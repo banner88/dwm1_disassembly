@@ -506,13 +506,16 @@ pipeline — never retrofit the overlay.
       no hardcoded cp $6B) + insertion (S41 Pillar B — GateDecisionFork at $16:$5BA9
       routes gate 1 → custom $6D; descent feel via transient wInGateworld=$01 during
       transition only). → GATE_GENERATION §7.1–7.5; archive: SESSION_HISTORY Part 3.
+      **S100: the hard-coded gate-1 POC became data-driven (P3.7b part 1,
+      GATE_GENERATION §7.6).**
 - [x] **Room-palette derivation from ROM** (S39) — derive_room_palette.py, validated
       30/30 SameBoy dumps + gate floor. → GATE_GENERATION §7.1.
 - [ ] **`piece_id → screen layout` map** — decode the table turning a grid cell's
       high nibble into the rendered screen layout (needed to author NEW maze
       pieces vs. only reweighting existing ones). (GATE_GENERATION.md §12.2.)
 - [ ] **Full `rst $00` dispatch enumeration** — list every special-floor handler
-      slot so reusable slots are known precisely. (§12.3.)
+      slot so reusable slots are known precisely. (§12.3.) (S100: no longer
+      needed for custom rooms — they insert before the vanilla gating.)
 - [ ] **`SetBrd_6744`/`SetBrd_6800` carve algorithm** — step-trace the maze
       connectivity guarantee. (§12.4.)
 
@@ -976,13 +979,59 @@ recipes are pure authoring.
       checked in the editor (screen pixel-identical) but was not exercised
       in PyBoy (the test room had no placed tile at the moved slot);
       (7) animated tiles → P3.3e (DONE S99).
-- [ ] **P3.7b — Gates tab** [G-F partial]: per-gate config-row editing
-      (floors/weights/pool binding — Layer A-lite rows), custom-room-at-
-      depth-N insertion surfaced (built S41), boss floor (template +
-      boss EID script param + Set-2 coherence), entrance + unlock
-      trigger. *Accept:* a vanilla gate's floor count + pool edited and
-      a custom room inserted at a chosen depth, all from the GUI,
-      verified in PyBoy descent.
+- [ ] **P3.7b — Gates tab** [G-F partial] — split S100 (user OK'd: "Yes but
+      give a sense of how much work"; estimate given: part 2 ≈ 3-4 sessions).
+  - [x] **P3.7b part 1 — custom rooms on gate floors** — **DONE S100, built,
+        PyBoy-verified on the user's save, NOT yet user-tested** (user
+        decisions: most gate rooms are special-function/boss rooms without
+        battles; "at most once per dive"; saving as vanilla — special rooms
+        yes, random floors / boss rooms no; floor 1 stays the gate's; music:
+        the gate's OR the room's; example = floors 2-3 at 50 %). As built
+        (GATE_GENERATION §7.6, PROJECT_COMPILER §2.16, EDITOR_DESIGN §5.1b):
+        `custom.gate_inserts[]` (gate, floors, chance, flag terms, once per
+        dive) → bank $71 entry 4 `CustomGateInsert` from the rewritten bank $16
+        `GateDecisionFork` (S41 POC removed; B preserved — the vanilla
+        special-room test divides it, §3 corrected: floors 3, 6, 9 … only);
+        gate rooms: `gate_arrival`, Stairs down rows, `can_save` (bank $07
+        `SaveAllowCheck` same-size rewrite + entry 5 `CustomRoomFlags`),
+        `encounters.follow_gate` (entry 1 $FF = no pin), music = gate's or
+        own (no engine change — measured); dive state `wGateDiveGate/Mask`
+        saved via SRAM $BFCA/B; Gates tab + inspector "Inside gates" + S↓ / G
+        markers. Also S100: gate names fixed (two sources wrong), bank $06
+        `FieldStateDispatch` + `MapTransitionMachine` re-sectioned (the
+        218-row SkillLearnReqTable). Pin `7cd7257b…` (patched; r3 = free-colour descent transition fix + LZSS MAX_COPY 256; r2 `91202c74…` = example rule once per dive; prev `4f13d2af…` historical); template 395 B. r3 editor: Stairs down paints the vanilla well; "Inside gates (gate floor)" is its own Rooms-tab section.
+        *Accept MET (machine half):* test_compiler S100 cases, test_canvas v7
+        --rom, the demo ROM on the user's save (GATE_GENERATION §7.6).
+        *User half:* `DWM-S100-gates-test-v2.gbc` (patched, `d29e34b2…`; v1 `398b1b5c…` historical).
+        Residuals: (a) a served room reached by warp or door (not through the
+        fork) behaves as an ordinary room — its Stairs down then drops the
+        player into a floor of the last gate dived (validator warning); (b) the floor plan assumes flags do not change mid-dive (toggle:
+        hold / do not hold); (c) music picker lists
+        project songs + raw ids only (no vanilla song names yet — P3.13b).
+  - [ ] **P3.7b part 2 — gate settings, boss floor, entrances** (≈3-4
+        sessions, S100 estimate): (1) per-gate config rows — floor count,
+        the three floor-type rows (shared between gates — the UI must say so),
+        depth tier, monster-pool binding — as a compiler-owned bank-$16
+        region (Layer A-lite, ~1 session); (2) a CUSTOM BOSS FLOOR — byte 4 of
+        `GateFloorDataTable` = a custom mapID is one byte, but the boss flow
+        (battle with a chosen EID, join/redirect pair = Set 2, gate cleared,
+        the trip home, boss music, no saving via `can_save`) must first be
+        traced from a vanilla boss room (1-2 sessions); (3) gate entrances +
+        unlock triggers — which pedestal/exit leads to which gate id and what
+        makes it appear (~1 session). *Accept:* a vanilla gate's floor count
+        + pool edited, a custom boss room fought and cleared, all from the
+        GUI, verified in PyBoy.
+        *Carry-overs from S100 r3 (do first, small):* (a) user test of r3 —
+        the Crystal Well test ROM (`5295a028…` patched: cream wipe + cream
+        load screen from an own-colour-1 room), "Stairs down here" painting
+        the well, the "Inside gates (gate floor)" section; (b) NOT measured:
+        NORMAL door transitions (bank $06 `MapTransitionMachine` states
+        $00-$06) out of an own-colour-1 room — they also fade to the buffer's
+        colour 1 (KEY_LESSONS S100 r3 "Colour 1 … descent transition"), so
+        the same own-colour fade is likely there; PyBoy a door exit from an
+        imported room, fix like entry 20 if confirmed; (c) the PNG-imported
+        rooms authored before S100 r3 must be REBUILT (LZSS MAX_COPY fix) —
+        any whose sheet had 17+ leading empty slots drew shifted in-game.
 - [ ] **P3.8 — Cutscene storyboard + playback** [G-H]: symbolic stepper
       over ops, blocking keyframes on canvas, virtual flag/inventory
       branch walking; playback via P3.4. *Accept:* the S70 demo quest's
@@ -1006,6 +1055,9 @@ recipes are pure authoring.
       fought as-authored in PyBoy.
 - [ ] **P3.11 — Skills tab**: the S74 knob surface as forms with the
       invariant validators (MP pair sync, budgets, table existence).
+      **S100 hazard:** `SkillLearnReqTable` has 218 rows ($00-$D9); learn
+      reqs for ids $DA-$DD are bank $06 `FieldStateDispatch` code — never
+      offer them (build_skill_tables.py refuses such an emission).
       *Accept:* a custom skill's damage tier + description edited in GUI,
       verified in battle in PyBoy.
 - [ ] **P3.11b — AI ban-list (OPTIONAL)** [G-N]: measure the clean
@@ -1098,7 +1150,8 @@ Driven by what the editor must EDIT, not completionism:
       (2) ✅ STALE BOXES verified + ticked (S51): bank `$03`/`$14`/`$16` were
           already `db`-converted.
       (2b) ✅ DONE (S51): `SkillMPCostTable` ($07:$570C, 222×`dw` with per-skill
-          name/MP comments) + `SkillLearnReqTable` ($06:$50E0, 222×18B `db` with
+          name/MP comments) + `SkillLearnReqTable` ($06:$50E0, 222×18B `db` [S100: really 218 rows — the
+          last 4 "rows" were bank $06 entry-6 code, re-sectioned back S100, DOC_AUDIT S100] with
           decoded stat/prereq comments) re-sectioned in BOTH trees via the new
           `tools/resection_skill_tables.py` (probe-build; clean build byte-perfect;
           verifier PASS 4/4). Two fake-decode artifact labels (`DispMapS_566b`,

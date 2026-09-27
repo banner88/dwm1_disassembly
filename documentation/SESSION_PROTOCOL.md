@@ -113,6 +113,12 @@ in the session brief bypasses this.
 - **Commit the tool with the data.** If you improve a dumper in-session, the improved tool ships in the same APPLY list as its output, or the output becomes unreproducible (this already happened: see TOOLS_AND_DATA.md Tier B).
 - **Generated files note their generator.** Any `extracted/*.json` you
   produce must contain a `"_generator"` key naming the tool and ROM source.
+- **Test content is visible (Iron Rule 7, user rule S100).** Demo / test
+  ROMs use NPCs and real-looking objects only — no invisible examine spots,
+  step-on triggers or exits on plain tiles; each demo room announces itself
+  through an NPC and looks distinct; instructions describe what is on screen.
+  Demo rooms are brand-new rooms with names not already used in the project
+  or the game (never reuse or copy an existing room).
 - **Test in-game when patching.** A patched ROM that builds is not a
   patched ROM that works. Use SameBoy (SAMEBOY_GUIDE.md). Record the
   iteration number (continue the v23 sequence).

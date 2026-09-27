@@ -84,6 +84,8 @@ SECTION "ROM Bank $073", ROMX[$4000], BANK[$73]
     dw BoxRowRestore                ; entry 16 — S97 r2: dialog close, one row: tiles from $C1xx + the saved attrs
     dw ChoiceBoxClose               ; entry 17 — S97 r2: YES/NO close ($00:$070E): res $C825 b2/b1 + choice tiles/attrs back
     dw ChoiceBoxOpen                ; entry 18 — S97 r2: YES/NO open ($56:$48A1): cursor gfx + choice attrs -> 7
+    dw GateWipeAttr                 ; entry 19 — S100 r3: in-gate transition blank rows -> palette 7 (free-colour rooms)
+    dw GateLeaveFreePal             ; entry 20 — S100 r3: in-gate transition, room squeezed: colour 1 := cream (buffer + HW)
 
 ; -----------------------------------------------------------------------------
 ; Entry 0 — map-change commit hook: displaced store + conditional drain.
@@ -965,6 +967,14 @@ CF3CopyToSRAM:
     ld a, e
     cp $24
     ret nz
+    ; S100: gate dive state (once-per-dive custom rooms, bank $71 entry 4)
+    ; rides the EXPLICIT save — SRAM $BFCA/$BFCB, the reserved tail after the
+    ; "F2" gate, inside checksum v3's third segment (written here, before
+    ; SaveGameState's checksum pass).
+    ld a, [wGateDiveGate]
+    ld [$bfca], a
+    ld a, [wGateDiveMask]
+    ld [$bfcb], a
     jp CF3SnapCommit
 
 ; -----------------------------------------------------------------------------
@@ -1042,6 +1052,13 @@ CF3CopyFromSRAM:
     ld a, l
     cp $65
     jr nz, .wclr                    ; stops at HL=$D665: $CC80-$D664 zeroed
+    ; S100: restore the gate dive state saved by entry 5 (pre-S100 saves hold
+    ; whatever the tail held — harmless: entry 4 resets on a gate mismatch or
+    ; floor 0, and a stale mask can only suppress a once-per-dive room).
+    ld a, [$bfca]
+    ld [wGateDiveGate], a
+    ld a, [$bfcb]
+    ld [wGateDiveMask], a
     ; S69v2: bank-1 roster snapshot — restore over the eager image if the
     ; magic is present, else SEED it (one-time migration of pre-v3 saves).
     jp CF3SnapRestore
@@ -2044,3 +2061,94 @@ ChoiceBoxClose:
     dec c
     jr nz, .arow
     ret
+
+
+; =============================================================================
+; Entry 19 — GateWipeAttr (S100 r3). Called from bank $06 MapTrans_S10_InGate
+; (the stairs / special-room descent transition) right after it computed the
+; fill base [$c90b]/[$c90c] (= $9800-map address of the screen's top-left).
+; That state then writes tile $E0 (colour 1) into the 20x14 block starting 18
+; rows below the base (offset $0240, row- and column-wrapped like its own
+; SaveMapS_6e88) — the rows the state-$12 squeeze shows around the shrinking
+; room. Vanilla: every colour 1 is cream. A custom room whose palette keeps
+; its own colour 1 (FreeColor1Hook marker, BoxAttrActive) showed that colour
+; there (user S100: "background is not CREAM but room-tile coloured"). Here:
+; the block's attrs := 7 (system palette, cream colour 1) in VRAM bank 1.
+; Off-screen rows, so the room keeps its colours while it shrinks; the next
+; room's attr load replaces them. Vanilla / unmarked rooms: ret at once.
+; Clobbers A, BC, HL; DE preserved.
+; =============================================================================
+GateWipeAttr:
+    call BoxAttrActive
+    ret z
+    ld a, [$c90b]                    ; HL = base + $0240, wrapped in the $9800 map
+    add $40
+    ld l, a
+    ld a, [$c90c]
+    adc $02
+    and $03
+    or $98
+    ld h, a
+    ld c, 14
+.row:
+    push hl
+    ld b, 20
+.cell:
+    di
+    call BoxVramWait
+    ld a, $01
+    ldh [rVBK], a
+    ld [hl], $07
+    xor a
+    ldh [rVBK], a
+    ei
+    call TilemapNextColumn
+    dec b
+    jr nz, .cell
+    pop hl
+    call ChoiceNextRow
+    dec c
+    jr nz, .row
+    ret
+
+
+; =============================================================================
+; Entry 20 — GateLeaveFreePal (S100 r3). Called from bank $06 MapTrans_S12 as
+; the squeeze ends (the room is a line; state $13 wipes it column by column
+; with tile $E0, then states $14-$17 fade EVERY colour to the palette
+; buffer's colour 1 while the next floor loads — PyBoy S100 r3: HW slots =
+; 4 x buffer colour 1). In a free-colour room (FreeColor1Hook marker, bit 7
+; of colour 3's high byte) that showed the room's own colour-1 blocks for ~2 s
+; instead of the vanilla cream. Here: for each marked slot 0-3, BUFFER colour
+; 1 := the system slot-7 colour 1 (cream, $C7D1/2), then MenuOpenFreePal
+; pushes it to hardware. The room is leaving — the next room's palette load
+; rewrites the buffer. Vanilla / unmarked: ret at once. Clobbers A, C, HL.
+; =============================================================================
+GateLeaveFreePal:
+    ld a, [wIsGBC]
+    or a
+    ret z
+    ld a, [wMapID]
+    cp CUSTOM_ROOM_START
+    ret c
+    ld hl, $c79e                    ; slot 0 colour 3 high byte (marker bit 7)
+    ld c, $04
+.slot:
+    bit 7, [hl]
+    jr z, .next
+    push hl
+    ld a, l
+    sub $05                         ; -> slot colour 1 low byte ($c799 + 8n)
+    ld l, a
+    ld a, [$c7d1]
+    ld [hl+], a
+    ld a, [$c7d2]
+    ld [hl], a
+    pop hl
+.next:
+    ld a, l
+    add $08
+    ld l, a
+    dec c
+    jr nz, .slot
+    jp MenuOpenFreePal

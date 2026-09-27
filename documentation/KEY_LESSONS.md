@@ -3810,3 +3810,155 @@ change, palm and water slots on screen move.
 what moves; test the check against the operation on real (full) data, not
 only on roomy demo sheets.
 
+
+## S100 — gate rooms: implicit inputs, return registers, shared staging
+
+### A helper's implicit input makes a "dead" register live (and hid a doc error for 60 sessions)
+**Symptom**: GATE_GENERATION §3 said vanilla special rooms (treasure / priest /
+forest / maze) come from "wRNG1 bit 4 AND RNG mod 3 == 2". Measured S100: they
+appear ONLY on floors 3, 6, 9 … (5/13 on floors 3/6, 0/39 elsewhere).
+**Root cause**: the test is `ld a,$03 / call Div8x8 / cp $02`, and `Div8x8`
+divides **B** (`B = B // A; A = B % A`) — B was loaded with `wCurrentFloor`
+a few instructions earlier for the boss test. The reader saw `ld a,$03` and
+assumed the dividend was an RNG value in A. The same fact makes B LIVE across
+`GateDecisionFork`: a far call (`rst $10` clobbers BC) inserted there without
+`push bc` would have silently changed every vanilla gate's special-room floors.
+**Fix**: GATE_GENERATION §3 corrected; the S100 fork brackets its far call
+with `push bc` / `pop bc`; comments at the test in both trees.
+**Rule**: before stating what a `call` computes, read the callee's input
+contract (which registers it READS); before inserting code into a routine,
+list every register the downstream code consumes — including the implicit
+inputs of the helpers it calls — and preserve them.
+
+### A routine that returns in a register must set it on EVERY exit
+**Symptom**: first S100 build — any gate floor transition hung (`wMapID` 0,
+`wInGateworld` $80, no decision hook fired) on a gate with NO rule.
+**Root cause**: `CustomGateInsert` returns E (1 = room served) per the rst $10
+DE-return contract, set E = 0 at entry — then reused E for record sizes while
+skipping non-matching records, and the table end was a bare `ret z`. The
+fork read E = 11 as a hit and unwound entry 5 with nothing set up.
+**Fix**: the table end jumps to `.none: ld e,$00 / ret`.
+**Rule**: when the result lives in a register, give the routine explicit exit
+labels that load it (`.hit` / `.none`), and never use the result register as
+scratch between them. A hook trace of the exit labels (`.next` then the fork's
+`.custom`) found this in one run — trace exits before theorising.
+
+### Two builds at once corrupt the CLEAN tree
+**Symptom**: a test_canvas v5 `--rom` build failed ("Unterminated string …
+'blank/Empty_'"), and afterwards `git status` showed 32 files of
+`disassembly/` modified — the patched code, in the clean tree.
+**Root cause**: `editor2/core/builder.build_rom` STAGES `patches/` + generated
+files into `disassembly/`, runs make, then restores the backups it took at its
+own start. A second build started meanwhile (a demo `build_project.py` run
+while `test_canvas.py --rom` was running) backed up the FIRST build's staged
+files as "originals" and restored them — leaving the patched tree in place.
+**Fix**: per-file `git show HEAD:<file> > <file>` for every modified
+disassembly file (never a broad checkout), re-apply the session's own
+annotation edits, byte-perfect rebuild (1ca6579…), rebuild the ROM that was
+built during the overlap and compare md5 (identical here).
+**Rule**: never run two ROM builds (build_project, test_app/test_canvas
+`--rom`, verify_integrity) concurrently in one checkout. Background a long
+test only if nothing else will build until it finishes.
+
+### A data table's extent comes from its READER, not from the id space
+**Symptom**: bank $06's own entry table lists `dw label6_6034`, but the S51
+re-section had turned $6034-$607D into `SkillLearnReqTable` rows $DA-$DD
+("LIFE lvl 250", "RUN lvl 203" …) and called `label6_6034` a "fake-decode
+artifact … NOT a real entry point".
+**Root cause**: the table was sized 222 rows because there are 222 skill ids.
+Its reader (the learn scanner, bank $06 entry 5) loops ids `0..$D9` only —
+218 rows; the next 72 bytes are entry 6 `FieldStateDispatch`, the per-frame
+field router (called from bank $01 `$4E0F`). The S51 lesson "an entry-point-
+looking name inside a proven data table is not evidence of code" was applied
+to a label that the bank HEADER references — the strongest evidence of code
+there is.
+**Fix**: re-sectioned back to code (labels `FieldStateDispatch` + `.notMenu`
+/ `.notBit3` / `.notBattle` land exactly on mgbdis's original `jr_006_6059/
+6062/606b`); `build_skill_tables.py` refuses to emit changed rows $DA-$DD.
+**Rule**: size a table by its reader's loop bound (or the next proven
+reference), never by "how many ids exist"; a label listed by the bank's own
+`rst $10` entry table is code until proven otherwise.
+
+### Two partly-wrong name lists: key on two independent ROM fields
+**Symptom**: `extracted/gate_names.json` was right for gates 0-22 and one gate
+late for 23-31; `tools/gate_reference.py` was right for 0-11 and 18-31 but in
+FAQ chapter order for 12-17. Each looked authoritative.
+**Root cause**: the generator indexed the boss fight/join REDIRECT table
+($14:$4897 — one row per boss, two for Demolition) by gate id; the hand list
+copied the FAQ's chapter order.
+**Fix**: derive from the gate-indexed `GateFloorDataTable` and require two
+independent fields to agree for every gate — floor count (byte 3, == FAQ
+"Levels") and boss map (byte 4, named via map_names) — `--check` in verify.
+**Rule**: an id→name map is only trustworthy when derived from a table the
+engine indexes by that id, cross-checked by a second independent field.
+
+### Test ROMs: nothing invisible, every room says what it is (user rule S100)
+**Symptom**: the first S100 demo put its flag switch on an invisible examine
+spot ("a lever on the cell to the right") and cloned a room with leftover
+NPCs (a jerky-giver, a music changer); its stairs first sat on plain sand.
+(Correction S100 r2: the "merchant" the user asked about was the VANILLA
+merchant special room — I wrongly explained it as the clone's NPCs. Ask
+what they saw before explaining it away.) The user: "STOP USING INVISIBLE
+LEVERS OR OTHER INVISIBLE SHIT … you do this CONSTANTLY THEN are AMAZED I
+get confused. I cant see invisible shit."
+**Root cause**: demo content built for the harness (which knows the
+coordinates) instead of for a person looking at the screen.
+**Fix**: demo v2 — a visible guide NPC states the room ("This is the REST
+STOP. Once per dive. You can save.") and asks the YES/NO; the vault drops
+the cloned NPCs, gets its own sign NPC and the night palette; both stairs
+are the rooms' visible pits.
+**Rule**: PROJECT_STATE Iron Rule 7 — test content is visible, self-
+describing and visually distinct; instructions name what the user sees.
+Demo rooms are brand-new (not reused / copied project rooms) with names the
+project and game do not already use.
+
+### A gate rule without once-per-dive can serve its room twice in one dive (S100 r2)
+**Symptom**: the user saw the example project's `gate_rotation` on two floors
+of one Villager dive and read it as a broken "once" mechanic.
+**Root cause**: the example rule (floors 2-3, 50 %) never set
+`once_per_dive`, and the Gates-tab dialog started new rules with it OFF —
+so each floor rolled independently (25 % of dives: both).
+**Fix**: example rule `once_per_dive: true` (pin `91202c74…` patched); new
+rules start with it ON. PyBoy 40 dives: floor 2 19x, floor 3 12x, never both.
+**Rule**: defaults follow the user's stated intent ("at most once per dive"),
+not the minimal feature set.
+
+### The game's LZSS length is 8-bit — a Python round trip proved nothing (S100 r3)
+**Symptom**: a brand-new imported room (blank tileset, 58 empty slots before
+its art) drew in PyBoy as flat colour blocks; the tilemap in VRAM matched the
+layout exactly.
+**Root cause**: `compress_tiles.py` emitted copies up to 274 bytes; the game
+adds 19 to the extended-length byte in 8 bits (`HandleCompressedRun`, `dec/jr
+nz`, 0 = 256), so a 257-274-byte copy became 1-18 and the rest of the sheet
+landed 256 B early. `decompress_tiles.py` added the 19 in Python ints, so the
+round trip "✅" agreed with the compressor, not with the game.
+**Fix**: MAX_COPY 256; the decoder mirrors the 8-bit add; test_compiler LZSS
+cases. The example sheet re-encoded (its old stream decoded right by luck).
+**Rule**: a codec's reference decoder must copy the game's arithmetic widths;
+check VRAM tile data (not only the tilemap) when a new sheet shape appears.
+
+### "Colour 1 is always cream" also carries the descent transition (S100 r3)
+**Symptom** (user): stepping into a custom room's well, "background is not
+CREAM but room-tile coloured".
+**Root cause**: bank $06 states $10-$17 blank with tile $E0 (colour 1) under
+the room's attrs, then fade every colour to the palette BUFFER's colour 1 —
+the S96 lesson predicted exactly this class ("grep for transitions that draw
+with it"), and S96-S97 fixed only the menu and the text boxes.
+**Fix**: bank $73 entries 19 `GateWipeAttr` (blank rows → attr 7) and 20
+`GateLeaveFreePal` (buffer + HW colour 1 := cream once the room is a line).
+A first attempt (HW cream at the start) turned the room's walls cream for
+half a second before the shrink — the room must keep its colours until it is
+off screen.
+**Rule**: after a "free colour" feature, list every routine that reads colour
+1 (tile $E0 users, fades from the buffer) and test each with a free-colour
+room — before the user finds them one by one.
+
+### A combo is as wide as its longest item (S100 r3)
+**Symptom** (user): Room / screen / selection "needs to be scrolled both down
+and to the right".
+**Root cause**: the animation combo held a 130-character item → ~1,400 px
+minimum width; the scroll area grew sideways.
+**Fix / Rule**: `narrow_combo` (AdjustToMinimumContentsLengthWithIcon + popup
+sized to its items) on every inspector combo; measure `minimumSizeHint()` of
+the children when a panel scrolls sideways.
+

@@ -1152,7 +1152,7 @@ expanded the code region ahead of them):
 | SpecialRecipeTable 825×5 | `$16:$4B30` | same (whole bank identical) |
 | FamilyRecipeTable 222×2 | `$16:$4974` | same |
 | Exp curves / growth curves | `$13:$41E6` / `$13:$6706` | same (whole bank identical) |
-| SkillLearnReqTable 222×18 | `$06:$50E0` | same |
+| SkillLearnReqTable 218×18 ($00-$D9; S100 — rows $DA-$DD read bank $06 FieldStateDispatch code) | `$06:$50E0` | same |
 | SkillMPCost / FnTable / RecordData | `$07:$570C` / `$52:$4011` / `$54:$41CF` | same |
 | Arena sprites, Mimic, RandScaled, Coliseum bands | bank `$04` | same |
 | **EnemyStatsTable 487×25** | `$14:$4C1D` | **`$14:$4C8D` (+$70)** |

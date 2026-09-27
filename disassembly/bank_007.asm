@@ -4917,8 +4917,18 @@ CmpFld_604d:
 
     ld a, [wInGateworld]
     or a
-    jr nz, jr_007_6090
+    jr nz, jr_007_6090            ; gate maze floors: no saving
 
+; SaveAllowCheck (label S100) — field menu OPTN -> JOURNAL: may the game be
+; recorded here? jr_007_60a5 = yes ("Record to the Journal?"), jr_007_6090 =
+; no ("Cannot record in the Journal here."). Verdict, exhaustively
+; re-checked over all mapIDs (S100): allowed iff mapID < $30 or mapID in
+; {$50,$51,$5A,$5B,$5C} (the treasure / priest special rooms); refused for
+; boss rooms $30-$4F, the forest / conveyor / maze specials $52-$59 and
+; $5D+. The five cp $60..$64 tests are redundant (those ids reach the
+; refusal anyway). Patched tree: same-size rewrite + custom-room flags
+; (patches/bank_007.asm, bank $71 entry 5).
+SaveAllowCheck:
     ld a, [wMapID]
     cp $60
     jr z, jr_007_6090

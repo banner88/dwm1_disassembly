@@ -1,5 +1,82 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-09-26 (Session 98 — **rooms group C = ROADMAP P3.7:
+> DOOR OBJECTS, one-way teleports, EXAMINE spots + STEP-ON triggers, TALK
+> scripts that set flags, World graph v0 — plus a user-driven round of
+> tileset / walkability tools** (user: "Let's finish room work"; "mostly
+> two-way but I want the option of having a one-way teleport … a separate,
+> rare object"; "happy with state rules as long as they're flexible
+> enough"; "I just need the flag system to work so I can make an NPC set a
+> flag"; P3.4 PyBoy preview left aside). S97 USER-CONFIRMED at session
+> start ("Can confirm s97 pass"). **User-tested in part 2026-09-26:** doors
+> in the user's own project work both ways ("Works now") and arrive ON the
+> door ("Its now fixed"); walkability flip / purge used on the user's
+> project. **Built, NOT yet user-tested:** talk scripts (YES/NO, flags,
+> move), examine / step spots in game, World tab. Verifier PASS 6/6; clean
+> `1ca6579…` byte-perfect (bank $0B/$01/$06 renames + comments, both
+> trees); **patched pin UNCHANGED `ce24de8b…` (patched)** — no engine,
+> template or example-project bytes changed; test_compiler --rom 97/97;
+> test_app --rom PASS (GUI build == pin); test_canvas --rom PASS (v5 doors
+> / spots / talk / teleport + the tileset checks, pixel-position arrival).
+> `EDITOR_REVISION` = 'S98r3'. Test ROMs (all patched): demo
+> `DWM-S98r3-doors-test.gbc` md5 `72cd22fe…` (GreatTree 2F Library door ⇄
+> "Door Lab": examine book facing up, step-on tile, YES/NO NPC that sets
+> `lab_flag` and reloads the room in its rule state ⇄ Room B with a one-way
+> teleport back; earlier builds `56e407cf…` r1 / `e55b0651…` r2 are
+> historical); the user's own project `my-dwm-hack-S98r3-doors.gbc` md5
+> `2537a593…` (patched).
+>
+> **Measured (Iron Rule 6 annotation same session; ROOM_DATA_FORMAT
+> "Interact entries ≥$80" + "Arrival and edge rules"; DOC_AUDIT S98):**
+> the "$8F spawn point" never existed — `$80-$83/$8F` are EXAMINE spots
+> (A press on the own or faced cell; low nibble = required facing, F =
+> any), `$90` is a STEP-ON trigger (walk onto the cell; not on arrival);
+> byte 4 = a room script index; both bank-$0B scans STOP at the first NPC
+> entry (spots must precede NPCs — vanilla 157/160; `$1F`'s trailing
+> `$81` is dead). Arrival = the exit row's bytes 4-6 only; arriving on an
+> exit cell never re-fires it; screen-byte bit 7 = +8 px = drawn HALF A
+> CELL below (pixel-measured r3: vanilla Library → GreatTree `$88` lands at
+> y=320, standing positions are ≡ 8 mod 16); x=0/9 / y=0 exits bordering
+> another screen never fire (the push scrolls); a custom y=7 exit blocks
+> scrolling down. MapTransitionFull takes absolute pixel coordinates;
+> YES/NO answer in `$C83C` (0 YES / 1 NO). Labels:
+> `RoomEntry4_TalkTargetLookup`, `RoomEntry5_StepTriggerLookup`,
+> `SearchStepTriggers`, `InteractEntryAtPos`, `TalkScanNPCSlots`,
+> `NPCSlotAtPos`, `TalkScanExamineSpots`, `ExamineSpotMatch`.
+>
+> **Compiler (PROJECT_COMPILER §2.14):** `examine` / `step` npc kinds
+> (emitted before NPCs); door OBJECTS = exit rows with `door` + `name` +
+> `link` (vanilla doors `vdoor_MM_k_x_y` via tagged `entrance_redirects`,
+> `twin_of` for double doors), an unconnected door emits nothing (warning);
+> `talk` scripts (text, optional `question`, then / yes / no blocks with
+> `text`, `set`, `clear`, `move`) lowered to ops; validators: spawn-script-0
+> warning replaces the spawn error/warning, exit to a missing destination
+> screen = error, edge-vs-scroll warnings, talk and door-link checks.
+>
+> **Editor (EDITOR_DESIGN §5.1 "S98 additions" + "S98 r2" bullets, §5.8):**
+> round 1 built pair-doors through a coordinate dialog; the user called it
+> "bad design" → **round 2/3 (the user's design):** select a cell →
+> **+ Door (D)** puts an unconnected named door there; double-click → name
+> + connect to any door object (yours in any room, or a vanilla door) from
+> a searchable list — no coordinates; links two-way; delete leaves the
+> partner unconnected; doors arrive ON the partner door (whole tile —
+> user: "You arrive on tile fully always"); doors on a scrolling edge are
+> refused / drawn red **D!**; **+ Examine (X)**; double-click an NPC / spot
+> = edit its talk; talk editor with Ask YES/NO and per-answer say / flags
+> ON / OFF / move; More ▾ → one-way teleport / step-on trigger; World tab.
+> Tiles (user reports): the Walk toggle = walkability mode, refused flips
+> say why (silent since S95); copied rooms get their OWN tileset copy
+> ("stop sharing by default"), a shared sheet is flagged with "Give this
+> room its own copy"; a full walkable side offers moving the wall/walkable
+> split down one slot (asked; PyBoy: the cell walks, a control wall blocks,
+> screen pixel-identical); Tileset tab **Purge unused borrowed / own**
+> (user project: 15 unplaced borrowed metatiles held 30 walkable slots).
+> Rect / Fill off the tool bar. S98 r1 projects migrate on open (door
+> pairs → linked objects; step-out arrivals → on-door). Door-arrival STATE
+> (S97 carry-over) closed by user decision: state rules keyed on a flag
+> the talk sets. Signposted for next session at the user's request:
+> **ROADMAP P3.3e animated tiles**. Residuals: ROADMAP P3.7.
+
 > Last verified: 2026-09-25 (Session 97 — **rooms group B: P3.5a flag
 > STATE RULES + P3.5 NPC INSPECTOR, with the NPC behaviour engine decoded**
 > (user: "all of B"; rule terms AND-ed — "Flag A set and Flag B set but C

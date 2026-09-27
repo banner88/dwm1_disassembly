@@ -34,7 +34,7 @@ from editor2.core import emulator
 ORIGINAL_MD5 = '1ca6579359f21d8e27b446f865bf6b83'   # PROJECT_STATE canonical
 
 STUB_TABS = [
-    ('Gates', 'P3.7b', 'Per-gate config rows, custom room at depth N, boss floor.'),
+    ('Gates', 'P3.7b', 'Custom rooms on gate floors (open a project); gate settings + boss floor = part 2.'),
     ('Monsters', 'P3.9 + P3.10', 'Stats / growth / AI weights / learnset, battle + follower sprites.'),
     ('Skills', 'P3.11', 'The S74 knob surface as forms with the invariant validators.'),
     ('Breeding', 'P3.12', 'Recipe editor + the randomizer tree explorer, live re-sim.'),
@@ -151,6 +151,7 @@ class MainWindow(QMainWindow):
         if self.session:
             self.rooms_tab = RoomsTab(self.session)
             self.rooms_tab.status.connect(self.statusBar().showMessage)
+            self.rooms_tab.gatesRequested.connect(self._open_gates_for)
             self.tabs.addTab(self.rooms_tab, 'Rooms')
             from editor2.app.import_tab import ImportTab
             self.import_tab = ImportTab(self.session)
@@ -160,6 +161,13 @@ class MainWindow(QMainWindow):
             self.tabs.addTab(_stub('Rooms', 'P3.3', 'Open a project (File → Open) to edit rooms.'),
                              'Rooms')
         for title, box, blurb in STUB_TABS:
+            if title == 'Gates' and self.session:
+                # S100 (P3.7b part 1): custom rooms served on gate floors
+                from editor2.app.gates_tab import GatesTab
+                self.gates_tab = GatesTab(self.session)
+                self.gates_tab.openRoomRequested.connect(self._open_gate_room)
+                self.tabs.addTab(self.gates_tab, 'Gates')
+                continue
             if title == 'Balance':
                 # S98 (P3.7): the World graph sits before Balance, as in §5.0
                 if self.session:
@@ -173,6 +181,25 @@ class MainWindow(QMainWindow):
             self.tabs.addTab(_stub(title, box, blurb), title)
         self.build_tab = BuildPlayTab(self)
         self.tabs.addTab(self.build_tab, 'Build && Play')
+
+    def _open_gates_for(self, room_id):
+        """Rooms tab 'Gates tab…' -> the Gates tab on the first gate serving
+        the room (else where it was)."""
+        gt = getattr(self, 'gates_tab', None)
+        if gt is None:
+            return
+        self.tabs.setCurrentWidget(gt)
+        rules = self.session.doc.rules_serving(room_id) if room_id else []
+        if rules:
+            from editor2.core.gates import _val
+            gt.list.setCurrentRow(int(_val(rules[0][1].get('gate', 0))))
+
+    def _open_gate_room(self, room_id):
+        """Gates tab 'Open room' -> the room in the Rooms tab (S100)."""
+        if self.rooms_tab is None:
+            return
+        self.tabs.setCurrentWidget(self.rooms_tab)
+        self.rooms_tab.open_node(('room', room_id))
 
     def _open_world_node(self, key):
         """World graph double-click -> the room in the Rooms tab (S98)."""

@@ -106,13 +106,21 @@
                  ClearAnimationState SKIPS its reset, so script state
                  $D8D5-7 survives and the NPC script RESUMES after a won
                  battle. Cleared (res 7) on loss/arena warps -> full re-entry.
-   C8EB     1    wGameState flags. Bit 6 = battle REQUEST latch (set by wild
+   C8EB     1    wGameState flags, routed per field frame by bank $06
+                 FieldStateDispatch (entry 6) in priority order bit 5 (map change
+                 in progress -> MapTransitionMachine), 7, 4, 0, 1 (field menu ->
+                 bank $07 entry 0), 3 (bank $19 entry 0), 6, 2 [S100].
+                 Bit 6 = battle REQUEST latch (set by wild
                  encounters + script battle opcodes; the ROM's only res 6 is
                  $13:$73F5 in the $C905 battle-transition machine) [S68]
    C8ED     1    Follower-render suppression mask (bits 1-3 = the 3
                  followers); boss win ($DA09==3) sets $0E, kept by bank $01
                  only while $D92B==7 — cosmetic [S68]
-   C905     1    Battle-transition machine state (bank $13 label13_7366:
+   C905     1    Transition sub-state. Map changes: set 0 with wGameState bit 5 by every
+                 exit/warp/staircase path; bank $06 MapTransitionMachine picks
+                 0 = normal fade or $10 = in-gate/special-room style for the room
+                 being LEFT (24-entry MapTransStateTable) [S100]. Battles:
+                 Battle-transition machine state (bank $13 label13_7366:
                  BGM $4B/$4D, random wipe $C906, sets wGameMode=2) [S68]
    C96D     1    Gate to warp to
    CA38     1    Encounter pool index (gate + floor → pool via $01:Call_69e1)
@@ -579,7 +587,10 @@
                  path to SRAM banks 1-3 under the RAMB pin; see ARCHITECTURE
                  "SRAM banking as built S69"), wSnapBounce $DE92-$DEB1 (S69v2: 32-B
                  bounce for CF3SnapXfer — roster snapshot staging, banks
-                 can't see each other); $DEB2-$DEDD reserved.
+                 can't see each other); $DEB2-$DEBB anchor/quake/mourn (S73-S75);
+                 $DEBC-$DEBD wGateDiveGate/wGateDiveMask (S100: gate dive state
+                 for once-per-dive custom gate rooms — transient here, saved via
+                 SRAM $BFCA/$BFCB by bank $73 entries 5/6); $DEBE-$DEDD reserved.
                  Vetted: no real claimant above the audio ceiling $DE2B
                  (full-corpus scan; $DE30-$DEFF literals are all data-as-code
                  junk); SVBK windows touch $DB00+ only; NOT in save range.
@@ -635,6 +646,10 @@
 ;   DEB2    1    wAnchorArm — transient protocol: 1 store / 2 install+charge /
 ;                3 force-standard (GateDecisionFork consumes). [S73]
 ;   DEB3    1    wAnchorCaster — caster party slot 0-2, captured at cast. [S73]
+;   DEBC    1    wGateDiveGate — wGateID+1 of the dive in progress, 0 = none;
+;                reset by bank $71 entry 4 on floor 0 / another gate. [S100]
+;   DEBD    1    wGateDiveMask — once-per-dive rule bits served this dive
+;                (GATE_GENERATION §7.6). Both ride the save via SRAM $BFCA/B. [S100]
 
 ## [S87] Obedience / WLD / party personality
 

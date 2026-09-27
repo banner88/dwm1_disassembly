@@ -48,6 +48,7 @@ SELFTEST_TOOLS = [
     "build_skill_tables.py",   # skill MP/learn/record tables byte-identical
     "script_param_counts.py",  # S96: opcode arity table == bank-$04 handler analysis
     "census_room_animation.py",  # S99: room-animation census JSON == bank-$01 dispatch table + handler operands
+    "map_gate_names.py",         # S100: gate_names.json == GateFloorDataTable (floors + boss map) x FAQ
 ]
 
 PATCH_FILES = [

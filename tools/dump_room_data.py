@@ -26,7 +26,9 @@ GATE_NAMES = {}
 try:
     with open(os.path.join(SCRIPT_DIR, '..', 'extracted', 'gate_names.json')) as f:
         gn = json.load(f)
-        if isinstance(gn, list):
+        if isinstance(gn, dict) and 'gates' in gn:   # S100 shape (map_gate_names.py)
+            GATE_NAMES = {g['id']: g['name'] for g in gn['gates']}
+        elif isinstance(gn, list):
             GATE_NAMES = {i: (g.get('name', f'Map_{i}') if isinstance(g, dict) else str(g))
                           for i, g in enumerate(gn)}
         elif isinstance(gn, dict):

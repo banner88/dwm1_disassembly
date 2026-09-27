@@ -179,6 +179,7 @@
     "bank_053.asm",
     "bank_054.asm",
     "bank_058.asm",
+    "bank_071.asm",
     "bank_072.asm"
    ],
    "vanilla_alias": true
@@ -202,7 +203,8 @@
     "bank_052.asm",
     "bank_053.asm",
     "bank_054.asm",
-    "bank_058.asm"
+    "bank_058.asm",
+    "bank_071.asm"
    ],
    "vanilla_alias": true
   },
@@ -577,7 +579,8 @@
     "bank_015.asm",
     "bank_016.asm",
     "bank_050.asm",
-    "bank_05f.asm"
+    "bank_05f.asm",
+    "bank_071.asm"
    ],
    "vanilla_alias": false
   },
@@ -600,7 +603,8 @@
     "bank_015.asm",
     "bank_016.asm",
     "bank_050.asm",
-    "bank_05f.asm"
+    "bank_05f.asm",
+    "bank_071.asm"
    ],
    "vanilla_alias": false
   },
@@ -623,7 +627,8 @@
     "bank_015.asm",
     "bank_016.asm",
     "bank_050.asm",
-    "bank_05f.asm"
+    "bank_05f.asm",
+    "bank_071.asm"
    ],
    "vanilla_alias": false
   },
@@ -646,7 +651,8 @@
     "bank_015.asm",
     "bank_016.asm",
     "bank_050.asm",
-    "bank_05f.asm"
+    "bank_05f.asm",
+    "bank_071.asm"
    ],
    "vanilla_alias": false
   },
@@ -1247,28 +1253,6 @@
    "referenced_by": [
     "bank_004.asm",
     "bank_060.asm"
-   ],
-   "vanilla_alias": true
-  },
-  {
-   "label": "wScriptStateFlags",
-   "addr": "$D8D7",
-   "size": 1,
-   "end": "$D8D7",
-   "collision_classes": [
-    "A':rammap-span"
-   ],
-   "collides_with_indexed": [],
-   "referenced_by": [
-    "bank_001.asm",
-    "bank_004.asm",
-    "bank_006.asm",
-    "bank_00a.asm",
-    "bank_00b.asm",
-    "bank_012.asm",
-    "bank_015.asm",
-    "bank_050.asm",
-    "bank_05f.asm"
    ],
    "vanilla_alias": true
   },
@@ -1898,6 +1882,36 @@
     "bank_072.asm"
    ],
    "vanilla_alias": true
+  },
+  {
+   "label": "wGateDiveGate",
+   "addr": "$DEBC",
+   "size": 1,
+   "end": "$DEBC",
+   "collision_classes": [
+    "A':rammap-span"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_071.asm",
+    "bank_073.asm"
+   ],
+   "vanilla_alias": true
+  },
+  {
+   "label": "wGateDiveMask",
+   "addr": "$DEBD",
+   "size": 1,
+   "end": "$DEBD",
+   "collision_classes": [
+    "A':rammap-span"
+   ],
+   "collides_with_indexed": [],
+   "referenced_by": [
+    "bank_071.asm",
+    "bank_073.asm"
+   ],
+   "vanilla_alias": true
   }
  ],
  "custom_literal_only_refs": {
@@ -1918,9 +1932,6 @@
   ],
   "$D8D5": [
    "bank_072.asm:818"
-  ],
-  "$D8D7": [
-   "bank_072.asm:823"
   ],
   "$DB89": [
    "bank_04c.asm:11783",
@@ -2075,8 +2086,8 @@
  ],
  "vanilla_suspect_only_refs": {
   "$C5C4": [
-   "bank_000.asm:9481",
-   "bank_000.asm:9573",
+   "bank_000.asm:9483",
+   "bank_000.asm:9575",
    "bank_009.asm:7857",
    "bank_00a.asm:7303",
    "bank_012.asm:7505",
@@ -2084,8 +2095,8 @@
    "bank_059.asm:5526"
   ],
   "$CCCB": [
-   "bank_000.asm:9490",
-   "bank_000.asm:9582",
+   "bank_000.asm:9492",
+   "bank_000.asm:9584",
    "bank_007.asm:8316",
    "bank_009.asm:7780",
    "bank_009.asm:7866",
@@ -2101,8 +2112,8 @@
    "bank_065.asm:3405"
   ],
   "$CFCE": [
-   "bank_000.asm:9492",
-   "bank_000.asm:9584",
+   "bank_000.asm:9494",
+   "bank_000.asm:9586",
    "bank_009.asm:7782",
    "bank_009.asm:7868",
    "bank_00a.asm:7314",
@@ -2115,15 +2126,15 @@
    "bank_065.asm:3407"
   ],
   "$DDDD": [
-   "bank_000.asm:10379",
-   "bank_000.asm:10397",
+   "bank_000.asm:10381",
+   "bank_000.asm:10399",
    "bank_061.asm:1088"
   ],
   "$D43C": [
-   "bank_000.asm:12999"
+   "bank_000.asm:13001"
   ],
   "$CD7E": [
-   "bank_001.asm:9430"
+   "bank_001.asm:9652"
   ],
   "$C342": [
    "bank_002.asm:629",
@@ -2181,22 +2192,22 @@
    "bank_005.asm:9610"
   ],
   "$C010": [
-   "bank_006.asm:6975",
+   "bank_006.asm:7063",
    "bank_036.asm:7733"
   ],
   "$CF47": [
-   "bank_006.asm:7142",
+   "bank_006.asm:7230",
    "bank_055.asm:10465"
   ],
   "$DFC8": [
-   "bank_006.asm:8098"
+   "bank_006.asm:8186"
   ],
   "$C77B": [
-   "bank_006.asm:8992",
+   "bank_006.asm:9080",
    "bank_015.asm:10782"
   ],
   "$C7C3": [
-   "bank_006.asm:9007",
+   "bank_006.asm:9095",
    "bank_055.asm:9206",
    "bank_063.asm:1287",
    "bank_063.asm:1588"
@@ -2238,7 +2249,7 @@
    "bank_018.asm:3699",
    "bank_050.asm:8901",
    "bank_051.asm:7941",
-   "bank_056.asm:1798",
+   "bank_056.asm:1803",
    "bank_059.asm:6696"
   ],
   "$D340": [
@@ -3143,7 +3154,7 @@
    "bank_065.asm:3432"
   ],
   "$CCFF": [
-   "bank_056.asm:4545",
+   "bank_056.asm:4550",
    "bank_05b.asm:14248"
   ],
   "$DD4C": [

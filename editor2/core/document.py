@@ -30,6 +30,7 @@ from editor2.core import layouts as L
 from editor2.core.doors import DoorsMixin
 from editor2.core.talk import TalkMixin
 from editor2.core.animate import AnimateMixin
+from editor2.core.gates import GatesMixin
 from editor2.core.formats import anim_source as F_anim
 
 SCREEN_W, SCREEN_H = 20, 16
@@ -93,7 +94,7 @@ class ThresholdShiftNeeded(RuntimeError):
     The GUI asks the author (user: "make that an option") and retries with
     shift_ok=True."""
 
-class Document(DoorsMixin, TalkMixin, AnimateMixin):
+class Document(DoorsMixin, TalkMixin, AnimateMixin, GatesMixin):
     def __init__(self, path):
         self.path = path if path.endswith('.json') else \
             os.path.join(path, 'project.json')

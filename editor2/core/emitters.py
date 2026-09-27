@@ -405,7 +405,9 @@ def _room_data(prj, r):
                                  F.val(e.get('gate_flag', 0)),
                                  F.val(e['screen_byte']),
                                  e['spawn_x'], e['spawn_y'])
-                what = (f"door '{e.get('name') or e['door']}'" if e.get('door') else 'exit')
+                what = (f"door '{e.get('name') or e['door']}'" if e.get('door')
+                        else 'stairs down (next gate floor)' if e.get('stairs')
+                        else 'exit')
                 out.append(F.db_line(b, comment=e.get('comment',
                            f"{what} ({e['x']},{e['y']}) -> {e['dest']}")))
             out.append("    db $FF")
@@ -452,12 +454,18 @@ def emit_bank_071(prj, warnings):
               "RoomEncTable:"]
     for r in prj.rooms:
         enc = r.get('encounters') or {}
-        b = F.enc_row(enc.get('enabled', False),
-                      F.val(enc.get('gate_id', 0)),
-                      F.val(enc.get('floor', 0)))
-        state = (f"enabled, gate {F.val(enc.get('gate_id',0))}, "
-                 f"floor {F.val(enc.get('floor',0))}"
-                 if enc.get('enabled') else "disabled")
+        if enc.get('enabled') and enc.get('follow_gate'):
+            # S100: gate byte $FF = use the dive's own gate/floor (entry 1
+            # never pins) — for rooms served inside gates
+            b = F.enc_row(True, 0xFF, 0)
+            state = "enabled, follows the gate being dived"
+        else:
+            b = F.enc_row(enc.get('enabled', False),
+                          F.val(enc.get('gate_id', 0)),
+                          F.val(enc.get('floor', 0)))
+            state = (f"enabled, gate {F.val(enc.get('gate_id',0))}, "
+                     f"floor {F.val(enc.get('floor',0))}"
+                     if enc.get('enabled') else "disabled")
         lines.append(F.db_line(b, comment=f"{F.hexb(F.val(r['mapID']))} — {state}"))
     lines.append("")
     lines += ["; " + "-" * 77,
@@ -470,6 +478,19 @@ def emit_bank_071(prj, warnings):
     for r in prj.rooms:
         src, why = prj.anim_source(r)
         lines.append(F.db_line([src], comment=f"{F.hexb(F.val(r['mapID']))} — {why}"))
+    lines.append("")
+    lines += _gate_insert_table(prj)
+    lines += ["; " + "-" * 77,
+              "; CustomRoomFlagsTable — 1 byte/room, indexed (mapID-$6B): bit 0 =",
+              "; saving NOT allowed (custom.rooms[].can_save false). Read by entry",
+              "; 5 CustomRoomFlags for the bank $07 save ladder (S100). (generated)",
+              "; " + "-" * 77,
+              f"ROOMFLAGS_TABLE_LEN EQU {len(prj.rooms)}",
+              "CustomRoomFlagsTable:"]
+    for r in prj.rooms:
+        fl = prj.room_flags(r)
+        lines.append(F.db_line([fl], comment=f"{F.hexb(F.val(r['mapID']))} — "
+                     + ("no saving" if fl & 1 else "saving allowed")))
     lines.append("")
     lines += ["; " + "-" * 77,
               "; CustomRoomBGMTable — 128 entries indexed by wMapID (S64, M3b).",
@@ -491,6 +512,33 @@ def emit_bank_071(prj, warnings):
         lines.append(F.db_line(row, comment=f"mapIDs ${i:02X}-${i+15:02X}"
                      + (": " + ", ".join(tags) if tags else "")))
     return "\n".join(lines) + "\n"
+
+
+def _gate_insert_table(prj):
+    """GateInsertTable (S100, P3.7b) — record layout in the bank $71 template
+    (entry 4 CustomGateInsert); rules in custom.gate_inserts[] list order."""
+    out = ["; " + "-" * 77,
+           "; GateInsertTable — custom rooms served on gate floors (S100, P3.7b).",
+           "; [gate, floor_lo, floor_hi (0-based), chance, once_bit, mapID,",
+           ";  spawn_x lo/hi, spawn_y lo/hi, n_terms] + n_terms x dw flag",
+           "; (bit 15 = must be CLEAR); $FF ends. Read by entry 4. (generated)",
+           "; " + "-" * 77,
+           "GateInsertTable:"]
+    for row in prj.gate_insert_rows():
+        b = [row['gate'], row['first'] - 1, row['last'] - 1, row['chance'],
+             row['once_bit'], row['mapID'],
+             row['px'] & 0xFF, row['px'] >> 8, row['py'] & 0xFF, row['py'] >> 8,
+             len(row['terms'])]
+        what = (f"gate {row['gate']} floors {row['first']}-{row['last']} "
+                f"{row['chance']}% -> {row['room_id']} ({F.hexb(row['mapID'])})"
+                + (" once/dive" if row['once_bit'] else ""))
+        out.append(F.db_line(b, comment=what))
+        for idx, clr in row['terms']:
+            out.append(f"    dw ${idx | (0x8000 if clr else 0):04X}   ; flag "
+                       f"{F.hexw(idx)} must be {'clear' if clr else 'set'}")
+    out.append("    db $FF")
+    out.append("")
+    return out
 
 
 # ---------------------------------------------------------------------------

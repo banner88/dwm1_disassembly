@@ -1,34 +1,453 @@
 {
-  "0": "Gate of Beginning",
-  "1": "Gate of Villager",
-  "2": "Gate of Talisman",
-  "3": "Gate of Memories",
-  "4": "Gate of Bewilder",
-  "5": "Bazaar Gate",
-  "6": "Gate of Peace",
-  "7": "Gate of Bravery",
-  "8": "Well Gate",
-  "9": "Gate of Strength",
-  "10": "Gate of Anger",
-  "11": "Farm Gate",
-  "12": "Gate of Joy",
-  "13": "Gate of Wisdom",
-  "14": "Arena - Left Gate",
-  "15": "Gate of Happiness",
-  "16": "Gate of Temptation",
-  "17": "Medal Gate",
-  "18": "Gate of Labyrinth",
-  "19": "Gate of Judgement",
-  "20": "Library Gate",
-  "21": "Gate of Reflection",
-  "22": "Gate of Ambition",
-  "23": "Gate of Demolition (Hargon)",
-  "24": "Gate of Demolition (Sidoh)",
-  "25": "Gate of Mastermind",
-  "26": "Gate of Control",
-  "27": "Gate of Extinction",
-  "28": "Gate of Sleep",
-  "29": "Bazaar Edge Gate",
-  "30": "Arena - Right Gate",
-  "31": "Unused Gate (99 Floors)"
+ "_generator": "tools/map_gate_names.py (S100) from data/DWM-original.gbc GateFloorDataTable $16:$70A6 (floors byte 3 + boss map byte 4), cross-checked vs FULL_FAQ.txt 'Levels:'",
+ "gates": [
+  {
+   "id": 0,
+   "name": "Gate of Beginning",
+   "faq_name": "Gate 1 - Beginning",
+   "floors": 5,
+   "boss_map": "0x30",
+   "boss_room": "Boss: Beginning (Healer)",
+   "floor_types": [
+    0,
+    0,
+    0
+   ],
+   "depth_tier": 1
+  },
+  {
+   "id": 1,
+   "name": "Gate of Villager",
+   "faq_name": "Gate 2 - Villager",
+   "floors": 5,
+   "boss_map": "0x31",
+   "boss_room": "Boss: Villager (Dragon)",
+   "floor_types": [
+    1,
+    1,
+    1
+   ],
+   "depth_tier": 1
+  },
+  {
+   "id": 2,
+   "name": "Gate of Talisman",
+   "faq_name": "Gate 3 - Talisman",
+   "floors": 6,
+   "boss_map": "0x32",
+   "boss_room": "Boss: Talisman (Golem)",
+   "floor_types": [
+    1,
+    1,
+    2
+   ],
+   "depth_tier": 1
+  },
+  {
+   "id": 3,
+   "name": "Gate of Memories",
+   "faq_name": "Gate 4 - Memories",
+   "floors": 5,
+   "boss_map": "0x33",
+   "boss_room": "Boss: Memories (MadCat)",
+   "floor_types": [
+    2,
+    1,
+    2
+   ],
+   "depth_tier": 1
+  },
+  {
+   "id": 4,
+   "name": "Gate of Bewilder",
+   "faq_name": "Gate 5 - Bewilder",
+   "floors": 6,
+   "boss_map": "0x34",
+   "boss_room": "Boss: Bewilder (FaceTree)",
+   "floor_types": [
+    2,
+    2,
+    3
+   ],
+   "depth_tier": 1
+  },
+  {
+   "id": 5,
+   "name": "Bazaar Gate",
+   "faq_name": "Bazaar Gate",
+   "floors": 9,
+   "boss_map": "0x35",
+   "boss_room": "Boss: Bazaar (MadKnight)",
+   "floor_types": [
+    3,
+    2,
+    3
+   ],
+   "depth_tier": 1
+  },
+  {
+   "id": 6,
+   "name": "Gate of Peace",
+   "faq_name": "Gate 6 - Peace",
+   "floors": 8,
+   "boss_map": "0x36",
+   "boss_room": "Boss: Peace (FangSlime)",
+   "floor_types": [
+    3,
+    2,
+    4
+   ],
+   "depth_tier": 2
+  },
+  {
+   "id": 7,
+   "name": "Gate of Bravery",
+   "faq_name": "Gate 7 - Bravery",
+   "floors": 9,
+   "boss_map": "0x37",
+   "boss_room": "Boss: Bravery (BigEye)",
+   "floor_types": [
+    3,
+    3,
+    4
+   ],
+   "depth_tier": 2
+  },
+  {
+   "id": 8,
+   "name": "Well Gate",
+   "faq_name": "Well Gate",
+   "floors": 12,
+   "boss_map": "0x38",
+   "boss_room": "Boss: Well (Gigantes)",
+   "floor_types": [
+    4,
+    3,
+    5
+   ],
+   "depth_tier": 2
+  },
+  {
+   "id": 9,
+   "name": "Gate of Strength",
+   "faq_name": "Gate 9 - Strength",
+   "floors": 11,
+   "boss_map": "0x39",
+   "boss_room": "Boss: Strength (StoneMan)",
+   "floor_types": [
+    4,
+    4,
+    5
+   ],
+   "depth_tier": 2
+  },
+  {
+   "id": 10,
+   "name": "Gate of Anger",
+   "faq_name": "Gate 8 - Anger",
+   "floors": 11,
+   "boss_map": "0x3C",
+   "boss_room": "Boss: Anger (BattleRex)",
+   "floor_types": [
+    4,
+    4,
+    5
+   ],
+   "depth_tier": 2
+  },
+  {
+   "id": 11,
+   "name": "Farm Gate",
+   "faq_name": "Monster Farm Gate",
+   "floors": 12,
+   "boss_map": "0x10",
+   "boss_room": "Copycat House",
+   "floor_types": [
+    4,
+    4,
+    6
+   ],
+   "depth_tier": 2
+  },
+  {
+   "id": 12,
+   "name": "Gate of Joy",
+   "faq_name": "Gate 10 - Joy",
+   "floors": 14,
+   "boss_map": "0x3B",
+   "boss_room": "Boss: Joy (FunkyBird)",
+   "floor_types": [
+    5,
+    6,
+    6
+   ],
+   "depth_tier": 2
+  },
+  {
+   "id": 13,
+   "name": "Gate of Wisdom",
+   "faq_name": "Gate 11 - Wisdom",
+   "floors": 15,
+   "boss_map": "0x3A",
+   "boss_room": "Boss: Wisdom (SkyDragon)",
+   "floor_types": [
+    5,
+    6,
+    6
+   ],
+   "depth_tier": 2
+  },
+  {
+   "id": 14,
+   "name": "Arena - Left Gate",
+   "faq_name": "Goopi's Gate",
+   "floors": 16,
+   "boss_map": "0x3D",
+   "boss_room": "Boss: Arena Left (Digster)",
+   "floor_types": [
+    5,
+    6,
+    7
+   ],
+   "depth_tier": 2
+  },
+  {
+   "id": 15,
+   "name": "Gate of Happiness",
+   "faq_name": "Gate 12 - Happiness",
+   "floors": 18,
+   "boss_map": "0x3E",
+   "boss_room": "Boss: Happiness (Jamirus)",
+   "floor_types": [
+    6,
+    7,
+    7
+   ],
+   "depth_tier": 3
+  },
+  {
+   "id": 16,
+   "name": "Gate of Temptation",
+   "faq_name": "Gate 13 - Temptation",
+   "floors": 20,
+   "boss_map": "0x3F",
+   "boss_room": "Boss: Temptation (Servant)",
+   "floor_types": [
+    7,
+    7,
+    8
+   ],
+   "depth_tier": 3
+  },
+  {
+   "id": 17,
+   "name": "Medal Gate",
+   "faq_name": "Medal King's Gate",
+   "floors": 19,
+   "boss_map": "0x40",
+   "boss_room": "KingSlime Decision Room (3 doors)",
+   "floor_types": [
+    7,
+    5,
+    8
+   ],
+   "depth_tier": 3
+  },
+  {
+   "id": 18,
+   "name": "Gate of Labyrinth",
+   "faq_name": "Gate 14 - Labyrinth",
+   "floors": 23,
+   "boss_map": "0x42",
+   "boss_room": "Labyrinth",
+   "floor_types": [
+    8,
+    8,
+    9
+   ],
+   "depth_tier": 3
+  },
+  {
+   "id": 19,
+   "name": "Gate of Judgement",
+   "faq_name": "Gate 15 - Judgement",
+   "floors": 25,
+   "boss_map": "0x43",
+   "boss_room": "Boss: Judgment (Akubar)",
+   "floor_types": [
+    8,
+    9,
+    9
+   ],
+   "depth_tier": 3
+  },
+  {
+   "id": 20,
+   "name": "Library Gate",
+   "faq_name": "Library Gate",
+   "floors": 25,
+   "boss_map": "0x44",
+   "boss_room": "Boss: Library (Orochi)",
+   "floor_types": [
+    8,
+    5,
+    9
+   ],
+   "depth_tier": 3
+  },
+  {
+   "id": 21,
+   "name": "Gate of Reflection",
+   "faq_name": "Gate 16 - Reflection",
+   "floors": 29,
+   "boss_map": "0x45",
+   "boss_room": "Boss: Reflection (Durran)",
+   "floor_types": [
+    9,
+    10,
+    10
+   ],
+   "depth_tier": 3
+  },
+  {
+   "id": 22,
+   "name": "Gate of Ambition",
+   "faq_name": "Gate 17 - Ambition",
+   "floors": 30,
+   "boss_map": "0x46",
+   "boss_room": "Boss: Ambition (DracoLord)",
+   "floor_types": [
+    10,
+    11,
+    11
+   ],
+   "depth_tier": 3
+  },
+  {
+   "id": 23,
+   "name": "Gate of Demolition",
+   "faq_name": "Gate 18 - Demolition",
+   "floors": 29,
+   "boss_map": "0x47",
+   "boss_room": "Boss: Demolition (Hargon/Sidoh)",
+   "floor_types": [
+    10,
+    11,
+    11
+   ],
+   "depth_tier": 3
+  },
+  {
+   "id": 24,
+   "name": "Gate of Mastermind",
+   "faq_name": "Gate 19 - Mastermind",
+   "floors": 27,
+   "boss_map": "0x48",
+   "boss_room": "Boss: Mastermind (Baramos)",
+   "floor_types": [
+    10,
+    11,
+    11
+   ],
+   "depth_tier": 3
+  },
+  {
+   "id": 25,
+   "name": "Gate of Control",
+   "faq_name": "Gate 20 - Control",
+   "floors": 30,
+   "boss_map": "0x49",
+   "boss_room": "Boss: Control (Zoma)",
+   "floor_types": [
+    11,
+    12,
+    12
+   ],
+   "depth_tier": 3
+  },
+  {
+   "id": 26,
+   "name": "Gate of Extinction",
+   "faq_name": "Gate 21 - Extinction",
+   "floors": 30,
+   "boss_map": "0x4A",
+   "boss_room": "Boss: Extinction (Pizzaro)",
+   "floor_types": [
+    11,
+    12,
+    12
+   ],
+   "depth_tier": 3
+  },
+  {
+   "id": 27,
+   "name": "Gate of Sleep",
+   "faq_name": "Gate 22 - Sleep",
+   "floors": 30,
+   "boss_map": "0x4B",
+   "boss_room": "Boss: Sleep (Esterk)",
+   "floor_types": [
+    11,
+    13,
+    13
+   ],
+   "depth_tier": 3
+  },
+  {
+   "id": 28,
+   "name": "Bazaar Edge Gate",
+   "faq_name": "Bazaar Gate 2",
+   "floors": 30,
+   "boss_map": "0x4C",
+   "boss_room": "Boss: Bazaar Edge (Mirudraas)",
+   "floor_types": [
+    12,
+    13,
+    13
+   ],
+   "depth_tier": 3
+  },
+  {
+   "id": 29,
+   "name": "Arena - Right Gate",
+   "faq_name": "Goopi's Gate 2",
+   "floors": 27,
+   "boss_map": "0x4D",
+   "boss_room": "Boss: Arena Right (Mudou)",
+   "floor_types": [
+    13,
+    14,
+    14
+   ],
+   "depth_tier": 3
+  },
+  {
+   "id": 30,
+   "name": "Old Man's Gate",
+   "faq_name": "Grandpa's Gate",
+   "floors": 30,
+   "boss_map": "0x4E",
+   "boss_room": "Boss: Grandpa's Gate (DeathMore)",
+   "floor_types": [
+    14,
+    14,
+    14
+   ],
+   "depth_tier": 3
+  },
+  {
+   "id": 31,
+   "name": "Unused Gate",
+   "faq_name": "??? (99 floors)",
+   "floors": 99,
+   "boss_map": "0x4F",
+   "boss_room": "Boss: Unused (DarkDrium)",
+   "floor_types": [
+    15,
+    15,
+    15
+   ],
+   "depth_tier": 3
+  }
+ ]
 }

@@ -26,6 +26,7 @@ from PySide6.QtGui import QBrush, QColor, QFont, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import QGraphicsPixmapItem, QGraphicsScene, QGraphicsView
 
 from editor2.core import animation as ANIM
+from editor2.core import gates as G
 from editor2.core.document import val, metatile_pals, pal_value, metatile_key
 from editor2.core.render_project import SCREEN_H, SCREEN_W
 from editor2.app.session import REPO
@@ -47,12 +48,15 @@ MARKER = {'npc': QColor(0, 200, 255), 'spawn': QColor(255, 170, 40),
           'door': QColor(0, 230, 200), 'door_open': QColor(255, 150, 40),
           'door_dead': QColor(255, 40, 40),
           'examine': QColor(255, 210, 60),
-          'step': QColor(255, 140, 200)}
+          'step': QColor(255, 140, 200),
+          # S100 (P3.7b): gate rooms
+          'stairs': QColor(170, 120, 255), 'gate_arrival': QColor(80, 245, 255)}
 MARKER_TEXT = {'spawn': 'X!', 'exit': '→', 'walkon': 'T', 'special': '?',
                'redirect': 'R', 'entrance': 'IN', 'door': 'D', 'door_open': 'D?',
                'door_dead': 'D!',
                'examine': 'X',
-               'step': 'T'}
+               'step': 'T',
+               'stairs': 'S↓', 'gate_arrival': 'G'}
 SEL = QColor(255, 230, 0)
 
 
@@ -372,6 +376,7 @@ class RoomCanvas(QGraphicsView):
                     self.attr_lid = cand
             self._build_markers(st)
             self._mark_entrances(room)
+            self._mark_gate_arrival(room)
         self._update_anim()
         self._render()
 
@@ -444,12 +449,27 @@ class RoomCanvas(QGraphicsView):
                     label = (f"door '{name}' — NEVER FIRES: the {c[0]} edge scrolls into "
                              f"screen {c[1]}; drag it one cell in")
                 self.markers.append((kind, int(e['x']), int(e['y']), None, label, ('exit', i, e)))
+            elif G.is_stairs_down(e):
+                self.markers.append(('stairs', int(e['x']), int(e['y']), None,
+                                     'Stairs down — the next floor of the gate dive '
+                                     '(works while the room is served inside a gate)',
+                                     ('exit', i, e)))
             else:
                 self.markers.append(('exit', int(e['x']), int(e['y']), None,
                                      f"one-way exit → {e.get('dest')} screen "
                                      f"{val(e.get('screen_byte', 0)) & 0x0F} "
                                      f"({e.get('spawn_x')},{e.get('spawn_y')})",
                                      ('exit', i, e)))
+
+    def _mark_gate_arrival(self, room):
+        """S100: where the player appears when the room is served on a gate
+        floor (room-level `gate_arrival`, shown on its screen)."""
+        arr = room.get('gate_arrival') if room else None
+        if arr and int(arr.get('screen', 0)) == int(self.key):
+            self.markers.append(('gate_arrival', int(arr['x']), int(arr['y']), None,
+                                 'Gate arrival — the player appears here when the room is '
+                                 'served on a gate floor (drag to move)',
+                                 ('gate_arrival', 0, arr)))
 
     def select_marker(self, kind, index):
         """Re-select the marker whose ref is (kind, index) — 'npc' or
@@ -888,8 +908,9 @@ class RoomCanvas(QGraphicsView):
             # S97: NPC / spawn markers of an editable custom room drag to move
             # S98: doors, one-way exits and examine/step spots too
             if (m and m[0] in ('npc', 'spawn', 'examine', 'step', 'door', 'door_open',
-                               'door_dead', 'exit')
-                    and not self.is_vanilla() and m[5] and m[5][0] in ('npc', 'exit')):
+                               'door_dead', 'exit', 'stairs', 'gate_arrival')
+                    and not self.is_vanilla() and m[5]
+                    and m[5][0] in ('npc', 'exit', 'gate_arrival')):
                 self._drag = [m[5], cell, cell]
             self.viewport().update()
             if m:

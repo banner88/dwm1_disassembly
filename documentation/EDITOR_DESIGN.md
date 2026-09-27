@@ -747,6 +747,55 @@ The gate system as an authorable object; every element decoded
 - Editing a VANILLA gate's row = Layer A-lite same-size edit; new gate
   slots beyond 32 = a measured capacity question (G-M box).
 
+**As built S100 (P3.7b part 1 — custom rooms on gate floors; built,
+PyBoy-verified, NOT yet user-tested).** User decisions S100: most custom gate
+rooms are special-function or boss rooms without battles (fully hand-authored
+"pseudo-gates" are ordinary rooms + doors — not this feature); "at most once per
+dive" wanted; saving replicates vanilla (can save in special rooms inside gates,
+not on random floors, not in boss rooms); the first floor stays the gate's own;
+music: the gate's OR the room's own; the example project serves `gate_rotation`
+on Villager floors 2-3 at 50 %.
+- **Gates tab** (`editor2/app/gates_tab.py`): left, the 32 gates with ROM names
+  and floor counts (★n = rules); right, the gate line (floors, boss room, depth
+  tier, floor-type rows), **Custom rooms in this gate — tried top-down** (room,
+  floors, chance, once / flag conditions, "room ready?" with the readiness notes;
+  Add… / Edit… / Remove / ▲ ▼ / Open room), and the **Floor plan**: every floor
+  with what the game serves in ONE dive — each custom room's chance of being the
+  one served, computed floor by floor through the dive (an exact walk over which
+  once-per-dive rooms were already served, like the engine's mask), then the
+  vanilla remainder ("maze", or on floors 3, 6, 9 … "maze, or a special room
+  (~50 %)"; "boss floor"); a tick box switches between "flag conditions hold" and
+  "do not hold" (flags changing mid-dive are not modelled). The rule dialog: room
+  (with its readiness), any floor / floors a-b (range limited to 2 .. floors-1),
+  chance 1-100 %, "at most once per dive" (ON for a new rule — S100 r2), flag conditions (+ New named flag…).
+- **Rooms tab**: inspector group **"Inside gates — served as a gate floor"**
+  (`rooms/gate_panel.py`): where the room is served, the **arrival** cell
+  (Selected cell / Clear; the canvas shows a draggable teal **G**), the Stairs down
+  count, **saving allowed here**, **battles** (off / follow the gate — the dive's
+  own monsters / fixed pool, refused for gate rooms), **music** (no song = the
+  gate's music keeps playing; a project song; or a raw id), readiness, and
+  "Gates tab…" (opens the gate serving it). **Stairs down** is placed from
+  Selection → More ▾ → "Stairs down here" (purple **S↓** marker, draggable; the
+  object panel explains it); the World graph skips stairs rows.
+- Every edit is one undo step (SnapshotCommand); `EDITOR_REVISION` 'S100' (r3: 'S100r3').
+- **S100 r3 (user 15:11; built, NOT yet user-tested).** "Stairs down here" also
+  PAINTS the cell with the vanilla next-floor well (`gates.WELL_SRC_MAP` $51,
+  slots $2C-$2F; its plain surround replaced by the floor already on the cell,
+  so it sits on any floor in the cell's palette), brought into the room's
+  tileset once and listed in its metatiles as "Next floor down (well)"; if the
+  tileset is full the stairs still work and the status line says why. The
+  gate group moved OUT of Room / screen / selection into its own foldable
+  section **"Inside gates (gate floor)"** (hidden for vanilla rooms; the
+  splitter state key is now `ui/rooms_right_split5`). Every inspector combo is
+  sized to a short minimum (`inspector.narrow_combo`, popups keep full texts):
+  the animation combo alone had made the inspector ~1,500 px wide.
+- Acceptance (machine half MET): test_canvas v7 `--rom` (GUI authoring on a
+  fresh project → PyBoy from a scripted new game) + test_compiler S100 cases;
+  the demo ROM on the user's save (GATE_GENERATION §7.6 "Measured end to end").
+- Part 2 (open, ROADMAP P3.7b part 2): per-gate settings (floor count, floor
+  weighting rows, depth tier, monster-pool binding), a custom boss floor
+  (template + boss fight/join + no saving), gate entrances / unlock triggers.
+
 ### 5.1c Triggers (v2.1 — first-class concept, user spec S90)
 
 Authored as sentences: **"When [flag set / quest state / item owned] →

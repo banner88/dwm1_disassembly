@@ -181,6 +181,27 @@ class TeleportPanel(QGroupBox):
         self._dest = None
 
     def show_exit(self, doc, rend, row, presence, editable=True, note=''):
+        from editor2.core import gates as G
+        if G.is_stairs_down(row):                  # S100 (P3.7b): gate rooms
+            self.setTitle('Stairs down')
+            self._dest = None
+            self.info.setText('the next floor of the gate being dived')
+            self.what.setText('Stepping on this cell takes the player down one floor — the '
+                              "gate's maze, a special room, another custom room, or the boss. "
+                              'It only works while this room is served inside a gate (Gates '
+                              'tab); anywhere else it does nothing useful.')
+            if presence and len(presence) > 1:
+                self.states.show_states(presence, 'stairs present in state {n} of this screen')
+                self.form.setRowVisible(self.states, True)
+            else:
+                self.form.setRowVisible(self.states, False)
+            self.btn_del.setEnabled(editable)
+            self.states.setEnabled(editable)
+            self.btn_go.setEnabled(False)
+            self.note.setText(note)
+            self.note.setVisible(bool(note))
+            return
+        self.setTitle('One-way exit / teleport')
         dest = str(row.get('dest', ''))
         sb = val(row.get('screen_byte', 0))
         k = sb & 0x0F

@@ -25,7 +25,7 @@ TEMPLATE_SIZE = {
                  # (283 S53 -> 348 S70 -> 358 S70v3 (+2x5B wCustomY7Cmp arming): entry-7 dw + VanillaExitResolve +
                  # factored CopyExitListToBuffer in the template head; 383 S94: VanillaExitResolve rows keyed
                  # by (mapID, screen) — `db mapID, screen` with $FF = any screen)
-    0x71: 164,    # addr(Custom26DDTable)-$4000, S99 (142 S64 + entry-3 dw + CustomAnimSource 20 B; measured from the S99 reference game.sym). Prev 142 S64 (S55 116 + entry-2 dw + CustomRoomBGMResolve; measured from the S64 reference game.sym)
+    0x71: 395,    # addr(Custom26DDTable)-$4000, S100 (164 S99 + entries 4/5 dw + CustomGateInsert + CustomRoomFlags + entry-1 follow-gate test; measured from the S100 reference game.sym). Prev 164 S99 (142 S64 + entry-3 dw + CustomAnimSource 20 B; measured from the S99 reference game.sym). Prev 142 S64 (S55 116 + entry-2 dw + CustomRoomBGMResolve; measured from the S64 reference game.sym)
 }
 BANK_SIZE = 0x4000
 
@@ -150,6 +150,9 @@ def validate(prj, generated=None):
                 f"room {rid}: no `animation` set — it runs Castle's handler "
                 "(the pre-S99 behaviour: tiles 77-78 roll). Set 'none', "
                 "'source' or a vanilla map id (the editor migrates on open)")
+
+    # ------------------------------------------ gate insertion (S100, P3.7b)
+    _validate_gates(prj, rooms, errors, warnings)
 
     # ------------------------------------------------- per-room structure
     for r in rooms:
@@ -842,3 +845,97 @@ def _validate_accounting(prj, generated, errors, warnings):
                 warnings.append(
                     f"bank ${bank:02X}: {BANK_SIZE - total} bytes free "
                     "(under 256) — nearly full")
+
+
+def _validate_gates(prj, rooms, errors, warnings):
+    """custom.gate_inserts[] + the rooms they serve (S100, ROADMAP P3.7b;
+    PROJECT_COMPILER §2.16). Engine facts: GATE_GENERATION §7.6."""
+    from . import gates as G
+    from .project import FLAG_PERSIST_LIMIT
+    for r in rooms:
+        if 'can_save' in r and not isinstance(r['can_save'], bool):
+            errors.append(f"room {r.get('id')}: can_save must be true/false")
+        enc = r.get('encounters') or {}
+        if enc.get('follow_gate') and not enc.get('enabled'):
+            warnings.append(f"room {r.get('id')}: encounters.follow_gate set but "
+                            "encounters are not enabled — no battles")
+    try:
+        rows = prj.gate_insert_rows()
+    except Exception as e:
+        errors.append(str(e))
+        return
+    served = {}
+    for row in rows:
+        served.setdefault(row['room_id'], []).append(row)
+        for idx, _clr in row['terms']:
+            if idx >= FLAG_PERSIST_LIMIT:
+                warnings.append(
+                    f"custom.gate_inserts[{row['index']}]: tests flag "
+                    f"{F.hexw(idx)} — $0278+ is not saved (EVENT_FLAGS.md)")
+    # a rule that can never fire: an earlier rule on the same gate always
+    # wins on every floor it covers (100 %, no flags, not once-per-dive)
+    for j, b in enumerate(rows):
+        for a in rows[:j]:
+            if (a['gate'] == b['gate'] and a['chance'] >= 100 and not a['terms']
+                    and not a['once_bit'] and a['first'] <= b['first']
+                    and b['last'] <= a['last']):
+                warnings.append(
+                    f"custom.gate_inserts[{b['index']}] ({b['room_id']}) can never "
+                    f"be served: rule {a['index']} ({a['room_id']}) always takes "
+                    f"gate {a['gate']} floors {b['first']}-{b['last']} (100 %, no "
+                    "flag terms, not once-per-dive)")
+                break
+    for rid, rrows in served.items():
+        r = prj.room_by_id(rid)
+        stairs, other = 0, []
+        for k, scr in prj.room_screens(r).items():
+            for st in prj.screen_states(scr):
+                for e in st.get('exits', []) or []:
+                    if G.is_stairs_down(e):
+                        stairs += 1
+                    elif 'dest' in e:
+                        other.append((k, e.get('x'), e.get('y')))
+        if not stairs:
+            errors.append(
+                f"room {rid}: served inside gates (custom.gate_inserts) but has "
+                "no Stairs down exit — the player could never leave the floor")
+        if other:
+            k, x, y = other[0]
+            warnings.append(
+                f"room {rid}: served inside gates but has {len(other)} ordinary "
+                f"exit(s) (first: screen {k} ({x},{y})) — walking through one "
+                "leaves the dive the way a door does")
+        mid = F.val(r['mapID'])
+        ways_in = []
+        for r2 in prj.rooms:
+            if r2 is r or r2.get('placeholder'):
+                continue
+            for k2, scr2 in prj.room_screens(r2).items():
+                for st2 in prj.screen_states(scr2):
+                    for e2 in st2.get('exits', []) or []:
+                        try:
+                            if 'dest' in e2 and not G.is_stairs_down(e2) \
+                                    and prj.resolve_dest(e2['dest']) == mid:
+                                ways_in.append(f"room {r2.get('id')}")
+                        except Exception:
+                            pass
+        for rd in prj.custom.get('entrance_redirects') or []:
+            try:
+                if prj.resolve_dest(rd.get('dest')) == mid:
+                    ways_in.append(f"vanilla map {rd.get('mapID')}")
+            except Exception:
+                pass
+        if ways_in:
+            warnings.append(
+                f"room {rid}: served inside gates but also reachable by a door "
+                f"({sorted(set(ways_in))[0]}) — entered that way, outside a dive, its "
+                "Stairs down drops the player into a floor of the last gate dived")
+        enc = r.get('encounters') or {}
+        if enc.get('enabled') and not enc.get('follow_gate'):
+            errors.append(
+                f"room {rid}: served inside gates with a FIXED encounter pool "
+                f"(gate {enc.get('gate_id')}, floor {enc.get('floor')}) — the pool "
+                "is pinned by rewriting the current gate/floor every step, so the "
+                "next floor would belong to that gate. Use \"follow the gate\" "
+                "(encounters.follow_gate) or turn encounters off")
+

@@ -1,6 +1,10 @@
 # DWM1 Complete Gate Reference
 # Source: Game FAQ, verified against gameplay
-# Internal gate ID → Gate name mapping verified via encounter pool cross-reference
+# Internal gate ID → Gate name mapping: CORRECTED S100 against the ROM's gate-indexed
+# GateFloorDataTable ($16:$70A6: floor count byte 3 + boss map byte 4) — keys 12-17 were
+# in FAQ chapter order (Arena-Left, Joy, Wisdom, Medal, Happiness, Temptation) instead of
+# ROM id order; Medal (19) and Mastermind (27) floor counts fixed. The ROM-derived list is
+# extracted/gate_names.json (tools/map_gate_names.py) — prefer it; this file is hand data.
 #
 # Format: gate_id, name, floors, boss_species, boss_name, boss_recruitable
 
@@ -17,19 +21,19 @@ GATES = {
     9:  {"name": "Gate of Strength",      "floors": 11, "boss": "StoneMan",  "boss_name": None,    "recruitable": False, "auto_join": False},
     10: {"name": "Gate of Anger",         "floors": 11, "boss": "BattleRex", "boss_name": "Wrex",  "recruitable": True,  "auto_join": True},
     11: {"name": "Farm Gate",             "floors": 12, "boss": "Copycat",   "boss_name": "Mime",  "recruitable": True,  "auto_join": True},
-    12: {"name": "Arena - Left Gate",     "floors": 16, "boss": "Digster",   "boss_name": "Ebi",   "recruitable": True,  "auto_join": True},
-    13: {"name": "Gate of Joy",           "floors": 14, "boss": "FunkyBird", "boss_name": "Func",  "recruitable": True,  "auto_join": True},
-    14: {"name": "Gate of Wisdom",        "floors": 15, "boss": "SkyDragon", "boss_name": None,    "recruitable": False, "auto_join": False},
-    15: {"name": "Medal Gate",            "floors": 16, "boss": "KingSlime", "boss_name": "Kix",   "recruitable": True,  "auto_join": False},
-    16: {"name": "Gate of Happiness",     "floors": 18, "boss": "Jamirus",   "boss_name": None,    "recruitable": False, "auto_join": False},
-    17: {"name": "Gate of Temptation",    "floors": 20, "boss": "Servant",   "boss_name": "Mats",  "recruitable": True,  "auto_join": False},
+    12: {"name": "Gate of Joy",           "floors": 14, "boss": "FunkyBird", "boss_name": "Func",  "recruitable": True,  "auto_join": True},
+    13: {"name": "Gate of Wisdom",        "floors": 15, "boss": "SkyDragon", "boss_name": None,    "recruitable": False, "auto_join": False},
+    14: {"name": "Arena - Left Gate",     "floors": 16, "boss": "Digster",   "boss_name": "Ebi",   "recruitable": True,  "auto_join": True},
+    15: {"name": "Gate of Happiness",     "floors": 18, "boss": "Jamirus",   "boss_name": None,    "recruitable": False, "auto_join": False},
+    16: {"name": "Gate of Temptation",    "floors": 20, "boss": "Servant",   "boss_name": "Mats",  "recruitable": True,  "auto_join": False},
+    17: {"name": "Medal Gate",            "floors": 19, "boss": "KingSlime", "boss_name": "Kix",   "recruitable": True,  "auto_join": False},
     18: {"name": "Gate of Labyrinth",     "floors": 23, "boss": "DarkHorn",  "boss_name": "Dark",  "recruitable": True,  "auto_join": False},
     19: {"name": "Gate of Judgement",     "floors": 25, "boss": "Akubar",    "boss_name": None,    "recruitable": False, "auto_join": False},
     20: {"name": "Library Gate",          "floors": 25, "boss": "Orochi",    "boss_name": None,    "recruitable": False, "auto_join": False},
     21: {"name": "Gate of Reflection",    "floors": 29, "boss": "Durran",    "boss_name": None,    "recruitable": False, "auto_join": False},
     22: {"name": "Gate of Ambition",      "floors": 30, "boss": "DracoLord",  "boss_name": None,   "recruitable": False, "auto_join": False},
     23: {"name": "Gate of Demolition",    "floors": 29, "boss": "Hargon/Sidoh", "boss_name": None, "recruitable": False, "auto_join": False},
-    24: {"name": "Gate of Mastermind",    "floors": 28, "boss": "Baramos",   "boss_name": None,    "recruitable": False, "auto_join": False},
+    24: {"name": "Gate of Mastermind",    "floors": 27, "boss": "Baramos",   "boss_name": None,    "recruitable": False, "auto_join": False},
     25: {"name": "Gate of Control",       "floors": 30, "boss": "Zoma",      "boss_name": None,    "recruitable": False, "auto_join": False},
     26: {"name": "Gate of Extinction",    "floors": 30, "boss": "Pizzaro",   "boss_name": None,    "recruitable": False, "auto_join": False},
     27: {"name": "Gate of Sleep",         "floors": 30, "boss": "Esterk",    "boss_name": None,    "recruitable": False, "auto_join": False},
@@ -54,12 +58,12 @@ GATE_MONSTERS = {
     9:  {"MudDoll": "1-5", "TreeSlime": "1-3,6-10", "SkulRider": "1-8", "FairyDrak": "1-5,9-10", "WingTree": "4-10", "DrakSlime": "6-10"},
     10: {"GiantWorm": "1-3", "GiantSlug": "1-5", "Poisongon": "1-8", "CatFly": "1-10", "Eyeder": "4-10", "Putrepup": "6-10", "DrakSlime": "9-10"},
     11: {"Butterfly": "1-3", "FairyDrak": "1-5", "MadRaven": "1-8", "Skullroo": "1-11", "Mudron": "4-5,9-11", "DrakSlime": "6-11", "Facer": "6-11"},
-    12: {"WingSlime": "1-5", "MedusaEye": "1-6", "MadCandle": "1-12", "MadGopher": "1-15", "Slabbit": "6-15", "WindBeast": "9-15", "Gasgon": "13-15"},
-    13: {"Snaily": "1-5", "Gulpple": "1-8", "Saccer": "1-12", "MadPecker": "1-8,13", "EyeBall": "6-13", "Babble": "9-13", "Mummy": "9-13"},
-    14: {"Facer": "1-5", "Tonguella": "1-14", "FloraJay": "1-14", "Pteranod": "1-14", "Armorpede": "6-14"},
-    15: {"Gismo": "1-8", "NiteWhip": "1-8", "BoxSlime": "1-18", "Orc": "1-18", "Reaper": "6-18", "RogueNite": "6-18"},
-    16: {"Gasgon": "1-4", "Oniono": "1-12", "Pixy": "1-16", "Gophecada": "1-17", "DeadNite": "5-17", "StubBird": "13-17", "SpikeyBoy": "17"},
-    17: {"SpikeyBoy": "1-8", "Mommonja": "1-12", "KingCobra": "1-16", "SlimeNite": "1-19", "StagBug": "9-19", "MistyWing": "13-19", "DarkEye": "17-19"},
+    12: {"Snaily": "1-5", "Gulpple": "1-8", "Saccer": "1-12", "MadPecker": "1-8,13", "EyeBall": "6-13", "Babble": "9-13", "Mummy": "9-13"},
+    13: {"Facer": "1-5", "Tonguella": "1-14", "FloraJay": "1-14", "Pteranod": "1-14", "Armorpede": "6-14"},
+    14: {"WingSlime": "1-5", "MedusaEye": "1-6", "MadCandle": "1-12", "MadGopher": "1-15", "Slabbit": "6-15", "WindBeast": "9-15", "Gasgon": "13-15"},
+    15: {"Gasgon": "1-4", "Oniono": "1-12", "Pixy": "1-16", "Gophecada": "1-17", "DeadNite": "5-17", "StubBird": "13-17", "SpikeyBoy": "17"},
+    16: {"SpikeyBoy": "1-8", "Mommonja": "1-12", "KingCobra": "1-16", "SlimeNite": "1-19", "StagBug": "9-19", "MistyWing": "13-19", "DarkEye": "17-19"},
+    17: {"Gismo": "1-8", "NiteWhip": "1-8", "BoxSlime": "1-18", "Orc": "1-18", "Reaper": "6-18", "RogueNite": "6-18"},
     18: {"Chamelgon": "1-5", "CactiBall": "1-15", "TailEater": "1-10,16-20", "RockSlime": "1-22", "Gismo": "1-22", "DuckKite": "6-22", "AgDevil": "6-22", "WindMerge": "21-22"},
     19: {"WeedBug": "1-5", "TreeBoy": "1-20", "HammerMan": "1-24", "MadGoose": "1-10,21-24", "SpotKing": "1-24", "Droll": "6-15", "LizardFly": "11-24", "GiantMoth": "16-24"},
     20: {"AmberWeed": "1-5", "CurseLamp": "1-10", "ArmyCrab": "1-20", "ArcDemon": "1-24", "MadSpirit": "1-10,16-24", "WildApe": "6-24", "Tortragon": "11-24", "LandOwl": "21-24"},

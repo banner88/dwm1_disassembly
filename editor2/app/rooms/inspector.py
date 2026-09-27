@@ -21,6 +21,24 @@ from editor2.core.document import val
 VANILLA_PAL = '(borrow vanilla source palette)'
 
 
+def narrow_combo(combo, chars=14):
+    """S100 r3: size a combo to a short minimum instead of its longest item;
+    the popup list keeps the full width of its texts (re-measured whenever
+    the items change)."""
+    combo.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
+    combo.setMinimumContentsLength(chars)
+
+    def fit_view(*_a):
+        v = combo.view()
+        v.setMinimumWidth(v.sizeHintForColumn(0) + 24 if combo.count() else 0)
+    m = combo.model()
+    m.rowsInserted.connect(fit_view)
+    m.rowsRemoved.connect(fit_view)
+    m.modelReset.connect(fit_view)
+    m.dataChanged.connect(fit_view)
+    fit_view()
+
+
 def _lbl(text=''):
     l = QLabel(text)
     l.setWordWrap(True)
@@ -46,6 +64,7 @@ class Inspector(QWidget):
     addSpotRequested = Signal(object, str)     # (cx, cy), 'examine'|'step'  S98
     removeDoorRequested = Signal(str)          # door id  S98
     goDoorRequested = Signal(str)              # door id: select its end here  S98
+    addStairsRequested = Signal(object)        # (cx, cy)  S100 gate rooms
     animationChosen = Signal(str)              # 'none' | 'source' | '0xNN'  S99
 
     def __init__(self, parent=None):
@@ -158,6 +177,13 @@ class Inspector(QWidget):
         self.entr_group = g
         self.lay.addWidget(g)
 
+        # ---- Inside gates (S100, P3.7b part 1). S100 r3 (user: "separate the
+        # gate stuff from 'room/screen/selection' with its own arrow button"):
+        # built here (the inspector still fills it) but NOT added to this
+        # layout — the Rooms tab shows it in its own foldable section.
+        from editor2.app.rooms.gate_panel import GateRoomGroup
+        self.gate_group = GateRoomGroup()
+
         # ---- State rules (S97, P3.5a) — room level
         from editor2.app.rooms.rules_panel import RulesGroup
         self.rules = RulesGroup()
@@ -224,6 +250,7 @@ class Inspector(QWidget):
         m = QMenu(self.sel_more)
         m.addAction('One-way teleport here…', self._add_exit_here)
         m.addAction('Step-on trigger here…', lambda: self._emit_spot('step'))
+        m.addAction('Stairs down here (gate rooms)', lambda: self._emit_cell(self.addStairsRequested))
         self.sel_more.setMenu(m)
         self.sel_add_row = QWidget()
         ar = QHBoxLayout(self.sel_add_row)
@@ -264,6 +291,13 @@ class Inspector(QWidget):
         f.addRow('used by', self.l_users)
         self.lay.addWidget(g)
         self.lay.addStretch(1)
+        # S100 r3 (user: "'room/screen/selection' is enormous and needs to be
+        # scrolled both down and to the right"): a combo is as wide as its
+        # LONGEST item (the animation list reached ~1,400 px) — every combo
+        # here gets a short minimum; its open list still shows full texts
+        for c in body.findChildren(QComboBox) + self.gate_group.findChildren(QComboBox):
+            narrow_combo(c)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
     # ------------------------------------------------------------ updates
     def show_vanilla(self, renderer, mid, key):
@@ -307,6 +341,7 @@ class Inspector(QWidget):
         self.r_note.setVisible(True)
         self.entr_group.setVisible(False)
         self.rules.setVisible(False)
+        self.gate_group.setVisible(False)
         self._vanilla_view = (mid, key)
         self.s_key.setText(f'{key}')
         self.s_layout.setText('vanilla layout (read-only)')
@@ -364,7 +399,8 @@ class Inspector(QWidget):
         self.r_attr.setText(str(at.get('id') if at and 'id' in at else at or 'none'))
         enc = room.get('encounters')
         self.r_enc.setText(
-            f"gate {enc.get('gate_id')} floor {enc.get('floor')}"
+            ("follows the gate being dived" if enc.get('follow_gate')
+             else f"gate {enc.get('gate_id')} floor {enc.get('floor')}")
             if enc and enc.get('enabled') else 'off')
         self.r_music.setText(str(room.get('music', 'default')))
         self._fill_anim(doc, renderer, room)
@@ -375,6 +411,9 @@ class Inspector(QWidget):
         self.show_entrances(doc, renderer, room)
         self.rules.setVisible(not room.get('placeholder'))
         self.rules.show_room(doc, room, key, state_idx)
+        self.gate_group.setVisible(not room.get('placeholder'))
+        if not room.get('placeholder'):
+            self.gate_group.show_room(doc, room)
         self.show_screen(doc, renderer, room, key, state_idx)
         self._building = False
 

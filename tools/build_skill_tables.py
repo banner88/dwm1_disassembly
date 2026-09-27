@@ -5,7 +5,7 @@ round-trip is byte-identical to the original ROM (the keystone guarantee).
 Tables covered (the numeric, fully-owned ones):
   - SkillFunctionTable   $52:$4011   222 x dw (handler_addr)
   - SkillMPCostTable     $07:$570C   222 x u16 LE  (ALL -> 999)
-  - SkillLearnReqTable   $06:$50E0   222 x 18B record
+  - SkillLearnReqTable   $06:$50E0   218 x 18B record (rows $DA-$DD read bank $06 code — S100)
   - SkillRecordPtrTable  $54:$4013   222 x dw  (= $41CF + id*19; dispatch entries 9..230)
   - SkillRecordData      $54:$41CF   222 x 19B per-skill PARAMETER block
                                      (power/targeting/message; handler is the shared
@@ -73,6 +73,17 @@ def emit_mp_bytes(recs):
     return bytes(out)
 
 
+# S100 (DOC_AUDIT S100): SkillLearnReqTable has only 218 REAL rows ($00-$D9,
+# $06:$50E0-$6033). The 72 bytes where rows $DA-$DD "would" be are bank $06
+# entry 6 FieldStateDispatch (the per-frame field router) — the game's own
+# learn lookup for those ids reads this code (never learnable). The records
+# keep reading them (that IS the game's view), but a WRITE that changes them
+# would corrupt the field loop, so emission refuses any difference.
+LEARN_ROWS = 218
+FIELD_STATE_DISPATCH_BYTES = bytes.fromhex(
+    "fa8fc8b7c0faebc8cb6fc2876bcb7fc29562cb67c2b262cb47c2a967cb4f2805210007d7c9cb5f2805210019d7c9cb772805210313d7c9cb57c2f662fae8d9b7c28462fad7d8b7c2")
+
+
 def emit_learn_bytes(recs):
     out = bytearray()
     for r in recs:
@@ -86,6 +97,11 @@ def emit_learn_bytes(recs):
         rec += bytes(pre[:5])
         assert len(rec) == LEARN_REC, len(rec)
         out += rec
+    tail = bytes(out[LEARN_ROWS * LEARN_REC:])
+    if tail and tail != FIELD_STATE_DISPATCH_BYTES[:len(tail)]:
+        raise SystemExit("build_skill_tables: learn rows $DA-$DD are NOT a table — they are "
+                         "bank $06 FieldStateDispatch code ($6034). Refusing to emit a change "
+                         "(DOC_AUDIT S100).")
     return bytes(out)
 
 
@@ -147,8 +163,9 @@ def emit_asm(which):
             mp = MP_ALL if r["mp_cost"] == "ALL" else int(r["mp_cost"])
             print(f"    dw {mp:>3}  ; [{r['id']:3d}] {r['name']}")
     elif which == "learn":
-        print("SkillLearnReqTable:  ; $06:$50E0 — 222 x 18B (lvl u8; hp/mp/atk/def/agl/int u16; 5 prereq ids $FF=none)")
-        for r in recs:
+        print("SkillLearnReqTable:  ; $06:$50E0 — 218 x 18B ($00-$D9; lvl u8; hp/mp/atk/def/agl/int u16; 5 prereq ids $FF=none)")
+        emit_learn_bytes(recs)          # S100 guard: rows $DA-$DD must still equal the code bytes
+        for r in recs[:LEARN_ROWS]:
             L = r["learn"]
             pre = list(r["prereqs"]) + [0xFF] * (5 - len(r["prereqs"]))
             stats = ", ".join(f"${L[k] & 0xFF:02X}, ${(L[k] >> 8) & 0xFF:02X}"

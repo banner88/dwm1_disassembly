@@ -1383,7 +1383,8 @@ BATTLE_SKILL_SYSTEM "Resistances are an ENEMY stat too").
 ### Skill-learn gating uses these, and it bites
 
 A skill is learnable only when level AND all six stat thresholds in
-`SkillLearnReqTable` (`$06:$50E0`, 222×18) are met. So a growth curve that is
+`SkillLearnReqTable` (`$06:$50E0`, 218×18 — S100: ids $DA-$DD have no row, their lookups read
+code = never learnable) are met. So a growth curve that is
 too flat can make a skill permanently unreachable even though it sits in the
 species' natural slots. Worked example (S76, guaranteeing a starter can heal):
 

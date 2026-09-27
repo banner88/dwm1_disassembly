@@ -542,3 +542,12 @@ wMournBoosted:: db ;deba — 1 if dead allies were found (triggers the boost
 wMournSlashes:: db ;debb — double-slash replay counter (starts at 2; decremented
                 ;   by QuakeAnimHold72's .mourn path each time $da82→1;
                 ;   release at 0). Transient to the cast-anim slot.
+; [S100] Gate dive state for once-per-dive custom gate rooms (bank $71 entry 4
+; CustomGateInsert, ROADMAP P3.7b). Outside the WRAM save image, so it rides
+; the explicit save through SRAM $BFCA/$BFCB (bank $73 entries 5/6, the
+; main-image detectors) — a save made in a special room mid-dive keeps which
+; once-per-dive rooms were already served. Boot-zeroed by ClearAllWRAM.
+; Reserve now 32 B, growth starts $DEBE.
+wGateDiveGate:: db ;debc — wGateID+1 of the dive in progress (0 = none)
+wGateDiveMask:: db ;debd — once-per-dive rule bits served this dive (per gate, max 8)
+

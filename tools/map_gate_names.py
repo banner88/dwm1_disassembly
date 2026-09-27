@@ -1,126 +1,144 @@
-"""Derive internal gate ID → gate name mapping by matching ROM boss data to known FAQ data.
+"""Internal gate ID -> gate name, derived from the gate-indexed ROM table (S100 rewrite).
 
-Each gate has a unique boss (except Gate of Demolition which has Hargon then Sidoh).
-We use the boss species as a key to match ROM gate IDs to real gate names.
+WHY THE REWRITE (S100, DOC_AUDIT S100): the old version keyed gate names on the
+boss FIGHT/JOIN redirect table at $14:$4897, read as if it were indexed by gate
+id. It is not: that table has one row per boss (the Gate of Demolition has two,
+Hargon and Sidoh), so every gate from 23 up came out one name late (23 "Demolition
+(Hargon)", 24 "Demolition (Sidoh)", 25 "Mastermind" ... 31 "Unused"). A second,
+hand-written list (tools/gate_reference.py) had its own error in the other
+direction (gates 12-17 in FAQ chapter order instead of ROM id order).
 
-Usage:
-  uv run python -m tools.map_gate_names
+THE GATE-INDEXED SOURCE: GateFloorDataTable ($16:$70A6, 32 x 8 B, indexed by
+wGateID — the loader at $16:$5B72 reads it with wGateID*8; GATE_GENERATION.md §1).
+Two of its fields identify a gate independently of each other:
+  byte 3 = last_floor (the gate's floor count INCLUDING the boss floor: the boss
+           floor is served when wCurrentFloor+1 == last_floor, wCurrentFloor
+           counting from 0) — cross-checked here against the FAQ "Levels: N"
+           box of every gate;
+  byte 4 = boss map type (the bank $0B room served on the boss floor) — named
+           through dwm/map_names.py.
+Every gate must agree on BOTH or the tool fails (non-zero exit).
+
+Output: extracted/gate_names.json
+  {"_generator": ..., "gates": [{"id", "name", "faq_name", "floors",
+    "boss_map", "boss_room", "floor_types", "depth_tier"} x 32]}
+Readers: tools/dump_room_data.py, tools/gen_encounter_db.py, editor2 Gates tab
+(editor2/core/gates.py).
+
+Usage:  python3 -m tools.map_gate_names [--check]
+  --check / --selftest  exit non-zero if extracted/gate_names.json differs from
+           the ROM derivation (verify_integrity check 5).
 """
 
 import json
+import sys
 from pathlib import Path
-from dwm.rom import ROM
-from dwm.text import decode
 
-rom = ROM(Path("data/DWM-original.gbc"))
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
+from dwm.map_names import MAP_NAMES  # noqa: E402
 
-BOSS_TABLE_BANK = 0x14
-BOSS_TABLE_OFFSET = 0x4897
-BOSS_TABLE_STRIDE = 4
-ENEMY_STATS_START = 0x4C1D
-ENEMY_STATS_SIZE = 25
-NAME_PTR_BANK = 0x41
-NAME_PTR_OFFSET = 0x4339
-BOSS_FLOOR_BANK = 0x16
-BOSS_FLOOR_OFFSET = 0x70A6
+ROM_PATH = ROOT / "data" / "DWM-original.gbc"
+OUT = ROOT / "extracted" / "gate_names.json"
 
-def load_monster_names():
-    names = {}
-    for i in range(256):
-        ptr_bytes = rom.read(NAME_PTR_BANK, NAME_PTR_OFFSET + i * 2, 2)
-        ptr = ptr_bytes[0] | (ptr_bytes[1] << 8)
-        if ptr < 0x4000 or ptr > 0x7FFF:
-            continue
-        raw = rom.read_until(NAME_PTR_BANK, ptr, 0xF0)
-        name, _ = decode(raw)
-        names[i] = name
-    return names
+GATE_TABLE_BANK, GATE_TABLE_ADDR, GATE_ROW = 0x16, 0x70A6, 8
 
-NAMES = load_monster_names()
-
-# Definitive FAQ: gate name → boss species name
-# This mapping is confirmed correct by the user
-BOSS_TO_GATE = {
-    "Healer":    "Gate of Beginning",
-    "Dragon":    "Gate of Villager",
-    "Golem":     "Gate of Talisman",
-    "MadKnight": "Bazaar Gate",
-    "MadCat":    "Gate of Memories",
-    "FaceTree":  "Gate of Bewilder",
-    "FangSlime": "Gate of Peace",
-    "BigEye":    "Gate of Bravery",
-    "Gigantes":  "Well Gate",
-    "BattleRex": "Gate of Anger",
-    "StoneMan":  "Gate of Strength",
-    "Copycat":   "Farm Gate",
-    "Digster":   "Arena - Left Gate",
-    "FunkyBird": "Gate of Joy",
-    "SkyDragon": "Gate of Wisdom",
-    "KingSlime": "Medal Gate",
-    "Jamirus":   "Gate of Happiness",
-    "Servant":   "Gate of Temptation",
-    "DarkHorn":  "Gate of Labyrinth",
-    "Akubar":    "Gate of Judgement",
-    "Orochi":    "Library Gate",
-    "Durran":    "Gate of Reflection",
-    "DracoLord": "Gate of Ambition",
-    "Hargon":    "Gate of Demolition",
-    "Sidoh":     "Gate of Demolition",  # second boss, same gate
-    "Baramos":   "Gate of Mastermind",
-    "Zoma":      "Gate of Control",
-    "Pizzaro":   "Gate of Extinction",
-    "Esterk":    "Gate of Sleep",
-    "Mirudraas": "Bazaar Edge Gate",
-    "Mudou":     "Arena - Right Gate",
-    "DeathMore": "Old Man's Gate",
+# boss map type (ROM fact, GateFloorDataTable byte 4) -> (editor name, FAQ box
+# title, FAQ "Levels:" value). The FAQ column is the independent witness.
+BOSS_MAP_TO_GATE = {
+    0x30: ("Gate of Beginning", "Gate 1 - Beginning", 5),
+    0x31: ("Gate of Villager", "Gate 2 - Villager", 5),
+    0x32: ("Gate of Talisman", "Gate 3 - Talisman", 6),
+    0x33: ("Gate of Memories", "Gate 4 - Memories", 5),
+    0x34: ("Gate of Bewilder", "Gate 5 - Bewilder", 6),
+    0x35: ("Bazaar Gate", "Bazaar Gate", 9),
+    0x36: ("Gate of Peace", "Gate 6 - Peace", 8),
+    0x37: ("Gate of Bravery", "Gate 7 - Bravery", 9),
+    0x38: ("Well Gate", "Well Gate", 12),
+    0x39: ("Gate of Strength", "Gate 9 - Strength", 11),
+    0x3C: ("Gate of Anger", "Gate 8 - Anger", 11),
+    0x10: ("Farm Gate", "Monster Farm Gate", 12),        # boss = the Copycat House room
+    0x3B: ("Gate of Joy", "Gate 10 - Joy", 14),
+    0x3A: ("Gate of Wisdom", "Gate 11 - Wisdom", 15),
+    0x3D: ("Arena - Left Gate", "Goopi's Gate", 16),
+    0x3E: ("Gate of Happiness", "Gate 12 - Happiness", 18),
+    0x3F: ("Gate of Temptation", "Gate 13 - Temptation", 20),
+    0x40: ("Medal Gate", "Medal King's Gate", 19),        # boss room = KingSlime decision room
+    0x42: ("Gate of Labyrinth", "Gate 14 - Labyrinth", 23),
+    0x43: ("Gate of Judgement", "Gate 15 - Judgement", 25),
+    0x44: ("Library Gate", "Library Gate", 25),
+    0x45: ("Gate of Reflection", "Gate 16 - Reflection", 29),
+    0x46: ("Gate of Ambition", "Gate 17 - Ambition", 30),
+    0x47: ("Gate of Demolition", "Gate 18 - Demolition", 29),
+    0x48: ("Gate of Mastermind", "Gate 19 - Mastermind", 27),
+    0x49: ("Gate of Control", "Gate 20 - Control", 30),
+    0x4A: ("Gate of Extinction", "Gate 21 - Extinction", 30),
+    0x4B: ("Gate of Sleep", "Gate 22 - Sleep", 30),
+    0x4C: ("Bazaar Edge Gate", "Bazaar Gate 2", 30),
+    0x4D: ("Arena - Right Gate", "Goopi's Gate 2", 27),
+    0x4E: ("Old Man's Gate", "Grandpa's Gate", 30),
+    0x4F: ("Unused Gate", "??? (99 floors)", 99),
 }
 
-# Read all 32 boss table entries and match
-print(f"{'ID':>3s}  {'Boss Species':<14s}  {'Lv':>3s}  {'Fl':>3s}  {'Gate Name (derived)'}")
-print("-" * 60)
 
-gate_names = {}
-for gate in range(32):
-    # Read boss entry
-    data = rom.read(BOSS_TABLE_BANK, BOSS_TABLE_OFFSET + gate * 4, 4)
-    fight_eid = data[0]
+def derive(rom: bytes) -> dict:
+    base = GATE_TABLE_BANK * 0x4000 + GATE_TABLE_ADDR - 0x4000
+    gates, problems = [], []
+    for g in range(32):
+        row = rom[base + g * GATE_ROW: base + (g + 1) * GATE_ROW]
+        ft1, ft2, ft3, last, boss, _sx, _sy, tier = row
+        if boss not in BOSS_MAP_TO_GATE:
+            problems.append(f"gate {g}: boss map ${boss:02X} not in the name table")
+            continue
+        name, faq, faq_levels = BOSS_MAP_TO_GATE[boss]
+        if faq_levels != last:
+            problems.append(f"gate {g} ({name}): ROM floors {last} != FAQ Levels {faq_levels}")
+        gates.append({
+            "id": g,
+            "name": name,
+            "faq_name": faq,
+            "floors": last,
+            "boss_map": f"0x{boss:02X}",
+            "boss_room": MAP_NAMES.get(boss, f"map ${boss:02X}"),
+            "floor_types": [ft1, ft2, ft3],
+            "depth_tier": tier,
+        })
+    if len({x["boss_map"] for x in gates}) != len(gates):
+        problems.append("two gates share a boss map")
+    if problems:
+        raise SystemExit("map_gate_names: ROM/FAQ disagreement:\n  " + "\n  ".join(problems))
+    return {
+        "_generator": "tools/map_gate_names.py (S100) from data/DWM-original.gbc "
+                      "GateFloorDataTable $16:$70A6 (floors byte 3 + boss map byte 4), "
+                      "cross-checked vs FULL_FAQ.txt 'Levels:'",
+        "gates": gates,
+    }
 
-    # Get species
-    es_offset = ENEMY_STATS_START + fight_eid * ENEMY_STATS_SIZE
-    es_data = rom.read(BOSS_TABLE_BANK, es_offset, ENEMY_STATS_SIZE)
-    species_id = es_data[0]
-    species_name = NAMES.get(species_id, f"???#{species_id:02X}")
-    level = es_data[4]
 
-    # Get floor count
-    fl_data = rom.read(BOSS_FLOOR_BANK, BOSS_FLOOR_OFFSET + gate * 8, 8)
-    floors = fl_data[3]
+def load_names(path=OUT) -> dict:
+    """{gate id: name} from gate_names.json (any historical shape)."""
+    gn = json.loads(Path(path).read_text())
+    if isinstance(gn, dict) and "gates" in gn:
+        return {x["id"]: x["name"] for x in gn["gates"]}
+    if isinstance(gn, list):
+        return {i: (g.get("name") if isinstance(g, dict) else str(g)) for i, g in enumerate(gn)}
+    return {int(k): v for k, v in gn.items() if not str(k).startswith("_")}
 
-    # Match to gate name
-    gate_name = BOSS_TO_GATE.get(species_name)
-    if gate_name and gate == 31 and floors == 99:
-        gate_name = "Unused Gate (99 Floors)"
-    elif gate_name == "Gate of Demolition":
-        # Distinguish first and second boss
-        if species_name == "Hargon":
-            gate_name = "Gate of Demolition (Hargon)"
-        else:
-            gate_name = "Gate of Demolition (Sidoh)"
-    elif gate_name is None:
-        gate_name = f"??? (boss={species_name})"
 
-    gate_names[gate] = gate_name
-    print(f"{gate:3d}  {species_name:<14s}  {level:>3d}  {floors:>3d}  {gate_name}")
+def main():
+    rom = ROM_PATH.read_bytes()
+    data = derive(rom)
+    text = json.dumps(data, indent=1) + "\n"
+    if "--check" in sys.argv or "--selftest" in sys.argv:
+        if not OUT.exists() or OUT.read_text() != text:
+            raise SystemExit("map_gate_names --check: extracted/gate_names.json is stale")
+        print("map_gate_names --check: OK (32 gates, ROM floors == FAQ, boss maps unique)")
+        return
+    OUT.write_text(text)
+    for x in data["gates"]:
+        print(f"{x['id']:3d}  {x['floors']:3d} fl  boss {x['boss_map']}  {x['name']}")
+    print(f"wrote {OUT.relative_to(ROOT)}")
 
-# Save
-out = Path("extracted/gate_names.json")
-out.parent.mkdir(exist_ok=True)
-out.write_text(json.dumps(gate_names, indent=2))
-print(f"\nSaved to {out}")
 
-# Generate Python dict for editor
-print("\n# For editor.py GATE_NAMES:")
-print("GATE_NAMES = {")
-for gate in range(32):
-    print(f'    {gate}: "{gate_names[gate]}",')
-print("}")
+if __name__ == "__main__":
+    main()

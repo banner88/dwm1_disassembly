@@ -261,7 +261,9 @@ drivers; user ear-test clean).
   `CheckScreenLock` ← `InitFieldState` ← `GameInit` — runs on every map
   entry AND on save-load; the caller compares against `wCurrPlayingBGM`
   and `call nz, SetBGM`). Vanilla logic: `wInGateworld`≠0 → floor path
-  ($34, or `RoomBGMTable[wBossMapType]` on the boss floor); else mapID
+  ($34, or `RoomBGMTable[wBossMapType]` when `wCurrentFloor == wLastFloor−2` — the floor BEFORE
+  the boss floor, carried into the boss floor; CORRECTED S100, PyBoy: Bazaar Gate floors 7/8/9 =
+  $34/$0C/$0C — the doc used to say "on the boss floor"); else mapID
   <MAP_ITEMSP($50), ==MAP_COLISUM($52), or $5D–$60 → `RoomBGMTable
   [wMapID]`; mapID ≥$61 (incl. all custom rooms) → gate path — which is
   exactly why script `SetBGM` was transient in custom rooms. **RoomBGMTable

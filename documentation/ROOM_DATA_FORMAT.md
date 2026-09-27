@@ -313,7 +313,7 @@ Read by Entry 6 (runs EVERY step) for walk-on exit detection.
 | 0 | trigger_X (screen-local coordinate, compared with player position) |
 | 1 | trigger_Y (values 0 and 7 are treated as invalid and skipped) |
 | 2 | dest_map_type → written to $C96D |
-| 3 | gate_flag → written to $C96E (0=normal, 1=entering gate) |
+| 3 | gate_flag → written to $C96E (0=normal, 1=entering gate [dest = gate id], $80 = next floor of the dive [dest $00] — the special rooms' descent and the editor's Stairs down, GATE_GENERATION §7.5/§7.6) |
 | 4 | screen_byte (low nibble = spawn screen index, bit 7 = Y+8 flag) |
 | 5 | spawn_X at destination (added to offset table value) |
 | 6 | spawn_Y at destination (added to offset table value) |
@@ -741,6 +741,9 @@ Three RAM buffers used for tile/screen data:
 - **$C500** (512 bytes): Secondary tile layout (used during screen transitions)
 
 All three use the same LZSS decompressor (Call_000_14cf).
+Length limit (S100 r3): an extended back-reference's length is `byte + 19`
+computed in 8 bits, counted down with `dec/jr nz` — 256 max (byte 237 → 0);
+`tools/compress_tiles.py` MAX_COPY = 256 (PROJECT_COMPILER).
 ## Key Constants
 
 | Address | Purpose |

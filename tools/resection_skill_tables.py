@@ -4,7 +4,7 @@ resection_skill_tables.py — Phase D item (2b): convert the two S44-decoded ski
 tables from mgbdis fake instructions to real, labeled `dw`/`db` data.
 
   SkillMPCostTable    $07:$570C  222 x u16 LE   (999 = "ALL MP")
-  SkillLearnReqTable  $06:$50E0  222 x 18 B     (lvl u8; hp/mp/atk/def/agl/int u16 LE; 5 prereq ids, $FF = none)
+  SkillLearnReqTable  $06:$50E0  218 x 18 B (S100: was 222 — rows $DA-$DD are bank $06 entry-6 code)     (lvl u8; hp/mp/atk/def/agl/int u16 LE; 5 prereq ids, $FF = none)
 
 Method (the repo's proven probe-build approach — see resection_library_tables.py;
 NEVER sum opcode sizes by hand, that was the S22 trap):
@@ -39,7 +39,7 @@ RECS = json.load(open(os.path.join(REPO, "extracted", "skill_records.json")))["r
 TARGETS = [
     # (file, bank, start, size, kind, label)
     ("bank_007.asm", 0x07, 0x570C, 222 * 2,  "mp",    "SkillMPCostTable"),
-    ("bank_006.asm", 0x06, 0x50E0, 222 * 18, "learn", "SkillLearnReqTable"),
+    ("bank_006.asm", 0x06, 0x50E0, 218 * 18, "learn", "SkillLearnReqTable"),  # S100: 218 rows — $6034+ is FieldStateDispatch code
 ]
 
 def rom_bytes(bank, addr, n):
@@ -108,9 +108,9 @@ def emit_mp(start):
     return segs, data
 
 def emit_learn(start):
-    data = rom_bytes(0x06, start, 222 * 18)
+    data = rom_bytes(0x06, start, 218 * 18)   # S100: 218 real rows
     out = []
-    hdr = [f"{'SkillLearnReqTable'}:  ; $06:$50E0 — 222 x 18 B, skill-id order:",
+    hdr = [f"{'SkillLearnReqTable'}:  ; $06:$50E0 — 218 x 18 B ($00-$D9), skill-id order:",
            ";   +0 level u8; +1 hp, +3 mp, +5 atk, +7 def, +9 agl, +11 int (u16 LE);",
            ";   +13..17 five prereq skill ids ($FF = none).",
            ";   Decoded S44, FAQ-validated; round-trip proven by build_skill_tables.py",

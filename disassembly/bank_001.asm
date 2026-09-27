@@ -496,14 +496,14 @@ jr_001_4346:
     ret
 
 
-jr_001_4358:
-    ld a, [wCurrentFloor]
-    ld b, a
-    ld a, [wLastFloor]
-    sub $02
-    cp b
-    ld a, $34
-    ret nz
+jr_001_4358:                      ; gate floors + every unassigned mapID >= $61
+    ld a, [wCurrentFloor]         ;   (all custom rooms): $34, the gate theme —
+    ld b, a                       ;   EXCEPT when wCurrentFloor == wLastFloor-2,
+    ld a, [wLastFloor]            ;   i.e. the floor BEFORE the boss floor (floor
+    sub $02                       ;   N-1 of N, 1-based), which already plays the
+    cp b                          ;   boss room's RoomBGMTable entry; the boss
+    ld a, $34                     ;   floor keeps it (PyBoy S100, Bazaar Gate:
+    ret nz                        ;   floors 7 $34, 8 $0C, 9 $0C)
 
     ld hl, RoomBGMTable
     ld a, [wBossMapType]
@@ -7640,15 +7640,15 @@ GateFloorBreakpoints:
     dw $6A98  ; [20] Library Gate
     dw $6A9D  ; [21] Gate of Reflection
     dw $6AA3  ; [22] Gate of Ambition
-    dw $6AA3  ; [23] Gate of Demolition (Hargon)
-    dw $6AA3  ; [24] Gate of Demolition (Sidoh)
-    dw $6AA3  ; [25] Gate of Mastermind
-    dw $6AA3  ; [26] Gate of Control
-    dw $6AA3  ; [27] Gate of Extinction
-    dw $6AA3  ; [28] Gate of Sleep
-    dw $6AA3  ; [29] Bazaar Edge Gate
-    dw $6AA3  ; [30] Arena - Right Gate
-    dw $6AA7  ; [31] Unused Gate (99 Floors)
+    dw $6AA3  ; [23] Gate of Demolition
+    dw $6AA3  ; [24] Gate of Mastermind
+    dw $6AA3  ; [25] Gate of Control
+    dw $6AA3  ; [26] Gate of Extinction
+    dw $6AA3  ; [27] Gate of Sleep
+    dw $6AA3  ; [28] Bazaar Edge Gate
+    dw $6AA3  ; [29] Arena - Right Gate
+    dw $6AA3  ; [30] Old Man's Gate
+    dw $6AA7  ; [31] Unused Gate
 
 ; Floor breakpoint data ($6A82)
 ; Variable-length lists of floor thresholds, $FF-terminated
@@ -8305,28 +8305,28 @@ EncounterPool_088:
     db 3, 3, 3, 3, 0  ; Weights
     db 15  ; Extra
 
-; --- Pool 89 ($73B8): Gate of Demolition (Hargon) ---
+; --- Pool 89 ($73B8): Gate of Demolition ---
 EncounterPool_089:
     db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
     dw 5, 18, 27, 35, 0  ; EIDs: Stubsuck, EvilSeed, BeanMan, FloraMan, (none)
     db 3, 3, 3, 3, 0  ; Weights
     db 15  ; Extra
 
-; --- Pool 90 ($73D2): Gate of Demolition (Hargon) ---
+; --- Pool 90 ($73D2): Gate of Demolition ---
 EncounterPool_090:
     db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
     dw 43, 62, 69, 85, 0  ; EIDs: WingTree, Gulpple, MadPlant, Oniono, (none)
     db 3, 3, 3, 3, 0  ; Weights
     db 15  ; Extra
 
-; --- Pool 91 ($73EC): Gate of Demolition (Hargon) ---
+; --- Pool 91 ($73EC): Gate of Demolition ---
 EncounterPool_091:
     db $03, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
     dw 112, 121, 136, 145, 0  ; EIDs: CactiBall, TreeBoy, AmberWeed, FireWeed, (none)
     db 3, 3, 3, 3, 0  ; Weights
     db 15  ; Extra
 
-; --- Pool 92 ($7406): Gate of Demolition (Hargon) ---
+; --- Pool 92 ($7406): Gate of Demolition ---
 EncounterPool_092:
     ; Header
     db $04
@@ -8336,7 +8336,7 @@ EncounterDataTable_1:
     db 3, 3, 3, 3, 0  ; Weights
     db 15  ; Extra
 
-; --- Pool 93 ($7420): Gate of Demolition (Sidoh) ---
+; --- Pool 93 ($7420): Gate of Mastermind ---
 EncounterPool_093:
     ; Header
 EncounterDataTable_2:
@@ -8345,21 +8345,21 @@ EncounterDataTable_2:
     db 3, 3, 3, 3, 0  ; Weights
     db 15  ; Extra
 
-; --- Pool 94 ($743A): Gate of Demolition (Sidoh) ---
+; --- Pool 94 ($743A): Gate of Mastermind ---
 EncounterPool_094:
     db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
     dw 50, 61, 68, 84, 0  ; EIDs: MadRaven, MadPecker, Florajay, StubBird, (none)
     db 3, 3, 3, 3, 0  ; Weights
     db 15  ; Extra
 
-; --- Pool 95 ($7454): Gate of Demolition (Sidoh) ---
+; --- Pool 95 ($7454): Gate of Mastermind ---
 EncounterPool_095:
     db $03, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
     dw 93, 111, 120, 135, 0  ; EIDs: MistyWing, DuckKite, MadGoose, LandOwl, (none)
     db 3, 3, 3, 3, 0  ; Weights
     db 15  ; Extra
 
-; --- Pool 96 ($746E): Gate of Demolition (Sidoh) ---
+; --- Pool 96 ($746E): Gate of Mastermind ---
 EncounterPool_096:
     db $04, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
     ; EIDs (split by label)
@@ -8369,217 +8369,217 @@ EncounterWeightTable:
     db 3, 3, 3, 3, 0  ; Weights
     db 15  ; Extra
 
-; --- Pool 97 ($7488): Gate of Mastermind ---
+; --- Pool 97 ($7488): Gate of Control ---
 EncounterPool_097:
     db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
     dw 2, 25, 30, 40, 0  ; EIDs: Slime, SpotSlime, Metaly, TreeSlime, (none)
     db 3, 3, 3, 3, 0  ; Weights
     db 15  ; Extra
 
-; --- Pool 98 ($74A2): Gate of Mastermind ---
+; --- Pool 98 ($74A2): Gate of Control ---
 EncounterPool_098:
     db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
     dw 46, 59, 65, 73, 0  ; EIDs: DrakSlime, Snaily, Babble, WingSlime, (none)
     db 3, 3, 3, 3, 0  ; Weights
     db 15  ; Extra
 
-; --- Pool 99 ($74BC): Gate of Mastermind ---
+; --- Pool 99 ($74BC): Gate of Control ---
 EncounterPool_099:
     db $03, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
     dw 81, 90, 98, 108, 0  ; EIDs: Slabbit, SlimeNite, BoxSlime, RockSlime, (none)
     db 3, 3, 3, 3, 0  ; Weights
     db 15  ; Extra
 
-; --- Pool 100 ($74D6): Gate of Mastermind ---
+; --- Pool 100 ($74D6): Gate of Control ---
 EncounterPool_100:
     db $04, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
     dw 108, 117, 141, 181, 0  ; EIDs: RockSlime, SpotKing, SlimeBorg, Metabble, (none)
     db 3, 3, 3, 2, 0  ; Weights
     db 15  ; Extra
 
-; --- Pool 101 ($74F0): Gate of Control ---
+; --- Pool 101 ($74F0): Gate of Extinction ---
 EncounterPool_101:
     db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
     dw 7, 22, 28, 37, 0  ; EIDs: Gremlin, Demonite, 1EyeClown, SkulRider, (none)
     db 3, 3, 3, 3, 0  ; Weights
     db 15  ; Extra
 
-; --- Pool 102 ($750A): Gate of Control ---
+; --- Pool 102 ($750A): Gate of Extinction ---
 EncounterPool_102:
     db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
     dw 63, 71, 87, 95, 0  ; EIDs: EyeBall, MedusaEye, Pixy, DarkEye, (none)
     db 3, 3, 3, 3, 0  ; Weights
     db 15  ; Extra
 
-; --- Pool 103 ($7524): Gate of Control ---
+; --- Pool 103 ($7524): Gate of Extinction ---
 EncounterPool_103:
     db $03, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
     dw 105, 114, 130, 138, 0  ; EIDs: Orc, AgDevil, ArcDemon, EvilBeast, (none)
     db 3, 3, 3, 3, 0  ; Weights
     db 15  ; Extra
 
-; --- Pool 104 ($753E): Gate of Control ---
+; --- Pool 104 ($753E): Gate of Extinction ---
 EncounterPool_104:
     db $04, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
     dw 157, 164, 170, 190, 0  ; EIDs: Lionex, Grendal, Ogre, GoatHorn, (none)
     db 3, 3, 3, 3, 0  ; Weights
     db 15  ; Extra
 
-; --- Pool 105 ($7558): Gate of Extinction ---
+; --- Pool 105 ($7558): Gate of Sleep ---
 EncounterPool_105:
     db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
     dw 8, 16, 23, 45, 0  ; EIDs: Spooky, Hork, BoneSlave, Putrepup, (none)
     db 3, 3, 3, 3, 0  ; Weights
     db 15  ; Extra
 
-; --- Pool 106 ($7572): Gate of Extinction ---
+; --- Pool 106 ($7572): Gate of Sleep ---
 EncounterPool_106:
     db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
     dw 57, 64, 88, 96, 0  ; EIDs: Mudron, Mummy, DeadNite, NiteWhip, (none)
     db 3, 3, 3, 3, 0  ; Weights
     db 15  ; Extra
 
-; --- Pool 107 ($758C): Gate of Extinction ---
+; --- Pool 107 ($758C): Gate of Sleep ---
 EncounterPool_107:
     db $03, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
     dw 106, 115, 131, 139, 0  ; EIDs: Reaper, WindMerge, MadSpirit, Shadow, (none)
     db 3, 3, 3, 3, 0  ; Weights
     db 15  ; Extra
 
-; --- Pool 108 ($75A6): Gate of Extinction ---
+; --- Pool 108 ($75A6): Gate of Sleep ---
 EncounterPool_108:
     db $04, $03, $00, $00, $07, $02, $02, $02, $02, $02  ; Header
     dw 158, 165, 171, 186, 191  ; EIDs: RotRaven, DarkCrab, Skullgon, Skeletor, DeadNoble
     db 3, 3, 3, 3, 3  ; Weights
     db 15  ; Extra
 
-; --- Pool 109 ($75C0): Gate of Sleep ---
+; --- Pool 109 ($75C0): Bazaar Edge Gate ---
 EncounterPool_109:
     db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
     dw 9, 24, 29, 39, 0  ; EIDs: Goopi, SabreMan, CoilBird, MudDoll, (none)
     db 3, 3, 3, 3, 0  ; Weights
     db 15  ; Extra
 
-; --- Pool 110 ($75DA): Gate of Sleep ---
+; --- Pool 110 ($75DA): Bazaar Edge Gate ---
 EncounterPool_110:
     db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
     dw 58, 72, 89, 97, 0  ; EIDs: Facer, MadCandle, SpikyBoy, RogueNite, (none)
     db 3, 3, 3, 3, 0  ; Weights
     db 15  ; Extra
 
-; --- Pool 111 ($75F4): Gate of Sleep ---
+; --- Pool 111 ($75F4): Bazaar Edge Gate ---
 EncounterPool_111:
     db $03, $03, $00, $00, $07, $02, $02, $02, $02, $02  ; Header
     dw 107, 132, 140, 159, 166  ; EIDs: Gismo, CurseLamp, EvilWand, JewelBag, MadMirror
     db 3, 3, 3, 3, 3  ; Weights
     db 15  ; Extra
 
-; --- Pool 112 ($760E): Gate of Sleep ---
+; --- Pool 112 ($760E): Bazaar Edge Gate ---
 EncounterPool_112:
     db $04, $03, $00, $00, $07, $02, $02, $02, $02, $02  ; Header
     dw 172, 183, 187, 192, 193  ; EIDs: Voodoll, Balzak, MetalDrak, Roboster, BombCrag
     db 3, 3, 3, 3, 3  ; Weights
     db 15  ; Extra
 
-; --- Pool 113 ($7628): Bazaar Edge Gate ---
+; --- Pool 113 ($7628): Arena - Right Gate ---
 EncounterPool_113:
     db $02, $03, $00, $00, $07, $02, $02, $02, $02, $02  ; Header
     dw 15, 20, 33, 42, 48  ; EIDs: PillowRat, FairyRat, Almiraj, CatFly, Skullroo
     db 3, 3, 3, 3, 3  ; Weights
     db 15  ; Extra
 
-; --- Pool 114 ($7642): Bazaar Edge Gate ---
+; --- Pool 114 ($7642): Arena - Right Gate ---
 EncounterPool_114:
     db $02, $03, $00, $00, $07, $02, $02, $02, $02, $02  ; Header
     dw 60, 67, 74, 83, 92  ; EIDs: Saccer, Tonguella, MadGopher, WindBeast, Mommonja
     db 3, 3, 3, 3, 3  ; Weights
     db 15  ; Extra
 
-; --- Pool 115 ($765C): Bazaar Edge Gate ---
+; --- Pool 115 ($765C): Arena - Right Gate ---
 EncounterPool_115:
     db $03, $03, $00, $00, $07, $02, $02, $02, $02, $02  ; Header
     dw 110, 119, 134, 143, 161  ; EIDs: Goategon, HammerMan, WildApe, Grizzly, SuperTen
     db 3, 3, 3, 3, 3  ; Weights
     db 15  ; Extra
 
-; --- Pool 116 ($7676): Bazaar Edge Gate ---
+; --- Pool 116 ($7676): Arena - Right Gate ---
 EncounterPool_116:
     db $04, $03, $00, $00, $07, $02, $02, $02, $02, $02  ; Header
     dw 168, 174, 182, 185, 195  ; EIDs: Yeti, IronTurt, GulpBeast, Trumpeter, Unicorn
     db 3, 3, 3, 3, 3  ; Weights
     db 15  ; Extra
 
-; --- Pool 117 ($7690): Arena - Right Gate ---
+; --- Pool 117 ($7690): Old Man's Gate ---
 EncounterPool_117:
     db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
     dw 13, 17, 26, 41, 0  ; EIDs: MiniDrak, DragonKid, Crestpent, Poisongon, (none)
     db 3, 3, 3, 3, 0  ; Weights
     db 15  ; Extra
 
-; --- Pool 118 ($76AA): Arena - Right Gate ---
+; --- Pool 118 ($76AA): Old Man's Gate ---
 EncounterPool_118:
     db $02, $03, $00, $00, $07, $02, $02, $02, $02, $02  ; Header
     dw 47, 66, 82, 91, 109  ; EIDs: FairyDrak, Pteranod, Gasgon, KingCobra, Chamelgon
     db 3, 3, 3, 3, 3  ; Weights
     db 15  ; Extra
 
-; --- Pool 119 ($76C4): Arena - Right Gate ---
+; --- Pool 119 ($76C4): Old Man's Gate ---
 EncounterPool_119:
     db $03, $03, $00, $00, $07, $02, $02, $02, $02, $02  ; Header
     dw 118, 133, 142, 160, 167  ; EIDs: LizardFly, Tortragon, LizardMan, Swordgon, WingSnake
     db 3, 3, 3, 3, 3  ; Weights
     db 15  ; Extra
 
-; --- Pool 120 ($76DE): Arena - Right Gate ---
+; --- Pool 120 ($76DE): Old Man's Gate ---
 EncounterPool_120:
     db $04, $03, $00, $00, $07, $02, $02, $02, $02, $02  ; Header
     dw 173, 184, 188, 194, 196  ; EIDs: Rayburn, Spikerous, MadDragon, Andreal, GreatDrak
     db 3, 3, 3, 3, 3  ; Weights
     db 15  ; Extra
 
-; --- Pool 121 ($76F8): Unused Gate (99 Floors) ---
+; --- Pool 121 ($76F8): Unused Gate ---
 EncounterPool_121:
     db $04, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
     dw 186, 185, 187, 188, 0  ; EIDs: Skeletor, Trumpeter, MetalDrak, MadDragon, (none)
     db 3, 3, 3, 3, 0  ; Weights
     db 15  ; Extra
 
-; --- Pool 122 ($7712): Unused Gate (99 Floors) ---
+; --- Pool 122 ($7712): Unused Gate ---
 EncounterPool_122:
     db $04, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
     dw 187, 188, 189, 190, 0  ; EIDs: MetalDrak, MadDragon, Snapper, GoatHorn, (none)
     db 3, 3, 3, 3, 0  ; Weights
     db 15  ; Extra
 
-; --- Pool 123 ($772C): Unused Gate (99 Floors) ---
+; --- Pool 123 ($772C): Unused Gate ---
 EncounterPool_123:
     db $04, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
     dw 189, 190, 191, 192, 0  ; EIDs: Snapper, GoatHorn, DeadNoble, Roboster, (none)
     db 3, 3, 3, 3, 0  ; Weights
     db 15  ; Extra
 
-; --- Pool 124 ($7746): Unused Gate (99 Floors) ---
+; --- Pool 124 ($7746): Unused Gate ---
 EncounterPool_124:
     db $04, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
     dw 191, 192, 193, 194, 0  ; EIDs: DeadNoble, Roboster, BombCrag, Andreal, (none)
     db 3, 3, 3, 3, 0  ; Weights
     db 15  ; Extra
 
-; --- Pool 125 ($7760): Unused Gate (99 Floors) ---
+; --- Pool 125 ($7760): Unused Gate ---
 EncounterPool_125:
     db $04, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
     dw 193, 194, 195, 196, 0  ; EIDs: BombCrag, Andreal, Unicorn, GreatDrak, (none)
     db 3, 3, 3, 3, 0  ; Weights
     db 15  ; Extra
 
-; --- Pool 126 ($777A): Unused Gate (99 Floors) ---
+; --- Pool 126 ($777A): Unused Gate ---
 EncounterPool_126:
     db $04, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
     dw 195, 196, 197, 198, 0  ; EIDs: Unicorn, GreatDrak, ZapBird, WhipBird, (none)
     db 3, 3, 3, 3, 0  ; Weights
     db 15  ; Extra
 
-; --- Pool 127 ($7794): Unused Gate (99 Floors) ---
+; --- Pool 127 ($7794): Unused Gate ---
 EncounterPool_127:
     db $04, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
     dw 197, 198, 30, 181, 0  ; EIDs: ZapBird, WhipBird, Metaly, Metabble, (none)

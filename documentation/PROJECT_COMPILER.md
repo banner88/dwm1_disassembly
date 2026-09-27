@@ -269,9 +269,11 @@ hole `0xCD84`, was `0xDE78`/`0xD47C`).
 ### 2.7 `custom.flags[]`
 
 `{name, index: "auto"|"0x0158"}` → allocated from the EVENT_FLAGS.md
-safe+persistent pool (**`$0158–$0167` and `$01E0–$01EF` = 32 flags** — the
-S57 per-byte audit; the previously listed "broader" ranges were refuted,
-see EVENT_FLAGS "Free Flag Slots"), never the collision zones or the
+safe+persistent pool (**`$0158–$0167` = 16 flags** — the S57 per-byte
+audit; `$01E0–$01EF` was retired S73 to `wAnchorGate`/`wAnchorFloor`, so the
+"32 flags" this line said until S100 was stale — DOC_AUDIT S100; the
+previously listed "broader" ranges were refuted, see EVENT_FLAGS "Free Flag
+Slots"), never the collision zones or the
 non-SRAM `$0278+` range. Resolved indices appear in the manifest; scripts
 reference flags by the resolved value (a name→`set_flag` sugar is a v1.1
 nicety). The example project uses none (the proven content predates named
@@ -415,11 +417,13 @@ user-confirmed hand-authored code:
 * `editor2/core/templates/bank_060_head.asm` — bank byte, 7-entry `rst $10`
   table, `CustomPtrChase`, `DummyStepEntry/NPCs/Exits`, entries 0–6
   (readers, `GateAwareDispatch`, `CustomScriptRead`, `CustomTextDisplay`).
-* `editor2/core/templates/bank_071_head.asm` — bank byte, 4-entry table
-  (S99; 3 since S64), `CopyCustomRoomRecord`, `CustomEncResolve`,
-  `CustomRoomBGMResolve` (entry 2: E := `CustomRoomBGMTable[wMapID]` or 0;
-  gate floors return 0 — SOUND_SYSTEM §8), `CustomAnimSource` (entry 3,
-  S99: E := the room's animation source — §2.15).
+* `editor2/core/templates/bank_071_head.asm` — bank byte, 6-entry table
+  (S100; 4 S99, 3 S64), `CopyCustomRoomRecord`, `CustomEncResolve` (S100:
+  gate byte $FF = follow the dive, no pin), `CustomRoomBGMResolve` (entry 2:
+  E := `CustomRoomBGMTable[wMapID]` or 0; gate floors return 0 — SOUND_SYSTEM
+  §8), `CustomAnimSource` (entry 3, S99: E := the room's animation source —
+  §2.15), `CustomGateInsert` (entry 4, S100 — §2.16), `CustomRoomFlags`
+  (entry 5, S100 — §2.16).
 
 Two pins, both enforced at compile time:
 
@@ -427,13 +431,15 @@ Two pins, both enforced at compile time:
    template refuses to compile. Re-pin (`--pin-templates`) ONLY after a
    deliberate engine session changes the head. Re-pinned S64 (bank $71
    entry 2 added: `64cb43ee…be23`; bank $60 unchanged `63969b1a…33d9`); re-pinned S99 (bank $71 entry 3 added: `99b8eb7b…a708`, historical
-   S64 value `64cb43ee…be23`).
+   S64 value `64cb43ee…be23`); re-pinned S100 (bank $71 entries 4/5 +
+   entry-1 follow test: `4c36c4ca…0d6e`; S99 value `99b8eb7b…a708` historical).
 2. **TEMPLATE_SIZE** in `editor2/core/validators.py` — measured from the
    reference `game.sym`: bank `$60` head = **283 B**
-   (`CustomScriptMasterTable @ $411B`, S53), bank `$71` head = **164 B**
-   (`Custom26DDTable @ $40A4`, S99; history 103 S53 → 116 S55 flag fix →
-   142 S64 entry-2 dw + resolver → **164 S99** entry-3 dw + CustomAnimSource,
-   §2.15). Used by the pre-build overflow check
+   (`CustomScriptMasterTable @ $411B`, S53), bank `$71` head = **395 B**
+   (`Custom26DDTable @ $418B`, S100; history 103 S53 → 116 S55 flag fix →
+   142 S64 entry-2 dw + resolver → 164 S99 entry-3 dw + CustomAnimSource,
+   §2.15 → **395 S100** entries 4/5 + CustomGateInsert + CustomRoomFlags,
+   §2.16). Used by the pre-build overflow check
    (template + counted generated payload ≤ `$4000`). Re-measure from the
    new `.sym` whenever a template is re-pinned.
 
@@ -565,6 +571,11 @@ exits bordering a neighbour screen (warning — replaces the blanket
 "boundary exit y=0/7 cannot coexist with a scroll" warning, which fired on
 every edge exit even with no screen beyond; KL S10), talk-script and door
 checks (§2.14).
+**S100 additions:** gate insertion + gate-room checks (§2.16 "Validators") —
+floor range 2..floors−1, chance 1-100, ≤ 8 once rules per gate, a served
+room needs `gate_arrival` + a Stairs down and may not pin a FIXED encounter
+pool (errors); ordinary exits in a served room, shadowed rules, unsaved
+flags (warnings).
 
 ---
 
@@ -582,6 +593,7 @@ editor2/
         png_import.py        # PNG -> tiles/palettes/metatiles planning (S96)
         doors.py talk.py     # S98 door/teleport/spot mutations (DoorsMixin), talk specs (TalkMixin)
         world.py             # S98 room/warp graph + deterministic layout (World tab)
+        gates.py             # S100 gate model: vanilla gates, floors, arrival px, GatesMixin
         emulator.py
         templates/{bank_060_head.asm, bank_071_head.asm, PINNED_SHA256}
   app/  main.py session.py build_worker.py     # shell (S93), one Session per project
@@ -595,14 +607,18 @@ editor2/
                door_dialog.py object_panels.py         # S98 door / teleport dialog, door/teleport/spot panels
         import_tab.py space_meter.py                   # S96 Import art tab, bank meters
         world_tab.py                                   # S98 World tab (read-only graph)
+        gates_tab.py                                   # S100 Gates tab (custom rooms on gate floors)
+        rooms/gate_panel.py                            # S100 inspector "Inside gates" group
   templates/blank-project/project.json   # File > New project (S94)
   example-project/project.json      # regression baseline (build/ is regenerable output)
-  tests/test_compiler.py            # 89 tests (92 with --rom: the ROM builds; S98)
+  tests/test_compiler.py            # 121 tests (124 with --rom: the ROM builds; S100)
   tests/test_app.py                 # shell smoke test; --rom = GUI build == pin
   tests/test_canvas.py              # P3.3 acceptance; --rom = build + PyBoy both states;
                                     # v4 (S97) = state rules + NPC panel, PyBoy-verified
                                     # v5 (S98) = doors/teleport/spots/talk, PyBoy-verified
                                     # (--only-v5 runs just v5)
+                                    # v6 (S99) = animated tiles; v7 (S100) = gate rooms
+                                    # (--only-v6 / --only-v7)
 tools/build_project.py              # CLI
 ```
 
@@ -803,6 +819,19 @@ bank-1 writes wait mode 3 → not-3 inside `di`. Other rooms: the same tiles
 in the same order, attrs untouched (PyBoy: vanilla + non-free frames
 pixel-identical). WRAM: 132 B carved from `wCustomPool` (now $D0C5-$D5E4).
 
+**Round 3 (S100 r3) — the stairs / special-room descent in free-colour
+rooms** (same principle, GATE_GENERATION §7.6): bank $06 `MapTrans_S10_InGate`
+→ entry 19 `GateWipeAttr` (the blank rows' attrs → 7) and `MapTrans_S12`'s
+end → entry 20 `GateLeaveFreePal` (buffer + HW colour 1 := cream for marked
+slots, since the load fade targets the buffer's colour 1).
+
+**LZSS limit (S100 r3).** `tools/compress_tiles.py` emits no back-reference
+longer than **256** bytes (`MAX_COPY`): the game's decoder
+(`$00:HandleCompressedRun`) adds 19 to the extended-length byte in 8 bits
+and counts down with `dec/jr nz` (0 = 256), so 257-274 wrap to 1-18 and
+everything after lands 256 bytes early. `decompress_tiles.py` decodes the
+same way, so a round trip catches it (test_compiler "LZSS" cases).
+
 ## §2.14 S98 — doors, one-way teleports, examine / step-on spots, talk scripts (P3.7)
 
 No engine or template change; the pin held (`ce24de8b…`, patched). All of
@@ -930,6 +959,88 @@ animates is a warning (replaces the fixed "77/78 no-go" warning).
 table, and the example project's explicit `animation` values (arena_clone
 `source` = $06, a bare `ret`; the rest `none`) — so slots 77/78 no longer roll
 in the example rooms. Prev `ce24de8b…` (patched, historical).
+
+## §2.16 S100 — custom rooms served on gate floors (`custom.gate_inserts[]`, ROADMAP P3.7b part 1)
+
+```json
+"gate_inserts": [                                  // tried in LIST order
+  {"room": "gate_rotation",                        // a custom room id
+   "gate": 1,                                      // 0-31 (extracted/gate_names.json)
+   "floors": [2, 3],                               // [first, last] | [n] | n | "all"
+   "chance": 50,                                   // 1-100 %
+   "when": [{"flag": "demo_vault"},                // optional, AND-ed, like state rules
+            {"flag": "0x0030", "is": "clear"}],
+   "once_per_dive": true,                          // optional
+   "comment": "..."}
+]
+```
+
+plus, on the ROOM served:
+
+```json
+"gate_arrival": {"screen": 0, "x": 4, "y": 6},    // REQUIRED for a served room
+"can_save": false,                                 // optional; default true
+"encounters": {"enabled": true, "follow_gate": true},  // optional
+"music": "<song id>"                               // optional; none = the gate's
+```
+
+and at least one **Stairs down** exit row: `{"x", "y", "stairs": "down"}` —
+the compiler fills `dest 0x00 / gate_flag 0x80 / screen_byte 0x00 / spawn
+0,0` (the vanilla special-room descent, GATE_GENERATION §7.5); explicit bytes
+must equal those (error otherwise). The editor writes the full row + tag.
+
+**Floor numbering** = the game's: the first floor of a gate is 1, the boss
+floor is the gate's floor count (`wCurrentFloor` = floor − 1). A rule may
+cover floors **2 .. floors−1**: floor 1 stays the gate's own (user scope
+S100) and the boss floor is decided before the fork. `"all"` = that range.
+
+**Lowering** (`Project.gate_insert_rows`, emitter `_gate_insert_table`):
+**`GateInsertTable`** in bank $71, records `[gate, floor_lo, floor_hi
+(0-based), chance, once_bit, mapID, spawn_x lo/hi, spawn_y lo/hi, n_terms]`
++ `n_terms × dw flag` (bit 15 = must be CLEAR), `$FF`-terminated. Spawn =
+`16·(col·10 + x) + 8`, `16·(row·8 + y) + 8` from `gate_arrival` (screen k:
+col = k mod 4, row = k div 4 — standing positions are 8 mod 16). Once bits
+are allocated per gate in list order (max 8 per gate: one bit each in
+`wGateDiveMask`). **`CustomRoomFlagsTable`** (1 B/room, `ROOMFLAGS_TABLE_LEN`,
+bit 0 = `can_save` false). `encounters.follow_gate` → `RoomEncTable` gate
+byte **$FF** (entry 1 then never pins `wGateID`/`wCurrentFloor`).
+
+**Engine** (template entries 4 + 5, GATE_GENERATION §7.6 for the measured
+behaviour): bank $16 `GateDecisionFork` (hand patch, rewritten S100) calls
+**entry 4 `CustomGateInsert`** on every non-boss floor after the Anchor
+check: the first record whose gate, floor range, once bit and flag terms
+hold rolls `RNG16 mod 100 < chance` (100 = no roll) — so a gate without
+applicable rules draws no RNG and behaves byte-for-byte vanilla; a hit
+writes `wMapID`, `wInGateworld = 0`, the spawn pixels and the once bit (E=1),
+a miss tries the next record, no hit → E=0 and the vanilla gating runs.
+`wGateDiveGate`/`wGateDiveMask` ($DEBC/$DEBD, transient) reset on floor 0 or
+a different gate and ride the explicit save through SRAM `$BFCA/$BFCB`
+(bank $73 entries 5/6). **Entry 5 `CustomRoomFlags`** (E := flags byte) is
+read by the bank $07 `SaveAllowCheck` same-size rewrite.
+
+**Validators** (`_validate_gates`): unknown keys / missing room / gate out of
+0-31 / floor < 2 / floor ≥ the boss floor / backwards range / chance outside
+1-100 / > 8 terms / > 8 once rules on one gate = ERROR; a served room with
+no `gate_arrival`, no Stairs down, or a FIXED encounter pool (pinning would
+switch the dive to that gate) = ERROR; ordinary exits in a served room
+(they leave the dive) = warning; a rule shadowed by an earlier 100 % /
+no-terms / not-once rule covering its floors = warning; flags ≥ $0278 =
+warning (not saved); `follow_gate` without `enabled` = warning; a served
+room that is also a door / redirect destination = warning (entered outside a
+dive, its Stairs down drops the player into a floor of the last gate dived).
+
+**Template + pin (S100)**: `bank_071_head.asm` + entries 4/5 (dw),
+`CustomGateInsert`, `CustomRoomFlags`, entry 1's `$FF` test — head 164 →
+**395 B** (`TEMPLATE_SIZE[0x71]`), sha256 re-pinned (`4c36c4ca…`). Reference
+patched md5 **`7cd7257b94004fdf8b406138dc7122e1`** (patched; built S100 r3, NOT
+yet user-tested — r3: the free-colour descent-transition fix, bank $06 +
+bank $73 entries 19/20, and the LZSS MAX_COPY 256 re-encode of the example
+sheet; r2 `91202c74…` patched, historical): the engine above + the bank $07/$16/$73/wram hand patches
++ the example project's `gate_rotation` served on Villager floors 2-3 at
+50 %, at most once per dive (was: every non-boss Villager floor, hard-coded
+S41). Prev `4f13d2af…` (patched, historical — the same rule without
+`once_per_dive`, so it could land on both floors), `d072eb51…` (patched,
+historical).
 
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 

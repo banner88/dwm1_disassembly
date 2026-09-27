@@ -153,3 +153,39 @@ edge and the battle waits for input forever.
   multi-frame VRAM loads by a few bytes at frame edges — A/B from ONE
   savestate and require convergence (KEY_LESSONS S99), not frame equality.
 
+
+## S100 techniques (gate floors, saves) + two traps
+
+- **Continue a patched-format save.** The user's `.sav` is in the PATCHED
+  format (checksum v3, F2 gate, R4 snapshot): the ORIGINAL ROM rejects it and
+  starts a new game (map $2F). Boot a patched build; the menu recipe that
+  reaches CONTINUE: `adv 400 / START / adv 120 / A / adv 120 / A / adv 200 / A`
+  then tap A until `$C88A == 1` and `wGameState == 0`.
+- **Trap — savestates do not travel between builds.** A state saved on build
+  A and loaded into build B whose bank $73 shifted hangs at the next far call
+  (stale return addresses): map $00, `wInGateworld` $80, nothing moves. Make a
+  continue state PER ROM from the `.sav`.
+- **Drive gate floors without walking mazes.** Staircase kick (what
+  `Jump_00b_46a7` writes): `wGateID`, `wCurrentFloor = floor − 2` (entry 5
+  increments), `$C96D = 0`, `$C96E = $80`, `$C96C = 1`, `$C88F++`, then ~700
+  frames (keep `$CA39/$CA3A` high). Real gate entry (the pedestal exit's own
+  bytes): `$C96D = gate`, `$C96E = 1` → the first-entry branch, floor 1. Hook
+  `$16:$5C1C` (special) / `$5BBF` (maze) / `$5BE1` (boss) to log decisions.
+- **Trap — kicking OUT of a special maze room** ($57-$59 keep their own state)
+  can wedge the next floor (blank screen, kicks ignored). For statistics,
+  reload one state per sample and vary the frames waited before the kick
+  (the RNG advances with time); an A/B of two builds then compares
+  decision-for-decision.
+- **Save + reload inside a test.** Menu OPTN → JOURNAL: `A (80) / down / right
+  / A (60) / down ×3 / A (90)`, then A for YES; hooks `$07:$6090` (refused) /
+  `$07:$60A5` (allowed). `p.memory[0, 0xBFCA]` reads cart SRAM bank 0;
+  `p.stop()` writes `<rom>.ram` — copy it as a new `.sav` and boot again.
+- **YES/NO in talk scripts starts on NO** (`$C83C = 1`): press up before A.
+- **S100 r3 — compare transitions as pictures, not frames.** Two builds whose
+  far calls differ by a few cycles give raster/fade frames that differ in 1-2
+  scanline bands (the LCD caught mid-update), same picture. Diff per frame,
+  then check the bounding boxes before calling it a regression.
+- **S100 r3 — check VRAM tile DATA, not only the tilemap.** A room drew as
+  flat colour blocks while the tilemap matched the layout: the sheet sat 256 B
+  low in `$9000-$97FF` (LZSS over-long copy). Compare `$9000 + 16*i` with the
+  project sheet slot by slot.

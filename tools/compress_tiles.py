@@ -28,7 +28,15 @@ def choose_marker(data):
     return freq.index(min(freq))
 
 
-def find_best_match(data, pos, min_len=4, max_len=255+19):
+# S100 r3: the game adds 19 to the extended length byte in 8 bits ($00:DecompressTileLayout
+# HandleCompressedRun `add $13`; the copy loop is dec/jr nz, so 0 = 256). A copy of
+# 257-274 bytes therefore wraps to 1-18 in the game and the rest of the sheet lands
+# 256 bytes early (user S100: imported room drawn as flat colour blocks — its blank
+# tileset opens with a 900+ byte zero run). 256 is the longest copy the game decodes.
+MAX_COPY = 256
+
+
+def find_best_match(data, pos, min_len=4, max_len=MAX_COPY):
     """Find the longest match starting at pos from earlier in the buffer."""
     best_offset = 0
     best_length = 0

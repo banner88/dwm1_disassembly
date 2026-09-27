@@ -2348,6 +2348,227 @@ def v6_split(new_dir):
           f'{len(keep_cells)} cell(s) move, every cell keeps look + walkability')
 
 
+
+# ------------------------------------------------------------ S100 (v7)
+V7_STAIRS = (5, 3)
+V7_ARRIVE = (4, 6)
+
+
+def v7_round_trip(new_dir):
+    """S100 (ROADMAP P3.7b part 1) — a fresh project, everything through the
+    Rooms-tab + Gates-tab code paths: room 'Gate Lab' gets a Stairs down
+    (Selection → More → Stairs down here), a gate arrival (selected cell →
+    Inside gates → Selected cell), no saving, battles that follow the gate;
+    the Gates tab adds two rules to the Bazaar Gate (gate 5) through the rule
+    dialog: floors 2-3 100 % once per dive, and floor 4 100 % when a NEW
+    named flag is set; the floor plan shows them; exact undo/redo; compile."""
+    from editor2.app.main import MainWindow
+    from editor2.app.rooms import commands as C
+    from editor2.app import gates_tab as GT
+    from PySide6.QtWidgets import QMessageBox, QDialog
+    app = QApplication.instance() or QApplication(sys.argv)
+    QMessageBox.question = staticmethod(lambda *a, **k: QMessageBox.Yes)
+    w = MainWindow()
+    w.new_project(new_dir, 'v7 gate rooms')
+    app.processEvents()
+    rt, s = w.rooms_tab, w.session
+    rend = s.renderer
+    s.undo.push(C.SnapshotCommand(s, 'New room', lambda doc: doc.new_room('Gate Lab', 0x04, rend)))
+    app.processEvents()
+    rid = s.doc.rooms[0]['id']
+    s.doc.save()
+    saved = open(s.doc.path).read()
+    n0 = s.undo.count()
+    for i in range(rt.room_list.count()):
+        if rt.room_list.item(i).data(0x100) == rid:
+            rt.room_list.setCurrentRow(i)
+    app.processEvents()
+    gg = rt.inspector.gate_group
+    assert 'Not served' in gg.served.text(), gg.served.text()
+    # stairs through the inspector's More-menu signal, arrival from the selection
+    rt.inspector.addStairsRequested.emit(V7_STAIRS)
+    app.processEvents()
+    R = s.doc.room(rid)
+    ex = s.doc.states(R, 0)[0]['exits']
+    assert ex == [{'x': 5, 'y': 3, 'stairs': 'down', 'dest': '0x00', 'gate_flag': '0x80',
+                   'screen_byte': '0x00', 'spawn_x': 0, 'spawn_y': 0}], ex
+    assert any(m[0] == 'stairs' for m in rt.canvas.markers), 'no S↓ marker'
+    # S100 r3 (user: "by default it should always be displayed as the 'next
+    # floor down'"): the stairs cell is painted with the vanilla well, drawn
+    # over the floor that was there, walkable
+    from editor2.core import gates as G
+    tid = s.doc.tileset_key(R)
+    wells = [mt for mt in s.doc.metatiles(tid) if mt['name'] == G.WELL_NAME]
+    assert len(wells) == 1, f'one well metatile expected: {len(wells)}'
+    lay = s.doc.layout(s.doc.state_layout_ref(R, 0, 0)['id'])['tiles']
+    sx, sy = V7_STAIRS
+    cell = [lay[sy * 2 + dr][sx * 2 + dc] for dr, dc in ((0, 0), (0, 1), (1, 0), (1, 1))]
+    assert cell == wells[0]['tiles'], (cell, wells[0]['tiles'])
+    assert cell[3] >= int(str(R['record']['collision_threshold']), 0), 'well must be walkable'
+    sheet = s.doc.read_sheet(tid)
+    src = s.renderer.vanilla_gfx(G.WELL_SRC_MAP).sheet
+    hole = bytes(src[G.WELL_SRC_TILES[3] * 16:G.WELL_SRC_TILES[3] * 16 + 16])
+    got = bytes(sheet[cell[3] * 16:cell[3] * 16 + 16])
+    for r_ in range(8):                   # the hole's black (colour 3) pixels are there
+        both = hole[2 * r_] & hole[2 * r_ + 1]
+        assert got[2 * r_] & both == both and got[2 * r_ + 1] & both == both
+    rt.canvas.selected_cell = V7_ARRIVE
+    gg.arrivalHereRequested.emit()
+    app.processEvents()
+    assert s.doc.room(rid)['gate_arrival'] == {'screen': 0, 'x': 4, 'y': 6}
+    assert any(m[0] == 'gate_arrival' for m in rt.canvas.markers), 'no G marker'
+    gg.can_save.setChecked(False)
+    app.processEvents()
+    assert s.doc.room(rid)['can_save'] is False
+    gg.enc.setCurrentIndex(gg.enc.findData('follow'))
+    app.processEvents()
+    assert s.doc.room(rid)['encounters'] == {'enabled': True, 'follow_gate': True}
+    assert s.doc.gate_room_report(s.doc.room(rid))['ready']
+    # Gates tab: two rules on gate 5 through the dialog code path
+    gt = w.gates_tab
+    gt.list.setCurrentRow(5)
+    app.processEvents()
+    plan = []
+
+    def fake_exec(dlg):
+        spec = plan.pop(0)
+        dlg.room.setCurrentIndex(dlg.room.findData(rid))
+        dlg.any.setChecked(False)
+        dlg.f_from.setValue(spec['from'])
+        dlg.f_to.setValue(spec['to'])
+        dlg.chance.setValue(spec['chance'])
+        dlg.once.setChecked(spec.get('once', False))
+        if spec.get('flag'):
+            import editor2.app.gates_tab as _gt
+            _gt.QInputDialog.getText = staticmethod(lambda *a, **k: (spec['flag'], True))
+            dlg._new_flag()
+        return QDialog.Accepted
+    GT.GateRuleDialog.exec = fake_exec
+    plan.append({'from': 2, 'to': 3, 'chance': 100, 'once': True})
+    gt._add()
+    plan.append({'from': 4, 'to': 4, 'chance': 100, 'flag': 'lab_key'})
+    gt._add()
+    app.processEvents()
+    rules = s.doc.gate_inserts()
+    assert rules == [
+        {'room': rid, 'gate': 5, 'floors': [2, 3], 'chance': 100, 'once_per_dive': True},
+        {'room': rid, 'gate': 5, 'floors': [4], 'chance': 100, 'when': [{'flag': 'lab_key'}]}
+    ], rules
+    assert any(f['name'] == 'lab_key' for f in s.doc.flags())
+    assert gt.rules.rowCount() == 2
+    assert 'Gate Lab 100 %' in gt.plan.item(1, 1).text(), gt.plan.item(1, 1).text()
+    assert gt.plan.item(8, 1).text().startswith('boss floor')
+    rt._show()
+    app.processEvents()
+    assert gg.served.text().startswith('Served in: Bazaar Gate floors 2-3, 100 %, once per dive'), \
+        gg.served.text()
+    # exact undo / redo
+    after = s.doc.dumps()
+    while s.undo.index() > n0:
+        s.undo.undo()
+    if s.doc.dumps() != saved:
+        import difflib
+        print('\n'.join(list(difflib.unified_diff(saved.splitlines(), s.doc.dumps().splitlines(),
+                                                   lineterm=''))[:60]))
+    assert s.doc.dumps() == saved, 'undo did not restore the saved project exactly'
+    while s.undo.canRedo():
+        s.undo.redo()
+    assert s.doc.dumps() == after, 'redo did not restore the edits exactly'
+    s.save()
+    print('OK: v7 — Gate Lab: Stairs down (5,3) + arrival (4,6) + no saving + battles follow '
+          'the gate (Rooms tab), 2 rules on the Bazaar Gate through the rule dialog (floors '
+          '2-3 once per dive; floor 4 when new flag lab_key), floor plan, exact undo/redo')
+    return w, s, rid
+
+
+def test_rom_v7(w, s, rid, keep_dir=None):
+    """--rom: PyBoy from a scripted new game + a party — the gate-5 floor-2
+    kick serves Gate Lab at the arrival pixels; floor 3 does NOT (once per
+    dive); floor 4 serves it only once lab_key is set; walking onto the
+    stairs descends (floor+1, back in the maze); JOURNAL refused in the room;
+    a room-less gate (21) plays byte-for-byte the vanilla decision."""
+    from editor2.app.build_worker import BuildWorker
+    app = QApplication.instance()
+    results = []
+    worker = BuildWorker(REPO, s.project_dir)
+    worker.finished_build.connect(results.append)
+    worker.start()
+    worker.wait()
+    app.processEvents()
+    res = results[0]
+    assert res.ok, f'build failed: {res.error}'
+    man = json.load(open(os.path.join(os.path.dirname(res.rom_path), 'manifest.json')))
+    fl = {k: int(v.lstrip('$'), 16) for k, v in man['flags'].items()}
+    mid = val(s.doc.room(rid)['mapID'])
+    from tools.pyboy_harness import (boot, to_bedroom, adv, MAP_ID, IN_GATEWORLD,
+                                     give_party_monster, set_flag, SCRIPT_FLAGS)
+    import tempfile as _t
+    p = boot(res.rom_path)
+    assert to_bedroom(p), 'scripted intro failed'
+    base = os.path.join(_t.mkdtemp(prefix='v7_'), 'bed.state')
+    with open(base, 'wb') as f:
+        p.save_state(f)
+    m = p.memory
+
+    def kick(gate, floor, frames=700):
+        m[0xC935] = gate
+        m[0xC939] = (floor - 2) & 0xFF
+        m[SCRIPT_FLAGS] = 0
+        m[0xC96D] = 0; m[0xC96E] = 0x80; m[0xC96C] = 1; m[0xC88F] = (m[0xC88F] + 1) & 0xFF
+        for _ in range(frames):
+            p.tick()
+            m[0xCA39] = 0xFF; m[0xCA3A] = 0xFF
+        return m[MAP_ID], m[0xC939] + 1, m[IN_GATEWORLD]
+
+    p.load_state(open(base, 'rb'))
+    got = kick(5, 2)
+    assert got == (mid, 2, 0), f'floor 2 should serve Gate Lab: {got}'
+    px = m[0xC96F] | m[0xC970] << 8
+    py = m[0xC971] | m[0xC972] << 8
+    assert (px, py) == (4 * 16 + 8, 6 * 16 + 8), (px, py)
+    assert (m[0xFF97], m[0xFF98]) == V7_ARRIVE, (m[0xFF97], m[0xFF98])
+    got3 = kick(5, 3)
+    assert got3[0] != mid and got3[1] == 3, f'floor 3 must not re-serve (once per dive): {got3}'
+    got4 = kick(5, 4)
+    assert got4[0] != mid, f'floor 4 without lab_key: {got4}'
+    set_flag(p, fl['lab_key'])
+    got4b = kick(5, 4)
+    assert got4b == (mid, 4, 0), f'floor 4 with lab_key: {got4b}'
+    # S100 r3: the well is on screen where the stairs are
+    lay = s.doc.layout(s.doc.state_layout_ref(s.doc.room(rid), 0, 0)['id'])['tiles']
+    sx, sy = V7_STAIRS
+    vram = [p.memory[0x9800 + (sy * 2 + dr) * 32 + sx * 2 + dc]
+            for dr, dc in ((0, 0), (0, 1), (1, 0), (1, 1))]
+    want = [lay[sy * 2 + dr][sx * 2 + dc] for dr, dc in ((0, 0), (0, 1), (1, 0), (1, 1))]
+    assert vram == want, f'well cell in VRAM {vram} != layout {want}'
+    # stairs: walk from the arrival (4,6) to (5,3): right 1, up 3
+    give_party_monster(p)
+    for d, n in (('right', 1), ('up', 3)):
+        for _ in range(n):
+            p.button_press(d); adv(p, 18); p.button_release(d); adv(p, 6)
+    for _ in range(400):
+        p.tick(); m[0xCA39] = 0xFF; m[0xCA3A] = 0xFF
+    assert m[0xC939] + 1 == 5 and m[MAP_ID] != mid, \
+        f'stairs: floor {m[0xC939] + 1} map ${m[MAP_ID]:02X}'
+    # JOURNAL in the room: refused (bank $07 SaveAllowCheck -> $6090)
+    p.load_state(open(base, 'rb'))
+    kick(5, 2)
+    give_party_monster(p)
+    ev = []
+    p.hook_register(0x07, 0x6090, lambda c: ev.append('refused'), None)
+    p.hook_register(0x07, 0x60A5, lambda c: ev.append('allowed'), None)
+    adv(p, 60)
+    for b, wt in (('a', 80), ('down', 30), ('right', 30), ('a', 60), ('down', 20),
+                  ('down', 20), ('down', 20), ('a', 90)):
+        p.button_press(b); adv(p, 3); p.button_release(b); adv(p, wt)
+    assert ev == ['refused'], f'JOURNAL in a no-save gate room: {ev}'
+    if keep_dir:
+        shutil.copy(res.rom_path, os.path.join(keep_dir, 'rom_v7_gates.gbc'))
+    print(f'OK: v7 --rom — gate 5 floor 2 -> ${mid:02X} at (4,6) px ({px},{py}); floor 3 '
+          f'${got3[0]:02X} (once per dive); floor 4 ${got4[0]:02X} flag clear / ${mid:02X} '
+          'flag set; stairs -> floor 5; JOURNAL refused')
+
+
 def main():
     do_rom = '--rom' in sys.argv
     if '--only-v6' in sys.argv:          # S99: animated tiles
@@ -2366,6 +2587,22 @@ def main():
         if do_rom:
             test_rom_v6(w6, s6, a6, b6, c6, d6, e6, keep)
         print('PASS (v6 only)')
+        return
+    if '--only-v7' in sys.argv:          # S100: gate rooms
+        tmp = tempfile.mkdtemp(prefix='dwm_v7_')
+        keep = None
+        if '--out' in sys.argv:
+            keep = os.path.abspath(sys.argv[sys.argv.index('--out') + 1])
+            os.makedirs(keep, exist_ok=True)
+            tmp = keep
+        v7_dir = os.path.join(tmp, 'fresh_v7')
+        if os.path.exists(v7_dir):
+            shutil.rmtree(v7_dir)
+        w7, s7, r7 = v7_round_trip(v7_dir)
+        test_compile(v7_dir)
+        if do_rom:
+            test_rom_v7(w7, s7, r7, keep)
+        print('PASS (v7 only)')
         return
     if '--only-v5' in sys.argv:          # S98: fast path while iterating on v5
         tmp = tempfile.mkdtemp(prefix='dwm_v5_')
@@ -2434,7 +2671,13 @@ def main():
     v6_split(os.path.join(tmp, 'split_v6'))
     w6, s6, a6, b6, c6, d6, e6 = v6_round_trip(v6_dir)
     test_compile(v6_dir)
+    v7_dir = os.path.join(tmp, 'fresh_v7')
+    if os.path.exists(v7_dir):
+        shutil.rmtree(v7_dir)
+    w7, s7, r7 = v7_round_trip(v7_dir)
+    test_compile(v7_dir)
     if do_rom:
+        test_rom_v7(w7, s7, r7, keep)
         test_rom_v6(w6, s6, a6, b6, c6, d6, e6, keep)
         test_rom_tilesets(wts, keep)
         test_rom(proj, grids, keep)

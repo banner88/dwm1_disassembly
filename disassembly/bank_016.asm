@@ -1893,14 +1893,14 @@ jr_016_5b72:
     or a
     jr z, jr_016_5bbf
 
-    ld a, [wRNG1]
-    bit 4, a
+    ld a, [wRNG1]                 ; special-room gate (S100, PyBoy-measured):
+    bit 4, a                      ;   wRNG1 bit 4 set (~50 %) AND
     jr z, jr_016_5bbf
 
-    ld a, $03
-    call Div8x8
-    cp $02
-    jr z, jr_016_5c1c
+    ld a, $03                     ;   Div8x8 divides B = wCurrentFloor (loaded
+    call Div8x8                   ;   above) by 3 -> A = floor mod 3, so special
+    cp $02                        ;   rooms appear only on floors 3, 6, 9 ...
+    jr z, jr_016_5c1c             ;   (1-based) — NOT "RNG mod 3"
 
 jr_016_5bbf:
     ; STANDARD MAZE PATH: roll the floor biome/shape via FloorTypeSelectionTable

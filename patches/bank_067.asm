@@ -77,4 +77,4 @@ TilesetGFX_combined_room6b:  ; 1036 bytes compressed (2048 decompressed)
     db $19, $60, $F2, $B0, $FD, $CE, $DF, $61, $73, $D8, $5E, $F7, $D7, $3F, $F5, $1D
     db $FF, $02, $A7, $08, $5D, $01, $FB, $83, $E7, $0D, $BD, $F7, $F5, $FE, $57, $5C
     db $0A, $4F, $1F, $01, $0A, $D0, $4F, $0D, $0A, $10, $5F, $20, $0A, $10, $5F, $53
-    db $0A, $10, $5F, $B9, $0A, $10, $5F, $FF, $0A, $10, $5F, $33
+    db $0A, $10, $5F, $B9, $0A, $10, $5F, $ED, $0A, $10, $5F, $45

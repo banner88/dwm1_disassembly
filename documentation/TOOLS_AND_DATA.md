@@ -138,7 +138,7 @@ S57 fixes: `project.py FLAG_SAFE_RANGES` corrected to the per-byte-audited
 pool [(0x0158,0x0167),(0x01E0,0x01EF)] (EVENT_FLAGS; DOC_AUDIT S57). Owning doc:
 **PROJECT_COMPILER.md**) ·
 `compile_script.py` (✅ --test passes; ⚠️ S53: its OPCODES table says `set_bgm`($41)=2 params — handler `$04:$669D` consumes ONE; fix together with decompile_script.py's PARAM_COUNTS copy + round-trip re-test, see PROJECT_COMPILER.md §8) · `decompile_script.py` (✅) ·
-`compress_tiles.py` / `decompress_tiles.py` (✅ roundtrip) ·
+`compress_tiles.py` / `decompress_tiles.py` (✅ roundtrip; S100 r3: copies capped at 256 B = the game's 8-bit length, decoder 8-bit like the game — longer copies had shifted imported sheets 256 B in-game) ·
 `tile_layout_compiler.py` (✅ — standalone layout compiler: JSON grid
 → padded → LZSS → ASM db; roundtrip verified; editor backend module) ·
 `generate_attr_map.py` (✅ new — builds tile→palette maps from ROM for
@@ -356,7 +356,9 @@ presentation tables mgbdis mis-rendered as instructions (Phase-D re-section help
 palette-group clustering (custom-art import front door). ·
 `patch_breeding_recipe.py` — S12 keystone: direct same-size edits to the vanilla
 special table $16:$4B30 (predates B5; kept as the minimal-edit precedent). ·
-`resection_skill_tables.py` — **NEW S51**, Phase-D item (2b): converts
+`resection_skill_tables.py` — **NEW S51**, Phase-D item (2b) [S100: learn
+region corrected 222 → **218** rows — its $6034+ tail is bank $06 entry-6 code,
+re-sectioned back to code by hand S100; DOC_AUDIT S100]: converts
 `SkillMPCostTable` ($07:$570C) + `SkillLearnReqTable` ($06:$50E0) from fake
 instructions to labeled `dw`/`db` in BOTH trees via the probe-build method;
 byte-perfect asserted; keeps outside-referenced fake-artifact labels at exact
@@ -395,7 +397,8 @@ key should auto-version instead of requiring manual cache clear.
 `search_bytes` · `search_text` · `scan_text` · `view_string` · `hl_calc` ·
 `gate_reference` · `test_roundtrip` (needs pytest) ·
 `map_gate_names` (writes gate_names.json — used by dump_room_data,
-gen_encounter_db; do NOT archive) ·
+gen_encounter_db, editor2 Gates tab; do NOT archive; **REWRITTEN S100** — see
+the S100 rows) ·
 `match_npc_text` (writes npc_text_mapping/npc_with_text — NPC↔dialogue
 join, useful for editor; do NOT archive) ·
 `derive_room_palette` (**NEW S39** — derives any room's runtime BG palette from
@@ -672,3 +675,21 @@ verified overrides.
 | editor2/tests/test_canvas.py v6 (`--only-v6`) + test_compiler S99 cases | GUI: vanilla animated tiles, clone = source, preview, None / Borrow, exact undo; `--rom`: VRAM == census schedule (source / none / borrow / vanilla) | test_compiler 106/106 with --rom |
 | tools/audit_mapid_range.py (S99) + **extracted/mapid_range_audit.json** (regenerated) | 11 new verdict keys (9 overdue since S73 + 2 S99) — selftest PASS again | DOC_AUDIT S99; CROSSBANK_ROOMS "S99 adjudication sweep" |
 | disassembly/bank_001.asm + patches/bank_001.asm (labels/comments) | 65 `RoomAnim_*` / `RoomAnimNone_*` handler labels with census comments; helpers `RollTilePairWobble`, `GreatTreeSway`, `RollTilesRight4/Left4`, `VRAMSwapBytes`, `RollTileRight/Left`; wrong comments replaced | clean `1ca6579…` byte-perfect; one-shot script (not kept) |
+
+## S100 rows (P3.7b part 1: custom rooms on gate floors)
+
+| Item | What | Notes |
+|---|---|---|
+| tools/map_gate_names.py → **extracted/gate_names.json** (REWRITTEN + REGENERATED S100, tool + data together) | gate id → name from the gate-indexed `GateFloorDataTable` ($16:$70A6: floor count byte 3 + boss map byte 4), cross-checked against FULL_FAQ "Levels:" for all 32 gates; new shape `{_generator, gates: [{id, name, faq_name, floors, boss_map, boss_room, floor_types, depth_tier}]}`; `--check`/`--selftest` (verify check 5) | the old tool indexed the boss REDIRECT table ($14:$4897, one row per boss — Demolition has two) as if gate-indexed: names 23-31 were one gate late (DOC_AUDIT S100). Readers `dump_room_data.py` / `gen_encounter_db.py` accept the new shape; `load_names()` helper |
+| tools/gate_reference.py (hand data, FIXED S100) | keys 12-17 re-keyed to ROM id order (were FAQ chapter order) in both dicts; Medal 19 / Mastermind 27 floors | prefer gate_names.json (ROM-derived) |
+| disassembly/bank_001.asm + patches/bank_001.asm (comments only) | 48 gate-name comments in the encounter pointer table + pool headers corrected (they came from the old gate_names.json); `jr_001_4358` gate-music comment (floor before the boss plays the boss theme) | clean build byte-perfect |
+| disassembly/bank_006.asm + patches/bank_006.asm (labels/comments/re-section, zero byte) | `FieldStateDispatch` (entry 6, $6034) re-sectioned from fake `SkillLearnReqTable` rows back to code (218-row table); `MapTransitionMachine` header + `MapTransStateTable` (24 × dw, was fake `call c, DispMapS_566b …`) + 12 `MapTrans_*` handler labels (probe-build addresses) | DOC_AUDIT S100 |
+| disassembly/bank_007.asm (label + comment) / bank_016.asm (comments) | `SaveAllowCheck` $07:$6061 (vanilla JOURNAL ladder); special-room gating comment (Div8x8 divides B = wCurrentFloor) | GATE_GENERATION §3 / §7.6 |
+| tools/build_skill_tables.py (`LEARN_ROWS = 218`, `FIELD_STATE_DISPATCH_BYTES` guard) | `--emit learn` prints 218 rows; any emission that would change rows $DA-$DD (the code) refuses | selftest still round-trips all 222 reads (the game reads those code bytes) |
+| tools/verify_integrity.py | check 5 += `map_gate_names.py` | |
+| extracted/wram_usage.json (regenerated by tools/audit_wram.py) | picks up wGateDiveGate/Mask $DEBC-$DEBD | class A':rammap-span like the neighbouring S73-S75 vars |
+| editor2/core/gates.py (NEW: `vanilla_gates / gate_floors / floor_range / floors_text / arrival_px / effective_chances / stairs_down_row / is_stairs_down` + `GatesMixin` on Document: `gate_inserts / set_gate_inserts / gate_rules_for / rules_serving / gate_rule_rows / gate_floor_plan / describe_gate_rule / set_gate_arrival / clear_gate_arrival / set_can_save / encounter_mode / set_encounter_mode / set_room_music / add_stairs / gate_room_report`) | headless gate model for compiler + GUI | PROJECT_COMPILER §2.16 |
+| editor2/core/project.py (`_normalize_stairs / gate_insert_rows / gate_rooms / room_by_id / room_flags`) + emitters `_gate_insert_table`, `CustomRoomFlagsTable`, RoomEncTable `$FF` + validators `_validate_gates` + template entries 4/5 | the compiler half | PROJECT_COMPILER §2.16; TEMPLATE_SIZE[$71] 395 |
+| editor2/app/gates_tab.py (`GatesTab`, `GateRuleDialog`) + app/rooms/gate_panel.py (`GateRoomGroup`) + canvas `stairs`/`gate_arrival` markers + inspector More ▾ "Stairs down here" + TeleportPanel stairs view + tab/main wiring + world.py (stairs skipped) | the editor half | EDITOR_DESIGN §5.1b "as built S100" |
+| editor2/tests/test_compiler.py (S100 gate cases, pin `7cd7257b…` patched, S100 r3; + LZSS max-copy cases) + test_canvas.py v7 (`--only-v7`) | 121/124 tests; v7 = GUI authoring + PyBoy from a scripted new game | |
+

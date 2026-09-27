@@ -967,7 +967,8 @@ VANILLA cap, never a crank).
 
 **(B) Natural-learn / EVOLVE fork (`LearnLoopFork`, bank `$06`).** The scanner ($06 entry 5,
 `$4f9a`; caller = `$51` level-up flow via `ld hl,$0605; rst $10`) loops skill ids `0..$D9`
-against `SkillLearnReqTable` (18 B: lvl, 6 u16 stats, up to 5 prereq ids `$FF`-padded),
+(S100: exactly the table's 218 real rows — $06:$6034, where row $DA would start, is bank $06
+entry 6 FieldStateDispatch; DOC_AUDIT S100) against `SkillLearnReqTable` (18 B: lvl, 6 u16 stats, up to 5 prereq ids `$FF`-padded),
 skipping already-known ids via the `$c0d8` working copy (caller pre-fills $FF + the monster's
 8 skills). Return in `$ffd8/$ffd9`: code 0 = plain learn (id found in the monster's personal
 learnable queue — natural slots seed it), code 1 = **UPGRADE** (prereq known; old id in

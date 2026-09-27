@@ -84,6 +84,7 @@ class _ObjectPanels:
 
 class RoomsTab(QWidget):
     status = Signal(str)
+    gatesRequested = Signal(str)            # S100: room id -> the Gates tab
     HELP = ('V select · D / X add a door / examine spot on the selected cell · double-click to edit · B paint · I / right-click eyedrop · W walkability · '
             'Esc select · ⌘/Ctrl+wheel zoom · space-drag pan · , . state · 0-9 screen · ⌘Z undo')
 
@@ -466,9 +467,37 @@ class RoomsTab(QWidget):
         self.inspector.removeDoorRequested.connect(self._remove_door)
         self.inspector.goDoorRequested.connect(self._go_door_here)
         self.inspector.rules.rulesEdited.connect(self._rules_edited)
+        # S100 (P3.7b part 1): rooms served as gate floors
+        gg = self.inspector.gate_group
+        gg.arrivalHereRequested.connect(self._gate_arrival_here)
+        gg.arrivalClearRequested.connect(
+            lambda: self._gate_room_op('Clear gate arrival', lambda doc, r: doc.clear_gate_arrival(r)))
+        gg.canSaveToggled.connect(
+            lambda on: self._gate_room_op('Saving allowed' if on else 'No saving here',
+                                          lambda doc, r: doc.set_can_save(r, on)))
+        gg.encounterModeChosen.connect(
+            lambda m: self._gate_room_op(f'Battles: {m}', lambda doc, r: doc.set_encounter_mode(r, m)))
+        gg.musicChosen.connect(
+            lambda v: self._gate_room_op(f'Room music: {v or "none"}',
+                                         lambda doc, r: doc.set_room_music(r, v)))
+        gg.openGatesRequested.connect(lambda: self.gatesRequested.emit(self.room_id or ''))
+        self.inspector.addStairsRequested.connect(self._add_stairs)
         self.sec_insp = Section('Room / screen / selection', self.inspector, 'rooms_inspector',
                                 expanded=False, remember=False)
         self.right_split.addWidget(self.sec_insp)
+        # S100 r3 (user: "separate the gate stuff from 'room/screen/selection'
+        # with its own arrow button"): the inspector's "Inside gates" group in
+        # its own foldable section, vertical scroll only
+        gscroll = QScrollArea()
+        gscroll.setWidgetResizable(True)
+        gscroll.setFrameShape(QScrollArea.NoFrame)
+        gscroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        gscroll.setWidget(gg)
+        self.sec_gate = Section('Inside gates (gate floor)', gscroll, 'rooms_gate',
+                                expanded=False)
+        self.right_split.addWidget(self.sec_gate)
+        gg.shownChanged.connect(self.sec_gate.setVisible)
+        self.sec_gate.setVisible(False)
         # S97 r2: the NPC form is its own foldable section (user request);
         # S98: the section holds whichever OBJECT is selected — NPC, door,
         # one-way exit, examine spot / step trigger
@@ -533,16 +562,20 @@ class RoomsTab(QWidget):
         self.right_split.setStretchFactor(0, 3)
         self.right_split.setStretchFactor(1, 0)
         self.right_split.setStretchFactor(2, 4)
-        self.right_split.setStretchFactor(3, 4)
+        self.right_split.setStretchFactor(3, 3)      # S100 r3: Inside gates
+        self.right_split.setStretchFactor(4, 4)
         from PySide6.QtCore import QSettings
-        st = QSettings('dwm1_disassembly', 'DWM1Editor').value('ui/rooms_right_split4')
+        # S100 r3: 5 sections now — a new key, so an old 4-pane state is not
+        # applied to the wrong panes
+        st = QSettings('dwm1_disassembly', 'DWM1Editor').value('ui/rooms_right_split5')
         if st:
             self.right_split.restoreState(st)
         self.right_split.splitterMoved.connect(lambda *_a: QSettings(
-            'dwm1_disassembly', 'DWM1Editor').setValue('ui/rooms_right_split4',
+            'dwm1_disassembly', 'DWM1Editor').setValue('ui/rooms_right_split5',
                                                       self.right_split.saveState()))
-        for sec in (self.sec_tiles, self.sec_pal, self.sec_insp, self.sec_npc):
+        for sec in (self.sec_tiles, self.sec_pal, self.sec_insp, self.sec_gate, self.sec_npc):
             sec.toggled.connect(lambda _on: self._relayout_right())
+        self.inspector.gate_group.shownChanged.connect(lambda _on: self._relayout_right())
         self.pal_sys.toggled.connect(lambda _on: self._relayout_right())
         self._relayout_right()          # S97 r2: start folded (only Metatiles open)
 
@@ -1009,17 +1042,20 @@ class RoomsTab(QWidget):
 
     def _do_relayout_right(self):
         sp = self.right_split
-        secs = [self.sec_tiles, self.sec_pal, self.sec_insp, self.sec_npc]
+        secs = [self.sec_tiles, self.sec_pal, self.sec_insp, self.sec_gate, self.sec_npc]
         sizes = sp.sizes()
         total = sum(sizes) or sp.height()
         head = self.sec_tiles.button.sizeHint().height() + 6
         pal_h = (self.palettes.sizeHint().height() + self.pal_sys.sizeHint().height()
                  + head + 12) if self.sec_pal.is_expanded() else head
         self.sec_pal.setMinimumHeight(pal_h if self.sec_pal.is_expanded() else 0)
-        flexible = (0, 2, 3)
-        flex = [i for i in flexible if secs[i].is_expanded()]
-        rest = max(0, total - pal_h - sum(head for i in flexible if i not in flex))
-        new = [head, pal_h, head, head]
+        # S100 r3: the Inside-gates section (3) is hidden for vanilla rooms
+        shown = [not s_.isHidden() for s_ in secs]
+        hd = [head if shown[i] else 0 for i in range(len(secs))]
+        flexible = (0, 2, 3, 4)
+        flex = [i for i in flexible if shown[i] and secs[i].is_expanded()]
+        rest = max(0, total - pal_h - sum(hd[i] for i in flexible if i not in flex))
+        new = [hd[0], pal_h, hd[2], hd[3], hd[4]]
         if flex:
             # a section that was folded (header-sized) opens with an equal
             # share instead of its old header height (S97 r2)
@@ -1192,7 +1228,7 @@ class RoomsTab(QWidget):
                 self._show_spot_panel(ref[1], ref[2])
             elif sel['kind'] in ('door', 'door_open', 'door_dead') and ref:
                 self._show_door_panel(ref)
-            elif sel['kind'] == 'exit' and ref and ref[0] == 'exit':
+            elif sel['kind'] in ('exit', 'stairs') and ref and ref[0] == 'exit':
                 self._show_exit_panel(ref[1], ref[2])
 
     def _show_object(self, panel):
@@ -1528,6 +1564,52 @@ class RoomsTab(QWidget):
                                   pres if len(pres) > 1 else None, editable=True)
         self._show_object(self.spot_panel)
 
+    # ------------------------------------------ gate rooms (S100, P3.7b)
+    def _gate_room_op(self, label, fn):
+        room = self.current_room()
+        if room is None:
+            return None
+        rid = self.room_id
+        cmd = self._door_op(label, lambda doc: fn(doc, doc.room(rid)))
+        if cmd is not None:
+            self._show()
+        return cmd
+
+    def _gate_arrival_here(self):
+        cell = self.canvas.selected_cell
+        if cell is None:
+            QMessageBox.information(self, 'Gate arrival', 'Select a cell first (Select tool, V).')
+            return
+        cx, cy = cell
+        if not self.canvas.cell_walkable(cx, cy):
+            if QMessageBox.question(self, 'Gate arrival',
+                                    f'Cell ({cx},{cy}) is a wall — the player would stand in '
+                                    'it. Use it anyway?') != QMessageBox.Yes:
+                return
+        key = self.key
+        self._gate_room_op(f'Gate arrival ({cx},{cy}) screen {key}',
+                           lambda doc, r: doc.set_gate_arrival(r, key, cx, cy))
+
+    def _add_stairs(self, cell):
+        room = self.current_room()
+        if room is None:
+            return
+        cx, cy = cell
+        dead = self._dead_edge((cx, cy), 'exit')
+        if dead:
+            QMessageBox.warning(self, 'Stairs down', dead)
+            return
+        rid, key, st = self.room_id, self.key, self.state_idx
+        cmd = self._door_op(f'Stairs down ({cx},{cy})',
+                            lambda doc: doc.add_stairs(doc.room(rid), key, st, cx, cy))
+        if cmd is not None:
+            self._show()
+            self._select_exit_at((cx, cy))
+            # S100 r3: the cell is painted with the vanilla next-floor well
+            note = getattr(self.s.doc, 'last_import_note', '')
+            self.status_line.setText(note or f'Stairs down at ({cx},{cy}) — painted with the '
+                                     'next-floor well. Walking onto it goes one floor down.')
+
     def _add_spot(self, cell, kind):
         room = self.current_room()
         if room is None:
@@ -1651,6 +1733,11 @@ class RoomsTab(QWidget):
     def _move_marker(self, ref, cx, cy):
         room = self.current_room()
         if not ref or room is None:
+            return
+        if ref[0] == 'gate_arrival':               # S100
+            key = self.key
+            self._gate_room_op(f'Gate arrival ({cx},{cy}) screen {key}',
+                               lambda doc, r: doc.set_gate_arrival(r, key, cx, cy))
             return
         if ref[0] == 'exit':
             e = ref[2]

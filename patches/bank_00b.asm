@@ -2653,7 +2653,9 @@ NewFollowerGfxTable0b:
 ; the fade/BGM logic reads "already inside the gate" → quick whoosh + BGM
 ; continues, instead of the hub→gate dissolve + music restart. The room itself
 ; still runs with wInGateworld=0 for display (Entry0 resets it via the fork →
-; CustomGate1Setup), so the working render and exit-list descent are untouched.
+; bank $71 entry 4 CustomGateInsert, which writes wInGateworld=0 for a served
+; custom room — S100; was CustomGate1Setup), so the working render and
+; exit-list descent are untouched.
 ; Replaces the 'ld hl, wGameState' that the call site needs, so it restores HL
 ; before returning.
 CustomDescentInGate:

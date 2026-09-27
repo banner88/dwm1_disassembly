@@ -264,12 +264,18 @@
         "screen_byte": "0x00",
         "spawn_x": 0,
         "spawn_y": 0,
-        "comment": "descent: PIT walk (col5,row3), gate_flag=$80 -> next gate floor (Pillar B; byte-identical to special rooms $50/$51)"
+        "comment": "descent: PIT walk (col5,row3), gate_flag=$80 -> next gate floor (Pillar B; byte-identical to special rooms $50/$51)",
+        "stairs": "down"
        }
       ]
      }
     },
-    "animation": "none"
+    "animation": "none",
+    "gate_arrival": {
+     "screen": 0,
+     "x": 4,
+     "y": 6
+    }
    },
    {
     "id": "reserved_6e",
@@ -6627,6 +6633,19 @@
     "spawn_x": 7,
     "spawn_y": 6,
     "comment": "S1-era Room $6B entrance as DATA (S94b): GreatTree 2F (4,5) -> gate_island $6B spawn (7,6); vanilla dest was $18"
+   }
+  ],
+  "gate_inserts": [
+   {
+    "room": "gate_rotation",
+    "gate": 1,
+    "floors": [
+     2,
+     3
+    ],
+    "chance": 50,
+    "once_per_dive": true,
+    "comment": "S100: at most once per dive (user 14:39 \u2014 without it the room could be floor 2 AND floor 3 of one dive); data-driven successor of the S41 Pillar B POC (was: every non-boss Villager floor, hardcoded in bank $16)"
    }
   ],
   "layouts": [

@@ -89,6 +89,8 @@ def world_graph(doc, renderer=None, include_vanilla=False):
                 for e in st.get('exits') or []:
                     if e.get('door') or not e.get('dest'):
                         continue
+                    if _v(e.get('gate_flag', 0)) == 0x80:
+                        continue        # S100: Stairs down = next gate floor, not a map link
                     b = node(dest_key(doc, e.get('dest')))
                     sig = (k, _v(e['x']), _v(e['y']), b)
                     if b is None or sig in got:

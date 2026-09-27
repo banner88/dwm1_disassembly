@@ -13,7 +13,7 @@ SECTION "ROM Bank $006", ROMX[$4000], BANK[$6]
     dw jr_006_4028
     dw label6_4d5a
     dw label6_4f9a
-    dw label6_6034
+    dw FieldStateDispatch             ; entry 6 ($0606): per-frame field state router (S100)
 
 label6_400f:
     ld a, [wGameState]
@@ -3407,7 +3407,8 @@ jr_006_50d7:
 
 
 ; -----------------------------------------------------------------------------
-; SkillLearnReqTable  ($06:$50E0 .. $607C) — 222 x 18-byte records, skill-id order.
+; SkillLearnReqTable  ($06:$50E0 .. $6033) — 218 x 18-byte records ($00-$D9), skill-id order
+; (S100 correction: was documented as 222 rows to $607C — see the END note below).
 ; Per-skill requirements a party monster must meet to LEARN the skill:
 ;   +0  level (u8)
 ;   +1 HP  +3 MP  +5 Atk  +7 Def  +9 Agl  +11 Int   (each u16 LE)
@@ -3417,7 +3418,7 @@ jr_006_50d7:
 ; 12/68/-/72/-/62/-. mgbdis rendered the bytes below as fake code; decoded by
 ; tools/gen_skill_records.py and round-trip-proven by build_skill_tables.py.
 ; -----------------------------------------------------------------------------
-SkillLearnReqTable:  ; $06:$50E0 — 222 x 18 B, skill-id order (label added S51;
+SkillLearnReqTable:  ; $06:$50E0 — 218 x 18 B ($00-$D9), skill-id order (label added S51;
 ;   the block below was emitted without it by a tool defect, caught by --check).
     ; --- $00 Blaze: lvl 1; hp 0 mp 7 atk 0 def 0 agl 0 int 20; no prereq
     db $01, $00, $00, $07, $00, $00, $00, $00, $00, $00, $00, $14, $00, $ff, $ff, $ff, $ff, $ff
@@ -3577,7 +3578,7 @@ SkillLearnReqTable:  ; $06:$50E0 — 222 x 18 B, skill-id order (label added S51
     db $0c, $40, $00, $00, $00, $3a, $00, $00, $00, $3e, $00, $30, $00, $ff, $ff, $ff, $ff, $ff
     ; --- $4e CleanCut: lvl 12; hp 68 mp 0 atk 72 def 0 agl 62 int 0; no prereq
     db $0c, $44, $00, $00, $00, $48, $00, $00, $00, $3e, $00, $00, $00, $ff, $ff
-DispMapS_566b:  ; fake-decode ARTIFACT kept at exact offset $566b — referenced by a fake instruction in a not-yet-re-sectioned region of this bank; NOT a real entry point (mid-table byte)
+DispMapS_566b:  ; fake-decode ARTIFACT at offset $566b (mid-table byte, NOT an entry point). Its only referrer was the fake `call c, DispMapS_566b` in MapTransStateTable, re-sectioned to dw S100 — now unreferenced; kept (label only, zero bytes)
     db $ff, $ff, $ff
     ; --- $4f MultiCut: lvl 28; hp 154 mp 140 atk 168 def 0 agl 168 int 148; prereq $4d,$59
     db $1c, $9a, $00, $8c, $00, $a8, $00, $00, $00, $a8, $00, $94, $00, $4d, $59, $ff, $ff, $ff
@@ -3857,18 +3858,90 @@ DispMapS_566b:  ; fake-decode ARTIFACT kept at exact offset $566b — referenced
     db $0c, $44, $00, $00, $00, $3e, $00, $00, $00, $48, $00, $00, $00, $ff, $ff, $ff, $ff, $ff
     ; --- $d9 GigaSlash: lvl 33; hp 231 mp 164 atk 198 def 0 agl 198 int 198; prereq $44,$45,$46,$47
     db $21, $e7, $00, $a4, $00, $c6, $00, $00, $00, $c6, $00, $c6, $00, $44, $45, $46, $47, $ff
-    ; --- $da LIFE: lvl 250; hp 51343 mp 49335 atk 60410 def 52168 agl 49775 int 27527; prereq $cb,$7f,$c2,$95,$62
-label6_6034:  ; fake-decode ARTIFACT kept at exact offset $6034 — referenced by a fake instruction in a not-yet-re-sectioned region of this bank; NOT a real entry point (mid-table byte)
-    db $fa, $8f, $c8, $b7, $c0, $fa, $eb, $c8, $cb, $6f, $c2, $87, $6b, $cb, $7f, $c2, $95, $62
-    ; --- $db RUN: lvl 203; hp 49767 mp 25266 atk 18379 def 43458 agl 52071 int 10319; prereq $05,$21,$00,$07,$d7
-    db $cb, $67, $c2, $b2, $62, $cb, $47, $c2, $a9, $67, $cb, $4f, $28, $05, $21, $00, $07, $d7
-    ; --- $dc IRONIZE: lvl 201; hp 24523 mp 1320 atk 33 def 55065 agl 52169 int 10359; prereq $05,$21,$03,$13,$d7
-    db $c9, $cb, $5f, $28, $05, $21, $00, $19, $d7, $c9, $cb, $77, $28, $05, $21, $03, $13, $d7
-    ; --- $dd Ahhh: lvl 201; hp 22475 mp 63170 atk 64098 def 55784 agl 49847 int 25220; prereq $fa,$d7,$d8,$b7,$c2
-    db $c9, $cb, $57, $c2, $f6, $62, $fa, $e8, $d9, $b7, $c2, $84, $62, $fa, $d7, $d8, $b7, $c2
-; $607c-$607d: bytes between SkillLearnReqTable and the next labeled line (unclassified; preserved verbatim, was fake-decoded)
-    db $84, $62
-; NOTE: fake-decode artifact labels removed with this region: jr_006_51a1, jr_006_5238, jr_006_525f, jr_006_52a7, jr_006_52b9, jr_006_52f7, jr_006_531b, jr_006_5337, jr_006_535b, jr_006_5405, jr_006_5466, jr_006_549f, jr_006_54b9, jr_006_54c3, jr_006_54d5, jr_006_54e4, jr_006_5645, jr_006_5657, jr_006_5710, jr_006_5991, jr_006_59c9, jr_006_5a30, jr_006_6059, jr_006_6062, jr_006_606b
+    ; (no row $DA: the 18 bytes that would hold it start FieldStateDispatch below)
+; -----------------------------------------------------------------------------
+; END of SkillLearnReqTable: 218 rows ($00-$D9), $50E0-$6033. CORRECTED S100:
+; the S51 re-section counted 222 rows and rendered the next 74 bytes as rows
+; $DA-$DD ("LIFE lvl 250", "RUN lvl 203", ...), but $6034 is this bank's OWN
+; entry 6 (header `dw FieldStateDispatch`, called every field frame from bank
+; $01 $4E0F `ld hl,$0606 / rst $10`) — real code, byte-decoded below. Learn-req
+; lookups for skill ids $DA-$DD (if any reach here) read these code bytes
+; (level byte $FA/$CB/$C9 = never learnable). NEVER write learn rows past $D9:
+; it would overwrite the field main dispatch (DOC_AUDIT S100).
+; -----------------------------------------------------------------------------
+
+; =============================================================================
+; FieldStateDispatch — bank $06 entry 6 ($0606), the per-frame field-mode
+; state router. Bails while a map change is being committed ($C88F != 0),
+; then routes on wGameState ($C8EB) bits, highest priority first:
+;   bit 5  map change in progress (set by every exit/warp/staircase path,
+;          e.g. $0B jr_00b_466b, $04 SetMapChangeFlag) -> Jump_006_6b87, the
+;          transition machine (sub-state $C905: 0 = normal fade, $10 = the
+;          in-gate style chosen for in-gate / special-room maps)
+;   bit 7  -> Jump_006_6295       bit 4 -> Jump_006_62b2
+;   bit 0  -> Jump_006_67a9
+;   bit 1  field menu open -> bank $07 entry 0 (rst $10 $0700)
+;   bit 3  -> bank $19 entry 0 (rst $10 $1900)
+;   bit 6  battle request latch -> bank $13 entry 3 (rst $10 $1303, the
+;          battle-transition machine; known_RAM_map $C8EB)
+;   bit 2  -> Jump_006_62f6
+; then: $D9E8 != 0 or $D8D7 != 0 (script running) -> Jump_006_6284;
+; else falls through into the free-walk / input handling at $607E.
+; =============================================================================
+FieldStateDispatch:  ; $06:$6034 (was the artifact label `label6_6034`)
+    ld a, [$c88f]
+    or a
+    ret nz
+
+    ld a, [wGameState]
+    bit 5, a
+    jp nz, Jump_006_6b87
+
+    bit 7, a
+    jp nz, Jump_006_6295
+
+    bit 4, a
+    jp nz, Jump_006_62b2
+
+    bit 0, a
+    jp nz, Jump_006_67a9
+
+    bit 1, a
+    jr z, .notMenu
+
+    ld hl, $0700
+    rst $10
+    ret
+
+.notMenu:
+    bit 3, a
+    jr z, .notBit3
+
+    ld hl, $1900
+    rst $10
+    ret
+
+.notBit3:
+    bit 6, a
+    jr z, .notBattle
+
+    ld hl, $1303
+    rst $10
+    ret
+
+.notBattle:
+    bit 2, a
+    jp nz, Jump_006_62f6
+
+    ld a, [$d9e8]
+    or a
+    jp nz, Jump_006_6284
+
+    ld a, [$d8d7]
+    or a
+    jp nz, Jump_006_6284
+
+; NOTE: fake-decode artifact labels removed with this region (S51): jr_006_51a1, jr_006_5238, jr_006_525f, jr_006_52a7, jr_006_52b9, jr_006_52f7, jr_006_531b, jr_006_5337, jr_006_535b, jr_006_5405, jr_006_5466, jr_006_549f, jr_006_54b9, jr_006_54c3, jr_006_54d5, jr_006_54e4, jr_006_5645, jr_006_5657, jr_006_5710, jr_006_5991, jr_006_59c9, jr_006_5a30 (the S51 list also named jr_006_6059/6062/606b — those were REAL: they are .notMenu/.notBit3/.notBattle above)
     ld a, [$c8a8]
     or a
     jp nz, Jump_006_6284
@@ -5790,6 +5863,19 @@ jr_006_6b3d:
     ret
 
 
+; =============================================================================
+; MapTransitionMachine (S100 annotation) — reached from FieldStateDispatch
+; (bank $06 entry 6) while wGameState bit 5 (map change in progress) is set.
+; Every exit / warp / staircase path sets bit 5 and $C905 = 0 (bank $0B
+; jr_00b_466b / Jump_00b_46a7, bank $04 SetMapChangeFlag). On the first pass
+; ($C905 == 0) the STYLE is chosen for the room being LEFT:
+;   wInGateworld != 0 (a gate maze floor), or mapID >= $50 except $52 (the
+;   Coliseum) and $60  ->  $C905 := $10, the in-gate / special-room style;
+;   else (towns, rooms, boss rooms $30-$4F) -> state $00, the normal fade.
+; The S41 CustomDescentInGate (bank $0B) sets wInGateworld transiently so a
+; custom gate room leaving by its stairs takes the $10 style too. The patched
+; tree routes custom rooms through MapIDClampForPalette (S8) = normal style.
+; =============================================================================
 Jump_006_6b87:
     ld a, [$c905]
     or a
@@ -5816,55 +5902,38 @@ jr_006_6ba2:
 jr_006_6ba7:
     ld a, [$c905]
     rst $00
-    call c, DispMapS_566b
-    ld l, h
-    ld a, e
-    ld l, h
-    rra
-    ld l, l
-    ld d, e
-    ld l, l
-    ld [de], a
-    ld l, [hl]
-    dec hl
-    ld l, [hl]
-    db $db
-    ld l, e
-    db $db
-    ld l, e
-    db $db
-    ld l, e
-    db $db
-    ld l, e
-    db $db
-    ld l, e
-    db $db
-    ld l, e
-    db $db
-    ld l, e
-    db $db
-    ld l, e
-    db $db
-    ld l, e
-    sbc a
-    ld l, [hl]
-    inc d
-    ld l, a
-    ccf
-    ld l, a
-    rst $00
-    ld l, a
-    rra
-    ld l, l
-    ld d, e
-    ld l, l
-    ld [de], a
-    ld l, [hl]
-    dec hl
-    ld l, [hl]
+    ; MapTransStateTable — 24 x dw, indexed by $C905 (rst $00; S100 re-section,
+    ; was fake-decoded as `call c, DispMapS_566b / ld l,h / ...`)
+    dw MapTrans_S00_Begin    ; $00
+    dw MapTrans_S01          ; $01
+    dw MapTrans_S02          ; $02
+    dw MapTrans_S03          ; $03
+    dw MapTrans_S04          ; $04
+    dw MapTrans_S05          ; $05
+    dw MapTrans_S06          ; $06
+    dw MapTrans_Idle         ; $07
+    dw MapTrans_Idle         ; $08
+    dw MapTrans_Idle         ; $09
+    dw MapTrans_Idle         ; $0A
+    dw MapTrans_Idle         ; $0B
+    dw MapTrans_Idle         ; $0C
+    dw MapTrans_Idle         ; $0D
+    dw MapTrans_Idle         ; $0E
+    dw MapTrans_Idle         ; $0F
+    dw MapTrans_S10_InGate   ; $10
+    dw MapTrans_S11          ; $11
+    dw MapTrans_S12          ; $12
+    dw MapTrans_S13          ; $13
+    dw MapTrans_S03          ; $14
+    dw MapTrans_S04          ; $15
+    dw MapTrans_S05          ; $16
+    dw MapTrans_S06          ; $17
+
+MapTrans_Idle:  ; $6BDB — states $07-$0F: nothing to do (bare ret)
     ret
 
 
+MapTrans_S00_Begin:  ; $6BDC — state $00: normal transition begins (SetBGM $02, SFX $52, ...)
     ld a, $02
     call SetBGM
     call InitAudioSystem
@@ -5945,6 +6014,7 @@ jr_006_6c4a:
     ret
 
 
+MapTrans_S01:  ; $6C56 — state $01 (wipe pattern $C906)
     ld a, [$c906]
     and $01
     ld [$c8ec], a
@@ -5966,6 +6036,7 @@ jr_006_6c4a:
     ret
 
 
+MapTrans_S02:  ; $6C7B — state $02
     ld a, $01
     ld [$c8ec], a
     ld a, [$c8a6]
@@ -6087,6 +6158,7 @@ jr_006_6d05:
     db $ec
     or [hl]
     ld h, b
+MapTrans_S03:  ; $6D1F — states $03/$14
     ld a, [$c8a6]
     and $0f
     jr nz, jr_006_6d3a
@@ -6120,6 +6192,7 @@ jr_006_6d3a:
 
     nop
     nop
+MapTrans_S04:  ; $6D53 — states $04/$15
     ld hl, $c905
     inc [hl]
     ld hl, $c88f
@@ -6238,6 +6311,7 @@ jr_006_6e0f:
     jp Jump_006_6ca3
 
 
+MapTrans_S05:  ; $6E12 — states $05/$16
     di
     ld a, $7f
     ldh [rLYC], a
@@ -6257,6 +6331,7 @@ jr_006_6e26:
     ret
 
 
+MapTrans_S06:  ; $6E2B — states $06/$17
     ld a, [$c850]
     or a
     ret nz
@@ -6352,6 +6427,7 @@ jr_006_6e9d:
     ret
 
 
+MapTrans_S10_InGate:  ; $6E9F — state $10: in-gate / special-room transition begins
     ld a, $55
     call PlaySoundEffect
     ld hl, $ffb7
@@ -6430,6 +6506,7 @@ jr_006_6f05:
     ret
 
 
+MapTrans_S11:  ; $6F14 — state $11
     ld a, [$c906]
     and $01
     ld [$c8ec], a
@@ -6454,6 +6531,7 @@ jr_006_6f05:
     ret
 
 
+MapTrans_S12:  ; $6F3F — state $12
     ldh a, [$bb]
     add $20
     ld [$c180], a
@@ -6545,6 +6623,7 @@ jr_006_6fbe:
     ret
 
 
+MapTrans_S13:  ; $6FC7 — state $13
     ld hl, $0000
     ld a, [$c908]
     add l

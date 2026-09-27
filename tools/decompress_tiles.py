@@ -75,7 +75,9 @@ def decompress_lz(rom, bank, step_id):
             if copy_len == 0x13:  # extended length
                 if src >= len(rom):
                     break
-                copy_len = rom[src] + 0x13
+                # 8-bit like the game (`add $13`; dec/jr nz loop: 0 = 256) —
+                # S100 r3, so a round trip catches an over-long copy
+                copy_len = ((rom[src] + 0x13) & 0xFF) or 0x100
                 src += 1
             
             # Back-reference offset

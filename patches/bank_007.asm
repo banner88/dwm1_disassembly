@@ -4925,39 +4925,48 @@ CmpFld_604d:
     or a
     jr nz, jr_007_6090
 
-    call MapIDClampForPalette   ; custom rooms → safe mapID (< $30)
-    cp $60
-    jr z, jr_007_6090
-
-    cp $61
-    jr z, jr_007_6090
-
-    cp $62
-    jr z, jr_007_6090
-
-    cp $63
-    jr z, jr_007_6090
-
-    cp $64
-    jr z, jr_007_6090
-
+; SaveAllowCheck (S100) — same-size rewrite (47 B) of the save-permission
+; ladder (field menu JOURNAL/save): jr_007_60a5 = saving allowed,
+; jr_007_6090 = refused. Vanilla semantics, exhaustively re-checked over all
+; mapIDs $00-$6A: allowed iff mapID < $30 (towns/rooms) or mapID in
+; {$50,$51,$5A,$5B,$5C} (the treasure/priest special rooms); refused for boss
+; rooms $30-$4F, the forest/conveyor/maze specials $52-$59, $5D-$6A (the
+; original's five `cp $60..$64 / jr z, refuse` tests were redundant — those
+; ids fall through to "refuse" anyway — which funds the custom branch). Gate
+; maze floors never reach here (wInGateworld != 0 -> refused above).
+; Custom rooms (>= $6B): bank $71 entry 5 CustomRoomFlags, bit 0 = saving
+; NOT allowed (custom.rooms[].can_save false); default = allowed (the S8
+; behaviour, which clamped every custom room to Castle).
+SaveAllowCheck:
+    ld a, [wMapID]
+    cp CUSTOM_ROOM_START
+    jr nc, .custom
     cp $30
-    jr c, jr_007_60a5
-
-    cp $5a
-    jr z, jr_007_60a5
-
-    cp $5b
-    jr z, jr_007_60a5
-
-    cp $5c
-    jr z, jr_007_60a5
-
+    jr c, jr_007_60a5           ; ordinary rooms: allowed
     cp $50
     jr z, jr_007_60a5
-
     cp $51
     jr z, jr_007_60a5
+    cp $5a
+    jr c, jr_007_6090           ; $30-$4F, $52-$59: refused
+    cp $5d
+    jr c, jr_007_60a5           ; $5A-$5C: allowed
+    jr jr_007_6090              ; $5D-$6A: refused
+.custom:
+    ld hl, $7105                ; bank $71 entry 5: E = room flags
+    rst $10
+    bit 0, e
+    jr z, jr_007_60a5           ; bit 0 clear: allowed
+    nop                         ; -- 10 pad bytes: region stays 47 --
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop                         ; (falls into jr_007_6090: refused)
 
 jr_007_6090:
     ld hl, $0243

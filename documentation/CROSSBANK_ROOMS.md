@@ -262,8 +262,12 @@ section is the custom-room recipe and the editor build spec.
 > see **GATE_GENERATION.md §6**. The hook is the special-floor `rst $00` dispatch
 > at `$16:$5C1C`; each handler just sets `wMapID` + `wInGateworld=0` — the same
 > `wInGateworld=0` mode custom rooms (mapID ≥ `$6B`) already render in, so a
-> dispatch slot pointed at a custom mapID drops it into the rotation. (Not yet
-> built — ROADMAP Phase 2C.)
+> dispatch slot pointed at a custom mapID drops it into the rotation. **Built
+> differently:** S41 inserted before the vanilla gating (a fork, not a dispatch
+> slot) and S100 made it data-driven — GATE_GENERATION §7.6. A room served in a
+> gate must NOT use a pinned pool (this section's recipe): pinning rewrites
+> `wGateID`/`wCurrentFloor` and the next floor would belong to that gate — use
+> `encounters.follow_gate` (RoomEncTable gate byte $FF, S100).
 
 ### What it takes (two patches)
 

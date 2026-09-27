@@ -37,7 +37,9 @@ def main():
     try:
         with open(GATE_NAMES_PATH) as f:
             gn = json.load(f)
-            if isinstance(gn, list):
+            if isinstance(gn, dict) and 'gates' in gn:   # S100 shape (map_gate_names.py)
+                gate_names = {g['id']: g['name'] for g in gn['gates']}
+            elif isinstance(gn, list):
                 gate_names = {i: g.get('name', f'Gate {i}') if isinstance(g, dict) else str(g) for i, g in enumerate(gn)}
             elif isinstance(gn, dict):
                 gate_names = {int(k): v if isinstance(v, str) else v.get('name', f'Gate {k}') for k, v in gn.items()}

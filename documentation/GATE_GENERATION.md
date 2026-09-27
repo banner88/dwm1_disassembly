@@ -94,7 +94,8 @@ After loading config (`$16:$5B72`), per non-boss floor:
 ```
 if wCurrentFloor+1 == last_floor → BOSS floor   ($16:$5BE1): load boss room + spawn
 else:
-   if wGateID != 0  AND  wRNG1 bit4  AND  (RNG mod 3 == 2):
+   [S41/S100 patched tree: GateDecisionFork — custom rooms, §7.6]
+   if wGateID != 0  AND  wRNG1 bit4  AND  (wCurrentFloor mod 3 == 2):
         → SPECIAL-ROOM path   ($16:$5C1C)
    else:
         → STANDARD maze path  ($16:$5BBF):
@@ -104,7 +105,19 @@ else:
 ```
 
 So gate 0 (Gate of Beginning) **never** takes the special path, and special rooms
-are gated behind a ~1/3 roll on top of an RNG bit — i.e. occasional. ✅
+appear **only on floors 3, 6, 9 …** (1-based; `wCurrentFloor` = floor − 1), about
+half the time (wRNG1 bit 4). ✅ **CORRECTED S100** (was "RNG mod 3 == 2"): the
+test is `ld a,$03 / call Div8x8 / cp $02`, and `Div8x8` divides **B** — loaded
+with `wCurrentFloor` just before the boss test (`ld a,[wCurrentFloor] / ld b,a /
+inc a / cp [hl]`). PyBoy S100 on the Gate of Reflection (29 floors): specials
+only on floors 3 and 6 (5 of 13 samples), never on floors 2, 4, 5, 7, 8 (39
+samples). Any code inserted before this test must preserve B (§7.6).
+
+**Floor numbering.** The first-entry branch sets `wCurrentFloor = 0`; each floor
+change increments it; the boss floor is served when `wCurrentFloor + 1 ==
+last_floor`. So the game's floor N is `wCurrentFloor = N − 1`, and `last_floor`
+(byte 3) is the gate's floor count INCLUDING the boss floor — it equals the FAQ's
+"Levels: N" for all 32 gates (`tools/map_gate_names.py` checks it).
 
 ---
 
@@ -526,16 +539,109 @@ point `jr_00b_466b` (`$0B:$45F9`), a byte-neutral `call CustomDescentInGate` (it
 in-gate state. Result: whoosh + BGM continuous, render and descent unchanged. Non-custom
 rooms (`wMapID < $6B`) are untouched. (KEY_LESSONS S41.)
 
-**Production note (not in the POC).** The POC forces `$6D` on every non-boss floor. For
-*occasional* placement, gate the `.gate1` branch behind the existing RNG roll (or a
-`CustomGateRotationTable[wGateID]` weight) instead of jumping unconditionally to
-`CustomGate1Setup`.
+**Production note — DONE S100 (§7.6).** The POC forced `$6D` on every non-boss
+Villager floor from a hard-coded `.gate1` branch + `CustomGate1Setup`; both were
+removed S100 — the fork now asks bank $71 entry 4 for a data-driven rule (gate,
+floors, chance, flag terms, once per dive), and the example project expresses the
+POC as `gate_rotation` on Villager floors 2-3 at 50 %.
 
 **Files:** `patches/bank_016.asm` (fork + `CustomGate1Setup`), `patches/bank_000.asm`
 (`$26DD[$6D]` gate-tileset record, 1-screen), `patches/bank_017.asm`
 (`CustomRoomPalPtr[2]`/`CustomRoomAttr[2]` → borrow `$6B`), `patches/wram.asm`
 (`wCustomStep_Room6D_S0 $D47D`), `patches/bank_060.asm` (`$6D` room data + descent exit),
 `patches/bank_00b.asm` (`CustomDescentInGate` transition intercept).
+
+---
+
+## 7.6 Custom rooms on gate floors, data-driven (S100, ROADMAP P3.7b part 1) ✅ built, PyBoy-verified, NOT yet user-tested
+
+Authoring: PROJECT_COMPILER §2.16 (`custom.gate_inserts[]` + the room's
+`gate_arrival` / Stairs down / `can_save` / `encounters.follow_gate` / `music`);
+editor: the Gates tab + the Rooms-tab "Inside gates" group (EDITOR_DESIGN §5.1b).
+
+**Decision point.** `GateDecisionFork` (bank $16 tail, the S41 in-place call at
+`$5BA9`) on every NON-boss floor: (1) anchor return → standard maze (S73,
+unchanged); (2) `push bc` / **bank $71 entry 4 `CustomGateInsert`** / `pop bc` —
+B must survive (the vanilla special-room test that follows divides it, §3); a hit
+(E=1) → `pop hl` + `ret` (the room is already set up; this unwinds to entry 5's
+caller exactly as the vanilla special handlers do); (3) gate 0 → standard maze;
+(4) else `ret` into the vanilla gating.
+
+**Entry 4.** Walks `GateInsertTable` in list order. A record applies when its gate
+== `wGateID`, `floor_lo ≤ wCurrentFloor ≤ floor_hi`, its once bit is clear in
+`wGateDiveMask`, and every flag term holds (`TestEventFlag`); only THEN is its
+chance rolled — `GenerateRNG`, `RNG16 mod 100` (the `SelectFloorType` roll) `<
+chance`; 100 % draws no RNG. The first hit writes `wMapID`, `wInGateworld = 0`,
+`wWarpSpawnX/Y` (absolute pixels — the exact contract of the vanilla handler
+`$16:$5D0D`) and sets its once bit. **A gate with no applicable record never calls
+`GenerateRNG`**, so its floors are byte-for-byte vanilla (A/B S100: Gate of
+Reflection, 18 floor decisions from one save — maps, spawns, special/standard
+identical to the S99 build). Engine bug caught S100 before delivery: the record
+walk uses E for record sizes, so the end of the table must reload E = 0 (a
+stale E read as a hit and hung the floor load — KEY_LESSONS S100).
+
+**Once per dive.** `wGateDiveGate` ($DEBC, = wGateID+1) / `wGateDiveMask`
+($DEBD): entry 4 resets both on floor 0 (a new dive — the first-entry branch) or
+when `wGateID+1` differs (an anchor return into another gate). They sit outside
+the WRAM save image, so bank $73's main-image detectors copy them to / from SRAM
+**`$BFCA/$BFCB`** (the reserved tail after the "F2" gate, inside checksum v3's
+third segment) — a save made in a served room keeps them (PyBoy S100: save in the
+room on floor 2 → reset → continue → dive bytes 6/1 restored → the stairs lead to
+a maze floor 3, not the 100 % once-per-dive room again). Old saves hold whatever
+the tail held: harmless (mismatch → reset; a stale mask can only suppress a room).
+
+**Saving** — bank $07 `SaveAllowCheck` (field menu OPTN → JOURNAL), vanilla
+verdict: allowed iff mapID < $30 or mapID ∈ {$50,$51,$5A,$5B,$5C} (treasure /
+priest rooms); refused on maze floors (`wInGateworld ≠ 0`), boss rooms $30-$4F,
+the forest / conveyor / maze specials $52-$59 and $5D+. The patched same-size
+rewrite keeps every vanilla verdict (exhaustive byte interpretation over all 256
+mapIDs, S100) and asks entry 5 for custom rooms (`can_save` false → refused,
+"Cannot record in the Journal here."; default allowed — the S8 behaviour).
+
+**Transitions + music.** Entering a served room from a maze floor and leaving by
+its stairs (gate flag $80) use the in-gate style (S41 `CustomDescentInGate`,
+bank $06 `MapTransitionMachine`, $C905 = $10). A served room with no music keeps
+the gate's: `LoadNewBGMIdIntoA`'s gate path returns $34, or on the floor BEFORE
+the boss floor the boss room's `RoomBGMTable` entry — the same as a vanilla floor
+(PyBoy S100, Bazaar Gate: maze floors 7/8/9 = $34/$0C/$0C; a served room on floor
+8 = $0C, also after save + reload). A room song (`music`) overrides it.
+
+**Free-colour rooms (S100 r3, built, NOT yet user-tested).** The descent
+transition draws its blank with tile `$E0` = colour 1 and never sets attrs:
+state $10 fills 20×14 map rows 18 below the screen origin (`[$c90b/c]` +
+$0240, what state $12's raster squeeze shows outside the room), state $13
+wipes the room's columns, and states $14-$17 fade every hardware colour to
+the palette BUFFER's colour 1 ($C797 + 8n + 2) while the next floor loads.
+Vanilla forces colour 1 = cream, so all of it reads as a cream wipe; a room
+with own colour 1 (FreeColor1Hook) showed its own colour (user S100 r3). Fix:
+state $10 (after the fill base is known) → bank $73 entry 19 `GateWipeAttr`
+(those rows' attrs := 7); end of state $12 → entry 20 `GateLeaveFreePal`
+(marked slots: buffer colour 1 := slot 7's cream, then entry 13 pushes it to
+hardware). Same-size (the $98xx store 18 → 14 B, the $c180-3 stores 12 → 7
+B + nop; states $11-$13 keep $6F14/$6F3F/$6FC7). Both return at once for
+vanilla rooms and unmarked palettes.
+
+**The well graphic (S100 r3).** Vanilla's next-floor hole: special room $51
+(Priest) cell (8,2) = sheet slots $2C/$2D/$2E/$2F (walkable side, threshold
+$20) — black hole, colour-0 rim, a plain colour-2 surround ($50's copy at
+cell (1,6), slots $24-$27, has cream colour-1 corners). The editor's "Stairs
+down here" paints it with the surround replaced by the cell's own floor.
+
+**Battles.** A served room with `encounters.follow_gate` (RoomEncTable gate byte
+$FF) runs the per-step encounter handler WITHOUT pinning, so battles draw the
+dive's own pool (PyBoy S100: vault on Bazaar floor 5 → pool 10, a Bazaar pool;
+Villager floor 3 → pool 2) and `wGateID`/`wCurrentFloor` stay the dive's. A FIXED
+pool is refused by the compiler for served rooms: entry 1 rewrites
+`wGateID`/`wCurrentFloor` every step, so the next floor would belong to that gate.
+
+**Measured end to end (PyBoy S100, the user's .sav):** real gate entry (the
+pedestal exit's own bytes: dest = gate, flag 1) → floor-1 maze, dive mask 0 →
+the staircase transition → rule floor 2 served at (4,6); an examine spot's YES
+sets a flag → the real stairs → the flag rule serves another room on floor 3 at
+its arrival, JOURNAL refused there, own song, a Villager battle; once-per-dive
+suppression; flag clear → vanilla; 40-sample chance runs (50 % → 19/40 and
+19/40; an out-of-range floor 0/40); `test_canvas.py` v7 --rom from a scripted
+new game.
 
 ---
 
@@ -570,6 +676,8 @@ rooms (`wMapID < $6B`) are untouched. (KEY_LESSONS S41.)
 | `$C960` | `wStaircaseScreen` | screen index holding the down-staircase |
 | `$C100-F` | — | per-screen content state (placement) |
 | `$C969` | `wInGateworld` | 1 = generated maze mode; 0 = fixed template / overworld |
+| `$DEBC` | `wGateDiveGate` | S100 patched: wGateID+1 of the dive in progress (0 = none); SRAM `$BFCA` |
+| `$DEBD` | `wGateDiveMask` | S100 patched: once-per-dive rule bits served this dive; SRAM `$BFCB` |
 | `$C300` | — | screen tile-id shadow buffer (read for standing-tile lookup) |
 | `$AA` (HRAM) | — | tile id under the player; behavior class = `$AA >> 2` |
 | `$CB0B` | — | party slot 0 status byte (`+$0B`); bit7 set = skipped by floor damage |
@@ -589,6 +697,10 @@ rooms (`wMapID < $6B`) are untouched. (KEY_LESSONS S41.)
 | `$16:$5C1C` | — | SPECIAL path: roll FloorType2 → `rst $00` dispatch |
 | `$16:$5C50…` | — | special-room handlers (set `wMapID`, `wInGateworld=0`) |
 | `$16:$5FC0` | `SelectFloorType` | weighted threshold roll |
+| `$16:$7CB9` | `GateDecisionFork` | patched tree: anchor / custom room (bank $71 entry 4) / gate 0 / vanilla (§7.6) |
+| `$71` entry 4 | `CustomGateInsert` | patched tree: `GateInsertTable` rule walk (§7.6) |
+| `$07:$6061` | `SaveAllowCheck` | JOURNAL permission ladder (label S100; patched same-size rewrite, §7.6) |
+| `$06:$6034` | `FieldStateDispatch` | bank $06 entry 6, per-frame field router (S100; bit 5 → `MapTransitionMachine`) |
 | `$16:$5FE4` | `label16_5fe4` (entry 6) | map-overview VRAM + grid build kickoff |
 | `$16:$605B` | `label16_605b` | the maze grid builder |
 | `$16:$6432` | `SaveBrd_6432` | content (item/master) placement |
@@ -659,7 +771,8 @@ rooms (`wMapID < $6B`) are untouched. (KEY_LESSONS S41.)
    `(piece<<4)|variant`, but the table turning a piece id into the rendered
    screen's tile layout isn't fully pinned. Needed to author *new* maze pieces
    (vs. reweighting existing ones).
-3. **Full `rst $00` dispatch enumeration** 🟡 — mechanism + ~7 handlers confirmed;
+3. **Full `rst $00` dispatch enumeration** 🟡 (S100: custom rooms no longer need a
+   dispatch slot — §7.6 inserts before the vanilla gating) — mechanism + ~7 handlers confirmed;
    enumerate every slot so reusable slots are known precisely.
 4. **`SetBrd_6744`/`SetBrd_6800` carve algorithm** 🟡 — outline understood;
    step-trace pending for guaranteed-connectivity guarantees.

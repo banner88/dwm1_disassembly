@@ -87,6 +87,8 @@ class Project:
         self.vanilla_exit_exts = (list(self.custom.get('vanilla_exit_extensions', []))
                                   + self._lower_entrance_redirects())
         self.rooms = self._dense_rooms()
+        self._normalize_stairs()
+        self._gate_rows = None
         self.palettes = self.custom.get('palettes', [])
         self._pal_by_id = {p['id']: p for p in self.palettes}
         self._dialogue = self.custom.get('dialogue', [])
@@ -539,6 +541,135 @@ class Project:
 
     def room_by_mid(self, mid):
         return self.rooms[mid - 0x6B]
+
+    def room_by_id(self, rid):
+        for r in self.rooms:
+            if r.get('id') == rid:
+                return r
+        return None
+
+    # ------------------------------------------------- gates (S100, P3.7b)
+    def _normalize_stairs(self):
+        """`{"x", "y", "stairs": "down"}` exit rows (the editor's Stairs
+        down object) get the fixed descent bytes; explicit bytes must agree."""
+        from . import gates as G
+        for r in self.rooms:
+            for k, scr in self.room_screens(r).items():
+                for st in self.screen_states(scr):
+                    for e in st.get('exits', []) or []:
+                        if e.get('stairs') is None:
+                            continue
+                        if e['stairs'] != 'down':
+                            raise ProjectError(
+                                f"room {r.get('id')} screen {k}: stairs must be "
+                                f"'down' (got {e['stairs']!r})")
+                        for key, v in G.STAIRS_DOWN_FIELDS.items():
+                            if key not in e:
+                                e[key] = v
+                            elif F.val(e[key]) != F.val(v):
+                                raise ProjectError(
+                                    f"room {r.get('id')} screen {k}: stairs-down "
+                                    f"exit ({e.get('x')},{e.get('y')}) has {key}="
+                                    f"{e[key]!r}; a stairs-down row is always "
+                                    f"{G.STAIRS_DOWN_FIELDS}")
+
+    def gate_insert_rows(self):
+        """custom.gate_inserts[] (S100, ROADMAP P3.7b; PROJECT_COMPILER
+        §2.16) resolved, in list order:
+            {"room": "<custom room id>", "gate": 0-31,
+             "floors": [first, last] | [n] | n | "all",   # game numbering
+             "chance": 1-100, "when": [flag terms], "once_per_dive": bool,
+             "comment": "..."}
+        -> [{index, room_id, mapID, gate, first, last, chance, once_bit,
+             px, py, terms[(idx, must_clear)], comment}]. Arrival pixels come
+        from the room's `gate_arrival` {screen, x, y}."""
+        if self._gate_rows is not None:
+            return self._gate_rows
+        from . import gates as G
+        rows, once_next = [], {}
+        for i, ru in enumerate(self.custom.get('gate_inserts') or []):
+            c = f"custom.gate_inserts[{i}]"
+            unknown = set(ru) - {'room', 'gate', 'floors', 'chance', 'when',
+                                 'once_per_dive', 'comment'}
+            if unknown:
+                raise ProjectError(f"{c}: unknown keys {sorted(unknown)}")
+            room = self.room_by_id(ru.get('room'))
+            if room is None or room.get('placeholder'):
+                raise ProjectError(f"{c}: room {ru.get('room')!r} is not a "
+                                   "custom room of this project")
+            gate = int(F.val(ru.get('gate', -1)))
+            if not 0 <= gate <= 31:
+                raise ProjectError(f"{c}: gate must be 0-31 (got {gate})")
+            floors = G.gate_floors(gate, self.repo_root or self.root)
+            try:
+                first, last = G.floor_range(ru.get('floors', 'all'), floors)
+            except ValueError as e:
+                raise ProjectError(f"{c}: {e}")
+            if first < G.MIN_FLOOR:
+                raise ProjectError(f"{c}: floor {first} — custom rooms start at "
+                                   f"floor {G.MIN_FLOOR} (the first floor stays "
+                                   "the gate's own)")
+            if floors and last > floors - 1:
+                raise ProjectError(
+                    f"{c}: floor {last} — gate {gate} has {floors} floors and "
+                    f"floor {floors} is its boss floor; the last floor a room "
+                    f"can take is {floors - 1}")
+            if last < first:
+                raise ProjectError(f"{c}: floors run backwards ({first}-{last})")
+            chance = int(F.val(ru.get('chance', 100)))
+            if not 1 <= chance <= 100:
+                raise ProjectError(f"{c}: chance must be 1-100 % (got {chance})")
+            terms = []
+            for t in ru.get('when') or []:
+                is_ = t.get('is', 'set')
+                if is_ not in ('set', 'clear'):
+                    raise ProjectError(f"{c}: term 'is' must be set/clear")
+                terms.append((self.resolve_flag_ref(t.get('flag'), c),
+                              is_ == 'clear'))
+            if len(terms) > G.MAX_TERMS:
+                raise ProjectError(f"{c}: {len(terms)} flag terms (max {G.MAX_TERMS})")
+            once_bit = 0
+            if ru.get('once_per_dive'):
+                k = once_next.get(gate, 0)
+                if k >= G.MAX_ONCE_PER_GATE:
+                    raise ProjectError(
+                        f"{c}: more than {G.MAX_ONCE_PER_GATE} once-per-dive "
+                        f"rules on gate {gate} (one bit each in wGateDiveMask)")
+                once_bit = 1 << k
+                once_next[gate] = k + 1
+            arr = room.get('gate_arrival')
+            if not arr:
+                raise ProjectError(
+                    f"{c}: room {room.get('id')!r} has no gate_arrival "
+                    "{screen, x, y} — where the player appears when the room "
+                    "is served as a gate floor")
+            scr = int(arr.get('screen', 0))
+            if scr not in self.room_screens(room):
+                raise ProjectError(f"{c}: room {room.get('id')!r} gate_arrival "
+                                   f"screen {scr} does not exist")
+            if not (0 <= int(arr['x']) <= 9 and 0 <= int(arr['y']) <= 7):
+                raise ProjectError(f"{c}: gate_arrival cell outside the 10x8 grid")
+            px, py = G.arrival_px(scr, arr['x'], arr['y'])
+            rows.append({'index': i, 'room_id': room.get('id'),
+                         'mapID': F.val(room['mapID']), 'gate': gate,
+                         'first': first, 'last': last, 'chance': chance,
+                         'once_bit': once_bit, 'px': px, 'py': py,
+                         'terms': terms, 'comment': ru.get('comment', '')})
+        self._gate_rows = rows
+        return rows
+
+    def gate_rooms(self):
+        """{room id: [rule rows]} for rooms served inside gates."""
+        out = {}
+        for row in self.gate_insert_rows():
+            out.setdefault(row['room_id'], []).append(row)
+        return out
+
+    @staticmethod
+    def room_flags(r):
+        """CustomRoomFlagsTable byte (bank $71 entry 5): bit 0 = saving
+        NOT allowed (custom.rooms[].can_save false; default allowed)."""
+        return 0 if r.get('can_save', True) else 0x01
 
     def master_rooms(self):
         compat = (self.build.get('compat') or {}).get('master_table_rooms')
