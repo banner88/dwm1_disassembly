@@ -392,7 +392,7 @@ registering an emitter; nothing existing changes.
 | Emitter | Consumes | Target | Banks |
 |---|---|---|---|
 | `rooms60` | `custom.rooms/scripts/dialogue` | `file:patches/bank_060.asm` | `$60` |
-| `dispatch71` | `custom.rooms` (records, encounters) + `custom.music` (room BGM table, S64) | `file:patches/bank_071.asm` | `$71` |
+| `dispatch71` | `custom.rooms` (records, encounters, animation S99) + `custom.music` (room BGM table, S64) | `file:patches/bank_071.asm` | `$71` |
 | `palettes_a` | `custom.palettes` (placement a) | `region:…#room_palettes_a` | `$17` |
 | `render17` | `custom.rooms` (+ placement-b palettes) | `region:…#room_render_tables` | `$17` |
 | `wram_steps` | `custom.rooms` + `custom.wram` | `region:…#wram_step_counters` | — |
@@ -415,22 +415,25 @@ user-confirmed hand-authored code:
 * `editor2/core/templates/bank_060_head.asm` — bank byte, 7-entry `rst $10`
   table, `CustomPtrChase`, `DummyStepEntry/NPCs/Exits`, entries 0–6
   (readers, `GateAwareDispatch`, `CustomScriptRead`, `CustomTextDisplay`).
-* `editor2/core/templates/bank_071_head.asm` — bank byte, 3-entry table
-  (S64), `CopyCustomRoomRecord`, `CustomEncResolve`,
+* `editor2/core/templates/bank_071_head.asm` — bank byte, 4-entry table
+  (S99; 3 since S64), `CopyCustomRoomRecord`, `CustomEncResolve`,
   `CustomRoomBGMResolve` (entry 2: E := `CustomRoomBGMTable[wMapID]` or 0;
-  gate floors return 0 — SOUND_SYSTEM §8).
+  gate floors return 0 — SOUND_SYSTEM §8), `CustomAnimSource` (entry 3,
+  S99: E := the room's animation source — §2.15).
 
 Two pins, both enforced at compile time:
 
 1. **sha256** in `editor2/core/templates/PINNED_SHA256` — a drifted
    template refuses to compile. Re-pin (`--pin-templates`) ONLY after a
    deliberate engine session changes the head. Re-pinned S64 (bank $71
-   entry 2 added: `64cb43ee…be23`; bank $60 unchanged `63969b1a…33d9`).
+   entry 2 added: `64cb43ee…be23`; bank $60 unchanged `63969b1a…33d9`); re-pinned S99 (bank $71 entry 3 added: `99b8eb7b…a708`, historical
+   S64 value `64cb43ee…be23`).
 2. **TEMPLATE_SIZE** in `editor2/core/validators.py` — measured from the
    reference `game.sym`: bank `$60` head = **283 B**
-   (`CustomScriptMasterTable @ $411B`, S53), bank `$71` head = **142 B**
-   (`Custom26DDTable @ $408E`, S64; history 103 S53 → 116 S55 flag fix →
-   142 S64 entry-2 dw + resolver). Used by the pre-build overflow check
+   (`CustomScriptMasterTable @ $411B`, S53), bank `$71` head = **164 B**
+   (`Custom26DDTable @ $40A4`, S99; history 103 S53 → 116 S55 flag fix →
+   142 S64 entry-2 dw + resolver → **164 S99** entry-3 dw + CustomAnimSource,
+   §2.15). Used by the pre-build overflow check
    (template + counted generated payload ≤ `$4000`). Re-measure from the
    new `.sym` whenever a template is re-pinned.
 
@@ -570,6 +573,7 @@ checks (§2.14).
 ```
 editor2/
   core/ project.py formats.py textenc.py scriptgen.py validators.py
+        animation.py         # S99 room tile animation: census access + preview Player
         emitters.py compiler.py builder.py layouts.py music.py
         render.py            # ROM-built renderer (S72; PyBoy-validated)
         render_project.py    # LIVE renderer from project.json (S93; == render.py, tested)
@@ -666,7 +670,9 @@ editor** (`Document.localize_tileset` copies a room's vanilla sheet into
 `assets/<id>.2bpp`; walkability flips edit that sheet — `ensure_twin`; S95
 `import_metatile` copies 8×8 graphics from another room's sheet into free
 slots — free = 128 − tiles placed in any layout on the tileset − author
-metatiles − 77/78 − the protected vocabulary of the rooms' vanilla sources).
+metatiles − the slots the rooms on that sheet ANIMATE (S99: their `animation`
+handlers; pre-S99 always 77/78) − the protected vocabulary of the rooms'
+vanilla sources).
 
 **`screens[k].palette` (S95):** a project palette id for one screen; resolution
 `states[n].palette › screens[k].palette › render.palette › vanilla source`
@@ -887,6 +893,43 @@ mixed into `Document`): `add_door` (unconnected) / `link_doors` /
 `add_spot` / `update_spot`, `talk_spec` / `set_talk` / `new_talk`. Every
 mutation is one undo step. `core/world.py` builds the World tab's graph
 from the same data (no bytes re-derived).
+
+## §2.15 S99 — room tile animation (`custom.rooms[].animation`, ROADMAP P3.3e)
+
+```json
+"animation": "source"      // the room's source_mapID's own animation
+"animation": "none"        // no tile animation
+"animation": "0x3D"        // borrow any vanilla room's animation ($00-$6A)
+```
+
+Resolved by `formats.anim_source(room)` → one byte per room in the generated
+**`CustomAnimSrcTable`** (bank $71, after `RoomEncTable`, indexed
+`mapID-$6B`, `ANIM_TABLE_LEN EQU <room count>`; placeholders and `none` =
+**$6B**, the dispatch table's own bare-`ret` row). Read every field frame by
+the new template **entry 3 `CustomAnimSource`** (E := table byte, or $6B out
+of range) from the rewritten bank-$01 `PerRoomVRAMDispatch` (custom rooms
+only; vanilla rooms index by `wMapID` as before). What each source animates:
+ROOM_DATA_FORMAT "Animated tiles" (census `extracted/room_animations.json`).
+
+**Absent = legacy**: the pre-S99 behaviour (Castle's handler, `$00` — tiles
+77-78 roll) plus a warning. The editor migrates on open (`Document.
+_migrate_animation`, user decision S99): `source` when the room still draws
+with its source room's sheet (every clone; a new room made on a vanilla
+tileset), else `none`. New clones get `source`, new rooms `source` (vanilla
+tileset) or `none` (blank sheet).
+
+**Validators**: a value that is not `none` / `source` / a map ID
+$00-$6A is an ERROR; map `$08` (the breeding cutscene's DMG-palette pulse,
+no tile effect) is an ERROR; a `spec` tileset slot that a room on the sheet
+animates is a warning (replaces the fixed "77/78 no-go" warning).
+
+**Template + pin (S99)**: `bank_071_head.asm` entry 3 + `CustomAnimSource`
+(20 B) — head 142 → **164 B** (`TEMPLATE_SIZE[0x71]`), sha256 re-pinned
+(`99b8eb7b…`). Reference patched md5 **`d072eb516dabc4799d830c170bbc9d9f`**
+(patched; built S99, NOT yet user-tested): the bank-$01 rewrite + template +
+table, and the example project's explicit `animation` values (arena_clone
+`source` = $06, a bare `ret`; the rest `none`) — so slots 77/78 no longer roll
+in the example rooms. Prev `ce24de8b…` (patched, historical).
 
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 

@@ -39,6 +39,7 @@ This document records every bug encountered and the root cause. Future implement
 **Root cause**: MapIDClampForDispatch was returning $65 (RET-only handler) instead of $00 (Castle handler). Castle's VRAM handler maintains display state needed for correct palette. Without it, palette corrupts.
 **Fix**: Return $00 (Castle) from MapIDClampForDispatch, not a bare RET handler.
 **Rule**: The VRAM dispatch handler for custom rooms must be Castle's ($00), not a no-op.
+*S99 correction:* MEASURED FALSE today — forcing a bare-`ret` handler in two custom rooms left the screen pixel-identical and the palette buffer unchanged (vanilla's own table already points $6B-$6F at a `ret`). The v8 yellow was most likely the clamp's OTHER use at the time (palette lookups). Custom rooms now pick their animation (`none` = the `ret` row) — ROOM_DATA_FORMAT "Animated tiles"; DOC_AUDIT S99.
 
 ### v11-v12: Wrong source mapID (WRAM timing)
 **Symptom**: Tileset scrambled when entering MedalMan room (showed Castle tiles).
@@ -287,6 +288,7 @@ Contrary to initial analysis ("bank $17 is full"), the LZSS attribute data ends 
 **Root cause**: `MapIDClampForDispatch` returns $00 (Castle) for custom rooms. Castle's per-room VRAM handler at bank $01 `label1_61f9` does `ld hl, $94D0; call CheckVisualEffectType` which rotates pixel data at VRAM address $94D0-$94FF = tile indices 77-78 (($94D0-$9000)/16 = 77). The build tool's wall/walkable sort placed the gravestone tiles at indices 76-79, with tiles 77-78 landing exactly in the animated range.
 **Fix**: `build_combined_tileset.py` now reserves indices 77-78 as "animated no-go zones." After sorting, tiles are remapped to skip those indices (blank tiles inserted at 77-78, subsequent tiles shifted to 79+). The `ANIMATED_INDICES` set is checked during GFX building, layout remapping, and palette assignment.
 **Rule**: Custom rooms using Castle as their dispatch source (mapID $00) must not place tiles at indices 77-78. The build tool handles this automatically. If MapIDClampForDispatch is changed to a different source room, the animated indices may be different — check that room's VRAM handler in bank $01.
+*S99:* superseded — the dispatch now takes each custom room's `animation` source (bank $71 entry 3), and the full per-handler slot census lives in ROOM_DATA_FORMAT "Animated tiles" / `extracted/room_animations.json`. The range is $94D0-$94EF (2 tiles), not "-$94FF".
 
 ### K-means palette grouping replaced with exact-color matching
 **Symptom**: NORDEN tiles had wrong colors — bookshelf black, crate black, grey tiles showing wrong tones.
@@ -3654,3 +3656,157 @@ The S97 carry-over ("a door that arrives in a chosen state") needed no exit-path
 **Symptom** (user, twice): "I still arrive half a tile below the door." The r2 PyBoy check asserted the logical CELL ($FF97/$FF98) after arrival — identical whether or not the player is drawn half a cell off (screen-byte bit 7 = +8 px).
 **Fix**: assert the PIXEL position ($FF92-96: every standing position has x, y ≡ 8 mod 16). The same probe showed vanilla's own Library→GreatTree return ($88) lands at y=320 — half a cell below the door — so "copy vanilla's bytes" was not what the user wanted either.
 **Rule**: when the complaint is visual, the emulator check must read the quantity that is drawn (pixels / OAM), not a derived logical value.
+
+## S99 — animated tiles: measure on a pattern, re-measure the "because"
+
+### A slot effect is invisible on blank art — census it over a patterned VRAM
+**Symptom**: measuring each vanilla room in place showed NO animation in the
+Secret Passage and both Goopy rooms, although their handlers clearly roll /
+swap tiles.
+**Root cause**: the slots those handlers touch are blank (all-zero) in the
+rooms' own sheets — rolling or swapping identical/blank tiles changes nothing.
+In-place measurement only sees effects on art that happens to sit there.
+**Fix**: `tools/census_room_animation.py` warps to a `ret`-handler room, fills
+VRAM $9000-$97FF with a random pattern, forces the dispatch index with a code
+hook (`p.register_file.A = map` at the `rst $00`, $01:$6118) and classifies
+every change (roll right/left = each byte rotated; swap = the tile now holds
+another tile's previous bytes). All 65 handlers in 26 s; the in-place result
+becomes a per-map "inert" flag instead of a missing effect.
+**Rule**: to learn what code does to a buffer, run it over input where every
+possible change is visible (a unique pattern), and separately ask what the
+real input makes of it. Forcing a dispatch index from a hook is cheap — use
+it instead of reaching each room.
+
+### A workaround's "because X breaks" must be reproduced before it shapes design
+**Symptom**: for 98 sessions every custom room ran Castle's handler "because a
+bare `ret` handler causes yellow palette corruption" (KEY_LESSONS v8, CROSSBANK
+§6) — so slots 77/78 were reserved in every custom room and clones never
+animated.
+**Root cause**: the claim was never re-tested after the clamp stopped serving
+the palette lookups. A handler that executes only `ret` cannot touch a
+palette; vanilla's own table already points $6B-$6F at one.
+**Fix**: forced a `ret` handler in two custom rooms (PyBoy hook): screen
+pixel-identical, palette buffer identical, only the 77/78 roll stopped. The
+animation source became a per-room choice with `none` = that `ret` row.
+**Rule**: when a design constraint cites a failure ("X breaks Y"), reproduce
+the failure first — one A/B run — especially when the code involved could not
+plausibly cause it. Constraints outlive their causes.
+
+### A same-size rewrite still changes timing — A/B for convergence, not frame equality
+**Symptom**: after the bank-$01 guard rewrite, a frame-by-frame A/B against the
+old build from one savestate differed on 1-29 frames per room.
+**Root cause**: the new path is ~35 cycles cheaper per frame, so a multi-frame
+VRAM tile load (text box / menu graphics) is a few bytes further along at a
+frame edge; the differing tiles are partial writes.
+**Fix/Rule**: prove the logic separately (the guard was checked exhaustively
+over all 65,536 input pairs), then A/B from ONE savestate and require that
+every difference re-converges within a few frames and the final VRAM, screen
+and counters are identical — not that every frame matches.
+
+### S99 r2 — copying a graphic is not copying its animation
+**Symptom** (user): "I borrowed the moving water from castle and put it into
+my custom room but it doesnt move."
+**Root cause**: the game animates SLOTS (Castle rolls whatever sits in 77-78);
+the Borrow import copied the water's 8×8 graphics into free slots — by design
+it even AVOIDED animated slots — and the room's own animation was none.
+**Fix**: an animated tile keeps its slot index (and a swap's hidden partner
+frame), tiles in the way move, and the room takes that room's animation
+(asked when it would replace another). PyBoy: the Farm-sheet room's water
+moves.
+**Rule**: when an object's behaviour is keyed on WHERE it lives (a slot, an
+address, an index), copying its content elsewhere loses the behaviour —
+a copy operation must carry the key or say plainly that it didn't.
+
+### S99 r3 — switching a shared resource changes EVERYTHING keyed on it
+**Symptom** (caught before delivery): making one Farm tile flip with Zoma's
+animation made 51 subtiles animate — ordinary Farm tiles that happened to sit
+in Zoma's OTHER slots (49-50, 58-61…) started rolling/flipping too.
+**Root cause**: a room plays one animation, and that animation moves ALL of
+its slots; the op only cleared the slots it wrote.
+**Fix**: on a switch, every tile in use in any slot of the new animation
+(except the one being animated) moves to a free slot on its own side of the
+threshold; the candidate list counts those moves and says "no room" when the
+sheet cannot take them (the r2 borrow path got the same fix). PyBoy: only
+the chosen cells animate.
+**Rule**: when an edit re-points something shared (a per-room mode, a
+palette, a tileset), enumerate everything ELSE keyed on it and decide each
+one explicitly — assert the side effect count in the test (here: animated
+cells == the chosen cells).
+
+### S99 r4 — a migration that turns a feature ON must check what the feature will touch
+**Symptom** (user): "Why is the mirror in $6b moving? I never wanted it to
+move. It also didnt move in earlier editor versions."
+**Root cause**: the S99 migration gave every clone its source animation when
+the room "still draws with its source room's sheet" — true for the sheet,
+but pre-S99 imports had filled the source's unplaced HIDDEN-FRAME slots
+(free by the old rules) with the user's own art (a mirror in the Servant
+room's flame slots 62-63). Turning the animation on started moving it.
+**Fix**: on open, list every tile a `source` room places in its animated
+slots whose art is not the source's own, and offer to move it to a still
+slot (source art restored); Make still for any tile; deliberate animation
+stores an explicit id so it is never mistaken for a stray.
+**Rule**: when a migration switches on behaviour that acts on data (slots,
+flags, addresses), check the DATA it will act on — not just the container
+it lives in — and report every item whose behaviour changes.
+
+### S99 r6 — a greyed-out button must say which limit it hit, and a "full" resource should be re-assignable
+**Symptom** (user): "Make animated is greyed out when trying to make a tile
+animated? Surely it should allow me to shift animation to tile I'm
+editing??" + "I'm still very unclear how many tiles per room are allowed to
+be animated."
+**Root cause**: three different limits all ended as one grey button with a
+terse tag: (1) the room's animation was FULL (its slots drawn by the tile
+already moving — treated as untouchable), (2) the TILESET had no free
+still slot on the right wall/walkable side to move tiles in the way to
+(the user's fountain room: 0 free wall slots), (3) the animation is too
+SMALL for the tile (Castle moves 2 pieces; a tile with 3-4 different
+quarters needs 3-4). Nothing showed how much of the room's animation was
+used.
+**Fix**: (1) take-over — when no free unit is left, the tile takes a slot
+from what moves there (that tile's quarters in the slot move to a still
+copy; same look; asked first); (2) slots the tile itself gives up count as
+free, and the note says how many more free wall/walkable slots are needed;
+(3) a count box ("slide 2 of 2 slots used — FULL; moving here: …") in the
+Make animated tab and the Selection panel.
+**Verified**: on the user's project the take-over keeps every cell of the
+room pixel-identical at frame A and starts exactly the chosen tile's
+cells; PyBoy ($6E): the new tile's slot moves, the water's taken quarters
+now draw a still slot (115, unchanged over 300 frames), its other quarter
+keeps moving.
+**Trap**: a scripted check through ProjectRenderer must clear
+`renderer._sheet_cache` as well as `invalidate()` after a sheet write (the
+GUI's SnapshotCommand does both) — otherwise it compares against the old
+sheet and reports a false "look changed".
+
+### S99 r7 — the feasibility check must count exactly what the operation will do
+**Symptom** (user): "I go to fountain room, click on palm, and want to make
+it animated but button is GREYED OUT … it says … this tileset needs 2 more
+free wall slots … removing walkability from like 10 tiles doesnt make the
+button not greyed out … Even clickin on water and selecting 'make still'
+doesnt allow 'make animated' on palm tree."
+**Root causes** (all reproduced on the user's project): (1) the fountain
+tileset had 0 free wall slots and 11 free walkable ones — only walls were
+short, and nothing moved the split; (2) "removing walkability" moves art to
+the WALL side, consuming wall slots (made it worse); (3) Castle moves 2
+pieces, the palm has 4 different quarters — stopping the water could never
+help; (4) every quarter counted as moving, so the palm's walkable
+bottom-right needed a walkable animated slot none of the big animations
+has; (5) the check under-counted what a switch moves: only the requested
+kind's slots, not the handler's other kind (Zoma also rolls 49-50), and it
+treated the OLD animation's slots as unusable although a switch stops
+them — so "fits" and the operation disagreed ("no free wall slot" at apply).
+**Fix**: quarters unchanged in frame B stay in their own slots (need no
+pair, keep walkability); frame B starts as a copy of A; when one side is
+short and the other has room, the split moves (tiles at it move to their
+own side — look and walkability unchanged); the check counts every slot
+the new animation moves and frees the old animation's; the grey reason is
+spelled out next to the button (too small / N more free slots, and how
+many a purge of unused My metatiles frees).
+**Verified**: user project — palm (top quarters) + fountain water both on
+Zoma after a purge: every cell's look (frame A) and walkability identical,
+14 palm cells + 6 water cells move, nothing else; PyBoy $6E: Zoma's slots
+change, palm and water slots on screen move.
+**Rule**: a "can I?" check and the "do it" code must share one model of
+what moves; test the check against the operation on real (full) data, not
+only on roomy demo sheets.
+

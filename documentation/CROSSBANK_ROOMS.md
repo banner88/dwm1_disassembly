@@ -75,7 +75,7 @@ Four same-size `ld a,[wMapID]` → `call MapIDClampForPalette/Dispatch` replacem
 
 | Address | Table | Purpose |
 |---------|-------|---------|
-| $6115 | VRAM dispatch ($6119, 107 entries) | Per-frame visual effects |
+| $6115 | VRAM dispatch ($6119, **112** entries — S99) | Per-frame room TILE ANIMATION (S99: no longer a clamp — custom rooms ask bank $71 entry 3 for their `animation` source; ROOM_DATA_FORMAT "Animated tiles") |
 | $447C | NPCWalkDataTable ($4506, ×4) | NPC walk animation frames |
 | $4C3E | Room entry script call | ScriptInit with mapID |
 | $5E44 | $5E7D table (107 bytes) | Per-room special effects |
@@ -108,7 +108,7 @@ CUSTOM_ROOM_START EQU $6B     ; first custom mapID
 7. **Bank $17** palette: `call MapIDClampForPalette` returns $16 → loads MedalMan palette/attributes
 8. **Entry 7** fires: calls ReadInteractPtr → intercept → bank $60 CustomReadInteract → copies NPC data to wCustomNPCBuffer → returns HL=wCustomNPCBuffer → engine processes NPCs normally
 9. **Collision threshold**: ROM0 code calls MapIDClampForPalette → $16 → reads MedalMan's threshold from $26E3[$16] → correct walkability
-10. **VRAM dispatch**: MapIDClampForDispatch returns $00 → Castle handler runs (harmless `ret`-equivalent for MedalMan rooms, but maintains needed VRAM state)
+10. **VRAM dispatch** (historical, pre-S99): MapIDClampForDispatch returned $00 → Castle's handler ran, rolling tiles 77-78 every 32 frames in every custom room (not "harmless", and it maintains no state — DOC_AUDIT S99). S99: the room's own `animation` source (bank $71 entry 3)
 11. **Room entry script**: MapIDClampForPalette returns $16 → engine runs MedalMan's script 0 which is just `end`
 12. Fade in, player can walk
 
@@ -116,7 +116,7 @@ CUSTOM_ROOM_START EQU $6B     ; first custom mapID
 
 - **Entry 2** (ScreenScroll): calls ReadStepBlock → bank $60 → decompresses correct tiles
 - **RoomEntry6** (ExitChecker): calls bank $60 CustomExitCheck → copies exits to wCustomExitBuffer → engine checks normally
-- **VRAM dispatch**: runs Castle handler (harmless)
+- **VRAM dispatch**: runs the room's animation source's handler (S99; pre-S99 always Castle's)
 - **Collision**: ROM0 reads correct threshold via clamped mapID
 
 ### Exit (Custom Room → GreatTree)
@@ -176,7 +176,9 @@ Bit 7:    Adds $08 to Y spawn position (for rooms with >2 screen rows)
 ```
 Use the SAME screen byte as existing rooms that exit to the same destination. Example: WellStairway exits to GreatTree screen 8 with screen byte $08. Copy that exactly.
 
-### 6. VRAM Dispatch Must Use Castle Handler ($00), Not RET-Only
+### 6. ~~VRAM Dispatch Must Use Castle Handler ($00), Not RET-Only~~ — REFUTED S99
+**S99 measurement:** a bare-`ret` handler is safe (screen and palette buffer identical; only the 77-78 roll stops). Custom rooms now choose their animation (`none` = the table's `ret` row) — ROOM_DATA_FORMAT "Animated tiles", DOC_AUDIT S99. Original S1 text kept below for history:
+
 MapIDClampForDispatch returns $00 (Castle), not a RET-only handler like $65. Castle's handler (`ld hl, $94D0; call CheckVisualEffectType; ret`) maintains VRAM state needed for correct palette rendering. Using a bare `ret` causes yellow palette corruption.
 
 ### 7. Bank $0B Code Section Is Safe for Insertions
@@ -412,6 +414,7 @@ spot, $90 = step-on trigger — S98 names; ROOM_DATA_FORMAT), not a mapID.
 | bank $71 entry 0 (CopyCustomRoomRecord) | 16-bit `sla/rl` ×8; $70+ → Custom26DDTable[mapID−$70] | mapID $FE |
 | bank $71 entry 1 (CustomEncResolve) | `cp ENC_TABLE_LEN` bounds check | table length (compiler-emitted) |
 | bank $71 entry 2 (CustomRoomBGMResolve) | `cp $80 / ret nc` bounds check | see BGM cap below |
+| bank $71 entry 3 (CustomAnimSource, S99) | `sub $6B` + `cp ANIM_TABLE_LEN` bounds check; 16-bit `add l/adc h/sub l` | table length (compiler-emitted); the returned byte is validator-bounded to <$6B or $6B, so the bank-$01 `rst $00` (≤$7F cap) is always in range |
 | bank $60 CustomScriptRead / script master table | 16-bit ×2, dense from $6B (validated) | mapID $FE |
 
 **Ceilings: hard max mapID $FE** ($FF = exit-list terminator byte); practical
@@ -474,3 +477,14 @@ its key to the tool's verdict table, and record the reasoning here.
 - **Entrance authoring**: entry scripts run at INITIAL entry (bank $01
   $4C3E reverted to vanilla `ld a,[wMapID]`) — arm encounters etc. at
   entry; seed the counter with `write_ram2` (drain = 100/step).
+
+**S99 adjudication sweep (tools/audit_mapid_range.py).** The selftest had been
+failing since S73 (the tool is not in verify check 5): nine sites added S73-S97
+without keys. Verdicts: `BattleExitHandler` (renamed `Jump_050_640a`, cp $5d),
+`FreeColor1Hook`, `VanillaExitResolve`, `AnchorField14Tail` (cp $30),
+`MenuOpenFreePal`, `BoxAttrActive` = CP_UNSIGNED; `StateRulesHook17` = COPY (A
+reloaded for `CustomAttrCheck`, IDX8_SUB6B); `CustomStateRules` = IDX8_SUB6B
+(`sub $6B / ret c`). S99 sites: `PerRoomDispatchEntry` = RST00_CLAMPED (`cp $6B /
+jr c` → `rst $00` on a vanilla mapID; custom → entry 3's validator-bounded
+byte), `CustomAnimSource` = IDX8_SUB6B (bounded). Selftest PASS (clean 58 /
+patched 64); `extracted/mapid_range_audit.json` regenerated.

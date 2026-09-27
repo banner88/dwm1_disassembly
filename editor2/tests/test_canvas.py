@@ -602,8 +602,12 @@ def v3_round_trip(new_dir):
     rid = s.doc.rooms[-1]['id']
     room = s.doc.room(rid)
     tid = room['record']['tileset']
-    assert s.doc.free_counts(tid, 0x40)['total'] == 128 - 2 - 1, \
-        'blank tileset: every slot free but 77/78 and the floor tile'
+    # S99: a blank-sheet room is created with animation 'none', so 77/78
+    # (Castle's rolling pair, animated in EVERY custom room before S99) are
+    # ordinary free slots now
+    assert room.get('animation') == 'none', room.get('animation')
+    assert s.doc.free_counts(tid, 0x40)['total'] == 128 - 1, \
+        'blank tileset: every slot free but the floor tile'
     # --- PNG import through the tab's code path
     png = os.path.join(new_dir, 'synth_rip.png')
     src = synth_rip(png)
@@ -1731,6 +1735,432 @@ def test_rom_v5(w, s, a_id, b_id, keep_dir=None):
     p.stop(save=False)
 
 
+def v6_round_trip(new_dir):
+    """S99 (P3.3e) — animated tiles through the GUI code paths: vanilla rooms
+    show their animated tiles (canvas outline + inspector line; inert
+    handlers show none), a clone gets its source room's animation, the
+    preview plays the measured schedule and restores the static screen,
+    None / Borrow via the inspector combo (slot map + picker follow), exact
+    undo; leaves a project with a Castle clone (source), a second Castle
+    clone (none) and a Castle-sheet room borrowing Digster's roll."""
+    from editor2.app.main import MainWindow
+    from editor2.core import animation as ANIM
+    from PySide6.QtWidgets import QMessageBox
+    app = QApplication.instance() or QApplication(sys.argv)
+    QMessageBox.question = staticmethod(lambda *a, **k: QMessageBox.Yes)
+    w = MainWindow()
+    w.new_project(new_dir, 'v6 animated tiles')
+    app.processEvents()
+    rt, s = w.rooms_tab, w.session
+    start = s.doc.dumps()
+
+    def pick_vanilla(mid):
+        for i in range(rt.vanilla_list.count()):
+            if rt.vanilla_list.item(i).data(0x100) == mid:
+                rt.vanilla_list.setCurrentRow(i)
+        app.processEvents()
+        assert rt.canvas.is_vanilla() and rt.vanilla_mid == mid
+
+    # --- vanilla rooms: which tiles animate
+    pick_vanilla(0x00)
+    cv = rt.canvas
+    assert cv.anim_slots == {77, 78}, cv.anim_slots
+    assert cv.anim_cells(), 'Castle screen 0 draws its fountain water (slots 77/78)'
+    assert rt.inspector.r_anim.currentText().startswith('animates: rolls tiles 77-78')
+    assert rt.picker.anim == {77, 78}
+    pick_vanilla(0x0A)                      # Secret Passage: handler animates blank slots
+    assert cv.anim_slots == set() and rt.inspector.r_anim.currentText() == 'none'
+    pick_vanilla(0x1C)                      # Coffin room: swap 36-37 <-> hidden 44-45
+    assert cv.anim_slots == {36, 37, 44, 45}
+    assert '44-45' in rt.inspector.r_anim_note.text()
+    # --- clone Castle: source animation
+    pick_vanilla(0x00)
+    rt._clone_vanilla()
+    app.processEvents()
+    a_id = rt.room_id
+    room = s.doc.room(a_id)
+    assert room['animation'] == 'source'
+    assert cv.anim_slots == {77, 78} and rt.inspector.r_anim.currentData() == 'source'
+    tid = s.doc.tileset_key(room)
+    use = s.doc.tile_usage(tid)
+    assert use[77]['status'] == 'animated' and use[78]['status'] == 'animated'
+    assert 'animated here: <b>2</b>' in rt.tileset_map.summary.text()
+    # --- preview: the measured schedule, then back to the static screen
+    still = cv.base.pixmap().toImage()
+    rt.play_btn.setChecked(True)
+    assert cv.previewing()
+    cv._anim_timer.stop()                   # drive it by hand (deterministic)
+    base = bytes(cv._player.sheet)
+    assert cv._player.step(8)               # counter 7: both tiles roll right
+    g = base[77 * 16:77 * 16 + 16]
+    assert bytes(cv._player.sheet[77 * 16:77 * 16 + 16]) == \
+        bytes(((x >> 1) | ((x & 1) << 7)) for x in g)
+    cv._render()
+    assert cv.base.pixmap().toImage() != still, 'preview frame shows the rolled water'
+    rt.play_btn.setChecked(False)
+    assert not cv.previewing() and cv.base.pixmap().toImage() == still
+    # --- None / Borrow from the inspector
+    box = rt.inspector.r_anim
+    box.setCurrentIndex(box.findData('none'))
+    app.processEvents()
+    assert s.doc.room(a_id)['animation'] == 'none' and cv.anim_slots == set()
+    assert s.doc.tile_usage(tid)[77]['status'] != 'animated'
+    box = rt.inspector.r_anim
+    box.setCurrentIndex(box.findData('0x3D'))
+    app.processEvents()
+    assert s.doc.room(a_id)['animation'] == '0x3D' and cv.anim_slots == {10, 11}
+    assert "NOT $3D's" in rt.inspector.r_anim_note.text()
+    assert s.doc.tile_usage(tid)[10]['status'] == 'animated'
+    # --- exact undo of everything, then redo
+    n = s.undo.count()
+    for _ in range(n):
+        s.undo.undo()
+    app.processEvents()
+    assert s.doc.dumps() == start, 'full undo must restore the empty project byte-exact'
+    for _ in range(n):
+        s.undo.redo()
+    app.processEvents()
+    rt.room_id = a_id
+    rt._show()
+    app.processEvents()
+    box = rt.inspector.r_anim
+    box.setCurrentIndex(box.findData('source'))
+    app.processEvents()
+    # --- a second Castle clone (none) and a Castle-sheet room borrowing $3D
+    pick_vanilla(0x00)
+    rt._clone_vanilla()
+    app.processEvents()
+    b_id = rt.room_id
+    rt.inspector.r_anim.setCurrentIndex(rt.inspector.r_anim.findData('none'))
+    app.processEvents()
+    c_id = s.doc.new_room('Borrowed roll', 0x00, s.renderer)
+    s.doc.set_room_animation(c_id, '0x3D')
+    # S99 r2 (user: "I borrowed the moving water from castle and put it into
+    # my custom room but it doesnt move"): a Farm-sheet room borrows Castle's
+    # moving water through the Borrow tab — it keeps moving
+    d_id = s.doc.new_room('Farm + Castle water', 0x04, s.renderer)
+    rt.room_id, rt.vanilla_mid = d_id, None
+    rt._fill_rooms(keep=d_id)
+    app.processEvents()
+    assert rt.current_room()['id'] == d_id
+    rt.foreign_box.setCurrentIndex(rt.foreign_box.findData(0x00))
+    app.processEvents()
+    water = next(m for m in rt._vanilla_vocab(0x00)
+                 if all((t & 0x7F) in (77, 78) for t in m['tiles']))
+    rt._import_metatile(water)
+    app.processEvents()
+    D = s.doc.room(d_id)
+    assert D['animation'] == '0x00', D['animation']
+    assert 'animated like $00' in rt.status_line.text(), rt.status_line.text()
+    assert rt.canvas.anim_slots == {77, 78}
+    dsheet = s.doc.read_sheet(s.doc.tileset_key(D))
+    csheet = s.renderer.vanilla_gfx(0x00).sheet
+    assert dsheet[77 * 16:79 * 16] == csheet[77 * 16:79 * 16], 'water graphics in slots 77/78'
+    brush = rt.canvas.brush
+    assert brush and {t & 0x7F for t in brush['tiles']} <= {77, 78}, brush
+    cv = rt.canvas
+    cv._begin_stroke()
+    for c in ((2, 2), (3, 2)):
+        cv._stroke_cell(c)
+    cv._end_stroke('Paint')
+    assert cv.anim_cells(), 'the painted water is outlined as animated'
+    # S99 r3 (user: "make the 'make animatable' tab … re-paint a second tile
+    # in a paint-like manner"): double-click a cell -> Make animated tab,
+    # paint frame B, apply
+    from PySide6.QtTest import QTest
+    from PySide6.QtCore import Qt as _Qt, QPoint
+    e_id = s.doc.new_room('Flip test', 0x04, s.renderer)
+    rt.room_id, rt.vanilla_mid = e_id, None
+    rt._fill_rooms(keep=e_id)
+    app.processEvents()
+    cv.set_zoom(3)
+    app.processEvents()
+    QTest.mouseDClick(cv.viewport(), _Qt.LeftButton, _Qt.NoModifier, cv.mapFromScene(4 * 16 + 8, 4 * 16 + 8))
+    app.processEvents()
+    at = rt.animate_tab
+    assert rt.picker_tabs.currentWidget() is rt._anim_scroll, 'double-click opens Make animated'
+    assert 'not animated' in at.head.text(), at.head.text()
+    at.r_flip.setChecked(True)
+    app.processEvents()
+    at._set_colour(3)
+    for (x, y) in ((1, 1), (6, 2), (12, 13)):
+        QTest.mouseClick(at.pad_b, _Qt.LeftButton, _Qt.NoModifier, QPoint(1 + x * 8 + 3, 1 + y * 8 + 3))
+    app.processEvents()
+    assert at.pad_b.get(1, 1) == 3 and at.apply_b.isEnabled(), at.note.text()
+    # S99 r5 (user: "allow copy of quadrants separately not just a -> B.
+    # Make it easier to edit"): part tools on one 8x8 quarter, either frame,
+    # with a local undo that walks back to exactly where it started
+    st0 = at._state()
+    assert at.pad_b.active and at.editing.text() == 'editing frame B · whole tile', at.editing.text()
+    QTest.mouseClick(at.pad_a, _Qt.LeftButton, _Qt.ControlModifier, QPoint(1 + 12 * 8 + 3, 1 + 3))
+    app.processEvents()
+    assert at.part == 1 and at.pad_a.active and at._state() == st0, 'Ctrl+click selects, never paints'
+    assert at.part_btns[1].isChecked() and 'frame A · top-right' in at.editing.text()
+    at.tool_btns['copy'].click()
+    at._set_part(2)
+    at._set_active(at.pad_b)
+    at.tool_btns['paste'].click()
+    A0, B0 = st0
+    assert at.pad_b.px[2] == A0[1], 'A top-right pasted into B bottom-left'
+    assert [at.pad_b.px[k] for k in (0, 1, 3)] == [B0[k] for k in (0, 1, 3)], 'other quarters kept'
+    assert at._state()[0] == A0, 'frame A untouched'
+    at._set_part(0)
+    at.tool_btns['ab'].click()
+    assert at.pad_b.px[0] == A0[0] and at.pad_b.px[3] == B0[3], 'A → B for one quarter only'
+    at.tool_btns['fh'].click()
+    assert at.pad_b.px[0] == [A0[0][y * 8 + 7 - x] for y in range(8) for x in range(8)], \
+        'Flip acts on the quarter'
+    assert at.pad_b.px[2] == A0[1]
+    at._set_part(3)
+    at.tool_btns['swap'].click()
+    assert at.pad_a.px[3] == B0[3] and at.pad_b.px[3] == A0[3], 'A ⇄ B for one quarter'
+    at._set_part(None)
+    at.tool_btns['paste'].click()
+    assert all(at.pad_b.px[k] == A0[1] for k in range(4)), 'a quarter pasted on Whole fills all four'
+    assert not at.between_w.isHidden() and at.apply_b.isEnabled(), at.note.text()
+    at.tool_btns['undo'].click()
+    assert at.pad_b.px[3] == A0[3] and at.pad_b.px[2] == A0[1], 'undo steps back one tool'
+    for _ in range(4):
+        at.tool_btns['undo'].click()
+    assert at._state() == st0, 'undo walks back to the start exactly'
+    at.tool_btns['revert'].click()
+    assert at._state() == at._loaded and at._state() != st0, 'Revert = frames as loaded'
+    at.tool_btns['undo'].click()
+    assert at._state() == st0, 'Revert is undoable'
+    at.r_slide.setChecked(True)
+    app.processEvents()
+    assert at.pad_a.active and at.between_w.isHidden(), 'slide: only frame A'
+    at.r_flip.setChecked(True)
+    app.processEvents()
+    at._set_active(at.pad_b)
+    assert at._state() == st0 and at.apply_b.isEnabled(), at.note.text()
+    before = s.doc.dumps()
+    at.apply_b.click()
+    app.processEvents()
+    E = s.doc.room(e_id)
+    assert E['animation'] not in (None, 'none', 'source'), E['animation']
+    assert 'Animated — flip with' in rt.status_line.text(), rt.status_line.text()
+    assert cv.previewing() and cv.anim_cells(), 'the result plays on the canvas'
+    rt.play_btn.setChecked(False)
+    assert 'animated now: flip' in at.head.text(), at.head.text()
+    after = s.doc.dumps()
+    s.undo.undo()
+    app.processEvents()
+    assert s.doc.dumps() == before, 'Make animated undoes exactly'
+    s.undo.redo()
+    app.processEvents()
+    assert s.doc.dumps() == after
+    # S99 r4 (user: "Why is the mirror in $6b moving? I never wanted it to
+    # move"): a tile of other art in a 'source' room's animated slot (what a
+    # pre-S99 import could do) is found on open and moved to a still slot
+    from PySide6.QtWidgets import QMessageBox as _QMB
+    A_ = s.doc.room(a_id)
+    tidA = s.doc.localize_tileset(A_, s.renderer.room_gfx(A_).sheet) \
+        if 'tileset' not in A_['record'] else A_['record']['tileset']
+    shA = s.doc.read_sheet(tidA)
+    shA[78 * 16:79 * 16] = shA[10 * 16:11 * 16]          # foreign art in slot 78
+    s.doc.write_sheet(tidA, shA)
+    s.renderer.invalidate()
+    assert s.doc.stray_report() == [(a_id, s.doc.room_name(A_), [78], 0x00)], s.doc.stray_report()
+    pre = s.doc.dumps()
+    _QMB.question = staticmethod(lambda *a, **k: _QMB.Yes)
+    w._offer_animation_repair(s)
+    app.processEvents()
+    assert s.doc.stray_report() == [], 'repaired'
+    shA2 = s.doc.read_sheet(tidA)
+    assert shA2[78 * 16:79 * 16] == s.renderer.vanilla_gfx(0x00).sheet[78 * 16:79 * 16], \
+        "the source's own art is back in slot 78"
+    s.undo.undo()
+    app.processEvents()
+    assert s.doc.dumps() == pre and s.doc.stray_report(), 'the repair undoes exactly'
+    s.undo.redo()
+    app.processEvents()
+    # S99 r6 (user: "Make animated is greyed out … Surely it should allow me to
+    # shift animation to tile I'm editing??" + "Would be good to have a
+    # count"): room d's Castle animation is FULL (the water uses 77 and 78);
+    # a plain tile TAKES OVER a slot — the room looks the same, only that
+    # tile's cells start moving, the water's quarters in the taken slot stand
+    # still — and the count says 2 of 2
+    rt.room_id, rt.vanilla_mid = d_id, None
+    rt._fill_rooms(keep=d_id)
+    app.processEvents()
+    D = s.doc.room(d_id)
+    assert 'slide <b>2 of 2</b> slots used' in at.budget.text() and 'FULL' in at.budget.text(), \
+        at.budget.text()
+    assert at.mt is None and at.b_brush.isEnabled(), 'a tile of another room is dropped'
+    sh = bytes(cv.gfx.sheet)
+    tk = None
+    for r_ in range(8):
+        for c_ in range(10):
+            m_ = cv.cell_metatile(c_, r_)
+            if {t & 0x7F for t in m_['tiles']} & {77, 78}:
+                continue
+            fa = [sh[(t & 0x7F) * 16:(t & 0x7F) * 16 + 16] for t in m_['tiles']]
+            cs = s.doc.animate_candidates(D, m_, 'slide', fa)
+            if cs and cs[0]['fits'] and cs[0]['current'] and cs[0]['takes'] and cs[0]['walk_ok']:
+                tk = (c_, r_)
+                break
+        if tk:
+            break
+    assert tk, 'a plain tile of room d can take over the full Castle animation'
+    look0 = [[cv.cell_metatile(c_, r_) for c_ in range(10)] for r_ in range(8)]
+    gfx0 = {(c_, r_): [sh[(t & 0x7F) * 16:(t & 0x7F) * 16 + 16] for t in look0[r_][c_]['tiles']]
+            for r_ in range(8) for c_ in range(10)}
+    moving0 = {(x // 2, y // 2) for x, y in cv.anim_cells()}     # subtiles -> cells
+    QTest.mouseDClick(cv.viewport(), _Qt.LeftButton, _Qt.NoModifier,
+                      cv.mapFromScene(tk[0] * 16 + 8, tk[1] * 16 + 8))
+    app.processEvents()
+    at.r_slide.setChecked(True)
+    app.processEvents()
+    c0 = at._cand()
+    assert c0 and c0['current'] and c0['takes'] and at.apply_b.isEnabled(), at.note.text()
+    assert 'TAKES OVER' in at.note.text() and 'takes over slot' in at.src.currentText(), \
+        (at.note.text(), at.src.currentText())
+    pre = s.doc.dumps()
+    asked = []
+    _q = _QMB.question
+    _QMB.question = staticmethod(lambda *a_, **k_: asked.append(a_[1]) or _QMB.Yes)
+    at.apply_b.click()
+    app.processEvents()
+    _QMB.question = _q
+    assert asked == ['Make animated — take over'], asked
+    assert 'took over slot' in rt.status_line.text(), rt.status_line.text()
+    rt.play_btn.setChecked(False)
+    app.processEvents()
+    sh1 = bytes(cv.gfx.sheet)
+    for r_ in range(8):
+        for c_ in range(10):
+            m_ = cv.cell_metatile(c_, r_)
+            assert [sh1[(t & 0x7F) * 16:(t & 0x7F) * 16 + 16] for t in m_['tiles']] == \
+                gfx0[(c_, r_)], f'cell {(c_, r_)} looks the same after the take-over'
+    started = {(x // 2, y // 2) for x, y in cv.anim_cells()} - moving0
+    same_mt = {(c_, r_) for r_ in range(8) for c_ in range(10)
+               if look0[r_][c_]['tiles'] == look0[tk[1]][tk[0]]['tiles']}
+    assert tk in started and started <= same_mt, (started, same_mt)
+    took = set(c0['takes'])
+    for (c_, r_) in moving0:
+        if {t & 0x7F for t in look0[r_][c_]['tiles']} & took:
+            assert not {t & 0x7F for t in cv.cell_metatile(c_, r_)['tiles']} & took, \
+                'the water quarters in the taken slot now draw a still copy'
+    assert 'slide <b>2 of 2</b>' in at.budget.text(), at.budget.text()
+    s.undo.undo()
+    app.processEvents()
+    assert s.doc.dumps() == pre, 'the take-over undoes exactly'
+    # Make still: the borrowed Castle water (room d) stops moving
+    rt.room_id, rt.vanilla_mid = d_id, None
+    rt._fill_rooms(keep=d_id)
+    app.processEvents()
+    wc = next((c, r) for r in range(8) for c in range(10)
+              if {t & 0x7F for t in cv.cell_metatile(c, r)['tiles']} <= {77, 78})
+    rt._animate_cell(wc)
+    app.processEvents()
+    assert at.still_b.isEnabled(), 'a moving tile can be made still'
+    pre = s.doc.dumps()
+    at.still_b.click()
+    app.processEvents()
+    assert not any({t & 0x7F for t in cv.cell_metatile(c, r)['tiles']} & {77, 78}
+                   for r in range(8) for c in range(10)), 'no cell of room d moves any more'
+    assert 'Made still' in rt.status_line.text(), rt.status_line.text()
+    s.undo.undo()
+    app.processEvents()
+    assert s.doc.dumps() == pre, 'Make still undoes exactly'
+    s.undo.redo()
+    app.processEvents()
+    s.save() if hasattr(s, 'save') else s.doc.save()
+    anims = {r['id']: r.get('animation') for r in s.doc.rooms}
+    assert {k: v for k, v in anims.items() if k != e_id} == \
+        {a_id: 'source', b_id: 'none', c_id: '0x3D', d_id: '0x00'}, anims
+    print(f'OK: v6 — vanilla animated tiles shown (Castle 77-78, Coffin 36-37 + frames '
+          f'44-45, Secret Passage inert), clone = source, preview plays + restores, '
+          f'None / Borrow $3D via the inspector (slot map + picker follow), {n} undoable '
+          f'edits exact; Castle water borrowed onto the Farm sheet keeps moving (slots 77/78, '
+          f'room animation $00); Make animated: double-click -> frame B painted -> '
+          f'flip with ${val(anims[e_id]):02X} (exact undo); unintended-animation repair on '
+          f'open + Make still (both exact undo); project: {anims}')
+    return w, s, a_id, b_id, c_id, d_id, e_id
+
+
+def _sched_predict(sheet, mid, c0, frames):
+    """Apply the census schedule of map `mid`'s handler for counters
+    c0..c0+frames-1 (the counter value each dispatch sees) to `sheet`."""
+    from editor2.core import animation as ANIM
+    sched = {int(k): v for k, v in (ANIM.handler(mid).get('schedule') or {}).items()}
+    pl = ANIM.Player(None, sheet)
+    for c in range(c0, c0 + frames):
+        ops = sched.get(c & 0x3FF)
+        if ops:
+            pl._apply(ops)
+    return bytes(pl.sheet)
+
+
+def test_rom_v6(w, s, a_id, b_id, c_id, d_id, e_id=None, keep_dir=None):
+    """--rom: PyBoy — the source clone rolls 77/78 EXACTLY as the census
+    schedule predicts (the preview model == the game), the 'none' clone's
+    sheet never changes, the borrowing room rolls 10/11 like Digster's
+    room, and vanilla Castle is unchanged."""
+    from editor2.app.build_worker import BuildWorker
+    app = QApplication.instance()
+    results = []
+    worker = BuildWorker(REPO, s.project_dir)
+    worker.finished_build.connect(results.append)
+    worker.start()
+    worker.wait()
+    app.processEvents()
+    res = results[0]
+    assert res.ok, f'build failed: {res.error}'
+    from tools.pyboy_harness import boot, to_bedroom, warp, MAP_ID
+    import io
+    p = boot(res.rom_path)
+    assert to_bedroom(p), 'scripted intro failed'
+    bed = io.BytesIO()
+    p.save_state(bed)
+    checks = []
+    for rid, src in ((a_id, 0x00), (b_id, None), (c_id, 0x3D), (d_id, 0x00), (None, 0x00)):
+        mid = val(s.doc.room(rid)['mapID']) if rid else 0x00
+        bed.seek(0)
+        p.load_state(bed)
+        warp(p, mid, 4, 4, settle=240)
+        assert p.memory[MAP_ID] == mid, f'warp to ${mid:02X} failed'
+        s0 = bytes(p.memory[0, 0x9000:0x9800])
+        c0 = p.memory[0xC8A6] | (p.memory[0xC8A7] << 8)
+        n = 300
+        for _ in range(n):
+            p.tick()
+        got = bytes(p.memory[0, 0x9000:0x9800])
+        want = s0 if src is None else _sched_predict(s0, src, c0, n)
+        changed = sorted({i // 16 for i in range(0x800) if got[i] != s0[i]})
+        assert got == want, (f'${mid:02X}: VRAM != census prediction; changed tiles '
+                             f'{changed}')
+        checks.append(f'${mid:02X}->{changed or "static"}')
+    if e_id:
+        # Make animated: the placed flip tile shows exactly frame A / frame B
+        from editor2.core import animation as ANIM
+        E = s.doc.room(e_id)
+        mid = val(E['mapID'])
+        src = val(E['animation'])
+        bed.seek(0)
+        p.load_state(bed)
+        warp(p, mid, 4, 4, settle=240)
+        tm = bytes(p.memory[0, 0x9800:0x9C00])
+        t = tm[8 * 32 + 8]                      # cell (4,4) top-left subtile
+        looks, changed = set(), set()
+        prev = bytes(p.memory[0, 0x9000:0x9800])
+        for _ in range(200):
+            p.tick()
+            cur = bytes(p.memory[0, 0x9000:0x9800])
+            changed |= {i // 16 for i in range(0x800) if cur[i] != prev[i]}
+            looks.add(cur[t * 16:t * 16 + 16])
+            prev = cur
+        assert t in ANIM.slots(src), (t, src)
+        assert changed <= ANIM.slots(src), sorted(changed - ANIM.slots(src))
+        assert len(looks) == 2, f'flip tile shows {len(looks)} looks'
+        checks.append(f'${mid:02X} made-animated flip: tile {t} alternates 2 looks')
+    if keep_dir:
+        shutil.copy(res.rom_path, os.path.join(keep_dir, 'rom_v6_animation.gbc'))
+    p.stop(save=False)
+    print('OK: v6 --rom — VRAM == census schedule after 300 frames: ' + ', '.join(checks))
+
+
 def test_all_clones():
     """--all-clones (S96): EVERY vanilla room clones ("Make editable"),
     every screen AND every valid state renders pixel-identical to vanilla,
@@ -1823,8 +2253,120 @@ def test_rom(project_dir, grids, keep_dir=None):
         print(f'kept ROM + screenshots in {keep_dir}')
 
 
+def v6_split(new_dir):
+    """S99 r7 (user: "I go to fountain room, click on palm, and want to make it
+    animated but button is GREYED OUT … it says … this tileset needs 2 more
+    free wall slots … removing walkability from like 10 tiles doesnt make the
+    button not greyed out"). A room whose WALL side is full: a tile with only
+    its top-left quarter changed in frame B can still be made animated — the
+    editor moves the wall/walkable split (free walkable slots become wall
+    ones, tiles at the split move to their own side), the other quarters stay
+    in their own slots, and every cell keeps its look and walkability."""
+    from editor2.core.document import Document
+    from editor2.core.render_project import ProjectRenderer
+    from editor2.core.png_import import encode_2bpp
+    from editor2.app.rooms.canvas import metatile_at
+    os.makedirs(new_dir)
+    shutil.copy(os.path.join(REPO, 'editor2/templates/blank-project/project.json'), new_dir)
+    d = Document(new_dir)
+    r = ProjectRenderer(REPO, new_dir, d.data)
+    d.vanilla = r
+    rid = d.new_room('Split test', 0x04, r)
+    r.invalidate()
+    room = d.room(rid)
+    d.localize_tileset(room, bytes(r.room_gfx(room).sheet))
+    r.invalidate()
+    r._sheet_cache.clear()
+    tid = room['record']['tileset']
+    thr = val(room['record']['collision_threshold'])
+    L = d.layout(room['screens']['0']['layout']['id'])
+    vg, va = r.vanilla_screen_grid(0x04, 0, 0), r.vanilla_attr_grid(0x04, 0, 0)
+    for y in range(16):                          # the Farm screen as the layout
+        for x in range(20):
+            L['tiles'][y][x] = vg[y][x]
+            if L.get('attr') is not None and va is not None:
+                L['attr'][y][x] = va[y][x]
+    grid, attr = L['tiles'], L.get('attr')
+
+    def mt_at(cx, cy):
+        return metatile_at(grid, attr, cx, cy) if attr else \
+            {'tiles': [grid[cy * 2 + dy][cx * 2 + dx] for dy in (0, 1) for dx in (0, 1)], 'pal': 0}
+    # target: a cell whose top-left quarter is its own graphic
+    tgt = next((cx, cy) for cy in range(8) for cx in range(10)
+               if len({t & 0x7F for t in mt_at(cx, cy)['tiles']}) >= 2)
+    tmt = mt_at(*tgt)
+    keep_cells = {(cx, cy) for cy in range(8) for cx in range(10)
+                  if mt_at(cx, cy)['tiles'] == tmt['tiles']}
+    # fill every free wall slot with a unique graphic placed in some cell
+    usage = d.tile_usage(tid)
+    free_wall = [i for i in range(thr) if not usage[i]['placed'] and not usage[i]['mine']
+                 and not usage[i]['animated']]
+    sheet = d.read_sheet(tid)
+    spots = [(cx, cy, k) for cy in range(7, -1, -1) for cx in range(10)
+             if (cx, cy) not in keep_cells for k in range(4)]
+    for n, i in enumerate(free_wall):
+        sheet[i * 16:i * 16 + 16] = encode_2bpp([(n + x * 3 + (x // 8)) % 4 for x in range(64)])
+        cx, cy, k = spots[n]
+        grid[cy * 2 + k // 2][cx * 2 + k % 2] = i
+    d.write_sheet(tid, sheet)
+    r.invalidate()
+    r._sheet_cache.clear()
+    usage = d.tile_usage(tid)
+    assert not [i for i in range(thr) if not usage[i]['placed'] and not usage[i]['mine']], \
+        'wall side is full'
+    sh = bytes(r.room_gfx(room).sheet)
+    tmt = mt_at(*tgt)
+    fa = [sh[(t & 0x7F) * 16:(t & 0x7F) * 16 + 16] for t in tmt['tiles']]
+    fb = [bytes(255 - v for v in fa[0])] + fa[1:]            # only the top-left changes
+
+    def look():
+        s_ = bytes(r.room_gfx(d.room(rid)).sheet)
+        t_ = val(d.room(rid)['record']['collision_threshold'])
+        return {(cx, cy): ([s_[(t & 0x7F) * 16:(t & 0x7F) * 16 + 16] for t in mt_at(cx, cy)['tiles']],
+                           (mt_at(cx, cy)['tiles'][3] & 0x7F) < t_)
+                for cy in range(8) for cx in range(10)}
+    cs = d.animate_candidates(room, tmt, 'flip', fa, fb)
+    assert cs and all(c['units'] == 1 for c in cs), 'still quarters need no slot'
+    sc = next((c for c in cs if c['fits'] and c['shift'] > 0), None)
+    assert sc, [(c['label'], c['fits'], c['short'], c['shift']) for c in cs]
+    before = look()
+    new = d.make_animated(rid, tmt, 'flip', sc['map'], fa, fb)
+    r.invalidate()
+    r._sheet_cache.clear()
+    after = look()
+    thr2 = val(d.room(rid)['record']['collision_threshold'])
+    assert thr2 == thr + sc['shift'], (thr, thr2, sc['shift'])
+    assert before == after, 'every cell keeps its look (frame A) and its walkability'
+    anim = d.room_animation(d.room(rid))['slots']
+    assert (new['tiles'][0] in anim and not ({t for t in new['tiles'][1:]} & anim)), \
+        ('only the changed quarter moves', new['tiles'], sorted(anim))
+    moving = {(cx, cy) for cy in range(8) for cx in range(10)
+              if {t & 0x7F for t in mt_at(cx, cy)['tiles']} & anim}
+    assert moving == keep_cells, (moving, keep_cells)
+    print(f'OK: v6 split — wall side full (filled {len(free_wall)} slots), top-left-only flip '
+          f"on ${sc['map']:02X}: split moved ${thr:02X} -> ${thr2:02X}, 1 pair used, "
+          f'{len(keep_cells)} cell(s) move, every cell keeps look + walkability')
+
+
 def main():
     do_rom = '--rom' in sys.argv
+    if '--only-v6' in sys.argv:          # S99: animated tiles
+        tmp = tempfile.mkdtemp(prefix='dwm_v6_')
+        keep = None
+        if '--out' in sys.argv:
+            keep = os.path.abspath(sys.argv[sys.argv.index('--out') + 1])
+            os.makedirs(keep, exist_ok=True)
+            tmp = keep
+        v6_dir = os.path.join(tmp, 'fresh_v6')
+        if os.path.exists(v6_dir):
+            shutil.rmtree(v6_dir)
+        v6_split(os.path.join(tmp, 'split_v6'))
+        w6, s6, a6, b6, c6, d6, e6 = v6_round_trip(v6_dir)
+        test_compile(v6_dir)
+        if do_rom:
+            test_rom_v6(w6, s6, a6, b6, c6, d6, e6, keep)
+        print('PASS (v6 only)')
+        return
     if '--only-v5' in sys.argv:          # S98: fast path while iterating on v5
         tmp = tempfile.mkdtemp(prefix='dwm_v5_')
         keep = None
@@ -1886,7 +2428,14 @@ def main():
         shutil.rmtree(tsd)
     wts = tileset_sharing_check(tsd)
     test_compile(tsd)
+    v6_dir = os.path.join(tmp, 'fresh_v6')
+    if os.path.exists(v6_dir):
+        shutil.rmtree(v6_dir)
+    v6_split(os.path.join(tmp, 'split_v6'))
+    w6, s6, a6, b6, c6, d6, e6 = v6_round_trip(v6_dir)
+    test_compile(v6_dir)
     if do_rom:
+        test_rom_v6(w6, s6, a6, b6, c6, d6, e6, keep)
         test_rom_tilesets(wts, keep)
         test_rom(proj, grids, keep)
         test_rom_v2(w2, s2, rid, keep)

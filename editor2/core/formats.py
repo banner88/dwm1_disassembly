@@ -229,3 +229,47 @@ def db_line(bytes_, comment=None, per_line=None):
     if comment:
         s += f"  ; {comment}"
     return s
+
+
+# ---------------------------------------------------------------------------
+# Room tile animation (S99, ROADMAP P3.3e) — ROOM_DATA_FORMAT "Animated tiles",
+# census extracted/room_animations.json (tools/census_room_animation.py).
+# A custom room runs ONE vanilla room's bank-$01 animation handler (or none),
+# chosen by custom.rooms[].animation -> CustomAnimSrcTable (bank $71).
+# ---------------------------------------------------------------------------
+ANIM_NONE = 0x6B            # the dispatch table's own bare-`ret` row
+ANIM_LEGACY = 0x00          # pre-S99 behaviour: every custom room ran Castle's
+ANIM_EXCLUDED = {0x08: "map $08's handler pulses the cutscene DMG palette, "
+                       "not tiles"}
+
+
+def anim_source(room):
+    """(map id byte, kind, description) for a room's `animation` field.
+
+    'none' -> $6B; 'source' -> the room's source_mapID; '0xNN'/int -> that
+    vanilla map; absent -> legacy Castle ($00, the pre-S99 behaviour).
+    Raises ValueError on an unusable value (validators report it)."""
+    a = room.get('animation')
+    if room.get('placeholder'):
+        return ANIM_NONE, 'none', 'placeholder'
+    if a is None:
+        return ANIM_LEGACY, 'legacy', 'legacy: Castle ($00) — no animation set'
+    if isinstance(a, str) and a.strip().lower() == 'none':
+        return ANIM_NONE, 'none', 'none'
+    if isinstance(a, str) and a.strip().lower() == 'source':
+        src = val(room.get('source_mapID', 0))
+        if not isinstance(src, int):
+            raise ValueError("animation 'source' needs a numeric source_mapID")
+        kind, v = 'source', src
+    else:
+        v = val(a)
+        kind = 'borrow'
+        if not isinstance(v, int):
+            raise ValueError(f"animation {a!r}: use 'none', 'source' or a "
+                             "vanilla map id like '0x00'")
+    if not 0 <= v < 0x6B:
+        raise ValueError(f"animation source ${v:02X} is not a vanilla map id "
+                         "($00-$6A)")
+    if v in ANIM_EXCLUDED:
+        raise ValueError(f"animation source ${v:02X}: {ANIM_EXCLUDED[v]}")
+    return v, kind, f"{kind}: map ${v:02X}"

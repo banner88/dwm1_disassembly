@@ -29,6 +29,8 @@ import os
 from editor2.core import layouts as L
 from editor2.core.doors import DoorsMixin
 from editor2.core.talk import TalkMixin
+from editor2.core.animate import AnimateMixin
+from editor2.core.formats import anim_source as F_anim
 
 SCREEN_W, SCREEN_H = 20, 16
 GRID_COLS, GRID_ROWS = 4, 4          # engine scroll grid (row*4+col), S94 schema
@@ -78,13 +80,20 @@ def metatile_key(mt):
 
 
 
+class AnimationSwitchNeeded(RuntimeError):
+    """S99 r2: a borrowed metatile animates in its source room, but this room
+    already plays a DIFFERENT animation with tiles of its own — switching
+    would stop those. The GUI asks and retries with switch_ok=True (or
+    imports the tile still, anim_src=None)."""
+
+
 class ThresholdShiftNeeded(RuntimeError):
     """S98 r2: the walkable side of the sheet is full but the wall side has
     room — moving the wall/walkable split DOWN one slot would make space.
     The GUI asks the author (user: "make that an option") and retries with
     shift_ok=True."""
 
-class Document(DoorsMixin, TalkMixin):
+class Document(DoorsMixin, TalkMixin, AnimateMixin):
     def __init__(self, path):
         self.path = path if path.endswith('.json') else \
             os.path.join(path, 'project.json')
@@ -139,6 +148,8 @@ class Document(DoorsMixin, TalkMixin):
         # S98 r2: door pairs -> linked door objects
         self._migrate_doors(notes)
         self._migrate_door_arrivals(notes)
+        # S99: room tile animation source
+        self._migrate_animation(notes)
         if notes:
             self.dirty = True
         return notes
@@ -596,6 +607,9 @@ class Document(DoorsMixin, TalkMixin):
         for k in list(room):
             if k.startswith('_'):
                 room.pop(k)
+        # S99 (P3.3e, user: "Clones SHOULD get source animation"): run the
+        # source room's own bank-$01 tile animation (water, torches, swirls)
+        room['animation'] = 'source'
         for lay in layouts:
             for k in list(lay):
                 if k.startswith('_') or k == 'comment':
@@ -809,6 +823,10 @@ class Document(DoorsMixin, TalkMixin):
                         attr=self.blank_grid(0))
         room = {'id': rid, 'name': name, 'mapID': hexs(self.next_free_mapid()),
                 'source_mapID': hexs(source_mid), 'record': rec,
+                # S99: a room drawn with a vanilla room's sheet animates like
+                # it (the animated slots hold that room's art); a blank sheet
+                # has nothing to animate
+                'animation': 'none' if blank_tileset else 'source',
                 'render': {'attr': {'id': lid}},
                 # S98: no 'spawn' marker — the $8F entry is an EXAMINE SPOT
                 # (PyBoy-measured); arrival comes from the door / warp
@@ -985,7 +1003,8 @@ class Document(DoorsMixin, TalkMixin):
 
     def new_blank_tileset(self, base='ts_blank', origin=None, sheet=None):
         """A project tileset with an all-colour-0 sheet (S96: rooms built
-        from imported PNG art start empty; every slot but 77/78 is free).
+        from imported PNG art start empty; every slot is free — the room
+        is created with animation 'none', S99).
         Returns the tileset id."""
         ids = {t.get('id') for t in self.custom.get('tilesets', [])}
         tid, n = base, 2
@@ -1137,7 +1156,9 @@ class Document(DoorsMixin, TalkMixin):
     #   VOCABULARY  used by the vanilla room the sheet came from (the picker
     #               keeps offering those metatiles, so their graphics are
     #               protected — unless the author RELEASES the vocabulary)
-    #   ANIMATED    77/78 (Castle dispatch source rotates VRAM $94D0, KL S7)
+    #   ANIMATED    a slot the room's animation changes at runtime (S99: the
+    #               handler of each room's `animation` source — census
+    #               extracted/room_animations.json; pre-S99 always 77/78)
     #   FREE        none of the above — imports and walkability twins use it
     TILESET_ORIGIN_RE = r'bank \$([0-9A-Fa-f]{2}) id \$([0-9A-Fa-f]{2})'
 
@@ -1202,11 +1223,86 @@ class Document(DoorsMixin, TalkMixin):
         self.touch()
         return old
 
+    # ------------------------------------------------ animation (S99, P3.3e)
+    def animated_slots(self, tid):
+        """Slots of sheet `tid` that a room drawing with it animates at
+        runtime (union over those rooms' `animation` handlers)."""
+        from editor2.core import animation as A
+        out = set()
+        for r in self.rooms_using_tileset(tid):
+            out |= A.room_slots(r)
+        return out
+
+    def room_animation(self, room):
+        """{'value', 'kind', 'map', 'slots', 'shown', 'text', 'error'} for
+        the inspector / canvas."""
+        from editor2.core import animation as A
+        try:
+            v, kind, _why = F_anim(room)
+            err = None
+        except ValueError as e:
+            v, kind, err = None, 'invalid', str(e)
+        mid = None if v in (None, 0x6B) else v
+        return {'value': room.get('animation'), 'kind': kind, 'map': mid,
+                'slots': A.slots(mid), 'shown': A.shown_slots(mid),
+                'text': A.describe_effects(mid) if mid is not None else '',
+                'error': err}
+
+    def set_room_animation(self, room_id, value):
+        """'none' | 'source' | '0xNN' (a vanilla map). Returns the old value.
+        The compiler emits it into CustomAnimSrcTable (bank $71)."""
+        r = self.room(room_id)
+        old = r.get('animation')
+        test = dict(r, animation=value)
+        F_anim(test)                           # raises ValueError if unusable
+        r['animation'] = value
+        self.touch()
+        return old
+
+    def _migrate_animation(self, notes):
+        """S99: rooms saved before `animation` existed ran Castle's handler
+        (tiles 77-78 rolled in every custom room). User decision S99: a room
+        still drawing with its source room's sheet (every clone; a new room
+        on a vanilla tileset) animates like that room ('source'); anything
+        else (blank / imported / changed sheets) gets 'none', which frees
+        77/78."""
+        for r in self.rooms:
+            if r.get('placeholder') or 'animation' in r:
+                continue
+            src = r.get('source_mapID')
+            rec = r.get('record') or {}
+            kind = 'none'
+            if src is not None and val(src) < 0x6B and rec:
+                o = 0x26DD + val(src) * 8
+                rom = self._rom_bytes()
+                if rom is not None:
+                    want = (rom[o + 1], rom[o])          # (gfx_bank, gfx_id)
+                    tid = self.tileset_key(r)
+                    have = self.tileset_origin(tid) if 'tileset' in rec else \
+                        (val(rec.get('gfx_bank', 0)), val(rec.get('gfx_id', 0)))
+                    if have == want:
+                        kind = 'source'
+            r['animation'] = kind
+            notes.append(f"room {r.get('id')}: animation = {kind!r} (S99 — was "
+                         "Castle's tile 77-78 roll in every custom room)")
+
+    def _rom_bytes(self):
+        if getattr(self, '_rom_cache', None) is None:
+            here = os.path.dirname(os.path.dirname(os.path.dirname(
+                os.path.abspath(__file__))))
+            try:
+                self._rom_cache = open(os.path.join(here, 'data',
+                                                    'DWM-original.gbc'), 'rb').read()
+            except Exception:
+                self._rom_cache = b''
+        return self._rom_cache or None
+
     def tile_usage(self, tid):
         """128 dicts: placed [(room_id, screen, state)], mine [names],
         vocab bool, animated bool, changed bool (graphic differs from the
         origin sheet), status (animated/placed/mine/vocab/free)."""
-        out = [{'placed': [], 'mine': [], 'vocab': False, 'animated': i in (77, 78),
+        anim = self.animated_slots(tid)
+        out = [{'placed': [], 'mine': [], 'vocab': False, 'animated': i in anim,
                 'changed': False} for i in range(128)]
         for r in self.rooms_using_tileset(tid):
             for k, scr in (r.get('screens') or {}).items():
@@ -1251,7 +1347,7 @@ class Document(DoorsMixin, TalkMixin):
     def used_tiles(self, tid):
         """Indices a free-slot search must NOT overwrite: every tile placed
         in any layout on this tileset, every author metatile for it, the
-        animated pair 77/78, and — unless released — the VOCABULARY (S95: the
+        slots animated by a room on it (S99), and — unless released — the VOCABULARY (S95: the
         tiles of the rooms' vanilla source; 'this room's tiles' never shrinks,
         so the graphics behind them must never change either)."""
         return {i for i, u in enumerate(self.tile_usage(tid)) if u['status'] != 'free'}
@@ -1274,7 +1370,7 @@ class Document(DoorsMixin, TalkMixin):
         return t in self.used_tiles(tid)
 
     def import_metatile(self, room, mt, src_sheet, src_threshold, own_sheet=None,
-                        name=None):
+                        name=None, anim_src=None, switch_ok=False):
         """Bring a metatile from ANOTHER tileset into this room's tileset
         (S95, "tiles from other rooms displayed using the room's palette"):
         the room's tileset is copied into the project first when it still
@@ -1285,7 +1381,25 @@ class Document(DoorsMixin, TalkMixin):
         (it decides walkability — S94); the other three take any free slot,
         preferring the same side. Returns the new metatile (also appended to
         the author's metatiles so it persists). Raises RuntimeError when the
-        sheet has no free slot."""
+        sheet has no free slot.
+
+        S99 r2 (user: "I borrowed the moving water from castle and put it
+        into my custom room but it doesnt move"): with `anim_src` = the
+        vanilla map the metatile comes from, subtiles that room ANIMATES keep
+        their slot index (the game animates slots, not graphics), a swap's
+        hidden second frame is copied to its partner slot too, tiles already
+        placed in those slots move to a free slot on the same side (layouts
+        remapped), and the room's `animation` becomes that room's.
+        `self.last_import_note` says what happened (incl. walkability of the
+        fixed slot here). Raises AnimationSwitchNeeded when the room plays a
+        different animation with tiles of its own and not `switch_ok`."""
+        self.last_import_note = ''
+        if anim_src is not None:
+            from editor2.core import animation as A
+            src_slots = A.slots(anim_src)
+            if any((t & 0x7F) in src_slots for t in mt['tiles']):
+                return self._import_animated(room, mt, src_sheet, src_threshold,
+                                             own_sheet, name, anim_src, switch_ok)
         rec = room['record']
         tid = rec.get('tileset')
         if tid is None:
@@ -1295,6 +1409,7 @@ class Document(DoorsMixin, TalkMixin):
         sheet = self.read_sheet(tid)
         thr = val(rec['collision_threshold'])
         used = self.used_tiles(tid)
+        anim = self.animated_slots(tid)
         free = [i for i in range(128) if i not in used]
         out = []
         for pos, t in enumerate(mt['tiles']):
@@ -1304,7 +1419,7 @@ class Document(DoorsMixin, TalkMixin):
             strict = pos == 3                       # bottom-right decides
             cand = None
             for i in range(128):
-                if i in (77, 78) or bytes(sheet[i * 16:i * 16 + 16]) != gfx:
+                if i in anim or bytes(sheet[i * 16:i * 16 + 16]) != gfx:
                     continue
                 if not strict or (i < thr) == want_wall:
                     cand = i
@@ -1331,6 +1446,95 @@ class Document(DoorsMixin, TalkMixin):
         self.touch()
         return new
 
+    def _import_animated(self, room, mt, src_sheet, src_threshold, own_sheet,
+                         name, src, switch_ok):
+        from editor2.core import animation as A
+        src_slots = A.slots(src)
+        detail = A.handler(src).get('slot_detail') or {}
+        cur = self.room_animation(room)
+        if cur['map'] != src and cur['slots'] and not switch_ok:
+            raise AnimationSwitchNeeded(
+                f"This room plays the animation of ${cur['map']:02X} "
+                f"({cur['text']}). Tiles from ${src:02X} only move with ${src:02X}'s "
+                f"animation — switching stops the current one.")
+        rec = room['record']
+        tid = rec.get('tileset')
+        if tid is None:
+            if own_sheet is None:
+                raise RuntimeError('room borrows a vanilla tileset — pass own_sheet')
+            tid = self.localize_tileset(room, own_sheet)
+        thr = val(rec['collision_threshold'])
+        # the fixed slots this metatile needs: its animated subtiles + the
+        # hidden partner frame of each swapped one
+        need = []
+        for t in mt['tiles']:
+            t &= 0x7F
+            if t in src_slots and t not in need:
+                need.append(t)
+                d = detail.get(str(t)) or {}
+                if d.get('partner') is not None and d['partner'] not in need:
+                    need.append(d['partner'])
+        sheet = self.read_sheet(tid)
+        switching = cur['map'] != src
+        if switching:
+            self.room(room['id'])['animation'] = ('source' if room.get('source_mapID') is not None
+                                                  and val(room['source_mapID']) == src
+                                                  else f'0x{src:02X}')
+        anim_after = self.animated_slots(tid)
+        # tiles in use in the slots we write — and, on a switch, in EVERY slot
+        # the new animation moves — leave (unrelated tiles must not start moving)
+        vac = set(need) | (set(src_slots) if switching else set())
+        same = {i for i in need
+                if bytes(sheet[i * 16:i * 16 + 16]) == bytes(src_sheet[i * 16:i * 16 + 16])}
+        moved = self._vacate(tid, sheet, vac, same, thr, anim_after | set(need))
+        for i in need:
+            sheet[i * 16:i * 16 + 16] = bytes(src_sheet[i * 16:i * 16 + 16])
+        self.write_sheet(tid, sheet)
+        # the other subtiles: the ordinary borrow — an identical graphic
+        # already in the sheet, else a free slot (never an animated one); the
+        # bottom-right keeps its source side of the threshold (walkability)
+        used = self.used_tiles(tid) | set(need)
+        free = [i for i in range(128) if i not in used and i not in anim_after]
+        out = []
+        for pos, t in enumerate(mt['tiles']):
+            t &= 0x7F
+            if t in src_slots:
+                out.append(t)
+                continue
+            gfx = bytes(src_sheet[t * 16:t * 16 + 16])
+            want_wall = t < src_threshold
+            strict = pos == 3
+            cand = next((i for i in range(128) if i not in anim_after
+                         and bytes(sheet[i * 16:i * 16 + 16]) == gfx
+                         and (not strict or (i < thr) == want_wall)), None)
+            if cand is None:
+                side = [i for i in free if (i < thr) == want_wall]
+                pool = side or ([] if strict else free)
+                if not pool:
+                    raise RuntimeError(f"tileset {tid!r} has no free "
+                                       f"{'wall' if want_wall else 'walkable'} slot")
+                cand = pool[-1] if want_wall else pool[0]
+                free.remove(cand)
+                sheet[cand * 16:cand * 16 + 16] = gfx
+            out.append(cand)
+        self.write_sheet(tid, sheet)
+        new = {'name': name or mt.get('name') or 'imported', 'tiles': out,
+               'pal': mt.get('pal', 0), 'src': 'borrowed'}
+        self.add_metatile(tid, new['name'], out, new['pal'], src='borrowed')
+        br = mt['tiles'][3] & 0x7F
+        note = [f"animated like ${src:02X}: slots {A.rng(need)} hold its graphics"]
+        if cur['map'] != src:
+            note.append(f"this room's animation is now ${src:02X}'s")
+        if moved:
+            note.append('moved ' + ', '.join(f'{a}->{b}' for a, b in moved))
+        if br in src_slots and (br < thr) != (br < src_threshold):
+            note.append(f"slot {br} is on the {'WALL' if br < thr else 'WALKABLE'} side here "
+                        f"({'wall' if br < src_threshold else 'walkable'} in ${src:02X}) — "
+                        'an animated slot cannot move, so walkability follows this room')
+        self.last_import_note = '; '.join(note)
+        self.touch()
+        return new
+
     # ------------------------------------------------ PNG import (S96)
     def import_png_cells(self, room_id, plans, palettes, define_slots,
                          key=0, state_idx=0, own_sheet=None, stamp=None,
@@ -1340,8 +1544,8 @@ class Document(DoorsMixin, TalkMixin):
         * tileset — the room's sheet is copied into the project first if it
           still borrows a vanilla one (`own_sheet`); every distinct 8x8
           graphic reuses an identical slot when one exists, else takes a
-          FREE slot (`used_tiles`: placed / mine / vocabulary / 77-78 are
-          never touched). The bottom-right subtile of a cell marked WALL
+          FREE slot (`used_tiles`: placed / mine / vocabulary / the
+          animated slots of the room's animation are never touched). The bottom-right subtile of a cell marked WALL
           must sit below the collision threshold (it decides walkability —
           S94). Unmarked cells: with `strict_walk` their bottom-right
           subtile must sit at/above it (a graphic used both ways costs two
@@ -1370,11 +1574,12 @@ class Document(DoorsMixin, TalkMixin):
         thr = val(rec['collision_threshold'])
         sheet = self.read_sheet(tid)
         used = self.used_tiles(tid)
-        free = [i for i in range(128) if i not in used and i not in (77, 78)]
+        anim = self.animated_slots(tid)
+        free = [i for i in range(128) if i not in used and i not in anim]
 
         def existing(g, side):
             for i in range(128):
-                if i in (77, 78) or bytes(sheet[i * 16:i * 16 + 16]) != g:
+                if i in anim or bytes(sheet[i * 16:i * 16 + 16]) != g:
                     continue
                 if side == 'any' or (i < thr) == (side == 'wall'):
                     return i
@@ -1574,8 +1779,9 @@ class Document(DoorsMixin, TalkMixin):
     def ensure_twin(self, tid, t, want_wall, shift_ok=False):
         """Return an index whose graphic equals subtile `t` on the wanted
         side of the collision threshold (tile < thr = WALL, KEY_LESSONS S6),
-        creating one if needed. Never touches animated indices 77/78
-        (KEY_LESSONS S7). Falls back to moving the threshold by one (the
+        creating one if needed. Never touches the slots an animation of a
+        room on this sheet changes at runtime (S99 `animated_slots`; was the
+        fixed 77/78 of KEY_LESSONS S7). Falls back to moving the threshold by one (the
         first walkable tile is relocated to a free slot and every layout on
         this tileset is remapped) when no free slot exists on the wall side.
         Raises RuntimeError when the sheet has no free slot at all."""
@@ -1584,13 +1790,14 @@ class Document(DoorsMixin, TalkMixin):
         thr = val(rooms[0]['record']['collision_threshold']) if rooms else 0
         gfx = bytes(sheet[t * 16:t * 16 + 16])
         side = range(0, thr) if want_wall else range(thr, 128)
+        anim = self.animated_slots(tid)
         for i in side:
-            if i in (77, 78):
+            if i in anim:
                 continue
             if bytes(sheet[i * 16:i * 16 + 16]) == gfx:
                 return i, thr
         used = self.used_tiles(tid)
-        free = [i for i in range(128) if i not in (77, 78) and i not in used]
+        free = [i for i in range(128) if i not in anim and i not in used]
         on_side = [i for i in free if (i < thr) == want_wall]
         if on_side:
             i = on_side[-1] if want_wall else on_side[0]
@@ -1603,7 +1810,7 @@ class Document(DoorsMixin, TalkMixin):
             # one; its graphic (if in use) moves to a free wall slot below
             s_idx = thr - 1
             below = [i for i in free if i < s_idx]
-            if s_idx < 1 or s_idx in (77, 78) or (s_idx in used and not below):
+            if s_idx < 1 or s_idx in anim or (s_idx in used and not below):
                 raise RuntimeError(
                     f'tileset {tid} is full on both sides (walkable side: no free slot; '
                     'wall side: none to move a tile into) — release unused vocabulary '
@@ -1631,7 +1838,7 @@ class Document(DoorsMixin, TalkMixin):
         # wall side full: relocate the first walkable tile (index thr) to a
         # free slot above, put the twin at thr, threshold += 1
         above = [i for i in free if i > thr]
-        if not above or thr in (77, 78):
+        if not above or thr in anim:
             raise RuntimeError('tileset has no free slot for a wall twin')
         f = above[0]
         moved = bytes(sheet[thr * 16:thr * 16 + 16])

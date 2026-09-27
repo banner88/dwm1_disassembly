@@ -461,6 +461,17 @@ def emit_bank_071(prj, warnings):
         lines.append(F.db_line(b, comment=f"{F.hexb(F.val(r['mapID']))} — {state}"))
     lines.append("")
     lines += ["; " + "-" * 77,
+              "; CustomAnimSrcTable — 1 byte/room, indexed (mapID-$6B): the map ID",
+              "; whose bank-$01 room-animation handler runs for this room ($6B =",
+              "; none). Read by entry 3 CustomAnimSource (S99, P3.3e). (generated)",
+              "; " + "-" * 77,
+              f"ANIM_TABLE_LEN EQU {len(prj.rooms)}",
+              "CustomAnimSrcTable:"]
+    for r in prj.rooms:
+        src, why = prj.anim_source(r)
+        lines.append(F.db_line([src], comment=f"{F.hexb(F.val(r['mapID']))} — {why}"))
+    lines.append("")
+    lines += ["; " + "-" * 77,
               "; CustomRoomBGMTable — 128 entries indexed by wMapID (S64, M3b).",
               "; Read by entry 2 (CustomRoomBGMResolve, template head) for the",
               "; rewritten LoadNewBGMIdIntoA (patches/bank_001.asm). 0 = no",

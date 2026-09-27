@@ -4,7 +4,7 @@
   {
    "tree": "clean",
    "file": "bank_000.asm",
-   "line": 6091,
+   "line": 6093,
    "label": "UseGateWorldTable",
    "occ": 0,
    "pattern": [],
@@ -13,7 +13,7 @@
   {
    "tree": "clean",
    "file": "bank_000.asm",
-   "line": 7744,
+   "line": 7761,
    "label": "CheckGateWorldMapType",
    "occ": 0,
    "pattern": [
@@ -24,7 +24,7 @@
   {
    "tree": "clean",
    "file": "bank_000.asm",
-   "line": 7751,
+   "line": 7768,
    "label": "CheckGateWorldMapType",
    "occ": 1,
    "pattern": [
@@ -108,7 +108,7 @@
   {
    "tree": "clean",
    "file": "bank_001.asm",
-   "line": 1961,
+   "line": 1970,
    "label": "CheckBattleModeFlag",
    "occ": 0,
    "pattern": [
@@ -119,7 +119,7 @@
   {
    "tree": "clean",
    "file": "bank_001.asm",
-   "line": 2947,
+   "line": 2956,
    "label": "RetIfInGateworld",
    "occ": 0,
    "pattern": [
@@ -130,7 +130,7 @@
   {
    "tree": "clean",
    "file": "bank_001.asm",
-   "line": 3445,
+   "line": 3454,
    "label": "CheckSpecialMapExits",
    "occ": 0,
    "pattern": [
@@ -141,7 +141,7 @@
   {
    "tree": "clean",
    "file": "bank_001.asm",
-   "line": 3671,
+   "line": 3684,
    "label": "CopyPlayerCoordsAndGetNextRoom",
    "occ": 0,
    "pattern": [
@@ -152,7 +152,7 @@
   {
    "tree": "clean",
    "file": "bank_001.asm",
-   "line": 3745,
+   "line": 3758,
    "label": "CheckScriptBeforeAction",
    "occ": 0,
    "pattern": [
@@ -163,7 +163,7 @@
   {
    "tree": "clean",
    "file": "bank_001.asm",
-   "line": 5145,
+   "line": 5164,
    "label": "jr_001_5e23",
    "occ": 0,
    "pattern": [],
@@ -172,7 +172,7 @@
   {
    "tree": "clean",
    "file": "bank_001.asm",
-   "line": 5750,
+   "line": 5775,
    "label": "jr_001_6115",
    "occ": 0,
    "pattern": [
@@ -183,7 +183,7 @@
   {
    "tree": "clean",
    "file": "bank_001.asm",
-   "line": 6619,
+   "line": 6853,
    "label": "CheckPaletteAnimActive",
    "occ": 0,
    "pattern": [
@@ -205,7 +205,7 @@
   {
    "tree": "clean",
    "file": "bank_004.asm",
-   "line": 3321,
+   "line": 3356,
    "label": "label4_5bdb",
    "occ": 0,
    "pattern": [
@@ -216,7 +216,7 @@
   {
    "tree": "clean",
    "file": "bank_004.asm",
-   "line": 5015,
+   "line": 5035,
    "label": "label4_66bd",
    "occ": 0,
    "pattern": [],
@@ -225,7 +225,7 @@
   {
    "tree": "clean",
    "file": "bank_004.asm",
-   "line": 5296,
+   "line": 5316,
    "label": "label4_68d7",
    "occ": 0,
    "pattern": [],
@@ -234,7 +234,7 @@
   {
    "tree": "clean",
    "file": "bank_006.asm",
-   "line": 2545,
+   "line": 2592,
    "label": "jr_006_4d99",
    "occ": 0,
    "pattern": [
@@ -245,7 +245,7 @@
   {
    "tree": "clean",
    "file": "bank_006.asm",
-   "line": 3873,
+   "line": 3920,
    "label": "jr_006_60b8",
    "occ": 0,
    "pattern": [
@@ -256,7 +256,7 @@
   {
    "tree": "clean",
    "file": "bank_006.asm",
-   "line": 4001,
+   "line": 4052,
    "label": "jr_006_618e",
    "occ": 0,
    "pattern": [
@@ -267,7 +267,7 @@
   {
    "tree": "clean",
    "file": "bank_006.asm",
-   "line": 4943,
+   "line": 4997,
    "label": "jr_006_66c2",
    "occ": 0,
    "pattern": [
@@ -278,7 +278,7 @@
   {
    "tree": "clean",
    "file": "bank_006.asm",
-   "line": 5282,
+   "line": 5336,
    "label": "jr_006_6893",
    "occ": 0,
    "pattern": [
@@ -290,7 +290,7 @@
   {
    "tree": "clean",
    "file": "bank_006.asm",
-   "line": 5737,
+   "line": 5802,
    "label": "Jump_006_6b87",
    "occ": 0,
    "pattern": [
@@ -301,7 +301,7 @@
   {
    "tree": "clean",
    "file": "bank_007.asm",
-   "line": 4854,
+   "line": 4861,
    "label": "jr_007_6004",
    "occ": 0,
    "pattern": [
@@ -312,7 +312,7 @@
   {
    "tree": "clean",
    "file": "bank_007.asm",
-   "line": 4915,
+   "line": 4922,
    "label": "CmpFld_604d",
    "occ": 0,
    "pattern": [
@@ -403,7 +403,7 @@
   {
    "tree": "clean",
    "file": "bank_00b.asm",
-   "line": 1049,
+   "line": 1071,
    "label": "labelb_4488",
    "occ": 0,
    "pattern": [
@@ -414,7 +414,7 @@
   {
    "tree": "clean",
    "file": "bank_00b.asm",
-   "line": 1190,
+   "line": 1212,
    "label": "labelb_451d",
    "occ": 0,
    "pattern": [
@@ -425,7 +425,7 @@
   {
    "tree": "clean",
    "file": "bank_00b.asm",
-   "line": 1416,
+   "line": 1438,
    "label": "jr_00b_4601",
    "occ": 0,
    "pattern": [
@@ -436,7 +436,7 @@
   {
    "tree": "clean",
    "file": "bank_00b.asm",
-   "line": 1429,
+   "line": 1451,
    "label": "jr_00b_462c",
    "occ": 0,
    "pattern": [],
@@ -445,7 +445,7 @@
   {
    "tree": "clean",
    "file": "bank_00b.asm",
-   "line": 1476,
+   "line": 1498,
    "label": "jr_00b_4674",
    "occ": 0,
    "pattern": [],
@@ -454,7 +454,7 @@
   {
    "tree": "clean",
    "file": "bank_00b.asm",
-   "line": 1477,
+   "line": 1499,
    "label": "jr_00b_4674",
    "occ": 1,
    "pattern": [
@@ -465,7 +465,7 @@
   {
    "tree": "clean",
    "file": "bank_00b.asm",
-   "line": 2041,
+   "line": 2072,
    "label": "jr_00b_492a",
    "occ": 0,
    "pattern": [
@@ -476,7 +476,7 @@
   {
    "tree": "clean",
    "file": "bank_00b.asm",
-   "line": 2068,
+   "line": 2099,
    "label": "Jump_00b_4945",
    "occ": 0,
    "pattern": [
@@ -564,8 +564,8 @@
   {
    "tree": "clean",
    "file": "bank_050.asm",
-   "line": 6319,
-   "label": "Jump_050_640a",
+   "line": 6378,
+   "label": "BattleExitHandler",
    "occ": 0,
    "pattern": [
     "cp"
@@ -575,7 +575,7 @@
   {
    "tree": "clean",
    "file": "bank_050.asm",
-   "line": 6413,
+   "line": 6472,
    "label": "Jump_050_64e0",
    "occ": 0,
    "pattern": [
@@ -622,7 +622,7 @@
   {
    "tree": "patched",
    "file": "bank_000.asm",
-   "line": 7838,
+   "line": 7864,
    "label": "CheckGateWorldMapType",
    "occ": 0,
    "pattern": [
@@ -633,7 +633,7 @@
   {
    "tree": "patched",
    "file": "bank_000.asm",
-   "line": 7845,
+   "line": 7871,
    "label": "CheckGateWorldMapType",
    "occ": 1,
    "pattern": [
@@ -644,7 +644,7 @@
   {
    "tree": "patched",
    "file": "bank_000.asm",
-   "line": 13160,
+   "line": 13157,
    "label": "MapIDClampForPalette",
    "occ": 0,
    "pattern": [
@@ -710,7 +710,18 @@
   {
    "tree": "patched",
    "file": "bank_001.asm",
-   "line": 3389,
+   "line": 2421,
+   "label": "CheckBattleModeFlag",
+   "occ": 0,
+   "pattern": [
+    "store"
+   ],
+   "verdict": "COPY"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_001.asm",
+   "line": 3407,
    "label": "RetIfInGateworld",
    "occ": 0,
    "pattern": [
@@ -721,7 +732,7 @@
   {
    "tree": "patched",
    "file": "bank_001.asm",
-   "line": 3887,
+   "line": 3905,
    "label": "CheckSpecialMapExits",
    "occ": 0,
    "pattern": [
@@ -732,7 +743,7 @@
   {
    "tree": "patched",
    "file": "bank_001.asm",
-   "line": 4113,
+   "line": 4135,
    "label": "CopyPlayerCoordsAndGetNextRoom",
    "occ": 0,
    "pattern": [
@@ -743,7 +754,7 @@
   {
    "tree": "patched",
    "file": "bank_001.asm",
-   "line": 4187,
+   "line": 4209,
    "label": "CheckScriptBeforeAction",
    "occ": 0,
    "pattern": [
@@ -754,7 +765,18 @@
   {
    "tree": "patched",
    "file": "bank_001.asm",
-   "line": 7045,
+   "line": 6203,
+   "label": "PerRoomDispatchEntry",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "RST00_CLAMPED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_001.asm",
+   "line": 7294,
    "label": "CheckPaletteAnimActive",
    "occ": 0,
    "pattern": [
@@ -776,7 +798,7 @@
   {
    "tree": "patched",
    "file": "bank_004.asm",
-   "line": 3320,
+   "line": 3355,
    "label": "label4_5bdb",
    "occ": 0,
    "pattern": [
@@ -787,7 +809,7 @@
   {
    "tree": "patched",
    "file": "bank_004.asm",
-   "line": 5012,
+   "line": 5032,
    "label": "label4_66bd",
    "occ": 0,
    "pattern": [],
@@ -796,7 +818,7 @@
   {
    "tree": "patched",
    "file": "bank_004.asm",
-   "line": 5293,
+   "line": 5313,
    "label": "label4_68d7",
    "occ": 0,
    "pattern": [],
@@ -805,7 +827,7 @@
   {
    "tree": "patched",
    "file": "bank_006.asm",
-   "line": 2545,
+   "line": 2592,
    "label": "jr_006_4d99",
    "occ": 0,
    "pattern": [
@@ -816,7 +838,7 @@
   {
    "tree": "patched",
    "file": "bank_006.asm",
-   "line": 3863,
+   "line": 3918,
    "label": "jr_006_60b8",
    "occ": 0,
    "pattern": [
@@ -827,7 +849,7 @@
   {
    "tree": "patched",
    "file": "bank_006.asm",
-   "line": 3991,
+   "line": 4050,
    "label": "jr_006_618e",
    "occ": 0,
    "pattern": [
@@ -838,7 +860,7 @@
   {
    "tree": "patched",
    "file": "bank_006.asm",
-   "line": 4933,
+   "line": 5005,
    "label": "jr_006_66c2",
    "occ": 0,
    "pattern": [
@@ -849,7 +871,7 @@
   {
    "tree": "patched",
    "file": "bank_006.asm",
-   "line": 5272,
+   "line": 5344,
    "label": "jr_006_6893",
    "occ": 0,
    "pattern": [
@@ -861,7 +883,7 @@
   {
    "tree": "patched",
    "file": "bank_007.asm",
-   "line": 4838,
+   "line": 4867,
    "label": "jr_007_6004",
    "occ": 0,
    "pattern": [
@@ -934,29 +956,7 @@
   {
    "tree": "patched",
    "file": "bank_00b.asm",
-   "line": 979,
-   "label": "labelb_4488",
-   "occ": 0,
-   "pattern": [
-    "cp"
-   ],
-   "verdict": "LOSSY_DIVERTED"
-  },
-  {
-   "tree": "patched",
-   "file": "bank_00b.asm",
-   "line": 1094,
-   "label": "labelb_451d",
-   "occ": 0,
-   "pattern": [
-    "cp"
-   ],
-   "verdict": "LOSSY_DIVERTED"
-  },
-  {
-   "tree": "patched",
-   "file": "bank_00b.asm",
-   "line": 1294,
+   "line": 1353,
    "label": "jr_00b_4601",
    "occ": 0,
    "pattern": [
@@ -967,7 +967,7 @@
   {
    "tree": "patched",
    "file": "bank_00b.asm",
-   "line": 1307,
+   "line": 1370,
    "label": "jr_00b_462c",
    "occ": 0,
    "pattern": [],
@@ -976,7 +976,7 @@
   {
    "tree": "patched",
    "file": "bank_00b.asm",
-   "line": 1354,
+   "line": 1417,
    "label": "jr_00b_4674",
    "occ": 0,
    "pattern": [],
@@ -985,7 +985,7 @@
   {
    "tree": "patched",
    "file": "bank_00b.asm",
-   "line": 1355,
+   "line": 1418,
    "label": "jr_00b_4674",
    "occ": 1,
    "pattern": [
@@ -996,7 +996,7 @@
   {
    "tree": "patched",
    "file": "bank_00b.asm",
-   "line": 1946,
+   "line": 2011,
    "label": "jr_00b_492a",
    "occ": 0,
    "pattern": [
@@ -1007,7 +1007,7 @@
   {
    "tree": "patched",
    "file": "bank_00b.asm",
-   "line": 1973,
+   "line": 2038,
    "label": "Jump_00b_4945",
    "occ": 0,
    "pattern": [
@@ -1018,7 +1018,7 @@
   {
    "tree": "patched",
    "file": "bank_00b.asm",
-   "line": 2510,
+   "line": 2575,
    "label": "SharedPtrChase",
    "occ": 0,
    "pattern": [
@@ -1029,7 +1029,7 @@
   {
    "tree": "patched",
    "file": "bank_00b.asm",
-   "line": 2595,
+   "line": 2660,
    "label": "CustomDescentInGate",
    "occ": 0,
    "pattern": [
@@ -1073,7 +1073,7 @@
   {
    "tree": "patched",
    "file": "bank_017.asm",
-   "line": 105,
+   "line": 107,
    "label": "jr_017_4071",
    "occ": 0,
    "pattern": [
@@ -1084,7 +1084,7 @@
   {
    "tree": "patched",
    "file": "bank_017.asm",
-   "line": 2573,
+   "line": 2594,
    "label": "CustomAttrCheck",
    "occ": 0,
    "pattern": [
@@ -1097,21 +1097,39 @@
   {
    "tree": "patched",
    "file": "bank_017.asm",
-   "line": 2616,
+   "line": 2629,
    "label": "CustomPalCheck",
    "occ": 0,
    "pattern": [
-    "add_a",
-    "cp",
-    "sub"
+    "cp"
    ],
    "verdict": "IDX8_SUB6B"
   },
   {
    "tree": "patched",
+   "file": "bank_017.asm",
+   "line": 2737,
+   "label": "FreeColor1Hook",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_017.asm",
+   "line": 2822,
+   "label": "StateRulesHook17",
+   "occ": 0,
+   "pattern": [],
+   "verdict": "COPY"
+  },
+  {
+   "tree": "patched",
    "file": "bank_050.asm",
-   "line": 6304,
-   "label": "Jump_050_640a",
+   "line": 6376,
+   "label": "BattleExitHandler",
    "occ": 0,
    "pattern": [
     "cp"
@@ -1121,7 +1139,7 @@
   {
    "tree": "patched",
    "file": "bank_050.asm",
-   "line": 6398,
+   "line": 6470,
    "label": "Jump_050_64e0",
    "occ": 0,
    "pattern": [
@@ -1144,7 +1162,7 @@
   {
    "tree": "patched",
    "file": "bank_060.asm",
-   "line": 30,
+   "line": 36,
    "label": "CustomPtrChase",
    "occ": 0,
    "pattern": [
@@ -1155,7 +1173,7 @@
   {
    "tree": "patched",
    "file": "bank_060.asm",
-   "line": 40,
+   "line": 46,
    "label": "CustomPtrChase",
    "occ": 1,
    "pattern": [
@@ -1167,7 +1185,29 @@
   {
    "tree": "patched",
    "file": "bank_060.asm",
-   "line": 191,
+   "line": 217,
+   "label": "CustomStateRules",
+   "occ": 0,
+   "pattern": [
+    "sub"
+   ],
+   "verdict": "IDX8_SUB6B"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_060.asm",
+   "line": 331,
+   "label": "VanillaExitResolve",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_060.asm",
+   "line": 415,
    "label": "GateAwareDispatch",
    "occ": 0,
    "pattern": [
@@ -1178,7 +1218,7 @@
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 56,
+   "line": 67,
    "label": "CopyCustomRoomRecord",
    "occ": 0,
    "pattern": [
@@ -1189,7 +1229,7 @@
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 63,
+   "line": 74,
    "label": "CopyCustomRoomRecord",
    "occ": 1,
    "pattern": [
@@ -1200,7 +1240,7 @@
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 73,
+   "line": 84,
    "label": "CopyCustomRoomRecord",
    "occ": 2,
    "pattern": [
@@ -1211,7 +1251,7 @@
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 105,
+   "line": 116,
    "label": "CustomEncResolve",
    "occ": 0,
    "pattern": [
@@ -1223,13 +1263,58 @@
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 138,
+   "line": 149,
    "label": "CustomRoomBGMResolve",
    "occ": 0,
    "pattern": [
     "cp"
    ],
    "verdict": "BOUNDED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_071.asm",
+   "line": 167,
+   "label": "CustomAnimSource",
+   "occ": 0,
+   "pattern": [
+    "cp",
+    "sub"
+   ],
+   "verdict": "IDX8_SUB6B"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_072.asm",
+   "line": 798,
+   "label": "AnchorField14Tail",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_073.asm",
+   "line": 1586,
+   "label": "MenuOpenFreePal",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_073.asm",
+   "line": 1642,
+   "label": "BoxAttrActive",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
   }
  ],
  "ceilings": {

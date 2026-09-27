@@ -69,6 +69,10 @@
    C8B9     1    ? (related to BGM)
    C8A6     1    Frame counter used as the NPC behaviour clock (bank $06:
                  `and $01` = every 2nd frame, `and $07/$0F` = 8/16) [S97]
+                 Low byte of the 16-bit FIELD frame counter $C8A6/$C8A7
+                 (IncrementVisualStep, +1 per MainFieldLoop pass) — also the
+                 room tile-animation clock (ROOM_DATA_FORMAT "Animated
+                 tiles"; the GreatTree sway flips on $C8A7 bit 1) [S99]
    C925     1    wScreenIndex — current screen of the room (0-15, row*4+col)
    C926     1    Gate wanderer's screen: bank $16 floor generation sets it
                  to the screen holding the wandering NPC, $FF outside gates;

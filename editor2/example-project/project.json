@@ -134,7 +134,8 @@
       ]
      }
     },
-    "music": "dwm2_bgm07"
+    "music": "dwm2_bgm07",
+    "animation": "none"
    },
    {
     "id": "dusk_mirror",
@@ -217,7 +218,8 @@
       ],
       "exits": []
      }
-    }
+    },
+    "animation": "none"
    },
    {
     "id": "gate_rotation",
@@ -266,7 +268,8 @@
        }
       ]
      }
-    }
+    },
+    "animation": "none"
    },
    {
     "id": "reserved_6e",
@@ -327,7 +330,8 @@
        }
       ]
      }
-    }
+    },
+    "animation": "none"
    },
    {
     "id": "medal_vault",
@@ -400,7 +404,8 @@
       ]
      }
     },
-    "music": "dwm2_bgm10"
+    "music": "dwm2_bgm10",
+    "animation": "none"
    },
    {
     "id": "arena_clone",
@@ -804,7 +809,8 @@
       ],
       "comment": "S97: rank G cleared (vanilla flag $0030) -> the right-hand attendant leaves (was the S92 entry:medal_vault prelude; a rule also survives save/reload)"
      }
-    ]
+    ],
+    "animation": "source"
    },
    {
     "id": "island_copy",
@@ -910,7 +916,8 @@
      "width_px": 160,
      "height_px": 256,
      "collision_threshold": "0x30"
-    }
+    },
+    "animation": "none"
    }
   ],
   "dialogue": [

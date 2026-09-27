@@ -9,7 +9,9 @@ every slot with its graphic and its status from `Document.tile_usage`:
     blue    VOCABULARY only (the vanilla source room's tiles — protected so
             the picker's "This room" entries keep their graphics)
     orange  vocabulary, RELEASED (imports / walkability twins may take it)
-    grey    ANIMATED 77/78 (never used: VRAM $94D0 rotates — KL S7)
+    teal    ANIMATED by the room's animation (S99: the slots of its
+            `animation` handler — census extracted/room_animations.json);
+            dashed = a hidden second frame the game swaps in (never place)
     dim     FREE
     red dot the graphic differs from the sheet the tileset was copied from
 
@@ -33,7 +35,7 @@ COLOURS = {
     'mine': QColor(170, 110, 240),
     'vocab': QColor(80, 150, 255),
     'released': QColor(255, 150, 40),
-    'animated': QColor(120, 120, 120),
+    'animated': QColor(40, 170, 185),
     'free': QColor(60, 60, 66),
 }
 
@@ -82,11 +84,14 @@ class SlotGrid(QWidget):
                     p.setOpacity(0.35)
                 p.drawPixmap(inner, pm)
                 p.setOpacity(1.0)
-            if st == 'animated':
-                pen = QPen(QColor(200, 200, 200))
+            if st == 'animated' and not u.get('placed'):
+                # S99: a hidden second frame (swap partner) — the game
+                # swaps it onto the shown tile; dashed = never place it
+                pen = QPen(QColor(230, 250, 255))
+                pen.setStyle(Qt.DashLine)
                 p.setPen(pen)
-                p.drawLine(inner.topLeft(), inner.bottomRight())
-                p.drawLine(inner.topRight(), inner.bottomLeft())
+                p.setBrush(Qt.NoBrush)
+                p.drawRect(inner.adjusted(-1, -1, 0, 0))
             if u.get('changed'):
                 p.fillRect(QRect(rc.right() - 6, rc.y() + 2, 4, 4), QColor(255, 50, 50))
             if i == self.selected:
@@ -207,7 +212,7 @@ class TilesetMap(QWidget):
             '<span style="color:#aa6ef0">■</span> my metatiles '
             '<span style="color:#5096ff">■</span> vocabulary '
             '<span style="color:#ff9628">■</span> released '
-            '<span style="color:#787878">■</span> animated '
+            '<span style="color:#28aab9">■</span> animated (dashed = hidden frame) '
             '<span style="color:#ff3232">•</span> graphic changed · '
             '<span style="color:#ffdc00">▬</span> wall | walkable')
         legend.setWordWrap(True)
@@ -246,11 +251,22 @@ class TilesetMap(QWidget):
             counts[u['status']] = counts.get(u['status'], 0) + 1
         own = 'tileset in your project' if ':' not in tid else \
             'vanilla sheet (copied into the project on the first edit)'
+        an = self.doc.room_animation(self.room)
+        mine = an['slots']
+        every = {i for i, u in enumerate(usage) if u['animated']}
+        anim_line = (f"<br>animated here: <b>{len(mine)}</b> slot(s) — {an['text']}"
+                     if an['map'] is not None else
+                     '<br>animated here: none (this room plays no tile animation)')
+        if every - mine:
+            from editor2.core.animation import rng
+            anim_line += (f" · also protected: {rng(every - mine)} (animated by other "
+                          'rooms sharing this sheet)')
         self.summary.setText(
             f"<b>{tid}</b> — {own}<br>"
             f"free: <b>{fc['wall']}</b> wall / <b>{fc['walkable']}</b> walkable "
             f"(<b>{fc['total']}</b> of 128) · placed {counts.get('placed', 0)} · "
-            f"my metatiles {counts.get('mine', 0)} · vocabulary {counts.get('vocab', 0)}")
+            f"my metatiles {counts.get('mine', 0)} · vocabulary {counts.get('vocab', 0)}"
+            + anim_line)
         for btn, kind, label in ((self.purge_b, 'borrowed', 'borrowed'),
                                  (self.purge_o, 'own', 'own')):
             try:
@@ -286,7 +302,11 @@ class TilesetMap(QWidget):
         side = 'WALL side' if i < self.threshold else 'walkable side'
         bits = [f'slot ${i:02X} ({i}) — {side}']
         if u['animated']:
-            bits.append('ANIMATED (77/78 rotate in custom rooms) — never used')
+            bits.append('ANIMATED by the animation of a room on this sheet — '
+                        + ('shown on screen; its graphic changes in game'
+                           if u['placed'] else
+                           'a hidden second frame the game swaps in: never place it, '
+                           'imports and twins never use it'))
         if u['placed']:
             where = ', '.join(f'{r} scr {k} st {s}' for r, k, s in u['placed'][:6])
             more = f' +{len(u["placed"]) - 6}' if len(u['placed']) > 6 else ''

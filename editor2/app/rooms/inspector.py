@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (QComboBox, QFormLayout, QGroupBox, QLabel,
                                QScrollArea, QSpinBox, QVBoxLayout, QWidget,
                                QTreeWidget, QTreeWidgetItem, QHBoxLayout)
 
+from editor2.core import animation as ANIM
 from editor2.core.document import val
 
 VANILLA_PAL = '(borrow vanilla source palette)'
@@ -45,6 +46,7 @@ class Inspector(QWidget):
     addSpotRequested = Signal(object, str)     # (cx, cy), 'examine'|'step'  S98
     removeDoorRequested = Signal(str)          # door id  S98
     goDoorRequested = Signal(str)              # door id: select its end here  S98
+    animationChosen = Signal(str)              # 'none' | 'source' | '0xNN'  S99
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -88,6 +90,17 @@ class Inspector(QWidget):
         self.r_scripts = _lbl()
         self.r_note = _lbl()
         self.r_note.setStyleSheet('color: #e0b040;')
+        # S99 (P3.3e): which room's tile animation this room plays
+        self.r_anim = QComboBox()
+        self.r_anim.setToolTip(
+            'Tile animation (water, torches, swirls…) is a per-ROOM routine in the '
+            'game that changes fixed tile slots of the sheet every few frames. '
+            'Pick none, the source room\'s own, or borrow any room\'s — it then '
+            'animates whatever graphic sits in those slots of THIS room\'s sheet. '
+            'Anim (toolbar) outlines the tiles; ▶ Play previews it.')
+        self.r_anim.currentIndexChanged.connect(self._anim_changed)
+        self.r_anim_note = _lbl()
+        self.r_anim_note.setStyleSheet('color: #6ad8e6;')
         f.addRow('name', self.r_name)
         f.addRow('id', self.r_id)
         f.addRow('mapID', self.r_map)
@@ -106,6 +119,8 @@ class Inspector(QWidget):
         f.addRow('attr base', self.r_attr)
         f.addRow('encounters', self.r_enc)
         f.addRow('music', self.r_music)
+        f.addRow('animated tiles', self.r_anim)
+        f.addRow('', self.r_anim_note)
         f.addRow('scripts', self.r_scripts)
         f.addRow(self.r_note)
         self.lay.addWidget(g)
@@ -272,6 +287,20 @@ class Inspector(QWidget):
         self.r_attr.setText('vanilla')
         self.r_enc.setText('vanilla')
         self.r_music.setText('vanilla')
+        self.r_anim.clear()
+        e = ANIM.map_entry(mid)
+        if e.get('slots') and not e.get('inert_in_vanilla') and mid not in (0x08,):
+            self.r_anim.addItem(f'animates: {ANIM.describe_effects(mid)}', None)
+            hid = e.get('hidden_frames') or []
+            self.r_anim_note.setText(
+                'Outlined dashed on the canvas (Anim); ▶ Play shows it moving.'
+                + (f' Slots {ANIM.rng(hid)} hold the hidden second frames.' if hid else ''))
+        else:
+            self.r_anim.addItem('none', None)
+            self.r_anim_note.setText('' if not e.get('slots') else
+                                     'Its routine animates blank slots (nothing visible).')
+        self.r_anim.setEnabled(False)
+        self.r_anim_note.setVisible(bool(self.r_anim_note.text()))
         self.r_scripts.setText('vanilla')
         self.r_note.setText('Vanilla room. "Make editable" clones it into your '
                             'project (the original stays untouched).')
@@ -338,6 +367,7 @@ class Inspector(QWidget):
             f"gate {enc.get('gate_id')} floor {enc.get('floor')}"
             if enc and enc.get('enabled') else 'off')
         self.r_music.setText(str(room.get('music', 'default')))
+        self._fill_anim(doc, renderer, room)
         self.r_scripts.setText(str(len(room.get('scripts') or {})))
         self.r_note.setText(note)
         self.r_note.setVisible(bool(note))
@@ -347,6 +377,76 @@ class Inspector(QWidget):
         self.rules.show_room(doc, room, key, state_idx)
         self.show_screen(doc, renderer, room, key, state_idx)
         self._building = False
+
+    def _fill_anim(self, doc, renderer, room):
+        """S99: None / Same as source room / Borrow <room>, plus one line
+        saying exactly which slots move and whether they hold that room's art."""
+        self.r_anim.clear()
+        self.r_anim.setEnabled(not room.get('placeholder'))
+        src = val(room.get('source_mapID', 0))
+        names = {m: n for m, n, _s in renderer.vanilla_rooms()}
+        src_name = names.get(src) or renderer.vanilla_name(src)
+        src_txt = ANIM.describe_effects(src) if src < 0x6B else ''
+        self.r_anim.addItem('None — no tile animation', 'none')
+        self.r_anim.addItem(f'Same as source room (${src:02X} {src_name}'
+                            + (f': {src_txt})' if src_txt else ': none)'), 'source')
+        self.r_anim.insertSeparator(self.r_anim.count())
+        for mid, label in ANIM.sources(names):
+            self.r_anim.addItem(f'Borrow {label}', f'0x{mid:02X}')
+        info = doc.room_animation(room)
+        cur = room.get('animation')
+        idx = -1
+        if isinstance(cur, str) and cur.lower() in ('none', 'source'):
+            idx = self.r_anim.findData(cur.lower())
+        elif cur is not None:
+            try:
+                idx = self.r_anim.findData(f'0x{val(cur):02X}')
+            except Exception:
+                idx = -1
+        if idx < 0 and cur is not None:
+            self.r_anim.addItem(f'(current: {cur})', cur)
+            idx = self.r_anim.count() - 1
+        self.r_anim.setCurrentIndex(max(idx, 0))
+        self.r_anim_note.setText(self._anim_note(doc, renderer, room, info))
+        self.r_anim_note.setVisible(bool(self.r_anim_note.text()))
+
+    @staticmethod
+    def _anim_note(doc, renderer, room, info):
+        if info.get('error'):
+            return f"⚠ {info['error']}"
+        if info['kind'] == 'legacy':
+            return ('Not set: plays Castle\'s roll on slots 77-78 (the old behaviour). '
+                    'Pick one above.')
+        mid = info['map']
+        if mid is None:
+            return 'No tile moves in this room.'
+        txt = f"Slots {ANIM.rng(info['slots'])} change in game: {info['text']}."
+        try:                                  # S99 r6: the count
+            b = doc.anim_budget(room)
+            cnt = '; '.join(f"{u['effect']} {u['used']} of {u['total']} {u['unit']}s"
+                            + (' (FULL)' if u['used'] >= u['total'] else '')
+                            for u in b['units'])
+            if cnt:
+                txt = (f"Used here: {cnt} — {len(b['tiles'])} moving tile(s) "
+                       '(details: Make animated tab). ' + txt)
+        except Exception:
+            pass
+        try:
+            g = renderer.vanilla_gfx(mid)
+            same = doc.tileset_origin(doc.tileset_key(room)) == (g.gfx_bank, g.gfx_id)
+        except Exception:
+            same = False
+        if not same:
+            txt += (f' This room\'s sheet is NOT ${mid:02X}\'s, so whatever graphic sits '
+                    'in those slots here moves instead (dashed outline on the canvas; '
+                    '▶ Play shows it). Imports and twins leave those slots alone.')
+        return txt
+
+    def _anim_changed(self, _i):
+        if not self._building and self.r_anim.isEnabled():
+            v = self.r_anim.currentData()
+            if isinstance(v, str):
+                self.animationChosen.emit(v)
 
     def _fill_palette_combo(self, combo, doc, renderer):
         """Project palettes, then every vanilla room's palette as a
@@ -478,6 +578,10 @@ class Inspector(QWidget):
         QTreeWidgetItem(self.sel_tree, ['walkable', 'yes' if walkable else 'NO (wall)'])
         self.sel_note.setText('Walkability is decided by the bottom-right subtile '
                               '(engine, measured S94). Use Walkability mode (W) to flip it.')
+
+    def add_cell_row(self, name, value):
+        """S99 r3: an extra line under the selected cell (animation)."""
+        QTreeWidgetItem(self.sel_tree, [name, value])
 
     def show_selection(self, sel, editable=False):
         self.sel_tree.clear()

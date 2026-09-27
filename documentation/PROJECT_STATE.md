@@ -10,6 +10,158 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
+> Last verified: 2026-09-27 (Session 99 — **ROADMAP P3.3e ANIMATED TILES:
+> the room tile-animation system measured end to end, made per-room for
+> custom rooms, and surfaced in the editor** (user: "Animated tiles next";
+> "indicate currently animated tiles (in vanilla)"; "Can preview animation
+> (maybe button …)"; "Clones SHOULD get soure animation … Also yes migrate";
+> borrowing "fine as long as it's clear whats happening"; "Gate floors do NOT
+> have animation … interesting to add. but not necessary"). S98 not yet
+> re-confirmed this session beyond its doors. **Built S99, NOT yet
+> user-tested.** Verifier PASS 6/6 (check 5 now also runs
+> `census_room_animation.py --check`); clean `1ca6579…` byte-perfect (bank
+> $01 labels + comments, both trees); **patched pin MOVED `ce24de8b…` →
+> `d072eb51…` (patched)**; test_compiler --rom 106/106; test_app --rom PASS
+> (GUI build == pin); test_canvas --rom PASS incl. the new v6.
+> **Session sign-off 2026-09-27** (user: "Fantastic job. Package everything
+> up."), after seven rounds (r2 borrowed water moves — user: "Excellent.
+> Looks good."; r3 Make animated tab + frame pads; r4 unintended-animation
+> repair + Make still; r5 per-quarter part tools; r6 take-over + the count;
+> r7 still quarters, automatic split move, numbered tab — each block below).
+> Rounds r3-r7 are editor-only (pin unchanged); r7's palm path is verified
+> on the user's project + PyBoy, not yet re-tested by the user in-game.
+> Final `EDITOR_REVISION` = 'S99r7'. Round-1 `EDITOR_REVISION` = 'S99' (historical). Test ROM `DWM-S99-anim-test.gbc` (patched, md5
+> `d01a08e5…`, historical — superseded by r2 below): GreatTree 2F Library door → a Castle clone hub (fountain
+> water rolls — its source animation) → four doors on the hub: Room of
+> Beginning clone (swirl frame swaps), Digster arena clone (pool rolls),
+> "Fountain water, NO animation" (Castle-sheet room, animation none — the
+> painted water stands still) and "Castle art + GreatTree sway (borrowed)"
+> (the Castle art in slots 64-79 sways). PyBoy on the user's .sav: walked in
+> through the Library door; every room's VRAM after 300 frames == the census
+> schedule's prediction, byte for byte.
+>
+> **Measured (Iron Rule 6 annotation same session; ROOM_DATA_FORMAT
+> "Animated tiles"; DOC_AUDIT S99):** the bank-$01 `PerRoomVRAMDispatch`
+> table has **112** entries ($00-$6F, not 107); 65 handlers (labels
+> `RoomAnim_<room>` / `RoomAnimNone_<map>`) ROLL 2 tiles 1 px (3 R : 1 L per
+> 128 frames; Castle 77-78 and 9 more), SWAY 64-79 (GreatTree), or SWAP a
+> shown tile with a hidden second frame in the same sheet (every 32 frames;
+> Orochi 64, Coliseum 25/32, Arena Battle 16/32); map $08 only pulses the
+> DMG palette; Secret Passage and Goopy 1/2 are INERT (blank slots). The
+> ONLY BG tile animation in the ROM; gate floors never animate. **The "bare
+> `ret` handler corrupts the palette" premise (KEY_LESSONS v8, CROSSBANK §6,
+> ROADMAP P3.3e (c)) is FALSE** — measured: identical screen and palette
+> buffer; only the 77/78 roll stops. Census tool: every handler forced
+> through the dispatch (hook sets A) over a patterned VRAM → `extracted/
+> room_animations.json` incl. an exact per-counter `schedule`.
+>
+> **Engine + compiler (PROJECT_COMPILER §2.15):** same-size rewrite of
+> `PerRoomVRAMDispatch` $60F9-$6118 (six `bit/ret nz` guards → `and $fe /
+> cp $10`, equivalent over all 65,536 (wGameState, $C8EF) pairs) funds the
+> custom-room path: `cp $6B / jr c` → bank $71 entry 3 `CustomAnimSource`
+> (E := `CustomAnimSrcTable[mapID-$6B]`) — replaces `call
+> MapIDClampForDispatch` (every custom room ran Castle's roll on 77-78;
+> clones never animated). `custom.rooms[].animation` = `none` ($6B, the
+> table's own `ret` row) / `source` / a vanilla map id; absent = legacy
+> Castle + warning; $08 and non-vanilla ids are errors. Template head 142 →
+> 164 B, re-pinned. Vanilla rooms: A/B vs the S98 build from one savestate —
+> final VRAM / screen / counter identical, sub-frame tile-load timing only.
+> Also: `audit_mapid_range.py` selftest fixed (failing since S73: 9 overdue
+> verdicts + 2 new).
+>
+> **Editor (EDITOR_DESIGN §5.1 "S99 additions"):** canvas **Anim** layer
+> (dashed outline of animated areas — vanilla rooms show their own
+> animation), **▶ Play** on the screen/state row (replays the measured
+> schedule at game speed), inspector **animated tiles** (None / Same as
+> source / Borrow + a plain-language line, warns when the borrowed room's
+> sheet is not this room's), slot map teal (dashed = hidden frame) + "also
+> protected for rooms sharing this sheet", picker teal corner; slot
+> protection follows each room's animation (77/78 free in `none` rooms);
+> clones = `source`; projects migrate on open (source when the room still
+> draws with its source room's sheet, else none). Residuals: ROADMAP P3.3e.
+>
+> **S99 round 2 (user: "I borrowed the moving water from castle and put it
+> into my custom room but it doesnt move"; built, NOT yet user-tested):** the
+> Borrow-tab import copied the water GRAPHIC into a free slot, and the game
+> animates SLOTS — now an animated vanilla tile is imported into its own
+> slot indices (+ swap partner frames; tiles in the way relocated) and the
+> room switches to that room's animation (asked when it would replace
+> another animation; status line reports walkability of the fixed slot).
+> Editor-only — pin unchanged `d072eb51…` (patched). `EDITOR_REVISION` =
+> 'S99r2'. Test ROM `DWM-S99r2-anim-test.gbc` (patched, md5 `f3f27d7e…`,
+> historical — superseded by r3; r1 `d01a08e5…` historical) = the r1 demo + a 5th hub door "To Farm +
+> Castle water" (a Farm-sheet room that borrowed Castle's water — it moves;
+> PyBoy on the user's .sav: VRAM == census prediction).
+>
+> **S99 round 3 (user: "please make the 'make animatable' tab … re-paint a
+> second tile in a paint-like manner"; "Double clicking on the tile doesnt
+> bring up any animation info"; built, NOT yet user-tested):** the **Make
+> animated** tab (EDITOR_DESIGN §5.1 "S99 r3") — double-click a cell, pick
+> slide / two-frame flip, pick among the animations that can host it
+> (ranked; FULL / no room / walkability / what a switch stops), paint frame
+> B in a 16×16 pad in the tile's palettes, preview, apply (one undo step).
+> Found while building: switching a room's animation starts EVERY slot of
+> the new one moving, so unrelated tiles in those slots are moved out first
+> (also applied to the r2 borrow path). Editor-only — pin unchanged
+> `d072eb51…` (patched). `EDITOR_REVISION` = 'S99r3'. Test ROM
+> `DWM-S99r3-anim-test.gbc` (patched, md5 `859b46cc…`; r2 `f3f27d7e…`
+> historical) = r2 + a 6th hub door "To Made animated": Farm water made to
+> slide and tree stumps made to flip (mirrored second frame), both on Zoma's
+> animation; PyBoy on the user's .sav: VRAM == census prediction.
+>
+> **S99 round 4 (user: "Why is the mirror in $6b moving? I never wanted it
+> to move. It also didnt move in earlier editor versions."; built, NOT yet
+> user-tested):** cause = the S99 migration (clone → `source`) checked the
+> room's SHEET but not the art in the animated slots — a pre-S99 import had
+> put an Arena-Rooms mirror into the Servant clone's hidden flame slots
+> 62-63. Fix: the editor finds such tiles on open and offers to move them
+> to still slots (source art restored; one undo step); **Make still** in the
+> Make animated tab; Make animated stores explicit ids. User project
+> verified: prompt lists the mirror, fix moves 62->79 / 63->78, PyBoy: no
+> on-screen tile of $6B moves (before: 62/63). Editor-only — pin unchanged
+> `d072eb51…` (patched). `EDITOR_REVISION` = 'S99r4' (historical).
+>
+> **S99 round 5 (user: "allow copy of quadrants separately not just a -> B.
+> Make it easier to edit"; built, NOT yet user-tested):** Make animated
+> frame pads get part tools — Whole tile or one 8×8 quarter (buttons or
+> Ctrl+click), acting on the edited frame (yellow border): Copy / Paste,
+> A → B, B → A, A ⇄ B, flips, 1 px shifts, Clear, local Undo / Revert.
+> test_canvas v6 exercises each on one quarter (others untouched) and
+> undoes back exactly. Editor-only — pin unchanged `d072eb51…` (patched).
+> `EDITOR_REVISION` = 'S99r5' (historical).
+>
+> **S99 round 6 (user: "Make animated is greyed out … Surely it should
+> allow me to shift animation to tile I'm editing??" + "Would be good to
+> have a count"; built, NOT yet user-tested):** a full room animation can
+> be TAKEN OVER (the tile moving there keeps its look in a still copy of
+> the taken quarters; asked first); slots the tile gives up count as free;
+> the grey button's note names the limit (animation too small / N more
+> free wall or walkable slots needed); a count box in the Make animated tab
+> + Selection panel ("slide 2 of 2 slots used — FULL", moving tiles).
+> Verified on the user's project: fountain room ($6E) and GreatTree
+> take-overs keep every cell identical at frame A, start only the chosen
+> tile's cells; PyBoy $6E: new tile's slot 77 moves, the water's taken
+> quarters draw still slot 115. Test ROM `DWM-S99r6-takeover-test.gbc`
+> (patched, md5 `1afa30a9…`) = the user's project + that fountain-room
+> take-over. Editor-only — pin unchanged `d072eb51…` (patched).
+> `EDITOR_REVISION` = 'S99r6' (historical).
+>
+> **S99 round 7 (user: "I go to fountain room, click on palm, and want to
+> make it animated but button is GREYED OUT"; built, NOT yet user-tested):**
+> reproduced on the user's project (fountain tileset: 0 free wall slots,
+> 11 walkable; palm = 4 different quarters). Fixes: unchanged quarters stay
+> still (no slot, same walkability); the wall/walkable split moves
+> automatically when one side is short; the check counts every slot a
+> switch moves (Zoma's roll 49-50 too) and frees the old animation's; the
+> tab is numbered ①-④ with the grey reason above the button. User project:
+> palm top quarters + fountain water both on Zoma (after Tileset → purge
+> unused) — look + walkability identical, only palm + water cells move;
+> PyBoy $6E: palm/water slots move on screen. Test ROM
+> `DWM-S99r7-palm-test.gbc` (patched, md5 `6176f21f…`) = user project +
+> purge + palm (demo frame B: top quarters 1 px right) + water on Zoma.
+> Editor-only — pin unchanged `d072eb51…` (patched). `EDITOR_REVISION` =
+> 'S99r7'.
+
 > Last verified: 2026-09-26 (Session 98 — **rooms group C = ROADMAP P3.7:
 > DOOR OBJECTS, one-way teleports, EXAMINE spots + STEP-ON triggers, TALK
 > scripts that set flags, World graph v0 — plus a user-driven round of
@@ -87,93 +239,8 @@
 > the talk sets. Signposted for next session at the user's request:
 > **ROADMAP P3.3e animated tiles**. Residuals: ROADMAP P3.7.
 
-> Last verified: 2026-09-25 (Session 97 — **rooms group B: P3.5a flag
-> STATE RULES + P3.5 NPC INSPECTOR, with the NPC behaviour engine decoded**
-> (user: "all of B"; rule terms AND-ed — "Flag A set and Flag B set but C
-> NOT set"; door-arrival state moved to P3.7). Built S97; **USER-CONFIRMED
-> 2026-09-26** (S98 start: "Can confirm s97 pass" — r1 + r2). Verifier PASS 6/6; clean `1ca6579…` byte-perfect (bank $06
-> jump tables re-sectioned + bank $00B/$01/$06 comments, both trees);
-> **patched pin MOVED `5db25d15…` → `6e97fd37…` (patched)** — hand-staged
-> patches/ == compiler build == GUI build (`--apply`'d); test_compiler
-> --rom 74/74; test_app --rom PASS; test_canvas --rom PASS incl. the new
-> v4 acceptance. Test ROM `DWM-S97-npc-rules-test.gbc` (patched, md5
-> `2da054a7…`, a fresh demo project — NOT the example content): GreatTree
-> 2F Library door → an NPC "zoo" (8 behaviours, each NPC says its type) →
-> east edge → a Servant-room clone that burns until the firefighter NPC
-> sets flag $0158 (YES → the room reloads cleared; the arsonist in the
-> cleared state relights it). PyBoy: both directions via real talk + choice.
->
-> **Decoded (Iron Rule 6 annotation same session; ROOM_DATA_FORMAT "NPC
-> behaviour types" + "NPC RAM slot"):** the NPC type byte = facing (bits
-> 4-5) | HIDDEN (bit 6: not drawn, not solid, no behaviour, not talkable —
-> measured) | behaviour (bits 0-3) dispatched every frame through bank $06
-> `NPCBehaviourTable` ($4050, 16 dw — was misassembled as code, plus 9
-> sub-tables and 2 byte tables). 13 behaviours measured by poking a live
-> Bazaar slot: stand (keep facing) / stand_return / stand_fixed / spin /
-> pace ±1, ±2 (right-first, left-first) / right-3 / 2×2 square / figure 8 /
-> sway / gate wanderers E-F (act only on the `$C926` gate screen). Walkers
-> never test tiles (walk through walls and off-screen); the player blocks
-> them (bank $06 entry 0 + $01 AdvanceNPCPointer undo the step, pause $20).
-> Corrections: DOC_AUDIT S97 (npc_names.json type_names were guesses;
-> BANK04 "+$05 bit 0 = interacting" = walking; $48/$49 hide/show unverified;
-> stale Key Constants).
->
-> **Engine + compiler (PROJECT_COMPILER §2.13):** `custom.rooms[].
-> state_rules` (ordered, first match wins, optional `screens`, trailing
-> unconditional rule = "Otherwise") → generated `CustomStateRulePtrTable`
-> (bank $60) → template entry 8 `CustomStateRules` (head 383 → 492 B,
-> re-pinned), called from bank $17 `CustomAttrCheck` FIRST via
-> `StateRulesHook17` (3 B from the `ds 12` reserve) and from
-> `CustomReadStep`. **Measured S97:** at a custom-room load the bank-$17
-> attr/palette walk reads the step counter BEFORE bank $0B Entry 0 — rules
-> only in Entry 0 gave the cleared layout with the burning palette (A/B,
-> KEY_LESSONS S97). Rules make custom-room state persistent across
-> save/reload (counters are transient, flags are saved). NPC entries gain
-> `behaviour` / `hidden` / int `script`; validators warn on gate-only
-> behaviours and walker paths leaving the screen. The example project's S92
-> rank demo moved from the `entry:medal_vault` prelude to
-> `arena_clone.state_rules` (PyBoy: same NPC sets; vault entry unchanged).
->
-> **Editor (EDITOR_DESIGN §5.1 "S97 additions"):** State rules group
-> (+ Otherwise combo, flag picker incl. vanilla story flags, New named flag,
-> "State shown when" line); NPC panel (sprite picker, facing, behaviour with
-> measured descriptions, hidden, talk script / New talk text / Edit text,
-> per-state presence, delete), Add NPC here, drag-to-move, walk-path overlay
-> (red dots on walls/off-screen), facing ticks, read-only form for vanilla
-> NPCs; stale selection cleared on navigation. `EDITOR_REVISION` = 'S97'.
-> Residuals (ROADMAP P3.5): hidden-entry reveal mechanism unmeasured; the
-> named-flag pool is 16 flags; walkers ignore walls (warned); sprite-sheet
-> budget still a count warning.
->
-> **S97 round 2 (user test of r1: 4 issues; USER-CONFIRMED 2026-09-26).**
-> Patched pin MOVED again `6e97fd37…` → **`ce24de8b…` (patched)**; test ROM
-> `DWM-S97-r2-textbox-test.gbc` (patched, md5 `02c05364…`, the r1 demo with
-> own-colour-1 palettes in the zoo (magenta) and the servant room (green)).
-> (1) **Text boxes in free-colour rooms took the room's colours** — the
-> dialog box (bank $06 states 2/6/9, close 12/15/19) and the YES/NO box
-> (bank $56 `SetB56_4855`/`48a1`, bank $00 `ClearTextBitsRedraw`) write tile
-> ids only; the room's GBC attrs stay under them. Same-size far calls to
-> bank $73 entries 14-18 save the covered attrs (`wBoxAttrSave`/
-> `wChoiceAttrSave`, 132 B carved from `wCustomPool`) and set palette 7
-> while the box is up, then restore them cell by cell — only in custom rooms
-> whose palette carries a free-colour marker. PyBoy: box + choice cream in
-> both rooms, top and bottom box positions, attrs restored after close;
-> vanilla Bazaar + non-free custom rooms pixel-identical to r1. (2) **Talk
-> text per box**: measured — a box = 2 lines × 18 cells, "*:" leaves 16 on
-> box 1 line 1 ($EA opener: no indent; the vanilla indent is $EB); cells
-> past an edge wrap and are overwritten (lost); a 3rd line scrolls without
-> waiting. New `boxes` dialogue form ($FA $F7 $EF $EE between boxes, vanilla
-> choice tail `…? $E7 $F0`), auto `text` now flows into boxes; editor
-> `talk_editor.py` = one editor per box with an in-game preview drawn with
-> the ROM font (bank $4F $4010, glyph = code) — red split word, lost cells,
-> Fit / Fit all. (3) Right panel: NPC is its own section; every launch opens
-> with only Metatiles expanded; selecting an NPC opens the NPC section.
-> (4) New named flag in the rule dialog is now a real item of every flag
-> list (the new row showed the name while its list pointed at item 0).
-> **Still true: nothing in the editor SETS a flag yet** (script ops only) —
-> a new flag stays clear in game until a script sets it.
-
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S97** (2026-09-25): rooms group B — P3.5a flag state rules (bank $60 entry 8 + bank $17 hook) + P3.5 NPC inspector with the NPC behaviour engine decoded (13 measured behaviours, hidden bit); r2: cream text / YES-NO boxes in free-colour rooms (bank $73 entries 14-18), per-box talk editor; pins `6e97fd37…` → `ce24de8b…` (patched, historical). USER-CONFIRMED 2026-09-26. Owning: PROJECT_COMPILER §2.13, ROOM_DATA_FORMAT "NPC behaviour types", TEXT_SYSTEM "Text boxes", EDITOR_DESIGN §5.1 S97, KEY_LESSONS S97, DOC_AUDIT S97.
 - **S96** (2026-09-25): rooms group A — P3.3c tileset slot map + vocabulary release, tileset switching / blank sheets, the Import Art tab (DWM2 PNG rips), per-subtile metatile palettes, bank space meters, "Make editable" fixed for all 98 vanilla rooms (extract_room bank/attr/arity fixes; `script_param_counts.py`, 102 opcodes); round 2/4 engine: FreeColor1Hook own colour 1 + MenuOpenFreePal; pin `5db25d15…` (patched, historical). USER-CONFIRMED 2026-09-25. Owning: EDITOR_DESIGN §5.1 S96, PROJECT_COMPILER §2.11 + §11, GATE_GENERATION §7.1, TOOLS_AND_DATA S96, KEY_LESSONS S96, DOC_AUDIT S96.
 - **S95** (2026-09-24): user feedback round on S94b — metatile VOCABULARY (never shrinks, protected slots), borrow tiles from any vanilla room (import across tilesets), on-open migration of pre-S94 projects, `screens[k].palette` + per-screen/state palette selector + copy-from-vanilla palettes, minimal GUI exits, Borrow tab; editor-only (pin `fc1caa98…` held, historical patched pin). Owning: EDITOR_DESIGN §5.1 as built S95, PROJECT_COMPILER §2.11 + §11, TOOLS_AND_DATA S95, KEY_LESSONS S95, ROADMAP P3.3b residual + P3.3c + P3.5a + P3.7.
 - **S94** (2026-09-20): P3.3b canvas v2 + the room model (vanilla/custom columns, clone-with-confirm, metatiles, walkability BR-subtile twins, 4×4 grid, per-(screen,state) attr+palette engine tables, compiler-owned ROM0 records) + S94b entrance redirects & per-state rooms; pin `fc1caa98…`. Owning: EDITOR_DESIGN §5.1 as built S94, PROJECT_COMPILER §2.11/§2.12/§11, ROOM_DATA_FORMAT (walkability, states), GATE_GENERATION §7, TOOLS_AND_DATA S94, KEY_LESSONS S94, ROADMAP P3.3b.
@@ -280,6 +347,7 @@
 | Gate damage tiles | Standing-tile id → HRAM `$AA` (`$00:$1E96`); behavior class `$AA>>2`: `$0E` (ids `$38–$3B`) = damage, `$0F` (`$3C–$3F`) = staircase. Amount = `FloorDamageTable` `$01:$5E7D` (16 B by floor type): type 3→5, type 6→10, types $0C/$0E→2, else 0. Applier `ApplyFloorDamage` `$01:$5E23`. (GATE_GENERATION.md §5.1.) |
 | Room palette derivation | A room's runtime BG palette is ROM-derivable: real colours are only indices 0 & 2 of slots 0–3 (`$17:$476F`[mapID] normal / `$17:$51F5`[floortype] gate, scanning past empty screens); engine FORCES idx1=`$6bff`, idx3=`$0000` in every BG palette; slots 4–7 shared system; object palettes global at `$17:$5615`. `tools/derive_room_palette.py`, validated 30/30 dumps + gate. (GATE_GENERATION.md §7.1.) |
 | Script opcodes | **102** (`$00-$65`, rst $00 table after MarkScriptActive `$04:$5613`); arity + branch kind per opcode from the HANDLER code: `extracted/script_param_counts.json` (`tools/script_param_counts.py`, verify check 5). Script data bank by map type: <$06 `$0C`, <$20 `$0D`, <$40 `$0E`, else `$0F` (master table `$41BA` in each). decompile_script's old PARAM_COUNTS is wrong for 36 opcodes (DOC_AUDIT S96). |
+| Room tile animation | bank $01 `PerRoomVRAMDispatch` $60E7 → `rst $00` table `$01:$6119`, **112** entries ($00-$6F), per field frame; clock `$C8A6/$C8A7`; the ONLY BG tile animation (none in gates). Custom rooms: bank $71 entry 3 `CustomAnimSource` (S99). Census `extracted/room_animations.json`; ROOM_DATA_FORMAT "Animated tiles". |
 | Verifier | `python3 tools/verify_integrity.py` — run at session start AND end |
 
 **The MD5 `b90957482011c8083a068781033715b7` is WRONG.** It was a drifted
@@ -354,6 +422,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | NPC behaviours (movement types) | ✅ decoded + authorable S97, USER-CONFIRMED 2026-09-26 | type byte low nibble, bank $06 NPCBehaviourTable; ROOM_DATA_FORMAT "NPC behaviour types" |
 | NPC talk text as boxes (2 lines, waits per box) + text boxes cream in free-colour rooms | ✅ built S97 r2, USER-CONFIRMED 2026-09-26 | `boxes` dialogue form (TEXT_SYSTEM "Text boxes"); bank $73 entries 14-18 + same-size calls in banks $00/$06/$56 |
 | Doors (two-way, auto return + measured arrival), one-way teleports, examine spots ($8x) + step-on triggers ($90), talk scripts that set/clear flags + YES/NO + move | 🟢 built S98; doors USER-CONFIRMED 2026-09-26 (user project, both ways, on-door arrival); talk / flags / spots in game NOT yet user-tested (PyBoy test_canvas v5) | `door` ids on exit/redirect rows, `talk` scripts; PROJECT_COMPILER §2.14; ROOM_DATA_FORMAT "Interact entries ≥$80" + "Arrival and edge rules" |
+| Room tile animation (vanilla census + per-custom-room source) | 🟢 built S99 (signed off 2026-09-27; borrowed water user-seen moving in r2; r3-r7 editor-only): 112-entry bank-$01 dispatch measured (65 handlers, 33 animated maps); custom rooms pick `none` / `source` / borrow via bank $71 entry 3; editor outline + ▶ Play preview + inspector choice; **Make animated** tab (slide / two-frame flip, paint pads with per-quarter tools, still quarters keep their slot, take-over of a full animation, automatic wall/walkable split move, per-room count), stray-animation repair on open, Make still | ROOM_DATA_FORMAT "Animated tiles"; PROJECT_COMPILER §2.15; extracted/room_animations.json |
 | LZSS tile compressor | ✅ working | tools/compress_tiles.py, roundtrip verified |
 | Custom tile layouts + tileset selection | ✅ working | bank $64 + tile_layout_compiler.py; MapIDClampForPalette ROM0 $3FE8 |
 | Custom tile GRAPHICS (multi-tileset mashup) | ✅ working end-to-end (S6–S10): editor JSON → build_combined_tileset.py → bank $67/$17 patches. Remaining = editor multi-screen UI. | KEY_LESSONS S5–S8; TOOLS_AND_DATA |
@@ -374,7 +443,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Arena/boss roster AUTHORING (E1→E2 wiring) | RE ✅ DECODED S67 (arena path HW-verified); authoring spec in SIDEQUEST_MAP + arena_brackets.json. project.json schema wiring = E2, not built |
 | Combat simulator (arc S78-S88) | 🟢 **COMPLETE through the pacing layer (S86) + commit-model close-out (S87: party bases from the instance record, obedience EXACT 889/889 on the WLD stat, $7997 + TRUE-loaf closed)**: `simulator/damage.py` 698/698 (S78) + specials (S79); `turn_order.py` 143/143 (S79); AI `ai.py` 26/26 + rule chains `ai_rules.py` 240/240 (S80/S81); `battle.py` loop glue 6614/6614 (S85) + 802/802 on fresh S86 captures; **S86: measured RNG idle model (`measure_idle.py` → `s86_idle_model.json`), full-battle driver `pacing.py` (commit + rounds + TTK), aggregate-validated (`validate_pacing.py`: round-level PIT uniform over 197 rounds; 5 fresh real-save battles inside sim envelopes), `sweep_ttk.py` gate-pool sweeps, `profile_check --ttk` gating**. **S88 (built, NOT yet user-tested): confusion end-to-end + snap-out (2824/0), riders 40/40 ($69 boss veto = application-only), curse MP MaxMP//6, poison cap 15/15, PsycheUp closed empty, $DB06/$DB07 writer map, dodge incapacity exemption; 3 new corpora; the S79 $7AB5 confusion attribution corrected to Transform (DOC_AUDIT S88).** Residuals (§15.9 + ROADMAP S89): the low-stat calcdef edge (2 deterministic SameBoy repros), meta-actions (hero-slot MENU verbs — PARTIAL, named box), and +8/+9 defensive-flag consumers. **S89 (built, NOT yet user-tested): Group-B residuals CLOSED — $DB07 = IRONIZE counter (not stun); interception = Cover/Guardian guard table (`guard_redirect`, 14/14); WLD level-up writer = none; `board_from_event` consumes real ai_bases/WLD; defensive-set sweep folded into status.py. New corpora s89_fresh (426/1 flagged) + s89_guard (14/14). Annotation: $670E re-sectioned, guard/iron handlers commented.** **S90: arc adjudicated DONE FOR PURPOSE (user-conferred); residuals banked as non-blocking boxes ($DB42 setter, +8/+9 consumers, meta-actions menu drive, guard-validator polish).** | BATTLE_SKILL_SYSTEM §15, §15.6, §15.9; TOOLS_AND_DATA §2.10 + S89 rows; ROADMAP S89/S90 |
 | Randomizer (standalone; English + German builds) | ✅ **SHIPPED, USER-TESTED, part 2 S77** — `randomizer/`, data tables only plus ONE code change (`plusgrowth.py`, opt-out). Breeding tree regenerated to a target depth profile (3-6) with deeper = better; bosses/arena/wild stratified against vanilla's measured correlations; skills dealt from vanilla's usage bag and never below vanilla's minimum placement level; growth shuffled within vanilla-ordering bands; paralysis + full heals banned on boss/arena rows; pools de-duplicated. Gate: `randomizer/profile_check.py` (per-entity envelopes) + `randomizer/audit_threat.py` (per-row damage parity). | randomizer/README.md; BATTLE_SKILL_SYSTEM §record power field is BLIND; BREEDING_SYSTEM §Depth is a function of matcher SPECIFICITY; MONSTER_DATA §Growth randomization needs a per-species envelope; PROJECT_COMPILER §Validation the editor must run |
-| Editor app (Phase 3) | 🟢 Skeleton S72 → design v2 S90 → P3.0-P3.2b S91/S92 → **P3.3 canvas v1 + shell S93** → **S94 canvas v2 + real room model + S94b entrance redirects & per-state rooms (built, NOT yet user-tested):** vanilla/custom room columns (every vanilla state browsable), clone-with-confirm carrying ALL vanilla states (paintable at once), New/Copy/Rename/Delete, File→New project (blank template), metatiles (4 subtiles + palette) as the editing unit, Select-first with real selection, Walkability mode (BR-subtile twin swap, tileset copied into the project), 4×4 grid, vanilla-format per-(screen,state) attr+palette tables (engine), records for every room (ROM0 region), **"Route a vanilla door here" = `custom.entrance_redirects` → per-(map,screen) exit overrides (Entry 6 + Entry 9)** — the in-game test route for any custom room; **S95:** picker = the room's whole vocabulary (never shrinks) + borrow tiles from any vanilla room under this room's palettes (import across tilesets, PyBoy-verified) + on-open migration of pre-S94 projects. Acceptance PyBoy-verified incl. walking and the door walk-through. **S96 (USER-CONFIRMED 2026-09-25 ("Everything works")): P3.3c Tileset tab (slot map + release) + P3.3d (change tileset / blank sheets, Import art tab for PNG rips, per-subtile metatile palettes, bank space meters) + Make editable works on all 98 vanilla rooms (opcode arity from the handlers).** **S97 (USER-CONFIRMED 2026-09-26): rooms group B — P3.5a flag state rules (engine entry 8 + bank $17 hook; persistent custom-room versions) + P3.5 NPC inspector (13 measured behaviours, hidden bit, talk text, presence, drag; **r2**: per-box talk editor with ROM-font preview, cream dialog/YES-NO boxes in free-colour rooms, NPC section, sections start folded).** **S98 (doors USER-CONFIRMED 2026-09-26; the rest built, NOT yet user-tested): rooms group C = P3.7 — named door objects linked two-way (+ Door, double-click to connect, arrive ON the door), one-way teleports, examine / step-on spots (the "$8F spawn" misnomer retired), talk scripts with YES/NO + set/clear flags + move, edge-vs-scroll guards, World tab v0; tileset tools (own copies, split move, purge).** Next: **P3.3e animated tiles** (signposted S98 at the user's request), then user's choice (P3.4 PyBoy preview deferred by the user; P3.6 dialogue, P3.7b gates, P3.8 storyboard open), plus P3.3b residuals (bank-$64 spill; transparent NPC census crops). | EDITOR_DESIGN §5.1 as built S94; ROADMAP P3.3b |
+| Editor app (Phase 3) | 🟢 Skeleton S72 → design v2 S90 → P3.0-P3.2b S91/S92 → **P3.3 canvas v1 + shell S93** → **S94 canvas v2 + real room model + S94b entrance redirects & per-state rooms (built, NOT yet user-tested):** vanilla/custom room columns (every vanilla state browsable), clone-with-confirm carrying ALL vanilla states (paintable at once), New/Copy/Rename/Delete, File→New project (blank template), metatiles (4 subtiles + palette) as the editing unit, Select-first with real selection, Walkability mode (BR-subtile twin swap, tileset copied into the project), 4×4 grid, vanilla-format per-(screen,state) attr+palette tables (engine), records for every room (ROM0 region), **"Route a vanilla door here" = `custom.entrance_redirects` → per-(map,screen) exit overrides (Entry 6 + Entry 9)** — the in-game test route for any custom room; **S95:** picker = the room's whole vocabulary (never shrinks) + borrow tiles from any vanilla room under this room's palettes (import across tilesets, PyBoy-verified) + on-open migration of pre-S94 projects. Acceptance PyBoy-verified incl. walking and the door walk-through. **S96 (USER-CONFIRMED 2026-09-25 ("Everything works")): P3.3c Tileset tab (slot map + release) + P3.3d (change tileset / blank sheets, Import art tab for PNG rips, per-subtile metatile palettes, bank space meters) + Make editable works on all 98 vanilla rooms (opcode arity from the handlers).** **S97 (USER-CONFIRMED 2026-09-26): rooms group B — P3.5a flag state rules (engine entry 8 + bank $17 hook; persistent custom-room versions) + P3.5 NPC inspector (13 measured behaviours, hidden bit, talk text, presence, drag; **r2**: per-box talk editor with ROM-font preview, cream dialog/YES-NO boxes in free-colour rooms, NPC section, sections start folded).** **S98 (doors USER-CONFIRMED 2026-09-26; the rest built, NOT yet user-tested): rooms group C = P3.7 — named door objects linked two-way (+ Door, double-click to connect, arrive ON the door), one-way teleports, examine / step-on spots (the "$8F spawn" misnomer retired), talk scripts with YES/NO + set/clear flags + move, edge-vs-scroll guards, World tab v0; tileset tools (own copies, split move, purge).** **S99 (built; signed off 2026-09-27, r7 not yet re-tested in-game): P3.3e animated tiles — measured census, per-room animation source (engine), canvas outline + ▶ Play preview, inspector choice, clones = source, migration; Make animated tab (r3-r7: paint pads + part tools, still quarters, take-over, split move, count) + stray repair / Make still (r4).** Next: user's choice (P3.4 PyBoy preview deferred by the user; P3.6 dialogue, P3.7b gates, P3.8 storyboard open), plus P3.3b residuals (bank-$64 spill; transparent NPC census crops). | EDITOR_DESIGN §5.1 as built S94; ROADMAP P3.3b |
 
 ### Disassembly annotation (measured 2026-06-13, not estimated)
 

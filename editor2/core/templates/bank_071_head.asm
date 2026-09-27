@@ -31,6 +31,16 @@
 ;     clobbers A on return but not DE; CustomReadStep returns DE the same way).
 ;     Gate floors (wInGateworld!=0) keep vanilla floor-derived music: wMapID is
 ;     not room-meaningful there; gate/event music assignment is a future item.
+;
+; Entry 3 (HL=$7103) CustomAnimSource (S99, ROADMAP P3.3e):
+;     E := CustomAnimSrcTable[wMapID-$6B] — the map ID whose bank-$01 room-
+;     animation handler runs for this custom room (a vanilla room's own
+;     handler, or ANIM_NONE $6B = the dispatch table's bare-`ret` row).
+;     Out-of-range ids get ANIM_NONE. Called every field frame by the
+;     rewritten PerRoomVRAMDispatch (patches/bank_001.asm), for wMapID >=
+;     CUSTOM_ROOM_START only; E-return per the DE contract (rst $10 clobbers
+;     A). Table generated from project.json custom.rooms[].animation
+;     (PROJECT_COMPILER §2.15; ROOM_DATA_FORMAT "Animated tiles").
 ; =============================================================================
 
 SECTION "ROM Bank $071", ROMX[$4000], BANK[$71]
@@ -41,6 +51,7 @@ SECTION "ROM Bank $071", ROMX[$4000], BANK[$71]
     dw CopyCustomRoomRecord             ; entry 0  (HL=$7100)
     dw CustomEncResolve                 ; entry 1  (HL=$7101)
     dw CustomRoomBGMResolve             ; entry 2  (HL=$7102, S64 M3b)
+    dw CustomAnimSource                 ; entry 3  (HL=$7103, S99 P3.3e)
 
 ; -----------------------------------------------------------------------------
 ; Entry 0: CopyCustomRoomRecord — 8-byte $26DD record for wMapID → wRoomRecScratch
@@ -148,3 +159,20 @@ CustomRoomBGMResolve:
     ld e, a                             ; 0 entries fall through as "none"
     ret
 
+; -----------------------------------------------------------------------------
+; Entry 3: CustomAnimSource — E := the room's animation source map ID (S99)
+; -----------------------------------------------------------------------------
+CustomAnimSource:
+    ld e, $6b                           ; ANIM_NONE: the table's bare-`ret` row
+    ld a, [wMapID]
+    sub CUSTOM_ROOM_START               ; index = mapID - $6B
+    cp ANIM_TABLE_LEN
+    ret nc                              ; out of table range -> none
+    ld hl, CustomAnimSrcTable
+    add l
+    ld l, a
+    adc h
+    sub l
+    ld h, a
+    ld e, [hl]
+    ret

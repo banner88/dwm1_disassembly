@@ -13147,9 +13147,11 @@ AudioWavePatternData:
 ; MapIDClampForDispatch / MapIDClampForPalette were byte-identical twins
 ; (same 8 instructions, authored in different sessions); merged here as one
 ; body carrying BOTH exported labels — every `call` site links unchanged.
-; Contract (both callers): A = wMapID if < CUSTOM_ROOM_START, else A = 0
-; (Castle: harmless VRAM handler / AttrPtrTable fallback — see the original
-; per-function notes preserved in GATE_GENERATION / KEY_LESSONS).
+; Contract: A = wMapID if < CUSTOM_ROOM_START, else A = 0 (Castle: the
+; AttrPtrTable / palette / script fallback). S99: the room-animation dispatch
+; no longer calls it (bank $01 PerRoomVRAMDispatch now asks bank $71 entry 3
+; for each custom room's animation source); the MapIDClampForDispatch label
+; is kept on the merged body for history but has zero call sites.
 MapIDClampForDispatch::
 MapIDClampForPalette::
     ld a, [wMapID]              ; 3 bytes: FA 68 C9

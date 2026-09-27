@@ -958,6 +958,16 @@ class Project:
                                f"{pid!r} which is not defined")
         return self._pal_by_id[pid]
 
+    # ------------------------------------------------------------- animation
+    def anim_source(self, room):
+        """(byte, comment) for CustomAnimSrcTable (S99). Invalid values are
+        reported by validators; here they fall back to none."""
+        try:
+            v, _kind, why = F.anim_source(room)
+        except ValueError as e:
+            return F.ANIM_NONE, f'INVALID ({e}) -> none'
+        return v, why
+
     # ----------------------------------------------------------------- music
     def music_resolved(self):
         """(bank74_library, room_bgm[128], song_ids, warnings) — cached so

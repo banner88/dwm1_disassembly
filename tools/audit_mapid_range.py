@@ -138,6 +138,21 @@ V = {
     ("bank_00b.asm", "CustomDescentInGate", 0): "CP_UNSIGNED",
     ("bank_017.asm", "CustomAttrCheck", 0): "IDX8_SUB6B",
     ("bank_017.asm", "CustomPalCheck", 0): "IDX8_SUB6B",
+    # ---- S99 adjudication sweep: sites added S73-S97 without keys (the
+    # selftest had been failing since; tool not in verify check 5) + the S99
+    # dispatch rewrite. Reasoning: CROSSBANK_ROOMS "mapID >=$80 readiness".
+    ("bank_050.asm", "BattleExitHandler", 0): "CP_UNSIGNED",  # renamed Jump_050_640a (cp $5d)
+    ("bank_001.asm", "PerRoomDispatchEntry", 0): "RST00_CLAMPED",  # S99: cp $6B/jr c -> rst $00 on a
+                                                             # vanilla mapID; custom -> bank $71 entry 3 whose
+                                                             # table bytes are validator-bounded to <$6B (+ $6B none)
+    ("bank_071.asm", "CustomAnimSource", 0): "IDX8_SUB6B",   # S99: sub $6B + cp ANIM_TABLE_LEN bound
+    ("bank_017.asm", "FreeColor1Hook", 0): "CP_UNSIGNED",    # S96
+    ("bank_017.asm", "StateRulesHook17", 0): "COPY",         # S97: reloads A for CustomAttrCheck (IDX8_SUB6B)
+    ("bank_060.asm", "CustomStateRules", 0): "IDX8_SUB6B",   # S97: sub $6B, ret c
+    ("bank_060.asm", "VanillaExitResolve", 0): "CP_UNSIGNED",  # S70/S94b
+    ("bank_072.asm", "AnchorField14Tail", 0): "CP_UNSIGNED", # S73 (cp $30)
+    ("bank_073.asm", "MenuOpenFreePal", 0): "CP_UNSIGNED",   # S96 r4
+    ("bank_073.asm", "BoxAttrActive", 0): "CP_UNSIGNED",     # S97 r2
     ("bank_060.asm", "CustomPtrChase", 0): "IDX8_SUB6B",
     ("bank_060.asm", "CustomPtrChase", 1): "IDX8_SUB6B",
     ("bank_060.asm", "GateAwareDispatch", 0): "CP_UNSIGNED",

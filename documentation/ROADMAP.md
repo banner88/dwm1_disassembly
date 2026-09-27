@@ -806,29 +806,63 @@ recipes are pure authoring.
       (b) import allocates tiles only, it never removes stale ones (the slot
       map shows them); (c) flipped/mirrored duplicates in a rip cost separate
       slots (DWM1 attrs carry no flip bits — vanilla census values 0-3 only).
-- [ ] **P3.3e — Animated tiles (signposted S98 at the user's request —
-      "animated tiles and which are animated")**. KNOWN: per-frame tile
-      animation is a per-ROOM VRAM handler — bank $01 VRAM dispatch table at
-      `$6119` (107 entries, CROSSBANK_ROOMS "$6115"), indexed through ROM0
-      `MapIDClampForDispatch`, which returns **$00 (Castle) for every custom
-      room**; Castle's handler rotates VRAM `$94D0-$94FF` = sheet slots
-      **77-78** (KEY_LESSONS S7). Consequences today: (a) in ANY custom room
-      slots 77/78 animate whatever graphic sits there (the editor never
-      allocates them — slot map "animated", grey); (b) a CLONE of a vanilla
-      room with its own animation (water, torches, the Starry Shrine…) does
-      NOT animate those tiles (it runs Castle's handler, not its source's —
-      INFERRED from the dispatch, not yet measured in PyBoy);
-      (c) a bare `ret` handler corrupts the palette (CROSSBANK_ROOMS §6), so
-      "no animation" is not a free option. UNKNOWN (measure first): which of
-      the 107 handlers animate which VRAM ranges / tile slots and with which
-      frames; whether a custom room can safely run its SOURCE room's handler
-      (dispatch by `source_mapID`, a per-room table like the S94 records);
-      what each handler needs besides VRAM (state bytes, palette refresh).
-      *Accept:* a handler census (slots + frame source per vanilla room) in
-      ROOM_DATA_FORMAT; the slot map / picker mark the animated slots OF THE
-      ROOM'S handler (not a hard-coded 77/78); a water-room clone animates
-      its water in PyBoy; the author can pick the room's animation source
-      (none-safe / source room / Castle).
+- [x] **P3.3e — Animated tiles** — **DONE S99, built, NOT yet user-tested**
+      (signposted S98 at the user's request; user S99: "indicate currently
+      animated tiles (in vanilla)", "preview … a button … so it doesnt take up
+      right hand side room", "Clones SHOULD get source animation … Also yes
+      migrate", borrowing "fine as long as it's clear whats happening", "Gate
+      floors do NOT have animation"). As built (ROOM_DATA_FORMAT "Animated
+      tiles", PROJECT_COMPILER §2.15, EDITOR_DESIGN §5.1 "S99 additions"):
+      (a) **census MEASURED** — `tools/census_room_animation.py` →
+      `extracted/room_animations.json`: the bank-$01 table has **112** entries
+      (not 107), 65 handlers, 33 animated map ids (roll / GreatTree sway /
+      swap with hidden second frames; Secret Passage + Goopy 1/2 INERT; map $08
+      = DMG palette pulse only); `--check` in verify check 5; bank_001
+      annotated (65 `RoomAnim*` labels + helpers). (b) **the "bare ret corrupts
+      the palette" premise was FALSE** (measured) — none is free, 77/78 are
+      ordinary slots in a room without animation. (c) **engine**: same-size
+      bank-$01 `PerRoomVRAMDispatch` rewrite (guards collapsed, exhaustively
+      equivalent) → custom rooms ask bank $71 entry 3 `CustomAnimSource`
+      (`CustomAnimSrcTable`, `custom.rooms[].animation` = none / source /
+      borrow); template 164 B re-pinned; pin `d072eb51…` (patched). (d)
+      **editor**: canvas Anim outline (vanilla + custom), ▶ Play preview on
+      the state row (replays the measured schedule), inspector "animated
+      tiles" (None / Same as source / Borrow + a plain-language line),
+      slot map + picker marks, slot protection per the room's animation,
+      clones = source, on-open migration. *Accept MET (machine half):* census
+      in ROOM_DATA_FORMAT; the slot map marks the room's handler's slots;
+      test_canvas v6 --rom — Castle clone (fountain water) animates exactly
+      as the census schedule predicts, a `none` clone stays static, a borrow
+      rolls Digster's slots, vanilla Castle unchanged; demo on the user's
+      save: Room of Beginning + Digster clones animate, walked in through the
+      Library door. *User half:* `DWM-S99-anim-test.gbc` (see PROJECT_STATE
+      S99) + open your own project (migration log), toggle Anim / ▶ Play.
+      Residuals: (1) gate-floor animation (user: "would be interesting to add.
+      but not necessary") — needs a gate-side dispatch (the handler returns
+      while wInGateworld != 0); (2) the preview re-phases the Coliseum's
+      25-frame swap at its 1024-frame loop; (3) "borrow a single animated
+      tile into this sheet" — **DONE S99 r2 for vanilla art** (user: "I
+      borrowed the moving water from castle … but it doesnt move"): the
+      Borrow tab keeps an animated tile animated (same slots + partner
+      frames, tiles in the way relocated, room animation switched, asked
+      when it would replace another animation; PyBoy: Farm-sheet room +
+      Castle water moves). Still open: YOUR OWN art made animated ("Make
+      animated…": pick slide / 2-frame flip, the editor picks a source with
+      free slots and writes both frames) — **DONE S99 r3**: the "Make
+      animated" tab (double-click a cell; slide or two-frame flip; candidate
+      animations ranked by free slots / walkability / what a switch stops;
+      frame-B paint pads with the tile's palettes + preview; tiles in the
+      way moved; PyBoy: the flipped tile shows exactly frames A/B, only the
+      source's slots change). Limits that stay (engine): one animation per
+      room, 2-16 slots per animation, fixed rhythms (32 frames mostly);
+      S99 r4: unintended animation (pre-S99 imports in a source room's
+      hidden-frame slots — the user's mirror) found on open + one-click fix,
+      and **Make still**; S99 r5: per-quarter copy / paste / A⇄B / flip /
+      shift + local undo on the frame pads; S99 r6: take-over of a full
+      room animation, freed slots counted, the count box; S99 r7: unchanged
+      quarters stay still, automatic wall/walkable split move, numbered tab
+      with the grey reason; (4) the legacy
+      build_combined_tileset.py mashup path still reserves 77/78 on its own.
 - [ ] **P3.4 — Embedded PyBoy preview panel** [G-E] (EDITOR_DESIGN §7
       Tier 2): Build → cached post-boot savestate → warp to the room under
       edit → frames in a Qt widget with input. *Accept:* one click plays
@@ -941,7 +975,7 @@ recipes are pure authoring.
       (6) the split-down move's "moved wall tile still blocks" path is
       checked in the editor (screen pixel-identical) but was not exercised
       in PyBoy (the test room had no placed tile at the moved slot);
-      (7) animated tiles → P3.3e.
+      (7) animated tiles → P3.3e (DONE S99).
 - [ ] **P3.7b — Gates tab** [G-F partial]: per-gate config-row editing
       (floors/weights/pool binding — Layer A-lite rows), custom-room-at-
       depth-N insertion surfaced (built S41), boss floor (template +

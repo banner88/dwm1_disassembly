@@ -25,7 +25,7 @@ TEMPLATE_SIZE = {
                  # (283 S53 -> 348 S70 -> 358 S70v3 (+2x5B wCustomY7Cmp arming): entry-7 dw + VanillaExitResolve +
                  # factored CopyExitListToBuffer in the template head; 383 S94: VanillaExitResolve rows keyed
                  # by (mapID, screen) — `db mapID, screen` with $FF = any screen)
-    0x71: 142,    # addr(Custom26DDTable)-$4000, S64 (S55 116 + entry-2 dw + CustomRoomBGMResolve; measured from the S64 reference game.sym)
+    0x71: 164,    # addr(Custom26DDTable)-$4000, S99 (142 S64 + entry-3 dw + CustomAnimSource 20 B; measured from the S99 reference game.sym). Prev 142 S64 (S55 116 + entry-2 dw + CustomRoomBGMResolve; measured from the S64 reference game.sym)
 }
 BANK_SIZE = 0x4000
 
@@ -134,6 +134,22 @@ def validate(prj, generated=None):
             errors.append(
                 "build.compat.master_table_rooms must be dense ascending "
                 "from $6B (the table is indexed wScriptMapType-$6B)")
+
+    # ------------------------------------------------- room animation (S99)
+    # custom.rooms[].animation -> CustomAnimSrcTable (bank $71 entry 3; the
+    # bank-$01 PerRoomVRAMDispatch rewrite). ROOM_DATA_FORMAT "Animated tiles".
+    for r in rooms:
+        rid = r.get('id', F.hexb(F.val(r['mapID'])))
+        try:
+            _v, kind, _why = F.anim_source(r)
+        except ValueError as e:
+            errors.append(f"room {rid}: {e}")
+            continue
+        if kind == 'legacy':
+            warnings.append(
+                f"room {rid}: no `animation` set — it runs Castle's handler "
+                "(the pre-S99 behaviour: tiles 77-78 roll). Set 'none', "
+                "'source' or a vanilla map id (the editor migrates on open)")
 
     # ------------------------------------------------- per-room structure
     for r in rooms:
@@ -688,6 +704,13 @@ def _edge_neighbour(prj, r, key, x, y):
 
 
 def _validate_layouts_tilesets(prj, errors, warnings):
+    # S99: slots each project tileset's rooms animate (spec-slot warning)
+    from . import animation as A
+    anim_by_tid = {}
+    for r in prj.rooms:
+        t = (r.get('record') or {}).get('tileset')
+        if t is not None and not r.get('placeholder'):
+            anim_by_tid.setdefault(t, set()).update(A.room_slots(r))
     """S92 [G-A]: content checks for custom.layouts / custom.tilesets."""
     for lay in prj.layouts:
         lid = lay.get('id', '?')
@@ -741,12 +764,12 @@ def _validate_layouts_tilesets(prj, errors, warnings):
                 if not (0 <= slot < 128):
                     errors.append(f"custom.tilesets {tid!r}: spec slot "
                                   f"{slot} outside 0-127")
-                if slot in (77, 78):
+                if slot in anim_by_tid.get(tid, ()):
                     warnings.append(
                         f"custom.tilesets {tid!r}: spec places a tile at "
-                        f"slot {slot} — the animated no-go zone "
-                        "(KEY_LESSONS: indices 77-78 are animated by the "
-                        "engine; build_combined_tileset reserves them)")
+                        f"slot {slot}, which a room drawing with this sheet "
+                        "animates (its `animation` handler — ROOM_DATA_FORMAT "
+                        "'Animated tiles'); the graphic will move in game")
 
 
 def bank_usage(generated):

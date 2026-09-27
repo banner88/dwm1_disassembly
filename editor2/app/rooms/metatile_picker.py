@@ -56,6 +56,7 @@ class MetatilePicker(QWidget):
         self.foreign_same = True  # foreign room shares this tileset?
         self.foreign_title = ''
         self.flags = {}           # tile index -> 'released' | 'changed' (S96)
+        self.anim = set()         # S99: slots the room's animation changes
         self.free_text = ''       # "12 wall / 40 walkable slots free"
         self.selected = None      # (section, index)
         self._hover = None
@@ -73,6 +74,14 @@ class MetatilePicker(QWidget):
         on the next import) or already CHANGED get a corner mark."""
         self.flags, self.free_text = dict(flags), free_text
         self.update()
+
+    def set_animated(self, slots):
+        """S99: metatiles using an animated slot get a teal corner mark."""
+        self.anim = set(slots or ())
+        self.update()
+
+    def _animated(self, sec, mt):
+        return sec in ('found', 'custom') and any((t & 0x7F) in self.anim for t in mt['tiles'])
 
     def _flag(self, mt):
         f = {self.flags.get(t & 0x7F) for t in mt['tiles']}
@@ -213,6 +222,8 @@ class MetatilePicker(QWidget):
         if fl:
             p.fillRect(QRect(r.x(), r.y(), 7, 7),
                        QColor(255, 40, 40) if fl == 'changed' else QColor(255, 150, 40))
+        if self._animated(sec, mt):
+            p.fillRect(QRect(r.right() - 6, r.y(), 7, 7), QColor(40, 200, 220))
         if self._hover == key:
             p.setPen(QPen(QColor(255, 255, 255, 180), 1))
             p.setBrush(Qt.NoBrush)
@@ -246,6 +257,8 @@ class MetatilePicker(QWidget):
                         extra = '   GRAPHIC CHANGED — a released slot was reused'
                     elif fl == 'released':
                         extra = '   slot released — graphic may change on the next import'
+                    if self._animated(sec, mt):
+                        extra += '   ANIMATED in game (this room\'s tile animation)'
                     if sec == 'foreign' and not self.foreign_same:
                         extra = '   (click imports the 4 subtiles into this tileset)'
                     self.hoverInfo.emit(

@@ -5718,10 +5718,14 @@ jr_001_606f:
     nop
     dec b
 
-; Per-room VRAM update function
-; Called from main game loop. Checks various state flags, then dispatches
-; to a per-room handler via rst $00 indexed by wMapID.
-; NOT the NPC text system — handlers do palette animation and tile swaps.
+; Per-room VRAM update = ROOM TILE ANIMATION (S99 census: ROOM_DATA_FORMAT
+; "Animated tiles", extracted/room_animations.json). Called once per
+; MainFieldLoop pass; after its guards it runs map ID's handler through the
+; 112-entry rst $00 table at $6119. Handlers ROLL tiles 1 px in place
+; (RollTilePairWobble / GreatTreeSway / RollTileRight/Left) or SWAP a shown
+; tile with its hidden second frame elsewhere in the sheet (VRAMSwapBytes),
+; timed by the field frame counter $C8A6/$C8A7. This is the ONLY BG tile
+; animation in the ROM; gate floors never animate (wInGateworld guard).
 PerRoomVRAMDispatch:
 VisualEffectsDispatch:  ; original label
     ld a, [$c850]
@@ -5763,7 +5767,9 @@ VisualEffectsDispatch:  ; original label
     ret z
 
 ; The actual dispatch point: ld a,[wMapID]; rst $00
-; Jump table follows (107 entries indexed by map_type)
+; Jump table follows: 112 entries, map IDs $00-$6F (ends where the first
+; handler begins, $61F9); vanilla points $6B-$6F at a bare `ret` (S99 — the
+; old "107 entries" count was wrong).
 PerRoomDispatchEntry:
 jr_001_6115:  ; original label
     ld a, [wMapID]
@@ -5884,20 +5890,27 @@ jr_001_6115:  ; original label
     dw label1_63fa
     dw label1_63fa
 
-; Castle ($00): LD HL,$94D0; CALL $65E0 — VRAM update
+; Room animation for map $00 (Castle)
+;   ROLL tiles 77-78 1 px sideways every 32 frames (3 right : 1 left per 128)
+;   (measured S99: tools/census_room_animation.py; ROOM_DATA_FORMAT "Animated tiles")
+RoomAnim_Castle:
 Handler_Castle:
 label1_61f9:  ; original label
     ld hl, $94d0
     call CheckVisualEffectType
     ret
 
-; GreatTree ($01): CALL $659F — story event visual effect
+; Room animation for map $01 (GreatTree)
+;   SWAY tiles 64-79: 4-tile groups roll 1 px in alternating directions every 32 frames (direction set flips every 512 frames, $C8A7 bit 1)
+;   (measured S99: tools/census_room_animation.py; ROOM_DATA_FORMAT "Animated tiles")
+RoomAnim_GreatTree:
 Handler_GreatTree:
 label1_6200:  ; original label
     call GetVisualEffectMask
     ret
 
-; Bazaar ($02): RET — no visual update
+; No room animation: map $02
+RoomAnimNone_02:
 Handler_Bazaar:
 label1_6204:  ; original label
     ret
@@ -5916,13 +5929,15 @@ label1_6204:  ; original label
     call VRAMRotateLeft
     ret
 
-; GateHub ($03-$07): RET — no visual update
+; No room animation: maps $03, $04, $05, $06, $07
+RoomAnimNone_03:
 Handler_GateHub:
 label1_621f:  ; original label
     ret
 
-; GateHub2 ($08): Palette animation
-; Reads $C8A6/$C8A7 as 16-bit counter, shifts right 5, indexes palette table
+; Map $08 (Starry Shrine breeding cutscene): pulses the DMG palette byte
+; wBGPalette from a table on the frame counter — no tile animation (S99)
+RoomAnim_StarryShrineCutscenePalette:
 Handler_GateHub2_Palette:
 label1_6220:  ; original label
     ld a, [$d9cb]
@@ -6000,29 +6015,40 @@ jr_001_6260:
 label1_b2b1:
     ret
 
-; StarryShrine ($09): RET — no visual update
+; No room animation: map $09
+RoomAnimNone_09:
 Handler_StarryShrine:
 label1_62b2:  ; original label
     ret
 
-; SecretPassage ($0A): CALL $659F
+; Room animation for map $0A (Secret Passage)
+;   SWAY tiles 64-79: 4-tile groups roll 1 px in alternating directions every 32 frames (direction set flips every 512 frames, $C8A7 bit 1)
+;   map $0A: INERT in vanilla — those slots are blank in its sheet
+;   (measured S99: tools/census_room_animation.py; ROOM_DATA_FORMAT "Animated tiles")
+RoomAnim_SecretPassage:
 Handler_SecretPassage:
 label1_62b3:  ; original label
     call GetVisualEffectMask
     ret
 
-; $0B-$0F: RET
+; No room animation: maps $0B, $0C, $0D, $0E, $0F
+RoomAnimNone_0B:
 Handler_RET_Group1:
 label1_62b7:  ; original label
     ret
 
-; $10-$18 (Copycat through Well): RET
+; No room animation: maps $10, $11, $12, $13, $14, $15, $16, $17, $18
+RoomAnimNone_10:
 Handler_RET_Group2:
 label1_62b8:  ; original label
     ret
 
-; GoopyRoom1/2 ($19/$1A): VRAM tile swap
-; Checks $C8A6 AND $1F == 3, then copies tiles $9320↔$93D0
+; Room animation for maps $19, $1A (Goopy Room 1 (scr8); Goopy Room 2 (scr8))
+;   SWAP tiles 50-51 <-> 61-62 every 32 frames
+;   map $19: INERT in vanilla — those slots are blank in its sheet
+;   map $1A: INERT in vanilla — those slots are blank in its sheet
+;   (measured S99: tools/census_room_animation.py; ROOM_DATA_FORMAT "Animated tiles")
+RoomAnim_GoopyRoom1:
 Handler_GoopyRooms:
 label1_62b9:  ; original label
     ld a, [$c8a6]
@@ -6036,9 +6062,16 @@ label1_62b9:  ; original label
     call VRAMCopyTile
     ret
 
+; No room animation: map $1B
+RoomAnimNone_1B:
 label1_62cd:
     ret
 
+; Room animation for map $1C (Stable: Coffin Room)
+;   SWAP tiles 36-37 <-> 44-45 every 32 frames
+;   placed on screen: 36-37; hidden second frames: 44-45
+;   (measured S99: tools/census_room_animation.py; ROOM_DATA_FORMAT "Animated tiles")
+RoomAnim_StableCoffinRoom:
 label1_62ce:
     ld a, [$c8a6]
     and $1f
@@ -6051,19 +6084,25 @@ label1_62ce:
     call VRAMCopyTile
     ret
 
+; No room animation: map $1D
+RoomAnimNone_1D:
 label1_62e2:
     ret
 
+; No room animation: map $1E
+RoomAnimNone_1E:
 label1_62e3:
     ret
 
+; No room animation: map $1F
+RoomAnimNone_1F:
 label1_62e4:
     ret
 
-; Map $20/$21 (Castle aliases): VRAM tile swap
-; Same pattern: $C8A6 check, copies $9320↔$9380
-; THIS is what crashes when custom room NPCs are talked to:
-; $C8A6 AND $1F == 3 passes, then copies garbage VRAM addresses
+; Room animation for maps $20, $21 (map $20; map $21)
+;   SWAP tiles 50-51 <-> 56-57 every 32 frames
+;   (measured S99: tools/census_room_animation.py; ROOM_DATA_FORMAT "Animated tiles")
+RoomAnim_Map20:
 Handler_Map20:
 label1_62e5:  ; original label
     ld a, [$c8a6]
@@ -6077,9 +6116,16 @@ label1_62e5:  ; original label
     call VRAMCopyTile
     ret
 
+; No room animation: map $22
+RoomAnimNone_22:
 label1_62f9:
     ret
 
+; Room animation for map $23 (Room of Beginning)
+;   SWAP tiles 19-22 <-> 25-28 every 32 frames
+;   placed on screen: 19-22; hidden second frames: 25-28
+;   (measured S99: tools/census_room_animation.py; ROOM_DATA_FORMAT "Animated tiles")
+RoomAnim_RoomOfBeginning:
 label1_62fa:
     ld a, [$c8a6]
     and $1f
@@ -6092,12 +6138,22 @@ label1_62fa:
     call VRAMCopyTile
     ret
 
+; No room animation: map $24
+RoomAnimNone_24:
 label1_630e:
     ret
 
+; No room animation: map $25
+RoomAnimNone_25:
 label1_630f:
     ret
 
+; Room animation for map $26 (Room: Peace/Bravery)
+;   SWAP tiles 6-7,22-23 <-> 32-35 every 32 frames
+;   ROLL tiles 36-37 1 px sideways every 32 frames (3 right : 1 left per 128)
+;   placed on screen: 6-7,22-23,36-37; hidden second frames: 32-35
+;   (measured S99: tools/census_room_animation.py; ROOM_DATA_FORMAT "Animated tiles")
+RoomAnim_RoomPeaceBravery:
 label1_6310:
     ld hl, $9240
     call CheckVisualEffectType
@@ -6116,14 +6172,26 @@ label1_6310:
     call VRAMCopyTile
     ret
 
+; No room animation: map $27
+RoomAnimNone_27:
 label1_6335:
     ret
 
+; Room animation for map $28 (Room: Joy/Wisdom)
+;   ROLL tiles 37-38 1 px sideways every 32 frames (3 right : 1 left per 128)
+;   (measured S99: tools/census_room_animation.py; ROOM_DATA_FORMAT "Animated tiles")
+RoomAnim_RoomJoyWisdom:
 label1_6336:
     ld hl, $9250
     call CheckVisualEffectType
     ret
 
+; Room animation for map $29 (Room: Happiness/Temptation)
+;   SWAP tiles 6-7,14-15 <-> 12-13,22-23 every 32 frames
+;   ROLL tiles 10-11 1 px sideways every 32 frames (3 right : 1 left per 128)
+;   placed on screen: 6-7,10-11,22-23; hidden second frames: 12-15
+;   (measured S99: tools/census_room_animation.py; ROOM_DATA_FORMAT "Animated tiles")
+RoomAnim_RoomHappinessTemptation:
 label1_633d:
     ld hl, $90a0
     call CheckVisualEffectType
@@ -6142,6 +6210,11 @@ label1_633d:
     call VRAMCopyTile
     ret
 
+; Room animation for maps $2A, $2C (Room: Labyrinth/Judgment; Room: Ambition/Demolition)
+;   SWAP tiles 6-9 <-> 26-29 every 32 frames
+;   placed on screen: 6-9; hidden second frames: 26-29
+;   (measured S99: tools/census_room_animation.py; ROOM_DATA_FORMAT "Animated tiles")
+RoomAnim_RoomLabyrinthJudgment:
 label1_6362:
     ld a, [$c8a6]
     and $1f
@@ -6154,14 +6227,25 @@ label1_6362:
     call VRAMCopyTile
     ret
 
+; No room animation: map $2B
+RoomAnimNone_2B:
 label1_6376:
     ret
 
+; Room animation for map $2D (Room: Mastermind/Control)
+;   ROLL tiles 24-25 1 px sideways every 32 frames (3 right : 1 left per 128)
+;   (measured S99: tools/census_room_animation.py; ROOM_DATA_FORMAT "Animated tiles")
+RoomAnim_RoomMastermindControl:
 label1_6377:
     ld hl, $9180
     call CheckVisualEffectType
     ret
 
+; Room animation for map $2E (Room: Extinction/Sleep)
+;   SWAP tiles 6-7,22-23 <-> 32-35 every 32 frames
+;   placed on screen: 6-7,22-23; hidden second frames: 32-35
+;   (measured S99: tools/census_room_animation.py; ROOM_DATA_FORMAT "Animated tiles")
+RoomAnim_RoomExtinctionSleep:
 label1_637e:
     ld a, [$c8a6]
     and $1f
@@ -6178,6 +6262,11 @@ label1_637e:
     call VRAMCopyTile
     ret
 
+; Room animation for map $2F (Intro Bedroom (2-screen, crashes))
+;   SWAP tiles 78 <-> 79 every 32 frames
+;   placed on screen: 78; hidden second frames: 79
+;   (measured S99: tools/census_room_animation.py; ROOM_DATA_FORMAT "Animated tiles")
+RoomAnim_IntroBedroom:
 label1_639d:
     ld a, [$c8a6]
     and $1f
@@ -6190,29 +6279,50 @@ label1_639d:
     call VRAMCopyTile
     ret
 
+; Room animation for map $30 (Boss: Beginning (Healer))
+;   ROLL tiles 30-31 1 px sideways every 32 frames (3 right : 1 left per 128)
+;   (measured S99: tools/census_room_animation.py; ROOM_DATA_FORMAT "Animated tiles")
+RoomAnim_BossBeginning:
 label1_63b1:
     ld hl, $91e0
     call CheckVisualEffectType
     ret
 
+; No room animation: map $31
+RoomAnimNone_31:
 label1_63b8:
     ret
 
+; No room animation: map $32
+RoomAnimNone_32:
 label1_63b9:
     ret
 
+; No room animation: map $33
+RoomAnimNone_33:
 label1_63ba:
     ret
 
+; No room animation: map $34
+RoomAnimNone_34:
 label1_63bb:
     ret
 
+; No room animation: map $35
+RoomAnimNone_35:
 label1_63bc:
     ret
 
+; No room animation: map $36
+RoomAnimNone_36:
 label1_63bd:
     ret
 
+; Room animation for maps $37, $3E (Boss: Bravery (BigEye); Boss: Happiness (Jamirus))
+;   SWAP tiles 35 <-> 36 every 32 frames
+;   placed on screen: 35; hidden second frames: 36
+;   (measured S99: tools/census_room_animation.py; ROOM_DATA_FORMAT "Animated tiles")
+RoomAnim_BossBravery:
 label1_63be:
     ld a, [$c8a6]
     and $1f
@@ -6225,28 +6335,49 @@ label1_63be:
     call VRAMCopyTile
     ret
 
+; No room animation: map $38
+RoomAnimNone_38:
 label1_63d2:
     ret
 
+; No room animation: map $39
+RoomAnimNone_39:
 label1_63d3:
     ret
 
+; No room animation: map $3A
+RoomAnimNone_3A:
 label1_63d4:
     ret
 
+; No room animation: map $3B
+RoomAnimNone_3B:
 label1_63d5:
     ret
 
+; Room animation for map $3C (Boss: Anger (BattleRex))
+;   ROLL tiles 86-87 1 px sideways every 32 frames (3 right : 1 left per 128)
+;   (measured S99: tools/census_room_animation.py; ROOM_DATA_FORMAT "Animated tiles")
+RoomAnim_BossAnger:
 label1_63d6:
     ld hl, $9560
     call CheckVisualEffectType
     ret
 
+; Room animation for map $3D (Boss: Arena Left (Digster))
+;   ROLL tiles 10-11 1 px sideways every 32 frames (3 right : 1 left per 128)
+;   (measured S99: tools/census_room_animation.py; ROOM_DATA_FORMAT "Animated tiles")
+RoomAnim_BossArenaLeft:
 label1_63dd:
     ld hl, $90a0
     call CheckVisualEffectType
     ret
 
+; Room animation for map $3F (Boss: Temptation (Servant))
+;   SWAP tiles 56-59 <-> 60-63 every 32 frames
+;   placed on screen: 56-59; hidden second frames: 60-63
+;   (measured S99: tools/census_room_animation.py; ROOM_DATA_FORMAT "Animated tiles")
+RoomAnim_BossTemptation:
 label1_63e4:
     ld a, [$c8a6]
     and $1f
@@ -6259,18 +6390,32 @@ label1_63e4:
     call VRAMCopyTile
     ret
 
+; No room animation: map $40
+RoomAnimNone_40:
 label1_63f8:
     ret
 
+; No room animation: map $41
+RoomAnimNone_41:
 label1_63f9:
     ret
 
+; No room animation: maps $42, $60, $65, $66, $67, $68, $69, $6A, $6B, $6C, $6D, $6E, $6F
+RoomAnimNone_42:
 label1_63fa:
     ret
 
+; No room animation: map $43
+RoomAnimNone_43:
 label1_63fb:
     ret
 
+; Room animation for map $44 (Boss: Library (Orochi))
+;   SWAP tiles 14 <-> 15 every 64 frames
+;   SWAP tiles 30 <-> 31 every 64 frames
+;   placed on screen: 14-15; hidden second frames: 30-31
+;   (measured S99: tools/census_room_animation.py; ROOM_DATA_FORMAT "Animated tiles")
+RoomAnim_BossLibrary:
 label1_63fc:
     ld a, [$c8a6]
     and $3f
@@ -6290,14 +6435,25 @@ label1_63fc:
     call VRAMCopyTile
     ret
 
+; No room animation: map $45
+RoomAnimNone_45:
 label1_6422:
     ret
 
+; Room animation for map $46 (Boss: Ambition (DracoLord))
+;   ROLL tiles 70-71 1 px sideways every 32 frames (3 right : 1 left per 128)
+;   (measured S99: tools/census_room_animation.py; ROOM_DATA_FORMAT "Animated tiles")
+RoomAnim_BossAmbition:
 label1_6423:
     ld hl, $9460
     call CheckVisualEffectType
     ret
 
+; Room animation for map $47 (Boss: Demolition (Hargon/Sidoh))
+;   SWAP tiles 76,78 <-> 90-91 every 32 frames
+;   placed on screen: 76,78; hidden second frames: 90-91
+;   (measured S99: tools/census_room_animation.py; ROOM_DATA_FORMAT "Animated tiles")
+RoomAnim_BossDemolition:
 label1_642a:
     ld a, [$c8a6]
     and $1f
@@ -6314,6 +6470,11 @@ label1_642a:
     call VRAMCopyTile
     ret
 
+; Room animation for map $48 (Boss: Mastermind (Baramos))
+;   SWAP tiles 25 <-> 26 every 32 frames
+;   placed on screen: 25; hidden second frames: 26
+;   (measured S99: tools/census_room_animation.py; ROOM_DATA_FORMAT "Animated tiles")
+RoomAnim_BossMastermind:
 label1_6449:
     ld a, [$c8a6]
     and $1f
@@ -6328,6 +6489,12 @@ VRAMCopyTile16:
     call VRAMCopyTile
     ret
 
+; Room animation for map $49 (Boss: Control (Zoma))
+;   SWAP tiles 42-43,58-59,64-65 <-> 44-45,60-61,66-67 every 32 frames
+;   ROLL tiles 49-50 1 px sideways every 32 frames (3 right : 1 left per 128)
+;   placed on screen: 42-43,49-50,58-59,64-65; hidden second frames: 44-45,60-61,66-67
+;   (measured S99: tools/census_room_animation.py; ROOM_DATA_FORMAT "Animated tiles")
+RoomAnim_BossControl:
 label1_645d:
     ld hl, $9310
     call CheckVisualEffectType
@@ -6352,9 +6519,17 @@ VRAMCopyTileAndRet:
     call VRAMCopyTile
     ret
 
+; No room animation: map $4A
+RoomAnimNone_4A:
 label1_648d:
     ret
 
+; Room animation for map $4B (Boss: Sleep (Esterk))
+;   SWAP tiles 12 <-> 13 every 32 frames
+;   SWAP tiles 14 <-> 15 every 32 frames
+;   placed on screen: 12,14; hidden second frames: 13,15
+;   (measured S99: tools/census_room_animation.py; ROOM_DATA_FORMAT "Animated tiles")
+RoomAnim_BossSleep:
 label1_648e:
     ld a, [$c8a6]
     and $1f
@@ -6374,9 +6549,17 @@ label1_648e:
     call VRAMCopyTile
     ret
 
+; No room animation: map $4C
+RoomAnimNone_4C:
 label1_64b4:
     ret
 
+; Room animation for map $4D (Boss: Arena Right (Mudou))
+;   SWAP tiles 10-11,32-33 <-> 12-13,34-35 every 32 frames
+;   ROLL tiles 52-53 1 px sideways every 32 frames (3 right : 1 left per 128)
+;   placed on screen: 10-11,32-33,52-53; hidden second frames: 12-13,34-35
+;   (measured S99: tools/census_room_animation.py; ROOM_DATA_FORMAT "Animated tiles")
+RoomAnim_BossArenaRight:
 label1_64b5:
     ld hl, $9340
     call CheckVisualEffectType
@@ -6395,9 +6578,16 @@ label1_64b5:
     call VRAMCopyTile
     ret
 
+; No room animation: map $4E
+RoomAnimNone_4E:
 label1_64da:
     ret
 
+; Room animation for map $4F (Boss: Unused (DarkDrium))
+;   SWAP tiles 92-93 <-> 94-95 every 32 frames
+;   placed on screen: 92-93; hidden second frames: 94-95
+;   (measured S99: tools/census_room_animation.py; ROOM_DATA_FORMAT "Animated tiles")
+RoomAnim_BossUnused:
 label1_64db:
     ld a, [$c8a6]
     and $1f
@@ -6410,9 +6600,17 @@ label1_64db:
     call VRAMCopyTile
     ret
 
+; No room animation: maps $50, $51
+RoomAnimNone_50:
 label1_64ef:
     ret
 
+; Room animation for map $52 (Gate Floor: Coliseum)
+;   SWAP tiles 13,28 <-> 27,29 every 32 frames
+;   SWAP tiles 32-33 <-> 34-35 every 25 frames
+;   placed on screen: 27-28,32-33; hidden second frames: 13,29,34-35
+;   (measured S99: tools/census_room_animation.py; ROOM_DATA_FORMAT "Animated tiles")
+RoomAnim_GateFloorColiseum:
 label1_64f0:
     ld a, [$c8a6]
     ld l, a
@@ -6462,9 +6660,17 @@ jr_001_651e:
 jr_001_6541:
     ret
 
+; No room animation: maps $53, $54, $55, $56, $57, $58, $59, $5A, $5B, $5C, $61, $62, $63, $64
+RoomAnimNone_53:
 label1_6542:
     ret
 
+; Room animation for map $5D (Arena Battle)
+;   SWAP tiles 60-61 <-> 68-69 every 32 frames
+;   SWAP tiles 62-63,74-75 <-> 70-71,82-83 every 32 frames
+;   SWAP tiles 72-73 <-> 80-81 every 16 frames
+;   (measured S99: tools/census_room_animation.py; ROOM_DATA_FORMAT "Animated tiles")
+RoomAnim_ArenaBattle:
 label1_6543:
     ld a, [$c8a6]
     and $07
@@ -6517,14 +6723,17 @@ jr_001_6584:
 jr_001_659d:
     ret
 
+; No room animation: maps $5E, $5F
+RoomAnimNone_5E:
 label1_659e:
     ret
 
 
-; Text/event visual helper
-; Checks $C8A6 AND $1F for values $05, $07
-; Different paths for different interaction states
-; Reads from $9400, calls $65D4, $66BC, $668F
+; GreatTree / Secret Passage SWAY (S99, measured): when $C8A6 & $1F == 5
+; (every 32 frames) roll tiles 64-79 ($9400-$94FF) 1 px in 4-tile groups of
+; alternating direction — R,L,R,L while $C8A7 bit 1 is set, L,R,L,R while
+; clear (the set flips every 512 frames): swaying foliage.
+GreatTreeSway:
 TextHelper_659F:
 GetVisualEffectMask:  ; original label
     ld a, [$c8a6]
@@ -6545,6 +6754,7 @@ jr_001_65a9:
     call VRAMEffectSetup
     call VRAMEffectStep
 
+RollTilesLeft4:                 ; roll the 4 tiles at HL 1 px left, HL += $40
 VRAMEffectSetup:
     call VRAMRotateLeft
     call VRAMRotateLeft
@@ -6558,6 +6768,7 @@ jr_001_65c8:
     call VRAMEffectStep
     call VRAMEffectSetup
 
+RollTilesRight4:                ; roll the 4 tiles at HL 1 px right, HL += $40
 VRAMEffectStep:
     call VRAMRotateRight
     call VRAMRotateRight
@@ -6565,9 +6776,11 @@ VRAMEffectStep:
     jp Jump_001_6636
 
 
-; VRAM update helper (used by Castle handler)
-; Checks $C8A6 AND $7F against values $07, $27, $47, $67
-; Different VRAM copy operations for each
+; Tile-pair WOBBLE roll (S99, measured): HL = first of 2 tiles. On
+; $C8A6 & $7F == $07/$27/$47 roll both tiles 1 px right, on $67 1 px left —
+; one step every 32 frames, net 2 px right per 128 (flowing water / flame).
+; Used by Castle (77-78) and 9 more rooms (census).
+RollTilePairWobble:
 TextHelper_65E0:
 CheckVisualEffectType:  ; original label
     ld a, [$c8a6]
@@ -6597,9 +6810,11 @@ jr_001_65fc:
     jp Jump_001_668f
 
 
-; VRAM tile swap routine
-; DI; copies B bytes between [HL] and [DE] (swap, not just copy)
-; Used by room handlers for animated tile effects
+; VRAM byte SWAP (S99): exchanges B bytes between [HL] and [DE] (VRAM-safe,
+; di/WaitVRAM per byte). Room handlers call it every 32 (or 64/25/16) frames
+; to flip a shown tile with its hidden second frame — a 2-frame animation
+; whose other frame lives in the same 128-tile sheet.
+VRAMSwapBytes:
 VRAMTileSwap_6602:
 VRAMCopyTile:  ; original label
 jr_001_6602:
@@ -6648,8 +6863,9 @@ CheckPaletteAnimActive:
     ret
 
 
-; VRAM tile copy routine (one-way)
-; DI; copies tiles from [HL] area using VRAM-safe timing
+; Roll ONE tile 1 px RIGHT (S99; was mis-described as a one-way copy):
+; `rrc` on all 16 bytes at HL (pixels move right, wrapping); HL += 16.
+RollTileRight:
 VRAMTileCopy_6636:
 VRAMRotateRight:  ; original label
 Jump_001_6636:
@@ -6712,6 +6928,8 @@ Jump_001_6636:
     ret
 
 
+; Roll ONE tile 1 px LEFT: `rlc` on all 16 bytes at HL; HL += 16 (S99).
+RollTileLeft:
 VRAMRotateLeft:
 Jump_001_668f:
     di

@@ -160,8 +160,8 @@ def build_sheet_from_spec(bct, rom, spec):
 
     Mirrors build_combined_tileset.py's GFX assembly: each palette row
     {"slot": N, "ts": "bank:step", "idx": tile} places the source tile at
-    slot N; unfilled slots stay zero; the animated no-go indices (77/78)
-    must already be respected by the export (validator-checked upstream).
+    slot N; unfilled slots stay zero. Slots a room on this sheet animates
+    (S99: its `animation` handler) are warned about upstream (validators).
     """
     sheet = bytearray(2048)
     for row in spec.get('palette', []):

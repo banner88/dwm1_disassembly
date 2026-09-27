@@ -1,5 +1,91 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-09-25 (Session 97 — **rooms group B: P3.5a flag
+> STATE RULES + P3.5 NPC INSPECTOR, with the NPC behaviour engine decoded**
+> (user: "all of B"; rule terms AND-ed — "Flag A set and Flag B set but C
+> NOT set"; door-arrival state moved to P3.7). Built S97; **USER-CONFIRMED
+> 2026-09-26** (S98 start: "Can confirm s97 pass" — r1 + r2). Verifier PASS 6/6; clean `1ca6579…` byte-perfect (bank $06
+> jump tables re-sectioned + bank $00B/$01/$06 comments, both trees);
+> **patched pin MOVED `5db25d15…` → `6e97fd37…` (patched)** — hand-staged
+> patches/ == compiler build == GUI build (`--apply`'d); test_compiler
+> --rom 74/74; test_app --rom PASS; test_canvas --rom PASS incl. the new
+> v4 acceptance. Test ROM `DWM-S97-npc-rules-test.gbc` (patched, md5
+> `2da054a7…`, a fresh demo project — NOT the example content): GreatTree
+> 2F Library door → an NPC "zoo" (8 behaviours, each NPC says its type) →
+> east edge → a Servant-room clone that burns until the firefighter NPC
+> sets flag $0158 (YES → the room reloads cleared; the arsonist in the
+> cleared state relights it). PyBoy: both directions via real talk + choice.
+>
+> **Decoded (Iron Rule 6 annotation same session; ROOM_DATA_FORMAT "NPC
+> behaviour types" + "NPC RAM slot"):** the NPC type byte = facing (bits
+> 4-5) | HIDDEN (bit 6: not drawn, not solid, no behaviour, not talkable —
+> measured) | behaviour (bits 0-3) dispatched every frame through bank $06
+> `NPCBehaviourTable` ($4050, 16 dw — was misassembled as code, plus 9
+> sub-tables and 2 byte tables). 13 behaviours measured by poking a live
+> Bazaar slot: stand (keep facing) / stand_return / stand_fixed / spin /
+> pace ±1, ±2 (right-first, left-first) / right-3 / 2×2 square / figure 8 /
+> sway / gate wanderers E-F (act only on the `$C926` gate screen). Walkers
+> never test tiles (walk through walls and off-screen); the player blocks
+> them (bank $06 entry 0 + $01 AdvanceNPCPointer undo the step, pause $20).
+> Corrections: DOC_AUDIT S97 (npc_names.json type_names were guesses;
+> BANK04 "+$05 bit 0 = interacting" = walking; $48/$49 hide/show unverified;
+> stale Key Constants).
+>
+> **Engine + compiler (PROJECT_COMPILER §2.13):** `custom.rooms[].
+> state_rules` (ordered, first match wins, optional `screens`, trailing
+> unconditional rule = "Otherwise") → generated `CustomStateRulePtrTable`
+> (bank $60) → template entry 8 `CustomStateRules` (head 383 → 492 B,
+> re-pinned), called from bank $17 `CustomAttrCheck` FIRST via
+> `StateRulesHook17` (3 B from the `ds 12` reserve) and from
+> `CustomReadStep`. **Measured S97:** at a custom-room load the bank-$17
+> attr/palette walk reads the step counter BEFORE bank $0B Entry 0 — rules
+> only in Entry 0 gave the cleared layout with the burning palette (A/B,
+> KEY_LESSONS S97). Rules make custom-room state persistent across
+> save/reload (counters are transient, flags are saved). NPC entries gain
+> `behaviour` / `hidden` / int `script`; validators warn on gate-only
+> behaviours and walker paths leaving the screen. The example project's S92
+> rank demo moved from the `entry:medal_vault` prelude to
+> `arena_clone.state_rules` (PyBoy: same NPC sets; vault entry unchanged).
+>
+> **Editor (EDITOR_DESIGN §5.1 "S97 additions"):** State rules group
+> (+ Otherwise combo, flag picker incl. vanilla story flags, New named flag,
+> "State shown when" line); NPC panel (sprite picker, facing, behaviour with
+> measured descriptions, hidden, talk script / New talk text / Edit text,
+> per-state presence, delete), Add NPC here, drag-to-move, walk-path overlay
+> (red dots on walls/off-screen), facing ticks, read-only form for vanilla
+> NPCs; stale selection cleared on navigation. `EDITOR_REVISION` = 'S97'.
+> Residuals (ROADMAP P3.5): hidden-entry reveal mechanism unmeasured; the
+> named-flag pool is 16 flags; walkers ignore walls (warned); sprite-sheet
+> budget still a count warning.
+>
+> **S97 round 2 (user test of r1: 4 issues; USER-CONFIRMED 2026-09-26).**
+> Patched pin MOVED again `6e97fd37…` → **`ce24de8b…` (patched)**; test ROM
+> `DWM-S97-r2-textbox-test.gbc` (patched, md5 `02c05364…`, the r1 demo with
+> own-colour-1 palettes in the zoo (magenta) and the servant room (green)).
+> (1) **Text boxes in free-colour rooms took the room's colours** — the
+> dialog box (bank $06 states 2/6/9, close 12/15/19) and the YES/NO box
+> (bank $56 `SetB56_4855`/`48a1`, bank $00 `ClearTextBitsRedraw`) write tile
+> ids only; the room's GBC attrs stay under them. Same-size far calls to
+> bank $73 entries 14-18 save the covered attrs (`wBoxAttrSave`/
+> `wChoiceAttrSave`, 132 B carved from `wCustomPool`) and set palette 7
+> while the box is up, then restore them cell by cell — only in custom rooms
+> whose palette carries a free-colour marker. PyBoy: box + choice cream in
+> both rooms, top and bottom box positions, attrs restored after close;
+> vanilla Bazaar + non-free custom rooms pixel-identical to r1. (2) **Talk
+> text per box**: measured — a box = 2 lines × 18 cells, "*:" leaves 16 on
+> box 1 line 1 ($EA opener: no indent; the vanilla indent is $EB); cells
+> past an edge wrap and are overwritten (lost); a 3rd line scrolls without
+> waiting. New `boxes` dialogue form ($FA $F7 $EF $EE between boxes, vanilla
+> choice tail `…? $E7 $F0`), auto `text` now flows into boxes; editor
+> `talk_editor.py` = one editor per box with an in-game preview drawn with
+> the ROM font (bank $4F $4010, glyph = code) — red split word, lost cells,
+> Fit / Fit all. (3) Right panel: NPC is its own section; every launch opens
+> with only Metatiles expanded; selecting an NPC opens the NPC section.
+> (4) New named flag in the rule dialog is now a real item of every flag
+> list (the new row showed the name while its list pointed at item 0).
+> **Still true: nothing in the editor SETS a flag yet** (script ops only) —
+> a new flag stays clear in game until a script sets it.
+
 > Last verified: 2026-09-25 (Session 96 — **"Finish out the rooms stuff":
 > group A = tiles & tilesets — P3.3c slot map + vocabulary release, tileset
 > switching / blank sheets, the IMPORT ART tab (DWM2 PNG rips → room tiles,

@@ -133,3 +133,23 @@ edge and the battle waits for input forever.
   (measured). Registers are readable via `pyboy.register_file`.
 - Enable pyboy's own logs with `PyBoy(..., log_level='DEBUG')`;
   `logging.basicConfig` does NOT capture the Cython modules.
+
+## S99 techniques + one trap
+
+- **Force a dispatch index from a hook.** `p.register_file.A = n` inside a
+  `hook_register` callback on a `rst $00` changes which jump-table entry runs
+  (measured: bank $01 $6118, the room-animation dispatch). One room can then
+  host every handler — `tools/census_room_animation.py`.
+- **VRAM by bank.** `p.memory[0, 0x9000:0x9800]` reads VRAM bank 0 regardless
+  of the game's VBK; writes work the same way (the census seeds a pattern).
+- **Measure over a pattern.** A handler that rolls / swaps blank tiles shows
+  no change on the room's own art — fill the buffer with a unique pattern
+  first (KEY_LESSONS S99).
+- **Trap — A-spam after CONTINUE.** Tapping A 40 times on a real save left a
+  menu open: nothing animated and walking did nothing, which looked like an
+  engine failure. Tap A only until `$C88A == 1` and `wGameState` ($C8EB) is 0,
+  then B until it stays 0 (the S92 rule, again).
+- **A/B timing.** A patch that changes a routine's cycle count shifts
+  multi-frame VRAM loads by a few bytes at frame edges — A/B from ONE
+  savestate and require convergence (KEY_LESSONS S99), not frame equality.
+

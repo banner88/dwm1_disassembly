@@ -391,7 +391,44 @@ class MainWindow(QMainWindow):
         self.log.appendPlainText(f'Opened project: {path}   (editor code: {EDITOR_REVISION})')
         for note in getattr(session.doc, 'migrations', []):
             self.log.appendPlainText(f'MIGRATED: {note} — Save to keep it')
+        self._offer_animation_repair(session)
         self.statusBar().showMessage(f'Opened {session.name}', 4000)
+
+    def _offer_animation_repair(self, session):
+        """S99 r4 (user: "Why is the mirror in $6b moving? I never wanted it
+        to move. It also didnt move in earlier editor versions."): tiles that
+        sit in a 'source' room's animated slots without being that room's
+        animated art started moving when S99 gave clones their source
+        animation. List them and offer the fix (one undo step)."""
+        from PySide6.QtWidgets import QMessageBox
+        from editor2.core.animation import rng
+        try:
+            rep = session.doc.stray_report()
+        except Exception:
+            rep = []
+        if not rep:
+            return
+        lines = '\n'.join(f"• {name}: tiles in slots {rng(sl)} move with ${mid:02X}'s "
+                          'animation' for _rid, name, sl, mid in rep)
+        self.log.appendPlainText('ANIMATION: unintended moving tiles found —\n' + lines)
+        if QMessageBox.question(
+                self, 'Tiles moving by accident',
+                'Since this editor version, a room made from a vanilla room plays that '
+                'room\'s own animation (water, flames…). These tiles of yours sit in the '
+                'slots that animation moves, so they move too:\n\n' + lines +
+                '\n\nMove them to still slots? (The rooms\' own animation keeps working; '
+                'one undo step.)') != QMessageBox.Yes:
+            return
+        from editor2.app.rooms.commands import SnapshotCommand
+        cmd = SnapshotCommand(session, 'Stop unintended animation',
+                              lambda doc: doc.repair_animation())
+        session.undo.push(cmd)
+        if cmd.error is not None:
+            QMessageBox.warning(self, 'Tiles moving by accident', str(cmd.error))
+            return
+        for n in cmd.result or []:
+            self.log.appendPlainText('FIXED: ' + n + ' — Save to keep it')
+        session.structureChanged.emit()
 
     def _undo_text(self, t):
         try:

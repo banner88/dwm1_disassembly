@@ -21,10 +21,11 @@ VANILLA room (read-only; "Make editable" clones it).
 import os
 
 from PIL import ImageQt
-from PySide6.QtCore import QPointF, QRectF, Qt, Signal
+from PySide6.QtCore import QElapsedTimer, QPointF, QRectF, Qt, QTimer, Signal
 from PySide6.QtGui import QBrush, QColor, QFont, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import QGraphicsPixmapItem, QGraphicsScene, QGraphicsView
 
+from editor2.core import animation as ANIM
 from editor2.core.document import val, metatile_pals, pal_value, metatile_key
 from editor2.core.render_project import SCREEN_H, SCREEN_W
 from editor2.app.session import REPO
@@ -201,6 +202,7 @@ class RoomCanvas(QGraphicsView):
     toolChanged = Signal(str)
     markerMoveRequested = Signal(object, int, int)   # S97: marker ref, new cell
     markerActivated = Signal(object)          # S98 r2: double-click on a marker
+    cellActivated = Signal(object)            # S99 r3: double-click on a plain cell
 
     TOOLS = ('select', 'paint', 'rect', 'fill', 'pick', 'walk')
 
@@ -214,7 +216,18 @@ class RoomCanvas(QGraphicsView):
         self._zoom = 3
         self.tool = 'select'
         self.brush = None            # metatile dict
-        self.layers = {'grid': True, 'attr': False, 'walk': False, 'markers': True}
+        self.layers = {'grid': True, 'attr': False, 'walk': False, 'markers': True,
+                       'anim': True}      # S99: outline the animated tiles
+        # S99 (P3.3e): the room's tile animation — map ID whose bank-$01
+        # handler runs (vanilla: the room itself; custom: its `animation`)
+        self.anim_mid = None
+        self.anim_slots = set()
+        self._player = None               # animation.Player while previewing
+        self._anim_timer = QTimer(self)
+        self._anim_timer.setInterval(15)
+        self._anim_timer.timeout.connect(self._anim_tick)
+        self._anim_clock = QElapsedTimer()
+        self._anim_frames = 0
         self.tiles = None
         self.attr = None
         self.lid = None
@@ -359,6 +372,7 @@ class RoomCanvas(QGraphicsView):
                     self.attr_lid = cand
             self._build_markers(st)
             self._mark_entrances(room)
+        self._update_anim()
         self._render()
 
     # S94b entrance redirects: a vanilla door routed into a custom room is a
@@ -463,8 +477,56 @@ class RoomCanvas(QGraphicsView):
         self.viewport().update()
         return self.selected_marker
 
+    # ------------------------------------------------ animation (S99)
+    def _update_anim(self):
+        if self.is_vanilla():
+            mid = self.source[1]
+            e = ANIM.map_entry(mid)
+            self.anim_mid = mid if e.get('slots') and not e.get('inert_in_vanilla') else None
+        elif self.room is not None:
+            self.anim_mid = self.s.doc.room_animation(self.room)['map']
+        else:
+            self.anim_mid = None
+        self.anim_slots = ANIM.slots(self.anim_mid)
+        if self._player is not None:
+            self._player = ANIM.Player(self.anim_mid, self.gfx.sheet)
+
+    def anim_cells(self):
+        """(col, row) of every 8x8 tile on this screen whose slot animates."""
+        if not self.tiles or not self.anim_slots:
+            return []
+        return [(c, r) for r in range(SCREEN_H) for c in range(SCREEN_W)
+                if (self.tiles[r][c] & 0x7F) in self.anim_slots]
+
+    def previewing(self):
+        return self._player is not None
+
+    def set_preview(self, on):
+        """Play the room's tile animation on the canvas at game speed
+        (the census schedule, one step per field frame)."""
+        if on and self.gfx is not None:
+            self._player = ANIM.Player(self.anim_mid, self.gfx.sheet)
+            self._anim_clock.start()
+            self._anim_frames = 0
+            self._anim_timer.start()
+        else:
+            self._anim_timer.stop()
+            self._player = None
+            if self.tiles is not None:
+                self._render()
+
+    def _anim_tick(self):
+        if self._player is None or self.tiles is None:
+            return
+        want = int(self._anim_clock.elapsed() * ANIM.FPS / 1000.0)
+        n = max(0, min(want - self._anim_frames, 64))
+        self._anim_frames = want
+        if n and self._player.step(n):
+            self._render()
+
     def _render(self):
-        img = self.s.renderer.compose(self.gfx.sheet, self.tiles, self.attr, self.pals)
+        sheet = bytes(self._player.sheet) if self._player is not None else self.gfx.sheet
+        img = self.s.renderer.compose(sheet, self.tiles, self.attr, self.pals)
         self.base.setPixmap(QPixmap.fromImage(ImageQt.ImageQt(img)))
         self.viewport().update()
 
@@ -539,6 +601,35 @@ class RoomCanvas(QGraphicsView):
                 painter.drawLine(c * CELL, 0, c * CELL, SCREEN_H * TILE)
             for r in range(1, CELLS_H):
                 painter.drawLine(0, r * CELL, SCREEN_W * TILE, r * CELL)
+        if self.layers.get('anim') and self.anim_slots:
+            # S99: outline the AREAS the room's animation changes at runtime
+            # (vanilla rooms: their own handler) — only the border between
+            # animated and still tiles, dark underlay + bright dashes, so it
+            # reads on water / lava / any art
+            cells = set(self.anim_cells())
+            segs = []
+            for c, r in cells:
+                x0, y0, x1, y1 = c * TILE, r * TILE, (c + 1) * TILE, (r + 1) * TILE
+                if (c, r - 1) not in cells:
+                    segs.append((x0, y0, x1, y0))
+                if (c, r + 1) not in cells:
+                    segs.append((x0, y1, x1, y1))
+                if (c - 1, r) not in cells:
+                    segs.append((x0, y0, x0, y1))
+                if (c + 1, r) not in cells:
+                    segs.append((x1, y0, x1, y1))
+            painter.setBrush(Qt.NoBrush)
+            under = QPen(QColor(0, 0, 0, 200))
+            under.setCosmetic(True)
+            under.setWidth(4)
+            top = QPen(QColor(80, 245, 255))
+            top.setCosmetic(True)
+            top.setWidth(2)
+            top.setStyle(Qt.DashLine)
+            for pen in (under, top):
+                painter.setPen(pen)
+                for x0, y0, x1, y1 in segs:
+                    painter.drawLine(QPointF(x0, y0), QPointF(x1, y1))
         if self.highlight is not None:
             pen = QPen(QColor(255, 230, 0))
             pen.setCosmetic(True)
@@ -839,6 +930,15 @@ class RoomCanvas(QGraphicsView):
             self.viewport().update()
             self.markerActivated.emit({'kind': m[0], 'x': m[1], 'y': m[2],
                                        'sprite': m[3], 'label': m[4], 'ref': m[5]})
+            return
+        # S99 r3 (user: "Double clicking on the tile doesnt bring up any
+        # animation info"): a plain cell opens the Make animated tab on it
+        cell = self._cell_at(ev.position().toPoint())
+        if cell is not None:
+            self.selected_marker = None
+            self.selected_cell = cell
+            self.viewport().update()
+            self.cellActivated.emit(cell)
 
     def mouseMoveEvent(self, ev):
         pos = ev.position().toPoint()

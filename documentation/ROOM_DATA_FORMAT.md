@@ -587,6 +587,143 @@ leaves the 10×8 screen.
 | +$18/+$1A | pixel X/Y (16-bit, tile·16+8) | walkers |
 | +$1C/+$1E | previous pixel X/Y (copied each frame by bank $01 `LoadNPCDataTable`) | step undo |
 
+## Animated tiles (S99, PyBoy-measured) — ROADMAP P3.3e
+
+**One mechanism, one bank.** Every field frame, `MainFieldLoop` calls bank
+$01 `PerRoomVRAMDispatch` ($60E7). After its guards it does `rst $00` on a
+**112-entry** jump table at `$01:$6119` indexed by map ID `$00-$6F`
+(the table ends where the first handler begins, $61F9; vanilla points
+$6B-$6F at a bare `ret`; the old "107 entries" count was wrong — DOC_AUDIT
+S99). The 65 distinct handlers (labels `RoomAnim_<room>` /
+`RoomAnimNone_<map>`, bank_001.asm) change fixed tile SLOTS of whatever
+2 KB sheet is loaded at VRAM `$9000-$97FF` (slot = (addr-$9000)/16).
+Nothing else in the ROM rolls or swaps BG tile graphics (grep: every
+VRAM `rrc/rlc [hl]` loop and every caller of the roll/swap helpers is in
+bank $01). **Gate floors never animate** (the dispatch returns while
+`wInGateworld` != 0; user-confirmed S99: "Gate floors do NOT have
+animation").
+
+**Guards** (return = no animation this frame): `$C850`, `$C88F` or
+`wInGateworld` non-zero; any of `wGameState` ($C8EB) bits 1,2,3,5,6,7 set
+(menus, text, transitions); bit 4 set with `$C8EF == $0F`. **Clock**:
+`$C8A6/$C8A7`, the 16-bit field frame counter (`IncrementVisualStep`, +1
+per MainFieldLoop pass, after the dispatch — a handler sees the value before
+the increment).
+
+**Effects** (helpers annotated S99):
+* **ROLL** — `RollTilePairWobble` (was `CheckVisualEffectType`): HL = the
+  first of 2 tiles; on counter `& $7F` = $07/$27/$47 both tiles roll 1 px
+  RIGHT (`RollTileRight`: `rrc` on all 16 bytes), on $67 1 px LEFT — one
+  step every 32 frames, net 2 px right per 128 (flowing water, flames).
+* **SWAY** — `GreatTreeSway` (GreatTree, Secret Passage): on counter
+  `& $1F` = 5, tiles 64-79 roll 1 px in 4-tile groups of alternating
+  direction (R,L,R,L while `$C8A7` bit 1 is set, L,R,L,R while clear — the
+  directions flip every 512 frames).
+* **SWAP** — `VRAMSwapBytes` (was "VRAMCopyTile"): exchanges B bytes
+  between two VRAM ranges — a shown tile trades graphics with its HIDDEN
+  SECOND FRAME stored in unplaced slots of the same sheet (2-frame
+  animation). Most rooms swap when counter `& $1F` = 3 (every 32 frames);
+  Orochi (`$44`) every 64 on two phases; Esterk (`$4B`) two pairs on two
+  phases; Coliseum (`$52`) and Arena Battle (`$5D`) use divider rhythms
+  (periods 25/32 and 16/32 frames).
+* Map `$08` (breeding cutscene) only pulses the DMG palette byte
+  `wBGPalette` ($C89B) — not a tile effect; not offered as a source.
+
+**Census** (`tools/census_room_animation.py` → `extracted/room_animations.json`;
+method: every handler forced through the `$01:$6118` dispatch in the Bazaar
+over a patterned VRAM, counter reset to 0, 1024 frames, every change
+classified; "shown" = slots the vanilla room places on any screen/state,
+"hidden frames" = animated but never placed; INERT = the room's own sheet
+makes the effect a no-op). Maps not listed have a bare-`ret` handler.
+
+| Map | Room | Handler | Effect (measured) | Shown | Hidden frames |
+|---|---|---|---|---|---|
+| $00 | Castle | `RoomAnim_Castle` $61F9 | ROLL 77-78 1 px (3 R : 1 L per 128 f) | 77-78 | — |
+| $01 | GreatTree | `RoomAnim_GreatTree` $6200 | SWAY 64-79 (4-tile groups alternate, flip /512 f) | 64-79 | — |
+| $08 | Starry Shrine Breeding Cutscene | `RoomAnim_StarryShrineCutscenePalette` $6220 | DMG palette pulse (wBGPalette), no tiles | — | — |
+| $0A | Secret Passage | `RoomAnim_SecretPassage` $62B3 | SWAY 64-79 (4-tile groups alternate, flip /512 f) | INERT (blank slots) | — |
+| $19 | Goopy Room 1 (scr8) | `RoomAnim_GoopyRoom1` $62B9 | SWAP 50-51 ↔ 61-62 /32 f | INERT (blank slots) | — |
+| $1A | Goopy Room 2 (scr8) | `RoomAnim_GoopyRoom1` $62B9 | SWAP 50-51 ↔ 61-62 /32 f | INERT (blank slots) | — |
+| $1C | Stable: Coffin Room | `RoomAnim_StableCoffinRoom` $62CE | SWAP 36-37 ↔ 44-45 /32 f | 36-37 | 44-45 |
+| $20 | map $20 | `RoomAnim_Map20` $62E5 | SWAP 50-51 ↔ 56-57 /32 f | 50-51,56-57 | — |
+| $21 | map $21 | `RoomAnim_Map20` $62E5 | SWAP 50-51 ↔ 56-57 /32 f | 50-51,56-57 | — |
+| $23 | Room of Beginning | `RoomAnim_RoomOfBeginning` $62FA | SWAP 19-22 ↔ 25-28 /32 f | 19-22 | 25-28 |
+| $26 | Room: Peace/Bravery | `RoomAnim_RoomPeaceBravery` $6310 | SWAP 6-7,22-23 ↔ 32-35 /32 f; ROLL 36-37 1 px (3 R : 1 L per 128 f) | 6-7,22-23,36-37 | 32-35 |
+| $28 | Room: Joy/Wisdom | `RoomAnim_RoomJoyWisdom` $6336 | ROLL 37-38 1 px (3 R : 1 L per 128 f) | 37-38 | — |
+| $29 | Room: Happiness/Temptation | `RoomAnim_RoomHappinessTemptation` $633D | SWAP 6-7,14-15 ↔ 12-13,22-23 /32 f; ROLL 10-11 1 px (3 R : 1 L per 128 f) | 6-7,10-11,22-23 | 12-15 |
+| $2A | Room: Labyrinth/Judgment | `RoomAnim_RoomLabyrinthJudgment` $6362 | SWAP 6-9 ↔ 26-29 /32 f | 6-9 | 26-29 |
+| $2C | Room: Ambition/Demolition | `RoomAnim_RoomLabyrinthJudgment` $6362 | SWAP 6-9 ↔ 26-29 /32 f | 6-9 | 26-29 |
+| $2D | Room: Mastermind/Control | `RoomAnim_RoomMastermindControl` $6377 | ROLL 24-25 1 px (3 R : 1 L per 128 f) | 24-25 | — |
+| $2E | Room: Extinction/Sleep | `RoomAnim_RoomExtinctionSleep` $637E | SWAP 6-7,22-23 ↔ 32-35 /32 f | 6-7,22-23 | 32-35 |
+| $2F | Intro Bedroom (2-screen, crashes) | `RoomAnim_IntroBedroom` $639D | SWAP 78 ↔ 79 /32 f | 78 | 79 |
+| $30 | Boss: Beginning (Healer) | `RoomAnim_BossBeginning` $63B1 | ROLL 30-31 1 px (3 R : 1 L per 128 f) | 30-31 | — |
+| $37 | Boss: Bravery (BigEye) | `RoomAnim_BossBravery` $63BE | SWAP 35 ↔ 36 /32 f | 35 | 36 |
+| $3C | Boss: Anger (BattleRex) | `RoomAnim_BossAnger` $63D6 | ROLL 86-87 1 px (3 R : 1 L per 128 f) | 86-87 | — |
+| $3D | Boss: Arena Left (Digster) | `RoomAnim_BossArenaLeft` $63DD | ROLL 10-11 1 px (3 R : 1 L per 128 f) | 10-11 | — |
+| $3E | Boss: Happiness (Jamirus) | `RoomAnim_BossBravery` $63BE | SWAP 35 ↔ 36 /32 f | 35 | 36 |
+| $3F | Boss: Temptation (Servant) | `RoomAnim_BossTemptation` $63E4 | SWAP 56-59 ↔ 60-63 /32 f | 56-59 | 60-63 |
+| $44 | Boss: Library (Orochi) | `RoomAnim_BossLibrary` $63FC | SWAP 14 ↔ 15 /64 f; SWAP 30 ↔ 31 /64 f | 14-15 | 30-31 |
+| $46 | Boss: Ambition (DracoLord) | `RoomAnim_BossAmbition` $6423 | ROLL 70-71 1 px (3 R : 1 L per 128 f) | 70-71 | — |
+| $47 | Boss: Demolition (Hargon/Sidoh) | `RoomAnim_BossDemolition` $642A | SWAP 76,78 ↔ 90-91 /32 f | 76,78 | 90-91 |
+| $48 | Boss: Mastermind (Baramos) | `RoomAnim_BossMastermind` $6449 | SWAP 25 ↔ 26 /32 f | 25 | 26 |
+| $49 | Boss: Control (Zoma) | `RoomAnim_BossControl` $645D | SWAP 42-43,58-59,64-65 ↔ 44-45,60-61,66-67 /32 f; ROLL 49-50 1 px (3 R : 1 L per 128 f) | 42-43,49-50,58-59,64-65 | 44-45,60-61,66-67 |
+| $4B | Boss: Sleep (Esterk) | `RoomAnim_BossSleep` $648E | SWAP 12 ↔ 13 /32 f; SWAP 14 ↔ 15 /32 f | 12,14 | 13,15 |
+| $4D | Boss: Arena Right (Mudou) | `RoomAnim_BossArenaRight` $64B5 | SWAP 10-11,32-33 ↔ 12-13,34-35 /32 f; ROLL 52-53 1 px (3 R : 1 L per 128 f) | 10-11,32-33,52-53 | 12-13,34-35 |
+| $4F | Boss: Unused (DarkDrium) | `RoomAnim_BossUnused` $64DB | SWAP 92-93 ↔ 94-95 /32 f | 92-93 | 94-95 |
+| $52 | Gate Floor: Coliseum | `RoomAnim_GateFloorColiseum` $64F0 | SWAP 13,28 ↔ 27,29 /32 f; SWAP 32-33 ↔ 34-35 /25 f | 27-28,32-33 | 13,29,34-35 |
+| $5D | Arena Battle | `RoomAnim_ArenaBattle` $6543 | SWAP 60-61 ↔ 68-69 /32 f; SWAP 62-63,74-75 ↔ 70-71,82-83 /32 f; SWAP 72-73 ↔ 80-81 /16 f | (no room data) | — |
+
+Verified three ways S99: (1) each vanilla room measured in place (warp,
+real sheet, 520-1100 frames) — same slots; (2) the patterned forced-dispatch
+census above; (3) `--check` walks every handler's code (branches + bank-$01
+calls) and asserts each measured slot lies in the VRAM ranges it names
+(verify_integrity check 5).
+
+**Custom rooms (S99 engine).** Before S99 the dispatch called
+`MapIDClampForDispatch` → $00 for every map ID ≥ $6B, so **every custom
+room ran Castle's roll on slots 77-78** and clones of animated rooms stood
+still. Now `custom.rooms[].animation` picks the handler (PROJECT_COMPILER
+§2.15): `none` ($6B, the table's own `ret` row), `source` (the room's
+`source_mapID`) or any vanilla map ID (borrow). `PerRoomVRAMDispatch` was
+rewritten same-size ($60F9-$6118): the six `bit n,a / ret nz` guards became
+`and $fe / jr z / cp $10 / ret nz` (equivalent for all 65,536
+(wGameState, $C8EF) pairs — checked exhaustively), and the freed bytes fund
+`cp CUSTOM_ROOM_START / jr c / ld hl,$7103 / rst $10 / ld a,e` → bank $71
+entry 3 `CustomAnimSource` (E := `CustomAnimSrcTable[mapID-$6B]`; the
+`rst $00` stays at $6118, asserted). Vanilla rooms: frame-by-frame A/B vs
+the S98 build from one savestate — the final VRAM, screen and counter are
+identical; the only differences are sub-frame (a multi-frame tile load a few
+bytes further along at a frame edge, re-converging within 7 frames — the new
+path is ~35 cycles cheaper per frame).
+
+**A bare `ret` handler is safe** (S99, measured): forcing `rst $00`'s index
+to a `ret` handler in two custom rooms left the screen pixel-identical and
+the palette buffer unchanged — only tiles 77-78 stopped rolling. The S1-era
+"yellow palette" (KEY_LESSONS v8) had another cause (at that time the clamp
+also served the palette lookups). So "no animation" costs nothing and slots
+77/78 are ordinary slots in a room whose animation is `none`.
+
+**Which slots a custom room animates** = its handler's slots, in whatever
+sheet it draws with. A clone keeps its source's sheet layout, so `source`
+reproduces the vanilla animation exactly (PyBoy S99: Castle / Room of
+Beginning / Digster clones — VRAM after 300 frames == the census schedule,
+byte for byte, on the user's save). Borrowing onto another sheet animates
+whatever graphic sits in those slots — which is why the editor's Borrow tab
+(S99 r2) copies an ANIMATED vanilla tile into the same slot indices it has
+in its source room (plus a swap's hidden partner frame) and switches the
+room to that room's animation: a copy into any other slot is a still
+picture. And a room that SWITCHES animation starts moving every slot of the
+new one — so the editor's "Make animated" (S99 r3, `Document.make_animated`)
+moves every tile in use in those slots (other than the one being animated)
+to a free slot first; your own art becomes a slide (roll slots) or a
+two-frame flip (frame A in a shown slot, the painted frame B in its
+partner). The editor protects every animated
+slot of a sheet (union over the rooms drawing with it) from imports and
+walkability twins, outlines the animated areas on the canvas, and plays the
+measured schedule (`editor2/core/animation.py` `Player`; exact within a
+1024-frame cycle — every handler returns to its start over one cycle except
+the Coliseum's 25-frame swap, which re-phases at the loop).
+
 ## Gate Room Differences
 
 Gate rooms (wInGateworld ≠ 0) differ from normal rooms:

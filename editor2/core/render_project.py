@@ -46,7 +46,8 @@ try:
     from dwm.map_names import MAP_NAMES
 except Exception:                                  # pragma: no cover
     MAP_NAMES = {}
-ANIMATED_INDICES = {77, 78}     # KEY_LESSONS S7: VRAM $94D0-$94FF rotates
+# (S99: the fixed ANIMATED_INDICES {77, 78} constant is gone — which slots
+#  animate depends on the room's `animation`; see editor2/core/animation.py)
 
 SCREEN_W, SCREEN_H = 20, 16           # tiles
 WALK_W, WALK_H = 10, 8                # 16-px walk cells

@@ -184,8 +184,9 @@ with its evidence; every unknown one as a measurement box):
   measured S91; capacities.json).
 - Palettes: 4 BG groups per room; the tile picker GREYS OUT tiles whose
   colours don't fit the remaining groups, and BADGES animated tiles
-  (the mashup pipeline's animated-tile registry, already avoided by
-  build_combined_tileset).
+  (S99: the teal corner on metatiles using a slot the room's animation
+  changes — per room, from the census; the old fixed 77/78 registry of
+  build_combined_tileset is legacy).
 - Banks: manifest budget bars per bank (built); bank-$60 spill state.
 - Flags: safe-pool remaining; SRAM banks 1-3 once b2 lands.
 - Species: custom slots used / 32. Quest EIDs used / tail. Songs / 95.
@@ -532,6 +533,138 @@ spots in game NOT yet user-tested):**
 - **S98 r2 — + Examine (X)** on the tool bar next to + Door (user: "Why is
   examine spot not a button?"); double-clicking an NPC or a spot opens its
   talk editor.
+
+**S99 additions — animated tiles (P3.3e; user: "indicate currently animated
+tiles (in vanilla)", "Can preview animation (maybe button or something so it
+doesnt take up right hand side room unless used)", "Clones SHOULD get source
+animation … Also yes migrate", borrowing "fine as long as it's clear whats
+happening"; built S99, NOT yet user-tested):**
+- **Canvas "Anim" layer** (tool-bar toggle, on by default): the border of
+  every area of tiles the room's animation changes in game is drawn as a
+  bright dashed line on a dark underlay (reads on water / lava / any art) —
+  vanilla rooms show their OWN animation (the census; inert handlers such as
+  Secret Passage show none), custom rooms their `animation` setting.
+- **▶ Play** on the screen/state row (always visible; takes no panel space):
+  replays the census schedule (`editor2/core/animation.py` `Player`) on the
+  canvas at game speed (59.73 frames/s); ■ Stop restores the still screen.
+  The schedule is the measured game behaviour — test_canvas v6 --rom asserts
+  PyBoy VRAM == the schedule's prediction after 300 frames.
+- **Inspector "animated tiles"** row: None / Same as source room ($XX name:
+  what it does) / Borrow $XX name — effect (every vanilla room with a visible
+  animation), plus one line saying which slots change, and — when the chosen
+  room's sheet is not this room's — that whatever graphic sits in those slots
+  HERE moves instead. Vanilla view: read-only "animates: …" + where the
+  hidden second frames are. One undo step (SnapshotCommand).
+- **Tileset tab**: animated slots teal (dashed = a hidden second frame: never
+  place it), summary "animated here: N slot(s) — …" + slots protected for
+  OTHER rooms sharing the sheet; the picker marks metatiles containing an
+  animated slot with a teal corner ("ANIMATED in game" on hover).
+- **Slot protection follows the animation**: imports, borrowed metatiles and
+  walkability twins avoid exactly the slots animated by the rooms on that
+  sheet (`Document.animated_slots`) — 77/78 are ordinary free slots in a room
+  set to None (before S99 they were always reserved).
+- **S99 r2 — borrowing an animated tile keeps it animated** (user: "I
+  borrowed the moving water from castle and put it into my custom room but
+  it doesnt move" — the S99 import copied the GRAPHIC into a free slot and
+  the room animated nothing): Borrow-tab import of a metatile whose slots
+  its source room animates (`Document.import_metatile(anim_src=)`) puts
+  those subtiles into the SAME slot indices (+ a swap's hidden partner
+  frame), moves tiles already in use there to a free slot on the same side
+  (layouts remapped), and switches the room to that room's animation — if
+  the room already plays a different animation with tiles of its own, a
+  dialog asks: switch / import it still (static) / cancel. The status line
+  says what happened, incl. the walkability of the fixed slot in THIS sheet
+  (an animated slot cannot move to the other side of the threshold). The
+  same-sheet brush from the Borrow tab offers the animation switch too.
+- **S99 r3 — "Make animated" tab** (user: "please make the 'make
+  animatable' tab. Bonus points if you can make a little tab/edit doodad
+  that lets me re-paint a second tile in a paint-like manner"; and "how do I
+  change animation of e.g. the water? Double clicking on the tile doesnt
+  bring up any animation info"): a 4th Metatiles tab
+  (`rooms/animate_tab.py`). **Double-click a plain cell** (or "Use the
+  brush" / "Use the selected cell") loads that metatile: the head says
+  whether and how it animates now and how many cells of the room draw it
+  (all change). **Slide sideways** or **Two-frame flip**; the **Animation**
+  list = every vanilla animation that can host it (`Document.
+  animate_candidates`): free slots / pairs (the room's CURRENT animation's
+  slots already drawn by other tiles are taken; any other source's slots can
+  be emptied), tiles it must move and whether the sheet has room for them
+  ("no room to move tiles" otherwise), walkability kept or not, and how many
+  animated subtiles a switch would stop — best first. **Frame A / frame B**
+  16×16 paint pads in the tile's own palettes (left paint, Shift fill,
+  right pick; colour swatches; Copy A→B, Flip ↔/↕, shift ◀▶▲▼, Clear) +
+  a live preview at game timing. **Make animated** (one undo step,
+  `Document.make_animated`): frames into the chosen slots (B into the
+  partner slots), tiles in the way — and on a SWITCH every tile in use in
+  any slot of the new animation — move to a free slot on the same side
+  (unrelated tiles must never start moving), this room's cells of the
+  metatile remapped, the new metatile added to My metatiles, the room's
+  animation set, ▶ Play started. The Selection panel shows "animated: yes —
+  slots … move with $XX's animation" per cell.
+- **S99 r4 — unintended animation found + fixed; Make still** (user: "Why
+  is the mirror in $6b moving? I never wanted it to move. It also didnt move
+  in earlier editor versions."): the S99 migration gave clones their source
+  animation, but pre-S99 imports had used the source's HIDDEN-FRAME slots
+  as free slots (the user's Servant clone: an Arena-Rooms mirror in slots
+  62-63 = the flames' second frames). On open the editor lists every tile a
+  `source` room places in its animated slots that is NOT the source room's
+  own art there (`Document.stray_report`) and offers the fix
+  (`repair_animation`, one undo step): the tile moves to a free still slot
+  on the same side (all placements follow) and the source's own art goes
+  back into the animated slot, so the room's real animation keeps working.
+  Make animated now always stores the explicit id (`0x3F`, never
+  `source`), so deliberate art is never taken for a stray. **Make still**
+  (Make animated tab, `Document.make_still`): copies the tile's current
+  graphics into still slots and remaps this room's cells of it — other
+  animated tiles keep moving.
+- **S99 r5 — part tools on the frame pads** (user: "allow copy of
+  quadrants separately not just a -> B. Make it easier to edit"): every
+  tool acts on the EDITED frame (yellow border; click a pad to switch) and
+  the selected PART — Whole tile or one 8×8 quarter (the ◤◥◣◢ buttons, or
+  Ctrl+click a quarter; dashed outline on both pads). Copy / Paste (a
+  copied quarter pasted on Whole fills all four; a copied whole pasted on a
+  quarter gives that quarter; the status line says when the target quarter
+  has a different palette, since pixels are colour numbers), A → B, B → A,
+  A ⇄ B, Flip ↔/↕, Shift ◀▶▲▼ (wraps inside the part), Clear, and a local
+  **Undo** (100 steps) / **Revert** (frames as loaded) — the room is
+  untouched until Make animated, which stays one project undo step.
+- **S99 r6 — take-over + the count** (user: "Make animated is greyed out
+  … Surely it should allow me to shift animation to tile I'm editing??"
+  + "Would be good to have a count"): a box at the top of the Make
+  animated tab (and a line in the Selection panel) counts the room's
+  animation — "slide **2 of 2** slots used — FULL", "flip 1 of 4 pairs
+  (3 free)" — lists the tiles moving here, and states the rule (one
+  animation per room; one slot/pair per different 8×8 quarter). When the
+  room's animation is full the tile **takes over** a slot (listed first
+  when it stops fewer moving cells than a switch; asked first): the tile
+  moving there keeps its look — its quarters in the taken slot move to a
+  still copy, its other quarters keep moving (Make still stops a tile
+  completely). Slots the tile itself gives up (placed only by its cells
+  here, not in My metatiles) count as free for tiles in the way. A grey
+  button's note now names the limit: too small ("moves N in all, this
+  tile needs M"), or the tileset lacks "N more free wall/walkable
+  slot(s)". The tab drops a tile loaded from another room when the room
+  changes, and "Use the brush / selected cell" work before a tile is
+  loaded.
+- **S99 r7 — the palm case** (user: "button is GREYED OUT … Not sure what
+  'use the brush' or 'use the selected cell' does … no idea what selecting
+  the animation drop down button does"): the tab is numbered — ① the tile
+  ("Load the selected cell" / "Load the brush tile", or double-click),
+  ② how it moves (with a one-line explanation), ③ paint the frames, ④
+  borrow the motion from (the list, explained in its tooltip) — and a bold
+  orange line above the button says why it is grey. Frame B starts as a
+  copy of A; **quarters left the same in B do not move** (no pair, same
+  slot, same walkability). When the tileset lacks free slots on one side
+  but has them on the other, Make animated **moves the wall/walkable split**
+  (`_shift_split`: tiles at it move to free slots on their own side; every
+  room on the tileset gets the new threshold; nothing changes on screen or
+  in walkability). The check counts every slot a switch sets moving (both
+  kinds of the handler) and treats the old animation's slots as ordinary.
+- **Defaults + migration**: clones get `source`; New room on a vanilla
+  tileset `source`, on a blank sheet `none`; Copy keeps the original's value;
+  projects without the field migrate on open (`source` when the room still
+  draws with its source room's sheet, else `none`) — "MIGRATED … Save to keep
+  it" in the build log.
 
 
 Acceptance `editor2/tests/test_canvas.py --rom`: fresh project → Farm clone
