@@ -77,7 +77,7 @@ the script advances Castle ($D92B=5, $D92C=4) and GreatTree ($D92D=3,
 $D933=2, $D934=2) to their post-game states.
 
 **Boss defeat flow.** Each boss-defeat script does three things:
-1. Sets D9E3 (story progression counter) to its value (48→78)
+1. Sets D9E3 (the King's-speech code, $30-$4E / $C7 / $10 — S101 r3: GATE_GENERATION §7.7) to its value
 2. Sets the boss room's step counter (D976–D995) to 1 (defeated state)
 3. Sets the gate "Room of" step counter + Castle screen 1 ($D92B = 7)
 4. Sets one or more event flags marking the gate as cleared
@@ -115,7 +115,7 @@ variables and/or script-referenced, on top of the known WriteRAM collisions:
 | $D9D7–$D9D8 | $01E0–$01EF | clean, but **RETIRED S73** → `wAnchorGate`/`wAnchorFloor` (skill $E4 Anchor persistent state; CF2 precedent) | reserved |
 | $D9D9–$D9DE | $01F0–$021F | engine literals (6 files each) | poisoned |
 | $D9DF–$D9E2 | $0220–$023F | engine literals and/or script refs | poisoned |
-| $D9E3 | $0240–$0247 | story progression counter | poisoned |
+| $D9E3 | $0240–$0247 | the King's-speech selector for the next `$D92B = 7` castle arrival (S101 r3 ROM scan: read ONLY by the castle chain $0C:$4804 and one castle NPC at $0C:$5066; the priest path resets it to $FF) — the old name "story progression counter" overstated it | poisoned |
 | $D9E4–$D9E5 | $0248–$0257 | script-referenced | poisoned |
 | $D9E6 | $0258–$025F | breeding mutation flag | poisoned |
 | $D9E7–$D9E8 | $0260–$026F | engine literals / script refs | poisoned |

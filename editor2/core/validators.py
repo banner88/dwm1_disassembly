@@ -21,11 +21,12 @@ from . import scriptgen as S
 # --pin-templates after a successful regression build; None = check skipped
 # with a warning.
 TEMPLATE_SIZE = {
-    0x60: 492,   # addr(CustomScriptMasterTable)-$4000 — S97 reference game.sym (383 S94b -> 492 S97: entry-8 dw + CustomStateRules + the CustomReadStep call)
+    0x60: 549,   # addr(CustomScriptMasterTable)-$4000 — S101 reference game.sym (492 S97 + CustomMonsterCast + its call at the head of CustomStateRules). Prev: S97 reference game.sym (383 S94b -> 492 S97: entry-8 dw + CustomStateRules + the CustomReadStep call)
                  # (283 S53 -> 348 S70 -> 358 S70v3 (+2x5B wCustomY7Cmp arming): entry-7 dw + VanillaExitResolve +
                  # factored CopyExitListToBuffer in the template head; 383 S94: VanillaExitResolve rows keyed
                  # by (mapID, screen) — `db mapID, screen` with $FF = any screen)
-    0x71: 395,    # addr(Custom26DDTable)-$4000, S100 (164 S99 + entries 4/5 dw + CustomGateInsert + CustomRoomFlags + entry-1 follow-gate test; measured from the S100 reference game.sym). Prev 164 S99 (142 S64 + entry-3 dw + CustomAnimSource 20 B; measured from the S99 reference game.sym). Prev 142 S64 (S55 116 + entry-2 dw + CustomRoomBGMResolve; measured from the S64 reference game.sym)
+    0x71: 440,    # addr(Custom26DDTable)-$4000, S101 (395 S100 + CustomRoomBGMResolve .gatePath: the custom boss song on the floor before the boss). Prev 395 S100 (164 S99 + entries 4/5 dw + CustomGateInsert + CustomRoomFlags + entry-1 follow-gate test; measured from the S100 reference game.sym). Prev 164 S99 (142 S64 + entry-3 dw + CustomAnimSource 20 B; measured from the S99 reference game.sym). Prev 142 S64 (S55 116 + entry-2 dw + CustomRoomBGMResolve; measured from the S64 reference game.sym)
+    0x6B: 53,     # addr(ProjectEnemyRows)-$4000, S101 (bank self-ID + entry table + CopyEnemyRowExt; measured from the S101 reference game.sym)
 }
 BANK_SIZE = 0x4000
 
@@ -268,24 +269,42 @@ def validate(prj, generated=None):
 
     _validate_layouts_tilesets(prj, errors, warnings)
 
-    # ---------------------------------------------- progression (S70, E2)
-    from .project import QUEST_EID_BASE, QUEST_EID_CAP
+    # ------------------------------ progression enemies (S70 E2; S101 bank $6B)
+    from .project import PROJECT_EID_BASE, PROJECT_EID_CAP, REDIRECT_ROWS_MAX
     ens = prj.progression.get('enemies', []) if hasattr(prj, 'progression') \
         else []
     eids = sorted(e['_eid'] for e in ens)
     if eids:
-        if eids != list(range(QUEST_EID_BASE, QUEST_EID_BASE + len(eids))):
+        if eids != list(range(PROJECT_EID_BASE, PROJECT_EID_BASE + len(eids))):
             errors.append(
                 f"progression.enemies: EIDs must be dense from "
-                f"{QUEST_EID_BASE} (rows are tail-appended at $14:$7ECC; a "
-                "gap would misaddress every later row — EID*25+$4C1D)")
-        if len(eids) > QUEST_EID_CAP:
+                f"{PROJECT_EID_BASE} (bank $6B row = EID-{PROJECT_EID_BASE}; a gap "
+                "would misaddress every later row)")
+        if len(eids) > PROJECT_EID_CAP:
             errors.append(
-                f"progression.enemies: {len(eids)} rows exceed the bank $14 "
-                f"free-tail capacity ({QUEST_EID_CAP} rows / 308 bytes)")
+                f"progression.enemies: {len(eids)} rows exceed the bank $6B "
+                f"capacity ({PROJECT_EID_CAP} rows)")
+    try:
+        reds = prj.enemy_redirects()
+    except Exception as ex:                              # noqa: BLE001
+        errors.append(str(ex))
+        reds = []
+    if len(reds) > REDIRECT_ROWS_MAX:
+        errors.append(f"progression.enemies: {len(reds)} join_as rows exceed the "
+                      f"bank $14 redirect capacity ({REDIRECT_ROWS_MAX})")
+    known = {e['_eid'] for e in ens}
+    for fight, join, name in reds:
+        if join >= PROJECT_EID_BASE and join not in known:
+            errors.append(f"progression.enemies: {name} — join EID {join} is not "
+                          "a row of this project")
     for e in ens:
         eid = e['_eid']
         ctx = f"progression.enemies[{e.get('id')}]"
+        unknown = set(e) - {'id', 'eid', 'species', 'level', 'exp', 'joinability',
+                            'hp', 'mp', 'atk', 'def', 'agl', 'int', 'ai_weights',
+                            'skills', 'join_as', 'name', 'comment', '_eid'}
+        if unknown:
+            errors.append(f"{ctx}: unknown keys {sorted(unknown)}")
         if not (0 <= F.val(e.get('species', -1)) <= 255):
             errors.append(f"{ctx}: species must be 0-255 (byte field)")
         if not (1 <= F.val(e.get('level', 0)) <= 99):
@@ -302,11 +321,13 @@ def validate(prj, generated=None):
         sk = e.get('skills', [])
         if len(sk) > 4 or any(not (0 <= F.val(x) <= 255) for x in sk):
             errors.append(f"{ctx}: skills must be <= 4 byte ids ($FF pads)")
-        if F.val(e.get('joinability', 7)) != 7 and F.val(e.get('hp', 0)) > 1023:
+        if (F.val(e.get('joinability', 7)) != 7 and F.val(e.get('hp', 0)) > 1023
+                and e.get('join_as') in (None, e.get('id'))):
             warnings.append(
-                f"{ctx}: joinable enemy with hp {F.val(e['hp'])} — fight EID "
-                "== join EID means the JOINED monster inherits these stats "
-                "as its creation base (80-100% roll, MONSTER_DATA)")
+                f"{ctx}: joinable enemy with hp {F.val(e['hp'])} and no join_as "
+                "— the JOINED monster inherits these battle stats as its "
+                "creation base (80-100% roll, MONSTER_DATA); give it a weaker "
+                "join version (join_as)")
 
     # ------------------------------- vanilla exit extensions (S70, Entry 6)
     # S94b: VanillaExitResolve takes the FIRST row matching (mapID, screen);
@@ -447,6 +468,88 @@ def validate(prj, generated=None):
                                       f"which room {dr.get('id')} does not have")
                 except Exception as ex:
                     errors.append(f"{ctx}: {part}.move: {ex}")
+
+    # ------------------------------------ conversation steps (S101, talk.steps)
+    def _walk_steps(steps, ctx, after_exit=False):
+        for i, st in enumerate(steps or []):
+            c = f"{ctx}[{i}]"
+            if not isinstance(st, dict):
+                continue
+            kind = prj.step_kind(st)
+            if after_exit:
+                warnings.append(f"{c}: never runs — an earlier step already moved "
+                                "the player out of the room")
+                after_exit = False
+            if kind == 'say':
+                if st['say'] not in by_did:
+                    errors.append(f"{c}: dialogue {st['say']!r} not defined")
+                elif by_did[st['say']].get('choice'):
+                    warnings.append(f"{c}: 'say' text opens a YES/NO box nothing reads "
+                                    "(use an 'ask' step)")
+            elif kind == 'ask':
+                d = by_did.get(st['ask'])
+                if d is None:
+                    errors.append(f"{c}: dialogue {st['ask']!r} not defined")
+                elif not d.get('choice'):
+                    errors.append(f"{c}: an 'ask' needs its text to end in the "
+                                  "choice box — dialogue 'choice': true ($E7 $F0)")
+                _walk_steps(st.get('yes'), c + '.yes')
+                _walk_steps(st.get('no'), c + '.no')
+            elif kind == 'if':
+                if not st.get('if'):
+                    errors.append(f"{c}: 'if' needs at least one flag term")
+                _walk_steps(st.get('then'), c + '.then')
+                _walk_steps(st.get('else'), c + '.else')
+            elif kind == 'helper':
+                h = st['helper'] or {}
+                if h.get('say') and h['say'] not in by_did:
+                    errors.append(f"{c}: helper dialogue {h['say']!r} not defined")
+                ev = h.get('castle') or 'none'
+                if ev not in ('none', 'heal', 'king'):
+                    errors.append(f"{c}: helper 'castle' is none / heal / king")
+                elif ev != 'none':
+                    from editor2.core.conversation import KING_SPEECHES
+                    if str(h.get('dest')) != 'vanilla:$00' or int(h.get('screen', 0)) != 1:
+                        errors.append(f"{c}: a castle event ({ev}) needs the destination "
+                                      "Castle throne room (vanilla:$00, screen 1)")
+                    code = int(F.val(h.get('king_speech', 0x31)))
+                    if ev == 'king' and code not in {k for k, _n in KING_SPEECHES}:
+                        errors.append(f"{c}: king_speech {h.get('king_speech')} is not one of "
+                                      "the King's gate speeches")
+                    elif ev == 'king':
+                        from editor2.core.conversation import SPEECH_NOTES
+                        if code in SPEECH_NOTES:
+                            warnings.append(f"{c}: King speech ${code:02X}: {SPEECH_NOTES[code]}")
+                land = h.get('land')
+                if isinstance(land, dict):
+                    if not (0 <= int(land.get('x', 4)) <= 9 and 0 <= int(land.get('y', 3)) <= 7):
+                        errors.append(f"{c}: helper landing cell outside the 10x8 screen")
+                elif land not in (None, 'player'):
+                    errors.append(f"{c}: helper 'land' is a cell {{x, y}} or \"player\" "
+                                  "(beside the player — the default)")
+                after_exit = True
+            elif kind == 'move':
+                after_exit = True
+            elif kind == 'battle':
+                for e in (st['battle'] or {}).get('enemies') or []:
+                    try:
+                        eid = prj.enemy_ref(e, c)
+                    except Exception as ex:                 # noqa: BLE001
+                        errors.append(str(ex))
+                        continue
+                    if not 0 <= eid < 0x10000:
+                        errors.append(f"{c}: enemy {e!r} is not an EID")
+                    elif 487 <= eid <= 517:
+                        errors.append(f"{c}: EID {eid} does not exist (487-517 would "
+                                      "read bank $14 code)")
+                    elif eid >= 519 and eid not in {x['_eid'] for x in
+                                                    prj.progression.get('enemies', [])}:
+                        errors.append(f"{c}: EID {eid} is past the vanilla table but "
+                                      "is not a project enemy")
+    for sid, sc in prj._scripts.items():
+        t = sc.get('talk') or {}
+        if 'steps' in t:
+            _walk_steps(t['steps'], f"script {sid} (conversation)")
 
     # ------------------------------------------------------ doors (S98)
     # S98 r2: a door is a named OBJECT (exit rows on one cell sharing a
@@ -859,11 +962,58 @@ def _validate_gates(prj, rooms, errors, warnings):
         if enc.get('follow_gate') and not enc.get('enabled'):
             warnings.append(f"room {r.get('id')}: encounters.follow_gate set but "
                             "encounters are not enabled — no battles")
+    # ---- per-gate settings + boss floors (S101, P3.7b part 2)
+    try:
+        cfg = prj.gate_configs()
+    except Exception as e:
+        errors.append(str(e))
+        return
+    for gid, c in sorted(cfg.items()):
+        if not c['boss_room']:
+            continue
+        r = prj.room_by_id(c['boss_room'])
+        if r.get('can_save') is True:
+            warnings.append(
+                f"room {r.get('id')}: boss room of gate {gid} but saving is allowed "
+                "— vanilla refuses the JOURNAL in every boss room")
+        if prj.gate_rooms().get(r.get('id')):
+            warnings.append(
+                f"room {r.get('id')}: gate {gid}'s boss room is also served on "
+                "ordinary floors (custom.gate_inserts)")
+        enc = r.get('encounters') or {}
+        if enc.get('enabled') and not enc.get('follow_gate'):
+            errors.append(
+                f"room {r.get('id')}: boss room of gate {gid} with a FIXED encounter "
+                "pool — pinning rewrites the current gate/floor every step")
+        if F.val(r['mapID']) > 0x7F and not r.get('music'):
+            warnings.append(
+                f"room {r.get('id')}: boss room map id {F.hexb(F.val(r['mapID']))} is "
+                "past the $7F room-music table — the floor before the boss plays "
+                "the gate theme")
+        if not r.get('music'):
+            warnings.append(
+                f"room {r.get('id')}: boss room of gate {gid} has no song — the "
+                "gate theme ($34) keeps playing (vanilla boss rooms have their "
+                "own boss song, which starts on the floor before)")
     try:
         rows = prj.gate_insert_rows()
     except Exception as e:
         errors.append(str(e))
         return
+    # hand-made gates: every ordinary floor should always be one of the
+    # author's rooms (a floor no rule serves falls back to the gate's maze)
+    for gid, c in sorted(cfg.items()):
+        if not c['hand_made']:
+            continue
+        for fl in range(1, c['floors']):
+            ok = any(rw['gate'] == gid and rw['first'] <= fl <= rw['last']
+                     and rw['chance'] >= 100 and not rw['terms'] and not rw['once_bit']
+                     for rw in rows)
+            if not ok:
+                warnings.append(
+                    f"gate {gid} ({c['name']}) is hand-made but floor {fl} has no "
+                    "rule that always serves a room (100 %, no flag terms, not once "
+                    "per dive) — some dives will get the gate's own maze there")
     served = {}
     for row in rows:
         served.setdefault(row['room_id'], []).append(row)

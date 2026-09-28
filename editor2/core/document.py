@@ -31,6 +31,7 @@ from editor2.core.doors import DoorsMixin
 from editor2.core.talk import TalkMixin
 from editor2.core.animate import AnimateMixin
 from editor2.core.gates import GatesMixin
+from editor2.core.conversation import ConversationMixin, EnemiesMixin
 from editor2.core.formats import anim_source as F_anim
 
 SCREEN_W, SCREEN_H = 20, 16
@@ -94,7 +95,8 @@ class ThresholdShiftNeeded(RuntimeError):
     The GUI asks the author (user: "make that an option") and retries with
     shift_ok=True."""
 
-class Document(DoorsMixin, TalkMixin, AnimateMixin, GatesMixin):
+class Document(DoorsMixin, TalkMixin, AnimateMixin, GatesMixin, ConversationMixin,
+               EnemiesMixin):
     def __init__(self, path):
         self.path = path if path.endswith('.json') else \
             os.path.join(path, 'project.json')
@@ -1981,7 +1983,7 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, GatesMixin):
     # 5-byte entries; editing one converts it to the typed form with the
     # SAME bytes (script index -> the room's script id when the table has
     # it, else the index is kept as an int).
-    NPC_FIELDS = ('x', 'y', 'sprite', 'facing', 'behaviour', 'hidden', 'script')
+    NPC_FIELDS = ('x', 'y', 'sprite', 'facing', 'behaviour', 'hidden', 'script', 'monster')
 
     def _state_target(self, room, key, state_idx):
         scr = self.screen(room, key)
@@ -2016,7 +2018,11 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, GatesMixin):
                     'facing': F.FACING_NAMES[(t >> 4) & 3],
                     'behaviour': F.behaviour_value(entry.get('behaviour', 0)),
                     'hidden': bool(entry.get('hidden')) or bool(t & 0x40),
-                    'script': entry.get('script'), 'raw': False}
+                    'script': entry.get('script'), 'raw': False,
+                    # S101: a MONSTER NPC (a species drawn with its follower
+                    # art — display-list ids $F0-$F3, CustomMonsterCast)
+                    'monster': (val(entry['monster']) if entry.get('monster') is not None
+                                else None)}
         if k == 'raw':
             b = [val(x) for x in entry['bytes']]
             table = {int(i): sid for i, sid in (room.get('scripts') or {}).items()}
@@ -2045,6 +2051,9 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, GatesMixin):
         from editor2.core import formats as F
         e = {'kind': 'npc', 'x': int(v['x']), 'y': int(v['y']),
              'sprite': hexs(int(v['sprite'])), 'facing': v.get('facing', 'down')}
+        if v.get('monster') is not None:
+            e['monster'] = int(v['monster'])       # S101: drawn as that species
+            e['sprite'] = '0xF0'
         beh = int(v.get('behaviour', 0))
         if beh:
             e['behaviour'] = F.BEHAVIOUR_NAMES.get(beh, beh)
@@ -2057,7 +2066,7 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, GatesMixin):
         return e
 
     def add_npc(self, room, key, state_idx, x, y, sprite, facing='down',
-                behaviour=0, hidden=False, script=None):
+                behaviour=0, hidden=False, script=None, monster=None):
         """Append an NPC to the screen/state; refuses past the 8-NPC hard
         cap (S91). Returns its index in npcs[]."""
         n, cap = self.state_capacity(room, key, state_idx)
@@ -2066,9 +2075,14 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, GatesMixin):
                              f'hard cap is {cap} (S91: a 9th silently corrupts script '
                              'state)')
         lst = self.npc_entries(room, key, state_idx)
+        if monster is not None:
+            cast = {val(e['monster']) for e in lst if e.get('monster') is not None}
+            if int(monster) not in cast and len(cast) >= 4:
+                raise ValueError('this screen/state already shows 4 different monsters — '
+                                 'the engine display list has 4 slots ($F0-$F3)')
         lst.append(self._npc_entry({'x': x, 'y': y, 'sprite': sprite, 'facing': facing,
                                     'behaviour': behaviour, 'hidden': hidden,
-                                    'script': script}))
+                                    'script': script, 'monster': monster}))
         self.touch()
         return len(lst) - 1
 
@@ -2094,6 +2108,8 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, GatesMixin):
         unknown = set(fields) - set(self.NPC_FIELDS)
         if unknown:
             raise ValueError(f'unknown NPC fields {sorted(unknown)}')
+        if 'sprite' in fields and 'monster' not in fields:
+            v['monster'] = None                    # a plain sprite replaces a monster
         v.update(fields)
         if old.get('comment') and not old.get('kind') == 'raw':
             v['comment'] = old['comment']

@@ -499,6 +499,13 @@ Bank0C_ScriptAddr_41FC:
     db $00
     db $FF
     db $FF
+; S101 r3: Castle_Script00 screen 1 = the CASTLE ARRIVAL dispatch on $D92B
+; (the arrival-event code; PyBoy-measured): 0 / 4 -> $4270 (new-game intro +
+; story cascade), 6 -> $490A (priest: GreatTree blessing + heal — written by bank
+; $07 for the gate return; 8 = the same path, written by bank $50 after a lost
+; battle and bank $06), 7 -> $47E0 (a gate boss was beaten: the King's speech
+; chain on $D9E3), 1-3/5 -> no event. (The "PlaySE" names below are op $15
+; cond_branch [addr] == value.)
 Bank0C_ScriptAddr_4246:
     dw $FF15  ; PlaySE
     dw $D92B  ; RAM $D92B
@@ -1906,6 +1913,13 @@ Bank0C_ScriptAddr_4270:
     db $00
     db $70
     db $49
+; ---- $0C:$4804 (S101 r3, PyBoy-measured) — CASTLE ARRIVAL, $D92B = 7 (a gate boss
+; was beaten): the King's speech chain. cond_branch $D9E3 == code -> that gate's
+; speech ($30 Healer … $4E DeathMore, $C7 Sidoh, $10 Copycat; the vanilla boss win
+; tails write the code). No saved flag changes in any speech; each ends with
+; $D92B := 3 (or 5 for the post-game codes). An unknown code falls to the $490A
+; priest path. The editor's helper step "at the Castle: King's speech" writes
+; $D9E3 + $D92B = 7 before its $3B warp (PROJECT_COMPILER §2.18).
     db $15
     db $FF
     db $E3
@@ -4052,6 +4066,10 @@ Bank0C_ScriptAddr_4270:
     db $FF
     db $16
     db $FF
+; ---- $0C:$5066 (S101 r3, ROM scan) — the ONLY other $D9E3 reader: a castle NPC's
+; talk. $30 -> "These stairs go up to the monster farm"; $3C -> write $C88A/$C88B
+; = 3, op $3E, "The shaking of GreatTree has changed…" (story event); else the herb
+; gift (give_item 1, or the inventory-full line).
     db $15
     db $FF
     db $E3

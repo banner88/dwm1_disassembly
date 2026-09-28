@@ -1008,7 +1008,7 @@ recipes are pure authoring.
         player into a floor of the last gate dived (validator warning); (b) the floor plan assumes flags do not change mid-dive (toggle:
         hold / do not hold); (c) music picker lists
         project songs + raw ids only (no vanilla song names yet — P3.13b).
-  - [ ] **P3.7b part 2 — gate settings, boss floor, entrances** (≈3-4
+  - [ ] **P3.7b part 2 — gate settings, boss floor, entrances** (S101: boss floors built — see below; ≈3-4
         sessions, S100 estimate): (1) per-gate config rows — floor count,
         the three floor-type rows (shared between gates — the UI must say so),
         depth tier, monster-pool binding — as a compiler-owned bank-$16
@@ -1021,7 +1021,49 @@ recipes are pure authoring.
         makes it appear (~1 session). *Accept:* a vanilla gate's floor count
         + pool edited, a custom boss room fought and cleared, all from the
         GUI, verified in PyBoy.
-        *Carry-overs from S100 r3 (do first, small):* (a) user test of r3 —
+        **S101 (first half) — built, PyBoy-verified on the user's save, NOT
+        yet user-tested** (user decisions: boss rooms are multiscreen custom
+        rooms with NPCs / flags / conversation trees / optional exits; the
+        event stays fight → optional join → the helper takes you away; the
+        boss NPC is the monster's follower sprite; a weaker join version +
+        always / sometimes / never; battles of 1-3; vanilla boss rooms
+        reusable; a chosen custom room per gate as the destination; flags
+        only where the user sets them; floor count for every gate; a fight
+        on arrival; hand-made gates). As built (GATE_GENERATION §7.7,
+        PROJECT_COMPILER §2.17/§2.18, ROOM_DATA_FORMAT "Monster NPCs",
+        MONSTER_DATA "Project enemy rows", EDITOR_DESIGN §5.1b): (1) partly —
+        floor count per gate (2-99) + `hand_made` via the compiler-owned
+        `GateFloorDataTable` region; (2) DONE — boss = custom room (arrival
+        cell) or `vanilla:$xx`, monster NPCs $F0-$F3 (`CustomMonsterCast`),
+        `talk.steps` conversations (say / ask / if / set / clear / battle 1-3
+        / helper / move / end, `on_arrival`), project enemies in bank $6B +
+        `join_as` redirects, boss song on the floor before; Gates tab
+        settings, Enemies dialog, Monsters picker, Conversation dialog. Pin
+        `9c813041…` (patched). *Accept MET (machine half):* test_compiler
+        S101 cases, test_canvas v8 --rom (GUI-authored boss floor played),
+        the demo on the user's save (PROJECT_STATE S101). *User half:*
+        `DWM_S101_boss_floors_test.gbc` (patched, `ec9cbc96…`) — USER-CONFIRMED
+        2026-09-27 ("everything works as intended") apart from the helper
+        (sprite + facing) → r2 `DWM_S101r2_warubou_test.gbc` (patched,
+        `2934c12a…`), NOT yet user-tested.
+        **Still open in part 2:** private floor-type rows per gate (bytes 0-2
+        are shared today — the compiler copies the vanilla row), per-gate
+        monster pools / floor bands (user: "then edit bands … dont care
+        when"), per-room encounters inside dives, more than 32 gates, gate
+        entrances + unlock triggers, the maze look in the editor (the game's
+        own tileset / palette). Measured residuals: (i) after a battle
+        started by TALKING to a monster NPC the NPC is not redrawn until the
+        screen reloads (slot active, cast intact — trace the post-battle
+        sprite-sheet reload; an arrival fight keeps it); (ii) in a 2-3 enemy
+        battle the join candidate is the last enemy knocked out (vanilla
+        `$DD61`); (iii) CLOSED r2 — the helper (Warubou $39 by default)
+        lands LEFT of the player at run time and faces them (user r2: "faces
+        THE WRONG WAY … lands left of player? Ideally always"); if that cell
+        is the talked-to monster's own cell (player talking from its right)
+        the helper overlaps it — the monster is not drawn after the battle
+        anyway (residual i).
+        *Carry-overs from S100 r3:* (a) CLOSED — the user passed r3 at S101
+        start ("1) yes passed"); (b) and (c) still open. Original list: (a) user test of r3 —
         the Crystal Well test ROM (`5295a028…` patched: cream wipe + cream
         load screen from an own-colour-1 room), "Stairs down here" painting
         the well, the "Inside gates (gate floor)" section; (b) NOT measured:
@@ -1032,9 +1074,33 @@ recipes are pure authoring.
         imported room, fix like entry 20 if confirmed; (c) the PNG-imported
         rooms authored before S100 r3 must be REBUILT (LZSS MAX_COPY fix) —
         any whose sheet had 17+ leading empty slots drew shifted in-game.
+- [x] **S101 r3/r4 user round (built, NOT yet user-tested):** helper text
+      moved to the top of the helper editor ("Warubou says something
+      first"); helper *at the Castle* = nothing / priest heal / a gate's
+      King speech (castle-arrival codes decoded, GATE_GENERATION §7.7);
+      World tab wheel zoom + drag pan + Fit / + / −.
+- [ ] **P3.H — Editor Help tab** (user S101 r2: "The editor needs a help
+      tab … needs lookup"; "a) needs to be built out and b) always kept up
+      to date as editor progresses"). **Wired S101 r3:** Help tab (topic list,
+      search, Markdown topics in `editor2/help/`, Help → Editor help F1),
+      10 first topics (start, rooms/states/rules, NPCs/monsters/spots/doors,
+      flags, conversations, enemies, gates, boss floors step by step, build,
+      limits); `_revision.md` stamp enforced by test_app (SESSION_PROTOCOL
+      wrap-up item 7). **To build out:** Import art, Make animated, tileset
+      tools, doors / teleports / World tab, palettes, talk dialog details,
+      screenshots or small diagrams per topic, context help (a "?" on each
+      section / dialog opening its topic), a glossary. Never "done" — it
+      grows with every editor feature.
 - [ ] **P3.8 — Cutscene storyboard + playback** [G-H]: symbolic stepper
       over ops, blocking keyframes on canvas, virtual flag/inventory
-      branch walking; playback via P3.4. *Accept:* the S70 demo quest's
+      branch walking; playback via P3.4. **S101 user direction (12:36):
+      "Our cutscene editor can then edit or extend king's cutscenes etc."**
+      — scope includes VANILLA cutscenes: the Castle arrival chain
+      ($0C:$4804, one King speech per `$D9E3` code, the `$490A` priest path —
+      GATE_GENERATION §7.7) as the first editable / extendable example (a
+      custom speech code for a custom gate = one more chain entry + its
+      branch; vanilla branches edited in place like any script). The S101
+      conversation steps (`talk.steps`) are the natural storyboard model. *Accept:* the S70 demo quest's
       entry cutscene is legible & editable in the storyboard; an edit
       round-trips through compile_script and plays.
 - [ ] **P3.9 — Layer A-lite gamedata backend** [G-D]: `gamedata.monsters/
@@ -1047,6 +1113,21 @@ recipes are pure authoring.
       stack; new-species wizard hooks Phase N (G3 fold folded here or
       ticked separately). *Accept:* a vanilla species stat+sprite edit and
       a follower reassignment authored in GUI, verified in PyBoy.
+      **S101 requirement (user: "What happens to your monster lists when we
+      start adding custom monsters, changing existing monster sprites/names,
+      etc?"):** today every species list in the editor (NPC picker Monsters
+      tab, Enemies dialog species, battle-step names, canvas thumbnails)
+      reads VANILLA data — names from `extracted/monsters_full.json` (+ the
+      new-species file), thumbnails from the ROM census
+      `extracted/monster_npc_sprites/`, safe-id limits hard-coded (216 blank,
+      217-223 refused). When P3.9/P3.10 land, (1) one project-level
+      `species()` source (project gamedata over vanilla) feeds all lists and
+      the compiler's monster-NPC / enemy checks; (2) thumbnails are rendered
+      from the PROJECT's follower art (the same bank $10/$11 layout + attr
+      data the game uses) instead of the vanilla census, or the census tool
+      is re-run on the project build and cached in the project; (3) the
+      safe-id rule becomes "has real follower art" per project, not a fixed
+      range; (4) enemies / NPCs referring to a species follow renames by id.
 - [ ] **P3.10b — Arena editor** [G-L] (E1→E2 wiring, promoted from
       Phase E): tiers×matches×slots grid over enemy-stats rows 224-304 +
       King 481-483 (stats/skills/ai_weights per enemy via Layer A-lite);

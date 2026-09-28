@@ -181,6 +181,9 @@ class MainWindow(QMainWindow):
             self.tabs.addTab(_stub(title, box, blurb), title)
         self.build_tab = BuildPlayTab(self)
         self.tabs.addTab(self.build_tab, 'Build && Play')
+        from editor2.app.help_tab import HelpTab      # S101 r2
+        self.help_tab = HelpTab()
+        self.tabs.addTab(self.help_tab, 'Help')
 
     def _open_gates_for(self, room_id):
         """Rooms tab 'Gates tab…' -> the Gates tab on the first gate serving
@@ -269,6 +272,12 @@ class MainWindow(QMainWindow):
         m_view = self.menuBar().addMenu('&View')
         m_view.addAction(self.log_dock.toggleViewAction())
         m_view.addAction(self.undo_dock.toggleViewAction())
+
+        m_help = self.menuBar().addMenu('&Help')
+        a_help = QAction('Editor &help', self)
+        a_help.setShortcut(QKeySequence.HelpContents)          # F1
+        a_help.triggered.connect(lambda: self.tabs.setCurrentWidget(self.help_tab))
+        m_help.addAction(a_help)
 
         tb = QToolBar('Main')
         tb.setMovable(False)

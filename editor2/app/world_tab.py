@@ -6,7 +6,10 @@ the connections (editor2/core/world.py): two-way doors, one-way exits,
 vanilla doors re-pointed one-way, script warps. "Whole vanilla world" adds
 every vanilla exit. Double-click a room to open it in the Rooms tab; hover
 a line to see what it is. Drag rooms around to untangle (positions are not
-saved — the layout is deterministic).
+saved — the layout is deterministic). S101 r3 (user: "world tab needs
+zoomability. Mouse scroll in/out - zoom in/out; also click and drag canvas
+when zoomed"): the wheel zooms around the mouse, dragging empty canvas pans
+(at any zoom), Fit / + / − buttons.
 """
 
 import math
@@ -136,6 +139,14 @@ class WorldTab(QWidget):
         b = QPushButton('Re-layout')
         b.clicked.connect(self.refresh)
         row.addWidget(b)
+        for txt, tip, fn in (('Fit', 'Show the whole graph', self.fit),
+                             ('+', 'Zoom in (mouse wheel)', lambda: self.zoom(1.25)),
+                             ('−', 'Zoom out (mouse wheel)', lambda: self.zoom(1 / 1.25))):
+            zb = QPushButton(txt)
+            zb.setToolTip(tip)
+            zb.setMaximumWidth(48)
+            zb.clicked.connect(fn)
+            row.addWidget(zb)
         legend = QLabel('<span style="color:#00e6c8">━ door (two-way)</span> &nbsp; '
                         '<span style="color:#ff5a5a">━ one-way exit</span> &nbsp; '
                         '<span style="color:#ff00ff">━ vanilla door → here (one-way)</span> &nbsp; '
@@ -149,7 +160,11 @@ class WorldTab(QWidget):
         self.scene = QGraphicsScene(self)
         self.view = QGraphicsView(self.scene)
         self.view.setRenderHints(QPainter.Antialiasing)
-        self.view.setDragMode(QGraphicsView.ScrollHandDrag)
+        self.view.setDragMode(QGraphicsView.ScrollHandDrag)   # empty canvas = pan
+        self.view.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
+        self.view.setResizeAnchor(QGraphicsView.AnchorViewCenter)
+        self.view.setToolTip('Wheel = zoom · drag empty space = move around · drag a room '
+                             'to move it · double-click a room to open it')
         self.view.setBackgroundBrush(QBrush(QColor(24, 24, 28)))
         v.addWidget(self.view, 1)
         self.view.wheelEvent = self._wheel
@@ -157,13 +172,34 @@ class WorldTab(QWidget):
         self.nodes = {}
         self.edges = []
 
+    ZOOM_MIN, ZOOM_MAX = 0.05, 8.0
+
     def _wheel(self, ev):
-        if ev.modifiers() & (Qt.ControlModifier | Qt.MetaModifier):
-            f = 1.15 if ev.angleDelta().y() > 0 else 1 / 1.15
-            self.view.scale(f, f)
-            ev.accept()
-            return
-        QGraphicsView.wheelEvent(self.view, ev)
+        d = ev.angleDelta().y() or ev.angleDelta().x()
+        if d:
+            self.zoom(1.15 if d > 0 else 1 / 1.15)
+        ev.accept()
+
+    def zoom(self, f):
+        cur = self.view.transform().m11()
+        f = max(self.ZOOM_MIN / cur, min(self.ZOOM_MAX / cur, f))
+        self.view.scale(f, f)
+
+    def _pan_rect(self):
+        """Scene rect with a margin of a whole view on every side, so the
+        canvas can be dragged around at any zoom."""
+        r = self.scene.itemsBoundingRect()
+        m = max(r.width(), r.height(), 800.0)
+        return r.adjusted(-m, -m, m, m)
+
+    def fit(self):
+        r = self.scene.itemsBoundingRect().adjusted(-40, -40, 40, 40)
+        if r.width() > 0 and r.height() > 0:
+            self.view.resetTransform()
+            self.view.fitInView(r, Qt.KeepAspectRatio)
+            if self.view.transform().m11() > 1.0:        # small graphs: 1:1, centred
+                self.view.resetTransform()
+            self.view.centerOn(r.center())
 
     def _mark(self):
         self._dirty = True
@@ -219,9 +255,7 @@ class WorldTab(QWidget):
             self.scene.addItem(item)
             self.edges.append(item)
         self.count.setText(f'{len(nodes)} rooms, {len(edges)} connections')
-        rect = self.scene.itemsBoundingRect().adjusted(-40, -40, 40, 40)
-        self.scene.setSceneRect(rect)
-        self.view.resetTransform()
+        self.scene.setSceneRect(self._pan_rect())
         vw, vh = self.view.viewport().width(), self.view.viewport().height()
-        if vw > 50 and vh > 50 and (rect.width() > vw or rect.height() > vh):
-            self.view.fitInView(rect, Qt.KeepAspectRatio)
+        if vw > 50 and vh > 50:
+            self.fit()

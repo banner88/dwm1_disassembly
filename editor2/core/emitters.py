@@ -156,6 +156,7 @@ def emit_bank_060(prj, warnings):
         lines.append(f"    dw {tgt}   ; {F.hexb(F.val(r['mapID']))}")
     lines.append("")
     lines += _state_rule_tables(prj, rooms)
+    lines += _monster_cast_tables(prj, rooms)
 
     dummy_emitted = False
     for r in rooms:
@@ -175,6 +176,42 @@ def emit_bank_060(prj, warnings):
 
     lines += _vanilla_exit_exts(prj)
     return "\n".join(lines) + "\n"
+
+
+def _monster_cast_tables(prj, rooms):
+    """S101 — MONSTER NPCs: per custom room, per screen, the 4 display-list
+    pairs [species+$10, 1] that sprite ids $F0-$F3 draw (template
+    CustomMonsterCast, called first by entry 8). Emitted ALWAYS (the label is
+    referenced by the template head): one dw per room, $0000 = none."""
+    out = banner("MONSTER NPC CASTS (S101, generated)", [
+        "Read by bank $60 CustomMonsterCast (entry 8 head) at every custom",
+        "room/screen load: the screen's pairs -> $D7CA-$D7D1, which the bank",
+        "$0B NPC sheet resolver reads for sprite ids $F0-$F3."])
+    out.append("CustomMonsterCastPtrTable:")
+    per_room = []
+    for r in rooms:
+        casts = [] if r.get('placeholder') else [
+            (k, prj.monster_cast(r, k)) for k in sorted(prj.room_screens(r))]
+        casts = [(k, c) for k, c in casts if c]
+        if casts:
+            lbl = f"{room_tag(r)}_MonsterCast"
+            per_room.append((lbl, casts))
+            out.append(f"    dw {lbl}   ; {F.hexb(F.val(r['mapID']))} {r.get('id','')}")
+        else:
+            out.append(f"    dw $0000   ; {F.hexb(F.val(r['mapID']))} (no monster NPCs)")
+    out.append("")
+    for lbl, casts in per_room:
+        out.append(f"{lbl}:")
+        for k, cast in casts:
+            pairs = []
+            for sp in (cast + [None] * 4)[:4]:
+                pairs += [0xFF, 0x00] if sp is None else [(sp + 0x10) & 0xFF, 0x01]
+            out.append(f"    db {k}")
+            out.append(F.db_line(pairs, comment="$F0-$F3 = species "
+                                 + ", ".join(str(x) for x in cast)))
+        out.append("    db $FF")
+        out.append("")
+    return out
 
 
 def _state_rule_tables(prj, rooms):
@@ -389,7 +426,7 @@ def _room_data(prj, r):
                     sidx = (0xFF if sid in (None, 'none')
                             else sid if isinstance(sid, int)   # S97: raw index kept
                             else prj.script_index(r, sid))
-                    b = F.npc_entry(n.get('facing', 'down'), F.val(n['sprite']),
+                    b = F.npc_entry(n.get('facing', 'down'), prj.npc_sprite(r, i, n),
                                     n['x'], n['y'], sidx,
                                     behaviour=n.get('behaviour', 0),
                                     hidden=bool(n.get('hidden', False)))
@@ -696,44 +733,103 @@ def emit_bank_074(prj, warnings):
 
 
 # ---------------------------------------------------------------------------
-# bank $14 region emitter — progression.enemies rows (S70, ROADMAP E2)
+# Project enemy rows (S101; was the S70 bank-$14 12-row tail region)
+#   file:patches/bank_06b.asm           — template head + the 25-byte rows
+#   region:patches/bank_014.asm#boss_redirects — BossRedirectTableExt
 # ---------------------------------------------------------------------------
 
-def emit_region_enemies14(prj, warnings):
-    """progression.enemies -> appended enemy-stats rows in the bank $14 free
-    tail (@BUILD_PROJECT quest_enemy_stats around the vanilla ds-308 pad).
-    Row format: MONSTER_DATA "Enemy Stats Table" ($14:$4C1D, 25 B/row):
-    [species, exp:2, joinability, level, hp:2, mp:2, atk:2, def:2, agl:2,
-     int:2, ai:4, skills:4]. EIDs from 519 ($7ECC = $4C1D + 519*25 — exact
-    tail alignment); pad shrinks by 25 per row so every following byte is
-    unmoved. No-op case = the vanilla ds 308 (byte-identical)."""
-    from .project import QUEST_REGION_BYTES
-    out = ["; progression.enemies rows (EIDs 519+ @ $7ECC+; 12-row capacity).",
-           "; Emitted by editor2 `enemies14`; row addr = $4C1D + EID*25",
-           "; (LoadEnemyStats, no fork — MONSTER_DATA \"Enemy Stats Table\").",
-           "; Joinability byte: $00 = always joins (story-boss behavior);",
-           "; fight EID == join EID needs NO BossRedirectTable entry (the",
-           "; $14:$4893 lookup falls through unchanged — SIDEQUEST_MAP E1)."]
-    used = 0
-    for e in prj.quest_enemy_rows():
-        eid = e['_eid']
-        sp, lv = F.val(e['species']), F.val(e['level'])
-        exp = F.val(e.get('exp', 0))
-        join = F.val(e.get('joinability', 7))
-        row = [sp, exp & 0xFF, exp >> 8, join, lv]
-        for f16 in ('hp', 'mp', 'atk', 'def', 'agl', 'int'):
-            v = F.val(e.get(f16, 0))
-            row += [v & 0xFF, (v >> 8) & 0xFF]
-        ai = [F.val(x) for x in e.get('ai_weights', [0, 0, 0, 0])]
-        sk = [F.val(x) for x in e.get('skills', [])]
-        row += ai + (sk + [0xFF] * 4)[:4]
-        out.append(f"QuestEnemyStats_{eid}:   ; {e['id']} — species {sp} "
-                   f"L{lv}, join {F.hexb(join)}"
-                   + (f" — {e['comment']}" if e.get('comment') else ""))
-        out.append(F.db_line(row))
-        used += 25
-    pad = QUEST_REGION_BYTES - used
-    out.append(f"    ds {pad}, $00")
+# The 34 vanilla BossRedirectTable pairs ($14:$4893, fight EID -> join EID),
+# in ROM order. The rewritten LookupBossRedirect scans BossRedirectTableExt =
+# project rows FIRST, then these, then $FFFF (test_compiler --rom checks this
+# list against the ROM bytes).
+VANILLA_REDIRECTS = [
+    (4, 486), (11, 12), (31, 484), (32, 485), (51, 52), (53, 54), (55, 56),
+    (75, 76), (77, 78), (79, 80), (99, 100), (101, 102), (103, 104),
+    (123, 124), (125, 126), (127, 128), (147, 148), (149, 150), (153, 154),
+    (175, 176), (177, 178), (179, 180), (199, 200), (201, 202), (203, 204),
+    (205, 206), (207, 208), (209, 210), (211, 212), (213, 214), (215, 216),
+    (217, 218), (219, 220), (221, 222)]
+
+
+def enemy_row_bytes(e):
+    """progression.enemies item -> the 25-byte enemy-stats row (MONSTER_DATA
+    "Enemy Stats Table"): [species, exp:2, joinability, level, hp:2, mp:2,
+    atk:2, def:2, agl:2, int:2, ai:4, skills:4]."""
+    sp, lv = F.val(e['species']), F.val(e['level'])
+    exp = F.val(e.get('exp', 0))
+    join = F.val(e.get('joinability', 7))
+    row = [sp, exp & 0xFF, (exp >> 8) & 0xFF, join, lv]
+    for f16 in ('hp', 'mp', 'atk', 'def', 'agl', 'int'):
+        v = F.val(e.get(f16, 0))
+        row += [v & 0xFF, (v >> 8) & 0xFF]
+    ai = [F.val(x) for x in e.get('ai_weights', [0, 0, 0, 0])]
+    sk = [F.val(x) for x in e.get('skills', [])]
+    row += (ai + [0] * 4)[:4] + (sk + [0xFF] * 4)[:4]
+    return row
+
+
+def emit_bank_06b(prj, warnings):
+    from .project import PROJECT_EID_BASE
+    rows = prj.quest_enemy_rows()
+    lines = [template('bank_06b_head.asm').rstrip('\n'), ""]
+    lines += ["; " + "-" * 77,
+              "; ProjectEnemyRows — progression.enemies, row = EID - 519 (generated",
+              "; by build_project.py; S101). An empty project keeps one zero row.",
+              "; " + "-" * 77,
+              f"PROJECT_EID_BASE EQU {PROJECT_EID_BASE}",
+              f"PROJECT_ENEMY_ROWS EQU {max(1, len(rows))}",
+              "ProjectEnemyRows:"]
+    if not rows:
+        lines.append(F.db_line([0] * 25, comment="(no project enemies)"))
+    for e in rows:
+        b = enemy_row_bytes(e)
+        what = (f"EID {e['_eid']} {e['id']} — species {b[0]} L{b[4]}, "
+                f"joinability {b[3]}")
+        if e.get('join_as') is not None:
+            what += f", joins as {e.get('join_as')}"
+        lines.append(f"ProjectEnemy_{e['_eid']}:   ; {what}")
+        lines.append(F.db_line(b))
+    return "\n".join(lines) + "\n"
+
+
+def emit_region_redirects14(prj, warnings):
+    out = ["; BossRedirectTableExt (S101): fight EID -> join EID, scanned by the",
+           "; rewritten LookupBossRedirect (bank $14 entry 6). Project rows first",
+           "; (progression.enemies[].join_as), then the 34 vanilla rows, then",
+           "; $FFFF. Generated by editor2 `redirects14`; the pad fills the bank.",
+           "BossRedirectTableExt:"]
+    for fight, join, name in prj.enemy_redirects():
+        out.append(f"    dw {fight}, {join}   ; project: {name}")
+    for fight, join in VANILLA_REDIRECTS:
+        out.append(f"    dw {fight}, {join}")
+    out.append("    dw $FFFF, $0000")
+    out.append("    ds $8000 - @, $00")
+    return "\n".join(out) + "\n"
+
+
+# ---------------------------------------------------------------------------
+# bank $16 region emitter — GateFloorDataTable (S101, custom.gates[])
+# ---------------------------------------------------------------------------
+
+def emit_region_gates16(prj, warnings):
+    """custom.gates[] -> the 32 x 8-byte GateFloorDataTable ($16:$70A6, read by
+    entry 5: bytes 0-2 floor-type rows, 3 floor count incl. the boss floor,
+    4 boss map, 5/6 boss arrival TILE, 7 depth tier — GATE_GENERATION §1).
+    Untouched gates = the vanilla row bytes (extracted/gate_names.json 'row',
+    tools/map_gate_names.py), so an empty custom.gates is byte-identical."""
+    out = ["; (generated by editor2 `gates16` from custom.gates[] — vanilla rows until edited)",
+           "GateFloorDataTable:"]
+    for gid, c in sorted(prj.gate_configs().items()):
+        why = f"{c['name']} (last floor: {c['floors']})"
+        if c['edited']:
+            bits = []
+            if c['boss_room']:
+                bits.append(f"boss room {c['boss_room']} ({F.hexb(c['boss_map'])}) "
+                            f"arrival tile {c['spawn']}")
+            if c['hand_made']:
+                bits.append("hand-made floors")
+            why += " — EDITED: " + ("; ".join(bits) if bits else "settings")
+        out.append(F.db_line(c['row'], comment=why))
     return "\n".join(out) + "\n"
 
 
@@ -875,9 +971,13 @@ REGISTRY = [
      emit_bank_064, [0x64]),
     ("tilesets67", "custom.tilesets", "file:patches/bank_067.asm",
      emit_bank_067, [0x67]),
-    ("enemies14", "progression.enemies",
-     "region:patches/bank_014.asm#quest_enemy_stats", emit_region_enemies14,
+    ("enemies6b", "progression.enemies", "file:patches/bank_06b.asm",
+     emit_bank_06b, [0x6B]),
+    ("redirects14", "progression.enemies",
+     "region:patches/bank_014.asm#boss_redirects", emit_region_redirects14,
      [0x14]),
+    ("gates16", "custom.gates", "region:patches/bank_016.asm#gate_floor_table",
+     emit_region_gates16, [0x16]),
     ("dispatch71", "custom.rooms", "file:patches/bank_071.asm",
      emit_bank_071, [0x71]),
     ("palettes_a", "custom.palettes",

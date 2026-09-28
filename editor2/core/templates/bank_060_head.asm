@@ -213,7 +213,10 @@ CustomTilesetInfo:
 ;               flag word: bits 0-14 = event flag index, bit 15 = must be CLEAR
 ;               (n_terms 0 = always).
 ; Clobbers A/BC/DE/HL (callers preserve what they need).
+; S101: first writes the screen's MONSTER CAST (CustomMonsterCast below) —
+; the same load hooks run before the bank $0B NPC parse reads it.
 CustomStateRules:
+    call CustomMonsterCast
     ld a, [wMapID]
     sub CUSTOM_ROOM_START
     ret c                        ; not a custom room (defensive)
@@ -300,6 +303,59 @@ CustomStateRules:
     pop af                       ; drop the state
     pop de                       ; DE = counter again
     jr .rule
+
+; -----------------------------------------------------------------------------
+; CustomMonsterCast (S101) — MONSTER NPCs (a species drawn with its follower
+; art). The bank $0B NPC sheet resolver maps sprite ids $F0-$F3 to the
+; display-list pairs at $D7CA + 2n ([draw id, is_monster]; is_monster != 0 ->
+; draw id = species+$10, follower sheet + layout + palette — the arena lobby's
+; own mechanism, ROOM_DATA_FORMAT "Monster NPCs"). Custom rooms carry a
+; generated per-screen cast: CustomMonsterCastPtrTable (dw per room, $0000 =
+; none) -> { db screen / 8 bytes = 4 pairs } ... db $FF. The pairs of the
+; current wScreenIndex are copied to $D7CA-$D7D1 at every custom load, before
+; the NPC parse; screens without a cast leave the list alone.
+; -----------------------------------------------------------------------------
+CustomMonsterCast:
+    ld a, [wMapID]
+    sub CUSTOM_ROOM_START
+    ret c
+    add a
+    ld hl, CustomMonsterCastPtrTable
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a
+    or h
+    ret z                        ; room has no monster NPCs
+.scr:
+    ld a, [hl+]
+    cp $FF
+    ret z                        ; this screen has no cast
+    ld b, a
+    ld a, [wScreenIndex]
+    cp b
+    jr z, .copy
+    ld a, l
+    add 8
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    jr .scr
+.copy:
+    ld de, $d7ca
+    ld b, 8
+.byte:
+    ld a, [hl+]
+    ld [de], a
+    inc de
+    dec b
+    jr nz, .byte
+    ret
 
 ; =============================================================================
 ; Entry 7: VanillaExitResolve  (S70 — vanilla-room exit extensions)

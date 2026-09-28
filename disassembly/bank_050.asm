@@ -6444,7 +6444,7 @@ jr_050_64a0:
     ret nz
 
 jr_050_64af:
-    ld a, $08
+    ld a, $08                ; S101 r3: $D92B = 8 -> castle arrival = priest heal path ($0C:$490A)
     ld [$d92b], a
     ld hl, $0000
     ld a, l
@@ -6545,7 +6545,7 @@ jr_050_6546:
 
 
 jr_050_6559:
-    ld a, $08
+    ld a, $08                ; S101 r3: $D92B = 8 -> castle arrival = priest heal path ($0C:$490A)
     ld [$d92b], a
     ld hl, $0000
     ld a, l

@@ -3962,3 +3962,87 @@ minimum width; the scroll area grew sideways.
 sized to its items) on every inspector combo; measure `minimumSizeHint()` of
 the children when a panel scrolls sideways.
 
+
+### A boss floor is DATA; the boss EVENT is the room's script (S101)
+**Symptom**: "custom boss floor" looked like an engine job (bank $16 boss
+flow, clear flags, trip home).
+**Root cause**: bank $16 entry 5 only reads `GateFloorDataTable` bytes 4-6
+(no RNG, no flags); everything a player sees — the fight, the join, the
+helper, the fade home — is the vanilla boss room's own talk script
+($5A/$5B battle, win resumes, `$3B` warp).
+**Fix**: the table became a compiler region; the event became a
+conversation (`talk.steps`) with a helper step that re-creates the vanilla
+exit op for op.
+**Rule**: before designing engine code for a "system", trace one vanilla
+instance to the byte and find which part is data and which part is script —
+the script part is usually already editable.
+
+### A fly-in "target" was a distance and a curve (S101, corrected r2)
+**Symptom** (user, r2): Watabou "faces THE WRONG WAY" after landing; the
+first S101 lesson had said `$1C $16NN` flies the NPC to the tile in
+`$D8E3/$D8E4`, and an arrival fight's helper landed three rows off.
+**Root cause**: program $16 starts from the NPC's CURRENT pixel position,
+runs `$D8E3`·8 frames at +2 px right each and adds the dy table `$D8E4`
+picks (1-3, else 4). With the helper's home at tile (0,0), `$D8E3` looked
+like a landing column (x = 0 + D8E3) and row 3 happened to match `$D8E4 = 3`
+on the first tests — a coincidence, not a coordinate. The vanilla helper
+lands left of Terry and its last spin op is face RIGHT ($4A); ours landed
+right of the player with the same final op.
+**Fix**: fixed flight ($D8E3/$D8E4 = 3/3 → +48/+43 px); the compiler writes
+the helper's START pixels = landing − (48, 43), the landing = the player's
+left (byte compares on `$FF97/$FF98` at run time; their right on a screen's
+column 0, facing left). PyBoy: lands on the exact pixel, faces the player.
+**Rule**: when two parameters of a vanilla animation "work" as coordinates,
+sweep them (a hook that overrides them on the handler) before building on
+them — one test point cannot tell a coordinate from a distance.
+
+### Species ids that exist in tables may not exist as graphics (S101)
+**Symptom**: the monster-NPC census hung / crashed on species 217-220.
+**Root cause**: their follower-art table rows are not real graphics (Diago /
+Samsi / Bazoo / the last row are never followers in vanilla).
+**Fix**: census 0-216 + 224, blank batches retried singly; the compiler
+refuses 217-223.
+**Rule**: capture every id of a new feature in the emulator before offering
+it in a picker — a crash is a data point, not a harness bug.
+
+### New opcode names re-spell the example project (S101)
+**Symptom**: test_app "document model must round-trip project.json
+byte-for-byte" failed after adding names to `scriptgen.OPS`.
+**Root cause**: the Document canonicalises raw `0x0E`-style ops to their
+names on load, so the example's `0x0E`/`0x0D` ops now dump as
+`branch_screen`/`npc_write`.
+**Fix**: re-save the example project through the Document and prove the
+compiled bytes are identical (only `; name` comments move).
+**Rule**: naming an opcode is a data migration of every project that used
+its raw form — re-save the example in the same session.
+
+### PyBoy: a choice box is on screen before it takes input (S101)
+**Symptom**: scripted "UP, A" at the YES/NO box answered NO (or nothing),
+and a pixel test "found" the box on a sandy floor.
+**Root cause**: the box is drawn a few frames before the cursor accepts
+input; the detector looked for dark pixels, which the floor pattern has.
+**Fix**: detect the box as a mostly-cream region with dark glyphs, then
+wait ~90 frames before UP / A (scratch `d1.py answer()`).
+**Rule**: drive menus by state (text-box / cursor RAM or a strict pixel
+signature) with a settle delay, never by fixed frame counts after A.
+
+### The delivery zip mirrors the repo — no extra folder level (S101)
+**Symptom**: the user's usual `rsync -av "…/S101_delivery/" repo/` put
+every file under `repo/files/…`; the editor still said S100r3.
+**Root cause**: the S101 zip nested the repo tree in a `files/` subfolder
+(and carried the test ROM) — against SESSION_PROTOCOL "Delivery format"
+(wrapper folder = repo root; ROM delivered separately).
+**Fix / Rule**: build the zip from the protocol text every time:
+`DWM-S<NN>-<slug>-changed-files.zip` → one wrapper folder whose inside IS the
+repo root (+ APPLY_THESE_CHANGES.md); the `.gbc` goes out as its own file.
+
+### "Flags changed" can be the RAM byte you poked (S101 r4)
+**Symptom**: every castle-arrival trial reported flags $0240-$0247 changed —
+it looked as if each King speech advanced the story.
+**Root cause**: the flag bitfield $D99B+ overlaps RAM variables; flags
+$0240-$0247 ARE the byte $D9E3 the trial itself set (EVENT_FLAGS "poisoned"
+rows).
+**Fix / Rule**: before reading a flag diff, mask the flag indices that alias
+a RAM variable the test writes (EVENT_FLAGS lists them); and scan the ROM for
+every reader of a variable before naming it ("story progression counter"
+had exactly two readers).

@@ -1852,6 +1852,27 @@ jr_00b_4830:
     ret
 
 
+; NPC SPRITE-ID -> SHEET RESOLVER (S101 annotation, PyBoy-measured). A = the
+; NPC entry's sprite id (byte 1), DE -> the slot. Returns the sheet in a
+; 6-pair cache at $D7BE ([id, is_monster] x 6; each distinct pair loads one
+; 256-byte sheet at VRAM $8000 + (c+5)*$100 in towns, +7 in gates).
+;   $FF        -> no sprite.
+;   $E0        -> the player-shaped id $5E.
+;   $E1-$E3    -> the PARTY monster in party slot 0/1/2 ($CA8E list ->
+;                 $CA91+slot = species+$10), tile bases $20/$30/$40 (the
+;                 follower sheets already in VRAM).
+;   $F0-$F3    -> DISPLAY-LIST entry n: the pair [$D7CA+2n] = draw id,
+;                 [$D7CB+2n] = is_monster. is_monster != 0 -> the draw id is
+;                 species+$10 and the sheet comes from the follower-art table
+;                 (SpritePtrTable_4974) -> the NPC is drawn and animated
+;                 exactly like that species' follower (layout from bank
+;                 $10/$11 by species, palette from its attr table). The
+;                 arena writes this list (ArenaBattleSetup, opcode $1F: master
+;                 + 3 enemy monsters); with the list empty the ids alias $00
+;                 (the S91 census). S101: $D7CA = $2C,1 (Dragon), $D8,1
+;                 (DracoLord), $10,1 before a room load -> $F0/$F1/$F2 NPCs
+;                 render those monsters, standing / spinning / pacing.
+;   anything else -> a plain NPC sheet from ROM0 table $2ADF[id].
 Call_00b_4839:
     cp $ff
     ret z

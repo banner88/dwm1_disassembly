@@ -778,6 +778,45 @@ on Villager floors 2-3 at 50 %.
   Selection → More ▾ → "Stairs down here" (purple **S↓** marker, draggable; the
   object panel explains it); the World graph skips stairs rows.
 - Every edit is one undo step (SnapshotCommand); `EDITOR_REVISION` 'S100' (r3: 'S100r3').
+
+**As built S101 (P3.7b part 2, first half — custom boss floors; built,
+PyBoy-verified, NOT yet user-tested):**
+- **Gates tab → "Gate settings"** per gate: *floors* spin 2-99 (incl. the
+  boss floor; "Vanilla" resets), *boss floor* combo = vanilla / another
+  gate's vanilla boss room (`vanilla:$xx`) / any custom room (⚠ no arrival
+  cell) + *Open room* + a readiness line (arrival, saving, song); *hand-made
+  gate* checkbox (rules may take floor 1); *Project enemies…*. The list
+  shows the project's floor count, ♛ (boss set) and ✎ (hand-made); floor
+  plan and rule dialog use the project's floors / first floor.
+- **Enemies dialog** (`app/enemies_dialog.py`): project enemies (EID 519+)
+  added from a vanilla row (bosses first); name, species, level, exp, six
+  stats, joins? = always / sometimes (tier 1-6) / never, join version,
+  skills ×4, AI weights; *Make join version* (stats halved, always joins).
+  Edits a scratch copy → one undo step on OK.
+- **NPC sprite picker → Monsters tab**: every safe species with its
+  captured thumbnail (filter by name); picks `('monster', species)` → NPC
+  `monster` field ($F0). Canvas and NPC panel draw the species
+  (`MonsterCache`, key $1000 + species).
+- **Conversation dialog** (`app/rooms/conversation_dialog.py`): a tree of
+  steps (Ask → If YES / If NO, If flags… → Then / Otherwise), + Add step ▾,
+  ▲▼, Remove; per-kind editors — text boxes with the in-game preview, flag
+  lists (+ New flag…), Battle (1-3 enemy pickers: your enemies ★, vanilla
+  bosses, all vanilla rows; *Enemies…*), Helper (destination room: Castle
+  throne or a custom room + screen / cell; landing cell; sprite, default
+  $21 Watabou; optional text), Move, Stop; a problems line gates OK. Opened
+  from the NPC panel (*New conversation…*, *Edit talk…* on a conversation)
+  and the "Inside gates" group (*Arrival conversation…* = the room's entry
+  script, all screens or one; warns that it runs on every arrival).
+- "Inside gates" shows *Boss floor of: …*; boss rooms default to no saving
+  and need a way out (a helper / move step or an exit), not Stairs down.
+- `EDITOR_REVISION` 'S101'. Test: test_canvas v8 (`--only-v8 [--rom]`).
+- **r3 ('S101r3') — Help tab** (`app/help_tab.py`, topics `editor2/help/NN_*.md`,
+  first `# ` line = title, search filters by text, Help → Editor help = F1;
+  `_revision.md` must equal `EDITOR_REVISION` — test_app enforces it;
+  ROADMAP P3.H: build out + keep current, SESSION_PROTOCOL wrap-up item 7).
+- **r2 ('S101r2'):** the helper editor's landing = "lands next to the player —
+  on their left, turned to them" (default) or a fixed cell; default sprite
+  $39 Warubou (the button says so; $21 = Watabou (vanilla)).
 - **S100 r3 (user 15:11; built, NOT yet user-tested).** "Stairs down here" also
   PAINTS the cell with the vanilla next-floor well (`gates.WELL_SRC_MAP` $51,
   slots $2C-$2F; its plain surround replaced by the floor already on the cell,

@@ -43,15 +43,18 @@ STATE_RULE_MAX_TERMS = 8
 STEP_COUNTER_BASE = 0xCD80
 WRAM_REGION_MAX = 0x280             # $CD80+$280 = $D000 = the wram0 section end
 WRAM_REGION_SIZE_DEFAULT = 0x280    # 640 counters — campaign-scale default
-# S70 (ROADMAP E2 wiring): progression.enemies rows append past the vanilla
-# 487-row enemy-stats table. EID 518 = Gorbunok (build_new_species.py); the
-# quest region (@BUILD_PROJECT quest_enemy_stats, patches/bank_014.asm) owns
-# $7ECC+ = EIDs 519+ (row addr = $4C1D + EID*25 — MONSTER_DATA "Enemy Stats
-# Table"; LoadEnemyStats has no bounds check, 16-bit EID). ds-308 tail = 12
-# rows capacity.
-QUEST_EID_BASE = 519
-QUEST_EID_CAP = 12
-QUEST_REGION_BYTES = 308
+# Project enemy rows (S101; MONSTER_DATA "Project enemy rows"). EID 518 =
+# Gorbunok (build_new_species.py, bank $14 free tail). EVERY EID >= 519 is a
+# progression.enemies row in bank $6B (compiler-owned patches/bank_06b.asm,
+# row = EID-519): the bank-$14 LoadEnemyStats head now diverts EIDs >= 519 to
+# bank $6B entry 0 (S70-S100 kept 12 rows in the bank-$14 tail instead). The
+# tail now holds the divert + BossRedirectTableExt (project fight->join rows,
+# then the 34 vanilla rows).
+PROJECT_EID_BASE = 519
+PROJECT_EID_CAP = 640              # bank $6B: ~16 KB / 25 B, minus the head
+REDIRECT_ROWS_MAX = 34             # bank $14 tail: 308 - 28 B code - 4*(34 vanilla + end) = 136 B
+QUEST_EID_BASE = PROJECT_EID_BASE  # legacy names (S70)
+QUEST_EID_CAP = PROJECT_EID_CAP
 
 
 
@@ -66,6 +69,8 @@ class ProjectError(ValueError):
 
 class Project:
     def __init__(self, data, root):
+        self._helper_screens = {}      # S101 r2: helper script -> screen keys
+        self._lowering_sid = None
         self.data = data
         self.root = root
         self.warnings = []
@@ -88,6 +93,9 @@ class Project:
                                   + self._lower_entrance_redirects())
         self.rooms = self._dense_rooms()
         self._normalize_stairs()
+        # S101: helper-exit conversations need their NPC slot, known only
+        # once rooms resolve — place the helpers, then lower those scripts
+        self._lower_talk_scripts(self._place_helpers())
         self._gate_rows = None
         self.palettes = self.custom.get('palettes', [])
         self._pal_by_id = {p['id']: p for p in self.palettes}
@@ -247,8 +255,34 @@ class Project:
         return out
 
     def quest_enemy_rows(self):
-        """Enemies in EID order for the bank $14 region emitter."""
+        """Enemies in EID order for the bank $6B emitter."""
         return sorted(self.quest_enemies.values(), key=lambda e: e['_eid'])
+
+    def enemy_ref(self, ref, ctx):
+        """An enemy reference -> EID: a progression.enemies id, or a number
+        (any vanilla / project EID)."""
+        if isinstance(ref, str) and ref in self.quest_enemies:
+            return self.quest_enemies[ref]['_eid']
+        try:
+            v = F.val(ref)
+        except (TypeError, ValueError):
+            v = None
+        if not isinstance(v, int) or isinstance(v, bool):
+            raise ProjectError(f"{ctx}: enemy {ref!r} is neither a "
+                               "progression.enemies id nor an EID number")
+        return v
+
+    def enemy_redirects(self):
+        """[(fight EID, join EID, name)] from progression.enemies[].join_as
+        (S101: the boss's weaker 'join version'), in EID order."""
+        out = []
+        for e in self.quest_enemy_rows():
+            ja = e.get('join_as')
+            if ja is None or ja == e.get('id'):
+                continue
+            out.append((e['_eid'], self.enemy_ref(ja, f"progression.enemies[{e['id']}].join_as"),
+                        f"{e['id']} joins as {ja}"))
+        return out
 
     def _lower_actions(self, acts, ctx, dialog_prefix=False):
         """dialog_prefix=True: the ops run OUTSIDE an NPC interaction (entry
@@ -332,7 +366,337 @@ class Project:
             ops.append(['op', 'map_transition', f'0x{mid:04X}', f'0x{px:04X}', f'0x{py:04X}'])
         return ops
 
-    def _lower_talk_scripts(self):
+    # ------------------------------------------- conversation steps (S101)
+    # talk: {"steps": [STEP...], "on_arrival": bool, "screen": k}
+    # STEP (one kind per dict):
+    #   {"say": dlg}
+    #   {"ask": dlg (choice), "yes": [STEP..], "no": [STEP..]}   (branches rejoin)
+    #   {"if": [{"flag": f, "is": "set"|"clear"}...], "then": [..], "else": [..]}
+    #   {"set": [f..]} / {"clear": [f..]}
+    #   {"battle": {"enemies": [ref, ref?, ref?]}}  — the steps AFTER it run
+    #        only on a WIN (engine guarantee, SIDEQUEST_MAP S68); a loss sends
+    #        the player to the castle (engine)
+    #   {"move": {dest, screen, x, y}}              — $0F warp
+    #   {"helper": {"dest", "screen", "x", "y", "say": dlg?, "land": {x, y},
+    #               "sprite": id?}}                 — the vanilla boss exit:
+    #        the helper NPC (Watabou's sprite $21 by default) flies in, spins,
+    #        speaks, and fades the player to dest ($3B) — PROJECT_COMPILER §2.18
+    #   {"end": true}
+    # Text in FIELD context (a room-arrival script, or anything after a battle
+    # or the helper's flight) gets its own init_dialog (the S70 protocol).
+    STEP_KINDS = ('say', 'ask', 'if', 'set', 'clear', 'battle', 'move', 'helper', 'end')
+    HELPER_SPRITE = 0x39                # Warubou — the darker Watabou (user S101 r2: the
+                                        # romhack's helper; vanilla boss exits use $21 Watabou)
+    HELPER_FLY = 0x16                   # $1C anim: fly to ($D8E3, $D8E4)
+    HELPER_HOP = 0x04
+
+    @staticmethod
+    def step_kind(st):
+        ks = [k for k in Project.STEP_KINDS if k in st]
+        return ks[0] if len(ks) == 1 else None
+
+    def _terms_ops(self, terms, fail_label, ctx):
+        ops = []
+        for t in terms or []:
+            is_ = t.get('is', 'set')
+            if is_ not in ('set', 'clear'):
+                raise ProjectError(f"{ctx}: term 'is' must be set/clear")
+            idx = self.resolve_flag_ref(t.get('flag'), ctx)
+            ops.append(['op', 'if_flag_clear' if is_ == 'set' else 'if_flag_set',
+                        idx, '@' + fail_label])
+        return ops
+
+    def _move_words(self, mv, ctx):
+        dest = str(mv.get('dest', ''))
+        if ':' not in dest:
+            raise ProjectError(f"{ctx}: dest must be room:$xx or vanilla:$xx")
+        mid = F.val(dest.split(':', 1)[1])
+        k, x, y = int(mv.get('screen', 0)), int(mv['x']), int(mv['y'])
+        if not (0 <= k <= 15 and 0 <= x <= 9 and 0 <= y <= 7):
+            raise ProjectError(f"{ctx}: move to screen {k} cell ({x},{y}) outside "
+                               "the 4x4 grid / 10x8 cells")
+        px = ((k % 4) * 10 + x) * 16 + 8
+        py = ((k // 4) * 8 + y) * 16 + 8
+        return f'0x{mid:04X}', f'0x{px:04X}', f'0x{py:04X}'
+
+    def _lower_steps(self, steps, ctx, lab, field, helper_idx=None):
+        """-> (ops, field_after). lab = [counter] for unique local labels."""
+        ops = []
+        if not isinstance(steps, list):
+            raise ProjectError(f"{ctx}: steps must be a list")
+        for i, st in enumerate(steps):
+            c = f"{ctx}[{i}]"
+            if not isinstance(st, dict):
+                raise ProjectError(f"{c}: a step is an object")
+            kind = self.step_kind(st)
+            if kind is None:
+                raise ProjectError(f"{c}: a step needs exactly one of {self.STEP_KINDS}")
+            if kind == 'say':
+                if field:
+                    ops.append(['op', 'init_dialog'])
+                ops.append(['text', st['say']])
+            elif kind == 'ask':
+                lab[0] += 1
+                n = lab[0]
+                if field:
+                    ops.append(['op', 'init_dialog'])
+                ops.append(['text', st['ask']])
+                ops.append(['op', 'check_and_branch', '0xC83C', '0x0001', f'@no{n}'])
+                y_ops, fy = self._lower_steps(st.get('yes') or [], c + '.yes', lab, False, helper_idx)
+                n_ops, fn = self._lower_steps(st.get('no') or [], c + '.no', lab, False, helper_idx)
+                ops += y_ops + [['op', 'goto', f'@join{n}'], f'label:no{n}'] + n_ops \
+                    + [f'label:join{n}']
+                field = fy or fn
+            elif kind == 'if':
+                lab[0] += 1
+                n = lab[0]
+                ops += self._terms_ops(st['if'], f'else{n}', c)
+                t_ops, ft = self._lower_steps(st.get('then') or [], c + '.then', lab, field, helper_idx)
+                e_ops, fe = self._lower_steps(st.get('else') or [], c + '.else', lab, field, helper_idx)
+                ops += t_ops + [['op', 'goto', f'@fi{n}'], f'label:else{n}'] + e_ops \
+                    + [f'label:fi{n}']
+                field = ft or fe
+            elif kind in ('set', 'clear'):
+                fl = st[kind] if isinstance(st[kind], list) else [st[kind]]
+                for f in fl:
+                    ops.append(['op', 'set_flag' if kind == 'set' else 'clear_flag',
+                                self.resolve_flag_ref(f, c)])
+            elif kind == 'battle':
+                b = st['battle'] or {}
+                ens = b.get('enemies') or []
+                if not 1 <= len(ens) <= 3:
+                    raise ProjectError(f"{c}: a battle has 1-3 enemies")
+                eids = [self.enemy_ref(e, c) for e in ens]
+                if len(eids) == 1:
+                    ops.append(['op', 'trigger_battle3', eids[0]])
+                else:
+                    for j, e in enumerate(eids):
+                        ops.append(['op', 'write_ram2', f'0x{0xDA03 + 2 * j:04X}', e])
+                    ops.append(['op', 'write_ram', '0xDA02', len(eids) - 1])
+                    ops.append(['op', 'boss_battle'])
+                field = True
+            elif kind == 'move':
+                ops.append(['op', 'map_transition'] + list(self._move_words(st['move'], c)))
+            elif kind == 'helper':
+                h = st['helper'] or {}
+                if helper_idx is None:
+                    raise ProjectError(f"{c}: the helper exit needs the room context "
+                                       "(the script is not bound to any room screen)")
+                H = helper_idx
+                land = h.get('land')
+                lab[0] += 1
+                n = lab[0]
+                spin = [['op', 'long_delay', 4], ['op', 'face_up', H],
+                        ['op', 'long_delay', 4], ['op', 'face_left', H],
+                        ['op', 'long_delay', 4], ['op', 'face_down', H],
+                        ['op', 'long_delay', 4]]
+                if field is False:
+                    ops.append(['op', 'close_text'])
+                ops += [['op', 'delay', 8],
+                        ['op', 'npc_write', H, 0, 0]]                 # reveal
+                if isinstance(land, dict):
+                    # a fixed landing cell (screen-local); faces right
+                    lx, ly = int(land.get('x', 4)), int(land.get('y', 3))
+                    ops += self._helper_fixed(H, n, lx, ly)
+                    face = lambda tag: [['op', 'face_right', H]]   # noqa: E731
+                else:
+                    # S101 r2 (user: "lands left of player … ideally always"):
+                    # beside the player at RUN time — the player's absolute
+                    # tile ($FF97/$FF98) is matched against every value the
+                    # screens that run this script allow; left of the player
+                    # facing right, or right of them facing left on column 0
+                    ld, face = self._helper_beside_player(H, n)
+                    ops += ld
+                ops += [['op', 'write_ram2', '0xD8E3',
+                         f'0x{(self.HELPER_FLY_CURVE << 8) | self.HELPER_FLY_TILES:04X}'],
+                        ['op', 'trigger_anim', f'0x{(self.HELPER_FLY << 8) | H:04X}'],
+                        ['op', 'wait_movement']] + spin + face('a') + [['op', 'long_delay', 4]]
+                if h.get('say'):
+                    ops += [['op', 'init_dialog'], ['text', h['say']], ['op', 'close_text']]
+                ops += [['op', 'trigger_anim', f'0x{(self.HELPER_HOP << 8) | H:04X}'],
+                        ['op', 'wait_movement']] + spin + face('b') + [['op', 'long_delay', 6]]
+                ev = h.get('castle') or 'none'
+                if ev == 'heal':            # the priest's blessing + heal (S101 r3)
+                    ops.append(['op', 'write_ram', '0xD92B', 6])
+                elif ev == 'king':          # the King's speech for one gate's boss
+                    ops += [['op', 'write_ram', '0xD9E3', int(F.val(h.get('king_speech', 0x31)))],
+                            ['op', 'write_ram', '0xD92B', 7]]
+                ops.append(['op', 'warp_fade'] + list(self._move_words(h, c)))
+                field = True
+            elif kind == 'end':
+                ops.append(['end'])
+        return ops, field
+
+    PLAYER_TX, PLAYER_TY = 0xFF97, 0xFF98     # HRAM: player tile, absolute
+    # The fly program ($1C $16NN, measured S101 r2): each frame the NPC moves
+    # +2 px right and down along a curve; it runs D8E3*8 frames and D8E4
+    # (1-3, else 4) picks the curve. D8E3 = 3, D8E4 = 3: +48 px right,
+    # +43 px down. So the compiler places the hidden helper at (land − 48,
+    # land − 43) in PIXELS (slot +$18/+$1A, absolute 16-bit) and it lands on
+    # the exact cell, coming in from the upper left.
+    HELPER_FLY_DX, HELPER_FLY_DY, HELPER_FLY_TILES, HELPER_FLY_CURVE = 48, 43, 3, 3
+
+    def _helper_start_ops(self, H, ax, ay):
+        """ops placing helper NPC H so that it lands on absolute tile (ax, ay)."""
+        base = 0xD7D2 + 32 * (H - 1)
+        px = (ax * 16 + 8 - self.HELPER_FLY_DX) & 0xFFFF
+        py = (ay * 16 + 8 - self.HELPER_FLY_DY) & 0xFFFF
+        return [['op', 'write_ram2', f'0x{base + 0x18:04X}', f'0x{px:04X}'],
+                ['op', 'write_ram2', f'0x{base + 0x1A:04X}', f'0x{py:04X}']]
+
+    def _helper_screens_of(self):
+        return self._helper_screens.get(self._lowering_sid) or list(range(16))
+
+    def _helper_fixed(self, H, n, lx, ly):
+        """A fixed screen-local landing cell on every screen running the script."""
+        keys = self._helper_screens_of()
+        ops = []
+        for k in keys:
+            ops.append(['op', 'branch_screen', k, f'@hs{n}_{k}'])
+        ops.append(['op', 'goto', f'@hsd{n}'])
+        for k in keys:
+            ops.append(f'label:hs{n}_{k}')
+            ops += self._helper_start_ops(H, (k % 4) * 10 + lx, (k // 4) * 8 + ly)
+            ops.append(['op', 'goto', f'@hsd{n}'])
+        ops.append(f'label:hsd{n}')
+        return ops
+
+    def _helper_beside_player(self, H, n):
+        """-> (ops placing the helper so it lands LEFT of the player — or
+        RIGHT on a screen's column 0 —, final-facing op factory). One byte
+        compare per possible player column / row of the screens that run the
+        script ($15 check_and_branch: `ld a,[hl] / cp c`)."""
+        keys = self._helper_screens_of()
+        cols = sorted({k % 4 for k in keys})
+        rows = sorted({k // 4 for k in keys})
+        base = 0xD7D2 + 32 * (H - 1)
+        ops = []
+        for c in cols:
+            for lx in range(10):
+                ops.append(['op', 'check_and_branch', f'0x{self.PLAYER_TX:04X}',
+                            c * 10 + lx, f'@hx{n}_{c * 10 + lx}'])
+        ops.append(['op', 'goto', f'@hxd{n}'])
+        for c in cols:
+            for lx in range(10):
+                ax = c * 10 + lx
+                land = ax - 1 if lx else ax + 1
+                px = (land * 16 + 8 - self.HELPER_FLY_DX) & 0xFFFF
+                ops += [f'label:hx{n}_{ax}',
+                        ['op', 'write_ram2', f'0x{base + 0x18:04X}', f'0x{px:04X}'],
+                        ['op', 'goto', f'@hxd{n}']]
+        ops.append(f'label:hxd{n}')
+        for r in rows:
+            for ly in range(8):
+                ops.append(['op', 'check_and_branch', f'0x{self.PLAYER_TY:04X}',
+                            r * 8 + ly, f'@hy{n}_{r * 8 + ly}'])
+        ops.append(['op', 'goto', f'@hyd{n}'])
+        for r in rows:
+            for ly in range(8):
+                ay = r * 8 + ly
+                py = (ay * 16 + 8 - self.HELPER_FLY_DY) & 0xFFFF
+                ops += [f'label:hy{n}_{ay}',
+                        ['op', 'write_ram2', f'0x{base + 0x1A:04X}', f'0x{py:04X}'],
+                        ['op', 'goto', f'@hyd{n}']]
+        ops.append(f'label:hyd{n}')
+
+        def face(tag):
+            out = []
+            for c in cols:      # player on a screen's column 0: helper is on their RIGHT
+                out.append(['op', 'check_and_branch', f'0x{self.PLAYER_TX:04X}', c * 10,
+                            f'@hfl{n}{tag}'])
+            return out + [['op', 'face_right', H], ['op', 'goto', f'@hfd{n}{tag}'],
+                          f'label:hfl{n}{tag}', ['op', 'face_left', H], f'label:hfd{n}{tag}']
+        return ops, face
+
+    def _helper_scripts(self):
+        """{script id: helper sprite} for talk scripts whose steps use the helper."""
+        out = {}
+
+        def walk(steps):
+            for st in steps or []:
+                if not isinstance(st, dict):
+                    continue
+                if 'helper' in st:
+                    return (st['helper'] or {}).get('sprite', self.HELPER_SPRITE)
+                for key in ('yes', 'no', 'then', 'else'):
+                    got = walk(st.get(key))
+                    if got is not None:
+                        return got
+            return None
+        for sc in self.custom.get('scripts', []):
+            t = sc.get('talk') or {}
+            if t.get('steps'):
+                sp = walk(t['steps'])
+                if sp is not None:
+                    out[sc['id']] = F.val(sp)
+        return out
+
+    def _place_helpers(self):
+        """S101: every screen that fires a helper-exit script gets a hidden
+        helper NPC at one FIXED slot per script (the script names its NPC by
+        index, so every state of every such screen puts it at the same slot:
+        states with fewer NPCs are padded with hidden dummies). Returns
+        {script id: npc index (1-based, spots not counted)}."""
+        helpers = self._helper_scripts()
+        if not helpers:
+            return {}
+        uses = {sid: [] for sid in helpers}          # sid -> [(room, k)]
+        for r in self.rooms:
+            if r.get('placeholder'):
+                continue
+            table = r.get('scripts') or {}
+            by_idx = {int(k): v for k, v in table.items()}
+            for k, scr in self.room_screens(r).items():
+                for st in self.screen_states(scr):
+                    for n in st.get('npcs', []) or []:
+                        sid = n.get('script')
+                        if isinstance(sid, int):
+                            sid = by_idx.get(sid)
+                        if sid in uses and (r, k) not in uses[sid]:
+                            uses[sid].append((r, k))
+            ent = table.get('0')
+            if ent in uses:
+                t = next((sc for sc in self.custom.get('scripts', [])
+                          if sc.get('id') == ent), {}).get('talk') or {}
+                ks = [int(t['screen'])] if t.get('screen') is not None \
+                    else list(self.room_screens(r))
+                for k in ks:
+                    if (r, k) not in uses[ent]:
+                        uses[ent].append((r, k))
+
+        def real_npcs(st):
+            return [n for n in st.get('npcs', []) or []
+                    if n.get('kind') == 'npc' or (n.get('kind') == 'raw' and
+                                                 F.val(n['bytes'][0]) < 0x80)]
+        out = {}
+        for sid, places in uses.items():
+            if not places:
+                continue
+            H = 1 + max(len(real_npcs(st)) for r, k in places
+                        for st in self.screen_states(self.room_screens(r)[k]))
+            if H > 8:
+                raise ProjectError(
+                    f"script {sid}: the helper exit needs an NPC slot but a screen "
+                    "using it already has 8 NPCs (the engine cap)")
+            for r, k in places:
+                scr = self.room_screens(r)[k]
+                sts = scr.get('states')
+                targets = sts if sts else [scr]
+                for st in targets:
+                    lst = st.setdefault('npcs', [])
+                    while len(real_npcs(st)) < H - 1:
+                        lst.append({'kind': 'npc', 'sprite': '0xFF', 'x': 0, 'y': 0,
+                                    'hidden': True, 'script': 'none',
+                                    'comment': 'hidden pad (keeps the helper slot fixed)'})
+                    lst.append({'kind': 'npc', 'sprite': helpers[sid], 'x': 0, 'y': 0,
+                                'hidden': True, 'facing': 'right', 'script': 'none',
+                                'comment': f'helper for {sid} (revealed by its exit)'})
+            out[sid] = H
+            self._helper_screens[sid] = sorted({int(k) for _r, k in places})
+        return out
+
+    def _lower_talk_scripts(self, helper_idx=None):
+        helper_idx = helper_idx or {}
         for s in self.custom.get('scripts', []):
             t = s.get('talk')
             if t is None or s.get('_talk_lowered'):
@@ -340,6 +704,25 @@ class Project:
             ctx = f"scripts[{s.get('id')}].talk"
             if 'ops' in s:
                 raise ProjectError(f"{ctx}: a script has either 'talk' or 'ops', not both")
+            if 'steps' in t:
+                unknown = set(t) - {'steps', 'on_arrival', 'screen', 'comment'}
+                if unknown:
+                    raise ProjectError(f"{ctx}: unknown keys {sorted(unknown)}")
+                if s['id'] in self._helper_scripts() and s['id'] not in helper_idx:
+                    continue                 # lowered after rooms resolve (_place_helpers)
+                lab = [0]
+                ops = []
+                if t.get('screen') is not None:
+                    ops += [['op', 'branch_screen', int(t['screen']), '@run'], ['end'],
+                            'label:run']
+                self._lowering_sid = s['id']
+                body, _f = self._lower_steps(t['steps'], ctx + '.steps', lab,
+                                             bool(t.get('on_arrival')),
+                                             helper_idx.get(s['id']))
+                self._lowering_sid = None
+                s['ops'] = ops + body + [['end']]
+                s['_talk_lowered'] = True
+                continue
             if not t.get('text'):
                 raise ProjectError(f"{ctx}: 'text' (the dialogue shown first) is required")
             ops = [['text', t['text']]]
@@ -600,15 +983,16 @@ class Project:
             gate = int(F.val(ru.get('gate', -1)))
             if not 0 <= gate <= 31:
                 raise ProjectError(f"{c}: gate must be 0-31 (got {gate})")
-            floors = G.gate_floors(gate, self.repo_root or self.root)
+            floors = G.gate_floor_count(self.custom, gate, self.repo_root or self.root)
+            minf = G.gate_min_floor(self.custom, gate)
             try:
-                first, last = G.floor_range(ru.get('floors', 'all'), floors)
+                first, last = G.floor_range(ru.get('floors', 'all'), floors, minf)
             except ValueError as e:
                 raise ProjectError(f"{c}: {e}")
-            if first < G.MIN_FLOOR:
+            if first < minf:
                 raise ProjectError(f"{c}: floor {first} — custom rooms start at "
-                                   f"floor {G.MIN_FLOOR} (the first floor stays "
-                                   "the gate's own)")
+                                   f"floor {minf} (the first floor stays the gate's "
+                                   "own unless the gate is marked hand-made)")
             if floors and last > floors - 1:
                 raise ProjectError(
                     f"{c}: floor {last} — gate {gate} has {floors} floors and "
@@ -658,6 +1042,45 @@ class Project:
         self._gate_rows = rows
         return rows
 
+    # ------------------------------------------------ monster NPCs (S101)
+    MONSTER_SPRITE_BASE = 0xF0      # display-list ids $F0-$F3 (bank $0B resolver)
+    MONSTER_CAST_MAX = 4
+
+    def monster_cast(self, r, k):
+        """Distinct species of the `monster` NPCs on screen k (all states), in
+        first-seen order — slot n is drawn by sprite id $F0+n."""
+        scr = self.room_screens(r).get(k)
+        if scr is None:
+            return []
+        cast = []
+        for st in self.screen_states(scr):
+            for n in st.get('npcs', []) or []:
+                if n.get('kind') == 'npc' and n.get('monster') is not None:
+                    sp = F.val(n['monster'])
+                    if sp not in cast:
+                        cast.append(sp)
+        return cast
+
+    def npc_sprite(self, r, k, n):
+        """The NPC entry's sprite byte: a `monster` NPC draws through its
+        screen's cast slot ($F0 + index); others use `sprite`."""
+        if n.get('monster') is not None:
+            sp = F.val(n['monster'])
+            if not 0 <= sp <= 255 or 217 <= sp <= 223:
+                raise ProjectError(
+                    f"room {r.get('id')} screen {k}: monster NPC species {sp} — species "
+                    "217-220 hang or crash the game as monster NPCs (no real follower "
+                    "tables; PyBoy S101) and 221-223 do not exist")
+            cast = self.monster_cast(r, k)
+            idx = cast.index(sp)
+            if idx >= self.MONSTER_CAST_MAX:
+                raise ProjectError(
+                    f"room {r.get('id')} screen {k}: more than "
+                    f"{self.MONSTER_CAST_MAX} different monster NPCs (the engine's "
+                    "display list has 4 slots, $F0-$F3)")
+            return self.MONSTER_SPRITE_BASE + idx
+        return F.val(n['sprite'])
+
     def gate_rooms(self):
         """{room id: [rule rows]} for rooms served inside gates."""
         out = {}
@@ -665,11 +1088,95 @@ class Project:
             out.setdefault(row['room_id'], []).append(row)
         return out
 
-    @staticmethod
-    def room_flags(r):
+    def room_flags(self, r):
         """CustomRoomFlagsTable byte (bank $71 entry 5): bit 0 = saving
-        NOT allowed (custom.rooms[].can_save false; default allowed)."""
-        return 0 if r.get('can_save', True) else 0x01
+        NOT allowed (custom.rooms[].can_save false; default allowed — but a
+        gate's BOSS room defaults to no saving, like vanilla boss rooms $30-$4F:
+        user rule S100, S101)."""
+        default = r.get('id') not in self.boss_room_ids()
+        return 0 if r.get('can_save', default) else 0x01
+
+    # ------------------------------------------ per-gate settings (S101)
+    def gate_configs(self):
+        """custom.gates[] resolved -> {gate: {floors, boss_map, spawn (tx, ty),
+        boss_room (custom id or None), hand_made, row [8 bytes]}} for all 32
+        gates (vanilla values where not edited). Owning doc: PROJECT_COMPILER
+        §2.17; engine: GATE_GENERATION §1 / §7.7."""
+        if getattr(self, '_gate_cfg', None) is not None:
+            return self._gate_cfg
+        from . import gates as G
+        start = self.repo_root or self.root
+        van = {g['id']: g for g in G.vanilla_gates(start)}
+        seen = set()
+        for i, g in enumerate(self.custom.get('gates') or []):
+            c = f"custom.gates[{i}]"
+            unknown = set(g) - G.GATE_KEYS
+            if unknown:
+                raise ProjectError(f"{c}: unknown keys {sorted(unknown)}")
+            gid = int(F.val(g.get('gate', -1)))
+            if not 0 <= gid <= 31:
+                raise ProjectError(f"{c}: gate must be 0-31 (got {gid})")
+            if gid in seen:
+                raise ProjectError(f"{c}: gate {gid} has two entries")
+            seen.add(gid)
+        out = {}
+        for gid in range(32):
+            v = van[gid]
+            row = list(bytes.fromhex(v['row']))
+            gs = G.gate_settings(self.custom, gid)
+            c = f"custom.gates[gate {gid}]"
+            boss_room = None
+            if gs.get('floors') is not None:
+                n = int(F.val(gs['floors']))
+                if not G.FLOORS_MIN <= n <= G.FLOORS_MAX:
+                    raise ProjectError(f"{c}: floors must be {G.FLOORS_MIN}-"
+                                       f"{G.FLOORS_MAX} (the count includes the "
+                                       f"boss floor; got {n})")
+                row[3] = n
+            b = gs.get('boss')
+            if b not in (None, '', 'vanilla'):
+                if isinstance(b, str) and b.startswith('vanilla:'):
+                    mid = F.val(b.split(':', 1)[1])
+                    if not 0 <= mid < 0x6B:
+                        raise ProjectError(f"{c}: boss {b!r} is not a vanilla map")
+                    sp = G.vanilla_boss_spawn(mid, start)
+                    if sp is None:
+                        raise ProjectError(
+                            f"{c}: vanilla map {F.hexb(mid)} is no gate's boss room "
+                            "— its arrival cell is unknown (use a custom room)")
+                    row[4], row[5], row[6] = mid, sp[0], sp[1]
+                else:
+                    room = self.room_by_id(b)
+                    if room is None or room.get('placeholder'):
+                        raise ProjectError(f"{c}: boss room {b!r} is not a custom "
+                                           "room of this project")
+                    mid = F.val(room['mapID'])
+                    if mid > 0xFE:
+                        raise ProjectError(f"{c}: boss room map id {F.hexb(mid)} > $FE")
+                    arr = room.get('gate_arrival')
+                    if not arr:
+                        raise ProjectError(
+                            f"{c}: boss room {b!r} has no gate_arrival {{screen, x, "
+                            "y}} — where the player appears on the boss floor")
+                    scr = int(arr.get('screen', 0))
+                    if scr not in self.room_screens(room):
+                        raise ProjectError(f"{c}: boss room {b!r} gate_arrival "
+                                           f"screen {scr} does not exist")
+                    tx, ty = G.arrival_tile(scr, arr['x'], arr['y'])
+                    row[4], row[5], row[6] = mid, tx, ty
+                    boss_room = b
+            out[gid] = {'floors': row[3], 'boss_map': row[4], 'spawn': (row[5], row[6]),
+                        'boss_room': boss_room, 'hand_made': bool(gs.get('hand_made')),
+                        'edited': bool(gs), 'row': row, 'name': v['name'],
+                        'comment': gs.get('comment', '')}
+        self._gate_cfg = out
+        return out
+
+    def boss_room_ids(self):
+        try:
+            return {c['boss_room'] for c in self.gate_configs().values() if c['boss_room']}
+        except ProjectError:
+            return set()
 
     def master_rooms(self):
         compat = (self.build.get('compat') or {}).get('master_table_rooms')

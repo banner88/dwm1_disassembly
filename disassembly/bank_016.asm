@@ -1927,6 +1927,11 @@ jr_016_5bbf:
     ret
 
 
+; BOSS FLOOR (S101 notes): the boss room is fixed per gate — no RNG. Byte 4 =
+; the map id, bytes 5/6 = ABSOLUTE TILE coords b (pixels = 16*b + 8, so any
+; cell of a 4x4-screen room). The room is shown with wInGateworld = 0 (the
+; special-room contract); wBossMapType is also read by LoadNewBGMIdIntoA on
+; the floor BEFORE the boss floor (RoomBGMTable[wBossMapType]).
 jr_016_5be1:
     ld a, [wGateID]
     add a

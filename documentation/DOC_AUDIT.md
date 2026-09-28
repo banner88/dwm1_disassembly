@@ -300,3 +300,14 @@ gate you assumed".
 | GATE_GENERATION §7.5 "Production note (not in the POC)" | DONE S100 | §7.6 — data-driven insertion; `CustomGate1Setup` removed. |
 | TOOLS_AND_DATA: `compress_tiles.py` / `decompress_tiles.py` "✅ roundtrip" (S100 r3) | WRONG (game decoder, PyBoy) | Both used an unbounded `byte + 19` extended length; the game computes it in 8 bits (`$00:HandleCompressedRun`, 0 = 256), so the compressor's 257-274-byte copies decoded shifted in-game while the Python round trip passed. Fixed: MAX_COPY 256, decoder 8-bit. |
 | KEY_LESSONS S96 "the menu blanks … vanilla relies on every colour 1 being cream" — scope | INCOMPLETE (S100 r3) | The descent transition (bank $06 states $10-$17) relies on it too: tile-$E0 blank rows + a fade to the BUFFER's colour 1 (GATE_GENERATION §7.6 "Free-colour rooms"). Normal door transitions (states $00-$06) were not re-measured. |
+
+## S101 addendum (2026-09-27; custom boss floors, ROADMAP P3.7b part 2)
+
+| Claim (where) | Verdict | Correction |
+|---|---|---|
+| BANK04_SCRIPT_ENGINE catalog / bank_004 comments: $47/$48/$49 "npc_buffer_write / npc_hide / npc_show", $4A unnamed | WRONG (PyBoy trace of the vanilla boss exit + handler bytes) | $47-$4A = face UP / DOWN / LEFT / RIGHT for NPC n (0 = player). Table "S101 corrections" in BANK04_SCRIPT_ENGINE; comments fixed in both trees. |
+| BANK04_SCRIPT_ENGINE: $1C "CompareRAM" | WRONG | NPC animation `$SSNN` ($16 = fly in from the NPC's position: `$D8E3`·8 frames, +2 px/frame right, down along curve `$D8E4`; $04 = hop). S101 r2 corrected S101's own "fly to the tile in $D8E3/4". |
+| BANK04_SCRIPT_ENGINE: $0D "WriteNPCByte" (use unclear), $06 unnamed, $3B / $58 unnamed | INCOMPLETE | $0D `npc,0,0` reveals a hidden NPC; $06 closes the text box; $3B = wavy fade warp; $58 = FloorSkip (gate-world script 4 only). |
+| MONSTER_DATA "Boss Join System": story bosses "join through the natural probability path" | IMPRECISE | Tier 0 skips the roll (`LoadB54_5683`) — always joins when it is the candidate; the candidate is the enemy KO'd last (`$DD61`). |
+| bank_00b.asm `Call_00b_4839` (unannotated) / ROOM_DATA_FORMAT S91 "ids $F0+ alias $00" | INCOMPLETE | Sprite ids $E1-$E3 = party slot monsters, $F0-$F3 = the display list at `$D7CA` (any species as its follower); aliasing to $00 happens only while the list is empty. |
+| Summary "helper = Warubou" (user wording S101) vs ROM | NOTE | The vanilla boss-exit helper is NPC sprite $21 and its text box is labelled "Watabou:" (FAQ agrees); sprite $14 (intro) may be Warubou — unconfirmed. The helper step lets the author pick sprite and text. |

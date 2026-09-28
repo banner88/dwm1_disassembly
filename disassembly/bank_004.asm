@@ -1960,6 +1960,9 @@ CallAndCachePtr:
     db $02, $00, $03, $00, $02, $00, $02, $00, $03, $00, $02, $00, $03, $00, $04, $00
     db $03, $00, $04, $00, $04, $00, $80, $80
 
+; S101 r2: a fly step (program $16) — first call sets the frame counter
+; [de] = (10 - $D8E3)*8 + 1 counting down; $D8E4 picks the curve table
+; ($4DF3/$4E95/$4F37/$4FD9 = dy per frame); the pixel X (+$18) steps +2.
 OpcodeHandlerAdvance5:
     ldh a, [$d7]
     add $01
@@ -2388,14 +2391,14 @@ MarkScriptActive:
 ; $03  $5788       Event        SetEventFlag: set bit in $D99B+ bitfield
 ; $04  $57A1       Screen       TriggerScreenEffect: set $C8EF/$C8F0/$C8F1
 ; $05  $57EB       Battle       TriggerBattle(ByEID): 1 param = EID -> $DA03/04, 1 enemy, $DA09=1
-; $06  $5819       State        IncrementC915: inc $C915 dialogue counter
+; $06  $5819       State        IncrementC915: inc $C915 = close the open text box (S101: every boss win tail uses it after its text)
 ; $07  $5824       State        InitDialogMode: set wGameState bit 0, init $C917
 ; $08  $5842       Flow         NOP: no operation
 ; $09  $5843       Timer        SetDelay: set frame countdown in $D8DB
 ; $0A  $5860       NPC          SetNPCMoveX: set NPC + X delta, trigger walk
 ; $0B  $5898       NPC          SetNPCMoveY: set NPC + Y delta, trigger walk
 ; $0C  $58D0       NPC          SetNPCFacing: set facing via NPC buffer (81 lines)
-; $0D  $5968       NPC          WriteNPCBuffer: write byte to NPC buffer (52 lines)
+; $0D  $5968       NPC          WriteNPCBuffer (npc, field, value): slot byte write; field 0 = the TYPE byte, so `$0D n,0,0` REVEALS a hidden (bit-6) NPC (S101: Villager boss reveals Watabou, slot 1 $70 -> $00)
 ; $0E  $59D2       Flow         BranchByScreen: branch based on $C925 screen index
 ; $0F  $5A02       Map          MapTransitionFull: write $C96D-$C96F, set $C88F
 ; $10  $5A6F       NPC          NPCMoveToPos: move NPC to position via $D7EA (47 lines)
@@ -2410,7 +2413,7 @@ MarkScriptActive:
 ; $19  $5C6D       Timer        SetDelayAndFlags: delay + set $D8D7 flags
 ; $1A  $5C86       NPC          NPCMoveSequence: multi-step NPC movement ($D8E9)
 ; $1B  $5CCF       NPC          NPCMoveSequence2: movement variant with $D8E9
-; $1C  $5D1A       NPC          NPCMoveCheck: check NPC movement completion
+; $1C  $5D1A       NPC          NpcRunAnim ($AANN): $D8E9+8*NN := [1,0,AA,NN], sets $D8D7.4 — NPC NN runs movement/anim program AA. S101 r2 (PyBoy-measured): AA=$16 = FLY IN from the NPC's current pixel position: $D8E3*8 frames, +2 px right per frame, down along the curve $D8E4 picks (1-3, else 4); $D8E3=3/$D8E4=3 = +48 px right, +43 px down (vanilla Healer exit: $0307 from an off-screen home). NOT a destination tile. AA=$04 = hop in place; $19 waits for it
 ; $1D  $5D4B       NPC          LockMovement: set $D8D7 bit 5, suppress facing
 ; $1E  $5D53       NPC          UnlockMovement: clear $D8D7 bit 5
 ; $1F  $5D5B       Battle       ArenaBattleSetup: 3-enemy arena party from
@@ -2458,10 +2461,10 @@ MarkScriptActive:
 ; $44  $676F       NPC          SetNPCPosAndFace: set position+facing via buffer
 ; $45  $67B1       Monster      FullMonsterOp: bank $01 entries 3/5/9
 ; $46  $67FD       Event        CheckDungeonFlags: check $DDB4/$DDCE/$DDE8
-; $47  $6822       NPC          NPCBufferCheck: check NPC buffer $D7D8 area
-; $48  $684D       Flow         ReadAndContinue2: read params, continue
-; $49  $6866       Flow         ReadAndContinue3: read params, continue
-; $4A  $687F       Flow         ReadAndContinue4: read params, continue
+; $47  $6822       NPC          FaceUp n: slot n-1 +6 (facing) := 2; n=0 -> the PLAYER (HRAM $8D-$8F via the shared tail, mislabeled ScriptEndCheck) — S101 (the S97 facing field; the old 'buffer/show/hide' names were wrong)
+; $48  $684D       NPC          FaceDown n: facing := 0 (see $47; the boss scenes spin Watabou with $47/$49/$48/$4A + $4D delays)
+; $49  $6866       NPC          FaceLeft n: facing := 1 (see $47)
+; $4A  $687F       NPC          FaceRight n: facing := 3 (see $47)
 ; $4B  $6898       Sound        ReadSavedBGM: read $C8B6 (prev BGM)
 ; $4C  $68A1       Sound        RestoreBGM: restore BGM from $C8B6
 ; $4D  $68BA       Timer        SetLongDelay: extended delay via $D8D8
@@ -4862,6 +4865,11 @@ SaveReadDE:
     ld [de], a
     ret
 
+; ScriptCmd $3B MapTransitionFade (3 words): word 1 low = wWarpGateId (dest
+; map), high = wWarpFlag; words 2/3 = spawn X / Y in ABSOLUTE PIXELS. Every
+; vanilla gate-boss win tail (28 boss rooms, ROM survey S101) ends with
+; `$3B $0000, $00E8, $0058` = Castle (map $00) pixel (232,88) = tile (14,5),
+; the throne room on screen 1 (PyBoy S101, Villager boss on the user's save).
 label4_65ab:
     ld a, [wScriptCounter]
     add $01
@@ -5795,6 +5803,13 @@ WriteAndSetupHLB:
     jp Jump_004_55f5
 
 
+; ScriptCmd $58 FloorSkip (0 params): a staircase kick that lands deeper in
+; the current gate — wCurrentFloor += 19 (entry 5 adds 1 = 20 floors), capped
+; so the next floor is at most the one before the boss floor; if already on
+; wLastFloor-2 the kick just descends one floor. Writes the same mailbox as
+; the maze staircase (wWarpGateId 0, wWarpFlag $80). ROM scan S101: the only
+; script user is the gate-world script set (map type $70) script 4 at
+; $0F:$6ED0, after a RandomScaledBattle ($52) win.
 label4_6ba0:
     ld a, [wLastFloor]
     dec a

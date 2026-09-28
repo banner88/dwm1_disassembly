@@ -5666,7 +5666,7 @@ jr_006_6a25:
     xor a
     ld [$c915], a
     ld [$c916], a
-    ld a, $08
+    ld a, $08                ; S101 r3: $D92B = 8 -> castle arrival = priest heal path ($0C:$490A)
     ld [$d92b], a
     ld hl, $0000
     ld a, l

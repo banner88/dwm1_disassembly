@@ -61,7 +61,7 @@ PATCH_FILES = [
     "bank_00a.asm", "bank_015.asm", "bank_051.asm",  # S60 CF3 walker redirects
     "wram.asm", "game.asm",
 ]
-PATCH_NEW_FILES = ["bank_060.asm", "bank_064.asm", "bank_067.asm", "bank_069.asm", "bank_06a.asm", "bank_071.asm", "bank_072.asm", "bank_073.asm", "bank_074.asm", "bank_07e.asm"]  # don't exist in clean disassembly/
+PATCH_NEW_FILES = ["bank_060.asm", "bank_064.asm", "bank_067.asm", "bank_069.asm", "bank_06a.asm", "bank_06b.asm", "bank_071.asm", "bank_072.asm", "bank_073.asm", "bank_074.asm", "bank_07e.asm"]  # don't exist in clean disassembly/
 
 BUILD_ARTIFACTS = ["game.o", "game.gbc", "game.sym", "game.map"]
 

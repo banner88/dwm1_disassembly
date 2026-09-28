@@ -54,6 +54,49 @@ def main():
         'document model must round-trip project.json byte-for-byte'
     print(f'OK: window up, {n} rooms listed, Build enabled, doc round-trips')
 
+    # S101 r2: the Help tab (user: "needs lookup") — every topic loads, search
+    # filters, and the help is kept up to date WITH the editor: its
+    # _revision.md must name the current EDITOR_REVISION
+    from editor2 import EDITOR_REVISION
+    from editor2.app.help_tab import help_revision, load_topics
+    ht = w.help_tab
+    assert w.tabs.indexOf(ht) >= 0, 'no Help tab'
+    topics = load_topics()
+    assert len(topics) >= 8 and ht.list.count() == len(topics), (len(topics), ht.list.count())
+    ht.search.setText('warubou')
+    assert 0 < ht.list.count() < len(topics), ht.list.count()
+    ht.search.setText('')
+    assert ht.show_topic('Boss floors') and 'step by step' in ht.view.toPlainText()
+    assert help_revision() == EDITOR_REVISION, (
+        f'editor2/help/_revision.md says {help_revision()!r} but EDITOR_REVISION is '
+        f'{EDITOR_REVISION!r} — update the help topics for this delivery, then the stamp')
+    print(f'OK: Help tab — {len(topics)} topics, search, help revision == {EDITOR_REVISION}')
+
+    # S101 r3: World tab zoom (wheel, around the mouse) + pan (drag empty canvas)
+    from PySide6.QtCore import QPoint, QPointF, Qt
+    from PySide6.QtGui import QWheelEvent, QMouseEvent
+    wt = w.world_tab
+    w.tabs.setCurrentWidget(wt)
+    w.resize(1300, 800)
+    w.show()
+    app.processEvents()
+    z0 = wt.view.transform().m11()
+    vp = wt.view.viewport()
+    c = QPointF(vp.width() / 2, vp.height() / 2)
+    for _ in range(4):
+        ev = QWheelEvent(c, vp.mapToGlobal(c), QPoint(0, 0), QPoint(0, 120), Qt.NoButton,
+                         Qt.NoModifier, Qt.NoScrollPhase, False)
+        wt._wheel(ev)
+    z1 = wt.view.transform().m11()
+    assert z1 > z0 * 1.5, (z0, z1)
+    h0 = wt.view.horizontalScrollBar().value()
+    wt.view.horizontalScrollBar().setValue(h0 + 200)       # what a hand-drag does
+    assert wt.view.horizontalScrollBar().value() != h0, 'no room to pan when zoomed'
+    wt.zoom(1 / 50)
+    assert abs(wt.view.transform().m11() - wt.ZOOM_MIN) < 1e-6
+    wt.fit()
+    print(f'OK: World tab — wheel zoom {z0:.2f} -> {z1:.2f}, pans when zoomed, clamp, Fit')
+
     # Rooms tab: the canvas renders LIVE from project.json (S93) — no build
     # needed. The selected room must produce pixels; placeholder rooms must
     # not; the arena clone's vanilla-referenced layout must be read-only.

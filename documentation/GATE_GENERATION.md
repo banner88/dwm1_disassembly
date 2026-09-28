@@ -645,6 +645,70 @@ new game.
 
 ---
 
+## 7.7 Custom boss floors, hand-made gates (S101, ROADMAP P3.7b part 2) — built, PyBoy-verified, NOT yet user-tested
+
+**The boss floor.** Bank $16 entry 5 serves the boss when `wCurrentFloor ==
+wLastFloor − 1` from `GateFloorDataTable` ($16:$70A6, 32 × 8 B per gate id):
+byte 3 = floor count (incl. the boss floor), byte 4 = boss map, bytes 5/6 =
+arrival TILE (pixels = 16·b + 8), byte 7 = depth tier (only reader: the bank
+$01 item tier). The path (`jr_016_5be1`) has **no RNG** — so a custom boss
+floor is DATA only: byte 4 = the custom mapID, 5/6 = the room's
+`gate_arrival` cell (screen-grid absolute). The table is a compiler-owned
+region (`; @BUILD_PROJECT BEGIN gate_floor_table`, emitter `gates16`) fed by
+`custom.gates[]` (PROJECT_COMPILER §2.17); a gate without settings keeps its
+vanilla 8 bytes, so the example project's region is byte-identical to the
+ROM. Bytes 0-2 (floor-type rows) are still the vanilla values — private rows
+per gate are open (ROADMAP P3.7b part 2).
+
+**What happens in the boss room** is the room's scripts — nothing in bank
+$16. Vanilla (28 boss rooms): the entry script sets `D92B = 6`; the
+talk/examine script fights with `$5A` EID (single, `DA09 = 3`) or `$5B`
+(preset: `DA02 = count − 1`, EIDs at `DA03/05/07`); the WIN resumes the
+script (a LOSS never returns: castle, half gold); the win tail sets the
+cleared flag, `D92B = 7`, then `$3B $0000,$00E8,$0058` — the wavy fade to the
+Castle (map $00, pixel (232, 88) = screen 1 tile (4,5)). Rooms have state 0
+(boss present) and state 1 (cleared, walk-on exit home). The "helper" who
+flies in first is NPC sprite **$21**; its text box says "Watabou:" (the FAQ
+agrees). Custom boss rooms express the same event as a **conversation**
+(`talk.steps`, PROJECT_COMPILER §2.18): battle → (join, engine) → flags →
+helper → any destination. Measured S101 on the user's save: a 3-enemy talk
+battle (EIDs 520/327/327) → win → join prompt → flag → helper → a custom
+room; a 1-enemy branch chosen by a flag set on the room's other screen; a
+fight on ARRIVAL (entry script; the post-battle reload does not restart it).
+The helper (S101 r2: Warubou $39 by default) lands on the player's LEFT and
+faces them — the fly-in is a fixed +48 / +43 px move from start pixels the
+compiler computes from the player's tile at run time (PROJECT_COMPILER §2.18).
+
+**The Castle arrival** (S101 r3, PyBoy-measured on the user's save, all 33
+codes): Castle_Script00 on screen 1 dispatches on **`$D92B`**: 0 / 4 → the
+new-game intro / story cascade; **6** (bank $07, the gate return) and **8**
+(bank $50 after a lost battle, bank $06) → `$0C:$490A` = the priest's
+GreatTree blessing + heal (HP measured 1 → 999), `$D9E3 := $FF`; **7** (the
+vanilla boss win tails) → `$0C:$47E0` = the King's speech chain on
+**`$D9E3`** — one speech per gate boss ($30 Healer, $31 Dragon, … $4E
+DeathMore, $C7 Sidoh, $10 Copycat; `conversation.KING_SPEECHES`); every
+speech ends with `$D92B := 3` (5 for post-game codes) and changes NO saved
+flag; an unknown code falls to the priest path; 1-3 / 5 = no event.
+`$D9E3` has one other reader, a castle NPC at `$0C:$5066` ($30 / $3C lines,
+else the herb). The helper step's *at the Castle* option writes these
+before its `$3B` warp (PROJECT_COMPILER §2.18).
+
+**Music.** On the floor before the boss, vanilla switches to the boss song
+by `RoomBGMTable[wBossMapType]`, which overruns for custom maps; bank $71
+entry 2 `CustomRoomBGMResolve` now returns that custom room's own song (or
+$34) when `wBossMapType ≥ $6B` and `wCurrentFloor == wLastFloor − 2`.
+
+**Vanilla boss rooms on other gates** (`boss: "vanilla:$xx"`): byte 4 = that
+map, 5/6 = the owning vanilla gate's spawn (`extracted/gate_names.json`
+`boss_spawn`). Measured: Talisman (gate 2) → the Villager Dragon room at
+(1,6). Its vanilla scripts run unchanged (vanilla flags included).
+
+**Hand-made gates** (`hand_made: true`): `GateDecisionFork` already runs on
+floor 0, so rules may take floor 1; every floor should be a room served
+always (validator warning otherwise; the floor plan shows the maze where
+none is). Measured: Gate of Beginning, 3 floors — floor 1 / floor 2 custom
+rooms at 100 %, their Stairs down descend, floor 3 = a custom boss room.
+
 ## 8. Floor completion / exit ✅
 
 - **Down-staircase**: `Jump_00b_46A7` checks `wScreenIndex == [$C960]` and the

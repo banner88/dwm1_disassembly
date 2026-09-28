@@ -1,5 +1,157 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-09-27 (Session 99 — **ROADMAP P3.3e ANIMATED TILES:
+> the room tile-animation system measured end to end, made per-room for
+> custom rooms, and surfaced in the editor** (user: "Animated tiles next";
+> "indicate currently animated tiles (in vanilla)"; "Can preview animation
+> (maybe button …)"; "Clones SHOULD get soure animation … Also yes migrate";
+> borrowing "fine as long as it's clear whats happening"; "Gate floors do NOT
+> have animation … interesting to add. but not necessary"). S98 not yet
+> re-confirmed this session beyond its doors. **Built S99, NOT yet
+> user-tested.** Verifier PASS 6/6 (check 5 now also runs
+> `census_room_animation.py --check`); clean `1ca6579…` byte-perfect (bank
+> $01 labels + comments, both trees); **patched pin MOVED `ce24de8b…` →
+> `d072eb51…` (patched)**; test_compiler --rom 106/106; test_app --rom PASS
+> (GUI build == pin); test_canvas --rom PASS incl. the new v6.
+> **Session sign-off 2026-09-27** (user: "Fantastic job. Package everything
+> up."), after seven rounds (r2 borrowed water moves — user: "Excellent.
+> Looks good."; r3 Make animated tab + frame pads; r4 unintended-animation
+> repair + Make still; r5 per-quarter part tools; r6 take-over + the count;
+> r7 still quarters, automatic split move, numbered tab — each block below).
+> Rounds r3-r7 are editor-only (pin unchanged); r7's palm path is verified
+> on the user's project + PyBoy, not yet re-tested by the user in-game.
+> Final `EDITOR_REVISION` = 'S99r7'. Round-1 `EDITOR_REVISION` = 'S99' (historical). Test ROM `DWM-S99-anim-test.gbc` (patched, md5
+> `d01a08e5…`, historical — superseded by r2 below): GreatTree 2F Library door → a Castle clone hub (fountain
+> water rolls — its source animation) → four doors on the hub: Room of
+> Beginning clone (swirl frame swaps), Digster arena clone (pool rolls),
+> "Fountain water, NO animation" (Castle-sheet room, animation none — the
+> painted water stands still) and "Castle art + GreatTree sway (borrowed)"
+> (the Castle art in slots 64-79 sways). PyBoy on the user's .sav: walked in
+> through the Library door; every room's VRAM after 300 frames == the census
+> schedule's prediction, byte for byte.
+>
+> **Measured (Iron Rule 6 annotation same session; ROOM_DATA_FORMAT
+> "Animated tiles"; DOC_AUDIT S99):** the bank-$01 `PerRoomVRAMDispatch`
+> table has **112** entries ($00-$6F, not 107); 65 handlers (labels
+> `RoomAnim_<room>` / `RoomAnimNone_<map>`) ROLL 2 tiles 1 px (3 R : 1 L per
+> 128 frames; Castle 77-78 and 9 more), SWAY 64-79 (GreatTree), or SWAP a
+> shown tile with a hidden second frame in the same sheet (every 32 frames;
+> Orochi 64, Coliseum 25/32, Arena Battle 16/32); map $08 only pulses the
+> DMG palette; Secret Passage and Goopy 1/2 are INERT (blank slots). The
+> ONLY BG tile animation in the ROM; gate floors never animate. **The "bare
+> `ret` handler corrupts the palette" premise (KEY_LESSONS v8, CROSSBANK §6,
+> ROADMAP P3.3e (c)) is FALSE** — measured: identical screen and palette
+> buffer; only the 77/78 roll stops. Census tool: every handler forced
+> through the dispatch (hook sets A) over a patterned VRAM → `extracted/
+> room_animations.json` incl. an exact per-counter `schedule`.
+>
+> **Engine + compiler (PROJECT_COMPILER §2.15):** same-size rewrite of
+> `PerRoomVRAMDispatch` $60F9-$6118 (six `bit/ret nz` guards → `and $fe /
+> cp $10`, equivalent over all 65,536 (wGameState, $C8EF) pairs) funds the
+> custom-room path: `cp $6B / jr c` → bank $71 entry 3 `CustomAnimSource`
+> (E := `CustomAnimSrcTable[mapID-$6B]`) — replaces `call
+> MapIDClampForDispatch` (every custom room ran Castle's roll on 77-78;
+> clones never animated). `custom.rooms[].animation` = `none` ($6B, the
+> table's own `ret` row) / `source` / a vanilla map id; absent = legacy
+> Castle + warning; $08 and non-vanilla ids are errors. Template head 142 →
+> 164 B, re-pinned. Vanilla rooms: A/B vs the S98 build from one savestate —
+> final VRAM / screen / counter identical, sub-frame tile-load timing only.
+> Also: `audit_mapid_range.py` selftest fixed (failing since S73: 9 overdue
+> verdicts + 2 new).
+>
+> **Editor (EDITOR_DESIGN §5.1 "S99 additions"):** canvas **Anim** layer
+> (dashed outline of animated areas — vanilla rooms show their own
+> animation), **▶ Play** on the screen/state row (replays the measured
+> schedule at game speed), inspector **animated tiles** (None / Same as
+> source / Borrow + a plain-language line, warns when the borrowed room's
+> sheet is not this room's), slot map teal (dashed = hidden frame) + "also
+> protected for rooms sharing this sheet", picker teal corner; slot
+> protection follows each room's animation (77/78 free in `none` rooms);
+> clones = `source`; projects migrate on open (source when the room still
+> draws with its source room's sheet, else none). Residuals: ROADMAP P3.3e.
+>
+> **S99 round 2 (user: "I borrowed the moving water from castle and put it
+> into my custom room but it doesnt move"; built, NOT yet user-tested):** the
+> Borrow-tab import copied the water GRAPHIC into a free slot, and the game
+> animates SLOTS — now an animated vanilla tile is imported into its own
+> slot indices (+ swap partner frames; tiles in the way relocated) and the
+> room switches to that room's animation (asked when it would replace
+> another animation; status line reports walkability of the fixed slot).
+> Editor-only — pin unchanged `d072eb51…` (patched). `EDITOR_REVISION` =
+> 'S99r2'. Test ROM `DWM-S99r2-anim-test.gbc` (patched, md5 `f3f27d7e…`,
+> historical — superseded by r3; r1 `d01a08e5…` historical) = the r1 demo + a 5th hub door "To Farm +
+> Castle water" (a Farm-sheet room that borrowed Castle's water — it moves;
+> PyBoy on the user's .sav: VRAM == census prediction).
+>
+> **S99 round 3 (user: "please make the 'make animatable' tab … re-paint a
+> second tile in a paint-like manner"; "Double clicking on the tile doesnt
+> bring up any animation info"; built, NOT yet user-tested):** the **Make
+> animated** tab (EDITOR_DESIGN §5.1 "S99 r3") — double-click a cell, pick
+> slide / two-frame flip, pick among the animations that can host it
+> (ranked; FULL / no room / walkability / what a switch stops), paint frame
+> B in a 16×16 pad in the tile's palettes, preview, apply (one undo step).
+> Found while building: switching a room's animation starts EVERY slot of
+> the new one moving, so unrelated tiles in those slots are moved out first
+> (also applied to the r2 borrow path). Editor-only — pin unchanged
+> `d072eb51…` (patched). `EDITOR_REVISION` = 'S99r3'. Test ROM
+> `DWM-S99r3-anim-test.gbc` (patched, md5 `859b46cc…`; r2 `f3f27d7e…`
+> historical) = r2 + a 6th hub door "To Made animated": Farm water made to
+> slide and tree stumps made to flip (mirrored second frame), both on Zoma's
+> animation; PyBoy on the user's .sav: VRAM == census prediction.
+>
+> **S99 round 4 (user: "Why is the mirror in $6b moving? I never wanted it
+> to move. It also didnt move in earlier editor versions."; built, NOT yet
+> user-tested):** cause = the S99 migration (clone → `source`) checked the
+> room's SHEET but not the art in the animated slots — a pre-S99 import had
+> put an Arena-Rooms mirror into the Servant clone's hidden flame slots
+> 62-63. Fix: the editor finds such tiles on open and offers to move them
+> to still slots (source art restored; one undo step); **Make still** in the
+> Make animated tab; Make animated stores explicit ids. User project
+> verified: prompt lists the mirror, fix moves 62->79 / 63->78, PyBoy: no
+> on-screen tile of $6B moves (before: 62/63). Editor-only — pin unchanged
+> `d072eb51…` (patched). `EDITOR_REVISION` = 'S99r4' (historical).
+>
+> **S99 round 5 (user: "allow copy of quadrants separately not just a -> B.
+> Make it easier to edit"; built, NOT yet user-tested):** Make animated
+> frame pads get part tools — Whole tile or one 8×8 quarter (buttons or
+> Ctrl+click), acting on the edited frame (yellow border): Copy / Paste,
+> A → B, B → A, A ⇄ B, flips, 1 px shifts, Clear, local Undo / Revert.
+> test_canvas v6 exercises each on one quarter (others untouched) and
+> undoes back exactly. Editor-only — pin unchanged `d072eb51…` (patched).
+> `EDITOR_REVISION` = 'S99r5' (historical).
+>
+> **S99 round 6 (user: "Make animated is greyed out … Surely it should
+> allow me to shift animation to tile I'm editing??" + "Would be good to
+> have a count"; built, NOT yet user-tested):** a full room animation can
+> be TAKEN OVER (the tile moving there keeps its look in a still copy of
+> the taken quarters; asked first); slots the tile gives up count as free;
+> the grey button's note names the limit (animation too small / N more
+> free wall or walkable slots needed); a count box in the Make animated tab
+> + Selection panel ("slide 2 of 2 slots used — FULL", moving tiles).
+> Verified on the user's project: fountain room ($6E) and GreatTree
+> take-overs keep every cell identical at frame A, start only the chosen
+> tile's cells; PyBoy $6E: new tile's slot 77 moves, the water's taken
+> quarters draw still slot 115. Test ROM `DWM-S99r6-takeover-test.gbc`
+> (patched, md5 `1afa30a9…`) = the user's project + that fountain-room
+> take-over. Editor-only — pin unchanged `d072eb51…` (patched).
+> `EDITOR_REVISION` = 'S99r6' (historical).
+>
+> **S99 round 7 (user: "I go to fountain room, click on palm, and want to
+> make it animated but button is GREYED OUT"; built, NOT yet user-tested):**
+> reproduced on the user's project (fountain tileset: 0 free wall slots,
+> 11 walkable; palm = 4 different quarters). Fixes: unchanged quarters stay
+> still (no slot, same walkability); the wall/walkable split moves
+> automatically when one side is short; the check counts every slot a
+> switch moves (Zoma's roll 49-50 too) and frees the old animation's; the
+> tab is numbered ①-④ with the grey reason above the button. User project:
+> palm top quarters + fountain water both on Zoma (after Tileset → purge
+> unused) — look + walkability identical, only palm + water cells move;
+> PyBoy $6E: palm/water slots move on screen. Test ROM
+> `DWM-S99r7-palm-test.gbc` (patched, md5 `6176f21f…`) = user project +
+> purge + palm (demo frame B: top quarters 1 px right) + water on Zoma.
+> Editor-only — pin unchanged `d072eb51…` (patched). `EDITOR_REVISION` =
+> 'S99r7'.
+
 > Last verified: 2026-09-26 (Session 98 — **rooms group C = ROADMAP P3.7:
 > DOOR OBJECTS, one-way teleports, EXAMINE spots + STEP-ON triggers, TALK
 > scripts that set flags, World graph v0 — plus a user-driven round of

@@ -321,7 +321,11 @@
                  $D9D1-$D9D6 / $D9D9-$D9DE = pending foreign-master parties
                  2 and 3 (3 × 16-bit EIDs each), chained by $50:SetBtl_67ae.
                  [S67] Shares bytes with flag indices $01A0-$01DF.
-   1:D9E3   1    Story progression counter. Boss-defeat scripts set this to
+   1:D9E3   1    [S101 r3 CORRECTION: read ONLY by the castle-arrival King's-speech
+                 chain $0C:$4804 (with $D92B = 7) and one castle NPC at $0C:$5066
+                 (ROM scan of every op-$15 read); the priest path writes $FF.
+                 GATE_GENERATION §7.7. The text below is the older reading.]
+                 Story progression counter. Boss-defeat scripts set this to
                  increasing values:
                    48 after first boss (Beginning/Healer)
                    50 after second boss (Villager/Dragon)

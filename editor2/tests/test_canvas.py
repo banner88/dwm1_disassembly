@@ -69,6 +69,7 @@ except ImportError:
     print('SKIP: PySide6 not installed (pip install PySide6 Pillow)')
     sys.exit(0)
 
+from PySide6.QtCore import Qt                                   # noqa: E402
 from editor2.core.document import val, metatile_key, metatile_pals          # noqa: E402
 
 EXAMPLE = os.path.join(REPO, 'editor2', 'example-project')
@@ -2569,6 +2570,346 @@ def test_rom_v7(w, s, rid, keep_dir=None):
           'flag set; stairs -> floor 5; JOURNAL refused')
 
 
+V8_ARRIVE = (4, 6)
+V8_BOSS = (4, 3)                 # the monster boss NPC; the player talks from (4,4)
+V8_LAND = (3, 4)                 # the helper lands LEFT of the player (4,4)
+V8_DRAGON, V8_KID = 28, 20       # species: Dragon (boss NPC), DragonKid (screen 1)
+
+
+def v8_round_trip(new_dir):
+    """S101 (ROADMAP P3.7b part 2) — a custom BOSS FLOOR through the GUI code
+    paths: room 'Dragon Court' (2 screens), gate arrival (4,6); Gates tab:
+    gate 1 gets 3 floors and the room as
+    its boss floor; a monster NPC (Dragon) on screen 0 and a DragonKid on
+    screen 1 (Monsters picker); a conversation on the Dragon through the
+    conversation dialog: If court_won is OFF → Ask YES/NO → YES: Battle
+    (own enemy 'Court Dragon' made in Enemies… + its join version, and a
+    vanilla Slime) → turn court_won ON → the helper takes the player to the
+    Castle throne room; NO: Say; Otherwise: Say. Exact undo/redo; compile."""
+    from editor2.app.main import MainWindow
+    from editor2.app.rooms import commands as C
+    from editor2.app.rooms import npc_panel
+    from editor2.app.rooms import conversation_dialog as CD
+    from editor2.app.rooms.talk_editor import FlagList
+    from editor2.app import enemies_dialog as ED
+    from PySide6.QtWidgets import QMessageBox, QDialog, QInputDialog
+    app = QApplication.instance() or QApplication(sys.argv)
+    QMessageBox.question = staticmethod(lambda *a, **k: QMessageBox.Yes)
+    w = MainWindow()
+    w.new_project(new_dir, 'v8 boss floors')
+    app.processEvents()
+    rt, s = w.rooms_tab, w.session
+    rend = s.renderer
+    s.undo.push(C.SnapshotCommand(s, 'New room',
+                                  lambda doc: doc.new_room('Dragon Court', 0x04, rend)))
+    app.processEvents()
+    rid = s.doc.rooms[0]['id']
+    s.doc.save()
+    saved = open(s.doc.path).read()
+    n0 = s.undo.count()
+    for i in range(rt.room_list.count()):
+        if rt.room_list.item(i).data(0x100) == rid:
+            rt.room_list.setCurrentRow(i)
+    app.processEvents()
+    rt._add_screen(1)
+    app.processEvents()
+    assert s.doc.screen_keys(s.doc.room(rid)) == [0, 1]
+    rt.select_screen(0)
+    app.processEvents()
+    gg = rt.inspector.gate_group
+    rt.canvas.selected_cell = V8_ARRIVE
+    gg.arrivalHereRequested.emit()
+    app.processEvents()
+    # Gates tab: gate 1 — 3 floors, boss floor = Dragon Court
+    gt = w.gates_tab
+    gt.list.setCurrentRow(1)
+    app.processEvents()
+    gt.set_floors.setValue(3)
+    gt._set_floors()
+    gt.set_boss.setCurrentIndex(gt.set_boss.findData(rid))
+    gt._set_boss(gt.set_boss.currentIndex())
+    app.processEvents()
+    assert s.doc.gate_setting(1) == {'gate': 1, 'floors': 3, 'boss': rid}, \
+        s.doc.gate_setting(1)
+    assert gt.gate()['floors'] == 3 and 'custom room' in gt.sub.text(), gt.sub.text()
+    assert gt.plan.rowCount() == 3 and gt.plan.item(2, 1).text().startswith('boss'), \
+        [gt.plan.item(r, 1).text() for r in range(gt.plan.rowCount())]
+    assert '♛' in gt.list.item(1).text()
+    # a vanilla boss room reused by another gate, then back to vanilla
+    gt.list.setCurrentRow(2)
+    app.processEvents()
+    j = next(k for k in range(gt.set_boss.count())
+             if str(gt.set_boss.itemData(k)).startswith('vanilla:'))
+    gt.set_boss.setCurrentIndex(j)
+    gt._set_boss(j)
+    assert str(s.doc.gate_setting(2).get('boss')).startswith('vanilla:$')
+    gt.set_boss.setCurrentIndex(0)
+    gt._set_boss(0)
+    assert s.doc.gate_setting(2) == {}
+    # monster NPCs (Monsters picker) — the boss on screen 0, a DragonKid on screen 1
+    npc_panel.SpritePicker.exec = lambda dlg: (setattr(dlg, 'value', ('monster', V8_DRAGON)),
+                                               QDialog.Accepted)[1]
+    rt.select_screen(0)
+    app.processEvents()
+    rt._add_npc(V8_BOSS)
+    app.processEvents()
+    R = s.doc.room(rid)
+    boss = [n for n in s.doc.npc_entries(R, 0, 0) if n.get('kind') == 'npc']
+    assert len(boss) == 1 and boss[0]['monster'] == V8_DRAGON and \
+        str(boss[0]['sprite']).upper() == '0XF0', boss
+    assert any(m[0] == 'npc' and m[3] == 0x1000 + V8_DRAGON for m in rt.canvas.markers)
+    npc_panel.SpritePicker.exec = lambda dlg: (setattr(dlg, 'value', ('monster', V8_KID)),
+                                               QDialog.Accepted)[1]
+    rt.select_screen(1)
+    app.processEvents()
+    rt._add_npc((5, 4))
+    app.processEvents()
+    rt.select_screen(0)
+    app.processEvents()
+    ref = rt.canvas.select_npc(0)
+    m_ = next(m for m in rt.canvas.markers if m[5] is ref)
+    rt.inspector.show_selection({'kind': m_[0], 'x': m_[1], 'y': m_[2], 'sprite': m_[3],
+                                 'label': m_[4], 'ref': ref}, editable=True)
+    rt._show_npc_panel(0)
+    assert rt.npc_panel.sprite_btn.text() == 'monster: Dragon', rt.npc_panel.sprite_btn.text()
+
+    # the conversation, through the dialog
+    def fake_enemies(dlg):
+        eid = dlg.x.add_enemy(copy_eid=325, name='Court Dragon', species=V8_DRAGON, level=1,
+                              hp=4, mp=0, atk=1, **{'def': 0}, agl=0, exp=5, joinability=0)
+        dlg.x.make_join_version(eid)
+        return QDialog.Accepted
+    ED.EnemiesDialog.exec = fake_enemies
+    QInputDialog.getText = staticmethod(lambda *a, **k: ('court_won', True))
+
+    def branch(dlg, parent_step, label):
+        it = dlg.tree.findItems(label, Qt.MatchExactly | Qt.MatchRecursive)
+        for x in it:
+            p = dlg._pay[x.data(0, Qt.UserRole)]
+            if p[0] == 'branch' and any(p[1] is parent_step.get(k) for k in
+                                        ('yes', 'no', 'then', 'else')):
+                dlg.tree.setCurrentItem(x)
+                return
+        raise AssertionError(f'branch {label} not found')
+
+    def text(dlg, t):
+        from editor2.app.rooms.talk_editor import BoxList
+        bl = dlg.right.findChildren(BoxList)[-1]
+        bl.editors[0].edit.setPlainText(t)
+
+    def fake_conv(dlg):
+        st_if = dlg.add_step('if')
+        a, b = dlg.right.findChildren(FlagList)
+        b._new()                                     # court_won must be OFF
+        assert st_if['if'] == [{'flag': 'court_won', 'is': 'clear'}], st_if
+        branch(dlg, st_if, 'Then')
+        ask = dlg.add_step('ask')
+        text(dlg, 'I am the court\nDragon. Fight?')
+        branch(dlg, ask, 'If YES')
+        bat = dlg.add_step('battle')
+        dlg._open_enemies(bat)                       # Enemies… (patched exec)
+        from PySide6.QtWidgets import QComboBox, QSpinBox
+        cnt = dlg.right.findChildren(QSpinBox)[0]
+        cnt.setValue(2)
+        combos = dlg.right.findChildren(QComboBox)
+        combos[0].setCurrentIndex(combos[0].findData('court_dragon'))
+        combos[0].activated.emit(combos[0].currentIndex())
+        combos[1].setCurrentIndex(combos[1].findData(327))
+        combos[1].activated.emit(combos[1].currentIndex())
+        assert bat["battle"] == {"enemies": ["court_dragon", 327]}, bat
+        st_set = dlg.add_step('set')
+        fl = dlg.right.findChildren(FlagList)[0]
+        fl.pick.setCurrentIndex(fl.pick.findData('court_won'))
+        fl._add()
+        assert st_set['set'] == ['court_won'], st_set
+        hlp = dlg.add_step('helper')
+        from PySide6.QtWidgets import QCheckBox
+        from PySide6.QtWidgets import QGroupBox
+        boxes = dlg.right.findChildren(QCheckBox)
+        assert boxes[0].isChecked(), 'a new helper lands beside the player'
+        says = [g for g in dlg.right.findChildren(QGroupBox) if g.isCheckable()][0]
+        assert not says.isChecked()
+        says.setChecked(True)                        # the helper says something
+        text(dlg, 'Well done!\nHome we go.')
+        assert 'land' not in hlp['helper'], hlp
+        # S101 r3: at the Castle, the King's Villager speech
+        cas = [c for c in dlg.right.findChildren(QComboBox) if c.findData('king') >= 0][0]
+        cas.setCurrentIndex(cas.findData('king'))
+        cas.activated.emit(cas.currentIndex())
+        sp = [c for c in dlg.right.findChildren(QComboBox) if c.findData(0x31) >= 0 and
+              c is not cas][0]
+        sp.setCurrentIndex(sp.findData(0x31))
+        sp.activated.emit(sp.currentIndex())
+        assert hlp['helper'].get('castle') == 'king' and hlp['helper'].get('king_speech') == 0x31 \
+            and (hlp['helper']['screen'], hlp['helper']['x'], hlp['helper']['y']) == (1, 4, 5), hlp
+        assert hlp['helper']['dest'] == 'vanilla:$00' and hlp['helper']['say'], hlp
+        branch(dlg, ask, 'If NO')
+        dlg.add_step('say')
+        text(dlg, 'Coward!')
+        branch(dlg, st_if, 'Otherwise')
+        dlg.add_step('say')
+        text(dlg, 'You beat me\nalready.')
+        assert dlg.problems.text() == 'Ready.', dlg.problems.text()
+        return QDialog.Accepted
+    CD.ConversationDialog.exec = fake_conv
+    rt._npc_new_conversation()
+    app.processEvents()
+    R = s.doc.room(rid)
+    sid = next(n['script'] for n in s.doc.npc_entries(R, 0, 0) if n.get('kind') == 'npc')
+    spec = s.doc.conversation_spec(sid)
+    assert spec is not None and len(spec['steps']) == 1, spec
+    assert [e['id'] for e in s.doc.project_enemies()] == ['court_dragon', 'court_dragon_joins']
+    assert s.doc.project_enemy('court_dragon')['join_as'] == 'court_dragon_joins'
+    assert any(f['name'] == 'court_won' for f in s.doc.flags())
+    assert rt.npc_panel.talk_preview.text().startswith('Conversation: If court_won is OFF'), \
+        rt.npc_panel.talk_preview.text()
+    rep = s.doc.gate_room_report(s.doc.room(rid))
+    assert rep['ready'] and 'no saving here' in rep['notes'], rep
+    assert 'Boss floor of' in gg.boss.text(), gg.boss.text()
+    assert not gg.can_save.isChecked(), 'boss rooms default to no saving'
+    # an arrival conversation limited to screen 1 (Inside gates → Arrival conversation…)
+    def fake_arr(dlg):
+        dlg.scr.setCurrentIndex(dlg.scr.findData(1))
+        dlg._screen_changed(0)
+        dlg.add_step('say')
+        text(dlg, 'The east wing.')
+        return QDialog.Accepted
+    CD.ConversationDialog.exec = fake_arr
+    gg.arrivalConversationRequested.emit()
+    app.processEvents()
+    ent = s.doc.room(rid)['scripts']['0']
+    t = s.doc.conversation(ent)
+    assert t and t.get('on_arrival') and t.get('screen') == 1, t
+    assert gg.btn_conv.text().startswith('Edit arrival'), gg.btn_conv.text()
+    # re-open the conversation: the dialog round-trips the spec unchanged
+    CD.ConversationDialog.exec = lambda dlg: QDialog.Accepted
+    before = s.doc.dumps()
+    rt._npc_edit_talk()
+    app.processEvents()
+    assert s.doc.conversation_spec(sid) == spec, 'edit round-trip changed the conversation'
+    # exact undo / redo
+    after = s.doc.dumps()
+    while s.undo.index() > n0:
+        s.undo.undo()
+    assert s.doc.dumps() == saved, 'undo did not restore the saved project exactly'
+    while s.undo.canRedo():
+        s.undo.redo()
+    assert s.doc.dumps() == after, 'redo did not restore the edits exactly'
+    s.save()
+    print('OK: v8 — Dragon Court (2 screens) = gate 1 boss floor (3 floors) via the Gates '
+          'tab; monster NPCs Dragon / DragonKid; conversation If→Ask→Battle(2)→flag→helper '
+          'with own enemy + join version; exact undo/redo')
+    return w, s, rid
+
+
+def test_rom_v8(w, s, rid, keep_dir=None):
+    """--rom: PyBoy, scripted new game + a starter: gate 1 floor 2 plays the
+    boss song, floor 3 is Dragon Court at (4,6) with the Dragon monster NPC;
+    walk up, talk, YES → a 2-enemy battle (EIDs 519 + 327) → win → court_won
+    set → the helper appears → fade to the Castle throne room (map $00)."""
+    from editor2.app.build_worker import BuildWorker
+    app = QApplication.instance()
+    results = []
+    worker = BuildWorker(REPO, s.project_dir)
+    worker.finished_build.connect(results.append)
+    worker.start()
+    worker.wait()
+    app.processEvents()
+    res = results[0]
+    assert res.ok, f'build failed: {res.error}'
+    man = json.load(open(os.path.join(os.path.dirname(res.rom_path), 'manifest.json')))
+    fl = {k: int(v.lstrip('$'), 16) for k, v in man['flags'].items()}
+    mid = val(s.doc.room(rid)['mapID'])
+    from tools.pyboy_harness import (boot, to_bedroom, adv, MAP_ID, GAME_MODE, IN_GATEWORLD,
+                                     give_party_monster, flag, SCRIPT_FLAGS, PLAYER_TX,
+                                     PLAYER_TY)
+    p = boot(res.rom_path)
+    assert to_bedroom(p), 'scripted intro failed'
+    m = p.memory
+
+    def kick(gate, floor, frames=700):
+        m[0xC935] = gate
+        m[0xC939] = (floor - 2) & 0xFF
+        m[SCRIPT_FLAGS] = 0
+        m[0xC96D] = 0; m[0xC96E] = 0x80; m[0xC96C] = 1; m[0xC88F] = (m[0xC88F] + 1) & 0xFF
+        for _ in range(frames):
+            p.tick()
+            m[0xCA39] = 0xFF; m[0xCA3A] = 0xFF
+    kick(1, 3)
+    assert (m[MAP_ID], m[0xC939] + 1, m[IN_GATEWORLD]) == (mid, 3, 0), \
+        (hex(m[MAP_ID]), m[0xC939] + 1)
+    assert (m[PLAYER_TX], m[PLAYER_TY]) == V8_ARRIVE, (m[PLAYER_TX], m[PLAYER_TY])
+    assert (m[0xD7CA], m[0xD7CB]) == (V8_DRAGON + 0x10, 1), 'monster cast not written'
+    give_party_monster(p)
+    for _ in range(2):
+        p.button_press('up'); adv(p, 18); p.button_release('up'); adv(p, 10)
+    assert (m[PLAYER_TX], m[PLAYER_TY]) == (4, 4), (m[PLAYER_TX], m[PLAYER_TY])
+    # talk; the question box starts on NO — UP then A answers YES
+    p.button_press('a'); adv(p, 4); p.button_release('a'); adv(p, 150)   # text + YES/NO
+    p.button_press('up'); adv(p, 4); p.button_release('up'); adv(p, 20)
+    p.button_press('a'); adv(p, 4); p.button_release('a')
+    for _ in range(120):
+        adv(p, 10)
+        if m[GAME_MODE] == 2:
+            break
+    assert m[GAME_MODE] == 2, 'the battle did not start'
+    eids = (m[0xDA03] | m[0xDA04] << 8, m[0xDA05] | m[0xDA06] << 8, m[0xDA02])
+    assert eids == (519, 327, 1), eids
+    f, won = 0, False
+    while f < 15000:
+        if not won and m[GAME_MODE] == 2 and m[0xDB55] == 0 and m[0xD9EC] >= 0x0A:
+            won = True
+        if won:
+            seq = f % 48
+            b = {0: 'a', 16: 'down', 32: 'a'}.get(seq)
+            if b:
+                p.button_press(b)
+            elif seq in (4, 20, 36):
+                p.button_release('a'); p.button_release('down')
+        else:
+            (p.button_press if f % 8 < 4 else p.button_release)('a')
+        p.tick(); f += 1
+        m[0xCA39] = 0xFF; m[0xCA3A] = 0x7F
+        if won and f > 300 and m[GAME_MODE] == 1:
+            break
+    p.button_release('a'); p.button_release('down')
+    assert won, 'the battle was not won'
+    seen = []
+    landed = None
+    hs = 0xD7D2 + 32 * 1            # helper = NPC 2 (after the Dragon) -> slot 1
+    for k in range(1500):
+        if k % 16 < 3:
+            p.button_press('a')
+        else:
+            p.button_release('a')
+        p.tick()
+        m[0xCA39] = 0xFF; m[0xCA3A] = 0x7F
+        if m[MAP_ID] == mid and m[hs + 1] == 0x39 and not m[hs] & 0x40 and m[0xC8EB] & 1:
+            landed = (m[hs + 0x18] | m[hs + 0x19] << 8, m[hs + 0x1A] | m[hs + 0x1B] << 8,
+                      m[hs + 6])
+        if m[MAP_ID] not in seen:
+            seen.append(m[MAP_ID])
+        if m[MAP_ID] == 0x00 and k > 200:
+            break
+    assert flag(p, fl['court_won']), 'court_won not set after the win'
+    # S101 r2: Warubou lands LEFT of the player (4,4) and faces right (facing byte 3)
+    assert landed == (V8_LAND[0] * 16 + 8, V8_LAND[1] * 16 + 8, 3), landed
+    assert m[MAP_ID] == 0x00, f'the helper exit should end in the Castle: {[hex(x) for x in seen]}'
+    # S101 r3: the King's Villager speech plays ($D92B 7 -> the castle chain, $D9E3 = $31)
+    boxes = 0
+    for k in range(3000):
+        (p.button_press if k % 20 < 3 else p.button_release)('a')
+        p.tick()
+        m[0xCA39] = 0xFF; m[0xCA3A] = 0x7F
+        boxes += bool(m[0xC8EB] & 1) and k % 20 == 0
+    assert m[0xD9E3] == 0x31 and m[0xD92B] in (3, 5) and boxes > 5, \
+        (hex(m[0xD9E3]), m[0xD92B], boxes)
+    if keep_dir:
+        shutil.copy(res.rom_path, os.path.join(keep_dir, 'rom_v8_boss.gbc'))
+    print(f'OK: v8 --rom — gate 1 floor 3 -> ${mid:02X} at {V8_ARRIVE}, monster cast Dragon; '
+          'talk → YES → battle 519+327 → win → court_won set → helper → Castle')
+
+
 def main():
     do_rom = '--rom' in sys.argv
     if '--only-v6' in sys.argv:          # S99: animated tiles
@@ -2603,6 +2944,22 @@ def main():
         if do_rom:
             test_rom_v7(w7, s7, r7, keep)
         print('PASS (v7 only)')
+        return
+    if '--only-v8' in sys.argv:          # S101: boss floors
+        tmp = tempfile.mkdtemp(prefix='dwm_v8_')
+        keep = None
+        if '--out' in sys.argv:
+            keep = os.path.abspath(sys.argv[sys.argv.index('--out') + 1])
+            os.makedirs(keep, exist_ok=True)
+            tmp = keep
+        v8_dir = os.path.join(tmp, 'fresh_v8')
+        if os.path.exists(v8_dir):
+            shutil.rmtree(v8_dir)
+        w8, s8, r8 = v8_round_trip(v8_dir)
+        test_compile(v8_dir)
+        if do_rom:
+            test_rom_v8(w8, s8, r8, keep)
+        print('PASS (v8 only)')
         return
     if '--only-v5' in sys.argv:          # S98: fast path while iterating on v5
         tmp = tempfile.mkdtemp(prefix='dwm_v5_')
@@ -2676,7 +3033,13 @@ def main():
         shutil.rmtree(v7_dir)
     w7, s7, r7 = v7_round_trip(v7_dir)
     test_compile(v7_dir)
+    v8_dir = os.path.join(tmp, 'fresh_v8')
+    if os.path.exists(v8_dir):
+        shutil.rmtree(v8_dir)
+    w8, s8, r8 = v8_round_trip(v8_dir)
+    test_compile(v8_dir)
     if do_rom:
+        test_rom_v8(w8, s8, r8, keep)
         test_rom_v7(w7, s7, r7, keep)
         test_rom_v6(w6, s6, a6, b6, c6, d6, e6, keep)
         test_rom_tilesets(wts, keep)

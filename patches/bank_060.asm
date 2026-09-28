@@ -213,7 +213,10 @@ CustomTilesetInfo:
 ;               flag word: bits 0-14 = event flag index, bit 15 = must be CLEAR
 ;               (n_terms 0 = always).
 ; Clobbers A/BC/DE/HL (callers preserve what they need).
+; S101: first writes the screen's MONSTER CAST (CustomMonsterCast below) —
+; the same load hooks run before the bank $0B NPC parse reads it.
 CustomStateRules:
+    call CustomMonsterCast
     ld a, [wMapID]
     sub CUSTOM_ROOM_START
     ret c                        ; not a custom room (defensive)
@@ -300,6 +303,59 @@ CustomStateRules:
     pop af                       ; drop the state
     pop de                       ; DE = counter again
     jr .rule
+
+; -----------------------------------------------------------------------------
+; CustomMonsterCast (S101) — MONSTER NPCs (a species drawn with its follower
+; art). The bank $0B NPC sheet resolver maps sprite ids $F0-$F3 to the
+; display-list pairs at $D7CA + 2n ([draw id, is_monster]; is_monster != 0 ->
+; draw id = species+$10, follower sheet + layout + palette — the arena lobby's
+; own mechanism, ROOM_DATA_FORMAT "Monster NPCs"). Custom rooms carry a
+; generated per-screen cast: CustomMonsterCastPtrTable (dw per room, $0000 =
+; none) -> { db screen / 8 bytes = 4 pairs } ... db $FF. The pairs of the
+; current wScreenIndex are copied to $D7CA-$D7D1 at every custom load, before
+; the NPC parse; screens without a cast leave the list alone.
+; -----------------------------------------------------------------------------
+CustomMonsterCast:
+    ld a, [wMapID]
+    sub CUSTOM_ROOM_START
+    ret c
+    add a
+    ld hl, CustomMonsterCastPtrTable
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a
+    or h
+    ret z                        ; room has no monster NPCs
+.scr:
+    ld a, [hl+]
+    cp $FF
+    ret z                        ; this screen has no cast
+    ld b, a
+    ld a, [wScreenIndex]
+    cp b
+    jr z, .copy
+    ld a, l
+    add 8
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    jr .scr
+.copy:
+    ld de, $d7ca
+    ld b, 8
+.byte:
+    ld a, [hl+]
+    ld [de], a
+    inc de
+    dec b
+    jr nz, .byte
+    ret
 
 ; =============================================================================
 ; Entry 7: VanillaExitResolve  (S70 — vanilla-room exit extensions)
@@ -812,7 +868,7 @@ CustomRoom7_Scr00_S92body:
     dw $D951
     dw $00F2
     dw CustomRoom7_Scr00_L46F2
-    dw $FF0E  ; opcode $0E
+    dw $FF0E  ; branch_screen
     dw $0001
     dw CustomRoom7_Scr00_L4228
     dw $FFFF
@@ -825,14 +881,14 @@ CustomRoom7_Scr00_L4228:
     dw $D9CD
     dw $00FF
     dw CustomRoom7_Scr00_L4242
-    dw $FF0D  ; opcode $0D
+    dw $FF0D  ; npc_write
     dw $0000
     dw $FF90
     dw $0000
     dw $FFFF
 CustomRoom7_Scr00_L4242:
     dw $FF27  ; monster_party_op2
-    dw $FF0D  ; opcode $0D
+    dw $FF0D  ; npc_write
     dw $0000
     dw $FF90
     dw $0000
@@ -858,7 +914,7 @@ CustomRoom7_Scr00_L426C:
     dw $FFFF
 CustomRoom7_Scr00_L4270:
     dw $FF27  ; monster_party_op2
-    dw $FF0D  ; opcode $0D
+    dw $FF0D  ; npc_write
     dw $0000
     dw $FF90
     dw $0000
@@ -935,7 +991,7 @@ CustomRoom7_Scr00_L42D6:
     dw $0000
     dw $FF07  ; init_dialog
     dw $00E4
-    dw $FF0D  ; opcode $0D
+    dw $FF0D  ; npc_write
     dw $0003
     dw $0000
     dw $0000
@@ -990,15 +1046,15 @@ CustomRoom7_Scr00_L42D6:
     dw $FF12  ; write_ram
     dw $C8ED
     dw $000F
-    dw $FF0D  ; opcode $0D
+    dw $FF0D  ; npc_write
     dw $0000
     dw $FF90
     dw $0040
-    dw $FF0D  ; opcode $0D
+    dw $FF0D  ; npc_write
     dw $0003
     dw $0000
     dw $0040
-    dw $FF08  ; opcode $08
+    dw $FF08  ; nop
     dw $FF0F  ; map_transition
     dw $0000
     dw $00E8
@@ -1138,7 +1194,7 @@ CustomRoom7_Scr00_L443C:
     dw $0000
     dw $FF07  ; init_dialog
     dw $021C
-    dw $FF0D  ; opcode $0D
+    dw $FF0D  ; npc_write
     dw $0003
     dw $0000
     dw $0000
@@ -1193,15 +1249,15 @@ CustomRoom7_Scr00_L443C:
     dw $FF12  ; write_ram
     dw $C8ED
     dw $000F
-    dw $FF0D  ; opcode $0D
+    dw $FF0D  ; npc_write
     dw $0000
     dw $FF90
     dw $0040
-    dw $FF0D  ; opcode $0D
+    dw $FF0D  ; npc_write
     dw $0003
     dw $0000
     dw $0040
-    dw $FF08  ; opcode $08
+    dw $FF08  ; nop
     dw $FF0F  ; map_transition
     dw $0000
     dw $00E8
@@ -1380,7 +1436,7 @@ CustomRoom7_Scr00_L4600:
     dw $0000
     dw $FF07  ; init_dialog
     dw $03F1
-    dw $FF0D  ; opcode $0D
+    dw $FF0D  ; npc_write
     dw $0003
     dw $0000
     dw $0000
@@ -1435,22 +1491,22 @@ CustomRoom7_Scr00_L4600:
     dw $FF12  ; write_ram
     dw $C8ED
     dw $000F
-    dw $FF0D  ; opcode $0D
+    dw $FF0D  ; npc_write
     dw $0000
     dw $FF90
     dw $0040
-    dw $FF0D  ; opcode $0D
+    dw $FF0D  ; npc_write
     dw $0003
     dw $0000
     dw $0040
-    dw $FF08  ; opcode $08
+    dw $FF08  ; nop
     dw $FF0F  ; map_transition
     dw $0000
     dw $00E8
     dw $0058
     dw $FFFF
 CustomRoom7_Scr00_L46F2:
-    dw $FF0D  ; opcode $0D
+    dw $FF0D  ; npc_write
     dw $0000
     dw $FF90
     dw $0000
@@ -1470,7 +1526,7 @@ CustomRoom7_Scr01_L470E:
     dw $FF12  ; write_ram
     dw $C8ED
     dw $0001
-    dw $FF0D  ; opcode $0D
+    dw $FF0D  ; npc_write
     dw $0001
     dw $0000
     dw $0000
@@ -1486,7 +1542,7 @@ CustomRoom7_Scr01_L470E:
     dw $FF12  ; write_ram
     dw $C8ED
     dw $0009
-    dw $FF0D  ; opcode $0D
+    dw $FF0D  ; npc_write
     dw $0004
     dw $0000
     dw $0000
@@ -1496,7 +1552,7 @@ CustomRoom7_Scr01_L470E:
     dw $FF12  ; write_ram
     dw $C8ED
     dw $000D
-    dw $FF0D  ; opcode $0D
+    dw $FF0D  ; npc_write
     dw $0003
     dw $0000
     dw $0000
@@ -1506,15 +1562,15 @@ CustomRoom7_Scr01_L470E:
     dw $FF12  ; write_ram
     dw $C8ED
     dw $000F
-    dw $FF0D  ; opcode $0D
+    dw $FF0D  ; npc_write
     dw $0002
     dw $0000
     dw $0000
-    dw $FF4A  ; opcode $4A
+    dw $FF4A  ; face_right
     dw $0002
-    dw $FF4A  ; opcode $4A
+    dw $FF4A  ; face_right
     dw $0003
-    dw $FF4A  ; opcode $4A
+    dw $FF4A  ; face_right
     dw $0004
     dw $FF0A  ; opcode $0A
     dw $0000
@@ -1524,8 +1580,8 @@ CustomRoom7_Scr01_L470E:
     dw $FFF0
     dw $FF49  ; npc_show
     dw $0000
-    dw $FF08  ; opcode $08
-    dw $FF0D  ; opcode $0D
+    dw $FF08  ; nop
+    dw $FF0D  ; npc_write
     dw $0001
     dw $0000
     dw $0040
@@ -1609,7 +1665,7 @@ CustomRoom7_Scr06_L47FE:
     dw $0000
     dw $FF09  ; delay
     dw $0004
-    dw $FF47  ; opcode $47
+    dw $FF47  ; face_up
     dw $0000
     dw $FF09  ; delay
     dw $0002
@@ -1646,7 +1702,7 @@ CustomRoom7_Scr06_L4824:
     dw $000F
     dw $FF09  ; delay
     dw $0002
-    dw $FF0D  ; opcode $0D
+    dw $FF0D  ; npc_write
     dw $0000
     dw $FF90
     dw $0040
@@ -1696,7 +1752,7 @@ CustomRoom7_Scr06_L48A8:
     dw $04B1
     dw $FF09  ; delay
     dw $0004
-    dw $FF47  ; opcode $47
+    dw $FF47  ; face_up
     dw $0000
     dw $FF09  ; delay
     dw $000C
@@ -1722,7 +1778,7 @@ CustomRoom7_Scr06_L48DC:
     dw CustomRoom7_Scr06_L490A
     dw $FF09  ; delay
     dw $0004
-    dw $FF47  ; opcode $47
+    dw $FF47  ; face_up
     dw $0000
     dw $FF09  ; delay
     dw $000C
@@ -1748,7 +1804,7 @@ CustomRoom7_Scr06_L490E:
     dw CustomRoom7_Scr06_L493C
     dw $FF09  ; delay
     dw $0004
-    dw $FF47  ; opcode $47
+    dw $FF47  ; face_up
     dw $0000
     dw $FF09  ; delay
     dw $000C
@@ -1780,7 +1836,7 @@ CustomRoom7_Scr06_L4948:
     dw $08D4
     dw $FF09  ; delay
     dw $0004
-    dw $FF47  ; opcode $47
+    dw $FF47  ; face_up
     dw $0000
     dw $FF09  ; delay
     dw $000C
@@ -1996,21 +2052,21 @@ CustomRoom7_Scr07_L4AC0:
 CustomRoom7_Scr07_L4ACA:
     dw $07D4
 CustomRoom7_Scr07_L4ACC:
-    dw $FF0D  ; opcode $0D
+    dw $FF0D  ; npc_write
     dw $0004
     dw $0010
     dw $0000
-    dw $FF0D  ; opcode $0D
+    dw $FF0D  ; npc_write
     dw $0004
     dw $001A
     dw $0060
-    dw $FF0D  ; opcode $0D
+    dw $FF0D  ; npc_write
     dw $0004
     dw $0000
     dw $0000
     dw $FF09  ; delay
     dw $0010
-    dw $FF0D  ; opcode $0D
+    dw $FF0D  ; npc_write
     dw $0004
     dw $0000
     dw $0040
@@ -3019,6 +3075,23 @@ CustomRoom7_S1_Rules:
     db 1, 1   ; state 1 when $0030
     dw $0030
     db $FF
+
+; =============================================================================
+; MONSTER NPC CASTS (S101, generated)
+; Read by bank $60 CustomMonsterCast (entry 8 head) at every custom
+; room/screen load: the screen's pairs -> $D7CA-$D7D1, which the bank
+; $0B NPC sheet resolver reads for sprite ids $F0-$F3.
+; =============================================================================
+CustomMonsterCastPtrTable:
+    dw $0000   ; $6B (no monster NPCs)
+    dw $0000   ; $6C (no monster NPCs)
+    dw $0000   ; $6D (no monster NPCs)
+    dw $0000   ; $6E (no monster NPCs)
+    dw $0000   ; $6F (no monster NPCs)
+    dw $0000   ; $70 (no monster NPCs)
+    dw $0000   ; $71 (no monster NPCs)
+    dw $0000   ; $72 (no monster NPCs)
+    dw $0000   ; $73 (no monster NPCs)
 
 ; --- $6B (gate_island) room data ---
 CustomRoom0_SubTable:

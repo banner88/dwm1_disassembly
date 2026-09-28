@@ -481,6 +481,7 @@ class RoomsTab(QWidget):
             lambda v: self._gate_room_op(f'Room music: {v or "none"}',
                                          lambda doc, r: doc.set_room_music(r, v)))
         gg.openGatesRequested.connect(lambda: self.gatesRequested.emit(self.room_id or ''))
+        gg.arrivalConversationRequested.connect(self._arrival_conversation)   # S101
         self.inspector.addStairsRequested.connect(self._add_stairs)
         self.sec_insp = Section('Room / screen / selection', self.inspector, 'rooms_inspector',
                                 expanded=False, remember=False)
@@ -535,6 +536,7 @@ class RoomsTab(QWidget):
         npc.fieldsEdited.connect(self._npc_fields)
         npc.spriteRequested.connect(self._npc_sprite)
         npc.newTalkRequested.connect(self._npc_new_talk)
+        npc.newConversationRequested.connect(self._npc_new_conversation)     # S101
         npc.editTalkRequested.connect(self._npc_edit_talk)
         npc.presenceToggled.connect(self._npc_presence)
         npc.deleteRequested.connect(self._npc_delete)
@@ -1680,10 +1682,14 @@ class RoomsTab(QWidget):
         self._sel_npc = index
         sid = view.get('script')
         talk = (self.s.doc.talk_spec(sid) if isinstance(sid, str) and sid != 'none' else None)
+        conv = (self.s.doc.conversation_spec(sid) if isinstance(sid, str) and sid != 'none'
+                else None)
         pres = self.s.doc.npc_presence(room, self.key, self.state_idx, index)
         panel.show_npc(view, self.s.doc.room_script_ids(room), talk,
                        pres if len(pres) > 1 else None, editable=True,
-                       bytes_hint=' '.join(str(b) for b in entry.get('bytes', [])))
+                       bytes_hint=' '.join(str(b) for b in entry.get('bytes', [])),
+                       conversation=(self.s.doc.describe_conversation(conv)
+                                     if conv is not None else None))
         self._show_object(panel)                # selecting an NPC opens its section
 
     def _after_npc_edit(self, index):
@@ -1723,10 +1729,17 @@ class RoomsTab(QWidget):
         dlg = SpritePicker(parent=self)
         if dlg.exec() != QDialog.Accepted or dlg.value is None:
             return
-        spr = int(dlg.value)
         cx, cy = cell
-        cmd = self._npc_op(f'Add NPC ${spr:02X} at ({cx},{cy})',
-                           lambda doc, r, k, st: doc.add_npc(r, k, st, cx, cy, spr))
+        if isinstance(dlg.value, tuple):             # S101: a monster NPC
+            sp = int(dlg.value[1])
+            from editor2.app.rooms.canvas import monster_name
+            cmd = self._npc_op(f'Add monster NPC {monster_name(sp)} at ({cx},{cy})',
+                               lambda doc, r, k, st: doc.add_npc(r, k, st, cx, cy, 0xF0,
+                                                                 monster=sp))
+        else:
+            spr = int(dlg.value)
+            cmd = self._npc_op(f'Add NPC ${spr:02X} at ({cx},{cy})',
+                               lambda doc, r, k, st: doc.add_npc(r, k, st, cx, cy, spr))
         if cmd is not None:
             self._after_npc_edit(cmd.result)
 
@@ -1800,9 +1813,14 @@ class RoomsTab(QWidget):
             return
         from editor2.app.rooms.npc_panel import SpritePicker
         cur = self.s.doc.npc_view(room, self.s.doc.npc_entries(room, self.key, self.state_idx)[idx])
-        dlg = SpritePicker(current=cur.get('sprite'), parent=self)
+        now = ('monster', cur['monster']) if cur.get('monster') is not None \
+            else cur.get('sprite')
+        dlg = SpritePicker(current=now, parent=self)
         if dlg.exec() == QDialog.Accepted and dlg.value is not None:
-            self._npc_fields({'sprite': int(dlg.value)})
+            if isinstance(dlg.value, tuple):         # S101: a monster NPC
+                self._npc_fields({'sprite': 0xF0, 'monster': int(dlg.value[1])})
+            else:
+                self._npc_fields({'sprite': int(dlg.value)})
 
     def _sel_is_spot(self):
         room = self.current_room()
@@ -1849,6 +1867,9 @@ class RoomsTab(QWidget):
         spot = self._sel_is_spot()
         v = self.s.doc.npc_view(room, self.s.doc.npc_entries(room, self.key, self.state_idx)[idx])
         sid = v.get('script')
+        if isinstance(sid, str) and self.s.doc.conversation(sid) is not None:
+            self._edit_conversation(sid, idx, spot)          # S101
+            return
         spec = self.s.doc.talk_spec(sid) if isinstance(sid, str) else None
         if spec is None:
             return
@@ -1866,6 +1887,93 @@ class RoomsTab(QWidget):
             doc.set_talk(sid, new)
         if self._npc_op(f'Edit talk {sid}', op) is not None:
             (self._after_spot_edit if spot else self._after_npc_edit)(idx)
+
+    # ------------------------------------------- conversations (S101, P3.7b)
+    def _conversation_dialog(self, room, spec=None, title='Conversation', entry=False):
+        from editor2.app.rooms.conversation_dialog import ConversationDialog
+        dlg = ConversationDialog(self.s.doc, rom=self.s.renderer.rom, room=room, key=self.key,
+                                 spec=spec, title=title, entry=entry, parent=self)
+        if dlg.exec() != QDialog.Accepted:
+            return None
+        return dlg.spec(), dlg.new_flags(), dlg.enemies()
+
+    @staticmethod
+    def _apply_conversation_side(doc, new_flags, enemies):
+        for nm in new_flags:
+            if not any(f.get('name') == nm for f in doc.flags()):
+                doc.add_flag(nm)
+        if enemies is not None:
+            doc.set_project_enemies(enemies)
+
+    def _npc_new_conversation(self):
+        idx = self._sel_npc
+        room = self.current_room()
+        if idx is None or room is None:
+            return
+        got = self._conversation_dialog(room, title='New conversation')
+        if got is None:
+            return
+        spec, new_flags, enemies = got
+
+        def op(doc, r, k, st):
+            self._apply_conversation_side(doc, new_flags, enemies)
+            sid = doc.new_conversation(r, spec, name='conv')
+            doc.update_npc(r, k, st, idx, script=sid)
+            return sid
+        if self._npc_op('New conversation', op) is not None:
+            self._after_npc_edit(idx)
+
+    def _edit_conversation(self, sid, idx=None, spot=False):
+        room = self.current_room()
+        if room is None:
+            return
+        got = self._conversation_dialog(room, spec=self.s.doc.conversation_spec(sid),
+                                        title=f'Edit conversation {sid}',
+                                        entry=bool((self.s.doc.conversation(sid) or {})
+                                                   .get('on_arrival')))
+        if got is None:
+            return
+        spec, new_flags, enemies = got
+
+        def op(doc, r, k, st):
+            self._apply_conversation_side(doc, new_flags, enemies)
+            doc.set_conversation(sid, spec)
+        if self._npc_op(f'Edit conversation {sid}', op) is not None:
+            if idx is None:
+                self._show()
+            else:
+                (self._after_spot_edit if spot else self._after_npc_edit)(idx)
+
+    def _arrival_conversation(self):
+        """The room's ENTRY script as a conversation (a fight that starts on
+        arrival, a greeting …). Replaces a plain entry script."""
+        room = self.current_room()
+        if room is None:
+            return
+        ent = (room.get('scripts') or {}).get('0')
+        if ent is not None and self.s.doc.conversation(ent) is not None:
+            self._edit_conversation(ent)
+            return
+        if ent is not None:
+            sc = next((x for x in self.s.doc.custom.get('scripts', []) if x.get('id') == ent),
+                      {})
+            if sc.get('ops') not in (None, [['end']]) or sc.get('talk'):
+                if QMessageBox.question(self, 'Arrival conversation',
+                                        f'The room already has an entry script ({ent}) that '
+                                        'does something. Replace it with a conversation? '
+                                        '(the old script is kept, just no longer the entry '
+                                        'script)') != QMessageBox.Yes:
+                    return
+        got = self._conversation_dialog(room, title='Arrival conversation', entry=True)
+        if got is None:
+            return
+        spec, new_flags, enemies = got
+
+        def op(doc, r, k, st):
+            self._apply_conversation_side(doc, new_flags, enemies)
+            return doc.new_conversation(r, spec, name='arrival', entry=True)
+        if self._npc_op('Arrival conversation', op) is not None:
+            self._show()
 
     def _npc_presence(self, target, present):
         idx = self._sel_npc

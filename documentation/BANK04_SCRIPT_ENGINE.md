@@ -298,6 +298,24 @@ ends where the next in-range map's list begins.
 | $11 | $5AC5 | NPCAnimSetup | Configure NPC animation parameters |
 | $18 | $5C14 | NPCVisibility | Show/hide NPC |
 
+### S101 corrections — the vanilla boss exit, traced (PyBoy + handler bytes; comments in bank_004.asm, both trees)
+| Cmd | Params | Measured meaning (the names in the tables here are older guesses) |
+|-----|--------|-----|
+| $06 | 0 | close the text box (the vanilla boss script closes before the helper arrives) |
+| $0D | 3 | `npc,0,0` REVEALS a hidden NPC (clears type bit 6) — "WriteNPCByte" writes the NPC buffer; the reveal is its use in boss rooms |
+| $0E | 2 | `branch_screen k,@target`: branch when `wScreenIndex` == k (compiler name) |
+| $1C | 1 | NPC ANIMATION `$SSNN` (script SS, NPC index NN = 1 + NPC-entry slot, spots not counted): $16 = FLY IN (S101 r2 correction: NOT a target tile — from the NPC's current pixel position, `$D8E3`·8 frames, +2 px right per frame, down along the curve `$D8E4` picks; `$0303` = +48/+43 px) — earlier text: fly to the SCREEN-LOCAL tile in `$D8E3`/`$D8E4` (write `(y<<8)\|x` with `write_ram2`), $04 = hop; wait with $19. Not "CompareRAM" |
+| $19 | 0 | wait until the NPC movement ends |
+| $3B | 3 | `warp_fade map, px, py` — the wavy fade + warp (vanilla boss win tail: `$0000,$00E8,$0058` = Castle screen 1 tile (4,5)); `$0F` is the plain warp |
+| $47/$48/$49/$4A | 1 | face UP / DOWN / LEFT / RIGHT for NPC n (n = 0 is the player) — the helper's spin is `$4D 4` + these four. Were catalogued as npc_buffer_write / npc_hide / npc_show |
+| $4D | 1 | long delay |
+| $58 | 0 | `FloorSkip` (label4_6ba0) — used only by gate-world script 4 ($0F:$6ED0) |
+| $5A / $5B | 1 / 0 | boss battle: $5A = one EID (DA09 = 3); $5B = the preset (`DA02` = count − 1, EIDs at `DA03/05/07`). The WIN resumes the script; a LOSS never returns |
+
+The compiler's names (`editor2/core/scriptgen.py` OPS): `close_text`, `npc_write`, `branch_screen`,
+`trigger_anim`, `wait_movement`, `warp_fade`, `face_up/down/left/right`, `long_delay`,
+`trigger_battle3`, `boss_battle` (PROJECT_COMPILER §2.18).
+
 ### Timer/Delay
 | Cmd | Address | Name | Description |
 |-----|---------|------|-------------|

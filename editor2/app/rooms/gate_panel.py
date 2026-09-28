@@ -33,6 +33,7 @@ class GateRoomGroup(QGroupBox):
     encounterModeChosen = Signal(str)
     musicChosen = Signal(object)
     openGatesRequested = Signal()
+    arrivalConversationRequested = Signal()     # S101: the room's entry conversation
 
     def __init__(self, parent=None):
         # S100 r3: shown in its own foldable Rooms-tab section (title there)
@@ -79,7 +80,16 @@ class GateRoomGroup(QGroupBox):
         v.addLayout(f)
         self.status = _lbl('')
         v.addWidget(self.status)
+        self.boss = _lbl('')
+        v.addWidget(self.boss)
         row = QHBoxLayout()
+        self.btn_conv = QPushButton('Arrival conversation…')
+        self.btn_conv.setToolTip('A conversation that runs when the player arrives on a screen '
+                                 'of this room (the room\'s entry script) — e.g. a boss fight '
+                                 'that starts on arrival. It runs on every arrival: guard it '
+                                 'with an "If flags…" step.')
+        self.btn_conv.clicked.connect(self.arrivalConversationRequested.emit)
+        row.addWidget(self.btn_conv)
         b = QPushButton('Gates tab…')
         b.setToolTip('Choose the gates and floors that serve this room')
         b.clicked.connect(self.openGatesRequested.emit)
@@ -114,7 +124,22 @@ class GateRoomGroup(QGroupBox):
         self.stairs.setText(f"{rep['stairs']} Stairs down" if rep['stairs'] else
                             'none — select a cell, then Room / screen / selection → More ▾ → '
                             '"Stairs down here" (paints the next-floor well)')
-        self.can_save.setChecked(room.get('can_save', True))
+        boss_of = doc.boss_gates_of(room.get('id'))
+        self.can_save.setChecked(room.get('can_save', not boss_of))
+        if boss_of:
+            from editor2.core import gates as G
+            names = {g['id']: g['name'] for g in
+                     G.vanilla_gates(getattr(doc, 'project_dir', None))}
+            self.boss.setText('Boss floor of: ' + ', '.join(names.get(g, f'gate {g}')
+                                                            for g in boss_of)
+                              + '. The fight is a conversation with a Battle step (an NPC '
+                              'here, or the arrival conversation).')
+            self.boss.setStyleSheet('color:#e6a0ff;')
+        else:
+            self.boss.setText('')
+        ent = (room.get('scripts') or {}).get('0')
+        has = ent is not None and doc.conversation(ent) is not None
+        self.btn_conv.setText('Edit arrival conversation…' if has else 'Arrival conversation…')
         self.enc.setCurrentIndex(max(0, self.enc.findData(doc.encounter_mode(room))))
         self.music.clear()
         self.music.addItem("no song — the gate's music keeps playing", None)
@@ -124,7 +149,7 @@ class GateRoomGroup(QGroupBox):
         if cur is not None and self.music.findData(cur) < 0:
             self.music.addItem(str(cur), cur)
         self.music.setCurrentIndex(max(0, self.music.findData(cur)))
-        if rules or arr:
+        if rules or arr or boss_of:
             if rep['ready']:
                 self.status.setStyleSheet('color:#7fd67f;')
                 self.status.setText('Ready for gates.')

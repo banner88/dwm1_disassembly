@@ -1,5 +1,5 @@
 {
- "_generator": "tools/map_gate_names.py (S100) from data/DWM-original.gbc GateFloorDataTable $16:$70A6 (floors byte 3 + boss map byte 4), cross-checked vs FULL_FAQ.txt 'Levels:'",
+ "_generator": "tools/map_gate_names.py (S100) from data/DWM-original.gbc GateFloorDataTable $16:$70A6 (floors byte 3 + boss map byte 4; S101: + boss_spawn bytes 5/6 + the raw row), cross-checked vs FULL_FAQ.txt 'Levels:'",
  "gates": [
   {
    "id": 0,
@@ -13,7 +13,12 @@
     0,
     0
    ],
-   "depth_tier": 1
+   "depth_tier": 1,
+   "boss_spawn": [
+    7,
+    2
+   ],
+   "row": "0000000530070201"
   },
   {
    "id": 1,
@@ -27,7 +32,12 @@
     1,
     1
    ],
-   "depth_tier": 1
+   "depth_tier": 1,
+   "boss_spawn": [
+    1,
+    6
+   ],
+   "row": "0101010531010601"
   },
   {
    "id": 2,
@@ -41,7 +51,12 @@
     1,
     2
    ],
-   "depth_tier": 1
+   "depth_tier": 1,
+   "boss_spawn": [
+    5,
+    1
+   ],
+   "row": "0101020632050101"
   },
   {
    "id": 3,
@@ -55,7 +70,12 @@
     1,
     2
    ],
-   "depth_tier": 1
+   "depth_tier": 1,
+   "boss_spawn": [
+    4,
+    6
+   ],
+   "row": "0201020533040601"
   },
   {
    "id": 4,
@@ -69,7 +89,12 @@
     2,
     3
    ],
-   "depth_tier": 1
+   "depth_tier": 1,
+   "boss_spawn": [
+    0,
+    7
+   ],
+   "row": "0202030634000701"
   },
   {
    "id": 5,
@@ -83,7 +108,12 @@
     2,
     3
    ],
-   "depth_tier": 1
+   "depth_tier": 1,
+   "boss_spawn": [
+    1,
+    6
+   ],
+   "row": "0302030935010601"
   },
   {
    "id": 6,
@@ -97,7 +127,12 @@
     2,
     4
    ],
-   "depth_tier": 2
+   "depth_tier": 2,
+   "boss_spawn": [
+    5,
+    1
+   ],
+   "row": "0302040836050102"
   },
   {
    "id": 7,
@@ -111,7 +146,12 @@
     3,
     4
    ],
-   "depth_tier": 2
+   "depth_tier": 2,
+   "boss_spawn": [
+    5,
+    7
+   ],
+   "row": "0303040937050702"
   },
   {
    "id": 8,
@@ -125,7 +165,12 @@
     3,
     5
    ],
-   "depth_tier": 2
+   "depth_tier": 2,
+   "boss_spawn": [
+    8,
+    3
+   ],
+   "row": "0403050c38080302"
   },
   {
    "id": 9,
@@ -139,7 +184,12 @@
     4,
     5
    ],
-   "depth_tier": 2
+   "depth_tier": 2,
+   "boss_spawn": [
+    2,
+    1
+   ],
+   "row": "0404050b39020102"
   },
   {
    "id": 10,
@@ -153,7 +203,12 @@
     4,
     5
    ],
-   "depth_tier": 2
+   "depth_tier": 2,
+   "boss_spawn": [
+    2,
+    6
+   ],
+   "row": "0404050b3c020602"
   },
   {
    "id": 11,
@@ -167,7 +222,12 @@
     4,
     6
    ],
-   "depth_tier": 2
+   "depth_tier": 2,
+   "boss_spawn": [
+    8,
+    5
+   ],
+   "row": "0404060c10080502"
   },
   {
    "id": 12,
@@ -181,7 +241,12 @@
     6,
     6
    ],
-   "depth_tier": 2
+   "depth_tier": 2,
+   "boss_spawn": [
+    4,
+    1
+   ],
+   "row": "0506060e3b040102"
   },
   {
    "id": 13,
@@ -195,7 +260,12 @@
     6,
     6
    ],
-   "depth_tier": 2
+   "depth_tier": 2,
+   "boss_spawn": [
+    1,
+    7
+   ],
+   "row": "0506060f3a010702"
   },
   {
    "id": 14,
@@ -209,7 +279,12 @@
     6,
     7
    ],
-   "depth_tier": 2
+   "depth_tier": 2,
+   "boss_spawn": [
+    4,
+    7
+   ],
+   "row": "050607103d040702"
   },
   {
    "id": 15,
@@ -223,7 +298,12 @@
     7,
     7
    ],
-   "depth_tier": 3
+   "depth_tier": 3,
+   "boss_spawn": [
+    4,
+    1
+   ],
+   "row": "060707123e040103"
   },
   {
    "id": 16,
@@ -237,7 +317,12 @@
     7,
     8
    ],
-   "depth_tier": 3
+   "depth_tier": 3,
+   "boss_spawn": [
+    6,
+    3
+   ],
+   "row": "070708143f060303"
   },
   {
    "id": 17,
@@ -251,7 +336,12 @@
     5,
     8
    ],
-   "depth_tier": 3
+   "depth_tier": 3,
+   "boss_spawn": [
+    4,
+    6
+   ],
+   "row": "0705081340040603"
   },
   {
    "id": 18,
@@ -265,7 +355,12 @@
     8,
     9
    ],
-   "depth_tier": 3
+   "depth_tier": 3,
+   "boss_spawn": [
+    4,
+    6
+   ],
+   "row": "0808091742040603"
   },
   {
    "id": 19,
@@ -279,7 +374,12 @@
     9,
     9
    ],
-   "depth_tier": 3
+   "depth_tier": 3,
+   "boss_spawn": [
+    5,
+    5
+   ],
+   "row": "0809091943050503"
   },
   {
    "id": 20,
@@ -293,7 +393,12 @@
     5,
     9
    ],
-   "depth_tier": 3
+   "depth_tier": 3,
+   "boss_spawn": [
+    0,
+    3
+   ],
+   "row": "0805091944000303"
   },
   {
    "id": 21,
@@ -307,7 +412,12 @@
     10,
     10
    ],
-   "depth_tier": 3
+   "depth_tier": 3,
+   "boss_spawn": [
+    4,
+    7
+   ],
+   "row": "090a0a1d45040703"
   },
   {
    "id": 22,
@@ -321,7 +431,12 @@
     11,
     11
    ],
-   "depth_tier": 3
+   "depth_tier": 3,
+   "boss_spawn": [
+    5,
+    6
+   ],
+   "row": "0a0b0b1e46050603"
   },
   {
    "id": 23,
@@ -335,7 +450,12 @@
     11,
     11
    ],
-   "depth_tier": 3
+   "depth_tier": 3,
+   "boss_spawn": [
+    5,
+    6
+   ],
+   "row": "0a0b0b1d47050603"
   },
   {
    "id": 24,
@@ -349,7 +469,12 @@
     11,
     11
    ],
-   "depth_tier": 3
+   "depth_tier": 3,
+   "boss_spawn": [
+    4,
+    7
+   ],
+   "row": "0a0b0b1b48040703"
   },
   {
    "id": 25,
@@ -363,7 +488,12 @@
     12,
     12
    ],
-   "depth_tier": 3
+   "depth_tier": 3,
+   "boss_spawn": [
+    4,
+    7
+   ],
+   "row": "0b0c0c1e49040703"
   },
   {
    "id": 26,
@@ -377,7 +507,12 @@
     12,
     12
    ],
-   "depth_tier": 3
+   "depth_tier": 3,
+   "boss_spawn": [
+    9,
+    7
+   ],
+   "row": "0b0c0c1e4a090703"
   },
   {
    "id": 27,
@@ -391,7 +526,12 @@
     13,
     13
    ],
-   "depth_tier": 3
+   "depth_tier": 3,
+   "boss_spawn": [
+    4,
+    7
+   ],
+   "row": "0b0d0d1e4b040703"
   },
   {
    "id": 28,
@@ -405,7 +545,12 @@
     13,
     13
    ],
-   "depth_tier": 3
+   "depth_tier": 3,
+   "boss_spawn": [
+    5,
+    5
+   ],
+   "row": "0c0d0d1e4c050503"
   },
   {
    "id": 29,
@@ -419,7 +564,12 @@
     14,
     14
    ],
-   "depth_tier": 3
+   "depth_tier": 3,
+   "boss_spawn": [
+    5,
+    7
+   ],
+   "row": "0d0e0e1b4d050703"
   },
   {
    "id": 30,
@@ -433,7 +583,12 @@
     14,
     14
    ],
-   "depth_tier": 3
+   "depth_tier": 3,
+   "boss_spawn": [
+    8,
+    12
+   ],
+   "row": "0e0e0e1e4e080c03"
   },
   {
    "id": 31,
@@ -447,7 +602,12 @@
     15,
     15
    ],
-   "depth_tier": 3
+   "depth_tier": 3,
+   "boss_spawn": [
+    5,
+    6
+   ],
+   "row": "0f0f0f634f050603"
   }
  ]
 }

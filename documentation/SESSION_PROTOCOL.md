@@ -158,6 +158,14 @@ Then update, in place:
    annotated in-session (budget), it MUST land as a named ROADMAP backlog
    item the same session — and per Iron Rule 6 that backlog blocks new
    decoding work until burned down.
+7. **Editor help (user decision S101 r2: "wire a help tab in … always kept
+   up to date as editor progresses")** — every delivery that changes what
+   the editor can do updates the matching topic(s) in `editor2/help/*.md`
+   (new tab, button, dialog, workflow, limit) and then sets
+   `editor2/help/_revision.md` to the new `EDITOR_REVISION`. `test_app.py`
+   FAILS while the stamp lags the editor — never bump the stamp without
+   updating the text. The help is still thin (ROADMAP P3.H): extend a topic
+   whenever a session touches its area.
 
 ### Delivery format (MANDATORY — do this exactly, every session)
 

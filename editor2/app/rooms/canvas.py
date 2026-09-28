@@ -78,8 +78,13 @@ def classify_npc(entry):
     if k == 'npc':
         spr = val(entry.get('sprite', 0))
         beh = entry.get('behaviour', 'stand')
+        what = f'${spr:02X}'
+        if entry.get('monster') is not None:          # S101: a monster NPC
+            sp = val(entry['monster'])
+            spr = MONSTER_KEY + sp
+            what = f'monster {monster_name(sp)}'
         return ('npc', int(entry['x']), int(entry['y']), spr,
-                f"NPC ${spr:02X} {entry.get('facing', 'down')} {beh}"
+                f"NPC {what} {entry.get('facing', 'down')} {beh}"
                 f"{' HIDDEN' if entry.get('hidden') else ''} → {entry.get('script', 'none')}")
     if k == 'raw':
         b = [val(x) for x in entry['bytes']]
@@ -171,6 +176,8 @@ class SpriteCache:
 
     @classmethod
     def get(cls, sprite_id):
+        if sprite_id is not None and sprite_id >= MONSTER_KEY:
+            return MonsterCache.get(sprite_id - MONSTER_KEY)
         if sprite_id not in cls._pix:
             p = os.path.join(SPRITE_DIR, f'id_{sprite_id:02X}.png')
             pm = None
@@ -182,6 +189,45 @@ class SpriteCache:
                 pm = QPixmap.fromImage(ImageQt.ImageQt(im))
             cls._pix[sprite_id] = pm
         return cls._pix[sprite_id]
+
+
+MONSTER_KEY = 0x1000          # canvas marker sprite key of a monster NPC = MONSTER_KEY + species
+MONSTER_DIR = os.path.join(REPO, 'extracted', 'monster_npc_sprites')
+
+
+def monster_name(species):
+    from editor2.core.conversation import species_names
+    return species_names().get(int(species), f'species {species}')
+
+
+class MonsterCache:
+    """S101: monster-NPC thumbnails — each species as the game draws it as a
+    monster NPC (its overworld follower, standing, facing down), captured
+    from the running game by tools/census_monster_npc_sprites.py (transparent
+    background already)."""
+    _pix = {}
+
+    @classmethod
+    def get(cls, species):
+        species = int(species)
+        if species not in cls._pix:
+            p = os.path.join(MONSTER_DIR, f'sp_{species:03d}.png')
+            pm = QPixmap(p) if os.path.exists(p) else None
+            cls._pix[species] = pm if pm is not None and not pm.isNull() else None
+        return cls._pix[species]
+
+    @staticmethod
+    def species():
+        """[(species, name)] with a thumbnail, safe as monster NPCs."""
+        import json
+        try:
+            d = json.load(open(os.path.join(REPO, 'extracted', 'monster_npc_sprites.json')))
+        except (OSError, ValueError):
+            return []
+        blank = set(d.get('blank') or [])
+        return [(int(k), v.get('name', '')) for k, v in sorted(d.get('species', {}).items(),
+                                                              key=lambda kv: int(kv[0]))
+                if int(k) not in blank]
 
 
 def metatile_at(tiles, attr, cx, cy):

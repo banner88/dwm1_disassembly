@@ -90,25 +90,54 @@ def load_catalog():
 
 
 class SpritePicker(QDialog):
-    """Grid of NPC sprite ids (S91 catalog crops)."""
+    """Grid of NPC sprite ids (S91 catalog crops) + S101 MONSTERS: any
+    species drawn as the game draws its overworld follower (a monster NPC,
+    ROOM_DATA_FORMAT "Monster NPCs"). `value` = sprite id (int) or
+    ('monster', species)."""
 
-    def __init__(self, current=None, parent=None):
+    def __init__(self, current=None, parent=None, monsters=True):
         super().__init__(parent)
+        from PySide6.QtWidgets import QLineEdit, QTabWidget
         from editor2.app.rooms.canvas import SpriteCache
         self.setWindowTitle('NPC sprite')
-        self.resize(560, 520)
+        self.resize(620, 560)
         self.value = current
         self.cat = load_catalog()
         v = QVBoxLayout(self)
+        self.tabs = QTabWidget()
+        v.addWidget(self.tabs, 1)
+        # people & objects
+        pw = QWidget()
+        pv = QVBoxLayout(pw)
         self.show_all = QCheckBox('show boss fragments / empty / glitch ids too')
         self.show_all.toggled.connect(self._fill)
-        v.addWidget(QLabel('Sprite ids from the vanilla census (S91). Each screen has a '
-                           'sprite-sheet VRAM budget: many DIFFERENT sprites on one screen '
-                           'can render blank — repeats are free.'))
-        v.addWidget(self.show_all)
+        pv.addWidget(QLabel('Sprite ids from the vanilla census (S91). Each screen has a '
+                            'sprite-sheet VRAM budget: many DIFFERENT sprites on one screen '
+                            'can render blank — repeats are free.'))
+        pv.addWidget(self.show_all)
         self.scroll = QScrollArea()
         self.scroll.setWidgetResizable(True)
-        v.addWidget(self.scroll, 1)
+        pv.addWidget(self.scroll, 1)
+        self.tabs.addTab(pw, 'People && objects')
+        # monsters
+        self.mscroll = None
+        if monsters:
+            mw = QWidget()
+            mv = QVBoxLayout(mw)
+            ml = QLabel('Any monster as an NPC, drawn like its follower (captured from the '
+                        'game). Up to 4 different monsters per screen; repeats are free. '
+                        'Diago, Samsi, Bazoo and the last row cannot be shown (they crash '
+                        'the game).')
+            ml.setWordWrap(True)
+            mv.addWidget(ml)
+            self.mfilter = QLineEdit()
+            self.mfilter.setPlaceholderText('filter by name…')
+            self.mfilter.textChanged.connect(self._fill_monsters)
+            mv.addWidget(self.mfilter)
+            self.mscroll = QScrollArea()
+            self.mscroll.setWidgetResizable(True)
+            mv.addWidget(self.mscroll, 1)
+            self.tabs.addTab(mw, 'Monsters')
         self.info = QLabel('')
         v.addWidget(self.info)
         bb = QDialogButtonBox(QDialogButtonBox.Cancel)
@@ -116,6 +145,10 @@ class SpritePicker(QDialog):
         v.addWidget(bb)
         self._cache = SpriteCache
         self._fill()
+        if monsters:
+            self._fill_monsters()
+            if isinstance(current, tuple):
+                self.tabs.setCurrentIndex(1)
 
     def _fill(self):
         w = QWidget()
@@ -145,6 +178,31 @@ class SpritePicker(QDialog):
         self.scroll.setWidget(w)
         self.info.setText(f'{n} ids shown')
 
+    def _fill_monsters(self):
+        from editor2.app.rooms.canvas import MonsterCache
+        w = QWidget()
+        g = QGridLayout(w)
+        g.setSpacing(2)
+        flt = self.mfilter.text().strip().lower()
+        n = 0
+        for sp, name in MonsterCache.species():
+            if flt and flt not in name.lower():
+                continue
+            b = QToolButton()
+            pm = MonsterCache.get(sp)
+            if pm is not None:
+                b.setIcon(QIcon(pm.scaled(32, 32)))
+                b.setIconSize(QSize(32, 32))
+            b.setText(name[:9])
+            b.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
+            b.setToolTip(f'{name} (species {sp})')
+            if self.value == ('monster', sp):
+                b.setStyleSheet('background: #806010;')
+            b.clicked.connect(lambda _c=False, s=sp: self._pick(('monster', s)))
+            g.addWidget(b, n // 8, n % 8)
+            n += 1
+        self.mscroll.setWidget(w)
+
     def _pick(self, sid):
         self.value = sid
         self.accept()
@@ -156,6 +214,7 @@ class NpcPanel(QGroupBox):
     fieldsEdited = Signal(dict)          # {field: value}
     spriteRequested = Signal()
     newTalkRequested = Signal()
+    newConversationRequested = Signal()  # S101
     editTalkRequested = Signal()
     presenceToggled = Signal(int, bool)  # state index, present
     deleteRequested = Signal()
@@ -177,7 +236,8 @@ class NpcPanel(QGroupBox):
         self.sprite_btn.setIconSize(QSize(32, 32))
         self.sprite_btn.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
         self.sprite_btn.clicked.connect(self.spriteRequested.emit)
-        self.sprite_btn.setToolTip('Change the sprite (S91 catalog)')
+        self.sprite_btn.setToolTip('Change the sprite (S91 catalog) — or any monster '
+                                   '(drawn like its follower, S101)')
         row.addWidget(self.sprite_btn)
         row.addStretch(1)
         f.addRow('sprite', row)
@@ -221,7 +281,13 @@ class NpcPanel(QGroupBox):
         self.btn_new_talk.clicked.connect(self.newTalkRequested.emit)
         self.btn_edit_talk = QPushButton('Edit talk…')
         self.btn_edit_talk.clicked.connect(self.editTalkRequested.emit)
+        self.btn_new_conv = QPushButton('New conversation…')
+        self.btn_new_conv.setToolTip('A conversation tree (S101): text, YES/NO branches, flag '
+                                     'checks, flags, a battle of 1-3 enemies, the helper who '
+                                     'takes the player away — boss rooms')
+        self.btn_new_conv.clicked.connect(self.newConversationRequested.emit)
         brow.addWidget(self.btn_new_talk)
+        brow.addWidget(self.btn_new_conv)
         brow.addWidget(self.btn_edit_talk)
         f.addRow('', brow)
         self.talk_preview = QLabel('')
@@ -241,7 +307,8 @@ class NpcPanel(QGroupBox):
         f.addRow('', self.btn_del)
 
     # --------------------------------------------------------------- show
-    def show_npc(self, view, script_ids, talk_pages, presence, editable, bytes_hint=''):
+    def show_npc(self, view, script_ids, talk_pages, presence, editable, bytes_hint='',
+                 conversation=None):
         """view = Document.npc_view(...); script_ids = [(index, id)];
         talk_pages = pages of a plain talk script or None; presence =
         [bool per state] or None (single-state screen)."""
@@ -249,10 +316,16 @@ class NpcPanel(QGroupBox):
         self._building = True
         self._view = view
         spr = view.get('sprite', 0)
-        cat = load_catalog().get(spr, {})
-        pm = SpriteCache.get(spr)
+        if view.get('monster') is not None:          # S101: a monster NPC
+            from editor2.app.rooms.canvas import MonsterCache, monster_name
+            pm = MonsterCache.get(view['monster'])
+            text = f"monster: {monster_name(view['monster'])}"
+        else:
+            cat = load_catalog().get(spr, {})
+            pm = SpriteCache.get(spr)
+            text = f"${spr:02X} {cat.get('name') or ''}".strip()
         self.sprite_btn.setIcon(QIcon(pm.scaled(32, 32)) if pm is not None else QIcon())
-        self.sprite_btn.setText(f"${spr:02X} {cat.get('name') or ''}".strip())
+        self.sprite_btn.setText(text)
         self.pos.setText(f"({view['x']},{view['y']})   drag on the canvas to move")
         self.facing.setCurrentIndex(max(0, self.facing.findData(view.get('facing', 'down'))))
         b = int(view.get('behaviour', 0))
@@ -273,8 +346,9 @@ class NpcPanel(QGroupBox):
             self.script.addItem(f'[{cur}] raw index (no id)', cur)
         k = self.script.findData(cur) if cur not in (None, 'none') else 0
         self.script.setCurrentIndex(max(0, k))
-        self.btn_edit_talk.setEnabled(talk_pages is not None)
-        self.talk_preview.setText(talk_summary(talk_pages, cur))
+        self.btn_edit_talk.setEnabled(talk_pages is not None or conversation is not None)
+        self.talk_preview.setText(('Conversation: ' + conversation) if conversation is not None
+                                  else talk_summary(talk_pages, cur))
         while self.presence_lay.count():
             w = self.presence_lay.takeAt(0).widget()
             if w:
@@ -293,7 +367,7 @@ class NpcPanel(QGroupBox):
         self.raw_note.setText(('Cloned entry (' + bytes_hint + '): editing a field turns it into '
                                'a typed NPC with the same bytes.') if view.get('raw') else '')
         for w in (self.sprite_btn, self.facing, self.beh, self.obj, self.script,
-                  self.btn_new_talk, self.btn_del, self.presence_box):
+                  self.btn_new_talk, self.btn_new_conv, self.btn_del, self.presence_box):
             w.setEnabled(editable)
         if not editable:
             self.btn_edit_talk.setEnabled(False)

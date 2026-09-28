@@ -1,0 +1,1099 @@
+{
+ "_generator": "tools/census_monster_npc_sprites.py (S101): PyBoy capture of each species as a monster NPC ($F0-$F3 display list) in a build of the example project from data/DWM-original.gbc (build md5 a09d307411138482c5ab3c5b0ced529e)",
+ "cell": "standing, facing down; 16x16 RGBA, transparent background",
+ "blank": [
+  216
+ ],
+ "species": {
+  "0": {
+   "name": "DrakSlime",
+   "file": "sp_000.png",
+   "pixels": 130
+  },
+  "1": {
+   "name": "SpotSlime",
+   "file": "sp_001.png",
+   "pixels": 116
+  },
+  "2": {
+   "name": "WingSlime",
+   "file": "sp_002.png",
+   "pixels": 149
+  },
+  "3": {
+   "name": "TreeSlime",
+   "file": "sp_003.png",
+   "pixels": 94
+  },
+  "4": {
+   "name": "Snaily",
+   "file": "sp_004.png",
+   "pixels": 165
+  },
+  "5": {
+   "name": "SlimeNite",
+   "file": "sp_005.png",
+   "pixels": 178
+  },
+  "6": {
+   "name": "Babble",
+   "file": "sp_006.png",
+   "pixels": 113
+  },
+  "7": {
+   "name": "BoxSlime",
+   "file": "sp_007.png",
+   "pixels": 86
+  },
+  "8": {
+   "name": "Slime",
+   "file": "sp_008.png",
+   "pixels": 64
+  },
+  "9": {
+   "name": "Healer",
+   "file": "sp_009.png",
+   "pixels": 150
+  },
+  "10": {
+   "name": "FangSlime",
+   "file": "sp_010.png",
+   "pixels": 150
+  },
+  "11": {
+   "name": "RockSlime",
+   "file": "sp_011.png",
+   "pixels": 106
+  },
+  "12": {
+   "name": "SlimeBorg",
+   "file": "sp_012.png",
+   "pixels": 126
+  },
+  "13": {
+   "name": "Slabbit",
+   "file": "sp_013.png",
+   "pixels": 128
+  },
+  "14": {
+   "name": "SpotKing",
+   "file": "sp_014.png",
+   "pixels": 170
+  },
+  "15": {
+   "name": "KingSlime",
+   "file": "sp_015.png",
+   "pixels": 168
+  },
+  "16": {
+   "name": "Metaly",
+   "file": "sp_016.png",
+   "pixels": 64
+  },
+  "17": {
+   "name": "Metabble",
+   "file": "sp_017.png",
+   "pixels": 113
+  },
+  "18": {
+   "name": "MetalKing",
+   "file": "sp_018.png",
+   "pixels": 168
+  },
+  "19": {
+   "name": "GoldSlime",
+   "file": "sp_019.png",
+   "pixels": 206
+  },
+  "20": {
+   "name": "DragonKid",
+   "file": "sp_020.png",
+   "pixels": 119
+  },
+  "21": {
+   "name": "Tortragon",
+   "file": "sp_021.png",
+   "pixels": 150
+  },
+  "22": {
+   "name": "Pteranod",
+   "file": "sp_022.png",
+   "pixels": 128
+  },
+  "23": {
+   "name": "Gasgon",
+   "file": "sp_023.png",
+   "pixels": 180
+  },
+  "24": {
+   "name": "FairyDrak",
+   "file": "sp_024.png",
+   "pixels": 194
+  },
+  "25": {
+   "name": "LizardMan",
+   "file": "sp_025.png",
+   "pixels": 217
+  },
+  "26": {
+   "name": "Poisongon",
+   "file": "sp_026.png",
+   "pixels": 157
+  },
+  "27": {
+   "name": "Swordgon",
+   "file": "sp_027.png",
+   "pixels": 178
+  },
+  "28": {
+   "name": "Dragon",
+   "file": "sp_028.png",
+   "pixels": 155
+  },
+  "29": {
+   "name": "MiniDrak",
+   "file": "sp_029.png",
+   "pixels": 144
+  },
+  "30": {
+   "name": "MadDragon",
+   "file": "sp_030.png",
+   "pixels": 182
+  },
+  "31": {
+   "name": "Rayburn",
+   "file": "sp_031.png",
+   "pixels": 159
+  },
+  "32": {
+   "name": "Chamelgon",
+   "file": "sp_032.png",
+   "pixels": 176
+  },
+  "33": {
+   "name": "LizardFly",
+   "file": "sp_033.png",
+   "pixels": 156
+  },
+  "34": {
+   "name": "Andreal",
+   "file": "sp_034.png",
+   "pixels": 200
+  },
+  "35": {
+   "name": "KingCobra",
+   "file": "sp_035.png",
+   "pixels": 182
+  },
+  "36": {
+   "name": "Spikerous",
+   "file": "sp_036.png",
+   "pixels": 171
+  },
+  "37": {
+   "name": "GreatDrak",
+   "file": "sp_037.png",
+   "pixels": 193
+  },
+  "38": {
+   "name": "Crestpent",
+   "file": "sp_038.png",
+   "pixels": 170
+  },
+  "39": {
+   "name": "WingSnake",
+   "file": "sp_039.png",
+   "pixels": 172
+  },
+  "40": {
+   "name": "Coatol",
+   "file": "sp_040.png",
+   "pixels": 163
+  },
+  "41": {
+   "name": "Orochi",
+   "file": "sp_041.png",
+   "pixels": 187
+  },
+  "42": {
+   "name": "BattleRex",
+   "file": "sp_042.png",
+   "pixels": 184
+  },
+  "43": {
+   "name": "SkyDragon",
+   "file": "sp_043.png",
+   "pixels": 200
+  },
+  "44": {
+   "name": "Divinegon",
+   "file": "sp_044.png",
+   "pixels": 200
+  },
+  "45": {
+   "name": "Tonguella",
+   "file": "sp_045.png",
+   "pixels": 180
+  },
+  "46": {
+   "name": "Almiraj",
+   "file": "sp_046.png",
+   "pixels": 176
+  },
+  "47": {
+   "name": "CatFly",
+   "file": "sp_047.png",
+   "pixels": 190
+  },
+  "48": {
+   "name": "PillowRat",
+   "file": "sp_048.png",
+   "pixels": 194
+  },
+  "49": {
+   "name": "Saccer",
+   "file": "sp_049.png",
+   "pixels": 153
+  },
+  "50": {
+   "name": "GulpBeast",
+   "file": "sp_050.png",
+   "pixels": 177
+  },
+  "51": {
+   "name": "Skullroo",
+   "file": "sp_051.png",
+   "pixels": 168
+  },
+  "52": {
+   "name": "WindBeast",
+   "file": "sp_052.png",
+   "pixels": 190
+  },
+  "53": {
+   "name": "Anteater",
+   "file": "sp_053.png",
+   "pixels": 186
+  },
+  "54": {
+   "name": "SuperTen",
+   "file": "sp_054.png",
+   "pixels": 168
+  },
+  "55": {
+   "name": "IronTurt",
+   "file": "sp_055.png",
+   "pixels": 179
+  },
+  "56": {
+   "name": "Mommonja",
+   "file": "sp_056.png",
+   "pixels": 192
+  },
+  "57": {
+   "name": "HammerMan",
+   "file": "sp_057.png",
+   "pixels": 136
+  },
+  "58": {
+   "name": "Grizzly",
+   "file": "sp_058.png",
+   "pixels": 200
+  },
+  "59": {
+   "name": "Yeti",
+   "file": "sp_059.png",
+   "pixels": 177
+  },
+  "60": {
+   "name": "MadGopher",
+   "file": "sp_060.png",
+   "pixels": 170
+  },
+  "61": {
+   "name": "FairyRat",
+   "file": "sp_061.png",
+   "pixels": 181
+  },
+  "62": {
+   "name": "Unicorn",
+   "file": "sp_062.png",
+   "pixels": 127
+  },
+  "63": {
+   "name": "Goategon",
+   "file": "sp_063.png",
+   "pixels": 203
+  },
+  "64": {
+   "name": "WildApe",
+   "file": "sp_064.png",
+   "pixels": 211
+  },
+  "65": {
+   "name": "Trumpeter",
+   "file": "sp_065.png",
+   "pixels": 207
+  },
+  "66": {
+   "name": "KingLeo",
+   "file": "sp_066.png",
+   "pixels": 220
+  },
+  "67": {
+   "name": "DarkHorn",
+   "file": "sp_067.png",
+   "pixels": 189
+  },
+  "68": {
+   "name": "MadCat",
+   "file": "sp_068.png",
+   "pixels": 119
+  },
+  "69": {
+   "name": "BigEye",
+   "file": "sp_069.png",
+   "pixels": 161
+  },
+  "70": {
+   "name": "Picky",
+   "file": "sp_070.png",
+   "pixels": 161
+  },
+  "71": {
+   "name": "Wyvern",
+   "file": "sp_071.png",
+   "pixels": 97
+  },
+  "72": {
+   "name": "BullBird",
+   "file": "sp_072.png",
+   "pixels": 155
+  },
+  "73": {
+   "name": "Florajay",
+   "file": "sp_073.png",
+   "pixels": 152
+  },
+  "74": {
+   "name": "DuckKite",
+   "file": "sp_074.png",
+   "pixels": 186
+  },
+  "75": {
+   "name": "MadPecker",
+   "file": "sp_075.png",
+   "pixels": 159
+  },
+  "76": {
+   "name": "MadRaven",
+   "file": "sp_076.png",
+   "pixels": 136
+  },
+  "77": {
+   "name": "MistyWing",
+   "file": "sp_077.png",
+   "pixels": 112
+  },
+  "78": {
+   "name": "Dracky",
+   "file": "sp_078.png",
+   "pixels": 116
+  },
+  "79": {
+   "name": "BigRoost",
+   "file": "sp_079.png",
+   "pixels": 181
+  },
+  "80": {
+   "name": "StubBird",
+   "file": "sp_080.png",
+   "pixels": 184
+  },
+  "81": {
+   "name": "LandOwl",
+   "file": "sp_081.png",
+   "pixels": 187
+  },
+  "82": {
+   "name": "MadGoose",
+   "file": "sp_082.png",
+   "pixels": 152
+  },
+  "83": {
+   "name": "MadCondor",
+   "file": "sp_083.png",
+   "pixels": 186
+  },
+  "84": {
+   "name": "Blizzardy",
+   "file": "sp_084.png",
+   "pixels": 171
+  },
+  "85": {
+   "name": "Phoenix",
+   "file": "sp_085.png",
+   "pixels": 171
+  },
+  "86": {
+   "name": "ZapBird",
+   "file": "sp_086.png",
+   "pixels": 152
+  },
+  "87": {
+   "name": "WhipBird",
+   "file": "sp_087.png",
+   "pixels": 176
+  },
+  "88": {
+   "name": "FunkyBird",
+   "file": "sp_088.png",
+   "pixels": 159
+  },
+  "89": {
+   "name": "RainHawk",
+   "file": "sp_089.png",
+   "pixels": 194
+  },
+  "90": {
+   "name": "MadPlant",
+   "file": "sp_090.png",
+   "pixels": 170
+  },
+  "91": {
+   "name": "FireWeed",
+   "file": "sp_091.png",
+   "pixels": 139
+  },
+  "92": {
+   "name": "FloraMan",
+   "file": "sp_092.png",
+   "pixels": 175
+  },
+  "93": {
+   "name": "WingTree",
+   "file": "sp_093.png",
+   "pixels": 142
+  },
+  "94": {
+   "name": "CactiBall",
+   "file": "sp_094.png",
+   "pixels": 183
+  },
+  "95": {
+   "name": "Gulpple",
+   "file": "sp_095.png",
+   "pixels": 151
+  },
+  "96": {
+   "name": "Toadstool",
+   "file": "sp_096.png",
+   "pixels": 147
+  },
+  "97": {
+   "name": "AmberWeed",
+   "file": "sp_097.png",
+   "pixels": 166
+  },
+  "98": {
+   "name": "Stubsuck",
+   "file": "sp_098.png",
+   "pixels": 202
+  },
+  "99": {
+   "name": "Oniono",
+   "file": "sp_099.png",
+   "pixels": 174
+  },
+  "100": {
+   "name": "DanceVegi",
+   "file": "sp_100.png",
+   "pixels": 155
+  },
+  "101": {
+   "name": "TreeBoy",
+   "file": "sp_101.png",
+   "pixels": 168
+  },
+  "102": {
+   "name": "FaceTree",
+   "file": "sp_102.png",
+   "pixels": 200
+  },
+  "103": {
+   "name": "HerbMan",
+   "file": "sp_103.png",
+   "pixels": 139
+  },
+  "104": {
+   "name": "BeanMan",
+   "file": "sp_104.png",
+   "pixels": 160
+  },
+  "105": {
+   "name": "EvilSeed",
+   "file": "sp_105.png",
+   "pixels": 137
+  },
+  "106": {
+   "name": "ManEater",
+   "file": "sp_106.png",
+   "pixels": 205
+  },
+  "107": {
+   "name": "Snapper",
+   "file": "sp_107.png",
+   "pixels": 168
+  },
+  "108": {
+   "name": "Rosevine",
+   "file": "sp_108.png",
+   "pixels": 214
+  },
+  "109": {
+   "name": "Watabou",
+   "file": "sp_109.png",
+   "pixels": 160
+  },
+  "110": {
+   "name": "GiantSlug",
+   "file": "sp_110.png",
+   "pixels": 189
+  },
+  "111": {
+   "name": "Catapila",
+   "file": "sp_111.png",
+   "pixels": 172
+  },
+  "112": {
+   "name": "Gophecada",
+   "file": "sp_112.png",
+   "pixels": 168
+  },
+  "113": {
+   "name": "Butterfly",
+   "file": "sp_113.png",
+   "pixels": 138
+  },
+  "114": {
+   "name": "WeedBug",
+   "file": "sp_114.png",
+   "pixels": 119
+  },
+  "115": {
+   "name": "GiantWorm",
+   "file": "sp_115.png",
+   "pixels": 128
+  },
+  "116": {
+   "name": "Lipsy",
+   "file": "sp_116.png",
+   "pixels": 152
+  },
+  "117": {
+   "name": "StagBug",
+   "file": "sp_117.png",
+   "pixels": 140
+  },
+  "118": {
+   "name": "ArmyAnt",
+   "file": "sp_118.png",
+   "pixels": 125
+  },
+  "119": {
+   "name": "GoHopper",
+   "file": "sp_119.png",
+   "pixels": 132
+  },
+  "120": {
+   "name": "TailEater",
+   "file": "sp_120.png",
+   "pixels": 133
+  },
+  "121": {
+   "name": "ArmorPede",
+   "file": "sp_121.png",
+   "pixels": 123
+  },
+  "122": {
+   "name": "Eyeder",
+   "file": "sp_122.png",
+   "pixels": 156
+  },
+  "123": {
+   "name": "GiantMoth",
+   "file": "sp_123.png",
+   "pixels": 138
+  },
+  "124": {
+   "name": "Droll",
+   "file": "sp_124.png",
+   "pixels": 208
+  },
+  "125": {
+   "name": "ArmyCrab",
+   "file": "sp_125.png",
+   "pixels": 196
+  },
+  "126": {
+   "name": "MadHornet",
+   "file": "sp_126.png",
+   "pixels": 178
+  },
+  "127": {
+   "name": "HornBeet",
+   "file": "sp_127.png",
+   "pixels": 161
+  },
+  "128": {
+   "name": "Armorpion",
+   "file": "sp_128.png",
+   "pixels": 152
+  },
+  "129": {
+   "name": "Digster",
+   "file": "sp_129.png",
+   "pixels": 186
+  },
+  "130": {
+   "name": "Pixy",
+   "file": "sp_130.png",
+   "pixels": 132
+  },
+  "131": {
+   "name": "ArcDemon",
+   "file": "sp_131.png",
+   "pixels": 218
+  },
+  "132": {
+   "name": "AgDevil",
+   "file": "sp_132.png",
+   "pixels": 187
+  },
+  "133": {
+   "name": "Demonite",
+   "file": "sp_133.png",
+   "pixels": 113
+  },
+  "134": {
+   "name": "DarkEye",
+   "file": "sp_134.png",
+   "pixels": 152
+  },
+  "135": {
+   "name": "EyeBall",
+   "file": "sp_135.png",
+   "pixels": 131
+  },
+  "136": {
+   "name": "SkulRider",
+   "file": "sp_136.png",
+   "pixels": 178
+  },
+  "137": {
+   "name": "EvilBeast",
+   "file": "sp_137.png",
+   "pixels": 202
+  },
+  "138": {
+   "name": "1EyeClown",
+   "file": "sp_138.png",
+   "pixels": 147
+  },
+  "139": {
+   "name": "Gremlin",
+   "file": "sp_139.png",
+   "pixels": 118
+  },
+  "140": {
+   "name": "MedusaEye",
+   "file": "sp_140.png",
+   "pixels": 214
+  },
+  "141": {
+   "name": "Lionex",
+   "file": "sp_141.png",
+   "pixels": 199
+  },
+  "142": {
+   "name": "GoatHorn",
+   "file": "sp_142.png",
+   "pixels": 192
+  },
+  "143": {
+   "name": "Orc",
+   "file": "sp_143.png",
+   "pixels": 187
+  },
+  "144": {
+   "name": "Ogre",
+   "file": "sp_144.png",
+   "pixels": 186
+  },
+  "145": {
+   "name": "GateGuard",
+   "file": "sp_145.png",
+   "pixels": 188
+  },
+  "146": {
+   "name": "ChopClown",
+   "file": "sp_146.png",
+   "pixels": 24
+  },
+  "147": {
+   "name": "Grendal",
+   "file": "sp_147.png",
+   "pixels": 199
+  },
+  "148": {
+   "name": "Akubar",
+   "file": "sp_148.png",
+   "pixels": 206
+  },
+  "149": {
+   "name": "MadKnight",
+   "file": "sp_149.png",
+   "pixels": 195
+  },
+  "150": {
+   "name": "Gigantes",
+   "file": "sp_150.png",
+   "pixels": 193
+  },
+  "151": {
+   "name": "Centasaur",
+   "file": "sp_151.png",
+   "pixels": 175
+  },
+  "152": {
+   "name": "EvilArmor",
+   "file": "sp_152.png",
+   "pixels": 216
+  },
+  "153": {
+   "name": "Jamirus",
+   "file": "sp_153.png",
+   "pixels": 204
+  },
+  "154": {
+   "name": "Durran",
+   "file": "sp_154.png",
+   "pixels": 222
+  },
+  "155": {
+   "name": "Spooky",
+   "file": "sp_155.png",
+   "pixels": 152
+  },
+  "156": {
+   "name": "Skullgon",
+   "file": "sp_156.png",
+   "pixels": 213
+  },
+  "157": {
+   "name": "Putrepup",
+   "file": "sp_157.png",
+   "pixels": 118
+  },
+  "158": {
+   "name": "RotRaven",
+   "file": "sp_158.png",
+   "pixels": 101
+  },
+  "159": {
+   "name": "Mummy",
+   "file": "sp_159.png",
+   "pixels": 154
+  },
+  "160": {
+   "name": "DarkCrab",
+   "file": "sp_160.png",
+   "pixels": 190
+  },
+  "161": {
+   "name": "DeadNite",
+   "file": "sp_161.png",
+   "pixels": 186
+  },
+  "162": {
+   "name": "Shadow",
+   "file": "sp_162.png",
+   "pixels": 138
+  },
+  "163": {
+   "name": "Hork",
+   "file": "sp_163.png",
+   "pixels": 143
+  },
+  "164": {
+   "name": "Mudron",
+   "file": "sp_164.png",
+   "pixels": 181
+  },
+  "165": {
+   "name": "NiteWhip",
+   "file": "sp_165.png",
+   "pixels": 129
+  },
+  "166": {
+   "name": "MadSpirit",
+   "file": "sp_166.png",
+   "pixels": 193
+  },
+  "167": {
+   "name": "WindMerge",
+   "file": "sp_167.png",
+   "pixels": 198
+  },
+  "168": {
+   "name": "Reaper",
+   "file": "sp_168.png",
+   "pixels": 156
+  },
+  "169": {
+   "name": "DeadNoble",
+   "file": "sp_169.png",
+   "pixels": 197
+  },
+  "170": {
+   "name": "WhiteKing",
+   "file": "sp_170.png",
+   "pixels": 201
+  },
+  "171": {
+   "name": "BoneSlave",
+   "file": "sp_171.png",
+   "pixels": 187
+  },
+  "172": {
+   "name": "Skeletor",
+   "file": "sp_172.png",
+   "pixels": 209
+  },
+  "173": {
+   "name": "Servant",
+   "file": "sp_173.png",
+   "pixels": 187
+  },
+  "174": {
+   "name": "Copycat",
+   "file": "sp_174.png",
+   "pixels": 123
+  },
+  "175": {
+   "name": "JewelBag",
+   "file": "sp_175.png",
+   "pixels": 122
+  },
+  "176": {
+   "name": "EvilWand",
+   "file": "sp_176.png",
+   "pixels": 137
+  },
+  "177": {
+   "name": "MadCandle",
+   "file": "sp_177.png",
+   "pixels": 138
+  },
+  "178": {
+   "name": "CoilBird",
+   "file": "sp_178.png",
+   "pixels": 128
+  },
+  "179": {
+   "name": "Facer",
+   "file": "sp_179.png",
+   "pixels": 186
+  },
+  "180": {
+   "name": "SpikyBoy",
+   "file": "sp_180.png",
+   "pixels": 151
+  },
+  "181": {
+   "name": "MadMirror",
+   "file": "sp_181.png",
+   "pixels": 223
+  },
+  "182": {
+   "name": "RogueNite",
+   "file": "sp_182.png",
+   "pixels": 197
+  },
+  "183": {
+   "name": "Goopi",
+   "file": "sp_183.png",
+   "pixels": 175
+  },
+  "184": {
+   "name": "Voodoll",
+   "file": "sp_184.png",
+   "pixels": 194
+  },
+  "185": {
+   "name": "MetalDrak",
+   "file": "sp_185.png",
+   "pixels": 183
+  },
+  "186": {
+   "name": "Balzak",
+   "file": "sp_186.png",
+   "pixels": 195
+  },
+  "187": {
+   "name": "SabreMan",
+   "file": "sp_187.png",
+   "pixels": 122
+  },
+  "188": {
+   "name": "CurseLamp",
+   "file": "sp_188.png",
+   "pixels": 102
+  },
+  "189": {
+   "name": "Roboster",
+   "file": "sp_189.png",
+   "pixels": 194
+  },
+  "190": {
+   "name": "EvilPot",
+   "file": "sp_190.png",
+   "pixels": 148
+  },
+  "191": {
+   "name": "Gismo",
+   "file": "sp_191.png",
+   "pixels": 155
+  },
+  "192": {
+   "name": "LavaMan",
+   "file": "sp_192.png",
+   "pixels": 118
+  },
+  "193": {
+   "name": "IceMan",
+   "file": "sp_193.png",
+   "pixels": 118
+  },
+  "194": {
+   "name": "Mimic",
+   "file": "sp_194.png",
+   "pixels": 178
+  },
+  "195": {
+   "name": "MudDoll",
+   "file": "sp_195.png",
+   "pixels": 164
+  },
+  "196": {
+   "name": "Golem",
+   "file": "sp_196.png",
+   "pixels": 212
+  },
+  "197": {
+   "name": "StoneMan",
+   "file": "sp_197.png",
+   "pixels": 205
+  },
+  "198": {
+   "name": "BombCrag",
+   "file": "sp_198.png",
+   "pixels": 90
+  },
+  "199": {
+   "name": "GoldGolem",
+   "file": "sp_199.png",
+   "pixels": 202
+  },
+  "200": {
+   "name": "DracoLord",
+   "file": "sp_200.png",
+   "pixels": 218
+  },
+  "201": {
+   "name": "DracoLord",
+   "file": "sp_201.png",
+   "pixels": 186
+  },
+  "202": {
+   "name": "Hargon",
+   "file": "sp_202.png",
+   "pixels": 206
+  },
+  "203": {
+   "name": "Sidoh",
+   "file": "sp_203.png",
+   "pixels": 180
+  },
+  "204": {
+   "name": "Baramos",
+   "file": "sp_204.png",
+   "pixels": 202
+  },
+  "205": {
+   "name": "Zoma",
+   "file": "sp_205.png",
+   "pixels": 224
+  },
+  "206": {
+   "name": "Pizzaro",
+   "file": "sp_206.png",
+   "pixels": 201
+  },
+  "207": {
+   "name": "Esterk",
+   "file": "sp_207.png",
+   "pixels": 191
+  },
+  "208": {
+   "name": "Mirudraas",
+   "file": "sp_208.png",
+   "pixels": 186
+  },
+  "209": {
+   "name": "Mirudraas",
+   "file": "sp_209.png",
+   "pixels": 212
+  },
+  "210": {
+   "name": "Mudou",
+   "file": "sp_210.png",
+   "pixels": 189
+  },
+  "211": {
+   "name": "DeathMore",
+   "file": "sp_211.png",
+   "pixels": 182
+  },
+  "212": {
+   "name": "DeathMore",
+   "file": "sp_212.png",
+   "pixels": 210
+  },
+  "213": {
+   "name": "DeathMore",
+   "file": "sp_213.png",
+   "pixels": 180
+  },
+  "214": {
+   "name": "Darkdrium",
+   "file": "sp_214.png",
+   "pixels": 221
+  },
+  "215": {
+   "name": "TERRY?",
+   "file": "sp_215.png",
+   "pixels": 30
+  },
+  "216": {
+   "name": "Tatsu",
+   "file": "sp_216.png",
+   "pixels": 0
+  },
+  "224": {
+   "name": "Gorbunok",
+   "file": "sp_224.png",
+   "pixels": 172
+  }
+ }
+}

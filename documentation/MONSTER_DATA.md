@@ -120,6 +120,24 @@ entry 1's fields — proving the stats derive from the entry, not the species
 growth curve. EID 1 is starter-only (no encounter pool or boss references it), so
 edits are isolated to the starter.
 
+### Project enemy rows — EID 519+ in bank $6B (S101, PyBoy-measured)
+
+`LoadEnemyStats` (bank $14) now starts with `jp LoadEnemyStatsExt`: EID
+high byte ≥ 3, or = 2 with low byte ≥ 7 (EID ≥ 519) → `ld hl, $6B00 / rst
+$10` = bank $6B entry 0 `CopyEnemyRowExt` (row = EID − 519, 25 B, same
+format as this table; DE preserved by rst $10 and advanced by 25, as the
+vanilla copy leaves it); lower EIDs resume the vanilla copy. EIDs 487-517
+land in code and are never valid; 518 = Gorbunok (bank $14 tail).
+`LookupBossRedirect` (entry 6) reads `BossRedirectTableExt` — the project's
+`[fight EID, join EID]` pairs first, then the vanilla 34, `$FFFF`
+(PROJECT_COMPILER §2.18). Measured: EID 519-522 load (DA18 row and the
+battle screen); a tier-0 row joins every time it is the join candidate;
+the JOIN VERSION's stats arrive (Court Dragon: fight row HP 4 / INT 5, join
+row HP 2 / INT 2 → the new monster had max HP 1 / INT 1 after the 80-100 %
+creation roll). **Join candidate** (`$DD61`): the slot of the enemy the
+player KO'd last (battle banks $51-$53 write `wBattleTargetIdx`) — in a 2-3
+enemy battle only that enemy can join.
+
 ## Boss Table (Bank $14:$4897)
 
 32 gates × 4 bytes. Preceded by 1 non-boss redirect entry at $4893.
@@ -190,7 +208,7 @@ of the post-battle level-up processing loop.
 **Decision logic**: `$DB85` (per-enemy joinability flag):
 - Value `$07` = non-joinable (standard wild encounters)
 - Any other value = recruitable via RNG probability
-- Story bosses have `$DB85 = $00` and join through the natural probability path
+- Story bosses have `$DB85 = $00` — tier 0 skips the roll (`LoadB54_5683`: `or a / jr z` → join), i.e. ALWAYS joins when it is the candidate (S101 annotation + measurement; "natural probability path" was imprecise)
 
 **Battle phase machine** (`$D9EC`) — CORRECTED S68: **18 states** (not 15),
 dispatch table `BattlePhaseTable $50:$5F3A`, dispatcher `$5F2F`, gated by

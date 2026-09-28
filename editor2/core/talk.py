@@ -57,6 +57,8 @@ class TalkMixin:
                     and isinstance(op[1], str):
                 out.append(op[1])
         t = sc.get('talk') or {}
+        if 'steps' in t and hasattr(self, 'conversation_dialogue_ids'):
+            out += self.conversation_dialogue_ids(t)        # S101 steps form
         if t.get('text'):
             out.append(t['text'])
         for part in ('then', 'yes', 'no'):

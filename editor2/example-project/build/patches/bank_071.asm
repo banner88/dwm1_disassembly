@@ -30,7 +30,8 @@
 ;     Return in E per the proven DE-return contract (KEY_LESSONS: rst $10
 ;     clobbers A on return but not DE; CustomReadStep returns DE the same way).
 ;     Gate floors (wInGateworld!=0) keep vanilla floor-derived music: wMapID is
-;     not room-meaningful there; gate/event music assignment is a future item.
+;     not room-meaningful there — EXCEPT the floor before a CUSTOM boss room
+;     (S101): the boss room's song (or $34), never RoomBGMTable[custom id].
 ;
 ; Entry 3 (HL=$7103) CustomAnimSource (S99, ROADMAP P3.3e):
 ;     E := CustomAnimSrcTable[wMapID-$6B] — the map ID whose bank-$01 room-
@@ -165,23 +166,56 @@ CustomEncResolve:
 
 ; -----------------------------------------------------------------------------
 ; Entry 2: CustomRoomBGMResolve — E := assigned room BGM id, or 0 (S64, M3b)
+; S101: a CUSTOM boss room (wBossMapType >= $6B, custom.gates[].boss) — the
+; vanilla derivation would index RoomBGMTable[wBossMapType] past its $70
+; entries on the floor before the boss floor (garbage song). There, and in
+; an unassigned custom room at that floor (a served room, or stale dive
+; values), E := the boss room's CustomRoomBGMTable entry, or $34 (the gate
+; theme) when it has none. Vanilla boss maps keep the vanilla derivation.
 ; -----------------------------------------------------------------------------
 CustomRoomBGMResolve:
     ld e, $00                           ; default: no assignment
     ld a, [wInGateworld]
     or a
-    ret nz                              ; gate floors: vanilla floor music
+    jr nz, .gatePath                    ; maze floors: only the custom-boss case
     ld a, [wMapID]
     cp $80
     ret nc                              ; out of table range
+    call .lookup                        ; E = CustomRoomBGMTable[wMapID]
+    ld a, e
+    or a
+    ret nz                              ; assigned: wins
+    ld a, [wMapID]
+    cp $61
+    ret c                               ; RoomBGMTable rooms: vanilla derivation
+.gatePath:
+    ld a, [wBossMapType]
+    cp CUSTOM_ROOM_START
+    ret c                               ; vanilla boss map: vanilla is safe
+    ld a, [wLastFloor]
+    sub $02
+    ld b, a
+    ld a, [wCurrentFloor]
+    cp b
+    ret nz                              ; not the floor before the boss floor
+    ld a, [wBossMapType]
+    cp $80
+    jr nc, .gateTheme
+    call .lookup                        ; the custom boss room's own song
+    ld a, e
+    or a
+    ret nz
+.gateTheme:
+    ld e, $34                           ; no song: the gate theme
+    ret
+.lookup:                                ; A = mapID -> E = table byte
     ld hl, CustomRoomBGMTable
     add l
     ld l, a
     adc h
     sub l
     ld h, a
-    ld a, [hl]
-    ld e, a                             ; 0 entries fall through as "none"
+    ld e, [hl]
     ret
 
 ; -----------------------------------------------------------------------------

@@ -587,6 +587,32 @@ leaves the 10×8 screen.
 | +$18/+$1A | pixel X/Y (16-bit, tile·16+8) | walkers |
 | +$1C/+$1E | previous pixel X/Y (copied each frame by bank $01 `LoadNPCDataTable`) | step undo |
 
+## Monster NPCs — any species drawn as its follower (S101, PyBoy-measured)
+
+The bank $0B NPC sheet resolver (`Call_00b_4839`, annotated S101) maps an NPC
+entry's sprite id: $FF none; $E0 the player shape; **$E1-$E3 = the party
+monster in party slot 0-2** (the follower sheets already in VRAM);
+**$F0-$F3 = display-list entry n**: the pair at `$D7CA + 2n` = [draw id,
+is_monster]; with is_monster ≠ 0 the draw id is `species + $10` and the NPC
+is drawn and animated exactly like that species' follower (art from the
+follower table, layout bank $10/$11, palette from its attr table). The
+resolver copies the pair into the slot (+$11 draw id, +$0F is_monster). The
+arena fills this list (opcode $1F); with it empty the ids alias sprite $00
+(the S91 census). Behaviours (stand / spin / pace …) work as for any NPC.
+
+Custom rooms: `npc.monster = species` (PROJECT_COMPILER §2.18) — bank $60
+`CustomMonsterCast` writes the current screen's list before the NPC parse
+(≤ 4 different species per screen; repeats share an entry), so scrolling
+between screens swaps the cast (measured on a 2-screen room: GreatDrak on
+screen 0, DragonKid on screen 1). Census (`tools/census_monster_npc_sprites.py`,
+218 species, `extracted/monster_npc_sprites/`): species **216** draws blank;
+**217-220 hang or crash** the game (their follower tables are not real);
+221-223 do not exist — the compiler refuses 217-223. Heavy monster sheets
+count against the per-screen sprite budget (above). **Observed S101, not yet
+traced:** after a battle started by TALKING to a monster NPC, that NPC is not
+drawn again until the screen reloads (its slot stays active, the cast is
+intact); after a fight started by the entry script the monster NPC stays.
+
 ## Animated tiles (S99, PyBoy-measured) — ROADMAP P3.3e
 
 **One mechanism, one bank.** Every field frame, `MainFieldLoop` calls bank

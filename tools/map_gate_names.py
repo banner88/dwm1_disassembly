@@ -86,7 +86,7 @@ def derive(rom: bytes) -> dict:
     gates, problems = [], []
     for g in range(32):
         row = rom[base + g * GATE_ROW: base + (g + 1) * GATE_ROW]
-        ft1, ft2, ft3, last, boss, _sx, _sy, tier = row
+        ft1, ft2, ft3, last, boss, sx, sy, tier = row
         if boss not in BOSS_MAP_TO_GATE:
             problems.append(f"gate {g}: boss map ${boss:02X} not in the name table")
             continue
@@ -102,6 +102,12 @@ def derive(rom: bytes) -> dict:
             "boss_room": MAP_NAMES.get(boss, f"map ${boss:02X}"),
             "floor_types": [ft1, ft2, ft3],
             "depth_tier": tier,
+            # S101: the boss room's arrival TILE (absolute; entry 5 boss path
+            # writes 16*b+8 pixels) and the raw 8-byte row, so the compiler can
+            # re-emit the table byte-identically (patches/bank_016.asm region
+            # gate_floor_table) without reading the ROM.
+            "boss_spawn": [sx, sy],
+            "row": row.hex(),
         })
     if len({x["boss_map"] for x in gates}) != len(gates):
         problems.append("two gates share a boss map")
@@ -109,7 +115,8 @@ def derive(rom: bytes) -> dict:
         raise SystemExit("map_gate_names: ROM/FAQ disagreement:\n  " + "\n  ".join(problems))
     return {
         "_generator": "tools/map_gate_names.py (S100) from data/DWM-original.gbc "
-                      "GateFloorDataTable $16:$70A6 (floors byte 3 + boss map byte 4), "
+                      "GateFloorDataTable $16:$70A6 (floors byte 3 + boss map byte 4; "
+                      "S101: + boss_spawn bytes 5/6 + the raw row), "
                       "cross-checked vs FULL_FAQ.txt 'Levels:'",
         "gates": gates,
     }

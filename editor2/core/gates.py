@@ -121,11 +121,63 @@ def gate_floors(gate_id, start=None):
     return None
 
 
-def floor_range(spec, floors):
+# ---------------------------------------------------------------------------
+# Per-gate settings (S101, ROADMAP P3.7b part 2): custom.gates[] =
+#   {"gate": 0-31, "floors": 2-99, "boss": "<custom room id>" | "vanilla:$xx",
+#    "hand_made": bool, "comment": "..."}
+# compiled into the bank $16 GateFloorDataTable region (gate_floor_table):
+# byte 3 = floor count (incl. the boss floor), byte 4 = boss map, bytes 5/6 =
+# the boss room's arrival TILE (absolute; entry 5 writes 16*b+8 pixels).
+# hand_made: the gate's floors are the author's rooms — rules may take floor 1
+# and the validator wants every floor 1..N-1 covered by an always-served rule.
+# ---------------------------------------------------------------------------
+GATE_KEYS = {'gate', 'floors', 'boss', 'hand_made', 'comment'}
+FLOORS_MIN, FLOORS_MAX = 2, 99
+
+
+def gate_settings(custom, gate_id):
+    """The custom.gates[] entry of one gate (or {})."""
+    for g in (custom or {}).get('gates') or []:
+        try:
+            if int(_val(g.get('gate', -1))) == int(gate_id):
+                return g
+        except (TypeError, ValueError):
+            continue
+    return {}
+
+
+def gate_floor_count(custom, gate_id, start=None):
+    g = gate_settings(custom, gate_id)
+    if g.get('floors') is not None:
+        return int(_val(g['floors']))
+    return gate_floors(gate_id, start)
+
+
+def gate_min_floor(custom, gate_id):
+    """First floor a custom room may take: 1 on a hand-made gate, else 2."""
+    return 1 if gate_settings(custom, gate_id).get('hand_made') else MIN_FLOOR
+
+
+def vanilla_boss_spawn(boss_map, start=None):
+    """(tile x, tile y) where a vanilla boss room receives the player — the
+    spawn bytes of the vanilla gate that owns that boss map."""
+    for g in vanilla_gates(start):
+        if int(g['boss_map'], 16) == int(boss_map):
+            return tuple(g['boss_spawn'])
+    return None
+
+
+def arrival_tile(screen, x, y):
+    """A room cell -> the absolute TILE entry 5's boss path takes (bytes 5/6)."""
+    k = int(screen)
+    return (k % 4) * 10 + int(x), (k // 4) * 8 + int(y)
+
+
+def floor_range(spec, floors, min_floor=MIN_FLOOR):
     """Authored floors -> (first, last) in the game's numbering.
     spec: [a, b] | [a] | a | "all" (= every floor a room may take)."""
     if spec in (None, 'all', 'any'):
-        return MIN_FLOOR, (floors - 1 if floors else 254)
+        return min_floor, (floors - 1 if floors else 254)
     if isinstance(spec, (int, str)) and not isinstance(spec, bool):
         a = b = _val(spec)
     else:
@@ -139,8 +191,8 @@ def floor_range(spec, floors):
     return a, b
 
 
-def floors_text(spec, floors=None):
-    a, b = floor_range(spec, floors)
+def floors_text(spec, floors=None, min_floor=MIN_FLOOR):
+    a, b = floor_range(spec, floors, min_floor)
     if spec in (None, 'all', 'any'):
         return 'any floor'
     return f"floor {a}" if a == b else f"floors {a}-{b}"
@@ -201,13 +253,86 @@ class GatesMixin:
     def rules_serving(self, room_id):
         return [(i, r) for i, r in enumerate(self.gate_inserts()) if r.get('room') == room_id]
 
+    # ------------------------------------------------ gate settings (S101)
+    def gate_setting(self, gate_id):
+        return gate_settings(self.custom, gate_id)
+
+    def set_gate_setting(self, gate_id, **fields):
+        """floors (int | None = vanilla), boss (custom room id | 'vanilla:$xx' |
+        None = vanilla), hand_made (bool). An entry with nothing left is
+        removed (the gate is vanilla again)."""
+        lst = self.custom.setdefault('gates', [])
+        g = gate_settings(self.custom, gate_id)
+        if not g:
+            g = {'gate': int(gate_id)}
+            lst.append(g)
+        for k, v in fields.items():
+            if k not in GATE_KEYS - {'gate'}:
+                raise ValueError(f'unknown gate setting {k!r}')
+            if v in (None, False, '') and k != 'floors':
+                g.pop(k, None)
+            elif k == 'floors' and v is None:
+                g.pop('floors', None)
+            else:
+                g[k] = v
+        if set(g) <= {'gate', 'comment'}:
+            lst.remove(g)
+        lst.sort(key=lambda x: int(_val(x.get('gate', 0))))
+        if not lst:
+            self.custom.pop('gates', None)
+        self.touch()
+
+    def conversation_exits(self, room):
+        """S101: helper / move steps in the conversations of a room's script table."""
+        n = 0
+
+        def walk(steps):
+            c = 0
+            for st in steps or []:
+                if isinstance(st, dict):
+                    c += ('helper' in st) + ('move' in st)
+                    for k in ('yes', 'no', 'then', 'else'):
+                        c += walk(st.get(k))
+            return c
+        by_id = {sc.get('id'): sc for sc in self.custom.get('scripts', [])}
+        for sid in set((room.get('scripts') or {}).values()):
+            t = (by_id.get(sid) or {}).get('talk') or {}
+            n += walk(t.get('steps'))
+        return n
+
+    def gate_floor_count(self, gate_id):
+        return gate_floor_count(self.custom, gate_id, getattr(self, 'project_dir', None))
+
+    def gate_min_floor(self, gate_id):
+        return gate_min_floor(self.custom, gate_id)
+
+    def boss_gates_of(self, room_id):
+        """Gates whose boss floor is this custom room."""
+        return [int(_val(g['gate'])) for g in self.custom.get('gates') or []
+                if g.get('boss') == room_id]
+
+    def gate_boss_label(self, gate_id):
+        g = gate_settings(self.custom, gate_id)
+        b = g.get('boss')
+        if not b:
+            v = next((x for x in vanilla_gates(getattr(self, 'project_dir', None))
+                      if x['id'] == int(gate_id)), None)
+            return f"vanilla: {v['boss_room']}" if v else 'vanilla'
+        if isinstance(b, str) and b.startswith('vanilla:'):
+            mid = int(b.split(':', 1)[1].lstrip('$'), 16)
+            v = next((x for x in vanilla_gates(getattr(self, 'project_dir', None))
+                      if int(x['boss_map'], 16) == mid), None)
+            return f"vanilla room: {v['boss_room'] if v else b}"
+        return f'custom room: {b}'
+
     def gate_rule_rows(self, gate_id):
         """Display rows for effective_chances (flag terms unresolved)."""
-        floors = gate_floors(gate_id, getattr(self, 'project_dir', None))
+        floors = self.gate_floor_count(gate_id)
+        minf = self.gate_min_floor(gate_id)
         rows = []
         for i, r in self.gate_rules_for(gate_id):
             try:
-                a, b = floor_range(r.get('floors', 'all'), floors)
+                a, b = floor_range(r.get('floors', 'all'), floors, minf)
             except ValueError:
                 continue
             rows.append({'index': i, 'rule': r, 'gate': int(gate_id), 'first': a,
@@ -223,7 +348,8 @@ class GatesMixin:
         engine's wGateDiveMask), then the vanilla remainder. Flag conditions
         are assumed to hold (flags_hold) or to fail (rules with conditions
         never serve); flags that change mid-dive are not modelled."""
-        floors = gate_floors(gate_id, getattr(self, 'project_dir', None)) or 0
+        floors = self.gate_floor_count(gate_id) or 0
+        hand_made = self.gate_min_floor(gate_id) == 1
         rows = self.gate_rule_rows(gate_id)
         for k, r in enumerate(rows):
             r['has_terms'] = bool(r['rule'].get('when'))
@@ -237,9 +363,9 @@ class GatesMixin:
         plan = []
         for f in range(1, floors + 1):
             if f == floors:
-                plan.append((f, [], 'boss floor', 1.0))
+                plan.append((f, [], 'boss floor — ' + self.gate_boss_label(gate_id), 1.0))
                 continue
-            if f == 1:
+            if f == 1 and not hand_made:
                 plan.append((f, [], "first floor — the gate's maze", 1.0))
                 continue
             van = ('maze, or a special room (~50 %: treasure / priest / forest / maze rooms)'
@@ -427,9 +553,20 @@ class GatesMixin:
                     elif 'dest' in e:
                         other += 1
         arr = room.get('gate_arrival')
+        boss_of = self.boss_gates_of(room.get('id'))
         if not arr:
             problems.append('no gate arrival cell (where the player appears)')
-        if not stairs:
+        if boss_of:
+            # S101: a boss floor ends the dive — no stairs; the way out is a
+            # conversation's Helper / Move step or an ordinary exit
+            outs = self.conversation_exits(room)
+            if not outs and not other and not stairs:
+                problems.append('boss room with no way out — give a conversation a "Helper '
+                                'takes the player away" (or Move) step, or add an exit')
+            notes.append('boss floor of gate ' + ', '.join(map(str, boss_of)))
+            if outs:
+                notes.append(f'{outs} conversation exit(s)')
+        elif not stairs:
             problems.append('no Stairs down — the player could never leave the floor')
         mode = self.encounter_mode(room)
         if mode == 'fixed':
@@ -437,7 +574,7 @@ class GatesMixin:
                             'that gate; pick "follow the gate" or off')
         if other:
             notes.append(f'{other} ordinary exit(s): walking through one leaves the dive')
-        notes.append('saving allowed' if room.get('can_save', True) else 'no saving here')
+        notes.append('saving allowed' if room.get('can_save', not boss_of) else 'no saving here')
         notes.append({'off': 'no battles', 'follow': "battles: the gate's own monsters",
                       'fixed': 'battles: fixed pool'}[mode])
         notes.append(f"music: {room.get('music')}" if room.get('music')

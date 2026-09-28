@@ -1307,6 +1307,13 @@ jr_054_5682:
     ret
 
 
+; Join roll by tier (the enemy row's joinability byte, copied to $DB4D):
+; tier 0 -> always joins (e.g. the early story-boss rows: EID 31 Dragon),
+; tier 7 -> never (the postgame boss rows, e.g. EID 201 DracoLord), 1-6 ->
+; RNG vs the tier-scaled HL. What joins is the bank $14 entry 6
+; LookupBossRedirect result (fight EID -> join EID; unlisted EIDs join as
+; themselves). S101: Villager boss, user's save — joined (party full ->
+; "Choose a monster back to farm").
 LoadB54_5683:
     ld a, [$db4d]
     or a

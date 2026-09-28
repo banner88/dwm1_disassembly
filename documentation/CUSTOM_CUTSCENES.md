@@ -40,15 +40,15 @@ Movement values are signed 16-bit: negative = left/up, positive = right/down.
 
 ### NPC Visibility & Animation
 ```
-$49  npc_show    npc            Show NPC sprite
-$48  npc_hide    npc            Hide NPC sprite
-$47  npc_buffer_write npc        Write to NPC RAM buffer field
-$1C  trigger_anim  $XXYY        Play animation: XX=type (01=jump, 02=dresser-jump), YY=npc
+$47/$48/$49/$4A  face_up/down/left/right  npc   Set NPC facing (0 = player) — S101
+                 correction: were catalogued as npc_buffer_write / npc_hide / npc_show
+$1C  trigger_anim  $XXYY        Play animation: XX=type (01=jump, 02=dresser-jump,
+                                $04 hop, $16 fly-in: $D8E3*8 frames +2 px right, curve $D8E4), YY=npc
 $0D  npc_write   npc, field, val Write byte to NPC RAM buffer
 ```
 
 NPC numbers are 0-based within the current room's NPC list.
-Field $0000 with value $00 = visible, $40 = hidden (in npc_write).
+Field $0000 with value $00 = visible, $40 = hidden (in npc_write) — the way to show / hide an NPC.
 
 **Note:** These opcodes control NPC visibility at runtime (during the
 current room visit). They reset on room re-entry because NPCs reload

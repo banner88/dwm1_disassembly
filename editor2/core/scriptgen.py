@@ -73,6 +73,23 @@ OPS = {
                                        #        battle-latch + ret=yield; win path
                                        #        resumes the script AFTER this opcode
                                        #        (SIDEQUEST_MAP S68 engine guarantee)
+    # S101 additions — handler-verified (bank_004 catalog, BANK04_SCRIPT_ENGINE),
+    # used by talk-step lowering (boss conversations, the helper exit):
+    'close_text':         (0x06, 0),   # $5819: inc $C915 = close the open box
+    'nop':                (0x08, 0),
+    'npc_write':          (0x0D, 3),   # $5968: npc, field, value; field 0 = type
+                                       #        byte (0 = reveal a hidden NPC)
+    'branch_screen':      (0x0E, 2),   # $59D2: screen, @label (branch if
+                                       #        wScreenIndex == screen)
+    'warp_fade':          (0x3B, 3),   # $65AB: map|flag<<8, px, py — the boss
+                                       #        exit's wavy fade (vs $0F)
+    'face_up':            (0x47, 1),   # $6822: npc n facing := up (0 = player)
+    'face_down':          (0x48, 1),   # $684D (the old 'npc_hide' name)
+    'face_left':          (0x49, 1),   # $6866 (the old 'npc_show' name)
+    'face_right':         (0x4A, 1),   # $687F
+    'long_delay':         (0x4D, 1),   # $68BA: $D8DB := n, $D8D8.2
+    'boss_battle':        (0x5B, 0),   # $6D84: preset slots $DA03/05/07 +
+                                       #        $DA02 = count-1, $DA09 = 3
 }
 
 # S96: branch ops = handlers with a path into ScriptReturnProcess ($04:$7212)

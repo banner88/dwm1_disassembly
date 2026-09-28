@@ -2440,7 +2440,7 @@ jr_007_5012:
     ld hl, $0304
     rst $10
     call UpdateOAMSprites
-    ld a, $06
+    ld a, $06                ; S101 r3: $D92B = 6 -> castle arrival = priest blessing + heal ($0C:$490A; gate return)
     ld [$d92b], a
     ld hl, $0000
     ld a, l

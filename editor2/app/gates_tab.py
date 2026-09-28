@@ -10,9 +10,13 @@ floor is fixed; on every other floor the rules of that gate are tried top
 down — the first whose floors, once-per-dive state and flag conditions hold
 rolls its chance; a hit serves the room, a miss tries the next rule; if no
 rule serves, the vanilla choice runs (maze, or on floors 3, 6, 9 … a ~50 %
-special room — never in the Gate of Beginning). The first floor always stays
-the gate's own. Gate settings (floor count, weighting, monster pools), the
-boss floor and gate entrances are ROADMAP P3.7b part 2.
+special room — never in the Gate of Beginning). The first floor stays the
+gate's own unless the gate is HAND-MADE.
+
+Gate settings (S101, P3.7b part 2): floor count 2-99 (incl. the boss floor),
+the boss floor (vanilla / another gate's vanilla boss room / any custom room,
+arriving on its "Inside gates" cell), hand-made (rules may take floor 1).
+Still to come: floor weighting, monster pools per gate, gate entrances.
 
 Every edit is one undo step (SnapshotCommand).
 """
@@ -72,9 +76,10 @@ class GateRuleDialog(QDialog):
         self.any = QCheckBox('any floor')
         self.f_from = QSpinBox()
         self.f_to = QSpinBox()
-        last = max(G.MIN_FLOOR, self.floors - 1)
+        self.min_floor = gate.get('min_floor', G.MIN_FLOOR)
+        last = max(self.min_floor, self.floors - 1)
         for sb in (self.f_from, self.f_to):
-            sb.setRange(G.MIN_FLOOR, last)
+            sb.setRange(self.min_floor, last)
         fr.addWidget(self.any)
         fr.addWidget(QLabel('  floors'))
         fr.addWidget(self.f_from)
@@ -82,15 +87,17 @@ class GateRuleDialog(QDialog):
         fr.addWidget(self.f_to)
         fr.addStretch(1)
         f.addRow('where', fr)
-        f.addRow('', QLabel(f"{gate['name']} has {self.floors} floors: floor 1 stays the "
-                            f"gate's own, floor {self.floors} is the boss."))
+        f.addRow('', QLabel(f"{gate['name']} has {self.floors} floors: "
+                            + ("every floor is yours (hand-made gate)"
+                               if self.min_floor == 1 else "floor 1 stays the gate's own")
+                            + f", floor {self.floors} is the boss."))
         spec = rule.get('floors', 'all')
         if spec in (None, 'all', 'any'):
             self.any.setChecked(True)
-            self.f_from.setValue(G.MIN_FLOOR)
+            self.f_from.setValue(self.min_floor)
             self.f_to.setValue(last)
         else:
-            a, b = G.floor_range(spec, self.floors)
+            a, b = G.floor_range(spec, self.floors, self.min_floor)
             self.f_from.setValue(a)
             self.f_to.setValue(b)
         self.any.toggled.connect(lambda on: (self.f_from.setEnabled(not on),
@@ -280,6 +287,58 @@ class GatesTab(QWidget):
         self.sub.setWordWrap(True)
         self.sub.setStyleSheet('color:#aaa;')
         rv.addWidget(self.sub)
+        sg = QGroupBox('Gate settings')
+        sf = QFormLayout(sg)
+        frow = QHBoxLayout()
+        self.set_floors = QSpinBox()
+        self.set_floors.setRange(G.FLOORS_MIN, G.FLOORS_MAX)
+        self.set_floors.setToolTip('Floors in one dive, INCLUDING the boss floor (the game '
+                                   'serves the boss when floor = this count).')
+        self.set_floors.editingFinished.connect(self._set_floors)
+        frow.addWidget(self.set_floors)
+        self.floors_note = QLabel('')
+        self.floors_note.setStyleSheet('color:#aaa;')
+        frow.addWidget(self.floors_note, 1)
+        b = QToolButton()
+        b.setText('Vanilla')
+        b.setToolTip("Back to the game's own floor count")
+        b.clicked.connect(lambda: self._setting('floors', None, 'Vanilla floor count'))
+        frow.addWidget(b)
+        sf.addRow('floors', frow)
+        brow = QHBoxLayout()
+        self.set_boss = QComboBox()
+        self.set_boss.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
+        self.set_boss.setMinimumContentsLength(28)
+        self.set_boss.activated.connect(self._set_boss)
+        brow.addWidget(self.set_boss, 1)
+        b = QToolButton()
+        b.setText('Open room')
+        b.setToolTip('Edit the boss room in the Rooms tab')
+        b.clicked.connect(self._open_boss)
+        brow.addWidget(b)
+        sf.addRow('boss floor', brow)
+        self.boss_note = QLabel('')
+        self.boss_note.setWordWrap(True)
+        sf.addRow('', self.boss_note)
+        self.set_hand = QCheckBox('hand-made gate: every floor is one of my rooms '
+                                  '(rules may take floor 1)')
+        self.set_hand.setToolTip('The first floor normally stays the gate\'s own maze. A '
+                                 'hand-made gate serves your rooms from floor 1; give every '
+                                 'floor a room that is always served (the floor plan shows '
+                                 'the maze where none is).')
+        self.set_hand.clicked.connect(lambda on: self._setting('hand_made', bool(on),
+                                                               'Hand-made gate' if on else
+                                                               'Gate floors: vanilla first floor'))
+        sf.addRow('', self.set_hand)
+        er = QHBoxLayout()
+        b = QPushButton('Project enemies…')
+        b.setToolTip('Your own enemies for boss battles (conversation Battle steps): stats, '
+                     'skills, always / sometimes / never joins, a weaker join version')
+        b.clicked.connect(self._enemies)
+        er.addWidget(b)
+        er.addStretch(1)
+        sf.addRow('', er)
+        rv.addWidget(sg)
         g = QGroupBox('Custom rooms in this gate — tried top-down')
         gv = QVBoxLayout(g)
         self.rules = QTableWidget(0, 6)
@@ -328,8 +387,10 @@ class GatesTab(QWidget):
         hl.setWordWrap(True)
         hl.setStyleSheet('color:#999;')
         rv.addWidget(hl)
-        nl = QLabel('Coming in part 2 (ROADMAP P3.7b): floor count, floor weighting and '
-                    'monster pools per gate, a custom boss floor, gate entrances.')
+        nl = QLabel('Boss rooms (S101): any custom room — its "Inside gates" arrival cell is '
+                    'where the player appears; the fight is a conversation (NPC or arrival) '
+                    'with a Battle step. Still to come (ROADMAP P3.7b part 2): floor '
+                    'weighting and monster pools per gate, gate entrances.')
         nl.setWordWrap(True)
         nl.setStyleSheet('color:#777;')
         rv.addWidget(nl)
@@ -346,29 +407,40 @@ class GatesTab(QWidget):
         self.list.clear()
         for g in self.gates:
             n = len(self.s.doc.gate_rules_for(g['id']))
-            it = QListWidgetItem(f"{g['id']:2d}  {g['name']} — {g['floors']} fl"
-                                 + (f"   ★{n}" if n else ''))
+            gs = self.s.doc.gate_setting(g['id'])
+            fl = self.s.doc.gate_floor_count(g['id'])
+            it = QListWidgetItem(f"{g['id']:2d}  {g['name']} — {fl} fl"
+                                 + (f"   ★{n}" if n else '')
+                                 + ('   ♛' if gs.get('boss') else '')
+                                 + ('   ✎' if gs.get('hand_made') else ''))
             it.setToolTip(f"boss room {g['boss_map']} {g['boss_room']} · depth tier "
                           f"{g['depth_tier']} · FAQ: {g['faq_name']}")
-            if n:
+            if n or gs:
                 it.setForeground(QColor(0, 200, 255))
             self.list.addItem(it)
         self.list.setCurrentRow(min(cur, self.list.count() - 1))
         self.list.blockSignals(False)
         self._show_gate(self.list.currentRow())
 
-    def gate(self):
-        i = self.list.currentRow()
-        return self.gates[i] if 0 <= i < len(self.gates) else None
+    def gate(self, i=None):
+        """The selected gate with the PROJECT's floor count / first floor."""
+        i = self.list.currentRow() if i is None else i
+        if not 0 <= i < len(self.gates):
+            return None
+        g = dict(self.gates[i])
+        g['floors'] = self.s.doc.gate_floor_count(g['id'])
+        g['min_floor'] = self.s.doc.gate_min_floor(g['id'])
+        return g
 
     def _show_gate(self, i):
         if not 0 <= i < len(self.gates):
             return
-        g = self.gates[i]
+        g = self.gate(i)
         doc = self.s.doc
+        self._show_settings(g)
         self.head.setText(f"<b>{g['name']}</b>  (gate {g['id']})")
-        self.sub.setText(f"{g['floors']} floors — boss on floor {g['floors']} ({g['boss_map']} "
-                         f"{g['boss_room']}) · depth tier {g['depth_tier']} · floor-type rows "
+        self.sub.setText(f"{g['floors']} floors — boss on floor {g['floors']} "
+                         f"({doc.gate_boss_label(g['id'])}) · depth tier {g['depth_tier']} · floor-type rows "
                          f"{g['floor_types'][0]}/{g['floor_types'][1]}/{g['floor_types'][2]}"
                          + (' · no special rooms in this gate' if g['id'] == 0 else ''))
         rules = doc.gate_rules_for(g['id'])
@@ -385,7 +457,8 @@ class GatesTab(QWidget):
                 also.append('once per dive')
             for t in r.get('when') or []:
                 also.append(f"{t.get('flag')} {'clear' if t.get('is') == 'clear' else 'set'}")
-            cells = [str(row + 1), rname, G.floors_text(r.get('floors', 'all'), g['floors']),
+            cells = [str(row + 1), rname, G.floors_text(r.get('floors', 'all'), g['floors'],
+                                                        g['min_floor']),
                      f"{int(G._val(r.get('chance', 100)))} %", ', '.join(also) or '—',
                      ('✓ ' + ' · '.join(rep['notes'])) if rep and rep['ready'] else
                      ('⚠ ' + '; '.join(rep['problems']) if rep else '⚠ room missing')]
@@ -422,6 +495,107 @@ class GatesTab(QWidget):
                 it.setForeground(QColor(230, 120, 120))
             self.plan.setItem(row, 1, it)
 
+    def _show_settings(self, g):
+        doc = self.s.doc
+        gs = doc.gate_setting(g['id'])
+        van = next(x for x in self.gates if x['id'] == g['id'])
+        self.set_floors.blockSignals(True)
+        self.set_floors.setValue(g['floors'])
+        self.set_floors.blockSignals(False)
+        self.floors_note.setText(f"incl. the boss floor · vanilla {van['floors']}"
+                                 + ('' if gs.get('floors') is None else ' (changed)'))
+        self.set_boss.blockSignals(True)
+        self.set_boss.clear()
+        self.set_boss.addItem(f"Vanilla — {van['boss_room']}", None)
+        for x in self.gates:
+            if x['id'] != g['id']:
+                self.set_boss.addItem(f"Vanilla room of {x['name']} — {x['boss_room']}",
+                                      f"vanilla:${int(x['boss_map'], 16):02X}")
+        for r in doc.rooms:
+            if r.get('placeholder'):
+                continue
+            mark = '' if r.get('gate_arrival') else '   ⚠ no arrival cell'
+            self.set_boss.addItem(f"Custom room ${val(r['mapID']):02X} {doc.room_name(r)}{mark}",
+                                  r['id'])
+        i = self.set_boss.findData(gs.get('boss'))
+        self.set_boss.setCurrentIndex(max(i, 0))
+        self.set_boss.blockSignals(False)
+        self.set_hand.setChecked(bool(gs.get('hand_made')))
+        b = gs.get('boss')
+        if b and not str(b).startswith('vanilla:'):
+            try:
+                r = doc.room(b)
+            except KeyError:
+                r = None
+            if r is None:
+                self.boss_note.setStyleSheet('color:#e0b040;')
+                self.boss_note.setText(f'Room {b} is missing.')
+            else:
+                bits = []
+                arr = r.get('gate_arrival')
+                bits.append(f"arrival screen {arr['screen']} ({arr['x']},{arr['y']})" if arr
+                            else '⚠ no arrival cell — Rooms tab → Inside gates')
+                bits.append('no saving' if not r.get('can_save', False) else '⚠ saving allowed')
+                bits.append(f"song {r['music']}" if r.get('music')
+                            else '⚠ no song (the gate theme keeps playing)')
+                self.boss_note.setStyleSheet('color:#7fd67f;' if arr else 'color:#e0b040;')
+                self.boss_note.setText('Boss room: ' + ' · '.join(bits) + '. The fight is a '
+                                       'conversation with a Battle step (an NPC, or "on '
+                                       'arrival").')
+        elif b:
+            self.boss_note.setStyleSheet('color:#aaa;')
+            self.boss_note.setText('A vanilla boss room reused here — it runs its own vanilla '
+                                   'scripts (and sets vanilla story flags).')
+        else:
+            self.boss_note.setStyleSheet('color:#aaa;')
+            self.boss_note.setText('')
+
+    def _setting(self, key, value, label):
+        g = self.gate()
+        if g is None:
+            return
+        gid = g['id']
+        cmd = C.SnapshotCommand(self.s, f"{label} ({g['name']})",
+                                lambda doc: doc.set_gate_setting(gid, **{key: value}))
+        self.s.undo.push(cmd)
+        if cmd.error is not None:
+            QMessageBox.warning(self, label, str(cmd.error))
+        self.refresh()
+
+    def _set_floors(self):
+        g = self.gate()
+        if g is None or self.set_floors.value() == g['floors']:
+            return
+        n = self.set_floors.value()
+        van = next(x for x in self.gates if x['id'] == g['id'])['floors']
+        self._setting('floors', None if n == van else n, f'{n} floors')
+
+    def _set_boss(self, _i):
+        v = self.set_boss.currentData()
+        self._setting('boss', v, 'Boss floor ' + (str(v) if v else 'vanilla'))
+
+    def _open_boss(self):
+        g = self.gate()
+        if g is None:
+            return
+        b = self.s.doc.gate_setting(g['id']).get('boss')
+        if b and not str(b).startswith('vanilla:'):
+            self.openRoomRequested.emit(b)
+
+    def _enemies(self):
+        from editor2.app.enemies_dialog import EnemiesDialog
+        dlg = EnemiesDialog(self.s.doc, parent=self)
+        if dlg.exec() != QDialog.Accepted:
+            return
+        new = dlg.enemies()
+        if new == self.s.doc.project_enemies():
+            return
+        cmd = C.SnapshotCommand(self.s, 'Project enemies',
+                                lambda doc: doc.set_project_enemies(new))
+        self.s.undo.push(cmd)
+        if cmd.error is not None:
+            QMessageBox.warning(self, 'Project enemies', str(cmd.error))
+
     # ------------------------------------------------------------ edits
     def _sel_index(self):
         r = self.rules.currentRow()
@@ -443,7 +617,7 @@ class GatesTab(QWidget):
         g = self.gate()
         if g is None:
             return
-        if g['floors'] < 3:
+        if g['floors'] - g['min_floor'] < 1:
             QMessageBox.information(self, 'Add custom room', 'This gate has no floor between '
                                     'the first floor and the boss.')
             return

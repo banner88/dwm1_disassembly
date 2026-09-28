@@ -417,6 +417,8 @@ user-confirmed hand-authored code:
 * `editor2/core/templates/bank_060_head.asm` — bank byte, 7-entry `rst $10`
   table, `CustomPtrChase`, `DummyStepEntry/NPCs/Exits`, entries 0–6
   (readers, `GateAwareDispatch`, `CustomScriptRead`, `CustomTextDisplay`).
+* `editor2/core/templates/bank_06b_head.asm` (S101) — bank byte, 1-entry
+  table, `CopyEnemyRowExt` (project enemy rows, §2.18).
 * `editor2/core/templates/bank_071_head.asm` — bank byte, 6-entry table
   (S100; 4 S99, 3 S64), `CopyCustomRoomRecord`, `CustomEncResolve` (S100:
   gate byte $FF = follow the dive, no pin), `CustomRoomBGMResolve` (entry 2:
@@ -432,9 +434,13 @@ Two pins, both enforced at compile time:
    deliberate engine session changes the head. Re-pinned S64 (bank $71
    entry 2 added: `64cb43ee…be23`; bank $60 unchanged `63969b1a…33d9`); re-pinned S99 (bank $71 entry 3 added: `99b8eb7b…a708`, historical
    S64 value `64cb43ee…be23`); re-pinned S100 (bank $71 entries 4/5 +
-   entry-1 follow test: `4c36c4ca…0d6e`; S99 value `99b8eb7b…a708` historical).
+   entry-1 follow test: `4c36c4ca…0d6e`; S99 value `99b8eb7b…a708` historical). Re-pinned S101: bank $60 `d90b9761…4dfd` (`CustomMonsterCast`),
+   bank $71 `dff1234a…ccd2` (`CustomRoomBGMResolve` custom-boss path), new
+   bank $6B `cff4507a…a2c5`; the S100 values are historical.
 2. **TEMPLATE_SIZE** in `editor2/core/validators.py` — measured from the
-   reference `game.sym`: bank `$60` head = **283 B**
+   reference `game.sym` (S101: bank `$60` = **549 B**, `$71` = **440 B**,
+   new `$6B` = **53 B** — `ProjectEnemyRows @ $4035`; the older figures
+   below are history): bank `$60` head = **283 B**
    (`CustomScriptMasterTable @ $411B`, S53), bank `$71` head = **395 B**
    (`Custom26DDTable @ $418B`, S100; history 103 S53 → 116 S55 flag fix →
    142 S64 entry-2 dw + resolver → 164 S99 entry-3 dw + CustomAnimSource,
@@ -1041,6 +1047,128 @@ sheet; r2 `91202c74…` patched, historical): the engine above + the bank $07/$1
 S41). Prev `4f13d2af…` (patched, historical — the same rule without
 `once_per_dive`, so it could land on both floors), `d072eb51…` (patched,
 historical).
+
+## §2.17 S101 — gate settings + custom boss floors (`custom.gates[]`, ROADMAP P3.7b part 2)
+
+```json
+"gates": [
+  {"gate": 1, "floors": 4, "boss": "ember_court"},          // a custom room id
+  {"gate": 0, "floors": 3, "boss": "thorn_arena", "hand_made": true},
+  {"gate": 2, "boss": "vanilla:$31"}                         // another gate's vanilla boss room
+]
+```
+
+`floors` 2-99 = the gate's floor count INCLUDING the boss floor (byte 3);
+`boss` = a custom room (byte 4 = its mapID, bytes 5/6 = its `gate_arrival`
+cell as absolute tiles, `col·10 + x` / `row·8 + y` — REQUIRED) or
+`vanilla:$xx` (a vanilla boss map; bytes 5/6 = the owning vanilla gate's
+spawn, `extracted/gate_names.json` `boss_spawn`); `hand_made` = rules may
+take floor 1 (`gate_min_floor` 1). Omitted keys keep the vanilla bytes; a
+gate without an entry is emitted verbatim. Lowering: `Project.gate_configs()`
+→ emitter **`gates16`** = region `bank_016#gate_floor_table`
+(`GateFloorDataTable`, 32 rows × 8 B; bytes 0-2 and 7 vanilla — private
+floor-type rows are open). `floors` also bounds `gate_inserts` (§2.16: 2 ..
+N−1, or 1 .. N−1 when hand-made) and the Gates-tab floor plan.
+
+A custom boss room gets `room_flags` no-saving by DEFAULT (explicit
+`can_save: true` wins, with a warning). Music: `CustomRoomBGMResolve`
+(bank $71 entry 2) plays the boss room's song on the floor before it (or $34
+without one — warning "no song"). **Validators:** unknown keys / gate outside
+0-31 / duplicate gate / floors outside 2-99 / missing boss room / boss room
+without `gate_arrival` / `vanilla:$xx` that is not a vanilla boss map =
+ERROR; boss room with a fixed encounter pool = ERROR; boss room also served
+by a rule, boss mapID > $7F, no song, `can_save: true` = warning; a
+hand-made gate floor with no room always served = warning.
+
+## §2.18 S101 — conversations (`talk.steps`), monster NPCs, project enemies
+
+**Conversation** — a script whose `talk` holds `steps` (the editor's
+Conversation dialog writes it; texts are `dialogue` ids, the dialog stores
+them as `<script>_sayN` / `_askN` (`choice: true`) / `_helperN`):
+
+```json
+{"id": "ember_court_lord", "talk": {"steps": [
+  {"if": [{"flag": "ember_won", "is": "set"}],
+   "then": [{"say": "…"}, {"helper": {…}}],
+   "else": [
+     {"ask": "ember_court_lord_ask5", "yes": [{"battle": {"enemies": ["ember_lord", 327, 327]}}],
+                                       "no":  [{"say": "…"}, {"end": true}]},
+     {"set": ["ember_won"]},
+     {"helper": {"dest": "room:$75", "screen": 0, "x": 4, "y": 4,
+                 "land": {"x": 5, "y": 3}, "say": "…", "sprite": "0x21"}}]}],
+  "on_arrival": false, "screen": 0}}
+```
+
+Step kinds (exactly one key each): `say` · `ask` (+ `yes` / `no`; both
+branches rejoin) · `if` (terms `{flag, is: set|clear}` AND-ed; + `then` /
+`else`) · `set` / `clear` (flag list) · `battle` `{enemies: [1-3 refs]}` (a
+project enemy id or a vanilla EID 0-486 / 518) · `helper` · `move` `{dest,
+screen, x, y}` · `end`. Lowering (`Project._lower_steps`): text outside an
+NPC interaction gets its `init_dialog` (S70 protocol); `ask` = `text` +
+`check_and_branch $C83C 1 @no`; `if` = `if_flag_clear/set … @else`; battle 1
+enemy = `trigger_battle3 EID` ($5A), 2-3 = `write_ram2 $DA03/05/07`,
+`write_ram $DA02 n−1`, `boss_battle` ($5B) — the steps after a battle run
+only on a WIN; `move` = `map_transition`; **helper** = the vanilla boss exit:
+`close_text` (when a box is open), `delay 8`, `npc_write H,0,0` (reveal),
+(S101 r2) the helper's START pixels (slot +$18/+$1A, 16-bit absolute) = the
+landing cell − (48, 43) px, `write_ram2 $D8E3 = $0303` (3 tiles, curve 3 —
+the fly-in moves +48 / +43 px), `trigger_anim $16H` + `wait_movement`, spin
+(`long_delay` + `face_up/left/down H`, then face the player), optional text,
+`trigger_anim $04H` (hop), spin, `warp_fade dest,px,py` ($3B). LANDING: default = beside the PLAYER at run time — the lowering
+byte-compares `$FF97` / `$FF98` (player tile, absolute) against every column
+/ row of the screens that run the script and writes the start pixels for the
+cell on the player's LEFT (facing right), or on their RIGHT when they stand in
+a screen's column 0 (facing left); `land: {x, y}` = a fixed screen-local cell
+(faces right). **At the Castle** (S101 r3): `castle: "heal"` → `write_ram
+$D92B 6` (the priest's blessing + heal), `castle: "king", king_speech: $31` →
+`write_ram $D9E3 code` + `write_ram $D92B 7` (that gate's King speech), just
+before the `$3B` warp; both require `dest vanilla:$00`, screen 1 (validator);
+speeches $30 / $3C warn (a castle NPC reads `$D9E3` too — GATE_GENERATION
+§7.7). The helper NPC (sprite `helper.sprite`, default **$39
+Warubou** — S101 r2, user; vanilla exits use $21 Watabou) is placed by the
+compiler (`_place_helpers`): a HIDDEN NPC at one fixed slot H per script on
+every screen / state that can run it (padded with hidden dummies; H = 1 +
+the most real NPCs there; > 8 = error). `on_arrival: true` = the room's entry
+script (index 0) — the fight-on-arrival option; `screen: k` wraps it in
+`branch_screen k` (runs only on that screen). **Validators:** dialogue
+exists, `ask` text has `choice`, `if` has terms, landing cell inside 10×8,
+steps after a helper / move never run = warning, battle EIDs 487-517 do not
+exist, ≥ 519 must be a project enemy.
+
+**Monster NPCs** — an `npc` entry with `"monster": <species>` (sprite
+emitted as $F0-$F3): `Project.monster_cast(room, screen)` collects ≤ 4
+species per screen (in NPC order; > 4 or species 217-223 = error, 216 draws
+blank) → `CustomMonsterCastPtrTable` (bank $60, per room `[db screen, 8 B
+display list] … $FF`) read by `CustomMonsterCast` at the head of entry 8
+`CustomStateRules` (writes `$D7CA` before the NPC parse; ROOM_DATA_FORMAT
+"Monster NPCs").
+
+**Project enemies** — `progression.enemies[]` (S70 rows, now in bank $6B):
+`{id, eid: "auto", name?, species, level 1-99, exp, joinability 0-7 (0 =
+always joins, 1-6 = sometimes by tier, 7 = never), hp, mp, atk, def, agl,
+int, ai_weights[4], skills[≤4], join_as?}`. EIDs are dense from **519** in
+list order (cap **640**); emitter **`enemies6b`** writes `patches/bank_06b.asm`
+= template `bank_06b_head.asm` (`CopyEnemyRowExt`, pinned) + `PROJECT_EID_BASE
+EQU 519`, `PROJECT_ENEMY_ROWS EQU n` + `ProjectEnemyRows` (25 B rows,
+MONSTER_DATA "Enemy Stats Table" format; an empty project keeps one zero
+row). `join_as` = the JOIN VERSION: emitter **`redirects14`** writes region
+`bank_014#boss_redirects` = `BossRedirectTableExt` (project `[fight EID,
+join EID]` pairs FIRST, then the vanilla 34, `$FFFF`; ≤ 34 project rows).
+Bank $14 hand patch: `LoadEnemyStats` head → `LoadEnemyStatsExt` (EID ≥ 519
+→ `ld hl, $6B00 / rst $10`, else the vanilla copy); `LookupBossRedirect`
+reads `BossRedirectTableExt`. **Validators:** dense-from-519, cap, redirect
+cap, `join_as` must exist, field ranges, joinable with hp > 1023 and no
+join version = warning.
+
+**Template + pin (S101)**: templates re-pinned (§5); reference patched md5
+**`9c81304176bd069ec77cd4c0d2211900`** (patched; built S101, NOT yet
+user-tested): the bank $14 enemy-row divert + `BossRedirectTableExt`, bank
+$6B (the example's quest enemy row EID 519 moved here from the bank-$14
+tail), `CustomMonsterCast` (empty cast table), the $71 BGM custom-boss path,
+the `gate_floor_table` region (vanilla bytes — the example has no
+`custom.gates`). The example's raw script ops were renamed to the new
+opcode names (`branch_screen`, `npc_write`, …) — bytes identical. The S100
+r3 pin `7cd7257b…` (below) is historical.
 
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 
