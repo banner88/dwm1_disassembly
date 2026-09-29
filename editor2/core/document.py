@@ -30,6 +30,7 @@ from editor2.core import layouts as L
 from editor2.core.doors import DoorsMixin
 from editor2.core.talk import TalkMixin
 from editor2.core.animate import AnimateMixin
+from editor2.core.tileanim_doc import TileAnimMixin
 from editor2.core.gates import GatesMixin
 from editor2.core.conversation import ConversationMixin, EnemiesMixin
 from editor2.core.formats import anim_source as F_anim
@@ -95,8 +96,8 @@ class ThresholdShiftNeeded(RuntimeError):
     The GUI asks the author (user: "make that an option") and retries with
     shift_ok=True."""
 
-class Document(DoorsMixin, TalkMixin, AnimateMixin, GatesMixin, ConversationMixin,
-               EnemiesMixin):
+class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
+               ConversationMixin, EnemiesMixin):
     def __init__(self, path):
         self.path = path if path.endswith('.json') else \
             os.path.join(path, 'project.json')
@@ -1234,6 +1235,9 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, GatesMixin, ConversationMixi
         out = set()
         for r in self.rooms_using_tileset(tid):
             out |= A.room_slots(r)
+            # S102: the room's OWN animated tiles (tile_anims) change at
+            # runtime too — protected the same way
+            out |= self.own_anim_slots(r)
         return out
 
     def room_animation(self, room):

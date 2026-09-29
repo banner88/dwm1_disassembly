@@ -42,6 +42,9 @@
 ;     CUSTOM_ROOM_START only; E-return per the DE contract (rst $10 clobbers
 ;     A). Table generated from project.json custom.rooms[].animation
 ;     (PROJECT_COMPILER §2.15; ROOM_DATA_FORMAT "Animated tiles").
+;     S102: first far-calls bank $6C entry 0 CustomTileAnimate (the room's
+;     own tile animations, custom.rooms[].tile_anims — §2.19), so a room
+;     can play authored animations AND a vanilla room's animation together.
 ;
 ; Entry 4 (HL=$7104) CustomGateInsert (S100, ROADMAP P3.7b part 1):
 ;     Called by bank $16 GateDecisionFork on every NON-boss gate floor (after
@@ -222,6 +225,8 @@ CustomRoomBGMResolve:
 ; Entry 3: CustomAnimSource — E := the room's animation source map ID (S99)
 ; -----------------------------------------------------------------------------
 CustomAnimSource:
+    ld hl, $6c00                        ; S102: bank $6C entry 0 CustomTileAnimate —
+    rst $10                             ; the room's OWN animated tiles (§2.19) first
     ld e, $6b                           ; ANIM_NONE: the table's bare-`ret` row
     ld a, [wMapID]
     sub CUSTOM_ROOM_START               ; index = mapID - $6B

@@ -29,6 +29,7 @@ to the proven overlay:
 | `patches/wram.asm` | one marked region (`wram_step_counters`) |
 | `patches/bank_000.asm` | one marked region (`rom0_room_records` — the `$26DD` rows `$6B-$6F`, S94) |
 | `patches/bank_064.asm`, `bank_067.asm`, `bank_074.asm`, `bank_014.asm` region | layouts / tilesets / songs / quest enemies (S64, S70, S92) |
+| `patches/bank_06c.asm` | whole file = template head (`CustomTileAnimate`) + the rooms' own tile animations (S102, §2.19) |
 
 Everything else — engine intercepts in banks `$00/$01/$04/$06/$07/$0B/$16`,
 layouts (`bank_064.asm` via `tools/build_gate_room.py` /
@@ -399,6 +400,7 @@ registering an emitter; nothing existing changes.
 | `render17` | `custom.rooms` (+ placement-b palettes) | `region:…#room_render_tables` | `$17` |
 | `wram_steps` | `custom.rooms` + `custom.wram` | `region:…#wram_step_counters` | — |
 | `music74` | `custom.music` (+ `rooms[].music`) | `file:patches/bank_074.asm` | `$74` |
+| `tileanim6c` (S102) | `custom.rooms[].tile_anims` | `file:patches/bank_06c.asm` | `$6C` |
 
 `bank_060` generated layout order (fixed, deterministic): script master
 table → shared no-op (if needed) → per-room script tables+bodies (script
@@ -419,6 +421,9 @@ user-confirmed hand-authored code:
   (readers, `GateAwareDispatch`, `CustomScriptRead`, `CustomTextDisplay`).
 * `editor2/core/templates/bank_06b_head.asm` (S101) — bank byte, 1-entry
   table, `CopyEnemyRowExt` (project enemy rows, §2.18).
+* `editor2/core/templates/bank_06c_head.asm` (S102) — bank byte, 1-entry
+  table, `CustomTileAnimate` / `TileAnimRestart` / `TileAnimCopy` (the rooms'
+  own tile animations, §2.19).
 * `editor2/core/templates/bank_071_head.asm` — bank byte, 6-entry table
   (S100; 4 S99, 3 S64), `CopyCustomRoomRecord`, `CustomEncResolve` (S100:
   gate byte $FF = follow the dive, no pin), `CustomRoomBGMResolve` (entry 2:
@@ -436,9 +441,13 @@ Two pins, both enforced at compile time:
    S64 value `64cb43ee…be23`); re-pinned S100 (bank $71 entries 4/5 +
    entry-1 follow test: `4c36c4ca…0d6e`; S99 value `99b8eb7b…a708` historical). Re-pinned S101: bank $60 `d90b9761…4dfd` (`CustomMonsterCast`),
    bank $71 `dff1234a…ccd2` (`CustomRoomBGMResolve` custom-boss path), new
-   bank $6B `cff4507a…a2c5`; the S100 values are historical.
+   bank $6B `cff4507a…a2c5`; the S100 values are historical. Re-pinned
+   S102: bank $71 (entry 3 `CustomAnimSource` far-calls bank $6C first) and
+   the new bank $6C head; the S101 bank $71 value `dff1234a…ccd2` is
+   historical (current values: `templates/PINNED_SHA256`).
 2. **TEMPLATE_SIZE** in `editor2/core/validators.py` — measured from the
-   reference `game.sym` (S101: bank `$60` = **549 B**, `$71` = **440 B**,
+   reference `game.sym` (S102: `$71` = **444 B**, new `$6C` = **285 B** —
+   `TileAnimRoomTable @ $411D`; S101: bank `$60` = **549 B**, `$71` = 440 B,
    new `$6B` = **53 B** — `ProjectEnemyRows @ $4035`; the older figures
    below are history): bank `$60` head = **283 B**
    (`CustomScriptMasterTable @ $411B`, S53), bank `$71` head = **395 B**
@@ -1169,6 +1178,83 @@ the `gate_floor_table` region (vanilla bytes — the example has no
 `custom.gates`). The example's raw script ops were renamed to the new
 opcode names (`branch_screen`, `npc_write`, …) — bytes identical. The S100
 r3 pin `7cd7257b…` (below) is historical.
+
+## §2.19 S102 — a room's OWN animated tiles (`custom.rooms[].tile_anims`)
+
+User S102: "I just want animated tiles and for the UI to tell me wtf is
+happening … I want to mostly make them myself"; "from-scratch animations with
+clearly explained budget. Also if I can set speed". Lifts the S99 limits
+(one vanilla animation per room, its fixed 2-16 slots, fixed rhythms). The
+vanilla source (`animation`, §2.15) still runs; these run next to it.
+
+```json
+"tile_anims": [
+ {"id": "cloud", "name": "Cloud",
+  "motion": "flip" | "drift_right" | "drift_left" | "sway",
+  "speed": 32,                    // game frames per step, 1-255
+  "rows": [[112, 111, 76, 78]],   // sheet slots, row-major (left -> right)
+  "frames": [["<32 hex>", ...]],  // flip: frames 2..N, one 16-byte tile per
+                                  //   slot in `rows` order; frame 1 = the sheet
+  "order": "loop" | "pingpong",   // flip (default loop)
+  "strip": true,                  // drift/sway: pixels flow across each row
+  "amplitude": 1,                 // sway: 1-3 px each way
+  "where": {"layout": "…", "x": 0, "y": 0, "w": 2, "h": 1},  // editor only
+  "scope": "here" | "everywhere"}]                          // editor only
+```
+
+**Engine** (`templates/bank_06c_head.asm`, compiler-owned bank **$6C**):
+bank $71 entry 3 `CustomAnimSource` first far-calls bank $6C entry 0
+`CustomTileAnimate` (so: custom rooms only, only when the vanilla
+`PerRoomVRAMDispatch` guards pass — no animation during menus / text /
+transitions, never on gate maze floors). Data: `TileAnimRoomTable` (dw per
+room, index mapID-$6B, `TILEANIM_ROOMS` entries, $0000 = none) → per room a
+list of GROUP records `[period, phase, seqlen, nslots, dw seq, nslots × dw
+VRAM dest ($9000+slot*16)]`, `db 0` ends it; `seq` = seqlen × dw frame-block
+address; frame blocks (nslots × 16 B) live in a floating `ALIGN[4]` section of
+the same bank (the GDMA source must be 16-aligned and mapped). State (WRAM,
+`patches/wram.asm`, carved from wCustomPool): `wTileAnimRoom` $D0C5,
+`wTileAnimLeft`, `wTileAnimVBK`, `wTileAnimSrc`, `wTileAnimState` $D0CA =
+2 × `TILEANIM_MAX_GROUPS` (32) bytes (timer, step). A different custom room
+restarts the timers (timer := phase, step 0 = the sheet's own art).
+
+**Every step copies a WHOLE frame** (never a relative roll / swap), so the
+slot index — and the tile's walkability — never changes, and a sheet reload
+mid-loop (leaving and re-entering, a battle, a menu that reloads tiles)
+heals at the next step (PyBoy S102: warp to GreatTree and back → every frame
+still an authored frame). Drift / sway are pre-rendered: a strip W tiles wide
+= 8W one-pixel frames (hence `strip` ≤ 4 tiles); sway amplitude a = 2a+1
+frames played 0,1..a..0,-1..-a..
+**Timing**: at most `TILEANIM_CAP` = 8 tiles per field frame; a due group
+that does not fit waits (timer 0) for the next frame. Each tile = one
+General-Purpose DMA of 16 bytes started as HBlank begins (mode 3 → 0 polled
+with interrupts off, like the vanilla WaitVRAM) or at once in VBlank lines
+144-151; line 127 is skipped (the LYC=127 STAT job hides sprites under the
+status bar — bank $00 `LCDCStateTable`). The game never uses HDMA/GDMA
+(S102 audit: every `rHDMAx` operand in the disassembly is data decoded as
+code). Measured on the user's save: 4-13 tiles → at most 7-8 scanlines of
+the frame in bank $6C, ~1.5 lines per tile (the vanilla `$47` 2-tile swap
+costs ~13); vanilla GreatTree's sway (65 lines) and Zoma (50) drop one frame
+per 32, 34 lines did not. SameBoy (VRAM blocked in mode 3, like hardware):
+0 mismatching tile-frames in 600 frames; negative control (HBlank wait
+removed): 631 — `tools/sameboy_anim_check.py`.
+
+**Compiler** (`editor2/core/tileanim.py`, shared with the editor): `steps`
+(frames + sequence; frame 1 read from the room's sheet at build time, so
+repainting the tile updates the animation), `groups` (≤ 8 slots per group,
+same timing), `schedule` (greedy phases: biggest first, each takes the phase
+that keeps the busiest frame lowest over the LCM horizon ≤ 4096 f), `load`
+(avg tiles per frame vs 8 → the editor's "Load %"), `rom_bytes`, `problems`
+(validators: own tileset copy required; motion; speed 1-255; ≤ 32 slots per
+animation; a slot in one animation only, never one the room's vanilla
+animation moves; flip 2-8 frames of the right size; strips equal rows ≤ 4
+tiles; ≤ 32 groups per room), `Player` (the editor preview = the engine's
+timers + cap). Load > 100 % is a warning. Bank accounting: `TEMPLATE_SIZE
+[$6C]` 285 + payload after the `TILEANIM DATA (generated` marker + 15 pad.
+
+**Pin (S102)**: reference **`0d60486e57edc2ad31fa28079d4fc9f8`** (patched;
+built S102, NOT yet user-tested) — the example has no `tile_anims`, so bank
+$6C = template + an empty table; bank $71 +4 B; wram carve. Prev
+`9c813041…` (patched, historical).
 
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 

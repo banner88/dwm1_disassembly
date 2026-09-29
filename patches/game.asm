@@ -127,7 +127,7 @@ INCLUDE "bank_068.asm"
 INCLUDE "bank_069.asm"
 INCLUDE "bank_06a.asm"
 INCLUDE "bank_06b.asm"          ; S101: project enemy rows (EIDs 519+; compiler-generated)
-INCLUDE "blank/Empty_bank_06c.asm"
+INCLUDE "bank_06c.asm"          ; S102: own tile animations (compiler-generated)
 INCLUDE "blank/Empty_bank_06d.asm"
 INCLUDE "blank/Empty_bank_06e.asm"
 INCLUDE "blank/Empty_bank_06f.asm"

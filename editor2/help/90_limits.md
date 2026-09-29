@@ -12,3 +12,6 @@
 - The monster lists (NPC Monsters tab, Enemies species) show the VANILLA
   species; project-made monsters / renamed species arrive with the Monsters
   tab (ROADMAP P3.9 / P3.10).
+- Animated tiles: up to 8 frames per flip, drifting strips at most 2 cells
+  wide, 32 animation groups per room, about 15.7 KB of frames for the whole
+  project; they do not run on gate maze floors (like the game's own).

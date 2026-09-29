@@ -10008,6 +10008,17 @@ SerialInterruptHandler:
     reti
 
 
+; LCD STAT interrupt (IE bit 1; LYC coincidence). $C892 picks the job, via a
+; 4-entry dw table right after the rst $00 (S102 decode; was misread as code):
+;   0 -> $2F40 LCDCEpilogue      nothing
+;   1 -> $2EFA WaitSTATForLCDC   the FIELD (PyBoy S102: $C892 = 1, LYC = 127):
+;        wait for HBlank, then LCDC bit 1 off — sprites are hidden under the
+;        status bar from line 128 (the bank $6C tile animator never delays
+;        line 127 for this reason — PROJECT_COMPILER §2.19)
+;   2 -> $2F08  per-line SCX wave from $C1xx, LYC += 2 up to $80 (then SCX :=
+;        hBuffer $B7, LYC := 1)
+;   3 -> $2F24  per-line SCY wave from $C1xx, LYC += 2 up to $81 (then SCY :=
+;        hBuffer $BB, LYC := 0)
 LCDCInterruptHandler:
     push af
     push bc
@@ -10015,16 +10026,12 @@ LCDCInterruptHandler:
     push hl
     ld a, [$c892]
     rst $00
-    ld b, b
-
-LCDCHandlerBody:
-    cpl
-
-MenuClearContents:
-    ld a, [$082e]
-    cpl
-    inc h
-    cpl
+LCDCStateTable:                         ; dw $2F40, $2EFA, $2F08, $2F24 (as bytes:
+    db $40                              ; bank $34 data-as-code jumps to the label
+LCDCHandlerBody:                        ; below, which must keep its address)
+    db $2F
+MenuClearContents:                      ; (auto-named; inside the table)
+    db $FA, $2E, $08, $2F, $24, $2F
 
 WaitSTATForLCDC:
     ldh a, [rSTAT]

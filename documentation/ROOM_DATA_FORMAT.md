@@ -625,7 +625,8 @@ S99). The 65 distinct handlers (labels `RoomAnim_<room>` /
 2 KB sheet is loaded at VRAM `$9000-$97FF` (slot = (addr-$9000)/16).
 Nothing else in the ROM rolls or swaps BG tile graphics (grep: every
 VRAM `rrc/rlc [hl]` loop and every caller of the roll/swap helpers is in
-bank $01). **Gate floors never animate** (the dispatch returns while
+bank $01; S102: custom rooms add their OWN animations from bank $6C — see
+"Own tile animations (S102)" below). **Gate floors never animate** (the dispatch returns while
 `wInGateworld` != 0; user-confirmed S99: "Gate floors do NOT have
 animation").
 
@@ -749,6 +750,33 @@ walkability twins, outlines the animated areas on the canvas, and plays the
 measured schedule (`editor2/core/animation.py` `Player`; exact within a
 1024-frame cycle — every handler returns to its start over one cycle except
 the Coliseum's 25-frame swap, which re-phases at the loop).
+
+### Own tile animations (S102) — any slot, any speed, drawn frames
+
+A custom room can also animate its OWN tiles (`custom.rooms[].tile_anims`,
+PROJECT_COMPILER §2.19): bank $71 entry 3 far-calls bank $6C
+`CustomTileAnimate` before choosing the vanilla handler, so both run. Each
+step copies a whole authored frame from bank $6C into the tile's slot of the
+loaded sheet with General-Purpose DMA at the start of HBlank — no hidden
+partner slots, no relative rolls, walkability untouched (the slot index
+never changes), and a reloaded sheet heals at the next step. Up to 8 tiles
+per field frame (groups that do not fit wait a frame). Measured (PyBoy, the
+user's save): ~1.5 scanlines per tile; SameBoy agrees frame for frame.
+
+**Per-frame budget of the old handlers (measured S102, PyBoy)**: the field
+loop tolerates ~35-45 scanlines of animation work per frame; GreatTree's
+16-tile sway (~65 lines) and Zoma's 6 swaps + roll (~50) make the loop miss
+one frame per 32; Room of Beginning's 4 swaps (34) and Castle's roll (9) do
+not. A vanilla swap costs ~8 lines per pair (one WaitVRAM per byte).
+
+**Hardware headroom found S102 (field only; not yet checked in battle or
+cutscenes)**: the game never uses HDMA/GDMA (every `rHDMAx` operand in the
+disassembly is data decoded as code); it runs at normal speed (KEY1 = 0);
+its VBlank handler finishes its VRAM work at LY 148, leaving ~5 lines of
+VBlank; and **VRAM bank 1's tile area ($8000-$97FF, 384 tiles) is empty**
+with no BG cell using attribute bit 3 — checked in GreatTree, Castle, the
+Zoma room, Room of Beginning, a Farm room, a custom room and the menu. A
+room could draw up to 128 more tiles from there (ROADMAP P3.3g).
 
 ## Gate Room Differences
 

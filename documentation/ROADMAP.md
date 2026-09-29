@@ -857,7 +857,8 @@ recipes are pure authoring.
       frame-B paint pads with the tile's palettes + preview; tiles in the
       way moved; PyBoy: the flipped tile shows exactly frames A/B, only the
       source's slots change). Limits that stay (engine): one animation per
-      room, 2-16 slots per animation, fixed rhythms (32 frames mostly);
+      room, 2-16 slots per animation, fixed rhythms (32 frames mostly) —
+      **lifted S102 by P3.3f** (own animations, any slot, any speed);
       S99 r4: unintended animation (pre-S99 imports in a source room's
       hidden-frame slots — the user's mirror) found on open + one-click fix,
       and **Make still**; S99 r5: per-quarter copy / paste / A⇄B / flip /
@@ -866,6 +867,53 @@ recipes are pure authoring.
       quarters stay still, automatic wall/walkable split move, numbered tab
       with the grey reason; (4) the legacy
       build_combined_tileset.py mashup path still reserves 77/78 on its own.
+- [x] **P3.3f — Own animated tiles, from scratch** — **built S102 (+ r2
+      frames side by side, r3 per-tile / per-cell tools); session signed off
+      2026-09-29 (user: "Good work"); in-game test of the ROMs not separately
+      reported** (user S102: "This is NOT UI friendly. I dont … understand
+      the budget … I just want animated tiles and for the UI to tell me wtf is
+      happening … I want to mostly make them myself"; "offer both" drift and
+      flip; "Keep button" for vanilla; "if I can set speed that would be
+      great"; "CAN animation slots be expanded?"). Lifts P3.3e's engine limits
+      (one vanilla animation per room, its fixed 2-16 slots, fixed rhythms).
+      As built (PROJECT_COMPILER §2.19, ROOM_DATA_FORMAT "Own tile animations
+      (S102)", EDITOR_DESIGN §5.1 "As built S102"): new compiler-owned bank
+      **$6C** `CustomTileAnimate` (called by bank $71 entry 3 first) copies
+      authored frames into any slot with GDMA at HBlank, ≤ 8 tiles per frame,
+      per-animation speed 1-255 frames; motions flip (2-8 drawn frames, loop /
+      back-and-forth), drift right / left (pixels flow across a ≤ 4-tile strip
+      or per tile), sway (1-3 px); `custom.rooms[].tile_anims`; wCustomPool
+      carve $D0C5-$D109. Editor: the **Animate** tab (replaces "Make
+      animated"): select cells (drag / Shift+click / double-click) → motion →
+      speed → frames (painter + tools) → "only these cells" (own copies) or
+      "everywhere these tiles are drawn" → Create; list with Edit / Remove;
+      plain budget box (load %, free tiles, frame storage, groups); the
+      vanilla source combo moved behind "Copy a vanilla room's animation…";
+      canvas rectangle selection, preview plays own + vanilla. *Accept MET
+      (machine half):* PyBoy AND SameBoy on the user's save — every animated
+      tile shows only its authored frames on every frame at the set speeds
+      (600 frames, 13 tiles, 4 motions), no dropped frame, ≤ 8 scanlines;
+      negative control (HBlank wait removed) caught by both; leave-and-return
+      heals; test_canvas v6 (GUI create / edit / remove, exact undo, --rom
+      own flip). *User half:* `DWM_S102_tile_anim_engine_test.gbc` and
+      `DWM_S102_animate_tab_test.gbc` (room $6C of the user's project) + the
+      Animate tab on your own rooms. Residuals: (1) frames live in one bank
+      (~15.7 KB for the project; a second frame bank needs the copy routine
+      per bank); (2) own animations do not run on gate maze floors (same
+      dispatch guard as vanilla); (3) per-frame durations (a long frame 1, a
+      short blink) are not offered — one speed per animation.
+- [ ] **P3.3g — 128 more tiles per room from VRAM bank 1** — **NEXT (user
+      2026-09-29: "We'll check expanding tileset next session(s)")**; found
+      S102, not started. Suggested first session: the full-game VRAM-bank-1
+      census (below) before any engine change: in the field VRAM bank 1's tile area is EMPTY and no BG cell
+      uses attribute bit 3 (6 rooms + the menu checked; battles / cutscenes /
+      the monster screens NOT yet). A room could load a second 128-tile sheet
+      there and pick it per cell with attr bit 3 — every tileset twice as big
+      (imports, animations, fewer "tileset full"). Needs: a full-game census
+      of VRAM bank 1 use (battle, menus, library, cutscenes, link), the sheet
+      loader for bank 1, attr bit 3 through the attr emitters and the editor
+      (renderer, slot map, import). *Accept:* a custom room drawing 200+
+      distinct tiles, PyBoy + SameBoy, battles and menus from it intact.
 - [ ] **P3.4 — Embedded PyBoy preview panel** [G-E] (EDITOR_DESIGN §7
       Tier 2): Build → cached post-boot savestate → warp to the room under
       edit → frames in a Qt widget with input. *Accept:* one click plays

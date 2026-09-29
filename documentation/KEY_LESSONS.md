@@ -4046,3 +4046,61 @@ rows).
 a RAM variable the test writes (EVENT_FLAGS lists them); and scan the ROM for
 every reader of a variable before naming it ("story progression counter"
 had exactly two readers).
+
+## S102 — own animated tiles: fix the limit, prove timing with a broken twin
+
+### A UI that needs a page of caveats is exposing an engine limit — remove the limit
+**Symptom** (user): "This is NOT UI friendly. I dont … understand the budget,
+how it works … I have NO understanding why you built in a drop down list for
+importing animations when I want to mostly make them myself." Their two-part
+cloud stopped half-way: animating the second cell took over the first's pairs.
+**Root cause**: S99 modelled the ENGINE's limit (a room replays one vanilla
+room's handler: fixed slots, hidden partner frames, fixed rhythm) and showed
+it to the author as a source list, pair counts, take-overs and split moves —
+seven rounds of explanations for a limit nobody asked for.
+**Fix**: a new engine (bank $6C) that copies authored frames into any slot
+at any speed; the UI talks about cells, frames and speed, and its budget is
+three plain numbers (load %, free tiles, frame storage). The old model stays
+behind one button.
+**Rule**: when the explanation of a limit keeps growing, spend the next
+session measuring whether the limit is real (here: HDMA unused, ~40 scanlines
+of headroom, VRAM bank 1 empty) before writing more explanation.
+
+### Prove a timing-sensitive VRAM path with a deliberately broken twin
+**Symptom**: the GDMA copy must never run in mode 3 (VRAM blocked); an
+emulator that never blocks would pass a wrong implementation.
+**Fix**: `tools/sameboy/dwmcheck.c` (SameBoy core, boots the user's save,
+warps, compares every animated slot with its authored frames every frame) +
+the same check in PyBoy; then a ROM with the HBlank wait patched out (`jr nz`
+→ `nop nop`): 631 (SameBoy) / 581 (PyBoy) bad tile-frames; the real build 0.
+Both emulators DO block mode-3 writes (a session-internal assumption that
+PyBoy does not was wrong — DOC_AUDIT S102).
+**Rule**: a "timing is safe" claim is proven only when a deliberately broken
+variant FAILS the same check; otherwise the check may be blind.
+
+### deleteLater'd widgets still paint — hide and unparent before rebuilding a row
+**Symptom**: the frame painter was a grey box; only the frame buttons showed.
+**Root cause**: `_rebuild_frame_btns` removed the old buttons from the layout
+with `deleteLater()` (still alive, still children until the event loop runs)
+and created new ones without a parent — some sat at their default 640×480
+geometry over the painter.
+**Fix**: `hide(); setParent(None); deleteLater()` and create with the parent.
+Found by listing the container's children with geometry, not by staring at
+the screenshot.
+**Rule**: when rebuilding widgets inside a live layout, detach the old ones
+immediately; to debug "invisible" widgets, dump `findChildren` geometry.
+
+### An operation keyed on what the canvas shows must check it belongs to the target
+**Symptom** (test): an animation made in room "Flip test" recorded another
+room's layout (`farm_castle_water_s0`) and repointed ITS cells.
+**Root cause**: the test created the room straight on the document (no
+renderer refresh), so the canvas still showed the previous room's layout id
+while `current_room()` was the new room; the op trusted the canvas.
+**Fix**: `add_tile_anim` refuses a layout the room does not draw; the tab
+refuses a selection whose layout is not the room's; the test refreshes the
+renderer like the GUI's New does.
+**Rule**: when an edit takes "where" from the view and "what" from the model,
+assert they agree before writing — a stale view must fail loudly, not edit
+another object. (Also recurred: the S99 r7 rule "the check and the operation
+share one model" — the free-tile count differed for rooms still on a vanilla
+sheet until both used `_free_anim_tiles`.)

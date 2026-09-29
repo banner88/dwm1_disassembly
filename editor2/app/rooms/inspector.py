@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (QComboBox, QFormLayout, QGroupBox, QLabel,
                                QTreeWidget, QTreeWidgetItem, QHBoxLayout)
 
 from editor2.core import animation as ANIM
+from editor2.core import tileanim as TA
 from editor2.core.document import val
 
 VANILLA_PAL = '(borrow vanilla source palette)'
@@ -138,8 +139,13 @@ class Inspector(QWidget):
         f.addRow('attr base', self.r_attr)
         f.addRow('encounters', self.r_enc)
         f.addRow('music', self.r_music)
-        f.addRow('animated tiles', self.r_anim)
-        f.addRow('', self.r_anim_note)
+        # S102 (user: "I have NO understanding why you built in a drop down list
+        # for importing animations"): the vanilla-source combo + note move to
+        # the Animate tab, behind "Copy a vanilla room's animation…"
+        # (tab.py attach_vanilla_controls); here one plain summary line
+        self.r_anim_sum = _lbl()
+        self.r_anim_sum.setToolTip('Make tiles move: Metatiles → Animate tab')
+        f.addRow('animated tiles', self.r_anim_sum)
         f.addRow('scripts', self.r_scripts)
         f.addRow(self.r_note)
         self.lay.addWidget(g)
@@ -335,6 +341,7 @@ class Inspector(QWidget):
                                      'Its routine animates blank slots (nothing visible).')
         self.r_anim.setEnabled(False)
         self.r_anim_note.setVisible(bool(self.r_anim_note.text()))
+        self.r_anim_sum.setText(self.r_anim.itemText(0) if self.r_anim.count() else 'none')
         self.r_scripts.setText('vanilla')
         self.r_note.setText('Vanilla room. "Make editable" clones it into your '
                             'project (the original stays untouched).')
@@ -448,6 +455,14 @@ class Inspector(QWidget):
         self.r_anim.setCurrentIndex(max(idx, 0))
         self.r_anim_note.setText(self._anim_note(doc, renderer, room, info))
         self.r_anim_note.setVisible(bool(self.r_anim_note.text()))
+        own = doc.tile_anims(room)
+        bits = []
+        if own:
+            n = sum(len(TA.slots_of(a)) for a in own)
+            bits.append(f"{len(own)} animation{'s' if len(own) != 1 else ''} ({n} tiles)")
+        if info.get('map') is not None:
+            bits.append(f"copied vanilla ${info['map']:02X}")
+        self.r_anim_sum.setText((', '.join(bits) or 'none') + ' — Animate tab')
 
     @staticmethod
     def _anim_note(doc, renderer, room, info):
@@ -467,7 +482,7 @@ class Inspector(QWidget):
                             for u in b['units'])
             if cnt:
                 txt = (f"Used here: {cnt} — {len(b['tiles'])} moving tile(s) "
-                       '(details: Make animated tab). ' + txt)
+                       '(Animate tab). ' + txt)
         except Exception:
             pass
         try:

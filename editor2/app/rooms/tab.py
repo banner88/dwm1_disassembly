@@ -20,6 +20,8 @@ from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, 
                                QToolBar, QToolButton, QVBoxLayout, QWidget)
 
 from editor2.core.animation import rng as ANIMR
+from editor2.core.animation import slots as ANIM_slots
+from editor2.core import tileanim as TA
 from editor2.core.document import val, GRID_COLS, metatile_key
 from editor2.app.session import REPO
 from editor2.app.rooms import commands as C
@@ -331,6 +333,7 @@ class RoomsTab(QWidget):
         self.canvas.editRequested.connect(self._edit_requested)
         self.canvas.markerActivated.connect(self._marker_activated)
         self.canvas.cellActivated.connect(self._animate_cell)
+        self.canvas.cellsSelected.connect(self._cells_selected)
         self.canvas.toolChanged.connect(self._tool_changed)
         cv.addWidget(self.canvas, 1)
         self.status_line = QLabel(self.HELP)
@@ -399,19 +402,22 @@ class RoomsTab(QWidget):
         tscroll.setWidgetResizable(True)
         tscroll.setWidget(self.tileset_map)
         self.picker_tabs.addTab(tscroll, 'Tileset')
-        # tab 4 — Make animated (S99 r3)
+        # tab 4 — Animate (S102; was S99 r3 "Make animated"): the room's own
+        # animated tiles, made from scratch (core/tileanim.py, bank $6C)
         from editor2.app.rooms.animate_tab import AnimateTab
         self.animate_tab = AnimateTab()
-        self.animate_tab.applyRequested.connect(self._apply_animate)
+        self.animate_tab.createRequested.connect(self._tanim_create)
+        self.animate_tab.replaceRequested.connect(self._tanim_replace)
+        self.animate_tab.removeRequested.connect(self._tanim_remove)
+        self.animate_tab.useSelectionRequested.connect(self._tanim_use_selection)
+        self.animate_tab.showRequested.connect(self._tanim_show)
         self.animate_tab.stillRequested.connect(self._make_still)
         self.animate_tab.status.connect(self.status_line.setText)
-        self.animate_tab.b_brush.clicked.connect(self._animate_from_brush)
-        self.animate_tab.b_cell.clicked.connect(
-            lambda: self._animate_cell(self.canvas.selected_cell))
         ascroll = QScrollArea()
         ascroll.setWidgetResizable(True)
+        ascroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         ascroll.setWidget(self.animate_tab)
-        self.picker_tabs.addTab(ascroll, 'Make animated')
+        self.picker_tabs.addTab(ascroll, 'Animate')
         self._anim_scroll = ascroll
         self.picker_tabs.setMinimumHeight(120)
         self.sec_tiles = Section('Metatiles', self.picker_tabs, 'rooms_metatiles',
@@ -450,6 +456,8 @@ class RoomsTab(QWidget):
         self.inspector.thresholdEdited.connect(self._threshold_edited)
         self.inspector.paletteChosen.connect(self._palette_chosen)
         self.inspector.animationChosen.connect(self._animation_chosen)
+        self.animate_tab.attach_vanilla_controls(self.inspector.r_anim,
+                                                 self.inspector.r_anim_note)
         self.inspector.localizeRequested.connect(self._localize)
         self.inspector.nameEdited.connect(self._rename_to)
         self.inspector.addRedirectRequested.connect(self._add_redirect)
@@ -670,7 +678,7 @@ class RoomsTab(QWidget):
         self.inspector.show_selection(None)
         if self.vanilla_mid is not None:
             self._show_vanilla()
-            self.animate_tab.show_room(self.s.doc, None)
+            self.animate_tab.show_room(self.s.doc, None, self.s.renderer)
             return
         room = self.current_room()
         if room is None:
@@ -959,7 +967,7 @@ class RoomsTab(QWidget):
         self.pal_free1.setEnabled(bool(words))
         self.pal_free1.blockSignals(False)
         self.inspector.show_room(self.s.doc, self.s.renderer, room, self.key, self.state_idx)
-        self.animate_tab.show_room(self.s.doc, room)
+        self.animate_tab.show_room(self.s.doc, room, self.s.renderer)
         self._update_brush_label()
 
     # ---------------------------------------------- tileset slots (P3.3c)
@@ -2019,35 +2027,69 @@ class RoomsTab(QWidget):
         mt = self.canvas.cell_metatile(*cell)
         self.inspector.show_cell(cell, mt, self.canvas.cell_walkable(*cell),
                                  editable=self.current_room() is not None)
-        # S99 r3: say whether (and how) the cell animates
-        slots = self.canvas.anim_slots
-        hit = [t & 0x7F for t in mt['tiles'] if (t & 0x7F) in slots]
-        if hit:
-            txt = (f"yes — slots {ANIMR(sorted(set(hit)))} move with "
-                   f"${self.canvas.anim_mid:02X}'s animation")
-        else:
-            txt = 'no'
-        self.inspector.add_cell_row('animated', txt + ' — double-click the cell to change it')
+        # S99 r3 / S102: say whether (and how) the cell animates
+        room = self.current_room()
+        own = []
+        if room is not None:
+            for t in mt['tiles']:
+                it = self.s.doc.anim_of_slot(room, t & 0x7F)
+                if it is not None and it.get('name') not in own:
+                    own.append(it.get('name') or it.get('id'))
+        van = [t & 0x7F for t in mt['tiles']
+               if (t & 0x7F) in ANIM_slots(self.canvas.anim_mid)]
+        bits = []
+        if own:
+            bits.append('yes — ' + ', '.join(own))
+        if van:
+            bits.append(f"moves with the copied vanilla animation ${self.canvas.anim_mid:02X}")
+        txt = '; '.join(bits) or 'no'
+        self.inspector.add_cell_row('animated', txt + ' — double-click the cell to animate it')
 
-    # ------------------------------------------------ Make animated (S99 r3)
+    # ------------------------------------------------ Animate tab (S102; was S99 r3 Make animated)
     def _animate_context_ok(self):
         room = self.current_room()
-        if room is None:
-            self.animate_tab.set_enabled(False, 'Vanilla room — "Make editable" first; '
-                                        'the outline (Anim) shows what already animates.')
-            return None
-        if not room.get('record'):
-            self.animate_tab.set_enabled(False, 'This room has no record.')
+        if room is None or not room.get('record'):
+            self.status_line.setText('Animate: open a custom room (vanilla rooms: "Make editable" '
+                                     'first).')
             return None
         return room
 
+    def _cells_selected(self, rect):
+        """S102: several cells selected (drag / Shift+click)."""
+        c0, r0, c1, r1 = rect
+        if (c0, r0) != (c1, r1):
+            self.status_line.setText(f'{c1 - c0 + 1}×{r1 - r0 + 1} cells selected — Animate tab → '
+                                     '"Use the selected cells" to make them move.')
+
     def _animate_cell(self, cell):
-        room = self._animate_context_ok()
+        """Double-click a plain cell: select it and load it into the Animate tab."""
         if cell is None:
-            self.status_line.setText('No cell selected: pick the Select tool, click a cell, then '
-                                     '"Load the selected cell" — or just double-click the cell.')
             return
+        self.canvas.set_selection((cell[0], cell[1], cell[0], cell[1]))
         self._cell_selected(cell)
+        self._tanim_use_selection()
+
+    def _tanim_sel(self, room, rect):
+        """The Animate tab's view of the selected cells on the current canvas."""
+        cv = self.canvas
+        c0, r0, c1, r1 = rect
+        sheet = cv.gfx.sheet
+        art, pals, slots = [], [], []
+        for r in range(r0 * 2, r1 * 2 + 2):
+            for c in range(c0 * 2, c1 * 2 + 2):
+                t = cv.tiles[r][c] & 0x7F
+                art.append(bytes(sheet[t * 16:t * 16 + 16]))
+                slots.append(t)
+                p = (cv.attr[r][c] & 7) if cv.attr else 0
+                pals.append([tuple(x) for x in cv.pals[p]])
+        where = (f'at ({c0},{r0})' + (f'–({c1},{r1})' if (c0, r0) != (c1, r1) else '')
+                 + f' on screen {self.key}')
+        return {'lid': cv.lid, 'rect': (c0, r0, c1, r1), 'art': art, 'pals': pals,
+                'slots': slots, 'rows': (r1 - r0 + 1) * 2, 'cols': (c1 - c0 + 1) * 2,
+                'where': where}
+
+    def _tanim_use_selection(self):
+        room = self._animate_context_ok()
         self.picker_tabs.setCurrentWidget(self._anim_scroll)
         try:
             self.sec_tiles.set_expanded(True)
@@ -2055,61 +2097,127 @@ class RoomsTab(QWidget):
             pass
         if room is None:
             return
-        mt = self.canvas.cell_metatile(*cell)
-        self.animate_tab.set_tile(self.s.doc, self.s.renderer, room, self.canvas.gfx.sheet,
-                                  self.canvas.pals, mt, f' at cell {cell}')
-        self.status_line.setText(f'Loaded the tile at cell {cell} into Make animated — '
-                                 'paint frame B (③), then Make animated.')
-
-    def _animate_from_brush(self):
-        room = self._animate_context_ok()
-        mt = self.canvas.brush
-        if room is None or not mt:
-            self.status_line.setText('Pick a metatile as the brush first.')
+        rect = self.canvas.selection()
+        if rect is None:
+            self.status_line.setText('Animate: select cells first — Select tool (V), click a cell '
+                                     'or drag over several.')
             return
-        self.animate_tab.set_tile(self.s.doc, self.s.renderer, room, self.canvas.gfx.sheet,
-                                  self.canvas.pals, mt, ' (the brush)')
-        self.status_line.setText('Loaded the brush tile into Make animated — paint frame B (③), '
-                                 'then Make animated.')
+        sel = self._tanim_sel(room, rect)
+        doc = self.s.doc
+        if sel['lid'] not in doc._room_layout_ids(room):
+            self.status_line.setText('Animate: the canvas does not show an editable layout of this '
+                                     'room (vanilla layout? "Make editable" / paint once first).')
+            return
+        # an existing animation drawn exactly here -> edit it
+        mine = None
+        for it in doc.tile_anims(room):
+            w = it.get('where') or {}
+            if w.get('layout') == sel['lid'] and (w.get('x'), w.get('y'), w.get('x', 0) + w.get('w', 1) - 1,
+                                                   w.get('y', 0) + w.get('h', 1) - 1) == tuple(rect):
+                mine = it
+                break
+        hit = [it for it in doc.tile_anims(room) if set(TA.slots_of(it)) & set(sel['slots'])]
+        self.animate_tab.load_selection(sel, anim=mine)
+        if mine is None and hit:
+            self.status_line.setText(
+                'These cells already show part of ' + ', '.join(repr(h.get('name')) for h in hit)
+                + ' — a new animation here gives them their own tiles; to change that one, '
+                  'select it in the list and press Edit.')
+        else:
+            self.status_line.setText(('Editing ' + repr(mine.get('name')) if mine else
+                                      'Animate: pick how the cells move and how fast, then '
+                                      'Create animation.'))
+        # the VANILLA animation copied into this room moves this cell? -> Make still
+        mt = self.canvas.cell_metatile(rect[0], rect[1])
+        van = doc.room_animation(room)['slots']
+        self.animate_tab.set_still_candidate(
+            mt if any((t & 0x7F) in van for t in mt['tiles']) else None)
 
-    def _apply_animate(self, req):
+    def _tanim_run(self, label, op):
         room = self.current_room()
         if room is None:
-            return
-        if req.get('takes') and QMessageBox.question(
-                self, 'Make animated — take over',
-                f"This room's animation is full. To move this tile it takes over slot(s) "
-                f"{ANIMR(req['takes'])}.\n\nIn {req['stops']} cell(s) of the tile(s) moving "
-                "there now, the quarters drawn from those slots will STAND STILL (same look). "
-                "Their other moving quarters, and every other animated tile, keep moving; "
-                "Make still stops a tile completely.\n\nOne undo step. Continue?"
-                ) != QMessageBox.Yes:
-            return
-        if req['stops'] and not req.get('takes') and QMessageBox.question(
-                self, 'Make animated',
-                f"This room plays another animation, and {req['stops']} cell(s) animated by "
-                "it will stop moving if it switches (they keep their current look). "
-                "Continue?") != QMessageBox.Yes:
-            return
-        rid = room['id']
+            return None
         own = bytes(self.canvas.gfx.sheet[:2048])
-        cmd = C.SnapshotCommand(
-            self.s, f"Make animated ({req['effect']})",
-            lambda doc: doc.make_animated(rid, req['mt'], req['effect'], req['mid'],
-                                          req['a'], req['b'], own_sheet=own))
+        cmd = C.SnapshotCommand(self.s, label, lambda doc: op(doc, room['id'], own))
         self.s.undo.push(cmd)
         if cmd.error is not None:
-            QMessageBox.warning(self, 'Make animated', str(cmd.error))
-            return
+            QMessageBox.warning(self, 'Animate', str(cmd.error))
+            return None
         note = getattr(self.s.doc, 'last_import_note', '')
         self._show()
-        if cmd.result is not None:
-            self._brush_selected(cmd.result)
-            room = self.current_room()
-            self.animate_tab.set_tile(self.s.doc, self.s.renderer, room, self.canvas.gfx.sheet,
-                                      self.canvas.pals, cmd.result, ' (just animated)')
+        return note
+
+    def _tanim_add(self, doc, rid, own, req):
+        return doc.add_tile_anim(rid, req['lid'], req['rect'], req['motion'], req['speed'],
+                                 frames=req['frames'], order=req['order'], strip=req['strip'],
+                                 amplitude=req['amplitude'], name=req['name'],
+                                 private=req['private'], own_sheet=own)
+
+    def _tanim_create(self, req):
+        note = self._tanim_run('Animate tiles',
+                               lambda doc, rid, own: self._tanim_add(doc, rid, own, req))
+        if note is None:
+            return
+        self.animate_tab.cancel_edit()
         self.play_btn.setChecked(True)
-        self.status_line.setText('Animated — ' + note + '. Playing the preview (■ Stop).')
+        self.status_line.setText('Animated — ' + note + '. Playing on the canvas (■ Stop).')
+
+    def _tanim_replace(self, req):
+        def op(doc, rid, own):
+            room = doc.room(rid)
+            idx = next((i for i, a in enumerate(room.get('tile_anims') or [])
+                        if a.get('id') == req['aid']), 0)
+            doc.remove_tile_anim(rid, req['aid'])
+            item = self._tanim_add(doc, rid, own, req)
+            lst = room['tile_anims']
+            lst.insert(idx, lst.pop())          # keep its place in the list
+            return item
+        note = self._tanim_run('Edit animation', op)
+        if note is None:
+            return
+        self.animate_tab.cancel_edit()
+        self.play_btn.setChecked(True)
+        self.status_line.setText('Saved — ' + note + '. Playing on the canvas (■ Stop).')
+
+    def _tanim_remove(self, aid):
+        it = self.s.doc.tile_anim(self.current_room() or {}, aid) or {}
+        note = self._tanim_run('Remove animation',
+                               lambda doc, rid, own: doc.remove_tile_anim(rid, aid))
+        if note is None:
+            return
+        self.animate_tab.cancel_edit()
+        self.status_line.setText(f"Removed {it.get('name') or aid!r} — its tiles show their "
+                                 'first frame again.')
+
+    def _tanim_show(self, aid):
+        """Select an animation's cells (switching screen / state) and edit it."""
+        room = self.current_room()
+        it = self.s.doc.tile_anim(room, aid) if room else None
+        if it is None:
+            return
+        w = it.get('where') or {}
+        lid = w.get('layout')
+        found = None
+        for k, scr in (room.get('screens') or {}).items():
+            if (scr.get('layout') or {}).get('id') == lid:
+                found = (int(k), 0)
+            for i, st in enumerate(scr.get('states') or []):
+                if (st.get('layout') or scr.get('layout') or {}).get('id') == lid:
+                    found = found or (int(k), i)
+            if found:
+                break
+        if found is None:
+            self.status_line.setText(f"{it.get('name')!r}: its cells are not on any screen now "
+                                     '(layout changed) — Remove it and animate again.')
+            return
+        if (self.key, self.state_idx) != found:
+            self.key, self.state_idx = found
+            self._show()
+        rect = (w['x'], w['y'], w['x'] + w['w'] - 1, w['y'] + w['h'] - 1)
+        self.canvas.set_selection(rect)
+        self.animate_tab.load_selection(self._tanim_sel(room, rect), anim=it)
+        self.status_line.setText(f"Editing {it.get('name')!r} — change it below, then Save "
+                                 'changes.')
 
     def _make_still(self, mt):
         """S99 r4: stop one tile moving (Make still)."""
@@ -2128,9 +2236,7 @@ class RoomsTab(QWidget):
         self._show()
         if cmd.result is not None:
             self._brush_selected(cmd.result)
-            self.animate_tab.set_tile(self.s.doc, self.s.renderer, self.current_room(),
-                                      self.canvas.gfx.sheet, self.canvas.pals, cmd.result,
-                                      ' (made still)')
+        self.animate_tab.set_still_candidate(None)
         self.status_line.setText('Made still — ' + note + '.')
 
     def _edit_requested(self):

@@ -1606,6 +1606,20 @@ class Project:
             return F.ANIM_NONE, f'INVALID ({e}) -> none'
         return v, why
 
+    def room_sheet(self, room):
+        """S102: the 2048-byte sheet a room draws with (its own tileset copy),
+        or None for a room on a vanilla sheet."""
+        tid = (room.get('record') or {}).get('tileset')
+        if tid is None or tid not in self._tileset_entry:
+            return None
+        from . import layouts as L
+        ts = self.tilesets[self._tileset_entry[tid]]
+        return bytes(L.tileset_bytes(self.repo_root or '.', ts, self.root))
+
+    def tile_anims(self, room):
+        """S102: custom.rooms[].tile_anims (the room's own animated tiles)."""
+        return list(room.get('tile_anims') or [])
+
     # ----------------------------------------------------------------- music
     def music_resolved(self):
         """(bank74_library, room_bgm[128], song_ids, warnings) — cached so

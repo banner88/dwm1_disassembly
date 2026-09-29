@@ -709,3 +709,22 @@ verified overrides.
 | editor2/tests/test_compiler.py (S101 cases; pin `9c813041…` patched) + test_canvas.py v8 (`--only-v8`) | 151 tests with --rom; v8 = a boss floor authored through the GUI code paths, played in PyBoy (talk → YES → 2-enemy battle → win → flag → helper → Castle) | |
 | editor2/example-project/project.json | raw script ops renamed to the new opcode names (bytes identical) | KEY_LESSONS S101 |
 | editor2/app/help_tab.py + **editor2/help/*.md + editor2/help/_revision.md** (NEW S101 r3) | the editor's Help tab and its topics (hand-written Markdown); `_revision.md` = the EDITOR_REVISION the help was updated for | test_app asserts the stamp == EDITOR_REVISION; SESSION_PROTOCOL wrap-up item 7 |
+
+## S102 rows (P3.3f own animated tiles)
+
+| Item | What | Notes |
+|---|---|---|
+| **tools/sameboy_anim_check.py + tools/sameboy/dwmcheck.c** (NEW) | SameBoy-core cross-check of a room's own tile animations: boots `<project>/build/build/rom.gbc` with a battery save, CONTINUE, warps (pyboy_harness mailbox), then every frame compares each animated slot's VRAM with its authored frames | needs SameBoy cloned + `make tester` (docstring), clang; exit 0 = all frames match, 3 = mismatches. No extracted/ output. PYBOY_DEBUGGING "S102" |
+| patches/bank_06c.asm (NEW, compiler-owned) + editor2/core/templates/bank_06c_head.asm (pinned) + patches/game.asm include + verify_integrity PATCH_NEW_FILES | `CustomTileAnimate` / `TileAnimRestart` / `TileAnimCopy` + generated data | PROJECT_COMPILER §2.19; TEMPLATE_SIZE[$6C] 285 |
+| editor2/core/templates/bank_071_head.asm (re-pinned) | entry 3 `CustomAnimSource` far-calls bank $6C first | TEMPLATE_SIZE[$71] 444 |
+| patches/wram.asm (hand) | `wTileAnim*` carved from wCustomPool ($D0C5-$D109) | known_RAM_map [S102] |
+| editor2/core/tileanim.py (NEW) | data model + engine mirror: `steps / groups / roll / offsets / schedule / load / load_words / rom_bytes / problems / Player` | shared by compiler, validators, editor |
+| editor2/core/tileanim_doc.py (NEW, `TileAnimMixin` on Document) | `anim_selection / add_tile_anim / update_tile_anim / remove_tile_anim / tile_anim_budget / tile_anim_player / own_anim_slots / anim_of_slot` | Document.animated_slots includes own slots |
+| editor2/core/emitters.py `emit_bank_06c` (`tileanim6c`) + project.py `room_sheet / tile_anims` + validators (tile_anims block, bank $6C accounting) | the compiler half | |
+| editor2/app/rooms/animate_tab.py (REWRITTEN: `AnimateTab`, `FramePad`) + canvas.py (rectangle selection, own preview) + tab.py (`_tanim_*`) + inspector.py (summary line; combo moved) | the Animate tab | EDITOR_DESIGN §5.1 "As built S102" |
+| editor2/help/15_animated_tiles.md (NEW) + 10_rooms.md / 90_limits.md | help | `EDITOR_REVISION` = 'S102' |
+| editor2/app/rooms/animate_tab.py r2 (`FramePad.activated / set_zoom`, the side-by-side frame strip `_rebuild_frame_btns / _layout_strip / _zoom_by`, `pad` = the yellow frame) | every frame painted in place, side by side (user S102 r2) | test_canvas v6; `EDITOR_REVISION` = 'S102r2' |
+| editor2/app/rooms/animate_tab.py r3 (`FramePad.partPicked / part_rect`, `_set_part / _pick_part / _part_rect / _grid / _put_grid`, `_tool` copy / paste / clear on the part) | tools on one 8×8 tile / 16×16 cell / the whole frame (user S102 r3) | test_canvas v6; `EDITOR_REVISION` = 'S102r3' |
+| editor2/tests/test_compiler.py (tile_anims cases; pin `0d60486e…` patched) + test_canvas.py v6 (Animate tab; --rom own flip = authored frames only) | 170 tests with --rom | |
+| disassembly/bank_000.asm + patches/bank_000.asm (bytes + comments, zero byte) | `LCDCStateTable` (the LCD STAT job table, was decoded as code) | DOC_AUDIT S102 |
+

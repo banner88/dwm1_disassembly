@@ -10,6 +10,94 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
+> Last verified: 2026-09-28 (Session 102 — **ROADMAP P3.3f: OWN ANIMATED
+> TILES, FROM SCRATCH — any tile, drawn frames, any speed, a plain budget**
+> (user: "CAN I animate more than a single tile? … If I animate 1 it stops
+> the second one. Also is this budget expandable"; "can we control speed of
+> tile movement?"; then "This is NOT UI friendly. I dont … understand the
+> budget, how it works … I just want animated tiles and for the UI to tell
+> me wtf is happening … I want to mostly make them myself"; "offer both"
+> [flip and drift]; "Keep button" [vanilla copy]; "if I can set speed that
+> would be great"; "CAN animation slots be expanded? Can you poke around
+> briefly?"). S101 r4 not re-confirmed this session. **Built S102; signed
+> off 2026-09-29 (in-game ROM test not separately reported).** Verifier PASS 6/6; clean `1ca6579…` byte-perfect (bank $00
+> `LCDCStateTable` re-sectioned to bytes + comments, both trees); **patched
+> pin MOVED `9c813041…` → `0d60486e…` (patched)**; test_compiler --rom
+> 170/170; test_app --rom PASS (GUI build == pin); test_canvas --rom PASS
+> incl. the rewritten v6 (Animate tab + --rom own flip). `EDITOR_REVISION` =
+> 'S102'.
+>
+> **Why the user's two-part cloud stopped:** room $6C borrowed `$47`
+> (Hargon room), whose animation has 2 flip pairs; the cloud's right cell
+> used both, so animating the left cell TOOK OVER them (S99 r6 take-over).
+> Measured in PyBoy that a 4-pair source (`$23`) moves both halves — the
+> answer to "can I animate more than one tile" was always "yes, up to the
+> borrowed animation's slots" (GreatTree sways 16). The S99 model itself
+> was the problem, so S102 replaced it.
+>
+> **Engine (PROJECT_COMPILER §2.19; ROOM_DATA_FORMAT "Own tile animations
+> (S102)"):** new compiler-owned bank **$6C** — bank $71 entry 3
+> `CustomAnimSource` far-calls entry 0 `CustomTileAnimate` first (custom
+> rooms only, vanilla dispatch guards). Per room, groups `[period, phase,
+> seqlen, nslots, dw seq, dw VRAM dests]`; every step copies a WHOLE frame
+> (16-aligned blocks in bank $6C) into the slot with GDMA at the start of
+> HBlank (or VBlank lines 144-151), ≤ 8 tiles per frame, line 127 skipped
+> (the LYC=127 STAT job hides sprites under the status bar — decoded +
+> annotated: bank $00 `LCDCStateTable`, field state 1 measured). State:
+> wCustomPool carve `wTileAnim*` $D0C5-$D109 (32 groups). Measured on the
+> user's save: 13 tiles / 4 motions → every tile shows only authored frames
+> on every one of 600 frames in **PyBoy and SameBoy** (new
+> `tools/sameboy_anim_check.py` + `tools/sameboy/dwmcheck.c`), ≤ 8
+> scanlines, no dropped frame; negative control (HBlank wait removed): 631 /
+> 581 bad tile-frames (SameBoy / PyBoy — both block mode-3 VRAM writes);
+> leave-and-return heals. Budget facts measured: vanilla GreatTree sway ~65
+> scanlines and Zoma ~50 drop a frame per 32, 34 do not; the game never uses
+> HDMA/GDMA, runs normal speed, its VBlank VRAM work ends at LY 148; **VRAM
+> bank 1's tile area is empty in the field** (6 rooms + menu; battles not
+> checked) → ROADMAP P3.3g (128 more tiles per room).
+>
+> **Editor (EDITOR_DESIGN §5.1 "As built S102"):** the **Animate** tab
+> replaces "Make animated": select cells (Select tool drag / Shift+click /
+> double-click) → Use the selected cells → Flip through frames (painter,
+> 2-8 frames, loop / back-and-forth, shift / mirror / copy previous / undo)
+> / Drift right / Drift left (as one picture ≤ 2 cells, or per tile) / Sway
+> (1-3 px) → speed (presets + exact frames per step, "≈ N per second") →
+> "only the selected cells" (own copies; the only thing that costs free
+> tiles) or "every place drawn with these tiles" → Create; list + Edit (one
+> undo step, keeps its place) / Remove; plain box: load %, free tiles, frame
+> storage, groups; "How does this work?". The inspector's vanilla combo
+> moved behind "Copy a vanilla room's animation…" (+ Make the selected cell
+> still). Canvas: rectangle selection, preview plays own + vanilla, Anim
+> outline includes own slots. Help topic *Animated tiles* (+ limits). Test
+> ROMs **`DWM_S102_tile_anim_engine_test.gbc`** (patched, md5 `37194b4d…`)
+> and **`DWM_S102_animate_tab_test.gbc`** (patched, md5 `394b5ee7…`, made
+> through the GUI code paths): the user's project, room $6C — cloud (0,0)-
+> (1,0) screen 0 drifts right, cloud (0,1)-(1,1) screen 1 drifts left, every
+> tree sways, the screen-4 blue floor flips; the old `$47` flip still runs
+> next to them. Bugs caught before delivery: KEY_LESSONS S102.
+>
+> **S102 r2 (user 18:30: "Wait wtf I cant have frames side by side
+> anymore?? How can I paint them?"; editor-only, built, NOT yet
+> user-tested):** the Animate tab shows every frame side by side (one
+> painter each, wrapping to the panel width, frame 1 = the map, fixed);
+> paint straight on any frame; the clicked frame is the yellow one the
+> tools act on; Size − +. test_canvas v6 asserts it. `EDITOR_REVISION` =
+> 'S102r2'. Pin unchanged `0d60486e…` (patched).
+>
+> **S102 r3 (user 18:51: "Can I still copy or shift individual
+> quadrants?"; editor-only, built, NOT yet user-tested):** Ctrl+click picks
+> one 8×8 tile, Ctrl+Shift+click a 16×16 cell (outlined on every frame);
+> Shift / Mirror / Clear / Copy previous act on it; Copy (any frame incl.
+> the map) / Paste (repeats to fill); test_canvas v6 asserts part-only
+> edits + exact undo. `EDITOR_REVISION` = 'S102r3'. Pin unchanged.
+>
+> **Session sign-off 2026-09-29** (user: "Good work. We'll check expanding
+> tileset next session(s) so make sure thats on roadmap. Hand off please");
+> the in-game test of the two S102 ROMs was not separately reported. **Next:
+> ROADMAP P3.3g** (VRAM bank 1 → 128 more tiles per room; first the
+> full-game bank-1 census). **Hand-off: all S102 work = the diff against
+> `f4b0ec1` (origin/master), delivered as `DWM-S102-tileanim-changed-files.zip`.**
+
 > Last verified: 2026-09-27 (Session 101 — **ROADMAP P3.7b PART 2 (first
 > half): CUSTOM BOSS FLOORS — per-gate floor count / boss floor / hand-made
 > gates, MONSTER NPCs, CONVERSATION TREES (flags, YES/NO, battles of 1-3
@@ -155,124 +243,8 @@
 > reported. **Hand-off: all S101 work = the diff against `833f56e`
 > (origin/master), delivered as `DWM-S101-bossfloors-changed-files.zip`.**
 
-> Last verified: 2026-09-27 (Session 100 — **ROADMAP P3.7b PART 1: CUSTOM
-> ROOMS SERVED ON GATE FLOORS — data-driven rules (gate, floors, chance, flag
-> conditions, once per dive), gate-room settings (arrival, Stairs down,
-> saving, battles that follow the gate, gate or own music), Gates tab v1**
-> (user: "we cant insert them into gates and trigger upon floor, or floor +
-> flag, or assign % chance"; answers: gate rooms are mostly special-function /
-> boss rooms without battles; "at most once per dive is useful"; "CANNOT save
-> in random floors, ALWAYS CAN in special rooms inside gates. CANNOT save in
-> boss rooms. I want that mechanic replicated"; floor 1 not needed; music
-> "option for BOTH"; part 2 later "but give a sense of how much work" — ≈3-4
-> sessions, ROADMAP; example "floors 2-3, 50%"). S99 not re-confirmed this
-> session. **Built S100, NOT yet user-tested.** Verifier PASS 6/6 (check 5 now
-> also runs `map_gate_names.py --check`); clean `1ca6579…` byte-perfect (banks
-> $01/$06/$07/$16 labels, comments, re-sections — both trees); **patched pin
-> MOVED `d072eb51…` → `4f13d2af…` → `91202c74…` (patched; S100 r2: the example
-> gate rule gains `once_per_dive` — user 14:39 saw `gate_rotation` on floor 2
-> AND floor 3 of one dive; PyBoy 40 dives: floor 2 19x, floor 3 12x, never
-> both; new rules in the Gates tab now start as once per dive)**; test_compiler --rom 124/124;
-> test_app --rom PASS (GUI build == pin); test_canvas --rom PASS incl. the new
-> v7. `EDITOR_REVISION` = 'S100'. Test ROM `DWM-S100-gates-test-v2.gbc`
-> (patched, md5 `d29e34b2…`; the first demo `398b1b5c…` is historical — it hid
-> its switch in an invisible examine spot, user-rejected → Iron Rule 7): Gate
-> of Villager — floor 2 always the REST STOP (island; a guide NPC says so, asks
-> "Unlock the VAULT below?" — YES sets `demo_vault`; saving allowed, gate
-> music), then THE VAULT (night palette, a sign NPC; no saving, own song,
-> Villager battles) once per dive after the YES: 50 % on floor 3, else 50 % on
-> floor 4 (PyBoy, 24 dives: 11 on 3, 8 of the other 13 on 4, never both). PyBoy on the user's .sav: real gate entry (the pedestal
-> exit's bytes) → floor 2 served at (4,6) → lever YES → the real stairs → vault
-> on floor 3, JOURNAL refused, song $A1, a pool-2 battle. **Caveat (user
-> 14:39):** v2 still REUSES rooms — the rest stop is `gate_rotation` (the
-> room the user already knew from the overworld) and "THE VAULT" is an
-> island copy whose name clashes with the project's own medal vault room;
-> the next demo uses brand-new rooms (Iron Rule 7). The user's "merchant" was
-> the VANILLA merchant special room ($50/$51 family, floor 3), not a clone.
->
-> **S100 r3 (user 15:11, three points; built, NOT yet user-tested).** Pin
-> `91202c74…` → **`7cd7257b…` (patched)**; test_compiler --rom 126/126,
-> test_app --rom PASS, verifier PASS. (1) *"Going into 'step down' from custom
-> well — background is not CREAM but room-tile coloured"*: the descent
-> transition (bank $06 `MapTransitionMachine` states $10-$17) blanks with tile
-> $E0 (colour 1) under the room's attrs and then fades every colour to the
-> palette BUFFER's colour 1 — both cream only because vanilla forces colour 1;
-> rooms with own colour 1 (the Import tab default) showed their own colour.
-> Fix: `MapTrans_S10_InGate` + `MapTrans_S12` same-size rewrites far-call bank
-> $73 **entry 19 `GateWipeAttr`** (the 20×14 blank rows → attr 7) and **entry
-> 20 `GateLeaveFreePal`** (once the room is squeezed to a line: buffer + HW
-> colour 1 := cream). PyBoy (brand-new imported room, before/after): own
-> colour around the shrinking room + own-colour blocks for ~2 s of loading →
-> cream, room keeps its colours while shrinking; vanilla $50 pit: same
-> pictures (single-scanline timing jitter only). (2) *"I can't seem to import
-> the next gate floor icon from anywhere … by default it should always be
-> displayed as the 'next floor down'"*: "Stairs down here" now PAINTS the
-> vanilla well ($51 Priest room slots $2C-$2F, its plain surround replaced by
-> the floor already on the cell) and adds it to the room's metatiles
-> (`gates.WELL_*`, `Document.paint_well`). (3) *"separate the gate stuff from
-> 'room/screen/selection' with its own arrow button … needs to be scrolled
-> both down and to the right"*: own foldable section "Inside gates (gate
-> floor)"; the sideways scroll was the animation combo (~1,400 px — one item
-> is a 130-char sentence): every inspector combo now sizes to a short minimum
-> (`inspector.narrow_combo`), popups keep full texts. **Found on the way —
-> compressor bug:** `tools/compress_tiles.py` allowed copies of 257-274
-> bytes, but the game adds the 19 in 8 bits → those wrap and the rest of the
-> sheet lands 256 B early (a blank imported sheet drew as flat colour blocks).
-> MAX_COPY = 256; `decompress_tiles.py` now decodes 8-bit like the game (the
-> example sheet re-encodes — its old stream happened to decode right). Test
-> ROM **`DWM-S100-r3-crystal-well-test.gbc`** (patched, md5 `5295a028…`):
-> brand-new "Crystal Well Room" (imported purple floor / teal walls / pink
-> crystals, own colour 1, a sign NPC that says what it is) on Villager floor
-> 2, 100 %, once per dive; step into the well → cream wipe → floor 3.
->
-> **Engine (GATE_GENERATION §7.6; PROJECT_COMPILER §2.16):** bank $16
-> `GateDecisionFork` rewritten — the S41 hard-coded gate-1 → $6D branch and
-> `CustomGate1Setup` removed; after the anchor check it calls **bank $71 entry
-> 4 `CustomGateInsert`** (push/pop BC around the far call); the generated
-> `GateInsertTable` is walked in list order, a rule rolls `RNG16 mod 100` only
-> after its gate / floor / once bit / flag terms hold, so a gate without rules
-> draws no RNG (A/B vs S99 on the Gate of Reflection: 18 decisions identical);
-> a hit writes `wMapID`, `wInGateworld = 0`, the spawn pixels (the vanilla
-> special handler's contract). **Once per dive**: `wGateDiveGate/Mask`
-> ($DEBC-$DEBD) reset on floor 0 / another gate, saved via SRAM `$BFCA/$BFCB`
-> in bank $73 entries 5/6 (PyBoy: save in the room → reload → not served
-> again). **Saving**: bank $07 `SaveAllowCheck` same-size rewrite (vanilla
-> verdict identical over all 256 mapIDs — byte interpretation of original /
-> S99 / S100) + entry 5 `CustomRoomFlags` (`can_save`). **Battles**: entry 1
-> gate byte $FF = follow the dive (pinned pools refused for gate rooms — they
-> would re-route the dive). **Music**: no change needed — an unassigned custom
-> room takes the gate path ($34; the boss theme on the floor BEFORE the boss
-> floor, exactly like a maze floor — measured). Template 164 → 395 B,
-> re-pinned. Bug caught before delivery: entry 4 returned a stale E at the
-> table end (every floor load hung) — KEY_LESSONS S100.
->
-> **Measured / corrected (DOC_AUDIT S100; Iron Rule 6 annotation same
-> session):** vanilla special rooms appear only on floors 3, 6, 9 … (~50 %) —
-> `Div8x8` divides B = `wCurrentFloor`, not an RNG value (GATE_GENERATION §3
-> was wrong since S37); the game's floor N = `wCurrentFloor` N−1 and
-> `last_floor` = the FAQ's floor count for all 32 gates; **gate names**:
-> `extracted/gate_names.json` was one gate late for 23-31 (its tool read the
-> boss redirect table as gate-indexed) and `gate_reference.py` had 12-17 in
-> FAQ order — `map_gate_names.py` rewritten on `GateFloorDataTable` (floors +
-> boss map, FAQ-checked), bank $01 comments fixed; **`SkillLearnReqTable` is
-> 218 rows** — $06:$6034 is bank $06 entry 6 `FieldStateDispatch` (the S51
-> re-section had swallowed it as rows $DA-$DD), re-sectioned back to code +
-> `MapTransitionMachine` / 24-entry `MapTransStateTable` (the $C905 "gate-like"
-> state = the transition STYLE of the room being left); SOUND_SYSTEM's boss-
-> music floor was off by one; PROJECT_COMPILER §2.7's 32-flag pool stale (16).
->
-> **Editor (EDITOR_DESIGN §5.1b "As built S100"):** **Gates tab** — the 32
-> gates (ROM names, floor counts, ★ rules), rules table (Add / Edit / Remove /
-> ▲▼ / Open room; readiness per room), **Floor plan** (per floor: each custom
-> room's chance of being served, then the vanilla remainder / special-room
-> floors / boss); rule dialog (room, floors 2..N−1 or any, chance, once per
-> dive, flag conditions + new named flag). **Rooms tab** — inspector group
-> "Inside gates" (served in, arrival Selected cell / Clear, stairs count,
-> saving, battles off / follow the gate, music gate's / song, readiness,
-> Gates tab…), Selection → More ▾ → "Stairs down here", canvas S↓ / G markers
-> (draggable). Residuals: ROADMAP P3.7b part 1.
-
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S100** (2026-09-27): P3.7b part 1 — custom rooms served on gate floors (rules: gate / floors / chance / flag terms / once per dive; `GateDecisionFork` → bank $71 entry 4; saving via entry 5 + bank $07 `SaveAllowCheck`; gate-room music / battles), Gates tab v1, r3 cream descent wipe (bank $73 entries 19/20) + compressor MAX_COPY fix; special rooms only on floors 3/6/9 (DOC_AUDIT S100); pins `d072eb51…` → `7cd7257b…` (patched, historical). User-passed at S101 start. Owning: GATE_GENERATION §7.6, PROJECT_COMPILER §2.16, EDITOR_DESIGN §5.1b, KEY_LESSONS S100, DOC_AUDIT S100.
 - **S99** (2026-09-27): P3.3e animated tiles — measured animation census, per-room animation source (bank $71 entry 3 + bank $01 PerRoomVRAMDispatch same-size rewrite), canvas outline + ▶ Play, clones = source; Make animated tab (r3-r7) + stray repair / Make still; pin `ce24de8b…` → `d072eb51…` (patched, historical). Signed off 2026-09-27 (r7 not re-tested in-game). Owning: PROJECT_COMPILER, EDITOR_DESIGN §5.1, TOOLS_AND_DATA (census_room_animation), KEY_LESSONS S99.
 - **S98** (2026-09-26): rooms group C = P3.7 — door OBJECTS linked two-way (+ Door, double-click to connect, arrive ON the door), one-way teleports, EXAMINE spots ($80-$83/$8F — the "$8F spawn" misnomer retired) + STEP-ON triggers ($90), talk scripts (YES/NO, set/clear flags, move), World graph v0; tileset tools (own copies, split move, purge); pin unchanged `ce24de8b…` (patched, historical). Doors USER-CONFIRMED 2026-09-26. Owning: PROJECT_COMPILER §2.14, ROOM_DATA_FORMAT "Interact entries ≥$80" + "Arrival and edge rules", EDITOR_DESIGN §5.1 S98, DOC_AUDIT S98.
 - **S97** (2026-09-25): rooms group B — P3.5a flag state rules (bank $60 entry 8 + bank $17 hook) + P3.5 NPC inspector with the NPC behaviour engine decoded (13 measured behaviours, hidden bit); r2: cream text / YES-NO boxes in free-colour rooms (bank $73 entries 14-18), per-box talk editor; pins `6e97fd37…` → `ce24de8b…` (patched, historical). USER-CONFIRMED 2026-09-26. Owning: PROJECT_COMPILER §2.13, ROOM_DATA_FORMAT "NPC behaviour types", TEXT_SYSTEM "Text boxes", EDITOR_DESIGN §5.1 S97, KEY_LESSONS S97, DOC_AUDIT S97.
@@ -382,7 +354,7 @@
 | Gate damage tiles | Standing-tile id → HRAM `$AA` (`$00:$1E96`); behavior class `$AA>>2`: `$0E` (ids `$38–$3B`) = damage, `$0F` (`$3C–$3F`) = staircase. Amount = `FloorDamageTable` `$01:$5E7D` (16 B by floor type): type 3→5, type 6→10, types $0C/$0E→2, else 0. Applier `ApplyFloorDamage` `$01:$5E23`. (GATE_GENERATION.md §5.1.) |
 | Room palette derivation | A room's runtime BG palette is ROM-derivable: real colours are only indices 0 & 2 of slots 0–3 (`$17:$476F`[mapID] normal / `$17:$51F5`[floortype] gate, scanning past empty screens); engine FORCES idx1=`$6bff`, idx3=`$0000` in every BG palette; slots 4–7 shared system; object palettes global at `$17:$5615`. `tools/derive_room_palette.py`, validated 30/30 dumps + gate. (GATE_GENERATION.md §7.1.) |
 | Script opcodes | **102** (`$00-$65`, rst $00 table after MarkScriptActive `$04:$5613`); arity + branch kind per opcode from the HANDLER code: `extracted/script_param_counts.json` (`tools/script_param_counts.py`, verify check 5). Script data bank by map type: <$06 `$0C`, <$20 `$0D`, <$40 `$0E`, else `$0F` (master table `$41BA` in each). decompile_script's old PARAM_COUNTS is wrong for 36 opcodes (DOC_AUDIT S96). |
-| Room tile animation | bank $01 `PerRoomVRAMDispatch` $60E7 → `rst $00` table `$01:$6119`, **112** entries ($00-$6F), per field frame; clock `$C8A6/$C8A7`; the ONLY BG tile animation (none in gates). Custom rooms: bank $71 entry 3 `CustomAnimSource` (S99). Census `extracted/room_animations.json`; ROOM_DATA_FORMAT "Animated tiles". |
+| Room tile animation | bank $01 `PerRoomVRAMDispatch` $60E7 → `rst $00` table `$01:$6119`, **112** entries ($00-$6F), per field frame; clock `$C8A6/$C8A7`; the ONLY BG tile animation (none in gates). Custom rooms: bank $71 entry 3 `CustomAnimSource` (S99), which first runs bank $6C `CustomTileAnimate` — the room's OWN animations (S102, `tile_anims`, GDMA frame copies, any slot / speed). Census `extracted/room_animations.json`; ROOM_DATA_FORMAT "Animated tiles". |
 | Verifier | `python3 tools/verify_integrity.py` — run at session start AND end |
 
 **The MD5 `b90957482011c8083a068781033715b7` is WRONG.** It was a drifted
@@ -403,13 +375,14 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | $69 | Breeding special table + scanner (B5 owns the whole table) | `build_breeding.py --emit-special` |
 | $6A | New-species info high table (ids 224+) | `build_new_species.py` |
 | $6B | Project enemy rows (`progression.enemies[]`, EID 519 + index, 25 B each, ≤640; entry 0 `CopyEnemyRowExt` called by bank $14 `LoadEnemyStatsExt`; S101) | compiler-generated `patches/bank_06b.asm` (template `bank_06b_head.asm` + rows) |
-| $71 | Custom-room dispatch tables (S42 keystone: `Custom26DDTable`, `RoomEncTable`; + `CustomRoomBGMTable` + resolver entry 2, S64; `CustomAnimSrcTable` + entry 3, S99; `GateInsertTable` + entry 4 `CustomGateInsert`, `CustomRoomFlagsTable` + entry 5, S100) | compiler-generated `patches/bank_071.asm` (template head + tables; S63 `--apply` route) |
+| $6C | Own tile animations (`custom.rooms[].tile_anims`: `CustomTileAnimate` entry 0 + `TileAnimRoomTable`, group records, 16-aligned frame blocks; S102) | compiler-generated `patches/bank_06c.asm` (template `bank_06c_head.asm` + data; `tileanim6c`) |
+| $71 | Custom-room dispatch tables (S42 keystone: `Custom26DDTable`, `RoomEncTable`; + `CustomRoomBGMTable` + resolver entry 2, S64; `CustomAnimSrcTable` + entry 3, S99 — S102: entry 3 far-calls bank $6C first; `GateInsertTable` + entry 4 `CustomGateInsert`, `CustomRoomFlagsTable` + entry 5, S100) | compiler-generated `patches/bank_071.asm` (template head + tables; S63 `--apply` route) |
 | $72 | Custom-skill system (de-aliased S2d/S2e code + tables) | hand-authored `patches/bank_072.asm` |
 | $73 | Cold Farm systems (CF2 drain, entry 0; CF3 party-first sort, entry 1) | hand-authored `patches/bank_073.asm` |
 | $74 | Custom song bank (M3a: records $4001-$417C fixed 95-slot, streams $4180+; resolved by AudioMasterTableExt row $9E) | compiler-generated `patches/bank_074.asm` (`music74` emitter → `song_codec.song_bank_asm` ← project.json `custom.music` + `extracted/*_song_library.json`; S64 — `custom_songs.json` retired) |
 | $7E | Sprite overflow streams (battle + follower art) | `dwm/sprite_bank.py`, `bake_follower_overflow.py` |
 | $7F | RESERVED next sprite-overflow bank (then $7C, $7A, $79) | `dwm/sprite_bank.py` order |
-| **Unallocated** | **$6B–$70, $75–$77, $79–$7A, $7C** (11 banks = 176 KB) + reserved $7F | — |
+| **Unallocated** | **$6D–$70, $75–$77, $79–$7A, $7C** (9 banks = 144 KB; $75 is the documented next song bank) + reserved $7F. (S102 correction: this row still listed $6B, patch-owned since S101.) | — |
 
 ## Iron Rules
 
@@ -472,6 +445,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | NPC talk text as boxes (2 lines, waits per box) + text boxes cream in free-colour rooms | ✅ built S97 r2, USER-CONFIRMED 2026-09-26 | `boxes` dialogue form (TEXT_SYSTEM "Text boxes"); bank $73 entries 14-18 + same-size calls in banks $00/$06/$56 |
 | Doors (two-way, auto return + measured arrival), one-way teleports, examine spots ($8x) + step-on triggers ($90), talk scripts that set/clear flags + YES/NO + move | 🟢 built S98; doors USER-CONFIRMED 2026-09-26 (user project, both ways, on-door arrival); talk / flags / spots in game NOT yet user-tested (PyBoy test_canvas v5) | `door` ids on exit/redirect rows, `talk` scripts; PROJECT_COMPILER §2.14; ROOM_DATA_FORMAT "Interact entries ≥$80" + "Arrival and edge rules" |
 | Room tile animation (vanilla census + per-custom-room source) | 🟢 built S99 (signed off 2026-09-27; borrowed water user-seen moving in r2; r3-r7 editor-only): 112-entry bank-$01 dispatch measured (65 handlers, 33 animated maps); custom rooms pick `none` / `source` / borrow via bank $71 entry 3; editor outline + ▶ Play preview + inspector choice; **Make animated** tab (slide / two-frame flip, paint pads with per-quarter tools, still quarters keep their slot, take-over of a full animation, automatic wall/walkable split move, per-room count), stray-animation repair on open, Make still | ROOM_DATA_FORMAT "Animated tiles"; PROJECT_COMPILER §2.15; extracted/room_animations.json |
+| Own animated tiles (any slot; flip through drawn frames / drift / sway; any speed; plain budget) | 🟢 built S102 (P3.3f; r2 frames side by side, r3 per-tile / per-cell tools), signed off 2026-09-29 (in-game ROM test not separately reported); PyBoy + SameBoy frame-exact on the user's save | `custom.rooms[].tile_anims` → bank $6C; PROJECT_COMPILER §2.19; ROOM_DATA_FORMAT "Own tile animations (S102)"; EDITOR_DESIGN §5.1 "As built S102" |
 | Custom rooms on gate floors (rules: gate, floors, chance %, flag conditions, once per dive; room: arrival, Stairs down, saving, battles following the gate, gate/own music) | 🟢 built S100 (P3.7b part 1); user-passed S101 session start | GATE_GENERATION §7.6; PROJECT_COMPILER §2.16; EDITOR_DESIGN §5.1b; bank $71 entries 4/5, bank $16 GateDecisionFork, bank $07 SaveAllowCheck |
 | Custom boss floors (custom.gates: floor count, boss = custom room / vanilla boss room, hand-made gates), monster NPCs ($F0-$F3), conversation trees (talk.steps: flags, YES/NO, 1-3 enemy battles, helper exit, arrival fights), project enemies (bank $6B) + join versions | 🟢 built S101 (P3.7b part 2, first half), USER-CONFIRMED 2026-09-27 except the helper; r2 (Warubou, lands left of the player facing them) built, NOT yet user-tested | GATE_GENERATION §7.7; PROJECT_COMPILER §2.17/§2.18; ROOM_DATA_FORMAT "Monster NPCs"; MONSTER_DATA "Project enemy rows"; EDITOR_DESIGN §5.1b |
 | LZSS tile compressor | ✅ working | tools/compress_tiles.py, roundtrip verified |

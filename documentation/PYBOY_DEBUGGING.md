@@ -189,3 +189,33 @@ edge and the battle waits for input forever.
   flat colour blocks while the tilemap matched the layout: the sheet sat 256 B
   low in `$9000-$97FF` (LZSS over-long copy). Compare `$9000 + 16*i` with the
   project sheet slot by slot.
+
+## S102 techniques — frame-exact VRAM checks, cost per call, SameBoy cross-check
+
+- **Every frame, every animated slot.** For a room's own animations the
+  check is: after each `tick()`, the 16 bytes at `$9000+16*slot` (VRAM bank
+  0) must equal ONE of that slot's authored frames (built with
+  `editor2/core/tileanim.groups`); record the step sequence and the gaps
+  between changes (= the speed; longer gaps = the dispatch guards paused it,
+  e.g. the status bar popping up). Leaving to a vanilla room and warping back
+  must keep the count of bad frames at 0 (the sheet reloads; the next step
+  heals).
+- **Cost of a routine in scanlines.** Hook its entry and its exit (e.g.
+  `$6C:$4003` and `CustomTileAnimate.done`), record `(frame, LY)` at both,
+  cost = frame delta × 154 + LY delta. Hooking `PerRoomVRAMDispatch` and
+  `IncrementVisualStep` ($01:$4EAA) gives the whole animation dispatch; a
+  frame with no MainFieldLoop pass (no exit hook fired) = a dropped frame.
+- **PyBoy blocks VRAM writes in mode 3 — GDMA included** (measured S102: a
+  build with the HBlank wait removed showed 581 bad tile-frames). Still, for
+  anything timing-critical cross-check in SameBoy:
+  `tools/sameboy_anim_check.py --project P --map 6C --x 5 --y 6 --sav S`
+  (SameBoy core + `tools/sameboy/dwmcheck.c`; setup in the tool's
+  docstring). Same boot / CONTINUE / warp mailbox as `pyboy_harness`.
+- **Negative control.** Before trusting a "0 mismatches", run the same check
+  on a deliberately broken ROM (patch one `jr` to `nop nop`) and see it fail.
+- **Trap — building SameBoy's core into your own harness**: compile it with
+  the SAME defines as the core objects (`-std=gnu11 -D_GNU_SOURCE`, no
+  `-DGB_DISABLE_DEBUGGER` unless the core had it) or `GB_gameboy_t`'s layout
+  differs and it crashes in `GB_timing_sync` (SIGFPE); call
+  `GB_set_turbo_mode(gb, true, true)`.
+

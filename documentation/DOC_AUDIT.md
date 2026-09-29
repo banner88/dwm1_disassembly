@@ -311,3 +311,13 @@ gate you assumed".
 | MONSTER_DATA "Boss Join System": story bosses "join through the natural probability path" | IMPRECISE | Tier 0 skips the roll (`LoadB54_5683`) — always joins when it is the candidate; the candidate is the enemy KO'd last (`$DD61`). |
 | bank_00b.asm `Call_00b_4839` (unannotated) / ROOM_DATA_FORMAT S91 "ids $F0+ alias $00" | INCOMPLETE | Sprite ids $E1-$E3 = party slot monsters, $F0-$F3 = the display list at `$D7CA` (any species as its follower); aliasing to $00 happens only while the list is empty. |
 | Summary "helper = Warubou" (user wording S101) vs ROM | NOTE | The vanilla boss-exit helper is NPC sprite $21 and its text box is labelled "Watabou:" (FAQ agrees); sprite $14 (intro) may be Warubou — unconfirmed. The helper step lets the author pick sprite and text. |
+
+## S102 addendum (2026-09-28; own animated tiles, ROADMAP P3.3f)
+
+| Claim (where) | Verdict | Correction |
+|---|---|---|
+| ROADMAP P3.3e / EDITOR_DESIGN S99: "Limits that stay (engine): one animation per room, 2-16 slots per animation, fixed rhythms" | SUPERSEDED S102 | Bank $6C `CustomTileAnimate` (called by bank $71 entry 3 before the vanilla handler) animates any slot at any speed from authored frames; the vanilla source still runs next to it (PROJECT_COMPILER §2.19). |
+| PROJECT_STATE "Bank allocation": Unallocated "$6B–$70 … (11 banks)" | STALE since S101 | $6B = project enemy rows (S101), $6C = own tile animations (S102); unallocated $6D–$70, $75–$77, $79–$7A, $7C (9 banks). |
+| disassembly bank_000 `LCDCInterruptHandler`: `ld b, b` / `LCDCHandlerBody: cpl` / `MenuClearContents: ld a, [$082e] …` after the `rst $00` | WRONG (data decoded as code) | A 4-entry dw table (`LCDCStateTable`: $2F40 nothing, $2EFA hide sprites below the LYC line, $2F08 / $2F24 per-line SCX / SCY waves); the field runs state 1 at LYC 127 (PyBoy S102). Re-sectioned as bytes (labels kept — bank $34 data-as-code references `LCDCHandlerBody`); clean build byte-perfect. |
+| (session-internal, S102) "PyBoy does not block VRAM writes during mode 3, so it cannot test DMA timing" | WRONG (measured) | With the HBlank wait removed, PyBoy showed 581 bad tile-frames and SameBoy 631: both block mode-3 VRAM writes, GDMA included (PYBOY_DEBUGGING "S102"). |
+| every `rHDMA1-5` operand in disassembly banks $04/$05/$09/$10/$15/$33/$3A/$4B/$5B/$5D | DATA DECODED AS CODE | The game never uses HDMA/GDMA (jump tables and graphics bytes read as `ldh [$ff5x]`); bank $6C is the first user (ROOM_DATA_FORMAT "Own tile animations (S102)"). |

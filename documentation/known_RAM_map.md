@@ -184,7 +184,11 @@
                  $D0A6 / wChoiceAttrSave $D0A7-$D0C4 (S97 r2: GBC attrs under
                  the dialog / YES-NO box in free-colour custom rooms, bank
                  $73 entries 14-18) /
-                 wCustomPool $D0C5-$D5E4 (transient reserve) /
+                 [S102] wTileAnimRoom $D0C5 / wTileAnimLeft $D0C6 /
+                 wTileAnimVBK $D0C7 / wTileAnimSrc $D0C8-$D0C9 /
+                 wTileAnimState $D0CA-$D109 (32 groups x timer, step) — the
+                 bank $6C own-tile-animation state (PROJECT_COMPILER §2.19) /
+                 wCustomPool $D10A-$D5E4 (transient reserve) /
                  wPoolBounce $D5E5-$D664 (128 B, FX1: sleep-pool swap
                  scratch; the v1 drain halved-pending use died with the
                  S71v2 exp-scale veto).

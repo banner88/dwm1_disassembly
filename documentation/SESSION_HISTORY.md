@@ -1,5 +1,122 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-09-27 (Session 100 — **ROADMAP P3.7b PART 1: CUSTOM
+> ROOMS SERVED ON GATE FLOORS — data-driven rules (gate, floors, chance, flag
+> conditions, once per dive), gate-room settings (arrival, Stairs down,
+> saving, battles that follow the gate, gate or own music), Gates tab v1**
+> (user: "we cant insert them into gates and trigger upon floor, or floor +
+> flag, or assign % chance"; answers: gate rooms are mostly special-function /
+> boss rooms without battles; "at most once per dive is useful"; "CANNOT save
+> in random floors, ALWAYS CAN in special rooms inside gates. CANNOT save in
+> boss rooms. I want that mechanic replicated"; floor 1 not needed; music
+> "option for BOTH"; part 2 later "but give a sense of how much work" — ≈3-4
+> sessions, ROADMAP; example "floors 2-3, 50%"). S99 not re-confirmed this
+> session. **Built S100, NOT yet user-tested.** Verifier PASS 6/6 (check 5 now
+> also runs `map_gate_names.py --check`); clean `1ca6579…` byte-perfect (banks
+> $01/$06/$07/$16 labels, comments, re-sections — both trees); **patched pin
+> MOVED `d072eb51…` → `4f13d2af…` → `91202c74…` (patched; S100 r2: the example
+> gate rule gains `once_per_dive` — user 14:39 saw `gate_rotation` on floor 2
+> AND floor 3 of one dive; PyBoy 40 dives: floor 2 19x, floor 3 12x, never
+> both; new rules in the Gates tab now start as once per dive)**; test_compiler --rom 124/124;
+> test_app --rom PASS (GUI build == pin); test_canvas --rom PASS incl. the new
+> v7. `EDITOR_REVISION` = 'S100'. Test ROM `DWM-S100-gates-test-v2.gbc`
+> (patched, md5 `d29e34b2…`; the first demo `398b1b5c…` is historical — it hid
+> its switch in an invisible examine spot, user-rejected → Iron Rule 7): Gate
+> of Villager — floor 2 always the REST STOP (island; a guide NPC says so, asks
+> "Unlock the VAULT below?" — YES sets `demo_vault`; saving allowed, gate
+> music), then THE VAULT (night palette, a sign NPC; no saving, own song,
+> Villager battles) once per dive after the YES: 50 % on floor 3, else 50 % on
+> floor 4 (PyBoy, 24 dives: 11 on 3, 8 of the other 13 on 4, never both). PyBoy on the user's .sav: real gate entry (the pedestal
+> exit's bytes) → floor 2 served at (4,6) → lever YES → the real stairs → vault
+> on floor 3, JOURNAL refused, song $A1, a pool-2 battle. **Caveat (user
+> 14:39):** v2 still REUSES rooms — the rest stop is `gate_rotation` (the
+> room the user already knew from the overworld) and "THE VAULT" is an
+> island copy whose name clashes with the project's own medal vault room;
+> the next demo uses brand-new rooms (Iron Rule 7). The user's "merchant" was
+> the VANILLA merchant special room ($50/$51 family, floor 3), not a clone.
+>
+> **S100 r3 (user 15:11, three points; built, NOT yet user-tested).** Pin
+> `91202c74…` → **`7cd7257b…` (patched)**; test_compiler --rom 126/126,
+> test_app --rom PASS, verifier PASS. (1) *"Going into 'step down' from custom
+> well — background is not CREAM but room-tile coloured"*: the descent
+> transition (bank $06 `MapTransitionMachine` states $10-$17) blanks with tile
+> $E0 (colour 1) under the room's attrs and then fades every colour to the
+> palette BUFFER's colour 1 — both cream only because vanilla forces colour 1;
+> rooms with own colour 1 (the Import tab default) showed their own colour.
+> Fix: `MapTrans_S10_InGate` + `MapTrans_S12` same-size rewrites far-call bank
+> $73 **entry 19 `GateWipeAttr`** (the 20×14 blank rows → attr 7) and **entry
+> 20 `GateLeaveFreePal`** (once the room is squeezed to a line: buffer + HW
+> colour 1 := cream). PyBoy (brand-new imported room, before/after): own
+> colour around the shrinking room + own-colour blocks for ~2 s of loading →
+> cream, room keeps its colours while shrinking; vanilla $50 pit: same
+> pictures (single-scanline timing jitter only). (2) *"I can't seem to import
+> the next gate floor icon from anywhere … by default it should always be
+> displayed as the 'next floor down'"*: "Stairs down here" now PAINTS the
+> vanilla well ($51 Priest room slots $2C-$2F, its plain surround replaced by
+> the floor already on the cell) and adds it to the room's metatiles
+> (`gates.WELL_*`, `Document.paint_well`). (3) *"separate the gate stuff from
+> 'room/screen/selection' with its own arrow button … needs to be scrolled
+> both down and to the right"*: own foldable section "Inside gates (gate
+> floor)"; the sideways scroll was the animation combo (~1,400 px — one item
+> is a 130-char sentence): every inspector combo now sizes to a short minimum
+> (`inspector.narrow_combo`), popups keep full texts. **Found on the way —
+> compressor bug:** `tools/compress_tiles.py` allowed copies of 257-274
+> bytes, but the game adds the 19 in 8 bits → those wrap and the rest of the
+> sheet lands 256 B early (a blank imported sheet drew as flat colour blocks).
+> MAX_COPY = 256; `decompress_tiles.py` now decodes 8-bit like the game (the
+> example sheet re-encodes — its old stream happened to decode right). Test
+> ROM **`DWM-S100-r3-crystal-well-test.gbc`** (patched, md5 `5295a028…`):
+> brand-new "Crystal Well Room" (imported purple floor / teal walls / pink
+> crystals, own colour 1, a sign NPC that says what it is) on Villager floor
+> 2, 100 %, once per dive; step into the well → cream wipe → floor 3.
+>
+> **Engine (GATE_GENERATION §7.6; PROJECT_COMPILER §2.16):** bank $16
+> `GateDecisionFork` rewritten — the S41 hard-coded gate-1 → $6D branch and
+> `CustomGate1Setup` removed; after the anchor check it calls **bank $71 entry
+> 4 `CustomGateInsert`** (push/pop BC around the far call); the generated
+> `GateInsertTable` is walked in list order, a rule rolls `RNG16 mod 100` only
+> after its gate / floor / once bit / flag terms hold, so a gate without rules
+> draws no RNG (A/B vs S99 on the Gate of Reflection: 18 decisions identical);
+> a hit writes `wMapID`, `wInGateworld = 0`, the spawn pixels (the vanilla
+> special handler's contract). **Once per dive**: `wGateDiveGate/Mask`
+> ($DEBC-$DEBD) reset on floor 0 / another gate, saved via SRAM `$BFCA/$BFCB`
+> in bank $73 entries 5/6 (PyBoy: save in the room → reload → not served
+> again). **Saving**: bank $07 `SaveAllowCheck` same-size rewrite (vanilla
+> verdict identical over all 256 mapIDs — byte interpretation of original /
+> S99 / S100) + entry 5 `CustomRoomFlags` (`can_save`). **Battles**: entry 1
+> gate byte $FF = follow the dive (pinned pools refused for gate rooms — they
+> would re-route the dive). **Music**: no change needed — an unassigned custom
+> room takes the gate path ($34; the boss theme on the floor BEFORE the boss
+> floor, exactly like a maze floor — measured). Template 164 → 395 B,
+> re-pinned. Bug caught before delivery: entry 4 returned a stale E at the
+> table end (every floor load hung) — KEY_LESSONS S100.
+>
+> **Measured / corrected (DOC_AUDIT S100; Iron Rule 6 annotation same
+> session):** vanilla special rooms appear only on floors 3, 6, 9 … (~50 %) —
+> `Div8x8` divides B = `wCurrentFloor`, not an RNG value (GATE_GENERATION §3
+> was wrong since S37); the game's floor N = `wCurrentFloor` N−1 and
+> `last_floor` = the FAQ's floor count for all 32 gates; **gate names**:
+> `extracted/gate_names.json` was one gate late for 23-31 (its tool read the
+> boss redirect table as gate-indexed) and `gate_reference.py` had 12-17 in
+> FAQ order — `map_gate_names.py` rewritten on `GateFloorDataTable` (floors +
+> boss map, FAQ-checked), bank $01 comments fixed; **`SkillLearnReqTable` is
+> 218 rows** — $06:$6034 is bank $06 entry 6 `FieldStateDispatch` (the S51
+> re-section had swallowed it as rows $DA-$DD), re-sectioned back to code +
+> `MapTransitionMachine` / 24-entry `MapTransStateTable` (the $C905 "gate-like"
+> state = the transition STYLE of the room being left); SOUND_SYSTEM's boss-
+> music floor was off by one; PROJECT_COMPILER §2.7's 32-flag pool stale (16).
+>
+> **Editor (EDITOR_DESIGN §5.1b "As built S100"):** **Gates tab** — the 32
+> gates (ROM names, floor counts, ★ rules), rules table (Add / Edit / Remove /
+> ▲▼ / Open room; readiness per room), **Floor plan** (per floor: each custom
+> room's chance of being served, then the vanilla remainder / special-room
+> floors / boss); rule dialog (room, floors 2..N−1 or any, chance, once per
+> dive, flag conditions + new named flag). **Rooms tab** — inspector group
+> "Inside gates" (served in, arrival Selected cell / Clear, stairs count,
+> saving, battles off / follow the gate, music gate's / song, readiness,
+> Gates tab…), Selection → More ▾ → "Stairs down here", canvas S↓ / G markers
+> (draggable). Residuals: ROADMAP P3.7b part 1.
+
 > Last verified: 2026-09-27 (Session 99 — **ROADMAP P3.3e ANIMATED TILES:
 > the room tile-animation system measured end to end, made per-room for
 > custom rooms, and surfaced in the editor** (user: "Animated tiles next";

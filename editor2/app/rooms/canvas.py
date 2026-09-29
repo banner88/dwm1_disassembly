@@ -253,6 +253,7 @@ class RoomCanvas(QGraphicsView):
     markerMoveRequested = Signal(object, int, int)   # S97: marker ref, new cell
     markerActivated = Signal(object)          # S98 r2: double-click on a marker
     cellActivated = Signal(object)            # S99 r3: double-click on a plain cell
+    cellsSelected = Signal(object)            # S102: (c0, r0, c1, r1) drag / Shift+click
 
     TOOLS = ('select', 'paint', 'rect', 'fill', 'pick', 'walk')
 
@@ -272,7 +273,9 @@ class RoomCanvas(QGraphicsView):
         # handler runs (vanilla: the room itself; custom: its `animation`)
         self.anim_mid = None
         self.anim_slots = set()
+        self.own_slots = set()            # S102: slots of the room's own tile_anims
         self._player = None               # animation.Player while previewing
+        self._tplayer = None              # S102: tileanim.Player (own animations)
         self._anim_timer = QTimer(self)
         self._anim_timer.setInterval(15)
         self._anim_timer.timeout.connect(self._anim_tick)
@@ -296,6 +299,8 @@ class RoomCanvas(QGraphicsView):
         self._space = False
         self.highlight = None        # S96 slot map: tile index to outline
         self._drag = None            # S97: [marker ref, start cell, current cell]
+        self.sel_rect = None         # S102: (c0, r0, c1, r1) selected cells
+        self._sel_drag = None        # S102: anchor cell of a selection drag
 
         self.scene_ = QGraphicsScene(self)
         self.setScene(self.scene_)
@@ -352,12 +357,14 @@ class RoomCanvas(QGraphicsView):
         self.source = ('custom', room_id)
         self.key, self.state_idx = int(key), int(state_idx)
         self.selected_marker = self.selected_cell = None
+        self.sel_rect = None
         self.reload()
 
     def show_vanilla(self, mid, key, state_idx=0):
         self.source = ('vanilla', int(mid))
         self.key, self.state_idx = int(key), int(state_idx)
         self.selected_marker = self.selected_cell = None
+        self.sel_rect = None
         self.reload()
 
     def clear(self):
@@ -553,9 +560,21 @@ class RoomCanvas(QGraphicsView):
             self.anim_mid = self.s.doc.room_animation(self.room)['map']
         else:
             self.anim_mid = None
-        self.anim_slots = ANIM.slots(self.anim_mid)
+        self.own_slots = (self.s.doc.own_anim_slots(self.room)
+                          if self.room is not None and not self.is_vanilla() else set())
+        self.anim_slots = ANIM.slots(self.anim_mid) | self.own_slots
         if self._player is not None:
-            self._player = ANIM.Player(self.anim_mid, self.gfx.sheet)
+            self._start_players()
+
+    def _start_players(self):
+        self._player = ANIM.Player(self.anim_mid, self.gfx.sheet)
+        self._tplayer = None
+        if self.own_slots and self.room is not None:
+            try:
+                from editor2.core import tileanim as TA
+                self._tplayer = TA.Player(self.s.doc.tile_anims(self.room), self.gfx.sheet)
+            except Exception:
+                self._tplayer = None
 
     def anim_cells(self):
         """(col, row) of every 8x8 tile on this screen whose slot animates."""
@@ -571,13 +590,14 @@ class RoomCanvas(QGraphicsView):
         """Play the room's tile animation on the canvas at game speed
         (the census schedule, one step per field frame)."""
         if on and self.gfx is not None:
-            self._player = ANIM.Player(self.anim_mid, self.gfx.sheet)
+            self._start_players()
             self._anim_clock.start()
             self._anim_frames = 0
             self._anim_timer.start()
         else:
             self._anim_timer.stop()
             self._player = None
+            self._tplayer = None
             if self.tiles is not None:
                 self._render()
 
@@ -587,11 +607,20 @@ class RoomCanvas(QGraphicsView):
         want = int(self._anim_clock.elapsed() * ANIM.FPS / 1000.0)
         n = max(0, min(want - self._anim_frames, 64))
         self._anim_frames = want
-        if n and self._player.step(n):
+        a = n and self._player.step(n)
+        b = n and self._tplayer is not None and self._tplayer.step(n)
+        if a or b:
             self._render()
 
     def _render(self):
         sheet = bytes(self._player.sheet) if self._player is not None else self.gfx.sheet
+        if self._tplayer is not None:
+            # S102: the room's own animations write whole frames into their
+            # slots (disjoint from the vanilla handler's — validators)
+            sh = bytearray(sheet)
+            for s_ in self.own_slots:
+                sh[s_ * 16:s_ * 16 + 16] = self._tplayer.sheet[s_ * 16:s_ * 16 + 16]
+            sheet = bytes(sh)
         img = self.s.renderer.compose(sheet, self.tiles, self.attr, self.pals)
         self.base.setPixmap(QPixmap.fromImage(ImageQt.ImageQt(img)))
         self.viewport().update()
@@ -755,6 +784,17 @@ class RoomCanvas(QGraphicsView):
             painter.setPen(pen)
             painter.setBrush(Qt.NoBrush)
             painter.drawRect(QRectF(cx * CELL, cy * CELL, CELL, CELL).adjusted(0.5, 0.5, -0.5, -0.5))
+        if self.sel_rect and self.sel_rect[:2] != self.sel_rect[2:]:
+            c0, r0, c1, r1 = self.sel_rect
+            rr = QRectF(c0 * CELL, r0 * CELL, (c1 - c0 + 1) * CELL, (r1 - r0 + 1) * CELL)
+            for col, w, style in ((QColor(0, 0, 0, 200), 4, Qt.SolidLine), (SEL, 2, Qt.DashLine)):
+                pen = QPen(col)
+                pen.setCosmetic(True)
+                pen.setWidth(w)
+                pen.setStyle(style)
+                painter.setPen(pen)
+                painter.setBrush(QBrush(QColor(255, 230, 0, 40)) if w == 2 else Qt.NoBrush)
+                painter.drawRect(rr)
         if self._rect_anchor and self._rect_cur:
             x0, y0 = self._rect_anchor
             x1, y1 = self._rect_cur
@@ -963,8 +1003,18 @@ class RoomCanvas(QGraphicsView):
                 self.markerSelected.emit({'kind': m[0], 'x': m[1], 'y': m[2],
                                           'sprite': m[3], 'label': m[4], 'ref': m[5]})
             else:
+                # S102: drag (or Shift+click) selects a rectangle of cells
+                if cell is not None:
+                    anchor = cell
+                    if ev.modifiers() & Qt.ShiftModifier and self.sel_rect:
+                        anchor = self.sel_rect[:2]
+                        self.selected_cell = anchor
+                    self._sel_drag = anchor
+                    self._set_sel(anchor, cell)
+                else:
+                    self.sel_rect = None
                 self.markerSelected.emit(None)
-                self.cellSelected.emit(cell)
+                self.cellSelected.emit(self.selected_cell)
             return
         if self.tool == 'pick':
             self._pick(cell)
@@ -999,7 +1049,7 @@ class RoomCanvas(QGraphicsView):
                                        'sprite': m[3], 'label': m[4], 'ref': m[5]})
             return
         # S99 r3 (user: "Double clicking on the tile doesnt bring up any
-        # animation info"): a plain cell opens the Make animated tab on it
+        # animation info"): a plain cell opens the Animate tab on it (S102)
         cell = self._cell_at(ev.position().toPoint())
         if cell is not None:
             self.selected_marker = None
@@ -1026,6 +1076,9 @@ class RoomCanvas(QGraphicsView):
             self._drag[2] = cell
             self.viewport().update()
             return
+        if self._sel_drag is not None and ev.buttons() & Qt.LeftButton:
+            self._set_sel(self._sel_drag, cell)
+            return
         if self._stroke is not None and self.tool == 'paint':
             self._stroke_cell(cell)
         elif self._rect_anchor is not None:
@@ -1046,6 +1099,11 @@ class RoomCanvas(QGraphicsView):
             if cur and cur != start:
                 self.markerMoveRequested.emit(ref, cur[0], cur[1])
             return
+        if self._sel_drag is not None:
+            self._sel_drag = None
+            if self.sel_rect:
+                self.cellsSelected.emit(self.sel_rect)
+            return
         if self._stroke is not None and self.tool == 'paint':
             self._end_stroke('Paint')
         elif self._rect_anchor is not None:
@@ -1057,6 +1115,26 @@ class RoomCanvas(QGraphicsView):
                 for cx in range(min(x0, x1), max(x0, x1) + 1):
                     self._stroke_cell((cx, cy))
             self._end_stroke('Rectangle')
+
+    def _set_sel(self, a, b):
+        self.sel_rect = (min(a[0], b[0]), min(a[1], b[1]), max(a[0], b[0]), max(a[1], b[1]))
+        self.viewport().update()
+
+    def set_selection(self, rect):
+        """S102: select cells (c0, r0, c1, r1) from code (the Animate tab)."""
+        self.sel_rect = tuple(rect) if rect else None
+        self.selected_marker = None
+        self.selected_cell = tuple(rect[:2]) if rect else None
+        self.viewport().update()
+
+    def selection(self):
+        """The selected cells as (c0, r0, c1, r1), or None."""
+        if self.sel_rect:
+            return self.sel_rect
+        if self.selected_cell and self.selected_marker is None:
+            c, r = self.selected_cell
+            return (c, r, c, r)
+        return None
 
     def leaveEvent(self, ev):
         self._hover = None

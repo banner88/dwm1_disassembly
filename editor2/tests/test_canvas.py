@@ -1865,12 +1865,15 @@ def v6_round_trip(new_dir):
         cv._stroke_cell(c)
     cv._end_stroke('Paint')
     assert cv.anim_cells(), 'the painted water is outlined as animated'
-    # S99 r3 (user: "make the 'make animatable' tab … re-paint a second tile
-    # in a paint-like manner"): double-click a cell -> Make animated tab,
-    # paint frame B, apply
+    # S102 (user: "I just want animated tiles and for the UI to tell me wtf is
+    # happening … I want to mostly make them myself"; speed settable): the
+    # Animate tab — double-click a cell, draw frame 2, set the speed, Create;
+    # the room's OWN animation (tile_anims, bank $6C) plays on the canvas
     from PySide6.QtTest import QTest
     from PySide6.QtCore import Qt as _Qt, QPoint
+    from editor2.core import tileanim as TA
     e_id = s.doc.new_room('Flip test', 0x04, s.renderer)
+    s.renderer.invalidate()                 # (a GUI New does this through its command)
     rt.room_id, rt.vanilla_mid = e_id, None
     rt._fill_rooms(keep=e_id)
     app.processEvents()
@@ -1879,78 +1882,134 @@ def v6_round_trip(new_dir):
     QTest.mouseDClick(cv.viewport(), _Qt.LeftButton, _Qt.NoModifier, cv.mapFromScene(4 * 16 + 8, 4 * 16 + 8))
     app.processEvents()
     at = rt.animate_tab
-    assert rt.picker_tabs.currentWidget() is rt._anim_scroll, 'double-click opens Make animated'
-    assert 'not animated' in at.head.text(), at.head.text()
-    at.r_flip.setChecked(True)
-    app.processEvents()
+    assert rt.picker_tabs.currentWidget() is rt._anim_scroll, 'double-click opens the Animate tab'
+    assert cv.lid == 'flip_test_s0', cv.lid
+    assert at.sel is not None and tuple(at.sel['rect']) == (4, 4, 4, 4), at.sel
+    assert 'New animation' in at.form_title.text() and at._motion() == 'flip'
+    assert len(at.frames) == 1 and at.cur_frame == 1, 'frame 2 starts as a copy of the map'
+    assert 'Nothing would change' in at.problem.text() and not at.b_create.isEnabled()
     at._set_colour(3)
+    z = at.pad.zoom
     for (x, y) in ((1, 1), (6, 2), (12, 13)):
-        QTest.mouseClick(at.pad_b, _Qt.LeftButton, _Qt.NoModifier, QPoint(1 + x * 8 + 3, 1 + y * 8 + 3))
+        QTest.mouseClick(at.pad, _Qt.LeftButton, _Qt.NoModifier, QPoint(3 + x * z + 1, 3 + y * z + 1))
     app.processEvents()
-    assert at.pad_b.get(1, 1) == 3 and at.apply_b.isEnabled(), at.note.text()
-    # S99 r5 (user: "allow copy of quadrants separately not just a -> B.
-    # Make it easier to edit"): part tools on one 8x8 quarter, either frame,
-    # with a local undo that walks back to exactly where it started
-    st0 = at._state()
-    assert at.pad_b.active and at.editing.text() == 'editing frame B · whole tile', at.editing.text()
-    QTest.mouseClick(at.pad_a, _Qt.LeftButton, _Qt.ControlModifier, QPoint(1 + 12 * 8 + 3, 1 + 3))
-    app.processEvents()
-    assert at.part == 1 and at.pad_a.active and at._state() == st0, 'Ctrl+click selects, never paints'
-    assert at.part_btns[1].isChecked() and 'frame A · top-right' in at.editing.text()
+    assert at.frames[0][0][1 * 8 + 1] == 3 and at.b_create.isEnabled(), at.problem.text()
+    st0 = [list(p_) for p_ in at.frames[0]]
+    at._tool('r')
+    assert at.frames[0] != st0, 'Shift ▶ moves the frame'
+    at._tool('undo')
+    assert at.frames[0] == st0, 'Undo steps back'
+    at._add_frame()
+    assert len(at.frames) == 2 and at.cur_frame == 2
+    # S102 r2 (user: "I cant have frames side by side anymore?? How can I paint
+    # them?"): every frame has its own painter, side by side; painting on one
+    # makes it the current (yellow) frame
+    assert len(at.pads) == 3 and not at.pads[0].editable and at.pads[2].active
+    p1 = at.pads[1]
+    QTest.mouseClick(p1, _Qt.LeftButton, _Qt.NoModifier, QPoint(3 + 5 * p1.zoom + 1, 3 + 5 * p1.zoom + 1))
+    assert at.cur_frame == 1 and at.pads[1].active and at.frames[0][0][5 * 8 + 5] == 3
+    # S102 r3 (user: "Can I still copy or shift individual quadrants?"):
+    # Ctrl+click picks one 8x8 tile (outlined on every frame), the tools act
+    # on it only; Copy on frame 1, Paste into frame 2; a tile pasted on a
+    # Ctrl+Shift-picked 16x16 cell fills its four tiles; Undo walks back
+    base = [list(p_) for p_ in at.frames[0]]
+    p0 = at.pads[0]
+    QTest.mouseClick(p0, _Qt.LeftButton, _Qt.ControlModifier, QPoint(3 + 12 * p0.zoom, 3 + 2 * p0.zoom))
+    assert at.part == ('tile', 1) and at.cur_frame == 0 and all(p_.part_rect == (8, 0, 8, 8) for p_ in at.pads)
+    assert at.frames[0] == base, 'Ctrl+click never paints'
     at.tool_btns['copy'].click()
-    at._set_part(2)
-    at._set_active(at.pad_b)
+    at._pick_frame(1)
+    at._set_part(('tile', 2))
     at.tool_btns['paste'].click()
-    A0, B0 = st0
-    assert at.pad_b.px[2] == A0[1], 'A top-right pasted into B bottom-left'
-    assert [at.pad_b.px[k] for k in (0, 1, 3)] == [B0[k] for k in (0, 1, 3)], 'other quarters kept'
-    assert at._state()[0] == A0, 'frame A untouched'
-    at._set_part(0)
-    at.tool_btns['ab'].click()
-    assert at.pad_b.px[0] == A0[0] and at.pad_b.px[3] == B0[3], 'A → B for one quarter only'
-    at.tool_btns['fh'].click()
-    assert at.pad_b.px[0] == [A0[0][y * 8 + 7 - x] for y in range(8) for x in range(8)], \
-        'Flip acts on the quarter'
-    assert at.pad_b.px[2] == A0[1]
-    at._set_part(3)
-    at.tool_btns['swap'].click()
-    assert at.pad_a.px[3] == B0[3] and at.pad_b.px[3] == A0[3], 'A ⇄ B for one quarter'
-    at._set_part(None)
+    map_tl = at._frame_px(0)[1]
+    assert at.frames[0][2] == map_tl and [at.frames[0][k] for k in (0, 1, 3)] == \
+        [base[k] for k in (0, 1, 3)], 'map tile 2 pasted into tile 3 of frame 2 only'
+    at.tool_btns['r'].click()
+    assert at.frames[0][2] == [map_tl[y_ * 8 + (x_ - 1) % 8] for y_ in range(8) for x_ in range(8)]
+    assert at.frames[0][0] == base[0], 'Shift acts on the picked tile only'
+    at._pick_part(3, True)
+    assert at.part == ('cell', 0) and at.pads[1].part_rect == (0, 0, 16, 16)
     at.tool_btns['paste'].click()
-    assert all(at.pad_b.px[k] == A0[1] for k in range(4)), 'a quarter pasted on Whole fills all four'
-    assert not at.between_w.isHidden() and at.apply_b.isEnabled(), at.note.text()
-    at.tool_btns['undo'].click()
-    assert at.pad_b.px[3] == A0[3] and at.pad_b.px[2] == A0[1], 'undo steps back one tool'
-    for _ in range(4):
+    assert all(at.frames[0][k] == map_tl for k in range(4)), 'a tile pasted on a cell fills 4'
+    for _ in range(3):
         at.tool_btns['undo'].click()
-    assert at._state() == st0, 'undo walks back to the start exactly'
-    at.tool_btns['revert'].click()
-    assert at._state() == at._loaded and at._state() != st0, 'Revert = frames as loaded'
-    at.tool_btns['undo'].click()
-    assert at._state() == st0, 'Revert is undoable'
-    at.r_slide.setChecked(True)
+    assert at.frames[0] == base, 'undo walks back exactly'
+    at._set_part(None)
+    at._pick_frame(2)
+    at._del_frame()
+    assert len(at.frames) == 1
+    at._set_speed(16)
+    at.order.setCurrentIndex(at.order.findData('pingpong'))
+    at.name.setText('Blink')
     app.processEvents()
-    assert at.pad_a.active and at.between_w.isHidden(), 'slide: only frame A'
-    at.r_flip.setChecked(True)
-    app.processEvents()
-    at._set_active(at.pad_b)
-    assert at._state() == st0 and at.apply_b.isEnabled(), at.note.text()
+    assert 'every 16 frames' in at.speed_lbl.text(), at.speed_lbl.text()
+    assert 'With this new animation' in at.budget.text(), at.budget.text()
     before = s.doc.dumps()
-    at.apply_b.click()
+    at.b_create.click()
     app.processEvents()
     E = s.doc.room(e_id)
-    assert E['animation'] not in (None, 'none', 'source'), E['animation']
-    assert 'Animated — flip with' in rt.status_line.text(), rt.status_line.text()
-    assert cv.previewing() and cv.anim_cells(), 'the result plays on the canvas'
+    items = E.get('tile_anims') or []
+    assert len(items) == 1 and items[0]['motion'] == 'flip' and items[0]['speed'] == 16 \
+        and items[0]['name'] == 'Blink', items
+    assert 'Animated — Blink' in rt.status_line.text(), rt.status_line.text()
+    assert cv.previewing() and cv.own_slots == set(TA.slots_of(items[0])), cv.own_slots
+    assert {(x // 2, y // 2) for x, y in cv.anim_cells()} >= {(4, 4)}, 'the cell is outlined'
+    assert at.listw.count() == 1 and 'Blink' in at.listw.item(0).text()
+    assert '1 animation' in at.budget.text(), at.budget.text()
+    # the preview is the game's playback: after 16 frames slot shows frame 2
+    cv._anim_timer.stop()
+    sl = TA.slots_of(items[0])[0]
+    cv._tplayer.step(16)
+    assert bytes(cv._tplayer.sheet[sl * 16:sl * 16 + 16]) == bytes.fromhex(items[0]['frames'][0][0])
     rt.play_btn.setChecked(False)
-    assert 'animated now: flip' in at.head.text(), at.head.text()
     after = s.doc.dumps()
     s.undo.undo()
     app.processEvents()
-    assert s.doc.dumps() == before, 'Make animated undoes exactly'
+    assert s.doc.dumps() == before, 'Create animation undoes exactly'
     s.undo.redo()
     app.processEvents()
     assert s.doc.dumps() == after
+    # edit: Edit in the list -> change the speed -> Save (one undo step, same place)
+    at.listw.setCurrentRow(0)
+    at._edit_selected()
+    app.processEvents()
+    assert 'Editing: Blink' in at.form_title.text() and at.speed.value() == 16
+    assert at.frames and at.frames[0][0][1 * 8 + 1] == 3, 'the frames are loaded back'
+    at._set_speed(8)
+    at.b_create.click()
+    app.processEvents()
+    items = s.doc.room(e_id)['tile_anims']
+    assert len(items) == 1 and items[0]['speed'] == 8 and items[0]['name'] == 'Blink', items
+    s.undo.undo()
+    app.processEvents()
+    assert s.doc.room(e_id)['tile_anims'][0]['speed'] == 16, 'edit undoes'
+    s.undo.redo()
+    app.processEvents()
+    # a drift / sway on some cell with detail, then Remove
+    made = None
+    for cy_ in range(1, 7):
+        for cx_ in range(0, 9):
+            if (cx_, cy_) == (4, 4):
+                continue
+            cv.set_selection((cx_, cy_, cx_ + 1, cy_))
+            rt._tanim_use_selection()
+            at.m_btns['sway'].setChecked(True)
+            app.processEvents()
+            if at.b_create.isEnabled():
+                made = (cx_, cy_)
+                break
+        if made:
+            break
+    assert made, 'some 2-cell strip of the Farm sheet can sway'
+    at.b_create.click()
+    app.processEvents()
+    items = s.doc.room(e_id)['tile_anims']
+    assert len(items) == 2 and items[1]['motion'] == 'sway' and items[1]['strip'], items
+    at.listw.setCurrentRow(1)
+    at._remove_selected()
+    app.processEvents()
+    assert len(s.doc.room(e_id)['tile_anims']) == 1, 'Remove'
+
     # S99 r4 (user: "Why is the mirror in $6b moving? I never wanted it to
     # move"): a tile of other art in a 'source' room's animated slot (what a
     # pre-S99 import could do) is found on open and moved to a still slot
@@ -1976,77 +2035,6 @@ def v6_round_trip(new_dir):
     assert s.doc.dumps() == pre and s.doc.stray_report(), 'the repair undoes exactly'
     s.undo.redo()
     app.processEvents()
-    # S99 r6 (user: "Make animated is greyed out … Surely it should allow me to
-    # shift animation to tile I'm editing??" + "Would be good to have a
-    # count"): room d's Castle animation is FULL (the water uses 77 and 78);
-    # a plain tile TAKES OVER a slot — the room looks the same, only that
-    # tile's cells start moving, the water's quarters in the taken slot stand
-    # still — and the count says 2 of 2
-    rt.room_id, rt.vanilla_mid = d_id, None
-    rt._fill_rooms(keep=d_id)
-    app.processEvents()
-    D = s.doc.room(d_id)
-    assert 'slide <b>2 of 2</b> slots used' in at.budget.text() and 'FULL' in at.budget.text(), \
-        at.budget.text()
-    assert at.mt is None and at.b_brush.isEnabled(), 'a tile of another room is dropped'
-    sh = bytes(cv.gfx.sheet)
-    tk = None
-    for r_ in range(8):
-        for c_ in range(10):
-            m_ = cv.cell_metatile(c_, r_)
-            if {t & 0x7F for t in m_['tiles']} & {77, 78}:
-                continue
-            fa = [sh[(t & 0x7F) * 16:(t & 0x7F) * 16 + 16] for t in m_['tiles']]
-            cs = s.doc.animate_candidates(D, m_, 'slide', fa)
-            if cs and cs[0]['fits'] and cs[0]['current'] and cs[0]['takes'] and cs[0]['walk_ok']:
-                tk = (c_, r_)
-                break
-        if tk:
-            break
-    assert tk, 'a plain tile of room d can take over the full Castle animation'
-    look0 = [[cv.cell_metatile(c_, r_) for c_ in range(10)] for r_ in range(8)]
-    gfx0 = {(c_, r_): [sh[(t & 0x7F) * 16:(t & 0x7F) * 16 + 16] for t in look0[r_][c_]['tiles']]
-            for r_ in range(8) for c_ in range(10)}
-    moving0 = {(x // 2, y // 2) for x, y in cv.anim_cells()}     # subtiles -> cells
-    QTest.mouseDClick(cv.viewport(), _Qt.LeftButton, _Qt.NoModifier,
-                      cv.mapFromScene(tk[0] * 16 + 8, tk[1] * 16 + 8))
-    app.processEvents()
-    at.r_slide.setChecked(True)
-    app.processEvents()
-    c0 = at._cand()
-    assert c0 and c0['current'] and c0['takes'] and at.apply_b.isEnabled(), at.note.text()
-    assert 'TAKES OVER' in at.note.text() and 'takes over slot' in at.src.currentText(), \
-        (at.note.text(), at.src.currentText())
-    pre = s.doc.dumps()
-    asked = []
-    _q = _QMB.question
-    _QMB.question = staticmethod(lambda *a_, **k_: asked.append(a_[1]) or _QMB.Yes)
-    at.apply_b.click()
-    app.processEvents()
-    _QMB.question = _q
-    assert asked == ['Make animated — take over'], asked
-    assert 'took over slot' in rt.status_line.text(), rt.status_line.text()
-    rt.play_btn.setChecked(False)
-    app.processEvents()
-    sh1 = bytes(cv.gfx.sheet)
-    for r_ in range(8):
-        for c_ in range(10):
-            m_ = cv.cell_metatile(c_, r_)
-            assert [sh1[(t & 0x7F) * 16:(t & 0x7F) * 16 + 16] for t in m_['tiles']] == \
-                gfx0[(c_, r_)], f'cell {(c_, r_)} looks the same after the take-over'
-    started = {(x // 2, y // 2) for x, y in cv.anim_cells()} - moving0
-    same_mt = {(c_, r_) for r_ in range(8) for c_ in range(10)
-               if look0[r_][c_]['tiles'] == look0[tk[1]][tk[0]]['tiles']}
-    assert tk in started and started <= same_mt, (started, same_mt)
-    took = set(c0['takes'])
-    for (c_, r_) in moving0:
-        if {t & 0x7F for t in look0[r_][c_]['tiles']} & took:
-            assert not {t & 0x7F for t in cv.cell_metatile(c_, r_)['tiles']} & took, \
-                'the water quarters in the taken slot now draw a still copy'
-    assert 'slide <b>2 of 2</b>' in at.budget.text(), at.budget.text()
-    s.undo.undo()
-    app.processEvents()
-    assert s.doc.dumps() == pre, 'the take-over undoes exactly'
     # Make still: the borrowed Castle water (room d) stops moving
     rt.room_id, rt.vanilla_mid = d_id, None
     rt._fill_rooms(keep=d_id)
@@ -2075,8 +2063,9 @@ def v6_round_trip(new_dir):
           f'44-45, Secret Passage inert), clone = source, preview plays + restores, '
           f'None / Borrow $3D via the inspector (slot map + picker follow), {n} undoable '
           f'edits exact; Castle water borrowed onto the Farm sheet keeps moving (slots 77/78, '
-          f'room animation $00); Make animated: double-click -> frame B painted -> '
-          f'flip with ${val(anims[e_id]):02X} (exact undo); unintended-animation repair on '
+          f'room animation $00); Animate tab (S102): double-click -> frame 2 painted -> '
+          f'Blink flip every 16 frames (preview == game playback, exact undo, Edit keeps its '
+          f'place, sway + Remove); unintended-animation repair on '
           f'open + Make still (both exact undo); project: {anims}')
     return w, s, a_id, b_id, c_id, d_id, e_id
 
@@ -2134,28 +2123,36 @@ def test_rom_v6(w, s, a_id, b_id, c_id, d_id, e_id=None, keep_dir=None):
                              f'{changed}')
         checks.append(f'${mid:02X}->{changed or "static"}')
     if e_id:
-        # Make animated: the placed flip tile shows exactly frame A / frame B
-        from editor2.core import animation as ANIM
+        # S102: the room's OWN animation (bank $6C) — every frame the Blink
+        # slots show one of their authored frames, they really change, and
+        # no other tile of the sheet moves
+        from editor2.core import tileanim as TA
         E = s.doc.room(e_id)
         mid = val(E['mapID'])
-        src = val(E['animation'])
+        sheet = bytes(s.doc.read_sheet(E['record']['tileset']))
+        want = {}
+        for it in E['tile_anims']:
+            for part, blocks, seq in TA.groups(it, sheet):
+                for k, sl in enumerate(part):
+                    want[sl] = {b_[k * 16:k * 16 + 16] for b_ in blocks}
         bed.seek(0)
         p.load_state(bed)
         warp(p, mid, 4, 4, settle=240)
-        tm = bytes(p.memory[0, 0x9800:0x9C00])
-        t = tm[8 * 32 + 8]                      # cell (4,4) top-left subtile
-        looks, changed = set(), set()
         prev = bytes(p.memory[0, 0x9000:0x9800])
-        for _ in range(200):
+        changed, looks = set(), {sl: set() for sl in want}
+        for _ in range(240):
             p.tick()
             cur = bytes(p.memory[0, 0x9000:0x9800])
             changed |= {i // 16 for i in range(0x800) if cur[i] != prev[i]}
-            looks.add(cur[t * 16:t * 16 + 16])
+            for sl, frs in want.items():
+                g = cur[sl * 16:sl * 16 + 16]
+                assert g in frs, f'slot {sl} shows a graphic that is not one of its frames'
+                looks[sl].add(g)
             prev = cur
-        assert t in ANIM.slots(src), (t, src)
-        assert changed <= ANIM.slots(src), sorted(changed - ANIM.slots(src))
-        assert len(looks) == 2, f'flip tile shows {len(looks)} looks'
-        checks.append(f'${mid:02X} made-animated flip: tile {t} alternates 2 looks')
+        assert changed <= set(want), sorted(changed - set(want))
+        assert any(len(v) >= 2 for v in looks.values()), looks
+        checks.append(f'${mid:02X} own flip (bank $6C): slots {sorted(want)} = authored '
+                      f'frames only, nothing else moves')
     if keep_dir:
         shutil.copy(res.rom_path, os.path.join(keep_dir, 'rom_v6_animation.gbc'))
     p.stop(save=False)

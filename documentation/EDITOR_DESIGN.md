@@ -666,6 +666,72 @@ happening"; built S99, NOT yet user-tested):**
   draws with its source room's sheet, else `none`) — "MIGRATED … Save to keep
   it" in the build log.
 
+**As built S102 — own animated tiles: the Animate tab (P3.3f; built S102,
+NOT yet user-tested).** User S102: "This is NOT UI friendly. I dont …
+understand the budget, how it works … I just want animated tiles and for
+the UI to tell me wtf is happening … I have NO understanding why you built
+in a drop down list for importing animations when I want to mostly make
+them myself". Design rule taken from it: **fix the engine limit instead of
+exposing it** — the S99 tab made the author pick a vanilla room's animation
+(slots, pairs, take-overs, split moves) because the engine could only replay
+those; S102's bank $6C engine animates any slot at any speed from authored
+frames, so the UI can be about the art. The S99 "Make animated" tab (and its
+take-over / split / candidate UI) is gone from the GUI; `core/animate.py`
+stays (Borrow tab import of animated vanilla tiles, Make still, stray repair).
+- **Animate tab** (Metatiles section, replaces "Make animated";
+  `app/rooms/animate_tab.py`): a dark box of plain numbers — *This room: N
+  animations, M tiles changing · Load: X % of what the game can change per
+  frame (fine / busy but fine / TOO MUCH) · Free tiles on this tileset (only
+  "only the selected cells" uses them; frames never do) · Frame storage
+  (whole project): a KB of 15.7 KB · animation groups: g of 32* and, while
+  editing, *With this new animation: load, free tiles used, + KB*; "How does
+  this work?" expands one paragraph. **Animations in this room** list (name
+  — motion, speed words, tiles, "(everywhere)") with **Edit** (switches to
+  its screen/state, selects its cells, loads it) and **Remove**.
+  **New animation / Editing:** *Use the selected cells* (or double-click a
+  cell) → name → **How it moves** (Flip through frames / Drift right / Drift
+  left / Sway (back and forth), one help line each; drift/sway: "the
+  selection moves as one picture" = strip, sway: pixels each way 1-3; flip:
+  loop / back and forth) → **Speed** (presets very fast 4 … very slow 128 +
+  "exactly N game frames per step" + "One frame every N frames (≈ x per
+  second)") → **Frames** (flip: every frame has its own painter `FramePad`,
+  **side by side**, wrapping to the panel width — S102 r2, user: "I cant
+  have frames side by side anymore?? How can I paint them?" — frame 1 = the
+  map, dimmed and fixed; paint straight on any other (paint / Shift fill /
+  right pick, each 8×8 tile in its own palette); the clicked frame turns
+  yellow and is the one + Add (copies it) / − Remove / Shift ◀▶▲▼ / Mirror /
+  Copy previous act on; Undo; Size − + zooms all frames; S102 r3, user: "Can
+  I still copy or shift individual quadrants?" — the tools act on a PART:
+  whole frame, one 8×8 tile (Ctrl+click) or one 16×16 cell
+  (Ctrl+Shift+click), outlined dashed on every frame; Copy (any frame, the
+  map included) / Paste (a smaller piece repeats to fill the part, a bigger
+  one is cut from its top-left) / Clear) → live
+  **Preview** at game speed → **What moves**
+  ("only the selected cells (uses N free tiles)" / "every place in this room
+  drawn with these tiles (M more places move)") → result line + a bold
+  orange reason when Create is impossible → **Create animation** / **Save
+  changes** (+ Cancel editing). Every action is one SnapshotCommand;
+  Edit replaces the animation in place (same list position).
+- **Copy a vanilla room's animation…** (bottom of the tab, collapsed): the
+  S99 inspector combo + note, moved here (user: "Keep button"), plus **Make
+  the selected cell still** for cells the copied vanilla animation moves.
+  The inspector keeps one summary line ("2 animations (8 tiles), copied
+  vanilla $47 — Animate tab").
+- **Canvas**: Select tool drag / Shift+click selects a rectangle of cells
+  (`sel_rect`, `cellsSelected`), drawn dashed; ▶ Play runs the vanilla
+  `Player` and `tileanim.Player` together (own frames written over their
+  slots); the Anim outline and the cell panel ("animated: yes — Cloud;
+  moves with the copied vanilla animation $47") include own animations.
+- Document ops (`core/tileanim_doc.py` `TileAnimMixin`): `anim_selection`
+  (the facts shown before acting: which tiles change, own copies needed,
+  other places that would move, free tiles, the problem text — the same
+  code the operation runs), `add_tile_anim` (own copies for "only these
+  cells" — the bottom-right quarter keeps its wall/walkable side; refuses a
+  layout the room does not draw), `update_tile_anim`, `remove_tile_anim`,
+  `tile_anim_budget`, `tile_anim_player`; `animated_slots` now includes own
+  slots (imports / twins leave them alone).
+- Help topic `editor2/help/15_animated_tiles.md` (step by step + the numbers).
+
 
 Acceptance `editor2/tests/test_canvas.py --rom`: fresh project → Farm clone
 at `$6B` → metatiles painted → a lone metatile painted over stays in the

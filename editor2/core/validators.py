@@ -25,7 +25,8 @@ TEMPLATE_SIZE = {
                  # (283 S53 -> 348 S70 -> 358 S70v3 (+2x5B wCustomY7Cmp arming): entry-7 dw + VanillaExitResolve +
                  # factored CopyExitListToBuffer in the template head; 383 S94: VanillaExitResolve rows keyed
                  # by (mapID, screen) — `db mapID, screen` with $FF = any screen)
-    0x71: 440,    # addr(Custom26DDTable)-$4000, S101 (395 S100 + CustomRoomBGMResolve .gatePath: the custom boss song on the floor before the boss). Prev 395 S100 (164 S99 + entries 4/5 dw + CustomGateInsert + CustomRoomFlags + entry-1 follow-gate test; measured from the S100 reference game.sym). Prev 164 S99 (142 S64 + entry-3 dw + CustomAnimSource 20 B; measured from the S99 reference game.sym). Prev 142 S64 (S55 116 + entry-2 dw + CustomRoomBGMResolve; measured from the S64 reference game.sym)
+    0x71: 444,    # addr(Custom26DDTable)-$4000, S102 (440 S101 + CustomAnimSource's far call to bank $6C entry 0, 4 B; measured from the S102 reference game.sym). Prev 440 S101 (395 S100 + CustomRoomBGMResolve .gatePath: the custom boss song on the floor before the boss). Prev 395 S100 (164 S99 + entries 4/5 dw + CustomGateInsert + CustomRoomFlags + entry-1 follow-gate test; measured from the S100 reference game.sym). Prev 164 S99 (142 S64 + entry-3 dw + CustomAnimSource 20 B; measured from the S99 reference game.sym). Prev 142 S64 (S55 116 + entry-2 dw + CustomRoomBGMResolve; measured from the S64 reference game.sym)
+    0x6C: 285,    # addr(TileAnimRoomTable)-$4000, S102 (bank self-ID + entry table + CustomTileAnimate / TileAnimRestart / TileAnimCopy; measured from the S102 reference game.sym)
     0x6B: 53,     # addr(ProjectEnemyRows)-$4000, S101 (bank self-ID + entry table + CopyEnemyRowExt; measured from the S101 reference game.sym)
 }
 BANK_SIZE = 0x4000
@@ -151,6 +152,25 @@ def validate(prj, generated=None):
                 f"room {rid}: no `animation` set — it runs Castle's handler "
                 "(the pre-S99 behaviour: tiles 77-78 roll). Set 'none', "
                 "'source' or a vanilla map id (the editor migrates on open)")
+
+    # ---------------------------------------- own tile animations (S102)
+    # custom.rooms[].tile_anims -> bank $6C (PROJECT_COMPILER §2.19).
+    from . import tileanim as TA
+    from . import animation as A
+    for r in rooms:
+        items = r.get('tile_anims') or []
+        if not items:
+            continue
+        rid = r.get('id', F.hexb(F.val(r['mapID'])))
+        try:
+            sheet = prj.room_sheet(r)
+        except Exception as e:
+            errors.append(f"room {rid}: tile_anims: tileset unreadable ({e})")
+            continue
+        errs = TA.problems(r, items, sheet or bytes(2048), A.room_slots(r))
+        errors += [f"room {rid}: {e}" for e in errs]
+        if not errs and TA.load(items)['pct'] > 100:
+            warnings.append(f"room {rid}: animated tiles — {TA.load_words(items)}")
 
     # ------------------------------------------ gate insertion (S100, P3.7b)
     _validate_gates(prj, rooms, errors, warnings)
@@ -899,6 +919,12 @@ def bank_usage(generated):
             if bank == 0x60 else
             text.split('Custom26DDTable —', 1)[-1])
         out[bank] = ((TEMPLATE_SIZE.get(bank) or 0) + gen_bytes, BANK_SIZE)
+    # S102: bank $6C = own tile animations (template head + generated data;
+    # the frame section is 16-aligned — up to 15 pad bytes)
+    text = generated.get("file:patches/bank_06c.asm")
+    if text is not None:
+        gen_bytes = _payload_bytes(text.split('TILEANIM DATA (generated', 1)[-1])
+        out[0x6C] = ((TEMPLATE_SIZE.get(0x6C) or 0) + gen_bytes + 15, BANK_SIZE)
     return out
 
 
@@ -922,7 +948,7 @@ def _validate_accounting(prj, generated, errors, warnings):
             warnings.append(
                 f"bank ${bank:02X}: {BANK_SIZE - gen_bytes} bytes free "
                 "(under 256) — nearly full")
-    for bank in (0x60, 0x71):
+    for bank in (0x60, 0x71, 0x6C):
         if bank not in usage:
             continue
         tmpl = TEMPLATE_SIZE.get(bank)

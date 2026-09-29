@@ -23,3 +23,6 @@ shows when*): **Add…** a rule "show state N when these flags are ON / OFF".
 Rules are checked top-down every time a screen loads; the first that holds
 wins. Flags are saved with the game, so this is how a room remembers its
 version. See *Boss floors → the "beaten" version*.
+
+**Animated tiles:** select cells → Metatiles → **Animate** tab. See the
+*Animated tiles* topic.

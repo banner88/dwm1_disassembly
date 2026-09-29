@@ -282,7 +282,19 @@ wBoxAttrSave:: ds 100 ;d041-d0a4 — room attrs under the dialog box (row*20+col
 wBoxAttrMask:: db ;d0a5 — bits 0-4: dialog box row r set to palette 7 (restore on close); bit 5: the YES/NO box (wChoiceAttrSave)
 wBoxAttrRow:: db ;d0a6 — scratch: the row being restored
 wChoiceAttrSave:: ds 30 ;d0a7-d0c4 — room attrs under the YES/NO choice box (6x5, row-major; S97 r2)
-wCustomPool:: ds $5A4 - 132 ;d0c5-d5e4 — transient reserve (was $664; FX1 carved 64+128; S97 132)
+; S102: own tile animations (bank $6C CustomTileAnimate; PROJECT_COMPILER
+; §2.19). Transient by design: wTileAnimRoom = the custom map ID whose timers
+; are live — any other value (boot zero, another room, a reload) restarts
+; them from the room's data, and every step copies a WHOLE frame, so nothing
+; here has to survive a save or a battle. 2 bytes per group (timer, step);
+; TILEANIM_MAX_GROUPS groups per room (the compiler refuses more).
+TILEANIM_MAX_GROUPS EQU 32
+wTileAnimRoom:: db ;d0c5 — map ID the state below belongs to
+wTileAnimLeft:: db ;d0c6 — tiles still allowed this frame (TILEANIM_CAP budget)
+wTileAnimVBK:: db ;d0c7 — rVBK on entry (restored on exit)
+wTileAnimSrc:: dw ;d0c8-d0c9 — frame block pointer of the step being copied
+wTileAnimState:: ds 2 * TILEANIM_MAX_GROUPS ;d0ca-d109 — per group: timer, step
+wCustomPool:: ds $5A4 - 132 - 5 - 2 * TILEANIM_MAX_GROUPS ;d10a-d5e4 — transient reserve (was $664; FX1 carved 64+128; S97 132; S102 69)
 ; FX1 (S71): wPoolBounce — 128-byte staging for sleep-pool bank-2 record
 ; swaps (per-byte scratch in CF3PoolSwapRecord). Transient. (The v1 drain's
 ; halved-pending scratch use was removed with the S71v2 exp-scale veto.)
