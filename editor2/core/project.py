@@ -165,6 +165,7 @@ class Project:
         self._step_alloc = None
         self.repo_root = None          # set by compiler.compile_project
         self._music = None
+        self._gamedata = None
 
     # ------------------------------------------------------------------ load
     @classmethod
@@ -177,7 +178,9 @@ class Project:
         return cls(data, os.path.dirname(path))
 
     def _check_layers(self):
-        for layer in ('world', 'gamedata'):
+        # S103 (P3.9): `gamedata` is implemented (Layer A-lite, gamedata.py);
+        # its schema errors surface through validators (Project.gamedata()).
+        for layer in ('world',):
             sec = self.data.get(layer)
             if sec and any(k for k in sec if not k.startswith('_')):
                 raise ProjectError(
@@ -253,6 +256,17 @@ class Project:
                 raise ProjectError(f"progression.enemies: duplicate id {e['id']!r}")
             out[e['id']] = e
         return out
+
+    def gamedata(self):
+        """The resolved Layer A-lite tables (editor2/core/gamedata.py; S103,
+        PROJECT_COMPILER §2.20). Raises gamedata.GamedataError on bad data —
+        validators.validate reports it as an error before any emitter runs."""
+        if self._gamedata is None:
+            from . import gamedata as G
+            repo = getattr(self, 'repo_root', None) or REPO_ROOT
+            eids = [e['_eid'] for e in self.quest_enemy_rows()]
+            self._gamedata = G.Gamedata(self.data.get('gamedata') or {}, repo, eids)
+        return self._gamedata
 
     def quest_enemy_rows(self):
         """Enemies in EID order for the bank $6B emitter."""

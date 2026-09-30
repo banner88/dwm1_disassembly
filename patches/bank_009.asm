@@ -6600,21 +6600,31 @@ jr_009_68aa:
     ld [wTempSpeciesId], a
     ld hl, $0301
     rst $10
-    ld a, [$da33]
-    ld c, a
-    ld a, [wRNG1]
-    and $07
-    swap c
-    or c
-    ld c, a
-    ld a, [$c8f6]
-    and $01
-    add a
-    add a
-    add a
-    add c
-    ld l, a
-    ld h, $03
+    ; S104 FORK (same-size, 25 B = 9 + 16 nops): L = default-name id from bank
+    ; $6D entry 3 FamilyDefaultNameId (Spirit -> ids $A0-$A7). Was the inline
+    ; `$DA33<<4 | RNG&7 | ($C8F6&1)*8` — 160 ids, family 10 ran past the pool.
+    push bc
+    ld hl, $6D03
+    rst $10                           ; E = mode-3 name id
+    pop bc
+    ld l, e
+    ld h, $03                         ; H = text mode 3 (family name pools)
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
     ld de, $c0c8
     call SetupVRAMParams
     ret

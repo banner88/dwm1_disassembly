@@ -1858,7 +1858,8 @@ ScreenTransDataTable:
 FollowerFamilyGfxTable:
     ; Family-shared follower block (2nd DMA in GetActiveMonsterStatus,
     ; via `ld hl, FollowerFamilyGfxTable` + family-byte index). 10 entries,
-    ; families 0-9 -> $2E03..$2E0C (B9 ClampFamIdx keeps family>=10 in range).
+    ; families 0-9 -> $2E03..$2E0C (= the font icon glyphs $10-$19 as gfx
+    ; streams in bank $2E). Twin table: bank $0A FamilyIconGfxTable0A.
     dw $2e03, $2e04, $2e05, $2e06, $2e07, $2e08, $2e09, $2e0a
     dw $2e0b, $2e0c
 
@@ -7248,11 +7249,24 @@ IncrementEncounterCounter:
 ; Uses weighted random selection ($6989) to pick monsters
 ; Writes enemy IDs to $DA03/$DA05/$DA07
 ;
-; ENCOUNTER POOL FORMAT (26 bytes each at $6AAE + pool_index × 26):
-;   +0:  header (10 bytes, includes floor range info)
+; ENCOUNTER POOL FORMAT (26 bytes each at $6AAE + pool_index × 26; decoded
+; S103 from this routine + LoadNextDungeonFloor / LoadFloorAndEncounterData,
+; the 2-3 monster rule PyBoy-measured — DATA_STRUCTURES "Encounter pool entry"):
+;   +0:  encounter RATE code -> wC8A9 ($C8A9, EncounterRateModifierTable index)
+;   +1:  not read by any pool reader (vanilla 1-3)
+;   +2..+4: chance CODES for a group of 1 / 2 / 3 monsters -> $DA02
+;   +5..+9: chance CODES per EID slot (who is drawn)
+;        a code is a percentage via EncounterChancePercent (0,10,20,30,40,50,
+;        70,100); LookupEncounterEntry accumulates them into $C0D8 and
+;        CalcEncounterPoolIdx draws RNG mod 100 against the running sums
 ;   +10: EID slots (5 × 2 bytes LE) — enemy stats IDs for this pool
-;   +20: weights (5 × 1 byte) — probability weights for each slot
-;        (unused slots have EID $0000 and weight 0)
+;   +20: MAX COUNT per slot (not a weight): 1 = this monster only ever comes
+;        ALONE (a first pick with 1 ends the group), otherwise the 2nd/3rd
+;        draw is repeated until a slot's max >= its copies so far (incl. the
+;        new one) and != 1 — so 0 = never 2nd/3rd. A pool whose first pick can
+;        have max 0 with no slot allowed twice re-draws forever (measured S103:
+;        28,257 passes, the battle never starts).
+;   +25: MAZE SIZE -> $C93D (the bank $16 maze carve count; vanilla 3/8/15)
 ;   Pool index determined by LoadNextDungeonFloor from gate ID + current floor
 ;
 ; GATE → POOL MAPPING:
@@ -7407,6 +7421,10 @@ jr_001_6940:
     ret
 
 
+; SetupEncounterCalc: in A = the slot just drawn for monster 2/3 (already
+; stored); B := how many picks so far use that slot (itself included), A :=
+; that slot's max count (pool +20); callers retry while max < B (carry) or
+; max == 1 (only-alone slots never join a group).
 SetupEncounterCalc:
     ld b, $00
     push af
@@ -7447,6 +7465,8 @@ jr_001_6966:
     ret
 
 
+; SaveRegsForEncounter: A = slot index -> A = pool +20 byte (the slot's max
+; count); BC preserved. Monster 1 with max 1 = the group ends at one.
 SaveRegsForEncounter:
     push af
     push bc
@@ -7470,6 +7490,10 @@ SaveRegsForEncounter:
     ret
 
 
+; CalcEncounterPoolIdx: RNG mod 100 against the cumulative % list at HL;
+; returns the index of the first entry whose sum exceeds the draw (zero-%
+; entries are skipped; a sum of exactly 100 always stops). A list that never
+; reaches 100 walks past its end (the compiler refuses such pools, S103).
 CalcEncounterPoolIdx:
     push hl
     call GenerateRNG
@@ -7501,10 +7525,12 @@ jr_001_69ab:
     ret
 
 
+; LookupEncounterEntry: in HL -> a pool chance CODE, B = running sum, DE ->
+; the $C0D8 list; appends B += EncounterChancePercent[code] (cumulative %).
 LookupEncounterEntry:
     ld a, [hl]
     push hl
-    ld hl, $69c0
+    ld hl, EncounterChancePercent
     add l
     ld l, a
     ld a, $00
@@ -7520,16 +7546,15 @@ LookupEncounterEntry:
     ret
 
 
-    nop
-    ld a, [bc]
-    inc d
-    ld e, $28
-    ld [hl-], a
-    ld b, [hl]
-    ld h, h
+; EncounterChancePercent ($69C0, re-sectioned S103 from 7 mis-decoded
+; instructions; byte-neutral): pool chance code (0-7) -> percent, read by
+; LookupEncounterEntry for the group-size (+2..+4) and slot (+5..+9) codes.
+EncounterChancePercent:
+    db 0, 10, 20, 30, 40, 50, 70, 100
 
 
 LoadFloorAndEncounterData:
+    ; pool +25 (maze size) -> $C93D, read by the bank $16 maze builder
     call LoadNextDungeonFloor
     ld a, [wEncounterPoolIndex]
     ld bc, $001a
@@ -7597,7 +7622,7 @@ jr_001_6a01:
     adc HIGH(EncounterPoolData)
     ld h, a
     ld a, [hl]
-    ld [$c8a9], a
+    ld [$c8a9], a            ; pool +0 = encounter RATE code (EncounterRateModifierTable index, S103)
     ret
 
 

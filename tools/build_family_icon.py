@@ -17,16 +17,20 @@ This tool:
                     16-byte `db` line for patches/bank_04f.asm. --head-index N sets
                     which palette index the brightest input pixels map to (default 0;
                     use 2 for the "safe mid-shade" fallback).
-  --selftest        assert decode->encode of all 10 vanilla icons == ROM bytes, and
-                    that the Spirit design in extracted/family_icons.json encodes to
-                    the 16 bytes shipped in patches/bank_04f.asm at $41A0 (byte $19 —
-                    the Spirit whip overwrites the vanilla ??? glyph; the free $1A
-                    slot was abandoned because it is not fill-immune at runtime).
+  --selftest        assert decode->encode of all 10 vanilla icons == ROM bytes, that
+                    patches/bank_04f.asm keeps the vanilla ??? glyph at $41A0 (the
+                    full INCBIN), and that the Spirit design in
+                    extracted/family_icons.json encodes to BOTH shipped copies: the
+                    font glyph at $4F:$41B0 (text byte $1A — INFO page, library tab
+                    strip, parent icons) and the bank $6D SpiritIconStream (gfx id
+                    $6D04 — the HUD / list icon DMA; run marker absent from the data).
+                    (S104: the B9 "$1A is not fill-immune" finding does not reproduce;
+                    see KEY_LESSONS S104.)
 
 Generator-stamped data deliverable: extracted/family_icons.json.
 
-NOTE: this tool emits a patch LINE; it does not itself write patches/bank_04f.asm
-(that patch is a same-size copy of the clean bank with the $41B0 line replaced).
+NOTE: this tool emits patch LINES (--png); it does not itself write
+patches/bank_04f.asm / patches/bank_06d.asm (same-size 16-byte lines).
 """
 import argparse, hashlib, json, os, sys
 
@@ -39,15 +43,17 @@ ORIGINAL_MD5 = "1ca6579359f21d8e27b446f865bf6b83"
 ICON_BANK = 0x4F
 ICON_BASE = 0x4110            # in-bank addr of icon 0 (text byte $10)
 FONT_BASE = 0x4010           # ComputeTileDataAddr base: addr = $4010 + byte*16
-FREE_SLOT_ADDR = 0x41B0      # text byte $1A — first free font slot (left blank)
-SPIRIT_SLOT_ADDR = 0x41A0    # text byte $19 — where the Spirit whip ACTUALLY ships
-SPIRIT_MARKER = "$41A0 byte $19"  # stable token in the patch comment
+FREE_SLOT_ADDR = 0x41B0      # text byte $1A — the first font slot after the icons
+SPIRIT_SLOT_ADDR = 0x41B0    # S104: the Spirit glyph ships HERE (byte $1A)
+SPIRIT_MARKER = "$41B0 byte $1A = SPIRIT icon"  # stable token in the patch comment
+STREAM_PATH = os.path.join(REPO, "patches", "bank_06d.asm")
+STREAM_LABEL = "SpiritIconStream:"
 NUM_VANILLA = 10             # icons $10..$19
 
-# NOTE (S-corruption-fix saga): the S20 plan put the Spirit icon on the free slot
-# byte $1A ($41B0). That slot proved NOT fill-immune at runtime (the menu blanks it),
-# so the shipped Spirit icon is the option-5 whip on byte $19 ($41A0), overwriting the
-# vanilla ??? glyph — ??? and Spirit share the whip. The $1A slot is left blank.
+# History: B9 (S28) shipped the whip on byte $19, overwriting the vanilla ???
+# glyph, because $1A "rendered blank". S104 could not reproduce that: with the
+# bank-$41 mode-4 Spirit string = "$1A" the glyph renders (PyBoy: INFO page,
+# library tab strip). ??? is vanilla again.
 
 # Visual labels, user-confirmed S20 (glyph order $10..$19; NOT family-code order):
 ICON_LABELS = [
@@ -153,7 +159,10 @@ def cmd_dump():
         "_generator": "tools/build_family_icon.py --dump",
         "_rom": "data/DWM-original.gbc",
         "_note": ("Family icons are font tiles at $4F:$4110+ (bytes $10-$19). "
-                  "Byte->addr: $4010 + byte*16. Free 11th slot: byte $1A = $41B0."),
+                  "Byte->addr: $4010 + byte*16. The 11th family (Spirit) icon "
+                  "ships on byte $1A = $41B0 (patches/bank_04f.asm) and as the "
+                  "bank $6D SpiritIconStream (HUD copy, gfx id $6D04); the "
+                  "vanilla ??? glyph at $41A0 is untouched (S104)."),
         "byte_to_addr_formula": "$4010 + textbyte*16",
         "bank": f"${ICON_BANK:02X}",
         "icons": icons,
@@ -161,6 +170,9 @@ def cmd_dump():
                       "vanilla_grid": free_grid},
         "spirit": spirit,
     }
+    if spirit:
+        spirit["byte"] = "$1A"
+        spirit["addr"] = f"${SPIRIT_SLOT_ADDR:04X}"
     os.makedirs(os.path.dirname(JSON_PATH), exist_ok=True)
     json.dump(out, open(JSON_PATH, "w"), indent=1)
     print(f"wrote {JSON_PATH} ({NUM_VANILLA} icons + free slot"
@@ -172,7 +184,31 @@ def cmd_png(path, head_index):
     tile = encode_tile(grid)
     for row in grid:
         print("".join(" .:#"[v] if v != head_index else "*" for v in row))
-    print(db_line(tile, f"$41B0 byte $1A = family icon (head idx {head_index})"))
+    print("patches/bank_04f.asm:")
+    print(db_line(tile, SPIRIT_MARKER))
+    print("patches/bank_06d.asm SpiritIconStream (dw $0010, db marker, 16 bytes):")
+    print(f"    db ${stream_marker(tile):02X}")
+    print(db_line(tile, ""))
+
+
+def stream_marker(tile):
+    """The run marker of a raw 16-byte gfx stream: the smallest byte value the
+    data does not contain (WaitDMATransfer treats the marker as a run start)."""
+    return next(v for v in range(256) if v not in tile)
+
+
+def parse_db(line):
+    return bytes(int(tok.strip().lstrip("$"), 16)
+                 for tok in line.split("db", 1)[1].split(";")[0].split(","))
+
+
+def read_stream():
+    """(length, marker, data) of SpiritIconStream in patches/bank_06d.asm."""
+    lines = open(STREAM_PATH).read().split("\n")
+    k = lines.index(STREAM_LABEL)
+    body = [ln for ln in lines[k + 1:k + 6] if ln.strip().startswith(("dw", "db"))]
+    length = int(body[0].split("dw", 1)[1].split(";")[0].strip().lstrip("$"), 16)
+    return length, parse_db(body[1]), parse_db(body[2])
 
 
 def cmd_selftest():
@@ -182,8 +218,13 @@ def cmd_selftest():
         off = flat(ICON_BANK, ICON_BASE) + i * 16
         b16 = rom[off:off + 16]
         assert encode_tile(decode_tile(b16)) == b16, f"icon {i} round-trip"
-    # 2) spirit design in json encodes to the bytes in patches/bank_04f.asm @ $41A0
-    #    (byte $19 — the shipped Spirit slot; $1A was abandoned, see header note)
+    # 2) the patch keeps the vanilla 10 icons (??? at $41A0 included)
+    src = open(PATCH_PATH).read()
+    assert 'INCBIN "gfx/image_04f_4110.2bpp"\t' in src and \
+        'INCBIN "gfx/image_04f_4110.2bpp", 0' not in src, \
+        "patches/bank_04f.asm must INCBIN all 10 vanilla icons (??? restored S104)"
+    print("  vanilla ??? glyph at $41A0 kept (full INCBIN): OK")
+    # 3) spirit design in json == the $41B0 glyph AND the bank $6D stream
     if os.path.exists(JSON_PATH) and os.path.exists(PATCH_PATH):
         j = json.load(open(JSON_PATH))
         sp = j.get("spirit")
@@ -195,11 +236,16 @@ def cmd_selftest():
                 if SPIRIT_MARKER in ln and ln.strip().startswith("db"):
                     line = ln; break
             assert line, f"no {SPIRIT_MARKER} SPIRIT db line in patches/bank_04f.asm"
-            got = bytes(int(tok.strip().lstrip("$"), 16)
-                        for tok in line.split("db", 1)[1].split(";")[0].split(","))
+            got = parse_db(line)
             assert got == want, ("spirit json grid != patch bytes\n"
                                  f" json={want.hex()} patch={got.hex()}")
             print(f"  spirit json grid == patch {SPIRIT_MARKER} bytes: OK")
+            length, marker, data = read_stream()
+            assert length == 16 and len(marker) == 1 and data == want, \
+                f"SpiritIconStream != json grid (len {length}, data {data.hex()})"
+            assert marker[0] not in data, "stream run marker occurs in the data"
+            print("  spirit json grid == bank $6D SpiritIconStream (marker "
+                  f"${marker[0]:02X} absent): OK")
     print("SELFTEST: PASS")
 
 

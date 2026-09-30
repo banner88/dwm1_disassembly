@@ -11,7 +11,7 @@
   "_status": "NOT_IMPLEMENTED_V1"
  },
  "gamedata": {
-  "_status": "NOT_IMPLEMENTED_V1"
+  "_status": "Layer A-lite (S103): sparse overrides of the vanilla data tables \u2014 monsters, enemies, encounters, skills, exp/growth curves, breeding, boss_joins (PROJECT_COMPILER \u00a72.20). Empty = the game's own tables."
  },
  "custom": {
   "wram": {

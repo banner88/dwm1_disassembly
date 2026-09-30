@@ -13167,6 +13167,9 @@ MapIDClampForPalette::
     xor a                       ; 1 byte:  AF  A = $00 (Castle) for ALL custom rooms
     ret                         ; 1 byte:  C9
 ClampFamIdx::
+; S104: ZERO call sites — the one caller (bank $01 GetActiveMonsterStatus) now
+; far-calls bank $6D FamilyIconGfxActive, which gives Spirit its own icon.
+; Kept (8 B, label-stable). Original B9 note:
 ; B9 S29: party-graphics tables $4BAD (family) & $49DF (glyph) have only 10 entries
 ; (families 0-9). Spirit (family 10) overflows -> garbage pointer -> runaway VRAM
 ; copy corrupts all of VRAM. Clamp the family index to 9 (Spirit borrows family 9 /

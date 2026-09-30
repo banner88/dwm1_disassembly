@@ -958,6 +958,21 @@ Per species — every knob is a decoded, proven surface:
   wizard (ids 224+; G3 schema fold is the open box). Capacity meter:
   slots used / 32.
 
+### 5.2a Families tab (as built S104 r2, ROADMAP P3.10a)
+
+A tab before Monsters (`editor2/app/families_tab.py`, model
+`editor2/core/families.py`). Left: the 11 families with their font icons
+(`extracted/family_icons.json`) and member counts. Middle: members of the
+selected family ("moved here" marks a non-vanilla member); **Move selected
+to** + **Add a monster to this family…** (lists every species with its
+current family). Right: **Arena-lobby dialogue** — the four vanilla voices
+(A Slime / Plant / Zombie, B Dragon / Bird / Material, C Beast / Bug / Devil,
+D ???), per family; for Spirit, **8 default names** (4 letters max) with a
+one-line explanation of what they are. Writes `gamedata.monsters.<id>.family`
+and `gamedata.families.*` — only differences from the original game; each
+edit is one undo step validated by the compiler's gamedata model. When the
+Monsters tab (5.2) lands, the family combo there uses the same setters.
+
 ### 5.2b Arena tab-section (v2.1 — user spec S90; lives under Gates or Monsters, final placement at build time)
 
 Rosters are FORMULA-addressed enemy-stats rows (E1 decoded,
@@ -1119,6 +1134,18 @@ same-size compiler-emitted patches; readers ported from
 `randomizer/romdata.py` (which already proves read+rewrite). Regression:
 an unedited `gamedata` section emits ZERO byte diffs. [G-D]
 
+**As built S103 (ROADMAP P3.9, backend only):** `gamedata` = sparse overrides
+(`monsters`, `enemies`, `encounters`, `skills` (mp / learn / record),
+`exp_curves`, `growth_curves`, `breeding.family` / `.special`, `boss_joins`) →
+twelve same-size `@BUILD_PROJECT` regions (banks $01/$03/$06/$07/$12/$13/
+$14/$16/$4D/$54/$69); vanilla rows from `extracted/gamedata_vanilla.json`, so
+an empty section is the ROM (per-table regression in test_compiler, `--rom`
+against the original ROM). Coherence handled by the compiler: library recipe
+text (Set 1, rewritten in place) and library tabs follow the effective
+family bytes; Set 2 / Set 3 are warnings. The GUI tabs (P3.10 Monsters, P3.11
+Skills, P3.12 Breeding, P3.13 Encounters) sit on `Project.gamedata()` /
+`editor2/core/gamedata.py`. PROJECT_COMPILER §2.20.
+
 ### 6.3 What remains of "Layer A proper" / full extraction
 
 - In-place vanilla edits still needed: **exit repoints** (built) and the
@@ -1188,7 +1215,7 @@ row is click-navigable (§5.0).
 | G-A | Bank `$64` (layouts/attr) + `$67` (combined tilesets) emission folded behind project.json (today tool-owned, referenced by {bank,entry}) | ✅ CLOSED S92 (`custom.layouts[]` / `custom.tilesets[]`, PROJECT_COMPILER §2.10); painted by the S93 canvas |
 | G-B | NPC sprite-id catalog | ✅ CLOSED S91: `extracted/npc_sprite_catalog.json` + sheet + per-id crops (`npc_field_sprites/`), tools/dump_npc_sprite_catalog.py; classes/names hand-curated in npc_names.json. No id crashes ($11-crash was custom-room context); $23 = boss-composite fragment; aliases $4E/$4F/$F0-$F3 → $00. ROOM_DATA_FORMAT S91 section owns the facts |
 | G-C | Encounters #2 — custom monster pools in a free bank | ROADMAP P3.13a (pre-existing Phase-2 box, re-slotted) |
-| G-D | Layer A-lite `gamedata` emitters + readers (monsters/skills/breeding/encounters; port randomizer `romdata.py`) | ROADMAP P3.9 (new) |
+| G-D | Layer A-lite `gamedata` emitters + readers (monsters/skills/breeding/encounters; port randomizer `romdata.py`) | ROADMAP P3.9 — **CLOSED S103** (backend; GUI = P3.10-P3.13) |
 | G-E | Embedded PyBoy preview widget (cached savestate → warp → Qt blit + input) | ROADMAP P3.4 (pre-existing box, re-slotted) |
 | G-F | E4 gate-network / world-hub schema | ROADMAP Phase E (design item; World tab ships without it) |
 | G-G | First-class `states[]` (step-counter variants) in the custom-room schema | ✅ CLOSED: schema/emitter S92 (PROJECT_COMPILER §2.10); GUI state switcher + add/duplicate/own-layout/remove S93 (ROADMAP P3.3) |

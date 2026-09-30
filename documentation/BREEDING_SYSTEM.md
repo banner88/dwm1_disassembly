@@ -19,8 +19,12 @@
 > special table as authored data: 825 vanilla base (decoded from the ROM) + in-place
 > `overrides` (edit any entry, by index or by parents) + `appends`, from
 > `extracted/breeding_special.json`, with a whole-table first-match-wins shadow
-> validator; bank `$16`'s special table is left byte-identical to the ROM forever
-> (single source = JSON → bank `$69`). User-confirmed in SameBoy: MadCat×BattleRex→
+> validator; bank `$16`'s special table is runtime-dead (single source = JSON →
+> bank `$69`) — **S103 correction: it is NOT byte-identical to the ROM** — entries
+> 693 / 803 still carry the Session-12 GoldSlime mirror (dead bytes, harmless, not
+> compiler-owned). **S103: B4 / B5 / B6 authoring moved into project.json
+> `gamedata.breeding` / `gamedata.monsters[].family` (PROJECT_COMPILER §2.20);
+> the `--emit-*` paths are retired, the JSON specs are historical.** User-confirmed in SameBoy: MadCat×BattleRex→
 > DracoLord (in-place edit of entry 187, was Yeti), Darkdrium×BattleRex→Armorpion
 > (unshadowed append), Anteater×BattleRex→GoldSlime both orders (S12 carried forward).
 > The verified ??? / family-reassignment mechanics and the user's full romhack plan
@@ -104,6 +108,13 @@ A post-recipe **mutation system** (~1-5% RNG) at `$16:$44DA` can override the re
 | `$F7` | Zombie |
 | `$F8` | Material |
 | `$F9` | Boss |
+| `$FA` | Spirit (family 10; S104 — see "Spirit — the 11th family (S104)") |
+
+Codes are `$F0 + family byte`, computed by both scanners from the species'
+info byte 0 (`$0301` loader → `$DA33`), so a Spirit species reaches the tables
+as `$FA` with no extra code. Vanilla's family scan read `$FA` in a MATE matcher
+as "any family" (never used by vanilla data); the patched scan compares it
+exactly (below).
 
 ## Step 1: Special Recipe Table ($4B30)
 
@@ -153,6 +164,11 @@ separators.
 - **Exact species match** on parent 1: returns IMMEDIATELY
 - **Family match** on parent 1: stores result but CONTINUES SCANNING (last family match wins)
 - Parent 2 must match C exactly (or C matches parent 2's family code if parent 2 is family-coded)
+- Vanilla only: when parent 2 is family-coded and `C == $FA`, the `cp $fa / jr z`
+  at `jr_016_461a` treated `C` as "any family". S104 turned the `jr z` into two
+  `nop`s (`patches/bank_016.asm`), so `$FA` is compared exactly = Spirit. The
+  special scanners (vanilla bank $16 `Call_016_471c`, bank $69 B2) never had a
+  wildcard.
 
 **Two-pass search** (`Call_016_45d5`):
 1. First pass: parent 2 as specific species → only exact C matches possible
@@ -233,8 +249,8 @@ extended to 1×–2× capacity (825 → up to ~1650) for iterative playtesting.
   shadowed, and WARNS when an edit newly precedes a later different-result entry or
   when an override changes a result species that **other entries still produce**
   (so "edited a cross" is never mistaken for "removed a monster"). Single source of
-  truth: bank `$16`'s special table stays **byte-identical to the ROM forever**
-  (already runtime-dead via the B2 redirect), so nothing in the shift-sensitive bank
+  truth: bank `$16`'s special table is left alone (runtime-dead via the B2
+  redirect; S103: two entries still hold the S12 mirror — not byte-identical), so nothing in the shift-sensitive bank
   moves and there is exactly one authored source + one emit target. Self-checks:
   emitted table == authored bytes + `$FF`; every non-overridden base entry ==
   vanilla; each override present at its index; capacity ≤ 1650. Proof set
@@ -565,10 +581,63 @@ knows the terrain:
 **Decision (user, S19/S20):** "Spirit" is **ADDED as an 11th family** (not a
 rename-only replace of ???), then families reshuffled. So B9 is the target.
 
+## Spirit — the 11th family (S104, BUILT, NOT yet user-tested)
+
+User 2026-09-30: keep the FAMILY, no monsters assigned by default; members are
+assigned per project (`gamedata.monsters.N.family: "Spirit"` or `10`) and that
+propagates to breeding, the library and every family-indexed screen. S104 audit
+of every reader indexed by family, and what each does now:
+
+| Reader | Vanilla table (10 entries) | Family 10 before S104 | S104 |
+|--------|----------------------------|-----------------------|------|
+| INFO page / library tab strip / pedigree parents — mode-4 icon string | `$41:$4323` (B9: `$41:$7E18`, 16 words) | entry 10 = `"$19"` = ??? glyph overwritten with the whip | entry 10 = `"$1A"`, glyph `$4F:$41B0` = Spirit; ??? glyph `$41A0` vanilla again |
+| Pedigree "unknown parent" icon (`$07` `jr_007_69ac`) | mode-4 id 10 = `$5B1E` (empty) | drew the Spirit icon for every unknown parent (B9 regression) | id 11 (also `$5B1E`) |
+| Active-monster family tile DMA (`$01` GetActiveMonsterStatus → `$8DA0+slot*16`) | `FollowerFamilyGfxTable` `$01:$4BAD` (`$2E03+fam`) | `ClampFamIdx` → ??? tile | bank `$6D` entry 0 → `SpiritIconStream` (gfx id `$6D04`) |
+| Arena/shrine/evaluator list icon DMA (`$0A` `LoadFldA_4610`) | `FamilyIconGfxTable0A` `$0A:$46B5` — **unclamped** | read the next code bytes as a gfx id | bank `$6D` entry 1 |
+| Arena-lobby party dialogue (opcode `$2D`, `$04` `label4_6093`) | `FamilyTextPtrTable` `$04:$60F4` | read `FamilyTextGroup_A`'s first word as a pointer (text `$EA3C`) | bank `$6D` entry 2 (`FamilyTextPtrTable11`, compiler region `gd_family_voices` = `gamedata.families.<f>.dialogue`; Spirit default = group D, the ??? voice) |
+| Naming-screen default name (`$09` `jr_009_68aa`, text mode 3) | 160 ids = 16 per family | ids `$A0`+ = the dead mode-4 words → "<material>" | bank `$6D` entry 3: Spirit → ids `$A0`–`$A7`; the 8 strings = compiler region `gd_spirit_names` (`gamedata.families.spirit.names`, default WISP SOUL AURA MIST HALO ECHO GLOW NOVA) |
+| Family recipe scan (`$16`) | `$FA` = mate-side wildcard | a Spirit mate matched every `$FA` row | `$FA` exact (Spirit) |
+| Library grouping / recipe text | compiler regions (S103) | tab 10 existed since B9 | recipe token for `$FA` = `<$1A>family` |
+
+Measured (PyBoy, S104): INFO page glyph `$1A` for a family-10 struct and the
+vanilla "?" for family 9; HUD tiles `$8DA0-$8DCF` = the Spirit stream for three
+family-10 party monsters and byte-identical to the S103 build for families 0-9;
+the `$0A` list draw (stub-called `LoadFldA_4610`) puts the Spirit tile at `$88B0`
+and is byte-identical to S103 for 0-9; default names 0-9 byte-identical, Spirit
+→ WISP/NOVA/ECHO…; dialogue text ids identical for 0-9, Spirit → group D;
+breeding (stub-called `$16` entry 3) identical over 289 pairs of non-Spirit
+species, `[Spirit × Dragon]` / `[Dragon × Spirit]` special appends fire;
+unknown-parent pedigree lines blank again.
+
+Library list buffer (S104 r3): `LibScanByFamily` (bank $12) writes the tab's
+member list to `wMonList` ($D001) — the buffer FX1 (S71) gave every bank-$12
+list reader. Before r3 it wrote the vanilla `$C0D8`, so every tab listed the
+roster and a lookup opened species = list index (a Spirit lookup froze).
+
+Display order (S104 r5, user: "Just a display reorder"): the library tab
+strip shows Bug / Devil / Zombie / Material / **Spirit** on page 2 and ??? on
+page 3. Bank $12 `LibTabToFamily` maps tab position → family through
+`LibTabOrder` (= `editor2/core/gamedata.py DISPLAY_ORDER`) for the tab icons
+and the member scan; family bytes, codes and tables are unchanged. The
+editor's Families tab uses the same order.
+
+Icon (S104 r2, user pick 2026-09-30 "Ghost whisp is the best BY FAR"):
+mock-up B, 8×8 grid in `extracted/family_icons.json` → `$4F:$41B0` + the
+bank $6D stream (run marker `$00`). The user-facing editor surface is the
+**Families** tab (members / move, dialogue voice, Spirit names).
+
+Still vanilla-sized (by design, no family 10 path): the battle banks' `$DA33`
+reads are countdown timers, not family (S104 audit).
+
 ---
 
 ## Family icons (B8/B9 "name" path) — TRACED + Spirit icon half-built (Session 20)
 
+> **S104:** Spirit now ships on byte **$1A (`$4F:$41B0`)** and the vanilla ??? glyph at
+> `$41A0` is restored — the "not fill-immune" finding below did not reproduce (PyBoy: `$1A`
+> renders on the INFO page and the library tab strip once the bank-$41 mode-4 Spirit string
+> says `$1A`). See "Spirit — the 11th family (S104)". Historical text follows.
+>
 > **CORRECTION (2026-06-19):** the Spirit icon SHIPS on font byte **$19 (`$4F:$41A0`)**,
 > overwriting the vanilla ??? glyph (??? + Spirit share the whip). The S20 text in this
 > section that places it on the free slot **$1A (`$41B0`)** is SUPERSEDED — $1A is blanked
@@ -587,8 +656,8 @@ Summary for builders:
 | Detail-screen line | `<$F0><icon $1x>"family"` per family, in bank `$4D` |
 | Library tab strip | blits the same `$10`–`$19` tiles |
 | Tile index→shade convention | idx 1 = menu background, idx 2/3 = ink, idx 0 = lightest (a few icons use it) |
-| 11th icon slot (SHIPPED) | byte `$19` → `$4F:$41A0` (overwrites vanilla ???; $1A was not fill-immune) |
-| ~~FREE slot for an 11th icon~~ (abandoned) | byte `$1A` → `$4F:$41B0` (blank; menu blanks it at runtime) |
+| 11th icon slot (S104) | byte `$1A` → `$4F:$41B0` (Spirit); byte `$19` = vanilla ??? again |
+| HUD / list copy (S104) | bank `$6D` `SpiritIconStream`, gfx id `$6D04` |
 
 **Spirit icon — DONE as a same-size insert (`patches/bank_04f.asm`).** User art
 ("Fire Whip Spirit"); encoded to a 16-byte 2bpp tile and dropped into `$41B0` (byte
@@ -683,6 +752,19 @@ Two guards worth keeping in any future writer:
    region it has never seen.
 2. **No foreign pointers into the repack region.** Abort if any dispatch entry
    outside `species+5` range points inside the block being rewritten.
+
+### As built in the editor (S103)
+
+The compiler keeps Set 1 automatically: every family slot a project changes
+(`gamedata.breeding.family`) gets its bank-$4D string regenerated **in place**
+— the English strings are always 18 characters + `$F0`, exactly one slot, so no
+pointer moves (entries 5-10 double as the `$4007` mode 2-7 bases — TEXT_SYSTEM).
+Untouched species keep their hand-authored strings, typos included. The block
+is re-sectioned in both trees as `LibRecipeText_NNN` rows; region
+`gd_library_text` (PROJECT_COMPILER §2.20). PyBoy S103: Snaily's page shows the
+edited Zombie × Zombie recipe. A family-byte change (`gamedata.monsters[].family`)
+regroups the library tabs (`gd_library_grouping`, B7 format) — PyBoy S103:
+Slime moved to Dragon → the Dragon tab lists 26, the Slime tab 20.
 
 ### Note for the editor
 

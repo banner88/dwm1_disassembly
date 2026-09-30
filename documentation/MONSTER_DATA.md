@@ -2,6 +2,10 @@
 
 ## Monster Info Table (Bank $03:$4461)
 
+> **Editable S103** as `gamedata.monsters` (PROJECT_COMPILER §2.20): field names
+> `family, level_cap, exp_table, female_ratio, can_fly, metal_body, skills[3],
+> growth{hp..int}, resist{Fire..}, tier`; compiler region `gd_monster_info`.
+
 **Loader**: `Call_003_4446` (entry 1), reads species from `$DA31`, copies 43 bytes to `$DA33`
 
 221 entries × 43 bytes each:
@@ -73,6 +77,12 @@ Values: 0=weak/no resistance, 1=some resist, 2=normal, 3=strong/immune.
 5. HP and ATK get additional bonus scaling via `Call_013_4163`
 
 ## Enemy Stats Table (Bank $14:$4C1D)
+
+> **Editable S103** as `gamedata.enemies` (EIDs 0-486; same field names as
+> `progression.enemies`); region `gd_enemy_stats`. PyBoy S103 on the user's
+> save: EID 2 edited to HP 250 / ATK 1 / 500 exp / always joins → the battle
+> row `$DA18` holds exactly the edited 25 bytes, each party monster got 167
+> exp (500 / 3, CF2 party split) and the Slime joined.
 
 **Loader**: `Call_014_4849`, reads EID from `$DA12/$DA13`, copies 25 bytes to `$DA18`
 
@@ -1300,7 +1310,10 @@ both uniformly eager). Heal accepts vanilla-full, S60v1, S60v2 → rewrites
 v3 in place. **Snapshot v4** ("R4", bank 1): dual regions $A1BF ×95 chunks
 (as v3) + $B124 ×94 chunks ($B124-$BCE3; the 28-byte tail overlaps the LAZY
 tile-buffer image — restore there is a proven no-op, same argument as v3's
-8 leading bytes). Restore ladder: R4 → both; R3 → roster restore + seed
+8 leading bytes — **WRONG, S104 r4**: the commit runs before SaveGameState's
+tile block, so those 28 bank-1 bytes are the PREVIOUS save's; restoring them
+broke checksum segment 3 and lost the save after a reset. The R4 restore now
+stops at $BCC7 = 93 chunks + `CF3SnapTail4`). Restore ladder: R4 → both; R3 → roster restore + seed
 extended from live + upgrade to R4; absent → seed both. Commit (explicit
 save via the entry-5 detector, unchanged) writes both regions + R4.
 Entry 5/6 copy-skip windows unchanged (no block copy touches $B124+).

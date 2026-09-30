@@ -1,7 +1,7 @@
 {
  "_generator": "tools/build_family_icon.py --dump",
  "_rom": "data/DWM-original.gbc",
- "_note": "Family icons are font tiles at $4F:$4110+ (bytes $10-$19). Byte->addr: $4010 + byte*16. The 11th-family (Spirit) icon ships on byte $19 ($41A0), overwriting vanilla ???; the free $1A slot ($41B0) is left blank (not fill-immune).",
+ "_note": "Family icons are font tiles at $4F:$4110+ (bytes $10-$19). Byte->addr: $4010 + byte*16. The 11th family (Spirit) icon ships on byte $1A = $41B0 (patches/bank_04f.asm) and as the bank $6D SpiritIconStream (HUD copy, gfx id $6D04); the vanilla ??? glyph at $41A0 is untouched (S104).",
  "byte_to_addr_formula": "$4010 + textbyte*16",
  "bank": "$4F",
  "icons": [
@@ -963,19 +963,79 @@
   ]
  },
  "spirit": {
-  "byte": "$19",
-  "addr": "$41A0",
-  "label": "Spirit (whip, option 5)",
-  "note": "Shipped Spirit family icon. Overwrites the vanilla ??? glyph at byte $19 ($41A0); ??? and Spirit share this whip tile. The S20 plan targeted the free slot $1A ($41B0) but that slot is blanked by the menu at runtime (not fill-immune), so the whip lives on $19. Grid round-trips to the 16 bytes in patches/bank_04f.asm; build_family_icon.py --selftest verifies it (no PNG needed).",
+  "byte": "$1A",
+  "addr": "$41B0",
+  "label": "Spirit (ghost wisp, S104 mock-up B \u2014 user pick 2026-09-30)",
+  "note": "Spirit (family 10) icon. Ships on font byte $1A ($4F:$41B0) and as the bank $6D SpiritIconStream (HUD copy); the vanilla ??? glyph at $19/$41A0 is restored (S104: the B9 finding that $1A renders blank does not reproduce \u2014 PyBoy shows it on the INFO page and the library tab strip). Art = S104 mock-up B \"ghost wisp\" (user pick 2026-09-30: \"Ghost whisp is the best BY FAR\"); the B9 whip is retired. build_family_icon.py --selftest checks both copies against this grid (no PNG needed).",
   "grid": [
    [
     1,
     1,
     1,
+    3,
     1,
     1,
     1,
+    1
+   ],
+   [
     1,
+    1,
+    3,
+    0,
+    3,
+    1,
+    1,
+    1
+   ],
+   [
+    1,
+    3,
+    0,
+    0,
+    0,
+    3,
+    1,
+    1
+   ],
+   [
+    3,
+    0,
+    3,
+    0,
+    3,
+    0,
+    3,
+    1
+   ],
+   [
+    3,
+    0,
+    0,
+    0,
+    0,
+    0,
+    3,
+    1
+   ],
+   [
+    1,
+    3,
+    0,
+    0,
+    0,
+    3,
+    1,
+    1
+   ],
+   [
+    1,
+    1,
+    3,
+    3,
+    0,
+    3,
+    3,
     1
    ],
    [
@@ -987,66 +1047,6 @@
     3,
     3,
     3
-   ],
-   [
-    1,
-    1,
-    1,
-    1,
-    2,
-    0,
-    1,
-    3
-   ],
-   [
-    1,
-    1,
-    1,
-    3,
-    0,
-    0,
-    0,
-    3
-   ],
-   [
-    1,
-    1,
-    2,
-    3,
-    0,
-    0,
-    3,
-    1
-   ],
-   [
-    1,
-    1,
-    3,
-    3,
-    3,
-    2,
-    1,
-    1
-   ],
-   [
-    1,
-    2,
-    3,
-    3,
-    2,
-    1,
-    1,
-    1
-   ],
-   [
-    3,
-    3,
-    3,
-    2,
-    1,
-    1,
-    1,
-    1
    ]
   ]
  }

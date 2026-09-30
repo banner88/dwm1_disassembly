@@ -127,6 +127,46 @@ def main():
     print('OK: Rooms tab renders live (placeholders skipped, vanilla refs '
           'read-only, states switch); shell has the §5.0 tab strip')
 
+    # S104 (P3.10a): Families tab — 11 families, move a monster, dialogue voice,
+    # Spirit names; each edit is one undo step and undo restores the file
+    from editor2.core import gamedata as G
+    ft = w.families_tab
+    w.tabs.setCurrentWidget(ft)
+    app.processEvents()
+    assert ft.fam_list.count() == 11, ft.fam_list.count()
+    doc = w.session.doc
+    before = doc.dumps()
+    n_spirit = len(doc.family_members()[10])
+    ft.fam_list.setCurrentRow(0)
+    for i in range(ft.members.count()):
+        if ft.members.item(i).data(Qt.UserRole) == 4:          # Snaily
+            ft.members.setCurrentRow(i)
+    ft.move_to.setCurrentIndex(ft.move_to.findData(10))
+    ft._move()
+    assert len(doc.family_members()[10]) == n_spirit + 1
+    # S104 r5: display order puts Spirit before ??? (row 9)
+    assert ft.fam_list.item(9).text().startswith('Spirit'), ft.fam_list.item(9).text()
+    assert ft.fam_list.item(10).text().startswith('???'), ft.fam_list.item(10).text()
+    ft.fam_list.setCurrentRow(9)
+    ft.voice.setCurrentIndex(ft.voice.findData('A'))
+    ft._voice(0)
+    assert doc.family_voice(10) == 'A'
+    assert ft.names_box.isVisibleTo(ft)
+    ft.name_edits[0].setText('Boo')
+    ft._names()
+    assert doc.spirit_names()[0] == 'Boo'
+    fam = doc.data['gamedata']['families']
+    assert any(v.get('dialogue') == 'A' and v.get('names', [''])[0] == 'Boo'
+               for v in fam.values()), fam
+    ft.name_edits[1].setText('TOOLONG'[:G.NAME_MAX] + '1')   # maxLength stops the 5th char
+    assert len(ft.name_edits[1].text()) <= G.NAME_MAX
+    for _ in range(3):
+        w.session.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'undo must restore project.json exactly'
+    print('OK: Families tab — 11 families, move Snaily to Spirit, voice A, a Spirit '
+          'name; undo restores the document')
+
     if do_rom:
         from editor2.app.build_worker import BuildWorker  # noqa: E402
         results = []

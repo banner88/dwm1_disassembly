@@ -2,7 +2,8 @@
 ; BANK $41 — NAME TABLES (MONSTERS, SKILLS, ITEMS, PERSONALITIES, GAME TEXT)
 ; =============================================================================
 ; Contains:
-;   - Code/dispatch table at $4000-$4338 (73-entry dispatch + handler code)
+;   - $4000-$4338: bank id, 3 rst entries, the 15-word text-mode list $4007
+;     (TextModeList41) and the mode 0-4 tables (S104 re-section; TEXT_SYSTEM)
 ;   - MonsterNamePtrTable at $4339 (256 × dw → MonsterName_XXX labels)
 ;   - SkillNamePtrTable at $4539 (256 × dw → SkillName_XXX labels)
 ;   - FamilyCodePtrTable at $4739 (215 × dw → FamilyCode_XXX labels)
@@ -58,58 +59,435 @@ SECTION "ROM Bank $041", ROMX[$4000], BANK[$41]
 ;   HAZARD: each mode's per-species table has its OWN entry count and NONE bounds-
 ;   checks, so a new species id overshoots any table shorter than id+1 (see mode 7).
 ;
-    db $41, $93, $4A, $9A, $4A, $A1, $4A, $25, $40, $39, $40, $01, $41, $E3, $41, $23
-    db $43, $39, $43, $39, $45, $39, $47, $E7, $48, $3F, $49, $97, $49, $CD, $49, $17
-    db $4A, $1B, $4A, $7B, $4A, $A8, $4A, $A8, $4A, $A8, $4A, $A8, $4A, $25, $4B, $71
-    db $4B, $83, $4B, $9B, $4B, $C1, $4B, $12, $4C, $5E, $4C, $65, $4C, $6D, $4C, $6D
-    db $4C, $75, $4C, $7C, $4C, $84, $4C, $8B, $4C, $93, $4C, $98, $4C, $9E, $4C, $A6
-    db $4C, $AE, $4C, $B3, $4C, $BB, $4C, $C3, $4C, $C4, $4C, $CC, $4C, $D4, $4C, $D5
-    db $4C, $DD, $4C, $E5, $4C, $E6, $4C, $EE, $4C, $F4, $4C, $F5, $4C, $F6, $4C, $FF
-    db $4C, $00, $4D, $08, $4D, $10, $4D, $18, $4D, $20, $4D, $28, $4D, $2F, $4D, $33
-    db $4D, $3A, $4D, $3B, $4D, $3C, $4D, $3D, $4D, $45, $4D, $4D, $4D, $55, $4D, $5D
-    db $4D, $65, $4D, $6D, $4D, $75, $4D, $7D, $4D, $85, $4D, $8D, $4D, $95, $4D, $9D
-    db $4D, $A4, $4D, $AC, $4D, $B3, $4D, $BA, $4D, $BF, $4D, $C7, $4D, $CF, $4D, $D6
-    db $4D, $DD, $4D, $E6, $4D, $EC, $4D, $F3, $4D, $FA, $4D, $01, $4E, $08, $4E, $0E
-    db $4E, $16, $4E, $1D, $4E, $24, $4E, $2B, $4E, $32, $4E, $39, $4E, $40, $4E, $48
-    db $4E, $50, $4E, $58, $4E, $60, $4E, $67, $4E, $6D, $4E, $75, $4E, $7D, $4E, $85
-    db $4E, $8D, $4E, $94, $4E, $9B, $4E, $A3, $4E, $AB, $4E, $B3, $4E, $BB, $4E, $C3
-    db $4E, $C9, $4E, $CF, $4E, $D5, $4E, $DC, $4E, $E3, $4E, $EA, $4E, $F2, $4E, $F8
-    db $4E, $F9, $4E, $FC, $4E, $0D, $4F, $20, $4F, $33, $4F, $42, $4F, $58, $4F, $6A
-    db $4F, $82, $4F, $90, $4F, $A9, $4F, $C6, $4F, $D3, $4F, $E0, $4F, $E6, $4F, $EA
-    db $4F, $04, $50, $0E, $50, $39, $50, $47, $50, $58, $50, $6F, $50, $7D, $50, $9B
-    db $50, $C0, $50, $CC, $50, $E4, $50, $FB, $50, $2A, $51, $49, $51, $87, $51, $A3
-    db $51, $B6, $51, $C5, $51, $D7, $51, $E9, $51, $06, $52, $14, $52, $36, $52, $51
-    db $52, $6A, $52, $7B, $52, $AD, $52, $CD, $52, $E5, $52, $ED, $52, $01, $53, $11
-    db $53, $1C, $53, $73, $53, $7C, $53, $96, $53, $9D, $53, $A4, $53, $A7, $53, $AA
-    db $53, $B7, $53, $C5, $53, $CD, $53, $DA, $53, $DC, $53, $DE, $53, $E0, $53, $E2
-    db $53, $E4, $53, $E6, $53, $E8, $53, $EA, $53, $0E, $54, $14, $54, $51, $54, $5C
-    db $54, $68, $54, $7C, $54, $91, $54, $A1, $54, $FF, $54, $20, $55, $3C, $55, $5B
-    db $55, $98, $55, $D4, $55, $F0, $55, $F9, $55, $11, $56, $32, $56, $37, $56, $53
-    db $56, $75, $56, $9D, $56, $A8, $56, $A8, $56, $A8, $56, $EB, $56, $16, $57, $33
-    db $57, $3E, $57, $48, $57, $52, $57, $5C, $57, $66, $57, $6D, $57, $76, $57, $80
-    db $57, $87, $57, $8C, $57, $94, $57, $9F, $57, $AB, $57, $B6, $57, $C0, $57, $CC
-    db $57, $CD, $57, $01, $58, $06, $58, $0B, $58, $10, $58, $15, $58, $1A, $58, $29
-    db $58, $2E, $58, $32, $58, $36, $58, $3A, $58, $3F, $58, $44, $58, $49, $58, $4E
-    db $58, $52, $58, $57, $58, $5C, $58, $60, $58, $65, $58, $6A, $58, $6F, $58, $73
-    db $58, $78, $58, $7D, $58, $82, $58, $87, $58, $8C, $58, $91, $58, $96, $58, $9B
-    db $58, $A0, $58, $A5, $58, $AA, $58, $AF, $58, $B4, $58, $B9, $58, $BD, $58, $C2
-    db $58, $C7, $58, $CB, $58, $D0, $58, $D5, $58, $DA, $58, $DF, $58, $E4, $58, $E9
-    db $58, $EE, $58, $F3, $58, $F8, $58, $FD, $58, $02, $59, $07, $59, $0C, $59, $11
-    db $59, $16, $59, $1A, $59, $1F, $59, $24, $59, $29, $59, $2D, $59, $32, $59, $36
-    db $59, $3B, $59, $40, $59, $45, $59, $4A, $59, $4F, $59, $54, $59, $59, $59, $5E
-    db $59, $62, $59, $67, $59, $6C, $59, $70, $59, $75, $59, $7A, $59, $7E, $59, $82
-    db $59, $87, $59, $8C, $59, $91, $59, $96, $59, $9A, $59, $9F, $59, $A4, $59, $A9
-    db $59, $AE, $59, $B3, $59, $B8, $59, $BD, $59, $C2, $59, $C7, $59, $CC, $59, $D0
-    db $59, $D5, $59, $DA, $59, $DF, $59, $E4, $59, $E9, $59, $EE, $59, $F3, $59, $F8
-    db $59, $FD, $59, $02, $5A, $07, $5A, $0C, $5A, $11, $5A, $16, $5A, $1A, $5A, $1F
-    db $5A, $23, $5A, $27, $5A, $2B, $5A, $2F, $5A, $33, $5A, $38, $5A, $3D, $5A, $42
-    db $5A, $47, $5A, $4C, $5A, $51, $5A, $55, $5A, $5A, $5A, $5F, $5A, $63, $5A, $68
-    db $5A, $6D, $5A, $71, $5A, $76, $5A, $7B, $5A, $7F, $5A, $84, $5A, $88, $5A, $8C
-    db $5A, $90, $5A, $95, $5A, $9A, $5A, $9F, $5A, $A3, $5A, $A7, $5A, $AC, $5A, $B1
-    db $5A, $B6, $5A, $BB, $5A, $C0, $5A, $C5, $5A, $CA, $5A, $CF, $5A, $D4, $5A, $D9
-    db $5A, $DE, $5A, $E3, $5A, $E8, $5A, $ED, $5A, $F2, $5A, $F7, $5A, $FB, $5A, $00
-    db $5B, $05, $5B, $0A, $5B, $0C, $5B, $0E, $5B, $10, $5B, $12, $5B, $14, $5B, $16
-    db $5B, $18, $5B, $1A, $5B, $1C, $5B, $1E, $5B
+; --- S104 re-section (was raw db rows; byte-neutral): entry table, the $4007
+;     mode list, and the mode 0-4 tables. Strings stay raw below. ---
+    db $41                            ; bank id
+    dw $4A93, $4A9A, $4AA1        ; rst $10 entries 0-2 (code at $4A93+)
+TextModeList41:  ; $4007 — [ $4007 + mode*2 ] = that mode's per-id table (TEXT_SYSTEM)
+    dw $4025  ; mode  0: debug menu text
+    dw $4039  ; mode  1: debug stage names
+    dw $4101  ; mode  2: field messages
+    dw $41E3  ; mode  3: family DEFAULT-NAME pool (16 per family: +8 = the $C8F6 bit 0 variant, + RNG 0-7)
+    dw $4323  ; mode  4: family ICON string ("$1x" + $F0) — the INFO / library / parent family icon
+    dw $4339  ; mode  5: MonsterNamePtrTable
+    dw $4539  ; mode  6: SkillNamePtrTable
+    dw $4739  ; mode  7: FamilyCodePtrTable (2-letter nicknames, per SPECIES)
+    dw $48E7  ; mode  8: ItemNamePtrTable
+    dw $493F  ; mode  9: ItemDescPtrTable
+    dw $4997  ; mode 10: PersonalityNamePtrTable
+    dw $49CD  ; mode 11: MiscTextPtrTable
+    dw $4A17  ; mode 12: WatabouTextPtrTable
+    dw $4A1B  ; mode 13: ItemUseTextPtrTable
+    dw $4A7B  ; mode 14: SpellUseTextPtrTable
+TextMode0_Debug:  ; $4025 — mode 0, 10 entries: debug menu text
+    dw $4AA8  ; [0] [96] DEBUG MODE[F1]    SELECT 
+    dw $4AA8  ; [1] [96] DEBUG MODE[F1]    SELECT 
+    dw $4AA8  ; [2] [96] DEBUG MODE[F1]    SELECT 
+    dw $4AA8  ; [3] [96] DEBUG MODE[F1]    SELECT 
+    dw $4B25  ; [4]   [9C] EDIT [9C][F1][F1]MAPTYP
+    dw $4B71  ; [5]  0123456789ABCDEF
+    dw $4B83  ; [6]   [9C] SOUND [9C][F1][F1]  BGM
+    dw $4B9B  ; [7] [9C] GOTOPRG [9C][F1][F1][F1] 
+    dw $4BC1  ; [8] TITLE [9D]1  GAME   BATTLE EVT
+    dw $4C12  ; [9] [9C] BATTLE [9C][F1][F1]ENEMY 
+TextMode1_DebugStages:  ; $4039 — mode 1, 100 entries: debug stage names
+    dw $4C5E  ; [0] NORMAL
+    dw $4C65  ; [1] ACREATE
+    dw $4C6D  ; [2] STAGEID
+    dw $4C6D  ; [3] STAGEID
+    dw $4C75  ; [4] CASTLE
+    dw $4C7C  ; [5] VILLAGE
+    dw $4C84  ; [6] BAZAAR
+    dw $4C8B  ; [7] TRVGATE
+    dw $4C93  ; [8] FARM
+    dw $4C98  ; [9] SHPRD
+    dw $4C9E  ; [10] BATTLE1
+    dw $4CA6  ; [11] BATTLE2
+    dw $4CAE  ; [12] NEST
+    dw $4CB3  ; [13] STRDNGN
+    dw $4CBB  ; [14] WTMEDAL
+    dw $4CC3  ; [15] 
+    dw $4CC4  ; [16] EGCNSLT
+    dw $4CCC  ; [17] PRDPRNT
+    dw $4CD4  ; [18] 
+    dw $4CD5  ; [19] CHKSTND
+    dw $4CDD  ; [20] CUTYGRL
+    dw $4CE5  ; [21] 
+    dw $4CE6  ; [22] LIBRARY
+    dw $4CEE  ; [23] STACK
+    dw $4CF4  ; [24] 
+    dw $4CF5  ; [25] 
+    dw $4CF6  ; [26] MEDALMAN
+    dw $4CFF  ; [27] 
+    dw $4D00  ; [28] IN WELL
+    dw $4D08  ; [29] MDYHAND
+    dw $4D10  ; [30] SPONSER
+    dw $4D18  ; [31] STABLEL
+    dw $4D20  ; [32] STABLER
+    dw $4D28  ; [33] SCHOOL
+    dw $4D2F  ; [34] BAR
+    dw $4D33  ; [35] QUEEEN
+    dw $4D3A  ; [36] 
+    dw $4D3B  ; [37] 
+    dw $4D3C  ; [38] 
+    dw $4D3D  ; [39] CHMBROP
+    dw $4D45  ; [40] CHMBR G
+    dw $4D4D  ; [41] CHMBR F
+    dw $4D55  ; [42] CHMBR E
+    dw $4D5D  ; [43] CHMBR D
+    dw $4D65  ; [44] CHMBR C
+    dw $4D6D  ; [45] CHMBR B
+    dw $4D75  ; [46] CHMBR A
+    dw $4D7D  ; [47] CHMBR S
+    dw $4D85  ; [48] CHMBR 1
+    dw $4D8D  ; [49] CHMBR 2
+    dw $4D95  ; [50] CHMBR 3
+    dw $4D9D  ; [51] TERRYS
+    dw $4DA4  ; [52] OLDWELL
+    dw $4DAC  ; [53] S CAVE
+    dw $4DB3  ; [54] MELKID
+    dw $4DBA  ; [55] NEST
+    dw $4DBF  ; [56] ILMWOOD
+    dw $4DC7  ; [57] TOMDOLA
+    dw $4DCF  ; [58] CASINO
+    dw $4DD6  ; [59] GODTWR
+    dw $4DDD  ; [60] LONDARGR
+    dw $4DE6  ; [61] RENUL
+    dw $4DEC  ; [62] ARPTWR
+    dw $4DF3  ; [63] DANCER
+    dw $4DFA  ; [64] T CAVE
+    dw $4E01  ; [65] SPRING
+    dw $4E08  ; [66] HAPPY
+    dw $4E0E  ; [67] LIFECOD
+    dw $4E16  ; [68] TRIAL1
+    dw $4E1D  ; [69] TRIAL2
+    dw $4E24  ; [70] M CAVE
+    dw $4E2B  ; [71] PRISON
+    dw $4E32  ; [72] Z CAVE
+    dw $4E39  ; [73] HELCLD
+    dw $4E40  ; [74] DRGCSTL
+    dw $4E48  ; [75] HRGNCSL
+    dw $4E50  ; [76] BRMSCSL
+    dw $4E58  ; [77] ZOMACSL
+    dw $4E60  ; [78] MT TOP
+    dw $4E67  ; [79] ATTOM
+    dw $4E6D  ; [80] EVIL MT
+    dw $4E75  ; [81] MUDOCSL
+    dw $4E7D  ; [82] BTWECSL
+    dw $4E85  ; [83] SCRTMAP
+    dw $4E8D  ; [84] ITEMSP
+    dw $4E94  ; [85] CHURCH
+    dw $4E9B  ; [86] COLISUM
+    dw $4EA3  ; [87] MAZEWOD
+    dw $4EAB  ; [88] SLDFLR1
+    dw $4EB3  ; [89] SLDFLR2
+    dw $4EBB  ; [90] SLDFLR3
+    dw $4EC3  ; [91] MAZE1
+    dw $4EC9  ; [92] MAZE2
+    dw $4ECF  ; [93] MAZE3
+    dw $4ED5  ; [94] MMCRM1
+    dw $4EDC  ; [95] MMCRM2
+    dw $4EE3  ; [96] MMCRM3
+    dw $4EEA  ; [97] BTLDEMO
+    dw $4EF2  ; [98] CSLBG
+    dw $4EF8  ; [99] 
+TextMode2_FieldMsgs:  ; $4101 — mode 2, 113 entries: field messages
+    dw $4EF9  ; [0] [F9]0
+    dw $4EFC  ; [1] Want to dump[F1][F9]<slime>?
+    dw $4F0D  ; [2] [F9]0 dumps[F1][F9]<slime> awa
+    dw $4F20  ; [3] Cannot dump here!<CLEAR>
+    dw $4F33  ; [4] [F9]0 uses[F1]1 [F9]<slime>.<C
+    dw $4F42  ; [5] [F9]0 gaves[F1][F9]<slime><WAI
+    dw $4F58  ; [6] Nothing happens.<CLEAR>
+    dw $4F6A  ; [7] Record to the[F1]Journal?<CLEA
+    dw $4F82  ; [8] <HERO> found[F1]1 [F9]0<CLEAR>
+    dw $4F90  ; [9] Is [F9]0 okay[F1]for the name?
+    dw $4FA9  ; [10] Please choose[F1]another name.
+    dw $4FC6  ; [11] PUT TAKEEXIT
+    dw $4FD3  ; [12] ITEMGOLDEXIT
+    dw $4FE0  ; [13] Empty
+    dw $4FE6  ; [14] Egg
+    dw $4FEA  ; [15] Want to name[F1][F9]<slime> as
+    dw $5004  ; [16] EXIT INFO
+    dw $500E  ; [17] Found 1 [F9]0.[F1]But cannot c
+    dw $5039  ; [18] Gives up[F1][F9]0!<CLEAR>
+    dw $5047  ; [19] Dump which item?
+    dw $5058  ; [20] Dumped [F9]<slime>[F1]and got 
+    dw $506F  ; [21] <HERO> found[F1][F9]0G.<CLEAR>
+    dw $507D  ; [22] Finds [F9]0G.[F1]Cannot take m
+    dw $509B  ; [23] The treasure box[F1]is really 
+    dw $50C0  ; [24] [F9]0[F1]faints.<CLEAR>
+    dw $50CC  ; [25] [F9]0[F1]faints.<CLEAR>[F2][F9
+    dw $50E4  ; [26] <HERO>'s side is[F1]wiped out!
+    dw $50FB  ; [27] Not ready for[F1]link up.<WAIT
+    dw $512A  ; [28] Choose a monster[F1]for breedi
+    dw $5149  ; [29] Cannot choose the[F1]only mons
+    dw $5187  ; [30] Same gender.[F1]Cannot breed.<
+    dw $51A3  ; [31] One moment please.
+    dw $51B6  ; [32] Want to breed?
+    dw $51C5  ; [33] Refused to breed.
+    dw $51D7  ; [34] Breeding refused.
+    dw $51E9  ; [35] Save the result of[F1]breeding
+    dw $5206  ; [36] The ceremony!
+    dw $5214  ; [37] Choose monster[A0]s[A1][F1]for
+    dw $5236  ; [38] What would you[F1]like to do?
+    dw $5251  ; [39] Choose another[F1]monster?<CLE
+    dw $526A  ; [40] Submit a prize?<CLEAR>
+    dw $527B  ; [41] No monsters left[F1]at the far
+    dw $52AD  ; [42] Choose a monster[F1]for the pr
+    dw $52CD  ; [43] Are you ready[F1]to fight?
+    dw $52E5  ; [44] Fight!!
+    dw $52ED  ; [45] Refused the[F1]battle.
+    dw $5301  ; [46] Battle refused.
+    dw $5311  ; [47] No prize.<CLEAR>
+    dw $531C  ; [48] Your monster is[F1]not old eno
+    dw $5373  ; [49] No Save.
+    dw $537C  ; [50] Recorded in the[F1]Journal.<CL
+    dw $5396  ; [51]   [1B]<plant>[1C][1D]
+    dw $539D  ; [52] 'r't<bug>be[1C][1D]
+    dw $53A4  ; [53] HP
+    dw $53A7  ; [54] MP
+    dw $53AA  ; [55] ATTACK power
+    dw $53B7  ; [56] DEFENSE power
+    dw $53C5  ; [57] AGILITY
+    dw $53CD  ; [58] INTELLIGENCE
+    dw $53DA  ; [59] [AE]
+    dw $53DC  ; [60] [AF]
+    dw $53DE  ; [61] [A9]
+    dw $53E0  ; [62] [B0]
+    dw $53E2  ; [63] [B1]
+    dw $53E4  ; [64] [AD]
+    dw $53E6  ; [65] [B2]
+    dw $53E8  ; [66] [B3]
+    dw $53EA  ; [67] Cannot record in[F1]the Journa
+    dw $540E  ; [68] [1E][59]<bird>[B4] 
+    dw $5414  ; [69] The same name[F1]already exist
+    dw $5451  ; [70] You win!<WAIT><CLEAR>
+    dw $545C  ; [71] You lose!<WAIT><CLEAR>
+    dw $5468  ; [72] [F9]0 surrendered[F1][F9]<slim
+    dw $547C  ; [73] [F9]<slime> was[F1]taken by [F
+    dw $5491  ; [74] WHOINFOOKMONEGG
+    dw $54A1  ; [75] The monster<PAGE> farm is full
+    dw $54FF  ; [76] [F9]<slime> [F1]is returned to
+    dw $5520  ; [77] Replace with[F1]which monster?
+    dw $553C  ; [78] Is this monster[F1]OK to repla
+    dw $555B  ; [79] Do you want to[F1]replace one 
+    dw $5598  ; [80] There will be no[F1]one left i
+    dw $55D4  ; [81] Replace with[F1]which monster?
+    dw $55F0  ; [82] No egg.<CLEAR>
+    dw $55F9  ; [83] Replace with[F1]which egg?
+    dw $5611  ; [84] [F9]<slime> [F1]is returned to
+    dw $5632  ; [85] ITEM
+    dw $5637  ; [86] Want to record[F1]your quest?[
+    dw $5653  ; [87] Saved! Please turn[F1]off the 
+    dw $5675  ; [88] Thank you![F1]<CLEAR>[F2]Pleas
+    dw $569D  ; [89] chen.j.n[B4][9B]
+    dw $56A8  ; [90] You cannot choose[F1]the monst
+    dw $56A8  ; [91] You cannot choose[F1]the monst
+    dw $56A8  ; [92] You cannot choose[F1]the monst
+    dw $56EB  ; [93] Please choose a[F1]monster fro
+    dw $5716  ; [94] Too bad...[F1]Breeding failed.
+    dw $5733  ; [95] BEGINNING[A3]
+    dw $573E  ; [96] VILLAGER[A3]
+    dw $5748  ; [97] TALISMAN[A3]
+    dw $5752  ; [98] MEMORIES[A3]
+    dw $575C  ; [99] BEWILDER[A3]
+    dw $5766  ; [100] PEACE[A3]
+    dw $576D  ; [101] BRAVERY[A3]
+    dw $5776  ; [102] STRENGTH[A3]
+    dw $5780  ; [103] ANGER[A3]
+    dw $5787  ; [104] JOY[A3]
+    dw $578C  ; [105] WISDOM[A3]
+    dw $5794  ; [106] HAPPINESS[A3]
+    dw $579F  ; [107] TEMPTATION[A3]
+    dw $57AB  ; [108] LABYRINTH[A3]
+    dw $57B6  ; [109] JUDGMENT[A3]
+    dw $57C0  ; [110] REFLECTION[A3]
+    dw $57CC  ; [111] 
+    dw $57CD  ; [112] This Option is[F1]unavailable 
+FamilyNamePoolTable:  ; $41E3 — mode 3, 160 entries: family DEFAULT-NAME pool (16 per family: +8 = the $C8F6 bit 0 variant, + RNG 0-7)
+    ; family 0 Slime: ids $00-$0F
+    dw $5801  ; [0] SLIR
+    dw $5806  ; [1] SLUP
+    dw $580B  ; [2] RUKY
+    dw $5810  ; [3] SALY
+    dw $5815  ; [4] POSY
+    dw $581A  ; [5] PETE
+    dw $5829  ; [6] SLEE
+    dw $582E  ; [7] CAL
+    dw $5832  ; [8] SIL
+    dw $5836  ; [9] SAL
+    dw $583A  ; [10] MILI
+    dw $583F  ; [11] LIME
+    dw $5844  ; [12] MARC
+    dw $5849  ; [13] AUTM
+    dw $584E  ; [14] REX
+    dw $5852  ; [15] MOVE
+    ; family 1 Dragon: ids $10-$1F
+    dw $5857  ; [16] CLOW
+    dw $585C  ; [17] TAP
+    dw $5860  ; [18] KITE
+    dw $5865  ; [19] WILD
+    dw $586A  ; [20] GEEK
+    dw $586F  ; [21] TIE
+    dw $5873  ; [22] DRAC
+    dw $5878  ; [23] CARY
+    dw $587D  ; [24] BETH
+    dw $5882  ; [25] LULU
+    dw $5887  ; [26] ISYS
+    dw $588C  ; [27] CHES
+    dw $5891  ; [28] GIRL
+    dw $5896  ; [29] BELL
+    dw $589B  ; [30] SAVY
+    dw $58A0  ; [31] PUKY
+    ; family 2 Beast: ids $20-$2F
+    dw $58A5  ; [32] BUKY
+    dw $58AA  ; [33] BONG
+    dw $58AF  ; [34] GUNY
+    dw $58B4  ; [35] SUNY
+    dw $58B9  ; [36] MAX
+    dw $58BD  ; [37] DELO
+    dw $58C2  ; [38] NEVY
+    dw $58C7  ; [39] TIL
+    dw $58CB  ; [40] YETA
+    dw $58D0  ; [41] SASA
+    dw $58D5  ; [42] MOKO
+    dw $58DA  ; [43] KARY
+    dw $58DF  ; [44] BABY
+    dw $58E4  ; [45] KITA
+    dw $58E9  ; [46] BIRD
+    dw $58EE  ; [47] LUCK
+    ; family 3 Bird: ids $30-$3F
+    dw $58F3  ; [48] CHIP
+    dw $58F8  ; [49] PARK
+    dw $58FD  ; [50] HEKY
+    dw $5902  ; [51] RAVE
+    dw $5907  ; [52] TONY
+    dw $590C  ; [53] RADY
+    dw $5911  ; [54] CUKY
+    dw $5916  ; [55] COO
+    dw $591A  ; [56] JODY
+    dw $591F  ; [57] BONY
+    dw $5924  ; [58] MISA
+    dw $5929  ; [59] MEG
+    dw $592D  ; [60] KELY
+    dw $5932  ; [61] FEY
+    dw $5936  ; [62] BONZ
+    dw $593B  ; [63] ZOOL
+    ; family 4 Plant: ids $40-$4F
+    dw $5940  ; [64] BABA
+    dw $5945  ; [65] MITY
+    dw $594A  ; [66] HOLY
+    dw $594F  ; [67] KINY
+    dw $5954  ; [68] LUMP
+    dw $5959  ; [69] SION
+    dw $595E  ; [70] EVE
+    dw $5962  ; [71] LOTS
+    dw $5967  ; [72] ROSE
+    dw $596C  ; [73] CUL
+    dw $5970  ; [74] JILL
+    dw $5975  ; [75] BECK
+    dw $597A  ; [76] SHY
+    dw $597E  ; [77] FUR
+    dw $5982  ; [78] KICS
+    dw $5987  ; [79] JOHN
+    ; family 5 Bug: ids $50-$5F
+    dw $598C  ; [80] RIMP
+    dw $5991  ; [81] PEET
+    dw $5996  ; [82] GRU
+    dw $599A  ; [83] BRUT
+    dw $599F  ; [84] TOPY
+    dw $59A4  ; [85] STIK
+    dw $59A9  ; [86] MARY
+    dw $59AE  ; [87] LYNN
+    dw $59B3  ; [88] BETY
+    dw $59B8  ; [89] HONY
+    dw $59BD  ; [90] POLY
+    dw $59C2  ; [91] COOL
+    dw $59C7  ; [92] HANA
+    dw $59CC  ; [93] SUN
+    dw $59D0  ; [94] MEFY
+    dw $59D5  ; [95] BERG
+    ; family 6 Devil: ids $60-$6F
+    dw $59DA  ; [96] MERE
+    dw $59DF  ; [97] BART
+    dw $59E4  ; [98] BRUN
+    dw $59E9  ; [99] BOLD
+    dw $59EE  ; [100] LUKE
+    dw $59F3  ; [101] AMOS
+    dw $59F8  ; [102] SALA
+    dw $59FD  ; [103] POLA
+    dw $5A02  ; [104] JUDY
+    dw $5A07  ; [105] VIVI
+    dw $5A0C  ; [106] FLOR
+    dw $5A11  ; [107] SADY
+    dw $5A16  ; [108] AMY
+    dw $5A1A  ; [109] RONA
+    dw $5A1F  ; [110] MIL
+    dw $5A23  ; [111] WIL
+    ; family 7 Zombie: ids $70-$7F
+    dw $5A27  ; [112] TOO
+    dw $5A2B  ; [113] NEK
+    dw $5A2F  ; [114] TEK
+    dw $5A33  ; [115] TOTO
+    dw $5A38  ; [116] VOMI
+    dw $5A3D  ; [117] LILI
+    dw $5A42  ; [118] BELY
+    dw $5A47  ; [119] JENY
+    dw $5A4C  ; [120] FRAN
+    dw $5A51  ; [121] DOR
+    dw $5A55  ; [122] TWEE
+    dw $5A5A  ; [123] KANA
+    dw $5A5F  ; [124] RAY
+    dw $5A63  ; [125] JESY
+    dw $5A68  ; [126] NITR
+    dw $5A6D  ; [127] PEP
+    ; family 8 Material: ids $80-$8F
+    dw $5A71  ; [128] ROKY
+    dw $5A76  ; [129] MEGA
+    dw $5A7B  ; [130] FOT
+    dw $5A7F  ; [131] VINY
+    dw $5A84  ; [132] BOB
+    dw $5A88  ; [133] ROB
+    dw $5A8C  ; [134] JEL
+    dw $5A90  ; [135] RUBY
+    dw $5A95  ; [136] PARL
+    dw $5A9A  ; [137] AMET
+    dw $5A9F  ; [138] PIA
+    dw $5AA3  ; [139] TIA
+    dw $5AA7  ; [140] SERA
+    dw $5AAC  ; [141] REDA
+    dw $5AB1  ; [142] DRAN
+    dw $5AB6  ; [143] PUPS
+    ; family 9 Boss/???: ids $90-$9F
+    dw $5ABB  ; [144] CARL
+    dw $5AC0  ; [145] ZEEK
+    dw $5AC5  ; [146] CRIS
+    dw $5ACA  ; [147] GOLD
+    dw $5ACF  ; [148] GIGA
+    dw $5AD4  ; [149] CENT
+    dw $5AD9  ; [150] MARI
+    dw $5ADE  ; [151] ANNA
+    dw $5AE3  ; [152] ELLY
+    dw $5AE8  ; [153] LIZA
+    dw $5AED  ; [154] BELA
+    dw $5AF2  ; [155] LILY
+    dw $5AF7  ; [156] ANN
+    dw $5AFB  ; [157] BARB
+    dw $5B00  ; [158] MARI
+    dw $5B05  ; [159] ANNA
+FamilyIconStrTable_Old:  ; $4323 — mode 4, 11 entries: family ICON string ("$1x" + $F0) — the INFO / library / parent family icon
+    dw $5B0A  ; [0] <slime>
+    dw $5B0C  ; [1] <dragon>
+    dw $5B0E  ; [2] <beast>
+    dw $5B10  ; [3] <bird>
+    dw $5B12  ; [4] <plant>
+    dw $5B14  ; [5] <bug>
+    dw $5B16  ; [6] <devil>
+    dw $5B18  ; [7] <zombie>
+    dw $5B1A  ; [8] <material>
+    dw $5B1C  ; [9] <???>
+    dw $5B1E  ; [10] 
 
 MonsterNamePtrTable:  ; $4339 — 256 entries, indexed by monster ID
     ; mode 5 of the $4007 config list (full monster name). 256-wide → a new species

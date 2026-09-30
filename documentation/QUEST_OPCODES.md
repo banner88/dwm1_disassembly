@@ -159,7 +159,9 @@ ArenaLobby_Script04:  check_step $0002  ; Party slot 2
 These are the 3 NPCs representing your monster party in the arena lobby. When talked to, they show dialogue specific to their monster family (Slime family says one thing, Dragon family says another, etc.).
 
 ### Data Table at $04:$60F4
-Contains pointers to per-family text arrays. Each family has a sub-table of text IDs indexed by a secondary lookup. The table at $60F4 is misassembled as instructions in the current bank_004.asm — it needs annotation as data.
+Contains pointers to per-family text arrays (`FamilyTextPtrTable`, 10 entries: groups A B C B A C C A B D). Each family has a sub-table of text IDs (`FamilyTextGroup_A`-`_D`, 8 dw each) indexed by the bank $01 entry 7 result. (Annotated as data since; the "misassembled" note is historical.)
+
+**S104:** the handler reads the family from `$DA33` (the SPECIES' info byte, not the stamped struct byte) and now far-calls bank `$6D` entry 2 `FamilyTextGroupFromE` (same-size fork, `patches/bank_004.asm`): families 0-9 get the vanilla groups, Spirit (10) gets group D (the ??? voice, default until the user picks). The `$60F4` table is dead in the patched build; before S104 family 10 read `FamilyTextGroup_A`'s first word as a pointer (PyBoy: text id `$EA3C`).
 
 ---
 

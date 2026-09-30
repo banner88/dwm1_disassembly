@@ -149,7 +149,9 @@ A macro-shape mode is rolled first: `wShapeMode = [$6056 + (RNG mod 5)]`
 - **Other modes** 🟡 — carve a connected layout into `$C940` using
   `FloorTypeOrderTable` (`$16:$7096`, a 16-byte permutation of piece ids) and two
   primitives: `SetBrd_6744` (neighbour/connectivity test) and `SetBrd_6800`
-  (place/link a piece). The exact carve algorithm (how connectivity is guaranteed)
+  (place/link a piece). The carve count comes from `$C93D` = the floor's
+  encounter pool +25 byte ("maze size", vanilla 3 / 8 / 15; S103 static read —
+  DATA_STRUCTURES "Encounter pool entry", `gamedata.encounters[].maze_size`). The exact carve algorithm (how connectivity is guaranteed)
   is understood in outline but not step-traced.
 
 After the grid is built, a final pass folds in the per-cell `variant` nibble

@@ -30,6 +30,7 @@ to the proven overlay:
 | `patches/bank_000.asm` | one marked region (`rom0_room_records` — the `$26DD` rows `$6B-$6F`, S94) |
 | `patches/bank_064.asm`, `bank_067.asm`, `bank_074.asm`, `bank_014.asm` region | layouts / tilesets / songs / quest enemies (S64, S70, S92) |
 | `patches/bank_06c.asm` | whole file = template head (`CustomTileAnimate`) + the rooms' own tile animations (S102, §2.19) |
+| `gd_*` regions in `patches/bank_001/003/006/007/012/013/014/016/04d/054/069.asm` | the vanilla data tables, from `gamedata` (S103, §2.20) |
 
 Everything else — engine intercepts in banks `$00/$01/$04/$06/$07/$0B/$16`,
 layouts (`bank_064.asm` via `tools/build_gate_room.py` /
@@ -116,16 +117,17 @@ python3 editor2/tests/test_compiler.py [--rom]
 
 ## 2. Schema reference (v1)
 
-Top level: `meta`, `world` (stub), `custom`, `gamedata` (stub), `build`.
+Top level: `meta`, `world` (stub), `custom`, `gamedata` (S103, §2.20), `progression`, `build`.
 Values accept `"0x6B"`, `"$6B"`, decimal ints, or (where noted) RGBDS
 symbols passed through to the assembler.
 
 ### 2.1 Layers (EDITOR_DESIGN §3)
 
-v1 implements **Layer B (`custom`)** and **Layer D (`build`)**. `world`
-(Layer A, vanilla-room edits) and `gamedata` (Layer C) are declared but
-unimplemented: **any non-`_`-prefixed content in them is a hard error** —
-the compiler never silently ignores authored data. Same for `custom.music`
+v1 implements **Layer B (`custom`)** and **Layer D (`build`)**; **Layer C
+(`gamedata`) since S103** (§2.20). `world` (Layer A, vanilla-room edits) is
+declared but unimplemented: **any non-`_`-prefixed content in it is a hard
+error** — the compiler never silently ignores authored data (unknown
+`gamedata` sections / fields are errors too). Same for `custom.music`
 (needs ROADMAP Arc 3 M1–M3) and `custom.skills` (see §6).
 
 ### 2.2 `custom.rooms[]`
@@ -401,6 +403,7 @@ registering an emitter; nothing existing changes.
 | `wram_steps` | `custom.rooms` + `custom.wram` | `region:…#wram_step_counters` | — |
 | `music74` | `custom.music` (+ `rooms[].music`) | `file:patches/bank_074.asm` | `$74` |
 | `tileanim6c` (S102) | `custom.rooms[].tile_anims` | `file:patches/bank_06c.asm` | `$6C` |
+| `gd_monsters` `gd_enemies` `gd_encounters` `gd_family` `gd_special` `gd_exp_curves` `gd_growth_curves` `gd_skill_learn` `gd_skill_mp` `gd_skill_records` `gd_library` `gd_library_text` (S103) | `gamedata` (§2.20) | `region:` in banks $03 / $14 / $01 / $16 / $69 / $13 / $13 / $06 / $07 / $54 / $12 / $4D | those banks |
 
 `bank_060` generated layout order (fixed, deterministic): script master
 table → shared no-op (if needed) → per-room script tables+bodies (script
@@ -609,6 +612,7 @@ editor2/
         doors.py talk.py     # S98 door/teleport/spot mutations (DoorsMixin), talk specs (TalkMixin)
         world.py             # S98 room/warp graph + deterministic layout (World tab)
         gates.py             # S100 gate model: vanilla gates, floors, arrival px, GatesMixin
+        gamedata.py          # S103 Layer A-lite: vanilla tables + gamedata overrides (§2.20)
         emulator.py
         templates/{bank_060_head.asm, bank_071_head.asm, PINNED_SHA256}
   app/  main.py session.py build_worker.py     # shell (S93), one Session per project
@@ -1255,6 +1259,119 @@ timers + cap). Load > 100 % is a warning. Bank accounting: `TEMPLATE_SIZE
 built S102, NOT yet user-tested) — the example has no `tile_anims`, so bank
 $6C = template + an empty table; bank $71 +4 B; wram carve. Prev
 `9c813041…` (patched, historical).
+
+## §2.20 S103 — `gamedata`: the vanilla data tables (Layer A-lite, ROADMAP P3.9)
+
+EDITOR_DESIGN §6.2. `gamedata` is **sparse**: it holds only what the project
+changes; every table is emitted as "vanilla rows + these overrides" into a
+compiler-owned `@BUILD_PROJECT` region of the SAME size, in place — no code
+or pointer moves. **An empty `gamedata` reproduces the ROM bytes exactly**
+(test_compiler: per-table region == ROM, and `--rom` compares the built ROM
+with the original at every table's address). The vanilla rows come from
+`extracted/gamedata_vanilla.json` (`tools/extract_gamedata.py`, verify check
+5 `--selftest`), so compiling needs no ROM. Module: `editor2/core/gamedata.py`
+(`Gamedata` = the resolved tables; `Project.gamedata()` caches it;
+`validators.validate` reports its errors / warnings before any emitter runs).
+
+```jsonc
+"gamedata": {
+  "monsters":   {"78": {"family": 10, "growth": {"hp": 12}, "resist": {"Fire": 3},
+                        "skills": [1, 2, 3], "level_cap": 50, "exp_table": 4,
+                        "female_ratio": 2, "can_fly": 0, "metal_body": 0, "tier": 5}},
+  "enemies":    {"1": {"species": 8, "exp": 3, "joinability": 0, "level": 1,
+                       "hp": 30, "mp": 100, "atk": 10, "def": 6, "agl": 5, "int": 1,
+                       "ai_weights": [100, 200, 100, 200], "skills": [233, 229]}},
+  "encounters": {"0": {"rate": 3, "unk1": 1, "size_chance": [7, 0, 0],
+                       "slot_chance": [3, 5, 2, 0, 0], "eids": [2, 4, 3, 0, 0],
+                       "max_count": [1, 1, 1, 0, 0], "maze_size": 8}},
+  "skills":     {"44": {"mp": 1, "learn": {"level": 5, "int": 30, "prereqs": [43]},
+                        "record": {"party_min": 75, "party_range": 15}}},
+  "exp_curves":    {"3": [99 cumulative values] | {"2": 5}},
+  "growth_curves": {"5": [99 increments]       | {"10": 3}},
+  "breeding":   {"family": {"37": {"p1": "Dragon", "p2": "Dragon"}, "12": null},
+                 "special": {"overrides": [{"index": 187, "result": 200}],
+                             "appends": [{"p1": "Snaily", "p2": "BattleRex",
+                                          "min_plus": 0, "result": 224, "plus_mod": 0}]}},
+  "boss_joins": {"11": 13}
+}
+```
+
+| Section | Table (region) | Notes |
+|---|---|---|
+| `monsters` (ids 0-220) | `MonsterInfoTable` $03:$4461, 221 × 43 (`bank_003#gd_monster_info`) | MONSTER_DATA field map; growth / exp indices 0-31 (higher = code); resist by name (MONSTER_DATA order) or a list of 27; family 0-10 or its name (`"Spirit"` = 10, S104; `"Bird"`/`"Flying"`, `"Boss"`/`"???"`); ids 215-220 (combat-only) may not change family |
+| `enemies` (EIDs 0-486) | `EnemyStatsTable` $14:$4C1D, 487 × 25 (`bank_014#gd_enemy_stats`) | same field names as `progression.enemies`; skills padded with $FF |
+| `encounters` (pools 0-127) | `EncounterPoolData` $01:$6AAE, 128 × 26 (`bank_001#gd_encounter_pools`) | format decoded S103 (DATA_STRUCTURES "Encounter pool entry"); EIDs 0-486, a declared new species' EID (518) or a project enemy |
+| `skills` (ids 0-221) | `SkillMPCostTable` $07:$570C (`bank_007#gd_skill_mp`), `SkillLearnReqTable` $06:$50E0 218 rows (`bank_006#gd_skill_learn`), `SkillRecordData` $54:$41CF (`bank_054#gd_skill_records`) | record field names = BATTLE_SKILL_SYSTEM §7; `learn` for ids $DA-$DD is an ERROR (FieldStateDispatch code) |
+| `exp_curves` / `growth_curves` | $13:$41E6 / $13:$6706 (`bank_013#gd_exp_curves` / `#gd_growth_curves`) | new hand patch `patches/bank_013.asm` (the clean bank + two markers) |
+| `breeding.family` (slots 0-214) | `FamilyRecipeTable` $16:$4974 (`bank_016#gd_family_recipes`) | `null` = no recipe ($FF,$FF); matchers as `build_breeding.py` (family / species name, id, $hex). S104: `"Spirit"` = `$FA` on either side; `"AnyFamily"` / `"any"` are an ERROR (the patched family scan no longer has the wildcard) |
+| `breeding.special` | the LIVE table in bank $69 (`bank_069#gd_special_recipes`; the $16 copy is runtime-dead, B2) | B5 semantics ported: overrides by `index` or `match`, appends past 824; the whole-table shadow check (ERROR: a dead append / a shadowed override) |
+| `families` (S104 r2) | `FamilyTextPtrTable11` bank $6D (`bank_06d#gd_family_voices`, 11 dw) + the Spirit name pool in bank $41's dead fill (`bank_041#gd_spirit_names`, fixed 55 B) | `<family>.dialogue` = voice `A`-`D` or a family name ("talks like"); `spirit.names` = 8 names, 1-4 letters A-Z / a-z (`A` = $24, `a` = $3E); names only for Spirit (the other pools stay vanilla). Editor: the Families tab |
+| `boss_joins` | the vanilla 34 rows inside `BossRedirectTableExt` (`redirects14`) | only for the 34 vanilla fight EIDs; new pairs = `progression.enemies[].join_as` |
+| (derived) | `LibFamilyPtrTable` bank $12 (`bank_012#gd_library_grouping`) | library tabs from the effective family bytes (+ new species) — B7/B9 format |
+| (derived) | bank $4D recipe TEXT (`bank_04d#gd_library_text`) | coherence Set 1: every family slot the project changed gets its encyclopedia string regenerated **in place** (EN strings are 18 chars + $F0 = the slot; the dispatch pointer never moves because entries 5-10 double as the $4007 mode 2-7 bases — TEXT_SYSTEM) |
+
+**Anchors.** Six mgbdis labels inside `MonsterInfoTable` and three inside
+`EncounterPoolData` are referenced by other code in those banks (bytes that
+are mostly data decoded as code). `gamedata.ANCHORS` re-emits each at its byte
+offset (a row an anchor falls into is written as split `db` chunks), so the
+overlay still links; `EncounterPool_NNN` / `EnemyStats_NNN` /
+`MonsterInfo_NNN_<Name>` / `ExpCurve_NN` / `GrowthCurve_NN` row labels are kept.
+
+**Validators** (ERROR): unknown sections / fields, every range above, a
+protected species' family, a learn row past $D9, an encounter list whose
+1/2/3-monster or slot chances sum under 100 % (CalcEncounterPoolIdx would walk
+off the list), a slot with a chance but no EID, a pool that can draw 2-3
+monsters with no slot allowed twice (measured freeze, DATA_STRUCTURES), a
+3-monster pool whose max counts allow fewer than 3 copies, an EID that does
+not exist, a shadowed special append / override, `boss_joins` outside the 34,
+more than 1650 special entries, > 32 members in one library family.
+(WARN): combat-only species edits; an enemy row's species change (Set 3:
+resistances follow the species) and, on a boss fight row, its join row (Set 2);
+joinable with HP > 1023; the same EID twice in a pool (S77); a skill's MP
+changed while record +4 (`mp_byte`, reader untraced — 218/222 vanilla rows
+equal the MP cost's low byte) keeps the old value; decreasing cumulative exp;
+the family / special shadow reports ported from build_breeding.py.
+
+**Retired tool paths (S103)** — they wrote the same bytes and would overwrite
+the regions: `build_breeding.py --emit-family / --emit-special /
+--emit-relocation`, `build_family_reassign.py --emit`,
+`build_library_table.py --emit`, and `build_new_species.py`'s bank $14 / bank
+$01 writes (bank_06a stays). Their `--selftest`s still run (verify check 5).
+Their JSON specs (`breeding_family_defaults.json`, `breeding_special.json`,
+`spirit_family.json`, `breeding_family_reassign.json`) are HISTORICAL inputs:
+the example project's `gamedata` re-expresses what they produced.
+
+**Pin (S103)**: reference **`5d1dbc5f50aa46717d662bdc83b3cad4`** (patched;
+built S103, NOT yet user-tested). The example's `gamedata` re-expresses the
+pre-S103 hand edits (Spirit Dracky / Darkdrium, starter EID 1 test harness,
+Gorbunok pool 0, B4 family recipes, B5 special overrides + appends) — byte-
+identical — EXCEPT the library text, which now matches the 4 B4 recipes
+(DrakSlime / GreatDrak / Almiraj / Wyvern): 17 B in bank $4D + header. Prev
+`0d60486e…` (patched, historical).
+
+**S104 (P3.10a Spirit).** No new section: Spirit is family 10 everywhere the
+tables take a family (`monsters.N.family`, matchers `$FA`), the library
+recipe token for `$FA` is `<glyph $1A>family` (`gamedata.SPIRIT_TOKEN`), and
+the special-table shadow check no longer treats a `$FA` mate matcher as a
+wildcard. The engine half (bank `$6D` family systems, the five same-size
+forks, `$FA` exact in bank `$16`) is hand-authored (`patches/bank_06d.asm`;
+BREEDING_SYSTEM "Spirit — the 11th family (S104)"). **Pin (S104):**
+**`eee9f5b08b2f847291103961385099d9`** (patched; built S104, NOT yet
+user-tested) — no example `project.json` change; the delta is the engine
+bytes. Prev `5d1dbc5f…` (patched, historical; S103 user-confirmed).
+**S104 r2:** `gamedata.families` (voices + Spirit names, two new regions;
+empty == the r1 bytes) and the user-picked ghost-wisp icon → pin
+**`eb1535108cdbc9ac24d64dce3db5591e`** (patched; built S104 r2, NOT yet
+user-tested). Prev `eee9f5b0…` (patched, historical). **S104 r3:** the
+library-list buffer fix (bank $12 `LibScanByFamily` → wMonList) → pin
+**`d7b762db217656f4432f115c25b39418`** (patched; built S104 r3, NOT yet
+user-tested). Prev `eb153510…` (patched, historical). **S104 r4:** bank $73
+R4 restore fix (save lost after a reset) → pin
+**`e994173e6086fd9f3cfe5095e3f9ba65`** (patched; built S104 r4, NOT yet
+user-tested; USER-CONFIRMED 2026-09-30). Prev `d7b762db…` (patched, historical).
+**S104 r5:** library tab display order (Spirit before ???) → pin
+**`15f21834385eb38e3650d434c622eda2`** (patched; built S104 r5,
+USER-CONFIRMED 2026-09-30). Prev `e994173e…` (patched, historical).
 
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 

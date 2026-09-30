@@ -168,6 +168,15 @@ class MainWindow(QMainWindow):
                 self.gates_tab.openRoomRequested.connect(self._open_gate_room)
                 self.tabs.addTab(self.gates_tab, 'Gates')
                 continue
+            if title == 'Monsters':
+                # S104 (P3.10a): families — members, dialogue voice, Spirit names
+                if self.session:
+                    from editor2.app.families_tab import FamiliesTab
+                    self.families_tab = FamiliesTab(self.session)
+                    self.tabs.addTab(self.families_tab, 'Families')
+                else:
+                    self.tabs.addTab(_stub('Families', 'P3.10a', 'Family members, dialogue, Spirit names (open a project).'),
+                                     'Families')
             if title == 'Balance':
                 # S98 (P3.7): the World graph sits before Balance, as in §5.0
                 if self.session:

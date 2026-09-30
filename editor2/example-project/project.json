@@ -17,7 +17,124 @@
   "_status": "NOT_IMPLEMENTED_V1 \u2014 Layer A (vanilla-room edits) is extraction work, ROADMAP Phase 2/F"
  },
  "gamedata": {
-  "_status": "NOT_IMPLEMENTED_V1 \u2014 Layer C keeps its proven per-system tools (build_breeding.py etc.)"
+  "_status": "S103 (ROADMAP P3.9, Layer A-lite): sparse overrides of the vanilla data tables \u2014 PROJECT_COMPILER \u00a72.20. These re-express the proof-of-concept edits the hand overlay carried before S103 (Spirit family B9, starter test harness S75, Gorbunok pool edit Phase N, breeding B4/B5), so the example still builds its pinned bytes.",
+  "monsters": {
+   "_comment": "B9 Spirit family (extracted/spirit_family.json): Dracky and Darkdrium move to family 10.",
+   "78": {
+    "family": 10
+   },
+   "214": {
+    "family": 10
+   }
+  },
+  "enemies": {
+   "_comment": "EID 1 = the starter (MONSTER_DATA 'Starter Monster'): S75 test harness \u2014 MP 0->100 and Mourn / Tremor / Anchor / Infernos.",
+   "1": {
+    "mp": 100,
+    "skills": [
+     233,
+     229,
+     228,
+     9
+    ]
+   }
+  },
+  "encounters": {
+   "_comment": "Pool 0 (Gate of Beginning): Gorbunok (EID 518, new species 224) in slot 3 at ~70% for testing (Phase N, new_species.json).",
+   "0": {
+    "slot_chance": [
+     1,
+     1,
+     1,
+     6,
+     0
+    ],
+    "eids": [
+     2,
+     4,
+     3,
+     518,
+     0
+    ],
+    "max_count": [
+     1,
+     1,
+     1,
+     1,
+     0
+    ]
+   }
+  },
+  "breeding": {
+   "family": {
+    "_comment": "B4 family-default overrides (extracted/breeding_family_defaults.json).",
+    "0": {
+     "_comment": "Bird x Dragon -> DrakSlime (species 0). Vanilla slot 0 was Slime x Dragon -> DrakSlime; this swaps which cross produces DrakSlime. Matcher becomes [$F3,$F1].",
+     "p1": "Bird",
+     "p2": "Dragon"
+    },
+    "37": {
+     "_comment": "Dragon x Dragon -> GreatDrak (species 37). NEW recipe: vanilla slot 37 was a separator ($FFFF), so Dragon x Dragon had NO family default and fell through to fallback=parent1 (the dragon itself). Now two dragons breed into GreatDrak. Zero collateral (no existing recipe displaced). Matcher [$F1,$F1].",
+     "p1": "Dragon",
+     "p2": "Dragon"
+    },
+    "46": {
+     "_comment": "Slime x Dragon -> Almiraj (species 46). Vanilla slot 46 was Beast x Dragon -> Almiraj; now Slime x Dragon makes Almiraj. Matcher [$F0,$F1]. Slime pedigree is fully shadow-safe with a Dragon mate.",
+     "p1": "Slime",
+     "p2": "Dragon"
+    },
+    "71": {
+     "_comment": "Beast x Dragon -> Wyvern (species 71). Vanilla slot 71 was Bird x Dragon -> Wyvern; now Beast x Dragon makes Wyvern. Matcher [$F2,$F1]. Pick a beast NOT in the avoid-list above.",
+     "p1": "Beast",
+     "p2": "Dragon"
+    }
+   },
+   "special": {
+    "overrides": [
+     {
+      "_comment": "Session-12 custom recipe, carried forward so the authored base reproduces current behavior exactly. BattleRex(Pedigree) x Anteater(Mate) -> GoldSlime, at vanilla dead entry 693 (originally Zombie-fam x [Bird-result] shadowed entry). Same bytes as the patched bank_016 mirror.",
+      "index": 693,
+      "p1": "BattleRex",
+      "p2": "Anteater",
+      "min_plus": 0,
+      "result": "GoldSlime",
+      "plus_mod": 0
+     },
+     {
+      "_comment": "Session-12 custom recipe, reverse order. Anteater(Pedigree) x BattleRex(Mate) -> GoldSlime, at vanilla duplicate entry 803 (== 802). Same bytes as the patched bank_016 mirror.",
+      "index": 803,
+      "p1": "Anteater",
+      "p2": "BattleRex",
+      "min_plus": 0,
+      "result": "GoldSlime",
+      "plus_mod": 0
+     },
+     {
+      "_comment": "B5 PROOF (base edit in place). Entry 187 is vanilla MadCat x BattleRex -> Yeti. Change ONLY the result to DracoLord. NOTE: two species are named 'DracoLord' (id 200 = level_cap 50 base form, id 201 = level_cap 80 second form); we use the numeric id 200 explicitly (matching the B3 proof) so the name collision can't make the choice ambiguous. TEST: breed MadCat (Pedigree) x BattleRex (Mate, female), opposite genders, Lv10+ -> should now produce DracoLord instead of Yeti. The validator will also list the OTHER entries that still produce Yeti as offspring of other crosses (editing one cross does not remove Yeti from the game) \u2014 that report demonstrates the whole-table precedence engine.",
+      "index": 187,
+      "result": 200
+     }
+    ],
+    "appends": [
+     {
+      "_comment": "B5 PROOF (append, unshadowed). Darkdrium(214,Boss) x BattleRex(42,Dragon) currently matches NO special and has no family default (it falls back to the pedigree, Darkdrium). Appended past index 824, so Armorpion can ONLY come from this entry. TEST: breed Darkdrium (Pedigree) x BattleRex (Mate, female), opposite genders, Lv10+ -> should produce Armorpion.",
+      "p1": "Darkdrium",
+      "p2": "BattleRex",
+      "min_plus": 0,
+      "result": "Armorpion",
+      "plus_mod": 0
+     },
+     {
+      "_comment": "N5 (Phase N) \u2014 make the NEW species Gorbunok (id 224) BREEDABLE as a result. User-chosen recipe: Snaily(4,Slime) [Pedigree] x BattleRex(42,Dragon) [Mate]. Verified free: matches no vanilla special and no family default (falls back to the pedigree, Snaily), so this append is unshadowed and changes only that one fallback cross. Snaily is Slime-family, matching Gorbunok's family. The encyclopedia 'bred from' icons (FamilyRecipeResolve high-id entry in patches/bank_016.asm) show Snaily + BattleRex to match. result=224 admitted because Gorbunok is declared in new_species.json. TEST: breed Snaily (Pedigree) x BattleRex (Mate, female), opposite genders, Lv10+ -> Gorbunok.",
+      "p1": "Snaily",
+      "p2": "BattleRex",
+      "min_plus": 0,
+      "result": 224,
+      "plus_mod": 0
+     }
+    ]
+   }
+  }
  },
  "custom": {
   "wram": {

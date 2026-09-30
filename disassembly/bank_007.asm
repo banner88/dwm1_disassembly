@@ -6476,6 +6476,9 @@ LoadFld_69a5:
     jr nz, jr_007_69b6
 
 jr_007_69ac:
+    ; family byte $FF (unknown parent / grandparent on the pedigree page) ->
+    ; text mode 4 id 10 = $41:$4323[10] -> $5B1E, the EMPTY string (the
+    ; "no family" icon; ids 0-9 are the family icon strings "$10".."$19").
     ld a, $0a
     ld [$c823], a
     ld a, $04

@@ -10,7 +10,9 @@ fidelity guarantee is non-negotiable.
 Tables (bank $16, ROM-verified):
   * SPECIAL recipe table  $16:$4B30 — 825 entries x 5 bytes, $FF terminator at $5B4D.
       entry = [p1_match, p2_match, min_plus, result_species, plus_mod]
-      p1/p2 match a species ID (0-220) OR a family code ($F0-$F9, $FA="any family").
+      p1/p2 match a species ID (0-220) OR a family code ($F0-$F9; $FA = Spirit,
+      family 10 — S104. The vanilla bank-$16 FAMILY scan read $FA as a mate-side
+      "any family" wildcard, unused by vanilla data and retired in patches/).
       Scanned FIRST; first match wins (see BREEDING_SYSTEM.md, bank_016.asm).
   * FAMILY recipe table    $16:$4974 — flat stream of 2-byte pairs, $0000 terminator.
       The result species IS the positional slot index: pair k lives at slot k, and a
@@ -78,7 +80,7 @@ SEPARATOR = (0xFF, 0xFF)           # advances slot, stores no recipe
 FAMILY_CODES = {
     0xF0: "Slime", 0xF1: "Dragon", 0xF2: "Beast", 0xF3: "Flying", 0xF4: "Plant",
     0xF5: "Bug", 0xF6: "Devil", 0xF7: "Zombie", 0xF8: "Material", 0xF9: "Boss",
-    0xFA: "AnyFamily",  # wildcard (preserved by the two-pass family search)
+    0xFA: "Spirit",     # family 10 (S104; vanilla: the unused family-scan wildcard)
 }
 
 
@@ -431,7 +433,7 @@ def species_family_code(rom, sp):
 _FAMILY_NAME_TO_CODE = {
     "slime": 0xF0, "dragon": 0xF1, "beast": 0xF2, "bird": 0xF3, "flying": 0xF3,
     "plant": 0xF4, "bug": 0xF5, "devil": 0xF6, "zombie": 0xF7, "material": 0xF8,
-    "boss": 0xF9, "anyfamily": 0xFA, "any": 0xFA,
+    "boss": 0xF9, "spirit": 0xFA,
 }
 
 
@@ -444,9 +446,9 @@ def resolve_matcher(token, names, *, mate_side):
     """Resolve a p1/p2 matcher token to a byte.
 
     token may be: an int (species id 0-220, or a raw code $F0-$FA), a family
-    name (Slime/Dragon/.../Boss, Flying=Bird), '$FA'/'AnyFamily', or a species
-    name. $FA (AnyFamily wildcard) is only meaningful on the mate side (parent 2)
-    per the scanner; reject it on the pedigree side."""
+    name (Slime/Dragon/.../Boss/Spirit, Flying=Bird), or a species name.
+    `mate_side` is kept for callers; since S104 $FA is the Spirit family code
+    and valid on both sides."""
     if isinstance(token, int):
         b = token
     else:
@@ -463,8 +465,6 @@ def resolve_matcher(token, names, *, mate_side):
                              "name, species name, id, or $hex code)" % (token,))
     if not (0 <= b <= 0xFF):
         raise ValueError("matcher byte out of range: %r -> $%X" % (token, b))
-    if b == 0xFA and not mate_side:
-        raise ValueError("AnyFamily ($FA) wildcard is mate-side (parent 2) only")
     if b > 0xFA:
         raise ValueError("matcher $%02X is above the family-code range" % b)
     return b
@@ -765,11 +765,11 @@ def _resolve_recipe_fields(spec, names, *, require_all, base=None,
 def _entry_matches(entry, p1, p2, f1, f2):
     """True if a 5-byte special `entry` would match a cross with pedigree
     species p1 (family code f1) and mate species p2 (family code f2), ignoring
-    the plus threshold. Mirrors the scanner: byte0 ∈ {p1, f1}, byte1 ∈ {p2, f2};
-    the mate-side $FA wildcard matches any family-coded mate."""
+    the plus threshold. Mirrors the scanner: byte0 ∈ {p1, f1}, byte1 ∈ {p2, f2}
+    (the special scanners never had a wildcard; S104: $FA = Spirit)."""
     b0, b1 = entry[0], entry[1]
     m0 = b0 == p1 or (f1 is not None and b0 == f1)
-    m1 = b1 == p2 or (f2 is not None and b1 == f2) or (b1 == 0xFA and f2 is not None)
+    m1 = b1 == p2 or (f2 is not None and b1 == f2)
     return m0 and m1
 
 
@@ -1171,6 +1171,12 @@ def main():
 
     if args.selftest:
         return 0
+
+    if args.emit_relocation or args.emit_special or args.emit_family:
+        print("ERROR: " + 'RETIRED S103 (ROADMAP P3.9): {what} is now a compiler-owned @BUILD_PROJECT region fed by project.json `gamedata` ({key}; PROJECT_COMPILER §2.20). Edit the project and run tools/build_project.py --apply instead — this path would overwrite the generated region.'.format(
+            what="the FamilyRecipeTable (bank $16) / the bank $69 special table",
+            key="gamedata.breeding.family / gamedata.breeding.special"), file=sys.stderr)
+        return 2
 
     if args.emit_relocation:
         path = write_bank69(rom)

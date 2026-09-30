@@ -10,240 +10,187 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
-> Last verified: 2026-09-28 (Session 102 — **ROADMAP P3.3f: OWN ANIMATED
-> TILES, FROM SCRATCH — any tile, drawn frames, any speed, a plain budget**
-> (user: "CAN I animate more than a single tile? … If I animate 1 it stops
-> the second one. Also is this budget expandable"; "can we control speed of
-> tile movement?"; then "This is NOT UI friendly. I dont … understand the
-> budget, how it works … I just want animated tiles and for the UI to tell
-> me wtf is happening … I want to mostly make them myself"; "offer both"
-> [flip and drift]; "Keep button" [vanilla copy]; "if I can set speed that
-> would be great"; "CAN animation slots be expanded? Can you poke around
-> briefly?"). S101 r4 not re-confirmed this session. **Built S102; signed
-> off 2026-09-29 (in-game ROM test not separately reported).** Verifier PASS 6/6; clean `1ca6579…` byte-perfect (bank $00
-> `LCDCStateTable` re-sectioned to bytes + comments, both trees); **patched
-> pin MOVED `9c813041…` → `0d60486e…` (patched)**; test_compiler --rom
-> 170/170; test_app --rom PASS (GUI build == pin); test_canvas --rom PASS
-> incl. the rewritten v6 (Animate tab + --rom own flip). `EDITOR_REVISION` =
-> 'S102'.
+> Last verified: 2026-09-30 (Session 104 — **ROADMAP P3.10a: SPIRIT AS THE
+> 11TH FAMILY** (user 13:07: "1) Custom skills absolutely stay!! … All data
+> related to them must also be in editor. 2) Yeah please fix ??? and make
+> spirit separate. Wisp is fine just make it look nicer. 3) Breeding table will
+> utilize spirit extensively … Plan for it. 4) Of course spirit is in library.
+> Given all this, please proceed. Make your own mockups for spirit and Ill
+> pick"). S103 USER-CONFIRMED at session start. **Built S104 (r1-r5);
+> r5 USER-CONFIRMED 2026-09-30 15:51 ("perfect. Hand off.").** Verifier PASS 6/6 (check 5 now also runs
+> `build_family_icon.py --selftest`; `bank_06d.asm` in PATCH_NEW_FILES); clean
+> `1ca6579…` byte-perfect (bank $41 `$4000-$4338` re-sectioned into the mode
+> list + mode 0-4 tables, bank $0A `FamilyIconGfxTable0A` + `LoadFldA_46c9`,
+> bank $09 default-name and bank $07 pedigree annotations — both trees);
+> **patched pin MOVED `5d1dbc5f…` → `eee9f5b0…` (patched)**; test_compiler
+> --rom 233/233; test_app --rom + test_canvas --rom PASS. `EDITOR_REVISION` =
+> 'S104'.
 >
-> **Why the user's two-part cloud stopped:** room $6C borrowed `$47`
-> (Hargon room), whose animation has 2 flip pairs; the cloud's right cell
-> used both, so animating the left cell TOOK OVER them (S99 r6 take-over).
-> Measured in PyBoy that a 4-pair source (`$23`) moves both halves — the
-> answer to "can I animate more than one tile" was always "yes, up to the
-> borrowed animation's slots" (GreatTree sways 16). The S99 model itself
-> was the problem, so S102 replaced it.
+> **Engine (BREEDING_SYSTEM "Spirit — the 11th family (S104)"):** new
+> hand-authored bank **$6D FAMILY SYSTEMS** — entry 0/1 family-icon gfx id
+> (families 0-9 = `$2E03+fam`, Spirit = `SpiritIconStream`, gfx id `$6D04`),
+> entry 2 farm-dialogue text group (11 entries; Spirit = group D),
+> entry 3 naming-screen default name (Spirit → mode-3 ids `$A0-$A7`) — behind
+> same-size forks in banks $01 (was ClampFamIdx → ??? tile), $0A (the
+> UNCLAMPED twin table: family 10 read code as a gfx id), $04 (opcode $2D read
+> garbage) and $09 (names ran into the next table); bank $16 family scan `$FA`
+> wildcard `jr z` → 2 nops (`$FA` = Spirit); bank $4F ??? glyph restored at
+> `$41A0`, Spirit glyph at `$41B0` (byte `$1A`); bank $41 mode-4 Spirit string
+> `"$1A"`, 8 Spirit names in the dead `$4323` words + tail fill; bank $07
+> pedigree "unknown parent" icon id 10 → 11 (**found S104: vanilla id 10 is
+> the empty "no family" string; since B9 every unknown parent drew the Spirit
+> icon**). The B9 "$1A is not fill-immune" note did not reproduce (DOC_AUDIT
+> S104). Editor: `"Spirit"` family / matcher everywhere, library token
+> `<$1A>family`, `"AnyFamily"` refused, help topic updated.
 >
-> **Engine (PROJECT_COMPILER §2.19; ROOM_DATA_FORMAT "Own tile animations
-> (S102)"):** new compiler-owned bank **$6C** — bank $71 entry 3
-> `CustomAnimSource` far-calls entry 0 `CustomTileAnimate` first (custom
-> rooms only, vanilla dispatch guards). Per room, groups `[period, phase,
-> seqlen, nslots, dw seq, dw VRAM dests]`; every step copies a WHOLE frame
-> (16-aligned blocks in bank $6C) into the slot with GDMA at the start of
-> HBlank (or VBlank lines 144-151), ≤ 8 tiles per frame, line 127 skipped
-> (the LYC=127 STAT job hides sprites under the status bar — decoded +
-> annotated: bank $00 `LCDCStateTable`, field state 1 measured). State:
-> wCustomPool carve `wTileAnim*` $D0C5-$D109 (32 groups). Measured on the
-> user's save: 13 tiles / 4 motions → every tile shows only authored frames
-> on every one of 600 frames in **PyBoy and SameBoy** (new
-> `tools/sameboy_anim_check.py` + `tools/sameboy/dwmcheck.c`), ≤ 8
-> scanlines, no dropped frame; negative control (HBlank wait removed): 631 /
-> 581 bad tile-frames (SameBoy / PyBoy — both block mode-3 VRAM writes);
-> leave-and-return heals. Budget facts measured: vanilla GreatTree sway ~65
-> scanlines and Zoma ~50 drop a frame per 32, 34 do not; the game never uses
-> HDMA/GDMA, runs normal speed, its VBlank VRAM work ends at LY 148; **VRAM
-> bank 1's tile area is empty in the field** (6 rooms + menu; battles not
-> checked) → ROADMAP P3.3g (128 more tiles per room).
+> **PyBoy (stub-calls from WRAM + real screens; old build vs new):** INFO page
+> `$1A` glyph for family 10, "?" for 9; HUD tiles `$8DA0-$8DCF` = Spirit stream,
+> identical to S103 for 0-9; bank $0A list (stub `LoadFldA_4610`) Spirit tile
+> at `$88B0`, identical for 0-9; default names identical 0-9, Spirit WISP /
+> NOVA / ECHO; dialogue ids identical 0-9, Spirit `$7C` (group D; was `$EA3C`);
+> breeding (`$16` entry 3) identical over every pair of non-Spirit species,
+> `[Spirit × Dragon]` → MadSpirit and `[Dragon × Spirit]` → Spooky fire;
+> pedigree unknown parents blank again; library tab strip page 3 = Spirit
+> icon, page 2 ??? = "?". Test ROM **`DWM_S104_spirit_test.gbc`** (patched, md5
+> `a7cf5159…`) = the user's project + a demo overlay (NOT in their project):
+> Healer / Spooky / Shadow / MadSpirit in Spirit + those two recipes; the
+> user's project as-is built `d17633de…` (patched, r1).
 >
-> **Editor (EDITOR_DESIGN §5.1 "As built S102"):** the **Animate** tab
-> replaces "Make animated": select cells (Select tool drag / Shift+click /
-> double-click) → Use the selected cells → Flip through frames (painter,
-> 2-8 frames, loop / back-and-forth, shift / mirror / copy previous / undo)
-> / Drift right / Drift left (as one picture ≤ 2 cells, or per tile) / Sway
-> (1-3 px) → speed (presets + exact frames per step, "≈ N per second") →
-> "only the selected cells" (own copies; the only thing that costs free
-> tiles) or "every place drawn with these tiles" → Create; list + Edit (one
-> undo step, keeps its place) / Remove; plain box: load %, free tiles, frame
-> storage, groups; "How does this work?". The inspector's vanilla combo
-> moved behind "Copy a vanilla room's animation…" (+ Make the selected cell
-> still). Canvas: rectangle selection, preview plays own + vanilla, Anim
-> outline includes own slots. Help topic *Animated tiles* (+ limits). Test
-> ROMs **`DWM_S102_tile_anim_engine_test.gbc`** (patched, md5 `37194b4d…`)
-> and **`DWM_S102_animate_tab_test.gbc`** (patched, md5 `394b5ee7…`, made
-> through the GUI code paths): the user's project, room $6C — cloud (0,0)-
-> (1,0) screen 0 drifts right, cloud (0,1)-(1,1) screen 1 drifts left, every
-> tree sways, the screen-4 blue floor flips; the old `$47` flip still runs
-> next to them. Bugs caught before delivery: KEY_LESSONS S102.
+> **S104 r2 (user 14:35: "1) Ghost whisp is the best BY FAR, use that. 2)
+> Doesnt matter. Just make option in editor. 3) Huh wtf is this? What eight
+> placeholders? ALSO: I cant enter library on your map because it leads to
+> custom room. The rest works fine.")** — r1 test ROM passed except the
+> Library door, which the USER'S project redirects to its own room
+> (`entrance_redirects` GreatTree scr 8 (5,3) → cities_fount; test overlay r2
+> drops that redirect only). Icon = mock-up B ghost wisp; new
+> `gamedata.families` (per-family dialogue voice A-D, Spirit's 8 default
+> names = the naming screen's random pre-filled name) as compiler regions in
+> banks $6D / $41; the editor's new **Families** tab (members, move / add,
+> voice, Spirit names). Pin **`eb153510…` (patched)**; test_compiler --rom
+> 241/241; test ROM **`DWM_S104r2_spirit_test.gbc`** (patched, md5
+> `008435d6…`; PyBoy: the Library door enters `$12`, INFO / HUD / library tab
+> show the ghost wisp); the user's project as-is builds `48edddfc…` (patched).
+> `EDITOR_REVISION` = 'S104r2'. Built, NOT yet user-tested.
 >
-> **S102 r2 (user 18:30: "Wait wtf I cant have frames side by side
-> anymore?? How can I paint them?"; editor-only, built, NOT yet
-> user-tested):** the Animate tab shows every frame side by side (one
-> painter each, wrapping to the panel width, frame 1 = the map, fixed);
-> paint straight on any frame; the clicked frame is the yellow one the
-> tools act on; Size − +. test_canvas v6 asserts it. `EDITOR_REVISION` =
-> 'S102r2'. Pin unchanged `0d60486e…` (patched).
+> **S104 r3 (user 14:56: "Nope when looking up spirit family in library it
+> freezes"):** reproduced in PyBoy — and it was not Spirit-specific: since FX1
+> (S71) the B7 library writer `LibScanByFamily` filled `$C0D8` while FX1 had
+> moved every bank-$12 reader to `wMonList`, so every tab showed the roster
+> list (DrakSlime… on every tab) and a lookup opened species = the list index;
+> on the Spirit tab that index was an unseen species → text id `$FF` → the
+> text engine never finished. Fix: the writer targets `wMonList` (same size,
+> `patches/bank_012.asm`). PyBoy: Spirit tab lists Healer (the other demo
+> members are unseen on this save = blank, as vanilla), its page opens; the
+> Dragon tab lists its own (unseen = blank). Pin **`d7b762db…` (patched)**;
+> test ROM **`DWM_S104r3_spirit_test.gbc`** (patched, md5 `acfd4ea9…`); the
+> user's project as-is builds `ec4df754…` (patched). Verifier PASS,
+> test_compiler --rom 241/241, test_app / test_canvas --rom PASS.
 >
-> **S102 r3 (user 18:51: "Can I still copy or shift individual
-> quadrants?"; editor-only, built, NOT yet user-tested):** Ctrl+click picks
-> one 8×8 tile, Ctrl+Shift+click a 16×16 cell (outlined on every frame);
-> Shift / Mirror / Clear / Copy previous act on it; Copy (any frame incl.
-> the map) / Paste (repeats to fill); test_canvas v6 asserts part-only
-> edits + exact undo. `EDITOR_REVISION` = 'S102r3'. Pin unchanged.
+> **S104 r4 (user 15:13: "It wiped my sav file … when I reload it 1) make top
+> row of screen glitchy, and b) wipes sav file again if I press reset"; sent
+> `rom.s1` + `rom.sav`):** NOT an S104 regression — an FX1 (S71) bug,
+> PyBoy-reproduced on the S103 test ROM too, and from a clean save: save at
+> the farm, save again in the castle, CONTINUE, reset → new game. The R4
+> snapshot's 94th chunk carries 28 bytes of the tile image `$BCC8-$BCE3`,
+> committed BEFORE SaveGameState writes that block, so it is the PREVIOUS
+> save's top row; CONTINUE restored it (the glitchy top row) without a new
+> checksum (segment 3 covers `$BCC8`) → the next boot found no save. Fix:
+> bank $73 R4 restore = 93 chunks + `CF3SnapTail4` (`$B124-$BCC7`). PyBoy on
+> r4: the user's sent `.sav` CONTINUEs in the castle with the right top row
+> and survives a reset; farm → castle save → CONTINUE → reset keeps the save
+> (r3: lost); unsaved farm edits still rewind (incl. the 4 tail bytes);
+> library visit + save + reload keeps party and farm identical. Pin
+> **`e994173e…` (patched)**; test ROM **`DWM_S104r4_spirit_test.gbc`**
+> (patched, md5 `5e25799e…`); the user's project as-is builds `52e13c28…`
+> (patched). **USER-CONFIRMED 2026-09-30 15:34 ("Great that fixed it!").**
 >
-> **Session sign-off 2026-09-29** (user: "Good work. We'll check expanding
-> tileset next session(s) so make sure thats on roadmap. Hand off please");
-> the in-game test of the two S102 ROMs was not separately reported. **Next:
-> ROADMAP P3.3g** (VRAM bank 1 → 128 more tiles per room; first the
-> full-game bank-1 census). **Hand-off: all S102 work = the diff against
-> `f4b0ec1` (origin/master), delivered as `DWM-S102-tileanim-changed-files.zip`.**
+> **S104 r5 (user 15:42: "Just a display reorder. Feel free to do it now if
+> small"):** Spirit shown BEFORE ??? — bank $12 `LibTabToFamily` +
+> `LibTabOrder` (tab position → family) for the tab-strip icons
+> (`SaveItem_6184`, same-size call) and `LibScanByFamily`; 39 tail fill nops
+> consumed; editor `gamedata.DISPLAY_ORDER` drives the Families tab. No
+> family byte / code changes. PyBoy: page 2 = Bug, Devil, Zombie, Material,
+> Spirit (its list = Healer, page opens), page 3 = ???. Pin **`15f21834…`
+> (patched)**; test ROM **`DWM_S104r5_spirit_test.gbc`** (patched, md5
+> `67d32535…`); the user's project as-is builds `53338a16…` (patched).
+> Verifier PASS, test_compiler --rom 242/242, test_app / test_canvas --rom
+> PASS. **USER-CONFIRMED 2026-09-30 15:51 ("perfect. Hand off. Everything
+> that has been changed since last repo push.").**
+>
+> ROADMAP revised this session: P3.9b (custom skills are NOT content to
+> purge), new **P3.11c** (custom skills as project data), **P3.12** planning
+> for the Spirit-heavy breeding redesign (11-family randomizer / optimizer as
+> a proposer writing `gamedata.breeding`, depth read-out). **Next:** the user
+> picks the next editor item. **Hand-off: all S103 + S104 work = the diff
+> against `f2d9ece` (origin/master), delivered as
+> `DWM-S103-S104-changed-files.zip`.**
 
-> Last verified: 2026-09-27 (Session 101 — **ROADMAP P3.7b PART 2 (first
-> half): CUSTOM BOSS FLOORS — per-gate floor count / boss floor / hand-made
-> gates, MONSTER NPCs, CONVERSATION TREES (flags, YES/NO, battles of 1-3
-> enemies, the vanilla helper exit), PROJECT ENEMIES with a weaker JOIN
-> VERSION** (user: "I want custom boss floors"; "boss rooms WILL BE
-> MULTISCREEN … a custom room hookable as an end boss room with all that
-> entails (music, script, etc)"; "The event is still the same (fight,
-> optional join, WAROBOU - NOT WATABOU - takes you away)"; "every monster
-> has follower sprite, we can use that as BOSS NPC"; "New weaker join
-> version … 'always/sometimes/never' join flag settable"; battles "1, 2 or
-> 3"; vanilla boss rooms reusable; "Want to set floor count for all gates";
-> "Fight starts on arrival - want that option"; "Dont forget fully custom
-> gates"). S100 confirmed passed at session start ("1) yes passed").
-> **S101 USER-CONFIRMED 2026-09-27 23:44 ("Can confirm everything works as
-> intended") except the helper (point r2 below); r2 built, NOT yet
-> user-tested.** Verifier PASS 6/6; clean `1ca6579…`
-> byte-perfect (banks $04/$0B/$16/$54 comments only, both trees); **patched
-> pin MOVED `7cd7257b…` → `9c813041…` (patched)**; test_compiler --rom
-> 151/151; test_app --rom PASS (GUI build == pin); test_canvas --rom PASS
-> incl. the new **v8** (a boss floor authored entirely through the GUI code
-> paths, then played in PyBoy). `EDITOR_REVISION` = 'S101'.
+> Last verified: 2026-09-29 (Session 103 — **ROADMAP P3.9: LAYER A-LITE —
+> THE VANILLA DATA TABLES BEHIND project.json `gamedata`** (user: P3.3g "No
+> fuck this. Bank and come back later if tiles become a problem … Move on to
+> next editor item" → P3.3g BANKED with its S103 static audit in ROADMAP;
+> then "Sure lets do 3.9 and if its ends up very fast lets do P3.7b part 2
+> also" — P3.9 was not fast, P3.7b part 2 not started). S102 not re-confirmed
+> this session. **Built S103; USER-CONFIRMED 2026-09-30 (test ROM: "Rom - all
+> correct").** Verifier PASS 6/6 (check
+> 5 also runs `extract_gamedata.py --selftest`; PATCH_FILES + the new hand
+> patch `bank_013.asm`); clean `1ca6579…` byte-perfect (bank $04D recipe-string
+> block and bank $01 `EncounterChancePercent` re-sectioned, bank $01 encounter
+> code annotated — both trees); **patched pin MOVED `0d60486e…` → `5d1dbc5f…`
+> (patched)**; test_compiler --rom 227/227; test_app --rom PASS (GUI build ==
+> pin); test_canvas --rom PASS. `EDITOR_REVISION` = 'S103'.
 >
-> **Engine (all PyBoy-measured on the user's save unless noted):**
-> `GateFloorDataTable` ($16:$70A6, 32×8) is a compiler-owned region fed by
-> `custom.gates[]` (floors 2-99 incl. the boss floor, boss = a custom room —
-> arrival on its "Inside gates" cell — or `vanilla:$xx`, `hand_made`);
-> gates without settings keep their vanilla bytes (the example: all 256 B
-> vanilla). The boss floor itself needs no code (entry 5 `jr_016_5be1` reads
-> byte 4/5/6, no RNG). Hand-made gates: rules may take floor 1. **Monster
-> NPCs**: NPC sprite ids $F0-$F3 read the display list $D7CA ([species+$10,
-> 1]) and draw that species exactly like its follower; bank $60 entry 8
-> starts with `CustomMonsterCast` (per-screen cast, ≤4 species, written
-> before the NPC parse — survives scrolls). Census: 218 species captured
-> (`extracted/monster_npc_sprites/`); 216 draws blank, **217-220 hang or
-> crash** (refused by the compiler). **Project enemies**: `LoadEnemyStats`
-> head → bank $14 `LoadEnemyStatsExt` → EIDs ≥ 519 come from the new
-> compiler-owned **bank $6B** (`CopyEnemyRowExt`, 640 rows max);
-> `LookupBossRedirect` reads `BossRedirectTableExt` (project `join_as` rows,
-> then the vanilla 34). Joins measured: tier 0 = always joins; the JOIN
-> VERSION's stats arrive (Court Dragon joins with the join row's stats); in
-> a 2-3 enemy battle the join candidate is the LAST enemy knocked out
-> (vanilla `$DD61`). **Music**: on the floor before a custom boss map, bank
-> $71 `CustomRoomBGMResolve` plays that room's song (or $34).
+> **What changed (PROJECT_COMPILER §2.20):** `gamedata` is implemented as
+> SPARSE overrides — `monsters`, `enemies` (EIDs 0-486), `encounters`,
+> `skills` (mp / learn / record), `exp_curves`, `growth_curves`,
+> `breeding.family` / `.special`, `boss_joins` — emitted into twelve same-size
+> compiler regions in banks $01/$03/$06/$07/$12/$13/$14/$16/$4D/$54/$69 from
+> the committed vanilla base `extracted/gamedata_vanilla.json`
+> (`tools/extract_gamedata.py`); an empty `gamedata` == the ROM, table by
+> table (test_compiler; `--rom` against the original ROM). The compiler keeps
+> coherence: library recipe TEXT regenerated **in place** (the bank $4D mode
+> table overlaps the recipe pointers — TEXT_SYSTEM correction), library tabs
+> regrouped from the family bytes, Set 2 / Set 3 warnings, the B5 shadow
+> validator ported. The pre-S103 hand edits (Spirit Dracky / Darkdrium, starter
+> EID 1 harness, Gorbunok pool 0, B4 recipes, B5 overrides + appends) are now
+> the **example project's `gamedata`** — byte-identical, except that its 4 B4
+> recipe strings now match (17 B in bank $4D). Tool emit paths that wrote these
+> bytes are retired (KEY_LESSONS S103).
 >
-> **Conversations** (`talk.steps`, PROJECT_COMPILER §2.18): say / ask
-> YES-NO / if flags / set / clear / battle (1 enemy = `$5A`, 2-3 = DA03/05/07
-> + DA02 + `$5B`; the steps after it run only on a WIN — a loss is vanilla:
-> castle, half gold) / helper (a hidden NPC at a fixed slot is revealed,
-> flies in with `$1C $16NN` to a screen-local cell next to the player, spins
-> with `$47-$4A`, can speak, hops, then the `$3B` wavy fade to the
-> destination) / move / end. `on_arrival` = the room's entry script (the
-> fight-on-arrival option; `screen` limits it). Measured in the demo: talk →
-> ask → 3-enemy battle (EID 520 + 327 + 327) → win → join prompt → flag →
-> helper → Warden's Rest → walk off → GreatTree; the screen-2 DragonKid's
-> blessing flag changes the lord's branch (1-enemy fight); hand-made Gate of
-> Beginning floors 1/2 served, the stairs descend, Thorn Arena's fight on
-> arrival → helper → Castle throne (14,5); Talisman's boss floor = the
-> Villager Dragon room at its vanilla spawn (1,6). **Observed, not yet
-> traced:** after a battle started by TALKING to a monster NPC, that NPC is
-> not drawn again until the screen reloads (slot active, cast intact —
-> the sheet reload path; after an arrival fight the monster NPC stays).
-> Corrections (Iron Rule 6, both trees): opcodes $06 close text, $0D reveal
-> NPC, $1C NPC animation ($16 fly-in, distance / curve in D8E3/4 — r2), $47-$4A face up/down/left/right
-> (were "npc_buffer_write / npc_hide / npc_show"), $3B fade warp, $58
-> FloorSkip; the helper's text says "Watabou:" (sprite $21; the FAQ agrees)
-> — sprite and text are the author's choice per helper step.
+> **Decoded (DATA_STRUCTURES "Encounter pool entry"; annotated bank $01):**
+> pool +0 rate code → wC8A9, +2..+4 chance of 1/2/3 monsters, +5..+9 slot
+> chances (codes → `EncounterChancePercent` $01:$69C0 = 0-100 %), +20..+24
+> **max count** per slot (1 = only alone; NOT a weight), +25 maze size → $C93D.
+> **Measured freeze:** a pool that can draw 2 monsters whose first draw has max
+> 0 and no slot allowed twice re-draws forever (28,257 passes, no battle) — the
+> compiler refuses it.
 >
-> **Editor (EDITOR_DESIGN §5.1b "As built S101"):** Gates tab "Gate
-> settings" (floors spin + Vanilla, boss floor combo = vanilla / another
-> gate's vanilla boss room / any custom room + Open room + readiness, hand-
-> made checkbox, Project enemies…), project-aware list (♛ boss, ✎ hand-made),
-> floor plan and rule dialog (floor 1 on hand-made gates). Enemies dialog
-> (from a vanilla row; stats, skills, AI, always / sometimes tier / never,
-> join version, Make join version). NPC sprite picker **Monsters** tab
-> (thumbnails from the census; canvas and NPC panel show the species).
-> **Conversation dialog** (tree of steps with branches; per-kind editors;
-> battle 1-3 enemy pickers; helper destination / landing cell / sprite /
-> text; problems list gates OK) from the NPC panel ("New conversation…",
-> "Edit talk…") and the "Inside gates" group ("Arrival conversation…", boss
-> floor line; boss rooms default to no saving; boss rooms need a way out,
-> not stairs). Test ROM **`DWM_S101_boss_floors_test.gbc`** (patched, md5
-> `ec9cbc96…`, example project + 5 brand-new rooms, built through the
-> Document API): Villager 4 floors → EMBER COURT (2 screens; GreatDrak
-> lord, DragonKid blessing on screen 2, a sign NPC) → WARDEN'S REST; Gate
-> of Beginning hand-made 3 floors: MOSS STAIR HALL → LANTERN STAIR HALL →
-> THORN ARENA (fight on arrival); Talisman ends in the Villager Dragon
-> room. Deferred (ROADMAP P3.7b part 2 rest): private floor-type rows,
-> per-gate monster pools / floor bands, per-room encounters inside dives,
-> > 32 gates, gate entrances, the maze look in the editor.
+> **PyBoy on the user's save** (their project + the example's gamedata + demo
+> edits = `DWM_S103_gamedata_test.gbc`, patched, md5 `1dbae0a5…`): Gate of
+> Beginning = always one Slime; its battle row `$DA18` = the edited EID 2
+> (HP 250, ATK 1, 500 exp, always joins) → 167 exp to each of 3, the Slime
+> joins; HealMore USE MP 1 (5 on the same project without the demo edits);
+> Snaily's encyclopedia page reads "Zombie family / Zombie family"; the Dragon
+> tab lists 26 (Slime moved in), the Slime tab 20. The user's project WITHOUT
+> gamedata now builds the vanilla tables (the POC edits are no longer
+> inherited).
 >
-> **S101 r2 (user 23:44: "for romhack I want WAROUBOU the darker version …
-> Its just a sprite swap"; "Watabou … faces THE WRONG WAY … Can I change where
-> he lands so he lands left of player? Ideally always?"; built, NOT yet
-> user-tested).** Warubou = NPC sprite **$39** (the dark twin next to $21 in
-> the bedroom cutscene step; PyBoy frames) — now the helper default. The
-> fly-in was mis-read: `$1C $16NN` moves the NPC from its CURRENT pixels,
-> `$D8E3`·8 frames at +2 px right, down along the curve `$D8E4` picks — not a
-> target tile (swept with a handler hook: (3,1)→y 24, (3,2)→38, (3,3)→51,
-> (3,4+)→61 px from a (8,8) start). The compiler now flies a fixed +48/+43 px
-> from start pixels it writes into the helper's slot, and by default computes
-> the landing at RUN time: the player's LEFT (right on a screen's column 0),
-> facing them (vanilla lands left of Terry and ends its spin facing right).
-> PyBoy: Ember Court — player (4,4)… lands (3,3)/(3,4) exact pixels, facing
-> byte 3 = right, toward the player; Thorn Arena — player (4,6), lands (3,6).
-> test_canvas v8 --rom asserts the landing pixel + facing; test_compiler --rom
-> 153/153, test_app --rom PASS, verifier PASS. Test ROM
-> **`DWM_S101r2_warubou_test.gbc`** (patched, md5 `2934c12a…`; same demo,
-> Warubou, landing beside the player). Pin UNCHANGED `9c813041…` (patched —
-> the example has no helper). `EDITOR_REVISION` = 'S101r2'.
->
-> **S101 r3 (user 11:18: "The editor needs a help tab … flag in docs that
-> this a) needs to be built out and b) always kept up to date"; editor-only,
-> built, NOT yet user-tested).** Help tab + Help → Editor help (F1): 10
-> Markdown topics in `editor2/help/`, search; `_revision.md` stamp checked
-> by test_app against `EDITOR_REVISION` ('S101r3'); ROADMAP **P3.H** (build
-> out) + SESSION_PROTOCOL wrap-up item 7 (keep current). Also recorded: the
-> editor's monster lists are VANILLA-sourced until P3.9/P3.10 (ROADMAP P3.10
-> "S101 requirement"). Pin unchanged `9c813041…` (patched).
->
-> **S101 r4 (user 11:38: helper "where is the conversation tab? I sometimes
-> want it to say something"; castle options "teleport to castle and king is
-> NOT there (priest says hi, heals you, gives herb); or king IS there and
-> does a little speech … I want option of both"; World tab zoom + drag;
-> built, NOT yet user-tested).** The helper's text was there but hidden
-> behind an unticked checkbox at the bottom — now a "Warubou says something
-> first" box at the top, and the step's tree line shows the text. **Castle
-> arrival decoded** (GATE_GENERATION §7.7): `$D92B` 6/8 = priest blessing +
-> heal, 7 = the King's speech chosen by `$D9E3` (33 gate speeches, none
-> changes a saved flag — PyBoy on the user's save; `$D9E3` = the speech
-> selector, not a "story counter": ROM scan, 2 readers). Helper option *at
-> the Castle*: nothing / priest heal / King's speech (pick the gate).
-> PyBoy (demo): Thorn Arena win → castle → priest heals (HP 1 → 999);
-> second visit → the King's Villager speech. **World tab**: wheel zoom
-> around the mouse (clamped), drag empty canvas to pan at any zoom, Fit / +
-> / −. test_compiler --rom 156/156, test_app --rom (+ World zoom/pan check) PASS,
-> test_canvas v8 --rom (King speech after the helper) PASS. Annotated (both
-> trees, comments only): bank $0C castle dispatch / speech chain / NPC
-> reader, the `$D92B` writers in banks $06/$07/$50. `EDITOR_REVISION` =
-> 'S101r4'. Test ROM `DWM_S101r4_castle_test.gbc` (patched, md5 `7ec987df…`;
-> the r2 demo + Thorn Arena: win → priest heal, return visit → King speech).
-> User 12:36: "Fantastic job" + direction for P3.8 (the cutscene editor should
-> edit / extend the King's cutscenes — ROADMAP P3.8); r4 in-game test not yet
-> reported. **Hand-off: all S101 work = the diff against `833f56e`
-> (origin/master), delivered as `DWM-S101-bossfloors-changed-files.zip`.**
+> **User sign-off 2026-09-30 12:53: "Rom - all correct"** (test ROM passed).
+> Decisions: "Start off hack with original table. patches are POC trash" (the
+> user's project keeps NO gamedata = vanilla tables); "Please do not include any
+> patches in the editor, they are all trash (in terms of custom monsters, custom
+> rooms, etc. The mechanisms are obviously vital)" → ROADMAP **P3.9b** (purge
+> POC content from the hand overlay, keep the mechanisms); "I still want the
+> FAMILY [Spirit], but for now no monsters assigned … assign to families …
+> propagates to breeding … a new sprite for the spirit family" → ROADMAP
+> **P3.10a** (Spirit as a first-class 11th family). Both audited (read-only)
+> S103; not started. **Hand-off: all S103 work = the diff against `f2d9ece`
+> (origin/master), delivered as `DWM-S103-gamedata-changed-files.zip`.**
 
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S104** (2026-09-30): P3.10a Spirit as the 11th family (bank $6D family systems + forks, `$FA` = Spirit, icon on $1A, ??? restored, unknown-parent icon fix, `gamedata.families`, Families tab, display order) + two FX1 bugs fixed (library list buffer; R4 snapshot restore losing saves). USER-CONFIRMED. Verbose block in this file. Owning: BREEDING_SYSTEM "Spirit — the 11th family (S104)", PROJECT_COMPILER §2.20, EDITOR_DESIGN §5.2a, KEY_LESSONS S104.
+- **S102** (2026-09-28): P3.3f own animated tiles — compiler-owned bank $6C (`CustomTileAnimate`, GDMA frame copies in HBlank, ≤ 8 tiles/frame, line 127 skipped), the Animate tab (flip / drift / sway, any speed, plain budget; r2 frames side by side, r3 per-tile / per-cell tools), `LCDCStateTable` decoded, VRAM bank 1 found empty in the field (→ P3.3g). Owning: PROJECT_COMPILER §2.19, ROOM_DATA_FORMAT "Own tile animations (S102)", EDITOR_DESIGN §5.1, KEY_LESSONS S102.
+- **S101** (2026-09-27): P3.7b part 2 first half — custom boss floors (`custom.gates`: floor count, boss = custom / vanilla room, hand-made gates), monster NPCs $F0-$F3, conversation trees (`talk.steps`: flags, YES/NO, 1-3 enemy battles, helper exit, arrival fights), project enemies in bank $6B + join versions; r2 Warubou helper landing beside the player; r3 Help tab; r4 castle arrival (priest heal / King speech), World zoom; pins `7cd7257b…` → `9c813041…` (patched, historical). USER-CONFIRMED 2026-09-27 except the helper (r2-r4 NOT yet user-tested). Owning: GATE_GENERATION §7.7, PROJECT_COMPILER §2.17/§2.18, ROOM_DATA_FORMAT "Monster NPCs", MONSTER_DATA "Project enemy rows", EDITOR_DESIGN §5.1b, DOC_AUDIT S101.
 - **S100** (2026-09-27): P3.7b part 1 — custom rooms served on gate floors (rules: gate / floors / chance / flag terms / once per dive; `GateDecisionFork` → bank $71 entry 4; saving via entry 5 + bank $07 `SaveAllowCheck`; gate-room music / battles), Gates tab v1, r3 cream descent wipe (bank $73 entries 19/20) + compressor MAX_COPY fix; special rooms only on floors 3/6/9 (DOC_AUDIT S100); pins `d072eb51…` → `7cd7257b…` (patched, historical). User-passed at S101 start. Owning: GATE_GENERATION §7.6, PROJECT_COMPILER §2.16, EDITOR_DESIGN §5.1b, KEY_LESSONS S100, DOC_AUDIT S100.
 - **S99** (2026-09-27): P3.3e animated tiles — measured animation census, per-room animation source (bank $71 entry 3 + bank $01 PerRoomVRAMDispatch same-size rewrite), canvas outline + ▶ Play, clones = source; Make animated tab (r3-r7) + stray repair / Make still; pin `ce24de8b…` → `d072eb51…` (patched, historical). Signed off 2026-09-27 (r7 not re-tested in-game). Owning: PROJECT_COMPILER, EDITOR_DESIGN §5.1, TOOLS_AND_DATA (census_room_animation), KEY_LESSONS S99.
 - **S98** (2026-09-26): rooms group C = P3.7 — door OBJECTS linked two-way (+ Door, double-click to connect, arrive ON the door), one-way teleports, EXAMINE spots ($80-$83/$8F — the "$8F spawn" misnomer retired) + STEP-ON triggers ($90), talk scripts (YES/NO, set/clear flags, move), World graph v0; tileset tools (own copies, split move, purge); pin unchanged `ce24de8b…` (patched, historical). Doors USER-CONFIRMED 2026-09-26. Owning: PROJECT_COMPILER §2.14, ROOM_DATA_FORMAT "Interact entries ≥$80" + "Arrival and edge rules", EDITOR_DESIGN §5.1 S98, DOC_AUDIT S98.
@@ -344,7 +291,7 @@
 | Custom content bank | $60 (verifier check 2 prints current usage — 1,393 B as of S51) |
 | Monster battle palette table | `MonsterBattlePalettes` @ `$17:$62FD`, 8 B/species, 4 RGB555 `[c0, c1=$6bff, c2, c3=$0000]`; loaded by bank $17 entry 6 (`$1706`). Was mislabeled `RoomAttrDataBlocks`. |
 | Monster sprite overflow banks | `$7E,$7F` (then `$7C,$7A,$79`) — cross-bank sprite streams (`dwm/sprite_bank.py`); EDITOR_DESIGN §8. Resolver reads `$<bank>:$4001+index*2`, no bank gating. |
-| Follower gfx-ID table | `ScreenTransDataTable` @ `$01:$49DF`, 231 `dw`, indexed `species+$10`; loader `GetActiveMonsterStatus` @ `$01:$4986`; family table `FollowerFamilyGfxTable` @ `$01:$4BAD` (10). 16 tiles / 256 B per follower, DMA'd to VRAM `$8200`/`$8300`/`$8400` (party slot 0/1/2). **8 parallel copies of this gfx-ID table exist** (`$01 $06 $07 $09 $0b $12 $18 $59`, one per UI context: `$18`=menu/`TextDataPtrLookup`@`$4123` indexed `species`, `$12`=library); a complete art swap repoints ALL 8. |
+| Follower gfx-ID table | `ScreenTransDataTable` @ `$01:$49DF`, 231 `dw`, indexed `species+$10`; loader `GetActiveMonsterStatus` @ `$01:$4986`; family table `FollowerFamilyGfxTable` @ `$01:$4BAD` (10; twin `FamilyIconGfxTable0A` @ `$0A:$46B5`; both dead in the patched build since S104 — bank $6D entries 0/1). 16 tiles / 256 B per follower, DMA'd to VRAM `$8200`/`$8300`/`$8400` (party slot 0/1/2). **8 parallel copies of this gfx-ID table exist** (`$01 $06 $07 $09 $0b $12 $18 $59`, one per UI context: `$18`=menu/`TextDataPtrLookup`@`$4123` indexed `species`, `$12`=library); a complete art swap repoints ALL 8. |
 | Follower layout dispatch (GFX-4) | Level-1 tables at FIXED `$10:$407f` (species 0–127) / `$11:$407f` (species 128+), indexed by species; `$ffc7=species+$10` routed by bank-`$04` entry 2 (`$10–$8F`→bank `$10`, `≥$90`→bank `$11`). Per-species attr/palette byte at `$10:$417f` / `$11:$412d` (bit6=Y-flip, bit5=X-flip, low3=OBJ palette). `[$caca]` = SPECIES (party +$09), not a "sprite-class" byte. Bank `$05` `$407f`-style table is the ObjTest viewer, NOT the follower path. `extracted/monster_follower_layouts.json`. |
 | Follower render engine | `SaveScr_40cd` @ `$04:$40cd` (GBC variant of ROM0 `$0d91`). Metasprite list = 4-byte entries **(dy, dx, tile_offset, attr)**, `$80`-terminated; OAM tile = `tile_offset + [$ffc9]` (base `$20/$30/$40`); OAM attr = `[$ffca] XOR attr` (X-flip bit5). 2-level table: sprite-type `$ffc7`(=`[$ca91]`) → frame/dir `$ffc8`. **OBJ idx0 = hardware-transparent** (battle BG used idx1). 8 OBJ palettes @ `$17:$5615`. |
 | Follower layout library | **155 distinct layouts** (complete; regenerated by `tools/extract_monster_follower_layouts.py` from the real `$10/$11:$407f` tables — the old 118-count brute-force scan dropped 3-entry small/blob layouts). Layout is per-species. Reassignment = same-size 2-byte repoint of the species' `$407f` level-1 entry (same-bank only), NOT a `[$caca]` edit. `extracted/follower_layouts.json`. |
@@ -372,17 +319,18 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | $60 | Custom rooms / NPCs / scripts / text (+ `CustomMonsterCast` monster-NPC cast tables, S101) | hand-authored `patches/bank_060.asm` (→ `build_project.py` later) |
 | $64 | Custom tile layouts + attr data (`custom.layouts[]`, S92; per-screen attr maps S94) | compiler-generated `patches/bank_064.asm` (`layouts64`) |
 | $67 | Custom tileset sheets (`custom.tilesets[]`: raw2bpp incl. editor-copied vanilla sheets, or mashup spec) | compiler-generated `patches/bank_067.asm` (`tilesets67`) |
-| $69 | Breeding special table + scanner (B5 owns the whole table) | `build_breeding.py --emit-special` |
+| $69 | Breeding special scanner (B2) + the live special table | hand-kept `patches/bank_069.asm` (scanner) + compiler region `gd_special_recipes` (`gamedata.breeding.special`, S103; `build_breeding.py --emit-special` retired) |
 | $6A | New-species info high table (ids 224+) | `build_new_species.py` |
 | $6B | Project enemy rows (`progression.enemies[]`, EID 519 + index, 25 B each, ≤640; entry 0 `CopyEnemyRowExt` called by bank $14 `LoadEnemyStatsExt`; S101) | compiler-generated `patches/bank_06b.asm` (template `bank_06b_head.asm` + rows) |
 | $6C | Own tile animations (`custom.rooms[].tile_anims`: `CustomTileAnimate` entry 0 + `TileAnimRoomTable`, group records, 16-aligned frame blocks; S102) | compiler-generated `patches/bank_06c.asm` (template `bank_06c_head.asm` + data; `tileanim6c`) |
+| $6D | Family systems (S104: Spirit = family 10 — entries 0/1 icon gfx id, 2 dialogue text group, 3 default-name id, gfx index 4 `SpiritIconStream`; callers = same-size forks in banks $01/$0A/$04/$09) | hand-authored `patches/bank_06d.asm` (the Spirit icon bytes checked by `build_family_icon.py --selftest`) |
 | $71 | Custom-room dispatch tables (S42 keystone: `Custom26DDTable`, `RoomEncTable`; + `CustomRoomBGMTable` + resolver entry 2, S64; `CustomAnimSrcTable` + entry 3, S99 — S102: entry 3 far-calls bank $6C first; `GateInsertTable` + entry 4 `CustomGateInsert`, `CustomRoomFlagsTable` + entry 5, S100) | compiler-generated `patches/bank_071.asm` (template head + tables; S63 `--apply` route) |
 | $72 | Custom-skill system (de-aliased S2d/S2e code + tables) | hand-authored `patches/bank_072.asm` |
 | $73 | Cold Farm systems (CF2 drain, entry 0; CF3 party-first sort, entry 1) | hand-authored `patches/bank_073.asm` |
 | $74 | Custom song bank (M3a: records $4001-$417C fixed 95-slot, streams $4180+; resolved by AudioMasterTableExt row $9E) | compiler-generated `patches/bank_074.asm` (`music74` emitter → `song_codec.song_bank_asm` ← project.json `custom.music` + `extracted/*_song_library.json`; S64 — `custom_songs.json` retired) |
 | $7E | Sprite overflow streams (battle + follower art) | `dwm/sprite_bank.py`, `bake_follower_overflow.py` |
 | $7F | RESERVED next sprite-overflow bank (then $7C, $7A, $79) | `dwm/sprite_bank.py` order |
-| **Unallocated** | **$6D–$70, $75–$77, $79–$7A, $7C** (9 banks = 144 KB; $75 is the documented next song bank) + reserved $7F. (S102 correction: this row still listed $6B, patch-owned since S101.) | — |
+| **Unallocated** | **$6E–$70, $75–$77, $79–$7A, $7C** (8 banks = 128 KB; S104: $6D taken; $75 is the documented next song bank) + reserved $7F. (S102 correction: this row still listed $6B, patch-owned since S101.) | — |
 
 ## Iron Rules
 
@@ -448,13 +396,14 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Own animated tiles (any slot; flip through drawn frames / drift / sway; any speed; plain budget) | 🟢 built S102 (P3.3f; r2 frames side by side, r3 per-tile / per-cell tools), signed off 2026-09-29 (in-game ROM test not separately reported); PyBoy + SameBoy frame-exact on the user's save | `custom.rooms[].tile_anims` → bank $6C; PROJECT_COMPILER §2.19; ROOM_DATA_FORMAT "Own tile animations (S102)"; EDITOR_DESIGN §5.1 "As built S102" |
 | Custom rooms on gate floors (rules: gate, floors, chance %, flag conditions, once per dive; room: arrival, Stairs down, saving, battles following the gate, gate/own music) | 🟢 built S100 (P3.7b part 1); user-passed S101 session start | GATE_GENERATION §7.6; PROJECT_COMPILER §2.16; EDITOR_DESIGN §5.1b; bank $71 entries 4/5, bank $16 GateDecisionFork, bank $07 SaveAllowCheck |
 | Custom boss floors (custom.gates: floor count, boss = custom room / vanilla boss room, hand-made gates), monster NPCs ($F0-$F3), conversation trees (talk.steps: flags, YES/NO, 1-3 enemy battles, helper exit, arrival fights), project enemies (bank $6B) + join versions | 🟢 built S101 (P3.7b part 2, first half), USER-CONFIRMED 2026-09-27 except the helper; r2 (Warubou, lands left of the player facing them) built, NOT yet user-tested | GATE_GENERATION §7.7; PROJECT_COMPILER §2.17/§2.18; ROOM_DATA_FORMAT "Monster NPCs"; MONSTER_DATA "Project enemy rows"; EDITOR_DESIGN §5.1b |
+| Vanilla data tables from project.json (`gamedata`: monsters, enemy rows, encounter pools, skills MP / learn / record, exp + growth curves, family + special recipes, boss joins; library text + tabs kept coherent) | 🟢 built S103 (P3.9, backend — the GUI tabs are P3.10-P3.13), USER-CONFIRMED 2026-09-30 (demo ROM on the user's save) | PROJECT_COMPILER §2.20; DATA_STRUCTURES "Encounter pool entry"; editor2/core/gamedata.py |
 | LZSS tile compressor | ✅ working | tools/compress_tiles.py, roundtrip verified |
 | Custom tile layouts + tileset selection | ✅ working | bank $64 + tile_layout_compiler.py; MapIDClampForPalette ROM0 $3FE8 |
 | Custom tile GRAPHICS (multi-tileset mashup) | ✅ working end-to-end (S6–S10): editor JSON → build_combined_tileset.py → bank $67/$17 patches. Remaining = editor multi-screen UI. | KEY_LESSONS S5–S8; TOOLS_AND_DATA |
 | Attr map generator | ✅ working | tools/generate_attr_map.py (85 tilesets) |
 | Script compiler/decompiler | ✅ working | tools/compile_script.py / decompile_script.py |
 | Random encounters in custom rooms | ✅ generalized per-room (S42 `RoomEncTable`, bank $71). Remaining: custom monster POOLS (Encounters #2, ROADMAP). | CROSSBANK_ROOMS; KEY_LESSONS S11 |
-| Custom breeding | ✅ full authoring stack B1–B7: round-trip encoder; bank $69 owns the special table (overrides+appends+shadow validator); family-defaults rewrite; family reassignment; production library grouping (zero lag). B9 11th-family icon shipped; tab wiring open. | BREEDING_SYSTEM; ROADMAP Phase 2B |
+| Custom breeding | ✅ full authoring stack B1–B7: round-trip encoder; bank $69 owns the special table (overrides+appends+shadow validator); family-defaults rewrite; family reassignment; production library grouping (zero lag). **Spirit = a first-class 11th family (S104, USER-CONFIRMED 2026-09-30):** bank $6D family systems, `$FA` = Spirit, ghost-wisp icon, ??? restored, shown before ???, editor Families tab. | BREEDING_SYSTEM; ROADMAP Phase 2B |
 | Custom battle skills (net-new ids) | 🟢 NINE custom skills live: MagicBurn $E0 (S49), Tame $E1 (S50), TameMore $E2 + TameMost $E3 (S52), Anchor $E4 field-cast (S73, user-confirmed), Earthquake chain $E5-$E8 (S74; **S84: AI-commit of $E6-$E8 was CRASH-CAPABLE on all pre-S84 builds** — dispatch-table overrun, fixed by DispatchBoundsStub; PyBoy re-verified S84, awaiting user test), **Mourn $E9 (S75: ATK-vs-DEF × (dead allies+1), 2nd dispatch trampoline = per-skill vanilla damage machine; **S84: AI-commit was CRASH-CAPABLE (wild jump to WRAM) on all pre-S84 builds** — fixed S84; AI-commit activation USER-CONFIRMED on the real save (Charge tactics))** — all on the full de-aliased stack incl. natural-learn, real MP, announce, descriptions. | BATTLE_SKILL_SYSTEM §12–§13.8, §14; ROADMAP Arc 2 |
 | SRAM save layout | ✅ audited S8: custom flags persist (truly-safe pool = 32 flags, S57); collisions mapped; free SRAM tail $BFC8-$BFFF (56 B, reserved). **32 KB expansion BUILT S69 (RAMB pin + CF3SRAMBankedCopy; NOT yet user-tested)** — +24 KB persistent in banks 1-3, uninitialized until a schema exists (E3 residual) | ARCHITECTURE "SRAM banking as built S69"; known_RAM_map |
 | Custom-room WRAM state | ✅ migrated S65 into the CF3-freed window (buffers $CC80/$CD00, counter region $CD80×640, wCustomPool $D001-$D664; TRANSIENT permanently, init-guaranteed zeroed). v7 USER-CONFIRMED S66 | patches/wram.asm banner; PROJECT_COMPILER §2.6; ROADMAP CF4 |

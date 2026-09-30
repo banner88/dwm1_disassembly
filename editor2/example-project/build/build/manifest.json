@@ -15,8 +15,8 @@
     "dwm2_bgm10": "$A7"
   },
   "project": "/home/claude/dwm1_disassembly/editor2/example-project",
-  "project_sha256": "6e9fe8ae9258a63727f8ae01de5ca66f5e3ca977609e534edcee4578d194dc38",
-  "rom_md5": "0d60486e57edc2ad31fa28079d4fc9f8",
+  "project_sha256": "83e7350b243a5a12fc4890fc349e09839386cd718442b6219fe55ebb82443647",
+  "rom_md5": "15f21834385eb38e3650d434c622eda2",
   "scripts": {
     "CustomRoom0_Scr00": "60:4243",
     "CustomRoom0_Scr01": "60:424b",
@@ -921,6 +921,9 @@
     }
   },
   "warnings": [
+    "breeding.special entry 693 no longer yields Gigantes, but 3 other entries still do \u2014 editing one cross does not remove it",
+    "breeding.special entry 803 no longer yields Skullgon, but 16 other entries still do \u2014 editing one cross does not remove it",
+    "breeding.special entry 187 no longer yields Yeti, but 23 other entries still do \u2014 editing one cross does not remove it",
     "room gate_island screen 0: legacy 'spawn' marker at (7,6) is an $8F examine spot (S98) \u2014 pressing A on or facing it re-runs the room's ENTRY script (index 0). It does not choose where the player appears (the exit does); delete it unless intended",
     "room gate_island screen 4: legacy 'spawn' marker at (5,3) is an $8F examine spot (S98) \u2014 pressing A on or facing it re-runs the room's ENTRY script (index 0). It does not choose where the player appears (the exit does); delete it unless intended",
     "room dusk_mirror screen 0: legacy 'spawn' marker at (7,6) is an $8F examine spot (S98) \u2014 pressing A on or facing it re-runs the room's ENTRY script (index 0). It does not choose where the player appears (the exit does); delete it unless intended",

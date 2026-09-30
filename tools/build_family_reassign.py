@@ -165,6 +165,8 @@ def main():
     if args.selftest:
         selftest(rom)
     if args.emit:
+        sys.exit("ERROR: " + 'RETIRED S103 (ROADMAP P3.9): {what} is now a compiler-owned @BUILD_PROJECT region fed by project.json `gamedata` ({key}; PROJECT_COMPILER §2.20). Edit the project and run tools/build_project.py --apply instead — this path would overwrite the generated region.'.format(what="MonsterInfoTable (bank $03)",
+                                       key="gamedata.monsters[].family"))
         spec = load_spec(args.spec)
         emit(spec, rom)
     if not (args.selftest or args.emit):

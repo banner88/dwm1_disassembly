@@ -861,6 +861,8 @@ SOURCE byte (family vs species) and the TABLE LENGTH before clamping. Clamping t
 one silently corrupts valid data.
 
 ### The Spirit icon ships on byte $19, not the "free" $1A slot ($1A is not fill-immune)
+> **SUPERSEDED S104:** not reproduced — $1A renders once the mode-4 Spirit string says
+> "$1A"; Spirit is on $1A/$41B0 and ??? is vanilla again (S104 lessons below).
 **Symptom**: The S20 plan placed the Spirit family icon on the first free font slot,
 byte $1A ($4F:$41B0). In practice that tile rendered blank — the menu blanks $1A at
 runtime, so the icon never showed.
@@ -4104,3 +4106,135 @@ assert they agree before writing — a stale view must fail loudly, not edit
 another object. (Also recurred: the S99 r7 rule "the check and the operation
 share one model" — the free-tile count differed for rooms still on a vanilla
 sheet until both used `_free_anim_tiles`.)
+
+## S103 — tables become regions: anchors, overlapping tables, and old tools that still write
+
+### A table turned into a generated region can still hold other code's labels
+**Symptom**: the first build with `MonsterInfoTable` / `EncounterPoolData` as
+generated regions failed to link: `Unknown symbol "Jump_003_68ab"`,
+`DataMon_59d0`, `EncounterDataTable_1` …
+**Root cause**: mgbdis put labels INSIDE the tables because other bytes in the
+bank (mostly data decoded as code) jump or call there; replacing the hand
+text dropped them.
+**Fix**: before wrapping a table in markers, list every label inside it that
+anything outside references (`region_labels` scan); the emitter re-emits each
+at its byte offset (`gamedata.ANCHORS`, a row it falls into is split into db
+chunks).
+**Rule**: a region's labels are part of its interface — census the in-region
+labels referenced from outside BEFORE generating the region, and keep them.
+
+### Two tables can share words — change the data, not the pointer
+**Symptom**: the library recipe strings looked like a plain pointer table
+(entry = species + 5); repointing species 0's string is what the randomizer
+does.
+**Root cause**: the bank $4D mode table ($4007, entries 3-10) overlaps the
+recipe table ($400B = entry 5): species 0-5's pointers ARE the mode 2-7 bases.
+**Fix**: every English recipe string is exactly one 19-byte slot, so the
+compiler rewrites strings in place and never touches a pointer.
+**Rule**: before repointing an entry of a table, check whether its words are
+also read as another table (overlapping bases); prefer a same-size in-place
+data change when the format allows it.
+
+### When the compiler takes a region over, retire every tool that wrote it
+**Symptom** (found by reading, not by breakage): `build_breeding.py
+--emit-family`, `build_family_reassign.py --emit` (which rewrote the WHOLE
+bank_003 from the clean disassembly), `build_library_table.py --emit` and
+`build_new_species.py` (bank_014 regenerated from the clean file — it would
+erase the S101 divert) all still wrote the bytes the new regions own.
+**Fix**: those paths now stop with a "RETIRED S103" message naming the
+project.json section; their `--selftest`s stay in verify check 5.
+**Rule**: a region has exactly one writer. When ownership moves, grep every
+tool for the file it writes and close the old path in the same session.
+
+### A "weight" byte that makes the game hang
+**Symptom**: pool +20..+24 were documented as selection weights; editing
+them like weights can freeze the game.
+**Root cause**: they are per-slot MAX COUNTS; the 2nd / 3rd monster is
+re-drawn until a slot accepts it, so a pool whose first draw has max 0 and no
+slot allowed twice loops forever (PyBoy: 28,257 passes, no battle).
+**Fix**: decoded the whole pool record; the compiler refuses such pools.
+**Rule**: before exposing a byte as an editable number, find the loop that
+consumes it and ask what value makes that loop never end.
+
+## S104 — adding an 11th family: sentinels, twin tables, and a finding that did not reproduce
+
+### "Entry N+1" of a vanilla table may already mean "none"
+**Symptom**: after the 11th family was wired, the pedigree page drew the
+Spirit icon for every UNKNOWN parent (Darkdrium's DAD/MOM lines). It had
+been doing so since B9 (S28) — the whip then sat on $19.
+**Root cause**: bank $07 `jr_007_69ac` prints family `$FF` as text mode 4
+id **10**; vanilla's mode-4 table has 11 entries and id 10 is the EMPTY
+string. The table's extra slot was the "no family" sentinel, and B9's
+relocation gave that id to Spirit.
+**Fix**: the request now asks for id 11 (the relocated table points ids
+11-15 at the same empty string).
+**Rule**: before giving index N to a new member of an N-entry family table,
+decode what index N already holds in vanilla and grep for code that loads
+N as a constant (`ld a,$0a` + the table's mode) — an "extra" entry is often
+a sentinel.
+
+### A clamp on one reader is not a fix for the family of readers
+**Symptom**: B9 clamped family 10 at the bank $01 icon DMA (ClampFamIdx);
+the byte-identical table in bank $0A ($0A:$46B5, the arena / shrine / egg
+lists) was never clamped and read code bytes as a gfx id.
+**Fix**: one bank-$6D answer per question (icon gfx, text group, default
+name), all readers far-call it; the vanilla tables stay in place, dead.
+**Rule**: when widening an index, search the ROM for every copy of the
+table's BYTES (not just its label or address) — twins are common.
+
+### A recorded runtime finding can be wrong; re-measure before building on it
+**Symptom**: KEY_LESSONS/BREEDING_SYSTEM said font byte $1A "is blanked by
+the menu at runtime (not fill-immune)", so Spirit overwrote the ??? glyph.
+**Finding**: with the bank-$41 mode-4 Spirit string set to "$1A", PyBoy
+shows the glyph on the INFO page and the library tab strip (S104). The old
+failure was not reproduced; the ??? glyph is vanilla again.
+**Rule**: a "does not work at runtime" note without a reproduction recipe
+is a hypothesis. Re-measure it when a design depends on it.
+
+### Stub-calling a routine from WRAM beats menu hunting
+**Symptom**: reaching the breeding / arena list screens by button presses
+cost many attempts (warp spawns on exit tiles, NPCs present only at some
+steps).
+**Fix**: write `di / set bank / call <routine> / jr $` into WRAM, set PC
+there between ticks, run a few frames, read RAM/VRAM (`/tmp` helper in
+S104: `run_stub`). Used for `$16` entry 3 (breeding), `$09` LoadFld9_688e
+(default name), `$04` opcode-$2D body and `$0A` LoadFldA_4610 (list icons),
+each compared old build vs new build.
+**Rule**: for a fork deep inside a UI flow, prove the fork's contract by
+calling its enclosing routine directly with the RAM it reads; save menu
+navigation for what only the screen can show.
+
+### A buffer rename must move its writers AND its readers (S104 r3)
+**Symptom**: user: looking up a Spirit monster in the library froze. In
+PyBoy every tab listed DrakSlime, SpotSlime … and a lookup opened species =
+the list INDEX; only the Slime tab looked right (its ids 0-19 are in order).
+**Root cause**: vanilla has ONE list buffer ($C0D8) for the roster lists and
+the library list. FX1 (S71) moved every bank-$12 READER to wMonList ($D001)
+for the 40-slot roster, but the B7 library writer `LibScanByFamily` kept
+writing $C0D8 — the library read the roster list. A Spirit lookup landed on
+an unseen species id and printed text id $FF (mode 0) → garbage pointer →
+text never finished (the S29 freeze class).
+**Fix**: `LibScanByFamily` writes wMonList (same-size `ld hl`), restoring the
+vanilla one-buffer contract.
+**Rule**: when relocating a shared buffer, list every writer and reader of
+the old address across ALL banks (not just the feature you are moving) and
+move them together; a "lists look right on the first tab" test is not a test.
+
+### A "proven no-op" that depends on call ORDER is not proven (S104 r4)
+**Symptom** (user): the save file was "wiped" after a reset; after CONTINUE
+the top row of the screen was wrong. PyBoy reproduced it from a clean save
+on the S103 and S104 builds alike: save at the farm, save again in the
+castle, CONTINUE, reset → no save (new game).
+**Root cause**: FX1 (S71) snapshots the extended farm in 32-byte chunks; the
+94th chunk also carries 28 bytes of the tile-buffer image $BCC8-$BCE3. The
+design note called restoring them "a proven no-op" because those bytes
+"only change at explicit save". But SaveGameState writes the main image
+(which triggers the snapshot commit) BEFORE the $C300 -> $BCC8 tile block,
+so the snapshot always holds the PREVIOUS save's tile row. CONTINUE put it
+back into bank 0 (and then into $C300 — the glitchy row) without redoing the
+checksum, which covers $BCC8 → the next boot rejected the save.
+**Fix**: the R4 restore stops at $BCC7 (93 chunks + a 4-byte tail copy).
+**Rule**: when a design argument says "these extra bytes are always equal
+at time X", check the ORDER of the writes that make them equal; a snapshot
+commit inside a multi-block save sees only the blocks written before it.
+And test save → save somewhere else → load → reset, not just save → load.

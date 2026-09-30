@@ -1124,7 +1124,7 @@ label45d2:
     or a
     ret nz
 
-    call $46c9
+    call LoadFldA_46c9
     call LoadFldA_4610
     call CallFldA_45e5
     ld hl, $c906
@@ -1246,17 +1246,22 @@ jr_00a_4671:
     ld a, [de]
     ld hl, $cacb
     call GetMonsterDataPtr
-    ld a, [hl]
-    add a
-    ld hl, $46b5
-    add l
-    ld l, a
-    ld a, $00
-    adc h
-    ld h, a
-    ld e, [hl]
-    inc hl
-    ld d, [hl]
+    ld a, [hl]                        ; A = the slot's family byte
+    ; S104 FORK (same-size, 13 B = 7 + 6 nops): gfx id from bank $6D entry 1
+    ; FamilyIconGfxFromE. Was `add a / ld hl,$46b5 / ... / ld d,[hl]` — the
+    ; 10-entry table $0A:$46B5 (dead now) was never clamped: family 10 read
+    ; the next code bytes as a gfx id.
+    ld e, a
+    push bc
+    ld hl, $6D01
+    rst $10                           ; DE = family-icon gfx id
+    pop bc
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
     pop hl
     push hl
     call WaitDMATransfer
@@ -1272,19 +1277,14 @@ jr_00a_4671:
     ret
 
 
-    inc bc
-    ld l, $04
-    ld l, $05
-    ld l, $06
-    ld l, $07
-    ld l, $08
-    ld l, $09
-    ld l, $0a
-    ld l, $0b
-    ld l, $0c
-    ld l, $fa
-    db $e3
-    ret z
+FamilyIconGfxTable0A:  ; $0A:$46B5 — family -> gfx id of its 16-byte icon tile (bank $2E
+    ; entries 3-12 = the same tiles as font glyphs $10-$19). 10 entries, NOT clamped:
+    ; family 10 (Spirit) read the next code bytes ($C8E3 -> garbage gfx id). S104: DEAD — the reader far-calls bank $6D FamilyIconGfxFromE.
+    dw $2e03, $2e04, $2e05, $2e06, $2e07, $2e08, $2e09, $2e0a
+    dw $2e0b, $2e0c
+
+LoadFldA_46c9:
+    ld a, [$c8e3]
 
     add a
     add a
@@ -1425,7 +1425,7 @@ label479d:
     cp [hl]
     jr z, jr_00a_47c6
 
-    call $46c9
+    call LoadFldA_46c9
     call LoadFldA_474b
     call LoadFldA_40e5
 
@@ -1435,7 +1435,7 @@ jr_00a_47c6:
     cp [hl]
     jr z, jr_00a_47d9
 
-    call $46c9
+    call LoadFldA_46c9
     call LoadFldA_4610
     call LoadFldA_474b
     call CallFldA_45e5
@@ -1934,7 +1934,7 @@ label4b46:
     ld de, MenuBorderFill
     ld hl, $8800
     call WaitDMATransfer
-    call $46c9
+    call LoadFldA_46c9
     call LoadFldA_4610
     ld hl, $0005
     call LoadFldA_441f

@@ -268,15 +268,33 @@ $C82D/$C82E = de                      ; final text source pointer
 
 | Mode | Base | Use | Entries |
 |------|------|-----|---------|
-| 0 | `$400B` | detail line 1 — name template (`$F6` insert) | 256 |
+| 0 | `$400B` | detail line 1 — the **breeding recipe line** (two 9-char parent fields; BREEDING_SYSTEM "Library recipe TEXT") | 256 |
 | 1 | `$420B` | detail line 2 — **per-species description** | **215** (0–214) |
-| 2–6 | `$43CE…` | small routine targets (not per-species tables) | n/a |
-| 7 | `$442D` | large blob | — |
+| 2–7 | `$43CE…$442D` | **not tables**: these words are dispatch entries 5-10 = the mode-0 pointers of species 0-5, i.e. the addresses of their recipe strings (19 B apart). A mode 2-7 lookup would read string bytes as pointers — no reader uses them (S103 correction; the S29 row said "small routine targets") | — |
+
+The mode table ($4007 = entries 3-10) and the mode-0 table ($400B = entries
+5+) OVERLAP, so an editor must never repoint the recipe strings of species 0-5:
+the compiler rewrites recipe strings **in place** (`gd_library_text`, S103;
+the block $43CE-$53D2 is re-sectioned as `LibRecipeText_NNN` db rows in both
+trees).
 
 **Bank `$41` `$4007` mode bases line up with the named tables in `DATA_STRUCTURES.md`:**
 mode 5 → `MonsterNamePtrTable` (`$4339`, 256), mode 6 → `SkillNamePtrTable`
-(`$4539`, 256), mode 7 → `FamilyCodePtrTable` (`$4739`, **215**). Modes 0–4 are
-the fixed-size dispatch tables (misc/item/spell, etc.).
+(`$4539`, 256), mode 7 → `FamilyCodePtrTable` (`$4739`, **215**). Modes 0–4
+(S104: decoded and re-sectioned in both trees as labelled `dw` tables,
+`TextModeList41` + `TextMode0_Debug` … `FamilyIconStrTable_Old`; bytes unchanged):
+
+| Mode | Base | Entries | Content |
+|------|------|---------|---------|
+| 0 | `$4025` | 10 | debug-menu strings ("DEBUG MODE" …) |
+| 1 | `$4039` | 100 | debug stage names (NORMAL, ACREATE, STAGEID, CASTLE …) |
+| 2 | `$4101` | 113 | field messages ("[F9]0 dumps…", "Cannot dump here!", "WHOINFOOKMONEGG" …) |
+| 3 | `$41E3` | 160 | `FamilyNamePoolTable`: DEFAULT NAMES, 16 per family — id = `family<<4 \| gender*8 \| RNG&7` (bank `$09` `jr_009_68aa`, naming screen). S104: ids `$A0`–`$A7` = Spirit's pool (bank `$6D` `FamilyDefaultNameId`), reached through the dead `$4323` words |
+| 4 | `$4323` (patched: `$7E18`) | 11 (patched 16) | family ICON strings `"<$10+fam>"+$F0`; **id 10 = `$5B1E`, the EMPTY string = the "no family" icon** (bank `$07` pedigree page, family `$FF`). B9 relocated the table to `$7E18` with id 10 = Spirit; S104 moved the "no family" request to id 11 (same empty string) |
+
+Mode 4 is the one text path that prints a family icon: INFO page, library tab
+strip, pedigree parents. The HUD / list icons are gfx streams instead (bank
+`$2E` entries 3-12, the same 10 tiles; Spirit: bank `$6D` gfx id `$6D04`).
 
 ### Worked example & trap — the encyclopedia detail-page freeze (Session 29)
 

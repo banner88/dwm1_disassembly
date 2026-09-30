@@ -79,6 +79,18 @@ def validate(prj, generated=None):
     warnings += list(prj.warnings)
     rooms = [r for r in prj.rooms if not r.get('placeholder')]
 
+    # ---------------------------------------------------------- gamedata
+    # S103 (P3.9, PROJECT_COMPILER §2.20): Layer A-lite overrides. Any schema
+    # / range / coherence error stops the build here; warnings are the
+    # coherence notes (Sets 1-3) and the soft checks.
+    from . import gamedata as GD
+    try:
+        gd = prj.gamedata()
+    except GD.GamedataError as e:
+        errors.append(str(e))
+    else:
+        warnings += [w for w in gd.warnings if w not in warnings]
+
     # ------------------------------------------------------------- music
     # M3b (S64): resolve custom.music up front so schema/reference errors
     # surface as validation. Capacity: fixed 95-slot record area (ids

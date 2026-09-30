@@ -588,6 +588,8 @@ recipes are pure authoring.
       NUM_FAMILIES→11 in build_library_table.py, family reshuffle; tab-strip layout is
       the one UI nicety. → BREEDING_SYSTEM "Future — 11th family"; KEY_LESSONS
       "Spirit B9"; archive: SESSION_HISTORY Part 3.
+      **S104:** the open items are done under P3.10a (Spirit on $1A, ??? restored,
+      $FA = Spirit, bank $6D family systems) — see P3.10a.
 - [x] **BUG — breeding-cutscene parent sprites** — FIXED S14: incomplete bank $0B
       labelization (3 raw pointer refs into the shift region) + one ref mislabeled to
       RoomScreenPtrTable; re-sectioned + repointed, user-confirmed.
@@ -902,9 +904,23 @@ recipes are pure authoring.
       per bank); (2) own animations do not run on gate maze floors (same
       dispatch guard as vanilla); (3) per-frame durations (a long frame 1, a
       short blink) are not offered — one speed per animation.
-- [ ] **P3.3g — 128 more tiles per room from VRAM bank 1** — **NEXT (user
-      2026-09-29: "We'll check expanding tileset next session(s)")**; found
-      S102, not started. Suggested first session: the full-game VRAM-bank-1
+- [ ] **P3.3g — 128 more tiles per room from VRAM bank 1** — **BANKED S103
+      (user 2026-09-29: "Bank and come back later if tiles become a problem,
+      I dont want to burn three sessions on an expansion")** — reopen only
+      when the 128-tile sheet actually blocks a room. S103 static audit
+      (read-only, nothing built): every attribute writer (bank $0B full-screen
+      load `jr_00b_4165`, bank $06 row/column staging → ROM0
+      `CopyRowAttrGBCLoop`/`CopyColAttrGBCLoop`) writes the $C200 nibble
+      straight into the GBC attr byte (`swap a / and $0f`), so nibble 8-11 =
+      bank-1 tile + palette 0-3 with NO attr-path change; the ~75 `rVBK`
+      sites are attr-map writers ($9800/$9C00) or data decoded as code (banks
+      $05/$08/$14/$32-$36/$55/$5A/$5B/$78) — none targets $8000-$97FF;
+      walkability stays tile-id based (bank-1 slot N = slot N's side). Main
+      risk found: the dialog / YES-NO boxes never set attrs (TEXT_SYSTEM "Text
+      boxes"), so font tiles over a bank-1 cell would read empty bank 1 —
+      reuse the bank $73 entries 14-18 attr save/restore for such rooms and
+      census every other overlay. Estimate when reopened: census 1 session,
+      engine POC 1, editor 1. Original suggested first session: the full-game VRAM-bank-1
       census (below) before any engine change: in the field VRAM bank 1's tile area is EMPTY and no BG cell
       uses attribute bit 3 (6 rooms + the menu checked; battles / cutscenes /
       the monster screens NOT yet). A room could load a second 128-tile sheet
@@ -1151,11 +1167,117 @@ recipes are pure authoring.
       conversation steps (`talk.steps`) are the natural storyboard model. *Accept:* the S70 demo quest's
       entry cutscene is legible & editable in the storyboard; an edit
       round-trips through compile_script and plays.
-- [ ] **P3.9 — Layer A-lite gamedata backend** [G-D]: `gamedata.monsters/
-      skills/breeding/encounters` emitters as same-size table patches;
-      readers ported from randomizer/romdata.py. *Accept:* unedited
-      gamedata → ZERO byte diffs (per-table regression); one stat edit
-      lands in-game; test_compiler extended + green.
+- [x] **P3.9 — Layer A-lite gamedata backend** [G-D] — **built S103,
+      USER-CONFIRMED 2026-09-30 ("Rom - all correct", the demo test ROM)**
+      (user 2026-09-29: "lets do 3.9"). As built
+      (PROJECT_COMPILER §2.20, EDITOR_DESIGN §6.2): sparse `gamedata` —
+      `monsters`, `enemies` (EIDs 0-486), `encounters` (pool format fully
+      decoded: rate / group chances / slot chances / EIDs / MAX COUNT / maze
+      size — DATA_STRUCTURES), `skills` (mp, learn ≤ $D9, record),
+      `exp_curves`, `growth_curves`, `breeding.family` / `.special` (B5 logic
+      ported), `boss_joins` — twelve same-size compiler regions (new hand patch
+      `patches/bank_013.asm`); vanilla base = `extracted/gamedata_vanilla.json`
+      (`tools/extract_gamedata.py`, verify check 5). Coherence: library recipe
+      TEXT regenerated in place (bank $4D block re-sectioned, both trees), library
+      tabs regrouped from the family bytes, Set 2 / 3 warnings; a pool that can
+      freeze the 2nd / 3rd draw is refused (measured). The pre-S103 hand edits
+      moved into the example project's `gamedata`; pin `0d60486e…` →
+      `5d1dbc5f…` (patched; the only byte change = the example's 4 recipe
+      strings now match its B4 recipes). The old tool emit paths are retired.
+      *Accept MET (machine half):* empty gamedata == ROM per table
+      (test_compiler + `--rom` vs the original ROM), test_compiler 227 `--rom`,
+      test_app `--rom` (GUI build == pin), test_canvas `--rom` PASS; **PyBoy on
+      the user's save** (their project + the example's gamedata + demo edits):
+      the Gate of Beginning battle row = the edited EID 2 bytes, exp 500 split
+      167 × 3, the Slime joins; HealMore shows USE MP 1 (5 before); Snaily's
+      encyclopedia page shows the edited recipe; the Dragon tab lists 26 (Slime
+      moved), the Slime tab 20. *User half:* `DWM_S103_gamedata_test.gbc`.
+      Residuals: (a) the GUI (P3.10-P3.13); (b) names / descriptions (text
+      tables), growth-curve reuse warnings, the enemy-side power bands of S76
+      (profile_check / audit_threat run on a built ROM) are not compiler
+      checks yet; (c) record +4 (`mp_byte`) reader not traced; (d) pool +1
+      unread by the pool readers — confirm nothing else reads it; (e) new
+      species (Phase N, G3) still live in `extracted/new_species.json` +
+      bank_06a / the hand EID-518 row.
+- [ ] **P3.9b — Purge the proof-of-concept CONTENT from the hand overlay;
+      keep every MECHANISM** (user 2026-09-30: "patches are POC trash … Please
+      do not include any patches in the editor, they are all trash (in terms
+      of custom monsters, custom rooms, etc. The mechanisms are obviously
+      vital)"). Goal: a project with no content builds a game whose DATA is
+      vanilla; every fork / hook / reader stays and reads project data (empty
+      by default). S103 audit (read-only) of what still leaks from
+      `patches/` into EVERY project's build:
+      (1) **Gorbunok (new species 224)** — info row (bank $6A, build_new_species),
+      EID-518 row (bank $14 tail), name + 4-char short name (bank $41,
+      `LoadModeBaseRedirect` table), detail text / recipe line (bank $4D
+      `HighLine2Ptrs` / `HighMode0Ptrs` / `GorbunokRecipeLine`),
+      `FamilyRecipeResolve` entry (bank $16), battle art `$7E01` + palette
+      (`HighBattlePal`, bank $17), follower art / layout / attr in the 8
+      contexts (G1), the library tab (via `extracted/new_species.json`) — full
+      site list: MONSTER_DATA "Species-indexed table overshoot registry". The
+      forks stay; their data becomes project-driven (P3.10 new-species wizard /
+      G3 fold) with an empty default. (2) ~~The 10 custom skills~~ — **NOT
+      content to purge** (user 2026-09-30: "Custom skills absolutely stay!!
+      They are NOT random trash, they were carefully designed for new
+      romhack. All data related to them must also be in editor.") → P3.11c.
+      The one project-specific leak inside them — Anchor hardcodes map $71 +
+      the example's script indices in bank $72 — becomes project data there.
+      (3) ~~The ??? family icon~~ — DONE S104 (P3.10a: ??? glyph vanilla
+      again, Spirit on $1A). (4) The dead bank-$16 special
+      table still carries the S12 mirror (entries 693 / 803) — restore to
+      vanilla. (5) The example project (compiler regression fixture) carries
+      POC rooms + gamedata (incl. Gorbunok references) — decide with the user:
+      keep as a test fixture only, or replace. *Accept:* the user's project
+      builds with vanilla data everywhere except what it authors (per-table
+      ROM compare like S103's, extended to names / text / art / skill tables);
+      every mechanism's test still passes.
+- [x] **P3.10a — Spirit: the 11th family as a first-class family** — **built
+      S104 (r1-r5), USER-CONFIRMED 2026-09-30** (test ROM = the user's project + a demo
+      overlay: Healer / Spooky / Shadow / MadSpirit in Spirit, [Spirit × Dragon]
+      → MadSpirit, [Dragon × Spirit] → Spooky). Engine: new bank $6D FAMILY
+      SYSTEMS (icon gfx, text group, default name, SpiritIconStream) behind
+      same-size forks in banks $01 / $0A / $04 / $09; `$FA` = Spirit in the
+      bank-$16 family scan; ??? glyph restored, Spirit glyph $1A; bank $07
+      "unknown parent" icon id 10 → 11 (a B9 regression found here). Editor:
+      `"Spirit"` in monster families + matchers, library token, `"AnyFamily"`
+      refused. PyBoy measurements: BREEDING_SYSTEM "Spirit — the 11th family
+      (S104)". **S104 r2** (user 14:35: "Ghost whisp is the best BY FAR, use
+      that. 2) Doesnt matter. Just make option in editor."; r1 test ROM
+      passed except the Library door, which the user's own project
+      redirects): icon = mock-up B ghost wisp; `gamedata.families`
+      (`<family>.dialogue` voice A-D for ANY family, `spirit.names`) as
+      compiler regions; the editor's new **Families** tab (members, move / add
+      a monster, dialogue voice, Spirit names; one undo step each). Built,
+      NOT yet user-tested. **S104 r3:** the reported Spirit-library freeze
+      was an FX1 (S71) library-buffer bug on EVERY tab (writer $C0D8, readers
+      wMonList) — fixed in bank $12. **S104 r4:** the reported save wipe /
+      glitchy top row was an FX1 (S71) snapshot-restore bug (stale tile
+      bytes broke the checksum after saving on a different screen) — fixed
+      in bank $73 (KEY_LESSONS S104 r4); USER-CONFIRMED 2026-09-30. **S104
+      r5:** display order Spirit before ??? (library tabs + editor), no
+      family renumbering. (Original item follows.) (user
+      2026-09-30: "I still want the FAMILY, but for now no monsters assigned.
+      As I add new monsters, change existing ones, etc - I want to be able to
+      assign to families. Then that propagates to breeding etc. … would be nice
+      to have a new sprite for the spirit family"). Default: no monster in
+      Spirit (vanilla + `gamedata.monsters[].family = 10` already assigns;
+      the library has an 11th tab since B9). S103 audit of what is missing:
+      (1) **its own icon** — today Spirit borrows font byte $19 = the vanilla
+      ??? glyph (overwritten); byte $1A was blanked by the menu at runtime
+      (BREEDING_SYSTEM "Family icons") → find a fill-immune font slot, new art
+      from the user; (2) **breeding family code** — family 10 → code $F0+10 =
+      $FA, which the FAMILY-table scan (bank $16 `jr_016_461a`, `cp $fa`) treats
+      as the mate-side "any family" wildcard (zero vanilla data uses; the bank
+      $69 special scanner has no wildcard) → repurpose $FA as Spirit (same-size
+      edit of the wildcard test) and teach the editor's matchers "Spirit";
+      (3) **family dialogue** — `FamilyTextPtrTable` ($04:$60F4) has 10
+      entries: a family-10 monster reads the next bytes as its text group
+      (garbage) → fork (bank $04 admits no inserts); (4) the library recipe
+      token for Spirit (`<icon>family`) and the status / detail family line;
+      (5) editor: family pickers show 11 families (P3.10). *Accept:* a monster
+      moved to Spirit shows the Spirit icon in the library tab, status and
+      detail pages, talks with its own text group at the farm, and a Spirit ×
+      X recipe breeds in PyBoy.
 - [ ] **P3.10 — Monsters tab** (needs P3.9): stats/growth/ai_weights/
       learnset forms + battle-sprite and follower pickers over the GFX
       stack; new-species wizard hooks Phase N (G3 fold folded here or
@@ -1189,6 +1311,22 @@ recipes are pure authoring.
       offer them (build_skill_tables.py refuses such an emission).
       *Accept:* a custom skill's damage tier + description edited in GUI,
       verified in battle in PyBoy.
+- [ ] **P3.11c — The custom skills are PROJECT DATA** (user 2026-09-30:
+      "Custom skills absolutely stay!! … All data related to them must also
+      be in editor."). Today the custom skills ($DE Scorch / $DF Smite — the
+      S45 masquerade pair —, and $E0-$E9: MagicBurn, Tame ×3, Anchor, Tremor,
+      Quake ×3, Mourn; confirm the full list with the user) live as hand bytes in banks
+      $06/$07/$14/$41/$4C/$52-$58/$5F/$72 (BATTLE_SKILL_SYSTEM §13-14);
+      `gamedata.skills` covers only ids 0-221. Scope: a `custom.skills`
+      section (or `gamedata.skills` ids $E0+) owning every DATA row the
+      custom skills use — 19-byte records, names (bank $41), descriptions
+      (bank $56), MP / learn / announce rows, the battle-message pool
+      strings, Anchor's map + script indices — emitted as compiler regions
+      at the same addresses (byte-identical for today's set, pinned), while
+      the bespoke handlers stay hand code (mechanism). Editor: a Skills tab
+      page listing vanilla + custom skills with the same fields. *Accept:*
+      the user's project re-expresses the 10 skills byte-identically; one
+      field edit (e.g. Quake MP) changes the right byte and works in PyBoy.
 - [ ] **P3.11b — AI ban-list (OPTIONAL)** [G-N]: measure the clean
       knows-it-never-casts-it mechanism (option-list filter in the AI
       build path; per-actor or per-skill ban table in a patch bank),
@@ -1201,6 +1339,38 @@ recipes are pure authoring.
       coherence Set 1 live). *Accept:* an added recipe shows correct tree
       placement + depth in the panel and works at the Starry Shrine in
       PyBoy.
+      **S104 planning (user 2026-09-30: "Breeding table will utilize spirit
+      extensively obviously all breeding tables will need to be heavily
+      redesigned. Partially with optimizer randomizer and depth-breeding
+      reading. Plan for it.").** The redesign is a DESIGN tool that writes
+      `gamedata.breeding`, not a new engine:
+      (a) **11-family model everywhere** — the randomizer's tree builder
+      (`randomizer/`, S76/S77: regenerated tree, depth-targeted, bosses /
+      arena / wild stratified by depth) and the simulator assume 10 family
+      codes; lift them to read the family list + codes from
+      `editor2/core/gamedata.py` (FAMILY_NAMES / FAMILY_CODES, `$FA` =
+      Spirit) so Spirit rows are generated and scored like the others.
+      (b) **Depth reading** — the S77 rule "depth is a function of matcher
+      SPECIFICITY" (BREEDING_SYSTEM) becomes the panel's primary read-out:
+      per species, the shallowest recipe depth from the wild/boss roots,
+      the family-default fallback, orphans, and which recipes are shadowed
+      (the S103 validators already report shadowing).
+      (c) **Optimizer / randomizer as a proposer** — "generate / re-balance
+      to a depth profile" runs the randomizer's tree regeneration on the
+      PROJECT's species + families (Spirit included) and writes a candidate
+      `gamedata.breeding` (family slots 0-214 + special overrides/appends)
+      that the user edits; nothing is written to the ROM outside the
+      compiler regions. Seeds + constraints (keep the vanilla rows the user
+      pins, target depth per species, per-family counts) are project data.
+      (d) **Engine limits that shape it** (all measured / decoded):
+      family table = ONE family-cross default per result species (slot =
+      result); special table ≤ 1650 entries, first match wins; family scan
+      last-family-match-wins; fallback = parent 1; a new member of Spirit
+      gets no family default until the table gives it one (S104 test: every
+      non-Dragon Spirit cross falls back to parent 1). *Accept (planning):*
+      the tree explorer shows Spirit rows; a generated table round-trips
+      through the compiler with zero validator errors and PyBoy breeds three
+      sampled recipes (one Spirit) with the stub harness (KEY_LESSONS S104).
 - [ ] **P3.13 — Encounters + Music tabs**: (a) Encounters cross-view +
       per-room pools — requires **Encounters #2 custom pools** [G-C]
       (the Phase-2 box, folded here if not done earlier) — PLUS

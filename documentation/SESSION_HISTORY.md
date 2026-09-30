@@ -1,5 +1,238 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-09-28 (Session 102 — **ROADMAP P3.3f: OWN ANIMATED
+> TILES, FROM SCRATCH — any tile, drawn frames, any speed, a plain budget**
+> (user: "CAN I animate more than a single tile? … If I animate 1 it stops
+> the second one. Also is this budget expandable"; "can we control speed of
+> tile movement?"; then "This is NOT UI friendly. I dont … understand the
+> budget, how it works … I just want animated tiles and for the UI to tell
+> me wtf is happening … I want to mostly make them myself"; "offer both"
+> [flip and drift]; "Keep button" [vanilla copy]; "if I can set speed that
+> would be great"; "CAN animation slots be expanded? Can you poke around
+> briefly?"). S101 r4 not re-confirmed this session. **Built S102; signed
+> off 2026-09-29 (in-game ROM test not separately reported).** Verifier PASS 6/6; clean `1ca6579…` byte-perfect (bank $00
+> `LCDCStateTable` re-sectioned to bytes + comments, both trees); **patched
+> pin MOVED `9c813041…` → `0d60486e…` (patched)**; test_compiler --rom
+> 170/170; test_app --rom PASS (GUI build == pin); test_canvas --rom PASS
+> incl. the rewritten v6 (Animate tab + --rom own flip). `EDITOR_REVISION` =
+> 'S102'.
+>
+> **Why the user's two-part cloud stopped:** room $6C borrowed `$47`
+> (Hargon room), whose animation has 2 flip pairs; the cloud's right cell
+> used both, so animating the left cell TOOK OVER them (S99 r6 take-over).
+> Measured in PyBoy that a 4-pair source (`$23`) moves both halves — the
+> answer to "can I animate more than one tile" was always "yes, up to the
+> borrowed animation's slots" (GreatTree sways 16). The S99 model itself
+> was the problem, so S102 replaced it.
+>
+> **Engine (PROJECT_COMPILER §2.19; ROOM_DATA_FORMAT "Own tile animations
+> (S102)"):** new compiler-owned bank **$6C** — bank $71 entry 3
+> `CustomAnimSource` far-calls entry 0 `CustomTileAnimate` first (custom
+> rooms only, vanilla dispatch guards). Per room, groups `[period, phase,
+> seqlen, nslots, dw seq, dw VRAM dests]`; every step copies a WHOLE frame
+> (16-aligned blocks in bank $6C) into the slot with GDMA at the start of
+> HBlank (or VBlank lines 144-151), ≤ 8 tiles per frame, line 127 skipped
+> (the LYC=127 STAT job hides sprites under the status bar — decoded +
+> annotated: bank $00 `LCDCStateTable`, field state 1 measured). State:
+> wCustomPool carve `wTileAnim*` $D0C5-$D109 (32 groups). Measured on the
+> user's save: 13 tiles / 4 motions → every tile shows only authored frames
+> on every one of 600 frames in **PyBoy and SameBoy** (new
+> `tools/sameboy_anim_check.py` + `tools/sameboy/dwmcheck.c`), ≤ 8
+> scanlines, no dropped frame; negative control (HBlank wait removed): 631 /
+> 581 bad tile-frames (SameBoy / PyBoy — both block mode-3 VRAM writes);
+> leave-and-return heals. Budget facts measured: vanilla GreatTree sway ~65
+> scanlines and Zoma ~50 drop a frame per 32, 34 do not; the game never uses
+> HDMA/GDMA, runs normal speed, its VBlank VRAM work ends at LY 148; **VRAM
+> bank 1's tile area is empty in the field** (6 rooms + menu; battles not
+> checked) → ROADMAP P3.3g (128 more tiles per room).
+>
+> **Editor (EDITOR_DESIGN §5.1 "As built S102"):** the **Animate** tab
+> replaces "Make animated": select cells (Select tool drag / Shift+click /
+> double-click) → Use the selected cells → Flip through frames (painter,
+> 2-8 frames, loop / back-and-forth, shift / mirror / copy previous / undo)
+> / Drift right / Drift left (as one picture ≤ 2 cells, or per tile) / Sway
+> (1-3 px) → speed (presets + exact frames per step, "≈ N per second") →
+> "only the selected cells" (own copies; the only thing that costs free
+> tiles) or "every place drawn with these tiles" → Create; list + Edit (one
+> undo step, keeps its place) / Remove; plain box: load %, free tiles, frame
+> storage, groups; "How does this work?". The inspector's vanilla combo
+> moved behind "Copy a vanilla room's animation…" (+ Make the selected cell
+> still). Canvas: rectangle selection, preview plays own + vanilla, Anim
+> outline includes own slots. Help topic *Animated tiles* (+ limits). Test
+> ROMs **`DWM_S102_tile_anim_engine_test.gbc`** (patched, md5 `37194b4d…`)
+> and **`DWM_S102_animate_tab_test.gbc`** (patched, md5 `394b5ee7…`, made
+> through the GUI code paths): the user's project, room $6C — cloud (0,0)-
+> (1,0) screen 0 drifts right, cloud (0,1)-(1,1) screen 1 drifts left, every
+> tree sways, the screen-4 blue floor flips; the old `$47` flip still runs
+> next to them. Bugs caught before delivery: KEY_LESSONS S102.
+>
+> **S102 r2 (user 18:30: "Wait wtf I cant have frames side by side
+> anymore?? How can I paint them?"; editor-only, built, NOT yet
+> user-tested):** the Animate tab shows every frame side by side (one
+> painter each, wrapping to the panel width, frame 1 = the map, fixed);
+> paint straight on any frame; the clicked frame is the yellow one the
+> tools act on; Size − +. test_canvas v6 asserts it. `EDITOR_REVISION` =
+> 'S102r2'. Pin unchanged `0d60486e…` (patched).
+>
+> **S102 r3 (user 18:51: "Can I still copy or shift individual
+> quadrants?"; editor-only, built, NOT yet user-tested):** Ctrl+click picks
+> one 8×8 tile, Ctrl+Shift+click a 16×16 cell (outlined on every frame);
+> Shift / Mirror / Clear / Copy previous act on it; Copy (any frame incl.
+> the map) / Paste (repeats to fill); test_canvas v6 asserts part-only
+> edits + exact undo. `EDITOR_REVISION` = 'S102r3'. Pin unchanged.
+>
+> **Session sign-off 2026-09-29** (user: "Good work. We'll check expanding
+> tileset next session(s) so make sure thats on roadmap. Hand off please");
+> the in-game test of the two S102 ROMs was not separately reported. **Next:
+> ROADMAP P3.3g** (VRAM bank 1 → 128 more tiles per room; first the
+> full-game bank-1 census). **Hand-off: all S102 work = the diff against
+> `f4b0ec1` (origin/master), delivered as `DWM-S102-tileanim-changed-files.zip`.**
+
+> Last verified: 2026-09-27 (Session 101 — **ROADMAP P3.7b PART 2 (first
+> half): CUSTOM BOSS FLOORS — per-gate floor count / boss floor / hand-made
+> gates, MONSTER NPCs, CONVERSATION TREES (flags, YES/NO, battles of 1-3
+> enemies, the vanilla helper exit), PROJECT ENEMIES with a weaker JOIN
+> VERSION** (user: "I want custom boss floors"; "boss rooms WILL BE
+> MULTISCREEN … a custom room hookable as an end boss room with all that
+> entails (music, script, etc)"; "The event is still the same (fight,
+> optional join, WAROBOU - NOT WATABOU - takes you away)"; "every monster
+> has follower sprite, we can use that as BOSS NPC"; "New weaker join
+> version … 'always/sometimes/never' join flag settable"; battles "1, 2 or
+> 3"; vanilla boss rooms reusable; "Want to set floor count for all gates";
+> "Fight starts on arrival - want that option"; "Dont forget fully custom
+> gates"). S100 confirmed passed at session start ("1) yes passed").
+> **S101 USER-CONFIRMED 2026-09-27 23:44 ("Can confirm everything works as
+> intended") except the helper (point r2 below); r2 built, NOT yet
+> user-tested.** Verifier PASS 6/6; clean `1ca6579…`
+> byte-perfect (banks $04/$0B/$16/$54 comments only, both trees); **patched
+> pin MOVED `7cd7257b…` → `9c813041…` (patched)**; test_compiler --rom
+> 151/151; test_app --rom PASS (GUI build == pin); test_canvas --rom PASS
+> incl. the new **v8** (a boss floor authored entirely through the GUI code
+> paths, then played in PyBoy). `EDITOR_REVISION` = 'S101'.
+>
+> **Engine (all PyBoy-measured on the user's save unless noted):**
+> `GateFloorDataTable` ($16:$70A6, 32×8) is a compiler-owned region fed by
+> `custom.gates[]` (floors 2-99 incl. the boss floor, boss = a custom room —
+> arrival on its "Inside gates" cell — or `vanilla:$xx`, `hand_made`);
+> gates without settings keep their vanilla bytes (the example: all 256 B
+> vanilla). The boss floor itself needs no code (entry 5 `jr_016_5be1` reads
+> byte 4/5/6, no RNG). Hand-made gates: rules may take floor 1. **Monster
+> NPCs**: NPC sprite ids $F0-$F3 read the display list $D7CA ([species+$10,
+> 1]) and draw that species exactly like its follower; bank $60 entry 8
+> starts with `CustomMonsterCast` (per-screen cast, ≤4 species, written
+> before the NPC parse — survives scrolls). Census: 218 species captured
+> (`extracted/monster_npc_sprites/`); 216 draws blank, **217-220 hang or
+> crash** (refused by the compiler). **Project enemies**: `LoadEnemyStats`
+> head → bank $14 `LoadEnemyStatsExt` → EIDs ≥ 519 come from the new
+> compiler-owned **bank $6B** (`CopyEnemyRowExt`, 640 rows max);
+> `LookupBossRedirect` reads `BossRedirectTableExt` (project `join_as` rows,
+> then the vanilla 34). Joins measured: tier 0 = always joins; the JOIN
+> VERSION's stats arrive (Court Dragon joins with the join row's stats); in
+> a 2-3 enemy battle the join candidate is the LAST enemy knocked out
+> (vanilla `$DD61`). **Music**: on the floor before a custom boss map, bank
+> $71 `CustomRoomBGMResolve` plays that room's song (or $34).
+>
+> **Conversations** (`talk.steps`, PROJECT_COMPILER §2.18): say / ask
+> YES-NO / if flags / set / clear / battle (1 enemy = `$5A`, 2-3 = DA03/05/07
+> + DA02 + `$5B`; the steps after it run only on a WIN — a loss is vanilla:
+> castle, half gold) / helper (a hidden NPC at a fixed slot is revealed,
+> flies in with `$1C $16NN` to a screen-local cell next to the player, spins
+> with `$47-$4A`, can speak, hops, then the `$3B` wavy fade to the
+> destination) / move / end. `on_arrival` = the room's entry script (the
+> fight-on-arrival option; `screen` limits it). Measured in the demo: talk →
+> ask → 3-enemy battle (EID 520 + 327 + 327) → win → join prompt → flag →
+> helper → Warden's Rest → walk off → GreatTree; the screen-2 DragonKid's
+> blessing flag changes the lord's branch (1-enemy fight); hand-made Gate of
+> Beginning floors 1/2 served, the stairs descend, Thorn Arena's fight on
+> arrival → helper → Castle throne (14,5); Talisman's boss floor = the
+> Villager Dragon room at its vanilla spawn (1,6). **Observed, not yet
+> traced:** after a battle started by TALKING to a monster NPC, that NPC is
+> not drawn again until the screen reloads (slot active, cast intact —
+> the sheet reload path; after an arrival fight the monster NPC stays).
+> Corrections (Iron Rule 6, both trees): opcodes $06 close text, $0D reveal
+> NPC, $1C NPC animation ($16 fly-in, distance / curve in D8E3/4 — r2), $47-$4A face up/down/left/right
+> (were "npc_buffer_write / npc_hide / npc_show"), $3B fade warp, $58
+> FloorSkip; the helper's text says "Watabou:" (sprite $21; the FAQ agrees)
+> — sprite and text are the author's choice per helper step.
+>
+> **Editor (EDITOR_DESIGN §5.1b "As built S101"):** Gates tab "Gate
+> settings" (floors spin + Vanilla, boss floor combo = vanilla / another
+> gate's vanilla boss room / any custom room + Open room + readiness, hand-
+> made checkbox, Project enemies…), project-aware list (♛ boss, ✎ hand-made),
+> floor plan and rule dialog (floor 1 on hand-made gates). Enemies dialog
+> (from a vanilla row; stats, skills, AI, always / sometimes tier / never,
+> join version, Make join version). NPC sprite picker **Monsters** tab
+> (thumbnails from the census; canvas and NPC panel show the species).
+> **Conversation dialog** (tree of steps with branches; per-kind editors;
+> battle 1-3 enemy pickers; helper destination / landing cell / sprite /
+> text; problems list gates OK) from the NPC panel ("New conversation…",
+> "Edit talk…") and the "Inside gates" group ("Arrival conversation…", boss
+> floor line; boss rooms default to no saving; boss rooms need a way out,
+> not stairs). Test ROM **`DWM_S101_boss_floors_test.gbc`** (patched, md5
+> `ec9cbc96…`, example project + 5 brand-new rooms, built through the
+> Document API): Villager 4 floors → EMBER COURT (2 screens; GreatDrak
+> lord, DragonKid blessing on screen 2, a sign NPC) → WARDEN'S REST; Gate
+> of Beginning hand-made 3 floors: MOSS STAIR HALL → LANTERN STAIR HALL →
+> THORN ARENA (fight on arrival); Talisman ends in the Villager Dragon
+> room. Deferred (ROADMAP P3.7b part 2 rest): private floor-type rows,
+> per-gate monster pools / floor bands, per-room encounters inside dives,
+> > 32 gates, gate entrances, the maze look in the editor.
+>
+> **S101 r2 (user 23:44: "for romhack I want WAROUBOU the darker version …
+> Its just a sprite swap"; "Watabou … faces THE WRONG WAY … Can I change where
+> he lands so he lands left of player? Ideally always?"; built, NOT yet
+> user-tested).** Warubou = NPC sprite **$39** (the dark twin next to $21 in
+> the bedroom cutscene step; PyBoy frames) — now the helper default. The
+> fly-in was mis-read: `$1C $16NN` moves the NPC from its CURRENT pixels,
+> `$D8E3`·8 frames at +2 px right, down along the curve `$D8E4` picks — not a
+> target tile (swept with a handler hook: (3,1)→y 24, (3,2)→38, (3,3)→51,
+> (3,4+)→61 px from a (8,8) start). The compiler now flies a fixed +48/+43 px
+> from start pixels it writes into the helper's slot, and by default computes
+> the landing at RUN time: the player's LEFT (right on a screen's column 0),
+> facing them (vanilla lands left of Terry and ends its spin facing right).
+> PyBoy: Ember Court — player (4,4)… lands (3,3)/(3,4) exact pixels, facing
+> byte 3 = right, toward the player; Thorn Arena — player (4,6), lands (3,6).
+> test_canvas v8 --rom asserts the landing pixel + facing; test_compiler --rom
+> 153/153, test_app --rom PASS, verifier PASS. Test ROM
+> **`DWM_S101r2_warubou_test.gbc`** (patched, md5 `2934c12a…`; same demo,
+> Warubou, landing beside the player). Pin UNCHANGED `9c813041…` (patched —
+> the example has no helper). `EDITOR_REVISION` = 'S101r2'.
+>
+> **S101 r3 (user 11:18: "The editor needs a help tab … flag in docs that
+> this a) needs to be built out and b) always kept up to date"; editor-only,
+> built, NOT yet user-tested).** Help tab + Help → Editor help (F1): 10
+> Markdown topics in `editor2/help/`, search; `_revision.md` stamp checked
+> by test_app against `EDITOR_REVISION` ('S101r3'); ROADMAP **P3.H** (build
+> out) + SESSION_PROTOCOL wrap-up item 7 (keep current). Also recorded: the
+> editor's monster lists are VANILLA-sourced until P3.9/P3.10 (ROADMAP P3.10
+> "S101 requirement"). Pin unchanged `9c813041…` (patched).
+>
+> **S101 r4 (user 11:38: helper "where is the conversation tab? I sometimes
+> want it to say something"; castle options "teleport to castle and king is
+> NOT there (priest says hi, heals you, gives herb); or king IS there and
+> does a little speech … I want option of both"; World tab zoom + drag;
+> built, NOT yet user-tested).** The helper's text was there but hidden
+> behind an unticked checkbox at the bottom — now a "Warubou says something
+> first" box at the top, and the step's tree line shows the text. **Castle
+> arrival decoded** (GATE_GENERATION §7.7): `$D92B` 6/8 = priest blessing +
+> heal, 7 = the King's speech chosen by `$D9E3` (33 gate speeches, none
+> changes a saved flag — PyBoy on the user's save; `$D9E3` = the speech
+> selector, not a "story counter": ROM scan, 2 readers). Helper option *at
+> the Castle*: nothing / priest heal / King's speech (pick the gate).
+> PyBoy (demo): Thorn Arena win → castle → priest heals (HP 1 → 999);
+> second visit → the King's Villager speech. **World tab**: wheel zoom
+> around the mouse (clamped), drag empty canvas to pan at any zoom, Fit / +
+> / −. test_compiler --rom 156/156, test_app --rom (+ World zoom/pan check) PASS,
+> test_canvas v8 --rom (King speech after the helper) PASS. Annotated (both
+> trees, comments only): bank $0C castle dispatch / speech chain / NPC
+> reader, the `$D92B` writers in banks $06/$07/$50. `EDITOR_REVISION` =
+> 'S101r4'. Test ROM `DWM_S101r4_castle_test.gbc` (patched, md5 `7ec987df…`;
+> the r2 demo + Thorn Arena: win → priest heal, return visit → King speech).
+> User 12:36: "Fantastic job" + direction for P3.8 (the cutscene editor should
+> edit / extend the King's cutscenes — ROADMAP P3.8); r4 in-game test not yet
+> reported. **Hand-off: all S101 work = the diff against `833f56e`
+> (origin/master), delivered as `DWM-S101-bossfloors-changed-files.zip`.**
+
 > Last verified: 2026-09-27 (Session 100 — **ROADMAP P3.7b PART 1: CUSTOM
 > ROOMS SERVED ON GATE FLOORS — data-driven rules (gate, floors, chance, flag
 > conditions, once per dive), gate-room settings (arrival, Stairs down,

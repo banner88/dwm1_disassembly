@@ -31,7 +31,9 @@
                  random battle-intro event roll [S68]
    C1ED     2    LINK-mode battle RNG chain (BattleRNG loads it, steps once,
                  stores back) — keeps both GBs' rolls in sync [S85]
-   C8A9     1    ? (related to floor change in Gate)
+   C8A9     1    Encounter RATE code = the current pool's +0 byte (bank $01
+                 LoadNextDungeonFloor); indexes EncounterRateModifierTable
+                 in the per-step encounter drain [S103]
    C8B5     1    BGM (offset)
                  0x02 - No music
                  0x06 - Title Screen
@@ -85,6 +87,9 @@
    C93A     1    Last floor (floors before boss)
    C93B     1    Boss room map type
    C93C     1    Boss/floor tileset = DEPTH TIER 1/2/3 (also item-tier select)
+   C93D     1    Maze size = the current pool's +25 byte (bank $01
+                 LoadFloorAndEncounterData); the bank $16 maze carve count
+                 (vanilla 3 / 8 / 15) [S103, static]
    C93F     1    Floor shape mode ([$16:$6056 + RNG%5])
    C940    16    Floor screen GRID (4×4): byte = (piece<<4)|variant; $Fx = empty
    C950    16    Floor grid paired per-cell state buffer
@@ -113,6 +118,15 @@
                  Bit 6 = battle REQUEST latch (set by wild
                  encounters + script battle opcodes; the ROM's only res 6 is
                  $13:$73F5 in the $C905 battle-transition machine) [S68]
+   C8EF     1    GameAction sub-command (script opcode $04 param; bank $0A
+                 dispatches 5 = arena-lobby party list, 6 = Starry Shrine
+                 breeding list, 7 = egg evaluator, 11 = shrine entry) [S104]
+   C8F4     1    Naming screen: species + $10 of the monster being named
+                 (0 = placeholder name); set by the recruit (bank $51) and
+                 script (bank $04) paths; read by bank $09 LoadFld9_688e [S104]
+   C8F6     1    Naming screen: struct byte +$0B of that monster; bit 0 (the
+                 gender bit, cf. bank $0A `and $01 / add $a7` sex glyph)
+                 picks the second half of the family's 16-name pool [S104]
    C8ED     1    Follower-render suppression mask (bits 1-3 = the 3
                  followers); boss win ($DA09==3) sets $0E, kept by bank $01
                  only while $D92B==7 — cosmetic [S68]

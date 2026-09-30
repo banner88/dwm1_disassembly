@@ -61,14 +61,14 @@ was lost; they were intentionally curated. Treat as documentation.
 | resistance_mapping.json | Structured resistance→skill mapping with skill IDs | reference |
 | tile_registry.json | 9 hand-cataloged tile entries (Milayou sprite tiles) | reference |
 | custom_layouts/room_6b_custom.json | 20×16 tile grid for Room $6B — user-designed Farm tileset room | tile_layout_compiler.py → bank_064.asm |
-| breeding_family_defaults.json | B4 family-default overrides: positional `{result,p1,p2}` list applied in place to `$16:$4974` (offspring species == slot). Includes the shadow avoid-list inline. | tools/build_breeding.py --emit-family → patches/bank_016.asm |
-| breeding_special.json | B5 full special-table spec: `base:"rom"` + in-place `overrides` (edit any base entry, by `index` or by parent `match`) + `appends` (new entries past 824). The SINGLE authored source for the whole special table; bank `$16` stays vanilla. | tools/build_breeding.py --emit-special → patches/bank_069.asm |
-| breeding_family_reassign.json | B6 family reassignment spec: `{id,name,from,to}` list of same-size family-byte edits ($03:$4461+$00). `from` is validated == vanilla at build time. | tools/build_family_reassign.py --emit → patches/bank_003.asm |
+| breeding_family_defaults.json | B4 family-default overrides: positional `{result,p1,p2}` list applied in place to `$16:$4974` (offspring species == slot). Includes the shadow avoid-list inline. | HISTORICAL S103 — re-expressed as the example project's `gamedata.breeding.family` (the `--emit-family` path is retired) |
+| breeding_special.json | B5 full special-table spec: `base:"rom"` + in-place `overrides` (edit any base entry, by `index` or by parent `match`) + `appends` (new entries past 824). The SINGLE authored source for the whole special table; bank `$16` stays vanilla. | HISTORICAL S103 — re-expressed as the example project's `gamedata.breeding.special` (`--emit-special` retired) |
+| breeding_family_reassign.json | B6 family reassignment spec: `{id,name,from,to}` list of same-size family-byte edits ($03:$4461+$00). `from` is validated == vanilla at build time. | HISTORICAL S103 — B6 proof spec, never the committed bytes; family edits = `gamedata.monsters[].family` (`--emit` retired) |
 | custom_layouts/room_6b_medalman.json | 20×16 tile grid for Room $6B — user-designed MedalMan tileset room (v28) | tile_layout_compiler.py → bank_064.asm |
 | *(Room $6B current = gate-tile room)* | **S39:** Room $6B is now the Gate-of-Beginning maze-tileset room (gfx-ID `$280D`), authored directly in **`tools/build_gate_room.py`** (no JSON) → `patches/bank_064.asm`. Sandy island: ocean-wall border, 2×2 tree/dune/pit metatiles, per-position palette. Builds the v5 ROM. See GATE_GENERATION.md §7.2–7.3. | tools/build_gate_room.py → bank_064.asm |
-| family_icons.json | S20: the 10 vanilla family ICON tiles ($4F:$4110-$41A0, text bytes $10-$19) decoded as 8×8 grids + the free $1A slot + the authored Spirit icon (Variants A/B). Round-trip safe (decode→encode == ROM). `_generator` stamped. | tools/build_family_icon.py → patches/bank_04f.asm |
-| new_species.json | Phase-N authored spec (normalized/stamped by build_new_species.py): first_free_id 224, high bank $6A, per-species info/stats/encounter/name blocks. G3 (ROADMAP) will fold ALL Gorbunok artifacts into this schema. | tools/build_new_species.py → patches/bank_003/006a/014/001.asm |
-| spirit_family.json | B6 authored spec: Spirit-family reassignment list (`{id,name,from,to}`), `from` validated vs vanilla. | build_family_reassign.py, build_library_table.py |
+| family_icons.json | S20: the 10 vanilla family ICON tiles ($4F:$4110-$41A0, text bytes $10-$19) decoded as 8×8 grids + the free $1A slot + the authored Spirit icon (Variants A/B). Round-trip safe (decode→encode == ROM). `_generator` stamped. **S104 (regenerated with the tool the same session):** `spirit` = byte `$1A` / `$41B0`, note updated; the grid (placeholder whip, pending the user's pick) also feeds the bank $6D `SpiritIconStream`. | tools/build_family_icon.py → patches/bank_04f.asm ($41B0) + patches/bank_06d.asm (SpiritIconStream) — lines printed by `--png`, checked by `--selftest` (verify check 5, S104) |
+| new_species.json | Phase-N authored spec (normalized/stamped by build_new_species.py): first_free_id 224, high bank $6A, per-species info/stats/encounter/name blocks. G3 (ROADMAP) will fold ALL Gorbunok artifacts into this schema. | tools/build_new_species.py → patches/bank_06a.asm (S103: its bank $14 / bank $01 writes are retired — the EID-518 row is hand-kept in bank_014, pool slots are `gamedata.encounters`; `extract_gamedata`/the compiler read its `species[].id / name / info / enemy_stats.eid`) |
+| spirit_family.json | B6 authored spec: Spirit-family reassignment list (`{id,name,from,to}`), `from` validated vs vanilla. | HISTORICAL S103 — re-expressed as the example project's `gamedata.monsters` 78 / 214 → family 10; the library grouping is the compiler region `gd_library_grouping` |
 | skill_faq.json | **EXTERNAL ground truth** (community skill FAQ, transcribed — `_source`, deliberately NOT `_generator`): per-skill MP/target/learn/family data used to validate S44/S46 decodes. | build_skill_faq.py (writer); gen_skill_records.py + docs (validation) |
 | npc_names.json | Hand-curated naming reference: sprite/type names, NPC labels, room-name overrides, **+ `sprite_classes` (S91: user visual classification — empty / glitch_invalid / boss_composite_fragment)**. No generator by design; merged into npc_sprite_catalog.json at `--finalize`. | dump_all_npcs.py, dump_npc_sprite_catalog.py, editor tooling |
 
@@ -278,7 +278,7 @@ byte*16). `--dump` decodes the 10 vanilla icons (+ the free $1A/$41B0 slot) to
 `extracted/family_icons.json` (round-trip safe). `--png FILE [--head-index N]`
 encodes an 8×8 PNG to a 2bpp tile and prints the `db` line for the Spirit slot.
 `--selftest` asserts vanilla icons round-trip and the Spirit grid in the JSON ==
-the bytes in `patches/bank_04f.asm` at the Spirit slot. Delivered WITH `family_icons.json`. **(CORRECTED 2026-06-19: Spirit ships on byte $19/`$41A0`, overwriting vanilla ???; the free $1A/`$41B0` slot is left blank — it is not fill-immune at runtime. selftest now checks $41A0.)**
+the bytes in `patches/bank_04f.asm` at the Spirit slot. Delivered WITH `family_icons.json`. **(CORRECTED 2026-06-19: Spirit ships on byte $19/`$41A0`, overwriting vanilla ???; the free $1A/`$41B0` slot is left blank — it is not fill-immune at runtime. selftest now checks $41A0.)** **(S104: SUPERSEDED — Spirit is on byte $1A/`$41B0` again and the ??? glyph at `$41A0` is vanilla; `--selftest` checks the full vanilla INCBIN, the `$41B0` glyph AND the bank $6D `SpiritIconStream` against the JSON grid; `--png` prints both lines; verify check 5 runs it.)**
 The Spirit icon insert itself is `patches/bank_04f.asm` (same-size 16-byte tile at
 $41B0, zero shift; bank $4F otherwise byte-identical to vanilla).
 
@@ -728,3 +728,60 @@ verified overrides.
 | editor2/tests/test_compiler.py (tile_anims cases; pin `0d60486e…` patched) + test_canvas.py v6 (Animate tab; --rom own flip = authored frames only) | 170 tests with --rom | |
 | disassembly/bank_000.asm + patches/bank_000.asm (bytes + comments, zero byte) | `LCDCStateTable` (the LCD STAT job table, was decoded as code) | DOC_AUDIT S102 |
 
+## S103 rows (P3.9 Layer A-lite: the vanilla data tables behind project.json `gamedata`)
+
+| Tool / data | What | Verified |
+|---|---|---|
+| tools/extract_gamedata.py (NEW) | ROM → `extracted/gamedata_vanilla.json`: the 11 vanilla tables (monster info, enemy stats 0-486, encounter pools, family + special recipes, exp / growth curves, skill learn 218 / MP / records, boss redirects) as hex rows + label/bank/addr/stride, `EncounterChancePercent`, the bank-$41 monster name bytes and the bank-$4D library recipe block (pointers, raw $43CE-$53D2 bytes, pad, family tokens). `--selftest` = JSON == ROM (verify check 5) | selftest PASS; test_compiler: empty gamedata regions == these rows; `--rom`: built ROM == original at every table |
+| extracted/gamedata_vanilla.json (NEW, ~150 KB) | the Layer A-lite base read by `editor2/core/gamedata.py` (so the compiler needs no ROM) | `_generator` stamped |
+| editor2/core/gamedata.py (NEW) | `Gamedata` (vanilla + overrides, validators, coherence warnings, B5 special logic ported from build_breeding.py) + the 12 region emitters (PROJECT_COMPILER §2.20) | test_compiler 227 (`--rom`) |
+| patches/bank_013.asm (NEW hand patch) | the clean bank $13 + two markers (`gd_exp_curves`, `gd_growth_curves`); listed in verify_integrity PATCH_FILES | verifier PASS |
+| disassembly/ + patches/ bank_04d.asm | recipe-string block re-sectioned (`LibRecipeTextBlock`, `LibRecipeText_NNN`); patched copy = region `gd_library_text` | clean build byte-perfect |
+| disassembly/ + patches/ bank_001.asm (comments/labels) | `EncounterChancePercent` re-sectioned, the pool format + group-size rule annotated | clean build byte-perfect |
+| tools/build_breeding.py `--emit-family / --emit-special / --emit-relocation`, build_family_reassign.py `--emit`, build_library_table.py `--emit`, build_new_species.py bank $14 / $01 writes | RETIRED S103 (exit with a message naming the `gamedata` section); `--selftest`s unchanged | run: each refuses; selftests PASS |
+| editor2/help/55_game_data.md (NEW) + `EDITOR_REVISION` = 'S103' | help topic: what game data a project can change today, what the build keeps coherent, the checks | test_app `--rom` PASS |
+| editor2/tests/test_compiler.py `test_gamedata` + `--rom` table regression; pin `5d1dbc5f…` (patched) | per-table empty == vanilla, field offsets, validators (incl. the measured freeze), example re-expression | 227 tests with `--rom` |
+
+## S104 rows (P3.10a Spirit as the 11th family)
+
+| Tool / data | What | Verified |
+|---|---|---|
+| patches/bank_06d.asm (NEW hand patch; PATCH_NEW_FILES; `patches/game.asm` includes it instead of the empty bank) | bank $6D FAMILY SYSTEMS: `FamilyIconGfxActive` / `FamilyIconGfxFromE` / `FamilyTextGroupFromE` (+ `FamilyTextPtrTable11`) / `FamilyDefaultNameId` / `SpiritIconStream` | PyBoy stub-calls + screens (BREEDING_SYSTEM "Spirit — the 11th family (S104)") |
+| patches/bank_001 / 004 / 009 / 00a / 016 / 007 / 041 / 04f.asm | the same-size forks, `$FA` exact, unknown-parent icon id 11, mode-4 Spirit string + names, ??? restored + Spirit glyph | verifier PASS; old-vs-new build diff = exactly these bytes |
+| disassembly/ + patches/ bank_041 (mode list + mode 0-4 tables), bank_00a (`FamilyIconGfxTable0A`, `LoadFldA_46c9`), bank_001 (patched copy of the clean `ScreenTransDataTable` / `FollowerFamilyGfxTable` rendering), bank_009 / bank_007 comments | re-section / labels / comments, zero byte | clean build `1ca6579…` |
+| tools/build_family_icon.py | `--selftest` checks the full vanilla INCBIN (??? kept), the `$41B0` glyph and the bank-$6D stream against `family_icons.json`; `--png` prints both lines; `--dump` writes the Spirit slot as `$1A/$41B0` | selftest PASS; now in verify check 5 |
+| extracted/family_icons.json (regenerated with `--dump` the same session) | `_note` + `spirit.byte/addr/note` updated; grids unchanged | selftest PASS |
+| tools/build_breeding.py | `FAMILY_CODES[$FA]` = "Spirit", `"spirit"` matcher, `"anyfamily"` removed, no `$FA` wildcard in `_entry_matches` (the special scanners never had one) | `--selftest` PASS (round trip unchanged) |
+| editor2/core/gamedata.py | `family_index()` (names or 0-10), `"Spirit"` → `$FA`, `"AnyFamily"` / `"any"` ERROR, `FAMILY_CODES` $F0-$FA, `SPIRIT_TOKEN` library text, `_matches` without wildcard | test_compiler 7 new cases |
+| editor2/help/55_game_data.md + `EDITOR_REVISION` = 'S104' | Families paragraph (Spirit, stamped vs species family) | test_app `--rom` |
+| editor2/tests/test_compiler.py pin `eee9f5b0…` (patched) | example build = S103 + the engine bytes (no project.json change) | 233 tests with `--rom` |
+
+### S104 r2 rows
+
+| Tool / data | What | Verified |
+|---|---|---|
+| editor2/core/gamedata.py `families` section (`VOICES`, `VOICE_OF`, `SPIRIT_NAMES_DEFAULT`, `emit_family_voices`, `emit_spirit_names`) + emitters REGISTRY `gd_family_voices` (bank $6D) / `gd_spirit_names` (bank $41) + the two marker pairs in patches/bank_06d.asm / bank_041.asm | per-family dialogue voice, Spirit's 8 default names | test_compiler 8 new cases; empty == r1 bytes |
+| editor2/core/families.py (NEW, `FamiliesMixin` on Document) | members / vanilla family / voice / names readers; setters that write only differences and validate with the compiler's model | test_app |
+| editor2/app/families_tab.py (NEW) + main.py (tab before Monsters) | the Families tab | test_app: move, voice, name, undo == file |
+| extracted/family_icons.json `spirit.grid` + patches/bank_04f.asm $41B0 + patches/bank_06d.asm SpiritIconStream | ghost wisp (user pick) | build_family_icon.py --selftest PASS |
+| editor2/help/55_game_data.md + `EDITOR_REVISION` = 'S104r2' | Families tab help | test_app |
+| test_compiler pin `eb153510…` (patched) | | 241 tests with `--rom` |
+
+### S104 r3 rows
+
+| Tool / data | What | Verified |
+|---|---|---|
+| patches/bank_012.asm `LibScanByFamily` (2 × `ld hl, $c0d8` → `ld hl, wMonList`) | library list buffer = the FX1 reader buffer | PyBoy: Spirit tab lists Healer, page opens; test_compiler pin `d7b762db…` (patched) |
+
+### S104 r4 rows
+
+| Tool / data | What | Verified |
+|---|---|---|
+| patches/bank_073.asm `CF3SnapRestore` .r4 (93 chunks) + NEW `CF3SnapTail4` | R4 restore no longer writes the snapshot's stale tile bytes $BCC8-$BCE3 | PyBoy: user .sav continue + reset, farm→castle save cycle, rewind regression; pin `e994173e…` (patched) |
+
+### S104 r5 rows
+
+| Tool / data | What | Verified |
+|---|---|---|
+| patches/bank_012.asm `LibTabToFamily` / `LibTabOrder` / `LibTabIconId` (+ same-size call in `SaveItem_6184`, a call in `LibScanByFamily`, 39 fill nops consumed) | library tab display order: Spirit before ??? | PyBoy tab pages 2/3; test_compiler checks LibTabOrder == `gamedata.DISPLAY_ORDER`; pin `15f21834…` (patched) |
+| editor2/core/gamedata.py `DISPLAY_ORDER` + editor2/app/families_tab.py | Families tab rows / Move-to list in display order | test_app |

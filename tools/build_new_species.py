@@ -374,12 +374,18 @@ def main():
     print("WROTE %s" % os.path.relpath(OUT_PATH, REPO))
     for idx, (sid, base, entry) in sorted(slots.items()):
         print(f"  slot {idx}: species {sid}  info={entry.hex(' ')}")
-    placements = emit_bank14(rom, spec)
+    # S103: bank $14 is hand/compiler-owned (the EID-518 row lives in the hand
+    # patch next to the S101 divert; emit_bank14 regenerated the WHOLE file from
+    # the clean disassembly and would erase it) and the encounter pools are the
+    # compiler region gd_encounter_pools (gamedata.encounters; PROJECT_COMPILER
+    # §2.20). Only bank_06a is still written here.
+    print("NOTE: bank $14 / bank $01 emission retired S103 — the EID-518 row is "
+          "hand-kept in patches/bank_014.asm; pool slots are gamedata.encounters")
+    placements = enc = None
     if placements:
         print("WROTE %s" % os.path.relpath(OUT_BANK14, REPO))
         for addr, entry, sid, eid in placements:
             print(f"  enemy-stats species {sid} EID {eid} @ ${addr:04x}: {entry.hex(' ')}")
-    enc = emit_bank01_encounters(rom, spec)
     if enc:
         print("WROTE %s" % os.path.relpath(OUT_BANK01, REPO))
         for pool, slot, eid, w, sid in enc:

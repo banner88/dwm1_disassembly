@@ -864,8 +864,11 @@ def emit_region_redirects14(prj, warnings):
            "BossRedirectTableExt:"]
     for fight, join, name in prj.enemy_redirects():
         out.append(f"    dw {fight}, {join}   ; project: {name}")
-    for fight, join in VANILLA_REDIRECTS:
-        out.append(f"    dw {fight}, {join}")
+    # S103: the vanilla 34 as gamedata.boss_joins leaves them (== ROM when unedited)
+    gd = prj.gamedata()
+    for fight, join in gd.redirects:
+        edited = "   ; gamedata.boss_joins" if fight in gd.edited['redirect'] else ""
+        out.append(f"    dw {fight}, {join}{edited}")
     out.append("    dw $FFFF, $0000")
     out.append("    ds $8000 - @, $00")
     return "\n".join(out) + "\n"
@@ -1027,6 +1030,20 @@ def emit_region_rom0_records(prj, warnings):
             first = False
     return "\n".join(out) + "\n"
 
+# ---------------------------------------------------------------------------
+# S103 (P3.9) Layer A-lite: the vanilla data tables as compiler-owned regions
+# (editor2/core/gamedata.py; PROJECT_COMPILER §2.20). Every region is the same
+# size as the vanilla table it replaces; an empty `gamedata` == the ROM bytes.
+# ---------------------------------------------------------------------------
+
+def _gd(fn, *a):
+    def emit(prj, warnings):
+        from . import gamedata as G
+        return getattr(G, fn)(prj.gamedata(), *a)
+    emit.__name__ = f"emit_{fn}"
+    return emit
+
+
 REGISTRY = [
     # (name, schema_section, target, function, owned_banks)
     ("rooms60", "custom.rooms", "file:patches/bank_060.asm",
@@ -1060,4 +1077,32 @@ REGISTRY = [
      []),
     ("music74", "custom.music", "file:patches/bank_074.asm",
      emit_bank_074, [0x74]),
+    ("gd_monsters", "gamedata.monsters",
+     "region:patches/bank_003.asm#gd_monster_info", _gd('emit_monster_info'), [0x03]),
+    ("gd_enemies", "gamedata.enemies",
+     "region:patches/bank_014.asm#gd_enemy_stats", _gd('emit_enemy_stats'), [0x14]),
+    ("gd_encounters", "gamedata.encounters",
+     "region:patches/bank_001.asm#gd_encounter_pools", _gd('emit_encounter_pools'), [0x01]),
+    ("gd_family", "gamedata.breeding.family",
+     "region:patches/bank_016.asm#gd_family_recipes", _gd('emit_family_recipes'), [0x16]),
+    ("gd_special", "gamedata.breeding.special",
+     "region:patches/bank_069.asm#gd_special_recipes", _gd('emit_special_recipes'), [0x69]),
+    ("gd_exp_curves", "gamedata.exp_curves",
+     "region:patches/bank_013.asm#gd_exp_curves", _gd('emit_curves', 'exp'), [0x13]),
+    ("gd_growth_curves", "gamedata.growth_curves",
+     "region:patches/bank_013.asm#gd_growth_curves", _gd('emit_curves', 'growth'), [0x13]),
+    ("gd_skill_learn", "gamedata.skills.learn",
+     "region:patches/bank_006.asm#gd_skill_learn", _gd('emit_skill_learn'), [0x06]),
+    ("gd_skill_mp", "gamedata.skills.mp",
+     "region:patches/bank_007.asm#gd_skill_mp", _gd('emit_skill_mp'), [0x07]),
+    ("gd_skill_records", "gamedata.skills.record",
+     "region:patches/bank_054.asm#gd_skill_records", _gd('emit_skill_records'), [0x54]),
+    ("gd_library", "gamedata.monsters.family",
+     "region:patches/bank_012.asm#gd_library_grouping", _gd('emit_library_grouping'), [0x12]),
+    ("gd_library_text", "gamedata.breeding.family",
+     "region:patches/bank_04d.asm#gd_library_text", _gd('emit_library_strings'), [0x4D]),
+    ("gd_family_voices", "gamedata.families.dialogue",
+     "region:patches/bank_06d.asm#gd_family_voices", _gd('emit_family_voices'), [0x6D]),
+    ("gd_spirit_names", "gamedata.families.spirit.names",
+     "region:patches/bank_041.asm#gd_spirit_names", _gd('emit_spirit_names'), [0x41]),
 ]

@@ -26,13 +26,14 @@ SECTION "ROM Bank $04f", ROMX[$4000], BANK[$4f]
 ;   $18 red face (Material)   $19 question mark (??? / Boss family)
 ; (Visual descriptions are the user's; the family-CODE order differs from this
 ; glyph order — this is only the icon tile table.)
-    INCBIN "gfx/image_04f_4110.2bpp", 0, $90	;family icons $10-$18 (vanilla)
-    db $FF, $00, $FF, $0F, $F3, $09, $F1, $11, $D3, $32, $FB, $3C, $B7, $78, $EF, $F0	; $41A0 byte $19 = SPIRIT icon (whip, option 5); overwrites vanilla ??? glyph ($1A was not fill-immune)
+    INCBIN "gfx/image_04f_4110.2bpp"	;family icons $10-$19 (vanilla, incl. the ??? glyph at $41A0 — S104: restored)
 
-; $41B0 = text byte $1A = first FREE font slot after the family icons (blank $ff/$00
-; filler; charmap notes "20-23 are blank"). This is where an 11th family icon
-; (Spirit, B9) goes — a same-size 16-byte tile, zero shift. See patches/bank_04f.asm.
-    db $ff, $00, $ff, $00, $ff, $00, $ff, $00, $ff, $00, $ff, $00, $ff, $00, $ff, $00	; $41B0 byte $1A (free, unused — Spirit ships on $19 above; $1A not fill-immune at runtime)
+; $41B0 = text byte $1A = the SPIRIT family icon (family 10). S104: the B9 finding that
+; $1A renders blank does not reproduce — with bank $41 mode-4 entry 10 ($41:$7E16) =
+; "$1A" it renders on the INFO page and the library tab strip (PyBoy-measured S104). Art = extracted/family_icons.json "spirit" grid (tools/build_family_icon.py
+; --selftest checks these 16 bytes AND the bank $6D HUD copy SpiritIconStream).
+SpiritFamilyIconGlyph:
+    db $FF, $10, $EF, $28, $C7, $44, $AB, $AA, $83, $82, $C7, $44, $F7, $36, $FF, $0F	; $41B0 byte $1A = SPIRIT icon (ghost wisp)
     db $ff, $00, $ff, $00, $ff, $00, $ff, $00, $ff, $00, $ff, $00, $ff, $00, $ff, $00	; $41C0 byte $1B
     db $ff, $00, $ff, $00, $ff, $00, $ff, $00, $ff, $00, $ff, $00, $ff, $00, $ff, $00	; $41D0 byte $1C
     db $ff, $00, $ff, $00, $ff, $00, $ff, $00, $ff, $00, $ff, $00, $ff, $00, $ff, $00

@@ -1288,10 +1288,12 @@ CF3SRAMBankedCopy:
 ; ~200 cycles).
 ; FX1 regions: $A1BF x 95 chunks (roster, as v3) and $B124 x 94 chunks
 ; ($B124-$BCE3: extended farm $B124-$BCC7 + 28 bytes of the LAZY tile-buffer
-; image $BCC8-$BCE3 bought for exact chunking — lazy bytes only change at
-; explicit save, so bank 0 already holds their last-save values and the
-; restore overwrite is a proven no-op, same argument as v3's 8 leading
-; bytes).
+; image $BCC8-$BCE3 bought for exact chunking). S104 CORRECTION: the FX1
+; argument "bank 0 already holds their last-save values, so the restore
+; overwrite is a no-op" was wrong — the commit runs BEFORE SaveGameState's
+; tile block, so bank 1 holds the PREVIOUS save's bytes. The commit still
+; copies 94 chunks (the extra 28 bytes in bank 1 are never read); the R4
+; restore now stops at $BCC7 (93 chunks + CF3SnapTail4).
 CF3SnapXfer:
 .chunk:
     push de
@@ -1398,11 +1400,21 @@ CF3SnapRestore:
     ld hl, $a1bf
     ld d, 95
     call CF3SnapXfer
+    ; S104 FIX: restore the extended farm $B124-$BCC7 ONLY — 93 chunks
+    ; ($B124-$BCC3) + its last 4 bytes. The snapshot's 94th chunk also holds
+    ; 28 bytes of the lazy tile-buffer image $BCC8-$BCE3, and those are NOT
+    ; last-save values: SaveGameState copies the main image (-> entry 5 ->
+    ; CF3SnapCommit) BEFORE its $C300 -> $BCC8 tile block, so the snapshot
+    ; holds the PREVIOUS save's top tile row. Restoring it (FX1 did) broke
+    ; checksum v3 segment 3 whenever the last two saves were made on
+    ; different screens: CONTINUE drew the old top row (the "glitchy top
+    ; row"), and the next power-on / reset found no save (user S104).
     ld b, 1
     ld c, 0
     ld hl, $b124
-    ld d, 94
+    ld d, 93
     call CF3SnapXfer
+    call CF3SnapTail4
 .wramcopy:
     ld hl, $a1c7                    ; rewound bank-0 roster -> WRAM
     ld de, $ca8d
@@ -1420,6 +1432,33 @@ CF3SnapRestore:
     xor a
     ld [$4100], a
     jp CF3SnapCommit
+
+; CF3SnapTail4 (S104): bank 1 $BCC4-$BCC7 -> bank 0, the extended farm's last
+; 4 bytes (slot 39's tail) that share the snapshot's 94th chunk with the tile
+; image. Registers carry the bytes across the bank switch (SRAM is not
+; dual-port). RAMB = 0 on exit. Clobbers A/BC/DE/HL.
+CF3SnapTail4:
+    ld a, 1
+    ld [$4100], a
+    ld hl, $bcc4
+    ld a, [hl+]
+    ld b, a
+    ld a, [hl+]
+    ld c, a
+    ld a, [hl+]
+    ld d, a
+    ld e, [hl]
+    xor a
+    ld [$4100], a
+    ld hl, $bcc4
+    ld [hl], b
+    inc hl
+    ld [hl], c
+    inc hl
+    ld [hl], d
+    inc hl
+    ld [hl], e
+    ret
 
 ; =============================================================================
 ; FX1 (S71) — THE BANK-2 SLEEP POOL (the eviction that funded the expansion).

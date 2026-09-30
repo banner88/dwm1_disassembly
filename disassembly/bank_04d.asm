@@ -502,3574 +502,452 @@ SetB4d_43b9:
     ret
 
 
-    db $10
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld de, $3e43
-    ld c, d
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR10]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld [de], a
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-
-jr_04d_43f1:
-    ld h, d
-    ld h, d
-    ldh a, [rNR10]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    inc de
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR10]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    inc d
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR10]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    dec d
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR10]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld d, $43
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR10]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    rla
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR10]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    jr jr_04d_44a1
-
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [$64]
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [rNR10]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    jr nc, jr_04d_44c2
-
-    ld b, c
-    inc sp
-    ld c, c
-    ld a, $4b
-    ld d, c
-    ld h, d
-    ldh a, [rNR10]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    inc h
-    ld c, c
-    ld c, d
-    ld b, [hl]
-    ld c, a
-    ld a, $47
-    ld h, d
-    ld h, d
-    ldh a, [rNR10]
-    ld b, e
-
-jr_04d_44a1:
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    dec h
-    ld c, h
-    ld c, d
-    ccf
-    ld h, $4f
-    ld a, $44
-    ld h, d
-    ldh a, [rNR10]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    dec [hl]
-    ld c, h
-    ccf
-    ld c, h
-    ld d, b
-    ld d, c
-    ld b, d
-
-jr_04d_44c2:
-    ld c, a
-    ld h, d
-    ldh a, [rNR10]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld [hl], $48
-    ld d, d
-    ld c, c
-    ld c, c
-    ld c, a
-    ld c, h
-    ld c, h
-    ld h, d
-    ldh a, [$64]
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [rNR10]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [rNR10]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    jr nc, jr_04d_454b
-
-    ld d, c
-    ld a, $49
-    daa
-    ld c, a
-    ld a, $48
-    ldh a, [$30]
-    ld b, d
-    ld d, c
-    ld a, $49
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld h, d
-    jr nc, jr_04d_455e
-
-    ld d, c
-    ld a, $49
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [$30]
-    ld b, d
-    ld d, c
-    ld a, $3f
-    ccf
-    ld c, c
-    ld b, d
-    ld h, d
-    jr nc, jr_04d_4571
-
-    ld d, c
-    ld a, $3f
-    ccf
-    ld c, c
-    ld b, d
-    ld h, d
-    ldh a, [$30]
-    ld b, d
-    ld d, c
-    ld a, $49
-    ld l, $46
-    ld c, e
-    ld b, h
-    jr nc, jr_04d_4584
-
-    ld d, c
-    ld a, $49
-    ld l, $46
-    ld c, e
-    ld b, h
-    ldh a, [rNR11]
-
-jr_04d_454b:
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    db $10
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR11]
-
-jr_04d_455e:
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld [de], a
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR11]
-
-jr_04d_4571:
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    inc de
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR11]
-
-jr_04d_4584:
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    inc d
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR11]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    dec d
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR11]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld d, $43
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR11]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    rla
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR11]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    jr jr_04d_461d
-
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [$27]
-    ld c, a
-    ld a, $44
-    ld c, h
-    ld c, e
-    ld l, $46
-    ld b, c
-    daa
-    ld c, a
-    ld a, $44
-    ld c, h
-    ld c, e
-    ld l, $46
-    ld b, c
-    ldh a, [rNR11]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    inc sp
-    ld b, [hl]
-    ld b, b
-    ld c, b
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [rNR11]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld a, [hl+]
-    ld d, d
-    ld c, c
-    ld c, l
-    dec h
-    ld b, d
-    ld a, $50
-    ld d, c
-    ldh a, [rNR11]
-    ld b, e
-
-jr_04d_461d:
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    jr nc, jr_04d_4664
-
-    ld b, c
-    ld h, $4c
-    ld c, e
-    ld b, c
-    ld c, h
-    ld c, a
-    ldh a, [rNR11]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    add hl, sp
-    ld c, h
-    ld c, h
-    ld b, c
-    ld c, h
-    ld c, c
-    ld c, c
-    ld h, d
-    ld h, d
-    ldh a, [rNR11]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld a, [hl+]
-    ld c, h
-    dec hl
-    ld c, h
-    ld c, l
-    ld c, l
-    ld b, d
-    ld c, a
-    ld h, d
-    ldh a, [rNR11]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld a, [hl+]
-    ld d, d
-    ld c, c
-    ld c, l
-    ld c, l
-    ld c, c
-    ld b, d
-
-jr_04d_4664:
-    ld h, d
-    ld h, d
-    ldh a, [rNR11]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    dec h
-    ld a, $3f
-    ccf
-    ld c, c
-    ld b, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [rNR11]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    inc h
-    ld c, a
-    ld c, d
-    ld d, [hl]
-    ld h, $4f
-    ld a, $3f
-    ld h, d
-    ldh a, [$64]
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [rNR11]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    dec h
-    ld b, [hl]
-    ld b, h
-    dec [hl]
-    ld c, h
-    ld c, h
-    ld d, b
-    ld d, c
-    ld h, d
-    ldh a, [rNR52]
-    ld c, a
-    ld b, d
-    ld d, b
-    ld d, c
-    ld c, l
-    ld b, d
-    ld c, e
-    ld d, c
-    ld h, $4f
-    ld b, d
-    ld d, b
-    ld d, c
-    ld c, l
-    ld b, d
-    ld c, e
-    ld d, c
-    ldh a, [$3a]
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld [hl], $4b
-    ld a, $48
-    ld b, d
-    ld a, [hl-]
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld [hl], $4b
-    ld a, $48
-    ld b, d
-    ldh a, [rNR50]
-    ld c, e
-    ld b, c
-    ld c, a
-    ld b, d
-    ld a, $49
-    ld h, d
-    ld h, d
-    jr nc, jr_04d_4726
-
-    ld b, c
-    ld d, d
-    ld d, b
-    ld a, $28
-    ld d, [hl]
-    ld b, d
-    ldh a, [rNR11]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    cpl
-    ld b, [hl]
-    ld c, h
-    ld c, e
-    ld b, d
-    ld d, l
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [rNR11]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    inc sp
-    ld b, l
-    ld c, h
-    ld b, d
-    ld c, e
-    ld b, [hl]
-    ld d, l
-    ld h, d
-    ld h, d
-    ldh a, [$36]
-    ld c, b
-    ld d, [hl]
-    daa
-    ld c, a
-    ld a, $44
-    ld c, h
-    ld c, e
-    ld [hl-], a
-    ld c, a
-    ld c, h
-    ld b, b
-    ld b, l
-    ld b, [hl]
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [rNR12]
-
-jr_04d_4726:
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    db $10
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR12]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld de, $3e43
-    ld c, d
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR12]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    inc de
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR12]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    inc d
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR12]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    dec d
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [$64]
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [rNR12]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    rla
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR12]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    jr jr_04d_47f8
-
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [$64]
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [rNR12]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    jr nc, jr_04d_482d
-
-    ld b, c
-    ld c, a
-    ld c, h
-    ld c, e
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [rNR12]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    scf
-    ld c, h
-    ld c, a
-    ld d, c
-    ld c, a
-    ld a, $44
-    ld c, h
-    ld c, e
-    ldh a, [rNR12]
-    ld b, e
-
-jr_04d_47f8:
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    daa
-    ld d, d
-    ld b, b
-    ld c, b
-    ld l, $46
-    ld d, c
-    ld b, d
-    ld h, d
-    ldh a, [rNR12]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld [hl], $51
-    ld d, d
-    ccf
-    ld d, b
-    ld d, d
-    ld b, b
-    ld c, b
-    ld h, d
-    ldh a, [rNR12]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld d, $43
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-
-jr_04d_482d:
-    ld h, d
-    ldh a, [rNR12]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld [hl-], a
-    ld c, a
-    ld b, b
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [rNR12]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld [hl], $3e
-    ccf
-    ld c, a
-    ld b, d
-    jr nc, jr_04d_4890
-
-    ld c, e
-    ld h, d
-    ldh a, [rNR12]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    cpl
-    ld b, [hl]
-    ld d, a
-    ld a, $4f
-    ld b, c
-    add hl, hl
-    ld c, c
-    ld d, [hl]
-    ldh a, [rNR12]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    add hl, hl
-    ld a, $4b
-    ld b, h
-    ld [hl], $49
-    ld b, [hl]
-    ld c, d
-    ld b, d
-    ldh a, [rNR12]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    daa
-    ld c, a
-    ld a, $48
-    ld [hl], $49
-    ld b, [hl]
-    ld c, d
-    ld b, d
-    ldh a, [rNR12]
-    ld b, e
-
-jr_04d_4890:
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    jr nc, jr_04d_48d7
-
-    ld b, c
-    inc sp
-    ld b, d
-    ld b, b
-    ld c, b
-    ld b, d
-    ld c, a
-    ldh a, [$3a]
-    ld b, [hl]
-    ld c, c
-    ld b, c
-    inc h
-    ld c, l
-    ld b, d
-    ld h, d
-    ld h, d
-    ld a, [hl-]
-    ld b, [hl]
-    ld c, c
-    ld b, c
-    inc h
-    ld c, l
-    ld b, d
-    ld h, d
-    ld h, d
-    ldh a, [$37]
-    ld c, a
-    ld d, d
-    ld c, d
-    ld c, l
-    ld b, d
-    ld d, c
-    ld b, d
-    ld c, a
-    scf
-    ld c, a
-    ld d, d
-    ld c, d
-    ld c, l
-    ld b, d
-    ld d, c
-    ld b, d
-    ld c, a
-    ldh a, [rNR12]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, d
-    ld h, d
-
-jr_04d_48d7:
-    ld h, d
-    ld h, d
-    ldh a, [rNR12]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    daa
-    ld c, a
-    ld a, $44
-    ld c, h
-    ld c, e
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [rNR12]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    jr z, jr_04d_494e
-
-    ld b, d
-    dec h
-    ld a, $49
-    ld c, c
-    ld h, d
-    ld h, d
-    ldh a, [rNR13]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    db $10
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR13]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld de, $3e43
-    ld c, d
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR13]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld [de], a
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR13]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    inc d
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR13]
-    ld b, e
-
-jr_04d_494e:
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    dec d
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR13]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld d, $43
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR13]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    rla
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR13]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    jr jr_04d_49d3
-
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [$64]
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [$64]
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [rNR13]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    dec [hl]
-    ld c, h
-    ld b, b
-    ld c, b
-    ld [hl], $49
-    ld b, [hl]
-    ld c, d
-    ld b, d
-    ldh a, [$64]
-    ld h, h
-
-jr_04d_49d3:
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [rNR13]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    daa
-    ld c, a
-    ld c, h
-    ld c, c
-    ld c, c
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [rNR13]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld h, $4c
-    ld b, [hl]
-    ld c, c
-    dec h
-    ld b, [hl]
-    ld c, a
-    ld b, c
-    ld h, d
-    ldh a, [rNR13]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    inc l
-    ld b, b
-    ld b, d
-    jr nc, @+$40
-
-    ld c, e
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [rNR13]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld a, [hl+]
-    ld b, [hl]
-    ld d, b
-    ld c, d
-    ld c, h
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [$64]
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [rNR13]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    dec [hl]
-    ld a, $56
-    ccf
-    ld d, d
-    ld c, a
-    ld c, e
-    ld h, d
-    ld h, d
-    ldh a, [rNR13]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    daa
-    ld a, $4b
-    ld b, b
-    ld b, d
-    add hl, sp
-    ld b, d
-    ld b, h
-    ld b, [hl]
-    ldh a, [rNR51]
-    ld c, c
-    ld b, [hl]
-    ld d, a
-    ld d, a
-    ld a, $4f
-    ld b, c
-    ld d, [hl]
-    inc sp
-    ld b, l
-    ld c, h
-    ld b, d
-    ld c, e
-    ld b, [hl]
-    ld d, l
-    ld h, d
-    ld h, d
-    ldh a, [rNR14]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    db $10
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR14]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld de, $3e43
-    ld c, d
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR14]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld [de], a
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR14]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    inc de
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR14]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    dec d
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR14]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld d, $43
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR14]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    rla
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR14]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    jr jr_04d_4b4f
-
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [$64]
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [rNR14]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld a, [hl+]
-    ld c, h
-    ld c, l
-    ld b, l
-    ld b, d
-    ld b, b
-    ld a, $41
-    ld a, $f0
-    inc d
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    add hl, hl
-    ld a, $40
-    ld b, d
-    ld c, a
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [rNR14]
-    ld b, e
-
-jr_04d_4b4f:
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    inc sp
-    ld b, [hl]
-    ld d, l
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [rNR14]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld sp, $5146
-    ld b, d
-    ld a, [hl-]
-    ld b, l
-    ld b, [hl]
-    ld c, l
-    ld h, d
-    ldh a, [rNR14]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    add hl, hl
-    ld d, d
-    ld c, e
-    ld c, b
-    ld d, [hl]
-    dec h
-    ld b, [hl]
-    ld c, a
-    ld b, c
-    ldh a, [rNR14]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    inc sp
-    ld b, [hl]
-    ld c, c
-    ld c, c
-    ld c, h
-    ld d, h
-    dec [hl]
-    ld a, $51
-    ldh a, [rNR14]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    daa
-    ld a, $4f
-    ld c, b
-    jr z, jr_04d_4bfe
-
-    ld b, d
-    ld h, d
-    ld h, d
-    ldh a, [$28]
-    ld d, e
-    ld b, [hl]
-    ld c, c
-    ld [hl], $42
-    ld b, d
-    ld b, c
-    ld h, d
-    jr z, jr_04d_4c0a
-
-    ld b, [hl]
-    ld c, c
-    ld [hl], $42
-    ld b, d
-    ld b, c
-    ld h, d
-    ldh a, [$30]
-    ld a, $4b
-    jr z, jr_04d_4c02
-
-    ld d, c
-    ld b, d
-    ld c, a
-    ld h, d
-    jr nc, jr_04d_4c08
-
-    ld c, e
-    jr z, @+$40
-
-    ld d, c
-    ld b, d
-    ld c, a
-    ld h, d
-    ldh a, [rNR14]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [$64]
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [$15]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-
-jr_04d_4bfe:
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    db $10
-
-jr_04d_4c02:
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-
-jr_04d_4c08:
-    ld h, d
-    ld h, d
-
-jr_04d_4c0a:
-    ldh a, [$15]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld de, $3e43
-    ld c, d
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [$15]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld [de], a
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [$15]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    inc de
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [$15]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    inc d
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [$15]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld d, $43
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [$15]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    rla
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [$15]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    jr jr_04d_4ccb
-
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [$64]
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [$64]
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [$15]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    add hl, hl
-    ld c, c
-    ld c, h
-    ld c, a
-    ld a, $30
-    ld a, $4b
-    ld h, d
-    ldh a, [$15]
-    ld b, e
-
-jr_04d_4ccb:
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    inc l
-    ld c, a
-    ld c, h
-    ld c, e
-    scf
-    ld d, d
-    ld c, a
-    ld d, c
-    ld h, d
-    ldh a, [$15]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    inc h
-    ld c, d
-    ccf
-    ld b, d
-    ld c, a
-    ld a, [hl-]
-    ld b, d
-    ld b, d
-    ld b, c
-    ldh a, [$15]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld [hl], $3e
-    ld b, b
-    ld b, b
-    ld b, d
-    ld c, a
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [$15]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld [hl], $4d
-    ld c, h
-    ld c, h
-    ld c, b
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [$15]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    daa
-    ld a, $4f
-    ld c, b
-    ld h, $4f
-    ld a, $3f
-    ld h, d
-    ldh a, [$15]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    add hl, hl
-    ld a, $46
-    ld c, a
-    ld d, [hl]
-    dec [hl]
-    ld a, $51
-    ld h, d
-    ldh a, [$36]
-    ld d, c
-    ld a, $44
-    dec h
-    ld d, d
-    ld b, h
-    ld h, d
-    ld h, d
-    ld [hl], $51
-    ld a, $44
-    dec h
-    ld d, d
-    ld b, h
-    ld h, d
-    ld h, d
-    ldh a, [$2b]
-    ld c, h
-    ld c, a
-    ld c, e
-    dec h
-    ld b, d
-    ld b, d
-    ld d, c
-    ld h, d
-    dec hl
-    ld c, h
-    ld c, a
-    ld c, e
-    dec h
-    ld b, d
-    ld b, d
-    ld d, c
-    ld h, d
-    ldh a, [$15]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [rNR21]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    db $10
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR21]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [$64]
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [rNR21]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    inc de
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR21]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    inc d
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR21]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    dec d
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR21]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    rla
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR21]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    jr jr_04d_4e47
-
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [$64]
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [rNR21]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld [de], a
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR21]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld de, $3e43
-    ld c, d
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR21]
-    ld b, e
-
-jr_04d_4e47:
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    cpl
-    ld b, [hl]
-    ld d, a
-    ld a, $4f
-    ld b, c
-    jr nc, jr_04d_4e94
-
-    ld c, e
-    ldh a, [rNR21]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    daa
-    ld a, $4f
-    ld c, b
-    dec hl
-    ld c, h
-    ld c, a
-    ld c, e
-    ld h, d
-    ldh a, [rNR21]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    dec h
-    ld b, d
-    ld a, $4b
-    jr nc, jr_04d_4eb8
-
-    ld c, e
-    ld h, d
-    ld h, d
-    ldh a, [rNR21]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    dec hl
-    ld a, $4a
-    ld c, d
-    ld b, d
-    ld c, a
-    jr nc, jr_04d_4ecd
-
-    ld c, e
-    ldh a, [$27]
-    ld b, d
-    ld c, d
-
-jr_04d_4e94:
-    ld c, h
-    ld c, e
-    ld b, [hl]
-    ld d, c
-    ld b, d
-    ld h, d
-    daa
-    ld b, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld b, [hl]
-    ld d, c
-    ld b, d
-    ld h, d
-    ldh a, [rSB]
-    jr z, @+$58
-
-    ld b, d
-    ld h, $49
-    ld c, h
-    ld d, h
-    ld c, e
-    ld bc, $5628
-    ld b, d
-    ld h, $49
-    ld c, h
-    ld d, h
-    ld c, e
-    ldh a, [rNR21]
-
-jr_04d_4eb8:
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    jr nc, jr_04d_4f00
-
-    ld b, c
-    daa
-    ld c, a
-    ld a, $44
-    ld c, h
-    ld c, e
-    ldh a, [$2a]
-    ld c, a
-    ld b, d
-
-jr_04d_4ecd:
-    ld c, e
-    ld a, $41
-    ld a, $49
-    ld h, d
-    ld a, [hl+]
-    ld c, a
-    ld b, d
-    ld c, e
-    ld a, $41
-    ld a, $49
-    ld h, d
-    ldh a, [rNR21]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    dec [hl]
-    ld c, h
-    ld b, h
-    ld d, d
-    ld b, d
-    ld sp, $5146
-    ld b, d
-    ldh a, [rNR21]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    dec h
-    ld b, [hl]
-    ld b, h
-    jr z, jr_04d_4f54
-
-    ld b, d
-    ld h, d
-
-jr_04d_4f00:
-    ld h, d
-    ld h, d
-    ldh a, [$64]
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [rNR21]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    inc h
-    ld c, a
-    ld c, d
-    ld c, h
-    ld c, a
-    inc sp
-    ld b, d
-    ld b, c
-    ld b, d
-    ldh a, [rNR50]
-    ld c, b
-    ld d, d
-    ccf
-    ld a, $4f
-    ld h, d
-    ld h, d
-    ld h, d
-    dec [hl]
-    ld a, $46
-    ld c, e
-    dec hl
-    ld a, $54
-    ld c, b
-    ld h, d
-    ldh a, [rNR52]
-    ld b, d
-    ld c, e
-    ld d, c
-    ld a, $50
-    ld a, $52
-    ld c, a
-    ld a, [hl+]
-    ld c, h
-    ld c, c
-    ld b, c
-    ld a, [hl+]
-    ld c, h
-    ld c, c
-    ld b, d
-    ld c, d
-    ldh a, [rNR22]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-
-jr_04d_4f54:
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    db $10
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR22]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld [hl], $54
-    ld c, h
-    ld c, a
-    ld b, c
-    ld b, h
-    ld c, h
-    ld c, e
-    ld h, d
-    ldh a, [rNR22]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld [de], a
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR22]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    inc de
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR22]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    inc d
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR22]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    dec d
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR22]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld d, $43
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR22]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    jr jr_04d_5022
-
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [$64]
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [rNR22]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld a, [hl+]
-    ld b, [hl]
-    ld a, $4b
-    ld d, c
-    ld [hl], $49
-    ld d, d
-    ld b, h
-    ldh a, [rNR22]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    jr nc, @+$48
-
-    ld d, b
-    ld d, c
-    ld d, [hl]
-    ld a, [hl-]
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ldh a, [rNR22]
-    ld b, e
-
-jr_04d_5022:
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld de, $3e43
-    ld c, d
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR22]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld a, [hl-]
-    ld b, [hl]
-    ld c, e
-    ld b, c
-    dec h
-    ld b, d
-    ld a, $50
-    ld d, c
-    ldh a, [rNR22]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld a, [hl-]
-    ld b, d
-    ld b, d
-    ld b, c
-    dec h
-    ld d, d
-    ld b, h
-    ld h, d
-    ld h, d
-    ldh a, [$27]
-    ld b, d
-    ld a, $41
-    ld sp, $5146
-    ld b, d
-    ld h, d
-    daa
-    ld b, d
-    ld a, $41
-    ld sp, $5146
-    ld b, d
-    ld h, d
-    ldh a, [rNR22]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [$2b]
-    ld c, h
-    ld c, a
-    ld c, b
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    dec hl
-    ld c, h
-    ld c, a
-    ld c, b
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [rNR51]
-    ld c, h
-    ld c, e
-    ld b, d
-    ld [hl], $49
-    ld a, $53
-    ld b, d
-    dec h
-    ld c, h
-    ld c, e
-    ld b, d
-    ld [hl], $49
-    ld a, $53
-    ld b, d
-    ldh a, [$36]
-    ld c, b
-    ld b, d
-    ld c, c
-    ld b, d
-    ld d, c
-    ld c, h
-    ld c, a
-    ld h, d
-    ld [hl], $48
-    ld b, d
-    ld c, c
-    ld b, d
-    ld d, c
-    ld c, h
-    ld c, a
-    ld h, d
-    ldh a, [$64]
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [rNR23]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    db $10
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR23]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld de, $3e43
-    ld c, d
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR23]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld [de], a
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR23]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    inc de
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR23]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    inc d
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR23]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    dec d
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR23]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld d, $43
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [rNR23]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    rla
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ldh a, [$64]
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [rNR23]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    cpl
-    ld b, [hl]
-    ld c, l
-    ld d, b
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [rNR23]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    inc h
-    ld c, e
-    ld b, c
-    ld c, a
-    ld b, d
-    ld a, $49
-    ld h, d
-    ld h, d
-    ldh a, [rNR23]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [rNR23]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld a, [hl+]
-    ld b, [hl]
-    ld a, $4b
-    ld d, c
-    ld a, [hl-]
-    ld c, h
-    ld c, a
-    ld c, d
-    ldh a, [rNR23]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld a, [hl-]
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    scf
-    ld c, a
-    ld b, d
-    ld b, d
-    ld h, d
-    ldh a, [rNR23]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld [hl], $48
-    ld d, d
-    ld c, c
-    dec [hl]
-    ld b, [hl]
-    ld b, c
-    ld b, d
-    ld c, a
-    ldh a, [rNR23]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld [hl], $4b
-    ld a, $46
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [$2a]
-    ld c, h
-    ld c, h
-    ld c, l
-    ld b, [hl]
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    add hl, hl
-    ld b, [hl]
-    ld c, a
-    ld b, d
-    ld a, [hl-]
-    ld b, d
-    ld b, d
-    ld b, c
-    ld h, d
-    ldh a, [$30]
-    ld b, d
-    ld d, c
-    ld a, $49
-    daa
-    ld c, a
-    ld a, $48
-    inc h
-    ld c, a
-    ld b, b
-    daa
-    ld b, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld h, d
-    ldh a, [$35]
-    ld c, h
-    ccf
-    ld c, h
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld h, d
-    ld l, $46
-    ld c, e
-    ld b, h
-    cpl
-    ld b, d
-    ld c, h
-    ld h, d
-    ld h, d
-    ldh a, [rNR23]
-    ld b, e
-    ld a, $4a
-    ld b, [hl]
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld h, d
-    dec h
-    ld c, h
-    ld d, l
-    ld [hl], $49
-    ld b, [hl]
-    ld c, d
-    ld b, d
-    ld h, d
-    ldh a, [$2a]
-    ld c, h
-    ld c, h
-    ld c, l
-    ld b, [hl]
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ld a, [hl+]
-    ld c, h
-    ld c, h
-    ld c, l
-    ld b, [hl]
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [$30]
-    ld d, d
-    ld b, c
-    daa
-    ld c, h
-    ld c, c
-    ld c, c
-    ld h, d
-    ld h, d
-    jr nc, @+$54
-
-    ld b, c
-    daa
-    ld c, h
-    ld c, c
-    ld c, c
-    ld h, d
-    ld h, d
-    ldh a, [$2a]
-    ld c, h
-    ld c, c
-    ld b, d
-    ld c, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ld a, [hl+]
-    ld c, h
-    ld c, c
-    ld b, d
-    ld c, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [$36]
-    ld c, l
-    ld b, [hl]
-    ld c, b
-    ld d, [hl]
-    dec h
-    ld c, h
-    ld d, [hl]
-    ld h, d
-    ld [hl], $4d
-    ld b, [hl]
-    ld c, b
-    ld d, [hl]
-    dec h
-    ld c, h
-    ld d, [hl]
-    ld h, d
-    ldh a, [$2c]
-    ld b, b
-    ld b, d
-    jr nc, @+$40
-
-    ld c, e
-    ld h, d
-    ld h, d
-    ld h, d
-    cpl
-    ld a, $53
-    ld a, $30
-    ld a, $4b
-    ld h, d
-    ld h, d
-    ldh a, [$36]
-    ld b, d
-    ld c, a
-    ld d, e
-    ld a, $4b
-    ld d, c
-    ld h, d
-    ld h, d
-    ld a, [hl+]
-    ld c, a
-    ld b, d
-    ld a, $51
-    daa
-    ld c, a
-    ld a, $48
-    ldh a, [$27]
-    ld c, a
-    ld a, $40
-    ld c, h
-    cpl
-    ld c, h
-    ld c, a
-    ld b, c
-    daa
-    ld b, [hl]
-    ld d, e
-    ld b, [hl]
-    ld c, e
-    ld b, d
-    ld b, h
-    ld c, h
-    ld c, e
-    ldh a, [$3a]
-    ld b, l
-    ld b, [hl]
-    ld d, c
-    ld b, d
-    ld c, b
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    jr nc, jr_04d_5319
-
-    ld d, c
-    ld a, $49
-    ld l, $46
-    ld c, e
-    ld b, h
-    ldh a, [$2d]
-    ld a, $4a
-    ld b, [hl]
-    ld c, a
-    ld d, d
-    ld d, b
-    ld h, d
-    ld h, d
-    dec [hl]
-    ld c, h
-    ld d, b
-    ld b, d
-    ld d, e
-    ld b, [hl]
-    ld c, e
-    ld b, d
-    ld h, d
-    ldh a, [$2b]
-    ld a, $4f
-    ld b, h
-    ld c, h
-    ld c, e
-    ld h, d
-    ld h, d
-    ld h, d
-    ld [hl-], a
-    ld c, a
-    ld c, h
-    ld b, b
-    ld b, l
-    ld b, [hl]
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [$27]
-    ld c, a
-    ld a, $40
-    ld c, h
-    cpl
-    ld c, h
-    ld c, a
-    ld b, c
-    ld [hl], $46
-    ld b, c
-    ld c, h
-    ld b, l
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [$27]
-
-jr_04d_5319:
-    ld d, d
-    ld c, a
-    ld c, a
-    ld a, $4b
-    ld h, d
-    ld h, d
-    ld h, d
-    daa
-    ld b, [hl]
-    ld d, e
-    ld b, [hl]
-    ld c, e
-    ld b, d
-    ld b, h
-    ld c, h
-    ld c, e
-    ld h, d
-    ldh a, [$33]
-    ld b, [hl]
-    ld d, a
-    ld d, a
-    ld a, $4f
-    ld c, h
-    ld h, d
-    ld h, d
-    ld l, $46
-    ld c, e
-    ld b, h
-    cpl
-    ld b, d
-    ld c, h
-    ld h, d
-    ld h, d
-    ldh a, [$28]
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld c, b
-    ld h, d
-    ld h, d
-    ld h, d
-    ld a, [hl+]
-    ld c, h
-    ld c, c
-    ld b, c
-    ld [hl], $49
-    ld b, [hl]
-    ld c, d
-    ld b, d
-    ldh a, [$30]
-    ld b, [hl]
-    ld c, a
-    ld d, d
-    ld b, c
-    ld c, a
-    ld a, $3e
-    ld d, b
-    ld [hl], $4d
-    ld b, [hl]
-    ld c, b
-    ld b, d
-    ld c, a
-    ld c, h
-    ld d, d
-    ld d, b
-    ldh a, [rNR51]
-    ld a, $4f
-    ld a, $4a
-    ld c, h
-    ld d, b
-    ld h, d
-    ld h, d
-    daa
-    ld a, $4f
-    ld c, b
-    dec hl
-    ld c, h
-    ld c, a
-    ld c, e
-    ld h, d
-    ldh a, [$3d]
-    ld c, h
-    ld c, d
-    ld a, $62
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    jr nc, jr_04d_53c9
-
-    ld c, a
-    ld d, d
-    ld b, c
-    ld c, a
-    ld a, $3e
-    ld d, b
-    ldh a, [$27]
-    ld b, d
-    ld a, $51
-    ld b, l
-    jr nc, jr_04d_53de
-
-    ld c, a
-    ld b, d
-    inc h
-    ld c, a
-    ld c, d
-    ld c, h
-    ld c, a
-    ld c, l
-    ld b, [hl]
-    ld c, h
-    ld c, e
-    ldh a, [$27]
-    ld b, d
-    ld a, $51
-    ld b, l
-    jr nc, jr_04d_53f1
-
-    ld c, a
-    ld b, d
-    jr nc, jr_04d_53fb
-
-    ld b, c
-    ld c, h
-    ld d, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ldh a, [$27]
-    ld b, d
-    ld a, $51
-    ld b, l
-    jr nc, @+$4e
-
-    ld c, a
-    ld b, d
-    ld a, [hl-]
-    ld a, $51
-    ld a, $3f
-    ld c, h
-    ld d, d
-    ld h, d
-    ld h, d
-    ldh a, [$64]
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-
-jr_04d_53c9:
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, d
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ld h, h
-    ldh a, [$30]
+; =============================================================================
+; LIBRARY RECIPE TEXT — $43CE-$53D2, re-sectioned S103 from code-decoded bytes
+; (labels/comments only, byte-neutral). The encyclopedia detail page's recipe
+; line: mode 0 of the $4007 mode table ($400B = dispatch entry 5), so species s
+; -> entry s + 5 -> one slot here: <parent 1 padded to 9><parent 2 padded to 9>
+; $F0 (pad byte $62; a family token is its icon byte $10-$18 + "family"). The
+; strings are HAND-AUTHORED (4 typos the tables do not have), read by nothing
+; but the text engine — BREEDING_SYSTEM "Library recipe TEXT". Entries 5-10
+; (species 0-5) double as the $4007 mode 2-7 bases (TEXT_SYSTEM), so an editor
+; rewrites a string IN PLACE and never repoints it (editor2 `gd_library_text`).
+; =============================================================================
+LibRecipeTextBlock:
+LibRecipeText_000:  ; 0 DrakSlime: "<slime>family  <dragon>family  "
+    db $10, $43, $3E, $4A, $46, $49, $56, $62, $62, $11, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_001:  ; 1 SpotSlime: "<slime>family  <beast>family  "
+    db $10, $43, $3E, $4A, $46, $49, $56, $62, $62, $12, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_002:  ; 2 WingSlime: "<slime>family  <bird>family  "
+    db $10, $43, $3E, $4A, $46, $49, $56, $62, $62, $13, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_003:  ; 3 TreeSlime: "<slime>family  <plant>family  "
+    db $10, $43, $3E, $4A, $46, $49, $56, $62, $62, $14, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_004:  ; 4 Snaily: "<slime>family  <bug>family  "
+    db $10, $43, $3E, $4A, $46, $49, $56, $62, $62, $15, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_005:  ; 5 SlimeNite: "<slime>family  <devil>family  "
+    db $10, $43, $3E, $4A, $46, $49, $56, $62, $62, $16, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_006:  ; 6 Babble: "<slime>family  <zombie>family  "
+    db $10, $43, $3E, $4A, $46, $49, $56, $62, $62, $17, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_007:  ; 7 BoxSlime: "<slime>family  <material>family  "
+    db $10, $43, $3E, $4A, $46, $49, $56, $62, $62, $18, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_008:  ; 8 Slime: "?????    ?????    "
+    db $64, $64, $64, $64, $64, $62, $62, $62, $62, $64, $64, $64, $64, $64, $62, $62, $62, $62, $F0
+LibRecipeText_009:  ; 9 Healer: "<slime>family  MadPlant "
+    db $10, $43, $3E, $4A, $46, $49, $56, $62, $62, $30, $3E, $41, $33, $49, $3E, $4B, $51, $62, $F0
+LibRecipeText_010:  ; 10 FangSlime: "<slime>family  Almiraj  "
+    db $10, $43, $3E, $4A, $46, $49, $56, $62, $62, $24, $49, $4A, $46, $4F, $3E, $47, $62, $62, $F0
+LibRecipeText_011:  ; 11 RockSlime: "<slime>family  BombCrag "
+    db $10, $43, $3E, $4A, $46, $49, $56, $62, $62, $25, $4C, $4A, $3F, $26, $4F, $3E, $44, $62, $F0
+LibRecipeText_012:  ; 12 SlimeBorg: "<slime>family  Roboster "
+    db $10, $43, $3E, $4A, $46, $49, $56, $62, $62, $35, $4C, $3F, $4C, $50, $51, $42, $4F, $62, $F0
+LibRecipeText_013:  ; 13 Slabbit: "<slime>family  Skullroo "
+    db $10, $43, $3E, $4A, $46, $49, $56, $62, $62, $36, $48, $52, $49, $49, $4F, $4C, $4C, $62, $F0
+LibRecipeText_014:  ; 14 SpotKing: "?????    ?????    "
+    db $64, $64, $64, $64, $64, $62, $62, $62, $62, $64, $64, $64, $64, $64, $62, $62, $62, $62, $F0
+LibRecipeText_015:  ; 15 KingSlime: "<slime>family  ?????    "
+    db $10, $43, $3E, $4A, $46, $49, $56, $62, $62, $64, $64, $64, $64, $64, $62, $62, $62, $62, $F0
+LibRecipeText_016:  ; 16 Metaly: "<slime>family  MetalDrak"
+    db $10, $43, $3E, $4A, $46, $49, $56, $62, $62, $30, $42, $51, $3E, $49, $27, $4F, $3E, $48, $F0
+LibRecipeText_017:  ; 17 Metabble: "Metaly   Metaly   "
+    db $30, $42, $51, $3E, $49, $56, $62, $62, $62, $30, $42, $51, $3E, $49, $56, $62, $62, $62, $F0
+LibRecipeText_018:  ; 18 MetalKing: "Metabble Metabble "
+    db $30, $42, $51, $3E, $3F, $3F, $49, $42, $62, $30, $42, $51, $3E, $3F, $3F, $49, $42, $62, $F0
+LibRecipeText_019:  ; 19 GoldSlime: "MetalKingMetalKing"
+    db $30, $42, $51, $3E, $49, $2E, $46, $4B, $44, $30, $42, $51, $3E, $49, $2E, $46, $4B, $44, $F0
+LibRecipeText_020:  ; 20 DragonKid: "<dragon>family  <slime>family  "
+    db $11, $43, $3E, $4A, $46, $49, $56, $62, $62, $10, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_021:  ; 21 Tortragon: "<dragon>family  <beast>family  "
+    db $11, $43, $3E, $4A, $46, $49, $56, $62, $62, $12, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_022:  ; 22 Pteranod: "<dragon>family  <bird>family  "
+    db $11, $43, $3E, $4A, $46, $49, $56, $62, $62, $13, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_023:  ; 23 Gasgon: "<dragon>family  <plant>family  "
+    db $11, $43, $3E, $4A, $46, $49, $56, $62, $62, $14, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_024:  ; 24 FairyDrak: "<dragon>family  <bug>family  "
+    db $11, $43, $3E, $4A, $46, $49, $56, $62, $62, $15, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_025:  ; 25 LizardMan: "<dragon>family  <devil>family  "
+    db $11, $43, $3E, $4A, $46, $49, $56, $62, $62, $16, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_026:  ; 26 Poisongon: "<dragon>family  <zombie>family  "
+    db $11, $43, $3E, $4A, $46, $49, $56, $62, $62, $17, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_027:  ; 27 Swordgon: "<dragon>family  <material>family  "
+    db $11, $43, $3E, $4A, $46, $49, $56, $62, $62, $18, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_028:  ; 28 Dragon: "DragonKidDragonKid"
+    db $27, $4F, $3E, $44, $4C, $4B, $2E, $46, $41, $27, $4F, $3E, $44, $4C, $4B, $2E, $46, $41, $F0
+LibRecipeText_029:  ; 29 MiniDrak: "<dragon>family  Picky    "
+    db $11, $43, $3E, $4A, $46, $49, $56, $62, $62, $33, $46, $40, $48, $56, $62, $62, $62, $62, $F0
+LibRecipeText_030:  ; 30 MadDragon: "<dragon>family  GulpBeast"
+    db $11, $43, $3E, $4A, $46, $49, $56, $62, $62, $2A, $52, $49, $4D, $25, $42, $3E, $50, $51, $F0
+LibRecipeText_031:  ; 31 Rayburn: "<dragon>family  MadCondor"
+    db $11, $43, $3E, $4A, $46, $49, $56, $62, $62, $30, $3E, $41, $26, $4C, $4B, $41, $4C, $4F, $F0
+LibRecipeText_032:  ; 32 Chamelgon: "<dragon>family  Voodoll  "
+    db $11, $43, $3E, $4A, $46, $49, $56, $62, $62, $39, $4C, $4C, $41, $4C, $49, $49, $62, $62, $F0
+LibRecipeText_033:  ; 33 LizardFly: "<dragon>family  GoHopper "
+    db $11, $43, $3E, $4A, $46, $49, $56, $62, $62, $2A, $4C, $2B, $4C, $4D, $4D, $42, $4F, $62, $F0
+LibRecipeText_034:  ; 34 Andreal: "<dragon>family  Gulpple  "
+    db $11, $43, $3E, $4A, $46, $49, $56, $62, $62, $2A, $52, $49, $4D, $4D, $49, $42, $62, $62, $F0
+LibRecipeText_035:  ; 35 KingCobra: "<dragon>family  Babble   "
+    db $11, $43, $3E, $4A, $46, $49, $56, $62, $62, $25, $3E, $3F, $3F, $49, $42, $62, $62, $62, $F0
+LibRecipeText_036:  ; 36 Spikerous: "<dragon>family  ArmyCrab "
+    db $11, $43, $3E, $4A, $46, $49, $56, $62, $62, $24, $4F, $4A, $56, $26, $4F, $3E, $3F, $62, $F0
+LibRecipeText_037:  ; 37 GreatDrak: "?????    ?????    "
+    db $64, $64, $64, $64, $64, $62, $62, $62, $62, $64, $64, $64, $64, $64, $62, $62, $62, $62, $F0
+LibRecipeText_038:  ; 38 Crestpent: "<dragon>family  BigRoost "
+    db $11, $43, $3E, $4A, $46, $49, $56, $62, $62, $25, $46, $44, $35, $4C, $4C, $50, $51, $62, $F0
+LibRecipeText_039:  ; 39 WingSnake: "CrestpentCrestpent"
+    db $26, $4F, $42, $50, $51, $4D, $42, $4B, $51, $26, $4F, $42, $50, $51, $4D, $42, $4B, $51, $F0
+LibRecipeText_040:  ; 40 Coatol: "WingSnakeWingSnake"
+    db $3A, $46, $4B, $44, $36, $4B, $3E, $48, $42, $3A, $46, $4B, $44, $36, $4B, $3E, $48, $42, $F0
+LibRecipeText_041:  ; 41 Orochi: "Andreal  MedusaEye"
+    db $24, $4B, $41, $4F, $42, $3E, $49, $62, $62, $30, $42, $41, $52, $50, $3E, $28, $56, $42, $F0
+LibRecipeText_042:  ; 42 BattleRex: "<dragon>family  Lionex   "
+    db $11, $43, $3E, $4A, $46, $49, $56, $62, $62, $2F, $46, $4C, $4B, $42, $55, $62, $62, $62, $F0
+LibRecipeText_043:  ; 43 SkyDragon: "<dragon>family  Phoenix  "
+    db $11, $43, $3E, $4A, $46, $49, $56, $62, $62, $33, $45, $4C, $42, $4B, $46, $55, $62, $62, $F0
+LibRecipeText_044:  ; 44 Divinegon: "SkyDragonOrochi   "
+    db $36, $48, $56, $27, $4F, $3E, $44, $4C, $4B, $32, $4F, $4C, $40, $45, $46, $62, $62, $62, $F0
+LibRecipeText_045:  ; 45 Tonguella: "<beast>family  <slime>family  "
+    db $12, $43, $3E, $4A, $46, $49, $56, $62, $62, $10, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_046:  ; 46 Almiraj: "<beast>family  <dragon>family  "
+    db $12, $43, $3E, $4A, $46, $49, $56, $62, $62, $11, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_047:  ; 47 CatFly: "<beast>family  <bird>family  "
+    db $12, $43, $3E, $4A, $46, $49, $56, $62, $62, $13, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_048:  ; 48 PillowRat: "<beast>family  <plant>family  "
+    db $12, $43, $3E, $4A, $46, $49, $56, $62, $62, $14, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_049:  ; 49 Saccer: "<beast>family  <bug>family  "
+    db $12, $43, $3E, $4A, $46, $49, $56, $62, $62, $15, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_050:  ; 50 GulpBeast: "?????    ?????    "
+    db $64, $64, $64, $64, $64, $62, $62, $62, $62, $64, $64, $64, $64, $64, $62, $62, $62, $62, $F0
+LibRecipeText_051:  ; 51 Skullroo: "<beast>family  <zombie>family  "
+    db $12, $43, $3E, $4A, $46, $49, $56, $62, $62, $17, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_052:  ; 52 WindBeast: "<beast>family  <material>family  "
+    db $12, $43, $3E, $4A, $46, $49, $56, $62, $62, $18, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_053:  ; 53 Anteater: "?????    ?????    "
+    db $64, $64, $64, $64, $64, $62, $62, $62, $62, $64, $64, $64, $64, $64, $62, $62, $62, $62, $F0
+LibRecipeText_054:  ; 54 SuperTen: "<beast>family  Mudron   "
+    db $12, $43, $3E, $4A, $46, $49, $56, $62, $62, $30, $52, $41, $4F, $4C, $4B, $62, $62, $62, $F0
+LibRecipeText_055:  ; 55 IronTurt: "<beast>family  Tortragon"
+    db $12, $43, $3E, $4A, $46, $49, $56, $62, $62, $37, $4C, $4F, $51, $4F, $3E, $44, $4C, $4B, $F0
+LibRecipeText_056:  ; 56 Mommonja: "<beast>family  DuckKite "
+    db $12, $43, $3E, $4A, $46, $49, $56, $62, $62, $27, $52, $40, $48, $2E, $46, $51, $42, $62, $F0
+LibRecipeText_057:  ; 57 HammerMan: "<beast>family  Stubsuck "
+    db $12, $43, $3E, $4A, $46, $49, $56, $62, $62, $36, $51, $52, $3F, $50, $52, $40, $48, $62, $F0
+LibRecipeText_058:  ; 58 Grizzly: "<beast>family  <devil>family  "
+    db $12, $43, $3E, $4A, $46, $49, $56, $62, $62, $16, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_059:  ; 59 Yeti: "<beast>family  Orc      "
+    db $12, $43, $3E, $4A, $46, $49, $56, $62, $62, $32, $4F, $40, $62, $62, $62, $62, $62, $62, $F0
+LibRecipeText_060:  ; 60 MadGopher: "<beast>family  SabreMan "
+    db $12, $43, $3E, $4A, $46, $49, $56, $62, $62, $36, $3E, $3F, $4F, $42, $30, $3E, $4B, $62, $F0
+LibRecipeText_061:  ; 61 FairyRat: "<beast>family  LizardFly"
+    db $12, $43, $3E, $4A, $46, $49, $56, $62, $62, $2F, $46, $57, $3E, $4F, $41, $29, $49, $56, $F0
+LibRecipeText_062:  ; 62 Unicorn: "<beast>family  FangSlime"
+    db $12, $43, $3E, $4A, $46, $49, $56, $62, $62, $29, $3E, $4B, $44, $36, $49, $46, $4A, $42, $F0
+LibRecipeText_063:  ; 63 Goategon: "<beast>family  DrakSlime"
+    db $12, $43, $3E, $4A, $46, $49, $56, $62, $62, $27, $4F, $3E, $48, $36, $49, $46, $4A, $42, $F0
+LibRecipeText_064:  ; 64 WildApe: "<beast>family  MadPecker"
+    db $12, $43, $3E, $4A, $46, $49, $56, $62, $62, $30, $3E, $41, $33, $42, $40, $48, $42, $4F, $F0
+LibRecipeText_065:  ; 65 Trumpeter: "WildApe  WildApe  "
+    db $3A, $46, $49, $41, $24, $4D, $42, $62, $62, $3A, $46, $49, $41, $24, $4D, $42, $62, $62, $F0
+LibRecipeText_066:  ; 66 KingLeo: "TrumpeterTrumpeter"
+    db $37, $4F, $52, $4A, $4D, $42, $51, $42, $4F, $37, $4F, $52, $4A, $4D, $42, $51, $42, $4F, $F0
+LibRecipeText_067:  ; 67 DarkHorn: "<beast>family  ?????    "
+    db $12, $43, $3E, $4A, $46, $49, $56, $62, $62, $64, $64, $64, $64, $64, $62, $62, $62, $62, $F0
+LibRecipeText_068:  ; 68 MadCat: "<beast>family  Dragon   "
+    db $12, $43, $3E, $4A, $46, $49, $56, $62, $62, $27, $4F, $3E, $44, $4C, $4B, $62, $62, $62, $F0
+LibRecipeText_069:  ; 69 BigEye: "<beast>family  EyeBall  "
+    db $12, $43, $3E, $4A, $46, $49, $56, $62, $62, $28, $56, $42, $25, $3E, $49, $49, $62, $62, $F0
+LibRecipeText_070:  ; 70 Picky: "<bird>family  <slime>family  "
+    db $13, $43, $3E, $4A, $46, $49, $56, $62, $62, $10, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_071:  ; 71 Wyvern: "<bird>family  <dragon>family  "
+    db $13, $43, $3E, $4A, $46, $49, $56, $62, $62, $11, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_072:  ; 72 BullBird: "<bird>family  <beast>family  "
+    db $13, $43, $3E, $4A, $46, $49, $56, $62, $62, $12, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_073:  ; 73 Florajay: "<bird>family  <plant>family  "
+    db $13, $43, $3E, $4A, $46, $49, $56, $62, $62, $14, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_074:  ; 74 DuckKite: "<bird>family  <bug>family  "
+    db $13, $43, $3E, $4A, $46, $49, $56, $62, $62, $15, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_075:  ; 75 MadPecker: "<bird>family  <devil>family  "
+    db $13, $43, $3E, $4A, $46, $49, $56, $62, $62, $16, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_076:  ; 76 MadRaven: "<bird>family  <zombie>family  "
+    db $13, $43, $3E, $4A, $46, $49, $56, $62, $62, $17, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_077:  ; 77 MistyWing: "<bird>family  <material>family  "
+    db $13, $43, $3E, $4A, $46, $49, $56, $62, $62, $18, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_078:  ; 78 Dracky: "?????    ?????    "
+    db $64, $64, $64, $64, $64, $62, $62, $62, $62, $64, $64, $64, $64, $64, $62, $62, $62, $62, $F0
+LibRecipeText_079:  ; 79 BigRoost: "?????    ?????    "
+    db $64, $64, $64, $64, $64, $62, $62, $62, $62, $64, $64, $64, $64, $64, $62, $62, $62, $62, $F0
+LibRecipeText_080:  ; 80 StubBird: "<bird>family  RockSlime"
+    db $13, $43, $3E, $4A, $46, $49, $56, $62, $62, $35, $4C, $40, $48, $36, $49, $46, $4A, $42, $F0
+LibRecipeText_081:  ; 81 LandOwl: "?????    ?????    "
+    db $64, $64, $64, $64, $64, $62, $62, $62, $62, $64, $64, $64, $64, $64, $62, $62, $62, $62, $F0
+LibRecipeText_082:  ; 82 MadGoose: "<bird>family  Droll    "
+    db $13, $43, $3E, $4A, $46, $49, $56, $62, $62, $27, $4F, $4C, $49, $49, $62, $62, $62, $62, $F0
+LibRecipeText_083:  ; 83 MadCondor: "<bird>family  CoilBird "
+    db $13, $43, $3E, $4A, $46, $49, $56, $62, $62, $26, $4C, $46, $49, $25, $46, $4F, $41, $62, $F0
+LibRecipeText_084:  ; 84 Blizzardy: "<bird>family  IceMan   "
+    db $13, $43, $3E, $4A, $46, $49, $56, $62, $62, $2C, $40, $42, $30, $3E, $4B, $62, $62, $62, $F0
+LibRecipeText_085:  ; 85 Phoenix: "<bird>family  Gismo    "
+    db $13, $43, $3E, $4A, $46, $49, $56, $62, $62, $2A, $46, $50, $4A, $4C, $62, $62, $62, $62, $F0
+LibRecipeText_086:  ; 86 ZapBird: "?????    ?????    "
+    db $64, $64, $64, $64, $64, $62, $62, $62, $62, $64, $64, $64, $64, $64, $62, $62, $62, $62, $F0
+LibRecipeText_087:  ; 87 WhipBird: "<bird>family  Rayburn  "
+    db $13, $43, $3E, $4A, $46, $49, $56, $62, $62, $35, $3E, $56, $3F, $52, $4F, $4B, $62, $62, $F0
+LibRecipeText_088:  ; 88 FunkyBird: "<bird>family  DanceVegi"
+    db $13, $43, $3E, $4A, $46, $49, $56, $62, $62, $27, $3E, $4B, $40, $42, $39, $42, $44, $46, $F0
+LibRecipeText_089:  ; 89 RainHawk: "BlizzardyPhoenix  "
+    db $25, $49, $46, $57, $57, $3E, $4F, $41, $56, $33, $45, $4C, $42, $4B, $46, $55, $62, $62, $F0
+LibRecipeText_090:  ; 90 MadPlant: "<plant>family  <slime>family  "
+    db $14, $43, $3E, $4A, $46, $49, $56, $62, $62, $10, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_091:  ; 91 FireWeed: "<plant>family  <dragon>family  "
+    db $14, $43, $3E, $4A, $46, $49, $56, $62, $62, $11, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_092:  ; 92 FloraMan: "<plant>family  <beast>family  "
+    db $14, $43, $3E, $4A, $46, $49, $56, $62, $62, $12, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_093:  ; 93 WingTree: "<plant>family  <bird>family  "
+    db $14, $43, $3E, $4A, $46, $49, $56, $62, $62, $13, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_094:  ; 94 CactiBall: "<plant>family  <bug>family  "
+    db $14, $43, $3E, $4A, $46, $49, $56, $62, $62, $15, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_095:  ; 95 Gulpple: "<plant>family  <devil>family  "
+    db $14, $43, $3E, $4A, $46, $49, $56, $62, $62, $16, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_096:  ; 96 Toadstool: "<plant>family  <zombie>family  "
+    db $14, $43, $3E, $4A, $46, $49, $56, $62, $62, $17, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_097:  ; 97 AmberWeed: "<plant>family  <material>family  "
+    db $14, $43, $3E, $4A, $46, $49, $56, $62, $62, $18, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_098:  ; 98 Stubsuck: "?????    ?????    "
+    db $64, $64, $64, $64, $64, $62, $62, $62, $62, $64, $64, $64, $64, $64, $62, $62, $62, $62, $F0
+LibRecipeText_099:  ; 99 Oniono: "<plant>family  Gophecada"
+    db $14, $43, $3E, $4A, $46, $49, $56, $62, $62, $2A, $4C, $4D, $45, $42, $40, $3E, $41, $3E, $F0
+LibRecipeText_100:  ; 100 DanceVegi: "<plant>family  Facer    "
+    db $14, $43, $3E, $4A, $46, $49, $56, $62, $62, $29, $3E, $40, $42, $4F, $62, $62, $62, $62, $F0
+LibRecipeText_101:  ; 101 TreeBoy: "<plant>family  Pixy     "
+    db $14, $43, $3E, $4A, $46, $49, $56, $62, $62, $33, $46, $55, $56, $62, $62, $62, $62, $62, $F0
+LibRecipeText_102:  ; 102 FaceTree: "<plant>family  NiteWhip "
+    db $14, $43, $3E, $4A, $46, $49, $56, $62, $62, $31, $46, $51, $42, $3A, $45, $46, $4D, $62, $F0
+LibRecipeText_103:  ; 103 HerbMan: "<plant>family  FunkyBird"
+    db $14, $43, $3E, $4A, $46, $49, $56, $62, $62, $29, $52, $4B, $48, $56, $25, $46, $4F, $41, $F0
+LibRecipeText_104:  ; 104 BeanMan: "<plant>family  PillowRat"
+    db $14, $43, $3E, $4A, $46, $49, $56, $62, $62, $33, $46, $49, $49, $4C, $54, $35, $3E, $51, $F0
+LibRecipeText_105:  ; 105 EvilSeed: "<plant>family  DarkEye  "
+    db $14, $43, $3E, $4A, $46, $49, $56, $62, $62, $27, $3E, $4F, $48, $28, $56, $42, $62, $62, $F0
+LibRecipeText_106:  ; 106 ManEater: "EvilSeed EvilSeed "
+    db $28, $53, $46, $49, $36, $42, $42, $41, $62, $28, $53, $46, $49, $36, $42, $42, $41, $62, $F0
+LibRecipeText_107:  ; 107 Snapper: "ManEater ManEater "
+    db $30, $3E, $4B, $28, $3E, $51, $42, $4F, $62, $30, $3E, $4B, $28, $3E, $51, $42, $4F, $62, $F0
+LibRecipeText_108:  ; 108 Rosevine: "<plant>family  ?????    "
+    db $14, $43, $3E, $4A, $46, $49, $56, $62, $62, $64, $64, $64, $64, $64, $62, $62, $62, $62, $F0
+LibRecipeText_109:  ; 109 Watabou: "?????    ?????    "
+    db $64, $64, $64, $64, $64, $62, $62, $62, $62, $64, $64, $64, $64, $64, $62, $62, $62, $62, $F0
+LibRecipeText_110:  ; 110 GiantSlug: "<bug>family  <slime>family  "
+    db $15, $43, $3E, $4A, $46, $49, $56, $62, $62, $10, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_111:  ; 111 Catapila: "<bug>family  <dragon>family  "
+    db $15, $43, $3E, $4A, $46, $49, $56, $62, $62, $11, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_112:  ; 112 Gophecada: "<bug>family  <beast>family  "
+    db $15, $43, $3E, $4A, $46, $49, $56, $62, $62, $12, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_113:  ; 113 Butterfly: "<bug>family  <bird>family  "
+    db $15, $43, $3E, $4A, $46, $49, $56, $62, $62, $13, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_114:  ; 114 WeedBug: "<bug>family  <plant>family  "
+    db $15, $43, $3E, $4A, $46, $49, $56, $62, $62, $14, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_115:  ; 115 GiantWorm: "<bug>family  <devil>family  "
+    db $15, $43, $3E, $4A, $46, $49, $56, $62, $62, $16, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_116:  ; 116 Lipsy: "<bug>family  <zombie>family  "
+    db $15, $43, $3E, $4A, $46, $49, $56, $62, $62, $17, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_117:  ; 117 StagBug: "<bug>family  <material>family  "
+    db $15, $43, $3E, $4A, $46, $49, $56, $62, $62, $18, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_118:  ; 118 ArmyAnt: "?????    ?????    "
+    db $64, $64, $64, $64, $64, $62, $62, $62, $62, $64, $64, $64, $64, $64, $62, $62, $62, $62, $F0
+LibRecipeText_119:  ; 119 GoHopper: "?????    ?????    "
+    db $64, $64, $64, $64, $64, $62, $62, $62, $62, $64, $64, $64, $64, $64, $62, $62, $62, $62, $F0
+LibRecipeText_120:  ; 120 TailEater: "<bug>family  FloraMan "
+    db $15, $43, $3E, $4A, $46, $49, $56, $62, $62, $29, $49, $4C, $4F, $3E, $30, $3E, $4B, $62, $F0
+LibRecipeText_121:  ; 121 ArmorPede: "<bug>family  IronTurt "
+    db $15, $43, $3E, $4A, $46, $49, $56, $62, $62, $2C, $4F, $4C, $4B, $37, $52, $4F, $51, $62, $F0
+LibRecipeText_122:  ; 122 Eyeder: "<bug>family  AmberWeed"
+    db $15, $43, $3E, $4A, $46, $49, $56, $62, $62, $24, $4A, $3F, $42, $4F, $3A, $42, $42, $41, $F0
+LibRecipeText_123:  ; 123 GiantMoth: "<bug>family  Saccer   "
+    db $15, $43, $3E, $4A, $46, $49, $56, $62, $62, $36, $3E, $40, $40, $42, $4F, $62, $62, $62, $F0
+LibRecipeText_124:  ; 124 Droll: "<bug>family  Spooky   "
+    db $15, $43, $3E, $4A, $46, $49, $56, $62, $62, $36, $4D, $4C, $4C, $48, $56, $62, $62, $62, $F0
+LibRecipeText_125:  ; 125 ArmyCrab: "<bug>family  DarkCrab "
+    db $15, $43, $3E, $4A, $46, $49, $56, $62, $62, $27, $3E, $4F, $48, $26, $4F, $3E, $3F, $62, $F0
+LibRecipeText_126:  ; 126 MadHornet: "<bug>family  FairyRat "
+    db $15, $43, $3E, $4A, $46, $49, $56, $62, $62, $29, $3E, $46, $4F, $56, $35, $3E, $51, $62, $F0
+LibRecipeText_127:  ; 127 HornBeet: "StagBug  StagBug  "
+    db $36, $51, $3E, $44, $25, $52, $44, $62, $62, $36, $51, $3E, $44, $25, $52, $44, $62, $62, $F0
+LibRecipeText_128:  ; 128 Armorpion: "HornBeet HornBeet "
+    db $2B, $4C, $4F, $4B, $25, $42, $42, $51, $62, $2B, $4C, $4F, $4B, $25, $42, $42, $51, $62, $F0
+LibRecipeText_129:  ; 129 Digster: "<bug>family  ?????    "
+    db $15, $43, $3E, $4A, $46, $49, $56, $62, $62, $64, $64, $64, $64, $64, $62, $62, $62, $62, $F0
+LibRecipeText_130:  ; 130 Pixy: "<devil>family  <slime>family  "
+    db $16, $43, $3E, $4A, $46, $49, $56, $62, $62, $10, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_131:  ; 131 ArcDemon: "<devil>family  ?????    "
+    db $16, $43, $3E, $4A, $46, $49, $56, $62, $62, $64, $64, $64, $64, $64, $62, $62, $62, $62, $F0
+LibRecipeText_132:  ; 132 AgDevil: "?????    ?????    "
+    db $64, $64, $64, $64, $64, $62, $62, $62, $62, $64, $64, $64, $64, $64, $62, $62, $62, $62, $F0
+LibRecipeText_133:  ; 133 Demonite: "<devil>family  <bird>family  "
+    db $16, $43, $3E, $4A, $46, $49, $56, $62, $62, $13, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_134:  ; 134 DarkEye: "<devil>family  <plant>family  "
+    db $16, $43, $3E, $4A, $46, $49, $56, $62, $62, $14, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_135:  ; 135 EyeBall: "<devil>family  <bug>family  "
+    db $16, $43, $3E, $4A, $46, $49, $56, $62, $62, $15, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_136:  ; 136 SkulRider: "<devil>family  <zombie>family  "
+    db $16, $43, $3E, $4A, $46, $49, $56, $62, $62, $17, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_137:  ; 137 EvilBeast: "<devil>family  <material>family  "
+    db $16, $43, $3E, $4A, $46, $49, $56, $62, $62, $18, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_138:  ; 138 1EyeClown: "?????    ?????    "
+    db $64, $64, $64, $64, $64, $62, $62, $62, $62, $64, $64, $64, $64, $64, $62, $62, $62, $62, $F0
+LibRecipeText_139:  ; 139 Gremlin: "<devil>family  <beast>family  "
+    db $16, $43, $3E, $4A, $46, $49, $56, $62, $62, $12, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_140:  ; 140 MedusaEye: "<devil>family  <dragon>family  "
+    db $16, $43, $3E, $4A, $46, $49, $56, $62, $62, $11, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_141:  ; 141 Lionex: "<devil>family  LizardMan"
+    db $16, $43, $3E, $4A, $46, $49, $56, $62, $62, $2F, $46, $57, $3E, $4F, $41, $30, $3E, $4B, $F0
+LibRecipeText_142:  ; 142 GoatHorn: "<devil>family  DarkHorn "
+    db $16, $43, $3E, $4A, $46, $49, $56, $62, $62, $27, $3E, $4F, $48, $2B, $4C, $4F, $4B, $62, $F0
+LibRecipeText_143:  ; 143 Orc: "<devil>family  BeanMan  "
+    db $16, $43, $3E, $4A, $46, $49, $56, $62, $62, $25, $42, $3E, $4B, $30, $3E, $4B, $62, $62, $F0
+LibRecipeText_144:  ; 144 Ogre: "<devil>family  HammerMan"
+    db $16, $43, $3E, $4A, $46, $49, $56, $62, $62, $2B, $3E, $4A, $4A, $42, $4F, $30, $3E, $4B, $F0
+LibRecipeText_145:  ; 145 GateGuard: "Demonite Demonite "
+    db $27, $42, $4A, $4C, $4B, $46, $51, $42, $62, $27, $42, $4A, $4C, $4B, $46, $51, $42, $62, $F0
+LibRecipeText_146:  ; 146 ChopClown: "1EyeClown1EyeClown"
+    db $01, $28, $56, $42, $26, $49, $4C, $54, $4B, $01, $28, $56, $42, $26, $49, $4C, $54, $4B, $F0
+LibRecipeText_147:  ; 147 Grendal: "<devil>family  MadDragon"
+    db $16, $43, $3E, $4A, $46, $49, $56, $62, $62, $30, $3E, $41, $27, $4F, $3E, $44, $4C, $4B, $F0
+LibRecipeText_148:  ; 148 Akubar: "Grenadal Grenadal "
+    db $2A, $4F, $42, $4B, $3E, $41, $3E, $49, $62, $2A, $4F, $42, $4B, $3E, $41, $3E, $49, $62, $F0
+LibRecipeText_149:  ; 149 MadKnight: "<devil>family  RogueNite"
+    db $16, $43, $3E, $4A, $46, $49, $56, $62, $62, $35, $4C, $44, $52, $42, $31, $46, $51, $42, $F0
+LibRecipeText_150:  ; 150 Gigantes: "<devil>family  BigEye   "
+    db $16, $43, $3E, $4A, $46, $49, $56, $62, $62, $25, $46, $44, $28, $56, $42, $62, $62, $62, $F0
+LibRecipeText_151:  ; 151 Centasaur: "?????    ?????    "
+    db $64, $64, $64, $64, $64, $62, $62, $62, $62, $64, $64, $64, $64, $64, $62, $62, $62, $62, $F0
+LibRecipeText_152:  ; 152 EvilArmor: "<devil>family  ArmorPede"
+    db $16, $43, $3E, $4A, $46, $49, $56, $62, $62, $24, $4F, $4A, $4C, $4F, $33, $42, $41, $42, $F0
+LibRecipeText_153:  ; 153 Jamirus: "Akubar   RainHawk "
+    db $24, $48, $52, $3F, $3E, $4F, $62, $62, $62, $35, $3E, $46, $4B, $2B, $3E, $54, $48, $62, $F0
+LibRecipeText_154:  ; 154 Durran: "CentasaurGoldGolem"
+    db $26, $42, $4B, $51, $3E, $50, $3E, $52, $4F, $2A, $4C, $49, $41, $2A, $4C, $49, $42, $4A, $F0
+LibRecipeText_155:  ; 155 Spooky: "<zombie>family  <slime>family  "
+    db $17, $43, $3E, $4A, $46, $49, $56, $62, $62, $10, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_156:  ; 156 Skullgon: "<zombie>family  Swordgon "
+    db $17, $43, $3E, $4A, $46, $49, $56, $62, $62, $36, $54, $4C, $4F, $41, $44, $4C, $4B, $62, $F0
+LibRecipeText_157:  ; 157 Putrepup: "<zombie>family  <beast>family  "
+    db $17, $43, $3E, $4A, $46, $49, $56, $62, $62, $12, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_158:  ; 158 RotRaven: "<zombie>family  <bird>family  "
+    db $17, $43, $3E, $4A, $46, $49, $56, $62, $62, $13, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_159:  ; 159 Mummy: "<zombie>family  <plant>family  "
+    db $17, $43, $3E, $4A, $46, $49, $56, $62, $62, $14, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_160:  ; 160 DarkCrab: "<zombie>family  <bug>family  "
+    db $17, $43, $3E, $4A, $46, $49, $56, $62, $62, $15, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_161:  ; 161 DeadNite: "<zombie>family  <devil>family  "
+    db $17, $43, $3E, $4A, $46, $49, $56, $62, $62, $16, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_162:  ; 162 Shadow: "<zombie>family  <material>family  "
+    db $17, $43, $3E, $4A, $46, $49, $56, $62, $62, $18, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_163:  ; 163 Hork: "?????    ?????    "
+    db $64, $64, $64, $64, $64, $62, $62, $62, $62, $64, $64, $64, $64, $64, $62, $62, $62, $62, $F0
+LibRecipeText_164:  ; 164 Mudron: "<zombie>family  GiantSlug"
+    db $17, $43, $3E, $4A, $46, $49, $56, $62, $62, $2A, $46, $3E, $4B, $51, $36, $49, $52, $44, $F0
+LibRecipeText_165:  ; 165 NiteWhip: "<zombie>family  MistyWing"
+    db $17, $43, $3E, $4A, $46, $49, $56, $62, $62, $30, $46, $50, $51, $56, $3A, $46, $4B, $44, $F0
+LibRecipeText_166:  ; 166 MadSpirit: "<zombie>family  <dragon>family  "
+    db $17, $43, $3E, $4A, $46, $49, $56, $62, $62, $11, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_167:  ; 167 WindMerge: "<zombie>family  WindBeast"
+    db $17, $43, $3E, $4A, $46, $49, $56, $62, $62, $3A, $46, $4B, $41, $25, $42, $3E, $50, $51, $F0
+LibRecipeText_168:  ; 168 Reaper: "<zombie>family  WeedBug  "
+    db $17, $43, $3E, $4A, $46, $49, $56, $62, $62, $3A, $42, $42, $41, $25, $52, $44, $62, $62, $F0
+LibRecipeText_169:  ; 169 DeadNoble: "DeadNite DeadNite "
+    db $27, $42, $3E, $41, $31, $46, $51, $42, $62, $27, $42, $3E, $41, $31, $46, $51, $42, $62, $F0
+LibRecipeText_170:  ; 170 WhiteKing: "<zombie>family  ?????    "
+    db $17, $43, $3E, $4A, $46, $49, $56, $62, $62, $64, $64, $64, $64, $64, $62, $62, $62, $62, $F0
+LibRecipeText_171:  ; 171 BoneSlave: "Hork     Hork     "
+    db $2B, $4C, $4F, $48, $62, $62, $62, $62, $62, $2B, $4C, $4F, $48, $62, $62, $62, $62, $62, $F0
+LibRecipeText_172:  ; 172 Skeletor: "BoneSlaveBoneSlave"
+    db $25, $4C, $4B, $42, $36, $49, $3E, $53, $42, $25, $4C, $4B, $42, $36, $49, $3E, $53, $42, $F0
+LibRecipeText_173:  ; 173 Servant: "Skeletor Skeletor "
+    db $36, $48, $42, $49, $42, $51, $4C, $4F, $62, $36, $48, $42, $49, $42, $51, $4C, $4F, $62, $F0
+LibRecipeText_174:  ; 174 Copycat: "?????    ?????    "
+    db $64, $64, $64, $64, $64, $62, $62, $62, $62, $64, $64, $64, $64, $64, $62, $62, $62, $62, $F0
+LibRecipeText_175:  ; 175 JewelBag: "<material>family  <slime>family  "
+    db $18, $43, $3E, $4A, $46, $49, $56, $62, $62, $10, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_176:  ; 176 EvilWand: "<material>family  <dragon>family  "
+    db $18, $43, $3E, $4A, $46, $49, $56, $62, $62, $11, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_177:  ; 177 MadCandle: "<material>family  <beast>family  "
+    db $18, $43, $3E, $4A, $46, $49, $56, $62, $62, $12, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_178:  ; 178 CoilBird: "<material>family  <bird>family  "
+    db $18, $43, $3E, $4A, $46, $49, $56, $62, $62, $13, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_179:  ; 179 Facer: "<material>family  <plant>family  "
+    db $18, $43, $3E, $4A, $46, $49, $56, $62, $62, $14, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_180:  ; 180 SpikyBoy: "<material>family  <bug>family  "
+    db $18, $43, $3E, $4A, $46, $49, $56, $62, $62, $15, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_181:  ; 181 MadMirror: "<material>family  <devil>family  "
+    db $18, $43, $3E, $4A, $46, $49, $56, $62, $62, $16, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_182:  ; 182 RogueNite: "<material>family  <zombie>family  "
+    db $18, $43, $3E, $4A, $46, $49, $56, $62, $62, $17, $43, $3E, $4A, $46, $49, $56, $62, $62, $F0
+LibRecipeText_183:  ; 183 Goopi: "?????    ?????    "
+    db $64, $64, $64, $64, $64, $62, $62, $62, $62, $64, $64, $64, $64, $64, $62, $62, $62, $62, $F0
+LibRecipeText_184:  ; 184 Voodoll: "<material>family  Lipsy    "
+    db $18, $43, $3E, $4A, $46, $49, $56, $62, $62, $2F, $46, $4D, $50, $56, $62, $62, $62, $62, $F0
+LibRecipeText_185:  ; 185 MetalDrak: "<material>family  Andreal  "
+    db $18, $43, $3E, $4A, $46, $49, $56, $62, $62, $24, $4B, $41, $4F, $42, $3E, $49, $62, $62, $F0
+LibRecipeText_186:  ; 186 Balzak: "<material>family  ?????    "
+    db $18, $43, $3E, $4A, $46, $49, $56, $62, $62, $64, $64, $64, $64, $64, $62, $62, $62, $62, $F0
+LibRecipeText_187:  ; 187 SabreMan: "<material>family  GiantWorm"
+    db $18, $43, $3E, $4A, $46, $49, $56, $62, $62, $2A, $46, $3E, $4B, $51, $3A, $4C, $4F, $4A, $F0
+LibRecipeText_188:  ; 188 CurseLamp: "<material>family  WingTree "
+    db $18, $43, $3E, $4A, $46, $49, $56, $62, $62, $3A, $46, $4B, $44, $37, $4F, $42, $42, $62, $F0
+LibRecipeText_189:  ; 189 Roboster: "<material>family  SkulRider"
+    db $18, $43, $3E, $4A, $46, $49, $56, $62, $62, $36, $48, $52, $49, $35, $46, $41, $42, $4F, $F0
+LibRecipeText_190:  ; 190 EvilPot: "<material>family  Snaily   "
+    db $18, $43, $3E, $4A, $46, $49, $56, $62, $62, $36, $4B, $3E, $46, $49, $56, $62, $62, $62, $F0
+LibRecipeText_191:  ; 191 Gismo: "Goopi    FireWeed "
+    db $2A, $4C, $4C, $4D, $46, $62, $62, $62, $62, $29, $46, $4F, $42, $3A, $42, $42, $41, $62, $F0
+LibRecipeText_192:  ; 192 LavaMan: "MetalDrakArcDemon "
+    db $30, $42, $51, $3E, $49, $27, $4F, $3E, $48, $24, $4F, $40, $27, $42, $4A, $4C, $4B, $62, $F0
+LibRecipeText_193:  ; 193 IceMan: "Roboster KingLeo  "
+    db $35, $4C, $3F, $4C, $50, $51, $42, $4F, $62, $2E, $46, $4B, $44, $2F, $42, $4C, $62, $62, $F0
+LibRecipeText_194:  ; 194 Mimic: "<material>family  BoxSlime "
+    db $18, $43, $3E, $4A, $46, $49, $56, $62, $62, $25, $4C, $55, $36, $49, $46, $4A, $42, $62, $F0
+LibRecipeText_195:  ; 195 MudDoll: "Goopi    Goopi    "
+    db $2A, $4C, $4C, $4D, $46, $62, $62, $62, $62, $2A, $4C, $4C, $4D, $46, $62, $62, $62, $62, $F0
+LibRecipeText_196:  ; 196 Golem: "MudDoll  MudDoll  "
+    db $30, $52, $41, $27, $4C, $49, $49, $62, $62, $30, $52, $41, $27, $4C, $49, $49, $62, $62, $F0
+LibRecipeText_197:  ; 197 StoneMan: "Golem    Golem    "
+    db $2A, $4C, $49, $42, $4A, $62, $62, $62, $62, $2A, $4C, $49, $42, $4A, $62, $62, $62, $62, $F0
+LibRecipeText_198:  ; 198 BombCrag: "SpikyBoy SpikyBoy "
+    db $36, $4D, $46, $48, $56, $25, $4C, $56, $62, $36, $4D, $46, $48, $56, $25, $4C, $56, $62, $F0
+LibRecipeText_199:  ; 199 GoldGolem: "IceMan   LavaMan  "
+    db $2C, $40, $42, $30, $3E, $4B, $62, $62, $62, $2F, $3E, $53, $3E, $30, $3E, $4B, $62, $62, $F0
+LibRecipeText_200:  ; 200 DracoLord: "Servant  GreatDrak"
+    db $36, $42, $4F, $53, $3E, $4B, $51, $62, $62, $2A, $4F, $42, $3E, $51, $27, $4F, $3E, $48, $F0
+LibRecipeText_201:  ; 201 DracoLord: "DracoLordDivinegon"
+    db $27, $4F, $3E, $40, $4C, $2F, $4C, $4F, $41, $27, $46, $53, $46, $4B, $42, $44, $4C, $4B, $F0
+LibRecipeText_202:  ; 202 Hargon: "WhitekingMetalKing"
+    db $3A, $45, $46, $51, $42, $48, $46, $4B, $44, $30, $42, $51, $3E, $49, $2E, $46, $4B, $44, $F0
+LibRecipeText_203:  ; 203 Sidoh: "Jamirus  Rosevine "
+    db $2D, $3E, $4A, $46, $4F, $52, $50, $62, $62, $35, $4C, $50, $42, $53, $46, $4B, $42, $62, $F0
+LibRecipeText_204:  ; 204 Baramos: "Hargon   Orochi   "
+    db $2B, $3E, $4F, $44, $4C, $4B, $62, $62, $62, $32, $4F, $4C, $40, $45, $46, $62, $62, $62, $F0
+LibRecipeText_205:  ; 205 Zoma: "DracoLordSidoh    "
+    db $27, $4F, $3E, $40, $4C, $2F, $4C, $4F, $41, $36, $46, $41, $4C, $45, $62, $62, $62, $62, $F0
+LibRecipeText_206:  ; 206 Pizzaro: "Durran   Divinegon "
+    db $27, $52, $4F, $4F, $3E, $4B, $62, $62, $62, $27, $46, $53, $46, $4B, $42, $44, $4C, $4B, $62, $F0
+LibRecipeText_207:  ; 207 Esterk: "Pizzaro  KingLeo  "
+    db $33, $46, $57, $57, $3E, $4F, $4C, $62, $62, $2E, $46, $4B, $44, $2F, $42, $4C, $62, $62, $F0
+LibRecipeText_208:  ; 208 Mirudraas: "Esterk   GoldSlime"
+    db $28, $50, $51, $42, $4F, $48, $62, $62, $62, $2A, $4C, $49, $41, $36, $49, $46, $4A, $42, $F0
+LibRecipeText_209:  ; 209 Mirudraas: "MirudraasSpikerous"
+    db $30, $46, $4F, $52, $41, $4F, $3E, $3E, $50, $36, $4D, $46, $48, $42, $4F, $4C, $52, $50, $F0
+LibRecipeText_210:  ; 210 Mudou: "Baramos  DarkHorn "
+    db $25, $3E, $4F, $3E, $4A, $4C, $50, $62, $62, $27, $3E, $4F, $48, $2B, $4C, $4F, $4B, $62, $F0
+LibRecipeText_211:  ; 211 DeathMore: "Zoma     Mirudraas"
+    db $3D, $4C, $4A, $3E, $62, $62, $62, $62, $62, $30, $46, $4F, $52, $41, $4F, $3E, $3E, $50, $F0
+LibRecipeText_212:  ; 212 DeathMore: "DeathMoreArmorpion"
+    db $27, $42, $3E, $51, $45, $30, $4C, $4F, $42, $24, $4F, $4A, $4C, $4F, $4D, $46, $4C, $4B, $F0
+LibRecipeText_213:  ; 213 DeathMore: "DeathMoreMudou    "
+    db $27, $42, $3E, $51, $45, $30, $4C, $4F, $42, $30, $52, $41, $4C, $52, $62, $62, $62, $62, $F0
+LibRecipeText_214:  ; 214 Darkdrium: "DeathMoreWatabou  "
+    db $27, $42, $3E, $51, $45, $30, $4C, $4F, $42, $3A, $3E, $51, $3E, $3F, $4C, $52, $62, $62, $F0
+LibRecipeText_215:  ; 215-220 (shared: combat-only species): "?????    ?????"
+    db $64, $64, $64, $64, $64, $62, $62, $62, $62, $64, $64, $64, $64, $64, $F0
+; $53D3: first byte of the next item (split from a mis-decoded instruction)
+    db $30
     ld c, h
     ld d, e
     ld b, d

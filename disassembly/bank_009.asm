@@ -6593,28 +6593,33 @@ LoadFld9_688e:
     ret
 
 
+; Default NAME offered for a monster ($C8F4 = species + $10, set by the
+; recruit / script callers; $C8F4 = 0 -> the 4 placeholder glyphs $D3-$D6).
+; Text mode 3 (bank $41 FamilyNamePoolTable, 160 ids) holds 16 names per
+; family: id = family<<4 | ($C8F6 bit 0, the gender bit of struct +$0B)*8
+; | RNG & 7. Written to the name buffer $C0C8.
 jr_009_68aa:
     call GenerateRNG
     ld a, [$c8f4]
     sub $10
     ld [wTempSpeciesId], a
     ld hl, $0301
-    rst $10
+    rst $10                         ; $DA33 = the species' family (info byte 0)
     ld a, [$da33]
     ld c, a
     ld a, [wRNG1]
     and $07
     swap c
     or c
-    ld c, a
+    ld c, a                         ; C = family<<4 | RNG&7
     ld a, [$c8f6]
     and $01
     add a
     add a
     add a
-    add c
+    add c                           ; + gender*8
     ld l, a
-    ld h, $03
+    ld h, $03                       ; H = text mode 3 (family name pools)
     ld de, $c0c8
     call SetupVRAMParams
     ret

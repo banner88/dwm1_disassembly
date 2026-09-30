@@ -623,6 +623,8 @@ def main():
     if a.selftest:
         selftest(read_rom())
     if a.emit:
+        sys.exit("ERROR: " + 'RETIRED S103 (ROADMAP P3.9): {what} is now a compiler-owned @BUILD_PROJECT region fed by project.json `gamedata` ({key}; PROJECT_COMPILER §2.20). Edit the project and run tools/build_project.py --apply instead — this path would overwrite the generated region.'.format(what="LibFamilyPtrTable (bank $12)",
+                                       key="the effective family bytes: gamedata.monsters[].family + new species"))
         emit(a.reassign, a.new_species)
     if not (a.emit or a.selftest):
         ap.print_help()

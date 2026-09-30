@@ -161,13 +161,31 @@ PRNG mod 101 compared to threshold. Range: 1100-6000 steps. Last entry $FF=catch
 | Encounter pool data | `$01:$6AAE` | `EncounterPoolData` | 128 × 26 bytes |
 | Generator | | `tools/gen_encounter_db.py` | |
 
-**Encounter pool entry (26 bytes):** `[header:10][eid_slots:5×2B_LE16][weights:5×1B][extra:1]`
-The header is NOT inert "floor range info": bytes at **+2** (read ×3) and **+5**
-(read ×5) feed the per-slot weighted selection (`LookupEncounterEntry` builds a
-table at `$C0D8`, `CalcEncounterPoolIdx` draws an index 0-4). The EID slots at
-**+10** are `enemy_stats_id`s. A slot is only selectable if its weight (+20) is
-non-zero — e.g. pool 0 = EIDs `[2,4,3,0,0]` weights `[1,1,1,0,0]` = Slime,
-Dracky, Anteater only.
+**Encounter pool entry (26 bytes) — fully decoded S103** (bank $01
+`EncounterMonsterSelect` + `LoadNextDungeonFloor` + `LoadFloorAndEncounterData`,
+annotated in both trees; editable as `gamedata.encounters`, PROJECT_COMPILER §2.20):
+
+| Off | Field | Reader / meaning |
+|---|---|---|
+| +0 | rate code | → `wC8A9` = `EncounterRateModifierTable` index (the per-step drain) |
+| +1 | — | read by no pool reader (vanilla 1-3) |
+| +2..+4 | group chance codes | chance of 1 / 2 / 3 monsters → `$DA02` |
+| +5..+9 | slot chance codes | chance that slot 0-4 is drawn (each monster separately) |
+| +10 | 5 × EID (LE16) | `enemy_stats_id`s |
+| +20..+24 | max count per slot | **not a weight**: 1 = this monster only ever comes ALONE (a first draw with 1 ends the group); otherwise the 2nd/3rd draw repeats until a slot's max ≥ its copies so far (the new one included) and ≠ 1 — so 0 = never 2nd/3rd |
+| +25 | maze size | → `$C93D`, the bank $16 maze carve count (vanilla 3 / 8 / 15) |
+
+Chance codes 0-7 are percentages via `EncounterChancePercent` ($01:$69C0 =
+0, 10, 20, 30, 40, 50, 70, 100; re-sectioned S103 from 7 mis-decoded
+instructions). `LookupEncounterEntry` turns the 3 (or 5) codes into running
+sums at `$C0D8`; `CalcEncounterPoolIdx` draws RNG mod 100 and returns the first
+entry whose sum exceeds it (a 0 % entry is never chosen; a list whose sums never
+reach 100 walks past its end). Pool 0 vanilla = group `[7,0,0]` (always one
+monster), slots `[3,5,2,0,0]` = Slime 30 %, Dracky 50 %, Anteater 20 %.
+**Freeze measured S103 (PyBoy):** a pool that can draw 2 monsters whose first
+draw has max 0 and where no slot may appear twice re-draws the 2nd monster
+forever (28,257 passes, the battle never starts); every slot at max 1 is safe
+(always alone). Every vanilla pool is consistent (checked over all 128).
 
 ---
 

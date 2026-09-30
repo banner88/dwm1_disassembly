@@ -49,6 +49,8 @@ SELFTEST_TOOLS = [
     "script_param_counts.py",  # S96: opcode arity table == bank-$04 handler analysis
     "census_room_animation.py",  # S99: room-animation census JSON == bank-$01 dispatch table + handler operands
     "map_gate_names.py",         # S100: gate_names.json == GateFloorDataTable (floors + boss map) x FAQ
+    "extract_gamedata.py",       # S103: gamedata_vanilla.json (the Layer A-lite base) == ROM tables
+    "build_family_icon.py",      # S104: family_icons.json vanilla icons == ROM; Spirit grid == $4F:$41B0 glyph + bank $6D SpiritIconStream
 ]
 
 PATCH_FILES = [
@@ -59,9 +61,10 @@ PATCH_FILES = [
     "bank_04c.asm", "bank_058.asm", "bank_05f.asm", "bank_059.asm",
     "bank_052.asm", "bank_050.asm", "bank_056.asm",
     "bank_00a.asm", "bank_015.asm", "bank_051.asm",  # S60 CF3 walker redirects
+    "bank_013.asm",  # S103 P3.9: gamedata exp/growth curve regions
     "wram.asm", "game.asm",
 ]
-PATCH_NEW_FILES = ["bank_060.asm", "bank_064.asm", "bank_067.asm", "bank_069.asm", "bank_06a.asm", "bank_06b.asm", "bank_06c.asm", "bank_071.asm", "bank_072.asm", "bank_073.asm", "bank_074.asm", "bank_07e.asm"]  # don't exist in clean disassembly/
+PATCH_NEW_FILES = ["bank_060.asm", "bank_064.asm", "bank_067.asm", "bank_069.asm", "bank_06a.asm", "bank_06b.asm", "bank_06c.asm", "bank_06d.asm", "bank_071.asm", "bank_072.asm", "bank_073.asm", "bank_074.asm", "bank_07e.asm"]  # don't exist in clean disassembly/
 
 BUILD_ARTIFACTS = ["game.o", "game.gbc", "game.sym", "game.map"]
 

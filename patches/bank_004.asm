@@ -4181,17 +4181,22 @@ label4_6093:
     ld [wTempSpeciesId], a
     ld hl, $0301
     rst $10
-    ld a, [$da33]
-    add a
-    ld hl, FamilyTextPtrTable
-    add l
-    ld l, a
-    ld a, $00
-    adc h
-    ld h, a
-    ld a, [hl+]
-    ld h, [hl]
-    ld l, a
+    ld a, [$da33]                     ; A = the species' family
+    ; S104 FORK (same-size, 13 B = 9 + 4 nops): HL = the family's text group
+    ; from bank $6D entry 2 FamilyTextGroupFromE (11 families). Was `add a /
+    ; ld hl,FamilyTextPtrTable / ... / ld l,a` — 10 entries, family 10 read
+    ; FamilyTextGroup_A's first word as a pointer.
+    ld e, a
+    push bc
+    ld hl, $6D02
+    rst $10                           ; DE = text group pointer
+    pop bc
+    ld h, d
+    ld l, e
+    nop
+    nop
+    nop
+    nop
     pop af
     push hl
     ld d, a
@@ -4222,7 +4227,9 @@ label4_6093:
 ; Used by opcode $2D (MonsterSlotDialogue) handler.
 ; =============================================================================
 
-FamilyTextPtrTable:  ; $60F4 — 10 entries, indexed by family ID
+FamilyTextPtrTable:  ; $60F4 — 10 entries, indexed by family ID. S104: DEAD — label4_6093
+                     ; far-calls bank $6D FamilyTextGroupFromE (FamilyTextPtrTable11: these
+                     ; 10 + Spirit); the FamilyTextGroup_A-D lists below are still live
     dw FamilyTextGroup_A  ; 0 = Slime
     dw FamilyTextGroup_B  ; 1 = Dragon
     dw FamilyTextGroup_C  ; 2 = Beast
