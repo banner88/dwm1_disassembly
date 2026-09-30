@@ -1196,11 +1196,36 @@ recipes are pure authoring.
       tables), growth-curve reuse warnings, the enemy-side power bands of S76
       (profile_check / audit_threat run on a built ROM) are not compiler
       checks yet; (c) record +4 (`mp_byte`) reader not traced; (d) pool +1
-      unread by the pool readers — confirm nothing else reads it; (e) new
+      unread by the pool readers — confirm nothing else reads it; (e) ~~new
       species (Phase N, G3) still live in `extracted/new_species.json` +
-      bank_06a / the hand EID-518 row.
-- [ ] **P3.9b — Purge the proof-of-concept CONTENT from the hand overlay;
-      keep every MECHANISM** (user 2026-09-30: "patches are POC trash … Please
+      bank_06a / the hand EID-518 row~~ — DONE S105 (`custom.species`).
+- [x] **P3.9b — Purge the proof-of-concept CONTENT from the hand overlay;
+      keep every MECHANISM** — **built S105, USER-CONFIRMED 2026-09-30 ("Confirm all three appear as expected")** (user
+      2026-09-30 16:21: "Yes let's clean all this stuff it wont make it into
+      real romhack except for mechanics, other than custom skills which need to
+      fire without pre-existing custom rooms"). As built (PROJECT_COMPILER
+      §2.21/§2.22, PROJECT_STATE S105): (1) new species = `custom.species`
+      (`ns_*` regions + compiler-owned bank $7E; empty = the original ROM
+      bytes; the example carries Gorbunok byte-identically, its wild row now a
+      project enemy); (2) custom skills kept — Anchor's dialogs are built into
+      every build (`editor2/core/skill_scripts.json`, script type $FF), which
+      also fixes a MEASURED soft-lock when Anchor was cast in a project without
+      room $71; (3) ??? icon — done S104; (4) bank $16 entries 693/803 vanilla
+      again; (5) the example project stays the compiler's test fixture (user
+      16:21); + found by the S105 ROM diff: the S21 Dracky → Clam battle sprite
+      (`patches/bank_036.asm`, deleted) and the ChopClown / Grendal follower
+      attr bytes the S34 layout write had overwritten ($11:$413F). *Accept MET
+      (machine half):* test_compiler --rom "blank project -> <site> == original
+      ROM bytes" for all 21 sites + the per-table S103 checks; every mechanism
+      test green (test_app / test_canvas --rom); PyBoy on the user's save:
+      Anchor's 4 dialogs, ChopClown / Grendal OAM, Dracky battle, Gorbunok
+      follower OAM unchanged (example). *User half:* `DWM_S105_purge_test.gbc`.
+      Residuals: new-species capacity 1 (G3 below — raised to 19 the same
+      session, `DWM_S105_G3_user.gbc` / `_demo.gbc` supersede the purge ROM);
+      the NPC-monster thumbnail
+      census (`extracted/monster_npc_sprites.json`) still holds the pre-S105
+      example's Gorbunok row (the picker ignores ids >= 224 from it). (Original
+      item follows.) (user 2026-09-30: "patches are POC trash … Please
       do not include any patches in the editor, they are all trash (in terms
       of custom monsters, custom rooms, etc. The mechanisms are obviously
       vital)"). Goal: a project with no content builds a game whose DATA is
@@ -1311,7 +1336,11 @@ recipes are pure authoring.
       offer them (build_skill_tables.py refuses such an emission).
       *Accept:* a custom skill's damage tier + description edited in GUI,
       verified in battle in PyBoy.
-- [ ] **P3.11c — The custom skills are PROJECT DATA** (user 2026-09-30:
+- [ ] **P3.11c — The custom skills are PROJECT DATA** (S105: the one
+      project-content dependency is gone — Anchor's 4 dialog scripts + texts
+      are the compiler's built-in `editor2/core/skill_scripts.json`, script
+      type $FF, in every build; making them EDITABLE is part of this item)
+      (user 2026-09-30:
       "Custom skills absolutely stay!! … All data related to them must also
       be in editor."). Today the custom skills ($DE Scorch / $DF Smite — the
       S45 masquerade pair —, and $E0-$E9: MagicBurn, Tame ×3, Anchor, Tremor,
@@ -1992,7 +2021,23 @@ Beyond 32 needs 16-bit ids everywhere (avoid).
 - [x] **N6 — Top-range gates: NOT species gates** (S31): the 4 cp-ladder sites branch
       on $db8a (a skill/effect id, never a species byte) — false positives; no patch.
       → MONSTER_DATA "Species ID geography" N6; DOC_AUDIT; archive: SESSION_HISTORY.
-- [ ] **G3 — new_species.json schema fold (the last open new-species item).** One
+- [~] **G3 — new_species.json schema fold + capacity** — **the fold is DONE S105 as
+      project.json `custom.species`** (P3.9b; PROJECT_COMPILER §2.21): one
+      project entry drives every new-species artifact through 17 compiler
+      regions + bank $7E (Gorbunok's bytes identical until G3 re-addressed
+      them to row 224-221); the hand-staged
+      pieces are deleted; `new_species.json` is historical. **(1) CAPACITY —
+      DONE S105 (USER-CONFIRMED 2026-09-30 ("Confirm all three appear as expected")): 19 species, ids 221-239** (user:
+      "Alright, 19 monsters it is"): the game's ceiling (seen bits 0-239,
+      family codes $F0-$FA, follower router wrap at 240); the eight follower
+      forks compute the gfx-ID into WRAM `wNewSpeciesGid` (no tables), every
+      other table is 19 rows, names packed into bank $41's free extents
+      (PROJECT_COMPILER §2.21; PyBoy: followers, battles, joins, library pages
+      for ids 221 / 224 / 239). **Still open:** (2) 19 nine-letter names each
+      with its own nickname do not pack — no more bank-$41 space; (3) the real
+      description TEXT (line 2 is still "the description of
+      species N", `description_from`); (4) the editor's thumbnails for the
+      project's species (P3.10). Original item: One
       JSON drives EVERY Gorbunok artifact (info, enemy stats, encounter, name,
       short-name, library, breeding, **the real description string** — line 2 still
       reuses Dracky's $60BC placeholder — and the art hooks) through

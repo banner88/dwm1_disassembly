@@ -21,7 +21,7 @@ from . import scriptgen as S
 # --pin-templates after a successful regression build; None = check skipped
 # with a warning.
 TEMPLATE_SIZE = {
-    0x60: 549,   # addr(CustomScriptMasterTable)-$4000 — S101 reference game.sym (492 S97 + CustomMonsterCast + its call at the head of CustomStateRules). Prev: S97 reference game.sym (383 S94b -> 492 S97: entry-8 dw + CustomStateRules + the CustomReadStep call)
+    0x60: 558,   # addr(CustomScriptMasterTable)-$4000 — S105 reference game.sym (549 + CustomScriptRead's SKILL_SCRIPT_TYPE branch, 9 B). Prev 549 S101 reference game.sym (492 S97 + CustomMonsterCast + its call at the head of CustomStateRules). Prev: S97 reference game.sym (383 S94b -> 492 S97: entry-8 dw + CustomStateRules + the CustomReadStep call)
                  # (283 S53 -> 348 S70 -> 358 S70v3 (+2x5B wCustomY7Cmp arming): entry-7 dw + VanillaExitResolve +
                  # factored CopyExitListToBuffer in the template head; 383 S94: VanillaExitResolve rows keyed
                  # by (mapID, screen) — `db mapID, screen` with $FF = any screen)
@@ -84,12 +84,26 @@ def validate(prj, generated=None):
     # / range / coherence error stops the build here; warnings are the
     # coherence notes (Sets 1-3) and the soft checks.
     from . import gamedata as GD
+    from . import species as SP
     try:
         gd = prj.gamedata()
-    except GD.GamedataError as e:
+    except (GD.GamedataError, SP.SpeciesError) as e:
         errors.append(str(e))
     else:
         warnings += [w for w in gd.warnings if w not in warnings]
+        # S105 (P3.9b, PROJECT_COMPILER §2.21): custom.species — the art files
+        # are read and decoded here, so a bad stream is a validation error.
+        try:
+            SP.resolve(prj)
+        except SP.SpeciesError as e:
+            errors.append(str(e))
+        # S105 G3: up to 19 new species can land in ONE family's encyclopedia
+        # tab — its 32-member cap is checked here, not only when bank $12 is
+        # emitted (which used to surface as an exception)
+        try:
+            GD.emit_library_grouping(gd)
+        except GD.GamedataError as e:
+            errors.append(str(e))
 
     # ------------------------------------------------------------- music
     # M3b (S64): resolve custom.music up front so schema/reference errors
@@ -337,8 +351,10 @@ def validate(prj, generated=None):
                             'skills', 'join_as', 'name', 'comment', '_eid'}
         if unknown:
             errors.append(f"{ctx}: unknown keys {sorted(unknown)}")
-        if not (0 <= F.val(e.get('species', -1)) <= 255):
-            errors.append(f"{ctx}: species must be 0-255 (byte field)")
+        sp = F.val(e.get('species', -1))
+        if not (0 <= sp <= 220 or sp in prj.new_species_ids()):
+            errors.append(f"{ctx}: species {sp} — a vanilla species 0-220 or one "
+                          "of this project's custom.species (S105)")
         if not (1 <= F.val(e.get('level', 0)) <= 99):
             errors.append(f"{ctx}: level must be 1-99")
         if not (0 <= F.val(e.get('joinability', 7)) <= 7):
@@ -443,7 +459,10 @@ def validate(prj, generated=None):
                     errors.append(
                         f"text {F.hexw(tid)}: bare $EE newline — must be "
                         "$EF $EE (KEY_LESSONS S2 '$EE needs $EF before it')")
-            if 'lines' in e and 'raw' not in e:
+            # S105: the built-in skill texts (skill_scripts.json, measured +
+            # user-confirmed S73) are not the author's to fix — no warning
+            if 'lines' in e and 'raw' not in e and \
+                    not str(e.get('id', '')).startswith('skill:'):
                 ls = e['lines']
                 if len(ls) > T.BOX_LINES or (ls and len(ls[0]) > T.FIRST_LINE):
                     warnings.append(

@@ -2005,7 +2005,7 @@ jr_00b_490b:
     ld l, d
     ld h, $00
     add hl, hl
-    call FollowerArtResolve0b        ; FORK: id>=224 -> interim Slime follower gfx-ID; else normal table (byte-neutral 8->3+5)
+    call FollowerArtResolve0b        ; FORK: id 221-239 -> computed new-species follower gfx-ID (S105 G3); else normal table (byte-neutral 8->3+5)
     nop
     nop
     nop
@@ -2632,9 +2632,9 @@ SharedPtrChase:
 ; =============================================================================
 ; FollowerArtResolve0b — Phase N follower-art fork for the $0b library copy.
 ; Mirrors FollowerArtResolve07/09/18. The reader passes HL = (species+$10)*2
-; (D held species+$10). id>=224 (HL>=$1E0) -> interim Slime follower gfx-ID
-; ($2f09); else replicate the original add-base into SpritePtrTable_4974
-; (byte-identical to vanilla for species 0-223). Without this, hatching/viewing
+; (D held species+$10). id 221-239 (HL>=$1DA) -> computed gfx-ID in
+; wNewSpeciesGid (S105 G3); else replicate the original add-base into
+; SpritePtrTable_4974 (byte-identical to vanilla for species 0-220). Without this, hatching/viewing
 ; a new species (Gorbunok, 224) overshoots SpritePtrTable_4974 and crashes.
 ; Lives in the $00 padding between the code section and the $4B43 room data.
 ; =============================================================================
@@ -2645,28 +2645,20 @@ FollowerArtResolve0b:                ; in: HL = (species+$10)*2
     cp $01
     jr c, .normal                    ; HL<$100 (species<128)
     ld a, l
-    cp $e0
-    jr c, .normal                    ; HL<$1E0 -> species<224
-.high:                               ; species>=224: HL = NewFollowerGfxTable0b + (species-224)*2
-    ld a, l                          ; HL still = (species+$10)*2; +(Table-$1E0) yields the indexed slot
-    add LOW(NewFollowerGfxTable0b - $1E0)
-    ld l, a
-    ld a, h
-    adc HIGH(NewFollowerGfxTable0b - $1E0)
-    ld h, a
+    cp $da
+    jr c, .normal                    ; HL<$1DA -> species<221
+.high:                               ; species 221-239: the gfx-ID is COMPUTED (S105 G3)
+    ld a, l                          ; L = low byte of (species+$10)*2
+    sub $da                          ; = (species-221)*2 = the follower's index in bank $7E
+    ld [wNewSpeciesGid], a
+    ld a, $7e                        ; overflow bank $7E (compiler bank species7e)
+    ld [wNewSpeciesGid+1], a
+    ld hl, wNewSpeciesGid            ; caller reads the word at HL (DE is dead here)
     ret
 .normal:
-    ld a, l
-    add LOW(SpritePtrTable_4974)
-    ld l, a
-    ld a, h
-    adc HIGH(SpritePtrTable_4974)
-    ld h, a
+    ld de, SpritePtrTable_4974
+    add hl, de
     ret
-; id-indexed new-species follower gfx-ID table (one dw per id, starting at 224).
-; Editor appends one dw per new species; sized to content (grows on rebuild).
-NewFollowerGfxTable0b:
-    dw $7E00                         ; id 224: blue-dragon follower art (bank $7e, index 0)
 
 ; --- Pillar B helper: mark custom-room descents as in-gate floor changes -----
 ; Called from the gate_flag exit-transition point (jr_00b_466b). For custom

@@ -607,7 +607,9 @@ between screens swaps the cast (measured on a 2-screen room: GreatDrak on
 screen 0, DragonKid on screen 1). Census (`tools/census_monster_npc_sprites.py`,
 218 species, `extracted/monster_npc_sprites/`): species **216** draws blank;
 **217-220 hang or crash** the game (their follower tables are not real);
-221-223 do not exist — the compiler refuses 217-223. Heavy monster sheets
+221-223 do not exist — the compiler refuses 217-223, and (S105) a species ≥ 224
+unless it is the project's own `custom.species` (the census's id-224 row was
+captured on the pre-S105 example build = that project's Gorbunok). Heavy monster sheets
 count against the per-screen sprite budget (above). **Observed S101, not yet
 traced:** after a battle started by TALKING to a monster NPC, that NPC is not
 drawn again until the screen reloads (its slot stays active, the cast is

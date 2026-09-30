@@ -22,7 +22,8 @@
 > validator; bank `$16`'s special table is runtime-dead (single source = JSON →
 > bank `$69`) — **S103 correction: it is NOT byte-identical to the ROM** — entries
 > 693 / 803 still carry the Session-12 GoldSlime mirror (dead bytes, harmless, not
-> compiler-owned). **S103: B4 / B5 / B6 authoring moved into project.json
+> compiler-owned). **S105: restored — bank `$16`'s copy is vanilla again (P3.9b);
+> the S12 recipes live only in the example project's `gamedata` (bank $69).** **S103: B4 / B5 / B6 authoring moved into project.json
 > `gamedata.breeding` / `gamedata.monsters[].family` (PROJECT_COMPILER §2.20);
 > the `--emit-*` paths are retired, the JSON specs are historical.** User-confirmed in SameBoy: MadCat×BattleRex→
 > DracoLord (in-place edit of entry 187, was Yeti), Darkdrium×BattleRex→Armorpion
@@ -58,7 +59,14 @@ correctly show no breeding recipe (same as vanilla unbreedable id 220).
 that one pedigree fallback). Authored in `extracted/breeding_special.json` `appends`;
 `build_breeding.py` was extended to admit a declared new-species id (>220, read from
 `new_species.json`) as a recipe RESULT (the old 0–220 cap rejected it). Display via
-`FamilyRecipeResolve` → `db $04,$2a` (parent icons). Parent-path needs no code (Gorbunok's
+`FamilyRecipeResolve` → `db $04,$2a` (parent icons). *(S105: new species are project
+data — `custom.species`; the display pair is the compiler region `ns_recipe_pair`,
+DERIVED from the first special entry whose result is the species, so the page
+cannot drift from the recipe; PROJECT_COMPILER §2.21.)* *(S105 G3: the resolver
+gates on id ≥ 221 — `cp $ba` — and returns `NewRecipePairs + (id-221)*2`, a
+19-row table for the new-species ids 221-239; row 221 of the 222-row
+FamilyRecipeTable is no longer read. PyBoy: DrakSlime × Healer → 239 shows both
+parent icons + names on 239's library page.)* Parent-path needs no code (Gorbunok's
 Slime family `$F0` is honoured through the forked `$0301` loader). KNOWN sub-item: the
 encyclopedia lineage shows the parent **icons** but "?????" for the **names** — a separate
 mode-0/1 (`$41:$4025/$4039`) offspring-indexed overshoot; see MONSTER_DATA registry + ROADMAP N5.
@@ -250,7 +258,7 @@ extended to 1×–2× capacity (825 → up to ~1650) for iterative playtesting.
   when an override changes a result species that **other entries still produce**
   (so "edited a cross" is never mistaken for "removed a monster"). Single source of
   truth: bank `$16`'s special table is left alone (runtime-dead via the B2
-  redirect; S103: two entries still hold the S12 mirror — not byte-identical), so nothing in the shift-sensitive bank
+  redirect; S103: two entries still hold the S12 mirror — not byte-identical; S105: vanilla again), so nothing in the shift-sensitive bank
   moves and there is exactly one authored source + one emit target. Self-checks:
   emitted table == authored bytes + `$FF`; every non-overridden base entry ==
   vanilla; each override present at its index; capacity ≤ 1650. Proof set
@@ -512,7 +520,9 @@ the SAME spec `patches/bank_003.asm` (B6) consumes. Library grouping and family
 bytes therefore stay in lock-step; `from` is validated == vanilla, exactly as B6.
 
 **New species (Phase N, ids ≥ 224):** they have no ROM info entry, so their library
-family comes from `new_species.json` (cloned base family + `info.overrides.family`).
+family comes from the project (S105: `custom.species[].info` family — the compiler's
+`gd_library` region; before S105 `new_species.json`, cloned base family +
+`info.overrides.family`).
 `build_library_table.py --new-species extracted/new_species.json` adds them to their
 family's member list (appended after the 0..214 ids), so the encyclopedia lists them
 reproducibly. This replaced an earlier hand-edit of `$e0` into the Slime list — the

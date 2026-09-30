@@ -4238,3 +4238,104 @@ checksum, which covers $BCC8 → the next boot rejected the save.
 at time X", check the ORDER of the writes that make them equal; a snapshot
 commit inside a multi-block save sees only the blocks written before it.
 And test save → save somewhere else → load → reset, not just save → load.
+
+## S105 — purging POC content: whole-ROM diffs, borrowed addresses, engine code naming project content
+
+### A purge audit is a whole-ROM diff of a real project, not a list of remembered edits
+**Symptom**: the S103 read-only audit of "POC content in every build" listed
+Gorbunok, the ??? icon and the S12 mirror — and missed the S21 Dracky → "Clam"
+battle sprite that had been in `patches/bank_036.asm` since 2026-06-19 (every
+patched build fought a clam). TOOLS_AND_DATA even said the patched build was
+"CLEAN" of the clam swap (it meant a different, bank-$7E swap).
+**Fix (S105)**: built the user's project, diffed EVERY byte against the original
+ROM, named each run with the build's `.sym`, and classified run by run
+(mechanism / project content / leak). That found the Clam and the ChopClown /
+Grendal bytes below. The acceptance is now a test: a BLANK project's build equals
+the original ROM at every purged site (test_compiler --rom).
+**Rule**: "what leaks into every build" is answered by building an empty (or the
+user's) project and diffing the whole ROM — never by recalling which sessions
+edited what.
+
+### A "slot past the end" of a short table is another table's data
+**Symptom** (found by the S105 diff): every patched build since S34 drew Grendal
+upside-down in green and ChopClown in the wrong palette as followers.
+**Root cause**: new species 224's walking layout was installed by WRITING a
+pointer at `$11:$407f + (224−$80)*2 = $413F`. Bank $11's level-1 table has only
+87 entries and is followed directly by the 87-byte attr table — `$413F` is
+ChopClown's and Grendal's attr bytes. The S34 note even said the write "lands in
+the attr-table region … not a free slot", and shipped it anyway.
+**Fix**: nothing is written there any more; `NewAttrHandler` (already the first
+thing both bank-$11 entries run) rewrites HRAM `$C7` to a DONOR species' index,
+so the lookup reads the donor's own pointer. PyBoy: ChopClown / Grendal OAM attrs
+back to vanilla, Gorbunok's follower OAM identical before/after.
+**Rule**: before writing an index that lies past a table's real count, name the
+table and the INDEX that owns those bytes. If it is someone else's data, redirect
+the READ (index or pointer), never write the slot.
+
+### Engine code that names project content by number breaks every other project
+**Symptom** (measured S105): in the user's project, casting Anchor soft-locked
+the game — a script stayed active (counter stuck at 8) and the player could not
+move; no dialog appeared.
+**Root cause**: bank $72 (hand engine code, in every build) armed script type
+`$71` / ids 2-5 = the EXAMPLE project's medal_vault room. The user's project has
+no room `$71`, so `CustomScriptRead` indexed past its master table and ran
+garbage. The S73 doc had flagged "that constant must follow" — for the example
+only.
+**Fix**: the skill's dialogs ship with the compiler (`editor2/core/
+skill_scripts.json`, script type `$FF` → `SkillScriptPtrTable` in every build).
+**Rule**: hand/engine code may reference only data that is built into EVERY
+build. If a feature needs content, ship the content with the engine (or make it
+project data with a validator) — never a custom mapID / script index / text id.
+
+### Growing an enum: grep the old count in every range check
+**Symptom**: the gamedata shadow validator missed a special recipe shadowed by
+an earlier `[Spirit × …]` entry.
+**Root cause**: S104 made Spirit family 10 (code `$FA`), but `Gamedata.fam_code`
+kept `f <= 9`, so a Spirit species had "no family" for the checks — while the
+game's scanners convert it to `$FA`.
+**Fix**: `f <= 10`; test_compiler proves the old code misses the case and the new
+code catches it.
+**Rule**: when an enumeration grows (families 10 → 11), grep for the old bound
+in every form (`<= 9`, `< 10`, `cp $0a`, `range(10)`) across code AND tools.
+
+### A compiler's output folder is an overlay — delete what it no longer writes
+**Symptom** (S105 G3): after the follower-fork regions of banks $09/$0B/$18/$59
+were retired, the example build still assembled the OLD forks (threshold 224,
+one-entry tables) — only four of the eight forks changed in the ROM diff.
+**Root cause**: `builder.build_rom` copies EVERY file in `<out>/patches` over
+`patches/`; `write_outputs` only wrote files, so a bank the compiler used to
+emit stayed in the build folder and silently replaced the hand overlay. A user
+project's build folder would have done the same after an editor update.
+**Fix**: `compiler.write_outputs` deletes files in `<out>/patches` that the
+current build does not generate.
+**Rule**: any generated-files directory that is layered over sources must be
+rewritten as a WHOLE (stale files removed), and a ROM diff after retiring an
+output must show every site you expected to change.
+
+### Fixed-count padding blocks region growth
+**Symptom** (S105 G3): a 3-species project failed to assemble — bank $12 "grew
+too big" — though the bank had 714 free bytes.
+**Root cause**: the free bytes were 714 literal `nop` lines at the end of the
+file; the compiler region `gd_library_grouping` above them grows by one byte
+per new species, and the fixed nop count pushed the section past $8000.
+**Fix**: `ds $8000 - @, $00` (identical bytes), and a 19-species build in
+test_compiler --rom proves every bank still fits.
+**Rule**: after a compiler-owned region that can grow, pad with `ds <end> - @`,
+never a counted run; test the maximum configuration, not only the example.
+
+### Test fork semantics by running the ROM's own bytes
+**Rule** (S105 G3): for small straight-line forks, a 40-opcode SM83 subset
+(`MiniSM83` in test_compiler) that executes the BUILT ROM over every input id
+catches threshold / base / table-address mistakes that byte diffs and one-id
+PyBoy runs miss (mutation check: changing one fork's `cp $da` back to `$e0`
+fails ids 221-223 exactly). PyBoy then proves the UI paths end to end.
+
+### Audit tables inherit their author's mislabels
+**Symptom**: `tools/map_species_slots.py` lists four "top-range special-case
+gates" for ids 221/222/223 (bank $5F clears for 221/223, $57/$58 special-case
+221) — which would have made 221-223 unusable for new species.
+**Root cause**: all four ladders compare `$db8a` / `GetPresentId`, a SKILL id
+(S31 had already said so in MONSTER_DATA N6; the tool's labels were never
+updated).
+**Rule**: before trusting a "gate" list, read what register/RAM the compare
+actually tests.

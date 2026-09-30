@@ -1,4 +1,5 @@
 {
+  "_status": "HISTORICAL (S105, ROADMAP P3.9b): superseded by project.json custom.species (editor2/core/species.py; the example project carries this species). Nothing in the build reads this file any more; tools/build_new_species.py --check still validates it.",
   "_generator": "tools/build_new_species.py (ROM data/DWM-original.gbc)",
   "_format": "Phase N (Stage 1) new-species authoring. Each entry: id>=224 (first free $E0), info cloned from a base species with field overrides; enemy-stats cloned from a base EID; encounter-pool insertions; battle sprite/palette. Tool emits patches/bank_06a.asm (high info table + far-copy routine) and validates a byte-exact round-trip against the authored values.",
   "first_free_id": 224,

@@ -1,0 +1,176 @@
+{
+ "_doc": [
+  "S105 (ROADMAP P3.9b; PROJECT_COMPILER \u00a72.22): the custom SKILLS' own dialog",
+  "scripts + texts. The compiler emits them into EVERY build (bank $60",
+  "SkillScriptPtrTable, script type $FF \u2014 templates/bank_060_head.asm",
+  "CustomScriptRead) after the project's own dialogue, so a field-cast skill",
+  "works in a project with no custom rooms. The script ORDER gives the id the",
+  "skill arms, from id 2 (0/1 are a no-op: 0 = 'the player' in bank $04",
+  "CheckPendingNPC): Anchor (bank $72 AnchorField14Tail) arms 2-5. Ids start",
+  "with 'skill:' and are reserved (a project may not define them). Moved",
+  "verbatim from the example project's medal_vault room ($71, scripts 2-5, S73)",
+  "\u2014 P3.11c makes them editable project data."
+ ],
+ "scripts": [
+  {
+   "id": "skill:anchor_gate_confirm",
+   "comment": "[skill script 2] Armed by bank $72 AnchorField14Tail after the menu closes on a standard maze floor. YES: arm=1 (commit hook snapshots gate+floor), $D92B=6 + warp to Castle (14,5) = the WarpWing recipe verbatim. NO: end.",
+   "ops": [
+    [
+     "op",
+     "init_dialog"
+    ],
+    [
+     "text",
+     "skill:anchor_gate_ask"
+    ],
+    [
+     "op",
+     "check_and_branch",
+     "0xC83C",
+     "0x0001",
+     "@no"
+    ],
+    [
+     "op",
+     "write_ram",
+     "0xDEB2",
+     "0x0001"
+    ],
+    [
+     "op",
+     "write_ram",
+     "0xD92B",
+     "0x0006"
+    ],
+    [
+     "op",
+     "map_transition",
+     "0x0000",
+     "0x00E8",
+     "0x0058"
+    ],
+    [
+     "end"
+    ],
+    "label:no",
+    [
+     "end"
+    ]
+   ]
+  },
+  {
+   "id": "skill:anchor_return_confirm",
+   "comment": "[skill script 3] Armed in town with an anchor stored. YES: arm=2 (commit hook installs wGateID/wCurrentFloor-1, charges 3/4 current MP on arrival, clears the anchor, arm->3 forces the standard maze in GateDecisionFork), then a staircase-style warp (flag $80; spawn ignored, the maze placement pass positions the player). NO: end.",
+   "ops": [
+    [
+     "op",
+     "init_dialog"
+    ],
+    [
+     "text",
+     "skill:anchor_return_ask"
+    ],
+    [
+     "op",
+     "check_and_branch",
+     "0xC83C",
+     "0x0001",
+     "@no"
+    ],
+    [
+     "op",
+     "write_ram",
+     "0xDEB2",
+     "0x0002"
+    ],
+    [
+     "op",
+     "map_transition",
+     "0x8000",
+     "0x0000",
+     "0x0000"
+    ],
+    [
+     "end"
+    ],
+    "label:no",
+    [
+     "end"
+    ]
+   ]
+  },
+  {
+   "id": "skill:anchor_err_special",
+   "comment": "[skill script 4] Anchor cast in a gate-like non-maze room (special/boss/custom).",
+   "ops": [
+    [
+     "op",
+     "init_dialog"
+    ],
+    [
+     "text",
+     "skill:anchor_err_special"
+    ],
+    [
+     "end"
+    ]
+   ]
+  },
+  {
+   "id": "skill:anchor_err_none",
+   "comment": "[skill script 5] Anchor cast in town with no anchor stored (wAnchorFloor==0).",
+   "ops": [
+    [
+     "op",
+     "init_dialog"
+    ],
+    [
+     "text",
+     "skill:anchor_err_none"
+    ],
+    [
+     "end"
+    ]
+   ]
+  }
+ ],
+ "dialogue": [
+  {
+   "id": "skill:anchor_gate_ask",
+   "lines": [
+    "Set an anchor",
+    "here and warp",
+    "to GreatTree?"
+   ],
+   "choice": true,
+   "comment": "[S73] Anchor gate-side confirm [Y/N]"
+  },
+  {
+   "id": "skill:anchor_return_ask",
+   "lines": [
+    "Spend most MP",
+    "to return to the",
+    "anchored floor?"
+   ],
+   "choice": true,
+   "comment": "[S73] Anchor return confirm [Y/N] \u2014 charge lands on arrival"
+  },
+  {
+   "id": "skill:anchor_err_special",
+   "lines": [
+    "The anchor",
+    "fails here!"
+   ],
+   "comment": "[S73] cast in a special/boss/custom gate room"
+  },
+  {
+   "id": "skill:anchor_err_none",
+   "lines": [
+    "No anchor",
+    "is set!"
+   ],
+   "comment": "[S73] cast in town with no stored anchor"
+  }
+ ]
+}

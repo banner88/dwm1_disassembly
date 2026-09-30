@@ -1,5 +1,67 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-09-29 (Session 103 — **ROADMAP P3.9: LAYER A-LITE —
+> THE VANILLA DATA TABLES BEHIND project.json `gamedata`** (user: P3.3g "No
+> fuck this. Bank and come back later if tiles become a problem … Move on to
+> next editor item" → P3.3g BANKED with its S103 static audit in ROADMAP;
+> then "Sure lets do 3.9 and if its ends up very fast lets do P3.7b part 2
+> also" — P3.9 was not fast, P3.7b part 2 not started). S102 not re-confirmed
+> this session. **Built S103; USER-CONFIRMED 2026-09-30 (test ROM: "Rom - all
+> correct").** Verifier PASS 6/6 (check
+> 5 also runs `extract_gamedata.py --selftest`; PATCH_FILES + the new hand
+> patch `bank_013.asm`); clean `1ca6579…` byte-perfect (bank $04D recipe-string
+> block and bank $01 `EncounterChancePercent` re-sectioned, bank $01 encounter
+> code annotated — both trees); **patched pin MOVED `0d60486e…` → `5d1dbc5f…`
+> (patched)**; test_compiler --rom 227/227; test_app --rom PASS (GUI build ==
+> pin); test_canvas --rom PASS. `EDITOR_REVISION` = 'S103'.
+>
+> **What changed (PROJECT_COMPILER §2.20):** `gamedata` is implemented as
+> SPARSE overrides — `monsters`, `enemies` (EIDs 0-486), `encounters`,
+> `skills` (mp / learn / record), `exp_curves`, `growth_curves`,
+> `breeding.family` / `.special`, `boss_joins` — emitted into twelve same-size
+> compiler regions in banks $01/$03/$06/$07/$12/$13/$14/$16/$4D/$54/$69 from
+> the committed vanilla base `extracted/gamedata_vanilla.json`
+> (`tools/extract_gamedata.py`); an empty `gamedata` == the ROM, table by
+> table (test_compiler; `--rom` against the original ROM). The compiler keeps
+> coherence: library recipe TEXT regenerated **in place** (the bank $4D mode
+> table overlaps the recipe pointers — TEXT_SYSTEM correction), library tabs
+> regrouped from the family bytes, Set 2 / Set 3 warnings, the B5 shadow
+> validator ported. The pre-S103 hand edits (Spirit Dracky / Darkdrium, starter
+> EID 1 harness, Gorbunok pool 0, B4 recipes, B5 overrides + appends) are now
+> the **example project's `gamedata`** — byte-identical, except that its 4 B4
+> recipe strings now match (17 B in bank $4D). Tool emit paths that wrote these
+> bytes are retired (KEY_LESSONS S103).
+>
+> **Decoded (DATA_STRUCTURES "Encounter pool entry"; annotated bank $01):**
+> pool +0 rate code → wC8A9, +2..+4 chance of 1/2/3 monsters, +5..+9 slot
+> chances (codes → `EncounterChancePercent` $01:$69C0 = 0-100 %), +20..+24
+> **max count** per slot (1 = only alone; NOT a weight), +25 maze size → $C93D.
+> **Measured freeze:** a pool that can draw 2 monsters whose first draw has max
+> 0 and no slot allowed twice re-draws forever (28,257 passes, no battle) — the
+> compiler refuses it.
+>
+> **PyBoy on the user's save** (their project + the example's gamedata + demo
+> edits = `DWM_S103_gamedata_test.gbc`, patched, md5 `1dbae0a5…`): Gate of
+> Beginning = always one Slime; its battle row `$DA18` = the edited EID 2
+> (HP 250, ATK 1, 500 exp, always joins) → 167 exp to each of 3, the Slime
+> joins; HealMore USE MP 1 (5 on the same project without the demo edits);
+> Snaily's encyclopedia page reads "Zombie family / Zombie family"; the Dragon
+> tab lists 26 (Slime moved in), the Slime tab 20. The user's project WITHOUT
+> gamedata now builds the vanilla tables (the POC edits are no longer
+> inherited).
+>
+> **User sign-off 2026-09-30 12:53: "Rom - all correct"** (test ROM passed).
+> Decisions: "Start off hack with original table. patches are POC trash" (the
+> user's project keeps NO gamedata = vanilla tables); "Please do not include any
+> patches in the editor, they are all trash (in terms of custom monsters, custom
+> rooms, etc. The mechanisms are obviously vital)" → ROADMAP **P3.9b** (purge
+> POC content from the hand overlay, keep the mechanisms); "I still want the
+> FAMILY [Spirit], but for now no monsters assigned … assign to families …
+> propagates to breeding … a new sprite for the spirit family" → ROADMAP
+> **P3.10a** (Spirit as a first-class 11th family). Both audited (read-only)
+> S103; not started. **Hand-off: all S103 work = the diff against `f2d9ece`
+> (origin/master), delivered as `DWM-S103-gamedata-changed-files.zip`.**
+
 > Last verified: 2026-09-28 (Session 102 — **ROADMAP P3.3f: OWN ANIMATED
 > TILES, FROM SCRATCH — any tile, drawn frames, any speed, a plain budget**
 > (user: "CAN I animate more than a single tile? … If I animate 1 it stops

@@ -14,7 +14,8 @@ Sections (all keys are ids as strings; `_`-prefixed keys are comments):
                MonsterInfoTable $03:$4461 (MONSTER_DATA "Monster Info Table")
   enemies      {"1": {"mp": 100, "skills": [233, 229, 228, 9]}}
                EnemyStatsTable $14:$4C1D, EIDs 0-486 (MONSTER_DATA "Enemy Stats")
-  encounters   {"0": {"slot_chance": [1,1,1,6,0], "eids": [2,4,3,518,0]}}
+  encounters   {"0": {"slot_chance": [1,1,1,6,0], "eids": [2,4,3,"gorbunok_wild",0]}}
+               (an EID number, or a progression.enemies id — S105)
                EncounterPoolData $01:$6AAE (DATA_STRUCTURES "Encounter pool entry")
   skills       {"43": {"mp": 3, "learn": {"level": 2}, "record": {"party_min": 40}}}
                SkillMPCostTable $07:$570C / SkillLearnReqTable $06:$50E0 (ids
@@ -55,7 +56,7 @@ VOICE_OF = ['A', 'B', 'C', 'B', 'A', 'C', 'C', 'A', 'B', 'D', 'D']   # vanilla +
 VOICE_LABEL = {'A': 'Slime / Plant / Zombie lines', 'B': 'Dragon / Bird / Material lines',
                'C': 'Beast / Bug / Devil lines', 'D': '??? lines'}
 SPIRIT_NAMES_DEFAULT = ['WISP', 'SOUL', 'AURA', 'MIST', 'HALO', 'ECHO', 'GLOW', 'NOVA']
-SPIRIT_NAMES_BYTES = 55      # bank $41 dead fill $7E4F-$7E85 the pool lives in
+SPIRIT_NAMES_BYTES = 40      # bank $41 $7E4F-$7E76 the pool lives in (8 x <= 5 B; S105 G3: was the 55-B fill $7E4F-$7E85, its last 15 B are now ns_text_f)
 NAME_MAX = 4                 # the nickname field is 4 characters
 
 FAMILY_NAMES = ["Slime", "Dragon", "Beast", "Bird", "Plant", "Bug", "Devil",
@@ -77,7 +78,8 @@ STATS = ('hp', 'mp', 'atk', 'def', 'agl', 'int')
 LEARN_ROWS = 218             # $00-$D9; $DA-$DD are bank-$06 code (S100)
 SKILL_COUNT = 222
 VANILLA_EID_MAX = 486
-GORBUNOK_EID = 518           # new_species.json enemy row in the bank-$14 tail
+# S105 (P3.9b): EID 518 (the S30 Gorbunok row in the bank-$14 free tail) is gone;
+# a new species' enemy rows are ordinary project enemies (EID 519+, bank $6B).
 
 # 19-byte skill record (BATTLE_SKILL_SYSTEM §7 "19-byte record field map")
 RECORD_FIELDS = [            # (name, offset, size)
@@ -202,31 +204,7 @@ def monster_names(repo_root):
         names = {m['id']: m['name'] for m in data}
     except Exception:
         names = {}
-    for sid, nm in new_species(repo_root).items():
-        names.setdefault(sid, nm['name'])
     return names
-
-
-def new_species(repo_root):
-    """extracted/new_species.json (Phase N) -> {id: {name, family, eid}}."""
-    try:
-        spec = json.load(open(os.path.join(repo_root, 'extracted', 'new_species.json')))
-    except Exception:
-        return {}
-    v = vanilla(repo_root)
-    info = _rows(v, 'monster_info')
-    out = {}
-    for s in spec.get('species', []):
-        sid = s.get('id')
-        if not isinstance(sid, int):
-            continue
-        inf = s.get('info', {})
-        cf = inf.get('clone_from_species')
-        fam = info[cf][0] if cf is not None else None
-        fam = inf.get('overrides', {}).get('family', fam)
-        out[sid] = {'name': s.get('name', f'species_{sid}'), 'family': fam,
-                    'eid': (s.get('enemy_stats') or {}).get('eid')}
-    return out
 
 
 def skill_names(repo_root):
@@ -285,24 +263,72 @@ def matcher_name(code, names):
 # the effective tables
 # ---------------------------------------------------------------------------
 
+MONSTER_KEYS = ('family', 'level_cap', 'exp_table', 'female_ratio', 'can_fly',
+                'metal_body', 'skills', 'growth', 'resist', 'tier')
+
+
+def apply_monster_fields(r, o, what, extra_keys=()):
+    """Write the named fields of `o` into a 43-byte MonsterInfoTable row `r`
+    (bytearray; MONSTER_DATA "Monster Info Table"). Shared by gamedata.monsters
+    and custom.species[].info (S105). Raises GamedataError."""
+    _check_keys(o, MONSTER_KEYS + tuple(extra_keys), what)
+    if 'family' in o:
+        r[0] = family_index(o['family'], what + '.family')
+    if 'level_cap' in o:
+        r[1] = _range(o['level_cap'], 0, 99, what + '.level_cap')
+    if 'exp_table' in o:
+        r[2] = _range(o['exp_table'], 0, 31, what + '.exp_table')
+    if 'female_ratio' in o:
+        r[3] = _range(o['female_ratio'], 0, 3, what + '.female_ratio')
+    if 'can_fly' in o:
+        r[4] = _range(o['can_fly'], 0, 1, what + '.can_fly')
+    if 'metal_body' in o:
+        r[5] = _range(o['metal_body'], 0, 1, what + '.metal_body')
+    if 'skills' in o:
+        r[6:9] = bytes(_list(o['skills'], 3, 0, 255, what + '.skills'))
+    if 'growth' in o:
+        g = o['growth']
+        _check_keys(g, STATS, what + '.growth')
+        for i, s in enumerate(STATS):
+            if s in g:
+                # indices > 31 index bank-$13 code (MONSTER_DATA "Growth curves")
+                r[9 + i] = _range(g[s], 0, 31, f"{what}.growth.{s}")
+    if 'resist' in o:
+        rs = o['resist']
+        if isinstance(rs, list):
+            r[15:42] = bytes(_list(rs, 27, 0, 3, what + '.resist'))
+        else:
+            _check_keys(rs, RESIST_NAMES, what + '.resist')
+            for i, n in enumerate(RESIST_NAMES):
+                if n in rs:
+                    r[15 + i] = _range(rs[n], 0, 3, f"{what}.resist.{n}")
+    if 'tier' in o:
+        r[42] = _range(o['tier'], 0, 7, what + '.tier')
+
+
 class Gamedata:
     """Vanilla tables + a project's `gamedata` overrides, resolved once.
 
     Attributes after __init__: rows per table (bytearrays), `edited` sets per
     table, `warnings`. Raises GamedataError on invalid data."""
 
-    def __init__(self, gd, repo_root, project_enemy_eids=(), new_eids=None):
+    def __init__(self, gd, repo_root, project_enemy_eids=(), new_species=None,
+                 enemy_ids=None):
+        """new_species: the project's custom.species, {id: {'name', 'family'}}
+        (S105 — was extracted/new_species.json). enemy_ids: {progression.enemies
+        id: EID}, so encounter pools may name a project enemy instead of its
+        number."""
         self.repo = repo_root
         self.v = vanilla(repo_root)
         self.gd = gd or {}
         self.warnings = []
         self.names = monster_names(repo_root)
         self.snames = skill_names(repo_root)
-        self.new_species = new_species(repo_root)
+        self.new_species = dict(new_species or {})
+        for sid, s in self.new_species.items():
+            self.names.setdefault(sid, s['name'])
+        self.enemy_ids = dict(enemy_ids or {})
         self.valid_eids = set(range(0, VANILLA_EID_MAX + 1)) | set(project_enemy_eids)
-        for s in self.new_species.values():
-            if isinstance(s.get('eid'), int):
-                self.valid_eids.add(s['eid'])
         _check_keys(self.gd, SECTIONS, 'gamedata')
         self.monster = _rows(self.v, 'monster_info')
         self.enemy = _rows(self.v, 'enemy_stats')
@@ -331,49 +357,15 @@ class Gamedata:
 
     # -- monsters -------------------------------------------------------
     def _monsters(self):
-        keys = ('family', 'level_cap', 'exp_table', 'female_ratio', 'can_fly',
-                'metal_body', 'skills', 'growth', 'resist', 'tier')
         for sid, o in _key_ids(self.gd.get('monsters'), 'monsters', 0, 220):
             what = f"gamedata.monsters.{sid}"
-            _check_keys(o, keys, what)
             r = self.monster[sid]
             before = bytes(r)
-            if 'family' in o:
-                f = family_index(o['family'], what + '.family')
-                if sid in PROTECTED_SPECIES and f != r[0]:
-                    raise GamedataError(f"{what}.family: species {sid} is a protected "
-                                        "combat-only entry (never in the library)")
-                r[0] = f
-            if 'level_cap' in o:
-                r[1] = _range(o['level_cap'], 0, 99, what + '.level_cap')
-            if 'exp_table' in o:
-                r[2] = _range(o['exp_table'], 0, 31, what + '.exp_table')
-            if 'female_ratio' in o:
-                r[3] = _range(o['female_ratio'], 0, 3, what + '.female_ratio')
-            if 'can_fly' in o:
-                r[4] = _range(o['can_fly'], 0, 1, what + '.can_fly')
-            if 'metal_body' in o:
-                r[5] = _range(o['metal_body'], 0, 1, what + '.metal_body')
-            if 'skills' in o:
-                r[6:9] = bytes(_list(o['skills'], 3, 0, 255, what + '.skills'))
-            if 'growth' in o:
-                g = o['growth']
-                _check_keys(g, STATS, what + '.growth')
-                for i, s in enumerate(STATS):
-                    if s in g:
-                        # indices > 31 index bank-$13 code (MONSTER_DATA "Growth curves")
-                        r[9 + i] = _range(g[s], 0, 31, f"{what}.growth.{s}")
-            if 'resist' in o:
-                rs = o['resist']
-                if isinstance(rs, list):
-                    r[15:42] = bytes(_list(rs, 27, 0, 3, what + '.resist'))
-                else:
-                    _check_keys(rs, RESIST_NAMES, what + '.resist')
-                    for i, n in enumerate(RESIST_NAMES):
-                        if n in rs:
-                            r[15 + i] = _range(rs[n], 0, 3, f"{what}.resist.{n}")
-            if 'tier' in o:
-                r[42] = _range(o['tier'], 0, 7, what + '.tier')
+            if 'family' in o and sid in PROTECTED_SPECIES and \
+                    family_index(o['family'], what + '.family') != r[0]:
+                raise GamedataError(f"{what}.family: species {sid} is a protected "
+                                    "combat-only entry (never in the library)")
+            apply_monster_fields(r, o, what)
             if bytes(r) != before:
                 self.edited['monster'].add(sid)
             if sid in PROTECTED_SPECIES:
@@ -450,13 +442,26 @@ class Gamedata:
             if 'slot_chance' in o:
                 r[5:10] = bytes(_list(o['slot_chance'], 5, 0, 7, what + '.slot_chance'))
             if 'eids' in o:
-                e = _list(o['eids'], 5, 0, 0xFFFF, what + '.eids')
+                raw = o['eids']
+                if not isinstance(raw, list) or len(raw) != 5:
+                    raise GamedataError(f"{what}.eids: must be a list of 5")
+                # S105: a slot may name a progression.enemies id (its EID is
+                # assigned by the compiler: 519 + position)
+                for i, x in enumerate(raw):
+                    if isinstance(x, str) and x not in self.enemy_ids and \
+                            not re.match(r'^(\$|0x)?[0-9A-Fa-f]+$', x):
+                        raise GamedataError(
+                            f"{what}.eids[{i}] = {x!r}: no such enemy row — not a "
+                            "progression.enemies id of this project")
+                e = [self.enemy_ids[x] if isinstance(x, str) and x in self.enemy_ids
+                     else x for x in raw]
+                e = _list(e, 5, 0, 0xFFFF, what + '.eids')
                 for i, x in enumerate(e):
                     if x and x not in self.valid_eids:
                         raise GamedataError(
-                            f"{what}.eids[{i}] = {x}: no such enemy row (0-486, a "
-                            "declared new species' EID, or a project enemy >= 519; "
-                            "487-517 are code)")
+                            f"{what}.eids[{i}] = {raw[i]!r}: no such enemy row "
+                            "(0-486, or a project enemy — its progression.enemies "
+                            "id or EID >= 519; 487-518 are code / free space)")
                     _put16(r, 10 + 2 * i, x)
             if 'max_count' in o:
                 r[20:25] = bytes(_list(o['max_count'], 5, 0, 3, what + '.max_count'))
@@ -594,7 +599,10 @@ class Gamedata:
             f = self.new_species[sp]['family']
         else:
             return None
-        return 0xF0 + f if f is not None and f <= 9 else None
+        # S105: family 10 (Spirit) is code $FA — the breeding scanners convert a
+        # parent to $F0 + family (BREEDING_SYSTEM), so a Spirit parent matches a
+        # $FA matcher; S104 stopped at 9 and the shadow checks missed Spirit.
+        return 0xF0 + f if f is not None and f <= 10 else None
 
     def _breeding(self):
         b = self.gd.get('breeding') or {}
@@ -659,7 +667,7 @@ class Gamedata:
             raise GamedataError(f"{what}: an append needs p1, p2, min_plus, result, plus_mod")
         if not (0 <= out[3] <= 220 or out[3] in self.new_species):
             raise GamedataError(f"{what}.result ${out[3]:02X}: not a species 0-220 or "
-                                "a declared new species (extracted/new_species.json)")
+                                "a new species of the project (custom.species)")
         return out
 
     @staticmethod
@@ -962,7 +970,7 @@ def emit_family_recipes(g):
     out = ["; (generated by editor2 `gd_family` from gamedata.breeding.family —",
            ";  222 x [pedigree, mate]; slot = offspring species, $FF,$FF = none)",
            "FamilyRecipeTable:  ; $4974 — indexed species*2 by label16_485c (no bounds",
-           ";  check; ids >= 222 go through FamilyRecipeResolve). See BREEDING_SYSTEM.md."]
+           ";  check; ids >= 221 go through FamilyRecipeResolve, S105 G3 — row 221 is never read). See BREEDING_SYSTEM.md."]
     for i, (a, b) in enumerate(g.family):
         if (a, b) == (0xFF, 0xFF):
             txt = "(no recipe)"
@@ -1042,14 +1050,16 @@ def emit_family_voices(g):
 def emit_spirit_names(g):
     out = ["; (generated by editor2 `gd_spirit_names` from gamedata.families.spirit.names —",
            ";  the Spirit default-name pool, mode-3 ids $A0-$A7 via the dead $4323 words",
-           ";  (bank $6D FamilyDefaultNameId). Fixed 55 B of dead fill: names + zero pad)"]
+           ";  (bank $6D FamilyDefaultNameId). Fixed 40 B: names + zero pad; the old",
+           ";  fill's last 15 B are new-species text extent ns_text_f since S105 G3)"]
     used = 0
     for i, n in enumerate(g.spirit_names):
         b = _name_bytes(n)
         used += len(b)
         out.append(f"SpiritName_{i}:  ; \"{n}\"")
         out.append(_db(b))
-    out.append(_db(bytes(SPIRIT_NAMES_BYTES - used)) + "  ; remaining dead fill")
+    if used < SPIRIT_NAMES_BYTES:
+        out.append(_db(bytes(SPIRIT_NAMES_BYTES - used)) + "  ; zero pad")
     assert used <= SPIRIT_NAMES_BYTES
     return "\n".join(out) + "\n"
 
@@ -1089,7 +1099,9 @@ def emit_library_grouping(g):
     for f, m in groups.items():
         if len(m) > 32:
             raise GamedataError(f"library: family {FAMILY_NAMES[f]} has {len(m)} "
-                                "members > 32 (display buffer $C0D8)")
+                                "members > 32 (the encyclopedia tab's display buffer "
+                                "$C0D8) — give some species (gamedata.monsters / "
+                                "custom.species info.family) another family")
     nav = GRID_ROWS * math.ceil(NUM_FAMILIES / GRID_ROWS)
     out = ["; (generated by editor2 `gd_library` from the effective family bytes:",
            ";  vanilla + gamedata.monsters[].family + new species — B7/B9 grouping)",

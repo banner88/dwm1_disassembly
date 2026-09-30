@@ -95,6 +95,11 @@ label4016:
 ; $FFC7 < $10:  local handler via HramScr_4126 + sprite table
 ; $FFC7 $10-$8F: bank $10 entry 0 (rst $10 → $10:fn0)
 ; $FFC7 >= $90:  bank $11 entry 0 (rst $10 → $11:fn0)
+; For a party FOLLOWER the caller sets $FFC7 = species + $10 (GetActiveMonsterStatus,
+; $01:$4986), so species 0-127 -> bank $10, 128-239 -> bank $11 (index species-$80),
+; and species 240-255 WRAP to $00-$0F -> the local NPC handler: a follower can
+; never be drawn for an id >= 240 (S105; custom.species therefore ends at 239 —
+; editor2/core/species.py).
 ; ---------------------------------------------------------------------------
 NPCInteractDispatch:
 label4081:

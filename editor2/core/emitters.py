@@ -42,6 +42,9 @@ TEMPLATE_SHA = {
 TEMPLATE_SHA_FILE = os.path.join(TEMPLATES, 'PINNED_SHA256')
 
 
+SKILL_SCRIPT_FIRST = 2     # S105: skill script ids 0/1 = no-op (see emit_bank_060)
+
+
 def template(name):
     path = os.path.join(TEMPLATES, name)
     data = open(path, 'rb').read()
@@ -115,6 +118,22 @@ def emit_bank_060(prj, warnings):
                   "    dw $FFFF", ""]
 
     text_names = prj.text_comments()
+    # S105 (P3.9b): the custom skills' own dialog scripts (script type $FF,
+    # id = [wScriptNPCId]; CustomScriptRead's SKILL_SCRIPT_TYPE branch) —
+    # every build has them, rooms or not (editor2/core/skill_scripts.json).
+    # Ids 0/1 are a no-op (0 = "the player" in bank $04 CheckPendingNPC's
+    # $D8DC test), so skill scripts start at id 2 = the values S73 measured.
+    first = SKILL_SCRIPT_FIRST
+    lines.append("SkillScriptPtrTable:   ; script type $FF — custom skills' dialogs")
+    for i in range(first):
+        lines.append(f"    dw SkillScrNoop   ; [{i}] never armed")
+    for i, sc in enumerate(prj.skill_scripts):
+        lines.append(f"    dw SkillScr{first + i:02d}   ; [{first + i}] {sc['id']}")
+    lines += ["SkillScrNoop:", "    dw $FFFF", ""]
+    for i, sc in enumerate(prj.skill_scripts):
+        lines += S.emit_script(f"SkillScr{first + i:02d}", prj.script(sc['id'])['ops'],
+                               text_names=text_names, warnings=warnings)
+        lines.append("")
     for r in rooms:
         if r.get('placeholder') or r.get('scripts_placement') == 'inline':
             continue
@@ -1044,6 +1063,14 @@ def _gd(fn, *a):
     return emit
 
 
+def _sp(fn):
+    def emit(prj, warnings):
+        from . import species as SP
+        return getattr(SP, fn)(prj, warnings)
+    emit.__name__ = f"emit_{fn}"
+    return emit
+
+
 REGISTRY = [
     # (name, schema_section, target, function, owned_banks)
     ("rooms60", "custom.rooms", "file:patches/bank_060.asm",
@@ -1105,4 +1132,18 @@ REGISTRY = [
      "region:patches/bank_06d.asm#gd_family_voices", _gd('emit_family_voices'), [0x6D]),
     ("gd_spirit_names", "gamedata.families.spirit.names",
      "region:patches/bank_041.asm#gd_spirit_names", _gd('emit_spirit_names'), [0x41]),
+    # S105 (P3.9b): NEW species are project data (editor2/core/species.py,
+    # PROJECT_COMPILER §2.21) — bank $7E art streams + the ns_* regions the
+    # new-species forks read; empty custom.species == the original ROM bytes.
+    ("species7e", "custom.species", "file:patches/bank_07e.asm",
+     _sp('emit_bank_07e'), [0x7E]),
 ]
+
+
+def _species_regions():
+    from . import species as SP
+    return [(name, "custom.species", f"region:{path}#{name}", fn, [bank])
+            for name, path, fn, bank in SP.REGIONS]
+
+
+REGISTRY += _species_regions()

@@ -11620,23 +11620,17 @@ FollowerArtResolve09:
     jr c, .normal                    ; h==0 -> HL<$100 (species<128)
     jr nz, .high                     ; h>=2 -> HL>=$200 (species>=240)
     ld a, l
-    cp $e0
-    jr c, .normal                    ; HL<$1E0 -> species<224
-.high:                               ; species>=224: HL = NewFollowerGfxTable09 + (species-224)*2
-    ld a, l
-    add LOW(NewFollowerGfxTable09 - $1E0)
-    ld l, a
-    ld a, h
-    adc HIGH(NewFollowerGfxTable09 - $1E0)
-    ld h, a
+    cp $da
+    jr c, .normal                    ; HL<$1DA -> species<221
+.high:                               ; species 221-239: the gfx-ID is COMPUTED (S105 G3)
+    ld a, l                          ; L = low byte of (species+$10)*2
+    sub $da                          ; = (species-221)*2 = the follower's index in bank $7E
+    ld [wNewSpeciesGid], a
+    ld a, $7e                        ; overflow bank $7E (compiler bank species7e)
+    ld [wNewSpeciesGid+1], a
+    ld hl, wNewSpeciesGid            ; caller reads the word at HL (DE is dead here)
     ret
 .normal:
-    ld a, l
-    add LOW(FieldPtrLookupTable)
-    ld l, a
-    ld a, h
-    adc HIGH(FieldPtrLookupTable)
-    ld h, a
+    ld de, FieldPtrLookupTable
+    add hl, de
     ret
-NewFollowerGfxTable09:
-    dw $7E00                         ; id 224: blue-dragon follower art (bank $7e, index 0)

@@ -95,13 +95,14 @@ class SpritePicker(QDialog):
     ROOM_DATA_FORMAT "Monster NPCs"). `value` = sprite id (int) or
     ('monster', species)."""
 
-    def __init__(self, current=None, parent=None, monsters=True):
+    def __init__(self, current=None, parent=None, monsters=True, project_data=None):
         super().__init__(parent)
         from PySide6.QtWidgets import QLineEdit, QTabWidget
         from editor2.app.rooms.canvas import SpriteCache
         self.setWindowTitle('NPC sprite')
         self.resize(620, 560)
         self.value = current
+        self.project_data = project_data      # S105: the project's new species
         self.cat = load_catalog()
         v = QVBoxLayout(self)
         self.tabs = QTabWidget()
@@ -185,7 +186,7 @@ class SpritePicker(QDialog):
         g.setSpacing(2)
         flt = self.mfilter.text().strip().lower()
         n = 0
-        for sp, name in MonsterCache.species():
+        for sp, name in MonsterCache.species(self.project_data):
             if flt and flt not in name.lower():
                 continue
             b = QToolButton()

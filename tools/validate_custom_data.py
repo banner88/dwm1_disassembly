@@ -15,10 +15,14 @@ data can produce a crashy patched ROM while assembling cleanly:
      without it, any monster at the required level stat-learns the custom
      skill through the never-exercised code-2 display path.
 
-2. REPLACEMENT BATTLE-SPRITE STREAMS (patches/bank_036.asm redirects):
+2. REPLACEMENT BATTLE-SPRITE STREAMS (bank $36 pointer-table redirects):
    - every redirected pointer-table entry must decode via dwm.sprite_codec
      to EXACTLY the tile count of the stream it replaces. A short/long
      decode means the loader over/under-reads in some consumer context.
+   - S105 (P3.9b): the only redirect ever made (the S21 Dracky -> "Clam"
+     battle-sprite POC, entry 39) was purged with patches/bank_036.asm, so
+     today every entry equals the original and the check is a guard for
+     future redirects.
 
 Usage:
   python3 tools/validate_custom_data.py --rom <patched.gbc>   # full check

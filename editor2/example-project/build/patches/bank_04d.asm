@@ -489,7 +489,7 @@ SECTION "ROM Bank $04d", ROMX[$4000], BANK[$4d]
     dw $76F6                          ; Entry 475
 
 SetB4d_43b9:
-    jp HighDetailTextFork   ; FORK: species>=224 use custom mode-table (byte-neutral 3+4)
+    jp HighDetailTextFork   ; FORK: species 221-239 use custom mode-table (byte-neutral 3+4)
     nop
     nop
     nop
@@ -9275,17 +9275,17 @@ jr_04d_767e:
     ldh a, [rP1]
 
 ; =============================================================================
-; HighDetailTextFork — encyclopedia DETAIL text for NEW species (id>=224).
+; HighDetailTextFork — encyclopedia DETAIL text for NEW species (ids 221-239; S105 G3, was 224).
 ; Vanilla mode-1 (line-2 description) pointer table at $420b is only 215 entries
 ; (0-214); species 224 overshoots into routine code at $43CB, reading $0609 and
 ; rendering ROM0 code as text forever (the WaitScreenUpdateDone freeze). For
-; id>=224 we swap the $4007 mode-table for a custom one whose mode-1 base is set
+; id>=221 we swap the $4007 mode-table for a custom one whose mode-1 base is set
 ; so [base + id*2] lands on a valid description pointer. Modes 0/2-7 keep vanilla
 ; bases (their tables are 256 entries, no overshoot).
 ; =============================================================================
 HighDetailTextFork:
     ld a, [$c823]                 ; species id
-    cp $e0                        ; >= 224 ?
+    cp $dd                        ; >= 221 ?
     jr nc, .high
     ld de, $4007                  ; vanilla mode-table
     jr .go
@@ -9296,25 +9296,61 @@ HighDetailTextFork:
     ret
 
 HighModeTable4D:
-    dw HighMode0Ptrs - $01C0      ; mode0 (line1 lineage/recipe) base: [base+224*2]=HighMode0Ptrs (was $400b -> shared "?????" @ $53C4)
-    dw HighLine2Ptrs - $01C0      ; mode1 (line2) base: [base + 224*2] = HighLine2Ptrs
+    dw HighMode0Ptrs - $01BA      ; mode0 (line1 lineage/recipe) base: [base+221*2]=HighMode0Ptrs (was $400b -> shared "?????" @ $53C4)
+    dw HighLine2Ptrs - $01BA      ; mode1 (line2) base: [base + 221*2] = HighLine2Ptrs
     dw $43ce, $43e1, $43f4, $4407, $441a, $442d   ; modes 2-7 vanilla
 
-HighLine2Ptrs:                    ; per-high-species line-2 description pointers (id 224+)
-    dw $60bc                      ; id 224 (Gorbunok): Dracky's description (valid placeholder)
-
-HighMode0Ptrs:                    ; per-high-species line-1 lineage/recipe pointers (id 224+)
-    dw GorbunokRecipeLine         ; id 224 (Gorbunok): "Snaily   BattleRex"
-
-; Phase N: lineage/recipe line-1 string for new species. mode-0[224] in the vanilla
-; $400b table (reached via bank $4d entry 2 -> entry 0 -> HighDetailTextFork) shared
-; the "?????    ?????" placeholder @ $53C4 (slots 220/224/225). Now repointed via
-; HighMode0Ptrs above. Format = TWO 9-char fields (matches vanilla recipes, e.g.
-; slot 200 "Servant  GreatDrak", slot 214 "DeathMoreWatabou"): parent1 padded to 9,
-; parent2 (to 9 or term), $F0. Names verified against MonsterNamePtrTable ($41:$4339).
-GorbunokRecipeLine:               ; "Snaily   BattleRex"  (Snaily=sp4, BattleRex=sp42)
-    db $36, $4b, $3e, $46, $49, $56, $62, $62, $62   ; "Snaily" + 3 spaces  (field 1 = 9)
-    db $25, $3e, $51, $51, $49, $42, $35, $42, $55   ; "BattleRex"          (field 2 = 9)
-    db $f0                                            ; terminator
+; S105 (P3.9b; G3: 19 ids 221-239): the per-new-species pointer words (2 x 19) + recipe lines are the
+; compiler region ns_detail_text (project.json custom.species; editor2/core/
+; species.py). Line 2 = the description of `description_from`'s species; line 1
+; = "Parent1  Parent2" derived from the first special breeding entry producing
+; the species (the vanilla recipe format: two 9-char fields — e.g. slot 200
+; "Servant  GreatDrak"), or the vanilla "?????" line $53C4 when nothing breeds
+; it. An undeclared id = the vanilla words ($60BC-style description of species 0 / "?????"); no species
+; at all = the same (never read: nothing can hold an undeclared id).
+; @BUILD_PROJECT BEGIN ns_detail_text
+HighLine2Ptrs:                    ; line 2 (description) pointers, ids 221-239
+    dw $53C4   ; [221] (none)
+    dw $53C4   ; [222] (none)
+    dw $53C4   ; [223] (none)
+    dw $60BC   ; [224] Gorbunok: species 78's description
+    dw $53C4   ; [225] (none)
+    dw $53C4   ; [226] (none)
+    dw $53C4   ; [227] (none)
+    dw $53C4   ; [228] (none)
+    dw $53C4   ; [229] (none)
+    dw $53C4   ; [230] (none)
+    dw $53C4   ; [231] (none)
+    dw $53C4   ; [232] (none)
+    dw $53C4   ; [233] (none)
+    dw $53C4   ; [234] (none)
+    dw $53C4   ; [235] (none)
+    dw $53C4   ; [236] (none)
+    dw $53C4   ; [237] (none)
+    dw $53C4   ; [238] (none)
+    dw $53C4   ; [239] (none)
+HighMode0Ptrs:                    ; line 1 (recipe) pointers, ids 221-239
+    dw $53C4   ; [221] (none)
+    dw $53C4   ; [222] (none)
+    dw $53C4   ; [223] (none)
+    dw NewSpeciesRecipeLine_224
+    dw $53C4   ; [225] (none)
+    dw $53C4   ; [226] (none)
+    dw $53C4   ; [227] (none)
+    dw $53C4   ; [228] (none)
+    dw $53C4   ; [229] (none)
+    dw $53C4   ; [230] (none)
+    dw $53C4   ; [231] (none)
+    dw $53C4   ; [232] (none)
+    dw $53C4   ; [233] (none)
+    dw $53C4   ; [234] (none)
+    dw $53C4   ; [235] (none)
+    dw $53C4   ; [236] (none)
+    dw $53C4   ; [237] (none)
+    dw $53C4   ; [238] (none)
+    dw $53C4   ; [239] (none)
+NewSpeciesRecipeLine_224:   ; derived from the first special entry breeding 224
+    db $36, $4B, $3E, $46, $49, $56, $62, $62, $62, $25, $3E, $51, $51, $49, $42, $35, $42, $55, $F0
+; @BUILD_PROJECT END ns_detail_text
 
     ds $8000 - @, $00             ; pad remainder of bank with $00 (byte-exact)

@@ -23,6 +23,7 @@
   "palettes": [],
   "dialogue": [],
   "scripts": [],
+  "species": [],
   "music": {
    "libraries": [
     "extracted/dwm2_song_library.json",

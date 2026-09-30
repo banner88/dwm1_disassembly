@@ -917,7 +917,7 @@ lists all triggers globally; the room inspector lists the local ones.
 
 ### 5.2 Monsters tab
 
-Species list: 221 vanilla + custom (224+; Gorbunok proven end-to-end).
+Species list: 221 vanilla + custom (ids 221-239, S105 G3; Gorbunok proven end-to-end).
 Per species — every knob is a decoded, proven surface:
 - **Stats & growth** (info table `$03:$4461` 43 B rows; enemy-stats
   `$14:$4C1D` 25 B rows), family, joinability, exp — vanilla edits ship
@@ -955,8 +955,19 @@ Per species — every knob is a decoded, proven surface:
   `MonsterBattlePalettes` path is the prime suspect), fix the constant.
   Logged in PROJECT_STATE Open defects.
 - Custom-species creation = the Phase N pipeline behind a "New species"
-  wizard (ids 224+; G3 schema fold is the open box). Capacity meter:
-  slots used / 32.
+  wizard (ids 221-239). Capacity meter: slots used / 19, plus the
+  bank-$41 name budget (292 B, `species.text_layout` says whether the
+  names pack) and bank $7E (16,307 B of art streams).
+- **Backend as built S105 (P3.9b):** `project.json custom.species`
+  (PROJECT_COMPILER §2.21) — name, short name, info (`clone_from` + the
+  `gamedata.monsters` fields), `description_from`, battle art + palette,
+  follower art + `walks_like` (a bank-$11 layout donor 128-214) + palette;
+  the recipe display is derived from the breeding table; enemy rows are
+  project enemies. The wizard writes this section. Capacity (S105 G3):
+  **19**, ids 221-239 — the game's ceiling (followers never work past 239,
+  240+ collide with the breeding family codes). The NPC
+  Monsters picker / Enemies species list already include the project's
+  species (no thumbnail yet: render it from the species' follower art).
 
 ### 5.2a Families tab (as built S104 r2, ROADMAP P3.10a)
 
@@ -1163,8 +1174,8 @@ reserved sprite-overflow order + bank-$60 multi-bank spill A′3 when
 needed); **~128 practical free mapIDs** (`$6B..$EA`, S66 audit) — clones
 included, not a constraint; **flags** = 32 truly-safe vanilla-range +
 **24 KB persistent SRAM banks 1-3** (S69 expansion, USER-TESTED; needs
-the E3 b2 schema before first use); **32 custom species slots**
-(224-255); **quest EIDs** 519+ (12-row tail, extendable by table move);
+the E3 b2 schema before first use); **19 custom species slots**
+(221-239; S105 G3 — 240+ are impossible); **quest EIDs** 519+ (12-row tail, extendable by table move);
 **95 song slots**. Verdict: fork-first is affordable for the whole
 campaign at current scope.
 

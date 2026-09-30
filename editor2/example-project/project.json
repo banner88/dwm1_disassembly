@@ -40,7 +40,7 @@
    }
   },
   "encounters": {
-   "_comment": "Pool 0 (Gate of Beginning): Gorbunok (EID 518, new species 224) in slot 3 at ~70% for testing (Phase N, new_species.json).",
+   "_comment": "Pool 0 (Gate of Beginning): Gorbunok (project enemy gorbunok_wild, new species 224) in slot 3 at ~70% for testing (S105: was EID 518).",
    "0": {
     "slot_chance": [
      1,
@@ -53,7 +53,7 @@
      2,
      4,
      3,
-     518,
+     "gorbunok_wild",
      0
     ],
     "max_count": [
@@ -475,11 +475,7 @@
     },
     "scripts": {
      "0": "entry:medal_vault",
-     "1": "quest:medal_vault",
-     "2": "anchor_gate_confirm",
-     "3": "anchor_return_confirm",
-     "4": "anchor_err_special",
-     "5": "anchor_err_none"
+     "1": "quest:medal_vault"
     },
     "screens": {
      "0": {
@@ -1336,42 +1332,6 @@
      "quiet. The",
      "shinies sleep."
     ]
-   },
-   {
-    "id": "anchor_gate_ask",
-    "lines": [
-     "Set an anchor",
-     "here and warp",
-     "to GreatTree?"
-    ],
-    "choice": true,
-    "comment": "[S73] Anchor gate-side confirm [Y/N]"
-   },
-   {
-    "id": "anchor_return_ask",
-    "lines": [
-     "Spend most MP",
-     "to return to the",
-     "anchored floor?"
-    ],
-    "choice": true,
-    "comment": "[S73] Anchor return confirm [Y/N] \u2014 charge lands on arrival"
-   },
-   {
-    "id": "anchor_err_special",
-    "lines": [
-     "The anchor",
-     "fails here!"
-    ],
-    "comment": "[S73] cast in a special/boss/custom gate room"
-   },
-   {
-    "id": "anchor_err_none",
-    "lines": [
-     "No anchor",
-     "is set!"
-    ],
-    "comment": "[S73] cast in town with no stored anchor"
    }
   ],
   "scripts": [
@@ -1720,128 +1680,6 @@
     "id": "noop_entry",
     "comment": "no-op room-entry script",
     "ops": [
-     [
-      "end"
-     ]
-    ]
-   },
-   {
-    "id": "anchor_gate_confirm",
-    "comment": "[S73] Armed by bank $72 AnchorField14Tail after the menu closes on a standard maze floor. YES: arm=1 (commit hook snapshots gate+floor), $D92B=6 + warp to Castle (14,5) = the WarpWing recipe verbatim. NO: end.",
-    "ops": [
-     [
-      "op",
-      "init_dialog"
-     ],
-     [
-      "text",
-      "anchor_gate_ask"
-     ],
-     [
-      "op",
-      "check_and_branch",
-      "0xC83C",
-      "0x0001",
-      "@no"
-     ],
-     [
-      "op",
-      "write_ram",
-      "0xDEB2",
-      "0x0001"
-     ],
-     [
-      "op",
-      "write_ram",
-      "0xD92B",
-      "0x0006"
-     ],
-     [
-      "op",
-      "map_transition",
-      "0x0000",
-      "0x00E8",
-      "0x0058"
-     ],
-     [
-      "end"
-     ],
-     "label:no",
-     [
-      "end"
-     ]
-    ]
-   },
-   {
-    "id": "anchor_return_confirm",
-    "comment": "[S73] Armed in town with an anchor stored. YES: arm=2 (commit hook installs wGateID/wCurrentFloor-1, charges 3/4 current MP on arrival, clears the anchor, arm->3 forces the standard maze in GateDecisionFork), then a staircase-style warp (flag $80; spawn ignored, the maze placement pass positions the player). NO: end.",
-    "ops": [
-     [
-      "op",
-      "init_dialog"
-     ],
-     [
-      "text",
-      "anchor_return_ask"
-     ],
-     [
-      "op",
-      "check_and_branch",
-      "0xC83C",
-      "0x0001",
-      "@no"
-     ],
-     [
-      "op",
-      "write_ram",
-      "0xDEB2",
-      "0x0002"
-     ],
-     [
-      "op",
-      "map_transition",
-      "0x8000",
-      "0x0000",
-      "0x0000"
-     ],
-     [
-      "end"
-     ],
-     "label:no",
-     [
-      "end"
-     ]
-    ]
-   },
-   {
-    "id": "anchor_err_special",
-    "comment": "[S73] Anchor cast in a gate-like non-maze room (special/boss/custom).",
-    "ops": [
-     [
-      "op",
-      "init_dialog"
-     ],
-     [
-      "text",
-      "anchor_err_special"
-     ],
-     [
-      "end"
-     ]
-    ]
-   },
-   {
-    "id": "anchor_err_none",
-    "comment": "[S73] Anchor cast in town with no anchor stored (wAnchorFloor==0).",
-    "ops": [
-     [
-      "op",
-      "init_dialog"
-     ],
-     [
-      "text",
-      "anchor_err_none"
-     ],
      [
       "end"
      ]
@@ -9988,7 +9826,36 @@
   ],
   "script_preludes": {
    "_doc": "S92 used a prelude here (entry:medal_vault armed arena_clone screen 1 before the staircase, because state selection reads the counter at LOAD). S97: that rank state is now arena_clone.state_rules (flag $0030 -> state 1), evaluated at every load by bank $60 entry 8 \u2014 no hub arming, and it survives save/reload."
-  }
+  },
+  "species": [
+   {
+    "comment": "S105 (P3.9b): the Phase N test species, formerly hand data in 11 patch files + extracted/new_species.json (so it was in EVERY project). Byte-identical to the pre-S105 build. Info = vanilla Dracky's row with family Slime; encyclopedia line 2 = Dracky's description (a placeholder since S30); the recipe the encyclopedia shows is derived from gamedata.breeding.special (Snaily x BattleRex append).",
+    "id": 224,
+    "name": "Gorbunok",
+    "short_name": "Gorb",
+    "info": {
+     "clone_from": 78,
+     "family": "Slime"
+    },
+    "description_from": 78,
+    "battle": {
+     "art": "assets/species/gorbunok_battle.bin",
+     "palette": [
+      "$4D67",
+      "$6BFF",
+      "$7FFF",
+      "$0000"
+     ],
+     "comment": "DWM2 W_bluedragon.png, 48x48, literal stream. Reproduce both .bin files byte-for-byte: python3 tools/bake_follower_overflow.py --art examples/follower_swap/W_bluedragon.png --frames examples/follower_swap/gorbunok_frames.json --battle-art examples/follower_swap/W_bluedragon.png --battle-spec examples/follower_swap/gorbunok_battle.json --stream-dir editor2/example-project/assets/species --name gorbunok"
+    },
+    "follower": {
+     "art": "assets/species/gorbunok_follower.bin",
+     "walks_like": 128,
+     "palette": 2,
+     "comment": "blue-dragon walking art (G1); walks like Armorpion (layout 0, $11:$4184); OBJ palette 2 = blue"
+    }
+   }
+  ]
  },
  "build": {
   "bank_map": {
@@ -10027,6 +9894,28 @@
      60
     ],
     "comment": "Vault GoldSlime: Upper($1E)/RobMagic($1A)/Ramming($3C); joinability $00 = always joins; fight EID == join EID (no redirect row needed)"
+   },
+   {
+    "id": "gorbunok_wild",
+    "eid": "auto",
+    "species": 224,
+    "level": 1,
+    "exp": 3,
+    "joinability": 2,
+    "hp": 8,
+    "mp": 0,
+    "atk": 8,
+    "def": 5,
+    "agl": 7,
+    "int": 1,
+    "ai_weights": [
+     200,
+     50,
+     100,
+     200
+    ],
+    "skills": [],
+    "comment": "S105: the S30 EID-518 Gorbunok row (Slime EID 2 clone, species 224), now an ordinary project enemy (bank $6B)"
    }
   ],
   "quests": [

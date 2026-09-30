@@ -687,10 +687,13 @@ MonsterNamePtrTable:  ; $4339 — 256 entries, indexed by monster ID
     dw MonsterName_218_Samsi  ; [218]
     dw MonsterName_219_Bazoo  ; [219]
     dw MonsterName_220_Unused_220  ; [220]
+; S105 (G3): [221]-[239] = the new-species ids (compiler region ns_name_ptr;
+; an undeclared id keeps its vanilla word: Unused_220 for 221-224, Unused_225 after).
+; @BUILD_PROJECT BEGIN ns_name_ptr
     dw MonsterName_220_Unused_220  ; [221]
     dw MonsterName_220_Unused_220  ; [222]
     dw MonsterName_220_Unused_220  ; [223]
-    dw MonsterName_224_Gorbunok  ; [224]
+    dw NsName_224  ; [224] custom.species Gorbunok
     dw MonsterName_225_Unused_225  ; [225]
     dw MonsterName_225_Unused_225  ; [226]
     dw MonsterName_225_Unused_225  ; [227]
@@ -706,6 +709,7 @@ MonsterNamePtrTable:  ; $4339 — 256 entries, indexed by monster ID
     dw MonsterName_225_Unused_225  ; [237]
     dw MonsterName_225_Unused_225  ; [238]
     dw MonsterName_225_Unused_225  ; [239]
+; @BUILD_PROJECT END ns_name_ptr
     dw MonsterName_225_Unused_225  ; [240]
     dw MonsterName_225_Unused_225  ; [241]
     dw MonsterName_225_Unused_225  ; [242]
@@ -1795,8 +1799,16 @@ DispatchText_72:
     db $49, $42, $62, $54, $46, $51, $45, $FA, $F7, $F2, $36, $52, $4D, $42, $4F, $62  ; $57E5
     db $2A, $3E, $4A, $42, $62, $25, $4C, $56, $5F, $F1, $F7, $F0, $36, $2F, $2C, $35  ; $57F5
     db $F0, $36, $2F, $38, $33, $F0, $35, $38, $2E, $3C, $F0, $36, $24, $2F, $3C, $F0  ; $5805
-    db $33, $32, $36, $3C, $F0, $33, $28, $37, $28, $F0, $36, $2F, $24, $26, $F0, $30  ; $5815
-    db $28, $2F, $37, $F0, $36, $2F, $28, $28, $F0, $26, $24, $2F, $F0, $36, $2C, $2F  ; $5825
+    db $33, $32, $36, $3C, $F0, $33, $28, $37, $28, $F0  ; $5815
+; S105 (G3): $581F-$5828 = two DEAD default names ("SLAC", "MELT" — no pointer
+; in the default-name tables reaches them) -> new-species text extent ns_text_g
+; (10 B; the original bytes unless the names need it).
+    ASSERT @ == $581F
+; @BUILD_PROJECT BEGIN ns_text_g
+    db $36, $2F, $24, $26, $F0, $30, $28, $2F, $37, $F0   ; unused: the original bytes
+; @BUILD_PROJECT END ns_text_g
+    ASSERT @ == $5829
+    db $36, $2F, $28, $28, $F0, $26, $24, $2F, $F0, $36, $2C, $2F  ; $5829
     db $F0, $36, $24, $2F, $F0, $30, $2C, $2F, $2C, $F0, $2F, $2C, $30, $28, $F0, $30  ; $5835
     db $24, $35, $26, $F0, $24, $38, $37, $30, $F0, $35, $28, $3B, $F0, $30, $32, $39  ; $5845
     db $28, $F0, $26, $2F, $32, $3A, $F0, $37, $24, $33, $F0, $2E, $2C, $37, $28, $F0  ; $5855
@@ -2674,9 +2686,12 @@ MiscText_02:
     db $ED, $F9, $00, $62, $46, $4B, $40, $4F, $42, $3E, $50, $42, $50, $F1, $51, $4C  ; $7260
     db $62, $2F, $39, $62, $F9, $10, $FA, $F7, $F2, $3E, $4B, $41, $62, $49, $42, $3E  ; $7270
     db $4F, $4B, $42, $41, $F1, $F9, $20, $63, $FA, $F7, $F0  ; $7280
-MiscText_03:
-    db $ED, $F9, $00, $68, $62, $F9, $30, $F1, $3F, $42, $40, $4C, $4A, $42, $50, $62  ; $728B
-    db $F9, $20, $63, $FA, $F7, $F0  ; $729B
+MiscText_03:  ; $728B — DEAD since Stage 2 (MiscTextPtrTable[3] -> MiscText_03_Paged). S105 (G3):
+              ; the last new-species text extent ns_text_e (22 B; original bytes unless needed)
+; @BUILD_PROJECT BEGIN ns_text_e
+    db $ED, $F9, $00, $68, $62, $F9, $30, $F1, $3F, $42, $40, $4C, $4A, $42, $50, $62, $F9, $20, $63, $FA, $F7, $F0   ; unused: the original bytes
+; @BUILD_PROJECT END ns_text_e
+    ASSERT @ == $72A1
 MiscText_04:
     db $ED, $25, $52, $51, $62, $F9, $00, $F1, $40, $3E, $4B, $4B, $4C, $51, $62, $4A  ; $72A1
     db $3E, $50, $51, $42, $4F, $62, $3E, $4B, $56, $FA, $F7, $F2, $4A, $4C, $4F, $42  ; $72B1
@@ -2994,7 +3009,7 @@ SpellUseText_10:
 SpellUseText_11:
     db $26, $3E, $4B, $4B, $4C, $51, $62, $52, $50, $42, $62, $50, $48, $46, $49, $49  ; $7DE6
     db $50, $F1, $4C, $43, $62, $3E, $62, $48, $4B, $4C, $40, $48, $42, $41, $62, $4C  ; $7DF6
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; $7E06
+    db $52, $51, $F7, $F2, $4A, $4C, $4B, $50, $51, $42, $4F, $5F, $F1, $F7, $F0, $00  ; $7E06 (S105: vanilla bytes restored — B9 S28 had zeroed this live tail)
 SpiritIconStr:  ; $7E16 — mode-4 id 10 (Spirit). S104: glyph $1A = the Spirit icon at font $4F:$41B0;
                 ; glyph $19 ($4F:$41A0) is the vanilla ??? icon again (B9 S28 had drawn the whip over it)
     db $1A, $F0
@@ -3004,15 +3019,30 @@ FamilyIconStrTable:  ; $7E18 — mode 4 (B9 S28 relocation of the dead $4323 tab
     dw $5B14, $5B16, $5B18, $5B1A, $5B1C  ; 5 Bug, 6 Devil, 7 Zombie, 8 Material, 9 ???
     dw SpiritIconStr                      ; 10 Spirit
     dw $5B1E, $5B1E, $5B1E, $5B1E, $5B1E  ; 11-15 (no family; blank)
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; $7E38
-MonsterName_224_Gorbunok:  ; $7E46 — Phase N new species
-    db $2a, $4c, $4f, $3f, $52, $4b, $4c, $48, $f0  ; "Gorbunok" literal (no DTE) + terminator
+; S105 (G3): the NEW-SPECIES names + default nicknames (ids 221-239) are packed
+; by the compiler (editor2/core/species.py) into five free extents of this bank:
+; ns_text_a $7E38 (23 B), ns_text_b $7E86 (109 B), ns_text_c $7F19 (103 B),
+; ns_text_d $7FF6 (10 B), ns_text_f $7E77 (15 B, Spirit-name fill slack),
+; ns_text_g $581F (10 B, two dead vanilla default names), ns_text_e $728B (22 B,
+; the dead vanilla MiscText_03) — 292 B for 19 names (<= 9 letters + $F0) + 19
+; nicknames (<= 4 letters + $F0); equal strings / suffixes are shared.
+; An empty custom.species = the original bytes in every extent.
+    ASSERT @ == $7E38
+; @BUILD_PROJECT BEGIN ns_text_a
+NsName_224:
+    db $2A, $4C, $4F, $3F, $52, $4B, $4C, $48, $F0
+NsShort_224:
+    db $2A, $4C, $4F, $3F, $F0
+    ds 9, $00
+; @BUILD_PROJECT END ns_text_a
+    ASSERT @ == $7E4F
 ; S104: Spirit (family 10) DEFAULT-NAME pool = mode-3 ids $A0-$A7 via the dead $4323 words
 ;       (bank $6D FamilyDefaultNameId: Spirit -> $A0 + RNG&7; gender bit ignored). 8 x 5 B.
 ; @BUILD_PROJECT BEGIN gd_spirit_names
 ; (generated by editor2 `gd_spirit_names` from gamedata.families.spirit.names —
 ;  the Spirit default-name pool, mode-3 ids $A0-$A7 via the dead $4323 words
-;  (bank $6D FamilyDefaultNameId). Fixed 55 B of dead fill: names + zero pad)
+;  (bank $6D FamilyDefaultNameId). Fixed 40 B: names + zero pad; the old
+;  fill's last 15 B are new-species text extent ns_text_f since S105 G3)
 SpiritName_0:  ; "WISP"
     db $3A, $2C, $36, $33, $F0
 SpiritName_1:  ; "SOUL"
@@ -3029,25 +3059,49 @@ SpiritName_6:  ; "GLOW"
     db $2A, $2F, $32, $3A, $F0
 SpiritName_7:  ; "NOVA"
     db $31, $32, $39, $24, $F0
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; remaining dead fill
 ; @BUILD_PROJECT END gd_spirit_names
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; $7E86
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; $7E96
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; $7EA6
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; $7EB6
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; $7EC6
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; $7ED6
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; $7EE6
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; $7EF6
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; $7F06
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; $7F16
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; $7F26
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; $7F36
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; $7F46
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; $7F56
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; $7F66
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; $7F76 (6 zeros consumed by SkillName_233_Mourn [MOURN S75]; dead fill — only $7FF9+ of the $7E39-based short-name region is ever indexed, redirect gates id>=224)
-SkillName_222_Scorch:                                             ; $7F86
+    ASSERT @ == $7E77
+; S105 (G3): the last 15 B of the old 55-B Spirit-name fill (8 names x <= 5 B
+; = 40 B max) -> new-species text extent ns_text_f.
+; @BUILD_PROJECT BEGIN ns_text_f
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00   ; unused: the original bytes
+; @BUILD_PROJECT END ns_text_f
+    ASSERT @ == $7E86
+; @BUILD_PROJECT BEGIN ns_text_b
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00   ; unused: the original bytes
+; @BUILD_PROJECT END ns_text_b
+; NewSpeciesShortPtrs: the default-nickname pointer table of ids 221-239. The
+; bank-$00 LoadModeBaseRedirect sends the mode-7 lookup ($4739, family codes /
+; nicknames) of a species >= 221 to base $7D39, so [221] = $7D39 + 221*2 = $7EF3.
+NewSpeciesShortPtrs:
+    ASSERT @ == $7D39 + 221 * 2
+; @BUILD_PROJECT BEGIN ns_short_ptr
+    dw $0000  ; [221] (none)
+    dw $0000  ; [222] (none)
+    dw $0000  ; [223] (none)
+    dw NsShort_224  ; [224] default nickname "Gorb"
+    dw $0000  ; [225] (none)
+    dw $0000  ; [226] (none)
+    dw $0000  ; [227] (none)
+    dw $0000  ; [228] (none)
+    dw $0000  ; [229] (none)
+    dw $0000  ; [230] (none)
+    dw $0000  ; [231] (none)
+    dw $0000  ; [232] (none)
+    dw $0000  ; [233] (none)
+    dw $0000  ; [234] (none)
+    dw $0000  ; [235] (none)
+    dw $0000  ; [236] (none)
+    dw $0000  ; [237] (none)
+    dw $0000  ; [238] (none)
+    dw $0000  ; [239] (none)
+; @BUILD_PROJECT END ns_short_ptr
+    ASSERT @ == $7F19
+; @BUILD_PROJECT BEGIN ns_text_c
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00   ; unused: the original bytes
+; @BUILD_PROJECT END ns_text_c
+    ASSERT @ == $7F80
+SkillName_222_Scorch:                                             ; $7F80
     db $36, $40, $4c, $4f, $40, $45, $f0                          ; "Scorch" + terminator
 SkillName_223_Smite:                                              ; $7F8D
     db $36, $4a, $46, $51, $42, $f0                               ; "Smite" + terminator
@@ -3082,13 +3136,7 @@ SkillName_232_QuakeMost:                                          ; [QUAKE] $E8
 SkillName_233_Mourn:                                              ; [MOURN S75] $E9
     db $30, $4c, $52, $4f, $4b, $f0                               ; "Mourn" + terminator
 .pad224
-    ds $7FF6 - .pad224, $00                                       ; pad to $7FF6 (NewSpecies tail unchanged)
-;   Phase N: new-species SHORT (default-nickname) name table tail.
-;   The default-name redirect (bank $00 LoadModeBaseRedirect) sends id>=224 to
-;   base $7E39, so id 224 lands at $7FF9. Holds the first 4 letters of the name
-;   ("Gorb"), used for BOTH the nickname field and the "take X with you" line.
-    db $00, $00, $00                              ; $7FF6-$7FF8 pad
-NewSpeciesShortName224:                           ; $7FF9 (= $7E39 + 224*2)
-    dw .gorb                                      ; -> short name string
-.gorb:
-    db $2a, $4c, $4f, $3f, $f0                    ; "Gorb" (first 4 of "Gorbunok") + terminator
+    ds $7FF6 - .pad224, $00                                       ; pad to $7FF6
+; @BUILD_PROJECT BEGIN ns_text_d
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00   ; unused: the original bytes
+; @BUILD_PROJECT END ns_text_d

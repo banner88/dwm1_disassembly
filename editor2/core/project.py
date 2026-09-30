@@ -43,8 +43,9 @@ STATE_RULE_MAX_TERMS = 8
 STEP_COUNTER_BASE = 0xCD80
 WRAM_REGION_MAX = 0x280             # $CD80+$280 = $D000 = the wram0 section end
 WRAM_REGION_SIZE_DEFAULT = 0x280    # 640 counters — campaign-scale default
-# Project enemy rows (S101; MONSTER_DATA "Project enemy rows"). EID 518 =
-# Gorbunok (build_new_species.py, bank $14 free tail). EVERY EID >= 519 is a
+# Project enemy rows (S101; MONSTER_DATA "Project enemy rows"). EID 518 was
+# the S30 Gorbunok row (retired S105: a new species' rows are project enemies
+# like any other; bank $14 $7EB3 is free space again). EVERY EID >= 519 is a
 # progression.enemies row in bank $6B (compiler-owned patches/bank_06b.asm,
 # row = EID-519): the bank-$14 LoadEnemyStats head now diverts EIDs >= 519 to
 # bank $6B entry 0 (S70-S100 kept 12 rows in the bank-$14 tail instead). The
@@ -65,6 +66,16 @@ def _unlinked_door(e):
 
 class ProjectError(ValueError):
     pass
+
+
+SKILL_SCRIPTS_JSON = os.path.join(os.path.dirname(__file__), 'skill_scripts.json')
+
+
+def _skill_scripts():
+    """(scripts, dialogue) — fresh copies of the custom skills' built-in dialog
+    scripts (S105; the list ORDER is the id bank $72 arms, script type $FF)."""
+    d = json.load(open(SKILL_SCRIPTS_JSON))
+    return d['scripts'], d['dialogue']
 
 
 class Project:
@@ -99,10 +110,24 @@ class Project:
         self._gate_rows = None
         self.palettes = self.custom.get('palettes', [])
         self._pal_by_id = {p['id']: p for p in self.palettes}
-        self._dialogue = self.custom.get('dialogue', [])
+        # S105 (P3.9b): the custom skills' own dialog scripts + texts
+        # (editor2/core/skill_scripts.json) are part of EVERY build — script
+        # type $FF, bank $60 SkillScriptPtrTable — appended after the project's
+        # dialogue so its text ids never move. Copies: never written back into
+        # the project's data (the editor saves self.data).
+        self.skill_scripts, skill_dialogue = _skill_scripts()
+        for sec, lst in (('scripts', self.custom.get('scripts', [])),
+                         ('dialogue', self.custom.get('dialogue', []))):
+            bad = [x.get('id') for x in lst if str(x.get('id', '')).startswith('skill:')]
+            if bad:
+                raise ProjectError(f"custom.{sec}: ids {bad} — 'skill:' ids are "
+                                   "reserved for the custom skills' built-in scripts "
+                                   "(editor2/core/skill_scripts.json)")
+        self._dialogue = list(self.custom.get('dialogue', [])) + skill_dialogue
         self._text_by_id = {}
         self._assign_text_ids()
-        self._scripts = {s['id']: s for s in self.custom.get('scripts', [])}
+        self._scripts = {s['id']: s for s in
+                         list(self.custom.get('scripts', [])) + self.skill_scripts}
         # S92: custom.script_preludes {script_id: [ops...]} — prepended to the
         # named script's op stream AFTER quest lowering, so generated
         # entry:/quest: scripts can be extended without touching the lowering.
@@ -263,10 +288,21 @@ class Project:
         validators.validate reports it as an error before any emitter runs."""
         if self._gamedata is None:
             from . import gamedata as G
+            from . import species as SP
             repo = getattr(self, 'repo_root', None) or REPO_ROOT
             eids = [e['_eid'] for e in self.quest_enemy_rows()]
-            self._gamedata = G.Gamedata(self.data.get('gamedata') or {}, repo, eids)
+            # S105 (P3.9b): the project's new species (custom.species) and its
+            # enemy ids by name (encounter pools may name a project enemy)
+            self._gamedata = G.Gamedata(
+                self.data.get('gamedata') or {}, repo, eids,
+                new_species=SP.basics(self),
+                enemy_ids={k: e['_eid'] for k, e in self.quest_enemies.items()})
         return self._gamedata
+
+    def new_species_ids(self):
+        """Ids of this project's custom.species (S105; species.py)."""
+        return {s.get('id') for s in (self.custom.get('species') or [])
+                if isinstance(s, dict)}
 
     def quest_enemy_rows(self):
         """Enemies in EID order for the bank $6B emitter."""
@@ -1080,11 +1116,13 @@ class Project:
         screen's cast slot ($F0 + index); others use `sprite`."""
         if n.get('monster') is not None:
             sp = F.val(n['monster'])
-            if not 0 <= sp <= 255 or 217 <= sp <= 223:
+            if not 0 <= sp <= 255 or 217 <= sp <= 220 or \
+                    (sp >= 221 and sp not in self.new_species_ids()):
                 raise ProjectError(
                     f"room {r.get('id')} screen {k}: monster NPC species {sp} — species "
                     "217-220 hang or crash the game as monster NPCs (no real follower "
-                    "tables; PyBoy S101) and 221-223 do not exist")
+                    "tables; PyBoy S101), and 221-239 must be one of this project's "
+                    "custom.species (S105; 240+ do not exist)")
             cast = self.monster_cast(r, k)
             idx = cast.index(sp)
             if idx >= self.MONSTER_CAST_MAX:
@@ -1322,7 +1360,7 @@ class Project:
             next_id = max(next_id, tid + 1)
         # resolve script "text" ops given as dialogue ids
         by_name = {e['id']: e['_tid'] for e in self._dialogue if 'id' in e}
-        for s in self.custom.get('scripts', []):
+        for s in list(self.custom.get('scripts', [])) + self.skill_scripts:
             for it in s['ops']:
                 if isinstance(it, list) and it and it[0] == 'text' \
                         and isinstance(it[1], str) \

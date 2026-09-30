@@ -29,10 +29,14 @@ class FamiliesMixin:
         if gd is not None:
             data['gamedata'] = gd
         try:
-            eids = [e['_eid'] for e in Project(data, self.project_dir).quest_enemy_rows()]
+            prj = Project(data, self.project_dir)
         except Exception:
-            eids = []
-        return G.Gamedata(data.get('gamedata') or {}, REPO, eids)
+            prj = None
+        if prj is not None:
+            # S105: the compiler's own construction (project enemies by EID and
+            # by id, the project's custom.species) — one source of truth
+            return prj.gamedata()
+        return G.Gamedata(data.get('gamedata') or {}, REPO, [])
 
     def species_names(self):
         return G.monster_names(REPO)

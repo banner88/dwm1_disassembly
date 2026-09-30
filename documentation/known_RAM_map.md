@@ -158,9 +158,11 @@
    CA94    30    Library "seen" species bit array (bit N = species N seen).
                  Set via SetBitInArray on add-to-storage ($14:label14_40b4);
                  bank $07 completion counters scan bits 0-$EF (240 bits →
-                 $CA94-$CAB1). New species 224's bit lands at $CAB0 — inside
-                 the scanned extent (benign) but it COUNTS toward the
-                 100-monster library reward checks (S54).
+                 $CA94-$CAB1). Bit order MSB-first: byte $CA94+id/8, mask
+                 $80>>(id&7) (ROM0 $26D5 table; PyBoy S105: species 4 =
+                 $CA94 $08). New species 221-239 (S105 G3) = $CAAF bits 2-0,
+                 $CAB0, $CAB1 — inside the scanned extent (benign) but they
+                 COUNT toward the 100-monster library reward checks (S54).
    CA8D     1    PARTY COUNT (0-3) (S56). Recounted by the canonicalizer
                  ReadPartySlotInfo ($01:$46F6, bank $01 entry 5).
    CA8E     3    PARTY SLOT LIST (S56): three indices into the 20-slot
@@ -202,7 +204,10 @@
                  wTileAnimVBK $D0C7 / wTileAnimSrc $D0C8-$D0C9 /
                  wTileAnimState $D0CA-$D109 (32 groups x timer, step) — the
                  bank $6C own-tile-animation state (PROJECT_COMPILER §2.19) /
-                 wCustomPool $D10A-$D5E4 (transient reserve) /
+                 [S105 G3] wNewSpeciesGid $D10A-$D10B — the follower
+                 gfx-ID a new species' FollowerArtResolveXX fork computes
+                 ($7E00+(id-221)*2, written right before the caller reads it) /
+                 wCustomPool $D10C-$D5E4 (transient reserve) /
                  wPoolBounce $D5E5-$D664 (128 B, FX1: sleep-pool swap
                  scratch; the v1 drain halved-pending use died with the
                  S71v2 exp-scale veto).
@@ -649,6 +654,20 @@
    FFAA     1    Tile id under the player (from $C300 buffer; $00:$1E96).
                  Behavior class = $AA>>2: $0E (ids $38-$3B)=damage tile,
                  $0F ($3C-$3F)=staircase. See GATE_GENERATION.md §5.1.
+   FFC7     1    Sprite-draw type index. Written before EVERY object draw
+                 (dozens of writers); a party follower = species+$10
+                 (GetActiveMonsterStatus -> $CA91-3). bank $04
+                 NPCInteractDispatch routes $10-$8F -> bank $10, >= $90 ->
+                 bank $11 and rewrites it to the table index (-$10 / -$90 =
+                 species-$80); species >= 240 wrap below $10 (never a
+                 follower). Bank $11 indexes FollowerLayoutL1Table11 ($407F,
+                 87 dw) and FollowerAttrTable11 ($412D, 87 db) with it.
+                 S105: the patched NewAttrHandler rewrites it to the layout
+                 DONOR's index for a new species (ids 221-239; S105 G3,
+                 was 224 only). [S105]
+   FFC8     1    Sprite frame/facing index (level-2 layout table). [S24]
+   FFCA     1    Base OAM attribute for the draw (per-species attr OR-ed in;
+                 bit5 set by the engine for LEFT facing). [S24/S34]
 
 {{Internal Data|game=Dragon Warrior Monsters}}
 

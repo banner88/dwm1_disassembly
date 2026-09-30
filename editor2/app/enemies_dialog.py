@@ -101,7 +101,7 @@ class EnemiesDialog(QDialog):
                                                             or None))
         f.addRow('name (editor only)', self.name)
         self.species = QComboBox()
-        for sp, nm in sorted(species_names().items()):
+        for sp, nm in sorted(species_names(self.doc.data).items()):
             self.species.addItem(f'{sp:3d} {nm}', sp)
         self.species.activated.connect(lambda _i: self._set('species',
                                                             self.species.currentData()))
@@ -199,7 +199,7 @@ class EnemiesDialog(QDialog):
         self.list.clear()
         row = 0
         for i, e in enumerate(self.enemies()):
-            sp = species_names().get(int(e.get('species', 0)), '?')
+            sp = species_names(self.doc.data).get(int(e.get('species', 0)), '?')
             j = f" → joins as {e['join_as']}" if e.get('join_as') else ''
             self.list.addItem(f"{self.x.project_eid(e)}  {e.get('name') or e['id']}  "
                               f"({sp} L{e.get('level')}, {join_label(e.get('joinability', 7))})"
@@ -268,7 +268,7 @@ class EnemiesDialog(QDialog):
 
     def _refresh_row(self, e):
         i = self.list.currentRow()
-        sp = species_names().get(int(e.get('species', 0)), '?')
+        sp = species_names(self.doc.data).get(int(e.get('species', 0)), '?')
         j = f" → joins as {e['join_as']}" if e.get('join_as') else ''
         self.list.item(i).setText(f"{self.x.project_eid(e)}  {e.get('name') or e['id']}  "
                                   f"({sp} L{e.get('level')}, "

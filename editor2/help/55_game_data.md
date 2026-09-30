@@ -52,3 +52,34 @@ join or hatch after the change show the new one everywhere.
 The six species that only exist in battles (the rival TERRY?, the four
 summons and one unused slot) cannot be moved to another family or given a
 breeding recipe.
+
+**New monsters** (`custom.species` in `project.json`; the Monsters tab that
+authors them comes next). A project can add up to **19** brand-new monsters,
+ids **221-239**, in any order and with gaps (0-220 are the original monsters;
+240 and up are impossible in this game). A project without one builds the
+original game's data: since S105 no test monster is built into every project
+any more. An entry gives:
+
+- `id` (221-239, each once);
+- `name` (up to 9 letters) and `short_name` (up to 4 — the name the naming
+  screen suggests and the "take X with you" line; default = first 4 letters);
+- `info` — start from an existing monster's row (`clone_from`) and change
+  any of the same fields as `gamedata.monsters` (family, growth, resistances,
+  skills, level cap …);
+- `description_from` — the encyclopedia description of an existing monster;
+- `battle` — its battle picture (`art`: an art file in the project's
+  assets, `palette`: 4 colours, the 2nd is the cream backdrop and the 4th
+  black) and `follower` — its walking picture (`art`), which monster it
+  walks like (`walks_like`, one of the monsters 128-214) and its colour
+  (`palette`, 0-7). `tools/bake_follower_overflow.py --stream-dir` turns
+  PNG sheets into the two art files.
+
+Its wild or boss battle rows are ordinary **project enemies** with that
+species (Enemies help). An encounter list can name a project enemy by its
+id. The encyclopedia shows the recipe that really breeds it (the first
+breeding recipe with it as the result), or "?????" if nothing does.
+
+**Custom skills work in every project.** The dialogs of the field skill
+Anchor ("Set an anchor here …", "No anchor is set!") are built into the
+editor and added to every build — they no longer need a room of the example
+project. They take the first free text numbers after your own dialogue.

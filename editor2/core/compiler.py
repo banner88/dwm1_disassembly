@@ -128,7 +128,18 @@ def content_hash(project_path):
 
 
 def write_outputs(outputs, out_dir):
+    """Write the generated files under out_dir. S105: a file left in
+    <out>/patches by an EARLIER build that this build no longer generates is
+    deleted — builder.build_rom layers every file there over patches/, so a
+    stale one (e.g. a bank whose regions a newer editor retired) would
+    silently replace the current hand overlay."""
     written = []
+    gen = os.path.join(out_dir, 'patches')
+    keep = {os.path.normpath(rel) for rel in outputs}
+    if os.path.isdir(gen):
+        for f in os.listdir(gen):
+            if os.path.normpath(os.path.join('patches', f)) not in keep:
+                os.remove(os.path.join(gen, f))
     for rel, text in sorted(outputs.items()):
         dst = os.path.join(out_dir, rel)
         os.makedirs(os.path.dirname(dst), exist_ok=True)

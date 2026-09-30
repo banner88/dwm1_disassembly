@@ -2,8 +2,9 @@
 ; BANK $6B — PROJECT ENEMY ROWS (S101; compiler-owned, patches/bank_06b.asm)
 ; =============================================================================
 ; The vanilla enemy-stats table is bank $14 EnemyStatsTable ($4C1D, 25 B/row,
-; EIDs 0-486; 487-517 would land in code; 518 = Gorbunok in the bank-$14 free
-; tail). Every EID >= 519 is a PROJECT enemy row stored HERE, 25 B each, row
+; EIDs 0-486; 487-517 would land in code; 518 = bank-$14 free space — the
+; S30 Gorbunok row until S105). Every EID >= 519 is a PROJECT enemy row stored
+; HERE (a new species' rows too, S105), 25 B each, row
 ; index = EID - 519, in the vanilla row format (MONSTER_DATA "Enemy Stats
 ; Table"): [species, exp:2, joinability, level, hp:2, mp:2, atk:2, def:2,
 ; agl:2, int:2, ai:4, skills:4].
@@ -68,7 +69,9 @@ CopyEnemyRowExt:
 ; by build_project.py; S101). An empty project keeps one zero row.
 ; -----------------------------------------------------------------------------
 PROJECT_EID_BASE EQU 519
-PROJECT_ENEMY_ROWS EQU 1
+PROJECT_ENEMY_ROWS EQU 2
 ProjectEnemyRows:
 ProjectEnemy_519:   ; EID 519 vault_goldslime — species 19 L30, joinability 0
     db $13, $E0, $2E, $00, $1E, $7C, $01, $5A, $00, $A5, $00, $40, $01, $BE, $00, $82, $00, $FA, $96, $C8, $00, $1E, $1A, $3C, $FF
+ProjectEnemy_520:   ; EID 520 gorbunok_wild — species 224 L1, joinability 2
+    db $E0, $03, $00, $02, $01, $08, $00, $00, $00, $08, $00, $05, $00, $07, $00, $01, $00, $C8, $32, $64, $C8, $FF, $FF, $FF, $FF

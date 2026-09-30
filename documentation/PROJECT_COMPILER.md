@@ -31,6 +31,7 @@ to the proven overlay:
 | `patches/bank_064.asm`, `bank_067.asm`, `bank_074.asm`, `bank_014.asm` region | layouts / tilesets / songs / quest enemies (S64, S70, S92) |
 | `patches/bank_06c.asm` | whole file = template head (`CustomTileAnimate`) + the rooms' own tile animations (S102, §2.19) |
 | `gd_*` regions in `patches/bank_001/003/006/007/012/013/014/016/04d/054/069.asm` | the vanilla data tables, from `gamedata` (S103, §2.20) |
+| `patches/bank_07e.asm` + the `ns_*` regions in `patches/bank_000/011/016/017/041/04d/06a.asm` | the project's NEW species (ids 221-239), from `custom.species` (S105, §2.21) |
 
 Everything else — engine intercepts in banks `$00/$01/$04/$06/$07/$0B/$16`,
 layouts (`bank_064.asm` via `tools/build_gate_room.py` /
@@ -404,6 +405,7 @@ registering an emitter; nothing existing changes.
 | `music74` | `custom.music` (+ `rooms[].music`) | `file:patches/bank_074.asm` | `$74` |
 | `tileanim6c` (S102) | `custom.rooms[].tile_anims` | `file:patches/bank_06c.asm` | `$6C` |
 | `gd_monsters` `gd_enemies` `gd_encounters` `gd_family` `gd_special` `gd_exp_curves` `gd_growth_curves` `gd_skill_learn` `gd_skill_mp` `gd_skill_records` `gd_library` `gd_library_text` (S103) | `gamedata` (§2.20) | `region:` in banks $03 / $14 / $01 / $16 / $69 / $13 / $13 / $06 / $07 / $54 / $12 / $4D | those banks |
+| `species7e` + `ns_battle_gfx` `ns_follower_attr` `ns_battle_pal` `ns_recipe_pair` `ns_name_ptr` `ns_short_ptr` `ns_text_a`…`ns_text_g` `ns_detail_text` `ns_info` (S105; G3 layout) | `custom.species` (§2.21; editor2/core/species.py) | `file:patches/bank_07e.asm` + `region:` in banks $00 / $11 / $17 / $16 / $41 ×9 / $4D / $6A | those banks |
 
 `bank_060` generated layout order (fixed, deterministic): script master
 table → shared no-op (if needed) → per-room script tables+bodies (script
@@ -447,9 +449,13 @@ Two pins, both enforced at compile time:
    bank $6B `cff4507a…a2c5`; the S100 values are historical. Re-pinned
    S102: bank $71 (entry 3 `CustomAnimSource` far-calls bank $6C first) and
    the new bank $6C head; the S101 bank $71 value `dff1234a…ccd2` is
-   historical (current values: `templates/PINNED_SHA256`).
+   historical (current values: `templates/PINNED_SHA256`). Re-pinned S105:
+   bank $60 (`CustomScriptRead` SKILL_SCRIPT_TYPE branch, §2.22: `650278bb…`)
+   and bank $6B (comment only — EID 518: `14c314e0…`); the S101 values
+   `d90b9761…` / `cff4507a…` are historical.
 2. **TEMPLATE_SIZE** in `editor2/core/validators.py` — measured from the
-   reference `game.sym` (S102: `$71` = **444 B**, new `$6C` = **285 B** —
+   reference `game.sym` (S105: bank `$60` = **558 B**, +9 for the skill-script
+   branch; S102: `$71` = **444 B**, new `$6C` = **285 B** —
    `TileAnimRoomTable @ $411D`; S101: bank `$60` = **549 B**, `$71` = 440 B,
    new `$6B` = **53 B** — `ProjectEnemyRows @ $4035`; the older figures
    below are history): bank `$60` head = **283 B**
@@ -613,6 +619,8 @@ editor2/
         world.py             # S98 room/warp graph + deterministic layout (World tab)
         gates.py             # S100 gate model: vanilla gates, floors, arrival px, GatesMixin
         gamedata.py          # S103 Layer A-lite: vanilla tables + gamedata overrides (§2.20)
+        species.py           # S105 custom.species: new species -> ns_* regions + bank $7E (§2.21)
+        skill_scripts.json   # S105 the custom skills' built-in dialog scripts + texts (§2.22)
         emulator.py
         templates/{bank_060_head.asm, bank_071_head.asm, PINNED_SHA256}
   app/  main.py session.py build_worker.py     # shell (S93), one Session per project
@@ -630,7 +638,8 @@ editor2/
         rooms/gate_panel.py                            # S100 inspector "Inside gates" group
   templates/blank-project/project.json   # File > New project (S94)
   example-project/project.json      # regression baseline (build/ is regenerable output)
-  tests/test_compiler.py            # 121 tests (124 with --rom: the ROM builds; S100)
+  example-project/assets/species/   # S105 Gorbunok's art streams (custom.species)
+  tests/test_compiler.py            # 277 tests (315 with --rom: the ROM builds; S105)
   tests/test_app.py                 # shell smoke test; --rom = GUI build == pin
   tests/test_canvas.py              # P3.3 acceptance; --rom = build + PyBoy both states;
                                     # v4 (S97) = state rules + NPC panel, PyBoy-verified
@@ -1115,7 +1124,7 @@ them as `<script>_sayN` / `_askN` (`choice: true`) / `_helperN`):
 Step kinds (exactly one key each): `say` · `ask` (+ `yes` / `no`; both
 branches rejoin) · `if` (terms `{flag, is: set|clear}` AND-ed; + `then` /
 `else`) · `set` / `clear` (flag list) · `battle` `{enemies: [1-3 refs]}` (a
-project enemy id or a vanilla EID 0-486 / 518) · `helper` · `move` `{dest,
+project enemy id or a vanilla EID 0-486; S105: 518 is free space, not a row) · `helper` · `move` `{dest,
 screen, x, y}` · `end`. Lowering (`Project._lower_steps`): text outside an
 NPC interaction gets its `init_dialog` (S70 protocol); `ask` = `text` +
 `check_and_branch $C83C 1 @no`; `if` = `if_flag_clear/set … @else`; battle 1
@@ -1300,7 +1309,7 @@ with the original at every table's address). The vanilla rows come from
 |---|---|---|
 | `monsters` (ids 0-220) | `MonsterInfoTable` $03:$4461, 221 × 43 (`bank_003#gd_monster_info`) | MONSTER_DATA field map; growth / exp indices 0-31 (higher = code); resist by name (MONSTER_DATA order) or a list of 27; family 0-10 or its name (`"Spirit"` = 10, S104; `"Bird"`/`"Flying"`, `"Boss"`/`"???"`); ids 215-220 (combat-only) may not change family |
 | `enemies` (EIDs 0-486) | `EnemyStatsTable` $14:$4C1D, 487 × 25 (`bank_014#gd_enemy_stats`) | same field names as `progression.enemies`; skills padded with $FF |
-| `encounters` (pools 0-127) | `EncounterPoolData` $01:$6AAE, 128 × 26 (`bank_001#gd_encounter_pools`) | format decoded S103 (DATA_STRUCTURES "Encounter pool entry"); EIDs 0-486, a declared new species' EID (518) or a project enemy |
+| `encounters` (pools 0-127) | `EncounterPoolData` $01:$6AAE, 128 × 26 (`bank_001#gd_encounter_pools`) | format decoded S103 (DATA_STRUCTURES "Encounter pool entry"); EIDs 0-486 or a project enemy (its EID or, S105, its `progression.enemies` id; the S30 EID 518 is gone) |
 | `skills` (ids 0-221) | `SkillMPCostTable` $07:$570C (`bank_007#gd_skill_mp`), `SkillLearnReqTable` $06:$50E0 218 rows (`bank_006#gd_skill_learn`), `SkillRecordData` $54:$41CF (`bank_054#gd_skill_records`) | record field names = BATTLE_SKILL_SYSTEM §7; `learn` for ids $DA-$DD is an ERROR (FieldStateDispatch code) |
 | `exp_curves` / `growth_curves` | $13:$41E6 / $13:$6706 (`bank_013#gd_exp_curves` / `#gd_growth_curves`) | new hand patch `patches/bank_013.asm` (the clean bank + two markers) |
 | `breeding.family` (slots 0-214) | `FamilyRecipeTable` $16:$4974 (`bank_016#gd_family_recipes`) | `null` = no recipe ($FF,$FF); matchers as `build_breeding.py` (family / species name, id, $hex). S104: `"Spirit"` = `$FA` on either side; `"AnyFamily"` / `"any"` are an ERROR (the patched family scan no longer has the wildcard) |
@@ -1336,7 +1345,7 @@ the family / special shadow reports ported from build_breeding.py.
 the regions: `build_breeding.py --emit-family / --emit-special /
 --emit-relocation`, `build_family_reassign.py --emit`,
 `build_library_table.py --emit`, and `build_new_species.py`'s bank $14 / bank
-$01 writes (bank_06a stays). Their `--selftest`s still run (verify check 5).
+$01 writes (S105: its bank_06a write too — §2.21). Their `--selftest`s still run (verify check 5).
 Their JSON specs (`breeding_family_defaults.json`, `breeding_special.json`,
 `spirit_family.json`, `breeding_family_reassign.json`) are HISTORICAL inputs:
 the example project's `gamedata` re-expresses what they produced.
@@ -1372,6 +1381,133 @@ user-tested; USER-CONFIRMED 2026-09-30). Prev `d7b762db…` (patched, historical
 **S104 r5:** library tab display order (Spirit before ???) → pin
 **`15f21834385eb38e3650d434c622eda2`** (patched; built S104 r5,
 USER-CONFIRMED 2026-09-30). Prev `e994173e…` (patched, historical).
+
+## §2.21 S105 — NEW species as project data (`custom.species`, ROADMAP P3.9b + G3)
+
+Module `editor2/core/species.py` (validation + one emitter per region). Before
+S105 the one new species (Gorbunok, 224) was hand data in eleven patch files +
+`extracted/new_species.json` — present in EVERY project's build. The forks that
+make new ids work stay hand-authored (MONSTER_DATA "Species-indexed table
+overshoot registry"); the DATA they read is emitted from the project.
+
+**Capacity (S105 G3, USER-CONFIRMED 2026-09-30 ("Confirm all three appear as expected")): 19 species, ids 221-239**,
+any subset, any order (user decision "19 monsters it is"). The range is the
+game's own: 0-220 are the vanilla monsters (MonsterInfoTable = 221 rows); the
+library seen-bit array `$CA94` is 30 bytes (0-239); the special-recipe scanner
+compares species bytes directly against the family codes `$F0-$FA`; `$FE` /
+`$FF` are the library "unseen" marker / none; the bank-$04 follower router's
+species+$10 wraps at 240. (The first P3.9b build held ONE species: the eight
+follower forks kept a one-entry table in end-of-bank padding.)
+
+```jsonc
+"species": [{
+  "id": 224,                          // 221-239, each at most once
+  "name": "Gorbunok",                 // 1-9 letters (packed into bank $41, below)
+  "short_name": "Gorb",               // 1-4 letters; default = first 4 of name
+  "info": {"clone_from": 78, "family": "Slime"},   // a VANILLA row + gamedata.monsters fields
+  "description_from": 78,             // encyclopedia line 2 = that species' text (0-214)
+  "battle":   {"art": "assets/species/gorbunok_battle.bin",   // LZ stream, 576 B decoded
+               "palette": ["$4D67", "$6BFF", "$7FFF", "$0000"]},
+  "follower": {"art": "assets/species/gorbunok_follower.bin", // LZ stream, 256 B decoded
+               "walks_like": 128, "palette": 2}               // layout donor 128-214, OBJ palette 0-7
+}]
+```
+
+Every table region is **id-indexed over 221-239 (19 rows)**; an undeclared id
+keeps the original bytes (never read — every validator refuses an undeclared
+id ≥ 221).
+
+| Region | File | Content (no species = the ORIGINAL ROM's bytes) |
+|---|---|---|
+| `ns_battle_gfx` | bank_000 `$2D59-$2D7E` (MonsterBattleGfxTable tail, re-sectioned `$2D56-$2DA7`) | 19 words: `$7E00 + (id-221)*2 + 1` (else `$320F`) |
+| `ns_follower_attr` | bank_011 `NewFollowerAttrTable` | 19 × 2 B: OBJ palette, donor level-1 index (walks_like − $80) |
+| `ns_battle_pal` | bank_017 `NewBattlePalTable` | 19 × 8 B RGB555 |
+| `ns_recipe_pair` | bank_016 `NewRecipePairs` | 19 × 2 B encyclopedia parent pair (`$FF,$FF` = none) |
+| `ns_name_ptr` | bank_041 MonsterNamePtrTable `[221]-[239]` (`$44F3`) | `dw NsName_<id>` (else `Unused_220` / `Unused_225`, the vanilla words) |
+| `ns_short_ptr` | bank_041 `NewSpeciesShortPtrs` `$7EF3` (= `$7D39 + 221*2`) | `dw NsShort_<id>` (else `$0000`) |
+| `ns_text_a`…`ns_text_g` | bank_041 `$7E38` (23 B), `$7E86` (109), `$7F19` (103), `$7FF6` (10), `$7E77` (15, Spirit-name slack), `$581F` (10, two dead vanilla default names), `$728B` (22, dead vanilla MiscText_03) | the PACKED name + nickname strings (below); unused = original bytes |
+| `ns_detail_text` | bank_04d `HighLine2Ptrs` / `HighMode0Ptrs` | 19 + 19 words (line 2 = vanilla mode-1 entry 261 + `description_from`, read from the clean disassembly; line 1 = the recipe line or `$53C4`) + the recipe lines; no species = labels only |
+| `ns_info` | bank_06a slots 0-18 | 19 × 43-byte info rows |
+| (file) `species7e` | bank_07e | `SpriteOverflowPtrs_7E` (38 words: index (id-221)*2 = follower, +1 = battle; an undeclared id aliases the first declared species) + the streams; no species = `ds $4000, $00` |
+
+**Follower art has no table.** The eight follower gfx-id forks
+(`FollowerArtResolveXX`, banks $01/$06/$07/$09/$0B/$12/$18/$59) COMPUTE
+`$7E00 + (id-221)*2` into WRAM `wNewSpeciesGid` (`$D10A`, carved from
+wCustomPool) and return HL = its address — the callers read the word at HL
+at once (DE is dead at all eight). Same fork size (`.normal` became
+`ld de,Table / add hl,de`). The old `ns_follower_gfx_*` regions are gone,
+so banks $09/$0B/$18/$59 are no longer compiler-touched.
+
+**Names (bank $41).** No fixed slots fit: the strings are packed into the
+seven extents above (292 B) by an exact bin-packer; equal strings and
+suffixes share bytes. 19 eight-letter names + 19 four-letter nicknames
+(266 B) fit; 19 nine-letter names each with its own nickname (285 B) do not
+(the extents waste ≥ 12 B for 10/5-byte strings) → validation error. The
+nickname lookup: `LoadModeBaseRedirect` (ROM0 `$00F0`) sends mode base
+`$4739` with id ≥ 221 to `$7D39`.
+
+**Derived, never authored:** the encyclopedia recipe = the FIRST special entry
+(`gamedata.breeding.special`, live table) whose result is the species — pair
+bytes as matchers, line in the vanilla two-9-char-field format (coherence
+Set 1); none → `$FF,$FF` + the vanilla "?????" line `$4D:$53C4`. **Enemy rows**
+of a new species are ordinary project enemies (`progression.enemies`,
+`species: <id>`, EID 519+) — the S30 EID-518 row in the bank-$14 tail is free
+space again; `gamedata.encounters[].eids` may name a project enemy by its id.
+**Validators** (ERROR): more than 19 species, an id outside 221-239 or twice,
+name / short name not 1-9 / 1-4 letters, names that do not pack, `walks_like`
+outside 128-214, art that does not decode to exactly 576 / 256 bytes (the S75
+over/under-read class), a missing art file, art streams over bank $7E's 16,307
+B, an enemy or monster NPC of an undeclared species ≥ 221, a family library
+tab over 32 members (was an emit-time exception), a `skill:` id in the project.
+**Layout (S105 fix):** the pre-S105 patch wrote the layout pointer at
+`$11:$413F`, inside the attr table (ChopClown / Grendal's bytes);
+`NewAttrHandler` now writes the donor's level-1 index to HRAM `$C7`
+(MONSTER_DATA follower section). Art files: the example's are reproduced
+byte-for-byte by `tools/bake_follower_overflow.py --stream-dir` from
+`examples/follower_swap/`. Editor: `conversation.species_names(data)` and the
+NPC Monsters picker list the project's species (no thumbnail until P3.10); the
+Families tab builds its model through `Project.gamedata()`.
+
+**Stale generated files (S105 G3 fix).** `compiler.write_outputs` now deletes a
+file in `<out>/patches` that this build no longer generates: `builder.build_rom`
+layers everything there over `patches/`, so the pre-G3 `bank_009/00b/018/059.asm`
+left in a project's build folder would have silently replaced the new forks.
+
+**Tests.** `test_compiler --rom` runs every fork FROM THE BUILT ROM's bytes
+(`MiniSM83`, a 40-opcode SM83 subset) over species 0-239 — the eight follower
+forks, HighBattlePal, FamilyRecipeResolve, NewAttrHandler, LoadModeBaseRedirect
+— for the example and for a 19-species project (which also proves every bank
+still fits; bank $12's 714 trailing `nop`s became `ds $8000 - @` so the library
+grouping region can grow).
+
+**Pin (S105 G3):** **`f22f56e116bc6b3f6b94e7d45a7e5f1e`** (patched; built S105,
+USER-CONFIRMED 2026-09-30 ("Confirm all three appear as expected")). The example still declares only Gorbunok (now row 224-221
+= 3; bank $7E index 6/7). Prev **`f8a714850b5318844e23b050a16f222e`** (patched,
+historical — the capacity-1 P3.9b build, never user-tested): byte delta vs the
+S104 r5 pin (`15f21834…`, patched, historical): pool 0 slot 3 EID 518 → 520;
+`$11:$413F` vanilla + NewAttrHandler +5 B; bank $14 `$7EB3` row cleared; bank
+$6B + Gorbunok's row; bank $16 entries 693/803; bank $36 vanilla (Clam gone);
+bank $60 (template +9 B + skill table); bank $72 one byte (`$71` → `$FF`).
+
+## §2.22 S105 — the custom skills' built-in scripts (script type `$FF`)
+
+`editor2/core/skill_scripts.json` holds the dialog scripts + texts of the custom
+skills (today Anchor's four: gate-side confirm, return confirm, "fails here",
+"no anchor"). `Project` appends copies of them after the project's own
+`custom.scripts` / `custom.dialogue` (never written back — the editor saves
+`self.data`), so they take the first text ids after the project's; ids starting
+`skill:` are reserved. `emit_bank_060` writes `SkillScriptPtrTable` right after
+the master table: ids 0/1 → `SkillScrNoop` (id 0 = "the player" in bank $04
+`CheckPendingNPC`'s `$D8DC` test), then the scripts from id 2 in file order —
+Anchor = 2-5, the S73-measured values. Template `CustomScriptRead`: `cp
+SKILL_SCRIPT_TYPE ($FF) / jr nz .room / ld de, SkillScriptPtrTable / jr
+.byScript` (+9 B, re-pinned §5); `$FF` routes like any type ≥ `$6B` ≠ `$70`
+everywhere else (the `$06/$20/$40` bank ladders, `GateAwareDispatch`, the `$5D`
+battle tests). Bank $72 `AnchorField14Tail` arms `$D8D3 := $FF` (was `$71`).
+The validator does not warn about the built-in texts' `lines` form (measured +
+user-confirmed S73). PyBoy S105 on the user's save (a project WITHOUT room
+`$71`): all four dialogs through the real SKIL menu; the S104 build soft-locked
+there (BATTLE_SKILL_SYSTEM §14).
 
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 
@@ -1507,7 +1643,10 @@ delays accordingly.
 * **Reference patched pin**: `224b11766b28de88cdb206c31145e286` (S73b,
   SHIPPED USER-CONFIRMED; full description in test_compiler.py; superseded
   interim S73 pin `8fa605d795…` — historical).
-* **Anchor content in the example project**: medal_vault (`$71`) hosts
+* **S105: SUPERSEDED** — Anchor's scripts + texts are no longer project
+  content: they are the compiler's built-in skill scripts (§2.22, script type
+  `$FF`), and bank $72 no longer names map `$71`. Historical S73 note follows.
+* **Anchor content in the example project** (S73-S104): medal_vault (`$71`) hosts
   script ids 2-5 (`anchor_gate_confirm` / `anchor_return_confirm` /
   `anchor_err_special` / `anchor_err_none`) + 4 AUTO-id dialogue entries
   (explicit `text_id`s above the auto block break the no-quest fixture's

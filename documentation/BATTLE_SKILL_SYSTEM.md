@@ -1058,7 +1058,14 @@ handler + `$c90d=4` (full menu close, no message, no deduct); others →
 byte-exact flag reproduction.
 
 **Arming a script from the menu (the S73 protocol):** `$D8D3=$71`
-(medal_vault; CustomScriptRead keys on wScriptMapType), `$D8D4`/`$D8DC` =
+(medal_vault; CustomScriptRead keys on wScriptMapType) — **S105: `$D8D3=$FF`**,
+the custom skills' OWN scripts (bank $60 `SkillScriptPtrTable`, emitted into
+every build from `editor2/core/skill_scripts.json`; PROJECT_COMPILER §2.22).
+S73-S104 armed `$71` = the example project's medal_vault: in a project without
+room `$71` (the user's) the script read past the master table and SOFT-LOCKED
+the game (PyBoy S105: script active, counter stuck at 8, player cannot move);
+S105 build: all four dialogs through the real SKIL menu on the user's save.
+`$D8D4`/`$D8DC` =
 script index, **counter `$D8D5/6 = $FFFF`** (the per-frame ticker
 `ScriptExecContinue` PRE-increments before reading — only `ScriptInit`
 reads at 0), `$D8D7 = $01`. The script engine is gated on the UI-busy
@@ -1071,7 +1078,7 @@ physical room; `$70` (the gate-world script type) stays on the wMapID route
 
 **Anchor ($E4) semantics as built:** confirm scripts 2 (gate-side) / 3
 (return) with YES/NO, error scripts 4 (special/boss/custom room) / 5 (no
-anchor); YES writes `wAnchorArm` (1/2) + warps (script `map_transition`:
+anchor) (S105: skill-script ids 2-5, script type $FF; ids 0/1 no-op); YES writes `wAnchorArm` (1/2) + warps (script `map_transition`:
 $0000/$E8/$58 = the WarpWing recipe incl. `$d92b=6`; $8000 staircase-style
 for the return). Bank $73 commit hook: arm 1 → store gate + floor+1
 (1-BASED; `wAnchorFloor==0` is the no-anchor sentinel, and `wCurrentFloor`
@@ -1480,7 +1487,8 @@ text. The flag is set strictly between the two renders.
 valid only while the table sits in one page — **link-time ASSERT added**,
 build fails if a future row crosses). Bank `$41`: the Mourn name is funded
 from the dead `$00` fill before Scorch (only `$7FF9+` of the `$7E39` region
-is ever indexed; redirect gates id>=224). Bank `$56` desc + `$4c` messages
+is ever indexed; redirect gates id>=224 — S105 G3: base now `$7D39`, the
+nickname pointer table sits at `$7EF3-$7F18`, the Mourn name is untouched). Bank `$56` desc + `$4c` messages
 consume their nop pads 1:1; bank `$58` announce row consumes 1 nop
 (DataBtlFX_7959 pin re-verified); bank `$06` learn row consumes 18 `rst $38`
 (db `$06` still at `$7FFF`).

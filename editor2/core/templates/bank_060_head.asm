@@ -465,8 +465,8 @@ GateAwareDispatch:
     ld a, [wScriptMapType]      ; [ANCHOR S73] script TYPE targets the custom bank?
     cp $70                      ;   $70 = the gate-world script type — the B-bug
     jr z, .byRoom               ;   poison value; MUST stay on the wMapID route.
-    cp CUSTOM_ROOM_START        ;   Any other type >= $6B (e.g. $71 armed by the
-    jr nc, .customRoom          ;   Anchor field-skill) reads bank $60 scripts
+    cp CUSTOM_ROOM_START        ;   Any other type >= $6B (e.g. $FF armed by the
+    jr nc, .customRoom          ;   Anchor field-skill, S105) reads bank $60 scripts
 .byRoom:                        ;   regardless of the physical room (maze/town).
     ld a, [wMapID]              ; $C968 — the actual room map-type
     cp CUSTOM_ROOM_START        ; $6B
@@ -480,8 +480,21 @@ GateAwareDispatch:
 ; =============================================================================
 ; Entry 4: CustomScriptRead
 ; =============================================================================
+; S105 (P3.9b): script TYPE $FF = a custom SKILL's own dialog script
+; (SkillScriptPtrTable, emitted into every build from editor2/core/
+; skill_scripts.json, id = [wScriptNPCId]) — so a field-cast skill needs no
+; custom room. Anchor (bank $72 AnchorField14Tail) arms $FF / ids 2-5; S73-S104
+; armed $71 = the example project's medal_vault, which other projects lack.
+; $FF routes exactly like $71 everywhere else: >= $40 -> bank $0F dispatch ->
+; GateAwareDispatch (>= $6B, != $70) -> here.
+SKILL_SCRIPT_TYPE EQU $FF
 CustomScriptRead:
     ld a, [wScriptMapType]
+    cp SKILL_SCRIPT_TYPE
+    jr nz, .room
+    ld de, SkillScriptPtrTable
+    jr .byScript
+.room:
     sub CUSTOM_ROOM_START
     ld l, a
     ld h, $00
@@ -492,6 +505,7 @@ CustomScriptRead:
     inc hl
     ld d, [hl]
 
+.byScript:
     ld a, [wScriptNPCId]
     ld l, a
     ld h, $00

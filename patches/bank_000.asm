@@ -211,14 +211,15 @@ SetScrollRegisters_00C2:
 ; --- Phase N default-nickname fix: occupies the 16-byte $00F0-$00FF padding ----
 ; SaveBankAndSwitch's level-1 lookup loads DE = per-mode text table base. The
 ; default monster nickname uses the 2-letter FamilyCodePtrTable ($4739, 215
-; entries); a new species (id>=224) overshoots it (id 224 -> $48F9 =
+; entries); a new species (id>=221) overshoots it (id 224 -> $48F9 =
 ; ItemNamePtrTable[9] = "SkyBell"). This reproduces the original
-; `ld e,[hl];inc hl;ld d,[hl]`, then ONLY when the base is $4739 and id>=224
-; redirects to a new-species SHORT-name table ($7E39, [224]=$7FF9) holding the
-; first 4 letters of the name. Using a real 4-char string (not the full name)
+; `ld e,[hl];inc hl;ld d,[hl]`, then ONLY when the base is $4739 and id>=221
+; redirects to the new-species SHORT-name table (base $7D39: [221] = $7EF3 ..
+; [239] = $7F17 in bank $41, NewSpeciesShortPtrs — S105 G3; was base $7E39 with
+; only [224] = $7FF9) holding the default nickname (<= 4 letters). Using a real 4-char string (not the full name)
 ; fixes BOTH the truncating nickname field AND the untruncated "take X with you"
 ; narration. Generic for any new species; gated on $4739 so all other text is
-; byte/behaviour-identical ($4739/$7E39 share low byte $39, so D-only).
+; byte/behaviour-identical ($4739/$7D39 share low byte $39, so D-only).
 LoadModeBaseRedirect:                ; $00F0
     ld e, [hl]
     inc hl
@@ -227,9 +228,9 @@ LoadModeBaseRedirect:                ; $00F0
     cp $47
     ret nz
     ld a, [$c823]
-    cp $e0
+    cp $dd                      ; S105 G3: id >= 221 (was $e0 = 224)
     ret c
-    ld d, $7e                   ; $4739 -> $7E39 (new-species SHORT-name table; [224] = $7FF9 in bank $41). low byte $39 is shared so this is D-only. Gives the first-4 name to BOTH the 4-char nickname field AND the untruncated "take X with you" narration.
+    ld d, $7d                   ; $4739 -> $7D39 (new-species SHORT-name table; [221] = $7EF3 in bank $41). low byte $39 is shared so this is D-only. Gives the first-4 name to BOTH the 4-char nickname field AND the untruncated "take X with you" narration.
     ret
 
 Boot::
@@ -9637,87 +9638,45 @@ TilemapRotateWrite:
     rrca
 
 WriteRotatedBytesDown:
-    ; --- MonsterBattleGfxTable tail ($2d56..$2d62), re-sectioned as data (this
+    ; --- MonsterBattleGfxTable tail ($2d56..$2da7), re-sectioned as data (this
     ;     region is mgbdis-misassembled as ld/rrca; the bytes ARE the battle
-    ;     gfx-ID table $00:$2b9f[species*2]). Byte-identical to vanilla EXCEPT the
-    ;     id-224 word at $2d5f: $320f ("Durran" placeholder shared by sp216-255)
-    ;     -> $7e01 = Battle_sp224 (overflow bank $7e, index 1). G2 / Phase N.
+    ;     gfx-ID table $00:$2b9f[species*2], 256 words to $2d9e, then 9 bytes of
+    ;     the next block). Byte-identical to vanilla EXCEPT ids 221-239
+    ;     ($2d59..$2d7e): the compiler region ns_battle_gfx (S105, P3.9b / G3) =
+    ;     a declared new species' battle stream in overflow bank $7e (index
+    ;     (id-221)*2+1); an undeclared id keeps $320f ("Durran", the vanilla
+    ;     placeholder shared by ids 216-255). WriteRotatedBytesDown is kept: bytes
+    ;     elsewhere decoded as code call it (data, never executed). TilemapRotateCont
+    ;     ($2d63, unreferenced) is now inside the region.
     ;     Editor: a battle-sprite swap for ANY species is a same-size 2-byte edit
     ;     of its slot here ($2b9f + species*2). New art lives in an overflow bank.
-    db $32, $0f, $32, $0f, $32, $0f, $32, $0f, $32   ; $2d56..$2d5e
-    db $01, $7e                                       ; $2d5f: id-224 battle gfx-ID = $7e01
-    db $0f, $32                                       ; $2d61..$2d62
-
-TilemapRotateCont:
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    nop
+    db $32, $0f, $32   ; $2d56 (id 219 hi, id 220)
+    ASSERT @ == $2b9f + 221 * 2
+; @BUILD_PROJECT BEGIN ns_battle_gfx
+    db $0F, $32   ; [221] battle gfx-ID (vanilla placeholder)
+    db $0F, $32   ; [222] battle gfx-ID (vanilla placeholder)
+    db $0F, $32   ; [223] battle gfx-ID (vanilla placeholder)
+    db $07, $7E   ; [224] battle gfx-ID (Gorbunok)
+    db $0F, $32   ; [225] battle gfx-ID (vanilla placeholder)
+    db $0F, $32   ; [226] battle gfx-ID (vanilla placeholder)
+    db $0F, $32   ; [227] battle gfx-ID (vanilla placeholder)
+    db $0F, $32   ; [228] battle gfx-ID (vanilla placeholder)
+    db $0F, $32   ; [229] battle gfx-ID (vanilla placeholder)
+    db $0F, $32   ; [230] battle gfx-ID (vanilla placeholder)
+    db $0F, $32   ; [231] battle gfx-ID (vanilla placeholder)
+    db $0F, $32   ; [232] battle gfx-ID (vanilla placeholder)
+    db $0F, $32   ; [233] battle gfx-ID (vanilla placeholder)
+    db $0F, $32   ; [234] battle gfx-ID (vanilla placeholder)
+    db $0F, $32   ; [235] battle gfx-ID (vanilla placeholder)
+    db $0F, $32   ; [236] battle gfx-ID (vanilla placeholder)
+    db $0F, $32   ; [237] battle gfx-ID (vanilla placeholder)
+    db $0F, $32   ; [238] battle gfx-ID (vanilla placeholder)
+    db $0F, $32   ; [239] battle gfx-ID (vanilla placeholder)
+; @BUILD_PROJECT END ns_battle_gfx
+    ASSERT @ == $2d7f
+    db $0f, $32, $0f, $32, $0f, $32, $0f, $32, $0f, $32, $0f, $32, $0f, $32, $0f, $32   ; $2d7f
+    db $0f, $32, $0f, $32, $0f, $32, $0f, $32, $0f, $32, $0f, $32, $0f, $32, $0f, $32   ; $2d8f
+    db $0f, $32, $0f, $32, $0f, $32, $0f, $32, $00   ; $2d9f
 
 TileRotatePadding:
     nop

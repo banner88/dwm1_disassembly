@@ -10,6 +10,93 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
+> Last verified: 2026-09-30 (Session 105 — **ROADMAP P3.9b: PURGE THE
+> PROOF-OF-CONCEPT CONTENT FROM THE HAND OVERLAY, KEEP EVERY MECHANISM** (user
+> 16:21: "Yes let's clean all this stuff it wont make it into real romhack
+> except for mechanics, other than custom skills which need to fire without
+> pre-existing custom rooms"; 16:35 "sounds great" to the scope) **+ G3:
+> NEW-SPECIES CAPACITY 1 → 19 (ids 221-239)** (user: "Wait hang on so I can
+> only have 16 new monsters max? I DONT LIKE THAT." → "Alright, 19 monsters it
+> is. The rest I'll edit existing ones. Lets do it."). S104 USER-CONFIRMED at
+> session start. **USER-CONFIRMED 2026-09-30 ("Confirm all three appear as expected")** on the S105 G3 test ROMs (user project as-is + the
+> 3-species demo).
+> Verifier PASS 6/6; clean `1ca6579…` byte-perfect (bank $11 `$407F-$4183`
+> re-sectioned into `FollowerLayoutL1Table11` / `FollowerAttrTable11` + bank
+> $04 router note — both trees where the bank is patched); **patched pin MOVED
+> `15f21834…` → `f8a71485…` (patched, historical: the capacity-1 build, never
+> user-tested) → `f22f56e1…` (patched, G3)**; test_compiler --rom 402/402
+> (new: a BLANK project builds the original ROM's bytes at every purged /
+> new-species site; every new-species fork EXECUTED from the built ROM's bytes
+> over ids 0-239 for the example and a 19-species project); test_app --rom
+> (GUI build == pin) + test_canvas --rom PASS. `EDITOR_REVISION` = 'S105'.
+>
+> **Purged (no project gets them any more):** (1) **Gorbunok** (new species
+> 224) — now project data `custom.species` (editor2/core/species.py,
+> PROJECT_COMPILER §2.21): 17 `ns_*` compiler regions in banks
+> $00/$01/$06/$07/$09/$0B/$11/$12/$16/$17/$18/$41/$4D/$59/$6A + the
+> compiler-owned bank $7E; an empty `custom.species` writes the original ROM
+> bytes into every one (bank $7E all zero). The example project re-expresses
+> Gorbunok byte-identically (art = `assets/species/*.bin`, reproducible from
+> the PNGs with `bake_follower_overflow.py --stream-dir`); its wild row moved
+> from the bank-$14 EID-518 slot to an ordinary project enemy (520). (2) **the
+> S21 Dracky → "Clam" battle sprite** (`patches/bank_036.asm` deleted — it was
+> in every build since 2026-06-19; the S103 audit missed it). (3) the S12
+> dead-table mirror (bank $16 special entries 693 / 803). **Kept:** every fork
+> (they read the project data), the custom skills. **Anchor needs no custom
+> room any more:** its 4 dialog scripts + texts moved from the example's
+> medal_vault (`$71`, scripts 2-5) to the compiler's built-in
+> `editor2/core/skill_scripts.json` (bank $60 `SkillScriptPtrTable`, script
+> type `$FF`; template `CustomScriptRead` +9 B, re-pinned; bank $72 arms `$FF`,
+> ids 2-5 unchanged).
+>
+> **Found + fixed (measured in PyBoy on the user's save, old build `53338a16…`
+> vs new `e8e30264…`, both patched):** (a) casting Anchor in the user's project
+> SOFT-LOCKED the game — room `$71` does not exist there, the script read past
+> the master table, stayed active with counter 8 and the player could not
+> move; new build: all four dialogs through the real SKIL menu (no anchor →
+> "No anchor is set!"; gate 1 floor 1 → YES → Castle, anchor 1/1 stored; Castle
+> → YES → gate 1 floor 1, MP 916 → 229, anchor cleared; the user's custom gate
+> room `$6F` → "The anchor fails here!"). (b) since S34 every build wrote the
+> new species' layout pointer at `$11:$413F` = the follower attr bytes of
+> **ChopClown (146) / Grendal (147)**: OAM attr `$A4` / `$41` (green palette,
+> Grendal upside-down) → vanilla `$22` / `$02` again; Gorbunok's follower OAM
+> (tiles + attrs, 8 walk samples) identical old vs new in the example (bank $11
+> NewAttrHandler writes the layout donor's index to HRAM `$C7`). (c) Dracky
+> fights as Dracky again (battle screenshot A/B). Also: the gamedata shadow
+> checks treated a Spirit parent as no family (`fam_code` stopped at 9) —
+> fixed, test proves old-fails / new-catches.
+>
+> **G3 — 19 new species, ids 221-239 (PROJECT_COMPILER §2.21).** The range
+> is the game's own ceiling (seen bits 0-239, family codes $F0-$FA in the
+> recipe scanner, $FE/$FF markers, follower router wrap at 240). The eight
+> follower forks now COMPUTE the gfx-ID `$7E00+(id-221)*2` into WRAM
+> `wNewSpeciesGid` ($D10A) — no per-bank tables (same fork size); every other
+> fork gates on id ≥ 221 with 19-row tables (info $03/$6A, attr $11, battle
+> palette $17, recipe pair $16, detail text $4D, nickname redirect $00 → base
+> $7D39); ROM0 battle gfx table tail re-sectioned; bank $41 names/nicknames
+> PACKED into 7 free extents (292 B: 19 × 8-letter names fit, 19 × 9-letter
+> each with its own nickname do not — validation error); bank $12's trailing
+> nops → `ds` so the library grouping can grow; a library tab over 32 members
+> is now a validation error. **Also fixed:** (d) `SpellUseText_11`
+> ("…knocked out monster!") had its last 16 bytes zeroed since B9 S28 (commit
+> `e97b6da`) — restored; (e) stale files in a project's `build/patches` from an
+> older editor silently overrode the hand overlay (write_outputs deletes them).
+> **Measured in PyBoy** (fixture = example + 221 "Invertus" (colour-inverted
+> art) / 239 "DrakSlimy" (tile-reversed art) + Gorbunok 224, user save):
+> follower gid $7E00 / $7E06 / $7E24, the exact 256-B art in VRAM, OBJ palette
+> 4/2/5; battles: the exact 576-B art, the declared BG palette, "Look out!
+> Invertus / DrakSlimy monster!"; joins: naming screen suggests "Inve" / "Drak";
+> library pages: Invertus "????? ?????" + species 10's text, Gorbunok Snaily +
+> BattleRex, DrakSlimy DrakSlime + Healer with parent icons. User project as-is
+> vs `e8e30264…`: 17 room/menu screenshots + 3 battles pixel-identical.
+> Test ROMs: **`DWM_S105_G3_user.gbc`** = the user's project as-is (patched,
+> `e84dff45…`); **`DWM_S105_G3_demo.gbc`** = the user's project + 3 demo
+> species in Gate of Beginning pool 0 (patched, `0b65dc01…`; demo only, not
+> for the real hack). **USER-CONFIRMED 2026-09-30 ("Confirm all three appear as expected").** Hand-off: all S105 work = the
+> diff against `4e7f7ea` (origin/master), delivered as
+> `DWM-S105-species-capacity-changed-files.zip`. **Next:** the user picks the
+> next editor item (P3.10 Monsters tab would start from `custom.species`).
+
 > Last verified: 2026-09-30 (Session 104 — **ROADMAP P3.10a: SPIRIT AS THE
 > 11TH FAMILY** (user 13:07: "1) Custom skills absolutely stay!! … All data
 > related to them must also be in editor. 2) Yeah please fix ??? and make
@@ -125,69 +212,9 @@
 > against `f2d9ece` (origin/master), delivered as
 > `DWM-S103-S104-changed-files.zip`.**
 
-> Last verified: 2026-09-29 (Session 103 — **ROADMAP P3.9: LAYER A-LITE —
-> THE VANILLA DATA TABLES BEHIND project.json `gamedata`** (user: P3.3g "No
-> fuck this. Bank and come back later if tiles become a problem … Move on to
-> next editor item" → P3.3g BANKED with its S103 static audit in ROADMAP;
-> then "Sure lets do 3.9 and if its ends up very fast lets do P3.7b part 2
-> also" — P3.9 was not fast, P3.7b part 2 not started). S102 not re-confirmed
-> this session. **Built S103; USER-CONFIRMED 2026-09-30 (test ROM: "Rom - all
-> correct").** Verifier PASS 6/6 (check
-> 5 also runs `extract_gamedata.py --selftest`; PATCH_FILES + the new hand
-> patch `bank_013.asm`); clean `1ca6579…` byte-perfect (bank $04D recipe-string
-> block and bank $01 `EncounterChancePercent` re-sectioned, bank $01 encounter
-> code annotated — both trees); **patched pin MOVED `0d60486e…` → `5d1dbc5f…`
-> (patched)**; test_compiler --rom 227/227; test_app --rom PASS (GUI build ==
-> pin); test_canvas --rom PASS. `EDITOR_REVISION` = 'S103'.
->
-> **What changed (PROJECT_COMPILER §2.20):** `gamedata` is implemented as
-> SPARSE overrides — `monsters`, `enemies` (EIDs 0-486), `encounters`,
-> `skills` (mp / learn / record), `exp_curves`, `growth_curves`,
-> `breeding.family` / `.special`, `boss_joins` — emitted into twelve same-size
-> compiler regions in banks $01/$03/$06/$07/$12/$13/$14/$16/$4D/$54/$69 from
-> the committed vanilla base `extracted/gamedata_vanilla.json`
-> (`tools/extract_gamedata.py`); an empty `gamedata` == the ROM, table by
-> table (test_compiler; `--rom` against the original ROM). The compiler keeps
-> coherence: library recipe TEXT regenerated **in place** (the bank $4D mode
-> table overlaps the recipe pointers — TEXT_SYSTEM correction), library tabs
-> regrouped from the family bytes, Set 2 / Set 3 warnings, the B5 shadow
-> validator ported. The pre-S103 hand edits (Spirit Dracky / Darkdrium, starter
-> EID 1 harness, Gorbunok pool 0, B4 recipes, B5 overrides + appends) are now
-> the **example project's `gamedata`** — byte-identical, except that its 4 B4
-> recipe strings now match (17 B in bank $4D). Tool emit paths that wrote these
-> bytes are retired (KEY_LESSONS S103).
->
-> **Decoded (DATA_STRUCTURES "Encounter pool entry"; annotated bank $01):**
-> pool +0 rate code → wC8A9, +2..+4 chance of 1/2/3 monsters, +5..+9 slot
-> chances (codes → `EncounterChancePercent` $01:$69C0 = 0-100 %), +20..+24
-> **max count** per slot (1 = only alone; NOT a weight), +25 maze size → $C93D.
-> **Measured freeze:** a pool that can draw 2 monsters whose first draw has max
-> 0 and no slot allowed twice re-draws forever (28,257 passes, no battle) — the
-> compiler refuses it.
->
-> **PyBoy on the user's save** (their project + the example's gamedata + demo
-> edits = `DWM_S103_gamedata_test.gbc`, patched, md5 `1dbae0a5…`): Gate of
-> Beginning = always one Slime; its battle row `$DA18` = the edited EID 2
-> (HP 250, ATK 1, 500 exp, always joins) → 167 exp to each of 3, the Slime
-> joins; HealMore USE MP 1 (5 on the same project without the demo edits);
-> Snaily's encyclopedia page reads "Zombie family / Zombie family"; the Dragon
-> tab lists 26 (Slime moved in), the Slime tab 20. The user's project WITHOUT
-> gamedata now builds the vanilla tables (the POC edits are no longer
-> inherited).
->
-> **User sign-off 2026-09-30 12:53: "Rom - all correct"** (test ROM passed).
-> Decisions: "Start off hack with original table. patches are POC trash" (the
-> user's project keeps NO gamedata = vanilla tables); "Please do not include any
-> patches in the editor, they are all trash (in terms of custom monsters, custom
-> rooms, etc. The mechanisms are obviously vital)" → ROADMAP **P3.9b** (purge
-> POC content from the hand overlay, keep the mechanisms); "I still want the
-> FAMILY [Spirit], but for now no monsters assigned … assign to families …
-> propagates to breeding … a new sprite for the spirit family" → ROADMAP
-> **P3.10a** (Spirit as a first-class 11th family). Both audited (read-only)
-> S103; not started. **Hand-off: all S103 work = the diff against `f2d9ece`
-> (origin/master), delivered as `DWM-S103-gamedata-changed-files.zip`.**
-
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S105** (2026-09-30): P3.9b purge of the POC content — new species = project data (`custom.species`, `ns_*` regions + bank $7E) + G3 capacity 19 (ids 221-239, computed follower gfx-ID, packed bank-$41 names), Dracky Clam + S12 mirror gone, Anchor's dialogs built into every build (skill scripts, type $FF); fixed: Anchor soft-lock in projects without room $71, ChopClown / Grendal follower attrs, Spirit parents in the shadow checks, SpellUseText_11 tail, stale build/patches files. USER-CONFIRMED 2026-09-30 ("Confirm all three appear as expected"). Verbose block in this file. Owning: PROJECT_COMPILER §2.21/§2.22, MONSTER_DATA overshoot registry + follower section, BATTLE_SKILL_SYSTEM §14, KEY_LESSONS S105, DOC_AUDIT S105.
+- **S103** (2026-09-29): P3.9 Layer A-lite — `gamedata` sparse overrides into twelve same-size compiler regions (monsters, enemies, encounters, skills, curves, breeding, boss joins; library text + tabs coherent), encounter pool format decoded (+20..+24 = max counts; the measured freeze refused), P3.9b / P3.10a audited. USER-CONFIRMED 2026-09-30. Owning: PROJECT_COMPILER §2.20, DATA_STRUCTURES "Encounter pool entry", KEY_LESSONS S103.
 - **S104** (2026-09-30): P3.10a Spirit as the 11th family (bank $6D family systems + forks, `$FA` = Spirit, icon on $1A, ??? restored, unknown-parent icon fix, `gamedata.families`, Families tab, display order) + two FX1 bugs fixed (library list buffer; R4 snapshot restore losing saves). USER-CONFIRMED. Verbose block in this file. Owning: BREEDING_SYSTEM "Spirit — the 11th family (S104)", PROJECT_COMPILER §2.20, EDITOR_DESIGN §5.2a, KEY_LESSONS S104.
 - **S102** (2026-09-28): P3.3f own animated tiles — compiler-owned bank $6C (`CustomTileAnimate`, GDMA frame copies in HBlank, ≤ 8 tiles/frame, line 127 skipped), the Animate tab (flip / drift / sway, any speed, plain budget; r2 frames side by side, r3 per-tile / per-cell tools), `LCDCStateTable` decoded, VRAM bank 1 found empty in the field (→ P3.3g). Owning: PROJECT_COMPILER §2.19, ROOM_DATA_FORMAT "Own tile animations (S102)", EDITOR_DESIGN §5.1, KEY_LESSONS S102.
 - **S101** (2026-09-27): P3.7b part 2 first half — custom boss floors (`custom.gates`: floor count, boss = custom / vanilla room, hand-made gates), monster NPCs $F0-$F3, conversation trees (`talk.steps`: flags, YES/NO, 1-3 enemy battles, helper exit, arrival fights), project enemies in bank $6B + join versions; r2 Warubou helper landing beside the player; r3 Help tab; r4 castle arrival (priest heal / King speech), World zoom; pins `7cd7257b…` → `9c813041…` (patched, historical). USER-CONFIRMED 2026-09-27 except the helper (r2-r4 NOT yet user-tested). Owning: GATE_GENERATION §7.7, PROJECT_COMPILER §2.17/§2.18, ROOM_DATA_FORMAT "Monster NPCs", MONSTER_DATA "Project enemy rows", EDITOR_DESIGN §5.1b, DOC_AUDIT S101.
@@ -320,7 +347,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | $64 | Custom tile layouts + attr data (`custom.layouts[]`, S92; per-screen attr maps S94) | compiler-generated `patches/bank_064.asm` (`layouts64`) |
 | $67 | Custom tileset sheets (`custom.tilesets[]`: raw2bpp incl. editor-copied vanilla sheets, or mashup spec) | compiler-generated `patches/bank_067.asm` (`tilesets67`) |
 | $69 | Breeding special scanner (B2) + the live special table | hand-kept `patches/bank_069.asm` (scanner) + compiler region `gd_special_recipes` (`gamedata.breeding.special`, S103; `build_breeding.py --emit-special` retired) |
-| $6A | New-species info high table (ids 224+) | `build_new_species.py` |
+| $6A | New-species info high table (ids 221-239; S105 G3, was 224+): hand `NewSpeciesInfoCopy` (`sub $dd`) + slots 0-18 = compiler region `ns_info` (S105) | hand-kept `patches/bank_06a.asm` + `custom.species` (editor2/core/species.py; `build_new_species.py` emit retired S105) |
 | $6B | Project enemy rows (`progression.enemies[]`, EID 519 + index, 25 B each, ≤640; entry 0 `CopyEnemyRowExt` called by bank $14 `LoadEnemyStatsExt`; S101) | compiler-generated `patches/bank_06b.asm` (template `bank_06b_head.asm` + rows) |
 | $6C | Own tile animations (`custom.rooms[].tile_anims`: `CustomTileAnimate` entry 0 + `TileAnimRoomTable`, group records, 16-aligned frame blocks; S102) | compiler-generated `patches/bank_06c.asm` (template `bank_06c_head.asm` + data; `tileanim6c`) |
 | $6D | Family systems (S104: Spirit = family 10 — entries 0/1 icon gfx id, 2 dialogue text group, 3 default-name id, gfx index 4 `SpiritIconStream`; callers = same-size forks in banks $01/$0A/$04/$09) | hand-authored `patches/bank_06d.asm` (the Spirit icon bytes checked by `build_family_icon.py --selftest`) |
@@ -328,7 +355,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | $72 | Custom-skill system (de-aliased S2d/S2e code + tables) | hand-authored `patches/bank_072.asm` |
 | $73 | Cold Farm systems (CF2 drain, entry 0; CF3 party-first sort, entry 1) | hand-authored `patches/bank_073.asm` |
 | $74 | Custom song bank (M3a: records $4001-$417C fixed 95-slot, streams $4180+; resolved by AudioMasterTableExt row $9E) | compiler-generated `patches/bank_074.asm` (`music74` emitter → `song_codec.song_bank_asm` ← project.json `custom.music` + `extracted/*_song_library.json`; S64 — `custom_songs.json` retired) |
-| $7E | Sprite overflow streams (battle + follower art) | `dwm/sprite_bank.py`, `bake_follower_overflow.py` |
+| $7E | The project's NEW-SPECIES art streams (38-word pointer table: index (id-221)*2 follower, +1 battle; S105: compiler-owned, all zero without `custom.species`) | compiler-generated `patches/bank_07e.asm` (`species7e`, editor2/core/species.py; streams from `bake_follower_overflow.py --stream-dir`) |
 | $7F | RESERVED next sprite-overflow bank (then $7C, $7A, $79) | `dwm/sprite_bank.py` order |
 | **Unallocated** | **$6E–$70, $75–$77, $79–$7A, $7C** (8 banks = 128 KB; S104: $6D taken; $75 is the documented next song bank) + reserved $7F. (S102 correction: this row still listed $6B, patch-owned since S101.) | — |
 
@@ -374,7 +401,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 
 | Primitive | Status | Where |
 |-----------|--------|-------|
-| Add NEW monster species (ids 224–255) | 🟢 Gorbunok (id 224) fully integrated & baked: info/stats/wild-encounter/name/library/breeding(3 paths)/lineage/follower art/battle art (S28–S38, user-confirmed). Open: **G3** schema fold (ROADMAP). | ROADMAP Phase N; MONSTER_DATA "Species ID geography" + "NEW species followers/battle sprite" |
+| Add NEW monster species (ids 221–239) | 🟢 mechanism proven with Gorbunok (S28–S38, user-confirmed); **S105: project data** — `custom.species` (name, short name, info row, description, battle art + palette, follower art + walks_like + palette; recipe display derived; enemy rows = project enemies) → `ns_*` regions + bank $7E; no species = the original ROM bytes; the example project carries Gorbunok. **Capacity 19** (ids 221-239 = the game's ceiling; G3 S105). USER-CONFIRMED 2026-09-30 ("Confirm all three appear as expected"). | PROJECT_COMPILER §2.21; MONSTER_DATA "Species ID geography" + overshoot registry |
 | Custom rooms (mapID ≥ $6B) | ✅ table-driven to editor scale: render/palette/attr/$26DD records + per-room encounters via bank $71 tables (S40/S42); multi-screen scroll (v28); gate-rotation insertion + descent (S41; data-driven S100 — next row). | EDITOR_DESIGN §2; GATE_GENERATION §7; CROSSBANK_ROOMS |
 | Custom NPCs with scripts | ✅ working | bank $60 entry 4 dispatch |
 | Custom text, multi-page, line breaks | ✅ working | IDs $0A00+, two-level ptr table |
@@ -383,7 +410,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Monster/egg give + storage-full check | ✅ working | opcodes $29 (wrapped) / $28; egg path is the practical choice |
 | Script-driven teleport | ✅ working | opcode $0F (MapTransitionFull); vanilla + custom destinations |
 | FIELD-cast custom skills (menu → context logic → dialog → effect) | ✅ SHIPPED, USER-CONFIRMED S73 (+S73b descriptions & battle rejection): skill $E4 "Anchor" (anchor gate floor → warp to GreatTree → return later for 3/4 current MP charged on arrival; persistent through save; single-use; forced-standard regenerated floor). Full field-cast pipeline RE'd: usability whitelist, $da5e, bank $14 entry 4/5, menu-shell states ($c90d 0-4), script arming from the menu. PyBoy-verified round trip via the real UI. | BATTLE_SKILL_SYSTEM §14; bank $72 AnchorField14Tail; patched pin `8fa605d7…` |
-| Menu-armed dialog scripts in ANY room (incl. maze floors) | ✅ user-confirmed S73 (part of Anchor): $D8D3=$71 + ctr=$FFFF arming; GateAwareDispatch script-type branch (≥$6B, ≠$70) | PROJECT_COMPILER §5 (template re-pin); KEY_LESSONS S73 |
+| Menu-armed dialog scripts in ANY room (incl. maze floors) | ✅ user-confirmed S73 (part of Anchor): ctr=$FFFF arming; GateAwareDispatch script-type branch. S105: script type **$FF** = the built-in skill scripts (bank $60 `SkillScriptPtrTable`, editor2/core/skill_scripts.json) — no custom room needed (was $71 = the example's medal_vault; a soft-lock in other projects), built S105, PyBoy on the user's save (≥$6B, ≠$70) | PROJECT_COMPILER §5 (template re-pin); KEY_LESSONS S73 |
 | BGM change | ✅ working | opcode $41 (SetBGM); reverts to the ROOM DEFAULT on exit/reload |
 | Room-default music (vanilla + custom rooms) | ✅ working (S64, user-confirmed v6): `music.room_defaults`/`rooms[].music` → `CustomRoomBGMTable` (bank $71 entry 2) consulted first by the rewritten `LoadNewBGMIdIntoA`; survives save/reload by construction; sources = inbuilt ids, DWM2 catalog (all 31), MIDI conversions | SOUND_SYSTEM §8; PROJECT_COMPILER §2.9 |
 | Event flags set/clear/check | ✅ working | opcodes $00/$01/$03; 328 referenced, 298 with sets (branch-following) |
@@ -404,7 +431,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Script compiler/decompiler | ✅ working | tools/compile_script.py / decompile_script.py |
 | Random encounters in custom rooms | ✅ generalized per-room (S42 `RoomEncTable`, bank $71). Remaining: custom monster POOLS (Encounters #2, ROADMAP). | CROSSBANK_ROOMS; KEY_LESSONS S11 |
 | Custom breeding | ✅ full authoring stack B1–B7: round-trip encoder; bank $69 owns the special table (overrides+appends+shadow validator); family-defaults rewrite; family reassignment; production library grouping (zero lag). **Spirit = a first-class 11th family (S104, USER-CONFIRMED 2026-09-30):** bank $6D family systems, `$FA` = Spirit, ghost-wisp icon, ??? restored, shown before ???, editor Families tab. | BREEDING_SYSTEM; ROADMAP Phase 2B |
-| Custom battle skills (net-new ids) | 🟢 NINE custom skills live: MagicBurn $E0 (S49), Tame $E1 (S50), TameMore $E2 + TameMost $E3 (S52), Anchor $E4 field-cast (S73, user-confirmed), Earthquake chain $E5-$E8 (S74; **S84: AI-commit of $E6-$E8 was CRASH-CAPABLE on all pre-S84 builds** — dispatch-table overrun, fixed by DispatchBoundsStub; PyBoy re-verified S84, awaiting user test), **Mourn $E9 (S75: ATK-vs-DEF × (dead allies+1), 2nd dispatch trampoline = per-skill vanilla damage machine; **S84: AI-commit was CRASH-CAPABLE (wild jump to WRAM) on all pre-S84 builds** — fixed S84; AI-commit activation USER-CONFIRMED on the real save (Charge tactics))** — all on the full de-aliased stack incl. natural-learn, real MP, announce, descriptions. | BATTLE_SKILL_SYSTEM §12–§13.8, §14; ROADMAP Arc 2 |
+| Custom battle skills (net-new ids) | 🟢 NINE custom skills live: MagicBurn $E0 (S49), Tame $E1 (S50), TameMore $E2 + TameMost $E3 (S52), Anchor $E4 field-cast (S73, user-confirmed; S105: its dialogs are built into every build — no custom room needed), Earthquake chain $E5-$E8 (S74; **S84: AI-commit of $E6-$E8 was CRASH-CAPABLE on all pre-S84 builds** — dispatch-table overrun, fixed by DispatchBoundsStub; PyBoy re-verified S84, awaiting user test), **Mourn $E9 (S75: ATK-vs-DEF × (dead allies+1), 2nd dispatch trampoline = per-skill vanilla damage machine; **S84: AI-commit was CRASH-CAPABLE (wild jump to WRAM) on all pre-S84 builds** — fixed S84; AI-commit activation USER-CONFIRMED on the real save (Charge tactics))** — all on the full de-aliased stack incl. natural-learn, real MP, announce, descriptions. | BATTLE_SKILL_SYSTEM §12–§13.8, §14; ROADMAP Arc 2 |
 | SRAM save layout | ✅ audited S8: custom flags persist (truly-safe pool = 32 flags, S57); collisions mapped; free SRAM tail $BFC8-$BFFF (56 B, reserved). **32 KB expansion BUILT S69 (RAMB pin + CF3SRAMBankedCopy; NOT yet user-tested)** — +24 KB persistent in banks 1-3, uninitialized until a schema exists (E3 residual) | ARCHITECTURE "SRAM banking as built S69"; known_RAM_map |
 | Custom-room WRAM state | ✅ migrated S65 into the CF3-freed window (buffers $CC80/$CD00, counter region $CD80×640, wCustomPool $D001-$D664; TRANSIENT permanently, init-guaranteed zeroed). v7 USER-CONFIRMED S66 | patches/wram.asm banner; PROJECT_COMPILER §2.6; ROADMAP CF4 |
 

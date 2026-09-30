@@ -2565,7 +2565,7 @@ jr_006_4d7a:
     ld l, b
     ld h, $00
     add hl, hl
-    call FollowerArtResolve06         ; FORK: id>=224 -> new-species follower gfx-ID table; else normal (byte-neutral 8->3+5)
+    call FollowerArtResolve06         ; FORK: id 221-239 -> computed new-species follower gfx-ID (S105 G3); else normal (byte-neutral 8->3+5)
     nop
     nop
     nop
@@ -9950,7 +9950,7 @@ Jump_006_7f7f:
 ; chain = the vanilla EVOLVE mechanic: knowing the prereq + hitting the level
 ; REPLACES it with the next tier. Levels are v1 placeholders (editor-tunable).
 ; Placed at $7F80 (right after the referenced rst $38 trap byte at $7F7F);
-; the trailing rst $38 run shrinks 1:1 so NewFollowerGfxTable06 stays at $7FFC.
+; the trailing rst $38 run shrinks 1:1 so FollowerArtResolve06 keeps its address (S105: its table is gone; the gfx-ID is computed).
 CustomLearnReqTable2:
     ; --- $E5 Tremor: lvl 2; no stat reqs; no prereq (species skill-slot grant)
     db $02, $00,$00, $00,$00, $00,$00, $00,$00, $00,$00, $00,$00, $ff,$ff,$ff,$ff,$ff
@@ -9970,8 +9970,8 @@ CustomLearnReqTable2:
     rst $38
 ; =============================================================================
 ; FollowerArtResolve06 — Phase N follower-art fork for the $06 copy (mislabelled
-; MapNPCPosDataTable, $4dcc). Reader passes HL = (species+$10)*2. id>=224 ->
-; indexed new-species follower gfx-ID table; else original add-base. Placed at the
+; MapNPCPosDataTable, $4dcc). Reader passes HL = (species+$10)*2. id 221-239 ->
+; computed gfx-ID in wNewSpeciesGid (S105 G3; was a table); else original add-base. Placed at the
 ; end of bank-$06 end padding (byte-neutral: 32B resolver replaces 32 $FF bytes,
 ; leaving the $7f7f label landing on rst $38 as before, db $06 still at $7FFF).
 ; =============================================================================
@@ -9981,24 +9981,18 @@ FollowerArtResolve06:                ; in: HL = (species+$10)*2
     jr c, .normal
     jr nz, .high
     ld a, l
-    cp $e0
+    cp $da
     jr c, .normal
-.high:
-    ld a, l
-    add LOW(NewFollowerGfxTable06 - $1E0)
-    ld l, a
-    ld a, h
-    adc HIGH(NewFollowerGfxTable06 - $1E0)
-    ld h, a
+.high:                               ; species 221-239: the gfx-ID is COMPUTED (S105 G3)
+    ld a, l                          ; L = low byte of (species+$10)*2
+    sub $da                          ; = (species-221)*2 = the follower's index in bank $7E
+    ld [wNewSpeciesGid], a
+    ld a, $7e                        ; overflow bank $7E (compiler bank species7e)
+    ld [wNewSpeciesGid+1], a
+    ld hl, wNewSpeciesGid            ; caller reads the word at HL (DE is dead here)
     ret
 .normal:
-    ld a, l
-    add LOW(MapNPCPosDataTable)
-    ld l, a
-    ld a, h
-    adc HIGH(MapNPCPosDataTable)
-    ld h, a
+    ld de, MapNPCPosDataTable
+    add hl, de
     ret
-NewFollowerGfxTable06:
-    dw $7E00
     db $06

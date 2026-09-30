@@ -12,13 +12,13 @@ SECTION "ROM Bank $011", ROMX[$4000], BANK[$11]
 
 label11_4005:
     call HramUnk11_406e
-    ld de, $407f
+    ld de, FollowerLayoutL1Table11   ; $407F (S105 label)
     call $0d91
     ret
 
 label11_400f:
     call HramUnk11_406e
-    ld de, $407f
+    ld de, FollowerLayoutL1Table11   ; $407F (S105 label)
     push af
     push bc
     push de
@@ -106,7 +106,7 @@ jr_011_4069:
 ;   supply a clean attr (see tools/build_new_species_follower.py; MONSTER_DATA.md follower section).
 HramUnk11_406e:
     ldh a, [$c7]
-    ld hl, $412d
+    ld hl, FollowerAttrTable11   ; $412D (S105 label)
     add l
     ld l, a
     ld a, $00
@@ -118,246 +118,203 @@ HramUnk11_406e:
     ret
 
 
-    add h
-    ld b, c
-    or $41
-    ld l, b
-    ld b, d
-    jp c, Jump_011_4c42
-
-    ld b, e
-    cp [hl]
-    ld b, e
-    jr nc, jr_011_40d1
-
-    and d
-    ld b, h
-    inc d
-    ld b, l
-    add [hl]
-    ld b, l
-    ld hl, sp+$45
-    ld l, d
-    ld b, [hl]
-    call c, DataUnk11_4e46
-    ld b, a
-    ret nz
-
-    ld b, a
-    ld [hl-], a
-    ld c, b
-    and h
-    ld c, b
-    ld d, $49
-    adc b
-    ld c, c
-    ld a, [$6c49]
-    ld c, d
-    sbc $4a
-    ld d, b
-    ld c, e
-    jp nz, $344b
-
-    ld c, h
-    and [hl]
-    ld c, h
-    jr jr_011_4102
-
-    adc d
-    ld c, l
-    db $fc
-    ld c, l
-    ld l, [hl]
-    ld c, [hl]
-    ldh [$4e], a
-    ld d, d
-    ld c, a
-    call nz, $364f
-    ld d, b
-    xor b
-    ld d, b
-    ld a, [de]
-    ld d, c
-    adc h
-    ld d, c
-    cp $51
-    ld [hl], b
-    ld d, d
-    ld [c], a
-    ld d, d
-    ld d, h
-    ld d, e
-
-jr_011_40d1:
-    add $53
-    jr c, @+$56
-
-    xor d
-    ld d, h
-    inc e
-    ld d, l
-    adc [hl]
-    ld d, l
-    nop
-    ld d, [hl]
-    ld [hl], d
-    ld d, [hl]
-    db $e4
-    ld d, [hl]
-    ld d, [hl]
-    ld d, a
-    ret z
-
-    ld d, a
-    ld a, [hl-]
-    ld e, b
-    xor h
-    ld e, b
-    ld e, $59
-    sub b
-    ld e, c
-    ld [bc], a
-    ld e, d
-    ld [hl], h
-    ld e, d
-    and $5a
-    ld e, b
-    ld e, e
-    jp z, $3c5b
-
-    ld e, h
-    xor [hl]
-    ld e, h
-    jr nz, jr_011_415a
-
-    sub d
-    ld e, l
-    inc b
-    ld e, [hl]
-    ld l, [hl]
-
-jr_011_4102:
-    ld e, [hl]
-    ret c
-
-    ld e, [hl]
-    ld c, d
-    ld e, a
-    cp h
-    ld e, a
-    ld l, $60
-    and b
-    ld h, b
-    ld [de], a
-    ld h, c
-    add h
-    ld h, c
-    or $61
-    ld l, b
-    ld h, d
-    jp c, Jump_011_4c62
-
-    ld h, e
-    cp [hl]
-    ld h, e
-    jr nc, jr_011_4181
-
-    and d
-    ld h, h
-    inc d
-    ld h, l
-    add [hl]
-    ld h, l
-    ld hl, sp+$65
-    ld l, d
-    ld h, [hl]
-    call c, DispUnk11_4e66
-    ld h, a
-    ret nz
-
-    ld h, a
-    ld b, $00
-    ld b, $04
-    ld [bc], a
-
+; ===========================================================================
+; S105 (labels/comments only; re-sectioned from mgbdis soup, byte-identical):
+; the bank-$11 follower LAYOUT level-1 table and ATTR table (species 128-214;
+; MONSTER_DATA "Follower / walking-sprite render system").
+; FollowerLayoutL1Table11 ($407F) — 87 dw, index = [$ffc7] = species-$80 (the
+;   bank-$04 router subtracts $90 from species+$10). Read by both entries
+;   (`ld de, FollowerLayoutL1Table11`: entry 0 via ROM0 $0D91, entry 1 inline)
+;   -> the species' level-2 layout table (per facing/frame metasprite lists).
+;   Only 87 entries: an index >= 87 (species >= 215) reads the ATTR table below
+;   and then level-2 data — e.g. species 224's entry is $413F = the attr bytes
+;   of ChopClown (146) / Grendal (147). S30-S104 WROTE a layout pointer there
+;   for the new species and broke those two followers (upside-down / wrong
+;   palette); S105 patches/bank_011.asm NewAttrHandler instead rewrites [$ffc7]
+;   to a donor species' index so the lookup reads the donor's own pointer.
+; FollowerAttrTable11 ($412D) — 87 db, same index; OR-ed into [$ffca] by
+;   HramUnk11_406e (bit6 Y-flip, bit5 X-flip, low3 OBJ palette).
+;   jr_011_4132 / jr_011_4176 are kept: bytes decoded as code in the level-2
+;   data below branch there (data, never executed).
+; ===========================================================================
+FollowerLayoutL1Table11:
+    dw $4184   ; [00] 128 Armorpion
+    dw $41F6   ; [01] 129 Digster
+    dw $4268   ; [02] 130 Pixy
+    dw $42DA   ; [03] 131 ArcDemon
+    dw $434C   ; [04] 132 AgDevil
+    dw $43BE   ; [05] 133 Demonite
+    dw $4430   ; [06] 134 DarkEye
+    dw $44A2   ; [07] 135 EyeBall
+    dw $4514   ; [08] 136 SkulRider
+    dw $4586   ; [09] 137 EvilBeast
+    dw $45F8   ; [10] 138 1EyeClown
+    dw $466A   ; [11] 139 Gremlin
+    dw $46DC   ; [12] 140 MedusaEye
+    dw $474E   ; [13] 141 Lionex
+    dw $47C0   ; [14] 142 GoatHorn
+    dw $4832   ; [15] 143 Orc
+    dw $48A4   ; [16] 144 Ogre
+    dw $4916   ; [17] 145 GateGuard
+    dw $4988   ; [18] 146 ChopClown
+    dw $49FA   ; [19] 147 Grendal
+    dw $4A6C   ; [20] 148 Akubar
+    dw $4ADE   ; [21] 149 MadKnight
+    dw $4B50   ; [22] 150 Gigantes
+    dw $4BC2   ; [23] 151 Centasaur
+    dw $4C34   ; [24] 152 EvilArmor
+    dw $4CA6   ; [25] 153 Jamirus
+    dw $4D18   ; [26] 154 Durran
+    dw $4D8A   ; [27] 155 Spooky
+    dw $4DFC   ; [28] 156 Skullgon
+    dw $4E6E   ; [29] 157 Putrepup
+    dw $4EE0   ; [30] 158 RotRaven
+    dw $4F52   ; [31] 159 Mummy
+    dw $4FC4   ; [32] 160 DarkCrab
+    dw $5036   ; [33] 161 DeadNite
+    dw $50A8   ; [34] 162 Shadow
+    dw $511A   ; [35] 163 Hork
+    dw $518C   ; [36] 164 Mudron
+    dw $51FE   ; [37] 165 NiteWhip
+    dw $5270   ; [38] 166 MadSpirit
+    dw $52E2   ; [39] 167 WindMerge
+    dw $5354   ; [40] 168 Reaper
+    dw $53C6   ; [41] 169 DeadNoble
+    dw $5438   ; [42] 170 WhiteKing
+    dw $54AA   ; [43] 171 BoneSlave
+    dw $551C   ; [44] 172 Skeletor
+    dw $558E   ; [45] 173 Servant
+    dw $5600   ; [46] 174 Copycat
+    dw $5672   ; [47] 175 JewelBag
+    dw $56E4   ; [48] 176 EvilWand
+    dw $5756   ; [49] 177 MadCandle
+    dw $57C8   ; [50] 178 CoilBird
+    dw $583A   ; [51] 179 Facer
+    dw $58AC   ; [52] 180 SpikyBoy
+    dw $591E   ; [53] 181 MadMirror
+    dw $5990   ; [54] 182 RogueNite
+    dw $5A02   ; [55] 183 Goopi
+    dw $5A74   ; [56] 184 Voodoll
+    dw $5AE6   ; [57] 185 MetalDrak
+    dw $5B58   ; [58] 186 Balzak
+    dw $5BCA   ; [59] 187 SabreMan
+    dw $5C3C   ; [60] 188 CurseLamp
+    dw $5CAE   ; [61] 189 Roboster
+    dw $5D20   ; [62] 190 EvilPot
+    dw $5D92   ; [63] 191 Gismo
+    dw $5E04   ; [64] 192 LavaMan
+    dw $5E6E   ; [65] 193 IceMan
+    dw $5ED8   ; [66] 194 Mimic
+    dw $5F4A   ; [67] 195 MudDoll
+    dw $5FBC   ; [68] 196 Golem
+    dw $602E   ; [69] 197 StoneMan
+    dw $60A0   ; [70] 198 BombCrag
+    dw $6112   ; [71] 199 GoldGolem
+    dw $6184   ; [72] 200 DracoLord
+    dw $61F6   ; [73] 201 DracoLord
+    dw $6268   ; [74] 202 Hargon
+    dw $62DA   ; [75] 203 Sidoh
+    dw $634C   ; [76] 204 Baramos
+    dw $63BE   ; [77] 205 Zoma
+    dw $6430   ; [78] 206 Pizzaro
+    dw $64A2   ; [79] 207 Esterk
+    dw $6514   ; [80] 208 Mirudraas
+    dw $6586   ; [81] 209 Mirudraas
+    dw $65F8   ; [82] 210 Mudou
+    dw $666A   ; [83] 211 DeathMore
+    dw $66DC   ; [84] 212 DeathMore
+    dw $674E   ; [85] 213 DeathMore
+    dw $67C0   ; [86] 214 Darkdrium
+FollowerAttrTable11:
+    db $06   ; [00] 128 Armorpion
+    db $00   ; [01] 129 Digster
+    db $06   ; [02] 130 Pixy
+    db $04   ; [03] 131 ArcDemon
+    db $02   ; [04] 132 AgDevil
 jr_011_4132:
-    inc b
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    dec b
-    ld b, $04
-    ld [bc], a
-    ld b, $00
-    rlca
-    dec b
-    inc b
-    ld [bc], a
-    ld [bc], a
-    ld b, $05
-    ld [bc], a
-    ld [bc], a
-    nop
-    inc bc
-    inc b
-    inc b
-    dec b
-    ld [bc], a
-    ld [bc], a
-    inc b
-    ld [bc], a
-    rlca
-    dec b
-    rlca
-    inc bc
-    inc bc
-    inc b
-    ld [bc], a
-    ld b, $02
-    inc b
-    rlca
-    inc b
-
-jr_011_415a:
-    dec b
-    inc bc
-    nop
-    rlca
-    ld b, $03
-    ld bc, $0001
-    ld [bc], a
-    rlca
-    inc b
-    ld [bc], a
-    ld [bc], a
-    dec b
-    ld b, $02
-    inc bc
-    dec b
-    nop
-    ld [bc], a
-    inc b
-    rlca
-    rlca
-    dec b
-    dec b
-    inc bc
-    inc b
-
+    db $04   ; [05] 133 Demonite
+    db $02   ; [06] 134 DarkEye
+    db $02   ; [07] 135 EyeBall
+    db $02   ; [08] 136 SkulRider
+    db $05   ; [09] 137 EvilBeast
+    db $06   ; [10] 138 1EyeClown
+    db $04   ; [11] 139 Gremlin
+    db $02   ; [12] 140 MedusaEye
+    db $06   ; [13] 141 Lionex
+    db $00   ; [14] 142 GoatHorn
+    db $07   ; [15] 143 Orc
+    db $05   ; [16] 144 Ogre
+    db $04   ; [17] 145 GateGuard
+    db $02   ; [18] 146 ChopClown
+    db $02   ; [19] 147 Grendal
+    db $06   ; [20] 148 Akubar
+    db $05   ; [21] 149 MadKnight
+    db $02   ; [22] 150 Gigantes
+    db $02   ; [23] 151 Centasaur
+    db $00   ; [24] 152 EvilArmor
+    db $03   ; [25] 153 Jamirus
+    db $04   ; [26] 154 Durran
+    db $04   ; [27] 155 Spooky
+    db $05   ; [28] 156 Skullgon
+    db $02   ; [29] 157 Putrepup
+    db $02   ; [30] 158 RotRaven
+    db $04   ; [31] 159 Mummy
+    db $02   ; [32] 160 DarkCrab
+    db $07   ; [33] 161 DeadNite
+    db $05   ; [34] 162 Shadow
+    db $07   ; [35] 163 Hork
+    db $03   ; [36] 164 Mudron
+    db $03   ; [37] 165 NiteWhip
+    db $04   ; [38] 166 MadSpirit
+    db $02   ; [39] 167 WindMerge
+    db $06   ; [40] 168 Reaper
+    db $02   ; [41] 169 DeadNoble
+    db $04   ; [42] 170 WhiteKing
+    db $07   ; [43] 171 BoneSlave
+    db $04   ; [44] 172 Skeletor
+    db $05   ; [45] 173 Servant
+    db $03   ; [46] 174 Copycat
+    db $00   ; [47] 175 JewelBag
+    db $07   ; [48] 176 EvilWand
+    db $06   ; [49] 177 MadCandle
+    db $03   ; [50] 178 CoilBird
+    db $01   ; [51] 179 Facer
+    db $01   ; [52] 180 SpikyBoy
+    db $00   ; [53] 181 MadMirror
+    db $02   ; [54] 182 RogueNite
+    db $07   ; [55] 183 Goopi
+    db $04   ; [56] 184 Voodoll
+    db $02   ; [57] 185 MetalDrak
+    db $02   ; [58] 186 Balzak
+    db $05   ; [59] 187 SabreMan
+    db $06   ; [60] 188 CurseLamp
+    db $02   ; [61] 189 Roboster
+    db $03   ; [62] 190 EvilPot
+    db $05   ; [63] 191 Gismo
+    db $00   ; [64] 192 LavaMan
+    db $02   ; [65] 193 IceMan
+    db $04   ; [66] 194 Mimic
+    db $07   ; [67] 195 MudDoll
+    db $07   ; [68] 196 Golem
+    db $05   ; [69] 197 StoneMan
+    db $05   ; [70] 198 BombCrag
+    db $03   ; [71] 199 GoldGolem
+    db $04   ; [72] 200 DracoLord
 jr_011_4176:
-    inc b
-    inc b
-    ld [bc], a
-    inc b
-    ld b, $01
-    inc bc
-    ld bc, Boot
-    inc b
-
-jr_011_4181:
-    nop
-    nop
-    nop
+    db $04   ; [73] 201 DracoLord
+    db $04   ; [74] 202 Hargon
+    db $02   ; [75] 203 Sidoh
+    db $04   ; [76] 204 Baramos
+    db $06   ; [77] 205 Zoma
+    db $01   ; [78] 206 Pizzaro
+    db $03   ; [79] 207 Esterk
+    db $01   ; [80] 208 Mirudraas
+    db $00   ; [81] 209 Mirudraas
+    db $01   ; [82] 210 Mudou
+    db $04   ; [83] 211 DeathMore
+    db $00   ; [84] 212 DeathMore
+    db $00   ; [85] 213 DeathMore
+    db $00   ; [86] 214 Darkdrium
     sub b
     ld b, c
     and c

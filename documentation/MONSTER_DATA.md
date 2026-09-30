@@ -137,7 +137,9 @@ high byte ≥ 3, or = 2 with low byte ≥ 7 (EID ≥ 519) → `ld hl, $6B00 / rs
 $10` = bank $6B entry 0 `CopyEnemyRowExt` (row = EID − 519, 25 B, same
 format as this table; DE preserved by rst $10 and advanced by 25, as the
 vanilla copy leaves it); lower EIDs resume the vanilla copy. EIDs 487-517
-land in code and are never valid; 518 = Gorbunok (bank $14 tail).
+land in code and are never valid; 518 was the S30 Gorbunok row in the bank-$14
+tail — free space since S105 (a new species' rows are project enemies like any
+other, `species: 224`; PROJECT_COMPILER §2.21).
 `LookupBossRedirect` (entry 6) reads `BossRedirectTableExt` — the project's
 `[fight EID, join EID]` pairs first, then the vanilla 34, `$FFFF`
 (PROJECT_COMPILER §2.18). Measured: EID 519-522 load (DA18 row and the
@@ -296,7 +298,10 @@ annotated; the hack itself is editor-only and was never ported to `patches/`.
 
 Reverse-engineered and proven in-game via battle-sprite swaps (Session 21 Dracky →
 DWM2 "clam"; Session 22 Dracky → Anteater via the generalised tool, user-confirmed
-in SameBoy). GFX-1 (tile system: annotate + tool) is **DONE** (Session 22); GFX-2
+in SameBoy). *(S105: the S21 clam stayed IN `patches/bank_036.asm` — bank $36
+pointer entry 39 = Dracky's gfx-id `$3627` → `ClamBattleSprite` — so every
+patched build until S105 fought a clam instead of Dracky; the file is deleted,
+bank $36 is vanilla, PyBoy battle A/B confirms Dracky's own art.)* GFX-1 (tile system: annotate + tool) is **DONE** (Session 22); GFX-2
 (palette + recolour) and GFX-3 (follower swap) remain in ROADMAP. The disassembly is
 annotated with labels/comments only — build stays `1ca6579…`.
 
@@ -451,10 +456,21 @@ Three independent overshoots, each handled:
   patch (`ReadActiveMonsterByteSpeciesClamped`) clamped species ≥ 224 → 214 *before* this read to dodge a
   garbage-gfx crash; that silently defeated the `$01` fork (overworld always showed DarkDrium). Fix: narrow
   the clamp to ≥ 225 (`cp $e0` → `cp $e1`).
-- **layout level-1:** write the species' `$11:$407f + (species-$80)*2` slot (e.g. `$413f` for 224) to a
-  clean layout-0 level-2 table (Armorpion's `$4184` is the proven layout-0 — its DOWN-a is `0,1,2,3` at
-  `TL,TR,BL,BR` with no flips, matching `pack_png_layout0`). This write lands in the attr-table/early-layout
-  region and is part of the overshoot, not a free slot.
+- **layout level-1:** ~~write the species' `$11:$407f + (species-$80)*2` slot (e.g. `$413f` for 224) to a
+  clean layout-0 level-2 table~~ — **WRONG, fixed S105.** `$11:$407f` has only 87 entries
+  (`FollowerLayoutL1Table11`, species 128-214) and is followed directly by the 87-byte attr table
+  (`FollowerAttrTable11`, `$412D`): the "slot" of species 224 (`$413F`) IS the attr bytes of
+  **ChopClown (146) and Grendal (147)**. Writing `$4184` there gave them attrs `$84`/`$41` (OAM `$A4` /
+  `$41` measured S105: green palette, Grendal upside-down, ChopClown behind the background) in every
+  patched build S34-S104. **S105 mechanism:** `NewAttrHandler` (which already runs first in both
+  bank-$11 entries) also writes the new species' layout DONOR index (`walks_like − $80`, stored next to
+  its attr byte in `NewFollowerAttrTable`) to HRAM `$C7`; the lookup `ld de,$407f` + `[$c7]*2` then
+  reads the donor's own pointer — any bank-$11 species' layout (128-214) can be borrowed, nothing is
+  written into another table. Armorpion (128, index 0, `$4184`) is the proven layout-0 — its DOWN-a
+  is `0,1,2,3` at `TL,TR,BL,BR` with no flips, matching `pack_png_layout0`; Gorbunok's follower OAM is
+  identical before/after (8 walk samples, PyBoy S105). `$C7` is re-written before every sprite draw
+  (bank $04 `NPCInteractDispatch`) and not read back after the bank-$11 call. Also measured/decoded
+  S105: the router's `species+$10` WRAPS for species ≥ 240 → followers only work for new ids 224-239.
 - **attr (palette + FLIP) — the subtle one:** `HramUnk11_406e` reads `[$412d + (species-$80)]`; for 224 that
   is `$418d`, **inside Armorpion's level-2 layout**, where the byte is `$41`. That single garbage byte caused
   BOTH cosmetic bugs: **bit6 (`$40`) = the OBJ Y-flip bit** → every follower tile rendered upside-down in
@@ -640,6 +656,42 @@ never clamp/gate to hide the miss. Verified status for id 224:
 | Lineage parent NAMES (library detail, line 1) | mode-0 `$400b` (bank `$4d` entry 2) | `$4d:$400b` | **256** | un-authored slot→"?????" | **DONE (S38)** — `LoadItem_6456` (`$12:$6456`) renders line 1 via bank `$4d` entry 2 → entry 0 (`call SetB4d_43b9`) → `HighDetailTextFork`, mode 0 indexed by the **offspring** id. Slot 224 was the vanilla shared "?????    ?????" placeholder @ `$53C4` (NOT an overshoot; 256-wide, slot un-authored, shared w/ 220/225). Fixed by wiring `HighModeTable4D` mode-0 → `HighMode0Ptrs` → `GorbunokRecipeLine` "Snaily   BattleRex" (`patches/bank_04d.asm`); two 9-char fields to match vanilla recipe format. id≥224-gated. User-confirmed SameBoy. |
 | Library tab | `LibFamilyPtrTable` (custom) | `$12` | by family | — | id224 listed under Slime; **tool-owned** — `build_library_table.py --new-species` reads `new_species.json` (family from clone+override) + moves the unseen-marker `$E0`→`$FE` (id 224 now a real species; see BREEDING_SYSTEM "Walker contract") |
 
+**S105 (ROADMAP P3.9b): every DATA cell of this table is now project data** —
+`custom.species` → the compiler regions `ns_info` / `ns_name_ptr` /
+`ns_short_ptr` / `ns_text_a…g` / `ns_detail_text` / `ns_recipe_pair` /
+`ns_battle_gfx` / `ns_battle_pal` / `ns_follower_attr` + bank $7E
+(PROJECT_COMPILER §2.21); a project without a new species builds the original
+ROM bytes at every site. The tools named as owners (`build_new_species.py`,
+`build_library_table.py --new-species`, `bake_follower_overflow.py`'s patch
+output) no longer write patches. The enemy row is a project enemy, the
+encounter slot `gamedata.encounters`.
+
+**S105 G3 — capacity 19, ids 221-239 (supersedes "id≥224" in the rows above;
+USER-CONFIRMED 2026-09-30 ("Confirm all three appear as expected")).** Every fork now gates on id ≥ 221 (the first id
+past MonsterInfoTable's 221 rows) and reads a 19-row table indexed id-221:
+info `label443f` `cp $dd` + bank $6A `sub $dd`; `NewAttrHandler` `cp/sub $5d`
+(19 × 2 B); `HighBattlePal` gate HL ≥ `$6E8` (19 × 8 B `NewBattlePalTable`;
+216-220 keep their vanilla overshoot); `FamilyRecipeResolve` `cp $ba`
+(`NewRecipePairs`, 19 × 2 B — row 221 of the 222-row FamilyRecipeTable is no
+longer read); `HighDetailTextFork` `cp $dd`, `HighModeTable4D` bases −`$1BA`;
+`LoadModeBaseRedirect` `cp $dd` + `ld d,$7d` (base `$7D39`: [221] = `$7EF3` =
+`NewSpeciesShortPtrs`); ROM0 battle gfx `[221]-[239]` `$2D59-$2D7E`; bank-$01
+follower clamp `cp $f0` (only 240+ borrow species 214); the eight follower
+forks COMPUTE `$7E00+(id-221)*2` into WRAM `wNewSpeciesGid` (`$D10A`) —
+`.high: ld a,l / sub $da (raw forks $18/$59: $ba) / ld [gid],a / ld a,$7e /
+ld [gid+1],a / ld hl,gid / ret`, `.normal: ld de,Table / add hl,de / ret`
+(DE is dead at all eight callers), same 32 B per fork, no per-bank table.
+Bank $41 has no room for fixed name slots: names + nicknames are packed into
+seven free extents (292 B; PROJECT_COMPILER §2.21). Why the ceiling is 239:
+the seen-bit array `$CA94` (0-239), the family codes `$F0-$FA` the special
+scanner compares species bytes against, `$FE`/`$FF` markers, the router's
+species+$10 wrap at 240. The "N6 gates" above that name ids 221/222/223 are
+SKILL-id ladders on `$db8a` (bank $5F `GetPresentId`, $57 AIRule, $58 SkillFX
+router, $52) — not species; re-checked S105 G3. PyBoy (fixture 221 / 224 /
+239): follower gid + exact art in VRAM + OBJ palette, battle art + palette +
+"Look out! <name> monster!", naming-screen default nickname on a join, library
+detail pages (recipe icons + names, description).
+
 The text engine multiplies the risk: detail/name text uses the mode×species double
 indirection (`SaveBankAndSwitch $092F`; see TEXT_SYSTEM.md), and **each mode's
 per-species table has its own count** (bank `$4D` mode0=256, mode1=**215**; bank
@@ -671,6 +723,8 @@ baked into source while doing this:
   structurally overshoots at **id ≥ 215** (into `ItemNamePtrTable`); the `LoadModeBaseRedirect`
   fork gates `cp $e0` so it only covers **id ≥ 224**. Ids 215–223 are phantom/never-rendered
   and deliberately left to overshoot. *(Supersedes the looser "overshoots for id≥224".)*
+  **S105 G3:** the fork now gates `cp $dd` (id ≥ 221, base `$7D39`); 215-220 still overshoot
+  (never rendered), 221-239 are new species.
 * **`FamilyCodePtrTable` name is legacy/misleading** (kept for ref-stability; the nickname
   fork gates on the literal `$4739`, not the label). It is the SPECIES-indexed 2-letter
   default-nickname table, not a family table; the 215 `FamilyCode_NNN` string labels are
@@ -728,7 +782,8 @@ documents its Phase-N fork/append behaviour and cross-refs the owning patch + to
   trailing free run `$7EAD..$7FFF` (339 × `$00`) is addressed directly at `EID*25+$4C1D`. KEY GOTCHA
   recorded at the anchor: the 487-entry table ends at `$7BAC`, but `$7BAC..$7EAC` is CODE, so EIDs
   487–517 are **unusable**; the first grid-aligned slot at/after `$7EAD` is **EID 518** (`$7EB3`) —
-  which is why Gorbunok (species 224) = EID 518. `EnemyStatsTrailingFree` sym-verified to `14:7ead`.
+  which is why Gorbunok (species 224) was EID 518 (S30-S104; S105: retired — new species' rows are
+  project enemies, EID 519+ in bank $6B). `EnemyStatsTrailingFree` sym-verified to `14:7ead`.
 * **Wild encounters (`bank_001` `EncounterPool_000`).** 5 EID slots (+`$0A`, 5×2 LE) + 5 weights
   (+`$14`); an UNUSED slot = EID `$0000`/wt 0. A new species fills a provably-empty slot — a
   same-size, in-place edit (Iron-Rule-2 safe, no shift), NOT a reader fork. Gorbunok → pool 0 slot 3.

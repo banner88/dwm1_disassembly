@@ -46,7 +46,7 @@ Regen produces identical output to committed file. Safe to re-run.
 | monster_follower_layouts.json | extract_monster_follower_layouts.py | **NEW (Session 25, GFX-4).** Every species (0–220) → `{bank, l1_index, l1_addr, l2_addr, attr_base, layout_id, sharing}`, traced through the real follower dispatch (`$ffc7=species+$10` → bank `$10`/`$11` `$407f` level-1 table). `--selftest` reproduces the Healer (sp9, sharing) + DarkDrium (sp214, non-sharing) anchors byte-for-byte and confirms all 215 collectible species map. |
 | library_layouts.json | resection_library_tables.py --dump-json | **NEW (Session 27, Phase D).** All **29** bank-`$12` monster-library / family-tab menu window-draw layouts (contiguous run `$710c..$7b9b`) decoded to `{addr, label, pos, length, ld_de_ref, rows[]}`. `$d8`=newline, `$d9`=terminator; rows are literal tile ids. 7 layouts are direct `ld de,$imm` entry points (`ld_de_ref:true`); incl. the 380-B `$79c6` 18×20 full-screen view. Same tool re-sections the asm (labels-only, build stays `1ca6579…`). |
 
-| species_slot_map.json | map_species_slots.py | **S28 (N1).** The 256-slot species-ID map: per id → occupancy class (real 0–214 / special 215–219 / empty 220–223 / free 224–255) + per-table presence. Self-checking anchors. |
+| species_slot_map.json | map_species_slots.py | **S28 (N1).** The 256-slot species-ID map: per id → occupancy class (real 0–214 / special 215–219 / empty 220–223 / free 224–255) + per-table presence. Self-checking anchors. **HISTORICAL classes (S105 G3):** the usable new-species range is 221–239 (PROJECT_COMPILER §2.21); its `N6_GATES` are skill-id ladders, not species gates (DOC_AUDIT S105). |
 | library_grouping.json | build_library_table.py | **S19 (B7), re-owned S30.** The build-time family→members grouping table emitted into bank $12 free space; owns the 3 unseen-marker sites ($E0→$FE). Inputs: spirit_family.json + new_species.json. `--selftest` proves vanilla parity. |
 | battle_animations.json | decode_battle_animations.py | **S47 (S2c-anim).** All 45 battle-effect animations decoded (routine ids, side-table params, $0d = no visual); emulator-verified renderer model. See BATTLE_SKILL_SYSTEM §11. |
 | effect_messages.json | decode_effect_messages.py | **S47 (S2c).** Packed hit/miss message-id pairs ($dd70/71) for all skills; 67/67 statically-resolved FAQ-validated. See BATTLE_SKILL_SYSTEM §9. |
@@ -67,7 +67,7 @@ was lost; they were intentionally curated. Treat as documentation.
 | custom_layouts/room_6b_medalman.json | 20×16 tile grid for Room $6B — user-designed MedalMan tileset room (v28) | tile_layout_compiler.py → bank_064.asm |
 | *(Room $6B current = gate-tile room)* | **S39:** Room $6B is now the Gate-of-Beginning maze-tileset room (gfx-ID `$280D`), authored directly in **`tools/build_gate_room.py`** (no JSON) → `patches/bank_064.asm`. Sandy island: ocean-wall border, 2×2 tree/dune/pit metatiles, per-position palette. Builds the v5 ROM. See GATE_GENERATION.md §7.2–7.3. | tools/build_gate_room.py → bank_064.asm |
 | family_icons.json | S20: the 10 vanilla family ICON tiles ($4F:$4110-$41A0, text bytes $10-$19) decoded as 8×8 grids + the free $1A slot + the authored Spirit icon (Variants A/B). Round-trip safe (decode→encode == ROM). `_generator` stamped. **S104 (regenerated with the tool the same session):** `spirit` = byte `$1A` / `$41B0`, note updated; the grid (placeholder whip, pending the user's pick) also feeds the bank $6D `SpiritIconStream`. | tools/build_family_icon.py → patches/bank_04f.asm ($41B0) + patches/bank_06d.asm (SpiritIconStream) — lines printed by `--png`, checked by `--selftest` (verify check 5, S104) |
-| new_species.json | Phase-N authored spec (normalized/stamped by build_new_species.py): first_free_id 224, high bank $6A, per-species info/stats/encounter/name blocks. G3 (ROADMAP) will fold ALL Gorbunok artifacts into this schema. | tools/build_new_species.py → patches/bank_06a.asm (S103: its bank $14 / bank $01 writes are retired — the EID-518 row is hand-kept in bank_014, pool slots are `gamedata.encounters`; `extract_gamedata`/the compiler read its `species[].id / name / info / enemy_stats.eid`) |
+| new_species.json | **HISTORICAL since S105** (`_status` key): superseded by project.json `custom.species` (editor2/core/species.py, PROJECT_COMPILER §2.21) — nothing in the build reads it; `build_new_species.py --check` still validates it. Phase-N authored spec (normalized/stamped by build_new_species.py): first_free_id 224, high bank $6A, per-species info/stats/encounter/name blocks. G3 (ROADMAP) will fold ALL Gorbunok artifacts into this schema. | tools/build_new_species.py → patches/bank_06a.asm (S103: its bank $14 / bank $01 writes are retired — the EID-518 row is hand-kept in bank_014, pool slots are `gamedata.encounters`; `extract_gamedata`/the compiler read its `species[].id / name / info / enemy_stats.eid`) |
 | spirit_family.json | B6 authored spec: Spirit-family reassignment list (`{id,name,from,to}`), `from` validated vs vanilla. | HISTORICAL S103 — re-expressed as the example project's `gamedata.monsters` 78 / 214 → family 10; the library grouping is the compiler region `gd_library_grouping` |
 | skill_faq.json | **EXTERNAL ground truth** (community skill FAQ, transcribed — `_source`, deliberately NOT `_generator`): per-skill MP/target/learn/family data used to validate S44/S46 decodes. | build_skill_faq.py (writer); gen_skill_records.py + docs (validation) |
 | npc_names.json | Hand-curated naming reference: sprite/type names, NPC labels, room-name overrides, **+ `sprite_classes` (S91: user visual classification — empty / glitch_invalid / boss_composite_fragment)**. No generator by design; merged into npc_sprite_catalog.json at `--finalize`. | dump_all_npcs.py, dump_npc_sprite_catalog.py, editor tooling |
@@ -245,6 +245,9 @@ Maps source-line→address via a zero-byte probe-build read from the linker `.sy
 summing — the S22 trap); per-table idempotent; re-runnable from the clean tree. Labels/comments only,
 build stays `1ca6579…`. `--dump-json` writes `extracted/library_layouts.json`) ·
 
+> **S105 correction:** the in-place S21 Dracky → clam swap (`patches/bank_036.asm`) WAS
+> in every patched build until S105 (deleted; DOC_AUDIT S105), and bank $7E is now
+> compiler-owned (`custom.species`, PROJECT_COMPILER §2.21) — the recipe below is historical.
 > **Making a sprite swap PERMANENT (in the canonical patched build).** The S23 hand-off
 > left the patched build CLEAN — the clam swap is a reproducible example
 > (`examples/sprite_swap/`), NOT baked in. To make any swap permanent you must edit the
@@ -341,11 +344,17 @@ LZSS GFX) + bank_017.asm palette wiring; the Phase-1 "custom tile GRAPHICS" pipe
 owns the $E0→$FE unseen-marker sites; inputs spirit_family/new_species; `--selftest`
 vanilla parity (see library_grouping.json row). ·
 `build_new_species.py` — Phase N: info-table fork ($6A), enemy stats (EID 518),
-same-size wild-encounter edit, name wiring, from new_species.json; SameBoy-proven. ·
+same-size wild-encounter edit, name wiring, from new_species.json; SameBoy-proven.
+**S105: writer RETIRED** (its bank_06a slot data is the compiler region `ns_info`
+from `custom.species`); `--check` / `--dump-json` still run on the historical JSON. ·
 `build_new_species_follower.py` — G1 follower-art path for ids ≥224 (all-8-copy
 gfx-ID fork + attr fix); standalone TEST-ROM emitter during bring-up. ·
-`bake_follower_overflow.py` — emits a sprite-overflow bank ($7E…) as a STATIC patch
-file from follower art sources (the baked-into-patches/ path, vs test ROMs). ·
+`bake_follower_overflow.py` — encodes follower (layout-0 pack) + battle art (PNG +
+frames / battle-spec JSON) into literal LZ streams. **S105:** `--stream-dir DIR --name N`
+writes `N_follower.bin` / `N_battle.bin` for a project's `custom.species` (the example's
+Gorbunok assets are reproduced byte-for-byte from `examples/follower_swap/`); writing
+into `patches/` is refused (bank $7E is compiler-owned); `--out` elsewhere still emits
+a stand-alone overflow-bank .asm. ·
 `build_skill_faq.py` — transcribed community FAQ → skill_faq.json (external ground
 truth, `_source`-stamped). ·
 `decode_battle_animations.py` / `decode_effect_messages.py` — S2c/S2c-anim decoders
@@ -505,7 +514,9 @@ custom records, LearnLoopFork scan bound == last id + 1), universal-qualifier
 rows (no prereq + all-zero stats) require the LearnCode2Guard06 fence bytes in
 the built ROM, the SlotProbeGuard50 fence must be present in bank $50, and
 every redirected bank-$36 battle-sprite pointer must decode (dwm.sprite_codec)
-to exactly the original entry's tile count. `--rom <gbc>` = full check;
+to exactly the original entry's tile count (S105: no entry is redirected any
+more — the only one, the S21 Dracky clam, was purged — so this is a guard;
+`custom.species` art gets the same decode-size check in the compiler). `--rom <gbc>` = full check;
 `--records-only` = source-only. Exit 1 = FAIL. Runs as verify_integrity
 check 6 and inside editor2/core/builder.build_rom (the editor refuses to
 return a failing ROM).
@@ -739,6 +750,8 @@ verified overrides.
 | disassembly/ + patches/ bank_04d.asm | recipe-string block re-sectioned (`LibRecipeTextBlock`, `LibRecipeText_NNN`); patched copy = region `gd_library_text` | clean build byte-perfect |
 | disassembly/ + patches/ bank_001.asm (comments/labels) | `EncounterChancePercent` re-sectioned, the pool format + group-size rule annotated | clean build byte-perfect |
 | tools/build_breeding.py `--emit-family / --emit-special / --emit-relocation`, build_family_reassign.py `--emit`, build_library_table.py `--emit`, build_new_species.py bank $14 / $01 writes | RETIRED S103 (exit with a message naming the `gamedata` section); `--selftest`s unchanged | run: each refuses; selftests PASS |
+| tools/build_new_species.py bank_06a write, tools/bake_follower_overflow.py `--out patches/…` | RETIRED S105 (P3.9b; `custom.species` → `ns_info` / bank $7E — PROJECT_COMPILER §2.21) | run: each refuses with a message; `build_new_species.py --check` PASS; `bake_follower_overflow.py --stream-dir` reproduces the example assets |
+| editor2/core/species.py (S105 G3) | ids 221-239; 13 `ns_*` regions + bank $7E (38-word pointer table, computed follower gfx-ID); exact bin-packer `_pack` for the bank-$41 name extents | test_compiler --rom: MiniSM83 runs every fork from the built ROM (example + 19 species); PyBoy fixture 221/224/239 |
 | editor2/help/55_game_data.md (NEW) + `EDITOR_REVISION` = 'S103' | help topic: what game data a project can change today, what the build keeps coherent, the checks | test_app `--rom` PASS |
 | editor2/tests/test_compiler.py `test_gamedata` + `--rom` table regression; pin `5d1dbc5f…` (patched) | per-table empty == vanilla, field offsets, validators (incl. the measured freeze), example re-expression | 227 tests with `--rom` |
 

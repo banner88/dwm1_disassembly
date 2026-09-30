@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """build_new_species.py — Phase N (add NEW monster species, ids >= 224).
 
+RETIRED as a writer S105 (ROADMAP P3.9b): new species are project.json
+custom.species, emitted by the compiler (editor2/core/species.py). This tool's
+--check / --dump-json still validate the HISTORICAL extracted/new_species.json.
+
 Stage 1 (this tool, current scope):
   * Reads extracted/new_species.json + the original ROM.
   * Builds each new species' 43-byte monster-info entry by cloning a base
@@ -369,6 +373,13 @@ def main():
     if "--check" in args:
         print("VALIDATE OK: %d species, round-trip clean (no write)." % len(slots))
         return
+    # S105 (ROADMAP P3.9b): NEW species are project data — project.json
+    # custom.species -> the compiler region ns_info in patches/bank_06a.asm
+    # (+ the other ns_* regions and bank $7E; editor2/core/species.py,
+    # PROJECT_COMPILER §2.21). A second writer would clobber the region
+    # (KEY_LESSONS S103 "one writer per region").
+    sys.exit("RETIRED S105: patches/bank_06a.asm slot data is the compiler region "
+             "ns_info (project.json custom.species). --check / --dump-json still run.")
     with open(OUT_PATH, "w") as f:
         f.write(asm)
     print("WROTE %s" % os.path.relpath(OUT_PATH, REPO))

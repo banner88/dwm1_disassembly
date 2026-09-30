@@ -210,6 +210,8 @@ class MonsterCache:
     @classmethod
     def get(cls, species):
         species = int(species)
+        if species >= 221:
+            return None       # S105: new species (221-239) are project data (no census art)
         if species not in cls._pix:
             p = os.path.join(MONSTER_DIR, f'sp_{species:03d}.png')
             pm = QPixmap(p) if os.path.exists(p) else None
@@ -217,17 +219,26 @@ class MonsterCache:
         return cls._pix[species]
 
     @staticmethod
-    def species():
-        """[(species, name)] with a thumbnail, safe as monster NPCs."""
+    def species(project_data=None):
+        """[(species, name)] safe as monster NPCs: the vanilla species of the
+        census that have a thumbnail, + the project's own new species
+        (custom.species; S105). The census was captured on the pre-S105
+        example build, so its id-224 row is that project's Gorbunok — ids >= 221
+        come from the PROJECT only (no thumbnail until the Monsters tab renders
+        the project's art, ROADMAP P3.10)."""
         import json
         try:
             d = json.load(open(os.path.join(REPO, 'extracted', 'monster_npc_sprites.json')))
         except (OSError, ValueError):
-            return []
+            d = {}
         blank = set(d.get('blank') or [])
-        return [(int(k), v.get('name', '')) for k, v in sorted(d.get('species', {}).items(),
-                                                              key=lambda kv: int(kv[0]))
-                if int(k) not in blank]
+        out = [(int(k), v.get('name', '')) for k, v in sorted(d.get('species', {}).items(),
+                                                             key=lambda kv: int(kv[0]))
+               if int(k) not in blank and int(k) < 221]
+        for s in ((project_data or {}).get('custom') or {}).get('species') or []:
+            if isinstance(s, dict) and isinstance(s.get('id'), int):
+                out.append((s['id'], s.get('name', f"species {s['id']}")))
+        return sorted(out)
 
 
 def metatile_at(tiles, attr, cx, cy):

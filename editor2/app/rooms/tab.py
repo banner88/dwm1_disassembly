@@ -1734,7 +1734,7 @@ class RoomsTab(QWidget):
                                 f'the engine hard cap is {cap} (S91 measurement).')
             return
         from editor2.app.rooms.npc_panel import SpritePicker
-        dlg = SpritePicker(parent=self)
+        dlg = SpritePicker(parent=self, project_data=self.s.doc.data)
         if dlg.exec() != QDialog.Accepted or dlg.value is None:
             return
         cx, cy = cell
@@ -1823,7 +1823,7 @@ class RoomsTab(QWidget):
         cur = self.s.doc.npc_view(room, self.s.doc.npc_entries(room, self.key, self.state_idx)[idx])
         now = ('monster', cur['monster']) if cur.get('monster') is not None \
             else cur.get('sprite')
-        dlg = SpritePicker(current=now, parent=self)
+        dlg = SpritePicker(current=now, parent=self, project_data=self.s.doc.data)
         if dlg.exec() == QDialog.Accepted and dlg.value is not None:
             if isinstance(dlg.value, tuple):         # S101: a monster NPC
                 self._npc_fields({'sprite': 0xF0, 'monster': int(dlg.value[1])})

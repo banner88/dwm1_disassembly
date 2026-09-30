@@ -2,8 +2,9 @@
 ; BANK $6B — PROJECT ENEMY ROWS (S101; compiler-owned, patches/bank_06b.asm)
 ; =============================================================================
 ; The vanilla enemy-stats table is bank $14 EnemyStatsTable ($4C1D, 25 B/row,
-; EIDs 0-486; 487-517 would land in code; 518 = Gorbunok in the bank-$14 free
-; tail). Every EID >= 519 is a PROJECT enemy row stored HERE, 25 B each, row
+; EIDs 0-486; 487-517 would land in code; 518 = bank-$14 free space — the
+; S30 Gorbunok row until S105). Every EID >= 519 is a PROJECT enemy row stored
+; HERE (a new species' rows too, S105), 25 B each, row
 ; index = EID - 519, in the vanilla row format (MONSTER_DATA "Enemy Stats
 ; Table"): [species, exp:2, joinability, level, hp:2, mp:2, atk:2, def:2,
 ; agl:2, int:2, ai:4, skills:4].

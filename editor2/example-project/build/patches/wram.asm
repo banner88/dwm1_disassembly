@@ -294,7 +294,13 @@ wTileAnimLeft:: db ;d0c6 — tiles still allowed this frame (TILEANIM_CAP budget
 wTileAnimVBK:: db ;d0c7 — rVBK on entry (restored on exit)
 wTileAnimSrc:: dw ;d0c8-d0c9 — frame block pointer of the step being copied
 wTileAnimState:: ds 2 * TILEANIM_MAX_GROUPS ;d0ca-d109 — per group: timer, step
-wCustomPool:: ds $5A4 - 132 - 5 - 2 * TILEANIM_MAX_GROUPS ;d10a-d5e4 — transient reserve (was $664; FX1 carved 64+128; S97 132; S102 69)
+; S105 (G3 capacity): the follower gfx-ID a new species' fork computes. The
+; eight FollowerArtResolveXX forks return HL -> a gfx-ID WORD that the caller
+; reads at once (ld e,[hl] / inc hl / ld d,[hl]); for species 221-239 the fork
+; writes $7E00 + (species-221)*2 here and returns HL = wNewSpeciesGid (no
+; per-bank tables). Transient: written right before every read.
+wNewSpeciesGid:: dw ;d10a-d10b — computed new-species follower gfx-ID (lo, hi=$7E)
+wCustomPool:: ds $5A4 - 132 - 5 - 2 * TILEANIM_MAX_GROUPS - 2 ;d10c-d5e4 — transient reserve (was $664; FX1 carved 64+128; S97 132; S102 69; S105 2)
 ; FX1 (S71): wPoolBounce — 128-byte staging for sleep-pool bank-2 record
 ; swaps (per-byte scratch in CF3PoolSwapRecord). Transient. (The v1 drain's
 ; halved-pending scratch use was removed with the S71v2 exp-scale veto.)

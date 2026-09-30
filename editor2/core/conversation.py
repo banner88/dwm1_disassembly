@@ -102,9 +102,11 @@ def _repo_root():
 _CACHE = {}
 
 
-def species_names():
-    """{species id: name} (extracted/monsters_full.json — 221 vanilla
-    species) + the project's new species ids the ROM knows (224 Gorbunok)."""
+def species_names(data=None):
+    """{species id: name}: the 221 vanilla species (extracted/monsters_full.json)
+    + the PROJECT's new species (custom.species of `data`, the project.json
+    dict — S105 P3.9b; before S105 a hardcoded 224 Gorbunok from
+    extracted/new_species.json, present in every project)."""
     if 'species' not in _CACHE:
         out = {}
         try:
@@ -113,16 +115,19 @@ def species_names():
                 out[int(m['id'])] = m['name']
         except (OSError, ValueError):
             pass
-        try:
-            ns = json.load(open(os.path.join(_repo_root(), 'extracted', 'new_species.json')))
-            for s in ns.get('species', []) if isinstance(ns, dict) else []:
-                if 'id' in s and 'name' in s:
-                    out.setdefault(int(s['id']), s['name'])
-        except (OSError, ValueError, TypeError):
-            pass
-        out.setdefault(224, 'Gorbunok')
         _CACHE['species'] = out
-    return _CACHE['species']
+    out = dict(_CACHE['species'])
+    for s in ((data or {}).get('custom') or {}).get('species') or []:
+        if isinstance(s, dict) and isinstance(s.get('id'), int) and s.get('name'):
+            out[s['id']] = s['name']
+    return out
+
+
+def _project_data(obj):
+    """The project.json dict behind a mixin user (a Document, or a scratch
+    copy holding its document in _doc)."""
+    doc = getattr(obj, '_doc', None)
+    return getattr(doc, 'data', None) or getattr(obj, 'data', None)
 
 
 def skill_names():
@@ -411,7 +416,7 @@ class EnemiesMixin:
         """Readable name of an enemy reference (project id or EID)."""
         e = self.project_enemy(ref)
         if e is not None:
-            sp = species_names().get(int(e.get('species', 0)), f"species {e.get('species')}")
+            sp = species_names(_project_data(self)).get(int(e.get('species', 0)), f"species {e.get('species')}")
             return f"{e.get('name') or e['id']} ({sp} L{e.get('level')})"
         try:
             eid = int(str(ref), 0)
@@ -442,7 +447,7 @@ class EnemiesMixin:
                         break
         base.update(fields)
         taken = {e.get('id') for e in self.project_enemies()}
-        sp = species_names().get(int(base['species']), 'enemy')
+        sp = species_names(_project_data(self)).get(int(base['species']), 'enemy')
         eid_name = self._unique_id(self._slug(name or sp.lower()) or 'enemy', taken)
         row = {'id': eid_name, 'eid': 'auto'}
         row.update(base)

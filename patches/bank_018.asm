@@ -92,7 +92,7 @@ label18_400b:
     ld l, [hl]
     ld h, $00
     add hl, hl
-    call FollowerArtResolve18    ; species>=224 -> Gorbunok follower gfx-ID (else normal table)
+    call FollowerArtResolve18    ; species 221-239 -> computed new-species follower gfx-ID (S105 G3; else normal table)
     nop
     nop
     nop
@@ -8650,31 +8650,25 @@ jr_018_7e82:
     nop
     nop
     nop
-; --- Phase N: follower-art resolver (species>=224 = new species) ---
-; Replaces the inline TextDataPtrLookup index calc. <224: identical behaviour.
-; >=224: HL -> Gorbunok follower gfx-ID (this bank). Same idea as the info fork.
+; --- Phase N: follower-art resolver (species 221-239 = new species) ---
+; Replaces the inline TextDataPtrLookup index calc. <221: identical behaviour.
+; 221-239: HL -> wNewSpeciesGid, the computed gfx-ID (S105 G3). Raw convention.
 FollowerArtResolve18:                ; in: HL = species*2
     ld a, h
     or a
     jr z, .normal                    ; h==0 -> HL<$100 (species<128)
     ld a, l
-    cp $c0                           ; species>=224 -> species*2>=$1C0
+    cp $ba                           ; species>=224 -> species*2>=$1C0
     jr c, .normal
-.high:                               ; species>=224: HL = NewFollowerGfxTable18 + (species-224)*2
-    ld a, l                          ; raw convention: HL = species*2, so +(Table-$1C0)
-    add LOW(NewFollowerGfxTable18 - $1C0)
-    ld l, a
-    ld a, h
-    adc HIGH(NewFollowerGfxTable18 - $1C0)
-    ld h, a
+.high:                               ; species 221-239: the gfx-ID is COMPUTED (S105 G3)
+    ld a, l                          ; L = low byte of species*2
+    sub $ba                          ; = (species-221)*2 = the follower's index in bank $7E
+    ld [wNewSpeciesGid], a
+    ld a, $7e                        ; overflow bank $7E (compiler bank species7e)
+    ld [wNewSpeciesGid+1], a
+    ld hl, wNewSpeciesGid            ; caller reads the word at HL (DE is dead here)
     ret
 .normal:
-    ld a, l
-    add LOW(TextDataPtrLookup)
-    ld l, a
-    ld a, h
-    adc HIGH(TextDataPtrLookup)
-    ld h, a
+    ld de, TextDataPtrLookup
+    add hl, de
     ret
-NewFollowerGfxTable18:
-    dw $7E00                         ; id 224: blue-dragon follower art (bank $7e, index 0)

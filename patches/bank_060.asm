@@ -465,8 +465,8 @@ GateAwareDispatch:
     ld a, [wScriptMapType]      ; [ANCHOR S73] script TYPE targets the custom bank?
     cp $70                      ;   $70 = the gate-world script type — the B-bug
     jr z, .byRoom               ;   poison value; MUST stay on the wMapID route.
-    cp CUSTOM_ROOM_START        ;   Any other type >= $6B (e.g. $71 armed by the
-    jr nc, .customRoom          ;   Anchor field-skill) reads bank $60 scripts
+    cp CUSTOM_ROOM_START        ;   Any other type >= $6B (e.g. $FF armed by the
+    jr nc, .customRoom          ;   Anchor field-skill, S105) reads bank $60 scripts
 .byRoom:                        ;   regardless of the physical room (maze/town).
     ld a, [wMapID]              ; $C968 — the actual room map-type
     cp CUSTOM_ROOM_START        ; $6B
@@ -480,8 +480,21 @@ GateAwareDispatch:
 ; =============================================================================
 ; Entry 4: CustomScriptRead
 ; =============================================================================
+; S105 (P3.9b): script TYPE $FF = a custom SKILL's own dialog script
+; (SkillScriptPtrTable, emitted into every build from editor2/core/
+; skill_scripts.json, id = [wScriptNPCId]) — so a field-cast skill needs no
+; custom room. Anchor (bank $72 AnchorField14Tail) arms $FF / ids 2-5; S73-S104
+; armed $71 = the example project's medal_vault, which other projects lack.
+; $FF routes exactly like $71 everywhere else: >= $40 -> bank $0F dispatch ->
+; GateAwareDispatch (>= $6B, != $70) -> here.
+SKILL_SCRIPT_TYPE EQU $FF
 CustomScriptRead:
     ld a, [wScriptMapType]
+    cp SKILL_SCRIPT_TYPE
+    jr nz, .room
+    ld de, SkillScriptPtrTable
+    jr .byScript
+.room:
     sub CUSTOM_ROOM_START
     ld l, a
     ld h, $00
@@ -492,6 +505,7 @@ CustomScriptRead:
     inc hl
     ld d, [hl]
 
+.byScript:
     ld a, [wScriptNPCId]
     ld l, a
     ld h, $00
@@ -543,6 +557,65 @@ CustomScriptMasterTable:
 CustomScriptNoop_PtrTable:
     dw CustomScriptNoop_Entry   ; [0] room entry (no-op)
 CustomScriptNoop_Entry:
+    dw $FFFF
+
+SkillScriptPtrTable:   ; script type $FF — custom skills' dialogs
+    dw SkillScrNoop   ; [0] never armed
+    dw SkillScrNoop   ; [1] never armed
+    dw SkillScr02   ; [2] skill:anchor_gate_confirm
+    dw SkillScr03   ; [3] skill:anchor_return_confirm
+    dw SkillScr04   ; [4] skill:anchor_err_special
+    dw SkillScr05   ; [5] skill:anchor_err_none
+SkillScrNoop:
+    dw $FFFF
+
+SkillScr02:
+    dw $FF07  ; init_dialog
+    dw $0A20  ; [S73] Anchor gate-side confirm [Y/N]
+    dw $FF15  ; check_and_branch
+    dw $C83C
+    dw $0001
+    dw SkillScr02_no
+    dw $FF12  ; write_ram
+    dw $DEB2
+    dw $0001
+    dw $FF12  ; write_ram
+    dw $D92B
+    dw $0006
+    dw $FF0F  ; map_transition
+    dw $0000
+    dw $00E8
+    dw $0058
+    dw $FFFF
+SkillScr02_no:
+    dw $FFFF
+
+SkillScr03:
+    dw $FF07  ; init_dialog
+    dw $0A21  ; [S73] Anchor return confirm [Y/N] — charge lands on arrival
+    dw $FF15  ; check_and_branch
+    dw $C83C
+    dw $0001
+    dw SkillScr03_no
+    dw $FF12  ; write_ram
+    dw $DEB2
+    dw $0002
+    dw $FF0F  ; map_transition
+    dw $8000
+    dw $0000
+    dw $0000
+    dw $FFFF
+SkillScr03_no:
+    dw $FFFF
+
+SkillScr04:
+    dw $FF07  ; init_dialog
+    dw $0A22  ; [S73] cast in a special/boss/custom gate room
+    dw $FFFF
+
+SkillScr05:
+    dw $FF07  ; init_dialog
+    dw $0A23  ; [S73] cast in town with no stored anchor
     dw $FFFF
 
 ; --- $6B (gate_island) scripts ---
@@ -708,10 +781,6 @@ CustomRoom5_ScriptPtrTable:
 CustomRoom6_ScriptPtrTable:
     dw CustomRoom6_Scr00   ; [0] entry:medal_vault
     dw CustomRoom6_Scr01   ; [1] quest:medal_vault
-    dw CustomRoom6_Scr02   ; [2] anchor_gate_confirm
-    dw CustomRoom6_Scr03   ; [3] anchor_return_confirm
-    dw CustomRoom6_Scr04   ; [4] anchor_err_special
-    dw CustomRoom6_Scr05   ; [5] anchor_err_none
 
 CustomRoom6_Scr00:
     dw $FF01  ; if_flag_set
@@ -784,55 +853,6 @@ CustomRoom6_Scr01_declined:
     dw $FFFF
 CustomRoom6_Scr01_qdone:
     dw $0A1F  ; vault_done
-    dw $FFFF
-
-CustomRoom6_Scr02:
-    dw $FF07  ; init_dialog
-    dw $0A20  ; [S73] Anchor gate-side confirm [Y/N]
-    dw $FF15  ; check_and_branch
-    dw $C83C
-    dw $0001
-    dw CustomRoom6_Scr02_no
-    dw $FF12  ; write_ram
-    dw $DEB2
-    dw $0001
-    dw $FF12  ; write_ram
-    dw $D92B
-    dw $0006
-    dw $FF0F  ; map_transition
-    dw $0000
-    dw $00E8
-    dw $0058
-    dw $FFFF
-CustomRoom6_Scr02_no:
-    dw $FFFF
-
-CustomRoom6_Scr03:
-    dw $FF07  ; init_dialog
-    dw $0A21  ; [S73] Anchor return confirm [Y/N] — charge lands on arrival
-    dw $FF15  ; check_and_branch
-    dw $C83C
-    dw $0001
-    dw CustomRoom6_Scr03_no
-    dw $FF12  ; write_ram
-    dw $DEB2
-    dw $0002
-    dw $FF0F  ; map_transition
-    dw $8000
-    dw $0000
-    dw $0000
-    dw $FFFF
-CustomRoom6_Scr03_no:
-    dw $FFFF
-
-CustomRoom6_Scr04:
-    dw $FF07  ; init_dialog
-    dw $0A22  ; [S73] cast in a special/boss/custom gate room
-    dw $FFFF
-
-CustomRoom6_Scr05:
-    dw $FF07  ; init_dialog
-    dw $0A23  ; [S73] cast in town with no stored anchor
     dw $FFFF
 
 ; --- $72 (arena_clone) scripts ---

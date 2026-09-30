@@ -1776,7 +1776,7 @@ jr_001_49a2:
     ld l, a
     ld h, $00
     add hl, hl
-    call FollowerArtResolve01         ; FORK: id>=224 -> new-species follower gfx-ID table; else normal (byte-neutral 8->3+5)
+    call FollowerArtResolve01         ; FORK: id 221-239 -> computed new-species follower gfx-ID (S105 G3); else normal (byte-neutral 8->3+5)
     nop
     nop
     nop
@@ -7706,9 +7706,9 @@ FloorBreakpointData:
 ;  -> $C93D (the bank-$16 maze carve count: vanilla 3 / 8 / 15) — S103
 ;  static decode of bank $01 EncounterMonsterSelect / LoadFloorAndEncounterData)
 EncounterPoolData:
-EncounterPool_000:  ; EID 2 10%, EID 4 10%, EID 3 10%, EID 518 70%  ; EDITED (project gamedata)
+EncounterPool_000:  ; EID 2 10%, EID 4 10%, EID 3 10%, EID 520 70%  ; EDITED (project gamedata)
     db $03, $01, $07, $00, $00, $01, $01, $01, $06, $00
-    dw 2, 4, 3, 518, 0
+    dw 2, 4, 3, 520, 0
     db $01, $01, $01, $01, $00, $08
 EncounterPool_001:  ; EID 5 30%, EID 6 30%, EID 3 20%, EID 14 20%
     db $03, $02, $05, $05, $00, $03, $03, $02, $02, $00
@@ -9635,11 +9635,11 @@ jr_001_7fd0:
     inc de
 ; =============================================================================
 ; FollowerArtResolve01 — Phase N follower-art fork for the $01 ScreenTransData copy.
-; Reader passes HL = (species+$10)*2. id>=224 (HL>=$1E0) -> indexed new-species
-; follower gfx-ID table; else replicate the original add-base into
-; ScreenTransDataTable (byte-identical to vanilla for species 0-223). Compact
-; 12-byte dispatch (fits bank $01's tight end-of-bank padding). Byte-neutral:
-; replaces 32 of the 33 trailing $FF padding bytes, leaving the clamp in place.
+; Reader passes HL = (species+$10)*2. id 221-239 (HL>=$1DA) -> the gfx-ID
+; $7E00+(species-221)*2 is computed into wNewSpeciesGid (S105 G3; was a
+; one-entry table for id 224); else the original add-base into
+; ScreenTransDataTable (byte-identical to vanilla for species 0-220).
+; Byte-neutral: 32 of the 33 trailing $FF padding bytes, leaving the clamp in place.
 ; =============================================================================
 FollowerArtResolve01:                ; in: HL = (species+$10)*2
     ld a, h
@@ -9647,35 +9647,31 @@ FollowerArtResolve01:                ; in: HL = (species+$10)*2
     jr c, .normal                    ; h==0 -> HL<$100 (species<128)
     jr nz, .high                     ; h>=2 -> HL>=$200 (species>=240)
     ld a, l
-    cp $e0
-    jr c, .normal                    ; HL<$1E0 -> species<224
-.high:                               ; HL = NewFollowerGfxTable01 + (species-224)*2
-    ld a, l
-    add LOW(NewFollowerGfxTable01 - $1E0)
-    ld l, a
-    ld a, h
-    adc HIGH(NewFollowerGfxTable01 - $1E0)
-    ld h, a
+    cp $da
+    jr c, .normal                    ; HL<$1DA -> species<221
+.high:                               ; species 221-239: the gfx-ID is COMPUTED (S105 G3)
+    ld a, l                          ; L = low byte of (species+$10)*2
+    sub $da                          ; = (species-221)*2 = the follower's index in bank $7E
+    ld [wNewSpeciesGid], a
+    ld a, $7e                        ; overflow bank $7E (compiler bank species7e)
+    ld [wNewSpeciesGid+1], a
+    ld hl, wNewSpeciesGid            ; caller reads the word at HL (DE is dead here)
     ret
 .normal:
-    ld a, l
-    add LOW(ScreenTransDataTable)
-    ld l, a
-    ld a, h
-    adc HIGH(ScreenTransDataTable)
-    ld h, a
+    ld de, ScreenTransDataTable
+    add hl, de
     ret
-NewFollowerGfxTable01:
-    dw $7E00                         ; id 224: blue-dragon follower art (bank $7e, index 0)
     rst $38                          ; 1-byte padding refill (resolver=32B, run was 33B)
-; --- Phase N: clamp species>=224 to a valid follower (placeholder until Stage 2) ---
+; --- Phase N: clamp species>=240 to a valid follower ---
 ; Lives in bank $01 end-of-bank padding (same bank as caller). Reached via the
-; repointed species read in GetActiveMonsterStatus; species>=224 has no follower
-; gfx-ID entry yet, so borrow species 214 to avoid a garbage-gfxID decompress crash.
+; repointed species read in GetActiveMonsterStatus. Ids 221-239 are the new-species
+; range (S105 G3: every bank-$7E follower slot 0-37 holds a real stream, gaps alias
+; one); 240+ cannot be followers (species+$10 wraps in the bank-$04 router), so
+; borrow species 214 to avoid a garbage-gfxID decompress crash.
 ReadActiveMonsterByteSpeciesClamped:
     call ReadActiveMonsterByte        ; A = active monster species (ReadActiveMonsterByte is ROM0)
-    cp $e1                            ; >= 225? (224 now has real follower art -> let it pass)
-    ret c                             ; no (incl. 224) -> real species
-    ld a, $d6                         ; yes (225-255, no real monster) -> clamp to species 214
+    cp $f0                            ; >= 240? (S105: was $e1 — only 224 passed)
+    ret c                             ; no (0-239) -> real species
+    ld a, $d6                         ; yes (240-255, no real monster) -> clamp to species 214
     ret
     db $01

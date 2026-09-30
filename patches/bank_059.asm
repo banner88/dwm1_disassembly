@@ -421,7 +421,7 @@ LoadB59_42c0:
     ld [$c0e0], a
     ld h, $00
     add hl, hl
-    call FollowerArtResolve59     ; FORK [8/8]: id>=224 -> new-species follower gfx-ID table; else normal (byte-neutral 8->3+5)
+    call FollowerArtResolve59     ; FORK [8/8]: id 221-239 -> computed new-species follower gfx-ID (S105 G3); else normal (byte-neutral 8->3+5)
     nop
     nop
     nop
@@ -13748,9 +13748,9 @@ Jump_059_74e0:
     nop
 ; =============================================================================
 ; FollowerArtResolve59 — Phase N follower-art fork for the $59 copy (SaveSlotPtrTable,
-; $4363; raw-species index, NOT save data). Reader passes HL = species*2. id>=224
-; (HL>=$1C0) -> indexed new-species follower gfx-ID table; else original add-base.
-; Raw convention: index offset is $1C0 (= 224*2). Byte-neutral: 29B resolver replaces
+; $4363; raw-species index, NOT save data). Reader passes HL = species*2. id 221-239
+; (HL>=$1BA) -> computed gfx-ID in wNewSpeciesGid (S105 G3); else original add-base.
+; Raw convention: $1BA = 221*2. Byte-neutral: 29B resolver replaces
 ; 29 of the trailing $00 padding bytes at end of bank.
 ; =============================================================================
 FollowerArtResolve59:                ; in: HL = species*2 (raw)
@@ -13758,23 +13758,17 @@ FollowerArtResolve59:                ; in: HL = species*2 (raw)
     or a
     jr z, .normal                    ; h==0 -> species<128
     ld a, l
-    cp $c0
-    jr c, .normal                    ; h==1, l<$c0 -> species 128-223
-.high:                               ; species>=224: HL = NewFollowerGfxTable59 + (species-224)*2
-    ld a, l
-    add LOW(NewFollowerGfxTable59 - $1C0)
-    ld l, a
-    ld a, h
-    adc HIGH(NewFollowerGfxTable59 - $1C0)
-    ld h, a
+    cp $ba
+    jr c, .normal                    ; h==1, l<$c0 -> species 128-220
+.high:                               ; species 221-239: the gfx-ID is COMPUTED (S105 G3)
+    ld a, l                          ; L = low byte of species*2
+    sub $ba                          ; = (species-221)*2 = the follower's index in bank $7E
+    ld [wNewSpeciesGid], a
+    ld a, $7e                        ; overflow bank $7E (compiler bank species7e)
+    ld [wNewSpeciesGid+1], a
+    ld hl, wNewSpeciesGid            ; caller reads the word at HL (DE is dead here)
     ret
 .normal:
-    ld a, l
-    add LOW(SaveSlotPtrTable)
-    ld l, a
-    ld a, h
-    adc HIGH(SaveSlotPtrTable)
-    ld h, a
+    ld de, SaveSlotPtrTable
+    add hl, de
     ret
-NewFollowerGfxTable59:
-    dw $7E00
