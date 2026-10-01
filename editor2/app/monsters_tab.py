@@ -21,6 +21,10 @@ three pages:
                 battle colours, walking palette, back to the original —
                 gamedata.art. TERRY? and the summons (215-220) have no art
                 page: they are not monsters (PROJECT_STATE Iron Rule 8).
+                (S108, part 3) the name, default nickname and library
+                description of the originals (gamedata.monster_text) and a
+                new species' own description, each previewed in the game's
+                font; "Texts that name it…" opens the Dialogue tab.
 
 Every edit is one undo step (SnapshotCommand); the model validates with the
 compiler's own code, so the GUI can never save what the build would refuse.
@@ -104,8 +108,35 @@ class CurveChart(QWidget):
             p.drawText(int(pts[-1][0]) - 28, int(pts[-1][1]) - 2, label)
 
 
+def _rom():
+    p = os.path.join(M.REPO, 'data', 'DWM-original.gbc')
+    try:
+        return open(p, 'rb').read()
+    except OSError:
+        return b''
+
+
+def text_pixmap(rom, rows, width, scale=2):
+    """The game's font on cream: rows = [glyph codes]; cells past `width` red
+    (the library page / name fields cut them)."""
+    from editor2.app.rooms import talk_editor as TE
+    from editor2.core import textenc as T
+    from PySide6.QtGui import QImage
+    n = max([width] + [len(r) for r in rows])
+    img = QImage(8 * (n + 1), 8 * max(1, len(rows)) + 2, QImage.Format_RGB32)
+    img.fill(TE.PAL[1])
+    for ty, codes in enumerate(rows):
+        for k, c in enumerate(codes):
+            g = T.glyph_2bpp(rom, c) if rom else b''
+            if len(g) == 16:
+                TE._blit(img, g, k, ty, TE.OVER if k >= width else None)
+    pm = QPixmap.fromImage(img)
+    return pm.scaled(pm.width() * scale, pm.height() * scale)
+
+
 class MonstersTab(QWidget):
     openEnemies = Signal()
+    showDialogue = Signal(int)          # S108: "Texts that name it…" (main opens the Dialogue tab)
 
     def __init__(self, session, parent=None):
         super().__init__(parent)
@@ -334,24 +365,52 @@ class MonstersTab(QWidget):
         self.art_note = QLabel()
         self.art_note.setWordWrap(True)
         v.addWidget(self.art_note)
-        box = QGroupBox('Name')
+        box = QGroupBox('Name and library text')
         self.name_box = box
         f = QFormLayout(box)
         self.a_name = QLineEdit()
         self.a_name.setMaxLength(SP.NAME_MAX)
-        self.a_name.editingFinished.connect(lambda: self._prop('name', self.a_name.text().strip()))
+        self.a_name.editingFinished.connect(lambda: self._text_edit('name', self.a_name.text().strip()))
         f.addRow('Name', self.a_name)
         self.a_short = QLineEdit()
         self.a_short.setMaxLength(SP.SHORT_MAX)
-        self.a_short.editingFinished.connect(lambda: self._prop('short_name', self.a_short.text().strip()))
-        f.addRow('Nickname', self.a_short)
+        self.a_short.setToolTip('The naming screen offers this when the monster joins you '
+                                '(the player can change it; 4 letters at most).')
+        self.a_short.editingFinished.connect(lambda: self._text_edit('nickname', self.a_short.text().strip()))
+        f.addRow('Default nickname', self.a_short)
         self.a_desc = QComboBox()
         narrow_combo(self.a_desc, 18)
         names = G.monster_names(M.REPO)
         for i in range(SP.DESC_MAX + 1):
             self.a_desc.addItem(f'{i:3d}  {names.get(i, "")}', i)
         self.a_desc.activated.connect(lambda _i: self._prop('description_from', self.a_desc.currentData()))
-        f.addRow('Library text of', self.a_desc)
+        self.a_desc_label = QLabel('Library text of')
+        f.addRow(self.a_desc_label, self.a_desc)
+        self.a_lines = []
+        for k in range(3):
+            le = QLineEdit()
+            le.setMaxLength(24)
+            le.textEdited.connect(self._desc_preview)
+            le.editingFinished.connect(self._desc_done)
+            f.addRow(f'Description {k + 1}', le)
+            self.a_lines.append(le)
+        self.a_preview = QLabel()
+        f.addRow('In the game', self.a_preview)
+        self.a_text_note = QLabel()
+        self.a_text_note.setWordWrap(True)
+        self.a_text_note.setStyleSheet('color:#555')
+        f.addRow(self.a_text_note)
+        row = QHBoxLayout()
+        self.a_text_reset = QPushButton('Back to the original name and text')
+        self.a_text_reset.clicked.connect(self._text_reset)
+        row.addWidget(self.a_text_reset)
+        self.a_mentions = QPushButton('Texts that name it…')
+        self.a_mentions.setToolTip('Dialogue and messages that spell this monster\'s name '
+                                   '(they keep what is written there when you rename it).')
+        self.a_mentions.clicked.connect(lambda: self.showDialogue.emit(self.sid))
+        row.addWidget(self.a_mentions)
+        row.addStretch(1)
+        f.addRow(row)
         v.addWidget(box)
         art = QGroupBox('Art')
         af = QFormLayout(art)
@@ -622,16 +681,19 @@ class MonstersTab(QWidget):
                 self.pages.setCurrentIndex(0)
             return
         is_new = kind == 'new'
-        for wdg in (self.name_box, self.rm_btn, self.recut_btn):
+        for wdg in (self.rm_btn, self.recut_btn, self.a_desc, self.a_desc_label):
             wdg.setVisible(is_new)
+        self.a_text_reset.setVisible(not is_new)
         for wdg in (self.orig_btn, self.orig_reset):
             wdg.setVisible(not is_new)
         self._busy = True
+        self._fill_text(sp)
         if is_new:
             e = self.s.doc.new_species(self.sid)
             self.a_name.setText(e['name'])
             self.a_short.setText(e.get('short_name', e['name'][:SP.SHORT_MAX]))
             self.a_desc.setCurrentIndex(self.a_desc.findData(int(e.get('description_from', 0))))
+            self.a_desc.setEnabled('description' not in e)
             self.a_pal.setCurrentIndex(int((e.get('follower') or {}).get('palette', 0)))
             pal = [int(str(x).replace('$', '0x'), 0) for x in (e.get('battle') or {}).get('palette', [0, 0, 0, 0])]
             src = e.get('source') or {}
@@ -655,7 +717,7 @@ class MonstersTab(QWidget):
             self.art_note.setText(
                 f'{what} New art replaces this monster everywhere the game draws it: battles, '
                 'the menus and the library, and following you in the field (it walks with '
-                'layout 0 — down, side, up). Name changes come later (Monsters part 3). '
+                'the walk style you pick). '
                 f'Art space used: {used:,} / {cap:,} bytes (banks $7F, $7C, $7A).')
             self.orig_reset.setEnabled(bool(e))
         for k, btn in enumerate(self.a_sw):
@@ -805,6 +867,122 @@ class MonstersTab(QWidget):
         sid = self.sid
         self._push(f'{self._name()}: {key.replace("_", " ")} → {value}',
                    lambda doc: doc.set_species_props(sid, **{key: value}))
+
+    # ---------------------------------------------------- S108 name / text
+    def _desc_rows(self):
+        from editor2.core import monster_text as MT
+        rows = []
+        for le in self.a_lines:
+            try:
+                rows.append(MT.desc_codes(le.text()))
+            except MT.MonsterTextError:
+                rows.append([0x64] * len(le.text()))
+        while len(rows) > 1 and not rows[-1]:
+            rows.pop()
+        return rows
+
+    def _desc_preview(self, *_a):
+        from editor2.core import monster_text as MT
+        if not hasattr(self, '_rom_bytes'):
+            self._rom_bytes = _rom()
+        rows = self._desc_rows()
+        self.a_preview.setPixmap(text_pixmap(self._rom_bytes, rows, MT.DESC_CELLS))
+        cells = ', '.join(f'{len(r)}' for r in rows)
+        bad = [k + 1 for k, r in enumerate(rows) if len(r) > MT.DESC_CELLS]
+        msg = f'cells per line: {cells} (18 fit)'
+        if bad:
+            msg += f' — line {", ".join(map(str, bad))} is too long (red = cut off)'
+        self._desc_msg = msg
+
+    def _fill_text(self, sp):
+        """Name / nickname / description fields + preview + meters."""
+        from editor2.core import dialogue_index as DI
+        from editor2.core import monster_text as MT
+        doc = self.s.doc
+        if sp['kind'] == 'new':
+            e = doc.new_species(self.sid)
+            own = e.get('description')
+            if own:
+                lines = list(own) if not isinstance(own, str) else own.split('\n')
+            else:
+                van = MT.vanilla()
+                lines = MT.desc_lines(van['descs'][int(e.get('description_from', 0))])
+            names = [e['name']]
+            edited = bool(own)
+            note = ('Type your own description, or leave the lines empty to show another '
+                    'monster\'s ("Library text of").' + ('' if own else ' (showing that text now)'))
+        else:
+            t = doc.monster_text(self.sid)
+            self.a_name.setText(t['name'])
+            self.a_short.setText(t['nickname'])
+            lines = t['description']
+            names = [t['name']] + ([t['original']['name']] if t['edited']['name'] else [])
+            edited = any(t['edited'].values())
+            ch = [k for k, v in t['edited'].items() if v]
+            note = (('Changed: ' + ', '.join(ch) + f' (originally “{t["original"]["name"]}”, '
+                     f'“{t["original"]["nickname"]}”). ') if ch else 'As in the original game. ')
+            note += ('The name shows everywhere the game prints it: battles, menus, the '
+                     'library, breeding and the recipe lines (they follow automatically).')
+            self.a_text_reset.setEnabled(edited)
+        for k, le in enumerate(self.a_lines):
+            le.setText(lines[k] if k < len(lines) else '')
+        self._desc_preview()
+        try:
+            cap = doc.text_capacity()
+            meter = (f" Text space: names {cap['names'][0]:,} / {cap['names'][1]:,} B · nicknames "
+                     f"{cap['nicks'][0]} / {cap['nicks'][1]} B · descriptions {cap['descs'][0]:,} / "
+                     f"{cap['descs'][1]:,} B (more than the block spills into free space; the "
+                     "build says when it is full).")
+        except Exception:                           # noqa: BLE001
+            meter = ''
+        n = len({e['key'] for nm in names for e in DI.mentions(nm)})
+        self.a_mentions.setText(f'Texts that name it… ({n})')
+        self.a_text_note.setText(note + ' ' + self._desc_msg + '.' + meter)
+
+    def _text_edit(self, key, value):
+        """Name / nickname edited (originals -> gamedata.monster_text; new
+        species -> custom.species name / short_name)."""
+        if self._busy:
+            return
+        sid = self.sid
+        if sid > 220:
+            self._prop('name' if key == 'name' else 'short_name', value)
+            return
+        cur = self.s.doc.monster_text(sid)
+        if cur[key] == value:
+            return
+        self._push(f'{self._name()}: {key} → {value}',
+                   lambda doc: doc.set_monster_text(sid, **{key: value}))
+
+    def _desc_done(self):
+        if self._busy:
+            return
+        lines = [le.text() for le in self.a_lines]
+        while lines and not lines[-1].strip():
+            lines.pop()
+        sid = self.sid
+        if sid > 220:
+            e = self.s.doc.new_species(sid)
+            cur = e.get('description') or None
+            if (lines or None) == (list(cur) if cur else None):
+                return
+            if not lines and cur is None:
+                return
+            self._push(f'{self._name()}: description',
+                       lambda doc: doc.set_species_props(sid, description=lines or None))
+            return
+        cur = self.s.doc.monster_text(sid)
+        if not lines:
+            lines = cur['original']['description']
+        if lines == cur['description']:
+            return
+        self._push(f'{self._name()}: description',
+                   lambda doc: doc.set_monster_text(sid, description=lines))
+
+    def _text_reset(self):
+        sid = self.sid
+        self._push(f'{self._name()}: original name and text',
+                   lambda doc: doc.reset_monster_text(sid))
 
     def _battle_colour(self, k):
         if self.sid <= 214:

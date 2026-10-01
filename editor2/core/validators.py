@@ -112,6 +112,13 @@ def validate(prj, generated=None):
                 WL.copies(WL.needed(prj), getattr(prj, 'repo_root', None))
             except (WL.LayoutError, SP.SpeciesError) as e:
                 errors.append(str(e))
+        # S108 (P3.10 part 3, PROJECT_COMPILER §2.24): gamedata.monster_text —
+        # names / nicknames / descriptions encode and fit
+        from . import monster_text as MT
+        try:
+            MT.check(prj)
+        except (MT.MonsterTextError, SP.SpeciesError) as e:
+            errors.append(str(e))
         # S105 G3: up to 19 new species can land in ONE family's encyclopedia
         # tab — its 32-member cap is checked here, not only when bank $12 is
         # emitted (which used to surface as an exception)

@@ -1,5 +1,117 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-01 (Session 106 — **ROADMAP P3.10 PART 1: THE MONSTERS
+> TAB — SPECIES DATA, ENEMY ROWS, NEW SPECIES CUT FROM SPRITE SHEETS** (user
+> 10:55 on the audit: "Yeah that seems fine" — the split P3.10 part 1 species
+> data / part 2 art / part 3 renames — "Here I will give you spritesheets for
+> followers and monsters — either build them in or make a reader that can import
+> them. Happy to adjust squares on top manually. Proceed"; the 12 DWM2 family
+> sheets `All_DWM2_monsters.zip`, ripped by The IT, are NOT committed — the
+> reader imports any such sheet into a project's `assets/sheets/`). S105
+> USER-CONFIRMED at session start. **Built S106; the r2 test ROM USER-CONFIRMED
+> 2026-10-01 13:26 ("Ok perfect, this fixed it"; r1: "all enemies are there",
+> "SPrite followers are also all correct"); the tab itself USER-CONFIRMED
+> 2026-10-01 15:16 on the Mac (S106 r3, below).** Hand-off: all S106 work = the
+> diff against `07594f1` (origin/master), delivered as
+> `DWM-S106-monsters-tab-changed-files.zip`; from S106 on the APPLY list is pasted
+> in the chat, not zipped (SESSION_PROTOCOL "Delivery format").
+> Verifier PASS 6/6; clean `1ca6579…` byte-perfect (bank $00 LZ decompressor +
+> bank $10 `HramScr2_406e` comments — both trees); **patched pin UNCHANGED
+> `f22f56e1…` (patched)** — no engine / emitter byte change; the user's project
+> as-is still builds `e84dff45…` (patched, = S105). test_compiler --rom 431/431,
+> test_app --rom (GUI build == pin) + test_canvas --rom PASS. `EDITOR_REVISION`
+> = 'S106'.
+>
+> **Built:** the **Monsters** tab (EDITOR_DESIGN §5.2 "As built S106"; model
+> `editor2/core/monsters.py`): every species (your new ones, the 215 originals,
+> the 6 combat-only) with its walking sprite; **Species** page = the 43-byte
+> info row (family, level cap, exp curve, female, flying, metal, tier, 3 natural
+> skills, 6 growth curves + chart, 27 resistances, reset) → sparse
+> `gamedata.monsters` / `custom.species[].info`; **Where you meet it** = every
+> enemy row of the species with where the game uses it (pools, gate bosses + join
+> rows, arena, coliseum / random / mimic / script battles, starter, project
+> uses), cells editable → sparse `gamedata.enemies` / `progression.enemies`;
+> **Name & art** (new species); **New species from a sprite sheet…** =
+> `editor2/core/sheet_import.py` (finds every pose + 2 × 3 walking frames,
+> draggable / resizable boxes, live preview of exactly what the game draws:
+> 48 × 48 battle pose with backdrop + black + 2 chosen colours, 4-direction walk
+> in one of the 8 OBJ palettes) → `custom.species` + the art streams + the sheet
+> + `source` boxes (re-cut later). One species source for the editor: NPC
+> picker / canvas thumbnails of new species drawn from the project's art
+> (`editor2/core/sprite_render.py`).
+>
+> **Found + fixed (foundational):** (a) **`dwm/sprite_codec.decode` was wrong
+> since S22** — the game re-wraps EVERY copy source byte 4 KB down and writes 0
+> for one below the destination (`TextMakeVisible`); the decoder returned 0 for
+> whole copies, garbling 213 of 221 battle and 49 walking streams in
+> `extracted/monster_sprites.json`. The S22 "shared VRAM tile pool" and "extracted
+> sprites render correctly" claims were false (DOC_AUDIT S106). New
+> `tools/census_lz_decode.py`: PyBoy stub-calls the real decompressor for all 442
+> streams → 442 equal, none depends on prior VRAM. Data regenerated; extended
+> copy length 8-bit (0 = 256) in decode / read_stream / encoder `MAX_COPY`.
+> (b) `extract_monster_follower_layouts.py` read bank $11's attr bytes at bank
+> $10's base (`$417F`); `$412D` now — every collectible species' attr is a palette
+> 0-7. (c) MONSTER_DATA's resistance wording "0 = weak, 2 = normal" was wrong:
+> level 0 = full effect … 3 = immune (the S78 ladders).
+>
+> **Measured in PyBoy** (the user's save, test ROM below): the sheet reader's
+> boxes for the water sheet's blue dragon == the hand-picked S34 / S35 Gorbunok
+> boxes and its walking payload == Gorbunok's committed in-game-proven art; the
+> editor's walking frames == the S101 PyBoy census for 213 / 215 species (146 /
+> 147: the census build's S105 attr bug); battles in the Gate of Beginning show
+> the three sheet species with their chosen colours; Onidrak joins ("Onid"),
+> goes to the party, VRAM `$8400` == its walking art, OAM palette 0 as authored;
+> the edited wild Slime (EID 2) joins at Lv 20, H 225 (250 rolled), family byte
+> 3 = Bird. Test ROM **`DWM_S106_monsters_demo.gbc`** (patched, md5
+> `bcf7ec0d…`) = the user's project + a demo overlay NOT in their project (pool 0
+> = Slime row Lv 20 / 250 HP / always joins + Onidrak / Wyrmlord / Goldhorn, all
+> always join; Slime species family Bird + natural skills Blaze / Firebal /
+> Beserker). **Next:** user test of the ROM + the tab; then P3.10 part 2 (art of
+> ORIGINAL species: battle art + palette, walking art / layout / palette as
+> project data, the 4-direction visualizer for them, G-P) or the user's pick.
+>
+> **S106 r2 (user 13:17: "all enemies are there. HOWEVER sprites got slightly
+> messed up … goldhorn (estark FYI) … his sword is no longer gold/white but only
+> gold … I am guessing you somehow minus background colour within the sprite?
+> That should not happen. background colour is perfect. SPrite followers are also
+> all correct."):** the battle colour fit used black + 2 colours inside the pose
+> and kept the cream for the background only — but the cream ($6BFF, c1) is drawn
+> INSIDE every original pose too (all 215 have enclosed cream pixels). Now every
+> sheet colour goes to the nearest of {black, cream, c0, c2} with c0 / c2 fitted
+> (`sheet_import.battle_colors`): a black + white + 2-colour pose is exact (white
+> → the cream). PyBoy on the user's save: all three poses == the editor preview
+> 2304 / 2304 px; Goldhorn keeps its white sword edges, Onidrak exact; Wyrmlord
+> (6 sheet colours) merges its red flame. Test ROM **`DWM_S106r2_monsters_demo.gbc`**
+> (patched, md5 `42d13e71…`; r1 `bcf7ec0d…` patched, historical). test_compiler
+> --rom 432/432, test_app --rom PASS. **USER-CONFIRMED 2026-10-01 13:26 ("Ok
+> perfect, this fixed it").** Followers (user question): no shade lost — walking
+> frames have 3 colours + transparent and the sheets' frames use exactly 3; the
+> light one is always the shared OBJ cream (yellow / orange tints become cream).
+>
+> **S106 r3 (user 14:50: "1) What is 'start from: 0 Drakslime' 2) How to put it
+> into gate? 3) Have you been updating the help?" → "either signpost or
+> implement"):** implemented — "Where you meet it" gains **New enemy row for this
+> monster** (`monsters.new_enemy_for_species`: a project enemy copying the species'
+> first original row, else the wild Slime EID 2) and **Put the selected row in a
+> gate…** (`app/pool_dialog.py`; `monsters.gate_pools / pool_slots /
+> set_pool_slots` → sparse `gamedata.encounters`, project enemies by id): gate
+> floors list, the five slots with chance codes + the REAL chance (running sums cut
+> at 100), "max in a group" only for 2-3 monster lists, exactly 100 % required —
+> all 128 original lists are exactly 100 (measured); the compiler now WARNS on a
+> list over 100 (its last slots are never drawn). "Start from" → **Copy data
+> from** with an explanation, default Dragon (28), family follows it. Help: the
+> Monsters topic's "Putting a monster in a gate". PyBoy on the user's save: the
+> user's project + Goldhorn made only through these paths (sheet → species → new
+> row → gate list 0 at 50 %) → Goldhorn battles in the Gate of Beginning.
+> test_compiler 337 / test_app PASS. `EDITOR_REVISION` = 'S106r3'. **USER-CONFIRMED
+> 2026-10-01 15:16 ("Ok worked. Can confirm inserting enemy works perfectly. Please
+> hand off.") — the editor ran on the user's Mac, built their project, the gate
+> insertion worked.** Also r3 (user's first build on a fresh clone: "BUILD FAILED:
+> crash-config validation failed:" with no reason): `tools/validate_custom_data.py`
+> crashed (FileNotFoundError, stderr only) when `data/DWM-original.gbc` is missing;
+> it now reports that as an error, and `builder.build_rom` runs it with the editor's
+> own interpreter and shows stderr too.
+
 > Last verified: 2026-09-30 (Session 105 — **ROADMAP P3.9b: PURGE THE
 > PROOF-OF-CONCEPT CONTENT FROM THE HAND OVERLAY, KEEP EVERY MECHANISM** (user
 > 16:21: "Yes let's clean all this stuff it wont make it into real romhack

@@ -35,8 +35,8 @@ Single bytes expanding to common 2-character pairs:
 | Code | Name | Purpose |
 |------|------|---------|
 | $E7 | **CHOICE** | **YES/NO box + continuation flags. NOT "END".** Sets $C83C, $C83A=$FF. Script checks result via opcode $15. |
-| $E8 | PAUSE | Brief pause |
-| $E9 | NUM | Insert number from variable |
+| $E8 | POS | Set the draw position — **2 parameter bytes** (S108, handler $56:$451F; was listed as "PAUSE"; textenc keeps the token name `PAUSE`) |
+| $E9 | SOUND | Play a sound effect — **1 parameter byte** (S108, handler $56:$4554 `PlaySoundEffect`; was listed as "NUM") |
 | $EA | BOX | Text box init (2 param bytes: $9F $A3 = standard NPC box) |
 | $EB | BOX2 | Alternate text box init (same params as $EA) |
 | $EC | NAME | Insert NPC/character name |
@@ -154,7 +154,69 @@ Exact ranges determined by CPU-simulating the cascade for all 2067 text IDs:
 | $07C0-$0867 | 168 | $4B | System messages, menus |
 | $0868-$09FF | 408 | $4E | Battle text, monster info |
 
-Total: **2067 text IDs**. All decoded in `extracted/text_id_map.json`.
+Total: **2,560 text ids** ($0000-$09FF; the "2067" this line said came from the old
+dump's count). **S108: the "Bank" column is only where an id STARTS** — see the next
+section; every id's real bank / address / text is in `extracted/dialogue.json`.
+
+## Text id resolution (measured S108)
+
+Each corpus bank's entry 0 (the routine the cascade `rst $10`s into, e.g. bank $42
+`LoadB42_40eb`) keeps the first part of its index range and forwards the rest to an
+**overflow bank** (`cp $71 / jr c / sub $71 / … ld hl,$1A00 / rst $10` in bank $42).
+Measured for all 2,560 ids by `tools/dump_dialogue.py` (PyBoy stub-calls ROM0
+`TextBankDispatch` $0AD9 with HL = id and reads $C824 = bank, $C82D/$C82E = string):
+
+| ids | corpus bank (ids kept) | overflow bank (ids) |
+|---|---|---|
+| $0000-$00E1 | $42 (113) | $1A (113) |
+| $00E2-$0197 | $43 (142) | $1A (40) |
+| $0198-$0243 | $44 (98) | $1B (74) |
+| $0244-$02FF | $45 (124) | $1F (64) |
+| $0300-$03C7 | $46 (144) | $1B (56) |
+| $03C8-$0473 | $47 (56) | $21 (116) |
+| $0474-$0511 | $48 (108) | $1F (50) |
+| $0512-$05DF | $49 (158) | $18 (48) |
+| $05E0-$07BF | $4A (288) | $22 (192) |
+| $07C0-$0867 | $4B (64) | $3F (104) |
+| $0868-$09FF | $4E (88) | $4F (320) |
+
+So banks $18 $1A $1B $1F $21 $22 $3F and $4F hold dialogue too (1,177 ids: farm
+chatter, monster talk, the bonus-gate bosses, the ending, the font bank's tail …).
+A bank's mode-0 table starts at the word at its own $4007 (bank $42: $4009 = dispatch
+entry 4 — id $0000 = `$42:$4142` "Milayou:Terry! Wait! It's time for bed!", the new-
+game intro, PyBoy screenshot S108). 382 ids show the same string as an earlier id; 2
+ids resolve to non-text bytes ($45 $65EA / $65F6, "suspect"). **The pre-S108
+`text_id_map.json` modelled this** (pointer table at a fixed $400B, a guessed per-page
+index rule, no overflow banks): 62 of its 2,061 entries matched — the script-bank text
+previews and bank $47's TextStr id comments built from it named the wrong lines until
+S108 (`tools/refresh_script_text_comments.py`; DOC_AUDIT S108). `text_id_map.json` is
+now derived from `dialogue.json` (`tools/dump_text_id_map.py`).
+
+**Control-code parameters (bank $56 handler table $44CD, read S108 for the decoder):**
+`$E8` takes 2 bytes (sets the draw position — not "PAUSE"), `$E9` 1 byte (plays a
+sound effect — not "NUM"; 7 uses in the ids, all `$E9 $60`), `$F9` 1 byte (insert:
+`$00` / `$10` / `$20` / `$30` — the inserted names of the join / upgrade messages),
+`$F3` none (a box opener like `$EA` / `$EB`, 20 uses before the speaker). The Control
+Codes table above carries these corrections.
+Battle messages (bank $4C) use their own codes (`$ED`, `$FC xx`, `$EC`, `$F2` — not
+decoded; shown raw by the Dialogue tab).
+
+## Monster text blocks (S108)
+
+The three per-species text blocks (all contiguous, id-ordered, one string per
+species, reached only through their pointer tables — `extract_gamedata --selftest`):
+
+| What | Text mode / table | Block | Format |
+|---|---|---|---|
+| species NAME | bank $41 mode 5, `MonsterNamePtrTable` $4339 (256) | $5B1F-$628D (1,903 B): 0-219, then "" (220-224), "?????" (225-255) | 3-9 glyphs + $F0 |
+| DEFAULT NICKNAME | bank $41 mode 7, `MonsterNickPtrTable` $4739 (215; was `FamilyCodePtrTable`) | $69F2-$6C76 (645 B) | 2 letters + $F0 ("SL" = Slime) |
+| DESCRIPTION (library page line 2) | bank $4D mode 1 = dispatch entries 261-475 | $53D3-$7719 (9,031 B; re-sectioned S108 as `MonsterDesc_NNN_<Name>`) | ≤ 3 lines × ≤ 18 cells, $F1 between lines; $9C `-`, $B6 `&`, $67 `'t`, $68 `'s` (one cell each, font bank $4F) |
+
+The default nickname is what the JOIN naming screen pre-fills (PyBoy S108: "SL" +
+two blank slots for a Slime; bank $09 `FuncFld9_621f` copies mode 7 id [$C8F5] into
+the name buffer when the name is blank and $C8F4 ≠ 0); a name left blank at END gets
+a random family name instead (mode 3, `LoadFld9_688e`). The editor writes all three
+blocks from `gamedata.monster_text` (PROJECT_COMPILER §2.24).
 
 ## Source re-section: text corpus was misassembled as fake instructions {#text-resection}
 
@@ -218,8 +280,14 @@ indexed by `wMapID` to the table at `$6119`. Each handler does room-specific vis
 
 ## Data Files
 
-- `extracted/text_id_map.json` — 2067 text IDs → decoded English, exact bank/index
-- `extracted/decoded_text.json` — 1374 text strings organized by handler bank
+- `extracted/dialogue.json` — S108: ALL 2,560 text ids with their MEASURED bank /
+  address / raw bytes / decoded text (+ `same_as` for shared strings) and every text
+  table (battle messages, bank $41 message tables, item / skill / monster
+  descriptions) — `tools/dump_dialogue.py`; read by the editor's Dialogue tab
+- `extracted/text_id_map.json` — derived from dialogue.json since S108 (id → bank /
+  index / address / one-line text; the pre-S108 file was modelled and mostly wrong)
+- `extracted/decoded_text.json` — 1374 text strings organized by handler bank (pre-S108,
+  per corpus bank only)
 
 
 ## Bank $56 Text Control Code Jump Table
@@ -280,7 +348,7 @@ trees).
 
 **Bank `$41` `$4007` mode bases line up with the named tables in `DATA_STRUCTURES.md`:**
 mode 5 → `MonsterNamePtrTable` (`$4339`, 256), mode 6 → `SkillNamePtrTable`
-(`$4539`, 256), mode 7 → `FamilyCodePtrTable` (`$4739`, **215**). Modes 0–4
+(`$4539`, 256), mode 7 → `MonsterNickPtrTable` (`$4739`, **215**; the default nicknames — mgbdis named it `FamilyCodePtrTable`, renamed S108). Modes 0–4
 (S104: decoded and re-sectioned in both trees as labelled `dw` tables,
 `TextModeList41` + `TextMode0_Debug` … `FamilyIconStrTable_Old`; bytes unchanged):
 

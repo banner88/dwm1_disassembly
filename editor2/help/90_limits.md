@@ -9,8 +9,14 @@
 - Gate floor-type rows, per-gate monster pools / floor bands, battles inside
   a dive per room, more than 32 gates and gate entrances are not editable
   yet (ROADMAP P3.7b part 2).
-- Original monsters cannot be renamed yet (Monsters tab part 3). They can
-  get new art (S107): new art walks in one of the game's 155 walk styles
+- Monster names are up to 9 characters, default nicknames up to 4,
+  library descriptions 3 lines of 18 cells (S108). The 215 names have 1,903
+  bytes, the nicknames 645, the descriptions 9,031 (+ about 2 KB free at the
+  end of their bank); names / nicknames longer than the block share the
+  ≈ 290 free bytes with the new monsters' names. Words written into dialogue
+  keep the old name (the Dialogue tab lists them; editing dialogue comes
+  later).
+- Original monsters can get new art (S107): new art walks in one of the game's 155 walk styles
   (picked to fit the sheet's six frames; the original art keeps its own) and
   uses one of the game's 8 shared walking palettes. A walk style the game
   keeps only for monsters of the other half (0-127 / 128 and up, plus your

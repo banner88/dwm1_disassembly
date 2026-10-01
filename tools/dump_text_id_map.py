@@ -1,147 +1,71 @@
-"""Dump the text ID map: every routable text ID with bank, index, address,
-and decoded text.
+"""Dump the text ID map: every text id $0000-$09FF with bank, index, address
+and a one-line decoded preview -> extracted/text_id_map.json.
 
-Regenerates extracted/text_id_map.json (previously frozen-source). The
-original in-session generator was lost; its 'text' field was a lossy
-~150-char preview (sections concatenated across NEIGHBORING ptr entries,
-then truncated mid-word). This tool keeps the structural fields
-byte-compatible (id/bank/index/addr — verified identical for all 2,067
-entries) and replaces the preview with a faithful per-entry decode:
+S108 REWRITE: the map is now DERIVED from the measured id resolution in
+extracted/dialogue.json (tools/dump_dialogue.py stub-calls the game's own
+TextBankDispatch $00:$0AD9 for every id in PyBoy). The pre-S108 generator
+modelled the cascade with constants and read each bank's pointer table at a
+fixed $400B: bank $42's mode-0 table starts at $4009 (so every bank-$42 id
+was one slot late — its "id 0" text was the measured id 1), the per-page
+index rule was a guess, and the 1,177 ids that the corpus banks forward to the
+overflow banks ($1A $1B $1F $21 $22 $3F $18 $4F) were missing or read from the wrong bank. Measured S108:
+62 of its 2,061 entries matched the game (DOC_AUDIT S108). The intro
+confirms the measured map: id $0000 = "Milayou:Terry! Wait! It's time for
+bed!" ($42:$4142), shown when a new game starts (PyBoy screenshot S108).
 
-  - decodes exactly this entry's byte span (its ptr up to the next ptr)
-  - charmap + DTE via dwm.text
-  - $EE (newline) -> ' ', $EF $EE -> ' // ' (page break),
-    $F6 -> '[HERO]', $EC -> '[NAME]', $ED -> '[MONSTER]',
-    $E7 -> '[YES/NO]', $E9 -> '[NUM]',
-    box-init $EA/$EB and other control codes dropped
-  - terminator $F7 $F0 stripped
-
-Routing ranges (start_id -> bank) were originally established by CPU-
-simulating the ROM0 cascade at $0AD9 (TEXT_SYSTEM.md); they are encoded
-here as constants and re-validated against each bank's pointer table.
+Schema kept for its readers (decompile_script.py / gen_script_banks.py
+previews, resection_text_bank.py string addresses): {"<id>": {id, bank,
+index, addr, text}} — `index` = the string's slot in its bank's mode-0 table
+(base = the word at that bank's $4007), null if the string is only reached
+mid-table; `text` = the decoded text on one line (" // " between boxes).
+Ids whose resolved bytes are not text (dialogue.json `suspect`) are left out.
 
 Usage:
-  python3 -m tools.dump_text_id_map
+  python3 -m tools.dump_text_id_map      (after tools/dump_dialogue.py)
 """
 import json
+import re
 from pathlib import Path
-from dwm.rom import ROM
-# charmap built locally below (authoritative per TEXT_SYSTEM.md)
 
-ROUTING = [  # (start_id, bank); end of each range = next start
-    (0x0000, 0x42), (0x00E2, 0x43), (0x0198, 0x44), (0x0244, 0x45),
-    (0x0300, 0x46), (0x03C8, 0x47), (0x0474, 0x48), (0x0512, 0x49),
-    (0x05E0, 0x4A), (0x07C0, 0x4B), (0x0868, 0x4E),
-]
-RANGE_END = 0x0A00  # custom IDs start at $0A00
-PTR_TABLE = 0x400B
-
-rom = ROM(Path("data/DWM-original.gbc"))
+ROM_PATH = Path("data/DWM-original.gbc")
 
 
-def build_decode_tables():
-    """Charmap per TEXT_SYSTEM.md (authoritative; dwm.text internals vary)."""
-    cm = {}
-    for i in range(10):
-        cm[i] = str(i)
-    for i in range(26):
-        cm[0x24 + i] = chr(ord('A') + i)
-        cm[0x3E + i] = chr(ord('a') + i)
-    for code, ch in zip(range(0x5C, 0x65), ["'", "→", ",", ".", ";", "..", " ", "!", "?"]):
-        cm[code] = ch
-    dte = {
-        0x65: "ll", 0x66: "'l", 0x67: "'t", 0x68: "'s", 0x69: "'r",
-        0x6A: "'m", 0x6B: "n'", 0x6C: "'v", 0x6D: "th", 0x6E: "he",
-        0x6F: "be", 0x70: "or", 0x71: "an", 0x72: "in", 0x73: "er",
-        0x74: "re", 0x75: "on", 0x76: "st", 0x77: "ou", 0x78: "te",
-        0x79: "nd", 0x7A: "to", 0x7B: "it", 0x7C: "es", 0x7D: "at",
-        0x7E: "en", 0x7F: "al",
-    }
-    return cm, dte
-
-
-CM, DTE_TABLE = build_decode_tables()
-
-
-def decode_span(raw: bytes) -> str:
-    out, i = [], 0
-    while i < len(raw):
-        b = raw[i]
-        if b in (0xF7, 0xE7, 0xFF) and i + 1 < len(raw) and raw[i + 1] == 0xF0:
-            # terminators: $F7 $F0 (CLEAR+SECTION, standard) or
-            # $E7 $F0 (CHOICE+SECTION, YES/NO question texts)
-            if b == 0xE7:
-                out.append(" [YES/NO]")
-            elif b == 0xFF:
-                out.append(" [YES/NO-2]")
-            return "".join(out).strip().removesuffix("//").strip()
-        if b in (0xEA, 0xEB):            # box-init codes — no inline params
-            i += 1                       # (verified: $EA directly followed by
-            continue                     # text 'King' at $42:$4D91; the $9F/$A3
-                                         # often seen after them are independent
-                                         # codes dropped by the $80-$DF rule)
-        if b == 0xEF:                    # PAGE — with $EE = ' // '
-            if i + 1 < len(raw) and raw[i + 1] == 0xEE:
-                out.append(" // ")
-                i += 2
-                continue
-            i += 1
-            continue
-        if b == 0xEE:
-            out.append(" ")
-            i += 1
-            continue
-        marker = {0xF6: "[HERO]", 0xEC: "[NAME]", 0xED: "[MONSTER]",
-                  0xE7: "[YES/NO]", 0xE9: "[NUM]"}.get(b)
-        if marker:
-            out.append(marker)
-            i += 1
-            continue
-        if b >= 0x80:                    # extended ($80-$DF) + other control
-            i += 1                       # codes ($E0+): drop
-            continue
-        if b in DTE_TABLE:
-            out.append(DTE_TABLE[b])
-        elif b in CM:
-            out.append(CM[b])
-        else:
-            out.append(f"[{b:02X}]")
-        i += 1
-    return None  # no terminator in window — not a real text entry
+def one_line(text):
+    t = text.replace(" ▼", "").replace("\n\n", " // ").replace("\n", " ")
+    return re.sub(r"\s+", " ", t).strip()
 
 
 def main():
+    rom = ROM_PATH.read_bytes()
+    d = json.loads(Path("extracted/dialogue.json").read_text())
+
+    def word(bank, addr):
+        o = bank * 0x4000 + addr - 0x4000
+        return rom[o] | rom[o + 1] << 8
+
+    slots = {}
+
+    def index_of(bank, addr):
+        if bank not in slots:
+            base = word(bank, 0x4007)
+            m = {}
+            for k in range(0, 512):
+                a = base + 2 * k
+                if a >= 0x8000:
+                    break
+                m.setdefault(word(bank, a), k)
+            slots[bank] = m
+        return slots[bank].get(addr)
+
     result = {}
-    for ri, (start, bank) in enumerate(ROUTING):
-        end = ROUTING[ri + 1][0] if ri + 1 < len(ROUTING) else RANGE_END
-        for tid in range(start, end):
-            # Cascade indexing rule (derived from the ROM0 cascade at $0AD9 and
-            # verified against all 2,067 committed entries): within a bank's
-            # range, index = (low byte - range_start.low) while the high byte
-            # equals the range start's high byte; once the id crosses into the
-            # next $100 page, index = low byte. Different ids can therefore
-            # alias to the same (bank, index) — the map includes those aliases.
-            if (tid >> 8) == (start >> 8):
-                idx = (tid & 0xFF) - (start & 0xFF)
-            else:
-                idx = tid & 0xFF
-            if idx < 0:
-                continue
-            p = rom.read(bank, PTR_TABLE + idx * 2, 2)
-            ptr = p[0] | (p[1] << 8)
-            if not (0x4100 <= ptr < 0x8000):
-                continue  # gap / unused ID / pointer into the bank header
-            raw = rom.read(bank, ptr, min(4096, 0x8000 - ptr))
-            text = decode_span(raw)
-            if text is None:
-                continue  # no terminator → not a real text entry
-            result[str(tid)] = {
-                "id": f"${tid:04X}",
-                "bank": f"${bank:02X}",
-                "index": idx,
-                "addr": f"${ptr:04X}",
-                "text": text,
-            }
+    for e in d["text_ids"]:
+        if e.get("suspect"):
+            continue
+        tid = int(e["id"][1:], 16)
+        bank, addr = int(e["bank"][1:], 16), int(e["addr"][1:], 16)
+        result[str(tid)] = {"id": e["id"], "bank": e["bank"],
+                            "index": index_of(bank, addr), "addr": e["addr"],
+                            "text": one_line(e["text"])}
     out = Path("extracted/text_id_map.json")
     out.write_text(json.dumps(result, indent=2))
     print(f"Saved {out} ({len(result)} text IDs)")

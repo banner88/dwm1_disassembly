@@ -4381,7 +4381,8 @@ it into behaviour (here `CheckTargetGuardA`) and label from that.
 
 ### Only delete files git does not track
 **Symptom**: clearing `__pycache__` with `find … -exec rm -rf` deleted tracked
-`.pyc` files (the repo commits some).
+`.pyc` files (the repo committed some — S108: removed from git, `__pycache__/` and
+`*.pyc` are in `.gitignore` now).
 **Fix**: restored each with `git show HEAD:<file>`; caches are kept out of the tree
 with `PYTHONDONTWRITEBYTECODE=1`, and cleanup uses `git ls-files --others`.
 **Rule**: clean up by asking git what is untracked; never by directory name.
@@ -4498,3 +4499,41 @@ return within N frames) and log the PC: the stub-called routine sat in the
 ROM0 decompressor (`$1593`) on a garbage gfx id.
 **Rule**: when an emulator run stalls, bisect with a bounded stub call of the
 suspect routine — "does not return" is the bug, not the harness.
+
+
+## S108 — renaming the originals: a modelled map, comments that inherit it, blocks kept in place
+
+### An id map is measured by running the game's resolver, not modelled
+**Symptom**: the Dialogue tab needed every text with its id; `extracted/text_id_map.json`
+(2,061 entries, "structurally identical", used for 6,520 script-bank previews) said id
+$0000 was "Milayou... zzz." — the new-game intro shows "Milayou:Terry! Wait! It's time
+for bed!".
+**Root cause**: the dump modelled the cascade: a fixed pointer-table base $400B (bank
+$42's mode-0 table starts at $4009), a guessed per-page index rule, and nothing about
+the corpus banks' entry 0 forwarding the upper part of each id range to an overflow
+bank ($1A $1B $1F $21 $22 $3F $18 $4F — 1,177 ids). 62 of its 2,061 entries matched.
+**Fix**: `tools/dump_dialogue.py` stub-calls the ROM0 `TextBankDispatch` for all 2,560
+ids in PyBoy and reads the text engine's own result ($C824, $C82D/E); the intro
+screenshot confirms id $0000. text_id_map.json is derived from it.
+**Rule**: when a value comes out of a chain of game routines (dispatch → bank entry →
+forward → table), get it by running the chain over EVERY input and reading the result
+— a re-implementation is a hypothesis, and "structurally identical to the last dump"
+proves nothing about the game.
+
+### Generated annotations inherit their generator's data bugs
+**Symptom**: the script banks' `; Text $XXXX: "…"` comments read as authoritative and
+were wrong for most of the 6,520 sites; bank $47's T1 re-section started one string late.
+**Root cause**: both were generated from the faulty map; nobody re-checked a comment
+against the screen.
+**Fix**: `tools/refresh_script_text_comments.py` re-derives them from the measured map
+(comments only, clean build byte-perfect); the comments now carry `$bank:$addr` so a
+reader can check one.
+**Rule**: when you correct a data file, grep for every tool that turned it into SOURCE
+(comments, labels, region bounds) and regenerate those too in the same session.
+
+### Make a variable-length table editable by keeping its labels, not its addresses
+**Rule** (S108 design, test-proven): the name / nickname / description blocks are
+emitted first-fit in id order under the clean tree's labels; a string that no longer
+fits keeps its label but moves to free space. No pointer table changes, an unedited
+project is byte-identical, and a rename that grows by one byte spills only the last
+string of its block (the strings after the rename shift; their labels follow).

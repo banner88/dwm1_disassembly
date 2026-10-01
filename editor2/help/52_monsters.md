@@ -119,12 +119,44 @@ battle AND walking art. Only the changes are saved (`gamedata.art`).
 TERRY? and the four summons have no art page: they are special battle
 entries, not monsters — only their moves and stats change.
 
+## Renaming a monster — name, default nickname, library text
+
+**Name & art → Name and library text** (every original monster 0-214 and
+your new species):
+
+- **Name** — up to 9 characters (letters, digits, space and `' , . ! ? - &`).
+  The game prints it from one table everywhere: battles ("Look out! … monster!"),
+  the party and INFO screens, the library list and pages, breeding, the
+  join messages — and the **recipe lines** of the library pages that name it as
+  a parent are rewritten for you (vanilla's own misspellings in those lines,
+  like Akubar's "Grenadal", go with them).
+- **Default nickname** — what the naming screen offers when the monster
+  joins you (the original game uses two letters, "SL" for Slime; up to 4).
+- **Description 1-3** — the library page's text: three lines of 18 cells.
+  `'s` and `'t` take one cell (the game has a single letter for each), `-`
+  and `&` exist too. **In the game** draws the lines in the game's own font;
+  red letters would be cut off.
+- **Back to the original name and text** undoes all three.
+- **Texts that name it… (N)** opens the **Dialogue** tab with every text that
+  spells the name ("Slime", "Slimes", "Slime's") — under the old and the new
+  name. Words written INTO dialogue are not changed by a rename; that list is
+  where to check them.
+
+Only the changes are saved (`gamedata.monster_text`). TERRY? and the four
+summons cannot be renamed (they are special battle entries, not monsters).
+Space: the names (1,903 bytes), nicknames (645) and descriptions (9,031) each
+have their block; longer text spills into free space (the names share the
+≈ 290 free bytes with your new species — the meters under the page show the
+use, and the build refuses text that does not fit).
+
 ## Name & art (new species)
 
-Name, nickname, whose library description it uses, its walking palette and
-battle colours, re-cut the art, **Remove this species** (refused while an
+Name, nickname, its library description — **its own three lines**, or (lines
+left empty) another monster's text ("Library text of") — its walking palette
+and battle colours, re-cut the art, **Remove this species** (refused while an
 enemy, a monster NPC or a breeding recipe still uses it). The encyclopedia
-recipe is the first special breeding recipe that makes it (Breeding).
+recipe is the first special breeding recipe that makes it (Breeding); its
+parents' names follow your renames.
 
 The meters under the list: new species used of 19, the bytes their names
 take of the ≈ 290 the game has free, the art bytes of the 16 KB new-species

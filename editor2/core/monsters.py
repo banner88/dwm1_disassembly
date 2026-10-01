@@ -206,7 +206,7 @@ class MonstersMixin:
         TERRY? and the summons, never in the library), 'new' (custom.species).
         Families are the project's (gamedata edits applied)."""
         g, new = self.monsters_model()
-        names = G.monster_names(REPO)
+        names = self.monster_names_effective()
         out = []
         for sid in range(221):
             out.append({'id': sid, 'name': names.get(sid, f'#{sid}'),
@@ -286,6 +286,11 @@ class MonstersMixin:
         prj = self._project(data)
         prj.gamedata()
         SP.resolve(prj, with_art=False)
+        from editor2.core import monster_text as MT
+        try:                               # S108: names / nicknames / descriptions fit
+            MT.check(prj)
+        except MT.MonsterTextError as ex:
+            raise SP.SpeciesError(str(ex))
         from editor2.core import walk_layouts as WL
         try:                               # S107 2b: layouts copied into a bank's tail
             WL.copies(WL.needed(prj), getattr(prj, 'repo_root', None))
@@ -419,7 +424,7 @@ class MonstersMixin:
         art bytes (S105 limits, species.py)."""
         prj = self._project()
         lst = SP.resolve(prj, with_art=True)
-        regions, _ = SP.text_layout(lst)
+        regions, _ = SP.text_layout(lst, SP._spills(prj))
         name_used = sum(len(b) for items in regions.values() for _l, b in items)
         art = sum(len(s['battle_art']) + len(s['follower_art']) for s in lst)
         return {'slots': (len(lst), SP.N_IDS), 'names': (name_used, SP.TEXT_BUDGET),
@@ -517,6 +522,13 @@ class MonstersMixin:
                         e.pop('short_name', None)
                 elif k == 'description_from':
                     e['description_from'] = int(v)
+                    e.pop('description', None)
+                elif k == 'description':              # S108: its own text (1-3 lines)
+                    if v:
+                        e['description'] = [str(x) for x in v]
+                        e.pop('description_from', None)
+                    else:
+                        e.pop('description', None)
                 elif k == 'walks_like':
                     e.setdefault('follower', {})['walks_like'] = int(v)
                     e['follower'].pop('layout', None)
@@ -535,6 +547,88 @@ class MonstersMixin:
                 else:
                     raise KeyError(k)
         self._commit_data(data)
+
+    # ------------------------------------------------------------ names / text
+    # S108 (P3.10 part 3): the ORIGINAL monsters' name, default nickname and
+    # library description = gamedata.monster_text (editor2/core/monster_text.py,
+    # PROJECT_COMPILER §2.24); 215-220 are not monsters (Iron Rule 8).
+    def monster_names_effective(self):
+        """{species id: name the player sees} — originals with the project's
+        renames, plus the new species. The one name source for every list."""
+        from editor2.core import monster_text as MT
+        try:
+            e = MT.effective(self.data, REPO)
+        except MT.MonsterTextError:
+            e = MT.vanilla(REPO)
+        out = {sid: MT.decode(e['names'][sid]) for sid in range(221)}
+        out[220] = out[220] or '(empty)'
+        for sp in (self.data.get('custom') or {}).get('species') or []:
+            if isinstance(sp, dict) and sp.get('id') is not None:
+                out[sp['id']] = sp.get('name', f"#{sp['id']}")
+        return out
+
+    def monster_text(self, sid):
+        """{'name', 'nickname', 'description': [lines], 'original': {same},
+        'edited': {field: bool}} of original monster `sid` (0-214)."""
+        from editor2.core import monster_text as MT
+        sid = int(sid)
+        van = MT.vanilla(REPO)
+        orig = {'name': MT.decode(van['names'][sid]), 'nickname': MT.decode(van['nicks'][sid]),
+                'description': MT.desc_lines(van['descs'][sid])}
+        e = ((self.data.get('gamedata') or {}).get('monster_text') or {}).get(str(sid)) or {}
+        cur = {'name': e.get('name', orig['name']), 'nickname': e.get('nickname', orig['nickname']),
+               'description': list(e['description']) if 'description' in e else list(orig['description'])}
+        if isinstance(cur['description'], str):
+            cur['description'] = cur['description'].split('\n')
+        cur['original'] = orig
+        cur['edited'] = {k: cur[k] != orig[k] for k in ('name', 'nickname', 'description')}
+        return cur
+
+    def set_monster_text(self, sid, **fields):
+        """name / nickname / description (list of 1-3 lines) of original monster
+        `sid`; a field set back to the original disappears. Validated (font,
+        lengths, room in the banks) before it is kept."""
+        from editor2.core import monster_text as MT
+        sid = int(sid)
+        if sid not in MT.IDS:
+            raise SP.SpeciesError(f'species {sid}: only the original monsters 0-214 are renamed '
+                                  'here (215-220 are not monsters — PROJECT_STATE Iron Rule 8; '
+                                  'new species keep their name in their own page)')
+        orig = self.monster_text(sid)['original']
+        data = copy.deepcopy(self.data)
+        mt = data.setdefault('gamedata', {}).setdefault('monster_text', {})
+        e = dict(mt.get(str(sid)) or {})
+        for k, v in fields.items():
+            if k not in ('name', 'nickname', 'description'):
+                raise KeyError(k)
+            if k == 'description':
+                v = [str(x) for x in (v.split('\n') if isinstance(v, str) else v)]
+                while len(v) > 1 and not v[-1].strip():
+                    v.pop()
+            else:
+                v = str(v).strip()
+            if v == orig[k]:
+                e.pop(k, None)
+            else:
+                e[k] = v
+        if e:
+            mt[str(sid)] = e
+        else:
+            mt.pop(str(sid), None)
+        if not mt:
+            data['gamedata'].pop('monster_text', None)
+            if not data['gamedata']:
+                data.pop('gamedata', None)
+        self._commit_data(data)
+
+    def reset_monster_text(self, sid):
+        o = self.monster_text(sid)['original']
+        self.set_monster_text(sid, **o)
+
+    def text_capacity(self):
+        """{'names' | 'nicks' | 'descs': (bytes used, block size)} — the meters."""
+        from editor2.core import monster_text as MT
+        return MT.usage(self._project())
 
     # ------------------------------------------------------------ original art
     # S107 (P3.10 part 2a): new art for the ORIGINAL monsters 0-214 =

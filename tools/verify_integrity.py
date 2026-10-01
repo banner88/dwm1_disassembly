@@ -52,6 +52,7 @@ SELFTEST_TOOLS = [
     "extract_gamedata.py",       # S103: gamedata_vanilla.json (the Layer A-lite base) == ROM tables
     "build_family_icon.py",      # S104: family_icons.json vanilla icons == ROM; Spirit grid == $4F:$41B0 glyph + bank $6D SpiritIconStream
     "extract_monster_follower_layouts.py",  # S107: the 155 walking layouts (+ stored bytes, per-bank instances / frames) == ROM
+    "dump_dialogue.py",          # S108: dialogue.json (all 2,560 text ids, measured; + the text tables) raw bytes == ROM
 ]
 
 PATCH_FILES = [

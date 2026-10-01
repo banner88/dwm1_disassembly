@@ -1175,3 +1175,15 @@ def _art_regions():
 
 
 REGISTRY += _art_regions()
+
+
+def _monster_text_regions():
+    # S108 (P3.10 part 3): the ORIGINAL monsters' names / default nicknames /
+    # descriptions (gamedata.monster_text, editor2/core/monster_text.py,
+    # PROJECT_COMPILER §2.24) — no edits == the original bytes.
+    from . import monster_text as MT
+    return [(name, "gamedata.monster_text", f"region:{path}#{name}", fn, [bank])
+            for name, path, fn, bank in MT.REGIONS]
+
+
+REGISTRY += _monster_text_regions()

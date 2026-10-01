@@ -5643,6 +5643,12 @@ jr_009_6155:
     ret
 
 
+; Naming screen setup (S108; measured on a JOIN in PyBoy: the field shows "SL" + two
+; blank slots for a Slime): copy the 8-byte current name ($C8F2/$C8F3 -> $C0C8);
+; if $C8F4 != 0 (a monster is being named) and that name is blank ($9F), PRE-FILL
+; it with the species' default nickname = text mode 7 (bank $41 MonsterNickPtrTable
+; $4739, id [$C8F5]) via $C180. The editor writes those strings:
+; gamedata.monster_text.<id>.nickname (S108, PROJECT_COMPILER §2.24).
 FuncFld9_621f:
     ld b, $08
     ld a, [$c8f2]
@@ -6315,7 +6321,7 @@ jr_009_6606:
     cp $9f
     jr nz, jr_009_66ca
 
-    call LoadFld9_688e
+    call LoadFld9_688e          ; name still blank at END -> a random family name (text mode 3, below)
     call SetFld9_68d9
     call SetFld9_625d
 
@@ -6593,6 +6599,9 @@ LoadFld9_688e:
     ret
 
 
+; Random NAME for a monster left unnamed (S108: the naming screen calls this when
+; the name is still blank at END — the PRE-FILL is the species' default nickname,
+; text mode 7, FuncFld9_621f). Text mode 3 = the family name pools (S104 fork below).
 jr_009_68aa:
     call GenerateRNG
     ld a, [$c8f4]

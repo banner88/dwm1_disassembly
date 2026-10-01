@@ -303,7 +303,7 @@ def main():
     assert not mt.pages.isTabEnabled(2), 'TERRY? must have no art page (Iron Rule 8)'
     mt.select(78)
     assert mt.pages.isTabEnabled(2) and mt.orig_btn.isVisibleTo(mt.art_page) \
-        and not mt.name_box.isVisibleTo(mt.art_page)
+        and mt.name_box.isVisibleTo(mt.art_page) and not mt.a_desc.isVisibleTo(mt.art_page)
     dlg = SheetImportDialog(doc, 'original', sid=78, parent=mt)
     assert 'Dracky' in dlg.windowTitle()
     dlg.load_sheet(sheet)
@@ -355,6 +355,62 @@ def main():
         os.rmdir(adir)
     print('OK: Monsters tab (S107) — Dracky re-arted from the water sheet, Slime walking '
           'palette set and set back, TERRY? has no art page; undo restores everything')
+
+    # S108 (P3.10 part 3): rename an original monster (name, default nickname,
+    # description) through the tab's fields; the Dialogue tab lists the texts
+    # that name it (old + new name); a new species gets its own description;
+    # undo restores everything
+    before = doc.dumps()
+    mt.pages.setCurrentIndex(2)
+    mt.select(8)
+    app.processEvents()
+    assert mt.a_name.text() == 'Slime' and mt.a_short.text() == 'SL', (mt.a_name.text(), mt.a_short.text())
+    assert mt.a_lines[0].text() == 'The most abundant'
+    n0 = int(mt.a_mentions.text().split('(')[-1].rstrip(')'))
+    assert n0 > 5, mt.a_mentions.text()
+    mt.a_name.setText('Goober')
+    mt._text_edit('name', 'Goober')
+    mt.a_short.setText('GOOB')
+    mt._text_edit('nickname', 'GOOB')
+    for k, t in enumerate(['A wobbly blob', "that's always", 'grinning']):
+        mt.a_lines[k].setText(t)
+    mt._desc_done()
+    e = doc.data['gamedata']['monster_text']['8']
+    assert e == {'name': 'Goober', 'nickname': 'GOOB',
+                 'description': ['A wobbly blob', "that's always", 'grinning']}, e
+    assert any(s_['id'] == 8 and s_['name'] == 'Goober' for s_ in doc.species_catalog())
+    assert 'Goober' in mt.title.text()
+    dt = w.dialogue_tab
+    w._show_dialogue_for(8)
+    app.processEvents()
+    assert w.tabs.currentWidget() is dt and dt.table.rowCount() == n0, (dt.table.rowCount(), n0)
+    assert 'Goober' in dt.monster.currentText() and 'was Slime' in dt.monster.currentText()
+    dt.query.setText('$0000')
+    assert dt.table.rowCount() >= 0
+    dt.show_monster(None)
+    dt.query.setText('Terry! Wait!')
+    assert dt.table.rowCount() == 1 and dt.shown[0]['ref'] == '$0000', dt.table.rowCount()
+    dt.query.clear()
+    w.tabs.setCurrentWidget(mt)
+    mt.select(224)
+    for k, t in enumerate(['A gentle dragon', 'from the deep sea', '']):
+        mt.a_lines[k].setText(t)
+    mt._desc_done()
+    g = next(x for x in doc.data['custom']['species'] if x['id'] == 224)
+    assert g.get('description') == ['A gentle dragon', 'from the deep sea'] and \
+        'description_from' not in g, g
+    try:
+        doc.set_monster_text(215, name='Rival')
+        raise AssertionError('TERRY? must not be renamed')
+    except Exception as ex:                                       # noqa: BLE001
+        assert 'Iron Rule 8' in str(ex)
+    for _ in range(4):
+        w.session.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'undo must restore project.json exactly'
+    print('OK: Monsters tab (S108) — Slime renamed Goober / GOOB with a new description, '
+          'the Dialogue tab lists its texts (old + new name), Gorbunok got its own '
+          'description, TERRY? refused; undo restores everything')
 
     if do_rom:
         from editor2.app.build_worker import BuildWorker  # noqa: E402

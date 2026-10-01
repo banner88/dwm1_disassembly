@@ -285,9 +285,9 @@ jr_047_4161:
 ; --- BEGIN re-sectioned text run (bank $47: $4174-$5b74) ---
 ; DTE-encoded dialogue strings, one label per text id (text_id_map.json).
 ; Labels/comments only; bytes are byte-identical to the original ROM.
-TextStr_47_4174:           ; (region entry / unlisted fragment)
+TextStr_47_4174:           ; (no text id points here: a mid-string fragment)
     db $f0
-TextStr_47_4175:           ; id $03C8 $0400
+TextStr_47_4175:           ; id $03C9
     ; "He looks a bit / nervous. / I wonder why? / / Maybe it's / because the / tournament is / approaching..."
     db $eb, $9f, $a3, $2b, $42, $62, $49, $4c, $4c, $48, $50, $62, $3e, $62, $3f, $46
     db $51, $ef, $ee, $4b, $42, $4f, $53, $4c, $52, $50, $5f, $fa, $f7, $ef, $ee, $2c
@@ -296,7 +296,7 @@ TextStr_47_4175:           ; id $03C8 $0400
     db $42, $40, $3e, $52, $50, $42, $62, $51, $45, $42, $fa, $f7, $ef, $ee, $51, $4c
     db $52, $4f, $4b, $3e, $4a, $42, $4b, $51, $62, $46, $50, $ef, $ee, $3e, $4d, $4d
     db $4f, $4c, $3e, $40, $45, $46, $4b, $44, $5f, $5f, $5f, $f7, $f0
-TextStr_47_41e2:           ; id $03C9 $0401
+TextStr_47_41e2:           ; id $03CA
     ; "I'm the Monster / Minister! / Do you want to / know about where / the monsters live? / [YES/NO-2]"
     db $ea, $9f, $a3, $2c, $6a, $62, $51, $45, $42, $62, $30, $4c, $4b, $50, $51, $42
     db $4f, $ef, $ee, $30, $46, $4b, $46, $50, $51, $42, $4f, $63, $fa, $f7, $ef, $ee
@@ -304,18 +304,18 @@ TextStr_47_41e2:           ; id $03C9 $0401
     db $ef, $ee, $48, $4b, $4c, $54, $62, $3e, $3f, $4c, $52, $51, $62, $54, $45, $42
     db $4f, $42, $fa, $f7, $ef, $ee, $51, $45, $42, $62, $4a, $4c, $4b, $50, $51, $42
     db $4f, $50, $62, $49, $46, $53, $42, $64, $ef, $ee, $ff, $f0
-TextStr_47_423e:           ; id $03CA $0402
+TextStr_47_423e:           ; id $03CB
     ; "If you don't / want to know, / that's fine. / Come again!"
     db $ea, $9f, $a3, $2c, $43, $62, $56, $4c, $52, $62
-TextStr_47_4248:           ; id $045E
+TextStr_47_4248:           ; (no text id points here: a mid-string fragment)
     ; "don't / want to know, / that's fine. / Come again!"
     db $41, $4c, $4b, $67, $ef, $ee, $54, $3e, $4b, $51, $62
-TextStr_47_4253:           ; id $046C
+TextStr_47_4253:           ; (no text id points here: a mid-string fragment)
     ; "to know, / that's fine. / Come again!"
     db $51, $4c, $62, $48, $4b, $4c, $54, $5e, $fa, $f7, $ef, $ee, $51, $45, $3e, $51
     db $68, $62, $43, $46, $4b, $42, $5f, $ef, $ee, $26, $4c, $4a, $42, $62, $3e, $44
     db $3e, $46, $4b, $63, $f7, $f0
-TextStr_47_4279:           ; id $03CB $0403
+TextStr_47_4279:           ; id $03CC
     ; "How about the / monsters living / behind the / Travelers' Gates / in the Room of / Villager / Talisman? / [YES/NO-2]"
     db $ea, $9f, $a3, $2b, $4c, $54, $62, $3e, $3f, $4c, $52, $51, $62, $51, $45, $42
     db $ef, $ee, $4a, $4c, $4b, $50, $51, $42, $4f, $50, $62, $49, $46, $53, $46, $4b
@@ -324,7 +324,7 @@ TextStr_47_4279:           ; id $03CB $0403
     db $50, $fa, $f7, $ef, $ee, $46, $4b, $62, $51, $45, $42, $62, $35, $4c, $4c, $4a
     db $62, $4c, $43, $ef, $ee, $39, $46, $49, $49, $3e, $44, $42, $4f, $62, $b6, $fa
     db $f7, $ef, $ee, $37, $3e, $49, $46, $50, $4a, $3e, $4b, $64, $ef, $ee, $ff, $f0
-TextStr_47_42e9:           ; id $03CC $0404
+TextStr_47_42e9:           ; id $03CD
     ; "Behind the Gate / of Villager, / Stubsucks, / GoHoppers... / Anteaters, and / Gremlins are / living. / / Behind the Gate / of Talisman live ..."
     db $ea, $9f, $a3, $25, $42, $45, $46, $4b, $41, $62, $51, $45, $42, $62, $2a, $3e
     db $51, $42, $ef, $ee, $4c, $43, $62, $39, $46, $49, $49, $3e, $44, $42, $4f, $5e
@@ -337,7 +337,7 @@ TextStr_47_42e9:           ; id $03CC $0404
     db $ef, $ee, $4c, $43, $62, $37, $3e, $49, $46, $50, $4a, $3e, $4b, $62, $49, $46
     db $53, $42, $fa, $f7, $ef, $ee, $36, $4d, $4c, $4c, $48, $56, $50, $62, $3e, $4b
     db $41, $ef, $ee, $24, $4f, $4a, $56, $24, $4b, $51, $50, $5f, $f7, $f0
-TextStr_47_4397:           ; id $03CD $0405
+TextStr_47_4397:           ; id $03CE
     ; "How about / monsters living / behind the Gates / in the Room of / Memories / Bewilder? [YES/NO-2]"
     db $ea, $9f, $a3, $2b, $4c, $54, $62, $3e, $3f, $4c, $52, $51, $ef, $ee, $4a, $4c
     db $4b, $50, $51, $42, $4f, $50, $62, $49, $46, $53, $46, $4b, $44, $fa, $f7, $ef
@@ -345,7 +345,7 @@ TextStr_47_4397:           ; id $03CD $0405
     db $50, $ef, $ee, $46, $4b, $62, $51, $45, $42, $62, $35, $4c, $4c, $4a, $62, $4c
     db $43, $fa, $f7, $ef, $ee, $30, $42, $4a, $4c, $4f, $46, $42, $50, $62, $b6, $ef
     db $ee, $25, $42, $54, $46, $49, $41, $42, $4f, $64, $ff, $f0
-TextStr_47_43f3:           ; id $03CE $0406
+TextStr_47_43f3:           ; id $03CF
     ; "Behind the Gate / of Memories are, / Goopis, / PillowRats, / Catapilas, / / Pickys, and / FairyRats. / Behind the Gate / of Bewilder live / ..."
     db $ea, $9f, $a3, $25, $42, $45, $46, $4b, $41, $62, $51, $45, $42, $62, $2a, $3e
     db $51, $42, $ef, $ee, $4c, $43, $62, $30, $42, $4a, $4c, $4f, $46, $42, $50, $62
@@ -358,7 +358,7 @@ TextStr_47_43f3:           ; id $03CE $0406
     db $4c, $43, $62, $25, $42, $54, $46, $49, $41, $42, $4f, $62, $49, $46, $53, $42
     db $fa, $f7, $ef, $ee, $30, $46, $4b, $46, $27, $4f, $3e, $48, $50, $62, $3e, $4b
     db $41, $ef, $ee, $28, $53, $46, $49, $36, $42, $42, $41, $50, $5f, $f7, $f0
-TextStr_47_44a2:           ; id $03CF $0407
+TextStr_47_44a2:           ; id $03D0
     ; "How about the / monsters behind / the Gates in the / Room of Peace / Bravery? / [YES/NO-2]"
     db $ea, $9f, $a3, $2b, $4c, $54, $62, $3e, $3f, $4c, $52, $51, $62, $51, $45, $42
     db $ef, $ee, $4a, $4c, $4b, $50, $51, $42, $4f, $50, $62, $3f, $42, $45, $46, $4b
@@ -366,7 +366,7 @@ TextStr_47_44a2:           ; id $03CF $0407
     db $4b, $62, $51, $45, $42, $ef, $ee, $35, $4c, $4c, $4a, $62, $4c, $43, $62, $33
     db $42, $3e, $40, $42, $62, $b6, $fa, $f7, $ef, $ee, $25, $4f, $3e, $53, $42, $4f
     db $56, $64, $ef, $ee, $ff, $f0
-TextStr_47_44f8:           ; id $03D0 $0408
+TextStr_47_44f8:           ; id $03D1
     ; "Behind the Gate / of Peace live / BigRoosts, / SpotSlimes, / CoilBirds, / DragonKids, / CrestPents, / BoneSlaves / Horks, / Almirajs, and / ..."
     db $ea, $9f, $a3, $25, $42, $45, $46, $4b, $41, $62, $51, $45, $42, $62, $2a, $3e
     db $51, $42, $ef, $ee, $4c, $43, $62, $33, $42, $3e, $40, $42, $62, $49, $46, $53
@@ -374,10 +374,10 @@ TextStr_47_44f8:           ; id $03D0 $0408
     db $ee, $36, $4d, $4c, $51, $36, $49, $46, $4a, $42, $50, $5e, $fa, $f7, $ef, $ee
     db $9f, $a3, $26, $4c, $46, $49, $25, $46, $4f, $41, $50, $5e, $ef, $ee, $27, $4f
     db $3e, $44, $4c, $4b, $2e, $46, $41, $50
-TextStr_47_4550:           ; id $0466
+TextStr_47_4550:           ; (no text id points here: a mid-string fragment)
     ; ", / CrestPents, / BoneSlaves / Horks, / Almirajs, and / BullBirds. / / Behind the Gate / of Bravery live / Demonites, / 1EyeClowns, / FloraM..."
     db $5e
-TextStr_47_4551:           ; id $0462 $046E
+TextStr_47_4551:           ; (no text id points here: a mid-string fragment)
     ; "/ CrestPents, / BoneSlaves / Horks, / Almirajs, and / BullBirds. / / Behind the Gate / of Bravery live / Demonites, / 1EyeClowns, / FloraMen..."
     db $fa, $f7, $ef, $ee, $26, $4f, $42, $50, $51, $33, $42, $4b, $51, $50, $5e, $ef
     db $ee, $25, $4c, $4b, $42, $36, $49, $3e, $53, $42, $50, $fa, $f7, $ef, $ee, $9f
@@ -391,14 +391,14 @@ TextStr_47_4551:           ; id $0462 $046E
     db $30, $42, $4b, $5e, $ef, $ee, $fa, $f7, $ef, $ee, $9f, $a3, $36, $3e, $3f, $4f
     db $42, $30, $42, $4b, $62, $3e, $4b, $41, $ef, $ee, $25, $42, $3e, $4b, $30, $42
     db $4b, $5f, $f7, $f0
-TextStr_47_4605:           ; id $03D1 $0409
+TextStr_47_4605:           ; id $03D2
     ; "How about / monsters behind / the Gates of / Strength Anger? [YES/NO-2]"
     db $ea, $9f, $a3, $2b, $4c, $54, $62, $3e, $3f, $4c, $52, $51, $ef, $ee, $4a, $4c
     db $4b, $50, $51, $42, $4f, $50, $62, $3f, $42, $45, $46, $4b, $41, $fa, $f7, $ef
     db $ee, $51, $45, $42, $62, $2a, $3e, $51, $42, $50, $62, $4c, $43, $ef, $ee, $36
     db $51, $4f, $42, $4b, $44, $51, $45, $62, $b6, $62, $24, $4b, $44, $42, $4f, $64
     db $ff, $f0
-TextStr_47_4647:           ; id $03D2 $040A
+TextStr_47_4647:           ; id $03D3
     ; "Behind the Gate / of Strength live / MudDolls, / SkulRiders, / FairyDraks, / TreeSlimes, / DrakSlimes, / / and WingTrees. / / Behind the Gat..."
     db $ea, $9f, $a3, $25, $42, $45, $46, $4b, $41, $62, $51, $45, $42, $62, $2a, $3e
     db $51, $42, $ef, $ee, $4c, $43, $62, $36, $51, $4f, $42, $4b, $44, $51, $45, $62
@@ -417,41 +417,41 @@ TextStr_47_4647:           ; id $03D2 $040A
     db $50, $5e, $ef, $ee, $28, $56, $42, $41, $42, $4f, $50, $5e, $62, $3e, $4b, $41
     db $fa, $f7, $ef, $ee, $33, $52, $51, $4f, $42, $4d, $52, $4d, $50, $5f, $ef, $ee
     db $f7, $f0
-TextStr_47_4749:           ; id $03D3 $040B
+TextStr_47_4749:           ; id $03D4
     ; "If you don't / want to know, / that's fine. / Come again!"
     db $ea, $9f, $a3, $2c, $43, $62, $56, $4c, $52, $62, $41, $4c, $4b, $67, $ef, $ee
     db $54, $3e, $4b, $51, $62, $51, $4c, $62, $48, $4b, $4c, $54, $5e, $fa, $f7, $ef
     db $ee, $51, $45, $3e, $51, $68, $62, $43, $46, $4b, $42, $5f, $ef, $ee, $26, $4c
     db $4a, $42, $62, $3e, $44, $3e, $46, $4b, $63, $f7, $f0
-TextStr_47_4784:           ; id $03D4 $040C
+TextStr_47_4784:           ; id $03D5
     ; "Don't / pick on me!"
     db $eb, $9f, $a3, $27, $4c, $4b, $67, $ef, $ee, $4d, $46, $40, $48, $62, $4c, $4b
     db $62, $4a, $42, $63, $f7, $f0
-TextStr_47_479a:           ; id $03D5 $040D
+TextStr_47_479a:           ; id $03D6
     ; "Ha ha ha! I made / Gigantes a coward!"
     db $ea, $9f, $a3, $2b, $3e, $62, $45, $3e, $62, $45, $3e, $63, $62, $2c, $62, $4a
     db $3e, $41, $42, $ef, $ee, $2a, $46, $44, $3e, $4b, $51, $42, $50, $62, $3e, $62
     db $40, $4c, $54, $3e, $4f, $41, $63, $f7, $f0
-TextStr_47_47c3:           ; id $03D6 $040E
+TextStr_47_47c3:           ; id $03D7
     ; "I can see.. I / can see! It's a / never before / seen monster!"
     db $eb, $9f, $a3, $2c, $62, $40, $3e, $4b, $62, $50, $42, $42, $5f, $5f, $62, $2c
     db $ef, $ee, $40, $3e, $4b, $62, $50, $42, $42, $63, $62, $2c, $51, $68, $62, $3e
     db $fa, $f7, $ef, $ee, $4b, $42, $53, $42, $4f, $62, $3f, $42, $43, $4c, $4f, $42
     db $ef, $ee, $50, $42, $42, $4b, $62, $4a, $4c, $4b, $50, $51, $42, $4f, $63, $f7
     db $f0
-TextStr_47_4804:           ; id $03D7 $040F
+TextStr_47_4804:           ; id $03D8
     ; "You, must obey / my command. / I want to see / a Florajay! / A flowerlike / animal with wings. / A Florajay!"
     db $eb, $9f, $a3, $3c, $4c, $52, $5e, $62, $4a, $52, $50, $51, $62, $4c, $3f, $42
     db $56, $ef, $ee, $4a, $56, $62, $40, $4c, $4a, $4a, $3e, $4b, $41, $5f, $fa, $f7
     db $ef, $ee, $9f, $a3, $2c, $62, $54, $3e, $4b, $51, $62, $51, $4c, $62, $50, $42
     db $42, $ef, $ee, $3e, $62, $29, $49, $4c, $4f, $3e, $47, $3e, $56, $63, $fa, $f7
     db $ef, $ee, $9f, $a3, $24, $62, $43, $49
-TextStr_47_484c:           ; id $0465
+TextStr_47_484c:           ; (no text id points here: a mid-string fragment)
     ; "owerlike / animal with wings. / A Florajay!"
     db $4c, $54, $42, $4f, $9c, $49, $46, $48, $42, $ef, $ee, $3e, $4b, $46, $4a, $3e
     db $49, $62, $54, $46, $51, $45, $62, $54, $46, $4b, $44, $50, $5f, $fa, $f7, $ef
     db $ee, $24, $62, $29, $49, $4c, $4f, $3e, $47, $3e, $56, $63, $ef, $ee, $f7, $f0
-TextStr_47_487c:           ; id $03D8 $0410
+TextStr_47_487c:           ; id $03D9
     ; "Oh! It's a / FloraJay! What a / funny face! / / Well done! / I'll give you a / reward."
     db $eb, $9f, $a3, $32, $45, $63, $62, $2c, $51, $68, $62, $3e, $ef, $ee, $29, $49
     db $4c, $4f, $3e, $2d, $3e, $56, $63, $62, $3a, $45, $3e, $51, $62, $3e, $fa, $f7
@@ -459,22 +459,22 @@ TextStr_47_487c:           ; id $03D8 $0410
     db $f7, $ef, $ee, $9f, $a3, $3a, $42, $49, $49, $62, $41, $4c, $4b, $42, $63, $ef
     db $ee, $2c, $66, $49, $62, $44, $46, $53, $42, $62, $56, $4c, $52, $62, $3e, $fa
     db $f7, $ef, $ee, $4f, $42, $54, $3e, $4f, $41, $5f, $ef, $ee, $fa, $f7, $f0
-TextStr_47_48db:           ; id $03D9 $0411
+TextStr_47_48db:           ; id $03DA
     ; "This is an / AGLseed. / Use it wisely."
     db $eb, $9f, $a3, $37, $45, $46, $50, $62, $46, $50, $62, $3e, $4b, $ef, $ee, $24
     db $2a, $2f, $50, $42, $42, $41, $5f, $fa, $f7, $ef, $ee, $38, $50, $42, $62, $46
     db $51, $62, $54, $46, $50, $42, $49, $56, $5f, $ef, $ee, $f7, $f0
-TextStr_47_4908:           ; id $03DA $0412
+TextStr_47_4908:           ; id $03DB
     ; "I heard a rumor / that a terrible / master appeared / from nowhere in / a foreign kingdom. / / When this master / defeats an enemy / master,..."
     db $ea, $9f, $a3, $2c, $62, $45, $42, $3e, $4f, $41, $62, $3e, $62, $4f, $52, $4a
     db $4c, $4f, $ef, $ee, $51, $45, $3e, $51, $62, $3e, $62, $51, $42, $4f, $4f, $46
     db $3f, $49, $42, $fa, $f7, $ef, $ee, $4a, $3e, $50, $51, $42, $4f, $62, $3e, $4d
     db $4d, $42, $3e, $4f, $42, $41, $ef, $ee, $43, $4f
-TextStr_47_4942:           ; id $0467
+TextStr_47_4942:           ; (no text id points here: a mid-string fragment)
     ; "om nowhere in / a foreign kingdom. / / When this master / defeats an enemy / master, this / master devours / their monsters!!"
     db $4c, $4a, $62, $4b, $4c, $54, $45, $42, $4f, $42, $62, $46, $4b, $fa, $f7, $ef
     db $ee, $3e, $62, $43, $4c, $4f, $42, $46, $44, $4b, $62, $48, $46, $4b, $44, $41
-TextStr_47_4962:           ; id $045C
+TextStr_47_4962:           ; (no text id points here: a mid-string fragment)
     ; "om. / / When this master / defeats an enemy / master, this / master devours / their monsters!!"
     db $4c, $4a, $5f, $ef, $ee, $fa, $f7, $ef, $ee, $9f, $a3, $3a, $45, $42, $4b, $62
     db $51, $45, $46, $50, $62, $4a, $3e, $50, $51, $42, $4f, $ef, $ee, $41, $42, $43
@@ -483,13 +483,13 @@ TextStr_47_4962:           ; id $045C
     db $3e, $50, $51, $42, $4f, $62, $41, $42, $53, $4c, $52, $4f, $50, $fa, $f7, $ef
     db $ee, $51, $45, $42, $46, $4f, $62, $4a, $4c, $4b, $50, $51, $42, $4f, $50, $63
     db $63, $ef, $ee, $f7, $f0
-TextStr_47_49c7:           ; id $03DB $0413
+TextStr_47_49c7:           ; id $03DC
     ; "Oops...I lost / ...I guess I'll / try to get more / sleep!"
     db $ea, $9f, $a3, $32, $4c, $4d, $50, $5f, $5f, $5f, $2c, $62, $49, $4c, $50, $51
     db $ef, $ee, $5f, $5f, $5f, $2c, $62, $44, $52, $42, $50, $50, $62, $2c, $66, $49
     db $fa, $f7, $ef, $ee, $51, $4f, $56, $62, $51, $4c, $62, $44, $42, $51, $62, $4a
     db $4c, $4f, $42, $ef, $ee, $50, $49, $42, $42, $4d, $63, $f7, $f0
-TextStr_47_4a04:           ; id $03DC $0414
+TextStr_47_4a04:           ; id $03DD
     ; "You're in / the Room of / Happiness / Temptation. / Go right to the / Gate of / Temptation. / Left to the Gate / of Happiness."
     db $ea, $9f, $a3, $3c, $4c, $52, $69, $42, $62, $46, $4b, $ef, $ee, $51, $45, $42
     db $62, $35, $4c, $4c, $4a, $62, $4c, $43, $fa, $f7, $ef, $ee, $2b, $3e, $4d, $4d
@@ -500,7 +500,7 @@ TextStr_47_4a04:           ; id $03DC $0414
     db $5f, $ef, $ee, $2f, $42, $43, $51, $62, $51, $4c, $62, $51, $45, $42, $62, $2a
     db $3e, $51, $42, $fa, $f7, $ef, $ee, $4c, $43, $62, $2b, $3e, $4d, $4d, $46, $4b
     db $42, $50, $50, $5f, $ef, $ee, $f7, $f0
-TextStr_47_4a8c:           ; id $03DD $0415
+TextStr_47_4a8c:           ; id $03DE
     ; "Welcome to / A class. I was / expecting you! / / C'mon, [HERO]! / Show me what / you've got!!"
     db $eb, $9f, $a3, $3a, $42, $49, $40, $4c, $4a, $42, $62, $51, $4c, $ef, $ee, $24
     db $62, $40, $49, $3e, $50, $50, $5f, $62, $2c, $62, $54, $3e, $50, $fa, $f7, $ef
@@ -508,7 +508,7 @@ TextStr_47_4a8c:           ; id $03DD $0415
     db $ee, $fa, $f7, $ef, $ee, $9f, $a3, $26, $6a, $4c, $4b, $5e, $62, $f6, $63, $ef
     db $ee, $36, $45, $4c, $54, $62, $4a, $42, $62, $54, $45, $3e, $51, $fa, $f7, $ef
     db $ee, $56, $4c, $52, $6c, $42, $62, $44, $4c, $51, $63, $63, $ef, $ee, $f7, $f0
-TextStr_47_4aec:           ; id $03DE $0416
+TextStr_47_4aec:           ; id $03DF
     ; "Maybe you'll / do better next / time [HERO]. / / Never give up / just because you / failed a few / times!"
     db $eb, $9f, $a3, $30, $3e, $56, $3f, $42, $62, $56, $4c, $52, $66, $49, $ef, $ee
     db $41, $4c, $62, $3f, $42, $51, $51, $42, $4f, $62, $4b, $42, $55, $51, $fa, $f7
@@ -516,16 +516,16 @@ TextStr_47_4aec:           ; id $03DE $0416
     db $a3, $31, $42, $53, $42, $4f, $62, $44, $46, $53, $42, $62, $52, $4d, $ef, $ee
     db $47, $52, $50, $51, $62, $3f, $42, $40, $3e, $52, $50, $42, $62, $56, $4c, $52
     db $fa, $f7, $ef, $ee, $43, $3e, $46, $49, $42, $41
-TextStr_47_4b46:           ; id $046F
+TextStr_47_4b46:           ; (no text id points here: a mid-string fragment)
     ; "a few / times!"
     db $62, $3e, $62, $43, $42, $54, $ef, $ee, $51, $46, $4a, $42, $50, $63, $f7, $f0
-TextStr_47_4b56:           ; id $03DF $0417
+TextStr_47_4b56:           ; id $03E0
     ; "Are you familiar / with the Gate of / Labyrinth? / [YES/NO-2]"
     db $eb, $9f, $a3, $24, $4f, $42, $62, $56, $4c, $52, $62, $43, $3e, $4a, $46, $49
     db $46, $3e, $4f, $ef, $ee, $54, $46, $51, $45, $62, $51, $45, $42, $62, $2a, $3e
     db $51, $42, $62, $4c, $43, $fa, $f7, $ef, $ee, $2f, $3e, $3f, $56, $4f, $46, $4b
     db $51, $45, $64, $ef, $ee, $ff, $f0
-TextStr_47_4b8d:           ; id $03E0 $0418
+TextStr_47_4b8d:           ; id $03E1
     ; "A quote from the / journal of a / journey by the / legendary monster / master, Mary / / It's a / mysterious cave / that seems to go / on for..."
     db $eb, $9f, $a3, $24, $62, $4e, $52, $4c, $51, $42, $62, $43, $4f, $4c, $4a, $62
     db $51, $45, $42, $ef, $ee, $47, $4c, $52, $4f, $4b, $3e, $49, $62, $4c, $43, $62
@@ -534,7 +534,7 @@ TextStr_47_4b8d:           ; id $03E0 $0418
     db $4c, $4b, $50, $51, $42, $4f, $fa, $f7, $ef, $ee, $4a, $3e, $50, $51, $42, $4f
     db $5e, $62, $30, $3e, $4f, $56, $a3, $ef, $ee, $fa, $f7, $ef, $ee, $9f, $a3, $2c
     db $51
-TextStr_47_4bee:           ; id $0473
+TextStr_47_4bee:           ; (no text id points here: a mid-string fragment)
     ; "'s a / mysterious cave / that seems to go / on forever. / It looks like / there are many / paths, but there / is only one way to / go to fin..."
     db $68, $62, $3e, $ef, $ee, $4a, $56, $50, $51, $42, $4f, $46, $4c, $52, $50, $62
     db $40, $3e, $53, $42, $fa, $f7, $ef, $ee, $51, $45, $3e, $51, $62, $50, $42, $42
@@ -542,24 +542,24 @@ TextStr_47_4bee:           ; id $0473
     db $42, $53, $42, $4f, $5f, $fa, $f7, $ef, $ee, $9f, $a3, $2c, $51, $62, $49, $4c
     db $4c, $48, $50, $62, $49, $46, $48, $42, $ef, $ee, $51, $45, $42, $4f, $42, $62
     db $3e
-TextStr_47_4c3f:           ; id $0464
+TextStr_47_4c3f:           ; (no text id points here: a mid-string fragment)
     ; "re many / paths, but there / is only one way to / go to find / the DarkHorn."
     db $4f, $42, $62, $4a, $3e, $4b, $56, $fa, $f7, $ef, $ee, $4d, $3e
-TextStr_47_4c4c:           ; id $045D
+TextStr_47_4c4c:           ; (no text id points here: a mid-string fragment)
     ; "ths, but there / is only one way to / go to find / the DarkHorn."
     db $51, $45, $50, $5e, $62, $3f, $52, $51, $62, $51
-TextStr_47_4c56:           ; id $0471
+TextStr_47_4c56:           ; (no text id points here: a mid-string fragment)
     ; "here / is only one way to / go to find / the DarkHorn."
     db $45, $42, $4f, $42, $ef, $ee, $46, $50, $62, $4c, $4b, $49, $56, $62, $4c, $4b
     db $42, $62, $54, $3e, $56, $62, $51, $4c, $fa, $f7, $ef, $ee, $44, $4c, $62, $51
     db $4c, $62, $43, $46, $4b, $41, $ef, $ee, $51, $45, $42, $62, $27, $3e, $4f, $48
     db $2b, $4c, $4f, $4b, $5f, $f7, $f0
-TextStr_47_4c8d:           ; id $03E1 $0419
+TextStr_47_4c8d:           ; id $03E2
     ; "Do you know of / the Gate of / Judgment? / [YES/NO-2]"
     db $eb, $9f, $a3, $27, $4c, $62, $56, $4c, $52, $62, $48, $4b, $4c, $54, $62, $4c
     db $43, $ef, $ee, $51, $45, $42, $62, $2a, $3e, $51, $42, $62, $4c, $43, $fa, $f7
     db $ef, $ee, $2d, $52, $41, $44, $4a, $42, $4b, $51, $64, $ef, $ee, $ff, $f0
-TextStr_47_4cbc:           ; id $03E2 $041A
+TextStr_47_4cbc:           ; id $03E3
     ; "A quote from the / first victor of / the tournament. / / A master is one / who commands / monsters in / fights. / You must trust / and love ..."
     db $eb, $9f, $a3, $24, $62, $4e, $52, $4c, $51, $42, $62, $43, $4f, $4c, $4a, $62
     db $51, $45, $42, $ef, $ee, $43, $46, $4f, $50, $51, $62, $53, $46, $40, $51, $4c
@@ -575,7 +575,7 @@ TextStr_47_4cbc:           ; id $03E2 $041A
     db $4c, $52, $51, $62, $51, $4f, $52, $50, $51, $5e, $ef, $ee, $4b, $4c, $62, $51
     db $4f, $52, $42, $62, $4a, $3e, $50, $51, $42, $4f, $fa, $f7, $ef, $ee, $54, $46
     db $49, $49, $62, $42, $4a, $42, $4f, $44, $42, $5f, $ef, $ee, $f7, $f0
-TextStr_47_4d9a:           ; id $03E3 $041B
+TextStr_47_4d9a:           ; id $03E4
     ; "Far across / the ocean, is / the country / of Jipangu. / A dragon with 8 / heads lives there. / Its name is / Orochi! / A quote from the / d..."
     db $eb, $9f, $a3, $29, $3e, $4f, $62, $3e, $40, $4f, $4c, $50, $50, $ef, $ee, $51
     db $45, $42, $62, $4c, $40, $42, $3e, $4b, $5e, $62, $46, $50, $fa, $f7, $ef, $ee
@@ -589,7 +589,7 @@ TextStr_47_4d9a:           ; id $03E3 $041B
     db $42, $ef, $ee, $41, $46, $3e, $4f, $56, $62, $4c, $43, $62, $3e, $fa, $f7, $ef
     db $ee, $49, $42, $44, $42, $4b, $41, $3e, $4f, $56, $62, $53, $46, $40, $51, $4c
     db $4f, $5f, $ef, $ee, $f7, $f0
-TextStr_47_4e50:           ; id $03E4 $041C
+TextStr_47_4e50:           ; id $03E5
     ; "KingOh, [HERO]! / You beat DarkHorn! / KingYou beat it / without becoming / lost in the / labyrinth... / KingYou have / great wisdom!!"
     db $ea, $2e, $46, $4b, $44, $a3, $32, $45, $5e, $62, $f6, $63, $ef, $ee, $3c, $4c
     db $52, $62, $3f, $42, $3e, $51, $62, $27, $3e, $4f, $48, $2b, $4c, $4f, $4b, $63
@@ -600,7 +600,7 @@ TextStr_47_4e50:           ; id $03E4 $041C
     db $5f, $5f, $5f, $fa, $f7, $ef, $ee, $2e, $46, $4b, $44, $a3, $3c, $4c, $52, $62
     db $45, $3e, $53, $42, $ef, $ee, $44, $4f, $42, $3e, $51, $62, $54, $46, $50, $41
     db $4c, $4a, $63, $63, $f7, $f0
-TextStr_47_4ed6:           ; id $03E5 $041D
+TextStr_47_4ed6:           ; id $03E6
     ; "KingOh, [HERO]! / You beat Akubar! / KingIt's not / your fault! / Don't worry! / / KingIf anybody / complains, I'll / throw them in / the du..."
     db $ea, $2e, $46, $4b, $44, $a3, $32, $45, $5e, $62, $f6, $63, $ef, $ee, $3c, $4c
     db $52, $62, $3f, $42, $3e, $51, $62, $24, $48, $52, $3f, $3e, $4f, $63, $fa, $f7
@@ -611,23 +611,23 @@ TextStr_47_4ed6:           ; id $03E5 $041D
     db $ee, $40, $4c, $4a, $4d, $49, $3e, $46, $4b, $50, $5e, $62, $2c, $66, $49, $fa
     db $f7, $ef, $ee, $51, $45, $4f, $4c, $54, $62, $51, $45, $42, $4a, $62, $46, $4b
     db $ef, $ee, $51, $45, $42, $62, $41, $52, $4b, $44, $42, $4c, $4b, $63, $f7, $f0
-TextStr_47_4f66:           ; id $03E6 $041E
+TextStr_47_4f66:           ; id $03E7
     ; "Hey are you / really aiming / for S class? / [YES/NO-2]"
     db $eb, $9f, $a3, $2b, $42, $56, $62, $3e, $4f, $42, $62, $56, $4c, $52, $ef, $ee
     db $4f, $42, $3e, $49, $49, $56, $62, $3e, $46, $4a, $46, $4b, $44, $fa, $f7, $ef
     db $ee, $43, $4c, $4f, $62, $36, $62, $40, $49, $3e, $50, $50, $64, $ef, $ee, $ff
     db $f0
-TextStr_47_4f97:           ; id $03E7 $041F
+TextStr_47_4f97:           ; id $03E8
     ; "You'll never get / there with such / pathetic powers!"
     db $eb, $9f, $a3, $3c, $4c, $52, $66, $49, $62, $4b, $42, $53, $42, $4f, $62, $44
     db $42, $51, $ef, $ee, $51, $45, $42, $4f, $42, $62, $54, $46, $51, $45, $62, $50
     db $52, $40, $45, $fa, $f7, $ef, $ee, $4d, $3e, $51, $45, $42, $51, $46, $40, $62
     db $4d, $4c, $54, $42, $4f, $50, $63, $ef, $ee, $f7, $f0
-TextStr_47_4fd2:           ; id $03E8 $0420
+TextStr_47_4fd2:           ; id $03E9
     ; "Then go home, / liar!"
     db $eb, $9f, $a3, $37, $45, $42, $4b, $62, $44, $4c, $62, $45, $4c, $4a, $42, $5e
     db $ef, $ee, $49, $46, $3e, $4f, $63, $f7, $f0
-TextStr_47_4feb:           ; id $03E9 $0421
+TextStr_47_4feb:           ; id $03EA
     ; "You're in the / Chamber of / Travelers' Gates. / Go left to the / Room of the / Labyrinth / Judgment. / / Right to the / Room of Happiness /..."
     db $ea, $9f, $a3, $3c, $4c, $52, $69, $42, $62, $46, $4b, $62, $51, $45, $42, $ef
     db $ee, $26, $45, $3e, $4a, $3f, $42, $4f, $62, $4c, $43, $fa, $f7, $ef, $ee, $37
@@ -640,7 +640,7 @@ TextStr_47_4feb:           ; id $03E9 $0421
     db $4c, $4c, $4a, $62, $4c, $43, $62, $2b, $3e, $4d, $4d, $46, $4b, $42, $50, $50
     db $fa, $f7, $ef, $ee, $b6, $62, $37, $42, $4a, $4d, $51, $3e, $51, $46, $4c, $4b
     db $5f, $ef, $ee, $f7, $f0
-TextStr_47_5090:           ; id $03EA $0422
+TextStr_47_5090:           ; id $03EB
     ; "Behind the Gate / of Labyrinth / there really is a / labyrinth. / You need to get / more information! / The monsters in / the stable may / k..."
     db $ea, $9f, $a3, $25, $42, $45, $46, $4b, $41, $62, $51, $45, $42, $62, $2a, $3e
     db $51, $42, $ef, $ee, $4c, $43, $62, $2f, $3e, $3f, $56, $4f, $46, $4b, $51, $45
@@ -653,10 +653,10 @@ TextStr_47_5090:           ; id $03EA $0422
     db $51, $45, $42, $62, $50, $51, $3e, $3f, $49, $42, $62, $4a, $3e, $56, $fa, $f7
     db $ef, $ee, $48, $4b, $4c, $54, $62, $4a, $4c, $4f, $42, $62, $3e, $3f, $4c, $52
     db $51, $ef, $ee, $51, $45, $42, $62, $49, $3e, $3f, $56, $4f, $46, $4b
-TextStr_47_513e:           ; id $0460
+TextStr_47_513e:           ; (no text id points here: a mid-string fragment)
     ; "th."
     db $51, $45, $5f, $f7, $f0
-TextStr_47_5143:           ; id $03EB $0423
+TextStr_47_5143:           ; id $03EC
     ; "DuckKite is a / troublesome / monster. / / It makes us / sleep confuses / and curses us.. / / I hope you won't / encounter it / behind the G..."
     db $eb, $9f, $a3, $27, $52, $40, $48, $2e, $46, $51, $42, $62, $46, $50, $62, $3e
     db $ef, $ee, $51, $4f, $4c, $52, $3f, $49, $42, $50, $4c, $4a, $42, $fa, $f7, $ef
@@ -669,7 +669,7 @@ TextStr_47_5143:           ; id $03EB $0423
     db $51, $42, $4f, $62, $46, $51, $fa, $f7, $ef, $ee, $3f, $42, $45, $46, $4b, $41
     db $62, $51, $45, $42, $62, $2a, $3e, $51, $42, $62, $4c, $43, $ef, $ee, $51, $45
     db $42, $62, $2f, $3e, $3f, $56, $4f, $46, $4b, $51, $45, $63, $f7, $f0
-TextStr_47_51f1:           ; id $03EC $0424
+TextStr_47_51f1:           ; id $03ED
     ; "Copycopy. I / wanna copycopy an / Unicorn today. / Copycopy. / HealAll... / Antidote. / Revive. Perfect!"
     db $eb, $9f, $a3, $26, $4c, $4d, $56, $40, $4c, $4d, $56, $5f, $62, $2c, $ef, $ee
     db $54, $3e, $4b, $4b, $3e, $62, $40, $4c, $4d, $56, $40, $4c, $4d, $56, $62, $3e
@@ -679,7 +679,7 @@ TextStr_47_51f1:           ; id $03EC $0424
     db $24, $4b, $51, $46, $41, $4c, $51, $42, $5f, $fa, $f7, $ef, $ee, $35, $42, $53
     db $46, $53, $42, $5f, $62, $33, $42, $4f, $43, $42, $40, $51, $63, $ef, $ee, $f7
     db $f0
-TextStr_47_5262:           ; id $03ED $0425
+TextStr_47_5262:           ; id $03EE
     ; "Hello! / I am Helo. / My former master / wanted more / monsters so, / / he intentionally / extended the fight / and gave the / monsters lots..."
     db $eb, $9f, $a3, $2b, $42, $49, $49, $4c, $63, $ef, $ee, $2c, $62, $3e, $4a, $62
     db $2b, $42, $49, $4c, $5f, $fa, $f7, $ef, $ee, $9f, $a3, $30, $56, $62, $43, $4c
@@ -700,7 +700,7 @@ TextStr_47_5262:           ; id $03ED $0425
     db $4b, $49, $56, $62, $4c, $4b, $42, $5f, $fa, $f7, $ef, $ee, $2b, $42, $62, $51
     db $4f, $46, $42, $41, $62, $4a, $3e, $4b, $56, $ef, $ee, $51, $45, $46, $4b, $44
     db $50, $5f, $f7, $f0
-TextStr_47_5386:           ; id $03EE $0426
+TextStr_47_5386:           ; id $03EF
     ; "Yeah! The / Starry Night / has arrived! / / That merchant / has changed his / attitude at last! / / Wanna know / about the book / he's selli..."
     db $ea, $9f, $a3, $3c, $42, $3e, $45, $63, $62, $37, $45, $42, $ef, $ee, $36, $51
     db $3e, $4f, $4f, $56, $62, $31, $46, $44, $45, $51, $fa, $f7, $ef, $ee, $45, $3e
@@ -712,13 +712,13 @@ TextStr_47_5386:           ; id $03EE $0426
     db $4b, $3e, $62, $48, $4b, $4c, $54, $ef, $ee, $3e, $3f, $4c, $52, $51, $62, $51
     db $45, $42, $62, $3f, $4c, $4c, $48, $fa, $f7, $ef, $ee, $45, $42, $68, $62, $50
     db $42, $49, $49, $46, $4b, $44, $64, $ef, $ee, $ff, $f0
-TextStr_47_5421:           ; id $03EF $0427
+TextStr_47_5421:           ; id $03F0
     ; "I wonder what / will happen if I / use Chance? / Eeek!"
     db $eb, $9f, $a3, $2c, $62, $54, $4c, $4b, $41, $42, $4f, $62, $54, $45, $3e, $51
     db $ef, $ee, $54, $46, $49, $49, $62, $45, $3e, $4d, $4d, $42, $4b, $62, $46, $43
     db $62, $2c, $fa, $f7, $ef, $ee, $52, $50, $42, $62, $26, $45, $3e, $4b, $40, $42
     db $64, $ef, $ee, $28, $42, $42, $48, $63, $f7, $f0
-TextStr_47_545b:           ; id $03F0 $0428
+TextStr_47_545b:           ; id $03F1
     ; "Well done! You / survived S class! / Now you're the / master and the / representative / of GreatTree!!!"
     db $ea, $9f, $a3, $3a, $42, $49, $49, $62, $41, $4c, $4b, $42, $63, $62, $3c, $4c
     db $52, $ef, $ee, $50, $52, $4f, $53, $46, $53, $42, $41, $62, $36, $62, $40, $49
@@ -727,7 +727,7 @@ TextStr_47_545b:           ; id $03F0 $0428
     db $3e, $4b, $41, $62, $51, $45, $42, $fa, $f7, $ef, $ee, $4f, $42, $4d, $4f, $42
     db $50, $42, $4b, $51, $3e, $51, $46, $53, $42, $ef, $ee, $4c, $43, $62, $2a, $4f
     db $42, $3e, $51, $37, $4f, $42, $42, $63, $63, $63, $f7, $f0
-TextStr_47_54c7:           ; id $03F1 $0429
+TextStr_47_54c7:           ; id $03F2
     ; "Monster Master / [HERO]! You became / our rep at last! / / The King needs / you. This way!"
     db $ea, $9f, $a3, $30, $4c, $4b, $50, $51, $42, $4f, $62, $30, $3e, $50, $51, $42
     db $4f, $ef, $ee, $f6, $63, $62, $3c, $4c, $52, $62, $3f, $42, $40, $3e, $4a, $42
@@ -735,7 +735,7 @@ TextStr_47_54c7:           ; id $03F1 $0429
     db $3e, $50, $51, $63, $ef, $ee, $fa, $f7, $ef, $ee, $9f, $a3, $37, $45, $42, $62
     db $2e, $46, $4b, $44, $62, $4b, $42, $42, $41, $50, $ef, $ee, $56, $4c, $52, $5f
     db $62, $37, $45, $46, $50, $62, $54, $3e, $56, $63, $f7, $f0
-TextStr_47_5523:           ; id $03F2 $042A
+TextStr_47_5523:           ; id $03F3
     ; "The last match / in S class will / be with... / / the Medal Man in / the Queen's room!"
     db $eb, $9f, $a3, $37, $45, $42, $62, $49, $3e, $50, $51, $62, $4a, $3e, $51, $40
     db $45, $ef, $ee, $46, $4b, $62, $36, $62, $40, $49, $3e, $50, $50, $62, $54, $46
@@ -743,7 +743,7 @@ TextStr_47_5523:           ; id $03F2 $042A
     db $ef, $ee, $fa, $f7, $ef, $ee, $9f, $a3, $51, $45, $42, $62, $30, $42, $41, $3e
     db $49, $62, $30, $3e, $4b, $62, $46, $4b, $ef, $ee, $51, $45, $42, $62, $34, $52
     db $42, $42, $4b, $68, $62, $4f, $4c, $4c, $4a, $63, $f7, $f0
-TextStr_47_557f:           ; id $03F3 $042B
+TextStr_47_557f:           ; id $03F4
     ; "[HERO], nothing / left but S class. / I'll help you / with what little / I can do! / / Why don't you / breed with my / Yeti? / Tut! Not in /..."
     db $ea, $9f, $f6, $5e, $62, $4b, $4c, $51, $45, $46, $4b, $44, $ef, $ee, $49, $42
     db $43, $51, $62, $3f, $52, $51, $62, $36, $62, $40, $49, $3e, $50, $50, $5f, $fa
@@ -753,23 +753,23 @@ TextStr_47_557f:           ; id $03F3 $042B
     db $ef, $ee, $fa, $f7, $ef, $ee, $9f, $a3, $3a, $45, $56, $62, $41, $4c, $4b, $67
     db $62, $56, $4c, $52, $ef, $ee, $3f, $4f, $42, $42, $41, $62, $54, $46, $51, $45
     db $62, $4a, $56, $fa, $f7, $ef, $ee, $3c, $42, $51, $46, $64, $ef, $ee, $f0
-TextStr_47_55fe:           ; id $03F4 $042C
+TextStr_47_55fe:           ; id $03F5
     ; "Tut! Not in / here either!"
     db $ea, $9f, $a3, $37, $52, $51, $63, $62, $31, $4c, $51, $62, $46, $4b, $ef, $ee
     db $45, $42, $4f, $42, $62, $42, $46, $51, $45, $42, $4f, $63, $f7, $f0
-TextStr_47_561c:           ; id $03F5 $042D
+TextStr_47_561c:           ; id $03F6
     ; "There are cliffs / that you can jump / down. / / Have you tried / jumping down the / cliffs?"
     db $ea, $9f, $a3, $37, $45, $42, $4f, $42, $62, $3e, $4f, $42, $62, $40, $49, $46
     db $43, $43, $50, $ef, $ee, $51, $45, $3e, $51, $62, $56, $4c, $52, $62, $40, $3e
     db $4b, $62, $47, $52, $4a, $4d, $fa, $f7, $ef, $ee, $41, $4c, $54, $4b, $5f, $ef
     db $ee, $fa, $f7
-TextStr_47_564f:           ; id $046D
+TextStr_47_564f:           ; (no text id points here: a mid-string fragment)
     ; "/ Have you tried / jumping down the / cliffs?"
     db $ef, $ee, $9f, $a3, $2b, $3e, $53, $42, $62, $56, $4c, $52, $62, $51, $4f, $46
     db $42, $41, $ef, $ee, $47, $52, $4a, $4d, $46, $4b, $44, $62, $41, $4c, $54, $4b
     db $62, $51, $45, $42, $fa, $f7, $ef, $ee, $40, $49, $46, $43, $43, $50, $64, $ef
     db $ee, $f7, $f0
-TextStr_47_5682:           ; id $03F6 $042E
+TextStr_47_5682:           ; id $03F7
     ; "When a monster / learns two certain / skills, sometimes / a new... / ...skill is / created from the / combination. / / The S class is / the ..."
     db $ea, $9f, $a3, $3a, $45, $42, $4b, $62, $3e, $62, $4a, $4c, $4b, $50, $51, $42
     db $4f, $ef, $ee, $49, $42, $3e, $4f, $4b, $50, $62, $51, $54, $4c, $62, $40, $42
@@ -783,7 +783,7 @@ TextStr_47_5682:           ; id $03F6 $042E
     db $45, $42, $62, $4c, $4b, $49, $56, $62, $4c, $4b, $42, $62, $49, $42, $43, $51
     db $63, $fa, $f7, $ef, $ee, $2c, $62, $48, $4b, $4c, $54, $62, $f6, $ef, $ee, $40
     db $3e, $4b, $62, $54, $46, $4b, $5f, $f7, $f0
-TextStr_47_573b:           ; id $03F7 $042F
+TextStr_47_573b:           ; id $03F8
     ; "You, listen to / my request. / I want to see / a CurseLamp! / The CurseLamp / is filled with the / curse of a flying / plant."
     db $eb, $9f, $a3, $3c, $4c, $52, $5e, $62, $49, $46, $50, $51, $42, $4b, $62, $51
     db $4c, $ef, $ee, $4a, $56, $62, $4f, $42, $4e, $52, $42, $50, $51, $5f, $fa, $f7
@@ -794,18 +794,18 @@ TextStr_47_573b:           ; id $03F7 $042F
     db $51, $45, $62, $51, $45, $42, $fa, $f7, $ef, $ee, $40, $52, $4f, $50, $42, $62
     db $4c, $43, $62, $3e, $62, $43, $49, $56, $46, $4b, $44, $ef, $ee, $4d, $49, $3e
     db $4b, $51, $5f, $f7, $f0
-TextStr_47_57c0:           ; id $03F8 $0430
+TextStr_47_57c0:           ; id $03F9
     ; "Yeti doesn't / say yet. Funny?"
     db $ea, $9f, $a3, $3c, $42, $51, $46, $62, $41, $4c, $42, $50, $4b, $67, $ef, $ee
     db $50, $3e, $56, $62, $56, $42, $51, $5f, $62, $29, $52, $4b, $4b, $56, $64, $f7
     db $f0
-TextStr_47_57e1:           ; id $03F9 $0431
+TextStr_47_57e1:           ; id $03FA
     ; "You're having / trouble with the / monsters' / personalities? [YES/NO-2]"
     db $ea, $9f, $a3, $3c, $4c, $52, $69, $42, $62, $45, $3e, $53, $46, $4b, $44, $ef
     db $ee, $51, $4f, $4c, $52, $3f, $49, $42, $62, $54, $46, $51, $45, $62, $51, $45
     db $42, $fa, $f7, $ef, $ee, $4a, $4c, $4b, $50, $51, $42, $4f, $50, $5c, $ef, $ee
     db $4d, $42, $4f, $50, $4c, $4b, $3e, $49, $46, $51, $46, $42, $50, $64, $ff, $f0
-TextStr_47_5821:           ; id $03FA $0432
+TextStr_47_5821:           ; id $03FB
     ; "You see the / merchant with an / attitude at the / Bazaar? / He sells / amazing items! / You should find / out how amazing / they are."
     db $ea, $9f, $a3, $3c, $4c, $52, $62, $50, $42, $42, $62, $51, $45, $42, $ef, $ee
     db $4a, $42, $4f, $40, $45, $3e, $4b, $51, $62, $54, $46, $51, $45, $62, $3e, $4b
@@ -817,14 +817,14 @@ TextStr_47_5821:           ; id $03FA $0432
     db $ee, $4c, $52, $51, $62, $45, $4c, $54, $62, $3e, $4a, $3e, $57, $46, $4b, $44
     db $fa, $f7, $ef, $ee, $51, $45, $42, $56, $62, $3e, $4f, $42, $5f, $ef, $ee, $f7
     db $f0
-TextStr_47_58b2:           ; id $03FB $0433
+TextStr_47_58b2:           ; id $03FC
     ; "Hee hee! Yo / dude, wanna know / who're you / fighting in / S class? / [YES/NO-2]"
     db $ea, $9f, $a3, $2b, $42, $42, $62, $45, $42, $42, $63, $62, $3c, $4c, $ef, $ee
     db $41, $52, $41, $42, $5e, $62, $54, $3e, $4b, $4b, $3e, $62, $48, $4b, $4c, $54
     db $fa, $f7, $ef, $ee, $54, $45, $4c, $69, $42, $62, $56, $4c, $52, $ef, $ee, $43
     db $46, $44, $45, $51, $46, $4b, $44, $62, $46, $4b, $fa, $f7, $ef, $ee, $36, $62
     db $40, $49, $3e, $50, $50, $64, $ef, $ee, $ff, $f0
-TextStr_47_58fc:           ; id $03FC $0434
+TextStr_47_58fc:           ; id $03FD
     ; "The last match / in S class will be / with the Medal Man / in the Queen's / room. / / His lineup is / MetalDrak, / Roboster / Metabble. / Me..."
     db $ea, $9f, $a3, $37, $45, $42, $62, $49, $3e, $50, $51, $62, $4a, $3e, $51, $40
     db $45, $ef, $ee, $46, $4b, $62, $36, $62, $40, $49, $3e, $50, $50, $62, $54, $46
@@ -842,14 +842,14 @@ TextStr_47_58fc:           ; id $03FC $0434
     db $62, $50, $4d, $42, $49, $49, $50, $ef, $ee, $4a, $46, $44, $45, $51, $62, $4b
     db $4c, $51, $62, $3f, $42, $62, $50, $4c, $fa, $f7, $ef, $ee, $52, $50, $42, $43
     db $52, $49, $63, $ef, $ee, $f7, $f0
-TextStr_47_59f3:           ; id $03FD $0435
+TextStr_47_59f3:           ; id $03FE
     ; "Well, you're / strong so you may / not need to hear / about it to win."
     db $ea, $9f, $a3, $3a, $42, $49, $49, $5e, $62, $56, $4c, $52, $69, $42, $ef, $ee
     db $50, $51, $4f, $4c, $4b, $44, $62, $50, $4c, $62, $56, $4c, $52, $62, $4a, $3e
     db $56, $fa, $f7, $ef, $ee, $4b, $4c, $51, $62, $4b, $42, $42, $41, $62, $51, $4c
     db $62, $45, $42, $3e, $4f, $ef, $ee, $3e, $3f, $4c, $52, $51, $62, $46, $51, $62
     db $51, $4c, $62, $54, $46, $4b, $5f, $f7, $f0
-TextStr_47_5a3c:           ; id $03FE $0436
+TextStr_47_5a3c:           ; id $03FF
     ; "You must be / something to / beat May! / / I heard a rumor / that a terrible / master appeared / from nowhere in / a foreign kingdom. / / Th..."
     db $ea, $9f, $a3, $3c, $4c, $52, $62, $4a, $52, $50, $51, $62, $3f, $42, $ef, $ee
     db $50, $4c, $4a, $42, $51, $45, $46, $4b, $44, $62, $51, $4c, $fa, $f7, $ef, $ee

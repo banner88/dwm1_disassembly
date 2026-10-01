@@ -116,12 +116,14 @@ def _db(bs):
 
 
 def name_bytes(n, what, lo, hi):
-    if not isinstance(n, str) or not lo <= len(n) <= hi or \
-            not all('A' <= c <= 'Z' or 'a' <= c <= 'z' for c in n):
-        raise SpeciesError(f"{what}: {n!r} must be {lo}-{hi} letters A-Z / a-z")
-    # font: 'A'-'Z' = $24-$3D, 'a'-'z' = $3E-$57 (literal, no DTE — bank $41 names)
-    return bytes((0x24 + ord(c) - 65) if c.isupper() else (0x3E + ord(c) - 97)
-                 for c in n)
+    """S108: the one name encoder for every monster name / nickname (bank $41,
+    literal glyphs, no DTE): letters, digits, space and ' , . ! ? - &
+    (monster_text.encode_name; S105-S107 allowed letters only)."""
+    from . import monster_text as MT
+    try:
+        return MT.encode_name(n, what, lo, hi)
+    except MT.MonsterTextError as e:
+        raise SpeciesError(str(e))
 
 
 def _art(prj, spec, what, decoded):
@@ -194,7 +196,7 @@ def resolve(prj, with_art=True):
         # by the Monsters tab's sheet import so the art can be re-cut later;
         # the compiler never reads it
         G._check_keys(s, ('id', 'name', 'short_name', 'info', 'description_from',
-                          'battle', 'follower', 'comment', 'source'), what)
+                          'description', 'battle', 'follower', 'comment', 'source'), what)
         sid = s.get('id')
         if isinstance(sid, bool) or sid not in CAPACITY_IDS:
             raise SpeciesError(f"{what}.id: {sid!r} — new species ids are "
@@ -221,6 +223,16 @@ def resolve(prj, with_art=True):
             raise SpeciesError(str(ex))
         desc = G._range(s.get('description_from', cf if cf <= DESC_MAX else 0),
                         0, DESC_MAX, what + '.description_from')
+        # S108 (P3.10 part 3): or its OWN description (1-3 lines of 18 cells)
+        desc_b = None
+        if 'description' in s:
+            if 'description_from' in s:
+                raise SpeciesError(f"{what}: give `description` OR `description_from`, not both")
+            from . import monster_text as MT
+            try:
+                desc_b = MT.encode_desc(s['description'], what + '.description')
+            except MT.MonsterTextError as ex:
+                raise SpeciesError(str(ex))
         b = s.get('battle') or {}
         fo = s.get('follower') or {}
         G._check_keys(b, ('art', 'palette', 'comment'), what + '.battle')
@@ -256,15 +268,25 @@ def resolve(prj, with_art=True):
         fpal = G._range(fo.get('palette', 0), 0, 7, what + '.follower.palette')
         out.append({
             'id': sid, 'name': name, 'name_b': nb, 'short': sn, 'short_b': sb,
-            'info': bytes(row), 'desc_species': desc,
+            'info': bytes(row), 'desc_species': desc, 'desc_b': desc_b,
             'battle_art': _art(prj, b, what + '.battle', BATTLE_DECODED) if with_art else None,
             'battle_pal': pb,
             'follower_art': _art(prj, fo, what + '.follower', FOLLOWER_DECODED) if with_art else None,
             'donor': donor, 'follower_pal': fpal, 'layout': lid, 'l2': l2,
         })
     out.sort(key=lambda d: d['id'])
-    text_layout(out)                              # raises if the names do not fit
+    text_layout(out, _spills(prj))                # raises if the names do not fit
     return out
+
+
+def _spills(prj):
+    """S108: original monsters' names / nicknames that no longer fit their
+    bank-$41 blocks (gamedata.monster_text) share the free extents."""
+    from . import monster_text as MT
+    try:
+        return MT.bank41_spills(prj)
+    except MT.MonsterTextError:
+        return []                                 # reported by the validator
 
 
 # ---------------------------------------------------------------------------
@@ -309,8 +331,26 @@ def _pack(sizes, caps):
     return list(where) if go(0, tuple(caps)) else None
 
 
-def text_layout(lst):
-    """Pack the names + nicknames into TEXT_EXTENTS. Returns
+def _ffd(sizes, caps):
+    """First fit (items in the given order, bins in TEXT_EXTENTS order) — the
+    exact search's first path, so whenever it succeeds the result is the one
+    _pack would return; it keeps big inputs (S108 spills) fast."""
+    rem, where = list(caps), []
+    for n in sizes:
+        for b, r in enumerate(rem):
+            if r >= n:
+                rem[b] -= n
+                where.append(b)
+                break
+        else:
+            return None
+    return where
+
+
+def text_layout(lst, extra=()):
+    """Pack the names + nicknames into TEXT_EXTENTS (S108: + `extra`, the
+    [(label, bytes incl. $F0)] original-monster strings that no longer fit
+    their own blocks — monster_text.bank41_spills). Returns
     ({region: [(label, bytes)]}, {(sid, 'name'|'short'): label expression}).
     A string equal to / a suffix of a longer one points into it; the rest are
     packed exactly (fill order = TEXT_EXTENTS order, so a light project uses
@@ -319,11 +359,20 @@ def text_layout(lst):
     for s in lst:
         strings.append(('name', s['id'], s['name_b'] + b'\xf0'))
         strings.append(('short', s['id'], s['short_b'] + b'\xf0'))
+    for label, b in extra:
+        strings.append(('spill', label, b))
     order = sorted(range(len(strings)), key=lambda i: (-len(strings[i][2]), i))
     prim, ref = [], {}
     for i in order:
         kind, sid, b = strings[i]
-        label = f"NsName_{sid}" if kind == 'name' else f"NsShort_{sid}"
+        label = (f"NsName_{sid}" if kind == 'name' else
+                 f"NsShort_{sid}" if kind == 'short' else sid)
+        if kind == 'spill':
+            # the pointer table names this label, so it is always DEFINED at
+            # its own bytes (never a suffix pointer into another string)
+            prim.append((label, b))
+            ref[(sid, kind)] = label
+            continue
         for plab, pb in prim:
             if pb.endswith(b):
                 off = len(pb) - len(b)
@@ -332,14 +381,20 @@ def text_layout(lst):
         else:
             prim.append((label, b))
             ref[(sid, kind)] = label
-    where = _pack([len(b) for _l, b in prim], [e[2] for e in TEXT_EXTENTS])
+    sizes, caps = [len(b) for _l, b in prim], [e[2] for e in TEXT_EXTENTS]
+    where = _ffd(sizes, caps)
+    if where is None and len(sizes) <= 40:
+        where = _pack(sizes, caps)
     if where is None:
         need = sum(len(b) for _l, b in prim)
         raise SpeciesError(
-            f"custom.species: the names + nicknames need {need} bytes of bank $41 "
-            f"text ({len(prim)} strings incl. $F0 ends; equal ones are shared); the "
-            f"free extents hold {TEXT_BUDGET} ({', '.join(str(e[2]) for e in TEXT_EXTENTS)}"
-            ") and these do not pack into them — shorten some names or short_names")
+            f"monster names: the new species' names + nicknames"
+            + (f" and {len(extra)} renamed original name(s) / nickname(s) that no longer "
+               "fit their own blocks" if extra else "")
+            + f" need {need} bytes of bank $41 text ({len(prim)} strings incl. $F0 ends; "
+            f"equal ones are shared); the free extents hold {TEXT_BUDGET} "
+            f"({', '.join(str(e[2]) for e in TEXT_EXTENTS)}) and these do not pack into "
+            "them — shorten some names or nicknames")
     regions = {e[0]: [] for e in TEXT_EXTENTS}
     for (label, b), w in zip(prim, where):
         regions[TEXT_EXTENTS[w][0]].append((label, b))
@@ -364,7 +419,8 @@ def recipe_line(prj, pair, lst=None):
     lib = g.v['library']
     pad = lib['pad']
     tok = {int(k): bytes.fromhex(v) for k, v in lib['family_tokens'].items()}
-    names = g.v['monster_name_bytes']
+    from . import monster_text as MT
+    names = [b.hex() for b in MT.effective(prj)['names']]     # S108: project names
     if lst is None:
         lst = resolve(prj, with_art=False)
     own = {s['id']: s['name_b'] for s in lst}
@@ -384,18 +440,13 @@ def recipe_line(prj, pair, lst=None):
     return t1 + t2 + b'\xf0'
 
 
-def desc_pointer(sid, repo_root):
-    """Vanilla line-2 pointer of species `sid` = bank $4D pointer-table entry
-    261 + sid (mode 1 base $420B, table base $4001) — read from the clean
-    disassembly (byte-perfect, so compiling needs no ROM)."""
-    import re
-    path = os.path.join(repo_root, 'disassembly', 'bank_04d.asm')
-    want = 261 + sid
-    for line in open(path):
-        m = re.match(r'\s+dw \$([0-9A-Fa-f]{4})\s*; Entry (\d+)\s*$', line)
-        if m and int(m.group(2)) == want:
-            return int(m.group(1), 16)
-    raise SpeciesError(f"description_from {sid}: bank $4D entry {want} not found")
+def desc_pointer(sid, repo_root=None):
+    """Line-2 (description) label of ORIGINAL species `sid` (0-214): the
+    `MonsterDesc_NNN_<Name>` rows of bank $4D (S108 re-section; in the patched
+    tree they are the compiler region gd_monster_desc, so an edited description
+    is followed automatically). Label = mode-1 pointer-table entry 261 + sid."""
+    from . import monster_text as MT
+    return MT.desc_label(sid)
 
 
 # ---------------------------------------------------------------------------
@@ -473,7 +524,7 @@ def emit_recipe_pair(prj, warnings):
 
 def emit_name_ptr(prj, warnings):
     lst = resolve(prj, with_art=False)
-    _, ref = text_layout(lst)
+    _, ref = text_layout(lst, _spills(prj))
     sp = {s['id']: s for s in lst}
     out = []
     for sid in CAPACITY_IDS:
@@ -486,7 +537,7 @@ def emit_name_ptr(prj, warnings):
 
 def emit_short_ptr(prj, warnings):
     lst = resolve(prj, with_art=False)
-    _, ref = text_layout(lst)
+    _, ref = text_layout(lst, _spills(prj))
     sp = {s['id']: s for s in lst}
     out = []
     for sid in CAPACITY_IDS:
@@ -501,7 +552,7 @@ def _text_emit(region):
     size, orig = next((e[2], e[3]) for e in TEXT_EXTENTS if e[0] == region)
 
     def emit(prj, warnings):
-        regions, _ = text_layout(resolve(prj, with_art=False))
+        regions, _ = text_layout(resolve(prj, with_art=False), _spills(prj))
         items = regions[region]
         if not items:
             return _db(orig) + "   ; unused: the original bytes\n"
@@ -535,8 +586,12 @@ def emit_detail_text(prj, warnings):
             l2.append(f"    dw ${NO_RECIPE_LINE:04X}   ; [{sid}] (none)")
             m0.append(f"    dw ${NO_RECIPE_LINE:04X}   ; [{sid}] (none)")
             continue
-        dp = desc_pointer(s['desc_species'], repo)
-        l2.append(f"    dw ${dp:04X}   ; [{sid}] {s['name']}: species {s['desc_species']}'s description")
+        if s.get('desc_b') is not None:
+            from . import monster_text as MT
+            l2.append(f"    dw {MT.ns_desc_label(sid)}   ; [{sid}] {s['name']}: its own description")
+        else:
+            dp = desc_pointer(s['desc_species'], repo)
+            l2.append(f"    dw {dp}   ; [{sid}] {s['name']}: species {s['desc_species']}'s description")
         pair = recipe(prj, sid)
         if pair:
             m0.append(f"    dw NewSpeciesRecipeLine_{sid}")

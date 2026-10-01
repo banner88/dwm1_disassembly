@@ -182,6 +182,12 @@ class MainWindow(QMainWindow):
                     from editor2.app.monsters_tab import MonstersTab
                     self.monsters_tab = MonstersTab(self.session)
                     self.tabs.addTab(self.monsters_tab, 'Monsters')
+                    # S108 (P3.10 part 3): every text in the game, searchable;
+                    # "Texts that name it…" on the Monsters tab opens it filtered
+                    from editor2.app.dialogue_tab import DialogueTab
+                    self.dialogue_tab = DialogueTab(self.session)
+                    self.tabs.addTab(self.dialogue_tab, 'Dialogue')
+                    self.monsters_tab.showDialogue.connect(self._show_dialogue_for)
                     continue
             if title == 'Balance':
                 # S98 (P3.7): the World graph sits before Balance, as in §5.0
@@ -199,6 +205,11 @@ class MainWindow(QMainWindow):
         from editor2.app.help_tab import HelpTab      # S101 r2
         self.help_tab = HelpTab()
         self.tabs.addTab(self.help_tab, 'Help')
+
+    def _show_dialogue_for(self, sid):
+        """Monsters tab → the Dialogue tab listing the texts that name `sid`."""
+        self.dialogue_tab.show_monster(sid)
+        self.tabs.setCurrentWidget(self.dialogue_tab)
 
     def _open_gates_for(self, room_id):
         """Rooms tab 'Gates tab…' -> the Gates tab on the first gate serving

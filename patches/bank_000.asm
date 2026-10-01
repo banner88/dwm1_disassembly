@@ -210,7 +210,7 @@ SetScrollRegisters_00C2:
 
 ; --- Phase N default-nickname fix: occupies the 16-byte $00F0-$00FF padding ----
 ; SaveBankAndSwitch's level-1 lookup loads DE = per-mode text table base. The
-; default monster nickname uses the 2-letter FamilyCodePtrTable ($4739, 215
+; default monster nickname uses the 2-letter MonsterNickPtrTable ($4739, 215
 ; entries); a new species (id>=221) overshoots it (id 224 -> $48F9 =
 ; ItemNamePtrTable[9] = "SkyBell"). This reproduces the original
 ; `ld e,[hl];inc hl;ld d,[hl]`, then ONLY when the base is $4739 and id>=221

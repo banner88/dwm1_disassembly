@@ -461,9 +461,11 @@ def test_species_and_skills():
     ok("SP.CAPACITY_IDS = 221-239 (19)", SP.CAPACITY_IDS == tuple(range(221, 240)))
     dt = region_text(out, 'patches/bank_04d.asm', 'ns_detail_text')
     dtb = asm_bytes(_data_lines(dt))
-    ok("example ns_detail_text: 19 line-2 words ([224] = Dracky's $60BC, the rest "
-       "$53C4), 19 line-1 words, then the derived \"Snaily   BattleRex\" line",
-       dtb[:38].hex() == 'c453' * 3 + 'bc60' + 'c453' * 15 and
+    ok("example ns_detail_text: 19 line-2 words ([224] = Dracky's description — S108: "
+       "the label MonsterDesc_078_Dracky = $60BC — the rest $53C4), 19 line-1 words, then "
+       "the derived \"Snaily   BattleRex\" line",
+       dtb[:36].hex() == 'c453' * 3 + 'c453' * 15 and
+       'dw MonsterDesc_078_Dracky' in '\n'.join(dt) and
        'dw NewSpeciesRecipeLine_224' in '\n'.join(dt) and
        dtb.hex().endswith('364b3e464956626262253e51514942354255f0'))
     np_ = '\n'.join(region_text(out, 'patches/bank_041.asm', 'ns_name_ptr'))
@@ -584,7 +586,7 @@ def test_species_and_skills():
                           for i in range(221, 240) if i != 224] + [(221, 'Extra', None)])
     expect_error("custom.species: 20 species > capacity 19", d, "capacity 19")
     d = base(); d['custom']['species'][0]['name'] = 'Gorbunokxx'
-    expect_error("custom.species: name 1-9 letters", d, "letters")
+    expect_error("custom.species: name 1-9 characters (S108: the shared name encoder)", d, "1-9 characters")
     L = 'abcdefghijklmnopqrstuvwxyz'
     d = _species_fixture([(i, 'Q' + L[i - 221] * 8, 'W' + L[i - 221] * 3)
                           for i in range(221, 240) if i != 224])
@@ -1326,6 +1328,132 @@ def test_family_icons_s107():
         d.setdefault('gamedata', {}).setdefault('families', {})['bird'] = {'icon': bad}
         expect_error(f"S107 2c: a bad icon is refused ({bad[0]!r} x {len(bad)})", d, why)
     return o2
+
+
+def _mt_fixture(mt, species_desc=None):
+    d = base()
+    d.setdefault('gamedata', {})['monster_text'] = mt
+    if species_desc is not None:
+        g = d['custom']['species'][0]
+        g.pop('description_from', None)
+        g['description'] = species_desc
+    return d
+
+
+def _rom_str(rom, bank, ptr_addr):
+    o = bank * 0x4000 + ptr_addr - 0x4000
+    p = rom[o] | rom[o + 1] << 8
+    q = bank * 0x4000 + p - 0x4000
+    return rom[q:rom.index(b'\xf0', q)]
+
+
+def test_monster_text_s108():
+    """S108 (ROADMAP P3.10 part 3): gamedata.monster_text — the ORIGINAL monsters'
+    names / default nicknames / descriptions (+ a new species' own description)."""
+    from editor2.core import monster_text as MT
+    rom = open(os.path.join(REPO, 'data', 'DWM-original.gbc'), 'rb').read()
+    out, _, _ = compile_data(base())
+    nb = region_bytes(out, 'patches/bank_041.asm', 'gd_monster_names')
+    kb = region_bytes(out, 'patches/bank_041.asm', 'gd_monster_nicks')
+    db_ = region_bytes(out, 'patches/bank_04d.asm', 'gd_monster_desc')
+    ok("S108: no edits -> the name block == ROM $41:$5B1F-$628D (1,903 B)",
+       nb == rom[0x41 * 0x4000 + 0x1B1F:][:1903])
+    ok("S108: no edits -> the nickname block == ROM $41:$69F2-$6C76 (645 B)",
+       kb == rom[0x41 * 0x4000 + 0x29F2:][:645])
+    ok("S108: no edits -> the description block == ROM $4D:$53D3-$7719 (9,031 B)",
+       db_ == rom[0x4D * 0x4000 + 0x13D3:][:9031])
+    ok("S108: no edits -> gd_monster_desc_extra empty",
+       region_bytes(out, 'patches/bank_04d.asm', 'gd_monster_desc_extra') == b'')
+    # labels == the clean disassembly's (the pointer tables name them)
+    dis41 = open(os.path.join(REPO, 'disassembly', 'bank_041.asm')).read()
+    dis4d = open(os.path.join(REPO, 'disassembly', 'bank_04d.asm')).read()
+    ok("S108: every name / nickname / description label is the clean tree's",
+       all(f"{MT.name_label(s)}:" in dis41 for s in MT.NAME_ORDER)
+       and all(f"{MT.nick_label(s)}:" in dis41 for s in MT.IDS)
+       and all(f"{MT.desc_label(s)}:" in dis4d for s in MT.IDS))
+    # encoders
+    ok("S108: encode_name 'Goo-Bob' = glyphs, '-' = $9C",
+       MT.encode_name('Goo-Bob', 'x') == bytes([0x2A, 0x4C, 0x4C, 0x9C, 0x25, 0x4C, 0x3F]))
+    ok("S108: encode_desc: \"'s\" / \"'t\" are one cell ($68 / $67), lines split by $F1",
+       MT.encode_desc(["It's", "can't"], 'x') ==
+       bytes([0x2C, 0x51, 0x68, 0xF1, 0x40, 0x3E, 0x4B, 0x67]))
+    van = MT.vanilla(REPO)
+    ok("S108: every vanilla description re-encodes from its decoded lines (round trip)",
+       all(MT.encode_desc(MT.desc_lines(van['descs'][s]), 'x') == van['descs'][s] for s in MT.IDS))
+    ok("S108: every vanilla name / nickname re-encodes (round trip)",
+       all(MT.encode_name(MT.decode(van['names'][s]), 'x') == van['names'][s] for s in range(215))
+       and all(MT.encode_name(MT.decode(van['nicks'][s]), 'x', 1, 4) == van['nicks'][s] for s in MT.IDS))
+    # edits
+    mt = {"8": {"name": "Goober", "nickname": "GOOB",
+                "description": ["A wobbly blob", "that's always", "grinning - & glad"]},
+          "147": {"name": "Grendel"}, "28": {"nickname": "D"}}
+    o2, _, _ = compile_data(_mt_fixture(mt))
+    nb = region_bytes(o2, 'patches/bank_041.asm', 'gd_monster_names')
+    pre = b''.join(van['names'][s] + b'\xf0' for s in range(8))
+    ok("S108: renames -> the name block keeps its 1,903 B; species 0-7 unchanged, then "
+       "Goober in Slime's place",
+       len(nb) == 1903 and nb.startswith(pre + MT.encode_name('Goober', 'x') + b'\xf0'
+                                         + van['names'][9] + b'\xf0'))
+    lt = "\n".join(region_text(o2, 'patches/bank_04d.asm', 'gd_library_text'))
+    ok("S108: Akubar's recipe line follows Grendal -> Grendel (vanilla typo 'Grenadal' gone)",
+       'Grendel  Grendel' in lt)
+    # spill: every name of 0-214 nine letters long -> some go to the extents
+    big = {str(s): {"name": ("Q" + "abcdefghijklmnopqrstuvwxyz"[s % 26] * 8)} for s in range(0, 215)
+           if MT.decode(van['names'][s]) and len(van['names'][s]) < 9}
+    spill = MT.bank41_spills(_mt_fixture(big), REPO)
+    ok("S108: lengthened names that overflow the block are spilled (not lost)",
+       len(spill) > 0)
+    expect_error("S108: more spill than the free extents hold is refused (names)",
+                 _mt_fixture(big), "bank $41 text")
+    small = dict(list(big.items())[:12])
+    o3, _, _ = compile_data(_mt_fixture(small))
+    allx = "\n".join(o3['patches/bank_041.asm'].split('\n'))
+    ok("S108: a few lengthened names fit (block slack + extents); labels defined once",
+       all(allx.count(f"{MT.name_label(int(k))}:") == 1 for k in small))
+    # refusals
+    expect_error("S108: TERRY? cannot be renamed (Iron Rule 8)",
+                 _mt_fixture({"215": {"name": "Rival"}}), "Iron Rule 8")
+    expect_error("S108: a 10-character name is refused",
+                 _mt_fixture({"8": {"name": "Abcdefghij"}}), "1-9 characters")
+    expect_error("S108: a 5-letter nickname is refused",
+                 _mt_fixture({"8": {"nickname": "ABCDE"}}), "1-4 characters")
+    expect_error("S108: a character the font lacks is refused",
+                 _mt_fixture({"8": {"name": "Sl@me"}}), "not in the game font")
+    expect_error("S108: a 19-cell description line is refused",
+                 _mt_fixture({"8": {"description": ["a" * 19]}}), "19 cells")
+    expect_error("S108: four description lines are refused",
+                 _mt_fixture({"8": {"description": ["a", "b", "c", "d"]}}), "1-3 lines")
+    expect_error("S108: unknown field refused",
+                 _mt_fixture({"8": {"title": "x"}}), "unknown field")
+    # new species: own description
+    o4, _, _ = compile_data(_mt_fixture({}, ["A blue dragon", "from the deep"]))
+    ns = "\n".join(region_text(o4, 'patches/bank_04d.asm', 'ns_detail_text'))
+    ex = "\n".join(region_text(o4, 'patches/bank_04d.asm', 'gd_monster_desc_extra'))
+    ok("S108: a new species' own description -> NsDesc_224 in gd_monster_desc_extra, "
+       "HighLine2Ptrs[224] points at it", 'dw NsDesc_224' in ns and 'NsDesc_224:' in ex)
+    d5 = _mt_fixture({}, ["x"])
+    d5['custom']['species'][0]['description_from'] = 3
+    expect_error("S108: description + description_from together are refused", d5, "not both")
+    ok("S108: Gorbunok's borrowed description is a label (follows an edit of species 78)",
+       f"dw {MT.desc_label(78)}" in "\n".join(region_text(out, 'patches/bank_04d.asm', 'ns_detail_text')))
+    return o2
+
+
+def test_monster_text_rom(rom_bytes, sym):
+    """--rom: the built ROM's mode 5 / 7 / 1 tables lead to the authored text."""
+    from editor2.core import monster_text as MT
+    ok("ROM S108: names 8 / 147 = Goober / Grendel, Dracky untouched",
+       _rom_str(rom_bytes, 0x41, 0x4339 + 16) == MT.encode_name('Goober', 'x')
+       and _rom_str(rom_bytes, 0x41, 0x4339 + 294) == MT.encode_name('Grendel', 'x')
+       and _rom_str(rom_bytes, 0x41, 0x4339 + 156) == MT.encode_name('Dracky', 'x'))
+    ok("ROM S108: nicknames 8 / 28 = GOOB / D",
+       _rom_str(rom_bytes, 0x41, 0x4739 + 16) == MT.encode_name('GOOB', 'x')
+       and _rom_str(rom_bytes, 0x41, 0x4739 + 56) == MT.encode_name('D', 'x'))
+    ok("ROM S108: description 8 through dispatch entry 269",
+       _rom_str(rom_bytes, 0x4D, 0x4001 + 2 * 269) ==
+       MT.encode_desc(["A wobbly blob", "that's always", "grinning - & glad"], 'x'))
+    ok("ROM S108: HighLine2Ptrs at monster_text.HIGH_LINE2_PTRS (the extra region's room)",
+       sym['HighLine2Ptrs'] == (0x4D, MT.HIGH_LINE2_PTRS))
 
 
 def _save_tmp(doc):
@@ -2131,6 +2259,7 @@ def main():
     outart = test_art_s107()
     outlay = test_walk_layouts_s107()
     outicon = test_family_icons_s107()
+    outmt = test_monster_text_s108()
 
     if '--rom' in sys.argv:
         from editor2.core import builder as B
@@ -2327,6 +2456,11 @@ def main():
            SCm.decode(SCm.read_stream(ri, SCm.gfxid_stream_offset(ri, 0x2E03)[3])) == ta and
            SCm.decode(SCm.read_stream(ri, SCm.gfxid_stream_offset(ri, 0x6D04)[3])) == ts)
         fork = bytes.fromhex('5fc52101 6dd7c1'.replace(' ', '')) + bytes(6)
+        # S108: names / nicknames / descriptions read back through the tables
+        outdirt = '/tmp/_t_monster_text'
+        C.write_outputs(outmt, outdirt)
+        romt, symt, _mt5 = B.build_rom(REPO, outdirt, os.path.join(outdirt, 'build'))
+        test_monster_text_rom(open(romt, 'rb').read(), B.parse_sym(symt))
         n07 = ri[0x07 * 0x4000:0x08 * 0x4000].count(fork)
         n0a = ri[0x0A * 0x4000:0x0B * 0x4000].count(fork)
         ok("ROM 2c: the JOURNAL ($07) and its $0A twin read the saved party's icon through "
@@ -2385,7 +2519,10 @@ def main():
                                    ('FollowerGfxTable0B', 32), ('FollowerGfxTable12', 32),
                                    ('FollowerGfxTable18', 0), ('FollowerGfxTable59', 0)))),
                  ('bank $10 layout + attr tables (S107)', at(0x10, 0x407F, 384)),
-                 ('bank $11 layout + attr tables (S107)', at(0x11, 0x407F, 174 + 87))]
+                 ('bank $11 layout + attr tables (S107)', at(0x11, 0x407F, 174 + 87)),
+                 ('monster names $41:$5B1F-$628D (S108)', at(0x41, 0x5B1F, 1903)),
+                 ('default nicknames $41:$69F2-$6C76 (S108)', at(0x41, 0x69F2, 645)),
+                 ('descriptions $4D:$53D3-$7719 (S108)', at(0x4D, 0x53D3, 9031))]
         for what, good in sites:
             ok(f"ROM: blank project -> {what} == original ROM bytes", good)
 

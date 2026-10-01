@@ -1753,7 +1753,7 @@ MultiplyHL_091F:
 ;   level 2:  string_ptr = [ table_base + id*2 ]
 ; HAZARD: each mode's per-id table has its OWN entry count and NONE is bounds-checked,
 ; so a new species id overshoots any table shorter than id+1 (e.g. bank $41 mode 7
-; FamilyCodePtrTable = 215 entries -> id 224 reads ItemNamePtrTable[9] = "SkyBell";
+; MonsterNickPtrTable = 215 entries -> id 224 reads ItemNamePtrTable[9] = "SkyBell";
 ; bank $4D mode 1 desc = 215 -> id 224 read ROM0 code and froze the detail page).
 ; FORK: patches/bank_000.asm replaces the level-1 `ld e,[hl];inc hl;ld d,[hl]` below
 ; with `call LoadModeBaseRedirect` ($00:$00F0), which redirects the mode-7 default-

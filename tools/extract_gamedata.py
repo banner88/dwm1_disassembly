@@ -34,6 +34,15 @@ against the patched build's game.sym — every label sits at the same address):
                     the 221 pointers, the raw $43CE-$53D2 string block, pad
                     byte, family tokens, and the bank-$41 monster name bytes
                     (BREEDING_SYSTEM "Library recipe TEXT").
+  monster_text      S108 (P3.10 part 3): the three per-species text blocks the
+                    compiler re-emits from gamedata.monster_text — names
+                    ($41:$5B1F-$628D, 222 strings: species 0-219, then the
+                    empty string of 220-224 and "?????" of 225-255), default
+                    nicknames ($41:$69F2-$6C76, mode 7, species 0-214) and
+                    descriptions ($4D:$53D3-$7719, mode 1 = dispatch entries
+                    261-475, species 0-214). --selftest also proves each block
+                    is contiguous, id-ordered and unshared (the property that
+                    makes an unedited project reproduce the bytes).
 
 Usage:
   python3 tools/extract_gamedata.py              # write extracted/gamedata_vanilla.json
@@ -119,6 +128,7 @@ def extract(rom):
         end = rom.find(b"\xf0", q, q + 24)
         names.append(rom[q:end].hex() if 0x4000 <= ptr < 0x8000 and end > 0 else "")
     out["monster_name_bytes"] = names
+    out["monster_text"] = monster_text(rom)
 
     # --- bank $4D library recipe text ------------------------------------
     base = flat(LIB_BANK, 0x4000)
@@ -166,6 +176,49 @@ def extract(rom):
     return out
 
 
+# S108: the three per-species text blocks (PROJECT_COMPILER §2.24)
+NAME_BLOCK = (0x5B1F, 0x628E)        # bank $41, [lo, hi)
+NICK_TABLE, NICK_BLOCK = 0x4739, (0x69F2, 0x6C77)
+DESC_ENTRY0, DESC_BLOCK = 261, (0x53D3, 0x771A)   # bank $4D
+
+
+def _strings_in_order(rom, bank, ptrs, block, what):
+    """The strings at `ptrs` (hex, without $F0) after checking they tile
+    [block) exactly, in pointer order, each once."""
+    out, a = [], block[0]
+    for i, p in enumerate(ptrs):
+        if p != a:
+            raise SystemExit(f"{what}: entry {i} at ${p:04X}, expected ${a:04X} "
+                             "(block not contiguous / id-ordered)")
+        o = flat(bank, p)
+        e = rom.index(b"\xf0", o)
+        out.append(rom[o:e].hex())
+        a += e - o + 1
+    if a != block[1]:
+        raise SystemExit(f"{what}: block ends at ${a:04X}, expected ${block[1]:04X}")
+    return out
+
+
+def monster_text(rom):
+    w = lambda bank, addr: rom[flat(bank, addr)] | rom[flat(bank, addr) + 1] << 8
+    nptr = [w(0x41, NAME_PTRS[1] + 2 * s) for s in range(256)]
+    order = list(range(220)) + [220, 225]           # the 222 distinct strings
+    _strings_in_order(rom, 0x41, [nptr[s] for s in order], NAME_BLOCK, "names")
+    shared = {s: (220 if nptr[s] == nptr[220] else 225) for s in range(221, 256)}
+    if any(nptr[s] not in (nptr[220], nptr[225]) for s in range(221, 256)):
+        raise SystemExit("names: ids 221-255 must point at the 220 / 225 strings")
+    kptr = [w(0x41, NICK_TABLE + 2 * s) for s in range(215)]
+    nicks = _strings_in_order(rom, 0x41, kptr, NICK_BLOCK, "nicknames")
+    dptr = [w(LIB_BANK, 0x4001 + 2 * (DESC_ENTRY0 + s)) for s in range(215)]
+    descs = _strings_in_order(rom, LIB_BANK, dptr, DESC_BLOCK, "descriptions")
+    return {
+        "name_block": list(NAME_BLOCK), "name_order": order,
+        "name_shared_221_255": [shared[s] for s in range(221, 256)],
+        "nick_block": list(NICK_BLOCK), "nicks": nicks,
+        "desc_block": list(DESC_BLOCK), "desc_entry0": DESC_ENTRY0, "descs": descs,
+    }
+
+
 def load_rom():
     rom = open(ROM_PATH, "rb").read()
     if hashlib.md5(rom).hexdigest() != ORIGINAL_MD5:
@@ -194,7 +247,8 @@ def selftest():
         print("FAIL: library family tokens incomplete")
         return 1
     print(f"OK: gamedata_vanilla.json == ROM ({len(want['tables'])} tables, "
-          "library text, names, chance codes)")
+          "library text, names, chance codes; monster name / nickname / "
+          "description blocks contiguous + id-ordered)")
     return 0
 
 

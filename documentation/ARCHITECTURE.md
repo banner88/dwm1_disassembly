@@ -15,7 +15,7 @@
 | $16 | Breeding system: special table ($4B30), family table ($4974) |
 | $17 | Palette system |
 | $41 | Name/text tables: monster names, skill names, family codes, items, personalities, game text (fully annotated) |
-| $42-$4E | Text handler banks (text ID routing, text data) |
+| $42-$4E | Text handler banks (text ID routing, text data); each forwards the upper part of its id range to an OVERFLOW text bank — $18 $1A $1B $1F $21 $22 $3F $4F (S108, measured: TEXT_SYSTEM "Text id resolution") |
 | $50 | BATTLE MODE manager (wGameMode==2; S68): $D9EC 18-phase battle machine (BattlePhaseTable $5F3A), nested $D9F4 sub-machine (11 states), BattleExitHandler $640A (win→script-resume / loss penalty) |
 | $51 | Event sub-handlers, room transitions |
 | $52 | Battle system: 115 named skill handlers, SkillFunctionTable at $4011, family checks, math helpers |

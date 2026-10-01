@@ -1000,7 +1000,7 @@ Per species — every knob is a decoded, proven surface:
   encounter list at a time: slots, chances with the real chance after the
   running-sum cut, exactly 100 %, max in a group for 2-3 monster lists) — the
   §5.5 Encounters tab remains the cross-view. Part 2 (art of the original
-  species) and part 3 (renames) are ROADMAP boxes.
+  species) and part 3 (renames) are ROADMAP boxes (both built: S107 / S108, below).
 
 - **As built S107 (ROADMAP P3.10 part 2a — art of the ORIGINAL monsters;
   model `MonstersMixin.original_art / set_original_art / set_original_art_props /
@@ -1011,7 +1011,7 @@ Per species — every knob is a decoded, proven surface:
   walking palette; the cut is remembered in `gamedata.art.<id>.source` and
   reopened next time), **Battle colours** (c0 / c2) and **Walking palette** work
   on the original art too (colours-only edits), **Back to the original art and
-  colours**. The name fields stay hidden for originals (renames = part 3). The
+  colours**. The name fields stayed hidden for originals until part 3 (S108, below). The
   species list, the battle / walking previews and the canvas thumbnails draw the
   project's art (`sprite_render.original_art`); the meter under the list shows
   the art banks' bytes (49,149 B, $7F/$7C/$7A). Writes only what differs from the
@@ -1039,6 +1039,33 @@ Per species — every knob is a decoded, proven surface:
   entries' own Y-flip (`sprite_render.follower_frames`, S107 fix). Picking a
   layout for the ORIGINAL walking art is not offered: that art is packed for the
   monster's own layout, another layout would scramble it.
+- **As built S108 (ROADMAP P3.10 part 3 — names / default nicknames /
+  descriptions; model `MonstersMixin.monster_names_effective / monster_text /
+  set_monster_text / reset_monster_text / text_capacity`, compiler
+  `editor2/core/monster_text.py`, PROJECT_COMPILER §2.24; built S108 — the
+  test ROM USER-CONFIRMED 2026-10-01, the tab itself test_app-verified, not yet run
+  on the user's Mac).** The Name & art page's **Name and library text** group is shown
+  for every monster with a page (originals 0-214 and new species; TERRY? / the
+  summons still have none — Iron Rule 8): **Name** (≤ 9), **Default nickname** (≤ 4;
+  what the join naming screen pre-fills), **Description 1-3**, **In the game** (the
+  three lines in the ROM font, bank $4F; cells past 18 red), a note with what
+  changed, the cell counts and the three byte meters (names / nicknames /
+  descriptions — spill beyond a block is allowed, the build says when it is full),
+  **Back to the original name and text** (originals), **Texts that name it… (N)**
+  (opens the Dialogue tab filtered on this monster, old + new name). New species: the
+  three lines are its OWN description; left empty, "Library text of" picks another
+  monster's. Every species list in the editor reads `monster_names_effective()`
+  (renames included). Each edit one undo step, validated by the compiler's model.
+- **Dialogue tab (as built S108; `editor2/app/dialogue_tab.py`, model
+  `editor2/core/dialogue_index.py` over `extracted/dialogue.json`)** — the read-only
+  seed of P3.6 (§5.6): every text the game can show (2,560 text ids — the id → bank
+  map measured in PyBoy, TEXT_SYSTEM "Text id resolution" — and the text tables:
+  battle / field / item / spell messages, item / skill / monster descriptions).
+  Search (words across line breaks, `$id`, `$bank:$addr`), a kind filter, **Names a
+  monster** (word match incl. plural / possessive, case-sensitive, under the old and
+  the new name; the hits highlighted), the full text with "also shown as" ids, and
+  **Save as text file…** (the current list). Renames do not touch these texts; the
+  tab is where the author finds them (user S108).
 
 ### 5.2a Families tab (as built S104 r2, ROADMAP P3.10a)
 

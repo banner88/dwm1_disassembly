@@ -42,7 +42,8 @@ from . import formats as F
 
 VANILLA_JSON = os.path.join('extracted', 'gamedata_vanilla.json')
 SECTIONS = ('monsters', 'enemies', 'encounters', 'skills', 'exp_curves',
-            'growth_curves', 'breeding', 'boss_joins', 'families', 'art')
+            'growth_curves', 'breeding', 'boss_joins', 'families', 'art',
+            'monster_text')   # S108: names / nicknames / descriptions (monster_text.py)
 
 # S104 (P3.10a): per-family settings. Arena-lobby party dialogue comes in four
 # VOICES (bank $04 FamilyTextGroup_A-D, 8 lines each); vanilla gives every
@@ -335,6 +336,10 @@ class Gamedata:
         self.warnings = []
         self.names = monster_names(repo_root)
         self.snames = skill_names(repo_root)
+        # S108 (P3.10 part 3): renamed originals (gamedata.monster_text) — the
+        # library recipe lines naming them follow (coherence Set 1)
+        from . import monster_text as MT
+        self.text_names = MT.name_overrides({'gamedata': self.gd}, repo_root)
         self.new_species = dict(new_species or {})
         for sid, s in self.new_species.items():
             self.names.setdefault(sid, s['name'])
@@ -850,32 +855,43 @@ class Gamedata:
         return fam
 
     def library_text_edits(self):
-        """{species: bytes} for every family slot that differs from vanilla —
-        the bank-$4D recipe string that must follow (coherence Set 1)."""
+        """{species: bytes} for every encyclopedia recipe line that must follow
+        the project (coherence Set 1): a family slot that differs from vanilla,
+        and (S108) every slot whose pair names a RENAMED monster
+        (gamedata.monster_text) — regenerated with the project names, which
+        also drops vanilla's own typos in those lines (Akubar "Grenadal")."""
         lib = self.v['library']
         pad = lib['pad']
         tok = {int(k): bytes.fromhex(v) for k, v in lib['family_tokens'].items()}
         names = self.v['monster_name_bytes']
         van = _rows(self.v, 'family_recipes')
-        out = {}
-        for s in sorted(self.edited['family']):
-            a, b = self.family[s]
-            if bytes(self.family[s]) == bytes(van[s]):
-                continue
+        renamed = self.text_names
 
-            def token(m):
-                if m == 0xFF:
-                    return b'\x64' * 5                     # "?????" (no recipe)
-                if 0xF0 <= m <= 0xF9:
-                    return tok[m - 0xF0]
-                if m == 0xFA:
-                    return SPIRIT_TOKEN                    # <Spirit icon>family
-                return bytes.fromhex(names[m])
+        def token(m):
+            if m == 0xFF:
+                return b'\x64' * 5                     # "?????" (no recipe)
+            if 0xF0 <= m <= 0xF9:
+                return tok[m - 0xF0]
+            if m == 0xFA:
+                return SPIRIT_TOKEN                    # <Spirit icon>family
+            if m in renamed:
+                return renamed[m]
+            return bytes.fromhex(names[m])
+        out = {}
+        for s in range(len(self.family)):
+            if s >= len(lib['strings']) or s > 214:
+                continue
+            a, b = self.family[s][0], self.family[s][1]
+            fam_changed = s in self.edited['family'] and bytes(self.family[s]) != bytes(van[s])
+            if not fam_changed and a not in renamed and b not in renamed:
+                continue
             t1 = token(a)[:9].ljust(9, bytes([pad]))
             t2 = token(b)
             if lib['pad_token2']:
                 t2 = t2.ljust(9, bytes([pad]))
-            out[s] = t1 + t2 + b'\xf0'
+            line = t1 + t2 + b'\xf0'
+            if fam_changed or line[:-1] != bytes.fromhex(lib['strings'][s]):
+                out[s] = line
         return out
 
 

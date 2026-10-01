@@ -1303,9 +1303,10 @@ recipes are pure authoring.
       moved to Spirit shows the Spirit icon in the library tab, status and
       detail pages, talks with its own text group at the farm, and a Spirit ×
       X recipe breeds in PyBoy.
-- [ ] **P3.10 — Monsters tab** — **split S106 (user 2026-10-01 on the audit:
+- [x] **P3.10 — Monsters tab** — **split S106 (user 2026-10-01 on the audit:
       "Yeah that seems fine")** into part 1 species data (DONE S106, below),
-      part 2 art of the ORIGINAL species, part 3 renames / descriptions.
+      part 2 art of the ORIGINAL species, part 3 renames / descriptions (all three
+      built; part 3 S108, test ROM USER-CONFIRMED 2026-10-01).
   - [x] **P3.10 part 1 — species data, enemy rows, new species from sprite
         sheets** — **built S106; test ROM r2 USER-CONFIRMED 2026-10-01 ("Ok
         perfect, this fixed it"); the tab + gate insertion USER-CONFIRMED 2026-10-01 15:16 on the
@@ -1414,9 +1415,38 @@ recipes are pure authoring.
           wisp, stub calls of both routines return). *User half:* MET (the demo ROM).
           (The white-vs-cream background defect of G-P is RESOLVED — user S106 r2
           "background colour is perfect".)
-  - [ ] **P3.10 part 3 — renaming original species + descriptions** (bank $41
-        names: same length or shorter in place; longer needs space — audit
-        first; bank $4D descriptions).
+  - [x] **P3.10 part 3 — renaming original species + descriptions** — **built S108,
+        test ROM r2 USER-CONFIRMED 2026-10-01 21:07 ("COnfirrmed")** (user 2026-10-01 19:03 on the audit: "need to be able to
+        rename everything"; default nickname "1-4 like new species"; "pull all dialogue
+        so I can inspect"; "Ok to regenerate, fix typo"). As built (PROJECT_COMPILER
+        §2.24, TEXT_SYSTEM "Monster text blocks (S108)" / "Text id resolution (measured
+        S108)", EDITOR_DESIGN §5.2 "As built S108"): `gamedata.monster_text` (0-214:
+        name 1-9, nickname 1-4, description 1-3 × 18 cells) → regions over the three
+        contiguous blocks (names $41:$5B1F, nicknames $41:$69F2 = mode 7, descriptions
+        $4D:$53D3), first-fit with labels unchanged; overflow → the new-species text
+        extents / `gd_monster_desc_extra`; recipe lines naming a renamed monster
+        regenerated; `custom.species[].description` (own text). Editor: Monsters tab
+        "Name and library text" (game-font preview, back to original, "Texts that name
+        it…"), Dialogue tab (every text: 2,560 measured text ids + the text tables;
+        search, per-monster mentions, export). Found + fixed: the join naming prefill
+        is mode 7 (`FamilyCodePtrTable` renamed `MonsterNickPtrTable`); text ids use 8
+        overflow banks; `text_id_map.json` matched the game for 62 of 2,061 ids
+        (rebuilt from the measured `dialogue.json`; 6,520 script-bank previews + bank
+        $47 id comments refreshed); bank $4D descriptions re-sectioned (both trees).
+        *Accept MET (machine half):* test_compiler --rom 575 (no edits == ROM per
+        block, labels == clean tree, round trips, spills, refusals, the built ROM's
+        mode 5 / 7 / 1 tables lead to the authored text), test_app (tab fields →
+        project, Dialogue tab filtered by old + new name, undo), PyBoy on the user's
+        save (INFO pages, battle messages, the naming prefill "GOOB", text-engine stub
+        calls for every edited species + Akubar's regenerated recipe line). *User
+        half:* `DWM_S108r2_rename_demo.gbc` (r2: the demo raises the wild Slime to 50 % and
+        lifts the user's Library-door redirect; PyBoy drove the real library screen —
+        renamed list entries, Goober's description, Akubar's "Grendel" parents).
+        Residuals: (b) the egg-hatching
+        naming screen was not measured (whether it pre-fills the default nickname
+        like a join — bank $09 `FuncFld9_621f` keys on $C8F4 / $C8F5); (c) dialogue stays read-only until P3.6 (literal names in it keep the
+        old name — the Dialogue tab lists them); (d) battle-message control codes
+        ($4C engine: $ED / $FC / $EC / $F2) are shown raw in the Dialogue tab.
   Original box text follows. (needs P3.9): stats/growth/ai_weights/
       learnset forms + battle-sprite and follower pickers over the GFX
       stack; new-species wizard hooks Phase N (G3 fold folded here or
@@ -1902,6 +1932,12 @@ yields the E6 capacity numbers.
       69 strings, run $4174–$5b74, 5607 fake lines → labeled `db` with decoded
       comments; byte-perfect, idempotent, data-driven bounds.
       → TEXT_SYSTEM "Source re-section"; TOOLS_AND_DATA; archive: SESSION_HISTORY.
+- **S108 note for T2…Tn:** the text corpus is wider than these banks — each corpus
+      bank forwards part of its id range to an overflow bank ($1A $1B $1F $21 $22 $3F
+      $18 $4F; TEXT_SYSTEM "Text id resolution (measured S108)"), and the region bounds
+      must come from the MEASURED `extracted/dialogue.json` (the old
+      `text_id_map.json` had 62 / 2,061 right). Bank $47's T1 region misses its first
+      string `$40C1` (id $03C8) — redo its bounds first (PROJECT_STATE open defects).
 - [ ] **T2…Tn — Roll-out across `$42-$46, $48-$4B, $4E`** (one or two banks/session, same
       tool). *Accept:* each bank re-sectioned; MD5 stays `1ca6579…` after each.
 - [ ] **T-author — Edit/replace a vanilla string.** A tool that rewrites a vanilla text id's

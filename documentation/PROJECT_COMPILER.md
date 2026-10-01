@@ -35,6 +35,7 @@ to the proven overlay:
 | `patches/bank_07e.asm` + the `ns_*` regions in `patches/bank_000/011/016/017/041/04d/06a.asm` | the project's NEW species (ids 221-239), from `custom.species` (S105, §2.21) |
 | `patches/bank_07f.asm`, `bank_07c.asm`, `bank_07a.asm` + the `art_*` regions in `patches/bank_000/001/006/007/009/00b/010/011/012/017/018/059.asm` | new ART for the ORIGINAL monsters 0-214, from `gamedata.art` (S107, §2.23) |
 | the `lay_copies_10` / `lay_copies_11` regions (the zero tails of `patches/bank_010.asm` / `bank_011.asm`) | walking layouts copied into the other follower bank, from `gamedata.art` + `custom.species` (S107 2b, §2.23 "Walking layouts") |
+| `gd_monster_names` / `gd_monster_nicks` in `patches/bank_041.asm`, `gd_monster_desc` / `gd_monster_desc_extra` in `patches/bank_04d.asm` | the ORIGINAL monsters' names, default nicknames and library descriptions (+ new species' own descriptions), from `gamedata.monster_text` / `custom.species[].description` (S108 P3.10 part 3, §2.24) |
 
 Everything else — engine intercepts in banks `$00/$01/$04/$06/$07/$0B/$16`,
 layouts (`bank_064.asm` via `tools/build_gate_room.py` /
@@ -410,6 +411,7 @@ registering an emitter; nothing existing changes.
 | `gd_monsters` `gd_enemies` `gd_encounters` `gd_family` `gd_special` `gd_exp_curves` `gd_growth_curves` `gd_skill_learn` `gd_skill_mp` `gd_skill_records` `gd_library` `gd_library_text` (S103) | `gamedata` (§2.20) | `region:` in banks $03 / $14 / $01 / $16 / $69 / $13 / $13 / $06 / $07 / $54 / $12 / $4D | those banks |
 | `species7e` + `ns_battle_gfx` `ns_follower_attr` `ns_battle_pal` `ns_recipe_pair` `ns_name_ptr` `ns_short_ptr` `ns_text_a`…`ns_text_g` `ns_detail_text` `ns_info` (S105; G3 layout) | `custom.species` (§2.21; editor2/core/species.py) | `file:patches/bank_07e.asm` + `region:` in banks $00 / $11 / $17 / $16 / $41 ×9 / $4D / $6A | those banks |
 | `art7f` `art7c` `art7a` + `art_battle_gfx` `art_battle_pal` `art_walk_01/06/07/09/0b/12/18/59` `art_layout_10/11` `art_attr_10/11` (S107) | `gamedata.art` (§2.23; editor2/core/art.py) | `file:patches/bank_07f/07c/07a.asm` + `region:` in banks $00 / $17 / $01 $06 $07 $09 $0B $12 $18 $59 / $10 / $11 | those banks |
+| `gd_monster_names` `gd_monster_nicks` `gd_monster_desc` `gd_monster_desc_extra` (S108) | `gamedata.monster_text` (+ `custom.species[].description`) (§2.24; editor2/core/monster_text.py) | `region:` in banks $41 / $4D | those banks |
 | `lay_copies_10` `lay_copies_11` (S107 2b) + `ns_follower_layout` (in the species list) | `gamedata.art` + `custom.species` (§2.23 "Walking layouts"; editor2/core/walk_layouts.py) | `region:` in banks $10 / $11 | those banks |
 
 `bank_060` generated layout order (fixed, deterministic): script master
@@ -644,7 +646,8 @@ editor2/
         gates_tab.py                                   # S100 Gates tab (custom rooms on gate floors)
         rooms/gate_panel.py                            # S100 inspector "Inside gates" group
   templates/blank-project/project.json   # File > New project (S94)
-  example-project/project.json      # regression baseline (build/ is regenerable output)
+  example-project/project.json      # regression baseline (build/ is regenerable output;
+                                    #   untracked + .gitignore'd since S108)
   example-project/assets/species/   # S105 Gorbunok's art streams (custom.species)
   tests/test_compiler.py            # 277 tests (315 with --rom: the ROM builds; S105)
   tests/test_app.py                 # shell smoke test; --rom = GUI build == pin
@@ -1421,10 +1424,11 @@ follower forks kept a one-entry table in end-of-bank padding.)
 ```jsonc
 "species": [{
   "id": 224,                          // 221-239, each at most once
-  "name": "Gorbunok",                 // 1-9 letters (packed into bank $41, below)
+  "name": "Gorbunok",                 // 1-9 characters (packed into bank $41, below; S108: the §2.24 name encoder)
   "short_name": "Gorb",               // 1-4 letters; default = first 4 of name
   "info": {"clone_from": 78, "family": "Slime"},   // a VANILLA row + gamedata.monsters fields
   "description_from": 78,             // encyclopedia line 2 = that species' text (0-214)
+  // S108: OR "description": ["line 1", "line 2", "line 3"]  (its own; §2.24)
   "battle":   {"art": "assets/species/gorbunok_battle.bin",   // LZ stream, 576 B decoded
                "palette": ["$4D67", "$6BFF", "$7FFF", "$0000"]},
   "follower": {"art": "assets/species/gorbunok_follower.bin", // LZ stream, 256 B decoded
@@ -1670,6 +1674,76 @@ both entries `call FollowerLayoutBase11`, `MiniSM83` runs `FollowerLayoutBase11`
 and `NewAttrHandler` for species 128-239; the blank project's ROM == the original
 at `NewFollowerAttrTable` / `NewFollowerL1Table` / both zero tails. **Pin S107 2b**
 `9740c1c9…` (patched; §2.21).
+
+## §2.24 S108 — names, default nicknames and descriptions of the ORIGINAL monsters (`gamedata.monster_text`, ROADMAP P3.10 part 3)
+
+Module `editor2/core/monster_text.py` (`MT.check` called from `validators.validate`;
+`monster_text` is in `gamedata.SECTIONS`, the `Gamedata` model reads only the renamed
+names — for the recipe-line coherence). Species **0-214**; 215-220 refused with the
+Iron Rule 8 reason; 221-239 keep their name / short name in `custom.species`.
+
+```jsonc
+"gamedata": {"monster_text": {
+  "8":  {"name": "Goober", "nickname": "GOOB",
+         "description": ["A wobbly blob", "that's always", "grinning - & glad"]},
+  "147": {"name": "Grendel"}}}
+```
+
+Every field optional; a value equal to the original counts as unedited (the editor
+removes it). **Encoding:** names / nicknames = single glyphs: letters, digits, space,
+`' , . ! ? - &` (`-` = $9C, `&` = $B6; no DTE / ligatures — the naming screen and the
+name fields draw one glyph per letter); no leading / trailing space. Descriptions add
+`;` and the one-cell glyphs `'t` ($67), `'s` ($68), `..` ($61) by longest match,
+lines joined with $F1, ≤ 3 lines of ≤ 18 cells (the vanilla maximum; every vanilla
+description re-encodes byte-for-byte from its decoded lines — test_compiler).
+
+**What the game reads (ROM-verified S108; `extract_gamedata --selftest` re-proves the
+shapes):** names = text mode 5 (`MonsterNamePtrTable` $41:$4339, 256 words; strings
+0-219 then "" (220, also 221-224) and "?????" (225-255) at $5B1F-$628D, 1,903 B);
+default nicknames = mode 7 (`MonsterNickPtrTable` $41:$4739, 215 words; $69F2-$6C76,
+645 B — the join naming screen PRE-FILLS the nickname with it, PyBoy S108; was the
+mgbdis `FamilyCodePtrTable`); descriptions = bank $4D mode 1 (dispatch entries
+261-475; $53D3-$7719, 9,031 B). Each block is contiguous, in id order, every string
+once — and every reader goes through its pointer table (no raw address of a string in
+the ROM besides the tables: bank-$41 scan + the labels' census).
+
+| Region | File | Content (no edits = the original bytes) |
+|---|---|---|
+| `gd_monster_names` | bank_041 (`MonsterNameStrings`, 1,903 B) | the 222 strings, labels `MonsterName_NNN_<VanillaName>` (220 / 225: `…_Unused_220/225`) |
+| `gd_monster_nicks` | bank_041 (`MonsterNickStrings`, 645 B) | 215 strings, labels `MonsterNick_NNN_<vanilla code>` |
+| `gd_monster_desc` | bank_04d (9,031 B; S108 re-section, `tools/resection_monster_desc.py`) | 215 strings, labels `MonsterDesc_NNN_<VanillaName>` (the mode-1 pointer words reference them) |
+| `gd_monster_desc_extra` | bank_04d, after `ns_detail_text` (before the `ds $8000 - @` pad) | descriptions that no longer fit their block + `NsDesc_<id>` of new species' own descriptions; empty = nothing |
+
+**Layout:** each block is filled first-fit in id order with the effective strings; a
+string that does not fit keeps its LABEL but is emitted elsewhere — names / nicknames
+in the new-species text extents (`species.text_layout(lst, extra)`: they are packed
+with the new species' names, never suffix-shared because the pointer table names them;
+first-fit decreasing, the exact search when that fails and ≤ 40 strings), descriptions
+in `gd_monster_desc_extra` (room = $8000 − (`HighLine2Ptrs` $773E + 2 × 19 words + 19 B
+per new-species recipe line), checked by `MT.check`). Unused block bytes = $00. Labels
+never change, so no pointer table moves and the unedited project is byte-identical.
+
+**Coherence:** `Gamedata.library_text_edits` regenerates the encyclopedia recipe line
+(gd_library_text, 19-B slots in place) of every species whose FamilyRecipeTable pair
+names a renamed monster (also fixing vanilla's own misspelling in that line — Akubar
+"Grenadal" — and, for the 4 vanilla lines that do not follow the generator, only when
+a parent is renamed); new species' recipe lines (ns_detail_text) and the encyclopedia
+use the project names. `custom.species[].description` (1-3 lines) instead of
+`description_from` (both = error) → `NsDesc_<id>`; `description_from` now references
+the label `MonsterDesc_NNN_…`, so a borrowed description follows an edit.
+
+**Validators (ERROR):** unknown keys, species outside 0-214 (215-220 Iron Rule 8),
+name not 1-9 / nickname not 1-4 characters, a character the font lacks, a description
+line over 18 cells or more than 3 lines, names / nicknames that do not pack into the
+free extents (message names both), descriptions over the bank-$4D room.
+
+**Tests:** test_compiler — no edits == ROM per block, labels == the clean tree's,
+encoder round trips (all 215 names / nicknames / descriptions), a rename fixture
+(block bytes, Akubar's line), spill (lengthened names placed in the extents; too many
+refused), refusals, a new species' own description; `--rom`: the built ROM's mode 5 /
+7 / 1 tables lead to the authored text, `HighLine2Ptrs` == `HIGH_LINE2_PTRS`, the
+blank project's ROM == the original at all three blocks. **Pin unchanged** `77ccdab8…`
+(patched).
 
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 

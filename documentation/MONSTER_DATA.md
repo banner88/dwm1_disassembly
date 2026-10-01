@@ -210,6 +210,15 @@ weights (80/186/189/85) are a legitimate roll of EID 1's [100,200,100,200].
 ## Name Tables (Bank $41)
 
 - **Monster names**: Pointer table at `$41:$4339` (256 × 2 bytes), strings at `$41:$5B1F`
+  ($5B1F-$628D: species 0-219 in id order, then "" (220-224) and "?????" (225-255))
+- **Default nicknames** (S108; mgbdis called the table `FamilyCodePtrTable`, renamed
+  `MonsterNickPtrTable`): `$41:$4739` (215 × 2), 2 letters each at `$41:$69F2-$6C76`
+  — the JOIN naming screen pre-fills the nickname with it (PyBoy S108)
+- **Descriptions** (library page line 2): bank `$4D` dispatch entries 261-475 →
+  `$4D:$53D3-$7719` (≤ 3 lines × 18 cells)
+- All three are project data since S108: `gamedata.monster_text` (PROJECT_COMPILER
+  §2.24; TEXT_SYSTEM "Monster text blocks (S108)"); the library recipe lines naming a
+  renamed monster follow.
 - **Skill names**: Names at `$41:$628E`, 256 entries, `$F0` terminated
 
 ## Boss Join System (Bank $54:$55BB)
@@ -738,7 +747,7 @@ never clamp/gate to hide the miss. Verified status for id 224:
 | Breeding family recipe | `FamilyRecipeTable` | `$16:$4974` | **222** | overshoot | **forked** `FamilyRecipeResolve` (`patches/bank_016.asm`). S32: id224 → `db $04,$2a` (Snaily+BattleRex) so the encyclopedia shows the recipe icons. NOTE: the *icons* render, but the lineage parent **names** still show "?????" — that text is a SEPARATE overshoot (modes 0/1, below) |
 | Battle sprite gfx | `MonsterBattleGfxTable` | `$00:$2B9F` | 256 | **slot exists** | **G2 (S35), baked into `patches/`:** `$2d5f` `$320f`→`$7e01` (same-size 2-byte repoint, no fork); dragon battle stream = overflow `$7e01`; palette via `HighBattlePal` fork in bank `$17` (`$62fd` overshoots, needs fork). User-confirmed. |
 | Follower gfx (walking) | follower gfx-ID copies | `$01/$06/$07/$09/$0b/$12/$18/$59` | — | overshoot | S32: `$0b` forked in `patches/` (`FollowerArtResolve0b`, hatch-crash fix). **Real follower ART now integrated** via `build_new_species_follower.py` (W.png → gid `$7e00`, layout `$4184`, attr palette 2, all 8 contexts repointed/forked + `$01` clamp lifted) — user-confirmed. **Now BAKED into `patches/` as id-indexed tables (G1, S34)**, so the bare patched build shows the real dragon. **Battle sprite also baked (G2, S35) — `$7e01` + palette fork.** |
-| Default nickname + "take X with you" | `FamilyCodePtrTable` (mode 7) | `$41:$4739` | **215** | overshoot→"SkyBell" | **FIXED S32** — id224 overshot into `ItemName[9]`="SkyBell". `LoadModeBaseRedirect` (16 B in `$00F0` ROM0 padding, `patches/bank_000.asm`) redirects mode-7 id≥224 to a new-species SHORT-name table (`$7E39`→`$41:$7FF9`) holding the first-4 name ("Gorb"). Generic; gated on `$4739` so all other text byte-identical |
+| Default nickname (S108: the join naming screen's PRE-FILL, measured; "take X with you" then prints the chosen nickname) | `MonsterNickPtrTable` (mode 7; was `FamilyCodePtrTable`) | `$41:$4739` | **215** | overshoot→"SkyBell" | **FIXED S32** — id224 overshot into `ItemName[9]`="SkyBell". `LoadModeBaseRedirect` (16 B in `$00F0` ROM0 padding, `patches/bank_000.asm`) redirects mode-7 id≥224 to a new-species SHORT-name table (`$7E39`→`$41:$7FF9`) holding the first-4 name ("Gorb"). Generic; gated on `$4739` so all other text byte-identical |
 | Lineage parent NAMES (library detail, line 1) | mode-0 `$400b` (bank `$4d` entry 2) | `$4d:$400b` | **256** | un-authored slot→"?????" | **DONE (S38)** — `LoadItem_6456` (`$12:$6456`) renders line 1 via bank `$4d` entry 2 → entry 0 (`call SetB4d_43b9`) → `HighDetailTextFork`, mode 0 indexed by the **offspring** id. Slot 224 was the vanilla shared "?????    ?????" placeholder @ `$53C4` (NOT an overshoot; 256-wide, slot un-authored, shared w/ 220/225). Fixed by wiring `HighModeTable4D` mode-0 → `HighMode0Ptrs` → `GorbunokRecipeLine` "Snaily   BattleRex" (`patches/bank_04d.asm`); two 9-char fields to match vanilla recipe format. id≥224-gated. User-confirmed SameBoy. |
 | Library tab | `LibFamilyPtrTable` (custom) | `$12` | by family | — | id224 listed under Slime; **tool-owned** — `build_library_table.py --new-species` reads `new_species.json` (family from clone+override) + moves the unseen-marker `$E0`→`$FE` (id 224 now a real species; see BREEDING_SYSTEM "Walker contract") |
 
@@ -811,10 +820,10 @@ baked into source while doing this:
   and deliberately left to overshoot. *(Supersedes the looser "overshoots for id≥224".)*
   **S105 G3:** the fork now gates `cp $dd` (id ≥ 221, base `$7D39`); 215-220 still overshoot
   (never rendered), 221-239 are new species.
-* **`FamilyCodePtrTable` name is legacy/misleading** (kept for ref-stability; the nickname
+* **`FamilyCodePtrTable` name was legacy/misleading** — S108 renamed it
+  `MonsterNickPtrTable` and the strings `MonsterNick_NNN_XX` (both trees; the nickname
   fork gates on the literal `$4739`, not the label). It is the SPECIES-indexed 2-letter
-  default-nickname table, not a family table; the 215 `FamilyCode_NNN` string labels are
-  likewise legacy.
+  default-nickname table, not a family table.
 
 **The 8 follower gfx-ID copies — add-base sites (one comment each, `[n/8]`).** A complete
 art swap / new-species follower must repoint ALL 8 (layout `$10/$11:$407f` + attr are

@@ -2,7 +2,7 @@
 """Generate labeled db/dw for remaining bank $41 tables.
 
 Converts raw hex in bank $41 into labeled pointer tables and string data:
-  - FamilyCodePtrTable at $4739 (215 entries)
+  - MonsterNickPtrTable at $4739 (215 entries)
   - ItemNamePtrTable at $48E7 (44 entries)
   - ItemDescPtrTable at $493F (44 entries)
   - PersonalityNamePtrTable at $4997 (27 entries)
@@ -189,7 +189,7 @@ def generate_ptr_table_section(rom):
         if ptr not in fam_addr_to_label:
             decoded, _ = decode_string(rom, ptr)
             lname = safe_label(decoded) or 'Empty'
-            fam_addr_to_label[ptr] = 'FamilyCode_%03d_%s' % (i, lname)
+            fam_addr_to_label[ptr] = 'MonsterNick_%03d_%s' % (i, lname)
         fam_idx_to_label[i] = fam_addr_to_label[ptr]
 
     lines.append('')
@@ -199,7 +199,7 @@ def generate_ptr_table_section(rom):
     lines.append('; 2-letter family abbreviation per monster ID (0-214)')
     lines.append('; ---------------------------------------------------------------')
     lines.append('')
-    lines.append('FamilyCodePtrTable:  ; $4739')
+    lines.append('MonsterNickPtrTable:  ; $4739')
 
     for i, ptr in enumerate(family_ptrs):
         decoded, _ = decode_string(rom, ptr)
@@ -494,10 +494,10 @@ def generate_family_code_strings(rom, addr_to_label):
     lines.append('; ---------------------------------------------------------------')
     lines.append('; Family Code Strings ($69F2-$6C77)')
     lines.append('; 2-letter family abbreviation + $F0 terminator')
-    lines.append('; Indexed by FamilyCodePtrTable at $4739')
+    lines.append('; Indexed by MonsterNickPtrTable at $4739')
     lines.append('; ---------------------------------------------------------------')
     lines.append('')
-    lines.append('FamilyCodeStrings:')
+    lines.append('MonsterNickStrings:')
 
     for addr in sorted(addr_to_label.keys()):
         label = addr_to_label[addr]

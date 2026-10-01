@@ -508,13 +508,13 @@ Map23_Script00:
 ; ---------------------------------------------------------------------------
 Map23_Script01:
     dw $FF01  ; BranchIfFlagSet
-    dw $0009  ; Text $0009: "You speak monster talk don't you? Where "
+    dw $0009  ; Text $0009: "$42:$4590 *:Huh? What happened? // Where is Milayo"
     dw Bank0E_ScriptAddr_4256          ; -> branch target
-    dw $0057  ; Text $0057: "How do you do. I'm Hale. I know you are "
+    dw $0057  ; Text $0057: "$42:$6F60 *:We are at the Chamber of // Travelers'"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_4256:
-    dw $011F  ; Text $011F: "[HERO] looked into the jar. A piece of p"
+    dw $011F  ; Text $011F: "$43:$5D7D *:You are at the Room of Beginning. // *"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -533,7 +533,7 @@ RoomVillagerTalisman_Script00:
 ; RoomVillagerTalisman_Script01
 ; ---------------------------------------------------------------------------
 RoomVillagerTalisman_Script01:
-    dw $01A1  ; Text $01A1: "I'm conducting secret research at the bo"
+    dw $01A1  ; Text $01A1: "$44:$477B *:Here's the Room of Villager // & Talis"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -552,7 +552,7 @@ RoomMemoriesBewilder_Script00:
 ; RoomMemoriesBewilder_Script01
 ; ---------------------------------------------------------------------------
 RoomMemoriesBewilder_Script01:
-    dw $01E1  ; Text $01E1: "Hey [HERO]. Welcome. I am Master Teto. D"
+    dw $01E1  ; Text $01E1: "$44:$7206 *:This is the room of Memories & // Bewi"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -571,7 +571,7 @@ RoomPeaceBravery_Script00:
 ; RoomPeaceBravery_Script01
 ; ---------------------------------------------------------------------------
 RoomPeaceBravery_Script01:
-    dw $026E  ; Text $026E: "You're my opponent? Is this a joke? You "
+    dw $026E  ; Text $026E: "$45:$5163 *:This is the Room of Peace & // Bravery"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -592,20 +592,20 @@ Map27_Script00:
 ; ---------------------------------------------------------------------------
 Map27_Script01:
     dw $FF01  ; BranchIfFlagSet
-    dw $00F1  ; Text $00F1: "Let's play rock paperscissors![Y/N] // H"
+    dw $00F1  ; Text $00F1: "$43:$48ED *:Let's play rock- paper-scissors! [YES/"
     dw Bank0E_ScriptAddr_4294          ; -> branch target
     dw $FF01  ; BranchIfFlagSet
-    dw $001D  ; Text $001D: "[HERO] opened a treasure chest! // This "
+    dw $001D  ; Text $001D: "$42:$4C85 [HERO] found an Herb. // But cannot carr"
     dw Bank0E_ScriptAddr_4290          ; -> branch target
-    dw $029C  ; Text $029C: "Monsters are flooding out from the Gate "
+    dw $029C  ; Text $029C: "$45:$6803 *:[HERO], here is the Room of // Strengt"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_4290:
-    dw $032E  ; Text $032E: "Thank you very much [HERO]! // Hello [HE"
+    dw $032E  ; Text $032E: "$46:$530C *:[HERO]! Thanks for saving me. // *:You"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_4294:
-    dw $082A  ; Text $082A: "Natto? What's that? You're making it up!"
+    dw $082A  ; Text $082A: "$3F:$5BFE *:Oh my, it is Master [HERO]. // Welcome"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -613,20 +613,20 @@ Bank0E_ScriptAddr_4294:
 ; ---------------------------------------------------------------------------
 Map27_Script02:
     dw $FF01  ; BranchIfFlagSet
-    dw $00F1  ; Text $00F1: "Let's play rock paperscissors![Y/N] // H"
+    dw $00F1  ; Text $00F1: "$43:$48ED *:Let's play rock- paper-scissors! [YES/"
     dw Bank0E_ScriptAddr_42AC          ; -> branch target
     dw $FF01  ; BranchIfFlagSet
-    dw $001D  ; Text $001D: "[HERO] opened a treasure chest! // This "
+    dw $001D  ; Text $001D: "$42:$4C85 [HERO] found an Herb. // But cannot carr"
     dw Bank0E_ScriptAddr_42A8          ; -> branch target
-    dw $029D  ; Text $029D: "It's my wish that... my family in this w"
+    dw $029D  ; Text $029D: "$45:$686F *:Monsters are flooding out from // the "
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_42A8:
-    dw $032F  ; Text $032F: "Hello [HERO]! I was expecting you. Befor"
+    dw $032F  ; Text $032F: "$46:$53A3 *:Thank you very much [HERO]!"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_42AC:
-    dw $082B  ; Text $082B: "Victory... You've conquered one of the b"
+    dw $082B  ; Text $082B: "$3F:$5C95 *:Oh, [HERO], Master [HERO] is // here!"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -645,7 +645,7 @@ RoomJoyWisdom_Script00:
 ; RoomJoyWisdom_Script01
 ; ---------------------------------------------------------------------------
 RoomJoyWisdom_Script01:
-    dw $035D  ; Text $035D: "Oooo! Ahhhh! Where am I? What? The arena"
+    dw $035D  ; Text $035D: "$46:$6597 *:You're at the Room of // Joy and Wisdo"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -664,7 +664,7 @@ RoomHappinessTemptation_Script00:
 ; RoomHappinessTemptation_Script01
 ; ---------------------------------------------------------------------------
 RoomHappinessTemptation_Script01:
-    dw $03DD  ; Text $03DD: "Welcome to A class. I was expecting you!"
+    dw $03DD  ; Text $03DD: "$47:$4A04 *:You're in the Room of // Happiness & T"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -683,7 +683,7 @@ RoomLabyrinthJudgment_Script00:
 ; RoomLabyrinthJudgment_Script01
 ; ---------------------------------------------------------------------------
 RoomLabyrinthJudgment_Script01:
-    dw $0408  ; Text $0408: "Behind the Gate of Peace live BigRoosts,"
+    dw $0408  ; Text $0408: "$21:$44CC *:You're at the Room of the // Labyrinth"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -703,29 +703,29 @@ Map2B_Script00:
 ; ---------------------------------------------------------------------------
 Map2B_Script01:
     dw $FF01  ; BranchIfFlagSet
-    dw $00F1  ; Text $00F1: "Let's play rock paperscissors![Y/N] // H"
+    dw $00F1  ; Text $00F1: "$43:$48ED *:Let's play rock- paper-scissors! [YES/"
     dw Bank0E_ScriptAddr_42F6          ; -> branch target
     dw $FF01  ; BranchIfFlagSet
-    dw $0025  ; Text $0025: "[HERO] returned the book to the bookshel"
+    dw $0025  ; Text $0025: "$42:$5285 :It's a little kingdom built // inside a"
     dw Bank0E_ScriptAddr_42F2          ; -> branch target
     dw $046A
     dw $FF15  ; PlaySE
     dw $C83C  ; RAM $C83C
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw Bank0E_ScriptAddr_42EE          ; -> branch target
     dw $046B
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_42EE:
-    dw $046C  ; Text $046C: "to know, that's fine. Come again! // How"
+    dw $046C  ; Text $046C: "$21:$76D3 *:I...I agree with you. I'm sorry to // "
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_42F2:
-    dw $04DE  ; Text $04DE: "Ladies Gents! Welcome! Tonight is the ni"
+    dw $04DE  ; Text $04DE: "$48:$7411 *:[HERO]! You are the first person // *:"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_42F6:
-    dw $082C  ; Text $082C: "You won! But you know there is always so"
+    dw $082C  ; Text $082C: "$3F:$5CB8 *:Welcome to the Room of // Reflection. "
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -744,7 +744,7 @@ RoomAmbitionDemolition_Script00:
 ; RoomAmbitionDemolition_Script01
 ; ---------------------------------------------------------------------------
 RoomAmbitionDemolition_Script01:
-    dw $082D  ; Text $082D: "Y..you defeated the Master Monster Tamer"
+    dw $082D  ; Text $082D: "$3F:$5D0E *:Welcome! // *:Go right to the Gate of "
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -763,7 +763,7 @@ RoomMastermindControl_Script00:
 ; RoomMastermindControl_Script01
 ; ---------------------------------------------------------------------------
 RoomMastermindControl_Script01:
-    dw $082E  ; Text $082E: "I also was brought here by Watabou a lon"
+    dw $082E  ; Text $082E: "$3F:$5D6A *:Welcome! Master! // *:Go up for the Ga"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -782,7 +782,7 @@ Map2E_Script00:
 ; Map2E_Script01
 ; ---------------------------------------------------------------------------
 Map2E_Script01:
-    dw $082F  ; Text $082F: "Ha Ha Ha! I made a comeback! You're stil"
+    dw $082F  ; Text $082F: "$3F:$5DD4 *:How are you? // *:Go right to the Gate"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -809,281 +809,281 @@ Map2F_ScriptPtrTable:
 ; ---------------------------------------------------------------------------
 Map2F_Script00:
     dw $FF0E  ; SetMapTransition
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw Bank0E_ScriptAddr_4344          ; -> branch target
     dw $FF0E  ; SetMapTransition
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw Bank0E_ScriptAddr_48E4          ; -> branch target
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_4344:
     dw $FF01  ; BranchIfFlagSet
-    dw $00EF  ; Text $00EF: "In the back, they teach kids about the m"
+    dw $00EF  ; Text $00EF: "$43:$486E *:In the back, they teach kids // about "
     dw $4342
     dw $FF01  ; BranchIfFlagSet
-    dw $00EE  ; Text $00EE: "Gwrr, Gwrr... // In the back, they teach"
+    dw $00EE  ; Text $00EE: "$43:$485A *:Gwrr, Gwrr..."
     dw $47CE
     dw $FF01  ; BranchIfFlagSet
-    dw $00ED  ; Text $00ED: "H...Hello! I'm T..T..Teto. I'm nervous b"
+    dw $00ED  ; Text $00ED: "$43:$47A4 *:H...Hello! I'm T..T..Teto. // *:I'm ne"
     dw $4620
     dw $FF01  ; BranchIfFlagSet
-    dw $00EC  ; Text $00EC: "Only those registered are allowed here! "
+    dw $00EC  ; Text $00EC: "$43:$4772 *:Only those registered are // allowed h"
     dw $4342
     dw $FF01  ; BranchIfFlagSet
-    dw $00EB  ; Text $00EB: "You hear a voice. // Only those register"
+    dw $00EB  ; Text $00EB: "$43:$475D You hear a voice."
     dw $4342
     dw $FF01  ; BranchIfFlagSet
-    dw $00EA  ; Text $00EA: "Get out of my way! Huff! // You hear a v"
+    dw $00EA  ; Text $00EA: "$43:$473F *:Get out of my way! Huff!"
     dw $45C0
     dw $FF01  ; BranchIfFlagSet
-    dw $00E9  ; Text $00E9: "Eeek! What? Talk to me from the front! /"
+    dw $00E9  ; Text $00E9: "$43:$470E *:Eeek! What? Talk to me // from the fro"
     dw $4342
     dw $FF01  ; BranchIfFlagSet
-    dw $00E4  ; Text $00E4: "Well done! You survived G class! // Oh, "
+    dw $00E4  ; Text $00E4: "$43:$43F5 *:Well done! You survived // G class!"
     dw $455C
     dw $FF01  ; BranchIfFlagSet
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $4342
     dw $FF0D  ; WriteNPCByte
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF0D  ; WriteNPCByte
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0040  ; Text $0040: "SlioYou can drop off up to 19 monsters a"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0040  ; Text $0040: "$42:$6159 *:I'm Slio. I am the grandson // of Gran"
     dw $FF49  ; Cmd49
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF49  ; Cmd49
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF08  ; NOP
     dw $FF22  ; Cmd22
     dw $FF1A  ; Cmd1A
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FFE0  ; Cmd$E0
     dw $FF1A  ; Cmd1A
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $FFE0  ; Cmd$E0
-    dw $FF19  ; FadeEffect
-    dw $FF22  ; Cmd22
-    dw $FF1B  ; MultiRAMWrite
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $FFF0  ; Cmd$F0
-    dw $FF1A  ; Cmd1A
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $FFF0  ; Cmd$F0
-    dw $FF19  ; FadeEffect
-    dw $FF22  ; Cmd22
-    dw $FF1A  ; Cmd1A
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
-    dw $FF1B  ; MultiRAMWrite
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $FFF0  ; Cmd$F0
-    dw $FF19  ; FadeEffect
-    dw $FF22  ; Cmd22
-    dw $FF1A  ; Cmd1A
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0040  ; Text $0040: "SlioYou can drop off up to 19 monsters a"
-    dw $FF1A  ; Cmd1A
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0040  ; Text $0040: "SlioYou can drop off up to 19 monsters a"
-    dw $FF19  ; FadeEffect
-    dw $FF22  ; Cmd22
-    dw $FF1B  ; MultiRAMWrite
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
-    dw $FF1A  ; Cmd1A
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
-    dw $FF19  ; FadeEffect
-    dw $FF22  ; Cmd22
-    dw $FF1A  ; Cmd1A
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $FFF0  ; Cmd$F0
-    dw $FF1B  ; MultiRAMWrite
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
-    dw $FF19  ; FadeEffect
-    dw $FF22  ; Cmd22
-    dw $FF1A  ; Cmd1A
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $FFE0  ; Cmd$E0
-    dw $FF1A  ; Cmd1A
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $FFE0  ; Cmd$E0
-    dw $FF19  ; FadeEffect
-    dw $FF22  ; Cmd22
-    dw $FF1A  ; Cmd1A
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $FFE0  ; Cmd$E0
-    dw $FF1A  ; Cmd1A
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FFE0  ; Cmd$E0
     dw $FF19  ; FadeEffect
     dw $FF22  ; Cmd22
     dw $FF1B  ; MultiRAMWrite
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FFF0  ; Cmd$F0
     dw $FF1A  ; Cmd1A
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FFF0  ; Cmd$F0
     dw $FF19  ; FadeEffect
     dw $FF22  ; Cmd22
     dw $FF1A  ; Cmd1A
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF1B  ; MultiRAMWrite
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FFF0  ; Cmd$F0
     dw $FF19  ; FadeEffect
     dw $FF22  ; Cmd22
     dw $FF1A  ; Cmd1A
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0040  ; Text $0040: "SlioYou can drop off up to 19 monsters a"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0040  ; Text $0040: "$42:$6159 *:I'm Slio. I am the grandson // of Gran"
     dw $FF1A  ; Cmd1A
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0040  ; Text $0040: "SlioYou can drop off up to 19 monsters a"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0040  ; Text $0040: "$42:$6159 *:I'm Slio. I am the grandson // of Gran"
     dw $FF19  ; FadeEffect
     dw $FF22  ; Cmd22
     dw $FF1B  ; MultiRAMWrite
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF1A  ; Cmd1A
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF19  ; FadeEffect
     dw $FF22  ; Cmd22
     dw $FF1A  ; Cmd1A
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FFF0  ; Cmd$F0
     dw $FF1B  ; MultiRAMWrite
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF19  ; FadeEffect
     dw $FF22  ; Cmd22
     dw $FF1A  ; Cmd1A
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FFE0  ; Cmd$E0
     dw $FF1A  ; Cmd1A
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $FFE0  ; Cmd$E0
-    dw $FF19  ; FadeEffect
-    dw $FF22  ; Cmd22
-    dw $FF1A  ; Cmd1A
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $FFE0  ; Cmd$E0
-    dw $FF1A  ; Cmd1A
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FFE0  ; Cmd$E0
     dw $FF19  ; FadeEffect
     dw $FF22  ; Cmd22
-    dw $FF1B  ; MultiRAMWrite
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $FFF0  ; Cmd$F0
     dw $FF1A  ; Cmd1A
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $FFF0  ; Cmd$F0
-    dw $FF19  ; FadeEffect
-    dw $FF22  ; Cmd22
-    dw $FF1A  ; Cmd1A
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
-    dw $FF1B  ; MultiRAMWrite
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $FFF0  ; Cmd$F0
-    dw $FF19  ; FadeEffect
-    dw $FF22  ; Cmd22
-    dw $FF1A  ; Cmd1A
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0040  ; Text $0040: "SlioYou can drop off up to 19 monsters a"
-    dw $FF1A  ; Cmd1A
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0040  ; Text $0040: "SlioYou can drop off up to 19 monsters a"
-    dw $FF19  ; FadeEffect
-    dw $FF22  ; Cmd22
-    dw $FF1B  ; MultiRAMWrite
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
-    dw $FF1A  ; Cmd1A
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
-    dw $FF19  ; FadeEffect
-    dw $FF22  ; Cmd22
-    dw $FF1A  ; Cmd1A
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $FFF0  ; Cmd$F0
-    dw $FF1B  ; MultiRAMWrite
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
-    dw $FF19  ; FadeEffect
-    dw $FF22  ; Cmd22
-    dw $FF1A  ; Cmd1A
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FFE0  ; Cmd$E0
     dw $FF1A  ; Cmd1A
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $FFE0  ; Cmd$E0
+    dw $FF19  ; FadeEffect
+    dw $FF22  ; Cmd22
+    dw $FF1B  ; MultiRAMWrite
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $FFF0  ; Cmd$F0
+    dw $FF1A  ; Cmd1A
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $FFF0  ; Cmd$F0
+    dw $FF19  ; FadeEffect
+    dw $FF22  ; Cmd22
+    dw $FF1A  ; Cmd1A
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
+    dw $FF1B  ; MultiRAMWrite
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $FFF0  ; Cmd$F0
+    dw $FF19  ; FadeEffect
+    dw $FF22  ; Cmd22
+    dw $FF1A  ; Cmd1A
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0040  ; Text $0040: "$42:$6159 *:I'm Slio. I am the grandson // of Gran"
+    dw $FF1A  ; Cmd1A
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0040  ; Text $0040: "$42:$6159 *:I'm Slio. I am the grandson // of Gran"
+    dw $FF19  ; FadeEffect
+    dw $FF22  ; Cmd22
+    dw $FF1B  ; MultiRAMWrite
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
+    dw $FF1A  ; Cmd1A
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
+    dw $FF19  ; FadeEffect
+    dw $FF22  ; Cmd22
+    dw $FF1A  ; Cmd1A
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $FFF0  ; Cmd$F0
+    dw $FF1B  ; MultiRAMWrite
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
+    dw $FF19  ; FadeEffect
+    dw $FF22  ; Cmd22
+    dw $FF1A  ; Cmd1A
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $FFE0  ; Cmd$E0
+    dw $FF1A  ; Cmd1A
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $FFE0  ; Cmd$E0
+    dw $FF19  ; FadeEffect
+    dw $FF22  ; Cmd22
+    dw $FF1A  ; Cmd1A
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $FFE0  ; Cmd$E0
+    dw $FF1A  ; Cmd1A
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $FFE0  ; Cmd$E0
+    dw $FF19  ; FadeEffect
+    dw $FF22  ; Cmd22
+    dw $FF1B  ; MultiRAMWrite
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $FFF0  ; Cmd$F0
+    dw $FF1A  ; Cmd1A
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $FFF0  ; Cmd$F0
+    dw $FF19  ; FadeEffect
+    dw $FF22  ; Cmd22
+    dw $FF1A  ; Cmd1A
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
+    dw $FF1B  ; MultiRAMWrite
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $FFF0  ; Cmd$F0
+    dw $FF19  ; FadeEffect
+    dw $FF22  ; Cmd22
+    dw $FF1A  ; Cmd1A
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0040  ; Text $0040: "$42:$6159 *:I'm Slio. I am the grandson // of Gran"
+    dw $FF1A  ; Cmd1A
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0040  ; Text $0040: "$42:$6159 *:I'm Slio. I am the grandson // of Gran"
+    dw $FF19  ; FadeEffect
+    dw $FF22  ; Cmd22
+    dw $FF1B  ; MultiRAMWrite
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
+    dw $FF1A  ; Cmd1A
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
+    dw $FF19  ; FadeEffect
+    dw $FF22  ; Cmd22
+    dw $FF1A  ; Cmd1A
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $FFF0  ; Cmd$F0
+    dw $FF1B  ; MultiRAMWrite
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
+    dw $FF19  ; FadeEffect
+    dw $FF22  ; Cmd22
+    dw $FF1A  ; Cmd1A
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $FFE0  ; Cmd$E0
+    dw $FF1A  ; Cmd1A
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FFE0  ; Cmd$E0
     dw $FF19  ; FadeEffect
     dw $FF4A  ; Cmd4A
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF07  ; InitDialogMode
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF06  ; IncrementCounter
     dw $FF0A  ; NPCMoveX
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0020  ; Text $0020: "KingOh [HERO]! Will you comply with my w"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0020  ; Text $0020: "$42:$4D34 *:Welcome! I am the King of this // king"
     dw $FF0B  ; NPCMoveY
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF0A  ; NPCMoveX
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FFF0  ; Cmd$F0
     dw $FF0D  ; WriteNPCByte
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0040  ; Text $0040: "SlioYou can drop off up to 19 monsters a"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0040  ; Text $0040: "$42:$6159 *:I'm Slio. I am the grandson // of Gran"
     dw $FF0D  ; WriteNPCByte
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF0B  ; NPCMoveY
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF0A  ; NPCMoveX
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FFF0  ; Cmd$F0
     dw $FF0D  ; WriteNPCByte
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF90  ; Cmd$90
-    dw $0040  ; Text $0040: "SlioYou can drop off up to 19 monsters a"
+    dw $0040  ; Text $0040: "$42:$6159 *:I'm Slio. I am the grandson // of Gran"
     dw $FF0D  ; WriteNPCByte
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0040  ; Text $0040: "SlioYou can drop off up to 19 monsters a"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0040  ; Text $0040: "$42:$6159 *:I'm Slio. I am the grandson // of Gran"
     dw $FF0D  ; WriteNPCByte
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF09  ; SetDelay
-    dw $0020  ; Text $0020: "KingOh [HERO]! Will you comply with my w"
+    dw $0020  ; Text $0020: "$42:$4D34 *:Welcome! I am the King of this // king"
     dw $FF08  ; NOP
     dw $FF4C  ; RestoreBGM
     dw $FF0D  ; WriteNPCByte
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF90  ; Cmd$90
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF0D  ; WriteNPCByte
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0040  ; Text $0040: "SlioYou can drop off up to 19 monsters a"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0040  ; Text $0040: "$42:$6159 *:I'm Slio. I am the grandson // of Gran"
     dw $FF0A  ; NPCMoveX
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF48  ; Cmd48
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FFFF  ; END
 
     db $0D
@@ -1992,322 +1992,322 @@ Bank0E_ScriptAddr_4344:
     db $FF
 Bank0E_ScriptAddr_48E4:
     dw $FF01  ; BranchIfFlagSet
-    dw $00F0  ; Text $00F0: "Where did the MiniDrak go? // Let's play"
+    dw $00F0  ; Text $00F0: "$43:$48CD *:Where did the MiniDrak go?"
     dw $4342
     dw $FF01  ; BranchIfFlagSet
-    dw $00EF  ; Text $00EF: "In the back, they teach kids about the m"
+    dw $00EF  ; Text $00EF: "$43:$486E *:In the back, they teach kids // about "
     dw $4B60
     dw $FF01  ; BranchIfFlagSet
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $4342
     dw $FF0A  ; NPCMoveX
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF21  ; TriggerBattle2
-    dw $0060  ; Text $0060: "Oh boy! This looks dangerous! Oh, no! //"
+    dw $0060  ; Text $0060: "$42:$7430 *:This is the castle of // GreatTree. //"
     dw $FF17  ; SetupBossBattle
     dw $FF09  ; SetDelay
-    dw $0008  ; Text $0008: "Huh? What happened? Where is Milayou? //"
+    dw $0008  ; Text $0008: "$42:$44BA *:Are you Milayou? // *:Hm, You don't lo"
     dw $FF0D  ; WriteNPCByte
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF21  ; TriggerBattle2
-    dw $0055  ; Text $0055: "Welcome to the Chamber of Travelers' Gat"
+    dw $0055  ; Text $0055: "$42:$6E72 *:Hale was the cherished pet of // the K"
     dw $FF1C  ; CompareRAM
     dw $1202
     dw $FF19  ; FadeEffect
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF49  ; Cmd49
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF0A  ; NPCMoveX
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF90  ; Cmd$90
     dw $FF48  ; Cmd48
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF47  ; Cmd47
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF07  ; InitDialogMode
-    dw $0008  ; Text $0008: "Huh? What happened? Where is Milayou? //"
+    dw $0008  ; Text $0008: "$42:$44BA *:Are you Milayou? // *:Hm, You don't lo"
     dw $FF06  ; IncrementCounter
     dw $FF1D  ; LockMovement
     dw $FF22  ; Cmd22
     dw $FF1B  ; MultiRAMWrite
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FFF0  ; Cmd$F0
     dw $FF19  ; FadeEffect
     dw $FF1E  ; UnlockMovement
     dw $FF22  ; Cmd22
     dw $FF1B  ; MultiRAMWrite
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF19  ; FadeEffect
     dw $FF21  ; TriggerBattle2
-    dw $0054  ; Text $0054: "Hale was the cherished pet of the King. "
+    dw $0054  ; Text $0054: "$42:$6DC6 *:You will find items scattered // aroun"
     dw $FF22  ; Cmd22
     dw $FF1B  ; MultiRAMWrite
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF19  ; FadeEffect
     dw $FF0D  ; WriteNPCByte
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF90  ; Cmd$90
-    dw $0080  ; Text $0080: "PulioThank you [HERO]! Now I can go back"
+    dw $0080  ; Text $0080: "$1A:$4628 *:I don't care how strong the enemies //"
     dw $FF0B  ; NPCMoveY
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF0A  ; NPCMoveX
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FFE0  ; Cmd$E0
     dw $FF09  ; SetDelay
-    dw $0016  ; Text $0016: "Please listen to his wish. // This is th"
+    dw $0016  ; Text $0016: "$42:$4B9C *:His Majesty is in trouble. // Please p"
     dw $FF0D  ; WriteNPCByte
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
-    dw $0018  ; Text $0018: "Hurry! Go see the King! // I see..... //"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
+    dw $0018  ; Text $0018: "$42:$4BF7 *:This is the castle of // GreatTree."
     dw $0098
     dw $FF0D  ; WriteNPCByte
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF1D  ; LockMovement
     dw $FF1A  ; Cmd1A
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF19  ; FadeEffect
     dw $FF09  ; SetDelay
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF1A  ; Cmd1A
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF1A  ; Cmd1A
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF19  ; FadeEffect
     dw $FF09  ; SetDelay
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF1A  ; Cmd1A
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF1A  ; Cmd1A
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF19  ; FadeEffect
     dw $FF09  ; SetDelay
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF1A  ; Cmd1A
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF1A  ; Cmd1A
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF19  ; FadeEffect
     dw $FF1E  ; UnlockMovement
     dw $FF48  ; Cmd48
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF1D  ; LockMovement
     dw $FF09  ; SetDelay
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF1B  ; MultiRAMWrite
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FFF0  ; Cmd$F0
     dw $FF1A  ; Cmd1A
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF19  ; FadeEffect
     dw $FF1E  ; UnlockMovement
     dw $FF49  ; Cmd49
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF48  ; Cmd48
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
     dw $FF1D  ; LockMovement
     dw $FF09  ; SetDelay
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF1A  ; Cmd1A
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF1B  ; MultiRAMWrite
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
     dw $FFF0  ; Cmd$F0
     dw $FF19  ; FadeEffect
     dw $FF1E  ; UnlockMovement
     dw $FF49  ; Cmd49
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
     dw $FF1D  ; LockMovement
     dw $FF09  ; SetDelay
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF1A  ; Cmd1A
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF1A  ; Cmd1A
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF19  ; FadeEffect
     dw $FF09  ; SetDelay
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF1A  ; Cmd1A
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF1A  ; Cmd1A
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF19  ; FadeEffect
     dw $FF09  ; SetDelay
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF1A  ; Cmd1A
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF1A  ; Cmd1A
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF19  ; FadeEffect
     dw $FF09  ; SetDelay
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF1A  ; Cmd1A
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF1A  ; Cmd1A
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF19  ; FadeEffect
     dw $FF09  ; SetDelay
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF1E  ; UnlockMovement
     dw $FF0D  ; WriteNPCByte
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF90  ; Cmd$90
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF4A  ; Cmd4A
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF09  ; SetDelay
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF1C  ; CompareRAM
-    dw $0100  ; Text $0100: "Welcome to the arena. Huh? Me? I'm famou"
+    dw $0100  ; Text $0100: "$43:$4DEC [HERO] looked into the jar. // An old la"
     dw $FF19  ; FadeEffect
     dw $FF1D  ; LockMovement
     dw $FF48  ; Cmd48
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF48  ; Cmd48
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
     dw $FF09  ; SetDelay
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF21  ; TriggerBattle2
-    dw $0055  ; Text $0055: "Welcome to the Chamber of Travelers' Gat"
+    dw $0055  ; Text $0055: "$42:$6E72 *:Hale was the cherished pet of // the K"
     dw $FF1C  ; CompareRAM
     dw $1302
     dw $FF1A  ; Cmd1A
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF19  ; FadeEffect
     dw $FF1E  ; UnlockMovement
     dw $FF0D  ; WriteNPCByte
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0040  ; Text $0040: "SlioYou can drop off up to 19 monsters a"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0040  ; Text $0040: "$42:$6159 *:I'm Slio. I am the grandson // of Gran"
     dw $FF21  ; TriggerBattle2
-    dw $0055  ; Text $0055: "Welcome to the Chamber of Travelers' Gat"
+    dw $0055  ; Text $0055: "$42:$6E72 *:Hale was the cherished pet of // the K"
     dw $FF1C  ; CompareRAM
     dw $1303
     dw $FF19  ; FadeEffect
     dw $FF0D  ; WriteNPCByte
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0040  ; Text $0040: "SlioYou can drop off up to 19 monsters a"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0040  ; Text $0040: "$42:$6159 *:I'm Slio. I am the grandson // of Gran"
     dw $FF21  ; TriggerBattle2
-    dw $0060  ; Text $0060: "Oh boy! This looks dangerous! Oh, no! //"
+    dw $0060  ; Text $0060: "$42:$7430 *:This is the castle of // GreatTree. //"
     dw $FF17  ; SetupBossBattle
     dw $FF09  ; SetDelay
-    dw $0008  ; Text $0008: "Huh? What happened? Where is Milayou? //"
+    dw $0008  ; Text $0008: "$42:$44BA *:Are you Milayou? // *:Hm, You don't lo"
     dw $FF22  ; Cmd22
     dw $FF1B  ; MultiRAMWrite
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FFE0  ; Cmd$E0
     dw $FF19  ; FadeEffect
     dw $FF22  ; Cmd22
     dw $FF1A  ; Cmd1A
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0030  ; Text $0030: "Upper floor, the monster farm. Pulio tak"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0030  ; Text $0030: "$42:$5B00 *:Pulio from the farm is goofy but // a "
     dw $FF19  ; FadeEffect
     dw $FF09  ; SetDelay
-    dw $000C  ; Text $000C: "Terry looked in front of him. The clock "
+    dw $000C  ; Text $000C: "$42:$47BF Terry looked at the bookshelf. // Too di"
     dw $FF21  ; TriggerBattle2
-    dw $0060  ; Text $0060: "Oh boy! This looks dangerous! Oh, no! //"
+    dw $0060  ; Text $0060: "$42:$7430 *:This is the castle of // GreatTree. //"
     dw $FF17  ; SetupBossBattle
     dw $FF09  ; SetDelay
-    dw $0008  ; Text $0008: "Huh? What happened? Where is Milayou? //"
+    dw $0008  ; Text $0008: "$42:$44BA *:Are you Milayou? // *:Hm, You don't lo"
     dw $FF0D  ; WriteNPCByte
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF21  ; TriggerBattle2
-    dw $0055  ; Text $0055: "Welcome to the Chamber of Travelers' Gat"
+    dw $0055  ; Text $0055: "$42:$6E72 *:Hale was the cherished pet of // the K"
     dw $FF1C  ; CompareRAM
     dw $1201
     dw $FF19  ; FadeEffect
     dw $FF07  ; InitDialogMode
-    dw $0009  ; Text $0009: "You speak monster talk don't you? Where "
+    dw $0009  ; Text $0009: "$42:$4590 *:Huh? What happened? // Where is Milayo"
     dw $FF06  ; IncrementCounter
     dw $FF09  ; SetDelay
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
     dw $FF49  ; Cmd49
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF09  ; SetDelay
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
     dw $FF4A  ; Cmd4A
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF09  ; SetDelay
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
     dw $FF48  ; Cmd48
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF09  ; SetDelay
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FF49  ; Cmd49
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF09  ; SetDelay
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FF1C  ; CompareRAM
-    dw $0100  ; Text $0100: "Welcome to the arena. Huh? Me? I'm famou"
+    dw $0100  ; Text $0100: "$43:$4DEC [HERO] looked into the jar. // An old la"
     dw $FF19  ; FadeEffect
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF1C  ; CompareRAM
-    dw $0101  ; Text $0101: "Too bad. You need more training. There a"
+    dw $0101  ; Text $0101: "$43:$4E4F [HERO] looked into the jar. // A piece o"
     dw $FF19  ; FadeEffect
     dw $FF09  ; SetDelay
-    dw $0008  ; Text $0008: "Huh? What happened? Where is Milayou? //"
+    dw $0008  ; Text $0008: "$42:$44BA *:Are you Milayou? // *:Hm, You don't lo"
     dw $FF0A  ; NPCMoveX
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FFD0  ; Cmd$D0
     dw $FF07  ; InitDialogMode
-    dw $000A  ; Text $000A: "Terry looks at the bookshelf. Encycloped"
+    dw $000A  ; Text $000A: "$42:$45C1 *:You speak monster talk // don't you? /"
     dw $FF06  ; IncrementCounter
     dw $FF0A  ; NPCMoveX
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0030  ; Text $0030: "Upper floor, the monster farm. Pulio tak"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0030  ; Text $0030: "$42:$5B00 *:Pulio from the farm is goofy but // a "
     dw $FF47  ; Cmd47
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF09  ; SetDelay
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF1C  ; CompareRAM
-    dw $0201  ; Text $0201: "[HERO] looked at the bookshelf. The secr"
+    dw $0201  ; Text $0201: "$1B:$4344 *:Who does he think he is! // *:If he do"
     dw $FF19  ; FadeEffect
     dw $FF0D  ; WriteNPCByte
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0040  ; Text $0040: "SlioYou can drop off up to 19 monsters a"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0040  ; Text $0040: "$42:$6159 *:I'm Slio. I am the grandson // of Gran"
     dw $FF0B  ; NPCMoveY
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FFF0  ; Cmd$F0
     dw $FF21  ; TriggerBattle2
-    dw $0060  ; Text $0060: "Oh boy! This looks dangerous! Oh, no! //"
+    dw $0060  ; Text $0060: "$42:$7430 *:This is the castle of // GreatTree. //"
     dw $FF17  ; SetupBossBattle
     dw $FF03  ; SetEventFlag
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF12  ; WriteRAM
     dw $D974  ; RAM $D974
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FFFF  ; END
 
     db $0D
@@ -2402,42 +2402,42 @@ Bank0E_ScriptAddr_48E4:
 ; Map2F_Script01
 ; ---------------------------------------------------------------------------
 Map2F_Script01:
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
 ; Map2F_Script02
 ; ---------------------------------------------------------------------------
 Map2F_Script02:
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
 ; Map2F_Script03
 ; ---------------------------------------------------------------------------
 Map2F_Script03:
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
 ; Map2F_Script04
 ; ---------------------------------------------------------------------------
 Map2F_Script04:
-    dw $0007  ; Text $0007: "Are you Milayou? Hm, You don't look like"
+    dw $0007  ; Text $0007: "$42:$4473 [SOUND 60]Terry looked in the dresser. /"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
 ; Map2F_Script05
 ; ---------------------------------------------------------------------------
 Map2F_Script05:
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
 ; Map2F_Script06
 ; ---------------------------------------------------------------------------
 Map2F_Script06:
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -2445,27 +2445,27 @@ Map2F_Script06:
 ; ---------------------------------------------------------------------------
 Map2F_Script07:
     dw $FF01  ; BranchIfFlagSet
-    dw $00EE  ; Text $00EE: "Gwrr, Gwrr... // In the back, they teach"
+    dw $00EE  ; Text $00EE: "$43:$485A *:Gwrr, Gwrr..."
     dw Bank0E_ScriptAddr_4BEE          ; -> branch target
     dw $FF01  ; BranchIfFlagSet
-    dw $00EC  ; Text $00EC: "Only those registered are allowed here! "
+    dw $00EC  ; Text $00EC: "$43:$4772 *:Only those registered are // allowed h"
     dw Bank0E_ScriptAddr_4BEA          ; -> branch target
     dw $FF01  ; BranchIfFlagSet
-    dw $00EB  ; Text $00EB: "You hear a voice. // Only those register"
+    dw $00EB  ; Text $00EB: "$43:$475D You hear a voice."
     dw Bank0E_ScriptAddr_4BE6          ; -> branch target
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_4BE6:
-    dw $0514  ; Text $0514: "MilayouGood night [HERO]! Go to sleep. /"
+    dw $0514  ; Text $0514: "$49:$42CB Milayou:Good night [HERO]! // Sweet drea"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_4BEA:
-    dw $0515  ; Text $0515: "Milayou...Oh? ...[HERO]! // MilayouWhat'"
+    dw $0515  ; Text $0515: "$49:$42F7 Milayou:Good night [HERO]! Go to // slee"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_4BEE:
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -2473,20 +2473,20 @@ Bank0E_ScriptAddr_4BEE:
 ; ---------------------------------------------------------------------------
 Map2F_Script08:
     dw $FF01  ; BranchIfFlagSet
-    dw $00E4  ; Text $00E4: "Well done! You survived G class! // Oh, "
+    dw $00E4  ; Text $00E4: "$43:$43F5 *:Well done! You survived // G class!"
     dw Bank0E_ScriptAddr_4BFC          ; -> branch target
-    dw $000B  ; Text $000B: "Terry looked at the bookshelf. Too diffi"
+    dw $000B  ; Text $000B: "$42:$476A Terry looks at the bookshelf. // :Encycl"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_4BFC:
-    dw $051A  ; Text $051A: "[NUM];[HERO] looked in the dresser. And "
+    dw $051A  ; Text $051A: "$49:$43AC [HERO] checked out the bookshelf. // :En"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
 ; Map2F_Script09
 ; ---------------------------------------------------------------------------
 Map2F_Script09:
-    dw $000C  ; Text $000C: "Terry looked in front of him. The clock "
+    dw $000C  ; Text $000C: "$42:$47BF Terry looked at the bookshelf. // Too di"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -2494,188 +2494,188 @@ Map2F_Script09:
 ; ---------------------------------------------------------------------------
 Map2F_Script10:
     dw $FF01  ; BranchIfFlagSet
-    dw $00F0  ; Text $00F0: "Where did the MiniDrak go? // Let's play"
+    dw $00F0  ; Text $00F0: "$43:$48CD *:Where did the MiniDrak go?"
     dw Bank0E_ScriptAddr_4CB4          ; -> branch target
     dw $FF01  ; BranchIfFlagSet
-    dw $00E4  ; Text $00E4: "Well done! You survived G class! // Oh, "
+    dw $00E4  ; Text $00E4: "$43:$43F5 *:Well done! You survived // G class!"
     dw Bank0E_ScriptAddr_4CAC          ; -> branch target
     dw $FF21  ; TriggerBattle2
-    dw $0060  ; Text $0060: "Oh boy! This looks dangerous! Oh, no! //"
+    dw $0060  ; Text $0060: "$42:$7430 *:This is the castle of // GreatTree. //"
     dw $FF17  ; SetupBossBattle
     dw $FF47  ; Cmd47
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF1D  ; LockMovement
     dw $FF1B  ; MultiRAMWrite
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF19  ; FadeEffect
     dw $FF1E  ; UnlockMovement
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF1C  ; CompareRAM
-    dw $0100  ; Text $0100: "Welcome to the arena. Huh? Me? I'm famou"
+    dw $0100  ; Text $0100: "$43:$4DEC [HERO] looked into the jar. // An old la"
     dw $FF19  ; FadeEffect
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF48  ; Cmd48
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF0B  ; NPCMoveY
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF09  ; SetDelay
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF47  ; Cmd47
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF09  ; SetDelay
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF4A  ; Cmd4A
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF09  ; SetDelay
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF48  ; Cmd48
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF09  ; SetDelay
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF49  ; Cmd49
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF09  ; SetDelay
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF47  ; Cmd47
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF09  ; SetDelay
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF4A  ; Cmd4A
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF09  ; SetDelay
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF48  ; Cmd48
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF09  ; SetDelay
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF49  ; Cmd49
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF09  ; SetDelay
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF47  ; Cmd47
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF1C  ; CompareRAM
-    dw $0300  ; Text $0300: "You snuck in here because I'm so beautif"
+    dw $0300  ; Text $0300: "$46:$4180 *:Hey, little thief, I think // it's pas"
     dw $FF19  ; FadeEffect
     dw $FF0D  ; WriteNPCByte
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF90  ; Cmd$90
-    dw $0040  ; Text $0040: "SlioYou can drop off up to 19 monsters a"
+    dw $0040  ; Text $0040: "$42:$6159 *:I'm Slio. I am the grandson // of Gran"
     dw $FF12  ; WriteRAM
     dw $D951  ; RAM $D951
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF3B  ; Cmd3B
-    dw $0008  ; Text $0008: "Huh? What happened? Where is Milayou? //"
-    dw $0058  ; Text $0058: "You are strong! I like you, [HERO]. // K"
-    dw $0048  ; Text $0048: "KingArrgh! You! You let my precious Hale"
+    dw $0008  ; Text $0008: "$42:$44BA *:Are you Milayou? // *:Hm, You don't lo"
+    dw $0058  ; Text $0058: "$42:$6FFE *:How do you do. I'm Hale. // *:I know y"
+    dw $0048  ; Text $0048: "$42:$6612 Pulio:Your Majesty please forgive me! //"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_4CAC:
-    dw $051B  ; Text $051B: "There are cliffs that we can jump off if"
+    dw $051B  ; Text $051B: "$49:$43FA [SOUND 60][HERO] looked in the dresser. "
     dw $FF03  ; SetEventFlag
-    dw $00EA  ; Text $00EA: "Get out of my way! Huff! // You hear a v"
+    dw $00EA  ; Text $00EA: "$43:$473F *:Get out of my way! Huff!"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_4CB4:
     dw $FF21  ; TriggerBattle2
-    dw $0060  ; Text $0060: "Oh boy! This looks dangerous! Oh, no! //"
+    dw $0060  ; Text $0060: "$42:$7430 *:This is the castle of // GreatTree. //"
     dw $FF17  ; SetupBossBattle
     dw $FF47  ; Cmd47
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF1D  ; LockMovement
     dw $FF1B  ; MultiRAMWrite
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF19  ; FadeEffect
     dw $FF1E  ; UnlockMovement
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF1C  ; CompareRAM
-    dw $0100  ; Text $0100: "Welcome to the arena. Huh? Me? I'm famou"
+    dw $0100  ; Text $0100: "$43:$4DEC [HERO] looked into the jar. // An old la"
     dw $FF19  ; FadeEffect
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF48  ; Cmd48
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF0B  ; NPCMoveY
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF09  ; SetDelay
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF47  ; Cmd47
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF09  ; SetDelay
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF4A  ; Cmd4A
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF09  ; SetDelay
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF48  ; Cmd48
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF09  ; SetDelay
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF49  ; Cmd49
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF09  ; SetDelay
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF47  ; Cmd47
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF09  ; SetDelay
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF4A  ; Cmd4A
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF09  ; SetDelay
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF48  ; Cmd48
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF09  ; SetDelay
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF49  ; Cmd49
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF09  ; SetDelay
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF47  ; Cmd47
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF1C  ; CompareRAM
-    dw $0300  ; Text $0300: "You snuck in here because I'm so beautif"
+    dw $0300  ; Text $0300: "$46:$4180 *:Hey, little thief, I think // it's pas"
     dw $FF19  ; FadeEffect
     dw $FF0D  ; WriteNPCByte
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF90  ; Cmd$90
-    dw $0040  ; Text $0040: "SlioYou can drop off up to 19 monsters a"
+    dw $0040  ; Text $0040: "$42:$6159 *:I'm Slio. I am the grandson // of Gran"
     dw $FF12  ; WriteRAM
     dw $D951  ; RAM $D951
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF3B  ; Cmd3B
-    dw $0008  ; Text $0008: "Huh? What happened? Where is Milayou? //"
-    dw $0058  ; Text $0058: "You are strong! I like you, [HERO]. // K"
-    dw $0048  ; Text $0048: "KingArrgh! You! You let my precious Hale"
+    dw $0008  ; Text $0008: "$42:$44BA *:Are you Milayou? // *:Hm, You don't lo"
+    dw $0058  ; Text $0058: "$42:$6FFE *:How do you do. I'm Hale. // *:I know y"
+    dw $0048  ; Text $0048: "$42:$6612 Pulio:Your Majesty please forgive me! //"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
 ; Map2F_Script11
 ; ---------------------------------------------------------------------------
 Map2F_Script11:
-    dw $000E  ; Text $000E: "Oh, you must be the master. You must hav"
+    dw $000E  ; Text $000E: "$42:$483B Terry looked at a stuffed animal. // Som"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
 ; Map2F_Script12
 ; ---------------------------------------------------------------------------
 Map2F_Script12:
-    dw $000D  ; Text $000D: "Terry looked at a stuffed animal. Someth"
+    dw $000D  ; Text $000D: "$42:$47FB Terry looked in front of him. // The clo"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -2683,95 +2683,95 @@ Map2F_Script12:
 ; ---------------------------------------------------------------------------
 Map2F_Script13:
     dw $FF01  ; BranchIfFlagSet
-    dw $00EB  ; Text $00EB: "You hear a voice. // Only those register"
+    dw $00EB  ; Text $00EB: "$43:$475D You hear a voice."
     dw Bank0E_ScriptAddr_4D66          ; -> branch target
     dw $FF01  ; BranchIfFlagSet
-    dw $00EC  ; Text $00EC: "Only those registered are allowed here! "
+    dw $00EC  ; Text $00EC: "$43:$4772 *:Only those registered are // allowed h"
     dw Bank0E_ScriptAddr_4D66          ; -> branch target
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_4D66:
     dw $FF49  ; Cmd49
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF1C  ; CompareRAM
-    dw $0101  ; Text $0101: "Too bad. You need more training. There a"
+    dw $0101  ; Text $0101: "$43:$4E4F [HERO] looked into the jar. // A piece o"
     dw $FF19  ; FadeEffect
     dw $FF07  ; InitDialogMode
-    dw $0516  ; Text $0516: "MilayouWhat's in your pocket? // Watabou"
+    dw $0516  ; Text $0516: "$49:$4322 Milayou:...Oh? ...[HERO]!"
     dw $FF06  ; IncrementCounter
     dw $FF4A  ; Cmd4A
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF0A  ; NPCMoveX
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0020  ; Text $0020: "KingOh [HERO]! Will you comply with my w"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0020  ; Text $0020: "$42:$4D34 *:Welcome! I am the King of this // king"
     dw $FF07  ; InitDialogMode
-    dw $0517  ; Text $0517: "WatabouGimme that meat. // WatabouGimme "
+    dw $0517  ; Text $0517: "$49:$433A Milayou:What's in your pocket?"
     dw $FF06  ; IncrementCounter
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF48  ; Cmd48
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF09  ; SetDelay
-    dw $000C  ; Text $000C: "Terry looked in front of him. The clock "
+    dw $000C  ; Text $000C: "$42:$47BF Terry looked at the bookshelf. // Too di"
     dw $FF49  ; Cmd49
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF09  ; SetDelay
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF48  ; Cmd48
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF49  ; Cmd49
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF09  ; SetDelay
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF48  ; Cmd48
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF09  ; SetDelay
-    dw $000C  ; Text $000C: "Terry looked in front of him. The clock "
+    dw $000C  ; Text $000C: "$42:$47BF Terry looked at the bookshelf. // Too di"
     dw $FF4A  ; Cmd4A
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF09  ; SetDelay
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF0D  ; WriteNPCByte
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF1C  ; CompareRAM
-    dw $0400  ; Text $0400: "He looks a bit nervous. I wonder why? Ma"
+    dw $0400  ; Text $0400: "$21:$4106 *:I heard a rumor that a terrible // mas"
     dw $FF1C  ; CompareRAM
-    dw $0401  ; Text $0401: "I'm the Monster Minister! Do you want to"
+    dw $0401  ; Text $0401: "$21:$420F *:I think I'm gonna quit // staying up a"
     dw $FF19  ; FadeEffect
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF48  ; Cmd48
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF48  ; Cmd48
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF12  ; WriteRAM
     dw $D974  ; RAM $D974
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FF03  ; SetEventFlag
-    dw $00ED  ; Text $00ED: "H...Hello! I'm T..T..Teto. I'm nervous b"
+    dw $00ED  ; Text $00ED: "$43:$47A4 *:H...Hello! I'm T..T..Teto. // *:I'm ne"
     dw $FF41  ; SetBGM
-    dw $0047  ; Text $0047: "PulioYour Majesty please forgive me! Hal"
+    dw $0047  ; Text $0047: "$42:$65E5 King:Pulio, did Hale escape // as well?"
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF65  ; Cmd$65
     dw $FF12  ; WriteRAM
     dw $C88A  ; RAM $C88A
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF12  ; WriteRAM
     dw $C88B  ; RAM $C88B
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF3E  ; Cmd3E
     dw $FFFF  ; END
 
@@ -2780,34 +2780,34 @@ Bank0E_ScriptAddr_4D66:
 ; ---------------------------------------------------------------------------
 Map2F_Script14:
     dw $FF01  ; BranchIfFlagSet
-    dw $00EB  ; Text $00EB: "You hear a voice. // Only those register"
+    dw $00EB  ; Text $00EB: "$43:$475D You hear a voice."
     dw Bank0E_ScriptAddr_4E1A          ; -> branch target
     dw $FF01  ; BranchIfFlagSet
-    dw $00EC  ; Text $00EC: "Only those registered are allowed here! "
+    dw $00EC  ; Text $00EC: "$43:$4772 *:Only those registered are // allowed h"
     dw Bank0E_ScriptAddr_4E1A          ; -> branch target
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_4E1A:
     dw $FF49  ; Cmd49
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF1C  ; CompareRAM
-    dw $0101  ; Text $0101: "Too bad. You need more training. There a"
+    dw $0101  ; Text $0101: "$43:$4E4F [HERO] looked into the jar. // A piece o"
     dw $FF19  ; FadeEffect
     dw $FF07  ; InitDialogMode
-    dw $0516  ; Text $0516: "MilayouWhat's in your pocket? // Watabou"
+    dw $0516  ; Text $0516: "$49:$4322 Milayou:...Oh? ...[HERO]!"
     dw $FF06  ; IncrementCounter
     dw $FF49  ; Cmd49
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF4A  ; Cmd4A
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF07  ; InitDialogMode
-    dw $0517  ; Text $0517: "WatabouGimme that meat. // WatabouGimme "
+    dw $0517  ; Text $0517: "$49:$433A Milayou:What's in your pocket?"
     dw $FF06  ; IncrementCounter
     dw $FF14  ; ClearGameFlags
     dw $4D8E
@@ -2823,11 +2823,11 @@ BossBeginning_ScriptPtrTable:
 BossBeginning_Script00:
     dw $FF12  ; WriteRAM
     dw $D92B  ; RAM $D92B
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF0D  ; WriteNPCByte
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF90  ; Cmd$90
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -2835,97 +2835,97 @@ BossBeginning_Script00:
 ; ---------------------------------------------------------------------------
 BossBeginning_Script01:
     dw $FF01  ; BranchIfFlagSet
-    dw $003D  ; Text $003D: "You came here to get monsters? // I'm Pu"
+    dw $003D  ; Text $003D: "$42:$5F5F *:C'mon, I'll give you a beating. // Sni"
     dw Bank0E_ScriptAddr_4F0E          ; -> branch target
-    dw $0058  ; Text $0058: "You are strong! I like you, [HERO]. // K"
+    dw $0058  ; Text $0058: "$42:$6FFE *:How do you do. I'm Hale. // *:I know y"
     dw $FF03  ; SetEventFlag
-    dw $003D  ; Text $003D: "You came here to get monsters? // I'm Pu"
+    dw $003D  ; Text $003D: "$42:$5F5F *:C'mon, I'll give you a beating. // Sni"
     dw $FF5A  ; Cmd5A
-    dw $000B  ; Text $000B: "Terry looked at the bookshelf. Too diffi"
+    dw $000B  ; Text $000B: "$42:$476A Terry looks at the bookshelf. // :Encycl"
     dw $FF07  ; InitDialogMode
-    dw $0059  ; Text $0059: "KingOh, [HERO]! Did you bring back Hale!"
+    dw $0059  ; Text $0059: "$42:$7092 *:You are strong! I like you, // [HERO]."
     dw $FF06  ; IncrementCounter
     dw $FF09  ; SetDelay
-    dw $0008  ; Text $0008: "Huh? What happened? Where is Milayou? //"
+    dw $0008  ; Text $0008: "$42:$44BA *:Are you Milayou? // *:Hm, You don't lo"
     dw $FF0D  ; WriteNPCByte
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF0D  ; WriteNPCByte
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF13  ; SetGameFlags
     dw $D8E3  ; RAM $D8E3
-    dw $0307  ; Text $0307: "Betty was actually a CopyCat! Nooooooooo"
+    dw $0307  ; Text $0307: "$46:$4359 *:It can't be! My Betty is... // *:actua"
     dw $FF1C  ; CompareRAM
     dw $1502
     dw $FF19  ; FadeEffect
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF47  ; Cmd47
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF4A  ; Cmd4A
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF48  ; Cmd48
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF49  ; Cmd49
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF4A  ; Cmd4A
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF07  ; InitDialogMode
-    dw $0146  ; Text $0146: "[HERO] found an Herb. But cannot carry a"
+    dw $0146  ; Text $0146: "$43:$685F Watabou:Right on! [HERO]! // I'll take y"
     dw $FF1C  ; CompareRAM
-    dw $0402  ; Text $0402: "If you don't want to know, that's fine. "
+    dw $0402  ; Text $0402: "$21:$4248 *:You defeated me. I didn't even have //"
     dw $FF19  ; FadeEffect
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF47  ; Cmd47
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF4A  ; Cmd4A
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF48  ; Cmd48
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF49  ; Cmd49
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF08  ; NOP
     dw $FF12  ; WriteRAM
     dw $D9E3  ; RAM $D9E3
-    dw $0030  ; Text $0030: "Upper floor, the monster farm. Pulio tak"
+    dw $0030  ; Text $0030: "$42:$5B00 *:Pulio from the farm is goofy but // a "
     dw $FF03  ; SetEventFlag
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF12  ; WriteRAM
     dw $D92B  ; RAM $D92B
-    dw $0007  ; Text $0007: "Are you Milayou? Hm, You don't look like"
+    dw $0007  ; Text $0007: "$42:$4473 [SOUND 60]Terry looked in the dresser. /"
     dw $FF12  ; WriteRAM
     dw $D968  ; RAM $D968
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF12  ; WriteRAM
     dw $D976  ; RAM $D976
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF06  ; IncrementCounter
     dw $FF3B  ; Cmd3B
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $00E8  ; Text $00E8: "The last battle in G class is with the p"
-    dw $0058  ; Text $0058: "You are strong! I like you, [HERO]. // K"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $00E8  ; Text $00E8: "$43:$46B7 *:The last battle in G class is with // "
+    dw $0058  ; Text $0058: "$42:$6FFE *:How do you do. I'm Hale. // *:I know y"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_4F0E:
-    dw $013F  ; Text $013F: "Leeet's Rumble! // For the 1st match, th"
+    dw $013F  ; Text $013F: "$43:$6649 *:How many times do I have to say // it?"
     dw $FF14  ; ClearGameFlags
     dw $4E68
     dw $FFFF  ; END
@@ -2943,11 +2943,11 @@ BossVillager_ScriptPtrTable:
 BossVillager_Script00:
     dw $FF12  ; WriteRAM
     dw $D92B  ; RAM $D92B
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF0D  ; WriteNPCByte
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF90  ; Cmd$90
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -2955,7 +2955,7 @@ BossVillager_Script00:
 ; ---------------------------------------------------------------------------
 BossVillager_Script01:
     dw $FF01  ; BranchIfFlagSet
-    dw $00B6  ; Text $00B6: "ed a treasure chest! // [HERO] picked up"
+    dw $00B6  ; Text $00B6: "$1A:$5342 *:...I am not a rebel!"
     dw Bank0E_ScriptAddr_4FA8          ; -> branch target
     dw $FF01  ; BranchIfFlagSet
     dw $00B2
@@ -2964,59 +2964,59 @@ BossVillager_Script01:
     dw $00B5
     dw Bank0E_ScriptAddr_4F80          ; -> branch target
     dw $FF01  ; BranchIfFlagSet
-    dw $00B4  ; Text $00B4: "Warubou? I'm not Warubou. I am Watabou! "
+    dw $00B4  ; Text $00B4: "$1A:$52C2 *:No matter what, you keep fighting. // "
     dw Bank0E_ScriptAddr_4F6E          ; -> branch target
     dw $FF01  ; BranchIfFlagSet
     dw $00B3
     dw Bank0E_ScriptAddr_4F5C          ; -> branch target
-    dw $0220  ; Text $0220: "Ha ha ha... It's E class. I survived E c"
+    dw $0220  ; Text $0220: "$1B:$4E33 *:Oh, my prince! // *:You came here to s"
     dw $FF15  ; PlaySE
     dw $C83C  ; RAM $C83C
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw Bank0E_ScriptAddr_4FAC          ; -> branch target
-    dw $0221  ; Text $0221: "The bishop over there taught me a song. "
+    dw $0221  ; Text $0221: "$1B:$4E68 *:I see..."
     dw $FF03  ; SetEventFlag
     dw $00B3
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_4F5C:
-    dw $0220  ; Text $0220: "Ha ha ha... It's E class. I survived E c"
+    dw $0220  ; Text $0220: "$1B:$4E33 *:Oh, my prince! // *:You came here to s"
     dw $FF15  ; PlaySE
     dw $C83C  ; RAM $C83C
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw Bank0E_ScriptAddr_4FAC          ; -> branch target
-    dw $0222  ; Text $0222: "BigRoost is roasting big time! // Hee he"
+    dw $0222  ; Text $0222: "$1B:$4E77 *:I want to go back to the // castle..."
     dw $FF03  ; SetEventFlag
-    dw $00B4  ; Text $00B4: "Warubou? I'm not Warubou. I am Watabou! "
+    dw $00B4  ; Text $00B4: "$1A:$52C2 *:No matter what, you keep fighting. // "
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_4F6E:
-    dw $0220  ; Text $0220: "Ha ha ha... It's E class. I survived E c"
+    dw $0220  ; Text $0220: "$1B:$4E33 *:Oh, my prince! // *:You came here to s"
     dw $FF15  ; PlaySE
     dw $C83C  ; RAM $C83C
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw Bank0E_ScriptAddr_4FAC          ; -> branch target
-    dw $0223  ; Text $0223: "Hee hee! Dude! Wanna know who you're gon"
+    dw $0223  ; Text $0223: "$1B:$4EA4 *:*sigh*"
     dw $FF03  ; SetEventFlag
     dw $00B5
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_4F80:
-    dw $0220  ; Text $0220: "Ha ha ha... It's E class. I survived E c"
+    dw $0220  ; Text $0220: "$1B:$4E33 *:Oh, my prince! // *:You came here to s"
     dw $FF15  ; PlaySE
     dw $C83C  ; RAM $C83C
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw Bank0E_ScriptAddr_4FAC          ; -> branch target
-    dw $0224  ; Text $0224: "Teto in the waiting room will fight you "
+    dw $0224  ; Text $0224: "$1B:$4EB1 *:I want to go back to the // castle..."
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_4F8E:
-    dw $0227  ; Text $0227: "After breeding, the parent monsters will"
+    dw $0227  ; Text $0227: "$1B:$4F6B *:It is okay. You're still // little. //"
     dw $FF15  ; PlaySE
     dw $C83C  ; RAM $C83C
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $4FA0
-    dw $0228  ; Text $0228: "[HERO] looked at the bookshelf. Everythi"
+    dw $0228  ; Text $0228: "$1B:$4FD9 *:Please leave quietly. [YES/NO]"
     dw $FF14  ; ClearGameFlags
     dw $4F90
     dw $FFFF  ; END
@@ -3030,12 +3030,12 @@ Bank0E_ScriptAddr_4F8E:
     db $FF
     db $FF
 Bank0E_ScriptAddr_4FA8:
-    dw $0250  ; Text $0250: "Zzz... zzzz.... // Zzz... zzzz.... ....b"
+    dw $0250  ; Text $0250: "$45:$481E *:I know. // *:There will be a youth... "
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_4FAC:
-    dw $0225  ; Text $0225: "Oh, long time no see! Remember me? I am "
-    dw $0226  ; Text $0226: "Hey! Lemme tell ya. when you breed... fi"
+    dw $0225  ; Text $0225: "$1B:$4EDE *:Oh, I'm so happy! // *blush* // *:Oh p"
+    dw $0226  ; Text $0226: "$1B:$4F33 [HERO] tried to pick up the // princess."
     dw $FF03  ; SetEventFlag
     dw $00B2
     dw $FFFF  ; END
@@ -3048,103 +3048,103 @@ BossVillager_Script02:
     dw $00B7
     dw Bank0E_ScriptAddr_5076          ; -> branch target
     dw $FF01  ; BranchIfFlagSet
-    dw $00B6  ; Text $00B6: "ed a treasure chest! // [HERO] picked up"
+    dw $00B6  ; Text $00B6: "$1A:$5342 *:...I am not a rebel!"
     dw Bank0E_ScriptAddr_4FC6          ; -> branch target
-    dw $0251  ; Text $0251: "Zzz... zzzz.... ....bust! It's been a lo"
+    dw $0251  ; Text $0251: "$45:$4883 *:Zzz... zzzz...."
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_4FC6:
-    dw $0252  ; Text $0252: "...zzz. You came again! // You're strong"
+    dw $0252  ; Text $0252: "$45:$4899 *:Zzz... zzzz.... ....*bust!* // *:It's "
     dw $FF03  ; SetEventFlag
     dw $00B7
     dw $FF5A  ; Cmd5A
-    dw $001F  ; Text $001F: "Welcome! I am the King of this kingdom. "
+    dw $001F  ; Text $001F: "$42:$4D08 *:This is the Kingdom of // GreatTree!"
     dw $FF07  ; InitDialogMode
-    dw $0254  ; Text $0254: "WatabouYou couldn't carry the princess. "
+    dw $0254  ; Text $0254: "$45:$490F *:You're strong!!"
     dw $FF06  ; IncrementCounter
     dw $FF09  ; SetDelay
-    dw $0008  ; Text $0008: "Huh? What happened? Where is Milayou? //"
+    dw $0008  ; Text $0008: "$42:$44BA *:Are you Milayou? // *:Hm, You don't lo"
     dw $FF0D  ; WriteNPCByte
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF13  ; SetGameFlags
     dw $D8E3  ; RAM $D8E3
-    dw $0304  ; Text $0304: "You again!? I'm really gonna get you now"
+    dw $0304  ; Text $0304: "$46:$4292 *:Eeek! I cannot stand you! // *:I'm gon"
     dw $FF1C  ; CompareRAM
     dw $1602
     dw $FF19  ; FadeEffect
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF47  ; Cmd47
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF49  ; Cmd49
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF48  ; Cmd48
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF4A  ; Cmd4A
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF49  ; Cmd49
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF07  ; InitDialogMode
-    dw $0255  ; Text $0255: "........ // You, stop right there! You s"
+    dw $0255  ; Text $0255: "$45:$4924 Watabou:You couldn't carry the // prince"
     dw $FF1C  ; CompareRAM
-    dw $0402  ; Text $0402: "If you don't want to know, that's fine. "
+    dw $0402  ; Text $0402: "$21:$4248 *:You defeated me. I didn't even have //"
     dw $FF19  ; FadeEffect
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF47  ; Cmd47
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF49  ; Cmd49
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF48  ; Cmd48
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF4A  ; Cmd4A
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF08  ; NOP
     dw $FF12  ; WriteRAM
     dw $D9E3  ; RAM $D9E3
-    dw $0031  ; Text $0031: "Watabou brings us capable masters. Hmm. "
+    dw $0031  ; Text $0031: "$42:$5B3C *:Upper floor, the monster farm. // *:Pu"
     dw $FF03  ; SetEventFlag
-    dw $0011  ; Text $0011: "Yes indeed, I'm taking him to see the Ki"
+    dw $0011  ; Text $0011: "$42:$4A3E *:Hey, is he the new master // Watabou b"
     dw $FF12  ; WriteRAM
     dw $D92B  ; RAM $D92B
-    dw $0007  ; Text $0007: "Are you Milayou? Hm, You don't look like"
+    dw $0007  ; Text $0007: "$42:$4473 [SOUND 60]Terry looked in the dresser. /"
     dw $FF12  ; WriteRAM
     dw $D969  ; RAM $D969
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF12  ; WriteRAM
     dw $D977  ; RAM $D977
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF00  ; BranchIfFlagClear
-    dw $0012  ; Text $0012: "Good luck at the Starry Night Tournament"
+    dw $0012  ; Text $0012: "$42:$4A77 *:Yes indeed, I'm taking him to see // t"
     dw $506A
     dw $FF12  ; WriteRAM
     dw $D969  ; RAM $D969
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
     dw $FF06  ; IncrementCounter
     dw $FF3B  ; Cmd3B
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $00E8  ; Text $00E8: "The last battle in G class is with the p"
-    dw $0058  ; Text $0058: "You are strong! I like you, [HERO]. // K"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $00E8  ; Text $00E8: "$43:$46B7 *:The last battle in G class is with // "
+    dw $0058  ; Text $0058: "$42:$6FFE *:How do you do. I'm Hale. // *:I know y"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_5076:
-    dw $0253  ; Text $0253: "You're strong!! // WatabouYou couldn't c"
+    dw $0253  ; Text $0253: "$45:$48F2 *:...zzz. You came again!"
     dw $FF14  ; ClearGameFlags
     dw $4FCC
     dw $FFFF  ; END
@@ -3162,128 +3162,128 @@ BossTalisman_ScriptPtrTable:
 BossTalisman_Script00:
     dw $FF12  ; WriteRAM
     dw $D92B  ; RAM $D92B
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF0D  ; WriteNPCByte
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF90  ; Cmd$90
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF01  ; BranchIfFlagSet
-    dw $00B8  ; Text $00B8: "late! Warubou? I'm not Warubou. I am Wat"
+    dw $00B8  ; Text $00B8: "$1A:$53A9 *:What? Are we having the match // now? "
     dw Bank0E_ScriptAddr_517E          ; -> branch target
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF0D  ; WriteNPCByte
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF0B  ; NPCMoveY
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
-    dw $0020  ; Text $0020: "KingOh [HERO]! Will you comply with my w"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
+    dw $0020  ; Text $0020: "$42:$4D34 *:Welcome! I am the King of this // king"
     dw $FF0A  ; NPCMoveX
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FFD0  ; Cmd$D0
     dw $FF0B  ; NPCMoveY
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
-    dw $0020  ; Text $0020: "KingOh [HERO]! Will you comply with my w"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
+    dw $0020  ; Text $0020: "$42:$4D34 *:Welcome! I am the King of this // king"
     dw $FF49  ; Cmd49
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF4A  ; Cmd4A
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF47  ; Cmd47
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF09  ; SetDelay
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF4A  ; Cmd4A
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF09  ; SetDelay
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF48  ; Cmd48
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF09  ; SetDelay
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF49  ; Cmd49
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF09  ; SetDelay
-    dw $0008  ; Text $0008: "Huh? What happened? Where is Milayou? //"
+    dw $0008  ; Text $0008: "$42:$44BA *:Are you Milayou? // *:Hm, You don't lo"
     dw $FF48  ; Cmd48
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF09  ; SetDelay
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF49  ; Cmd49
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF09  ; SetDelay
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF47  ; Cmd47
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF09  ; SetDelay
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF4A  ; Cmd4A
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF09  ; SetDelay
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF1C  ; CompareRAM
-    dw $0102  ; Text $0102: "Well done! You survived G class! // Oh, "
+    dw $0102  ; Text $0102: "$43:$4EEE *:Hm.. It doesn't listen to me much. // "
     dw $FF19  ; FadeEffect
     dw $FF09  ; SetDelay
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF1C  ; CompareRAM
-    dw $0102  ; Text $0102: "Well done! You survived G class! // Oh, "
+    dw $0102  ; Text $0102: "$43:$4EEE *:Hm.. It doesn't listen to me much. // "
     dw $FF19  ; FadeEffect
     dw $FF09  ; SetDelay
-    dw $0008  ; Text $0008: "Huh? What happened? Where is Milayou? //"
+    dw $0008  ; Text $0008: "$42:$44BA *:Are you Milayou? // *:Hm, You don't lo"
     dw $FF48  ; Cmd48
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF09  ; SetDelay
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF49  ; Cmd49
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF09  ; SetDelay
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF47  ; Cmd47
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF09  ; SetDelay
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF4A  ; Cmd4A
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF09  ; SetDelay
-    dw $0008  ; Text $0008: "Huh? What happened? Where is Milayou? //"
+    dw $0008  ; Text $0008: "$42:$44BA *:Are you Milayou? // *:Hm, You don't lo"
     dw $FF1C  ; CompareRAM
-    dw $0102  ; Text $0102: "Well done! You survived G class! // Oh, "
+    dw $0102  ; Text $0102: "$43:$4EEE *:Hm.. It doesn't listen to me much. // "
     dw $FF19  ; FadeEffect
     dw $FF09  ; SetDelay
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF1C  ; CompareRAM
-    dw $0102  ; Text $0102: "Well done! You survived G class! // Oh, "
+    dw $0102  ; Text $0102: "$43:$4EEE *:Hm.. It doesn't listen to me much. // "
     dw $FF19  ; FadeEffect
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF1D  ; LockMovement
     dw $FF1A  ; Cmd1A
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FFF0  ; Cmd$F0
     dw $FF19  ; FadeEffect
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF22  ; Cmd22
     dw $FF1A  ; Cmd1A
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF19  ; FadeEffect
     dw $FF21  ; TriggerBattle2
-    dw $0054  ; Text $0054: "Hale was the cherished pet of the King. "
+    dw $0054  ; Text $0054: "$42:$6DC6 *:You will find items scattered // aroun"
     dw $FF13  ; SetGameFlags
     dw $D8E3  ; RAM $D8E3
-    dw $0305  ; Text $0305: "You don't seem to be a bad guy after all"
+    dw $0305  ; Text $0305: "$46:$42D5 *:You again!? I'm really gonna // get yo"
     dw $FF1C  ; CompareRAM
     dw $1802
     dw $FF19  ; FadeEffect
     dw $FF1E  ; UnlockMovement
     dw $FF03  ; SetEventFlag
-    dw $00B8  ; Text $00B8: "late! Warubou? I'm not Warubou. I am Wat"
+    dw $00B8  ; Text $00B8: "$1A:$53A9 *:What? Are we having the match // now? "
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_517E:
@@ -3293,7 +3293,7 @@ Bank0E_ScriptAddr_517E:
 ; BossTalisman_Script01
 ; ---------------------------------------------------------------------------
 BossTalisman_Script01:
-    dw $0256  ; Text $0256: "You, stop right there! You shall not pas"
+    dw $0256  ; Text $0256: "$45:$4977 *:........"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -3301,106 +3301,106 @@ BossTalisman_Script01:
 ; ---------------------------------------------------------------------------
 BossTalisman_Script02:
     dw $FF4A  ; Cmd4A
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF07  ; InitDialogMode
     dw $FF01  ; BranchIfFlagSet
-    dw $00B9  ; Text $00B9: "ou leave the monsters here. SlioBut the "
+    dw $00B9  ; Text $00B9: "$1A:$541F *:I just wanna attack the enemy!"
     dw Bank0E_ScriptAddr_5246          ; -> branch target
-    dw $0257  ; Text $0257: "Must I repeat myself? You shall not pass"
+    dw $0257  ; Text $0257: "$45:$4986 *:You, stop right there! // *:You shall "
     dw $FF03  ; SetEventFlag
-    dw $00B9  ; Text $00B9: "ou leave the monsters here. SlioBut the "
+    dw $00B9  ; Text $00B9: "$1A:$541F *:I just wanna attack the enemy!"
     dw $FF5A  ; Cmd5A
-    dw $0020  ; Text $0020: "KingOh [HERO]! Will you comply with my w"
+    dw $0020  ; Text $0020: "$42:$4D34 *:Welcome! I am the King of this // king"
     dw $FF07  ; InitDialogMode
-    dw $0259  ; Text $0259: "Want to match with my CatFly? // You are"
+    dw $0259  ; Text $0259: "$45:$4A25 *:You are powerful. // *:But defeating m"
     dw $FF06  ; IncrementCounter
     dw $FF09  ; SetDelay
-    dw $0008  ; Text $0008: "Huh? What happened? Where is Milayou? //"
+    dw $0008  ; Text $0008: "$42:$44BA *:Are you Milayou? // *:Hm, You don't lo"
     dw $FF0D  ; WriteNPCByte
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF0D  ; WriteNPCByte
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF13  ; SetGameFlags
     dw $D8E3  ; RAM $D8E3
-    dw $0405  ; Text $0405: "How about monsters living behind the Gat"
+    dw $0405  ; Text $0405: "$21:$43D8 *:...fine. If you change your // mind, l"
     dw $FF1C  ; CompareRAM
     dw $1503
     dw $FF19  ; FadeEffect
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF4A  ; Cmd4A
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF48  ; Cmd48
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF49  ; Cmd49
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF47  ; Cmd47
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF48  ; Cmd48
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF07  ; InitDialogMode
-    dw $0262  ; Text $0262: "Grrrr... Whoosh! Whoooosh! // Guffaw Guf"
+    dw $0262  ; Text $0262: "$45:$4DAD Watabou:This village is an // illusion o"
     dw $FF09  ; SetDelay
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4A  ; Cmd4A
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF48  ; Cmd48
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
     dw $FF4D  ; SetLongDelay
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF49  ; Cmd49
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF47  ; Cmd47
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
     dw $FF08  ; NOP
     dw $FF12  ; WriteRAM
     dw $D9E3  ; RAM $D9E3
-    dw $0032  ; Text $0032: "I wonder where I can get treats. // [HER"
+    dw $0032  ; Text $0032: "$42:$5B99 *:Watabou brings us capable // masters. "
     dw $FF03  ; SetEventFlag
-    dw $0012  ; Text $0012: "Good luck at the Starry Night Tournament"
+    dw $0012  ; Text $0012: "$42:$4A77 *:Yes indeed, I'm taking him to see // t"
     dw $FF12  ; WriteRAM
     dw $D92B  ; RAM $D92B
-    dw $0007  ; Text $0007: "Are you Milayou? Hm, You don't look like"
+    dw $0007  ; Text $0007: "$42:$4473 [SOUND 60]Terry looked in the dresser. /"
     dw $FF12  ; WriteRAM
     dw $D969  ; RAM $D969
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF12  ; WriteRAM
     dw $D978  ; RAM $D978
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF00  ; BranchIfFlagClear
-    dw $0011  ; Text $0011: "Yes indeed, I'm taking him to see the Ki"
+    dw $0011  ; Text $0011: "$42:$4A3E *:Hey, is he the new master // Watabou b"
     dw Bank0E_ScriptAddr_523A          ; -> branch target
     dw $FF12  ; WriteRAM
     dw $D969  ; RAM $D969
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
 Bank0E_ScriptAddr_523A:
     dw $FF06  ; IncrementCounter
     dw $FF3B  ; Cmd3B
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $00E8  ; Text $00E8: "The last battle in G class is with the p"
-    dw $0058  ; Text $0058: "You are strong! I like you, [HERO]. // K"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $00E8  ; Text $00E8: "$43:$46B7 *:The last battle in G class is with // "
+    dw $0058  ; Text $0058: "$42:$6FFE *:How do you do. I'm Hale. // *:I know y"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_5246:
-    dw $0258  ; Text $0258: "You are powerful. But defeating me doesn"
+    dw $0258  ; Text $0258: "$45:$49EF *:Must I repeat myself? // *:You shall n"
     dw $FF14  ; ClearGameFlags
     dw $519A
     dw $FFFF  ; END
@@ -3417,11 +3417,11 @@ BossMemories_ScriptPtrTable:
 BossMemories_Script00:
     dw $FF12  ; WriteRAM
     dw $D92B  ; RAM $D92B
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF0D  ; WriteNPCByte
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF90  ; Cmd$90
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -3429,121 +3429,121 @@ BossMemories_Script00:
 ; ---------------------------------------------------------------------------
 BossMemories_Script01:
     dw $FF01  ; BranchIfFlagSet
-    dw $00BC  ; Text $00BC: "e alone with my brother. Hope no horribl"
+    dw $00BC  ; Text $00BC: "$1A:$548D *:Are you telling me what // to do? What"
     dw Bank0E_ScriptAddr_533C          ; -> branch target
     dw $FF01  ; BranchIfFlagSet
     dw $00BB
     dw Bank0E_ScriptAddr_5284          ; -> branch target
     dw $FF01  ; BranchIfFlagSet
-    dw $00BA  ; Text $00BA: "ed a treasure chest! // [HERO] picked up"
+    dw $00BA  ; Text $00BA: "$1A:$5443 *:Too bad, attacking will be // the focu"
     dw Bank0E_ScriptAddr_527C          ; -> branch target
-    dw $0263  ; Text $0263: "Guffaw Guffaw..? Cackle cackle...? // Gr"
+    dw $0263  ; Text $0263: "$45:$4E3D *:Grrrr... Whoosh! Whoooosh!"
     dw $FF03  ; SetEventFlag
-    dw $00BA  ; Text $00BA: "ed a treasure chest! // [HERO] picked up"
+    dw $00BA  ; Text $00BA: "$1A:$5443 *:Too bad, attacking will be // the focu"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_527C:
-    dw $0264  ; Text $0264: "Grrrr... Whoosh! Whoooosh! ......cackle!"
+    dw $0264  ; Text $0264: "$45:$4E5D *:Guffaw Guffaw..? Cackle cackle...?"
     dw $FF03  ; SetEventFlag
     dw $00BB
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_5284:
-    dw $0265  ; Text $0265: "Grrrr... Cackle cackle!! // [HERO]! [HER"
+    dw $0265  ; Text $0265: "$45:$4E85 *:Grrrr... Whoosh! Whoooosh! // *:......"
     dw $FF03  ; SetEventFlag
-    dw $00BC  ; Text $00BC: "e alone with my brother. Hope no horribl"
+    dw $00BC  ; Text $00BC: "$1A:$548D *:Are you telling me what // to do? What"
     dw $FF5A  ; Cmd5A
-    dw $0033  ; Text $0033: "[HERO] read the sign. Danger, Don't rush"
+    dw $0033  ; Text $0033: "$42:$5C54 *:I wonder where I can get treats."
     dw $FF07  ; InitDialogMode
-    dw $0267  ; Text $0267: "WatabouIt seems MadCat is attached to [H"
+    dw $0267  ; Text $0267: "$45:$4ED9 *:[HERO]! [HERO]!! // *:Meow. Purrrr..."
     dw $FF06  ; IncrementCounter
     dw $FF09  ; SetDelay
-    dw $0008  ; Text $0008: "Huh? What happened? Where is Milayou? //"
+    dw $0008  ; Text $0008: "$42:$44BA *:Are you Milayou? // *:Hm, You don't lo"
     dw $FF0D  ; WriteNPCByte
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF0D  ; WriteNPCByte
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF13  ; SetGameFlags
     dw $D8E3  ; RAM $D8E3
-    dw $0407  ; Text $0407: "How about the monsters behind the Gates "
+    dw $0407  ; Text $0407: "$21:$44A2 *:It's a LifeAcorn. // Use it wisely."
     dw $FF1C  ; CompareRAM
     dw $1502
     dw $FF19  ; FadeEffect
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF47  ; Cmd47
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF49  ; Cmd49
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF48  ; Cmd48
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF4A  ; Cmd4A
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF49  ; Cmd49
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF07  ; InitDialogMode
-    dw $0268  ; Text $0268: "[HERO] read the sign. Youth goes in hast"
+    dw $0268  ; Text $0268: "$45:$4EFC Watabou:It seems MadCat is attached // t"
     dw $FF1C  ; CompareRAM
-    dw $0402  ; Text $0402: "If you don't want to know, that's fine. "
+    dw $0402  ; Text $0402: "$21:$4248 *:You defeated me. I didn't even have //"
     dw $FF19  ; FadeEffect
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF47  ; Cmd47
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF49  ; Cmd49
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF48  ; Cmd48
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF4A  ; Cmd4A
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF08  ; NOP
     dw $FF12  ; WriteRAM
     dw $D9E3  ; RAM $D9E3
-    dw $0033  ; Text $0033: "[HERO] read the sign. Danger, Don't rush"
+    dw $0033  ; Text $0033: "$42:$5C54 *:I wonder where I can get treats."
     dw $FF03  ; SetEventFlag
-    dw $0013  ; Text $0013: "Now it's time to go see the King. // I'm"
+    dw $0013  ; Text $0013: "$42:$4AAC *:Good luck at the Starry Night // Tourn"
     dw $FF12  ; WriteRAM
     dw $D92B  ; RAM $D92B
-    dw $0007  ; Text $0007: "Are you Milayou? Hm, You don't look like"
+    dw $0007  ; Text $0007: "$42:$4473 [SOUND 60]Terry looked in the dresser. /"
     dw $FF12  ; WriteRAM
     dw $D96A  ; RAM $D96A
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF12  ; WriteRAM
     dw $D979  ; RAM $D979
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF00  ; BranchIfFlagClear
-    dw $0014  ; Text $0014: "I'm the minister of this kingdom. Are yo"
+    dw $0014  ; Text $0014: "$42:$4AE0 *:Now it's time to go see the King."
     dw $5330
     dw $FF12  ; WriteRAM
     dw $D96A  ; RAM $D96A
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
     dw $FF06  ; IncrementCounter
     dw $FF3B  ; Cmd3B
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $00E8  ; Text $00E8: "The last battle in G class is with the p"
-    dw $0058  ; Text $0058: "You are strong! I like you, [HERO]. // K"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $00E8  ; Text $00E8: "$43:$46B7 *:The last battle in G class is with // "
+    dw $0058  ; Text $0058: "$42:$6FFE *:How do you do. I'm Hale. // *:I know y"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_533C:
-    dw $0266  ; Text $0266: "[HERO]! [HERO]!! Meow. Purrrr... // Wata"
+    dw $0266  ; Text $0266: "$45:$4EBB *:Grrrr... Cackle cackle!!"
     dw $FF14  ; ClearGameFlags
     dw $528A
     dw $FFFF  ; END
@@ -3569,18 +3569,18 @@ BossBewilder_ScriptPtrTable:
 BossBewilder_Script00:
     dw $FF12  ; WriteRAM
     dw $D92B  ; RAM $D92B
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF0D  ; WriteNPCByte
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF90  ; Cmd$90
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
 ; BossBewilder_Script01
 ; ---------------------------------------------------------------------------
 BossBewilder_Script01:
-    dw $0269  ; Text $0269: "Hee hee hee! I didn't think you could ma"
+    dw $0269  ; Text $0269: "$45:$4F48 [HERO] read the sign. // :Youth goes in "
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -3588,99 +3588,99 @@ BossBewilder_Script01:
 ; ---------------------------------------------------------------------------
 BossBewilder_Script02:
     dw $FF01  ; BranchIfFlagSet
-    dw $0117  ; Text $0117: "Want to know where the wife of the King."
+    dw $0117  ; Text $0117: "$43:$581F [HERO] read the blackboard. // :Do's & D"
     dw Bank0E_ScriptAddr_5422          ; -> branch target
-    dw $026A  ; Text $026A: "No matter how many times you fight, it w"
+    dw $026A  ; Text $026A: "$45:$4FA2 *:Hee hee hee! I didn't think // you cou"
     dw $FF03  ; SetEventFlag
-    dw $0117  ; Text $0117: "Want to know where the wife of the King."
+    dw $0117  ; Text $0117: "$43:$581F [HERO] read the blackboard. // :Do's & D"
     dw $FF5A  ; Cmd5A
-    dw $0035  ; Text $0035: "If it was not for this hole... Oh my dea"
+    dw $0035  ; Text $0035: "$42:$5CC2 *:No! You'll be hurt if you fall."
     dw $FF07  ; InitDialogMode
-    dw $0290  ; Text $0290: "Squeaking squeaking. // // WatabouYou di"
+    dw $0290  ; Text $0290: "$45:$64F5 *:Ha ha ha! You beat me!"
     dw $FF09  ; SetDelay
-    dw $0008  ; Text $0008: "Huh? What happened? Where is Milayou? //"
+    dw $0008  ; Text $0008: "$42:$44BA *:Are you Milayou? // *:Hm, You don't lo"
     dw $FF0D  ; WriteNPCByte
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF13  ; SetGameFlags
     dw $D8E3  ; RAM $D8E3
-    dw $0205  ; Text $0205: "Welcome to the Master School! [HERO]! It"
+    dw $0205  ; Text $0205: "$1B:$4486 K-thump! Something // hit [HERO]."
     dw $FF1C  ; CompareRAM
     dw $1505
     dw $FF19  ; FadeEffect
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF47  ; Cmd47
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF4A  ; Cmd4A
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF48  ; Cmd48
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF49  ; Cmd49
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF4A  ; Cmd4A
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF07  ; InitDialogMode
-    dw $0293  ; Text $0293: "Wel...come... // Come.....again.. // // "
+    dw $0293  ; Text $0293: "$45:$6535 Watabou:You did a good job solving // th"
     dw $FF1C  ; CompareRAM
-    dw $0405  ; Text $0405: "How about monsters living behind the Gat"
+    dw $0405  ; Text $0405: "$21:$43D8 *:...fine. If you change your // mind, l"
     dw $FF19  ; FadeEffect
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF47  ; Cmd47
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF4A  ; Cmd4A
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF48  ; Cmd48
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FF4D  ; SetLongDelay
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF49  ; Cmd49
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FF08  ; NOP
     dw $FF12  ; WriteRAM
     dw $D9E3  ; RAM $D9E3
-    dw $0034  ; Text $0034: "No! You'll be hurt if you fall. // If it"
+    dw $0034  ; Text $0034: "$42:$5C7A [HERO] read the sign. // :Danger, Don't "
     dw $FF03  ; SetEventFlag
-    dw $0014  ; Text $0014: "I'm the minister of this kingdom. Are yo"
+    dw $0014  ; Text $0014: "$42:$4AE0 *:Now it's time to go see the King."
     dw $FF12  ; WriteRAM
     dw $D92B  ; RAM $D92B
-    dw $0007  ; Text $0007: "Are you Milayou? Hm, You don't look like"
+    dw $0007  ; Text $0007: "$42:$4473 [SOUND 60]Terry looked in the dresser. /"
     dw $FF12  ; WriteRAM
     dw $D96A  ; RAM $D96A
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF12  ; WriteRAM
     dw $D97A  ; RAM $D97A
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF00  ; BranchIfFlagClear
-    dw $0013  ; Text $0013: "Now it's time to go see the King. // I'm"
+    dw $0013  ; Text $0013: "$42:$4AAC *:Good luck at the Starry Night // Tourn"
     dw Bank0E_ScriptAddr_5416          ; -> branch target
     dw $FF12  ; WriteRAM
     dw $D96A  ; RAM $D96A
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
 Bank0E_ScriptAddr_5416:
     dw $FF06  ; IncrementCounter
     dw $FF3B  ; Cmd3B
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $00E8  ; Text $00E8: "The last battle in G class is with the p"
-    dw $0058  ; Text $0058: "You are strong! I like you, [HERO]. // K"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $00E8  ; Text $00E8: "$43:$46B7 *:The last battle in G class is with // "
+    dw $0058  ; Text $0058: "$42:$6FFE *:How do you do. I'm Hale. // *:I know y"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_5422:
-    dw $026B  ; Text $026B: "You want to breed with my LizardMan? // "
+    dw $026B  ; Text $026B: "$45:$5010 *:No matter how many times you // fight,"
     dw $FF14  ; ClearGameFlags
     dw $537A
     dw $FFFF  ; END
@@ -3690,18 +3690,18 @@ Bank0E_ScriptAddr_5422:
 ; ---------------------------------------------------------------------------
 BossBewilder_Script03:
     dw $FF01  ; BranchIfFlagSet
-    dw $00BD  ; Text $00BD: "the Starry Night! KingLegend has it that"
+    dw $00BD  ; Text $00BD: "$1A:$54C2 *:I cannot stand by and let the // monst"
     dw Bank0E_ScriptAddr_543E          ; -> branch target
-    dw $0291  ; Text $0291: "// WatabouYou did a good job solving the"
+    dw $0291  ; Text $0291: "$45:$6511 *:Squeaking squeaking."
     dw $FF06  ; IncrementCounter
     dw $FF05  ; TriggerBattle
-    dw $0155  ; Text $0155: "[HERO] looked into the barrel. Something"
+    dw $0155  ; Text $0155: "$43:$6FFA *:I see...Hm.."
     dw $FF03  ; SetEventFlag
-    dw $00BD  ; Text $00BD: "the Starry Night! KingLegend has it that"
+    dw $00BD  ; Text $00BD: "$1A:$54C2 *:I cannot stand by and let the // monst"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_543E:
-    dw $0292  ; Text $0292: "WatabouYou did a good job solving the Fo"
+    dw $0292  ; Text $0292: "$45:$652B *:{A4} {A4}"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -3709,18 +3709,18 @@ Bank0E_ScriptAddr_543E:
 ; ---------------------------------------------------------------------------
 BossBewilder_Script04:
     dw $FF01  ; BranchIfFlagSet
-    dw $00BE  ; Text $00BE: "Milayou... zzz. // Terry looked at a stu"
+    dw $00BE  ; Text $00BE: "$1A:$5501 *:I don't like attacking // that much."
     dw Bank0E_ScriptAddr_5456          ; -> branch target
-    dw $0291  ; Text $0291: "// WatabouYou did a good job solving the"
+    dw $0291  ; Text $0291: "$45:$6511 *:Squeaking squeaking."
     dw $FF06  ; IncrementCounter
     dw $FF05  ; TriggerBattle
-    dw $0155  ; Text $0155: "[HERO] looked into the barrel. Something"
+    dw $0155  ; Text $0155: "$43:$6FFA *:I see...Hm.."
     dw $FF03  ; SetEventFlag
-    dw $00BE  ; Text $00BE: "Milayou... zzz. // Terry looked at a stu"
+    dw $00BE  ; Text $00BE: "$1A:$5501 *:I don't like attacking // that much."
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_5456:
-    dw $0292  ; Text $0292: "WatabouYou did a good job solving the Fo"
+    dw $0292  ; Text $0292: "$45:$652B *:{A4} {A4}"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -3728,18 +3728,18 @@ Bank0E_ScriptAddr_5456:
 ; ---------------------------------------------------------------------------
 BossBewilder_Script05:
     dw $FF01  ; BranchIfFlagSet
-    dw $00BF  ; Text $00BF: "monsters here. SlioBut the monsters will"
+    dw $00BF  ; Text $00BF: "$1A:$552C *:I am fine as long as everyone // is co"
     dw Bank0E_ScriptAddr_546E          ; -> branch target
-    dw $0291  ; Text $0291: "// WatabouYou did a good job solving the"
+    dw $0291  ; Text $0291: "$45:$6511 *:Squeaking squeaking."
     dw $FF06  ; IncrementCounter
     dw $FF05  ; TriggerBattle
-    dw $0155  ; Text $0155: "[HERO] looked into the barrel. Something"
+    dw $0155  ; Text $0155: "$43:$6FFA *:I see...Hm.."
     dw $FF03  ; SetEventFlag
-    dw $00BF  ; Text $00BF: "monsters here. SlioBut the monsters will"
+    dw $00BF  ; Text $00BF: "$1A:$552C *:I am fine as long as everyone // is co"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_546E:
-    dw $0292  ; Text $0292: "WatabouYou did a good job solving the Fo"
+    dw $0292  ; Text $0292: "$45:$652B *:{A4} {A4}"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -3747,18 +3747,18 @@ Bank0E_ScriptAddr_546E:
 ; ---------------------------------------------------------------------------
 BossBewilder_Script06:
     dw $FF01  ; BranchIfFlagSet
-    dw $00C0  ; Text $00C0: "Kingdom of GreatLog. WarubouDon't you fo"
+    dw $00C0  ; Text $00C0: "$1A:$556C *:I cannot stand still when I see // mon"
     dw Bank0E_ScriptAddr_5486          ; -> branch target
-    dw $0291  ; Text $0291: "// WatabouYou did a good job solving the"
+    dw $0291  ; Text $0291: "$45:$6511 *:Squeaking squeaking."
     dw $FF06  ; IncrementCounter
     dw $FF05  ; TriggerBattle
-    dw $0155  ; Text $0155: "[HERO] looked into the barrel. Something"
+    dw $0155  ; Text $0155: "$43:$6FFA *:I see...Hm.."
     dw $FF03  ; SetEventFlag
-    dw $00C0  ; Text $00C0: "Kingdom of GreatLog. WarubouDon't you fo"
+    dw $00C0  ; Text $00C0: "$1A:$556C *:I cannot stand still when I see // mon"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_5486:
-    dw $0292  ; Text $0292: "WatabouYou did a good job solving the Fo"
+    dw $0292  ; Text $0292: "$45:$652B *:{A4} {A4}"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -3766,7 +3766,7 @@ Bank0E_ScriptAddr_5486:
 ; ---------------------------------------------------------------------------
 BossBewilder_Script07:
     dw $FF10  ; NPCAnimStart
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $0078
     dw $FFFF  ; END
 
@@ -3775,11 +3775,11 @@ BossBewilder_Script07:
 ; ---------------------------------------------------------------------------
 BossBewilder_Script08:
     dw $FF01  ; BranchIfFlagSet
-    dw $00BF  ; Text $00BF: "monsters here. SlioBut the monsters will"
+    dw $00BF  ; Text $00BF: "$1A:$552C *:I am fine as long as everyone // is co"
     dw Bank0E_ScriptAddr_549E          ; -> branch target
     dw $FF10  ; NPCAnimStart
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
-    dw $0048  ; Text $0048: "KingArrgh! You! You let my precious Hale"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
+    dw $0048  ; Text $0048: "$42:$6612 Pulio:Your Majesty please forgive me! //"
 Bank0E_ScriptAddr_549E:
     dw $FFFF  ; END
 
@@ -3788,11 +3788,11 @@ Bank0E_ScriptAddr_549E:
 ; ---------------------------------------------------------------------------
 BossBewilder_Script09:
     dw $FF01  ; BranchIfFlagSet
-    dw $00C0  ; Text $00C0: "Kingdom of GreatLog. WarubouDon't you fo"
+    dw $00C0  ; Text $00C0: "$1A:$556C *:I cannot stand still when I see // mon"
     dw Bank0E_ScriptAddr_54AC          ; -> branch target
     dw $FF11  ; NPCAnimSetup
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
-    dw $0058  ; Text $0058: "You are strong! I like you, [HERO]. // K"
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
+    dw $0058  ; Text $0058: "$42:$6FFE *:How do you do. I'm Hale. // *:I know y"
 Bank0E_ScriptAddr_54AC:
     dw $FFFF  ; END
 
@@ -3801,8 +3801,8 @@ Bank0E_ScriptAddr_54AC:
 ; ---------------------------------------------------------------------------
 BossBewilder_Script10:
     dw $FF10  ; NPCAnimStart
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0008  ; Text $0008: "Huh? What happened? Where is Milayou? //"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0008  ; Text $0008: "$42:$44BA *:Are you Milayou? // *:Hm, You don't lo"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -3819,147 +3819,147 @@ Map35_ScriptPtrTable:
 Map35_Script00:
     dw $FF12  ; WriteRAM
     dw $D92B  ; RAM $D92B
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF0D  ; WriteNPCByte
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF90  ; Cmd$90
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
 ; Map35_Script01
 ; ---------------------------------------------------------------------------
 Map35_Script01:
-    dw $0294  ; Text $0294: "Come.....again.. // // // WatabouThis pl"
+    dw $0294  ; Text $0294: "$45:$65BF *:Wel...come..."
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
 ; Map35_Script02
 ; ---------------------------------------------------------------------------
 Map35_Script02:
-    dw $0295  ; Text $0295: "// // WatabouThis place was ruined by mo"
+    dw $0295  ; Text $0295: "$45:$65D3 *:Come.....again.."
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
 ; Map35_Script03
 ; ---------------------------------------------------------------------------
 Map35_Script03:
-    dw $0296  ; Text $0296: "// WatabouThis place was ruined by monst"
+    dw $0296  ; Text $0296: "$45:$65EA *:{A4} {A4} {A4}"
     dw $FF5A  ; Cmd5A
-    dw $0037  ; Text $0037: "I heard that Pulio let the monsters esca"
+    dw $0037  ; Text $0037: "$42:$5D55 [HERO] read the sign. // :When the Great"
     dw $FF07  ; InitDialogMode
-    dw $0297  ; Text $0297: "WatabouThis place was ruined by monsters"
+    dw $0297  ; Text $0297: "$45:$65F6 *:{A4} {A4} {A4}"
     dw $FF09  ; SetDelay
-    dw $0008  ; Text $0008: "Huh? What happened? Where is Milayou? //"
+    dw $0008  ; Text $0008: "$42:$44BA *:Are you Milayou? // *:Hm, You don't lo"
     dw $FF0D  ; WriteNPCByte
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF0D  ; WriteNPCByte
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF13  ; SetGameFlags
     dw $D8E3  ; RAM $D8E3
-    dw $0204  ; Text $0204: "[HERO] looked into the big kettle. ...So"
+    dw $0204  ; Text $0204: "$1B:$444A *:Oh well, nobody's here. // I wanna hav"
     dw $FF1C  ; CompareRAM
     dw $1502
     dw $FF19  ; FadeEffect
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF49  ; Cmd49
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF47  ; Cmd47
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF4A  ; Cmd4A
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF48  ; Cmd48
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF47  ; Cmd47
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF07  ; InitDialogMode
-    dw $0298  ; Text $0298: "[HERO] pulled the slot machine! The symb"
+    dw $0298  ; Text $0298: "$45:$6602 Watabou:This place was ruined // by mons"
     dw $FF1C  ; CompareRAM
-    dw $0402  ; Text $0402: "If you don't want to know, that's fine. "
+    dw $0402  ; Text $0402: "$21:$4248 *:You defeated me. I didn't even have //"
     dw $FF19  ; FadeEffect
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF49  ; Cmd49
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF47  ; Cmd47
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF4A  ; Cmd4A
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF48  ; Cmd48
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF08  ; NOP
     dw $FF12  ; WriteRAM
     dw $D9E3  ; RAM $D9E3
-    dw $0035  ; Text $0035: "If it was not for this hole... Oh my dea"
+    dw $0035  ; Text $0035: "$42:$5CC2 *:No! You'll be hurt if you fall."
     dw $FF03  ; SetEventFlag
-    dw $0015  ; Text $0015: "His Majesty is in trouble. Please provid"
+    dw $0015  ; Text $0015: "$42:$4B06 *:I'm the minister of this kingdom. // A"
     dw $FF12  ; WriteRAM
     dw $D92B  ; RAM $D92B
-    dw $0007  ; Text $0007: "Are you Milayou? Hm, You don't look like"
+    dw $0007  ; Text $0007: "$42:$4473 [SOUND 60]Terry looked in the dresser. /"
     dw $FF12  ; WriteRAM
     dw $D93A  ; RAM $D93A
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF12  ; WriteRAM
     dw $D97B  ; RAM $D97B
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF00  ; BranchIfFlagClear
-    dw $002D  ; Text $002D: "Here it is again. The Starry Night comes"
+    dw $002D  ; Text $002D: "$42:$58B2 *:Should I repeat the legend of the // S"
     dw Bank0E_ScriptAddr_557C          ; -> branch target
     dw $FF01  ; BranchIfFlagSet
-    dw $00F6  ; Text $00F6: "It's a tie... In this case... I win anyw"
+    dw $00F6  ; Text $00F6: "$43:$4A22 *:It's a tie... In this case... // *:I w"
     dw Bank0E_ScriptAddr_55A0          ; -> branch target
 Bank0E_ScriptAddr_557C:
     dw $FF01  ; BranchIfFlagSet
-    dw $00F6  ; Text $00F6: "It's a tie... In this case... I win anyw"
+    dw $00F6  ; Text $00F6: "$43:$4A22 *:It's a tie... In this case... // *:I w"
     dw Bank0E_ScriptAddr_5596          ; -> branch target
     dw $FF01  ; BranchIfFlagSet
-    dw $00EE  ; Text $00EE: "Gwrr, Gwrr... // In the back, they teach"
+    dw $00EE  ; Text $00EE: "$43:$485A *:Gwrr, Gwrr..."
     dw Bank0E_ScriptAddr_558C          ; -> branch target
     dw $FF14  ; ClearGameFlags
     dw Bank0E_ScriptAddr_55AA          ; -> branch target
 Bank0E_ScriptAddr_558C:
     dw $FF12  ; WriteRAM
     dw $D93A  ; RAM $D93A
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF14  ; ClearGameFlags
     dw Bank0E_ScriptAddr_55AA          ; -> branch target
 Bank0E_ScriptAddr_5596:
     dw $FF12  ; WriteRAM
     dw $D93A  ; RAM $D93A
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF14  ; ClearGameFlags
     dw Bank0E_ScriptAddr_55AA          ; -> branch target
 Bank0E_ScriptAddr_55A0:
     dw $FF12  ; WriteRAM
     dw $D93A  ; RAM $D93A
-    dw $0008  ; Text $0008: "Huh? What happened? Where is Milayou? //"
+    dw $0008  ; Text $0008: "$42:$44BA *:Are you Milayou? // *:Hm, You don't lo"
     dw $FF14  ; ClearGameFlags
     dw Bank0E_ScriptAddr_55AA          ; -> branch target
 Bank0E_ScriptAddr_55AA:
     dw $FF06  ; IncrementCounter
     dw $FF3B  ; Cmd3B
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $00E8  ; Text $00E8: "The last battle in G class is with the p"
-    dw $0058  ; Text $0058: "You are strong! I like you, [HERO]. // K"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $00E8  ; Text $00E8: "$43:$46B7 *:The last battle in G class is with // "
+    dw $0058  ; Text $0058: "$42:$6FFE *:How do you do. I'm Hale. // *:I know y"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -3981,11 +3981,11 @@ BossPeace_ScriptPtrTable:
 BossPeace_Script00:
     dw $FF12  ; WriteRAM
     dw $D92B  ; RAM $D92B
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF0D  ; WriteNPCByte
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF90  ; Cmd$90
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -3993,31 +3993,31 @@ BossPeace_Script00:
 ; ---------------------------------------------------------------------------
 BossPeace_Script01:
     dw $FF01  ; BranchIfFlagSet
-    dw $0016  ; Text $0016: "Please listen to his wish. // This is th"
+    dw $0016  ; Text $0016: "$42:$4B9C *:His Majesty is in trouble. // Please p"
     dw Bank0E_ScriptAddr_55FE          ; -> branch target
     dw $FF01  ; BranchIfFlagSet
     dw $00C2
     dw Bank0E_ScriptAddr_55FA          ; -> branch target
     dw $FF01  ; BranchIfFlagSet
-    dw $00C1  ; Text $00C1: "level. KingGo and ask Pulio for your mon"
+    dw $00C1  ; Text $00C1: "$1A:$55B7 *:I..I.. is it o..o..okay to just // h.."
     dw Bank0E_ScriptAddr_55F2          ; -> branch target
-    dw $0299  ; Text $0299: "MickAs proof of my friendship let's bree"
+    dw $0299  ; Text $0299: "$45:$667C [HERO] pulled the slot machine! // The s"
     dw $FF03  ; SetEventFlag
-    dw $00C1  ; Text $00C1: "level. KingGo and ask Pulio for your mon"
+    dw $00C1  ; Text $00C1: "$1A:$55B7 *:I..I.. is it o..o..okay to just // h.."
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_55F2:
-    dw $0311  ; Text $0311: "The slot machine is out of order. // The"
+    dw $0311  ; Text $0311: "$46:$47D2 [HERO] pulled the arm of the // slot mac"
     dw $FF03  ; SetEventFlag
     dw $00C2
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_55FA:
-    dw $0312  ; Text $0312: "There are 3 Slimes sleeping inside. // ["
+    dw $0312  ; Text $0312: "$46:$4835 The slot machine is out of order."
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_55FE:
-    dw $0313  ; Text $0313: "[HERO] pulled the slot machine! The reel"
+    dw $0313  ; Text $0313: "$46:$4859 There are 3 Slimes sleeping inside."
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -4025,31 +4025,31 @@ Bank0E_ScriptAddr_55FE:
 ; ---------------------------------------------------------------------------
 BossPeace_Script02:
     dw $FF01  ; BranchIfFlagSet
-    dw $0016  ; Text $0016: "Please listen to his wish. // This is th"
+    dw $0016  ; Text $0016: "$42:$4B9C *:His Majesty is in trouble. // Please p"
     dw Bank0E_ScriptAddr_5628          ; -> branch target
     dw $FF01  ; BranchIfFlagSet
     dw $00C4
     dw Bank0E_ScriptAddr_5624          ; -> branch target
     dw $FF01  ; BranchIfFlagSet
-    dw $00C3  ; Text $00C3: "the new master Watabou brought here? // "
+    dw $00C3  ; Text $00C3: "$1A:$5624 *:Arghhh... Flee or should I // go for i"
     dw Bank0E_ScriptAddr_561C          ; -> branch target
-    dw $0314  ; Text $0314: "[HERO] pulled the arm of the slot machin"
+    dw $0314  ; Text $0314: "$46:$487F [HERO] pulled the slot machine! // The r"
     dw $FF03  ; SetEventFlag
-    dw $00C3  ; Text $00C3: "the new master Watabou brought here? // "
+    dw $00C3  ; Text $00C3: "$1A:$5624 *:Arghhh... Flee or should I // go for i"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_561C:
-    dw $0315  ; Text $0315: "It's out of order. // 3 Metalys are swea"
+    dw $0315  ; Text $0315: "$46:$4937 [HERO] pulled the arm of the // slot mac"
     dw $FF03  ; SetEventFlag
     dw $00C4
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_5624:
-    dw $0316  ; Text $0316: "3 Metalys are sweating inside the machin"
+    dw $0316  ; Text $0316: "$46:$4988 It's out of order."
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_5628:
-    dw $0317  ; Text $0317: "[HERO] pulled the arm of the slot machin"
+    dw $0317  ; Text $0317: "$46:$499D 3 Metalys are sweating inside // the mac"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -4057,18 +4057,18 @@ Bank0E_ScriptAddr_5628:
 ; ---------------------------------------------------------------------------
 BossPeace_Script03:
     dw $FF01  ; BranchIfFlagSet
-    dw $0016  ; Text $0016: "Please listen to his wish. // This is th"
+    dw $0016  ; Text $0016: "$42:$4B9C *:His Majesty is in trouble. // Please p"
     dw Bank0E_ScriptAddr_5644          ; -> branch target
     dw $FF01  ; BranchIfFlagSet
     dw $00C5
     dw Bank0E_ScriptAddr_5640          ; -> branch target
-    dw $0318  ; Text $0318: "The reel is spinning... // [HERO] pulled"
+    dw $0318  ; Text $0318: "$46:$49CF [HERO] pulled the arm of the // slot mac"
     dw $FF03  ; SetEventFlag
     dw $00C5
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_5640:
-    dw $0319  ; Text $0319: "[HERO] pulled the slot machine! The reel"
+    dw $0319  ; Text $0319: "$46:$4B14 The reel is spinning..."
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_5644:
@@ -4080,29 +4080,29 @@ Bank0E_ScriptAddr_5644:
 ; ---------------------------------------------------------------------------
 BossPeace_Script04:
     dw $FF01  ; BranchIfFlagSet
-    dw $0016  ; Text $0016: "Please listen to his wish. // This is th"
+    dw $0016  ; Text $0016: "$42:$4B9C *:His Majesty is in trouble. // Please p"
     dw Bank0E_ScriptAddr_5660          ; -> branch target
     dw $FF01  ; BranchIfFlagSet
-    dw $00C6  ; Text $00C6: "master? His Majesty has a favor to ask y"
+    dw $00C6  ; Text $00C6: "$1A:$56D6 *:I know I'm careless but // I do help m"
     dw Bank0E_ScriptAddr_565C          ; -> branch target
-    dw $031A  ; Text $031A: "What do you say? Why don't you breed wit"
+    dw $031A  ; Text $031A: "$46:$4B2E [HERO] pulled the slot machine! // The r"
     dw $FF03  ; SetEventFlag
-    dw $00C6  ; Text $00C6: "master? His Majesty has a favor to ask y"
+    dw $00C6  ; Text $00C6: "$1A:$56D6 *:I know I'm careless but // I do help m"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_565C:
-    dw $0322  ; Text $0322: "There is a sign on the slot machine. No "
+    dw $0322  ; Text $0322: "$46:$4F85 There is a sign on the slot machine. // "
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_5660:
-    dw $0323  ; Text $0323: "Welcome to the Casino! Gold here is only"
+    dw $0323  ; Text $0323: "$46:$4FCF There is a sign on the slot machine. // "
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
 ; BossPeace_Script05
 ; ---------------------------------------------------------------------------
 BossPeace_Script05:
-    dw $0324  ; Text $0324: "How's your luck? // I need to get good a"
+    dw $0324  ; Text $0324: "$46:$500E *:Welcome to the Casino! // Gold here is"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -4110,13 +4110,13 @@ BossPeace_Script05:
 ; ---------------------------------------------------------------------------
 BossPeace_Script06:
     dw $FF01  ; BranchIfFlagSet
-    dw $0016  ; Text $0016: "Please listen to his wish. // This is th"
+    dw $0016  ; Text $0016: "$42:$4B9C *:His Majesty is in trouble. // Please p"
     dw Bank0E_ScriptAddr_5672          ; -> branch target
-    dw $0325  ; Text $0325: "I need to get good at it. // That custom"
+    dw $0325  ; Text $0325: "$46:$504E *:How's your luck?"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_5672:
-    dw $0326  ; Text $0326: "That customer has an attitude! Can you d"
+    dw $0326  ; Text $0326: "$46:$5064 *:I need to get good at it."
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -4124,13 +4124,13 @@ Bank0E_ScriptAddr_5672:
 ; ---------------------------------------------------------------------------
 BossPeace_Script07:
     dw $FF01  ; BranchIfFlagSet
-    dw $0016  ; Text $0016: "Please listen to his wish. // This is th"
+    dw $0016  ; Text $0016: "$42:$4B9C *:His Majesty is in trouble. // Please p"
     dw Bank0E_ScriptAddr_5680          ; -> branch target
-    dw $0327  ; Text $0327: "No violence in this store. // Gwrrrrrrrr"
+    dw $0327  ; Text $0327: "$46:$5083 *:That customer has an attitude! // *:Ca"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_5680:
-    dw $0328  ; Text $0328: "Gwrrrrrrrr.. This machine gave me nothin"
+    dw $0328  ; Text $0328: "$46:$50D1 *:No violence in this store."
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -4138,109 +4138,109 @@ Bank0E_ScriptAddr_5680:
 ; ---------------------------------------------------------------------------
 BossPeace_Script08:
     dw $FF01  ; BranchIfFlagSet
-    dw $00C7  ; Text $00C7: "ou leave the monsters here. SlioBut the "
+    dw $00C7  ; Text $00C7: "$1A:$570A *:Careless monster is my middle name."
     dw Bank0E_ScriptAddr_574A          ; -> branch target
     dw $FF01  ; BranchIfFlagSet
-    dw $00C6  ; Text $00C6: "master? His Majesty has a favor to ask y"
+    dw $00C6  ; Text $00C6: "$1A:$56D6 *:I know I'm careless but // I do help m"
     dw Bank0E_ScriptAddr_5694          ; -> branch target
-    dw $0329  ; Text $0329: "Gwrrrrrrrr.. Why are you the only lucky "
+    dw $0329  ; Text $0329: "$46:$50F1 *:Gwrrrrrrrr.. This machine gave // me n"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_5694:
-    dw $032A  ; Text $032A: "It's mine now!! // Because you trusted m"
+    dw $032A  ; Text $032A: "$46:$5126 *:Gwrrrrrrrr.. Why are you the // only l"
     dw $FF03  ; SetEventFlag
-    dw $00C7  ; Text $00C7: "ou leave the monsters here. SlioBut the "
+    dw $00C7  ; Text $00C7: "$1A:$570A *:Careless monster is my middle name."
     dw $FF5A  ; Cmd5A
-    dw $004B  ; Text $004B: "KingI see. Now [HERO], proceed to the Tr"
+    dw $004B  ; Text $004B: "$42:$6791 Pulio:Majesty, Hale escaped // through t"
     dw $FF07  ; InitDialogMode
-    dw $0346  ; Text $0346: "WatabouDid you have a good time at the c"
+    dw $0346  ; Text $0346: "$46:$5D41 *:No luck today! // *:Hey, you don't hav"
     dw $FF09  ; SetDelay
-    dw $0008  ; Text $0008: "Huh? What happened? Where is Milayou? //"
+    dw $0008  ; Text $0008: "$42:$44BA *:Are you Milayou? // *:Hm, You don't lo"
     dw $FF0D  ; WriteNPCByte
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF0D  ; WriteNPCByte
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF13  ; SetGameFlags
     dw $D8E3  ; RAM $D8E3
-    dw $0304  ; Text $0304: "You again!? I'm really gonna get you now"
+    dw $0304  ; Text $0304: "$46:$4292 *:Eeek! I cannot stand you! // *:I'm gon"
     dw $FF1C  ; CompareRAM
     dw $1605
     dw $FF19  ; FadeEffect
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF47  ; Cmd47
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF49  ; Cmd49
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF48  ; Cmd48
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF4A  ; Cmd4A
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF49  ; Cmd49
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF07  ; InitDialogMode
-    dw $0347  ; Text $0347: "Ha ha ha! I made Gigantes smug! // Well."
+    dw $0347  ; Text $0347: "$46:$5DC6 Watabou:Did you have a good time // at t"
     dw $FF1C  ; CompareRAM
-    dw $0405  ; Text $0405: "How about monsters living behind the Gat"
+    dw $0405  ; Text $0405: "$21:$43D8 *:...fine. If you change your // mind, l"
     dw $FF19  ; FadeEffect
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF47  ; Cmd47
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF49  ; Cmd49
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF48  ; Cmd48
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FF4D  ; SetLongDelay
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF4A  ; Cmd4A
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FF08  ; NOP
     dw $FF12  ; WriteRAM
     dw $D9E3  ; RAM $D9E3
-    dw $0036  ; Text $0036: "[HERO] read the sign. When the GreatTree"
+    dw $0036  ; Text $0036: "$42:$5CE6 *:If it was not for this hole... // *:Oh"
     dw $FF03  ; SetEventFlag
-    dw $0016  ; Text $0016: "Please listen to his wish. // This is th"
+    dw $0016  ; Text $0016: "$42:$4B9C *:His Majesty is in trouble. // Please p"
     dw $FF12  ; WriteRAM
     dw $D92B  ; RAM $D92B
-    dw $0007  ; Text $0007: "Are you Milayou? Hm, You don't look like"
+    dw $0007  ; Text $0007: "$42:$4473 [SOUND 60]Terry looked in the dresser. /"
     dw $FF12  ; WriteRAM
     dw $D96B  ; RAM $D96B
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF12  ; WriteRAM
     dw $D97C  ; RAM $D97C
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF00  ; BranchIfFlagClear
-    dw $0017  ; Text $0017: "This is the castle of GreatTree. // Hurr"
+    dw $0017  ; Text $0017: "$42:$4BD7 *:Please listen to his wish."
     dw $573E
     dw $FF12  ; WriteRAM
     dw $D96B  ; RAM $D96B
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
     dw $FF06  ; IncrementCounter
     dw $FF3B  ; Cmd3B
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $00E8  ; Text $00E8: "The last battle in G class is with the p"
-    dw $0058  ; Text $0058: "You are strong! I like you, [HERO]. // K"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $00E8  ; Text $00E8: "$43:$46B7 *:The last battle in G class is with // "
+    dw $0058  ; Text $0058: "$42:$6FFE *:How do you do. I'm Hale. // *:I know y"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_574A:
-    dw $032B  ; Text $032B: "Because you trusted me, I'll give you so"
+    dw $032B  ; Text $032B: "$46:$517C *:It's mine now!!"
     dw $FF14  ; ClearGameFlags
     dw $569A
     dw $FFFF  ; END
@@ -4260,99 +4260,99 @@ BossBravery_ScriptPtrTable:
 BossBravery_Script00:
     dw $FF12  ; WriteRAM
     dw $D92B  ; RAM $D92B
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF15  ; PlaySE
     dw $D9E5  ; RAM $D9E5
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw Bank0E_ScriptAddr_5774          ; -> branch target
     dw $FF0D  ; WriteNPCByte
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF90  ; Cmd$90
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_5774:
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF0D  ; WriteNPCByte
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF22  ; Cmd22
     dw $FF1B  ; MultiRAMWrite
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF19  ; FadeEffect
     dw $FF0D  ; WriteNPCByte
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF22  ; Cmd22
     dw $FF1B  ; MultiRAMWrite
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF1B  ; MultiRAMWrite
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF19  ; FadeEffect
     dw $FF0D  ; WriteNPCByte
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF22  ; Cmd22
     dw $FF1B  ; MultiRAMWrite
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF1B  ; MultiRAMWrite
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF1B  ; MultiRAMWrite
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF19  ; FadeEffect
     dw $FF0D  ; WriteNPCByte
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF22  ; Cmd22
     dw $FF1B  ; MultiRAMWrite
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0040  ; Text $0040: "SlioYou can drop off up to 19 monsters a"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0040  ; Text $0040: "$42:$6159 *:I'm Slio. I am the grandson // of Gran"
     dw $FF1B  ; MultiRAMWrite
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
-    dw $0050  ; Text $0050: "These stairs bring you to the Chamber of"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
+    dw $0050  ; Text $0050: "$42:$6ABA Pulio:Sorry [HERO], It's my fault... // "
     dw $FF1B  ; MultiRAMWrite
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
-    dw $0060  ; Text $0060: "Oh boy! This looks dangerous! Oh, no! //"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
+    dw $0060  ; Text $0060: "$42:$7430 *:This is the castle of // GreatTree. //"
     dw $FF1B  ; MultiRAMWrite
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $0070
     dw $FF19  ; FadeEffect
     dw $FF0D  ; WriteNPCByte
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0040  ; Text $0040: "SlioYou can drop off up to 19 monsters a"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0040  ; Text $0040: "$42:$6159 *:I'm Slio. I am the grandson // of Gran"
     dw $FF0D  ; WriteNPCByte
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0040  ; Text $0040: "SlioYou can drop off up to 19 monsters a"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0040  ; Text $0040: "$42:$6159 *:I'm Slio. I am the grandson // of Gran"
     dw $FF0D  ; WriteNPCByte
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0040  ; Text $0040: "SlioYou can drop off up to 19 monsters a"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0040  ; Text $0040: "$42:$6159 *:I'm Slio. I am the grandson // of Gran"
     dw $FF0D  ; WriteNPCByte
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0040  ; Text $0040: "SlioYou can drop off up to 19 monsters a"
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0040  ; Text $0040: "$42:$6159 *:I'm Slio. I am the grandson // of Gran"
     dw $FF48  ; Cmd48
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF0D  ; WriteNPCByte
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF90  ; Cmd$90
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF12  ; WriteRAM
     dw $D9E5  ; RAM $D9E5
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -4360,103 +4360,103 @@ Bank0E_ScriptAddr_5774:
 ; ---------------------------------------------------------------------------
 BossBravery_Script01:
     dw $FF01  ; BranchIfFlagSet
-    dw $00C9  ; Text $00C9: "ou leave the monsters here. SlioBut the "
+    dw $00C9  ; Text $00C9: "$1A:$5798 *:I guarantee a comfortable // environme"
     dw Bank0E_ScriptAddr_58D4          ; -> branch target
-    dw $03F6  ; Text $03F6: "When a monster learns two certain skills"
+    dw $03F6  ; Text $03F6: "$47:$561C *:There are cliffs that you can jump // "
     dw $FF03  ; SetEventFlag
-    dw $00C9  ; Text $00C9: "ou leave the monsters here. SlioBut the "
+    dw $00C9  ; Text $00C9: "$1A:$5798 *:I guarantee a comfortable // environme"
     dw $FF5A  ; Cmd5A
-    dw $004D  ; Text $004D: "Give the courageous master [HERO] the po"
+    dw $004D  ; Text $004D: "$42:$68DF *:His Majesty seems to be // very upset."
     dw $FF07  ; InitDialogMode
-    dw $051C  ; Text $051C: "WatabouGood job finding the invisible fl"
+    dw $051C  ; Text $051C: "$49:$4430 *:There are cliffs that we can jump // o"
     dw $FF09  ; SetDelay
-    dw $0008  ; Text $0008: "Huh? What happened? Where is Milayou? //"
+    dw $0008  ; Text $0008: "$42:$44BA *:Are you Milayou? // *:Hm, You don't lo"
     dw $FF0D  ; WriteNPCByte
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF0D  ; WriteNPCByte
-    dw $0007  ; Text $0007: "Are you Milayou? Hm, You don't look like"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0007  ; Text $0007: "$42:$4473 [SOUND 60]Terry looked in the dresser. /"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF13  ; SetGameFlags
     dw $D8E3  ; RAM $D8E3
-    dw $0406  ; Text $0406: "Behind the Gate of Memories are, Goopis,"
+    dw $0406  ; Text $0406: "$21:$4411 *:My StoneMan can use Ahhh! // *:Boy mon"
     dw $FF1C  ; CompareRAM
     dw $1507
     dw $FF19  ; FadeEffect
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF49  ; Cmd49
-    dw $0007  ; Text $0007: "Are you Milayou? Hm, You don't look like"
+    dw $0007  ; Text $0007: "$42:$4473 [SOUND 60]Terry looked in the dresser. /"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF48  ; Cmd48
-    dw $0007  ; Text $0007: "Are you Milayou? Hm, You don't look like"
+    dw $0007  ; Text $0007: "$42:$4473 [SOUND 60]Terry looked in the dresser. /"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF4A  ; Cmd4A
-    dw $0007  ; Text $0007: "Are you Milayou? Hm, You don't look like"
+    dw $0007  ; Text $0007: "$42:$4473 [SOUND 60]Terry looked in the dresser. /"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF47  ; Cmd47
-    dw $0007  ; Text $0007: "Are you Milayou? Hm, You don't look like"
+    dw $0007  ; Text $0007: "$42:$4473 [SOUND 60]Terry looked in the dresser. /"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF48  ; Cmd48
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF07  ; InitDialogMode
-    dw $051D  ; Text $051D: "Wow! Yummy meat! Yum! // Wow, yummy meat"
+    dw $051D  ; Text $051D: "$49:$446E Watabou:Good job finding the // invisibl"
     dw $FF1C  ; CompareRAM
-    dw $0407  ; Text $0407: "How about the monsters behind the Gates "
+    dw $0407  ; Text $0407: "$21:$44A2 *:It's a LifeAcorn. // Use it wisely."
     dw $FF19  ; FadeEffect
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF49  ; Cmd49
-    dw $0007  ; Text $0007: "Are you Milayou? Hm, You don't look like"
+    dw $0007  ; Text $0007: "$42:$4473 [SOUND 60]Terry looked in the dresser. /"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF48  ; Cmd48
-    dw $0007  ; Text $0007: "Are you Milayou? Hm, You don't look like"
+    dw $0007  ; Text $0007: "$42:$4473 [SOUND 60]Terry looked in the dresser. /"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF4A  ; Cmd4A
-    dw $0007  ; Text $0007: "Are you Milayou? Hm, You don't look like"
+    dw $0007  ; Text $0007: "$42:$4473 [SOUND 60]Terry looked in the dresser. /"
     dw $FF4D  ; SetLongDelay
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF47  ; Cmd47
-    dw $0007  ; Text $0007: "Are you Milayou? Hm, You don't look like"
+    dw $0007  ; Text $0007: "$42:$4473 [SOUND 60]Terry looked in the dresser. /"
     dw $FF08  ; NOP
     dw $FF12  ; WriteRAM
     dw $D9E3  ; RAM $D9E3
-    dw $0037  ; Text $0037: "I heard that Pulio let the monsters esca"
+    dw $0037  ; Text $0037: "$42:$5D55 [HERO] read the sign. // :When the Great"
     dw $FF03  ; SetEventFlag
-    dw $0017  ; Text $0017: "This is the castle of GreatTree. // Hurr"
+    dw $0017  ; Text $0017: "$42:$4BD7 *:Please listen to his wish."
     dw $FF12  ; WriteRAM
     dw $D92B  ; RAM $D92B
-    dw $0007  ; Text $0007: "Are you Milayou? Hm, You don't look like"
+    dw $0007  ; Text $0007: "$42:$4473 [SOUND 60]Terry looked in the dresser. /"
     dw $FF12  ; WriteRAM
     dw $D96B  ; RAM $D96B
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF12  ; WriteRAM
     dw $D97D  ; RAM $D97D
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF00  ; BranchIfFlagClear
-    dw $0016  ; Text $0016: "Please listen to his wish. // This is th"
+    dw $0016  ; Text $0016: "$42:$4B9C *:His Majesty is in trouble. // Please p"
     dw Bank0E_ScriptAddr_58C8          ; -> branch target
     dw $FF12  ; WriteRAM
     dw $D96B  ; RAM $D96B
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
 Bank0E_ScriptAddr_58C8:
     dw $FF06  ; IncrementCounter
     dw $FF3B  ; Cmd3B
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $00E8  ; Text $00E8: "The last battle in G class is with the p"
-    dw $0058  ; Text $0058: "You are strong! I like you, [HERO]. // K"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $00E8  ; Text $00E8: "$43:$46B7 *:The last battle in G class is with // "
+    dw $0058  ; Text $0058: "$42:$6FFE *:How do you do. I'm Hale. // *:I know y"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_58D4:
-    dw $0467  ; Text $0467: "om nowhere in a foreign kingdom. When th"
+    dw $0467  ; Text $0467: "$21:$7305 *:You came back again. I wonder // if yo"
     dw $FF14  ; ClearGameFlags
     dw $5824
 ; ---------------------------------------------------------------------------
@@ -4464,109 +4464,109 @@ Bank0E_ScriptAddr_58D4:
 ; ---------------------------------------------------------------------------
 BossBravery_Script02:
     dw $FF01  ; BranchIfFlagSet
-    dw $00AA  ; Text $00AA: "ou... zzz. // Terry looked at a stuffed "
+    dw $00AA  ; Text $00AA: "$1A:$5071 *:If you behave naturally. // You win na"
     dw Bank0E_ScriptAddr_59B0          ; -> branch target
     dw $FF01  ; BranchIfFlagSet
     dw $00C8
     dw Bank0E_ScriptAddr_59B0          ; -> branch target
     dw $FF47  ; Cmd47
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF48  ; Cmd48
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FF47  ; Cmd47
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF0D  ; WriteNPCByte
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF0B  ; NPCMoveY
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FFF0  ; Cmd$F0
     dw $FF09  ; SetDelay
-    dw $0008  ; Text $0008: "Huh? What happened? Where is Milayou? //"
+    dw $0008  ; Text $0008: "$42:$44BA *:Are you Milayou? // *:Hm, You don't lo"
     dw $FF0D  ; WriteNPCByte
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0080  ; Text $0080: "PulioThank you [HERO]! Now I can go back"
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0080  ; Text $0080: "$1A:$4628 *:I don't care how strong the enemies //"
     dw $FF09  ; SetDelay
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF1D  ; LockMovement
     dw $FF1C  ; CompareRAM
     dw $0F06
     dw $FF19  ; FadeEffect
     dw $FF1E  ; UnlockMovement
     dw $FF0D  ; WriteNPCByte
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF0B  ; NPCMoveY
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FFF0  ; Cmd$F0
     dw $FF09  ; SetDelay
-    dw $0008  ; Text $0008: "Huh? What happened? Where is Milayou? //"
+    dw $0008  ; Text $0008: "$42:$44BA *:Are you Milayou? // *:Hm, You don't lo"
     dw $FF4A  ; Cmd4A
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF09  ; SetDelay
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF47  ; Cmd47
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF1C  ; CompareRAM
-    dw $0105  ; Text $0105: "The battle classes go from S,A down to G"
+    dw $0105  ; Text $0105: "$43:$4FE2 *:Its the principal of the // school."
     dw $FF19  ; FadeEffect
     dw $FF09  ; SetDelay
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF49  ; Cmd49
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FF09  ; SetDelay
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4A  ; Cmd4A
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FF09  ; SetDelay
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF49  ; Cmd49
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FF09  ; SetDelay
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4A  ; Cmd4A
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF48  ; Cmd48
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FF09  ; SetDelay
-    dw $0008  ; Text $0008: "Huh? What happened? Where is Milayou? //"
+    dw $0008  ; Text $0008: "$42:$44BA *:Are you Milayou? // *:Hm, You don't lo"
     dw $FF48  ; Cmd48
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF07  ; InitDialogMode
-    dw $03F5  ; Text $03F5: "There are cliffs that you can jump down."
+    dw $03F5  ; Text $03F5: "$47:$55FE *:Tut! Not in here either!"
     dw $FF06  ; IncrementCounter
     dw $FF0B  ; NPCMoveY
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF09  ; SetDelay
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF0D  ; WriteNPCByte
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0080  ; Text $0080: "PulioThank you [HERO]! Now I can go back"
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0080  ; Text $0080: "$1A:$4628 *:I don't care how strong the enemies //"
     dw $FF1D  ; LockMovement
     dw $FF1C  ; CompareRAM
     dw $1006
     dw $FF19  ; FadeEffect
     dw $FF1E  ; UnlockMovement
     dw $FF0D  ; WriteNPCByte
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF0B  ; NPCMoveY
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF0D  ; WriteNPCByte
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0040  ; Text $0040: "SlioYou can drop off up to 19 monsters a"
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0040  ; Text $0040: "$42:$6159 *:I'm Slio. I am the grandson // of Gran"
     dw $FF03  ; SetEventFlag
     dw $00C8
     dw $FFFF  ; END
@@ -4579,42 +4579,42 @@ Bank0E_ScriptAddr_59B0:
 ; ---------------------------------------------------------------------------
 BossBravery_Script03:
     dw $FF09  ; SetDelay
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF21  ; TriggerBattle2
-    dw $0055  ; Text $0055: "Welcome to the Chamber of Travelers' Gat"
+    dw $0055  ; Text $0055: "$42:$6E72 *:Hale was the cherished pet of // the K"
     dw $FF12  ; WriteRAM
     dw $C8ED  ; RAM $C8ED
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF0A  ; NPCMoveX
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FFF0  ; Cmd$F0
     dw $FF12  ; WriteRAM
     dw $C8ED  ; RAM $C8ED
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
     dw $FF0A  ; NPCMoveX
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FFF0  ; Cmd$F0
     dw $FF12  ; WriteRAM
     dw $C8ED  ; RAM $C8ED
-    dw $0007  ; Text $0007: "Are you Milayou? Hm, You don't look like"
+    dw $0007  ; Text $0007: "$42:$4473 [SOUND 60]Terry looked in the dresser. /"
     dw $FF0A  ; NPCMoveX
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FFF0  ; Cmd$F0
     dw $FF12  ; WriteRAM
     dw $C8ED  ; RAM $C8ED
-    dw $000F  ; Text $000F: "This kingdom is created inside a big tre"
+    dw $000F  ; Text $000F: "$42:$48B2 *:Oh, you must be the master. // You mus"
     dw $FF0D  ; WriteNPCByte
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF90  ; Cmd$90
-    dw $0040  ; Text $0040: "SlioYou can drop off up to 19 monsters a"
+    dw $0040  ; Text $0040: "$42:$6159 *:I'm Slio. I am the grandson // of Gran"
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF12  ; WriteRAM
     dw $D9E5  ; RAM $D9E5
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF0F  ; SetScreenScroll
-    dw $0037  ; Text $0037: "I heard that Pulio let the monsters esca"
-    dw $0058  ; Text $0058: "You are strong! I like you, [HERO]. // K"
+    dw $0037  ; Text $0037: "$42:$5D55 [HERO] read the sign. // :When the Great"
+    dw $0058  ; Text $0058: "$42:$6FFE *:How do you do. I'm Hale. // *:I know y"
     dw $0078
     dw $FFFF  ; END
 
@@ -4623,42 +4623,42 @@ BossBravery_Script03:
 ; ---------------------------------------------------------------------------
 BossBravery_Script04:
     dw $FF09  ; SetDelay
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF21  ; TriggerBattle2
-    dw $0055  ; Text $0055: "Welcome to the Chamber of Travelers' Gat"
+    dw $0055  ; Text $0055: "$42:$6E72 *:Hale was the cherished pet of // the K"
     dw $FF12  ; WriteRAM
     dw $C8ED  ; RAM $C8ED
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF0A  ; NPCMoveX
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF12  ; WriteRAM
     dw $C8ED  ; RAM $C8ED
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
     dw $FF0A  ; NPCMoveX
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF12  ; WriteRAM
     dw $C8ED  ; RAM $C8ED
-    dw $0007  ; Text $0007: "Are you Milayou? Hm, You don't look like"
+    dw $0007  ; Text $0007: "$42:$4473 [SOUND 60]Terry looked in the dresser. /"
     dw $FF0A  ; NPCMoveX
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF12  ; WriteRAM
     dw $C8ED  ; RAM $C8ED
-    dw $000F  ; Text $000F: "This kingdom is created inside a big tre"
+    dw $000F  ; Text $000F: "$42:$48B2 *:Oh, you must be the master. // You mus"
     dw $FF0D  ; WriteNPCByte
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF90  ; Cmd$90
-    dw $0040  ; Text $0040: "SlioYou can drop off up to 19 monsters a"
+    dw $0040  ; Text $0040: "$42:$6159 *:I'm Slio. I am the grandson // of Gran"
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF12  ; WriteRAM
     dw $D9E5  ; RAM $D9E5
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF0F  ; SetScreenScroll
-    dw $0037  ; Text $0037: "I heard that Pulio let the monsters esca"
-    dw $0058  ; Text $0058: "You are strong! I like you, [HERO]. // K"
+    dw $0037  ; Text $0037: "$42:$5D55 [HERO] read the sign. // :When the Great"
+    dw $0058  ; Text $0058: "$42:$6FFE *:How do you do. I'm Hale. // *:I know y"
     dw $0078
     dw $FFFF  ; END
 
@@ -4689,96 +4689,96 @@ Map38_ScriptPtrTable:
 Map38_Script00:
     dw $FF12  ; WriteRAM
     dw $D92B  ; RAM $D92B
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF15  ; PlaySE
     dw $D9E5  ; RAM $D9E5
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw Bank0E_ScriptAddr_5A88          ; -> branch target
     dw $FF0D  ; WriteNPCByte
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF90  ; Cmd$90
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_5A88:
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF0D  ; WriteNPCByte
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF22  ; Cmd22
     dw $FF1B  ; MultiRAMWrite
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF19  ; FadeEffect
     dw $FF0D  ; WriteNPCByte
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF22  ; Cmd22
     dw $FF1B  ; MultiRAMWrite
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF1B  ; MultiRAMWrite
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF19  ; FadeEffect
     dw $FF0D  ; WriteNPCByte
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF22  ; Cmd22
     dw $FF1B  ; MultiRAMWrite
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF1B  ; MultiRAMWrite
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF1B  ; MultiRAMWrite
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF19  ; FadeEffect
     dw $FF0D  ; WriteNPCByte
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF22  ; Cmd22
     dw $FF1B  ; MultiRAMWrite
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF1B  ; MultiRAMWrite
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
-    dw $0020  ; Text $0020: "KingOh [HERO]! Will you comply with my w"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
+    dw $0020  ; Text $0020: "$42:$4D34 *:Welcome! I am the King of this // king"
     dw $FF1B  ; MultiRAMWrite
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
-    dw $0030  ; Text $0030: "Upper floor, the monster farm. Pulio tak"
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
+    dw $0030  ; Text $0030: "$42:$5B00 *:Pulio from the farm is goofy but // a "
     dw $FF19  ; FadeEffect
     dw $FF0D  ; WriteNPCByte
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0040  ; Text $0040: "SlioYou can drop off up to 19 monsters a"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0040  ; Text $0040: "$42:$6159 *:I'm Slio. I am the grandson // of Gran"
     dw $FF0D  ; WriteNPCByte
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0040  ; Text $0040: "SlioYou can drop off up to 19 monsters a"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0040  ; Text $0040: "$42:$6159 *:I'm Slio. I am the grandson // of Gran"
     dw $FF0D  ; WriteNPCByte
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0040  ; Text $0040: "SlioYou can drop off up to 19 monsters a"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0040  ; Text $0040: "$42:$6159 *:I'm Slio. I am the grandson // of Gran"
     dw $FF0D  ; WriteNPCByte
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0040  ; Text $0040: "SlioYou can drop off up to 19 monsters a"
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0040  ; Text $0040: "$42:$6159 *:I'm Slio. I am the grandson // of Gran"
     dw $FF48  ; Cmd48
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF0D  ; WriteNPCByte
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF90  ; Cmd$90
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF12  ; WriteRAM
     dw $D9E5  ; RAM $D9E5
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -4786,96 +4786,96 @@ Bank0E_ScriptAddr_5A88:
 ; ---------------------------------------------------------------------------
 Map38_Script01:
     dw $FF01  ; BranchIfFlagSet
-    dw $00CA  ; Text $00CA: "opened a treasure chest! // [HERO] picke"
+    dw $00CA  ; Text $00CA: "$1A:$57E6 *:If you want to take the fight one // c"
     dw Bank0E_ScriptAddr_5BD6          ; -> branch target
-    dw $051E  ; Text $051E: "Wow, yummy meat comming this way again! "
+    dw $051E  ; Text $051E: "$49:$44B1 *:Wow! Yummy meat! Yum!"
     dw $FF03  ; SetEventFlag
-    dw $00CA  ; Text $00CA: "opened a treasure chest! // [HERO] picke"
+    dw $00CA  ; Text $00CA: "$1A:$57E6 *:If you want to take the fight one // c"
     dw $FF5A  ; Cmd5A
-    dw $004F  ; Text $004F: "PulioSorry [HERO], It's my fault... Puli"
+    dw $004F  ; Text $004F: "$42:$69A4 *:In the Chamber of Travelers' // Gates "
     dw $FF07  ; InitDialogMode
-    dw $0520  ; Text $0520: "WatabouIt seems you had a hard time in t"
+    dw $0520  ; Text $0520: "$49:$44FE *:Wow! I'll do anything for // the meat!"
     dw $FF09  ; SetDelay
-    dw $0008  ; Text $0008: "Huh? What happened? Where is Milayou? //"
+    dw $0008  ; Text $0008: "$42:$44BA *:Are you Milayou? // *:Hm, You don't lo"
     dw $FF0D  ; WriteNPCByte
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF0D  ; WriteNPCByte
-    dw $0007  ; Text $0007: "Are you Milayou? Hm, You don't look like"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0007  ; Text $0007: "$42:$4473 [SOUND 60]Terry looked in the dresser. /"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF13  ; SetGameFlags
     dw $D8E3  ; RAM $D8E3
-    dw $0308  ; Text $0308: "The quake of GreatTree must have some co"
+    dw $0308  ; Text $0308: "$46:$43A5 *:Betty was actually // a CopyCat! Noooo"
     dw $FF1C  ; CompareRAM
     dw $1607
     dw $FF19  ; FadeEffect
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF49  ; Cmd49
-    dw $0007  ; Text $0007: "Are you Milayou? Hm, You don't look like"
+    dw $0007  ; Text $0007: "$42:$4473 [SOUND 60]Terry looked in the dresser. /"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF47  ; Cmd47
-    dw $0007  ; Text $0007: "Are you Milayou? Hm, You don't look like"
+    dw $0007  ; Text $0007: "$42:$4473 [SOUND 60]Terry looked in the dresser. /"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF4A  ; Cmd4A
-    dw $0007  ; Text $0007: "Are you Milayou? Hm, You don't look like"
+    dw $0007  ; Text $0007: "$42:$4473 [SOUND 60]Terry looked in the dresser. /"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF48  ; Cmd48
-    dw $0007  ; Text $0007: "Are you Milayou? Hm, You don't look like"
+    dw $0007  ; Text $0007: "$42:$4473 [SOUND 60]Terry looked in the dresser. /"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF47  ; Cmd47
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF07  ; InitDialogMode
-    dw $0521  ; Text $0521: "[HERO] checked out a treasure chest! Wow"
+    dw $0521  ; Text $0521: "$49:$452B Watabou:It seems you had a hard // time "
     dw $FF1C  ; CompareRAM
-    dw $0407  ; Text $0407: "How about the monsters behind the Gates "
+    dw $0407  ; Text $0407: "$21:$44A2 *:It's a LifeAcorn. // Use it wisely."
     dw $FF19  ; FadeEffect
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF49  ; Cmd49
-    dw $0007  ; Text $0007: "Are you Milayou? Hm, You don't look like"
+    dw $0007  ; Text $0007: "$42:$4473 [SOUND 60]Terry looked in the dresser. /"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF47  ; Cmd47
-    dw $0007  ; Text $0007: "Are you Milayou? Hm, You don't look like"
+    dw $0007  ; Text $0007: "$42:$4473 [SOUND 60]Terry looked in the dresser. /"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF4A  ; Cmd4A
-    dw $0007  ; Text $0007: "Are you Milayou? Hm, You don't look like"
+    dw $0007  ; Text $0007: "$42:$4473 [SOUND 60]Terry looked in the dresser. /"
     dw $FF4D  ; SetLongDelay
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF48  ; Cmd48
-    dw $0007  ; Text $0007: "Are you Milayou? Hm, You don't look like"
+    dw $0007  ; Text $0007: "$42:$4473 [SOUND 60]Terry looked in the dresser. /"
     dw $FF08  ; NOP
     dw $FF12  ; WriteRAM
     dw $D9E3  ; RAM $D9E3
-    dw $0038  ; Text $0038: "Hey, Mr.Monster Master. I wonder what I "
+    dw $0038  ; Text $0038: "$42:$5E08 *:I heard that Pulio let the // monsters"
     dw $FF03  ; SetEventFlag
-    dw $0018  ; Text $0018: "Hurry! Go see the King! // I see..... //"
+    dw $0018  ; Text $0018: "$42:$4BF7 *:This is the castle of // GreatTree."
     dw $FF12  ; WriteRAM
     dw $D92B  ; RAM $D92B
-    dw $0007  ; Text $0007: "Are you Milayou? Hm, You don't look like"
+    dw $0007  ; Text $0007: "$42:$4473 [SOUND 60]Terry looked in the dresser. /"
     dw $FF12  ; WriteRAM
     dw $D960  ; RAM $D960
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF12  ; WriteRAM
     dw $D97E  ; RAM $D97E
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF06  ; IncrementCounter
     dw $FF3B  ; Cmd3B
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $00E8  ; Text $00E8: "The last battle in G class is with the p"
-    dw $0058  ; Text $0058: "You are strong! I like you, [HERO]. // K"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $00E8  ; Text $00E8: "$43:$46B7 *:The last battle in G class is with // "
+    dw $0058  ; Text $0058: "$42:$6FFE *:How do you do. I'm Hale. // *:I know y"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_5BD6:
-    dw $051F  ; Text $051F: "Wow! I'll do anything for the meat! // W"
+    dw $051F  ; Text $051F: "$49:$44CC *:Wow, yummy meat comming this // way ag"
     dw $FF14  ; ClearGameFlags
     dw $5B32
     dw $FFFF  ; END
@@ -4994,62 +4994,62 @@ Map38_Script15:
     dw Bank0E_ScriptAddr_5C4E          ; -> branch target
 Bank0E_ScriptAddr_5C4E:
     dw $FF21  ; TriggerBattle2
-    dw $0055  ; Text $0055: "Welcome to the Chamber of Travelers' Gat"
+    dw $0055  ; Text $0055: "$42:$6E72 *:Hale was the cherished pet of // the K"
     dw $FF09  ; SetDelay
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF12  ; WriteRAM
     dw $C8ED  ; RAM $C8ED
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF0A  ; NPCMoveX
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FFF0  ; Cmd$F0
     dw $FF12  ; WriteRAM
     dw $C8ED  ; RAM $C8ED
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
     dw $FF0A  ; NPCMoveX
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF12  ; WriteRAM
     dw $C8ED  ; RAM $C8ED
-    dw $0007  ; Text $0007: "Are you Milayou? Hm, You don't look like"
+    dw $0007  ; Text $0007: "$42:$4473 [SOUND 60]Terry looked in the dresser. /"
     dw $FF0A  ; NPCMoveX
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FFF0  ; Cmd$F0
     dw $FF12  ; WriteRAM
     dw $C8ED  ; RAM $C8ED
-    dw $000F  ; Text $000F: "This kingdom is created inside a big tre"
+    dw $000F  ; Text $000F: "$42:$48B2 *:Oh, you must be the master. // You mus"
     dw $FF0D  ; WriteNPCByte
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF90  ; Cmd$90
-    dw $0040  ; Text $0040: "SlioYou can drop off up to 19 monsters a"
+    dw $0040  ; Text $0040: "$42:$6159 *:I'm Slio. I am the grandson // of Gran"
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF12  ; WriteRAM
     dw $D9E5  ; RAM $D9E5
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF0F  ; SetScreenScroll
-    dw $0038  ; Text $0038: "Hey, Mr.Monster Master. I wonder what I "
+    dw $0038  ; Text $0038: "$42:$5E08 *:I heard that Pulio let the // monsters"
     dw $0088
-    dw $0038  ; Text $0038: "Hey, Mr.Monster Master. I wonder what I "
+    dw $0038  ; Text $0038: "$42:$5E08 *:I heard that Pulio let the // monsters"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_5C9C:
-    dw $0008  ; Text $0008: "Huh? What happened? Where is Milayou? //"
+    dw $0008  ; Text $0008: "$42:$44BA *:Are you Milayou? // *:Hm, You don't lo"
     dw $5554
     dw $56D8
     dw $D957  ; RAM $D957
 Bank0E_ScriptAddr_5CA4:
-    dw $000A  ; Text $000A: "Terry looks at the bookshelf. Encycloped"
+    dw $000A  ; Text $000A: "$42:$45C1 *:You speak monster talk // don't you? /"
     dw $5554
     dw $56D8
     dw $D957  ; RAM $D957
 Bank0E_ScriptAddr_5CAC:
-    dw $000C  ; Text $000C: "Terry looked in front of him. The clock "
+    dw $000C  ; Text $000C: "$42:$47BF Terry looked at the bookshelf. // Too di"
     dw $5554
     dw $56D8
     dw $D957  ; RAM $D957
 Bank0E_ScriptAddr_5CB4:
-    dw $0042  ; Text $0042: "SlioDn'a wanna know about the farm? [Y/N"
+    dw $0042  ; Text $0042: "$42:$6437 Slio:Raise the monster to be // powerful"
     dw $5554
     dw $56D8
     dw $D957  ; RAM $D957
@@ -5064,42 +5064,42 @@ Bank0E_ScriptAddr_5CC4:
     dw $56D8
     dw $D957  ; RAM $D957
 Bank0E_ScriptAddr_5CCC:
-    dw $0104  ; Text $0104: "Welcome to the arena! Want to hear about"
+    dw $0104  ; Text $0104: "$43:$4FA8 *:Yo man, wanna know who your // match i"
     dw $5554
     dw $56D8
     dw $D957  ; RAM $D957
 Bank0E_ScriptAddr_5CD4:
-    dw $0106  ; Text $0106: "The last battle in G class is with the p"
+    dw $0106  ; Text $0106: "$43:$500D *:Well,it'll be OK too."
     dw $5554
     dw $56D8
     dw $D957  ; RAM $D957
 Bank0E_ScriptAddr_5CDC:
-    dw $0108  ; Text $0108: "Get out of my way! Huff! // You hear a v"
+    dw $0108  ; Text $0108: "$43:$506B *:StubSucks & GoHoppers, // Anteaters & "
     dw $5554
     dw $56D8
     dw $D957  ; RAM $D957
 Bank0E_ScriptAddr_5CE4:
-    dw $010E  ; Text $010E: "Where did the MiniDrak go? // Let's play"
+    dw $010E  ; Text $010E: "$43:$5294 *:What the heck is an onigiri? // Why ca"
     dw $5554
     dw $56D8
     dw $D957  ; RAM $D957
 Bank0E_ScriptAddr_5CEC:
-    dw $0110  ; Text $0110: "Hm, its not fun. // Select your choice b"
+    dw $0110  ; Text $0110: "$43:$5375 *:Oh, welcome Mas...ahem. // I am the Me"
     dw $5554
     dw $56D8
     dw $D957  ; RAM $D957
 Bank0E_ScriptAddr_5CF4:
-    dw $014E  ; Text $014E: "The Gate is shut tight. // The Gate is s"
+    dw $014E  ; Text $014E: "$43:$6D0E King:Well maybe I'm exaggerating a // li"
     dw $5554
     dw $56D8
     dw $D957  ; RAM $D957
 Bank0E_ScriptAddr_5CFC:
-    dw $0182  ; Text $0182: "So, you don't have enough money to buy i"
+    dw $0182  ; Text $0182: "$1A:$6713 *:Greetings. I manage the Vault. // *:Yo"
     dw $5554
     dw $56D8
     dw $D957  ; RAM $D957
 Bank0E_ScriptAddr_5D04:
-    dw $018A  ; Text $018A: "Wow! No way! Such a thing in a place lik"
+    dw $018A  ; Text $018A: "$1A:$6AA5 [HERO] looked at the bookshelf. // :Seon"
     dw $5554
     dw $56D8
     dw $D957  ; RAM $D957
@@ -5109,146 +5109,146 @@ Bank0E_ScriptAddr_5D04:
 Map38_Script16:
     dw $FF15  ; PlaySE
     dw $D9E4  ; RAM $D9E4
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw Bank0E_ScriptAddr_5D1C          ; -> branch target
     dw $FF00  ; BranchIfFlagClear
-    dw $00CB  ; Text $00CB: "uTerry! Wait! It's time for bed! Milayou"
+    dw $00CB  ; Text $00CB: "$1A:$5842 *:Don't mix me up with those guys // who"
     dw Bank0E_ScriptAddr_5D1C          ; -> branch target
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_5D1C:
     dw $FF0D  ; WriteNPCByte
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF22  ; Cmd22
     dw $FF1B  ; MultiRAMWrite
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0030  ; Text $0030: "Upper floor, the monster farm. Pulio tak"
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0030  ; Text $0030: "$42:$5B00 *:Pulio from the farm is goofy but // a "
     dw $FF19  ; FadeEffect
     dw $FF09  ; SetDelay
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF4A  ; Cmd4A
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FF09  ; SetDelay
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF48  ; Cmd48
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FF09  ; SetDelay
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF49  ; Cmd49
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FF09  ; SetDelay
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF48  ; Cmd48
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FF09  ; SetDelay
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4A  ; Cmd4A
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FF09  ; SetDelay
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF48  ; Cmd48
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FF09  ; SetDelay
-    dw $0008  ; Text $0008: "Huh? What happened? Where is Milayou? //"
+    dw $0008  ; Text $0008: "$42:$44BA *:Are you Milayou? // *:Hm, You don't lo"
     dw $FF0A  ; NPCMoveX
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FFF0  ; Cmd$F0
     dw $FF0B  ; NPCMoveY
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0020  ; Text $0020: "KingOh [HERO]! Will you comply with my w"
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0020  ; Text $0020: "$42:$4D34 *:Welcome! I am the King of this // king"
     dw $FF0A  ; NPCMoveX
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF09  ; SetDelay
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF4A  ; Cmd4A
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FF09  ; SetDelay
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF48  ; Cmd48
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FF09  ; SetDelay
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4A  ; Cmd4A
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FF09  ; SetDelay
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF47  ; Cmd47
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FF09  ; SetDelay
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4A  ; Cmd4A
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FF09  ; SetDelay
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF48  ; Cmd48
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FF09  ; SetDelay
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4A  ; Cmd4A
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FF09  ; SetDelay
-    dw $0008  ; Text $0008: "Huh? What happened? Where is Milayou? //"
+    dw $0008  ; Text $0008: "$42:$44BA *:Are you Milayou? // *:Hm, You don't lo"
     dw $FF0A  ; NPCMoveX
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FFF0  ; Cmd$F0
     dw $FF0B  ; NPCMoveY
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FFE0  ; Cmd$E0
     dw $FF0A  ; NPCMoveX
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0030  ; Text $0030: "Upper floor, the monster farm. Pulio tak"
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0030  ; Text $0030: "$42:$5B00 *:Pulio from the farm is goofy but // a "
     dw $FF0B  ; NPCMoveY
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FFF0  ; Cmd$F0
     dw $FF0A  ; NPCMoveX
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF24  ; Cmd24
     dw Bank0E_ScriptAddr_5CBC          ; -> branch target
     dw $FF4D  ; SetLongDelay
-    dw $000A  ; Text $000A: "Terry looks at the bookshelf. Encycloped"
+    dw $000A  ; Text $000A: "$42:$45C1 *:You speak monster talk // don't you? /"
     dw $FF48  ; Cmd48
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FF4D  ; SetLongDelay
-    dw $0020  ; Text $0020: "KingOh [HERO]! Will you comply with my w"
+    dw $0020  ; Text $0020: "$42:$4D34 *:Welcome! I am the King of this // king"
     dw $FF49  ; Cmd49
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FF4D  ; SetLongDelay
-    dw $000A  ; Text $000A: "Terry looks at the bookshelf. Encycloped"
+    dw $000A  ; Text $000A: "$42:$45C1 *:You speak monster talk // don't you? /"
     dw $FF48  ; Cmd48
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FF4D  ; SetLongDelay
-    dw $000A  ; Text $000A: "Terry looks at the bookshelf. Encycloped"
+    dw $000A  ; Text $000A: "$42:$45C1 *:You speak monster talk // don't you? /"
     dw $FF4A  ; Cmd4A
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FF4D  ; SetLongDelay
-    dw $000A  ; Text $000A: "Terry looks at the bookshelf. Encycloped"
+    dw $000A  ; Text $000A: "$42:$45C1 *:You speak monster talk // don't you? /"
     dw $FF48  ; Cmd48
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF0D  ; WriteNPCByte
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0080  ; Text $0080: "PulioThank you [HERO]! Now I can go back"
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0080  ; Text $0080: "$1A:$4628 *:I don't care how strong the enemies //"
     dw $FF09  ; SetDelay
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF21  ; TriggerBattle2
-    dw $0055  ; Text $0055: "Welcome to the Chamber of Travelers' Gat"
+    dw $0055  ; Text $0055: "$42:$6E72 *:Hale was the cherished pet of // the K"
     dw $FF0D  ; WriteNPCByte
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0040  ; Text $0040: "SlioYou can drop off up to 19 monsters a"
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0040  ; Text $0040: "$42:$6159 *:I'm Slio. I am the grandson // of Gran"
     dw $FF09  ; SetDelay
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF12  ; WriteRAM
     dw $D9E4  ; RAM $D9E4
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF03  ; SetEventFlag
-    dw $00CB  ; Text $00CB: "uTerry! Wait! It's time for bed! Milayou"
+    dw $00CB  ; Text $00CB: "$1A:$5842 *:Don't mix me up with those guys // who"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -5266,29 +5266,29 @@ Map39_ScriptPtrTable:
 Map39_Script00:
     dw $FF12  ; WriteRAM
     dw $D92B  ; RAM $D92B
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF0D  ; WriteNPCByte
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF90  ; Cmd$90
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF0D  ; WriteNPCByte
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0080  ; Text $0080: "PulioThank you [HERO]! Now I can go back"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0080  ; Text $0080: "$1A:$4628 *:I don't care how strong the enemies //"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
 ; Map39_Script01
 ; ---------------------------------------------------------------------------
 Map39_Script01:
-    dw $0523  ; Text $0523: "...... // So,yoooou saaaw my face...!! /"
+    dw $0523  ; Text $0523: "$49:$4603 [HERO] looked into a jar. // There was a"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
 ; Map39_Script02
 ; ---------------------------------------------------------------------------
 Map39_Script02:
-    dw $0522  ; Text $0522: "[HERO] looked into a jar. There was a da"
+    dw $0522  ; Text $0522: "$49:$4572 [HERO] checked out a treasure // chest! "
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -5296,118 +5296,118 @@ Map39_Script02:
 ; ---------------------------------------------------------------------------
 Map39_Script03:
     dw $FF00  ; BranchIfFlagClear
-    dw $00CC  ; Text $00CC: "ree... Want to read the book?[Y/N] // It"
+    dw $00CC  ; Text $00CC: "$1A:$5885 *:Grrr...Nobody can catch me // by surpr"
     dw Bank0E_ScriptAddr_5E5C          ; -> branch target
     dw $FF01  ; BranchIfFlagSet
-    dw $00CD  ; Text $00CD: "to be powerful! // SlioDn'a wanna know a"
+    dw $00CD  ; Text $00CD: "$1A:$58B8 *:Just sit back and wait for the // figh"
     dw Bank0E_ScriptAddr_5F1E          ; -> branch target
 Bank0E_ScriptAddr_5E5C:
     dw $FF01  ; BranchIfFlagSet
-    dw $00CD  ; Text $00CD: "to be powerful! // SlioDn'a wanna know a"
+    dw $00CD  ; Text $00CD: "$1A:$58B8 *:Just sit back and wait for the // figh"
     dw Bank0E_ScriptAddr_5F1A          ; -> branch target
     dw $FF01  ; BranchIfFlagSet
-    dw $00CC  ; Text $00CC: "ree... Want to read the book?[Y/N] // It"
+    dw $00CC  ; Text $00CC: "$1A:$5885 *:Grrr...Nobody can catch me // by surpr"
     dw Bank0E_ScriptAddr_5E6C          ; -> branch target
-    dw $0524  ; Text $0524: "So,yoooou saaaw my face...!! // It's yoo"
+    dw $0524  ; Text $0524: "$49:$4653 *:......"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_5E6C:
-    dw $0525  ; Text $0525: "It's yoooou agaaaain! // Yoooou win...!!"
+    dw $0525  ; Text $0525: "$49:$4660 *:So,yoooou saaaw my face...!!"
     dw $FF03  ; SetEventFlag
-    dw $00CD  ; Text $00CD: "to be powerful! // SlioDn'a wanna know a"
+    dw $00CD  ; Text $00CD: "$1A:$58B8 *:Just sit back and wait for the // figh"
     dw $FF02  ; ClearEventFlag
-    dw $00CC  ; Text $00CC: "ree... Want to read the book?[Y/N] // It"
+    dw $00CC  ; Text $00CC: "$1A:$5885 *:Grrr...Nobody can catch me // by surpr"
     dw $FF5A  ; Cmd5A
-    dw $0063  ; Text $0063: "Oh [HERO], it's you. I am getting old. J"
+    dw $0063  ; Text $0063: "$42:$7527 *:Fhew! I'm glad that I didn't get // hu"
     dw $FF07  ; InitDialogMode
-    dw $0527  ; Text $0527: "WatabouGood work! So,let's gooooo baaack"
+    dw $0527  ; Text $0527: "$49:$469C *:Yoooou win...!!"
     dw $FF09  ; SetDelay
-    dw $0008  ; Text $0008: "Huh? What happened? Where is Milayou? //"
+    dw $0008  ; Text $0008: "$42:$44BA *:Are you Milayou? // *:Hm, You don't lo"
     dw $FF0D  ; WriteNPCByte
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF0D  ; WriteNPCByte
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF13  ; SetGameFlags
     dw $D8E3  ; RAM $D8E3
-    dw $0308  ; Text $0308: "The quake of GreatTree must have some co"
+    dw $0308  ; Text $0308: "$46:$43A5 *:Betty was actually // a CopyCat! Noooo"
     dw $FF1C  ; CompareRAM
     dw $1502
     dw $FF19  ; FadeEffect
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF49  ; Cmd49
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF47  ; Cmd47
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF4A  ; Cmd4A
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF48  ; Cmd48
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF47  ; Cmd47
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF07  ; InitDialogMode
-    dw $0528  ; Text $0528: "Squeak squeak! Strike! // Good lord, You"
+    dw $0528  ; Text $0528: "$49:$46B2 Watabou:Good work! So,let's // gooooo ba"
     dw $FF1C  ; CompareRAM
-    dw $0402  ; Text $0402: "If you don't want to know, that's fine. "
+    dw $0402  ; Text $0402: "$21:$4248 *:You defeated me. I didn't even have //"
     dw $FF19  ; FadeEffect
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF49  ; Cmd49
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF47  ; Cmd47
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF4A  ; Cmd4A
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF48  ; Cmd48
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF08  ; NOP
     dw $FF12  ; WriteRAM
     dw $D9E3  ; RAM $D9E3
-    dw $0039  ; Text $0039: "[HERO] looked into the jar. // [HERO] lo"
+    dw $0039  ; Text $0039: "$42:$5E3E *:Hey, Mr.Monster Master. I wonder // wh"
     dw $FF03  ; SetEventFlag
-    dw $0019  ; Text $0019: "I see..... // [HERO] opened a treasure c"
+    dw $0019  ; Text $0019: "$42:$4C22 *:Hurry! Go see the King!"
     dw $FF12  ; WriteRAM
     dw $D92B  ; RAM $D92B
-    dw $0007  ; Text $0007: "Are you Milayou? Hm, You don't look like"
+    dw $0007  ; Text $0007: "$42:$4473 [SOUND 60]Terry looked in the dresser. /"
     dw $FF12  ; WriteRAM
     dw $D96C  ; RAM $D96C
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF12  ; WriteRAM
     dw $D97F  ; RAM $D97F
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF06  ; IncrementCounter
     dw $FF3B  ; Cmd3B
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $00E8  ; Text $00E8: "The last battle in G class is with the p"
-    dw $0058  ; Text $0058: "You are strong! I like you, [HERO]. // K"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $00E8  ; Text $00E8: "$43:$46B7 *:The last battle in G class is with // "
+    dw $0058  ; Text $0058: "$42:$6FFE *:How do you do. I'm Hale. // *:I know y"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_5F1A:
-    dw $0524  ; Text $0524: "So,yoooou saaaw my face...!! // It's yoo"
+    dw $0524  ; Text $0524: "$49:$4653 *:......"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_5F1E:
-    dw $0526  ; Text $0526: "Yoooou win...!! // WatabouGood work! So,"
+    dw $0526  ; Text $0526: "$49:$4682 *:It's yoooou agaaaain!"
     dw $FF02  ; ClearEventFlag
-    dw $00CC  ; Text $00CC: "ree... Want to read the book?[Y/N] // It"
+    dw $00CC  ; Text $00CC: "$1A:$5885 *:Grrr...Nobody can catch me // by surpr"
     dw $FF14  ; ClearGameFlags
     dw $5E76
 ; ---------------------------------------------------------------------------
@@ -5415,21 +5415,21 @@ Bank0E_ScriptAddr_5F1E:
 ; ---------------------------------------------------------------------------
 Map39_Script04:
     dw $FF01  ; BranchIfFlagSet
-    dw $00CC  ; Text $00CC: "ree... Want to read the book?[Y/N] // It"
+    dw $00CC  ; Text $00CC: "$1A:$5885 *:Grrr...Nobody can catch me // by surpr"
     dw Bank0E_ScriptAddr_5F48          ; -> branch target
     dw $FF0D  ; WriteNPCByte
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF08  ; NOP
     dw $FF10  ; NPCAnimStart
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0038  ; Text $0038: "Hey, Mr.Monster Master. I wonder what I "
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0038  ; Text $0038: "$42:$5E08 *:I heard that Pulio let the // monsters"
     dw $FF11  ; NPCAnimSetup
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0058  ; Text $0058: "You are strong! I like you, [HERO]. // K"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0058  ; Text $0058: "$42:$6FFE *:How do you do. I'm Hale. // *:I know y"
     dw $FF03  ; SetEventFlag
-    dw $00CC  ; Text $00CC: "ree... Want to read the book?[Y/N] // It"
+    dw $00CC  ; Text $00CC: "$1A:$5885 *:Grrr...Nobody can catch me // by surpr"
 Bank0E_ScriptAddr_5F48:
     dw $FFFF  ; END
 
@@ -5452,194 +5452,194 @@ Map3A_ScriptPtrTable:
 Map3A_Script00:
     dw $FF12  ; WriteRAM
     dw $D92B  ; RAM $D92B
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF15  ; PlaySE
     dw $D9E5  ; RAM $D9E5
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw Bank0E_ScriptAddr_5F74          ; -> branch target
     dw $FF0D  ; WriteNPCByte
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF90  ; Cmd$90
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_5F74:
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF0D  ; WriteNPCByte
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF22  ; Cmd22
     dw $FF1B  ; MultiRAMWrite
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF19  ; FadeEffect
     dw $FF0D  ; WriteNPCByte
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF22  ; Cmd22
     dw $FF1B  ; MultiRAMWrite
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF1B  ; MultiRAMWrite
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF19  ; FadeEffect
     dw $FF0D  ; WriteNPCByte
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF22  ; Cmd22
     dw $FF1B  ; MultiRAMWrite
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF1B  ; MultiRAMWrite
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF1B  ; MultiRAMWrite
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF19  ; FadeEffect
     dw $FF0D  ; WriteNPCByte
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF22  ; Cmd22
     dw $FF1B  ; MultiRAMWrite
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0040  ; Text $0040: "SlioYou can drop off up to 19 monsters a"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0040  ; Text $0040: "$42:$6159 *:I'm Slio. I am the grandson // of Gran"
     dw $FF1B  ; MultiRAMWrite
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
-    dw $0050  ; Text $0050: "These stairs bring you to the Chamber of"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
+    dw $0050  ; Text $0050: "$42:$6ABA Pulio:Sorry [HERO], It's my fault... // "
     dw $FF1B  ; MultiRAMWrite
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
-    dw $0060  ; Text $0060: "Oh boy! This looks dangerous! Oh, no! //"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
+    dw $0060  ; Text $0060: "$42:$7430 *:This is the castle of // GreatTree. //"
     dw $FF1B  ; MultiRAMWrite
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $0070
     dw $FF19  ; FadeEffect
     dw $FF0D  ; WriteNPCByte
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0040  ; Text $0040: "SlioYou can drop off up to 19 monsters a"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0040  ; Text $0040: "$42:$6159 *:I'm Slio. I am the grandson // of Gran"
     dw $FF0D  ; WriteNPCByte
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0040  ; Text $0040: "SlioYou can drop off up to 19 monsters a"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0040  ; Text $0040: "$42:$6159 *:I'm Slio. I am the grandson // of Gran"
     dw $FF0D  ; WriteNPCByte
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0040  ; Text $0040: "SlioYou can drop off up to 19 monsters a"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0040  ; Text $0040: "$42:$6159 *:I'm Slio. I am the grandson // of Gran"
     dw $FF0D  ; WriteNPCByte
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0040  ; Text $0040: "SlioYou can drop off up to 19 monsters a"
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0040  ; Text $0040: "$42:$6159 *:I'm Slio. I am the grandson // of Gran"
     dw $FF48  ; Cmd48
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF0D  ; WriteNPCByte
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF90  ; Cmd$90
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF12  ; WriteRAM
     dw $D9E5  ; RAM $D9E5
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
 ; Map3A_Script01
 ; ---------------------------------------------------------------------------
 Map3A_Script01:
-    dw $0529  ; Text $0529: "Good lord, You're good! // WatabouGood w"
+    dw $0529  ; Text $0529: "$49:$46E4 *:Squeak squeak! Strike!"
     dw $FF5A  ; Cmd5A
     dw $007D
     dw $FF07  ; InitDialogMode
-    dw $052A  ; Text $052A: "WatabouGood work reading SkyDragon's mov"
+    dw $052A  ; Text $052A: "$49:$4700 *:Good lord, You're good!"
     dw $FF09  ; SetDelay
-    dw $0008  ; Text $0008: "Huh? What happened? Where is Milayou? //"
+    dw $0008  ; Text $0008: "$42:$44BA *:Are you Milayou? // *:Hm, You don't lo"
     dw $FF0D  ; WriteNPCByte
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF0D  ; WriteNPCByte
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF13  ; SetGameFlags
     dw $D8E3  ; RAM $D8E3
-    dw $0105  ; Text $0105: "The battle classes go from S,A down to G"
+    dw $0105  ; Text $0105: "$43:$4FE2 *:Its the principal of the // school."
     dw $FF1C  ; CompareRAM
     dw $1506
     dw $FF19  ; FadeEffect
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF49  ; Cmd49
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF47  ; Cmd47
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF4A  ; Cmd4A
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF48  ; Cmd48
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF47  ; Cmd47
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF07  ; InitDialogMode
-    dw $052B  ; Text $052B: "Look at my cool steps! // Why don't you "
+    dw $052B  ; Text $052B: "$49:$471C Watabou:Good work reading // SkyDragon's"
     dw $FF1C  ; CompareRAM
-    dw $0406  ; Text $0406: "Behind the Gate of Memories are, Goopis,"
+    dw $0406  ; Text $0406: "$21:$4411 *:My StoneMan can use Ahhh! // *:Boy mon"
     dw $FF19  ; FadeEffect
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF49  ; Cmd49
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF47  ; Cmd47
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF4A  ; Cmd4A
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF4D  ; SetLongDelay
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF48  ; Cmd48
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF08  ; NOP
     dw $FF12  ; WriteRAM
     dw $D9E3  ; RAM $D9E3
-    dw $003A  ; Text $003A: "[HERO] looked into the jar. The jar is f"
+    dw $003A  ; Text $003A: "$42:$5ED1 [HERO] looked into the jar."
     dw $FF03  ; SetEventFlag
-    dw $001A  ; Text $001A: "[HERO] opened a treasure chest! // [HERO"
+    dw $001A  ; Text $001A: "$42:$4C3F *:I see....."
     dw $FF12  ; WriteRAM
     dw $D92B  ; RAM $D92B
-    dw $0007  ; Text $0007: "Are you Milayou? Hm, You don't look like"
+    dw $0007  ; Text $0007: "$42:$4473 [SOUND 60]Terry looked in the dresser. /"
     dw $FF12  ; WriteRAM
     dw $D96D  ; RAM $D96D
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF12  ; WriteRAM
     dw $D980  ; RAM $D980
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF00  ; BranchIfFlagClear
-    dw $001C  ; Text $001C: "[HERO] found an Herb. But cannot carry a"
+    dw $001C  ; Text $001C: "$42:$4C6E [HERO] picked up an Herb."
     dw Bank0E_ScriptAddr_60BE          ; -> branch target
     dw $FF12  ; WriteRAM
     dw $D96D  ; RAM $D96D
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
 Bank0E_ScriptAddr_60BE:
     dw $FF06  ; IncrementCounter
     dw $FF3B  ; Cmd3B
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $00E8  ; Text $00E8: "The last battle in G class is with the p"
-    dw $0058  ; Text $0058: "You are strong! I like you, [HERO]. // K"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $00E8  ; Text $00E8: "$43:$46B7 *:The last battle in G class is with // "
+    dw $0058  ; Text $0058: "$42:$6FFE *:How do you do. I'm Hale. // *:I know y"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -5647,42 +5647,42 @@ Bank0E_ScriptAddr_60BE:
 ; ---------------------------------------------------------------------------
 Map3A_Script02:
     dw $FF21  ; TriggerBattle2
-    dw $0055  ; Text $0055: "Welcome to the Chamber of Travelers' Gat"
+    dw $0055  ; Text $0055: "$42:$6E72 *:Hale was the cherished pet of // the K"
     dw $FF09  ; SetDelay
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF12  ; WriteRAM
     dw $C8ED  ; RAM $C8ED
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF0A  ; NPCMoveX
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF12  ; WriteRAM
     dw $C8ED  ; RAM $C8ED
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
     dw $FF0A  ; NPCMoveX
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FFF0  ; Cmd$F0
     dw $FF12  ; WriteRAM
     dw $C8ED  ; RAM $C8ED
-    dw $0007  ; Text $0007: "Are you Milayou? Hm, You don't look like"
+    dw $0007  ; Text $0007: "$42:$4473 [SOUND 60]Terry looked in the dresser. /"
     dw $FF0A  ; NPCMoveX
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF12  ; WriteRAM
     dw $C8ED  ; RAM $C8ED
-    dw $000F  ; Text $000F: "This kingdom is created inside a big tre"
+    dw $000F  ; Text $000F: "$42:$48B2 *:Oh, you must be the master. // You mus"
     dw $FF0D  ; WriteNPCByte
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF90  ; Cmd$90
-    dw $0040  ; Text $0040: "SlioYou can drop off up to 19 monsters a"
+    dw $0040  ; Text $0040: "$42:$6159 *:I'm Slio. I am the grandson // of Gran"
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF12  ; WriteRAM
     dw $D9E5  ; RAM $D9E5
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF0F  ; SetScreenScroll
-    dw $003A  ; Text $003A: "[HERO] looked into the jar. The jar is f"
-    dw $0018  ; Text $0018: "Hurry! Go see the King! // I see..... //"
+    dw $003A  ; Text $003A: "$42:$5ED1 [HERO] looked into the jar."
+    dw $0018  ; Text $0018: "$42:$4BF7 *:This is the castle of // GreatTree."
     dw $0078
     dw $FFFF  ; END
 
@@ -5691,7 +5691,7 @@ Map3A_Script02:
 ; ---------------------------------------------------------------------------
 Map3A_Script03:
     dw $FF10  ; NPCAnimStart
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $0078
     dw $FFFF  ; END
 
@@ -5700,8 +5700,8 @@ Map3A_Script03:
 ; ---------------------------------------------------------------------------
 Map3A_Script04:
     dw $FF10  ; NPCAnimStart
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0058  ; Text $0058: "You are strong! I like you, [HERO]. // K"
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0058  ; Text $0058: "$42:$6FFE *:How do you do. I'm Hale. // *:I know y"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -5709,8 +5709,8 @@ Map3A_Script04:
 ; ---------------------------------------------------------------------------
 Map3A_Script05:
     dw $FF10  ; NPCAnimStart
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0018  ; Text $0018: "Hurry! Go see the King! // I see..... //"
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0018  ; Text $0018: "$42:$4BF7 *:This is the castle of // GreatTree."
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -5718,7 +5718,7 @@ Map3A_Script05:
 ; ---------------------------------------------------------------------------
 Map3A_Script06:
     dw $FF10  ; NPCAnimStart
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $0078
     dw $FFFF  ; END
 
@@ -5727,8 +5727,8 @@ Map3A_Script06:
 ; ---------------------------------------------------------------------------
 Map3A_Script07:
     dw $FF10  ; NPCAnimStart
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0058  ; Text $0058: "You are strong! I like you, [HERO]. // K"
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0058  ; Text $0058: "$42:$6FFE *:How do you do. I'm Hale. // *:I know y"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -5736,8 +5736,8 @@ Map3A_Script07:
 ; ---------------------------------------------------------------------------
 Map3A_Script08:
     dw $FF10  ; NPCAnimStart
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0038  ; Text $0038: "Hey, Mr.Monster Master. I wonder what I "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0038  ; Text $0038: "$42:$5E08 *:I heard that Pulio let the // monsters"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -5752,11 +5752,11 @@ Map3B_ScriptPtrTable:
 Map3B_Script00:
     dw $FF12  ; WriteRAM
     dw $D92B  ; RAM $D92B
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF0D  ; WriteNPCByte
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF90  ; Cmd$90
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -5769,110 +5769,110 @@ Map3B_Script01:
     dw $FF01  ; BranchIfFlagSet
     dw $00CE
     dw Bank0E_ScriptAddr_6170          ; -> branch target
-    dw $052C  ; Text $052C: "Why don't you dance with me? // You came"
+    dw $052C  ; Text $052C: "$49:$47A5 *:Look at my cool steps!"
     dw $FF03  ; SetEventFlag
     dw $00CE
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_6170:
-    dw $052D  ; Text $052D: "You came again to dance with me? Ready? "
+    dw $052D  ; Text $052D: "$49:$47C1 *:Why don't you dance with me?"
     dw $FF03  ; SetEventFlag
     dw $00CF
     dw $FF5A  ; Cmd5A
     dw $007B
     dw $FF0D  ; WriteNPCByte
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF07  ; InitDialogMode
-    dw $052F  ; Text $052F: "Did you enjoy dancing? Well, let's go ba"
+    dw $052F  ; Text $052F: "$49:$481D *:You're a great dancer!"
     dw $FF09  ; SetDelay
-    dw $0008  ; Text $0008: "Huh? What happened? Where is Milayou? //"
+    dw $0008  ; Text $0008: "$42:$44BA *:Are you Milayou? // *:Hm, You don't lo"
     dw $FF0D  ; WriteNPCByte
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF0D  ; WriteNPCByte
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF13  ; SetGameFlags
     dw $D8E3  ; RAM $D8E3
-    dw $0405  ; Text $0405: "How about monsters living behind the Gat"
+    dw $0405  ; Text $0405: "$21:$43D8 *:...fine. If you change your // mind, l"
     dw $FF1C  ; CompareRAM
     dw $1502
     dw $FF19  ; FadeEffect
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF4A  ; Cmd4A
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF48  ; Cmd48
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF49  ; Cmd49
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF47  ; Cmd47
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF48  ; Cmd48
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF07  ; InitDialogMode
-    dw $0530  ; Text $0530: "There is a voice coming from out of nowh"
+    dw $0530  ; Text $0530: "$49:$4838 *:Did you enjoy dancing? Well, // let's "
     dw $FF1C  ; CompareRAM
-    dw $0402  ; Text $0402: "If you don't want to know, that's fine. "
+    dw $0402  ; Text $0402: "$21:$4248 *:You defeated me. I didn't even have //"
     dw $FF19  ; FadeEffect
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF4A  ; Cmd4A
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF48  ; Cmd48
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF49  ; Cmd49
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF47  ; Cmd47
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF08  ; NOP
     dw $FF12  ; WriteRAM
     dw $D9E3  ; RAM $D9E3
-    dw $003B  ; Text $003B: "Hey you! You came here to steal my monst"
+    dw $003B  ; Text $003B: "$42:$5EEB [HERO] looked into the jar. // The jar i"
     dw $FF03  ; SetEventFlag
-    dw $001C  ; Text $001C: "[HERO] found an Herb. But cannot carry a"
+    dw $001C  ; Text $001C: "$42:$4C6E [HERO] picked up an Herb."
     dw $FF12  ; WriteRAM
     dw $D92B  ; RAM $D92B
-    dw $0007  ; Text $0007: "Are you Milayou? Hm, You don't look like"
+    dw $0007  ; Text $0007: "$42:$4473 [SOUND 60]Terry looked in the dresser. /"
     dw $FF12  ; WriteRAM
     dw $D96D  ; RAM $D96D
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF12  ; WriteRAM
     dw $D981  ; RAM $D981
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF00  ; BranchIfFlagClear
-    dw $001A  ; Text $001A: "[HERO] opened a treasure chest! // [HERO"
+    dw $001A  ; Text $001A: "$42:$4C3F *:I see....."
     dw $6222
     dw $FF12  ; WriteRAM
     dw $D96D  ; RAM $D96D
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
     dw $FF06  ; IncrementCounter
     dw $FF3B  ; Cmd3B
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $00E8  ; Text $00E8: "The last battle in G class is with the p"
-    dw $0058  ; Text $0058: "You are strong! I like you, [HERO]. // K"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $00E8  ; Text $00E8: "$43:$46B7 *:The last battle in G class is with // "
+    dw $0058  ; Text $0058: "$42:$6FFE *:How do you do. I'm Hale. // *:I know y"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_622E:
-    dw $052E  ; Text $052E: "You're a great dancer! // Did you enjoy "
+    dw $052E  ; Text $052E: "$49:$47E2 *:You came again to dance with me? // Re"
     dw $FF14  ; ClearGameFlags
     dw $6176
     dw $FFFF  ; END
@@ -5896,16 +5896,16 @@ Map3C_ScriptPtrTable:
 Map3C_Script00:
     dw $FF12  ; WriteRAM
     dw $D92B  ; RAM $D92B
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF0D  ; WriteNPCByte
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF90  ; Cmd$90
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF01  ; BranchIfFlagSet
     dw $0077
     dw Bank0E_ScriptAddr_627C          ; -> branch target
     dw $FF02  ; ClearEventFlag
-    dw $006F  ; Text $006F: "If you take monsters on a journey, they "
+    dw $006F  ; Text $006F: "$42:$7C16 *:Treats! BeefJerky, // PorkChop, Rib. /"
     dw $FF02  ; ClearEventFlag
     dw $0070
     dw $FF02  ; ClearEventFlag
@@ -5934,27 +5934,27 @@ Bank0E_ScriptAddr_6286:
     dw $5AD8
     dw $D95B  ; RAM $D95B
 Bank0E_ScriptAddr_628E:
-    dw $0102  ; Text $0102: "Well done! You survived G class! // Oh, "
+    dw $0102  ; Text $0102: "$43:$4EEE *:Hm.. It doesn't listen to me much. // "
     dw $4B4A
     dw $5AD8
     dw $D95B  ; RAM $D95B
 Bank0E_ScriptAddr_6296:
-    dw $0110  ; Text $0110: "Hm, its not fun. // Select your choice b"
+    dw $0110  ; Text $0110: "$43:$5375 *:Oh, welcome Mas...ahem. // I am the Me"
     dw $4B4A
     dw $5AD8
     dw $D95B  ; RAM $D95B
 Bank0E_ScriptAddr_629E:
-    dw $014C  ; Text $014C: "Great! Go to the room above then. // We "
+    dw $014C  ; Text $014C: "$43:$6B82 *:The Room of Villager & // Talisman is "
     dw $4B4A
     dw $5AD8
     dw $D95B  ; RAM $D95B
 Bank0E_ScriptAddr_62A6:
-    dw $00C6  ; Text $00C6: "master? His Majesty has a favor to ask y"
+    dw $00C6  ; Text $00C6: "$1A:$56D6 *:I know I'm careless but // I do help m"
     dw $4B4A
     dw $5AD8
     dw $D95B  ; RAM $D95B
 Bank0E_ScriptAddr_62AE:
-    dw $010E  ; Text $010E: "Where did the MiniDrak go? // Let's play"
+    dw $010E  ; Text $010E: "$43:$5294 *:What the heck is an onigiri? // Why ca"
     dw $4B4A
     dw $5AD8
     dw $D95B  ; RAM $D95B
@@ -5978,7 +5978,7 @@ Bank0E_ScriptAddr_62AE:
     dw $4B4A
     dw $5AD8
     dw $D95B  ; RAM $D95B
-    dw $014C  ; Text $014C: "Great! Go to the room above then. // We "
+    dw $014C  ; Text $014C: "$43:$6B82 *:The Room of Villager & // Talisman is "
     dw $4B4A
     dw $4B4A
     dw $5AD8
@@ -6002,20 +6002,20 @@ Map3C_Script01:
     dw $FF01  ; BranchIfFlagSet
     dw $0070
     dw Bank0E_ScriptAddr_631C          ; -> branch target
-    dw $02A2  ; Text $02A2: "[HERO] looked at the egg. The egg is cra"
+    dw $02A2  ; Text $02A2: "$45:$6AA0 [HERO] looked at the egg. // A monster h"
     dw $FF24  ; Cmd24
     dw Bank0E_ScriptAddr_627E          ; -> branch target
     dw $FF06  ; IncrementCounter
     dw $FF03  ; SetEventFlag
-    dw $006F  ; Text $006F: "If you take monsters on a journey, they "
+    dw $006F  ; Text $006F: "$42:$7C16 *:Treats! BeefJerky, // PorkChop, Rib. /"
     dw $FF03  ; SetEventFlag
     dw $0070
     dw $FF05  ; TriggerBattle
-    dw $015D  ; Text $015D: "How many times do I have to say it?! I d"
+    dw $015D  ; Text $015D: "$43:$7229 [HERO] looked into the jar. // But there"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_631C:
-    dw $02A3  ; Text $02A3: "Arrrgh! How dare you crack all my eggs! "
+    dw $02A3  ; Text $02A3: "$45:$6AD6 [HERO] looked at the egg. // The egg is "
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -6028,20 +6028,20 @@ Map3C_Script02:
     dw $FF01  ; BranchIfFlagSet
     dw $0071
     dw Bank0E_ScriptAddr_6342          ; -> branch target
-    dw $02A2  ; Text $02A2: "[HERO] looked at the egg. The egg is cra"
+    dw $02A2  ; Text $02A2: "$45:$6AA0 [HERO] looked at the egg. // A monster h"
     dw $FF24  ; Cmd24
     dw Bank0E_ScriptAddr_6286          ; -> branch target
     dw $FF06  ; IncrementCounter
     dw $FF03  ; SetEventFlag
-    dw $006F  ; Text $006F: "If you take monsters on a journey, they "
+    dw $006F  ; Text $006F: "$42:$7C16 *:Treats! BeefJerky, // PorkChop, Rib. /"
     dw $FF03  ; SetEventFlag
     dw $0071
     dw $FF05  ; TriggerBattle
-    dw $015D  ; Text $015D: "How many times do I have to say it?! I d"
+    dw $015D  ; Text $015D: "$43:$7229 [HERO] looked into the jar. // But there"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_6342:
-    dw $02A3  ; Text $02A3: "Arrrgh! How dare you crack all my eggs! "
+    dw $02A3  ; Text $02A3: "$45:$6AD6 [HERO] looked at the egg. // The egg is "
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -6054,20 +6054,20 @@ Map3C_Script03:
     dw $FF01  ; BranchIfFlagSet
     dw $0072
     dw Bank0E_ScriptAddr_6368          ; -> branch target
-    dw $02A2  ; Text $02A2: "[HERO] looked at the egg. The egg is cra"
+    dw $02A2  ; Text $02A2: "$45:$6AA0 [HERO] looked at the egg. // A monster h"
     dw $FF24  ; Cmd24
     dw Bank0E_ScriptAddr_628E          ; -> branch target
     dw $FF06  ; IncrementCounter
     dw $FF03  ; SetEventFlag
-    dw $006F  ; Text $006F: "If you take monsters on a journey, they "
+    dw $006F  ; Text $006F: "$42:$7C16 *:Treats! BeefJerky, // PorkChop, Rib. /"
     dw $FF03  ; SetEventFlag
     dw $0072
     dw $FF05  ; TriggerBattle
-    dw $015D  ; Text $015D: "How many times do I have to say it?! I d"
+    dw $015D  ; Text $015D: "$43:$7229 [HERO] looked into the jar. // But there"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_6368:
-    dw $02A3  ; Text $02A3: "Arrrgh! How dare you crack all my eggs! "
+    dw $02A3  ; Text $02A3: "$45:$6AD6 [HERO] looked at the egg. // The egg is "
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -6080,20 +6080,20 @@ Map3C_Script04:
     dw $FF01  ; BranchIfFlagSet
     dw $0073
     dw Bank0E_ScriptAddr_638E          ; -> branch target
-    dw $02A2  ; Text $02A2: "[HERO] looked at the egg. The egg is cra"
+    dw $02A2  ; Text $02A2: "$45:$6AA0 [HERO] looked at the egg. // A monster h"
     dw $FF24  ; Cmd24
     dw Bank0E_ScriptAddr_6296          ; -> branch target
     dw $FF06  ; IncrementCounter
     dw $FF03  ; SetEventFlag
-    dw $006F  ; Text $006F: "If you take monsters on a journey, they "
+    dw $006F  ; Text $006F: "$42:$7C16 *:Treats! BeefJerky, // PorkChop, Rib. /"
     dw $FF03  ; SetEventFlag
     dw $0073
     dw $FF05  ; TriggerBattle
-    dw $015D  ; Text $015D: "How many times do I have to say it?! I d"
+    dw $015D  ; Text $015D: "$43:$7229 [HERO] looked into the jar. // But there"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_638E:
-    dw $02A3  ; Text $02A3: "Arrrgh! How dare you crack all my eggs! "
+    dw $02A3  ; Text $02A3: "$45:$6AD6 [HERO] looked at the egg. // The egg is "
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -6106,20 +6106,20 @@ Map3C_Script05:
     dw $FF01  ; BranchIfFlagSet
     dw $0074
     dw Bank0E_ScriptAddr_63B4          ; -> branch target
-    dw $02A2  ; Text $02A2: "[HERO] looked at the egg. The egg is cra"
+    dw $02A2  ; Text $02A2: "$45:$6AA0 [HERO] looked at the egg. // A monster h"
     dw $FF24  ; Cmd24
     dw Bank0E_ScriptAddr_629E          ; -> branch target
     dw $FF06  ; IncrementCounter
     dw $FF03  ; SetEventFlag
-    dw $006F  ; Text $006F: "If you take monsters on a journey, they "
+    dw $006F  ; Text $006F: "$42:$7C16 *:Treats! BeefJerky, // PorkChop, Rib. /"
     dw $FF03  ; SetEventFlag
     dw $0074
     dw $FF05  ; TriggerBattle
-    dw $015D  ; Text $015D: "How many times do I have to say it?! I d"
+    dw $015D  ; Text $015D: "$43:$7229 [HERO] looked into the jar. // But there"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_63B4:
-    dw $02A3  ; Text $02A3: "Arrrgh! How dare you crack all my eggs! "
+    dw $02A3  ; Text $02A3: "$45:$6AD6 [HERO] looked at the egg. // The egg is "
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -6132,20 +6132,20 @@ Map3C_Script06:
     dw $FF01  ; BranchIfFlagSet
     dw $0075
     dw Bank0E_ScriptAddr_63DA          ; -> branch target
-    dw $02A2  ; Text $02A2: "[HERO] looked at the egg. The egg is cra"
+    dw $02A2  ; Text $02A2: "$45:$6AA0 [HERO] looked at the egg. // A monster h"
     dw $FF24  ; Cmd24
     dw Bank0E_ScriptAddr_62A6          ; -> branch target
     dw $FF06  ; IncrementCounter
     dw $FF03  ; SetEventFlag
-    dw $006F  ; Text $006F: "If you take monsters on a journey, they "
+    dw $006F  ; Text $006F: "$42:$7C16 *:Treats! BeefJerky, // PorkChop, Rib. /"
     dw $FF03  ; SetEventFlag
     dw $0075
     dw $FF05  ; TriggerBattle
-    dw $015D  ; Text $015D: "How many times do I have to say it?! I d"
+    dw $015D  ; Text $015D: "$43:$7229 [HERO] looked into the jar. // But there"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_63DA:
-    dw $02A3  ; Text $02A3: "Arrrgh! How dare you crack all my eggs! "
+    dw $02A3  ; Text $02A3: "$45:$6AD6 [HERO] looked at the egg. // The egg is "
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -6158,20 +6158,20 @@ Map3C_Script07:
     dw $FF01  ; BranchIfFlagSet
     dw $0076
     dw Bank0E_ScriptAddr_6400          ; -> branch target
-    dw $02A2  ; Text $02A2: "[HERO] looked at the egg. The egg is cra"
+    dw $02A2  ; Text $02A2: "$45:$6AA0 [HERO] looked at the egg. // A monster h"
     dw $FF24  ; Cmd24
     dw Bank0E_ScriptAddr_62AE          ; -> branch target
     dw $FF06  ; IncrementCounter
     dw $FF03  ; SetEventFlag
-    dw $006F  ; Text $006F: "If you take monsters on a journey, they "
+    dw $006F  ; Text $006F: "$42:$7C16 *:Treats! BeefJerky, // PorkChop, Rib. /"
     dw $FF03  ; SetEventFlag
     dw $0076
     dw $FF05  ; TriggerBattle
-    dw $015D  ; Text $015D: "How many times do I have to say it?! I d"
+    dw $015D  ; Text $015D: "$43:$7229 [HERO] looked into the jar. // But there"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_6400:
-    dw $02A3  ; Text $02A3: "Arrrgh! How dare you crack all my eggs! "
+    dw $02A3  ; Text $02A3: "$45:$6AD6 [HERO] looked at the egg. // The egg is "
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -6185,129 +6185,129 @@ Map3C_Script08:
     dw $0077
     dw Bank0E_ScriptAddr_6564          ; -> branch target
     dw $FF01  ; BranchIfFlagSet
-    dw $006F  ; Text $006F: "If you take monsters on a journey, they "
+    dw $006F  ; Text $006F: "$42:$7C16 *:Treats! BeefJerky, // PorkChop, Rib. /"
     dw Bank0E_ScriptAddr_641A          ; -> branch target
-    dw $029E  ; Text $029E: "That my family in this world prospers..."
+    dw $029E  ; Text $029E: "$45:$68FF *:It's my wish that... // *:my family in"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_641A:
-    dw $029F  ; Text $029F: "Shoot! Not here either! // Who are you? "
+    dw $029F  ; Text $029F: "$45:$6977 *:That my family in this world // prospe"
     dw $FF0D  ; WriteNPCByte
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF0B  ; NPCMoveY
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FFF0  ; Cmd$F0
     dw $FF09  ; SetDelay
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF0D  ; WriteNPCByte
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF48  ; Cmd48
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF09  ; SetDelay
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF1C  ; CompareRAM
-    dw $0100  ; Text $0100: "Welcome to the arena. Huh? Me? I'm famou"
+    dw $0100  ; Text $0100: "$43:$4DEC [HERO] looked into the jar. // An old la"
     dw $FF19  ; FadeEffect
     dw $FF09  ; SetDelay
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF10  ; NPCAnimStart
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0058  ; Text $0058: "You are strong! I like you, [HERO]. // K"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0058  ; Text $0058: "$42:$6FFE *:How do you do. I'm Hale. // *:I know y"
     dw $FF0B  ; NPCMoveY
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0030  ; Text $0030: "Upper floor, the monster farm. Pulio tak"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0030  ; Text $0030: "$42:$5B00 *:Pulio from the farm is goofy but // a "
     dw $FF0A  ; NPCMoveX
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FFE0  ; Cmd$E0
     dw $FF0B  ; NPCMoveY
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FFF0  ; Cmd$F0
     dw $FF0A  ; NPCMoveX
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0020  ; Text $0020: "KingOh [HERO]! Will you comply with my w"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0020  ; Text $0020: "$42:$4D34 *:Welcome! I am the King of this // king"
     dw $FF0B  ; NPCMoveY
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FFF0  ; Cmd$F0
     dw $FF0A  ; NPCMoveX
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF0B  ; NPCMoveY
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FFF0  ; Cmd$F0
     dw $FF47  ; Cmd47
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF0D  ; WriteNPCByte
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0080  ; Text $0080: "PulioThank you [HERO]! Now I can go back"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0080  ; Text $0080: "$1A:$4628 *:I don't care how strong the enemies //"
     dw $FF0D  ; WriteNPCByte
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0080  ; Text $0080: "PulioThank you [HERO]! Now I can go back"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0080  ; Text $0080: "$1A:$4628 *:I don't care how strong the enemies //"
     dw $FF09  ; SetDelay
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF1C  ; CompareRAM
-    dw $0101  ; Text $0101: "Too bad. You need more training. There a"
+    dw $0101  ; Text $0101: "$43:$4E4F [HERO] looked into the jar. // A piece o"
     dw $FF19  ; FadeEffect
     dw $FF09  ; SetDelay
-    dw $0008  ; Text $0008: "Huh? What happened? Where is Milayou? //"
+    dw $0008  ; Text $0008: "$42:$44BA *:Are you Milayou? // *:Hm, You don't lo"
     dw $FF1C  ; CompareRAM
-    dw $0101  ; Text $0101: "Too bad. You need more training. There a"
+    dw $0101  ; Text $0101: "$43:$4E4F [HERO] looked into the jar. // A piece o"
     dw $FF19  ; FadeEffect
     dw $FF1C  ; CompareRAM
-    dw $0101  ; Text $0101: "Too bad. You need more training. There a"
-    dw $FF19  ; FadeEffect
-    dw $FF09  ; SetDelay
-    dw $0008  ; Text $0008: "Huh? What happened? Where is Milayou? //"
-    dw $FF1C  ; CompareRAM
-    dw $0103  ; Text $0103: "Oh, Sir [HERO]. Congratulations on your "
+    dw $0101  ; Text $0101: "$43:$4E4F [HERO] looked into the jar. // A piece o"
     dw $FF19  ; FadeEffect
     dw $FF09  ; SetDelay
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0008  ; Text $0008: "$42:$44BA *:Are you Milayou? // *:Hm, You don't lo"
+    dw $FF1C  ; CompareRAM
+    dw $0103  ; Text $0103: "$43:$4F3C *:Hi Ho Hi Ho. // *:Sigh.. I'm starving."
+    dw $FF19  ; FadeEffect
+    dw $FF09  ; SetDelay
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF0D  ; WriteNPCByte
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF0D  ; WriteNPCByte
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF48  ; Cmd48
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF09  ; SetDelay
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF3C  ; Cmd3C
     dw $FF07  ; InitDialogMode
-    dw $02A0  ; Text $02A0: "Who are you? You're a monster master are"
+    dw $02A0  ; Text $02A0: "$45:$6A11 *:Shoot! Not here either!"
     dw $FF1C  ; CompareRAM
-    dw $0401  ; Text $0401: "I'm the Monster Minister! Do you want to"
+    dw $0401  ; Text $0401: "$21:$420F *:I think I'm gonna quit // staying up a"
     dw $FF19  ; FadeEffect
     dw $FF12  ; WriteRAM
     dw $C8B2  ; RAM $C8B2
-    dw $0008  ; Text $0008: "Huh? What happened? Where is Milayou? //"
+    dw $0008  ; Text $0008: "$42:$44BA *:Are you Milayou? // *:Hm, You don't lo"
     dw $FF21  ; TriggerBattle2
-    dw $0064  ; Text $0064: "Once I picked up a TinyMedal, back when "
+    dw $0064  ; Text $0064: "$42:$756F *:Oh [HERO], it's you. // I am getting o"
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF12  ; WriteRAM
     dw $C89B  ; RAM $C89B
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF09  ; SetDelay
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF12  ; WriteRAM
     dw $C89B  ; RAM $C89B
     dw $00D2
     dw $FF09  ; SetDelay
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF12  ; WriteRAM
     dw $C89B  ; RAM $C89B
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF09  ; SetDelay
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF24  ; Cmd24
     dw Bank0E_ScriptAddr_62AE          ; -> branch target
     dw $FF24  ; Cmd24
@@ -6322,169 +6322,169 @@ Bank0E_ScriptAddr_641A:
     dw $C89B  ; RAM $C89B
     dw $00D2
     dw $FF09  ; SetDelay
-    dw $0008  ; Text $0008: "Huh? What happened? Where is Milayou? //"
+    dw $0008  ; Text $0008: "$42:$44BA *:Are you Milayou? // *:Hm, You don't lo"
     dw $FF0B  ; NPCMoveY
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF0A  ; NPCMoveX
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FFF0  ; Cmd$F0
     dw $FF0B  ; NPCMoveY
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF0A  ; NPCMoveX
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FFF0  ; Cmd$F0
     dw $FF48  ; Cmd48
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF3D  ; Cmd3D
     dw $FF07  ; InitDialogMode
-    dw $02A1  ; Text $02A1: "[HERO] looked at the egg. A monster hatc"
+    dw $02A1  ; Text $02A1: "$45:$6A2E *:Who are you? You're a monster // maste"
     dw $FF0A  ; NPCMoveX
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FFF0  ; Cmd$F0
     dw $FF0B  ; NPCMoveY
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0020  ; Text $0020: "KingOh [HERO]! Will you comply with my w"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0020  ; Text $0020: "$42:$4D34 *:Welcome! I am the King of this // king"
     dw $FF0D  ; WriteNPCByte
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0040  ; Text $0040: "SlioYou can drop off up to 19 monsters a"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0040  ; Text $0040: "$42:$6159 *:I'm Slio. I am the grandson // of Gran"
     dw $FF03  ; SetEventFlag
     dw $0077
     dw $FF12  ; WriteRAM
     dw $D982  ; RAM $D982
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_6564:
-    dw $02A4  ; Text $02A4: "It's you again! You'll pay for what you'"
+    dw $02A4  ; Text $02A4: "$45:$6B05 *:Arrrgh! How dare you crack all my // e"
     dw $FF03  ; SetEventFlag
     dw $0078
     dw $FF5A  ; Cmd5A
-    dw $0065  ; Text $0065: "Would you like to see the list of Travel"
+    dw $0065  ; Text $0065: "$42:$75F1 *:Once I picked up a TinyMedal, // *:bac"
     dw $FF07  ; InitDialogMode
-    dw $02A6  ; Text $02A6: "WatabouThose eggs were the reason there "
+    dw $02A6  ; Text $02A6: "$45:$6BA7 *:That sword man looked like you..."
     dw $FF09  ; SetDelay
-    dw $0008  ; Text $0008: "Huh? What happened? Where is Milayou? //"
+    dw $0008  ; Text $0008: "$42:$44BA *:Are you Milayou? // *:Hm, You don't lo"
     dw $FF0D  ; WriteNPCByte
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF0D  ; WriteNPCByte
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF13  ; SetGameFlags
     dw $D8E3  ; RAM $D8E3
-    dw $0204  ; Text $0204: "[HERO] looked into the big kettle. ...So"
+    dw $0204  ; Text $0204: "$1B:$444A *:Oh well, nobody's here. // I wanna hav"
     dw $FF1C  ; CompareRAM
     dw $1602
     dw $FF19  ; FadeEffect
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF48  ; Cmd48
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF49  ; Cmd49
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF47  ; Cmd47
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF4A  ; Cmd4A
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF49  ; Cmd49
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF07  ; InitDialogMode
-    dw $02A7  ; Text $02A7: "Soon you will become powerful! During my"
+    dw $02A7  ; Text $02A7: "$45:$6BCE Watabou:Those eggs were the // reason th"
     dw $FF1C  ; CompareRAM
-    dw $0402  ; Text $0402: "If you don't want to know, that's fine. "
+    dw $0402  ; Text $0402: "$21:$4248 *:You defeated me. I didn't even have //"
     dw $FF19  ; FadeEffect
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF48  ; Cmd48
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF49  ; Cmd49
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF47  ; Cmd47
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF4D  ; SetLongDelay
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF4A  ; Cmd4A
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF08  ; NOP
     dw $FF12  ; WriteRAM
     dw $D9E3  ; RAM $D9E3
-    dw $003C  ; Text $003C: "C'mon, I'll give you a beating. Sniff sn"
+    dw $003C  ; Text $003C: "$42:$5F28 *:Hey you! You came here to // steal my "
     dw $FF03  ; SetEventFlag
-    dw $001D  ; Text $001D: "[HERO] opened a treasure chest! // This "
+    dw $001D  ; Text $001D: "$42:$4C85 [HERO] found an Herb. // But cannot carr"
     dw $FF12  ; WriteRAM
     dw $D92B  ; RAM $D92B
-    dw $0007  ; Text $0007: "Are you Milayou? Hm, You don't look like"
+    dw $0007  ; Text $0007: "$42:$4473 [SOUND 60]Terry looked in the dresser. /"
     dw $FF12  ; WriteRAM
     dw $D933  ; RAM $D933
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF12  ; WriteRAM
     dw $D934  ; RAM $D934
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF12  ; WriteRAM
     dw $D935  ; RAM $D935
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF12  ; WriteRAM
     dw $D936  ; RAM $D936
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF12  ; WriteRAM
     dw $D937  ; RAM $D937
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF12  ; WriteRAM
     dw $D938  ; RAM $D938
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF12  ; WriteRAM
     dw $D93F  ; RAM $D93F
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF12  ; WriteRAM
     dw $D941  ; RAM $D941
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF12  ; WriteRAM
     dw $D942  ; RAM $D942
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF12  ; WriteRAM
     dw $D943  ; RAM $D943
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF12  ; WriteRAM
     dw $D944  ; RAM $D944
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF12  ; WriteRAM
     dw $D966  ; RAM $D966
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF12  ; WriteRAM
     dw $D967  ; RAM $D967
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF12  ; WriteRAM
     dw $D96C  ; RAM $D96C
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF12  ; WriteRAM
     dw $D982  ; RAM $D982
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF06  ; IncrementCounter
     dw $FF3B  ; Cmd3B
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $00E8  ; Text $00E8: "The last battle in G class is with the p"
-    dw $0058  ; Text $0058: "You are strong! I like you, [HERO]. // K"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $00E8  ; Text $00E8: "$43:$46B7 *:The last battle in G class is with // "
+    dw $0058  ; Text $0058: "$42:$6FFE *:How do you do. I'm Hale. // *:I know y"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_665C:
-    dw $02A5  ; Text $02A5: "That sword man looked like you... // Wat"
+    dw $02A5  ; Text $02A5: "$45:$6B6F *:It's you again! You'll pay for // what"
     dw $FF14  ; ClearGameFlags
     dw $656A
     dw $FFFF  ; END
@@ -6503,11 +6503,11 @@ Map3D_ScriptPtrTable:
 Map3D_Script00:
     dw $FF12  ; WriteRAM
     dw $D92B  ; RAM $D92B
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF0D  ; WriteNPCByte
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF90  ; Cmd$90
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -6515,41 +6515,41 @@ Map3D_Script00:
 ; ---------------------------------------------------------------------------
 Map3D_Script02:
     dw $FF0D  ; WriteNPCByte
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0018  ; Text $0018: "Hurry! Go see the King! // I see..... //"
-    dw $0058  ; Text $0058: "You are strong! I like you, [HERO]. // K"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0018  ; Text $0018: "$42:$4BF7 *:This is the castle of // GreatTree."
+    dw $0058  ; Text $0058: "$42:$6FFE *:How do you do. I'm Hale. // *:I know y"
     dw $FF0D  ; WriteNPCByte
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
-    dw $0018  ; Text $0018: "Hurry! Go see the King! // I see..... //"
-    dw $0058  ; Text $0058: "You are strong! I like you, [HERO]. // K"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
+    dw $0018  ; Text $0018: "$42:$4BF7 *:This is the castle of // GreatTree."
+    dw $0058  ; Text $0058: "$42:$6FFE *:How do you do. I'm Hale. // *:I know y"
     dw $FF0D  ; WriteNPCByte
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
-    dw $0018  ; Text $0018: "Hurry! Go see the King! // I see..... //"
-    dw $0058  ; Text $0058: "You are strong! I like you, [HERO]. // K"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
+    dw $0018  ; Text $0018: "$42:$4BF7 *:This is the castle of // GreatTree."
+    dw $0058  ; Text $0058: "$42:$6FFE *:How do you do. I'm Hale. // *:I know y"
     dw $FF0D  ; WriteNPCByte
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
-    dw $0018  ; Text $0018: "Hurry! Go see the King! // I see..... //"
-    dw $00A8  ; Text $00A8: "oBut the monsters will get more points i"
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
+    dw $0018  ; Text $0018: "$42:$4BF7 *:This is the castle of // GreatTree."
+    dw $00A8  ; Text $00A8: "$1A:$4F33 *:Let me tell you something useful. // T"
     dw $FF0D  ; WriteNPCByte
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0018  ; Text $0018: "Hurry! Go see the King! // I see..... //"
-    dw $0048  ; Text $0048: "KingArrgh! You! You let my precious Hale"
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0018  ; Text $0018: "$42:$4BF7 *:This is the castle of // GreatTree."
+    dw $0048  ; Text $0048: "$42:$6612 Pulio:Your Majesty please forgive me! //"
     dw $FF0A  ; NPCMoveX
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FFF0  ; Cmd$F0
     dw $FF47  ; Cmd47
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF0D  ; WriteNPCByte
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF49  ; Cmd49
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF13  ; SetGameFlags
     dw $D8E3  ; RAM $D8E3
-    dw $0305  ; Text $0305: "You don't seem to be a bad guy after all"
+    dw $0305  ; Text $0305: "$46:$42D5 *:You again!? I'm really gonna // get yo"
     dw $FF1C  ; CompareRAM
     dw $1504
     dw $FF14  ; ClearGameFlags
@@ -6559,297 +6559,297 @@ Map3D_Script02:
 ; ---------------------------------------------------------------------------
 Map3D_Script01:
     dw $FF0D  ; WriteNPCByte
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0018  ; Text $0018: "Hurry! Go see the King! // I see..... //"
-    dw $0048  ; Text $0048: "KingArrgh! You! You let my precious Hale"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0018  ; Text $0018: "$42:$4BF7 *:This is the castle of // GreatTree."
+    dw $0048  ; Text $0048: "$42:$6612 Pulio:Your Majesty please forgive me! //"
     dw $FF0D  ; WriteNPCByte
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
-    dw $0018  ; Text $0018: "Hurry! Go see the King! // I see..... //"
-    dw $0048  ; Text $0048: "KingArrgh! You! You let my precious Hale"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
+    dw $0018  ; Text $0018: "$42:$4BF7 *:This is the castle of // GreatTree."
+    dw $0048  ; Text $0048: "$42:$6612 Pulio:Your Majesty please forgive me! //"
     dw $FF0D  ; WriteNPCByte
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
-    dw $0018  ; Text $0018: "Hurry! Go see the King! // I see..... //"
-    dw $0048  ; Text $0048: "KingArrgh! You! You let my precious Hale"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
+    dw $0018  ; Text $0018: "$42:$4BF7 *:This is the castle of // GreatTree."
+    dw $0048  ; Text $0048: "$42:$6612 Pulio:Your Majesty please forgive me! //"
     dw $FF0D  ; WriteNPCByte
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
-    dw $0018  ; Text $0018: "Hurry! Go see the King! // I see..... //"
-    dw $0008  ; Text $0008: "Huh? What happened? Where is Milayou? //"
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
+    dw $0018  ; Text $0018: "$42:$4BF7 *:This is the castle of // GreatTree."
+    dw $0008  ; Text $0008: "$42:$44BA *:Are you Milayou? // *:Hm, You don't lo"
     dw $FF0D  ; WriteNPCByte
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0018  ; Text $0018: "Hurry! Go see the King! // I see..... //"
-    dw $0058  ; Text $0058: "You are strong! I like you, [HERO]. // K"
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0018  ; Text $0018: "$42:$4BF7 *:This is the castle of // GreatTree."
+    dw $0058  ; Text $0058: "$42:$6FFE *:How do you do. I'm Hale. // *:I know y"
     dw $FF0A  ; NPCMoveX
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF47  ; Cmd47
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF0D  ; WriteNPCByte
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF4A  ; Cmd4A
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF13  ; SetGameFlags
     dw $D8E3  ; RAM $D8E3
-    dw $0304  ; Text $0304: "You again!? I'm really gonna get you now"
+    dw $0304  ; Text $0304: "$46:$4292 *:Eeek! I cannot stand you! // *:I'm gon"
     dw $FF1C  ; CompareRAM
     dw $1604
 Bank0E_ScriptAddr_6718:
     dw $FF19  ; FadeEffect
     dw $FF48  ; Cmd48
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF09  ; SetDelay
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF12  ; WriteRAM
     dw $C8ED  ; RAM $C8ED
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
     dw $FF0D  ; WriteNPCByte
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF0D  ; WriteNPCByte
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF1D  ; LockMovement
     dw $FF1B  ; MultiRAMWrite
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FFD0  ; Cmd$D0
     dw $FF1B  ; MultiRAMWrite
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FFD0  ; Cmd$D0
     dw $FF19  ; FadeEffect
     dw $FF1E  ; UnlockMovement
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF1C  ; CompareRAM
-    dw $0405  ; Text $0405: "How about monsters living behind the Gat"
+    dw $0405  ; Text $0405: "$21:$43D8 *:...fine. If you change your // mind, l"
     dw $FF19  ; FadeEffect
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF21  ; TriggerBattle2
-    dw $0055  ; Text $0055: "Welcome to the Chamber of Travelers' Gat"
+    dw $0055  ; Text $0055: "$42:$6E72 *:Hale was the cherished pet of // the K"
     dw $FF22  ; Cmd22
     dw $FF1B  ; MultiRAMWrite
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0010  ; Text $0010: "Hey, is he the new master Watabou brough"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
     dw $FF19  ; FadeEffect
     dw $FF0D  ; WriteNPCByte
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0040  ; Text $0040: "SlioYou can drop off up to 19 monsters a"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0040  ; Text $0040: "$42:$6159 *:I'm Slio. I am the grandson // of Gran"
     dw $FF21  ; TriggerBattle2
-    dw $0066  ; Text $0066: "You can enter the locked rooms only when"
+    dw $0066  ; Text $0066: "$42:$7779 *:Would you like to see the list of // T"
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF0B  ; NPCMoveY
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FFF8  ; Cmd$F8
     dw $FF0D  ; WriteNPCByte
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0040  ; Text $0040: "SlioYou can drop off up to 19 monsters a"
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0040  ; Text $0040: "$42:$6159 *:I'm Slio. I am the grandson // of Gran"
     dw $FF09  ; SetDelay
-    dw $0008  ; Text $0008: "Huh? What happened? Where is Milayou? //"
+    dw $0008  ; Text $0008: "$42:$44BA *:Are you Milayou? // *:Hm, You don't lo"
     dw $FF07  ; InitDialogMode
-    dw $0531  ; Text $0531: "Hello...the traveler over there... I'm t"
-    dw $0532  ; Text $0532: "Now, wait there. // Then, would you like"
+    dw $0531  ; Text $0531: "$49:$486D There is a voice coming from out // of n"
+    dw $0532  ; Text $0532: "$49:$48A3 *:Hello...the traveler over // there... "
     dw $FF15  ; PlaySE
     dw $C83C  ; RAM $C83C
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw Bank0E_ScriptAddr_679C          ; -> branch target
-    dw $0533  ; Text $0533: "Then, would you like me to send you back"
+    dw $0533  ; Text $0533: "$49:$4957 *:Now, wait there."
     dw $FF14  ; ClearGameFlags
     dw Bank0E_ScriptAddr_67AE          ; -> branch target
 Bank0E_ScriptAddr_679C:
-    dw $0534  ; Text $0534: "It was actually a monster that fell wasn"
+    dw $0534  ; Text $0534: "$49:$496C *:Then, would you like me to send // you"
     dw $FF15  ; PlaySE
     dw $C83C  ; RAM $C83C
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw Bank0E_ScriptAddr_67AC          ; -> branch target
-    dw $0535  ; Text $0535: "Was it this meat that fell in the spring"
+    dw $0535  ; Text $0535: "$49:$49B2 *:It was actually a monster that // fell"
     dw $FF14  ; ClearGameFlags
     dw Bank0E_ScriptAddr_67AE          ; -> branch target
 Bank0E_ScriptAddr_67AC:
-    dw $0535  ; Text $0535: "Was it this meat that fell in the spring"
+    dw $0535  ; Text $0535: "$49:$49B2 *:It was actually a monster that // fell"
 Bank0E_ScriptAddr_67AE:
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF1C  ; CompareRAM
-    dw $0802  ; Text $0802: "WatabouOh well, you don't need me... [HE"
+    dw $0802  ; Text $0802: "$3F:$469B *:Oh my! So, this is // the GoldSlime! /"
     dw $FF19  ; FadeEffect
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF07  ; InitDialogMode
-    dw $0536  ; Text $0536: "...you're a liar. I'll give your monster"
+    dw $0536  ; Text $0536: "$49:$4A29 *:Was it this meat that fell in the // s"
     dw $FF15  ; PlaySE
     dw $C83C  ; RAM $C83C
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw Bank0E_ScriptAddr_67CE          ; -> branch target
-    dw $0537  ; Text $0537: "I see. Now, wait a moment for me. // Now"
+    dw $0537  ; Text $0537: "$49:$4A5D *:...you're a liar. // *:I'll give your "
     dw $FF14  ; ClearGameFlags
     dw Bank0E_ScriptAddr_68AE          ; -> branch target
 Bank0E_ScriptAddr_67CE:
-    dw $0538  ; Text $0538: "Now, is this the old guy who fell in the"
+    dw $0538  ; Text $0538: "$49:$4AA7 *:I see. Now, wait a moment for me."
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF1C  ; CompareRAM
     dw $0D02
     dw $FF19  ; FadeEffect
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF0D  ; WriteNPCByte
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0080  ; Text $0080: "PulioThank you [HERO]! Now I can go back"
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0080  ; Text $0080: "$1A:$4628 *:I don't care how strong the enemies //"
     dw $FF1C  ; CompareRAM
-    dw $0803  ; Text $0803: "WatabouHey, you have too many pals! Wata"
+    dw $0803  ; Text $0803: "$3F:$4720 *:If you show me a GoldSlime, // *:I'll "
     dw $FF19  ; FadeEffect
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF07  ; InitDialogMode
-    dw $0539  ; Text $0539: "...you're a liar. I'll give your monster"
+    dw $0539  ; Text $0539: "$49:$4ACE *:Now, is this the old guy who // fell i"
     dw $FF15  ; PlaySE
     dw $C83C  ; RAM $C83C
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw Bank0E_ScriptAddr_6802          ; -> branch target
-    dw $053A  ; Text $053A: "I see. Now,wait a minute for me. // Now "
+    dw $053A  ; Text $053A: "$49:$4B08 *:...you're a liar. // *:I'll give your "
     dw $FF14  ; ClearGameFlags
     dw Bank0E_ScriptAddr_68AE          ; -> branch target
 Bank0E_ScriptAddr_6802:
-    dw $053B  ; Text $053B: "Now is this the 0, the monster that fell"
+    dw $053B  ; Text $053B: "$49:$4B52 *:I see. Now,wait a minute for me."
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF1C  ; CompareRAM
     dw $0D03
     dw $FF19  ; FadeEffect
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF0D  ; WriteNPCByte
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0080  ; Text $0080: "PulioThank you [HERO]! Now I can go back"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0080  ; Text $0080: "$1A:$4628 *:I don't care how strong the enemies //"
     dw $FF0D  ; WriteNPCByte
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
-    dw $001A  ; Text $001A: "[HERO] opened a treasure chest! // [HERO"
-    dw $0028  ; Text $0028: "I wanna be a master. What should I do? /"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
+    dw $001A  ; Text $001A: "$42:$4C3F *:I see....."
+    dw $0028  ; Text $0028: "$42:$5474 :People who understand monster // talk a"
     dw $FF1C  ; CompareRAM
-    dw $0801  ; Text $0801: "WatabouYou made it! [HERO]!! You beathem"
+    dw $0801  ; Text $0801: "$3F:$45DC *:Oh, I see. I heard about you // from m"
     dw $FF19  ; FadeEffect
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF3F  ; Cmd3F
     dw $FF07  ; InitDialogMode
-    dw $053C  ; Text $053C: "I don't understand you... I'll give you "
+    dw $053C  ; Text $053C: "$49:$4B78 *:Now is this the [INS 00], the // monst"
     dw $FF15  ; PlaySE
     dw $C83C  ; RAM $C83C
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw Bank0E_ScriptAddr_6840          ; -> branch target
-    dw $053D  ; Text $053D: "You're honest. I'll give you back the mo"
+    dw $053D  ; Text $053D: "$49:$4BBA *:I don't understand you... // *:I'll gi"
     dw $FF14  ; ClearGameFlags
     dw Bank0E_ScriptAddr_68AE          ; -> branch target
 Bank0E_ScriptAddr_6840:
-    dw $053E  ; Text $053E: "You did well. Please go back to your hom"
+    dw $053E  ; Text $053E: "$49:$4C3D *:You're honest. I'll give you // back t"
     dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF0D  ; WriteNPCByte
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0040  ; Text $0040: "SlioYou can drop off up to 19 monsters a"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0040  ; Text $0040: "$42:$6159 *:I'm Slio. I am the grandson // of Gran"
     dw $FF0D  ; WriteNPCByte
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0040  ; Text $0040: "SlioYou can drop off up to 19 monsters a"
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0040  ; Text $0040: "$42:$6159 *:I'm Slio. I am the grandson // of Gran"
     dw $FF12  ; WriteRAM
     dw $C8ED  ; RAM $C8ED
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF09  ; SetDelay
-    dw $0008  ; Text $0008: "Huh? What happened? Where is Milayou? //"
+    dw $0008  ; Text $0008: "$42:$44BA *:Are you Milayou? // *:Hm, You don't lo"
     dw $FF05  ; TriggerBattle
     dw $007F
     dw $FF12  ; WriteRAM
     dw $D9E3  ; RAM $D9E3
-    dw $003D  ; Text $003D: "You came here to get monsters? // I'm Pu"
+    dw $003D  ; Text $003D: "$42:$5F5F *:C'mon, I'll give you a beating. // Sni"
     dw $FF03  ; SetEventFlag
-    dw $001E  ; Text $001E: "This is the Kingdom of GreatTree! // Wel"
+    dw $001E  ; Text $001E: "$42:$4CEA [HERO] opened a treasure chest!"
     dw $FF07  ; InitDialogMode
-    dw $053F  ; Text $053F: "Oh, it's you again. Would you like to go"
+    dw $053F  ; Text $053F: "$49:$4CEE *:You did well. Please go back to // you"
     dw $FF12  ; WriteRAM
     dw $D92B  ; RAM $D92B
-    dw $0007  ; Text $0007: "Are you Milayou? Hm, You don't look like"
+    dw $0007  ; Text $0007: "$42:$4473 [SOUND 60]Terry looked in the dresser. /"
     dw $FF12  ; WriteRAM
     dw $D94C  ; RAM $D94C
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
     dw $FF12  ; WriteRAM
     dw $D983  ; RAM $D983
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF00  ; BranchIfFlagClear
-    dw $002E  ; Text $002E: "The tournament is held on the Starry Nig"
+    dw $002E  ; Text $002E: "$42:$58EC *:Here it is again. // *:The Starry Nigh"
     dw Bank0E_ScriptAddr_6890          ; -> branch target
     dw $FF01  ; BranchIfFlagSet
-    dw $010C  ; Text $010C: "Gwrr, Gwrr... // In the back, they teach"
+    dw $010C  ; Text $010C: "$43:$526F BeBe:Boo Baa Boo Baa."
     dw Bank0E_ScriptAddr_68A4          ; -> branch target
 Bank0E_ScriptAddr_6890:
     dw $FF01  ; BranchIfFlagSet
-    dw $010C  ; Text $010C: "Gwrr, Gwrr... // In the back, they teach"
+    dw $010C  ; Text $010C: "$43:$526F BeBe:Boo Baa Boo Baa."
     dw Bank0E_ScriptAddr_689A          ; -> branch target
     dw $FF14  ; ClearGameFlags
     dw Bank0E_ScriptAddr_68AE          ; -> branch target
 Bank0E_ScriptAddr_689A:
     dw $FF12  ; WriteRAM
     dw $D94C  ; RAM $D94C
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
     dw $FF14  ; ClearGameFlags
     dw Bank0E_ScriptAddr_68AE          ; -> branch target
 Bank0E_ScriptAddr_68A4:
     dw $FF12  ; WriteRAM
     dw $D94C  ; RAM $D94C
-    dw $0007  ; Text $0007: "Are you Milayou? Hm, You don't look like"
+    dw $0007  ; Text $0007: "$42:$4473 [SOUND 60]Terry looked in the dresser. /"
     dw $FF14  ; ClearGameFlags
     dw Bank0E_ScriptAddr_68AE          ; -> branch target
 Bank0E_ScriptAddr_68AE:
     dw $FF0D  ; WriteNPCByte
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0040  ; Text $0040: "SlioYou can drop off up to 19 monsters a"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0040  ; Text $0040: "$42:$6159 *:I'm Slio. I am the grandson // of Gran"
     dw $FF0D  ; WriteNPCByte
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0040  ; Text $0040: "SlioYou can drop off up to 19 monsters a"
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0040  ; Text $0040: "$42:$6159 *:I'm Slio. I am the grandson // of Gran"
     dw $FF12  ; WriteRAM
     dw $C8ED  ; RAM $C8ED
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF09  ; SetDelay
-    dw $0008  ; Text $0008: "Huh? What happened? Where is Milayou? //"
+    dw $0008  ; Text $0008: "$42:$44BA *:Are you Milayou? // *:Hm, You don't lo"
     dw $FF06  ; IncrementCounter
     dw $FF3B  ; Cmd3B
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $00E8  ; Text $00E8: "The last battle in G class is with the p"
-    dw $0058  ; Text $0058: "You are strong! I like you, [HERO]. // K"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $00E8  ; Text $00E8: "$43:$46B7 *:The last battle in G class is with // "
+    dw $0058  ; Text $0058: "$42:$6FFE *:How do you do. I'm Hale. // *:I know y"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
 ; Map3D_Script03
 ; ---------------------------------------------------------------------------
 Map3D_Script03:
-    dw $0531  ; Text $0531: "Hello...the traveler over there... I'm t"
-    dw $0540  ; Text $0540: "Take your time. // Now so long... // Com"
+    dw $0531  ; Text $0531: "$49:$486D There is a voice coming from out // of n"
+    dw $0540  ; Text $0540: "$49:$4D2B *:Oh, it's you again. Would you // like "
     dw $FF15  ; PlaySE
     dw $C83C  ; RAM $C83C
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw Bank0E_ScriptAddr_68EE          ; -> branch target
-    dw $0542  ; Text $0542: "Comrade! Now is the time for us to unite"
+    dw $0542  ; Text $0542: "$49:$4D8B *:Now so long..."
     dw $FF06  ; IncrementCounter
     dw $FF3B  ; Cmd3B
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $00E8  ; Text $00E8: "The last battle in G class is with the p"
-    dw $0058  ; Text $0058: "You are strong! I like you, [HERO]. // K"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $00E8  ; Text $00E8: "$43:$46B7 *:The last battle in G class is with // "
+    dw $0058  ; Text $0058: "$42:$6FFE *:How do you do. I'm Hale. // *:I know y"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_68EE:
-    dw $0541  ; Text $0541: "Now so long... // Comrade! Now is the ti"
+    dw $0541  ; Text $0541: "$49:$4D75 *:Take your time."
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -6864,11 +6864,11 @@ Map3E_ScriptPtrTable:
 Map3E_Script00:
     dw $FF12  ; WriteRAM
     dw $D92B  ; RAM $D92B
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF0D  ; WriteNPCByte
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF90  ; Cmd$90
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -6879,117 +6879,117 @@ Map3E_Script01:
     dw $00D2
     dw Bank0E_ScriptAddr_69DE          ; -> branch target
     dw $FF01  ; BranchIfFlagSet
-    dw $00D1  ; Text $00D1: "Warubou? I'm not Warubou. I am Watabou! "
+    dw $00D1  ; Text $00D1: "$1A:$59B0 *:Huh? it's okay, let's heal // for the "
     dw Bank0E_ScriptAddr_6928          ; -> branch target
     dw $FF01  ; BranchIfFlagSet
     dw $00D0
     dw Bank0E_ScriptAddr_6920          ; -> branch target
-    dw $0543  ; Text $0543: "I'll promise you, comrade! A world where"
+    dw $0543  ; Text $0543: "$49:$4DA0 *:Comrade! Now is the time // for us to "
     dw $FF03  ; SetEventFlag
     dw $00D0
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_6920:
-    dw $0544  ; Text $0544: "Hm!? I don't know why but I feel somethi"
+    dw $0544  ; Text $0544: "$49:$4E49 *:I'll promise you, comrade! // *:A worl"
     dw $FF03  ; SetEventFlag
-    dw $00D1  ; Text $00D1: "Warubou? I'm not Warubou. I am Watabou! "
+    dw $00D1  ; Text $00D1: "$1A:$59B0 *:Huh? it's okay, let's heal // for the "
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_6928:
-    dw $0545  ; Text $0545: "Sirloin steak is totally yummy! Therefor"
+    dw $0545  ; Text $0545: "$49:$4EB9 *:Hm!? I don't know why // but I feel so"
     dw $FF03  ; SetEventFlag
     dw $00D2
     dw $FF5A  ; Cmd5A
     dw $0093
     dw $FF07  ; InitDialogMode
-    dw $0547  ; Text $0547: "Hee hee hee. I love burning villages! Wa"
+    dw $0547  ; Text $0547: "$49:$4FC7 *:I demand one sirloin steak // a day!"
     dw $FF09  ; SetDelay
-    dw $0008  ; Text $0008: "Huh? What happened? Where is Milayou? //"
+    dw $0008  ; Text $0008: "$42:$44BA *:Are you Milayou? // *:Hm, You don't lo"
     dw $FF0D  ; WriteNPCByte
-    dw $0002  ; Text $0002: "Terry looked in front of him. A flame sp"
-    dw $0005  ; Text $0005: "[NUM];Terry looked in the dresser. It's "
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
+    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF0D  ; WriteNPCByte
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF13  ; SetGameFlags
     dw $D8E3  ; RAM $D8E3
-    dw $0304  ; Text $0304: "You again!? I'm really gonna get you now"
+    dw $0304  ; Text $0304: "$46:$4292 *:Eeek! I cannot stand you! // *:I'm gon"
     dw $FF1C  ; CompareRAM
     dw $1501
     dw $FF19  ; FadeEffect
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF4A  ; Cmd4A
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF48  ; Cmd48
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF49  ; Cmd49
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF47  ; Cmd47
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF48  ; Cmd48
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF07  ; InitDialogMode
     dw $0844
     dw $FF1C  ; CompareRAM
-    dw $0401  ; Text $0401: "I'm the Monster Minister! Do you want to"
+    dw $0401  ; Text $0401: "$21:$420F *:I think I'm gonna quit // staying up a"
     dw $FF19  ; FadeEffect
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF4A  ; Cmd4A
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF48  ; Cmd48
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF4D  ; SetLongDelay
-    dw $0004  ; Text $0004: "Terry looked at the bookshelf. Diary of "
+    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF49  ; Cmd49
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF4D  ; SetLongDelay
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF47  ; Cmd47
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF08  ; NOP
     dw $FF12  ; WriteRAM
     dw $D9E3  ; RAM $D9E3
-    dw $003E  ; Text $003E: "I'm Pulio I take care of this farm. Puli"
+    dw $003E  ; Text $003E: "$42:$6007 *:You came here to get monsters?"
     dw $FF03  ; SetEventFlag
-    dw $001F  ; Text $001F: "Welcome! I am the King of this kingdom. "
+    dw $001F  ; Text $001F: "$42:$4D08 *:This is the Kingdom of // GreatTree!"
     dw $FF12  ; WriteRAM
     dw $D92B  ; RAM $D92B
-    dw $0007  ; Text $0007: "Are you Milayou? Hm, You don't look like"
+    dw $0007  ; Text $0007: "$42:$4473 [SOUND 60]Terry looked in the dresser. /"
     dw $FF12  ; WriteRAM
     dw $D96E  ; RAM $D96E
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF12  ; WriteRAM
     dw $D984  ; RAM $D984
-    dw $0001  ; Text $0001: "Terry looked at a stuffed animal. Someth"
+    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
     dw $FF00  ; BranchIfFlagClear
-    dw $0020  ; Text $0020: "KingOh [HERO]! Will you comply with my w"
+    dw $0020  ; Text $0020: "$42:$4D34 *:Welcome! I am the King of this // king"
     dw $69D2
     dw $FF12  ; WriteRAM
     dw $D96E  ; RAM $D96E
-    dw $0003  ; Text $0003: "Terry looked at the bookshelf. A Fairy T"
+    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
     dw $FF06  ; IncrementCounter
     dw $FF3B  ; Cmd3B
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
-    dw $00E8  ; Text $00E8: "The last battle in G class is with the p"
-    dw $0058  ; Text $0058: "You are strong! I like you, [HERO]. // K"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
+    dw $00E8  ; Text $00E8: "$43:$46B7 *:The last battle in G class is with // "
+    dw $0058  ; Text $0058: "$42:$6FFE *:How do you do. I'm Hale. // *:I know y"
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_69DE:
-    dw $0546  ; Text $0546: "I demand one sirloin steak a day! // Hee"
+    dw $0546  ; Text $0546: "$49:$4F36 *:Sirloin steak is totally yummy! // The"
     dw $FF14  ; ClearGameFlags
     dw $692E
     dw $FFFF  ; END
@@ -7002,11 +7002,11 @@ Map3F_ScriptPtrTable:
     dw $69FA
     dw $FF12  ; WriteRAM
     dw $D92B  ; RAM $D92B
-    dw $0006  ; Text $0006: "[NUM];Terry looked in the dresser. It's "
+    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
     dw $FF0D  ; WriteNPCByte
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF90  ; Cmd$90
-    dw $0000  ; Text $0000: "Milayou... zzz. // Terry looked at a stu"
+    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FFFF  ; END
 
     db $01

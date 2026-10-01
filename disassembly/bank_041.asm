@@ -6,12 +6,12 @@
 ;     (TextModeList41) and the mode 0-4 tables (S104 re-section; TEXT_SYSTEM)
 ;   - MonsterNamePtrTable at $4339 (256 × dw → MonsterName_XXX labels)
 ;   - SkillNamePtrTable at $4539 (256 × dw → SkillName_XXX labels)
-;   - FamilyCodePtrTable at $4739 (215 × dw → FamilyCode_XXX labels)
+;   - MonsterNickPtrTable at $4739 (215 × dw → MonsterNick_XXX labels; S108: was FamilyCode*)
 ;       NOTE (label is misleading — kept for ref-stability, do not trust the name):
 ;       this is the SPECIES-indexed 2-letter DEFAULT-NICKNAME code table (mode 7 of
 ;       the $4007 config list), NOT a family table. Entry [i] = species i's 2-char
 ;       code (DrakSlime=DS, Snaily=SN, ...). 215 entries (species 0–214); see the
-;       overshoot note at the FamilyCodePtrTable label below.
+;       overshoot note at the MonsterNickPtrTable label below.
 ;   - ItemNamePtrTable at $48E7 (44 × dw → ItemName_XX labels)
 ;   - ItemDescPtrTable at $493F (44 × dw → ItemDesc_XX labels)
 ;   - PersonalityNamePtrTable at $4997 (27 × dw → PersonalityName_XX labels)
@@ -23,7 +23,7 @@
 ;   - Dispatch text strings at $4AA8-$5B1E (game text, raw hex w/ labels)
 ;   - MonsterNameStrings at $5B1F (222 unique, $F0 terminated)
 ;   - SkillNameStrings at $628E (222 unique + 1 empty, $F0 terminated)
-;   - FamilyCodeStrings at $69F2 (215 entries, 2 chars + $F0)
+;   - MonsterNickStrings at $69F2 (215 entries, 2 chars + $F0)
 ;   - ItemNameStrings at $6C78 (43 entries, $F0 terminated)
 ;   - ItemDescStrings at $6DF8 (43 entries, with $F1=newline control codes)
 ;   - PersonalityNameStrings at $7159 (27 entries, $F0 terminated)
@@ -49,7 +49,7 @@ SECTION "ROM Bank $041", ROMX[$4000], BANK[$41]
 ;   Entries are little-endian table addresses; key modes (×2 from $4007):
 ;     mode 5  -> $4339 MonsterNamePtrTable  (256 — full names, no overshoot)
 ;     mode 6  -> $4539 SkillNamePtrTable    (256)
-;     mode 7  -> $4739 FamilyCodePtrTable   (215 — 2-letter default-nick; OVERSHOOTS)
+;     mode 7  -> $4739 MonsterNickPtrTable   (215 — 2-letter default-nick; OVERSHOOTS)
 ;     mode 8  -> $48E7 ItemNamePtrTable      (per the config table; verify the
 ;                actual item-render selector in SameBoy via [$c822] when an item
 ;                name draws — the config fact (mode 8) stands regardless)
@@ -71,7 +71,7 @@ TextModeList41:  ; $4007 — [ $4007 + mode*2 ] = that mode's per-id table (TEXT
     dw $4323  ; mode  4: family ICON string ("$1x" + $F0) — the INFO / library / parent family icon
     dw $4339  ; mode  5: MonsterNamePtrTable
     dw $4539  ; mode  6: SkillNamePtrTable
-    dw $4739  ; mode  7: FamilyCodePtrTable (2-letter nicknames, per SPECIES)
+    dw $4739  ; mode  7: MonsterNickPtrTable (2-letter nicknames, per SPECIES)
     dw $48E7  ; mode  8: ItemNamePtrTable
     dw $493F  ; mode  9: ItemDescPtrTable
     dw $4997  ; mode 10: PersonalityNamePtrTable
@@ -1009,242 +1009,240 @@ SkillNamePtrTable:  ; $4539 — 256 entries, indexed by skill ID
 
 
 ; ---------------------------------------------------------------
-; Family Code Pointer Table ($4739)
-; 215 entries x 2 bytes = 430 bytes
-; 2-letter family abbreviation per monster ID (0-214)
+; Monster DEFAULT-NICKNAME Pointer Table ($4739)
+; 215 entries x 2 bytes = 430 bytes — one code per SPECIES (0-214)
 ; ---------------------------------------------------------------
 
-; ===== DEFAULT-NICKNAME code table (label name is MISLEADING) ==================
-; Despite the "FamilyCode" name, this is the SPECIES-indexed 2-letter DEFAULT-
-; NICKNAME table — mode 7 of the $4007 config list (read by SaveBankAndSwitch
-; $00:$092F). Entry [i] = species i's own 2-char code (DrakSlime=DS, Snaily=SN),
-; NOT a per-family value. The name + the 215 FamilyCode_NNN entry-string labels
-; are LEGACY/mgbdis names kept only for reference-stability (the Phase-N nickname
-; fork gates on the literal address $4739, not on this label).
-; OVERSHOOT: 215 entries (species 0–214). index >= 215 reads past the table into
-; ItemNamePtrTable ($48E7); new species id 224 -> $48F9 = ItemName[9] ("SkyBell").
-; FORK: patches/bank_000.asm LoadModeBaseRedirect ($00:$00F0) redirects mode-7
-; loads for id >= 224 (gated cp $e0) to a new-species SHORT-name table ($41:$7FF9),
-; giving the first-4 letters of the real name to both the nickname field and the
-; "take X with you" narration. So: the TABLE overshoots at id>=215, but the FORK
-; only covers id>=224 — ids 215–223 are phantom/never-rendered and left to overshoot.
+; ===== DEFAULT-NICKNAME table (S108: renamed from the mgbdis-era FamilyCodePtrTable /
+; FamilyCode_NNN labels — it was never per family) ==============================
+; Mode 7 of the $4007 config list (SaveBankAndSwitch $00:$092F). Entry [i] = species
+; i's own 2-letter code (DrakSlime=DS, Slime=SL). MEASURED S108 (PyBoy, a wild Slime
+; joining on the user's save): the JOIN naming screen pre-fills the nickname field
+; with this string — "SL" + two blank slots of the 4-letter field — read as mode 7
+; id 8 just before the screen opens. (Egg hatching: see BREEDING_SYSTEM "Default
+; names".) The editor edits it per species: gamedata.monster_text.<id>.nickname
+; (1-4 letters; PROJECT_COMPILER §2.24) — patched tree: compiler region gd_monster_nicks.
+; OVERSHOOT: 215 entries; index >= 215 reads ItemNamePtrTable ($48E7). FORK:
+; patches/bank_000.asm LoadModeBaseRedirect ($00:$00F0) sends mode-7 loads with
+; id >= 221 (S105 G3, `cp $dd`; was 224) to the new-species nickname table
+; (base $7D39, [221] = $7EF3); 215-220 are never named (not monsters, Iron Rule 8).
 ; =============================================================================
-FamilyCodePtrTable:  ; $4739
-    dw FamilyCode_000_DS  ; [0] DS
-    dw FamilyCode_001_SP  ; [1] SP
-    dw FamilyCode_002_WS  ; [2] WS
-    dw FamilyCode_003_TS  ; [3] TS
-    dw FamilyCode_004_SN  ; [4] SN
-    dw FamilyCode_005_KN  ; [5] KN
-    dw FamilyCode_006_BB  ; [6] BB
-    dw FamilyCode_007_BX  ; [7] BX
-    dw FamilyCode_008_SL  ; [8] SL
-    dw FamilyCode_009_HL  ; [9] HL
-    dw FamilyCode_010_FS  ; [10] FS
-    dw FamilyCode_011_RS  ; [11] RS
-    dw FamilyCode_012_SB  ; [12] SB
-    dw FamilyCode_013_ST  ; [13] ST
-    dw FamilyCode_014_SK  ; [14] SK
-    dw FamilyCode_015_KS  ; [15] KS
-    dw FamilyCode_016_MK  ; [16] MK
-    dw FamilyCode_017_MB  ; [17] MB
-    dw FamilyCode_018_MT  ; [18] MT
-    dw FamilyCode_019_GS  ; [19] GS
-    dw FamilyCode_020_DK  ; [20] DK
-    dw FamilyCode_021_TG  ; [21] TG
-    dw FamilyCode_022_PT  ; [22] PT
-    dw FamilyCode_023_BG  ; [23] BG
-    dw FamilyCode_024_BD  ; [24] BD
-    dw FamilyCode_025_LM  ; [25] LM
-    dw FamilyCode_026_PG  ; [26] PG
-    dw FamilyCode_027_SD  ; [27] SD
-    dw FamilyCode_028_DR  ; [28] DR
-    dw FamilyCode_029_MD  ; [29] MD
-    dw FamilyCode_030_DK  ; [30] DK
-    dw FamilyCode_031_RB  ; [31] RB
-    dw FamilyCode_032_CH  ; [32] CH
-    dw FamilyCode_033_LF  ; [33] LF
-    dw FamilyCode_034_AD  ; [34] AD
-    dw FamilyCode_035_LC  ; [35] LC
-    dw FamilyCode_036_SS  ; [36] SS
-    dw FamilyCode_037_GD  ; [37] GD
-    dw FamilyCode_038_CP  ; [38] CP
-    dw FamilyCode_039_WS  ; [39] WS
-    dw FamilyCode_040_CT  ; [40] CT
-    dw FamilyCode_041_OR  ; [41] OR
-    dw FamilyCode_042_BR  ; [42] BR
-    dw FamilyCode_043_SD  ; [43] SD
-    dw FamilyCode_044_DG  ; [44] DG
-    dw FamilyCode_045_TG  ; [45] TG
-    dw FamilyCode_046_HB  ; [46] HB
-    dw FamilyCode_047_CF  ; [47] CF
-    dw FamilyCode_048_PR  ; [48] PR
-    dw FamilyCode_049_SC  ; [49] SC
-    dw FamilyCode_050_GB  ; [50] GB
-    dw FamilyCode_051_SL  ; [51] SL
-    dw FamilyCode_052_WB  ; [52] WB
-    dw FamilyCode_053_AE  ; [53] AE
-    dw FamilyCode_054_ST  ; [54] ST
-    dw FamilyCode_055_IT  ; [55] IT
-    dw FamilyCode_056_MM  ; [56] MM
-    dw FamilyCode_057_HM  ; [57] HM
-    dw FamilyCode_058_GZ  ; [58] GZ
-    dw FamilyCode_059_YT  ; [59] YT
-    dw FamilyCode_060_MG  ; [60] MG
-    dw FamilyCode_061_FR  ; [61] FR
-    dw FamilyCode_062_UC  ; [62] UC
-    dw FamilyCode_063_GG  ; [63] GG
-    dw FamilyCode_064_KA  ; [64] KA
-    dw FamilyCode_065_TP  ; [65] TP
-    dw FamilyCode_066_KL  ; [66] KL
-    dw FamilyCode_067_DH  ; [67] DH
-    dw FamilyCode_068_MC  ; [68] MC
-    dw FamilyCode_069_BE  ; [69] BE
-    dw FamilyCode_070_PK  ; [70] PK
-    dw FamilyCode_071_WV  ; [71] WV
-    dw FamilyCode_072_BB  ; [72] BB
-    dw FamilyCode_073_FJ  ; [73] FJ
-    dw FamilyCode_074_DK  ; [74] DK
-    dw FamilyCode_075_MP  ; [75] MP
-    dw FamilyCode_076_MR  ; [76] MR
-    dw FamilyCode_077_MW  ; [77] MW
-    dw FamilyCode_078_DK  ; [78] DK
-    dw FamilyCode_079_BR  ; [79] BR
-    dw FamilyCode_080_SB  ; [80] SB
-    dw FamilyCode_081_LO  ; [81] LO
-    dw FamilyCode_082_MG  ; [82] MG
-    dw FamilyCode_083_MC  ; [83] MC
-    dw FamilyCode_084_BZ  ; [84] BZ
-    dw FamilyCode_085_PN  ; [85] PN
-    dw FamilyCode_086_TH  ; [86] TH
-    dw FamilyCode_087_WH  ; [87] WH
-    dw FamilyCode_088_FB  ; [88] FB
-    dw FamilyCode_089_RB  ; [89] RB
-    dw FamilyCode_090_MP  ; [90] MP
-    dw FamilyCode_091_FW  ; [91] FW
-    dw FamilyCode_092_FM  ; [92] FM
-    dw FamilyCode_093_WT  ; [93] WT
-    dw FamilyCode_094_CB  ; [94] CB
-    dw FamilyCode_095_GP  ; [95] GP
-    dw FamilyCode_096_FG  ; [96] FG
-    dw FamilyCode_097_AW  ; [97] AW
-    dw FamilyCode_098_SS  ; [98] SS
-    dw FamilyCode_099_ON  ; [99] ON
-    dw FamilyCode_100_DV  ; [100] DV
-    dw FamilyCode_101_TB  ; [101] TB
-    dw FamilyCode_102_FT  ; [102] FT
-    dw FamilyCode_103_HM  ; [103] HM
-    dw FamilyCode_104_BM  ; [104] BM
-    dw FamilyCode_105_ES  ; [105] ES
-    dw FamilyCode_106_ME  ; [106] ME
-    dw FamilyCode_107_SP  ; [107] SP
-    dw FamilyCode_108_OV  ; [108] OV
-    dw FamilyCode_109_WT  ; [109] WT
-    dw FamilyCode_110_GS  ; [110] GS
-    dw FamilyCode_111_CP  ; [111] CP
-    dw FamilyCode_112_GC  ; [112] GC
-    dw FamilyCode_113_BF  ; [113] BF
-    dw FamilyCode_114_WB  ; [114] WB
-    dw FamilyCode_115_GW  ; [115] GW
-    dw FamilyCode_116_LP  ; [116] LP
-    dw FamilyCode_117_SB  ; [117] SB
-    dw FamilyCode_118_AA  ; [118] AA
-    dw FamilyCode_119_GH  ; [119] GH
-    dw FamilyCode_120_TE  ; [120] TE
-    dw FamilyCode_121_AP  ; [121] AP
-    dw FamilyCode_122_ED  ; [122] ED
-    dw FamilyCode_123_GM  ; [123] GM
-    dw FamilyCode_124_DR  ; [124] DR
-    dw FamilyCode_125_AC  ; [125] AC
-    dw FamilyCode_126_MH  ; [126] MH
-    dw FamilyCode_127_HB  ; [127] HB
-    dw FamilyCode_128_AP  ; [128] AP
-    dw FamilyCode_129_DG  ; [129] DG
-    dw FamilyCode_130_PX  ; [130] PX
-    dw FamilyCode_131_AD  ; [131] AD
-    dw FamilyCode_132_AD  ; [132] AD
-    dw FamilyCode_133_DM  ; [133] DM
-    dw FamilyCode_134_DE  ; [134] DE
-    dw FamilyCode_135_EB  ; [135] EB
-    dw FamilyCode_136_BR  ; [136] BR
-    dw FamilyCode_137_EB  ; [137] EB
-    dw FamilyCode_138_1E  ; [138] 1E
-    dw FamilyCode_139_GR  ; [139] GR
-    dw FamilyCode_140_MD  ; [140] MD
-    dw FamilyCode_141_LX  ; [141] LX
-    dw FamilyCode_142_GH  ; [142] GH
-    dw FamilyCode_143_OC  ; [143] OC
-    dw FamilyCode_144_OG  ; [144] OG
-    dw FamilyCode_145_GG  ; [145] GG
-    dw FamilyCode_146_CC  ; [146] CC
-    dw FamilyCode_147_GR  ; [147] GR
-    dw FamilyCode_148_AK  ; [148] AK
-    dw FamilyCode_149_MK  ; [149] MK
-    dw FamilyCode_150_GG  ; [150] GG
-    dw FamilyCode_151_CS  ; [151] CS
-    dw FamilyCode_152_EA  ; [152] EA
-    dw FamilyCode_153_JA  ; [153] JA
-    dw FamilyCode_154_DR  ; [154] DR
-    dw FamilyCode_155_SP  ; [155] SP
-    dw FamilyCode_156_SK  ; [156] SK
-    dw FamilyCode_157_DZ  ; [157] DZ
-    dw FamilyCode_158_RR  ; [158] RR
-    dw FamilyCode_159_MM  ; [159] MM
-    dw FamilyCode_160_DC  ; [160] DC
-    dw FamilyCode_161_DN  ; [161] DN
-    dw FamilyCode_162_SH  ; [162] SH
-    dw FamilyCode_163_PT  ; [163] PT
-    dw FamilyCode_164_MD  ; [164] MD
-    dw FamilyCode_165_NW  ; [165] NW
-    dw FamilyCode_166_ES  ; [166] ES
-    dw FamilyCode_167_WM  ; [167] WM
-    dw FamilyCode_168_ST  ; [168] ST
-    dw FamilyCode_169_DN  ; [169] DN
-    dw FamilyCode_170_IK  ; [170] IK
-    dw FamilyCode_171_BS  ; [171] BS
-    dw FamilyCode_172_SK  ; [172] SK
-    dw FamilyCode_173_SV  ; [173] SV
-    dw FamilyCode_174_CC  ; [174] CC
-    dw FamilyCode_175_JB  ; [175] JB
-    dw FamilyCode_176_EW  ; [176] EW
-    dw FamilyCode_177_MC  ; [177] MC
-    dw FamilyCode_178_CB  ; [178] CB
-    dw FamilyCode_179_MK  ; [179] MK
-    dw FamilyCode_180_SB  ; [180] SB
-    dw FamilyCode_181_MM  ; [181] MM
-    dw FamilyCode_182_RA  ; [182] RA
-    dw FamilyCode_183_MH  ; [183] MH
-    dw FamilyCode_184_VD  ; [184] VD
-    dw FamilyCode_185_DM  ; [185] DM
-    dw FamilyCode_186_BZ  ; [186] BZ
-    dw FamilyCode_187_SM  ; [187] SM
-    dw FamilyCode_188_CL  ; [188] CL
-    dw FamilyCode_189_KB  ; [189] KB
-    dw FamilyCode_190_EP  ; [190] EP
-    dw FamilyCode_191_GZ  ; [191] GZ
-    dw FamilyCode_192_LM  ; [192] LM
-    dw FamilyCode_193_IC  ; [193] IC
-    dw FamilyCode_194_MM  ; [194] MM
-    dw FamilyCode_195_MD  ; [195] MD
-    dw FamilyCode_196_GL  ; [196] GL
-    dw FamilyCode_197_MS  ; [197] MS
-    dw FamilyCode_198_BC  ; [198] BC
-    dw FamilyCode_199_GG  ; [199] GG
-    dw FamilyCode_200_DL  ; [200] DL
-    dw FamilyCode_201_DL  ; [201] DL
-    dw FamilyCode_202_HG  ; [202] HG
-    dw FamilyCode_203_SD  ; [203] SD
-    dw FamilyCode_204_BM  ; [204] BM
-    dw FamilyCode_205_ZM  ; [205] ZM
-    dw FamilyCode_206_PZ  ; [206] PZ
-    dw FamilyCode_207_ES  ; [207] ES
-    dw FamilyCode_208_MD  ; [208] MD
-    dw FamilyCode_209_MD  ; [209] MD
-    dw FamilyCode_210_MD  ; [210] MD
-    dw FamilyCode_211_DM  ; [211] DM
-    dw FamilyCode_212_DM  ; [212] DM
-    dw FamilyCode_213_DM  ; [213] DM
-    dw FamilyCode_214_DD  ; [214] DD
+MonsterNickPtrTable:  ; $4739
+    dw MonsterNick_000_DS  ; [0] DS
+    dw MonsterNick_001_SP  ; [1] SP
+    dw MonsterNick_002_WS  ; [2] WS
+    dw MonsterNick_003_TS  ; [3] TS
+    dw MonsterNick_004_SN  ; [4] SN
+    dw MonsterNick_005_KN  ; [5] KN
+    dw MonsterNick_006_BB  ; [6] BB
+    dw MonsterNick_007_BX  ; [7] BX
+    dw MonsterNick_008_SL  ; [8] SL
+    dw MonsterNick_009_HL  ; [9] HL
+    dw MonsterNick_010_FS  ; [10] FS
+    dw MonsterNick_011_RS  ; [11] RS
+    dw MonsterNick_012_SB  ; [12] SB
+    dw MonsterNick_013_ST  ; [13] ST
+    dw MonsterNick_014_SK  ; [14] SK
+    dw MonsterNick_015_KS  ; [15] KS
+    dw MonsterNick_016_MK  ; [16] MK
+    dw MonsterNick_017_MB  ; [17] MB
+    dw MonsterNick_018_MT  ; [18] MT
+    dw MonsterNick_019_GS  ; [19] GS
+    dw MonsterNick_020_DK  ; [20] DK
+    dw MonsterNick_021_TG  ; [21] TG
+    dw MonsterNick_022_PT  ; [22] PT
+    dw MonsterNick_023_BG  ; [23] BG
+    dw MonsterNick_024_BD  ; [24] BD
+    dw MonsterNick_025_LM  ; [25] LM
+    dw MonsterNick_026_PG  ; [26] PG
+    dw MonsterNick_027_SD  ; [27] SD
+    dw MonsterNick_028_DR  ; [28] DR
+    dw MonsterNick_029_MD  ; [29] MD
+    dw MonsterNick_030_DK  ; [30] DK
+    dw MonsterNick_031_RB  ; [31] RB
+    dw MonsterNick_032_CH  ; [32] CH
+    dw MonsterNick_033_LF  ; [33] LF
+    dw MonsterNick_034_AD  ; [34] AD
+    dw MonsterNick_035_LC  ; [35] LC
+    dw MonsterNick_036_SS  ; [36] SS
+    dw MonsterNick_037_GD  ; [37] GD
+    dw MonsterNick_038_CP  ; [38] CP
+    dw MonsterNick_039_WS  ; [39] WS
+    dw MonsterNick_040_CT  ; [40] CT
+    dw MonsterNick_041_OR  ; [41] OR
+    dw MonsterNick_042_BR  ; [42] BR
+    dw MonsterNick_043_SD  ; [43] SD
+    dw MonsterNick_044_DG  ; [44] DG
+    dw MonsterNick_045_TG  ; [45] TG
+    dw MonsterNick_046_HB  ; [46] HB
+    dw MonsterNick_047_CF  ; [47] CF
+    dw MonsterNick_048_PR  ; [48] PR
+    dw MonsterNick_049_SC  ; [49] SC
+    dw MonsterNick_050_GB  ; [50] GB
+    dw MonsterNick_051_SL  ; [51] SL
+    dw MonsterNick_052_WB  ; [52] WB
+    dw MonsterNick_053_AE  ; [53] AE
+    dw MonsterNick_054_ST  ; [54] ST
+    dw MonsterNick_055_IT  ; [55] IT
+    dw MonsterNick_056_MM  ; [56] MM
+    dw MonsterNick_057_HM  ; [57] HM
+    dw MonsterNick_058_GZ  ; [58] GZ
+    dw MonsterNick_059_YT  ; [59] YT
+    dw MonsterNick_060_MG  ; [60] MG
+    dw MonsterNick_061_FR  ; [61] FR
+    dw MonsterNick_062_UC  ; [62] UC
+    dw MonsterNick_063_GG  ; [63] GG
+    dw MonsterNick_064_KA  ; [64] KA
+    dw MonsterNick_065_TP  ; [65] TP
+    dw MonsterNick_066_KL  ; [66] KL
+    dw MonsterNick_067_DH  ; [67] DH
+    dw MonsterNick_068_MC  ; [68] MC
+    dw MonsterNick_069_BE  ; [69] BE
+    dw MonsterNick_070_PK  ; [70] PK
+    dw MonsterNick_071_WV  ; [71] WV
+    dw MonsterNick_072_BB  ; [72] BB
+    dw MonsterNick_073_FJ  ; [73] FJ
+    dw MonsterNick_074_DK  ; [74] DK
+    dw MonsterNick_075_MP  ; [75] MP
+    dw MonsterNick_076_MR  ; [76] MR
+    dw MonsterNick_077_MW  ; [77] MW
+    dw MonsterNick_078_DK  ; [78] DK
+    dw MonsterNick_079_BR  ; [79] BR
+    dw MonsterNick_080_SB  ; [80] SB
+    dw MonsterNick_081_LO  ; [81] LO
+    dw MonsterNick_082_MG  ; [82] MG
+    dw MonsterNick_083_MC  ; [83] MC
+    dw MonsterNick_084_BZ  ; [84] BZ
+    dw MonsterNick_085_PN  ; [85] PN
+    dw MonsterNick_086_TH  ; [86] TH
+    dw MonsterNick_087_WH  ; [87] WH
+    dw MonsterNick_088_FB  ; [88] FB
+    dw MonsterNick_089_RB  ; [89] RB
+    dw MonsterNick_090_MP  ; [90] MP
+    dw MonsterNick_091_FW  ; [91] FW
+    dw MonsterNick_092_FM  ; [92] FM
+    dw MonsterNick_093_WT  ; [93] WT
+    dw MonsterNick_094_CB  ; [94] CB
+    dw MonsterNick_095_GP  ; [95] GP
+    dw MonsterNick_096_FG  ; [96] FG
+    dw MonsterNick_097_AW  ; [97] AW
+    dw MonsterNick_098_SS  ; [98] SS
+    dw MonsterNick_099_ON  ; [99] ON
+    dw MonsterNick_100_DV  ; [100] DV
+    dw MonsterNick_101_TB  ; [101] TB
+    dw MonsterNick_102_FT  ; [102] FT
+    dw MonsterNick_103_HM  ; [103] HM
+    dw MonsterNick_104_BM  ; [104] BM
+    dw MonsterNick_105_ES  ; [105] ES
+    dw MonsterNick_106_ME  ; [106] ME
+    dw MonsterNick_107_SP  ; [107] SP
+    dw MonsterNick_108_OV  ; [108] OV
+    dw MonsterNick_109_WT  ; [109] WT
+    dw MonsterNick_110_GS  ; [110] GS
+    dw MonsterNick_111_CP  ; [111] CP
+    dw MonsterNick_112_GC  ; [112] GC
+    dw MonsterNick_113_BF  ; [113] BF
+    dw MonsterNick_114_WB  ; [114] WB
+    dw MonsterNick_115_GW  ; [115] GW
+    dw MonsterNick_116_LP  ; [116] LP
+    dw MonsterNick_117_SB  ; [117] SB
+    dw MonsterNick_118_AA  ; [118] AA
+    dw MonsterNick_119_GH  ; [119] GH
+    dw MonsterNick_120_TE  ; [120] TE
+    dw MonsterNick_121_AP  ; [121] AP
+    dw MonsterNick_122_ED  ; [122] ED
+    dw MonsterNick_123_GM  ; [123] GM
+    dw MonsterNick_124_DR  ; [124] DR
+    dw MonsterNick_125_AC  ; [125] AC
+    dw MonsterNick_126_MH  ; [126] MH
+    dw MonsterNick_127_HB  ; [127] HB
+    dw MonsterNick_128_AP  ; [128] AP
+    dw MonsterNick_129_DG  ; [129] DG
+    dw MonsterNick_130_PX  ; [130] PX
+    dw MonsterNick_131_AD  ; [131] AD
+    dw MonsterNick_132_AD  ; [132] AD
+    dw MonsterNick_133_DM  ; [133] DM
+    dw MonsterNick_134_DE  ; [134] DE
+    dw MonsterNick_135_EB  ; [135] EB
+    dw MonsterNick_136_BR  ; [136] BR
+    dw MonsterNick_137_EB  ; [137] EB
+    dw MonsterNick_138_1E  ; [138] 1E
+    dw MonsterNick_139_GR  ; [139] GR
+    dw MonsterNick_140_MD  ; [140] MD
+    dw MonsterNick_141_LX  ; [141] LX
+    dw MonsterNick_142_GH  ; [142] GH
+    dw MonsterNick_143_OC  ; [143] OC
+    dw MonsterNick_144_OG  ; [144] OG
+    dw MonsterNick_145_GG  ; [145] GG
+    dw MonsterNick_146_CC  ; [146] CC
+    dw MonsterNick_147_GR  ; [147] GR
+    dw MonsterNick_148_AK  ; [148] AK
+    dw MonsterNick_149_MK  ; [149] MK
+    dw MonsterNick_150_GG  ; [150] GG
+    dw MonsterNick_151_CS  ; [151] CS
+    dw MonsterNick_152_EA  ; [152] EA
+    dw MonsterNick_153_JA  ; [153] JA
+    dw MonsterNick_154_DR  ; [154] DR
+    dw MonsterNick_155_SP  ; [155] SP
+    dw MonsterNick_156_SK  ; [156] SK
+    dw MonsterNick_157_DZ  ; [157] DZ
+    dw MonsterNick_158_RR  ; [158] RR
+    dw MonsterNick_159_MM  ; [159] MM
+    dw MonsterNick_160_DC  ; [160] DC
+    dw MonsterNick_161_DN  ; [161] DN
+    dw MonsterNick_162_SH  ; [162] SH
+    dw MonsterNick_163_PT  ; [163] PT
+    dw MonsterNick_164_MD  ; [164] MD
+    dw MonsterNick_165_NW  ; [165] NW
+    dw MonsterNick_166_ES  ; [166] ES
+    dw MonsterNick_167_WM  ; [167] WM
+    dw MonsterNick_168_ST  ; [168] ST
+    dw MonsterNick_169_DN  ; [169] DN
+    dw MonsterNick_170_IK  ; [170] IK
+    dw MonsterNick_171_BS  ; [171] BS
+    dw MonsterNick_172_SK  ; [172] SK
+    dw MonsterNick_173_SV  ; [173] SV
+    dw MonsterNick_174_CC  ; [174] CC
+    dw MonsterNick_175_JB  ; [175] JB
+    dw MonsterNick_176_EW  ; [176] EW
+    dw MonsterNick_177_MC  ; [177] MC
+    dw MonsterNick_178_CB  ; [178] CB
+    dw MonsterNick_179_MK  ; [179] MK
+    dw MonsterNick_180_SB  ; [180] SB
+    dw MonsterNick_181_MM  ; [181] MM
+    dw MonsterNick_182_RA  ; [182] RA
+    dw MonsterNick_183_MH  ; [183] MH
+    dw MonsterNick_184_VD  ; [184] VD
+    dw MonsterNick_185_DM  ; [185] DM
+    dw MonsterNick_186_BZ  ; [186] BZ
+    dw MonsterNick_187_SM  ; [187] SM
+    dw MonsterNick_188_CL  ; [188] CL
+    dw MonsterNick_189_KB  ; [189] KB
+    dw MonsterNick_190_EP  ; [190] EP
+    dw MonsterNick_191_GZ  ; [191] GZ
+    dw MonsterNick_192_LM  ; [192] LM
+    dw MonsterNick_193_IC  ; [193] IC
+    dw MonsterNick_194_MM  ; [194] MM
+    dw MonsterNick_195_MD  ; [195] MD
+    dw MonsterNick_196_GL  ; [196] GL
+    dw MonsterNick_197_MS  ; [197] MS
+    dw MonsterNick_198_BC  ; [198] BC
+    dw MonsterNick_199_GG  ; [199] GG
+    dw MonsterNick_200_DL  ; [200] DL
+    dw MonsterNick_201_DL  ; [201] DL
+    dw MonsterNick_202_HG  ; [202] HG
+    dw MonsterNick_203_SD  ; [203] SD
+    dw MonsterNick_204_BM  ; [204] BM
+    dw MonsterNick_205_ZM  ; [205] ZM
+    dw MonsterNick_206_PZ  ; [206] PZ
+    dw MonsterNick_207_ES  ; [207] ES
+    dw MonsterNick_208_MD  ; [208] MD
+    dw MonsterNick_209_MD  ; [209] MD
+    dw MonsterNick_210_MD  ; [210] MD
+    dw MonsterNick_211_DM  ; [211] DM
+    dw MonsterNick_212_DM  ; [212] DM
+    dw MonsterNick_213_DM  ; [213] DM
+    dw MonsterNick_214_DD  ; [214] DD
 
 ; ---------------------------------------------------------------
 ; Item Name Pointer Table ($48E7)
@@ -1254,7 +1252,7 @@ FamilyCodePtrTable:  ; $4739
 
 ItemNamePtrTable:  ; $48E7
     ; mode 8 of the $4007 config list (per the table; confirm the item-render
-    ; selector [$c822] in SameBoy). Also the OVERSHOOT landing for FamilyCodePtrTable
+    ; selector [$c822] in SameBoy). Also the OVERSHOOT landing for MonsterNickPtrTable
     ; ($4739, mode 7): a default-nick lookup for species id>=215 reads here
     ; (id 224 -> $48F9 = ItemName[9] = "SkyBell") until the mode-7 fork intercepts it.
     dw ItemName_00_Empty  ; [0] 
@@ -2355,228 +2353,227 @@ SkillName_221_Ahhh: db "Ahhh", $F0
 SkillName_222_Unused_222: db $F0
 
 ; ---------------------------------------------------------------
-; Family Code Strings ($69F2-$6C77)  [LEGACY NAME — these are per-SPECIES codes]
-; 2-letter DEFAULT-NICKNAME code + $F0 terminator, one per species (NOT per family;
-; the "Family"/"FamilyCode_NNN" names are misleading legacy/mgbdis labels).
-; Indexed by FamilyCodePtrTable at $4739 (mode 7 of the $4007 config list)
+; Monster Default-Nickname Strings ($69F2-$6C77)
+; 2-letter code + $F0, one per species, id order (S108: was "Family Code Strings" /
+; FamilyCode_NNN — per SPECIES, not per family). Indexed by MonsterNickPtrTable ($4739).
 ; ---------------------------------------------------------------
 
-FamilyCodeStrings:
-FamilyCode_000_DS: db "DS", $F0
-FamilyCode_001_SP: db "SP", $F0
-FamilyCode_002_WS: db "WS", $F0
-FamilyCode_003_TS: db "TS", $F0
-FamilyCode_004_SN: db "SN", $F0
-FamilyCode_005_KN: db "KN", $F0
-FamilyCode_006_BB: db "BB", $F0
-FamilyCode_007_BX: db "BX", $F0
-FamilyCode_008_SL: db "SL", $F0
-FamilyCode_009_HL: db "HL", $F0
-FamilyCode_010_FS: db "FS", $F0
-FamilyCode_011_RS: db "RS", $F0
-FamilyCode_012_SB: db "SB", $F0
-FamilyCode_013_ST: db "ST", $F0
-FamilyCode_014_SK: db "SK", $F0
-FamilyCode_015_KS: db "KS", $F0
-FamilyCode_016_MK: db "MK", $F0
-FamilyCode_017_MB: db "MB", $F0
-FamilyCode_018_MT: db "MT", $F0
-FamilyCode_019_GS: db "GS", $F0
-FamilyCode_020_DK: db "DK", $F0
-FamilyCode_021_TG: db "TG", $F0
-FamilyCode_022_PT: db "PT", $F0
-FamilyCode_023_BG: db "BG", $F0
-FamilyCode_024_BD: db "BD", $F0
-FamilyCode_025_LM: db "LM", $F0
-FamilyCode_026_PG: db "PG", $F0
-FamilyCode_027_SD: db "SD", $F0
-FamilyCode_028_DR: db "DR", $F0
-FamilyCode_029_MD: db "MD", $F0
-FamilyCode_030_DK: db "DK", $F0
-FamilyCode_031_RB: db "RB", $F0
-FamilyCode_032_CH: db "CH", $F0
-FamilyCode_033_LF: db "LF", $F0
-FamilyCode_034_AD: db "AD", $F0
-FamilyCode_035_LC: db "LC", $F0
-FamilyCode_036_SS: db "SS", $F0
-FamilyCode_037_GD: db "GD", $F0
-FamilyCode_038_CP: db "CP", $F0
-FamilyCode_039_WS: db "WS", $F0
-FamilyCode_040_CT: db "CT", $F0
-FamilyCode_041_OR: db "OR", $F0
-FamilyCode_042_BR: db "BR", $F0
-FamilyCode_043_SD: db "SD", $F0
-FamilyCode_044_DG: db "DG", $F0
-FamilyCode_045_TG: db "TG", $F0
-FamilyCode_046_HB: db "HB", $F0
-FamilyCode_047_CF: db "CF", $F0
-FamilyCode_048_PR: db "PR", $F0
-FamilyCode_049_SC: db "SC", $F0
-FamilyCode_050_GB: db "GB", $F0
-FamilyCode_051_SL: db "SL", $F0
-FamilyCode_052_WB: db "WB", $F0
-FamilyCode_053_AE: db "AE", $F0
-FamilyCode_054_ST: db "ST", $F0
-FamilyCode_055_IT: db "IT", $F0
-FamilyCode_056_MM: db "MM", $F0
-FamilyCode_057_HM: db "HM", $F0
-FamilyCode_058_GZ: db "GZ", $F0
-FamilyCode_059_YT: db "YT", $F0
-FamilyCode_060_MG: db "MG", $F0
-FamilyCode_061_FR: db "FR", $F0
-FamilyCode_062_UC: db "UC", $F0
-FamilyCode_063_GG: db "GG", $F0
-FamilyCode_064_KA: db "KA", $F0
-FamilyCode_065_TP: db "TP", $F0
-FamilyCode_066_KL: db "KL", $F0
-FamilyCode_067_DH: db "DH", $F0
-FamilyCode_068_MC: db "MC", $F0
-FamilyCode_069_BE: db "BE", $F0
-FamilyCode_070_PK: db "PK", $F0
-FamilyCode_071_WV: db "WV", $F0
-FamilyCode_072_BB: db "BB", $F0
-FamilyCode_073_FJ: db "FJ", $F0
-FamilyCode_074_DK: db "DK", $F0
-FamilyCode_075_MP: db "MP", $F0
-FamilyCode_076_MR: db "MR", $F0
-FamilyCode_077_MW: db "MW", $F0
-FamilyCode_078_DK: db "DK", $F0
-FamilyCode_079_BR: db "BR", $F0
-FamilyCode_080_SB: db "SB", $F0
-FamilyCode_081_LO: db "LO", $F0
-FamilyCode_082_MG: db "MG", $F0
-FamilyCode_083_MC: db "MC", $F0
-FamilyCode_084_BZ: db "BZ", $F0
-FamilyCode_085_PN: db "PN", $F0
-FamilyCode_086_TH: db "TH", $F0
-FamilyCode_087_WH: db "WH", $F0
-FamilyCode_088_FB: db "FB", $F0
-FamilyCode_089_RB: db "RB", $F0
-FamilyCode_090_MP: db "MP", $F0
-FamilyCode_091_FW: db "FW", $F0
-FamilyCode_092_FM: db "FM", $F0
-FamilyCode_093_WT: db "WT", $F0
-FamilyCode_094_CB: db "CB", $F0
-FamilyCode_095_GP: db "GP", $F0
-FamilyCode_096_FG: db "FG", $F0
-FamilyCode_097_AW: db "AW", $F0
-FamilyCode_098_SS: db "SS", $F0
-FamilyCode_099_ON: db "ON", $F0
-FamilyCode_100_DV: db "DV", $F0
-FamilyCode_101_TB: db "TB", $F0
-FamilyCode_102_FT: db "FT", $F0
-FamilyCode_103_HM: db "HM", $F0
-FamilyCode_104_BM: db "BM", $F0
-FamilyCode_105_ES: db "ES", $F0
-FamilyCode_106_ME: db "ME", $F0
-FamilyCode_107_SP: db "SP", $F0
-FamilyCode_108_OV: db "OV", $F0
-FamilyCode_109_WT: db "WT", $F0
-FamilyCode_110_GS: db "GS", $F0
-FamilyCode_111_CP: db "CP", $F0
-FamilyCode_112_GC: db "GC", $F0
-FamilyCode_113_BF: db "BF", $F0
-FamilyCode_114_WB: db "WB", $F0
-FamilyCode_115_GW: db "GW", $F0
-FamilyCode_116_LP: db "LP", $F0
-FamilyCode_117_SB: db "SB", $F0
-FamilyCode_118_AA: db "AA", $F0
-FamilyCode_119_GH: db "GH", $F0
-FamilyCode_120_TE: db "TE", $F0
-FamilyCode_121_AP: db "AP", $F0
-FamilyCode_122_ED: db "ED", $F0
-FamilyCode_123_GM: db "GM", $F0
-FamilyCode_124_DR: db "DR", $F0
-FamilyCode_125_AC: db "AC", $F0
-FamilyCode_126_MH: db "MH", $F0
-FamilyCode_127_HB: db "HB", $F0
-FamilyCode_128_AP: db "AP", $F0
-FamilyCode_129_DG: db "DG", $F0
-FamilyCode_130_PX: db "PX", $F0
-FamilyCode_131_AD: db "AD", $F0
-FamilyCode_132_AD: db "AD", $F0
-FamilyCode_133_DM: db "DM", $F0
-FamilyCode_134_DE: db "DE", $F0
-FamilyCode_135_EB: db "EB", $F0
-FamilyCode_136_BR: db "BR", $F0
-FamilyCode_137_EB: db "EB", $F0
-FamilyCode_138_1E: db "1E", $F0
-FamilyCode_139_GR: db "GR", $F0
-FamilyCode_140_MD: db "MD", $F0
-FamilyCode_141_LX: db "LX", $F0
-FamilyCode_142_GH: db "GH", $F0
-FamilyCode_143_OC: db "OC", $F0
-FamilyCode_144_OG: db "OG", $F0
-FamilyCode_145_GG: db "GG", $F0
-FamilyCode_146_CC: db "CC", $F0
-FamilyCode_147_GR: db "GR", $F0
-FamilyCode_148_AK: db "AK", $F0
-FamilyCode_149_MK: db "MK", $F0
-FamilyCode_150_GG: db "GG", $F0
-FamilyCode_151_CS: db "CS", $F0
-FamilyCode_152_EA: db "EA", $F0
-FamilyCode_153_JA: db "JA", $F0
-FamilyCode_154_DR: db "DR", $F0
-FamilyCode_155_SP: db "SP", $F0
-FamilyCode_156_SK: db "SK", $F0
-FamilyCode_157_DZ: db "DZ", $F0
-FamilyCode_158_RR: db "RR", $F0
-FamilyCode_159_MM: db "MM", $F0
-FamilyCode_160_DC: db "DC", $F0
-FamilyCode_161_DN: db "DN", $F0
-FamilyCode_162_SH: db "SH", $F0
-FamilyCode_163_PT: db "PT", $F0
-FamilyCode_164_MD: db "MD", $F0
-FamilyCode_165_NW: db "NW", $F0
-FamilyCode_166_ES: db "ES", $F0
-FamilyCode_167_WM: db "WM", $F0
-FamilyCode_168_ST: db "ST", $F0
-FamilyCode_169_DN: db "DN", $F0
-FamilyCode_170_IK: db "IK", $F0
-FamilyCode_171_BS: db "BS", $F0
-FamilyCode_172_SK: db "SK", $F0
-FamilyCode_173_SV: db "SV", $F0
-FamilyCode_174_CC: db "CC", $F0
-FamilyCode_175_JB: db "JB", $F0
-FamilyCode_176_EW: db "EW", $F0
-FamilyCode_177_MC: db "MC", $F0
-FamilyCode_178_CB: db "CB", $F0
-FamilyCode_179_MK: db "MK", $F0
-FamilyCode_180_SB: db "SB", $F0
-FamilyCode_181_MM: db "MM", $F0
-FamilyCode_182_RA: db "RA", $F0
-FamilyCode_183_MH: db "MH", $F0
-FamilyCode_184_VD: db "VD", $F0
-FamilyCode_185_DM: db "DM", $F0
-FamilyCode_186_BZ: db "BZ", $F0
-FamilyCode_187_SM: db "SM", $F0
-FamilyCode_188_CL: db "CL", $F0
-FamilyCode_189_KB: db "KB", $F0
-FamilyCode_190_EP: db "EP", $F0
-FamilyCode_191_GZ: db "GZ", $F0
-FamilyCode_192_LM: db "LM", $F0
-FamilyCode_193_IC: db "IC", $F0
-FamilyCode_194_MM: db "MM", $F0
-FamilyCode_195_MD: db "MD", $F0
-FamilyCode_196_GL: db "GL", $F0
-FamilyCode_197_MS: db "MS", $F0
-FamilyCode_198_BC: db "BC", $F0
-FamilyCode_199_GG: db "GG", $F0
-FamilyCode_200_DL: db "DL", $F0
-FamilyCode_201_DL: db "DL", $F0
-FamilyCode_202_HG: db "HG", $F0
-FamilyCode_203_SD: db "SD", $F0
-FamilyCode_204_BM: db "BM", $F0
-FamilyCode_205_ZM: db "ZM", $F0
-FamilyCode_206_PZ: db "PZ", $F0
-FamilyCode_207_ES: db "ES", $F0
-FamilyCode_208_MD: db "MD", $F0
-FamilyCode_209_MD: db "MD", $F0
-FamilyCode_210_MD: db "MD", $F0
-FamilyCode_211_DM: db "DM", $F0
-FamilyCode_212_DM: db "DM", $F0
-FamilyCode_213_DM: db "DM", $F0
-FamilyCode_214_DD: db "DD", $F0
+MonsterNickStrings:
+MonsterNick_000_DS: db "DS", $F0
+MonsterNick_001_SP: db "SP", $F0
+MonsterNick_002_WS: db "WS", $F0
+MonsterNick_003_TS: db "TS", $F0
+MonsterNick_004_SN: db "SN", $F0
+MonsterNick_005_KN: db "KN", $F0
+MonsterNick_006_BB: db "BB", $F0
+MonsterNick_007_BX: db "BX", $F0
+MonsterNick_008_SL: db "SL", $F0
+MonsterNick_009_HL: db "HL", $F0
+MonsterNick_010_FS: db "FS", $F0
+MonsterNick_011_RS: db "RS", $F0
+MonsterNick_012_SB: db "SB", $F0
+MonsterNick_013_ST: db "ST", $F0
+MonsterNick_014_SK: db "SK", $F0
+MonsterNick_015_KS: db "KS", $F0
+MonsterNick_016_MK: db "MK", $F0
+MonsterNick_017_MB: db "MB", $F0
+MonsterNick_018_MT: db "MT", $F0
+MonsterNick_019_GS: db "GS", $F0
+MonsterNick_020_DK: db "DK", $F0
+MonsterNick_021_TG: db "TG", $F0
+MonsterNick_022_PT: db "PT", $F0
+MonsterNick_023_BG: db "BG", $F0
+MonsterNick_024_BD: db "BD", $F0
+MonsterNick_025_LM: db "LM", $F0
+MonsterNick_026_PG: db "PG", $F0
+MonsterNick_027_SD: db "SD", $F0
+MonsterNick_028_DR: db "DR", $F0
+MonsterNick_029_MD: db "MD", $F0
+MonsterNick_030_DK: db "DK", $F0
+MonsterNick_031_RB: db "RB", $F0
+MonsterNick_032_CH: db "CH", $F0
+MonsterNick_033_LF: db "LF", $F0
+MonsterNick_034_AD: db "AD", $F0
+MonsterNick_035_LC: db "LC", $F0
+MonsterNick_036_SS: db "SS", $F0
+MonsterNick_037_GD: db "GD", $F0
+MonsterNick_038_CP: db "CP", $F0
+MonsterNick_039_WS: db "WS", $F0
+MonsterNick_040_CT: db "CT", $F0
+MonsterNick_041_OR: db "OR", $F0
+MonsterNick_042_BR: db "BR", $F0
+MonsterNick_043_SD: db "SD", $F0
+MonsterNick_044_DG: db "DG", $F0
+MonsterNick_045_TG: db "TG", $F0
+MonsterNick_046_HB: db "HB", $F0
+MonsterNick_047_CF: db "CF", $F0
+MonsterNick_048_PR: db "PR", $F0
+MonsterNick_049_SC: db "SC", $F0
+MonsterNick_050_GB: db "GB", $F0
+MonsterNick_051_SL: db "SL", $F0
+MonsterNick_052_WB: db "WB", $F0
+MonsterNick_053_AE: db "AE", $F0
+MonsterNick_054_ST: db "ST", $F0
+MonsterNick_055_IT: db "IT", $F0
+MonsterNick_056_MM: db "MM", $F0
+MonsterNick_057_HM: db "HM", $F0
+MonsterNick_058_GZ: db "GZ", $F0
+MonsterNick_059_YT: db "YT", $F0
+MonsterNick_060_MG: db "MG", $F0
+MonsterNick_061_FR: db "FR", $F0
+MonsterNick_062_UC: db "UC", $F0
+MonsterNick_063_GG: db "GG", $F0
+MonsterNick_064_KA: db "KA", $F0
+MonsterNick_065_TP: db "TP", $F0
+MonsterNick_066_KL: db "KL", $F0
+MonsterNick_067_DH: db "DH", $F0
+MonsterNick_068_MC: db "MC", $F0
+MonsterNick_069_BE: db "BE", $F0
+MonsterNick_070_PK: db "PK", $F0
+MonsterNick_071_WV: db "WV", $F0
+MonsterNick_072_BB: db "BB", $F0
+MonsterNick_073_FJ: db "FJ", $F0
+MonsterNick_074_DK: db "DK", $F0
+MonsterNick_075_MP: db "MP", $F0
+MonsterNick_076_MR: db "MR", $F0
+MonsterNick_077_MW: db "MW", $F0
+MonsterNick_078_DK: db "DK", $F0
+MonsterNick_079_BR: db "BR", $F0
+MonsterNick_080_SB: db "SB", $F0
+MonsterNick_081_LO: db "LO", $F0
+MonsterNick_082_MG: db "MG", $F0
+MonsterNick_083_MC: db "MC", $F0
+MonsterNick_084_BZ: db "BZ", $F0
+MonsterNick_085_PN: db "PN", $F0
+MonsterNick_086_TH: db "TH", $F0
+MonsterNick_087_WH: db "WH", $F0
+MonsterNick_088_FB: db "FB", $F0
+MonsterNick_089_RB: db "RB", $F0
+MonsterNick_090_MP: db "MP", $F0
+MonsterNick_091_FW: db "FW", $F0
+MonsterNick_092_FM: db "FM", $F0
+MonsterNick_093_WT: db "WT", $F0
+MonsterNick_094_CB: db "CB", $F0
+MonsterNick_095_GP: db "GP", $F0
+MonsterNick_096_FG: db "FG", $F0
+MonsterNick_097_AW: db "AW", $F0
+MonsterNick_098_SS: db "SS", $F0
+MonsterNick_099_ON: db "ON", $F0
+MonsterNick_100_DV: db "DV", $F0
+MonsterNick_101_TB: db "TB", $F0
+MonsterNick_102_FT: db "FT", $F0
+MonsterNick_103_HM: db "HM", $F0
+MonsterNick_104_BM: db "BM", $F0
+MonsterNick_105_ES: db "ES", $F0
+MonsterNick_106_ME: db "ME", $F0
+MonsterNick_107_SP: db "SP", $F0
+MonsterNick_108_OV: db "OV", $F0
+MonsterNick_109_WT: db "WT", $F0
+MonsterNick_110_GS: db "GS", $F0
+MonsterNick_111_CP: db "CP", $F0
+MonsterNick_112_GC: db "GC", $F0
+MonsterNick_113_BF: db "BF", $F0
+MonsterNick_114_WB: db "WB", $F0
+MonsterNick_115_GW: db "GW", $F0
+MonsterNick_116_LP: db "LP", $F0
+MonsterNick_117_SB: db "SB", $F0
+MonsterNick_118_AA: db "AA", $F0
+MonsterNick_119_GH: db "GH", $F0
+MonsterNick_120_TE: db "TE", $F0
+MonsterNick_121_AP: db "AP", $F0
+MonsterNick_122_ED: db "ED", $F0
+MonsterNick_123_GM: db "GM", $F0
+MonsterNick_124_DR: db "DR", $F0
+MonsterNick_125_AC: db "AC", $F0
+MonsterNick_126_MH: db "MH", $F0
+MonsterNick_127_HB: db "HB", $F0
+MonsterNick_128_AP: db "AP", $F0
+MonsterNick_129_DG: db "DG", $F0
+MonsterNick_130_PX: db "PX", $F0
+MonsterNick_131_AD: db "AD", $F0
+MonsterNick_132_AD: db "AD", $F0
+MonsterNick_133_DM: db "DM", $F0
+MonsterNick_134_DE: db "DE", $F0
+MonsterNick_135_EB: db "EB", $F0
+MonsterNick_136_BR: db "BR", $F0
+MonsterNick_137_EB: db "EB", $F0
+MonsterNick_138_1E: db "1E", $F0
+MonsterNick_139_GR: db "GR", $F0
+MonsterNick_140_MD: db "MD", $F0
+MonsterNick_141_LX: db "LX", $F0
+MonsterNick_142_GH: db "GH", $F0
+MonsterNick_143_OC: db "OC", $F0
+MonsterNick_144_OG: db "OG", $F0
+MonsterNick_145_GG: db "GG", $F0
+MonsterNick_146_CC: db "CC", $F0
+MonsterNick_147_GR: db "GR", $F0
+MonsterNick_148_AK: db "AK", $F0
+MonsterNick_149_MK: db "MK", $F0
+MonsterNick_150_GG: db "GG", $F0
+MonsterNick_151_CS: db "CS", $F0
+MonsterNick_152_EA: db "EA", $F0
+MonsterNick_153_JA: db "JA", $F0
+MonsterNick_154_DR: db "DR", $F0
+MonsterNick_155_SP: db "SP", $F0
+MonsterNick_156_SK: db "SK", $F0
+MonsterNick_157_DZ: db "DZ", $F0
+MonsterNick_158_RR: db "RR", $F0
+MonsterNick_159_MM: db "MM", $F0
+MonsterNick_160_DC: db "DC", $F0
+MonsterNick_161_DN: db "DN", $F0
+MonsterNick_162_SH: db "SH", $F0
+MonsterNick_163_PT: db "PT", $F0
+MonsterNick_164_MD: db "MD", $F0
+MonsterNick_165_NW: db "NW", $F0
+MonsterNick_166_ES: db "ES", $F0
+MonsterNick_167_WM: db "WM", $F0
+MonsterNick_168_ST: db "ST", $F0
+MonsterNick_169_DN: db "DN", $F0
+MonsterNick_170_IK: db "IK", $F0
+MonsterNick_171_BS: db "BS", $F0
+MonsterNick_172_SK: db "SK", $F0
+MonsterNick_173_SV: db "SV", $F0
+MonsterNick_174_CC: db "CC", $F0
+MonsterNick_175_JB: db "JB", $F0
+MonsterNick_176_EW: db "EW", $F0
+MonsterNick_177_MC: db "MC", $F0
+MonsterNick_178_CB: db "CB", $F0
+MonsterNick_179_MK: db "MK", $F0
+MonsterNick_180_SB: db "SB", $F0
+MonsterNick_181_MM: db "MM", $F0
+MonsterNick_182_RA: db "RA", $F0
+MonsterNick_183_MH: db "MH", $F0
+MonsterNick_184_VD: db "VD", $F0
+MonsterNick_185_DM: db "DM", $F0
+MonsterNick_186_BZ: db "BZ", $F0
+MonsterNick_187_SM: db "SM", $F0
+MonsterNick_188_CL: db "CL", $F0
+MonsterNick_189_KB: db "KB", $F0
+MonsterNick_190_EP: db "EP", $F0
+MonsterNick_191_GZ: db "GZ", $F0
+MonsterNick_192_LM: db "LM", $F0
+MonsterNick_193_IC: db "IC", $F0
+MonsterNick_194_MM: db "MM", $F0
+MonsterNick_195_MD: db "MD", $F0
+MonsterNick_196_GL: db "GL", $F0
+MonsterNick_197_MS: db "MS", $F0
+MonsterNick_198_BC: db "BC", $F0
+MonsterNick_199_GG: db "GG", $F0
+MonsterNick_200_DL: db "DL", $F0
+MonsterNick_201_DL: db "DL", $F0
+MonsterNick_202_HG: db "HG", $F0
+MonsterNick_203_SD: db "SD", $F0
+MonsterNick_204_BM: db "BM", $F0
+MonsterNick_205_ZM: db "ZM", $F0
+MonsterNick_206_PZ: db "PZ", $F0
+MonsterNick_207_ES: db "ES", $F0
+MonsterNick_208_MD: db "MD", $F0
+MonsterNick_209_MD: db "MD", $F0
+MonsterNick_210_MD: db "MD", $F0
+MonsterNick_211_DM: db "DM", $F0
+MonsterNick_212_DM: db "DM", $F0
+MonsterNick_213_DM: db "DM", $F0
+MonsterNick_214_DD: db "DD", $F0
 ItemName_00_Empty: db $F0  ; no item
 
 ; ---------------------------------------------------------------
