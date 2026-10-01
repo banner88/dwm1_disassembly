@@ -9251,416 +9251,276 @@ Data_2B78:
     ld sp, $313a
 
 Data_2B91:
-    ld a, [hl-]
-    ld sp, $313a
-    ld a, [hl-]
-    ld sp, $313a
-    ld a, [hl-]
-    ld sp, $2f00
-    add hl, de
-    ld l, $11
-    cpl
-    ld [de], a
-    cpl
-    inc de
-    cpl
-    inc d
-    cpl
-    dec d
-    cpl
-    ld d, $2f
-    rla
-    cpl
-    jr @+$31
-
-    add hl, de
-    cpl
-    ld a, [de]
-    cpl
-    dec de
-    cpl
-    inc e
-    cpl
-    dec e
-    cpl
-    ld e, $2f
-    rra
-
-Data_2BBC:
-    cpl
-    jr nz, TilemapFillBorder01
-
-    ld hl, $222f
-    cpl
-    inc hl
-
-TilemapScrollCalc:
-    cpl
-    inc h
-    cpl
-    dec h
-    cpl
-    ld h, $2f
-    daa
-
-BitComplementAndBranch:
-    cpl
-    jr z, WriteTileBorderMid
-
-    add hl, hl
-    cpl
-    ld a, [hl+]
-    cpl
-    dec hl
-    cpl
-    inc l
-    cpl
-    dec l
-    cpl
-    ld l, $2f
-    cpl
-    cpl
-
-TilemapDrawRegion:
-    jr nc, WriteTileBorderBot
-
-    ld sp, $322f
-    cpl
-    inc sp
-    cpl
-    inc [hl]
-    cpl
-    dec [hl]
-    cpl
-    ld [hl], $2f
-    scf
-
-TilemapFillRegion:
-    cpl
-    nop
-
-TilemapFillBorder01:
-    ld [hl], $01
-
-TilemapFillBorder02:
-    ld [hl], $02
-    ld [hl], $03
-    ld [hl], $04
-    ld [hl], $05
-    ld [hl], $06
-    ld [hl], $07
-
-TilemapClearLine:
-    ld [hl], $08
-
-WriteTileBorderMid:
-    ld [hl], $09
-    ld [hl], $0a
-    ld [hl], $0b
-
-WriteTileSequence:
-    ld [hl], $0c
-    ld [hl], $0d
-    ld [hl], $0e
-    ld [hl], $0f
-    ld [hl], $10
-
-WriteTileBorderBot:
-    ld [hl], $11
-    ld [hl], $12
-
-WriteTileBorderInner:
-    ld [hl], $13
-    ld [hl], $14
-    ld [hl], $15
-    ld [hl], $16
-    ld [hl], $17
-    ld [hl], $18
-    ld [hl], $19
-    ld [hl], $1a
-    ld [hl], $1b
-    ld [hl], $1c
-    ld [hl], $1d
-    ld [hl], $1e
-    ld [hl], $1f
-    ld [hl], $20
-    ld [hl], $21
-    ld [hl], $22
-    ld [hl], $23
-    ld [hl], $24
-    ld [hl], $25
-    ld [hl], $26
-    ld [hl], $27
-    ld [hl], $00
-    dec [hl]
-    ld bc, $0235
-    dec [hl]
-    inc bc
-    dec [hl]
-    inc b
-    dec [hl]
-    dec b
-    dec [hl]
-    ld b, $35
-    rlca
-    dec [hl]
-    ld [$0935], sp
-    dec [hl]
-    ld a, [bc]
-    dec [hl]
-    dec bc
-    dec [hl]
-    inc c
-    dec [hl]
-    dec c
-    dec [hl]
-    ld c, $35
-    rrca
-    dec [hl]
-    db $10
-    dec [hl]
-    ld de, $1235
-    dec [hl]
-    inc de
-    dec [hl]
-    inc d
-    dec [hl]
-
-TileSequenceMid:
-    dec d
-    dec [hl]
-    ld d, $35
-    rla
-    dec [hl]
-    jr TileSeqIncrementC
-
-    add hl, de
-    dec [hl]
-    ld a, [de]
-    dec [hl]
-    dec de
-    dec [hl]
-    inc e
-    dec [hl]
-    dec e
-    dec [hl]
-    ld e, $35
-    rra
-    dec [hl]
-    jr nz, TileSeqIncrementD
-
-    ld hl, AddBCToHL
-    dec [hl]
-    inc hl
-    dec [hl]
-    inc h
-    dec [hl]
-    dec h
-    dec [hl]
-    ld h, $35
-    daa
-    dec [hl]
-    nop
-    inc [hl]
-    ld bc, $0234
-    inc [hl]
-    inc bc
-    inc [hl]
-    inc b
-    inc [hl]
-    dec b
-    inc [hl]
-    ld b, $34
-    rlca
-    inc [hl]
-    ld [$0934], sp
-    inc [hl]
-    ld a, [bc]
-    inc [hl]
-    dec bc
-
-TileSeqIncrementC:
-    inc [hl]
-    inc c
-    inc [hl]
-    dec c
-    inc [hl]
-    ld c, $34
-    rrca
-    inc [hl]
-    db $10
-    inc [hl]
-    ld de, $1234
-    inc [hl]
-    inc de
-
-TileSeqIncrementD:
-    inc [hl]
-    inc d
-    inc [hl]
-    dec d
-    inc [hl]
-    ld d, $34
-    rla
-    inc [hl]
-    jr TileDataContinue
-
-    add hl, de
-    inc [hl]
-    ld a, [de]
-    inc [hl]
-
-TileSeqDecrementDE:
-    dec de
-    inc [hl]
-    inc e
-    inc [hl]
-    dec e
-    inc [hl]
-    ld e, $34
-    rra
-    inc [hl]
-    jr nz, TileNextInSeq
-
-    ld hl, $2234
-    inc [hl]
-    inc hl
-    inc [hl]
-    inc h
-    inc [hl]
-    dec h
-    inc [hl]
-    ld h, $34
-    daa
-    inc [hl]
-    nop
-    inc sp
-    ld bc, $0233
-    inc sp
-    inc bc
-    inc sp
-    inc b
-    inc sp
-    dec b
-
-TileDataBlock1:
-    inc sp
-    ld b, $33
-    rlca
-
-TileDataBlock2:
-    inc sp
-    ld [$0933], sp
-    inc sp
-    ld a, [bc]
-    inc sp
-
-TileDataContinue:
-    dec bc
-    inc sp
-    inc c
-    inc sp
-    dec c
-    inc sp
-    ld c, $33
-
-TilemapWriteByte:
-    rrca
-
-TilemapWriteByte2:
-    inc sp
-    db $10
-    inc sp
-
-TilemapNextTile:
-    ld de, $1233
-    inc sp
-
-TileNextInSeq:
-    inc de
-    inc sp
-    inc d
-    inc sp
-    dec d
-    inc sp
-    ld d, $33
-    rla
-    inc sp
-    jr TileStoreReverseLoop
-
-TileAddDE:
-    add hl, de
-    inc sp
-
-TileReadDE:
-    ld a, [de]
-    inc sp
-    dec de
-    inc sp
-    inc e
-    inc sp
-    dec e
-    inc sp
-    ld e, $33
-    rra
-    inc sp
-    jr nz, TileStoreEnd
-
-    ld hl, $2233
-    inc sp
-    inc hl
-    inc sp
-    inc h
-    inc sp
-    dec h
-    inc sp
-    ld h, $33
-    daa
-    inc sp
-    nop
-    ld [hl-], a
-    ld bc, $0232
-    ld [hl-], a
-    inc bc
-    ld [hl-], a
-
-TileStoreReverse:
-    inc b
-    ld [hl-], a
-    dec b
-    ld [hl-], a
-    ld b, $32
-    rlca
-    ld [hl-], a
-    ld [$0932], sp
-    ld [hl-], a
-    ld a, [bc]
-
-TileStoreReverseLoop:
-    ld [hl-], a
-    dec bc
-    ld [hl-], a
-    inc c
-    ld [hl-], a
-    dec c
-    ld [hl-], a
-    ld c, $32
-    rrca
-    ld [hl-], a
-    db $10
-    ld [hl-], a
-    rrca
-    ld [hl-], a
-    rrca
-
-TileStoreEnd:
-    ld [hl-], a
-
-TilemapRotateWrite:
-    rrca
-    ld [hl-], a
-    rrca
-
+    db $3a, $31, $3a, $31, $3a, $31, $3a, $31, $3a, $31, $00, $2f, $19, $2e
+; --- Monster BATTLE sprite gfx-ID table (GFX-1; ported from the clean
+;     disassembly S107 — this patch copy was mgbdis soup). Word per species =
+;     gfx-ID (bank<<8 | index) -> $<bank>:$4001 + index*2 -> LZ stream -> VRAM
+;     $8B00. ONE table, 13 readers (battle, library, menus, breeding …), no
+;     copies (ROM search S107). Ids 0-214 = the compiler region art_battle_gfx
+;     (gamedata.art, S107: a re-arted monster points at an art bank $7F/$7C/$7A);
+;     215-220 below (TERRY? + the summons — PROJECT_STATE Iron Rule 8) and
+;     221-239 (ns_battle_gfx, custom.species) further down. The labels inside
+;     the region are fake-decode anchors other bytes point at (kept at their
+;     offsets by the emitter, editor2/core/art.py ANCHORS).
+MonsterBattleGfxTable:
+; @BUILD_PROJECT BEGIN art_battle_gfx
+    dw $2F11   ; [0] DrakSlime
+    dw $2F12   ; [1] SpotSlime
+    dw $2F13   ; [2] WingSlime
+    dw $2F14   ; [3] TreeSlime
+    dw $2F15   ; [4] Snaily
+    dw $2F16   ; [5] SlimeNite
+    dw $2F17   ; [6] Babble
+    dw $2F18   ; [7] BoxSlime
+    dw $2F19   ; [8] Slime
+    dw $2F1A   ; [9] Healer
+    dw $2F1B   ; [10] FangSlime
+    dw $2F1C   ; [11] RockSlime
+    dw $2F1D   ; [12] SlimeBorg
+    dw $2F1E   ; [13] Slabbit
+    db $1F   ; [14] SpotKing
+Data_2BBC:   ; kept at its byte offset (bytes elsewhere decoded as code point here; NOT code)
+    db $2F   ; [14] SpotKing (cont.)
+    dw $2F20   ; [15] KingSlime
+    dw $2F21   ; [16] Metaly
+    dw $2F22   ; [17] Metabble
+    db $23   ; [18] MetalKing
+TilemapScrollCalc:   ; kept at its byte offset (bytes elsewhere decoded as code point here; NOT code)
+    db $2F   ; [18] MetalKing (cont.)
+    dw $2F24   ; [19] GoldSlime
+    dw $2F25   ; [20] DragonKid
+    dw $2F26   ; [21] Tortragon
+    db $27   ; [22] Pteranod
+BitComplementAndBranch:   ; kept at its byte offset (bytes elsewhere decoded as code point here; NOT code)
+    db $2F   ; [22] Pteranod (cont.)
+    dw $2F28   ; [23] Gasgon
+    dw $2F29   ; [24] FairyDrak
+    dw $2F2A   ; [25] LizardMan
+    dw $2F2B   ; [26] Poisongon
+    dw $2F2C   ; [27] Swordgon
+    dw $2F2D   ; [28] Dragon
+    dw $2F2E   ; [29] MiniDrak
+    dw $2F2F   ; [30] MadDragon
+TilemapDrawRegion:   ; kept at its byte offset (bytes elsewhere decoded as code point here; NOT code)
+    db $30, $2F   ; [31] Rayburn
+    dw $2F31   ; [32] Chamelgon
+    dw $2F32   ; [33] LizardFly
+    dw $2F33   ; [34] Andreal
+    dw $2F34   ; [35] KingCobra
+    dw $2F35   ; [36] Spikerous
+    dw $2F36   ; [37] GreatDrak
+    dw $2F37   ; [38] Crestpent
+    db $00   ; [39] WingSnake
+TilemapFillBorder01:   ; kept at its byte offset (bytes elsewhere decoded as code point here; NOT code)
+    db $36   ; [39] WingSnake (cont.)
+    dw $3601   ; [40] Coatol
+    dw $3602   ; [41] Orochi
+    dw $3603   ; [42] BattleRex
+    dw $3604   ; [43] SkyDragon
+    dw $3605   ; [44] Divinegon
+    dw $3606   ; [45] Tonguella
+    dw $3607   ; [46] Almiraj
+    db $08   ; [47] CatFly
+WriteTileBorderMid:   ; kept at its byte offset (bytes elsewhere decoded as code point here; NOT code)
+    db $36   ; [47] CatFly (cont.)
+    dw $3609   ; [48] PillowRat
+    dw $360A   ; [49] Saccer
+    dw $360B   ; [50] GulpBeast
+    dw $360C   ; [51] Skullroo
+    dw $360D   ; [52] WindBeast
+    dw $360E   ; [53] Anteater
+    dw $360F   ; [54] SuperTen
+    db $10   ; [55] IronTurt
+WriteTileBorderBot:   ; kept at its byte offset (bytes elsewhere decoded as code point here; NOT code)
+    db $36   ; [55] IronTurt (cont.)
+    dw $3611   ; [56] Mommonja
+    dw $3612   ; [57] HammerMan
+    dw $3613   ; [58] Grizzly
+    dw $3614   ; [59] Yeti
+    dw $3615   ; [60] MadGopher
+    dw $3616   ; [61] FairyRat
+    dw $3617   ; [62] Unicorn
+    dw $3618   ; [63] Goategon
+    dw $3619   ; [64] WildApe
+    dw $361A   ; [65] Trumpeter
+    dw $361B   ; [66] KingLeo
+    dw $361C   ; [67] DarkHorn
+    dw $361D   ; [68] MadCat
+    dw $361E   ; [69] BigEye
+    dw $361F   ; [70] Picky
+    dw $3620   ; [71] Wyvern
+    dw $3621   ; [72] BullBird
+    dw $3622   ; [73] Florajay
+    dw $3623   ; [74] DuckKite
+    dw $3624   ; [75] MadPecker
+    dw $3625   ; [76] MadRaven
+    dw $3626   ; [77] MistyWing
+    dw $3627   ; [78] Dracky
+    dw $3500   ; [79] BigRoost
+    dw $3501   ; [80] StubBird
+    dw $3502   ; [81] LandOwl
+    dw $3503   ; [82] MadGoose
+    dw $3504   ; [83] MadCondor
+    dw $3505   ; [84] Blizzardy
+    dw $3506   ; [85] Phoenix
+    dw $3507   ; [86] ZapBird
+    dw $3508   ; [87] WhipBird
+    dw $3509   ; [88] FunkyBird
+    dw $350A   ; [89] RainHawk
+    dw $350B   ; [90] MadPlant
+    dw $350C   ; [91] FireWeed
+    dw $350D   ; [92] FloraMan
+    dw $350E   ; [93] WingTree
+    dw $350F   ; [94] CactiBall
+    dw $3510   ; [95] Gulpple
+    dw $3511   ; [96] Toadstool
+    dw $3512   ; [97] AmberWeed
+    dw $3513   ; [98] Stubsuck
+    dw $3514   ; [99] Oniono
+TileSequenceMid:   ; kept at its byte offset (bytes elsewhere decoded as code point here; NOT code)
+    db $15, $35   ; [100] DanceVegi
+    dw $3516   ; [101] TreeBoy
+    dw $3517   ; [102] FaceTree
+    dw $3518   ; [103] HerbMan
+    dw $3519   ; [104] BeanMan
+    dw $351A   ; [105] EvilSeed
+    dw $351B   ; [106] ManEater
+    dw $351C   ; [107] Snapper
+    dw $351D   ; [108] Rosevine
+    dw $351E   ; [109] Watabou
+    dw $351F   ; [110] GiantSlug
+    dw $3520   ; [111] Catapila
+    dw $3521   ; [112] Gophecada
+    dw $3522   ; [113] Butterfly
+    dw $3523   ; [114] WeedBug
+    dw $3524   ; [115] GiantWorm
+    dw $3525   ; [116] Lipsy
+    dw $3526   ; [117] StagBug
+    dw $3527   ; [118] ArmyAnt
+    dw $3400   ; [119] GoHopper
+    dw $3401   ; [120] TailEater
+    dw $3402   ; [121] ArmorPede
+    dw $3403   ; [122] Eyeder
+    dw $3404   ; [123] GiantMoth
+    dw $3405   ; [124] Droll
+    dw $3406   ; [125] ArmyCrab
+    dw $3407   ; [126] MadHornet
+    dw $3408   ; [127] HornBeet
+    dw $3409   ; [128] Armorpion
+    dw $340A   ; [129] Digster
+    db $0B   ; [130] Pixy
+TileSeqIncrementC:   ; kept at its byte offset (bytes elsewhere decoded as code point here; NOT code)
+    db $34   ; [130] Pixy (cont.)
+    dw $340C   ; [131] ArcDemon
+    dw $340D   ; [132] AgDevil
+    dw $340E   ; [133] Demonite
+    dw $340F   ; [134] DarkEye
+    dw $3410   ; [135] EyeBall
+    dw $3411   ; [136] SkulRider
+    dw $3412   ; [137] EvilBeast
+    db $13   ; [138] 1EyeClown
+TileSeqIncrementD:   ; kept at its byte offset (bytes elsewhere decoded as code point here; NOT code)
+    db $34   ; [138] 1EyeClown (cont.)
+    dw $3414   ; [139] Gremlin
+    dw $3415   ; [140] MedusaEye
+    dw $3416   ; [141] Lionex
+    dw $3417   ; [142] GoatHorn
+    dw $3418   ; [143] Orc
+    dw $3419   ; [144] Ogre
+    dw $341A   ; [145] GateGuard
+    dw $341B   ; [146] ChopClown
+    dw $341C   ; [147] Grendal
+    dw $341D   ; [148] Akubar
+    dw $341E   ; [149] MadKnight
+    dw $341F   ; [150] Gigantes
+    dw $3420   ; [151] Centasaur
+    dw $3421   ; [152] EvilArmor
+    dw $3422   ; [153] Jamirus
+    dw $3423   ; [154] Durran
+    dw $3424   ; [155] Spooky
+    dw $3425   ; [156] Skullgon
+    dw $3426   ; [157] Putrepup
+    dw $3427   ; [158] RotRaven
+    dw $3300   ; [159] Mummy
+    dw $3301   ; [160] DarkCrab
+    dw $3302   ; [161] DeadNite
+    dw $3303   ; [162] Shadow
+    dw $3304   ; [163] Hork
+    dw $3305   ; [164] Mudron
+    dw $3306   ; [165] NiteWhip
+    db $07   ; [166] MadSpirit
+TileDataBlock2:   ; kept at its byte offset (bytes elsewhere decoded as code point here; NOT code)
+    db $33   ; [166] MadSpirit (cont.)
+    dw $3308   ; [167] WindMerge
+    dw $3309   ; [168] Reaper
+    dw $330A   ; [169] DeadNoble
+TileDataContinue:   ; kept at its byte offset (bytes elsewhere decoded as code point here; NOT code)
+    db $0B, $33   ; [170] WhiteKing
+    dw $330C   ; [171] BoneSlave
+    dw $330D   ; [172] Skeletor
+    dw $330E   ; [173] Servant
+TilemapWriteByte:   ; kept at its byte offset (bytes elsewhere decoded as code point here; NOT code)
+    db $0F   ; [174] Copycat
+TilemapWriteByte2:   ; kept at its byte offset (bytes elsewhere decoded as code point here; NOT code)
+    db $33   ; [174] Copycat (cont.)
+    dw $3310   ; [175] JewelBag
+TilemapNextTile:   ; kept at its byte offset (bytes elsewhere decoded as code point here; NOT code)
+    db $11, $33   ; [176] EvilWand
+    dw $3312   ; [177] MadCandle
+TileNextInSeq:   ; kept at its byte offset (bytes elsewhere decoded as code point here; NOT code)
+    db $13, $33   ; [178] CoilBird
+    dw $3314   ; [179] Facer
+    dw $3315   ; [180] SpikyBoy
+    dw $3316   ; [181] MadMirror
+    dw $3317   ; [182] RogueNite
+    dw $3318   ; [183] Goopi
+TileAddDE:   ; kept at its byte offset (bytes elsewhere decoded as code point here; NOT code)
+    db $19, $33   ; [184] Voodoll
+    dw $331A   ; [185] MetalDrak
+    dw $331B   ; [186] Balzak
+    dw $331C   ; [187] SabreMan
+    dw $331D   ; [188] CurseLamp
+    dw $331E   ; [189] Roboster
+    dw $331F   ; [190] EvilPot
+    dw $3320   ; [191] Gismo
+    dw $3321   ; [192] LavaMan
+    dw $3322   ; [193] IceMan
+    dw $3323   ; [194] Mimic
+    dw $3324   ; [195] MudDoll
+    dw $3325   ; [196] Golem
+    dw $3326   ; [197] StoneMan
+    dw $3327   ; [198] BombCrag
+    dw $3200   ; [199] GoldGolem
+    dw $3201   ; [200] DracoLord
+    dw $3202   ; [201] DracoLord
+    dw $3203   ; [202] Hargon
+TileStoreReverse:   ; kept at its byte offset (bytes elsewhere decoded as code point here; NOT code)
+    db $04, $32   ; [203] Sidoh
+    dw $3205   ; [204] Baramos
+    dw $3206   ; [205] Zoma
+    dw $3207   ; [206] Pizzaro
+    dw $3208   ; [207] Esterk
+    dw $3209   ; [208] Mirudraas
+    db $0A   ; [209] Mirudraas
+TileStoreReverseLoop:   ; kept at its byte offset (bytes elsewhere decoded as code point here; NOT code)
+    db $32   ; [209] Mirudraas (cont.)
+    dw $320B   ; [210] Mudou
+    dw $320C   ; [211] DeathMore
+    dw $320D   ; [212] DeathMore
+    dw $320E   ; [213] DeathMore
+    dw $320F   ; [214] Darkdrium
+; @BUILD_PROJECT END art_battle_gfx
+    ASSERT @ == $2b9f + 215 * 2
+    ; ids 215-220: TERRY? + the four summon tiers (NOT monsters, Iron Rule 8);
+    ; 216-220 all show Darkdrium's (214) battle art $320F
+    dw $3210   ; [215] TERRY?
+    dw $320F   ; [216] Tatsu
+    db $0F     ; [217] Diago (lo)
+TileStoreEnd:   ; fake-decode label kept at its offset $2d52 (NOT code)
+    db $32     ; [217] Diago (hi)
+TilemapRotateWrite:   ; fake-decode label kept at its offset $2d53 (NOT code)
+    dw $320F   ; [218] Samsi
+    db $0F     ; [219] Bazoo (lo)
 WriteRotatedBytesDown:
     ; --- MonsterBattleGfxTable tail ($2d56..$2da7), re-sectioned as data (this
     ;     region is mgbdis-misassembled as ld/rrca; the bytes ARE the battle
@@ -9668,8 +9528,8 @@ WriteRotatedBytesDown:
     ;     the next block). Byte-identical to vanilla EXCEPT ids 221-239
     ;     ($2d59..$2d7e): the compiler region ns_battle_gfx (S105, P3.9b / G3) =
     ;     a declared new species' battle stream in overflow bank $7e (index
-    ;     (id-221)*2+1); an undeclared id keeps $320f ("Durran", the vanilla
-    ;     placeholder shared by ids 216-255). WriteRotatedBytesDown is kept: bytes
+    ;     (id-221)*2+1); an undeclared id keeps $320f (Darkdrium's art, sp 214,
+    ;     shared by ids 216-255 — S107; it was mis-called a "Durran" placeholder). WriteRotatedBytesDown is kept: bytes
     ;     elsewhere decoded as code call it (data, never executed). TilemapRotateCont
     ;     ($2d63, unreferenced) is now inside the region.
     ;     Editor: a battle-sprite swap for ANY species is a same-size 2-byte edit

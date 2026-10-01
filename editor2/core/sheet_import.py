@@ -413,11 +413,13 @@ def _hist(pixels, bg):
 
 
 def follower_colors(sheet, frames):
-    """{rgb: 1|2|3} for every colour in the four stored frames (light -> 1,
-    mid -> 2, dark -> 3, by weighted luminance clusters over ALL four frames
-    so every frame uses the same mapping) + the suggested OBJ palette."""
+    """{rgb: 1|2|3} for every colour in the six walking frames (light -> 1,
+    mid -> 2, dark -> 3, by weighted luminance clusters over ALL six frames
+    so every frame uses the same mapping) + the suggested OBJ palette.
+    (S107 2b: six frames — any layout may draw the B frames; 2a counted the
+    four layout 0 stores.)"""
     hist = {}
-    for key in LAYOUT0_ORDER:
+    for key in FRAME_KEYS:
         for c, n in _hist(sheet.crop(frames[key]), sheet.bg).items():
             hist[c] = hist.get(c, 0) + n
     if not hist:
@@ -451,6 +453,31 @@ def follower_payload(sheet, frames, cmap=None):
             for tx in (0, 8):
                 tiles.append([r[tx:tx + 8] for r in idx[ty:ty + 8]])
     return _pack_tiles(tiles)
+
+
+def follower_indexed(sheet, frames, cmap=None):
+    """The six walking frames as colour indices 0-3, keyed by the layout's
+    frame names (walk_layouts.FRAMES: down_A … up_B; SIDE = right)."""
+    from . import walk_layouts as WL
+    if cmap is None:
+        cmap, _p = follower_colors(sheet, frames)
+    return {f: [[0 if p == sheet.bg else cmap.get(p, 3) for p in row]
+                for row in sheet.crop(frames[WL.SHEET_KEY[f]])] for f in WL.FRAMES}
+
+
+def follower_fit(sheet, frames, cmap=None, sid=None):
+    """S107 2b: every walking layout ranked for this cut — [(pixels that
+    differ from the sheet, layout id)], best first (walk_layouts.fit_all)."""
+    from . import walk_layouts as WL
+    return WL.fit_all(follower_indexed(sheet, frames, cmap), sid=sid)
+
+
+def follower_pack(sheet, frames, lid, cmap=None):
+    """S107 2b: (256-byte walking art packed for layout `lid`, pixels that
+    differ from the sheet's six frames)."""
+    from . import walk_layouts as WL
+    tiles, err, _e = WL.pack(follower_indexed(sheet, frames, cmap), lid)
+    return WL.payload(tiles), err
 
 
 def _pack_tiles(tiles):
@@ -572,9 +599,21 @@ def battle_payload(sheet, box, cmap=None):
 def literal_stream(payload):
     """The LZ stream the compiler stores: literal (marker-free) — 3 bytes
     larger than the payload, trivially decodable, the form every new species
-    has used since S34."""
-    from dwm.sprite_codec import encode_safe
-    return encode_safe(payload, literal_only=True)
+    has used since S34. S107: a literal stream needs one byte value the
+    payload does not use (the run marker); a 576-byte pose can use all 256 —
+    then the art is stored as an ordinary LZ stream (the game's decompressor
+    format; dwm/sprite_codec.decode == the game for all 442 vanilla streams)."""
+    from dwm.sprite_codec import _MarkerCollision, encode_safe
+    try:
+        return encode_safe(payload, literal_only=True)
+    except ValueError:
+        pass
+    try:
+        return encode_safe(payload)
+    except _MarkerCollision:
+        raise ValueError("this picture uses all 256 byte patterns, so it cannot be "
+                         "stored as a stream (the format has no escape for the run "
+                         "marker) — move or shrink a box by a pixel and try again")
 
 
 def entry_json(entry):

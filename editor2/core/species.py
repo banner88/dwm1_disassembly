@@ -68,6 +68,7 @@ level-1 index, so the layout lookup reads the donor's untouched pointer.
 import os
 
 from . import formats as F
+from . import walk_layouts as WL
 
 FIRST_ID, LAST_ID = 221, 239
 CAPACITY_IDS = tuple(range(FIRST_ID, LAST_ID + 1))   # 19 ids
@@ -77,10 +78,11 @@ SHORT_MAX = 4                # the nickname field is 4 characters
 FOLLOWER_DECODED = 256       # 16 tiles (every vanilla follower stream)
 BATTLE_DECODED = 576         # 36 tiles, 48x48 (every vanilla battle stream)
 DONOR_MIN, DONOR_MAX = 128, 214   # bank-$11 layout owners (level-1 index 0-86)
+LAYOUT0_L2_11 = 0x4184           # Armorpion's level-2 table = layout 0 in bank $11
 DESC_MAX = 214               # bank $4D mode-1 (line 2) table: 215 rows
 OVERFLOW_BANK = 0x7E
 NO_RECIPE_LINE = 0x53C4      # vanilla "?????    ?????" (mode-0 slots 220-225)
-VANILLA_BATTLE_GFX = 0x320F  # $00:$2B9F+id*2 — the "Durran" placeholder of ids 216-255
+VANILLA_BATTLE_GFX = 0x320F  # $00:$2B9F+id*2 of ids 216-255 = Darkdrium's (214) art (S107; once mis-called a "Durran" placeholder)
 # MonsterNamePtrTable [221]-[239] in the original ROM
 VANILLA_NAME_PTR = {sid: ('MonsterName_220_Unused_220' if sid <= 224 else
                           'MonsterName_225_Unused_225') for sid in CAPACITY_IDS}
@@ -154,6 +156,14 @@ def _repo():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 
+def _vanilla_l1_11(prj):
+    """FollowerLayoutL1Table11 as the original ROM has it (87 level-2
+    addresses, species 128-214)."""
+    from . import gamedata as G
+    repo = getattr(prj, 'repo_root', None) or _repo()
+    return [int(r[2:4] + r[0:2], 16) for r in G.vanilla(repo)['tables']['follower_layout_11']['rows']]
+
+
 def basics(prj):
     """{id: {'name', 'family'}} for the gamedata model (library tabs, breeding
     names / family codes) — cheap, no art is read."""
@@ -214,7 +224,8 @@ def resolve(prj, with_art=True):
         b = s.get('battle') or {}
         fo = s.get('follower') or {}
         G._check_keys(b, ('art', 'palette', 'comment'), what + '.battle')
-        G._check_keys(fo, ('art', 'walks_like', 'palette', 'comment'), what + '.follower')
+        G._check_keys(fo, ('art', 'walks_like', 'layout', 'palette', 'comment'),
+                      what + '.follower')
         pal = b.get('palette')
         if not isinstance(pal, list) or len(pal) != 4:
             raise SpeciesError(f"{what}.battle.palette: 4 RGB555 colours "
@@ -224,8 +235,24 @@ def resolve(prj, with_art=True):
         for i, c in enumerate(pal):
             v = G._range(c, 0, 0x7FFF, f"{what}.battle.palette[{i}]")
             pb += bytes((v & 0xFF, v >> 8))
-        donor = G._range(fo.get('walks_like', DONOR_MIN), DONOR_MIN, DONOR_MAX,
-                         what + '.follower.walks_like')
+        repo = getattr(prj, 'repo_root', None)
+        if 'layout' in fo:
+            # S107 (P3.10 part 2b): any of the 155 layouts (the art is packed
+            # for it); one bank $11 lacks is copied into its free tail
+            if 'walks_like' in fo:
+                raise SpeciesError(f"{what}.follower: give `layout` OR `walks_like`, "
+                                   "not both")
+            try:
+                lid = WL.layout(fo['layout'], repo)['id']
+            except WL.LayoutError as ex:
+                raise SpeciesError(f"{what}.follower.layout: {ex}")
+            donor = None
+            l2 = WL.l2_ref(lid, 0x11, repo) if lid != WL.LAYOUT0 else LAYOUT0_L2_11
+        else:
+            donor = G._range(fo.get('walks_like', DONOR_MIN), DONOR_MIN, DONOR_MAX,
+                             what + '.follower.walks_like')
+            lid = WL.species_layout(donor, repo)
+            l2 = _vanilla_l1_11(prj)[donor - DONOR_MIN]     # the donor's own table
         fpal = G._range(fo.get('palette', 0), 0, 7, what + '.follower.palette')
         out.append({
             'id': sid, 'name': name, 'name_b': nb, 'short': sn, 'short_b': sb,
@@ -233,7 +260,7 @@ def resolve(prj, with_art=True):
             'battle_art': _art(prj, b, what + '.battle', BATTLE_DECODED) if with_art else None,
             'battle_pal': pb,
             'follower_art': _art(prj, fo, what + '.follower', FOLLOWER_DECODED) if with_art else None,
-            'donor': donor, 'follower_pal': fpal,
+            'donor': donor, 'follower_pal': fpal, 'layout': lid, 'l2': l2,
         })
     out.sort(key=lambda d: d['id'])
     text_layout(out)                              # raises if the names do not fit
@@ -396,15 +423,32 @@ def emit_battle_gfx(prj, warnings):
 
 
 def emit_follower_attr(prj, warnings):
-    """bank $11 NewFollowerAttrTable: 2 B per id = OBJ attr (palette), donor
-    level-1 index (walks_like - 128) — NewAttrHandler writes the index to HRAM
-    $C7 (S105)."""
+    """bank $11 NewFollowerAttrTable: 1 B per id = the clean OBJ attr
+    (palette) NewAttrHandler ORs into [$CA] (S105; S107 2b: the layout moved
+    to NewFollowerL1Table)."""
     def row(sid, s):
         if s:
-            return (_db([s['follower_pal'], s['donor'] - DONOR_MIN])
-                    + f"   ; [{sid}] {s['name']}: OBJ palette {s['follower_pal']}, "
-                    f"walks like species {s['donor']}\n")
-        return _db([0, 0]) + f"   ; [{sid}] (none)\n"
+            return (_db([s['follower_pal']])
+                    + f"   ; [{sid}] {s['name']}: OBJ palette {s['follower_pal']}\n")
+        return _db([0]) + f"   ; [{sid}] (none)\n"
+    return _rows(prj, row)
+
+
+def emit_follower_layout(prj, warnings):
+    """bank $11 NewFollowerL1Table (S107 P3.10 part 2b): 1 dw per id = the
+    species' level-2 layout table — FollowerLayoutBase11 points both bank-$11
+    follower entries' lookup here for species 221+ (index [$C7] = id-$80).
+    `walks_like` = the donor's own table; `layout` = that layout's table in
+    bank $11 or its copy (walk_layouts). Undeclared ids: $0000 (never read;
+    = the original ROM's zero padding, so a project without species builds
+    the original bytes there)."""
+    def row(sid, s):
+        if not s:
+            return "    dw $0000   ; [{}] (none — never read)\n".format(sid)
+        l2 = s['l2'] if isinstance(s['l2'], str) else f"${s['l2']:04X}"
+        how = (f"walks like species {s['donor']}" if s['donor'] is not None
+               else f"layout {s['layout']}")
+        return f"    dw {l2}   ; [{sid}] {s['name']}: {how}\n"
     return _rows(prj, row)
 
 
@@ -563,6 +607,7 @@ def emit_bank_07e(prj, warnings):
 REGIONS = [
     ('ns_battle_gfx', 'patches/bank_000.asm', emit_battle_gfx, 0x00),
     ('ns_follower_attr', 'patches/bank_011.asm', emit_follower_attr, 0x11),
+    ('ns_follower_layout', 'patches/bank_011.asm', emit_follower_layout, 0x11),
     ('ns_battle_pal', 'patches/bank_017.asm', emit_battle_pal, 0x17),
     ('ns_recipe_pair', 'patches/bank_016.asm', emit_recipe_pair, 0x16),
     ('ns_name_ptr', 'patches/bank_041.asm', emit_name_ptr, 0x41),

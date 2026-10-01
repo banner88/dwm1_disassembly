@@ -36,10 +36,19 @@ the family's monsters talk in the arena lobby (the game has four sets of
 lines: Slime / Plant / Zombie, Dragon / Bird / Material, Beast / Bug / Devil,
 ???); for Spirit, its 8 default names — when a monster joins or hatches, the
 naming screen fills in one of its family's names at random (up to 4 letters;
-the other families keep the game's own 16 each). In `project.json` these are
+the other families keep the game's own 16 each); and every family's **icon**
+— an 8 × 8 picture in 4 shades (1 = the cream background, 3 = black, 0 and 2
+take each screen's own colours: green on the INFO page, orange and gold in
+the continue box and the JOURNAL). Paint it with the left mouse button, pick
+a shade with the right one, or import an 8 × 8 PNG (darkest colour → black,
+lightest → background); **Back to the original icon** undoes it. The game
+shows the one picture everywhere: the INFO page, the library tabs, family
+recipes, the field status bar, lists, the JOURNAL and the continue box. In
+`project.json` these are
 `gamedata.monsters.<id>.family` (`"Spirit"` or 0-10) and
 `gamedata.families.<family>.dialogue` (`A`-`D` or a family name) /
-`gamedata.families.spirit.names`. Everything that shows or uses a family follows: the
+`gamedata.families.spirit.names` / `gamedata.families.<family>.icon` (8 rows of 8
+digits 0-3). Everything that shows or uses a family follows: the
 library tab and recipe text, the INFO page and status icon, the arena lobby
 dialogue, the default names offered when you name a new monster, and
 breeding. In a breeding recipe write `"Spirit"` as either parent. (The old

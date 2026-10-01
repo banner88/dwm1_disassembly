@@ -23,6 +23,12 @@ against the patched build's game.sym — every label sits at the same address):
   skill_mp          $07:$570C  222 x 2    SkillMPCostTable
   skill_records     $54:$41CF  222 x 19   SkillRecordData
   boss_redirects    $14:$4893   34 x 4    BossRedirectTable (fight, join)
+  battle_gfx        $00:$2B9F  221 x 2    MonsterBattleGfxTable (S107 art tables)
+  battle_palettes   $17:$62FD  216 x 8    MonsterBattlePalettes
+  follower_gfx      $01:$49FF  215 x 2    ScreenTransDataTable species 0-214 (the
+                                          eight copies are identical: --selftest)
+  follower_layout_10 / _attr_10  $10:$407F 128 x 2 / $417F 128 x 1
+  follower_layout_11 / _attr_11  $11:$407F  87 x 2 / $412D  87 x 1
   chance_percent    $01:$69C0    8        EncounterChancePercent (code -> %)
   library           bank $4D recipe TEXT (dispatch entry = species + 5):
                     the 221 pointers, the raw $43CE-$53D2 string block, pad
@@ -61,7 +67,24 @@ TABLES = {
     "skill_mp": (0x07, 0x570C, 222, 2, "SkillMPCostTable"),
     "skill_records": (0x54, 0x41CF, 222, 19, "SkillRecordData"),
     "boss_redirects": (0x14, 0x4893, 34, 4, "BossRedirectTable"),
+    # S107 (P3.10 part 2a, gamedata.art): the per-species ART tables. Species
+    # 0-214 only for everything but the battle tables (215-220 = TERRY? and the
+    # summons — PROJECT_STATE Iron Rule 8 — are never re-arted, but their
+    # battle rows are part of the tables).
+    "battle_gfx": (0x00, 0x2B9F, 221, 2, "MonsterBattleGfxTable"),
+    "battle_palettes": (0x17, 0x62FD, 216, 8, "MonsterBattlePalettes"),
+    "follower_gfx": (0x01, 0x49DF + 32, 215, 2, "ScreenTransDataTable"),
+    "follower_layout_10": (0x10, 0x407F, 128, 2, "FollowerLayoutL1Table10"),
+    "follower_attr_10": (0x10, 0x417F, 128, 1, "FollowerAttrTable10"),
+    "follower_layout_11": (0x11, 0x407F, 87, 2, "FollowerLayoutL1Table11"),
+    "follower_attr_11": (0x11, 0x412D, 87, 1, "FollowerAttrTable11"),
 }
+# the eight copies of the follower gfx-ID table at species 0 (MONSTER_DATA
+# "Follower-art table has EIGHT copies"): identical for species 0-214 —
+# checked by --selftest, so one row list (follower_gfx) serves all eight
+FOLLOWER_COPIES = [(0x01, 0x49DF + 32), (0x06, 0x4DCC + 32), (0x07, 0x6E14 + 32),
+                   (0x09, 0x6B10 + 32), (0x0B, 0x4974 + 32), (0x12, 0x65F2 + 32),
+                   (0x18, 0x4123), (0x59, 0x4363)]
 CHANCE = (0x01, 0x69C0, 8)          # EncounterChancePercent
 LIB_BANK = 0x4D
 LIB_ENTRY0 = 5                      # dispatch entry = species + 5
@@ -162,6 +185,11 @@ def selftest():
         print(f"FAIL: {OUT} differs from the ROM in {bad} — regenerate")
         return 1
     # family tokens: all ten must be present (the library writer needs them)
+    ref = rom[flat(*FOLLOWER_COPIES[0]):flat(*FOLLOWER_COPIES[0]) + 430]
+    for b, a in FOLLOWER_COPIES[1:]:
+        if rom[flat(b, a):flat(b, a) + 430] != ref:
+            print(f"FAIL: follower gfx copy ${b:02X}:${a:04X} differs from bank $01's")
+            return 1
     if sorted(want["library"]["family_tokens"]) != [str(i) for i in range(10)]:
         print("FAIL: library family tokens incomplete")
         return 1

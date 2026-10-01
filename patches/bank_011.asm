@@ -12,13 +12,13 @@ SECTION "ROM Bank $011", ROMX[$4000], BANK[$11]
 
 label11_4005:
     call HramUnk11_406e
-    ld de, FollowerLayoutL1Table11   ; $407F (S105 label)
+    call FollowerLayoutBase11        ; S107 2b: DE = $407F, or NewFollowerL1Table-$BA for ids 221+ (was ld de, FollowerLayoutL1Table11 — same 3 bytes)
     call $0d91
     ret
 
 label11_400f:
     call HramUnk11_406e
-    ld de, FollowerLayoutL1Table11   ; $407F (S105 label)
+    call FollowerLayoutBase11        ; S107 2b: DE = $407F, or NewFollowerL1Table-$BA for ids 221+ (was ld de, FollowerLayoutL1Table11 — same 3 bytes)
     push af
     push bc
     push de
@@ -129,183 +129,187 @@ HramUnk11_406e:
 ;   data below branch there (data, never executed).
 ; ===========================================================================
 FollowerLayoutL1Table11:
-    dw $4184   ; [00] 128 Armorpion
-    dw $41F6   ; [01] 129 Digster
-    dw $4268   ; [02] 130 Pixy
-    dw $42DA   ; [03] 131 ArcDemon
-    dw $434C   ; [04] 132 AgDevil
-    dw $43BE   ; [05] 133 Demonite
-    dw $4430   ; [06] 134 DarkEye
-    dw $44A2   ; [07] 135 EyeBall
-    dw $4514   ; [08] 136 SkulRider
-    dw $4586   ; [09] 137 EvilBeast
-    dw $45F8   ; [10] 138 1EyeClown
-    dw $466A   ; [11] 139 Gremlin
-    dw $46DC   ; [12] 140 MedusaEye
-    dw $474E   ; [13] 141 Lionex
-    dw $47C0   ; [14] 142 GoatHorn
-    dw $4832   ; [15] 143 Orc
-    dw $48A4   ; [16] 144 Ogre
-    dw $4916   ; [17] 145 GateGuard
-    dw $4988   ; [18] 146 ChopClown
-    dw $49FA   ; [19] 147 Grendal
-    dw $4A6C   ; [20] 148 Akubar
-    dw $4ADE   ; [21] 149 MadKnight
-    dw $4B50   ; [22] 150 Gigantes
-    dw $4BC2   ; [23] 151 Centasaur
-    dw $4C34   ; [24] 152 EvilArmor
-    dw $4CA6   ; [25] 153 Jamirus
-    dw $4D18   ; [26] 154 Durran
-    dw $4D8A   ; [27] 155 Spooky
-    dw $4DFC   ; [28] 156 Skullgon
-    dw $4E6E   ; [29] 157 Putrepup
-    dw $4EE0   ; [30] 158 RotRaven
-    dw $4F52   ; [31] 159 Mummy
-    dw $4FC4   ; [32] 160 DarkCrab
-    dw $5036   ; [33] 161 DeadNite
-    dw $50A8   ; [34] 162 Shadow
-    dw $511A   ; [35] 163 Hork
-    dw $518C   ; [36] 164 Mudron
-    dw $51FE   ; [37] 165 NiteWhip
-    dw $5270   ; [38] 166 MadSpirit
-    dw $52E2   ; [39] 167 WindMerge
-    dw $5354   ; [40] 168 Reaper
-    dw $53C6   ; [41] 169 DeadNoble
-    dw $5438   ; [42] 170 WhiteKing
-    dw $54AA   ; [43] 171 BoneSlave
-    dw $551C   ; [44] 172 Skeletor
-    dw $558E   ; [45] 173 Servant
-    dw $5600   ; [46] 174 Copycat
-    dw $5672   ; [47] 175 JewelBag
-    dw $56E4   ; [48] 176 EvilWand
-    dw $5756   ; [49] 177 MadCandle
-    dw $57C8   ; [50] 178 CoilBird
-    dw $583A   ; [51] 179 Facer
-    dw $58AC   ; [52] 180 SpikyBoy
-    dw $591E   ; [53] 181 MadMirror
-    dw $5990   ; [54] 182 RogueNite
-    dw $5A02   ; [55] 183 Goopi
-    dw $5A74   ; [56] 184 Voodoll
-    dw $5AE6   ; [57] 185 MetalDrak
-    dw $5B58   ; [58] 186 Balzak
-    dw $5BCA   ; [59] 187 SabreMan
-    dw $5C3C   ; [60] 188 CurseLamp
-    dw $5CAE   ; [61] 189 Roboster
-    dw $5D20   ; [62] 190 EvilPot
-    dw $5D92   ; [63] 191 Gismo
-    dw $5E04   ; [64] 192 LavaMan
-    dw $5E6E   ; [65] 193 IceMan
-    dw $5ED8   ; [66] 194 Mimic
-    dw $5F4A   ; [67] 195 MudDoll
-    dw $5FBC   ; [68] 196 Golem
-    dw $602E   ; [69] 197 StoneMan
-    dw $60A0   ; [70] 198 BombCrag
-    dw $6112   ; [71] 199 GoldGolem
-    dw $6184   ; [72] 200 DracoLord
-    dw $61F6   ; [73] 201 DracoLord
-    dw $6268   ; [74] 202 Hargon
-    dw $62DA   ; [75] 203 Sidoh
-    dw $634C   ; [76] 204 Baramos
-    dw $63BE   ; [77] 205 Zoma
-    dw $6430   ; [78] 206 Pizzaro
-    dw $64A2   ; [79] 207 Esterk
-    dw $6514   ; [80] 208 Mirudraas
-    dw $6586   ; [81] 209 Mirudraas
-    dw $65F8   ; [82] 210 Mudou
-    dw $666A   ; [83] 211 DeathMore
-    dw $66DC   ; [84] 212 DeathMore
-    dw $674E   ; [85] 213 DeathMore
-    dw $67C0   ; [86] 214 Darkdrium
+; @BUILD_PROJECT BEGIN art_layout_11
+    dw $4184   ; [128] Armorpion
+    dw $41F6   ; [129] Digster
+    dw $4268   ; [130] Pixy
+    dw $42DA   ; [131] ArcDemon
+    dw $434C   ; [132] AgDevil
+    dw $43BE   ; [133] Demonite
+    dw $4430   ; [134] DarkEye
+    dw $44A2   ; [135] EyeBall
+    dw $4514   ; [136] SkulRider
+    dw $4586   ; [137] EvilBeast
+    dw $45F8   ; [138] 1EyeClown
+    dw $466A   ; [139] Gremlin
+    dw $46DC   ; [140] MedusaEye
+    dw $474E   ; [141] Lionex
+    dw $47C0   ; [142] GoatHorn
+    dw $4832   ; [143] Orc
+    dw $48A4   ; [144] Ogre
+    dw $4916   ; [145] GateGuard
+    dw $4988   ; [146] ChopClown
+    dw $49FA   ; [147] Grendal
+    dw $4A6C   ; [148] Akubar
+    dw $4ADE   ; [149] MadKnight
+    dw $4B50   ; [150] Gigantes
+    dw $4BC2   ; [151] Centasaur
+    dw $4C34   ; [152] EvilArmor
+    dw $4CA6   ; [153] Jamirus
+    dw $4D18   ; [154] Durran
+    dw $4D8A   ; [155] Spooky
+    dw $4DFC   ; [156] Skullgon
+    dw $4E6E   ; [157] Putrepup
+    dw $4EE0   ; [158] RotRaven
+    dw $4F52   ; [159] Mummy
+    dw $4FC4   ; [160] DarkCrab
+    dw $5036   ; [161] DeadNite
+    dw $50A8   ; [162] Shadow
+    dw $511A   ; [163] Hork
+    dw $518C   ; [164] Mudron
+    dw $51FE   ; [165] NiteWhip
+    dw $5270   ; [166] MadSpirit
+    dw $52E2   ; [167] WindMerge
+    dw $5354   ; [168] Reaper
+    dw $53C6   ; [169] DeadNoble
+    dw $5438   ; [170] WhiteKing
+    dw $54AA   ; [171] BoneSlave
+    dw $551C   ; [172] Skeletor
+    dw $558E   ; [173] Servant
+    dw $5600   ; [174] Copycat
+    dw $5672   ; [175] JewelBag
+    dw $56E4   ; [176] EvilWand
+    dw $5756   ; [177] MadCandle
+    dw $57C8   ; [178] CoilBird
+    dw $583A   ; [179] Facer
+    dw $58AC   ; [180] SpikyBoy
+    dw $591E   ; [181] MadMirror
+    dw $5990   ; [182] RogueNite
+    dw $5A02   ; [183] Goopi
+    dw $5A74   ; [184] Voodoll
+    dw $5AE6   ; [185] MetalDrak
+    dw $5B58   ; [186] Balzak
+    dw $5BCA   ; [187] SabreMan
+    dw $5C3C   ; [188] CurseLamp
+    dw $5CAE   ; [189] Roboster
+    dw $5D20   ; [190] EvilPot
+    dw $5D92   ; [191] Gismo
+    dw $5E04   ; [192] LavaMan
+    dw $5E6E   ; [193] IceMan
+    dw $5ED8   ; [194] Mimic
+    dw $5F4A   ; [195] MudDoll
+    dw $5FBC   ; [196] Golem
+    dw $602E   ; [197] StoneMan
+    dw $60A0   ; [198] BombCrag
+    dw $6112   ; [199] GoldGolem
+    dw $6184   ; [200] DracoLord
+    dw $61F6   ; [201] DracoLord
+    dw $6268   ; [202] Hargon
+    dw $62DA   ; [203] Sidoh
+    dw $634C   ; [204] Baramos
+    dw $63BE   ; [205] Zoma
+    dw $6430   ; [206] Pizzaro
+    dw $64A2   ; [207] Esterk
+    dw $6514   ; [208] Mirudraas
+    dw $6586   ; [209] Mirudraas
+    dw $65F8   ; [210] Mudou
+    dw $666A   ; [211] DeathMore
+    dw $66DC   ; [212] DeathMore
+    dw $674E   ; [213] DeathMore
+    dw $67C0   ; [214] Darkdrium
+; @BUILD_PROJECT END art_layout_11
 FollowerAttrTable11:
-    db $06   ; [00] 128 Armorpion
-    db $00   ; [01] 129 Digster
-    db $06   ; [02] 130 Pixy
-    db $04   ; [03] 131 ArcDemon
-    db $02   ; [04] 132 AgDevil
-jr_011_4132:
-    db $04   ; [05] 133 Demonite
-    db $02   ; [06] 134 DarkEye
-    db $02   ; [07] 135 EyeBall
-    db $02   ; [08] 136 SkulRider
-    db $05   ; [09] 137 EvilBeast
-    db $06   ; [10] 138 1EyeClown
-    db $04   ; [11] 139 Gremlin
-    db $02   ; [12] 140 MedusaEye
-    db $06   ; [13] 141 Lionex
-    db $00   ; [14] 142 GoatHorn
-    db $07   ; [15] 143 Orc
-    db $05   ; [16] 144 Ogre
-    db $04   ; [17] 145 GateGuard
-    db $02   ; [18] 146 ChopClown
-    db $02   ; [19] 147 Grendal
-    db $06   ; [20] 148 Akubar
-    db $05   ; [21] 149 MadKnight
-    db $02   ; [22] 150 Gigantes
-    db $02   ; [23] 151 Centasaur
-    db $00   ; [24] 152 EvilArmor
-    db $03   ; [25] 153 Jamirus
-    db $04   ; [26] 154 Durran
-    db $04   ; [27] 155 Spooky
-    db $05   ; [28] 156 Skullgon
-    db $02   ; [29] 157 Putrepup
-    db $02   ; [30] 158 RotRaven
-    db $04   ; [31] 159 Mummy
-    db $02   ; [32] 160 DarkCrab
-    db $07   ; [33] 161 DeadNite
-    db $05   ; [34] 162 Shadow
-    db $07   ; [35] 163 Hork
-    db $03   ; [36] 164 Mudron
-    db $03   ; [37] 165 NiteWhip
-    db $04   ; [38] 166 MadSpirit
-    db $02   ; [39] 167 WindMerge
-    db $06   ; [40] 168 Reaper
-    db $02   ; [41] 169 DeadNoble
-    db $04   ; [42] 170 WhiteKing
-    db $07   ; [43] 171 BoneSlave
-    db $04   ; [44] 172 Skeletor
-    db $05   ; [45] 173 Servant
-    db $03   ; [46] 174 Copycat
-    db $00   ; [47] 175 JewelBag
-    db $07   ; [48] 176 EvilWand
-    db $06   ; [49] 177 MadCandle
-    db $03   ; [50] 178 CoilBird
-    db $01   ; [51] 179 Facer
-    db $01   ; [52] 180 SpikyBoy
-    db $00   ; [53] 181 MadMirror
-    db $02   ; [54] 182 RogueNite
-    db $07   ; [55] 183 Goopi
-    db $04   ; [56] 184 Voodoll
-    db $02   ; [57] 185 MetalDrak
-    db $02   ; [58] 186 Balzak
-    db $05   ; [59] 187 SabreMan
-    db $06   ; [60] 188 CurseLamp
-    db $02   ; [61] 189 Roboster
-    db $03   ; [62] 190 EvilPot
-    db $05   ; [63] 191 Gismo
-    db $00   ; [64] 192 LavaMan
-    db $02   ; [65] 193 IceMan
-    db $04   ; [66] 194 Mimic
-    db $07   ; [67] 195 MudDoll
-    db $07   ; [68] 196 Golem
-    db $05   ; [69] 197 StoneMan
-    db $05   ; [70] 198 BombCrag
-    db $03   ; [71] 199 GoldGolem
-    db $04   ; [72] 200 DracoLord
-jr_011_4176:
-    db $04   ; [73] 201 DracoLord
-    db $04   ; [74] 202 Hargon
-    db $02   ; [75] 203 Sidoh
-    db $04   ; [76] 204 Baramos
-    db $06   ; [77] 205 Zoma
-    db $01   ; [78] 206 Pizzaro
-    db $03   ; [79] 207 Esterk
-    db $01   ; [80] 208 Mirudraas
-    db $00   ; [81] 209 Mirudraas
-    db $01   ; [82] 210 Mudou
-    db $04   ; [83] 211 DeathMore
-    db $00   ; [84] 212 DeathMore
-    db $00   ; [85] 213 DeathMore
-    db $00   ; [86] 214 Darkdrium
+; @BUILD_PROJECT BEGIN art_attr_11
+    db $06   ; [128] Armorpion: OBJ palette 6
+    db $00   ; [129] Digster: OBJ palette 0
+    db $06   ; [130] Pixy: OBJ palette 6
+    db $04   ; [131] ArcDemon: OBJ palette 4
+    db $02   ; [132] AgDevil: OBJ palette 2
+jr_011_4132:   ; kept at its byte offset (bytes elsewhere decoded as code point here; NOT code)
+    db $04   ; [133] Demonite: OBJ palette 4
+    db $02   ; [134] DarkEye: OBJ palette 2
+    db $02   ; [135] EyeBall: OBJ palette 2
+    db $02   ; [136] SkulRider: OBJ palette 2
+    db $05   ; [137] EvilBeast: OBJ palette 5
+    db $06   ; [138] 1EyeClown: OBJ palette 6
+    db $04   ; [139] Gremlin: OBJ palette 4
+    db $02   ; [140] MedusaEye: OBJ palette 2
+    db $06   ; [141] Lionex: OBJ palette 6
+    db $00   ; [142] GoatHorn: OBJ palette 0
+    db $07   ; [143] Orc: OBJ palette 7
+    db $05   ; [144] Ogre: OBJ palette 5
+    db $04   ; [145] GateGuard: OBJ palette 4
+    db $02   ; [146] ChopClown: OBJ palette 2
+    db $02   ; [147] Grendal: OBJ palette 2
+    db $06   ; [148] Akubar: OBJ palette 6
+    db $05   ; [149] MadKnight: OBJ palette 5
+    db $02   ; [150] Gigantes: OBJ palette 2
+    db $02   ; [151] Centasaur: OBJ palette 2
+    db $00   ; [152] EvilArmor: OBJ palette 0
+    db $03   ; [153] Jamirus: OBJ palette 3
+    db $04   ; [154] Durran: OBJ palette 4
+    db $04   ; [155] Spooky: OBJ palette 4
+    db $05   ; [156] Skullgon: OBJ palette 5
+    db $02   ; [157] Putrepup: OBJ palette 2
+    db $02   ; [158] RotRaven: OBJ palette 2
+    db $04   ; [159] Mummy: OBJ palette 4
+    db $02   ; [160] DarkCrab: OBJ palette 2
+    db $07   ; [161] DeadNite: OBJ palette 7
+    db $05   ; [162] Shadow: OBJ palette 5
+    db $07   ; [163] Hork: OBJ palette 7
+    db $03   ; [164] Mudron: OBJ palette 3
+    db $03   ; [165] NiteWhip: OBJ palette 3
+    db $04   ; [166] MadSpirit: OBJ palette 4
+    db $02   ; [167] WindMerge: OBJ palette 2
+    db $06   ; [168] Reaper: OBJ palette 6
+    db $02   ; [169] DeadNoble: OBJ palette 2
+    db $04   ; [170] WhiteKing: OBJ palette 4
+    db $07   ; [171] BoneSlave: OBJ palette 7
+    db $04   ; [172] Skeletor: OBJ palette 4
+    db $05   ; [173] Servant: OBJ palette 5
+    db $03   ; [174] Copycat: OBJ palette 3
+    db $00   ; [175] JewelBag: OBJ palette 0
+    db $07   ; [176] EvilWand: OBJ palette 7
+    db $06   ; [177] MadCandle: OBJ palette 6
+    db $03   ; [178] CoilBird: OBJ palette 3
+    db $01   ; [179] Facer: OBJ palette 1
+    db $01   ; [180] SpikyBoy: OBJ palette 1
+    db $00   ; [181] MadMirror: OBJ palette 0
+    db $02   ; [182] RogueNite: OBJ palette 2
+    db $07   ; [183] Goopi: OBJ palette 7
+    db $04   ; [184] Voodoll: OBJ palette 4
+    db $02   ; [185] MetalDrak: OBJ palette 2
+    db $02   ; [186] Balzak: OBJ palette 2
+    db $05   ; [187] SabreMan: OBJ palette 5
+    db $06   ; [188] CurseLamp: OBJ palette 6
+    db $02   ; [189] Roboster: OBJ palette 2
+    db $03   ; [190] EvilPot: OBJ palette 3
+    db $05   ; [191] Gismo: OBJ palette 5
+    db $00   ; [192] LavaMan: OBJ palette 0
+    db $02   ; [193] IceMan: OBJ palette 2
+    db $04   ; [194] Mimic: OBJ palette 4
+    db $07   ; [195] MudDoll: OBJ palette 7
+    db $07   ; [196] Golem: OBJ palette 7
+    db $05   ; [197] StoneMan: OBJ palette 5
+    db $05   ; [198] BombCrag: OBJ palette 5
+    db $03   ; [199] GoldGolem: OBJ palette 3
+    db $04   ; [200] DracoLord: OBJ palette 4
+jr_011_4176:   ; kept at its byte offset (bytes elsewhere decoded as code point here; NOT code)
+    db $04   ; [201] DracoLord: OBJ palette 4
+    db $04   ; [202] Hargon: OBJ palette 4
+    db $02   ; [203] Sidoh: OBJ palette 2
+    db $04   ; [204] Baramos: OBJ palette 4
+    db $06   ; [205] Zoma: OBJ palette 6
+    db $01   ; [206] Pizzaro: OBJ palette 1
+    db $03   ; [207] Esterk: OBJ palette 3
+    db $01   ; [208] Mirudraas: OBJ palette 1
+    db $00   ; [209] Mirudraas: OBJ palette 0
+    db $01   ; [210] Mudou: OBJ palette 1
+    db $04   ; [211] DeathMore: OBJ palette 4
+    db $00   ; [212] DeathMore: OBJ palette 0
+    db $00   ; [213] DeathMore: OBJ palette 0
+    db $00   ; [214] Darkdrium: OBJ palette 0
+; @BUILD_PROJECT END art_attr_11
     sub b
     ld b, c
     and c
@@ -12424,23 +12428,23 @@ jr_011_789b:
     rrca
     rrca
 ; =============================================================================
-; NewAttrHandler — id-indexed new-species follower ATTR/palette + LAYOUT fork.
+; NewAttrHandler — id-indexed new-species follower ATTR/palette fork.
 ; Hooked from HramUnk11_406e (jp $792d) because a new id's attr index overshoots the
 ; 87-entry table into live layout data ($418d=$41 -> stray Y-flip + green palette).
 ; For species 221-239 (S105 G3; was 224 only), a CLEAN attr from NewFollowerAttrTable[species-221]:
 ; clear the flip + palette bits ($B8 mask keeps the engine's X-flip) and OR the
 ; table's attr byte. Else: original behavior ([$ca] |= [$412d + (species-$80)]).
-; S105 (P3.9b): the table is 2 B per species — attr, then the layout DONOR's
-; level-1 index (walks_like - $80). The handler writes that index to HRAM $C7,
-; so both bank-$11 entries' layout lookup (`ld de,$407f` then [$c7]*2, inline
-; in entry 1 / ROM0 $0D91 for entry 0) reads the donor's OWN level-1 pointer.
-; Before S105 the species' pointer was WRITTEN at $407f+(224-$80)*2 = $413F,
-; which is inside the attr table ($412D-$4183): it overwrote ChopClown (146) and
-; Grendal (147)'s attr bytes ($02,$02 -> $84,$41) in every patched build. $C7 is
-; written fresh before every sprite draw (bank $04 NPCInteractDispatch sets it,
-; dozens of writers) and not read back after the bank-$11 call, so rewriting it
-; here is local to this draw. The table is the compiler region ns_follower_attr
-; (custom.species; no species = zeros).
+; History: S105 (P3.9b) made the table 2 B per species (attr, then the layout
+; DONOR's level-1 index, walks_like - $80, which this handler wrote to HRAM $C7
+; so the lookup read the donor's own pointer — a new species could only walk
+; like one of 128-214). S107 (P3.10 part 2b): the layout is the species' OWN
+; level-2 pointer in NewFollowerL1Table, found by FollowerLayoutBase11 (below)
+; through the untouched index [$C7] = species-$80; this handler no longer
+; touches $C7 and the table is 1 B per species. (Before S105 the species'
+; pointer was WRITTEN at $407f+(224-$80)*2 = $413F, inside the attr table: it
+; overwrote ChopClown (146) and Grendal (147)'s attr bytes in every patched
+; build S34-S104.) The tables are the compiler regions ns_follower_attr /
+; ns_follower_layout (custom.species; no species = zeros / layout 0).
 ; Lives at $792d (start of bank-$11 trailing padding; byte-neutral).
 ; =============================================================================
 NewAttrHandler:
@@ -12459,1704 +12463,92 @@ NewAttrHandler:
     ret
 .newspecies:
     sub $5d                          ; index = species-221
-    add a                            ; x2: attr, donor index per species (S105)
     ld hl, NewFollowerAttrTable
     add l
     ld l, a
     ld a, $00
     adc h
     ld h, a
-    ld a, [hl+]
-    ld b, a                          ; B = clean attr byte for this species
-    ld a, [hl]                       ; A = the layout donor's level-1 index
-    ldh [$c7], a                     ; S105: layout lookup reads the donor's pointer
+    ld b, [hl]                       ; B = clean attr byte for this species
     ldh a, [$ca]
     and $b8                          ; clear Y-flip(6)+palette(0-2); KEEP X-flip(5): engine sets it for LEFT facing
     or b
     ldh [$ca], a
     ret
-NewFollowerAttrTable:                ; 2 B per new species (ids 221-239, 19 x 2 B): OBJ attr, donor level-1 index
+NewFollowerAttrTable:                ; 1 B per new species (ids 221-239): OBJ attr (palette)
 ; @BUILD_PROJECT BEGIN ns_follower_attr
-    db $00, $00   ; [221] (none)
-    db $00, $00   ; [222] (none)
-    db $00, $00   ; [223] (none)
-    db $02, $00   ; [224] Gorbunok: OBJ palette 2, walks like species 128
-    db $00, $00   ; [225] (none)
-    db $00, $00   ; [226] (none)
-    db $00, $00   ; [227] (none)
-    db $00, $00   ; [228] (none)
-    db $00, $00   ; [229] (none)
-    db $00, $00   ; [230] (none)
-    db $00, $00   ; [231] (none)
-    db $00, $00   ; [232] (none)
-    db $00, $00   ; [233] (none)
-    db $00, $00   ; [234] (none)
-    db $00, $00   ; [235] (none)
-    db $00, $00   ; [236] (none)
-    db $00, $00   ; [237] (none)
-    db $00, $00   ; [238] (none)
-    db $00, $00   ; [239] (none)
+    db $00   ; [221] (none)
+    db $00   ; [222] (none)
+    db $00   ; [223] (none)
+    db $02   ; [224] Gorbunok: OBJ palette 2
+    db $00   ; [225] (none)
+    db $00   ; [226] (none)
+    db $00   ; [227] (none)
+    db $00   ; [228] (none)
+    db $00   ; [229] (none)
+    db $00   ; [230] (none)
+    db $00   ; [231] (none)
+    db $00   ; [232] (none)
+    db $00   ; [233] (none)
+    db $00   ; [234] (none)
+    db $00   ; [235] (none)
+    db $00   ; [236] (none)
+    db $00   ; [237] (none)
+    db $00   ; [238] (none)
+    db $00   ; [239] (none)
 ; @BUILD_PROJECT END ns_follower_attr
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
+
+; NewFollowerL1Table (S107, P3.10 part 2b) — 1 dw per new species (ids
+; 221-239): the species' level-2 layout table (six frame pointers), read by
+; both bank-$11 follower entries as [DE + [$C7]*2] with DE from
+; FollowerLayoutBase11. Any bank-$11 layout table, or a copy of a bank-$10
+; layout in lay_copies_11 below (editor2/core/walk_layouts.py).
+NewFollowerL1Table:
+; @BUILD_PROJECT BEGIN ns_follower_layout
+    dw $0000   ; [221] (none — never read)
+    dw $0000   ; [222] (none — never read)
+    dw $0000   ; [223] (none — never read)
+    dw $4184   ; [224] Gorbunok: walks like species 128
+    dw $0000   ; [225] (none — never read)
+    dw $0000   ; [226] (none — never read)
+    dw $0000   ; [227] (none — never read)
+    dw $0000   ; [228] (none — never read)
+    dw $0000   ; [229] (none — never read)
+    dw $0000   ; [230] (none — never read)
+    dw $0000   ; [231] (none — never read)
+    dw $0000   ; [232] (none — never read)
+    dw $0000   ; [233] (none — never read)
+    dw $0000   ; [234] (none — never read)
+    dw $0000   ; [235] (none — never read)
+    dw $0000   ; [236] (none — never read)
+    dw $0000   ; [237] (none — never read)
+    dw $0000   ; [238] (none — never read)
+    dw $0000   ; [239] (none — never read)
+; @BUILD_PROJECT END ns_follower_layout
+
+; FollowerLayoutBase11 (S107, P3.10 part 2b) — called by both bank-$11
+; follower entries in place of `ld de, FollowerLayoutL1Table11` (3 bytes for
+; 3 bytes). Returns DE = the level-1 table the entry then indexes with [$C7]
+; (= species-$80; entry 1 inline as a 16-bit index, entry 0 through ROM0
+; $0D91 as `add a`, fine below $80): FollowerLayoutL1Table11 for species
+; 128-220 (unchanged), NewFollowerL1Table - 2*$5D for species 221+ so that
+; [$C7] = $5D.. lands on the species' own row. Keeps AF (and every other
+; register but DE) — measured: $0D91 and entry 1 reload A before use anyway.
+FollowerLayoutBase11:
+    push af
+    ld de, FollowerLayoutL1Table11
+    ldh a, [$c7]
+    cp $5d
+    jr c, .done
+    ld de, NewFollowerL1Table - 2 * $5d
+.done:
+    pop af
+    ret
+
+; Walking layouts copied from bank $10 for species 128-214 / the new species
+; whose chosen layout bank $11 does not hold (S107 P3.10 part 2b; compiler
+; region, walk_layouts.copies) + the bank's zero tail.
+; @BUILD_PROJECT BEGIN lay_copies_11
+; walking layouts copied into follower bank $11 (S107 P3.10 part 2b; editor2/core/walk_layouts.py) — 0 of 1634 B
+    ds $8000 - @, $00   ; the bank's zero tail
+; @BUILD_PROJECT END lay_copies_11

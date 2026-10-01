@@ -25,7 +25,7 @@ from editor2.core import validators as V
 from editor2.core.project import Project, ProjectError
 
 EXAMPLE = os.path.join(REPO, 'editor2/example-project/project.json')
-REFERENCE_MD5 = "f22f56e116bc6b3f6b94e7d45a7e5f1e"   # S105 G3 (USER-CONFIRMED 2026-09-30 ("Confirm all three appear as expected")): new-species CAPACITY 1 -> 19 (ids 221-239, any subset). The eight follower forks COMPUTE the gfx-ID $7E00+(id-221)*2 into WRAM wNewSpeciesGid ($D10A, carved from wCustomPool) instead of reading per-bank one-entry tables (their ns_follower_gfx_* regions are gone); every other fork gates on id >= 221 (info $03/$6A, NewAttrHandler $11, HighBattlePal $17 (19 x 8 B table), FamilyRecipeResolve $16 (19 x 2 B), HighDetailTextFork $4D (bases -$1BA), LoadModeBaseRedirect $00 (base $7D39)); bank-$01 follower clamp 240+ only; ROM0 battle gfx table re-sectioned $2D56-$2DA7 (19-word region); bank $41 names / nicknames PACKED into 5 free extents (ns_text_a-e) + the nickname pointer table $7EF3 (ns_short_ptr), and SpellUseText_11's tail $7E06-$7E15 restored to vanilla (B9 S28 had zeroed it); bank $7E pointer table 38 entries (Gorbunok 224 = index 6 / 7). The example still declares only Gorbunok (224). Prev: f8a714850b5318844e23b050a16f222e   # S105 (built, never user-tested — superseded in-session by G3): ROADMAP P3.9b purge of the POC CONTENT from the hand overlay. New species are project data (custom.species, editor2/core/species.py): the example re-expresses Gorbunok byte-identically through 17 ns_* regions + the compiler-owned bank $7E, except (a) its wild row moved from the bank-$14 EID-518 slot to project enemy 520 (bank $6B; pool 0 names it) and (b) the walking layout now comes from the donor index NewAttrHandler writes to HRAM $C7 (bank $11) instead of a pointer written at $11:$413F, which had overwritten ChopClown/Grendal's attr bytes (restored $02,$02). Purged: the S21 Dracky->Clam battle sprite (patches/bank_036.asm deleted), the S12 dead-table mirror (entries 693/803). Anchor's 4 dialog scripts + texts moved from the example's medal_vault room to the built-in skill_scripts.json (bank $60 SkillScriptPtrTable, script type $FF; template CustomScriptRead +9 B, re-pinned; bank $72 arms $FF, ids 2-5 unchanged). Prev: 15f21834385eb38e3650d434c622eda2   # S104 r5 (USER-CONFIRMED 2026-09-30 "perfect. Hand off."): library tab DISPLAY order — bank $12 LibTabToFamily / LibTabOrder (Spirit before ???; == gamedata.DISPLAY_ORDER) used by the tab-strip icons (SaveItem_6184 same-size call) and LibScanByFamily; 39 tail fill nops consumed. Prev: e994173e6086fd9f3cfe5095e3f9ba65   # S104 r4 (USER-CONFIRMED 2026-09-30 "Great that fixed it!"): bank $73 CF3SnapRestore restores the extended farm to $BCC7 only (93 chunks + CF3SnapTail4) — the snapshot's 28 lazy tile-image bytes $BCC8-$BCE3 hold the PREVIOUS save's top tile row (commit runs before SaveGameState's tile block); restoring them broke checksum v3 segment 3 when the last two saves were on different screens (user: save wiped on reset, glitchy top row). Prev: d7b762db217656f4432f115c25b39418   # S104 r3 (built; user: save wiped): bank $12 LibScanByFamily writes the library list to wMonList (was $C0D8; FX1 S71 had moved every bank-$12 reader to wMonList, so each tab listed the roster list and a lookup opened species = list index — user S104: the Spirit lookup froze). Prev: eb1535108cdbc9ac24d64dce3db5591e   # S104 r2 (built; user: Spirit library lookup froze): the Spirit icon = mock-up B "ghost wisp" (user pick) in $4F:$41B0 + the bank $6D SpiritIconStream (run marker $00); new compiler regions gd_family_voices (bank $6D FamilyTextPtrTable11) and gd_spirit_names (bank $41 dead fill) — empty gamedata == the r1 bytes. Prev: eee9f5b08b2f847291103961385099d9   # S104 r1 (built; test ROM user-passed except the Library door, which the user project redirects): ROADMAP P3.10a Spirit as the 11th family — new hand-authored bank $6D FAMILY SYSTEMS (FamilyIconGfxActive/FromE, FamilyTextGroupFromE, FamilyDefaultNameId, SpiritIconStream) behind same-size forks in banks $01/$0A/$04/$09; bank $16 family-scan $FA wildcard jr -> 2 nops ($FA = Spirit); bank $4F ??? glyph restored at $41A0, Spirit glyph at $41B0 (byte $1A); bank $41 mode-4 Spirit string "$1A", Spirit default names in the dead $4323 words + tail fill; bank $07 unknown-parent pedigree icon id 10 -> 11 (id 10 = Spirit since B9 drew the Spirit icon for unknown parents). No example project.json change. Prev: 5d1dbc5f50aa46717d662bdc83b3cad4   # S103 (USER-CONFIRMED 2026-09-30 "Rom - all correct"): ROADMAP P3.9 Layer A-lite — the vanilla data tables (MonsterInfoTable, EnemyStatsTable, EncounterPoolData, FamilyRecipeTable, bank $69 special table, Exp/StatGrowth curves (new patches/bank_013.asm), SkillLearnReq/MPCost/RecordData, bank $12 LibFamilyPtrTable, bank $4D library recipe text re-sectioned) are compiler-owned regions fed by `gamedata`; the example re-expresses the pre-S103 hand edits as gamedata (byte-identical) EXCEPT the library recipe text: its 4 B4 family-recipe slots (DrakSlime / GreatDrak / Almiraj / Wyvern) now show the recipes the table really has (coherence Set 1) — the only byte delta, 17 B in bank $4D + header. Prev: 0d60486e57edc2ad31fa28079d4fc9f8   # S102 (built, NOT yet user-tested): own tile animations — new compiler-owned bank $6C (template bank_06c_head.asm: CustomTileAnimate / TileAnimRestart / TileAnimCopy, empty TileAnimRoomTable in the example), bank $71 CustomAnimSource far-calls it first (+4 B), wram.asm carves wTileAnim* from wCustomPool. Prev: 9c81304176bd069ec77cd4c0d2211900   # S101 (built, NOT yet user-tested): ROADMAP P3.7b part 2 custom boss floors — bank $16 GateFloorDataTable is a compiler-owned region (custom.gates: floors 2-99, boss = custom room / vanilla:$xx, hand_made; the example has no custom.gates so the 256 B are vanilla); bank $14 LoadEnemyStats head -> LoadEnemyStatsExt (EID >= 519 -> new compiler-owned bank $6B CopyEnemyRowExt / ProjectEnemyRows, template bank_06b_head.asm pinned) and LookupBossRedirect -> BossRedirectTableExt (project join_as rows, then the vanilla 34) — the old bank-$14 tail enemy row (quest EID 519) moved to bank $6B; bank $60 CustomStateRules calls CustomMonsterCast first (per-screen monster NPC cast -> $D7CA; empty table in the example); bank $71 CustomRoomBGMResolve: the floor before a CUSTOM boss map plays that room's song (or $34). Example project.json: raw script op hex normalised to the new names (branch_screen/npc_write/...; bytes identical). Prev: 7cd7257b94004fdf8b406138dc7122e1   # S100 r3 (built, NOT yet user-tested): (1) stairs/special-room descent from a FREE-COLOUR custom room faded through the room's own colour 1 (user: "background is not CREAM but room-tile coloured") — bank $06 MapTrans_S10_InGate + MapTrans_S12 same-size rewrites far-call bank $73 new entries 19 GateWipeAttr (the 20x14 $E0 fill rows -> attr 7) and 20 GateLeaveFreePal (buffer+HW colour 1 := cream once the room is squeezed; the load fade targets buffer colour 1); vanilla + unmarked rooms early-ret (PyBoy: vanilla $50 pit transition = same pictures, single-scanline timing jitter only); (2) tools/compress_tiles.py MAX_COPY 256 (the game adds 19 in 8 bits: a 257-274 byte copy wrapped and shifted the rest of a sheet 256 B — an imported blank sheet drew as flat colour blocks) + decompress_tiles.py 8-bit like the game; the example sheet re-encodes (its old stream happened to decode right); (3) editor: "Stairs down here" paints the vanilla next-floor well ($51 slots $2C-$2F over the cell's floor). Prev: 91202c74fc9fc80dffc0e397d9d5e083   # S100 r2 (built, NOT yet user-tested): the example gate rule gains once_per_dive (user 14:39: gate_rotation could be floor 2 AND floor 3 of one dive; PyBoy 40 dives: floor 2 19x, floor 3 12x, never both). Prev: 4f13d2af8411c0b4387094221e9c2382   # S100 (built, NOT yet user-tested): ROADMAP P3.7b part 1 gate room insertion — bank $16 GateDecisionFork rewritten (the S41 hardcoded gate-1 -> $6D POC + CustomGate1Setup removed; push/pop BC around the far call because the vanilla special-room test after the fork divides B = wCurrentFloor) -> bank $71 entry 4 CustomGateInsert over the generated GateInsertTable (custom.gate_inserts[]: gate, floors, chance, flag terms, once-per-dive); entry 5 CustomRoomFlags + CustomRoomFlagsTable (can_save) read by the bank $07 save ladder same-size rewrite SaveAllowCheck (vanilla verdicts identical over all 256 mapIDs); entry 1 gate byte $FF = follow the dive (no pin); dive state wGateDiveGate/Mask $DEBC-D persisted via SRAM $BFCA-B in bank $73 entries 5/6; template 164 -> 395 B re-pinned; example project: gate_rotation served on Villager floors 2-3 at 50 % (was every floor), gate_arrival (4,6), stairs tag. PyBoy on the user save: gate-21 decisions identical to the S99 build (no rule = no RNG), floor 2/3 hit 19/40 each, floor 4 0/40, once-per-dive + flag rule + follow-gate encounters + gate/own music + JOURNAL allowed/refused + save-in-room/reload/descend. Prev: d072eb516dabc4799d830c170bbc9d9f   # S99 (built, NOT yet user-tested): ROADMAP P3.3e room tile animation — bank $01 PerRoomVRAMDispatch same-size rewrite (the six wGameState bit/ret-nz guards collapsed into `and $fe / cp $10`, proven equivalent over all 65,536 (wGameState, $C8EF) pairs; freed bytes fund: custom rooms ask bank $71 entry 3 CustomAnimSource for their animation source instead of `call MapIDClampForDispatch` = Castle for all); template bank_071_head.asm + entry 3 (head 142 -> 164 B, re-pinned); generated CustomAnimSrcTable (1 B/room); example project gains explicit `animation` (arena_clone source = $06 bare ret; the rest none) — so tiles 77/78 no longer roll in the example rooms. PyBoy: vanilla rooms frame-converge with the S98 build (sub-frame tile-load timing only), clones animate their source (test_canvas v6 --rom: VRAM == census schedule). Prev: ce24de8b708fe453711075dd0a3e07f8   # S97 round 2 (USER-CONFIRMED 2026-09-26; S98 changed no example/compiler-owned bytes — pin held): text boxes keep palette 7 (cream) in free-colour custom rooms — bank $06 dialog LoadMapS_6939 / state 9 / LoadMapS_6b3d same-size far calls to bank $73 entries 14-16 (row attrs saved to wBoxAttrSave, set to 7, restored cell by cell on close), bank $56 SetB56_48a1 + bank $00 ClearTextBitsRedraw same-size far calls to entries 18/17 for the YES/NO box; wram carves 132 B from wCustomPool. Vanilla + non-free rooms: pixel-identical dialog/choice frames (PyBoy). No example bytes change from the S97 r2 boxes text form (the example uses `lines`). Prev: 6e97fd377f50de47c98dcd665f515da7   # S97 round 1 (USER-CONFIRMED 2026-09-26): ROADMAP P3.5a state rules — bank $60 template entry 8 CustomStateRules (+ CustomReadStep calls it; head 383 -> 492 B, re-pinned) and bank $17 CustomAttrCheck calls StateRulesHook17 first (3 B from the ds-12 reserve -> ds 9; PyBoy-measured: the attr/palette walk reads the step counter BEFORE bank $0B Entry 0, so a rule evaluated only in Entry 0 loads the previous state's palette — A/B proven on the servant clone); generated CustomStateRulePtrTable in bank $60; the example project's S92 rank demo moved from the entry:medal_vault prelude to arena_clone.state_rules (flag $0030 -> screen 1 state 1; PyBoy: identical NPC sets flag clear/set, survives a wiped counter; vault entry script unchanged in behaviour). Also S97: the NPC type byte fields (behaviour/object) in the compiler — no example bytes change from them. Prev: 5db25d15af6298ca8be9e717a4a95b41   # S96 round 4 (USER-CONFIRMED 2026-09-25 ("Everything works"), SameBoy menu/battle): field-menu fix for free-colour rooms (user SameBoy report: washed-out room after closing the menu + colour-1 squares during the open wipe). FreeColor1Hook now keys on a PER-SLOT marker (bit 15 of colour 3 in slots 0-3, compiler-set for free_color1 palettes) and puts it back after the colour-3 pass, so the menu's standalone LoadPal_4102 no longer re-forces cream; bank $06 A-press menu-open tail rewritten same-size (4x `ld [hl+],a`) to far-call bank $73 entry 13 MenuOpenFreePal (hardware colour 1 := cream for marked slots during the tile-$E0 wipe; buffer untouched, menu-close push restores). Vanilla rooms: 619/620 menu frames pixel-identical to the round-3 build (1 mid-redraw text frame shifted by the far call's cycles). Prev: 07a71f202f011530ba7bb7d312666a97   # S96 (built, NOT yet user-tested): bank $17 FreeColor1Hook — LoadPal_4102's colour-1 pass (`ld a, [$c7d1]`) same-size -> jp FreeColor1Hook (bank tail, before room_render_tables): custom rooms whose loaded palette has bit 15 in slot 0 colour 3 (compiler marker for `free_color1` palettes) keep their own colour 1 in slots 0-3; slots 4-6 and every vanilla room unchanged. Example project has no free_color1 palette, so only the hook code moves bytes (room_render_tables shift, label-resolved). PyBoy: Pei import room BG palette RAM slots 0-3 == project (own colour 1), slots 4-7 $6BFF, GreatTree unchanged, holds after screen scroll. Prev: fc1caa987f5d4be1ad86ef7d4e87db20   # S94b (built, NOT yet user-tested): (1) vanilla-format per-(screen, STATE) attr+palette tables — bank $17 CustomAttrPtrTable -> RoomAttr_<mid> (16 dw) -> ScrAttr_<mid>_<k> (dw step counter; per state db attr_entry, attr_bank / dw pal_ptr) read by CustomAttrCheck/CustomPalCheck exactly like the vanilla AttrPtrTable walk (vanilla varies attr AND palette per step: Servant room $3F; clones carry ALL valid vanilla steps as states[] with per-state layout/attr/palette); (2) entrance redirects — custom.entrance_redirects[] lowered to per-(mapID, screen) VanillaExitExtTable rows (db mapID, screen; $FF = any) with every valid vanilla step rebuilt from extracted/map_table.json and only the named door re-pointed; template head 358 -> 383 (VanillaExitResolve keys on wScreenIndex), re-pinned; (3) bank $0B RoomEntry9 (boundary push exits) diverted through bank $60 entry 7 too (same-size rewrite, 5 nops) so y=0/7 extension rows are LIVE; (4) Exit_GreatTree_s8 restored to VANILLA bytes — the S92 Library-door repoint ($72) and the S1-era (4,5)->$6B entrance are now example-project DATA (entrance_redirects). PyBoy: Library door -> $72 scr 1 (14,7); (4,5) -> $6B (7,6); untouched GreatTree screen-12 door -> $0D; MedalMan south edge and OldManGate south edge identical to the original ROM; fresh-project Farm clone + redirect walk-through (test_canvas --rom). Prev: cdadf8346e207c248b151491e3ca2774   # S94 (built, NOT yet user-tested): per-SCREEN attr maps — CustomAttrCheck (patches/bank_017.asm) now reads CustomRoomAttr as dw per room -> 17-byte [bank, entry x16] map emitted by render17 (screens[k].attr > layout item attr > render.attr > $FF vanilla); the S42 base_entry+2 stride is retired (a 6-screen Farm clone PyBoy-verified: each screen its own attr, old rule mismatched 100+ tiles on screens 2/4/5/6). Also S94: ROM0 $26DD rows $6B-$6F are a compiler-owned @BUILD_PROJECT region in patches/bank_000.asm (rom0_records emitter; record required for EVERY room), 4x4 screen grid schema (keys 0-15, subtable width per row), extract_room emits screens[].attr, arena_clone screens 1/2 now carry their OWN attr items (attr_s1/attr_s2 — the faithful clone; under the old stride both showed attr_s2). Prev: df3219623203cf5bc272cb6155f07a01   # S92v5 (USER-CONFIRMED): rank state re-authored as visible-by-removal — rank G+ (flag $0030) removes the (7,6) $12 attendant; user-confirmed vanishing in-game. The v4 swap target $54 renders empty in field contexts (S91) — and that is VANILLA-FAITHFUL: user confirms the real lobby shows only 2 bunnies + 2 desks (the $54 entry is the desk talk-point). USER-CONFIRMED this session: Library-door entrance teleports to the clone; all 3 clone screens accessible on a normal save; postgame right-screen "crash" was a savestate issue, not the ROM. Prev S92v4: rank trigger corrected to EVENT FLAG $0030 (rank G cleared) — the S92v3 $D9CE ladder keyed a transient coliseum variable, not persistent rank (user-reported: G cleared, no state change). Both preludes (entry:medal_vault + arena_clone scr0) now if_flag_set $0030. PyBoy-verified on BOTH user saves: normal (flag 0 -> ctr 0 -> clerk) and postgame (flag 1 -> ctr 1 -> slime in buffer after a screen-seam cross; first-load NPCs predate the entry-script arming per the measured load-order rule, and a seam cross re-reads the screen state mid-visit — no re-entry needed). Postgame right-screen crash NOT reproduced headless (marker tile, NPC talk, north door all clean on the user postgame sav) — handed to user SameBoy debugging. Prev S92v3 (user-directed): GreatTree Library door REPOINTED to arena_clone $72 — in-place same-size byte edit in patches/bank_00b.asm at $0B:$4FE6 (05 03 12 00 04 05 07 -> 05 03 72 00 01 04 07; restore note at the site). NO injected triggers: the $12/$13 vanilla_exit_extensions rows are REMOVED (the v2 gate-room door was behind the 100-monster gate; main-Library injection is blocked by the map-wide replacement-list hazard, KEY_LESSONS S92). PyBoy-verified with real transitions both directions (Library south exit regressed; door -> clone (14,7) scr1; clone south -> GreatTree scr 4). Library itself unreachable while the repoint stands (testing stance, user-approved). Prev S92 pins: d5e052081890dd24137c0738aa240794 (v2 gate-room door), + Library Gate Room ($13) vanilla_exit_extensions row — Arena-clone door at (8,6), bottom-right corner (user-directed entrance; the well/vault chain was not the user's topology). Single sub-room = no cross-screen exit-replacement hazard (Library $12 itself is 2 screens sharing one replacement list — rejected for that reason, KEY_LESSONS S92). Both vanilla steps mirrored verbatim; return door PyBoy-regressed. Prev S92 pins: 9e5b592fd4b1150e1504d1be6b0c7c17 (prelude arming), + custom.script_preludes (entry:medal_vault arms arena_clone S1 rank state pre-transition; PyBoy-measured: state selection reads the counter at destination LOAD before its entry script) + rank demo re-authored as an in-budget NPC SWAP + placeholder zero 26DD rows. Interim S92 pin c3513d85283cac54778d0629f4537d6e (clone content, pre-prelude). S92 base: P3.2 [G-A] banks $64/$67 fold behind project.json + states[] backend [G-G] + P3.2b [G-J] clone extractor. Example project GAINS arena_clone ($72, vanilla Arena Lobby $06 clone via tools/extract_room.py, single-version per user decision, BGM $1E), island_copy ($73, custom->custom clone of gate_island), an authored medal_vault staircase layout+exit, and a 2-state rank demo on arena_clone screen1. The $64/$67 EMISSION is byte-identical to the prior hand-generated banks (proven via --expect-md5 a17bff8e67f3043fbff653c65128ea16 before clone content; the fold itself is zero-delta). NOT yet user-tested (built S92). Prev: a17bff8e67f3043fbff653c65128ea16 S85b: AI-committed Anchor $E4 rewritten to Attack in DispatchBoundsStub (prev S85 4c8de38a758eda5eb256d0af6f3be5b1: DispatchBoundsStub re-route $E5-$E8 -> $62BF (bank $58; AI-committed Tremor/Quake swept the party) + Anchor $E4 true no-op in CustomBattleExec (bank $72). Also absorbs the S84 pin move that was never recorded here: b99455d67012e2f451cd5ed96a5020a1 (S84: DispatchBoundsStub bounds guard for AI-committed ids > $E5, bank $58 $694F). Neither session touched compiler-owned banks; the pin is the whole-ROM regression. Prev: ce1e7369eb3876866e897c278510c3ae (S75v4: + LearnCode2Guard06 (bank $06: custom ids can never stat-learn via the code-2 path) + SlotProbeGuard50 (bank $50: level probe bounds slot index < $28; the stale-$cac0 phantom-slot-40 echo-RAM hazard) + builder-integrated validate_custom_data.py. Prev: 762c0df0e23611bce6c931813e976d0c (S75v2: banner-before-animation (user feedback: MournCountDead shared counter evaluated in the anim fork; banner render + $FE hold state precede the two slash plays; handler keeps only the multiplier; bank $72 only). Prev: a914e4896c3380b061d9bff8cfe509f6 (S75: + custom skill $E9 Mourn (ATK-vs-DEF x (dead allies+1) via the 2nd dispatch trampoline MournDispatch52; double EvilSlash replay; boost banner; banks $06/$07/$14/$41/$4c/$52/$53/$54/$56/$58/$5f/$72/wram -- BATTLE_SKILL_SYSTEM 13.8). This pin supersedes the S73b reference DIRECTLY: the S74 Earthquake bytes were never pinned here (S74 did not touch compiler-owned banks and did not run this chain), so the S74+S75 patched deltas both land in this one pin move. Prev: 224b11766b28de88cdb206c31145e286 (S73b: + skill descriptions for $E0-$E4 (bank $56 table $6667 repoints + 226 string bytes from tail pad) and battle field-only rejection for $E4 (bank $50 FieldOnlySkillA shared predicate: menu $0302 message without consuming the turn + usable-count exclusion; 12-byte mid-pad consumption, shift audit clean). Prev: 8fa605d795a7591871d5ad02058addfb (S73 Anchor reference patched build (custom skill $E4 Anchor: field-cast system RE'd — bank $07 usability whitelist in-place rewrite + Anchor07Post state-4 menu close; bank $14 entry-4 tail -> bank $72 AnchorField14Tail context classifier; script arm protocol ctr=$FFFF; GateAwareDispatch script-type branch (template re-pinned); medal_vault scripts 2-5 + dialogue $0A20-$0A23; bank $73 commit-hook arm 1/2/3 (anchor store / install+3/4-current-MP charge on arrival / GateDecisionFork force-standard); persistent wAnchorGate/Floor $D9D7-8 (flags $01E0-$01EF retired), transient $DEB2-3; PyBoy-verified full round trip via real menu UI both directions, MP 98->24, anchor single-use, error dialogs 4/5, NO paths, Heal/WarpWing/NPC regressions). Prev: 46ba69918c7ddfdfcd8a441d967debb6 (S71v2 FX1 reference patched build (exp-scale veto: drain pays FULL pending per eligible farm monster — vanilla per-monster rate; v1 halved it. USER-CONFIRMED v1 mechanics 2026-07-26: farm menus >17, sleep whole-swap, save/reload, breeding + hatches at scale, "everything works"; v2 delta = drain payout only, PyBoy-verified full 512 payout in both farm regions). Prev: 9c3af0d434f3d5bcd617677a42129778 (S71 FX1 reference patched build (farm expansion 17->37 active slots: array 40 slots (0-2 party, 3-19 farm @$A1FB+s*$95, 20-39 farm @$B124+(s-20)*$95 = the evicted sleep pool's bank-0 home; staging pseudo-slot INDICES 20/21 -> 40/41, addresses unchanged $D665/$D6FA); sleep pool -> SRAM bank 2 ($A010+c*$95, 40 slots, "P1" magic) via bank $73 entries 10-12; one-time F2 reformat gate $BFC8-9 in entry 4 (order load-bearing: legacy sums BEFORE F2 stamp, v3 after); checksum v3 = $A002x$1C5 + $AD9Fx$385 + $BCC8x$338; snapshot R4 dual-region ($A1BF x95 + $B124 x94 chunks); roster lists + canonicalizer map -> wMonList $D001 (C0D8 overflow at 40 slots); exp payout halved at drain (aggregate 37/32~=vanilla 17/16); PyBoy-verified: reformat preserves save, R3->R4 upgrade, 25-farm canonicalize/list/rewind/dual-snapshot/drain/battle). Prev: a5a5e0d5d01949b30bbff9d3253d9748 (S70v3 reference patched build (walk-on boundary exits for custom rooms: Entry 6 scan y=7 skip is data-driven via wCustomY7Cmp $DE74 (carved from the S65 legacy pad), armed fresh by bank $60 entry 7 before every scan - vanilla branch writes $07 (original skip semantics preserved), CustomExitCheck writes $FE (custom-room y=7 rows fire on arrival, PyBoy: 36 frames tap-to-transition, vanilla MedalMan door regression-checked push-only); template head 348->358, re-pinned). Prev: 22d30b66827628b9c8d9d400c48568a4 (S70v2 reference patched build (bug-fix pass, PyBoy-verified: init_dialog $07 protocol - every text outside an NPC interaction gets its own preceding init_dialog, auto-injected by quest lowering (field mode never services the text queue; dismissal tears script dialog mode down); emit_script hard-errors on non-terminated scripts (S70 freeze class); encounter seed 1200 (drain measured 100/step); bank $0B custom-source fast transition (in-place 19-byte window rewrite: exits FROM custom rooms take the town path, 18 frames vs the 385-frame gateworld-return ceremony, a day-one defect, not a regression); write_ram2 $13 opcode; Medal Chamber display strings). Prev: 6a6f4f8791cad0a271d210c7f485569c (S70v1 reference patched build (E2 wiring: progression.quests/enemies lowering -> quest:/entry: scripts + bank $14 tail row EID 519; vanilla_exit_extensions -> VanillaExitExtTable + template entry 7 VanillaExitResolve (re-pinned, head 348 B); bank $0B Entry 6 unified divert (-5 B); bank $01 $4C3E reverted to vanilla ld a,[wMapID] (entry scripts fire at initial entry); legacy compat key retired from the example project; room $71 Medal Vault + dwm2_bgm10). Prev: 94731e601af28503060acf3884348015 (S69v2 reference patched build (roster snapshot: bank-1 magic-gated save-time roster copy restoring vanilla reset-rewind semantics; entries 5/6 tail hooks + CF3SnapXfer/Commit/Restore + wSnapBounce $DE92). Prev: e719d286db0ff66e80755ec3ef1203e0 (S69v1 E3 pin (E3 SRAM 32 KB: 19 ROM0 quadrant-convention RAMB writes retargeted $4100->$6100 (MBC5-ignored), HeaderRAMSize $02->$03, bank $73 entry 9 CF3SRAMBankedCopy + wSRAMXfer* mailbox $DE8B-$DE91). Prev: de0c5a672e7e7e1fb834dd7afe70b9e7 (S65 reference patched build (WRAM migration: NPC/exit buffers -> $CC80/$CD00, step-counter region -> $CD80 (640 B) inside the CF3-freed window; $DE74 region -> static ds 7 pad, wRoomRecScratch stays $DE7B; + bank $73 entry 6 tail zeroes the window after the main-image restore copy). Prev: 7cc0857faad8a950573e865e93f791eb (S64 reference patched build (M3b+M3c: LoadNewBGMIdIntoA same-size rewrite -> bank $71 entry 2 CustomRoomBGMResolve + CustomRoomBGMTable; music emitter owns bank $74; dq6_town1 ids $A4-$A6 from MIDI; Library $12 + gate_island $6B room defaults). Prev: 3009b75ee1e3bd58bc315a39b7324e17 (S63v5 reference patched build (M3a v4 + v5: BGM #07 ids $A1-$A3 in bank $74, room $6C NPC via project.json; bank_060 now compiler-generated via --apply). Prev: c23beed7aadee80a061c0f6c24d7c1f4 (S63 v4, M3a: AudioMasterTableExt + song bank $74 + bank $1E reverted; S62's BGM NPC/set_bgm $9E folded into the example project — S62 had hand-edited bank_060 without updating project/pin, breaking compat==hand byte-identity; restored S63). Prev pins: 168c5f1b5b4b3b2568a6d6e2f3f1ab45 (S60), d31c9300e13b98f516c6bee8b446069d (S58v2)))
+REFERENCE_MD5 = "77ccdab8a746fdc25fcad8d1239c84e4"   # S107 (P3.10 part 2c, USER-CONFIRMED 2026-10-01 "Great, can confirm works"): the JOURNAL party line ($07 jr_007_6271) and its bank-$0A twin (jr_00a_5fd9) read the SAVED party member's family icon through bank $6D FamilyIconGfxFromE (same-size forks, 7 B + 6 nops each) — their unclamped 10-entry tables gave a saved Spirit member gfx id $CDE5 / $0A11 and the screen stopped (PyBoy S107); tables re-sectioned SavedPartyFamilyIconTable07 / 0A (both trees). Family icons are compiler regions gd_family_icons ($4F) / gd_family_icon_streams ($2E, new hand patch) / gd_spirit_icon_stream ($6D), empty = the same bytes. Prev: 9740c1c99f9eb11fd2d0edbf3d0a3066   # S107 (P3.10 part 2b, USER-CONFIRMED 2026-10-01 "Can confirm everything works correctly"): walking layouts for new species — bank $11 both follower entries `ld de, FollowerLayoutL1Table11` -> same-size `call FollowerLayoutBase11` (DE = NewFollowerL1Table - 2*$5D for ids 221+); NewAttrHandler no longer rewrites HRAM $C7 (the S105 donor index), NewFollowerAttrTable 1 B per id, new NewFollowerL1Table (ns_follower_layout, 19 dw; Gorbunok = $4184 as before, undeclared $0000); bank $10 / $11 zero tails = compiler regions lay_copies_10 / lay_copies_11 (empty = the same zeros). S107 2a changed no pinned byte. Prev: f22f56e116bc6b3f6b94e7d45a7e5f1e   # S105 G3 (USER-CONFIRMED 2026-09-30 ("Confirm all three appear as expected")): new-species CAPACITY 1 -> 19 (ids 221-239, any subset). The eight follower forks COMPUTE the gfx-ID $7E00+(id-221)*2 into WRAM wNewSpeciesGid ($D10A, carved from wCustomPool) instead of reading per-bank one-entry tables (their ns_follower_gfx_* regions are gone); every other fork gates on id >= 221 (info $03/$6A, NewAttrHandler $11, HighBattlePal $17 (19 x 8 B table), FamilyRecipeResolve $16 (19 x 2 B), HighDetailTextFork $4D (bases -$1BA), LoadModeBaseRedirect $00 (base $7D39)); bank-$01 follower clamp 240+ only; ROM0 battle gfx table re-sectioned $2D56-$2DA7 (19-word region); bank $41 names / nicknames PACKED into 5 free extents (ns_text_a-e) + the nickname pointer table $7EF3 (ns_short_ptr), and SpellUseText_11's tail $7E06-$7E15 restored to vanilla (B9 S28 had zeroed it); bank $7E pointer table 38 entries (Gorbunok 224 = index 6 / 7). The example still declares only Gorbunok (224). Prev: f8a714850b5318844e23b050a16f222e   # S105 (built, never user-tested — superseded in-session by G3): ROADMAP P3.9b purge of the POC CONTENT from the hand overlay. New species are project data (custom.species, editor2/core/species.py): the example re-expresses Gorbunok byte-identically through 17 ns_* regions + the compiler-owned bank $7E, except (a) its wild row moved from the bank-$14 EID-518 slot to project enemy 520 (bank $6B; pool 0 names it) and (b) the walking layout now comes from the donor index NewAttrHandler writes to HRAM $C7 (bank $11) instead of a pointer written at $11:$413F, which had overwritten ChopClown/Grendal's attr bytes (restored $02,$02). Purged: the S21 Dracky->Clam battle sprite (patches/bank_036.asm deleted), the S12 dead-table mirror (entries 693/803). Anchor's 4 dialog scripts + texts moved from the example's medal_vault room to the built-in skill_scripts.json (bank $60 SkillScriptPtrTable, script type $FF; template CustomScriptRead +9 B, re-pinned; bank $72 arms $FF, ids 2-5 unchanged). Prev: 15f21834385eb38e3650d434c622eda2   # S104 r5 (USER-CONFIRMED 2026-09-30 "perfect. Hand off."): library tab DISPLAY order — bank $12 LibTabToFamily / LibTabOrder (Spirit before ???; == gamedata.DISPLAY_ORDER) used by the tab-strip icons (SaveItem_6184 same-size call) and LibScanByFamily; 39 tail fill nops consumed. Prev: e994173e6086fd9f3cfe5095e3f9ba65   # S104 r4 (USER-CONFIRMED 2026-09-30 "Great that fixed it!"): bank $73 CF3SnapRestore restores the extended farm to $BCC7 only (93 chunks + CF3SnapTail4) — the snapshot's 28 lazy tile-image bytes $BCC8-$BCE3 hold the PREVIOUS save's top tile row (commit runs before SaveGameState's tile block); restoring them broke checksum v3 segment 3 when the last two saves were on different screens (user: save wiped on reset, glitchy top row). Prev: d7b762db217656f4432f115c25b39418   # S104 r3 (built; user: save wiped): bank $12 LibScanByFamily writes the library list to wMonList (was $C0D8; FX1 S71 had moved every bank-$12 reader to wMonList, so each tab listed the roster list and a lookup opened species = list index — user S104: the Spirit lookup froze). Prev: eb1535108cdbc9ac24d64dce3db5591e   # S104 r2 (built; user: Spirit library lookup froze): the Spirit icon = mock-up B "ghost wisp" (user pick) in $4F:$41B0 + the bank $6D SpiritIconStream (run marker $00); new compiler regions gd_family_voices (bank $6D FamilyTextPtrTable11) and gd_spirit_names (bank $41 dead fill) — empty gamedata == the r1 bytes. Prev: eee9f5b08b2f847291103961385099d9   # S104 r1 (built; test ROM user-passed except the Library door, which the user project redirects): ROADMAP P3.10a Spirit as the 11th family — new hand-authored bank $6D FAMILY SYSTEMS (FamilyIconGfxActive/FromE, FamilyTextGroupFromE, FamilyDefaultNameId, SpiritIconStream) behind same-size forks in banks $01/$0A/$04/$09; bank $16 family-scan $FA wildcard jr -> 2 nops ($FA = Spirit); bank $4F ??? glyph restored at $41A0, Spirit glyph at $41B0 (byte $1A); bank $41 mode-4 Spirit string "$1A", Spirit default names in the dead $4323 words + tail fill; bank $07 unknown-parent pedigree icon id 10 -> 11 (id 10 = Spirit since B9 drew the Spirit icon for unknown parents). No example project.json change. Prev: 5d1dbc5f50aa46717d662bdc83b3cad4   # S103 (USER-CONFIRMED 2026-09-30 "Rom - all correct"): ROADMAP P3.9 Layer A-lite — the vanilla data tables (MonsterInfoTable, EnemyStatsTable, EncounterPoolData, FamilyRecipeTable, bank $69 special table, Exp/StatGrowth curves (new patches/bank_013.asm), SkillLearnReq/MPCost/RecordData, bank $12 LibFamilyPtrTable, bank $4D library recipe text re-sectioned) are compiler-owned regions fed by `gamedata`; the example re-expresses the pre-S103 hand edits as gamedata (byte-identical) EXCEPT the library recipe text: its 4 B4 family-recipe slots (DrakSlime / GreatDrak / Almiraj / Wyvern) now show the recipes the table really has (coherence Set 1) — the only byte delta, 17 B in bank $4D + header. Prev: 0d60486e57edc2ad31fa28079d4fc9f8   # S102 (built, NOT yet user-tested): own tile animations — new compiler-owned bank $6C (template bank_06c_head.asm: CustomTileAnimate / TileAnimRestart / TileAnimCopy, empty TileAnimRoomTable in the example), bank $71 CustomAnimSource far-calls it first (+4 B), wram.asm carves wTileAnim* from wCustomPool. Prev: 9c81304176bd069ec77cd4c0d2211900   # S101 (built, NOT yet user-tested): ROADMAP P3.7b part 2 custom boss floors — bank $16 GateFloorDataTable is a compiler-owned region (custom.gates: floors 2-99, boss = custom room / vanilla:$xx, hand_made; the example has no custom.gates so the 256 B are vanilla); bank $14 LoadEnemyStats head -> LoadEnemyStatsExt (EID >= 519 -> new compiler-owned bank $6B CopyEnemyRowExt / ProjectEnemyRows, template bank_06b_head.asm pinned) and LookupBossRedirect -> BossRedirectTableExt (project join_as rows, then the vanilla 34) — the old bank-$14 tail enemy row (quest EID 519) moved to bank $6B; bank $60 CustomStateRules calls CustomMonsterCast first (per-screen monster NPC cast -> $D7CA; empty table in the example); bank $71 CustomRoomBGMResolve: the floor before a CUSTOM boss map plays that room's song (or $34). Example project.json: raw script op hex normalised to the new names (branch_screen/npc_write/...; bytes identical). Prev: 7cd7257b94004fdf8b406138dc7122e1   # S100 r3 (built, NOT yet user-tested): (1) stairs/special-room descent from a FREE-COLOUR custom room faded through the room's own colour 1 (user: "background is not CREAM but room-tile coloured") — bank $06 MapTrans_S10_InGate + MapTrans_S12 same-size rewrites far-call bank $73 new entries 19 GateWipeAttr (the 20x14 $E0 fill rows -> attr 7) and 20 GateLeaveFreePal (buffer+HW colour 1 := cream once the room is squeezed; the load fade targets buffer colour 1); vanilla + unmarked rooms early-ret (PyBoy: vanilla $50 pit transition = same pictures, single-scanline timing jitter only); (2) tools/compress_tiles.py MAX_COPY 256 (the game adds 19 in 8 bits: a 257-274 byte copy wrapped and shifted the rest of a sheet 256 B — an imported blank sheet drew as flat colour blocks) + decompress_tiles.py 8-bit like the game; the example sheet re-encodes (its old stream happened to decode right); (3) editor: "Stairs down here" paints the vanilla next-floor well ($51 slots $2C-$2F over the cell's floor). Prev: 91202c74fc9fc80dffc0e397d9d5e083   # S100 r2 (built, NOT yet user-tested): the example gate rule gains once_per_dive (user 14:39: gate_rotation could be floor 2 AND floor 3 of one dive; PyBoy 40 dives: floor 2 19x, floor 3 12x, never both). Prev: 4f13d2af8411c0b4387094221e9c2382   # S100 (built, NOT yet user-tested): ROADMAP P3.7b part 1 gate room insertion — bank $16 GateDecisionFork rewritten (the S41 hardcoded gate-1 -> $6D POC + CustomGate1Setup removed; push/pop BC around the far call because the vanilla special-room test after the fork divides B = wCurrentFloor) -> bank $71 entry 4 CustomGateInsert over the generated GateInsertTable (custom.gate_inserts[]: gate, floors, chance, flag terms, once-per-dive); entry 5 CustomRoomFlags + CustomRoomFlagsTable (can_save) read by the bank $07 save ladder same-size rewrite SaveAllowCheck (vanilla verdicts identical over all 256 mapIDs); entry 1 gate byte $FF = follow the dive (no pin); dive state wGateDiveGate/Mask $DEBC-D persisted via SRAM $BFCA-B in bank $73 entries 5/6; template 164 -> 395 B re-pinned; example project: gate_rotation served on Villager floors 2-3 at 50 % (was every floor), gate_arrival (4,6), stairs tag. PyBoy on the user save: gate-21 decisions identical to the S99 build (no rule = no RNG), floor 2/3 hit 19/40 each, floor 4 0/40, once-per-dive + flag rule + follow-gate encounters + gate/own music + JOURNAL allowed/refused + save-in-room/reload/descend. Prev: d072eb516dabc4799d830c170bbc9d9f   # S99 (built, NOT yet user-tested): ROADMAP P3.3e room tile animation — bank $01 PerRoomVRAMDispatch same-size rewrite (the six wGameState bit/ret-nz guards collapsed into `and $fe / cp $10`, proven equivalent over all 65,536 (wGameState, $C8EF) pairs; freed bytes fund: custom rooms ask bank $71 entry 3 CustomAnimSource for their animation source instead of `call MapIDClampForDispatch` = Castle for all); template bank_071_head.asm + entry 3 (head 142 -> 164 B, re-pinned); generated CustomAnimSrcTable (1 B/room); example project gains explicit `animation` (arena_clone source = $06 bare ret; the rest none) — so tiles 77/78 no longer roll in the example rooms. PyBoy: vanilla rooms frame-converge with the S98 build (sub-frame tile-load timing only), clones animate their source (test_canvas v6 --rom: VRAM == census schedule). Prev: ce24de8b708fe453711075dd0a3e07f8   # S97 round 2 (USER-CONFIRMED 2026-09-26; S98 changed no example/compiler-owned bytes — pin held): text boxes keep palette 7 (cream) in free-colour custom rooms — bank $06 dialog LoadMapS_6939 / state 9 / LoadMapS_6b3d same-size far calls to bank $73 entries 14-16 (row attrs saved to wBoxAttrSave, set to 7, restored cell by cell on close), bank $56 SetB56_48a1 + bank $00 ClearTextBitsRedraw same-size far calls to entries 18/17 for the YES/NO box; wram carves 132 B from wCustomPool. Vanilla + non-free rooms: pixel-identical dialog/choice frames (PyBoy). No example bytes change from the S97 r2 boxes text form (the example uses `lines`). Prev: 6e97fd377f50de47c98dcd665f515da7   # S97 round 1 (USER-CONFIRMED 2026-09-26): ROADMAP P3.5a state rules — bank $60 template entry 8 CustomStateRules (+ CustomReadStep calls it; head 383 -> 492 B, re-pinned) and bank $17 CustomAttrCheck calls StateRulesHook17 first (3 B from the ds-12 reserve -> ds 9; PyBoy-measured: the attr/palette walk reads the step counter BEFORE bank $0B Entry 0, so a rule evaluated only in Entry 0 loads the previous state's palette — A/B proven on the servant clone); generated CustomStateRulePtrTable in bank $60; the example project's S92 rank demo moved from the entry:medal_vault prelude to arena_clone.state_rules (flag $0030 -> screen 1 state 1; PyBoy: identical NPC sets flag clear/set, survives a wiped counter; vault entry script unchanged in behaviour). Also S97: the NPC type byte fields (behaviour/object) in the compiler — no example bytes change from them. Prev: 5db25d15af6298ca8be9e717a4a95b41   # S96 round 4 (USER-CONFIRMED 2026-09-25 ("Everything works"), SameBoy menu/battle): field-menu fix for free-colour rooms (user SameBoy report: washed-out room after closing the menu + colour-1 squares during the open wipe). FreeColor1Hook now keys on a PER-SLOT marker (bit 15 of colour 3 in slots 0-3, compiler-set for free_color1 palettes) and puts it back after the colour-3 pass, so the menu's standalone LoadPal_4102 no longer re-forces cream; bank $06 A-press menu-open tail rewritten same-size (4x `ld [hl+],a`) to far-call bank $73 entry 13 MenuOpenFreePal (hardware colour 1 := cream for marked slots during the tile-$E0 wipe; buffer untouched, menu-close push restores). Vanilla rooms: 619/620 menu frames pixel-identical to the round-3 build (1 mid-redraw text frame shifted by the far call's cycles). Prev: 07a71f202f011530ba7bb7d312666a97   # S96 (built, NOT yet user-tested): bank $17 FreeColor1Hook — LoadPal_4102's colour-1 pass (`ld a, [$c7d1]`) same-size -> jp FreeColor1Hook (bank tail, before room_render_tables): custom rooms whose loaded palette has bit 15 in slot 0 colour 3 (compiler marker for `free_color1` palettes) keep their own colour 1 in slots 0-3; slots 4-6 and every vanilla room unchanged. Example project has no free_color1 palette, so only the hook code moves bytes (room_render_tables shift, label-resolved). PyBoy: Pei import room BG palette RAM slots 0-3 == project (own colour 1), slots 4-7 $6BFF, GreatTree unchanged, holds after screen scroll. Prev: fc1caa987f5d4be1ad86ef7d4e87db20   # S94b (built, NOT yet user-tested): (1) vanilla-format per-(screen, STATE) attr+palette tables — bank $17 CustomAttrPtrTable -> RoomAttr_<mid> (16 dw) -> ScrAttr_<mid>_<k> (dw step counter; per state db attr_entry, attr_bank / dw pal_ptr) read by CustomAttrCheck/CustomPalCheck exactly like the vanilla AttrPtrTable walk (vanilla varies attr AND palette per step: Servant room $3F; clones carry ALL valid vanilla steps as states[] with per-state layout/attr/palette); (2) entrance redirects — custom.entrance_redirects[] lowered to per-(mapID, screen) VanillaExitExtTable rows (db mapID, screen; $FF = any) with every valid vanilla step rebuilt from extracted/map_table.json and only the named door re-pointed; template head 358 -> 383 (VanillaExitResolve keys on wScreenIndex), re-pinned; (3) bank $0B RoomEntry9 (boundary push exits) diverted through bank $60 entry 7 too (same-size rewrite, 5 nops) so y=0/7 extension rows are LIVE; (4) Exit_GreatTree_s8 restored to VANILLA bytes — the S92 Library-door repoint ($72) and the S1-era (4,5)->$6B entrance are now example-project DATA (entrance_redirects). PyBoy: Library door -> $72 scr 1 (14,7); (4,5) -> $6B (7,6); untouched GreatTree screen-12 door -> $0D; MedalMan south edge and OldManGate south edge identical to the original ROM; fresh-project Farm clone + redirect walk-through (test_canvas --rom). Prev: cdadf8346e207c248b151491e3ca2774   # S94 (built, NOT yet user-tested): per-SCREEN attr maps — CustomAttrCheck (patches/bank_017.asm) now reads CustomRoomAttr as dw per room -> 17-byte [bank, entry x16] map emitted by render17 (screens[k].attr > layout item attr > render.attr > $FF vanilla); the S42 base_entry+2 stride is retired (a 6-screen Farm clone PyBoy-verified: each screen its own attr, old rule mismatched 100+ tiles on screens 2/4/5/6). Also S94: ROM0 $26DD rows $6B-$6F are a compiler-owned @BUILD_PROJECT region in patches/bank_000.asm (rom0_records emitter; record required for EVERY room), 4x4 screen grid schema (keys 0-15, subtable width per row), extract_room emits screens[].attr, arena_clone screens 1/2 now carry their OWN attr items (attr_s1/attr_s2 — the faithful clone; under the old stride both showed attr_s2). Prev: df3219623203cf5bc272cb6155f07a01   # S92v5 (USER-CONFIRMED): rank state re-authored as visible-by-removal — rank G+ (flag $0030) removes the (7,6) $12 attendant; user-confirmed vanishing in-game. The v4 swap target $54 renders empty in field contexts (S91) — and that is VANILLA-FAITHFUL: user confirms the real lobby shows only 2 bunnies + 2 desks (the $54 entry is the desk talk-point). USER-CONFIRMED this session: Library-door entrance teleports to the clone; all 3 clone screens accessible on a normal save; postgame right-screen "crash" was a savestate issue, not the ROM. Prev S92v4: rank trigger corrected to EVENT FLAG $0030 (rank G cleared) — the S92v3 $D9CE ladder keyed a transient coliseum variable, not persistent rank (user-reported: G cleared, no state change). Both preludes (entry:medal_vault + arena_clone scr0) now if_flag_set $0030. PyBoy-verified on BOTH user saves: normal (flag 0 -> ctr 0 -> clerk) and postgame (flag 1 -> ctr 1 -> slime in buffer after a screen-seam cross; first-load NPCs predate the entry-script arming per the measured load-order rule, and a seam cross re-reads the screen state mid-visit — no re-entry needed). Postgame right-screen crash NOT reproduced headless (marker tile, NPC talk, north door all clean on the user postgame sav) — handed to user SameBoy debugging. Prev S92v3 (user-directed): GreatTree Library door REPOINTED to arena_clone $72 — in-place same-size byte edit in patches/bank_00b.asm at $0B:$4FE6 (05 03 12 00 04 05 07 -> 05 03 72 00 01 04 07; restore note at the site). NO injected triggers: the $12/$13 vanilla_exit_extensions rows are REMOVED (the v2 gate-room door was behind the 100-monster gate; main-Library injection is blocked by the map-wide replacement-list hazard, KEY_LESSONS S92). PyBoy-verified with real transitions both directions (Library south exit regressed; door -> clone (14,7) scr1; clone south -> GreatTree scr 4). Library itself unreachable while the repoint stands (testing stance, user-approved). Prev S92 pins: d5e052081890dd24137c0738aa240794 (v2 gate-room door), + Library Gate Room ($13) vanilla_exit_extensions row — Arena-clone door at (8,6), bottom-right corner (user-directed entrance; the well/vault chain was not the user's topology). Single sub-room = no cross-screen exit-replacement hazard (Library $12 itself is 2 screens sharing one replacement list — rejected for that reason, KEY_LESSONS S92). Both vanilla steps mirrored verbatim; return door PyBoy-regressed. Prev S92 pins: 9e5b592fd4b1150e1504d1be6b0c7c17 (prelude arming), + custom.script_preludes (entry:medal_vault arms arena_clone S1 rank state pre-transition; PyBoy-measured: state selection reads the counter at destination LOAD before its entry script) + rank demo re-authored as an in-budget NPC SWAP + placeholder zero 26DD rows. Interim S92 pin c3513d85283cac54778d0629f4537d6e (clone content, pre-prelude). S92 base: P3.2 [G-A] banks $64/$67 fold behind project.json + states[] backend [G-G] + P3.2b [G-J] clone extractor. Example project GAINS arena_clone ($72, vanilla Arena Lobby $06 clone via tools/extract_room.py, single-version per user decision, BGM $1E), island_copy ($73, custom->custom clone of gate_island), an authored medal_vault staircase layout+exit, and a 2-state rank demo on arena_clone screen1. The $64/$67 EMISSION is byte-identical to the prior hand-generated banks (proven via --expect-md5 a17bff8e67f3043fbff653c65128ea16 before clone content; the fold itself is zero-delta). NOT yet user-tested (built S92). Prev: a17bff8e67f3043fbff653c65128ea16 S85b: AI-committed Anchor $E4 rewritten to Attack in DispatchBoundsStub (prev S85 4c8de38a758eda5eb256d0af6f3be5b1: DispatchBoundsStub re-route $E5-$E8 -> $62BF (bank $58; AI-committed Tremor/Quake swept the party) + Anchor $E4 true no-op in CustomBattleExec (bank $72). Also absorbs the S84 pin move that was never recorded here: b99455d67012e2f451cd5ed96a5020a1 (S84: DispatchBoundsStub bounds guard for AI-committed ids > $E5, bank $58 $694F). Neither session touched compiler-owned banks; the pin is the whole-ROM regression. Prev: ce1e7369eb3876866e897c278510c3ae (S75v4: + LearnCode2Guard06 (bank $06: custom ids can never stat-learn via the code-2 path) + SlotProbeGuard50 (bank $50: level probe bounds slot index < $28; the stale-$cac0 phantom-slot-40 echo-RAM hazard) + builder-integrated validate_custom_data.py. Prev: 762c0df0e23611bce6c931813e976d0c (S75v2: banner-before-animation (user feedback: MournCountDead shared counter evaluated in the anim fork; banner render + $FE hold state precede the two slash plays; handler keeps only the multiplier; bank $72 only). Prev: a914e4896c3380b061d9bff8cfe509f6 (S75: + custom skill $E9 Mourn (ATK-vs-DEF x (dead allies+1) via the 2nd dispatch trampoline MournDispatch52; double EvilSlash replay; boost banner; banks $06/$07/$14/$41/$4c/$52/$53/$54/$56/$58/$5f/$72/wram -- BATTLE_SKILL_SYSTEM 13.8). This pin supersedes the S73b reference DIRECTLY: the S74 Earthquake bytes were never pinned here (S74 did not touch compiler-owned banks and did not run this chain), so the S74+S75 patched deltas both land in this one pin move. Prev: 224b11766b28de88cdb206c31145e286 (S73b: + skill descriptions for $E0-$E4 (bank $56 table $6667 repoints + 226 string bytes from tail pad) and battle field-only rejection for $E4 (bank $50 FieldOnlySkillA shared predicate: menu $0302 message without consuming the turn + usable-count exclusion; 12-byte mid-pad consumption, shift audit clean). Prev: 8fa605d795a7591871d5ad02058addfb (S73 Anchor reference patched build (custom skill $E4 Anchor: field-cast system RE'd — bank $07 usability whitelist in-place rewrite + Anchor07Post state-4 menu close; bank $14 entry-4 tail -> bank $72 AnchorField14Tail context classifier; script arm protocol ctr=$FFFF; GateAwareDispatch script-type branch (template re-pinned); medal_vault scripts 2-5 + dialogue $0A20-$0A23; bank $73 commit-hook arm 1/2/3 (anchor store / install+3/4-current-MP charge on arrival / GateDecisionFork force-standard); persistent wAnchorGate/Floor $D9D7-8 (flags $01E0-$01EF retired), transient $DEB2-3; PyBoy-verified full round trip via real menu UI both directions, MP 98->24, anchor single-use, error dialogs 4/5, NO paths, Heal/WarpWing/NPC regressions). Prev: 46ba69918c7ddfdfcd8a441d967debb6 (S71v2 FX1 reference patched build (exp-scale veto: drain pays FULL pending per eligible farm monster — vanilla per-monster rate; v1 halved it. USER-CONFIRMED v1 mechanics 2026-07-26: farm menus >17, sleep whole-swap, save/reload, breeding + hatches at scale, "everything works"; v2 delta = drain payout only, PyBoy-verified full 512 payout in both farm regions). Prev: 9c3af0d434f3d5bcd617677a42129778 (S71 FX1 reference patched build (farm expansion 17->37 active slots: array 40 slots (0-2 party, 3-19 farm @$A1FB+s*$95, 20-39 farm @$B124+(s-20)*$95 = the evicted sleep pool's bank-0 home; staging pseudo-slot INDICES 20/21 -> 40/41, addresses unchanged $D665/$D6FA); sleep pool -> SRAM bank 2 ($A010+c*$95, 40 slots, "P1" magic) via bank $73 entries 10-12; one-time F2 reformat gate $BFC8-9 in entry 4 (order load-bearing: legacy sums BEFORE F2 stamp, v3 after); checksum v3 = $A002x$1C5 + $AD9Fx$385 + $BCC8x$338; snapshot R4 dual-region ($A1BF x95 + $B124 x94 chunks); roster lists + canonicalizer map -> wMonList $D001 (C0D8 overflow at 40 slots); exp payout halved at drain (aggregate 37/32~=vanilla 17/16); PyBoy-verified: reformat preserves save, R3->R4 upgrade, 25-farm canonicalize/list/rewind/dual-snapshot/drain/battle). Prev: a5a5e0d5d01949b30bbff9d3253d9748 (S70v3 reference patched build (walk-on boundary exits for custom rooms: Entry 6 scan y=7 skip is data-driven via wCustomY7Cmp $DE74 (carved from the S65 legacy pad), armed fresh by bank $60 entry 7 before every scan - vanilla branch writes $07 (original skip semantics preserved), CustomExitCheck writes $FE (custom-room y=7 rows fire on arrival, PyBoy: 36 frames tap-to-transition, vanilla MedalMan door regression-checked push-only); template head 348->358, re-pinned). Prev: 22d30b66827628b9c8d9d400c48568a4 (S70v2 reference patched build (bug-fix pass, PyBoy-verified: init_dialog $07 protocol - every text outside an NPC interaction gets its own preceding init_dialog, auto-injected by quest lowering (field mode never services the text queue; dismissal tears script dialog mode down); emit_script hard-errors on non-terminated scripts (S70 freeze class); encounter seed 1200 (drain measured 100/step); bank $0B custom-source fast transition (in-place 19-byte window rewrite: exits FROM custom rooms take the town path, 18 frames vs the 385-frame gateworld-return ceremony, a day-one defect, not a regression); write_ram2 $13 opcode; Medal Chamber display strings). Prev: 6a6f4f8791cad0a271d210c7f485569c (S70v1 reference patched build (E2 wiring: progression.quests/enemies lowering -> quest:/entry: scripts + bank $14 tail row EID 519; vanilla_exit_extensions -> VanillaExitExtTable + template entry 7 VanillaExitResolve (re-pinned, head 348 B); bank $0B Entry 6 unified divert (-5 B); bank $01 $4C3E reverted to vanilla ld a,[wMapID] (entry scripts fire at initial entry); legacy compat key retired from the example project; room $71 Medal Vault + dwm2_bgm10). Prev: 94731e601af28503060acf3884348015 (S69v2 reference patched build (roster snapshot: bank-1 magic-gated save-time roster copy restoring vanilla reset-rewind semantics; entries 5/6 tail hooks + CF3SnapXfer/Commit/Restore + wSnapBounce $DE92). Prev: e719d286db0ff66e80755ec3ef1203e0 (S69v1 E3 pin (E3 SRAM 32 KB: 19 ROM0 quadrant-convention RAMB writes retargeted $4100->$6100 (MBC5-ignored), HeaderRAMSize $02->$03, bank $73 entry 9 CF3SRAMBankedCopy + wSRAMXfer* mailbox $DE8B-$DE91). Prev: de0c5a672e7e7e1fb834dd7afe70b9e7 (S65 reference patched build (WRAM migration: NPC/exit buffers -> $CC80/$CD00, step-counter region -> $CD80 (640 B) inside the CF3-freed window; $DE74 region -> static ds 7 pad, wRoomRecScratch stays $DE7B; + bank $73 entry 6 tail zeroes the window after the main-image restore copy). Prev: 7cc0857faad8a950573e865e93f791eb (S64 reference patched build (M3b+M3c: LoadNewBGMIdIntoA same-size rewrite -> bank $71 entry 2 CustomRoomBGMResolve + CustomRoomBGMTable; music emitter owns bank $74; dq6_town1 ids $A4-$A6 from MIDI; Library $12 + gate_island $6B room defaults). Prev: 3009b75ee1e3bd58bc315a39b7324e17 (S63v5 reference patched build (M3a v4 + v5: BGM #07 ids $A1-$A3 in bank $74, room $6C NPC via project.json; bank_060 now compiler-generated via --apply). Prev: c23beed7aadee80a061c0f6c24d7c1f4 (S63 v4, M3a: AudioMasterTableExt + song bank $74 + bank $1E reverted; S62's BGM NPC/set_bgm $9E folded into the example project — S62 had hand-edited bank_060 without updating project/pin, breaking compat==hand byte-identity; restored S63). Prev pins: 168c5f1b5b4b3b2568a6d6e2f3f1ab45 (S60), d31c9300e13b98f516c6bee8b446069d (S58v2)))
 
 PASS = 0
 
@@ -396,7 +396,7 @@ BLANK = os.path.join(REPO, 'editor2/templates/blank-project/project.json')
 # hand data, re-addressed by S105 G3 — , the empty row = the original ROM's)
 NS_ROWS = {
     'ns_battle_gfx': ('patches/bank_000.asm', 2, '077e', '0f32'),   # $7E index 7
-    'ns_follower_attr': ('patches/bank_011.asm', 2, '0200', '0000'),
+    'ns_follower_attr': ('patches/bank_011.asm', 1, '02', '00'),     # S107 2b: 1 B (attr)
     'ns_battle_pal': ('patches/bank_017.asm', 8, '674dff6bff7f0000', '00' * 8),
     'ns_recipe_pair': ('patches/bank_016.asm', 2, '042a', '0000'),
     'ns_short_ptr': ('patches/bank_041.asm', 2, None, '0000'),
@@ -520,7 +520,14 @@ def test_species_and_skills():
        b7.count('\n    dw ') == 38)
     at = region_bytes(o3, 'patches/bank_011.asm', 'ns_follower_attr')
     ok("G3: follower attr rows [221] / [239] carry their palettes",
-       at[0] == 221 % 8 and at[36] == 239 % 8 and at[6:8].hex() == '0200')
+       at[0] == 221 % 8 and at[18] == 239 % 8 and at[3] == 2 and len(at) == 19)
+    lay3 = region_bytes(o3, 'patches/bank_011.asm', 'ns_follower_layout')
+    ok("S107 2b: ns_follower_layout: 221 / 224 / 230 / 239 walk like 128 ($4184), the rest $0000",
+       [lay3[2 * k:2 * k + 2].hex() for k in range(19)] ==
+       ['8441' if k in (0, 3, 9, 18) else '0000' for k in range(19)])
+    ex_lay = region_bytes(out, 'patches/bank_011.asm', 'ns_follower_layout')
+    ok("S107 2b: example ns_follower_layout: [224] Gorbunok = $4184 (walks like 128), "
+       "the rest $0000", ex_lay.hex() == '0000' * 3 + '8441' + '0000' * 15)
     info = region_bytes(o3, 'patches/bank_06a.asm', 'ns_info')
     ok("G3: info slots 0 / 3 / 9 / 18 filled, the rest zero",
        all((info[k * 43:(k + 1) * 43] != bytes(43)) == (k in (0, 3, 9, 18))
@@ -642,6 +649,7 @@ class MiniSM83:
         self.a = self.b = self.d = self.e = self.h = self.l = 0
         self.z = self.c = False
         self.ram = {}
+        self.stack = []
 
     def rd(self, addr):
         if addr < 0x4000:
@@ -682,6 +690,9 @@ class MiniSM83:
             elif op == 0x5E: self.e = self.rd(hl)
             elif op == 0x56: self.d = self.rd(hl)
             elif op == 0x7E: self.a = self.rd(hl)
+            elif op == 0x46: self.b = self.rd(hl)                 # S107 2b
+            elif op == 0xF5: self.stack.append((self.a, self.z, self.c))
+            elif op == 0xF1: self.a, self.z, self.c = self.stack.pop()
             elif op == 0x2A:
                 self.a = self.rd(hl); hl = (hl + 1) & 0xFFFF
                 self.h, self.l = hl >> 8, hl & 0xFF
@@ -781,12 +792,26 @@ def test_species_forks_rom(tag, rom, sym, declared):
         if sp < 221:
             ok_ = ca == 0x61 | cpu.rd(a('FollowerAttrTable11') + sp - 0x80) and c7 == sp - 0x80
         else:
-            row = t11 + (sp - 221) * 2
-            ok_ = ca == (0x61 & 0xB8) | cpu.rd(row) and c7 == cpu.rd(row + 1)
+            ok_ = ca == (0x61 & 0xB8) | cpu.rd(t11 + sp - 221) and c7 == sp - 0x80
         if not ok_:
             bad.append(sp)
-    ok(f"ROM {tag}: NewAttrHandler — vanilla attr OR below 221; 221-239 clean attr + donor "
-       "index from NewFollowerAttrTable", not bad, f"({bad[:8]})")
+    ok(f"ROM {tag}: NewAttrHandler — vanilla attr OR below 221; 221-239 clean attr from "
+       "NewFollowerAttrTable (1 B / id, S107 2b), HRAM $C7 left alone", not bad, f"({bad[:8]})")
+    # S107 2b: FollowerLayoutBase11 — the level-1 table each id's lookup uses
+    bad = []
+    l1n = a('NewFollowerL1Table')
+    for sp in range(128, 240):
+        cpu = MiniSM83(rom, 0x11)
+        cpu.ram[0xFFC7] = sp - 0x80
+        cpu.a, cpu.z, cpu.c = 0x5A, True, True
+        cpu.run(a('FollowerLayoutBase11'))
+        de = cpu.d << 8 | cpu.e
+        row = de + 2 * (sp - 0x80)
+        want = a('FollowerLayoutL1Table11') + 2 * (sp - 0x80) if sp < 221 else l1n + 2 * (sp - 221)
+        if row != want or (cpu.a, cpu.z, cpu.c) != (0x5A, True, True):
+            bad.append(sp)
+    ok(f"ROM {tag}: FollowerLayoutBase11 — ids 128-220 read FollowerLayoutL1Table11, 221-239 "
+       "their NewFollowerL1Table row; AF kept", not bad, f"({bad[:8]})")
     # LoadModeBaseRedirect: the mode-7 base $4739 -> $7D39 for ids >= 221 only
     bad = []
     for sp in range(256):
@@ -1021,6 +1046,288 @@ def test_monsters_s106():
     shutil.rmtree(tmp)
 
 
+ART_TMP = '/tmp/_t_art_proj'
+
+
+def _art_fixture(entries, files=None):
+    """The example project + gamedata.art `entries`; `files` = {rel: bytes}
+    written under the compile tmp dir (compile_data copies the example's
+    assets/ there, so the art files go next to them)."""
+    d = base()
+    d.setdefault('gamedata', {})['art'] = entries
+    for rel, b in (files or {}).items():
+        p = os.path.join('/tmp/_t_proj', rel)
+        os.makedirs(os.path.dirname(p), exist_ok=True)
+        open(p, 'wb').write(b)
+    return d
+
+
+def test_art_s107():
+    """S107 (ROADMAP P3.10 part 2a): new art for the ORIGINAL monsters —
+    gamedata.art -> the battle gfx / battle palette / 8 walking tables / bank
+    $10-$11 layout + attr regions and the art banks $7F/$7C/$7A."""
+    from editor2.core import art as A
+    from editor2.core import gamedata as G
+    from editor2.core import sheet_import as SI
+    V0 = G.vanilla(REPO)
+    vt = lambda n: [bytes.fromhex(r) for r in V0['tables'][n]['rows']]
+    out, _, _ = compile_data(base())
+    # -- empty art: every region == the original rows, every art bank zero
+    ok("S107 art: empty -> battle gfx [0]-[214] == ROM",
+       region_bytes(out, 'patches/bank_000.asm', 'art_battle_gfx') == b''.join(vt('battle_gfx')[:215]))
+    ok("S107 art: empty -> battle palettes [0]-[214] == ROM",
+       region_bytes(out, 'patches/bank_017.asm', 'art_battle_pal') == b''.join(vt('battle_palettes')[:215]))
+    for name, path, bank in A.WALK_COPIES:
+        ok(f"S107 art: empty -> walking gfx copy ${bank:02X} [0]-[214] == ROM",
+           region_bytes(out, path, name) == b''.join(vt('follower_gfx')))
+    for b in (0x10, 0x11):
+        f = f'patches/bank_0{b:02x}.asm'
+        ok(f"S107 art: empty -> bank ${b:02X} layout + attr tables == ROM",
+           region_bytes(out, f, f'art_layout_{b:02x}') == b''.join(vt(f'follower_layout_{b:02x}'))
+           and region_bytes(out, f, f'art_attr_{b:02x}') == b''.join(vt(f'follower_attr_{b:02x}')))
+    for b in A.ART_BANKS:
+        ok(f"S107 art: empty -> art bank ${b:02X} is `ds $4000, $00`",
+           'ds $4000, $00' in out[f'patches/bank_0{b:02x}.asm'])
+    # -- the in-region anchor labels are emitted and exist in the clean tree
+    import glob as _g
+    clean = {}
+    for p in _g.glob(os.path.join(REPO, 'disassembly', 'bank_0*.asm')):
+        for l in open(p):
+            m = re.match(r'^(\w+):', l)
+            if m:
+                clean[m.group(1)] = True
+    files = {name: path for name, path, _f, _b in A.REGIONS}
+    miss = [(r, lb) for r, offs in A.ANCHORS.items() for v in offs.values() for lb in v
+            if f'{lb}:' not in '\n'.join(region_text(out, files[r], r)) or lb not in clean]
+    ok("S107 art: every in-region anchor label is emitted and defined in the clean tree",
+       not miss, str(miss[:4]))
+    # -- validation (Iron Rule 8 + ids + keys + art sizes + palettes)
+    st576 = SI.literal_stream(bytes(i % 251 for i in range(576)))
+    try:
+        _st = SI.literal_stream(bytes(range(256)) * 2 + bytes(64))
+        _r = len(__import__('dwm.sprite_codec', fromlist=['x']).decode(_st)) == 576
+    except ValueError as _e:
+        _r = 'all 256 byte patterns' in str(_e)
+    ok("S107 sheet: a payload using all 256 byte values gets a stream or a plain error", _r)
+    st256 = SI.literal_stream(bytes(i % 250 for i in range(256)))
+    fx = {'assets/art/t_b.bin': st576, 'assets/art/t_f.bin': st256,
+          'assets/art/t_short.bin': SI.literal_stream(bytes(100))}
+    for sid in (215, 216, 220):
+        expect_error(f"S107 art: species {sid} (TERRY? / summon) refused",
+                     _art_fixture({str(sid): {'battle': {'palette': ['$0000', '$6BFF', '$0000', '$0000']}}}, fx),
+                     'Iron Rule 8')
+    expect_error("S107 art: a new-species id is refused (custom.species owns its art)",
+                 _art_fixture({'224': {'follower': {'palette': 1}}}, fx), 'custom.species')
+    expect_error("S107 art: unknown key refused", _art_fixture({'9': {'walk': {}}}, fx), 'unknown key')
+    expect_error("S107 art: battle art must decode to 576 bytes",
+                 _art_fixture({'9': {'battle': {'art': 'assets/art/t_short.bin'}}}, fx), 'exactly 576')
+    expect_error("S107 art: walking art must decode to 256 bytes",
+                 _art_fixture({'9': {'follower': {'art': 'assets/art/t_b.bin'}}}, fx), 'exactly 256')
+    expect_error("S107 art: a missing art file is an error",
+                 _art_fixture({'9': {'follower': {'art': 'assets/art/none.bin'}}}, fx), 'cannot read')
+    expect_error("S107 art: OBJ palette outside 0-7 refused",
+                 _art_fixture({'9': {'follower': {'palette': 8}}}, fx), 'OBJ palettes 0-7')
+    expect_error("S107 art: battle palette needs 4 colours",
+                 _art_fixture({'9': {'battle': {'palette': ['$0000']}}}, fx), '4 RGB555')
+    # -- a project with art: the regions carry it
+    ents = {'9': {'battle': {'art': 'assets/art/t_b.bin', 'palette': ['$1234', '$6BFF', '$4321', '$0000']},
+                  'follower': {'art': 'assets/art/t_f.bin', 'palette': 5}},
+            '200': {'follower': {'palette': 3}},
+            '42': {'battle': {'palette': ['$0101', '$6BFF', '$0202', '$0000']}},
+            '214': {'follower': {'art': 'assets/art/t_f.bin'}}}
+    outa, _, _ = compile_data(_art_fixture(ents, fx))
+    bg = region_bytes(outa, 'patches/bank_000.asm', 'art_battle_gfx')
+    w = lambda b, i: b[2 * i] | b[2 * i + 1] << 8
+    ok("S107 art: species 9 battle gfx -> $7F00 (art bank $7F, index 0)", w(bg, 9) == 0x7F00, hex(w(bg, 9)))
+    ok("S107 art: species without battle art keep their gfx-ID",
+       all(w(bg, i) == w(b''.join(vt('battle_gfx')), i) for i in range(215) if i != 9))
+    for name, path, bank in A.WALK_COPIES:
+        wg = region_bytes(outa, path, name)
+        ok(f"S107 art: walking copy ${bank:02X}: 9 -> $7F01, 214 -> $7F02, the rest original",
+           w(wg, 9) == 0x7F01 and w(wg, 214) == 0x7F02 and
+           all(w(wg, i) == w(b''.join(vt('follower_gfx')), i) for i in range(215) if i not in (9, 214)))
+    l10 = region_bytes(outa, 'patches/bank_010.asm', 'art_layout_10')
+    a10 = region_bytes(outa, 'patches/bank_010.asm', 'art_attr_10')
+    l11 = region_bytes(outa, 'patches/bank_011.asm', 'art_layout_11')
+    a11 = region_bytes(outa, 'patches/bank_011.asm', 'art_attr_11')
+    ok("S107 art: new walking art -> its bank's layout 0 (9 -> $10:$4E33, 214 -> $11:$4184)",
+       w(l10, 9) == 0x4E33 and w(l11, 214 - 128) == 0x4184)
+    ok("S107 art: walking palette written (9 -> 5 no flips; 214 keeps its original palette)",
+       a10[9] == 5 and a11[214 - 128] == vt('follower_attr_11')[214 - 128][0] & 7)
+    ok("S107 art: palette-only walking edit keeps the layout and the flip bits (200 -> 3)",
+       a11[200 - 128] == (vt('follower_attr_11')[200 - 128][0] & 0xF8) | 3 and
+       w(l11, 200 - 128) == w(b''.join(vt('follower_layout_11')), 200 - 128))
+    bp = region_bytes(outa, 'patches/bank_017.asm', 'art_battle_pal')
+    ok("S107 art: battle palettes 9 / 42 written, others original",
+       bp[9 * 8:10 * 8] == bytes.fromhex('3412ff6b21430000') and bp[42 * 8:43 * 8] == bytes.fromhex('0101ff6b02020000')
+       and all(bp[i * 8:i * 8 + 8] == vt('battle_palettes')[i] for i in range(215) if i not in (9, 42)))
+    b7f = outa['patches/bank_07f.asm']
+    ok("S107 art: bank $7F = self-ID, 3 pointers, the three streams in species order",
+       'ArtBattle_9' in b7f and 'ArtWalk_9' in b7f and 'ArtWalk_214' in b7f
+       and b7f.index('ArtBattle_9:') < b7f.index('ArtWalk_9:') < b7f.index('ArtWalk_214:')
+       and 'ds $4000, $00' in outa['patches/bank_07c.asm'])
+    # -- budget: more than the three banks hold
+    many = {str(i): {'battle': {'art': 'assets/art/t_b.bin'}, 'follower': {'art': 'assets/art/t_f.bin'}}
+            for i in range(60)}
+    expect_error("S107 art: art over the three art banks is refused (with the byte count)",
+                 _art_fixture(many, fx), 'do not fit')
+    fifty = {k: v for k, v in many.items() if int(k) < 50}
+    try:
+        compile_data(_art_fixture(fifty, fx))
+        fit = True
+    except C.CompileError as e:
+        fit = str(e)
+    ok("S107 art: 50 fully re-arted monsters (literal streams) fit (user: 'no more than 50')",
+       fit is True, str(fit)[:200])
+    return outa
+
+
+def _layout_sig_rom(rom, bank, l2):
+    """The six frames of the level-2 table at bank:l2 of a built ROM, as
+    sorted (dy, dx, tile, xflip, yflip) tuples (like walk_layouts.entries)."""
+    out = []
+    for j in range(6):
+        o = bank * 0x4000 + l2 - 0x4000 + 2 * j
+        fp = rom[o] | rom[o + 1] << 8
+        q = bank * 0x4000 + fp - 0x4000
+        fr = []
+        while rom[q] != 0x80:
+            dy, dx, t, at = rom[q:q + 4]
+            fr.append((dy - 256 if dy > 127 else dy, dx - 256 if dx > 127 else dx, t,
+                       bool(at & 0x20), bool(at & 0x40)))
+            q += 4
+        out.append(sorted(fr))
+    return out
+
+
+def test_walk_layouts_s107():
+    """S107 (ROADMAP P3.10 part 2b): the 155 walking layouts — the packer,
+    the ranking, a chosen layout for an original monster / a new species, the
+    copies into the other follower bank."""
+    from editor2.core import walk_layouts as WL
+    from editor2.core import sheet_import as SI
+    from editor2.core import sprite_render as SR
+    ok("S107 2b: 155 layouts; layout 0 exists in both follower banks",
+       WL.count() == 155 and WL.native_l2(0, 0x10) and WL.native_l2(0, 0x11))
+    # -- the packer reproduces original monsters through their OWN layout
+    ms = json.load(open(os.path.join(REPO, 'extracted', 'monster_sprites.json')))['monsters']
+    n_in, bad = 0, []
+    for sid in range(215):
+        lid = WL.species_layout(sid)
+        if not all(-8 <= dx and dx <= 0 and -16 <= dy and dy <= -8
+                   for es in WL.entries(lid).values() for dy, dx, *_ in es):
+            continue                      # the sheet frame is the 16x16 box
+        n_in += 1
+        tb = bytes.fromhex(ms[str(sid)]['follower']['tile_bytes_hex'])
+        drawn = WL.render([SR.tiles_to_grid(tb[t * 16:t * 16 + 16], 1, 1) for t in range(16)], lid)
+        fr = {f: [[d.get((WL.BOX[1] + y, WL.BOX[0] + x), 0) for x in range(16)] for y in range(16)]
+              for f, d in zip(WL.FRAMES, drawn)}
+        tiles, err, _e = WL.pack(fr, lid)
+        if err or WL.render(tiles, lid) != drawn:
+            bad.append(sid)
+        if sid in (9, 21, 214) and WL.fit_all(fr, sid=sid)[0][0] != 0:
+            bad.append(('rank', sid))
+    ok(f"S107 2b: the packer redraws all {n_in} original monsters whose layout fits the "
+       "16x16 frame exactly through their own layout; the ranking puts a 0-pixel layout first",
+       n_in >= 40 and not bad, str(bad[:5]))
+    # -- the sheet: the blue dragon (Gorbunok) packs for layout 0 exactly like S106
+    sheet = SI.Sheet(os.path.join(REPO, 'examples/follower_swap/W_bluedragon.png'))
+    hit = [e for e in SI.find_entries(sheet) if e['frames'] and e['frames']['DOWN-a']['x'] == 232
+           and e['frames']['DOWN-a']['y'] == 8][0]
+    pay0, _err0 = SI.follower_pack(sheet, hit['frames'], 0)
+    ok("S107 2b: layout-0 packing == the S106 packing (Gorbunok's frames)",
+       pay0 == SI.follower_payload(sheet, hit['frames']))
+    rank = SI.follower_fit(sheet, hit['frames'], sid=224)
+    ok("S107 2b: the ranking covers all 155 layouts, best first",
+       len(rank) == 155 and rank == sorted(rank, key=lambda r: r[0]) and
+       SI.follower_pack(sheet, hit['frames'], rank[0][1])[1] == rank[0][0])
+    # -- layouts of one bank only (a copy is needed in the other)
+    only10 = [L['id'] for L in WL.data()['layouts'] if list(L['instances']) == ['10']]
+    only11 = [L['id'] for L in WL.data()['layouts'] if list(L['instances']) == ['11']]
+    both = [L['id'] for L in WL.data()['layouts'] if len(L['instances']) == 2 and L['id']]
+    l11, l10, lb = only11[0], only10[0], both[0]
+    st256 = SI.literal_stream(bytes(i % 250 for i in range(256)))
+    fx = {'assets/art/t_f.bin': st256}
+    ents = {'9': {'follower': {'art': 'assets/art/t_f.bin', 'layout': l11}},       # copy -> $10
+            '10': {'follower': {'art': 'assets/art/t_f.bin', 'layout': lb}},       # native $10
+            '200': {'follower': {'art': 'assets/art/t_f.bin', 'layout': l10}},     # copy -> $11
+            '201': {'follower': {'art': 'assets/art/t_f.bin'}}}                    # 2a: layout 0
+    d = _art_fixture(ents, fx)
+    g = d['custom']['species'][0]
+    g['follower'].pop('walks_like', None)
+    g['follower']['layout'] = l10                                    # shares 200's copy
+    out, prj, _w = compile_data(d)
+    l10r = '\n'.join(region_text(out, 'patches/bank_010.asm', 'art_layout_10'))
+    l11r = '\n'.join(region_text(out, 'patches/bank_011.asm', 'art_layout_11'))
+    c10 = '\n'.join(region_text(out, 'patches/bank_010.asm', 'lay_copies_10'))
+    c11 = '\n'.join(region_text(out, 'patches/bank_011.asm', 'lay_copies_11'))
+    nl = '\n'.join(region_text(out, 'patches/bank_011.asm', 'ns_follower_layout'))
+    ok("S107 2b: level-1 rows: 9 -> the bank-$10 copy, 10 -> its native table, 200 -> the "
+       "bank-$11 copy, 201 -> layout 0 ($4184)",
+       f'dw FollowerLayoutCopy10_L{l11}' in l10r and f'dw FollowerLayoutCopy11_L{l10}' in l11r
+       and f'${WL.native_l2(lb, 0x10):04X}' in l10r and 'dw $4184   ; [201]' in l11r)
+    ok("S107 2b: one copy per bank, the new species shares 200's",
+       c10.count('FollowerLayoutCopy10_L') >= 1 and f'FollowerLayoutCopy11_L{l10}:' in c11
+       and c11.count(f'FollowerLayoutCopy11_L{l10}:') == 1
+       and f'dw FollowerLayoutCopy11_L{l10}   ; [224] Gorbunok: layout {l10}' in nl)
+    # -- refusals
+    expect_error("S107 2b: a layout without new walking art is refused",
+                 _art_fixture({'9': {'follower': {'layout': 3}}}, fx), 'only goes with NEW')
+    expect_error("S107 2b: layout outside 0-154 refused",
+                 _art_fixture({'9': {'follower': {'art': 'assets/art/t_f.bin', 'layout': 155}}}, fx),
+                 'walking layouts')
+    d2 = base()
+    d2['custom']['species'][0]['follower']['layout'] = 3
+    expect_error("S107 2b: a new species with layout AND walks_like refused", d2, 'not both')
+    many = {str(i): {'follower': {'art': 'assets/art/t_f.bin', 'layout': only11[i]}}
+            for i in range(min(60, len(only11)))}
+    expect_error("S107 2b: more layout copies than bank $10's free tail holds are refused",
+                 _art_fixture(many, fx), 'free tail holds')
+    return out
+
+
+ICON_A = ['33333333', '30000003', '30222203', '30211203', '30211203', '30222203', '30000003', '33333333']
+ICON_S = ['11111111', '13333331', '13000031', '13022031', '13022031', '13000031', '13333331', '11111111']
+
+
+def test_family_icons_s107():
+    """S107 (ROADMAP P3.10 part 2c): the family icons — gamedata.families.<f>.icon
+    -> the font glyph (bank $4F), the gfx stream (bank $2E / bank $6D)."""
+    from editor2.core import gamedata as G
+    rom = open(os.path.join(REPO, 'data', 'DWM-original.gbc'), 'rb').read()
+    out, _, _ = compile_data(base())
+    f4 = region_bytes(out, 'patches/bank_04f.asm', 'gd_family_icons')
+    ok("S107 2c: no icon edits -> the 10 font glyphs == ROM $4F:$4110-$41AF, + the Spirit glyph",
+       f4[:160] == rom[0x4F * 0x4000 + 0x110:][:160] and
+       f4[160:] == G.icon_tile(G.vanilla_icons(REPO)[10]))
+    st = region_bytes(out, 'patches/bank_02e.asm', 'gd_family_icon_streams')
+    ok("S107 2c: no icon edits -> the 10 icon streams == ROM $2E:$424A-$42F7 (190 B)",
+       st == rom[0x2E * 0x4000 + 0x24A:][:190])
+    sp = region_bytes(out, 'patches/bank_06d.asm', 'gd_spirit_icon_stream')
+    ok("S107 2c: no icon edits -> SpiritIconStream = dw $0010, marker $00, the wisp",
+       sp == bytes((0x10, 0, 0)) + G.icon_tile(G.vanilla_icons(REPO)[10]))
+    d = base()
+    d.setdefault('gamedata', {}).setdefault('families', {})['slime'] = {'icon': ICON_A}
+    d['gamedata']['families']['spirit'] = dict(d['gamedata']['families'].get('spirit') or {},
+                                               icon=ICON_S)
+    o2, _, _ = compile_data(d)
+    ta, ts = G.icon_tile(G.icon_grid(ICON_A, 'a')), G.icon_tile(G.icon_grid(ICON_S, 's'))
+    f4 = region_bytes(o2, 'patches/bank_04f.asm', 'gd_family_icons')
+    st = region_bytes(o2, 'patches/bank_02e.asm', 'gd_family_icon_streams')
+    sp = region_bytes(o2, 'patches/bank_06d.asm', 'gd_spirit_icon_stream')
+    ok("S107 2c: a Slime + a Spirit icon -> glyph $10 / $1A, stream $2E03, SpiritIconStream; "
+       "the other 9 untouched, every stream still 19 B",
+       f4[:16] == ta and f4[160:] == ts and f4[16:160] == rom[0x4F * 0x4000 + 0x120:][:144]
+       and st[3:19] == ta and st[19:] == rom[0x2E * 0x4000 + 0x24A + 19:][:171]
+       and sp[3:] == ts and len(st) == 190)
+    for bad, why in ((['1111111'] * 8, '8 rows of 8 digits'), (['11111114'] * 8, '8 rows of 8 digits'),
+                     (['11111111'] * 7, '8 rows of 8 digits')):
+        d = base()
+        d.setdefault('gamedata', {}).setdefault('families', {})['bird'] = {'icon': bad}
+        expect_error(f"S107 2c: a bad icon is refused ({bad[0]!r} x {len(bad)})", d, why)
+    return o2
+
+
 def _save_tmp(doc):
     doc.save()
     return os.path.dirname(doc.path)
@@ -1037,22 +1344,30 @@ def main():
        "S102: + bank $6C tile animation; S103: + the gamedata regions in banks "
        "$01/$03/$06/$07/$12/$13/$4D/$54/$69; S104: + bank $41 Spirit names, bank $6D voices; "
        "S105: + bank $7E and the new-species ns_* regions in $11/$6A; S105 G3: the "
-       "follower forks of $09/$0B/$18/$59 no longer have regions)",
+       "follower forks of $09/$0B/$18/$59 no longer have regions; S107: + the art "
+       "regions in $09/$0B/$10/$18/$59 and the art banks $7A/$7C/$7F; S107 2c: + the family "
+       "icon regions in $2E/$4F)",
        sorted(out1) == ['patches/bank_000.asm', 'patches/bank_001.asm',
                         'patches/bank_003.asm', 'patches/bank_006.asm',
-                        'patches/bank_007.asm', 'patches/bank_011.asm',
+                        'patches/bank_007.asm', 'patches/bank_009.asm',
+                        'patches/bank_00b.asm', 'patches/bank_010.asm',
+                        'patches/bank_011.asm',
                         'patches/bank_012.asm',
                         'patches/bank_013.asm',
                         'patches/bank_014.asm', 'patches/bank_016.asm',
-                        'patches/bank_017.asm',
+                        'patches/bank_017.asm', 'patches/bank_018.asm',
+                        'patches/bank_02e.asm',
                         'patches/bank_041.asm', 'patches/bank_04d.asm',
-                        'patches/bank_054.asm',
+                        'patches/bank_04f.asm',
+                        'patches/bank_054.asm', 'patches/bank_059.asm',
                         'patches/bank_060.asm', 'patches/bank_064.asm',
                         'patches/bank_067.asm', 'patches/bank_069.asm',
                         'patches/bank_06a.asm', 'patches/bank_06b.asm',
                         'patches/bank_06c.asm', 'patches/bank_06d.asm',
                         'patches/bank_071.asm',
-                        'patches/bank_074.asm', 'patches/bank_07e.asm',
+                        'patches/bank_074.asm', 'patches/bank_07a.asm',
+                        'patches/bank_07c.asm', 'patches/bank_07e.asm',
+                        'patches/bank_07f.asm',
                         'patches/wram.asm'],
        f"(got {sorted(out1)})")
 
@@ -1813,6 +2128,9 @@ def main():
     test_gamedata()
     test_species_and_skills()
     test_monsters_s106()
+    outart = test_art_s107()
+    outlay = test_walk_layouts_s107()
+    outicon = test_family_icons_s107()
 
     if '--rom' in sys.argv:
         from editor2.core import builder as B
@@ -1918,6 +2236,103 @@ def main():
            all(o in (0x14D, 0x14E, 0x14F) for o in diffs if o < 0x4000),
            f"(diff banks {sorted(hex(b) for b in banks)})")
 
+        # S107 (P3.10 part 2a): a project with art, built — the ROM bytes at
+        # every table (the bank-$0B copy sits at $4914 in the patched build:
+        # addresses come from game.sym), the stream behind each gfx-ID, and
+        # TERRY? / the summons (215-220) untouched (Iron Rule 8)
+        from editor2.core import art as Am
+        from dwm import sprite_codec as SCm
+        outdira = '/tmp/_t_art'
+        C.write_outputs(outart, outdira)
+        roma, syma, _ma = B.build_rom(REPO, outdira, os.path.join(outdira, 'build'))
+        ra = open(roma, 'rb').read()
+        sya = B.parse_sym(syma)
+
+        def rw(bank, addr):
+            o = bank * 0x4000 + (addr - 0x4000 if bank else addr)
+            return ra[o] | ra[o + 1] << 8
+
+        ok("ROM art: battle gfx [9] = $7F00, [215]-[220] = the original words",
+           rw(0, 0x2B9F + 18) == 0x7F00 and
+           all(ra[0x2B9F + 2 * i:0x2BA1 + 2 * i] == orig_rom[0x2B9F + 2 * i:0x2BA1 + 2 * i]
+               for i in range(215, 221)))
+        starts = {0x01: ('ScreenTransDataTable', 32), 0x06: ('FollowerGfxTable06', 32),
+                  0x07: ('FollowerGfxTable07', 32), 0x09: ('FollowerGfxTable09', 32),
+                  0x0B: ('FollowerGfxTable0B', 32), 0x12: ('FollowerGfxTable12', 32),
+                  0x18: ('FollowerGfxTable18', 0), 0x59: ('FollowerGfxTable59', 0)}
+        for bk, (lbl, off) in starts.items():
+            b_, a_ = sya[lbl]
+            ok(f"ROM art: walking table ${bk:02X} ({lbl} @ ${a_:04X}): [9] = $7F01, [214] = $7F02",
+               b_ == bk and rw(bk, a_ + off + 18) == 0x7F01 and rw(bk, a_ + off + 428) == 0x7F02)
+        ok("ROM art: $10:$407F[9] = $4E33 (layout 0), $10:$417F[9] = 5; $11:$407F[86] = $4184",
+           rw(0x10, 0x407F + 18) == 0x4E33 and ra[0x10 * 0x4000 + 0x17F + 9] == 5
+           and rw(0x11, 0x407F + 172) == 0x4184)
+        for gid, want in ((0x7F00, 576), (0x7F01, 256), (0x7F02, 256)):
+            off = SCm.gfxid_stream_offset(ra, gid)[3]
+            ok(f"ROM art: gfx-ID ${gid:04X} resolves to a stream of {want} bytes",
+               len(SCm.decode(SCm.read_stream(ra, off))) == want)
+        ok("ROM art: battle palette [9] at $17:$62FD+72",
+           ra[0x17 * 0x4000 + 0x22FD + 72:0x17 * 0x4000 + 0x22FD + 80] == bytes.fromhex('3412ff6b21430000'))
+        # S107 (P3.10 part 2b): the layouts project, built — every chosen
+        # layout is what the game reads through the level-1 entry (native or
+        # copied), for originals of both banks and the new species
+        from editor2.core import walk_layouts as WLm
+        outdirl = '/tmp/_t_lay'
+        C.write_outputs(outlay, outdirl)
+        roml, syml, _ml = B.build_rom(REPO, outdirl, os.path.join(outdirl, 'build'))
+        rl = open(roml, 'rb').read()
+        syl = B.parse_sym(syml)
+
+        def rwl(bank, addr):
+            o = bank * 0x4000 + addr - 0x4000
+            return rl[o] | rl[o + 1] << 8
+
+        def want(lid):
+            return [sorted(x) for x in WLm.entries(lid).values()]
+        only10 = [L['id'] for L in WLm.data()['layouts'] if list(L['instances']) == ['10']]
+        only11 = [L['id'] for L in WLm.data()['layouts'] if list(L['instances']) == ['11']]
+        both = [L['id'] for L in WLm.data()['layouts'] if len(L['instances']) == 2 and L['id']]
+        nl2 = rwl(0x11, syl['NewFollowerL1Table'][1] + 2 * 3)
+        checks = [('9 (bank $10, copied)', 0x10, rwl(0x10, 0x407F + 18), only11[0]),
+                  ('10 (bank $10, native)', 0x10, rwl(0x10, 0x407F + 20), both[0]),
+                  ('200 (bank $11, copied)', 0x11, rwl(0x11, 0x407F + 2 * 72), only10[0]),
+                  ('201 (bank $11, layout 0)', 0x11, rwl(0x11, 0x407F + 2 * 73), 0),
+                  ('224 Gorbunok (NewFollowerL1Table)', 0x11, nl2, only10[0])]
+        for what, bk, l2, lid in checks:
+            ok(f"ROM 2b: species {what} -> ${bk:02X}:${l2:04X} draws layout {lid}",
+               _layout_sig_rom(rl, bk, l2) == want(lid))
+        ok("ROM 2b: the copies sit in the banks' free tails",
+           rwl(0x10, 0x407F + 18) >= WLm.COPY_START[0x10] and nl2 >= WLm.COPY_START[0x11])
+        ok("ROM 2b: walk_layouts.COPY_START[$11] == the built FollowerLayoutBase11 end",
+           syl['FollowerLayoutBase11.done'][1] + 2 == WLm.COPY_START[0x11])
+        ok("ROM 2b: FollowerLayoutBase11 is called by both bank-$11 entries "
+           "(call at $4008 / $4012)",
+           rl[0x11 * 0x4000 + 0x0008] == 0xCD and rwl(0x11, 0x4009) == syl['FollowerLayoutBase11'][1]
+           and rl[0x11 * 0x4000 + 0x0012] == 0xCD and rwl(0x11, 0x4013) == syl['FollowerLayoutBase11'][1])
+
+        # S107 (P3.10 part 2c): the icons project, built — the font glyph,
+        # both gfx streams decode to the authored tiles; the saved-party
+        # readers of banks $07 / $0A far-call FamilyIconGfxFromE (the fork
+        # bytes `ld e,a / push bc / ld hl,$6D01 / rst $10 / pop bc` + 6 nops)
+        from editor2.core import gamedata as Gm
+        outdiri = '/tmp/_t_icon'
+        C.write_outputs(outicon, outdiri)
+        romi, symi, _mi = B.build_rom(REPO, outdiri, os.path.join(outdiri, 'build'))
+        ri = open(romi, 'rb').read()
+        ta = Gm.icon_tile(Gm.icon_grid(ICON_A, 'a'))
+        ts = Gm.icon_tile(Gm.icon_grid(ICON_S, 's'))
+        ok("ROM 2c: font glyphs $4F:$4110 (Slime) / $41B0 (Spirit) = the authored tiles",
+           ri[0x4F * 0x4000 + 0x110:][:16] == ta and ri[0x4F * 0x4000 + 0x1B0:][:16] == ts)
+        ok("ROM 2c: gfx ids $2E03 / $6D04 decode to the authored tiles",
+           SCm.decode(SCm.read_stream(ri, SCm.gfxid_stream_offset(ri, 0x2E03)[3])) == ta and
+           SCm.decode(SCm.read_stream(ri, SCm.gfxid_stream_offset(ri, 0x6D04)[3])) == ts)
+        fork = bytes.fromhex('5fc52101 6dd7c1'.replace(' ', '')) + bytes(6)
+        n07 = ri[0x07 * 0x4000:0x08 * 0x4000].count(fork)
+        n0a = ri[0x0A * 0x4000:0x0B * 0x4000].count(fork)
+        ok("ROM 2c: the JOURNAL ($07) and its $0A twin read the saved party's icon through "
+           "bank $6D (1 fork in $07; 2 in $0A with the S104 list fork)", n07 == 1 and n0a == 2,
+           f"({n07}, {n0a})")
+
         # S105 (P3.9b acceptance): a BLANK project (File > New project) builds
         # the ORIGINAL ROM's bytes at every new-species site and at every POC
         # site purged this session — names, text, art, info, tables.
@@ -1947,13 +2362,30 @@ def main():
                  ('info slots 0-18 $6A', lab('NewSpeciesHighInfoTable', 43 * 19)),
                  ('battle palettes $17 NewBattlePalTable', lab('NewBattlePalTable', 8 * 19)),
                  ('recipe pairs $16', lab('NewRecipePairs', 2 * 19)),
-                 ('follower attr table $11', lab('NewFollowerAttrTable', 2 * 19)),
+                 ('follower attr table $11', lab('NewFollowerAttrTable', 19)),
+                 ('follower layout table $11 (S107 2b)', lab('NewFollowerL1Table', 2 * 19)),
+                 ('bank $10 zero tail $7A83-$7FFF (layout copies, S107 2b)', at(0x10, 0x7A83, 0x8000 - 0x7A83)),
+                 ('family icon glyphs $4F:$4110-$41AF (S107 2c)', at(0x4F, 0x4110, 160)),
+                 ('family icon streams $2E:$424A-$42F7 (S107 2c)', at(0x2E, 0x424A, 190)),
+                 ('bank $11 zero tail (layout copies, S107 2b)',
+                  at(0x11, sy['FollowerLayoutBase11.done'][1] + 2, 0x8000 - sy['FollowerLayoutBase11.done'][1] - 2)),
                  ('ChopClown / Grendal attr $11:$413F', at(0x11, 0x413F, 2)),
                  ('bank $14 free tail $7EAD-$7ECB (old EID 518)', at(0x14, 0x7EAD, 31)),
                  ('special table entries 693 / 803 (S12 mirror)',
                   at(0x16, 0x58B9, 5) and at(0x16, 0x5ADF, 5)),
                  ('bank $36 (Dracky battle sprite; S21 Clam POC)', at(0x36, 0x4000, 0x4000)),
-                 ('bank $7E (all zero)', at(0x7E, 0x4000, 0x4000))]
+                 ('bank $7E (all zero)', at(0x7E, 0x4000, 0x4000)),
+                 ('art banks $7A / $7C / $7F (all zero; S107)',
+                  at(0x7A, 0x4000, 0x4000) and at(0x7C, 0x4000, 0x4000) and at(0x7F, 0x4000, 0x4000)),
+                 ('the eight walking tables (S107; the bank-$0B copy at its patched address)',
+                  all(bb[sy[l][0] * 0x4000 + sy[l][1] - 0x4000 + o:][:430] ==
+                      orig_rom[0x01 * 0x4000 + 0x09FF:][:430]
+                      for l, o in (('ScreenTransDataTable', 32), ('FollowerGfxTable06', 32),
+                                   ('FollowerGfxTable07', 32), ('FollowerGfxTable09', 32),
+                                   ('FollowerGfxTable0B', 32), ('FollowerGfxTable12', 32),
+                                   ('FollowerGfxTable18', 0), ('FollowerGfxTable59', 0)))),
+                 ('bank $10 layout + attr tables (S107)', at(0x10, 0x407F, 384)),
+                 ('bank $11 layout + attr tables (S107)', at(0x11, 0x407F, 174 + 87))]
         for what, good in sites:
             ok(f"ROM: blank project -> {what} == original ROM bytes", good)
 

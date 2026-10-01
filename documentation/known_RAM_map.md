@@ -662,9 +662,12 @@
                  species-$80); species >= 240 wrap below $10 (never a
                  follower). Bank $11 indexes FollowerLayoutL1Table11 ($407F,
                  87 dw) and FollowerAttrTable11 ($412D, 87 db) with it.
-                 S105: the patched NewAttrHandler rewrites it to the layout
+                 S105: the patched NewAttrHandler rewrote it to the layout
                  DONOR's index for a new species (ids 221-239; S105 G3,
-                 was 224 only). [S105]
+                 was 224 only). S107 2b: no longer rewritten — the patched
+                 FollowerLayoutBase11 picks the level-1 table instead
+                 (NewFollowerL1Table - 2*$5D for $C7 >= $5D), so the new
+                 species' own row is read. [S105/S107]
    FFC8     1    Sprite frame/facing index (level-2 layout table). [S24]
    FFCA     1    Base OAM attribute for the draw (per-species attr OR-ed in;
                  bit5 set by the engine for LEFT facing). [S24/S34]

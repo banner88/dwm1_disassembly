@@ -97,9 +97,12 @@ def follower_frames(tiles, layout, palette_idx, attr=0):
     W, H = 24, 24
     for fr in FRAMES:
         canvas = [[None] * W for _ in range(H)]
-        for e in layout.get(fr) or []:
+        # S107: entry 0 is drawn LAST (on top) — it goes to the lowest OAM
+        # index, and on CGB the lower index wins where sprites overlap (137 of
+        # the 930 vanilla frames overlap); + the entry's own Y-flip
+        for e in reversed(layout.get(fr) or []):
             xf = bool(e.get('xflip')) ^ bool(attr & 0x20)
-            yf = bool(attr & 0x40)
+            yf = bool(e.get('yflip')) ^ bool(attr & 0x40)
             g = tile[e['tile'] & 15]
             ox, oy = e['dx'] + 12, e['dy'] + 24
             for r in range(8):
@@ -143,7 +146,10 @@ def project_species_art(project_dir, entry):
         pass
     try:
         ft = decode(open(os.path.join(project_dir, f['art']), 'rb').read())
-        lid, _attr = species_layout_id(int(f.get('walks_like', 128)))
+        if 'layout' in f:                       # S107 2b: any of the 155
+            lid = int(f['layout'])
+        else:
+            lid, _attr = species_layout_id(int(f.get('walks_like', 128)))
         lay = layout_frames(lid)
         if len(ft) == 256 and lay:
             fol = follower_frames(ft, lay, int(f.get('palette', 0)), 0)
@@ -152,14 +158,53 @@ def project_species_art(project_dir, entry):
     return battle, fol
 
 
+def original_art(project_dir, sid, entry):
+    """(battle rows, follower frames) of ORIGINAL species `sid` (0-214) with
+    its gamedata.art entry (S107, P3.10 part 2a; editor2/core/art.py): new
+    streams replace the original art, palettes replace the original colours;
+    new walking art is drawn with its `layout` (S107 2b; a 2a entry without
+    one = layout 0 — what the compiler points the species' level-1 entry at)
+    and no flips."""
+    from dwm.sprite_codec import decode
+    ms, pal = _load('monster_sprites.json'), _load('monster_palettes.json')
+    m = (ms or {}).get('monsters', {}).get(str(sid))
+    b = (entry or {}).get('battle') or {}
+    f = (entry or {}).get('follower') or {}
+    battle = fol = None
+    try:
+        bt = decode(open(os.path.join(project_dir, b['art']), 'rb').read()) if 'art' in b \
+            else bytes.fromhex(m['battle']['tile_bytes_hex'])
+        bp = [int(str(x).replace('$', '0x'), 0) if isinstance(x, str) else int(x)
+              for x in b['palette']] if 'palette' in b else pal['monsters'][str(sid)]['colors']
+        if len(bt) == 576:
+            battle = battle_rgb(bt, bp)
+    except (OSError, KeyError, ValueError, TypeError):
+        pass
+    try:
+        lid, attr = species_layout_id(sid)
+        if 'art' in f:
+            ft = decode(open(os.path.join(project_dir, f['art']), 'rb').read())
+            lid, flips = int(f.get('layout', 0)), 0
+        else:
+            ft = bytes.fromhex(m['follower']['tile_bytes_hex'])
+            flips = attr & 0x60
+        p = int(f['palette']) if 'palette' in f else attr & 7
+        lay = layout_frames(lid)
+        if len(ft) == 256 and lay:
+            fol = follower_frames(ft, lay, p, flips)
+    except (OSError, KeyError, ValueError, TypeError):
+        pass
+    return battle, fol
+
+
 def payload_preview(battle_payload, battle_palette, follower_payload, follower_palette,
-                    walks_like=128):
+                    walks_like=128, layout=None):
     """Previews straight from payloads (the sheet import, before anything is
-    written)."""
+    written); `layout` (S107 2b) wins over `walks_like`."""
     battle = battle_rgb(battle_payload, battle_palette) if battle_payload else None
     fol = None
     if follower_payload:
-        lid, _ = species_layout_id(int(walks_like))
+        lid = layout if layout is not None else species_layout_id(int(walks_like))[0]
         lay = layout_frames(lid)
         if lay:
             fol = follower_frames(follower_payload, lay, follower_palette, 0)

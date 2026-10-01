@@ -42,7 +42,7 @@ from . import formats as F
 
 VANILLA_JSON = os.path.join('extracted', 'gamedata_vanilla.json')
 SECTIONS = ('monsters', 'enemies', 'encounters', 'skills', 'exp_curves',
-            'growth_curves', 'breeding', 'boss_joins', 'families')
+            'growth_curves', 'breeding', 'boss_joins', 'families', 'art')
 
 # S104 (P3.10a): per-family settings. Arena-lobby party dialogue comes in four
 # VOICES (bank $04 FamilyTextGroup_A-D, 8 lines each); vanilla gives every
@@ -56,6 +56,16 @@ VOICE_OF = ['A', 'B', 'C', 'B', 'A', 'C', 'C', 'A', 'B', 'D', 'D']   # vanilla +
 VOICE_LABEL = {'A': 'Slime / Plant / Zombie lines', 'B': 'Dragon / Bird / Material lines',
                'C': 'Beast / Bug / Devil lines', 'D': '??? lines'}
 SPIRIT_NAMES_DEFAULT = ['WISP', 'SOUL', 'AURA', 'MIST', 'HALO', 'ECHO', 'GLOW', 'NOVA']
+# S107 (P3.10 part 2c): `families.<name>.icon` = the family's 8 x 8 icon, 8
+# strings of 8 digits 0-3 (the menu font's shades: 0 lightest, 1 = the menu
+# background, 2 / 3 ink). ONE picture, written to every copy the game has
+# (BREEDING_SYSTEM "Family icons"): the font glyph ($4F:$4110 + 16*family;
+# Spirit $41B0 = text byte $1A — INFO page, library tab strip, pedigree, recipe
+# text) and the 16-byte gfx stream the HUD / list / JOURNAL / continue-box
+# DMAs load (families 0-9 = bank $2E streams 3-12 = gfx ids $2E03 + family,
+# Spirit = bank $6D SpiritIconStream $6D04).
+ICON_STREAM_LABELS = [f'TileData_2E_{3 + f:02X}' for f in range(10)]
+SHADES = '0123'
 SPIRIT_NAMES_BYTES = 40      # bank $41 $7E4F-$7E76 the pool lives in (8 x <= 5 B; S105 G3: was the 55-B fill $7E4F-$7E85, its last 15 B are now ns_text_f)
 NAME_MAX = 4                 # the nickname field is 4 characters
 
@@ -114,6 +124,7 @@ class GamedataError(ValueError):
 
 
 _VANILLA_CACHE = {}
+_VCACHE = {}
 
 
 def vanilla(repo_root):
@@ -768,6 +779,8 @@ class Gamedata:
         self.spirit_names = list(SPIRIT_NAMES_DEFAULT)
         self.edited['voice'] = set()
         self.edited['spirit_names'] = False
+        self.icons = vanilla_icons(self.repo)
+        self.edited['icons'] = set()
         sec = self.gd.get('families') or {}
         for k, o in sec.items():
             if str(k).startswith('_'):
@@ -776,7 +789,12 @@ class Gamedata:
             f = family_index(k, what)
             if not isinstance(o, dict):
                 raise GamedataError(f"{what}: must be an object")
-            _check_keys(o, ('dialogue', 'names'), what)
+            _check_keys(o, ('dialogue', 'names', 'icon'), what)
+            if 'icon' in o:
+                grid = icon_grid(o['icon'], what + '.icon')
+                if grid != self.icons[f]:
+                    self.icons[f] = grid
+                    self.edited['icons'].add(f)
             if 'dialogue' in o:
                 v = str(o['dialogue']).strip()
                 if v.upper() in VOICES:
@@ -1051,6 +1069,95 @@ def emit_family_voices(g):
     for f, v in enumerate(g.voice):
         out.append(f"    dw {VOICES[v]}  ; {f} {FAMILY_NAMES[f]}{_mark(f in g.edited['voice'])}")
     return "\n".join(out) + "\n"
+
+
+def vanilla_icons(repo_root):
+    """The 11 icons the game ships (families 0-9 = the ROM's font glyphs;
+    Spirit = the S104 ghost wisp) as 8 x 8 grids of 0-3, from
+    extracted/family_icons.json (tools/build_family_icon.py --selftest proves
+    them against the ROM / the patch)."""
+    key = ('icons', repo_root)
+    if key not in _VCACHE:
+        d = json.load(open(os.path.join(repo_root, 'extracted', 'family_icons.json')))
+        _VCACHE[key] = [ic['grid'] for ic in d['icons']] + [d['spirit']['grid']]
+    return [[list(r) for r in g] for g in _VCACHE[key]]
+
+
+def icon_grid(v, what):
+    """8 strings of 8 digits 0-3 -> 8 x 8 grid."""
+    if not isinstance(v, list) or len(v) != 8 or \
+            not all(isinstance(r, str) and len(r) == 8 and set(r) <= set(SHADES) for r in v):
+        raise GamedataError(f"{what}: 8 rows of 8 digits 0-3 (0 lightest, 1 = the menu "
+                            "background, 2 / 3 ink), e.g. \"11131111\"")
+    return [[int(c) for c in r] for r in v]
+
+
+def icon_rows(grid):
+    """8 x 8 grid -> the project's 8 strings."""
+    return [''.join(str(v) for v in r) for r in grid]
+
+
+def icon_tile(grid):
+    """8 x 8 grid of 0-3 -> 16 bytes 2bpp (low plane, high plane per row)."""
+    out = bytearray()
+    for r in grid:
+        lo = hi = 0
+        for v in r:
+            lo = (lo << 1) | (v & 1)
+            hi = (hi << 1) | ((v >> 1) & 1)
+        out += bytes((lo, hi))
+    return bytes(out)
+
+
+def icon_stream(grid):
+    """The 19-byte literal gfx stream of an icon (dw $0010, run marker =
+    the smallest byte value the tile does not use, the 16 bytes) — exactly
+    the format of the 11 shipped streams."""
+    tile = icon_tile(grid)
+    marker = next(v for v in range(256) if v not in tile)
+    return bytes((0x10, 0x00, marker)) + tile
+
+
+def emit_family_icon_glyphs(g):
+    """bank $4F $4110-$41BF: the 11 font glyphs (text bytes $10-$1A)."""
+    out = ["; (generated by editor2 `gd_family_icons` from gamedata.families[].icon —",
+           ";  the family icon FONT glyphs, text bytes $10-$1A: INFO page, library tab",
+           ";  strip, pedigree, recipe text. Families 0-9 = the vanilla tiles (they were",
+           ";  INCBIN gfx/image_04f_4110.2bpp), Spirit = the S104 ghost wisp)"]
+    for f in range(NUM_FAMILIES):
+        if f == 10:
+            out.append("SpiritFamilyIconGlyph:")
+        tag = ' = SPIRIT icon' if f == 10 else ''
+        out.append(_db(icon_tile(g.icons[f])) + f"  ; ${0x4110 + 16 * f:04X} byte ${0x10 + f:02X}"
+                   f"{tag} — {FAMILY_NAMES[f]}{_mark(f in g.edited['icons'])}")
+    return "\n".join(out) + "\n"
+
+
+def emit_family_icon_streams(g):
+    """bank $2E streams 3-12 (gfx ids $2E03-$2E0C): families 0-9's 16-byte
+    icon streams (19 B each, same size always)."""
+    out = ["; (generated by editor2 `gd_family_icon_streams` from gamedata.families[].icon —",
+           ";  the HUD / list / JOURNAL / continue-box copy of families 0-9's icons; read",
+           ";  through FollowerFamilyGfxTable ($01), FamilyIconGfxTable0A,",
+           ";  SavedPartyFamilyIconTable07 / 0A and bank $6D FamilyIconGfxFromE)"]
+    for f in range(10):
+        b = icon_stream(g.icons[f])
+        assert len(b) == 19
+        out.append(f"{ICON_STREAM_LABELS[f]}:  ; gfx id ${0x2E03 + f:04X} — {FAMILY_NAMES[f]} icon"
+                   f"{_mark(f in g.edited['icons'])}")
+        out.append(_db(b[:16]))
+        out.append(_db(b[16:]))
+    return "\n".join(out) + "\n"
+
+
+def emit_spirit_icon_stream(g):
+    """bank $6D SpiritIconStream (gfx id $6D04)."""
+    b = icon_stream(g.icons[10])
+    return ("; (generated by editor2 `gd_spirit_icon_stream` from gamedata.families.spirit.icon)\n"
+            f"SpiritIconStream:{_mark(10 in g.edited['icons'])}\n"
+            "    dw $0010\n"
+            f"    db ${b[2]:02X}                              ; run marker (absent from the tile bytes)\n"
+            + _db(b[3:]) + "\n")
 
 
 def emit_spirit_names(g):

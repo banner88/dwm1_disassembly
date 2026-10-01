@@ -6114,487 +6114,250 @@ jr_012_65ef:
     ret
 
 
-ItemSlotPtrTable:
-    nop
-    cpl
-    ld b, b
-    ld sp, $3140
-    ld b, b
-    ld sp, $3140
-    ld b, b
-    ld sp, $3140
-    ld b, b
-    ld sp, $3140
-    ld b, b
-    ld sp, $3140
-    ld b, b
-    ld sp, $3140
-    ld b, b
-    ld sp, $3140
-    ld b, b
-    ld sp, $2f01
-    ld [bc], a
-    cpl
-    inc bc
-    cpl
-    inc b
-    cpl
-    dec b
-    cpl
-    ld b, $2f
-    rlca
-    cpl
-    ld [$092f], sp
-    cpl
-    ld a, [bc]
-    cpl
-    dec bc
-    cpl
-    inc c
-    cpl
-    dec c
-    cpl
-    ld c, $2f
-    rrca
-    cpl
-    db $10
-    cpl
-    nop
-    jr c, @+$03
-
-    jr c, jr_012_6639
-
-    jr c, @+$05
-
-jr_012_6639:
-    jr c, jr_012_663f
-
-    jr c, @+$07
-
-    jr c, jr_012_6645
-
-jr_012_663f:
-    jr c, @+$09
-
-    jr c, jr_012_664b
-
-    jr c, @+$0b
-
-jr_012_6645:
-    jr c, jr_012_6651
-
-    jr c, @+$0d
-
-    jr c, jr_012_6657
-
-jr_012_664b:
-    jr c, @+$0f
-
-    jr c, jr_012_665d
-
-    jr c, @+$11
-
-jr_012_6651:
-    jr c, jr_012_6663
-
-    jr c, @+$13
-
-    jr c, jr_012_6669
-
-jr_012_6657:
-    jr c, @+$15
-
-    jr c, jr_012_666f
-
-    jr c, @+$17
-
-jr_012_665d:
-    jr c, jr_012_6675
-
-    jr c, @+$19
-
-    jr c, jr_012_667b
-
-jr_012_6663:
-    jr c, @+$1b
-
-    jr c, jr_012_6681
-
-    jr c, @+$1d
-
-jr_012_6669:
-    jr c, jr_012_6687
-
-    jr c, @+$1f
-
-    jr c, jr_012_668d
-
-jr_012_666f:
-    jr c, @+$21
-
-    jr c, jr_012_6693
-
-    jr c, @+$23
-
-jr_012_6675:
-    jr c, jr_012_6699
-
-    jr c, @+$25
-
-    jr c, jr_012_669f
-
-jr_012_667b:
-    jr c, @+$27
-
-    jr c, jr_012_66a5
-
-    jr c, @+$29
-
-jr_012_6681:
-    jr c, jr_012_66ab
-
-    jr c, @+$2b
-
-    jr c, jr_012_66b1
-
-jr_012_6687:
-    jr c, @+$2d
-
-    jr c, jr_012_66b7
-
-    jr c, @+$2f
-
-jr_012_668d:
-    jr c, jr_012_66bd
-
-    jr c, @+$31
-
-    jr c, jr_012_66c3
-
-jr_012_6693:
-    jr c, @+$33
-
-    jr c, jr_012_66c9
-
-    jr c, jr_012_66cc
-
-jr_012_6699:
-    jr c, @+$36
-
-    jr c, jr_012_66d2
-
-    jr c, jr_012_66d5
-
-jr_012_669f:
-    jr c, jr_012_66d8
-
-    jr c, jr_012_66db
-
-    jr c, jr_012_66de
-
-jr_012_66a5:
-    jr c, jr_012_66e1
-
-    jr c, jr_012_66e4
-
-    jr c, jr_012_66e7
-
-jr_012_66ab:
-    jr c, jr_012_66ea
-
-    jr c, jr_012_66ed
-
-    jr c, jr_012_66f0
-
-jr_012_66b1:
-    jr c, @+$42
-
-    jr c, jr_012_66f6
-
-    jr c, jr_012_66f9
-
-jr_012_66b7:
-    jr c, jr_012_66fc
-
-    jr c, @+$46
-
-    jr c, jr_012_6702
-
-jr_012_66bd:
-    jr c, @+$48
-
-    jr c, jr_012_6708
-
-    jr c, jr_012_66c3
-
-jr_012_66c3:
-    add hl, sp
-    ld bc, $0239
-    add hl, sp
-    inc bc
-
-jr_012_66c9:
-    add hl, sp
-    inc b
-    add hl, sp
-
-jr_012_66cc:
-    dec b
-    add hl, sp
-    ld b, $39
-    rlca
-    add hl, sp
-
-jr_012_66d2:
-    ld [$0939], sp
-
-jr_012_66d5:
-    add hl, sp
-    ld a, [bc]
-    add hl, sp
-
-jr_012_66d8:
-    dec bc
-    add hl, sp
-    inc c
-
-jr_012_66db:
-    add hl, sp
-    dec c
-    add hl, sp
-
-jr_012_66de:
-    ld c, $39
-    rrca
-
-jr_012_66e1:
-    add hl, sp
-    db $10
-    add hl, sp
-
-jr_012_66e4:
-    ld de, $1239
-
-jr_012_66e7:
-    add hl, sp
-    inc de
-    add hl, sp
-
-jr_012_66ea:
-    inc d
-    add hl, sp
-    dec d
-
-jr_012_66ed:
-    add hl, sp
-    ld d, $39
-
-jr_012_66f0:
-    rla
-    add hl, sp
-    jr jr_012_672d
-
-    add hl, de
-    add hl, sp
-
-jr_012_66f6:
-    ld a, [de]
-    add hl, sp
-    dec de
-
-jr_012_66f9:
-    add hl, sp
-    inc e
-    add hl, sp
-
-jr_012_66fc:
-    dec e
-    add hl, sp
-    ld e, $39
-    rra
-    add hl, sp
-
-jr_012_6702:
-    jr nz, jr_012_673d
-
-    ld hl, $2239
-    add hl, sp
-
-jr_012_6708:
-    inc hl
-    add hl, sp
-    inc h
-    add hl, sp
-    dec h
-    add hl, sp
-    ld h, $39
-    daa
-    add hl, sp
-    jr z, jr_012_674d
-
-    add hl, hl
-    add hl, sp
-    ld a, [hl+]
-    add hl, sp
-    dec hl
-    add hl, sp
-    inc l
-    add hl, sp
-    dec l
-    add hl, sp
-    ld l, $39
-    cpl
-    add hl, sp
-    jr nc, jr_012_675d
-
-    ld sp, $3239
-    add hl, sp
-    inc sp
-    add hl, sp
-    inc [hl]
-    add hl, sp
-    dec [hl]
-
-jr_012_672d:
-    add hl, sp
-    ld [hl], $39
-    scf
-    add hl, sp
-    jr c, jr_012_676d
-
-    add hl, sp
-    add hl, sp
-    ld a, [hl-]
-    add hl, sp
-    dec sp
-    add hl, sp
-    inc a
-    add hl, sp
-    dec a
-
-jr_012_673d:
-    add hl, sp
-    ld a, $39
-    ccf
-    add hl, sp
-    ld b, b
-    add hl, sp
-    ld b, c
-    add hl, sp
-    ld b, d
-    add hl, sp
-    ld b, e
-    add hl, sp
-    ld b, h
-    add hl, sp
-    ld b, l
-
-jr_012_674d:
-    add hl, sp
-    ld b, [hl]
-    add hl, sp
-    ld b, a
-    add hl, sp
-    nop
-    ld a, [hl-]
-    ld bc, $023a
-    ld a, [hl-]
-    inc bc
-    ld a, [hl-]
-    inc b
-    ld a, [hl-]
-    dec b
-
-jr_012_675d:
-    ld a, [hl-]
-    ld b, $3a
-    rlca
-    ld a, [hl-]
-    ld [$093a], sp
-    ld a, [hl-]
-    ld a, [bc]
-    ld a, [hl-]
-    dec bc
-    ld a, [hl-]
-    inc c
-    ld a, [hl-]
-    dec c
-
-jr_012_676d:
-    ld a, [hl-]
-    ld c, $3a
-    rrca
-    ld a, [hl-]
-    db $10
-    ld a, [hl-]
-    ld de, $123a
-    ld a, [hl-]
-    inc de
-    ld a, [hl-]
-    inc d
-    ld a, [hl-]
-    dec d
-    ld a, [hl-]
-    ld d, $3a
-    rla
-    ld a, [hl-]
-    jr jr_012_67be
-
-    add hl, de
-    ld a, [hl-]
-    ld a, [de]
-    ld a, [hl-]
-    dec de
-    ld a, [hl-]
-    inc e
-    ld a, [hl-]
-    dec e
-    ld a, [hl-]
-    ld e, $3a
-    rra
-    ld a, [hl-]
-    jr nz, @+$3c
-
-    ld hl, $223a
-    ld a, [hl-]
-    inc hl
-    ld a, [hl-]
-    inc h
-    ld a, [hl-]
-    dec h
-    ld a, [hl-]
-    ld h, $3a
-    daa
-    ld a, [hl-]
-    jr z, jr_012_67de
-
-    add hl, hl
-    ld a, [hl-]
-    ld a, [hl+]
-    ld a, [hl-]
-    dec hl
-    ld a, [hl-]
-    inc l
-    ld a, [hl-]
-    dec l
-    ld a, [hl-]
-    ld l, $3a
-    cpl
-    ld a, [hl-]
-    jr nc, jr_012_67ee
-
-    ld sp, $323a
-    ld a, [hl-]
-    inc sp
-    ld a, [hl-]
-    inc [hl]
-    ld a, [hl-]
-    dec [hl]
-    ld a, [hl-]
-
-jr_012_67be:
-    ld [hl], $3a
-
+FollowerGfxTable12:
+ItemSlotPtrTable:   ; (mgbdis name, kept: referenced by the readers / patches)
+    ; FOLLOWER (walking) gfx-ID table — one of the EIGHT per-screen copies
+    ; (MONSTER_DATA 'Follower-art table has EIGHT copies'; bank $01's
+    ; ScreenTransDataTable is the overworld one). Read by the library + lineage parent icons (CmpItem_65cb) $65DE.
+    ; Index = species + $10 -> gfx-ID (bank<<8 | index) -> $<bank>:$4001 + index*2.
+    ; 231 words: 16 non-monster entries, then species 0-214; ids 215+ read past the end (never followers).
+    ; A re-arted species writes the SAME new gfx-ID into all eight copies
+    ; (S107: compiler region art_walk_12, gamedata.art).
+    ; Re-sectioned S107 (tools/resection_monster_art_tables.py), byte-identical.
+    dw $2f00   ; [  0] default
+    dw $3140   ; [  1] non-monster (loader index 1-15)
+    dw $3140   ; [  2] non-monster (loader index 1-15)
+    dw $3140   ; [  3] non-monster (loader index 1-15)
+    dw $3140   ; [  4] non-monster (loader index 1-15)
+    dw $3140   ; [  5] non-monster (loader index 1-15)
+    dw $3140   ; [  6] non-monster (loader index 1-15)
+    dw $3140   ; [  7] non-monster (loader index 1-15)
+    dw $3140   ; [  8] non-monster (loader index 1-15)
+    dw $3140   ; [  9] non-monster (loader index 1-15)
+    dw $3140   ; [ 10] non-monster (loader index 1-15)
+    dw $3140   ; [ 11] non-monster (loader index 1-15)
+    dw $3140   ; [ 12] non-monster (loader index 1-15)
+    dw $3140   ; [ 13] non-monster (loader index 1-15)
+    dw $3140   ; [ 14] non-monster (loader index 1-15)
+    dw $3140   ; [ 15] non-monster (loader index 1-15)
+; @BUILD_PROJECT BEGIN art_walk_12
+    dw $2F01   ; [0] DrakSlime
+    dw $2F02   ; [1] SpotSlime
+    dw $2F03   ; [2] WingSlime
+    dw $2F04   ; [3] TreeSlime
+    dw $2F05   ; [4] Snaily
+    dw $2F06   ; [5] SlimeNite
+    dw $2F07   ; [6] Babble
+    dw $2F08   ; [7] BoxSlime
+    dw $2F09   ; [8] Slime
+    dw $2F0A   ; [9] Healer
+    dw $2F0B   ; [10] FangSlime
+    dw $2F0C   ; [11] RockSlime
+    dw $2F0D   ; [12] SlimeBorg
+    dw $2F0E   ; [13] Slabbit
+    dw $2F0F   ; [14] SpotKing
+    dw $2F10   ; [15] KingSlime
+    dw $3800   ; [16] Metaly
+    dw $3801   ; [17] Metabble
+    dw $3802   ; [18] MetalKing
+    dw $3803   ; [19] GoldSlime
+    dw $3804   ; [20] DragonKid
+    dw $3805   ; [21] Tortragon
+    dw $3806   ; [22] Pteranod
+    dw $3807   ; [23] Gasgon
+    dw $3808   ; [24] FairyDrak
+    dw $3809   ; [25] LizardMan
+    dw $380A   ; [26] Poisongon
+    dw $380B   ; [27] Swordgon
+    dw $380C   ; [28] Dragon
+    dw $380D   ; [29] MiniDrak
+    dw $380E   ; [30] MadDragon
+    dw $380F   ; [31] Rayburn
+    dw $3810   ; [32] Chamelgon
+    dw $3811   ; [33] LizardFly
+    dw $3812   ; [34] Andreal
+    dw $3813   ; [35] KingCobra
+    dw $3814   ; [36] Spikerous
+    dw $3815   ; [37] GreatDrak
+    dw $3816   ; [38] Crestpent
+    dw $3817   ; [39] WingSnake
+    dw $3818   ; [40] Coatol
+    dw $3819   ; [41] Orochi
+    dw $381A   ; [42] BattleRex
+    dw $381B   ; [43] SkyDragon
+    dw $381C   ; [44] Divinegon
+    dw $381D   ; [45] Tonguella
+    dw $381E   ; [46] Almiraj
+    dw $381F   ; [47] CatFly
+    dw $3820   ; [48] PillowRat
+    dw $3821   ; [49] Saccer
+    dw $3822   ; [50] GulpBeast
+    dw $3823   ; [51] Skullroo
+    dw $3824   ; [52] WindBeast
+    dw $3825   ; [53] Anteater
+    dw $3826   ; [54] SuperTen
+    dw $3827   ; [55] IronTurt
+    dw $3828   ; [56] Mommonja
+    dw $3829   ; [57] HammerMan
+    dw $382A   ; [58] Grizzly
+    dw $382B   ; [59] Yeti
+    dw $382C   ; [60] MadGopher
+    dw $382D   ; [61] FairyRat
+    dw $382E   ; [62] Unicorn
+    dw $382F   ; [63] Goategon
+    dw $3830   ; [64] WildApe
+    dw $3831   ; [65] Trumpeter
+    dw $3832   ; [66] KingLeo
+    dw $3833   ; [67] DarkHorn
+    dw $3834   ; [68] MadCat
+    dw $3835   ; [69] BigEye
+    dw $3836   ; [70] Picky
+    dw $3837   ; [71] Wyvern
+    dw $3838   ; [72] BullBird
+    dw $3839   ; [73] Florajay
+    dw $383A   ; [74] DuckKite
+    dw $383B   ; [75] MadPecker
+    dw $383C   ; [76] MadRaven
+    dw $383D   ; [77] MistyWing
+    dw $383E   ; [78] Dracky
+    dw $383F   ; [79] BigRoost
+    dw $3840   ; [80] StubBird
+    dw $3841   ; [81] LandOwl
+    dw $3842   ; [82] MadGoose
+    dw $3843   ; [83] MadCondor
+    dw $3844   ; [84] Blizzardy
+    dw $3845   ; [85] Phoenix
+    dw $3846   ; [86] ZapBird
+    dw $3847   ; [87] WhipBird
+    dw $3900   ; [88] FunkyBird
+    dw $3901   ; [89] RainHawk
+    dw $3902   ; [90] MadPlant
+    dw $3903   ; [91] FireWeed
+    dw $3904   ; [92] FloraMan
+    dw $3905   ; [93] WingTree
+    dw $3906   ; [94] CactiBall
+    dw $3907   ; [95] Gulpple
+    dw $3908   ; [96] Toadstool
+    dw $3909   ; [97] AmberWeed
+    dw $390A   ; [98] Stubsuck
+    dw $390B   ; [99] Oniono
+    dw $390C   ; [100] DanceVegi
+    dw $390D   ; [101] TreeBoy
+    dw $390E   ; [102] FaceTree
+    dw $390F   ; [103] HerbMan
+    dw $3910   ; [104] BeanMan
+    dw $3911   ; [105] EvilSeed
+    dw $3912   ; [106] ManEater
+    dw $3913   ; [107] Snapper
+    dw $3914   ; [108] Rosevine
+    dw $3915   ; [109] Watabou
+    dw $3916   ; [110] GiantSlug
+    dw $3917   ; [111] Catapila
+    dw $3918   ; [112] Gophecada
+    dw $3919   ; [113] Butterfly
+    dw $391A   ; [114] WeedBug
+    dw $391B   ; [115] GiantWorm
+    dw $391C   ; [116] Lipsy
+    dw $391D   ; [117] StagBug
+    dw $391E   ; [118] ArmyAnt
+    dw $391F   ; [119] GoHopper
+    dw $3920   ; [120] TailEater
+    dw $3921   ; [121] ArmorPede
+    dw $3922   ; [122] Eyeder
+    dw $3923   ; [123] GiantMoth
+    dw $3924   ; [124] Droll
+    dw $3925   ; [125] ArmyCrab
+    dw $3926   ; [126] MadHornet
+    dw $3927   ; [127] HornBeet
+    dw $3928   ; [128] Armorpion
+    dw $3929   ; [129] Digster
+    dw $392A   ; [130] Pixy
+    dw $392B   ; [131] ArcDemon
+    dw $392C   ; [132] AgDevil
+    dw $392D   ; [133] Demonite
+    dw $392E   ; [134] DarkEye
+    dw $392F   ; [135] EyeBall
+    dw $3930   ; [136] SkulRider
+    dw $3931   ; [137] EvilBeast
+    dw $3932   ; [138] 1EyeClown
+    dw $3933   ; [139] Gremlin
+    dw $3934   ; [140] MedusaEye
+    dw $3935   ; [141] Lionex
+    dw $3936   ; [142] GoatHorn
+    dw $3937   ; [143] Orc
+    dw $3938   ; [144] Ogre
+    dw $3939   ; [145] GateGuard
+    dw $393A   ; [146] ChopClown
+    dw $393B   ; [147] Grendal
+    dw $393C   ; [148] Akubar
+    dw $393D   ; [149] MadKnight
+    dw $393E   ; [150] Gigantes
+    dw $393F   ; [151] Centasaur
+    dw $3940   ; [152] EvilArmor
+    dw $3941   ; [153] Jamirus
+    dw $3942   ; [154] Durran
+    dw $3943   ; [155] Spooky
+    dw $3944   ; [156] Skullgon
+    dw $3945   ; [157] Putrepup
+    dw $3946   ; [158] RotRaven
+    dw $3947   ; [159] Mummy
+    dw $3A00   ; [160] DarkCrab
+    dw $3A01   ; [161] DeadNite
+    dw $3A02   ; [162] Shadow
+    dw $3A03   ; [163] Hork
+    dw $3A04   ; [164] Mudron
+    dw $3A05   ; [165] NiteWhip
+    dw $3A06   ; [166] MadSpirit
+    dw $3A07   ; [167] WindMerge
+    dw $3A08   ; [168] Reaper
+    dw $3A09   ; [169] DeadNoble
+    dw $3A0A   ; [170] WhiteKing
+    dw $3A0B   ; [171] BoneSlave
+    dw $3A0C   ; [172] Skeletor
+    dw $3A0D   ; [173] Servant
+    dw $3A0E   ; [174] Copycat
+    dw $3A0F   ; [175] JewelBag
+    dw $3A10   ; [176] EvilWand
+    dw $3A11   ; [177] MadCandle
+    dw $3A12   ; [178] CoilBird
+    dw $3A13   ; [179] Facer
+    dw $3A14   ; [180] SpikyBoy
+    dw $3A15   ; [181] MadMirror
+    dw $3A16   ; [182] RogueNite
+    dw $3A17   ; [183] Goopi
+    dw $3A18   ; [184] Voodoll
+    dw $3A19   ; [185] MetalDrak
+    dw $3A1A   ; [186] Balzak
+    dw $3A1B   ; [187] SabreMan
+    dw $3A1C   ; [188] CurseLamp
+    dw $3A1D   ; [189] Roboster
+    dw $3A1E   ; [190] EvilPot
+    dw $3A1F   ; [191] Gismo
+    dw $3A20   ; [192] LavaMan
+    dw $3A21   ; [193] IceMan
+    dw $3A22   ; [194] Mimic
+    dw $3A23   ; [195] MudDoll
+    dw $3A24   ; [196] Golem
+    dw $3A25   ; [197] StoneMan
+    dw $3A26   ; [198] BombCrag
+    dw $3A27   ; [199] GoldGolem
+    dw $3A28   ; [200] DracoLord
+    dw $3A29   ; [201] DracoLord
+    dw $3A2A   ; [202] Hargon
+    dw $3A2B   ; [203] Sidoh
+    dw $3A2C   ; [204] Baramos
+    dw $3A2D   ; [205] Zoma
+    dw $3A2E   ; [206] Pizzaro
+    dw $3A2F   ; [207] Esterk
+    dw $3A30   ; [208] Mirudraas
+    dw $3A31   ; [209] Mirudraas
+    dw $3A32   ; [210] Mudou
+    dw $3A33   ; [211] DeathMore
+    dw $3A34   ; [212] DeathMore
+    dw $3A35   ; [213] DeathMore
+    dw $3A36   ; [214] Darkdrium
+; @BUILD_PROJECT END art_walk_12
+; NOTE: unreferenced fake-decode labels removed with this block: jr_012_6639, jr_012_663f, jr_012_6645, jr_012_664b, jr_012_6651, jr_012_6657, jr_012_665d, jr_012_6663, jr_012_6669, jr_012_666f, jr_012_6675, jr_012_667b, jr_012_6681, jr_012_6687, jr_012_668d, jr_012_6693, jr_012_6699, jr_012_669f, jr_012_66a5, jr_012_66ab, jr_012_66b1, jr_012_66b7, jr_012_66bd, jr_012_66c3, jr_012_66c9, jr_012_66cc, jr_012_66d2, jr_012_66d5, jr_012_66d8, jr_012_66db, jr_012_66de, jr_012_66e1, jr_012_66e4, jr_012_66e7, jr_012_66ea, jr_012_66ed, jr_012_66f0, jr_012_66f6, jr_012_66f9, jr_012_66fc, jr_012_6702, jr_012_6708, jr_012_672d, jr_012_673d, jr_012_674d, jr_012_675d, jr_012_676d, jr_012_67be
 SetItem_67c0:
     ld hl, $ca94
     ld a, [$cac0]

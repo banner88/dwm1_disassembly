@@ -48,6 +48,7 @@ SPIRIT_SLOT_ADDR = 0x41B0    # S104: the Spirit glyph ships HERE (byte $1A)
 SPIRIT_MARKER = "$41B0 byte $1A = SPIRIT icon"  # stable token in the patch comment
 STREAM_PATH = os.path.join(REPO, "patches", "bank_06d.asm")
 STREAM_LABEL = "SpiritIconStream:"
+STREAMS_PATH = os.path.join(REPO, "patches", "bank_02e.asm")   # S107 hand patch
 NUM_VANILLA = 10             # icons $10..$19
 
 # History: B9 (S28) shipped the whip on byte $19, overwriting the vanilla ???
@@ -202,10 +203,23 @@ def parse_db(line):
                  for tok in line.split("db", 1)[1].split(";")[0].split(","))
 
 
+def region_db(path, name):
+    """The db rows of an @BUILD_PROJECT region, as bytes per row (S107)."""
+    out, inside = [], False
+    for ln in open(path):
+        if f"@BUILD_PROJECT BEGIN {name}" in ln:
+            inside = True
+        elif f"@BUILD_PROJECT END {name}" in ln:
+            break
+        elif inside and ln.strip().startswith("db"):
+            out.append(parse_db(ln))
+    return out
+
+
 def read_stream():
     """(length, marker, data) of SpiritIconStream in patches/bank_06d.asm."""
     lines = open(STREAM_PATH).read().split("\n")
-    k = lines.index(STREAM_LABEL)
+    k = next(i for i, ln in enumerate(lines) if ln.startswith(STREAM_LABEL))
     body = [ln for ln in lines[k + 1:k + 6] if ln.strip().startswith(("dw", "db"))]
     length = int(body[0].split("dw", 1)[1].split(";")[0].strip().lstrip("$"), 16)
     return length, parse_db(body[1]), parse_db(body[2])
@@ -218,12 +232,20 @@ def cmd_selftest():
         off = flat(ICON_BANK, ICON_BASE) + i * 16
         b16 = rom[off:off + 16]
         assert encode_tile(decode_tile(b16)) == b16, f"icon {i} round-trip"
-    # 2) the patch keeps the vanilla 10 icons (??? at $41A0 included)
-    src = open(PATCH_PATH).read()
-    assert 'INCBIN "gfx/image_04f_4110.2bpp"\t' in src and \
-        'INCBIN "gfx/image_04f_4110.2bpp", 0' not in src, \
-        "patches/bank_04f.asm must INCBIN all 10 vanilla icons (??? restored S104)"
-    print("  vanilla ??? glyph at $41A0 kept (full INCBIN): OK")
+    # 2) the patch keeps the vanilla 10 icons (??? at $41A0 included). S107:
+    #    they are the compiler region gd_family_icons (db rows; was a full
+    #    INCBIN) and their gfx-stream twins the region gd_family_icon_streams
+    #    in patches/bank_02e.asm — both must hold the ROM's bytes (the hand
+    #    overlay = a project with no icon edits)
+    rows = region_db(PATCH_PATH, "gd_family_icons")
+    want = rom[flat(ICON_BANK, ICON_BASE):flat(ICON_BANK, ICON_BASE) + 16 * NUM_VANILLA]
+    assert len(rows) == NUM_VANILLA + 1 and b"".join(rows[:NUM_VANILLA]) == want, \
+        "patches/bank_04f.asm gd_family_icons: the 10 vanilla glyphs != ROM"
+    print("  vanilla glyphs $10-$19 (??? at $41A0 included) == ROM in gd_family_icons: OK")
+    srows = b"".join(region_db(STREAMS_PATH, "gd_family_icon_streams"))
+    o = flat(0x2E, 0x424A)
+    assert srows == rom[o:o + 190], "patches/bank_02e.asm gd_family_icon_streams != ROM"
+    print("  family icon streams $2E:$424A-$42F7 == ROM in gd_family_icon_streams: OK")
     # 3) spirit design in json == the $41B0 glyph AND the bank $6D stream
     if os.path.exists(JSON_PATH) and os.path.exists(PATCH_PATH):
         j = json.load(open(JSON_PATH))

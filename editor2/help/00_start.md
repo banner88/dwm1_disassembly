@@ -11,11 +11,11 @@ built from it (the original ROM is never changed).
 - **Import art** — turn a PNG rip into a room tileset.
 - **Gates** — which custom rooms appear on which gate floors, and per-gate
   settings (floor count, boss floor, hand-made gates, project enemies).
-- **Families** — which monsters belong to which family, arena dialogue,
-  Spirit's default names.
+- **Families** — which monsters belong to which family, family icons,
+  arena dialogue, Spirit's default names.
 - **Monsters** — every monster's species data (family, growth, resistances,
-  natural skills …), every battle row it appears in (stats, AI, joining), and
-  new monsters cut from a sprite sheet.
+  natural skills …), every battle row it appears in (stats, AI, joining), new
+  monsters cut from a sprite sheet, and new art for the original monsters.
 - **World** — the graph of rooms and the doors between them (mouse wheel =
   zoom, drag empty space = move around, Fit / + / −).
 - **Build & Play** — build the ROM (Ctrl+B) and run it (Ctrl+R).

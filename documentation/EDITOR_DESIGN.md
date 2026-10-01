@@ -946,14 +946,11 @@ Per species — every knob is a decoded, proven surface:
 - **Follower visualizer (v2.1)**: all-4-direction walk preview over the
   155-layout library (port of the existing follower_frame_picker tooling
   into Qt), used by both the picker and custom-art import.
-- **KNOWN DEFECT (v2.1, user-reported S90)**: custom sprite BACKGROUND
-  renders pure white where vanilla's is slightly creamy — near-certainly
-  the import pipeline quantizing to `$7FFF` instead of vanilla's exact
-  background RGB555. Measurement task in [G-P]: sample vanilla's value,
-  identify whether the battle-palette path, follower path, or both are
-  affected (follower OBJ idx0 is hardware-transparent, so the battle
-  `MonsterBattlePalettes` path is the prime suspect), fix the constant.
-  Logged in PROJECT_STATE Open defects.
+- ~~**KNOWN DEFECT (v2.1, user-reported S90)**: custom sprite BACKGROUND
+  renders pure white where vanilla's is slightly creamy~~ — **RESOLVED**: the
+  S106 sheet import puts the cream ($6BFF, index 1) behind every pose; the user
+  on the S106 r2 ROM (2026-10-01 13:17): "background colour is perfect"
+  (the S90 sprite was most likely the S21 Clam POC, purged S105).
 - Custom-species creation = the Phase N pipeline behind a "New species"
   wizard (ids 221-239). Capacity meter: slots used / 19, plus the
   bank-$41 name budget (292 B, `species.text_layout` says whether the
@@ -961,7 +958,8 @@ Per species — every knob is a decoded, proven surface:
 - **Backend as built S105 (P3.9b):** `project.json custom.species`
   (PROJECT_COMPILER §2.21) — name, short name, info (`clone_from` + the
   `gamedata.monsters` fields), `description_from`, battle art + palette,
-  follower art + `walks_like` (a bank-$11 layout donor 128-214) + palette;
+  follower art + `walks_like` (a bank-$11 layout donor 128-214; S107 2b: or a
+  walk `layout`, any of the 155) + palette;
   the recipe display is derived from the breeding table; enemy rows are
   project enemies. The wizard writes this section. Capacity (S105 G3):
   **19**, ids 221-239 — the game's ceiling (followers never work past 239,
@@ -1004,6 +1002,44 @@ Per species — every knob is a decoded, proven surface:
   §5.5 Encounters tab remains the cross-view. Part 2 (art of the original
   species) and part 3 (renames) are ROADMAP boxes.
 
+- **As built S107 (ROADMAP P3.10 part 2a — art of the ORIGINAL monsters;
+  model `MonstersMixin.original_art / set_original_art / set_original_art_props /
+  reset_original_art / art_capacity`, compiler `editor2/core/art.py`).** The
+  **Name & art** page now opens for the 215 original monsters too (TERRY? and the
+  summons have none — PROJECT_STATE Iron Rule 8): **New art from a sprite
+  sheet…** = the S106 sheet dialog in mode `original` (same boxes / colours /
+  walking palette; the cut is remembered in `gamedata.art.<id>.source` and
+  reopened next time), **Battle colours** (c0 / c2) and **Walking palette** work
+  on the original art too (colours-only edits), **Back to the original art and
+  colours**. The name fields stay hidden for originals (renames = part 3). The
+  species list, the battle / walking previews and the canvas thumbnails draw the
+  project's art (`sprite_render.original_art`); the meter under the list shows
+  the art banks' bytes (49,149 B, $7F/$7C/$7A). Writes only what differs from the
+  original game; each action one undo step (the asset files are snapshotted).
+  Walking art always uses layout 0 here (2a USER-CONFIRMED 2026-10-01, except
+  the still library icon → 2b); the family-icon editor (G-P) is 2c.
+- **As built S107 2b (ROADMAP P3.10 part 2b — walk styles; core
+  `editor2/core/walk_layouts.py`, PROJECT_COMPILER §2.23 "Walking layouts";
+  USER-CONFIRMED 2026-10-01).** The sheet dialog (all three modes) packs the walking
+  art for a **Walk style** = one of the game's 155 layouts instead of always
+  layout 0: the list ranks all 155 by the pixels the game would draw differently
+  from the sheet's six frames ("· 0 px off" = exactly the sheet's animation) and
+  names who walks that way ("layout 2 — walks like Pteranod, MistyWing …");
+  tags "its own" (the monster's original layout) and "copied into bank $10 / $11"
+  (the follower bank lacks it — the compiler copies it, PROJECT_COMPILER §2.23).
+  The best is preselected; a manual pick sticks while boxes are nudged (the
+  ranking is redone 0.35 s after a drag rests; a new monster resets to best).
+  Two walk previews: **In the game** (the packed art through the chosen layout,
+  4 facings, A/B at ≈ 4 Hz) and **On the sheet** (the six cut frames, left =
+  mirrored side) — the S24 "4-direction visualizer over the 155" is this pair.
+  Result: `follower.layout` in `gamedata.art.<id>` / `custom.species[]` (a new
+  species' `walks_like` is dropped; re-cut preselects the stored style). The
+  model refuses (before writing) layout copies over a follower bank's free tail.
+  The walk previews everywhere draw entry 0 on top (CGB OAM priority) with the
+  entries' own Y-flip (`sprite_render.follower_frames`, S107 fix). Picking a
+  layout for the ORIGINAL walking art is not offered: that art is packed for the
+  monster's own layout, another layout would scramble it.
+
 ### 5.2a Families tab (as built S104 r2, ROADMAP P3.10a)
 
 A tab before Monsters (`editor2/app/families_tab.py`, model
@@ -1018,6 +1054,19 @@ one-line explanation of what they are. Writes `gamedata.monsters.<id>.family`
 and `gamedata.families.*` — only differences from the original game; each
 edit is one undo step validated by the compiler's gamedata model. When the
 Monsters tab (5.2) lands, the family combo there uses the same setters.
+
+**As built S107 (ROADMAP P3.10 part 2c, G-P; USER-CONFIRMED 2026-10-01):**
+an **Icon** group above Settings (the right column now scrolls): an 8 × 8
+pixel canvas (left button paints the chosen shade, right button picks the
+shade under the cursor; one stroke = one undo step), four shade buttons
+(3 black, 0 dark, 2 light, 1 background) each showing the INFO-page and the
+continue-box colour (PyBoy-measured), previews at 4× in both palettes and at
+1×, **Import an 8 × 8 PNG…** (brightness order: darkest → 3, then 0, 2,
+lightest → 1; transparent → 1; bigger pictures shrunk), **Back to the
+original icon**. Writes `gamedata.families.<f>.icon` (model
+`FamiliesMixin.family_icon / family_icon_grids / vanilla_family_icon /
+set_family_icon`); the family list and the Move-to combo draw the project's
+icons.
 
 ### 5.2b Arena tab-section (v2.1 — user spec S90; lives under Gates or Monsters, final placement at build time)
 
@@ -1273,7 +1322,7 @@ row is click-navigable (§5.0).
 | G-M | CAPACITIES reference | ✅ CLOSED S91 (core): `extracted/capacities.json` (hand-compiled, evidence per entry); NPCs/screen = 8 hard (9th corrupts script state, measured) + a distinct-sprite-sheet VRAM budget (order-filled, blanks on overflow); screens/room engine=16, vanilla max 12-declared/9-valid, custom schema=8. Residual boxes live in the file's `_deferred_measurement_boxes` (E6 text budget, gate slots, per-sheet tile counts, 4x4 schema extension) |
 | G-N | AI ban-list mechanism (knows-it-never-casts-it option-list filter) — OPTIONAL | ROADMAP P3.11b (v2.1, optional) |
 | G-O | Flag-keyed encounter-pool variants (bank-$71 RoomEncTable resolver extension) | ROADMAP P3.13a acceptance (v2.1) |
-| G-P | Family-icon editor slot pipeline + the custom-sprite background white-vs-cream fix (sample vanilla RGB555, locate affected path) | ROADMAP P3.10 additions (v2.1); defect in PROJECT_STATE |
+| G-P | Family-icon editor slot pipeline (+ the custom-sprite background white-vs-cream defect — RESOLVED, user S106 r2 "background colour is perfect") — **built S107** (§5.2a) | ROADMAP P3.10 part 2c |
 
 ## 10. Milestones v2 (→ ROADMAP Phase 3, re-sequenced S90)
 

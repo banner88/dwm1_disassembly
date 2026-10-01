@@ -1382,7 +1382,7 @@ LoadFldA_474b:
     ld [hl+], a
     ld a, $e0
     ld [hl-], a
-    call $6027
+    call FldA_6027
     pop af
     ld hl, $cac1
     call GetMonsterDataPtr
@@ -2491,7 +2491,7 @@ LoadFldA_4ed3:
     call LoadFldA_4058
     ld a, $de
     ld [hl+], a
-    call $6027
+    call FldA_6027
     pop af
     ld hl, $cac1
     call GetMonsterDataPtr
@@ -2935,7 +2935,7 @@ SetFldA_51c1:
     call LoadFldA_4058
     ld a, $de
     ld [hl+], a
-    call $6027
+    call FldA_6027
     pop af
     ld hl, $cac1
     call GetMonsterDataPtr
@@ -2972,7 +2972,7 @@ jr_00a_51f0:
     call LoadFldA_4058
     ld a, $de
     ld [hl+], a
-    call $6027
+    call FldA_6027
     pop af
     ld hl, $cac1
     call GetMonsterDataPtr
@@ -4889,18 +4889,24 @@ jr_00a_5fd9:
     ld a, [hl]
     ld hl, $a205
     call GetMonsterDataPtr
-    ld a, [hl]
+    ld a, [hl]                        ; A = the saved party member's family byte
     ei
-    add a
-    ld hl, $6013
-    add l
-    ld l, a
-    ld a, $00
-    adc h
-    ld h, a
-    ld e, [hl]
-    inc hl
-    ld d, [hl]
+    ; S107 FORK (P3.10 part 2c; same-size, 13 B = 7 + 6 nops): gfx id from bank
+    ; $6D entry 1 FamilyIconGfxFromE (families 0-9 = the same $2E03 + family,
+    ; Spirit = SpiritIconStream). Was `add a / ld hl,$6013 / ... / ld d,[hl]`
+    ; over the unclamped 10-entry table: a SAVED Spirit party member made it
+    ; DMA gfx id $0A11 (PyBoy S107: the JOURNAL screen stopped advancing).
+    ld e, a
+    push bc
+    ld hl, $6D01
+    rst $10                           ; DE = family-icon gfx id
+    pop bc
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
     pop bc
     ld a, b
     swap a
@@ -4911,19 +4917,16 @@ jr_00a_5fd9:
     ret
 
 
-    inc bc
-    ld l, $04
-    ld l, $05
-    ld l, $06
-    ld l, $07
-    ld l, $08
-    ld l, $09
-    ld l, $0a
-    ld l, $0b
-    ld l, $0c
-    ld l, $11
-    ld a, [bc]
-    nop
+; SavedPartyFamilyIconTable0A ($0A:$6013, S107 re-section of data decoded as
+; code; byte-identical): the twin of $07's SavedPartyFamilyIconTable07 (family
+; -> gfx id $2E03 + family), read by jr_00a_5fd9 (`ld hl, $6013`) for the
+; SAVED party (SRAM $A1C8 -> record family $A205). 10 entries, NOT clamped:
+; family 10 reads gfx id $0A11.
+SavedPartyFamilyIconTable0A:   ; S107: DEAD in the patched build (the reader far-calls bank $6D FamilyIconGfxFromE)
+    dw $2E03, $2E04, $2E05, $2E06, $2E07, $2E08, $2E09, $2E0A, $2E0B, $2E0C
+
+FldA_6027:   ; $0A:$6027 (was `call $6027` at its 5 callers before S107)
+    ld de, $000a
     push bc
     call SaveFldA_6043
     pop bc
@@ -6794,7 +6797,7 @@ LoadFldA_6b82:
     call LoadFldA_4058
     ld a, $de
     ld [hl+], a
-    call $6027
+    call FldA_6027
     pop af
     ld hl, $cac1
     call GetMonsterDataPtr

@@ -123,7 +123,8 @@ def read_frame(rom, bank, addr):
             return None
         sdy = dy - 256 if dy >= 128 else dy
         sdx = dx - 256 if dx >= 128 else dx
-        ents.append({"dy": sdy, "dx": sdx, "tile": tile, "xflip": bool(attr & 0x20)})
+        ents.append({"dy": sdy, "dx": sdx, "tile": tile, "xflip": bool(attr & 0x20),
+                     "yflip": bool(attr & 0x40)})
     if not (1 <= len(ents) <= 8):
         return None
     return ents
@@ -145,7 +146,20 @@ def read_layout(rom, bank, l2_addr):
 
 def frame_sig(frame):
     # position-aware signature: tile mapping AND geometry both define a layout
-    return tuple(sorted((e["dy"], e["dx"], e["tile"], e["xflip"]) for e in frame))
+    # (S107: + Y-flip — one entry in the whole ROM uses it, species 139's
+    # right_B; the count stays 155 because that layout is unique anyway)
+    return tuple(sorted((e["dy"], e["dx"], e["tile"], e["xflip"], e["yflip"]) for e in frame))
+
+
+def raw_frame(rom, bank, addr):
+    """The frame's bytes as stored, incl. the $80 terminator (S107: the
+    compiler copies these into the other follower bank — PROJECT_COMPILER
+    §2.23 "walking layouts")."""
+    o = fileoff(bank, addr)
+    n = 0
+    while rom[o + n] != 0x80:
+        n += 4
+    return rom[o:o + n + 1]
 
 
 def layout_sig(frames):
@@ -176,7 +190,8 @@ def classify(frames):
 
 def frame_out(frame):
     return [
-        {"dy": e["dy"], "dx": e["dx"], "tile": e["tile"], "xflip": e["xflip"]}
+        {"dy": e["dy"], "dx": e["dx"], "tile": e["tile"], "xflip": e["xflip"],
+         "yflip": e["yflip"]}
         for e in frame
     ]
 
@@ -197,6 +212,8 @@ def build(rom):
     sig_count = {}
     sig_example = {}
     sig_frames = {}
+    sig_inst = {}           # sig -> {bank: set(l2)} (S107: where it already exists)
+    bank_frames = {0x10: {}, 0x11: {}}   # bank -> {frame addr: raw hex}
     for sp in range(0, MAX_SPECIES + 1):
         ffc7, bank, sub = route(sp)
         l1_addr = L1_BASE + sub * 2
@@ -227,6 +244,10 @@ def build(rom):
                 sig_frames[sig] = frames
             rec["_sig"] = sig
             rec["decode_ok"] = True
+            sig_inst.setdefault(sig, {}).setdefault(bank, set()).add(l2_addr)
+            for j in range(6):
+                fp = rd16(rom, bank, l2_addr + j * 2)
+                bank_frames[bank][fp] = raw_frame(rom, bank, fp).hex()
         species_recs.append(rec)
 
     # Assign layout ids by descending usage (stable: ties broken by example addr).
@@ -237,12 +258,21 @@ def build(rom):
     for s in ordered:
         frames = sig_frames[s]
         cls = classify(frames)
+        ex = sig_example[s]
+        ptrs = [rd16(rom, ex["bank"], ex["addr"] + j * 2) for j in range(6)]
         layouts.append({
             "id": sig_id[s],
             "used_by_species": sig_count[s],
-            "example_l2": sig_example[s],
+            "example_l2": ex,
             "classification": cls,
             "frames": {FRAME_NAMES[j]: frame_out(frames[j]) for j in range(6)},
+            # S107 (P3.10 part 2b): the level-2 tables of this layout in each
+            # follower bank (a species can only point at its OWN bank's), and
+            # the example's stored bytes — frame j = raw[share[j]] (frames the
+            # example's table points at twice are stored once)
+            "instances": {f"{b:02x}": sorted(v) for b, v in sorted(sig_inst[s].items())},
+            "raw": [raw_frame(rom, ex["bank"], p).hex() for p in dict.fromkeys(ptrs)],
+            "share": [list(dict.fromkeys(ptrs)).index(p) for p in ptrs],
         })
 
     # Finalize per-species map (resolve sig -> id, drop temp).
@@ -256,7 +286,9 @@ def build(rom):
         )
         monster_map.append(rec)
 
-    return layouts, monster_map
+    frames_by_bank = {f"{b:02x}": [[a, h] for a, h in sorted(fr.items())]
+                      for b, fr in bank_frames.items()}
+    return layouts, monster_map, frames_by_bank
 
 
 def selftest(rom, layouts, monster_map):
@@ -299,7 +331,36 @@ def selftest(rom, layouts, monster_map):
         print(f"  FAIL: DarkDrium sp214 layout mismatch. bank=${d['bank']:02x} sharing={dl['classification']['sharing'] if dl else '?'}")
         print(f"        got={got}")
 
-    # 4) stats
+    # 4) S107: the stored bytes (`raw` + `share`) decode to the layout's own
+    #    frames, and every listed instance IS that layout in its bank
+    bad = []
+    for L in layouts:
+        want = layout_sig([[{**e} for e in L["frames"][fn]] for fn in FRAME_NAMES])
+        dec = []
+        for j in range(6):
+            r = bytes.fromhex(L["raw"][L["share"][j]])
+            fr = []
+            for o in range(0, len(r) - 1, 4):
+                dy, dx, t, at = r[o:o + 4]
+                fr.append({"dy": dy - 256 if dy > 127 else dy, "dx": dx - 256 if dx > 127 else dx,
+                           "tile": t, "xflip": bool(at & 0x20), "yflip": bool(at & 0x40)})
+            dec.append(fr)
+        if layout_sig(dec) != want:
+            bad.append((L["id"], "raw"))
+        for bk, addrs in L["instances"].items():
+            for a in addrs:
+                if layout_sig(read_layout(rom, int(bk, 16), a)) != want:
+                    bad.append((L["id"], bk, a))
+    if bad:
+        ok = False
+        print(f"  FAIL: stored bytes / instances do not match: {bad[:5]}")
+    else:
+        n10 = sum('10' in L["instances"] for L in layouts)
+        n11 = sum('11' in L["instances"] for L in layouts)
+        print(f"  OK: raw bytes of all {len(layouts)} layouts decode to their frames; "
+              f"instances: {n10} layouts exist in bank $10, {n11} in bank $11")
+
+    # 5) stats
     n_share = sum(1 for L in layouts if L["classification"]["sharing"])
     sp_share = sum(1 for m in monster_map if m["sharing"] is True)
     sp_non = sum(1 for m in monster_map if m["sharing"] is False)
@@ -310,7 +371,7 @@ def selftest(rom, layouts, monster_map):
 
 def main():
     rom = load_rom()
-    layouts, monster_map = build(rom)
+    layouts, monster_map, frames_by_bank = build(rom)
 
     gen = {
         "_generator": "tools/extract_monster_follower_layouts.py (ROM: DWM-original.gbc md5 1ca6579359f21d8e27b446f865bf6b83)",
@@ -319,11 +380,28 @@ def main():
     if "--selftest" in sys.argv:
         print("extract_monster_follower_layouts.py --selftest")
         ok = selftest(rom, layouts, monster_map)
+        # S107: the committed JSON files == what the ROM gives now (the editor
+        # and the compiler read them: walk_layouts.py, sprite_render.py)
+        try:
+            on_disk = json.load(open(OUT_LAYOUTS))
+            same = (on_disk.get("layouts") == json.loads(json.dumps(layouts)) and
+                    on_disk.get("bank_frames") == json.loads(json.dumps(frames_by_bank)))
+            m_disk = json.load(open(OUT_MAP))
+            same = same and m_disk.get("monsters") == json.loads(json.dumps(monster_map))
+        except (OSError, ValueError):
+            same = False
+        print(f"  {'OK' if same else 'FAIL'}: extracted/follower_layouts.json + "
+              "monster_follower_layouts.json == the ROM")
+        ok = ok and same
         print("SELFTEST:", "PASS" if ok else "FAIL")
         sys.exit(0 if ok else 1)
 
     with open(OUT_LAYOUTS, "w") as f:
-        json.dump({**gen, "layout_count": len(layouts), "layouts": layouts}, f, indent=1)
+        json.dump({**gen, "layout_count": len(layouts), "layouts": layouts,
+                   # S107: every frame the species' tables use, per bank
+                   # ([address, stored bytes]) — a layout copied into the
+                   # other bank reuses a byte-identical frame already there
+                   "bank_frames": frames_by_bank}, f, indent=1)
     with open(OUT_MAP, "w") as f:
         json.dump({**gen,
                    "level1_table": {"bank_10": L1_BASE, "bank_11": L1_BASE,

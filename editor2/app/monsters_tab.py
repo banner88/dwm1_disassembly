@@ -17,6 +17,10 @@ three pages:
                 stats and AI from the row it joined from.
   Name & art    (new species) name, nickname, description, walking palette,
                 battle colours, re-cut the art from a sheet, remove.
+                (original monsters 0-214, S107) new art from a sprite sheet,
+                battle colours, walking palette, back to the original —
+                gamedata.art. TERRY? and the summons (215-220) have no art
+                page: they are not monsters (PROJECT_STATE Iron Rule 8).
 
 Every edit is one undo step (SnapshotCommand); the model validates with the
 compiler's own code, so the GUI can never save what the build would refuse.
@@ -331,6 +335,7 @@ class MonstersTab(QWidget):
         self.art_note.setWordWrap(True)
         v.addWidget(self.art_note)
         box = QGroupBox('Name')
+        self.name_box = box
         f = QFormLayout(box)
         self.a_name = QLineEdit()
         self.a_name.setMaxLength(SP.NAME_MAX)
@@ -374,16 +379,35 @@ class MonstersTab(QWidget):
         af.addRow('Battle colours', row)
         recut = QPushButton('Re-cut the art from a sprite sheet…')
         recut.clicked.connect(self._recut)
+        self.recut_btn = recut
         af.addRow(recut)
+        # S107 (P3.10 part 2a): an ORIGINAL monster's art (gamedata.art)
+        self.orig_btn = QPushButton('New art from a sprite sheet…')
+        self.orig_btn.setToolTip('Cut a battle pose and six walking frames from a sheet; '
+                                 'the game then draws this monster with them everywhere '
+                                 '(battles, menus, library, following you).')
+        self.orig_btn.clicked.connect(self._orig_art)
+        af.addRow(self.orig_btn)
+        self.orig_reset = QPushButton('Back to the original art and colours')
+        self.orig_reset.clicked.connect(self._orig_reset)
+        af.addRow(self.orig_reset)
         v.addWidget(art)
         rm = QPushButton('Remove this species…')
         rm.clicked.connect(self._remove)
+        self.rm_btn = rm
         v.addWidget(rm)
         v.addStretch(1)
         return w
 
     # ================================================================ refresh
     def _undo_changed(self, _i):
+        # a tab left over from a previously opened project can still be wired
+        # to that session's undo stack while Qt has already deleted its child
+        # widgets (seen once in test_app S107: "Internal C++ object already
+        # deleted" in _fill_art) — such a tab must do nothing
+        from shiboken6 import isValid
+        if not isValid(self) or not all(isValid(b) for b in self.a_sw):
+            return
         if self.isVisible():
             self.refresh()
         else:
@@ -460,8 +484,13 @@ class MonstersTab(QWidget):
         u, n = c['slots']
         nu, nn = c['names']
         au, an = c['art']
+        try:
+            ou, oc = self.s.doc.art_capacity()
+        except Exception:                           # noqa: BLE001
+            ou, oc = 0, 0
         self.meters.setText(f'New species: <b>{u} / {n}</b> slots · names {nu} / {nn} bytes '
-                            f'· art {au} / {an} bytes')
+                            f'· art {au} / {an} bytes<br>New art for original monsters: '
+                            f'{ou:,} / {oc:,} bytes')
 
     def select(self, sid):
         for i in range(self.list.count()):
@@ -584,25 +613,53 @@ class MonstersTab(QWidget):
         self._busy = False
 
     def _fill_art(self, sp):
-        is_new = sp['kind'] == 'new'
-        self.pages.setTabEnabled(2, is_new)
-        if not is_new:
+        kind = sp['kind']
+        self.pages.setTabEnabled(2, kind in ('new', 'monster'))
+        if kind == 'combat':
+            # TERRY? and the summons are not monsters (PROJECT_STATE Iron Rule 8):
+            # only their moves and stats change — no art page
             if self.pages.currentIndex() == 2:
                 self.pages.setCurrentIndex(0)
             return
-        e = self.s.doc.new_species(self.sid)
+        is_new = kind == 'new'
+        for wdg in (self.name_box, self.rm_btn, self.recut_btn):
+            wdg.setVisible(is_new)
+        for wdg in (self.orig_btn, self.orig_reset):
+            wdg.setVisible(not is_new)
         self._busy = True
-        self.a_name.setText(e['name'])
-        self.a_short.setText(e.get('short_name', e['name'][:SP.SHORT_MAX]))
-        self.a_desc.setCurrentIndex(self.a_desc.findData(int(e.get('description_from', 0))))
-        self.a_pal.setCurrentIndex(int((e.get('follower') or {}).get('palette', 0)))
-        pal = [int(str(x).replace('$', '0x'), 0) for x in (e.get('battle') or {}).get('palette', [0, 0, 0, 0])]
-        for k, b in enumerate(self.a_sw):
-            b.setStyleSheet(f'background:{QColor(*S.rgb888(pal[k])).name()}; border:1px solid #444')
-        src = e.get('source') or {}
-        self.art_note.setText('Art from ' + (src.get('sheet') or 'a stream file (no sheet recorded)')
-                              + '. The encyclopedia shows the recipe of the first special '
-                              'breeding recipe that makes this species (Breeding).')
+        if is_new:
+            e = self.s.doc.new_species(self.sid)
+            self.a_name.setText(e['name'])
+            self.a_short.setText(e.get('short_name', e['name'][:SP.SHORT_MAX]))
+            self.a_desc.setCurrentIndex(self.a_desc.findData(int(e.get('description_from', 0))))
+            self.a_pal.setCurrentIndex(int((e.get('follower') or {}).get('palette', 0)))
+            pal = [int(str(x).replace('$', '0x'), 0) for x in (e.get('battle') or {}).get('palette', [0, 0, 0, 0])]
+            src = e.get('source') or {}
+            self.art_note.setText('Art from ' + (src.get('sheet') or 'a stream file (no sheet recorded)')
+                                  + '. The encyclopedia shows the recipe of the first special '
+                                  'breeding recipe that makes this species (Breeding).')
+        else:
+            e = self.s.doc.original_art(self.sid)
+            vb, vf = self.s.doc.original_palettes(self.sid)
+            b, f = e.get('battle') or {}, e.get('follower') or {}
+            pal = [int(str(x).replace('$', '0x'), 0) for x in b['palette']] if 'palette' in b else vb
+            self.a_pal.setCurrentIndex(int(f['palette']) if 'palette' in f else vf)
+            src = e.get('source') or {}
+            if 'art' in b or 'art' in f:
+                what = 'New art from ' + (src.get('sheet') or 'stream files') + '.'
+            elif e:
+                what = 'The original art, with your colours.'
+            else:
+                what = 'The original art and colours.'
+            used, cap = self.s.doc.art_capacity()
+            self.art_note.setText(
+                f'{what} New art replaces this monster everywhere the game draws it: battles, '
+                'the menus and the library, and following you in the field (it walks with '
+                'layout 0 — down, side, up). Name changes come later (Monsters part 3). '
+                f'Art space used: {used:,} / {cap:,} bytes (banks $7F, $7C, $7A).')
+            self.orig_reset.setEnabled(bool(e))
+        for k, btn in enumerate(self.a_sw):
+            btn.setStyleSheet(f'background:{QColor(*S.rgb888(pal[k])).name()}; border:1px solid #444')
         self._busy = False
 
     # ================================================================ edits
@@ -731,6 +788,14 @@ class MonstersTab(QWidget):
     def _prop(self, key, value):
         if self._busy:
             return
+        if self.sid <= 214:
+            if key == 'follower_palette':
+                sid = self.sid
+                if self.s.doc.original_art(sid).get('follower', {}).get(
+                        'palette', self.s.doc.original_palettes(sid)[1]) != value:
+                    self._push(f'{self._name()}: walking palette → {value}',
+                               lambda doc: doc.set_original_art_props(sid, follower_palette=value))
+            return
         e = self.s.doc.new_species(self.sid)
         cur = {'name': e['name'], 'short_name': e.get('short_name', e['name'][:SP.SHORT_MAX]),
                'description_from': e.get('description_from'),
@@ -742,6 +807,19 @@ class MonstersTab(QWidget):
                    lambda doc: doc.set_species_props(sid, **{key: value}))
 
     def _battle_colour(self, k):
+        if self.sid <= 214:
+            e = self.s.doc.original_art(self.sid)
+            b = e.get('battle') or {}
+            pal = [int(str(x).replace('$', '0x'), 0) for x in b['palette']] if 'palette' in b \
+                else self.s.doc.original_palettes(self.sid)[0]
+            c = QColorDialog.getColor(QColor(*S.rgb888(pal[k])), self, 'Battle colour')
+            if not c.isValid():
+                return
+            pal[k] = S.rgb555((c.red(), c.green(), c.blue()))
+            sid = self.sid
+            self._push(f'{self._name()}: battle colour', lambda doc: doc.set_original_art_props(
+                sid, battle_palette=pal))
+            return
         e = self.s.doc.new_species(self.sid)
         pal = [int(str(x).replace('$', '0x'), 0) for x in e['battle']['palette']]
         c = QColorDialog.getColor(QColor(*S.rgb888(pal[k])), self, 'Battle colour')
@@ -786,6 +864,25 @@ class MonstersTab(QWidget):
             copy_sheet_into_project(doc.project_dir, r['sheet_abs'], r['source']['sheet'])
             doc.set_species_art(sid, r['art'], source=r['source'])
         self._push(f'{self._name()}: new art', op, assets=assets)
+
+    def _orig_art(self):
+        """S107: new art for an ORIGINAL monster from a sprite sheet."""
+        from editor2.app.sheet_import_dialog import SheetImportDialog, copy_sheet_into_project
+        dlg = SheetImportDialog(self.s.doc, 'original', sid=self.sid, parent=self)
+        if not dlg.exec() or not dlg.result_data:
+            return
+        r = dlg.result_data
+        sid = self.sid
+        assets = self.s.doc.original_art_paths(sid) + [r['source']['sheet']]
+
+        def op(doc):
+            copy_sheet_into_project(doc.project_dir, r['sheet_abs'], r['source']['sheet'])
+            doc.set_original_art(sid, r['art'], source=r['source'])
+        self._push(f'{self._name()}: new art', op, assets=assets)
+
+    def _orig_reset(self):
+        sid = self.sid
+        self._push(f'{self._name()}: original art', lambda doc: doc.reset_original_art(sid))
 
     def _remove(self):
         refs = self.s.doc.species_references(self.sid)

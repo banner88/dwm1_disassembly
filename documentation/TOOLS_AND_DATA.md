@@ -219,8 +219,10 @@ follower path) ·
 extractor. Walks the REAL species-indexed dispatch the engine runs: `$ffc7=species+$10` → bank `$04`
 entry-2 routing → bank `$10`/`$11` `$407f` level-1 table → level-2 frames. Emits BOTH
 `extracted/monster_follower_layouts.json` (species → layout id + addresses + sharing) and a complete
-`extracted/follower_layouts.json` (155 layouts, incl. 3-entry blobs). `--selftest` reproduces the
-Healer/DarkDrium anchors byte-for-byte + asserts 215/215 collectible coverage. Delivered WITH both JSONs) ·
+`extracted/follower_layouts.json` (155 layouts, incl. 3-entry blobs; S107: + stored bytes, per-bank
+instances, bank frames, Y-flip). `--selftest` reproduces the
+Healer/DarkDrium anchors byte-for-byte + asserts 215/215 collectible coverage (S107: + stored bytes /
+instances decode back, JSON == ROM). Delivered WITH both JSONs) ·
 `build_follower_reassign.py` (✅ new Session 25, GFX-4 — follower reassignment primitive + custom-art
 import. `--clone-from SRC` copies a same-bank monster's layout+art+attr (the same-bank constraint is
 enforced: the level-2 pointer is dereferenced with the routed bank mapped). `--art-png PNG
@@ -816,3 +818,40 @@ verified overrides.
 | editor2/app/pool_dialog.py (NEW, S106 r3) + monsters.py `gate_pools` / `pool_slots` / `set_pool_slots` / `new_enemy_for_species` + gamedata.py over-100 % warning; `EDITOR_REVISION` = 'S106r3' | put an enemy row into a gate's encounter list from the Monsters tab | test_compiler (sparse write, < 100 refused, > 100 warns), test_app (GUI put + undo), PyBoy (the user's project: a sheet species met in the Gate of Beginning) |
 | tools/validate_custom_data.py + editor2/core/builder.py (S106 r3) | a missing `data/DWM-original.gbc` is a reported error (was an uncaught exception → an empty "crash-config validation failed" in the editor); the build runs the checker with `sys.executable` and shows stderr | run without / with the ROM; test_app --rom |
 
+## S107 rows (P3.10 part 2a: new art for the original monsters)
+
+| Tool / data | What | Verified |
+|---|---|---|
+| tools/resection_monster_art_tables.py (NEW) | Iron-Rule-6 re-section (probe-build, both trees): the 7 misassembled follower gfx-ID copies → `FollowerGfxTable06/07/09/0B/12/18/59` (mgbdis names kept beside them) and bank $10's `FollowerLayoutL1Table10` / `FollowerAttrTable10`; labels another file references are kept at their byte offsets, the rest dropped and listed. Probes skip lines whose scope uses `.local` labels (a probe is a global label — KEY_LESSONS S107). The patched bank-$0B copy was replaced by hand (its text differs: S14 labels, table at $4914). Produces no extracted/ data | clean `1ca6579…` byte-perfect after every table; patched pin unchanged `f22f56e1…` (patched) |
+| tools/extract_gamedata.py + extracted/gamedata_vanilla.json (regenerated, additive) | 7 new tables: `battle_gfx` (221 × 2), `battle_palettes` (216 × 8), `follower_gfx` (bank $01 species rows, 215 × 2), `follower_layout_10/_11`, `follower_attr_10/_11`; `--selftest` also asserts the eight follower copies are identical for species 0-214 | verify check 5 PASS |
+| editor2/core/art.py (NEW) | `gamedata.art` → `art_*` regions + art banks $7F/$7C/$7A (`resolve` / `place` / `tables` / `usage`, `ANCHORS`, `rows_text`) | test_compiler S107 cases + `--rom` |
+| patches/bank_010.asm (NEW hand patch; PATCH_FILES) + patches/bank_07a/07c/07f.asm (compiler-owned; PATCH_NEW_FILES; `patches/game.asm` includes them) | regions `art_layout_10` / `art_attr_10`; the three art banks (empty = zero) | verifier PASS |
+| patches/bank_000 / 001 / 006 / 007 / 009 / 00b / 011 / 012 / 017 / 018 / 059.asm | the `art_*` region markers (filled with the emitter's vanilla output); bank $00's battle table head ported from the clean tree (8 unreferenced patched-only labels dropped); bank $17 `MonsterBattlePalettes` label added | patched pin unchanged |
+| editor2/core/gamedata.py `SECTIONS` += `art`; validators call `art.place` | | |
+| editor2/core/monsters.py (`original_art / can_reart / original_palettes / original_art_paths / set_original_art / set_original_art_props / reset_original_art / art_capacity`), core/sprite_render.py `original_art`, app/sprite_qt.py (project art first), app/monsters_tab.py (Name & art for originals), app/sheet_import_dialog.py (mode `original`, plain error for an unstorable picture), core/sheet_import.py `literal_stream` (LZ fallback / plain error) | the editor half | test_app (S107 block) |
+| editor2/help/52_monsters.md, 90_limits.md, 00_start.md; `EDITOR_REVISION` = 'S107' | help | test_app |
+
+### S107 2b rows (P3.10 part 2b: walking layouts)
+
+| Tool / data | What | Verified |
+|---|---|---|
+| tools/extract_monster_follower_layouts.py + extracted/follower_layouts.json (regenerated, additive; ids / frames / classification unchanged) | per layout: frame entries gain `yflip`; `instances` = its level-2 tables per follower bank (`"10"` / `"11"`, species 0-214 only); `raw` (the example table's stored frames, hex incl. `$80`) + `share` (frame j = raw[share[j]]); top-level `bank_frames` = every frame address + bytes each bank's species use. Signature now includes the Y-flip bit (count stays 155). `--selftest` also: `raw` decodes to every layout's frames, every instance IS the layout, and the committed JSON files == the ROM (both) | selftest PASS; added to verify_integrity check 5 |
+| extracted/monster_follower_layouts.json | regenerated, byte-identical | selftest |
+| editor2/core/walk_layouts.py (NEW) | the catalogue (`layout`, `entries`, `native_l2`, `users`, `label`), the packer (`pack` / `render` / `error` / `payload`), the ranking (`fit_all`), the copies (`needed` / `copies` / `l2_ref`, regions `lay_copies_10` / `lay_copies_11`, `COPY_START` $10:$7A83 / $11:$799E) | test_compiler S107 2b cases + `--rom` (ROM-decoded layouts) |
+| editor2/core/art.py (`follower.layout`, `l2_for`, label rows in `rows_text`), core/species.py (`follower.layout`, `ns_follower_attr` 1 B, NEW region `ns_follower_layout`), core/emitters.py (`lay_copies_*` registered), core/validators.py (copy room) | the compiler half | test_compiler |
+| patches/bank_011.asm | engine: both follower entries `call FollowerLayoutBase11` (same size); `NewAttrHandler` without the `$C7` write; `NewFollowerAttrTable` 1 B / id; NEW `NewFollowerL1Table` (region `ns_follower_layout`), `FollowerLayoutBase11`; the zero tail = region `lay_copies_11` (`ds $8000 - @`) | pin `9740c1c9…` (patched); MiniSM83 over species 128-239; PyBoy |
+| patches/bank_010.asm | the zero tail ($7A83-$7FFF, 1,405 `nop`s) = region `lay_copies_10` (`ds $8000 - @`, same bytes) | pin |
+| editor2/core/sheet_import.py (`follower_colors` over all six frames, `follower_indexed` / `follower_fit` / `follower_pack`), core/sprite_render.py (entry 0 on top, entry Y-flip, `layout` in previews), core/monsters.py (`layout` stored; the copy room checked before writing), app/sheet_import_dialog.py (Walk style list, "On the sheet" preview, deferred re-ranking) | the editor half | test_app (S107 block) |
+| editor2/tests/test_compiler.py (`test_walk_layouts_s107`, `_layout_sig_rom`, MiniSM83 `ld b,[hl]` / `push af` / `pop af`, pin), test_app.py (picker) | tests | 532 / PASS |
+
+### S107 2c rows (P3.10 part 2c: family icons)
+
+| Tool / data | What | Verified |
+|---|---|---|
+| tools/build_family_icon.py (`--selftest` updated; + `region_db`) | the 10 vanilla glyphs are no longer a full INCBIN: the selftest checks the `gd_family_icons` region of patches/bank_04f.asm == ROM $4F:$4110-$41AF and the `gd_family_icon_streams` region of patches/bank_02e.asm == ROM $2E:$424A-$42F7, plus (as before) the Spirit grid == glyph $41B0 + SpiritIconStream. extracted/family_icons.json unchanged | selftest PASS; verify check 5 |
+| patches/bank_02e.asm (NEW hand patch; PATCH_FILES) | = disassembly/bank_02e.asm + region `gd_family_icon_streams` over streams 3-12 | verifier PASS |
+| patches/bank_04f.asm (region `gd_family_icons` replaces the INCBIN + the Spirit db line), patches/bank_06d.asm (region `gd_spirit_icon_stream`) | the icon regions (empty = the same bytes) | pin |
+| patches/bank_007.asm / bank_00a.asm | same-size forks of the saved-party icon readers (JOURNAL $07, twin $0A) to bank $6D FamilyIconGfxFromE | pin `77ccdab8…` (patched); PyBoy |
+| disassembly/ + patches/ bank_007 (`SavedPartyFamilyIconTable07`, `Fld_62bf`), bank_00a (`SavedPartyFamilyIconTable0A`, `FldA_6027`), disassembly bank_02e (stream 3-12 comments) | Iron-Rule-6 re-section of data decoded as code (labels / comments only) | clean `1ca6579…` byte-perfect; patched unchanged before the forks |
+| editor2/core/gamedata.py (`icons`, `icon_grid` / `icon_rows` / `icon_tile` / `icon_stream`, `vanilla_icons`, emitters `emit_family_icon_glyphs` / `_streams` / `emit_spirit_icon_stream`), core/emitters.py (3 regions), core/families.py (`family_icon(_grids)` / `vanilla_family_icon` / `set_family_icon`), app/families_tab.py (Icon group, `IconCanvas`, `png_to_grid`, scrolling column) | compiler + editor | test_compiler `test_family_icons_s107` + `--rom`; test_app (S107 icon block) |
+| editor2/help/55_game_data.md, 00_start.md | help | test_app |

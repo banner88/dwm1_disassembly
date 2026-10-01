@@ -1132,6 +1132,15 @@ REGISTRY = [
      "region:patches/bank_06d.asm#gd_family_voices", _gd('emit_family_voices'), [0x6D]),
     ("gd_spirit_names", "gamedata.families.spirit.names",
      "region:patches/bank_041.asm#gd_spirit_names", _gd('emit_spirit_names'), [0x41]),
+    # S107 (P3.10 part 2c): the family icons — one 8x8 picture per family into
+    # every copy: the font glyphs (bank $4F), families 0-9's gfx streams (bank
+    # $2E, NEW hand patch) and Spirit's stream (bank $6D)
+    ("gd_family_icons", "gamedata.families.icon",
+     "region:patches/bank_04f.asm#gd_family_icons", _gd('emit_family_icon_glyphs'), [0x4F]),
+    ("gd_family_icon_streams", "gamedata.families.icon",
+     "region:patches/bank_02e.asm#gd_family_icon_streams", _gd('emit_family_icon_streams'), [0x2E]),
+    ("gd_spirit_icon_stream", "gamedata.families.icon",
+     "region:patches/bank_06d.asm#gd_spirit_icon_stream", _gd('emit_spirit_icon_stream'), [0x6D]),
     # S105 (P3.9b): NEW species are project data (editor2/core/species.py,
     # PROJECT_COMPILER §2.21) — bank $7E art streams + the ns_* regions the
     # new-species forks read; empty custom.species == the original ROM bytes.
@@ -1147,3 +1156,22 @@ def _species_regions():
 
 
 REGISTRY += _species_regions()
+
+
+def _art_regions():
+    # S107 (P3.10 part 2a): new art for the ORIGINAL monsters (gamedata.art,
+    # editor2/core/art.py, PROJECT_COMPILER §2.23) — the battle / walking
+    # tables as regions + the three art banks; empty == the original bytes.
+    # S107 2b: + the walking layouts copied into each follower bank's free
+    # tail (editor2/core/walk_layouts.py; gamedata.art + custom.species)
+    from . import art as A
+    from . import walk_layouts as WL
+    return ([(name, "gamedata.art", f"region:{path}#{name}", fn, [bank])
+             for name, path, fn, bank in A.REGIONS]
+            + [(name, "gamedata.art", f"file:{path}", fn, [bank])
+               for name, path, fn, bank in A.FILES]
+            + [(name, "gamedata.art", f"region:{path}#{name}", fn, [bank])
+               for name, path, fn, bank in WL.REGIONS])
+
+
+REGISTRY += _art_regions()

@@ -1339,14 +1339,81 @@ recipes are pure authoring.
         P3.15 (user OK'd); (e) a species' natural skills are learned on level-up
         (a joining monster brings none — measured), so the in-game check of a
         natural-skill edit needs a level-up.
-  - [ ] **P3.10 part 2 — art of the ORIGINAL species** as project data: battle
-        art + palette (ROM0 `MonsterBattleGfxTable` [0-220] + `$17`
-        `MonsterBattlePalettes` regions, streams in a spare bank — $7F reserved),
-        walking art (the 8 follower gfx-id tables) + layout + palette / flip
-        (`$10:$417F` / `FollowerAttrTable11`), cross-half layout borrowing
-        (bank $10 species can only point at bank-$10 layouts today — a fork like
-        S105's `NewAttrHandler` lifts it), the sheet dialog for them, the
-        4-direction visualizer over the 155 layouts, G-P.
+  - [x] **P3.10 part 2 — art of the ORIGINAL species** — **split S107; 2a + 2b + 2c
+        USER-CONFIRMED 2026-10-01** (user
+        2026-10-01 15:52: "lets start with 2a and see how we go"; "I probably WONT
+        edit more than 50 monsters"; 215-220 "ARE NOT MONSTERS … DO NOT MESS WITH
+        THEM beyond giving the ability to change their moves and stats" → Iron
+        Rule 8).
+    - [x] **2a — re-art an original monster from a sprite sheet** — **built S107,
+          USER-CONFIRMED 2026-10-01** ("great job, can confirm"; test ROM
+          `DWM_S107_art_demo.gbc`, patched `bdc408a8…`) with one note: a re-arted
+          monster's library parent icon stood STILL where vanilla MOVES (layout 0
+          = pure mirror, no bob — fixed by 2b's layout choice). As built (PROJECT_COMPILER §2.23, MONSTER_DATA "New art for
+          ORIGINAL species", EDITOR_DESIGN §5.2 "As built S107"): `gamedata.art`
+          (0-214) → regions over the ROM0 battle gfx table, the $17 battle
+          palettes, the EIGHT walking gfx-ID copies (identical rows, all written),
+          the bank $10 / $11 layout + attr tables (new walking art → the bank's own
+          layout 0: Dragon `$10:$4E33` / Armorpion `$11:$4184`) + compiler-owned art
+          banks $7F/$7C/$7A (49,149 B; 50 re-arted monsters fit, test-proven).
+          Annotation (Iron Rule 6): the 7 misassembled walking tables and bank
+          $10's layout / attr tables re-sectioned in both trees
+          (`tools/resection_monster_art_tables.py`), the patched battle table head
+          ported from the clean tree; pin unchanged `f22f56e1…` (patched). Editor:
+          Name & art page for originals (sheet dialog mode `original`, colours-only
+          edits, back to original, art meter). *Accept MET (machine half):*
+          test_compiler --rom 507 (empty == ROM per region, the eight copies at
+          their sym addresses, gfx-IDs resolve), test_app (dialog → art → undo),
+          PyBoy on the user's save (followers' VRAM + OAM palettes, menu / INFO /
+          library poses, a lineage parent icon (bank $12 copy), a wild re-arted
+          Slime in battle + joining, a colours-only Dracky). *User half:* the demo
+          ROM. Residuals: (a) a picture whose 2bpp bytes use all 256 values cannot
+          be stored (no run-marker escape in the format) — the dialog says so
+          (`sheet_import.literal_stream`); (b) the art files of a reset monster
+          stay in `assets/art/` (like a removed species' files).
+    - [x] **2b — walking LAYOUTS** — **built S107, USER-CONFIRMED 2026-10-01 17:26**
+          ("Can confirm everything works correctly"; test ROM
+          `DWM_S107b_walk_layouts_demo.gbc`, patched `f5bf7c12…`; pin
+          `9740c1c9…`). As built (PROJECT_COMPILER §2.23 "Walking layouts",
+          MONSTER_DATA "Walking layouts as project data", EDITOR_DESIGN §5.2):
+          `editor2/core/walk_layouts.py` — a packer that fits the sheet's six
+          frames to any of the 155 layouts (incl. the tile-sharing ones; exact for
+          all 44 original monsters whose layout fits the 16×16 frame) and ranks
+          all 155 by differing pixels; `follower.layout` in `gamedata.art` and
+          `custom.species`; layouts the follower bank lacks are copied into its
+          zero tail (`lay_copies_10` 1,405 B / `lay_copies_11` 1,634 B; only the
+          frames the bank lacks, median 63 / 80 B); new species walk with ANY
+          layout (bank $11 engine: `FollowerLayoutBase11` + `NewFollowerL1Table`;
+          the S105 donor write is gone). Sheet dialog: "Walk style" list (best fit
+          preselected, px off, "its own" / "copied into bank $xx"), the sheet's own
+          frames walking beside the game's. *Accept MET (machine half):*
+          test_compiler --rom 532 (ROM-decoded layouts through every level-1
+          entry, MiniSM83 runs the new routine), test_app (picker), PyBoy on the
+          user's save (the MadPlant parent icon on the Healer page now alternates
+          two poses; Slime in bank $10 copy, Klamutra in a bank $11 copy: every
+          follower OAM sample == its layout frames, all eight facings). *User
+          half:* the demo ROM. Residual: the S24 "4-direction picker over the 155"
+          is the dialog's list + live preview (layouts are always packed from a
+          sheet — choosing a layout for the ORIGINAL art cannot work, the art is
+          packed for its own).
+    - [x] **2c — family-icon editor (G-P)** — **built S107, USER-CONFIRMED 2026-10-01 18:37 ("Great, can confirm works")**
+          (test ROM `DWM_S107c_family_icons_demo.gbc`, patched `a4bbceaf…`; pin
+          `77ccdab8…`). As built (BREEDING_SYSTEM "Family icons as project data",
+          PROJECT_COMPILER §2.20 `families.<f>.icon`, EDITOR_DESIGN §5.2a):
+          `gamedata.families.<f>.icon` (8 × 8, shades 0-3) → the font glyph
+          (`gd_family_icons`, bank $4F) AND the gfx stream (`gd_family_icon_streams`,
+          bank $2E — NEW hand patch; `gd_spirit_icon_stream`, bank $6D); Families
+          tab: pixel editor (left paints, right picks), PNG import, previews in the
+          INFO-page and continue-box colours (measured), back to original. Found +
+          fixed: two unclamped saved-party icon tables S104 missed ($07:$62AB =
+          the JOURNAL screen, $0A:$6013) — a saved Spirit party member stalled the
+          JOURNAL (PyBoy); same-size forks to bank $6D FamilyIconGfxFromE; tables
+          re-sectioned in both trees. *Accept MET (machine half):* test_compiler
+          --rom 544, test_app (editor), PyBoy (continue box, field status bar, INFO
+          page show the demo's heart / star; JOURNAL with a Spirit member shows the
+          wisp, stub calls of both routines return). *User half:* MET (the demo ROM).
+          (The white-vs-cream background defect of G-P is RESOLVED — user S106 r2
+          "background colour is perfect".)
   - [ ] **P3.10 part 3 — renaming original species + descriptions** (bank $41
         names: same length or shorter in place; longer needs space — audit
         first; bank $4D descriptions).

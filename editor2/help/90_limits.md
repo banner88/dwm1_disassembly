@@ -9,11 +9,19 @@
 - Gate floor-type rows, per-gate monster pools / floor bands, battles inside
   a dive per room, more than 32 gates and gate entrances are not editable
   yet (ROADMAP P3.7b part 2).
-- Original monsters cannot be renamed or given new art yet (Monsters tab
-  part 2); their species data and battle rows can be changed. New monsters
-  walk like Armorpion (4 stored frames) and use one of the game's 8 shared
-  walking palettes; their battle picture has 2 free colours plus black and
-  the cream (which also draws white parts).
+- Original monsters cannot be renamed yet (Monsters tab part 3). They can
+  get new art (S107): new art walks in one of the game's 155 walk styles
+  (picked to fit the sheet's six frames; the original art keeps its own) and
+  uses one of the game's 8 shared walking palettes. A walk style the game
+  keeps only for monsters of the other half (0-127 / 128 and up, plus your
+  new species) is copied — about 60-80 bytes each of a 1.4 KB / 1.6 KB
+  reserve, so roughly 20 different copied styles per half; a battle picture has 2 free
+  colours plus black and the cream (which also draws white parts). The art
+  of re-drawn original monsters shares three banks (about 49 KB): about 58
+  monsters with new battle AND walking art fit.
+- TERRY? and the summons (Tatsu, Diago, Samsi, Bazoo, the empty slot) are
+  not monsters: only their moves and stats can change — no art, name or
+  family.
 - At most 19 new monsters per project, ids 221-239 (240+ collide with the
   breeding family codes and the library / walking limits). Their names and
   4-letter short names share about 290 bytes of text space: 19 names of 8

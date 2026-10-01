@@ -16,7 +16,7 @@
   },
   "project": "/home/claude/dwm1_disassembly/editor2/example-project",
   "project_sha256": "aa64ceecdeb432d1de875a7080da9a108041dc49d847c09ec2a139734d6f80c7",
-  "rom_md5": "f22f56e116bc6b3f6b94e7d45a7e5f1e",
+  "rom_md5": "77ccdab8a746fdc25fcad8d1239c84e4",
   "scripts": {
     "CustomRoom0_Scr00": "60:42a8",
     "CustomRoom0_Scr01": "60:42b0",

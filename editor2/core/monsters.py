@@ -286,6 +286,11 @@ class MonstersMixin:
         prj = self._project(data)
         prj.gamedata()
         SP.resolve(prj, with_art=False)
+        from editor2.core import walk_layouts as WL
+        try:                               # S107 2b: layouts copied into a bank's tail
+            WL.copies(WL.needed(prj), getattr(prj, 'repo_root', None))
+        except WL.LayoutError as ex:
+            raise SP.SpeciesError(str(ex))
         self.data.clear()
         self.data.update(data)
         self.touch()
@@ -438,7 +443,8 @@ class MonstersMixin:
 
     def add_species(self, sid, name, short_name, clone_from, family, art, source=None):
         """A new species: `art` = {'battle': stream, 'battle_palette': [4 RGB555],
-        'follower': stream, 'follower_palette': 0-7, 'walks_like': 128-214}.
+        'follower': stream, 'follower_palette': 0-7, and 'layout': 0-154 (S107
+        2b: the walk style the stream is packed for) or 'walks_like': 128-214}.
         Writes the two streams into assets/species/ and the custom.species
         entry. Returns the asset paths written."""
         sid = int(sid)
@@ -455,8 +461,11 @@ class MonstersMixin:
         entry['info'] = info
         entry['description_from'] = int(clone_from) if int(clone_from) <= SP.DESC_MAX else 0
         entry['battle'] = {'art': bp, 'palette': [f'${w:04X}' for w in art['battle_palette']]}
-        entry['follower'] = {'art': fp, 'walks_like': int(art.get('walks_like', SP.DONOR_MIN)),
-                             'palette': int(art['follower_palette'])}
+        entry['follower'] = {'art': fp, 'palette': int(art['follower_palette'])}
+        if art.get('layout') is not None:
+            entry['follower']['layout'] = int(art['layout'])
+        else:
+            entry['follower']['walks_like'] = int(art.get('walks_like', SP.DONOR_MIN))
         if source:
             entry['source'] = source
         data = copy.deepcopy(self.data)
@@ -478,9 +487,13 @@ class MonstersMixin:
                 fp = (e.get('follower') or {}).get('art') or self._asset_paths(sid, s['name'])[1]
                 e.setdefault('battle', {}).update(
                     {'art': bp, 'palette': [f'${w:04X}' for w in art['battle_palette']]})
-                e.setdefault('follower', {}).update(
-                    {'art': fp, 'palette': int(art['follower_palette']),
-                     'walks_like': int(art.get('walks_like', e['follower'].get('walks_like', SP.DONOR_MIN)))})
+                fo = e.setdefault('follower', {})
+                fo.update({'art': fp, 'palette': int(art['follower_palette'])})
+                if art.get('layout') is not None:        # S107 2b
+                    fo['layout'] = int(art['layout'])
+                    fo.pop('walks_like', None)
+                elif 'layout' not in fo:
+                    fo['walks_like'] = int(art.get('walks_like', fo.get('walks_like', SP.DONOR_MIN)))
                 if source:
                     e['source'] = source
                 self._write_asset(bp, art['battle'])
@@ -506,6 +519,7 @@ class MonstersMixin:
                     e['description_from'] = int(v)
                 elif k == 'walks_like':
                     e.setdefault('follower', {})['walks_like'] = int(v)
+                    e['follower'].pop('layout', None)
                 elif k == 'follower_palette':
                     e.setdefault('follower', {})['palette'] = int(v)
                 elif k == 'battle_palette':
@@ -521,6 +535,115 @@ class MonstersMixin:
                 else:
                     raise KeyError(k)
         self._commit_data(data)
+
+    # ------------------------------------------------------------ original art
+    # S107 (P3.10 part 2a): new art for the ORIGINAL monsters 0-214 =
+    # gamedata.art (editor2/core/art.py, PROJECT_COMPILER §2.23). 215-220 are
+    # TERRY? and the summons — never re-arted (PROJECT_STATE Iron Rule 8).
+    def original_art(self, sid):
+        """The project's gamedata.art entry of original species `sid` ({} = the
+        original art and colours)."""
+        return dict(((self.data.get('gamedata') or {}).get('art') or {}).get(str(int(sid))) or {})
+
+    def can_reart(self, sid):
+        from editor2.core import art as A
+        return int(sid) in A.ART_IDS
+
+    def original_palettes(self, sid):
+        """The original game's ([4 RGB555] battle colours, OBJ palette 0-7)."""
+        from editor2.core import art as A
+        v = A._vanilla(self._project())
+        p = v['battle_pal'][sid]
+        bank, i = A.follower_bank(sid)
+        return [p[2 * k] | p[2 * k + 1] << 8 for k in range(4)], v['attr'][bank][i] & 7
+
+    def _art_paths(self, sid):
+        from editor2.core.gamedata import monster_names
+        name = monster_names(REPO).get(sid, f'species{sid}')
+        slug = re.sub(r'[^a-z0-9]+', '_', name.lower()).strip('_') or f'species{sid}'
+        return (f'assets/art/{sid:03d}_{slug}_battle.bin',
+                f'assets/art/{sid:03d}_{slug}_follower.bin')
+
+    def original_art_paths(self, sid):
+        """Where set_original_art writes (the undo command's asset snapshot)."""
+        return list(self._art_paths(int(sid)))
+
+    def _put_art(self, sid, entry):
+        from editor2.core import art as A
+        sid = int(sid)
+        if sid not in A.ART_IDS:
+            raise A.ArtError(f'species {sid}: only the original monsters 0-214 get new art '
+                             '(215-220 = TERRY? and the summons; 221+ = your new species)')
+        data = copy.deepcopy(self.data)
+        gd = data.setdefault('gamedata', {})
+        sec = gd.setdefault('art', {})
+        clean = {k: v for k, v in entry.items() if v}
+        if clean:
+            sec[str(sid)] = clean
+        else:
+            sec.pop(str(sid), None)
+        if not sec:
+            gd.pop('art', None)
+        prj = self._project(data)
+        A.place(prj)                       # validates: files, ids, the art banks' room
+        from editor2.core import walk_layouts as WL
+        try:                               # S107 2b: the layout copies' room
+            WL.copies(WL.needed(prj), getattr(prj, 'repo_root', None))
+        except WL.LayoutError as ex:
+            raise A.ArtError(str(ex))
+        self._commit_data(data)
+
+    def set_original_art(self, sid, art, source=None):
+        """Re-art original monster `sid` from a sheet cut: `art` = {'battle':
+        stream, 'battle_palette': [4 RGB555], 'follower': stream,
+        'follower_palette': 0-7, 'layout': 0-154} (the sheet dialog's result;
+        `layout` = the walk style the walking stream is packed for, S107 2b —
+        absent = layout 0, the 2a packing). Writes
+        assets/art/<sid>_<name>_{battle,follower}.bin."""
+        sid = int(sid)
+        bp, fp = self._art_paths(sid)
+        e = self.original_art(sid)
+        e['battle'] = {'art': bp, 'palette': [f'${int(w):04X}' for w in art['battle_palette']]}
+        e['follower'] = {'art': fp, 'palette': int(art['follower_palette'])}
+        if art.get('layout') is not None:
+            e['follower']['layout'] = int(art['layout'])
+        if source:
+            e['source'] = source
+        self._write_asset(bp, art['battle'])
+        self._write_asset(fp, art['follower'])
+        self._put_art(sid, e)
+
+    def set_original_art_props(self, sid, battle_palette=None, follower_palette=None):
+        """Colours only (keeps whichever art the species has). A value equal
+        to the original game's, on original art, is dropped."""
+        sid = int(sid)
+        e = self.original_art(sid)
+        vb, vf = self.original_palettes(sid)
+        if battle_palette is not None:
+            b = dict(e.get('battle') or {})
+            if 'art' not in b and [int(x) for x in battle_palette] == vb:
+                b.pop('palette', None)
+            else:
+                b['palette'] = [f'${int(w):04X}' for w in battle_palette]
+            e['battle'] = b
+        if follower_palette is not None:
+            f = dict(e.get('follower') or {})
+            if 'art' not in f and int(follower_palette) == vf:
+                f.pop('palette', None)
+            else:
+                f['palette'] = int(follower_palette)
+            e['follower'] = f
+        self._put_art(sid, e)
+
+    def reset_original_art(self, sid):
+        """Back to the original game's art and colours (the asset files stay
+        in the project folder)."""
+        self._put_art(sid, {})
+
+    def art_capacity(self):
+        """(bytes used, capacity) of the art banks $7F/$7C/$7A."""
+        from editor2.core import art as A
+        return A.usage(self._project())
 
     def species_references(self, sid):
         """Where the project uses species `sid` (so removing it is safe only

@@ -515,468 +515,232 @@ jr_059_435d:
     ret
 
 
-SaveSlotPtrTable:
-    ld bc, $022f
-    cpl
-    inc bc
-    cpl
-    inc b
-    cpl
-    dec b
-    cpl
-    ld b, $2f
-    rlca
-    cpl
-    ld [$092f], sp
-    cpl
-    ld a, [bc]
-    cpl
-    dec bc
-    cpl
-    inc c
-    cpl
-    dec c
-    cpl
-    ld c, $2f
-    rrca
-    cpl
-    db $10
-    cpl
-    nop
-    jr c, @+$03
-
-    jr c, jr_059_438a
-
-    jr c, @+$05
-
-jr_059_438a:
-    jr c, jr_059_4390
-
-    jr c, @+$07
-
-    jr c, jr_059_4396
-
-jr_059_4390:
-    jr c, @+$09
-
-    jr c, jr_059_439c
-
-    jr c, @+$0b
-
-jr_059_4396:
-    jr c, jr_059_43a2
-
-    jr c, @+$0d
-
-    jr c, jr_059_43a8
-
-jr_059_439c:
-    jr c, @+$0f
-
-    jr c, jr_059_43ae
-
-    jr c, @+$11
-
-jr_059_43a2:
-    jr c, jr_059_43b4
-
-    jr c, @+$13
-
-    jr c, jr_059_43ba
-
-jr_059_43a8:
-    jr c, @+$15
-
-    jr c, jr_059_43c0
-
-    jr c, @+$17
-
-jr_059_43ae:
-    jr c, jr_059_43c6
-
-    jr c, @+$19
-
-    jr c, jr_059_43cc
-
-jr_059_43b4:
-    jr c, @+$1b
-
-    jr c, jr_059_43d2
-
-    jr c, @+$1d
-
-jr_059_43ba:
-    jr c, jr_059_43d8
-
-    jr c, @+$1f
-
-    jr c, jr_059_43de
-
-jr_059_43c0:
-    jr c, @+$21
-
-    jr c, jr_059_43e4
-
-    jr c, @+$23
-
-jr_059_43c6:
-    jr c, jr_059_43ea
-
-    jr c, @+$25
-
-    jr c, jr_059_43f0
-
-jr_059_43cc:
-    jr c, @+$27
-
-    jr c, jr_059_43f6
-
-    jr c, @+$29
-
-jr_059_43d2:
-    jr c, jr_059_43fc
-
-    jr c, @+$2b
-
-    jr c, jr_059_4402
-
-jr_059_43d8:
-    jr c, @+$2d
-
-    jr c, jr_059_4408
-
-    jr c, @+$2f
-
-jr_059_43de:
-    jr c, jr_059_440e
-
-    jr c, @+$31
-
-    jr c, jr_059_4414
-
-jr_059_43e4:
-    jr c, @+$33
-
-    jr c, jr_059_441a
-
-    jr c, jr_059_441d
-
-jr_059_43ea:
-    jr c, @+$36
-
-    jr c, jr_059_4423
-
-    jr c, jr_059_4426
-
-jr_059_43f0:
-    jr c, jr_059_4429
-
-    jr c, jr_059_442c
-
-    jr c, jr_059_442f
-
-jr_059_43f6:
-    jr c, jr_059_4432
-
-    jr c, jr_059_4435
-
-    jr c, jr_059_4438
-
-jr_059_43fc:
-    jr c, jr_059_443b
-
-    jr c, jr_059_443e
-
-    jr c, jr_059_4441
-
-jr_059_4402:
-    jr c, @+$42
-
-    jr c, jr_059_4447
-
-    jr c, jr_059_444a
-
-jr_059_4408:
-    jr c, jr_059_444d
-
-    jr c, @+$46
-
-    jr c, jr_059_4453
-
-jr_059_440e:
-    jr c, @+$48
-
-    jr c, jr_059_4459
-
-    jr c, jr_059_4414
-
-jr_059_4414:
-    add hl, sp
-    ld bc, $0239
-    add hl, sp
-    inc bc
-
-jr_059_441a:
-    add hl, sp
-    inc b
-    add hl, sp
-
-jr_059_441d:
-    dec b
-    add hl, sp
-    ld b, $39
-    rlca
-    add hl, sp
-
-jr_059_4423:
-    ld [$0939], sp
-
-jr_059_4426:
-    add hl, sp
-    ld a, [bc]
-    add hl, sp
-
-jr_059_4429:
-    dec bc
-    add hl, sp
-    inc c
-
-jr_059_442c:
-    add hl, sp
-    dec c
-    add hl, sp
-
-jr_059_442f:
-    ld c, $39
-    rrca
-
-jr_059_4432:
-    add hl, sp
-    db $10
-    add hl, sp
-
-jr_059_4435:
-    ld de, $1239
-
-jr_059_4438:
-    add hl, sp
-    inc de
-    add hl, sp
-
-jr_059_443b:
-    inc d
-    add hl, sp
-    dec d
-
-jr_059_443e:
-    add hl, sp
-    ld d, $39
-
-jr_059_4441:
-    rla
-    add hl, sp
-    jr jr_059_447e
-
-    add hl, de
-    add hl, sp
-
-jr_059_4447:
-    ld a, [de]
-    add hl, sp
-    dec de
-
-jr_059_444a:
-    add hl, sp
-    inc e
-    add hl, sp
-
-jr_059_444d:
-    dec e
-    add hl, sp
-    ld e, $39
-    rra
-    add hl, sp
-
-jr_059_4453:
-    jr nz, jr_059_448e
-
-    ld hl, $2239
-    add hl, sp
-
-jr_059_4459:
-    inc hl
-    add hl, sp
-    inc h
-    add hl, sp
-    dec h
-    add hl, sp
-    ld h, $39
-    daa
-    add hl, sp
-    jr z, jr_059_449e
-
-    add hl, hl
-    add hl, sp
-    ld a, [hl+]
-    add hl, sp
-    dec hl
-    add hl, sp
-    inc l
-    add hl, sp
-    dec l
-    add hl, sp
-    ld l, $39
-    cpl
-    add hl, sp
-    jr nc, jr_059_44ae
-
-    ld sp, $3239
-    add hl, sp
-    inc sp
-    add hl, sp
-    inc [hl]
-    add hl, sp
-    dec [hl]
-
-jr_059_447e:
-    add hl, sp
-    ld [hl], $39
-    scf
-    add hl, sp
-    jr c, jr_059_44be
-
-    add hl, sp
-    add hl, sp
-    ld a, [hl-]
-    add hl, sp
-    dec sp
-    add hl, sp
-    inc a
-    add hl, sp
-    dec a
-
-jr_059_448e:
-    add hl, sp
-    ld a, $39
-    ccf
-    add hl, sp
-    ld b, b
-    add hl, sp
-    ld b, c
-    add hl, sp
-    ld b, d
-    add hl, sp
-    ld b, e
-    add hl, sp
-    ld b, h
-    add hl, sp
-    ld b, l
-
-jr_059_449e:
-    add hl, sp
-    ld b, [hl]
-    add hl, sp
-    ld b, a
-    add hl, sp
-    nop
-    ld a, [hl-]
-    ld bc, $023a
-    ld a, [hl-]
-    inc bc
-    ld a, [hl-]
-    inc b
-    ld a, [hl-]
-    dec b
-
-jr_059_44ae:
-    ld a, [hl-]
-    ld b, $3a
-    rlca
-    ld a, [hl-]
-    ld [$093a], sp
-    ld a, [hl-]
-    ld a, [bc]
-    ld a, [hl-]
-    dec bc
-    ld a, [hl-]
-    inc c
-    ld a, [hl-]
-    dec c
-
-jr_059_44be:
-    ld a, [hl-]
-    ld c, $3a
-    rrca
-    ld a, [hl-]
-    db $10
-    ld a, [hl-]
-    ld de, $123a
-    ld a, [hl-]
-    inc de
-    ld a, [hl-]
-    inc d
-    ld a, [hl-]
-    dec d
-    ld a, [hl-]
-    ld d, $3a
-    rla
-    ld a, [hl-]
-    jr jr_059_450f
-
-    add hl, de
-    ld a, [hl-]
-    ld a, [de]
-    ld a, [hl-]
-    dec de
-    ld a, [hl-]
-    inc e
-    ld a, [hl-]
-    dec e
-    ld a, [hl-]
-    ld e, $3a
-    rra
-    ld a, [hl-]
-    jr nz, jr_059_451f
-
-    ld hl, $223a
-    ld a, [hl-]
-    inc hl
-    ld a, [hl-]
-    inc h
-    ld a, [hl-]
-    dec h
-    ld a, [hl-]
-    ld h, $3a
-    daa
-    ld a, [hl-]
-    jr z, jr_059_452f
-
-    add hl, hl
-    ld a, [hl-]
-    ld a, [hl+]
-    ld a, [hl-]
-    dec hl
-    ld a, [hl-]
-    inc l
-    ld a, [hl-]
-    dec l
-    ld a, [hl-]
-    ld l, $3a
-    cpl
-    ld a, [hl-]
-    jr nc, jr_059_453f
-
-    ld sp, $323a
-    ld a, [hl-]
-    inc sp
-    ld a, [hl-]
-    inc [hl]
-    ld a, [hl-]
-    dec [hl]
-    ld a, [hl-]
-
-jr_059_450f:
-    ld [hl], $3a
+FollowerGfxTable59:
+SaveSlotPtrTable:   ; (mgbdis name, kept: referenced by the readers / patches)
+    ; FOLLOWER (walking) gfx-ID table — one of the EIGHT per-screen copies
+    ; (MONSTER_DATA 'Follower-art table has EIGHT copies'; bank $01's
+    ; ScreenTransDataTable is the overworld one). Read by the battle-side party list $42CA (raw species).
+    ; Index = species -> gfx-ID (bank<<8 | index) -> $<bank>:$4001 + index*2.
+    ; 215 words: species 0-214; ids 215+ read past the end (never followers).
+    ; A re-arted species writes the SAME new gfx-ID into all eight copies
+    ; (S107: compiler region art_walk_59, gamedata.art).
+    ; Re-sectioned S107 (tools/resection_monster_art_tables.py), byte-identical.
+    dw $2f01   ; [  0] species 0 DrakSlime
+    dw $2f02   ; [  1] species 1 SpotSlime
+    dw $2f03   ; [  2] species 2 WingSlime
+    dw $2f04   ; [  3] species 3 TreeSlime
+    dw $2f05   ; [  4] species 4 Snaily
+    dw $2f06   ; [  5] species 5 SlimeNite
+    dw $2f07   ; [  6] species 6 Babble
+    dw $2f08   ; [  7] species 7 BoxSlime
+    dw $2f09   ; [  8] species 8 Slime
+    dw $2f0a   ; [  9] species 9 Healer
+    dw $2f0b   ; [ 10] species 10 FangSlime
+    dw $2f0c   ; [ 11] species 11 RockSlime
+    dw $2f0d   ; [ 12] species 12 SlimeBorg
+    dw $2f0e   ; [ 13] species 13 Slabbit
+    dw $2f0f   ; [ 14] species 14 SpotKing
+    dw $2f10   ; [ 15] species 15 KingSlime
+    dw $3800   ; [ 16] species 16 Metaly
+    dw $3801   ; [ 17] species 17 Metabble
+    dw $3802   ; [ 18] species 18 MetalKing
+    dw $3803   ; [ 19] species 19 GoldSlime
+    dw $3804   ; [ 20] species 20 DragonKid
+    dw $3805   ; [ 21] species 21 Tortragon
+    dw $3806   ; [ 22] species 22 Pteranod
+    dw $3807   ; [ 23] species 23 Gasgon
+    dw $3808   ; [ 24] species 24 FairyDrak
+    dw $3809   ; [ 25] species 25 LizardMan
+    dw $380a   ; [ 26] species 26 Poisongon
+    dw $380b   ; [ 27] species 27 Swordgon
+    dw $380c   ; [ 28] species 28 Dragon
+    dw $380d   ; [ 29] species 29 MiniDrak
+    dw $380e   ; [ 30] species 30 MadDragon
+    dw $380f   ; [ 31] species 31 Rayburn
+    dw $3810   ; [ 32] species 32 Chamelgon
+    dw $3811   ; [ 33] species 33 LizardFly
+    dw $3812   ; [ 34] species 34 Andreal
+    dw $3813   ; [ 35] species 35 KingCobra
+    dw $3814   ; [ 36] species 36 Spikerous
+    dw $3815   ; [ 37] species 37 GreatDrak
+    dw $3816   ; [ 38] species 38 Crestpent
+    dw $3817   ; [ 39] species 39 WingSnake
+    dw $3818   ; [ 40] species 40 Coatol
+    dw $3819   ; [ 41] species 41 Orochi
+    dw $381a   ; [ 42] species 42 BattleRex
+    dw $381b   ; [ 43] species 43 SkyDragon
+    dw $381c   ; [ 44] species 44 Divinegon
+    dw $381d   ; [ 45] species 45 Tonguella
+    dw $381e   ; [ 46] species 46 Almiraj
+    dw $381f   ; [ 47] species 47 CatFly
+    dw $3820   ; [ 48] species 48 PillowRat
+    dw $3821   ; [ 49] species 49 Saccer
+    dw $3822   ; [ 50] species 50 GulpBeast
+    dw $3823   ; [ 51] species 51 Skullroo
+    dw $3824   ; [ 52] species 52 WindBeast
+    dw $3825   ; [ 53] species 53 Anteater
+    dw $3826   ; [ 54] species 54 SuperTen
+    dw $3827   ; [ 55] species 55 IronTurt
+    dw $3828   ; [ 56] species 56 Mommonja
+    dw $3829   ; [ 57] species 57 HammerMan
+    dw $382a   ; [ 58] species 58 Grizzly
+    dw $382b   ; [ 59] species 59 Yeti
+    dw $382c   ; [ 60] species 60 MadGopher
+    dw $382d   ; [ 61] species 61 FairyRat
+    dw $382e   ; [ 62] species 62 Unicorn
+    dw $382f   ; [ 63] species 63 Goategon
+    dw $3830   ; [ 64] species 64 WildApe
+    dw $3831   ; [ 65] species 65 Trumpeter
+    dw $3832   ; [ 66] species 66 KingLeo
+    dw $3833   ; [ 67] species 67 DarkHorn
+    dw $3834   ; [ 68] species 68 MadCat
+    dw $3835   ; [ 69] species 69 BigEye
+    dw $3836   ; [ 70] species 70 Picky
+    dw $3837   ; [ 71] species 71 Wyvern
+    dw $3838   ; [ 72] species 72 BullBird
+    dw $3839   ; [ 73] species 73 Florajay
+    dw $383a   ; [ 74] species 74 DuckKite
+    dw $383b   ; [ 75] species 75 MadPecker
+    dw $383c   ; [ 76] species 76 MadRaven
+    dw $383d   ; [ 77] species 77 MistyWing
+    dw $383e   ; [ 78] species 78 Dracky
+    dw $383f   ; [ 79] species 79 BigRoost
+    dw $3840   ; [ 80] species 80 StubBird
+    dw $3841   ; [ 81] species 81 LandOwl
+    dw $3842   ; [ 82] species 82 MadGoose
+    dw $3843   ; [ 83] species 83 MadCondor
+    dw $3844   ; [ 84] species 84 Blizzardy
+    dw $3845   ; [ 85] species 85 Phoenix
+    dw $3846   ; [ 86] species 86 ZapBird
+    dw $3847   ; [ 87] species 87 WhipBird
+    dw $3900   ; [ 88] species 88 FunkyBird
+    dw $3901   ; [ 89] species 89 RainHawk
+    dw $3902   ; [ 90] species 90 MadPlant
+    dw $3903   ; [ 91] species 91 FireWeed
+    dw $3904   ; [ 92] species 92 FloraMan
+    dw $3905   ; [ 93] species 93 WingTree
+    dw $3906   ; [ 94] species 94 CactiBall
+    dw $3907   ; [ 95] species 95 Gulpple
+    dw $3908   ; [ 96] species 96 Toadstool
+    dw $3909   ; [ 97] species 97 AmberWeed
+    dw $390a   ; [ 98] species 98 Stubsuck
+    dw $390b   ; [ 99] species 99 Oniono
+    dw $390c   ; [100] species 100 DanceVegi
+    dw $390d   ; [101] species 101 TreeBoy
+    dw $390e   ; [102] species 102 FaceTree
+    dw $390f   ; [103] species 103 HerbMan
+    dw $3910   ; [104] species 104 BeanMan
+    dw $3911   ; [105] species 105 EvilSeed
+    dw $3912   ; [106] species 106 ManEater
+    dw $3913   ; [107] species 107 Snapper
+    dw $3914   ; [108] species 108 Rosevine
+    dw $3915   ; [109] species 109 Watabou
+    dw $3916   ; [110] species 110 GiantSlug
+    dw $3917   ; [111] species 111 Catapila
+    dw $3918   ; [112] species 112 Gophecada
+    dw $3919   ; [113] species 113 Butterfly
+    dw $391a   ; [114] species 114 WeedBug
+    dw $391b   ; [115] species 115 GiantWorm
+    dw $391c   ; [116] species 116 Lipsy
+    dw $391d   ; [117] species 117 StagBug
+    dw $391e   ; [118] species 118 ArmyAnt
+    dw $391f   ; [119] species 119 GoHopper
+    dw $3920   ; [120] species 120 TailEater
+    dw $3921   ; [121] species 121 ArmorPede
+    dw $3922   ; [122] species 122 Eyeder
+    dw $3923   ; [123] species 123 GiantMoth
+    dw $3924   ; [124] species 124 Droll
+    dw $3925   ; [125] species 125 ArmyCrab
+    dw $3926   ; [126] species 126 MadHornet
+    dw $3927   ; [127] species 127 HornBeet
+    dw $3928   ; [128] species 128 Armorpion
+    dw $3929   ; [129] species 129 Digster
+    dw $392a   ; [130] species 130 Pixy
+    dw $392b   ; [131] species 131 ArcDemon
+    dw $392c   ; [132] species 132 AgDevil
+    dw $392d   ; [133] species 133 Demonite
+    dw $392e   ; [134] species 134 DarkEye
+    dw $392f   ; [135] species 135 EyeBall
+    dw $3930   ; [136] species 136 SkulRider
+    dw $3931   ; [137] species 137 EvilBeast
+    dw $3932   ; [138] species 138 1EyeClown
+    dw $3933   ; [139] species 139 Gremlin
+    dw $3934   ; [140] species 140 MedusaEye
+    dw $3935   ; [141] species 141 Lionex
+    dw $3936   ; [142] species 142 GoatHorn
+    dw $3937   ; [143] species 143 Orc
+    dw $3938   ; [144] species 144 Ogre
+    dw $3939   ; [145] species 145 GateGuard
+    dw $393a   ; [146] species 146 ChopClown
+    dw $393b   ; [147] species 147 Grendal
+    dw $393c   ; [148] species 148 Akubar
+    dw $393d   ; [149] species 149 MadKnight
+    dw $393e   ; [150] species 150 Gigantes
+    dw $393f   ; [151] species 151 Centasaur
+    dw $3940   ; [152] species 152 EvilArmor
+    dw $3941   ; [153] species 153 Jamirus
+    dw $3942   ; [154] species 154 Durran
+    dw $3943   ; [155] species 155 Spooky
+    dw $3944   ; [156] species 156 Skullgon
+    dw $3945   ; [157] species 157 Putrepup
+    dw $3946   ; [158] species 158 RotRaven
+    dw $3947   ; [159] species 159 Mummy
+    dw $3a00   ; [160] species 160 DarkCrab
+    dw $3a01   ; [161] species 161 DeadNite
+    dw $3a02   ; [162] species 162 Shadow
+    dw $3a03   ; [163] species 163 Hork
+    dw $3a04   ; [164] species 164 Mudron
+    dw $3a05   ; [165] species 165 NiteWhip
+    dw $3a06   ; [166] species 166 MadSpirit
+    dw $3a07   ; [167] species 167 WindMerge
+    dw $3a08   ; [168] species 168 Reaper
+    dw $3a09   ; [169] species 169 DeadNoble
+    dw $3a0a   ; [170] species 170 WhiteKing
+    dw $3a0b   ; [171] species 171 BoneSlave
+    dw $3a0c   ; [172] species 172 Skeletor
+    dw $3a0d   ; [173] species 173 Servant
+    dw $3a0e   ; [174] species 174 Copycat
+    dw $3a0f   ; [175] species 175 JewelBag
+    dw $3a10   ; [176] species 176 EvilWand
+    dw $3a11   ; [177] species 177 MadCandle
+    dw $3a12   ; [178] species 178 CoilBird
+    dw $3a13   ; [179] species 179 Facer
+    dw $3a14   ; [180] species 180 SpikyBoy
+    dw $3a15   ; [181] species 181 MadMirror
+    dw $3a16   ; [182] species 182 RogueNite
+    dw $3a17   ; [183] species 183 Goopi
+    dw $3a18   ; [184] species 184 Voodoll
+    dw $3a19   ; [185] species 185 MetalDrak
+    dw $3a1a   ; [186] species 186 Balzak
+    dw $3a1b   ; [187] species 187 SabreMan
+    dw $3a1c   ; [188] species 188 CurseLamp
+    dw $3a1d   ; [189] species 189 Roboster
+    dw $3a1e   ; [190] species 190 EvilPot
+    dw $3a1f   ; [191] species 191 Gismo
+    dw $3a20   ; [192] species 192 LavaMan
+    dw $3a21   ; [193] species 193 IceMan
+    dw $3a22   ; [194] species 194 Mimic
+    dw $3a23   ; [195] species 195 MudDoll
+    dw $3a24   ; [196] species 196 Golem
+    dw $3a25   ; [197] species 197 StoneMan
+    dw $3a26   ; [198] species 198 BombCrag
+    dw $3a27   ; [199] species 199 GoldGolem
+    dw $3a28   ; [200] species 200 DracoLord
+    dw $3a29   ; [201] species 201 DracoLord
+    dw $3a2a   ; [202] species 202 Hargon
+    dw $3a2b   ; [203] species 203 Sidoh
+    dw $3a2c   ; [204] species 204 Baramos
+    dw $3a2d   ; [205] species 205 Zoma
+    dw $3a2e   ; [206] species 206 Pizzaro
+    dw $3a2f   ; [207] species 207 Esterk
+    dw $3a30   ; [208] species 208 Mirudraas
+    dw $3a31   ; [209] species 209 Mirudraas
+    dw $3a32   ; [210] species 210 Mudou
+    dw $3a33   ; [211] species 211 DeathMore
+    dw $3a34   ; [212] species 212 DeathMore
+    dw $3a35   ; [213] species 213 DeathMore
+    dw $3a36   ; [214] species 214 Darkdrium
+; NOTE: unreferenced fake-decode labels removed with this block: jr_059_438a, jr_059_4390, jr_059_4396, jr_059_439c, jr_059_43a2, jr_059_43a8, jr_059_43ae, jr_059_43b4, jr_059_43ba, jr_059_43c0, jr_059_43c6, jr_059_43cc, jr_059_43d2, jr_059_43d8, jr_059_43de, jr_059_43e4, jr_059_43ea, jr_059_43f0, jr_059_43f6, jr_059_43fc, jr_059_4402, jr_059_4408, jr_059_440e, jr_059_4414, jr_059_441a, jr_059_441d, jr_059_4423, jr_059_4426, jr_059_4429, jr_059_442c, jr_059_442f, jr_059_4432, jr_059_4435, jr_059_4438, jr_059_443b, jr_059_443e, jr_059_4441, jr_059_4447, jr_059_444a, jr_059_444d, jr_059_4453, jr_059_4459, jr_059_447e, jr_059_448e, jr_059_449e, jr_059_44ae, jr_059_44be, jr_059_450f
     nop
     nop
     ld a, [$efef]

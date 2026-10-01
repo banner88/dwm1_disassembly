@@ -479,6 +479,8 @@ Three independent overshoots, each handled:
   identical before/after (8 walk samples, PyBoy S105). `$C7` is re-written before every sprite draw
   (bank $04 `NPCInteractDispatch`) and not read back after the bank-$11 call. Also measured/decoded
   S105: the router's `species+$10` WRAPS for species ≥ 240 → followers only work for new ids 224-239.
+  **Superseded S107 2b:** the donor write is gone — `FollowerLayoutBase11` points the lookup at the
+  species' own `NewFollowerL1Table` row (any of the 155 layouts; "Walking layouts as project data").
 - **attr (palette + FLIP) — the subtle one:** `HramUnk11_406e` reads `[$412d + (species-$80)]`; for 224 that
   is `$418d`, **inside Armorpion's level-2 layout**, where the byte is `$41`. That single garbage byte caused
   BOTH cosmetic bugs: **bit6 (`$40`) = the OBJ Y-flip bit** → every follower tile rendered upside-down in
@@ -503,7 +505,8 @@ Three independent overshoots, each handled:
 **Reassignment primitive (`tools/build_follower_reassign.py`).** To restyle a monster's follower:
 (1) repoint its level-1 entry (`$10`/`$11:$407f + idx*2`) to a clean non-sharing layout's level-2
 table (same-bank only — the level-2 pointer is dereferenced with the routed bank mapped, so a
-bank-$10 species can't point at a bank-$11 table); (2) repoint all 8 art copies to the new art
+bank-$10 species can't point at a bank-$11 table; S107 2b: the editor COPIES such a layout into
+the bank's free tail — "Walking layouts as project data" below); (2) repoint all 8 art copies to the new art
 (clone an existing monster's gfx-ID, or place a custom 16-tile stream cross-bank via the GFX-2/3
 overflow allocator and point all 8 at it); (3) set the attr byte for the palette. This is NOT a
 `[$caca]` edit — `[$caca]` is the species and can't be changed to restyle. Layout 0 (`$10:$4e33`,
@@ -556,7 +559,7 @@ slot — both were misleading earlier leads (KEY_LESSONS "Session 23").
 The two battle tables behave *oppositely* at the top of the id range, and this is the whole
 lesson:
 - **Gfx table `MonsterBattleGfxTable` @ `$00:$2B9F` has a REAL slot for every id 0–255.**
-  Ids 216–255 are uniform `$320f` padding ("Durran" placeholder), so giving id 224 real art is a
+  Ids 216–255 are uniform `$320f` padding (= Darkdrium's battle art, sp 214 — S107; earlier notes said "Durran"), so giving id 224 real art is a
   **same-size 2-byte repoint** of its slot (`$2b9f + 224*2 = $2d5f`: `$320f`→`$7e01`) — **no fork.**
   (In a clean re-section this slot is a `dw`; in the pre-re-section `patches/bank_000.asm` the region
   is mgbdis-misassembled as `ld/rrca` and must be re-expressed as `db` for the edit — bytes identical
@@ -586,6 +589,77 @@ import new art (literal/self-contained). `--palette` recolours in the same run. 
 clam→Dracky (battle + purple palette) user-confirmed in SameBoy, including inside a
 custom room with random encounters and with Dracky reassigned to the Spirit family.
 
+**New art for ORIGINAL species as project data (S107, ROADMAP P3.10 part 2a;
+PROJECT_COMPILER §2.23).** `gamedata.art` (species 0-214 only — 215-220 are TERRY?
+and the summons, PROJECT_STATE Iron Rule 8) → compiler regions over every table the
+game draws a monster from, plus three compiler-owned art banks $7F/$7C/$7A.
+Measured / ROM-searched S107: the battle gfx table has **13 reader sites** (banks
+$07 ×5 `$43B4/$4678/$484D/$49CB/$49EF`, $12 `$6424`, $18 `$5381`, $51 `$6A6E`,
+$52 `$5240`, $53 `$657C`, $55 `$4D4C`, $59 `$5D16`, $5F `$6082` — all `add $9F /
+adc $2B` over `species*2`) and no copy; the battle palette table one reader; the
+eight follower gfx-ID copies are byte-identical for species 0-214 (each has 16
+non-monster entries first except $18 / $59, which index raw species) and are
+followed by unrelated bytes from species 215 on (bank $01's by
+`FollowerFamilyGfxTable`); layout 0 lives in BOTH follower banks (Dragon `$10:$4E33`,
+Armorpion `$11:$4184`), so new walking art packed in layout-0 order needs only a
+same-bank level-1 repoint. PyBoy on the user's save (S107 demo, patched
+`bdc408a8…`): followers' VRAM `$8200/$8300/$8400` == the new streams and their OAM
+palettes == the authored ones; the party menu, the INFO page and the library page
+show the new battle poses (VRAM); a library lineage parent icon (bank $12 copy) =
+the re-arted parent's new walking art; the wild re-arted Slime fights with its new
+art + colours (battle art lands at VRAM `$9000` in the gate battle), the
+colours-only Dracky with its own art in the new colours; the Slime joins. In the
+patched build bank $0B's copy sits at `$4914` (the patched bank is laid out
+differently since S14) — address it by label (`FollowerGfxTable0B`).
+
+**Walking layouts as project data (S107, ROADMAP P3.10 part 2b; PROJECT_COMPILER
+§2.23 "Walking layouts"; `editor2/core/walk_layouts.py`).** User on the 2a ROM: a
+re-arted monster's library parent icon "is STILL. Vanilla behaviour is MOVING" —
+2a packed every new walking art for layout 0, whose down_B / up_B are the A frame
+mirrored (no other tiles, no bob): a symmetric monster cannot move. 2b lets new
+walking art (original or new species) use ANY of the 155 layouts, packed to fit
+the sheet's six frames. Measured facts (ROM + PyBoy S107):
+- **155 / 175 / 188.** The 155 layouts are distinct as SETS of entries per frame
+  (the extractor's signature, now incl. the Y-flip bit); 175 if the entry ORDER
+  counts (it does where entries overlap — see priority), 188 as raw bytes (attr
+  bit4 `$10` = the DMG OBJ palette, meaningless on CGB). Attr bytes in layouts:
+  `$00 $10 $20 $30` and ONE `$40` (Y-flip: species 139's right_B, tile 6) — the
+  per-frame palette bits are always 0. Entries span dy −18..−4, dx −11..3; 1,255
+  frames have 4 entries, 35 have 3. 137 of the 930 frames have OVERLAPPING entries.
+- **Priority:** entry k goes to OAM slot `[$cb]+k`; on CGB the lower OAM index wins
+  where opaque pixels overlap, so entry 0 is drawn on top (the editor renderer drew
+  it underneath until S107).
+- **Where layouts live:** 96 of the 155 exist in bank $10, 72 in bank $11 (13 in
+  both); layout 0 has 10 / 4 byte-variants per bank. A level-2 pointer is read
+  with its follower bank mapped, so a layout the species' bank lacks is COPIED
+  into that bank's zero tail (bank $10 data ends `$7A82`, bank $11 vanilla data
+  `$792C`): a 12-byte table + only the frames the bank does not already hold
+  byte-for-byte (12-114 B, median 63 / 80 B). `extracted/follower_layouts.json`
+  now carries each layout's stored bytes (`raw` + `share`), its level-2 tables per
+  bank (`instances`) and every frame each bank holds (`bank_frames`).
+- **New species (engine change, bank $11):** `NewAttrHandler` no longer writes the
+  S105 donor index to HRAM `$C7`; both follower entries `call FollowerLayoutBase11`
+  in place of `ld de, FollowerLayoutL1Table11` (3 B for 3 B), which returns DE =
+  `NewFollowerL1Table − 2·$5D` for species 221+ (`[$C7]` = species−$80 ≥ $5D) and the
+  vanilla table otherwise, keeping AF; `NewFollowerL1Table` = 19 dw of level-2
+  pointers (`walks_like` = the donor's own table). ROM0 `$0D91` (entry 0's draw)
+  starts `ldh a,[$cb]` and indexes with an 8-bit `add a` — fine below `$80`.
+- **The library parent icon** (bank $12 copy) loads all 16 walking tiles (VRAM
+  tiles 112-127 == the art) and draws the down frames.
+- **Sheets:** bug.png 20 of 26 monsters fit some layout with 0 differing pixels
+  (layout 0: 6), the water sheet 16 of 31 (layout 0: 13).
+
+PyBoy (S107 2b, the user's save): the demo (patched `f5bf7c12…`) re-arts Healer
+with layout 2, Slime with layout 143 (copied into bank $10), MadPlant with layout
+2 — on the Healer library page the MadPlant parent icon now alternates two
+different tile pairs (OAM tiles 114/115 ↔ 112/113; was mirror-only); a scratch
+build gives the user's new species Klamutra layout 13 (copied into bank $11) and
+puts Klamutra + Slime in the party: on a gate floor all three followers' OAM, in
+all eight facing frames over 112 samples each, are exactly their layout's frames
+(left = right mirrored), in the authored palettes, with the project art in VRAM.
+Vanilla followers (Darkdrium layout 10, Healer layout 29) and a `walks_like` 128
+species draw their layouts identically on the pre- and post-change builds.
+
 **Disassembly label errors (noted; battle table FIXED Session 22):** `bank_038.asm`
 header "gate dungeon tileset J" also holds follower sprites; `bank_036.asm` "Cross-bank
 dispatch table" is actually the gfx pointer table (Entry-N comments added). A prior
@@ -603,7 +677,7 @@ name slots from `$41:$4339`, classifies each, self-aborts on ROM drift).
 | Range | Count | Status | Notes |
 |-------|-------|--------|-------|
 | 0–214 | 215 | real monsters | normal species |
-| 215–219 | 5 | **special** | 215 `TERRY?` (one-off enemy, fightable, NOT breedable); 216–219 `Tatsu`/`Diago`/`Samsi`/`Bazoo` (summon-skill byproducts only). Bespoke per-id handling in code (see gates below). |
+| 215–219 | 5 | **special — NOT monsters** | 215 `TERRY?` (the scripted rival boss, fightable, NOT breedable); 216–219 `Tatsu`/`Diago`/`Samsi`/`Bazoo` (the four tiers of the summon skill). Bespoke per-id handling in code (see gates below). **User rule (PROJECT_STATE Iron Rule 8): never treated as monsters — the editor offers only their moves and stats; no art / name / family / library / breeding.** Their battle gfx entries: 215 = its own `$3210`; 216–220 all = `$320F` = **Darkdrium's (214) battle art** (S107 — older notes called `$320F` a "Durran placeholder"; Durran is 154, `$3423`). |
 | 220–223 | 4 | empty/phantom | empty names (220/221/222 share one `$F0`-only name ptr at `$41:$6287`); info table stops at 220. |
 | **224–255** | **32** | **FREE** | usable for NEW species — every top-range classifier routes ≥224 to "normal". |
 
@@ -758,6 +832,11 @@ misleading (they are NOT NPC-pos / tile-ref / save-slot data):
 | 6 | `$12` | `$65de` | `ItemSlotPtrTable` | `$65f2` | species+$10 (= lineage parent-icon table; `CmpItem_65cb`) |
 | 7 | `$18` | `$40bf` | `TextDataPtrLookup` | `$4123` | raw species |
 | 8 | `$59` | `$42ca` | `SaveSlotPtrTable` | `$4363` | raw species |
+
+*(S107: tables 2-8 re-sectioned from fake code into labeled `dw` rows in both
+trees — `FollowerGfxTable06/07/09/0B/12/18/59`, the mgbdis names kept beside them —
+by `tools/resection_monster_art_tables.py`; their species rows are the compiler
+regions `art_walk_*`.)*
 
 *(Note: `build_new_species_follower.py` lists bank `$18` reader-base as `$4103` — that is
 operand−`$20` bookkeeping for its `species+$10` scan logic, not a code address; the actual

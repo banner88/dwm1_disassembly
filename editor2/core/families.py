@@ -5,6 +5,7 @@ families (PROJECT_COMPILER §2.20):
   gamedata.monsters.<id>.family     which family a species belongs to
   gamedata.families.<name>.dialogue the arena-lobby party dialogue voice
   gamedata.families.spirit.names    Spirit's 8 default names
+  gamedata.families.<name>.icon     the family's 8 x 8 icon (S107, P3.10 part 2c)
 The project stores only differences from the original game: setting a value
 back to vanilla removes the key (and any object it leaves empty).
 Every setter validates by building the gamedata model (the same code the
@@ -60,6 +61,18 @@ class FamiliesMixin:
     def spirit_names(self):
         return list(self._gd_model().spirit_names)
 
+    def family_icon_grids(self):
+        """All 11 icons from ONE model build (the list / combo icons)."""
+        return [[list(r) for r in g] for g in self._gd_model().icons]
+
+    def family_icon(self, fam):
+        """The family's icon as the game will draw it: 8 x 8 grid of 0-3."""
+        return [list(r) for r in self._gd_model().icons[int(fam)]]
+
+    def vanilla_family_icon(self, fam):
+        """The icon the game ships (Spirit: the S104 ghost wisp)."""
+        return G.vanilla_icons(REPO)[int(fam)]
+
     # ------------------------------------------------------------ writing
     def _commit_gamedata(self, gd):
         gd = {k: v for k, v in gd.items() if v not in ({}, None) or str(k).startswith('_')}
@@ -107,6 +120,24 @@ class FamiliesMixin:
             o.pop('names', None)
         else:
             o['names'] = names
+        if not o:
+            fams.pop(key)
+        self._commit_gamedata(gd)
+
+    def set_family_icon(self, fam, grid):
+        """S107 (P3.10 part 2c): the family's icon (8 x 8 grid of 0-3) — the
+        compiler writes it into the font glyph AND the gfx stream. The
+        original icon again removes the key."""
+        fam = int(fam)
+        rows = G.icon_rows(G.icon_grid(G.icon_rows(grid), f'families.{fam}.icon'))
+        gd = copy.deepcopy(self.data.get('gamedata') or {})
+        fams = gd.setdefault('families', {})
+        key = self._family_key(fams, fam)
+        o = fams.setdefault(key, {})
+        if rows == G.icon_rows(self.vanilla_family_icon(fam)):
+            o.pop('icon', None)
+        else:
+            o['icon'] = rows
         if not o:
             fams.pop(key)
         self._commit_gamedata(gd)

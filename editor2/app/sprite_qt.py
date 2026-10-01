@@ -46,6 +46,11 @@ class _Cache:
 
 def species_art(doc, sid):
     """(battle rows, follower frames) for any species of the project."""
+    if doc is not None and sid <= 214:
+        # S107: the project's own art for an original monster (gamedata.art)
+        e = ((doc.data.get('gamedata') or {}).get('art') or {}).get(str(sid))
+        if e:
+            return R.original_art(doc.project_dir, sid, e)
     if sid <= 220:
         if sid not in _Cache.vanilla_battle:
             _Cache.vanilla_battle[sid] = R.vanilla_battle(sid)

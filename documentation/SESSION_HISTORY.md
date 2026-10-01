@@ -1,5 +1,92 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-09-30 (Session 105 — **ROADMAP P3.9b: PURGE THE
+> PROOF-OF-CONCEPT CONTENT FROM THE HAND OVERLAY, KEEP EVERY MECHANISM** (user
+> 16:21: "Yes let's clean all this stuff it wont make it into real romhack
+> except for mechanics, other than custom skills which need to fire without
+> pre-existing custom rooms"; 16:35 "sounds great" to the scope) **+ G3:
+> NEW-SPECIES CAPACITY 1 → 19 (ids 221-239)** (user: "Wait hang on so I can
+> only have 16 new monsters max? I DONT LIKE THAT." → "Alright, 19 monsters it
+> is. The rest I'll edit existing ones. Lets do it."). S104 USER-CONFIRMED at
+> session start. **USER-CONFIRMED 2026-09-30 ("Confirm all three appear as expected")** on the S105 G3 test ROMs (user project as-is + the
+> 3-species demo).
+> Verifier PASS 6/6; clean `1ca6579…` byte-perfect (bank $11 `$407F-$4183`
+> re-sectioned into `FollowerLayoutL1Table11` / `FollowerAttrTable11` + bank
+> $04 router note — both trees where the bank is patched); **patched pin MOVED
+> `15f21834…` → `f8a71485…` (patched, historical: the capacity-1 build, never
+> user-tested) → `f22f56e1…` (patched, G3)**; test_compiler --rom 402/402
+> (new: a BLANK project builds the original ROM's bytes at every purged /
+> new-species site; every new-species fork EXECUTED from the built ROM's bytes
+> over ids 0-239 for the example and a 19-species project); test_app --rom
+> (GUI build == pin) + test_canvas --rom PASS. `EDITOR_REVISION` = 'S105'.
+>
+> **Purged (no project gets them any more):** (1) **Gorbunok** (new species
+> 224) — now project data `custom.species` (editor2/core/species.py,
+> PROJECT_COMPILER §2.21): 17 `ns_*` compiler regions in banks
+> $00/$01/$06/$07/$09/$0B/$11/$12/$16/$17/$18/$41/$4D/$59/$6A + the
+> compiler-owned bank $7E; an empty `custom.species` writes the original ROM
+> bytes into every one (bank $7E all zero). The example project re-expresses
+> Gorbunok byte-identically (art = `assets/species/*.bin`, reproducible from
+> the PNGs with `bake_follower_overflow.py --stream-dir`); its wild row moved
+> from the bank-$14 EID-518 slot to an ordinary project enemy (520). (2) **the
+> S21 Dracky → "Clam" battle sprite** (`patches/bank_036.asm` deleted — it was
+> in every build since 2026-06-19; the S103 audit missed it). (3) the S12
+> dead-table mirror (bank $16 special entries 693 / 803). **Kept:** every fork
+> (they read the project data), the custom skills. **Anchor needs no custom
+> room any more:** its 4 dialog scripts + texts moved from the example's
+> medal_vault (`$71`, scripts 2-5) to the compiler's built-in
+> `editor2/core/skill_scripts.json` (bank $60 `SkillScriptPtrTable`, script
+> type `$FF`; template `CustomScriptRead` +9 B, re-pinned; bank $72 arms `$FF`,
+> ids 2-5 unchanged).
+>
+> **Found + fixed (measured in PyBoy on the user's save, old build `53338a16…`
+> vs new `e8e30264…`, both patched):** (a) casting Anchor in the user's project
+> SOFT-LOCKED the game — room `$71` does not exist there, the script read past
+> the master table, stayed active with counter 8 and the player could not
+> move; new build: all four dialogs through the real SKIL menu (no anchor →
+> "No anchor is set!"; gate 1 floor 1 → YES → Castle, anchor 1/1 stored; Castle
+> → YES → gate 1 floor 1, MP 916 → 229, anchor cleared; the user's custom gate
+> room `$6F` → "The anchor fails here!"). (b) since S34 every build wrote the
+> new species' layout pointer at `$11:$413F` = the follower attr bytes of
+> **ChopClown (146) / Grendal (147)**: OAM attr `$A4` / `$41` (green palette,
+> Grendal upside-down) → vanilla `$22` / `$02` again; Gorbunok's follower OAM
+> (tiles + attrs, 8 walk samples) identical old vs new in the example (bank $11
+> NewAttrHandler writes the layout donor's index to HRAM `$C7`). (c) Dracky
+> fights as Dracky again (battle screenshot A/B). Also: the gamedata shadow
+> checks treated a Spirit parent as no family (`fam_code` stopped at 9) —
+> fixed, test proves old-fails / new-catches.
+>
+> **G3 — 19 new species, ids 221-239 (PROJECT_COMPILER §2.21).** The range
+> is the game's own ceiling (seen bits 0-239, family codes $F0-$FA in the
+> recipe scanner, $FE/$FF markers, follower router wrap at 240). The eight
+> follower forks now COMPUTE the gfx-ID `$7E00+(id-221)*2` into WRAM
+> `wNewSpeciesGid` ($D10A) — no per-bank tables (same fork size); every other
+> fork gates on id ≥ 221 with 19-row tables (info $03/$6A, attr $11, battle
+> palette $17, recipe pair $16, detail text $4D, nickname redirect $00 → base
+> $7D39); ROM0 battle gfx table tail re-sectioned; bank $41 names/nicknames
+> PACKED into 7 free extents (292 B: 19 × 8-letter names fit, 19 × 9-letter
+> each with its own nickname do not — validation error); bank $12's trailing
+> nops → `ds` so the library grouping can grow; a library tab over 32 members
+> is now a validation error. **Also fixed:** (d) `SpellUseText_11`
+> ("…knocked out monster!") had its last 16 bytes zeroed since B9 S28 (commit
+> `e97b6da`) — restored; (e) stale files in a project's `build/patches` from an
+> older editor silently overrode the hand overlay (write_outputs deletes them).
+> **Measured in PyBoy** (fixture = example + 221 "Invertus" (colour-inverted
+> art) / 239 "DrakSlimy" (tile-reversed art) + Gorbunok 224, user save):
+> follower gid $7E00 / $7E06 / $7E24, the exact 256-B art in VRAM, OBJ palette
+> 4/2/5; battles: the exact 576-B art, the declared BG palette, "Look out!
+> Invertus / DrakSlimy monster!"; joins: naming screen suggests "Inve" / "Drak";
+> library pages: Invertus "????? ?????" + species 10's text, Gorbunok Snaily +
+> BattleRex, DrakSlimy DrakSlime + Healer with parent icons. User project as-is
+> vs `e8e30264…`: 17 room/menu screenshots + 3 battles pixel-identical.
+> Test ROMs: **`DWM_S105_G3_user.gbc`** = the user's project as-is (patched,
+> `e84dff45…`); **`DWM_S105_G3_demo.gbc`** = the user's project + 3 demo
+> species in Gate of Beginning pool 0 (patched, `0b65dc01…`; demo only, not
+> for the real hack). **USER-CONFIRMED 2026-09-30 ("Confirm all three appear as expected").** Hand-off: all S105 work = the
+> diff against `4e7f7ea` (origin/master), delivered as
+> `DWM-S105-species-capacity-changed-files.zip`. **Next:** the user picks the
+> next editor item (P3.10 Monsters tab would start from `custom.species`).
+
 > Last verified: 2026-09-30 (Session 104 — **ROADMAP P3.10a: SPIRIT AS THE
 > 11TH FAMILY** (user 13:07: "1) Custom skills absolutely stay!! … All data
 > related to them must also be in editor. 2) Yeah please fix ??? and make

@@ -2162,486 +2162,331 @@ jr_00b_496c:
     ret
 
 ;DATA
-SpritePtrTable_4974:
-    nop
-    cpl
-    ld b, b
-    ld sp, $3140
-    ld b, b
-    ld sp, $3140
-    ld b, b
-    ld sp, $3140
-    ld b, b
-    ld sp, $3140
-    ld b, b
-    ld sp, $3140
-    ld b, b
-    ld sp, $3140
-    ld b, b
-    ld sp, $3140
-    ld b, b
-    ld sp, $2f01
-    ld [bc], a
-    cpl
-    inc bc
-    cpl
-    inc b
-    cpl
-    dec b
-    cpl
-    ld b, $2f
-    rlca
-    cpl
-    ld [$092f], sp
-    cpl
-    ld a, [bc]
-    cpl
-    dec bc
-    cpl
-    inc c
-    cpl
-    dec c
-    cpl
-    ld c, $2f
-    rrca
-    cpl
-    db $10
-    cpl
-    nop
-    jr c, @+$03
-
-    jr c, jr_00b_49bb
-
-    jr c, @+$05
-
-jr_00b_49bb:
-    jr c, jr_00b_49c1
-
-    jr c, @+$07
-
-    jr c, jr_00b_49c7
-
-jr_00b_49c1:
-    jr c, @+$09
-
-    jr c, jr_00b_49cd
-
-    jr c, @+$0b
-
-jr_00b_49c7:
-    jr c, jr_00b_49d3
-
-    jr c, @+$0d
-
-    jr c, jr_00b_49d9
-
-jr_00b_49cd:
-    jr c, @+$0f
-
-    jr c, jr_00b_49df
-
-    jr c, @+$11
-
-jr_00b_49d3:
-    jr c, jr_00b_49e5
-
-    jr c, @+$13
-
-    jr c, jr_00b_49eb
-
-jr_00b_49d9:
-    jr c, @+$15
-
-    jr c, jr_00b_49f1
-
-    jr c, @+$17
-
-jr_00b_49df:
-    jr c, jr_00b_49f7
-
-    jr c, @+$19
-
-    jr c, jr_00b_49fd
-
-jr_00b_49e5:
-    jr c, @+$1b
-
-    jr c, jr_00b_4a03
-
-    jr c, @+$1d
-
-jr_00b_49eb:
-    jr c, jr_00b_4a09
-
-    jr c, @+$1f
-
-    jr c, jr_00b_4a0f
-
-jr_00b_49f1:
-    jr c, @+$21
-
-    jr c, jr_00b_4a15
-
-    jr c, @+$23
-
-jr_00b_49f7:
-    jr c, jr_00b_4a1b
-
-    jr c, @+$25
-
-    jr c, jr_00b_4a21
-
-jr_00b_49fd:
-    jr c, @+$27
-
-    jr c, jr_00b_4a27
-
-    jr c, @+$29
-
-jr_00b_4a03:
-    jr c, jr_00b_4a2d
-
-    jr c, @+$2b
-
-    jr c, jr_00b_4a33
-
-jr_00b_4a09:
-    jr c, @+$2d
-
-    jr c, jr_00b_4a39
-
-    jr c, @+$2f
-
-jr_00b_4a0f:
-    jr c, jr_00b_4a3f
-
-    jr c, @+$31
-
-    jr c, jr_00b_4a45
-
-jr_00b_4a15:
-    jr c, @+$33
-
-    jr c, jr_00b_4a4b
-
-    jr c, jr_00b_4a4e
-
-jr_00b_4a1b:
-    jr c, @+$36
-
-    jr c, jr_00b_4a54
-
-    jr c, jr_00b_4a57
-
-jr_00b_4a21:
-    jr c, jr_00b_4a5a
-
-    jr c, jr_00b_4a5d
-
-    jr c, jr_00b_4a60
-
-jr_00b_4a27:
-    jr c, jr_00b_4a63
-
-    jr c, jr_00b_4a66
-
-    jr c, jr_00b_4a69
-
-jr_00b_4a2d:
-    jr c, jr_00b_4a6c
-
-    jr c, jr_00b_4a6f
-
-    jr c, jr_00b_4a72
-
-jr_00b_4a33:
-    jr c, @+$42
-
-    jr c, jr_00b_4a78
-
-    jr c, jr_00b_4a7b
-
-jr_00b_4a39:
-    jr c, jr_00b_4a7e
-
-    jr c, @+$46
-
-    jr c, jr_00b_4a84
-
-jr_00b_4a3f:
-    jr c, @+$48
-
-    jr c, jr_00b_4a8a
-
-    jr c, jr_00b_4a45
-
-jr_00b_4a45:
-    add hl, sp
-    ld bc, $0239
-    add hl, sp
-    inc bc
-
-jr_00b_4a4b:
-    add hl, sp
-    inc b
-    add hl, sp
-
-jr_00b_4a4e:
-    dec b
-    add hl, sp
-    ld b, $39
-    rlca
-    add hl, sp
-
-jr_00b_4a54:
-    ld [$0939], sp
-
-jr_00b_4a57:
-    add hl, sp
-    ld a, [bc]
-    add hl, sp
-
-jr_00b_4a5a:
-    dec bc
-    add hl, sp
-    inc c
-
-jr_00b_4a5d:
-    add hl, sp
-    dec c
-    add hl, sp
-
-jr_00b_4a60:
-    ld c, $39
-    rrca
-
-jr_00b_4a63:
-    add hl, sp
-    db $10
-    add hl, sp
-
-jr_00b_4a66:
-    ld de, $1239
-
-jr_00b_4a69:
-    add hl, sp
-    inc de
-    add hl, sp
-
-jr_00b_4a6c:
-    inc d
-    add hl, sp
-    dec d
-
-jr_00b_4a6f:
-    add hl, sp
-    ld d, $39
-
-jr_00b_4a72:
-    rla
-    add hl, sp
-    jr jr_00b_4aaf
-
-    add hl, de
-    add hl, sp
-
-jr_00b_4a78:
-    ld a, [de]
-    add hl, sp
-    dec de
-
-jr_00b_4a7b:
-    add hl, sp
-    inc e
-    add hl, sp
-
-jr_00b_4a7e:
-    dec e
-    add hl, sp
-    ld e, $39
-    rra
-    add hl, sp
-
-jr_00b_4a84:
-    jr nz, jr_00b_4abf
-
-    ld hl, $2239
-    add hl, sp
-
-jr_00b_4a8a:
-    inc hl
-    add hl, sp
-    inc h
-    add hl, sp
-    dec h
-    add hl, sp
-    ld h, $39
-    daa
-    add hl, sp
-    jr z, jr_00b_4acf
-
-    add hl, hl
-    add hl, sp
-    ld a, [hl+]
-    add hl, sp
-    dec hl
-    add hl, sp
-    inc l
-    add hl, sp
-    dec l
-    add hl, sp
-    ld l, $39
-    cpl
-    add hl, sp
-    jr nc, jr_00b_4adf
-
-    ld sp, $3239
-    add hl, sp
-    inc sp
-    add hl, sp
-    inc [hl]
-    add hl, sp
-    dec [hl]
-
-jr_00b_4aaf:
-    add hl, sp
-    ld [hl], $39
-    scf
-    add hl, sp
-    jr c, jr_00b_4aef
-
-    add hl, sp
-    add hl, sp
-    ld a, [hl-]
-    add hl, sp
-    dec sp
-    add hl, sp
-    inc a
-    add hl, sp
-    dec a
-
-jr_00b_4abf:
-    add hl, sp
-    ld a, $39
-    ccf
-    add hl, sp
-    ld b, b
-    add hl, sp
-    ld b, c
-    add hl, sp
-    ld b, d
-    add hl, sp
-    ld b, e
-    add hl, sp
-    ld b, h
-    add hl, sp
-    ld b, l
-
-jr_00b_4acf:
-    add hl, sp
-    ld b, [hl]
-    add hl, sp
-    ld b, a
-    add hl, sp
-    nop
-    ld a, [hl-]
-    ld bc, $023a
-    ld a, [hl-]
-    inc bc
-    ld a, [hl-]
-    inc b
-    ld a, [hl-]
-    dec b
-
-jr_00b_4adf:
-    ld a, [hl-]
-    ld b, $3a
-    rlca
-    ld a, [hl-]
-    ld [$093a], sp
-    ld a, [hl-]
-    ld a, [bc]
-    ld a, [hl-]
-    dec bc
-    ld a, [hl-]
-    inc c
-    ld a, [hl-]
-    dec c
-
-jr_00b_4aef:
-    ld a, [hl-]
-    ld c, $3a
-    rrca
-    ld a, [hl-]
-    db $10
-    ld a, [hl-]
-    ld de, $123a
-    ld a, [hl-]
-    inc de
-    ld a, [hl-]
-    inc d
-    ld a, [hl-]
-    dec d
-    ld a, [hl-]
-    ld d, $3a
-    rla
-    ld a, [hl-]
-    jr jr_00b_4b40
-
-    add hl, de
-    ld a, [hl-]
-    ld a, [de]
-    ld a, [hl-]
-    dec de
-    ld a, [hl-]
-    inc e
-    ld a, [hl-]
-    dec e
-    ld a, [hl-]
-    ld e, $3a
-    rra
-    ld a, [hl-]
-    jr nz, jr_00b_4b50
-
-    ld hl, $223a
-    ld a, [hl-]
-    inc hl
-    ld a, [hl-]
-    inc h
-    ld a, [hl-]
-    dec h
-    ld a, [hl-]
-    ld h, $3a
-    daa
-    ld a, [hl-]
-    jr z, jr_00b_4b60
-
-    add hl, hl
-    ld a, [hl-]
-    ld a, [hl+]
-    ld a, [hl-]
-    dec hl
-    ld a, [hl-]
-    inc l
-    ld a, [hl-]
-    dec l
-    ld a, [hl-]
-    ld l, $3a
-    cpl
-    ld a, [hl-]
-    jr nc, jr_00b_4b70
-
-    ld sp, $323a
-    ld a, [hl-]
-    inc sp
-    ld a, [hl-]
-    inc [hl]
-    ld a, [hl-]
-    dec [hl]
-    ld a, [hl-]
-
-jr_00b_4b40:
-    ld [hl], $3a
+FollowerGfxTable0B:
+SpritePtrTable_4974:   ; (mgbdis name, kept: referenced by the readers / patches)
+    ; FOLLOWER (walking) gfx-ID table — one of the EIGHT per-screen copies
+    ; (MONSTER_DATA 'Follower-art table has EIGHT copies'; bank $01's
+    ; ScreenTransDataTable is the overworld one). Read by the room NPC sprite resolver (monster NPCs $F0-$F3, FollowerArtResolve0b) $490F.
+    ; Index = species + $10 -> gfx-ID (bank<<8 | index) -> $<bank>:$4001 + index*2.
+    ; 231 words: 16 non-monster entries, then species 0-214; ids 215+ read past the end (never followers).
+    ; A re-arted species writes the SAME new gfx-ID into all eight copies
+    ; (S107: compiler region art_walk_0b, gamedata.art).
+    ; Re-sectioned S107 (tools/resection_monster_art_tables.py), byte-identical.
+    dw $2f00   ; [  0] default
+    dw $3140   ; [  1] non-monster (loader index 1-15)
+    dw $3140   ; [  2] non-monster (loader index 1-15)
+    dw $3140   ; [  3] non-monster (loader index 1-15)
+    dw $3140   ; [  4] non-monster (loader index 1-15)
+    dw $3140   ; [  5] non-monster (loader index 1-15)
+    dw $3140   ; [  6] non-monster (loader index 1-15)
+    dw $3140   ; [  7] non-monster (loader index 1-15)
+    dw $3140   ; [  8] non-monster (loader index 1-15)
+    dw $3140   ; [  9] non-monster (loader index 1-15)
+    dw $3140   ; [ 10] non-monster (loader index 1-15)
+    dw $3140   ; [ 11] non-monster (loader index 1-15)
+    dw $3140   ; [ 12] non-monster (loader index 1-15)
+    dw $3140   ; [ 13] non-monster (loader index 1-15)
+    dw $3140   ; [ 14] non-monster (loader index 1-15)
+    dw $3140   ; [ 15] non-monster (loader index 1-15)
+    dw $2f01   ; [ 16] species 0 DrakSlime
+    dw $2f02   ; [ 17] species 1 SpotSlime
+    dw $2f03   ; [ 18] species 2 WingSlime
+    dw $2f04   ; [ 19] species 3 TreeSlime
+    dw $2f05   ; [ 20] species 4 Snaily
+    dw $2f06   ; [ 21] species 5 SlimeNite
+    dw $2f07   ; [ 22] species 6 Babble
+    dw $2f08   ; [ 23] species 7 BoxSlime
+    dw $2f09   ; [ 24] species 8 Slime
+    dw $2f0a   ; [ 25] species 9 Healer
+    dw $2f0b   ; [ 26] species 10 FangSlime
+    dw $2f0c   ; [ 27] species 11 RockSlime
+    dw $2f0d   ; [ 28] species 12 SlimeBorg
+    dw $2f0e   ; [ 29] species 13 Slabbit
+    dw $2f0f   ; [ 30] species 14 SpotKing
+    dw $2f10   ; [ 31] species 15 KingSlime
+    dw $3800   ; [ 32] species 16 Metaly
+    dw $3801   ; [ 33] species 17 Metabble
+    dw $3802   ; [ 34] species 18 MetalKing
+    db $03   ; [ 35] species 19 GoldSlime (lo)
+jr_00b_49bb:   ; fake-decode label kept at its exact offset $49bb (referenced by bytes decoded as code elsewhere; NOT code)
+    db $38   ; [ 35] species 19 GoldSlime (hi)
+    dw $3804   ; [ 36] species 20 DragonKid
+    dw $3805   ; [ 37] species 21 Tortragon
+    db $06   ; [ 38] species 22 Pteranod (lo)
+jr_00b_49c1:   ; fake-decode label kept at its exact offset $49c1 (referenced by bytes decoded as code elsewhere; NOT code)
+    db $38   ; [ 38] species 22 Pteranod (hi)
+    dw $3807   ; [ 39] species 23 Gasgon
+    dw $3808   ; [ 40] species 24 FairyDrak
+    db $09   ; [ 41] species 25 LizardMan (lo)
+jr_00b_49c7:   ; fake-decode label kept at its exact offset $49c7 (referenced by bytes decoded as code elsewhere; NOT code)
+    db $38   ; [ 41] species 25 LizardMan (hi)
+    dw $380a   ; [ 42] species 26 Poisongon
+    dw $380b   ; [ 43] species 27 Swordgon
+    db $0c   ; [ 44] species 28 Dragon (lo)
+jr_00b_49cd:   ; fake-decode label kept at its exact offset $49cd (referenced by bytes decoded as code elsewhere; NOT code)
+    db $38   ; [ 44] species 28 Dragon (hi)
+    dw $380d   ; [ 45] species 29 MiniDrak
+    dw $380e   ; [ 46] species 30 MadDragon
+    db $0f   ; [ 47] species 31 Rayburn (lo)
+jr_00b_49d3:   ; fake-decode label kept at its exact offset $49d3 (referenced by bytes decoded as code elsewhere; NOT code)
+    db $38   ; [ 47] species 31 Rayburn (hi)
+    dw $3810   ; [ 48] species 32 Chamelgon
+    dw $3811   ; [ 49] species 33 LizardFly
+    db $12   ; [ 50] species 34 Andreal (lo)
+jr_00b_49d9:   ; fake-decode label kept at its exact offset $49d9 (referenced by bytes decoded as code elsewhere; NOT code)
+    db $38   ; [ 50] species 34 Andreal (hi)
+    dw $3813   ; [ 51] species 35 KingCobra
+    dw $3814   ; [ 52] species 36 Spikerous
+    db $15   ; [ 53] species 37 GreatDrak (lo)
+jr_00b_49df:   ; fake-decode label kept at its exact offset $49df (referenced by bytes decoded as code elsewhere; NOT code)
+    db $38   ; [ 53] species 37 GreatDrak (hi)
+    dw $3816   ; [ 54] species 38 Crestpent
+    dw $3817   ; [ 55] species 39 WingSnake
+    db $18   ; [ 56] species 40 Coatol (lo)
+jr_00b_49e5:   ; fake-decode label kept at its exact offset $49e5 (referenced by bytes decoded as code elsewhere; NOT code)
+    db $38   ; [ 56] species 40 Coatol (hi)
+    dw $3819   ; [ 57] species 41 Orochi
+    dw $381a   ; [ 58] species 42 BattleRex
+    db $1b   ; [ 59] species 43 SkyDragon (lo)
+jr_00b_49eb:   ; fake-decode label kept at its exact offset $49eb (referenced by bytes decoded as code elsewhere; NOT code)
+    db $38   ; [ 59] species 43 SkyDragon (hi)
+    dw $381c   ; [ 60] species 44 Divinegon
+    dw $381d   ; [ 61] species 45 Tonguella
+    db $1e   ; [ 62] species 46 Almiraj (lo)
+jr_00b_49f1:   ; fake-decode label kept at its exact offset $49f1 (referenced by bytes decoded as code elsewhere; NOT code)
+    db $38   ; [ 62] species 46 Almiraj (hi)
+    dw $381f   ; [ 63] species 47 CatFly
+    dw $3820   ; [ 64] species 48 PillowRat
+    db $21   ; [ 65] species 49 Saccer (lo)
+jr_00b_49f7:   ; fake-decode label kept at its exact offset $49f7 (referenced by bytes decoded as code elsewhere; NOT code)
+    db $38   ; [ 65] species 49 Saccer (hi)
+    dw $3822   ; [ 66] species 50 GulpBeast
+    dw $3823   ; [ 67] species 51 Skullroo
+    db $24   ; [ 68] species 52 WindBeast (lo)
+jr_00b_49fd:   ; fake-decode label kept at its exact offset $49fd (referenced by bytes decoded as code elsewhere; NOT code)
+    db $38   ; [ 68] species 52 WindBeast (hi)
+    dw $3825   ; [ 69] species 53 Anteater
+    dw $3826   ; [ 70] species 54 SuperTen
+    db $27   ; [ 71] species 55 IronTurt (lo)
+jr_00b_4a03:   ; fake-decode label kept at its exact offset $4a03 (referenced by bytes decoded as code elsewhere; NOT code)
+    db $38   ; [ 71] species 55 IronTurt (hi)
+    dw $3828   ; [ 72] species 56 Mommonja
+    dw $3829   ; [ 73] species 57 HammerMan
+    db $2a   ; [ 74] species 58 Grizzly (lo)
+jr_00b_4a09:   ; fake-decode label kept at its exact offset $4a09 (referenced by bytes decoded as code elsewhere; NOT code)
+    db $38   ; [ 74] species 58 Grizzly (hi)
+    dw $382b   ; [ 75] species 59 Yeti
+    dw $382c   ; [ 76] species 60 MadGopher
+    db $2d   ; [ 77] species 61 FairyRat (lo)
+jr_00b_4a0f:   ; fake-decode label kept at its exact offset $4a0f (referenced by bytes decoded as code elsewhere; NOT code)
+    db $38   ; [ 77] species 61 FairyRat (hi)
+    dw $382e   ; [ 78] species 62 Unicorn
+    dw $382f   ; [ 79] species 63 Goategon
+    db $30   ; [ 80] species 64 WildApe (lo)
+jr_00b_4a15:   ; fake-decode label kept at its exact offset $4a15 (referenced by bytes decoded as code elsewhere; NOT code)
+    db $38   ; [ 80] species 64 WildApe (hi)
+    dw $3831   ; [ 81] species 65 Trumpeter
+    dw $3832   ; [ 82] species 66 KingLeo
+    db $33   ; [ 83] species 67 DarkHorn (lo)
+jr_00b_4a1b:   ; fake-decode label kept at its exact offset $4a1b (referenced by bytes decoded as code elsewhere; NOT code)
+    db $38   ; [ 83] species 67 DarkHorn (hi)
+    dw $3834   ; [ 84] species 68 MadCat
+    dw $3835   ; [ 85] species 69 BigEye
+    db $36   ; [ 86] species 70 Picky (lo)
+jr_00b_4a21:   ; fake-decode label kept at its exact offset $4a21 (referenced by bytes decoded as code elsewhere; NOT code)
+    db $38   ; [ 86] species 70 Picky (hi)
+    dw $3837   ; [ 87] species 71 Wyvern
+    dw $3838   ; [ 88] species 72 BullBird
+    db $39   ; [ 89] species 73 Florajay (lo)
+jr_00b_4a27:   ; fake-decode label kept at its exact offset $4a27 (referenced by bytes decoded as code elsewhere; NOT code)
+    db $38   ; [ 89] species 73 Florajay (hi)
+    dw $383a   ; [ 90] species 74 DuckKite
+    dw $383b   ; [ 91] species 75 MadPecker
+    db $3c   ; [ 92] species 76 MadRaven (lo)
+jr_00b_4a2d:   ; fake-decode label kept at its exact offset $4a2d (referenced by bytes decoded as code elsewhere; NOT code)
+    db $38   ; [ 92] species 76 MadRaven (hi)
+    dw $383d   ; [ 93] species 77 MistyWing
+    dw $383e   ; [ 94] species 78 Dracky
+    db $3f   ; [ 95] species 79 BigRoost (lo)
+jr_00b_4a33:   ; fake-decode label kept at its exact offset $4a33 (referenced by bytes decoded as code elsewhere; NOT code)
+    db $38   ; [ 95] species 79 BigRoost (hi)
+    dw $3840   ; [ 96] species 80 StubBird
+    dw $3841   ; [ 97] species 81 LandOwl
+    db $42   ; [ 98] species 82 MadGoose (lo)
+jr_00b_4a39:   ; fake-decode label kept at its exact offset $4a39 (referenced by bytes decoded as code elsewhere; NOT code)
+    db $38   ; [ 98] species 82 MadGoose (hi)
+    dw $3843   ; [ 99] species 83 MadCondor
+    dw $3844   ; [100] species 84 Blizzardy
+    db $45   ; [101] species 85 Phoenix (lo)
+jr_00b_4a3f:   ; fake-decode label kept at its exact offset $4a3f (referenced by bytes decoded as code elsewhere; NOT code)
+    db $38   ; [101] species 85 Phoenix (hi)
+    dw $3846   ; [102] species 86 ZapBird
+    dw $3847   ; [103] species 87 WhipBird
+    db $00   ; [104] species 88 FunkyBird (lo)
+jr_00b_4a45:   ; fake-decode label kept at its exact offset $4a45 (referenced by bytes decoded as code elsewhere; NOT code)
+    db $39   ; [104] species 88 FunkyBird (hi)
+    dw $3901   ; [105] species 89 RainHawk
+    dw $3902   ; [106] species 90 MadPlant
+    db $03   ; [107] species 91 FireWeed (lo)
+jr_00b_4a4b:   ; fake-decode label kept at its exact offset $4a4b (referenced by bytes decoded as code elsewhere; NOT code)
+    db $39   ; [107] species 91 FireWeed (hi)
+    dw $3904   ; [108] species 92 FloraMan
+jr_00b_4a4e:   ; fake-decode label kept at its exact offset $4a4e (referenced by bytes decoded as code elsewhere; NOT code)
+    db $05, $39   ; [109] species 93 WingTree
+    dw $3906   ; [110] species 94 CactiBall
+    dw $3907   ; [111] species 95 Gulpple
+jr_00b_4a54:   ; fake-decode label kept at its exact offset $4a54 (referenced by bytes decoded as code elsewhere; NOT code)
+    db $08, $39   ; [112] species 96 Toadstool
+    db $09   ; [113] species 97 AmberWeed (lo)
+jr_00b_4a57:   ; fake-decode label kept at its exact offset $4a57 (referenced by bytes decoded as code elsewhere; NOT code)
+    db $39   ; [113] species 97 AmberWeed (hi)
+    dw $390a   ; [114] species 98 Stubsuck
+jr_00b_4a5a:   ; fake-decode label kept at its exact offset $4a5a (referenced by bytes decoded as code elsewhere; NOT code)
+    db $0b, $39   ; [115] species 99 Oniono
+    db $0c   ; [116] species 100 DanceVegi (lo)
+jr_00b_4a5d:   ; fake-decode label kept at its exact offset $4a5d (referenced by bytes decoded as code elsewhere; NOT code)
+    db $39   ; [116] species 100 DanceVegi (hi)
+    dw $390d   ; [117] species 101 TreeBoy
+jr_00b_4a60:   ; fake-decode label kept at its exact offset $4a60 (referenced by bytes decoded as code elsewhere; NOT code)
+    db $0e, $39   ; [118] species 102 FaceTree
+    db $0f   ; [119] species 103 HerbMan (lo)
+jr_00b_4a63:   ; fake-decode label kept at its exact offset $4a63 (referenced by bytes decoded as code elsewhere; NOT code)
+    db $39   ; [119] species 103 HerbMan (hi)
+    dw $3910   ; [120] species 104 BeanMan
+jr_00b_4a66:   ; fake-decode label kept at its exact offset $4a66 (referenced by bytes decoded as code elsewhere; NOT code)
+    db $11, $39   ; [121] species 105 EvilSeed
+    db $12   ; [122] species 106 ManEater (lo)
+jr_00b_4a69:   ; fake-decode label kept at its exact offset $4a69 (referenced by bytes decoded as code elsewhere; NOT code)
+    db $39   ; [122] species 106 ManEater (hi)
+    dw $3913   ; [123] species 107 Snapper
+jr_00b_4a6c:   ; fake-decode label kept at its exact offset $4a6c (referenced by bytes decoded as code elsewhere; NOT code)
+    db $14, $39   ; [124] species 108 Rosevine
+    db $15   ; [125] species 109 Watabou (lo)
+jr_00b_4a6f:   ; fake-decode label kept at its exact offset $4a6f (referenced by bytes decoded as code elsewhere; NOT code)
+    db $39   ; [125] species 109 Watabou (hi)
+    dw $3916   ; [126] species 110 GiantSlug
+jr_00b_4a72:   ; fake-decode label kept at its exact offset $4a72 (referenced by bytes decoded as code elsewhere; NOT code)
+    db $17, $39   ; [127] species 111 Catapila
+    dw $3918   ; [128] species 112 Gophecada
+    dw $3919   ; [129] species 113 Butterfly
+jr_00b_4a78:   ; fake-decode label kept at its exact offset $4a78 (referenced by bytes decoded as code elsewhere; NOT code)
+    db $1a, $39   ; [130] species 114 WeedBug
+    db $1b   ; [131] species 115 GiantWorm (lo)
+jr_00b_4a7b:   ; fake-decode label kept at its exact offset $4a7b (referenced by bytes decoded as code elsewhere; NOT code)
+    db $39   ; [131] species 115 GiantWorm (hi)
+    dw $391c   ; [132] species 116 Lipsy
+jr_00b_4a7e:   ; fake-decode label kept at its exact offset $4a7e (referenced by bytes decoded as code elsewhere; NOT code)
+    db $1d, $39   ; [133] species 117 StagBug
+    dw $391e   ; [134] species 118 ArmyAnt
+    dw $391f   ; [135] species 119 GoHopper
+jr_00b_4a84:   ; fake-decode label kept at its exact offset $4a84 (referenced by bytes decoded as code elsewhere; NOT code)
+    db $20, $39   ; [136] species 120 TailEater
+    dw $3921   ; [137] species 121 ArmorPede
+    dw $3922   ; [138] species 122 Eyeder
+jr_00b_4a8a:   ; fake-decode label kept at its exact offset $4a8a (referenced by bytes decoded as code elsewhere; NOT code)
+    db $23, $39   ; [139] species 123 GiantMoth
+    dw $3924   ; [140] species 124 Droll
+    dw $3925   ; [141] species 125 ArmyCrab
+    dw $3926   ; [142] species 126 MadHornet
+    dw $3927   ; [143] species 127 HornBeet
+    dw $3928   ; [144] species 128 Armorpion
+    dw $3929   ; [145] species 129 Digster
+    dw $392a   ; [146] species 130 Pixy
+    dw $392b   ; [147] species 131 ArcDemon
+    dw $392c   ; [148] species 132 AgDevil
+    dw $392d   ; [149] species 133 Demonite
+    dw $392e   ; [150] species 134 DarkEye
+    dw $392f   ; [151] species 135 EyeBall
+    dw $3930   ; [152] species 136 SkulRider
+    dw $3931   ; [153] species 137 EvilBeast
+    dw $3932   ; [154] species 138 1EyeClown
+    dw $3933   ; [155] species 139 Gremlin
+    dw $3934   ; [156] species 140 MedusaEye
+    db $35   ; [157] species 141 Lionex (lo)
+jr_00b_4aaf:   ; fake-decode label kept at its exact offset $4aaf (referenced by bytes decoded as code elsewhere; NOT code)
+    db $39   ; [157] species 141 Lionex (hi)
+    dw $3936   ; [158] species 142 GoatHorn
+    dw $3937   ; [159] species 143 Orc
+    dw $3938   ; [160] species 144 Ogre
+    dw $3939   ; [161] species 145 GateGuard
+    dw $393a   ; [162] species 146 ChopClown
+    dw $393b   ; [163] species 147 Grendal
+    dw $393c   ; [164] species 148 Akubar
+    db $3d   ; [165] species 149 MadKnight (lo)
+jr_00b_4abf:   ; fake-decode label kept at its exact offset $4abf (referenced by bytes decoded as code elsewhere; NOT code)
+    db $39   ; [165] species 149 MadKnight (hi)
+    dw $393e   ; [166] species 150 Gigantes
+    dw $393f   ; [167] species 151 Centasaur
+    dw $3940   ; [168] species 152 EvilArmor
+    dw $3941   ; [169] species 153 Jamirus
+    dw $3942   ; [170] species 154 Durran
+    dw $3943   ; [171] species 155 Spooky
+    dw $3944   ; [172] species 156 Skullgon
+    db $45   ; [173] species 157 Putrepup (lo)
+jr_00b_4acf:   ; fake-decode label kept at its exact offset $4acf (referenced by bytes decoded as code elsewhere; NOT code)
+    db $39   ; [173] species 157 Putrepup (hi)
+    dw $3946   ; [174] species 158 RotRaven
+    dw $3947   ; [175] species 159 Mummy
+    dw $3a00   ; [176] species 160 DarkCrab
+    dw $3a01   ; [177] species 161 DeadNite
+    dw $3a02   ; [178] species 162 Shadow
+    dw $3a03   ; [179] species 163 Hork
+    dw $3a04   ; [180] species 164 Mudron
+    db $05   ; [181] species 165 NiteWhip (lo)
+jr_00b_4adf:   ; fake-decode label kept at its exact offset $4adf (referenced by bytes decoded as code elsewhere; NOT code)
+    db $3a   ; [181] species 165 NiteWhip (hi)
+    dw $3a06   ; [182] species 166 MadSpirit
+    dw $3a07   ; [183] species 167 WindMerge
+    dw $3a08   ; [184] species 168 Reaper
+    dw $3a09   ; [185] species 169 DeadNoble
+    dw $3a0a   ; [186] species 170 WhiteKing
+    dw $3a0b   ; [187] species 171 BoneSlave
+    dw $3a0c   ; [188] species 172 Skeletor
+    db $0d   ; [189] species 173 Servant (lo)
+jr_00b_4aef:   ; fake-decode label kept at its exact offset $4aef (referenced by bytes decoded as code elsewhere; NOT code)
+    db $3a   ; [189] species 173 Servant (hi)
+    dw $3a0e   ; [190] species 174 Copycat
+    dw $3a0f   ; [191] species 175 JewelBag
+    dw $3a10   ; [192] species 176 EvilWand
+    dw $3a11   ; [193] species 177 MadCandle
+    dw $3a12   ; [194] species 178 CoilBird
+    dw $3a13   ; [195] species 179 Facer
+    dw $3a14   ; [196] species 180 SpikyBoy
+    dw $3a15   ; [197] species 181 MadMirror
+    dw $3a16   ; [198] species 182 RogueNite
+    dw $3a17   ; [199] species 183 Goopi
+    dw $3a18   ; [200] species 184 Voodoll
+    dw $3a19   ; [201] species 185 MetalDrak
+    dw $3a1a   ; [202] species 186 Balzak
+    dw $3a1b   ; [203] species 187 SabreMan
+    dw $3a1c   ; [204] species 188 CurseLamp
+    dw $3a1d   ; [205] species 189 Roboster
+    dw $3a1e   ; [206] species 190 EvilPot
+    dw $3a1f   ; [207] species 191 Gismo
+    dw $3a20   ; [208] species 192 LavaMan
+    dw $3a21   ; [209] species 193 IceMan
+    dw $3a22   ; [210] species 194 Mimic
+    dw $3a23   ; [211] species 195 MudDoll
+    dw $3a24   ; [212] species 196 Golem
+    dw $3a25   ; [213] species 197 StoneMan
+    dw $3a26   ; [214] species 198 BombCrag
+    dw $3a27   ; [215] species 199 GoldGolem
+    dw $3a28   ; [216] species 200 DracoLord
+    dw $3a29   ; [217] species 201 DracoLord
+    dw $3a2a   ; [218] species 202 Hargon
+    dw $3a2b   ; [219] species 203 Sidoh
+    dw $3a2c   ; [220] species 204 Baramos
+    dw $3a2d   ; [221] species 205 Zoma
+    dw $3a2e   ; [222] species 206 Pizzaro
+    dw $3a2f   ; [223] species 207 Esterk
+    dw $3a30   ; [224] species 208 Mirudraas
+    dw $3a31   ; [225] species 209 Mirudraas
+    dw $3a32   ; [226] species 210 Mudou
+    dw $3a33   ; [227] species 211 DeathMore
+    dw $3a34   ; [228] species 212 DeathMore
+    dw $3a35   ; [229] species 213 DeathMore
+jr_00b_4b40:   ; fake-decode label kept at its exact offset $4b40 (referenced by bytes decoded as code elsewhere; NOT code)
+    db $36, $3a   ; [230] species 214 Darkdrium
     rst $38
 
 ; =============================================================================

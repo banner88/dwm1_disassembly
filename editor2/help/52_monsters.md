@@ -73,9 +73,18 @@ monster on the sheet and outlines it; click one:
   **Auto colours** to go back. A pose bigger than
   48 × 48 is shrunk (the note turns red) — tighten the red box to crop
   instead. **Walking**: the game has 8 shared walking palettes (cream, one
-  colour, black); the editor picks the closest, you can pick another. It
-  stores 4 frames (down, sideways a and b, up); the second down / up frame is
-  the first mirrored, like the original monsters that walk this way.
+  colour, black); the editor picks the closest, you can pick another.
+  **In the game** shows the four directions walking as the game will draw
+  them, **On the sheet** the six frames you cut, walking the same way.
+- **Walk style**: the game keeps 16 walking tiles per monster, the sheet has
+  24 (six frames of four). Every original monster shares its tiles in one of
+  the game's 155 walk styles (a mirrored frame, a head re-used with new legs,
+  a one-pixel bob …). The list holds all 155, sorted by how many pixels the
+  game would draw differently from your six frames; "0 px off" = exactly the
+  sheet's animation. The best one is picked for you; "its own" marks the
+  monster's original style, "copied into bank $10 / $11" one the game keeps
+  for other monsters only (it is copied — that costs a few dozen bytes of a
+  small reserve, see Limits).
 - name (up to 9 letters), nickname (4), the id (221-239), **Copy data from**
   (the original monster whose family, level cap, growth, resistances, 3 skills
   and library text the new one starts with — only the art is new; change any
@@ -86,6 +95,30 @@ the two art files (`assets/species/`) and remembers the boxes, so **Re-cut the
 art from a sprite sheet…** (Name & art page) reopens the same monster with the
 same boxes. One undo step removes all of it.
 
+## New art for an original monster
+
+Select an original monster (0-214) and open **Name & art**:
+
+- **New art from a sprite sheet…** opens the same sheet window as a new
+  species (boxes, colours, walking palette — see above) and replaces this
+  monster's battle picture and walking frames **everywhere the game draws
+  them**: battles, the party / INFO screens, the library (its page and the
+  little parent icons on other monsters' pages), the farm, monster NPCs and
+  the monster following you. The editor keeps the sheet and the boxes, so
+  pressing it again reopens the same cut.
+- **Battle colours** / **Walking palette** change the colours alone — they
+  also work on the original art (a green Dracky, for example).
+- **Back to the original art and colours** undoes all of it for this
+  monster (the art files stay in `assets/art/`).
+
+New walking art walks in the walk style chosen in the sheet window (the
+best fit to the sheet's six frames unless you pick another). The list and the
+canvas show the new art at once. Space: the art of re-drawn original monsters shares
+three banks (about 49 KB, shown under the list) — about 58 monsters with new
+battle AND walking art. Only the changes are saved (`gamedata.art`).
+TERRY? and the four summons have no art page: they are special battle
+entries, not monsters — only their moves and stats change.
+
 ## Name & art (new species)
 
 Name, nickname, whose library description it uses, its walking palette and
@@ -94,7 +127,8 @@ enemy, a monster NPC or a breeding recipe still uses it). The encyclopedia
 recipe is the first special breeding recipe that makes it (Breeding).
 
 The meters under the list: new species used of 19, the bytes their names
-take of the ≈ 290 the game has free, and the art bytes of the 16 KB art bank.
+take of the ≈ 290 the game has free, the art bytes of the 16 KB new-species
+art bank, and the bytes used by new art for original monsters (three banks).
 
 ## Putting a monster in a gate
 

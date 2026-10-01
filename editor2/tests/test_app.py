@@ -167,6 +167,50 @@ def main():
     print('OK: Families tab — 11 families, move Snaily to Spirit, voice A, a Spirit '
           'name; undo restores the document')
 
+    # S107 (P3.10 part 2c): the family icon editor — a painted stroke = one
+    # undo step into gamedata.families.<f>.icon; a PNG import; the original
+    # again removes the key; undo restores the file
+    from editor2.app import families_tab as FT
+    before = doc.dumps()
+    ft.fam_list.setCurrentRow(0)                                   # Slime
+    app.processEvents()
+    assert ft.icon_canvas.grid == doc.vanilla_family_icon(0)
+    assert not ft.icon_reset.isEnabled()
+    g = [list(r) for r in ft.icon_canvas.grid]
+    g[0][0] = 3
+    ft.icon_canvas.set_grid(g)
+    ft._icon_edited(g)
+    assert doc.data['gamedata']['families']['slime']['icon'][0][0] == '3', \
+        doc.data['gamedata']['families']
+    assert ft.icon_reset.isEnabled() and ft.icon_canvas.grid == g
+    import tempfile
+    from PIL import Image
+    tmp = os.path.join(tempfile.mkdtemp(), 'icon.png')
+    im = Image.new('RGB', (8, 8), (255, 255, 255))
+    for k in range(8):
+        im.putpixel((k, k), (0, 0, 0))
+        im.putpixel((7 - k, k), (90, 90, 90))
+    im.save(tmp)
+    want = FT.png_to_grid(tmp)
+    assert want[0][0] == 3 and want[0][7] == 0 and want[1][2] == 1, want
+    ft.fam_list.setCurrentRow(9)                                   # Spirit
+    app.processEvents()
+    real = FT.QFileDialog.getOpenFileName
+    FT.QFileDialog.getOpenFileName = staticmethod(lambda *a, **k: (tmp, ''))
+    try:
+        ft._icon_png()
+    finally:
+        FT.QFileDialog.getOpenFileName = real
+    assert doc.family_icon(10) == want
+    ft._icon_original()
+    assert doc.family_icon(10) == doc.vanilla_family_icon(10)
+    for _ in range(3):
+        w.session.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'undo must restore project.json exactly'
+    print('OK: Families tab (S107) — icon painted, a PNG imported for Spirit, back to '
+          'the original; undo restores the document')
+
     # S106 (P3.10 part 1): Monsters tab — species list (original + new),
     # species field edits, an enemy-row edit, a new species cut from a sprite
     # sheet through the real dialog; every edit one undo step, undo restores
@@ -249,6 +293,68 @@ def main():
         os.rmdir(sdir)
     print('OK: Monsters tab — 222 species listed, Slime level cap + Fire resistance, wild '
           'Slime HP, a Gorbunok row put in a gate, a new species cut from the water sheet; undo restores everything')
+
+    # S107 (P3.10 part 2a): new art for an ORIGINAL monster (Dracky, 78) through
+    # the real sheet dialog ('original' mode), a battle colour + walking palette
+    # on another (Slime 8, colours only), TERRY? (215) has no art page; undo
+    # restores project.json and removes the written art
+    before = doc.dumps()
+    mt.select(215)
+    assert not mt.pages.isTabEnabled(2), 'TERRY? must have no art page (Iron Rule 8)'
+    mt.select(78)
+    assert mt.pages.isTabEnabled(2) and mt.orig_btn.isVisibleTo(mt.art_page) \
+        and not mt.name_box.isVisibleTo(mt.art_page)
+    dlg = SheetImportDialog(doc, 'original', sid=78, parent=mt)
+    assert 'Dracky' in dlg.windowTitle()
+    dlg.load_sheet(sheet)
+    dlg.select_entry(k)
+    # S107 2b: the walk style list = all 155 layouts ranked, best first, the
+    # sheet's own frames shown beside the game's; picking another re-packs
+    assert dlg.lay_combo.count() == 155 and dlg.lay_combo.currentIndex() == 0
+    assert dlg._follow[2] == dlg._fit[0][1] and dlg.walk_sheet.frames
+    other = dlg.lay_combo.itemData(5)
+    dlg.lay_combo.setCurrentIndex(5)
+    dlg._lay_chosen(5)
+    assert dlg._follow[2] == other and dlg.lay == other
+    dlg.lay_combo.setCurrentIndex(0)
+    dlg._lay_chosen(0)
+    dlg._accept()
+    r = dlg.result_data
+    assert r and 'id' not in r and r['art']['follower_palette'] == 2
+    assert r['art']['layout'] == dlg._fit[0][1], r['art'].get('layout')
+    assets = doc.original_art_paths(78) + [r['source']['sheet']]
+
+    def op2(d):
+        copy_sheet_into_project(d.project_dir, r['sheet_abs'], r['source']['sheet'])
+        d.set_original_art(78, r['art'], source=r['source'])
+    assert mt._push('Dracky: new art', op2, assets=assets)
+    e = doc.data['gamedata']['art']['78']
+    assert e['battle']['art'].startswith('assets/art/078_') and e['follower']['palette'] == 2, e
+    assert e['follower']['layout'] == r['art']['layout'], e
+    from editor2.app import sprite_qt as Qs
+    from editor2.core import sprite_render as SRr
+    bnew, fnew = Qs.species_art(doc, 78)
+    assert bnew and fnew and bnew != SRr.vanilla_battle(78), 'the tab must draw the new art'
+    mt.select(8)
+    mt.a_pal.setCurrentIndex(5)
+    mt._prop('follower_palette', 5)
+    assert doc.data['gamedata']['art']['8'] == {'follower': {'palette': 5}}, doc.data['gamedata']['art']
+    mt._prop('follower_palette', doc.original_palettes(8)[1])       # back to the original value
+    assert '8' not in doc.data['gamedata']['art'], 'an original value must disappear'
+    files = [os.path.join(doc.project_dir, a) for a in assets]
+    assert all(os.path.exists(f) for f in files)
+    for _ in range(3):
+        w.session.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'undo must restore project.json exactly'
+    assert not any(os.path.exists(f) for f in files[:2]), 'undo must remove the written art'
+    if os.path.isdir(sdir) and not os.listdir(sdir):
+        os.rmdir(sdir)
+    adir = os.path.join(doc.project_dir, 'assets', 'art')
+    if os.path.isdir(adir) and not os.listdir(adir):
+        os.rmdir(adir)
+    print('OK: Monsters tab (S107) — Dracky re-arted from the water sheet, Slime walking '
+          'palette set and set back, TERRY? has no art page; undo restores everything')
 
     if do_rom:
         from editor2.app.build_worker import BuildWorker  # noqa: E402

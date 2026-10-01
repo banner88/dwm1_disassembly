@@ -639,6 +639,41 @@ bank $6D stream (run marker `$00`). The user-facing editor surface is the
 Still vanilla-sized (by design, no family 10 path): the battle banks' `$DA33`
 reads are countdown timers, not family (S104 audit).
 
+### Family icons as project data + two missed Spirit readers (S107, ROADMAP P3.10 part 2c)
+
+**Every copy of a family icon (ROM search S107 for the word run `$2E03 … $2E0C`,
+not only labelled code):** the font glyph (`$4F:$4110` + 16·family; Spirit
+`$41B0` = text byte `$1A`) and the 16-byte gfx stream (bank $2E streams 3-12 =
+gfx ids `$2E03` + family, byte-identical to the glyphs; Spirit = bank $6D
+`SpiritIconStream` `$6D04`), the stream reached through FOUR 10-entry tables:
+
+| Table | Reader / screen | Family 10 before S107 | Now |
+|---|---|---|---|
+| `FollowerFamilyGfxTable` `$01:$4BAD` | `GetActiveMonsterStatus` → field status bar `$8DA0+slot·16` (also the title continue box) | S104 fork (`$6D` entry 0) | unchanged |
+| `FamilyIconGfxTable0A` `$0A:$46B5` | party / farm lists (`LoadFldA_4610`) | S104 fork (`$6D` entry 1) | unchanged |
+| **`SavedPartyFamilyIconTable07` `$07:$62AB`** | **the JOURNAL screen's party line** (`SetFld_61fd` → `jr_007_6271`): the SAVED party (SRAM `$A1C8` list → record `$A1FB + slot·$95`, family `+$0A` = `$A205`) | **gfx id `$CDE5`** — PyBoy S107: with a saved Spirit party member the emulator stalled on the JOURNAL screen (no frame completed within minutes); stub-called, the routine had not returned after 30 frames (PC in the ROM0 decompressor, `$1593`) | same-size fork → `$6D` entry 1 |
+| **`SavedPartyFamilyIconTable0A` `$0A:$6013`** | its bank-$0A twin (`SetFldA_5f65` → `jr_00a_5fd9`), same SRAM party | **gfx id `$0A11`** — stub-called, the routine had not returned after 30 frames (PC `$1596`) | same-size fork → `$6D` entry 1 |
+
+The S104 audit listed the two forked tables but not these two (they sat in
+code-decoded data with raw `ld hl, $62ab` / `$6013`; the bytes after them are
+code reached by `call $62bf` / `call $6027` — now labels `Fld_62bf` /
+`FldA_6027`, both trees). The forks: `ld e,a / push bc / ld hl,$6D01 / rst $10 /
+pop bc` + 6 `nop` over `add a … ld d,[hl]` (13 B), like S104's list fork. PyBoy
+(S107, the user's save with the active party member's family poked to 10 and
+saved via JOURNAL): before — the JOURNAL screen stops; after — it shows the
+Spirit wisp (VRAM `$8DA0` == the Spirit tile); the continue box and INFO page
+were already right. A wild monster of a species moved to Spirit joins with
+family byte 10 (PyBoy: the demo's always-joining Slime, farm slot 20).
+
+**Icons are project data:** `gamedata.families.<f>.icon` = 8 strings of 8 digits
+0-3 (PROJECT_COMPILER §2.20) → the glyph AND the stream (19-byte literal stream,
+the format of all 11 shipped ones). **Shades measured on screen (PyBoy S107):**
+index 1 = the cream background `(248,248,208)` and 3 = black on every screen;
+0 / 2 follow the screen's palette — INFO page `(0,128,56)` / `(120,216,8)`
+(greens), continue box `(200,72,0)` / `(248,200,0)` (orange, gold). The demo's
+heart (Slime) and star (Dragon) appear in the continue box, the field status bar
+(VRAM `$8DA0+16·slot` == the authored tiles) and the INFO page ("♥family").
+
 ---
 
 ## Family icons (B8/B9 "name" path) — TRACED + Spirit icon half-built (Session 20)

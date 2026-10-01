@@ -31,7 +31,10 @@ to the proven overlay:
 | `patches/bank_064.asm`, `bank_067.asm`, `bank_074.asm`, `bank_014.asm` region | layouts / tilesets / songs / quest enemies (S64, S70, S92) |
 | `patches/bank_06c.asm` | whole file = template head (`CustomTileAnimate`) + the rooms' own tile animations (S102, §2.19) |
 | `gd_*` regions in `patches/bank_001/003/006/007/012/013/014/016/04d/054/069.asm` | the vanilla data tables, from `gamedata` (S103, §2.20) |
+| `gd_family_icons` / `gd_family_icon_streams` / `gd_spirit_icon_stream` in `patches/bank_04f/02e/06d.asm` | the 11 family icons, from `gamedata.families.<f>.icon` (S107 P3.10 part 2c, §2.20) |
 | `patches/bank_07e.asm` + the `ns_*` regions in `patches/bank_000/011/016/017/041/04d/06a.asm` | the project's NEW species (ids 221-239), from `custom.species` (S105, §2.21) |
+| `patches/bank_07f.asm`, `bank_07c.asm`, `bank_07a.asm` + the `art_*` regions in `patches/bank_000/001/006/007/009/00b/010/011/012/017/018/059.asm` | new ART for the ORIGINAL monsters 0-214, from `gamedata.art` (S107, §2.23) |
+| the `lay_copies_10` / `lay_copies_11` regions (the zero tails of `patches/bank_010.asm` / `bank_011.asm`) | walking layouts copied into the other follower bank, from `gamedata.art` + `custom.species` (S107 2b, §2.23 "Walking layouts") |
 
 Everything else — engine intercepts in banks `$00/$01/$04/$06/$07/$0B/$16`,
 layouts (`bank_064.asm` via `tools/build_gate_room.py` /
@@ -406,6 +409,8 @@ registering an emitter; nothing existing changes.
 | `tileanim6c` (S102) | `custom.rooms[].tile_anims` | `file:patches/bank_06c.asm` | `$6C` |
 | `gd_monsters` `gd_enemies` `gd_encounters` `gd_family` `gd_special` `gd_exp_curves` `gd_growth_curves` `gd_skill_learn` `gd_skill_mp` `gd_skill_records` `gd_library` `gd_library_text` (S103) | `gamedata` (§2.20) | `region:` in banks $03 / $14 / $01 / $16 / $69 / $13 / $13 / $06 / $07 / $54 / $12 / $4D | those banks |
 | `species7e` + `ns_battle_gfx` `ns_follower_attr` `ns_battle_pal` `ns_recipe_pair` `ns_name_ptr` `ns_short_ptr` `ns_text_a`…`ns_text_g` `ns_detail_text` `ns_info` (S105; G3 layout) | `custom.species` (§2.21; editor2/core/species.py) | `file:patches/bank_07e.asm` + `region:` in banks $00 / $11 / $17 / $16 / $41 ×9 / $4D / $6A | those banks |
+| `art7f` `art7c` `art7a` + `art_battle_gfx` `art_battle_pal` `art_walk_01/06/07/09/0b/12/18/59` `art_layout_10/11` `art_attr_10/11` (S107) | `gamedata.art` (§2.23; editor2/core/art.py) | `file:patches/bank_07f/07c/07a.asm` + `region:` in banks $00 / $17 / $01 $06 $07 $09 $0B $12 $18 $59 / $10 / $11 | those banks |
+| `lay_copies_10` `lay_copies_11` (S107 2b) + `ns_follower_layout` (in the species list) | `gamedata.art` + `custom.species` (§2.23 "Walking layouts"; editor2/core/walk_layouts.py) | `region:` in banks $10 / $11 | those banks |
 
 `bank_060` generated layout order (fixed, deterministic): script master
 table → shared no-op (if needed) → per-room script tables+bodies (script
@@ -620,6 +625,8 @@ editor2/
         gates.py             # S100 gate model: vanilla gates, floors, arrival px, GatesMixin
         gamedata.py          # S103 Layer A-lite: vanilla tables + gamedata overrides (§2.20)
         species.py           # S105 custom.species: new species -> ns_* regions + bank $7E (§2.21)
+        art.py               # S107 gamedata.art: original monsters' art -> art_* regions + banks $7F/$7C/$7A (§2.23)
+        walk_layouts.py      # S107 2b: the 155 walking layouts — packer, ranking, copies into the other follower bank (§2.23)
         skill_scripts.json   # S105 the custom skills' built-in dialog scripts + texts (§2.22)
         emulator.py
         templates/{bank_060_head.asm, bank_071_head.asm, PINNED_SHA256}
@@ -1315,6 +1322,7 @@ with the original at every table's address). The vanilla rows come from
 | `breeding.family` (slots 0-214) | `FamilyRecipeTable` $16:$4974 (`bank_016#gd_family_recipes`) | `null` = no recipe ($FF,$FF); matchers as `build_breeding.py` (family / species name, id, $hex). S104: `"Spirit"` = `$FA` on either side; `"AnyFamily"` / `"any"` are an ERROR (the patched family scan no longer has the wildcard) |
 | `breeding.special` | the LIVE table in bank $69 (`bank_069#gd_special_recipes`; the $16 copy is runtime-dead, B2) | B5 semantics ported: overrides by `index` or `match`, appends past 824; the whole-table shadow check (ERROR: a dead append / a shadowed override) |
 | `families` (S104 r2) | `FamilyTextPtrTable11` bank $6D (`bank_06d#gd_family_voices`, 11 dw) + the Spirit name pool in bank $41's dead fill (`bank_041#gd_spirit_names`, fixed 55 B) | `<family>.dialogue` = voice `A`-`D` or a family name ("talks like"); `spirit.names` = 8 names, 1-4 letters A-Z / a-z (`A` = $24, `a` = $3E); names only for Spirit (the other pools stay vanilla). Editor: the Families tab |
+| `families.<f>.icon` (S107, ROADMAP P3.10 part 2c) | the font glyphs `bank_04f#gd_family_icons` ($4F:$4110-$41BF, 11 × 16 B, text bytes $10-$1A; families 0-9 were `INCBIN gfx/image_04f_4110.2bpp`), families 0-9's gfx streams `bank_02e#gd_family_icon_streams` ($2E:$424A-$42F7, 10 × 19 B, gfx ids $2E03-$2E0C; `patches/bank_02e.asm` = NEW hand patch, PATCH_FILES) and `bank_06d#gd_spirit_icon_stream` (SpiritIconStream, gfx id $6D04) | 8 strings of 8 digits 0-3 (0 dark, 1 the cream background, 2 light, 3 black); ONE picture → the glyph + the stream (19-B literal: `dw $0010`, run marker = the smallest byte the tile lacks, 16 B — the format of all 11 shipped streams, so empty == the same bytes). Original icon = key removed. Validators: 8 × 8, digits 0-3. Editor: the Families tab icon editor |
 | `boss_joins` | the vanilla 34 rows inside `BossRedirectTableExt` (`redirects14`) | only for the 34 vanilla fight EIDs; new pairs = `progression.enemies[].join_as` |
 | (derived) | `LibFamilyPtrTable` bank $12 (`bank_012#gd_library_grouping`) | library tabs from the effective family bytes (+ new species) — B7/B9 format |
 | (derived) | bank $4D recipe TEXT (`bank_04d#gd_library_text`) | coherence Set 1: every family slot the project changed gets its encyclopedia string regenerated **in place** (EN strings are 18 chars + $F0 = the slot; the dispatch pointer never moves because entries 5-10 double as the $4007 mode 2-7 bases — TEXT_SYSTEM) |
@@ -1369,6 +1377,16 @@ BREEDING_SYSTEM "Spirit — the 11th family (S104)"). **Pin (S104):**
 **`eee9f5b08b2f847291103961385099d9`** (patched; built S104, NOT yet
 user-tested) — no example `project.json` change; the delta is the engine
 bytes. Prev `5d1dbc5f…` (patched, historical; S103 user-confirmed).
+**S107 (P3.10 part 2c):** `gamedata.families.<f>.icon` → three regions (table
+row above); and the two saved-party icon readers S104 missed (banks $07 / $0A,
+BREEDING_SYSTEM "Family icons as project data") far-call `FamilyIconGfxFromE`
+→ pin **`77ccdab8a746fdc25fcad8d1239c84e4`** (patched; built S107,
+USER-CONFIRMED 2026-10-01; test_compiler `REFERENCE_MD5`). Prev `9740c1c9…` (patched,
+historical; S107 2b). Tests: no edits == the ROM's glyphs / streams; a Slime +
+a Spirit icon land in glyph + stream (other 9 untouched, every stream 19 B);
+bad icons refused; `--rom`: glyphs and gfx ids $2E03 / $6D04 decode to the
+authored tiles, the fork bytes once in $07 and twice in $0A, the blank
+project's ROM == the original at $4F:$4110-$41AF and $2E:$424A-$42F7.
 **S104 r2:** `gamedata.families` (voices + Spirit names, two new regions;
 empty == the r1 bytes) and the user-picked ghost-wisp icon → pin
 **`eb1535108cdbc9ac24d64dce3db5591e`** (patched; built S104 r2, NOT yet
@@ -1411,6 +1429,8 @@ follower forks kept a one-entry table in end-of-bank padding.)
                "palette": ["$4D67", "$6BFF", "$7FFF", "$0000"]},
   "follower": {"art": "assets/species/gorbunok_follower.bin", // LZ stream, 256 B decoded
                "walks_like": 128, "palette": 2}               // layout donor 128-214, OBJ palette 0-7
+               // S107 2b: OR "layout": 0-154 (any of the 155 walking layouts — §2.23
+               // "Walking layouts"); `layout` and `walks_like` together = error
 }]
 ```
 
@@ -1421,7 +1441,8 @@ id ≥ 221).
 | Region | File | Content (no species = the ORIGINAL ROM's bytes) |
 |---|---|---|
 | `ns_battle_gfx` | bank_000 `$2D59-$2D7E` (MonsterBattleGfxTable tail, re-sectioned `$2D56-$2DA7`) | 19 words: `$7E00 + (id-221)*2 + 1` (else `$320F`) |
-| `ns_follower_attr` | bank_011 `NewFollowerAttrTable` | 19 × 2 B: OBJ palette, donor level-1 index (walks_like − $80) |
+| `ns_follower_attr` | bank_011 `NewFollowerAttrTable` | 19 × 1 B: OBJ palette (S107 2b; S105-S107 2a: 2 B = palette + donor index) |
+| `ns_follower_layout` | bank_011 `NewFollowerL1Table` (S107 2b) | 19 dw: the species' level-2 layout table — `walks_like` = the donor's own table, `layout` = that layout's bank-$11 table or its copy (`lay_copies_11`, §2.23); undeclared = `$0000` (the original zero padding; never read) |
 | `ns_battle_pal` | bank_017 `NewBattlePalTable` | 19 × 8 B RGB555 |
 | `ns_recipe_pair` | bank_016 `NewRecipePairs` | 19 × 2 B encyclopedia parent pair (`$FF,$FF` = none) |
 | `ns_name_ptr` | bank_041 MonsterNamePtrTable `[221]-[239]` (`$44F3`) | `dw NsName_<id>` (else `Unused_220` / `Unused_225`, the vanilla words) |
@@ -1467,8 +1488,12 @@ B, an enemy or monster NPC of an undeclared species ≥ 221, a family library
 tab over 32 members (was an emit-time exception), a `skill:` id in the project.
 **Layout (S105 fix):** the pre-S105 patch wrote the layout pointer at
 `$11:$413F`, inside the attr table (ChopClown / Grendal's bytes);
-`NewAttrHandler` now writes the donor's level-1 index to HRAM `$C7`
-(MONSTER_DATA follower section). Art files: the example's are reproduced
+`NewAttrHandler` then wrote the donor's level-1 index to HRAM `$C7`
+(MONSTER_DATA follower section). **S107 2b:** the handler leaves `$C7` alone;
+both bank-$11 follower entries call `FollowerLayoutBase11` instead of
+`ld de, FollowerLayoutL1Table11` (3 bytes for 3) — DE = `NewFollowerL1Table −
+2·$5D` for ids 221+, so `[$C7]·2` (= species−$80) lands on the species' OWN
+row: any of the 155 layouts, native or copied. Art files: the example's are reproduced
 byte-for-byte by `tools/bake_follower_overflow.py --stream-dir` from
 `examples/follower_swap/`. Editor: `conversation.species_names(data)` and the
 NPC Monsters picker list the project's species (no thumbnail until P3.10); the
@@ -1486,8 +1511,14 @@ forks, HighBattlePal, FamilyRecipeResolve, NewAttrHandler, LoadModeBaseRedirect
 still fits; bank $12's 714 trailing `nop`s became `ds $8000 - @` so the library
 grouping region can grow).
 
-**Pin (S105 G3):** **`f22f56e116bc6b3f6b94e7d45a7e5f1e`** (patched; built S105,
-USER-CONFIRMED 2026-09-30 ("Confirm all three appear as expected")). The example still declares only Gorbunok (now row 224-221
+**Pin (S107 2b):** **`9740c1c99f9eb11fd2d0edbf3d0a3066`** (patched; built S107,
+USER-CONFIRMED 2026-10-01 on the demo ROM): the bank-$11 engine change above + `NewFollowerL1Table`
+(Gorbunok `$4184` = walks like 128, as before) + the zero tails of banks
+$10 / $11 as the regions `lay_copies_10` / `lay_copies_11` (empty = the same
+zeros). Prev:
+**Pin (S105 G3):** **`f22f56e116bc6b3f6b94e7d45a7e5f1e`** (patched, historical; built S105,
+USER-CONFIRMED 2026-09-30 ("Confirm all three appear as expected"); S107 2a
+changed no pinned byte). The example still declares only Gorbunok (now row 224-221
 = 3; bank $7E index 6/7). Prev **`f8a714850b5318844e23b050a16f222e`** (patched,
 historical — the capacity-1 P3.9b build, never user-tested): byte delta vs the
 S104 r5 pin (`15f21834…`, patched, historical): pool 0 slot 3 EID 518 → 520;
@@ -1514,6 +1545,131 @@ The validator does not warn about the built-in texts' `lines` form (measured +
 user-confirmed S73). PyBoy S105 on the user's save (a project WITHOUT room
 `$71`): all four dialogs through the real SKIL menu; the S104 build soft-locked
 there (BATTLE_SKILL_SYSTEM §14).
+
+## §2.23 S107 — new ART for the ORIGINAL monsters (`gamedata.art`, ROADMAP P3.10 part 2a) + walking layouts (part 2b)
+
+Module `editor2/core/art.py`. Species **0-214 only**: 215-220 (TERRY? and the four
+summon tiers) are not monsters (PROJECT_STATE Iron Rule 8 — refused with that
+reason), 221-239 keep their art in `custom.species`. Sparse like every
+`gamedata` section; `art` is in `gamedata.SECTIONS`, the `Gamedata` model ignores
+it, `art.resolve` / `art.place` validate it (called from `validators.validate`).
+
+```jsonc
+"gamedata": {"art": {
+  "8":  {"battle":   {"art": "assets/art/008_slime_battle.bin",       // LZ stream, 576 B decoded
+                      "palette": ["$015B", "$6BFF", "$02BF", "$0000"]},
+         "follower": {"art": "assets/art/008_slime_follower.bin",     // LZ stream, 256 B decoded
+                      "palette": 6,                                   // OBJ palette 0-7
+                      "layout": 143},                                 // S107 2b: walk style 0-154 (default 0)
+         "source":   {"sheet": "assets/sheets/bug.png", "battle": {…}, "frames": {…}}},
+  "78": {"battle": {"palette": ["$03E0", "$6BFF", "$5FEF", "$0000"]}, "follower": {"palette": 1}}
+}}
+```
+
+Every field optional: a palette alone recolours the original art; art alone keeps
+the original battle colours / OBJ palette. `source` = editor metadata (sheet +
+boxes for "New art from a sprite sheet…" to reopen the cut); never read here.
+
+**What the game reads (measured S107, ROM search + PyBoy):**
+
+| Looks | Table | Readers / copies |
+|---|---|---|
+| battle pose | ROM0 `MonsterBattleGfxTable` $2B9F (word = gfx-ID) | ONE table, 13 reader sites (banks $07 ×5, $12, $18, $51, $52, $53, $55, $59, $5F — all `add $9F / adc $2B`); no copy in the ROM |
+| battle colours | $17 `MonsterBattlePalettes` $62FD, 8 B | ONE reader (bank $17 entry 6); rows 0-215 exist |
+| walking art | follower gfx-ID table | EIGHT per-screen copies ($01 $06 $07 $09 $0B $12 $18 $59), identical for 0-214 (`extract_gamedata --selftest`) — the same new gfx-ID goes into all eight |
+| walking layout + palette | $10:$407F / $417F (0-127), $11:$407F / $412D (128-214) | level-1 pointer + attr byte (low 3 = OBJ palette, bits 5/6 flips) |
+
+| Region | File | Content (empty `art` = the original ROM bytes) |
+|---|---|---|
+| `art_battle_gfx` | bank_000 `MonsterBattleGfxTable` [0]-[214] (ported from the clean tree S107) | 215 words; 19 in-region fake-decode labels re-emitted at their offsets (`art.ANCHORS`) |
+| `art_battle_pal` | bank_017 `MonsterBattlePalettes` [0]-[214] | 215 × 8 B ([215] TERRY? stays hand text) |
+| `art_walk_01` … `art_walk_59` | the eight tables' species rows | 215 words each (bank $0B: 48 anchors; in the patched build its table sits at **$4914**, not $4974 — offsets are relative) |
+| `art_layout_10` / `art_attr_10` | NEW hand patch `patches/bank_010.asm` (= the clean bank, re-sectioned) | 128 dw / 128 db (1 anchor) |
+| `art_layout_11` / `art_attr_11` | bank_011 `FollowerLayoutL1Table11` / `FollowerAttrTable11` | 87 dw / 87 db (2 anchors) |
+| (files) `art7f` `art7c` `art7a` | `patches/bank_07f/07c/07a.asm` (`patches/game.asm` includes them instead of the blank banks; verify_integrity PATCH_NEW_FILES) | self-ID byte, pointer table at $4001, the streams; no art = `ds $4000, $00` |
+
+**Placement** (`art.place`, `dwm/sprite_bank.SpriteOverflowAllocator`): first fit
+over $7F, $7C, $7A in species order, battle stream before walking stream —
+deterministic. Capacity 3 × 16,383 = 49,149 B (user S107: "I probably WONT edit
+more than 50 monsters"; a literal battle + walking pair costs 838 B + 4 B of
+pointers → 58 fully re-arted monsters; test_compiler proves 50 fit and 60 are
+refused with the byte count).
+
+**Walking layout (2a).** New walking art without a `layout` is packed in layout-0
+order (the S106 sheet reader; tiles 0-3 down, 4-7 side a, 8-11 side b, 12-15 up).
+Layout 0 exists in BOTH follower banks — Dragon's level-2 table `$10:$4E33`,
+Armorpion's `$11:$4184` (`art.LAYOUT0_L2`; layout 0 has 10 / 4 byte-variants per
+bank that differ only in the DMG palette bit $10) — so a re-arted species'
+level-1 entry is pointed at its own bank's layout 0 (a level-2 pointer is read
+with its bank mapped). Its attr byte becomes the chosen OBJ palette with no flip
+bits (vanilla collectible attrs are 0-7 anyway). A palette-only walking edit
+keeps layout and flip bits: `(attr & $F8) | palette`. User 2026-10-01 on the 2a
+ROM: a re-arted monster's library parent icon "is STILL. Vanilla behaviour is
+MOVING" — layout 0's down_B / up_B are the A frame mirrored (no new tiles, no
+bob), so a symmetric monster does not move; the sheets have real B frames.
+
+**Walking layouts (S107 2b, ROADMAP P3.10 part 2b; `editor2/core/walk_layouts.py`).**
+`follower.layout` (0-154; with new walking art only — a layout cannot re-order the
+ORIGINAL art) / `custom.species[].follower.layout` (instead of `walks_like`) picks
+any of the game's 155 layouts (`extracted/follower_layouts.json`, regenerated S107
+with each layout's stored bytes, its Y-flip bits, the level-2 tables that already
+hold it per follower bank and every frame each bank holds). The art stream must
+be packed for that layout — the editor's sheet dialog does it:
+
+- **Packer** (`walk_layouts.pack`): the sheet's 16×16 frame = the OAM box x −8..7,
+  y −16..−1 around the anchor; each of the 16 tiles' pixels takes the value most
+  of its placements (all six frames, with their flips) want — a placement hidden
+  under a higher-priority entry counts ¼ — then the frames are re-drawn exactly
+  as the engine does (entry 0 on top: it goes to the lowest OAM index, which wins
+  on CGB) and the pixels that differ from the sheet are the error. Proof: all 44
+  original monsters whose layout fits the 16×16 box are re-drawn pixel-exactly
+  through their own layout (test_compiler).
+- **Ranking** (`walk_layouts.fit_all`, ≈ 0.3 s): all 155 layouts by error; ties →
+  the monster's own original layout, then one its follower bank already holds,
+  then the lower id. Measured over whole sheets: bug.png 20 of 26 monsters fit
+  some layout with 0 differing pixels (layout 0: only 6 — the rest are 170-252 px
+  off because their B frames are not mirrors), the water sheet 16 of 31 (layout 0:
+  13); the worst best fit is 100 px over six 16×16 frames.
+- **Level-1 entry** (`art.l2_for`): layout 0 → `art.LAYOUT0_L2` (the 2a tables);
+  any other → its first level-2 table in the species' own follower bank, else
+  the label of its COPY.
+- **Copies** (`walk_layouts.copies`, regions `lay_copies_10` = bank $10 `$7A83-$7FFF`
+  (1,405 B) and `lay_copies_11` = bank $11 from `$799E` (after
+  `FollowerLayoutBase11`, 1,634 B); test_compiler checks both starts against the
+  built game.sym): per (bank, layout) ONE 12-byte level-2 table + only the frames
+  the bank does not already hold byte-for-byte (the bank's own frames, then
+  earlier copies) — 12-114 B, median 63 B into bank $10 / 80 B into $11. Over the
+  room → validation error naming the bank. Empty = the original zero tails.
+- **New species:** `NewFollowerL1Table` (§2.21) holds the species' own level-2
+  pointer; the bank-$11 entries reach it through `FollowerLayoutBase11`.
+
+**Validators** (ERROR, 2b): a `layout` outside 0-154, a `layout` without new
+walking art, `layout` + `walks_like` on one species, layout copies over a bank's
+free tail (also refused by the editor's model before anything is written).
+
+**Validators** (ERROR): species outside 0-214 (215-220 with the Iron Rule 8
+reason, 221+ → custom.species), unknown keys, art that does not decode to exactly
+576 / 256 bytes or is missing, a palette that is not 4 RGB555 words, an OBJ palette
+outside 0-7, streams over the three banks.
+
+**Tests.** test_compiler: empty art == ROM rows for every region and zero banks;
+anchors emitted and defined in the clean tree; the refusals; a fixture (9 full,
+200 palette-only walking, 42 palette-only battle, 214 walking art in bank $11) →
+region bytes; `--rom`: the built ROM's table words at sym addresses (all eight
+copies), layout / attr bytes, each gfx-ID resolving to a stream of the right
+decoded size, 215-220 untouched; the blank project's ROM == the original at every
+art site. **Pin unchanged by 2a** `f22f56e1…` (patched, historical): the regions
+reproduce the hand bytes exactly. **2b tests:** the catalogue, the packer proof
+above, layout-0 packing == the S106 packing (Gorbunok), the ranking; a fixture
+(9 → a bank-$11-only layout copied into $10, 10 → a native one, 200 → a
+bank-$10-only layout copied into $11, 201 → layout 0, Gorbunok → 200's copy,
+shared) → level-1 rows + one copy per bank; the refusals; `--rom`: every chosen
+layout decoded back from the BUILT ROM through its level-1 entry /
+`NewFollowerL1Table` row == the layout, `COPY_START` == the built sym,
+both entries `call FollowerLayoutBase11`, `MiniSM83` runs `FollowerLayoutBase11`
+and `NewAttrHandler` for species 128-239; the blank project's ROM == the original
+at `NewFollowerAttrTable` / `NewFollowerL1Table` / both zero tails. **Pin S107 2b**
+`9740c1c9…` (patched; §2.21).
 
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 

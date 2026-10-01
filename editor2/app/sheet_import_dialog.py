@@ -10,14 +10,22 @@ with its four colours — black, the cream (also inside the body) and two
 free colours (click a free swatch to change it) and the four walking
 directions in one of the eight object palettes.
 
-Used two ways: New species (name, id, starting stats, family below the sheet)
-and Re-cut art of an existing new species (same view, no name fields).
+Used three ways: New species (name, id, starting stats, family below the sheet),
+Re-cut art of an existing new species (same view, no name fields) and, S107
+(P3.10 part 2a), new art for an ORIGINAL monster (mode 'original': the result
+goes to gamedata.art).
+
+S107 (P3.10 part 2b): the walking art is packed for a WALK STYLE — one of the
+game's 155 layouts (editor2/core/walk_layouts.py). The dialog ranks all of them
+by how many pixels of the sheet's six frames the game would draw differently,
+preselects the best (0 = exactly the sheet's animation) and shows the sheet's
+own frames next to what the game will draw.
 """
 
 import os
 import shutil
 
-from PySide6.QtCore import QPointF, QRectF, Qt, Signal
+from PySide6.QtCore import QPointF, QRectF, Qt, QTimer, Signal
 from PySide6.QtGui import QBrush, QColor, QIcon, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import (QColorDialog, QComboBox, QDialog,
                                QDialogButtonBox, QFileDialog, QFormLayout,
@@ -31,15 +39,35 @@ from editor2.core import gamedata as G
 from editor2.core import sheet_import as S
 from editor2.core import species as SP
 from editor2.core import sprite_render as R
+from editor2.core import walk_layouts as WL
 
 HELP = ('Click a monster on the sheet. Red = its battle pose, cyan / blue = its six '
         'walking frames (rows: facing down, sideways, up). Drag any box to fix it; the '
         'red box\'s corner square resizes it; arrow keys move the selected box one pixel. '
         'The right side is what the game will draw.')
 
-WALK_NOTE = ('The game stores 4 walking frames: down, sideways a + b, up — the second '
-             'down / up frame is the first one mirrored, like every original monster '
-             'that walks this way (layout of Armorpion).')
+WALK_NOTE = ('The game has room for 16 walking tiles, the sheet has 24 (six frames of '
+             'four): each WALK STYLE is one of the game\'s own 155 ways to share them '
+             '(mirror a frame, re-use the head, bob a pixel …). The list is sorted by how '
+             'close the game gets to the sheet; the best is picked for you.')
+
+
+def sheet_walk_frames(sheet, frames):
+    """The sheet's six frames as the walk preview draws frames (24 x 24,
+    anchor bottom-centre; LEFT = RIGHT mirrored) — the reference."""
+    out = {}
+    for f in WL.FRAMES:
+        rows = sheet.crop(frames[WL.SHEET_KEY[f]])
+        c = [[None] * 24 for _ in range(24)]
+        for y in range(16):
+            for x in range(16):
+                p = rows[y][x]
+                if p != sheet.bg:
+                    c[8 + y][4 + x] = tuple(p[:3]) + (255,)
+        out[f] = c
+    out['left_A'] = [r[::-1] for r in out['right_A']]
+    out['left_B'] = [r[::-1] for r in out['right_B']]
+    return out
 
 
 class _Box(QGraphicsRectItem):
@@ -163,7 +191,8 @@ def _entry_rect(e):
 
 
 class SheetImportDialog(QDialog):
-    """mode 'new' (a new species) or 'recut' (replace a new species' art)."""
+    """mode 'new' (a new species), 'recut' (replace a new species' art) or
+    'original' (new art for original monster `sid`, 0-214 — S107)."""
 
     def __init__(self, doc, mode='new', sid=None, parent=None):
         super().__init__(parent)
@@ -177,9 +206,21 @@ class SheetImportDialog(QDialog):
         self.items = {}
         self.bpal = None            # user-chosen battle palette (None = auto)
         self.fpal = None            # user-chosen OBJ palette (None = auto)
+        self.lay = None             # user-chosen walk style (None = best fit)
+        self._fit_key = None        # (frames, colours) the ranking was made for
+        self._fit = []
+        self._fit_now = False
+        self._refit_timer = QTimer(self)
+        self._refit_timer.setSingleShot(True)
+        self._refit_timer.setInterval(350)
+        self._refit_timer.timeout.connect(self._refit)
         self.result_data = None
-        self.setWindowTitle('New species from a sprite sheet' if mode == 'new'
-                            else 'Re-cut the art from a sprite sheet')
+        if mode == 'original':
+            nm = G.monster_names(R.REPO).get(sid, f'#{sid}')
+            self.setWindowTitle(f'New art for {nm} from a sprite sheet')
+        else:
+            self.setWindowTitle('New species from a sprite sheet' if mode == 'new'
+                                else 'Re-cut the art from a sprite sheet')
         self.resize(1400, 860)
         v = QVBoxLayout(self)
         top = QHBoxLayout()
@@ -235,8 +276,25 @@ class SheetImportDialog(QDialog):
         rv.addWidget(bg)
         fg = QGroupBox('Walking (down, left, right, up)')
         fl = QVBoxLayout(fg)
+        fl.addWidget(QLabel('In the game:'))
         self.walk = Q.WalkPreview(scale=3)
         fl.addWidget(self.walk)
+        fl.addWidget(QLabel('On the sheet:'))
+        self.walk_sheet = Q.WalkPreview(scale=3)
+        fl.addWidget(self.walk_sheet)
+        lrow = QHBoxLayout()
+        lrow.addWidget(QLabel('Walk style'))
+        self.lay_combo = QComboBox()
+        self.lay_combo.setMinimumContentsLength(30)
+        self.lay_combo.setToolTip('How the game shares its 16 walking tiles between the '
+                                  'six frames — one of its own 155 layouts. Sorted by the '
+                                  'pixels that differ from the sheet.')
+        self.lay_combo.activated.connect(self._lay_chosen)
+        lrow.addWidget(self.lay_combo, 1)
+        fl.addLayout(lrow)
+        self.lay_note = QLabel()
+        self.lay_note.setWordWrap(True)
+        fl.addWidget(self.lay_note)
         row = QHBoxLayout()
         row.addWidget(QLabel('Object palette'))
         self.pal_combo = QComboBox()
@@ -305,15 +363,25 @@ class SheetImportDialog(QDialog):
 
         self._fill_sheets()
         src = None
+        prev_lay = None             # the walk style the art was cut with (S107 2b)
         if mode == 'recut' and sid is not None:
             try:
-                src = doc.new_species(sid).get('source')
+                ns = doc.new_species(sid)
+                src = ns.get('source')
+                prev_lay = (ns.get('follower') or {}).get('layout')
             except KeyError:
                 src = None
+        elif mode == 'original' and sid is not None:
+            oa = doc.original_art(sid)
+            src = oa.get('source')
+            prev_lay = (oa.get('follower') or {}).get('layout')
         if src and src.get('sheet'):
             p = os.path.join(doc.project_dir, src['sheet'])
             if os.path.exists(p):
                 self.load_sheet(p, select=src)
+                if prev_lay is not None and self.lay_combo.findData(prev_lay) >= 0:
+                    self.lay = prev_lay
+                    self.boxes_changed()
                 return
         if self.sheet_combo.count():
             self.load_sheet(self.sheet_combo.itemData(0))
@@ -381,6 +449,8 @@ class SheetImportDialog(QDialog):
         self.cur = k
         self.bpal = None
         self.fpal = None
+        self._fit = []              # a new monster: rank its frames at once
+        self.lay = None             # … and start from its best walk style
         e = self.entries[k]
         for o in self.outlines:
             o.setVisible(o.k != k)
@@ -452,12 +522,35 @@ class SheetImportDialog(QDialog):
             cmap, auto = S.follower_colors(self.sheet, e['frames'])
             p = auto if self.fpal is None else self.fpal
             self.pal_combo.setCurrentIndex(p)
-            self._follow = (S.follower_payload(self.sheet, e['frames'], cmap), p)
-            _b, fol = R.payload_preview(None, None, self._follow[0], p, SP.DONOR_MIN)
+            key = (tuple(sorted((k, tuple(sorted(b.items()))) for k, b in e['frames'].items())),
+                   tuple(sorted(cmap.items())))
+            if key != self._fit_key:
+                if not self._fit or self._fit_now:
+                    # first cut of this monster: rank now (≈ 0.3 s, 155 layouts)
+                    self._fit_now = False
+                    self._fit_key = key
+                    self._fit = S.follower_fit(self.sheet, e['frames'], cmap, sid=self._art_sid())
+                    self._fill_layouts()
+                else:
+                    # a box is being dragged: keep the style, re-rank when it rests
+                    self._refit_timer.start()
+            lid = self.lay if self.lay is not None else self._fit[0][1]
+            pay, err = S.follower_pack(self.sheet, e['frames'], lid, cmap)
+            self._follow = (pay, p, lid)
+            _b, fol = R.payload_preview(None, None, pay, p, layout=lid)
             self.walk.set_frames(fol)
+            self.walk_sheet.set_frames(sheet_walk_frames(self.sheet, e['frames']))
+            self.lay_combo.setCurrentIndex(self.lay_combo.findData(lid))
+            self.lay_note.setText(
+                'The game draws exactly the sheet\'s animation.' if err == 0 else
+                f'{err} pixels differ from the sheet over the six frames (best possible: '
+                f'{self._fit[0][0]}).')
         else:
             self._follow = None
             self.walk.set_frames(None)
+            self.walk_sheet.set_frames(None)
+            self.lay_combo.clear()
+            self.lay_note.setText('')
 
     def _pick_colour(self, k):
         if not self._battle:
@@ -472,6 +565,36 @@ class SheetImportDialog(QDialog):
     def _auto_colours(self):
         self.bpal = None
         self.fpal = None
+        self.boxes_changed()
+
+    def _art_sid(self):
+        """The species the art is for (its follower bank decides which
+        layouts need a copy): the original monster, the re-cut species, or a
+        new species (bank $11, like every id 221+)."""
+        if self.mode in ('original', 'recut') and self.sid is not None:
+            return self.sid
+        return SP.FIRST_ID
+
+    def _fill_layouts(self):
+        sid = self._art_sid()
+        own = WL.species_layout(sid) if sid <= 214 else None
+        bank = WL.follower_bank(sid)
+        self.lay_combo.clear()
+        for err, lid in self._fit:
+            tags = []
+            if lid == own:
+                tags.append('its own')
+            if WL.native_l2(lid, bank) is None:
+                tags.append(f'copied into bank ${bank:02X}')
+            t = f'{WL.label(lid)} · {err} px off' + (f'  ({", ".join(tags)})' if tags else '')
+            self.lay_combo.addItem(t, lid)
+
+    def _refit(self):
+        self._fit_now = True
+        self.boxes_changed()
+
+    def _lay_chosen(self, _i):
+        self.lay = self.lay_combo.currentData()
         self.boxes_changed()
 
     def _pal_chosen(self, _i):
@@ -491,9 +614,13 @@ class SheetImportDialog(QDialog):
                                 'walking frames.')
             return
         sheet_rel = self._sheet_rel()
-        art = {'battle': S.literal_stream(self._battle[0]), 'battle_palette': self._battle[1],
-               'follower': S.literal_stream(self._follow[0]),
-               'follower_palette': self._follow[1], 'walks_like': SP.DONOR_MIN}
+        try:
+            art = {'battle': S.literal_stream(self._battle[0]), 'battle_palette': self._battle[1],
+                   'follower': S.literal_stream(self._follow[0]),
+                   'follower_palette': self._follow[1], 'layout': self._follow[2]}
+        except ValueError as ex:
+            QMessageBox.warning(self, 'Art', str(ex))
+            return
         src = {'sheet': sheet_rel, 'battle': e['battle'], 'frames': e['frames']}
         out = {'art': art, 'source': src, 'sheet_abs': self.sheet_path}
         if self.mode == 'new':

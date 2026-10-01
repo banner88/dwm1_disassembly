@@ -4409,3 +4409,92 @@ stdout.
 **Rule**: a build step's failure message must include stderr, and every file a
 tool needs is checked with a plain-language error naming where it must be.
 
+
+## S107 — re-arting the originals: probe labels, a table that moved, a format without an escape
+
+### A probe label is a GLOBAL label — it re-scopes `.local` labels
+**Symptom**: the first probe build of bank $06 failed to link: `Unknown symbol
+"Lprobe_3925.notBattle"`.
+**Root cause**: the probe-build method inserts `Lprobe_N:` before every code
+line; rgbasm scopes `.local` labels to the last GLOBAL label, so a probe between
+`FieldStateDispatch:` and its `.notBattle` turned `jr .notBattle` into a
+reference to `Lprobe_N.notBattle`. Older probe tools ran on banks without local
+labels.
+**Fix**: lines whose scope (up to the next global label) defines or uses a
+`.local` label are not probed (`tools/resection_monster_art_tables.py`).
+**Rule**: a probe must not change how the source resolves — skip local-label
+scopes, and always assert the probe build is byte-perfect before trusting it.
+
+### The same table can sit at different addresses in the two trees
+**Symptom**: the label census of the art regions put bank $0B's fake labels 96
+bytes "early" in the patched build.
+**Root cause**: the patched bank $0B is laid out differently since S14 (shared
+helpers); its follower table is at `$4914`, the clean one at `$4974`. Same bytes,
+different address.
+**Fix**: region anchors are OFFSETS from the region start; ROM checks find each
+table by its label in `game.sym`.
+**Rule**: in patched banks, address tables by label (sym), never by the clean
+address — and compare bytes, not addresses, when proving a re-section neutral.
+
+### A literal stream needs one unused byte value (S107)
+**Symptom** (test): `literal_stream` raised on a 576-byte payload using all 256
+byte values; the sheet dialog would have crashed.
+**Root cause**: the LZ format has no escape for the run marker; a literal copy
+needs a marker the payload never uses, and a compressed stream can only produce
+the marker value by copying an earlier copy of it.
+**Fix**: literal if possible, else an ordinary LZ stream, else a plain message
+("move or shrink a box by a pixel").
+**Rule**: before relying on a format's "store anything" path, find the input it
+cannot represent and give the author words for it.
+
+### A mirrored B frame looks "still" — check animation as changing tiles (S107 2b)
+**Symptom** (user, 2a ROM): "When you changed healer parent sprint in library it
+is STILL. Vanilla behaviour is MOVING."
+**Root cause**: 2a packed all new walking art for layout 0, whose down_B / up_B
+are the A frame X-flipped. The 2a check counted "two OAM states" (flip on / off)
+as animation; for a left-right symmetric monster those two states draw the SAME
+picture. The sheets have real B frames (20 of 26 on bug.png differ from a mirror).
+**Fix**: 2b — pack the sheet's six frames for any of the 155 layouts, ranked by
+pixels drawn differently; the icon now alternates different tiles (PyBoy).
+**Rule**: "it animates" means the drawn PIXELS change between frames, not that
+the OAM attributes do — compare rendered frames, and compare against what the
+vanilla monster does.
+
+### A new module name can be an existing module (S107 2b)
+**Symptom**: writing `editor2/core/layouts.py` for the walking layouts silently
+replaced the room-layout packer of the same name (P3.2, imported by six modules);
+the Write tool's "updated" (not "created") was the only hint.
+**Fix**: restored from git at once; the new module is `walk_layouts.py`.
+**Rule**: before creating a file, `ls` / glob the target path — a generic name
+(`layouts`, `art`, `tiles`) is likely taken in a project this size.
+
+### On CGB the FIRST metasprite entry is on top (S107 2b)
+**Symptom**: the editor's walk preview drew overlapping entries last-on-top;
+137 of the 930 vanilla frames overlap.
+**Root cause**: the draw loop writes entry k to OAM slot `[$cb]+k`; on CGB the
+lower OAM index wins where two sprites' opaque pixels overlap.
+**Fix**: renderers draw the entries in reverse (entry 0 last); the packer's error
+uses the same order; the per-entry Y-flip bit (one entry in the ROM) is honoured.
+**Rule**: a sprite renderer must follow the hardware's priority rule, not list
+order.
+
+### Audit a table family by its DATA, not by the code you already know (S107 2c)
+**Symptom**: S104 "audited every reader indexed by family" and forked two
+10-entry family-icon tables; a saved Spirit party member still stalled the
+JOURNAL screen.
+**Root cause**: two more copies of the same table (`$07:$62AB`, `$0A:$6013`)
+sat in code-decoded bytes, read by `ld hl, $62ab` with no label — invisible to
+a label / caller search.
+**Fix**: search the ROM for the table's BYTES (the word run `$2E03 … $2E0C`):
+four hits, all forked; the two new ones re-sectioned with labels.
+**Rule**: before declaring "every reader handled", search the ROM for the data
+signature of the table itself; each hit is a reader to account for.
+
+### A PyBoy run that never returns is a measurement (S107 2c)
+**Symptom**: scripts that opened the JOURNAL with a Spirit party member hit the
+10-minute timeout; the same script with a normal save finished in a second.
+**Fix**: bound every run (`timeout`, frame budgets, stub calls checked for
+return within N frames) and log the PC: the stub-called routine sat in the
+ROM0 decompressor (`$1593`) on a garbage gfx id.
+**Rule**: when an emulator run stalls, bisect with a bounded stub call of the
+suspect routine — "does not return" is the bug, not the harness.

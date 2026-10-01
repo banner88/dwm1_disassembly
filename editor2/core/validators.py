@@ -97,6 +97,21 @@ def validate(prj, generated=None):
             SP.resolve(prj)
         except SP.SpeciesError as e:
             errors.append(str(e))
+        # S107 (P3.10 part 2a, PROJECT_COMPILER §2.23): gamedata.art — art
+        # files decoded, species 0-214 only (Iron Rule 8), the art banks' room
+        from . import art as ART
+        try:
+            ART.place(prj)
+        except ART.ArtError as e:
+            errors.append(str(e))
+        else:
+            # S107 2b: walking layouts a follower bank lacks are copied into
+            # its free tail — refused here (not at emit) when they do not fit
+            from . import walk_layouts as WL
+            try:
+                WL.copies(WL.needed(prj), getattr(prj, 'repo_root', None))
+            except (WL.LayoutError, SP.SpeciesError) as e:
+                errors.append(str(e))
         # S105 G3: up to 19 new species can land in ONE family's encyclopedia
         # tab — its 32-member cap is checked here, not only when bank $12 is
         # emitted (which used to surface as an exception)

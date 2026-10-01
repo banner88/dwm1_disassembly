@@ -124,267 +124,271 @@ FollowerLayoutL1Table10:
     ; system'). Layout ids = extracted/follower_layouts.json. A level-2
     ; pointer is dereferenced with bank $10 mapped: only bank-$10 layouts.
     ; Re-sectioned S107 (tools/resection_monster_art_tables.py), byte-identical.
-    dw $41ff   ; [  0] DrakSlime (layout 22)
-    dw $4271   ; [  1] SpotSlime (layout 23)
-    dw $42e3   ; [  2] WingSlime (layout 24)
-    dw $4355   ; [  3] TreeSlime (layout 25)
-    dw $43c7   ; [  4] Snaily (layout 26)
-    dw $4439   ; [  5] SlimeNite (layout 27)
-    dw $44ab   ; [  6] Babble (layout 11)
-    dw $451d   ; [  7] BoxSlime (layout 28)
-    dw $458f   ; [  8] Slime (layout 12)
-    dw $45e9   ; [  9] Healer (layout 29)
-    dw $465b   ; [ 10] FangSlime (layout 30)
-    dw $46cd   ; [ 11] RockSlime (layout 31)
-    dw $472b   ; [ 12] SlimeBorg (layout 32)
-    dw $479d   ; [ 13] Slabbit (layout 33)
-    dw $480f   ; [ 14] SpotKing (layout 34)
-    dw $4881   ; [ 15] KingSlime (layout 13)
-    dw $48f3   ; [ 16] Metaly (layout 12)
-    dw $494d   ; [ 17] Metabble (layout 11)
-    dw $49bf   ; [ 18] MetalKing (layout 13)
-    dw $4a31   ; [ 19] GoldSlime (layout 35)
-    dw $4aa3   ; [ 20] DragonKid (layout 36)
-    dw $4b15   ; [ 21] Tortragon (layout 0)
-    dw $4b87   ; [ 22] Pteranod (layout 2)
-    dw $4bf9   ; [ 23] Gasgon (layout 37)
-    dw $4c6b   ; [ 24] FairyDrak (layout 3)
-    dw $4cdd   ; [ 25] LizardMan (layout 38)
-    dw $4d4f   ; [ 26] Poisongon (layout 0)
-    dw $4dc1   ; [ 27] Swordgon (layout 0)
-    dw $4e33   ; [ 28] Dragon (layout 0)
-    dw $4ea5   ; [ 29] MiniDrak (layout 5)
-    dw $4f17   ; [ 30] MadDragon (layout 1)
-    dw $4f89   ; [ 31] Rayburn (layout 39)
-    dw $4ffb   ; [ 32] Chamelgon (layout 40)
-    dw $506d   ; [ 33] LizardFly (layout 3)
-    dw $50df   ; [ 34] Andreal (layout 14)
-    dw $5151   ; [ 35] KingCobra (layout 1)
-    dw $51c3   ; [ 36] Spikerous (layout 15)
-    dw $5235   ; [ 37] GreatDrak (layout 14)
-    dw $52a7   ; [ 38] Crestpent (layout 6)
-    dw $5319   ; [ 39] WingSnake (layout 41)
-    dw $538b   ; [ 40] Coatol (layout 42)
-    dw $53fd   ; [ 41] Orochi (layout 0)
-    dw $546f   ; [ 42] BattleRex (layout 43)
-    dw $54e1   ; [ 43] SkyDragon (layout 16)
-    dw $5553   ; [ 44] Divinegon (layout 16)
-    dw $55c5   ; [ 45] Tonguella (layout 5)
-    dw $5637   ; [ 46] Almiraj (layout 44)
-    dw $56a9   ; [ 47] CatFly (layout 45)
-    dw $571b   ; [ 48] PillowRat (layout 46)
-    dw $578d   ; [ 49] Saccer (layout 47)
-    dw $57ff   ; [ 50] GulpBeast (layout 0)
-    dw $5871   ; [ 51] Skullroo (layout 48)
-    dw $58e3   ; [ 52] WindBeast (layout 49)
-    dw $5955   ; [ 53] Anteater (layout 50)
-    dw $59c7   ; [ 54] SuperTen (layout 1)
-    dw $5a39   ; [ 55] IronTurt (layout 0)
-    dw $5aab   ; [ 56] Mommonja (layout 51)
-    dw $5b1d   ; [ 57] HammerMan (layout 52)
-    dw $5b8f   ; [ 58] Grizzly (layout 53)
-    dw $5c01   ; [ 59] Yeti (layout 54)
-    dw $5c73   ; [ 60] MadGopher (layout 17)
-    dw $5ce5   ; [ 61] FairyRat (layout 55)
-    dw $5d57   ; [ 62] Unicorn (layout 56)
-    dw $5dc9   ; [ 63] Goategon (layout 57)
-    dw $5e3b   ; [ 64] WildApe (layout 58)
-    dw $5ead   ; [ 65] Trumpeter (layout 59)
-    dw $5f1f   ; [ 66] KingLeo (layout 60)
-    dw $5f91   ; [ 67] DarkHorn (layout 1)
-    dw $6003   ; [ 68] MadCat (layout 61)
-    dw $6075   ; [ 69] BigEye (layout 18)
-    dw $60e7   ; [ 70] Picky (layout 7)
-    dw $6159   ; [ 71] Wyvern (layout 62)
-    dw $61bb   ; [ 72] BullBird (layout 0)
-    dw $622d   ; [ 73] Florajay (layout 63)
-    dw $629f   ; [ 74] DuckKite (layout 64)
-    dw $6311   ; [ 75] MadPecker (layout 0)
-    dw $6383   ; [ 76] MadRaven (layout 65)
-    dw $63f5   ; [ 77] MistyWing (layout 2)
-    dw $6467   ; [ 78] Dracky (layout 66)
-    dw $64d9   ; [ 79] BigRoost (layout 67)
-    dw $654b   ; [ 80] StubBird (layout 68)
-    dw $65bd   ; [ 81] LandOwl (layout 69)
-    dw $662f   ; [ 82] MadGoose (layout 70)
-    dw $66a1   ; [ 83] MadCondor (layout 71)
-    dw $6713   ; [ 84] Blizzardy (layout 4)
-    dw $6785   ; [ 85] Phoenix (layout 4)
-    dw $67f7   ; [ 86] ZapBird (layout 72)
-    dw $6869   ; [ 87] WhipBird (layout 8)
-    dw $68db   ; [ 88] FunkyBird (layout 73)
-    dw $694d   ; [ 89] RainHawk (layout 74)
-    dw $69bf   ; [ 90] MadPlant (layout 5)
-    dw $6a31   ; [ 91] FireWeed (layout 75)
-    dw $6aa3   ; [ 92] FloraMan (layout 76)
-    dw $6b15   ; [ 93] WingTree (layout 77)
-    dw $6b87   ; [ 94] CactiBall (layout 1)
-    dw $6bf9   ; [ 95] Gulpple (layout 78)
-    dw $6c6b   ; [ 96] Toadstool (layout 79)
-    dw $6cdd   ; [ 97] AmberWeed (layout 1)
-    dw $6d4f   ; [ 98] Stubsuck (layout 19)
-    dw $6dc1   ; [ 99] Oniono (layout 1)
-    dw $6e33   ; [100] DanceVegi (layout 80)
-    dw $6ea5   ; [101] TreeBoy (layout 81)
-    dw $6f17   ; [102] FaceTree (layout 82)
-    dw $6f89   ; [103] HerbMan (layout 83)
-    dw $6ffb   ; [104] BeanMan (layout 84)
-    dw $706d   ; [105] EvilSeed (layout 85)
-    dw $70df   ; [106] ManEater (layout 1)
-    dw $7151   ; [107] Snapper (layout 86)
-    dw $71c3   ; [108] Rosevine (layout 2)
-    dw $7235   ; [109] Watabou (layout 0)
-    dw $72a7   ; [110] GiantSlug (layout 87)
-    dw $7319   ; [111] Catapila (layout 88)
-    dw $738b   ; [112] Gophecada (layout 3)
-    dw $73fd   ; [113] Butterfly (layout 89)
-    dw $746f   ; [114] WeedBug (layout 90)
-    dw $74c9   ; [115] GiantWorm (layout 91)
-    dw $7533   ; [116] Lipsy (layout 92)
-    dw $75a5   ; [117] StagBug (layout 93)
-    dw $7617   ; [118] ArmyAnt (layout 94)
-    dw $7689   ; [119] GoHopper (layout 95)
-    dw $76f3   ; [120] TailEater (layout 4)
-    dw $7765   ; [121] ArmorPede (layout 96)
-    dw $77d7   ; [122] Eyeder (layout 2)
-    dw $7849   ; [123] GiantMoth (layout 9)
-    dw $78bb   ; [124] Droll (layout 1)
-    dw $792d   ; [125] ArmyCrab (layout 9)
-    dw $799f   ; [126] MadHornet (layout 97)
-    dw $7a11   ; [127] HornBeet (layout 98)
+; @BUILD_PROJECT BEGIN art_layout_10
+    dw $41FF   ; [0] DrakSlime
+    dw $4271   ; [1] SpotSlime
+    dw $42E3   ; [2] WingSlime
+    dw $4355   ; [3] TreeSlime
+    dw $43C7   ; [4] Snaily
+    dw $4439   ; [5] SlimeNite
+    dw $44AB   ; [6] Babble
+    dw $451D   ; [7] BoxSlime
+    dw $458F   ; [8] Slime
+    dw $45E9   ; [9] Healer
+    dw $465B   ; [10] FangSlime
+    dw $46CD   ; [11] RockSlime
+    dw $472B   ; [12] SlimeBorg
+    dw $479D   ; [13] Slabbit
+    dw $480F   ; [14] SpotKing
+    dw $4881   ; [15] KingSlime
+    dw $48F3   ; [16] Metaly
+    dw $494D   ; [17] Metabble
+    dw $49BF   ; [18] MetalKing
+    dw $4A31   ; [19] GoldSlime
+    dw $4AA3   ; [20] DragonKid
+    dw $4B15   ; [21] Tortragon
+    dw $4B87   ; [22] Pteranod
+    dw $4BF9   ; [23] Gasgon
+    dw $4C6B   ; [24] FairyDrak
+    dw $4CDD   ; [25] LizardMan
+    dw $4D4F   ; [26] Poisongon
+    dw $4DC1   ; [27] Swordgon
+    dw $4E33   ; [28] Dragon
+    dw $4EA5   ; [29] MiniDrak
+    dw $4F17   ; [30] MadDragon
+    dw $4F89   ; [31] Rayburn
+    dw $4FFB   ; [32] Chamelgon
+    dw $506D   ; [33] LizardFly
+    dw $50DF   ; [34] Andreal
+    dw $5151   ; [35] KingCobra
+    dw $51C3   ; [36] Spikerous
+    dw $5235   ; [37] GreatDrak
+    dw $52A7   ; [38] Crestpent
+    dw $5319   ; [39] WingSnake
+    dw $538B   ; [40] Coatol
+    dw $53FD   ; [41] Orochi
+    dw $546F   ; [42] BattleRex
+    dw $54E1   ; [43] SkyDragon
+    dw $5553   ; [44] Divinegon
+    dw $55C5   ; [45] Tonguella
+    dw $5637   ; [46] Almiraj
+    dw $56A9   ; [47] CatFly
+    dw $571B   ; [48] PillowRat
+    dw $578D   ; [49] Saccer
+    dw $57FF   ; [50] GulpBeast
+    dw $5871   ; [51] Skullroo
+    dw $58E3   ; [52] WindBeast
+    dw $5955   ; [53] Anteater
+    dw $59C7   ; [54] SuperTen
+    dw $5A39   ; [55] IronTurt
+    dw $5AAB   ; [56] Mommonja
+    dw $5B1D   ; [57] HammerMan
+    dw $5B8F   ; [58] Grizzly
+    dw $5C01   ; [59] Yeti
+    dw $5C73   ; [60] MadGopher
+    dw $5CE5   ; [61] FairyRat
+    dw $5D57   ; [62] Unicorn
+    dw $5DC9   ; [63] Goategon
+    dw $5E3B   ; [64] WildApe
+    dw $5EAD   ; [65] Trumpeter
+    dw $5F1F   ; [66] KingLeo
+    dw $5F91   ; [67] DarkHorn
+    dw $6003   ; [68] MadCat
+    dw $6075   ; [69] BigEye
+    dw $60E7   ; [70] Picky
+    dw $6159   ; [71] Wyvern
+    dw $61BB   ; [72] BullBird
+    dw $622D   ; [73] Florajay
+    dw $629F   ; [74] DuckKite
+    dw $6311   ; [75] MadPecker
+    dw $6383   ; [76] MadRaven
+    dw $63F5   ; [77] MistyWing
+    dw $6467   ; [78] Dracky
+    dw $64D9   ; [79] BigRoost
+    dw $654B   ; [80] StubBird
+    dw $65BD   ; [81] LandOwl
+    dw $662F   ; [82] MadGoose
+    dw $66A1   ; [83] MadCondor
+    dw $6713   ; [84] Blizzardy
+    dw $6785   ; [85] Phoenix
+    dw $67F7   ; [86] ZapBird
+    dw $6869   ; [87] WhipBird
+    dw $68DB   ; [88] FunkyBird
+    dw $694D   ; [89] RainHawk
+    dw $69BF   ; [90] MadPlant
+    dw $6A31   ; [91] FireWeed
+    dw $6AA3   ; [92] FloraMan
+    dw $6B15   ; [93] WingTree
+    dw $6B87   ; [94] CactiBall
+    dw $6BF9   ; [95] Gulpple
+    dw $6C6B   ; [96] Toadstool
+    dw $6CDD   ; [97] AmberWeed
+    dw $6D4F   ; [98] Stubsuck
+    dw $6DC1   ; [99] Oniono
+    dw $6E33   ; [100] DanceVegi
+    dw $6EA5   ; [101] TreeBoy
+    dw $6F17   ; [102] FaceTree
+    dw $6F89   ; [103] HerbMan
+    dw $6FFB   ; [104] BeanMan
+    dw $706D   ; [105] EvilSeed
+    dw $70DF   ; [106] ManEater
+    dw $7151   ; [107] Snapper
+    dw $71C3   ; [108] Rosevine
+    dw $7235   ; [109] Watabou
+    dw $72A7   ; [110] GiantSlug
+    dw $7319   ; [111] Catapila
+    dw $738B   ; [112] Gophecada
+    dw $73FD   ; [113] Butterfly
+    dw $746F   ; [114] WeedBug
+    dw $74C9   ; [115] GiantWorm
+    dw $7533   ; [116] Lipsy
+    dw $75A5   ; [117] StagBug
+    dw $7617   ; [118] ArmyAnt
+    dw $7689   ; [119] GoHopper
+    dw $76F3   ; [120] TailEater
+    dw $7765   ; [121] ArmorPede
+    dw $77D7   ; [122] Eyeder
+    dw $7849   ; [123] GiantMoth
+    dw $78BB   ; [124] Droll
+    dw $792D   ; [125] ArmyCrab
+    dw $799F   ; [126] MadHornet
+    dw $7A11   ; [127] HornBeet
+; @BUILD_PROJECT END art_layout_10
 FollowerAttrTable10:
     ; FOLLOWER ATTR table, species 0-127: OR-ed into [$ffca] by HramScr2_406e
     ; (bit6 Y-flip, bit5 X-flip, low3 = OBJ palette $17:$5615). Every
     ; collectible species uses 0-7 (palette only).
-    db $03   ; [  0] DrakSlime
-    db $03   ; [  1] SpotSlime
-    db $01   ; [  2] WingSlime
-    db $04   ; [  3] TreeSlime
-    db $07   ; [  4] Snaily
-    db $01   ; [  5] SlimeNite
-    db $01   ; [  6] Babble
-    db $06   ; [  7] BoxSlime
-    db $02   ; [  8] Slime
-    db $02   ; [  9] Healer
-    db $02   ; [ 10] FangSlime
-    db $07   ; [ 11] RockSlime
-    db $05   ; [ 12] SlimeBorg
-    db $00   ; [ 13] Slabbit
-    db $03   ; [ 14] SpotKing
-    db $02   ; [ 15] KingSlime
-    db $05   ; [ 16] Metaly
-    db $05   ; [ 17] Metabble
-    db $05   ; [ 18] MetalKing
-    db $03   ; [ 19] GoldSlime
-    db $03   ; [ 20] DragonKid
-    db $02   ; [ 21] Tortragon
-    db $05   ; [ 22] Pteranod
-    db $06   ; [ 23] Gasgon
-    db $00   ; [ 24] FairyDrak
-    db $02   ; [ 25] LizardMan
-    db $03   ; [ 26] Poisongon
-    db $02   ; [ 27] Swordgon
-    db $01   ; [ 28] Dragon
-    db $06   ; [ 29] MiniDrak
-    db $02   ; [ 30] MadDragon
-    db $03   ; [ 31] Rayburn
-    db $01   ; [ 32] Chamelgon
-    db $01   ; [ 33] LizardFly
-    db $05   ; [ 34] Andreal
-    db $00   ; [ 35] KingCobra
-    db $07   ; [ 36] Spikerous
-    db $03   ; [ 37] GreatDrak
-    db $01   ; [ 38] Crestpent
-    db $05   ; [ 39] WingSnake
-    db $07   ; [ 40] Coatol
-    db $01   ; [ 41] Orochi
-    db $01   ; [ 42] BattleRex
-    db $03   ; [ 43] SkyDragon
-    db $01   ; [ 44] Divinegon
-    db $07   ; [ 45] Tonguella
-    db $04   ; [ 46] Almiraj
-    db $00   ; [ 47] CatFly
-    db $01   ; [ 48] PillowRat
-    db $07   ; [ 49] Saccer
-    db $07   ; [ 50] GulpBeast
-    db $03   ; [ 51] Skullroo
-    db $02   ; [ 52] WindBeast
-    db $02   ; [ 53] Anteater
-    db $06   ; [ 54] SuperTen
-    db $07   ; [ 55] IronTurt
-    db $05   ; [ 56] Mommonja
-    db $06   ; [ 57] HammerMan
-    db $05   ; [ 58] Grizzly
-    db $07   ; [ 59] Yeti
-    db $02   ; [ 60] MadGopher
-    db $04   ; [ 61] FairyRat
-    db $06   ; [ 62] Unicorn
-    db $02   ; [ 63] Goategon
-    db $04   ; [ 64] WildApe
-    db $05   ; [ 65] Trumpeter
-    db $02   ; [ 66] KingLeo
-    db $03   ; [ 67] DarkHorn
-    db $06   ; [ 68] MadCat
-    db $07   ; [ 69] BigEye
-    db $03   ; [ 70] Picky
-    db $03   ; [ 71] Wyvern
-    db $07   ; [ 72] BullBird
-    db $00   ; [ 73] Florajay
-    db $04   ; [ 74] DuckKite
-    db $04   ; [ 75] MadPecker
-    db $01   ; [ 76] MadRaven
-    db $06   ; [ 77] MistyWing
-    db $00   ; [ 78] Dracky
-    db $04   ; [ 79] BigRoost
-    db $02   ; [ 80] StubBird
-    db $04   ; [ 81] LandOwl
-    db $01   ; [ 82] MadGoose
-    db $04   ; [ 83] MadCondor
-    db $02   ; [ 84] Blizzardy
-    db $06   ; [ 85] Phoenix
-    db $04   ; [ 86] ZapBird
-    db $06   ; [ 87] WhipBird
-    db $02   ; [ 88] FunkyBird
-    db $04   ; [ 89] RainHawk
-    db $01   ; [ 90] MadPlant
-    db $02   ; [ 91] FireWeed
-    db $04   ; [ 92] FloraMan
-    db $03   ; [ 93] WingTree
-    db $01   ; [ 94] CactiBall
-    db $01   ; [ 95] Gulpple
-    db $00   ; [ 96] Toadstool
-    db $06   ; [ 97] AmberWeed
-    db $07   ; [ 98] Stubsuck
-    db $03   ; [ 99] Oniono
-    db $00   ; [100] DanceVegi
-    db $06   ; [101] TreeBoy
-    db $07   ; [102] FaceTree
-    db $07   ; [103] HerbMan
-    db $01   ; [104] BeanMan
-    db $04   ; [105] EvilSeed
-    db $00   ; [106] ManEater
-    db $01   ; [107] Snapper
-    db $00   ; [108] Rosevine
-    db $02   ; [109] Watabou
-    db $01   ; [110] GiantSlug
-    db $01   ; [111] Catapila
-    db $06   ; [112] Gophecada
-    db $04   ; [113] Butterfly
-jr_010_41f1:   ; fake-decode label kept at its exact offset $41f1 (referenced by bytes decoded as code elsewhere; NOT code)
-    db $02   ; [114] WeedBug
-    db $04   ; [115] GiantWorm
-    db $01   ; [116] Lipsy
-    db $07   ; [117] StagBug
-    db $02   ; [118] ArmyAnt
-    db $01   ; [119] GoHopper
-    db $07   ; [120] TailEater
-    db $00   ; [121] ArmorPede
-    db $03   ; [122] Eyeder
-    db $03   ; [123] GiantMoth
-    db $04   ; [124] Droll
-    db $00   ; [125] ArmyCrab
-    db $06   ; [126] MadHornet
-    db $07   ; [127] HornBeet
+; @BUILD_PROJECT BEGIN art_attr_10
+    db $03   ; [0] DrakSlime: OBJ palette 3
+    db $03   ; [1] SpotSlime: OBJ palette 3
+    db $01   ; [2] WingSlime: OBJ palette 1
+    db $04   ; [3] TreeSlime: OBJ palette 4
+    db $07   ; [4] Snaily: OBJ palette 7
+    db $01   ; [5] SlimeNite: OBJ palette 1
+    db $01   ; [6] Babble: OBJ palette 1
+    db $06   ; [7] BoxSlime: OBJ palette 6
+    db $02   ; [8] Slime: OBJ palette 2
+    db $02   ; [9] Healer: OBJ palette 2
+    db $02   ; [10] FangSlime: OBJ palette 2
+    db $07   ; [11] RockSlime: OBJ palette 7
+    db $05   ; [12] SlimeBorg: OBJ palette 5
+    db $00   ; [13] Slabbit: OBJ palette 0
+    db $03   ; [14] SpotKing: OBJ palette 3
+    db $02   ; [15] KingSlime: OBJ palette 2
+    db $05   ; [16] Metaly: OBJ palette 5
+    db $05   ; [17] Metabble: OBJ palette 5
+    db $05   ; [18] MetalKing: OBJ palette 5
+    db $03   ; [19] GoldSlime: OBJ palette 3
+    db $03   ; [20] DragonKid: OBJ palette 3
+    db $02   ; [21] Tortragon: OBJ palette 2
+    db $05   ; [22] Pteranod: OBJ palette 5
+    db $06   ; [23] Gasgon: OBJ palette 6
+    db $00   ; [24] FairyDrak: OBJ palette 0
+    db $02   ; [25] LizardMan: OBJ palette 2
+    db $03   ; [26] Poisongon: OBJ palette 3
+    db $02   ; [27] Swordgon: OBJ palette 2
+    db $01   ; [28] Dragon: OBJ palette 1
+    db $06   ; [29] MiniDrak: OBJ palette 6
+    db $02   ; [30] MadDragon: OBJ palette 2
+    db $03   ; [31] Rayburn: OBJ palette 3
+    db $01   ; [32] Chamelgon: OBJ palette 1
+    db $01   ; [33] LizardFly: OBJ palette 1
+    db $05   ; [34] Andreal: OBJ palette 5
+    db $00   ; [35] KingCobra: OBJ palette 0
+    db $07   ; [36] Spikerous: OBJ palette 7
+    db $03   ; [37] GreatDrak: OBJ palette 3
+    db $01   ; [38] Crestpent: OBJ palette 1
+    db $05   ; [39] WingSnake: OBJ palette 5
+    db $07   ; [40] Coatol: OBJ palette 7
+    db $01   ; [41] Orochi: OBJ palette 1
+    db $01   ; [42] BattleRex: OBJ palette 1
+    db $03   ; [43] SkyDragon: OBJ palette 3
+    db $01   ; [44] Divinegon: OBJ palette 1
+    db $07   ; [45] Tonguella: OBJ palette 7
+    db $04   ; [46] Almiraj: OBJ palette 4
+    db $00   ; [47] CatFly: OBJ palette 0
+    db $01   ; [48] PillowRat: OBJ palette 1
+    db $07   ; [49] Saccer: OBJ palette 7
+    db $07   ; [50] GulpBeast: OBJ palette 7
+    db $03   ; [51] Skullroo: OBJ palette 3
+    db $02   ; [52] WindBeast: OBJ palette 2
+    db $02   ; [53] Anteater: OBJ palette 2
+    db $06   ; [54] SuperTen: OBJ palette 6
+    db $07   ; [55] IronTurt: OBJ palette 7
+    db $05   ; [56] Mommonja: OBJ palette 5
+    db $06   ; [57] HammerMan: OBJ palette 6
+    db $05   ; [58] Grizzly: OBJ palette 5
+    db $07   ; [59] Yeti: OBJ palette 7
+    db $02   ; [60] MadGopher: OBJ palette 2
+    db $04   ; [61] FairyRat: OBJ palette 4
+    db $06   ; [62] Unicorn: OBJ palette 6
+    db $02   ; [63] Goategon: OBJ palette 2
+    db $04   ; [64] WildApe: OBJ palette 4
+    db $05   ; [65] Trumpeter: OBJ palette 5
+    db $02   ; [66] KingLeo: OBJ palette 2
+    db $03   ; [67] DarkHorn: OBJ palette 3
+    db $06   ; [68] MadCat: OBJ palette 6
+    db $07   ; [69] BigEye: OBJ palette 7
+    db $03   ; [70] Picky: OBJ palette 3
+    db $03   ; [71] Wyvern: OBJ palette 3
+    db $07   ; [72] BullBird: OBJ palette 7
+    db $00   ; [73] Florajay: OBJ palette 0
+    db $04   ; [74] DuckKite: OBJ palette 4
+    db $04   ; [75] MadPecker: OBJ palette 4
+    db $01   ; [76] MadRaven: OBJ palette 1
+    db $06   ; [77] MistyWing: OBJ palette 6
+    db $00   ; [78] Dracky: OBJ palette 0
+    db $04   ; [79] BigRoost: OBJ palette 4
+    db $02   ; [80] StubBird: OBJ palette 2
+    db $04   ; [81] LandOwl: OBJ palette 4
+    db $01   ; [82] MadGoose: OBJ palette 1
+    db $04   ; [83] MadCondor: OBJ palette 4
+    db $02   ; [84] Blizzardy: OBJ palette 2
+    db $06   ; [85] Phoenix: OBJ palette 6
+    db $04   ; [86] ZapBird: OBJ palette 4
+    db $06   ; [87] WhipBird: OBJ palette 6
+    db $02   ; [88] FunkyBird: OBJ palette 2
+    db $04   ; [89] RainHawk: OBJ palette 4
+    db $01   ; [90] MadPlant: OBJ palette 1
+    db $02   ; [91] FireWeed: OBJ palette 2
+    db $04   ; [92] FloraMan: OBJ palette 4
+    db $03   ; [93] WingTree: OBJ palette 3
+    db $01   ; [94] CactiBall: OBJ palette 1
+    db $01   ; [95] Gulpple: OBJ palette 1
+    db $00   ; [96] Toadstool: OBJ palette 0
+    db $06   ; [97] AmberWeed: OBJ palette 6
+    db $07   ; [98] Stubsuck: OBJ palette 7
+    db $03   ; [99] Oniono: OBJ palette 3
+    db $00   ; [100] DanceVegi: OBJ palette 0
+    db $06   ; [101] TreeBoy: OBJ palette 6
+    db $07   ; [102] FaceTree: OBJ palette 7
+    db $07   ; [103] HerbMan: OBJ palette 7
+    db $01   ; [104] BeanMan: OBJ palette 1
+    db $04   ; [105] EvilSeed: OBJ palette 4
+    db $00   ; [106] ManEater: OBJ palette 0
+    db $01   ; [107] Snapper: OBJ palette 1
+    db $00   ; [108] Rosevine: OBJ palette 0
+    db $02   ; [109] Watabou: OBJ palette 2
+    db $01   ; [110] GiantSlug: OBJ palette 1
+    db $01   ; [111] Catapila: OBJ palette 1
+    db $06   ; [112] Gophecada: OBJ palette 6
+    db $04   ; [113] Butterfly: OBJ palette 4
+jr_010_41f1:   ; kept at its byte offset (bytes elsewhere decoded as code point here; NOT code)
+    db $02   ; [114] WeedBug: OBJ palette 2
+    db $04   ; [115] GiantWorm: OBJ palette 4
+    db $01   ; [116] Lipsy: OBJ palette 1
+    db $07   ; [117] StagBug: OBJ palette 7
+    db $02   ; [118] ArmyAnt: OBJ palette 2
+    db $01   ; [119] GoHopper: OBJ palette 1
+    db $07   ; [120] TailEater: OBJ palette 7
+    db $00   ; [121] ArmorPede: OBJ palette 0
+    db $03   ; [122] Eyeder: OBJ palette 3
+    db $03   ; [123] GiantMoth: OBJ palette 3
+    db $04   ; [124] Droll: OBJ palette 4
+    db $00   ; [125] ArmyCrab: OBJ palette 0
+    db $06   ; [126] MadHornet: OBJ palette 6
+    db $07   ; [127] HornBeet: OBJ palette 7
+; @BUILD_PROJECT END art_attr_10
     dec bc
     ld b, d
     inc e
@@ -12624,1408 +12628,10 @@ jr_010_7a77:
     dec bc
     jr nc, jr_010_7a03
 
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
+; Walking layouts copied from bank $11 for species 0-127 whose chosen layout
+; bank $10 does not hold (S107 P3.10 part 2b; compiler region,
+; editor2/core/walk_layouts.py copies) + the bank's zero tail ($7A83-$7FFF).
+; @BUILD_PROJECT BEGIN lay_copies_10
+; walking layouts copied into follower bank $10 (S107 P3.10 part 2b; editor2/core/walk_layouts.py) — 0 of 1405 B
+    ds $8000 - @, $00   ; the bank's zero tail
+; @BUILD_PROJECT END lay_copies_10
