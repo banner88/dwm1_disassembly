@@ -4537,3 +4537,50 @@ emitted first-fit in id order under the clean tree's labels; a string that no lo
 fits keeps its label but moves to free space. No pointer table changes, an unedited
 project is byte-identical, and a rename that grows by one byte spills only the last
 string of its block (the strings after the rename shift; their labels follow).
+
+## S109 — the arena editor: a stub that resumes, a tail anchored by length, flags that `dec` does not set
+
+### A stub call into a running game must hand control back, not park it
+**Symptom**: stub-calling a bank routine from WRAM (`di`, call, `jr $`) froze the game
+afterwards — the next battle / room never ran, so nothing after the call could be measured.
+**Root cause**: the stub left PC parked with interrupts off and the old ROM bank switched
+out; the game's own frame never resumed.
+**Fix**: the stub pushes AF/BC/DE/HL, saves the current bank (read from the bank's own id
+byte at `$4000` — true for the code banks and every custom bank, NOT for `$20`/`$40` or
+vanilla-empty banks), switches, calls, restores the bank + registers and `jp`s back to the
+PC it replaced (PYBOY_DEBUGGING "S109 techniques").
+**Rule**: a stub call is an interrupt you inject — it must leave every register, the bank
+and the PC as it found them, or the measurement after it is of a broken game.
+
+### Anchor a re-section's END by length when the text repeats
+**Symptom**: `tools/resection_arena_menu.py` truncated the PATCHED bank_009 (restored from
+`git show HEAD:`) — its end anchor `ld a, [$c905]` matched an earlier occurrence in the
+patched file.
+**Fix**: the patched tree's end index = `len(new_lines) − (len(clean_lines) − clean_end)`
+(the tail after the region is identical in both trees), and the tool re-reads HEAD when the
+patched file is already processed.
+**Rule**: in a tool that edits both trees, find the region once in the clean tree and map
+it into the patched tree by the shared head/tail, never by searching for an instruction
+that can occur twice; probe-build both before writing.
+
+### `dec a` does not set carry
+**Symptom**: `ArenaTeamFixup`'s first draft `dec a / ret c` meant "size 0 → leave"; MiniSM83
+showed it fell through with A = $FF.
+**Rule**: on the SM83 `inc`/`dec` (8-bit) leave C untouched; test zero BEFORE the `dec`
+(`or a / ret z`). The ROM-execution test caught it — run new engine code from the built
+ROM over every index, not only the ones the demo uses.
+
+### Hiding an arena monster = the resolver's own "nothing" value, not a new branch
+**Rule** (S109, PyBoy): the Arena Battle room's NPCs `$F0-$F3` draw from the display list
+`$D7CA`; a draw id `$FF` gives sprite `$FF`, which bank $0B `Call_00b_4839` already treats
+as "not drawn" (vanilla `SetBtl_67ae` uses it for the coliseum). The team-size engine
+writes `[$FF, $00]` into the absent slots' entries and needs no room-script change. The
+same rule makes species 239 (draw id 239 + $10 = $FF) undrawable — refused as a master.
+
+### A catalog category is a hint, not a range check
+**Symptom**: the master picker offered `$E0`/`$E1` (the S91 NPC sprite catalog lists them
+'normal').
+**Root cause**: `$E0-$E3` are special only as an NPC's OWN sprite byte (bank $0B tests them
+before the display-list branch); a display entry's draw id goes straight to the sheet table.
+**Rule**: derive a picker's legal set from the CODE PATH the value takes (here: ids < $E0 +
+the ids vanilla masters use), and say why in the module.

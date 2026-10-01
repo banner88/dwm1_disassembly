@@ -1187,3 +1187,16 @@ def _monster_text_regions():
 
 
 REGISTRY += _monster_text_regions()
+
+
+def _arena_regions():
+    # S109 (P3.10b): the arena — masters (banks $04 / $50), class fees (bank
+    # $09), team sizes (bank $6E, hand patch) from gamedata.arena
+    # (editor2/core/arena.py, PROJECT_COMPILER §2.25); the teams themselves are
+    # gamedata.enemies rows. No arena == the original bytes.
+    from . import arena as AR
+    return [(name, "gamedata.arena", f"region:{path}#{name}", fn, [bank])
+            for name, path, fn, bank in AR.REGIONS]
+
+
+REGISTRY += _arena_regions()

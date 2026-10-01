@@ -1,6 +1,6 @@
 """main.py — DWM1 Editor shell (EDITOR_DESIGN §5.0; S72 skeleton → S93 shell).
 
-Project window: top-level tab strip (Rooms · Gates · Monsters · Skills ·
+Project window: top-level tab strip (Rooms · Gates · Monsters · Arena · Skills ·
 Breeding · Encounters · Music · Progression & Flags · World · Balance ·
 Build & Play) over ONE Session (editable project.json + live renderer +
 undo stack). Only the tabs whose ROADMAP boxes have landed are live; the
@@ -188,6 +188,11 @@ class MainWindow(QMainWindow):
                     self.dialogue_tab = DialogueTab(self.session)
                     self.tabs.addTab(self.dialogue_tab, 'Dialogue')
                     self.monsters_tab.showDialogue.connect(self._show_dialogue_for)
+                    # S109 (P3.10b): the arena — fees, masters, 1-3 monster teams,
+                    # the teams' enemy rows
+                    from editor2.app.arena_tab import ArenaTab
+                    self.arena_tab = ArenaTab(self.session)
+                    self.tabs.addTab(self.arena_tab, 'Arena')
                     continue
             if title == 'Balance':
                 # S98 (P3.7): the World graph sits before Balance, as in §5.0

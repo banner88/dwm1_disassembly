@@ -447,6 +447,59 @@ trigger — engine-forced during the intro (bank `$2D` per `$CAB9` note);
 (c) matches 2/3 re-entry: HW showed the bank `$50` clone firing post-battle
 as predicted; the full loop wasn't single-stepped but is consistent.
 
+### Arena authoring as built — S109 (ROADMAP P3.10b) ✅ [built S109, PyBoy-measured on the user's save; test ROM USER-CONFIRMED 2026-10-01 22:57]
+
+**The editor surface** (Arena tab; PROJECT_COMPILER §2.25 `gamedata.arena`;
+EDITOR_DESIGN §5.2b): per class the entry fee, per match the master and the
+team size (1-3), and the team members as their enemy rows (`gamedata.enemies`,
+EID = the formula above; the King 481-483). Bracket shape (classes / matches)
+stays fixed.
+
+**Who reads what (verified S109):**
+- `ArenaBattleSetup` (opcode `$1F`, `$04:$5D5B`) runs ONCE per visit, from the
+  lobby (Arena Lobby scr6, `wColiseumBattle` written 0 first) — it builds match
+  0. Between matches the Arena Battle room script (map `$5D`, bank `$0F`)
+  counts `wColiseumBattle` up BEFORE its `cmd_20` (so match 0 fights with
+  `$D9CD` = 1), and `BattleExitHandler` (`$50:$640A`, map `$5D` branch) calls
+  `LoadArenaEnemyStats` after every win, which builds match `wColiseumBattle`
+  = the NEXT one (returns at 3). The King (group 9, lobby scr6 `$D9CE` = 9,
+  `$D999` = 4) is ONE match: the room sets `$D9CD` = 3 before the fight.
+- The display list `$D7CA-$D7D1` ([draw id, is_monster] × 4) feeds the room's
+  NPCs `$F0-$F3` (bank `$0B` `Call_00b_4839`): entry 0 = the master
+  (`ArenaMasterSpriteTable`, now addressed by label in both trees — was the
+  raw `ld hl, $5e22` / `ld hl, $6778`), entry 1 = slot 1, entry 2 = slot 0 (the
+  middle monster), entry 3 = slot 2; monster draw id = species + `$10`. A draw
+  id `$FF` makes that NPC's sprite `$FF` = not drawn (the resolver's own path,
+  as vanilla `SetBtl_67ae` uses for the coliseum).
+- **Team size (NEW engine, hand patch `patches/bank_06e.asm`):** the last 6
+  bytes of both routines (`ld a,$01 / ld [$d7d1],a / ret`) became `ld hl,$6E00
+  / rst $10 / ret / nop`; bank `$6E` entry 0 `ArenaTeamFixup` writes `$D7D1` = 1
+  and, for a size from `ArenaTeamSizeTable[3*group + match]` (compiler region
+  `gd_arena_team_sizes`) below 3, `$DA02` = size − 1 and `[$FF,$00]` into the
+  absent slots' display entries (size 2: entry 3; size 1: entries 1 + 3). The
+  battle takes 1-3 enemies from `$DA02` like a field battle. PyBoy S109 (the
+  user's save, the real lobby flow): Starry Night 1 / 2 / 3 monsters fought
+  and won in turn, the next match loading each time, a monster master (Coatol)
+  drawn; the King with 2. Size 3 everywhere = the vanilla behaviour (only the
+  call moved).
+- **The class-registration menu** (bank `$09`, `ArenaClassMenu` `$5B64`;
+  re-sectioned S109, `tools/resection_arena_menu.py`): screen effect type 4 of
+  bank `$09` entry 0's `ScreenEffectTable09` (the `$C8EF` type set by script
+  opcode `$04`; Arena Lobby scr6 runs `$04 $0004 $0710`). Outer 5-state machine
+  on `$C905`, inner 9-state machine on `$C906` (`ArenaClassMenuRun`): the
+  cursor starts on the class after the last won one (`$C8E2` = `[$CAB4]` & 3,
+  `$C8E3` = 1 if `[$CAB4]` ≥ 4); `ArenaMenuMarkWon` puts `$90` (open) / `$AC`
+  (the star = won) per class in `$C0D8`; only an open class can be chosen (a
+  won one → menu message 6); the gold check reads `ArenaClassFeeTable`
+  (`$09:$5D23`, 8 words G..S, compiler region `gd_arena_fees`) against the
+  24-bit gold, YES pays it with `call AddGold` — which SUBTRACTS (ROM0
+  `CompareGoldHL`, floor 0; the label name is historical) — and sets
+  `wArenaGroup` = 4·column + row. Measured S109: the E class registration took
+  3800 → 3750 gold; with the fee set to 20 the menu showed "G CLASS 20" and
+  took 20.
+- **Prizes:** none — winning a class only advances flags / `$CAB4` / world
+  steps (the victory cascade above; user S109: "Only flags progression").
+
 ### Story progression ENGINE + AUTHORING SPEC — DECODED S68 (ROADMAP E2 RE half)
 
 **Owning section.** Everything below is ROM-byte-verified statically (S68);

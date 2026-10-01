@@ -412,6 +412,66 @@ def main():
           'the Dialogue tab lists its texts (old + new name), Gorbunok got its own '
           'description, TERRY? refused; undo restores everything')
 
+    # S109 (P3.10b): the Arena tab — Starry Night: match 1 one monster (a Slime
+    # at level 5), match 3's master a monster (Coatol), the G class fee 20;
+    # a summon in a fighting team is refused; undo restores everything
+    before = doc.dumps()
+    at = w.arena_tab
+    w.tabs.setCurrentWidget(at)
+    app.processEvents()
+    assert at.list.count() == 10, at.list.count()
+    assert at.list.item(0).text().startswith('G class') and 'fee 0' in at.list.item(0).text()
+    at.list.setCurrentRow(8)
+    app.processEvents()
+    assert 'Starry Night' in at.title.text() and not at.fee.isVisible()
+    c1 = at.cards[0]
+    c1.size_btns[0].click()                          # 1 monster
+    app.processEvents()
+    assert doc.data['gamedata']['arena'] == {'StarryNight': {'matches': {'0': {'size': 1}}}}, \
+        doc.data['gamedata'].get('arena')
+    c1 = at.cards[0]
+    assert '(not fought)' in c1.table.verticalHeaderItem(1).text()
+    combo = c1.table.cellWidget(0, 0)
+    combo.setCurrentIndex(combo.findData(8))          # a Slime
+    app.processEvents()
+    assert doc.data['gamedata']['enemies']['296']['species'] == 8
+    c1 = at.cards[0]
+    c1.table.item(0, 1).setText('5')                  # level 5
+    app.processEvents()
+    assert doc.data['gamedata']['enemies']['296']['level'] == 5
+    at.set_master(2, {'monster': 40})
+    assert doc.data['gamedata']['arena']['StarryNight']['matches']['2'] == {'master': {'monster': 40}}
+    assert 'Coatol' in at.cards[2].master_btn.text()
+    at.list.setCurrentRow(0)
+    app.processEvents()
+    assert at.fee.isVisible()
+    at.fee.setValue(20)
+    app.processEvents()
+    assert doc.data['gamedata']['arena']['G'] == {'fee': 20}
+    assert 'fee 20' in at.list.item(0).text()
+    n_undo = w.session.undo.index()
+    try:
+        doc.set_enemy_fields(224, {'species': 217})
+        raise AssertionError('a summon in a fighting arena team must be refused')
+    except Exception as ex:                                       # noqa: BLE001
+        assert 'Iron Rule 8' in str(ex), ex
+    import editor2.app.arena_tab as ATm
+    warned = []
+    orig_warn = ATm.QMessageBox.warning
+    ATm.QMessageBox.warning = staticmethod(lambda *a, **k: warned.append(a[1:3]))
+    try:
+        at.cards[0].table.item(0, 2).setText('notanumber')        # refused by the parser
+        app.processEvents()
+    finally:
+        ATm.QMessageBox.warning = orig_warn
+    assert warned and w.session.undo.index() == n_undo, (warned, w.session.undo.index(), n_undo)
+    while w.session.undo.index() > 0 and doc.dumps() != before:
+        w.session.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'undo must restore project.json exactly'
+    print('OK: Arena tab (S109) — Starry Night match 1 = one Lv-5 Slime, match 3 master = '
+          'Coatol, G class fee 20; a summon in a team refused; undo restores everything')
+
     if do_rom:
         from editor2.app.build_worker import BuildWorker  # noqa: E402
         results = []

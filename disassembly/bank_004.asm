@@ -3687,7 +3687,7 @@ ReadArenaGroup:
     ld a, [wColiseumBattle]
     add b
     add a
-    ld hl, $5e22
+    ld hl, ArenaMasterSpriteTable   ; was the raw $5e22 (S109 label, same bytes)
     add l
     ld l, a
     ld a, $00
@@ -3719,6 +3719,12 @@ ReadArenaGroup:
     ld h, a
     call LoadScr_5e10
     ld [$d7d0], a
+    ; display list $D7CA-$D7D1 = [draw id, is_monster] x 4 (the Arena Battle
+    ; room's NPCs $F0-$F3): entry 0 = the master, entry 1 = slot 1 ($DA05),
+    ; entry 2 = slot 0 ($DA03, the middle monster), entry 3 = slot 2 ($DA07).
+    ; S109: in the patched build these last 6 bytes (`ld a,$01 / ld [$d7d1],a /
+    ; ret`) far-call bank $6E ArenaTeamFixup — 1-3 monster teams
+    ; (gamedata.arena team sizes; SIDEQUEST_MAP arena section).
     ld a, $01
     ld [$d7d1], a
     ret

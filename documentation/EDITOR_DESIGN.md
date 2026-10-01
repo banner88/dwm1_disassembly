@@ -1095,7 +1095,7 @@ original icon**. Writes `gamedata.families.<f>.icon` (model
 set_family_icon`); the family list and the Move-to combo draw the project's
 icons.
 
-### 5.2b Arena tab-section (v2.1 — user spec S90; lives under Gates or Monsters, final placement at build time)
+### 5.2b Arena tab (v2.1 — user spec S90; S109: its own tab)
 
 Rosters are FORMULA-addressed enemy-stats rows (E1 decoded,
 HW-verified: `EID = $E0 + 9*group + 3*match + slot`, rows 224-304 +
@@ -1106,6 +1106,26 @@ tier flags surfaced read-only from the decoded Arena Lobby scr0.
 Bracket SHAPE changes (more tiers/matches) = patching the formula
 constants — an expert-mode knob, flagged, not v1 UI. [G-L wires the
 authoring schema.]
+
+**As built S109 (ROADMAP P3.10b; test ROM USER-CONFIRMED 2026-10-01 22:57).** Its OWN tab
+(user S109: "Its own tab"), after Dialogue — `editor2/app/arena_tab.py`, model
+`editor2/core/arena_doc.py` (`ArenaMixin` on `Document`), compiler
+`editor2/core/arena.py` (PROJECT_COMPILER §2.25). Left: the ten groups (G-S with
+their fee, Starry Night, the King; bold = edited, team sizes ≠ 3 listed after the
+name). Right: **Entry fee** (classes; spin box 0-65535 + Original fee), **Winning it**
+(the per-class victory cascade, read-only — `arena_doc.VICTORY`; flags are P3.14's)
+and one card per match (three; the King one): **Master** (button with the sprite →
+the room-NPC sprite picker: catalog persons + every monster; Original master),
+**Monsters 1 / 2 / 3** (team size), the **team table** — one row per slot = its enemy
+row (EID shown): species combo + level / HP / MP / ATK / DEF / AGL / INT / exp / AI
+weights / battle skills, edited through `MonstersMixin.set_enemy_fields` (the same
+rows the Monsters tab's "Where you meet it" lists); slots the team does not use are
+grey "(not fought)"; **Back to the original match** (master, size and the three rows).
+Every edit = one SnapshotCommand; the model validates with the compiler's own code
+(a summon / TERRY? in a fighting slot refused — Iron Rule 8 — also from the Monsters
+tab). Not in scope (user S109): bracket shape (fixed), prizes (none — "Only flags
+progression"), the arena text (read-only on the Dialogue tab), the victory flags.
+Help page `editor2/help/53_arena.md`.
 
 ### 5.2c AI ban-list (v2.1 — OPTIONAL, user-flagged S90)
 

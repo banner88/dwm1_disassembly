@@ -36,6 +36,7 @@ to the proven overlay:
 | `patches/bank_07f.asm`, `bank_07c.asm`, `bank_07a.asm` + the `art_*` regions in `patches/bank_000/001/006/007/009/00b/010/011/012/017/018/059.asm` | new ART for the ORIGINAL monsters 0-214, from `gamedata.art` (S107, §2.23) |
 | the `lay_copies_10` / `lay_copies_11` regions (the zero tails of `patches/bank_010.asm` / `bank_011.asm`) | walking layouts copied into the other follower bank, from `gamedata.art` + `custom.species` (S107 2b, §2.23 "Walking layouts") |
 | `gd_monster_names` / `gd_monster_nicks` in `patches/bank_041.asm`, `gd_monster_desc` / `gd_monster_desc_extra` in `patches/bank_04d.asm` | the ORIGINAL monsters' names, default nicknames and library descriptions (+ new species' own descriptions), from `gamedata.monster_text` / `custom.species[].description` (S108 P3.10 part 3, §2.24) |
+| `gd_arena_masters_04` / `gd_arena_masters_50` / `gd_arena_fees` / `gd_arena_team_sizes` in `patches/bank_004/050/009/06e.asm` | the arena: each match's master, the class entry fees, the team sizes, from `gamedata.arena` (S109 P3.10b, §2.25; the team members are `gamedata.enemies` rows) |
 
 Everything else — engine intercepts in banks `$00/$01/$04/$06/$07/$0B/$16`,
 layouts (`bank_064.asm` via `tools/build_gate_room.py` /
@@ -412,6 +413,7 @@ registering an emitter; nothing existing changes.
 | `species7e` + `ns_battle_gfx` `ns_follower_attr` `ns_battle_pal` `ns_recipe_pair` `ns_name_ptr` `ns_short_ptr` `ns_text_a`…`ns_text_g` `ns_detail_text` `ns_info` (S105; G3 layout) | `custom.species` (§2.21; editor2/core/species.py) | `file:patches/bank_07e.asm` + `region:` in banks $00 / $11 / $17 / $16 / $41 ×9 / $4D / $6A | those banks |
 | `art7f` `art7c` `art7a` + `art_battle_gfx` `art_battle_pal` `art_walk_01/06/07/09/0b/12/18/59` `art_layout_10/11` `art_attr_10/11` (S107) | `gamedata.art` (§2.23; editor2/core/art.py) | `file:patches/bank_07f/07c/07a.asm` + `region:` in banks $00 / $17 / $01 $06 $07 $09 $0B $12 $18 $59 / $10 / $11 | those banks |
 | `gd_monster_names` `gd_monster_nicks` `gd_monster_desc` `gd_monster_desc_extra` (S108) | `gamedata.monster_text` (+ `custom.species[].description`) (§2.24; editor2/core/monster_text.py) | `region:` in banks $41 / $4D | those banks |
+| `gd_arena_masters_04` `gd_arena_masters_50` `gd_arena_fees` `gd_arena_team_sizes` (S109) | `gamedata.arena` (§2.25; editor2/core/arena.py) | `region:` in banks $04 / $50 / $09 / $6E | those banks |
 | `lay_copies_10` `lay_copies_11` (S107 2b) + `ns_follower_layout` (in the species list) | `gamedata.art` + `custom.species` (§2.23 "Walking layouts"; editor2/core/walk_layouts.py) | `region:` in banks $10 / $11 | those banks |
 
 `bank_060` generated layout order (fixed, deterministic): script master
@@ -629,6 +631,8 @@ editor2/
         species.py           # S105 custom.species: new species -> ns_* regions + bank $7E (§2.21)
         art.py               # S107 gamedata.art: original monsters' art -> art_* regions + banks $7F/$7C/$7A (§2.23)
         walk_layouts.py      # S107 2b: the 155 walking layouts — packer, ranking, copies into the other follower bank (§2.23)
+        monster_text.py      # S108 gamedata.monster_text: names / nicknames / descriptions (§2.24)
+        arena.py arena_doc.py  # S109 gamedata.arena: regions + validator (§2.25); the Arena tab's model (ArenaMixin)
         skill_scripts.json   # S105 the custom skills' built-in dialog scripts + texts (§2.22)
         emulator.py
         templates/{bank_060_head.asm, bank_071_head.asm, PINNED_SHA256}
@@ -644,6 +648,7 @@ editor2/
         import_tab.py space_meter.py                   # S96 Import art tab, bank meters
         world_tab.py                                   # S98 World tab (read-only graph)
         gates_tab.py                                   # S100 Gates tab (custom rooms on gate floors)
+        arena_tab.py                                   # S109 Arena tab (fees, masters, team sizes, team rows)
         rooms/gate_panel.py                            # S100 inspector "Inside gates" group
   templates/blank-project/project.json   # File > New project (S94)
   example-project/project.json      # regression baseline (build/ is regenerable output;
@@ -1390,6 +1395,10 @@ a Spirit icon land in glyph + stream (other 9 untouched, every stream 19 B);
 bad icons refused; `--rom`: glyphs and gfx ids $2E03 / $6D04 decode to the
 authored tiles, the fork bytes once in $07 and twice in $0A, the blank
 project's ROM == the original at $4F:$4110-$41AF and $2E:$424A-$42F7.
+**S109 (P3.10b):** the arena regions + bank $6E `ArenaTeamFixup` (the two 6-byte
+tails in banks $04 / $50 far-call it; §2.25) → pin **`482c949ffabbce1ec409c4c9fb7e5f2e`**
+(patched; built S109, test ROM USER-CONFIRMED 2026-10-01 22:57; test_compiler `REFERENCE_MD5`). Prev
+`77ccdab8…` (patched, historical; S108 left it unchanged).
 **S104 r2:** `gamedata.families` (voices + Spirit names, two new regions;
 empty == the r1 bytes) and the user-picked ghost-wisp icon → pin
 **`eb1535108cdbc9ac24d64dce3db5591e`** (patched; built S104 r2, NOT yet
@@ -1744,6 +1753,67 @@ refused), refusals, a new species' own description; `--rom`: the built ROM's mod
 7 / 1 tables lead to the authored text, `HighLine2Ptrs` == `HIGH_LINE2_PTRS`, the
 blank project's ROM == the original at all three blocks. **Pin unchanged** `77ccdab8…`
 (patched).
+
+## §2.25 S109 — the ARENA (`gamedata.arena`, ROADMAP P3.10b)
+
+Module `editor2/core/arena.py` (`AR.check` called from `validators.validate` and from
+the Monsters tab's commit; `arena` is in `gamedata.SECTIONS`); editor model
+`editor2/core/arena_doc.py` (`ArenaMixin`), tab `editor2/app/arena_tab.py`.
+
+```jsonc
+"gamedata": {
+  "arena": {
+    "G":    {"fee": 20,
+             "matches": {"0": {"size": 1, "master": {"person": "0x0B"}},
+                         "2": {"master": {"monster": 41}}}},
+    "King": {"matches": {"0": {"size": 2}}}},
+  "enemies": {"300": {"species": 40, "level": 30}}}     // a team member = its enemy row
+```
+
+Group keys `G F E D C B A S StarryNight King` (groups 0-9); match keys `"0"`-`"2"`, the
+King `"0"` only (the King is ONE match — the Arena Battle room sets `$D9CD` = 3 before
+it). Every field optional; a value equal to the original is removed by the editor.
+`fee` (classes only) 0-65535; `size` 1-3 (3 = vanilla); `master` = `{"person": <NPC
+sprite id>}` (the S91 catalog's 'normal' ids below `$E0` + the vanilla masters' ids) or
+`{"monster": <species>}` (0-214 or a declared new species; drawn like its follower,
+draw id = species + `$10`).
+
+**The team members are not here:** the game has no team table — match *m* of group *g*
+fights EID `$E0 + 9·g + 3·m + slot` (the King `$01E1-$01E3`), so they are
+`gamedata.enemies` rows (§2.20), edited in place (the Arena tab writes them through the
+Monsters model). SIDEQUEST_MAP "Arena authoring as built — S109" has the runtime path.
+
+| Region | File | Content (no `arena` = the original bytes) |
+|---|---|---|
+| `gd_arena_masters_04` | bank_004 (`ArenaMasterSpriteTable`, `$04:$5E22`, 60 B) | 30 × [draw id, is_monster], index 3·group + match (read by `ArenaBattleSetup`, match 0) |
+| `gd_arena_masters_50` | bank_050 (`ArenaMasterSpriteTable50`, `$50:$6778`, 54 B) | the same first 27 rows (no King; read by `LoadArenaEnemyStats`, matches 1-2) |
+| `gd_arena_fees` | bank_009 (`ArenaClassFeeTable`, `$09:$5D23`, 16 B) | 8 words G..S (shown, checked, paid by the class menu) |
+| `gd_arena_team_sizes` | bank_06e (`ArenaTeamSizeTable`, 30 B; hand patch `patches/bank_06e.asm`) | 1-3 per (group, match) |
+
+**Engine (hand, patches/ only):** the last 6 bytes of `ArenaBattleSetup` ($04) and
+`LoadArenaEnemyStats` ($50) — `ld a,$01 / ld [$d7d1],a / ret` — became `ld hl,$6E00 /
+rst $10 / ret / nop`; bank $6E entry 0 `ArenaTeamFixup` writes `$D7D1` = 1, then for a
+size < 3 writes `$DA02` = size − 1 and `[$FF, $00]` into the absent slots' display
+entries (`$D7D0` for slot 2; + `$D7CC` for slot 1). Index ≥ 30 → returns (vanilla). The
+two master tables are now addressed by label in BOTH trees (`ld hl, ArenaMasterSpriteTable`
+was `ld hl, $5e22`), so the regions own their bytes.
+
+**Validators:** ERROR — unknown groups / matches / fields, a fee outside 0-65535 or on
+Starry Night / the King, a size outside 1-3, a master that is no catalog person / no
+monster, species 215-220 as master (Iron Rule 8), species 239 as master (draw id
+`$FF` = not drawn), a FIGHTING team member (slot < size) of species 215-220 (217-220
+hang the room — ROOM_DATA_FORMAT "Monster NPCs"). WARN — a fighting member of species
+239 (fights, not drawn before the fight). Unused slots may hold anything.
+
+**Tests:** test_compiler `test_arena_s109` — no arena == ROM for all four tables, the EID
+formula, the fixture's masters / bank-$50 copy / fees / sizes, the refusals, an unused
+summon slot accepted; `--rom` `test_arena_rom` — tables at their addresses, both tails
+far-call bank $6E, `ArenaTeamFixup` RUN from the built ROM (MiniSM83) for all 30 (group,
+match) — `$DA02`, the hidden entries, `$D7D1` — and an index past the table leaves the
+vanilla values. test_app — the Arena tab: team size, a row's species + level, a monster master,
+a fee through the widgets; a summon in a fighting team refused; a bad number refused
+without an undo step; undo restores project.json exactly. **Pin** `482c949f…` (patched), was `77ccdab8…` (patched,
+historical): the tails + bank $6E.
 
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 

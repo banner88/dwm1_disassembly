@@ -79,6 +79,13 @@
    C926     1    Gate wanderer's screen: bank $16 floor generation sets it
                  to the screen holding the wandering NPC, $FF outside gates;
                  NPC behaviours E/F act only when it == wScreenIndex [S97]
+   D7CA     8    Arena Battle room display list: [draw id, is_monster] x 4
+                 for the room's NPCs $F0-$F3 — entry 0 = the master, entry 1
+                 = slot 1, entry 2 = slot 0 (middle), entry 3 = slot 2;
+                 monster draw id = species + $10; $FF = not drawn. Written by
+                 ArenaBattleSetup ($04) / LoadArenaEnemyStats ($50) and, in
+                 the patched build, bank $6E ArenaTeamFixup (team size)
+                 [S109, PyBoy]
    D7D2   257    NPC slots: 8 x 32 B + terminator cell $D8D2 (field map:
                  ROOM_DATA_FORMAT "NPC RAM slot") [S91/S97]
    C935     1    Current Gate (wGateID)
@@ -121,6 +128,8 @@
    C8EF     1    GameAction sub-command (script opcode $04 param; bank $0A
                  dispatches 5 = arena-lobby party list, 6 = Starry Shrine
                  breeding list, 7 = egg evaluator, 11 = shrine entry) [S104]
+                 S109: indexes bank $09 ScreenEffectTable09 first; type 4 =
+                 the arena class-registration menu (ArenaClassMenu)
    C8F4     1    Naming screen: species + $10 of the monster being named
                  (0 = placeholder name); set by the recruit (bank $51) and
                  script (bank $04) paths; read by bank $09 LoadFld9_688e [S104]
@@ -136,6 +145,12 @@
                  being LEFT (24-entry MapTransStateTable) [S100]. Battles:
                  Battle-transition machine state (bank $13 label13_7366:
                  BGM $4B/$4D, random wipe $C906, sets wGameMode=2) [S68]
+                 Arena class menu (bank $09 screen effect type 4,
+                 ArenaClassMenu): $C905 = outer state 0-4 (window / run /
+                 close), $C906 = inner state 0-8 (ArenaClassMenuStateTable);
+                 cursor $C8E2 (row; the group formula masks bit 7) / $C8E3 (column); won marks
+                 per class written to $C0D8.. ($90 open / $AC star) while the
+                 menu is up [S109]
    C96D     1    Gate to warp to
    CA38     1    Encounter pool index (gate + floor → pool via $01:Call_69e1)
 ;  Gate floor generation pipeline (these vars): see GATE_GENERATION.md

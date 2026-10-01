@@ -7339,6 +7339,9 @@ Wrapper_2420:
     ret
 
 
+; AddGold (name kept for the 8 callers): it SUBTRACTS — C:D:E := E:H:L, then
+; CompareGoldHL does wCurrGold -= C:D:E with a floor of 0 (S109, measured: the
+; arena class fee, bank $09 ArenaClassMenu_State5, 3800 -> 3750).
 AddGold:
     ld c, e
     ld d, h

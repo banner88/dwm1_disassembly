@@ -35,6 +35,7 @@ from editor2.core.gates import GatesMixin
 from editor2.core.conversation import ConversationMixin, EnemiesMixin
 from editor2.core.families import FamiliesMixin
 from editor2.core.monsters import MonstersMixin
+from editor2.core.arena_doc import ArenaMixin
 from editor2.core.formats import anim_source as F_anim
 
 SCREEN_W, SCREEN_H = 20, 16
@@ -99,7 +100,8 @@ class ThresholdShiftNeeded(RuntimeError):
     shift_ok=True."""
 
 class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
-               ConversationMixin, EnemiesMixin, FamiliesMixin, MonstersMixin):
+               ConversationMixin, EnemiesMixin, FamiliesMixin, MonstersMixin,
+               ArenaMixin):
     def __init__(self, path):
         self.path = path if path.endswith('.json') else \
             os.path.join(path, 'project.json')

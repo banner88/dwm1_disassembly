@@ -409,3 +409,12 @@ gate you assumed".
 | MONSTER_DATA overshoot registry row "Default nickname + 'take X with you'" (S32) | SHARPENED (PyBoy S108) | Mode 7 is the naming screen's pre-fill; "Want to take GOOB with you?" prints the nickname actually chosen. |
 | disassembly bank_04d `$53D3-$7719` (`ld c, h / ld d, e …`) | DATA DECODED AS CODE | 215 `MonsterDesc_NNN_<Name>` db rows + `db $00` (the fake `ldh a, [rP1]` fused the last terminator with the zero tail), mode-1 pointer words → labels, both trees (`tools/resection_monster_desc.py`). |
 | PROJECT_COMPILER §2.21 / species.py: new-species names "1-9 letters A-Z / a-z" | SUPERSEDED (S108) | One name encoder for all monsters: letters, digits, space, `' , . ! ? - &`. |
+
+## S109 addendum (2026-10-01; the Arena editor, ROADMAP P3.10b)
+
+| Claim (where) | Verdict | Correct |
+|---|---|---|
+| ROM0 `AddGold` $2424 (label; DATA_STRUCTURES "Gold": "Add CDE to wCurrGoldLo") | WRONG (code + PyBoy S109) | It SUBTRACTS: C:D:E := E:H:L, then `CompareGoldHL` does wCurrGold −= C:D:E with a floor of 0 (arena fee 3800 → 3750). Label kept (callers), comment above it in both trees; DATA_STRUCTURES row corrected in place. |
+| BANK04_SCRIPT_ENGINE / DATA_STRUCTURES opcode `$04` "GameActionDispatch … 0 = shop, others = gate events"; the bank $09 entry 0 handler (mgbdis `label9_4005`, "screen effects") | INCOMPLETE (S109) | `$C8EF` indexes bank $09's `ScreenEffectTable09` ($09:$4009, 16 words); type 4 = `ArenaClassMenu` (the arena class-registration menu). Both names describe the same path; the table is now labelled with per-type comments. |
+| disassembly bank_009 $5B64-$5EA4 (mgbdis code: `Jump_009_5c0a`, `SetFld9_5c28` …) | DATA DECODED AS CODE (in part) | Re-sectioned both trees (`tools/resection_arena_menu.py`): the 5-state outer + 9-state inner machines, `ArenaClassLetterTable`, `ArenaClassFeeTable` (0 10 50 100 500 1000 5000 10000), the two cursor tables; helpers renamed `ArenaMenu…`. |
+| disassembly bank_004 / bank_050 `ld hl, $5e22` / `ld hl, $6778` (raw addresses into data) | RAW POINTER → LABEL | `ld hl, ArenaMasterSpriteTable` / `ArenaMasterSpriteTable50` (same bytes; the compiler regions own the tables). |

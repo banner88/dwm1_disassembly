@@ -67,7 +67,7 @@ PATCH_FILES = [
     "bank_010.asm",  # S107 P3.10 part 2a: gamedata.art follower layout/attr regions
     "wram.asm", "game.asm",
 ]
-PATCH_NEW_FILES = ["bank_060.asm", "bank_064.asm", "bank_067.asm", "bank_069.asm", "bank_06a.asm", "bank_06b.asm", "bank_06c.asm", "bank_06d.asm", "bank_071.asm", "bank_072.asm", "bank_073.asm", "bank_074.asm", "bank_07a.asm", "bank_07c.asm", "bank_07e.asm", "bank_07f.asm"]  # S107: art banks $7A/$7C/$7F (gamedata.art)  # don't exist in clean disassembly/
+PATCH_NEW_FILES = ["bank_060.asm", "bank_064.asm", "bank_067.asm", "bank_069.asm", "bank_06a.asm", "bank_06b.asm", "bank_06c.asm", "bank_06d.asm", "bank_06e.asm", "bank_071.asm", "bank_072.asm", "bank_073.asm", "bank_074.asm", "bank_07a.asm", "bank_07c.asm", "bank_07e.asm", "bank_07f.asm"]  # S107: art banks $7A/$7C/$7F (gamedata.art)  # don't exist in clean disassembly/
 
 BUILD_ARTIFACTS = ["game.o", "game.gbc", "game.sym", "game.map"]
 

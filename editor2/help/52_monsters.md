@@ -41,8 +41,9 @@ rolled to 80-100 %).
 ## Where you meet it
 
 Every enemy row of the species with where the game uses it: gate encounter
-lists (your project's), gate bosses and their join versions, arena classes,
-coliseum / random / mimic battles, script battles, the starter, and your own
+lists (your project's), gate bosses and their join versions, arena classes
+(the Arena tab shows the same rows match by match, with the team sizes and
+masters), coliseum / random / mimic battles, script battles, the starter, and your own
 enemies. Double-click a number to change it: level, HP, MP, ATK, DEF, AGL,
 INT, exp reward, **Joins** (0 = always, 7 = never, anything else = a chance),
 **AI weights** (four numbers 0-255) and **Battle skills** (up to 4 skill

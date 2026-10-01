@@ -219,3 +219,25 @@ edge and the battle waits for input forever.
   differs and it crashes in `GB_timing_sync` (SIGFPE); call
   `GB_set_turbo_mode(gb, true, true)`.
 
+## S109 techniques — a stub call that resumes, driving the arena on a real save
+
+- **Stub call + resume.** To run one routine inside a live game (e.g. the
+  text engine, an arena loader) write at a free WRAM spot: `push af/bc/de/hl`,
+  `ld a,[$4000] / push af` (the current bank's self-id — valid for the code
+  banks and every custom bank, not `$20`/`$40`/vanilla-empty banks), optional
+  `ld hl,<arg>`, `ld a,<bank> / ld [$2000],a / call <addr>`, `pop af /
+  ld [$2000],a`, `pop hl/de/bc/af`, `jp <the PC you replaced>`; set PC to the
+  stub and tick. The game carries on afterwards (a parked `jr $` with `di`
+  freezes it — KEY_LESSONS S109).
+- **Enter a room the way the game does.** A warp straight into the Arena
+  Battle room ($5D) at an arbitrary pixel broke the room script; use the
+  lobby transition's own arrival (px `0x78`, `0x58`) or walk in through the
+  lobby (GreatTree (4,12), walk up → lobby sub-room 1; receptionist: up 3,
+  left 1, A; YES = up then A).
+- **Measure a team, not a screenshot.** After the room is built read the
+  display list `$D7CA-$D7D1` ([draw id, is_monster] × 4) and `$DA02`; in
+  battle the enemy slots (`$D7D2 + 32·i`); after each won match the next
+  team must load (bank $50 `LoadArenaEnemyStats` with `wColiseumBattle` =
+  the next match). Gold = `$CA4B-$CA4D` (24-bit) before/after the class menu
+  gives the fee actually charged.
+

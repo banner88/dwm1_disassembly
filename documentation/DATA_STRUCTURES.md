@@ -603,7 +603,7 @@ Tables initialized by Bank $51 battle setup. Each table holds 16 bytes (up to 8 
 
 | Label | Address | Refs | Signature |
 |-------|---------|------|-----------|
-| `AddGold` | $2424 | 9 | Add CDE to wCurrGoldLo (24-bit) |
+| `AddGold` | $2424 | 9 | **SUBTRACTS** (S109, measured): C:D:E := E:H:L, then `CompareGoldHL` does wCurrGold −= C:D:E, floor 0 (the arena fee: 3800 → 3750). Name kept (callers); was documented "Add CDE to wCurrGoldLo" |
 | `CompareGold` | $241A | 5 | Compare CDE against wCurrGoldLo |
 
 **LCD/Video:**

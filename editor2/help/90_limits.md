@@ -37,3 +37,7 @@
 - Animated tiles: up to 8 frames per flip, drifting strips at most 2 cells
   wide, 32 animation groups per room, about 15.7 KB of frames for the whole
   project; they do not run on gate maze floors (like the game's own).
+- Arena (S109): a team has 1-3 monsters; the number of classes and matches is
+  fixed; entry fees are 0-65535 gold; TERRY? and the summons cannot fight in
+  or lead a team; the announcer and the masters' words are text (not editable
+  yet).

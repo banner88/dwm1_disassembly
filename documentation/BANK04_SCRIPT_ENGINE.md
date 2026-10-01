@@ -325,7 +325,7 @@ The compiler's names (`editor2/core/scriptgen.py` OPS): `close_text`, `npc_write
 ### Screen Effects
 | Cmd | Address | Name | Description |
 |-----|---------|------|-------------|
-| $04 | $57A1 | GameActionDispatch | **Bank $09 dispatch via $C8EF. 0=shop, others=gate events. NOT give-item.** |
+| $04 | $57A1 | GameActionDispatch | **Bank $09 dispatch via $C8EF. 0=shop, others=gate events. NOT give-item.** S109: $C8EF selects bank $09 entry 0's `ScreenEffectTable09` row — type 4 = the arena class-registration menu (`ArenaClassMenu` $09:$5B64; Arena Lobby scr6; SIDEQUEST_MAP "Arena authoring as built — S109"). |
 | $19 | $5C6D | FadeEffect | Screen fade in/out |
 | $0F | $5A02 | **MapTransitionFull** | **Write gate_id→$C96D, flag→$C96E, spawn XY→$C96F-$C972, set wIsPlayerChangingMaps=1. Format: $FF0F gate:flag spawnX spawnY (3 params). This is the real teleport opcode.** |
 

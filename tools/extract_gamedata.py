@@ -29,6 +29,12 @@ against the patched build's game.sym — every label sits at the same address):
                                           eight copies are identical: --selftest)
   follower_layout_10 / _attr_10  $10:$407F 128 x 2 / $417F 128 x 1
   follower_layout_11 / _attr_11  $11:$407F  87 x 2 / $412D  87 x 1
+  arena_masters     $04:$5E22   30 x 2    ArenaMasterSpriteTable (S109, P3.10b):
+                                          [draw id, is_monster] per (group, match)
+  arena_masters_50  $50:$6778   27 x 2    ArenaMasterSpriteTable50 — the bank $50
+                                          copy (no King rows; --selftest: == the
+                                          first 27 rows of bank $04's)
+  arena_fees        $09:$5D23    8 x 2    ArenaClassFeeTable (entry fee G..S)
   chance_percent    $01:$69C0    8        EncounterChancePercent (code -> %)
   library           bank $4D recipe TEXT (dispatch entry = species + 5):
                     the 221 pointers, the raw $43CE-$53D2 string block, pad
@@ -87,6 +93,11 @@ TABLES = {
     "follower_attr_10": (0x10, 0x417F, 128, 1, "FollowerAttrTable10"),
     "follower_layout_11": (0x11, 0x407F, 87, 2, "FollowerLayoutL1Table11"),
     "follower_attr_11": (0x11, 0x412D, 87, 1, "FollowerAttrTable11"),
+    # S109 (P3.10b, gamedata.arena — editor2/core/arena.py): the arena tables
+    # the compiler re-emits (the teams themselves are enemy_stats rows)
+    "arena_masters": (0x04, 0x5E22, 30, 2, "ArenaMasterSpriteTable"),
+    "arena_masters_50": (0x50, 0x6778, 27, 2, "ArenaMasterSpriteTable50"),
+    "arena_fees": (0x09, 0x5D23, 8, 2, "ArenaClassFeeTable"),
 }
 # the eight copies of the follower gfx-ID table at species 0 (MONSTER_DATA
 # "Follower-art table has EIGHT copies"): identical for species 0-214 —
@@ -243,12 +254,16 @@ def selftest():
         if rom[flat(b, a):flat(b, a) + 430] != ref:
             print(f"FAIL: follower gfx copy ${b:02X}:${a:04X} differs from bank $01's")
             return 1
+    t = want["tables"]
+    if t["arena_masters_50"]["rows"] != t["arena_masters"]["rows"][:27]:
+        print("FAIL: the bank $50 arena master table is not the first 27 rows of bank $04's")
+        return 1
     if sorted(want["library"]["family_tokens"]) != [str(i) for i in range(10)]:
         print("FAIL: library family tokens incomplete")
         return 1
     print(f"OK: gamedata_vanilla.json == ROM ({len(want['tables'])} tables, "
           "library text, names, chance codes; monster name / nickname / "
-          "description blocks contiguous + id-ordered)")
+          "description blocks contiguous + id-ordered; arena master copies agree)")
     return 0
 
 

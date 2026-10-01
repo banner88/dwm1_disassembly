@@ -296,6 +296,11 @@ class MonstersMixin:
             WL.copies(WL.needed(prj), getattr(prj, 'repo_root', None))
         except WL.LayoutError as ex:
             raise SP.SpeciesError(str(ex))
+        from editor2.core import arena as AR
+        try:                               # S109: arena fees / masters / sizes, and
+            AR.check(prj)                  # no summon in a fighting arena team
+        except AR.ArenaError as ex:
+            raise SP.SpeciesError(str(ex))
         self.data.clear()
         self.data.update(data)
         self.touch()

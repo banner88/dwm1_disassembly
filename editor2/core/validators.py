@@ -119,6 +119,13 @@ def validate(prj, generated=None):
             MT.check(prj)
         except (MT.MonsterTextError, SP.SpeciesError) as e:
             errors.append(str(e))
+        # S109 (P3.10b, PROJECT_COMPILER §2.25): gamedata.arena — fees, masters,
+        # team sizes; every fighting team member must be a drawable monster
+        from . import arena as AR
+        try:
+            warnings += [w for w in AR.check(prj) if w not in warnings]
+        except AR.ArenaError as e:
+            errors.append(str(e))
         # S105 G3: up to 19 new species can land in ONE family's encyclopedia
         # tab — its 32-member cap is checked here, not only when bank $12 is
         # emitted (which used to surface as an exception)

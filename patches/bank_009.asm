@@ -10,37 +10,29 @@ SECTION "ROM Bank $009", ROMX[$4000], BANK[$9]
     dw label9_4005
     dw label9_6120
 
-label9_4005:
-    ld a, [$c8ef]
+label9_4005:                        ; bank $09 entry 0: screen effects
+    ld a, [$c8ef]                   ; the effect type (script opcode $04)
     rst $00
-
-    di
-    ld b, l
-    inc sp
-    ld b, b
-    ld sp, hl
-    ld c, [hl]
-    ld l, $40
-    ld h, h
-    ld e, e
-    add hl, hl
-    ld b, b
-    add hl, hl
-    ld b, b
-    add hl, hl
-    ld b, b
-    ld l, $40
-    ld l, $40
-    ld l, $40
-    add hl, hl
-    ld b, b
-    di
-    ld b, l
-    jp z, ClearAudioState
-
-    ld b, b
-    jr nz, @+$63
-
+; ScreenEffectTable09 ($09:$4009) — S109: 16 handlers indexed by $C8EF, the
+; SCREEN-EFFECT type written by script opcode $04 (TriggerScreenEffect
+; type, text). Was mgbdis fake code. Type 4 = the arena class menu.
+ScreenEffectTable09:
+    dw $45F3               ; type  0
+    dw $4033               ; type  1 — close (no menu)
+    dw $4EF9               ; type  2
+    dw $402E               ; type  3 — bank $12 entry 0
+    dw ArenaClassMenu      ; type  4 — ARENA CLASS-REGISTRATION MENU
+    dw $4029               ; type  5 — bank $0A entry 0
+    dw $4029               ; type  6 — bank $0A entry 0
+    dw $4029               ; type  7 — bank $0A entry 0
+    dw $402E               ; type  8 — bank $12 entry 0
+    dw $402E               ; type  9 — bank $12 entry 0
+    dw $402E               ; type 10 — bank $12 entry 0
+    dw $4029               ; type 11 — bank $0A entry 0
+    dw $45F3               ; type 12
+    dw $5ECA               ; type 13
+    dw $4033               ; type 14 — close (no menu)
+    dw label9_6120         ; type 15
     ld hl, $0a00
     rst $10
     ret
@@ -4566,18 +4558,28 @@ jr_009_5b5e:
     ret
 
 
+; ---------------------------------------------------------------------------
+; ArenaClassMenu ($09:$5B64, screen effect 4) — S109 annotation. The Arena
+; Lobby class REGISTRATION menu: Arena Lobby script 6 `$04 $0004 $0710`
+; ('Which class are you registering for?'). Two columns of four classes,
+; each with its entry FEE (ArenaClassFeeTable) and a star when already won
+; ($CAB4 = classes won). Choosing a class that is not won and paying its fee
+; sets wArenaGroup = the class (0-7 = G..S); script 6 then runs opcode $1F
+; ArenaBattleSetup (bank $04) and warps to the Arena Battle room ($5D).
+; Editor: gamedata.arena.<class>.fee -> region gd_arena_fees (S109).
+; ---------------------------------------------------------------------------
+ArenaClassMenu:
     ld a, [$c905]
     rst $00
-    ld [hl], d
-    ld e, e
-    cp d
-    ld e, e
-    cp a
-    ld e, e
-    pop af
-    ld e, e
-    db $f4
-    ld e, e
+ArenaClassMenuOuterTable:
+    dw ArenaClassMenu_S0Window
+    dw ArenaClassMenu_S1
+    dw ArenaClassMenu_S2Cursor
+    dw ArenaClassMenu_S3Run
+    dw ArenaClassMenu_S4Close
+; outer state 0: menu window position from HRAM $B7/$BB -> $C909/$C90A,
+; border tiles to VRAM $8800
+ArenaClassMenu_S0Window:
     ld hl, $ffb7
     call ReadFld9_403d
     ld hl, $ffbb
@@ -4617,11 +4619,17 @@ jr_009_5b5e:
     ret
 
 
+; outer state 1: one frame
+ArenaClassMenu_S1:
     ld hl, $c905
     inc [hl]
     ret
 
 
+; outer state 2: inner state := 0, cursor := the next class to win:
+; $C8E2 (row) = [$CAB4] & 3, $C8E3 (column) = 1 when [$CAB4] >= 4
+; ($CAB4 = arena progress tier = classes won, Arena Lobby scr0)
+ArenaClassMenu_S2Cursor:
     ld hl, $c905
     inc [hl]
     xor a
@@ -4646,9 +4654,14 @@ jr_009_5b5e:
     ret
 
 
-    jp Jump_009_5c0a
+; outer state 3: the inner machine runs until it advances $C905
+ArenaClassMenu_S3Run:
+    jp ArenaClassMenuRun
 
 
+; outer state 4: restore the screen, clear wGameState bit 4 (screen effect
+; done) and $C905 -> the script resumes
+ArenaClassMenu_S4Close:
     call SetFld9_4204
     ld de, $2e07
     call LoadFld9_40c9
@@ -4660,33 +4673,31 @@ jr_009_5b5e:
     ret
 
 
-Jump_009_5c0a:
+; ArenaClassMenuRun: the inner 9-state machine (state $C906), S109
+ArenaClassMenuRun:
     ld a, [$c906]
     rst $00
-    jr nz, @+$5e
-
-    ld b, e
-    ld e, h
-    inc sp
-    ld e, l
-    xor [hl]
-    ld e, l
-    ld a, [bc]
-    ld e, [hl]
-    ld l, $5e
-    and a
-    ld e, [hl]
-    xor h
-    ld e, [hl]
-    or [hl]
-    ld e, [hl]
-    call SetFld9_5c28
+ArenaClassMenuStateTable:          ; inner machine, state = $C906
+    dw ArenaClassMenu_State0
+    dw ArenaClassMenu_State1
+    dw ArenaClassMenu_State2
+    dw ArenaClassMenu_State3
+    dw ArenaClassMenu_State4
+    dw ArenaClassMenu_State5
+    dw ArenaClassMenu_State6
+    dw ArenaClassMenu_State7
+    dw ArenaClassMenu_State8
+; inner state 0: ArenaMenuMarkWon, next
+ArenaClassMenu_State0:
+    call ArenaMenuMarkWon
     ld hl, $c906
     inc [hl]
     ret
 
 
-SetFld9_5c28:
+; ArenaMenuMarkWon: $C0D8[0..7] := $90 (selectable), then the first [$CAB4]
+; classes := $AC (the star glyph = already won). $CAB4 = classes won.
+ArenaMenuMarkWon:
     ld hl, $c0d8
     ld bc, $0008
     ld a, $90
@@ -4707,18 +4718,22 @@ jr_009_5c3c:
     ret
 
 
+; inner state 1 (after text): draw letters, fees, gold, cursor; next
+ArenaClassMenu_State1:
     ld a, [$c825]
     or a
     ret nz
 
-    call SetFld9_5c97
-    call CallFld9_5c53
+    call ArenaMenuDrawLetters
+    call ArenaMenuDraw
     ld hl, $c906
     inc [hl]
     ret
 
 
-CallFld9_5c53:
+; ArenaMenuDraw: the menu window, the fee column (ArenaMenuDrawFees), the
+; player's gold, the cursor (ArenaMenuCursorTable).
+ArenaMenuDraw:
     call SetFld9_4204
     ld de, $2e07
     call LoadFld9_40c9
@@ -4726,7 +4741,7 @@ CallFld9_5c53:
     call LoadFld9_40c9
     ld de, $6f1f
     call LoadFld9_40c9
-    call SetFld9_5ce0
+    call ArenaMenuDrawFees
     ld a, [wCurrGoldLo]
     ldh [$d5], a
     ld a, [wCurrGoldMid]
@@ -4737,7 +4752,7 @@ CallFld9_5c53:
     call LoadFld9_406d
     call ConvertNumberToText
     call ClrFld9_442a
-    ld de, $5da2
+    ld de, ArenaMenuCursorTable
     ld b, $04
     ld c, $04
     ld hl, $c8e2
@@ -4746,8 +4761,11 @@ CallFld9_5c53:
     ret
 
 
-SetFld9_5c97:
-    ld de, $5d1b
+; ArenaMenuDrawLetters: the four class letters of column [$C8E3]
+; (ArenaClassLetterTable) to VRAM $8800 and their four won/selectable
+; marks ($C0D8) to $8840.
+ArenaMenuDrawLetters:
+    ld de, ArenaClassLetterTable
     ld a, [$c8e3]
     add a
     add a
@@ -4757,10 +4775,10 @@ SetFld9_5c97:
     adc d
     ld d, a
     ld hl, $8800
-    call SaveFld9_5cce
-    call SaveFld9_5cce
-    call SaveFld9_5cce
-    call SaveFld9_5cce
+    call ArenaMenuPutLetter
+    call ArenaMenuPutLetter
+    call ArenaMenuPutLetter
+    call ArenaMenuPutLetter
     ld de, $c0d8
     ld a, [$c8e3]
     add a
@@ -4771,11 +4789,12 @@ SetFld9_5c97:
     adc d
     ld d, a
     ld hl, $8840
-    call SaveFld9_5cce
-    call SaveFld9_5cce
-    call SaveFld9_5cce
+    call ArenaMenuPutLetter
+    call ArenaMenuPutLetter
+    call ArenaMenuPutLetter
 
-SaveFld9_5cce:
+; ArenaMenuPutLetter: one glyph [DE] -> tile at HL; DE+1, HL+$10
+ArenaMenuPutLetter:
     push de
     push hl
     ld a, [de]
@@ -4792,8 +4811,10 @@ SaveFld9_5cce:
     ret
 
 
-SetFld9_5ce0:
-    ld de, $5d23
+; ArenaMenuDrawFees: the four fees of column [$C8E3] (ArenaClassFeeTable,
+; 4 words per column) as numbers, one text row ($40) apart from $00AB.
+ArenaMenuDrawFees:
+    ld de, ArenaClassFeeTable
     ld a, [$c8e3]
     add a
     add a
@@ -4804,11 +4825,12 @@ SetFld9_5ce0:
     adc d
     ld d, a
     ld hl, $00ab
-    call SaveFld9_5cfb
-    call SaveFld9_5cfb
-    call SaveFld9_5cfb
+    call ArenaMenuPutFee
+    call ArenaMenuPutFee
+    call ArenaMenuPutFee
 
-SaveFld9_5cfb:
+; ArenaMenuPutFee: the 16-bit fee [DE] -> number text at HL; DE+2, HL+$40
+ArenaMenuPutFee:
     push de
     push hl
     ld a, [de]
@@ -4833,27 +4855,34 @@ SaveFld9_5cfb:
     ret
 
 
-    ld a, [hl+]
-    add hl, hl
-    jr z, jr_009_5d46
-
-    ld h, $25
-    inc h
-    ld [hl], $00
-    nop
-    ld a, [bc]
-    nop
-    ld [hl-], a
-    nop
-    ld h, h
-    nop
-    db $f4
-    ld bc, $03e8
-    adc b
-    inc de
-    db $10
-    daa
-    ld de, $5da4
+; ArenaClassLetterTable ($09:$5D1B) — the class letter glyphs G F E D C B A S
+; (font: $24 = A); index 4*column + row. Read by ArenaMenuDrawLetters and
+; state 3 (the '<class> class?' prompt).
+ArenaClassLetterTable:
+    db $2a, $29, $28, $27, $26, $25, $24, $36   ; G F E D C B A S
+; ArenaClassFeeTable ($09:$5D23) — the ENTRY FEE of each class in gold, one
+; word per class G..S (index 4*column + row). Read by ArenaMenuDrawFees
+; (display), state 3 (gold >= fee?) and state 5 (AddGold). 16-bit: a fee
+; is 0-65535. Editor: gamedata.arena.<class>.fee (region gd_arena_fees, S109).
+; @BUILD_PROJECT BEGIN gd_arena_fees
+; (generated by editor2 `gd_arena_fees` from gamedata.arena)
+ArenaClassFeeTable:
+    dw     0   ; G class
+    dw    10   ; F class
+    dw    50   ; E class
+    dw   100   ; D class
+    dw   500   ; C class
+    dw  1000   ; B class
+    dw  5000   ; A class
+    dw 10000   ; S class
+; @BUILD_PROJECT END gd_arena_fees
+; inner state 2 = the class SELECTION: cursor over 2 columns x 4 rows
+; (column $C8E3: G F E D | C B A S; row $C8E2). A on a class whose
+; ArenaMenuMarkWon byte is $90 (not won yet) -> state 3; on a won class
+; ($AC, the star) -> menu message 6 and state 8. B -> wColiseumBattle := $FF
+; (the lobby script's 'Better luck next time' path) and leave.
+ArenaClassMenu_State2:
+    ld de, ArenaMenuCursorTable + 2
     ld hl, $c8e2
     ld b, $04
     inc hl
@@ -4867,8 +4896,8 @@ SaveFld9_5cfb:
 jr_009_5d46:
     jr z, jr_009_5d51
 
-    call SetFld9_5c97
-    call SetFld9_5ce0
+    call ArenaMenuDrawLetters
+    call ArenaMenuDrawFees
     call LoadFld9_40fa
 
 jr_009_5d51:
@@ -4923,15 +4952,17 @@ jr_009_5da1:
     ret
 
 
-    adc h
-    ld bc, $00a2
-    ld [c], a
-    nop
-    ld [hl+], a
-    ld bc, $0162
-    rst $38
-    rst $38
-    ld hl, $5d23
+; ArenaMenuCursorTable ($09:$5DA2) — the class cursor: ArenaMenuDraw passes
+; $5DA2 to ReadFld9_44ff (B = C = 4), state 2 passes $5DA4 (the four row
+; words, $FFFF-ended) to FuncFld9_42f1 (B = 4).
+ArenaMenuCursorTable:
+    dw $018C, $00A2, $00E2, $0122, $0162, $FFFF
+; inner state 3 = the GOLD CHECK: gold (24-bit $CA4B-$CA4D) minus
+; ArenaClassFeeTable[4*col + row] (16-bit). Short -> menu message 5 and
+; state 8; else $C180 = the class letter (+$F0 end) for message 4
+; ('<class> class?') and state 4.
+ArenaClassMenu_State3:
+    ld hl, ArenaClassFeeTable
     ld a, [$c8e3]
     add a
     add a
@@ -4963,7 +4994,7 @@ jr_009_5da1:
 
 
 jr_009_5de1:
-    ld de, $5d1b
+    ld de, ArenaClassLetterTable
     ld a, [$c8e3]
     add a
     add a
@@ -4987,6 +5018,8 @@ jr_009_5de1:
     ret
 
 
+; inner state 4: draw the YES/NO box (cursor $C8DE = YES)
+ArenaClassMenu_State4:
     ld a, [$c825]
     or a
     ret nz
@@ -4996,7 +5029,7 @@ jr_009_5de1:
     ld de, $6ed5
     call LoadFld9_40c9
     call ClrFld9_442a
-    ld de, $5ea1
+    ld de, ArenaYesNoCursorTable
     ld a, [$c8de]
     call FuncFld9_4530
     call LoadFld9_40fa
@@ -5005,7 +5038,13 @@ jr_009_5de1:
     ret
 
 
-    ld de, $5ea1
+; inner state 5 = YES/NO. B or NO ($C8DE = $81) -> redraw, message 1, back
+; to state 2. YES -> `call AddGold` with HL = the fee, E = 0: despite its
+; name the ROM0 routine SUBTRACTS (CompareGoldHL: gold - C:D:E, floor 0;
+; PyBoy S109: 3800 -> 3750 for E class), then wArenaGroup := 4*col + row
+; (the class 0-7 = G..S), next.
+ArenaClassMenu_State5:
+    ld de, ArenaYesNoCursorTable
     ld hl, $c8de
     ld b, $02
     call FuncFld9_42f1
@@ -5014,7 +5053,7 @@ jr_009_5de1:
     jr z, jr_009_5e5b
 
 jr_009_5e40:
-    call CallFld9_5c53
+    call ArenaMenuDraw
     ld hl, $0001
     call LoadFld9_45e5
     ld hl, $c906
@@ -5038,7 +5077,7 @@ jr_009_5e5b:
     cp $81
     jr z, jr_009_5e40
 
-    ld hl, $5d23
+    ld hl, ArenaClassFeeTable
     ld a, [$c8e3]
     add a
     add a
@@ -5073,15 +5112,19 @@ jr_009_5ea0:
     ret
 
 
-    cpl
-    ld bc, $016f
-    rst $38
-    rst $38
+; ArenaYesNoCursorTable ($09:$5EA1) — the YES/NO cursor (state 4 FuncFld9_4530,
+; state 5 FuncFld9_42f1 with B = 2).
+ArenaYesNoCursorTable:
+    dw $012F, $016F, $FFFF
+; inner state 6: next
+ArenaClassMenu_State6:
     ld hl, $c906
     inc [hl]
     ret
 
 
+; inner state 7 (after text): outer state 4 = close
+ArenaClassMenu_State7:
     ld a, [$c825]
     or a
     ret nz
@@ -5091,11 +5134,14 @@ jr_009_5ea0:
     ret
 
 
+; inner state 8 (after the message of a refused choice): redraw,
+; message 1, back to state 1
+ArenaClassMenu_State8:
     ld a, [$c825]
     or a
     ret nz
 
-    call CallFld9_5c53
+    call ArenaMenuDraw
     ld hl, $0001
     call LoadFld9_45e5
     ld a, $01

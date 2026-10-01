@@ -1467,8 +1467,31 @@ recipes are pure authoring.
       is re-run on the project build and cached in the project; (3) the
       safe-id rule becomes "has real follower art" per project, not a fixed
       range; (4) enemies / NPCs referring to a species follow renames by id.
-- [ ] **P3.10b — Arena editor** [G-L] (E1→E2 wiring, promoted from
-      Phase E): tiers×matches×slots grid over enemy-stats rows 224-304 +
+- [x] **P3.10b — Arena editor** [G-L] (E1→E2 wiring, promoted from
+      Phase E) — **built S109, test ROM USER-CONFIRMED 2026-10-01 22:57 ("Can confirm")** (test ROM
+      `DWM_S109_arena_demo.gbc`). User scope (S109 audit): its own tab; the
+      masters' sprites + the class entry fees in scope; teams of 1-2 monsters
+      wanted; bracket shape fixed; no prizes ("Only flags progression"); text
+      read-only; the victory cascade read-only (the flags session's).
+      **As built:** `gamedata.arena.<G..S|StarryNight|King>` (`fee`,
+      `matches.<m>.master` / `.size`) → regions `gd_arena_masters_04/_50`,
+      `gd_arena_fees`, `gd_arena_team_sizes`; NEW bank $6E `ArenaTeamFixup`
+      (same-size tails of `ArenaBattleSetup` / `LoadArenaEnemyStats`;
+      `$DA02` + hidden display entries for teams of 1 / 2); the team members
+      are the enemy rows (EID $E0 + 9·class + 3·match + slot, the King
+      481-483) edited in place; Arena tab after Dialogue (PROJECT_COMPILER
+      §2.25, SIDEQUEST_MAP "Arena authoring as built — S109", EDITOR_DESIGN
+      §5.2b). *Accept:* met — the demo project authored through the GUI
+      document model builds `3653b29d…` (patched) == the PyBoy-verified demo
+      (Starry Night 1 / 2 / 3 fought and won in turn, a monster master
+      drawn, the King with 2, fee 20 charged). Residuals: (a) the arena text
+      (announcer, masters' words, class names) is P3.6's; (b) the victory
+      cascade / `$CAB4` is the flags item's (P3.14); (c) a new species with id
+      239 cannot be a master and is not drawn before its fight (draw id
+      239 + $10 = $FF = "nothing"; refused as master, warned in a team);
+      (d) the King fights one match, so only its match 1 is offered (its
+      size-table rows 2-3 are unused).
+      Original box text: tiers×matches×slots grid over enemy-stats rows 224-304 +
       King 481-483 (stats/skills/ai_weights per enemy via Layer A-lite);
       victory cascade shown read-only. Bracket-shape constants = expert
       knob only. *Accept:* one arena match's team re-authored in GUI and

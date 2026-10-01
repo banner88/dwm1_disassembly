@@ -16,6 +16,9 @@ built from it (the original ROM is never changed).
 - **Monsters** — every monster's species data (family, growth, resistances,
   natural skills …), every battle row it appears in (stats, AI, joining), new
   monsters cut from a sprite sheet, and new art for the original monsters.
+- **Dialogue** — every text of the game, searchable (read-only for now).
+- **Arena** — the classes, Starry Night and the King: entry fees, each
+  match's master, 1-3 monster teams and the teams' monsters and stats.
 - **World** — the graph of rooms and the doors between them (mouse wheel =
   zoom, drag empty space = move around, Fit / + / −).
 - **Build & Play** — build the ROM (Ctrl+B) and run it (Ctrl+R).

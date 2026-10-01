@@ -1,5 +1,121 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-01 (Session 107 — **ROADMAP P3.10 PART 2a: NEW ART
+> FOR THE ORIGINAL MONSTERS + PART 2b: WALKING LAYOUTS + PART 2c: FAMILY ICONS** (user 15:52 on the audit: "I think we can do 2a-c
+> this session but lets start with 2a and see how we go. 2) I probably WONT edit
+> more than 50 monsters at most? 3) Terry and 216-220 ARE NOT MONSTERS. They are
+> SPECIAL BOSS + Summons that the summon skill makes. I have told you this
+> repeatedly. DO NOT MESS WITH THEM beyond giving the ability to change their
+> moves and stats." → **Iron Rule 8**). S106 USER-CONFIRMED at session start.
+> **2a USER-CONFIRMED 2026-10-01** ("great job, can confirm") with one note: a
+> re-arted monster's library parent icon stood STILL where vanilla MOVES (layout
+> 0 = pure mirror, no bob) → fixed by 2b (walking layouts, same session; below).
+> 2a as built: Verifier PASS 6/6 (bank_010.asm in
+> PATCH_FILES, art banks $7A/$7C/$7F in PATCH_NEW_FILES; extract_gamedata
+> selftest checks the eight walking copies); clean `1ca6579…` byte-perfect
+> (7 follower gfx-ID copies + bank $10 layout / attr tables re-sectioned, both
+> trees); patched pin unchanged by 2a `f22f56e1…` (patched, historical — 2b
+> moved it to `9740c1c9…`, below) — every new region reproduces the hand bytes;
+> the user's project as-is built `47b38e5c…` (patched, historical) == their own
+> Mac build. test_compiler --rom 507/507, test_app PASS.
+> `EDITOR_REVISION` = 'S107'.
+>
+> **Built (PROJECT_COMPILER §2.23, MONSTER_DATA "New art for ORIGINAL species",
+> EDITOR_DESIGN §5.2 "As built S107"):** `gamedata.art` for species 0-214 →
+> compiler regions over the ROM0 battle gfx table (ONE table, 13 readers — ROM
+> search), the $17 battle palettes, the EIGHT walking gfx-ID copies (identical for
+> 0-214; all written), the bank $10 / $11 layout + attr tables (new walking art →
+> the bank's own layout 0: Dragon `$10:$4E33` / Armorpion `$11:$4184`, no engine
+> code) + compiler-owned art banks $7F/$7C/$7A (49,149 B; 50 fully re-arted
+> monsters fit). Editor: the Name & art page opens for originals — **New art from
+> a sprite sheet…** (the S106 dialog, mode `original`), battle colours and
+> walking palette (also colours-only on the original art), back to original, art
+> meter; TERRY? / the summons have no art page. Found: `$320F` is Darkdrium's
+> battle art (not a "Durran placeholder"); the patched bank $0B walking table is
+> at `$4914`; a picture using all 256 byte values cannot be stored (plain error).
+>
+> **Measured in PyBoy on the user's save** (test ROM **`DWM_S107_art_demo.gbc`**,
+> patched md5 `bdc408a8…` = the user's project + a demo overlay NOT in their
+> project: Healer / BattleRex / Darkdrium (their party), Slime, MadPlant re-arted
+> from `bug.png`, Dracky colours only, wild Slime row always joins, the GreatTree
+> Library door un-redirected): followers' VRAM `$8200/$8300/$8400` == the new
+> streams, OAM palettes == the authored ones; party menu, INFO and the Healer
+> library page show the new poses; Healer's lineage parent icon (bank $12 copy) =
+> MadPlant's new walking art; Gate of Beginning: Slime = new art + colours, Dracky
+> = its art in the new colours, Anteater / Klamutra unchanged; the Slime joins.
+> **2a USER-CONFIRMED 2026-10-01** ("great job, can confirm") except: "When you
+> changed healer parent sprint in library it is STILL. Vanilla behaviour is
+> MOVING" (layout 0 = the A frames mirrored) → 2b; "Are we able to continue to 2b?"
+>
+> **2b — walking LAYOUTS: built S107, USER-CONFIRMED 2026-10-01 17:26** ("Can
+> confirm everything works correctly. 2c next") (PROJECT_COMPILER §2.23
+> "Walking layouts", MONSTER_DATA "Walking layouts as project data", EDITOR_DESIGN
+> §5.2 "As built S107 2b"). `editor2/core/walk_layouts.py`: a packer fits the
+> sheet's six frames to ANY of the 155 layouts and ranks them by differing pixels
+> (exact for all 44 original monsters whose layout fits the 16 × 16 frame;
+> bug.png: 20 of 26 monsters fit some layout pixel-exactly, layout 0 only 6);
+> `follower.layout` in `gamedata.art` / `custom.species` (instead of
+> `walks_like`); a layout the follower bank lacks is COPIED into its zero tail
+> (regions `lay_copies_10` / `lay_copies_11`; only the frames the bank lacks).
+> **Engine (bank $11, patches/):** both follower entries `call FollowerLayoutBase11`
+> (same size as the `ld de` it replaces) → new species read their own
+> `NewFollowerL1Table` row; `NewAttrHandler` no longer writes the S105 donor index
+> to HRAM `$C7`; `NewFollowerAttrTable` 1 B / id. **Patched pin `9740c1c9…`
+> (patched)**, was `f22f56e1…` (patched, historical); the user's project as-is now
+> builds `b1097263…` (patched; Klamutra still walks like 128 — same frames).
+> Extracted: `follower_layouts.json` regenerated with stored bytes / instances /
+> bank frames + Y-flip (ids unchanged), the extractor's selftest now checks the
+> JSON == ROM and runs in verify_integrity. Editor: the sheet dialog's **Walk
+> style** list + the sheet's own frames walking beside the game's; the
+> renderer draws entry 0 on top (CGB OAM priority — was underneath) with the
+> entries' Y-flip. Verifier PASS 6/6 (+1 selftest tool); clean `1ca6579…`;
+> test_compiler --rom 532/532, test_app --rom (GUI build == pin), test_canvas --rom
+> PASS.
+>
+> **Measured in PyBoy on the user's save** (test ROM
+> **`DWM_S107b_walk_layouts_demo.gbc`**, patched `f5bf7c12…` = the user's project
+> + the 2a demo overlay re-cut with the best walk styles: Healer layout 2, Slime
+> 143 (copied into bank $10), MadPlant 2, BattleRex / Darkdrium / Klamutra layout
+> 0 = their best fit): the MadPlant parent icon on the Healer library page now
+> alternates two poses (OAM tiles 114/115 ↔ 112/113), the icon's VRAM = all 16 new
+> tiles; a scratch build (Klamutra layout 13 copied into bank $11, Klamutra +
+> Slime poked into the party, gate floor): every follower OAM sample (112 each, all
+> eight facing frames) == its layout's frames, palettes as authored, art in VRAM;
+> vanilla Darkdrium (layout 10) / Healer (29) and a `walks_like` species draw
+> their layouts on both the old and the new build.
+> **2c — family icons: built S107, USER-CONFIRMED 2026-10-01 18:37 ("Great, can confirm works")** (user 17:26: "2c next if
+> you are able context-wise else hand off"; BREEDING_SYSTEM "Family icons as project
+> data", PROJECT_COMPILER §2.20, EDITOR_DESIGN §5.2a). `gamedata.families.<f>.icon`
+> (8 × 8, shades 0-3) → the font glyph (region `gd_family_icons`, bank $4F; was an
+> INCBIN) AND the gfx stream (`gd_family_icon_streams`, bank $2E — NEW hand patch
+> `patches/bank_02e.asm`, PATCH_FILES; `gd_spirit_icon_stream`, bank $6D); no edits =
+> the same bytes. Families tab: pixel editor + PNG import + previews in the two
+> measured screen palettes + back to original. **Found + fixed (Spirit, S104
+> leftover):** a ROM search for the `$2E03…$2E0C` word run found two more
+> unclamped 10-entry icon tables — `$07:$62AB` (the JOURNAL screen's saved-party
+> line) and `$0A:$6013` (its twin); a SAVED Spirit party member gave gfx id
+> `$CDE5` / `$0A11`: PyBoy stalled on the JOURNAL screen, stub calls never
+> returned. Same-size forks to bank $6D `FamilyIconGfxFromE` (patches/); the tables
+> re-sectioned `SavedPartyFamilyIconTable07` / `0A` + the code after them labelled
+> (`Fld_62bf`, `FldA_6027`) in both trees; `build_family_icon.py --selftest` now
+> checks the regions == ROM. **Patched pin `77ccdab8…` (patched)**, was `9740c1c9…`
+> (patched, historical). Verifier PASS (bank_02e in PATCH_FILES); clean `1ca6579…`;
+> test_compiler --rom 544/544; test_app PASS.
+>
+> **Measured in PyBoy** (test ROM **`DWM_S107c_family_icons_demo.gbc`**, patched
+> `a4bbceaf…` = the 2b demo + a heart Slime icon, a star Dragon icon, Slime species
+> moved to Spirit): continue box `?/★/♥` for Slib / Wrex / Hale, field status bar
+> VRAM `$8DA0+16·slot` == the authored tiles, Hale's INFO page "♥family"; the
+> always-joining wild Slime joins with family byte 10; with a saved Spirit party
+> member (the user's save, family poked + saved via JOURNAL) the JOURNAL shows the
+> wisp, and both saved-party routines return when stub-called (before the fork:
+> stall). Shades on screen: 1 = cream, 3 = black everywhere; 0 / 2 = greens on the
+> INFO page, orange / gold in the continue box.
+> **Hand-off:** user 18:37 "Hand off all changes since last repo push" — every S107
+> change (2a + 2b + 2c) delivered as `DWM-S107-original-art-changed-files.zip`, the
+> APPLY list pasted in the chat. **Next session:** the user's pick — ROADMAP P3.10
+> part 3 (renaming original species + descriptions) is the next unchecked item.
+
 > Last verified: 2026-10-01 (Session 106 — **ROADMAP P3.10 PART 1: THE MONSTERS
 > TAB — SPECIES DATA, ENEMY ROWS, NEW SPECIES CUT FROM SPRITE SHEETS** (user
 > 10:55 on the audit: "Yeah that seems fine" — the split P3.10 part 1 species
