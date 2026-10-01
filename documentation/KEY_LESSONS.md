@@ -4339,3 +4339,73 @@ gates" for ids 221/222/223 (bank $5F clears for 221/223, $57/$58 special-case
 updated).
 **Rule**: before trusting a "gate" list, read what register/RAM the compare
 actually tests.
+
+## S106 — the Monsters tab: a decoder checked by eye, a census that inherits its build, labels from the consumer
+
+### A decoder is verified against the real routine over the whole corpus, not by looking at three pictures
+**Symptom**: rendering the original battle poses for the Monsters tab gave
+cream stripes and solid colour fields around every monster — although S22 had
+recorded "extracted sprites render correctly (Slime/Dracky/Anteater verified)"
+and S22 / MONSTER_DATA explained the oddities as a "shared VRAM tile pool".
+**Root cause**: the decompressor ($00 `WaitDMATransfer`) re-checks every copied
+source byte: at/after the payload's end it wraps 4 KB down and, landing below the
+destination, writes 0 (`TextMakeVisible`) — then the next byte reads the stream's
+own output. `dwm/sprite_codec.decode` returned 0 for the WHOLE copy. Vanilla
+battle streams open with `$FFF, 96` (= one 0, then "repeat the last 2 bytes"),
+so 213 of 221 battle and 49 walking streams decoded wrong. The "pool" never
+existed; `tools/decompress_tiles.py` had the right rule all along.
+**Fix**: decode per byte like the game (+ 8-bit extended length); PyBoy stub-calls
+the real routine for all 442 streams (`tools/census_lz_decode.py`: 442 equal, and
+none changes when the VRAM below the destination is $00 vs $AA); data regenerated.
+**Rule**: a codec is proven by running the game's own routine on EVERY input it
+will ever see and comparing bytes — with a perturbation (here: the bytes outside
+the destination) that would expose a hidden dependency. Two decoders of one format
+in a repo is a smell: diff them before trusting either.
+
+### A census captured on build X carries build X's bugs
+**Symptom**: the new walking-sprite renderer disagreed with the S101 PyBoy census
+on exactly two species, ChopClown and Grendal.
+**Root cause**: the census was captured on a pre-S105 build, which had those two
+species' attr bytes overwritten (S105 fix); the renderer reads the original bytes.
+**Rule**: an emulator capture is ground truth only for the build it ran on — record
+the build md5 with it (the census does) and re-check outliers against that build's
+known defects before "fixing" the code that disagrees.
+
+### Label an enum from the code that consumes it
+**Symptom**: MONSTER_DATA called resistance level 0 "weak" and 2 "normal" (and so
+would the Monsters tab have).
+**Root cause**: the labels were guessed from the FAQ letters; the damage ladders
+(S78, simulator-validated) say 0 = full effect, 1 = ×0.85, 2 = ×0.5, 3 = immune.
+**Rule**: before showing an author what a value means, find the reader that turns
+it into behaviour (here `CheckTargetGuardA`) and label from that.
+
+### Only delete files git does not track
+**Symptom**: clearing `__pycache__` with `find … -exec rm -rf` deleted tracked
+`.pyc` files (the repo commits some).
+**Fix**: restored each with `git show HEAD:<file>`; caches are kept out of the tree
+with `PYTHONDONTWRITEBYTECODE=1`, and cleanup uses `git ls-files --others`.
+**Rule**: clean up by asking git what is untracked; never by directory name.
+
+### S106 r2 — a "fixed" palette entry can still be a usable colour
+**Symptom** (user): Goldhorn (Estark) in battle had lost its white sword edges and
+highlights — "I am guessing you somehow minus background colour within the
+sprite?"
+**Root cause**: the battle palette is [c0, c1 = cream forced by the engine, c2,
+c3 = black]. The import treated "forced" as "background only" and fitted the pose
+to black + 2 colours, so white merged into gold. Every original pose (215 / 215)
+draws its white / cream parts with c1 — a forced colour is still a colour.
+**Fix**: nearest of {black, cream, c0, c2} with c0 / c2 fitted; in-game ==
+preview 2304 / 2304 px on all three demo poses.
+**Rule**: before deciding how many colours a format offers, count what the
+ORIGINAL data uses each index for (here: enclosed cream pixels in all 215 poses),
+not what the docs call the index.
+
+### S106 r3 — a checker that crashes must still say why
+**Symptom** (user, fresh clone): "BUILD FAILED: crash-config validation failed:" and
+nothing after it.
+**Root cause**: the validator read `data/DWM-original.gbc` unguarded; on a clone
+without the ROM it died with a traceback on stderr, and the builder showed only
+stdout.
+**Rule**: a build step's failure message must include stderr, and every file a
+tool needs is checked with a plain-language error naming where it must be.
+

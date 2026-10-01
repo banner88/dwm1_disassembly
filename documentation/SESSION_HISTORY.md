@@ -1,5 +1,120 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-09-30 (Session 104 — **ROADMAP P3.10a: SPIRIT AS THE
+> 11TH FAMILY** (user 13:07: "1) Custom skills absolutely stay!! … All data
+> related to them must also be in editor. 2) Yeah please fix ??? and make
+> spirit separate. Wisp is fine just make it look nicer. 3) Breeding table will
+> utilize spirit extensively … Plan for it. 4) Of course spirit is in library.
+> Given all this, please proceed. Make your own mockups for spirit and Ill
+> pick"). S103 USER-CONFIRMED at session start. **Built S104 (r1-r5);
+> r5 USER-CONFIRMED 2026-09-30 15:51 ("perfect. Hand off.").** Verifier PASS 6/6 (check 5 now also runs
+> `build_family_icon.py --selftest`; `bank_06d.asm` in PATCH_NEW_FILES); clean
+> `1ca6579…` byte-perfect (bank $41 `$4000-$4338` re-sectioned into the mode
+> list + mode 0-4 tables, bank $0A `FamilyIconGfxTable0A` + `LoadFldA_46c9`,
+> bank $09 default-name and bank $07 pedigree annotations — both trees);
+> **patched pin MOVED `5d1dbc5f…` → `eee9f5b0…` (patched)**; test_compiler
+> --rom 233/233; test_app --rom + test_canvas --rom PASS. `EDITOR_REVISION` =
+> 'S104'.
+>
+> **Engine (BREEDING_SYSTEM "Spirit — the 11th family (S104)"):** new
+> hand-authored bank **$6D FAMILY SYSTEMS** — entry 0/1 family-icon gfx id
+> (families 0-9 = `$2E03+fam`, Spirit = `SpiritIconStream`, gfx id `$6D04`),
+> entry 2 farm-dialogue text group (11 entries; Spirit = group D),
+> entry 3 naming-screen default name (Spirit → mode-3 ids `$A0-$A7`) — behind
+> same-size forks in banks $01 (was ClampFamIdx → ??? tile), $0A (the
+> UNCLAMPED twin table: family 10 read code as a gfx id), $04 (opcode $2D read
+> garbage) and $09 (names ran into the next table); bank $16 family scan `$FA`
+> wildcard `jr z` → 2 nops (`$FA` = Spirit); bank $4F ??? glyph restored at
+> `$41A0`, Spirit glyph at `$41B0` (byte `$1A`); bank $41 mode-4 Spirit string
+> `"$1A"`, 8 Spirit names in the dead `$4323` words + tail fill; bank $07
+> pedigree "unknown parent" icon id 10 → 11 (**found S104: vanilla id 10 is
+> the empty "no family" string; since B9 every unknown parent drew the Spirit
+> icon**). The B9 "$1A is not fill-immune" note did not reproduce (DOC_AUDIT
+> S104). Editor: `"Spirit"` family / matcher everywhere, library token
+> `<$1A>family`, `"AnyFamily"` refused, help topic updated.
+>
+> **PyBoy (stub-calls from WRAM + real screens; old build vs new):** INFO page
+> `$1A` glyph for family 10, "?" for 9; HUD tiles `$8DA0-$8DCF` = Spirit stream,
+> identical to S103 for 0-9; bank $0A list (stub `LoadFldA_4610`) Spirit tile
+> at `$88B0`, identical for 0-9; default names identical 0-9, Spirit WISP /
+> NOVA / ECHO; dialogue ids identical 0-9, Spirit `$7C` (group D; was `$EA3C`);
+> breeding (`$16` entry 3) identical over every pair of non-Spirit species,
+> `[Spirit × Dragon]` → MadSpirit and `[Dragon × Spirit]` → Spooky fire;
+> pedigree unknown parents blank again; library tab strip page 3 = Spirit
+> icon, page 2 ??? = "?". Test ROM **`DWM_S104_spirit_test.gbc`** (patched, md5
+> `a7cf5159…`) = the user's project + a demo overlay (NOT in their project):
+> Healer / Spooky / Shadow / MadSpirit in Spirit + those two recipes; the
+> user's project as-is built `d17633de…` (patched, r1).
+>
+> **S104 r2 (user 14:35: "1) Ghost whisp is the best BY FAR, use that. 2)
+> Doesnt matter. Just make option in editor. 3) Huh wtf is this? What eight
+> placeholders? ALSO: I cant enter library on your map because it leads to
+> custom room. The rest works fine.")** — r1 test ROM passed except the
+> Library door, which the USER'S project redirects to its own room
+> (`entrance_redirects` GreatTree scr 8 (5,3) → cities_fount; test overlay r2
+> drops that redirect only). Icon = mock-up B ghost wisp; new
+> `gamedata.families` (per-family dialogue voice A-D, Spirit's 8 default
+> names = the naming screen's random pre-filled name) as compiler regions in
+> banks $6D / $41; the editor's new **Families** tab (members, move / add,
+> voice, Spirit names). Pin **`eb153510…` (patched)**; test_compiler --rom
+> 241/241; test ROM **`DWM_S104r2_spirit_test.gbc`** (patched, md5
+> `008435d6…`; PyBoy: the Library door enters `$12`, INFO / HUD / library tab
+> show the ghost wisp); the user's project as-is builds `48edddfc…` (patched).
+> `EDITOR_REVISION` = 'S104r2'. Built, NOT yet user-tested.
+>
+> **S104 r3 (user 14:56: "Nope when looking up spirit family in library it
+> freezes"):** reproduced in PyBoy — and it was not Spirit-specific: since FX1
+> (S71) the B7 library writer `LibScanByFamily` filled `$C0D8` while FX1 had
+> moved every bank-$12 reader to `wMonList`, so every tab showed the roster
+> list (DrakSlime… on every tab) and a lookup opened species = the list index;
+> on the Spirit tab that index was an unseen species → text id `$FF` → the
+> text engine never finished. Fix: the writer targets `wMonList` (same size,
+> `patches/bank_012.asm`). PyBoy: Spirit tab lists Healer (the other demo
+> members are unseen on this save = blank, as vanilla), its page opens; the
+> Dragon tab lists its own (unseen = blank). Pin **`d7b762db…` (patched)**;
+> test ROM **`DWM_S104r3_spirit_test.gbc`** (patched, md5 `acfd4ea9…`); the
+> user's project as-is builds `ec4df754…` (patched). Verifier PASS,
+> test_compiler --rom 241/241, test_app / test_canvas --rom PASS.
+>
+> **S104 r4 (user 15:13: "It wiped my sav file … when I reload it 1) make top
+> row of screen glitchy, and b) wipes sav file again if I press reset"; sent
+> `rom.s1` + `rom.sav`):** NOT an S104 regression — an FX1 (S71) bug,
+> PyBoy-reproduced on the S103 test ROM too, and from a clean save: save at
+> the farm, save again in the castle, CONTINUE, reset → new game. The R4
+> snapshot's 94th chunk carries 28 bytes of the tile image `$BCC8-$BCE3`,
+> committed BEFORE SaveGameState writes that block, so it is the PREVIOUS
+> save's top row; CONTINUE restored it (the glitchy top row) without a new
+> checksum (segment 3 covers `$BCC8`) → the next boot found no save. Fix:
+> bank $73 R4 restore = 93 chunks + `CF3SnapTail4` (`$B124-$BCC7`). PyBoy on
+> r4: the user's sent `.sav` CONTINUEs in the castle with the right top row
+> and survives a reset; farm → castle save → CONTINUE → reset keeps the save
+> (r3: lost); unsaved farm edits still rewind (incl. the 4 tail bytes);
+> library visit + save + reload keeps party and farm identical. Pin
+> **`e994173e…` (patched)**; test ROM **`DWM_S104r4_spirit_test.gbc`**
+> (patched, md5 `5e25799e…`); the user's project as-is builds `52e13c28…`
+> (patched). **USER-CONFIRMED 2026-09-30 15:34 ("Great that fixed it!").**
+>
+> **S104 r5 (user 15:42: "Just a display reorder. Feel free to do it now if
+> small"):** Spirit shown BEFORE ??? — bank $12 `LibTabToFamily` +
+> `LibTabOrder` (tab position → family) for the tab-strip icons
+> (`SaveItem_6184`, same-size call) and `LibScanByFamily`; 39 tail fill nops
+> consumed; editor `gamedata.DISPLAY_ORDER` drives the Families tab. No
+> family byte / code changes. PyBoy: page 2 = Bug, Devil, Zombie, Material,
+> Spirit (its list = Healer, page opens), page 3 = ???. Pin **`15f21834…`
+> (patched)**; test ROM **`DWM_S104r5_spirit_test.gbc`** (patched, md5
+> `67d32535…`); the user's project as-is builds `53338a16…` (patched).
+> Verifier PASS, test_compiler --rom 242/242, test_app / test_canvas --rom
+> PASS. **USER-CONFIRMED 2026-09-30 15:51 ("perfect. Hand off. Everything
+> that has been changed since last repo push.").**
+>
+> ROADMAP revised this session: P3.9b (custom skills are NOT content to
+> purge), new **P3.11c** (custom skills as project data), **P3.12** planning
+> for the Spirit-heavy breeding redesign (11-family randomizer / optimizer as
+> a proposer writing `gamedata.breeding`, depth read-out). **Next:** the user
+> picks the next editor item. **Hand-off: all S103 + S104 work = the diff
+> against `f2d9ece` (origin/master), delivered as
+> `DWM-S103-S104-changed-files.zip`.**
+
 > Last verified: 2026-09-29 (Session 103 — **ROADMAP P3.9: LAYER A-LITE —
 > THE VANILLA DATA TABLES BEHIND project.json `gamedata`** (user: P3.3g "No
 > fuck this. Bank and come back later if tiles become a problem … Move on to

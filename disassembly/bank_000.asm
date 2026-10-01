@@ -4315,7 +4315,14 @@ RestoreBankFromSprite:
     ret
 
 
-; WaitDMATransfer: Busy-wait until $DA78 == 0 (DMA transfer complete)
+; WaitDMATransfer ($1577): the game's LZ DECOMPRESSOR entry (graphics streams:
+; monster battle / walking art, tilesets, layouts). In: DE = gfx-ID (D = bank,
+; E = index into that bank's pointer table at $4001), HL = destination (VRAM).
+; Takes the $DA78 lock (busy-waits while another decompress runs), then
+; TextScrollWindow decodes straight into VRAM. The mgbdis "Text*" labels below
+; are this decompressor, not text code (S106, ROADMAP P3.10; format +
+; Python twin: dwm/sprite_codec.decode, tools/decompress_tiles.py; proven equal
+; to this routine for all 442 monster streams by tools/census_lz_decode.py).
 WaitDMATransfer:
 jr_000_1577:
     ld a, [$da78]
@@ -4330,6 +4337,10 @@ jr_000_1577:
     ret
 
 
+; TextScrollWindow: save the bank, DecompressTileLayout (header: declen ->
+; BC, marker -> $FFAB, dest -> $FFAC/$FFAD = the back-reference BASE, end =
+; dest+declen -> $FFB1/$FFB2, start -> $FFB3/$FFB4), then the byte loop:
+; byte != marker = literal; byte == marker = a copy (HandleTextRun).
 TextScrollWindow:
     ld a, [$4000]
     push af
@@ -4354,6 +4365,9 @@ TextTileByteLoop:
     jp RestoreBankFromText
 
 
+; HandleTextRun: a back-reference [marker, lo, hi4:len4]: source = dest +
+; 12-bit offset ((hi4 << 8) | lo), count = len4 + 4, or next byte + $13 when
+; len4 = $F — 8-bit, so 0 means 256 (the copy loop counts $FFAF down).
 HandleTextRun:
     pop hl
     ld a, [de]
@@ -4392,6 +4406,14 @@ StoreTextRunLength:
     ld d, h
     pop hl
 
+; CheckTextViewUpper: EVERY copied byte re-checks its source against the
+; stream's end ($FFB1/$FFB2): a source at/after the end is wrapped 4 KB down
+; (AdjustTextViewport); below the start that byte is written as 0
+; (TextMakeVisible) and the source walks on — so an offset like $FFF yields
+; one 0 and then copies the output from the destination's first byte on: the
+; "repeat the last 2 bytes" idiom every vanilla battle stream opens with.
+; Nothing before the destination is ever read (no shared tile pool; the S22
+; "pool" reading was the old Python decoder's bug — S106).
 CheckTextViewUpper:
     ldh a, [$b2]
     cp d
@@ -4433,6 +4455,8 @@ Jump_000_15f4:
 
     jr c, TextReadVisible
 
+; TextMakeVisible: wrapped source below the destination -> write 0, restore
+; the source's high byte (+$10) and continue.
 TextMakeVisible:
     ld a, $10
     add d

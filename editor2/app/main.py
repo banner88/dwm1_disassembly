@@ -35,7 +35,7 @@ ORIGINAL_MD5 = '1ca6579359f21d8e27b446f865bf6b83'   # PROJECT_STATE canonical
 
 STUB_TABS = [
     ('Gates', 'P3.7b', 'Custom rooms on gate floors (open a project); gate settings + boss floor = part 2.'),
-    ('Monsters', 'P3.9 + P3.10', 'Stats / growth / AI weights / learnset, battle + follower sprites.'),
+    ('Monsters', 'P3.10', 'Species data, enemy rows, new species from sprite sheets (open a project).'),
     ('Skills', 'P3.11', 'The S74 knob surface as forms with the invariant validators.'),
     ('Breeding', 'P3.12', 'Recipe editor + the randomizer tree explorer, live re-sim.'),
     ('Encounters', 'P3.13a', 'Cross-room pool view; custom pools; flag-keyed variants.'),
@@ -177,6 +177,12 @@ class MainWindow(QMainWindow):
                 else:
                     self.tabs.addTab(_stub('Families', 'P3.10a', 'Family members, dialogue, Spirit names (open a project).'),
                                      'Families')
+                if self.session:
+                    # S106 (P3.10 part 1): species data, enemy rows, new species
+                    from editor2.app.monsters_tab import MonstersTab
+                    self.monsters_tab = MonstersTab(self.session)
+                    self.tabs.addTab(self.monsters_tab, 'Monsters')
+                    continue
             if title == 'Balance':
                 # S98 (P3.7): the World graph sits before Balance, as in §5.0
                 if self.session:

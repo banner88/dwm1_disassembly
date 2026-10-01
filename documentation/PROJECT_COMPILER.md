@@ -1334,7 +1334,8 @@ monsters with no slot allowed twice (measured freeze, DATA_STRUCTURES), a
 3-monster pool whose max counts allow fewer than 3 copies, an EID that does
 not exist, a shadowed special append / override, `boss_joins` outside the 34,
 more than 1650 special entries, > 32 members in one library family.
-(WARN): combat-only species edits; an enemy row's species change (Set 3:
+(WARN): an encounter list whose slot chances add up to MORE than 100 % (S106 r3:
+the last slots are cut; all 128 original lists are exactly 100); combat-only species edits; an enemy row's species change (Set 3:
 resistances follow the species) and, on a boss fight row, its join row (Set 2);
 joinable with HP > 1023; the same EID twice in a pool (S77); a skill's MP
 changed while record +4 (`mp_byte`, reader untraced — 218/222 vanilla rows
@@ -1429,6 +1430,11 @@ id ≥ 221).
 | `ns_detail_text` | bank_04d `HighLine2Ptrs` / `HighMode0Ptrs` | 19 + 19 words (line 2 = vanilla mode-1 entry 261 + `description_from`, read from the clean disassembly; line 1 = the recipe line or `$53C4`) + the recipe lines; no species = labels only |
 | `ns_info` | bank_06a slots 0-18 | 19 × 43-byte info rows |
 | (file) `species7e` | bank_07e | `SpriteOverflowPtrs_7E` (38 words: index (id-221)*2 = follower, +1 = battle; an undeclared id aliases the first declared species) + the streams; no species = `ds $4000, $00` |
+
+**`source` (S106, editor metadata).** `{sheet, battle: box, frames: {DOWN-a …
+UP-b: box}}` — the sprite sheet (project-relative, `assets/sheets/`) and the boxes
+the Monsters tab cut the art from, so "Re-cut" reopens them. Allowed by the
+validator, never read by the compiler; the art files stay the source of the bytes.
 
 **Follower art has no table.** The eight follower gfx-id forks
 (`FollowerArtResolveXX`, banks $01/$06/$07/$09/$0B/$12/$18/$59) COMPUTE

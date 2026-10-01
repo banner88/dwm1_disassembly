@@ -478,6 +478,12 @@ class Gamedata:
             if sum(pct[c] for c in r[5:10]) < 100:
                 raise GamedataError(f"{what}.slot_chance: the slot chances add up "
                                     "to less than 100 %")
+            if sum(pct[c] for c in r[5:10]) > 100:
+                # S106 r3: every original list is exactly 100; above it the
+                # running sums pass 100 early and the last slots are never drawn
+                self.warnings.append(f"{what}.slot_chance: the slot chances add up to "
+                                     f"{sum(pct[c] for c in r[5:10])} % — the last slots "
+                                     "are cut (every original list is exactly 100 %)")
             eids = [_u16(r, 10 + 2 * i) for i in range(5)]
             for i in range(5):
                 if r[5 + i] and not eids[i]:

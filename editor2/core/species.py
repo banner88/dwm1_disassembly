@@ -180,8 +180,11 @@ def resolve(prj, with_art=True):
         what = f"custom.species[{k}]"
         if not isinstance(s, dict):
             raise SpeciesError(f"{what}: must be an object")
+        # `source` (S106): where the art came from (sheet + boxes), written
+        # by the Monsters tab's sheet import so the art can be re-cut later;
+        # the compiler never reads it
         G._check_keys(s, ('id', 'name', 'short_name', 'info', 'description_from',
-                          'battle', 'follower', 'comment'), what)
+                          'battle', 'follower', 'comment', 'source'), what)
         sid = s.get('id')
         if isinstance(sid, bool) or sid not in CAPACITY_IDS:
             raise SpeciesError(f"{what}.id: {sid!r} — new species ids are "

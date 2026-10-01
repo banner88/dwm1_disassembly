@@ -5,9 +5,10 @@ the wild and boss battle rows, the gate encounter lists, skills (MP cost,
 learning requirements, power), the experience and growth curves and the
 breeding recipes — can be changed by the project.
 
-**Today these are edited in `project.json` (the `gamedata` section); the
-Monsters / Skills / Breeding / Encounters tabs that edit them in the editor
-come next.** The project only stores what you change: an empty `gamedata`
+**The Monsters tab edits the species rows and the battle rows, and puts a
+row into a gate's wild list (Monsters help); skills, breeding and the rest of
+the encounter lists are still edited in `project.json` (the `gamedata`
+section) until their tabs come.** The project only stores what you change: an empty `gamedata`
 is the original game.
 
 What the build does for you:
@@ -53,8 +54,8 @@ The six species that only exist in battles (the rival TERRY?, the four
 summons and one unused slot) cannot be moved to another family or given a
 breeding recipe.
 
-**New monsters** (`custom.species` in `project.json`; the Monsters tab that
-authors them comes next). A project can add up to **19** brand-new monsters,
+**New monsters** (`custom.species` in `project.json`; the Monsters tab
+makes them from a sprite sheet — Monsters help). A project can add up to **19** brand-new monsters,
 ids **221-239**, in any order and with gaps (0-220 are the original monsters;
 240 and up are impossible in this game). A project without one builds the
 original game's data: since S105 no test monster is built into every project
@@ -71,8 +72,8 @@ any more. An entry gives:
   assets, `palette`: 4 colours, the 2nd is the cream backdrop and the 4th
   black) and `follower` — its walking picture (`art`), which monster it
   walks like (`walks_like`, one of the monsters 128-214) and its colour
-  (`palette`, 0-7). `tools/bake_follower_overflow.py --stream-dir` turns
-  PNG sheets into the two art files.
+  (`palette`, 0-7). The Monsters tab writes these from a sprite sheet and
+  records the boxes it used under `source`.
 
 Its wild or boss battle rows are ordinary **project enemies** with that
 species (Enemies help). An encounter list can name a project enemy by its

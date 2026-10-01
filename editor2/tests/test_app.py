@@ -167,6 +167,89 @@ def main():
     print('OK: Families tab — 11 families, move Snaily to Spirit, voice A, a Spirit '
           'name; undo restores the document')
 
+    # S106 (P3.10 part 1): Monsters tab — species list (original + new),
+    # species field edits, an enemy-row edit, a new species cut from a sprite
+    # sheet through the real dialog; every edit one undo step, undo restores
+    # project.json AND removes the written art / sheet files
+    mt = w.monsters_tab
+    w.tabs.setCurrentWidget(mt)
+    app.processEvents()
+    ids = [mt.list.item(i).data(Qt.UserRole) for i in range(mt.list.count())]
+    assert 224 in ids and 0 in ids and 220 in ids, 'species list incomplete'
+    assert sum(1 for i in ids if i is not None) == 222, len(ids)
+    before = doc.dumps()
+    mt.select(8)
+    assert mt.sid == 8 and 'Slime' in mt.title.text()
+    assert mt.walk.frames is not None and mt.battle.pixmap() is not None
+    mt.w_cap.setValue(60)
+    mt._set('level_cap', 60)
+    mt.w_resist['Fire'].setCurrentIndex(3)
+    mt._set('resist.Fire', 3)
+    assert doc.data['gamedata']['monsters']['8'] == {'level_cap': 60, 'resist': {'Fire': 3}}, \
+        doc.data['gamedata']['monsters']['8']
+    mt.pages.setCurrentIndex(1)
+    app.processEvents()
+    rows = {mt.table.item(r, 0).text(): r for r in range(mt.table.rowCount())}
+    assert '2' in rows and '1' in rows, rows
+    it = mt.table.item(rows['2'], 3)          # HP of the wild Slime (EID 2)
+    it.setText('99')
+    assert doc.data['gamedata']['enemies']['2'] == {'hp': 99}, doc.data['gamedata'].get('enemies')
+    # S106 r3: "Put the selected row in a gate…" — a new enemy row of Gorbunok,
+    # into the free slot of the Gate of Beginning list, chances to 100 %
+    from editor2.app.pool_dialog import PoolDialog
+    mt.select(224)
+    mt._new_enemy_row()
+    nid = [e for e in mt._rows if e['kind'] == 'project'][-1]
+    pd = PoolDialog(doc, nid['id'], 'test row', parent=mt)
+    pd.pool.setCurrentIndex(pd.pool.findData(0))
+    assert pd.table.currentRow() == 4, pd.table.currentRow()     # the free slot preselected
+    pd._put()
+    pd.table.cellWidget(3, 1).setCurrentIndex(5)                 # Gorbunok 70 % -> 50 %
+    pd._ok()
+    assert pd.result_slots and pd.result_slots[4][0] == nid['id'], pd.result_slots
+    pi, slots = pd.result_pool, pd.result_slots
+    assert mt._push('gate', lambda d: d.set_pool_slots(pi, slots))
+    assert doc.data['gamedata']['encounters']['0']['eids'][4] == nid['id']
+    w.session.undo.undo()
+    w.session.undo.undo()
+    from editor2.app.sheet_import_dialog import SheetImportDialog, copy_sheet_into_project
+    sheet = os.path.join(REPO, 'examples/follower_swap/W_bluedragon.png')
+    dlg = SheetImportDialog(doc, 'new', parent=mt)
+    dlg.load_sheet(sheet)
+    k = next(i for i, e in enumerate(dlg.entries)
+             if e['frames'] and e['frames']['DOWN-a']['x'] == 232 and e['frames']['DOWN-a']['y'] == 8)
+    dlg.select_entry(k)
+    it = dlg.items['DOWN-a']
+    it.setPos(it.pos().x() + 1, it.pos().y())       # a dragged box changes the preview
+    assert dlg.current()['frames']['DOWN-a']['x'] == 233
+    it.setPos(it.pos().x() - 1, it.pos().y())
+    dlg.name.setText('Aquadrak')
+    dlg._accept()
+    r = dlg.result_data
+    assert r and r['id'] == 221 and r['art']['follower_palette'] == 2, r and r.get('id')
+    assets = doc.species_asset_paths(r['id'], r['name']) + [r['source']['sheet']]
+
+    def op(d):
+        copy_sheet_into_project(d.project_dir, r['sheet_abs'], r['source']['sheet'])
+        d.add_species(r['id'], r['name'], r['short'], r['clone_from'], r['family'],
+                      r['art'], source=r['source'])
+    assert mt._push('New species Aquadrak', op, assets=assets)
+    files = [os.path.join(doc.project_dir, a) for a in assets]
+    assert all(os.path.exists(f) for f in files), files
+    mt.refresh()
+    mt.select(221)
+    assert mt.sid == 221 and 'Aquadrak' in mt.title.text() and mt.pages.isTabEnabled(2)
+    for _ in range(4):
+        w.session.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'undo must restore project.json exactly'
+    assert not any(os.path.exists(f) for f in files), 'undo must remove the written art'
+    sdir = os.path.join(doc.project_dir, 'assets', 'sheets')
+    if os.path.isdir(sdir) and not os.listdir(sdir):
+        os.rmdir(sdir)
+    print('OK: Monsters tab — 222 species listed, Slime level cap + Fire resistance, wild '
+          'Slime HP, a Gorbunok row put in a gate, a new species cut from the water sheet; undo restores everything')
+
     if do_rom:
         from editor2.app.build_worker import BuildWorker  # noqa: E402
         results = []

@@ -823,6 +823,209 @@ def test_species_forks_rom(tag, rom, sym, declared):
            g == 0x7E00 + k + 1 and fptr == a(f'Follower_sp{sid}') and bptr == a(f'Battle_sp{sid}'))
 
 
+def test_monsters_s106():
+    """S106 (ROADMAP P3.10 part 1): the LZ decoder fix, the sprite-sheet reader,
+    the Monsters tab's model (sparse writes, new species), the sprite renderer."""
+    import shutil
+    import tempfile
+    from dwm import sprite_codec as SC
+    from editor2.core import sheet_import as SI
+    from editor2.core import monsters as MM
+    from editor2.core import sprite_render as SR
+    from editor2.core.document import Document
+
+    # --- decoder: an offset past the payload reads the 4 KB-wrapped pool and
+    # then walks into the output (the game's per-byte re-check, $00:$15C6);
+    # vanilla streams open with "$FFF, 96" = repeat the previous 2 bytes
+    st = bytes([8, 0, 0xAA, 0xFF, 0xAA, 0xFF, 0xF3])     # literal FF, copy 7 from $FFF
+    ok("S106 LZ: an offset past the payload wraps 4 KB down (below the destination = 0, then the output)",
+       SC.decode(st) == bytes([0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00]),
+       SC.decode(st).hex())
+    st = bytes([0, 1, 0xAA, 0x11, 0xAA, 0x00, 0x0F, 0xED])     # ext length $ED -> 256
+    ok("S106 LZ: extended copy length is 8-bit (0 = 256, like the game)",
+       len(SC.decode(st)) == 256 and set(SC.decode(st)) == {0x11}, SC.decode(st)[:4].hex())
+    ok("S106 LZ: encoder never asks for a copy the game truncates", SC.MAX_COPY == 0x100)
+    import random
+    rnd = random.Random(106)
+    for k in range(20):
+        pay = bytes(rnd.choice((0, 0xFF, rnd.randrange(256))) for _ in range(rnd.randrange(16, 700)))
+        if SC.decode(SC.encode_safe(pay)) != pay:
+            ok("S106 LZ: encode/decode round trip", False, f"case {k}")
+    ok("S106 LZ: encode/decode round trip (20 random payloads)", True)
+
+    # --- the sheet reader finds the proven S34 Gorbunok boxes on its sheet
+    # (examples/follower_swap/W_bluedragon.png = the DWM2 water-family sheet)
+    sheet = SI.Sheet(os.path.join(REPO, 'examples/follower_swap/W_bluedragon.png'))
+    ok("S106 sheet: background = the sheet's key colour", sheet.bg == (255, 194, 14), str(sheet.bg))
+    ents = SI.find_entries(sheet)
+    ref = json.load(open(os.path.join(REPO, 'examples/follower_swap/gorbunok_frames.json')))['frames']
+    hit = [e for e in ents if e['frames'] and e['frames']['DOWN-a']['x'] == 232
+           and e['frames']['DOWN-a']['y'] == 8]
+    ok("S106 sheet: 31 complete monsters found on the water sheet",
+       sum(1 for e in ents if e['battle'] and e['frames']) == 31,
+       str(sum(1 for e in ents if e['battle'] and e['frames'])))
+    ok("S106 sheet: the blue dragon's four stored frames == the hand-picked S34 boxes",
+       len(hit) == 1 and all(hit[0]['frames'][k] == ref[k] for k in SI.LAYOUT0_ORDER))
+    bspec = json.load(open(os.path.join(REPO, 'examples/follower_swap/gorbunok_battle.json')))
+    ok("S106 sheet: its battle box == the hand-picked S35 bbox",
+       hit[0]['battle'] == bspec['bbox'], str(hit[0]['battle']))
+    gor = SC.decode(open(os.path.join(REPO, 'editor2/example-project/assets/species/'
+                                      'gorbunok_follower.bin'), 'rb').read())
+    ok("S106 sheet: follower payload == Gorbunok's committed (in-game proven) art",
+       SI.follower_payload(sheet, hit[0]['frames']) == gor)
+    _cm, pal = SI.follower_colors(sheet, hit[0]['frames'])
+    ok("S106 sheet: auto object palette == Gorbunok's (2, blue)", pal == 2, str(pal))
+    bp = SI.battle_payload(sheet, hit[0]['battle'])
+    _bm, bpal = SI.battle_colors(sheet, hit[0]['battle'])
+    grid = SR.tiles_to_grid(bp, 6, 6)
+    ok("S106 sheet: battle payload 576 B, backdrop (idx 1) everywhere outside the pose, "
+       "pose standing 2 px above the bottom like the original poses, c1 = $6BFF / c3 = $0000",
+       len(bp) == 576 and all(v == 1 for v in grid[0]) and any(v != 1 for v in grid[45])
+       and all(v == 1 for v in grid[46] + grid[47])
+       and bpal[1] == 0x6BFF and bpal[3] == 0)
+    bm, _ = SI.battle_colors(sheet, hit[0]['battle'])
+    ok("S106 r2 sheet: a 4-colour pose (black, white, 2 blues) keeps all four — white "
+       "on the cream (idx 1), the blues exact on c0 / c2 (user: Goldhorn lost its whites)",
+       sorted(bm.values()) == [0, 1, 2, 3] and bm[(248, 248, 248)] == 1 and bm[(0, 0, 0)] == 3
+       and {bpal[0], bpal[2]} == {SI.rgb555((56, 88, 152)), SI.rgb555((128, 136, 224))},
+       f"{bm} {[hex(x) for x in bpal]}")
+    ok("S106 sheet: a literal stream decodes back exactly",
+       SC.decode(SI.literal_stream(bp)) == bp)
+
+    # --- renderer: vanilla walking frames == the S101 PyBoy census crops
+    cen = json.load(open(os.path.join(REPO, 'extracted', 'monster_npc_sprites.json')))
+    from PIL import Image
+    good, bad = 0, []
+    for sid in range(215):
+        if sid in cen.get('blank', []) or str(sid) not in cen['species']:
+            continue
+        fr = SR.vanilla_follower(sid)
+        im = Image.open(os.path.join(REPO, 'extracted', 'monster_npc_sprites',
+                                     cen['species'][str(sid)]['file'])).convert('RGBA')
+        theirs = [(x, y, im.getpixel((x, y))[:3]) for y in range(16) for x in range(16)
+                  if im.getpixel((x, y))[3]]
+        match = False
+        for name in ('down_A', 'down_B'):
+            g = fr[name]
+            mine = {(x, y, g[y][x][:3]) for y in range(24) for x in range(24) if g[y][x]}
+            if mine and theirs:
+                mx, my = min(p[0] for p in mine), min(p[1] for p in mine)
+                tx, ty = min(p[0] for p in theirs), min(p[1] for p in theirs)
+                if {(x - tx + mx, y - ty + my, c) for x, y, c in theirs} == mine:
+                    match = True
+        good += match
+        if not match:
+            bad.append(sid)
+    ok("S106 render: walking frame == the PyBoy census for every species but ChopClown / "
+       "Grendal (146 / 147: the census build had their attrs overwritten — S105)",
+       bad == [146, 147], str(bad))
+
+    # --- the model: sparse writes, spelling kept, refusals, new species
+    tmp = tempfile.mkdtemp()
+    shutil.copytree(os.path.dirname(EXAMPLE), os.path.join(tmp, 'p'))
+    d = Document(os.path.join(tmp, 'p', 'project.json'))
+    d.set_species_fields(8, {'level_cap': 60, 'resist.Fire': 3, 'growth.hp': 5})
+    ok("S106 model: species edit -> only the changed fields in gamedata.monsters",
+       d.data['gamedata']['monsters']['8'] == {'level_cap': 60, 'growth': {'hp': 5},
+                                               'resist': {'Fire': 3}},
+       str(d.data['gamedata']['monsters']['8']))
+    b = d.species_base_row(8)
+    d.set_species_fields(8, {'level_cap': b[1], 'resist.Fire': b[15], 'growth.hp': b[9]})
+    ok("S106 model: setting the original values back removes the entry",
+       '8' not in d.data['gamedata']['monsters'])
+    d.set_species_fields(78, {'tier': 5})
+    ok("S106 model: an unchanged family keeps the project's spelling (10, not 'Spirit')",
+       d.data['gamedata']['monsters']['78'] == {'family': 10, 'tier': 5},
+       str(d.data['gamedata']['monsters']['78']))
+    try:
+        d.set_species_fields(216, {'family': 0})
+        ok("S106 model: a combat-only species' family is refused", False)
+    except Exception as ex:                                       # noqa: BLE001
+        ok("S106 model: a combat-only species' family is refused", 'protected' in str(ex))
+    d.set_enemy_fields(2, {'hp': 99, 'ai_weights': [1, 2, 3, 4]})
+    ok("S106 model: enemy row edit -> sparse gamedata.enemies",
+       d.data['gamedata']['enemies']['2'] == {'hp': 99, 'ai_weights': [1, 2, 3, 4]})
+    rows = {e['eid']: e for e in d.species_enemies(8)}
+    ok("S106 model: Slime's rows include the starter, the edited wild row with its pools",
+       1 in rows and rows[2]['edited'] and rows[2]['fields']['hp'] == 99
+       and any('Gate of Beginning' in w for w in rows[2]['where']))
+    from editor2.core import gamedata as GD
+    v2 = MM.decode_enemy(GD._rows(GD.vanilla(REPO), 'enemy_stats')[2])
+    d.set_enemy_fields(2, {'hp': v2['hp'], 'ai_weights': v2['ai_weights']})
+    ok("S106 model: an enemy row set back disappears", '2' not in d.data['gamedata']['enemies'])
+    pe = d.species_enemies(224)
+    ok("S106 model: a new species' project enemy is listed with its pool",
+       len(pe) == 1 and pe[0]['kind'] == 'project' and pe[0]['eid'] == 520
+       and any('Gate of Beginning' in w for w in pe[0]['where']), str(pe))
+    art = {'battle': SI.literal_stream(bp), 'battle_palette': bpal,
+           'follower': SI.literal_stream(gor), 'follower_palette': 2, 'walks_like': 128}
+    files = d.add_species(229, 'Tester', 'Tst', 28, 1, art,
+                          source={'sheet': 'assets/sheets/x.png', 'battle': hit[0]['battle'],
+                                  'frames': hit[0]['frames']})
+    e = d.new_species(229)
+    ok("S106 model: add_species writes the two streams + a valid custom.species entry",
+       all(os.path.exists(os.path.join(d.project_dir, f)) for f in files)
+       and e['info'] == {'clone_from': 28} and e['follower']['palette'] == 2
+       and e['source']['sheet'] == 'assets/sheets/x.png')
+    out, _p, _w = C.compile_project(_save_tmp(d), REPO)
+    ok("S106 model: the project with the sheet species compiles (bank $7E holds it)",
+       'Follower_sp229' in out['patches/bank_07e.asm'])
+    d.set_species_fields(229, {'family': 'Bird', 'level_cap': 70})
+    ok("S106 model: a new species' edits are stored against its clone_from row",
+       d.new_species(229)['info'] == {'clone_from': 28, 'family': 'Bird', 'level_cap': 70},
+       str(d.new_species(229)['info']))
+    cat = {s['id']: s for s in d.species_catalog()}
+    ok("S106 model: the catalog = 221 original + the project's species, families applied",
+       len(cat) == 223 and cat[229]['family'] == 3 and cat[78]['family'] == 10)
+    cap = d.species_capacity()
+    ok("S106 model: capacity meters (2 / 19 slots, names and art counted)",
+       cap['slots'] == (2, 19) and cap['art'][0] == 838 + len(art['battle']) + len(art['follower']))
+    # S106 r3: the "Put in a gate" path (user: "either signpost or implement")
+    nid = d.new_enemy_for_species(229)
+    ne = d.project_enemy(nid)
+    ok("S106 r3 model: a new enemy row of a new species (copy of the wild Slime, species set)",
+       ne['species'] == 229 and ne['level'] == 1, str(ne))
+    van = d.pool_slots(0)
+    sl = [(x['ref'], x['chance'], x['max']) for x in van['slots']]
+    sl[4] = (nid, 2, 1)                       # 20 %
+    sl[3] = (sl[3][0], 5, 1)                  # Gorbunok 70 % -> 50 %: total 10+10+10+50+20
+    d.set_pool_slots(0, sl)
+    enc = d.data['gamedata']['encounters']['0']
+    ok("S106 r3 model: set_pool_slots stores the project enemy by id, sparse vs the original",
+       enc['eids'][4] == nid and enc['slot_chance'] == [1, 1, 1, 5, 2]
+       and '_comment' in d.data['gamedata']['encounters'],
+       str(enc))
+    ok("S106 r3 model: the new row's 'where' names the gate",
+       any('Gate of Beginning' in w for e in d.species_enemies(229) for w in e['where']))
+    try:
+        sl[4] = (nid, 0, 1)
+        d.set_pool_slots(0, sl)
+        ok("S106 r3 model: a list under 100 % is refused", False)
+    except Exception as ex:                                       # noqa: BLE001
+        ok("S106 r3 model: a list under 100 % is refused (the compiler's own check)",
+           'less than 100' in str(ex) and d.data['gamedata']['encounters']['0']['eids'][4] == nid)
+    from editor2.core import gamedata as GD2
+    gw = GD2.Gamedata({'encounters': {'1': {'slot_chance': [4, 4, 3, 0, 0]}}}, REPO)
+    ok("S106 r3 gamedata: a list over 100 % warns (the last slots are cut; every original "
+       "list is exactly 100)", any('cut' in w for w in gw.warnings), str(gw.warnings))
+    vr = [(x['ref'], x['chance'], x['max']) for x in van['slots']]
+    d.set_pool_slots(0, vr)
+    ok("S106 r3 model: putting the list back leaves only the project's own changes",
+       'eids' in d.data['gamedata']['encounters']['0'])          # the example's Gorbunok edit stays
+    d.data['progression']['enemies'] = [e for e in d.data['progression']['enemies'] if e['id'] != nid]
+    ok("S106 model: removing a species used by an enemy is refused",
+       d.species_references(224) != [])
+    d.remove_species(229)
+    ok("S106 model: removing an unused species frees its id",
+       229 in d.free_species_ids() and all(s['id'] != 229 for s in d.data['custom']['species']))
+    shutil.rmtree(tmp)
+
+
+def _save_tmp(doc):
+    doc.save()
+    return os.path.dirname(doc.path)
+
+
 def main():
     # 1. determinism + example compiles clean
     out1, prj, warns = compile_data(base())
@@ -1609,6 +1812,7 @@ def main():
     test_tile_anims()
     test_gamedata()
     test_species_and_skills()
+    test_monsters_s106()
 
     if '--rom' in sys.argv:
         from editor2.core import builder as B
@@ -1752,6 +1956,21 @@ def main():
                  ('bank $7E (all zero)', at(0x7E, 0x4000, 0x4000))]
         for what, good in sites:
             ok(f"ROM: blank project -> {what} == original ROM bytes", good)
+
+        # S106: the shared LZ decoder reproduces the manifest of every monster
+        # stream (extracted/monster_sprites.json — == the game's own
+        # decompressor for all 442, tools/census_lz_decode.py in PyBoy)
+        from dwm import sprite_codec as SC
+        ms = json.load(open(os.path.join(REPO, 'extracted', 'monster_sprites.json')))['monsters']
+        bad = []
+        for sid in range(221):
+            for kind in ('battle', 'follower'):
+                gid = int(ms[str(sid)][kind]['gfx_id'][1:], 16)
+                off = SC.gfxid_stream_offset(orig_rom, gid)[3]
+                if SC.decode(SC.read_stream(orig_rom, off)).hex() != ms[str(sid)][kind]['tile_bytes_hex']:
+                    bad.append((sid, kind))
+        ok("ROM: S106 LZ decode of all 442 monster streams == extracted/monster_sprites.json",
+           not bad, str(bad[:5]))
 
     if os.path.exists(os.path.join('/tmp/_t_regression', 'build', 'rom.gbc')):
         test_crash_config_validator()

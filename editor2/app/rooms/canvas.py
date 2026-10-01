@@ -201,20 +201,35 @@ def monster_name(species):
 
 
 class MonsterCache:
-    """S101: monster-NPC thumbnails — each species as the game draws it as a
-    monster NPC (its overworld follower, standing, facing down), captured
-    from the running game by tools/census_monster_npc_sprites.py (transparent
-    background already)."""
+    """Monster-NPC thumbnails — each species as the game draws it as a monster
+    NPC (its overworld follower, standing, facing down). S106 (P3.10): drawn
+    by editor2/core/sprite_render.py from the decoded art + layout + palette —
+    pixel-identical to the S101 PyBoy census (tools/census_monster_npc_sprites.py)
+    for 213 of 215 species; the other two (ChopClown / Grendal) the census
+    caught with the attr bytes the pre-S105 overlay had overwritten — and the
+    project's NEW species (221-239) from their own art (`bind` = the open
+    project's Document; Session binds it)."""
     _pix = {}
+    _doc = None
+
+    @classmethod
+    def bind(cls, doc):
+        cls._doc = doc
 
     @classmethod
     def get(cls, species):
+        from editor2.app import sprite_qt
         species = int(species)
         if species >= 221:
-            return None       # S105: new species (221-239) are project data (no census art)
+            if cls._doc is None:
+                return None
+            pm = sprite_qt.species_icon(cls._doc, species, 1)
+            return None if pm.isNull() else pm
         if species not in cls._pix:
-            p = os.path.join(MONSTER_DIR, f'sp_{species:03d}.png')
-            pm = QPixmap(p) if os.path.exists(p) else None
+            pm = sprite_qt.species_icon(None, species, 1)
+            if pm.isNull():
+                p = os.path.join(MONSTER_DIR, f'sp_{species:03d}.png')
+                pm = QPixmap(p) if os.path.exists(p) else None
             cls._pix[species] = pm if pm is not None and not pm.isNull() else None
         return cls._pix[species]
 

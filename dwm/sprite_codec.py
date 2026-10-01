@@ -16,11 +16,12 @@ decompressor $00:$1577 — see MONSTER_DATA.md "Monster sprite graphics system")
       copy_len    = (ctrl & 0xF) + 4
       if (ctrl & 0xF) == 0xF: copy_len = next_byte + 0x13   (extended)
   Back-references index the output buffer ABSOLUTELY (the game's output base is
-  the VRAM dest in HRAM $ac/$ad). For a monster battle/follower stream the early
-  part of that buffer is a SHARED tile pool pre-loaded before the stream, so a
-  stream with back-refs does NOT decode standalone to a self-contained image —
-  it references pool tiles. A stream whose body contains NO marker byte is a pure
-  literal copy and IS self-contained (the swap lever used by build_sprite_swap).
+  the VRAM dest in HRAM $ac/$ad); a source byte at or past the payload's end is
+  wrapped 4 KB down and, landing below the destination, reads as 0 — per byte
+  (S106: the "shared tile pool" this note described until S106 does not exist;
+  it was this decoder returning 0 for whole copies). Every vanilla stream is
+  self-contained. A stream whose body contains NO marker byte is a pure literal
+  copy (what the editor writes for new art).
 
 ROUND-TRIP CONTRACT (what the editor relies on):
   decode(encode(x)) == x   for any payload x   (SEMANTIC round-trip).
@@ -37,7 +38,9 @@ from __future__ import annotations
 
 HEADER_LEN = 3
 MAX_BACK_OFFSET = 0xFFF            # 12-bit absolute offset
-MAX_COPY = 0xFF + 0x13            # extended-length ceiling
+MAX_COPY = 0x100                  # the game's copy count is 8-bit (0 = 256; S106,
+                                  # as tools/compress_tiles.py since S100 r3 —
+                                  # was 0xFF + 0x13, which the game truncates)
 
 
 # ----------------------------------------------------------------------------
@@ -46,23 +49,22 @@ MAX_COPY = 0xFF + 0x13            # extended-length ceiling
 def decode(stream: bytes) -> bytes:
     """Decompress a full stream (with 3-byte header). Returns the payload bytes.
 
-    Back-references resolve absolutely into the growing output buffer, matching
-    the game. For self-contained (marker-free) streams this is a plain literal
-    copy; for pool-referencing streams the referenced low offsets read whatever
-    has been produced so far (the caller is responsible for any shared pool if a
-    faithful VRAM reproduction is wanted — for extraction we read the stream as
-    the game would into a zero-initialised buffer)."""
+    Back-references resolve absolutely into the output buffer, per byte, with
+    the game's 4 KB wrap (below the destination = 0) — equal to the game's
+    decompressor for every monster stream (S106, tools/census_lz_decode.py)."""
     if len(stream) < HEADER_LEN:
         raise ValueError("stream shorter than header")
     declen = stream[0] | (stream[1] << 8)
     marker = stream[2]
-    out = bytearray()
+    out = bytearray(declen)          # VRAM the stream has not written yet = 0
+    pos = 0
     p = HEADER_LEN
     n = len(stream)
-    while len(out) < declen and p < n:
+    while pos < declen and p < n:
         b = stream[p]; p += 1
         if b != marker:
-            out.append(b)
+            out[pos] = b
+            pos += 1
         else:
             if p + 1 >= n:
                 break
@@ -72,12 +74,28 @@ def decode(stream: bytes) -> bytes:
             if (ctrl & 0xF) == 0xF:
                 if p >= n:
                     break
-                cnt = stream[p] + 0x13; p += 1
+                # 8-bit like the game (`add $13`; the copy loop counts a
+                # byte down, so 0 = 256) — tools/decompress_tiles.py, S100 r3
+                cnt = ((stream[p] + 0x13) & 0xFF) or 0x100; p += 1
             for k in range(cnt):
-                if len(out) >= declen:
+                if pos >= declen:
                     break
+                # S106: the game re-checks EVERY source byte against the
+                # stream's end and wraps it 4 KB down ($00 CheckTextViewUpper /
+                # AdjustTextViewport); a wrapped source BELOW the destination
+                # is written as 0 (TextMakeVisible) and the copy walks on into
+                # the stream's own output. The pre-S106 decoder returned 0 for
+                # the WHOLE copy, which garbled 213 of 221 vanilla battle
+                # sprites (vanilla streams open with "$FFF, n" = one 0, then
+                # repeat the last 2 bytes). Nothing before the destination is
+                # ever read: there is no shared tile pool. PyBoy-measured equal
+                # to the game for all 442 monster streams
+                # (tools/census_lz_decode.py).
                 ref = back + k
-                out.append(out[ref] if 0 <= ref < len(out) else 0)
+                if ref >= declen:
+                    ref -= 0x1000
+                out[pos] = out[ref] if 0 <= ref < declen else 0
+                pos += 1
     return bytes(out[:declen])
 
 
@@ -244,6 +262,6 @@ def read_stream(rom: bytes, file_off: int) -> bytes:
             cnt = (ctrl & 0xF) + 4
             p += 2
             if (ctrl & 0xF) == 0xF:
-                cnt = rom[p] + 0x13; p += 1
+                cnt = ((rom[p] + 0x13) & 0xFF) or 0x100; p += 1   # 8-bit (S106)
             produced += cnt
     return rom[file_off:p]

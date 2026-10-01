@@ -27,13 +27,13 @@
 | $0C | 1 | DEF growth | |
 | $0D | 1 | AGL growth | |
 | $0E | 1 | INT growth | |
-| $0F-$29 | 27 | Resistances | Values: 0=weak, 1=some resist, 2=normal, 3=immune |
+| $0F-$29 | 27 | Resistances | LEVEL 0-3 = how much gets through: 0 = none (full effect), 1 = some, 2 = strong, 3 = immune — spells ×1 / 0.85 / 0.5 / 0, breaths ×1 / 0.75 / 0.4 / 0, status hit always / 85 % / 50 % / never (BATTLE_SKILL_SYSTEM §15 ladders, simulator-validated S78). *S106 correction: the old "0=weak, 2=normal" wording was wrong.* |
 | $2A | 1 | Tier/rank | 0=starter, 3-6=normal, 7=endgame boss |
 
 ### Resistance Type Ordering (26 types + 1 unused, FAQ-confirmed)
 
 Verified against community FAQ data — 100% match across all tested monsters.
-Values: 0=weak/no resistance, 1=some resist, 2=normal, 3=strong/immune.
+Values (S106 corrected): 0 = no resistance (full effect), 1 = some, 2 = strong, 3 = immune — see the field table above.
 
 | Index | Offset | Letter | Type | Skills |
 |-------|--------|--------|------|--------|
@@ -336,10 +336,18 @@ compressed stream in `$4000–$7FFF`.
 (decompressor `WaitDMATransfer $00:$1577` → `TextScrollWindow`): byte≠runmark =
 literal; byte==runmark = back-ref (next 2 bytes → offset `b0|((b1>>4)&0xF)<<8`,
 ABSOLUTE into output base `$ac/$ad`; count `(b1&0xF)+4`, ext if low-nibble `$F`).
-Back-refs index a **shared VRAM tile pool pre-loaded before the per-monster stream**,
-so a single stream does NOT decode standalone (Dracky's battle stream ≈ 9 on-disk
-bytes → 576 decompressed). **Swap lever:** a body with no runmark byte = pure literal
-copy = self-contained, ignoring the shared pool. (Gotcha: fill the WHOLE tile field
+~~Back-refs index a shared VRAM tile pool pre-loaded before the per-monster stream,
+so a single stream does NOT decode standalone.~~ **WRONG — corrected S106 (DOC_AUDIT
+S106):** there is no pool. The decompressor ($00 `WaitDMATransfer` → `TextScrollWindow`,
+annotated) re-checks EVERY copied source byte: at/after the payload's end it is wrapped
+4 KB down, and a wrapped source below the destination is written as **0**
+(`TextMakeVisible`) while the copy walks on into the stream's own output — so `$FFF, n`
+(how every vanilla battle stream opens) = one 0, then "repeat the last 2 bytes". The
+extended copy count is 8-bit (0 = 256). The Python decoder returned 0 for the whole
+copy, which garbled 213 battle + 49 walking streams in every extraction S22-S105;
+fixed in `dwm/sprite_codec.decode`, PyBoy-proven equal to the game for all 442
+(`tools/census_lz_decode.py`). Every vanilla stream is self-contained. **Swap lever:** a
+body with no runmark byte = pure literal copy (what new art uses). (Gotcha: fill the WHOLE tile field
 with the backdrop index, not just the sprite footprint, or the surround renders as
 palette index 0.)
 
@@ -504,11 +512,12 @@ DOWN-a, 4–7 = SIDE-a, 8–11 = SIDE-b, 12–15 = UP-a (down_B/up_B auto-mirror
 USER-CONFIRMED in SameBoy: Healer→Dragon clone and Dracky→custom blue-dragon (imported art),
 correct in all directions and consistent across overworld + menu + library.
 
-**Pool dependency (Session 22).** All 221 battle streams (and 174/221 followers) use
-back-references that read below their own output start — i.e. into the shared VRAM
-pool. Standalone extraction decodes those as zero-fill; in practice the meaningful
-refs are self-covered, so extracted sprites render correctly (Slime/Dracky/Anteater
-verified). But a CROSS-monster transplant must encode the new art **self-contained**
+**Pool dependency (Session 22) — FALSE, S106.** The "reads below their own output
+start" back-references are the 4 KB wrap above: they produce 0 for the byte below the
+start and then copy the stream's own output; nothing outside the stream is read
+(PyBoy: VRAM below the destination pre-filled $00 vs $AA gives identical output for
+all 442). The S22 claim "extracted sprites render correctly (Slime/Dracky/Anteater
+verified)" was wrong — 213 battle poses were garbled by the decoder bug. But a CROSS-monster transplant must encode the new art **self-contained**
 (`--literal`) — otherwise it inherits whatever pool state the *target* monster loads,
 not the source's. The swap tool defaults handle this.
 
@@ -526,7 +535,10 @@ as **BG tiles on BG palette slot 4** (SameBoy-confirmed: tilemap attr `---04`; t
 BG colour buffer is `$c797`, slot 4 = `$c7b7`; uploaded to BCPD by bank `$17` entry 8).
 The per-species colours live in a ROM table **`MonsterBattlePalettes` @ `$17:$62FD`**
 (historically mislabeled `RoomAttrDataBlocks`), **8 bytes/species = 4 RGB555 LE colours
-`[c0, c1=$6bff backdrop(forced), c2, c3=$0000 black]`** (only c0/c2 vary per monster).
+`[c0, c1=$6bff backdrop(forced), c2, c3=$0000 black]`** (only c0/c2 vary per monster). **c1 is not only the backdrop: every
+original pose (215 / 215, S106 r2) also draws its white / cream parts with it** —
+a pose has 4 usable colours (black, cream, c0, c2), not 3 (the S106 r1 sheet
+import treated c1 as background-only and lost Goldhorn's white sword edges).
 It is loaded by **bank `$17` entry 6** (`label17_41d0` / far-call `$1706`): `$c81e` =
 palette index (= species) `×8 + base`, `$c81f` = destination CGB slot; the monster
 battle display calls it with index=species, slot=4. Verified: Dracky sp78 @ `$656d`

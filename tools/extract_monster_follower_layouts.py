@@ -30,9 +30,10 @@ ENGINE PATH (all ROM-verified, see MONSTER_DATA.md "Follower / walking-sprite sy
     $80-terminated; final OAM tile = tile_offset + [$ffc9] (follower base $20/$30/$40
     per party slot); final OAM attr = [$ffca] XOR attr (X-flip = bit5).  tile_offset
     is 0..15 within the monster's 16-tile follower art block.
-  * (Bonus, also at a fixed address: a per-species attribute byte table at $417f in
-    the same bank, ORed into [$ffca] by HramScr2_406e -- the follower's palette/attr
-    base.  Captured here as `attr_base`.)
+  * (Bonus, also at a fixed address: a per-species attribute byte table right after
+    the level-1 table -- bank $10 $417f, bank $11 $412d (87 entries; S106 fix) --
+    ORed into [$ffca] by HramScr2_406e: the follower's palette (low 3 bits) and
+    flips (bit5 X, bit6 Y).  Captured here as `attr_base`.)
 
 Anchors reproduced byte-for-byte from this path: Healer (sp9) = a sharing layout;
 DarkDrium (sp214) = a non-sharing layout (down 0,0^,1,2 / 0,0^,3,4, right 5,6,7,8 /
@@ -57,7 +58,11 @@ OUT_MAP = os.path.join(ROOT, "extracted", "monster_follower_layouts.json")
 MONSTERS = os.path.join(ROOT, "extracted", "monsters_full.json")
 
 L1_BASE = 0x407F          # level-1 table address in the routed bank
-ATTR_BASE = 0x417F        # per-species attr/palette byte table (HramScr2_406e)
+ATTR_BASE = {0x10: 0x417F,  # per-species attr/palette byte table (HramScr2_406e),
+             0x11: 0x412D}  # AFTER each bank's level-1 table: bank $10's has 128
+                            # entries, bank $11's only 87 (species 128-214) —
+                            # S106 fix: one $417F for both read bank $11's level-2
+                            # layout bytes as attrs (MONSTER_DATA follower section)
 FRAME_NAMES = ["down_A", "down_B", "right_A", "right_B", "up_A", "up_B"]
 
 # Collectible species range and known non-collectible specials (PROJECT_STATE B7).
@@ -196,7 +201,7 @@ def build(rom):
         ffc7, bank, sub = route(sp)
         l1_addr = L1_BASE + sub * 2
         l2_addr = rd16(rom, bank, l1_addr)
-        attr_base = rd8(rom, bank, ATTR_BASE + sub)
+        attr_base = rd8(rom, bank, ATTR_BASE[bank] + sub)
         frames = read_layout(rom, bank, l2_addr)
         rec = {
             "species": sp,

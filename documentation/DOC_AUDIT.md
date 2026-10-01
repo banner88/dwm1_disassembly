@@ -364,3 +364,15 @@ gate you assumed".
 | tools/map_species_slots.py `N6_GATES` ("clears 6 bytes @ $DA82 for ids … 221, 223"; "special-cases id 221") | MISLABELED | All four ladders test a SKILL id (`$db8a` / `GetPresentId`), as MONSTER_DATA N6 (S31) already says — ids 221-223 are clean new-species ids (S105 G3). |
 | MONSTER_DATA "Default nickname" row / "`$4739` overshoot bound" (`cp $e0`, id ≥ 224) and every "id ≥ 224" fork note | SUPERSEDED S105 G3 | All forks gate on id ≥ 221 (19 ids 221-239); the nickname base is `$7D39`. |
 | PROJECT_COMPILER §2.21 (S105 first build) "Capacity 1 … banks $06/$07/$0B/$59 have zero bytes after the one entry" | SUPERSEDED S105 G3 | True of the table design; the forks now compute the gfx-ID (no tables), capacity 19. |
+
+## S106 addendum (2026-10-01; the Monsters tab, ROADMAP P3.10 part 1)
+
+| Claim (where) | Verdict | Correct |
+|---|---|---|
+| MONSTER_DATA sprite section (S22): "Back-refs index a shared VRAM tile pool pre-loaded before the per-monster stream, so a single stream does NOT decode standalone"; "Pool dependency … extracted sprites render correctly (Slime/Dracky/Anteater verified)"; dwm/sprite_codec docstrings | WRONG (PyBoy, all 442 streams) | No pool: a copy source at/after the payload end wraps 4 KB down and reads 0 below the destination, per byte (`TextMakeVisible`). The Python decoder zeroed whole copies → 213 battle + 49 walking streams garbled in `extracted/monster_sprites.json` S22-S105. Fixed + regenerated; `tools/census_lz_decode.py`. |
+| sprite_codec `MAX_COPY = 0xFF + 0x13` / `cnt = byte + 0x13` | WRONG (same class as S100 r3) | The game's copy count is 8-bit (0 = 256); encoder capped at 256 (no production encode used >256: all literal). |
+| tools/extract_monster_follower_layouts.py `ATTR_BASE = 0x417F` for both banks → `monster_follower_layouts.json` `attr_base` of species 128-214 | WRONG | bank $11's attr table is `$412D` (MONSTER_DATA already said so since S25's fix note); the JSON held level-2 layout bytes. Regenerated: every collectible species 0-7. |
+| MONSTER_DATA "Monster Info Table" resistances "0=weak, 1=some resist, 2=normal, 3=immune" (+ the Resistance Type Ordering line) | WRONG | Level 0 = full effect, 1 = some (×0.85 spells), 2 = strong (×0.5), 3 = immune (BATTLE_SKILL_SYSTEM §15 ladders). |
+| extracted/monster_npc_sprites (S101 census) = "each species as the game draws it" | BUILD-SPECIFIC | ChopClown (146) / Grendal (147) were captured with the pre-S105 overwritten attrs; the editor now draws thumbnails with `sprite_render` (== the census for the other 213). |
+| MONSTER_DATA battle palette "c1 = $6bff backdrop(forced) … only c0/c2 vary"; the S35 Gorbunok spec ("leaving idx0/idx2/idx3 for body colours (3 usable)") | INCOMPLETE (S106 r2) | c1 is ALSO a body colour: all 215 original poses draw white / cream parts with it — 4 usable colours. |
+

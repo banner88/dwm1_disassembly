@@ -130,7 +130,15 @@ def check_rom(rom_path, universal, errors):
     # sprite stream redirects: every bank $36 pointer-table entry must decode
     # to the same tile count as the ORIGINAL entry it replaced.
     from dwm.sprite_codec import decode, read_stream
-    orig = (REPO / "data" / "DWM-original.gbc").read_bytes()
+    orig_path = REPO / "data" / "DWM-original.gbc"
+    if not orig_path.exists():
+        # S106 r3: was an uncaught FileNotFoundError (the editor showed an
+        # empty "crash-config validation failed")
+        errors.append(f"the original ROM is not at {orig_path} — copy DWM-original.gbc "
+                      "(md5 1ca6579359f21d8e27b446f865bf6b83) there; the build compares "
+                      "its sprite streams with it")
+        return
+    orig = orig_path.read_bytes()
     b36 = 0x36 * 0x4000
     for e in range(221):
         o_lo, o_hi = orig[b36 + 1 + e * 2], orig[b36 + 2 + e * 2]

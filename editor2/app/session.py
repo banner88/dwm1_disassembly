@@ -41,6 +41,9 @@ class Session(QObject):
         self.undo.cleanChanged.connect(self._clean_changed)
         self.last_rom = None
         self.renderer = self._make_renderer()
+        # S106: monster thumbnails of the project's own species (canvas, pickers)
+        from editor2.app.rooms.canvas import MonsterCache
+        MonsterCache.bind(self.doc)
 
     # ------------------------------------------------------------ renderer
     def _make_renderer(self):

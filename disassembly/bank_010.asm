@@ -93,6 +93,13 @@ jr_010_4069:
     ret
 
 
+; HramScr2_406e: OR the species' follower ATTR byte into $FFCA — the table at
+; $417F right after the 128-entry level-1 layout table ($407F), indexed by
+; species 0-127 (bank $11's twin: FollowerAttrTable11 $412D, species 128-214).
+; Low 3 bits = OBJ palette (ObjectPalettes $17:$5615), bit5 X / bit6 Y flip;
+; every collectible species uses 0-7 (palette only). tools/
+; extract_monster_follower_layouts.py `attr_base` (S106: it had read $417F for
+; bank $11 too); the editor's walking previews match the game (S106 census).
 HramScr2_406e:
     ldh a, [$c7]
     ld hl, $417f

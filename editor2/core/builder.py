@@ -104,10 +104,16 @@ def build_rom(repo, generated_dir, out_dir, rgbds_dir=None):
         # fence, sprite-stream size mismatches). Same checker as
         # verify_integrity check 6 — the editor must never ship what the
         # repo build would reject.
-        v = subprocess.run(['python3', os.path.join(repo, 'tools', 'validate_custom_data.py'),
+        # S106 r3: run it with the editor's own Python (a Mac's bare `python3`
+        # may be another interpreter) and report stderr too — a crash of the
+        # checker (e.g. no original ROM in data/) used to show an empty message
+        import sys as _sys
+        v = subprocess.run([_sys.executable or 'python3',
+                            os.path.join(repo, 'tools', 'validate_custom_data.py'),
                             '--rom', rom_path], capture_output=True, text=True, cwd=repo)
         if v.returncode != 0:
-            raise RuntimeError('crash-config validation failed:\n' + v.stdout.strip())
+            raise RuntimeError('crash-config validation failed:\n'
+                               + (v.stdout.strip() + '\n' + v.stderr.strip()).strip())
         return rom_path, sym_path, md5(rom_path)
     finally:
         for f, data in backups.items():

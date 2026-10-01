@@ -1808,7 +1808,7 @@
    "l1_index": 0,
    "l1_addr": 16511,
    "l2_addr": 16772,
-   "attr_base": 1,
+   "attr_base": 6,
    "decode_ok": true,
    "layout_id": 0,
    "sharing": false
@@ -1822,7 +1822,7 @@
    "l1_index": 1,
    "l1_addr": 16513,
    "l2_addr": 16886,
-   "attr_base": 4,
+   "attr_base": 0,
    "decode_ok": true,
    "layout_id": 8,
    "sharing": false
@@ -1836,7 +1836,7 @@
    "l1_index": 2,
    "l1_addr": 16515,
    "l2_addr": 17000,
-   "attr_base": 0,
+   "attr_base": 6,
    "decode_ok": true,
    "layout_id": 4,
    "sharing": false
@@ -1850,7 +1850,7 @@
    "l1_index": 3,
    "l1_addr": 16517,
    "l2_addr": 17114,
-   "attr_base": 0,
+   "attr_base": 4,
    "decode_ok": true,
    "layout_id": 99,
    "sharing": false
@@ -1864,7 +1864,7 @@
    "l1_index": 4,
    "l1_addr": 16519,
    "l2_addr": 17228,
-   "attr_base": 0,
+   "attr_base": 2,
    "decode_ok": true,
    "layout_id": 100,
    "sharing": false
@@ -1878,7 +1878,7 @@
    "l1_index": 5,
    "l1_addr": 16521,
    "l2_addr": 17342,
-   "attr_base": 144,
+   "attr_base": 4,
    "decode_ok": true,
    "layout_id": 101,
    "sharing": true
@@ -1892,7 +1892,7 @@
    "l1_index": 6,
    "l1_addr": 16523,
    "l2_addr": 17456,
-   "attr_base": 65,
+   "attr_base": 2,
    "decode_ok": true,
    "layout_id": 102,
    "sharing": false
@@ -1906,7 +1906,7 @@
    "l1_index": 7,
    "l1_addr": 16525,
    "l2_addr": 17570,
-   "attr_base": 161,
+   "attr_base": 2,
    "decode_ok": true,
    "layout_id": 19,
    "sharing": false
@@ -1920,7 +1920,7 @@
    "l1_index": 8,
    "l1_addr": 16527,
    "l2_addr": 17684,
-   "attr_base": 65,
+   "attr_base": 2,
    "decode_ok": true,
    "layout_id": 2,
    "sharing": false
@@ -1934,7 +1934,7 @@
    "l1_index": 9,
    "l1_addr": 16529,
    "l2_addr": 17798,
-   "attr_base": 178,
+   "attr_base": 5,
    "decode_ok": true,
    "layout_id": 103,
    "sharing": false
@@ -1948,7 +1948,7 @@
    "l1_index": 10,
    "l1_addr": 16531,
    "l2_addr": 17912,
-   "attr_base": 65,
+   "attr_base": 6,
    "decode_ok": true,
    "layout_id": 104,
    "sharing": false
@@ -1962,7 +1962,7 @@
    "l1_index": 11,
    "l1_addr": 16533,
    "l2_addr": 18026,
-   "attr_base": 195,
+   "attr_base": 4,
    "decode_ok": true,
    "layout_id": 105,
    "sharing": false
@@ -1976,7 +1976,7 @@
    "l1_index": 12,
    "l1_addr": 16535,
    "l2_addr": 18140,
-   "attr_base": 65,
+   "attr_base": 2,
    "decode_ok": true,
    "layout_id": 3,
    "sharing": false
@@ -1990,7 +1990,7 @@
    "l1_index": 13,
    "l1_addr": 16537,
    "l2_addr": 18254,
-   "attr_base": 212,
+   "attr_base": 6,
    "decode_ok": true,
    "layout_id": 10,
    "sharing": false
@@ -2004,7 +2004,7 @@
    "l1_index": 14,
    "l1_addr": 16539,
    "l2_addr": 18368,
-   "attr_base": 65,
+   "attr_base": 0,
    "decode_ok": true,
    "layout_id": 106,
    "sharing": false
@@ -2018,7 +2018,7 @@
    "l1_index": 15,
    "l1_addr": 16541,
    "l2_addr": 18482,
-   "attr_base": 229,
+   "attr_base": 7,
    "decode_ok": true,
    "layout_id": 107,
    "sharing": false
@@ -2032,7 +2032,7 @@
    "l1_index": 16,
    "l1_addr": 16543,
    "l2_addr": 18596,
-   "attr_base": 65,
+   "attr_base": 5,
    "decode_ok": true,
    "layout_id": 6,
    "sharing": false
@@ -2046,7 +2046,7 @@
    "l1_index": 17,
    "l1_addr": 16545,
    "l2_addr": 18710,
-   "attr_base": 240,
+   "attr_base": 4,
    "decode_ok": true,
    "layout_id": 108,
    "sharing": false
@@ -2060,7 +2060,7 @@
    "l1_index": 18,
    "l1_addr": 16547,
    "l2_addr": 18824,
-   "attr_base": 248,
+   "attr_base": 2,
    "decode_ok": true,
    "layout_id": 0,
    "sharing": false
@@ -2074,7 +2074,7 @@
    "l1_index": 19,
    "l1_addr": 16549,
    "l2_addr": 18938,
-   "attr_base": 0,
+   "attr_base": 2,
    "decode_ok": true,
    "layout_id": 109,
    "sharing": true
@@ -2088,7 +2088,7 @@
    "l1_index": 20,
    "l1_addr": 16551,
    "l2_addr": 19052,
-   "attr_base": 16,
+   "attr_base": 6,
    "decode_ok": true,
    "layout_id": 110,
    "sharing": false
@@ -2102,7 +2102,7 @@
    "l1_index": 21,
    "l1_addr": 16553,
    "l2_addr": 19166,
-   "attr_base": 240,
+   "attr_base": 5,
    "decode_ok": true,
    "layout_id": 111,
    "sharing": true
@@ -2116,7 +2116,7 @@
    "l1_index": 22,
    "l1_addr": 16555,
    "l2_addr": 19280,
-   "attr_base": 0,
+   "attr_base": 2,
    "decode_ok": true,
    "layout_id": 112,
    "sharing": true
@@ -2130,7 +2130,7 @@
    "l1_index": 23,
    "l1_addr": 16557,
    "l2_addr": 19394,
-   "attr_base": 1,
+   "attr_base": 2,
    "decode_ok": true,
    "layout_id": 113,
    "sharing": false
@@ -2144,7 +2144,7 @@
    "l1_index": 24,
    "l1_addr": 16559,
    "l2_addr": 19508,
-   "attr_base": 16,
+   "attr_base": 0,
    "decode_ok": true,
    "layout_id": 114,
    "sharing": true
@@ -2158,7 +2158,7 @@
    "l1_index": 25,
    "l1_addr": 16561,
    "l2_addr": 19622,
-   "attr_base": 248,
+   "attr_base": 3,
    "decode_ok": true,
    "layout_id": 115,
    "sharing": false
@@ -2172,7 +2172,7 @@
    "l1_index": 26,
    "l1_addr": 16563,
    "l2_addr": 19736,
-   "attr_base": 248,
+   "attr_base": 4,
    "decode_ok": true,
    "layout_id": 10,
    "sharing": false
@@ -2186,7 +2186,7 @@
    "l1_index": 27,
    "l1_addr": 16565,
    "l2_addr": 19850,
-   "attr_base": 2,
+   "attr_base": 4,
    "decode_ok": true,
    "layout_id": 116,
    "sharing": false
@@ -2200,7 +2200,7 @@
    "l1_index": 28,
    "l1_addr": 16567,
    "l2_addr": 19964,
-   "attr_base": 16,
+   "attr_base": 5,
    "decode_ok": true,
    "layout_id": 15,
    "sharing": false
@@ -2214,7 +2214,7 @@
    "l1_index": 29,
    "l1_addr": 16569,
    "l2_addr": 20078,
-   "attr_base": 248,
+   "attr_base": 2,
    "decode_ok": true,
    "layout_id": 117,
    "sharing": false
@@ -2228,7 +2228,7 @@
    "l1_index": 30,
    "l1_addr": 16571,
    "l2_addr": 20192,
-   "attr_base": 0,
+   "attr_base": 2,
    "decode_ok": true,
    "layout_id": 118,
    "sharing": true
@@ -2242,7 +2242,7 @@
    "l1_index": 31,
    "l1_addr": 16573,
    "l2_addr": 20306,
-   "attr_base": 3,
+   "attr_base": 4,
    "decode_ok": true,
    "layout_id": 119,
    "sharing": true
@@ -2256,7 +2256,7 @@
    "l1_index": 32,
    "l1_addr": 16575,
    "l2_addr": 20420,
-   "attr_base": 16,
+   "attr_base": 2,
    "decode_ok": true,
    "layout_id": 120,
    "sharing": false
@@ -2270,7 +2270,7 @@
    "l1_index": 33,
    "l1_addr": 16577,
    "l2_addr": 20534,
-   "attr_base": 128,
+   "attr_base": 7,
    "decode_ok": true,
    "layout_id": 121,
    "sharing": true
@@ -2284,7 +2284,7 @@
    "l1_index": 34,
    "l1_addr": 16579,
    "l2_addr": 20648,
-   "attr_base": 240,
+   "attr_base": 5,
    "decode_ok": true,
    "layout_id": 122,
    "sharing": false
@@ -2298,7 +2298,7 @@
    "l1_index": 35,
    "l1_addr": 16581,
    "l2_addr": 20762,
-   "attr_base": 0,
+   "attr_base": 7,
    "decode_ok": true,
    "layout_id": 123,
    "sharing": false
@@ -2312,7 +2312,7 @@
    "l1_index": 36,
    "l1_addr": 16583,
    "l2_addr": 20876,
-   "attr_base": 0,
+   "attr_base": 3,
    "decode_ok": true,
    "layout_id": 4,
    "sharing": false
@@ -2326,7 +2326,7 @@
    "l1_index": 37,
    "l1_addr": 16585,
    "l2_addr": 20990,
-   "attr_base": 48,
+   "attr_base": 3,
    "decode_ok": true,
    "layout_id": 124,
    "sharing": true
@@ -2340,7 +2340,7 @@
    "l1_index": 38,
    "l1_addr": 16587,
    "l2_addr": 21104,
-   "attr_base": 240,
+   "attr_base": 4,
    "decode_ok": true,
    "layout_id": 125,
    "sharing": true
@@ -2354,7 +2354,7 @@
    "l1_index": 39,
    "l1_addr": 16589,
    "l2_addr": 21218,
-   "attr_base": 248,
+   "attr_base": 2,
    "decode_ok": true,
    "layout_id": 7,
    "sharing": false
@@ -2368,7 +2368,7 @@
    "l1_index": 40,
    "l1_addr": 16591,
    "l2_addr": 21332,
-   "attr_base": 1,
+   "attr_base": 6,
    "decode_ok": true,
    "layout_id": 126,
    "sharing": true
@@ -2382,7 +2382,7 @@
    "l1_index": 41,
    "l1_addr": 16593,
    "l2_addr": 21446,
-   "attr_base": 48,
+   "attr_base": 2,
    "decode_ok": true,
    "layout_id": 127,
    "sharing": true
@@ -2396,7 +2396,7 @@
    "l1_index": 42,
    "l1_addr": 16595,
    "l2_addr": 21560,
-   "attr_base": 248,
+   "attr_base": 4,
    "decode_ok": true,
    "layout_id": 128,
    "sharing": false
@@ -2410,7 +2410,7 @@
    "l1_index": 43,
    "l1_addr": 16597,
    "l2_addr": 21674,
-   "attr_base": 0,
+   "attr_base": 7,
    "decode_ok": true,
    "layout_id": 17,
    "sharing": true
@@ -2424,7 +2424,7 @@
    "l1_index": 44,
    "l1_addr": 16599,
    "l2_addr": 21788,
-   "attr_base": 2,
+   "attr_base": 4,
    "decode_ok": true,
    "layout_id": 6,
    "sharing": false
@@ -2438,7 +2438,7 @@
    "l1_index": 45,
    "l1_addr": 16601,
    "l2_addr": 21902,
-   "attr_base": 48,
+   "attr_base": 5,
    "decode_ok": true,
    "layout_id": 129,
    "sharing": true
@@ -2452,7 +2452,7 @@
    "l1_index": 46,
    "l1_addr": 16603,
    "l2_addr": 22016,
-   "attr_base": 248,
+   "attr_base": 3,
    "decode_ok": true,
    "layout_id": 130,
    "sharing": true
@@ -2466,7 +2466,7 @@
    "l1_index": 47,
    "l1_addr": 16605,
    "l2_addr": 22130,
-   "attr_base": 248,
+   "attr_base": 0,
    "decode_ok": true,
    "layout_id": 131,
    "sharing": true
@@ -2480,7 +2480,7 @@
    "l1_index": 48,
    "l1_addr": 16607,
    "l2_addr": 22244,
-   "attr_base": 3,
+   "attr_base": 7,
    "decode_ok": true,
    "layout_id": 132,
    "sharing": false
@@ -2494,7 +2494,7 @@
    "l1_index": 49,
    "l1_addr": 16609,
    "l2_addr": 22358,
-   "attr_base": 48,
+   "attr_base": 6,
    "decode_ok": true,
    "layout_id": 1,
    "sharing": false
@@ -2508,7 +2508,7 @@
    "l1_index": 50,
    "l1_addr": 16611,
    "l2_addr": 22472,
-   "attr_base": 128,
+   "attr_base": 3,
    "decode_ok": true,
    "layout_id": 8,
    "sharing": false
@@ -2522,7 +2522,7 @@
    "l1_index": 51,
    "l1_addr": 16613,
    "l2_addr": 22586,
-   "attr_base": 240,
+   "attr_base": 1,
    "decode_ok": true,
    "layout_id": 133,
    "sharing": false
@@ -2536,7 +2536,7 @@
    "l1_index": 52,
    "l1_addr": 16615,
    "l2_addr": 22700,
-   "attr_base": 248,
+   "attr_base": 1,
    "decode_ok": true,
    "layout_id": 1,
    "sharing": false
@@ -2550,7 +2550,7 @@
    "l1_index": 53,
    "l1_addr": 16617,
    "l2_addr": 22814,
-   "attr_base": 4,
+   "attr_base": 0,
    "decode_ok": true,
    "layout_id": 134,
    "sharing": false
@@ -2564,7 +2564,7 @@
    "l1_index": 54,
    "l1_addr": 16619,
    "l2_addr": 22928,
-   "attr_base": 16,
+   "attr_base": 2,
    "decode_ok": true,
    "layout_id": 135,
    "sharing": true
@@ -2578,7 +2578,7 @@
    "l1_index": 55,
    "l1_addr": 16621,
    "l2_addr": 23042,
-   "attr_base": 240,
+   "attr_base": 7,
    "decode_ok": true,
    "layout_id": 136,
    "sharing": true
@@ -2592,7 +2592,7 @@
    "l1_index": 56,
    "l1_addr": 16623,
    "l2_addr": 23156,
-   "attr_base": 0,
+   "attr_base": 4,
    "decode_ok": true,
    "layout_id": 137,
    "sharing": false
@@ -2606,7 +2606,7 @@
    "l1_index": 57,
    "l1_addr": 16625,
    "l2_addr": 23270,
-   "attr_base": 5,
+   "attr_base": 2,
    "decode_ok": true,
    "layout_id": 138,
    "sharing": false
@@ -2620,7 +2620,7 @@
    "l1_index": 58,
    "l1_addr": 16627,
    "l2_addr": 23384,
-   "attr_base": 16,
+   "attr_base": 2,
    "decode_ok": true,
    "layout_id": 139,
    "sharing": false
@@ -2634,7 +2634,7 @@
    "l1_index": 59,
    "l1_addr": 16629,
    "l2_addr": 23498,
-   "attr_base": 248,
+   "attr_base": 5,
    "decode_ok": true,
    "layout_id": 140,
    "sharing": false
@@ -2648,7 +2648,7 @@
    "l1_index": 60,
    "l1_addr": 16631,
    "l2_addr": 23612,
-   "attr_base": 248,
+   "attr_base": 6,
    "decode_ok": true,
    "layout_id": 3,
    "sharing": false
@@ -2662,7 +2662,7 @@
    "l1_index": 61,
    "l1_addr": 16633,
    "l2_addr": 23726,
-   "attr_base": 6,
+   "attr_base": 2,
    "decode_ok": true,
    "layout_id": 18,
    "sharing": true
@@ -2676,7 +2676,7 @@
    "l1_index": 62,
    "l1_addr": 16635,
    "l2_addr": 23840,
-   "attr_base": 16,
+   "attr_base": 3,
    "decode_ok": true,
    "layout_id": 141,
    "sharing": false
@@ -2690,7 +2690,7 @@
    "l1_index": 63,
    "l1_addr": 16637,
    "l2_addr": 23954,
-   "attr_base": 248,
+   "attr_base": 5,
    "decode_ok": true,
    "layout_id": 20,
    "sharing": false
@@ -2718,7 +2718,7 @@
    "l1_index": 65,
    "l1_addr": 16641,
    "l2_addr": 24174,
-   "attr_base": 7,
+   "attr_base": 2,
    "decode_ok": true,
    "layout_id": 21,
    "sharing": true
@@ -2732,7 +2732,7 @@
    "l1_index": 66,
    "l1_addr": 16643,
    "l2_addr": 24280,
-   "attr_base": 16,
+   "attr_base": 4,
    "decode_ok": true,
    "layout_id": 142,
    "sharing": true
@@ -2746,7 +2746,7 @@
    "l1_index": 67,
    "l1_addr": 16645,
    "l2_addr": 24394,
-   "attr_base": 128,
+   "attr_base": 7,
    "decode_ok": true,
    "layout_id": 20,
    "sharing": false
@@ -2760,7 +2760,7 @@
    "l1_index": 68,
    "l1_addr": 16647,
    "l2_addr": 24508,
-   "attr_base": 240,
+   "attr_base": 7,
    "decode_ok": true,
    "layout_id": 143,
    "sharing": false
@@ -2774,7 +2774,7 @@
    "l1_index": 69,
    "l1_addr": 16649,
    "l2_addr": 24622,
-   "attr_base": 248,
+   "attr_base": 5,
    "decode_ok": true,
    "layout_id": 144,
    "sharing": true
@@ -2788,7 +2788,7 @@
    "l1_index": 70,
    "l1_addr": 16651,
    "l2_addr": 24736,
-   "attr_base": 8,
+   "attr_base": 5,
    "decode_ok": true,
    "layout_id": 145,
    "sharing": true
@@ -2802,7 +2802,7 @@
    "l1_index": 71,
    "l1_addr": 16653,
    "l2_addr": 24850,
-   "attr_base": 16,
+   "attr_base": 3,
    "decode_ok": true,
    "layout_id": 146,
    "sharing": false
@@ -2816,7 +2816,7 @@
    "l1_index": 72,
    "l1_addr": 16655,
    "l2_addr": 24964,
-   "attr_base": 240,
+   "attr_base": 4,
    "decode_ok": true,
    "layout_id": 147,
    "sharing": false
@@ -2830,7 +2830,7 @@
    "l1_index": 73,
    "l1_addr": 16657,
    "l2_addr": 25078,
-   "attr_base": 0,
+   "attr_base": 4,
    "decode_ok": true,
    "layout_id": 148,
    "sharing": false
@@ -2844,7 +2844,7 @@
    "l1_index": 74,
    "l1_addr": 16659,
    "l2_addr": 25192,
-   "attr_base": 9,
+   "attr_base": 4,
    "decode_ok": true,
    "layout_id": 149,
    "sharing": false
@@ -2858,7 +2858,7 @@
    "l1_index": 75,
    "l1_addr": 16661,
    "l2_addr": 25306,
-   "attr_base": 16,
+   "attr_base": 2,
    "decode_ok": true,
    "layout_id": 9,
    "sharing": false
@@ -2872,7 +2872,7 @@
    "l1_index": 76,
    "l1_addr": 16663,
    "l2_addr": 25420,
-   "attr_base": 248,
+   "attr_base": 4,
    "decode_ok": true,
    "layout_id": 7,
    "sharing": false
@@ -2886,7 +2886,7 @@
    "l1_index": 77,
    "l1_addr": 16665,
    "l2_addr": 25534,
-   "attr_base": 248,
+   "attr_base": 6,
    "decode_ok": true,
    "layout_id": 1,
    "sharing": false
@@ -2900,7 +2900,7 @@
    "l1_index": 78,
    "l1_addr": 16667,
    "l2_addr": 25648,
-   "attr_base": 10,
+   "attr_base": 1,
    "decode_ok": true,
    "layout_id": 150,
    "sharing": false
@@ -2914,7 +2914,7 @@
    "l1_index": 79,
    "l1_addr": 16669,
    "l2_addr": 25762,
-   "attr_base": 16,
+   "attr_base": 3,
    "decode_ok": true,
    "layout_id": 0,
    "sharing": false
@@ -2928,7 +2928,7 @@
    "l1_index": 80,
    "l1_addr": 16671,
    "l2_addr": 25876,
-   "attr_base": 248,
+   "attr_base": 1,
    "decode_ok": true,
    "layout_id": 1,
    "sharing": false
@@ -2956,7 +2956,7 @@
    "l1_index": 82,
    "l1_addr": 16675,
    "l2_addr": 26104,
-   "attr_base": 11,
+   "attr_base": 1,
    "decode_ok": true,
    "layout_id": 152,
    "sharing": false
@@ -2970,7 +2970,7 @@
    "l1_index": 83,
    "l1_addr": 16677,
    "l2_addr": 26218,
-   "attr_base": 16,
+   "attr_base": 4,
    "decode_ok": true,
    "layout_id": 153,
    "sharing": false
@@ -2984,7 +2984,7 @@
    "l1_index": 84,
    "l1_addr": 16679,
    "l2_addr": 26332,
-   "attr_base": 128,
+   "attr_base": 0,
    "decode_ok": true,
    "layout_id": 0,
    "sharing": false
@@ -2998,7 +2998,7 @@
    "l1_index": 85,
    "l1_addr": 16681,
    "l2_addr": 26446,
-   "attr_base": 240,
+   "attr_base": 0,
    "decode_ok": true,
    "layout_id": 154,
    "sharing": false
@@ -3012,7 +3012,7 @@
    "l1_index": 86,
    "l1_addr": 16683,
    "l2_addr": 26560,
-   "attr_base": 248,
+   "attr_base": 0,
    "decode_ok": true,
    "layout_id": 10,
    "sharing": false
@@ -3026,7 +3026,7 @@
    "l1_index": 87,
    "l1_addr": 16685,
    "l2_addr": 6,
-   "attr_base": 12,
+   "attr_base": 144,
    "note": "TERRY? (Durran story enemy)",
    "layout_id": null,
    "decode_ok": false,
@@ -3041,7 +3041,7 @@
    "l1_index": 88,
    "l1_addr": 16687,
    "l2_addr": 1030,
-   "attr_base": 16,
+   "attr_base": 65,
    "note": "summon tier 1 (Tatsu)",
    "layout_id": null,
    "decode_ok": false,
@@ -3056,7 +3056,7 @@
    "l1_index": 89,
    "l1_addr": 16689,
    "l2_addr": 1026,
-   "attr_base": 240,
+   "attr_base": 161,
    "note": "summon tier 2 (Diago)",
    "layout_id": null,
    "decode_ok": false,
@@ -3071,7 +3071,7 @@
    "l1_index": 90,
    "l1_addr": 16691,
    "l2_addr": 514,
-   "attr_base": 0,
+   "attr_base": 65,
    "note": "summon tier 3 (Samsi)",
    "layout_id": null,
    "decode_ok": false,
@@ -3086,7 +3086,7 @@
    "l1_index": 91,
    "l1_addr": 16693,
    "l2_addr": 1282,
-   "attr_base": 13,
+   "attr_base": 178,
    "note": "summon tier 4 (Bazoo)",
    "layout_id": null,
    "decode_ok": false,
@@ -3101,7 +3101,7 @@
    "l1_index": 92,
    "l1_addr": 16695,
    "l2_addr": 1030,
-   "attr_base": 16,
+   "attr_base": 65,
    "note": "reserved/blank",
    "layout_id": null,
    "decode_ok": false,

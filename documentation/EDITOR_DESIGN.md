@@ -969,6 +969,41 @@ Per species — every knob is a decoded, proven surface:
   Monsters picker / Enemies species list already include the project's
   species (no thumbnail yet: render it from the species' follower art).
 
+- **As built S106 (ROADMAP P3.10 part 1; `editor2/app/monsters_tab.py`, model
+  `editor2/core/monsters.py`).** Left: every species with its walking sprite —
+  your new species (+ "New species from a sprite sheet…", meters: slots / 19,
+  bank-$41 name bytes / 292, bank-$7E art bytes), the 215 originals, the 6
+  combat-only. Right: battle pose + animated 4-direction walk, then three pages.
+  **Species** = the 43-byte info row as forms (family via the same validation as
+  the Families tab; exp curve with level-99 total + "used by N"; growth curves
+  per stat with a 6-line chart; resistances labelled none / some / strong /
+  immune; reset) — writes only differences (`gamedata.monsters`, or a new
+  species' `info` against its `clone_from`). **Where you meet it** = the decision
+  the audit made with the user: a species has no stats or AI, so the tab lists
+  every ENEMY ROW of the species (effective pools from the project, bosses + join
+  rows, arena, coliseum / random / mimic / script battles, starter, project
+  references) with editable level / stats / exp / joins / AI weights / battle
+  skills (`gamedata.enemies` sparse, project enemies in `progression.enemies`).
+  **Name & art** (new species): name, nickname, description donor, walking
+  palette, battle colours, re-cut, remove (refused while referenced).
+  **Sprite-sheet import** (`app/sheet_import_dialog.py`, core
+  `core/sheet_import.py`): the sheet zoomed with every monster outlined; click
+  one → red pose box (move / resize), six cyan / blue frame squares (move),
+  arrow-key nudge, "Add boxes here" for a missed monster; right side = what the
+  game draws (48 × 48 pose standing 2 px above the floor on cream; 4 colours —
+  black, the cream (backdrop AND light parts, as every original pose; S106 r2),
+  2 fitted free colours — click to change; walking in the closest of
+  the 8 OBJ palettes, pickable); stores art streams, copies the sheet into
+  `assets/sheets/`, records `source` boxes so "Re-cut" reopens them. Previews
+  come from `core/sprite_render.py` (original species from the extracted art —
+  == the PyBoy census; new species from their streams), and the canvas / NPC
+  picker thumbnails use the same renderer (one species source). **S106 r3:**
+  "New enemy row for this monster" + "Put the selected row in a gate…" (one
+  encounter list at a time: slots, chances with the real chance after the
+  running-sum cut, exactly 100 %, max in a group for 2-3 monster lists) — the
+  §5.5 Encounters tab remains the cross-view. Part 2 (art of the original
+  species) and part 3 (renames) are ROADMAP boxes.
+
 ### 5.2a Families tab (as built S104 r2, ROADMAP P3.10a)
 
 A tab before Monsters (`editor2/app/families_tab.py`, model

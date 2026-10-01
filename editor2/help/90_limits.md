@@ -9,9 +9,11 @@
 - Gate floor-type rows, per-gate monster pools / floor bands, battles inside
   a dive per room, more than 32 gates and gate entrances are not editable
   yet (ROADMAP P3.7b part 2).
-- The monster lists (NPC Monsters tab, Enemies species) show the vanilla
-  species plus the project's new monster (`custom.species`); renamed
-  vanilla species arrive with the Monsters tab (ROADMAP P3.10).
+- Original monsters cannot be renamed or given new art yet (Monsters tab
+  part 2); their species data and battle rows can be changed. New monsters
+  walk like Armorpion (4 stored frames) and use one of the game's 8 shared
+  walking palettes; their battle picture has 2 free colours plus black and
+  the cream (which also draws white parts).
 - At most 19 new monsters per project, ids 221-239 (240+ collide with the
   breeding family codes and the library / walking limits). Their names and
   4-letter short names share about 290 bytes of text space: 19 names of 8

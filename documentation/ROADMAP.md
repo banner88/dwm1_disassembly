@@ -1303,7 +1303,54 @@ recipes are pure authoring.
       moved to Spirit shows the Spirit icon in the library tab, status and
       detail pages, talks with its own text group at the farm, and a Spirit ×
       X recipe breeds in PyBoy.
-- [ ] **P3.10 — Monsters tab** (needs P3.9): stats/growth/ai_weights/
+- [ ] **P3.10 — Monsters tab** — **split S106 (user 2026-10-01 on the audit:
+      "Yeah that seems fine")** into part 1 species data (DONE S106, below),
+      part 2 art of the ORIGINAL species, part 3 renames / descriptions.
+  - [x] **P3.10 part 1 — species data, enemy rows, new species from sprite
+        sheets** — **built S106; test ROM r2 USER-CONFIRMED 2026-10-01 ("Ok
+        perfect, this fixed it"); the tab + gate insertion USER-CONFIRMED 2026-10-01 15:16 on the
+        Mac ("Can confirm inserting enemy works perfectly")** (user: "Here I will give
+        you spritesheets for followers and monsters — either build them in or
+        make a reader that can import them. Happy to adjust squares on top
+        manually."). As built (EDITOR_DESIGN §5.2 "As built S106", PROJECT_STATE
+        S106): the tab (Species / Where you meet it / Name & art), the sheet
+        reader + dialog (`editor2/core/sheet_import.py`, draggable boxes, live
+        game-exact preview, colour choice), one species source + renderer
+        (`monsters.py`, `sprite_render.py`; NPC picker thumbnails of new species).
+        Found + fixed: the LZ decoder (since S22), the bank-$11 follower attr
+        extraction, the resistance wording. *Accept MET (machine half):*
+        test_compiler --rom 431 (reader == the S34/S35 Gorbunok boxes + art,
+        renderer == the PyBoy census, decoder == the manifest), test_app --rom
+        (tab edits, sheet species created + undone), PyBoy on the user's save
+        (battle art of 3 sheet species, a join, walking art in VRAM, the edited
+        Slime row joining at Lv 20). *User half:* `DWM_S106_monsters_demo.gbc`
+        → r2 `DWM_S106r2_monsters_demo.gbc` (4-colour poses) USER-CONFIRMED;
+        the tab on the user's Mac confirmed (r3). **S106 r3:** "Put the selected row
+        in a gate…" + "New enemy row for this monster" (gate wild lists from
+        the tab; the full Encounters tab stays P3.13). Residuals: (a) the reader packs the 4
+        layout-0 frames (down-b / up-b = mirrors) and walks like Armorpion —
+        ((a2) S106 r2: battle poses use 4 colours — black, the cream that is
+        ALSO the backdrop, 2 free; a sheet pose with more colours merges them
+        into the nearest — a per-pose "which colours merge" control is open)
+        other donors need their own tile order; (b) poses over 48 × 48 are
+        shrunk (crop by tightening the box); (c) the sheets are not committed
+        (ripped art; the user keeps them, projects copy what they use);
+        (d) AI weights are plain numbers — the explainer + simulator preview is
+        P3.15 (user OK'd); (e) a species' natural skills are learned on level-up
+        (a joining monster brings none — measured), so the in-game check of a
+        natural-skill edit needs a level-up.
+  - [ ] **P3.10 part 2 — art of the ORIGINAL species** as project data: battle
+        art + palette (ROM0 `MonsterBattleGfxTable` [0-220] + `$17`
+        `MonsterBattlePalettes` regions, streams in a spare bank — $7F reserved),
+        walking art (the 8 follower gfx-id tables) + layout + palette / flip
+        (`$10:$417F` / `FollowerAttrTable11`), cross-half layout borrowing
+        (bank $10 species can only point at bank-$10 layouts today — a fork like
+        S105's `NewAttrHandler` lifts it), the sheet dialog for them, the
+        4-direction visualizer over the 155 layouts, G-P.
+  - [ ] **P3.10 part 3 — renaming original species + descriptions** (bank $41
+        names: same length or shorter in place; longer needs space — audit
+        first; bank $4D descriptions).
+  Original box text follows. (needs P3.9): stats/growth/ai_weights/
       learnset forms + battle-sprite and follower pickers over the GFX
       stack; new-species wizard hooks Phase N (G3 fold folded here or
       ticked separately). *Accept:* a vanilla species stat+sprite edit and
@@ -1400,7 +1447,10 @@ recipes are pure authoring.
       the tree explorer shows Spirit rows; a generated table round-trips
       through the compiler with zero validator errors and PyBoy breeds three
       sampled recipes (one Spirit) with the stub harness (KEY_LESSONS S104).
-- [ ] **P3.13 — Encounters + Music tabs**: (a) Encounters cross-view +
+- [ ] **P3.13 — Encounters + Music tabs** (S106 r3: ONE list at a time is
+      already editable from the Monsters tab — `app/pool_dialog.py`, put a row in
+      a slot, chances, max in a group; the cross-view, list size / rate / maze
+      size, new lists and per-room pools are what remain): (a) Encounters cross-view +
       per-room pools — requires **Encounters #2 custom pools** [G-C]
       (the Phase-2 box, folded here if not done earlier) — PLUS
       **flag-keyed pool variants** [G-O] (bank-$71 RoomEncTable resolver
