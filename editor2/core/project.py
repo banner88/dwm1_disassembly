@@ -116,6 +116,13 @@ class Project:
         # dialogue so its text ids never move. Copies: never written back into
         # the project's data (the editor saves self.data).
         self.skill_scripts, skill_dialogue = _skill_scripts()
+        # S111 (P3.11c): Anchor's dialog texts are editable project data
+        # (gamedata.skills.228.dialogs -> the `lines` of the built-in texts)
+        from . import custom_skills as CS
+        over = CS.dialog_overrides(data)
+        for d in skill_dialogue:
+            if d['id'] in over:
+                d['lines'] = list(over[d['id']])
         for sec, lst in (('scripts', self.custom.get('scripts', [])),
                          ('dialogue', self.custom.get('dialogue', []))):
             bad = [x.get('id') for x in lst if str(x.get('id', '')).startswith('skill:')]

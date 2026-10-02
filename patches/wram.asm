@@ -300,7 +300,11 @@ wTileAnimState:: ds 2 * TILEANIM_MAX_GROUPS ;d0ca-d109 — per group: timer, ste
 ; writes $7E00 + (species-221)*2 here and returns HL = wNewSpeciesGid (no
 ; per-bank tables). Transient: written right before every read.
 wNewSpeciesGid:: dw ;d10a-d10b — computed new-species follower gfx-ID (lo, hi=$7E)
-wCustomPool:: ds $5A4 - 132 - 5 - 2 * TILEANIM_MAX_GROUPS - 2 ;d10c-d5e4 — transient reserve (was $664; FX1 carved 64+128; S97 132; S102 69; S105 2)
+; S111: the learn scanner's row buffer for the custom skills (bank $06
+; LearnLoopFork / bank $72 CustomLearnRow72 copy one 18-byte CustomLearnTable
+; row here right before the scanner reads it). Transient by design.
+wLearnRowBuf:: ds 18 ;d10c-d11d — one custom-skill learn row
+wCustomPool:: ds $5A4 - 132 - 5 - 2 * TILEANIM_MAX_GROUPS - 2 - 18 ;d11e-d5e4 — transient reserve (was $664; FX1 carved 64+128; S97 132; S102 69; S105 2; S111 18)
 ; FX1 (S71): wPoolBounce — 128-byte staging for sleep-pool bank-2 record
 ; swaps (per-byte scratch in CF3PoolSwapRecord). Transient. (The v1 drain's
 ; halved-pending scratch use was removed with the S71v2 exp-scale veto.)

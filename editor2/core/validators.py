@@ -133,6 +133,13 @@ def validate(prj, generated=None):
             warnings += [w for w in SK.check(prj) if w not in warnings]
         except SK.SkillError as e:
             errors.append(str(e))
+        # S111 (P3.11c/d, PROJECT_COMPILER §2.27): the custom skills (built-in
+        # $E0-$E9 + new $EA-$FE) and the stock skills' element override
+        from . import custom_skills as CS
+        try:
+            warnings += [w for w in CS.check(prj) if w not in warnings]
+        except (CS.CustomSkillError, MT.MonsterTextError) as e:
+            errors.append(str(e))
         # S105 G3: up to 19 new species can land in ONE family's encyclopedia
         # tab — its 32-member cap is checked here, not only when bank $12 is
         # emitted (which used to surface as an exception)

@@ -4603,24 +4603,32 @@ jr_050_5ac5:
     ret
 
 
+; [S111] SkillNameForLine — the battle line's [INS 10] skill name. The announce
+; (bank $50 entry 7, jr_050_5a1c) shows the name of the queued skill id; ids
+; >= $DA come here. Vanilla: LIFE/RUN/IRONIZE/Ahhh ($DA-$DD) show the name of
+; SkillNameSubst_5ae1[id-$DA] and every id >= $DE read past that 4-byte table
+; into SaveBtl_5ae5's code (measured S111: a custom skill $E0 announced with
+; "casts" printed "CleanCut" = id $4E, the low byte of `call ClearSpriteBuffer`).
+; Same size: custom ids ($DE+) now keep their own id, so SkillNamePtrTable[id]
+; (their real name) is printed and the stock "casts {skill}!" lines work for
+; them (BATTLE_SKILL_SYSTEM §13.4 follow-up (a), closed S111).
 SaveBtl_5ad2:
+    cp $de
+    ret nc                              ; custom skill: its own name
     push hl
-    sub $da
-    ld hl, $5ae1
-    add l
+    add LOW(SkillNameSubst_5ae1 - $da)  ; $DA-$DD -> the 4-byte table (no carry)
     ld l, a
-    ld a, $00
-    adc h
-    ld h, a
+    ld h, HIGH(SkillNameSubst_5ae1)
     ld a, [hl]
     pop hl
     ret
-
-
-    add hl, de
-    and c
-    ld a, [hl+]
-    ld [hl], b
+    nop
+    nop
+    nop
+    ASSERT @ == $5ae1
+SkillNameSubst_5ae1:                    ; the name shown for ids $DA-$DD
+    db $19, $a1, $2a, $70               ; LIFE->$19 (PanicAll), RUN->$A1 (RUN), IRONIZE->$2A (Ironize), Ahhh->$70 (Ahhh)
+    ASSERT LOW(SkillNameSubst_5ae1) + 3 < $100
 
 SaveBtl_5ae5:
     push af

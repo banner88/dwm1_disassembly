@@ -219,7 +219,7 @@ def vanilla_name(sid, repo_root=None):
 # resolve gamedata.skills.<id>.{name, description, looks_like}
 # ---------------------------------------------------------------------------
 
-TEXT_KEYS = ('name', 'description', 'looks_like')
+TEXT_KEYS = ('name', 'description', 'looks_like', 'sounds_like')
 
 
 def _gd(prj_or_data):
@@ -267,10 +267,11 @@ def resolve(prj_or_data, repo_root=None):
             continue
         what = f"gamedata.skills.{k}"
         sid = _int(k, what)
-        if not 0 <= sid < N_IDS:
-            raise SkillError(f"{what}: names / descriptions / looks_like are for the "
-                             f"vanilla skills 0-{N_IDS - 1} (custom skills: ROADMAP P3.11c)")
-        r = {'name': None, 'desc': None, 'looks': None}
+        if sid >= N_IDS:
+            continue                    # S111: custom skills = custom_skills.py
+        if sid < 0:
+            raise SkillError(f"{what}: not a skill id")
+        r = {'name': None, 'desc': None, 'looks': None, 'sounds': None}
         if 'name' in e:
             try:
                 b = MT.encode_name(e['name'], what + '.name', 1, NAME_MAX)
@@ -293,6 +294,12 @@ def resolve(prj_or_data, repo_root=None):
                 raise SkillError(f"{what}.looks_like {x}: a vanilla skill id 0-{N_IDS - 1}")
             check_looks(prj_or_data, sid, x, what, repo)
             r['looks'] = x if x != sid else None
+        if 'sounds_like' in e and e['sounds_like'] is not None:
+            # S111: the sounds alone (bank $55 StockSfxTable); default = looks_like
+            x = _int(e['sounds_like'], what + '.sounds_like')
+            if not 0 <= x < N_IDS:
+                raise SkillError(f"{what}.sounds_like {x}: a vanilla skill id 0-{N_IDS - 1}")
+            r['sounds'] = x if x != sid else None
         if any(v is not None for v in r.values()):
             out[sid] = r
     return out
@@ -364,6 +371,7 @@ def effective(prj_or_data, repo_root=None):
     van = vanilla(repo_root or getattr(prj_or_data, 'repo_root', None))
     names, descs = list(van['names']), list(van['descs'])
     looks = list(range(N_IDS))
+    sounds = list(range(N_IDS))
     own = set()                                   # ids that get their OWN desc string
     for sid, r in resolve(prj_or_data, repo_root).items():
         if r['name'] is not None:
@@ -374,7 +382,10 @@ def effective(prj_or_data, repo_root=None):
                 own.add(sid)
         if r['looks'] is not None:
             looks[sid] = r['looks']
-    return {'names': names, 'descs': descs, 'looks': looks, 'own_desc': own}
+            sounds[sid] = r['looks']
+        if r.get('sounds') is not None:
+            sounds[sid] = r['sounds']
+    return {'names': names, 'descs': descs, 'looks': looks, 'sounds': sounds, 'own_desc': own}
 
 
 def name_text(prj_or_data, sid, repo_root=None):
@@ -475,7 +486,8 @@ def bank41_spills(prj_or_data, repo_root=None):
 
 def desc_extra_items(prj_or_data, repo_root=None):
     lay = layout(prj_or_data, repo_root)
-    return list(lay['descs'][1]) + list(lay['own'])
+    from . import custom_skills as CS          # S111: custom SKIL texts that spill
+    return list(lay['descs'][1]) + list(lay['own']) + list(CS.desc_spills(prj_or_data, repo_root))
 
 
 def usage(prj_or_data, repo_root=None):
@@ -565,15 +577,15 @@ def emit_desc_extra(prj, warnings):
     return "\n".join(out) + "\n"
 
 
-def _emit_looks(prj):
+def _emit_looks(prj, key='looks'):
     e = effective(prj)
     out = []
     for k in range(0, N_IDS, 16):
         ids = list(range(k, min(k + 16, N_IDS)))
-        row = "    db " + ", ".join(f"${e['looks'][i]:02X}" for i in ids) + f"   ; [{k:3d}-{ids[-1]:3d}]"
-        ed = [i for i in ids if e['looks'][i] != i]
+        row = "    db " + ", ".join(f"${e[key][i]:02X}" for i in ids) + f"   ; [{k:3d}-{ids[-1]:3d}]"
+        ed = [i for i in ids if e[key][i] != i]
         if ed:
-            row += "  ; looks like: " + ", ".join(f"{i}->{e['looks'][i]}" for i in ed)
+            row += f"  ; {key} like: " + ", ".join(f"{i}->{e[key][i]}" for i in ed)
         out.append(row)
     return "\n".join(out) + "\n"
 
@@ -583,7 +595,7 @@ def emit_present_5f(prj, warnings):
 
 
 def emit_present_55(prj, warnings):
-    return _emit_looks(prj)
+    return _emit_looks(prj, 'sounds')       # S111: sounds_like (default = looks_like)
 
 
 REGIONS = [('gd_skill_names', 'patches/bank_041.asm', emit_names, 0x41),

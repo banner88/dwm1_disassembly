@@ -222,7 +222,10 @@
                  [S105 G3] wNewSpeciesGid $D10A-$D10B — the follower
                  gfx-ID a new species' FollowerArtResolveXX fork computes
                  ($7E00+(id-221)*2, written right before the caller reads it) /
-                 wCustomPool $D10C-$D5E4 (transient reserve) /
+                 [S111] wLearnRowBuf $D10C-$D11D — one custom-skill learn
+                 row (18 B), copied by bank $72 CustomLearnRow72 right
+                 before bank $06 LearnLoopFork's scanner reads it /
+                 wCustomPool $D11E-$D5E4 (transient reserve) /
                  wPoolBounce $D5E5-$D664 (128 B, FX1: sleep-pool swap
                  scratch; the v1 drain halved-pending use died with the
                  S71v2 exp-scale veto).

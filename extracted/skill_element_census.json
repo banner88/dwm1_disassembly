@@ -1,0 +1,1320 @@
+{
+ "_generator": "tools/census_skill_element.py (S111) on the S111 example build 4a2860cfd148cafa6843221d8be1ad49 (patched); the same results on the S110 pin 534bfb62 (patched, historical) + a real .sav; PyBoy, RNG pinned, packed resistances poked to $1B, hooks on the 7 byte selectors + 3 damage ladders",
+ "ladders": {
+  "CheckTargetGuardA": "spell",
+  "ResLadderBreath_676c": "breath",
+  "ResLadderElemSlash_6782": "slash"
+ },
+ "results": {
+  "0": {
+   "name": "Blaze",
+   "acts": 1,
+   "ladders": [
+    {
+     "ladder": "spell",
+     "element": 0
+    }
+   ]
+  },
+  "1": {
+   "name": "Blazemore",
+   "acts": 1,
+   "ladders": [
+    {
+     "ladder": "spell",
+     "element": 0
+    }
+   ]
+  },
+  "2": {
+   "name": "Blazemost",
+   "acts": 1,
+   "ladders": [
+    {
+     "ladder": "spell",
+     "element": 0
+    }
+   ]
+  },
+  "3": {
+   "name": "Firebal",
+   "acts": 1,
+   "ladders": [
+    {
+     "ladder": "spell",
+     "element": 1
+    }
+   ]
+  },
+  "4": {
+   "name": "Firebane",
+   "acts": 1,
+   "ladders": [
+    {
+     "ladder": "spell",
+     "element": 1
+    }
+   ]
+  },
+  "5": {
+   "name": "Firebolt",
+   "acts": 1,
+   "ladders": [
+    {
+     "ladder": "spell",
+     "element": 1
+    }
+   ]
+  },
+  "6": {
+   "name": "Bang",
+   "acts": 1,
+   "ladders": [
+    {
+     "ladder": "spell",
+     "element": 2
+    }
+   ]
+  },
+  "7": {
+   "name": "Boom",
+   "acts": 1,
+   "ladders": [
+    {
+     "ladder": "spell",
+     "element": 2
+    }
+   ]
+  },
+  "8": {
+   "name": "Explodet",
+   "acts": 1,
+   "ladders": [
+    {
+     "ladder": "spell",
+     "element": 2
+    }
+   ]
+  },
+  "9": {
+   "name": "Infernos",
+   "acts": 1,
+   "ladders": [
+    {
+     "ladder": "spell",
+     "element": 3
+    }
+   ]
+  },
+  "10": {
+   "name": "Infermore",
+   "acts": 1,
+   "ladders": [
+    {
+     "ladder": "spell",
+     "element": 3
+    }
+   ]
+  },
+  "11": {
+   "name": "Infermost",
+   "acts": 1,
+   "ladders": [
+    {
+     "ladder": "spell",
+     "element": 3
+    }
+   ]
+  },
+  "12": {
+   "name": "IceBolt",
+   "acts": 1,
+   "ladders": [
+    {
+     "ladder": "spell",
+     "element": 5
+    }
+   ]
+  },
+  "13": {
+   "name": "SnowStorm",
+   "acts": 1,
+   "ladders": [
+    {
+     "ladder": "spell",
+     "element": 5
+    }
+   ]
+  },
+  "14": {
+   "name": "Blizzard",
+   "acts": 1,
+   "ladders": [
+    {
+     "ladder": "spell",
+     "element": 5
+    }
+   ]
+  },
+  "15": {
+   "name": "Bolt",
+   "acts": 1,
+   "ladders": [
+    {
+     "ladder": "spell",
+     "element": 4
+    }
+   ]
+  },
+  "16": {
+   "name": "Zap",
+   "acts": 1,
+   "ladders": [
+    {
+     "ladder": "spell",
+     "element": 4
+    }
+   ]
+  },
+  "17": {
+   "name": "Thordain",
+   "acts": 1,
+   "ladders": [
+    {
+     "ladder": "spell",
+     "element": 4
+    }
+   ]
+  },
+  "18": {
+   "name": "Beat",
+   "acts": 2,
+   "ladders": []
+  },
+  "19": {
+   "name": "Defeat",
+   "acts": 2,
+   "ladders": []
+  },
+  "20": {
+   "name": "Sacrifice",
+   "acts": 1,
+   "ladders": []
+  },
+  "21": {
+   "name": "Sleep",
+   "acts": 1,
+   "ladders": []
+  },
+  "22": {
+   "name": "SleepAll",
+   "acts": 1,
+   "ladders": []
+  },
+  "23": {
+   "name": "StopSpell",
+   "acts": 2,
+   "ladders": []
+  },
+  "24": {
+   "name": "Surround",
+   "acts": 2,
+   "ladders": []
+  },
+  "25": {
+   "name": "PanicAll",
+   "acts": 1,
+   "ladders": []
+  },
+  "26": {
+   "name": "RobMagic",
+   "acts": 2,
+   "ladders": []
+  },
+  "27": {
+   "name": "TakeMagic",
+   "acts": 2,
+   "ladders": []
+  },
+  "28": {
+   "name": "Sap",
+   "acts": 1,
+   "ladders": []
+  },
+  "29": {
+   "name": "Defence",
+   "acts": 1,
+   "ladders": []
+  },
+  "30": {
+   "name": "Upper",
+   "acts": 1,
+   "ladders": []
+  },
+  "31": {
+   "name": "Increase",
+   "acts": 3,
+   "ladders": []
+  },
+  "32": {
+   "name": "Slow",
+   "acts": 2,
+   "ladders": []
+  },
+  "33": {
+   "name": "SlowAll",
+   "acts": 2,
+   "ladders": []
+  },
+  "34": {
+   "name": "Speed",
+   "acts": 2,
+   "ladders": []
+  },
+  "35": {
+   "name": "SpeedUp",
+   "acts": 3,
+   "ladders": []
+  },
+  "36": {
+   "name": "Barrier",
+   "acts": 1,
+   "ladders": []
+  },
+  "37": {
+   "name": "TwinHits",
+   "acts": 2,
+   "ladders": []
+  },
+  "38": {
+   "name": "MagicWall",
+   "acts": 2,
+   "ladders": []
+  },
+  "39": {
+   "name": "MagicBack",
+   "acts": 1,
+   "ladders": []
+  },
+  "40": {
+   "name": "Bounce",
+   "acts": 1,
+   "ladders": []
+  },
+  "41": {
+   "name": "Transform",
+   "acts": 2,
+   "ladders": []
+  },
+  "42": {
+   "name": "Ironize",
+   "acts": 1,
+   "ladders": []
+  },
+  "43": {
+   "name": "Heal",
+   "acts": 2,
+   "ladders": []
+  },
+  "44": {
+   "name": "HealMore",
+   "acts": 2,
+   "ladders": []
+  },
+  "45": {
+   "name": "HealAll",
+   "acts": 2,
+   "ladders": []
+  },
+  "46": {
+   "name": "HealUs",
+   "acts": 3,
+   "ladders": []
+  },
+  "47": {
+   "name": "HealUsAll",
+   "acts": 3,
+   "ladders": []
+  },
+  "48": {
+   "name": "Vivify",
+   "acts": 2,
+   "ladders": []
+  },
+  "49": {
+   "name": "Revive",
+   "acts": 2,
+   "ladders": []
+  },
+  "50": {
+   "name": "Farewell",
+   "acts": 1,
+   "ladders": []
+  },
+  "51": {
+   "name": "Antidote",
+   "acts": 2,
+   "ladders": []
+  },
+  "52": {
+   "name": "NumbOff",
+   "acts": 3,
+   "ladders": []
+  },
+  "53": {
+   "name": "DeChaos",
+   "acts": 3,
+   "ladders": []
+  },
+  "54": {
+   "name": "CurseOff",
+   "acts": 3,
+   "ladders": []
+  },
+  "55": {
+   "name": "StepGuard",
+   "acts": 2,
+   "ladders": []
+  },
+  "56": {
+   "name": "MapMagic",
+   "acts": 2,
+   "ladders": []
+  },
+  "57": {
+   "name": "Chance",
+   "acts": 1,
+   "ladders": []
+  },
+  "58": {
+   "name": "Attack",
+   "acts": 2,
+   "ladders": []
+  },
+  "59": {
+   "name": "TwinSlash",
+   "acts": 1,
+   "ladders": []
+  },
+  "60": {
+   "name": "Ramming",
+   "acts": 2,
+   "ladders": [
+    {
+     "ladder": "spell",
+     "element": 14
+    }
+   ]
+  },
+  "61": {
+   "name": "Beserker",
+   "acts": 2,
+   "ladders": []
+  },
+  "62": {
+   "name": "Kamikaze",
+   "acts": 1,
+   "ladders": []
+  },
+  "63": {
+   "name": "Massacre",
+   "acts": 1,
+   "ladders": []
+  },
+  "64": {
+   "name": "EvilSlash",
+   "acts": 1,
+   "ladders": []
+  },
+  "65": {
+   "name": "ChargeUP",
+   "acts": 2,
+   "ladders": []
+  },
+  "66": {
+   "name": "HighJump",
+   "acts": 2,
+   "ladders": []
+  },
+  "67": {
+   "name": "SuckAir",
+   "acts": 2,
+   "ladders": []
+  },
+  "68": {
+   "name": "FireSlash",
+   "acts": 1,
+   "ladders": [
+    {
+     "ladder": "slash",
+     "element": 0
+    }
+   ]
+  },
+  "69": {
+   "name": "BoltSlash",
+   "acts": 1,
+   "ladders": [
+    {
+     "ladder": "slash",
+     "element": 4
+    }
+   ]
+  },
+  "70": {
+   "name": "VacuSlash",
+   "acts": 1,
+   "ladders": [
+    {
+     "ladder": "slash",
+     "element": 3
+    }
+   ]
+  },
+  "71": {
+   "name": "IceSlash",
+   "acts": 1,
+   "ladders": [
+    {
+     "ladder": "slash",
+     "element": 5
+    }
+   ]
+  },
+  "72": {
+   "name": "MetalCut",
+   "acts": 1,
+   "ladders": []
+  },
+  "73": {
+   "name": "DrakSlash",
+   "acts": 1,
+   "ladders": []
+  },
+  "74": {
+   "name": "BeastCut",
+   "acts": 1,
+   "ladders": []
+  },
+  "75": {
+   "name": "BirdBlow",
+   "acts": 1,
+   "ladders": []
+  },
+  "76": {
+   "name": "DevilCut",
+   "acts": 1,
+   "ladders": []
+  },
+  "77": {
+   "name": "ZombieCut",
+   "acts": 1,
+   "ladders": []
+  },
+  "78": {
+   "name": "CleanCut",
+   "acts": 1,
+   "ladders": []
+  },
+  "79": {
+   "name": "MultiCut",
+   "acts": 1,
+   "ladders": [
+    {
+     "ladder": "breath",
+     "element": 3
+    }
+   ]
+  },
+  "80": {
+   "name": "BiAttack",
+   "acts": 2,
+   "ladders": []
+  },
+  "81": {
+   "name": "QuadHits",
+   "acts": 4,
+   "ladders": []
+  },
+  "82": {
+   "name": "CallHelp",
+   "acts": 2,
+   "ladders": []
+  },
+  "83": {
+   "name": "YellHelp",
+   "acts": 2,
+   "ladders": []
+  },
+  "84": {
+   "name": "Focus",
+   "acts": 2,
+   "ladders": []
+  },
+  "85": {
+   "name": "SquallHit",
+   "acts": 1,
+   "ladders": []
+  },
+  "86": {
+   "name": "PsycheUp",
+   "acts": 2,
+   "ladders": []
+  },
+  "87": {
+   "name": "RainSlash",
+   "acts": 1,
+   "ladders": []
+  },
+  "88": {
+   "name": "WindBeast",
+   "acts": 1,
+   "ladders": [
+    {
+     "ladder": "spell",
+     "element": 3
+    }
+   ]
+  },
+  "89": {
+   "name": "Vacuum",
+   "acts": 1,
+   "ladders": [
+    {
+     "ladder": "spell",
+     "element": 3
+    }
+   ]
+  },
+  "90": {
+   "name": "Lightning",
+   "acts": 1,
+   "ladders": [
+    {
+     "ladder": "spell",
+     "element": 4
+    }
+   ]
+  },
+  "91": {
+   "name": "RockThrow",
+   "acts": 1,
+   "ladders": [
+    {
+     "ladder": "breath",
+     "element": 24
+    }
+   ]
+  },
+  "92": {
+   "name": "FireAir",
+   "acts": 1,
+   "ladders": [
+    {
+     "ladder": "breath",
+     "element": 16
+    }
+   ]
+  },
+  "93": {
+   "name": "BlazeAir",
+   "acts": 1,
+   "ladders": [
+    {
+     "ladder": "breath",
+     "element": 16
+    }
+   ]
+  },
+  "94": {
+   "name": "Scorching",
+   "acts": 1,
+   "ladders": [
+    {
+     "ladder": "breath",
+     "element": 16
+    }
+   ]
+  },
+  "95": {
+   "name": "WhiteFire",
+   "acts": 1,
+   "ladders": [
+    {
+     "ladder": "breath",
+     "element": 16
+    }
+   ]
+  },
+  "96": {
+   "name": "FrigidAir",
+   "acts": 1,
+   "ladders": [
+    {
+     "ladder": "breath",
+     "element": 17
+    }
+   ]
+  },
+  "97": {
+   "name": "IceAir",
+   "acts": 1,
+   "ladders": [
+    {
+     "ladder": "breath",
+     "element": 17
+    }
+   ]
+  },
+  "98": {
+   "name": "IceStorm",
+   "acts": 1,
+   "ladders": [
+    {
+     "ladder": "breath",
+     "element": 17
+    }
+   ]
+  },
+  "99": {
+   "name": "WhiteAir",
+   "acts": 1,
+   "ladders": [
+    {
+     "ladder": "breath",
+     "element": 17
+    }
+   ]
+  },
+  "100": {
+   "name": "Hellblast",
+   "acts": 1,
+   "ladders": [
+    {
+     "ladder": "spell",
+     "element": 4
+    }
+   ]
+  },
+  "101": {
+   "name": "BigBang",
+   "acts": 1,
+   "ladders": [
+    {
+     "ladder": "breath",
+     "element": 0
+    }
+   ]
+  },
+  "102": {
+   "name": "MegaMagic",
+   "acts": 1,
+   "ladders": [
+    {
+     "ladder": "breath",
+     "element": 15
+    }
+   ]
+  },
+  "103": {
+   "name": "PoisonHit",
+   "acts": 2,
+   "ladders": []
+  },
+  "104": {
+   "name": "NapAttack",
+   "acts": 2,
+   "ladders": []
+  },
+  "105": {
+   "name": "Paralyze",
+   "acts": 2,
+   "ladders": []
+  },
+  "106": {
+   "name": "SleepAir",
+   "acts": 1,
+   "ladders": []
+  },
+  "107": {
+   "name": "PalsyAir",
+   "acts": 2,
+   "ladders": []
+  },
+  "108": {
+   "name": "PoisonGas",
+   "acts": 2,
+   "ladders": []
+  },
+  "109": {
+   "name": "PoisonAir",
+   "acts": 2,
+   "ladders": []
+  },
+  "110": {
+   "name": "PaniDance",
+   "acts": 1,
+   "ladders": []
+  },
+  "111": {
+   "name": "Curse",
+   "acts": 2,
+   "ladders": []
+  },
+  "112": {
+   "name": "Ahhh",
+   "acts": 2,
+   "ladders": []
+  },
+  "113": {
+   "name": "K.O.Dance",
+   "acts": 1,
+   "ladders": []
+  },
+  "114": {
+   "name": "SandStorm",
+   "acts": 2,
+   "ladders": []
+  },
+  "115": {
+   "name": "Radiant",
+   "acts": 1,
+   "ladders": []
+  },
+  "116": {
+   "name": "EerieLite",
+   "acts": 1,
+   "ladders": []
+  },
+  "117": {
+   "name": "OddDance",
+   "acts": 2,
+   "ladders": []
+  },
+  "118": {
+   "name": "RobDance",
+   "acts": 2,
+   "ladders": []
+  },
+  "119": {
+   "name": "SideStep",
+   "acts": 2,
+   "ladders": []
+  },
+  "120": {
+   "name": "LureDance",
+   "acts": 1,
+   "ladders": []
+  },
+  "121": {
+   "name": "LushLicks",
+   "acts": 2,
+   "ladders": []
+  },
+  "122": {
+   "name": "SickLick",
+   "acts": 2,
+   "ladders": []
+  },
+  "123": {
+   "name": "LegSweep",
+   "acts": 2,
+   "ladders": []
+  },
+  "124": {
+   "name": "BigTrip",
+   "acts": 2,
+   "ladders": []
+  },
+  "125": {
+   "name": "WarCry",
+   "acts": 2,
+   "ladders": []
+  },
+  "126": {
+   "name": "Whistle",
+   "acts": 2,
+   "ladders": []
+  },
+  "127": {
+   "name": "Imitate",
+   "acts": 2,
+   "ladders": []
+  },
+  "128": {
+   "name": "DeMagic",
+   "acts": 1,
+   "ladders": []
+  },
+  "129": {
+   "name": "Surge",
+   "acts": 3,
+   "ladders": []
+  },
+  "130": {
+   "name": "UltraDown",
+   "acts": 1,
+   "ladders": []
+  },
+  "131": {
+   "name": "ThickFog",
+   "acts": 1,
+   "ladders": []
+  },
+  "132": {
+   "name": "TatsuCall",
+   "acts": 1,
+   "ladders": []
+  },
+  "133": {
+   "name": "DiagoCall",
+   "acts": 1,
+   "ladders": []
+  },
+  "134": {
+   "name": "SamsiCall",
+   "acts": 1,
+   "ladders": []
+  },
+  "135": {
+   "name": "BazooCall",
+   "acts": 1,
+   "ladders": []
+  },
+  "136": {
+   "name": "Cover",
+   "acts": 2,
+   "ladders": []
+  },
+  "137": {
+   "name": "Guardian",
+   "acts": 2,
+   "ladders": []
+  },
+  "138": {
+   "name": "TailWind",
+   "acts": 2,
+   "ladders": []
+  },
+  "139": {
+   "name": "StormWind",
+   "acts": 2,
+   "ladders": []
+  },
+  "140": {
+   "name": "Dodge",
+   "acts": 2,
+   "ladders": []
+  },
+  "141": {
+   "name": "Defence",
+   "acts": 2,
+   "ladders": []
+  },
+  "142": {
+   "name": "StrongD",
+   "acts": 2,
+   "ladders": []
+  },
+  "143": {
+   "name": "SuckAll",
+   "acts": 2,
+   "ladders": []
+  },
+  "144": {
+   "name": "BladeD",
+   "acts": 2,
+   "ladders": []
+  },
+  "145": {
+   "name": "DanceShut",
+   "acts": 1,
+   "ladders": []
+  },
+  "146": {
+   "name": "MouthShut",
+   "acts": 1,
+   "ladders": []
+  },
+  "147": {
+   "name": "Meditate",
+   "acts": 1,
+   "ladders": []
+  },
+  "148": {
+   "name": "Hustle",
+   "acts": 3,
+   "ladders": []
+  },
+  "149": {
+   "name": "LifeSong",
+   "acts": 2,
+   "ladders": []
+  },
+  "150": {
+   "name": "LifeDance",
+   "acts": 1,
+   "ladders": []
+  },
+  "151": {
+   "name": "Run",
+   "acts": 3,
+   "ladders": []
+  },
+  "152": {
+   "name": "Daze",
+   "acts": 2,
+   "ladders": []
+  },
+  "153": {
+   "name": "HitAlly",
+   "acts": 1,
+   "ladders": []
+  },
+  "154": {
+   "name": "HitEnemy",
+   "acts": 1,
+   "ladders": []
+  },
+  "155": {
+   "name": "HitRandom",
+   "acts": 1,
+   "ladders": []
+  },
+  "156": {
+   "name": "Scared",
+   "acts": 2,
+   "ladders": []
+  },
+  "157": {
+   "name": "Dance",
+   "acts": 2,
+   "ladders": []
+  },
+  "158": {
+   "name": "Trip",
+   "acts": 1,
+   "ladders": []
+  },
+  "159": {
+   "name": "Paralyze",
+   "acts": 1,
+   "ladders": []
+  },
+  "160": {
+   "name": "CANTMOVE",
+   "acts": 1,
+   "ladders": []
+  },
+  "161": {
+   "name": "RUN",
+   "acts": 1,
+   "ladders": []
+  },
+  "162": {
+   "name": "CALLHOROR",
+   "acts": 2,
+   "ladders": []
+  },
+  "163": {
+   "name": "HealUsAll",
+   "acts": 1,
+   "ladders": []
+  },
+  "164": {
+   "name": "Smashed",
+   "acts": 2,
+   "ladders": []
+  },
+  "165": {
+   "name": "FILTHZONE",
+   "acts": 1,
+   "ladders": []
+  },
+  "166": {
+   "name": "ALLCHANGE",
+   "acts": 2,
+   "ladders": []
+  },
+  "167": {
+   "name": "BIGSLEEP",
+   "acts": 4,
+   "ladders": []
+  },
+  "168": {
+   "name": "MP0",
+   "acts": 4,
+   "ladders": []
+  },
+  "169": {
+   "name": "ECHO",
+   "acts": 2,
+   "ladders": []
+  },
+  "170": {
+   "name": "CHGDRAGON",
+   "acts": 2,
+   "ladders": []
+  },
+  "171": {
+   "name": "CALLEVIL",
+   "acts": 1,
+   "ladders": []
+  },
+  "172": {
+   "name": "FREEZY",
+   "acts": 2,
+   "ladders": []
+  },
+  "173": {
+   "name": "ALLREVIVE",
+   "acts": 4,
+   "ladders": []
+  },
+  "174": {
+   "name": "RESTOREMP",
+   "acts": 3,
+   "ladders": []
+  },
+  "175": {
+   "name": "METEOR",
+   "acts": 4,
+   "ladders": []
+  },
+  "176": {
+   "name": "HERB",
+   "acts": 1,
+   "ladders": []
+  },
+  "177": {
+   "name": "HEALWATER",
+   "acts": 1,
+   "ladders": []
+  },
+  "178": {
+   "name": "SAGESTONE",
+   "acts": 3,
+   "ladders": []
+  },
+  "179": {
+   "name": "WARLDDEW",
+   "acts": 3,
+   "ladders": []
+  },
+  "180": {
+   "name": "POTION",
+   "acts": 1,
+   "ladders": []
+  },
+  "181": {
+   "name": "ELFWATER",
+   "acts": 1,
+   "ladders": []
+  },
+  "182": {
+   "name": "ANTIDOTE",
+   "acts": 1,
+   "ladders": []
+  },
+  "183": {
+   "name": "MOONHERB",
+   "acts": 1,
+   "ladders": []
+  },
+  "184": {
+   "name": "SKYBELL",
+   "acts": 1,
+   "ladders": []
+  },
+  "185": {
+   "name": "LAUREL",
+   "acts": 1,
+   "ladders": []
+  },
+  "186": {
+   "name": "AWAKESAND",
+   "acts": 1,
+   "ladders": []
+  },
+  "187": {
+   "name": "WARLDLEAF",
+   "acts": 1,
+   "ladders": []
+  },
+  "188": {
+   "name": "LIFEACORN",
+   "acts": 1,
+   "ladders": []
+  },
+  "189": {
+   "name": "MYSTICNUT",
+   "acts": 1,
+   "ladders": []
+  },
+  "190": {
+   "name": "PWRSEED",
+   "acts": 1,
+   "ladders": []
+  },
+  "191": {
+   "name": "DEFSEED",
+   "acts": 1,
+   "ladders": []
+  },
+  "192": {
+   "name": "AGILSEED",
+   "acts": 1,
+   "ladders": []
+  },
+  "193": {
+   "name": "INTSEED",
+   "acts": 1,
+   "ladders": []
+  },
+  "194": {
+   "name": "FEEDMEAT",
+   "acts": 1,
+   "ladders": []
+  },
+  "195": {
+   "name": "BEFFJERKY",
+   "acts": 1,
+   "ladders": []
+  },
+  "196": {
+   "name": "PORKCHOP",
+   "acts": 1,
+   "ladders": []
+  },
+  "197": {
+   "name": "BADMEAT",
+   "acts": 1,
+   "ladders": []
+  },
+  "198": {
+   "name": "SIRLOIN",
+   "acts": 1,
+   "ladders": []
+  },
+  "199": {
+   "name": "BOLTSTAFF",
+   "acts": 3,
+   "ladders": []
+  },
+  "200": {
+   "name": "STAFF",
+   "acts": 3,
+   "ladders": []
+  },
+  "201": {
+   "name": "BLOKSTAFF",
+   "acts": 3,
+   "ladders": []
+  },
+  "202": {
+   "name": "LAVASTAFF",
+   "acts": 3,
+   "ladders": []
+  },
+  "203": {
+   "name": "SNOWSTAFF",
+   "acts": 3,
+   "ladders": []
+  },
+  "204": {
+   "name": "FIRESTAFF",
+   "acts": 3,
+   "ladders": []
+  },
+  "205": {
+   "name": "WARPWING",
+   "acts": 1,
+   "ladders": []
+  },
+  "206": {
+   "name": "TINYMEDAL",
+   "acts": 1,
+   "ladders": []
+  },
+  "207": {
+   "name": "QuestBk",
+   "acts": 1,
+   "ladders": []
+  },
+  "208": {
+   "name": "HORRORBK",
+   "acts": 1,
+   "ladders": []
+  },
+  "209": {
+   "name": "BENICEBK",
+   "acts": 1,
+   "ladders": []
+  },
+  "210": {
+   "name": "CHEATERBK",
+   "acts": 1,
+   "ladders": []
+  },
+  "211": {
+   "name": "SMARTBK",
+   "acts": 1,
+   "ladders": []
+  },
+  "212": {
+   "name": "COMEDYBK",
+   "acts": 1,
+   "ladders": []
+  },
+  "213": {
+   "name": "BeDragon",
+   "acts": 2,
+   "ladders": []
+  },
+  "214": {
+   "name": "Smashlime",
+   "acts": 1,
+   "ladders": []
+  },
+  "215": {
+   "name": "Sheldodge",
+   "acts": 1,
+   "ladders": []
+  },
+  "216": {
+   "name": "Branching",
+   "acts": 1,
+   "ladders": []
+  },
+  "217": {
+   "name": "GigaSlash",
+   "acts": 1,
+   "ladders": [
+    {
+     "ladder": "spell",
+     "element": 25
+    }
+   ]
+  },
+  "218": {
+   "name": "LIFE",
+   "acts": 1,
+   "ladders": []
+  },
+  "219": {
+   "name": "RUN",
+   "acts": 1,
+   "ladders": []
+  },
+  "220": {
+   "name": "IRONIZE",
+   "acts": 1,
+   "ladders": []
+  },
+  "221": {
+   "name": "Ahhh",
+   "acts": 2,
+   "ladders": []
+  }
+ }
+}

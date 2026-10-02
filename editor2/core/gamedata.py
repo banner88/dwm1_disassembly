@@ -550,10 +550,15 @@ class Gamedata:
         # table 999, record 1 — the zeroing is code) and the field-only StepGuard /
         # MapMagic (record 0 — never charged in battle). `record.mp_byte` still
         # overrides the battle byte (expert).
-        for sid, o in _key_ids(self.gd.get('skills'), 'skills', 0, SKILL_COUNT - 1):
+        # S111: ids 222-254 are the CUSTOM skills (editor2/core/custom_skills.py
+        # validates and emits them); only the 222 stock skills are handled here.
+        stock = {k: v for k, v in (self.gd.get('skills') or {}).items()
+                 if str(k).startswith('_') or not str(k).strip().isdigit()
+                 or int(k) < SKILL_COUNT}
+        for sid, o in _key_ids(stock, 'skills', 0, SKILL_COUNT - 1):
             what = f"gamedata.skills.{sid}"
             _check_keys(o, ('mp', 'learn', 'record', 'name', 'description', 'looks_like',
-                            'comment'), what)
+                            'sounds_like', 'element', 'comment'), what)
             if 'mp' in o:
                 van_mp = _u16(self.v_mp[sid], 0)
                 mp = _mp_value(o['mp'], what + '.mp')
@@ -576,6 +581,16 @@ class Gamedata:
                     if self.record[sid][4] != mp:
                         self.record[sid][4] = mp           # the battle copy
                         self.edited['record'].add(sid)
+            if o.get('element') is not None and not ('record' in o and 'status_id' in
+                                                     (o.get('record') or {})):
+                # S111: the AI's assumed element (record +5, 1-based) follows the
+                # damage element (custom_skills.py emits the override tables)
+                from . import custom_skills as CS
+                ev = CS.element_value(o['element'], what + '.element')
+                nv = 0 if ev == CS.ELEMENT_NONE else ev + 1
+                if self.record[sid][5] != nv:
+                    self.record[sid][5] = nv
+                    self.edited['record'].add(sid)
             if 'learn' in o:
                 if sid >= LEARN_ROWS:
                     raise GamedataError(

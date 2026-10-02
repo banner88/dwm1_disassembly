@@ -4612,10 +4612,18 @@ jr_050_5ac5:
     ret
 
 
+; [S111] SkillNameForLine — the battle line's [INS 10] skill name: the announce
+; (entry 7, jr_050_5a1c) calls here for queued skill ids >= $DA (`call nc`).
+; LIFE / RUN / IRONIZE / Ahhh ($DA-$DD, the battle-action copies of stock
+; skills) print the name of the skill id at SkillNameSubst_5ae1[id-$DA].
+; Ids >= $DE never occur in vanilla; they would index past the 4 bytes into
+; SaveBtl_5ae5's code (measured S111 on a patched build: custom skill $E0
+; printed "CleanCut" = id $4E, the low byte of `call ClearSpriteBuffer`).
+; patches/bank_050.asm (S111) returns early for ids >= $DE (same size).
 SaveBtl_5ad2:
     push hl
     sub $da
-    ld hl, $5ae1
+    ld hl, SkillNameSubst_5ae1
     add l
     ld l, a
     ld a, $00
@@ -4626,10 +4634,11 @@ SaveBtl_5ad2:
     ret
 
 
-    add hl, de
-    and c
-    ld a, [hl+]
-    ld [hl], b
+; [S111] decoded: 4 skill ids, not code (was disassembled as add hl,de /
+; and c / ld a,[hl+] / ld [hl],b). The name shown for $DA-$DD.
+SkillNameSubst_5ae1:
+    db $19, $a1, $2a, $70               ; LIFE -> PanicAll ($19), RUN -> RUN ($a1),
+                                        ; IRONIZE -> Ironize ($2a), Ahhh -> Ahhh ($70)
 
 SaveBtl_5ae5:
     push af

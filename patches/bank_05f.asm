@@ -13207,23 +13207,6 @@ jr_05f_68d1:
     nop
     nop
     nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
 ; [S110] per-stock-skill presentation id (identity = each skill plays its own
 ; script). Compiler region: gd_present_proxy_5f (gamedata.skills.<id>.looks_like).
 StockPresentTable:
@@ -13271,9 +13254,16 @@ GetPresentId::
     ld a, [hl]         ; 1  presentation id
     pop hl             ; 1
     ret                ; 1   (=27 bytes; was 21 before S110)
-CustomProxyTable:      ; [skill_id-$DE] -> presentation proxy id; default $09 (Infernos)
-    db $09, $09, $09, $c2, $c2, $c2, $09, $09   ; $DE-$E5  ($E0 MagicBurn=$09; $E1-$E3 Tame=$c2 HEART; $E5 Tremor=$09 Infernos [QUAKE: proven-complete proxy; $2c HealMore STALLS the $52:$6c4d done-spin on the offense side — PyBoy S74])
-    db $09, $09, $09, $40, $09, $09, $09, $09   ; $E6-$ED  ($E6-$E8 Quake=$09; $E9 Mourn=$40 EvilSlash [MOURN S75]; rest reserved)
+CustomProxyTable:      ; [skill_id-$DE] -> presentation proxy id, ids $DE-$FE
+; [S111] compiler region gd_custom_present (gamedata.skills.<id>.looks_like).
+; Built-in: MagicBurn / Quake = $09 Infernos, Tame = $C2 (the meat heart),
+; Mourn = $40 EvilSlash (BATTLE_SKILL_SYSTEM §13). S74: as a CUSTOM skill's
+; proxy, HealMore $2C stalled the $52:$6c4d done-spin on the offense side.
+; @BUILD_PROJECT BEGIN gd_custom_present
+    db $09, $09, $09, $C2, $C2, $C2, $09, $09, $09, $09, $09   ; [$DE-$E8]
+    db $40, $09, $09, $09, $09, $09, $09, $09, $09, $09, $09   ; [$E9-$F3]
+    db $09, $09, $09, $09, $09, $09, $09, $09, $09, $09, $09   ; [$F4-$FE]
+; @BUILD_PROJECT END gd_custom_present
 ; [QUAKE S74] anim-index-site variant of GetPresentId (12 B, funded from the
 ; pad above): the Layer-1 sprite-animation lookup alone sees a "quiet" id for
 ; the Earthquake tiers, killing the borrowed cast animation at its source.

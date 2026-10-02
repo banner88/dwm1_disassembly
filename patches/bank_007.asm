@@ -10763,79 +10763,53 @@ jr_007_7ea0:
     add b
     ld [bc], a
 
+; [S111] The $7F58 free run now holds the custom skills' MP table (compiler
+; region gd_custom_skill_mp, gamedata.skills.<222-254>.mp; was 10 rows at the
+; bank's end). $7F58 itself stays rst $38: DispFld_7f58 is named by a state
+; pointer table above (`call z, DispFld_7f58` is a dw list decoded as code).
 DispFld_7f58:
     rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-
-jr_007_7f75:
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
+CustomMPCostTable:              ; u16 LE MP cost, indexed (id - $DE) * 2 — ids $DE-$FE
+; @BUILD_PROJECT BEGIN gd_custom_skill_mp
+    dw 0    ; [$DE] retired
+    dw 0    ; [$DF] retired
+    dw 0    ; [$E0] MagicBurn
+    dw 10   ; [$E1] Tame
+    dw 30   ; [$E2] TameMore
+    dw 50   ; [$E3] TameMost
+    dw 0    ; [$E4] Anchor
+    dw 5    ; [$E5] Tremor
+    dw 10   ; [$E6] Quake
+    dw 16   ; [$E7] QuakeMore
+    dw 24   ; [$E8] QuakeMost
+    dw 10   ; [$E9] Mourn
+    dw 0    ; [$EA] -
+    dw 0    ; [$EB] -
+    dw 0    ; [$EC] -
+    dw 0    ; [$ED] -
+    dw 0    ; [$EE] -
+    dw 0    ; [$EF] -
+    dw 0    ; [$F0] -
+    dw 0    ; [$F1] -
+    dw 0    ; [$F2] -
+    dw 0    ; [$F3] -
+    dw 0    ; [$F4] -
+    dw 0    ; [$F5] -
+    dw 0    ; [$F6] -
+    dw 0    ; [$F7] -
+    dw 0    ; [$F8] -
+    dw 0    ; [$F9] -
+    dw 0    ; [$FA] -
+    dw 0    ; [$FB] -
+    dw 0    ; [$FC] -
+    dw 0    ; [$FD] -
+    dw 0    ; [$FE] -
+; @BUILD_PROJECT END gd_custom_skill_mp
+; jr_007_7f75 is a jr target inside tile data decoded as code (never executed):
+; it now falls inside CustomMPCostTable.
+DEF jr_007_7f75 EQU $7f75
+    ds $7f9e - @, $FF           ; rst $38 fill; FollowerArtResolve07 keeps $7F9E
+    ASSERT @ == $7f9e
 ; [ANCHOR S73] 21 pad bytes of the $7F58 free run consumed below
 ; (funding Anchor07Post + the CustomMPCostTable $E4 row; S52 precedent).
 FollowerArtResolve07:
@@ -10863,7 +10837,7 @@ FollowerArtResolve07:
 ; [Stage2] MPPtrFromId — MP-cost pointer resolver forked into ALL THREE $570C
 ; readers ($56E8 GetSkillMPCost display, $5A9x afford, $5B4x deduct; the S48 map).
 ; Vanilla ids: identical math on the labeled SkillMPCostTable. Custom ids >= $DE:
-; index CustomMPCostTable instead (the vanilla table is exactly 222 entries; a
+; index CustomMPCostTable instead (S111: in the $7F58 run, ids $DE-$FE) (the vanilla table is exactly 222 entries; a
 ; custom id used to read garbage past $58C8). In: HL = skill id. Out: HL =
 ; &u16 MP cost. Clobbers A only (as the replaced window did); BC/DE preserved.
 ; MP is MIRRORED in record byte +4 (BATTLE_SKILL_SYSTEM §12.3): keep this table
@@ -10886,32 +10860,16 @@ MPPtrFromId:
     ld h, a
     ret
 .custom:
-    sub $E0                     ; [S74] index base moved $DE->$E0: the two retired
-    add a                       ;   POC ids ($DE/$DF) lost their dead rows (4 bytes
-    add LOW(CustomMPCostTable)  ;   freed for the $E5-$E8 rows in the full tail).
-    ld l, a                     ;   No live skill list contains $DE/$DF anymore
-    ld h, HIGH(CustomMPCostTable) ; [MOURN S75] 3 bytes reclaimed (was ld a,$00 /
-    ret                         ;   adc HIGH / ld h,a): valid ONLY because the
-                                ;   table cannot cross a page — ASSERT below.
+    sub $DE                     ; [S111] ids $DE-$FE (33 rows; S74-S110: base $E0,
+    add a                       ;   10 rows at the bank's end)
+    add LOW(CustomMPCostTable)
+    ld l, a
+    ld h, HIGH(CustomMPCostTable) ; [MOURN S75] valid ONLY because the table
+    ret                         ;   cannot cross a page — ASSERT below.
 
-; [MOURN S75] the ld h,HIGH() shortcut above requires the whole table (10 rows
-; x 2 B) to sit inside one 256-byte page (the add can then never carry into H).
-; If a future row pushes it over a page boundary, this assert fails the build.
-ASSERT LOW(CustomMPCostTable) <= 256 - 20
-
-CustomMPCostTable:              ; u16 LE MP cost, indexed (id - $E0)*2 [S74 base]
-    dw 0                        ; $E0 MagicBurn (handler charges half current MP)
-    dw 10                       ; $E1 Tame
-    dw 30                       ; $E2 TameMore
-    dw 50                       ; $E3 TameMost
-    dw 0                        ; $E4 Anchor [S73] (menu shows 0 by design — the real
-                                ;   cost, 3/4 of current MP, is charged in the bank
-                                ;   $73 commit hook upon ARRIVAL at the anchored floor)
-    dw 5                        ; $E5 Tremor    [QUAKE] (record +4 mirrors these —
-    dw 10                       ; $E6 Quake       the engine charges from the record;
-    dw 16                       ; $E7 QuakeMore   this table feeds the menus)
-    dw 24                       ; $E8 QuakeMost (1.5x WhiteAir-class cost)
-    dw 10                       ; $E9 Mourn [S75] (ATK×dead_allies+1; defense-calc'd)
+; [MOURN S75] the ld h,HIGH() shortcut above requires the whole table (33 rows
+; x 2 B since S111) to sit inside one 256-byte page.
+ASSERT LOW(CustomMPCostTable) <= 256 - 66
 
 ; =============================================================================
 ; [ANCHOR S73] Field-menu fork for custom skill $E4 "Anchor".

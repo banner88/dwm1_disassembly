@@ -1,10 +1,13 @@
 # Skills
 
-The **Skills** tab edits the game's 222 original skills. Pick one on the left
-(search by name or number; the list can show only skills, only battle actions
-/ boss moves, or only battle items). **Bold** = changed from the original game.
-Every field has a tooltip saying what the game does with it.
-**Back to the original skill** puts every field back.
+The **Skills** tab edits the game's 222 original skills, the ten **custom
+skills** built into every build (MagicBurn, Tame / TameMore / TameMost, Anchor,
+Tremor / Quake / QuakeMore / QuakeMost, Mourn) and your project's **new
+skills**. Pick one on the left (search by name or number; the list can show
+only skills, battle actions / boss moves, battle items, the custom skills or
+your new ones). **Bold** = changed from the original. Every field has a tooltip
+saying what the game does with it. **Back to the original skill** puts every
+field back (a new skill: back to what its base gives it).
 
 ## Name and SKIL text
 
@@ -40,7 +43,20 @@ the bank $41 space new monsters' names share; texts: a 2,993-byte spare area).
 Damage or healing is a random value from **min** to **max**. Your monsters use
 the first pair, enemies the second (enemy Blaze is weaker than yours). Some
 skills compute their effect in code and ignore these numbers; the note says
-which skills share this skill's effect code.
+which skills share this skill's effect code. The built-in custom skills set
+their damage in code, so their power boxes are off (Quake's numbers are under
+**Its own numbers and lines**).
+
+**Element** — the resistance the skill's DAMAGE tests (Fire, Ice, Lightning …):
+the target's level 0-3 in it cuts the damage (spells: 1 = 85 %, 2 = half,
+3 = immune; breaths and slashes have their own ladders). Only skills whose
+damage really tests a resistance have one — measured for all 222 originals:
+the fire / heat / explosion / wind / ice / lightning spells, the breaths,
+BigBang, RockThrow, MegaMagic, Ramming, the elemental slashes, MultiCut,
+WindBeast, Vacuum, GigaSlash (38). Pick another resistance, or **none** (the
+damage ignores resistances). The built-in custom skills deal raw damage; giving
+one an element runs it through the spell ladder. The AI's element (Monster AI)
+follows your choice.
 
 ## Targets
 
@@ -100,8 +116,9 @@ else):
 
 ## Looks and sounds
 
-**Looks and sounds like** plays another skill's animation, screen flash and
-sounds. What the skill does — its effect, damage, targets and messages — stays
+**Looks like** plays another skill's animation, screen flash and sounds;
+**Sounds like** (S111) picks the sounds alone (default: those of the look —
+built-in custom skills: Infernos', what they always played). What the skill does — its effect, damage, targets and messages — stays
 its own. Every original skill can lend its look: all 222 were measured lending
 it to attacks, group attacks, heals, group heals, self-buffs and enemy casters
 (1,554 battles) and none stalled. A look marked **(other side)** was made for a
@@ -109,7 +126,51 @@ skill aimed at the other side (a heal's look on an attack): it usually shows
 nothing (measured: Heal with Bang's look draws no explosion). A look marked
 **(summon)** only blinks the screen (a summon's "animation" is the summoned
 monster). **Announced as** is the line the battle
-shows when the skill is used; it is read-only until the dialogue editor.
+shows when the skill is used. For original skills it is read-only until the
+dialogue editor. For custom and new skills you choose: **its own line** (up to
+two pages of two lines of 18 cells; `{name}` = the caster, `{skill}` = this
+skill's name), one of the game's lines ("{name} casts {skill}!", "… spits
+{skill}!" …), or silent.
+
+## Its own numbers and lines
+
+Built-in custom skills only — the data their code uses:
+
+- **MagicBurn**: the **share of the current MP it spends** (original 1/2) and
+  the **damage to each foe per MP spent** (original 1). With several foes it
+  spends again for each foe in turn, on what is left.
+- **Tame / TameMore / TameMost**: the taming meter each cast adds (the meter
+  the meats fill: FeedMeat 10, PorkChop 100, Sirloin 400; it caps at 1600), and
+  the **damage as a share of the caster's ATK** (original 1/4).
+- **Tremor / Quake / QuakeMore / QuakeMost**: the damage range to foes, and the
+  **share its own side takes** (original 1/3; 0 = allies are not hurt; flyers
+  take nothing); Tremor also holds the two extra lines every tier shares (the
+  wave turning on its own side; an ally flying over it).
+- **Mourn**: the **extra damage per fallen ally**, as a share of the normal hit
+  (original 1: 1 fallen = double, 2 = triple), and the line shown when it fires.
+- **Anchor**: the **share of the current MP charged on arrival** (original
+  3/4), and the four dialogs (cast in a gate, cast in town with an anchor, cast
+  in a special room, cast without an anchor).
+
+The shares are fractions — type `1/3`, `2/5` or a whole number (top and bottom
+up to 255; MP shares at most 1, damage shares at most 4 — 2 for Quake's own
+side). Every result is rounded down and stops at 999. MagicBurn's and Anchor's
+MP box is off: they spend MP by these shares instead.
+
+## New skills
+
+**New skill…** adds a skill of your own (up to 21, ids 234-254). It runs the
+effect of an original skill you pick — its **base** — and everything else is
+its own: name, SKIL text, MP, power, targets, monster AI, behaviour, look,
+sounds, element, announce line and learning. Only bases measured to behave
+exactly like the original under a new id are offered (114 of 155 skills: all
+the spells, breaths, slashes and family cuts and many status / support skills;
+skills whose code checks its own number — Beat, Vacuum, the heals … — are not).
+A new skill is learned by **evolving** from a skill the monster knows (Evolves
+from), or given as a natural skill / enemy-row skill on the Monsters tab. New
+skills are battle-only (the field menu knows the original skills only).
+**Delete** removes a new skill (refused while a monster, an enemy row or
+another skill's learning still uses it).
 
 ## Who has it
 
@@ -121,6 +182,8 @@ evolve chain — read-only (edit them on the Monsters tab).
 - Battle items (HERB, seeds, meats, staves …) are skills in the game's tables;
   they are shown read-only here and will be edited with the items (Items tab,
   not built yet).
-- The custom skills (MagicBurn, Tame, Anchor, Tremor / Quake, Mourn) are not
-  editable yet (ROADMAP P3.11c).
+- The custom skills' EFFECTS are their own code; a new skill reuses an
+  original skill's effect. A new effect needs code (a session with Claude).
 - New animations cannot be drawn; a skill can only borrow an existing look.
+- Custom skills are never learned "by stats alone" (the S75 crash fence): they
+  evolve from a known skill or are a natural skill.

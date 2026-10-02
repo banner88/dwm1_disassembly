@@ -856,6 +856,10 @@ groundwork doc (folded here). Empirically located via SameBoy (probe ROM, bp
   **S110:** for stock ids it now reads `StockPresentTable` (identity unless a
   project sets `looks_like`, §11.8); the cast SFX of the per-skill bank-$55 tables
   is NOT one of the 12 reads — it has its own door, `SfxPresentId` at `$55:$4061`.
+  **S111:** custom ids no longer keep their id at that door — they read
+  `CustomSfxTable[id-$DE]` (`sounds_like`, default `$09`). Until S111 they indexed
+  past the 222-B tables (5 kinds × 2 sides, pointers `$55:$4070-$4083`) into the next
+  table's first rows, and from the last table (`$4696`) into code (§13.9).
 
 ### 13.3 Skill #1 file set (the complete working stack)
 - `patches/bank_072.asm` (NEW) — far-call table + `CustomBattleExec`/`SkillMagicBurn` (effect).
@@ -886,8 +890,11 @@ Each presentation layer is now a one-line edit; nothing is rebuilt:
    to a stock skill whose presentation fits. (Unique custom animation = authoring
    a new script into the same indirection — a refinement, not a redo.)
 
+**S111: this recipe is now PROJECT DATA** — every row above is a compiler region
+(PROJECT_COMPILER §2.27), and a new damage skill needs no handler at all (`base`, §13.9).
+
 **Open follow-ups (not blockers):** (a) custom-id skill-name insert for
-name-inserting announce templates; (b) a 2nd bespoke-message render path beyond
+name-inserting announce templates — **CLOSED S111** (bank $50 `SaveBtl_5ad2`, §13.9); (b) a 2nd bespoke-message render path beyond
 `$FD`; (c) FIELD-cast skills (e.g. teleport) — a different code path the battle
 foundation doesn't touch yet.
 
@@ -1590,6 +1597,89 @@ all-zero stats, like Tremor's and Mourn's) without the code-2 fence is a
 BUILD ERROR.
 
 
+
+### 13.9 The custom skills as DATA + NEW custom skills on a stock skill's effect  [S111, 2026-10-02; PyBoy-verified, test ROM USER-CONFIRMED 2026-10-02 15:08 ("Looks good")]
+
+**Ids.** `$DE/$DF` = the retired S45 POCs (Scorch / Smite; records point at Blaze's
+`$41CF`, names dropped S111); `$E0-$E9` = the built-ins (MagicBurn, Tame ×3, Anchor,
+Tremor / Quake / QuakeMore / QuakeMost, Mourn), their bespoke handlers in bank $72 /
+`MournDispatch52`; `$EA-$FE` = NEW skills a project adds; `$FF` = no skill. Every
+per-id table now covers `$DE-$FE` (33 rows): `CustomRecordPtrTable` ($54),
+`CustomMPCostTable` ($07, moved to `$7F59`, index `id-$DE`), `AnnounceTemplateTable`
+slots `$DE-$E1` + `CustomAnnounceTable` ($58), `CustomTargetBaseTable` ($58),
+`CustomMsgPtrTable` ($4C), `CustomProxyTable` ($5F), `CustomSfxTable` ($55),
+`CustomBaseTable` + `CustomElemTable` + `CustomLearnTable` ($72, the learn table from
+`$E0`, 31 rows), the name / SKIL-text pointer rows 222-254 ($41 / $56). The data is
+compiler output (PROJECT_COMPILER §2.27; built-in values `editor2/core/custom_skills.json`).
+
+**A new skill = a stock skill's effect under its own id.** Bank $72 `FarSkillFork`
+(far-called by the bank $52 skill dispatch for every acting skill) reads
+`CustomBaseTable[id-$DE]`: `$FF` → the custom handler path as before; any other value B →
+the VANILLA handler pointer `$52:$4011 + 2·B`, with `$db8a` still the new id. So every
+table keyed by the id serves the new skill's own row — record (power, targets, MP, AI
+fields), name, announce, look, sounds, element — while the handler is B's. The enemy AI's
+commit-time target service (`DispatchBoundsStub`) reads `CustomTargetBaseTable` = B (a
+changed target mode picks the row of a stock skill with that mode: $11 Blaze, $12
+Firebal, $21 Heal, $22 HealAll, $41 Upper). **Which bases work is MEASURED**
+(`tools/census_skill_clone.py` → `extracted/skill_clone_census.json`, the S111 build +
+the user's save, RNG pinned: B cast vs a copy at `$EA` with B's record / MP / look /
+announce, battle lines + HP / MP changes compared): 114 same, 41 differ, 67 not a skill.
+The 41 that differ are physical specials (Beat / Defeat, TwinSlash, Ramming, Kamikaze,
+BiAttack, QuadHits, HighJump…), heals (Heal … HealUsAll, Hustle, LifeSong), the
+status breaths / dances, the summons, and the stance skills (Cover, Guardian, Dodge…):
+the copy's battle lines or HP / MP changes are not the original's. WHY was not traced
+(candidates: handler code comparing `$db8a` with an id or range — the `< $72` hit ladder
+is one — and per-id tables outside the forked set); the heal results were not separated
+from the rig, which resets party HP in every command phase. The compiler refuses all 41 (and the
+field-only `$37/$38`) until each is traced.
+
+**Learning.** Bank $06 `LearnLoopFork` scans the custom ids `$E0-$FE` after the 218
+vanilla rows through bank $72 entry 6 `CustomLearnRow72`, which copies the next learnable
+id's 18-B row (level `$FF` = not learnable) into `wLearnRowBuf` ($D10C); the scanner
+reads it there. Code-2 (stat-qualification) rows stay fenced for every custom id
+(`LearnCode2Guard06` `cp $da`; `tools/validate_custom_data.py` checks the fence and the
+rows). Measured: a level-up learning Rumble → … → QuakeMost through prereqs, Scorching →
+FrostBite (a new skill).
+
+**The `{skill}` insert.** Battle lines with `$F9 $10` print the acting skill's name; bank
+$50 `SaveBtl_5ad2` substituted ids ≥ `$DA` from the 4-B `SkillNameSubst_5ae1` (LIFE / RUN
+/ IRONIZE / Ahhh → $19 / $A1 / $2A / $70) and read CODE for ids ≥ `$DE` (measured: "CleanCut").
+Same size now: ids ≥ `$DE` return unchanged, so "casts {skill}!" works for custom skills.
+
+**Sounds.** See §13.2: custom ids read `CustomSfxTable` (S110 builds played the next SFX
+kind's rows; for a party caster those were `$65` / `$6C` = Infernos's sounds — the
+default `$09` keeps exactly that).
+
+**Elements** — §15.3 "Element override (S111)".
+
+**Ratios (S111b).** The four handlers' fixed arithmetic became data: bank $72
+`CustomRatioTable` (22 B, two bytes n, d per slot: MagicBurn burn + damage per MP, Tame ×3
+damage of ATK, Anchor MP charge, Quake ×4 allies' share, Mourn bonus per fallen ally) read
+by `RatioBC72` → `ScaleHL72` = min(999, floor(x·n/d)) (computed exactly as q·n + (r·n)/d with
+q, r = x divmod d; `Div16by8_72`, `Mul16by8_72` saturating). Mourn adds floor(base·n/d) per
+fallen ally; Anchor's charge runs in bank $73 (`CF2WarpCommitDrain.anchorInstall`) and asks
+bank $72 entry 7 `AnchorKeepMP72` (`ld hl,$7207 / rst $10`, DE in / out). Defaults = the
+old constants; PyBoy on the user's save, RNG pinned: the old and new builds give identical
+HP / MP changes for all four; edited values measured (MagicBurn 1/4 spends 50 of 200;
+Quake allies 1/2 → 30 of 60, Tremor 0 → none; Mourn 1/2 with 2 fallen → 500 vs 750;
+Anchor 1/2 keeps 101 of 203 at the arrival commit). Measured, unchanged: an all-foes
+MagicBurn runs its handler once PER TARGET, so with 3 foes it spends 1/2 of what is left
+each time (200 MP: 100, 50, 25) and each foe takes its own amount (before the breath
+ladder of MegaMagic's context — eid 3 takes half).
+
+**AI target rows (S111b fix).** `DispatchBoundsStub` (§13.7.12 / S84) gave MagicBurn and
+Tame ×3 the "self" row `$6367`: whenever the act-time AI commits them (FIGHT, tactics,
+enemy casters — KEY_LESSONS S110) the cast landed on the caster's own side (measured: Tame
+75 to party slot 0; MagicBurn 100 / 25 / 12 to slots 0-2). `CustomTargetBaseTable` now
+gives MagicBurn Firebal's row and Tame Blaze's: the same casts hit the foes (measured).
+Player-ordered casts never used this row (S49/S50 user tests).
+
+**Verified in PyBoy (user's save, S111 build):** the 10 built-ins A/B against S110 (same
+lines, acts, MP; damage = RNG drift); a Blaze copy = Blaze (lines + damage); Thunder (Zap
+base, own power), FrostBite (Scorching base, IceStorm look, IceBreath element) cast by
+the party AND by enemies (they hit the party); the SKIL menu shows the new names / MP /
+texts ("Cannot use now." in the field, as stock battle skills).
+
 ---
 
 ## Power calibration — what actually makes a fight hard (S76)
@@ -1851,6 +1941,26 @@ Infernos→Wind(3) (via the 3-byte $5C27 tail), Bolt/Lightning/Hellblast→
 Lightning(4), IceBolt→Ice(5), BigBang→Fire(0), FireAir grp→(16),
 FrigidAir grp→(17), RockThrow→Aid(24), GigaSlash→(25) — GigaSlash is
 RECORD-driven (350-410 party / 270-320 enemy), not handler-scaled.
+
+**Element override (S111).** The element is not a record field: each damage handler
+reads ONE packed level of its target (`call BattleFunc_67bb … 67d9` = byte k, then a
+shift + `and $03`) and passes it in A to a ladder. Census (`tools/census_skill_element.py`
+→ `extracted/skill_element_census.json`; packed bytes poked to `$1B` so the level = the
+pair index, hooks on the 7 byte selectors + 3 ladders, RNG pinned): 38 skills reach a
+ladder with a resistance (e.g. Blaze 0 spell, Firebal 1, Ramming 14 slash, MultiCut 3
+breath, GigaSlash 25); the S110 pin and the S111 build give identical results. The 24
+ladder calls in bank $52 now go through `ElemLadderA` / `ElemLadderBreath` /
+`ElemLadderSlash` (the 42-B dead pocket `$51B3-$51DC`, S84/S111 zero references), which
+call `ElemLevel52` → bank $72 entry 5 `ElemLevel72`: `StockElemTable[id]` /
+`CustomElemTable[id-$DE]` = `$FF` → the handler's level unchanged; else the CURRENT
+target's level for that resistance (`ElemLevelOfA`, `$DD28 + 7·slot`, position t+1;
+`$FE` = "none" = level 0). Built-in custom handlers compute their own damage, so
+`CustomDispatch52` ends in `CustomElemTail52`: bank $72 `CustomBattleExec` returns E = the
+level for the skill's override (`$FF` = none: nothing happens) and HL = the target's status
+byte, and the result runs through `CheckTargetGuardA` (measured: Quake → Fire on a level-1
+target). Measured on the user's save: Blaze → Ice vs a level-3 Ice target = 0 damage;
+Firebal untouched; Spark (Zap) → Lightning. The record's +5 (the AI's assumed element)
+moves with it (editor).
 
 ### 15.4 Boss protection — `BossProtectionGate_51aa` (bank $53 entry $10)
 

@@ -3080,7 +3080,8 @@ jr_006_507c:
     inc c
     call LearnLoopFork          ; [Stage2] was: ld a,c / cp $da (3 bytes -> call, byte-neutral).
                                 ;   Extends the natural-learn scan past the vanilla 0..$D9
-                                ;   range into CustomLearnReqTable (ids $E1-$E3); Z at end.
+                                ;   range to the custom ids $E0-$FE (S111: rows in bank $72
+                                ;   CustomLearnTable, one at a time via wLearnRowBuf); Z at end.
     jp nz, Jump_006_4faa
 
     ld a, $ff
@@ -9655,8 +9656,8 @@ jr_006_7f02:
 ; 16 bytes from the 17-byte $7F1E free run; 1 spare rst kept.
 LearnCode2Guard06:
     ld a, c
-    cp $e1
-    jp nc, jr_006_507c          ; custom id -> not learnable here; scan on
+    cp $da                      ; [S111] every non-vanilla id ($DA+: was $E1+, the
+    jp nc, jr_006_507c          ;   custom ids now start at $E0) -> not learnable here; scan on
     pop bc
     pop hl
     pop de
@@ -9665,72 +9666,46 @@ LearnCode2Guard06:
     ldh [$d9], a
     ret
 ; =============================================================================
-; [Stage2] LearnLoopFork + CustomLearnReqTable — natural-learn/skill-evolve for
-; CUSTOM skill ids. The scanner (bank $06 entry 5, $4f9a; caller = bank $51
-; level-up flow) loops ids 0..$D9 over SkillLearnReqTable; custom ids were never
-; scanned. The fork continues the SAME loop over this table for ids $E1..$E3
-; (ids $DA-$E0 are skipped: $DA-$DD vanilla-unscanned, $DE/$DF retired POCs,
-; $E0 MagicBurn = not naturally learnable). Same 18-byte record format as
-; SkillLearnReqTable: +0 lvl, +1..+12 six u16 stat reqs, +13..+17 prereq ids
-; ($FF pad). Prereq chain = the vanilla EVOLVE mechanic: knowing the prereq +
-; meeting reqs REPLACES it (scanner code-1 path). Placed in the bank-$06 $FF
-; free run ($7F1E+); replaces 69 rst $38 lines so Jump_006_7f7f keeps its
-; exact byte offset. (15 + 3*18 = 69 bytes)
+; [S111] LearnLoopFork — natural-learn / skill-evolve for the CUSTOM skills. The
+; scanner (bank $06 entry 5, $4f9a; caller = bank $51 level-up flow) loops ids
+; 0..$D9 over SkillLearnReqTable; past $D9 it now continues with every custom
+; id $E0-$FE, whose 18-byte rows (same format: +0 level, +1..+12 six u16 stat
+; minimums, +13..+17 prerequisite ids $FF-padded; prereq = the vanilla EVOLVE
+; path, code 1) live in bank $72 CustomLearnTable (compiler region
+; gd_custom_learn, gamedata.skills.<224-254>.learn) and are copied ONE AT A
+; TIME into wLearnRowBuf by bank $72 entry 6 (CustomLearnRow72, which skips
+; rows with level $FF = not learnable). Until S110 two hand tables here held
+; $E1-$E3 and $E5-$E9 (CustomLearnReqTable / 2) and the ranges were code.
+; In: C = next skill id, HL = next row. Out: Z = end of the scan, else C / HL
+; = the id / row to test. Called from Jump_006_507c (`call LearnLoopFork /
+; jp nz, Jump_006_4faa`); DE (the monster record) is preserved.
 ; =============================================================================
-LearnLoopFork:                  ; in: C = next skill id; out: Z = end scan,
-    ld a, c                     ;   NZ = continue (A/HL adjusted on range switch)
+LearnLoopFork:
+    ld a, c
     cp $da
-    jr z, .toTame               ; vanilla range done -> Tame range ($E1-$E3)
-    cp $e4
-    jr z, .toQuake              ; [QUAKE] Tame range done -> Quake range ($E5-$E8)
-    cp $ea                      ; one past the last custom learnable id [MOURN S75: was $e9]
-    ret                         ; Z at end -> exit loop; NZ -> keep scanning
-.toTame:
-    ld c, $e1                   ; first custom learnable id (Tame)
-    ld hl, CustomLearnReqTable  ; scanner walks records from here (+$12/iter)
-    jr .go
-.toQuake:
-    ld c, $e5                   ; [QUAKE] first Earthquake tier (Tremor)
-    ld hl, CustomLearnReqTable2 ;   second table (post-$7F7F free run)
-.go:
-    or a                        ; A=$da/$e4 -> NZ (continue)
+    jr c, .vanilla              ; vanilla rows $00-$D9: keep scanning in place
+    jr nz, .custom
+    ld c, $e0                   ; past $D9: the custom ids $E0-$FE
+.custom:
+    push de
+    ld e, c
+    ld hl, $7206                ; bank $72 entry 6 = CustomLearnRow72 (E in / E out)
+    rst $10                     ; (clobbers A, BC)
+    ld c, e                     ; the id whose row was copied; $FF = none left
+    pop de
+    ld hl, wLearnRowBuf
+    ld a, c
+    inc a                       ; Z when C == $FF -> end of the scan
     ret
-
-CustomLearnReqTable:            ; 18 B/record, ids $E1..$E3 (walked by the scanner)
-    ; --- $E1 Tame: lvl 2; no stat reqs; no prereq (learned via the natural-slot
-    ;     queue, code-0 path, when placed in a species' $03:$4461 skill slots)
-    db $02, $00,$00, $00,$00, $00,$00, $00,$00, $00,$00, $00,$00, $ff,$ff,$ff,$ff,$ff
-    ; --- $E2 TameMore: lvl 3; no stat reqs; prereq $E1 (Tame -> REPLACED on learn)
-    db $03, $00,$00, $00,$00, $00,$00, $00,$00, $00,$00, $00,$00, $e1,$ff,$ff,$ff,$ff
-    ; --- $E3 TameMost: lvl 5; no stat reqs; prereq $E2 (TameMore -> REPLACED on learn)
-    db $05, $00,$00, $00,$00, $00,$00, $00,$00, $00,$00, $00,$00, $e2,$ff,$ff,$ff,$ff
-
+.vanilla:
+    or a                        ; NZ (C >= 1 here)
+    ret
+    ds $7f7f - @, $FF           ; rst $38 fill (the freed S52/S74 learn tables)
+    ASSERT @ == $7f7f
 Jump_006_7f7f:
     rst $38
-; [QUAKE] CustomLearnReqTable2 — Earthquake tier chain ($E5-$E8), walked by the
-; two-stage LearnLoopFork after the Tame range. Same 18-byte record format
-; (+0 lvl, +1..+12 six u16 stat reqs, +13..+17 prereq ids, $FF pad). Prereq
-; chain = the vanilla EVOLVE mechanic: knowing the prereq + hitting the level
-; REPLACES it with the next tier. Levels are v1 placeholders (editor-tunable).
-; Placed at $7F80 (right after the referenced rst $38 trap byte at $7F7F);
-; the trailing rst $38 run shrinks 1:1 so FollowerArtResolve06 keeps its address (S105: its table is gone; the gfx-ID is computed).
-CustomLearnReqTable2:
-    ; --- $E5 Tremor: lvl 2; no stat reqs; no prereq (species skill-slot grant)
-    db $02, $00,$00, $00,$00, $00,$00, $00,$00, $00,$00, $00,$00, $ff,$ff,$ff,$ff,$ff
-    ; --- $E6 Quake: lvl 4; prereq $E5 (Tremor -> REPLACED on learn)
-    db $04, $00,$00, $00,$00, $00,$00, $00,$00, $00,$00, $00,$00, $e5,$ff,$ff,$ff,$ff
-    ; --- $E7 QuakeMore: lvl 6; prereq $E6
-    db $06, $00,$00, $00,$00, $00,$00, $00,$00, $00,$00, $00,$00, $e6,$ff,$ff,$ff,$ff
-    ; --- $E8 QuakeMost: lvl 8; prereq $E7
-    db $08, $00,$00, $00,$00, $00,$00, $00,$00, $00,$00, $00,$00, $e7,$ff,$ff,$ff,$ff
-    ; --- $E9 Mourn [S75]: lvl 3; no stat reqs; no prereq (species skill-slot
-    ;     grant, code-0 natural-learn path — standalone, not part of a chain)
-    db $03, $00,$00, $00,$00, $00,$00, $00,$00, $00,$00, $00,$00, $ff,$ff,$ff,$ff,$ff
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
+    ds $7fdf - @, $FF           ; rst $38 fill
+    ASSERT @ == $7fdf
 ; =============================================================================
 ; FollowerArtResolve06 — Phase N follower-art fork for the $06 copy (mislabelled
 ; MapNPCPosDataTable, $4dcc). Reader passes HL = (species+$10)*2. id 221-239 ->

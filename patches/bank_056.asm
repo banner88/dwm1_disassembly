@@ -3410,18 +3410,21 @@ SkillDescPtrTable:  ; $6667 — 256 dw by skill id (mode 1)
     dw SkillDesc_None              ; [220] IRONIZE
     dw SkillDesc_None              ; [221] Ahhh
 ; @BUILD_PROJECT END gd_skill_desc_ptrs
-    dw SkillDesc_None              ; [222] -
-    dw SkillDesc_None              ; [223] -
-    dw SkillDescPtr_E0  ; [S73] skill-desc table entry $E0 MagicBurn (was dw $664a = the empty string; byte-neutral)
-    dw SkillDescPtr_E1  ; [S73] skill-desc table entry $E1 Tame (was dw $664a = the empty string; byte-neutral)
-    dw SkillDescPtr_E2  ; [S73] skill-desc table entry $E2 TameMore (was dw $664a = the empty string; byte-neutral)
-    dw SkillDescPtr_E3  ; [S73] skill-desc table entry $E3 TameMost (was dw $664a = the empty string; byte-neutral)
-    dw SkillDescPtr_E4  ; [S73] skill-desc table entry $E4 Anchor (was dw $664a = the empty string; byte-neutral)
-    dw SkillDescPtr_E5  ; [QUAKE S74] skill-desc table entry $E5 Tremor (was dw $664a = the empty string; byte-neutral)
-    dw SkillDescPtr_E6  ; [QUAKE S74] skill-desc table entry $E6 Quake (was dw $664a = the empty string; byte-neutral)
-    dw SkillDescPtr_E7  ; [QUAKE S74] skill-desc table entry $E7 QuakeMore (was dw $664a = the empty string; byte-neutral)
-    dw SkillDescPtr_E8  ; [QUAKE S74] skill-desc table entry $E8 QuakeMost (was dw $664a = the empty string; byte-neutral)
-    dw SkillDescPtr_E9  ; [MOURN S75] skill-desc table entry $E9 Mourn (was dw $664a = the empty string; byte-neutral)
+; [S111] rows 222-255 (the custom ids) = compiler region gd_custom_skill_desc_ptrs
+; (editor2/core/custom_skills.py): a custom skill's SKIL text, else SkillDesc_None.
+; @BUILD_PROJECT BEGIN gd_custom_skill_desc_ptrs
+    dw SkillDesc_None              ; [222] retired
+    dw SkillDesc_None              ; [223] retired
+    dw SkillDescC_224              ; [224] MagicBurn
+    dw SkillDescC_225              ; [225] Tame
+    dw SkillDescC_226              ; [226] TameMore
+    dw SkillDescC_227              ; [227] TameMost
+    dw SkillDescC_228              ; [228] Anchor
+    dw SkillDescC_229              ; [229] Tremor
+    dw SkillDescC_230              ; [230] Quake
+    dw SkillDescC_231              ; [231] QuakeMore
+    dw SkillDescC_232              ; [232] QuakeMost
+    dw SkillDescC_233              ; [233] Mourn
     dw SkillDesc_None              ; [234] -
     dw SkillDesc_None              ; [235] -
     dw SkillDesc_None              ; [236] -
@@ -3444,6 +3447,7 @@ SkillDescPtrTable:  ; $6667 — 256 dw by skill id (mode 1)
     dw SkillDesc_None              ; [253] -
     dw SkillDesc_None              ; [254] -
     dw SkillDesc_None              ; [255] -
+; @BUILD_PROJECT END gd_custom_skill_desc_ptrs
     jr nz, jr_056_6869
 
 jr_056_6869:
@@ -5533,62 +5537,32 @@ jr_056_7217:
 ; @BUILD_PROJECT BEGIN gd_skill_desc_extra
     ds 2993, $00
 ; @BUILD_PROJECT END gd_skill_desc_extra
-    ; [S73] 226 trailing pad nops consumed below by the description strings
 ; ============================================================================
-; [S73] Custom-skill DESCRIPTION strings (SKIL-menu info box). The pointer
-; table is at $56:$6667 (256 dw, indexed by skill id; discovered S73 via the
-; 'Heals' string search); unused ids point at the $664A empty string, which
-; is why custom skills showed a BLANK box. Encoding: charset letters,
-; $62 space, $F1 newline, $F0 end; three lines max, <=18 chars/line.
+; [S73] Custom-skill DESCRIPTION strings (SKIL-menu info box) — [S111] compiler
+; region gd_custom_skill_desc ($7E42-$7FFF, 446 B; first-fit, overflow into
+; gd_skill_desc_extra above). The pointer table is $56:$6667 (256 dw, indexed by
+; skill id). Encoding: charset letters, $62 space, $F1 newline, $F0 end; three
+; lines max, <=18 cells/line.
 ; ============================================================================
-SkillDescPtr_E0:  ; MagicBurn $E0: "Burns half its MP / to damage all / enemies"
-    db $25, $52, $4f, $4b, $50, $62, $45, $3e, $49, $43, $62, $46
-    db $51, $50, $62, $30, $33, $f1, $51, $4c, $62, $41, $3e, $4a
-    db $3e, $44, $42, $62, $3e, $49, $49, $f1, $42, $4b, $42, $4a
-    db $46, $42, $50, $f0
-SkillDescPtr_E1:  ; Tame $E1: "Builds trust to / make the enemy / join you"
-    db $25, $52, $46, $49, $41, $50, $62, $51, $4f, $52, $50, $51
-    db $62, $51, $4c, $f1, $4a, $3e, $48, $42, $62, $51, $45, $42
-    db $62, $42, $4b, $42, $4a, $56, $f1, $47, $4c, $46, $4b, $62
-    db $56, $4c, $52, $f0
-SkillDescPtr_E2:  ; TameMore $E2: "Builds strong / trust to make the / enemy join you"
-    db $25, $52, $46, $49, $41, $50, $62, $50, $51, $4f, $4c, $4b
-    db $44, $f1, $51, $4f, $52, $50, $51, $62, $51, $4c, $62, $4a
-    db $3e, $48, $42, $62, $51, $45, $42, $f1, $42, $4b, $42, $4a
-    db $56, $62, $47, $4c, $46, $4b, $62, $56, $4c, $52, $f0
-SkillDescPtr_E3:  ; TameMost $E3: "Builds the deepest / trust to make the / enemy join you"
-    db $25, $52, $46, $49, $41, $50, $62, $51, $45, $42, $62, $41
-    db $42, $42, $4d, $42, $50, $51, $f1, $51, $4f, $52, $50, $51
-    db $62, $51, $4c, $62, $4a, $3e, $48, $42, $62, $51, $45, $42
-    db $f1, $42, $4b, $42, $4a, $56, $62, $47, $4c, $46, $4b, $62
-    db $56, $4c, $52, $f0
-SkillDescPtr_E4:  ; Anchor $E4: "Warps to GreatTree / and back for most / of its MP"
-    db $3a, $3e, $4f, $4d, $50, $62, $51, $4c, $62, $2a, $4f, $42
-    db $3e, $51, $37, $4f, $42, $42, $f1, $3e, $4b, $41, $62, $3f
-    db $3e, $40, $48, $62, $43, $4c, $4f, $62, $4a, $4c, $50, $51
-    db $f1, $4c, $43, $62, $46, $51, $50, $62, $30, $33, $f0
-SkillDescPtr_E5:  ; Tremor $E5: "A small quake / hits both sides / but not flyers"
-    db $24, $62, $50, $4a, $3e, $49, $49, $62, $4e, $52, $3e, $48
-    db $42, $f1, $45, $46, $51, $50, $62, $3f, $4c, $51, $45, $62
-    db $50, $46, $41, $42, $50, $f1, $3f, $52, $51, $62, $4b, $4c
-    db $51, $62, $43, $49, $56, $42, $4f, $50, $f0
-SkillDescPtr_E6:  ; Quake $E6: "A quake that hits / both sides but / not flyers"
-    db $24, $62, $4e, $52, $3e, $48, $42, $62, $51, $45, $3e, $51
-    db $62, $45, $46, $51, $50, $f1, $3f, $4c, $51, $45, $62, $50
-    db $46, $41, $42, $50, $62, $3f, $52, $51, $f1, $4b, $4c, $51
-    db $62, $43, $49, $56, $42, $4f, $50, $f0
-SkillDescPtr_E7:  ; QuakeMore $E7: "A big quake that / hits both sides / but not flyers"
-    db $24, $62, $3f, $46, $44, $62, $4e, $52, $3e, $48, $42, $62
-    db $51, $45, $3e, $51, $f1, $45, $46, $51, $50, $62, $3f, $4c
-    db $51, $45, $62, $50, $46, $41, $42, $50, $f1, $3f, $52, $51
-    db $62, $4b, $4c, $51, $62, $43, $49, $56, $42, $4f, $50, $f0
-SkillDescPtr_E8:  ; QuakeMost $E8: "A huge quake that / hits both sides / but not flyers"
-    db $24, $62, $45, $52, $44, $42, $62, $4e, $52, $3e, $48, $42
-    db $62, $51, $45, $3e, $51, $f1, $45, $46, $51, $50, $62, $3f
-    db $4c, $51, $45, $62, $50, $46, $41, $42, $50, $f1, $3f, $52
-    db $51, $62, $4b, $4c, $51, $62, $43, $49, $56, $42, $4f, $50
-    db $f0
-SkillDescPtr_E9:  ; [MOURN S75] Mourn $E9: "Power grows with / each fallen ally"
-    db $33, $4c, $54, $42, $4f, $62, $44, $4f, $4c, $54, $50, $62
-    db $54, $46, $51, $45, $f1, $42, $3e, $40, $45, $62, $43, $3e
-    db $49, $49, $42, $4b, $62, $3e, $49, $49, $56, $f0
+; @BUILD_PROJECT BEGIN gd_custom_skill_desc
+SkillDescC_224:  ; "Burns half its MP/to damage all/enemies"
+    db $25, $52, $4F, $4B, $50, $62, $45, $3E, $49, $43, $62, $46, $51, $50, $62, $30, $33, $F1, $51, $4C, $62, $41, $3E, $4A, $3E, $44, $42, $62, $3E, $49, $49, $F1, $42, $4B, $42, $4A, $46, $42, $50, $F0
+SkillDescC_225:  ; "Builds trust to/make the enemy/join you"
+    db $25, $52, $46, $49, $41, $50, $62, $51, $4F, $52, $50, $51, $62, $51, $4C, $F1, $4A, $3E, $48, $42, $62, $51, $45, $42, $62, $42, $4B, $42, $4A, $56, $F1, $47, $4C, $46, $4B, $62, $56, $4C, $52, $F0
+SkillDescC_226:  ; "Builds strong/trust to make the/enemy join you"
+    db $25, $52, $46, $49, $41, $50, $62, $50, $51, $4F, $4C, $4B, $44, $F1, $51, $4F, $52, $50, $51, $62, $51, $4C, $62, $4A, $3E, $48, $42, $62, $51, $45, $42, $F1, $42, $4B, $42, $4A, $56, $62, $47, $4C, $46, $4B, $62, $56, $4C, $52, $F0
+SkillDescC_227:  ; "Builds the deepest/trust to make the/enemy join you"
+    db $25, $52, $46, $49, $41, $50, $62, $51, $45, $42, $62, $41, $42, $42, $4D, $42, $50, $51, $F1, $51, $4F, $52, $50, $51, $62, $51, $4C, $62, $4A, $3E, $48, $42, $62, $51, $45, $42, $F1, $42, $4B, $42, $4A, $56, $62, $47, $4C, $46, $4B, $62, $56, $4C, $52, $F0
+SkillDescC_228:  ; "Warps to GreatTree/and back for most/of its MP"
+    db $3A, $3E, $4F, $4D, $50, $62, $51, $4C, $62, $2A, $4F, $42, $3E, $51, $37, $4F, $42, $42, $F1, $3E, $4B, $41, $62, $3F, $3E, $40, $48, $62, $43, $4C, $4F, $62, $4A, $4C, $50, $51, $F1, $4C, $43, $62, $46, $51, $50, $62, $30, $33, $F0
+SkillDescC_229:  ; "A small quake/hits both sides/but not flyers"
+    db $24, $62, $50, $4A, $3E, $49, $49, $62, $4E, $52, $3E, $48, $42, $F1, $45, $46, $51, $50, $62, $3F, $4C, $51, $45, $62, $50, $46, $41, $42, $50, $F1, $3F, $52, $51, $62, $4B, $4C, $51, $62, $43, $49, $56, $42, $4F, $50, $F0
+SkillDescC_230:  ; "A quake that hits/both sides but/not flyers"
+    db $24, $62, $4E, $52, $3E, $48, $42, $62, $51, $45, $3E, $51, $62, $45, $46, $51, $50, $F1, $3F, $4C, $51, $45, $62, $50, $46, $41, $42, $50, $62, $3F, $52, $51, $F1, $4B, $4C, $51, $62, $43, $49, $56, $42, $4F, $50, $F0
+SkillDescC_231:  ; "A big quake that/hits both sides/but not flyers"
+    db $24, $62, $3F, $46, $44, $62, $4E, $52, $3E, $48, $42, $62, $51, $45, $3E, $51, $F1, $45, $46, $51, $50, $62, $3F, $4C, $51, $45, $62, $50, $46, $41, $42, $50, $F1, $3F, $52, $51, $62, $4B, $4C, $51, $62, $43, $49, $56, $42, $4F, $50, $F0
+SkillDescC_232:  ; "A huge quake that/hits both sides/but not flyers"
+    db $24, $62, $45, $52, $44, $42, $62, $4E, $52, $3E, $48, $42, $62, $51, $45, $3E, $51, $F1, $45, $46, $51, $50, $62, $3F, $4C, $51, $45, $62, $50, $46, $41, $42, $50, $F1, $3F, $52, $51, $62, $4B, $4C, $51, $62, $43, $49, $56, $42, $4F, $50, $F0
+SkillDescC_233:  ; "Power grows with/each fallen ally"
+    db $33, $4C, $54, $42, $4F, $62, $44, $4F, $4C, $54, $50, $62, $54, $46, $51, $45, $F1, $42, $3E, $40, $45, $62, $43, $3E, $49, $49, $42, $4B, $62, $3E, $49, $49, $56, $F0
+; @BUILD_PROJECT END gd_custom_skill_desc

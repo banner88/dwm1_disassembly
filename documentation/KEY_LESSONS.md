@@ -4629,3 +4629,56 @@ of earlier regions (address comments, S108/S109 notes).
 **Rule**: comments that must survive go above `; @BUILD_PROJECT BEGIN`; and `--apply`
 is not needed for a patched build to be right (the compiler injects the regions) —
 diff before keeping its output.
+
+## S111 — the custom skills as data: every id-indexed table has a length, a census needs a pinned RNG, a copy needs its base's target row
+
+### An id past a table's end reads whatever follows — census EVERY reader before adding ids
+**Symptom**: custom skills announced with "casts {skill}!" printed "CleanCut"; their
+cast sounds differed between party and enemy casters.
+**Root cause**: two id-indexed readers were never forked for ids ≥ $DE: bank $50
+`SaveBtl_5ad2` indexes a 4-byte table for ids ≥ $DA (id $E0 read the low byte of
+`call ClearSpriteBuffer` = $4E CleanCut), and bank $55 `SfxPresentId` passed custom ids
+to the 222-byte SFX tables (the next table's rows; from the last table, code).
+**Fix**: both readers bounded (same size / a 33-B `CustomSfxTable`); all per-id tables now
+cover $DE-$FE so a new id cannot fall off any of them.
+**Rule**: before a new id range flows through an engine, list every reader of that id
+(BATTLE_SKILL_SYSTEM §12's census) with its table LENGTH, and measure what an
+out-of-range id actually reads — "it worked" can be "it read something plausible".
+
+### A census that compares two builds must pin the RNG
+**Symptom**: the element census re-run on the S111 build differed from the S110 run in
+one skill (CallHelp: 1 act + a ladder hit vs 2 acts, none).
+**Root cause**: the rig left wRNG1 / wRNG2 free; the new build's extra far calls shifted
+the rolls, so CallHelp's helper behaved differently. With the RNG pinned (as the clone
+census already did) both builds give identical results for all 222 skills.
+**Rule**: any census whose result is compared across builds (or used as an A/B proof)
+pins the RNG every frame; an unpinned difference is not evidence of a code change.
+
+### A copied skill must be served by its base's TARGET row too
+**Symptom**: the first clone test (a Blaze copy at $EA, effect pointer = Blaze's) did not
+behave like Blaze.
+**Root cause**: the effect handler came from the base, but bank $58's commit-time target
+service (`DispatchBoundsStub`, which every action passes under FIGHT — KEY_LESSONS S110)
+still routed $EA+ to the S84 "self" row ($6367).
+**Fix**: `CustomTargetBaseTable` — a new skill takes its base's row (or the row of a
+stock skill with its changed target mode).
+**Rule**: "runs the same code" means every per-id dispatch the action passes through —
+handler, target service, records, presentation — not just the effect pointer.
+
+### The learn scanner reads the monster's known skills from its RECORD
+**Symptom**: a stub call of the custom learn path returned "nothing to learn" although
+the prereq skill was in the party's skill list.
+**Root cause**: the scanner checks prereqs against the monster record's 8 known skills
+at +$29 (level +$4B, exp +$4D), not against the menu's copy at $C0D8.
+**Rule**: when driving a scanner directly in PyBoy, set the state it actually reads —
+find its reads first (here: bank $06 entry 5).
+
+### A "harmless" default row is only harmless for the ids it was measured on
+**Symptom** (S111b, the ratio A/B): Tame and MagicBurn damage landed on the PARTY in the
+rig, in the old build as well as the new.
+**Root cause**: S84 gave every custom id without its own service the "self" target row
+`$6367` ("a harmless target write") — measured harmless for the ids that crashed then, but
+MagicBurn / Tame are committed by the act-time AI too, and that row aims them at the caster.
+**Rule**: a fallback that changes WHERE an action lands needs a test per id that can reach
+it; an A/B that shows the same wrong result in both builds is still a finding — read the
+numbers, not only the equality.

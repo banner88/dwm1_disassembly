@@ -1,0 +1,1668 @@
+{
+ "_generator": "tools/census_skill_clone.py (S111) on the S111 example build 4a2860cfd148cafa6843221d8be1ad49 (patched) + a real .sav; PyBoy, the stock skill vs its copy at id $EA, RNG pinned, party slot 0 casting",
+ "results": {
+  "0": {
+   "name": "Blaze",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "1": {
+   "name": "Blazemore",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "2": {
+   "name": "Blazemost",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "3": {
+   "name": "Firebal",
+   "result": "same",
+   "why": "",
+   "acts": [
+    4,
+    4
+   ]
+  },
+  "4": {
+   "name": "Firebane",
+   "result": "same",
+   "why": "",
+   "acts": [
+    4,
+    4
+   ]
+  },
+  "5": {
+   "name": "Firebolt",
+   "result": "same",
+   "why": "",
+   "acts": [
+    3,
+    3
+   ]
+  },
+  "6": {
+   "name": "Bang",
+   "result": "same",
+   "why": "",
+   "acts": [
+    3,
+    3
+   ]
+  },
+  "7": {
+   "name": "Boom",
+   "result": "same",
+   "why": "",
+   "acts": [
+    3,
+    3
+   ]
+  },
+  "8": {
+   "name": "Explodet",
+   "result": "same",
+   "why": "",
+   "acts": [
+    3,
+    3
+   ]
+  },
+  "9": {
+   "name": "Infernos",
+   "result": "same",
+   "why": "",
+   "acts": [
+    3,
+    3
+   ]
+  },
+  "10": {
+   "name": "Infermore",
+   "result": "same",
+   "why": "",
+   "acts": [
+    4,
+    4
+   ]
+  },
+  "11": {
+   "name": "Infermost",
+   "result": "same",
+   "why": "",
+   "acts": [
+    3,
+    3
+   ]
+  },
+  "12": {
+   "name": "IceBolt",
+   "result": "same",
+   "why": "",
+   "acts": [
+    3,
+    3
+   ]
+  },
+  "13": {
+   "name": "SnowStorm",
+   "result": "same",
+   "why": "",
+   "acts": [
+    3,
+    3
+   ]
+  },
+  "14": {
+   "name": "Blizzard",
+   "result": "same",
+   "why": "",
+   "acts": [
+    3,
+    3
+   ]
+  },
+  "15": {
+   "name": "Bolt",
+   "result": "same",
+   "why": "",
+   "acts": [
+    3,
+    3
+   ]
+  },
+  "16": {
+   "name": "Zap",
+   "result": "same",
+   "why": "",
+   "acts": [
+    3,
+    3
+   ]
+  },
+  "17": {
+   "name": "Thordain",
+   "result": "same",
+   "why": "",
+   "acts": [
+    3,
+    3
+   ]
+  },
+  "18": {
+   "name": "Beat",
+   "result": "differs",
+   "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0xb8', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0xe8', '0xe4', '0xec']",
+   "acts": [
+    2,
+    1
+   ]
+  },
+  "19": {
+   "name": "Defeat",
+   "result": "differs",
+   "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x23', '0xb8'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x23', '0xe8']",
+   "acts": [
+    4,
+    3
+   ]
+  },
+  "20": {
+   "name": "Sacrifice",
+   "result": "differs",
+   "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0xb8', '0x85', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x28', '0x28', '0x28']",
+   "acts": [
+    2,
+    3
+   ]
+  },
+  "21": {
+   "name": "Sleep",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "22": {
+   "name": "SleepAll",
+   "result": "same",
+   "why": "",
+   "acts": [
+    3,
+    3
+   ]
+  },
+  "23": {
+   "name": "StopSpell",
+   "result": "same",
+   "why": "",
+   "acts": [
+    3,
+    3
+   ]
+  },
+  "24": {
+   "name": "Surround",
+   "result": "same",
+   "why": "",
+   "acts": [
+    3,
+    3
+   ]
+  },
+  "25": {
+   "name": "PanicAll",
+   "result": "same",
+   "why": "",
+   "acts": [
+    3,
+    3
+   ]
+  },
+  "26": {
+   "name": "RobMagic",
+   "result": "same",
+   "why": "",
+   "acts": [
+    3,
+    3
+   ]
+  },
+  "27": {
+   "name": "TakeMagic",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "28": {
+   "name": "Sap",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "29": {
+   "name": "Defence",
+   "result": "same",
+   "why": "",
+   "acts": [
+    4,
+    4
+   ]
+  },
+  "30": {
+   "name": "Upper",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "31": {
+   "name": "Increase",
+   "result": "same",
+   "why": "",
+   "acts": [
+    4,
+    4
+   ]
+  },
+  "32": {
+   "name": "Slow",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "33": {
+   "name": "SlowAll",
+   "result": "same",
+   "why": "",
+   "acts": [
+    4,
+    4
+   ]
+  },
+  "34": {
+   "name": "Speed",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "35": {
+   "name": "SpeedUp",
+   "result": "same",
+   "why": "",
+   "acts": [
+    6,
+    6
+   ]
+  },
+  "36": {
+   "name": "Barrier",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "37": {
+   "name": "TwinHits",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "38": {
+   "name": "MagicWall",
+   "result": "same",
+   "why": "",
+   "acts": [
+    3,
+    3
+   ]
+  },
+  "39": {
+   "name": "MagicBack",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "40": {
+   "name": "Bounce",
+   "result": "differs",
+   "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x9a', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x99', '0x28', '0x28']",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "41": {
+   "name": "Transform",
+   "result": "differs",
+   "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0xa0', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0xa0', '0x28', '0x28']",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "42": {
+   "name": "Ironize",
+   "result": "differs",
+   "why": "battle lines ['0x0', '0x23', '0x93', '0x11', '0x11', '0x28', '0x11', '0x11'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x93', '0x11', '0x11']",
+   "acts": [
+    1,
+    1
+   ]
+  },
+  "43": {
+   "name": "Heal",
+   "result": "differs",
+   "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -2, 0, 0), (31, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -2, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -2, 0, 0), (31, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (-31, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)]",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "44": {
+   "name": "HealMore",
+   "result": "differs",
+   "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (89, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (89, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (-89, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)]",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "45": {
+   "name": "HealAll",
+   "result": "differs",
+   "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x84', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x84', '0xe3', '0x28']",
+   "acts": [
+    2,
+    1
+   ]
+  },
+  "46": {
+   "name": "HealUs",
+   "result": "differs",
+   "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -18, 0, 0), (100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (0, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -18, 0, 0), (100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (-106, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)]",
+   "acts": [
+    6,
+    6
+   ]
+  },
+  "47": {
+   "name": "HealUsAll",
+   "result": "differs",
+   "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x84', '0x84', '0x84'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x84', '0xe3', '0x84']",
+   "acts": [
+    6,
+    3
+   ]
+  },
+  "48": {
+   "name": "Vivify",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "49": {
+   "name": "Revive",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "50": {
+   "name": "Farewell",
+   "result": "differs",
+   "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x84', '0x84', '0x85'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x28', '0x28', '0x28']",
+   "acts": [
+    2,
+    3
+   ]
+  },
+  "51": {
+   "name": "Antidote",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "52": {
+   "name": "NumbOff",
+   "result": "same",
+   "why": "",
+   "acts": [
+    6,
+    6
+   ]
+  },
+  "53": {
+   "name": "DeChaos",
+   "result": "same",
+   "why": "",
+   "acts": [
+    6,
+    6
+   ]
+  },
+  "54": {
+   "name": "CurseOff",
+   "result": "same",
+   "why": "",
+   "acts": [
+    6,
+    6
+   ]
+  },
+  "55": {
+   "name": "StepGuard",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "56": {
+   "name": "MapMagic",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "57": {
+   "name": "Chance",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "58": {
+   "name": "Attack",
+   "result": "not a skill"
+  },
+  "59": {
+   "name": "TwinSlash",
+   "result": "differs",
+   "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x2b', '0x82', '0x83', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x2b', '0x82', '0x28', '0x28']",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "60": {
+   "name": "Ramming",
+   "result": "differs",
+   "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x2c', '0x82', '0x83', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x2c', '0x82', '0x28', '0x28']",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "61": {
+   "name": "Beserker",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "62": {
+   "name": "Kamikaze",
+   "result": "differs",
+   "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x2e', '0x82', '0x85', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x2e', '0x82', '0x28', '0x28']",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "63": {
+   "name": "Massacre",
+   "result": "differs",
+   "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x2f', '0x83', '0xe3', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x2f', '0x78', '0x28', '0x28']",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "64": {
+   "name": "EvilSlash",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "65": {
+   "name": "ChargeUP",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "66": {
+   "name": "HighJump",
+   "result": "differs",
+   "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (0, 0, 0, 0, -375, 0, 0, 0, 0, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (0, 0, 0, 0, -375, 0, 0, 0, 0, 0, 0)]",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "67": {
+   "name": "SuckAir",
+   "result": "same",
+   "why": "",
+   "acts": [
+    3,
+    3
+   ]
+  },
+  "68": {
+   "name": "FireSlash",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "69": {
+   "name": "BoltSlash",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "70": {
+   "name": "VacuSlash",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "71": {
+   "name": "IceSlash",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "72": {
+   "name": "MetalCut",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "73": {
+   "name": "DrakSlash",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "74": {
+   "name": "BeastCut",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "75": {
+   "name": "BirdBlow",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "76": {
+   "name": "DevilCut",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "77": {
+   "name": "ZombieCut",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "78": {
+   "name": "CleanCut",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "79": {
+   "name": "MultiCut",
+   "result": "same",
+   "why": "",
+   "acts": [
+    3,
+    3
+   ]
+  },
+  "80": {
+   "name": "BiAttack",
+   "result": "differs",
+   "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x24', '0x82', '0x82', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x24', '0x82', '0x28', '0x28']",
+   "acts": [
+    4,
+    2
+   ]
+  },
+  "81": {
+   "name": "QuadHits",
+   "result": "differs",
+   "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x24', '0x82', '0x82', '0x82'] vs ['0x0', '0x28', '0x28', '0x28', '0x24', '0x82', '0x28', '0x28']",
+   "acts": [
+    7,
+    2
+   ]
+  },
+  "82": {
+   "name": "CallHelp",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "83": {
+   "name": "YellHelp",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "84": {
+   "name": "Focus",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "85": {
+   "name": "SquallHit",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "86": {
+   "name": "PsycheUp",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "87": {
+   "name": "RainSlash",
+   "result": "same",
+   "why": "",
+   "acts": [
+    3,
+    3
+   ]
+  },
+  "88": {
+   "name": "WindBeast",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "89": {
+   "name": "Vacuum",
+   "result": "differs",
+   "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -6, 0, 0), (0, 0, 0, 0, -38, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, -38, 0, 0, 0, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -6, 0, 0), (0, 0, 0, 0, -41, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, -41, 0, 0, 0, 0, 0)]",
+   "acts": [
+    3,
+    3
+   ]
+  },
+  "90": {
+   "name": "Lightning",
+   "result": "same",
+   "why": "",
+   "acts": [
+    3,
+    3
+   ]
+  },
+  "91": {
+   "name": "RockThrow",
+   "result": "same",
+   "why": "",
+   "acts": [
+    3,
+    3
+   ]
+  },
+  "92": {
+   "name": "FireAir",
+   "result": "same",
+   "why": "",
+   "acts": [
+    4,
+    4
+   ]
+  },
+  "93": {
+   "name": "BlazeAir",
+   "result": "same",
+   "why": "",
+   "acts": [
+    4,
+    4
+   ]
+  },
+  "94": {
+   "name": "Scorching",
+   "result": "same",
+   "why": "",
+   "acts": [
+    3,
+    3
+   ]
+  },
+  "95": {
+   "name": "WhiteFire",
+   "result": "same",
+   "why": "",
+   "acts": [
+    3,
+    3
+   ]
+  },
+  "96": {
+   "name": "FrigidAir",
+   "result": "same",
+   "why": "",
+   "acts": [
+    3,
+    3
+   ]
+  },
+  "97": {
+   "name": "IceAir",
+   "result": "same",
+   "why": "",
+   "acts": [
+    3,
+    3
+   ]
+  },
+  "98": {
+   "name": "IceStorm",
+   "result": "same",
+   "why": "",
+   "acts": [
+    3,
+    3
+   ]
+  },
+  "99": {
+   "name": "WhiteAir",
+   "result": "same",
+   "why": "",
+   "acts": [
+    3,
+    3
+   ]
+  },
+  "100": {
+   "name": "Hellblast",
+   "result": "same",
+   "why": "",
+   "acts": [
+    3,
+    3
+   ]
+  },
+  "101": {
+   "name": "BigBang",
+   "result": "same",
+   "why": "",
+   "acts": [
+    3,
+    3
+   ]
+  },
+  "102": {
+   "name": "MegaMagic",
+   "result": "same",
+   "why": "",
+   "acts": [
+    3,
+    3
+   ]
+  },
+  "103": {
+   "name": "PoisonHit",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "104": {
+   "name": "NapAttack",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "105": {
+   "name": "Paralyze",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "106": {
+   "name": "SleepAir",
+   "result": "same",
+   "why": "",
+   "acts": [
+    3,
+    3
+   ]
+  },
+  "107": {
+   "name": "PalsyAir",
+   "result": "differs",
+   "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x25', '0xb8'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x25', '0xcf']",
+   "acts": [
+    4,
+    3
+   ]
+  },
+  "108": {
+   "name": "PoisonGas",
+   "result": "differs",
+   "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x25', '0xce'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x25', '0xce']",
+   "acts": [
+    3,
+    3
+   ]
+  },
+  "109": {
+   "name": "PoisonAir",
+   "result": "differs",
+   "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x25', '0xd0'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x25', '0xce']",
+   "acts": [
+    3,
+    3
+   ]
+  },
+  "110": {
+   "name": "PaniDance",
+   "result": "same",
+   "why": "",
+   "acts": [
+    3,
+    3
+   ]
+  },
+  "111": {
+   "name": "Curse",
+   "result": "same",
+   "why": "",
+   "acts": [
+    3,
+    3
+   ]
+  },
+  "112": {
+   "name": "Ahhh",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "113": {
+   "name": "K.O.Dance",
+   "result": "differs",
+   "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x26', '0xb8'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x26', '0xe8']",
+   "acts": [
+    4,
+    3
+   ]
+  },
+  "114": {
+   "name": "SandStorm",
+   "result": "differs",
+   "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x42', '0xa2'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x42', '0x1a']",
+   "acts": [
+    3,
+    3
+   ]
+  },
+  "115": {
+   "name": "Radiant",
+   "result": "differs",
+   "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x24', '0xa3'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x24', '0x1a']",
+   "acts": [
+    4,
+    3
+   ]
+  },
+  "116": {
+   "name": "EerieLite",
+   "result": "same",
+   "why": "",
+   "acts": [
+    3,
+    3
+   ]
+  },
+  "117": {
+   "name": "OddDance",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "118": {
+   "name": "RobDance",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "119": {
+   "name": "SideStep",
+   "result": "same",
+   "why": "",
+   "acts": [
+    3,
+    3
+   ]
+  },
+  "120": {
+   "name": "LureDance",
+   "result": "same",
+   "why": "",
+   "acts": [
+    4,
+    4
+   ]
+  },
+  "121": {
+   "name": "LushLicks",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "122": {
+   "name": "SickLick",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "123": {
+   "name": "LegSweep",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "124": {
+   "name": "BigTrip",
+   "result": "same",
+   "why": "",
+   "acts": [
+    4,
+    4
+   ]
+  },
+  "125": {
+   "name": "WarCry",
+   "result": "same",
+   "why": "",
+   "acts": [
+    4,
+    4
+   ]
+  },
+  "126": {
+   "name": "Whistle",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "127": {
+   "name": "Imitate",
+   "result": "differs",
+   "why": "battle lines ['0x0', '0x50', '0x28', '0x28', '0x28', '0x50', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x50', '0x28', '0x28', '0x28']",
+   "acts": [
+    3,
+    3
+   ]
+  },
+  "128": {
+   "name": "DeMagic",
+   "result": "differs",
+   "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x27', '0xac', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x27', '0x28', '0x28', '0x28']",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "129": {
+   "name": "Surge",
+   "result": "same",
+   "why": "",
+   "acts": [
+    4,
+    5
+   ]
+  },
+  "130": {
+   "name": "UltraDown",
+   "result": "differs",
+   "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x27', '0x86', '0x95', '0x98'] vs ['0x0', '0x28', '0x28', '0x28', '0x27', '0x28', '0x28', '0x28']",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "131": {
+   "name": "ThickFog",
+   "result": "differs",
+   "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x70', '0xac', '0xac', '0xac'] vs ['0x0', '0x28', '0x28', '0x28', '0x70', '0x28', '0x28', '0x28']",
+   "acts": [
+    1,
+    2
+   ]
+  },
+  "132": {
+   "name": "TatsuCall",
+   "result": "differs",
+   "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0), (0, 0, 0, 200, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0), (0, 0, 0, 700, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0)]",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "133": {
+   "name": "DiagoCall",
+   "result": "differs",
+   "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x49', '0xaf', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x49', '0xaf', '0x28', '0x28']",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "134": {
+   "name": "SamsiCall",
+   "result": "differs",
+   "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0), (0, 0, 0, 450, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0), (0, 0, 0, 700, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0)]",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "135": {
+   "name": "BazooCall",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "136": {
+   "name": "Cover",
+   "result": "differs",
+   "why": "battle lines ['0x0', '0x51', '0x28', '0x28', '0x28', '0x51', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x51', '0x28', '0x28', '0x28']",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "137": {
+   "name": "Guardian",
+   "result": "differs",
+   "why": "battle lines ['0x0', '0x52', '0x28', '0x28', '0x28', '0x52', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x52', '0x28', '0x28', '0x28']",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "138": {
+   "name": "TailWind",
+   "result": "same",
+   "why": "",
+   "acts": [
+    3,
+    3
+   ]
+  },
+  "139": {
+   "name": "StormWind",
+   "result": "same",
+   "why": "",
+   "acts": [
+    3,
+    3
+   ]
+  },
+  "140": {
+   "name": "Dodge",
+   "result": "differs",
+   "why": "battle lines ['0x0', '0x53', '0x28', '0x28', '0x28', '0x53', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x53', '0x28', '0x28', '0x28']",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "141": {
+   "name": "Defence",
+   "result": "not a skill"
+  },
+  "142": {
+   "name": "StrongD",
+   "result": "differs",
+   "why": "battle lines ['0x0', '0x54', '0x28', '0x28', '0x28', '0x54', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x54', '0x28', '0x28', '0x28']",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "143": {
+   "name": "SuckAll",
+   "result": "differs",
+   "why": "battle lines ['0x0', '0x56', '0x28', '0x28', '0x28', '0x56', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x56', '0x28', '0x28', '0x28']",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "144": {
+   "name": "BladeD",
+   "result": "differs",
+   "why": "battle lines ['0x0', '0x55', '0x28', '0x28', '0x28', '0x55', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x55', '0x28', '0x28', '0x28']",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "145": {
+   "name": "DanceShut",
+   "result": "same",
+   "why": "",
+   "acts": [
+    4,
+    4
+   ]
+  },
+  "146": {
+   "name": "MouthShut",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "147": {
+   "name": "Meditate",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "148": {
+   "name": "Hustle",
+   "result": "differs",
+   "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -12, 0, 0), (71, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (0, 71, 0, 0, 0, 0, 0, 0, 0, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -12, 0, 0), (71, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (-71, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)]",
+   "acts": [
+    4,
+    4
+   ]
+  },
+  "149": {
+   "name": "LifeSong",
+   "result": "differs",
+   "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0)]",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "150": {
+   "name": "LifeDance",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "151": {
+   "name": "Run",
+   "result": "not a skill"
+  },
+  "152": {
+   "name": "Daze",
+   "result": "not a skill"
+  },
+  "153": {
+   "name": "HitAlly",
+   "result": "not a skill"
+  },
+  "154": {
+   "name": "HitEnemy",
+   "result": "not a skill"
+  },
+  "155": {
+   "name": "HitRandom",
+   "result": "not a skill"
+  },
+  "156": {
+   "name": "Scared",
+   "result": "not a skill"
+  },
+  "157": {
+   "name": "Dance",
+   "result": "not a skill"
+  },
+  "158": {
+   "name": "Trip",
+   "result": "not a skill"
+  },
+  "159": {
+   "name": "Paralyze",
+   "result": "not a skill"
+  },
+  "160": {
+   "name": "CANTMOVE",
+   "result": "not a skill"
+  },
+  "161": {
+   "name": "RUN",
+   "result": "not a skill"
+  },
+  "162": {
+   "name": "CALLHOROR",
+   "result": "not a skill"
+  },
+  "163": {
+   "name": "HealUsAll",
+   "result": "not a skill"
+  },
+  "164": {
+   "name": "Smashed",
+   "result": "not a skill"
+  },
+  "165": {
+   "name": "FILTHZONE",
+   "result": "not a skill"
+  },
+  "166": {
+   "name": "ALLCHANGE",
+   "result": "not a skill"
+  },
+  "167": {
+   "name": "BIGSLEEP",
+   "result": "not a skill"
+  },
+  "168": {
+   "name": "MP0",
+   "result": "not a skill"
+  },
+  "169": {
+   "name": "ECHO",
+   "result": "not a skill"
+  },
+  "170": {
+   "name": "CHGDRAGON",
+   "result": "not a skill"
+  },
+  "171": {
+   "name": "CALLEVIL",
+   "result": "not a skill"
+  },
+  "172": {
+   "name": "FREEZY",
+   "result": "not a skill"
+  },
+  "173": {
+   "name": "ALLREVIVE",
+   "result": "not a skill"
+  },
+  "174": {
+   "name": "RESTOREMP",
+   "result": "not a skill"
+  },
+  "175": {
+   "name": "METEOR",
+   "result": "not a skill"
+  },
+  "176": {
+   "name": "HERB",
+   "result": "not a skill"
+  },
+  "177": {
+   "name": "HEALWATER",
+   "result": "not a skill"
+  },
+  "178": {
+   "name": "SAGESTONE",
+   "result": "not a skill"
+  },
+  "179": {
+   "name": "WARLDDEW",
+   "result": "not a skill"
+  },
+  "180": {
+   "name": "POTION",
+   "result": "not a skill"
+  },
+  "181": {
+   "name": "ELFWATER",
+   "result": "not a skill"
+  },
+  "182": {
+   "name": "ANTIDOTE",
+   "result": "not a skill"
+  },
+  "183": {
+   "name": "MOONHERB",
+   "result": "not a skill"
+  },
+  "184": {
+   "name": "SKYBELL",
+   "result": "not a skill"
+  },
+  "185": {
+   "name": "LAUREL",
+   "result": "not a skill"
+  },
+  "186": {
+   "name": "AWAKESAND",
+   "result": "not a skill"
+  },
+  "187": {
+   "name": "WARLDLEAF",
+   "result": "not a skill"
+  },
+  "188": {
+   "name": "LIFEACORN",
+   "result": "not a skill"
+  },
+  "189": {
+   "name": "MYSTICNUT",
+   "result": "not a skill"
+  },
+  "190": {
+   "name": "PWRSEED",
+   "result": "not a skill"
+  },
+  "191": {
+   "name": "DEFSEED",
+   "result": "not a skill"
+  },
+  "192": {
+   "name": "AGILSEED",
+   "result": "not a skill"
+  },
+  "193": {
+   "name": "INTSEED",
+   "result": "not a skill"
+  },
+  "194": {
+   "name": "FEEDMEAT",
+   "result": "not a skill"
+  },
+  "195": {
+   "name": "BEFFJERKY",
+   "result": "not a skill"
+  },
+  "196": {
+   "name": "PORKCHOP",
+   "result": "not a skill"
+  },
+  "197": {
+   "name": "BADMEAT",
+   "result": "not a skill"
+  },
+  "198": {
+   "name": "SIRLOIN",
+   "result": "not a skill"
+  },
+  "199": {
+   "name": "BOLTSTAFF",
+   "result": "not a skill"
+  },
+  "200": {
+   "name": "STAFF",
+   "result": "not a skill"
+  },
+  "201": {
+   "name": "BLOKSTAFF",
+   "result": "not a skill"
+  },
+  "202": {
+   "name": "LAVASTAFF",
+   "result": "not a skill"
+  },
+  "203": {
+   "name": "SNOWSTAFF",
+   "result": "not a skill"
+  },
+  "204": {
+   "name": "FIRESTAFF",
+   "result": "not a skill"
+  },
+  "205": {
+   "name": "WARPWING",
+   "result": "not a skill"
+  },
+  "206": {
+   "name": "TINYMEDAL",
+   "result": "not a skill"
+  },
+  "207": {
+   "name": "QuestBk",
+   "result": "not a skill"
+  },
+  "208": {
+   "name": "HORRORBK",
+   "result": "not a skill"
+  },
+  "209": {
+   "name": "BENICEBK",
+   "result": "not a skill"
+  },
+  "210": {
+   "name": "CHEATERBK",
+   "result": "not a skill"
+  },
+  "211": {
+   "name": "SMARTBK",
+   "result": "not a skill"
+  },
+  "212": {
+   "name": "COMEDYBK",
+   "result": "not a skill"
+  },
+  "213": {
+   "name": "BeDragon",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "214": {
+   "name": "Smashlime",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "215": {
+   "name": "Sheldodge",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "216": {
+   "name": "Branching",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "217": {
+   "name": "GigaSlash",
+   "result": "same",
+   "why": "",
+   "acts": [
+    2,
+    2
+   ]
+  },
+  "218": {
+   "name": "LIFE",
+   "result": "not a skill"
+  },
+  "219": {
+   "name": "RUN",
+   "result": "same",
+   "why": "",
+   "acts": [
+    1,
+    1
+   ]
+  },
+  "220": {
+   "name": "IRONIZE",
+   "result": "not a skill"
+  },
+  "221": {
+   "name": "Ahhh",
+   "result": "not a skill"
+  }
+ }
+}

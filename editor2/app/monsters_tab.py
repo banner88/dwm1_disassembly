@@ -486,10 +486,24 @@ class MonstersTab(QWidget):
             # S110: skill lists show the project's skill names (Skills tab renames)
             self.skills = doc.skill_names_effective()
             for c in self.w_skill:
+                have = [c.itemData(i) for i in range(c.count())]
+                if sorted(x for x in have if x is not None) != sorted(self.skills):
+                    # S111: the project's new skills (234-254) come and go
+                    cur = c.currentData()
+                    c.blockSignals(True)
+                    c.clear()
+                    for sid, nm in sorted(self.skills.items()):
+                        c.addItem(f'{nm}' + ('' if sid < G.SKILL_COUNT else
+                                             f'  (custom ${sid:02X})'), sid)
+                    if cur is not None and c.findData(cur) >= 0:
+                        c.setCurrentIndex(c.findData(cur))
+                    c.blockSignals(False)
+                    continue
                 for i in range(c.count()):
                     sid = c.itemData(i)
-                    if sid is not None and sid < G.SKILL_COUNT:
-                        c.setItemText(i, self.skills.get(sid, str(sid)))
+                    if sid is not None:
+                        c.setItemText(i, self.skills.get(sid, str(sid))
+                                      + ('' if sid < G.SKILL_COUNT else f'  (custom ${sid:02X})'))
         except Exception as ex:                     # noqa: BLE001
             self.title.setText('The project does not validate')
             self.subtitle.setText(str(ex))

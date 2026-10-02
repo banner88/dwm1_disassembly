@@ -1409,7 +1409,16 @@ tails in banks $04 / $50 far-call it; §2.25) → pin **`482c949ffabbce1ec409c4c
 **S110 (P3.11):** the skill text / looks regions + `GetPresentId` / `SfxPresentId`
 (§2.26) and the example project's skill 215 rename (moved out of a hand edit) →
 pin **`534bfb6245e825445f6d45764ed7305e`** (patched; built S110, test ROM USER-CONFIRMED
-2026-10-02; test_compiler `REFERENCE_MD5`). Prev `482c949f…` (patched, historical).
+2026-10-02). Prev `482c949f…` (patched, historical).
+**S111 (P3.11c/d):** the custom skills as project data — 19 regions over their bytes in
+banks $07/$41/$4C/$54/$55/$56/$58/$5F/$72, new skills 234-254, the element override, the
+learn row buffer, `CustomSfxTable`, the bank $50 name fix (§2.27) → pin
+**`4a2860cfd148cafa6843221d8be1ad49`** (patched; built S111, test ROM USER-CONFIRMED 2026-10-02 15:08 ("Looks good"); historical
+since S111b). Prev `534bfb62…` (patched, historical).
+**S111b:** the built-in custom skills' RATIOS as data (`gd_custom_ratios`, `ScaleHL72`, bank
+$72 entry 7 for Anchor) + the MagicBurn / Tame AI target rows (§2.27) → pin
+**`5a1c540487f9043e9d6431685527f1ad`** (patched; built S111, NOT yet user-tested;
+test_compiler `REFERENCE_MD5`). Prev `4a2860cf…` (patched, historical).
 **S104 r2:** `gamedata.families` (voices + Spirit names, two new regions;
 empty == the r1 bytes) and the user-picked ghost-wisp icon → pin
 **`eb1535108cdbc9ac24d64dce3db5591e`** (patched; built S104 r2, NOT yet
@@ -1897,6 +1906,123 @@ exactly; every behaviour box named in the help). **Pin** `534bfb62…` (patched)
 `482c949f…` (patched, historical): the proxies + the example's skill 215 = "BugCut" —
 until S110 a HAND edit inside the names block (`SkillName_215_BugCut`, 3 `$F0` pad),
 now example-project data; names 216-221 shift 3 B (DOC_AUDIT S110).
+
+## §2.27 S111 — the CUSTOM skills as project data + NEW custom skills + elements (`gamedata.skills.<222-254>`, ROADMAP P3.11c / P3.11d)
+
+Module `editor2/core/custom_skills.py` (`CS.resolve` / `CS.check`, from `validators.validate`
+and the Monsters / Skills commit; 19 entries in `CS.REGIONS`, registered by
+`emitters._custom_skill_regions()`); the built-in baseline `editor2/core/custom_skills.json`
+(read ONCE from the S110 pin by `tools/extract_custom_skills.py`; `--check` reads it back out
+of any build — the --rom test does, on the example build). Editor: `skills_doc.py`
+(`new_custom_skill` / `delete_custom_skill` / the custom setters), the Skills tab (kinds
+"custom" / "new", **New skill…**, **Delete**, Element, Sounds like, Announce, "Its own numbers
+and lines"), help `54_skills.md`.
+
+**Ids** (BATTLE_SKILL_SYSTEM §13.9): 222-223 ($DE/$DF) = the retired S45 POCs — refused;
+224-233 ($E0-$E9) = the BUILT-IN custom skills (MagicBurn, Tame / TameMore / TameMost,
+Anchor, Tremor / Quake / QuakeMore / QuakeMost, Mourn) — every build has them, a project
+edits their DATA; 234-254 ($EA-$FE) = NEW custom skills a project adds (21 slots): each
+runs the effect code of a stock skill (`base`, 0-221) under its own id.
+
+```jsonc
+"gamedata": {"skills": {
+  "0":   {"element": "Ice"},                                  // a stock skill's element
+  "229": {"name": "Rumble", "mp": 8, "element": "Explosion",
+          "quake_power": {"min": 60, "max": 80},              // Tremor's own numbers
+          "announce": ["{name} makes", "the ground rumble!"],
+          "learn": {"level": 1, "prereqs": [72]}},
+  "234": {"base": 16, "name": "Thunder", "mp": 6,             // runs Zap's effect
+          "description": ["Calls thunder down", "on every foe"],
+          "looks_like": 6, "sounds_like": 6,                  // Bang's animation + sounds
+          "record": {"party_min": 60, "party_range": 15},
+          "learn": {"level": 1, "prereqs": [16]}},
+  "235": {"base": 94, "name": "FrostBite", "looks_like": 98, "element": "IceBreath"}}}
+```
+
+**Keys.** Every custom id: `name`, `description` (null / [] = empty), `mp` (0-255; one value
+writes CustomMPCostTable AND record +4), `learn` (`{"level", "prereqs", ...}` as §2.20, or
+null = not learnable), `record` (§2.20's dict), `looks_like` / `sounds_like` (a stock id;
+a new skill's `sounds_like` follows `looks_like` unless set), `element` (below), `announce`
+(1-3 lines, `{name}` = the user's name, 18 cells per line — the own battle line, template
+$FD) OR `announce_as` (a stock battle message id 0-$FC, or "none"). Built-ins only:
+`tame_meter` (225-227, 0-1600), `quake_power` `{min, max}` (229-232; max ≤ min+255),
+`allies_line` / `flew_line` (229 — the Quake banners shared by the chain), `boost_line`
+(233), `dialogs` (228 — Anchor's 4 dialog texts, 1-3 lines × 18), and (S111b) the RATIOS their code
+used to fix: `burn` + `damage_per_mp` (224; 1/2, 1), `damage_of_atk` (225-227; 1/4),
+`mp_charge` (228; 3/4), `ally_damage` (229-232; 1/3), `per_fallen` (233; 1) — each "n/d",
+[n, d] or a whole number, n 0-255, d 1-255, at most 1 for the MP shares, 2 for Quake's own
+side, 4 for the damage factors; bank $72 `CustomRatioTable` (region `gd_custom_ratios`, 22 B,
+the RATIO_* offsets) read by `ScaleHL72` = min(999, floor(x·n/d)) (exact: q·n + (r·n)/d), and
+by entry 7 `AnchorKeepMP72` from bank $73's arrival commit (MP kept = MP·(d−n)/d). No edits
+= the old constants (`>> 1`, ×1, `>> 2` twice, `>> 2`, the /3 loop, ×(fallen+1)): PyBoy A/B
+identical. New skills only: `base` (required, with `name`).
+
+**Refusals (CustomSkillError → ProjectError):** ids 222-223 / > 254; `base` on a built-in;
+a new skill without `base` or `name`; a `base` that is not a skill (`SK.kind`), the
+field-only StepGuard / MapMagic ($37/$38), or one whose copy MEASURED different from the
+original (`extracted/skill_clone_census.json`: 114 same, 41 differ, 67 not a skill — the
+differing ones compare their own id with $DB8A, BATTLE_SKILL_SYSTEM §13.9); `mp` on MagicBurn
+/ Anchor (their code spends the MP); power words or a different `target_mode` on a built-in
+(the handler sets the damage; S74: nonzero powers looped the presentation); `element` on a
+built-in that deals no damage (Anchor) or on a new skill whose base tests no resistance;
+`announce` + `announce_as`; a learn prereq that is not a stock / built-in / defined new id;
+(S111b) a ratio that is not a fraction, has d = 0 / n or d > 255, exceeds its maximum, or
+sits on another skill.
+Budgets: names = the 94-B bank $41 region then the shared `ns_text_*` extents (S110),
+descriptions = the 446-B bank $56 region then `gd_skill_desc_extra`, battle lines = the
+bank $4C pool (MagicBurn's 56-B slot + `gd_custom_msgs`); all 21 new skills with 9-letter
+names and full texts fit (test).
+
+**Element.** `element` = one of the 27 resistance names (gamedata.RESIST_NAMES), "none"
+(every target takes full damage: level 0), or null = the skill's own. It is not a record
+field: a damage handler reads ONE 2-bit resistance level of its target and passes it to a
+damage ladder (BATTLE_SKILL_SYSTEM §15.3). Regions `gd_skill_elements` = `StockElemTable`
+(222 B, stock ids) + `CustomElemTable` (33 B, $DE-$FE), $FF = no override, $FE = none.
+Setting it also moves the AI's assumed element (record +5 = element+1, unless
+`record.status_id` is explicit). Which skills have a native element:
+`extracted/skill_element_census.json` (38 elemental; the editor offers the box only there).
+
+**Regions** (all same-address, byte-identical to S110 with no edits — test):
+`gd_custom_records` ($54, `CustomRecordPtrTable` 33 dw + one 19-B record per skill; unused
+ids → Blaze's `$41CF`), `gd_custom_skill_mp` ($07, 33 dw at $7F59 — moved from the bank's
+end), `gd_custom_learn` + `gd_custom_base` + `gd_skill_elements` + `gd_tame_meter` +
+`gd_quake_power` ($72), `gd_custom_announce_lo` (`AnnounceTemplateTable` slots $DE-$E1) +
+`gd_custom_announce` ($E2-$FE) + `gd_custom_target` (`CustomTargetBaseTable`) ($58),
+`gd_custom_msg_ptrs` + `gd_custom_msg_a` + `gd_custom_msgs` ($4C), `gd_custom_present`
+($5F), `gd_custom_sfx` ($55), `gd_custom_skill_name_ptrs` + `gd_custom_skill_names` ($41),
+`gd_custom_skill_desc_ptrs` + `gd_custom_skill_desc` ($56), (S111b) `gd_custom_ratios` ($72) —
+20 regions. `gd_custom_target` S111b: MagicBurn = Firebal's row ($03), Tame ×3 = Blaze's
+($00) — the S84 self row $6367 made the act-time AI cast them at its own side (measured).
+
+**Engine changes (hand patches, BATTLE_SKILL_SYSTEM §13.9 / §15.3):** bank $72
+`FarSkillFork` reads `CustomBaseTable` (a non-$FF entry → the vanilla handler of the base),
+`CustomBattleExec` returns the element for bank $52 `CustomElemTail52`, new entries 5
+`ElemLevel72` and 6 `CustomLearnRow72`; bank $52's 24 ladder calls → `ElemLadderA` /
+`ElemLadderBreath` / `ElemLadderSlash` in the dead $51B3 pocket; bank $06 `LearnLoopFork`
+scans the custom ids through `wLearnRowBuf` ($D10C, 18 B carved from wCustomPool); bank $55
+`SfxPresentId` reads `CustomSfxTable` for custom ids (default $09 — S110 builds read past
+each 222-B SFX table: custom ids played the NEXT kind's sounds, the last kind's read code);
+bank $58 `DispatchBoundsStub` reads `CustomTargetBaseTable`; bank $50 `SaveBtl_5ad2`
+returns custom ids unchanged (the `{skill}` insert printed "CleanCut" for ids ≥ $DE).
+Pinned behaviour: the example build's battles of the 10 built-ins = S110 (A/B in PyBoy;
+same lines, acts, MP; damage only RNG drift).
+
+**Tests:** test_compiler `test_custom_skills_s111` — the committed patches carry the
+example's region text; the 10 built-ins == custom_skills.json; the empty tables (base $FF,
+sfx $09, elements $FF); the CS_FIX fixture (Thunder / FrostBite / Rumble / Blaze→Ice:
+base, sounds, looks, AI target row, element + record +5, MP, quake power, names, learn
+rows, own announce); 15 refusals; 21 new skills compile. `--rom`
+`test_custom_skills_rom` on the example, CS_FIX and 21-new builds — `Fork54_RecordIndex`,
+`MPPtrFromId`, `AnnounceIdxFork`, `FarSkillFork`, `ElemLevel72`, `CustomLearnRow72` RUN
+from the ROM bytes (MiniSM83, now with calls / push / 16-bit adds) for every custom id;
+names / SKIL texts through the pointer tables; `extract_custom_skills` reads the baseline
+back out of the example build. test_app S111 block (Quake MP / element / announce,
+MagicBurn's MP box disabled, New skill… on Zap, looks / sounds / element / prereqs, the
+Upper element box disabled, Blaze → Ice moves the AI element, delete, undo restores
+project.json). S111b: + the ratio fixture (MagicBurn 1/4 + 3, TameMore 1/2, Anchor 1/2,
+Quake 1/2, Mourn 1/2), 5 ratio refusals, `ScaleHL72` / `AnchorKeepMP72` RUN from the ROM, the
+bank $73 call bytes; test_app: the burn edit, a refused 9, Mourn 1/2. **Pin** `5a1c5404…`
+(patched), was `4a2860cf…` (patched, historical) ← `534bfb62…` (patched, historical).
 
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 

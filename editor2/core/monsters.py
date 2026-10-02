@@ -46,7 +46,10 @@ JOIN_LABELS = {0: 'always joins (story / boss)', 7: 'never joins'}
 TIER_MAX = 7
 # the custom skills of the hand overlay (BATTLE_SKILL_SYSTEM §13-14): ids past the
 # 222 vanilla records; a species may learn them naturally (natural-learn proven)
-CUSTOM_SKILL_NAMES = {0xDE: 'Scorch', 0xDF: 'Smite', 0xE0: 'MagicBurn', 0xE1: 'Tame',
+# the built-in custom skills' ORIGINAL names (a fallback only — the project's names
+# come from SkillsMixin.skill_names_effective / custom_skills.names; S111: the retired
+# $DE Scorch / $DF Smite are no longer offered)
+CUSTOM_SKILL_NAMES = {0xE0: 'MagicBurn', 0xE1: 'Tame',
                       0xE2: 'TameMore', 0xE3: 'TameMost', 0xE4: 'Anchor', 0xE5: 'Tremor',
                       0xE6: 'Quake', 0xE7: 'QuakeMore', 0xE8: 'QuakeMost', 0xE9: 'Mourn'}
 
@@ -305,6 +308,11 @@ class MonstersMixin:
         try:                               # S110: skill names / descriptions / looks
             SK.check(prj)
         except SK.SkillError as ex:
+            raise SP.SpeciesError(str(ex))
+        from editor2.core import custom_skills as CS
+        try:                               # S111: custom + new skills, elements
+            CS.check(prj)
+        except (CS.CustomSkillError, MT.MonsterTextError) as ex:
             raise SP.SpeciesError(str(ex))
         self.data.clear()
         self.data.update(data)

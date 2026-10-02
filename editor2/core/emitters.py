@@ -1213,3 +1213,18 @@ def _skill_regions():
 
 
 REGISTRY += _skill_regions()
+
+
+def _custom_skill_regions():
+    # S111 (P3.11c/d): the CUSTOM skills' data (built-in $E0-$E9 + a project's new
+    # ones $EA-$FE) and the stock skills' element override — records ($54), MP
+    # ($07), learn rows / base / elements / Tame meter / Quake power ($72),
+    # announce + AI target rows ($58), battle lines ($4C), looks ($5F), sounds
+    # ($55), names ($41), SKIL texts ($56) (editor2/core/custom_skills.py,
+    # PROJECT_COMPILER §2.27). No edits == the built-in data.
+    from . import custom_skills as CS
+    return [(name, "gamedata.skills", f"region:{path}#{name}", fn, [bank])
+            for name, path, fn, bank in CS.REGIONS]
+
+
+REGISTRY += _custom_skill_regions()

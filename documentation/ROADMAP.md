@@ -1528,7 +1528,7 @@ recipes are pure authoring.
       (P3.13); (d) a look made for the other side shows nothing (measured:
       Heal with Bang's look — no explosion on the party side) — warned, not
       refused; (e) record bits nobody reads (+0, +1 low nibble, +7 b2, +8 b3,
-      +9 b6/b7) shown greyed; (f) NEW animations composed from existing frames
+      +9 b6/b7) shown greyed; (f) NEW animations composed from existing frames (→ P3.11e, NEXT, S111)
       (user S110 question: "if I wanted spark to be the first frames of a
       skill") — not built; needs first the Iron-Rule-6 re-section of the
       frame tables ($5C/$5D/$5E $4071+) and the bank $5F per-skill tables
@@ -1544,7 +1544,34 @@ recipes are pure authoring.
       greys them).
       *Accept:* a custom skill's damage tier + description edited in GUI,
       verified in battle in PyBoy.
-- [ ] **P3.11c — The custom skills are PROJECT DATA** (S105: the one
+- [x] **P3.11c — The custom skills are PROJECT DATA** — **built S111, test ROM
+      `DWM_S111_custom_skills_test.gbc` USER-CONFIRMED 2026-10-02 15:08 ("Looks good")** (user S111: "start with
+      vanilla [the 10 built-ins] … dont feel prohibited from diving into [P3.11d]";
+      "Are current skill elementals editable? If not, add that. Also consider quake
+      elemental damage"; "fix" [the sound overshoot]; schema "reasonable and
+      consistent"). **As built:** `gamedata.skills.<224-233>` edits the built-ins' data
+      (name, SKIL text, MP — refused where code spends it —, learn row or not learnable,
+      AI / record fields — not the power words —, looks, sounds, element, own announce
+      line or a stock one, Tame meters, Quake power, the Quake / Mourn banners, Anchor's
+      dialogs); 222-223 retired (refused). 19 compiler regions in banks
+      $07/$41/$4C/$54/$55/$56/$58/$5F/$72, the built-in baseline
+      `editor2/core/custom_skills.json` read once from the S110 pin; with no edits the
+      bytes are the S110 ones (test). Element override for EVERY skill (stock + custom,
+      incl. Quake: `CustomElemTail52`) — BATTLE_SKILL_SYSTEM §15.3; the `{skill}`
+      insert and the SFX overshoot fixed (§13.9). PROJECT_COMPILER §2.27, EDITOR_DESIGN
+      §5.3 "As built S111". *Accept:* the user's project re-expresses the 10 skills
+      byte-identically (the regions == the S110 bytes; its build changes only by the
+      engine) — met; Quake MP edited in the GUI lands in project.json (test_app) and an MP
+      edit compiles into CustomMPCostTable + record +4 (test_compiler, `MPPtrFromId` run
+      from the ROM) and Tremor → "Rumble" (MP 8, Explosion, own line, power 60-80) works in
+      PyBoy on the user's save — met; user-confirmed on the test ROM.
+      **S111b (user 15:20 "Fix it now"; built, test ROM NOT yet user-tested):** the
+      built-ins' fixed RATIOS are editable too (MagicBurn burn / damage per MP, Tame damage
+      of ATK, Anchor MP charge, Quake allies' share, Mourn bonus per fallen ally; bank $72
+      `CustomRatioTable` + `ScaleHL72`), defaults PyBoy-identical; fixed: the AI cast
+      MagicBurn / Tame at its own side (target rows). Open: MagicBurn spending again per
+      foe (as since S49) — user's call.
+      Original box text (S105): the one
       project-content dependency is gone — Anchor's 4 dialog scripts + texts
       are the compiler's built-in `editor2/core/skill_scripts.json`, script
       type $FF, in every build; making them EDITABLE is part of this item)
@@ -1564,6 +1591,42 @@ recipes are pure authoring.
       page listing vanilla + custom skills with the same fields. *Accept:*
       the user's project re-expresses the 10 skills byte-identically; one
       field edit (e.g. Quake MP) changes the right byte and works in PyBoy.
+- [x] **P3.11d — NEW custom skills from existing ones** (user S111: "New custom skills
+      should also be able to be added from a) further sessions with you and b) from
+      mix/matching existing skills and fiddling with their animations. These will be
+      damage skills without new logic") — **built S111, test ROM USER-CONFIRMED
+      2026-10-02 15:08.**
+      `gamedata.skills.<234-254>` = 21 slots; `base` = the stock skill whose effect runs
+      (bank $72 `FarSkillFork` → `CustomBaseTable`), everything else the skill's own:
+      name, text, MP, learn row (prereqs any skill), power, targets, AI fields, looks
+      (any of the 222 animations), sounds (any of the 222), element, announce. Bases =
+      the 114 stock skills MEASURED to behave the same under a new id
+      (`extracted/skill_clone_census.json`); 41 refused until traced (BATTLE_SKILL_SYSTEM
+      §13.9 — heals, physical specials, status breaths / dances, summons, stances).
+      Skills tab **New skill…** / **Delete**. Way (a) — a new handler from a future
+      session — = a bespoke handler in bank $72 like the built-ins, then data here.
+      *Accept:* Thunder (Zap's effect, Bang's look + sounds, own power) and FrostBite
+      (Scorching's effect, IceStorm's look, IceBreath element) cast by the party and by
+      enemies in PyBoy on the user's save, FrostBite learnt at a real level-up and shown
+      in the SKIL menu (name, MP, text) — met; user-confirmed. Residuals: (a) the 41 differing bases (trace why, fork per
+      case); (b) NEW animations composed from existing frames → **P3.11e (NEXT)**;
+      "fiddling with animations" is today looks + sounds from different skills.
+- [ ] **P3.11e — Skill ANIMATION editing — NEXT** (user 2026-10-02 15:08, after the S111
+      sign-off: "Yeah, make sure that's next"; origin: S110 "if I wanted spark to be the
+      first frames of a skill", S111 "mix/matching existing skills and fiddling with
+      their animations"). Goal: a skill's animation built from existing frames (e.g. the
+      first frames of one skill, then another's), frame order / timing editable, for
+      stock and custom skills. **Groundwork first (Iron Rule 6 + measurement):** (1)
+      re-section the animation frame tables of banks $5C/$5D/$5E (`$4071+`, today mgbdis
+      code over data) and the bank $5F per-skill selection tables ($56ED / $57D5 /
+      $58DD / $59C3 / $5AA9 / routine table $58BD — interleaved with map-script
+      boundaries, BATTLE_SKILL_SYSTEM §11.5) into labelled data, both trees, byte-perfect;
+      (2) decode the `$da81` command stream (§13.2) per renderer; (3) PyBoy trace of frame
+      timing and of where an animation's tiles come from (the `$c9` tile base — a frame
+      can only use tiles its own animation loaded); then (4) the data model + compiler
+      regions + a Skills-tab animation editor with preview. *Accept:* a new animation
+      (Spark's first frames + another skill's tail) authored in the GUI plays in PyBoy on
+      the user's save without stalls, cast by the party and by enemies.
 - [ ] **P3.11b — AI ban-list (OPTIONAL)** [G-N]: measure the clean
       knows-it-never-casts-it mechanism (option-list filter in the AI
       build path; per-actor or per-skill ban table in a patch bank),

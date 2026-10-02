@@ -432,3 +432,16 @@ gate you assumed".
 | patches/bank_041.asm `SkillName_215_BugCut: db "BugCut", $F0, $F0, $F0, $F0` (S44) | HIDDEN HAND EDIT | Restored to `SkillName_215_Sheldodge`; the rename is example-project data (`gamedata.skills.215.name`). |
 | S74 note "HealMore's look stalls" (as a rule for looks) | NOT REPRODUCED for stock skills | 1,554 PyBoy battles: no donor stalls a stock borrower (BATTLE_SKILL_SYSTEM §11.8). The note belongs to the custom-skill path. |
 | disassembly bank_056 $4E4C-$6866 (mgbdis code over the SKIL texts, the mode table, the pointer table) | DATA DECODED AS CODE | Re-sectioned both trees (`tools/resection_skill_desc.py`): `SkillDesc_NNN_<Name>` / `_Blank` / `_None` strings, `SkillDescModeTable` $664B, `SkillDebugTextPtrs` $664F (12 debug strings), `SkillDescPtrTable` $6667 (256 dw); `ld de, $664b` by label. |
+
+## S111 addendum (2026-10-02; the custom skills as project data, ROADMAP P3.11c / P3.11d)
+
+| Claim (where) | Verdict | Correct |
+|---|---|---|
+| patches/bank_055.asm (S110) `SfxPresentId`: "custom ids keep their id" (presented as harmless) | WRONG BEHAVIOUR (measured S111) | Custom ids read past the 222-B SFX tables (next table's rows; from the last table, code). Now `CustomSfxTable[id-$DE]`, default $09 = the party-side sounds they had (BATTLE_SKILL_SYSTEM §13.2 / §13.9). |
+| BATTLE_SKILL_SYSTEM §13.4 open follow-up (a) "custom-id skill-name insert" | CLOSED S111 | bank $50 `SaveBtl_5ad2` returns ids ≥ $DE unchanged (it read code: "CleanCut"). |
+| disassembly bank_050 $5AE1-$5AE4 (mgbdis `add hl,de / and c / ld a,[hl+] / ld [hl],b`) | DATA DECODED AS CODE | `SkillNameSubst_5ae1: db $19, $a1, $2a, $70` (the names shown for LIFE / RUN / IRONIZE / Ahhh); `ld hl, $5ae1` by label. |
+| ROADMAP P3.11c "Today the custom skills ($DE Scorch / $DF Smite …) … confirm the full list" | SETTLED S111 | $DE/$DF are retired (refused; names dropped); the built-ins are $E0-$E9; $EA-$FE are new-skill slots. |
+| PROJECT_STATE canonical "Skill text + looks (S110)": the custom skills' texts "[S73] … `SkillDescPtr_E0..E9`" (TEXT_SYSTEM row) | STALE | Compiler regions `gd_custom_skill_name_ptrs` / `_names` ($41) and `gd_custom_skill_desc_ptrs` / `_desc` ($56), rows 222-254 (TEXT_SYSTEM "Skill text blocks" row updated). |
+| BATTLE_SKILL_SYSTEM §15.3 element grid as "the element of a skill" | INCOMPLETE | Measured for all 222 (`extracted/skill_element_census.json`, 38 elemental); the grid stands. An element is the handler's choice of resistance byte, now overridable per skill (§15.3 "Element override (S111)"). |
+| patches/bank_058.asm `DispatchBoundsStub` (S84): "$DE-$E3 = the vanilla slack rows of their own ids … a harmless target write" | WRONG for MagicBurn / Tame ×3 (measured S111b) | Under the act-time AI the self row `$6367` aimed them at the caster's own side. Now Firebal's / Blaze's rows (BATTLE_SKILL_SYSTEM §13.9 "AI target rows"). Harmless only for the retired $DE/$DF, Anchor (rewritten to Attack) and unused ids. |
+| BATTLE_SKILL_SYSTEM §13 / bank_072 header: MagicBurn "spends HALF current MP; deals that exact amount to ALL foes" | INCOMPLETE (measured S111b) | The handler runs per target: each foe in turn costs half of what is LEFT and takes that amount (then the MegaMagic-context ladder). Behaviour unchanged; the share is data now. |

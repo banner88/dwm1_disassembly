@@ -16,10 +16,20 @@
 ; Registered skills:
 ;   $E0  MagicBurn  - spends HALF current MP; deals that exact amount to ALL foes
 ;                     (raw, no defense). Record (bank $54) gives target_mode $12.
+;                     (runs once per target: each foe costs half of what is LEFT)
 ;   $E1  Tame       - recruit (meter +10, FeedMeat tier) + ATK/4 damage, 1 foe.
+;   [S111b] the halves / quarters / thirds of $E0-$E9 are data: CustomRatioTable.
 ;   $E2  TameMore   - Tame tier 2: meter +100 (PorkChop tier).      [Stage2]
 ;   $E3  TameMost   - Tame tier 3: meter +400 (Sirloin tier).       [Stage2]
 ; =============================================================================
+
+; [S111] offsets into CustomRatioTable (gd_custom_ratios, below AnchorKeepMP72)
+DEF RATIO_MB_BURN    EQU 0              ; MagicBurn: share of current MP spent
+DEF RATIO_MB_DAMAGE  EQU 2              ; MagicBurn: damage per MP spent
+DEF RATIO_TAME       EQU 4              ; Tame / TameMore / TameMost: damage = ATK x (+2 per tier)
+DEF RATIO_ANCHOR     EQU 10             ; Anchor: share of current MP charged on arrival
+DEF RATIO_QUAKE_ALLY EQU 12             ; Tremor..QuakeMost: allies' share of the damage (+2 per tier)
+DEF RATIO_MOURN      EQU 20             ; Mourn: bonus per fallen ally, x the base damage
 
 SECTION "ROM Bank $072", ROMX[$4000], BANK[$72]
 
@@ -29,7 +39,9 @@ SECTION "ROM Bank $072", ROMX[$4000], BANK[$72]
     dw AnchorField14Tail                ; entry 2  ($7202 -> $4005) [ANCHOR S73]
     dw QuakeSweep72                     ; entry 3  ($7203 -> $4007) [QUAKE] sweep-advance fork
     dw QuakeAnimHold72                  ; entry 4  ($7204 -> $4009) [QUAKE v3] $6c4d anim-gate fork: shakes live in the cast-anim slot (d9ee==3) and hold it until the train completes
-    ; entry 5 reserved for future
+    dw ElemLevel72                      ; entry 5  ($7205 -> $400B) [S111] element override (bank $52 ElemLevel52)
+    dw CustomLearnRow72                 ; entry 6  ($7206 -> $400D) [S111] custom learn row -> wLearnRowBuf (bank $06 LearnLoopFork)
+    dw AnchorKeepMP72                   ; entry 7  ($7207 -> $400F) [S111] Anchor's MP charge (bank $73 arrival commit)
 
 ; -----------------------------------------------------------------------------
 ; FarSkillFork (entry 0) — replaces the dispatch's `ld hl,$4011/add hl,bc/add hl,bc`
@@ -48,6 +60,16 @@ FarSkillFork:
 .haveid:
     cp $DE
     jr c, .vanilla
+    ld c, a                             ; [S111] a NEW custom skill (P3.11d) runs the
+    sub $DE                             ;   effect code of a stock skill: CustomBaseTable
+    ld e, a                             ;   [id-$DE] = that skill's id ($FF = the
+    ld d, $00                           ;   bespoke handlers below). The working id
+    ld hl, CustomBaseTable              ;   stays the custom one, so its record (power,
+    add hl, de                          ;   targets, MP), name, text, look and element
+    ld a, [hl]                          ;   are its own; BC = the base id, as the
+    cp $FF                              ;   vanilla path leaves it.
+    jr nz, .vanilla
+    ld a, c
     cp $E9
     jr z, .mourn                        ; [MOURN S75] defense-calc dispatch path
     ld hl, $7FED                        ; CustomSkillPtr (bank $52)
@@ -64,10 +86,154 @@ FarSkillFork:
     ret
 
 ; -----------------------------------------------------------------------------
-; CustomBattleExec (entry 1) — far-called from $52:CustomDispatch52. Reads the
-; real id and tail-jumps to its handler (handler `ret` returns through the rst).
+; CustomBattleExec (entry 1) — far-called from $52:CustomDispatch52. Runs the
+; per-id handler (CustomBattleRun), then [S111] returns the skill's ELEMENT for
+; bank $52 CustomElemTail52: E = the target's resistance level for
+; CustomElemTable[id-$DE] ($FF = no element: nothing more happens), HL = the
+; target's status byte ($DB05 + 8*slot, what the spell ladder tests).
 ; -----------------------------------------------------------------------------
 CustomBattleExec:
+    call CustomBattleRun
+    ld a, [$db8a]
+    sub $DE
+    ld e, a
+    ld d, $00
+    ld hl, CustomElemTable
+    add hl, de
+    ld a, [hl]
+    ld e, $FF
+    cp $FF
+    jr z, .status
+    call ElemLevelOfA
+    ld e, a
+.status:
+    ld a, [wBattleTargetIdx]
+    and $07
+    add a
+    add a
+    add a
+    add LOW($db05)
+    ld l, a
+    ld a, $00
+    adc HIGH($db05)
+    ld h, a
+    ret
+
+; [S111] ElemLevel72 (entry 5) — bank $52 ElemLevel52 asks, for the acting skill,
+; which resistance level its damage ladder should use. In: E = the level the
+; handler read (its own element). Out: E = that level, or the target's level for
+; the skill's override element (StockElemTable / CustomElemTable, $FF = none).
+ElemLevel72:
+    ld a, [$db8a]
+    cp $DE
+    jr nc, .custom
+    ld hl, StockElemTable
+    jr .look
+.custom:
+    sub $DE
+    ld hl, CustomElemTable
+.look:
+    ld c, a
+    ld b, $00
+    add hl, bc
+    ld a, [hl]
+    cp $FF
+    ret z                               ; no override: the handler's own element
+    call ElemLevelOfA
+    ld e, a
+    ret
+
+; [S111] ElemLevelOfA — A = a resistance (0-26, gamedata.RESIST_NAMES order) or
+; $FE (= none: level 0) -> A = the CURRENT TARGET's level 0-3 for it. The 27
+; levels are packed 2 bits each, MSB first, at $DD28 + 7*slot; resistance t
+; sits at position t+1 (BATTLE_SKILL_SYSTEM §15.3). Clobbers BC, D, HL.
+ElemLevelOfA:
+    cp $FE
+    jr nz, .elem
+    xor a
+    ret
+.elem:
+    inc a                               ; packed position t+1
+    ld c, a
+    srl a
+    srl a
+    ld b, a                             ; byte k = position / 4
+    ld a, [wBattleTargetIdx]
+    and $07
+    ld d, a
+    add a
+    add a
+    add a
+    sub d                               ; slot * 7
+    add b
+    add LOW($dd28)                      ; $DD28 + 55 at most: no carry
+    ld l, a
+    ld h, HIGH($dd28)
+    ld b, [hl]                          ; the packed byte
+    ld a, c
+    and $03                             ; pair p (0 = bits 7:6)
+    ld c, a
+    ld a, $03
+    sub c
+    add a                               ; shift right (3-p)*2
+    ld c, a
+    ld a, b
+    jr z, .done
+.sh:
+    srl a
+    dec c
+    jr nz, .sh
+.done:
+    and $03
+    ret
+
+; [S111] CustomLearnRow72 (entry 6) — bank $06 LearnLoopFork scans the custom
+; ids $E0-$FE after the vanilla rows: their 18-byte learn rows live here
+; (CustomLearnTable, compiler region gd_custom_learn) and are copied one at a
+; time into wLearnRowBuf, where the scanner reads them. In: E = the next id to
+; try. Out: E = the id whose row is now in wLearnRowBuf, skipping rows with
+; level $FF (= not learnable), or E = $FF when none is left.
+CustomLearnRow72:
+.next:
+    ld a, e
+    cp $FF
+    ret z
+    sub $E0
+    ld l, a
+    ld h, $00
+    ld c, l
+    ld b, h
+    add hl, hl
+    add hl, hl
+    add hl, hl
+    add hl, hl
+    add hl, bc
+    add hl, bc                          ; * 18
+    ld bc, CustomLearnTable
+    add hl, bc
+    ld a, [hl]
+    cp $FF
+    jr nz, .copy
+    inc e
+    jr .next
+.copy:
+    push de
+    ld de, wLearnRowBuf
+    ld c, 18
+.cp:
+    ld a, [hl+]
+    ld [de], a
+    inc de
+    dec c
+    jr nz, .cp
+    pop de
+    ret
+
+; -----------------------------------------------------------------------------
+; CustomBattleRun — the per-id handler (CustomBattleExec before S111). Reads the
+; real id and tail-jumps to its handler (handler `ret` returns to the caller).
+; -----------------------------------------------------------------------------
+CustomBattleRun:
     ld a, [$db8a]
     cp $E0
     jp z, SkillMagicBurn
@@ -112,17 +278,24 @@ CustomBattleExec:
 ;   wBattleMP[attacker] -= spent             (record+4=0, so the engine deducts none)
 ; Damage is RAW (we set the final $db56; the applier uses it directly). ROM0 + RAM only.
 ; -----------------------------------------------------------------------------
+; [S111] the two fractions are project data (CustomRatioTable, gd_custom_ratios):
+;   spent  = currentMP * burn            (default 1/2 = the old `>> 1`)
+;   damage = spent * damage-per-MP       (default 1/1), at most 999
 SkillMagicBurn:
     ld a, [$db88]                       ; wBattleAttackerIdx
     call GetCombatantMP                 ; HL = attacker current MP (value, not ptr)
-    srl h
-    rr l                                ; HL = MP >> 1  (= MP spent = damage)
+    ld a, RATIO_MB_BURN
+    call RatioBC72
+    call ScaleHL72                      ; HL = MP spent
+    push hl                             ; save spent (-> DE below)
+    ld a, RATIO_MB_DAMAGE
+    call RatioBC72
+    call ScaleHL72                      ; HL = damage to each foe
     ld a, l
     ld [$db56], a
     ld a, h
     ld [$db57], a                       ; OVERRIDE the damage MegaMagicDamage_653e computed
     ; deduct the spent amount from wBattleMP[attacker]
-    push hl                             ; save spent (-> DE)
     ld a, [$db88]
     add a                               ; idx*2
     ld e, a
@@ -165,10 +338,12 @@ SkillTame:
     ld a, [hl+]                         ; A = ATK low
     ld h, [hl]                          ; H = ATK high
     ld l, a                             ; HL = ATK (u16 LE)
-    srl h
-    rr l                                ; HL = ATK >> 1
-    srl h
-    rr l                                ; HL = ATK >> 2  [S2e] = ATK/4 (weaker than a normal hit)
+    ld a, [$db8a]                       ; [S111] damage = ATK * the tier's fraction
+    sub $E1                             ;   (CustomRatioTable; default 1/4 = the old
+    add a                               ;   two `srl` — weaker than a normal hit)
+    add RATIO_TAME
+    call RatioBC72
+    call ScaleHL72                      ; HL = damage
     ld a, l
     ld [$db56], a
     ld a, h
@@ -210,10 +385,13 @@ SkillTame:
 ; [Stage2] Per-tier taming-meter increments, indexed (skill_id - $E1) * 2.
 ; Values = the vanilla per-meat meter boosts (meat record power_enemy words):
 ; FeedMeat +10 / PorkChop +100 / Sirloin +400; cap $0640 (1600) unchanged.
+; [S111] compiler region gd_tame_meter (gamedata.skills.<225-227>.tame_meter).
 TameMeterTable:
-    dw 10                               ; $E1 Tame     (FeedMeat tier)
-    dw 100                              ; $E2 TameMore (PorkChop tier)
-    dw 400                              ; $E3 TameMost (Sirloin tier)
+; @BUILD_PROJECT BEGIN gd_tame_meter
+    dw 10   ; [$E1] Tame
+    dw 100  ; [$E2] TameMore
+    dw 400  ; [$E3] TameMost
+; @BUILD_PROJECT END gd_tame_meter
 
 ; =============================================================================
 ; [QUAKE] SkillQuake ($E5-$E8 Tremor/Quake/QuakeMore/QuakeMost) — the Earthquake
@@ -314,21 +492,14 @@ SkillQuake:
     ld a, [wQuakePhase]
     cp $02
     jr c, .store                        ; phase 0/1: victim side -> full damage
-    ; integer divide HL by 3 (subtract loop; HL <= ~300 here)
-    ld bc, $0000                        ; BC = quotient
-.div3:
-    ld a, l
-    sub $03
-    ld l, a
-    ld a, h
-    sbc $00
-    ld h, a
-    jr c, .divdone
-    inc bc
-    jr .div3
-.divdone:
-    ld l, c
-    ld h, b
+    ; [S111] allies take the tier's fraction (CustomRatioTable; default 1/3 =
+    ; the old subtract loop, floor)
+    ld a, [$db8a]
+    sub $E5
+    add a
+    add RATIO_QUAKE_ALLY
+    call RatioBC72
+    call ScaleHL72
 .store:
     ; [v3] FLYING target: keep the beat (the fly line renders instead of the
     ; damage text — LoadB4c_MaybeFlew) but land nothing. $db89 is the current
@@ -357,11 +528,14 @@ SkillQuake:
 ; tuning (v1 placeholders): 40-60 / 90-120 / 150-190 / 240-270; top tier =
 ; 1.5x WhiteAir (160-180). Keep CustomMPCostTable (bank $07) + record +4
 ; (bank $54) in sync when rebalancing costs.
+; [S111] compiler region gd_quake_power (gamedata.skills.<229-232>.quake_power).
 QuakePowerTable:
-    db 40, 20                           ; $E5 Tremor    40-60
-    db 90, 30                           ; $E6 Quake     90-120
-    db 150, 40                          ; $E7 QuakeMore 150-190
-    db 240, 30                          ; $E8 QuakeMost 240-270
+; @BUILD_PROJECT BEGIN gd_quake_power
+    db 40, 20   ; [$E5] Tremor 40-60
+    db 90, 30   ; [$E6] Quake 90-120
+    db 150, 40   ; [$E7] QuakeMore 150-190
+    db 240, 30   ; [$E8] QuakeMost 240-270
+; @BUILD_PROJECT END gd_quake_power
 
 ; =============================================================================
 ; [QUAKE] QuakeSweep72 (entry 3) — far target of the $52:$719C sweep-advance
@@ -700,14 +874,22 @@ SkillMourn:
     ld [wMournBoosted], a
     ld [wMournSlashes], a
     call MournCountDead                 ; B = dead allies (0-2)
-    ; multiply $db56/57 by (B + 1)
+    ; [S111] damage += B * (base * per-fallen fraction) — default 1/1 = the old
+    ; x (B + 1); the fraction is CustomRatioTable data
     ld a, b
     or a
     ret z                               ; 0 dead: damage stays at 1× (CalcDefenseWrapper result)
+    push bc
     ld a, [$db56]
-    ld e, a
+    ld l, a
     ld a, [$db57]
-    ld d, a                             ; DE = base damage
+    ld h, a                             ; HL = base damage
+    ld a, RATIO_MOURN
+    call RatioBC72
+    call ScaleHL72                      ; HL = the bonus per fallen ally
+    ld d, h
+    ld e, l                             ; DE = bonus
+    pop bc
 .mulLoop:
     ld a, [$db56]
     add e
@@ -831,3 +1013,235 @@ AnchorField14Tail:
     and $7f                             ;   we are in (party slot 0-2)
     ld [wAnchorCaster], a
     ret                                 ; $da5e stays $E4 -> Anchor07Post closes menu
+
+; =============================================================================
+; [S111] AnchorKeepMP72 (entry 7) — bank $73's Anchor arrival commit asks how
+; much MP the caster keeps. In: DE = current MP. Out: DE = current MP *
+; (1 - the charged fraction) (CustomRatioTable; default charge 3/4 -> keeps
+; cur * 1/4, floor = the old `>> 2`). BC clobbered (rst $10 contract).
+; =============================================================================
+AnchorKeepMP72:
+    ld h, d
+    ld l, e                             ; HL = current MP
+    ld a, RATIO_ANCHOR
+    call RatioBC72                      ; B = charged num, C = den
+    ld a, c
+    sub b
+    ld b, a                             ; B = den - num = the kept part
+    call ScaleHL72
+    ld d, h
+    ld e, l
+    ret
+
+; [S111] RatioBC72 — A = byte offset into CustomRatioTable -> B = numerator,
+; C = denominator. Clobbers A, DE.
+RatioBC72:
+    ld e, a
+    ld d, $00
+    push hl
+    ld hl, CustomRatioTable
+    add hl, de
+    ld b, [hl]
+    inc hl
+    ld c, [hl]
+    pop hl
+    ret
+
+; [S111] ScaleHL72 — HL := min(999, floor(HL * B / C)), exact for any HL and
+; 1 <= C <= 255: with q, r = HL divmod C, HL*B/C = q*B + (r*B)/C (r*B < 65536).
+; Clobbers A, BC, DE.
+ScaleHL72:
+    push bc
+    call Div16by8_72                    ; HL = q, A = r (B clobbered)
+    pop bc
+    push bc
+    push af
+    ld d, h
+    ld e, l                             ; DE = q
+    call Mul16by8_72                    ; HL = q * B (saturating)
+    pop af
+    pop bc
+    push hl
+    ld e, a
+    ld d, $00                           ; DE = r
+    call Mul16by8_72                    ; HL = r * B
+    call Div16by8_72                    ; HL = r * B / C
+    pop de
+    add hl, de
+    jr c, .cap
+    ld a, h
+    cp HIGH(1000)
+    jr c, .ok
+    jr nz, .cap
+    ld a, l
+    cp LOW(1000)
+    jr c, .ok
+.cap:
+    ld hl, 999
+.ok:
+    ret
+
+; [S111] Div16by8_72 — HL := HL / C, A := HL mod C (C >= 1). Clobbers B.
+Div16by8_72:
+    xor a
+    ld b, 16
+.loop:
+    add hl, hl
+    rla
+    jr c, .sub                          ; 9-bit remainder: certainly >= C
+    cp c
+    jr c, .next
+.sub:
+    sub c
+    inc l
+.next:
+    dec b
+    jr nz, .loop
+    ret
+
+; [S111] Mul16by8_72 — HL := DE * B, saturating at $FFFF. Clobbers A, B, DE.
+Mul16by8_72:
+    ld hl, $0000
+.loop:
+    srl b
+    jr nc, .noadd
+    add hl, de
+    jr c, .sat
+.noadd:
+    ld a, b
+    or a
+    ret z
+    sla e
+    rl d
+    jr c, .sat                          ; DE * 2 overflowed with bits left in B
+    jr .loop
+.sat:
+    ld hl, $FFFF
+    ret
+
+; [S111] CustomRatioTable — the built-in custom skills' fixed RATIOS as project
+; data (compiler region gd_custom_ratios, gamedata.skills.<224-233> `burn`,
+; `damage_per_mp`, `damage_of_atk`, `mp_charge`, `ally_damage`, `per_fallen`;
+; PROJECT_COMPILER §2.27). Two bytes each: numerator, denominator. No edits =
+; the S49-S75 constants (results identical, measured).
+; (offsets: the RATIO_* constants at the top of this file)
+CustomRatioTable:
+; @BUILD_PROJECT BEGIN gd_custom_ratios
+    db 1, 2     ; [$E0] MagicBurn: spends 1/2 of the current MP
+    db 1, 1     ; [$E0] MagicBurn: damage = 1/1 x the MP spent
+    db 1, 4     ; [$E1] Tame: damage = 1/4 x ATK
+    db 1, 4     ; [$E2] TameMore: damage = 1/4 x ATK
+    db 1, 4     ; [$E3] TameMost: damage = 1/4 x ATK
+    db 3, 4     ; [$E4] Anchor: charges 3/4 of the current MP on arrival
+    db 1, 3     ; [$E5] Tremor: allies take 1/3
+    db 1, 3     ; [$E6] Quake: allies take 1/3
+    db 1, 3     ; [$E7] QuakeMore: allies take 1/3
+    db 1, 3     ; [$E8] QuakeMost: allies take 1/3
+    db 1, 1     ; [$E9] Mourn: + 1/1 x the base damage per fallen ally
+; @BUILD_PROJECT END gd_custom_ratios
+
+; =============================================================================
+; [S111] SKILL TABLES the compiler owns (PROJECT_COMPILER §2.27; editor2/core/
+; custom_skills.py). No edits = the S110 behaviour.
+; =============================================================================
+; CustomBaseTable [id-$DE] — $FF = the bespoke handler of a built-in custom
+; skill ($E0-$E9); else the STOCK skill whose effect code a NEW custom skill
+; runs (FarSkillFork). Ids $DE-$FE.
+CustomBaseTable:
+; @BUILD_PROJECT BEGIN gd_custom_base
+    db $FF   ; [$DE] retired
+    db $FF   ; [$DF] retired
+    db $FF   ; [$E0] MagicBurn
+    db $FF   ; [$E1] Tame
+    db $FF   ; [$E2] TameMore
+    db $FF   ; [$E3] TameMost
+    db $FF   ; [$E4] Anchor
+    db $FF   ; [$E5] Tremor
+    db $FF   ; [$E6] Quake
+    db $FF   ; [$E7] QuakeMore
+    db $FF   ; [$E8] QuakeMost
+    db $FF   ; [$E9] Mourn
+    db $FF   ; [$EA] -
+    db $FF   ; [$EB] -
+    db $FF   ; [$EC] -
+    db $FF   ; [$ED] -
+    db $FF   ; [$EE] -
+    db $FF   ; [$EF] -
+    db $FF   ; [$F0] -
+    db $FF   ; [$F1] -
+    db $FF   ; [$F2] -
+    db $FF   ; [$F3] -
+    db $FF   ; [$F4] -
+    db $FF   ; [$F5] -
+    db $FF   ; [$F6] -
+    db $FF   ; [$F7] -
+    db $FF   ; [$F8] -
+    db $FF   ; [$F9] -
+    db $FF   ; [$FA] -
+    db $FF   ; [$FB] -
+    db $FF   ; [$FC] -
+    db $FF   ; [$FD] -
+    db $FF   ; [$FE] -
+; @BUILD_PROJECT END gd_custom_base
+; StockElemTable [id] (0-221) / CustomElemTable [id-$DE] — the resistance a
+; skill's damage tests (gamedata.skills.<id>.element): $FF = the effect code's
+; own (stock) / none (built-in custom), $FE = none (level 0), 0-26 = one of the
+; 27 resistances. Read by ElemLevel72 / CustomBattleExec.
+StockElemTable:
+; @BUILD_PROJECT BEGIN gd_skill_elements
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [  0- 15]
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [ 16- 31]
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [ 32- 47]
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [ 48- 63]
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [ 64- 79]
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [ 80- 95]
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [ 96-111]
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [112-127]
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [128-143]
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [144-159]
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [160-175]
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [176-191]
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [192-207]
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [208-221]
+CustomElemTable:
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [$DE-$ED]
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [$EE-$FD]
+    db $FF   ; [$FE-$FE]
+; @BUILD_PROJECT END gd_skill_elements
+; CustomLearnTable [id-$E0] — the 18-byte learn rows of ids $E0-$FE (the
+; SkillLearnReqTable format: level, six u16 stat minimums, five prerequisite
+; ids $FF-padded); level $FF = not learnable. Read by CustomLearnRow72.
+CustomLearnTable:
+; @BUILD_PROJECT BEGIN gd_custom_learn
+    db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$E0] MagicBurn: not learnable
+    db $02, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$E1] Tame: level 2
+    db $03, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $E1, $FF, $FF, $FF, $FF   ; [$E2] TameMore: level 3
+    db $05, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $E2, $FF, $FF, $FF, $FF   ; [$E3] TameMost: level 5
+    db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$E4] Anchor: not learnable
+    db $02, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$E5] Tremor: level 2
+    db $04, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $E5, $FF, $FF, $FF, $FF   ; [$E6] Quake: level 4
+    db $06, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $E6, $FF, $FF, $FF, $FF   ; [$E7] QuakeMore: level 6
+    db $08, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $E7, $FF, $FF, $FF, $FF   ; [$E8] QuakeMost: level 8
+    db $03, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$E9] Mourn: level 3
+    db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$EA] -: not learnable
+    db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$EB] -: not learnable
+    db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$EC] -: not learnable
+    db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$ED] -: not learnable
+    db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$EE] -: not learnable
+    db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$EF] -: not learnable
+    db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$F0] -: not learnable
+    db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$F1] -: not learnable
+    db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$F2] -: not learnable
+    db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$F3] -: not learnable
+    db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$F4] -: not learnable
+    db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$F5] -: not learnable
+    db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$F6] -: not learnable
+    db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$F7] -: not learnable
+    db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$F8] -: not learnable
+    db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$F9] -: not learnable
+    db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$FA] -: not learnable
+    db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$FB] -: not learnable
+    db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$FC] -: not learnable
+    db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$FD] -: not learnable
+    db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$FE] -: not learnable
+; @BUILD_PROJECT END gd_custom_learn

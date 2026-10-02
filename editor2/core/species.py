@@ -293,6 +293,8 @@ def _spills(prj):
         out += SK.bank41_spills(prj)              # S110: renamed skills too
     except SK.SkillError:
         pass
+    from . import custom_skills as CS
+    out += CS.bank41_spills(prj)                  # S111: custom skills' names
     return out
 
 

@@ -1,5 +1,57 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-01 (Session 109 — **ROADMAP P3.10b: THE ARENA EDITOR — ENTRY
+> FEES, MASTERS, TEAMS OF 1-3 MONSTERS** (user on the audit: "Agree with proposed scope.
+> Its own tab. Yes include in scope [master sprites + fees]. Yes I want 1-2 monsters.
+> agreed [bracket shape fixed]. Only flags progression [no prizes]. fine [text read-only].
+> For now its fine, flags session will deal with it [victory cascade read-only]"). S108
+> USER-CONFIRMED at session start. **Test ROM `DWM_S109_arena_demo.gbc` USER-CONFIRMED 2026-10-01 22:57
+> ("Can confirm")**; the editor half (Arena tab) travels with this hand-off —
+> test_app-verified, not yet run on the user's Mac. Verifier PASS; clean `1ca6579…` byte-perfect (bank $09
+> arena class menu re-sectioned by `tools/resection_arena_menu.py`, both trees; the two
+> master-sprite tables addressed by label; comments only); **patched pin `482c949f…`
+> (patched)**, was `77ccdab8…` (patched, historical) — the two 6-byte tails + bank $6E;
+> the user's project as-is now builds `f995cb88…` (patched; was `7f6df249…`, historical).
+> test_compiler --rom 609/609, test_app + test_app --rom PASS (GUI build == pin).
+> `EDITOR_REVISION` = 'S109'.
+>
+> **Built (PROJECT_COMPILER §2.25, SIDEQUEST_MAP "Arena authoring as built — S109",
+> EDITOR_DESIGN §5.2b "As built S109"):** `gamedata.arena.<G..S|StarryNight|King>` = `fee`
+> (classes) + `matches.<0-2>.{master, size}` → compiler regions `gd_arena_masters_04` /
+> `gd_arena_masters_50` (the two master-sprite tables, `$04:$5E22` / `$50:$6778`),
+> `gd_arena_fees` (`ArenaClassFeeTable` `$09:$5D23`) and `gd_arena_team_sizes` (bank
+> $6E). The team members ARE enemy rows (`gamedata.enemies`, EID `$E0 + 9·class + 3·match
+> + slot`; the King 481-483), edited in place. **Engine (NEW hand patch
+> `patches/bank_06e.asm`, bank $6E = Arena systems):** the last 6 bytes of
+> `ArenaBattleSetup` ($04) and `LoadArenaEnemyStats` ($50) far-call `ArenaTeamFixup`,
+> which for a team of 1 / 2 writes `$DA02` = size − 1 and hides the absent slots' display
+> entries (draw id `$FF`); size 3 = vanilla. Editor: new **Arena** tab (after Dialogue) —
+> classes / Starry Night / King, fee, the victory cascade (read-only), per match the
+> master (sprite picker: any room-NPC person or monster), Monsters 1/2/3, the three enemy
+> rows (species + stats, grey "not fought"), back to the original match. Iron Rule 8:
+> species 215-220 refused in a fighting slot or as master.
+>
+> **Found:** (1) the class menu (bank $09 `$5B64`, screen effect type 4 of
+> `ScreenEffectTable09`; S67 had its fee table `$09:$5D23` and `$C0D8`) decoded and
+> re-sectioned: 5 + 9-state machines on `$C905` / `$C906`, the won marks, the gold check
+> and payment; (2) ROM0 **`AddGold` SUBTRACTS** (floor 0; measured 3800 → 3750 at the
+> E class) — name kept, comments + DATA_STRUCTURES corrected; (3) the display list
+> `$D7CA` order is master, slot 1, slot 0, slot 2; (4) measured: the King is one match
+> (the room sets `$D9CD` = 3 — as arena_brackets.json says).
+>
+> **Measured in PyBoy on the user's save** (demo `3653b29d…` (patched) = the user's
+> project + a demo overlay NOT in their project: Starry Night teams of 1 / 2 / 3, a
+> Coatol monster master on match 3, the King with 2, the G class fee 20): through the
+> real lobby flow Starry Night match 1 = one monster (entries 1 + 3 not drawn, one enemy
+> in battle), won → match 2 = two, won → match 3 = three with Coatol standing; the King
+> fought with two; the class menu showed "G CLASS 20" and took 20 (3800 → 3780); an
+> unedited class still fights three. The demo project made through the GUI document
+> model builds the same `3653b29d…`. **Hand-off (user 22:57: "Can confirm. Give handoff with all
+> changes since last repo push"):** every S109 change = the diff against `81418d3`
+> (origin/master), delivered as `DWM-S109-arena-editor-changed-files.zip`, the APPLY list
+> pasted in the chat. **Next session:** the user's pick — the next unchecked item after
+> P3.10b is P3.11 (Skills tab); P3.6 (dialogue editing) would also free the arena text.
+
 > Last verified: 2026-10-01 (Session 108 — **ROADMAP P3.10 PART 3: RENAMING THE
 > ORIGINAL MONSTERS — NAME, DEFAULT NICKNAME, LIBRARY DESCRIPTION — + EVERY
 > DIALOGUE TEXT, MEASURED AND SEARCHABLE** (user 19:03 on the audit: "1) Yes, need to

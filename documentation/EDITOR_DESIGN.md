@@ -1179,6 +1179,38 @@ Every edit is one `SnapshotCommand`; a refused edit (bad name / text / number)
 shows the compiler's message and leaves no undo step. Other tabs' skill pickers use
 `doc.skill_names_effective()` (renames follow). Help: `54_skills.md`.
 
+**As built S111 (ROADMAP P3.11c / P3.11d — the custom skills; test ROM USER-CONFIRMED
+2026-10-02 15:08; the tab test_app-verified).** Compiler §2.27. The list adds the ten
+built-in custom skills (224-233) and the project's NEW skills (234-254) after the 222
+(kind combo: + "custom skills" / "new skills"; the meters include the custom name / text
+regions). **New skill…** asks for a name and a base — only the stock skills the clone
+census measured "same" (`custom_skills.clone_bases`) — and takes the lowest free id;
+**Delete** removes a new skill (refused while a monster learns it, an enemy row has
+it or another skill evolves from it — the message names them). A note at the top
+names a new skill's base ("runs Zap's effect"); "Back to the base skill's values".
+Per skill:
+- **MP and learning** — a **Learnable** box (off = no learn row); MagicBurn / Anchor's MP
+  box disabled with the reason (their code spends the MP); prereqs may name custom ids.
+- **Power** — for built-ins the min-max boxes, Targets and Behaviour are disabled
+  (their handlers set the damage and targets); an **Element** combo (own / none / the 27
+  resistances) for every skill that reaches a damage ladder (the element census; others
+  greyed with a hint), and the AI's element (record +5) follows it.
+- **Looks and sounds** — **Sounds like** next to Looks like (a new skill's sounds follow
+  its looks until set); **Announced as**: the stock line (read-only, as S110) for stock
+  skills; for custom skills a mode combo (own line / a stock line that names the skill
+  — `announce_choices`, the templates vanilla uses with the `{skill}` insert / none) and
+  three line edits with `{name}`.
+- **Its own numbers and lines** (built-ins only) — (S111b) the ratio fields ("1/3", a
+  whole number; original shown beside, bold when changed; a refused value shows the
+  compiler's message and leaves no undo step): MagicBurn MP share + damage per MP, Tame
+  damage of ATK, Anchor MP charge, Quake own-side share, Mourn bonus per fallen ally;
+  Tame / TameMore / TameMost meter, Tremor … QuakeMost power min-max, the Quake banners (allies / flyers, shared by the
+  chain), Mourn's boost line, Anchor's four dialogs.
+The Monsters tab's skill pickers rebuild when skills are added / deleted / renamed.
+Help `54_skills.md` (custom skills, Element, Sounds like, Announce, Its own numbers and
+lines, New skills, the limits: 21 slots, names share the bank $41 budget, which bases
+are offered and why).
+
 ### 5.4 Breeding tab (edit + simulate — user spec "see randomizer")
 
 - **Table editor**: special recipes (bank `$69` full authoring stack

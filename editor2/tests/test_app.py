@@ -485,7 +485,7 @@ def main():
     st = w.skills_tab
     w.tabs.setCurrentWidget(st)
     app.processEvents()
-    assert st.list.count() == 222, st.list.count()
+    assert st.list.count() == 232, st.list.count()     # S111: + the 10 custom skills
 
     def pick(sid):
         for i in range(st.list.count()):
@@ -540,6 +540,97 @@ def main():
     print('OK: Skills tab (S110) — Zap -> Spark (SKIL text, MP 1, 150-159, looks like '
           'Bang), MetalCut at all foes, a flag; a bad name refused; items read-only; '
           'the Monsters tab follows the rename; undo restores everything')
+
+    # S111 (P3.11c/d): custom skills + new skills + elements in the Skills tab
+    from editor2.core import custom_skills as CSm
+    before = doc.dumps()
+    warned = []
+    STm.QMessageBox.warning = staticmethod(lambda *a, **k: warned.append(a[1:3]))
+    w.tabs.setCurrentWidget(st)
+    st.kind.setCurrentIndex(0)
+    app.processEvents()
+    pick(230)                                          # Quake (built in)
+    assert st.sec_params.isVisible() or not st.isVisible()
+    assert not st.power['party'][0].isEnabled() and not st.sec_target.content.isEnabled()
+    st.mp.setValue(12)
+    st.element.setCurrentIndex(st.element.findData(2))        # Explosion
+    app.processEvents()
+    assert st.ann_mode.currentData() == 0xFD and st.ann_lines[0].text() == '{name} sets off'
+    st.ann_lines[1].setText('a big quake!')
+    st.ann_lines[1].editingFinished.emit()
+    app.processEvents()
+    e = doc.data['gamedata']['skills']['230']
+    assert e['mp'] == 12 and e['element'] == 'Explosion' and \
+        e['announce'] == ['{name} sets off', 'a big quake!'], e
+    pick(224)                                          # MagicBurn: MP is code
+    assert not st.mp.isEnabled()
+    assert set(st.ratio_edits) == {'burn', 'damage_per_mp'}, st.ratio_edits
+    st.ratio_edits['burn'].setText('1/4')              # [S111] the ratios
+    st.ratio_edits['burn'].editingFinished.emit()
+    app.processEvents()
+    assert doc.data['gamedata']['skills']['224']['burn'] == '1/4'
+    assert st.ratio_edits['burn'].text() == '1/4'
+    warned_before = len(warned)
+    st.ratio_edits['damage_per_mp'].setText('9')       # refused: at most 4
+    st.ratio_edits['damage_per_mp'].editingFinished.emit()
+    app.processEvents()
+    assert 'damage_per_mp' not in doc.data['gamedata']['skills']['224']
+    assert len(warned) == warned_before + 1 and 'at most 4' in str(warned[-1]), warned
+    warned.pop()
+    pick(230)
+    assert set(st.ratio_edits) == {'ally_damage'}
+    st.ratio_edits['ally_damage'].setText('1/3')       # = the original: nothing written
+    st.ratio_edits['ally_damage'].editingFinished.emit()
+    app.processEvents()
+    assert 'ally_damage' not in doc.data['gamedata']['skills']['230']
+    pick(233)
+    st.ratio_edits['per_fallen'].setText('1/2')
+    st.ratio_edits['per_fallen'].editingFinished.emit()
+    app.processEvents()
+    assert doc.data['gamedata']['skills']['233']['per_fallen'] == '1/2'
+    nid = st.create_skill(16, 'Thunder')                # a NEW skill based on Zap
+    app.processEvents()
+    assert nid == 234 and st.sid == 234 and 'Thunder' in st.title.text(), (nid, st.sid)
+    st.power['party'][0].setValue(60)
+    st.power['party'][1].setValue(75)
+    st.looks.setCurrentIndex(st.looks.findData(6))     # Bang's look
+    st.sounds.setCurrentIndex(st.sounds.findData(15))  # Bolt's sounds
+    st.element.setCurrentIndex(st.element.findData(2))
+    st.learnable.setChecked(True)
+    app.processEvents()
+    st.prereqs.setText('Zap')
+    st.prereqs.editingFinished.emit()
+    app.processEvents()
+    e = doc.data['gamedata']['skills']['234']
+    assert e['base'] == 16 and e['name'] == 'Thunder' and e['looks_like'] == 6 and \
+        e['sounds_like'] == 15 and e['element'] == 'Explosion' and \
+        e['record']['party_min'] == 60 and e['learn']['prereqs'] == [16], e
+    assert doc.skill_names_effective()[234] == 'Thunder'
+    w.monsters_tab.refresh()
+    assert any(c.findData(234) >= 0 for c in w.monsters_tab.w_skill)
+    pick(30)                                           # Upper: no element to change
+    assert not st.element.isEnabled()
+    pick(0)                                            # Blaze -> Ice
+    st.element.setCurrentIndex(st.element.findData(5))
+    app.processEvents()
+    assert doc.data['gamedata']['skills']['0']['element'] == 'Ice'
+    assert doc.skill_detail(0)['record']['status_id'] == 6       # the AI element follows
+    pick(234)
+    st._delete_skill()
+    app.processEvents()
+    assert 234 not in doc.new_skill_ids()
+    STm.QMessageBox.warning = orig_warn
+    assert not warned, warned
+    while w.session.undo.index() > 0 and doc.dumps() != before:
+        w.session.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'undo must restore project.json exactly'
+    hlp = open(os.path.join(REPO, 'editor2', 'help', '54_skills.md')).read()
+    for word in ('New skill', 'Element', 'Sounds like', 'Its own numbers', 'share of the current MP'):
+        assert word in hlp, f'help 54_skills.md lacks "{word}"'
+    print('OK: Skills tab (S111) — Quake MP 12 / Explosion / its own line; MagicBurn MP is '
+          'code, its burn share 1/4 (9 refused); Mourn per fallen 1/2; a new skill Thunder (Zap base, Bang look, Bolt sounds, Explosion, evolves '
+          'from Zap); Blaze -> Ice (AI element follows); delete; undo restores everything')
 
     if do_rom:
         from editor2.app.build_worker import BuildWorker  # noqa: E402

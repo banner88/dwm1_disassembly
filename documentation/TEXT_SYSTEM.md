@@ -199,7 +199,12 @@ sound effect — not "NUM"; 7 uses in the ids, all `$E9 $60`), `$F9` 1 byte (ins
 `$F3` none (a box opener like `$EA` / `$EB`, 20 uses before the speaker). The Control
 Codes table above carries these corrections.
 Battle messages (bank $4C) use their own codes (`$ED`, `$FC xx`, `$EC`, `$F2` — not
-decoded; shown raw by the Dialogue tab).
+decoded; shown raw by the Dialogue tab). **S111 (the forms the custom skills' own lines
+use — `editor2/core/custom_skills.encode_line` / `decode_line`, read from the vanilla
+lines and verified in PyBoy with new lines):** `$ED` opens a line box, `$F9 $00` inserts
+the acting monster's name (`{name}`), `$F9 $10` the acting skill's name (`{skill}`; for
+ids ≥ $DE fixed S111, BATTLE_SKILL_SYSTEM §13.9), `$F1` = next line, `$FC $10 $EC $F2` =
+a new page, `$EC $F0` = the end. Other `$FC` arguments and codes stay undecoded.
 
 ## Monster text blocks (S108)
 
@@ -224,7 +229,7 @@ blocks from `gamedata.monster_text` (PROJECT_COMPILER §2.24).
 |---|---|---|---|
 | skill NAME | bank $41 mode 6, `SkillNamePtrTable` $4539 (256) | `SkillNameStrings` $628E-$69F1 (1,892 B): ids 0-221 + the empty 222nd, id-ordered | 1-9 cells + $F0 (the monster-name encoder) |
 | SKIL-menu DESCRIPTION | bank $56 `SkillDescModeTable` $664B: mode 0 → `SkillDebugTextPtrs` $664F (12 debug strings, $4E4C-$502E), mode 1 → `SkillDescPtrTable` $6667 (256 dw) | `SkillDescStrings` $502F-$664A (5,660 B; re-sectioned S110 as `SkillDesc_NNN_<Name>`): the owned texts 0-150, `SkillDesc_Blank` $6599 (ids 151-212 share it), 213-218, `SkillDesc_None` $664A (219-255 share it) | ≤ 3 lines × ≤ 18 cells, $F1 between lines, same cells as the monster descriptions |
-| custom skills $E0-$E9 | the same pointer table, rows $E0-$E9 | [S73] strings after the spare area, `SkillDescPtr_E0..E9` $56:$7E42+ | as above |
+| custom skills $DE-$FE | the same pointer tables, rows 222-254 (S111: regions `gd_custom_skill_name_ptrs` / `gd_custom_skill_desc_ptrs`) | names: bank $41 `gd_custom_skill_names` $7F98-$7FF5 (94 B; then the shared extents); texts: bank $56 `gd_custom_skill_desc` $7E42-$7FFF (446 B; then `gd_skill_desc_extra`) — PROJECT_COMPILER §2.27 | as above |
 
 The battle announce line ("Slib casts Blaze!") is NOT a per-skill string: bank $58
 `AnnounceTemplateTable` ($5806, 222 B) gives each skill a battle-message template id
@@ -435,3 +440,6 @@ ids stay byte-identical; a stock skill emitting `$FD` (id < $DE) falls back to v
 `$4019[$FD]`. This is the "forked render-from-pointer path" (BATTLE_SKILL_SYSTEM §13.4 open
 follow-up b) — now implemented. MagicBurn (`$E0`) and Tame (`$E1`) both use it (idx = id-$DE).
 Add a skill = one `CustomMsgPtrTable` entry + one pool string. `patches/bank_04c.asm`.
+**S111:** `CustomMsgPtrTable` (33 rows, $DE-$FE) and the pool strings are compiler regions
+(`gd_custom_msg_ptrs`, `gd_custom_msg_a` = MagicBurn's 56-B slot at `$7326`,
+`gd_custom_msgs`); a skill's own line = `gamedata.skills.<id>.announce`, template `$FD`.

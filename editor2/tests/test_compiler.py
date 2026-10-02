@@ -25,7 +25,7 @@ from editor2.core import validators as V
 from editor2.core.project import Project, ProjectError
 
 EXAMPLE = os.path.join(REPO, 'editor2/example-project/project.json')
-REFERENCE_MD5 = "534bfb6245e825445f6d45764ed7305e"   # S110 (P3.11 Skills tab; built S110, NOT yet user-tested): skills as project data — new regions gd_skill_names ($41 SkillNameStrings), gd_skill_desc / gd_skill_desc_ptrs / gd_skill_desc_extra ($56, re-sectioned S110), gd_present_proxy_5f / _55 (looks_like). Engine: bank $5f GetPresentId reads StockPresentTable for stock ids (+6 B code + 222 B table from the pad; the 11 call sites + GetAnimPresentId's jr move with it); NEW hand patch bank $55: `ld a,[$db8a]` at $4061 -> call SfxPresentId (+19 B + StockSfxTable 222 B after jr_055_797a, 241 pad nops). Identity tables = vanilla behaviour. Example: the S44 hand rename 215 Sheldodge -> "BugCut" (3 $F0 pad) became gamedata.skills.215.name, so names 216-221 move 3 B down (+ their 40 pointer words). Prev: 482c949ffabbce1ec409c4c9fb7e5f2e   # S109 (P3.10b arena editor; built S109, NOT yet user-tested): arena team sizes — the last 6 bytes of bank $04 ReadArenaGroup ($5E0A) and bank $50 LoadArenaEnemyStats ($6760), `ld a,$01 / ld [$d7d1],a / ret`, became `ld hl,$6E00 / rst $10 / ret / nop`: new hand patch bank $6E ArenaTeamFixup (writes $D7D1 = 1, then $DA02 and the absent slots' display entries from ArenaTeamSizeTable, region gd_arena_team_sizes; all 3 = vanilla). The arena master tables ($04 / $50) and class fees ($09) are compiler regions gd_arena_masters_04 / _50 / gd_arena_fees (empty gamedata.arena = the same bytes). Diff vs the S107 pin (built in a HEAD worktree): exactly those two 6-byte sites + bank $6E $4000-$4059 + the header checksum. Prev: 77ccdab8a746fdc25fcad8d1239c84e4   # S107 (P3.10 part 2c, USER-CONFIRMED 2026-10-01 "Great, can confirm works"): the JOURNAL party line ($07 jr_007_6271) and its bank-$0A twin (jr_00a_5fd9) read the SAVED party member's family icon through bank $6D FamilyIconGfxFromE (same-size forks, 7 B + 6 nops each) — their unclamped 10-entry tables gave a saved Spirit member gfx id $CDE5 / $0A11 and the screen stopped (PyBoy S107); tables re-sectioned SavedPartyFamilyIconTable07 / 0A (both trees). Family icons are compiler regions gd_family_icons ($4F) / gd_family_icon_streams ($2E, new hand patch) / gd_spirit_icon_stream ($6D), empty = the same bytes. Prev: 9740c1c99f9eb11fd2d0edbf3d0a3066   # S107 (P3.10 part 2b, USER-CONFIRMED 2026-10-01 "Can confirm everything works correctly"): walking layouts for new species — bank $11 both follower entries `ld de, FollowerLayoutL1Table11` -> same-size `call FollowerLayoutBase11` (DE = NewFollowerL1Table - 2*$5D for ids 221+); NewAttrHandler no longer rewrites HRAM $C7 (the S105 donor index), NewFollowerAttrTable 1 B per id, new NewFollowerL1Table (ns_follower_layout, 19 dw; Gorbunok = $4184 as before, undeclared $0000); bank $10 / $11 zero tails = compiler regions lay_copies_10 / lay_copies_11 (empty = the same zeros). S107 2a changed no pinned byte. Prev: f22f56e116bc6b3f6b94e7d45a7e5f1e   # S105 G3 (USER-CONFIRMED 2026-09-30 ("Confirm all three appear as expected")): new-species CAPACITY 1 -> 19 (ids 221-239, any subset). The eight follower forks COMPUTE the gfx-ID $7E00+(id-221)*2 into WRAM wNewSpeciesGid ($D10A, carved from wCustomPool) instead of reading per-bank one-entry tables (their ns_follower_gfx_* regions are gone); every other fork gates on id >= 221 (info $03/$6A, NewAttrHandler $11, HighBattlePal $17 (19 x 8 B table), FamilyRecipeResolve $16 (19 x 2 B), HighDetailTextFork $4D (bases -$1BA), LoadModeBaseRedirect $00 (base $7D39)); bank-$01 follower clamp 240+ only; ROM0 battle gfx table re-sectioned $2D56-$2DA7 (19-word region); bank $41 names / nicknames PACKED into 5 free extents (ns_text_a-e) + the nickname pointer table $7EF3 (ns_short_ptr), and SpellUseText_11's tail $7E06-$7E15 restored to vanilla (B9 S28 had zeroed it); bank $7E pointer table 38 entries (Gorbunok 224 = index 6 / 7). The example still declares only Gorbunok (224). Prev: f8a714850b5318844e23b050a16f222e   # S105 (built, never user-tested — superseded in-session by G3): ROADMAP P3.9b purge of the POC CONTENT from the hand overlay. New species are project data (custom.species, editor2/core/species.py): the example re-expresses Gorbunok byte-identically through 17 ns_* regions + the compiler-owned bank $7E, except (a) its wild row moved from the bank-$14 EID-518 slot to project enemy 520 (bank $6B; pool 0 names it) and (b) the walking layout now comes from the donor index NewAttrHandler writes to HRAM $C7 (bank $11) instead of a pointer written at $11:$413F, which had overwritten ChopClown/Grendal's attr bytes (restored $02,$02). Purged: the S21 Dracky->Clam battle sprite (patches/bank_036.asm deleted), the S12 dead-table mirror (entries 693/803). Anchor's 4 dialog scripts + texts moved from the example's medal_vault room to the built-in skill_scripts.json (bank $60 SkillScriptPtrTable, script type $FF; template CustomScriptRead +9 B, re-pinned; bank $72 arms $FF, ids 2-5 unchanged). Prev: 15f21834385eb38e3650d434c622eda2   # S104 r5 (USER-CONFIRMED 2026-09-30 "perfect. Hand off."): library tab DISPLAY order — bank $12 LibTabToFamily / LibTabOrder (Spirit before ???; == gamedata.DISPLAY_ORDER) used by the tab-strip icons (SaveItem_6184 same-size call) and LibScanByFamily; 39 tail fill nops consumed. Prev: e994173e6086fd9f3cfe5095e3f9ba65   # S104 r4 (USER-CONFIRMED 2026-09-30 "Great that fixed it!"): bank $73 CF3SnapRestore restores the extended farm to $BCC7 only (93 chunks + CF3SnapTail4) — the snapshot's 28 lazy tile-image bytes $BCC8-$BCE3 hold the PREVIOUS save's top tile row (commit runs before SaveGameState's tile block); restoring them broke checksum v3 segment 3 when the last two saves were on different screens (user: save wiped on reset, glitchy top row). Prev: d7b762db217656f4432f115c25b39418   # S104 r3 (built; user: save wiped): bank $12 LibScanByFamily writes the library list to wMonList (was $C0D8; FX1 S71 had moved every bank-$12 reader to wMonList, so each tab listed the roster list and a lookup opened species = list index — user S104: the Spirit lookup froze). Prev: eb1535108cdbc9ac24d64dce3db5591e   # S104 r2 (built; user: Spirit library lookup froze): the Spirit icon = mock-up B "ghost wisp" (user pick) in $4F:$41B0 + the bank $6D SpiritIconStream (run marker $00); new compiler regions gd_family_voices (bank $6D FamilyTextPtrTable11) and gd_spirit_names (bank $41 dead fill) — empty gamedata == the r1 bytes. Prev: eee9f5b08b2f847291103961385099d9   # S104 r1 (built; test ROM user-passed except the Library door, which the user project redirects): ROADMAP P3.10a Spirit as the 11th family — new hand-authored bank $6D FAMILY SYSTEMS (FamilyIconGfxActive/FromE, FamilyTextGroupFromE, FamilyDefaultNameId, SpiritIconStream) behind same-size forks in banks $01/$0A/$04/$09; bank $16 family-scan $FA wildcard jr -> 2 nops ($FA = Spirit); bank $4F ??? glyph restored at $41A0, Spirit glyph at $41B0 (byte $1A); bank $41 mode-4 Spirit string "$1A", Spirit default names in the dead $4323 words + tail fill; bank $07 unknown-parent pedigree icon id 10 -> 11 (id 10 = Spirit since B9 drew the Spirit icon for unknown parents). No example project.json change. Prev: 5d1dbc5f50aa46717d662bdc83b3cad4   # S103 (USER-CONFIRMED 2026-09-30 "Rom - all correct"): ROADMAP P3.9 Layer A-lite — the vanilla data tables (MonsterInfoTable, EnemyStatsTable, EncounterPoolData, FamilyRecipeTable, bank $69 special table, Exp/StatGrowth curves (new patches/bank_013.asm), SkillLearnReq/MPCost/RecordData, bank $12 LibFamilyPtrTable, bank $4D library recipe text re-sectioned) are compiler-owned regions fed by `gamedata`; the example re-expresses the pre-S103 hand edits as gamedata (byte-identical) EXCEPT the library recipe text: its 4 B4 family-recipe slots (DrakSlime / GreatDrak / Almiraj / Wyvern) now show the recipes the table really has (coherence Set 1) — the only byte delta, 17 B in bank $4D + header. Prev: 0d60486e57edc2ad31fa28079d4fc9f8   # S102 (built, NOT yet user-tested): own tile animations — new compiler-owned bank $6C (template bank_06c_head.asm: CustomTileAnimate / TileAnimRestart / TileAnimCopy, empty TileAnimRoomTable in the example), bank $71 CustomAnimSource far-calls it first (+4 B), wram.asm carves wTileAnim* from wCustomPool. Prev: 9c81304176bd069ec77cd4c0d2211900   # S101 (built, NOT yet user-tested): ROADMAP P3.7b part 2 custom boss floors — bank $16 GateFloorDataTable is a compiler-owned region (custom.gates: floors 2-99, boss = custom room / vanilla:$xx, hand_made; the example has no custom.gates so the 256 B are vanilla); bank $14 LoadEnemyStats head -> LoadEnemyStatsExt (EID >= 519 -> new compiler-owned bank $6B CopyEnemyRowExt / ProjectEnemyRows, template bank_06b_head.asm pinned) and LookupBossRedirect -> BossRedirectTableExt (project join_as rows, then the vanilla 34) — the old bank-$14 tail enemy row (quest EID 519) moved to bank $6B; bank $60 CustomStateRules calls CustomMonsterCast first (per-screen monster NPC cast -> $D7CA; empty table in the example); bank $71 CustomRoomBGMResolve: the floor before a CUSTOM boss map plays that room's song (or $34). Example project.json: raw script op hex normalised to the new names (branch_screen/npc_write/...; bytes identical). Prev: 7cd7257b94004fdf8b406138dc7122e1   # S100 r3 (built, NOT yet user-tested): (1) stairs/special-room descent from a FREE-COLOUR custom room faded through the room's own colour 1 (user: "background is not CREAM but room-tile coloured") — bank $06 MapTrans_S10_InGate + MapTrans_S12 same-size rewrites far-call bank $73 new entries 19 GateWipeAttr (the 20x14 $E0 fill rows -> attr 7) and 20 GateLeaveFreePal (buffer+HW colour 1 := cream once the room is squeezed; the load fade targets buffer colour 1); vanilla + unmarked rooms early-ret (PyBoy: vanilla $50 pit transition = same pictures, single-scanline timing jitter only); (2) tools/compress_tiles.py MAX_COPY 256 (the game adds 19 in 8 bits: a 257-274 byte copy wrapped and shifted the rest of a sheet 256 B — an imported blank sheet drew as flat colour blocks) + decompress_tiles.py 8-bit like the game; the example sheet re-encodes (its old stream happened to decode right); (3) editor: "Stairs down here" paints the vanilla next-floor well ($51 slots $2C-$2F over the cell's floor). Prev: 91202c74fc9fc80dffc0e397d9d5e083   # S100 r2 (built, NOT yet user-tested): the example gate rule gains once_per_dive (user 14:39: gate_rotation could be floor 2 AND floor 3 of one dive; PyBoy 40 dives: floor 2 19x, floor 3 12x, never both). Prev: 4f13d2af8411c0b4387094221e9c2382   # S100 (built, NOT yet user-tested): ROADMAP P3.7b part 1 gate room insertion — bank $16 GateDecisionFork rewritten (the S41 hardcoded gate-1 -> $6D POC + CustomGate1Setup removed; push/pop BC around the far call because the vanilla special-room test after the fork divides B = wCurrentFloor) -> bank $71 entry 4 CustomGateInsert over the generated GateInsertTable (custom.gate_inserts[]: gate, floors, chance, flag terms, once-per-dive); entry 5 CustomRoomFlags + CustomRoomFlagsTable (can_save) read by the bank $07 save ladder same-size rewrite SaveAllowCheck (vanilla verdicts identical over all 256 mapIDs); entry 1 gate byte $FF = follow the dive (no pin); dive state wGateDiveGate/Mask $DEBC-D persisted via SRAM $BFCA-B in bank $73 entries 5/6; template 164 -> 395 B re-pinned; example project: gate_rotation served on Villager floors 2-3 at 50 % (was every floor), gate_arrival (4,6), stairs tag. PyBoy on the user save: gate-21 decisions identical to the S99 build (no rule = no RNG), floor 2/3 hit 19/40 each, floor 4 0/40, once-per-dive + flag rule + follow-gate encounters + gate/own music + JOURNAL allowed/refused + save-in-room/reload/descend. Prev: d072eb516dabc4799d830c170bbc9d9f   # S99 (built, NOT yet user-tested): ROADMAP P3.3e room tile animation — bank $01 PerRoomVRAMDispatch same-size rewrite (the six wGameState bit/ret-nz guards collapsed into `and $fe / cp $10`, proven equivalent over all 65,536 (wGameState, $C8EF) pairs; freed bytes fund: custom rooms ask bank $71 entry 3 CustomAnimSource for their animation source instead of `call MapIDClampForDispatch` = Castle for all); template bank_071_head.asm + entry 3 (head 142 -> 164 B, re-pinned); generated CustomAnimSrcTable (1 B/room); example project gains explicit `animation` (arena_clone source = $06 bare ret; the rest none) — so tiles 77/78 no longer roll in the example rooms. PyBoy: vanilla rooms frame-converge with the S98 build (sub-frame tile-load timing only), clones animate their source (test_canvas v6 --rom: VRAM == census schedule). Prev: ce24de8b708fe453711075dd0a3e07f8   # S97 round 2 (USER-CONFIRMED 2026-09-26; S98 changed no example/compiler-owned bytes — pin held): text boxes keep palette 7 (cream) in free-colour custom rooms — bank $06 dialog LoadMapS_6939 / state 9 / LoadMapS_6b3d same-size far calls to bank $73 entries 14-16 (row attrs saved to wBoxAttrSave, set to 7, restored cell by cell on close), bank $56 SetB56_48a1 + bank $00 ClearTextBitsRedraw same-size far calls to entries 18/17 for the YES/NO box; wram carves 132 B from wCustomPool. Vanilla + non-free rooms: pixel-identical dialog/choice frames (PyBoy). No example bytes change from the S97 r2 boxes text form (the example uses `lines`). Prev: 6e97fd377f50de47c98dcd665f515da7   # S97 round 1 (USER-CONFIRMED 2026-09-26): ROADMAP P3.5a state rules — bank $60 template entry 8 CustomStateRules (+ CustomReadStep calls it; head 383 -> 492 B, re-pinned) and bank $17 CustomAttrCheck calls StateRulesHook17 first (3 B from the ds-12 reserve -> ds 9; PyBoy-measured: the attr/palette walk reads the step counter BEFORE bank $0B Entry 0, so a rule evaluated only in Entry 0 loads the previous state's palette — A/B proven on the servant clone); generated CustomStateRulePtrTable in bank $60; the example project's S92 rank demo moved from the entry:medal_vault prelude to arena_clone.state_rules (flag $0030 -> screen 1 state 1; PyBoy: identical NPC sets flag clear/set, survives a wiped counter; vault entry script unchanged in behaviour). Also S97: the NPC type byte fields (behaviour/object) in the compiler — no example bytes change from them. Prev: 5db25d15af6298ca8be9e717a4a95b41   # S96 round 4 (USER-CONFIRMED 2026-09-25 ("Everything works"), SameBoy menu/battle): field-menu fix for free-colour rooms (user SameBoy report: washed-out room after closing the menu + colour-1 squares during the open wipe). FreeColor1Hook now keys on a PER-SLOT marker (bit 15 of colour 3 in slots 0-3, compiler-set for free_color1 palettes) and puts it back after the colour-3 pass, so the menu's standalone LoadPal_4102 no longer re-forces cream; bank $06 A-press menu-open tail rewritten same-size (4x `ld [hl+],a`) to far-call bank $73 entry 13 MenuOpenFreePal (hardware colour 1 := cream for marked slots during the tile-$E0 wipe; buffer untouched, menu-close push restores). Vanilla rooms: 619/620 menu frames pixel-identical to the round-3 build (1 mid-redraw text frame shifted by the far call's cycles). Prev: 07a71f202f011530ba7bb7d312666a97   # S96 (built, NOT yet user-tested): bank $17 FreeColor1Hook — LoadPal_4102's colour-1 pass (`ld a, [$c7d1]`) same-size -> jp FreeColor1Hook (bank tail, before room_render_tables): custom rooms whose loaded palette has bit 15 in slot 0 colour 3 (compiler marker for `free_color1` palettes) keep their own colour 1 in slots 0-3; slots 4-6 and every vanilla room unchanged. Example project has no free_color1 palette, so only the hook code moves bytes (room_render_tables shift, label-resolved). PyBoy: Pei import room BG palette RAM slots 0-3 == project (own colour 1), slots 4-7 $6BFF, GreatTree unchanged, holds after screen scroll. Prev: fc1caa987f5d4be1ad86ef7d4e87db20   # S94b (built, NOT yet user-tested): (1) vanilla-format per-(screen, STATE) attr+palette tables — bank $17 CustomAttrPtrTable -> RoomAttr_<mid> (16 dw) -> ScrAttr_<mid>_<k> (dw step counter; per state db attr_entry, attr_bank / dw pal_ptr) read by CustomAttrCheck/CustomPalCheck exactly like the vanilla AttrPtrTable walk (vanilla varies attr AND palette per step: Servant room $3F; clones carry ALL valid vanilla steps as states[] with per-state layout/attr/palette); (2) entrance redirects — custom.entrance_redirects[] lowered to per-(mapID, screen) VanillaExitExtTable rows (db mapID, screen; $FF = any) with every valid vanilla step rebuilt from extracted/map_table.json and only the named door re-pointed; template head 358 -> 383 (VanillaExitResolve keys on wScreenIndex), re-pinned; (3) bank $0B RoomEntry9 (boundary push exits) diverted through bank $60 entry 7 too (same-size rewrite, 5 nops) so y=0/7 extension rows are LIVE; (4) Exit_GreatTree_s8 restored to VANILLA bytes — the S92 Library-door repoint ($72) and the S1-era (4,5)->$6B entrance are now example-project DATA (entrance_redirects). PyBoy: Library door -> $72 scr 1 (14,7); (4,5) -> $6B (7,6); untouched GreatTree screen-12 door -> $0D; MedalMan south edge and OldManGate south edge identical to the original ROM; fresh-project Farm clone + redirect walk-through (test_canvas --rom). Prev: cdadf8346e207c248b151491e3ca2774   # S94 (built, NOT yet user-tested): per-SCREEN attr maps — CustomAttrCheck (patches/bank_017.asm) now reads CustomRoomAttr as dw per room -> 17-byte [bank, entry x16] map emitted by render17 (screens[k].attr > layout item attr > render.attr > $FF vanilla); the S42 base_entry+2 stride is retired (a 6-screen Farm clone PyBoy-verified: each screen its own attr, old rule mismatched 100+ tiles on screens 2/4/5/6). Also S94: ROM0 $26DD rows $6B-$6F are a compiler-owned @BUILD_PROJECT region in patches/bank_000.asm (rom0_records emitter; record required for EVERY room), 4x4 screen grid schema (keys 0-15, subtable width per row), extract_room emits screens[].attr, arena_clone screens 1/2 now carry their OWN attr items (attr_s1/attr_s2 — the faithful clone; under the old stride both showed attr_s2). Prev: df3219623203cf5bc272cb6155f07a01   # S92v5 (USER-CONFIRMED): rank state re-authored as visible-by-removal — rank G+ (flag $0030) removes the (7,6) $12 attendant; user-confirmed vanishing in-game. The v4 swap target $54 renders empty in field contexts (S91) — and that is VANILLA-FAITHFUL: user confirms the real lobby shows only 2 bunnies + 2 desks (the $54 entry is the desk talk-point). USER-CONFIRMED this session: Library-door entrance teleports to the clone; all 3 clone screens accessible on a normal save; postgame right-screen "crash" was a savestate issue, not the ROM. Prev S92v4: rank trigger corrected to EVENT FLAG $0030 (rank G cleared) — the S92v3 $D9CE ladder keyed a transient coliseum variable, not persistent rank (user-reported: G cleared, no state change). Both preludes (entry:medal_vault + arena_clone scr0) now if_flag_set $0030. PyBoy-verified on BOTH user saves: normal (flag 0 -> ctr 0 -> clerk) and postgame (flag 1 -> ctr 1 -> slime in buffer after a screen-seam cross; first-load NPCs predate the entry-script arming per the measured load-order rule, and a seam cross re-reads the screen state mid-visit — no re-entry needed). Postgame right-screen crash NOT reproduced headless (marker tile, NPC talk, north door all clean on the user postgame sav) — handed to user SameBoy debugging. Prev S92v3 (user-directed): GreatTree Library door REPOINTED to arena_clone $72 — in-place same-size byte edit in patches/bank_00b.asm at $0B:$4FE6 (05 03 12 00 04 05 07 -> 05 03 72 00 01 04 07; restore note at the site). NO injected triggers: the $12/$13 vanilla_exit_extensions rows are REMOVED (the v2 gate-room door was behind the 100-monster gate; main-Library injection is blocked by the map-wide replacement-list hazard, KEY_LESSONS S92). PyBoy-verified with real transitions both directions (Library south exit regressed; door -> clone (14,7) scr1; clone south -> GreatTree scr 4). Library itself unreachable while the repoint stands (testing stance, user-approved). Prev S92 pins: d5e052081890dd24137c0738aa240794 (v2 gate-room door), + Library Gate Room ($13) vanilla_exit_extensions row — Arena-clone door at (8,6), bottom-right corner (user-directed entrance; the well/vault chain was not the user's topology). Single sub-room = no cross-screen exit-replacement hazard (Library $12 itself is 2 screens sharing one replacement list — rejected for that reason, KEY_LESSONS S92). Both vanilla steps mirrored verbatim; return door PyBoy-regressed. Prev S92 pins: 9e5b592fd4b1150e1504d1be6b0c7c17 (prelude arming), + custom.script_preludes (entry:medal_vault arms arena_clone S1 rank state pre-transition; PyBoy-measured: state selection reads the counter at destination LOAD before its entry script) + rank demo re-authored as an in-budget NPC SWAP + placeholder zero 26DD rows. Interim S92 pin c3513d85283cac54778d0629f4537d6e (clone content, pre-prelude). S92 base: P3.2 [G-A] banks $64/$67 fold behind project.json + states[] backend [G-G] + P3.2b [G-J] clone extractor. Example project GAINS arena_clone ($72, vanilla Arena Lobby $06 clone via tools/extract_room.py, single-version per user decision, BGM $1E), island_copy ($73, custom->custom clone of gate_island), an authored medal_vault staircase layout+exit, and a 2-state rank demo on arena_clone screen1. The $64/$67 EMISSION is byte-identical to the prior hand-generated banks (proven via --expect-md5 a17bff8e67f3043fbff653c65128ea16 before clone content; the fold itself is zero-delta). NOT yet user-tested (built S92). Prev: a17bff8e67f3043fbff653c65128ea16 S85b: AI-committed Anchor $E4 rewritten to Attack in DispatchBoundsStub (prev S85 4c8de38a758eda5eb256d0af6f3be5b1: DispatchBoundsStub re-route $E5-$E8 -> $62BF (bank $58; AI-committed Tremor/Quake swept the party) + Anchor $E4 true no-op in CustomBattleExec (bank $72). Also absorbs the S84 pin move that was never recorded here: b99455d67012e2f451cd5ed96a5020a1 (S84: DispatchBoundsStub bounds guard for AI-committed ids > $E5, bank $58 $694F). Neither session touched compiler-owned banks; the pin is the whole-ROM regression. Prev: ce1e7369eb3876866e897c278510c3ae (S75v4: + LearnCode2Guard06 (bank $06: custom ids can never stat-learn via the code-2 path) + SlotProbeGuard50 (bank $50: level probe bounds slot index < $28; the stale-$cac0 phantom-slot-40 echo-RAM hazard) + builder-integrated validate_custom_data.py. Prev: 762c0df0e23611bce6c931813e976d0c (S75v2: banner-before-animation (user feedback: MournCountDead shared counter evaluated in the anim fork; banner render + $FE hold state precede the two slash plays; handler keeps only the multiplier; bank $72 only). Prev: a914e4896c3380b061d9bff8cfe509f6 (S75: + custom skill $E9 Mourn (ATK-vs-DEF x (dead allies+1) via the 2nd dispatch trampoline MournDispatch52; double EvilSlash replay; boost banner; banks $06/$07/$14/$41/$4c/$52/$53/$54/$56/$58/$5f/$72/wram -- BATTLE_SKILL_SYSTEM 13.8). This pin supersedes the S73b reference DIRECTLY: the S74 Earthquake bytes were never pinned here (S74 did not touch compiler-owned banks and did not run this chain), so the S74+S75 patched deltas both land in this one pin move. Prev: 224b11766b28de88cdb206c31145e286 (S73b: + skill descriptions for $E0-$E4 (bank $56 table $6667 repoints + 226 string bytes from tail pad) and battle field-only rejection for $E4 (bank $50 FieldOnlySkillA shared predicate: menu $0302 message without consuming the turn + usable-count exclusion; 12-byte mid-pad consumption, shift audit clean). Prev: 8fa605d795a7591871d5ad02058addfb (S73 Anchor reference patched build (custom skill $E4 Anchor: field-cast system RE'd — bank $07 usability whitelist in-place rewrite + Anchor07Post state-4 menu close; bank $14 entry-4 tail -> bank $72 AnchorField14Tail context classifier; script arm protocol ctr=$FFFF; GateAwareDispatch script-type branch (template re-pinned); medal_vault scripts 2-5 + dialogue $0A20-$0A23; bank $73 commit-hook arm 1/2/3 (anchor store / install+3/4-current-MP charge on arrival / GateDecisionFork force-standard); persistent wAnchorGate/Floor $D9D7-8 (flags $01E0-$01EF retired), transient $DEB2-3; PyBoy-verified full round trip via real menu UI both directions, MP 98->24, anchor single-use, error dialogs 4/5, NO paths, Heal/WarpWing/NPC regressions). Prev: 46ba69918c7ddfdfcd8a441d967debb6 (S71v2 FX1 reference patched build (exp-scale veto: drain pays FULL pending per eligible farm monster — vanilla per-monster rate; v1 halved it. USER-CONFIRMED v1 mechanics 2026-07-26: farm menus >17, sleep whole-swap, save/reload, breeding + hatches at scale, "everything works"; v2 delta = drain payout only, PyBoy-verified full 512 payout in both farm regions). Prev: 9c3af0d434f3d5bcd617677a42129778 (S71 FX1 reference patched build (farm expansion 17->37 active slots: array 40 slots (0-2 party, 3-19 farm @$A1FB+s*$95, 20-39 farm @$B124+(s-20)*$95 = the evicted sleep pool's bank-0 home; staging pseudo-slot INDICES 20/21 -> 40/41, addresses unchanged $D665/$D6FA); sleep pool -> SRAM bank 2 ($A010+c*$95, 40 slots, "P1" magic) via bank $73 entries 10-12; one-time F2 reformat gate $BFC8-9 in entry 4 (order load-bearing: legacy sums BEFORE F2 stamp, v3 after); checksum v3 = $A002x$1C5 + $AD9Fx$385 + $BCC8x$338; snapshot R4 dual-region ($A1BF x95 + $B124 x94 chunks); roster lists + canonicalizer map -> wMonList $D001 (C0D8 overflow at 40 slots); exp payout halved at drain (aggregate 37/32~=vanilla 17/16); PyBoy-verified: reformat preserves save, R3->R4 upgrade, 25-farm canonicalize/list/rewind/dual-snapshot/drain/battle). Prev: a5a5e0d5d01949b30bbff9d3253d9748 (S70v3 reference patched build (walk-on boundary exits for custom rooms: Entry 6 scan y=7 skip is data-driven via wCustomY7Cmp $DE74 (carved from the S65 legacy pad), armed fresh by bank $60 entry 7 before every scan - vanilla branch writes $07 (original skip semantics preserved), CustomExitCheck writes $FE (custom-room y=7 rows fire on arrival, PyBoy: 36 frames tap-to-transition, vanilla MedalMan door regression-checked push-only); template head 348->358, re-pinned). Prev: 22d30b66827628b9c8d9d400c48568a4 (S70v2 reference patched build (bug-fix pass, PyBoy-verified: init_dialog $07 protocol - every text outside an NPC interaction gets its own preceding init_dialog, auto-injected by quest lowering (field mode never services the text queue; dismissal tears script dialog mode down); emit_script hard-errors on non-terminated scripts (S70 freeze class); encounter seed 1200 (drain measured 100/step); bank $0B custom-source fast transition (in-place 19-byte window rewrite: exits FROM custom rooms take the town path, 18 frames vs the 385-frame gateworld-return ceremony, a day-one defect, not a regression); write_ram2 $13 opcode; Medal Chamber display strings). Prev: 6a6f4f8791cad0a271d210c7f485569c (S70v1 reference patched build (E2 wiring: progression.quests/enemies lowering -> quest:/entry: scripts + bank $14 tail row EID 519; vanilla_exit_extensions -> VanillaExitExtTable + template entry 7 VanillaExitResolve (re-pinned, head 348 B); bank $0B Entry 6 unified divert (-5 B); bank $01 $4C3E reverted to vanilla ld a,[wMapID] (entry scripts fire at initial entry); legacy compat key retired from the example project; room $71 Medal Vault + dwm2_bgm10). Prev: 94731e601af28503060acf3884348015 (S69v2 reference patched build (roster snapshot: bank-1 magic-gated save-time roster copy restoring vanilla reset-rewind semantics; entries 5/6 tail hooks + CF3SnapXfer/Commit/Restore + wSnapBounce $DE92). Prev: e719d286db0ff66e80755ec3ef1203e0 (S69v1 E3 pin (E3 SRAM 32 KB: 19 ROM0 quadrant-convention RAMB writes retargeted $4100->$6100 (MBC5-ignored), HeaderRAMSize $02->$03, bank $73 entry 9 CF3SRAMBankedCopy + wSRAMXfer* mailbox $DE8B-$DE91). Prev: de0c5a672e7e7e1fb834dd7afe70b9e7 (S65 reference patched build (WRAM migration: NPC/exit buffers -> $CC80/$CD00, step-counter region -> $CD80 (640 B) inside the CF3-freed window; $DE74 region -> static ds 7 pad, wRoomRecScratch stays $DE7B; + bank $73 entry 6 tail zeroes the window after the main-image restore copy). Prev: 7cc0857faad8a950573e865e93f791eb (S64 reference patched build (M3b+M3c: LoadNewBGMIdIntoA same-size rewrite -> bank $71 entry 2 CustomRoomBGMResolve + CustomRoomBGMTable; music emitter owns bank $74; dq6_town1 ids $A4-$A6 from MIDI; Library $12 + gate_island $6B room defaults). Prev: 3009b75ee1e3bd58bc315a39b7324e17 (S63v5 reference patched build (M3a v4 + v5: BGM #07 ids $A1-$A3 in bank $74, room $6C NPC via project.json; bank_060 now compiler-generated via --apply). Prev: c23beed7aadee80a061c0f6c24d7c1f4 (S63 v4, M3a: AudioMasterTableExt + song bank $74 + bank $1E reverted; S62's BGM NPC/set_bgm $9E folded into the example project — S62 had hand-edited bank_060 without updating project/pin, breaking compat==hand byte-identity; restored S63). Prev pins: 168c5f1b5b4b3b2568a6d6e2f3f1ab45 (S60), d31c9300e13b98f516c6bee8b446069d (S58v2)))
+REFERENCE_MD5 = "5a1c540487f9043e9d6431685527f1ad"   # S111b (built S111, NOT yet user-tested): the built-in custom skills' fixed RATIOS are project data — bank $72 CustomRatioTable (region gd_custom_ratios: MagicBurn burn / damage per MP, Tame damage of ATK, Anchor MP charge, Quake allies' share, Mourn bonus per fallen ally) read by ScaleHL72 (floor(x*n/d), at most 999) in the four handlers + bank $72 entry 7 AnchorKeepMP72 (bank $73 Anchor arrival: rst $10 instead of `>> 2`); defaults = the old constants (PyBoy A/B identical); + CustomTargetBaseTable MagicBurn -> Firebal's row, Tame x3 -> Blaze's (the act-time AI cast them at its own side, measured). Prev: 4a2860cfd148cafa6843221d8be1ad49   # S111 (P3.11c/d, built S111, test ROM USER-CONFIRMED 2026-10-02 15:08 ("Looks good")): the custom skills $DE-$FE are project data (19 regions in $07/$41/$4C/$54/$55/$56/$58/$5F/$72; baseline editor2/core/custom_skills.json = the S110 pin's bytes) + NEW custom skills 234-254 (bank $72 FarSkillFork -> CustomBaseTable runs a stock skill's effect with the new id) + the element override (bank $52: the 24 ladder calls go through ElemLadderA/Breath/Slash in the dead $51B3 pocket -> $72 ElemLevel72; StockElemTable / CustomElemTable all $FF = vanilla) + learn rows from $72 CustomLearnTable via wLearnRowBuf ($06 LearnLoopFork) + CustomSfxTable ($55, $09: S110 custom ids read the next SFX table) + bank $50 SaveBtl_5ad2 keeps custom ids' own names (PROJECT_COMPILER §2.27). The Scorch / Smite name strings were dropped (retired $DE/$DF name the empty string). Prev: 534bfb6245e825445f6d45764ed7305e   # S110 (P3.11 Skills tab; built S110, NOT yet user-tested): skills as project data — new regions gd_skill_names ($41 SkillNameStrings), gd_skill_desc / gd_skill_desc_ptrs / gd_skill_desc_extra ($56, re-sectioned S110), gd_present_proxy_5f / _55 (looks_like). Engine: bank $5f GetPresentId reads StockPresentTable for stock ids (+6 B code + 222 B table from the pad; the 11 call sites + GetAnimPresentId's jr move with it); NEW hand patch bank $55: `ld a,[$db8a]` at $4061 -> call SfxPresentId (+19 B + StockSfxTable 222 B after jr_055_797a, 241 pad nops). Identity tables = vanilla behaviour. Example: the S44 hand rename 215 Sheldodge -> "BugCut" (3 $F0 pad) became gamedata.skills.215.name, so names 216-221 move 3 B down (+ their 40 pointer words). Prev: 482c949ffabbce1ec409c4c9fb7e5f2e   # S109 (P3.10b arena editor; built S109, NOT yet user-tested): arena team sizes — the last 6 bytes of bank $04 ReadArenaGroup ($5E0A) and bank $50 LoadArenaEnemyStats ($6760), `ld a,$01 / ld [$d7d1],a / ret`, became `ld hl,$6E00 / rst $10 / ret / nop`: new hand patch bank $6E ArenaTeamFixup (writes $D7D1 = 1, then $DA02 and the absent slots' display entries from ArenaTeamSizeTable, region gd_arena_team_sizes; all 3 = vanilla). The arena master tables ($04 / $50) and class fees ($09) are compiler regions gd_arena_masters_04 / _50 / gd_arena_fees (empty gamedata.arena = the same bytes). Diff vs the S107 pin (built in a HEAD worktree): exactly those two 6-byte sites + bank $6E $4000-$4059 + the header checksum. Prev: 77ccdab8a746fdc25fcad8d1239c84e4   # S107 (P3.10 part 2c, USER-CONFIRMED 2026-10-01 "Great, can confirm works"): the JOURNAL party line ($07 jr_007_6271) and its bank-$0A twin (jr_00a_5fd9) read the SAVED party member's family icon through bank $6D FamilyIconGfxFromE (same-size forks, 7 B + 6 nops each) — their unclamped 10-entry tables gave a saved Spirit member gfx id $CDE5 / $0A11 and the screen stopped (PyBoy S107); tables re-sectioned SavedPartyFamilyIconTable07 / 0A (both trees). Family icons are compiler regions gd_family_icons ($4F) / gd_family_icon_streams ($2E, new hand patch) / gd_spirit_icon_stream ($6D), empty = the same bytes. Prev: 9740c1c99f9eb11fd2d0edbf3d0a3066   # S107 (P3.10 part 2b, USER-CONFIRMED 2026-10-01 "Can confirm everything works correctly"): walking layouts for new species — bank $11 both follower entries `ld de, FollowerLayoutL1Table11` -> same-size `call FollowerLayoutBase11` (DE = NewFollowerL1Table - 2*$5D for ids 221+); NewAttrHandler no longer rewrites HRAM $C7 (the S105 donor index), NewFollowerAttrTable 1 B per id, new NewFollowerL1Table (ns_follower_layout, 19 dw; Gorbunok = $4184 as before, undeclared $0000); bank $10 / $11 zero tails = compiler regions lay_copies_10 / lay_copies_11 (empty = the same zeros). S107 2a changed no pinned byte. Prev: f22f56e116bc6b3f6b94e7d45a7e5f1e   # S105 G3 (USER-CONFIRMED 2026-09-30 ("Confirm all three appear as expected")): new-species CAPACITY 1 -> 19 (ids 221-239, any subset). The eight follower forks COMPUTE the gfx-ID $7E00+(id-221)*2 into WRAM wNewSpeciesGid ($D10A, carved from wCustomPool) instead of reading per-bank one-entry tables (their ns_follower_gfx_* regions are gone); every other fork gates on id >= 221 (info $03/$6A, NewAttrHandler $11, HighBattlePal $17 (19 x 8 B table), FamilyRecipeResolve $16 (19 x 2 B), HighDetailTextFork $4D (bases -$1BA), LoadModeBaseRedirect $00 (base $7D39)); bank-$01 follower clamp 240+ only; ROM0 battle gfx table re-sectioned $2D56-$2DA7 (19-word region); bank $41 names / nicknames PACKED into 5 free extents (ns_text_a-e) + the nickname pointer table $7EF3 (ns_short_ptr), and SpellUseText_11's tail $7E06-$7E15 restored to vanilla (B9 S28 had zeroed it); bank $7E pointer table 38 entries (Gorbunok 224 = index 6 / 7). The example still declares only Gorbunok (224). Prev: f8a714850b5318844e23b050a16f222e   # S105 (built, never user-tested — superseded in-session by G3): ROADMAP P3.9b purge of the POC CONTENT from the hand overlay. New species are project data (custom.species, editor2/core/species.py): the example re-expresses Gorbunok byte-identically through 17 ns_* regions + the compiler-owned bank $7E, except (a) its wild row moved from the bank-$14 EID-518 slot to project enemy 520 (bank $6B; pool 0 names it) and (b) the walking layout now comes from the donor index NewAttrHandler writes to HRAM $C7 (bank $11) instead of a pointer written at $11:$413F, which had overwritten ChopClown/Grendal's attr bytes (restored $02,$02). Purged: the S21 Dracky->Clam battle sprite (patches/bank_036.asm deleted), the S12 dead-table mirror (entries 693/803). Anchor's 4 dialog scripts + texts moved from the example's medal_vault room to the built-in skill_scripts.json (bank $60 SkillScriptPtrTable, script type $FF; template CustomScriptRead +9 B, re-pinned; bank $72 arms $FF, ids 2-5 unchanged). Prev: 15f21834385eb38e3650d434c622eda2   # S104 r5 (USER-CONFIRMED 2026-09-30 "perfect. Hand off."): library tab DISPLAY order — bank $12 LibTabToFamily / LibTabOrder (Spirit before ???; == gamedata.DISPLAY_ORDER) used by the tab-strip icons (SaveItem_6184 same-size call) and LibScanByFamily; 39 tail fill nops consumed. Prev: e994173e6086fd9f3cfe5095e3f9ba65   # S104 r4 (USER-CONFIRMED 2026-09-30 "Great that fixed it!"): bank $73 CF3SnapRestore restores the extended farm to $BCC7 only (93 chunks + CF3SnapTail4) — the snapshot's 28 lazy tile-image bytes $BCC8-$BCE3 hold the PREVIOUS save's top tile row (commit runs before SaveGameState's tile block); restoring them broke checksum v3 segment 3 when the last two saves were on different screens (user: save wiped on reset, glitchy top row). Prev: d7b762db217656f4432f115c25b39418   # S104 r3 (built; user: save wiped): bank $12 LibScanByFamily writes the library list to wMonList (was $C0D8; FX1 S71 had moved every bank-$12 reader to wMonList, so each tab listed the roster list and a lookup opened species = list index — user S104: the Spirit lookup froze). Prev: eb1535108cdbc9ac24d64dce3db5591e   # S104 r2 (built; user: Spirit library lookup froze): the Spirit icon = mock-up B "ghost wisp" (user pick) in $4F:$41B0 + the bank $6D SpiritIconStream (run marker $00); new compiler regions gd_family_voices (bank $6D FamilyTextPtrTable11) and gd_spirit_names (bank $41 dead fill) — empty gamedata == the r1 bytes. Prev: eee9f5b08b2f847291103961385099d9   # S104 r1 (built; test ROM user-passed except the Library door, which the user project redirects): ROADMAP P3.10a Spirit as the 11th family — new hand-authored bank $6D FAMILY SYSTEMS (FamilyIconGfxActive/FromE, FamilyTextGroupFromE, FamilyDefaultNameId, SpiritIconStream) behind same-size forks in banks $01/$0A/$04/$09; bank $16 family-scan $FA wildcard jr -> 2 nops ($FA = Spirit); bank $4F ??? glyph restored at $41A0, Spirit glyph at $41B0 (byte $1A); bank $41 mode-4 Spirit string "$1A", Spirit default names in the dead $4323 words + tail fill; bank $07 unknown-parent pedigree icon id 10 -> 11 (id 10 = Spirit since B9 drew the Spirit icon for unknown parents). No example project.json change. Prev: 5d1dbc5f50aa46717d662bdc83b3cad4   # S103 (USER-CONFIRMED 2026-09-30 "Rom - all correct"): ROADMAP P3.9 Layer A-lite — the vanilla data tables (MonsterInfoTable, EnemyStatsTable, EncounterPoolData, FamilyRecipeTable, bank $69 special table, Exp/StatGrowth curves (new patches/bank_013.asm), SkillLearnReq/MPCost/RecordData, bank $12 LibFamilyPtrTable, bank $4D library recipe text re-sectioned) are compiler-owned regions fed by `gamedata`; the example re-expresses the pre-S103 hand edits as gamedata (byte-identical) EXCEPT the library recipe text: its 4 B4 family-recipe slots (DrakSlime / GreatDrak / Almiraj / Wyvern) now show the recipes the table really has (coherence Set 1) — the only byte delta, 17 B in bank $4D + header. Prev: 0d60486e57edc2ad31fa28079d4fc9f8   # S102 (built, NOT yet user-tested): own tile animations — new compiler-owned bank $6C (template bank_06c_head.asm: CustomTileAnimate / TileAnimRestart / TileAnimCopy, empty TileAnimRoomTable in the example), bank $71 CustomAnimSource far-calls it first (+4 B), wram.asm carves wTileAnim* from wCustomPool. Prev: 9c81304176bd069ec77cd4c0d2211900   # S101 (built, NOT yet user-tested): ROADMAP P3.7b part 2 custom boss floors — bank $16 GateFloorDataTable is a compiler-owned region (custom.gates: floors 2-99, boss = custom room / vanilla:$xx, hand_made; the example has no custom.gates so the 256 B are vanilla); bank $14 LoadEnemyStats head -> LoadEnemyStatsExt (EID >= 519 -> new compiler-owned bank $6B CopyEnemyRowExt / ProjectEnemyRows, template bank_06b_head.asm pinned) and LookupBossRedirect -> BossRedirectTableExt (project join_as rows, then the vanilla 34) — the old bank-$14 tail enemy row (quest EID 519) moved to bank $6B; bank $60 CustomStateRules calls CustomMonsterCast first (per-screen monster NPC cast -> $D7CA; empty table in the example); bank $71 CustomRoomBGMResolve: the floor before a CUSTOM boss map plays that room's song (or $34). Example project.json: raw script op hex normalised to the new names (branch_screen/npc_write/...; bytes identical). Prev: 7cd7257b94004fdf8b406138dc7122e1   # S100 r3 (built, NOT yet user-tested): (1) stairs/special-room descent from a FREE-COLOUR custom room faded through the room's own colour 1 (user: "background is not CREAM but room-tile coloured") — bank $06 MapTrans_S10_InGate + MapTrans_S12 same-size rewrites far-call bank $73 new entries 19 GateWipeAttr (the 20x14 $E0 fill rows -> attr 7) and 20 GateLeaveFreePal (buffer+HW colour 1 := cream once the room is squeezed; the load fade targets buffer colour 1); vanilla + unmarked rooms early-ret (PyBoy: vanilla $50 pit transition = same pictures, single-scanline timing jitter only); (2) tools/compress_tiles.py MAX_COPY 256 (the game adds 19 in 8 bits: a 257-274 byte copy wrapped and shifted the rest of a sheet 256 B — an imported blank sheet drew as flat colour blocks) + decompress_tiles.py 8-bit like the game; the example sheet re-encodes (its old stream happened to decode right); (3) editor: "Stairs down here" paints the vanilla next-floor well ($51 slots $2C-$2F over the cell's floor). Prev: 91202c74fc9fc80dffc0e397d9d5e083   # S100 r2 (built, NOT yet user-tested): the example gate rule gains once_per_dive (user 14:39: gate_rotation could be floor 2 AND floor 3 of one dive; PyBoy 40 dives: floor 2 19x, floor 3 12x, never both). Prev: 4f13d2af8411c0b4387094221e9c2382   # S100 (built, NOT yet user-tested): ROADMAP P3.7b part 1 gate room insertion — bank $16 GateDecisionFork rewritten (the S41 hardcoded gate-1 -> $6D POC + CustomGate1Setup removed; push/pop BC around the far call because the vanilla special-room test after the fork divides B = wCurrentFloor) -> bank $71 entry 4 CustomGateInsert over the generated GateInsertTable (custom.gate_inserts[]: gate, floors, chance, flag terms, once-per-dive); entry 5 CustomRoomFlags + CustomRoomFlagsTable (can_save) read by the bank $07 save ladder same-size rewrite SaveAllowCheck (vanilla verdicts identical over all 256 mapIDs); entry 1 gate byte $FF = follow the dive (no pin); dive state wGateDiveGate/Mask $DEBC-D persisted via SRAM $BFCA-B in bank $73 entries 5/6; template 164 -> 395 B re-pinned; example project: gate_rotation served on Villager floors 2-3 at 50 % (was every floor), gate_arrival (4,6), stairs tag. PyBoy on the user save: gate-21 decisions identical to the S99 build (no rule = no RNG), floor 2/3 hit 19/40 each, floor 4 0/40, once-per-dive + flag rule + follow-gate encounters + gate/own music + JOURNAL allowed/refused + save-in-room/reload/descend. Prev: d072eb516dabc4799d830c170bbc9d9f   # S99 (built, NOT yet user-tested): ROADMAP P3.3e room tile animation — bank $01 PerRoomVRAMDispatch same-size rewrite (the six wGameState bit/ret-nz guards collapsed into `and $fe / cp $10`, proven equivalent over all 65,536 (wGameState, $C8EF) pairs; freed bytes fund: custom rooms ask bank $71 entry 3 CustomAnimSource for their animation source instead of `call MapIDClampForDispatch` = Castle for all); template bank_071_head.asm + entry 3 (head 142 -> 164 B, re-pinned); generated CustomAnimSrcTable (1 B/room); example project gains explicit `animation` (arena_clone source = $06 bare ret; the rest none) — so tiles 77/78 no longer roll in the example rooms. PyBoy: vanilla rooms frame-converge with the S98 build (sub-frame tile-load timing only), clones animate their source (test_canvas v6 --rom: VRAM == census schedule). Prev: ce24de8b708fe453711075dd0a3e07f8   # S97 round 2 (USER-CONFIRMED 2026-09-26; S98 changed no example/compiler-owned bytes — pin held): text boxes keep palette 7 (cream) in free-colour custom rooms — bank $06 dialog LoadMapS_6939 / state 9 / LoadMapS_6b3d same-size far calls to bank $73 entries 14-16 (row attrs saved to wBoxAttrSave, set to 7, restored cell by cell on close), bank $56 SetB56_48a1 + bank $00 ClearTextBitsRedraw same-size far calls to entries 18/17 for the YES/NO box; wram carves 132 B from wCustomPool. Vanilla + non-free rooms: pixel-identical dialog/choice frames (PyBoy). No example bytes change from the S97 r2 boxes text form (the example uses `lines`). Prev: 6e97fd377f50de47c98dcd665f515da7   # S97 round 1 (USER-CONFIRMED 2026-09-26): ROADMAP P3.5a state rules — bank $60 template entry 8 CustomStateRules (+ CustomReadStep calls it; head 383 -> 492 B, re-pinned) and bank $17 CustomAttrCheck calls StateRulesHook17 first (3 B from the ds-12 reserve -> ds 9; PyBoy-measured: the attr/palette walk reads the step counter BEFORE bank $0B Entry 0, so a rule evaluated only in Entry 0 loads the previous state's palette — A/B proven on the servant clone); generated CustomStateRulePtrTable in bank $60; the example project's S92 rank demo moved from the entry:medal_vault prelude to arena_clone.state_rules (flag $0030 -> screen 1 state 1; PyBoy: identical NPC sets flag clear/set, survives a wiped counter; vault entry script unchanged in behaviour). Also S97: the NPC type byte fields (behaviour/object) in the compiler — no example bytes change from them. Prev: 5db25d15af6298ca8be9e717a4a95b41   # S96 round 4 (USER-CONFIRMED 2026-09-25 ("Everything works"), SameBoy menu/battle): field-menu fix for free-colour rooms (user SameBoy report: washed-out room after closing the menu + colour-1 squares during the open wipe). FreeColor1Hook now keys on a PER-SLOT marker (bit 15 of colour 3 in slots 0-3, compiler-set for free_color1 palettes) and puts it back after the colour-3 pass, so the menu's standalone LoadPal_4102 no longer re-forces cream; bank $06 A-press menu-open tail rewritten same-size (4x `ld [hl+],a`) to far-call bank $73 entry 13 MenuOpenFreePal (hardware colour 1 := cream for marked slots during the tile-$E0 wipe; buffer untouched, menu-close push restores). Vanilla rooms: 619/620 menu frames pixel-identical to the round-3 build (1 mid-redraw text frame shifted by the far call's cycles). Prev: 07a71f202f011530ba7bb7d312666a97   # S96 (built, NOT yet user-tested): bank $17 FreeColor1Hook — LoadPal_4102's colour-1 pass (`ld a, [$c7d1]`) same-size -> jp FreeColor1Hook (bank tail, before room_render_tables): custom rooms whose loaded palette has bit 15 in slot 0 colour 3 (compiler marker for `free_color1` palettes) keep their own colour 1 in slots 0-3; slots 4-6 and every vanilla room unchanged. Example project has no free_color1 palette, so only the hook code moves bytes (room_render_tables shift, label-resolved). PyBoy: Pei import room BG palette RAM slots 0-3 == project (own colour 1), slots 4-7 $6BFF, GreatTree unchanged, holds after screen scroll. Prev: fc1caa987f5d4be1ad86ef7d4e87db20   # S94b (built, NOT yet user-tested): (1) vanilla-format per-(screen, STATE) attr+palette tables — bank $17 CustomAttrPtrTable -> RoomAttr_<mid> (16 dw) -> ScrAttr_<mid>_<k> (dw step counter; per state db attr_entry, attr_bank / dw pal_ptr) read by CustomAttrCheck/CustomPalCheck exactly like the vanilla AttrPtrTable walk (vanilla varies attr AND palette per step: Servant room $3F; clones carry ALL valid vanilla steps as states[] with per-state layout/attr/palette); (2) entrance redirects — custom.entrance_redirects[] lowered to per-(mapID, screen) VanillaExitExtTable rows (db mapID, screen; $FF = any) with every valid vanilla step rebuilt from extracted/map_table.json and only the named door re-pointed; template head 358 -> 383 (VanillaExitResolve keys on wScreenIndex), re-pinned; (3) bank $0B RoomEntry9 (boundary push exits) diverted through bank $60 entry 7 too (same-size rewrite, 5 nops) so y=0/7 extension rows are LIVE; (4) Exit_GreatTree_s8 restored to VANILLA bytes — the S92 Library-door repoint ($72) and the S1-era (4,5)->$6B entrance are now example-project DATA (entrance_redirects). PyBoy: Library door -> $72 scr 1 (14,7); (4,5) -> $6B (7,6); untouched GreatTree screen-12 door -> $0D; MedalMan south edge and OldManGate south edge identical to the original ROM; fresh-project Farm clone + redirect walk-through (test_canvas --rom). Prev: cdadf8346e207c248b151491e3ca2774   # S94 (built, NOT yet user-tested): per-SCREEN attr maps — CustomAttrCheck (patches/bank_017.asm) now reads CustomRoomAttr as dw per room -> 17-byte [bank, entry x16] map emitted by render17 (screens[k].attr > layout item attr > render.attr > $FF vanilla); the S42 base_entry+2 stride is retired (a 6-screen Farm clone PyBoy-verified: each screen its own attr, old rule mismatched 100+ tiles on screens 2/4/5/6). Also S94: ROM0 $26DD rows $6B-$6F are a compiler-owned @BUILD_PROJECT region in patches/bank_000.asm (rom0_records emitter; record required for EVERY room), 4x4 screen grid schema (keys 0-15, subtable width per row), extract_room emits screens[].attr, arena_clone screens 1/2 now carry their OWN attr items (attr_s1/attr_s2 — the faithful clone; under the old stride both showed attr_s2). Prev: df3219623203cf5bc272cb6155f07a01   # S92v5 (USER-CONFIRMED): rank state re-authored as visible-by-removal — rank G+ (flag $0030) removes the (7,6) $12 attendant; user-confirmed vanishing in-game. The v4 swap target $54 renders empty in field contexts (S91) — and that is VANILLA-FAITHFUL: user confirms the real lobby shows only 2 bunnies + 2 desks (the $54 entry is the desk talk-point). USER-CONFIRMED this session: Library-door entrance teleports to the clone; all 3 clone screens accessible on a normal save; postgame right-screen "crash" was a savestate issue, not the ROM. Prev S92v4: rank trigger corrected to EVENT FLAG $0030 (rank G cleared) — the S92v3 $D9CE ladder keyed a transient coliseum variable, not persistent rank (user-reported: G cleared, no state change). Both preludes (entry:medal_vault + arena_clone scr0) now if_flag_set $0030. PyBoy-verified on BOTH user saves: normal (flag 0 -> ctr 0 -> clerk) and postgame (flag 1 -> ctr 1 -> slime in buffer after a screen-seam cross; first-load NPCs predate the entry-script arming per the measured load-order rule, and a seam cross re-reads the screen state mid-visit — no re-entry needed). Postgame right-screen crash NOT reproduced headless (marker tile, NPC talk, north door all clean on the user postgame sav) — handed to user SameBoy debugging. Prev S92v3 (user-directed): GreatTree Library door REPOINTED to arena_clone $72 — in-place same-size byte edit in patches/bank_00b.asm at $0B:$4FE6 (05 03 12 00 04 05 07 -> 05 03 72 00 01 04 07; restore note at the site). NO injected triggers: the $12/$13 vanilla_exit_extensions rows are REMOVED (the v2 gate-room door was behind the 100-monster gate; main-Library injection is blocked by the map-wide replacement-list hazard, KEY_LESSONS S92). PyBoy-verified with real transitions both directions (Library south exit regressed; door -> clone (14,7) scr1; clone south -> GreatTree scr 4). Library itself unreachable while the repoint stands (testing stance, user-approved). Prev S92 pins: d5e052081890dd24137c0738aa240794 (v2 gate-room door), + Library Gate Room ($13) vanilla_exit_extensions row — Arena-clone door at (8,6), bottom-right corner (user-directed entrance; the well/vault chain was not the user's topology). Single sub-room = no cross-screen exit-replacement hazard (Library $12 itself is 2 screens sharing one replacement list — rejected for that reason, KEY_LESSONS S92). Both vanilla steps mirrored verbatim; return door PyBoy-regressed. Prev S92 pins: 9e5b592fd4b1150e1504d1be6b0c7c17 (prelude arming), + custom.script_preludes (entry:medal_vault arms arena_clone S1 rank state pre-transition; PyBoy-measured: state selection reads the counter at destination LOAD before its entry script) + rank demo re-authored as an in-budget NPC SWAP + placeholder zero 26DD rows. Interim S92 pin c3513d85283cac54778d0629f4537d6e (clone content, pre-prelude). S92 base: P3.2 [G-A] banks $64/$67 fold behind project.json + states[] backend [G-G] + P3.2b [G-J] clone extractor. Example project GAINS arena_clone ($72, vanilla Arena Lobby $06 clone via tools/extract_room.py, single-version per user decision, BGM $1E), island_copy ($73, custom->custom clone of gate_island), an authored medal_vault staircase layout+exit, and a 2-state rank demo on arena_clone screen1. The $64/$67 EMISSION is byte-identical to the prior hand-generated banks (proven via --expect-md5 a17bff8e67f3043fbff653c65128ea16 before clone content; the fold itself is zero-delta). NOT yet user-tested (built S92). Prev: a17bff8e67f3043fbff653c65128ea16 S85b: AI-committed Anchor $E4 rewritten to Attack in DispatchBoundsStub (prev S85 4c8de38a758eda5eb256d0af6f3be5b1: DispatchBoundsStub re-route $E5-$E8 -> $62BF (bank $58; AI-committed Tremor/Quake swept the party) + Anchor $E4 true no-op in CustomBattleExec (bank $72). Also absorbs the S84 pin move that was never recorded here: b99455d67012e2f451cd5ed96a5020a1 (S84: DispatchBoundsStub bounds guard for AI-committed ids > $E5, bank $58 $694F). Neither session touched compiler-owned banks; the pin is the whole-ROM regression. Prev: ce1e7369eb3876866e897c278510c3ae (S75v4: + LearnCode2Guard06 (bank $06: custom ids can never stat-learn via the code-2 path) + SlotProbeGuard50 (bank $50: level probe bounds slot index < $28; the stale-$cac0 phantom-slot-40 echo-RAM hazard) + builder-integrated validate_custom_data.py. Prev: 762c0df0e23611bce6c931813e976d0c (S75v2: banner-before-animation (user feedback: MournCountDead shared counter evaluated in the anim fork; banner render + $FE hold state precede the two slash plays; handler keeps only the multiplier; bank $72 only). Prev: a914e4896c3380b061d9bff8cfe509f6 (S75: + custom skill $E9 Mourn (ATK-vs-DEF x (dead allies+1) via the 2nd dispatch trampoline MournDispatch52; double EvilSlash replay; boost banner; banks $06/$07/$14/$41/$4c/$52/$53/$54/$56/$58/$5f/$72/wram -- BATTLE_SKILL_SYSTEM 13.8). This pin supersedes the S73b reference DIRECTLY: the S74 Earthquake bytes were never pinned here (S74 did not touch compiler-owned banks and did not run this chain), so the S74+S75 patched deltas both land in this one pin move. Prev: 224b11766b28de88cdb206c31145e286 (S73b: + skill descriptions for $E0-$E4 (bank $56 table $6667 repoints + 226 string bytes from tail pad) and battle field-only rejection for $E4 (bank $50 FieldOnlySkillA shared predicate: menu $0302 message without consuming the turn + usable-count exclusion; 12-byte mid-pad consumption, shift audit clean). Prev: 8fa605d795a7591871d5ad02058addfb (S73 Anchor reference patched build (custom skill $E4 Anchor: field-cast system RE'd — bank $07 usability whitelist in-place rewrite + Anchor07Post state-4 menu close; bank $14 entry-4 tail -> bank $72 AnchorField14Tail context classifier; script arm protocol ctr=$FFFF; GateAwareDispatch script-type branch (template re-pinned); medal_vault scripts 2-5 + dialogue $0A20-$0A23; bank $73 commit-hook arm 1/2/3 (anchor store / install+3/4-current-MP charge on arrival / GateDecisionFork force-standard); persistent wAnchorGate/Floor $D9D7-8 (flags $01E0-$01EF retired), transient $DEB2-3; PyBoy-verified full round trip via real menu UI both directions, MP 98->24, anchor single-use, error dialogs 4/5, NO paths, Heal/WarpWing/NPC regressions). Prev: 46ba69918c7ddfdfcd8a441d967debb6 (S71v2 FX1 reference patched build (exp-scale veto: drain pays FULL pending per eligible farm monster — vanilla per-monster rate; v1 halved it. USER-CONFIRMED v1 mechanics 2026-07-26: farm menus >17, sleep whole-swap, save/reload, breeding + hatches at scale, "everything works"; v2 delta = drain payout only, PyBoy-verified full 512 payout in both farm regions). Prev: 9c3af0d434f3d5bcd617677a42129778 (S71 FX1 reference patched build (farm expansion 17->37 active slots: array 40 slots (0-2 party, 3-19 farm @$A1FB+s*$95, 20-39 farm @$B124+(s-20)*$95 = the evicted sleep pool's bank-0 home; staging pseudo-slot INDICES 20/21 -> 40/41, addresses unchanged $D665/$D6FA); sleep pool -> SRAM bank 2 ($A010+c*$95, 40 slots, "P1" magic) via bank $73 entries 10-12; one-time F2 reformat gate $BFC8-9 in entry 4 (order load-bearing: legacy sums BEFORE F2 stamp, v3 after); checksum v3 = $A002x$1C5 + $AD9Fx$385 + $BCC8x$338; snapshot R4 dual-region ($A1BF x95 + $B124 x94 chunks); roster lists + canonicalizer map -> wMonList $D001 (C0D8 overflow at 40 slots); exp payout halved at drain (aggregate 37/32~=vanilla 17/16); PyBoy-verified: reformat preserves save, R3->R4 upgrade, 25-farm canonicalize/list/rewind/dual-snapshot/drain/battle). Prev: a5a5e0d5d01949b30bbff9d3253d9748 (S70v3 reference patched build (walk-on boundary exits for custom rooms: Entry 6 scan y=7 skip is data-driven via wCustomY7Cmp $DE74 (carved from the S65 legacy pad), armed fresh by bank $60 entry 7 before every scan - vanilla branch writes $07 (original skip semantics preserved), CustomExitCheck writes $FE (custom-room y=7 rows fire on arrival, PyBoy: 36 frames tap-to-transition, vanilla MedalMan door regression-checked push-only); template head 348->358, re-pinned). Prev: 22d30b66827628b9c8d9d400c48568a4 (S70v2 reference patched build (bug-fix pass, PyBoy-verified: init_dialog $07 protocol - every text outside an NPC interaction gets its own preceding init_dialog, auto-injected by quest lowering (field mode never services the text queue; dismissal tears script dialog mode down); emit_script hard-errors on non-terminated scripts (S70 freeze class); encounter seed 1200 (drain measured 100/step); bank $0B custom-source fast transition (in-place 19-byte window rewrite: exits FROM custom rooms take the town path, 18 frames vs the 385-frame gateworld-return ceremony, a day-one defect, not a regression); write_ram2 $13 opcode; Medal Chamber display strings). Prev: 6a6f4f8791cad0a271d210c7f485569c (S70v1 reference patched build (E2 wiring: progression.quests/enemies lowering -> quest:/entry: scripts + bank $14 tail row EID 519; vanilla_exit_extensions -> VanillaExitExtTable + template entry 7 VanillaExitResolve (re-pinned, head 348 B); bank $0B Entry 6 unified divert (-5 B); bank $01 $4C3E reverted to vanilla ld a,[wMapID] (entry scripts fire at initial entry); legacy compat key retired from the example project; room $71 Medal Vault + dwm2_bgm10). Prev: 94731e601af28503060acf3884348015 (S69v2 reference patched build (roster snapshot: bank-1 magic-gated save-time roster copy restoring vanilla reset-rewind semantics; entries 5/6 tail hooks + CF3SnapXfer/Commit/Restore + wSnapBounce $DE92). Prev: e719d286db0ff66e80755ec3ef1203e0 (S69v1 E3 pin (E3 SRAM 32 KB: 19 ROM0 quadrant-convention RAMB writes retargeted $4100->$6100 (MBC5-ignored), HeaderRAMSize $02->$03, bank $73 entry 9 CF3SRAMBankedCopy + wSRAMXfer* mailbox $DE8B-$DE91). Prev: de0c5a672e7e7e1fb834dd7afe70b9e7 (S65 reference patched build (WRAM migration: NPC/exit buffers -> $CC80/$CD00, step-counter region -> $CD80 (640 B) inside the CF3-freed window; $DE74 region -> static ds 7 pad, wRoomRecScratch stays $DE7B; + bank $73 entry 6 tail zeroes the window after the main-image restore copy). Prev: 7cc0857faad8a950573e865e93f791eb (S64 reference patched build (M3b+M3c: LoadNewBGMIdIntoA same-size rewrite -> bank $71 entry 2 CustomRoomBGMResolve + CustomRoomBGMTable; music emitter owns bank $74; dq6_town1 ids $A4-$A6 from MIDI; Library $12 + gate_island $6B room defaults). Prev: 3009b75ee1e3bd58bc315a39b7324e17 (S63v5 reference patched build (M3a v4 + v5: BGM #07 ids $A1-$A3 in bank $74, room $6C NPC via project.json; bank_060 now compiler-generated via --apply). Prev: c23beed7aadee80a061c0f6c24d7c1f4 (S63 v4, M3a: AudioMasterTableExt + song bank $74 + bank $1E reverted; S62's BGM NPC/set_bgm $9E folded into the example project — S62 had hand-edited bank_060 without updating project/pin, breaking compat==hand byte-identity; restored S63). Prev pins: 168c5f1b5b4b3b2568a6d6e2f3f1ab45 (S60), d31c9300e13b98f516c6bee8b446069d (S58v2)))
 
 PASS = 0
 
@@ -649,6 +649,7 @@ class MiniSM83:
     def __init__(self, rom, bank):
         self.rom, self.bank = rom, bank
         self.a = self.b = self.d = self.e = self.h = self.l = 0
+        self.c_ = 0                       # register C (self.c is the carry flag)
         self.z = self.c = False
         self.ram = {}
         self.stack = []
@@ -670,7 +671,7 @@ class MiniSM83:
         self.c, self.a = r > 0xFF, r & 0xFF
         self.z = self.a == 0
 
-    def run(self, pc, limit=200):
+    def run(self, pc, limit=2000):
         for _ in range(limit):
             op = self.rd(pc)
             n = self.rd(pc + 1)
@@ -678,10 +679,72 @@ class MiniSM83:
             e = n - 256 if n > 127 else n
             hl = self.h << 8 | self.l
             pc += 1
-            if op == 0xC9: return
+            if op == 0xC9 or (op in (0xC0, 0xC8, 0xD0, 0xD8) and
+                              {0xC0: not self.z, 0xC8: self.z, 0xD0: not self.c,
+                               0xD8: self.c}[op]):
+                if self.stack and isinstance(self.stack[-1], tuple) and \
+                        self.stack[-1][:1] == ('ret',):
+                    pc = self.stack.pop()[1]       # S111: return from a `call`
+                    continue
+                return
             elif op in (0xC0, 0xC8, 0xD0, 0xD8):
-                if {0xC0: not self.z, 0xC8: self.z, 0xD0: not self.c, 0xD8: self.c}[op]:
-                    return
+                pass
+            # S111: the custom-skill forks (register moves, 16-bit adds, calls,
+            # pushes of BC / DE, srl, the copy loop)
+            elif op == 0x4F: self.c_ = self.a
+            elif op == 0x5F: self.e = self.a
+            elif op == 0x57: self.d = self.a
+            elif op == 0x7B: self.a = self.e
+            elif op == 0x79: self.a = self.c_
+            elif op == 0x4D: self.c_ = self.l
+            elif op == 0x44: self.b = self.h
+            elif op == 0x0E: self.c_ = n; pc += 1
+            elif op == 0x06: self.b = n; pc += 1
+            elif op == 0x1E: self.e = n; pc += 1
+            elif op == 0x26: self.h = n; pc += 1
+            elif op == 0x2E: self.l = n; pc += 1
+            elif op == 0x01: self.b, self.c_ = nn >> 8, nn & 0xFF; pc += 2
+            elif op in (0x09, 0x29):
+                v = (self.b << 8 | self.c_) if op == 0x09 else hl
+                r = hl + v; self.c = r > 0xFFFF
+                self.h, self.l = (r >> 8) & 0xFF, r & 0xFF
+            elif op == 0xC5: self.stack.append((self.b, self.c_))
+            elif op == 0xC1: self.b, self.c_ = self.stack.pop()
+            elif op == 0xD5: self.stack.append((self.d, self.e))
+            elif op == 0xD1: self.d, self.e = self.stack.pop()
+            elif op == 0xCD: self.stack.append(('ret', pc + 2)); pc = nn; continue
+            elif op == 0xCB and n == 0x3F:
+                self.c = bool(self.a & 1); self.a >>= 1; self.z = self.a == 0; pc += 1
+            # S111 ratios: ScaleHL72 / Div16by8_72 / Mul16by8_72 / RatioBC72
+            elif op == 0xCB and n == 0x38:                        # srl b
+                self.c = bool(self.b & 1); self.b >>= 1; self.z = self.b == 0; pc += 1
+            elif op == 0xCB and n == 0x23:                        # sla e
+                self.c = bool(self.e & 0x80); self.e = (self.e << 1) & 0xFF
+                self.z = self.e == 0; pc += 1
+            elif op == 0xCB and n == 0x12:                        # rl d
+                r = self.d << 1 | int(self.c); self.c = r > 0xFF; self.d = r & 0xFF
+                self.z = self.d == 0; pc += 1
+            elif op == 0x17:                                      # rla
+                r = self.a << 1 | int(self.c); self.c = r > 0xFF; self.a = r & 0xFF
+                self.z = False
+            elif op == 0x2C: self.l = (self.l + 1) & 0xFF; self.z = self.l == 0
+            elif op == 0x05: self.b = (self.b - 1) & 0xFF; self.z = self.b == 0
+            elif op == 0xB9: self._cmp(self.c_)
+            elif op == 0x90: self.a = self._cmp(self.b)
+            elif op == 0x54: self.d = self.h
+            elif op == 0x5D: self.e = self.l
+            elif op == 0x62: self.h = self.d
+            elif op == 0x6B: self.l = self.e
+            elif op == 0x4E: self.c_ = self.rd(hl)
+            elif op == 0x92: self.a = self._cmp(self.d)
+            elif op == 0x91: self.a = self._cmp(self.c_)
+            elif op == 0x12: self.ram[self.d << 8 | self.e] = self.a
+            elif op == 0x13:
+                de = ((self.d << 8 | self.e) + 1) & 0xFFFF; self.d, self.e = de >> 8, de & 0xFF
+            elif op == 0x1C: self.e = (self.e + 1) & 0xFF; self.z = self.e == 0
+            elif op == 0x0D: self.c_ = (self.c_ - 1) & 0xFF; self.z = self.c_ == 0
+            elif op == 0x3C: self.a = (self.a + 1) & 0xFF; self.z = self.a == 0
+            elif op == 0xAF: self.a = 0; self.z, self.c = True, False
             elif op == 0x7C: self.a = self.h
             elif op == 0x7D: self.a = self.l
             elif op == 0x7A: self.a = self.d
@@ -1720,8 +1783,8 @@ def test_skills_s110():
                  _sk_fixture({"50": {"mp": 3}}), "always takes all MP")
     expect_error("S110: an unnamed target mode is refused",
                  _sk_fixture({"0": {"record": {"target_mode": 0x33}}}), "target_mode")
-    expect_error("S110: names are for ids 0-221",
-                 _sk_fixture({"222": {"name": "X"}}), "outside 0-221")
+    expect_error("S110/S111: ids 222-223 are the retired POCs (custom skills are 224-254)",
+                 _sk_fixture({"222": {"name": "X"}}), "retired")
     oa, _, _ = compile_data(_sk_fixture({"0": {"record": {"target_mode": 0x12}}}))
     ok("S110: target mode 'all foes' accepted for Blaze",
        asm_bytes(region_text(oa, 'patches/bank_054.asm', 'gd_skill_records'))[2] == 0x12)
@@ -1777,14 +1840,350 @@ def test_skills_rom(rom_bytes, sym):
         cpu.ram[0xDB8A] = sid
         cpu.h, cpu.l = 0x40, 0x84
         cpu.run(sfx)
-        want = t55[sid] if sid < 0xDE else sid
+        csx = sym['CustomSfxTable'][1]
+        want = t55[sid] if sid < 0xDE else rom_bytes[0x55 * 0x4000 + csx - 0x4000 + sid - 0xDE]
         if cpu.a != want or (cpu.h, cpu.l) != (0x40, 0x84):
             bad.append(('55', sid, cpu.a))
     ok("ROM S110: GetPresentId / SfxPresentId RUN for ids 0-221 + $DE-$E9 return the "
-       "table / custom proxy / own id and keep HL", not bad, f"{bad[:4]}")
+       "table / custom proxy / (S111) CustomSfxTable and keep HL", not bad, f"{bad[:4]}")
     o = 0x54 * 0x4000 + 0x01CF
     ok("ROM S110: Blaze's battle MP (record +4) = 5",
        rom_bytes[o + 4] == 5)
+
+
+
+# --- S111 (ROADMAP P3.11c/d): the custom skills as project data ---
+
+CS_FIX = {
+    "229": {"name": "Rumble", "learn": {"level": 1, "prereqs": [72]}, "mp": 8,
+            "quake_power": {"min": 60, "max": 80}, "element": "Explosion",
+            "announce": ["{name} makes", "the ground rumble!"],
+            "description": ["Shakes all foes,", "then allies a bit,", "never flyers"]},
+    "234": {"base": 16, "name": "Thunder", "description": ["Calls thunder down", "on every foe"],
+            "learn": {"level": 1, "prereqs": [16]}, "mp": 6, "looks_like": 6, "sounds_like": 6,
+            "record": {"party_min": 60, "party_range": 15}},
+    "235": {"base": 94, "name": "FrostBite", "description": ["A freezing breath",
+                                                              "that hits all foes"],
+            "learn": {"level": 1, "prereqs": [94]}, "looks_like": 98, "sounds_like": 98,
+            "element": "IceBreath"},
+    "0": {"element": "Ice"},
+    "224": {"burn": "1/4", "damage_per_mp": 3},
+    "226": {"damage_of_atk": [1, 2]},
+    "228": {"mp_charge": "1/2"},
+    "230": {"ally_damage": "1/2"},
+    "233": {"per_fallen": "1/2"}}
+
+
+def _cs_regions_committed():
+    """{region: lines} of every S111 custom-skill region as committed in patches/."""
+    from editor2.core import custom_skills as CS
+    out = {}
+    for name, f, _fn, _b in CS.REGIONS:
+        L = open(os.path.join(REPO, f)).read().split('\n')
+        b = L.index(f"; @BUILD_PROJECT BEGIN {name}")
+        e = L.index(f"; @BUILD_PROJECT END {name}")
+        out[name] = (f, L[b + 1:e])
+    return out
+
+
+def test_custom_skills_s111():
+    """S111: gamedata.skills.<222-254> (editor2/core/custom_skills.py) — the
+    built-in custom skills' data and NEW custom skills (base = a stock skill's
+    effect), the element override, the custom sound table."""
+    from editor2.core import custom_skills as CS
+    from editor2.core import monster_text as MT
+    from editor2.core import gamedata as G
+    B = CS.baseline()
+    ok("S111: custom_skills.json holds the 12 ids $DE-$E9 (+ banners, tame, quake)",
+       sorted(B['skills']) == list(range(0xDE, 0xEA))
+       and set(B['banners']) == {'quake_allies', 'quake_flew', 'mourn_boost'})
+    ok("S111: 20 compiler regions (+ gd_custom_ratios), each in a patch file that has it",
+       len(CS.REGIONS) == 20 and all(len(v[1]) > 0 for v in _cs_regions_committed().values()))
+    # (1) the committed patches carry the example's output (no edits >= 222)
+    oe, prj, _ = compile_data(base())
+    com = _cs_regions_committed()
+    bad = [n for n, (f, lines) in com.items() if region_text(oe, f, n) != lines]
+    ok("S111: example -> every custom-skill region == the committed patches/ text", not bad,
+       f"{bad}")
+    sk, ex, _w = CS.resolve(base(), REPO)
+    ok("S111: example -> the 10 built-ins (224-233) exist, no new skill",
+       sorted(sk) == list(range(0xE0, 0xEA)))
+    ok("S111: example -> every built-in's record / MP / learn row / announce / looks == "
+       "custom_skills.json (the S110 pin's bytes)",
+       all(sk[s]['record'] == bytes.fromhex(B['skills'][s]['record'])
+           and sk[s]['mp'] == B['skills'][s]['mp']
+           and sk[s]['learn'] == (bytes.fromhex(B['skills'][s]['learn'])
+                                  if B['skills'][s]['learn'] else None)
+           and sk[s]['template'] == B['skills'][s]['announce_template']
+           and sk[s]['proxy'] == B['skills'][s]['proxy'] for s in sk))
+    ok("S111: example -> CustomBaseTable = 33 x $FF, CustomSfxTable = 33 x $09 "
+       "(the party sound kind: S110 custom ids overshot into the next table)",
+       region_bytes(oe, 'patches/bank_072.asm', 'gd_custom_base') == b'\xff' * 33
+       and region_bytes(oe, 'patches/bank_055.asm', 'gd_custom_sfx') == b'\x09' * 33)
+    el = region_bytes(oe, 'patches/bank_072.asm', 'gd_skill_elements')
+    ok("S111: example -> no element overrides (222 stock + 33 custom = $FF)",
+       el == b'\xff' * (222 + 33))
+    ok("S111: example -> CustomRatioTable = the S49-S75 constants (1/2, 1, 1/4 x3, 3/4, "
+       "1/3 x4, 1)",
+       region_bytes(oe, 'patches/bank_072.asm', 'gd_custom_ratios') ==
+       bytes([1, 2, 1, 1, 1, 4, 1, 4, 1, 4, 3, 4, 1, 3, 1, 3, 1, 3, 1, 3, 1, 1]))
+    ok("S111: example -> CustomTargetBaseTable: MagicBurn = Firebal's row, Tame x3 = "
+       "Blaze's (the AI no longer casts them at its own side), Quake = Firebal's, Mourn = "
+       "Attack's", region_bytes(oe, 'patches/bank_058.asm', 'gd_custom_target')[:12] ==
+       bytes([0xE5, 0xE5, 0x03, 0x00, 0x00, 0x00, 0xE5, 0x03, 0x03, 0x03, 0x03, 0x3A]))
+    # (2) edits
+    o2, p2, w2 = compile_data(_sk_fixture(CS_FIX))
+    ok("S111: ratios: MagicBurn 1/4 + 3, TameMore 1/2, Anchor 1/2, Quake 1/2, Mourn 1/2; "
+       "the rest the originals",
+       region_bytes(o2, 'patches/bank_072.asm', 'gd_custom_ratios') ==
+       bytes([1, 4, 3, 1, 1, 4, 1, 2, 1, 4, 1, 2, 1, 3, 1, 2, 1, 3, 1, 3, 1, 2]))
+    sk2, ex2, _ = CS.resolve(_sk_fixture(CS_FIX), REPO)
+    ok("S111: 234 Thunder / 235 FrostBite are new skills on bases Zap / Scorching",
+       sorted(s for s in sk2 if s >= 0xEA) == [0xEA, 0xEB]
+       and sk2[0xEA]['handler'] == sk2[0xEB]['handler'] == 'clone'
+       and (sk2[0xEA]['base'], sk2[0xEB]['base']) == (16, 94))
+    cb = region_bytes(o2, 'patches/bank_072.asm', 'gd_custom_base')
+    ok("S111: CustomBaseTable[$EA] = 16, [$EB] = 94, the rest $FF",
+       cb == b'\xff' * 12 + bytes([16, 94]) + b'\xff' * 19)
+    ok("S111: CustomSfxTable / CustomProxyTable: Thunder sounds + looks like Blaze's "
+       "row 6, FrostBite like IceStorm (98)",
+       region_bytes(o2, 'patches/bank_055.asm', 'gd_custom_sfx')[12:14] == bytes([6, 98])
+       and region_bytes(o2, 'patches/bank_05f.asm', 'gd_custom_present')[12:14] == bytes([6, 98]))
+    ok("S111: CustomTargetBaseTable: a new skill uses its base's AI target row",
+       region_bytes(o2, 'patches/bank_058.asm', 'gd_custom_target')[12:14] == bytes([16, 94]))
+    el2 = region_bytes(o2, 'patches/bank_072.asm', 'gd_skill_elements')
+    ice, ib, ex_ = (G.RESIST_NAMES.index(n) for n in ('Ice', 'IceBreath', 'Explosion'))
+    ok("S111: element overrides: Blaze (stock 0) -> Ice, Tremor ($E5, project 'Rumble') -> "
+       "Explosion, FrostBite -> IceBreath, everything else $FF",
+       el2[0] == ice and el2[222 + 7] == ex_ and el2[222 + 13] == ib
+       and el2[1:222] == b'\xff' * 221
+       and sum(1 for x in el2[222:] if x != 0xFF) == 2)
+    ok("S111: the AI element (record +5) follows: Blaze = Ice+1, FrostBite = IceBreath+1",
+       sk2[0xEB]['record'][5] == ib + 1
+       and region_bytes(o2, 'patches/bank_054.asm', 'gd_skill_records')[5] == ice + 1)
+    ok("S111: Thunder's record: Zap's with party power 60 / 15 and MP 6 at +4",
+       sk2[0xEA]['record'][4] == 6 and sk2[0xEA]['mp'] == 6)
+    ok("S111: Tremor's quake_power {60, 80} -> QuakePowerTable row (60, 20); the "
+       "other three keep the baseline",
+       region_bytes(o2, 'patches/bank_072.asm', 'gd_quake_power')[0:2] == bytes([60, 20])
+       and region_bytes(o2, 'patches/bank_072.asm', 'gd_quake_power')[2:] ==
+       region_bytes(oe, 'patches/bank_072.asm', 'gd_quake_power')[2:])
+    nm = o2['patches/bank_041.asm']
+    ok("S111: the names Rumble / Thunder / FrostBite are emitted in bank $41 (the custom "
+       "region, then the shared ns_text_* extents when it is full)",
+       all(f'SkillName_{i}_{n}:' in nm and f'dw SkillName_{i}_{n} ' in nm
+           for i, n in ((229, 'Rumble'), (234, 'Thunder'), (235, 'FrostBite'))))
+    lr = region_bytes(o2, 'patches/bank_072.asm', 'gd_custom_learn')
+    ok("S111: CustomLearnTable: 31 rows x 18 B; Thunder's row = level 1, prereq Zap",
+       len(lr) == 31 * 18 and lr[18 * (0xEA - 0xE0)] == 1
+       and 16 in lr[18 * (0xEA - 0xE0):18 * (0xEA - 0xE0) + 18][1:]
+       and lr[18 * (0xEC - 0xE0)] == 0xFF)
+    ok("S111: the own announce line is encoded with the name insert",
+       sk2[0xE5]['template'] == 0xFD and bytes([0xF9, 0x00]) in sk2[0xE5]['message'])
+    ok("S111: the names reach the editor list (CS.names)",
+       CS.names(_sk_fixture(CS_FIX), REPO).get(0xEA) == 'Thunder')
+    # (3) refusals
+    def fx(extra):
+        return _sk_fixture(dict(extra))
+    expect_error("S111: id 222 is retired", fx({"222": {"name": "X"}}), "retired")
+    expect_error("S111: id 255 is out of range", fx({"255": {"name": "X"}}), "222-254")
+    expect_error("S111: MagicBurn's MP is a share (burn)", fx({"224": {"mp": 3}}), "set `burn`")
+    expect_error("S111: Quake's power words are refused",
+                 fx({"230": {"record": {"party_min": 9}}}), "power fields")
+    expect_error("S111: Anchor has no element", fx({"228": {"element": "Fire"}}),
+                 "deals no damage")
+    expect_error("S111: `base` only on new skills", fx({"230": {"base": 0}}), "own code")
+    expect_error("S111: a new skill needs a base", fx({"240": {"name": "X"}}), "needs `base`")
+    expect_error("S111: a new skill needs a name", fx({"240": {"base": 16}}), "needs a name")
+    expect_error("S111: a field skill is not a base", fx({"240": {"base": 0x37, "name": "X"}}),
+                 "field skill")
+    expect_error("S111: a battle action is not a base", fx({"240": {"base": 58, "name": "X"}}),
+                 "not a skill")
+    expect_error("S111: a base whose copy differs is refused (census)",
+                 fx({"240": {"base": 18, "name": "X"}}), "does not behave")
+    expect_error("S111: element on a non-elemental base",
+                 fx({"240": {"base": 21, "name": "X", "element": "Fire"}}), "does not test")
+    expect_error("S111: announce + announce_as", fx({"230": {"announce": ["a"],
+                                                             "announce_as": 3}}), "not both")
+    expect_error("S111: MagicBurn cannot burn more than all its MP",
+                 fx({"224": {"burn": "3/2"}}), "at most 1")
+    expect_error("S111: a ratio needs a denominator of 1-255",
+                 fx({"230": {"ally_damage": "1/0"}}), "denominator 1-255")
+    expect_error("S111: a ratio is a fraction", fx({"233": {"per_fallen": "half"}}),
+                 "a fraction like")
+    expect_error("S111: ratio keys belong to their skill", fx({"224": {"ally_damage": "1/2"}}),
+                 "unknown key")
+    expect_error("S111: Quake's own side at most 2x", fx({"230": {"ally_damage": 3}}),
+                 "at most 2")
+    expect_error("S111: quake_power max below min",
+                 fx({"230": {"quake_power": {"min": 50, "max": 40}}}), "quake_power")
+    expect_error("S111: a learn prereq must exist",
+                 fx({"240": {"base": 16, "name": "X", "learn": {"level": 1, "prereqs": [250]}}}),
+                 "250")
+    # (4) the bank budgets
+    big = {str(s): {"base": 16, "name": "ABCDEFGHI",
+                    "description": ["Eighteen chars abc", "Eighteen chars abc",
+                                    "Eighteen chars abc"]} for s in range(234, 255)}
+    ob, _, _ = compile_data(fx(big))
+    ok("S111: all 21 new skills with 9-letter names + full 3-line texts compile (the "
+       "names / texts spill into the shared extents; --rom builds it)",
+       all(f'SkillName_{s}_ABCDEFGHI:' in ob['patches/bank_041.asm'] for s in range(234, 255)))
+    CS_MAX[0] = big
+    return o2, ob
+
+
+CS_MAX = [None]
+
+
+def test_custom_skills_rom(tag, rom_bytes, sym, prj_data):
+    """--rom: the S111 forks RUN from the built ROM's bytes (MiniSM83) for every
+    custom id, against custom_skills.resolve() of the project they were built from."""
+    from editor2.core import custom_skills as CS
+    from tools import extract_custom_skills as X
+    sk, ex, _ = CS.resolve(prj_data, REPO)
+
+    def at(lbl, off=0, n=1):
+        b, a = sym[lbl]
+        o = b * 0x4000 + (a - 0x4000 if b else a) + off
+        return rom_bytes[o:o + n]
+    bad = []
+    rptr = sym['CustomRecordPtrTable'][1]
+    for sid in range(0xDE, 0xFF):
+        cpu = MiniSM83(rom_bytes, 0x54)
+        cpu.c_, cpu.b = sid, 0
+        cpu.run(sym['Fork54_RecordIndex'][1])
+        hl = cpu.h << 8 | cpu.l
+        if hl != rptr + 2 * (sid - 0xDE):
+            bad.append(('54', sid, hex(hl)))
+            continue
+        rp = rom_bytes[0x54 * 0x4000 + hl - 0x4000] | rom_bytes[0x54 * 0x4000 + hl - 0x3FFF] << 8
+        rec = rom_bytes[0x54 * 0x4000 + rp - 0x4000:][:19]
+        want = sk[sid]['record'] if sid in sk else rom_bytes[0x54 * 0x4000 + 0x1CF:][:19]
+        if rec != want:
+            bad.append(('rec', sid))
+    ok(f"ROM S111 {tag}: Fork54_RecordIndex RUN for $DE-$FE -> each id's own 19-B record "
+       "(unused ids: Blaze's $41CF)", not bad, f"{bad[:4]}")
+    bad = []
+    for sid in range(0xDE, 0xFF):
+        cpu = MiniSM83(rom_bytes, 0x07)
+        cpu.h, cpu.l = 0, sid
+        cpu.run(sym['MPPtrFromId'][1])
+        hl = cpu.h << 8 | cpu.l
+        mp = rom_bytes[0x07 * 0x4000 + hl - 0x4000] | rom_bytes[0x07 * 0x4000 + hl - 0x3FFF] << 8
+        want = sk[sid]['mp'] if sid in sk else 0
+        if mp != (want or 0):
+            bad.append((hex(sid), mp, want))
+    ok(f"ROM S111 {tag}: MPPtrFromId RUN for $DE-$FE -> the field MP (= record +4)",
+       not bad, f"{bad[:4]}")
+    bad = []
+    for sid in range(0xDE, 0xFF):
+        cpu = MiniSM83(rom_bytes, 0x58)
+        cpu.a = sid
+        cpu.run(sym['AnnounceIdxFork'][1])
+        hl = cpu.h << 8 | cpu.l
+        got = rom_bytes[0x58 * 0x4000 + hl - 0x4000]
+        want = sk[sid]['template'] if sid in sk else 0xFF
+        if sid in (0xDE, 0xDF):
+            want = CS.baseline()['skills'][sid]['announce_template']
+        if got != want:
+            bad.append((hex(sid), hex(got), hex(want)))
+    ok(f"ROM S111 {tag}: AnnounceIdxFork RUN for $DE-$FE -> each id's announce template",
+       not bad, f"{bad[:4]}")
+    bad = []
+    for sid in [0, 16, 94, 221] + list(range(0xDE, 0xFF)):
+        cpu = MiniSM83(rom_bytes, 0x72)
+        cpu.ram[0xDB8A] = sid
+        cpu.run(sym['FarSkillFork'][1])
+        hl = cpu.h << 8 | cpu.l
+        v = sk.get(sid)
+        if sid < 0xDE or (v and v['base'] is not None):
+            want = 0x4011 + 2 * (sid if sid < 0xDE else v['base'])
+        elif sid == 0xE9:
+            want = sym['MournDispatchPtr'][1]
+        else:
+            want = 0x7FED
+        if hl != want:
+            bad.append((hex(sid), hex(hl), hex(want)))
+    ok(f"ROM S111 {tag}: FarSkillFork RUN -> a new skill = its base's handler pointer, "
+       "the built-ins / unused ids = CustomSkillPtr (Mourn its own)", not bad, f"{bad[:4]}")
+    # ElemLevel72: packed resistances = $1B in every byte -> the level IS the pair index
+    bad = []
+    stock_el = at('StockElemTable', 0, 222)
+    cust_el = at('CustomElemTable', 0, 33)
+    for sid in list(range(0, 222, 7)) + list(range(0xDE, 0xFF)):
+        cpu = MiniSM83(rom_bytes, 0x72)
+        cpu.ram[0xDB8A] = sid
+        cpu.ram[sym['wBattleTargetIdx'][1]] = 4
+        for o in range(56):
+            cpu.ram[0xDD28 + o] = 0x1B
+        cpu.e = 0x77
+        cpu.run(sym['ElemLevel72'][1])
+        t = stock_el[sid] if sid < 222 else cust_el[sid - 0xDE]
+        want = 0x77 if t == 0xFF else (0 if t == 0xFE else (t + 1) % 4)
+        if cpu.e != want:
+            bad.append((hex(sid), cpu.e, want))
+    ok(f"ROM S111 {tag}: ElemLevel72 RUN -> no override keeps the handler's level, an "
+       "override reads the target's packed level for that resistance", not bad, f"{bad[:4]}")
+    # CustomLearnRow72: walk the custom rows like the bank $06 scanner does
+    seen, e = [], 0xE0
+    buf = sym['wLearnRowBuf'][1]
+    for _ in range(40):
+        cpu = MiniSM83(rom_bytes, 0x72)
+        cpu.e = e
+        cpu.run(sym['CustomLearnRow72'][1], limit=5000)
+        if cpu.e == 0xFF:
+            break
+        seen.append((cpu.e, bytes(cpu.ram.get(buf + k, 0) for k in range(18))))
+        e = cpu.e + 1
+        if e > 0xFE:
+            break
+    want = [(s, sk[s]['learn']) for s in sorted(sk) if sk[s]['learn']]
+    ok(f"ROM S111 {tag}: CustomLearnRow72 RUN -> visits exactly the learnable custom "
+       "skills and copies each 18-B row into wLearnRowBuf", seen == want,
+       f"{[hex(s) for s, _ in seen]} vs {[hex(s) for s, _ in want]}")
+    # names / texts through the game's pointer tables
+    from editor2.core import monster_text as MT
+    bad = [s for s in sk if _rom_str(rom_bytes, 0x41, sym['SkillNamePtrTable'][1] + 2 * s)
+           != sk[s]['name']]
+    bad += [('d', s) for s in sk if sk[s]['desc'] is not None and
+            _rom_str(rom_bytes, 0x56, sym['SkillDescPtrTable'][1] + 2 * s) != sk[s]['desc']]
+    ok(f"ROM S111 {tag}: every custom skill's name / SKIL text through the game's pointer "
+       "tables", not bad, f"{bad[:4]}")
+    ok(f"ROM S111 {tag}: bank $50 SaveBtl_5ad2 keeps a custom id's own name (ret nc at $DE)",
+       at('SaveBtl_5ad2', 0, 3) == bytes([0xFE, 0xDE, 0xD0]))
+    # [S111] the ratios: the table == resolve(); ScaleHL72 / AnchorKeepMP72 RUN
+    tab = at('CustomRatioTable', 0, CS.RATIO_TABLE)
+    ok(f"ROM S111 {tag}: CustomRatioTable == the project's ratios",
+       all(tuple(tab[o:o + 2]) == tuple(ex['ratios'][o]) for o in ex['ratios']))
+    bad = []
+    for hl, b_, c_ in ((0, 1, 2), (1, 1, 2), (999, 1, 2), (203, 1, 4), (300, 1, 4), (60, 1, 3),
+                       (61, 1, 3), (250, 1, 1), (999, 255, 1), (65535, 255, 255), (65535, 1, 255),
+                       (777, 0, 9), (500, 7, 3), (12345, 3, 200)):
+        cpu = MiniSM83(rom_bytes, 0x72)
+        cpu.h, cpu.l, cpu.b, cpu.c_ = hl >> 8, hl & 255, b_, c_
+        cpu.run(sym['ScaleHL72'][1], limit=5000)
+        if (cpu.h << 8 | cpu.l) != min(999, hl * b_ // c_):
+            bad.append((hl, b_, c_, cpu.h << 8 | cpu.l))
+    n_, d_ = ex['ratios'][10]
+    for mp in (0, 1, 3, 4, 203, 999):
+        cpu = MiniSM83(rom_bytes, 0x72)
+        cpu.d, cpu.e = mp >> 8, mp & 255
+        cpu.run(sym['AnchorKeepMP72'][1], limit=5000)
+        if (cpu.d << 8 | cpu.e) != mp * (d_ - n_) // d_:
+            bad.append(('anchor', mp, cpu.d << 8 | cpu.e))
+    ok(f"ROM S111 {tag}: ScaleHL72 (floor(HL*B/C), at most 999) and AnchorKeepMP72 (MP "
+       "kept = MP x (1 - the charge)) RUN from the ROM", not bad, f"{bad[:4]}")
+    o73 = 0x73 * 0x4000 + sym['CF2WarpCommitDrain.mpPtr'][1] - 0x4000
+    ok(f"ROM S111 {tag}: bank $73's Anchor arrival asks bank $72 entry 7 (ld hl,$7207 / rst $10)",
+       bytes([0x21, 0x07, 0x72, 0xD7]) in rom_bytes[o73:o73 + 12])
+    if tag == 'example':
+        r = X.Rom.__new__(X.Rom)
+        r.d, r.s = rom_bytes, sym
+        got = X.same_as_json(X.extract(r), json.load(open(X.OUT)))
+        Bj = json.load(open(X.OUT))
+        ok("ROM S111 example: tools/extract_custom_skills.py reads custom_skills.json back "
+           "out of the build (the move kept every byte)",
+           all(got[k] == Bj[k] for k in got), f"{[k for k in got if got[k] != Bj[k]]}")
 
 
 def main():
@@ -1801,7 +2200,7 @@ def main():
        "follower forks of $09/$0B/$18/$59 no longer have regions; S107: + the art "
        "regions in $09/$0B/$10/$18/$59 and the art banks $7A/$7C/$7F; S107 2c: + the family "
        "icon regions in $2E/$4F; S109: + the arena regions in $04/$50/$6E; S110: + the "
-       "skill regions in $55/$56/$5F)",
+       "skill regions in $55/$56/$5F; S111: + the custom-skill regions in $4C/$58/$72)",
        sorted(out1) == ['patches/bank_000.asm', 'patches/bank_001.asm',
                         'patches/bank_003.asm', 'patches/bank_004.asm',
                         'patches/bank_006.asm',
@@ -1813,17 +2212,19 @@ def main():
                         'patches/bank_014.asm', 'patches/bank_016.asm',
                         'patches/bank_017.asm', 'patches/bank_018.asm',
                         'patches/bank_02e.asm',
-                        'patches/bank_041.asm', 'patches/bank_04d.asm',
+                        'patches/bank_041.asm', 'patches/bank_04c.asm',
+                        'patches/bank_04d.asm',
                         'patches/bank_04f.asm', 'patches/bank_050.asm',
                         'patches/bank_054.asm', 'patches/bank_055.asm',
-                        'patches/bank_056.asm', 'patches/bank_059.asm',
+                        'patches/bank_056.asm', 'patches/bank_058.asm',
+                        'patches/bank_059.asm',
                         'patches/bank_05f.asm',
                         'patches/bank_060.asm', 'patches/bank_064.asm',
                         'patches/bank_067.asm', 'patches/bank_069.asm',
                         'patches/bank_06a.asm', 'patches/bank_06b.asm',
                         'patches/bank_06c.asm', 'patches/bank_06d.asm',
                         'patches/bank_06e.asm',
-                        'patches/bank_071.asm',
+                        'patches/bank_071.asm', 'patches/bank_072.asm',
                         'patches/bank_074.asm', 'patches/bank_07a.asm',
                         'patches/bank_07c.asm', 'patches/bank_07e.asm',
                         'patches/bank_07f.asm',
@@ -2593,6 +2994,7 @@ def main():
     outmt = test_monster_text_s108()
     outar = test_arena_s109()
     outsk = test_skills_s110()
+    outcs, outcsmax = test_custom_skills_s111()
 
     if '--rom' in sys.argv:
         from editor2.core import builder as B
@@ -2804,6 +3206,18 @@ def main():
         C.write_outputs(outsk, outdirs)
         roms, syms, _ms = B.build_rom(REPO, outdirs, os.path.join(outdirs, 'build'))
         test_skills_rom(open(roms, 'rb').read(), B.parse_sym(syms))
+        # S111: the custom-skill forks, on the example build and on CS_FIX's
+        test_custom_skills_rom('example', open(rom, 'rb').read(), B.parse_sym(sym), base())
+        outdircs = '/tmp/_t_cskills'
+        C.write_outputs(outcs, outdircs)
+        romc, symc, _mc = B.build_rom(REPO, outdircs, os.path.join(outdircs, 'build'))
+        test_custom_skills_rom('CS_FIX', open(romc, 'rb').read(), B.parse_sym(symc),
+                               _sk_fixture(CS_FIX))
+        outdircm = '/tmp/_t_cskills_max'
+        C.write_outputs(outcsmax, outdircm)
+        romcm, symcm, _mcm = B.build_rom(REPO, outdircm, os.path.join(outdircm, 'build'))
+        test_custom_skills_rom('21 new', open(romcm, 'rb').read(), B.parse_sym(symcm),
+                               _sk_fixture(CS_MAX[0]))
         n07 = ri[0x07 * 0x4000:0x08 * 0x4000].count(fork)
         n0a = ri[0x0A * 0x4000:0x0B * 0x4000].count(fork)
         ok("ROM 2c: the JOURNAL ($07) and its $0A twin read the saved party's icon through "

@@ -105,7 +105,8 @@ CF2WarpCommitDrain:
     ;   arm 2: town-side YES is warping us in (wWarpFlag=$80) -> install
     ;          wGateID + wCurrentFloor := anchor-1 (entry-5 increments),
     ;          charge the caster 3/4 of CURRENT MP (record +$54 :=
-    ;          cur>>2 — "arrival" = this commit), clear the stored
+    ;          cur>>2 — "arrival" = this commit; S111: the share is
+    ;          project data, bank $72 entry 7), clear the stored
     ;          anchor (v1 policy: single-use), then arm := 3 so
     ;          GateDecisionFork forces the STANDARD maze path.
     ;   arm 3 here = stray (fork didn't consume it) -> just clear.
@@ -148,15 +149,15 @@ CF2WarpCommitDrain:
     jr nz, .mpMul
 .mpPtr:
     ld a, [hl+]
-    ld c, a
-    ld b, [hl]                      ; BC = current MP (LE; HL at hi byte)
-    srl b
-    rr c
-    srl b
-    rr c                            ; BC = cur >> 2 = what REMAINS
-    ld [hl], b
+    ld e, a
+    ld d, [hl]                      ; DE = current MP (LE; HL at hi byte)
+    push hl
+    ld hl, $7207                    ; [S111] bank $72 entry 7 AnchorKeepMP72: DE := what
+    rst $10                         ;   REMAINS after the charge (gamedata.skills.228
+    pop hl                          ;   .mp_charge; default 3/4 -> cur >> 2 as before)
+    ld [hl], d
     dec hl
-    ld [hl], c
+    ld [hl], e
     ; clear the stored anchor (single-use policy, user decision 6)
     xor a
     ld [wAnchorFloor], a            ; floor 0 = "no anchor" sentinel

@@ -4,16 +4,18 @@
 Born from the S75 Dracky-battle crash investigation. Two classes of custom
 data can produce a crashy patched ROM while assembling cleanly:
 
-1. CUSTOM LEARN RECORDS (patches/bank_006.asm, CustomLearnReqTable/2):
-   - structural: every record must be exactly 18 bytes (lvl + 6x u16 stats +
-     5 prereq bytes), level 1-99, prereq ids must be $FF or an existing
-     custom skill id covered by the scan range.
-   - the scan range bound (LearnLoopFork `cp $XX`) must equal
-     last_record_id + 1, or the scanner walks non-record bytes.
+1. CUSTOM LEARN RECORDS (S111: bank $72 CustomLearnTable, ids $E0-$FE, the
+   compiler region gd_custom_learn — S75-S110 they were the hand tables
+   CustomLearnReqTable/2 in bank $06, whose fixed scan bound this tool also
+   checked; S111's LearnLoopFork walks every custom id and skips level $FF):
+   - structural: 31 records of exactly 18 bytes (lvl + 6x u16 stats + 5
+     prereq bytes), level 1-99 or $FF (= not learnable), prereq ids $FF or a
+     skill id ($00-$D9 a stock row, $E0-$FE a custom one with a learn row).
    - UNIVERSAL QUALIFIERS (no prereq AND all-zero stats) are only permitted
-     if the code-2 fence (LearnCode2Guard06) is present in the built ROM:
-     without it, any monster at the required level stat-learns the custom
-     skill through the never-exercised code-2 display path.
+     if the code-2 fence (LearnCode2Guard06, `cp $da` since S111) is present
+     in the built ROM: without it, any monster at the required level
+     stat-learns the custom skill through the never-exercised code-2 display
+     path.
 
 2. REPLACEMENT BATTLE-SPRITE STREAMS (bank $36 pointer-table redirects):
    - every redirected pointer-table entry must decode via dwm.sprite_codec
@@ -39,62 +41,64 @@ REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
 
 RECORD_LEN = 18
-CUSTOM_BASE = 0xE1
+LEARN_FIRST, LEARN_ROWS = 0xE0, 31
 
 
-def parse_learn_tables(src: str):
-    """Extract (table_name, [(id, level, stats[6], prereqs[5])]) from bank_006."""
-    tables = {}
-    for name, first_id in (("CustomLearnReqTable", 0xE1), ("CustomLearnReqTable2", 0xE5)):
-        m = re.search(rf"^{name}:\n(.*?)(?=^\S|\Z)", src, re.M | re.S)
-        if not m:
+def _records_from_rom(rom):
+    """The 31 custom learn rows, found through bank $72 entry 6
+    (CustomLearnRow72: `add hl,bc / add hl,bc / ld bc, CustomLearnTable`)."""
+    b72 = 0x72 * 0x4000
+    ent = rom[b72 + 0x0D] | rom[b72 + 0x0E] << 8
+    code = rom[b72 + ent - 0x4000:b72 + ent - 0x4000 + 48]
+    k = code.find(bytes([0x09, 0x09, 0x01]))
+    if k < 0:
+        return None
+    tab = code[k + 3] | code[k + 4] << 8
+    o = b72 + tab - 0x4000
+    return [rom[o + RECORD_LEN * i:o + RECORD_LEN * (i + 1)] for i in range(LEARN_ROWS)]
+
+
+def _records_from_source():
+    src = (REPO / "patches" / "bank_072.asm").read_text()
+    m = re.search(r"; @BUILD_PROJECT BEGIN gd_custom_learn\n(.*?); @BUILD_PROJECT END", src, re.S)
+    if not m:
+        return None
+    vals = []
+    for dbl in re.finditer(r"^\s+db\s+([^\n;]+)", m.group(1), re.M):
+        vals += [int(v.strip().replace("$", "0x"), 16) if "$" in v else int(v)
+                 for v in dbl.group(1).split(",")]
+    if not vals:                          # a placeholder `ds` region (not --apply'd)
+        return []
+    return [bytes(vals[i:i + RECORD_LEN]) for i in range(0, len(vals), RECORD_LEN)]
+
+
+def check_records(errors, rom=None):
+    rows = _records_from_rom(rom) if rom is not None else _records_from_source()
+    if rows is None:
+        errors.append("custom learn rows not found (bank $72 CustomLearnTable)")
+        return []
+    if rows and len(rows) != LEARN_ROWS:
+        errors.append(f"custom learn rows: {len(rows)} records, want {LEARN_ROWS}")
+    universal, learnable = [], set()
+    for i, r in enumerate(rows):
+        if r[0] != 0xFF:
+            learnable.add(LEARN_FIRST + i)
+    for i, r in enumerate(rows):
+        sid = LEARN_FIRST + i
+        if len(r) != RECORD_LEN:
+            errors.append(f"learn row ${sid:02X}: {len(r)} bytes")
             continue
-        body = m.group(1)
-        rows = []
-        for dbl in re.finditer(r"^\s+db\s+([^\n;]+)", body, re.M):
-            vals = [int(v.strip().replace("$", "0x"), 16) if "$" in v else int(v)
-                    for v in dbl.group(1).split(",")]
-            rows.extend(vals)
-        records = []
-        for i in range(0, len(rows) - len(rows) % RECORD_LEN, RECORD_LEN):
-            r = rows[i:i + RECORD_LEN]
-            stats = [r[1 + j * 2] | (r[2 + j * 2] << 8) for j in range(6)]
-            records.append((first_id + i // RECORD_LEN, r[0], stats, r[13:18]))
-        tables[name] = (records, len(rows))
-    return tables
-
-
-def check_records(errors):
-    src = (REPO / "patches" / "bank_006.asm").read_text()
-    tables = parse_learn_tables(src)
-    all_ids = set()
-    universal = []
-    for name, (records, nbytes) in tables.items():
-        if nbytes % RECORD_LEN:
-            errors.append(f"{name}: byte count {nbytes} is not a multiple of {RECORD_LEN}")
-        for sid, lvl, stats, prereqs in records:
-            all_ids.add(sid)
-            if not (1 <= lvl <= 99):
-                errors.append(f"{name} ${sid:02X}: level {lvl} outside 1-99")
-            has_prereq = any(p != 0xFF for p in prereqs)
-            for p in prereqs:
-                if p != 0xFF and not (CUSTOM_BASE <= p <= 0xF0):
-                    errors.append(f"{name} ${sid:02X}: prereq ${p:02X} is not a custom id")
-            if not has_prereq and all(s == 0 for s in stats):
-                universal.append(sid)
-    # prereq ids must reference records that exist
-    for name, (records, _) in tables.items():
-        for sid, _, _, prereqs in records:
-            for p in prereqs:
-                if p != 0xFF and p not in all_ids:
-                    errors.append(f"{name} ${sid:02X}: prereq ${p:02X} has no learn record")
-    # scan bound: LearnLoopFork's final `cp $XX` must be last id + 1
-    fork = re.search(r"LearnLoopFork:.*?cp \$([0-9a-fA-F]{2})\s*\n\s*ret", src, re.S)
-    if fork and all_ids:
-        bound = int(fork.group(1), 16)
-        want = max(all_ids) + 1
-        if bound != want:
-            errors.append(f"LearnLoopFork scan bound ${bound:02X} != last record id + 1 (${want:02X})")
+        if r[0] == 0xFF:
+            continue
+        if not 1 <= r[0] <= 99:
+            errors.append(f"learn row ${sid:02X}: level {r[0]} outside 1-99 ($FF = not learnable)")
+        stats = [r[1 + j * 2] | (r[2 + j * 2] << 8) for j in range(6)]
+        prereqs = list(r[13:18])
+        for p in prereqs:
+            if p != 0xFF and not (p <= 0xD9 or p in learnable or p in range(0xE0, 0xFF)):
+                errors.append(f"learn row ${sid:02X}: prereq ${p:02X} is not a skill id")
+        if all(p == 0xFF for p in prereqs) and all(x == 0 for x in stats):
+            universal.append(sid)
     return universal
 
 
@@ -108,7 +112,7 @@ def check_rom(rom_path, universal, errors):
     if head[0] == 0xC3:
         tgt = head[1] | (head[2] << 8)
         body = rom[b06 + (tgt - 0x4000):b06 + (tgt - 0x4000) + 8]
-        fence_ok = bytes([0x79, 0xFE, 0xE1]) == body[:3] and body[3] == 0xD2
+        fence_ok = bytes([0x79, 0xFE, 0xDA]) == body[:3] and body[3] == 0xD2   # S111: cp $da
     if universal and not fence_ok:
         errors.append(
             f"universal-qualifier learn rows {['$%02X' % u for u in universal]} present "
@@ -167,10 +171,12 @@ def main():
     args = ap.parse_args()
 
     errors = []
-    universal = check_records(errors)
     if args.rom and not args.records_only:
+        universal = check_records(errors, Path(args.rom).read_bytes())
         check_rom(args.rom, universal, errors)
-    elif universal and not args.rom:
+    else:
+        universal = check_records(errors)
+    if universal and not args.rom:
         print(f"note: universal-qualifier rows {['$%02X' % u for u in universal]} found; "
               "supply --rom to verify the code-2 fence is present")
 

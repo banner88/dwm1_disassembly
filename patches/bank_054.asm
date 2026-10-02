@@ -1422,91 +1422,73 @@ Fork54_RecordIndex:
     pop bc
     ret
 
-CustomRecordPtrTable:       ; indexed by (id - $DE)*2
-    dw $41CF                ; [$DE] retired POC -> Blaze record (benign default)
-    dw $41CF                ; [$DF] retired POC -> Blaze record (benign default)
-    dw CustomRecord_E0      ; [$E0] MagicBurn
-    dw CustomRecord_E1_Tame ; [$E1] Tame [S2e]
-    dw CustomRecord_E2_TameMore ; [$E2] TameMore [Stage2]
-    dw CustomRecord_E3_TameMost ; [$E3] TameMost [Stage2]
-    dw CustomRecord_E4_Anchor   ; [$E4] Anchor [S73]
-    dw CustomRecord_E5_Tremor   ; [$E5] Tremor    \  [QUAKE] Earthquake tier
-    dw CustomRecord_E6_Quake    ; [$E6] Quake      |  chain (evolves via the
-    dw CustomRecord_E7_QuakeMore; [$E7] QuakeMore  |  prereq mechanic in
-    dw CustomRecord_E8_QuakeMost; [$E8] QuakeMost /   CustomLearnReqTable2)
-    dw CustomRecord_E9_Mourn    ; [$E9] Mourn [S75]
-
-; --- MagicBurn ($E0) 19-byte record ------------------------------------------
-; Based on BigBang/MegaMagic-class all-foes magic, with mp_cost (+4) zeroed (the
-; handler charges the real half-MP) AND +9 (anim9, cached to $dcff) = $17 instead
-; of MegaMagic's $02. $dcff bit4/bit2 GATE the announce+animate presentation phase
-; (bank $52 $6F5B / $7E08, both target-driven, not skill-id keyed) -- MegaMagic's
-; $02 leaves those bits clear, which is why copying it gave instant silent damage.
-; $17 matches every announcing/animating damage spell (Bang/Bolt/Lightning/BigBang).
-; +0=$46 keeps MegaMagic's effect-class -> announcement msg $40 "uses all magic powers!".
-;   +0 effect_class=$46  +1 category=$12  +2 target=$12(ALL FOES)  +3 ai=0  +4 mp=0
-;   +5 status=$10  +6 dmg_class=$05  +7 flags7=$01  +8 field8=$06  +9 anim9=$17
-CustomRecord_E0:
-    db $46,$12,$12,$00,$00,$10,$05,$01,$06,$02,$02,$00,$00,$00,$00,$00,$00,$00,$00
-
-; --- Tame ($E1) 19-byte record [S2e] ----------------------------------------
-; Based on Blaze (id 0): single-target ($11), spell dmg-class ($04), presentation
-; flags +7/+8/+9 = $41/$07/$17 (announce+animate path that Blaze proves works).
-; Differences from Blaze: +5 status=0 (handler drives effect), and the
-; power fields +11.. = 0 because SkillTame OVERRIDES $db56/57 with ATK/4 directly.
-; +4 mp = 10 [Stage2] — mirrors CustomMPCostTable (bank $07 fork charges it).
-;   +0 eclass=$00  +1 cat=$13  +2 target=$11(1 FOE)  +3 ai=$14  +4 mp=10  +5 status=0
-;   +6 dmg_class=$04(spell)  +7 $41  +8 $07  +9 $17  +10 $02  +11.. power=0
-CustomRecord_E1_Tame:
-    db $00,$13,$11,$14,$0A,$00,$04,$41,$07,$17,$02,$00,$00,$00,$00,$00,$00,$00,$00
-
-; --- TameMore ($E2) / TameMost ($E3) 19-byte records [Stage2] ----------------
-; Identical to Tame except the MP mirror (+4): 30 / 50. Meter tier + damage come
-; from the shared SkillTame handler (bank $72 TameMeterTable), not the record.
-CustomRecord_E2_TameMore:
-    db $00,$13,$11,$14,$1E,$00,$04,$41,$07,$17,$02,$00,$00,$00,$00,$00,$00,$00,$00
-CustomRecord_E3_TameMost:
-    db $00,$13,$11,$14,$32,$00,$04,$41,$07,$17,$02,$00,$00,$00,$00,$00,$00,$00,$00
-
-; --- Anchor ($E4) 19-byte record [S73] -----------------------------------------
-; FIELD-ONLY skill; the record exists so the id survives every id-keyed reader
-; (menus, AI, record walker). Tame-shaped except: MP mirror (+4) = 0 (menu
-; shows 0; the real 3/4-current-MP charge happens at the arrival commit, bank
-; $73) and anim9 (+9) = $02 — the MagicBurn finding INVERTED: $02 leaves the
-; $dcff announce/animate gate bits CLEAR, so a battle cast is a silent no-op
-; (CustomBattleExec has no $E4 handler on purpose; v1 behavior, user-ack'd).
-CustomRecord_E4_Anchor:
-    db $00,$13,$11,$14,$00,$00,$04,$41,$07,$02,$02,$00,$00,$00,$00,$00,$00,$00,$00
-
-; --- Earthquake tiers ($E5-$E8) 19-byte records [QUAKE] -----------------------
-; Byte-for-byte the PROVEN MagicBurn ($E0) all-foes announcing/animating shape
-; (target_mode +2 = $12 all-foes; presentation trio identical), with ONE change
-; per tier: +4 mp (mirrors CustomMPCostTable — the engine charges it). The four
-; power words stay ZERO like every working custom record: NONZERO record powers
-; sent the presentation phase into an endless $dd80 animation loop (effect
-; step 2 stall — PyBoy-measured S74, A/B vs MagicBurn). Damage numbers live in
-; bank $72 QuakePowerTable (the handler overrides $db56/57), which is also
-; where the editor tunes them.
-CustomRecord_E5_Tremor:
-    db $46,$12,$12,$00,$05,$10,$05,$01,$06,$02,$02, $00,$00, $00,$00, $00,$00, $00,$00
-CustomRecord_E6_Quake:
-    db $46,$12,$12,$00,$0A,$10,$05,$01,$06,$02,$02, $00,$00, $00,$00, $00,$00, $00,$00
-CustomRecord_E7_QuakeMore:
-    db $46,$12,$12,$00,$10,$10,$05,$01,$06,$02,$02, $00,$00, $00,$00, $00,$00, $00,$00
-CustomRecord_E8_QuakeMost:
-    db $46,$12,$12,$00,$18,$10,$05,$01,$06,$02,$02, $00,$00, $00,$00, $00,$00, $00,$00
-
-; --- Mourn ($E9) 19-byte record [S75] -----------------------------------------
-; SINGLE-FOE physical-style attack. Target $11, presentation trio $41/$07/$17
-; (announce+animate, proven Tame shape). MP = 10 (mirrors CustomMPCostTable).
-; Power words = 0: the handler drives damage (CalcDefenseWrapper computed the
-; ATK-vs-DEF base, then SkillMourn multiplies by dead_allies+1). dmg_class = $04.
-; The record keeps the engine happy; all real damage logic is in the handler.
-;   +0 eclass=$00  +1 cat=$13  +2 target=$11(1 FOE)  +3 ai=$14  +4 mp=10
-;   +5 status=0  +6 dmg_class=$04  +7 $41  +8 $07  +9 $17  +10 $02
-;   +11.. power=0 (handler-driven)
-CustomRecord_E9_Mourn:
-    db $00,$13,$11,$14,$0A,$00,$04,$41,$07,$17,$02,$00,$00,$00,$00,$00,$00,$00,$00
+; [S111] The custom skills' records are a compiler region (gd_custom_records,
+; editor2/core/custom_skills.py, PROJECT_COMPILER §2.27): CustomRecordPtrTable
+; covers ids $DE-$FE (33 dw; an id with no record points at Blaze's $41CF, as the
+; retired $DE/$DF always did), then one 19-byte record per custom skill. The
+; built-in skills' records ($E0-$E9, editor2/core/custom_skills.json) keep the
+; S49-S75 shapes and notes (BATTLE_SKILL_SYSTEM §13-§14): MagicBurn / Quake =
+; the all-foes MegaMagic shape with power words 0 (their handlers set the
+; damage; S74: nonzero powers looped the presentation), Tame / Mourn = the
+; single-foe Blaze shape, Anchor = Tame-shaped with +9 = $02 (no battle
+; announce / animation). Record +4 = the battle MP cost (mirrors
+; CustomMPCostTable, bank $07).
+CustomRecordPtrTable:
+; @BUILD_PROJECT BEGIN gd_custom_records
+    dw $41CF               ; [$DE] retired
+    dw $41CF               ; [$DF] retired
+    dw CustomRecord_E0     ; [$E0] MagicBurn
+    dw CustomRecord_E1     ; [$E1] Tame
+    dw CustomRecord_E2     ; [$E2] TameMore
+    dw CustomRecord_E3     ; [$E3] TameMost
+    dw CustomRecord_E4     ; [$E4] Anchor
+    dw CustomRecord_E5     ; [$E5] Tremor
+    dw CustomRecord_E6     ; [$E6] Quake
+    dw CustomRecord_E7     ; [$E7] QuakeMore
+    dw CustomRecord_E8     ; [$E8] QuakeMost
+    dw CustomRecord_E9     ; [$E9] Mourn
+    dw $41CF               ; [$EA] -
+    dw $41CF               ; [$EB] -
+    dw $41CF               ; [$EC] -
+    dw $41CF               ; [$ED] -
+    dw $41CF               ; [$EE] -
+    dw $41CF               ; [$EF] -
+    dw $41CF               ; [$F0] -
+    dw $41CF               ; [$F1] -
+    dw $41CF               ; [$F2] -
+    dw $41CF               ; [$F3] -
+    dw $41CF               ; [$F4] -
+    dw $41CF               ; [$F5] -
+    dw $41CF               ; [$F6] -
+    dw $41CF               ; [$F7] -
+    dw $41CF               ; [$F8] -
+    dw $41CF               ; [$F9] -
+    dw $41CF               ; [$FA] -
+    dw $41CF               ; [$FB] -
+    dw $41CF               ; [$FC] -
+    dw $41CF               ; [$FD] -
+    dw $41CF               ; [$FE] -
+CustomRecord_E0:  ; [224] MagicBurn — MagicBurn (a share of the MP as damage to all foes)
+    db $46, $12, $12, $00, $00, $10, $05, $01, $06, $02, $02, $00, $00, $00, $00, $00, $00, $00, $00
+CustomRecord_E1:  ; [225] Tame — Tame (meat-meter recruit + a share of ATK as damage)
+    db $00, $13, $11, $14, $0A, $00, $04, $41, $07, $17, $02, $00, $00, $00, $00, $00, $00, $00, $00
+CustomRecord_E2:  ; [226] TameMore — Tame (meat-meter recruit + a share of ATK as damage)
+    db $00, $13, $11, $14, $1E, $00, $04, $41, $07, $17, $02, $00, $00, $00, $00, $00, $00, $00, $00
+CustomRecord_E3:  ; [227] TameMost — Tame (meat-meter recruit + a share of ATK as damage)
+    db $00, $13, $11, $14, $32, $00, $04, $41, $07, $17, $02, $00, $00, $00, $00, $00, $00, $00, $00
+CustomRecord_E4:  ; [228] Anchor — Anchor (field: warp to GreatTree and back)
+    db $00, $13, $11, $14, $00, $00, $04, $41, $07, $02, $02, $00, $00, $00, $00, $00, $00, $00, $00
+CustomRecord_E5:  ; [229] Tremor — Quake (all foes, then a share to allies, not flyers)
+    db $46, $12, $12, $00, $05, $10, $05, $01, $06, $02, $02, $00, $00, $00, $00, $00, $00, $00, $00
+CustomRecord_E6:  ; [230] Quake — Quake (all foes, then a share to allies, not flyers)
+    db $46, $12, $12, $00, $0A, $10, $05, $01, $06, $02, $02, $00, $00, $00, $00, $00, $00, $00, $00
+CustomRecord_E7:  ; [231] QuakeMore — Quake (all foes, then a share to allies, not flyers)
+    db $46, $12, $12, $00, $10, $10, $05, $01, $06, $02, $02, $00, $00, $00, $00, $00, $00, $00, $00
+CustomRecord_E8:  ; [232] QuakeMost — Quake (all foes, then a share to allies, not flyers)
+    db $46, $12, $12, $00, $18, $10, $05, $01, $06, $02, $02, $00, $00, $00, $00, $00, $00, $00, $00
+CustomRecord_E9:  ; [233] Mourn — Mourn (ATK-vs-DEF + a bonus per fallen ally)
+    db $00, $13, $11, $14, $0A, $00, $04, $41, $07, $17, $02, $00, $00, $00, $00, $00, $00, $00, $00
+; @BUILD_PROJECT END gd_custom_records
 
 ; pad the rest of the bank back out to $8000 (keeps bank $54 layout intact)
 CustomSkillBlobEnd_054:

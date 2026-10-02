@@ -1,0 +1,230 @@
+{
+ "_doc": [
+  "S111 (ROADMAP P3.11c; PROJECT_COMPILER \u00a72.27): the BUILT-IN data of the",
+  "custom skills $DE-$E9 \u2014 what every build gets when gamedata.skills.<id>",
+  "does not change it. Read once from the S110 pin by",
+  "tools/extract_custom_skills.py (until S111 these were hand bytes in banks",
+  "$41/$54/$56/$07/$06/$58/$4C/$5F/$72). Per skill: name / description (the",
+  "SKIL text, null = the empty string), mp (CustomMPCostTable; the battle copy",
+  "is record +4), record (19 B hex; null = the retired POCs' Blaze row $41CF),",
+  "learn (18 B hex; null = not naturally learnable), announce_template (the",
+  "battle announce message id, $FD = this skill's own `message`, $FF = none),",
+  "message (raw battle-text bytes, $F0-terminated), proxy (the stock skill",
+  "whose animation / flash / sounds it borrows). handler = the bank $72 code",
+  "that runs it (mechanism, not data). $DE/$DF are the retired S45 POCs."
+ ],
+ "_generator": "tools/extract_custom_skills.py on the S110 pin 534bfb6245e825445f6d45764ed7305e (patched)",
+ "skills": {
+  "222": {
+   "label": "Scorch",
+   "handler": "retired",
+   "name": "Scorch",
+   "description": null,
+   "mp": null,
+   "record": null,
+   "learn": null,
+   "announce_template": 103,
+   "message": null,
+   "proxy": 9
+  },
+  "223": {
+   "label": "Smite",
+   "handler": "retired",
+   "name": "Smite",
+   "description": null,
+   "mp": null,
+   "record": null,
+   "learn": null,
+   "announce_template": 104,
+   "message": null,
+   "proxy": 9
+  },
+  "224": {
+   "label": "MagicBurn",
+   "handler": "magicburn",
+   "name": "MagicBurn",
+   "description": [
+    "Burns half its MP",
+    "to damage all",
+    "enemies"
+   ],
+   "mp": 0,
+   "record": "46121200001005010602020000000000000000",
+   "learn": null,
+   "announce_template": 253,
+   "message": "f900623f524f4b5062453e49436246515062303363fc10ecf2246245524442623f524f5051624c43f14a3e44464062424b424f445663ecf0",
+   "proxy": 9
+  },
+  "225": {
+   "label": "Tame",
+   "handler": "tame",
+   "name": "Tame",
+   "description": [
+    "Builds trust to",
+    "make the enemy",
+    "join you"
+   ],
+   "mp": 10,
+   "record": "001311140a0004410717020000000000000000",
+   "learn": "02000000000000000000000000ffffffffff",
+   "announce_template": 253,
+   "message": "edf900625250424162373e4a4263ecf0",
+   "proxy": 194
+  },
+  "226": {
+   "label": "TameMore",
+   "handler": "tame",
+   "name": "TameMore",
+   "description": [
+    "Builds strong",
+    "trust to make the",
+    "enemy join you"
+   ],
+   "mp": 30,
+   "record": "001311141e0004410717020000000000000000",
+   "learn": "03000000000000000000000000e1ffffffff",
+   "announce_template": 253,
+   "message": "edf900625250424162373e4a42304c4f4263ecf0",
+   "proxy": 194
+  },
+  "227": {
+   "label": "TameMost",
+   "handler": "tame",
+   "name": "TameMost",
+   "description": [
+    "Builds the deepest",
+    "trust to make the",
+    "enemy join you"
+   ],
+   "mp": 50,
+   "record": "00131114320004410717020000000000000000",
+   "learn": "05000000000000000000000000e2ffffffff",
+   "announce_template": 253,
+   "message": "edf900625250424162373e4a42304c505163ecf0",
+   "proxy": 194
+  },
+  "228": {
+   "label": "Anchor",
+   "handler": "anchor",
+   "name": "Anchor",
+   "description": [
+    "Warps to GreatTree",
+    "and back for most",
+    "of its MP"
+   ],
+   "mp": 0,
+   "record": "00131114000004410702020000000000000000",
+   "learn": null,
+   "announce_template": 255,
+   "message": null,
+   "proxy": 9
+  },
+  "229": {
+   "label": "Tremor",
+   "handler": "quake",
+   "name": "Tremor",
+   "description": [
+    "A small quake",
+    "hits both sides",
+    "but not flyers"
+   ],
+   "mp": 5,
+   "record": "46121200051005010602020000000000000000",
+   "learn": "02000000000000000000000000ffffffffff",
+   "announce_template": 253,
+   "message": "edf9006250425150624c4343f13e624e523e484263ecf0",
+   "proxy": 9
+  },
+  "230": {
+   "label": "Quake",
+   "handler": "quake",
+   "name": "Quake",
+   "description": [
+    "A quake that hits",
+    "both sides but",
+    "not flyers"
+   ],
+   "mp": 10,
+   "record": "461212000a1005010602020000000000000000",
+   "learn": "04000000000000000000000000e5ffffffff",
+   "announce_template": 253,
+   "message": "edf9006250425150624c4343f13e624e523e484263ecf0",
+   "proxy": 9
+  },
+  "231": {
+   "label": "QuakeMore",
+   "handler": "quake",
+   "name": "QuakeMore",
+   "description": [
+    "A big quake that",
+    "hits both sides",
+    "but not flyers"
+   ],
+   "mp": 16,
+   "record": "46121200101005010602020000000000000000",
+   "learn": "06000000000000000000000000e6ffffffff",
+   "announce_template": 253,
+   "message": "edf9006250425150624c4343f13e624e523e484263ecf0",
+   "proxy": 9
+  },
+  "232": {
+   "label": "QuakeMost",
+   "handler": "quake",
+   "name": "QuakeMost",
+   "description": [
+    "A huge quake that",
+    "hits both sides",
+    "but not flyers"
+   ],
+   "mp": 24,
+   "record": "46121200181005010602020000000000000000",
+   "learn": "08000000000000000000000000e7ffffffff",
+   "announce_template": 253,
+   "message": "edf9006250425150624c4343f13e624e523e484263ecf0",
+   "proxy": 9
+  },
+  "233": {
+   "label": "Mourn",
+   "handler": "mourn",
+   "name": "Mourn",
+   "description": [
+    "Power grows with",
+    "each fallen ally"
+   ],
+   "mp": 10,
+   "record": "001311140a0004410717020000000000000000",
+   "learn": "03000000000000000000000000ffffffffff",
+   "announce_template": 253,
+   "message": "edf900625250424162304c524f4b63ecf0",
+   "proxy": 64
+  }
+ },
+ "banners": {
+  "quake_allies": "244949464250623e4f4262403e52444551f1464b623e62504246504a464062543e534263ecf0",
+  "quake_flew": "ed25525162f900f143494254623e3f4c534262465163ecf0",
+  "mourn_boost": "293e4949424b623e4949464250f149424b41624d4c54424f63ecf0"
+ },
+ "tame_meter": {
+  "225": 10,
+  "226": 100,
+  "227": 400
+ },
+ "quake_power": {
+  "229": [
+   40,
+   20
+  ],
+  "230": [
+   90,
+   30
+  ],
+  "231": [
+   150,
+   40
+  ],
+  "232": [
+   240,
+   30
+  ]
+ }
+}

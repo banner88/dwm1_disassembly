@@ -3208,6 +3208,9 @@ LoadBattle_519e:
 ; [S84] DEAD CODE (with its $db07-dodge twin below): no call/jp/rst/dw
 ; references anywhere in the ROM. The LIVE surround-miss + dodge rolls
 ; are the bank $53 act-time gate machine at $5747-$57F5 (§15.10.9).
+; [S111] re-checked ($51B3-$51DC, 42 B, zero references ROM-wide); the
+; patched build puts the element-override ladder hooks here (patches/
+; bank_052.asm ElemLadderA/Breath/Slash, BATTLE_SKILL_SYSTEM §15.3).
     call BattleRNG
     scf
     ccf

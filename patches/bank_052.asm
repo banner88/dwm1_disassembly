@@ -3139,31 +3139,50 @@ LoadBattle_519e:
     ret
 
 
-    call BattleRNG
-    scf
-    ccf
-    ld a, [wBattleAttackerIdx]
-    ld hl, $db03
-    call HL_AddA_x8
-    bit 1, [hl]
-    ret z
-
-    ld a, [wRNG1]
-    cp $a0
+; =============================================================================
+; [S111] ELEMENT OVERRIDE (BATTLE_SKILL_SYSTEM §15.3 "Element override (S111)").
+; These 42 bytes were the S84-audited DEAD twins of the surround-miss / dodge
+; rolls ($51B3-$51DC: zero call/jp/jr/dw references ROM-wide, re-checked S111).
+; A damage handler reads ONE 2-bit resistance level of the target itself and
+; passes it in A to a damage ladder; the 24 ladder calls in this bank now go
+; through ElemLadderA / ElemLadderBreath / ElemLadderSlash, which first ask bank
+; $72 (entry 5 ElemLevel72) whether the acting skill ($db8a) has an element
+; override (gamedata.skills.<id>.element -> StockElemTable / CustomElemTable):
+; if so A becomes the target's level for THAT resistance, else A is unchanged
+; (identity tables = vanilla). CustomElemTail52 applies the spell ladder after a
+; bespoke custom handler (Quake, MagicBurn, Tame, Mourn) when its CustomElemTable
+; entry names an element (bank $72 entry 1 returns E = level / $FF, HL = the
+; target's status byte $DB05+8*slot).
+; =============================================================================
+ElemLadderA:                    ; spell ladder (Blaze ... Hellblast, GigaSlash)
+    call ElemLevel52
+    jp CheckTargetGuardA
+ElemLadderBreath:               ; breath ladder (breaths, BigBang, RockThrow, MegaMagic)
+    call ElemLevel52
+    jp ResLadderBreath_676c
+ElemLadderSlash:                ; elemental-slash ladder (FireSlash, BoltSlash, ...)
+    call ElemLevel52
+    jp ResLadderElemSlash_6782
+ElemLevel52:                    ; A = the level the handler read -> A = the level to use
+    push bc
+    push de
+    push hl
+    ld e, a
+    ld hl, $7205                ; bank $72 entry 5 = ElemLevel72 (E in / E out)
+    rst $10
+    pop hl
+    ld a, e
+    pop de
+    pop bc
     ret
-
-
-    ld a, [wBattleTargetIdx]
-    ld hl, $db07
-    call HL_AddA_x8
-    ld a, [hl]
-    and $0c
+CustomElemTail52:               ; jp'd at the end of CustomDispatch52
+    ld a, e                     ; E = the custom skill's element level, $FF = none
+    inc a
     ret z
-
-    ld a, [wRNG1]
-    cp $80
-    ret
-
+    dec a
+    jp CheckTargetGuardA        ; HL = target status byte (set by bank $72 entry 1)
+    ds $51dd - @, $00           ; (4 spare bytes of the old dead code)
+    ASSERT @ == $51dd
 
 SaveBattle_51dd:
     push hl
@@ -4631,7 +4650,7 @@ jr_052_59f7:
     call GetBattleStatAddr1
     swap a
     and $03
-    call CheckTargetGuardA
+    call ElemLadderA
     call LoadBattle_5ad4
     ret
 
@@ -4645,7 +4664,7 @@ jr_052_59f7:
     rlca
     rlca
     and $03
-    call CheckTargetGuardA
+    call ElemLadderA
     call LoadBattle_5ad4
     ret
 
@@ -4692,7 +4711,7 @@ jr_052_5a66:
     rrca
     rrca
     and $03
-    call CheckTargetGuardA
+    call ElemLadderA
     call LoadBattle_5ad4
     ret
 
@@ -4706,7 +4725,7 @@ jr_052_5a66:
     rrca
     rrca
     and $03
-    call CheckTargetGuardA
+    call ElemLadderA
     call LoadBattle_5ad4
     ret
 
@@ -4719,7 +4738,7 @@ jr_052_5a66:
     call BattleFunc_67bb
     swap a
     and $03
-    call CheckTargetGuardA
+    call ElemLadderA
     call LoadBattle_5ad4
     ret
 
@@ -4964,7 +4983,7 @@ BattleCall_5bff:
     call BattleFunc_67bb
     swap a
     and $03
-    call CheckTargetGuardA
+    call ElemLadderA
     ret
 
 
@@ -4974,7 +4993,7 @@ BattleCall_5c0d:
     rrca
     rrca
     and $03
-    call CheckTargetGuardA
+    call ElemLadderA
     ret
 
 
@@ -4982,7 +5001,7 @@ BattleCall_5c1b:
     call StoreDamageResult
     call BattleFunc_67bb
     and $03
-    call CheckTargetGuardA
+    call ElemLadderA
     ret
 
 
@@ -4994,7 +5013,7 @@ BattleCall_5c2a:
     rlca
     rlca
     and $03
-    call CheckTargetGuardA
+    call ElemLadderA
     ret
 
 
@@ -5003,7 +5022,7 @@ BattleCall_5c35:
     call GetBattleStatAddr1
     swap a
     and $03
-    call CheckTargetGuardA
+    call ElemLadderA
     ret
 
 
@@ -5013,7 +5032,7 @@ BattleCall_5c43:
     rrca
     rrca
     and $03
-    call CheckTargetGuardA
+    call ElemLadderA
     ret
 
 
@@ -6063,7 +6082,7 @@ BattleTarget_6214:
     call GetTargetBattleSlot
     call BattleFunc_67ca
     and $03
-    call CheckTargetGuardA
+    call ElemLadderA
     ret
 
 
@@ -6146,7 +6165,7 @@ BattleCall_6298:
     call BattleFunc_67bb
     swap a
     and $03
-    call ResLadderElemSlash_6782
+    call ElemLadderSlash
     ret
 
 
@@ -6156,7 +6175,7 @@ BattleCall_62a9:
     call GetBattleStatAddr1
     swap a
     and $03
-    call ResLadderElemSlash_6782
+    call ElemLadderSlash
     ret
 
 
@@ -6167,7 +6186,7 @@ BattleCall_62ba:
     rlca
     rlca
     and $03
-    call ResLadderElemSlash_6782
+    call ElemLadderSlash
     ret
 
 
@@ -6178,7 +6197,7 @@ BattleCall_62cb:
     rrca
     rrca
     and $03
-    call ResLadderElemSlash_6782
+    call ElemLadderSlash
     ret
 
 
@@ -6366,7 +6385,7 @@ jr_052_63ce:
     rlca
     rlca
     and $03
-    call ResLadderBreath_676c
+    call ElemLadderBreath
     ret
 
 
@@ -6409,7 +6428,7 @@ jr_052_6404:
     call BattleFunc_67d9
     swap a
     and $03
-    call CheckTargetGuardA
+    call ElemLadderA
     ret
 
 
@@ -6580,7 +6599,7 @@ BattleCall_6506:
     call BattleFunc_67d9
     swap a
     and $03
-    call ResLadderBreath_676c
+    call ElemLadderBreath
     ret
 
 
@@ -6589,7 +6608,7 @@ BattleCall_6514:
     call BattleFunc_67cf
     swap a
     and $03
-    call ResLadderBreath_676c
+    call ElemLadderBreath
     ret
 
 
@@ -6599,7 +6618,7 @@ BattleCall_6522:
     rrca
     rrca
     and $03
-    call ResLadderBreath_676c
+    call ElemLadderBreath
     ret
 
 
@@ -6608,7 +6627,7 @@ BattleCall_6530:
     call BattleFunc_67bb
     swap a
     and $03
-    call ResLadderBreath_676c
+    call ElemLadderBreath
     ret
 
 
@@ -6685,7 +6704,7 @@ jr_052_65a7:
     rlca
     rlca
     and $03
-    call ResLadderBreath_676c
+    call ElemLadderBreath
     ret
 
 
@@ -6883,7 +6902,7 @@ BattleCall_66ac:
     rrca
     rrca
     and $03
-    call CheckTargetGuardA
+    call ElemLadderA
     ret
 
 
@@ -11627,7 +11646,7 @@ CustomDispatch52_shared:     ; [MOURN S75] shared tail — MournDispatch52 jp's 
     call SetHLBattle_54e7    ; descriptor $dd6f=$a8, msg pair $dd70/71=$b882 (hit/miss ids)
     ld hl, $7201             ; bank $72, entry 1 = CustomBattleExec
     rst $10                  ; far-call: override $db56 with the skill's real damage + cost
-    ret
+    jp CustomElemTail52      ; [S111] + the skill's element (E = level / $FF, HL = status)
 MournDispatchPtr:            ; [MOURN S75] the dw FarSkillFork returns for $E9 Mourn — 
     dw MournDispatch52       ;   dereffed by the dispatcher to jp MournDispatch52 ($6c56)
 .pad

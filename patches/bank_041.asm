@@ -950,18 +950,21 @@ SkillNamePtrTable:  ; $4539 — 256 entries, indexed by skill ID
     dw SkillName_219_RUN  ; [219]
     dw SkillName_220_IRONIZE  ; [220]
     dw SkillName_221_Ahhh  ; [221]
-    dw SkillName_222_Scorch  ; [222]
-    dw SkillName_223_Smite  ; [223]
-    dw SkillName_224_MagicBurn  ; [224] $E0 [S2d]
-    dw SkillName_225_Tame        ; [225] $E1 [S2e]
-    dw SkillName_226_TameMore    ; [226] $E2 [Stage2]
-    dw SkillName_227_TameMost    ; [227] $E3 [Stage2]
-    dw SkillName_228_Anchor      ; [228] $E4 Anchor [S73]
-    dw SkillName_229_Tremor      ; [229] $E5 [QUAKE]
-    dw SkillName_230_Quake       ; [230] $E6 [QUAKE]
-    dw SkillName_231_QuakeMore   ; [231] $E7 [QUAKE]
-    dw SkillName_232_QuakeMost   ; [232] $E8 [QUAKE]
-    dw SkillName_233_Mourn       ; [233] $E9 [MOURN S75]
+; [S111] rows 222-255 (the custom ids) = compiler region gd_custom_skill_name_ptrs
+; (editor2/core/custom_skills.py): a custom skill's name, else the empty string.
+; @BUILD_PROJECT BEGIN gd_custom_skill_name_ptrs
+    dw SkillName_222_Unused_222  ; [222]
+    dw SkillName_222_Unused_222  ; [223]
+    dw SkillName_224_MagicBurn  ; [224]
+    dw SkillName_225_Tame  ; [225]
+    dw SkillName_226_TameMore  ; [226]
+    dw SkillName_227_TameMost  ; [227]
+    dw SkillName_228_Anchor  ; [228]
+    dw SkillName_229_Tremor  ; [229]
+    dw SkillName_230_Quake  ; [230]
+    dw SkillName_231_QuakeMore  ; [231]
+    dw SkillName_232_QuakeMost  ; [232]
+    dw SkillName_233_Mourn  ; [233]
     dw SkillName_222_Unused_222  ; [234]
     dw SkillName_222_Unused_222  ; [235]
     dw SkillName_222_Unused_222  ; [236]
@@ -984,6 +987,7 @@ SkillNamePtrTable:  ; $4539 — 256 entries, indexed by skill ID
     dw SkillName_222_Unused_222  ; [253]
     dw SkillName_222_Unused_222  ; [254]
     dw SkillName_222_Unused_222  ; [255]
+; @BUILD_PROJECT END gd_custom_skill_name_ptrs
 
 
 ; ---------------------------------------------------------------
@@ -3130,42 +3134,44 @@ NewSpeciesShortPtrs:
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00   ; unused: the original bytes
 ; @BUILD_PROJECT END ns_text_c
     ASSERT @ == $7F80
-SkillName_222_Scorch:                                             ; $7F80
-    db $36, $40, $4c, $4f, $40, $45, $f0                          ; "Scorch" + terminator
-SkillName_223_Smite:                                              ; $7F8D
-    db $36, $4a, $46, $51, $42, $f0                               ; "Smite" + terminator
-SkillName_224_MagicBurn:                                          ; $7F93  [S2d]
-    db $30, $3e, $44, $46, $40, $25, $52, $4f, $4b, $f0           ; "MagicBurn" + terminator
-SkillName_225_Tame:                                               ; [S2e]
-    db $37, $3e, $4a, $42, $f0                                     ; "Tame" + terminator
-SkillName_226_TameMore:                                           ; [Stage2]
-    db $37, $3e, $4a, $42, $30, $4c, $4f, $42, $f0                 ; "TameMore" + terminator
-SkillName_227_TameMost:                                           ; [Stage2]
-    db $37, $3e, $4a, $42, $30, $4c, $50, $51, $f0                 ; "TameMost" + terminator
 ; [Stage2] Skill-upgrade message, paged (MiscTextPtrTable[3] repointed here).
 ; Vanilla MiscText_03 ($728B) = "[Mon]'s [Old]\nbecomes [New]!" — line 2 auto-wraps
 ; the "!" alone for names >= 8 chars. This version page-splits like MiscText_02:
 ;   page 1: "[Mon]'s [Old]"   page 2: "becomes\n[New]!"  — never orphans.
 ; $ED mon-prefix, $F9 xx buffer insert ($00 nickname / $30 old / $20 new),
 ; $68 "'s", $F1 newline, $FA $F7 wait-button, $F2 page, $63 "!", $F0 end.
+; [S111] moved to the start of this run ($7F80; it sat between the custom names).
 MiscText_03_Paged:
     db $ED, $F9, $00, $68, $62, $F9, $30, $FA, $F7, $F2            ; "[Mon]'s [Old]" <page>
     db $3F, $42, $40, $4C, $4A, $42, $50, $F1                      ; "becomes" <newline>
     db $F9, $20, $63, $FA, $F7, $F0                                ; "[New]!" <end>
-SkillName_228_Anchor:                                             ; [S73] $E4
-    db $24, $4b, $40, $45, $4c, $4f, $f0                          ; "Anchor" + terminator
-SkillName_229_Tremor:                                             ; [QUAKE] $E5
-    db $37, $4f, $42, $4a, $4c, $4f, $f0                          ; "Tremor" + terminator
-SkillName_230_Quake:                                              ; [QUAKE] $E6
-    db $34, $52, $3e, $48, $42, $f0                               ; "Quake" + terminator
-SkillName_231_QuakeMore:                                          ; [QUAKE] $E7
-    db $34, $52, $3e, $48, $42, $30, $4c, $4f, $42, $f0           ; "QuakeMore" + terminator
-SkillName_232_QuakeMost:                                          ; [QUAKE] $E8
-    db $34, $52, $3e, $48, $42, $30, $4c, $50, $51, $f0           ; "QuakeMost" + terminator
-SkillName_233_Mourn:                                              ; [MOURN S75] $E9
-    db $30, $4c, $52, $4f, $4b, $f0                               ; "Mourn" + terminator
-.pad224
-    ds $7FF6 - .pad224, $00                                       ; pad to $7FF6
+; [S111] The custom skills' names (compiler region gd_custom_skill_names, ids
+; $DE-$FE, first-fit; a name that does not fit goes to the shared ns_text_*
+; extents). The retired POCs $DE Scorch / $DF Smite no longer carry a name.
+; @BUILD_PROJECT BEGIN gd_custom_skill_names
+SkillName_224_MagicBurn:  ; "MagicBurn"
+    db $30, $3E, $44, $46, $40, $25, $52, $4F, $4B, $F0
+SkillName_225_Tame:  ; "Tame"
+    db $37, $3E, $4A, $42, $F0
+SkillName_226_TameMore:  ; "TameMore"
+    db $37, $3E, $4A, $42, $30, $4C, $4F, $42, $F0
+SkillName_227_TameMost:  ; "TameMost"
+    db $37, $3E, $4A, $42, $30, $4C, $50, $51, $F0
+SkillName_228_Anchor:  ; "Anchor"
+    db $24, $4B, $40, $45, $4C, $4F, $F0
+SkillName_229_Tremor:  ; "Tremor"
+    db $37, $4F, $42, $4A, $4C, $4F, $F0
+SkillName_230_Quake:  ; "Quake"
+    db $34, $52, $3E, $48, $42, $F0
+SkillName_231_QuakeMore:  ; "QuakeMore"
+    db $34, $52, $3E, $48, $42, $30, $4C, $4F, $42, $F0
+SkillName_232_QuakeMost:  ; "QuakeMost"
+    db $34, $52, $3E, $48, $42, $30, $4C, $50, $51, $F0
+SkillName_233_Mourn:  ; "Mourn"
+    db $30, $4C, $52, $4F, $4B, $F0
+    ds 15, $00   ; free (15 B)
+; @BUILD_PROJECT END gd_custom_skill_names
+    ASSERT @ == $7FF6
 ; @BUILD_PROJECT BEGIN ns_text_d
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00   ; unused: the original bytes
 ; @BUILD_PROJECT END ns_text_d
