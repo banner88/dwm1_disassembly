@@ -10,6 +10,67 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
+> Last verified: 2026-10-02 (Session 112 — **ROADMAP P3.11e: SKILL ANIMATION EDITING —
+> NEW BATTLE ANIMATIONS MADE FROM THE GAME'S FRAMES, AND WHAT EACH SKILL SHOWS** (user on
+> the audit: "Sounds perfect. The in-built editor viewer and sound playback is the
+> perfect way to do it. 1) New tile art later. 2) Stock tiles should all be fine, this
+> will be 5-10 mashup skills at MOST on top of vanilla ones. 3) Same as vanilla. 4) yes I
+> want to choose. 5) Preview in editor enough, I can assign to monster and build. 6) One
+> session preferred. 7) No idea."). **Test ROM `DWM_S112_animations_test.gbc`
+> (`16f7a43d…`, patched) USER-CONFIRMED 2026-10-02 18:29 ("Fantastic, everything checks out")**; the editor half test_app-verified, not yet run on the user's Mac.
+> Verifier PASS; clean `1ca6579…` byte-perfect (the animation system re-sectioned and
+> labelled in banks $00/$02/$17/$50/$5A/$5B/$5C/$5D/$5E/$5F by
+> `tools/resection_battle_anims.py` + the debugger's shade copy `EffectDebugShadeTable`
+> and the ROM0 tick / bank $50 `$DA80` comments by hand; labels / data / comments only);
+> **patched pin `9ce03bd0…` (patched)**, was `5a1c5404…` (patched, historical); the
+> user's project (my-dwm-hack_5) as-is now builds `c90a69c2…` (patched; was `c3499e39…`,
+> historical) and plays exactly as on S111 (PyBoy A/B, RNG pinned). test_compiler --rom
+> 754/754, test_app + test_app --rom PASS (GUI build == pin). `EDITOR_REVISION` = 'S112'.
+>
+> **Built (PROJECT_COMPILER §2.28, BATTLE_SKILL_SYSTEM §11.9, EDITOR_DESIGN §5.3 "As
+> built S112"):** `custom.animations` = NEW animations $2D-$4C (≤ 32), each a list of
+> steps — a frame of one of the 45 stock animations + how long it shows, a sound cue, a
+> blank; ≤ 4 source animations (one OBJ palette each), ≤ 128 tiles. The compiler gathers
+> the frames into bank **$6F** (engine template `bank_06f_head.asm` + generated tables)
+> and their tiles into one sheet per animation in bank **$70**.
+> `gamedata.skills.<id>.presentation` = an animation (stock or new) + motion (at the
+> target / middle / each target / flies across), a screen effect (11), or nothing —
+> regions `gd_anim_routine` / `gd_anim_cmd` (bank $5F, by real skill id), applied on the
+> sides where the look shows something (vanilla sides, user). Forks: ROM0 two operands,
+> NEW hand patch `patches/bank_002.asm` (`ReadSeqStepFork`), bank $50 `AnimLoadFork50`,
+> bank $5F routine / number forks + the developers' viewer (mode 5) listing $00-$4C.
+> Editor: NEW **Animations** tab (list, playing preview with the game's own sounds —
+> `extracted/anim_sounds/`, recorded from the ROM's sound engine —, steps with
+> thumbnails and frame counts, Add frames… from any stock animation, Add sound / blank)
+> and the Skills tab's **Animation** section (with preview); help `57_animations.md`
+> (new), `54_skills.md`, `00_start.md`.
+>
+> **Found (BATTLE_SKILL_SYSTEM §11.9 — corrects §11.1-11.5):** the per-skill
+> `$56ED`/`$57D5` byte is the ANIMATION NUMBER (frames + timeline + tiles + colours), not
+> "sound + flash"; the sounds are `$FD` cues in the timeline; the timelines are bank $02
+> sequencer row $60 (`AnimTimelineTable` $46A1); the routine index (16 routines,
+> measured) picks the motion / a screen effect / nothing; the OBJ colours pass through
+> the DMG shade with the order [1,2,0,3] (identity $D2) — measured on SCREEN; game mode 5
+> is the developers' "Effect" animation viewer. Stale: DOC_AUDIT #15's "map-script"
+> blocker (bank $0F's labels at the same addresses); bank $50's "$DA80 master-intro" label; PROJECT_COMPILER's `StockPresentTable
+> $7EEB` (it is $7EDA).
+>
+> **Measured in PyBoy on the user's save:** the developers' viewer census
+> (`tools/census_battle_anims.py`): all 45 stock animations = the decoded model frame by
+> frame (frames, timing, sounds, tiles, colours; negative control 45/45 fail) and the
+> demo's $2D / $2E = the editor's model. Battles (RNG pinned, 14 cases, no stall): the
+> demo overlay (NOT in the user's project, authored through the editor model) — Zap →
+> "Spark storm" $2D (Zap's opening + bolt, then Bang's burst) on each foe, MetalCut →
+> "Frost slash" $2E (TwinSlash's cut + IceStorm's shards) at the target, Scorching → the
+> screen blink, EvilSlash → stock $26 (GigaSlash); IceStorm / Blaze / Firebal / Bang /
+> HealMore / enemy Zap → party unchanged; an enemy's HealMore on itself showed $2D in the
+> first demo build. **Test ROM `DWM_S112_animations_test.gbc` = that demo — USER-CONFIRMED 2026-10-02 18:29 ("Fantastic, everything checks out").**
+> **Hand-off:** every S112 change = the diff against `a5f28f6` (origin/master, the S111b
+> push), delivered as `DWM-S112-skill-animations-changed-files.zip`, the APPLY list pasted
+> in the chat. **Next:** the user's pick (P3.11b AI ban-list is optional; P3.12 Breeding
+> tab is the next mandatory box).
+
+
 > Last verified: 2026-10-02 (Session 111 — **ROADMAP P3.11c + P3.11d: THE CUSTOM SKILLS AS
 > PROJECT DATA, NEW CUSTOM SKILLS FROM STOCK ONES, AN ELEMENT FOR EVERY SKILL** (user on
 > the audit: "1) Yes start with vanilla but given 3.11d is kind of tied, dont feel
@@ -88,65 +149,11 @@
 > frame-table re-section of banks $5C/$5D/$5E and the bank $5F per-skill tables, a PyBoy
 > trace of frame timing and tile loading).
 
-> Last verified: 2026-10-02 (Session 110 — **ROADMAP P3.11: THE SKILLS TAB — THE 222
-> ORIGINAL SKILLS: NAMES, SKIL TEXTS, MP, LEARNING, POWER, TARGETS, AI, BEHAVIOUR BITS,
-> "LOOKS AND SOUNDS LIKE"** (user on the audit: "Start with vanilla skills and add custom
-> skills if there is scope and context / 2) in scope [names + texts] / 3) yes editable
-> [target mode] / 4) show and give hover hints what they do; use help tab. If they are
-> genuinely useful, let me edit [the poorly-understood record fields] / 5) Offer [looks
-> like skill X] / 6) Edit in item tab [battle items] / 7) Your choice [announce line →
-> read-only]"). **Test ROM `DWM_S110_skills_test.gbc` USER-CONFIRMED 2026-10-02 09:09 ("Excellent work. Give me editor files")**;
-> the editor half test_app-verified, not yet run on the user's Mac. Verifier PASS; clean
-> `1ca6579…` byte-perfect (bank $56 SKIL texts + pointer tables re-sectioned by
-> `tools/resection_skill_desc.py`; 60 record-reader sites + the FIELD MAP header +
-> bank $54 entries 3/4/5 relabelled by `tools/annotate_skill_record.py`; comments /
-> labels only); **patched pin `534bfb62…` (patched)**, was `482c949f…` (patched,
-> historical) — the two looks proxies + the example project's skill 215 rename moved out
-> of a hand edit; the user's project as-is now builds `32133c7c…` (patched; was
-> `f995cb88…`, historical). test_compiler --rom 650/650, test_app + test_app --rom PASS
-> (GUI build == pin). `EDITOR_REVISION` = 'S110'.
->
-> **Built (PROJECT_COMPILER §2.26 + §2.20, BATTLE_SKILL_SYSTEM §7 / §11.8, TEXT_SYSTEM
-> "Skill text blocks (S110)", EDITOR_DESIGN §5.3 "As built S110"):**
-> `gamedata.skills.<0-221>` gains `name` / `description` / `looks_like` → regions
-> `gd_skill_names` ($41), `gd_skill_desc` / `gd_skill_desc_ptrs` / `gd_skill_desc_extra`
-> ($56), `gd_present_proxy_5f` (`StockPresentTable`, read by `GetPresentId` for ids <
-> $DE) and `gd_present_proxy_55` (NEW hand patch `patches/bank_055.asm`: the one SFX-table
-> reader `$55:$4061` → `call SfxPresentId`). `mp` now writes both MP copies (field `$07`
-> u16 + battle record +4); "ALL" for Farewell / MegaMagic only; `target_mode` from five.
-> New **Skills** tab (sections: text with the game font, MP + learning, power, targets,
-> AI, behaviour boxes with hover hints, looks, who has it; battle items read-only; the
-> announce line read-only); help `54_skills.md`; other tabs follow skill renames.
->
-> **Found (foundational — the RECORD READER CENSUS, BATTLE_SKILL_SYSTEM §7):** every
-> byte / bit of the 19-byte record has a named reader or is proven unread: +0, +1 low
-> nibble, +7 b2, +8 b3, +9 b6/b7 NOT READ; +4 is the BATTLE MP cost (menu, act time,
-> deduct, AI veto — the old "reader untraced" warning retired); +5 is the AI's assumed
-> element (not "status_id"); flags7/8/9 = breath / dance / spell seals, reflect,
-> redirect, iron, crits, TwinHits, ChargeUP, dodge, TakeMagic, Imitate, confusion snap,
-> airborne reach; +10 items only. Bank $54 entry 3 = the side power read ($52C7; docs
-> said entry 5 / $535F = the item lookup); the $55 SFX reader is $4061 (docs $4067);
-> S44 had renamed skill 215 by hand inside the names block (DOC_AUDIT S110).
->
-> **Measured in PyBoy on the user's save:** (1) the LOOKS census
-> (`tools/census_skill_present.py` → `extracted/skill_present_census.json`): 222 donors
-> × 7 borrowers = 1,554 battles, every borrower acted 4-9 times, longest frozen action
-> machine 157 frames — **no stall** (the first pass was void: the AI replaced the forced
-> skill at act time — KEY_LESSONS S110); a cross-side look shows nothing (Heal with
-> Bang's look); (2) the demo `ed8222b2…` (patched) = the user's project + a demo overlay
-> NOT in their project: Zap → "Spark" (SKIL menu: name, "Sparks leap at / every foe",
-> USE MP 1; battle "Slib casts Spark!" with Bang's look, 78/77/78 to three foes),
-> MetalCut aimed at all foes (hits all three; one in the original), HealMore → "Cure" (+200 HP for 1 MP).
-> **Test ROM `DWM_S110_skills_test.gbc` (= that demo) USER-CONFIRMED 2026-10-02 09:09 ("Excellent work. Give me editor files").** **Hand-off:** every S110
-> change = the diff against `bf8bb5f` (origin/master), delivered as
-> `DWM-S110-skills-tab-changed-files.zip`, the APPLY list pasted in the chat. The user also
-> asked how hard building new skill animations from existing frames would be — answered
-> in chat from BATTLE_SKILL_SYSTEM §11 (no new measurement; ROADMAP P3.11c residual).
-> **Next:** P3.11c (the custom skills as project data) or the user's pick.
 
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S112** (2026-10-02): P3.11e skill ANIMATION editing — `custom.animations` (new battle animations $2D-$4C from the stock 45's frames: steps = frame + hold / sound / blank; ≤ 4 sources, ≤ 128 tiles; banks $6F engine + frames, $70 sheets) + `gamedata.skills.<id>.presentation` (animation + motion / screen effect / nothing; regions `gd_anim_routine` / `gd_anim_cmd`); forks ROM0 / $02 `ReadSeqStepFork` / $50 `AnimLoadFork50` / $5F + the developers' viewer (mode 5); the animation system re-sectioned and measured (§11.9 corrects the layer model: the per-skill byte is the animation number; shade order [1,2,0,3]); Animations tab + Skills → Animation with a playing preview and the game's sounds; pin `9ce03bd0…` (patched). Test ROM `DWM_S112_animations_test.gbc` USER-CONFIRMED 2026-10-02 18:29 ("Fantastic, everything checks out"). Verbose block in this file. Owning: PROJECT_COMPILER §2.28, BATTLE_SKILL_SYSTEM §11.9, EDITOR_DESIGN §5.3, KEY_LESSONS S112, DOC_AUDIT S112, TOOLS_AND_DATA S112.
 - **S111** (2026-10-02): P3.11c + P3.11d — the custom skills as project data: `gamedata.skills.<224-233>` (the ten built-ins' data: text, MP, learning, looks, sounds, element, announce, Tame meters, Quake power, banners, Anchor's dialogs) + NEW skills 234-254 on a stock skill's effect (`base`, bank $72 `CustomBaseTable`; 114 measured bases) + an element override for every skill (bank $52 ladder hooks in the dead $51B3 pocket, `CustomElemTail52` for the built-ins); 19 regions, baseline `custom_skills.json` = the S110 bytes; fixed the `{skill}` insert ("CleanCut") and the SFX-table overshoot; element + clone censuses (RNG pinned); pin `4a2860cf…`. Test ROM USER-CONFIRMED 2026-10-02 15:08 ("Looks good"); next = P3.11e animation editing (user). S111b: the built-ins' fixed ratios as data (`gd_custom_ratios`, `ScaleHL72`) + the MagicBurn / Tame AI target-row fix (they hit their own side under the act-time AI); pin `5a1c5404…` (patched); test ROM NOT yet user-tested. Verbose block in this file. Owning: PROJECT_COMPILER §2.27, BATTLE_SKILL_SYSTEM §13.9 + §15.3, EDITOR_DESIGN §5.3, TEXT_SYSTEM, KEY_LESSONS S111, DOC_AUDIT S111, TOOLS_AND_DATA S111.
-- **S110** (2026-10-02): P3.11 the Skills tab — the 222 original skills: `gamedata.skills` + `name` / `description` / `looks_like` → regions over the name block ($41), the SKIL texts + pointers + a 2,993-B spare ($56, re-sectioned), `StockPresentTable` ($5F, `GetPresentId`) and NEW hand patch bank $55 `SfxPresentId` + `StockSfxTable`; `mp` writes both MP copies; the record READER CENSUS (every byte / bit named or proven unread; entry 3/4/5 labels, $55:$4061, +4 = battle MP, +5 = AI element); looks census 1,554 PyBoy battles, no stall (first pass void — act-time AI); S44 hand rename of skill 215 moved to project data; pin `534bfb62…`. Test ROM USER-CONFIRMED 2026-10-02 09:09 ("Excellent work. Give me editor files"). Verbose block in this file. Owning: PROJECT_COMPILER §2.26, BATTLE_SKILL_SYSTEM §7 + §11.8, TEXT_SYSTEM "Skill text blocks", EDITOR_DESIGN §5.3, KEY_LESSONS S110, DOC_AUDIT S110, TOOLS_AND_DATA S110.
+- **S110** (2026-10-02): P3.11 the Skills tab — the 222 original skills: `gamedata.skills` + `name` / `description` / `looks_like` → regions over the name block ($41), the SKIL texts + pointers + a 2,993-B spare ($56, re-sectioned), `StockPresentTable` ($5F, `GetPresentId`) and NEW hand patch bank $55 `SfxPresentId` + `StockSfxTable`; `mp` writes both MP copies; the record READER CENSUS (every byte / bit named or proven unread; entry 3/4/5 labels, $55:$4061, +4 = battle MP, +5 = AI element); looks census 1,554 PyBoy battles, no stall (first pass void — act-time AI); S44 hand rename of skill 215 moved to project data; pin `534bfb62…`. Test ROM USER-CONFIRMED 2026-10-02 09:09 ("Excellent work. Give me editor files"). Verbose block in SESSION_HISTORY.md. Owning: PROJECT_COMPILER §2.26, BATTLE_SKILL_SYSTEM §7 + §11.8, TEXT_SYSTEM "Skill text blocks", EDITOR_DESIGN §5.3, KEY_LESSONS S110, DOC_AUDIT S110, TOOLS_AND_DATA S110.
 - **S109** (2026-10-01): P3.10b the Arena editor — `gamedata.arena` (class fees, the master of each match, team sizes 1-3) → regions over the two master-sprite tables ($04/$50), the class fee table ($09) and bank $6E `ArenaTeamSizeTable`; NEW engine bank $6E `ArenaTeamFixup` (same-size tails of `ArenaBattleSetup` / `LoadArenaEnemyStats`); team members = the enemy rows; new Arena tab; bank $09 class menu re-sectioned + decoded; found `AddGold` subtracts, display-list order, the King = one match; pin `482c949f…` (patched, historical). Test ROM USER-CONFIRMED 2026-10-01 22:57. Verbose block in SESSION_HISTORY.md. Owning: PROJECT_COMPILER §2.25, SIDEQUEST_MAP "Arena authoring as built — S109", EDITOR_DESIGN §5.2b, KEY_LESSONS S109, DOC_AUDIT S109, TOOLS_AND_DATA S109.
 - **S108** (2026-10-01): P3.10 part 3 — renaming the original monsters: `gamedata.monster_text` (name / default nickname / description) → regions over the three text blocks (banks $41 / $4D; spill into the new-species extents / `gd_monster_desc_extra`), recipe lines follow renames, new species' own description; Monsters tab "Name and library text" + new Dialogue tab; found: the join naming prefill = mode 7 (`FamilyCodePtrTable` → `MonsterNickPtrTable`), text ids' overflow banks, `text_id_map.json` 62/2,061 right (now measured: `dump_dialogue.py`; 6,520 script previews refreshed); bank $4D descriptions re-sectioned; pin unchanged. Test ROM r2 USER-CONFIRMED 2026-10-01 (r1: the demo's Slime rate + the user's Library-door redirect, fixed in the demo); repo cleanup (.pyc + example build/ out of git). Verbose block in SESSION_HISTORY.md. Owning: PROJECT_COMPILER §2.24, TEXT_SYSTEM "Monster text blocks" + "Text id resolution", EDITOR_DESIGN §5.2, KEY_LESSONS S108, DOC_AUDIT S108, TOOLS_AND_DATA S108.
 - **S107** (2026-10-01): P3.10 part 2a — new art for the ORIGINAL monsters (`gamedata.art` 0-214 → battle gfx / palettes / the 8 walking copies / bank $10-$11 layout + attr regions + art banks $7F/$7C/$7A; Name & art page for originals; Iron Rule 8: 215-220 are not monsters); 7 walking tables + bank $10 tables re-sectioned; pin unchanged — USER-CONFIRMED 2026-10-01 (but the library parent icon stood still). Part 2b — walking layouts: any of the 155 for originals + new species (packer + ranking, `walk_layouts.py`), cross-bank copies in the follower banks' zero tails, bank-$11 `FollowerLayoutBase11` + `NewFollowerL1Table` (donor write gone), Walk style picker; pin `9740c1c9…`. 2b USER-CONFIRMED 2026-10-01. Part 2c — family icons as project data (glyph + streams, Families tab pixel editor) + two missed Spirit icon readers forked (JOURNAL stall); pin `77ccdab8…`; USER-CONFIRMED 2026-10-01. Verbose block in SESSION_HISTORY.md. Owning: PROJECT_COMPILER §2.21/§2.23, MONSTER_DATA "New art for ORIGINAL species" + "Walking layouts as project data", EDITOR_DESIGN §5.2, KEY_LESSONS S107, DOC_AUDIT S107, TOOLS_AND_DATA S107.
@@ -270,6 +277,7 @@
 | LZ graphics streams | `WaitDMATransfer` `$00:$1577` (DE = gfx-ID, HL = dest): literal / `[marker, lo, hi4:len4]` copies from dest + 12-bit offset, count len4+4 or next byte + $13 (8-bit, 0 = 256); EVERY source byte re-wrapped 4 KB down when at/after the end, written 0 when that lands below dest. No shared pool. Python twin `dwm/sprite_codec.decode` (S106 fix) == the game for all 442 monster streams (`tools/census_lz_decode.py`). |
 | Monster text blocks (S108) | Names `$41:$5B1F-$628D` (mode 5 `MonsterNamePtrTable` $4339; species 0-219 in id order, then "" (220-224) and "?????" (225-255); 1,903 B); default nicknames `$41:$69F2-$6C76` (mode 7 `MonsterNickPtrTable` $4739 — was `FamilyCodePtrTable`; 2 letters; the JOIN naming screen pre-fills the nickname with it, measured S108); descriptions `$4D:$53D3-$7719` (mode 1 = dispatch entries 261-475, ≤ 3 × 18 cells, `$F1` newline, `$67` 't / `$68` 's one cell). Contiguous, id-ordered, unshared (extract_gamedata --selftest). Compiler regions `gd_monster_names` / `gd_monster_nicks` / `gd_monster_desc` (PROJECT_COMPILER §2.24). |
 | Skill text + looks (S110) | Names `$41:$628E-$69F1` (mode 6 `SkillNamePtrTable` $4539; 1,892 B); SKIL texts `$56:$502F-$664A` (`SkillDescModeTable` $664B → `SkillDescPtrTable` $6667; ids 151-212 share `SkillDesc_Blank`, 219-255 `SkillDesc_None`) + the spare `$56:$7291-$7E41` (2,993 B). The look of the acting skill = bank $5F `GetPresentId` (12 reads) + bank $55's SFX tables (ONE reader `$55:$4061`); patched build: `StockPresentTable` / `StockSfxTable` (identity = vanilla). Record field map = BATTLE_SKILL_SYSTEM §7 (S110 reader census). **S111:** custom ids ($DE-$FE) read `CustomProxyTable` / `CustomSfxTable` (S110 builds: past the SFX tables); their names / texts = regions `gd_custom_skill_name_ptrs` / `_names` ($41 $7F98, 94 B) and `gd_custom_skill_desc_ptrs` / `_desc` ($56 $7E42, 446 B). |
+| Battle animations (S112) | 45 stock ($00-$2C): frames `AnimFrameTable5C/5D/5E` ($4071; < $0E / < $21 / rest), timelines bank $02 row $60 `AnimTimelineTable` $46A1 (pairs frame/hold+1, `$FD` sound, `$FE 4` loop, `$FF` end), tiles `AnimGfxTable` $50:$5E84 (streams $5A/$5B → $8000), palette `AnimObjPalettes` $17:$6B0D, shade `AnimObjShadeTable` $00:$3141 (GBC hw colour i = buffer [1,2,0,3][(shade>>2i)&3], identity $D2 — measured on screen). Per skill: number `AnimCmdTableFoe/Own` $5F:$56ED/$57D5, routine `AnimRoutineIdxParty/Enemy/Link` $58DD/$59C3/$5AA9 → `AnimRoutineTable` $58BD (16; 13 = nothing). Developers' viewer = game mode 5. New ones $2D+: banks $6F/$70 (patched builds). |
 | Text id → bank (S108, measured) | ROM0 `TextBankDispatch` $0AD9 (HL = id) → corpus bank by range (TEXT_SYSTEM), whose entry 0 forwards the upper part of its index range to an OVERFLOW bank: $42/$43→$1A, $44/$46→$1B, $45/$48→$1F, $47→$21, $49→$18, $4A→$22, $4B→$3F, $4E→$4F (1,177 of 2,560 ids). `extracted/dialogue.json` = the PyBoy-measured map + every text table (`tools/dump_dialogue.py`); `text_id_map.json` is derived from it (the pre-S108 file matched 62 / 2,061). |
 | Verifier | `python3 tools/verify_integrity.py` — run at session start AND end |
 
@@ -294,13 +302,15 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | $6C | Own tile animations (`custom.rooms[].tile_anims`: `CustomTileAnimate` entry 0 + `TileAnimRoomTable`, group records, 16-aligned frame blocks; S102) | compiler-generated `patches/bank_06c.asm` (template `bank_06c_head.asm` + data; `tileanim6c`) |
 | $6D | Family systems (S104: Spirit = family 10 — entries 0/1 icon gfx id, 2 dialogue text group, 3 default-name id, gfx index 4 `SpiritIconStream`; callers = same-size forks in banks $01/$0A/$04/$09; S107 2c: + the saved-party icon forks in $07 ($62AB JOURNAL) / $0A ($6013), and `SpiritIconStream` is the compiler region `gd_spirit_icon_stream`) | hand-authored `patches/bank_06d.asm` (the Spirit icon bytes checked by `build_family_icon.py --selftest`) |
 | $6E | Arena systems (S109: entry 0 `ArenaTeamFixup`, far-called from the same-size tails of `ArenaBattleSetup` $04 / `LoadArenaEnemyStats` $50; `ArenaTeamSizeTable` = compiler region `gd_arena_team_sizes`) | hand-authored `patches/bank_06e.asm` (the table region from `gamedata.arena`, editor2/core/arena.py) |
+| $6F | NEW battle animations (S112): engine entries 0-3 `CustomAnimTick` / `CustomAnimInit` / `CustomAnimLoad` / `CustomAnimStep` (template `bank_06f_head.asm`, 391 B) + per animation its frames, timeline, palettes, gfx id (`custom.animations`, ≤ 32) | compiler-generated `patches/bank_06f.asm` (`anims6f`, editor2/core/battle_anims.py) |
+| $70 | NEW battle animations' tile sheets (S112; one per animation, the bank $50 stream format) | compiler-generated `patches/bank_070.asm` (`anims70`) |
 | $71 | Custom-room dispatch tables (S42 keystone: `Custom26DDTable`, `RoomEncTable`; + `CustomRoomBGMTable` + resolver entry 2, S64; `CustomAnimSrcTable` + entry 3, S99 — S102: entry 3 far-calls bank $6C first; `GateInsertTable` + entry 4 `CustomGateInsert`, `CustomRoomFlagsTable` + entry 5, S100) | compiler-generated `patches/bank_071.asm` (template head + tables; S63 `--apply` route) |
 | $72 | Custom-skill system (de-aliased S2d/S2e code + tables; S111: `FarSkillFork` → `CustomBaseTable` (new skills run a stock handler), entries 5 `ElemLevel72` / 6 `CustomLearnRow72`) | hand-authored `patches/bank_072.asm` + compiler regions `gd_tame_meter`, `gd_quake_power`, `gd_custom_base`, `gd_skill_elements`, `gd_custom_learn` (editor2/core/custom_skills.py, S111) |
 | $73 | Cold Farm systems (CF2 drain, entry 0; CF3 party-first sort, entry 1) | hand-authored `patches/bank_073.asm` |
 | $74 | Custom song bank (M3a: records $4001-$417C fixed 95-slot, streams $4180+; resolved by AudioMasterTableExt row $9E) | compiler-generated `patches/bank_074.asm` (`music74` emitter → `song_codec.song_bank_asm` ← project.json `custom.music` + `extracted/*_song_library.json`; S64 — `custom_songs.json` retired) |
 | $7E | The project's NEW-SPECIES art streams (38-word pointer table: index (id-221)*2 follower, +1 battle; S105: compiler-owned, all zero without `custom.species`) | compiler-generated `patches/bank_07e.asm` (`species7e`, editor2/core/species.py; streams from `bake_follower_overflow.py --stream-dir`) |
 | $7F | RESERVED next sprite-overflow bank (then $7C, $7A, $79) | `dwm/sprite_bank.py` order |
-| **Unallocated** | **$6F–$70, $75–$77, $79–$7A, $7C** (7 banks = 112 KB; S109: $6E taken; S104: $6D taken; $75 is the documented next song bank) + reserved $7F. (S102 correction: this row still listed $6B, patch-owned since S101.) | — |
+| **Unallocated** | **$75–$77, $79–$7A, $7C** (5 banks = 80 KB; S112: $6F/$70 taken; S109: $6E taken; S104: $6D taken; $75 is the documented next song bank) + reserved $7F. (S102 correction: this row still listed $6B, patch-owned since S101.) | — |
 
 ## Iron Rules
 
@@ -361,6 +371,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Renaming the ORIGINAL monsters (0-214: name 1-9, default nickname 1-4, library description 3 × 18) + a new species' own description | 🟢 built S108 (P3.10 part 3), test ROM USER-CONFIRMED 2026-10-01 (editor half test_app-verified): `gamedata.monster_text` → regions over the name / nickname / description blocks (banks $41 / $4D; spill into the new-species extents / `gd_monster_desc_extra`), recipe lines follow renames; Monsters tab "Name and library text"; Dialogue tab (every text, measured id map, per-monster mentions); PyBoy on the user's save (INFO, battle messages, naming prefill, text-engine stub calls). TERRY? / summons excluded (Iron Rule 8). Dialogue keeps literal names (read-only list) | PROJECT_COMPILER §2.24; TEXT_SYSTEM "Monster text blocks (S108)"; EDITOR_DESIGN §5.2 |
 | Arena authoring (class fees, the master of each match, teams of 1-3 monsters, the teams' enemy rows) | 🟢 built S109 (P3.10b), test ROM USER-CONFIRMED 2026-10-01 22:57 (PyBoy on the user's save: Starry Night 1 / 2 / 3, the King with 2, a monster master, fee 20 charged): `gamedata.arena` → `gd_arena_masters_04/_50`, `gd_arena_fees`, `gd_arena_team_sizes` + bank $6E `ArenaTeamFixup`; Arena tab | PROJECT_COMPILER §2.25; SIDEQUEST_MAP "Arena authoring as built — S109"; EDITOR_DESIGN §5.2b |
 | Editing the ORIGINAL skills (0-221: name, SKIL text, MP — both copies, learning, power, targets, AI fields, behaviour bits, looks + sounds of another skill) | 🟢 built S110 (P3.11), test ROM `DWM_S110_skills_test.gbc` USER-CONFIRMED 2026-10-02 09:09 ("Excellent work. Give me editor files") (PyBoy on the user's save: a renamed Zap with its own text, 1 MP and Bang's look hitting 3 foes; MetalCut at all foes; HealMore → Cure 200 HP): `gamedata.skills` name / description / looks_like → `gd_skill_names`, `gd_skill_desc*`, `gd_present_proxy_5f/_55` (+ bank $55 `SfxPresentId`); Skills tab. Battle items read-only (Items tab later); custom skills = P3.11c (built S111, next row). **S111:** `element` for every skill (the resistance its damage tests, bank $52 ladder hooks) | PROJECT_COMPILER §2.26; BATTLE_SKILL_SYSTEM §7 / §11.8; EDITOR_DESIGN §5.3 |
+| Skill ANIMATIONS (new battle animations $2D-$4C made from the 45 stock animations' frames + tiles, with sounds; per skill an animation + motion / a screen effect / nothing) | 🟢 built S112 (P3.11e), test ROM `DWM_S112_animations_test.gbc` USER-CONFIRMED 2026-10-02 18:29 ("Fantastic, everything checks out") (PyBoy on the user's save: Zap → Spark storm on each foe, MetalCut → Frost slash, Scorching → blink, EvilSlash → GigaSlash's; the developers' viewer census = the editor's model frame by frame): `custom.animations` → banks $6F / $70; `gamedata.skills.<id>.presentation` → `gd_anim_routine` / `gd_anim_cmd`; Animations tab + Skills → Animation (preview with the game's sounds). New tile art = later (user) | PROJECT_COMPILER §2.28; BATTLE_SKILL_SYSTEM §11.9; EDITOR_DESIGN §5.3 |
 | Custom rooms (mapID ≥ $6B) | ✅ table-driven to editor scale: render/palette/attr/$26DD records + per-room encounters via bank $71 tables (S40/S42); multi-screen scroll (v28); gate-rotation insertion + descent (S41; data-driven S100 — next row). | EDITOR_DESIGN §2; GATE_GENERATION §7; CROSSBANK_ROOMS |
 | Custom NPCs with scripts | ✅ working | bank $60 entry 4 dispatch |
 | Custom text, multi-page, line breaks | ✅ working | IDs $0A00+, two-level ptr table |

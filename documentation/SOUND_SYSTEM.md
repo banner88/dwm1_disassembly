@@ -151,6 +151,12 @@ BGM $1E" was FALSE — the script existed but no NPC entity was wired to it;
 falsified + fixed S62, see DOC_AUDIT. Since S62 the room-$6B screen-0 NPC at
 metatile (5,6) runs `CustomRoom0_NPC02` = SetBGM **$9E**, the DWM2 port.)
 
+**Battle-animation sound cues (S112, BATTLE_SKILL_SYSTEM §11.9).** The 45 animation
+timelines cue 35 sound effects by `($FD, id)` pairs, ids $70-$9B (the ids between them
+are the second channels of two-channel effects); bank $02 `SeqApplyStep` calls ROM0
+`PlaySoundEffect` with the id and reads the next pair in the same tick (a cue takes no time). `tools/render_anim_sounds.py` records each from the original
+ROM's engine in PyBoy → `extracted/anim_sounds/sfx_XX.wav` (the editor's preview sounds).
+
 ## 7. DWM2 cross-compatibility (S61, from user-supplied GBS rip `DMG-BQLJ-JPN.gbs`)
 
 DWM2 (Cobi's Journey JP) runs an **evolved sibling of the same engine**:

@@ -132,6 +132,29 @@ two pages of two lines of 18 cells; `{name}` = the caster, `{skill}` = this
 skill's name), one of the game's lines ("{name} casts {skill}!", "… spits
 {skill}!" …), or silent.
 
+## Animation
+
+**Animation** (S112) sets what the skill **shows** in battle, separately from
+its look (Looks like still decides the sounds and, with "what its look shows",
+the animation):
+
+- **what its look shows** — the original game's choice (the default);
+- **an animation** — one of the game's 45 (listed by the skill that shows it)
+  or one of your project's **new animations** (the **Animations** tab), and how
+  it **moves**: at the target, in the middle of the foes, on each target in
+  turn, or flying across from the left;
+- **a screen effect** — the screen blinks (Radiant, the summons), fades dark,
+  shakes (TwinSlash) …;
+- **nothing**.
+
+As in the original game it shows only on the **sides where the look shows
+something**: the note under the boxes says what the look shows when your
+monsters cast the skill and when enemies do. Sprites only ever appear on the
+foes' side — an attack cast by an enemy at your monsters shows nothing, and a
+heal or buff shows its animation only when an enemy casts it on itself (the
+original game does the same). The preview plays it at the game's speed with
+its sounds (the Sound box mutes them).
+
 ## Its own numbers and lines
 
 Built-in custom skills only — the data their code uses:

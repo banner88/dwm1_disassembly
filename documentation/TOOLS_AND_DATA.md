@@ -48,7 +48,7 @@ Regen produces identical output to committed file. Safe to re-run.
 
 | species_slot_map.json | map_species_slots.py | **S28 (N1).** The 256-slot species-ID map: per id → occupancy class (real 0–214 / special 215–219 / empty 220–223 / free 224–255) + per-table presence. Self-checking anchors. **HISTORICAL classes (S105 G3):** the usable new-species range is 221–239 (PROJECT_COMPILER §2.21); its `N6_GATES` are skill-id ladders, not species gates (DOC_AUDIT S105). |
 | library_grouping.json | build_library_table.py | **S19 (B7), re-owned S30.** The build-time family→members grouping table emitted into bank $12 free space; owns the 3 unseen-marker sites ($E0→$FE). Inputs: spirit_family.json + new_species.json. `--selftest` proves vanilla parity. |
-| battle_animations.json | decode_battle_animations.py | **S47 (S2c-anim).** All 45 battle-effect animations decoded (routine ids, side-table params, $0d = no visual); emulator-verified renderer model. See BATTLE_SKILL_SYSTEM §11. |
+| battle_animations.json | decode_battle_animations.py | **S47 (S2c-anim); S112 schema 2** (frames, timelines with sounds, tile sheets, palettes, shades, debugger gfx ids, per-skill rows, extents — the decoder is `editor2/core/battle_anims.decode_rom`). All 45 battle-effect animations; census-verified frame by frame (S112). See BATTLE_SKILL_SYSTEM §11.9. |
 | effect_messages.json | decode_effect_messages.py | **S47 (S2c).** Packed hit/miss message-id pairs ($dd70/71) for all skills; 67/67 statically-resolved FAQ-validated. See BATTLE_SKILL_SYSTEM §9. |
 
 ### Tier R — Hand-authored reference material (not auto-generated; preserve as-is)
@@ -922,3 +922,21 @@ verified overrides.
 | editor2/help/54_skills.md, help/_revision.md; `EDITOR_REVISION` = 'S111' | help | test_app |
 | editor2/tests/test_compiler.py (`test_custom_skills_s111`, `test_custom_skills_rom` on 3 builds; MiniSM83 + register C, calls, push bc/de, srl, 16-bit adds; the S110 retired-id / SfxPresentId expectations updated; pin `4a2860cf…`), test_app.py (S111 block; list count 232) | tests | test_compiler --rom 710/710, test_app + --rom PASS |
 | S111b: patches/bank_072.asm (`CustomRatioTable` region `gd_custom_ratios`, `RatioBC72`, `ScaleHL72`, `Div16by8_72`, `Mul16by8_72`, entry 7 `AnchorKeepMP72`; the four handlers read the ratios), patches/bank_073.asm (Anchor arrival: `rst $10` entry 7 instead of `>> 2`), patches/bank_058.asm (`gd_custom_target` MagicBurn / Tame rows + comment), editor2/core/custom_skills.py (`RATIO_KEYS`, `ratio_value`, `emit_ratios`; 20 regions), skills_doc.py / app/skills_tab.py (ratio fields), help 54_skills.md | the built-ins' ratios as data + the AI target-row fix (PROJECT_COMPILER §2.27, BATTLE_SKILL_SYSTEM §13.9) | PyBoy A/B on the user's save (defaults identical, edits as set); test_compiler --rom 727/727 (pin `5a1c5404…`, patched); test_app + --rom PASS |
+
+
+## S112 rows (P3.11e: skill animation editing)
+
+| Tool / data | What | Verified |
+|---|---|---|
+| tools/decode_battle_animations.py (rewritten, schema 2) → extracted/battle_animations.json | the 45 stock animations (frame bank / table / pointers / sprites, timeline steps, gfx id, stream, sheet tiles, palette, shade, debugger gfx id) + the 230 skill rows (cmd_foe / cmd_own / party / enemy / link) + the 16 routines; `--selftest` ROM anchors (verify_integrity) | selftest OK; census below |
+| tools/census_battle_anims.py (NEW) → extracted/battle_anim_census.json (NEW) | PyBoy: game mode 5 (the developers' viewer) plays each number; per frame the OAM, the sounds, the tiles in VRAM and the OBJ palettes on screen vs the model (start lag 4 / 5 frames); `--project` adds the project's new animations ($2D+, `--only 45-..`), `--negative` a shuffled model | 45/45 ok, negative 45/45 fail; the S112 demo $2D / $2E ok |
+| tools/resection_battle_anims.py (NEW) | re-sections the animation system (bank $02 timelines + sequencer, $50 gfx table + loader, $5F tables / routines / debugger, $5C/$5D/$5E frame tables + code, $00 shade table + tick, $17 palettes, $5A/$5B gfx streams) into labelled data in BOTH trees; byte-perfect probe per splice | clean `1ca6579…`; patched pins unchanged by it |
+| tools/render_anim_sounds.py (NEW) → extracted/anim_sounds/sfx_XX.wav + index.json (NEW) | the 35 sound effects the timelines cue, recorded from the ORIGINAL ROM's sound engine in PyBoy (wSoundEffect per id), 16 kHz mono 16-bit — the editor preview's sounds | played in the editor (QSoundEffect) |
+| disassembly/bank_000/002/017/050/05a/05b/05c/05d/05e/05f.asm (+ the same in patches/) | the re-section; `EffectDebugShadeTable`; the ROM0 tick header; bank $50 `$DA80` comment | clean `1ca6579…` |
+| patches/bank_000.asm, bank_002.asm (NEW hand patch), bank_050.asm, bank_05f.asm, game.asm | the forks to banks $6F / $70 + regions `gd_anim_routine` / `gd_anim_cmd` (BATTLE_SKILL_SYSTEM §11.9.1) | pin `9ce03bd0…` (patched) |
+| editor2/core/battle_anims.py (NEW), anims_doc.py (NEW), templates/bank_06f_head.asm (NEW, pinned) + PINNED_SHA256, emitters.py, validators.py, gamedata.py / custom_skills.py (`presentation` key), monsters.py (commit check), document.py | decoder, model, compiler, emitters, preview helpers; the Animations tab's model (PROJECT_COMPILER §2.28) | test_compiler (754) |
+| patches/bank_06f.asm, patches/bank_070.asm (NEW, generated) | the example project's banks $6F / $70 | pin |
+| editor2/app/anims_tab.py (NEW), skills_tab.py (Animation section), main.py (Animations tab) | the editor (EDITOR_DESIGN §5.3 "As built S112") | test_app, test_app --rom |
+| editor2/help/57_animations.md (NEW), 54_skills.md, 00_start.md, _revision.md; `EDITOR_REVISION` = 'S112' | help | test_app |
+| editor2/tests/test_compiler.py (`test_anims_s112`, `test_anims_rom`, pin `9ce03bd0…`), test_app.py (S112 block) | tests | PASS |
+| tools/verify_integrity.py | + bank_002.asm (patch files), bank_06f / bank_070 (new patch files), decode_battle_animations selftest | PASS |

@@ -1228,3 +1228,26 @@ def _custom_skill_regions():
 
 
 REGISTRY += _custom_skill_regions()
+
+
+def _anim_entries():
+    # S112 (P3.11e): the project's NEW battle animations (bank $6F engine +
+    # data, bank $70 tile sheets) and every skill's own presentation (bank
+    # $5F SkillRoutineOverride / SkillAnimOverride) — editor2/core/
+    # battle_anims.py, PROJECT_COMPILER §2.28. No edits == the stock
+    # behaviour (empty tables, all $FF).
+    from . import battle_anims as BA
+
+    def e6f(prj, warnings):
+        return BA.emit_bank_06f(prj, warnings, template('bank_06f_head.asm'))
+    e6f.__name__ = 'emit_bank_06f'
+    return [("anims6f", "custom.animations", "file:patches/bank_06f.asm", e6f, [0x6F]),
+            ("anims70", "custom.animations", "file:patches/bank_070.asm",
+             BA.emit_bank_070, [0x70]),
+            ("gd_anim_routine", "gamedata.skills.presentation",
+             "region:patches/bank_05f.asm#gd_anim_routine", BA.emit_routine_region, [0x5F]),
+            ("gd_anim_cmd", "gamedata.skills.presentation",
+             "region:patches/bank_05f.asm#gd_anim_cmd", BA.emit_cmd_region, [0x5F])]
+
+
+REGISTRY += _anim_entries()

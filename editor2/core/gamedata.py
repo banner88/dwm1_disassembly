@@ -558,7 +558,7 @@ class Gamedata:
         for sid, o in _key_ids(stock, 'skills', 0, SKILL_COUNT - 1):
             what = f"gamedata.skills.{sid}"
             _check_keys(o, ('mp', 'learn', 'record', 'name', 'description', 'looks_like',
-                            'sounds_like', 'element', 'comment'), what)
+                            'sounds_like', 'element', 'presentation', 'comment'), what)
             if 'mp' in o:
                 van_mp = _u16(self.v_mp[sid], 0)
                 mp = _mp_value(o['mp'], what + '.mp')

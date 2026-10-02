@@ -1,0 +1,455 @@
+{
+ "_generator": "tools/census_battle_anims.py (S112) on rom.gbc + a real .sav; the game's Effect debugger (mode 5), PyBoy",
+ "results": {
+  "0": {
+   "frames_checked": 48,
+   "frame_errors": 0,
+   "timing": "ok",
+   "sounds": "ok",
+   "tiles": "ok",
+   "palette": "ok",
+   "start_lag": 4,
+   "ok": true
+  },
+  "1": {
+   "frames_checked": 107,
+   "frame_errors": 0,
+   "timing": "ok",
+   "sounds": "ok",
+   "tiles": "ok",
+   "palette": "ok",
+   "start_lag": 4,
+   "ok": true
+  },
+  "2": {
+   "frames_checked": 100,
+   "frame_errors": 0,
+   "timing": "ok",
+   "sounds": "ok",
+   "tiles": "ok",
+   "palette": "ok",
+   "start_lag": 4,
+   "ok": true
+  },
+  "3": {
+   "frames_checked": 64,
+   "frame_errors": 0,
+   "timing": "loop (op step; checked by frames only)",
+   "sounds": "ok",
+   "tiles": "ok",
+   "palette": "ok",
+   "start_lag": 4,
+   "ok": true
+  },
+  "4": {
+   "frames_checked": 66,
+   "frame_errors": 0,
+   "timing": "loop (op step; checked by frames only)",
+   "sounds": "ok",
+   "tiles": "ok",
+   "palette": "ok",
+   "start_lag": 4,
+   "ok": true
+  },
+  "5": {
+   "frames_checked": 105,
+   "frame_errors": 0,
+   "timing": "ok",
+   "sounds": "ok",
+   "tiles": "ok",
+   "palette": "ok",
+   "start_lag": 4,
+   "ok": true
+  },
+  "6": {
+   "frames_checked": 45,
+   "frame_errors": 0,
+   "timing": "ok",
+   "sounds": "ok",
+   "tiles": "ok",
+   "palette": "ok",
+   "start_lag": 4,
+   "ok": true
+  },
+  "7": {
+   "frames_checked": 84,
+   "frame_errors": 0,
+   "timing": "ok",
+   "sounds": "ok",
+   "tiles": "ok",
+   "palette": "ok",
+   "start_lag": 4,
+   "ok": true
+  },
+  "8": {
+   "frames_checked": 122,
+   "frame_errors": 0,
+   "timing": "ok",
+   "sounds": "ok",
+   "tiles": "ok",
+   "palette": "ok",
+   "start_lag": 4,
+   "ok": true
+  },
+  "9": {
+   "frames_checked": 51,
+   "frame_errors": 0,
+   "timing": "ok",
+   "sounds": "ok",
+   "tiles": "ok",
+   "palette": "ok",
+   "start_lag": 4,
+   "ok": true
+  },
+  "10": {
+   "frames_checked": 48,
+   "frame_errors": 0,
+   "timing": "ok",
+   "sounds": "ok",
+   "tiles": "ok",
+   "palette": "ok",
+   "start_lag": 4,
+   "ok": true
+  },
+  "11": {
+   "frames_checked": 120,
+   "frame_errors": 0,
+   "timing": "ok",
+   "sounds": "ok",
+   "tiles": "ok",
+   "palette": "ok",
+   "start_lag": 4,
+   "ok": true
+  },
+  "12": {
+   "frames_checked": 88,
+   "frame_errors": 0,
+   "timing": "ok",
+   "sounds": "ok",
+   "tiles": "ok",
+   "palette": "ok",
+   "start_lag": 4,
+   "ok": true
+  },
+  "13": {
+   "frames_checked": 77,
+   "frame_errors": 0,
+   "timing": "ok",
+   "sounds": "ok",
+   "tiles": "ok",
+   "palette": "ok",
+   "start_lag": 4,
+   "ok": true
+  },
+  "14": {
+   "frames_checked": 103,
+   "frame_errors": 0,
+   "timing": "ok",
+   "sounds": "ok",
+   "tiles": "ok",
+   "palette": "ok",
+   "start_lag": 4,
+   "ok": true
+  },
+  "15": {
+   "frames_checked": 70,
+   "frame_errors": 0,
+   "timing": "ok",
+   "sounds": "ok",
+   "tiles": "ok",
+   "palette": "ok",
+   "start_lag": 4,
+   "ok": true
+  },
+  "16": {
+   "frames_checked": 90,
+   "frame_errors": 0,
+   "timing": "ok",
+   "sounds": "ok",
+   "tiles": "ok",
+   "palette": "ok",
+   "start_lag": 4,
+   "ok": true
+  },
+  "17": {
+   "frames_checked": 95,
+   "frame_errors": 0,
+   "timing": "ok",
+   "sounds": "ok",
+   "tiles": "ok",
+   "palette": "ok",
+   "start_lag": 4,
+   "ok": true
+  },
+  "18": {
+   "frames_checked": 67,
+   "frame_errors": 0,
+   "timing": "ok",
+   "sounds": "ok",
+   "tiles": "ok",
+   "palette": "ok",
+   "start_lag": 4,
+   "ok": true
+  },
+  "19": {
+   "frames_checked": 38,
+   "frame_errors": 0,
+   "timing": "ok",
+   "sounds": "ok",
+   "tiles": "ok",
+   "palette": "ok",
+   "start_lag": 4,
+   "ok": true
+  },
+  "20": {
+   "frames_checked": 86,
+   "frame_errors": 0,
+   "timing": "ok",
+   "sounds": "ok",
+   "tiles": "ok",
+   "palette": "ok",
+   "start_lag": 4,
+   "ok": true
+  },
+  "21": {
+   "frames_checked": 90,
+   "frame_errors": 0,
+   "timing": "ok",
+   "sounds": "ok",
+   "tiles": "ok",
+   "palette": "ok",
+   "start_lag": 4,
+   "ok": true
+  },
+  "22": {
+   "frames_checked": 73,
+   "frame_errors": 0,
+   "timing": "ok",
+   "sounds": "ok",
+   "tiles": "ok",
+   "palette": "ok",
+   "start_lag": 4,
+   "ok": true
+  },
+  "23": {
+   "frames_checked": 54,
+   "frame_errors": 0,
+   "timing": "ok",
+   "sounds": "ok",
+   "tiles": "ok",
+   "palette": "ok",
+   "start_lag": 5,
+   "ok": true
+  },
+  "24": {
+   "frames_checked": 58,
+   "frame_errors": 0,
+   "timing": "ok",
+   "sounds": "ok",
+   "tiles": "ok",
+   "palette": "ok",
+   "start_lag": 4,
+   "ok": true
+  },
+  "25": {
+   "frames_checked": 72,
+   "frame_errors": 0,
+   "timing": "ok",
+   "sounds": "ok",
+   "tiles": "ok",
+   "palette": "ok",
+   "start_lag": 4,
+   "ok": true
+  },
+  "26": {
+   "frames_checked": 105,
+   "frame_errors": 0,
+   "timing": "ok",
+   "sounds": "ok",
+   "tiles": "ok",
+   "palette": "ok",
+   "start_lag": 4,
+   "ok": true
+  },
+  "27": {
+   "frames_checked": 53,
+   "frame_errors": 0,
+   "timing": "ok",
+   "sounds": "ok",
+   "tiles": "ok",
+   "palette": "ok",
+   "start_lag": 4,
+   "ok": true
+  },
+  "28": {
+   "frames_checked": 135,
+   "frame_errors": 0,
+   "timing": "ok",
+   "sounds": "ok",
+   "tiles": "ok",
+   "palette": "ok",
+   "start_lag": 4,
+   "ok": true
+  },
+  "29": {
+   "frames_checked": 40,
+   "frame_errors": 0,
+   "timing": "ok",
+   "sounds": "ok",
+   "tiles": "ok",
+   "palette": "ok",
+   "start_lag": 4,
+   "ok": true
+  },
+  "30": {
+   "frames_checked": 127,
+   "frame_errors": 0,
+   "timing": "ok",
+   "sounds": "ok",
+   "tiles": "ok",
+   "palette": "ok",
+   "start_lag": 4,
+   "ok": true
+  },
+  "31": {
+   "frames_checked": 106,
+   "frame_errors": 0,
+   "timing": "ok",
+   "sounds": "ok",
+   "tiles": "ok",
+   "palette": "ok",
+   "start_lag": 4,
+   "ok": true
+  },
+  "32": {
+   "frames_checked": 110,
+   "frame_errors": 0,
+   "timing": "ok",
+   "sounds": "ok",
+   "tiles": "ok",
+   "palette": "ok",
+   "start_lag": 4,
+   "ok": true
+  },
+  "33": {
+   "frames_checked": 114,
+   "frame_errors": 0,
+   "timing": "ok",
+   "sounds": "ok",
+   "tiles": "ok",
+   "palette": "ok",
+   "start_lag": 4,
+   "ok": true
+  },
+  "34": {
+   "frames_checked": 44,
+   "frame_errors": 0,
+   "timing": "ok",
+   "sounds": "ok",
+   "tiles": "ok",
+   "palette": "ok",
+   "start_lag": 4,
+   "ok": true
+  },
+  "35": {
+   "frames_checked": 43,
+   "frame_errors": 0,
+   "timing": "ok",
+   "sounds": "ok",
+   "tiles": "ok",
+   "palette": "ok",
+   "start_lag": 4,
+   "ok": true
+  },
+  "36": {
+   "frames_checked": 94,
+   "frame_errors": 0,
+   "timing": "ok",
+   "sounds": "ok",
+   "tiles": "ok",
+   "palette": "ok",
+   "start_lag": 4,
+   "ok": true
+  },
+  "37": {
+   "frames_checked": 82,
+   "frame_errors": 0,
+   "timing": "ok",
+   "sounds": "ok",
+   "tiles": "ok",
+   "palette": "ok",
+   "start_lag": 4,
+   "ok": true
+  },
+  "38": {
+   "frames_checked": 113,
+   "frame_errors": 0,
+   "timing": "ok",
+   "sounds": "ok",
+   "tiles": "ok",
+   "palette": "ok",
+   "start_lag": 4,
+   "ok": true
+  },
+  "39": {
+   "frames_checked": 103,
+   "frame_errors": 0,
+   "timing": "ok",
+   "sounds": "ok",
+   "tiles": "ok",
+   "palette": "ok",
+   "start_lag": 4,
+   "ok": true
+  },
+  "40": {
+   "frames_checked": 68,
+   "frame_errors": 0,
+   "timing": "ok",
+   "sounds": "ok",
+   "tiles": "ok",
+   "palette": "ok",
+   "start_lag": 4,
+   "ok": true
+  },
+  "41": {
+   "frames_checked": 146,
+   "frame_errors": 0,
+   "timing": "ok",
+   "sounds": "ok",
+   "tiles": "ok",
+   "palette": "ok",
+   "start_lag": 4,
+   "ok": true
+  },
+  "42": {
+   "frames_checked": 121,
+   "frame_errors": 0,
+   "timing": "ok",
+   "sounds": "ok",
+   "tiles": "ok",
+   "palette": "ok",
+   "start_lag": 4,
+   "ok": true
+  },
+  "43": {
+   "frames_checked": 57,
+   "frame_errors": 0,
+   "timing": "ok",
+   "sounds": "ok",
+   "tiles": "ok",
+   "palette": "ok",
+   "start_lag": 4,
+   "ok": true
+  },
+  "44": {
+   "frames_checked": 77,
+   "frame_errors": 0,
+   "timing": "ok",
+   "sounds": "ok",
+   "tiles": "ok",
+   "palette": "ok",
+   "start_lag": 4,
+   "ok": true
+  }
+ }
+}

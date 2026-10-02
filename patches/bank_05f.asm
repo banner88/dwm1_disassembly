@@ -13,10 +13,10 @@ SECTION "ROM Bank $05f", ROMX[$4000], BANK[$5f]
     dw $40F7                          ; Entry 1
     dw $441C                          ; Entry 2
     dw $4619                          ; Entry 3
-    dw LoadFldUI_4a60                  ; Entry 4
+    dw HitReactionArm                  ; Entry 4
     dw $4B1B                          ; Entry 5
     dw $52F0                          ; Entry 6 = skill VISUAL-anim dispatch by skill id $db8a (S2c): -> per-skill anim-index $5f:$58dd/$59c3/$5aa9 -> routine ptr table $5f:$58bd. See BATTLE_SKILL_SYSTEM.md S9.
-    dw LoadFldUI_5630                  ; Entry 7
+    dw AnimSelectCmd                  ; Entry 7
     dw $5BB7                          ; Entry 8
     dw $5C8D                          ; Entry 9
     dw $6251                          ; Entry 10
@@ -1586,7 +1586,7 @@ LoadFldUI_4a3b:
     ret
 
 
-LoadFldUI_4a60:
+HitReactionArm:
     call GetPresentId   ; [S2d] presentation-id proxy for custom skills (identity for stock)
     cp $12
     jp c, Jump_05f_4ae8
@@ -3239,6 +3239,8 @@ jr_05f_52e4:
     ret
 
 
+; bank $5F entry 6: per skill-id range, WHEN (which action phase) the skill's routine runs; then the side's AnimRoutineIdx table -> AnimRunRoutine (S112)
+AnimSkillVisual:
     call GetPresentId   ; [S2d] presentation-id proxy (identity for stock)
     cp $15
     jp c, Jump_05f_53a4
@@ -3442,7 +3444,7 @@ jr_05f_5400:
     jr jr_05f_540d
 
 jr_05f_5409:
-    call LoadFldUI_5ba3
+    call IsTargetPartySide
     ret c
 
 jr_05f_540d:
@@ -3485,7 +3487,7 @@ jr_05f_5433:
     adc h
     ld h, a
     ld a, [hl]
-    call FuncFldUI_5441
+    call AnimRoutineFork        ; [S112] was call AnimRunRoutine: a skill's own presentation (SkillRoutineOverride)
     ret
 
 
@@ -3494,7 +3496,7 @@ jr_05f_5433:
 ; side-selected by $c863 bit1). Indexes the routine table at $58bd and JP [hl]s to it
 ; (via RST_08 = $00:$0008). Index $0d -> $55cc = bare `ret` = NO VISUAL (the "no animation"
 ; sentinel; e.g. HealMore/Increase party-cast). EMULATOR-VERIFIED: Zap A=$02, HealMore A=$0d.
-FuncFldUI_5441:
+AnimRunRoutine:
     ld c, a
     ld b, $00
     ld hl, $58bd
@@ -3507,7 +3509,7 @@ FuncFldUI_5441:
     jp hl
 
 
-LoadFldUI_544e:
+AnimTargetSlot:
     call GetPresentId   ; [S2d] presentation-id proxy (identity for stock)
     cp $1a
     jr c, jr_05f_54c3
@@ -3522,7 +3524,7 @@ LoadFldUI_544e:
     jr nz, jr_05f_54c3
 
 jr_05f_5461:
-    call LoadFldUI_5b8f
+    call IsAttackerPartySide
     jr c, jr_05f_54c3
 
     ld hl, $db74
@@ -3591,7 +3593,7 @@ jr_05f_54bf:
 
 
 jr_05f_54c3:
-    call LoadFldUI_5b8f
+    call IsAttackerPartySide
     jr nc, jr_05f_5529
 
 jr_05f_54c8:
@@ -3673,7 +3675,7 @@ jr_05f_5529:
     cp $03
     jr nc, jr_05f_5523
 
-    call LoadFldUI_5ba3
+    call IsTargetPartySide
     jr nc, jr_05f_54c8
 
     ld hl, $db74
@@ -3737,117 +3739,151 @@ jr_05f_5583:
     ld a, $01
     jr jr_05f_551f
 
-    call LoadFldUI_544e
+; AnimRoutineTable[0] — at the target (S112)
+AnimRoutine_AtTarget:
+    call AnimTargetSlot
     ld a, $01
     ld [$dd68], a
     jr jr_05f_55bb
 
+; AnimRoutineTable[1] — in the middle of the foes (S112)
+AnimRoutine_Middle:
     ld a, $01
     ld [$db54], a
     ld a, $01
     ld [$dd68], a
     jr jr_05f_55bb
 
-    call LoadFldUI_544e
+; AnimRoutineTable[2] — on each target in turn (S112)
+AnimRoutine_EachTarget:
+    call AnimTargetSlot
     ld a, $02
     ld [$dd68], a
     jr jr_05f_55bb
 
+; AnimRoutineTable[3] — flies across from the left (S112)
+AnimRoutine_FlyAcross:
     ld a, $00
     ld [$db54], a
     ld a, $00
     ld [$dd68], a
 
+; routines 0-3 end here: select the animation number, start its timeline + renderer, [$da80] = 1 (bank $50 loads tiles + palette next frame) — S112
+AnimStartAnimation:
 jr_05f_55bb:
-    call LoadFldUI_5630
+    call AnimSelectCmd
     cp $ff
     ret z
 
-    call CallFldUI_5696
-    call CallBank5FEntry7_3103
+    call AnimStartTimeline
+    call AnimStartRenderer
     ld a, $01
     ld [$da80], a
+; AnimRoutineTable[13] — nothing (the bare ret; S112)
+AnimRoutine_None:
     ret
 
 
-    call LoadFldUI_4a60
+; AnimRoutineTable[4] — screen blinks (Radiant, the summons) (S112)
+AnimRoutine_Screen04:
+    call HitReactionArm
     ld a, $04
     ld [$da83], a
     ret
 
 
-    call LoadFldUI_4a60
+; AnimRoutineTable[5] — screen fades dark and back (UltraDown, ThickFog) (S112)
+AnimRoutine_Screen05:
+    call HitReactionArm
     ld a, $05
     ld [$da83], a
     ret
 
 
-    call LoadFldUI_4a60
+; AnimRoutineTable[6] — screen effect of Chance (S112)
+AnimRoutine_Screen06:
+    call HitReactionArm
     ld a, $06
     ld [$da83], a
     ret
 
 
-    call LoadFldUI_4a60
+; AnimRoutineTable[7] — screen fades dark twice (S112)
+AnimRoutine_Screen07:
+    call HitReactionArm
     ld a, $07
     ld [$da83], a
     ret
 
 
-    call LoadFldUI_4a60
+; AnimRoutineTable[8] — link-battle effect of Explodet / BigBang / MegaMagic (S112)
+AnimRoutine_Screen08:
+    call HitReactionArm
     ld a, $08
     ld [$da83], a
     ret
 
 
-    call LoadFldUI_4a60
+; AnimRoutineTable[9] — screen effect 9 (no skill uses it) (S112)
+AnimRoutine_Screen09:
+    call HitReactionArm
     ld a, $09
     ld [$da83], a
     ret
 
 
-    call LoadFldUI_4a60
+; AnimRoutineTable[10] — link-battle effect of Lightning / WhiteAir (S112)
+AnimRoutine_Screen10:
+    call HitReactionArm
     ld a, $0a
     ld [$da83], a
     ret
 
 
-    call LoadFldUI_4a60
+; AnimRoutineTable[11] — link-battle effect of Firebal / IceBolt (S112)
+AnimRoutine_Screen11:
+    call HitReactionArm
     ld a, $0b
     ld [$da83], a
     ret
 
 
-    call LoadFldUI_4a60
+; AnimRoutineTable[12] — link-battle effect of Infermore / Vacuum (S112)
+AnimRoutine_Screen12:
+    call HitReactionArm
     ld a, $0c
     ld [$da83], a
     ret
 
 
-    call LoadFldUI_4a60
+; AnimRoutineTable[14] — screen shakes (TwinSlash, Ramming, Kamikaze) (S112)
+AnimRoutine_Screen14:
+    call HitReactionArm
     ld a, $03
     ld [$da83], a
     ret
 
 
-    call LoadFldUI_4a60
+; AnimRoutineTable[15] — screen effect of an enemy TwinSlash (S112)
+AnimRoutine_Screen15:
+    call HitReactionArm
     ld a, $0d
     ld [$da83], a
     ret
 
 
-LoadFldUI_5630:
+AnimSelectCmd:
     ld a, [wBattleAttackerIdx]
     cp $10
     jr z, jr_05f_5649
 
-    call LoadFldUI_5b8f
+    call IsAttackerPartySide
     jr c, jr_05f_563e
 
     jr jr_05f_565f
 
 jr_05f_563e:
-    call LoadFldUI_5ba3
+    call IsTargetPartySide
     jr nc, jr_05f_564e
 
     ld a, $ff
@@ -3856,7 +3892,7 @@ jr_05f_563e:
 
 
 jr_05f_5649:
-    call LoadFldUI_5ba3
+    call IsTargetPartySide
     jr c, jr_05f_5690
 
 jr_05f_564e:
@@ -3867,9 +3903,9 @@ jr_05f_564e:
     ld a, $00
     adc d
     ld d, a
-    ld a, [de]
-    ld [$da81], a
-    ret
+    jp AnimCmdForkDE81          ; [S112] was ld a,[de] / ld [$da81],a / ret: SkillAnimOverride
+    nop
+    nop
 
 
 jr_05f_565f:
@@ -3892,7 +3928,7 @@ jr_05f_565f:
     cp $aa
     jr z, jr_05f_567f
 
-    call LoadFldUI_5ba3
+    call IsTargetPartySide
     jr c, jr_05f_5690
 
 jr_05f_567f:
@@ -3903,9 +3939,9 @@ jr_05f_567f:
     ld a, $00
     adc d
     ld d, a
-    ld a, [de]
-    ld [$da81], a
-    ret
+    jp AnimCmdForkDE81          ; [S112] was ld a,[de] / ld [$da81],a / ret: SkillAnimOverride
+    nop
+    nop
 
 
 jr_05f_5690:
@@ -3914,8 +3950,8 @@ jr_05f_5690:
     ret
 
 
-CallFldUI_5696:
-    call LoadFldUI_56b9
+AnimStartTimeline:
+    call AnimSelectCmdInit
     ld a, [$daa4]
     ld [$dd64], a
     ld a, $60
@@ -3932,18 +3968,18 @@ CallFldUI_5696:
     ret
 
 
-LoadFldUI_56b9:
+AnimSelectCmdInit:
     ld a, [wBattleAttackerIdx]
     cp $10
     jr z, jr_05f_56c7
 
-    call LoadFldUI_5b8f
+    call IsAttackerPartySide
     jr c, jr_05f_56c7
 
     jr jr_05f_56dc
 
 jr_05f_56c7:
-    call LoadFldUI_5ba3
+    call IsTargetPartySide
     ret c
 
     call GetPresentId   ; [S2d] presentation-id proxy for custom skills (identity for stock)
@@ -3953,9 +3989,9 @@ jr_05f_56c7:
     ld a, $00
     adc h
     ld h, a
-    ld a, [hl]
-    ld [$daa4], a
-    ret
+    jp AnimCmdForkHLA4          ; [S112] was ld a,[hl] / ld [$daa4],a / ret: SkillAnimOverride
+    nop
+    nop
 
 
 jr_05f_56dc:
@@ -3966,1140 +4002,1203 @@ jr_05f_56dc:
     ld a, $00
     adc h
     ld h, a
-    ld a, [hl]
-    ld [$daa4], a
-    ret
+    jp AnimCmdForkHLA4          ; [S112] was ld a,[hl] / ld [$daa4],a / ret: SkillAnimOverride
+    nop
+    nop
 
 
-    nop
-    ld bc, $0302
-    inc b
-    dec b
-    ld b, $07
-    ld [$0a09], sp
-    dec bc
-    inc c
-    dec c
-    ld c, $0f
-    db $10
-    ld de, $ffff
-    rst $38
-    dec d
-    dec d
-    ld [de], a
-    rla
-    ld d, $12
-    rst $38
-    ld [de], a
-    ld [de], a
-    rst $38
-    rst $38
-    ld [de], a
-    ld [de], a
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    dec e
-    rst $38
-    rst $38
-    rst $38
-    dec e
-    dec e
-    rst $38
-    rst $38
-    rst $38
-    ld e, $1f
-    jr nz, jr_05f_5756
-
-    dec h
-    dec e
-    dec e
-    inc hl
-    inc h
-    inc h
-    dec h
-    daa
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    dec e
-    rst $38
-    dec e
-    add hl, bc
-    dec bc
-    rrca
-    dec de
-    inc bc
-    inc b
-    dec b
-    inc e
-    inc c
-    dec c
-    ld c, $1a
-    jr z, jr_05f_577c
-
-    ld a, [hl+]
-    dec d
-    dec d
-
-jr_05f_5756:
-    dec d
-    dec d
-    dec d
-    dec d
-    dec d
-    ld d, $16
-    ld d, $ff
-    rla
-    rst $38
-    rst $38
-    ld [de], a
-    ld [de], a
-    rst $38
-    ld d, $15
-    dec d
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    dec hl
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-
-jr_05f_577c:
-    rst $38
-    rst $38
-    ld [de], a
-    ld [de], a
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc d
-    rst $38
-    rst $38
-    rst $38
-    dec d
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc d
-    inc d
-    inc d
-    inc d
-    inc d
-    inc d
-    inc d
-    inc d
-    inc d
-    inc d
-    inc d
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc l
-    inc l
-    inc l
-    dec d
-    inc l
-    rrca
-    add hl, bc
-    ld [de], a
-    inc b
-    ld c, $ff
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    ld [bc], a
-    rst $38
-    ld [hl+], a
-    ld [hl+], a
-    dec e
-    ld h, $ff
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc de
-    inc de
-    rst $38
-    rst $38
-    inc de
-    inc de
-    rst $38
-    rst $38
-    inc de
-    inc de
-    rst $38
-    inc de
-    rst $38
-    add hl, de
-    add hl, de
-    jr @+$01
-
-    inc d
-    inc d
-    inc d
-    inc d
-    inc d
-    rst $38
-    rst $38
-    inc d
-    inc d
-    inc d
-    inc d
-    inc d
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc de
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    dec hl
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc d
-    inc d
-    rst $38
-    inc d
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    inc d
-    rst $38
-    rst $38
-    rst $38
-    dec d
-    ld [de], a
-    rst $38
-    jr @+$01
-
-    rst $38
-    rst $38
-    inc d
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    jr @+$01
-
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    sub c
-    ld d, l
-    sbc e
-    ld d, l
-    and a
-    ld d, l
-    or c
-    ld d, l
-    call $d655
-    ld d, l
-    rst $18
-    ld d, l
-    add sp, $55
-    pop af
-    ld d, l
-    ld a, [$0355]
-    ld d, [hl]
-    inc c
-    ld d, [hl]
-    dec d
-    ld d, [hl]
-    db $cc, $55, $1e
-    ld d, [hl]
-    daa
-    ld d, [hl]
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    ld bc, $0202
-    ld bc, $0302
-    ld bc, $0203
-    ld bc, $0202
-    ld bc, $0d0d
-    dec c
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    dec c
-    nop
-    nop
-    dec c
-    dec c
-    nop
-    nop
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    ld b, $0d
-    ld c, $0e
-    dec c
-    ld c, $00
-    nop
-    dec c
-    dec c
-    dec c
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0d0d
-    dec c
-    dec c
-    dec c
-    nop
-    dec c
-    ld [bc], a
-    nop
-    ld bc, $0202
-    inc bc
-    inc bc
-    ld bc, $0301
-    ld [bc], a
-    ld bc, $0201
-    ld bc, $0001
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    dec c
-    nop
-    inc b
-    inc b
-    nop
-    nop
-    dec c
-    nop
-    nop
-    nop
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    ld bc, $0504
-    dec b
-    inc b
-    inc b
-    inc b
-    inc b
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    nop
-    nop
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    nop
-    dec c
-    dec b
-    dec c
-    nop
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    nop
-    inc bc
-    ld bc, $0d0d
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    nop
-    dec c
-    nop
-    nop
-    nop
-    nop
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    nop
-    nop
-    dec c
-    dec c
-    nop
-    nop
-    dec c
-    dec c
-    nop
-    nop
-    dec c
-    nop
-    ld [bc], a
-    nop
-    nop
-    nop
-    dec c
-    nop
-    nop
-    nop
-    nop
-    nop
-    dec c
-    dec c
-    nop
-    nop
-    nop
-    nop
-    nop
-    dec c
-    dec c
-    ld b, $0d
-    rrca
-    rrca
-    dec c
-    rrca
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    inc b
-    inc b
-    dec c
-    nop
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    ld bc, $0504
-    dec b
-    inc b
-    inc b
-    inc b
-    inc b
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    nop
-    nop
-    dec c
-    nop
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    nop
-    dec c
-    dec b
-    dec c
-    nop
-    nop
-    dec c
-    nop
-    dec c
-    dec c
-    dec c
-    nop
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    nop
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec bc
-    dec bc
-    dec bc
-    inc b
-    inc b
-    ld [$0c0d], sp
-    inc c
-    dec bc
-    inc b
-    dec bc
-    inc b
-    inc b
-    ld [$0d0d], sp
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    ld b, $0d
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    ld a, [bc]
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    inc c
-    ld a, [bc]
-    dec c
-    dec bc
-    dec bc
-    dec bc
-    ld a, [bc]
-    dec bc
-    inc b
-    dec bc
-    ld a, [bc]
-    ld b, $08
-    ld [$0d0d], sp
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    inc b
-    inc b
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    ld bc, $0504
-    dec b
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec b
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-    dec c
-
-LoadFldUI_5b8f:
+AnimCmdTableFoe:
+    ; ANIMATION NUMBER per skill id when a PARTY monster acts on the ENEMY
+    ; side (AnimSelectCmd, through GetPresentId in the patched build);
+    ; $FF = no animation. 232 rows (ids $00-$E7; only < $DE are skills).
+    ; Re-sectioned S112 (was mgbdis fake code; BATTLE_SKILL_SYSTEM §11).
+    db $00   ; [  0] Blaze
+    db $01   ; [  1] Blazemore
+    db $02   ; [  2] Blazemost
+    db $03   ; [  3] Firebal
+    db $04   ; [  4] Firebane
+    db $05   ; [  5] Firebolt
+    db $06   ; [  6] Bang
+    db $07   ; [  7] Boom
+    db $08   ; [  8] Explodet
+    db $09   ; [  9] Infernos
+    db $0a   ; [ 10] Infermore
+    db $0b   ; [ 11] Infermost
+    db $0c   ; [ 12] IceBolt
+    db $0d   ; [ 13] SnowStorm
+    db $0e   ; [ 14] Blizzard
+    db $0f   ; [ 15] Bolt
+    db $10   ; [ 16] Zap
+    db $11   ; [ 17] Thordain
+    db $ff   ; [ 18] Beat
+    db $ff   ; [ 19] Defeat
+    db $ff   ; [ 20] Sacrifice
+    db $15   ; [ 21] Sleep
+    db $15   ; [ 22] SleepAll
+    db $12   ; [ 23] StopSpell
+    db $17   ; [ 24] Surround
+    db $16   ; [ 25] PanicAll
+    db $12   ; [ 26] RobMagic
+    db $ff   ; [ 27] TakeMagic
+    db $12   ; [ 28] Sap
+    db $12   ; [ 29] Defence
+    db $ff   ; [ 30] Upper
+    db $ff   ; [ 31] Increase
+    db $12   ; [ 32] Slow
+    db $12   ; [ 33] SlowAll
+    db $ff   ; [ 34] Speed
+    db $ff   ; [ 35] SpeedUp
+    db $ff   ; [ 36] Barrier
+    db $ff   ; [ 37] TwinHits
+    db $ff   ; [ 38] MagicWall
+    db $ff   ; [ 39] MagicBack
+    db $ff   ; [ 40] Bounce
+    db $ff   ; [ 41] Transform
+    db $ff   ; [ 42] Ironize
+    db $ff   ; [ 43] Heal
+    db $ff   ; [ 44] HealMore
+    db $ff   ; [ 45] HealAll
+    db $ff   ; [ 46] HealUs
+    db $ff   ; [ 47] HealUsAll
+    db $ff   ; [ 48] Vivify
+    db $ff   ; [ 49] Revive
+    db $ff   ; [ 50] Farewell
+    db $ff   ; [ 51] Antidote
+    db $ff   ; [ 52] NumbOff
+    db $ff   ; [ 53] DeChaos
+    db $ff   ; [ 54] CurseOff
+    db $ff   ; [ 55] StepGuard
+    db $ff   ; [ 56] MapMagic
+    db $ff   ; [ 57] Chance
+    db $ff   ; [ 58] Attack
+    db $1d   ; [ 59] TwinSlash
+    db $ff   ; [ 60] Ramming
+    db $ff   ; [ 61] Beserker
+    db $ff   ; [ 62] Kamikaze
+    db $1d   ; [ 63] Massacre
+    db $1d   ; [ 64] EvilSlash
+    db $ff   ; [ 65] ChargeUP
+    db $ff   ; [ 66] HighJump
+    db $ff   ; [ 67] SuckAir
+    db $1e   ; [ 68] FireSlash
+    db $1f   ; [ 69] BoltSlash
+    db $20   ; [ 70] VacuSlash
+    db $21   ; [ 71] IceSlash
+    db $25   ; [ 72] MetalCut
+    db $1d   ; [ 73] DrakSlash
+    db $1d   ; [ 74] BeastCut
+    db $23   ; [ 75] BirdBlow
+    db $24   ; [ 76] DevilCut
+    db $24   ; [ 77] ZombieCut
+    db $25   ; [ 78] CleanCut
+    db $27   ; [ 79] MultiCut
+    db $ff   ; [ 80] BiAttack
+    db $ff   ; [ 81] QuadHits
+    db $ff   ; [ 82] CallHelp
+    db $ff   ; [ 83] YellHelp
+    db $ff   ; [ 84] Focus
+    db $1d   ; [ 85] SquallHit
+    db $ff   ; [ 86] PsycheUp
+    db $1d   ; [ 87] RainSlash
+    db $09   ; [ 88] WindBeast
+    db $0b   ; [ 89] Vacuum
+    db $0f   ; [ 90] Lightning
+    db $1b   ; [ 91] RockThrow
+    db $03   ; [ 92] FireAir
+    db $04   ; [ 93] BlazeAir
+    db $05   ; [ 94] Scorching
+    db $1c   ; [ 95] WhiteFire
+    db $0c   ; [ 96] FrigidAir
+    db $0d   ; [ 97] IceAir
+    db $0e   ; [ 98] IceStorm
+    db $1a   ; [ 99] WhiteAir
+    db $28   ; [100] Hellblast
+    db $29   ; [101] BigBang
+    db $2a   ; [102] MegaMagic
+    db $15   ; [103] PoisonHit
+    db $15   ; [104] NapAttack
+    db $15   ; [105] Paralyze
+    db $15   ; [106] SleepAir
+    db $15   ; [107] PalsyAir
+    db $15   ; [108] PoisonGas
+    db $15   ; [109] PoisonAir
+    db $16   ; [110] PaniDance
+    db $16   ; [111] Curse
+    db $16   ; [112] Ahhh
+    db $ff   ; [113] K.O.Dance
+    db $17   ; [114] SandStorm
+    db $ff   ; [115] Radiant
+    db $ff   ; [116] EerieLite
+    db $12   ; [117] OddDance
+    db $12   ; [118] RobDance
+    db $ff   ; [119] SideStep
+    db $16   ; [120] LureDance
+    db $15   ; [121] LushLicks
+    db $15   ; [122] SickLick
+    db $ff   ; [123] LegSweep
+    db $ff   ; [124] BigTrip
+    db $ff   ; [125] WarCry
+    db $ff   ; [126] Whistle
+    db $ff   ; [127] Imitate
+    db $2b   ; [128] DeMagic
+    db $ff   ; [129] Surge
+    db $ff   ; [130] UltraDown
+    db $ff   ; [131] ThickFog
+    db $ff   ; [132] TatsuCall
+    db $ff   ; [133] DiagoCall
+    db $ff   ; [134] SamsiCall
+    db $ff   ; [135] BazooCall
+    db $ff   ; [136] Cover
+    db $ff   ; [137] Guardian
+    db $ff   ; [138] TailWind
+    db $ff   ; [139] StormWind
+    db $ff   ; [140] Dodge
+    db $ff   ; [141] Defence
+    db $ff   ; [142] StrongD
+    db $ff   ; [143] SuckAll
+    db $ff   ; [144] BladeD
+    db $12   ; [145] DanceShut
+    db $12   ; [146] MouthShut
+    db $ff   ; [147] Meditate
+    db $ff   ; [148] Hustle
+    db $ff   ; [149] LifeSong
+    db $ff   ; [150] LifeDance
+    db $ff   ; [151] Run
+    db $ff   ; [152] Daze
+    db $ff   ; [153] HitAlly
+    db $ff   ; [154] HitEnemy
+    db $ff   ; [155] HitRandom
+    db $ff   ; [156] Scared
+    db $ff   ; [157] Dance
+    db $ff   ; [158] Trip
+    db $ff   ; [159] Paralyze
+    db $ff   ; [160] CANTMOVE
+    db $ff   ; [161] RUN
+    db $ff   ; [162] CALLHOROR
+    db $14   ; [163] HealUsAll
+    db $ff   ; [164] Smashed
+    db $ff   ; [165] FILTHZONE
+    db $ff   ; [166] ALLCHANGE
+    db $15   ; [167] BIGSLEEP
+    db $ff   ; [168] MP0
+    db $ff   ; [169] ECHO
+    db $ff   ; [170] CHGDRAGON
+    db $ff   ; [171] CALLEVIL
+    db $ff   ; [172] FREEZY
+    db $ff   ; [173] ALLREVIVE
+    db $ff   ; [174] RESTOREMP
+    db $ff   ; [175] METEOR
+    db $14   ; [176] HERB
+    db $14   ; [177] HEALWATER
+    db $14   ; [178] SAGESTONE
+    db $14   ; [179] WARLDDEW
+    db $14   ; [180] POTION
+    db $14   ; [181] ELFWATER
+    db $14   ; [182] ANTIDOTE
+    db $14   ; [183] MOONHERB
+    db $14   ; [184] SKYBELL
+    db $14   ; [185] LAUREL
+    db $14   ; [186] AWAKESAND
+    db $ff   ; [187] WARLDLEAF
+    db $ff   ; [188] LIFEACORN
+    db $ff   ; [189] MYSTICNUT
+    db $ff   ; [190] PWRSEED
+    db $ff   ; [191] DEFSEED
+    db $ff   ; [192] AGILSEED
+    db $ff   ; [193] INTSEED
+    db $2c   ; [194] FEEDMEAT
+    db $2c   ; [195] BEFFJERKY
+    db $2c   ; [196] PORKCHOP
+    db $15   ; [197] BADMEAT
+    db $2c   ; [198] SIRLOIN
+    db $0f   ; [199] BOLTSTAFF
+    db $09   ; [200] STAFF
+    db $12   ; [201] BLOKSTAFF
+    db $04   ; [202] LAVASTAFF
+    db $0e   ; [203] SNOWSTAFF
+    db $ff   ; [204] FIRESTAFF
+    db $ff   ; [205] WARPWING
+    db $ff   ; [206] TINYMEDAL
+    db $ff   ; [207] QuestBk
+    db $ff   ; [208] HORRORBK
+    db $ff   ; [209] BENICEBK
+    db $ff   ; [210] CHEATERBK
+    db $ff   ; [211] SMARTBK
+    db $02   ; [212] COMEDYBK
+    db $ff   ; [213] BeDragon
+    db $22   ; [214] Smashlime
+    db $22   ; [215] Sheldodge
+    db $1d   ; [216] Branching
+    db $26   ; [217] GigaSlash
+    db $ff   ; [218] LIFE
+    db $ff   ; [219] RUN
+    db $ff   ; [220] IRONIZE
+    db $ff   ; [221] Ahhh
+    db $ff   ; [222] 
+    db $ff   ; [223] 
+    db $ff   ; [224] 
+    db $ff   ; [225] 
+    db $ff   ; [226] 
+    db $ff   ; [227] 
+    db $ff   ; [228] 
+    db $ff   ; [229] 
+    db $ff   ; [230] 
+    db $ff   ; [231] 
+AnimCmdTableOwn:
+    ; ANIMATION NUMBER per skill id when an ENEMY acts on its OWN side
+    ; (heals, buffs) — and for $1A/$1B/$29/$80/$AA/$D5 whoever acts
+    ; (AnimSelectCmd); a target on the party side never gets sprites.
+    db $ff   ; [  0] Blaze
+    db $ff   ; [  1] Blazemore
+    db $ff   ; [  2] Blazemost
+    db $ff   ; [  3] Firebal
+    db $ff   ; [  4] Firebane
+    db $ff   ; [  5] Firebolt
+    db $ff   ; [  6] Bang
+    db $ff   ; [  7] Boom
+    db $ff   ; [  8] Explodet
+    db $ff   ; [  9] Infernos
+    db $ff   ; [ 10] Infermore
+    db $ff   ; [ 11] Infermost
+    db $ff   ; [ 12] IceBolt
+    db $ff   ; [ 13] SnowStorm
+    db $ff   ; [ 14] Blizzard
+    db $ff   ; [ 15] Bolt
+    db $ff   ; [ 16] Zap
+    db $ff   ; [ 17] Thordain
+    db $ff   ; [ 18] Beat
+    db $ff   ; [ 19] Defeat
+    db $ff   ; [ 20] Sacrifice
+    db $ff   ; [ 21] Sleep
+    db $ff   ; [ 22] SleepAll
+    db $ff   ; [ 23] StopSpell
+    db $ff   ; [ 24] Surround
+    db $ff   ; [ 25] PanicAll
+    db $13   ; [ 26] RobMagic
+    db $13   ; [ 27] TakeMagic
+    db $ff   ; [ 28] Sap
+    db $ff   ; [ 29] Defence
+    db $13   ; [ 30] Upper
+    db $13   ; [ 31] Increase
+    db $ff   ; [ 32] Slow
+    db $ff   ; [ 33] SlowAll
+    db $13   ; [ 34] Speed
+    db $13   ; [ 35] SpeedUp
+    db $ff   ; [ 36] Barrier
+    db $13   ; [ 37] TwinHits
+    db $ff   ; [ 38] MagicWall
+    db $19   ; [ 39] MagicBack
+    db $19   ; [ 40] Bounce
+    db $18   ; [ 41] Transform
+    db $ff   ; [ 42] Ironize
+    db $14   ; [ 43] Heal
+    db $14   ; [ 44] HealMore
+    db $14   ; [ 45] HealAll
+    db $14   ; [ 46] HealUs
+    db $14   ; [ 47] HealUsAll
+    db $ff   ; [ 48] Vivify
+    db $ff   ; [ 49] Revive
+    db $14   ; [ 50] Farewell
+    db $14   ; [ 51] Antidote
+    db $14   ; [ 52] NumbOff
+    db $14   ; [ 53] DeChaos
+    db $14   ; [ 54] CurseOff
+    db $ff   ; [ 55] StepGuard
+    db $ff   ; [ 56] MapMagic
+    db $ff   ; [ 57] Chance
+    db $ff   ; [ 58] Attack
+    db $ff   ; [ 59] TwinSlash
+    db $ff   ; [ 60] Ramming
+    db $ff   ; [ 61] Beserker
+    db $ff   ; [ 62] Kamikaze
+    db $ff   ; [ 63] Massacre
+    db $ff   ; [ 64] EvilSlash
+    db $ff   ; [ 65] ChargeUP
+    db $ff   ; [ 66] HighJump
+    db $ff   ; [ 67] SuckAir
+    db $ff   ; [ 68] FireSlash
+    db $ff   ; [ 69] BoltSlash
+    db $ff   ; [ 70] VacuSlash
+    db $ff   ; [ 71] IceSlash
+    db $ff   ; [ 72] MetalCut
+    db $ff   ; [ 73] DrakSlash
+    db $ff   ; [ 74] BeastCut
+    db $ff   ; [ 75] BirdBlow
+    db $ff   ; [ 76] DevilCut
+    db $ff   ; [ 77] ZombieCut
+    db $ff   ; [ 78] CleanCut
+    db $ff   ; [ 79] MultiCut
+    db $ff   ; [ 80] BiAttack
+    db $ff   ; [ 81] QuadHits
+    db $ff   ; [ 82] CallHelp
+    db $ff   ; [ 83] YellHelp
+    db $ff   ; [ 84] Focus
+    db $ff   ; [ 85] SquallHit
+    db $ff   ; [ 86] PsycheUp
+    db $ff   ; [ 87] RainSlash
+    db $ff   ; [ 88] WindBeast
+    db $ff   ; [ 89] Vacuum
+    db $ff   ; [ 90] Lightning
+    db $ff   ; [ 91] RockThrow
+    db $ff   ; [ 92] FireAir
+    db $ff   ; [ 93] BlazeAir
+    db $ff   ; [ 94] Scorching
+    db $ff   ; [ 95] WhiteFire
+    db $ff   ; [ 96] FrigidAir
+    db $ff   ; [ 97] IceAir
+    db $ff   ; [ 98] IceStorm
+    db $ff   ; [ 99] WhiteAir
+    db $ff   ; [100] Hellblast
+    db $ff   ; [101] BigBang
+    db $ff   ; [102] MegaMagic
+    db $ff   ; [103] PoisonHit
+    db $ff   ; [104] NapAttack
+    db $ff   ; [105] Paralyze
+    db $ff   ; [106] SleepAir
+    db $ff   ; [107] PalsyAir
+    db $ff   ; [108] PoisonGas
+    db $ff   ; [109] PoisonAir
+    db $ff   ; [110] PaniDance
+    db $ff   ; [111] Curse
+    db $ff   ; [112] Ahhh
+    db $ff   ; [113] K.O.Dance
+    db $ff   ; [114] SandStorm
+    db $ff   ; [115] Radiant
+    db $ff   ; [116] EerieLite
+    db $ff   ; [117] OddDance
+    db $13   ; [118] RobDance
+    db $ff   ; [119] SideStep
+    db $ff   ; [120] LureDance
+    db $ff   ; [121] LushLicks
+    db $ff   ; [122] SickLick
+    db $ff   ; [123] LegSweep
+    db $ff   ; [124] BigTrip
+    db $ff   ; [125] WarCry
+    db $ff   ; [126] Whistle
+    db $ff   ; [127] Imitate
+    db $2b   ; [128] DeMagic
+    db $ff   ; [129] Surge
+    db $ff   ; [130] UltraDown
+    db $ff   ; [131] ThickFog
+    db $ff   ; [132] TatsuCall
+    db $ff   ; [133] DiagoCall
+    db $ff   ; [134] SamsiCall
+    db $ff   ; [135] BazooCall
+    db $ff   ; [136] Cover
+    db $ff   ; [137] Guardian
+    db $ff   ; [138] TailWind
+    db $ff   ; [139] StormWind
+    db $ff   ; [140] Dodge
+    db $ff   ; [141] Defence
+    db $ff   ; [142] StrongD
+    db $ff   ; [143] SuckAll
+    db $ff   ; [144] BladeD
+    db $ff   ; [145] DanceShut
+    db $ff   ; [146] MouthShut
+    db $14   ; [147] Meditate
+    db $14   ; [148] Hustle
+    db $ff   ; [149] LifeSong
+    db $14   ; [150] LifeDance
+    db $ff   ; [151] Run
+    db $ff   ; [152] Daze
+    db $ff   ; [153] HitAlly
+    db $ff   ; [154] HitEnemy
+    db $ff   ; [155] HitRandom
+    db $ff   ; [156] Scared
+    db $ff   ; [157] Dance
+    db $ff   ; [158] Trip
+    db $ff   ; [159] Paralyze
+    db $ff   ; [160] CANTMOVE
+    db $ff   ; [161] RUN
+    db $ff   ; [162] CALLHOROR
+    db $14   ; [163] HealUsAll
+    db $ff   ; [164] Smashed
+    db $ff   ; [165] FILTHZONE
+    db $ff   ; [166] ALLCHANGE
+    db $15   ; [167] BIGSLEEP
+    db $12   ; [168] MP0
+    db $ff   ; [169] ECHO
+    db $18   ; [170] CHGDRAGON
+    db $ff   ; [171] CALLEVIL
+    db $ff   ; [172] FREEZY
+    db $ff   ; [173] ALLREVIVE
+    db $14   ; [174] RESTOREMP
+    db $ff   ; [175] METEOR
+    db $ff   ; [176] HERB
+    db $ff   ; [177] HEALWATER
+    db $ff   ; [178] SAGESTONE
+    db $ff   ; [179] WARLDDEW
+    db $ff   ; [180] POTION
+    db $ff   ; [181] ELFWATER
+    db $ff   ; [182] ANTIDOTE
+    db $ff   ; [183] MOONHERB
+    db $ff   ; [184] SKYBELL
+    db $ff   ; [185] LAUREL
+    db $ff   ; [186] AWAKESAND
+    db $ff   ; [187] WARLDLEAF
+    db $ff   ; [188] LIFEACORN
+    db $ff   ; [189] MYSTICNUT
+    db $ff   ; [190] PWRSEED
+    db $ff   ; [191] DEFSEED
+    db $ff   ; [192] AGILSEED
+    db $ff   ; [193] INTSEED
+    db $ff   ; [194] FEEDMEAT
+    db $ff   ; [195] BEFFJERKY
+    db $ff   ; [196] PORKCHOP
+    db $ff   ; [197] BADMEAT
+    db $ff   ; [198] SIRLOIN
+    db $ff   ; [199] BOLTSTAFF
+    db $ff   ; [200] STAFF
+    db $ff   ; [201] BLOKSTAFF
+    db $ff   ; [202] LAVASTAFF
+    db $ff   ; [203] SNOWSTAFF
+    db $ff   ; [204] FIRESTAFF
+    db $ff   ; [205] WARPWING
+    db $ff   ; [206] TINYMEDAL
+    db $ff   ; [207] QuestBk
+    db $ff   ; [208] HORRORBK
+    db $ff   ; [209] BENICEBK
+    db $ff   ; [210] CHEATERBK
+    db $ff   ; [211] SMARTBK
+    db $ff   ; [212] COMEDYBK
+    db $18   ; [213] BeDragon
+    db $ff   ; [214] Smashlime
+    db $ff   ; [215] Sheldodge
+    db $ff   ; [216] Branching
+    db $ff   ; [217] GigaSlash
+    db $ff   ; [218] LIFE
+    db $ff   ; [219] RUN
+    db $ff   ; [220] IRONIZE
+    db $ff   ; [221] Ahhh
+    db $ff   ; [222] 
+    db $ff   ; [223] 
+    db $ff   ; [224] 
+    db $ff   ; [225] 
+    db $ff   ; [226] 
+    db $ff   ; [227] 
+    db $ff   ; [228] 
+    db $ff   ; [229] 
+    db $ff   ; [230] 
+    db $ff   ; [231] 
+AnimRoutineTable:
+    ; the 16 per-skill presentation ROUTINES (AnimRunRoutine; index from
+    ; the AnimRoutineIdx tables): 0-3 start the skill's animation with a
+    ; MOTION, 4-12 / 14 / 15 run a SCREEN EFFECT (bank $5F entry 5 phase
+    ; [$da83]) instead, 13 = nothing (MEASURED S112, PyBoy).
+    dw AnimRoutine_AtTarget      ; [ 0] at the target
+    dw AnimRoutine_Middle        ; [ 1] in the middle of the foes
+    dw AnimRoutine_EachTarget    ; [ 2] on each target in turn
+    dw AnimRoutine_FlyAcross     ; [ 3] flies across from the left
+    dw AnimRoutine_Screen04      ; [ 4] screen blinks (Radiant, the summons)
+    dw AnimRoutine_Screen05      ; [ 5] screen fades dark and back (UltraDown, ThickFog)
+    dw AnimRoutine_Screen06      ; [ 6] screen effect of Chance
+    dw AnimRoutine_Screen07      ; [ 7] screen fades dark twice
+    dw AnimRoutine_Screen08      ; [ 8] link-battle effect of Explodet / BigBang / MegaMagic
+    dw AnimRoutine_Screen09      ; [ 9] screen effect 9 (no skill uses it)
+    dw AnimRoutine_Screen10      ; [10] link-battle effect of Lightning / WhiteAir
+    dw AnimRoutine_Screen11      ; [11] link-battle effect of Firebal / IceBolt
+    dw AnimRoutine_Screen12      ; [12] link-battle effect of Infermore / Vacuum
+    dw AnimRoutine_None          ; [13] nothing
+    dw AnimRoutine_Screen14      ; [14] screen shakes (TwinSlash, Ramming, Kamikaze)
+    dw AnimRoutine_Screen15      ; [15] screen effect of an enemy TwinSlash
+AnimRoutineIdxParty:
+    ; ROUTINE index per skill id when a PARTY monster acts (230 rows; AnimSkillVisual).
+    db $00   ; [  0] Blaze
+    db $00   ; [  1] Blazemore
+    db $00   ; [  2] Blazemost
+    db $03   ; [  3] Firebal
+    db $03   ; [  4] Firebane
+    db $01   ; [  5] Firebolt
+    db $02   ; [  6] Bang
+    db $02   ; [  7] Boom
+    db $01   ; [  8] Explodet
+    db $02   ; [  9] Infernos
+    db $03   ; [ 10] Infermore
+    db $01   ; [ 11] Infermost
+    db $03   ; [ 12] IceBolt
+    db $02   ; [ 13] SnowStorm
+    db $01   ; [ 14] Blizzard
+    db $02   ; [ 15] Bolt
+    db $02   ; [ 16] Zap
+    db $01   ; [ 17] Thordain
+    db $0d   ; [ 18] Beat
+    db $0d   ; [ 19] Defeat
+    db $0d   ; [ 20] Sacrifice
+    db $00   ; [ 21] Sleep
+    db $00   ; [ 22] SleepAll
+    db $00   ; [ 23] StopSpell
+    db $00   ; [ 24] Surround
+    db $00   ; [ 25] PanicAll
+    db $00   ; [ 26] RobMagic
+    db $0d   ; [ 27] TakeMagic
+    db $00   ; [ 28] Sap
+    db $00   ; [ 29] Defence
+    db $0d   ; [ 30] Upper
+    db $0d   ; [ 31] Increase
+    db $00   ; [ 32] Slow
+    db $00   ; [ 33] SlowAll
+    db $0d   ; [ 34] Speed
+    db $0d   ; [ 35] SpeedUp
+    db $0d   ; [ 36] Barrier
+    db $0d   ; [ 37] TwinHits
+    db $0d   ; [ 38] MagicWall
+    db $0d   ; [ 39] MagicBack
+    db $0d   ; [ 40] Bounce
+    db $0d   ; [ 41] Transform
+    db $0d   ; [ 42] Ironize
+    db $0d   ; [ 43] Heal
+    db $0d   ; [ 44] HealMore
+    db $0d   ; [ 45] HealAll
+    db $0d   ; [ 46] HealUs
+    db $0d   ; [ 47] HealUsAll
+    db $0d   ; [ 48] Vivify
+    db $0d   ; [ 49] Revive
+    db $0d   ; [ 50] Farewell
+    db $0d   ; [ 51] Antidote
+    db $0d   ; [ 52] NumbOff
+    db $0d   ; [ 53] DeChaos
+    db $0d   ; [ 54] CurseOff
+    db $0d   ; [ 55] StepGuard
+    db $0d   ; [ 56] MapMagic
+    db $06   ; [ 57] Chance
+    db $0d   ; [ 58] Attack
+    db $0e   ; [ 59] TwinSlash
+    db $0e   ; [ 60] Ramming
+    db $0d   ; [ 61] Beserker
+    db $0e   ; [ 62] Kamikaze
+    db $00   ; [ 63] Massacre
+    db $00   ; [ 64] EvilSlash
+    db $0d   ; [ 65] ChargeUP
+    db $0d   ; [ 66] HighJump
+    db $0d   ; [ 67] SuckAir
+    db $00   ; [ 68] FireSlash
+    db $00   ; [ 69] BoltSlash
+    db $00   ; [ 70] VacuSlash
+    db $00   ; [ 71] IceSlash
+    db $00   ; [ 72] MetalCut
+    db $00   ; [ 73] DrakSlash
+    db $00   ; [ 74] BeastCut
+    db $00   ; [ 75] BirdBlow
+    db $00   ; [ 76] DevilCut
+    db $00   ; [ 77] ZombieCut
+    db $00   ; [ 78] CleanCut
+    db $01   ; [ 79] MultiCut
+    db $0d   ; [ 80] BiAttack
+    db $0d   ; [ 81] QuadHits
+    db $0d   ; [ 82] CallHelp
+    db $0d   ; [ 83] YellHelp
+    db $0d   ; [ 84] Focus
+    db $00   ; [ 85] SquallHit
+    db $0d   ; [ 86] PsycheUp
+    db $02   ; [ 87] RainSlash
+    db $00   ; [ 88] WindBeast
+    db $01   ; [ 89] Vacuum
+    db $02   ; [ 90] Lightning
+    db $02   ; [ 91] RockThrow
+    db $03   ; [ 92] FireAir
+    db $03   ; [ 93] BlazeAir
+    db $01   ; [ 94] Scorching
+    db $01   ; [ 95] WhiteFire
+    db $03   ; [ 96] FrigidAir
+    db $02   ; [ 97] IceAir
+    db $01   ; [ 98] IceStorm
+    db $01   ; [ 99] WhiteAir
+    db $02   ; [100] Hellblast
+    db $01   ; [101] BigBang
+    db $01   ; [102] MegaMagic
+    db $00   ; [103] PoisonHit
+    db $00   ; [104] NapAttack
+    db $00   ; [105] Paralyze
+    db $00   ; [106] SleepAir
+    db $00   ; [107] PalsyAir
+    db $00   ; [108] PoisonGas
+    db $00   ; [109] PoisonAir
+    db $00   ; [110] PaniDance
+    db $00   ; [111] Curse
+    db $00   ; [112] Ahhh
+    db $0d   ; [113] K.O.Dance
+    db $00   ; [114] SandStorm
+    db $04   ; [115] Radiant
+    db $04   ; [116] EerieLite
+    db $00   ; [117] OddDance
+    db $00   ; [118] RobDance
+    db $0d   ; [119] SideStep
+    db $00   ; [120] LureDance
+    db $00   ; [121] LushLicks
+    db $00   ; [122] SickLick
+    db $0d   ; [123] LegSweep
+    db $0d   ; [124] BigTrip
+    db $0d   ; [125] WarCry
+    db $0d   ; [126] Whistle
+    db $0d   ; [127] Imitate
+    db $01   ; [128] DeMagic
+    db $04   ; [129] Surge
+    db $05   ; [130] UltraDown
+    db $05   ; [131] ThickFog
+    db $04   ; [132] TatsuCall
+    db $04   ; [133] DiagoCall
+    db $04   ; [134] SamsiCall
+    db $04   ; [135] BazooCall
+    db $0d   ; [136] Cover
+    db $0d   ; [137] Guardian
+    db $0d   ; [138] TailWind
+    db $0d   ; [139] StormWind
+    db $0d   ; [140] Dodge
+    db $0d   ; [141] Defence
+    db $0d   ; [142] StrongD
+    db $0d   ; [143] SuckAll
+    db $0d   ; [144] BladeD
+    db $00   ; [145] DanceShut
+    db $00   ; [146] MouthShut
+    db $0d   ; [147] Meditate
+    db $0d   ; [148] Hustle
+    db $0d   ; [149] LifeSong
+    db $0d   ; [150] LifeDance
+    db $0d   ; [151] Run
+    db $0d   ; [152] Daze
+    db $0d   ; [153] HitAlly
+    db $0d   ; [154] HitEnemy
+    db $0d   ; [155] HitRandom
+    db $0d   ; [156] Scared
+    db $0d   ; [157] Dance
+    db $0d   ; [158] Trip
+    db $0d   ; [159] Paralyze
+    db $0d   ; [160] CANTMOVE
+    db $0d   ; [161] RUN
+    db $0d   ; [162] CALLHOROR
+    db $00   ; [163] HealUsAll
+    db $0d   ; [164] Smashed
+    db $05   ; [165] FILTHZONE
+    db $0d   ; [166] ALLCHANGE
+    db $00   ; [167] BIGSLEEP
+    db $0d   ; [168] MP0
+    db $0d   ; [169] ECHO
+    db $0d   ; [170] CHGDRAGON
+    db $0d   ; [171] CALLEVIL
+    db $0d   ; [172] FREEZY
+    db $0d   ; [173] ALLREVIVE
+    db $0d   ; [174] RESTOREMP
+    db $0d   ; [175] METEOR
+    db $00   ; [176] HERB
+    db $00   ; [177] HEALWATER
+    db $00   ; [178] SAGESTONE
+    db $00   ; [179] WARLDDEW
+    db $00   ; [180] POTION
+    db $00   ; [181] ELFWATER
+    db $00   ; [182] ANTIDOTE
+    db $00   ; [183] MOONHERB
+    db $00   ; [184] SKYBELL
+    db $00   ; [185] LAUREL
+    db $00   ; [186] AWAKESAND
+    db $0d   ; [187] WARLDLEAF
+    db $0d   ; [188] LIFEACORN
+    db $0d   ; [189] MYSTICNUT
+    db $0d   ; [190] PWRSEED
+    db $0d   ; [191] DEFSEED
+    db $0d   ; [192] AGILSEED
+    db $0d   ; [193] INTSEED
+    db $00   ; [194] FEEDMEAT
+    db $00   ; [195] BEFFJERKY
+    db $00   ; [196] PORKCHOP
+    db $00   ; [197] BADMEAT
+    db $00   ; [198] SIRLOIN
+    db $02   ; [199] BOLTSTAFF
+    db $02   ; [200] STAFF
+    db $00   ; [201] BLOKSTAFF
+    db $03   ; [202] LAVASTAFF
+    db $01   ; [203] SNOWSTAFF
+    db $0d   ; [204] FIRESTAFF
+    db $0d   ; [205] WARPWING
+    db $0d   ; [206] TINYMEDAL
+    db $0d   ; [207] QuestBk
+    db $0d   ; [208] HORRORBK
+    db $0d   ; [209] BENICEBK
+    db $0d   ; [210] CHEATERBK
+    db $0d   ; [211] SMARTBK
+    db $00   ; [212] COMEDYBK
+    db $0d   ; [213] BeDragon
+    db $00   ; [214] Smashlime
+    db $00   ; [215] Sheldodge
+    db $00   ; [216] Branching
+    db $00   ; [217] GigaSlash
+    db $0d   ; [218] LIFE
+    db $0d   ; [219] RUN
+    db $0d   ; [220] IRONIZE
+    db $0d   ; [221] Ahhh
+    db $0d   ; [222] 
+    db $0d   ; [223] 
+    db $0d   ; [224] 
+    db $0d   ; [225] 
+    db $0d   ; [226] 
+    db $0d   ; [227] 
+    db $0d   ; [228] 
+    db $0d   ; [229] 
+AnimRoutineIdxEnemy:
+    ; ROUTINE index per skill id when an ENEMY acts (230 rows; AnimSkillVisual).
+    db $0d   ; [  0] Blaze
+    db $0d   ; [  1] Blazemore
+    db $0d   ; [  2] Blazemost
+    db $0d   ; [  3] Firebal
+    db $0d   ; [  4] Firebane
+    db $0d   ; [  5] Firebolt
+    db $0d   ; [  6] Bang
+    db $0d   ; [  7] Boom
+    db $0d   ; [  8] Explodet
+    db $0d   ; [  9] Infernos
+    db $0d   ; [ 10] Infermore
+    db $0d   ; [ 11] Infermost
+    db $0d   ; [ 12] IceBolt
+    db $0d   ; [ 13] SnowStorm
+    db $0d   ; [ 14] Blizzard
+    db $0d   ; [ 15] Bolt
+    db $0d   ; [ 16] Zap
+    db $0d   ; [ 17] Thordain
+    db $0d   ; [ 18] Beat
+    db $0d   ; [ 19] Defeat
+    db $0d   ; [ 20] Sacrifice
+    db $0d   ; [ 21] Sleep
+    db $0d   ; [ 22] SleepAll
+    db $0d   ; [ 23] StopSpell
+    db $0d   ; [ 24] Surround
+    db $0d   ; [ 25] PanicAll
+    db $00   ; [ 26] RobMagic
+    db $00   ; [ 27] TakeMagic
+    db $0d   ; [ 28] Sap
+    db $0d   ; [ 29] Defence
+    db $00   ; [ 30] Upper
+    db $00   ; [ 31] Increase
+    db $0d   ; [ 32] Slow
+    db $0d   ; [ 33] SlowAll
+    db $00   ; [ 34] Speed
+    db $00   ; [ 35] SpeedUp
+    db $0d   ; [ 36] Barrier
+    db $00   ; [ 37] TwinHits
+    db $02   ; [ 38] MagicWall
+    db $00   ; [ 39] MagicBack
+    db $00   ; [ 40] Bounce
+    db $00   ; [ 41] Transform
+    db $0d   ; [ 42] Ironize
+    db $00   ; [ 43] Heal
+    db $00   ; [ 44] HealMore
+    db $00   ; [ 45] HealAll
+    db $00   ; [ 46] HealUs
+    db $00   ; [ 47] HealUsAll
+    db $0d   ; [ 48] Vivify
+    db $0d   ; [ 49] Revive
+    db $00   ; [ 50] Farewell
+    db $00   ; [ 51] Antidote
+    db $00   ; [ 52] NumbOff
+    db $00   ; [ 53] DeChaos
+    db $00   ; [ 54] CurseOff
+    db $0d   ; [ 55] StepGuard
+    db $0d   ; [ 56] MapMagic
+    db $06   ; [ 57] Chance
+    db $0d   ; [ 58] Attack
+    db $0f   ; [ 59] TwinSlash
+    db $0f   ; [ 60] Ramming
+    db $0d   ; [ 61] Beserker
+    db $0f   ; [ 62] Kamikaze
+    db $0d   ; [ 63] Massacre
+    db $0d   ; [ 64] EvilSlash
+    db $0d   ; [ 65] ChargeUP
+    db $0d   ; [ 66] HighJump
+    db $0d   ; [ 67] SuckAir
+    db $0d   ; [ 68] FireSlash
+    db $0d   ; [ 69] BoltSlash
+    db $0d   ; [ 70] VacuSlash
+    db $0d   ; [ 71] IceSlash
+    db $0d   ; [ 72] MetalCut
+    db $0d   ; [ 73] DrakSlash
+    db $0d   ; [ 74] BeastCut
+    db $0d   ; [ 75] BirdBlow
+    db $0d   ; [ 76] DevilCut
+    db $0d   ; [ 77] ZombieCut
+    db $0d   ; [ 78] CleanCut
+    db $0d   ; [ 79] MultiCut
+    db $0d   ; [ 80] BiAttack
+    db $0d   ; [ 81] QuadHits
+    db $0d   ; [ 82] CallHelp
+    db $0d   ; [ 83] YellHelp
+    db $0d   ; [ 84] Focus
+    db $0d   ; [ 85] SquallHit
+    db $0d   ; [ 86] PsycheUp
+    db $0d   ; [ 87] RainSlash
+    db $0d   ; [ 88] WindBeast
+    db $0d   ; [ 89] Vacuum
+    db $0d   ; [ 90] Lightning
+    db $0d   ; [ 91] RockThrow
+    db $0d   ; [ 92] FireAir
+    db $0d   ; [ 93] BlazeAir
+    db $0d   ; [ 94] Scorching
+    db $0d   ; [ 95] WhiteFire
+    db $0d   ; [ 96] FrigidAir
+    db $0d   ; [ 97] IceAir
+    db $0d   ; [ 98] IceStorm
+    db $0d   ; [ 99] WhiteAir
+    db $0d   ; [100] Hellblast
+    db $0d   ; [101] BigBang
+    db $0d   ; [102] MegaMagic
+    db $0d   ; [103] PoisonHit
+    db $0d   ; [104] NapAttack
+    db $0d   ; [105] Paralyze
+    db $0d   ; [106] SleepAir
+    db $0d   ; [107] PalsyAir
+    db $0d   ; [108] PoisonGas
+    db $0d   ; [109] PoisonAir
+    db $0d   ; [110] PaniDance
+    db $0d   ; [111] Curse
+    db $0d   ; [112] Ahhh
+    db $0d   ; [113] K.O.Dance
+    db $0d   ; [114] SandStorm
+    db $04   ; [115] Radiant
+    db $04   ; [116] EerieLite
+    db $0d   ; [117] OddDance
+    db $00   ; [118] RobDance
+    db $0d   ; [119] SideStep
+    db $0d   ; [120] LureDance
+    db $0d   ; [121] LushLicks
+    db $0d   ; [122] SickLick
+    db $0d   ; [123] LegSweep
+    db $0d   ; [124] BigTrip
+    db $0d   ; [125] WarCry
+    db $0d   ; [126] Whistle
+    db $0d   ; [127] Imitate
+    db $01   ; [128] DeMagic
+    db $04   ; [129] Surge
+    db $05   ; [130] UltraDown
+    db $05   ; [131] ThickFog
+    db $04   ; [132] TatsuCall
+    db $04   ; [133] DiagoCall
+    db $04   ; [134] SamsiCall
+    db $04   ; [135] BazooCall
+    db $0d   ; [136] Cover
+    db $0d   ; [137] Guardian
+    db $0d   ; [138] TailWind
+    db $0d   ; [139] StormWind
+    db $0d   ; [140] Dodge
+    db $0d   ; [141] Defence
+    db $0d   ; [142] StrongD
+    db $0d   ; [143] SuckAll
+    db $0d   ; [144] BladeD
+    db $0d   ; [145] DanceShut
+    db $0d   ; [146] MouthShut
+    db $00   ; [147] Meditate
+    db $00   ; [148] Hustle
+    db $0d   ; [149] LifeSong
+    db $00   ; [150] LifeDance
+    db $0d   ; [151] Run
+    db $0d   ; [152] Daze
+    db $0d   ; [153] HitAlly
+    db $0d   ; [154] HitEnemy
+    db $0d   ; [155] HitRandom
+    db $0d   ; [156] Scared
+    db $0d   ; [157] Dance
+    db $0d   ; [158] Trip
+    db $0d   ; [159] Paralyze
+    db $0d   ; [160] CANTMOVE
+    db $0d   ; [161] RUN
+    db $0d   ; [162] CALLHOROR
+    db $00   ; [163] HealUsAll
+    db $0d   ; [164] Smashed
+    db $05   ; [165] FILTHZONE
+    db $0d   ; [166] ALLCHANGE
+    db $00   ; [167] BIGSLEEP
+    db $00   ; [168] MP0
+    db $0d   ; [169] ECHO
+    db $00   ; [170] CHGDRAGON
+    db $0d   ; [171] CALLEVIL
+    db $0d   ; [172] FREEZY
+    db $0d   ; [173] ALLREVIVE
+    db $00   ; [174] RESTOREMP
+    db $0d   ; [175] METEOR
+    db $0d   ; [176] HERB
+    db $0d   ; [177] HEALWATER
+    db $0d   ; [178] SAGESTONE
+    db $0d   ; [179] WARLDDEW
+    db $0d   ; [180] POTION
+    db $0d   ; [181] ELFWATER
+    db $0d   ; [182] ANTIDOTE
+    db $0d   ; [183] MOONHERB
+    db $0d   ; [184] SKYBELL
+    db $0d   ; [185] LAUREL
+    db $0d   ; [186] AWAKESAND
+    db $0d   ; [187] WARLDLEAF
+    db $0d   ; [188] LIFEACORN
+    db $0d   ; [189] MYSTICNUT
+    db $0d   ; [190] PWRSEED
+    db $0d   ; [191] DEFSEED
+    db $0d   ; [192] AGILSEED
+    db $0d   ; [193] INTSEED
+    db $0d   ; [194] FEEDMEAT
+    db $0d   ; [195] BEFFJERKY
+    db $0d   ; [196] PORKCHOP
+    db $0d   ; [197] BADMEAT
+    db $0d   ; [198] SIRLOIN
+    db $0d   ; [199] BOLTSTAFF
+    db $0d   ; [200] STAFF
+    db $0d   ; [201] BLOKSTAFF
+    db $0d   ; [202] LAVASTAFF
+    db $0d   ; [203] SNOWSTAFF
+    db $0d   ; [204] FIRESTAFF
+    db $0d   ; [205] WARPWING
+    db $0d   ; [206] TINYMEDAL
+    db $0d   ; [207] QuestBk
+    db $0d   ; [208] HORRORBK
+    db $0d   ; [209] BENICEBK
+    db $0d   ; [210] CHEATERBK
+    db $0d   ; [211] SMARTBK
+    db $0d   ; [212] COMEDYBK
+    db $00   ; [213] BeDragon
+    db $0d   ; [214] Smashlime
+    db $0d   ; [215] Sheldodge
+    db $0d   ; [216] Branching
+    db $0d   ; [217] GigaSlash
+    db $0d   ; [218] LIFE
+    db $0d   ; [219] RUN
+    db $0d   ; [220] IRONIZE
+    db $0d   ; [221] Ahhh
+    db $0d   ; [222] 
+    db $0d   ; [223] 
+    db $0d   ; [224] 
+    db $0d   ; [225] 
+    db $0d   ; [226] 
+    db $0d   ; [227] 
+    db $0d   ; [228] 
+    db $0d   ; [229] 
+AnimRoutineIdxLink:
+    ; ROUTINE index per skill id when the link battle's second side (d9ee = 5) (230 rows; AnimSkillVisual).
+    db $0d   ; [  0] Blaze
+    db $0d   ; [  1] Blazemore
+    db $0d   ; [  2] Blazemost
+    db $0b   ; [  3] Firebal
+    db $0b   ; [  4] Firebane
+    db $0b   ; [  5] Firebolt
+    db $04   ; [  6] Bang
+    db $04   ; [  7] Boom
+    db $08   ; [  8] Explodet
+    db $0d   ; [  9] Infernos
+    db $0c   ; [ 10] Infermore
+    db $0c   ; [ 11] Infermost
+    db $0b   ; [ 12] IceBolt
+    db $04   ; [ 13] SnowStorm
+    db $0b   ; [ 14] Blizzard
+    db $04   ; [ 15] Bolt
+    db $04   ; [ 16] Zap
+    db $08   ; [ 17] Thordain
+    db $0d   ; [ 18] Beat
+    db $0d   ; [ 19] Defeat
+    db $0d   ; [ 20] Sacrifice
+    db $0d   ; [ 21] Sleep
+    db $0d   ; [ 22] SleepAll
+    db $0d   ; [ 23] StopSpell
+    db $0d   ; [ 24] Surround
+    db $0d   ; [ 25] PanicAll
+    db $0d   ; [ 26] RobMagic
+    db $0d   ; [ 27] TakeMagic
+    db $0d   ; [ 28] Sap
+    db $0d   ; [ 29] Defence
+    db $0d   ; [ 30] Upper
+    db $0d   ; [ 31] Increase
+    db $0d   ; [ 32] Slow
+    db $0d   ; [ 33] SlowAll
+    db $0d   ; [ 34] Speed
+    db $0d   ; [ 35] SpeedUp
+    db $0d   ; [ 36] Barrier
+    db $0d   ; [ 37] TwinHits
+    db $0d   ; [ 38] MagicWall
+    db $0d   ; [ 39] MagicBack
+    db $0d   ; [ 40] Bounce
+    db $0d   ; [ 41] Transform
+    db $0d   ; [ 42] Ironize
+    db $0d   ; [ 43] Heal
+    db $0d   ; [ 44] HealMore
+    db $0d   ; [ 45] HealAll
+    db $0d   ; [ 46] HealUs
+    db $0d   ; [ 47] HealUsAll
+    db $0d   ; [ 48] Vivify
+    db $0d   ; [ 49] Revive
+    db $0d   ; [ 50] Farewell
+    db $0d   ; [ 51] Antidote
+    db $0d   ; [ 52] NumbOff
+    db $0d   ; [ 53] DeChaos
+    db $0d   ; [ 54] CurseOff
+    db $0d   ; [ 55] StepGuard
+    db $0d   ; [ 56] MapMagic
+    db $06   ; [ 57] Chance
+    db $0d   ; [ 58] Attack
+    db $0d   ; [ 59] TwinSlash
+    db $0d   ; [ 60] Ramming
+    db $0d   ; [ 61] Beserker
+    db $0d   ; [ 62] Kamikaze
+    db $0d   ; [ 63] Massacre
+    db $0d   ; [ 64] EvilSlash
+    db $0d   ; [ 65] ChargeUP
+    db $0d   ; [ 66] HighJump
+    db $0d   ; [ 67] SuckAir
+    db $0d   ; [ 68] FireSlash
+    db $0d   ; [ 69] BoltSlash
+    db $0d   ; [ 70] VacuSlash
+    db $0d   ; [ 71] IceSlash
+    db $0d   ; [ 72] MetalCut
+    db $0d   ; [ 73] DrakSlash
+    db $0d   ; [ 74] BeastCut
+    db $0d   ; [ 75] BirdBlow
+    db $0d   ; [ 76] DevilCut
+    db $0d   ; [ 77] ZombieCut
+    db $0d   ; [ 78] CleanCut
+    db $0a   ; [ 79] MultiCut
+    db $0d   ; [ 80] BiAttack
+    db $0d   ; [ 81] QuadHits
+    db $0d   ; [ 82] CallHelp
+    db $0d   ; [ 83] YellHelp
+    db $0d   ; [ 84] Focus
+    db $0d   ; [ 85] SquallHit
+    db $0d   ; [ 86] PsycheUp
+    db $0d   ; [ 87] RainSlash
+    db $0d   ; [ 88] WindBeast
+    db $0c   ; [ 89] Vacuum
+    db $0a   ; [ 90] Lightning
+    db $0d   ; [ 91] RockThrow
+    db $0b   ; [ 92] FireAir
+    db $0b   ; [ 93] BlazeAir
+    db $0b   ; [ 94] Scorching
+    db $0a   ; [ 95] WhiteFire
+    db $0b   ; [ 96] FrigidAir
+    db $04   ; [ 97] IceAir
+    db $0b   ; [ 98] IceStorm
+    db $0a   ; [ 99] WhiteAir
+    db $06   ; [100] Hellblast
+    db $08   ; [101] BigBang
+    db $08   ; [102] MegaMagic
+    db $0d   ; [103] PoisonHit
+    db $0d   ; [104] NapAttack
+    db $0d   ; [105] Paralyze
+    db $0d   ; [106] SleepAir
+    db $0d   ; [107] PalsyAir
+    db $0d   ; [108] PoisonGas
+    db $0d   ; [109] PoisonAir
+    db $0d   ; [110] PaniDance
+    db $0d   ; [111] Curse
+    db $0d   ; [112] Ahhh
+    db $0d   ; [113] K.O.Dance
+    db $0d   ; [114] SandStorm
+    db $04   ; [115] Radiant
+    db $04   ; [116] EerieLite
+    db $0d   ; [117] OddDance
+    db $0d   ; [118] RobDance
+    db $0d   ; [119] SideStep
+    db $0d   ; [120] LureDance
+    db $0d   ; [121] LushLicks
+    db $0d   ; [122] SickLick
+    db $0d   ; [123] LegSweep
+    db $0d   ; [124] BigTrip
+    db $0d   ; [125] WarCry
+    db $0d   ; [126] Whistle
+    db $0d   ; [127] Imitate
+    db $01   ; [128] DeMagic
+    db $04   ; [129] Surge
+    db $05   ; [130] UltraDown
+    db $05   ; [131] ThickFog
+    db $0d   ; [132] TatsuCall
+    db $0d   ; [133] DiagoCall
+    db $0d   ; [134] SamsiCall
+    db $0d   ; [135] BazooCall
+    db $0d   ; [136] Cover
+    db $0d   ; [137] Guardian
+    db $0d   ; [138] TailWind
+    db $0d   ; [139] StormWind
+    db $0d   ; [140] Dodge
+    db $0d   ; [141] Defence
+    db $0d   ; [142] StrongD
+    db $0d   ; [143] SuckAll
+    db $0d   ; [144] BladeD
+    db $0d   ; [145] DanceShut
+    db $0d   ; [146] MouthShut
+    db $0d   ; [147] Meditate
+    db $0d   ; [148] Hustle
+    db $0d   ; [149] LifeSong
+    db $0d   ; [150] LifeDance
+    db $0d   ; [151] Run
+    db $0d   ; [152] Daze
+    db $0d   ; [153] HitAlly
+    db $0d   ; [154] HitEnemy
+    db $0d   ; [155] HitRandom
+    db $0d   ; [156] Scared
+    db $0d   ; [157] Dance
+    db $0d   ; [158] Trip
+    db $0d   ; [159] Paralyze
+    db $0d   ; [160] CANTMOVE
+    db $0d   ; [161] RUN
+    db $0d   ; [162] CALLHOROR
+    db $0d   ; [163] HealUsAll
+    db $0d   ; [164] Smashed
+    db $05   ; [165] FILTHZONE
+    db $0d   ; [166] ALLCHANGE
+    db $0d   ; [167] BIGSLEEP
+    db $0d   ; [168] MP0
+    db $0d   ; [169] ECHO
+    db $0d   ; [170] CHGDRAGON
+    db $0d   ; [171] CALLEVIL
+    db $0d   ; [172] FREEZY
+    db $0d   ; [173] ALLREVIVE
+    db $0d   ; [174] RESTOREMP
+    db $0d   ; [175] METEOR
+    db $0d   ; [176] HERB
+    db $0d   ; [177] HEALWATER
+    db $0d   ; [178] SAGESTONE
+    db $0d   ; [179] WARLDDEW
+    db $0d   ; [180] POTION
+    db $0d   ; [181] ELFWATER
+    db $0d   ; [182] ANTIDOTE
+    db $0d   ; [183] MOONHERB
+    db $0d   ; [184] SKYBELL
+    db $0d   ; [185] LAUREL
+    db $0d   ; [186] AWAKESAND
+    db $0d   ; [187] WARLDLEAF
+    db $0d   ; [188] LIFEACORN
+    db $0d   ; [189] MYSTICNUT
+    db $0d   ; [190] PWRSEED
+    db $0d   ; [191] DEFSEED
+    db $0d   ; [192] AGILSEED
+    db $0d   ; [193] INTSEED
+    db $0d   ; [194] FEEDMEAT
+    db $0d   ; [195] BEFFJERKY
+    db $0d   ; [196] PORKCHOP
+    db $0d   ; [197] BADMEAT
+    db $0d   ; [198] SIRLOIN
+    db $0d   ; [199] BOLTSTAFF
+    db $0d   ; [200] STAFF
+    db $0d   ; [201] BLOKSTAFF
+    db $0d   ; [202] LAVASTAFF
+    db $0d   ; [203] SNOWSTAFF
+    db $0d   ; [204] FIRESTAFF
+    db $0d   ; [205] WARPWING
+    db $0d   ; [206] TINYMEDAL
+    db $0d   ; [207] QuestBk
+    db $0d   ; [208] HORRORBK
+    db $0d   ; [209] BENICEBK
+    db $0d   ; [210] CHEATERBK
+    db $0d   ; [211] SMARTBK
+    db $0d   ; [212] COMEDYBK
+    db $0d   ; [213] BeDragon
+    db $0d   ; [214] Smashlime
+    db $0d   ; [215] Sheldodge
+    db $0d   ; [216] Branching
+    db $0d   ; [217] GigaSlash
+    db $0d   ; [218] LIFE
+    db $0d   ; [219] RUN
+    db $0d   ; [220] IRONIZE
+    db $0d   ; [221] Ahhh
+    db $0d   ; [222] 
+    db $0d   ; [223] 
+    db $0d   ; [224] 
+    db $0d   ; [225] 
+    db $0d   ; [226] 
+    db $0d   ; [227] 
+    db $0d   ; [228] 
+    db $0d   ; [229] 
+; NOTE: unreferenced fake-decode labels removed with this block: jr_05f_5756, jr_05f_577c
+IsAttackerPartySide:
     ld a, [$c863]
     bit 1, a
     jr nz, jr_05f_5b9c
@@ -5116,7 +5215,7 @@ jr_05f_5b9c:
     ret
 
 
-LoadFldUI_5ba3:
+IsTargetPartySide:
     ld a, [$c863]
     bit 1, a
     jr nz, jr_05f_5bb0
@@ -5133,6 +5232,8 @@ jr_05f_5bb0:
     ret
 
 
+; bank $5F entry 8 = game mode 5 init: the developers' "Effect" animation debugger (S112)
+EffectDebuggerInit:
     xor a
     ld hl, wMenu_selection
     ld bc, $0008
@@ -5219,6 +5320,8 @@ jr_05f_5bb0:
     jp EnableLCDAndInterrupts
 
 
+; bank $5F entry 9 = game mode 5 per frame: rows 0 animation (A plays it) / 1 / 2 / 3 screen effects; tools/census_battle_anims.py drives it (S112)
+EffectDebuggerFrame:
     ld a, [$da83]
     cp $09
     jr nz, jr_05f_5c9b
@@ -5342,7 +5445,7 @@ jr_05f_5d36:
     inc a
     ld [wOPTN_and_Item_selection], a
     ld a, [wOPTN_and_Item_selection]
-    cp $2d
+    cp $2d + 32                 ; [S112] the debugger lists $00-$4C: the stock 45 + 32 new slots
     jr c, jr_05f_5d48
 
     xor a
@@ -5358,10 +5461,10 @@ jr_05f_5d4c:
     dec a
     ld [wOPTN_and_Item_selection], a
     ld a, [wOPTN_and_Item_selection]
-    cp $2d
+    cp $2d + 32                 ; [S112] the debugger lists $00-$4C: the stock 45 + 32 new slots
     jr c, jr_05f_5d48
 
-    ld a, $2c
+    ld a, $2c + 32              ; [S112] (wrap down to $4C)
     ld [wOPTN_and_Item_selection], a
     jr jr_05f_5d48
 
@@ -5447,20 +5550,16 @@ Jump_05f_5dc2:
 
 Jump_05f_5dd7:
     ld a, [wOPTN_and_Item_selection]
-    ld hl, $61ee
-    ld c, a
-    ld b, $00
-    add hl, bc
-    add hl, bc
-    ld a, [hl+]
-    ld d, [hl]
-    ld e, a
+    call DebugGfxFork5F         ; [S112] DE = the gfx id (new animations: bank $6F entry 2)
+    jr .dbgGfx
+    ds 6, $00                   ; (was ld hl,$61ee ... ld e,a, 11 B)
+.dbgGfx:
     ld hl, $8000
     call WaitDMATransfer
     ld a, [wOPTN_and_Item_selection]
     ld [$c81e], a
-    ld hl, $170d
-    rst $10
+    call DebugPalFork5F         ; [S112] was ld hl,$170d / rst $10: stock numbers only
+    nop
     ld hl, $1708
     rst $10
     ld a, [wOPTN_and_Item_selection]
@@ -5795,7 +5894,7 @@ LoadFldUI_5ffa:
     cp $21
     jr c, jr_05f_600f
 
-    ld hl, $5e00
+    ld hl, $6f00                ; [S112] was $5e00: bank $6F entry 0 (forwards $21-$2C to $5E)
     rst $10
     ret
 
@@ -5819,7 +5918,7 @@ SetFldUI_6014:
     ld [hl+], a
     ld a, $e0
     ld [hl], a
-    ld hl, $61c1
+    ld hl, EffectDebugShadeTable        ; [S112] the debugger's shade copy
     ld a, [wOPTN_and_Item_selection]
     add l
     ld l, a
@@ -5858,7 +5957,7 @@ jr_05f_6053:
     cp $21
     jr c, jr_05f_6068
 
-    ld hl, $5e01
+    ld hl, $6f01                ; [S112] was $5e01: bank $6F entry 1 (forwards $21-$2C to $5E)
     rst $10
     ret
 
@@ -6149,116 +6248,65 @@ jr_05f_61bc:
 jr_05f_61bf:
     sub b
     rst $38
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ret nc
-
-    ret nc
-
-    ret nc
-
+    ; [S112] $61C1-$61ED = EffectDebugShadeTable: the Effect debugger's copy of
+    ; ROM0 AnimObjShadeTable (45 B, wObj1Palette per animation, read by
+    ; SetFldUI_6014; byte-identical to $00:$3141). The jr_05f_61xx labels here and
+    ; above are mgbdis artefacts of the debugger's menu text (kept: the bogus
+    ; jr operands before them reference them).
+EffectDebugShadeTable:
+    db $e0, $e0, $e0, $e0, $e0, $e0, $d0, $d0, $d0
 jr_05f_61ca:
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-
+    db $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0
 jr_05f_61d6:
-    ret nc
-
-    ret nc
-
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$d0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$d0], a
-    nop
-    ld e, d
-    ld bc, $025a
-    ld e, d
-    inc bc
-    ld e, d
-    inc b
-    ld e, d
-    dec b
-    ld e, d
-    ld b, $5a
-    rlca
-    ld e, d
-    ld [$095a], sp
-    ld e, d
-    ld a, [bc]
-    ld e, d
-    dec bc
-    ld e, d
-    inc c
-    ld e, d
-    dec c
-    ld e, d
-    ld c, $5a
-    rrca
-    ld e, d
-    db $10
-    ld e, d
-    ld de, $125a
-    ld e, d
-    inc de
-    ld e, d
-    inc d
-    ld e, d
-    dec d
-    ld e, d
-    ld d, $5a
-    rla
-    ld e, d
-    jr jr_05f_627a
-
-    add hl, de
-    ld e, d
-    ld a, [de]
-    ld e, d
-    dec de
-    ld e, d
-    inc e
-    ld e, d
-    dec e
-    ld e, d
-    ld e, $5a
-    rra
-    ld e, d
-    ld a, [bc]
-    ld e, e
-    dec bc
-    ld e, e
-    inc c
-    ld e, e
-    dec c
-    ld e, e
-    ld c, $5b
-    rrca
-    ld e, e
-    db $10
-    ld e, e
-    ld de, $125b
-    ld e, e
-    inc de
-    ld e, e
-    inc d
-    ld e, e
-    dec d
-    ld e, e
-    ld d, $5b
-
+    db $d0, $d0, $e0, $e0, $e0, $e0, $e0, $d0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $d0
+AnimGfxTableDebug:
+    ; the Effect debugger's copy of AnimGfxTable (45 dw; game mode 5,
+    ; EffectDebuggerFrame: A on row 0 plays animation [wOPTN_and_Item_selection]).
+    dw $5a00   ; [$00] Blaze
+    dw $5a01   ; [$01] Blazemore
+    dw $5a02   ; [$02] Blazemost, COMEDYBK
+    dw $5a03   ; [$03] Firebal, FireAir
+    dw $5a04   ; [$04] Firebane, BlazeAir, LAVASTAFF
+    dw $5a05   ; [$05] Firebolt, Scorching
+    dw $5a06   ; [$06] Bang
+    dw $5a07   ; [$07] Boom
+    dw $5a08   ; [$08] Explodet
+    dw $5a09   ; [$09] Infernos, WindBeast, STAFF
+    dw $5a0a   ; [$0a] Infermore
+    dw $5a0b   ; [$0b] Infermost, Vacuum
+    dw $5a0c   ; [$0c] IceBolt, FrigidAir
+    dw $5a0d   ; [$0d] SnowStorm, IceAir
+    dw $5a0e   ; [$0e] Blizzard, IceStorm, SNOWSTAFF
+    dw $5a0f   ; [$0f] Bolt, Lightning, BOLTSTAFF
+    dw $5a10   ; [$10] Zap
+    dw $5a11   ; [$11] Thordain
+    dw $5a12   ; [$12] StopSpell, RobMagic, Sap, Defence, Slow, SlowAll (+6)
+    dw $5a13   ; [$13] RobMagic, TakeMagic, Upper, Increase, Speed, SpeedUp (+2)
+    dw $5a14   ; [$14] Heal, HealMore, HealAll, HealUs, HealUsAll, Farewell (+20)
+    dw $5a15   ; [$15] Sleep, SleepAll, PoisonHit, NapAttack, Paralyze, SleepAir (+7)
+    dw $5a16   ; [$16] PanicAll, PaniDance, Curse, Ahhh, LureDance
+    dw $5a17   ; [$17] Surround, SandStorm
+    dw $5a18   ; [$18] Transform, CHGDRAGON, BeDragon
+    dw $5a19   ; [$19] MagicBack, Bounce
+    dw $5a1a   ; [$1a] WhiteAir
+    dw $5a1b   ; [$1b] RockThrow
+    dw $5a1c   ; [$1c] WhiteFire
+    dw $5a1d   ; [$1d] TwinSlash, Massacre, EvilSlash, DrakSlash, BeastCut, SquallHit (+2)
+    dw $5a1e   ; [$1e] FireSlash
+    dw $5a1f   ; [$1f] BoltSlash
+    dw $5b0a   ; [$20] VacuSlash
+    dw $5b0b   ; [$21] IceSlash
+    dw $5b0c   ; [$22] Smashlime, Sheldodge
+    dw $5b0d   ; [$23] BirdBlow
+    dw $5b0e   ; [$24] DevilCut, ZombieCut
+    dw $5b0f   ; [$25] MetalCut, CleanCut
+    dw $5b10   ; [$26] GigaSlash
+    dw $5b11   ; [$27] MultiCut
+    dw $5b12   ; [$28] Hellblast
+    dw $5b13   ; [$29] BigBang
+    dw $5b14   ; [$2a] MegaMagic
+    dw $5b15   ; [$2b] DeMagic
+    dw $5b16   ; [$2c] FEEDMEAT, BEFFJERKY, PORKCHOP, SIRLOIN
 FuncFldUI_6248:
     srl a
     srl a
@@ -12598,615 +12646,132 @@ jr_05f_68d1:
     nop
     nop
     nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
+; =============================================================================
+; [S112] A skill's OWN presentation (ROADMAP P3.11e; PROJECT_COMPILER §2.28;
+; BATTLE_SKILL_SYSTEM §11): two per-skill-id tables (256 rows, by the REAL id
+; [$db8a], $FF = keep what the skill's look gives):
+;   SkillRoutineOverride — the routine (0-3 = an animation with a motion,
+;     4-12 / 14 / 15 = a screen effect, 13 = nothing) — applied only on a side
+;     where the look's own routine is not 13, so the sides that show something
+;     stay the vanilla ones;
+;   SkillAnimOverride    — the animation number (stock $00-$2C or the
+;     project's new ones $2D+), wherever AnimSelectCmd / AnimSelectCmdInit
+;     read their tables (the party-side "no sprites" paths are untouched).
+; Compiler regions gd_anim_routine / gd_anim_cmd (gamedata.skills.<id>.
+; presentation); no edits = all $FF = the S111 behaviour.
+; =============================================================================
+AnimRoutineFork:                ; A = the look's routine index
+    cp $0d
+    jp z, AnimRunRoutine        ; nothing on this side: stays nothing
+    ld c, a
+    ld hl, SkillRoutineOverride
+    call AnimOverrideRow
+    cp $ff
+    jr nz, .go
+    ld a, c
+.go:
+    jp AnimRunRoutine
+
+AnimCmdForkDE81:                ; [de] = the table's number
+    ld a, [de]
+    call AnimCmdOverride
+    ld [$da81], a
+    ret
+
+AnimCmdForkHLA4:                ; [hl] = the table's number
+    ld a, [hl]
+    call AnimCmdOverride
+    ld [$daa4], a
+    ret
+
+AnimCmdOverride:                ; A = number -> A (the skill's own if set)
+    push hl
+    ld c, a
+    ld hl, SkillAnimOverride
+    call AnimOverrideRow
+    cp $ff
+    jr nz, .own
+    ld a, c
+.own:
+    pop hl
+    ret
+
+AnimOverrideRow:                ; HL = table -> A = table[[$db8a]] (keeps C)
+    ld a, [$db8a]
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl]
+    ret
+
+DebugGfxFork5F:                 ; A = the debugger's number -> DE = gfx id
+    ld [$c81e], a
+    cp $2d
+    jr nc, .own
+    ld hl, AnimGfxTableDebug
+    ld c, a
+    ld b, $00
+    add hl, bc
+    add hl, bc
+    ld a, [hl+]
+    ld d, [hl]
+    ld e, a
+    ret
+.own:
+    ld hl, $6f02
+    rst $10                     ; bank $6F entry 2: palettes + DE
+    ret
+
+DebugPalFork5F:                 ; the stock palette load, numbers < $2D only
+    ld a, [$c81e]
+    cp $2d
+    ret nc
+    ld hl, $170d
+    rst $10
+    ret
+
+SkillRoutineOverride:
+; @BUILD_PROJECT BEGIN gd_anim_routine
+; SkillRoutineOverride rows (gamedata.skills.<id>.presentation; $FF = the look's)
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [  0- 15]
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [ 16- 31]
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [ 32- 47]
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [ 48- 63]
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [ 64- 79]
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [ 80- 95]
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [ 96-111]
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [112-127]
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [128-143]
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [144-159]
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [160-175]
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [176-191]
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [192-207]
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [208-223]
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [224-239]
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [240-255]
+; @BUILD_PROJECT END gd_anim_routine
+SkillAnimOverride:
+; @BUILD_PROJECT BEGIN gd_anim_cmd
+; SkillAnimOverride rows (gamedata.skills.<id>.presentation; $FF = the look's)
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [  0- 15]
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [ 16- 31]
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [ 32- 47]
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [ 48- 63]
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [ 64- 79]
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [ 80- 95]
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [ 96-111]
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [112-127]
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [128-143]
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [144-159]
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [160-175]
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [176-191]
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [192-207]
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [208-223]
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [224-239]
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [240-255]
+; @BUILD_PROJECT END gd_anim_cmd
 ; [S110] per-stock-skill presentation id (identity = each skill plays its own
 ; script). Compiler region: gd_present_proxy_5f (gamedata.skills.<id>.looks_like).
 StockPresentTable:

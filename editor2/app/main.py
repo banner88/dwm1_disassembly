@@ -1,7 +1,7 @@
 """main.py — DWM1 Editor shell (EDITOR_DESIGN §5.0; S72 skeleton → S93 shell).
 
 Project window: top-level tab strip (Rooms · Gates · Monsters · Arena · Skills ·
-Breeding · Encounters · Music · Progression & Flags · World · Balance ·
+Animations · Breeding · Encounters · Music · Progression & Flags · World · Balance ·
 Build & Play) over ONE Session (editable project.json + live renderer +
 undo stack). Only the tabs whose ROADMAP boxes have landed are live; the
 rest are stubs that name their box, so later sessions slot in without
@@ -200,6 +200,10 @@ class MainWindow(QMainWindow):
                 from editor2.app.skills_tab import SkillsTab
                 self.skills_tab = SkillsTab(self.session)
                 self.tabs.addTab(self.skills_tab, 'Skills')
+                # S112 (P3.11e): new battle animations from the stock frames
+                from editor2.app.anims_tab import AnimationsTab
+                self.anims_tab = AnimationsTab(self.session)
+                self.tabs.addTab(self.anims_tab, 'Animations')
                 continue
             if title == 'Balance':
                 # S98 (P3.7): the World graph sits before Balance, as in §5.0

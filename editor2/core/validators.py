@@ -27,6 +27,7 @@ TEMPLATE_SIZE = {
                  # by (mapID, screen) — `db mapID, screen` with $FF = any screen)
     0x71: 444,    # addr(Custom26DDTable)-$4000, S102 (440 S101 + CustomAnimSource's far call to bank $6C entry 0, 4 B; measured from the S102 reference game.sym). Prev 440 S101 (395 S100 + CustomRoomBGMResolve .gatePath: the custom boss song on the floor before the boss). Prev 395 S100 (164 S99 + entries 4/5 dw + CustomGateInsert + CustomRoomFlags + entry-1 follow-gate test; measured from the S100 reference game.sym). Prev 164 S99 (142 S64 + entry-3 dw + CustomAnimSource 20 B; measured from the S99 reference game.sym). Prev 142 S64 (S55 116 + entry-2 dw + CustomRoomBGMResolve; measured from the S64 reference game.sym)
     0x6C: 285,    # addr(TileAnimRoomTable)-$4000, S102 (bank self-ID + entry table + CustomTileAnimate / TileAnimRestart / TileAnimCopy; measured from the S102 reference game.sym)
+    0x6F: 391,    # addr(CustomAnimFrameTable)-$4000, S112 (bank self-ID + 4-entry table + CustomAnimTick / Init / Load / Step + CustomAnimNone; measured from the S112 game.sym)
     0x6B: 53,     # addr(ProjectEnemyRows)-$4000, S101 (bank self-ID + entry table + CopyEnemyRowExt; measured from the S101 reference game.sym)
 }
 BANK_SIZE = 0x4000
@@ -139,6 +140,13 @@ def validate(prj, generated=None):
         try:
             warnings += [w for w in CS.check(prj) if w not in warnings]
         except (CS.CustomSkillError, MT.MonsterTextError) as e:
+            errors.append(str(e))
+        # S112 (P3.11e, PROJECT_COMPILER §2.28): custom.animations (mashups of
+        # stock frames) + gamedata.skills.<id>.presentation
+        from . import battle_anims as BA
+        try:
+            warnings += [w for w in BA.check(prj) if w not in warnings]
+        except BA.AnimError as e:
             errors.append(str(e))
         # S105 G3: up to 19 new species can land in ONE family's encyclopedia
         # tab — its 32-member cap is checked here, not only when bank $12 is
@@ -999,6 +1007,15 @@ def bank_usage(generated):
     if text is not None:
         gen_bytes = _payload_bytes(text.split('TILEANIM DATA (generated', 1)[-1])
         out[0x6C] = ((TEMPLATE_SIZE.get(0x6C) or 0) + gen_bytes + 15, BANK_SIZE)
+    # S112: bank $6F = new battle animations (template head + data), bank $70
+    # = their tile sheets (pure payload)
+    text = generated.get("file:patches/bank_06f.asm")
+    if text is not None:
+        gen_bytes = _payload_bytes(text.split('NEW ANIMATION DATA (generated', 1)[-1])
+        out[0x6F] = ((TEMPLATE_SIZE.get(0x6F) or 0) + gen_bytes, BANK_SIZE)
+    text = generated.get("file:patches/bank_070.asm")
+    if text is not None:
+        out[0x70] = (_payload_bytes(text), BANK_SIZE)
     return out
 
 
@@ -1006,7 +1023,7 @@ def _validate_accounting(prj, generated, errors, warnings):
     # EDITOR_DESIGN §6: bank overflow must fail BEFORE rgbasm runs (rgbasm
     # reports only the first excess byte — KEY_LESSONS S52 #3).
     usage = bank_usage(generated)
-    for bank in (0x64, 0x67):
+    for bank in (0x64, 0x67, 0x70):
         # S92: banks $64/$67 have no engine template head — the db/dw payload
         # (self-ID + pointer table + streams) IS the whole bank.
         if bank not in usage:
@@ -1022,7 +1039,7 @@ def _validate_accounting(prj, generated, errors, warnings):
             warnings.append(
                 f"bank ${bank:02X}: {BANK_SIZE - gen_bytes} bytes free "
                 "(under 256) — nearly full")
-    for bank in (0x60, 0x71, 0x6C):
+    for bank in (0x60, 0x71, 0x6C, 0x6F):
         if bank not in usage:
             continue
         tmpl = TEMPLATE_SIZE.get(bank)

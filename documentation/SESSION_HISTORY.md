@@ -1,5 +1,61 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-02 (Session 110 — **ROADMAP P3.11: THE SKILLS TAB — THE 222
+> ORIGINAL SKILLS: NAMES, SKIL TEXTS, MP, LEARNING, POWER, TARGETS, AI, BEHAVIOUR BITS,
+> "LOOKS AND SOUNDS LIKE"** (user on the audit: "Start with vanilla skills and add custom
+> skills if there is scope and context / 2) in scope [names + texts] / 3) yes editable
+> [target mode] / 4) show and give hover hints what they do; use help tab. If they are
+> genuinely useful, let me edit [the poorly-understood record fields] / 5) Offer [looks
+> like skill X] / 6) Edit in item tab [battle items] / 7) Your choice [announce line →
+> read-only]"). **Test ROM `DWM_S110_skills_test.gbc` USER-CONFIRMED 2026-10-02 09:09 ("Excellent work. Give me editor files")**;
+> the editor half test_app-verified, not yet run on the user's Mac. Verifier PASS; clean
+> `1ca6579…` byte-perfect (bank $56 SKIL texts + pointer tables re-sectioned by
+> `tools/resection_skill_desc.py`; 60 record-reader sites + the FIELD MAP header +
+> bank $54 entries 3/4/5 relabelled by `tools/annotate_skill_record.py`; comments /
+> labels only); **patched pin `534bfb62…` (patched)**, was `482c949f…` (patched,
+> historical) — the two looks proxies + the example project's skill 215 rename moved out
+> of a hand edit; the user's project as-is now builds `32133c7c…` (patched; was
+> `f995cb88…`, historical). test_compiler --rom 650/650, test_app + test_app --rom PASS
+> (GUI build == pin). `EDITOR_REVISION` = 'S110'.
+>
+> **Built (PROJECT_COMPILER §2.26 + §2.20, BATTLE_SKILL_SYSTEM §7 / §11.8, TEXT_SYSTEM
+> "Skill text blocks (S110)", EDITOR_DESIGN §5.3 "As built S110"):**
+> `gamedata.skills.<0-221>` gains `name` / `description` / `looks_like` → regions
+> `gd_skill_names` ($41), `gd_skill_desc` / `gd_skill_desc_ptrs` / `gd_skill_desc_extra`
+> ($56), `gd_present_proxy_5f` (`StockPresentTable`, read by `GetPresentId` for ids <
+> $DE) and `gd_present_proxy_55` (NEW hand patch `patches/bank_055.asm`: the one SFX-table
+> reader `$55:$4061` → `call SfxPresentId`). `mp` now writes both MP copies (field `$07`
+> u16 + battle record +4); "ALL" for Farewell / MegaMagic only; `target_mode` from five.
+> New **Skills** tab (sections: text with the game font, MP + learning, power, targets,
+> AI, behaviour boxes with hover hints, looks, who has it; battle items read-only; the
+> announce line read-only); help `54_skills.md`; other tabs follow skill renames.
+>
+> **Found (foundational — the RECORD READER CENSUS, BATTLE_SKILL_SYSTEM §7):** every
+> byte / bit of the 19-byte record has a named reader or is proven unread: +0, +1 low
+> nibble, +7 b2, +8 b3, +9 b6/b7 NOT READ; +4 is the BATTLE MP cost (menu, act time,
+> deduct, AI veto — the old "reader untraced" warning retired); +5 is the AI's assumed
+> element (not "status_id"); flags7/8/9 = breath / dance / spell seals, reflect,
+> redirect, iron, crits, TwinHits, ChargeUP, dodge, TakeMagic, Imitate, confusion snap,
+> airborne reach; +10 items only. Bank $54 entry 3 = the side power read ($52C7; docs
+> said entry 5 / $535F = the item lookup); the $55 SFX reader is $4061 (docs $4067);
+> S44 had renamed skill 215 by hand inside the names block (DOC_AUDIT S110).
+>
+> **Measured in PyBoy on the user's save:** (1) the LOOKS census
+> (`tools/census_skill_present.py` → `extracted/skill_present_census.json`): 222 donors
+> × 7 borrowers = 1,554 battles, every borrower acted 4-9 times, longest frozen action
+> machine 157 frames — **no stall** (the first pass was void: the AI replaced the forced
+> skill at act time — KEY_LESSONS S110); a cross-side look shows nothing (Heal with
+> Bang's look); (2) the demo `ed8222b2…` (patched) = the user's project + a demo overlay
+> NOT in their project: Zap → "Spark" (SKIL menu: name, "Sparks leap at / every foe",
+> USE MP 1; battle "Slib casts Spark!" with Bang's look, 78/77/78 to three foes),
+> MetalCut aimed at all foes (hits all three; one in the original), HealMore → "Cure" (+200 HP for 1 MP).
+> **Test ROM `DWM_S110_skills_test.gbc` (= that demo) USER-CONFIRMED 2026-10-02 09:09 ("Excellent work. Give me editor files").** **Hand-off:** every S110
+> change = the diff against `bf8bb5f` (origin/master), delivered as
+> `DWM-S110-skills-tab-changed-files.zip`, the APPLY list pasted in the chat. The user also
+> asked how hard building new skill animations from existing frames would be — answered
+> in chat from BATTLE_SKILL_SYSTEM §11 (no new measurement; ROADMAP P3.11c residual).
+> **Next:** P3.11c (the custom skills as project data) or the user's pick.
+
 > Last verified: 2026-10-01 (Session 109 — **ROADMAP P3.10b: THE ARENA EDITOR — ENTRY
 > FEES, MASTERS, TEAMS OF 1-3 MONSTERS** (user on the audit: "Agree with proposed scope.
 > Its own tab. Yes include in scope [master sprites + fees]. Yes I want 1-2 monsters.

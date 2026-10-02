@@ -21,7 +21,10 @@ built from it (the original ROM is never changed).
   match's master, 1-3 monster teams and the teams' monsters and stats.
 - **Skills** — every original skill: name and SKIL text, MP, when monsters
   learn it, power, targets, how the monster AI treats it, its battle rules and
-  which skill's animation and sounds it plays.
+  which skill's animation and sounds it plays — or which animation, screen
+  effect or nothing it shows.
+- **Animations** — new battle animations made from the frames of the game's
+  45, with a playing preview and their sounds.
 - **World** — the graph of rooms and the doors between them (mouse wheel =
   zoom, drag empty space = move around, Fit / + / −).
 - **Build & Play** — build the ROM (Ctrl+B) and run it (Ctrl+R).

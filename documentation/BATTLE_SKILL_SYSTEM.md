@@ -434,6 +434,11 @@ descriptor-kind classification). Ground truth: `extracted/skill_faq.json` (built
 
 ## 11. Battle-effect PRESENTATION — the 3 layers (S2c-anim renderer reversed)  [2026-06-28]
 
+> **[S112] Read 11.9 first.** The "layer 2 = sound + flash" reading of the `$56ed`/`$57d5`
+> byte (11.4) is WRONG: it is the animation NUMBER (frames + timeline with the sound cues
+> + tiles + colours); the routine index picks the motion / a screen effect / nothing. The
+> tables named in 11.5 as "not yet converted" are data with labels since S112.
+
 > **This closes the §9 open item** ("the renderer that consumes `$dd68` … was not
 > traced"). The renderer IS reversed, AND a load-bearing error in the §9 mental model
 > is corrected here. Most of this section is **emulator-verified** (SameBoy
@@ -556,6 +561,9 @@ the hit-shake. `$da84`/`$da85` are written **only** in bank `$5f` (effect-only; 
 outside battle — the clean watch target).
 
 ### 11.4 Layer 2 — SOUND + screen-FLASH  (recap, keyed by `$56ed`/`$57d5` → `$da81`)
+
+> **[S112] Superseded by 11.9:** `$da81` is the ANIMATION number; its sounds are `$FD` cues
+> in the animation's timeline; the blink is routine 4's `$da83` phases. Kept as history.
 The `$56ed[id]`/`$57d5[id]` → `$da81` command path (§9 "Visual + sound" / the `$5c/$5d/$5e`
 dispatch on `$da81`) drives **sound and screen-flash/blink**, side-selected like layer 1:
 - offensive skills (`$11/$12`): real cmd in `$56ed`, `$ff` in `$57d5`
@@ -569,11 +577,14 @@ to force the `$57d5` path on its own side). Summons (`*Call` `$84-$87`) = `$ff`/
 effect animation.
 
 ### 11.5 Tools / data
-`tools/decode_battle_animations.py` — decodes the `$5c/$5d/$5e` two-level frame tables to
+`tools/decode_battle_animations.py` — [S112 v2, schema 2: frames, timelines, tiles, palettes,
+shades, per-skill rows; the decoder is `editor2/core/battle_anims.py`] decodes the `$5c/$5d/$5e` two-level frame tables to
 metasprites + the per-skill `$5f` descriptor tables. `--selftest` (ROM anchors),
 `--dump` (every frame), default writes `extracted/battle_animations.json` (45 distinct
 animations across 3 banks, ~600 frames, + 222 per-skill descriptors).
 
+**[S112] DONE — the tables below are `db`/`dw` with labels (`tools/resection_battle_anims.py`,
+11.9); the "Map* script" blocker of DOC_AUDIT #15 was a wrong premise — those labels are bank $0F's, at the same addresses. Historical text:**
 **Disassembly-cleanup status (NOT yet applied — see DOC_AUDIT #15):** the `$5f` tables
 `$56ed`/`$57d5` (anim commands), `$58bd` (routine ptrs), `$58dd`/`$59c3`/`$5aa9` (anim
 indices, 230 B each) currently mis-disassemble as instructions. `tools/emit_anim_data_sections.py`
@@ -710,6 +721,109 @@ action at ACT TIME (act state $18 = bank $57 entry 0), overwriting the queue —
 force the skill bytes every frame and the target bytes only in phases 4-6 (a group skill
 steps its queue target per victim in phase 7). The first census pass forced targets
 outside phase 7 only and let the AI replace the borrower with Attack: all "ok", all void.
+
+### 11.9 The animation system AS MEASURED (S112) — supersedes 11.0-11.6 where they differ
+
+> **S112 correction of the layer model.** 11.1-11.4 (2026-06-28) describe three layers
+> with the `$56ed`/`$57d5` → `$da81` byte as "sound + screen flash". Measured S112 (the
+> developers' animation viewer + PyBoy battles + a frame-by-frame census of all 45): the
+> `$56ed`/`$57d5` byte is the **ANIMATION NUMBER** — it selects the frames, the timeline
+> (which carries the SOUND cues), the tile sheet and the colours. The per-skill routine
+> index (`$58dd`/`$59c3`/`$5aa9`) selects **where / how it moves, or a screen effect, or
+> nothing**. The screen shake (11.3) and the hit-flash (11.7) stay as written. Labels
+> below are the S112 re-section (`tools/resection_battle_anims.py`; both trees, byte-neutral).
+
+**Two per-skill choices** (bank $5F, read through `GetPresentId`, 11.8 / §13.2; the S112
+override forks read the REAL id `[$db8a]`):
+
+| Table | Rows | Value |
+|---|---|---|
+| `AnimRoutineIdxParty` $5F:$58DD / `AnimRoutineIdxEnemy` $59C3 / `AnimRoutineIdxLink` $5AA9 | 230 | routine index 0-15, by caster side (`IsAttackerPartySide`); the link table only in link battles |
+| `AnimCmdTableFoe` $5F:$56ED / `AnimCmdTableOwn` $57D5 | 232 | animation number $00-$2C, $FF = none — Foe = the party acts on the enemy side, Own = an enemy acts on its own side (+ ids $1A/$1B/$29/$80/$AA/$D5 whitelisted) |
+
+`AnimSkillVisual` ($5F:$52F0, entry 6) walks a range ladder per phase and calls
+`AnimRunRoutine` ($5441) → `AnimRoutineTable` $58BD (16 dw). **Routines (MEASURED: Blaze
+with each index forced):**
+
+| # | Label | Shows |
+|---|---|---|
+| 0 | `AnimRoutine_AtTarget` | the animation at the target (`$dd68`=1, `$db54` = target slot) |
+| 1 | `AnimRoutine_Middle` | in the middle of the foes (`$db54`=1) |
+| 2 | `AnimRoutine_EachTarget` | on each target in turn (`$dd68`=2) |
+| 3 | `AnimRoutine_FlyAcross` | flies in from the left (`$dd68`=0, X += 4 per frame until $C0) |
+| 4-12, 14, 15 | `AnimRoutine_Screen04`… | screen effects through `$da83` phases (bank $5F entry 5): 4 blink (Radiant, summons), 5 fade dark and back, 6 Chance, 7 fade dark twice, 8/10/11/12 link-battle effects, 9 unused, 14 shake (TwinSlash), 15 enemy TwinSlash |
+| 13 | `AnimRoutine_None` ($55CC `ret`) | nothing |
+
+Sprites only ever appear on the **enemy** side: a party-side target's path never starts
+one (enemy Zap → party = routine 13; party HealMore = 13; an enemy's HealMore on itself
+= routine 0 + `AnimCmdTableOwn` $14).
+
+**Start** `AnimStartAnimation` $5F:$55BB → `AnimSelectCmd` / `AnimSelectCmdInit` write
+`$da81` / `$daa4` = the number; ROM0 `AnimStartRenderer` ($3103): `wObj1Palette` =
+`AnimObjShadeTable[$00:$3141 + C]`, then the renderer's entry 1 by range (C < $0E → bank
+$5C, < $21 → $5D, else $5E: `AnimInit5C/5D/5E`, X from `AnimTargetXTable5x[$db54]`
+= $00,$50,$38,$68,$20,$50,$80, Y $60). **Per frame** `AnimFrameTick` ($3001) →
+`AnimTickSelectAndDraw` ($3029: bank $5F entry 7, then the renderer's entry 0 by range;
+$15 and $2C are the multi-target specials) → `AnimBuildOAM5x` (11.2's builder; frames
+from `AnimFrameTable5x` $4071: 32 dw per animation, slot $1F = blank, unused slots → an
+empty `$80`; at most 40 sprites, stock $05 frame 5 lists 47 and is cut; CGB: the first
+sprite listed is on top).
+
+**Timeline** (bank $02, the generic sequencer `SeqStepper` entry 0; struct `[$d7b4]` =
+$DD62: +0 active, +1 row ($60 = animations), +2 number, +3 step, +4 frame, +5 hold):
+`SeqRowTable` $40E3 (97 dw) → row $60 = `AnimTimelineTable` $46A1 (45 dw) →
+`AnimTimeline_XX_<skill>` ($46FB-$4E16), pairs read by `ReadSeqStep` ($40B3; C = first,
+B = second): `(f < $F8, h)` = frame f for **h + 1** screen frames; `($FD, s)` = sound
+effect s, takes no time (35 ids $70-$9B — SOUND_SYSTEM); `($FE, 4)` = back to step 1
+(the Firebal / IceBolt projectile loop, ended by the fly-across stop); `($FF, $FF)` end.
+
+**Tiles + colours** (bank $50, when `[$da80]` = 1): `AnimGfxTable` $50:$5E84 (45 dw gfx
+ids: `AnimGfx_XX` streams in banks $5A / $5B) decoded to $8000 (128 tiles, ≤ 48 used);
+`AnimObjPalettes` $17:$6B0D + 8·C (one palette, bank $17 entry 13) into OBJ buffer slot 0
+($C7D7), committed by entry 8. **The shade (MEASURED on screen, not the buffer):** the GBC
+commit (bank $17 `Jump_017_4341`) writes hardware colour i = buffer colour
+`[1, 2, 0, 3][(shade >> 2i) & 3]` (the `$440C` byte offsets 2,4,0,6) for ALL eight OBJ
+palettes; stock shades are $E0 / $D0; the identity shade is **$D2** (also the field /
+battle default — the field resets it on every map change).
+
+**The developers' animation viewer** = game mode 5 "Effect" (`EffectDebuggerInit` $5F:$5BB7
+entry 8, `EffectDebuggerFrame` $5C8D entry 9; enter with `$C88A`=5, `$C88B`=0,
+`$C88E`++; row 0 = the number in `wOPTN_and_Item_selection` $C8DB, A plays). It has its
+own copies: `AnimGfxTableDebug` $5F:$61EE, a shade table $5F:$61C1, tick `LoadFldUI_5ffa`,
+init `SetFldUI_6014`. Start lag 4 frames (5 for the biggest sheet). It is the instrument
+of `tools/census_battle_anims.py`: **45/45 stock animations match the decoded model frame
+by frame** (frames, timing, sounds, tiles, colours; `extracted/battle_anim_census.json`),
+negative control 45/45 fail.
+
+#### 11.9.1 NEW animations (S112, ROADMAP P3.11e) — built, PyBoy-verified, test ROM USER-CONFIRMED 2026-10-02 18:29 ("Fantastic, everything checks out")
+
+`custom.animations` (PROJECT_COMPILER §2.28) = numbers **$2D..$4C** (≤ 32), each a list
+of steps taken from the stock 45 (frame + hold, sound, blank), ≤ 4 source animations
+(one OBJ palette each, attr bits 0-2 = the slot), ≤ 128 tiles. The stock $00-$2C are
+untouched. How a number ≥ $2D reaches its data:
+
+| Site | Change (hand patch) |
+|---|---|
+| ROM0 `AnimTickSelectAndDraw` / `AnimStartRenderer` | the "else" branch calls bank **$6F** entries 0 / 1 (was $5E 0 / 1); $6F forwards numbers < $2D to $5E unchanged |
+| bank $50 loader | `AnimLoadFork50` ($50:$7F63): ≥ $2D → $6F entry 2 (palettes into $C7D7 slots 0-3, shade $D2, DE = gfx id of the bank **$70** sheet), then bank $50's decoder as before |
+| bank $02 `ReadSeqStep` | head `jp ReadSeqStepFork` ($02:$7FC3, the bank's free tail): row $60 with number ≥ $2D → $6F entry 3 (`CustomAnimStep`, D/E = the pair) |
+| bank $5F | `AnimRoutineFork` ($7C79): routine 13 stays 13 (vanilla sides), else `SkillRoutineOverride[[$db8a]]` unless $FF; `AnimCmdForkDE81` / `AnimCmdForkHLA4` → `SkillAnimOverride[[$db8a]]` unless $FF (compiler regions `gd_anim_routine` / `gd_anim_cmd`, 256 B each, all $FF = vanilla) |
+| bank $5F viewer | lists $00-$4C (`cp $2d + 32`), loads ≥ $2D through `DebugGfxFork5F` / `DebugPalFork5F` |
+
+Bank $6F (`bank_06f_head.asm`, template-pinned): `CustomAnimTick` (a copy of `AnimTick5E`
++ `CustomAnimBuildOAM` for the own frame table, fly-across X += 4), `CustomAnimInit`
+(first frame read from the own timeline at the sequencer's step — bank $02 entry 5's row
+$60 ends at $2C), `CustomAnimLoad`, `CustomAnimStep`; a number past the project's count
+plays `CustomAnimNone` (one blank frame). `gamedata.skills.<id>.presentation` = an
+animation (stock or new) + motion 0-3 / a screen effect / nothing — applied only on the
+sides where the look's routine is not 13 (vanilla side behaviour, user choice S112).
+
+**Measured S112:** the census on the demo build: 45 stock + $2D (85 frames) + $2E (60
+frames) = the editor's model frame by frame. Battles on the user's save (RNG pinned,
+14 cases): Zap → $2D on each target (1 and 3 foes), MetalCut → $2E at the target,
+Scorching → blink (routine 4, no sprites), EvilSlash → stock $26, enemy HealMore on itself
+→ $14, enemy Zap → party nothing; Blaze / Firebal (fly) / Bang / MetalCut / IceStorm
+unchanged; no stall. A/B vs S111 with no animation data: every case identical.
 
 ---
 

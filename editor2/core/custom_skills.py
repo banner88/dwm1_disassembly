@@ -96,7 +96,7 @@ HANDLER_LABEL = {'magicburn': 'MagicBurn (a share of the MP as damage to all foe
                  'mourn': 'Mourn (ATK-vs-DEF + a bonus per fallen ally)'}
 DAMAGE_HANDLERS = ('magicburn', 'tame', 'quake', 'mourn')
 KEYS_COMMON = ('name', 'description', 'mp', 'learn', 'record', 'looks_like',
-               'sounds_like', 'element', 'announce', 'announce_as', 'comment')
+               'sounds_like', 'element', 'announce', 'announce_as', 'presentation', 'comment')
 LINE_KEYS = {'allies_line': (0xE5, 'quake_allies', False),   # (owner id, banner, $ED prefix)
              'flew_line': (0xE5, 'quake_flew', True),
              'boost_line': (0xE9, 'mourn_boost', False)}

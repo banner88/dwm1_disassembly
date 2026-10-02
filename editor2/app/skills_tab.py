@@ -18,6 +18,10 @@ text space meters; New skill… / Delete. Right, one foldable section per topic:
                        the bytes / bits nothing reads, greyed
   Looks and sounds     play another skill's animation / another's sounds; the
                        announce line (editable for custom skills)
+  Animation            (S112) what the skill SHOWS instead of its look's own
+                       animation: an animation (the 45 stock ones or the
+                       project's new ones, Animations tab) with a motion, a
+                       screen effect, or nothing — with a playing preview
   Its own numbers      built-in custom skills: Tame's meter, Quake's power, the
                        Quake / Mourn extra lines, Anchor's dialogs
   Who has it           natural learners, enemy rows, evolve chain, shared effect
@@ -43,6 +47,7 @@ from editor2.core import gamedata as G
 from editor2.core import monster_text as MT
 from editor2.core import skills as SK
 from editor2.core import custom_skills as CS
+from editor2.core import battle_anims as BA
 
 HELP = ('Every original skill: its name and SKIL-menu text, MP, when monsters learn it, '
         'its power, who it hits, how the monster AI treats it, the battle rules it '
@@ -58,6 +63,12 @@ ELEMENT_HINT = ('The resistance this skill\'s DAMAGE tests (Fire, Ice, …): the
                 'resistances. Only skills whose damage tests a resistance (measured, 38 '
                 'original ones) and the custom damage skills have one. The monster AI\'s '
                 'element (Monster AI) follows it.')
+ANIM_HINT = ('What the skill shows in battle. "What its look shows" = the animation of the '
+             'skill picked under Looks like (the original game). Or an animation — one of the '
+             'game\'s 45 or one of this project\'s new ones (Animations tab) — with how it '
+             'moves, a screen effect, or nothing. As in the original game, it shows only on '
+             'the sides where the look shows something, and sprites only ever appear on the '
+             'foes\' side.')
 SOUNDS_HINT = ('Play another skill\'s sounds (bank $55). Default: the sounds of the look '
                'you picked (original skills) / of its base (new skills) / Infernos\' '
                '(built-in custom skills — what they always played).')
@@ -168,6 +179,7 @@ class SkillsTab(QWidget):
         self._build_ai()
         self._build_flags()
         self._build_looks()
+        self._build_anim()
         self._build_params()
         self._build_who()
         self.sv.addStretch(1)
@@ -404,6 +416,49 @@ class SkillsTab(QWidget):
             self.ann_lines.append(e)
         self.sec_looks = self._section('Looks and sounds', 'looks', w)
 
+    def _build_anim(self):
+        w = QWidget()
+        g = QGridLayout(w)
+        g.addWidget(QLabel('Shows:'), 0, 0)
+        self.anim_kind = QComboBox()
+        self.anim_kind.setToolTip(ANIM_HINT)
+        for label, k in (('what its look shows', None), ('an animation', 'animation'),
+                         ('a screen effect', 'effect'), ('nothing', 'none')):
+            self.anim_kind.addItem(label, k)
+        self.anim_kind.currentIndexChanged.connect(self._anim_changed)
+        g.addWidget(self.anim_kind, 0, 1)
+        self.anim_lab = QLabel('Animation:')
+        g.addWidget(self.anim_lab, 1, 0)
+        self.anim_which = QComboBox()
+        self.anim_which.setToolTip('The game\'s 45 animations ($00-$2C, by the skill that '
+                                   'shows it) and this project\'s new ones ($2D and up)')
+        self.anim_which.currentIndexChanged.connect(self._anim_changed)
+        g.addWidget(self.anim_which, 1, 1)
+        self.motion_lab = QLabel('Moves:')
+        g.addWidget(self.motion_lab, 2, 0)
+        self.anim_motion = QComboBox()
+        for m in BA.MOTIONS:
+            self.anim_motion.addItem(BA.ROUTINE_INFO[m][0], m)
+        self.anim_motion.setToolTip('Where the animation plays (the game\'s routines 0-3)')
+        self.anim_motion.currentIndexChanged.connect(self._anim_changed)
+        g.addWidget(self.anim_motion, 2, 1)
+        self.effect_lab = QLabel('Effect:')
+        g.addWidget(self.effect_lab, 3, 0)
+        self.anim_effect = QComboBox()
+        for e in BA.EFFECTS:
+            self.anim_effect.addItem(BA.ROUTINE_INFO[e][0], e)
+        self.anim_effect.currentIndexChanged.connect(self._anim_changed)
+        g.addWidget(self.anim_effect, 3, 1)
+        self.anim_note = QLabel()
+        self.anim_note.setWordWrap(True)
+        g.addWidget(self.anim_note, 4, 0, 1, 3)
+        from editor2.app.anims_tab import PreviewBox
+        self.anim_preview = PreviewBox()
+        self.anim_preview.loop.setChecked(False)
+        g.addWidget(self.anim_preview, 5, 0, 1, 3)
+        g.setColumnStretch(2, 1)
+        self.sec_anim = self._section('Animation', 'anim', w)
+
     def _build_params(self):
         w = QWidget()
         self.params_box = QVBoxLayout(w)
@@ -531,7 +586,7 @@ class SkillsTab(QWidget):
                                    else 'Back to the original skill')
             self.del_btn.setEnabled(d['kind'] == 'new')
             for w in (self.sec_text, self.sec_cost, self.sec_power, self.sec_target,
-                      self.sec_ai, self.sec_flags, self.sec_looks):
+                      self.sec_ai, self.sec_flags, self.sec_looks, self.sec_anim):
                 w.content.setEnabled(not item)
             self.sec_params.setVisible(builtin)
             self.sec_target.content.setEnabled(not item and not builtin)
@@ -700,6 +755,7 @@ class SkillsTab(QWidget):
                 'lend its look (measured: none stalls a battle); "(other side)" = made for a '
                 'skill aimed at the other side — it may show nothing.'
                 + (f'<br><b>Note:</b> {warn_now}' if warn_now else ''))
+            self._show_anim(d)
             aid, atext = d['announce']
             if custom:
                 self._show_announce(d)
@@ -721,6 +777,107 @@ class SkillsTab(QWidget):
                 f" &nbsp; <b>Evolves into:</b> {', '.join(n for _t, n in d['evolves_to']) or '—'}")
         finally:
             self._busy = False
+
+    def _show_anim(self, d):
+        """The Animation section (S112). Called inside _show (busy)."""
+        doc = self.s.doc
+        try:
+            p = doc.skill_presentation(d['id'])
+        except Exception as ex:                       # noqa: BLE001
+            self.anim_note.setText(str(ex))
+            return
+        own = p['own'] or {}
+        kind = own.get('kind')
+        self.anim_kind.setCurrentIndex(max(0, self.anim_kind.findData(kind)))
+        _bold(self.anim_kind, kind is not None)
+        self.anim_which.clear()
+        for n, lab in doc.animation_choices():
+            self.anim_which.addItem(lab, n)
+        cur = BA.number_of(doc.data, own.get('animation')) if kind == 'animation' else p['cmd_foe']
+        self.anim_which.setCurrentIndex(max(0, self.anim_which.findData(
+            cur if cur not in (None, 0xFF) else 0)))
+        self.anim_motion.setCurrentIndex(max(0, self.anim_motion.findData(
+            int(own.get('motion', 0)) if kind == 'animation' else
+            (p['party'] if p['party'] in BA.MOTIONS else 0))))
+        self.anim_effect.setCurrentIndex(max(0, self.anim_effect.findData(
+            int(own.get('effect', 4)) if kind == 'effect' else
+            (p['party'] if p['party'] in BA.EFFECTS else 4))))
+        for wdg in (self.anim_lab, self.anim_which, self.motion_lab, self.anim_motion):
+            wdg.setVisible(kind == 'animation')
+        for wdg in (self.effect_lab, self.anim_effect):
+            wdg.setVisible(kind == 'effect')
+
+        def side(routine, num, who):
+            if routine == BA.NOTHING:
+                return f'{who}: nothing'
+            what = BA.ROUTINE_INFO.get(routine, (f'routine {routine}',))[0]
+            if routine in BA.MOTIONS and num not in (None, 0xFF):
+                return f'{who}: {BA.anim_label(doc.data, num)}, {what}'
+            return f'{who}: {what}'
+        names = doc.skill_names_effective()
+        look = p['look']
+        lines = [f"Its look ({names.get(look, look)}, #{look}) shows — "
+                 + side(p['party'], p['cmd_foe'], 'cast by your monsters')
+                 + '; ' + side(p['enemy'], p['cmd_own'], 'cast by enemies') + '.']
+        if kind is not None:
+            sides = [w for r, w in ((p['party'], 'your monsters'), (p['enemy'], 'enemies'))
+                     if r != BA.NOTHING]
+            lines.append('Your choice replaces it ' + (f"when {' and '.join(sides)} cast it"
+                                                       if sides else 'nowhere — the look shows '
+                                                       'nothing on either side; pick a look that '
+                                                       'shows something'))
+            lines[-1] += ('. Sprites only appear on the foes\' side (a skill aimed at its own '
+                          'side shows them only when an enemy casts it on itself).'
+                          if kind == 'animation' else '.')
+        self.anim_note.setText(' '.join(lines))
+        # preview: the chosen / the look's animation
+        num = None
+        if kind == 'animation':
+            num = BA.number_of(doc.data, own.get('animation'))
+        elif kind is None and p['party'] in BA.MOTIONS:
+            num = p['cmd_foe']
+        elif kind is None and p['enemy'] in BA.MOTIONS:
+            num = p['cmd_own']
+        self._anim_preview(num)
+
+    def _anim_preview(self, num):
+        view, info = None, ''
+        try:
+            if num is not None and num < BA.N_STOCK:
+                view, info = BA.stock_view(num), f'${num:02X}'
+            elif num is not None and num != 0xFF:
+                lst = BA.custom_list(self.s.doc.data)
+                i = num - BA.FIRST_CUSTOM
+                if 0 <= i < len(lst):
+                    view, info = BA.custom_view(lst[i]), f'${num:02X}'
+        except BA.AnimError as ex:
+            info = str(ex)
+        self.anim_preview.setVisible(view is not None)
+        self.anim_preview.set_view(view, info)
+
+    def _anim_changed(self, _i):
+        if self._busy:
+            return
+        kind = self.anim_kind.currentData()
+        if kind is None:
+            pres = None
+        elif kind == 'none':
+            pres = {'kind': 'none'}
+        elif kind == 'effect':
+            pres = {'kind': 'effect', 'effect': self.anim_effect.currentData()}
+        else:
+            n = self.anim_which.currentData()
+            ref = n if n < BA.N_STOCK else BA.custom_list(self.s.doc.data)[n - BA.FIRST_CUSTOM]['id']
+            pres = {'kind': 'animation', 'animation': ref,
+                    'motion': self.anim_motion.currentData()}
+        if pres == self.s.doc.skill_presentation(self.sid)['own']:
+            return
+        self.set_presentation(pres)
+
+    def set_presentation(self, pres):
+        sid = self.sid
+        what = 'shows its look' if pres is None else f"shows {pres['kind']}"
+        return self._push(self._label(what), lambda doc: doc.set_skill_presentation(sid, pres))
 
     def _show_element(self, d):
         self.element.clear()

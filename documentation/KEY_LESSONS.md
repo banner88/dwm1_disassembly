@@ -4682,3 +4682,33 @@ MagicBurn / Tame are committed by the act-time AI too, and that row aims them at
 **Rule**: a fallback that changes WHERE an action lands needs a test per id that can reach
 it; an A/B that shows the same wrong result in both builds is still a finding — read the
 numbers, not only the equality.
+
+
+## S112 — battle animations: measure colours on the SCREEN, use the developers' own viewer, splice data before its readers
+
+### A colour model checked against a RAM buffer is not checked
+The mashup's first build showed the wrong colours although the OBJ palette buffer
+(`$C7D7`) held exactly the bytes the compiler meant. On GBC the game passes every OBJ
+palette through the DMG shade `wObj1Palette` while committing it, in the order
+[1, 2, 0, 3] (bank $17's `$440C` offsets 2, 4, 0, 6) — the buffer is an INPUT. Only the
+screen shot (PyBoy `screen.image`) showed it. **Rule**: for anything visual, compare the
+pixels on screen with the model, not the bytes one step before the hardware.
+
+### Look for the developers' debug mode before building a rig
+Game mode 5 is the developers' "Effect" viewer: it plays any animation number on a blank
+battle screen, no battle state needed. Driving it made a frame-by-frame census of all 45
+animations possible (frames, timing, sounds, tiles, colours) with a negative control —
+far cleaner than catching animations inside battles. **Rule**: before rigging a subsystem,
+grep the mode / state dispatchers for an unused entry that exercises it.
+
+### Re-sectioning: write the data and its labels before the code that names them
+`resection_battle_anims.py` first spliced pointer tables (`dw AnimTimeline_00…`) before
+the labels they named existed → failed builds and partial trees (restored with `git show
+HEAD:<file> >`). Order: the data blocks and their labels first, then the tables of
+pointers, then the code operands; a label added by context must grow its context until it
+is unique (identical routines in banks $5C/$5D/$5E).
+
+### A mixin's helper names share one namespace
+`AnimsMixin._new_anim_id` silently replaced `TileAnimMixin._new_anim_id` (same Document,
+MRO), breaking the tile-animation ids. **Rule**: prefix a mixin's private helpers with its
+subject (`_new_battle_anim_id`) and grep the Document's bases for the name.

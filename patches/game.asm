@@ -130,8 +130,8 @@ INCLUDE "bank_06b.asm"          ; S101: project enemy rows (EIDs 519+; compiler-
 INCLUDE "bank_06c.asm"          ; S102: own tile animations (compiler-generated)
 INCLUDE "bank_06d.asm"          ; S104: family systems (Spirit = family 10; hand-authored)
 INCLUDE "bank_06e.asm"          ; S109: arena systems (team sizes; hand-authored + region gd_arena_team_sizes)
-INCLUDE "blank/Empty_bank_06f.asm"
-INCLUDE "blank/Empty_bank_070.asm"
+INCLUDE "bank_06f.asm"          ; S112: new battle animations — engine + data (compiler-generated)
+INCLUDE "bank_070.asm"          ; S112: new battle animations — tile sheets (compiler-generated)
 INCLUDE "bank_071.asm"
 INCLUDE "bank_072.asm"
 INCLUDE "bank_073.asm"

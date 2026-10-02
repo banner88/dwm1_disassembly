@@ -632,6 +632,81 @@ def main():
           'code, its burn share 1/4 (9 refused); Mourn per fallen 1/2; a new skill Thunder (Zap base, Bang look, Bolt sounds, Explosion, evolves '
           'from Zap); Blaze -> Ice (AI element follows); delete; undo restores everything')
 
+    # S112 (P3.11e): the Animations tab (a mashup with the preview) and the
+    # Skills tab's Animation section; delete refused while a skill shows it;
+    # undo restores everything; the help names the parts
+    import editor2.app.anims_tab as ATm
+    from editor2.core import battle_anims as BAm
+    before = doc.dumps()
+    at = w.anims_tab
+    w.tabs.setCurrentWidget(at)
+    app.processEvents()
+    awarned = []
+    a_warn, a_q = ATm.QMessageBox.warning, ATm.QMessageBox.question
+    ATm.QMessageBox.warning = staticmethod(lambda *a, **k: awarned.append(a[1:3]))
+    ATm.QMessageBox.question = staticmethod(lambda *a, **k: ATm.QMessageBox.Yes)
+    assert at.list.count() == len(doc.animations())
+    aid = at.create(0x10, 'Spark storm')               # all of Zap's steps
+    app.processEvents()
+    assert aid == 'spark_storm' and at.aid == aid and at.list.count() == len(doc.animations())
+    n0 = at.table.rowCount()
+    assert n0 == len(BAm.expand_source(0x10)) and at.box.preview.full, n0
+    dlg = ATm.AddFramesDialog(at, 0x06)                # Bang: its first two steps
+    dlg.steps.item(0).setSelected(True)
+    dlg.steps.item(1).setSelected(True)
+    new = dlg.chosen()
+    assert [('from' in x) or ('sound' in x) for x in new] == [True, True], new
+    at.table.clearSelection()
+    at.insert_steps(new, 'two Bang steps')
+    at._add_blank()
+    app.processEvents()
+    e = doc.animation(aid)
+    assert len(e['steps']) == n0 + 3 and e['sources'] == [0x10, 0x06] and e['error'] is None, e
+    sp = at.table.cellWidget(0, 1)
+    sp.setValue(9)                                     # step 1 shows 9 frames
+    app.processEvents()
+    assert doc.animation(aid)['steps'][0]['hold'] == 8
+    at.box.preview.play()
+    for _ in range(5):
+        at.box.preview._tick()
+    assert at.box.preview.pos == 5
+    at.box.preview.stop()
+    # a skill shows it: Zap, on each target in turn
+    w.tabs.setCurrentWidget(st)
+    pick(16)
+    st.anim_kind.setCurrentIndex(st.anim_kind.findData('animation'))
+    app.processEvents()
+    st.anim_which.setCurrentIndex(st.anim_which.findData(doc.animation(aid)['number']))
+    app.processEvents()
+    st.anim_motion.setCurrentIndex(st.anim_motion.findData(2))
+    app.processEvents()
+    assert doc.skill_presentation(16)['own'] == {'kind': 'animation', 'animation': aid,
+                                                  'motion': 2}, doc.skill_presentation(16)
+    assert 'your monsters' in st.anim_note.text() and st.anim_preview.preview.full
+    pick(94)                                           # Scorching: the screen blinks
+    st.anim_kind.setCurrentIndex(st.anim_kind.findData('effect'))
+    app.processEvents()
+    assert doc.skill_presentation(94)['own'] == {'kind': 'effect', 'effect': 4}
+    assert doc.animation_users(aid) == [16]
+    w.tabs.setCurrentWidget(at)
+    app.processEvents()
+    at._delete()                                       # refused: Zap shows it
+    app.processEvents()
+    assert awarned and 'Zap' in str(awarned[-1]) and aid in [x['id'] for x in doc.animations()]
+    ATm.QMessageBox.warning, ATm.QMessageBox.question = a_warn, a_q
+    STm.QMessageBox.warning = orig_warn
+    while w.session.undo.index() > 0 and doc.dumps() != before:
+        w.session.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'undo must restore project.json exactly'
+    hlp = open(os.path.join(REPO, 'editor2', 'help', '57_animations.md')).read()
+    for word in ('Add frames', 'Add sound', 'Limits', 'Skills'):
+        assert word in hlp, f'help 57_animations.md lacks "{word}"'
+    assert '## Animation' in open(os.path.join(REPO, 'editor2', 'help', '54_skills.md')).read()
+    print('OK: Animations tab (S112) — Spark storm = Zap + two Bang steps + a blank, a step '
+          'held 9 frames, the preview plays; Zap shows it on each target, Scorching blinks '
+          'the screen; delete refused while Zap shows it; undo restores everything')
+
     if do_rom:
         from editor2.app.build_worker import BuildWorker  # noqa: E402
         results = []

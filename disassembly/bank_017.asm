@@ -2569,30 +2569,55 @@ PaletteColorData:
 AttrMapData:
     db $00, $00, $FF, $6B, $8F, $7F, $1F, $7C
     db $10, $42, $1F, $7C, $1F, $7C, $1F, $7C
-AttrMapDataB:
-    db $00, $00, $FF, $02, $17, $00, $DF, $01
-    db $00, $00, $FF, $02, $17, $00, $DF, $01, $00, $00, $FF, $02, $17, $00, $DF, $01
-    db $00, $00, $5F, $03, $1F, $00, $FF, $01, $00, $00, $5F, $03, $1F, $00, $FF, $01
-    db $00, $00, $5F, $03, $1F, $00, $FF, $01, $00, $00, $FF, $7F, $FF, $4B, $FF, $02
-    db $00, $00, $FF, $7F, $7F, $03, $B8, $4A, $00, $00, $FF, $7F, $FF, $03, $15, $7E
-    db $00, $00, $FF, $4B, $72, $53, $C5, $2A, $00, $00, $FF, $4B, $72, $53, $C5, $2A
-    db $00, $00, $FF, $4B, $72, $53, $C5, $2A, $00, $00, $34, $7F, $0C, $5A, $C0, $7D
-    db $00, $00, $34, $7F, $0C, $5A, $C0, $7D, $00, $00, $34, $7F, $0C, $5A, $C0, $7D
-    db $00, $00, $FF, $03, $72, $53, $37, $7D, $00, $00, $FF, $03, $72, $53, $37, $7D
-    db $00, $00, $FF, $03, $72, $53, $37, $7D, $00, $00, $DF, $2D, $B8, $4A, $F2, $7D
-    db $00, $00, $E0, $4B, $FF, $02, $C8, $7D, $00, $00, $FF, $02, $B9, $60, $00, $00
-    db $00, $00, $1C, $4B, $7B, $3D, $00, $00, $00, $00, $E0, $4B, $3F, $7E, $F3, $64
-    db $00, $00, $B2, $56, $37, $1E, $F3, $64, $00, $00, $1C, $4B, $9F, $11, $B1, $20
-    db $00, $00, $72, $5F, $37, $7D, $B1, $20, $00, $00, $F5, $6B, $0C, $5A, $C8, $7D
-    db $00, $00, $1C, $4B, $F4, $1D, $E9, $00, $00, $00, $FF, $02, $FF, $00, $B1, $00
-    db $00, $00, $FF, $4B, $7F, $01, $00, $00, $00, $00, $FF, $4B, $7F, $01, $00, $00
-    db $00, $00, $FF, $4B, $B5, $7D, $00, $00, $00, $00, $FF, $4B, $72, $53, $C5, $2A
-    db $00, $00, $34, $7F, $0C, $5A, $C0, $7D, $00, $00, $1C, $4B, $F4, $1D, $E9, $00
-    db $00, $00, $FF, $5F, $FF, $16, $E9, $00, $00, $00, $FF, $5F, $EB, $6B, $E9, $00
-    db $00, $00, $FF, $5F, $DF, $01, $E9, $00, $00, $00, $59, $7F, $37, $7D, $E9, $00
-    db $00, $00, $FF, $5F, $BF, $03, $DF, $01, $00, $00, $9F, $33, $91, $69, $BF, $60
-    db $00, $00, $D9, $7F, $FF, $47, $37, $7D, $00, $00, $F9, $63, $DF, $01, $15, $00
-    db $00, $00, $FD, $7F, $A5, $7E, $0E, $7F, $00, $00, $FF, $7F, $FF, $7F, $BF, $01
+AnimObjPalettes:
+    ; OBJ palette 0 of each battle animation (45 x 4 RGB555): entry 13
+    ; loads row [$c81e] into $C7D7 (slot 0), entry 8 commits. S112.
+AttrMapDataB:   ; fake-decode label kept at its exact offset $6b0d (referenced by bytes decoded as code elsewhere; NOT code)
+    db $00, $00, $ff, $02, $17, $00, $df, $01   ; [$00] Blaze
+    dw $0000, $02ff, $0017, $01df   ; [$01] Blazemore
+    dw $0000, $02ff, $0017, $01df   ; [$02] Blazemost, COMEDYBK
+    dw $0000, $035f, $001f, $01ff   ; [$03] Firebal, FireAir
+    dw $0000, $035f, $001f, $01ff   ; [$04] Firebane, BlazeAir, LAVASTAFF
+    dw $0000, $035f, $001f, $01ff   ; [$05] Firebolt, Scorching
+    dw $0000, $7fff, $4bff, $02ff   ; [$06] Bang
+    dw $0000, $7fff, $037f, $4ab8   ; [$07] Boom
+    dw $0000, $7fff, $03ff, $7e15   ; [$08] Explodet
+    dw $0000, $4bff, $5372, $2ac5   ; [$09] Infernos, WindBeast, STAFF
+    dw $0000, $4bff, $5372, $2ac5   ; [$0a] Infermore
+    dw $0000, $4bff, $5372, $2ac5   ; [$0b] Infermost, Vacuum
+    dw $0000, $7f34, $5a0c, $7dc0   ; [$0c] IceBolt, FrigidAir
+    dw $0000, $7f34, $5a0c, $7dc0   ; [$0d] SnowStorm, IceAir
+    dw $0000, $7f34, $5a0c, $7dc0   ; [$0e] Blizzard, IceStorm, SNOWSTAFF
+    dw $0000, $03ff, $5372, $7d37   ; [$0f] Bolt, Lightning, BOLTSTAFF
+    dw $0000, $03ff, $5372, $7d37   ; [$10] Zap
+    dw $0000, $03ff, $5372, $7d37   ; [$11] Thordain
+    dw $0000, $2ddf, $4ab8, $7df2   ; [$12] StopSpell, RobMagic, Sap, Defence, Slow, SlowAll (+6)
+    dw $0000, $4be0, $02ff, $7dc8   ; [$13] RobMagic, TakeMagic, Upper, Increase, Speed, SpeedUp (+2)
+    dw $0000, $02ff, $60b9, $0000   ; [$14] Heal, HealMore, HealAll, HealUs, HealUsAll, Farewell (+20)
+    dw $0000, $4b1c, $3d7b, $0000   ; [$15] Sleep, SleepAll, PoisonHit, NapAttack, Paralyze, SleepAir (+7)
+    dw $0000, $4be0, $7e3f, $64f3   ; [$16] PanicAll, PaniDance, Curse, Ahhh, LureDance
+    dw $0000, $56b2, $1e37, $64f3   ; [$17] Surround, SandStorm
+    dw $0000, $4b1c, $119f, $20b1   ; [$18] Transform, CHGDRAGON, BeDragon
+    dw $0000, $5f72, $7d37, $20b1   ; [$19] MagicBack, Bounce
+    dw $0000, $6bf5, $5a0c, $7dc8   ; [$1a] WhiteAir
+    dw $0000, $4b1c, $1df4, $00e9   ; [$1b] RockThrow
+    dw $0000, $02ff, $00ff, $00b1   ; [$1c] WhiteFire
+    dw $0000, $4bff, $017f, $0000   ; [$1d] TwinSlash, Massacre, EvilSlash, DrakSlash, BeastCut, SquallHit (+2)
+    dw $0000, $4bff, $017f, $0000   ; [$1e] FireSlash
+    dw $0000, $4bff, $7db5, $0000   ; [$1f] BoltSlash
+    dw $0000, $4bff, $5372, $2ac5   ; [$20] VacuSlash
+    dw $0000, $7f34, $5a0c, $7dc0   ; [$21] IceSlash
+    dw $0000, $4b1c, $1df4, $00e9   ; [$22] Smashlime, Sheldodge
+    dw $0000, $5fff, $16ff, $00e9   ; [$23] BirdBlow
+    dw $0000, $5fff, $6beb, $00e9   ; [$24] DevilCut, ZombieCut
+    dw $0000, $5fff, $01df, $00e9   ; [$25] MetalCut, CleanCut
+    dw $0000, $7f59, $7d37, $00e9   ; [$26] GigaSlash
+    dw $0000, $5fff, $03bf, $01df   ; [$27] MultiCut
+    dw $0000, $339f, $6991, $60bf   ; [$28] Hellblast
+    dw $0000, $7fd9, $47ff, $7d37   ; [$29] BigBang
+    dw $0000, $63f9, $01df, $0015   ; [$2a] MegaMagic
+    dw $0000, $7ffd, $7ea5, $7f0e   ; [$2b] DeMagic
+    dw $0000, $7fff, $7fff, $01bf   ; [$2c] FEEDMEAT, BEFFJERKY, PORKCHOP, SIRLOIN
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00

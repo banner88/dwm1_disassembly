@@ -1,0 +1,260 @@
+{
+ "_generator": "tools/render_anim_sounds.py (S112): the original ROM's sound engine in PyBoy, wSoundEffect per id, 16 kHz mono s16",
+ "sounds": {
+  "112": {
+   "file": "sfx_70.wav",
+   "frames": 61,
+   "animations": [
+    20
+   ]
+  },
+  "113": {
+   "file": "sfx_71.wav",
+   "frames": 59,
+   "animations": [
+    19
+   ]
+  },
+  "114": {
+   "file": "sfx_72.wav",
+   "frames": 54,
+   "animations": [
+    18
+   ]
+  },
+  "115": {
+   "file": "sfx_73.wav",
+   "frames": 71,
+   "animations": [
+    21,
+    22
+   ]
+  },
+  "116": {
+   "file": "sfx_74.wav",
+   "frames": 35,
+   "animations": [
+    0
+   ]
+  },
+  "118": {
+   "file": "sfx_76.wav",
+   "frames": 118,
+   "animations": [
+    1,
+    2
+   ]
+  },
+  "120": {
+   "file": "sfx_78.wav",
+   "frames": 86,
+   "animations": [
+    3,
+    4
+   ]
+  },
+  "122": {
+   "file": "sfx_7a.wav",
+   "frames": 95,
+   "animations": [
+    5
+   ]
+  },
+  "123": {
+   "file": "sfx_7b.wav",
+   "frames": 49,
+   "animations": [
+    6,
+    7,
+    8
+   ]
+  },
+  "124": {
+   "file": "sfx_7c.wav",
+   "frames": 123,
+   "animations": [
+    8
+   ]
+  },
+  "126": {
+   "file": "sfx_7e.wav",
+   "frames": 62,
+   "animations": [
+    9,
+    10
+   ]
+  },
+  "127": {
+   "file": "sfx_7f.wav",
+   "frames": 130,
+   "animations": [
+    11
+   ]
+  },
+  "128": {
+   "file": "sfx_80.wav",
+   "frames": 103,
+   "animations": [
+    12,
+    13
+   ]
+  },
+  "129": {
+   "file": "sfx_81.wav",
+   "frames": 101,
+   "animations": [
+    14
+   ]
+  },
+  "130": {
+   "file": "sfx_82.wav",
+   "frames": 75,
+   "animations": [
+    15,
+    16
+   ]
+  },
+  "131": {
+   "file": "sfx_83.wav",
+   "frames": 89,
+   "animations": [
+    17
+   ]
+  },
+  "132": {
+   "file": "sfx_84.wav",
+   "frames": 53,
+   "animations": [
+    23
+   ]
+  },
+  "133": {
+   "file": "sfx_85.wav",
+   "frames": 39,
+   "animations": [
+    24
+   ]
+  },
+  "134": {
+   "file": "sfx_86.wav",
+   "frames": 49,
+   "animations": [
+    25
+   ]
+  },
+  "136": {
+   "file": "sfx_88.wav",
+   "frames": 77,
+   "animations": [
+    26
+   ]
+  },
+  "137": {
+   "file": "sfx_89.wav",
+   "frames": 39,
+   "animations": [
+    27
+   ]
+  },
+  "138": {
+   "file": "sfx_8a.wav",
+   "frames": 128,
+   "animations": [
+    28
+   ]
+  },
+  "140": {
+   "file": "sfx_8c.wav",
+   "frames": 36,
+   "animations": [
+    29,
+    37
+   ]
+  },
+  "141": {
+   "file": "sfx_8d.wav",
+   "frames": 107,
+   "animations": [
+    30
+   ]
+  },
+  "142": {
+   "file": "sfx_8e.wav",
+   "frames": 98,
+   "animations": [
+    31
+   ]
+  },
+  "143": {
+   "file": "sfx_8f.wav",
+   "frames": 95,
+   "animations": [
+    32
+   ]
+  },
+  "144": {
+   "file": "sfx_90.wav",
+   "frames": 121,
+   "animations": [
+    33
+   ]
+  },
+  "146": {
+   "file": "sfx_92.wav",
+   "frames": 32,
+   "animations": [
+    34
+   ]
+  },
+  "147": {
+   "file": "sfx_93.wav",
+   "frames": 64,
+   "animations": [
+    35,
+    36
+   ]
+  },
+  "148": {
+   "file": "sfx_94.wav",
+   "frames": 110,
+   "animations": [
+    38
+   ]
+  },
+  "149": {
+   "file": "sfx_95.wav",
+   "frames": 97,
+   "animations": [
+    39
+   ]
+  },
+  "150": {
+   "file": "sfx_96.wav",
+   "frames": 76,
+   "animations": [
+    40
+   ]
+  },
+  "151": {
+   "file": "sfx_97.wav",
+   "frames": 150,
+   "animations": [
+    41
+   ]
+  },
+  "153": {
+   "file": "sfx_99.wav",
+   "frames": 121,
+   "animations": [
+    42
+   ]
+  },
+  "155": {
+   "file": "sfx_9b.wav",
+   "frames": 56,
+   "animations": [
+    43
+   ]
+  }
+ }
+}

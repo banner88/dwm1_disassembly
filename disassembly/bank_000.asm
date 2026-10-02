@@ -9953,7 +9953,18 @@ Jump_NopReturn:
     ret
 
 
-ReadBattleStateDA80:
+; -----------------------------------------------------------------------------
+; [S112] Battle-animation per-frame tick (BATTLE_SKILL_SYSTEM §11.9).
+; AnimFrameTick: [$da80] = 0 -> nothing; when neither the attacker nor the target
+; (wBattleAttackerIdx / wBattleTargetIdx, side-flipped by $c863 bit 1) is an
+; enemy (index >= 4) it stops the animation ($dd60 / $dd62 = 0) — sprites only
+; ever show on the enemy side. AnimTickSelectAndDraw: bank $5F entry 7 (the motion /
+; target-step logic), then the renderer of animation [$da81] by range: < $0E bank
+; $5C, < $21 bank $5D (except $15 with skill $C5), else bank $5E entry 0; $15 /
+; $2C draw once per living enemy slot ($dd1f / $dd20 / $dd21 = KO flags, X $20 /
+; $50 / $80).
+; -----------------------------------------------------------------------------
+AnimFrameTick:
 DataLookup_3001:
     ld a, [$da80]
 
@@ -9972,12 +9983,12 @@ InitBattleState:
 
 CheckBattleIndex4:
     cp $04
-    jr nc, CallBank5FEntry7
+    jr nc, AnimTickSelectAndDraw
 
     ld a, [wBattleTargetIdx]
     xor b
     cp $04
-    jr nc, CallBank5FEntry7
+    jr nc, AnimTickSelectAndDraw
 
     ld a, $00
 
@@ -9992,7 +10003,7 @@ RetNop_3028:
     ret
 
 
-CallBank5FEntry7:
+AnimTickSelectAndDraw:
     ld hl, $5f07
     rst $10
     ld a, [$da81]
@@ -10175,7 +10186,7 @@ CallBank5E_Extra:
     ret
 
 
-CallBank5FEntry7_3103:
+AnimStartRenderer:
     ld hl, $5f07
     rst $10
     ld a, [$da81]
@@ -10231,37 +10242,55 @@ CallBank5DEntry1:
     ret
 
 
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ret nc
-
-    ret nc
-
-    ret nc
-
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ret nc
-
-RetNCFromField:
-    ret nc
-
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$d0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$d0], a
+AnimObjShadeTable:
+    ; DMG OBP1 shade byte per battle animation (45; AnimStartRenderer writes
+    ; it to wObj1Palette; on GBC the colours are AnimObjPalettes). S112.
+    db $e0   ; [$00] Blaze
+    db $e0   ; [$01] Blazemore
+    db $e0   ; [$02] Blazemost, COMEDYBK
+    db $e0   ; [$03] Firebal, FireAir
+    db $e0   ; [$04] Firebane, BlazeAir, LAVASTAFF
+    db $e0   ; [$05] Firebolt, Scorching
+    db $d0   ; [$06] Bang
+    db $d0   ; [$07] Boom
+    db $d0   ; [$08] Explodet
+    db $e0   ; [$09] Infernos, WindBeast, STAFF
+    db $e0   ; [$0a] Infermore
+    db $e0   ; [$0b] Infermost, Vacuum
+    db $e0   ; [$0c] IceBolt, FrigidAir
+    db $e0   ; [$0d] SnowStorm, IceAir
+    db $e0   ; [$0e] Blizzard, IceStorm, SNOWSTAFF
+    db $e0   ; [$0f] Bolt, Lightning, BOLTSTAFF
+    db $e0   ; [$10] Zap
+    db $e0   ; [$11] Thordain
+    db $e0   ; [$12] StopSpell, RobMagic, Sap, Defence, Slow, SlowAll (+6)
+    db $e0   ; [$13] RobMagic, TakeMagic, Upper, Increase, Speed, SpeedUp (+2)
+    db $e0   ; [$14] Heal, HealMore, HealAll, HealUs, HealUsAll, Farewell (+20)
+    db $d0   ; [$15] Sleep, SleepAll, PoisonHit, NapAttack, Paralyze, SleepAir (+7)
+RetNCFromField:   ; fake-decode label kept at its exact offset $3157 (referenced by bytes decoded as code elsewhere; NOT code)
+    db $d0   ; [$16] PanicAll, PaniDance, Curse, Ahhh, LureDance
+    db $e0   ; [$17] Surround, SandStorm
+    db $e0   ; [$18] Transform, CHGDRAGON, BeDragon
+    db $e0   ; [$19] MagicBack, Bounce
+    db $e0   ; [$1a] WhiteAir
+    db $e0   ; [$1b] RockThrow
+    db $d0   ; [$1c] WhiteFire
+    db $e0   ; [$1d] TwinSlash, Massacre, EvilSlash, DrakSlash, BeastCut, SquallHit (+2)
+    db $e0   ; [$1e] FireSlash
+    db $e0   ; [$1f] BoltSlash
+    db $e0   ; [$20] VacuSlash
+    db $e0   ; [$21] IceSlash
+    db $e0   ; [$22] Smashlime, Sheldodge
+    db $e0   ; [$23] BirdBlow
+    db $e0   ; [$24] DevilCut, ZombieCut
+    db $e0   ; [$25] MetalCut, CleanCut
+    db $e0   ; [$26] GigaSlash
+    db $e0   ; [$27] MultiCut
+    db $e0   ; [$28] Hellblast
+    db $e0   ; [$29] BigBang
+    db $e0   ; [$2a] MegaMagic
+    db $e0   ; [$2b] DeMagic
+    db $d0   ; [$2c] FEEDMEAT, BEFFJERKY, PORKCHOP, SIRLOIN
     nop
     ld bc, $3512
     adc d

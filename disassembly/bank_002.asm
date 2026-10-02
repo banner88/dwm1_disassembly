@@ -7,14 +7,14 @@ SECTION "ROM Bank $002", ROMX[$4000], BANK[$2]
 
     db $02
 
-    dw label400d
+    dw SeqStepper
     dw label4e9f
     dw label512c
     dw label5fd6
     dw label6a78
     dw label6b0a
 
-label400d:
+SeqStepper:
     ld a, [$d7b4]
     ld l, a
     ld a, [$d7b5]
@@ -23,7 +23,7 @@ label400d:
     or a
     jr z, jr_002_401e
 
-    call AdvanceDialoguePtr
+    call SeqTickHold
     jr jr_002_4027
 
 jr_002_401e:
@@ -32,13 +32,13 @@ jr_002_401e:
     inc hl
     inc hl
     ld [hl], $00
-    call ProcessDialogueStep
+    call SeqApplyStep
 
 jr_002_4027:
     ret
 
 
-AdvanceDialoguePtr:
+SeqTickHold:
     ld a, [$d7b4]
     add $05
     ld l, a
@@ -69,8 +69,8 @@ jr_002_4041:
     ld h, a
     inc [hl]
 
-ProcessDialogueStep:
-    call ReadDialogueState
+SeqApplyStep:
+    call ReadSeqStep
     ld a, b
     and c
     cp $ff
@@ -154,7 +154,7 @@ Jump_002_4095:
     jp Jump_002_4095
 
 
-ReadDialogueState:
+ReadSeqStep:
     ld a, [$d7b4]
     ld c, a
     ld a, [$d7b5]
@@ -196,197 +196,110 @@ ReadDialogueState:
     ret
 
 
-    and l
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    dec a
-    ld b, d
-    and l
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    ld h, l
-    ld b, d
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    xor c
-    ld b, d
-    call $f142
-    ld b, d
-    dec d
-    ld b, e
-    inc sp
-    ld b, e
-    ld d, a
-    ld b, e
-    ld a, e
-    ld b, e
-    and a
-    ld b, e
-    bit 0, e
-    db $ed
-    ld b, e
-    ld de, $3544
-    ld b, h
-    ld e, c
-    ld b, h
-    ld a, l
-    ld b, h
-    and c
-    ld b, h
-    push bc
-    ld b, h
-    jp hl
-
-
-    ld b, h
-    dec c
-    ld b, l
-    ld b, l
-    ld b, l
-    ld l, c
-    ld b, l
-    and a
-    ld b, l
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    pop af
-    ld b, c
-    rst $08
-    ld b, l
-    and l
-    ld b, c
-    and l
-    ld b, c
-    rst $28
-    ld b, l
-    rst $28
-    ld b, l
-    rrca
-    ld b, [hl]
-    rst $28
-    ld b, l
-    inc sp
-    ld b, [hl]
-    ld h, a
-    ld b, [hl]
-    pop af
-    ld b, c
-    rst $28
-    ld b, l
-    and l
-    ld b, c
-    and l
-    ld b, c
-    and l
-    ld b, c
-    and l
-    ld b, c
-    and l
-    ld b, c
-    and l
-    ld b, c
-    and l
-    ld b, c
-    rst $28
-    ld b, l
-    and c
-    ld b, [hl]
+SeqRowTable:
+    ; The generic SEQUENCER's row table (bank $02 entry 0 steps a struct
+    ; [$d7b4] -> +0 active, +1 ROW, +2 index, +3 step, +4 value, +5 hold:
+    ; ReadSeqStep reads SeqRowTable[row][index] -> the pair list, step
+    ; by step). Row $60 = AnimTimelineTable (the battle animations,
+    ; index = animation number; BATTLE_SKILL_SYSTEM §11). Other rows: other
+    ; sequences (not traced; left as words). Re-sectioned S112.
+    dw $41a5   ; row $00
+    dw $41f1   ; row $01
+    dw $41f1   ; row $02
+    dw $41f1   ; row $03
+    dw $41f1   ; row $04
+    dw $41f1   ; row $05
+    dw $41f1   ; row $06
+    dw $41f1   ; row $07
+    dw $41f1   ; row $08
+    dw $41f1   ; row $09
+    dw $41f1   ; row $0a
+    dw $41f1   ; row $0b
+    dw $41f1   ; row $0c
+    dw $41f1   ; row $0d
+    dw $41f1   ; row $0e
+    dw $41f1   ; row $0f
+    dw $41f1   ; row $10
+    dw $41f1   ; row $11
+    dw $41f1   ; row $12
+    dw $41f1   ; row $13
+    dw $41f1   ; row $14
+    dw $41f1   ; row $15
+    dw $41f1   ; row $16
+    dw $41f1   ; row $17
+    dw $423d   ; row $18
+    dw $41a5   ; row $19
+    dw $41f1   ; row $1a
+    dw $41f1   ; row $1b
+    dw $41f1   ; row $1c
+    dw $41f1   ; row $1d
+    dw $41f1   ; row $1e
+    dw $4265   ; row $1f
+    dw $41f1   ; row $20
+    dw $41f1   ; row $21
+    dw $42a9   ; row $22
+    dw $42cd   ; row $23
+    dw $42f1   ; row $24
+    dw $4315   ; row $25
+    dw $4333   ; row $26
+    dw $4357   ; row $27
+    dw $437b   ; row $28
+    dw $43a7   ; row $29
+    dw $43cb   ; row $2a
+    dw $43ed   ; row $2b
+    dw $4411   ; row $2c
+    dw $4435   ; row $2d
+    dw $4459   ; row $2e
+    dw $447d   ; row $2f
+    dw $44a1   ; row $30
+    dw $44c5   ; row $31
+    dw $44e9   ; row $32
+    dw $450d   ; row $33
+    dw $4545   ; row $34
+    dw $4569   ; row $35
+    dw $45a7   ; row $36
+    dw $41f1   ; row $37
+    dw $41f1   ; row $38
+    dw $41f1   ; row $39
+    dw $41f1   ; row $3a
+    dw $41f1   ; row $3b
+    dw $41f1   ; row $3c
+    dw $41f1   ; row $3d
+    dw $41f1   ; row $3e
+    dw $41f1   ; row $3f
+    dw $41f1   ; row $40
+    dw $41f1   ; row $41
+    dw $41f1   ; row $42
+    dw $41f1   ; row $43
+    dw $41f1   ; row $44
+    dw $41f1   ; row $45
+    dw $41f1   ; row $46
+    dw $41f1   ; row $47
+    dw $41f1   ; row $48
+    dw $41f1   ; row $49
+    dw $41f1   ; row $4a
+    dw $41f1   ; row $4b
+    dw $41f1   ; row $4c
+    dw $45cf   ; row $4d
+    dw $41a5   ; row $4e
+    dw $41a5   ; row $4f
+    dw $45ef   ; row $50
+    dw $45ef   ; row $51
+    dw $460f   ; row $52
+    dw $45ef   ; row $53
+    dw $4633   ; row $54
+    dw $4667   ; row $55
+    dw $41f1   ; row $56
+    dw $45ef   ; row $57
+    dw $41a5   ; row $58
+    dw $41a5   ; row $59
+    dw $41a5   ; row $5a
+    dw $41a5   ; row $5b
+    dw $41a5   ; row $5c
+    dw $41a5   ; row $5d
+    dw $41a5   ; row $5e
+    dw $45ef   ; row $5f
+    dw $46a1   ; row $60 = AnimTimelineTable, the battle animations
     cp a
     ld b, c
     push bc
@@ -1559,1524 +1472,1016 @@ jr_002_45aa:
     rst $38
     rst $38
     rst $38
-    ei
-    ld b, [hl]
-    ld de, $4747
-    ld b, a
-    ld a, e
-    ld b, a
-    adc c
-    ld b, a
-    sub a
-    ld b, a
-    rst $00
-    ld b, a
-    rst $18
-    ld b, a
-    dec b
-    ld c, b
-    ld b, a
-    ld c, b
-    ld h, a
-    ld c, b
-    ld a, l
-    ld c, b
-    cp c
-    ld c, b
-    push hl
-    ld c, b
-    dec b
-    ld c, c
-    ld b, l
-    ld c, c
-    ld h, a
-    ld c, c
-    sub a
-    ld c, c
-    reti
-
-
-    ld c, c
-    push af
-    ld c, c
-    dec bc
-    ld c, d
-    daa
-    ld c, d
-    ld b, c
-    ld c, d
-    ld e, c
-    ld c, d
-    ld l, e
-    ld c, d
-    add c
-    ld c, d
-    sbc a
-    ld c, d
-    db $dd
-    ld c, d
-    di
-    ld c, d
-    dec [hl]
-    ld c, e
-    ld b, a
-    ld c, e
-    ld a, a
-    ld c, e
-    cp e
-    ld c, e
-    rst $30
-    ld c, e
-    cpl
-    ld c, h
-    ld b, c
-    ld c, h
-    ld d, l
-    ld c, h
-    add l
-    ld c, h
-    or a
-    ld c, h
-    rst $30
-    ld c, h
-    scf
-    ld c, l
-    ld e, l
-    ld c, l
-    sbc l
-    ld c, l
-    rst $18
-    ld c, l
-    rst $38
-    ld c, l
-    nop
-    dec b
-    db $fd
-    ld [hl], h
-    ld bc, $0205
-    dec b
-    inc bc
-    dec b
-    inc b
-    ld [bc], a
-    dec b
-    ld [bc], a
-    ld b, $02
-    rlca
-    ld [bc], a
-    rra
-    ld [bc], a
-    rst $38
-    rst $38
-    nop
-    inc b
-    db $fd
-    db $76
-    ld bc, $0204
-    inc b
-    inc bc
-    inc b
-    inc b
-    ld [bc], a
-    dec b
-    ld [bc], a
-    ld b, $02
-    rlca
-    ld [bc], a
-    rra
-    ld [$0308], sp
-    add hl, bc
-    inc bc
-    ld a, [bc]
-    inc bc
-    dec bc
-    inc bc
-    inc c
-    inc bc
-    add hl, bc
-    inc bc
-    ld a, [bc]
-    inc bc
-    dec bc
-    inc bc
-    inc c
-    inc bc
-    add hl, bc
-    ld [bc], a
-    ld a, [bc]
-    ld [bc], a
-    dec bc
-    ld [bc], a
-    inc c
-    ld [bc], a
-    dec c
-    ld [bc], a
-    ld c, $02
-    rra
-    ld [bc], a
-    rst $38
-    rst $38
-    ld [$fd02], sp
-    db $76
-    add hl, bc
-    dec b
-    ld a, [bc]
-    dec b
-    dec bc
-    dec b
-    inc c
-    ld [bc], a
-    dec c
-    ld [bc], a
-    ld c, $02
-    rrca
-    ld [bc], a
-    rra
-    ld [$0100], sp
-    ld bc, $0201
-    ld bc, $0103
-    inc b
-    inc bc
-    dec b
-    inc bc
-    ld b, $03
-    rlca
-    inc bc
-    inc b
-    inc bc
-    dec b
-    inc bc
-    ld b, $03
-    rlca
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    nop
-    ld [bc], a
-    rra
-    ld [bc], a
-    rst $38
-    rst $38
-    nop
-    inc bc
-    db $fd
-    ld a, b
-    ld bc, $0203
-    inc bc
-    cp $04
-    rra
-    ld [bc], a
-    rst $38
-    rst $38
-    nop
-    ld [bc], a
-    db $fd
-    ld a, b
-    ld bc, $0202
-    ld [bc], a
-    cp $04
-    rra
-    ld [bc], a
-    rst $38
-    rst $38
-    nop
-    inc b
-    db $fd
-    ld a, d
-    ld bc, $0203
-    ld [bc], a
-    inc bc
-    inc b
-    inc b
-    dec b
-    dec b
-    inc bc
-    ld b, $04
-    rlca
-    inc bc
-    ld [$0404], sp
-    inc b
-    dec b
-    inc bc
-    ld b, $04
-    rlca
-    inc bc
-    ld [$0404], sp
-    inc bc
-    dec b
-    inc b
-    ld b, $03
-    rlca
-    inc b
-    ld [$0903], sp
-    ld [bc], a
-    ld a, [bc]
-    inc bc
-    rra
-    ld [bc], a
-    rst $38
-    rst $38
-    nop
-    inc b
-    db $fd
-    ld a, e
-    ld bc, $0202
-    inc b
-    inc bc
-    inc b
-    inc b
-    ld [bc], a
-    nop
-    ld [bc], a
-    ld bc, $0202
-    ld [bc], a
-    ld bc, $1f02
-    ld [bc], a
-    rst $38
-    rst $38
-    nop
-    ld [bc], a
-    ld bc, $0202
-    ld [bc], a
-    rra
-    db $10
-    inc bc
-    inc b
-    db $fd
-    ld a, e
-    inc b
-    ld [bc], a
-    dec b
-    inc b
-    ld b, $02
-    rlca
-    inc b
-    ld [$0302], sp
-    inc bc
-    inc b
-    ld [bc], a
-    dec b
-    inc bc
-    ld b, $02
-    rlca
-    inc b
-    ld [$1f02], sp
-    ld [bc], a
-    rst $38
-    rst $38
-    nop
-    ld [bc], a
-    db $fd
-    ld a, h
-    ld bc, $0202
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    rra
-    db $10
-    inc b
-    dec b
-    db $fd
-    ld a, e
-    dec b
-    dec b
-    ld b, $05
-    rlca
-    ld [bc], a
-    ld [$0e02], sp
-    ld [bc], a
-    add hl, bc
-    ld [bc], a
-    rrca
-    ld [bc], a
-    ld a, [bc]
-    ld [bc], a
-    db $10
-    ld [bc], a
-    dec bc
-    ld [bc], a
-    ld de, $0c02
-    ld [bc], a
-    ld [de], a
-    ld [bc], a
-    dec c
-    ld [bc], a
-    inc de
-    ld [bc], a
-    ld [$0e02], sp
-    ld [bc], a
-    add hl, bc
-    ld [bc], a
-    rrca
-    ld [bc], a
-    ld a, [bc]
-    ld [bc], a
-    db $10
-    ld [bc], a
-    dec bc
-    ld [bc], a
-    ld b, $02
-    rra
-    ld [bc], a
-    rst $38
-    rst $38
-    nop
-    ld [bc], a
-    db $fd
-    ld a, [hl]
-    ld bc, $0202
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    inc b
-    ld [bc], a
-    dec b
-    ld [bc], a
-    ld b, $02
-    rlca
-    ld [bc], a
-    ld [$0902], sp
-    ld [bc], a
-    ld a, [bc]
-    ld [bc], a
-    dec bc
-    ld [bc], a
-    inc c
-    ld [bc], a
-    rra
-    ld [bc], a
-    rst $38
-    rst $38
-    inc b
-    dec b
-    db $fd
-    ld a, [hl]
-    dec b
-    inc b
-    ld b, $05
-    rlca
-    ld b, $08
-    dec b
-    add hl, bc
-    inc b
-    ld a, [bc]
-    dec b
-    inc b
-    dec b
-    rra
-    ld [bc], a
-    rst $38
-    rst $38
-    nop
-    inc bc
-    db $fd
-    ld a, a
-    ld bc, $0203
-    inc bc
-    inc bc
-    inc bc
-    inc b
-    inc bc
-    dec b
-    inc bc
-    ld b, $03
-    rlca
-    inc bc
-    ld [$0903], sp
-    inc bc
-    ld a, [bc]
-    inc bc
-    dec bc
-    inc bc
-    inc c
-    inc bc
-    dec c
-    inc bc
-    ld c, $03
-    rrca
-    inc bc
-    db $10
-    inc bc
-    ld de, $1203
-    inc bc
-    inc de
-    inc bc
-    inc d
-    inc bc
-    dec d
-    inc bc
-    ld d, $03
-    rla
-    inc bc
-    jr jr_002_48b4
-
-    add hl, de
-    inc bc
-    ld a, [de]
-
-jr_002_48b4:
-    inc bc
-    rra
-    ld [bc], a
-    rst $38
-    rst $38
-    nop
-    inc bc
-    db $fd
-    add b
-    ld bc, $0203
-    inc bc
-    inc bc
-    inc bc
-    inc b
-    inc bc
-    dec b
-    inc bc
-    ld b, $03
-    rlca
-    inc bc
-    ld [$0903], sp
-    inc bc
-    ld a, [bc]
-    inc bc
-    dec bc
-    inc bc
-    inc c
-    inc bc
-    dec c
-    inc bc
-    ld c, $03
-    rrca
-    inc bc
-    db $10
-    inc bc
-    ld de, $1203
-    inc bc
-    rra
-    ld [bc], a
-    rst $38
-    rst $38
-    nop
-    dec b
-    db $fd
-    add b
-    ld bc, $0204
-    inc b
-    inc bc
-    inc bc
-    inc b
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    inc b
-    inc bc
-    inc bc
-    inc bc
-    inc b
-    rrca
-    rra
-    inc bc
-    inc b
-    inc bc
-    rra
-    inc bc
-    inc b
-    ld [bc], a
-    rra
-    ld [bc], a
-    rst $38
-    rst $38
-    ld b, $03
-    db $fd
-    add c
-    rlca
-    inc bc
-    ld [$0902], sp
-    ld [bc], a
-    ld a, [bc]
-    ld bc, $010b
-    inc c
-    ld bc, $081f
-    ld bc, $0202
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    inc b
-    ld [bc], a
-    ld bc, $0202
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    inc b
-    ld [bc], a
-    ld bc, $0202
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    inc b
-    ld [bc], a
-    ld bc, $0202
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    inc b
-    ld [bc], a
-    ld bc, $0202
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    inc b
-    ld [bc], a
-    dec b
-    ld bc, $021f
-    rst $38
-    rst $38
-    nop
-    inc b
-    db $fd
-    add d
-    ld bc, $1f03
-    ld [$0502], sp
-    inc bc
-    inc b
-    inc b
-    inc bc
-    dec b
-    inc bc
-    ld b, $02
-    rlca
-    ld [bc], a
-    inc b
-    ld [bc], a
-    dec b
-    ld [bc], a
-    ld b, $02
-    rlca
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    rra
-    ld [bc], a
-    rst $38
-    rst $38
-    nop
-    inc b
-    db $fd
-    add d
-    ld bc, $0203
-    ld [bc], a
-    rra
-    ld [$0503], sp
-    inc b
-    inc b
-    dec b
-    inc bc
-    ld b, $03
-    rlca
-    ld [bc], a
-    ld [$0902], sp
-    ld [bc], a
-    dec b
-    ld [bc], a
-    ld b, $02
-    rlca
-    ld [bc], a
-    ld [$0902], sp
-    ld [bc], a
-    ld b, $02
-    rlca
-    ld [bc], a
-    ld [$0902], sp
-    ld [bc], a
-    inc b
-    ld bc, $021f
-    rst $38
-    rst $38
-    nop
-    inc bc
-    db $fd
-    add e
-    ld bc, $0203
-    ld [bc], a
-    inc bc
-    inc bc
-    ld [bc], a
-    ld bc, $010f
-    inc b
-    inc bc
-    dec b
-    inc bc
-    ld b, $03
-    rlca
-    ld [bc], a
-    ld [$0902], sp
-    ld [bc], a
-    ld a, [bc]
-    ld bc, $010b
-    inc c
-    ld bc, $010d
-    ld b, $03
-    rlca
-    ld [bc], a
-    ld a, [bc]
-    ld bc, $010b
-    inc c
-    ld bc, $010d
-    ld [$0903], sp
-    ld [bc], a
-    ld a, [bc]
-    ld bc, $010b
-    inc c
-    ld bc, $010d
-    ld c, $01
-    inc b
-    ld [bc], a
-    rra
-    ld [bc], a
-    rst $38
-    rst $38
-    nop
-    inc b
-    db $fd
-    ld [hl], d
-    ld bc, $0204
-    inc b
-    inc bc
-    inc b
-    inc b
-    inc b
-    dec b
-    inc b
-    ld b, $04
-    rlca
-    inc b
-    ld [$0904], sp
-    inc b
-    ld a, [bc]
-    inc b
-    rra
-    ld [bc], a
-    rst $38
-    rst $38
-    nop
-    inc b
-    db $fd
-    ld [hl], c
-    ld bc, $0203
-    inc b
-    inc bc
-    inc bc
-    inc b
-    ld [bc], a
-    dec b
-    ld bc, $0106
-    rlca
-    ld bc, $011f
-    rst $38
-    rst $38
-    nop
-    ld a, [bc]
-    db $fd
-    ld [hl], b
-    ld bc, $0208
-    rlca
-    inc bc
-    ld b, $04
-    dec b
-    dec b
-    dec b
-    ld b, $05
-    rlca
-    dec b
-    ld [$0904], sp
-    inc b
-    ld a, [bc]
-    inc b
-    rra
-    ld [bc], a
-    rst $38
-    rst $38
-    nop
-    ld [$73fd], sp
-    ld bc, $0206
-    ld [$0603], sp
-    inc b
-    ld [$0805], sp
-    ld b, $08
-    rlca
-    ld [$0408], sp
-    add hl, bc
-    inc b
-    rra
-    ld [bc], a
-    rst $38
-    rst $38
-    nop
-    ld b, $fd
-    ld [hl], e
-    ld bc, $0206
-    ld b, $03
-    ld b, $04
-    ld [$0805], sp
-    ld b, $04
-    rlca
-    inc b
-    ld [$1f04], sp
-    ld [bc], a
-    rst $38
-    rst $38
-    nop
-    ld b, $fd
-    add h
-    ld bc, $0206
-    ld b, $03
-    ld b, $04
-    ld b, $05
-    ld b, $1f
-    ld [bc], a
-    rst $38
-    rst $38
-    nop
-    ld a, [bc]
-    db $fd
-    add l
-    ld bc, $0206
-    dec b
-    inc bc
-    inc b
-    inc b
-    inc b
-    dec b
-    inc bc
-    ld b, $03
-    rlca
-    inc bc
-    rra
-    ld [bc], a
-    rst $38
-    rst $38
-    nop
-    inc b
-    db $fd
-    add [hl]
-    rra
-    inc b
-    nop
-    inc b
-    rra
-    inc b
-    nop
-    inc b
-    rra
-    inc b
-    nop
-    inc b
-    rra
-    inc b
-    nop
-    inc b
-    rra
-    inc b
-    nop
-    inc b
-    rra
-    inc b
-    rra
-    ld [bc], a
-    rst $38
-    rst $38
-    nop
-    inc bc
-    db $fd
-    adc b
-    ld bc, $0203
-    inc bc
-    rra
-    ld [$0203], sp
-    inc b
-    ld [bc], a
-    dec b
-    ld [bc], a
-    ld b, $02
-    rlca
-    ld [bc], a
-    ld [$0902], sp
-    ld [bc], a
-    ld a, [bc]
-    ld [bc], a
-    dec bc
-    ld [bc], a
-    inc c
-    ld [bc], a
-    dec c
-    ld [bc], a
-    ld c, $02
-    rrca
-    ld [bc], a
-    db $10
-    ld [bc], a
-    ld de, $0a02
-    ld [bc], a
-    dec bc
-    ld [bc], a
-    inc c
-    ld [bc], a
-    dec c
-    ld [bc], a
-    ld c, $02
-    rrca
-    ld [bc], a
-    db $10
-    ld [bc], a
-    ld de, $1202
-    ld [bc], a
-    rra
-    ld [bc], a
-    rst $38
-    rst $38
-    nop
-    inc b
-    db $fd
-    adc c
-    ld bc, $0204
-    inc b
-    inc bc
-    inc b
-    inc b
-    dec b
-    dec b
-    inc b
-    ld b, $04
-    rlca
-    inc b
-    rra
-    ld [bc], a
-    rst $38
-    rst $38
-    nop
-    ld [bc], a
-    db $fd
-    adc d
-    ld bc, $0202
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    inc b
-    ld [bc], a
-    dec b
-    ld [bc], a
-    ld b, $02
-    rlca
-    ld [bc], a
-    ld [$0902], sp
-    ld [bc], a
-    ld a, [bc]
-    ld [bc], a
-    dec bc
-    inc bc
-    inc c
-    dec b
-    dec c
-    inc b
-    ld c, $03
-    rrca
-    inc bc
-    ld c, $04
-    dec c
-    inc b
-    ld c, $03
-    dec bc
-    inc bc
-    inc de
-    inc b
-    dec bc
-    inc b
-    inc c
-    dec b
-    dec c
-    inc b
-    ld c, $03
-    rrca
-    inc b
-    ld c, $03
-    db $10
-    inc b
-    ld de, $1204
-    inc b
-    rra
-    ld [bc], a
-    rst $38
-    rst $38
-    nop
-    inc bc
-    db $fd
-    adc h
-    ld bc, $0204
-    inc b
-    inc bc
-    inc bc
-    inc b
-    dec b
-    dec b
-    inc bc
-    rra
-    ld [bc], a
-    rst $38
-    rst $38
-    nop
-    inc bc
-    db $fd
-    adc l
-    ld bc, $0204
-    inc b
-    inc bc
-    inc bc
-    nop
-    inc bc
-    ld bc, $0204
-    inc b
-    inc bc
-    inc bc
-    inc b
-    dec b
-    dec b
-    inc bc
-    ld b, $03
-    rra
-    ld [$0307], sp
-    ld [$0902], sp
-    inc b
-    ld a, [bc]
-    inc b
-    dec bc
-    inc b
-    inc c
-    inc b
-    dec c
-    inc b
-    ld c, $03
-    rrca
-    inc bc
-    db $10
-    inc bc
-    ld de, $1203
-    inc bc
-    inc de
-    inc bc
-    rra
-    ld [bc], a
-    rst $38
-    rst $38
-    nop
-    inc bc
-    db $fd
-    adc [hl]
-    ld bc, $0204
-    inc b
-    inc bc
-    inc bc
-    inc b
-    dec b
-    dec b
-    ld [bc], a
-    ld b, $02
-    rlca
-    ld [bc], a
-    ld [$0902], sp
-    ld [bc], a
-    ld a, [bc]
-    inc bc
-    dec bc
-    inc b
-    inc c
-    inc bc
-    dec c
-    inc bc
-    ld c, $02
-    rrca
-    ld [bc], a
-    db $10
-    ld [bc], a
-    inc c
-    ld [bc], a
-    dec c
-    ld [bc], a
-    ld c, $02
-    rrca
-    ld [bc], a
-    db $10
-    ld [bc], a
-    dec c
-    ld [bc], a
-    ld c, $02
-    rrca
-    ld [bc], a
-    db $10
-    ld [bc], a
-    ld a, [bc]
-    ld bc, $021f
-    rst $38
-    rst $38
-    nop
-    inc bc
-    db $fd
-    adc a
-    ld bc, $0204
-    inc b
-    inc bc
-    inc bc
-    inc b
-    dec b
-    dec b
-    inc bc
-    ld b, $03
-    rra
-    ld [$0207], sp
-    ld [$0902], sp
-    ld [bc], a
-    ld a, [bc]
-    ld [bc], a
-    dec bc
-    ld [bc], a
-    inc c
-    ld [bc], a
-    dec c
-    ld [bc], a
-    ld c, $02
-    rrca
-    ld [bc], a
-    db $10
-    ld [bc], a
-    ld de, $1202
-    ld [bc], a
-    inc de
-    ld [bc], a
-    inc d
-    ld [bc], a
-    dec d
-    ld [bc], a
-    ld d, $02
-    rla
-    ld [bc], a
-    jr jr_002_4bf3
-
-    add hl, de
-    ld [bc], a
-
-jr_002_4bf3:
-    rra
-    ld [bc], a
-    rst $38
-    rst $38
-    nop
-    inc bc
-    db $fd
-    sub b
-    ld bc, $0204
-    inc b
-    inc bc
-    inc bc
-    inc b
-    dec b
-    dec b
-    inc bc
-    ld b, $03
-    rra
-    ld [$0507], sp
-    ld [$0904], sp
-    inc bc
-    ld a, [bc]
-    inc bc
-    dec bc
-    inc bc
-    ld a, [bc]
-    inc b
-    dec bc
-    ld [$031f], sp
-    dec bc
-    ld [bc], a
-    rra
-    ld [bc], a
-    dec bc
-    ld bc, $011f
-    dec bc
-    ld bc, $011f
-    dec bc
-    ld bc, $011f
-    dec bc
-    ld bc, $021f
-    rst $38
-    rst $38
-    nop
-    ld b, $fd
-    sub d
-    ld bc, $0205
-    dec b
-    inc bc
-    inc bc
-    inc b
-    inc b
-    dec b
-    inc bc
-    rra
-    ld [bc], a
-    rst $38
-    rst $38
-    nop
-    inc bc
-    db $fd
-    sub e
-    ld bc, $0204
-    inc b
-    inc bc
-    inc bc
-    inc b
-    dec b
-    dec b
-    inc bc
-    ld b, $02
-    rra
-    ld [bc], a
-    rst $38
-    rst $38
-    nop
-    ld b, $fd
-    sub e
-    ld bc, $0205
-    dec b
-    inc bc
-    dec b
-    inc b
-    inc bc
-    dec b
-    inc bc
-    ld b, $08
-    rlca
-    inc bc
-    ld b, $03
-    rlca
-    inc bc
-    ld b, $03
-    rlca
-    ld [bc], a
-    ld b, $02
-    rlca
-    ld [bc], a
-    ld b, $02
-    rlca
-    ld bc, $0106
-    rlca
-    ld bc, $0106
-    rlca
-    ld bc, $0106
-    rra
-    ld [bc], a
-    rst $38
-    rst $38
-    nop
-    dec b
-    db $fd
-    adc h
-    ld bc, $0204
-    inc b
-    inc bc
-    inc b
-    inc b
-    inc bc
-    dec b
-    inc bc
-    ld b, $03
-    dec b
-    ld [bc], a
-    rlca
-    ld [bc], a
-    ld [$0702], sp
-    ld [bc], a
-    rra
-    ld [bc], a
-    ld [$1f02], sp
-    ld [bc], a
-    rlca
-    ld bc, $011f
-    ld [$1f01], sp
-    ld bc, $0107
-    rra
-    ld bc, $0108
-    rra
-    ld bc, $021f
-    rst $38
-    rst $38
-    nop
-    inc b
-    db $fd
-    sub h
-    ld bc, $0205
-    dec b
-    inc bc
-    inc b
-    inc b
-    inc b
-    dec b
-    ld b, $06
-    inc b
-    rlca
-    inc b
-    ld [$0703], sp
-    ld [bc], a
-    ld [$0602], sp
-    ld [bc], a
-    ld [$0903], sp
-    inc bc
-    ld [$0902], sp
-    ld [bc], a
-    ld [$0902], sp
-    ld [bc], a
-    ld a, [bc]
-    ld [bc], a
-    dec bc
-    ld [bc], a
-    ld a, [bc]
-    ld bc, $010b
-    ld a, [bc]
-    ld bc, $011f
-    dec bc
-    ld bc, $011f
-    ld a, [bc]
-    ld bc, $011f
-    dec bc
-    ld bc, $021f
-    rst $38
-    rst $38
-    nop
-    ld bc, $95fd
-    ld bc, $0201
-    ld bc, $0203
-    inc b
-    inc bc
-    dec b
-    inc bc
-    ld b, $03
-    rlca
-    inc bc
-    ld [$0903], sp
-    inc bc
-    ld a, [bc]
-    inc bc
-    dec bc
-    ld [bc], a
-    inc c
-    ld [bc], a
-    dec c
-    ld [bc], a
-    dec bc
-    ld [bc], a
-    inc c
-    ld [bc], a
-    dec c
-    ld [bc], a
-    dec bc
-    ld [bc], a
-    inc c
-    ld [bc], a
-    dec c
-    ld [bc], a
-    dec bc
-    ld [bc], a
-    inc c
-    ld [bc], a
-    dec c
-    ld [bc], a
-    dec bc
-    ld [bc], a
-    inc c
-    ld [bc], a
-    dec c
-    ld [bc], a
-    dec bc
-    ld [bc], a
-    inc c
-    ld [bc], a
-    dec c
-    ld [bc], a
-    rra
-    ld [bc], a
-    rst $38
-    rst $38
-    nop
-    inc bc
-    db $fd
-    sub [hl]
-    rra
-    ld bc, $0301
-    rra
-    ld bc, $0302
-    rra
-    ld bc, $0303
-    rra
-    ld bc, $0304
-    dec b
-    inc bc
-    inc b
-    inc bc
-    dec b
-    inc bc
-    inc b
-    inc bc
-    dec b
-    inc bc
-    inc b
-    inc bc
-    dec b
-    inc bc
-    rra
-    ld [bc], a
-    rst $38
-    rst $38
-    nop
-    inc b
-    db $fd
-    sub a
-    ld bc, $0004
-    inc bc
-    ld bc, $0203
-    inc b
-    ld bc, $0204
-    inc bc
-    ld bc, $0303
-    inc b
-    ld [bc], a
-    inc b
-    inc bc
-    inc bc
-    ld [bc], a
-    inc bc
-    inc b
-    inc b
-    inc bc
-    inc b
-    inc b
-    inc bc
-    inc bc
-    inc bc
-    dec b
-    inc b
-    inc b
-    inc bc
-    ld b, $03
-    dec b
-    inc b
-    rlca
-    inc b
-    db $10
-    inc b
-    dec bc
-    inc b
-    ld de, $0c04
-    inc b
-    ld [de], a
-    inc b
-    dec c
-    inc b
-    inc de
-    inc b
-    rlca
-    inc bc
-    rra
-    ld [bc], a
-    rst $38
-    rst $38
-    nop
-    inc b
-    db $fd
-    sbc c
-    ld bc, $0205
-    inc b
-    inc bc
-    inc bc
-    inc b
-    inc bc
-    dec b
-    inc bc
-    ld b, $03
-    rlca
-    inc bc
-    ld [$1f03], sp
-    ld [$0209], sp
-    ld a, [bc]
-    ld [bc], a
-    dec bc
-    ld [bc], a
-    inc c
-    ld [bc], a
-    dec c
-    ld [bc], a
-    ld c, $02
-    rrca
-    ld [bc], a
-    db $10
-    ld [bc], a
-    ld de, $1202
-    ld [bc], a
-    inc de
-    ld [bc], a
-    inc d
-    ld [bc], a
-    dec bc
-    ld [bc], a
-    inc c
-    ld [bc], a
-    dec c
-    ld [bc], a
-    ld c, $02
-    rrca
-    ld [bc], a
-    dec d
-    ld [bc], a
-    ld d, $02
-    rla
-    ld [bc], a
-    rra
-    ld [bc], a
-    rst $38
-    rst $38
-    nop
-    inc b
-    db $fd
-    sbc e
-    ld bc, $0204
-    inc b
-    inc bc
-    ld [bc], a
-    inc b
-    ld [bc], a
-    dec b
-    ld [bc], a
-    ld b, $02
-    rlca
-    ld [bc], a
-    ld [$0502], sp
-    ld [bc], a
-    ld b, $02
-    rlca
-    ld [bc], a
-    ld [$1f02], sp
-    ld [bc], a
-    rst $38
-    rst $38
-    nop
-    inc b
-    ld bc, $0203
-    ld b, $03
-    ld b, $04
-    ld b, $05
-    ld b, $06
-    ld b, $07
-    ld b, $08
-    ld b, $09
-    ld b, $1f
-    ld [bc], a
-    rst $38
-    rst $38
+AnimTimelineTable:
+    ; SeqRowTable row $60: the TIMELINE of each battle animation (45, by
+    ; animation number = [$dd64] = $da81). Pairs (first, second): first < $F8 =
+    ; show frame `first` for `second`+1 frames ([$dd66] -> the renderer's
+    ; [$c8]; $1F = the blank frame); $FD = play sound `second` (no time);
+    ; $FE = control op `second` (4 = back to step 1: the projectile loop of
+    ; $03 / $04, left by the renderer at the target); $FF,$FF = end
+    ; ([$dd62] = 0). MEASURED S112 for all 45 (tools/census_battle_anims.py).
+    ; S112: new animations ($2D+) are read through ReadSeqStepFork (patches).
+    dw AnimTimeline_00_Blaze       ; [$00] Blaze
+    dw AnimTimeline_01_Blazemore   ; [$01] Blazemore
+    dw AnimTimeline_02_Blazemost   ; [$02] Blazemost, COMEDYBK
+    dw AnimTimeline_03_Firebal     ; [$03] Firebal, FireAir
+    dw AnimTimeline_04_Firebane    ; [$04] Firebane, BlazeAir, LAVASTAFF
+    dw AnimTimeline_05_Firebolt    ; [$05] Firebolt, Scorching
+    dw AnimTimeline_06_Bang        ; [$06] Bang
+    dw AnimTimeline_07_Boom        ; [$07] Boom
+    dw AnimTimeline_08_Explodet    ; [$08] Explodet
+    dw AnimTimeline_09_Infernos    ; [$09] Infernos, WindBeast, STAFF
+    dw AnimTimeline_0a_Infermore   ; [$0a] Infermore
+    dw AnimTimeline_0b_Infermost   ; [$0b] Infermost, Vacuum
+    dw AnimTimeline_0c_IceBolt     ; [$0c] IceBolt, FrigidAir
+    dw AnimTimeline_0d_SnowStorm   ; [$0d] SnowStorm, IceAir
+    dw AnimTimeline_0e_Blizzard    ; [$0e] Blizzard, IceStorm, SNOWSTAFF
+    dw AnimTimeline_0f_Bolt        ; [$0f] Bolt, Lightning, BOLTSTAFF
+    dw AnimTimeline_10_Zap         ; [$10] Zap
+    dw AnimTimeline_11_Thordain    ; [$11] Thordain
+    dw AnimTimeline_12_StopSpell   ; [$12] StopSpell, RobMagic, Sap, Defence, Slow, SlowAll (+6)
+    dw AnimTimeline_13_RobMagic    ; [$13] RobMagic, TakeMagic, Upper, Increase, Speed, SpeedUp (+2)
+    dw AnimTimeline_14_Heal        ; [$14] Heal, HealMore, HealAll, HealUs, HealUsAll, Farewell (+20)
+    dw AnimTimeline_15_Sleep       ; [$15] Sleep, SleepAll, PoisonHit, NapAttack, Paralyze, SleepAir (+7)
+    dw AnimTimeline_16_PanicAll    ; [$16] PanicAll, PaniDance, Curse, Ahhh, LureDance
+    dw AnimTimeline_17_Surround    ; [$17] Surround, SandStorm
+    dw AnimTimeline_18_Transform   ; [$18] Transform, CHGDRAGON, BeDragon
+    dw AnimTimeline_19_MagicBack   ; [$19] MagicBack, Bounce
+    dw AnimTimeline_1a_WhiteAir    ; [$1a] WhiteAir
+    dw AnimTimeline_1b_RockThrow   ; [$1b] RockThrow
+    dw AnimTimeline_1c_WhiteFire   ; [$1c] WhiteFire
+    dw AnimTimeline_1d_TwinSlash   ; [$1d] TwinSlash, Massacre, EvilSlash, DrakSlash, BeastCut, SquallHit (+2)
+    dw AnimTimeline_1e_FireSlash   ; [$1e] FireSlash
+    dw AnimTimeline_1f_BoltSlash   ; [$1f] BoltSlash
+    dw AnimTimeline_20_VacuSlash   ; [$20] VacuSlash
+    dw AnimTimeline_21_IceSlash    ; [$21] IceSlash
+    dw AnimTimeline_22_Smashlime   ; [$22] Smashlime, Sheldodge
+    dw AnimTimeline_23_BirdBlow    ; [$23] BirdBlow
+    dw AnimTimeline_24_DevilCut    ; [$24] DevilCut, ZombieCut
+    dw AnimTimeline_25_MetalCut    ; [$25] MetalCut, CleanCut
+    dw AnimTimeline_26_GigaSlash   ; [$26] GigaSlash
+    dw AnimTimeline_27_MultiCut    ; [$27] MultiCut
+    dw AnimTimeline_28_Hellblast   ; [$28] Hellblast
+    dw AnimTimeline_29_BigBang     ; [$29] BigBang
+    dw AnimTimeline_2a_MegaMagic   ; [$2a] MegaMagic
+    dw AnimTimeline_2b_DeMagic     ; [$2b] DeMagic
+    dw AnimTimeline_2c_FEEDMEAT    ; [$2c] FEEDMEAT, BEFFJERKY, PORKCHOP, SIRLOIN
+AnimTimeline_00_Blaze:   ; $46fb — Blaze
+    db $00, $05   ; frame  0 for 6 frames
+    db $fd, $74   ; sound $74
+    db $01, $05   ; frame  1 for 6 frames
+    db $02, $05   ; frame  2 for 6 frames
+    db $03, $05   ; frame  3 for 6 frames
+    db $04, $02   ; frame  4 for 3 frames
+    db $05, $02   ; frame  5 for 3 frames
+    db $06, $02   ; frame  6 for 3 frames
+    db $07, $02   ; frame  7 for 3 frames
+    db $1f, $02   ; blank for 3 frames
+    db $ff, $ff   ; end
+AnimTimeline_01_Blazemore:   ; $4711 — Blazemore
+    db $00, $04   ; frame  0 for 5 frames
+    db $fd, $76   ; sound $76
+    db $01, $04   ; frame  1 for 5 frames
+    db $02, $04   ; frame  2 for 5 frames
+    db $03, $04   ; frame  3 for 5 frames
+    db $04, $02   ; frame  4 for 3 frames
+    db $05, $02   ; frame  5 for 3 frames
+    db $06, $02   ; frame  6 for 3 frames
+    db $07, $02   ; frame  7 for 3 frames
+    db $1f, $08   ; blank for 9 frames
+    db $08, $03   ; frame  8 for 4 frames
+    db $09, $03   ; frame  9 for 4 frames
+    db $0a, $03   ; frame 10 for 4 frames
+    db $0b, $03   ; frame 11 for 4 frames
+    db $0c, $03   ; frame 12 for 4 frames
+    db $09, $03   ; frame  9 for 4 frames
+    db $0a, $03   ; frame 10 for 4 frames
+    db $0b, $03   ; frame 11 for 4 frames
+    db $0c, $03   ; frame 12 for 4 frames
+    db $09, $02   ; frame  9 for 3 frames
+    db $0a, $02   ; frame 10 for 3 frames
+    db $0b, $02   ; frame 11 for 3 frames
+    db $0c, $02   ; frame 12 for 3 frames
+    db $0d, $02   ; frame 13 for 3 frames
+    db $0e, $02   ; frame 14 for 3 frames
+    db $1f, $02   ; blank for 3 frames
+    db $ff, $ff   ; end
+AnimTimeline_02_Blazemost:   ; $4747 — Blazemost, COMEDYBK
+    db $08, $02   ; frame  8 for 3 frames
+    db $fd, $76   ; sound $76
+    db $09, $05   ; frame  9 for 6 frames
+    db $0a, $05   ; frame 10 for 6 frames
+    db $0b, $05   ; frame 11 for 6 frames
+    db $0c, $02   ; frame 12 for 3 frames
+    db $0d, $02   ; frame 13 for 3 frames
+    db $0e, $02   ; frame 14 for 3 frames
+    db $0f, $02   ; frame 15 for 3 frames
+    db $1f, $08   ; blank for 9 frames
+    db $00, $01   ; frame  0 for 2 frames
+    db $01, $01   ; frame  1 for 2 frames
+    db $02, $01   ; frame  2 for 2 frames
+    db $03, $01   ; frame  3 for 2 frames
+    db $04, $03   ; frame  4 for 4 frames
+    db $05, $03   ; frame  5 for 4 frames
+    db $06, $03   ; frame  6 for 4 frames
+    db $07, $03   ; frame  7 for 4 frames
+    db $04, $03   ; frame  4 for 4 frames
+    db $05, $03   ; frame  5 for 4 frames
+    db $06, $03   ; frame  6 for 4 frames
+    db $07, $03   ; frame  7 for 4 frames
+    db $02, $02   ; frame  2 for 3 frames
+    db $00, $02   ; frame  0 for 3 frames
+    db $1f, $02   ; blank for 3 frames
+    db $ff, $ff   ; end
+AnimTimeline_03_Firebal:   ; $477b — Firebal, FireAir
+    db $00, $03   ; frame  0 for 4 frames
+    db $fd, $78   ; sound $78
+    db $01, $03   ; frame  1 for 4 frames
+    db $02, $03   ; frame  2 for 4 frames
+    db $fe, $04   ; op 4 (back to step 1)
+    db $1f, $02   ; blank for 3 frames
+    db $ff, $ff   ; end
+AnimTimeline_04_Firebane:   ; $4789 — Firebane, BlazeAir, LAVASTAFF
+    db $00, $02   ; frame  0 for 3 frames
+    db $fd, $78   ; sound $78
+    db $01, $02   ; frame  1 for 3 frames
+    db $02, $02   ; frame  2 for 3 frames
+    db $fe, $04   ; op 4 (back to step 1)
+    db $1f, $02   ; blank for 3 frames
+    db $ff, $ff   ; end
+AnimTimeline_05_Firebolt:   ; $4797 — Firebolt, Scorching
+    db $00, $04   ; frame  0 for 5 frames
+    db $fd, $7a   ; sound $7a
+    db $01, $03   ; frame  1 for 4 frames
+    db $02, $02   ; frame  2 for 3 frames
+    db $03, $04   ; frame  3 for 5 frames
+    db $04, $05   ; frame  4 for 6 frames
+    db $05, $03   ; frame  5 for 4 frames
+    db $06, $04   ; frame  6 for 5 frames
+    db $07, $03   ; frame  7 for 4 frames
+    db $08, $04   ; frame  8 for 5 frames
+    db $04, $04   ; frame  4 for 5 frames
+    db $05, $03   ; frame  5 for 4 frames
+    db $06, $04   ; frame  6 for 5 frames
+    db $07, $03   ; frame  7 for 4 frames
+    db $08, $04   ; frame  8 for 5 frames
+    db $04, $03   ; frame  4 for 4 frames
+    db $05, $04   ; frame  5 for 5 frames
+    db $06, $03   ; frame  6 for 4 frames
+    db $07, $04   ; frame  7 for 5 frames
+    db $08, $03   ; frame  8 for 4 frames
+    db $09, $02   ; frame  9 for 3 frames
+    db $0a, $03   ; frame 10 for 4 frames
+    db $1f, $02   ; blank for 3 frames
+    db $ff, $ff   ; end
+AnimTimeline_06_Bang:   ; $47c7 — Bang
+    db $00, $04   ; frame  0 for 5 frames
+    db $fd, $7b   ; sound $7b
+    db $01, $02   ; frame  1 for 3 frames
+    db $02, $04   ; frame  2 for 5 frames
+    db $03, $04   ; frame  3 for 5 frames
+    db $04, $02   ; frame  4 for 3 frames
+    db $00, $02   ; frame  0 for 3 frames
+    db $01, $02   ; frame  1 for 3 frames
+    db $02, $02   ; frame  2 for 3 frames
+    db $01, $02   ; frame  1 for 3 frames
+    db $1f, $02   ; blank for 3 frames
+    db $ff, $ff   ; end
+AnimTimeline_07_Boom:   ; $47df — Boom
+    db $00, $02   ; frame  0 for 3 frames
+    db $01, $02   ; frame  1 for 3 frames
+    db $02, $02   ; frame  2 for 3 frames
+    db $1f, $10   ; blank for 17 frames
+    db $03, $04   ; frame  3 for 5 frames
+    db $fd, $7b   ; sound $7b
+    db $04, $02   ; frame  4 for 3 frames
+    db $05, $04   ; frame  5 for 5 frames
+    db $06, $02   ; frame  6 for 3 frames
+    db $07, $04   ; frame  7 for 5 frames
+    db $08, $02   ; frame  8 for 3 frames
+    db $03, $03   ; frame  3 for 4 frames
+    db $04, $02   ; frame  4 for 3 frames
+    db $05, $03   ; frame  5 for 4 frames
+    db $06, $02   ; frame  6 for 3 frames
+    db $07, $04   ; frame  7 for 5 frames
+    db $08, $02   ; frame  8 for 3 frames
+    db $1f, $02   ; blank for 3 frames
+    db $ff, $ff   ; end
+AnimTimeline_08_Explodet:   ; $4805 — Explodet
+    db $00, $02   ; frame  0 for 3 frames
+    db $fd, $7c   ; sound $7c
+    db $01, $02   ; frame  1 for 3 frames
+    db $02, $02   ; frame  2 for 3 frames
+    db $03, $02   ; frame  3 for 3 frames
+    db $1f, $10   ; blank for 17 frames
+    db $04, $05   ; frame  4 for 6 frames
+    db $fd, $7b   ; sound $7b
+    db $05, $05   ; frame  5 for 6 frames
+    db $06, $05   ; frame  6 for 6 frames
+    db $07, $02   ; frame  7 for 3 frames
+    db $08, $02   ; frame  8 for 3 frames
+    db $0e, $02   ; frame 14 for 3 frames
+    db $09, $02   ; frame  9 for 3 frames
+    db $0f, $02   ; frame 15 for 3 frames
+    db $0a, $02   ; frame 10 for 3 frames
+    db $10, $02   ; frame 16 for 3 frames
+    db $0b, $02   ; frame 11 for 3 frames
+    db $11, $02   ; frame 17 for 3 frames
+    db $0c, $02   ; frame 12 for 3 frames
+    db $12, $02   ; frame 18 for 3 frames
+    db $0d, $02   ; frame 13 for 3 frames
+    db $13, $02   ; frame 19 for 3 frames
+    db $08, $02   ; frame  8 for 3 frames
+    db $0e, $02   ; frame 14 for 3 frames
+    db $09, $02   ; frame  9 for 3 frames
+    db $0f, $02   ; frame 15 for 3 frames
+    db $0a, $02   ; frame 10 for 3 frames
+    db $10, $02   ; frame 16 for 3 frames
+    db $0b, $02   ; frame 11 for 3 frames
+    db $06, $02   ; frame  6 for 3 frames
+    db $1f, $02   ; blank for 3 frames
+    db $ff, $ff   ; end
+AnimTimeline_09_Infernos:   ; $4847 — Infernos, WindBeast, STAFF
+    db $00, $02   ; frame  0 for 3 frames
+    db $fd, $7e   ; sound $7e
+    db $01, $02   ; frame  1 for 3 frames
+    db $02, $02   ; frame  2 for 3 frames
+    db $03, $02   ; frame  3 for 3 frames
+    db $04, $02   ; frame  4 for 3 frames
+    db $05, $02   ; frame  5 for 3 frames
+    db $06, $02   ; frame  6 for 3 frames
+    db $07, $02   ; frame  7 for 3 frames
+    db $08, $02   ; frame  8 for 3 frames
+    db $09, $02   ; frame  9 for 3 frames
+    db $0a, $02   ; frame 10 for 3 frames
+    db $0b, $02   ; frame 11 for 3 frames
+    db $0c, $02   ; frame 12 for 3 frames
+    db $1f, $02   ; blank for 3 frames
+    db $ff, $ff   ; end
+AnimTimeline_0a_Infermore:   ; $4867 — Infermore
+    db $04, $05   ; frame  4 for 6 frames
+    db $fd, $7e   ; sound $7e
+    db $05, $04   ; frame  5 for 5 frames
+    db $06, $05   ; frame  6 for 6 frames
+    db $07, $06   ; frame  7 for 7 frames
+    db $08, $05   ; frame  8 for 6 frames
+    db $09, $04   ; frame  9 for 5 frames
+    db $0a, $05   ; frame 10 for 6 frames
+    db $04, $05   ; frame  4 for 6 frames
+    db $1f, $02   ; blank for 3 frames
+    db $ff, $ff   ; end
+AnimTimeline_0b_Infermost:   ; $487d — Infermost, Vacuum
+    db $00, $03   ; frame  0 for 4 frames
+    db $fd, $7f   ; sound $7f
+    db $01, $03   ; frame  1 for 4 frames
+    db $02, $03   ; frame  2 for 4 frames
+    db $03, $03   ; frame  3 for 4 frames
+    db $04, $03   ; frame  4 for 4 frames
+    db $05, $03   ; frame  5 for 4 frames
+    db $06, $03   ; frame  6 for 4 frames
+    db $07, $03   ; frame  7 for 4 frames
+    db $08, $03   ; frame  8 for 4 frames
+    db $09, $03   ; frame  9 for 4 frames
+    db $0a, $03   ; frame 10 for 4 frames
+    db $0b, $03   ; frame 11 for 4 frames
+    db $0c, $03   ; frame 12 for 4 frames
+    db $0d, $03   ; frame 13 for 4 frames
+    db $0e, $03   ; frame 14 for 4 frames
+    db $0f, $03   ; frame 15 for 4 frames
+    db $10, $03   ; frame 16 for 4 frames
+    db $11, $03   ; frame 17 for 4 frames
+    db $12, $03   ; frame 18 for 4 frames
+    db $13, $03   ; frame 19 for 4 frames
+    db $14, $03   ; frame 20 for 4 frames
+    db $15, $03   ; frame 21 for 4 frames
+    db $16, $03   ; frame 22 for 4 frames
+    db $17, $03   ; frame 23 for 4 frames
+    db $18, $03   ; frame 24 for 4 frames
+    db $19, $03   ; frame 25 for 4 frames
+    db $1a, $03   ; frame 26 for 4 frames
+    db $1f, $02   ; blank for 3 frames
+    db $ff, $ff   ; end
+AnimTimeline_0c_IceBolt:   ; $48b9 — IceBolt, FrigidAir
+    db $00, $03   ; frame  0 for 4 frames
+    db $fd, $80   ; sound $80
+    db $01, $03   ; frame  1 for 4 frames
+    db $02, $03   ; frame  2 for 4 frames
+    db $03, $03   ; frame  3 for 4 frames
+    db $04, $03   ; frame  4 for 4 frames
+    db $05, $03   ; frame  5 for 4 frames
+    db $06, $03   ; frame  6 for 4 frames
+    db $07, $03   ; frame  7 for 4 frames
+    db $08, $03   ; frame  8 for 4 frames
+    db $09, $03   ; frame  9 for 4 frames
+    db $0a, $03   ; frame 10 for 4 frames
+    db $0b, $03   ; frame 11 for 4 frames
+    db $0c, $03   ; frame 12 for 4 frames
+    db $0d, $03   ; frame 13 for 4 frames
+    db $0e, $03   ; frame 14 for 4 frames
+    db $0f, $03   ; frame 15 for 4 frames
+    db $10, $03   ; frame 16 for 4 frames
+    db $11, $03   ; frame 17 for 4 frames
+    db $12, $03   ; frame 18 for 4 frames
+    db $1f, $02   ; blank for 3 frames
+    db $ff, $ff   ; end
+AnimTimeline_0d_SnowStorm:   ; $48e5 — SnowStorm, IceAir
+    db $00, $05   ; frame  0 for 6 frames
+    db $fd, $80   ; sound $80
+    db $01, $04   ; frame  1 for 5 frames
+    db $02, $04   ; frame  2 for 5 frames
+    db $03, $03   ; frame  3 for 4 frames
+    db $04, $02   ; frame  4 for 3 frames
+    db $03, $02   ; frame  3 for 3 frames
+    db $04, $03   ; frame  4 for 4 frames
+    db $03, $03   ; frame  3 for 4 frames
+    db $04, $0f   ; frame  4 for 16 frames
+    db $1f, $03   ; blank for 4 frames
+    db $04, $03   ; frame  4 for 4 frames
+    db $1f, $03   ; blank for 4 frames
+    db $04, $02   ; frame  4 for 3 frames
+    db $1f, $02   ; blank for 3 frames
+    db $ff, $ff   ; end
+AnimTimeline_0e_Blizzard:   ; $4905 — Blizzard, IceStorm, SNOWSTAFF
+    db $06, $03   ; frame  6 for 4 frames
+    db $fd, $81   ; sound $81
+    db $07, $03   ; frame  7 for 4 frames
+    db $08, $02   ; frame  8 for 3 frames
+    db $09, $02   ; frame  9 for 3 frames
+    db $0a, $01   ; frame 10 for 2 frames
+    db $0b, $01   ; frame 11 for 2 frames
+    db $0c, $01   ; frame 12 for 2 frames
+    db $1f, $08   ; blank for 9 frames
+    db $01, $02   ; frame  1 for 3 frames
+    db $02, $02   ; frame  2 for 3 frames
+    db $03, $02   ; frame  3 for 3 frames
+    db $04, $02   ; frame  4 for 3 frames
+    db $01, $02   ; frame  1 for 3 frames
+    db $02, $02   ; frame  2 for 3 frames
+    db $03, $02   ; frame  3 for 3 frames
+    db $04, $02   ; frame  4 for 3 frames
+    db $01, $02   ; frame  1 for 3 frames
+    db $02, $02   ; frame  2 for 3 frames
+    db $03, $02   ; frame  3 for 3 frames
+    db $04, $02   ; frame  4 for 3 frames
+    db $01, $02   ; frame  1 for 3 frames
+    db $02, $02   ; frame  2 for 3 frames
+    db $03, $02   ; frame  3 for 3 frames
+    db $04, $02   ; frame  4 for 3 frames
+    db $01, $02   ; frame  1 for 3 frames
+    db $02, $02   ; frame  2 for 3 frames
+    db $03, $02   ; frame  3 for 3 frames
+    db $04, $02   ; frame  4 for 3 frames
+    db $05, $01   ; frame  5 for 2 frames
+    db $1f, $02   ; blank for 3 frames
+    db $ff, $ff   ; end
+AnimTimeline_0f_Bolt:   ; $4945 — Bolt, Lightning, BOLTSTAFF
+    db $00, $04   ; frame  0 for 5 frames
+    db $fd, $82   ; sound $82
+    db $01, $03   ; frame  1 for 4 frames
+    db $1f, $08   ; blank for 9 frames
+    db $02, $05   ; frame  2 for 6 frames
+    db $03, $04   ; frame  3 for 5 frames
+    db $04, $03   ; frame  4 for 4 frames
+    db $05, $03   ; frame  5 for 4 frames
+    db $06, $02   ; frame  6 for 3 frames
+    db $07, $02   ; frame  7 for 3 frames
+    db $04, $02   ; frame  4 for 3 frames
+    db $05, $02   ; frame  5 for 3 frames
+    db $06, $02   ; frame  6 for 3 frames
+    db $07, $02   ; frame  7 for 3 frames
+    db $02, $02   ; frame  2 for 3 frames
+    db $1f, $02   ; blank for 3 frames
+    db $ff, $ff   ; end
+AnimTimeline_10_Zap:   ; $4967 — Zap
+    db $00, $04   ; frame  0 for 5 frames
+    db $fd, $82   ; sound $82
+    db $01, $03   ; frame  1 for 4 frames
+    db $02, $02   ; frame  2 for 3 frames
+    db $1f, $08   ; blank for 9 frames
+    db $03, $05   ; frame  3 for 6 frames
+    db $04, $04   ; frame  4 for 5 frames
+    db $05, $03   ; frame  5 for 4 frames
+    db $06, $03   ; frame  6 for 4 frames
+    db $07, $02   ; frame  7 for 3 frames
+    db $08, $02   ; frame  8 for 3 frames
+    db $09, $02   ; frame  9 for 3 frames
+    db $05, $02   ; frame  5 for 3 frames
+    db $06, $02   ; frame  6 for 3 frames
+    db $07, $02   ; frame  7 for 3 frames
+    db $08, $02   ; frame  8 for 3 frames
+    db $09, $02   ; frame  9 for 3 frames
+    db $06, $02   ; frame  6 for 3 frames
+    db $07, $02   ; frame  7 for 3 frames
+    db $08, $02   ; frame  8 for 3 frames
+    db $09, $02   ; frame  9 for 3 frames
+    db $04, $01   ; frame  4 for 2 frames
+    db $1f, $02   ; blank for 3 frames
+    db $ff, $ff   ; end
+AnimTimeline_11_Thordain:   ; $4997 — Thordain
+    db $00, $03   ; frame  0 for 4 frames
+    db $fd, $83   ; sound $83
+    db $01, $03   ; frame  1 for 4 frames
+    db $02, $02   ; frame  2 for 3 frames
+    db $03, $03   ; frame  3 for 4 frames
+    db $02, $01   ; frame  2 for 2 frames
+    db $0f, $01   ; frame 15 for 2 frames
+    db $04, $03   ; frame  4 for 4 frames
+    db $05, $03   ; frame  5 for 4 frames
+    db $06, $03   ; frame  6 for 4 frames
+    db $07, $02   ; frame  7 for 3 frames
+    db $08, $02   ; frame  8 for 3 frames
+    db $09, $02   ; frame  9 for 3 frames
+    db $0a, $01   ; frame 10 for 2 frames
+    db $0b, $01   ; frame 11 for 2 frames
+    db $0c, $01   ; frame 12 for 2 frames
+    db $0d, $01   ; frame 13 for 2 frames
+    db $06, $03   ; frame  6 for 4 frames
+    db $07, $02   ; frame  7 for 3 frames
+    db $0a, $01   ; frame 10 for 2 frames
+    db $0b, $01   ; frame 11 for 2 frames
+    db $0c, $01   ; frame 12 for 2 frames
+    db $0d, $01   ; frame 13 for 2 frames
+    db $08, $03   ; frame  8 for 4 frames
+    db $09, $02   ; frame  9 for 3 frames
+    db $0a, $01   ; frame 10 for 2 frames
+    db $0b, $01   ; frame 11 for 2 frames
+    db $0c, $01   ; frame 12 for 2 frames
+    db $0d, $01   ; frame 13 for 2 frames
+    db $0e, $01   ; frame 14 for 2 frames
+    db $04, $02   ; frame  4 for 3 frames
+    db $1f, $02   ; blank for 3 frames
+    db $ff, $ff   ; end
+AnimTimeline_12_StopSpell:   ; $49d9 — StopSpell, RobMagic, Sap, Defence, Slow, SlowAll (+6)
+    db $00, $04   ; frame  0 for 5 frames
+    db $fd, $72   ; sound $72
+    db $01, $04   ; frame  1 for 5 frames
+    db $02, $04   ; frame  2 for 5 frames
+    db $03, $04   ; frame  3 for 5 frames
+    db $04, $04   ; frame  4 for 5 frames
+    db $05, $04   ; frame  5 for 5 frames
+    db $06, $04   ; frame  6 for 5 frames
+    db $07, $04   ; frame  7 for 5 frames
+    db $08, $04   ; frame  8 for 5 frames
+    db $09, $04   ; frame  9 for 5 frames
+    db $0a, $04   ; frame 10 for 5 frames
+    db $1f, $02   ; blank for 3 frames
+    db $ff, $ff   ; end
+AnimTimeline_13_RobMagic:   ; $49f5 — RobMagic, TakeMagic, Upper, Increase, Speed, SpeedUp (+2)
+    db $00, $04   ; frame  0 for 5 frames
+    db $fd, $71   ; sound $71
+    db $01, $03   ; frame  1 for 4 frames
+    db $02, $04   ; frame  2 for 5 frames
+    db $03, $03   ; frame  3 for 4 frames
+    db $04, $02   ; frame  4 for 3 frames
+    db $05, $01   ; frame  5 for 2 frames
+    db $06, $01   ; frame  6 for 2 frames
+    db $07, $01   ; frame  7 for 2 frames
+    db $1f, $01   ; blank for 2 frames
+    db $ff, $ff   ; end
+AnimTimeline_14_Heal:   ; $4a0b — Heal, HealMore, HealAll, HealUs, HealUsAll, Farewell (+20)
+    db $00, $0a   ; frame  0 for 11 frames
+    db $fd, $70   ; sound $70
+    db $01, $08   ; frame  1 for 9 frames
+    db $02, $07   ; frame  2 for 8 frames
+    db $03, $06   ; frame  3 for 7 frames
+    db $04, $05   ; frame  4 for 6 frames
+    db $05, $05   ; frame  5 for 6 frames
+    db $06, $05   ; frame  6 for 6 frames
+    db $07, $05   ; frame  7 for 6 frames
+    db $08, $04   ; frame  8 for 5 frames
+    db $09, $04   ; frame  9 for 5 frames
+    db $0a, $04   ; frame 10 for 5 frames
+    db $1f, $02   ; blank for 3 frames
+    db $ff, $ff   ; end
+AnimTimeline_15_Sleep:   ; $4a27 — Sleep, SleepAll, PoisonHit, NapAttack, Paralyze, SleepAir (+7)
+    db $00, $08   ; frame  0 for 9 frames
+    db $fd, $73   ; sound $73
+    db $01, $06   ; frame  1 for 7 frames
+    db $02, $08   ; frame  2 for 9 frames
+    db $03, $06   ; frame  3 for 7 frames
+    db $04, $08   ; frame  4 for 9 frames
+    db $05, $08   ; frame  5 for 9 frames
+    db $06, $08   ; frame  6 for 9 frames
+    db $07, $08   ; frame  7 for 9 frames
+    db $08, $04   ; frame  8 for 5 frames
+    db $09, $04   ; frame  9 for 5 frames
+    db $1f, $02   ; blank for 3 frames
+    db $ff, $ff   ; end
+AnimTimeline_16_PanicAll:   ; $4a41 — PanicAll, PaniDance, Curse, Ahhh, LureDance
+    db $00, $06   ; frame  0 for 7 frames
+    db $fd, $73   ; sound $73
+    db $01, $06   ; frame  1 for 7 frames
+    db $02, $06   ; frame  2 for 7 frames
+    db $03, $06   ; frame  3 for 7 frames
+    db $04, $08   ; frame  4 for 9 frames
+    db $05, $08   ; frame  5 for 9 frames
+    db $06, $04   ; frame  6 for 5 frames
+    db $07, $04   ; frame  7 for 5 frames
+    db $08, $04   ; frame  8 for 5 frames
+    db $1f, $02   ; blank for 3 frames
+    db $ff, $ff   ; end
+AnimTimeline_17_Surround:   ; $4a59 — Surround, SandStorm
+    db $00, $06   ; frame  0 for 7 frames
+    db $fd, $84   ; sound $84
+    db $01, $06   ; frame  1 for 7 frames
+    db $02, $06   ; frame  2 for 7 frames
+    db $03, $06   ; frame  3 for 7 frames
+    db $04, $06   ; frame  4 for 7 frames
+    db $05, $06   ; frame  5 for 7 frames
+    db $1f, $02   ; blank for 3 frames
+    db $ff, $ff   ; end
+AnimTimeline_18_Transform:   ; $4a6b — Transform, CHGDRAGON, BeDragon
+    db $00, $0a   ; frame  0 for 11 frames
+    db $fd, $85   ; sound $85
+    db $01, $06   ; frame  1 for 7 frames
+    db $02, $05   ; frame  2 for 6 frames
+    db $03, $04   ; frame  3 for 5 frames
+    db $04, $04   ; frame  4 for 5 frames
+    db $05, $03   ; frame  5 for 4 frames
+    db $06, $03   ; frame  6 for 4 frames
+    db $07, $03   ; frame  7 for 4 frames
+    db $1f, $02   ; blank for 3 frames
+    db $ff, $ff   ; end
+AnimTimeline_19_MagicBack:   ; $4a81 — MagicBack, Bounce
+    db $00, $04   ; frame  0 for 5 frames
+    db $fd, $86   ; sound $86
+    db $1f, $04   ; blank for 5 frames
+    db $00, $04   ; frame  0 for 5 frames
+    db $1f, $04   ; blank for 5 frames
+    db $00, $04   ; frame  0 for 5 frames
+    db $1f, $04   ; blank for 5 frames
+    db $00, $04   ; frame  0 for 5 frames
+    db $1f, $04   ; blank for 5 frames
+    db $00, $04   ; frame  0 for 5 frames
+    db $1f, $04   ; blank for 5 frames
+    db $00, $04   ; frame  0 for 5 frames
+    db $1f, $04   ; blank for 5 frames
+    db $1f, $02   ; blank for 3 frames
+    db $ff, $ff   ; end
+AnimTimeline_1a_WhiteAir:   ; $4a9f — WhiteAir
+    db $00, $03   ; frame  0 for 4 frames
+    db $fd, $88   ; sound $88
+    db $01, $03   ; frame  1 for 4 frames
+    db $02, $03   ; frame  2 for 4 frames
+    db $1f, $08   ; blank for 9 frames
+    db $03, $02   ; frame  3 for 3 frames
+    db $04, $02   ; frame  4 for 3 frames
+    db $05, $02   ; frame  5 for 3 frames
+    db $06, $02   ; frame  6 for 3 frames
+    db $07, $02   ; frame  7 for 3 frames
+    db $08, $02   ; frame  8 for 3 frames
+    db $09, $02   ; frame  9 for 3 frames
+    db $0a, $02   ; frame 10 for 3 frames
+    db $0b, $02   ; frame 11 for 3 frames
+    db $0c, $02   ; frame 12 for 3 frames
+    db $0d, $02   ; frame 13 for 3 frames
+    db $0e, $02   ; frame 14 for 3 frames
+    db $0f, $02   ; frame 15 for 3 frames
+    db $10, $02   ; frame 16 for 3 frames
+    db $11, $02   ; frame 17 for 3 frames
+    db $0a, $02   ; frame 10 for 3 frames
+    db $0b, $02   ; frame 11 for 3 frames
+    db $0c, $02   ; frame 12 for 3 frames
+    db $0d, $02   ; frame 13 for 3 frames
+    db $0e, $02   ; frame 14 for 3 frames
+    db $0f, $02   ; frame 15 for 3 frames
+    db $10, $02   ; frame 16 for 3 frames
+    db $11, $02   ; frame 17 for 3 frames
+    db $12, $02   ; frame 18 for 3 frames
+    db $1f, $02   ; blank for 3 frames
+    db $ff, $ff   ; end
+AnimTimeline_1b_RockThrow:   ; $4add — RockThrow
+    db $00, $04   ; frame  0 for 5 frames
+    db $fd, $89   ; sound $89
+    db $01, $04   ; frame  1 for 5 frames
+    db $02, $04   ; frame  2 for 5 frames
+    db $03, $04   ; frame  3 for 5 frames
+    db $04, $05   ; frame  4 for 6 frames
+    db $05, $04   ; frame  5 for 5 frames
+    db $06, $04   ; frame  6 for 5 frames
+    db $07, $04   ; frame  7 for 5 frames
+    db $1f, $02   ; blank for 3 frames
+    db $ff, $ff   ; end
+AnimTimeline_1c_WhiteFire:   ; $4af3 — WhiteFire
+    db $00, $02   ; frame  0 for 3 frames
+    db $fd, $8a   ; sound $8a
+    db $01, $02   ; frame  1 for 3 frames
+    db $02, $02   ; frame  2 for 3 frames
+    db $03, $02   ; frame  3 for 3 frames
+    db $04, $02   ; frame  4 for 3 frames
+    db $05, $02   ; frame  5 for 3 frames
+    db $06, $02   ; frame  6 for 3 frames
+    db $07, $02   ; frame  7 for 3 frames
+    db $08, $02   ; frame  8 for 3 frames
+    db $09, $02   ; frame  9 for 3 frames
+    db $0a, $02   ; frame 10 for 3 frames
+    db $0b, $03   ; frame 11 for 4 frames
+    db $0c, $05   ; frame 12 for 6 frames
+    db $0d, $04   ; frame 13 for 5 frames
+    db $0e, $03   ; frame 14 for 4 frames
+    db $0f, $03   ; frame 15 for 4 frames
+    db $0e, $04   ; frame 14 for 5 frames
+    db $0d, $04   ; frame 13 for 5 frames
+    db $0e, $03   ; frame 14 for 4 frames
+    db $0b, $03   ; frame 11 for 4 frames
+    db $13, $04   ; frame 19 for 5 frames
+    db $0b, $04   ; frame 11 for 5 frames
+    db $0c, $05   ; frame 12 for 6 frames
+    db $0d, $04   ; frame 13 for 5 frames
+    db $0e, $03   ; frame 14 for 4 frames
+    db $0f, $04   ; frame 15 for 5 frames
+    db $0e, $03   ; frame 14 for 4 frames
+    db $10, $04   ; frame 16 for 5 frames
+    db $11, $04   ; frame 17 for 5 frames
+    db $12, $04   ; frame 18 for 5 frames
+    db $1f, $02   ; blank for 3 frames
+    db $ff, $ff   ; end
+AnimTimeline_1d_TwinSlash:   ; $4b35 — TwinSlash, Massacre, EvilSlash, DrakSlash, BeastCut, SquallHit (+2)
+    db $00, $03   ; frame  0 for 4 frames
+    db $fd, $8c   ; sound $8c
+    db $01, $04   ; frame  1 for 5 frames
+    db $02, $04   ; frame  2 for 5 frames
+    db $03, $03   ; frame  3 for 4 frames
+    db $04, $05   ; frame  4 for 6 frames
+    db $05, $03   ; frame  5 for 4 frames
+    db $1f, $02   ; blank for 3 frames
+    db $ff, $ff   ; end
+AnimTimeline_1e_FireSlash:   ; $4b47 — FireSlash
+    db $00, $03   ; frame  0 for 4 frames
+    db $fd, $8d   ; sound $8d
+    db $01, $04   ; frame  1 for 5 frames
+    db $02, $04   ; frame  2 for 5 frames
+    db $03, $03   ; frame  3 for 4 frames
+    db $00, $03   ; frame  0 for 4 frames
+    db $01, $04   ; frame  1 for 5 frames
+    db $02, $04   ; frame  2 for 5 frames
+    db $03, $03   ; frame  3 for 4 frames
+    db $04, $05   ; frame  4 for 6 frames
+    db $05, $03   ; frame  5 for 4 frames
+    db $06, $03   ; frame  6 for 4 frames
+    db $1f, $08   ; blank for 9 frames
+    db $07, $03   ; frame  7 for 4 frames
+    db $08, $02   ; frame  8 for 3 frames
+    db $09, $04   ; frame  9 for 5 frames
+    db $0a, $04   ; frame 10 for 5 frames
+    db $0b, $04   ; frame 11 for 5 frames
+    db $0c, $04   ; frame 12 for 5 frames
+    db $0d, $04   ; frame 13 for 5 frames
+    db $0e, $03   ; frame 14 for 4 frames
+    db $0f, $03   ; frame 15 for 4 frames
+    db $10, $03   ; frame 16 for 4 frames
+    db $11, $03   ; frame 17 for 4 frames
+    db $12, $03   ; frame 18 for 4 frames
+    db $13, $03   ; frame 19 for 4 frames
+    db $1f, $02   ; blank for 3 frames
+    db $ff, $ff   ; end
+AnimTimeline_1f_BoltSlash:   ; $4b7f — BoltSlash
+    db $00, $03   ; frame  0 for 4 frames
+    db $fd, $8e   ; sound $8e
+    db $01, $04   ; frame  1 for 5 frames
+    db $02, $04   ; frame  2 for 5 frames
+    db $03, $03   ; frame  3 for 4 frames
+    db $04, $05   ; frame  4 for 6 frames
+    db $05, $02   ; frame  5 for 3 frames
+    db $06, $02   ; frame  6 for 3 frames
+    db $07, $02   ; frame  7 for 3 frames
+    db $08, $02   ; frame  8 for 3 frames
+    db $09, $02   ; frame  9 for 3 frames
+    db $0a, $03   ; frame 10 for 4 frames
+    db $0b, $04   ; frame 11 for 5 frames
+    db $0c, $03   ; frame 12 for 4 frames
+    db $0d, $03   ; frame 13 for 4 frames
+    db $0e, $02   ; frame 14 for 3 frames
+    db $0f, $02   ; frame 15 for 3 frames
+    db $10, $02   ; frame 16 for 3 frames
+    db $0c, $02   ; frame 12 for 3 frames
+    db $0d, $02   ; frame 13 for 3 frames
+    db $0e, $02   ; frame 14 for 3 frames
+    db $0f, $02   ; frame 15 for 3 frames
+    db $10, $02   ; frame 16 for 3 frames
+    db $0d, $02   ; frame 13 for 3 frames
+    db $0e, $02   ; frame 14 for 3 frames
+    db $0f, $02   ; frame 15 for 3 frames
+    db $10, $02   ; frame 16 for 3 frames
+    db $0a, $01   ; frame 10 for 2 frames
+    db $1f, $02   ; blank for 3 frames
+    db $ff, $ff   ; end
+AnimTimeline_20_VacuSlash:   ; $4bbb — VacuSlash
+    db $00, $03   ; frame  0 for 4 frames
+    db $fd, $8f   ; sound $8f
+    db $01, $04   ; frame  1 for 5 frames
+    db $02, $04   ; frame  2 for 5 frames
+    db $03, $03   ; frame  3 for 4 frames
+    db $04, $05   ; frame  4 for 6 frames
+    db $05, $03   ; frame  5 for 4 frames
+    db $06, $03   ; frame  6 for 4 frames
+    db $1f, $08   ; blank for 9 frames
+    db $07, $02   ; frame  7 for 3 frames
+    db $08, $02   ; frame  8 for 3 frames
+    db $09, $02   ; frame  9 for 3 frames
+    db $0a, $02   ; frame 10 for 3 frames
+    db $0b, $02   ; frame 11 for 3 frames
+    db $0c, $02   ; frame 12 for 3 frames
+    db $0d, $02   ; frame 13 for 3 frames
+    db $0e, $02   ; frame 14 for 3 frames
+    db $0f, $02   ; frame 15 for 3 frames
+    db $10, $02   ; frame 16 for 3 frames
+    db $11, $02   ; frame 17 for 3 frames
+    db $12, $02   ; frame 18 for 3 frames
+    db $13, $02   ; frame 19 for 3 frames
+    db $14, $02   ; frame 20 for 3 frames
+    db $15, $02   ; frame 21 for 3 frames
+    db $16, $02   ; frame 22 for 3 frames
+    db $17, $02   ; frame 23 for 3 frames
+    db $18, $02   ; frame 24 for 3 frames
+    db $19, $02   ; frame 25 for 3 frames
+    db $1f, $02   ; blank for 3 frames
+    db $ff, $ff   ; end
+AnimTimeline_21_IceSlash:   ; $4bf7 — IceSlash
+    db $00, $03   ; frame  0 for 4 frames
+    db $fd, $90   ; sound $90
+    db $01, $04   ; frame  1 for 5 frames
+    db $02, $04   ; frame  2 for 5 frames
+    db $03, $03   ; frame  3 for 4 frames
+    db $04, $05   ; frame  4 for 6 frames
+    db $05, $03   ; frame  5 for 4 frames
+    db $06, $03   ; frame  6 for 4 frames
+    db $1f, $08   ; blank for 9 frames
+    db $07, $05   ; frame  7 for 6 frames
+    db $08, $04   ; frame  8 for 5 frames
+    db $09, $03   ; frame  9 for 4 frames
+    db $0a, $03   ; frame 10 for 4 frames
+    db $0b, $03   ; frame 11 for 4 frames
+    db $0a, $04   ; frame 10 for 5 frames
+    db $0b, $08   ; frame 11 for 9 frames
+    db $1f, $03   ; blank for 4 frames
+    db $0b, $02   ; frame 11 for 3 frames
+    db $1f, $02   ; blank for 3 frames
+    db $0b, $01   ; frame 11 for 2 frames
+    db $1f, $01   ; blank for 2 frames
+    db $0b, $01   ; frame 11 for 2 frames
+    db $1f, $01   ; blank for 2 frames
+    db $0b, $01   ; frame 11 for 2 frames
+    db $1f, $01   ; blank for 2 frames
+    db $0b, $01   ; frame 11 for 2 frames
+    db $1f, $02   ; blank for 3 frames
+    db $ff, $ff   ; end
+AnimTimeline_22_Smashlime:   ; $4c2f — Smashlime, Sheldodge
+    db $00, $06   ; frame  0 for 7 frames
+    db $fd, $92   ; sound $92
+    db $01, $05   ; frame  1 for 6 frames
+    db $02, $05   ; frame  2 for 6 frames
+    db $03, $03   ; frame  3 for 4 frames
+    db $04, $04   ; frame  4 for 5 frames
+    db $05, $03   ; frame  5 for 4 frames
+    db $1f, $02   ; blank for 3 frames
+    db $ff, $ff   ; end
+AnimTimeline_23_BirdBlow:   ; $4c41 — BirdBlow
+    db $00, $03   ; frame  0 for 4 frames
+    db $fd, $93   ; sound $93
+    db $01, $04   ; frame  1 for 5 frames
+    db $02, $04   ; frame  2 for 5 frames
+    db $03, $03   ; frame  3 for 4 frames
+    db $04, $05   ; frame  4 for 6 frames
+    db $05, $03   ; frame  5 for 4 frames
+    db $06, $02   ; frame  6 for 3 frames
+    db $1f, $02   ; blank for 3 frames
+    db $ff, $ff   ; end
+AnimTimeline_24_DevilCut:   ; $4c55 — DevilCut, ZombieCut
+    db $00, $06   ; frame  0 for 7 frames
+    db $fd, $93   ; sound $93
+    db $01, $05   ; frame  1 for 6 frames
+    db $02, $05   ; frame  2 for 6 frames
+    db $03, $05   ; frame  3 for 6 frames
+    db $04, $03   ; frame  4 for 4 frames
+    db $05, $03   ; frame  5 for 4 frames
+    db $06, $08   ; frame  6 for 9 frames
+    db $07, $03   ; frame  7 for 4 frames
+    db $06, $03   ; frame  6 for 4 frames
+    db $07, $03   ; frame  7 for 4 frames
+    db $06, $03   ; frame  6 for 4 frames
+    db $07, $02   ; frame  7 for 3 frames
+    db $06, $02   ; frame  6 for 3 frames
+    db $07, $02   ; frame  7 for 3 frames
+    db $06, $02   ; frame  6 for 3 frames
+    db $07, $01   ; frame  7 for 2 frames
+    db $06, $01   ; frame  6 for 2 frames
+    db $07, $01   ; frame  7 for 2 frames
+    db $06, $01   ; frame  6 for 2 frames
+    db $07, $01   ; frame  7 for 2 frames
+    db $06, $01   ; frame  6 for 2 frames
+    db $1f, $02   ; blank for 3 frames
+    db $ff, $ff   ; end
+AnimTimeline_25_MetalCut:   ; $4c85 — MetalCut, CleanCut
+    db $00, $05   ; frame  0 for 6 frames
+    db $fd, $8c   ; sound $8c
+    db $01, $04   ; frame  1 for 5 frames
+    db $02, $04   ; frame  2 for 5 frames
+    db $03, $04   ; frame  3 for 5 frames
+    db $04, $03   ; frame  4 for 4 frames
+    db $05, $03   ; frame  5 for 4 frames
+    db $06, $03   ; frame  6 for 4 frames
+    db $05, $02   ; frame  5 for 3 frames
+    db $07, $02   ; frame  7 for 3 frames
+    db $08, $02   ; frame  8 for 3 frames
+    db $07, $02   ; frame  7 for 3 frames
+    db $1f, $02   ; blank for 3 frames
+    db $08, $02   ; frame  8 for 3 frames
+    db $1f, $02   ; blank for 3 frames
+    db $07, $01   ; frame  7 for 2 frames
+    db $1f, $01   ; blank for 2 frames
+    db $08, $01   ; frame  8 for 2 frames
+    db $1f, $01   ; blank for 2 frames
+    db $07, $01   ; frame  7 for 2 frames
+    db $1f, $01   ; blank for 2 frames
+    db $08, $01   ; frame  8 for 2 frames
+    db $1f, $01   ; blank for 2 frames
+    db $1f, $02   ; blank for 3 frames
+    db $ff, $ff   ; end
+AnimTimeline_26_GigaSlash:   ; $4cb7 — GigaSlash
+    db $00, $04   ; frame  0 for 5 frames
+    db $fd, $94   ; sound $94
+    db $01, $05   ; frame  1 for 6 frames
+    db $02, $05   ; frame  2 for 6 frames
+    db $03, $04   ; frame  3 for 5 frames
+    db $04, $04   ; frame  4 for 5 frames
+    db $05, $06   ; frame  5 for 7 frames
+    db $06, $04   ; frame  6 for 5 frames
+    db $07, $04   ; frame  7 for 5 frames
+    db $08, $03   ; frame  8 for 4 frames
+    db $07, $02   ; frame  7 for 3 frames
+    db $08, $02   ; frame  8 for 3 frames
+    db $06, $02   ; frame  6 for 3 frames
+    db $08, $03   ; frame  8 for 4 frames
+    db $09, $03   ; frame  9 for 4 frames
+    db $08, $02   ; frame  8 for 3 frames
+    db $09, $02   ; frame  9 for 3 frames
+    db $08, $02   ; frame  8 for 3 frames
+    db $09, $02   ; frame  9 for 3 frames
+    db $0a, $02   ; frame 10 for 3 frames
+    db $0b, $02   ; frame 11 for 3 frames
+    db $0a, $01   ; frame 10 for 2 frames
+    db $0b, $01   ; frame 11 for 2 frames
+    db $0a, $01   ; frame 10 for 2 frames
+    db $1f, $01   ; blank for 2 frames
+    db $0b, $01   ; frame 11 for 2 frames
+    db $1f, $01   ; blank for 2 frames
+    db $0a, $01   ; frame 10 for 2 frames
+    db $1f, $01   ; blank for 2 frames
+    db $0b, $01   ; frame 11 for 2 frames
+    db $1f, $02   ; blank for 3 frames
+    db $ff, $ff   ; end
+AnimTimeline_27_MultiCut:   ; $4cf7 — MultiCut
+    db $00, $01   ; frame  0 for 2 frames
+    db $fd, $95   ; sound $95
+    db $01, $01   ; frame  1 for 2 frames
+    db $02, $01   ; frame  2 for 2 frames
+    db $03, $02   ; frame  3 for 3 frames
+    db $04, $03   ; frame  4 for 4 frames
+    db $05, $03   ; frame  5 for 4 frames
+    db $06, $03   ; frame  6 for 4 frames
+    db $07, $03   ; frame  7 for 4 frames
+    db $08, $03   ; frame  8 for 4 frames
+    db $09, $03   ; frame  9 for 4 frames
+    db $0a, $03   ; frame 10 for 4 frames
+    db $0b, $02   ; frame 11 for 3 frames
+    db $0c, $02   ; frame 12 for 3 frames
+    db $0d, $02   ; frame 13 for 3 frames
+    db $0b, $02   ; frame 11 for 3 frames
+    db $0c, $02   ; frame 12 for 3 frames
+    db $0d, $02   ; frame 13 for 3 frames
+    db $0b, $02   ; frame 11 for 3 frames
+    db $0c, $02   ; frame 12 for 3 frames
+    db $0d, $02   ; frame 13 for 3 frames
+    db $0b, $02   ; frame 11 for 3 frames
+    db $0c, $02   ; frame 12 for 3 frames
+    db $0d, $02   ; frame 13 for 3 frames
+    db $0b, $02   ; frame 11 for 3 frames
+    db $0c, $02   ; frame 12 for 3 frames
+    db $0d, $02   ; frame 13 for 3 frames
+    db $0b, $02   ; frame 11 for 3 frames
+    db $0c, $02   ; frame 12 for 3 frames
+    db $0d, $02   ; frame 13 for 3 frames
+    db $1f, $02   ; blank for 3 frames
+    db $ff, $ff   ; end
+AnimTimeline_28_Hellblast:   ; $4d37 — Hellblast
+    db $00, $03   ; frame  0 for 4 frames
+    db $fd, $96   ; sound $96
+    db $1f, $01   ; blank for 2 frames
+    db $01, $03   ; frame  1 for 4 frames
+    db $1f, $01   ; blank for 2 frames
+    db $02, $03   ; frame  2 for 4 frames
+    db $1f, $01   ; blank for 2 frames
+    db $03, $03   ; frame  3 for 4 frames
+    db $1f, $01   ; blank for 2 frames
+    db $04, $03   ; frame  4 for 4 frames
+    db $05, $03   ; frame  5 for 4 frames
+    db $04, $03   ; frame  4 for 4 frames
+    db $05, $03   ; frame  5 for 4 frames
+    db $04, $03   ; frame  4 for 4 frames
+    db $05, $03   ; frame  5 for 4 frames
+    db $04, $03   ; frame  4 for 4 frames
+    db $05, $03   ; frame  5 for 4 frames
+    db $1f, $02   ; blank for 3 frames
+    db $ff, $ff   ; end
+AnimTimeline_29_BigBang:   ; $4d5d — BigBang
+    db $00, $04   ; frame  0 for 5 frames
+    db $fd, $97   ; sound $97
+    db $01, $04   ; frame  1 for 5 frames
+    db $00, $03   ; frame  0 for 4 frames
+    db $01, $03   ; frame  1 for 4 frames
+    db $02, $04   ; frame  2 for 5 frames
+    db $01, $04   ; frame  1 for 5 frames
+    db $02, $03   ; frame  2 for 4 frames
+    db $01, $03   ; frame  1 for 4 frames
+    db $03, $04   ; frame  3 for 5 frames
+    db $02, $04   ; frame  2 for 5 frames
+    db $03, $03   ; frame  3 for 4 frames
+    db $02, $03   ; frame  2 for 4 frames
+    db $04, $04   ; frame  4 for 5 frames
+    db $03, $04   ; frame  3 for 5 frames
+    db $04, $03   ; frame  4 for 4 frames
+    db $03, $03   ; frame  3 for 4 frames
+    db $05, $04   ; frame  5 for 5 frames
+    db $04, $03   ; frame  4 for 4 frames
+    db $06, $03   ; frame  6 for 4 frames
+    db $05, $04   ; frame  5 for 5 frames
+    db $07, $04   ; frame  7 for 5 frames
+    db $10, $04   ; frame 16 for 5 frames
+    db $0b, $04   ; frame 11 for 5 frames
+    db $11, $04   ; frame 17 for 5 frames
+    db $0c, $04   ; frame 12 for 5 frames
+    db $12, $04   ; frame 18 for 5 frames
+    db $0d, $04   ; frame 13 for 5 frames
+    db $13, $04   ; frame 19 for 5 frames
+    db $07, $03   ; frame  7 for 4 frames
+    db $1f, $02   ; blank for 3 frames
+    db $ff, $ff   ; end
+AnimTimeline_2a_MegaMagic:   ; $4d9d — MegaMagic
+    db $00, $04   ; frame  0 for 5 frames
+    db $fd, $99   ; sound $99
+    db $01, $05   ; frame  1 for 6 frames
+    db $02, $04   ; frame  2 for 5 frames
+    db $03, $03   ; frame  3 for 4 frames
+    db $04, $03   ; frame  4 for 4 frames
+    db $05, $03   ; frame  5 for 4 frames
+    db $06, $03   ; frame  6 for 4 frames
+    db $07, $03   ; frame  7 for 4 frames
+    db $08, $03   ; frame  8 for 4 frames
+    db $1f, $08   ; blank for 9 frames
+    db $09, $02   ; frame  9 for 3 frames
+    db $0a, $02   ; frame 10 for 3 frames
+    db $0b, $02   ; frame 11 for 3 frames
+    db $0c, $02   ; frame 12 for 3 frames
+    db $0d, $02   ; frame 13 for 3 frames
+    db $0e, $02   ; frame 14 for 3 frames
+    db $0f, $02   ; frame 15 for 3 frames
+    db $10, $02   ; frame 16 for 3 frames
+    db $11, $02   ; frame 17 for 3 frames
+    db $12, $02   ; frame 18 for 3 frames
+    db $13, $02   ; frame 19 for 3 frames
+    db $14, $02   ; frame 20 for 3 frames
+    db $0b, $02   ; frame 11 for 3 frames
+    db $0c, $02   ; frame 12 for 3 frames
+    db $0d, $02   ; frame 13 for 3 frames
+    db $0e, $02   ; frame 14 for 3 frames
+    db $0f, $02   ; frame 15 for 3 frames
+    db $15, $02   ; frame 21 for 3 frames
+    db $16, $02   ; frame 22 for 3 frames
+    db $17, $02   ; frame 23 for 3 frames
+    db $1f, $02   ; blank for 3 frames
+    db $ff, $ff   ; end
+AnimTimeline_2b_DeMagic:   ; $4ddf — DeMagic
+    db $00, $04   ; frame  0 for 5 frames
+    db $fd, $9b   ; sound $9b
+    db $01, $04   ; frame  1 for 5 frames
+    db $02, $04   ; frame  2 for 5 frames
+    db $03, $02   ; frame  3 for 3 frames
+    db $04, $02   ; frame  4 for 3 frames
+    db $05, $02   ; frame  5 for 3 frames
+    db $06, $02   ; frame  6 for 3 frames
+    db $07, $02   ; frame  7 for 3 frames
+    db $08, $02   ; frame  8 for 3 frames
+    db $05, $02   ; frame  5 for 3 frames
+    db $06, $02   ; frame  6 for 3 frames
+    db $07, $02   ; frame  7 for 3 frames
+    db $08, $02   ; frame  8 for 3 frames
+    db $1f, $02   ; blank for 3 frames
+    db $ff, $ff   ; end
+AnimTimeline_2c_FEEDMEAT:   ; $4dff — FEEDMEAT, BEFFJERKY, PORKCHOP, SIRLOIN
+    db $00, $04   ; frame  0 for 5 frames
+    db $01, $03   ; frame  1 for 4 frames
+    db $02, $06   ; frame  2 for 7 frames
+    db $03, $06   ; frame  3 for 7 frames
+    db $04, $06   ; frame  4 for 7 frames
+    db $05, $06   ; frame  5 for 7 frames
+    db $06, $06   ; frame  6 for 7 frames
+    db $07, $06   ; frame  7 for 7 frames
+    db $08, $06   ; frame  8 for 7 frames
+    db $09, $06   ; frame  9 for 7 frames
+    db $1f, $02   ; blank for 3 frames
+    db $ff, $ff   ; end
+; NOTE: unreferenced fake-decode labels removed with this block: jr_002_48b4, jr_002_4bf3
     inc hl
     ld c, [hl]
     add hl, hl

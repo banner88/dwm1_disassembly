@@ -1211,6 +1211,34 @@ Help `54_skills.md` (custom skills, Element, Sounds like, Announce, Its own numb
 lines, New skills, the limits: 21 slots, names share the bank $41 budget, which bases
 are offered and why).
 
+**As built S112 (ROADMAP P3.11e — skill ANIMATIONS; test ROM USER-CONFIRMED 2026-10-02 18:29 ("Fantastic, everything checks out"); the
+tabs test_app-verified).** Compiler §2.28, engine BATTLE_SKILL_SYSTEM §11.9. User choices
+(S112): new animation slots only (the stock 45 untouched), mashups of stock frames and
+tiles (new tile art later), per skill an animation + motion / a screen effect / nothing,
+sides as vanilla, the in-editor preview with sound as the test bench.
+- **Animations tab** (`editor2/app/anims_tab.py` over `anims_doc.AnimsMixin`; after
+  Skills): the list ($2D… + name; ⚠ when it does not compose) with **New…** (a copy of
+  a stock animation's steps), **Duplicate**, **Delete** (refused while a skill shows it,
+  naming them), **Rename…**, **Up / Down**; the meter line (length in frames and
+  seconds, source animations x / 4, tiles x / 128, the skills showing it, warnings); the
+  **preview** (`AnimPreview`: 60 fps QTimer over `BA.schedule`, the sprites drawn by
+  `BA.draw_frame` at the renderer's X $50 / Y $60 on the battle cream, 2x; sounds via
+  QSoundEffect from `extracted/anim_sounds/sfx_XX.wav` — the game's own engine recorded
+  by `tools/render_anim_sounds.py`, 16-bit; Play / Stop, Sound, Loop; selecting a step
+  shows its frame); the **steps table** (thumbnail + frame / sound / blank, a Frames spin
+  1-256 = hold + 1, From); **Add frames…** (`AddFramesDialog`: any stock animation,
+  playable, its steps as thumbnails, multi-select, inserted after the selection with
+  their timing and sounds), **Add sound…** (the 35 cue ids, labelled by the animations
+  using them; plays it), **Add blank**, **Remove**, **Up / Down**.
+- **Skills tab → Animation** section: **Shows** = what its look shows / an animation
+  (the 45 + the project's) with **Moves** (at the target / middle of the foes / each
+  target in turn / flies across) / a screen effect (11 labelled) / nothing; a note says
+  what the look shows per caster side and where the choice applies; a preview
+  (`PreviewBox`) of the chosen or the look's animation.
+Every edit is one `SnapshotCommand`; refused edits show the compiler's message. Help
+`57_animations.md` (new) + `54_skills.md` "Animation". Residuals: new tile art; the
+projectile "go back" loop is not authorable (copy frames instead).
+
 ### 5.4 Breeding tab (edit + simulate — user spec "see randomizer")
 
 - **Table editor**: special recipes (bank `$69` full authoring stack

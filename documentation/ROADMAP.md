@@ -1528,7 +1528,7 @@ recipes are pure authoring.
       (P3.13); (d) a look made for the other side shows nothing (measured:
       Heal with Bang's look — no explosion on the party side) — warned, not
       refused; (e) record bits nobody reads (+0, +1 low nibble, +7 b2, +8 b3,
-      +9 b6/b7) shown greyed; (f) NEW animations composed from existing frames (→ P3.11e, NEXT, S111)
+      +9 b6/b7) shown greyed; (f) NEW animations composed from existing frames (→ P3.11e, built S112)
       (user S110 question: "if I wanted spark to be the first frames of a
       skill") — not built; needs first the Iron-Rule-6 re-section of the
       frame tables ($5C/$5D/$5E $4071+) and the bank $5F per-skill tables
@@ -1609,9 +1609,9 @@ recipes are pure authoring.
       (Scorching's effect, IceStorm's look, IceBreath element) cast by the party and by
       enemies in PyBoy on the user's save, FrostBite learnt at a real level-up and shown
       in the SKIL menu (name, MP, text) — met; user-confirmed. Residuals: (a) the 41 differing bases (trace why, fork per
-      case); (b) NEW animations composed from existing frames → **P3.11e (NEXT)**;
+      case); (b) NEW animations composed from existing frames → **P3.11e (built S112)**;
       "fiddling with animations" is today looks + sounds from different skills.
-- [ ] **P3.11e — Skill ANIMATION editing — NEXT** (user 2026-10-02 15:08, after the S111
+- [x] **P3.11e — Skill ANIMATION editing — DONE S112, test ROM USER-CONFIRMED 2026-10-02 18:29 ("Fantastic, everything checks out")** (user 2026-10-02 15:08, after the S111
       sign-off: "Yeah, make sure that's next"; origin: S110 "if I wanted spark to be the
       first frames of a skill", S111 "mix/matching existing skills and fiddling with
       their animations"). Goal: a skill's animation built from existing frames (e.g. the
@@ -1627,6 +1627,26 @@ recipes are pure authoring.
       regions + a Skills-tab animation editor with preview. *Accept:* a new animation
       (Spark's first frames + another skill's tail) authored in the GUI plays in PyBoy on
       the user's save without stalls, cast by the party and by enemies.
+      **S112 (built; PROJECT_COMPILER §2.28, BATTLE_SKILL_SYSTEM §11.9, EDITOR_DESIGN §5.3
+      "As built S112").** User choices: new slots only ($2D-$4C, ≤ 32; the stock 45
+      untouched), mashups of stock frames + tiles (≤ 4 sources, ≤ 128 tiles), per skill
+      animation + motion / screen effect / nothing, sides as vanilla, the editor preview
+      with sound as the test bench, one session. Groundwork done: (1) re-section of banks
+      $5C/$5D/$5E/$5F/$02/$50/$5A/$5B/$17/$00 (`tools/resection_battle_anims.py`, both
+      trees, byte-perfect; the §11.5 "map-script" blocker was a wrong premise — bank $0F's labels); (2) the `$da81` byte
+      IS the animation number, the timelines live in bank $02 row $60 (§11.9); (3) the
+      tile / palette / shade path measured (shade on SCREEN: [1,2,0,3] order, identity $D2);
+      census of all 45 in the developers' viewer (mode 5) = the decoded model frame by
+      frame. (4) banks $6F (engine + frames) / $70 (sheets), forks in ROM0 / $02 / $50 /
+      $5F, compiler emitters + regions, the Animations tab + Skills → Animation, help.
+      *Accept:* met in PyBoy on the user's save — Spark storm (Zap's opening + bolt, then
+      Bang's burst) on Zap and Frost slash (TwinSlash's cut + IceStorm's shards) on MetalCut,
+      authored through the editor model (the GUI path is test_app's), party casts on 1 and
+      3 foes, an enemy's HealMore on itself showing a new animation (S112 demo build), enemy
+      Zap → party nothing; no stalls (14 cases); census $2D / $2E = model. Test ROM
+      `DWM_S112_animations_test.gbc` — USER-CONFIRMED 2026-10-02 18:29 ("Fantastic, everything checks out"). Residuals: new tile art
+      (user: later); the projectile "go back" op ($FE 4) is not authorable; frames are
+      whole stock frames (no per-sprite editing).
 - [ ] **P3.11b — AI ban-list (OPTIONAL)** [G-N]: measure the clean
       knows-it-never-casts-it mechanism (option-list filter in the AI
       build path; per-actor or per-skill ban table in a patch bank),

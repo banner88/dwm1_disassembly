@@ -1,0 +1,340 @@
+; =============================================================================
+; BANK $6F — NEW BATTLE ANIMATIONS (S112; compiler-owned, patches/bank_06f.asm)
+; =============================================================================
+; The project's own battle animations (project.json custom.animations,
+; PROJECT_COMPILER §2.28; BATTLE_SKILL_SYSTEM §11 "as measured S112"): numbers
+; FIRST_CUSTOM_ANIM ($2D) .. $2D + CUSTOM_ANIM_COUNT - 1, each built from
+; frames of the 45 stock animations (a "mashup": the frames keep their sprites,
+; the tiles they draw are gathered into one new sheet, each source animation
+; keeps its own colours in its own OBJ palette slot) with its own timeline
+; (frame / hold, sound cues). The stock animations $00-$2C are untouched.
+;
+; How a number reaches this bank (all other readers keep the stock ones):
+;   * ROM0 AnimTickSelectAndDraw / AnimStartRenderer: the "$21 and up" branch
+;     calls bank $6F entries 0 / 1 (was $5E) — numbers < $2D are forwarded
+;     unchanged to bank $5E (the stock $21-$2B);
+;   * bank $50 AnimLoadFork50 (the tiles + palette load, [$da80] = 1): numbers
+;     >= $2D call entry 2 (palettes -> $C7D7, DE = the sheet's gfx id in bank
+;     $70);
+;   * bank $02 ReadSeqStepFork (the sequencer, row $60): numbers >= $2D read
+;     their timeline pairs through entry 3;
+;   * bank $5F (the Effect debugger, game mode 5): rows 0 lists $00-$4C; a
+;     number >= $2D loads through entry 2 too.
+; A number past the project's animations plays CustomAnimNone (one blank
+; frame) — nothing can index past the tables.
+;
+; Entry 0 (HL=$6F00) CustomAnimTick   — per frame while an animation runs
+; Entry 1 (HL=$6F01) CustomAnimInit   — start ($da81 = the number)
+; Entry 2 (HL=$6F02) CustomAnimLoad   — [$c81e] = number: palettes into the OBJ
+;                                       buffer, wObj1Palette = $D2; out DE = gfx id
+; Entry 3 (HL=$6F03) CustomAnimStep   — out D, E = the pair (first, second) at
+;                                       step [struct+3] of animation [struct+2],
+;                                       struct = [$d7b4] (the bank $02 sequencer)
+; rst $10 clobbers A, BC (RST_10 adds $4001 in BC) and restores the bank: the
+; results travel in DE (KEY_LESSONS v3).
+;
+; Colours: on GBC the game writes ALL eight OBJ palettes from the $C7D7 buffer
+; through the DMG shade wObj1Palette (bank $17 Jump_017_4341: colour i of a
+; palette = buffer colour [1, 2, 0, 3][(shade >> 2i) & 3] — the $440C byte
+; offsets; stock animations use $E0 / $D0 — AnimObjShadeTable). The compiler
+; bakes each source animation's shade into its palette, and CustomAnimLoad /
+; CustomAnimInit set the identity shade $D2 (codes 2, 0, 1, 3).
+;
+; Data (generated below the template; CUSTOM_ANIM_COUNT + 1 rows each, the
+; last = CustomAnimNone):
+;   CustomAnimFrameTable  dw per animation -> its frame pointers (dw), each
+;                         -> sprites (dy, dx, tile, attr), $80 end — the stock
+;                         format; attr bits 0-2 = the source's palette slot
+;   CustomAnimTimelines   dw per animation -> pairs as AnimTimelineTable:
+;                         (frame, hold) / ($FD, sound) / ($FF, $FF)
+;   CustomAnimPalettes    dw per animation -> db count, then count x 4 RGB555
+;   CustomAnimGfxIds      dw per animation (bank $70 streams, decoded to $8000)
+; =============================================================================
+
+SECTION "ROM Bank $06F", ROMX[$4000], BANK[$6F]
+
+    db $6F                              ; bank self-ID at $4000
+
+; rst-$10 entry table at $4001
+    dw CustomAnimTick                   ; entry 0
+    dw CustomAnimInit                   ; entry 1
+    dw CustomAnimLoad                   ; entry 2
+    dw CustomAnimStep                   ; entry 3
+
+FIRST_CUSTOM_ANIM EQU $2D
+
+; ---------------------------------------------------------------------------
+; CustomAnimIndex: A = animation number (>= $2D) -> HL = 2 * row (row clamped
+; to CUSTOM_ANIM_COUNT = CustomAnimNone). Keeps DE.
+; ---------------------------------------------------------------------------
+CustomAnimIndex:
+    sub FIRST_CUSTOM_ANIM
+    cp CUSTOM_ANIM_COUNT
+    jr c, .ok
+    ld a, CUSTOM_ANIM_COUNT
+.ok:
+    ld l, a
+    ld h, $00
+    add hl, hl
+    ret
+
+; HL = table base, A = number -> HL = [base + 2 * row]
+CustomAnimRow:
+    push de
+    ld e, l
+    ld d, h
+    call CustomAnimIndex
+    add hl, de
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a
+    pop de
+    ret
+
+; ---------------------------------------------------------------------------
+; Entry 0 — the per-frame tick (a copy of bank $5E AnimTick5E for the own
+; frame table; the $03 / $04 projectile special does not apply).
+; ---------------------------------------------------------------------------
+CustomAnimTick:
+    ld a, [$da81]
+    cp FIRST_CUSTOM_ANIM
+    jr nc, .own
+    ld hl, $5e00                        ; stock $21-$2B: bank $5E entry 0
+    rst $10
+    ret
+.own:
+    ld a, [$dd60]
+    or a
+    ret z
+    ldh a, [$c7]                        ; frame-table row of this animation
+    ld hl, CustomAnimFrameTable
+    call CustomAnimRow                  ; HL = its frame pointer list
+    ld e, l
+    ld d, h
+    call CustomAnimBuildOAM
+    ld a, [$dd68]
+    or a
+    jr nz, .still
+    ld hl, $ffc3                        ; flies across: X += 4 per frame
+    inc [hl]
+    inc [hl]
+    inc [hl]
+    inc [hl]
+.still:
+    ld a, [$dd66]
+    ldh [$c8], a
+    ld a, [$dd62]
+    or a
+    jr nz, .running
+    xor a
+    ld [$dd60], a
+.running:
+    ld a, [$dd68]
+    or a
+    ret nz
+    ldh a, [$c3]
+    cp $c0
+    ret c
+    xor a
+    ld [$dd60], a
+    ld a, $01
+    ld [$dd68], a
+    ret
+
+; the OAM builder of bank $5E (AnimBuildOAM5E), DE = the frame pointer list
+CustomAnimBuildOAM:
+    ldh a, [$cb]
+    cp $28
+    jr nc, .done
+    ldh a, [$c8]
+    ld l, a
+    ld h, $00
+    add hl, hl
+    add hl, de
+    ld e, [hl]
+    inc hl
+    ld d, [hl]
+    ldh a, [$cb]
+    sla a
+    sla a
+    ld l, a
+    ld h, $c0
+.sprite:
+    ld a, [de]
+    inc de
+    cp $80
+    jr z, .done
+    ld b, a
+    ldh a, [$c5]
+    add b
+    add $10
+    ld [hl+], a
+    ld a, [de]
+    inc de
+    ld b, a
+    ldh a, [$c3]
+    add b
+    add $08
+    ld [hl+], a
+    ldh a, [$c9]
+    ld b, a
+    ld a, [de]
+    inc de
+    add b
+    ld [hl+], a
+    ld a, [de]
+    inc de
+    ld b, a
+    ldh a, [$ca]
+    xor b
+    ld [hl+], a
+    ldh a, [$cb]
+    inc a
+    ldh [$cb], a
+    cp $28
+    jr c, .sprite
+.done:
+    ret
+
+; ---------------------------------------------------------------------------
+; Entry 1 — start (a copy of bank $5E AnimInit5E; the first frame comes from
+; the own timeline, not bank $02 entry 5, whose row-$60 table ends at $2C).
+; ---------------------------------------------------------------------------
+CustomAnimInit:
+    ld a, [$da81]
+    cp FIRST_CUSTOM_ANIM
+    jr nc, .own
+    ld hl, $5e01                        ; stock $21-$2B: bank $5E entry 1
+    rst $10
+    ret
+.own:
+    ld a, $01
+    ld [$dd62], a
+    ld a, [$dd68]
+    or a
+    jr z, .x                            ; [$dd68] = 0: X 0, fly in
+    ld a, [$db54]
+    cp $07
+    jr nc, .off
+    add a
+    ld hl, CustomAnimTargetX
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl]
+.x:
+    ld hl, $ffc3
+    ld [hl+], a                         ; $c3 X
+    xor a
+    ld [hl+], a                         ; $c4
+    ld a, $60
+    ld [hl+], a                         ; $c5 Y
+    xor a
+    ld [hl+], a                         ; $c6
+    ld a, [$daa4]
+    ld [hl+], a                         ; $c7 = the number
+    push hl
+    ld a, [$daa4]
+    ld hl, CustomAnimTimelines
+    call CustomAnimRow
+    ld a, [$dd65]                       ; the step the sequencer is on
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl]                          ; its frame
+    pop hl
+    ld [hl+], a                         ; $c8
+    xor a
+    ld [hl+], a                         ; $c9
+    ld [hl], a                          ; $ca
+    ld a, $d2
+    ld [wObj1Palette], a                ; identity shade $D2 (palettes carry theirs)
+    ld a, $01
+    ld [$dd60], a
+    ret
+.off:
+    xor a
+    ld [$dd60], a
+    xor a
+    ld [$dd62], a
+    ret
+
+CustomAnimTargetX:                      ; = AnimTargetXTable5E (by [$db54])
+    dw $0000, $0050, $0038, $0068, $0020, $0050, $0080
+
+; ---------------------------------------------------------------------------
+; Entry 2 — tiles + palettes: [$c81e] = number. Writes `count` palettes into
+; the OBJ buffer from slot 0 (GBC only, as bank $17 entry 13), sets the
+; identity shade, returns DE = the gfx id of the sheet.
+; ---------------------------------------------------------------------------
+CustomAnimLoad:
+    ld a, $d2
+    ld [wObj1Palette], a
+    ld a, [$c81e]
+    ld hl, CustomAnimPalettes
+    call CustomAnimRow                  ; HL -> db count, count x 8 B
+    ld a, [$c81d]                       ; GBC?
+    or a
+    jr z, .gfx
+    ld a, [hl+]
+    add a
+    add a
+    add a                               ; bytes
+    ld b, a
+    ld de, $c7d7
+.copy:
+    ld a, [hl+]
+    ld [de], a
+    inc de
+    dec b
+    jr nz, .copy
+.gfx:
+    ld a, [$c81e]
+    ld hl, CustomAnimGfxIds
+    call CustomAnimRow
+    ld e, l
+    ld d, h
+    ret
+
+; ---------------------------------------------------------------------------
+; Entry 3 — the sequencer's step read for a new animation: struct = [$d7b4]
+; (+2 number, +3 step) -> D = first, E = second.
+; ---------------------------------------------------------------------------
+CustomAnimStep:
+    ld a, [$d7b4]
+    ld l, a
+    ld a, [$d7b5]
+    ld h, a
+    inc hl
+    inc hl
+    ld a, [hl+]                         ; number
+    ld c, [hl]                          ; step
+    ld hl, CustomAnimTimelines
+    call CustomAnimRow
+    ld a, c
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld d, [hl]
+    inc hl
+    ld e, [hl]
+    ret
+
+; a number past the project's animations: one blank frame, then the end
+CustomAnimNoneTimeline:
+    db $00, $00, $ff, $ff
+CustomAnimNoneFrames:
+    dw CustomAnimNoneFrame
+CustomAnimNoneFrame:
+    db $80
+CustomAnimNonePalette:
+    db $01
+    dw $7fff, $7fff, $0000, $0000

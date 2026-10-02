@@ -314,6 +314,11 @@ class MonstersMixin:
             CS.check(prj)
         except (CS.CustomSkillError, MT.MonsterTextError) as ex:
             raise SP.SpeciesError(str(ex))
+        from editor2.core import battle_anims as BA
+        try:                               # S112: new animations + skill presentations
+            BA.check(prj)
+        except BA.AnimError as ex:
+            raise SP.SpeciesError(str(ex))
         self.data.clear()
         self.data.update(data)
         self.touch()

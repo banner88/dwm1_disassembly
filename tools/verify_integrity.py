@@ -53,6 +53,7 @@ SELFTEST_TOOLS = [
     "build_family_icon.py",      # S104: family_icons.json vanilla icons == ROM; Spirit grid == $4F:$41B0 glyph + bank $6D SpiritIconStream
     "extract_monster_follower_layouts.py",  # S107: the 155 walking layouts (+ stored bytes, per-bank instances / frames) == ROM
     "dump_dialogue.py",          # S108: dialogue.json (all 2,560 text ids, measured; + the text tables) raw bytes == ROM
+    "decode_battle_animations.py",  # S112: battle_animations.json (schema 2: 45 animations, per-skill tables) == ROM
 ]
 
 PATCH_FILES = [
@@ -65,9 +66,10 @@ PATCH_FILES = [
     "bank_00a.asm", "bank_015.asm", "bank_051.asm",  # S60 CF3 walker redirects
     "bank_013.asm",  # S103 P3.9: gamedata exp/growth curve regions
     "bank_010.asm",  # S107 P3.10 part 2a: gamedata.art follower layout/attr regions
+    "bank_002.asm",  # S112 P3.11e: ReadSeqStepFork (new battle animations' timelines)
     "wram.asm", "game.asm",
 ]
-PATCH_NEW_FILES = ["bank_060.asm", "bank_064.asm", "bank_067.asm", "bank_069.asm", "bank_06a.asm", "bank_06b.asm", "bank_06c.asm", "bank_06d.asm", "bank_06e.asm", "bank_071.asm", "bank_072.asm", "bank_073.asm", "bank_074.asm", "bank_07a.asm", "bank_07c.asm", "bank_07e.asm", "bank_07f.asm"]  # S107: art banks $7A/$7C/$7F (gamedata.art)  # don't exist in clean disassembly/
+PATCH_NEW_FILES = ["bank_060.asm", "bank_064.asm", "bank_067.asm", "bank_069.asm", "bank_06a.asm", "bank_06b.asm", "bank_06c.asm", "bank_06d.asm", "bank_06e.asm", "bank_06f.asm", "bank_070.asm", "bank_071.asm", "bank_072.asm", "bank_073.asm", "bank_074.asm", "bank_07a.asm", "bank_07c.asm", "bank_07e.asm", "bank_07f.asm"]  # S107: art banks $7A/$7C/$7F (gamedata.art); S112: $6F/$70 new battle animations  # don't exist in clean disassembly/
 
 BUILD_ARTIFACTS = ["game.o", "game.gbc", "game.sym", "game.map"]
 

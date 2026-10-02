@@ -99,8 +99,10 @@
 ;   $DD62    battle-running latch: nonzero -> entry 1 runs bank $02 entry 0
 ;            instead of the phase machine [S68]
 ;   $DA33    frame delay counter (phases $00/$07/$08/$0A)
-;   $DA80    master-intro loader state (1=loading gfx via $5E84 dw table
-;            indexed $DA81; !=1 -> $5EDE battle/post-battle driver)
+;   $DA80    battle-animation loader state [S112 corrects "master-intro"]: 1 =
+;            decode the tiles of animation [$DA81] via AnimGfxTable ($5E84) +
+;            load its palette (bank $17 entries 13 / 8), then 2; !=1 -> the
+;            $5EDE battle driver (BATTLE_SKILL_SYSTEM §11.9)
 ;   $C846    Input/button state
 ;   $C863    link context flags (bit 1 = second side present) [S68]
 ;   $C86C    LINK battle flag (writers: bank $03/$15/$18 only) [S68]
@@ -5245,7 +5247,7 @@ jr_050_5dc8:
     or a
     ret nz
 
-    call ReadBattleStateDA80
+    call AnimFrameTick
     ld a, [$dd62]
     or a
     ret z
@@ -5262,7 +5264,7 @@ jr_050_5e3e:
     or a
     ret nz
 
-    call ReadBattleStateDA80
+    call AnimFrameTick
     call LoadBtl_6d78
     ld a, [$c850]
     or a
@@ -5277,20 +5279,13 @@ jr_050_5e3e:
     ret z
 
     ld a, [$da81]
-    ld [$c81e], a
-    ld hl, $170d
-    rst $10
-    ld hl, $1708
-    rst $10
-    ld a, [$da81]
-    ld hl, $5e84
-    ld c, a
-    ld b, $00
-    add hl, bc
-    add hl, bc
-    ld a, [hl+]
-    ld d, [hl]
-    ld e, a
+    ; [S112] tiles + palette of the animation [$da81]: AnimLoadFork50 serves
+    ; the stock numbers exactly as before and the project's new ones ($2D+,
+    ; bank $6F entry 2); 25-byte window, the jr skips the 20-byte filler
+    call AnimLoadFork50          ; DE = the gfx id
+    jr .animLoadGfx
+    ds 20, $00                   ; (was ld [$c81e],a ... ld e,a)
+.animLoadGfx:
     ld hl, $8000
     call WaitDMATransfer
     ld a, $02
@@ -5298,83 +5293,58 @@ jr_050_5e3e:
     ret
 
 
-    nop
-    ld e, d
-    ld bc, $025a
-    ld e, d
-    inc bc
-    ld e, d
-    inc b
-    ld e, d
-    dec b
-    ld e, d
-    ld b, $5a
-    rlca
-    ld e, d
-    ld [$095a], sp
-    ld e, d
-    ld a, [bc]
-    ld e, d
-    dec bc
-    ld e, d
-    inc c
-    ld e, d
-    dec c
-    ld e, d
-    ld c, $5a
-    rrca
-    ld e, d
-    db $10
-    ld e, d
-    ld de, $125a
-    ld e, d
-    inc de
-    ld e, d
-    inc d
-    ld e, d
-    dec d
-    ld e, d
-    ld d, $5a
-    rla
-    ld e, d
-    jr jr_050_5f10
-
-    add hl, de
-    ld e, d
-    ld a, [de]
-    ld e, d
-    dec de
-    ld e, d
-    inc e
-    ld e, d
-    dec e
-    ld e, d
-    ld e, $5a
-    rra
-    ld e, d
-    ld a, [bc]
-    ld e, e
-    dec bc
-    ld e, e
-    inc c
-    ld e, e
-    dec c
-    ld e, e
-    ld c, $5b
-    rrca
-    ld e, e
-    db $10
-    ld e, e
-    ld de, $125b
-    ld e, e
-    inc de
-    ld e, e
-    inc d
-    ld e, e
-    dec d
-    ld e, e
-    ld d, $5b
-
+AnimGfxTable:
+    ; gfx id of each battle animation's TILES (45, by animation number):
+    ; the frame after an animation starts ([$da80] = 1) this bank decodes
+    ; the stream (WaitDMATransfer) to $8000 (128 tiles) and loads its OBJ
+    ; palette (bank $17 entries 13 + 8, [$c81e] = number); [$da80] = 2.
+    ; Bank $5F AnimGfxTableDebug is the Effect debugger's identical copy.
+    ; Re-sectioned S112 (BATTLE_SKILL_SYSTEM §11).
+    dw $5a00   ; [$00] Blaze
+    dw $5a01   ; [$01] Blazemore
+    dw $5a02   ; [$02] Blazemost, COMEDYBK
+    dw $5a03   ; [$03] Firebal, FireAir
+    dw $5a04   ; [$04] Firebane, BlazeAir, LAVASTAFF
+    dw $5a05   ; [$05] Firebolt, Scorching
+    dw $5a06   ; [$06] Bang
+    dw $5a07   ; [$07] Boom
+    dw $5a08   ; [$08] Explodet
+    dw $5a09   ; [$09] Infernos, WindBeast, STAFF
+    dw $5a0a   ; [$0a] Infermore
+    dw $5a0b   ; [$0b] Infermost, Vacuum
+    dw $5a0c   ; [$0c] IceBolt, FrigidAir
+    dw $5a0d   ; [$0d] SnowStorm, IceAir
+    dw $5a0e   ; [$0e] Blizzard, IceStorm, SNOWSTAFF
+    dw $5a0f   ; [$0f] Bolt, Lightning, BOLTSTAFF
+    dw $5a10   ; [$10] Zap
+    dw $5a11   ; [$11] Thordain
+    dw $5a12   ; [$12] StopSpell, RobMagic, Sap, Defence, Slow, SlowAll (+6)
+    dw $5a13   ; [$13] RobMagic, TakeMagic, Upper, Increase, Speed, SpeedUp (+2)
+    dw $5a14   ; [$14] Heal, HealMore, HealAll, HealUs, HealUsAll, Farewell (+20)
+    dw $5a15   ; [$15] Sleep, SleepAll, PoisonHit, NapAttack, Paralyze, SleepAir (+7)
+    dw $5a16   ; [$16] PanicAll, PaniDance, Curse, Ahhh, LureDance
+    dw $5a17   ; [$17] Surround, SandStorm
+    dw $5a18   ; [$18] Transform, CHGDRAGON, BeDragon
+    dw $5a19   ; [$19] MagicBack, Bounce
+    dw $5a1a   ; [$1a] WhiteAir
+    dw $5a1b   ; [$1b] RockThrow
+    dw $5a1c   ; [$1c] WhiteFire
+    dw $5a1d   ; [$1d] TwinSlash, Massacre, EvilSlash, DrakSlash, BeastCut, SquallHit (+2)
+    dw $5a1e   ; [$1e] FireSlash
+    dw $5a1f   ; [$1f] BoltSlash
+    dw $5b0a   ; [$20] VacuSlash
+    dw $5b0b   ; [$21] IceSlash
+    dw $5b0c   ; [$22] Smashlime, Sheldodge
+    dw $5b0d   ; [$23] BirdBlow
+    dw $5b0e   ; [$24] DevilCut, ZombieCut
+    dw $5b0f   ; [$25] MetalCut, CleanCut
+    dw $5b10   ; [$26] GigaSlash
+    dw $5b11   ; [$27] MultiCut
+    dw $5b12   ; [$28] Hellblast
+    dw $5b13   ; [$29] BigBang
+    dw $5b14   ; [$2a] MegaMagic
+    dw $5b15   ; [$2b] DeMagic
+    dw $5b16   ; [$2c] FEEDMEAT, BEFFJERKY, PORKCHOP, SIRLOIN
 Jump_050_5ede:
     ld a, [$dd62]
     or a
@@ -11653,47 +11623,38 @@ SetBtl_7e1e:
     nop
     nop
     nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
+; [S112] AnimLoadFork50 — the tiles + palette load of a starting battle
+; animation (A = [$da81]): numbers < $2D = the vanilla code that stood in the
+; window (bank $17 entries 13 + 8, AnimGfxTable); $2D+ (the project's new
+; animations, PROJECT_COMPILER §2.28) = bank $6F entry 2 (palettes into the
+; OBJ buffer, DE = the sheet in bank $70) + entry 8 (commit). Out: DE = gfx id.
+; 41 bytes carved from this nop fill (net bank size unchanged).
+AnimLoadFork50:
+    ld [$c81e], a
+    cp $2d
+    jr nc, .own
+    ld hl, $170d
+    rst $10
+    ld hl, $1708
+    rst $10
+    ld a, [$da81]
+    ld hl, AnimGfxTable
+    ld c, a
+    ld b, $00
+    add hl, bc
+    add hl, bc
+    ld a, [hl+]
+    ld d, [hl]
+    ld e, a
+    ret
+.own:
+    ld hl, $6f02
+    rst $10                     ; DE = gfx id (rst $10 keeps DE)
+    push de
+    ld hl, $1708
+    rst $10                     ; commit the palettes
+    pop de
+    ret
 ; [S75 FENCE] SlotProbeGuard50 — displaced CmpBtl_6383 head + slot bound.
 ; 13 bytes carved from this nop fill (net bank size unchanged).
 SlotProbeGuard50:

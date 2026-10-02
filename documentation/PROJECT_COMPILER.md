@@ -414,6 +414,7 @@ registering an emitter; nothing existing changes.
 | `art7f` `art7c` `art7a` + `art_battle_gfx` `art_battle_pal` `art_walk_01/06/07/09/0b/12/18/59` `art_layout_10/11` `art_attr_10/11` (S107) | `gamedata.art` (§2.23; editor2/core/art.py) | `file:patches/bank_07f/07c/07a.asm` + `region:` in banks $00 / $17 / $01 $06 $07 $09 $0B $12 $18 $59 / $10 / $11 | those banks |
 | `gd_monster_names` `gd_monster_nicks` `gd_monster_desc` `gd_monster_desc_extra` (S108) | `gamedata.monster_text` (+ `custom.species[].description`) (§2.24; editor2/core/monster_text.py) | `region:` in banks $41 / $4D | those banks |
 | `gd_arena_masters_04` `gd_arena_masters_50` `gd_arena_fees` `gd_arena_team_sizes` (S109) | `gamedata.arena` (§2.25; editor2/core/arena.py) | `region:` in banks $04 / $50 / $09 / $6E | those banks |
+| `anims6f` `anims70` + `gd_anim_routine` `gd_anim_cmd` (S112) | `custom.animations` + `gamedata.skills.<id>.presentation` (§2.28; editor2/core/battle_anims.py) | `file:patches/bank_06f.asm` / `bank_070.asm` + `region:` in bank $5F | `$6F` `$70` $5F |
 | `lay_copies_10` `lay_copies_11` (S107 2b) + `ns_follower_layout` (in the species list) | `gamedata.art` + `custom.species` (§2.23 "Walking layouts"; editor2/core/walk_layouts.py) | `region:` in banks $10 / $11 | those banks |
 
 `bank_060` generated layout order (fixed, deterministic): script master
@@ -438,6 +439,10 @@ user-confirmed hand-authored code:
 * `editor2/core/templates/bank_06c_head.asm` (S102) — bank byte, 1-entry
   table, `CustomTileAnimate` / `TileAnimRestart` / `TileAnimCopy` (the rooms'
   own tile animations, §2.19).
+* `editor2/core/templates/bank_06f_head.asm` (S112) — bank byte, 4-entry
+  table, `CustomAnimTick` / `CustomAnimInit` / `CustomAnimLoad` /
+  `CustomAnimStep` + `CustomAnimNone` (the project's new battle animations,
+  §2.28); pinned `aec1d3b8…286e`; TEMPLATE_SIZE 391 B.
 * `editor2/core/templates/bank_071_head.asm` — bank byte, 6-entry table
   (S100; 4 S99, 3 S64), `CopyCustomRoomRecord`, `CustomEncResolve` (S100:
   gate byte $FF = follow the dive, no pin), `CustomRoomBGMResolve` (entry 2:
@@ -1865,7 +1870,7 @@ removed by the editor.
 | `gd_skill_desc` | bank_056 (`SkillDescStrings` `$56:$502F-$664A`, 5,660 B) | the owned texts in vanilla order (0-150, `SkillDesc_Blank`, 213-218, `SkillDesc_None`); overflow → `gd_skill_desc_extra` |
 | `gd_skill_desc_ptrs` | bank_056 (`SkillDescPtrTable` `$56:$6667`, rows 0-221) | `dw` labels; rows $E0-$E9 stay the hand [S73] rows |
 | `gd_skill_desc_extra` | bank_056 (`$56:$7291-$7E41`, 2,993 B, was nop pad before the [S73] strings) | spilled texts + `SkillDescOwn_NNN` (a skill that shared Blank / None given its own text); fixed size |
-| `gd_present_proxy_5f` | bank_05f (`StockPresentTable` `$5F:$7EEB`, 222 B) | presentation id per skill (identity = vanilla) |
+| `gd_present_proxy_5f` | bank_05f (`StockPresentTable` `$5F:$7EDA`, 222 B — [S112] the S110 text said `$7EEB`: wrong, the S111 and S112 .sym both give $7EDA) | presentation id per skill (identity = vanilla) |
 | `gd_present_proxy_55` | bank_055 (`StockSfxTable` `$55:$798D`, 222 B; NEW hand patch `patches/bank_055.asm`) | SFX-table index per skill (the same values) |
 
 **Engine (hand, patches/ only).** *Looks:* every presentation read of the acting skill
@@ -2023,6 +2028,74 @@ project.json). S111b: + the ratio fixture (MagicBurn 1/4 + 3, TameMore 1/2, Anch
 Quake 1/2, Mourn 1/2), 5 ratio refusals, `ScaleHL72` / `AnchorKeepMP72` RUN from the ROM, the
 bank $73 call bytes; test_app: the burn edit, a refused 9, Mourn 1/2. **Pin** `5a1c5404…`
 (patched), was `4a2860cf…` (patched, historical) ← `534bfb62…` (patched, historical).
+
+## §2.28 S112 — NEW battle animations + a skill's own presentation (`custom.animations`, `gamedata.skills.<id>.presentation`, ROADMAP P3.11e)
+
+Module `editor2/core/battle_anims.py` (decoder of the 45 stock animations — the same code
+`tools/decode_battle_animations.py` writes `extracted/battle_animations.json` with —, the
+model `compose()`, `check()` from `validators.validate` and the Monsters / Skills commit,
+the emitters, the preview helpers); editor model `editor2/core/anims_doc.py`
+(`AnimsMixin`); the **Animations** tab (`editor2/app/anims_tab.py`) and the Skills tab's
+**Animation** section; help `57_animations.md` + `54_skills.md`. Engine: BATTLE_SKILL_SYSTEM
+§11.9 (the system as measured, the forks, the measurements).
+
+```jsonc
+"custom": {"animations": [
+  {"id": "spark_storm", "name": "Spark storm", "steps": [
+     {"from": 16, "frame": 0, "hold": 4},     // stock $10 (Zap) frame 0, 5 screen frames
+     {"sound": 130},                          // sound effect $82, takes no time
+     {"from": 16, "frame": 3, "hold": 5},
+     {"from": 6,  "frame": 1, "hold": 2},     // stock $06 (Bang)
+     {"blank": true, "hold": 2}]}]},          // nothing, 3 frames
+"gamedata": {"skills": {
+  "16": {"presentation": {"kind": "animation", "animation": "spark_storm", "motion": 2}},
+  "64": {"presentation": {"kind": "animation", "animation": 38, "motion": 0}},  // stock $26
+  "94": {"presentation": {"kind": "effect", "effect": 4}},                       // blink
+  "44": {"presentation": {"kind": "none"}}}}
+```
+
+**Numbers.** The i-th entry of `custom.animations` = animation **$2D + i** (at most 32:
+the developers' viewer lists $00-$4C). The stock $00-$2C are never touched. A presentation
+names a stock number (0-44) or a custom id (it follows the entry when the list is
+reordered).
+
+**Compose** (`BA.compose`, the bytes the engine reads): each distinct (source, frame) =
+one frame (the stock sprites; tiles renumbered into ONE new sheet in first-use order;
+attr bits 0-2 = the source's palette slot); a blank = one shared empty frame; timeline =
+one pair per step (`(frame, hold)` / `($FD, sound)`) + `($FF, $FF)`; palettes = each
+source's stock palette with its stock shade BAKED in (`display_palette`: hardware colour
+i = buffer colour [1,2,0,3][(shade >> 2i) & 3], measured) — the engine then uses the
+identity shade $D2. **Refusals (AnimError → ProjectError):** no frame step; a step that is
+none of frame / sound / blank; `from` not 0-44; `frame` not 0-31; hold not 0-255; sound not
+0-254; > 4 source animations; > 128 tiles; > 200 frames; > 120 steps; > 32 animations; ids
+missing / twice; a presentation `kind` not animation / effect / none, `motion` not 0-3,
+`effect` not 4-12 / 14 / 15, an animation that is neither 0-44 nor a custom id, an id >
+254. Warning: a stock frame drawing a tile outside its sheet (drawn empty — none in the
+45).
+
+**Emitters** (`emitters._anim_entries()`):
+
+| Emitter | Target | Content |
+|---|---|---|
+| `anims6f` | `file:patches/bank_06f.asm` | `CUSTOM_ANIM_COUNT EQU n` + template `bank_06f_head.asm` + `CustomAnimFrameTable` / `CustomAnimTimelines` / `CustomAnimPalettes` (db count + 4 dw each) / `CustomAnimGfxIds` ($70kk) — n + 1 rows, the last = `CustomAnimNone` — and per animation `CustomAnim{k}_Frames` / `_F{i}` / `_Timeline` / `_Palettes` |
+| `anims70` | `file:patches/bank_070.asm` | bank byte, `CustomAnimSheetPtrs`, `CustomAnimSheet{k}` (the bank $50 gfx-stream format, `encode_safe`), the last an empty sheet |
+| `gd_anim_routine` / `gd_anim_cmd` | `region:` in `patches/bank_05f.asm` | `SkillRoutineOverride` / `SkillAnimOverride` (256 B each, by real skill id; $FF = the look's) |
+
+With no animations and no presentations the regions are all $FF and bank $6F holds the
+engine + `CustomAnimNone` only: the user's project and the example behave exactly as S111
+(PyBoy A/B, RNG pinned). `validators.bank_usage` counts banks $6F (generated part after
+"NEW ANIMATION DATA (generated") and $70; `TEMPLATE_SIZE[$6F]` = **391 B**
+(`CustomAnimFrameTable @ $4187`).
+
+**Hand patches** (BATTLE_SKILL_SYSTEM §11.9.1): ROM0 two operands ($5E → $6F),
+`patches/bank_002.asm` (new, `ReadSeqStepFork`), bank $50 `AnimLoadFork50`, bank $5F
+forks + viewer, `game.asm` INCLUDEs `bank_06f.asm` / `bank_070.asm`.
+
+**Tests:** test_compiler `test_anims_s112` (regions all $FF in the committed patches, the
+presentation rows of a fixture, compose checks — frames, palette slots, tiles, timeline —,
+the refusals, 32 animations compile) and `--rom` `test_anims_rom` (the tables read back
+from the ROM == compose; the fork bytes; the override rows). test_app S112 block. **Pin**
+`9ce03bd0…` (patched), was `5a1c5404…` (patched, historical).
 
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 
