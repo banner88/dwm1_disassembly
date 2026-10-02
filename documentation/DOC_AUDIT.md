@@ -456,3 +456,15 @@ gate you assumed".
 | PROJECT_COMPILER §2.26 table: `StockPresentTable` `$5F:$7EEB` | WRONG ADDRESS | `$5F:$7EDA` (S111 and S112 .sym); corrected in place. |
 | BATTLE_SKILL_SYSTEM §11.2 per-bank table shape "`$5d`/`$5e` begin with a run of repeated DEFAULT pointers … counts verified-decodable, not proven-exhaustive" | SETTLED (S112) | Each frame bank's `AnimFrameTable5x` ($4071) = 32 dw per animation of its range; unused slots point at an empty `$80` frame; slot $1F = the blank frame. Census: all 45 = the model. |
 | disassembly bank_05f `$61BC-$61ED` (mgbdis `rst $38 / jr … / ldh [$e0],a …`) | DATA DECODED AS CODE (the shade part) | `EffectDebugShadeTable` $61C1 (45 B, = `AnimObjShadeTable`) as `db`, `ld hl, $61c1` by label; the menu text before it is still mgbdis code (its `jr_05f_61xx` targets are kept). |
+
+## S113 addendum (2026-10-02; the Breeding tab, ROADMAP P3.12)
+
+| Claim (where) | Verdict | Correct |
+|---|---|---|
+| BREEDING_SYSTEM "A post-recipe mutation system (~1-5% RNG) at `$16:$44DA` can override the result" (+ the bank $16 header, ARCHITECTURE / EVENT_FLAGS "mutation flag", "precedence … → mutation") | WRONG (measured S113) | `$44DA` (`BreedRareMutation_Unreferenced`) has no caller (no call/jp in the ROM, not in the jump table; 0 executions in the census); `$D9E6` is never set. Corrected in BREEDING_SYSTEM + both bank $16 trees. |
+| bank $16 jump table "Entry 3: BreedingResolve alt (no mutation step)" | MISLEADING | Entry 3 = `BreedResolvePreview` (the Old Man's preview, bank $0A); the only difference is the `$44D0` flag-clear call. |
+| bank $16 header "Entry 2 … (scripts `dw $1602`)" (S113 first draft) / the `dw $1602` words in banks $0E/$0F | WRONG | Those words are `CompareRAM $D8E3` VALUES, not far calls; entry 2 has no far caller (entry 0 calls it). Corrected the same session. |
+| MONSTER_DATA FX1 "only index WRITERS changed ($15 …, $18 …, $0A …, $50 …, $14 …)" — implying every staging index writer was moved | INCOMPLETE (measured S113) | bank $16 `BreedCreateOffspring` still wrote $14/$15 to `$DA75/$DA76` → farm slots 20/21 (every egg +1, no + recipe; S71-S112). Fixed S113 ($28/$29); MONSTER_DATA FX1 note added. |
+| BREEDING_SYSTEM Plus Value "Read both parents' plus values from party struct offset `$CB23`" | INCOMPLETE | Via `GetMonsterDataPtr` with the slot numbers in `$DA75/$DA76`; link session uses the pedigree's plus only. |
+| ROADMAP Phase D "STILL PENDING … bank $16 breeding-determination internals" | DONE S113 | Annotated both trees (BREEDING_SYSTEM "The resolver as measured (S113)"). |
+| PROJECT_COMPILER §2.20 validators "a shadowed special append / override" | SUPERSEDED S113 | The special table is auto-ordered; the error is two rows with the same parents + min plus (§2.29). |

@@ -1,0 +1,26 @@
+{
+ "_generator": "tools/census_breeding.py (S113): PyBoy stub-calls of bank $16 entry 2 BreedResolveOffspring vs editor2/core/breeding.py on the build of the S113 test ROM (the user's project my-dwm-hack_5 + the S113 demo overlay: Healer x BattleRex -> Klamutra, MadCat x BattleRex +2 -> GoldSlime, original row 755 removed)",
+ "rom_md5": "56b359229934caf697a850c6829a02c6",
+ "negative_control": false,
+ "calls": 53156,
+ "cases": {
+  "pairs_plus0": 46656,
+  "plus_gated_sweep": 500,
+  "random": 6000
+ },
+ "parents": "0-214 + new species [221]",
+ "twin_paths": {
+  "special": 6342,
+  "family": 37697,
+  "parent": 9117
+ },
+ "mismatches": 0,
+ "first_mismatches": [],
+ "mutation_routine_hits": 0,
+ "clear_flag_hits_first_300_calls": 258,
+ "rare_flag_set_after_call": 0,
+ "special_rows": 826,
+ "egg_cases": 400,
+ "egg_mismatches": 0,
+ "first_egg_mismatches": []
+}

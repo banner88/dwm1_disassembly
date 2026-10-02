@@ -4712,3 +4712,43 @@ is unique (identical routines in banks $5C/$5D/$5E).
 `AnimsMixin._new_anim_id` silently replaced `TileAnimMixin._new_anim_id` (same Document,
 MRO), breaking the tile-animation ids. **Rule**: prefix a mixin's private helpers with its
 subject (`_new_battle_anim_id`) and grep the Document's bases for the name.
+
+## S113 — breeding: test the whole creation path, moved indices hide in writers, read addresses from the .sym
+
+### A model of the resolver can be perfect while the egg is wrong
+The Python resolver matched the game's `BreedResolveOffspring` for 49,056 calls — with
+the parents' plus / level read from roster slots 0 / 1, as the census set them. The REAL
+caller, `BreedCreateOffspring`, passes slot numbers 20/21 — which FX1 (S71) had turned
+into farm slots in SRAM (the staging records became indices 40/41). Every egg since S71
+came out +1 and no "+N" recipe could fire, while the shrine's preview (another caller,
+with the real slots) still showed the right result. Found only by calling entry 0 with the
+real staging records and reading the record it CREATED. **Rule**: a census of a routine
+must also drive it through its real caller with the caller's own inputs, and check the
+artefact the player keeps (the created record), not the routine's return value.
+
+### When indices move, grep the WRITERS of every slot-number variable
+FX1 changed "index writers" for the staging slots in banks $15/$18/$0A/$50/$14, but
+`$DA75/$DA76` (`wBreedParent1Slot/2Slot`) are slot NUMBERS written by bank $16 and read
+through `GetMonsterDataPtr` — a writer outside the roster walkers. **Rule**: when a
+numbering changes, list every RAM variable that holds such a number (wram.asm names,
+`GetMonsterDataPtr` callers' `ld a,[...]`) and adjudicate each writer.
+
+### Count bytes from the .sym, not from a hex dump by eye
+The first S113 annotation said the gender table and the flag-clear routine sat one byte
+below the addresses the code uses ("an off-by-one in vanilla") — a mis-indexed dump
+(`$44C4 …` counted from the wrong byte). Writing the claim as `BreedGenderThreshold + 1`
+changed the build's md5 and exposed it at once. **Rule**: take addresses from the built
+`.sym` (labels added at the boundaries) before claiming an anomaly; the byte-perfect
+rebuild is the check that makes such a label claim testable.
+
+### A stub must not live inside the RAM the routine uses
+The egg census first put its call stub at `$D700` — inside staging record 2
+($D6FA-$D78E): the mate's species read `$16` (the stub's operand byte) → Dragon family,
+wrong eggs. **Rule**: before placing a WRAM stub, check the routine's inputs' ranges
+(here the two staging records) — the census now uses `$DD40` (battle WRAM, idle at the
+title screen).
+
+### A name can be a family and a species
+`"Slime"` as a breeding matcher resolves to the Slime FAMILY (family names are checked
+first); a test meant for the Slime species changed every slime's eggs. **Rule**: the
+editor writes species as ids and families by name; tests use ids for species.

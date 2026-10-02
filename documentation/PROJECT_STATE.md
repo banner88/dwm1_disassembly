@@ -10,6 +10,79 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
+> Last verified: 2026-10-02 (Session 113 — **ROADMAP P3.12: THE BREEDING TAB — EVERY
+> RECIPE, EVERY MONSTER'S DEPTH, "TRY A CROSS", AN AUTO-ORDERED SPECIAL TABLE, A TREE
+> GENERATOR — AND THE FX1 EGG-PLUS BUG FIXED** (user on the audit: "1) [mutation] No I
+> have no idea where it came from. Monsters with + can have different breeding route,
+> thats it. Scope: 1) Fold in [the generator] if possible … 2) No gifts. You can get egg
+> from skydragon if it plops on your head. however, IN ROMHACK THERE WILL BE EGG REWARDS.
+> 3) [plus in depth] you decide. 4) Auto order sounds good. Keep in mind I will mess with
+> vanilla breeding table HARD in this romhack and try multiple iterations. Also we have
+> new sprite family, this is important to be aware of! 5) [offspring skills] you decide").
+> **Test ROM `DWM_S113_breeding_test.gbc` (`56b35922…`, patched) built S113, NOT yet
+> user-tested**; the editor half test_app-verified, not yet run on the user's Mac.
+> Verifier PASS; clean `1ca6579…` byte-perfect (bank $16's breeding resolver annotated in
+> both trees: `BreedCreateOffspring` / `BreedResolveOffspring` / `BreedResolvePreview` /
+> `BreedFamilySearch` / `BreedFamilyScan` / `BreedPlusAndSpecial` /
+> `BreedSpecialEntryCheck` / `BreedGenderThreshold` / `BreedClearRareFlag` /
+> `BreedRareMutation_Unreferenced` / `CountSeenInRange` / `NthSeenInRange` /
+> `InheritSkillList` / `InheritOneSkill`; labels / comments only — closes the Phase D
+> "bank $16 breeding-determination internals" item); **patched pin `8cf0b93b…`
+> (patched)**, was `9ce03bd0…` (patched, historical); the user's project (my-dwm-hack_5)
+> as-is now builds `3a09e1b2…` (patched; was `c90a69c2…`, historical — the bank $16 fix
+> only: it has no breeding edits). test_compiler --rom 773/773, test_app + test_app --rom PASS (GUI build == pin).
+> `EDITOR_REVISION` = 'S113'.
+>
+> **Measured (BREEDING_SYSTEM "The resolver as measured (S113)"):** the Python model
+> `editor2/core/breeding.py` == the game: `tools/census_breeding.py` stub-calls bank $16
+> entry 2 for every ordered pair of parents (0-214 + new species), a plus sweep and a
+> random sample (53,156 calls, 0 mismatches; negative control — no family second pass —
+> 31,433 mismatches) and the EGG ITSELF through entry 0 with the real staging records
+> (300 / 300). **No mutation:** `$16:$44DA` has no caller (ROM-wide call/jp search; 0
+> executions in the census), so `$D9E6` is never set and the bank $0D "Wow! It's a rare
+> breed!" line never shows (the old "~1-5 % mutation" doc claim was wrong).
+> **FOUND + FIXED (FX1 regression, S71 → S112):** `BreedCreateOffspring` still put the
+> parents' slot NUMBERS 20/21 in `$DA75/$DA76`; since FX1 those are farm slots 20/21 in
+> SRAM (the staging records are indices 40/41), so every egg's plus + level bonus came
+> from those slots — empty: every egg +1 and no "+N" recipe ever fired (the shrine
+> PREVIEW, which passes the real slots, still showed the right answer). Now `$28/$29`
+> (same size, `patches/bank_016.asm`). PyBoy through the real shrine menus on the user's
+> save, MadCat × BattleRex with a +2 route: before Yeti +1, after GoldSlime +2.
+>
+> **Built (PROJECT_COMPILER §2.29, EDITOR_DESIGN §5.4 "As built S113", help
+> `58_breeding.md`):** the special table is AUTO-ORDERED whenever a project edits it
+> (species × species, species × family, family × species, family × family, higher min
+> plus first — vanilla's own 825 sorted this way give identical results for every pair
+> and plus); `special.removes`; `special.table` (the whole table, for heavy rework / the
+> generator); two rows with the same parents + min plus refused. Analysis
+> (`breeding.Analysis`): obtainable without breeding (wild joinable rows, starter, boss
+> joins, vanilla script gifts — SkyDragon egg, farm Slime eggs, Watabou, StoneMan — and
+> the project's `add_monster` egg rewards), depth from the resolver (vanilla: deepest
+> DeathMore 9), what makes / what it makes, rows that never fire, library pages that do
+> not give their monster. Generator `editor2/core/breed_gen.py` (the randomizer's
+> depth-profile builder on the project: 11 families, new species, pinned monsters; S113b:
+> any depth up to 40, one share box per depth — the ceiling is the number of monsters
+> not obtainable without breeding).
+> **Breeding** tab: By monster (depth, how you get it, Made by / Makes, add / change /
+> remove), Try a cross, depth chart vs original, Problems; Special recipes (the whole
+> table in scan order); Family recipes ("works for n of m"); Work on the whole table;
+> Generate a tree….
+> **Measured in PyBoy on the user's save, through the Old Man's BREED menu (S113 test
+> ROM = the user's project + a demo overlay authored through the editor model, NOT in
+> their project):** Healer × BattleRex → "I suspect Klamutra+2 will be born" → Klamutra
+> +2 (a new species × species row beating the vanilla [Slime] × [Dragon] family recipe);
+> MadCat × BattleRex → GoldSlime +2 (a +2 row; levels 23 + 23); Dragon × BattleRex →
+> Dragon +2 (original row 755 [Dragon] × BattleRex → GreatDrak removed).
+> **Open / to ask:** boss gender (the 15 boss species have female ratio 0 = always
+> male by `BreedGenderThreshold`, yet vanilla recipes pair two of them — no gender rule is
+> modelled); offspring skills / stats in "Try a cross" (bank $16 entry 4) = ROADMAP
+> residual; family "last match wins" is code-read (no project data has exercised it).
+> **Hand-off:** every S113 change = the diff against `56daf61` (origin/master, the S112
+> push), delivered as `DWM-S113-breeding-changed-files.zip`, the APPLY list pasted in the
+> chat. **Next:** the user's pick (P3.13 Encounters + Music is the next mandatory box;
+> P3.11b AI ban-list optional).
+
+
 > Last verified: 2026-10-02 (Session 112 — **ROADMAP P3.11e: SKILL ANIMATION EDITING —
 > NEW BATTLE ANIMATIONS MADE FROM THE GAME'S FRAMES, AND WHAT EACH SKILL SHOWS** (user on
 > the audit: "Sounds perfect. The in-built editor viewer and sound playback is the
@@ -71,88 +144,10 @@
 > tab is the next mandatory box).
 
 
-> Last verified: 2026-10-02 (Session 111 — **ROADMAP P3.11c + P3.11d: THE CUSTOM SKILLS AS
-> PROJECT DATA, NEW CUSTOM SKILLS FROM STOCK ONES, AN ELEMENT FOR EVERY SKILL** (user on
-> the audit: "1) Yes start with vanilla but given 3.11d is kind of tied, dont feel
-> prohibited from diving into it as well. 2) New custom skills should also be able to be
-> added from a) further sessions with you and b) from mix/matching existing skills and
-> fiddling with their animations. These will be damage skills without new logic. 3) Are
-> current skill elementals editable? If not, add that. Also consider quake elemental
-> damage. 4) fix [the sound overshoot] 5) Sure, dont care just make sure its reasonable and
-> consistent [the schema]"). **Test ROM
-> `DWM_S111_custom_skills_test.gbc` (= the demo below) USER-CONFIRMED 2026-10-02 15:08
-> ("Looks good")**; the editor half test_app-verified, not yet run on the user's Mac. Verifier PASS; clean `1ca6579…` byte-perfect
-> (bank $50 `SkillNameSubst_5ae1` decoded as data + comments, bank $52 dead-pocket note;
-> labels / comments only); **patched pin `4a2860cf…` (patched, historical
-> since S111b — now `5a1c5404…`)**, was `534bfb62…` (patched, historical); the user's project (my-dwm-hack_5) as-is now builds `e7a0577f…`
-> (patched; was `fc54da9b…` on the S110 tree, historical). test_compiler --rom 710/710,
-> test_app + test_app --rom PASS (GUI build == pin). `EDITOR_REVISION` = 'S111'.
->
-> **Built (PROJECT_COMPILER §2.27, BATTLE_SKILL_SYSTEM §13.9 + §15.3, EDITOR_DESIGN §5.3
-> "As built S111", TEXT_SYSTEM battle-line codes):** `gamedata.skills.<224-233>` edits the
-> ten built-in custom skills' DATA (name, text, MP, learn row / not learnable, record
-> fields — not the power words —, looks, sounds, element, own announce line or a stock
-> one, Tame meters, Quake power, the Quake / Mourn banners, Anchor's dialogs);
-> `gamedata.skills.<234-254>` = NEW skills (`base` = the stock skill whose effect runs,
-> 114 measured bases); `element` for any skill (stock too). 19 compiler regions over the
-> custom skills' bytes in banks $07/$41/$4C/$54/$55/$56/$58/$5F/$72 (baseline
-> `editor2/core/custom_skills.json` = the S110 pin's bytes; with no edits the regions
-> reproduce them — tested, and `extract_custom_skills.py` reads them back out of the
-> build). Engine: bank $72 `FarSkillFork` → `CustomBaseTable`, entries 5 `ElemLevel72` /
-> 6 `CustomLearnRow72`; bank $52 24 ladder calls → `ElemLadder*` in the dead $51B3 pocket
-> + `CustomElemTail52` (Quake etc. take an element); bank $06 learn scan through
-> `wLearnRowBuf` $D10C; bank $58 `CustomTargetBaseTable`; per-id tables span $DE-$FE.
-> Skills tab: custom / new kinds, New skill… / Delete, Learnable, Element, Sounds like,
-> Announce, "Its own numbers and lines"; help `54_skills.md`.
->
-> **Fixed (measured):** (1) `{skill}` in battle lines printed "CleanCut" for custom ids
-> (bank $50 `SaveBtl_5ad2` indexed a 4-B table → code; now same-size bounded); (2) custom
-> ids' cast sounds read past bank $55's 222-B SFX tables (next kind's rows; from the last
-> table, code) → `CustomSfxTable`, default $09 = the party-side sounds they had.
->
-> **Measured in PyBoy on the user's save:** element census (38 elemental skills; S110 and
-> S111 builds identical with the RNG pinned — unpinned, CallHelp drifted: KEY_LESSONS
-> S111); clone census (114 same / 41 differ / 67 not a skill); Blaze → Ice vs a level-3 Ice
-> target = 0 damage, Quake → Fire on a level-1 target, Spark → Lightning; the 10 built-ins
-> A/B vs S110 (same lines / acts / MP); a Blaze copy = Blaze; real level-ups learning the
-> Rumble … QuakeMost chain and Scorching → FrostBite. The demo `b8a5b8ea…` (patched) = the
-> user's project + an overlay NOT in their project: 229 Tremor → "Rumble" (MP 8,
-> Explosion, own line "{name} makes / the ground rumble!", power 60-80, learnt after
-> MetalCut), 234 "Thunder" (Zap's effect, Bang's look + sounds, power 60-75), 235
-> "FrostBite" (Scorching's effect, IceStorm's look + sounds, IceBreath) — party and enemy
-> casts, the SKIL menu (name, MP 8, text; "Cannot use now." in the field).
-> **To mention / open:** 41 bases refused until traced (heals among them — possibly partly
-> a rig effect); 21 new-skill slots; custom names share bank $41's spill extents with the
-> renamed originals; new animations composed from frames = P3.11 residual (f), not built.
-> **S111b (same session, user 15:20 "Fix it now"; built, test ROM
-> `DWM_S111b_skill_ratios_test.gbc` NOT user-tested — user 15:38: "Not interested in rom
-> give editor files"):** the built-in custom skills'
-> fixed RATIOS are project data — MagicBurn `burn` (1/2) + `damage_per_mp` (1), Tame
-> `damage_of_atk` (1/4, per tier), Anchor `mp_charge` (3/4), Quake `ally_damage` (1/3, per
-> tier), Mourn `per_fallen` (1) → bank $72 `CustomRatioTable` (region `gd_custom_ratios`)
-> read through `ScaleHL72` (floor(x·n/d), at most 999) + entry 7 `AnchorKeepMP72` (bank
-> $73's arrival charge); Skills tab "Its own numbers and lines". PyBoy on the user's save:
-> defaults == before (A/B identical); the test ROM's edits measured (MagicBurn spends 50 of
-> 200, damage 3× before the foe's ladder; Quake allies 30 of 60; Tremor allies 0; Mourn
-> with 2 fallen 500 instead of 750; Anchor keeps 101 of 203). **Found + fixed:** under the
-> act-time AI (FIGHT / tactics / enemies) MagicBurn and Tame ×3 hit the CASTER'S OWN SIDE
-> (their AI target row was the S84 self row $6367; measured, the same since S84) →
-> `CustomTargetBaseTable` MagicBurn = Firebal's row, Tame = Blaze's. **Found, not
-> changed:** with several foes MagicBurn spends again per foe on what is left (200 MP:
-> 100 + 50 + 25), as since S49. Pin `5a1c5404…` (patched), was `4a2860cf…` (patched,
-> historical); the user's project as-is builds `c3499e39…` (patched). test_compiler --rom
-> 727/727, test_app + --rom PASS.
-> **Hand-off:** every S111 change = the diff against `1e919dd` (origin/master, the S110
-> push), delivered as `DWM-S111-custom-skills-changed-files.zip` (S111b: re-cut at 15:38 with the
-> ratios, on the user's request without a ROM test), the APPLY list pasted in the chat. **Next (user 2026-10-02 15:08: "Yeah, make sure that's next"): ROADMAP P3.11e —
-> skill ANIMATION editing** (new animations from existing frames; groundwork first: the
-> frame-table re-section of banks $5C/$5D/$5E and the bank $5F per-skill tables, a PyBoy
-> trace of frame timing and tile loading).
-
-
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S113** (2026-10-02): P3.12 the Breeding tab — `editor2/core/breeding.py` (the resolver model, == the game: `census_breeding.py` 53,156 calls + 300 eggs, 0 mismatches; no mutation — `$44DA` has no caller) + `Analysis` (roots incl. gifts / egg rewards, depth, never-firing rows) + `breed_gen.py` (depth-profile generator) + the Breeding tab; special table AUTO-ORDERED when edited, `special.removes` / `special.table`; bank $16 resolver annotated (Phase D item closed); FIXED the FX1 egg-plus bug (`$DA75/$DA76` = farm slots 20/21 since S71 → `$28/$29`); pin `8cf0b93b…` (patched). Test ROM `DWM_S113_breeding_test.gbc` built, NOT yet user-tested. Verbose block in this file. Owning: BREEDING_SYSTEM "The resolver as measured (S113)" + "Auto-ordered special table (S113)", PROJECT_COMPILER §2.29, EDITOR_DESIGN §5.4, KEY_LESSONS S113, DOC_AUDIT S113, TOOLS_AND_DATA S113.
 - **S112** (2026-10-02): P3.11e skill ANIMATION editing — `custom.animations` (new battle animations $2D-$4C from the stock 45's frames: steps = frame + hold / sound / blank; ≤ 4 sources, ≤ 128 tiles; banks $6F engine + frames, $70 sheets) + `gamedata.skills.<id>.presentation` (animation + motion / screen effect / nothing; regions `gd_anim_routine` / `gd_anim_cmd`); forks ROM0 / $02 `ReadSeqStepFork` / $50 `AnimLoadFork50` / $5F + the developers' viewer (mode 5); the animation system re-sectioned and measured (§11.9 corrects the layer model: the per-skill byte is the animation number; shade order [1,2,0,3]); Animations tab + Skills → Animation with a playing preview and the game's sounds; pin `9ce03bd0…` (patched). Test ROM `DWM_S112_animations_test.gbc` USER-CONFIRMED 2026-10-02 18:29 ("Fantastic, everything checks out"). Verbose block in this file. Owning: PROJECT_COMPILER §2.28, BATTLE_SKILL_SYSTEM §11.9, EDITOR_DESIGN §5.3, KEY_LESSONS S112, DOC_AUDIT S112, TOOLS_AND_DATA S112.
-- **S111** (2026-10-02): P3.11c + P3.11d — the custom skills as project data: `gamedata.skills.<224-233>` (the ten built-ins' data: text, MP, learning, looks, sounds, element, announce, Tame meters, Quake power, banners, Anchor's dialogs) + NEW skills 234-254 on a stock skill's effect (`base`, bank $72 `CustomBaseTable`; 114 measured bases) + an element override for every skill (bank $52 ladder hooks in the dead $51B3 pocket, `CustomElemTail52` for the built-ins); 19 regions, baseline `custom_skills.json` = the S110 bytes; fixed the `{skill}` insert ("CleanCut") and the SFX-table overshoot; element + clone censuses (RNG pinned); pin `4a2860cf…`. Test ROM USER-CONFIRMED 2026-10-02 15:08 ("Looks good"); next = P3.11e animation editing (user). S111b: the built-ins' fixed ratios as data (`gd_custom_ratios`, `ScaleHL72`) + the MagicBurn / Tame AI target-row fix (they hit their own side under the act-time AI); pin `5a1c5404…` (patched); test ROM NOT yet user-tested. Verbose block in this file. Owning: PROJECT_COMPILER §2.27, BATTLE_SKILL_SYSTEM §13.9 + §15.3, EDITOR_DESIGN §5.3, TEXT_SYSTEM, KEY_LESSONS S111, DOC_AUDIT S111, TOOLS_AND_DATA S111.
+- **S111** (2026-10-02): P3.11c + P3.11d — the custom skills as project data: `gamedata.skills.<224-233>` (the ten built-ins' data: text, MP, learning, looks, sounds, element, announce, Tame meters, Quake power, banners, Anchor's dialogs) + NEW skills 234-254 on a stock skill's effect (`base`, bank $72 `CustomBaseTable`; 114 measured bases) + an element override for every skill (bank $52 ladder hooks in the dead $51B3 pocket, `CustomElemTail52` for the built-ins); 19 regions, baseline `custom_skills.json` = the S110 bytes; fixed the `{skill}` insert ("CleanCut") and the SFX-table overshoot; element + clone censuses (RNG pinned); pin `4a2860cf…`. Test ROM USER-CONFIRMED 2026-10-02 15:08 ("Looks good"); next = P3.11e animation editing (user). S111b: the built-ins' fixed ratios as data (`gd_custom_ratios`, `ScaleHL72`) + the MagicBurn / Tame AI target-row fix (they hit their own side under the act-time AI); pin `5a1c5404…` (patched); test ROM NOT yet user-tested. Verbose block in SESSION_HISTORY.md. Owning: PROJECT_COMPILER §2.27, BATTLE_SKILL_SYSTEM §13.9 + §15.3, EDITOR_DESIGN §5.3, TEXT_SYSTEM, KEY_LESSONS S111, DOC_AUDIT S111, TOOLS_AND_DATA S111.
 - **S110** (2026-10-02): P3.11 the Skills tab — the 222 original skills: `gamedata.skills` + `name` / `description` / `looks_like` → regions over the name block ($41), the SKIL texts + pointers + a 2,993-B spare ($56, re-sectioned), `StockPresentTable` ($5F, `GetPresentId`) and NEW hand patch bank $55 `SfxPresentId` + `StockSfxTable`; `mp` writes both MP copies; the record READER CENSUS (every byte / bit named or proven unread; entry 3/4/5 labels, $55:$4061, +4 = battle MP, +5 = AI element); looks census 1,554 PyBoy battles, no stall (first pass void — act-time AI); S44 hand rename of skill 215 moved to project data; pin `534bfb62…`. Test ROM USER-CONFIRMED 2026-10-02 09:09 ("Excellent work. Give me editor files"). Verbose block in SESSION_HISTORY.md. Owning: PROJECT_COMPILER §2.26, BATTLE_SKILL_SYSTEM §7 + §11.8, TEXT_SYSTEM "Skill text blocks", EDITOR_DESIGN §5.3, KEY_LESSONS S110, DOC_AUDIT S110, TOOLS_AND_DATA S110.
 - **S109** (2026-10-01): P3.10b the Arena editor — `gamedata.arena` (class fees, the master of each match, team sizes 1-3) → regions over the two master-sprite tables ($04/$50), the class fee table ($09) and bank $6E `ArenaTeamSizeTable`; NEW engine bank $6E `ArenaTeamFixup` (same-size tails of `ArenaBattleSetup` / `LoadArenaEnemyStats`); team members = the enemy rows; new Arena tab; bank $09 class menu re-sectioned + decoded; found `AddGold` subtracts, display-list order, the King = one match; pin `482c949f…` (patched, historical). Test ROM USER-CONFIRMED 2026-10-01 22:57. Verbose block in SESSION_HISTORY.md. Owning: PROJECT_COMPILER §2.25, SIDEQUEST_MAP "Arena authoring as built — S109", EDITOR_DESIGN §5.2b, KEY_LESSONS S109, DOC_AUDIT S109, TOOLS_AND_DATA S109.
 - **S108** (2026-10-01): P3.10 part 3 — renaming the original monsters: `gamedata.monster_text` (name / default nickname / description) → regions over the three text blocks (banks $41 / $4D; spill into the new-species extents / `gd_monster_desc_extra`), recipe lines follow renames, new species' own description; Monsters tab "Name and library text" + new Dialogue tab; found: the join naming prefill = mode 7 (`FamilyCodePtrTable` → `MonsterNickPtrTable`), text ids' overflow banks, `text_id_map.json` 62/2,061 right (now measured: `dump_dialogue.py`; 6,520 script previews refreshed); bank $4D descriptions re-sectioned; pin unchanged. Test ROM r2 USER-CONFIRMED 2026-10-01 (r1: the demo's Slime rate + the user's Library-door redirect, fixed in the demo); repo cleanup (.pyc + example build/ out of git). Verbose block in SESSION_HISTORY.md. Owning: PROJECT_COMPILER §2.24, TEXT_SYSTEM "Monster text blocks" + "Text id resolution", EDITOR_DESIGN §5.2, KEY_LESSONS S108, DOC_AUDIT S108, TOOLS_AND_DATA S108.
@@ -279,6 +274,7 @@
 | Skill text + looks (S110) | Names `$41:$628E-$69F1` (mode 6 `SkillNamePtrTable` $4539; 1,892 B); SKIL texts `$56:$502F-$664A` (`SkillDescModeTable` $664B → `SkillDescPtrTable` $6667; ids 151-212 share `SkillDesc_Blank`, 219-255 `SkillDesc_None`) + the spare `$56:$7291-$7E41` (2,993 B). The look of the acting skill = bank $5F `GetPresentId` (12 reads) + bank $55's SFX tables (ONE reader `$55:$4061`); patched build: `StockPresentTable` / `StockSfxTable` (identity = vanilla). Record field map = BATTLE_SKILL_SYSTEM §7 (S110 reader census). **S111:** custom ids ($DE-$FE) read `CustomProxyTable` / `CustomSfxTable` (S110 builds: past the SFX tables); their names / texts = regions `gd_custom_skill_name_ptrs` / `_names` ($41 $7F98, 94 B) and `gd_custom_skill_desc_ptrs` / `_desc` ($56 $7E42, 446 B). |
 | Battle animations (S112) | 45 stock ($00-$2C): frames `AnimFrameTable5C/5D/5E` ($4071; < $0E / < $21 / rest), timelines bank $02 row $60 `AnimTimelineTable` $46A1 (pairs frame/hold+1, `$FD` sound, `$FE 4` loop, `$FF` end), tiles `AnimGfxTable` $50:$5E84 (streams $5A/$5B → $8000), palette `AnimObjPalettes` $17:$6B0D, shade `AnimObjShadeTable` $00:$3141 (GBC hw colour i = buffer [1,2,0,3][(shade>>2i)&3], identity $D2 — measured on screen). Per skill: number `AnimCmdTableFoe/Own` $5F:$56ED/$57D5, routine `AnimRoutineIdxParty/Enemy/Link` $58DD/$59C3/$5AA9 → `AnimRoutineTable` $58BD (16; 13 = nothing). Developers' viewer = game mode 5. New ones $2D+: banks $6F/$70 (patched builds). |
 | Text id → bank (S108, measured) | ROM0 `TextBankDispatch` $0AD9 (HL = id) → corpus bank by range (TEXT_SYSTEM), whose entry 0 forwards the upper part of its index range to an OVERFLOW bank: $42/$43→$1A, $44/$46→$1B, $45/$48→$1F, $47→$21, $49→$18, $4A→$22, $4B→$3F, $4E→$4F (1,177 of 2,560 ids). `extracted/dialogue.json` = the PyBoy-measured map + every text table (`tools/dump_dialogue.py`); `text_id_map.json` is derived from it (the pre-S108 file matched 62 / 2,061). |
+| Breeding resolver (S113) | bank $16 entry 0 `BreedCreateOffspring` (callers $0A:$4A8D / $0A:$56F8 / $15:$5B7D) → entry 2 `BreedResolveOffspring`: `BreedPlusAndSpecial` (plus = max(parents' plus) + 1 + level-sum bonus 40/60/76/100 → +1..+4, ≤ 99; then the special table, first row whose matchers fit and min plus ≤ plus; bank $69 in patched builds) → `BreedFamilySearch` (two passes: mate as species, then as family code; exact pedigree wins at once, family pedigree last match wins; result = row number) → parent 1. No mutation (`$44DA` unreferenced). Python model `editor2/core/breeding.py` == the game (`tools/census_breeding.py`). Patched builds: `$DA75/$DA76` = $28/$29 (S113 FX1 fix). BREEDING_SYSTEM "The resolver as measured (S113)". |
 | Verifier | `python3 tools/verify_integrity.py` — run at session start AND end |
 
 **The MD5 `b90957482011c8083a068781033715b7` is WRONG.** It was a drifted
@@ -400,7 +396,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Attr map generator | ✅ working | tools/generate_attr_map.py (85 tilesets) |
 | Script compiler/decompiler | ✅ working | tools/compile_script.py / decompile_script.py |
 | Random encounters in custom rooms | ✅ generalized per-room (S42 `RoomEncTable`, bank $71). Remaining: custom monster POOLS (Encounters #2, ROADMAP). | CROSSBANK_ROOMS; KEY_LESSONS S11 |
-| Custom breeding | ✅ full authoring stack B1–B7: round-trip encoder; bank $69 owns the special table (overrides+appends+shadow validator); family-defaults rewrite; family reassignment; production library grouping (zero lag). **Spirit = a first-class 11th family (S104, USER-CONFIRMED 2026-09-30):** bank $6D family systems, `$FA` = Spirit, ghost-wisp icon, ??? restored, shown before ???, editor Families tab. | BREEDING_SYSTEM; ROADMAP Phase 2B |
+| Custom breeding | ✅ **S113 (P3.12, test ROM `DWM_S113_breeding_test.gbc` built, NOT yet user-tested): the Breeding tab (depth per monster, recipes, Try a cross, Problems, special / family tables, whole-table form, tree generator), the special table auto-ordered when edited (+ `removes` / `table`), the FX1 egg-plus bug fixed (every egg was +1 and no + recipe fired since S71)** — PROJECT_COMPILER §2.29, EDITOR_DESIGN §5.4. Earlier: full authoring stack B1–B7: round-trip encoder; bank $69 owns the special table (overrides+appends+shadow validator); family-defaults rewrite; family reassignment; production library grouping (zero lag). **Spirit = a first-class 11th family (S104, USER-CONFIRMED 2026-09-30):** bank $6D family systems, `$FA` = Spirit, ghost-wisp icon, ??? restored, shown before ???, editor Families tab. | BREEDING_SYSTEM; ROADMAP Phase 2B |
 | Custom battle skills (net-new ids) | 🟢 NINE custom skills live: MagicBurn $E0 (S49), Tame $E1 (S50), TameMore $E2 + TameMost $E3 (S52), Anchor $E4 field-cast (S73, user-confirmed; S105: its dialogs are built into every build — no custom room needed), Earthquake chain $E5-$E8 (S74; **S84: AI-commit of $E6-$E8 was CRASH-CAPABLE on all pre-S84 builds** — dispatch-table overrun, fixed by DispatchBoundsStub; PyBoy re-verified S84, awaiting user test), **Mourn $E9 (S75: ATK-vs-DEF × (dead allies+1), 2nd dispatch trampoline = per-skill vanilla damage machine; **S84: AI-commit was CRASH-CAPABLE (wild jump to WRAM) on all pre-S84 builds** — fixed S84; AI-commit activation USER-CONFIRMED on the real save (Charge tactics))** — all on the full de-aliased stack incl. natural-learn, real MP, announce, descriptions. **S111 (test ROM USER-CONFIRMED 2026-10-02 15:08 ("Looks good")): their DATA is project data** (`gamedata.skills.<224-233>`, 19 compiler regions, baseline `editor2/core/custom_skills.json`; $DE/$DF retired) (S111b: their fixed ratios too — MagicBurn burn, Tame damage, Anchor charge, Quake allies' share, Mourn bonus — built, NOT yet user-tested) **+ NEW custom skills 234-254** on a stock skill's effect (`base`; 114 measured bases; own name / text / MP / learning / power / targets / looks / sounds / element / announce) — Skills tab. | BATTLE_SKILL_SYSTEM §12–§13.9, §14; PROJECT_COMPILER §2.27; ROADMAP Arc 2, P3.11c/d |
 | SRAM save layout | ✅ audited S8: custom flags persist (truly-safe pool = 32 flags, S57); collisions mapped; free SRAM tail $BFC8-$BFFF (56 B, reserved). **32 KB expansion BUILT S69 (RAMB pin + CF3SRAMBankedCopy; NOT yet user-tested)** — +24 KB persistent in banks 1-3, uninitialized until a schema exists (E3 residual) | ARCHITECTURE "SRAM banking as built S69"; known_RAM_map |
 | Custom-room WRAM state | ✅ migrated S65 into the CF3-freed window (buffers $CC80/$CD00, counter region $CD80×640, wCustomPool $D001-$D664; TRANSIENT permanently, init-guaranteed zeroed). v7 USER-CONFIRMED S66 | patches/wram.asm banner; PROJECT_COMPILER §2.6; ROADMAP CF4 |
@@ -414,7 +410,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Arena/boss roster AUTHORING (E1→E2 wiring) | RE ✅ DECODED S67; **ARENA half built S109 (P3.10b, test ROM USER-CONFIRMED 2026-10-01 22:57)** — `gamedata.arena` + the enemy rows, Arena tab (the "Arena authoring" primitive row). Gate-boss rosters: their enemy rows are editable on the Monsters tab (S106); a boss editor is not built |
 | Combat simulator (arc S78-S88) | 🟢 **COMPLETE through the pacing layer (S86) + commit-model close-out (S87: party bases from the instance record, obedience EXACT 889/889 on the WLD stat, $7997 + TRUE-loaf closed)**: `simulator/damage.py` 698/698 (S78) + specials (S79); `turn_order.py` 143/143 (S79); AI `ai.py` 26/26 + rule chains `ai_rules.py` 240/240 (S80/S81); `battle.py` loop glue 6614/6614 (S85) + 802/802 on fresh S86 captures; **S86: measured RNG idle model (`measure_idle.py` → `s86_idle_model.json`), full-battle driver `pacing.py` (commit + rounds + TTK), aggregate-validated (`validate_pacing.py`: round-level PIT uniform over 197 rounds; 5 fresh real-save battles inside sim envelopes), `sweep_ttk.py` gate-pool sweeps, `profile_check --ttk` gating**. **S88 (built, NOT yet user-tested): confusion end-to-end + snap-out (2824/0), riders 40/40 ($69 boss veto = application-only), curse MP MaxMP//6, poison cap 15/15, PsycheUp closed empty, $DB06/$DB07 writer map, dodge incapacity exemption; 3 new corpora; the S79 $7AB5 confusion attribution corrected to Transform (DOC_AUDIT S88).** Residuals (§15.9 + ROADMAP S89): the low-stat calcdef edge (2 deterministic SameBoy repros), meta-actions (hero-slot MENU verbs — PARTIAL, named box), and +8/+9 defensive-flag consumers. **S89 (built, NOT yet user-tested): Group-B residuals CLOSED — $DB07 = IRONIZE counter (not stun); interception = Cover/Guardian guard table (`guard_redirect`, 14/14); WLD level-up writer = none; `board_from_event` consumes real ai_bases/WLD; defensive-set sweep folded into status.py. New corpora s89_fresh (426/1 flagged) + s89_guard (14/14). Annotation: $670E re-sectioned, guard/iron handlers commented.** **S90: arc adjudicated DONE FOR PURPOSE (user-conferred); residuals banked as non-blocking boxes ($DB42 setter, +8/+9 consumers, meta-actions menu drive, guard-validator polish).** | BATTLE_SKILL_SYSTEM §15, §15.6, §15.9; TOOLS_AND_DATA §2.10 + S89 rows; ROADMAP S89/S90 |
 | Randomizer (standalone; English + German builds) | ✅ **SHIPPED, USER-TESTED, part 2 S77** — `randomizer/`, data tables only plus ONE code change (`plusgrowth.py`, opt-out). Breeding tree regenerated to a target depth profile (3-6) with deeper = better; bosses/arena/wild stratified against vanilla's measured correlations; skills dealt from vanilla's usage bag and never below vanilla's minimum placement level; growth shuffled within vanilla-ordering bands; paralysis + full heals banned on boss/arena rows; pools de-duplicated. Gate: `randomizer/profile_check.py` (per-entity envelopes) + `randomizer/audit_threat.py` (per-row damage parity). | randomizer/README.md; BATTLE_SKILL_SYSTEM §record power field is BLIND; BREEDING_SYSTEM §Depth is a function of matcher SPECIFICITY; MONSTER_DATA §Growth randomization needs a per-species envelope; PROJECT_COMPILER §Validation the editor must run |
-| Editor app (Phase 3) | 🟢 Skeleton S72 → design v2 S90 → P3.0-P3.2b S91/S92 → **P3.3 canvas v1 + shell S93** → **S94 canvas v2 + real room model + S94b entrance redirects & per-state rooms (built, NOT yet user-tested):** vanilla/custom room columns (every vanilla state browsable), clone-with-confirm carrying ALL vanilla states (paintable at once), New/Copy/Rename/Delete, File→New project (blank template), metatiles (4 subtiles + palette) as the editing unit, Select-first with real selection, Walkability mode (BR-subtile twin swap, tileset copied into the project), 4×4 grid, vanilla-format per-(screen,state) attr+palette tables (engine), records for every room (ROM0 region), **"Route a vanilla door here" = `custom.entrance_redirects` → per-(map,screen) exit overrides (Entry 6 + Entry 9)** — the in-game test route for any custom room; **S95:** picker = the room's whole vocabulary (never shrinks) + borrow tiles from any vanilla room under this room's palettes (import across tilesets, PyBoy-verified) + on-open migration of pre-S94 projects. Acceptance PyBoy-verified incl. walking and the door walk-through. **S96 (USER-CONFIRMED 2026-09-25 ("Everything works")): P3.3c Tileset tab (slot map + release) + P3.3d (change tileset / blank sheets, Import art tab for PNG rips, per-subtile metatile palettes, bank space meters) + Make editable works on all 98 vanilla rooms (opcode arity from the handlers).** **S97 (USER-CONFIRMED 2026-09-26): rooms group B — P3.5a flag state rules (engine entry 8 + bank $17 hook; persistent custom-room versions) + P3.5 NPC inspector (13 measured behaviours, hidden bit, talk text, presence, drag; **r2**: per-box talk editor with ROM-font preview, cream dialog/YES-NO boxes in free-colour rooms, NPC section, sections start folded).** **S98 (doors USER-CONFIRMED 2026-09-26; the rest built, NOT yet user-tested): rooms group C = P3.7 — named door objects linked two-way (+ Door, double-click to connect, arrive ON the door), one-way teleports, examine / step-on spots (the "$8F spawn" misnomer retired), talk scripts with YES/NO + set/clear flags + move, edge-vs-scroll guards, World tab v0; tileset tools (own copies, split move, purge).** **S99 (built; signed off 2026-09-27, r7 not yet re-tested in-game): P3.3e animated tiles — measured census, per-room animation source (engine), canvas outline + ▶ Play preview, inspector choice, clones = source, migration; Make animated tab (r3-r7: paint pads + part tools, still quarters, take-over, split move, count) + stray repair / Make still (r4).** **S100 (built, NOT yet user-tested): P3.7b part 1 — Gates tab v1 (32 gates, rules per gate, floor plan, rule dialog) + Rooms-tab "Inside gates" (arrival, Stairs down, saving, battles, music) → custom rooms served on gate floors.** Later rows: S101-S105 (boss floors, own animated tiles, gamedata, Spirit / Families tab, new species as project data — dashboard rows above). **S106 (USER-CONFIRMED 2026-10-01): P3.10 part 1 — the Monsters tab (species data, enemy rows + where met, new species from sprite sheets).** **S107: P3.10 part 2a — new art for the original monsters (USER-CONFIRMED 2026-10-01); part 2b — walk styles (any of the 155 layouts; USER-CONFIRMED 2026-10-01); part 2c — family icon editor (Families tab; USER-CONFIRMED 2026-10-01).** **S108 (test ROM USER-CONFIRMED 2026-10-01): P3.10 part 3 — renames / default nicknames / descriptions (Monsters tab) + the read-only Dialogue tab.** **S109 (test ROM USER-CONFIRMED 2026-10-01 22:57): P3.10b — the Arena tab (fees, masters, teams of 1-3, the team rows).** **S110 (test ROM USER-CONFIRMED 2026-10-02): P3.11 — the Skills tab (the 222 original skills).** Next: P3.11c (custom skills as project data) or the user's choice (P3.7b part 2, P3.4 PyBoy preview deferred by the user, P3.6 dialogue, P3.8 storyboard). | EDITOR_DESIGN §5.1 as built S94; ROADMAP P3.3b |
+| Editor app (Phase 3) | 🟢 Skeleton S72 → design v2 S90 → P3.0-P3.2b S91/S92 → **P3.3 canvas v1 + shell S93** → **S94 canvas v2 + real room model + S94b entrance redirects & per-state rooms (built, NOT yet user-tested):** vanilla/custom room columns (every vanilla state browsable), clone-with-confirm carrying ALL vanilla states (paintable at once), New/Copy/Rename/Delete, File→New project (blank template), metatiles (4 subtiles + palette) as the editing unit, Select-first with real selection, Walkability mode (BR-subtile twin swap, tileset copied into the project), 4×4 grid, vanilla-format per-(screen,state) attr+palette tables (engine), records for every room (ROM0 region), **"Route a vanilla door here" = `custom.entrance_redirects` → per-(map,screen) exit overrides (Entry 6 + Entry 9)** — the in-game test route for any custom room; **S95:** picker = the room's whole vocabulary (never shrinks) + borrow tiles from any vanilla room under this room's palettes (import across tilesets, PyBoy-verified) + on-open migration of pre-S94 projects. Acceptance PyBoy-verified incl. walking and the door walk-through. **S96 (USER-CONFIRMED 2026-09-25 ("Everything works")): P3.3c Tileset tab (slot map + release) + P3.3d (change tileset / blank sheets, Import art tab for PNG rips, per-subtile metatile palettes, bank space meters) + Make editable works on all 98 vanilla rooms (opcode arity from the handlers).** **S97 (USER-CONFIRMED 2026-09-26): rooms group B — P3.5a flag state rules (engine entry 8 + bank $17 hook; persistent custom-room versions) + P3.5 NPC inspector (13 measured behaviours, hidden bit, talk text, presence, drag; **r2**: per-box talk editor with ROM-font preview, cream dialog/YES-NO boxes in free-colour rooms, NPC section, sections start folded).** **S98 (doors USER-CONFIRMED 2026-09-26; the rest built, NOT yet user-tested): rooms group C = P3.7 — named door objects linked two-way (+ Door, double-click to connect, arrive ON the door), one-way teleports, examine / step-on spots (the "$8F spawn" misnomer retired), talk scripts with YES/NO + set/clear flags + move, edge-vs-scroll guards, World tab v0; tileset tools (own copies, split move, purge).** **S99 (built; signed off 2026-09-27, r7 not yet re-tested in-game): P3.3e animated tiles — measured census, per-room animation source (engine), canvas outline + ▶ Play preview, inspector choice, clones = source, migration; Make animated tab (r3-r7: paint pads + part tools, still quarters, take-over, split move, count) + stray repair / Make still (r4).** **S100 (built, NOT yet user-tested): P3.7b part 1 — Gates tab v1 (32 gates, rules per gate, floor plan, rule dialog) + Rooms-tab "Inside gates" (arrival, Stairs down, saving, battles, music) → custom rooms served on gate floors.** Later rows: S101-S105 (boss floors, own animated tiles, gamedata, Spirit / Families tab, new species as project data — dashboard rows above). **S106 (USER-CONFIRMED 2026-10-01): P3.10 part 1 — the Monsters tab (species data, enemy rows + where met, new species from sprite sheets).** **S107: P3.10 part 2a — new art for the original monsters (USER-CONFIRMED 2026-10-01); part 2b — walk styles (any of the 155 layouts; USER-CONFIRMED 2026-10-01); part 2c — family icon editor (Families tab; USER-CONFIRMED 2026-10-01).** **S108 (test ROM USER-CONFIRMED 2026-10-01): P3.10 part 3 — renames / default nicknames / descriptions (Monsters tab) + the read-only Dialogue tab.** **S109 (test ROM USER-CONFIRMED 2026-10-01 22:57): P3.10b — the Arena tab (fees, masters, teams of 1-3, the team rows).** **S110 (test ROM USER-CONFIRMED 2026-10-02): P3.11 — the Skills tab (the 222 original skills).** S111-S112: custom skills, animations (rows above). **S113 (built, NOT yet user-tested): P3.12 — the Breeding tab.** Earlier note: Next: P3.11c (custom skills as project data) or the user's choice (P3.7b part 2, P3.4 PyBoy preview deferred by the user, P3.6 dialogue, P3.8 storyboard). | EDITOR_DESIGN §5.1 as built S94; ROADMAP P3.3b |
 
 ### Disassembly annotation (measured 2026-06-13, not estimated)
 

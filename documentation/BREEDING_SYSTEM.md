@@ -85,7 +85,10 @@ mode-0/1 (`$41:$4025/$4039`) offspring-indexed overshoot; see MONSTER_DATA regis
 Neither is done yet (Gorbunok is intentionally wild-only for now), but both are
 straightforward given the resolver fork is already in place.
 
-A post-recipe **mutation system** (~1-5% RNG) at `$16:$44DA` can override the result.
+**There is no mutation in the shipped game (S113, measured — "The resolver as measured
+(S113)" below).** A post-recipe mutation routine exists at `$16:$44DA`
+(`BreedRareMutation_Unreferenced`) but nothing calls it; the earlier "~1-5 % mutation
+can override the result" claim was code-reading without a caller check.
 
 ## RAM Variables
 
@@ -100,7 +103,7 @@ A post-recipe **mutation system** (~1-5% RNG) at `$16:$44DA` can override the re
 | `$DA75` | Parent 1 slot | Party slot index |
 | `$DA76` | Parent 2 slot | Party slot index |
 | `$DA77` | Offspring plus | Computed plus value 0-99 |
-| `$D9E6` | Mutation flag | Set when mutation occurs |
+| `$D9E6` | "Rare breed" flag | Only the unreferenced mutation routine sets it; `BreedClearRareFlag` clears it each resolve — never set (S113) |
 
 ## Family Codes
 
@@ -126,7 +129,7 @@ exactly (below).
 
 ## Step 1: Special Recipe Table ($4B30)
 
-**Function**: `Call_016_4653` → scan loop at `jr_016_46f5`
+**Function**: `BreedPlusAndSpecial` ($4653, was `LoadBrd_4653`) → scan loop at `jr_016_46f5` (patched builds: bank $69 `RelocatedSpecialScan`)
 
 **Table format**: 5 bytes per entry, `$FF` terminated
 
@@ -150,7 +153,7 @@ exactly (below).
 
 ## Step 2: Family Recipe Table ($4974)
 
-**Function**: `Call_016_45d5` → `Call_016_45ff`
+**Function**: `BreedFamilySearch` ($45D5) → `BreedFamilyScan` ($45FF) (S113 names; were `LoadBrd_45d5` / `LoadBrd_45ff`)
 
 **Table format**: 2-byte pairs `[B, C]`, `$FFFF` separators, `$0000` terminator
 
@@ -178,7 +181,7 @@ separators.
   special scanners (vanilla bank $16 `Call_016_471c`, bank $69 B2) never had a
   wildcard.
 
-**Two-pass search** (`Call_016_45d5`):
+**Two-pass search** (`BreedFamilySearch`):
 1. First pass: parent 2 as specific species → only exact C matches possible
 2. Second pass: parent 2 converted to family code → family C matches possible
 
@@ -192,8 +195,10 @@ If neither table produces a result, offspring = parent 1 species (`$DA6F`). This
 
 Before table searches, `Call_016_4653` computes the offspring's plus value:
 
-1. Read both parents' plus values from party struct offset `$CB23` (via `Call_000_223b`)
-2. Take the higher of the two, increment by 1
+1. Read both parents' plus values from roster field +$62 (`$CB23` base, via
+   `GetMonsterDataPtr` with the slot numbers in `$DA75`/`$DA76` — S113: in patched
+   (FX1) builds those must be the staging INDICES 40/41; see "The FX1 egg-plus bug")
+2. Take the higher of the two (link session `$C86C`: the pedigree's), increment by 1
 3. Add a bonus based on sum of parent levels:
    - Sum >= 100: +4
    - Sum >= 76: +3
@@ -302,8 +307,8 @@ extended to 1×–2× capacity (825 → up to ~1650) for iterative playtesting.
   insert. Leave the vanilla tables in place (dead, ~8.7 KB) and overwrite only
   the scan-entry region in-place (`ld hl,$6900; rst $10` + NOP pad to preserve
   byte length); fall through to the existing plus-clamp.
-- Preserve plus computation, the ~1–5% mutation override (`$16:$44DA`→`$D9E6`),
-  and precedence: special → family → fallback(parent 1) → mutation.
+- Preserve plus computation and precedence: special → family → fallback(parent 1).
+  (S113: the "mutation override" `$16:$44DA` is unreferenced — never runs.)
 
 ### Source-spec + compiler
 Extend `tools/patch_breeding_recipe.py` into `tools/build_breeding.py`: a JSON
@@ -673,6 +678,103 @@ index 1 = the cream background `(248,248,208)` and 3 = black on every screen;
 (greens), continue box `(200,72,0)` / `(248,200,0)` (orange, gold). The demo's
 heart (Slime) and star (Dragon) appear in the continue box, the field status bar
 (VRAM `$8DA0+16·slot` == the authored tiles) and the INFO page ("♥family").
+
+---
+
+## The resolver as measured (S113)
+
+Labels (both trees, S113): entry 0 `BreedCreateOffspring` ($4015; callers $0A:$4A8D,
+$0A:$56F8, $15:$5B7D — the last clears `$C86C` afterwards, the link path), entry 2
+`BreedResolveOffspring` ($456E; no far caller — entry 0 calls it), entry 3
+`BreedResolvePreview` ($45A3; bank $0A $5470, the Old Man's "I suspect X+N will be born"
+line, with the selected roster slots), `BreedPlusAndSpecial` ($4653),
+`BreedSpecialEntryCheck` ($471C), `BreedFamilySearch` ($45D5), `BreedFamilyScan`
+($45FF), `BreedGenderThreshold` ($44CC, 4 B = bank $14's recruit table $459E bytes),
+`BreedClearRareFlag` ($44D0), `BreedRareMutation_Unreferenced` ($44DA),
+`CountSeenInRange` / `NthSeenInRange` ($453D / $4553), `InheritSkillList` /
+`InheritOneSkill` ($4496 / $44A3).
+
+**The model == the game.** `editor2/core/breeding.py` `Breeding.resolve` is a line-for-
+line model of entry 2 in the patched build; `tools/census_breeding.py` stub-calls the
+real routine (`ld hl,$1602 / rst $10`) at the title screen for every ordered pair of
+breedable parents (0-214 + the project's new species) at plus 0, every plus-gated row's
+parents at plus 0-99, and 6,000 random (plus, plus, level, level) cases — S113 on the
+test ROM: **53,156 calls, 0 mismatches** (species and plus); the negative control (the
+model without the family table's second pass) gives 31,433. The census also creates the
+EGG through entry 0 with the real staging records ($D665 / $D6FA: species +$09, plus
++$62, level +$4B) and reads the record it writes (300 / 300 == the model after the fix
+below). `extracted/breeding_census.json`.
+
+**Order, as measured:**
+1. Plus: max(the two parents' plus) + 1 (link: the pedigree's + 1) + 4 / 3 / 2 / 1 when
+   the parents' levels add up to ≥ 100 / 76 / 60 / 40, capped at 99.
+2. Special table, top to bottom: the first row whose pedigree matcher is the pedigree's
+   species or family code, whose mate matcher is the mate's species or family code, and
+   whose min plus ≤ the plus → result; plus += plus modifier (8-bit), capped at 99.
+3. Family table, two passes (mate as species, then as its family code): a row whose
+   pedigree matcher is the pedigree SPECIES wins at once; a family match is remembered
+   and the scan goes on — the last such row of the pass wins (code-read; no project data
+   has two family rows fitting one cross yet). Result = the row number.
+4. Nothing: the pedigree's species.
+
+**No mutation.** `BreedRareMutation_Unreferenced` ($44DA) would, with a result, 3/256 of
+the time swap it for a random SEEN species 200-214, and with none, 14/256 for a random
+seen species 0-199, setting `$D9E6` (the bank $0D script then says "Wow! It's a rare
+breed!"). Nothing calls it: no `call`/`jp` to $44DA in the ROM, not in the bank $16
+jump table, 0 executions in the census (hooked). `BreedClearRareFlag` ($44D0, called
+between the family search and the fallback) clears the flag; nothing sets it.
+
+**Gender of the egg** (entry 0): female (+$0B = 1) when wRNG1 <
+`BreedGenderThreshold[female ratio]` = 0 / 26 / 128 / 214 → 0 / 10 / 50 / 84 %. The 15
+ratio-0 species are the bosses (DracoLord … Darkdrium); vanilla recipes pair two of them
+(DracoLord × Sidoh → Zoma), so the editor applies NO gender rule to recipes — open
+question for the user (ROADMAP P3.12 residual).
+
+**Obtainable without breeding** (the depth roots, `breeding.obtainable`): a monster row
+in an encounter-list slot with a chance whose joinability ≠ 7; the starter (EID 1); the
+join row of a boss fight whose row can join (the 34 vanilla redirect pairs; project
+`join_as`); vanilla script gifts — the five AddMonster ($FF29) words in
+`extracted/all_scripts.json`: EID 1 (Castle 0, the starter), $15E SkyDragon (Farm 2, the
+egg), $15F Slime (Farm 27, ×2), $DF Watabou (Stable 16), $13A StoneMan (Restaurant 4);
+and every `add_monster` op in the project's scripts (egg rewards). Vanilla: 172 roots,
+every species 0-214 reachable, deepest DeathMore (9).
+
+**Depth** (`breeding.Analysis`): 0 for a root, else 1 + the deeper parent of the
+shallowest pair the RESOLVER gives the species for (all pairs, at plus 0 and at every
+min plus a row asks for) — so a row that is beaten counts only where it fires. A "+N"
+route is labelled, not charged: one breeding of two parents whose levels add up to 100
+gives +5 at once (plus 0 → 1 + 4). There is no depth limit in the game (vanilla: 9);
+a tree is bounded only by how many monsters are NOT obtainable without breeding — the
+S113 generator (`editor2/core/breed_gen.py`) builds to any depth up to 40.
+
+### The FX1 egg-plus bug (S71 → S112, fixed S113)
+
+`BreedCreateOffspring` sets `$DA75/$DA76` = $14/$15, the parents' slot numbers, for
+`BreedPlusAndSpecial`'s plus / level reads (`GetMonsterDataPtr`). FX1 (S71) moved the
+staging records' INDICES to 40/41 (MONSTER_DATA "FX1 as built") but missed this writer,
+so in every patched build since S71 the computed address for index 20/21 decoded to FARM
+slots 20/21 in SRAM: the egg's plus and level bonus came from them — empty, every egg
+was +1 and no "+N" special row could fire. The Old Man's preview (`BreedResolvePreview`,
+called from bank $0A with the real selected slots) still showed the right answer.
+Fix: `ld a,$28` / `ld a,$29` (same size, `patches/bank_016.asm`). PyBoy S113: entry 0
+with parents at plus 10 / levels 50: before Slime +1, after KingSlime +15; the real
+shrine menus on the user's save (MadCat × BattleRex, a +2 row, levels 23 + 23): before
+Yeti +1, after GoldSlime +2.
+
+## Auto-ordered special table (S113, PROJECT_COMPILER §2.29)
+
+With ANY special-table edit (`overrides`, `removes`, `appends` or a whole `table`) the
+compiler emits the effective table stably sorted most specific first: species × species,
+species × family, family × species, family × family, and within each a higher min plus
+first. Vanilla is already in this order except that its two family × family rows (740
+Slime × ??? → KingSlime, 751 Dragon × ??? → Orochi) sit between the family × species
+rows; sorting vanilla's 825 changes no result for any pair at plus 0 / 3 / 4 / 5 / 9
+(measured S113, and the test_compiler sort check). So a recipe added for two exact
+monsters beats every general row that also fits them, wherever it is written; the
+randomizer's "keep the specificity blocks" rule is now the compiler's job. Two rows with
+the same parents and min plus can never both fire: refused when a project row is
+involved (vanilla's own two such pairs, 682/693 and 802/803, are reported by the editor
+as "never fires").
 
 ---
 

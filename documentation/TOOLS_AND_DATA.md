@@ -940,3 +940,19 @@ verified overrides.
 | editor2/help/57_animations.md (NEW), 54_skills.md, 00_start.md, _revision.md; `EDITOR_REVISION` = 'S112' | help | test_app |
 | editor2/tests/test_compiler.py (`test_anims_s112`, `test_anims_rom`, pin `9ce03bd0…`), test_app.py (S112 block) | tests | PASS |
 | tools/verify_integrity.py | + bank_002.asm (patch files), bank_06f / bank_070 (new patch files), decode_battle_animations selftest | PASS |
+
+## S113 rows (P3.12: the Breeding tab)
+
+| Tool / data | What | Verified |
+|---|---|---|
+| tools/census_breeding.py (NEW) → extracted/breeding_census.json (NEW) | PyBoy: stub-calls bank $16 entry 2 `BreedResolveOffspring` for every ordered pair of breedable parents (0-214 + new species) at plus 0, a plus-gated sweep and a seeded random sample, and creates eggs through entry 0 `BreedCreateOffspring` with the real staging records; compares species / plus with `editor2/core/breeding.py`; hooks the unreferenced mutation; `--negative` (no family second pass), `--expect-egg-bug` (a pre-S113 build), `--label` | S113 test ROM: 53,156 calls + 300 eggs, 0 mismatches; negative 31,433; pre-fix build 300/300 eggs wrong |
+| disassembly/bank_016.asm + patches/bank_016.asm | the resolver annotated (labels / comments; BREEDING_SYSTEM "The resolver as measured (S113)"); patched: `BreedCreateOffspring` $DA75/$DA76 = $28/$29 (the FX1 egg-plus fix) | clean `1ca6579…`; pin `8cf0b93b…` (patched) |
+| patches/bank_069.asm | scanner comment names; region `gd_special_recipes` regenerated (the example's rows auto-ordered) | pin |
+| tools/build_breeding.py, tools/patch_breeding_recipe.py | comment label names only | selftest PASS |
+| editor2/core/breeding.py (NEW) | `Breeding` (resolver model), `FastResolver`, `obtainable`, `Analysis` (depth, makes / breeds into, never fires, library check) | census; test_compiler `test_breeding_analysis` |
+| editor2/core/breed_gen.py (NEW) | depth-profile tree generator on a project (`propose`, `to_gamedata`, `apply_to`) | test_compiler (seeded, compiles, pins) |
+| editor2/core/breeding_doc.py (NEW), document.py | `BreedingMixin` (the tab's model + setters) | test_app |
+| editor2/core/gamedata.py | special table: `removes`, `table`, auto-order (`special_key`, `special_src`, `special_removed`), same-parents refusal, family-warning summary; emitter tags | test_compiler `test_special_auto_order` |
+| editor2/app/breeding_tab.py (NEW), main.py (Breeding tab) | the editor (EDITOR_DESIGN §5.4 "As built S113") | test_app |
+| editor2/help/58_breeding.md (NEW), 00_start.md, 55_game_data.md, _revision.md; `EDITOR_REVISION` = 'S113' | help | test_app |
+| editor2/tests/test_compiler.py (pin `8cf0b93b…` patched, S113 tests), test_app.py (S113 block) | tests | 773/773 --rom; test_app + --rom PASS |

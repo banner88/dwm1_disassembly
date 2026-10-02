@@ -707,6 +707,100 @@ def main():
           'held 9 frames, the preview plays; Zap shows it on each target, Scorching blinks '
           'the screen; delete refused while Zap shows it; undo restores everything')
 
+    # S113 (P3.12): the Breeding tab — depth / roots read-outs, try a cross,
+    # a recipe added for two exact monsters beats the general ones, a special
+    # row changed and removed + brought back, a family (library) recipe,
+    # the whole-table form, a generated tree; undo restores everything
+    import editor2.app.breeding_tab as BTm
+    before = doc.dumps()
+    bt = w.breeding_tab
+    w.tabs.setCurrentWidget(bt)
+    app.processEvents()
+    an = bt.an
+    assert 'deepest' in bt.summary.text() and bt.sp_tree.topLevelItemCount() == len(an.species)
+    bt.select_species(8)                                    # Slime
+    app.processEvents()
+    assert bt.current_species() == 8 and 'Slime' in bt.sp_title.text()
+    bt.t_p1.set_value(8); bt.t_p2.set_value(8); bt.t_plus1.setValue(4)
+    app.processEvents()
+    assert 'KingSlime' in bt.t_out.text() and '#0' in bt.t_out.text(), bt.t_out.text()
+    bt.t_plus1.setValue(0)
+    app.processEvents()
+    assert 'KingSlime' not in bt.t_out.text().split('<br>')[0], bt.t_out.text()
+    bwarned = []
+    b_warn, b_q = BTm.QMessageBox.warning, BTm.QMessageBox.question
+    BTm.QMessageBox.warning = staticmethod(lambda *a, **k: bwarned.append(a[1:3]))
+    BTm.QMessageBox.question = staticmethod(lambda *a, **k: BTm.QMessageBox.Yes)
+    # Slime x DragonKid -> Healer (a vanilla Slime x [Dragon] row fits them too)
+    van_res = an.br.resolve(8, 20).species
+    assert bt._push('Recipe for Healer', lambda d: d.add_special(
+        {'p1': 8, 'p2': 20, 'min_plus': 0, 'result': 9, 'plus_mod': 0}))
+    app.processEvents()
+    assert doc.data['gamedata']['breeding']['special']['appends'][-1] == \
+        {'p1': 8, 'p2': 20, 'min_plus': 0, 'result': 9, 'plus_mod': 0}
+    bt.t_p1.set_value(8); bt.t_p2.set_value(20); bt._try()
+    assert bt.an.br.resolve(8, 20).species == 9 and van_res != 9 and 'Healer' in bt.t_out.text()
+    # a duplicate of an existing row is refused (it could never fire)
+    n_undo = w.session.undo.index()
+    bt._push('dup', lambda d: d.add_special({'p1': 8, 'p2': 20, 'min_plus': 0, 'result': 4,
+                                            'plus_mod': 0}))
+    app.processEvents()
+    assert bwarned and 'same parents' in str(bwarned[-1]) and w.session.undo.index() == n_undo
+    # change vanilla row 0 (Slime x Slime +5 -> KingSlime) to need +9, remove row 1, bring back
+    r0 = next(r for r in doc.special_rows() if r['src'] == ('vanilla', 0))
+    assert bt._push('row 0', lambda d: d.set_special(('vanilla', 0), dict(r0, min_plus=9)))
+    app.processEvents()
+    assert [o for o in doc.data['gamedata']['breeding']['special']['overrides']
+            if o.get('index') == 0][0]['min_plus'] == 9
+    assert bt._push('rm 1', lambda d: d.remove_special(('vanilla', 1)))
+    app.processEvents()
+    assert bt.removed.count() == 1 and bt.removed.currentData() == 1
+    bt._restore_special()
+    app.processEvents()
+    assert bt.removed.count() == 0
+    # the family (library) recipe of Slime: [Slime] x [Slime]
+    assert bt._push('fam', lambda d: d.set_family_recipe(8, 0xF0, 0xF0))
+    app.processEvents()
+    assert doc.data['gamedata']['breeding']['family']['8'] == {'p1': 'Slime', 'p2': 'Slime'}
+    assert bt.fam_table.item(8, 4).text() == 'changed'
+    # whole-table form
+    bt._to_table()
+    app.processEvents()
+    tab = doc.data['gamedata']['breeding']['special']
+    assert list(tab) == ['table'] and len(tab['table']) == len(bt.an.br.special)
+    assert not bt.b_table.isEnabled() and 'whole table' in bt.summary.text()
+    # a generated tree (seeded), applied as one undo step
+    dlg = BTm.GenerateDialog(bt, w.session, bt.an)
+    dlg.seed.setValue(7)
+    dlg.max_depth.setValue(12)                              # deeper than vanilla's 9
+    app.processEvents()
+    assert sorted(dlg.share) == list(range(1, 13)) and 'at most' in dlg.cap_note.text()
+    dlg.propose()
+    from editor2.core.breeding import Analysis as _An
+    from editor2.core.project import Project as _Pr
+    from editor2.core import breed_gen as _BG
+    _a12 = _An(_Pr(_BG.apply_to(doc.data, dlg.gd), doc.project_dir))
+    assert max(d for d in _a12.depth.values() if d < 99) >= 11, _a12.histogram()
+    assert dlg.b_apply.isEnabled() and 'special recipes' in dlg.report.text()
+    gd = dlg.gd
+    assert bt._push('Generated breeding tree', lambda d: d.apply_breeding(gd))
+    app.processEvents()
+    assert doc.data['gamedata']['breeding']['special']['table'] == gd['special']['table']
+    assert not bt.an.unreachable() or all(s >= 221 for s in bt.an.unreachable()), bt.an.unreachable()
+    BTm.QMessageBox.warning, BTm.QMessageBox.question = b_warn, b_q
+    while w.session.undo.index() > 0 and doc.dumps() != before:
+        w.session.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'undo must restore project.json exactly'
+    hlp = open(os.path.join(REPO, 'editor2', 'help', '58_breeding.md')).read()
+    for word in ('Depth', 'Try a cross', 'Special recipes', 'Family recipes', 'Generate',
+                 'whole table', 'never fires'):
+        assert word in hlp, f'help 58_breeding.md lacks "{word}"'
+    print('OK: Breeding tab (S113) — Slime x Slime +5 = KingSlime (#0); Slime x DragonKid -> '
+          'Healer beats the general rows; a duplicate refused; row 0 needs +9; row 1 removed '
+          'and brought back; Slime\'s library recipe; the whole table; a generated tree; '
+          'undo restores everything')
+
     if do_rom:
         from editor2.app.build_worker import BuildWorker  # noqa: E402
         results = []

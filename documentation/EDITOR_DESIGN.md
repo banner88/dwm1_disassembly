@@ -1255,6 +1255,37 @@ projectile "go back" loop is not authorable (copy frames instead).
   re-simulate live.
 - Coherence Set 1 (recipes ↔ library text) enforced as you type.
 
+**As built S113 (ROADMAP P3.12; NOT yet user-tested; help `58_breeding.md`):**
+`editor2/app/breeding_tab.py` over `editor2/core/breeding_doc.py` (`BreedingMixin`) and
+the resolver model `editor2/core/breeding.py` (== the game for every pair, PyBoy census —
+BREEDING_SYSTEM "The resolver as measured (S113)"). Top: a summary (how many monsters
+you get without breeding, deepest depth, how many nobody can get, special rows, rows
+that never fire) + **Generate a tree…**, **Work on the whole table** (→
+`special.table`), **Original special recipes**. Pages:
+- **By monster** — every collectible monster (0-214 + new species) with its depth and
+  how you get it (wild / starter / boss join / story gift / project egg reward /
+  breeding / nobody); for the selected one: **Made by** (its library recipe + every
+  special row giving it, with the number of pedigree × mate pairs each really decides,
+  "0 — never fires", hover = the pairs; Add a recipe for it… / Change… / Remove) and
+  **Makes** (offspring as pedigree or mate, with whom; double-click navigates). Right:
+  **Try a cross** (pedigree, mate, plus, levels → egg + plus + the deciding row), the
+  **depth chart** (bars = project, dashed = the original recipes with this project's
+  monsters), **Problems** (nobody can get X, rows that never fire, library recipes that
+  never give their monster; double-click navigates).
+- **Special recipes** — the whole table in scan order (#, pedigree, mate, needs +,
+  makes, adds +, from, decides), filter, Add / Change / Remove, removed originals can be
+  brought back; edited / added rows bold.
+- **Family recipes** — 215 slots: pedigree, mate, "works for n of m", changed; Change /
+  No family recipe / Original recipe.
+The recipe dialog offers the 11 families (Spirit included) and every species; the
+compiler sorts the special table (PROJECT_COMPILER §2.29), so the dialog needs no
+position. The generator dialog: **Deepest** 2-40 (S113b, user: "Goes only to depth 6? What if I
+want deeper..?" — no game limit; the ceiling is the number of monsters not obtainable
+without breeding, shown in the dialog), one share box per depth (Default / Even shares),
+seed, monsters to keep; Propose shows the depth chart + counts; Apply = one undo step. Not built: the
+offspring's skills / stats in Try a cross (bank $16 entry 4), a gender rule (open
+question), live coherence beyond the library text (the compiler regenerates it).
+
 ### 5.5 Encounters tab
 
 Cross-room/gate view of pools: which species at which levels where, per

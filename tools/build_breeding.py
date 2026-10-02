@@ -602,7 +602,7 @@ def write_family_table(rom):
 # relocates the SPECIAL-table scan to free bank $69 and calls it via `rst $10`
 # (H=$69, L=0 -> jump-table entry 0). The scanner below is a faithful,
 # instruction-level port of bank $16's in-bank scan (jr_016_46f5) + per-entry
-# check (LoadBrd_471c at $471C). It reads the same RAM ($DA6F/$DA70/$DA73/$DA74
+# check (BreedSpecialEntryCheck at $471C). It reads the same RAM ($DA6F/$DA70/$DA73/$DA74
 # /$DA77), writes the same RAM ($DA71 result, $DA77 += plus_mod), and ends with
 # `ret` so control returns to bank $16's plus-clamp at $4710. Vanilla behaviour
 # is preserved exactly (regression); the relocated table is byte-identical to
@@ -616,7 +616,7 @@ SECTION "ROM Bank $069", ROMX[$4000], BANK[$69]
 
 ; -----------------------------------------------------------------------------
 ; RelocatedSpecialScan (B2) — faithful port of bank $16 special-table scan.
-; Called via `ld hl,$6900; rst $10` from bank $16 (LoadBrd_4653, in place of the
+; Called via `ld hl,$6900; rst $10` from bank $16 (BreedPlusAndSpecial, in place of the
 ; old in-bank scan at $46F2-$470F). Plus value + parent family codes are already
 ; computed in bank $16 RAM before the call. On return, bank $16 clamps $DA77.
 ; Inputs  (RAM): $DA6F p1 species, $DA70 p2 species, $DA73 p1 family,
@@ -630,7 +630,7 @@ RelocatedSpecialScan:
     cp $ff                            ; $FF = end of table
     jr z, .done
     push hl
-    call .checkentry                  ; port of LoadBrd_471c
+    call .checkentry                  ; port of BreedSpecialEntryCheck
     pop hl
     ld a, [$da71]
     cp $ff
@@ -645,7 +645,7 @@ RelocatedSpecialScan:
 .done:
     ret                               ; back to bank $16 plus-clamp ($4710)
 
-; Port of LoadBrd_471c ($471C): match one 5-byte entry against the parents.
+; Port of BreedSpecialEntryCheck ($471C): match one 5-byte entry against the parents.
 .checkentry:
     ld a, [$da6f]                     ; parent 1 species (specific)
     cp [hl]

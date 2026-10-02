@@ -1403,6 +1403,10 @@ loops — byte-untouched; only index WRITERS changed ($15:$4c3b/$4c8d $14→$28,
 $15:$50da/$58e0 + $18:$42d6 $15→$29, $0A NPC-mate synth $15→$29, $50 link-
 loss wager park + battle-position cache $14→$28, $14:~$414f staging
 special-case cp $15→$29, $03 link viewer BCD cap "16"→"29").
+**S113: one writer was missed** — bank $16 `BreedCreateOffspring` kept `$DA75/$DA76`
+= $14/$15 (the parents' slot numbers for `BreedPlusAndSpecial`'s plus / level reads), so
+from S71 to S112 every egg's plus came from farm slots 20/21 (empty: +1, no "+N"
+recipe). Now $28/$29 (BREEDING_SYSTEM "The FX1 egg-plus bug").
 
 ### Computed-address decode (bank $73 entry 3, CF3RebaseDE v2)
 GMDP's vanilla computed address now decodes three windows: [$CC80,$D664]

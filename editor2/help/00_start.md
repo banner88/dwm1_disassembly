@@ -25,12 +25,15 @@ built from it (the original ROM is never changed).
   effect or nothing it shows.
 - **Animations** — new battle animations made from the frames of the game's
   45, with a playing preview and their sounds.
+- **Breeding** — every monster's breeding depth and how you get it, the
+  recipes that make it and what it makes, the special and family recipe
+  tables, "Try a cross", and a tree generator.
 - **World** — the graph of rooms and the doors between them (mouse wheel =
   zoom, drag empty space = move around, Fit / + / −).
 - **Build & Play** — build the ROM (Ctrl+B) and run it (Ctrl+R).
 - **Help** — this tab (F1).
 
-Tabs marked with a roadmap box (Breeding, Encounters, …) are not built yet.
+Tabs marked with a roadmap box (Encounters, Music, …) are not built yet.
 
 **Every edit can be undone** (Edit → Undo / Redo; View → History shows
 the list). File → Save saves the project.

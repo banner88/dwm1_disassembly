@@ -247,7 +247,7 @@ must skip these flag index ranges when allocating custom flags:
 | $D9CD | $0190-$0197 | Current Coliseum Battle |
 | $D9CF-$D9D6 | $01A0-$01DF | Gate room reset counters |
 | $D9E3 | $0240-$0247 | Story progression counter |
-| $D9E6 | $0258-$025F | Breeding mutation flag |
+| $D9E6 | $0258-$025F | Breeding "rare breed" flag (never set — the mutation $16:$44DA is unreferenced, S113) |
 | $D9E9 | $0270-$0277 | Current step in multi-step screens |
 
 **Safe pool for custom flags (S57 audit, current): 32 flags = $0158-$0167

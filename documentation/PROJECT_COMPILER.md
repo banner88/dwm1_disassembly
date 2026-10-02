@@ -1333,7 +1333,7 @@ with the original at every table's address). The vanilla rows come from
 | `skills` (ids 0-221) | `SkillMPCostTable` $07:$570C (`bank_007#gd_skill_mp`), `SkillLearnReqTable` $06:$50E0 218 rows (`bank_006#gd_skill_learn`), `SkillRecordData` $54:$41CF (`bank_054#gd_skill_records`) | record field names = BATTLE_SKILL_SYSTEM §7; `learn` for ids $DA-$DD is an ERROR (FieldStateDispatch code) |
 | `exp_curves` / `growth_curves` | $13:$41E6 / $13:$6706 (`bank_013#gd_exp_curves` / `#gd_growth_curves`) | new hand patch `patches/bank_013.asm` (the clean bank + two markers) |
 | `breeding.family` (slots 0-214) | `FamilyRecipeTable` $16:$4974 (`bank_016#gd_family_recipes`) | `null` = no recipe ($FF,$FF); matchers as `build_breeding.py` (family / species name, id, $hex). S104: `"Spirit"` = `$FA` on either side; `"AnyFamily"` / `"any"` are an ERROR (the patched family scan no longer has the wildcard) |
-| `breeding.special` | the LIVE table in bank $69 (`bank_069#gd_special_recipes`; the $16 copy is runtime-dead, B2) | B5 semantics ported: overrides by `index` or `match`, appends past 824; the whole-table shadow check (ERROR: a dead append / a shadowed override) |
+| `breeding.special` | the LIVE table in bank $69 (`bank_069#gd_special_recipes`; the $16 copy is runtime-dead, B2) | overrides by `index` or `match`, appends; **S113: + `removes`, or a whole `table`; with any edit the table is AUTO-ORDERED most specific first (§2.29); ERROR = two rows with the same parents + min plus when a project row is involved** (was: B5's dead-append / shadowed-override errors) |
 | `families` (S104 r2) | `FamilyTextPtrTable11` bank $6D (`bank_06d#gd_family_voices`, 11 dw) + the Spirit name pool in bank $41's dead fill (`bank_041#gd_spirit_names`, fixed 55 B) | `<family>.dialogue` = voice `A`-`D` or a family name ("talks like"); `spirit.names` = 8 names, 1-4 letters A-Z / a-z (`A` = $24, `a` = $3E); names only for Spirit (the other pools stay vanilla). Editor: the Families tab |
 | `families.<f>.icon` (S107, ROADMAP P3.10 part 2c) | the font glyphs `bank_04f#gd_family_icons` ($4F:$4110-$41BF, 11 × 16 B, text bytes $10-$1A; families 0-9 were `INCBIN gfx/image_04f_4110.2bpp`), families 0-9's gfx streams `bank_02e#gd_family_icon_streams` ($2E:$424A-$42F7, 10 × 19 B, gfx ids $2E03-$2E0C; `patches/bank_02e.asm` = NEW hand patch, PATCH_FILES) and `bank_06d#gd_spirit_icon_stream` (SpiritIconStream, gfx id $6D04) | 8 strings of 8 digits 0-3 (0 dark, 1 the cream background, 2 light, 3 black); ONE picture → the glyph + the stream (19-B literal: `dw $0010`, run marker = the smallest byte the tile lacks, 16 B — the format of all 11 shipped streams, so empty == the same bytes). Original icon = key removed. Validators: 8 × 8, digits 0-3. Editor: the Families tab icon editor |
 | `boss_joins` | the vanilla 34 rows inside `BossRedirectTableExt` (`redirects14`) | only for the 34 vanilla fight EIDs; new pairs = `progression.enemies[].join_as` |
@@ -1353,8 +1353,9 @@ protected species' family, a learn row past $D9, an encounter list whose
 off the list), a slot with a chance but no EID, a pool that can draw 2-3
 monsters with no slot allowed twice (measured freeze, DATA_STRUCTURES), a
 3-monster pool whose max counts allow fewer than 3 copies, an EID that does
-not exist, a shadowed special append / override, `boss_joins` outside the 34,
-more than 1650 special entries, > 32 members in one library family.
+not exist, two special rows with the same parents + min plus (S113, §2.29; was: a shadowed special append / override), `boss_joins` outside the 34,
+more than 1650 special entries, > 32 members in one library family (S113: the
+special-table checks are §2.29's).
 (WARN): an encounter list whose slot chances add up to MORE than 100 % (S106 r3:
 the last slots are cut; all 128 original lists are exactly 100); combat-only species edits; an enemy row's species change (Set 3:
 resistances follow the species) and, on a boss fight row, its join row (Set 2);
@@ -2096,6 +2097,64 @@ presentation rows of a fixture, compose checks — frames, palette slots, tiles,
 the refusals, 32 animations compile) and `--rom` `test_anims_rom` (the tables read back
 from the ROM == compose; the fork bytes; the override rows). test_app S112 block. **Pin**
 `9ce03bd0…` (patched), was `5a1c5404…` (patched, historical).
+
+## §2.29 S113 — breeding: the auto-ordered special table, `removes`, `table` (ROADMAP P3.12)
+
+BREEDING_SYSTEM "Auto-ordered special table (S113)" + "The resolver as measured
+(S113)"; EDITOR_DESIGN §5.4 "As built S113"; help `58_breeding.md`.
+
+```jsonc
+"breeding": {
+  "family":  {"8": {"p1": "Slime", "p2": "Slime"}, "37": null},
+  "special": {"overrides": [{"index": 0, "min_plus": 9}],
+              "removes":   [{"index": 755}],
+              "appends":   [{"p1": 9, "p2": 42, "result": 221}]}
+}
+// or, for heavy rework / the generator (no overrides / removes / appends with it):
+"special": {"table": [{"p1": "Spirit", "p2": 42, "min_plus": 0, "result": 221, "plus_mod": 0}, …]}
+```
+
+* **Auto-order.** With any special edit the effective rows (vanilla with overrides,
+  minus removes, plus appends — or the `table`) are emitted stably sorted: species ×
+  species, species × family, family × species, family × family, higher `min_plus` first
+  within each (`Gamedata.special_key`). No edits = the vanilla 825 in vanilla order (the
+  regression). Measured: sorting vanilla changes no result (BREEDING_SYSTEM). The region
+  comment marks EDITED / ADDED / TABLE rows; `Gamedata.special_src[i]` = where emitted
+  row i came from (`('vanilla'|'edited', vanilla index)` / `('added'|'table', k)`),
+  `special_removed` = the removed vanilla rows.
+* **`removes`** = `{index}` or `{match: {p1, p2}}` (the first vanilla row that fires for
+  that cross); a row may not be both removed and overridden.
+* **`table`** replaces the whole special table (≤ 1650 rows); `min_plus` / `plus_mod`
+  default 0 (also for appends since S113).
+* **ERROR:** two rows with the same `p1`, `p2`, `min_plus` when either came from the
+  project (the second could never fire) — the message names both. Vanilla's own two
+  such pairs (682/693, 802/803) are allowed (the editor lists them as "never fires").
+  The S103 dead-append / shadowed-override errors are gone (an appended row is never
+  "after" the rows it should beat any more).
+* **Matcher spelling.** A family NAME wins over a species name: `"Slime"` is the Slime
+  FAMILY. The editor writes species as ids (ints) and families by name; two vanilla
+  species share the name DracoLord (200 / 201) — use ids.
+* **Family warnings** (a family slot beaten by a special row / out-ranked by a later
+  identical slot) are summarised after 8 (a generated tree edits every slot).
+* **Engine (same delivery):** bank $16 `BreedCreateOffspring` passes the FX1 staging
+  indices `$28/$29` in `$DA75/$DA76` (was `$14/$15` = farm slots 20/21 — every egg +1,
+  no "+N" row fired, S71 → S112; BREEDING_SYSTEM "The FX1 egg-plus bug").
+* **Pin:** **`8cf0b93bbb7a91ac27ba4b8de5c40a66`** (patched; built S113, NOT yet
+  user-tested): the example's 3 overrides + 2 appends move into the species × species
+  block (bank $69 $4050-$5075) + the 2 bytes at $16:$4072 / $4077. Prev `9ce03bd0…`
+  (patched, historical).
+* **Model / GUI:** `editor2/core/breeding.py` (resolver model, `FastResolver`,
+  `obtainable`, `Analysis`), `editor2/core/breed_gen.py` (`propose` — any `max_depth` up to
+  `MAX_DEPTH_LIMIT` 40, `default_profile(max_depth)`, shares normalised, best of
+  max(5, 2 × depth) attempts; `to_gamedata`, `apply_to`), `editor2/core/breeding_doc.py` (`BreedingMixin` on Document: setters
+  `set_family_recipe`, `add_special`, `set_special`, `remove_special`,
+  `restore_special`, `special_to_table`, `special_to_vanilla`, `apply_breeding`),
+  `editor2/app/breeding_tab.py`.
+* **Tests:** test_compiler `test_special_auto_order` (no edits = vanilla order; an
+  append wins and the table stays sorted; every other cross unchanged; + rows first;
+  removes; table; refusals) + `test_breeding_analysis` (indexed resolver == the model,
+  vanilla tree, gifts, the example, the generator: seeded, compiles, pins kept);
+  test_app "Breeding tab (S113)".
 
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 

@@ -6,7 +6,7 @@ terminated). Each entry is [p1_match, p2_match, min_plus, result_species,
 plus_mod], where p1/p2 match a specific species ID (0-220) OR a family code
 ($F0-$F9). The engine scans top-to-bottom and returns the FIRST entry that
 matches both parents and whose min_plus <= offspring plus (see
-BREEDING_SYSTEM.md / disassembly bank_016.asm LoadBrd_471c).
+BREEDING_SYSTEM.md / disassembly bank_016.asm BreedSpecialEntryCheck).
 
 This tool performs a SAME-SIZE, in-place overwrite of chosen entry indices in
 disassembly/bank_016.asm and writes the result to patches/bank_016.asm. It

@@ -1,5 +1,84 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-02 (Session 111 — **ROADMAP P3.11c + P3.11d: THE CUSTOM SKILLS AS
+> PROJECT DATA, NEW CUSTOM SKILLS FROM STOCK ONES, AN ELEMENT FOR EVERY SKILL** (user on
+> the audit: "1) Yes start with vanilla but given 3.11d is kind of tied, dont feel
+> prohibited from diving into it as well. 2) New custom skills should also be able to be
+> added from a) further sessions with you and b) from mix/matching existing skills and
+> fiddling with their animations. These will be damage skills without new logic. 3) Are
+> current skill elementals editable? If not, add that. Also consider quake elemental
+> damage. 4) fix [the sound overshoot] 5) Sure, dont care just make sure its reasonable and
+> consistent [the schema]"). **Test ROM
+> `DWM_S111_custom_skills_test.gbc` (= the demo below) USER-CONFIRMED 2026-10-02 15:08
+> ("Looks good")**; the editor half test_app-verified, not yet run on the user's Mac. Verifier PASS; clean `1ca6579…` byte-perfect
+> (bank $50 `SkillNameSubst_5ae1` decoded as data + comments, bank $52 dead-pocket note;
+> labels / comments only); **patched pin `4a2860cf…` (patched, historical
+> since S111b — now `5a1c5404…`)**, was `534bfb62…` (patched, historical); the user's project (my-dwm-hack_5) as-is now builds `e7a0577f…`
+> (patched; was `fc54da9b…` on the S110 tree, historical). test_compiler --rom 710/710,
+> test_app + test_app --rom PASS (GUI build == pin). `EDITOR_REVISION` = 'S111'.
+>
+> **Built (PROJECT_COMPILER §2.27, BATTLE_SKILL_SYSTEM §13.9 + §15.3, EDITOR_DESIGN §5.3
+> "As built S111", TEXT_SYSTEM battle-line codes):** `gamedata.skills.<224-233>` edits the
+> ten built-in custom skills' DATA (name, text, MP, learn row / not learnable, record
+> fields — not the power words —, looks, sounds, element, own announce line or a stock
+> one, Tame meters, Quake power, the Quake / Mourn banners, Anchor's dialogs);
+> `gamedata.skills.<234-254>` = NEW skills (`base` = the stock skill whose effect runs,
+> 114 measured bases); `element` for any skill (stock too). 19 compiler regions over the
+> custom skills' bytes in banks $07/$41/$4C/$54/$55/$56/$58/$5F/$72 (baseline
+> `editor2/core/custom_skills.json` = the S110 pin's bytes; with no edits the regions
+> reproduce them — tested, and `extract_custom_skills.py` reads them back out of the
+> build). Engine: bank $72 `FarSkillFork` → `CustomBaseTable`, entries 5 `ElemLevel72` /
+> 6 `CustomLearnRow72`; bank $52 24 ladder calls → `ElemLadder*` in the dead $51B3 pocket
+> + `CustomElemTail52` (Quake etc. take an element); bank $06 learn scan through
+> `wLearnRowBuf` $D10C; bank $58 `CustomTargetBaseTable`; per-id tables span $DE-$FE.
+> Skills tab: custom / new kinds, New skill… / Delete, Learnable, Element, Sounds like,
+> Announce, "Its own numbers and lines"; help `54_skills.md`.
+>
+> **Fixed (measured):** (1) `{skill}` in battle lines printed "CleanCut" for custom ids
+> (bank $50 `SaveBtl_5ad2` indexed a 4-B table → code; now same-size bounded); (2) custom
+> ids' cast sounds read past bank $55's 222-B SFX tables (next kind's rows; from the last
+> table, code) → `CustomSfxTable`, default $09 = the party-side sounds they had.
+>
+> **Measured in PyBoy on the user's save:** element census (38 elemental skills; S110 and
+> S111 builds identical with the RNG pinned — unpinned, CallHelp drifted: KEY_LESSONS
+> S111); clone census (114 same / 41 differ / 67 not a skill); Blaze → Ice vs a level-3 Ice
+> target = 0 damage, Quake → Fire on a level-1 target, Spark → Lightning; the 10 built-ins
+> A/B vs S110 (same lines / acts / MP); a Blaze copy = Blaze; real level-ups learning the
+> Rumble … QuakeMost chain and Scorching → FrostBite. The demo `b8a5b8ea…` (patched) = the
+> user's project + an overlay NOT in their project: 229 Tremor → "Rumble" (MP 8,
+> Explosion, own line "{name} makes / the ground rumble!", power 60-80, learnt after
+> MetalCut), 234 "Thunder" (Zap's effect, Bang's look + sounds, power 60-75), 235
+> "FrostBite" (Scorching's effect, IceStorm's look + sounds, IceBreath) — party and enemy
+> casts, the SKIL menu (name, MP 8, text; "Cannot use now." in the field).
+> **To mention / open:** 41 bases refused until traced (heals among them — possibly partly
+> a rig effect); 21 new-skill slots; custom names share bank $41's spill extents with the
+> renamed originals; new animations composed from frames = P3.11 residual (f), not built.
+> **S111b (same session, user 15:20 "Fix it now"; built, test ROM
+> `DWM_S111b_skill_ratios_test.gbc` NOT user-tested — user 15:38: "Not interested in rom
+> give editor files"):** the built-in custom skills'
+> fixed RATIOS are project data — MagicBurn `burn` (1/2) + `damage_per_mp` (1), Tame
+> `damage_of_atk` (1/4, per tier), Anchor `mp_charge` (3/4), Quake `ally_damage` (1/3, per
+> tier), Mourn `per_fallen` (1) → bank $72 `CustomRatioTable` (region `gd_custom_ratios`)
+> read through `ScaleHL72` (floor(x·n/d), at most 999) + entry 7 `AnchorKeepMP72` (bank
+> $73's arrival charge); Skills tab "Its own numbers and lines". PyBoy on the user's save:
+> defaults == before (A/B identical); the test ROM's edits measured (MagicBurn spends 50 of
+> 200, damage 3× before the foe's ladder; Quake allies 30 of 60; Tremor allies 0; Mourn
+> with 2 fallen 500 instead of 750; Anchor keeps 101 of 203). **Found + fixed:** under the
+> act-time AI (FIGHT / tactics / enemies) MagicBurn and Tame ×3 hit the CASTER'S OWN SIDE
+> (their AI target row was the S84 self row $6367; measured, the same since S84) →
+> `CustomTargetBaseTable` MagicBurn = Firebal's row, Tame = Blaze's. **Found, not
+> changed:** with several foes MagicBurn spends again per foe on what is left (200 MP:
+> 100 + 50 + 25), as since S49. Pin `5a1c5404…` (patched), was `4a2860cf…` (patched,
+> historical); the user's project as-is builds `c3499e39…` (patched). test_compiler --rom
+> 727/727, test_app + --rom PASS.
+> **Hand-off:** every S111 change = the diff against `1e919dd` (origin/master, the S110
+> push), delivered as `DWM-S111-custom-skills-changed-files.zip` (S111b: re-cut at 15:38 with the
+> ratios, on the user's request without a ROM test), the APPLY list pasted in the chat. **Next (user 2026-10-02 15:08: "Yeah, make sure that's next"): ROADMAP P3.11e —
+> skill ANIMATION editing** (new animations from existing frames; groundwork first: the
+> frame-table re-section of banks $5C/$5D/$5E and the bank $5F per-skill tables, a PyBoy
+> trace of frame timing and tile loading).
+
+
 > Last verified: 2026-10-02 (Session 110 — **ROADMAP P3.11: THE SKILLS TAB — THE 222
 > ORIGINAL SKILLS: NAMES, SKIL TEXTS, MP, LEARNING, POWER, TARGETS, AI, BEHAVIOUR BITS,
 > "LOOKS AND SOUNDS LIKE"** (user on the audit: "Start with vanilla skills and add custom

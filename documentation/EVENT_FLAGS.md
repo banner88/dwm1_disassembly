@@ -117,7 +117,7 @@ variables and/or script-referenced, on top of the known WriteRAM collisions:
 | $D9DF–$D9E2 | $0220–$023F | engine literals and/or script refs | poisoned |
 | $D9E3 | $0240–$0247 | the King's-speech selector for the next `$D92B = 7` castle arrival (S101 r3 ROM scan: read ONLY by the castle chain $0C:$4804 and one castle NPC at $0C:$5066; the priest path resets it to $FF) — the old name "story progression counter" overstated it | poisoned |
 | $D9E4–$D9E5 | $0248–$0257 | script-referenced | poisoned |
-| $D9E6 | $0258–$025F | breeding mutation flag | poisoned |
+| $D9E6 | $0258–$025F | breeding "rare breed" flag (never set, S113) | poisoned |
 | $D9E7–$D9E8 | $0260–$026F | engine literals / script refs | poisoned |
 | $D9E9 | $0270–$0277 | current step (multi-step) | poisoned |
 

@@ -205,6 +205,12 @@ class MainWindow(QMainWindow):
                 self.anims_tab = AnimationsTab(self.session)
                 self.tabs.addTab(self.anims_tab, 'Animations')
                 continue
+            if title == 'Breeding' and self.session:
+                # S113 (P3.12): recipes, depth, try a cross, generate a tree
+                from editor2.app.breeding_tab import BreedingTab
+                self.breeding_tab = BreedingTab(self.session)
+                self.tabs.addTab(self.breeding_tab, 'Breeding')
+                continue
             if title == 'Balance':
                 # S98 (P3.7): the World graph sits before Balance, as in §5.0
                 if self.session:

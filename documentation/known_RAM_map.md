@@ -377,7 +377,7 @@
                  which cutscene to play and which step counters to advance.
                  CAUTION: shares byte with event flag indices $0240-$0247.
                  Editor must never allocate custom flags at those indices.
-   1:D9E6   1    Breeding mutation flag
+   1:D9E6   1    Breeding "rare breed" flag — only the UNREFERENCED mutation $16:$44DA sets it; never set (S113)
                  CAUTION: shares byte with event flag indices $0258-$025F
    1:D9E9   1    Current step in multi-step screens
                  CAUTION: shares byte with event flag indices $0270-$0277.

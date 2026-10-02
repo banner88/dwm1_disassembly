@@ -700,7 +700,10 @@ class Gamedata:
                 self.edited['family'].add(sid)
         self._special(b.get('special') or {}, names)
         # family shadow warnings (ported): a special entry with the same family
-        # pair fires first; an identical family pair at a higher slot wins
+        # pair fires first; an identical family pair at a higher slot wins.
+        # S113: a regenerated tree edits every slot — past 8 the rest are
+        # summarised (the Breeding tab shows each slot's real reach)
+        n_before = len(self.warnings)
         for sid in sorted(self.edited['family']):
             p1, p2 = self.family[sid]
             if p1 == 0xFF:
@@ -719,6 +722,11 @@ class Gamedata:
                     self.warnings.append(
                         f"breeding.family.{sid}: out-ranked by the identical matcher "
                         f"at slot(s) {higher} (last family match wins)")
+        extra = self.warnings[n_before:]
+        if len(extra) > 8:
+            self.warnings[n_before:] = extra[:5] + [
+                f"breeding.family: {len(extra) - 5} more family recipes are partly or "
+                "wholly beaten by special rows / later slots (see the Breeding tab)"]
 
     def _recipe(self, spec, names, *, base, what):
         out = list(base) if base is not None else [None] * 5
@@ -758,21 +766,54 @@ class Gamedata:
         return None
 
     def _special(self, spec, names):
-        """B5 semantics (tools/build_breeding.py load_special_spec + the whole-
-        table shadow validator): overrides edit a base entry (by index or by the
-        first entry a `match` cross fires), appends go past entry 824."""
-        _check_keys(spec, ('overrides', 'appends'), 'gamedata.breeding.special')
+        """The special table (S113 — ROADMAP P3.12, BREEDING_SYSTEM "Auto-ordered
+        special table (S113)").
+
+        Base = the 825 vanilla rows, or `table` (a whole replacement list).
+        Edits on the vanilla base: `overrides` (a row by vanilla `index`, or the
+        first row a `match` cross fires, in vanilla order), `removes` (same
+        addressing) and `appends` (new rows). With ANY of these the emitted table
+        is stably SORTED most specific first — species x species, species x
+        family, family x species, family x family, and within each a higher min
+        plus first — so a new recipe beats the general rows it overlaps and
+        loses to the more specific ones, wherever it was written. Measured S113:
+        this order gives vanilla's exact results for every pair and plus (the
+        vanilla FS / FF interleave never overlaps). No edits = vanilla bytes.
+
+        `self.special_src[i]` says where emitted row i came from: ('vanilla', n),
+        ('edited', n), ('added', k) or ('table', k)."""
+        _check_keys(spec, ('overrides', 'appends', 'removes', 'table'), 'gamedata.breeding.special')
         for sp in self.new_species:
             names.setdefault(sp, self.new_species[sp]['name'])
+        self.special_removed = []
+        if spec.get('table') is not None:
+            for k in ('overrides', 'appends', 'removes'):
+                if spec.get(k):
+                    raise GamedataError(f"gamedata.breeding.special: `table` replaces the "
+                                        f"whole table — it cannot be combined with `{k}`")
+            rows = spec['table']
+            if not isinstance(rows, list):
+                raise GamedataError("gamedata.breeding.special.table: a list of recipes")
+            entries, src = [], []
+            for k, r in enumerate(rows):
+                what = f"gamedata.breeding.special.table[{k}]"
+                if not isinstance(r, dict):
+                    raise GamedataError(f"{what}: an object {{p1, p2, min_plus, result, plus_mod}}")
+                _check_keys(r, ('p1', 'p2', 'min_plus', 'result', 'plus_mod'), what)
+                e = self._recipe(dict({'min_plus': 0, 'plus_mod': 0}, **r), names,
+                                 base=None, what=what)
+                entries.append(e)
+                src.append(('table', k))
+                self.special_appends.append(e)
+            self._finish_special(entries, src, names, sort=True)
+            return
         entries = self.special
-        seen = {}
-        for k, o in enumerate(spec.get('overrides') or []):
-            what = f"gamedata.breeding.special.overrides[{k}]"
-            _check_keys(o, ('index', 'match', 'p1', 'p2', 'min_plus', 'result',
-                            'plus_mod'), what)
+        src = [('vanilla', n) for n in range(len(entries))]
+
+        def address(o, what):
             if o.get('index') is not None:
-                idx = _range(o['index'], 0, 824, what + '.index')
-            elif o.get('match'):
+                return _range(o['index'], 0, 824, what + '.index')
+            if o.get('match'):
                 m = o['match']
                 p1 = resolve_matcher(m['p1'], names, mate_side=False, what=what)
                 p2 = resolve_matcher(m['p2'], names, mate_side=True, what=what)
@@ -780,56 +821,95 @@ class Gamedata:
                 if idx is None:
                     raise GamedataError(f"{what}.match: no special entry fires for "
                                         "that cross — use an append")
-            else:
-                raise GamedataError(f"{what}: needs index or match")
+                return idx
+            raise GamedataError(f"{what}: needs index or match")
+        seen = {}
+        for k, o in enumerate(spec.get('overrides') or []):
+            what = f"gamedata.breeding.special.overrides[{k}]"
+            _check_keys(o, ('index', 'match', 'p1', 'p2', 'min_plus', 'result',
+                            'plus_mod'), what)
+            idx = address(o, what)
             if idx in seen:
                 raise GamedataError(f"{what}: entry {idx} is already overridden")
             seen[idx] = k
             before = list(entries[idx])
             after = self._recipe(o, names, base=before, what=what)
             entries[idx] = after
+            src[idx] = ('edited', idx)
             self.special_overrides.append((idx, before, after))
-        appends = spec.get('appends') or []
-        for k, a in enumerate(appends):
+        drop = set()
+        for k, o in enumerate(spec.get('removes') or []):
+            what = f"gamedata.breeding.special.removes[{k}]"
+            _check_keys(o, ('index', 'match'), what)
+            idx = address(o, what)
+            if idx in seen:
+                raise GamedataError(f"{what}: entry {idx} is also overridden — "
+                                    "remove or change it, not both")
+            if idx in drop:
+                raise GamedataError(f"{what}: entry {idx} is already removed")
+            drop.add(idx)
+            self.special_removed.append((idx, list(entries[idx])))
+        for k, a in enumerate(spec.get('appends') or []):
             what = f"gamedata.breeding.special.appends[{k}]"
             _check_keys(a, ('p1', 'p2', 'min_plus', 'result', 'plus_mod'), what)
-            e = self._recipe(a, names, base=None, what=what)
+            e = self._recipe(dict({'min_plus': 0, 'plus_mod': 0}, **a), names,
+                             base=None, what=what)
             entries.append(e)
+            src.append(('added', k))
             self.special_appends.append(e)
-        if len(entries) > SPECIAL_CAPACITY_MAX:
-            raise GamedataError(f"breeding.special: {len(entries)} entries > "
-                                f"{SPECIAL_CAPACITY_MAX}")
-
-        def fam(c):
-            return c if 0xF0 <= c <= 0xFA else self.fam_code(c)
-
-        base_len = 825
-        for k, e in enumerate(self.special_appends):
-            hit = self._first(entries, e[0], e[1], fam(e[0]), fam(e[1]), upto=base_len + k)
-            if hit is not None:
-                raise GamedataError(
-                    f"breeding.special.appends[{k}] [{matcher_name(e[0], names)} x "
-                    f"{matcher_name(e[1], names)}] is SHADOWED by entry {hit} "
-                    f"(-> {matcher_name(entries[hit][3], names)}) and would never fire")
+        keep = [i for i in range(len(entries)) if i not in drop]
+        entries = [entries[i] for i in keep]
+        src = [src[i] for i in keep]
+        edited = bool(seen or drop or spec.get('appends'))
+        self._finish_special(entries, src, names, sort=edited)
+        # an override that changed a result: say if other rows still give it
         for idx, before, e in self.special_overrides:
-            hit = self._first(entries, e[0], e[1], fam(e[0]), fam(e[1]), upto=idx)
-            if hit is not None:
-                raise GamedataError(
-                    f"breeding.special override at entry {idx} is SHADOWED by earlier "
-                    f"entry {hit} (-> {matcher_name(entries[hit][3], names)})")
-            later = self._first(entries[idx + 1:], e[0], e[1], fam(e[0]), fam(e[1]))
-            if later is not None and entries[idx + 1 + later][3] != e[3]:
-                j = idx + 1 + later
-                self.warnings.append(
-                    f"breeding.special override at entry {idx} now precedes entry {j} "
-                    f"(-> {matcher_name(entries[j][3], names)}) for the same parents")
             if before[3] != e[3]:
-                others = [i for i, x in enumerate(entries) if i != idx and x[3] == before[3]]
+                others = [i for i, x in enumerate(self.special) if x[3] == before[3]]
                 if others:
                     self.warnings.append(
                         f"breeding.special entry {idx} no longer yields "
                         f"{matcher_name(before[3], names)}, but {len(others)} other "
                         "entries still do — editing one cross does not remove it")
+
+    @staticmethod
+    def special_key(e):
+        """Sort key of the auto-ordered special table (most specific first)."""
+        rank = (0xF0 <= e[0] <= 0xFA) * 2 + (0xF0 <= e[1] <= 0xFA)   # SS 0, SF 1, FS 2, FF 3
+        return (rank, -e[2])
+
+    def _finish_special(self, entries, src, names, *, sort):
+        if sort:
+            order = sorted(range(len(entries)), key=lambda i: self.special_key(entries[i]))
+            entries = [entries[i] for i in order]
+            src = [src[i] for i in order]
+        if len(entries) > SPECIAL_CAPACITY_MAX:
+            raise GamedataError(f"breeding.special: {len(entries)} entries > "
+                                f"{SPECIAL_CAPACITY_MAX}")
+        # two rows with the SAME parents and min plus: the later one can never
+        # fire. Vanilla has two such pairs (entries 682/693, 802/803) — reported
+        # by the editor, refused only when a project row is involved.
+        first = {}
+        for i, e in enumerate(entries):
+            key = (e[0], e[1], e[2])
+            if key in first:
+                j = first[key]
+                if src[i][0] != 'vanilla' or src[j][0] != 'vanilla':
+                    where = {'vanilla': 'vanilla entry', 'edited': 'edited vanilla entry',
+                             'added': 'appends', 'table': 'table'}
+                    def tag(s):
+                        return (f"{where[s[0]]} {s[1]}" if s[0] in ('vanilla', 'edited')
+                                else f"{where[s[0]]}[{s[1]}]")
+                    raise GamedataError(
+                        f"breeding.special: {tag(src[i])} [{matcher_name(e[0], names)} x "
+                        f"{matcher_name(e[1], names)}"
+                        f"{f' +{e[2]}' if e[2] else ''}] has the same parents as "
+                        f"{tag(src[j])} (-> {matcher_name(entries[j][3], names)}) and "
+                        "would never fire — change or remove that one instead")
+            else:
+                first[key] = i
+        self.special = entries
+        self.special_src = src
 
     # -- boss joins -----------------------------------------------------
     def _families(self):
@@ -1077,13 +1157,23 @@ def emit_family_recipes(g):
 
 
 def emit_special_recipes(g):
-    ov = {idx for idx, _, _ in g.special_overrides}
+    src = getattr(g, 'special_src', None) or [('vanilla', i) for i in range(len(g.special))]
+    moved = any(s[0] != 'vanilla' or s[1] != i for i, s in enumerate(src))
     out = ["; (generated by editor2 `gd_special` from gamedata.breeding.special —",
-           ";  825 vanilla entries with the overrides applied, then the appends, $FF.",
+           ";  the 825 vanilla entries, or (S113) with ANY edit the effective table",
+           ";  auto-ordered most specific first: species x species, species x family,",
+           ";  family x species, family x family, higher min plus first within each.",
            ";  5 B: pedigree, mate, min plus, result, plus modifier; first match wins)",
            "RelocatedSpecialTable:"]
+    tags = {'edited': 'EDITED vanilla', 'added': 'ADDED (appends', 'table': 'TABLE ('}
     for i, e in enumerate(g.special):
-        tag = "  ; OVERRIDDEN" if i in ov else ("  ; APPENDED" if i >= 825 else "")
+        kind, n = src[i]
+        if kind == 'vanilla':
+            tag = f"  ; vanilla {n}" if (moved and i % 25 == 0) else ""
+        elif kind == 'edited':
+            tag = f"  ; EDITED vanilla {n}"
+        else:
+            tag = f"  ; {'ADDED' if kind == 'added' else 'TABLE'} [{n}]"
         if tag or i % 25 == 0:
             tag = (tag or "  ;") + (f" [{i}] {matcher_name(e[0], g.names)} x "
                                     f"{matcher_name(e[1], g.names)} -> "

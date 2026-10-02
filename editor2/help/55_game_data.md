@@ -6,9 +6,10 @@ learning requirements, power), the experience and growth curves and the
 breeding recipes — can be changed by the project.
 
 **The Monsters tab edits the species rows and the battle rows, and puts a
-row into a gate's wild list (Monsters help); skills, breeding and the rest of
-the encounter lists are still edited in `project.json` (the `gamedata`
-section) until their tabs come.** The project only stores what you change: an empty `gamedata`
+row into a gate's wild list (Monsters help); skills have the Skills tab and
+breeding the Breeding tab (Breeding help); the rest of the encounter lists are
+still edited in `project.json` (the `gamedata` section) until their tab
+comes.** The project only stores what you change: an empty `gamedata`
 is the original game.
 
 What the build does for you:
@@ -23,7 +24,9 @@ What the build does for you:
   a monster family of a combat-only species), encounter lists whose chances
   do not add up to 100 %, an encounter slot without a monster, a list that
   would make the game draw the second or third monster forever (freeze), a
-  breeding recipe that can never happen because an earlier one always wins.
+  special breeding recipe with the same parents and + as another (it could
+  never fire — the build sorts the special recipes most specific first,
+  Breeding help).
 - **Warnings** (WARN): changing a battle row's species also changes its
   resistances (they belong to the species); changing a boss's species
   without its join row; the same monster twice in one encounter list.

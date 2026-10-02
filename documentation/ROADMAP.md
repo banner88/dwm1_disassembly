@@ -1653,7 +1653,7 @@ recipes are pure authoring.
       then the per-boss checkbox UI. *Accept:* a boss with HealAll
       learned NEVER casts it across a scripted battle corpus; field-only
       skills confirmed already rejected (S73b).
-- [ ] **P3.12 — Breeding tab: edit + simulation** (needs P3.9): table
+- [x] **P3.12 — Breeding tab: edit + simulation — built S113, test ROM `DWM_S113_breeding_test.gbc` NOT yet user-tested** (needs P3.9): table
       editor over the B1-B7 stack + the randomizer-derived tree explorer
       (depth profiles, reachability, orphans; live re-sim on edit;
       coherence Set 1 live). *Accept:* an added recipe shows correct tree
@@ -1691,6 +1691,37 @@ recipes are pure authoring.
       the tree explorer shows Spirit rows; a generated table round-trips
       through the compiler with zero validator errors and PyBoy breeds three
       sampled recipes (one Spirit) with the stub harness (KEY_LESSONS S104).
+      **S113 (built; PROJECT_COMPILER §2.29, EDITOR_DESIGN §5.4 "As built S113",
+      BREEDING_SYSTEM "The resolver as measured (S113)" + "Auto-ordered special table").**
+      User choices: generator folded in, egg rewards count as obtainable, plus handled
+      as Claude decided (labelled, not charged), the special table AUTO-ORDERED (the user
+      will rework the vanilla table heavily, many iterations), Spirit everywhere.
+      Groundwork: bank $16 resolver annotated (both trees; the Phase D item below
+      closed); the resolver model `editor2/core/breeding.py` == the game
+      (`tools/census_breeding.py`: 53,156 calls + 300 eggs, 0 mismatches; negative
+      control detected); no mutation (`$44DA` unreferenced). FIXED: the FX1 egg-plus
+      bug (`$DA75/$DA76` = farm slots 20/21 since S71: every egg +1, no + recipe fired).
+      Built: `special.removes` / `special.table`, auto-order, `breeding.Analysis` (roots
+      incl. gifts and egg rewards, depth from the resolver, never-firing rows, library
+      checks), `breed_gen.py` (depth-profile generator, 11 families, new species, pins),
+      the Breeding tab. *Accept:* met in PyBoy on the user's save through the Old Man's
+      BREED menu — an added recipe (Healer × BattleRex → Klamutra, a Spirit new species,
+      beating the vanilla [Slime] × [Dragon] family recipe) previews "Klamutra+2" and
+      hatches Klamutra +2; the tab lists the row under Klamutra's "Made by" (1 pair
+      decided; Klamutra's depth stays 0 — it is also wild in the user's project) and in
+      the species × species block; a +2 route (MadCat ×
+      BattleRex → GoldSlime +2) and a removed original row (Dragon × BattleRex → Dragon)
+      also bred as the model says; the generated tree round-trips through the compiler
+      with zero errors (test_compiler). **Residuals:** (a) the offspring's skills /
+      stats in Try a cross (bank $16 entry 4 `label16_474a` + `InheritSkillList`, not
+      decoded); (b) a gender rule — the 15 boss species have female ratio 0 (= always
+      male by `BreedGenderThreshold`), yet vanilla recipes pair two of them: ask the user /
+      SameBoy; (c) family "last match wins" is code-read (no data exercised it); (d) DONE
+      S113b (user: "Goes only to depth 6? What if I want deeper..?"): the generator
+      takes any Deepest up to 40 (tested: 12, 15, 30 reached; 20 → 19 at seed 3) — the
+      ceiling is the number of monsters not obtainable without breeding (43 on the
+      user's project, 173 are wild); (e) the generator drops duplicate rows it draws (fewer rows than vanilla's 825 — e.g.
+      552 on the user's project) — fine for the game, could redraw instead.
 - [ ] **P3.13 — Encounters + Music tabs** (S106 r3: ONE list at a time is
       already editable from the Monsters tab — `app/pool_dialog.py`, put a row in
       a slot, chances, max in a group; the cross-view, list size / rate / maze
@@ -1743,9 +1774,11 @@ Driven by what the editor must EDIT, not completionism:
       parent-family loads), the 8 follower gfx-ID copies, and the name/text/lineage
       chain ($41 / ROM0 $092F / $12 / $4d). Corrections recorded: ItemNamePtrTable =
       mode 8 (not 11); $4739 overshoots at id≥215 (fork covers ≥224).
-      **STILL PENDING (own pass, general breeding mechanics — NOT a new-species
-      seam):** bank $16 breeding-determination internals (LoadBrd_4653 plus/special,
-      LoadBrd_45d5/45ff family scan, special→family→pedigree precedence).
+      **DONE S113 (was "STILL PENDING"):** bank $16 breeding-determination internals
+      annotated in both trees (`BreedPlusAndSpecial`, `BreedFamilySearch` /
+      `BreedFamilyScan`, `BreedSpecialEntryCheck`, `BreedCreateOffspring`, the gender
+      table, the unreferenced mutation) and measured (BREEDING_SYSTEM "The resolver as
+      measured (S113)"). Entry 4 (inheritance) internals stay raw (P3.12 residual a).
       → MONSTER_DATA "Species ID geography"; archive: SESSION_HISTORY Part 3.
 - [x] Bank $03 monster table → `db` ✅ VERIFIED S51: `MonsterInfoTable` +
       per-monster `MonsterInfo_NNN_Name:` labeled `db` blocks (stale box; the

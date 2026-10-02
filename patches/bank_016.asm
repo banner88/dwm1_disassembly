@@ -9,13 +9,13 @@
 ;   - Resistance inheritance (Call_016_4360/$4373)
 ;
 ; BREEDING ALGORITHM (Call_016_456e):
-;   1. LoadBrd_4653 — Compute offspring "plus" value from parents
+;   1. BreedPlusAndSpecial — Compute offspring "plus" value from parents
 ;      Then search SPECIAL RECIPE TABLE at $4B30 (825 entries × 5 bytes)
 ;      Format: [parent1_match, parent2_match, min_plus, result_species, plus_mod]
 ;      Matches: specific species OR family code ($F0-$F9)
 ;      Checked FIRST — takes priority over family table
 ;
-;   2. LoadBrd_45d5 → LoadBrd_45ff — Search FAMILY RECIPE TABLE at $4974
+;   2. BreedFamilySearch → BreedFamilyScan — Search FAMILY RECIPE TABLE at $4974
 ;      Format: 2-byte pairs [B, C] with $FFFF separators between result species
 ;      D (result species index) increments at EVERY entry
 ;      EXACT species match: returns immediately
@@ -24,7 +24,10 @@
 ;
 ;   3. Fallback — offspring = parent 1 species ($DA6F)
 ;
-;   4. Mutation system (~1-5% RNG, at $44DA) can override result post-recipe
+;   4. (NO mutation in the shipped game — S113, measured: the "rare breed"
+;      routine BreedRareMutation_Unreferenced ($44DA) has no caller anywhere
+;      in the ROM, so $D9E6 is never set and the bank $0D "Wow! It's a rare
+;      breed!" line never shows. BREEDING_SYSTEM "The resolver as measured".)
 ;
 ; KEY DATA TABLES:
 ;   $4B30: Special recipe table — 825 entries × 5 bytes, $FF terminated
@@ -56,10 +59,10 @@ SECTION "ROM Bank $016", ROMX[$4000], BANK[$16]
     db $16 ;rom bank
 
     ; Bank $16 jump table (10 entries)
-    dw label16_4015          ; Entry 0: BreedingInit — find empty slot, init offspring
+    dw BreedCreateOffspring   ; Entry 0: create the offspring in the first empty roster slot (callers: $0A:$4A8D, $0A:$56F8, $15:$5B7D)
     dw label16_485c          ; Entry 1: Unknown
-    dw LoadBrd_456e          ; Entry 2: BreedingResolve — determine offspring species
-    dw label16_45a3          ; Entry 3: BreedingResolve alt (no mutation step)
+    dw BreedResolveOffspring  ; Entry 2: offspring species + plus (no far caller: BreedCreateOffspring calls it)
+    dw BreedResolvePreview    ; Entry 3: same result, no $44D0 call — the shrine's pair evaluator (bank $0A $5470)
     dw label16_474a          ; Entry 4: Skill/stat inheritance
     dw label16_5b4e          ; Entry 5
     dw label16_5fe4          ; Entry 6
@@ -67,7 +70,17 @@ SECTION "ROM Bank $016", ROMX[$4000], BANK[$16]
     dw label16_6f05          ; Entry 8
     dw LoadFloorDataPointer          ; Entry 9
 
-label16_4015:
+; BreedCreateOffspring (entry 0, S113 annotation) — builds the egg/offspring.
+; Scans the roster for the first empty slot (+$00 = 0), zeroes it, then:
+;   $DA6F/$DA70 = the two parents' species from the staging records
+;   ($D66E pedigree / $D703 mate), $DA75/$DA76 = their slot numbers, read
+;   by BreedPlusAndSpecial for plus + level ($14/$15 in vanilla; $28/$29 in
+;   this FX1 build — the S113 fix below), then
+;   BreedResolveOffspring -> species ($DA71) + plus ($DA77, stored max 99).
+;   level +$4B = 1; max level +$4C ($CB0D) = clamp(info level cap +
+;   2*plus, 2..99); female +$0B ($CACC) = 1 when wRNG1 <
+;   BreedGenderThreshold[ratio] (the info row's female ratio, $DA36).
+BreedCreateOffspring:
     ld de, $cac1
     ld b, $28  ; FX1: 40 slots
     ld c, $00
@@ -116,11 +129,11 @@ jr_016_402d:
     ld [$da6f], a
     ld a, [$d703]
     ld [$da70], a
-    ld a, $14
-    ld [$da75], a
-    ld a, $15
-    ld [$da76], a
-    call LoadBrd_456e
+    ld a, $28                ; S113 FIX: the parents' STAGING indices since FX1 (S71) = 40/41
+    ld [$da75], a            ;   ($D665/$D6FA via the GMDP decode). Was $14/$15 = farm slots
+    ld a, $29                ;   20/21 in FX1 builds: the egg's plus + level bonus came from
+    ld [$da76], a            ;   those (empty: plus 1, no + recipe ever fired). PyBoy S113.
+    call BreedResolveOffspring
     ld hl, $caca
     call LoadBrd_41b1
     ld a, [$da71]
@@ -225,7 +238,7 @@ jr_016_40d9:
     call SaveBrd_4227
     call ClrBrd_4360
     call GenerateRNG
-    ld hl, $44cc
+    ld hl, BreedGenderThreshold        ; [female ratio] (S113 label; = $14:$459E bytes)
     ld a, [$da36]
     add l
     ld l, a
@@ -249,27 +262,27 @@ jr_016_4169:
     call LoadBrd_4238
     ld de, $da39
     ld b, $03
-    call LoadBrd_4496
+    call InheritSkillList
     ld a, [$d66e]
     ld [wTempSpeciesId], a
     ld hl, $0301
     rst $10
     ld de, $da39
     ld b, $03
-    call LoadBrd_4496
+    call InheritSkillList
     ld a, [$d703]
     ld [wTempSpeciesId], a
     ld hl, $0301
     rst $10
     ld de, $da39
     ld b, $03
-    call LoadBrd_4496
+    call InheritSkillList
     ld de, $d68e
     ld b, $08
-    call LoadBrd_4496
+    call InheritSkillList
     ld de, $d723
     ld b, $08
-    call LoadBrd_4496
+    call InheritSkillList
     ret
 
 
@@ -756,13 +769,14 @@ LoadBrd_4481:
     ret
 
 
-LoadBrd_4496:
+; InheritSkillList — B skill ids at DE -> InheritOneSkill each (S113 label).
+InheritSkillList:
 jr_016_4496:
     ld a, [de]
     inc de
     push bc
     push de
-    call CmpBrd_44a3
+    call InheritOneSkill
     pop de
     pop bc
     dec b
@@ -771,7 +785,10 @@ jr_016_4496:
     ret
 
 
-CmpBrd_44a3:
+; InheritOneSkill — A = skill id ($FF = none): map through UnevolvedSkillMap
+; ($FF = not inherited), then add it to the offspring's 25-byte skill list
+; (+$31 = $CAF2) unless already present; first $FF hole wins (S113 label).
+InheritOneSkill:
     cp $ff
     ret z
 
@@ -812,7 +829,16 @@ jr_016_44c7:
     ret
 
 
+; BreedGenderThreshold (S113) — 4 bytes by female ratio 0-3: P(female) =
+; byte/256 (0 %, 10 %, 50 %, 84 %) — the same bytes as bank $14's recruit
+; table at $14:$459E (MONSTER_DATA info byte $03).
+BreedGenderThreshold:
     db $00, $1a, $80, $d6
+
+; BreedClearRareFlag (S113) — clear the "rare breed" flag $D9E6 unless in a
+; link session ($C86C); called by BreedResolveOffspring between the family
+; search and the fallback. Nothing ever sets the flag (S113).
+BreedClearRareFlag:
 
     ld a, [$c86c]
     or a
@@ -823,6 +849,12 @@ jr_016_44c7:
     ret
 
 
+; BreedRareMutation_Unreferenced (S113) — NOTHING CALLS THIS (ROM-wide search for
+; call/jp/dw $44DA: none; PyBoy census: 0 executions). Designed as a
+; post-recipe mutation: with a result, 3/256 → a random SEEN species 200-214
+; (CountSeenInRange / NthSeenInRange over $CA94); with none, 14/256 → a random
+; seen species 0-199; either way $D9E6++ (the bank $0D "rare breed" line).
+BreedRareMutation_Unreferenced:
     ld a, [$da71]
     cp $ff
     jr z, jr_016_450f
@@ -834,7 +866,7 @@ jr_016_44c7:
 
     ld b, $c8
     ld d, $d7
-    call FuncBrd_453d
+    call CountSeenInRange
     ld a, [wRNG2]
     ld b, a
     ld a, c
@@ -845,7 +877,7 @@ jr_016_44c7:
     ld b, $c8
     ld d, $d7
     ld e, a
-    call FuncBrd_4553
+    call NthSeenInRange
     ld a, b
     ld [$da71], a
     ld hl, $d9e6
@@ -864,7 +896,7 @@ jr_016_450f:
 
     ld b, $00
     ld d, $c8
-    call FuncBrd_453d
+    call CountSeenInRange
     ld a, [wRNG2]
     ld b, a
     ld a, c
@@ -875,7 +907,7 @@ jr_016_450f:
     ld b, $00
     ld d, $c8
     ld e, a
-    call FuncBrd_4553
+    call NthSeenInRange
     ld a, b
     ld [$da71], a
     cp $ff
@@ -886,7 +918,8 @@ jr_016_450f:
     ret
 
 
-FuncBrd_453d:
+; CountSeenInRange — C = how many species in [B, D) have their seen bit ($CA94).
+CountSeenInRange:
     ld c, $00
 
 jr_016_453f:
@@ -910,7 +943,8 @@ jr_016_454d:
     ret
 
 
-FuncBrd_4553:
+; NthSeenInRange — B = the E-th seen species in [B, D) ($FF if none).
+NthSeenInRange:
     ld c, $00
 
 jr_016_4555:
@@ -939,11 +973,13 @@ jr_016_4566:
     ret
 
 
-; BreedingResolve — Determine offspring species from two parents
+; BreedResolveOffspring (entry 2) — offspring species from two parents.
+; Precedence (S113, PyBoy census == editor2/core/breeding.py): special table
+; (first match, with plus) → family table (two passes) → parent 1 species.
 ; Input: $DA6F = parent 1 species, $DA70 = parent 2 species
 ;        $DA75/$DA76 = parent party slot indices
 ; Output: $DA71 = result species, $DA77 = offspring plus value
-LoadBrd_456e:
+BreedResolveOffspring:
     ld a, $ff
     ld [$da71], a            ; result = not found
     ld a, $ff
@@ -954,13 +990,13 @@ LoadBrd_456e:
     ld [$da74], a
     ld a, $ff
     ld [$da77], a
-    call LoadBrd_4653        ; Step 1: compute plus, search special table ($4B30)
+    call BreedPlusAndSpecial        ; Step 1: compute plus, search special table ($4B30)
     ld a, [$da71]
     cp $ff
     ret nz                   ; if special table found a result, done
 
-    call LoadBrd_45d5        ; Step 2: search family table ($4974)
-    call $44d0                ; Step 3: clear utility (checks $C86C link flag)
+    call BreedFamilySearch        ; Step 2: search family table ($4974)
+    call BreedClearRareFlag   ; Step 3: clear the (never-set) rare-breed flag $D9E6
     ld a, [$da71]
     cp $ff
     ret nz                   ; if family table found a result, done
@@ -969,7 +1005,9 @@ LoadBrd_456e:
     ld [$da71], a
     ret
 
-label16_45a3:
+; BreedResolvePreview (entry 3) — BreedResolveOffspring without the $44D0
+; call; the shrine's "what would these two make" evaluator (bank $0A).
+BreedResolvePreview:
     ld a, $ff
     ld [$da71], a
     ld a, $ff
@@ -980,12 +1018,12 @@ label16_45a3:
     ld [$da74], a
     ld a, $ff
     ld [$da77], a
-    call LoadBrd_4653
+    call BreedPlusAndSpecial
     ld a, [$da71]
     cp $ff
     ret nz
 
-    call LoadBrd_45d5
+    call BreedFamilySearch
     ld a, [$da71]
     cp $ff
     ret nz
@@ -995,17 +1033,23 @@ label16_45a3:
     ret
 
 
-; BreedingFamilySearch — Search family recipe table with parent swap
+; BreedFamilySearch — the family table, two passes (S113: measured).
+; Pass 1 keeps the mate as its SPECIES (only rows whose mate matcher is that
+; species can match); if nothing, pass 2 turns the mate into its family code
+; and scans again (only rows whose mate matcher is a family code can match).
+; Within a pass: pedigree matcher == the pedigree species → that row wins at
+; once; == its family code → remembered, scan continues (the LAST such row
+; wins). The result is the ROW NUMBER (= the offspring species).
 ; First pass: parent1 specific + parent2 specific → exact matches only
 ; If no match: convert parent2 to family code, search again
-LoadBrd_45d5:
+BreedFamilySearch:
     ld a, [$da70]            ; parent 2
     cp $f0
     jr nc, jr_016_45ff       ; if already family-coded, skip first pass
 
     ld a, [$da6f]            ; save parent 1
     push af
-    call LoadBrd_45ff        ; first pass: parent2 still specific
+    call BreedFamilyScan        ; first pass: parent2 still specific
     pop af
     ld [$da6f], a            ; restore parent 1
     ld a, [$da71]
@@ -1020,9 +1064,9 @@ LoadBrd_45d5:
     add $f0                  ; convert to family code ($F0-$F9)
     ld [$da70], a
 
-; BreedingTableScan — Search family recipe table at $4974
+; BreedFamilyScan — one pass over FamilyRecipeTable (S113 label).
 ; Converts parent 1 to family code, then scans all entries
-LoadBrd_45ff:
+BreedFamilyScan:
 jr_016_45ff:
     ld a, [$da6f]            ; parent 1
     cp $f0
@@ -1098,11 +1142,19 @@ jr_016_464e:
     ret
 
 
-; BreedingSpecialAndPlus — Compute plus value, then search special table ($4B30)
+; BreedPlusAndSpecial (S113, measured) — offspring plus, then the special table.
+;   plus = max(plus of slot [$DA75], plus of slot [$DA76]) + 1 (link session
+;   $C86C: the pedigree's plus + 1) + the level bonus: level sum >= 100 → +4,
+;   >= 76 → +3, >= 60 → +2, >= 40 → +1; capped at 99.
+;   Then $DA73/$DA74 = the parents' family codes ($F0 + info byte 0; Spirit =
+;   $FA) and the special scan: the FIRST row whose pedigree matcher is the
+;   pedigree species or family code, whose mate matcher is the mate species
+;   or family code, and whose min plus <= plus → result + plus_mod; the sum
+;   is capped at 99 at the end.
 ; Computes offspring plus from parents' plus values and levels
 ; Then converts parent species to family codes ($DA73/$DA74)
 ; Finally searches the 825-entry special recipe table
-LoadBrd_4653:
+BreedPlusAndSpecial:
     ld a, [$da75]
     ld hl, $cb23
     call GetMonsterDataPtr
@@ -1200,10 +1252,10 @@ jr_016_46f2:
     ; Same-size, in-place redirect (exactly 30 bytes = the original scan's
     ; length): ld hl,$6900 (3) + rst $10 (1) + 26-byte NOP pad. `rst $10`
     ; (H=$69, L=0) runs RelocatedSpecialScan in bank $69, a faithful port of
-    ; the old in-bank scan + LoadBrd_471c. It sets $DA71/$DA77 identically,
+    ; the old in-bank scan + BreedSpecialEntryCheck. It sets $DA71/$DA77 identically,
     ; returns here, and falls through to the plus-clamp at jr_016_4710.
     ; Bank $16 is shift-sensitive (embedded pointers at $70A6+), so the
-    ; vanilla SpecialRecipeTable + LoadBrd_471c below are left DEAD in place
+    ; vanilla SpecialRecipeTable + BreedSpecialEntryCheck below are left DEAD in place
     ; (no bytes inserted/removed; assembled output is byte-for-byte the same
     ; size as vanilla except inside this 30-byte window).
     ld hl, $6900             ; bank $69, jump-table entry 0
@@ -1220,11 +1272,11 @@ jr_016_4710:
     ret
 
 
-; SpecialEntryCheck — Check one 5-byte special table entry
+; BreedSpecialEntryCheck — check one 5-byte special row (S113 label).
 ; Format: [parent1_match, parent2_match, min_plus, result_species, plus_mod]
 ; Matches parent species (specific) or family code ($DA73/$DA74)
 ; Plus threshold: offspring plus ($DA77) must be >= entry byte 2
-LoadBrd_471c:
+BreedSpecialEntryCheck:
     ld a, [$da6f]            ; parent 1 species (specific)
     cp [hl]
     jr z, jr_016_4728        ; exact parent 1 match
