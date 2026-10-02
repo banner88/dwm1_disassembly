@@ -218,6 +218,20 @@ the name buffer when the name is blank and $C8F4 ≠ 0); a name left blank at EN
 a random family name instead (mode 3, `LoadFld9_688e`). The editor writes all three
 blocks from `gamedata.monster_text` (PROJECT_COMPILER §2.24).
 
+## Skill text blocks (S110)
+
+| What | Text mode / table | Block | Format |
+|---|---|---|---|
+| skill NAME | bank $41 mode 6, `SkillNamePtrTable` $4539 (256) | `SkillNameStrings` $628E-$69F1 (1,892 B): ids 0-221 + the empty 222nd, id-ordered | 1-9 cells + $F0 (the monster-name encoder) |
+| SKIL-menu DESCRIPTION | bank $56 `SkillDescModeTable` $664B: mode 0 → `SkillDebugTextPtrs` $664F (12 debug strings, $4E4C-$502E), mode 1 → `SkillDescPtrTable` $6667 (256 dw) | `SkillDescStrings` $502F-$664A (5,660 B; re-sectioned S110 as `SkillDesc_NNN_<Name>`): the owned texts 0-150, `SkillDesc_Blank` $6599 (ids 151-212 share it), 213-218, `SkillDesc_None` $664A (219-255 share it) | ≤ 3 lines × ≤ 18 cells, $F1 between lines, same cells as the monster descriptions |
+| custom skills $E0-$E9 | the same pointer table, rows $E0-$E9 | [S73] strings after the spare area, `SkillDescPtr_E0..E9` $56:$7E42+ | as above |
+
+The battle announce line ("Slib casts Blaze!") is NOT a per-skill string: bank $58
+`AnnounceTemplateTable` ($5806, 222 B) gives each skill a battle-message template id
+(the name is inserted). The editor writes the names / texts from
+`gamedata.skills.<id>.name` / `.description`; the announce template stays read-only
+(PROJECT_COMPILER §2.26).
+
 ## Source re-section: text corpus was misassembled as fake instructions {#text-resection}
 
 The text-string runs in the corpus banks were decoded by mgbdis as ~12k bogus

@@ -1353,9 +1353,16 @@ more than 1650 special entries, > 32 members in one library family.
 (WARN): an encounter list whose slot chances add up to MORE than 100 % (S106 r3:
 the last slots are cut; all 128 original lists are exactly 100); combat-only species edits; an enemy row's species change (Set 3:
 resistances follow the species) and, on a boss fight row, its join row (Set 2);
-joinable with HP > 1023; the same EID twice in a pool (S77); a skill's MP
+joinable with HP > 1023; the same EID twice in a pool (S77); ~~a skill's MP
 changed while record +4 (`mp_byte`, reader untraced — 218/222 vanilla rows
-equal the MP cost's low byte) keeps the old value; decreasing cumulative exp;
+equal the MP cost's low byte) keeps the old value~~ (S110: retired — record +4
+IS the battle MP cost (menu afford $50, act-time afford + deduct $53, AI veto
+$57; BATTLE_SKILL_SYSTEM §7), so `mp` now writes it too: `mp` 0-255 sets the
+field table AND +4; `"ALL"` only for Farewell / MegaMagic (table 999, +4 = 1,
+the MP emptied in their code); StepGuard / MapMagic (field-only, +4 = 0) keep
++4; an explicit `record.mp_byte` still wins; ERRORS: `mp` > 255, `"ALL"` on
+another skill, a number on an all-MP skill, a `target_mode` other than
+$11/$12/$21/$22/$41 — §2.26); decreasing cumulative exp;
 the family / special shadow reports ported from build_breeding.py.
 
 **Retired tool paths (S103)** — they wrote the same bytes and would overwrite
@@ -1397,8 +1404,12 @@ authored tiles, the fork bytes once in $07 and twice in $0A, the blank
 project's ROM == the original at $4F:$4110-$41AF and $2E:$424A-$42F7.
 **S109 (P3.10b):** the arena regions + bank $6E `ArenaTeamFixup` (the two 6-byte
 tails in banks $04 / $50 far-call it; §2.25) → pin **`482c949ffabbce1ec409c4c9fb7e5f2e`**
-(patched; built S109, test ROM USER-CONFIRMED 2026-10-01 22:57; test_compiler `REFERENCE_MD5`). Prev
+(patched; built S109, test ROM USER-CONFIRMED 2026-10-01 22:57). Prev
 `77ccdab8…` (patched, historical; S108 left it unchanged).
+**S110 (P3.11):** the skill text / looks regions + `GetPresentId` / `SfxPresentId`
+(§2.26) and the example project's skill 215 rename (moved out of a hand edit) →
+pin **`534bfb6245e825445f6d45764ed7305e`** (patched; built S110, test ROM USER-CONFIRMED
+2026-10-02; test_compiler `REFERENCE_MD5`). Prev `482c949f…` (patched, historical).
 **S104 r2:** `gamedata.families` (voices + Spirit names, two new regions;
 empty == the r1 bytes) and the user-picked ghost-wisp icon → pin
 **`eb1535108cdbc9ac24d64dce3db5591e`** (patched; built S104 r2, NOT yet
@@ -1812,8 +1823,80 @@ far-call bank $6E, `ArenaTeamFixup` RUN from the built ROM (MiniSM83) for all 30
 match) — `$DA02`, the hidden entries, `$D7D1` — and an index past the table leaves the
 vanilla values. test_app — the Arena tab: team size, a row's species + level, a monster master,
 a fee through the widgets; a summon in a fighting team refused; a bad number refused
-without an undo step; undo restores project.json exactly. **Pin** `482c949f…` (patched), was `77ccdab8…` (patched,
+without an undo step; undo restores project.json exactly. **Pin** `482c949f…` (patched, historical since S110), was `77ccdab8…` (patched,
 historical): the tails + bank $6E.
+
+## §2.26 S110 — the original SKILLS: names, SKIL texts, looks and sounds (`gamedata.skills`, ROADMAP P3.11)
+
+Module `editor2/core/skills.py` (`SK.check` from `validators.validate` and the Monsters /
+Skills commit; `_skill_regions()` in the emitter REGISTRY); `mp` / `learn` / `record`
+stay in `gamedata.py` (§2.20, MP semantics rewritten S110 — see the Validators paragraph
+there). Editor model `editor2/core/skills_doc.py` (`SkillsMixin`), tab
+`editor2/app/skills_tab.py`, help `editor2/help/54_skills.md`.
+
+```jsonc
+"gamedata": {
+  "skills": {
+    "16": {"name": "Spark", "description": ["Sparks leap at", "every foe"],
+           "mp": 1, "looks_like": 6,                       // plays Bang's animation + sounds
+           "record": {"party_min": 150, "party_range": 9}},
+    "72": {"record": {"target_mode": 18}},                 // $12 = all foes
+    "215": {"name": "BugCut"}}}
+```
+
+Ids 0-221 (the custom skills $DE-$E9 = P3.11c; ids ≥ 222 refused for these keys).
+`name` 1-9 cells (the monster-name encoder: letters, digits, space, `' , . ! ? - &`);
+`description` 1-3 lines × 18 cells (`'s` `'t` `..` one cell; `[]` / `""` = no text);
+`looks_like` a donor id 0-221 (its own id = none). A value equal to the original is
+removed by the editor.
+
+| Region | File | Content (no edits = the original bytes) |
+|---|---|---|
+| `gd_skill_names` | bank_041 (`SkillNameStrings` `$41:$628E-$69F1`, 1,892 B; pointers `SkillNamePtrTable` $4539 by label) | 222 names + the empty 222nd, first-fit in id order; overflow → the shared bank-$41 new-species text extents (`species.TEXT_EXTENTS`, joined by `SK.bank41_spills`) |
+| `gd_skill_desc` | bank_056 (`SkillDescStrings` `$56:$502F-$664A`, 5,660 B) | the owned texts in vanilla order (0-150, `SkillDesc_Blank`, 213-218, `SkillDesc_None`); overflow → `gd_skill_desc_extra` |
+| `gd_skill_desc_ptrs` | bank_056 (`SkillDescPtrTable` `$56:$6667`, rows 0-221) | `dw` labels; rows $E0-$E9 stay the hand [S73] rows |
+| `gd_skill_desc_extra` | bank_056 (`$56:$7291-$7E41`, 2,993 B, was nop pad before the [S73] strings) | spilled texts + `SkillDescOwn_NNN` (a skill that shared Blank / None given its own text); fixed size |
+| `gd_present_proxy_5f` | bank_05f (`StockPresentTable` `$5F:$7EEB`, 222 B) | presentation id per skill (identity = vanilla) |
+| `gd_present_proxy_55` | bank_055 (`StockSfxTable` `$55:$798D`, 222 B; NEW hand patch `patches/bank_055.asm`) | SFX-table index per skill (the same values) |
+
+**Engine (hand, patches/ only).** *Looks:* every presentation read of the acting skill
+goes through bank $5F `GetPresentId` (12 reads, S74 proxy) — now `ld a,[$db8a]`, ids <
+$DE index `StockPresentTable`, ≥ $DE the S74 `CustomProxyTable` (27 B; 228 pad nops
+consumed). The sounds are bank $55's per-skill tables (5 kinds × 2 sides × 222 B), read at
+ONE site `$55:$4061` (BATTLE_SKILL_SYSTEM had `$4067`): `ld a,[$db8a]` → `call
+SfxPresentId` (same size; ids < $DE → `StockSfxTable`, else unchanged; 19 B + table in the
+bank tail, 241 nops consumed, `DataB55_7db1` stays at $7DB1). So a skill keeps its handler,
+damage, targets and messages and plays the donor's animation, flash and sounds. *Text:*
+bank $56 re-sectioned (`tools/resection_skill_desc.py`, both trees): `SkillDescModeTable`
+$664B (mode 0 → `SkillDebugTextPtrs` $664F, 12 debug strings at $4E4C-$502E; mode 1 →
+`SkillDescPtrTable`), the two `ld de, $664b` by label.
+
+**Looks rules (MEASURED, `tools/census_skill_present.py` →
+`extracted/skill_present_census.json`):** each of the 222 skills lent its look to 7
+borrowers (party one foe Blaze / all foes Firebal vs 3 / one ally Heal / all allies HealUs /
+self ChargeUP; an enemy's Blaze and Heal) on the user's save — 1,554 PyBoy battles, every
+one acted 4-9 times, longest frozen action machine 157 frames, **no stall**. Nothing is
+refused unless the census measured a stall (`lend_problem`); WARN (`lend_warning`) for a
+summon donor ($84-$87: its "animation" is the summoned monster — only the blink shows)
+and a donor aimed at the other side (measured: Heal with Bang's look shows no explosion).
+
+**Validators:** ERROR — an id outside 0-221 with these keys, a bad name / text (cells,
+characters, lines), a donor outside 0-221, all texts not fitting block + 2,993 B (names
+never fail: the shared extents' own check), plus §2.20's `mp` / `target_mode` errors.
+WARN — the two looks cases above.
+
+**Tests:** test_compiler `test_skills_s110` — no edits == the ROM's names / texts /
+pointers / tables; renames, a 3-line text, an own text for a Blank-sharing id, spills
+(names into the extents, texts into the extra), looks, the MP rules (both copies, ALL,
+field-only), the refusals; `--rom` `test_skills_rom` — through the game's pointer tables,
+the $55 fork bytes, `GetPresentId` / `SfxPresentId` RUN from the built ROM (MiniSM83) for
+every id; the blank project's skill bytes == the original. test_app — the Skills tab
+(rename, text, MP, power, looks, target, a flag; a bad name refused without an undo step;
+items read-only; the Monsters tab follows the rename; undo restores project.json
+exactly; every behaviour box named in the help). **Pin** `534bfb62…` (patched), was
+`482c949f…` (patched, historical): the proxies + the example's skill 215 = "BugCut" —
+until S110 a HAND edit inside the names block (`SkillName_215_BugCut`, 3 `$F0` pad),
+now example-project data; names 216-221 shift 3 B (DOC_AUDIT S110).
 
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 

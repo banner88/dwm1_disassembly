@@ -36,7 +36,7 @@ ORIGINAL_MD5 = '1ca6579359f21d8e27b446f865bf6b83'   # PROJECT_STATE canonical
 STUB_TABS = [
     ('Gates', 'P3.7b', 'Custom rooms on gate floors (open a project); gate settings + boss floor = part 2.'),
     ('Monsters', 'P3.10', 'Species data, enemy rows, new species from sprite sheets (open a project).'),
-    ('Skills', 'P3.11', 'The S74 knob surface as forms with the invariant validators.'),
+    ('Skills', 'P3.11', 'Names, SKIL text, MP, learning, power, targets, AI, looks (open a project).'),
     ('Breeding', 'P3.12', 'Recipe editor + the randomizer tree explorer, live re-sim.'),
     ('Encounters', 'P3.13a', 'Cross-room pool view; custom pools; flag-keyed variants.'),
     ('Music', 'P3.13b', 'Song library, MIDI import, room assignment matrix, audition.'),
@@ -194,6 +194,13 @@ class MainWindow(QMainWindow):
                     self.arena_tab = ArenaTab(self.session)
                     self.tabs.addTab(self.arena_tab, 'Arena')
                     continue
+            if title == 'Skills' and self.session:
+                # S110 (P3.11): the original skills — names, SKIL text, MP,
+                # learning, power, targets, AI, behaviour flags, looks
+                from editor2.app.skills_tab import SkillsTab
+                self.skills_tab = SkillsTab(self.session)
+                self.tabs.addTab(self.skills_tab, 'Skills')
+                continue
             if title == 'Balance':
                 # S98 (P3.7): the World graph sits before Balance, as in §5.0
                 if self.session:

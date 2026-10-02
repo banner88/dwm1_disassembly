@@ -126,6 +126,13 @@ def validate(prj, generated=None):
             warnings += [w for w in AR.check(prj) if w not in warnings]
         except AR.ArenaError as e:
             errors.append(str(e))
+        # S110 (P3.11, PROJECT_COMPILER §2.26): gamedata.skills names /
+        # descriptions / looks_like — encode, fit, and only same-side looks
+        from . import skills as SK
+        try:
+            warnings += [w for w in SK.check(prj) if w not in warnings]
+        except SK.SkillError as e:
+            errors.append(str(e))
         # S105 G3: up to 19 new species can land in ONE family's encyclopedia
         # tab — its 32-member cap is checked here, not only when bank $12 is
         # emitted (which used to surface as an exception)

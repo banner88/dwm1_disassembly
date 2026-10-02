@@ -307,6 +307,7 @@ class ArenaTab(QWidget):
     def refresh(self):
         doc = self.s.doc
         try:
+            self.skills = doc.skill_names_effective()     # S110: project skill names
             groups = doc.arena_groups()
             model = doc.monsters_model()
         except Exception as ex:                       # noqa: BLE001

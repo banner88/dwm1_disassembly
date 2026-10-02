@@ -65,6 +65,12 @@
     ]
    }
   },
+  "skills": {
+   "215": {
+    "name": "BugCut",
+    "comment": "S44: the ROM name \"Sheldodge\" is a placeholder; id 215 is the Bug-family cut (FAQ \"BugBlow\"). A hand edit in patches/bank_041.asm until S110."
+   }
+  },
   "breeding": {
    "family": {
     "_comment": "B4 family-default overrides (extracted/breeding_family_defaults.json).",

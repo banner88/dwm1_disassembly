@@ -7040,6 +7040,7 @@ jr_058_6794:
     ld a, $02
     ld [$db4e], a
     push hl
+    ; [S110 rec] record +2 target mode: &3 == 1 = single
     ld hl, $5400
     rst $10
     pop hl

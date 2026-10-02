@@ -256,28 +256,34 @@ The 4218-byte block at `$54:$41CF` is now re-sectioned in `bank_054.asm` to clea
 byte-identical; `--emit record` / `--emit recordptr` print them.
 `extracted/skill_records.json[*].battle_record` holds every record decoded.
 
-**19-byte record field map** (codec in `tools/gen_skill_records.py`):
+**19-byte record field map — S110 READER CENSUS (supersedes the S2-era table below
+it in git history; DOC_AUDIT S110).** Every read of a record goes through bank $54
+entries 0/1 (offset in `$db4e`), entry 2 (cache +2/+7/+8/+9 → `$dcfc-$dcff`) or
+entries 3-5; each reader site in banks $50-$53/$57/$58 carries a `; [S110 rec]`
+comment and `bank_054.asm` has the "S110 FIELD MAP" header (`tools/annotate_skill_record.py`).
+The editor shows every field with this meaning (editor2/core/skills.py `FLAG_BITS` /
+`DEAD`, help `54_skills.md`).
 
-| Off | Field | Meaning | Conf |
+| Off | Field (editor key) | What reads it / what it does | Conf |
 |----|----|----|----|
-| +0 | effect_class | fine effect/message id; shared by same-effect skills (Heal/Healmore=$18) | HIGH |
-| +1 | effect_category | hi-nibble 1=damage 2=status/debuff 3=heal/buff 8=item | HIGH |
-| +2 | target_mode | $11=1 foe, $12=all foes, $21=1 ally, $22=all allies, $31/$41=special. Cached→`$dcfc`, read by AI & anim. FAQ-Range-validated | PROVEN |
-| +3 | ai_weight | per-skill AI score; enemy AI (`$57 AIState3SkillSums_7529`) SUMS record[+3] over its skill list into `$dce4` → weighted pick (Sacrifice/MegaMagic=0). The per-skill AI lever | HIGH |
-| +4 | mp_cost_byte | byte copy of MP cost (`$07` table); 19/19 match | PROVEN |
-| +5 | status_id | status/secondary-effect id; groups by effect (Sleep fam=$08, Poison=$13, Slow=$0e, instant-death=$09) | PROVEN |
-| +6 | damage_class | $00=non-damage, $04=spell-damage, $05=breath-damage (FireAir/Scorching breath=$05 vs Blaze spell=$04). Element itself is chosen in the handler | PROVEN |
-| +7 | flags7 | presentation bitfield (cached `$dcfd`; bit3→guard/skip in bank $53) | MED |
-| +8 | flags8 | anim/message bitfield (cached `$dcfe`; bit4→message variant $67/$68) | MED |
-| +9 | flags9 | cast-behaviour bitfield (cached `$dcff`; bit5→special cast substate) | MED |
-| +10 | field10 | small class flag (read, compared ==1 in a build loop) | LOW |
-| +11 | power_party_min | damage/heal MINIMUM, party-side caster | PROVEN |
-| +13 | power_party_range | range; **max = min + range** | PROVEN |
-| +15 | power_enemy_min | minimum, enemy-side caster | PROVEN |
-| +17 | power_enemy_range | range, enemy | PROVEN |
+| +0 | (none) | **NOT READ** — a serial-like number (S2 called it "effect_class") | PROVEN (census) |
+| +1 | `category` | hi nibble = the **AI option-list tag** (banks $51/$52 build `$DC64` lists: 1 attack, 2 status / weaken, 3 heal / support; 8 = item); lo nibble **NOT READ** | PROVEN |
+| +2 | `target_mode` | bit0 single, bit1 group; bit4 foes, bit5 allies, bit6 self ($11 / $12 / $21 / $22 / $41). Drives the battle menu ($50, ask for a target), the group loop ($52), the dead-target redirect ($53), Imitate's side test; the ACTUAL pick is per-skill code (bank $58 `BtlSkillTargetDispatch_401d`) | PROVEN |
+| +3 | `ai_weight` | AI only (bank $57 sums it per category) | PROVEN |
+| +4 | `mp_byte` | **the BATTLE MP cost, 8-bit**: menu afford check ($50 `SaveBtl_4ba4`), act-time afford + the "not enough MP" verb ($53 `SetupSub_480e`), deduct (two sites in $53; Farewell then zeroes MP), AI veto ($57), what a TakeMagic target soaks. The FIELD SKIL menu shows / charges the `$07` `SkillMPCostTable` u16 instead. Vanilla differs only for Farewell / MegaMagic (999 "All MP" vs 1) and StepGuard / MapMagic (field-only, 0) | PROVEN |
+| +5 | `status_id` | **AI element**: a resistance slot 1-27 (1-based index into `gamedata.RESIST_NAMES`) the AI assumes; damage takes the element from the handler (§15.3). Was "status_id" (wrong) | PROVEN |
+| +6 | `damage_class` | AI only: 0 none / 4 spell damage / 5 breath damage — nonzero = "deals damage" | PROVEN |
+| +7 | flags7 | b0 cut by Defence (½) / StrongD (1/10); b1 physical — Surround's miss rolls; b2 **NOT READ**; b3 keeps its committed target (no act-time re-resolve); b4 BREATH (MouthShut seal, TailWind reflect, SuckAll absorb, SuckAir ×2-2.5 for ids $5C-$63, the "spits" verb); b5 DANCE (DanceShut, "dances"); b6 SPELL (StopSpell, side +0 bit3 "spell was broken", "casts"); b7 physical CONTACT (airborne miss, BladeD halves, the shield grab, ×2 vs target +8 bit2). The AI copies it to `$dd6b` | PROVEN |
+| +8 | flags8 | b0 reflected by MagicBack / Bounce; b1 redirected by Cover / Guardian; b2 fails on an IRON target (Ironize); b3 **NOT READ**; b4 may land a critical hit (+ ChargeUP's "attacks with full force!"); b5 doubled by TwinHits (attacker +3 bit2); b6 ChargeUP ×2-2.5; b7 dodge-able (Dodge 50 %, else the AGL ladder) | PROVEN |
+| +9 | flags9 | b0 a TakeMagic target gains its MP; b1 (meta-actions $A0-$A9 only) allowed in a boss battle; b2 Imitate turns it back ("gets even!"); b3 a hit may snap confusion (§15.8c); b4 may be a FOLLOW-UP action (actor +6 bit6 — writer not found, never seen in ~11k measured events); b5 cannot reach an airborne target; b6 / b7 **NOT READ** | PROVEN (b4 writer open) |
+| +10 | `field10` | ITEMS only (entry 5 `$535F`, the battle item menu): 1 = not usable in battle | PROVEN |
+| +11 | `party_min` | damage / heal minimum, party caster | PROVEN |
+| +13 | `party_range` | range; **max = min + range** | PROVEN |
+| +15 | `enemy_min` | minimum, enemy caster | PROVEN |
+| +17 | `enemy_range` | range, enemy | PROVEN |
 
 **Side selection:** the caster's side picks the power pair — `StoreDamageResult`
-(`$52`) and dispatch entry 5 (`$54:$535F`) test `wBattleAttackerIdx` bit2 → +11
+(`$52`) and dispatch entry 3 (`$54:$52C7`, S110: was called entry 5 / `$535F`) test `wBattleAttackerIdx` bit2 → +11
 (party caster) or +15 (enemy caster). That's why player Blaze (12–15) hits harder
 than enemy Blaze (7–12). FAQ proof: Blaze 12-15 = min 12/range 3, Blazemore 70-90,
 Heal 30-40, … 31/32 exact (Explodet ROM 130-150 vs likely FAQ typo 130-140).
@@ -288,7 +294,10 @@ Heal 30-40, … 31/32 exact (Explodet ROM 130-150 vs likely FAQ typo 130-140).
 - `LoadB54_526e` (entry 1) — same + also loads offset+2 (read a field then its
   neighbour, e.g. power +11 then aux +13).
 - `CacheSkillRecordFields_5298` (entry 2) — caches rec[+2,+7,+8,+9] → `$dcfc–$dcff`.
-- `SkillMagnitudeBySide` (entry 5, `$535F`) — side-selected power read.
+- `SkillPowerBySide` (entry 3, `$52C7`) — side-selected power read (S110: the old
+  text called it `SkillMagnitudeBySide` "entry 5, `$535F`" — wrong entry / address).
+- entry 4 (`$5313`) — a twin of entry 3; no caller (S110 census).
+- entry 5 (`$535F`) — the battle ITEM target lookup (+10, +2).
 
 ## 8. Item-effect & meat system (#3)  [PROVEN structure]
 
@@ -605,7 +614,7 @@ interleaved at `$4071`+).
 | Record data (222 × 19B), re-sectioned to `db` | `$54:$41CF` |
 | Generic record field reader (idx `$db4c`, off `$db4e`) | `LoadB54_5249` (`$54` entry 0) |
 | Record field cache → `$dcfc–$dcff` | `CacheSkillRecordFields_5298` (`$54` entry 2) |
-| Side-selected power read | `SkillMagnitudeBySide` `$54:$535F` |
+| Side-selected power read | `SkillPowerBySide` `$54:$52C7` (entry 3; S110 — was given as `$535F`, which is entry 5, the item lookup) |
 | Damage/heal applier (record-driven) | `StoreDamageResult`/`CalcSkillDefense $60d7` (`$52`) |
 | Item-effect handler (ids 176–212) | `$52:$4625` |
 | Meat branch (ids $c2–$c6) → recruitment | `$52:$4014` → `$58:$591E` |
@@ -672,6 +681,36 @@ via `$9929` tilemap watchpoint captures; user: "bank it"].
   routines directly. `wTameBGSave` (`$d489`, 3 bytes) is reserved and free for this state.
   Deferred to its own session / editor animation support (ROADMAP optional-polish box).
 
+### 11.8 "Looks and sounds like skill X" for the ORIGINAL skills (S110, built + MEASURED)
+
+The whole presentation of the acting skill is keyed by the id in `$db8a` through two
+doors: (1) bank $5F `GetPresentId` (the S74 proxy; all 12 animation / flash / cast-SFX
+reads, §13.2) and (2) bank $55's per-skill SFX tables (5 kinds × 2 sides × 222 B),
+read at ONE site, `$55:$4061`. S110 routes both through a per-skill byte table:
+`GetPresentId` reads `StockPresentTable` ($5F) for ids < $DE (≥ $DE: the S74
+`CustomProxyTable`), and `$55:$4061 ld a,[$db8a]` became `call SfxPresentId`
+(`StockSfxTable`, $55). Both tables are compiler regions (`gamedata.skills.<id>.looks_like`,
+PROJECT_COMPILER §2.26); identity = vanilla. The borrower keeps its own handler,
+damage, targets and messages.
+
+**Measured (`tools/census_skill_present.py`, `extracted/skill_present_census.json`):**
+all 222 skills as donors × 7 borrowers (party: one foe, all foes ×3, one ally, all allies,
+self; enemy: one foe, one ally) on the user's save — 1,554 PyBoy battles, each borrower
+acted 4-9 times, the longest frozen action machine 157 frames: **no donor stalls a
+battle**. (The S74 note "HealMore's look stalls" belongs to the CUSTOM-skill path — the
+bank $72 / cast-anim slot — not to this one.) Visual spot check: Bang's look on Heal
+draws no explosion (the effect is drawn on the party side, which has no sprites), Heal's
+look on Bang shows no explosion either — so a look made for the other side "shows
+nothing", and the editor warns. Summons ($84-$87) lend only the screen blink (their
+animation is the summoned monster, drawn by the combatant display and waited for by
+THEIR id at `$53:$5B07`).
+
+**Rig lesson (KEY_LESSONS S110):** under FIGHT the party AND the enemies choose their
+action at ACT TIME (act state $18 = bank $57 entry 0), overwriting the queue — a rig must
+force the skill bytes every frame and the target bytes only in phases 4-6 (a group skill
+steps its queue target per victim in phase 7). The first census pass forced targets
+outside phase 7 only and let the AI replace the borrower with Attack: all "ok", all void.
+
 ---
 
 ## 12. Skill-ID bucketing audit & de-aliasing surface (S2d FOUNDATION)  [S48, 2026-06-28]
@@ -726,7 +765,7 @@ multi-hit code (`$52`) re-set `$db8a` for sub-effects (most of the 35 write site
 | ↳ entry 5 `$535F` | side-power; `cp $d5/jr nc $53a6` BAILS `≥$d6` | bails (minor path) | defer |
 | **Function table** `$52:$4011` | `$52:$6CD5` dispatch | — | DONE (FarSkillFork) |
 | **MP** `$07:$570C` | 3 readers `$56E8/$5A98/$5B4E`; `$570C+2*id` | overshoot | 3 sites |
-| **Sound** `$55:$4070` | side-selected ptr table, indexed at `$55:$4067` | overshoot; `$FF`=silence | 1 site |
+| **Sound** `$55:$4070` | side-selected ptr table, indexed at `$55:$4061` (S110: the one reader; was given as `$4067`) — the patched build reads the id through `SfxPresentId` (§11.8) | overshoot; `$FF`=silence | 1 site |
 | **Anim** `$5f:$58dd` | `$5f:$5433`, `$58dd+id` | `$58dd[$DE]=$0d`=no-visual | none for no-visual skills |
 | **Message** `$dd6f/$dd70` | handler-set descriptor (Heal: `$bb84`) | not id-indexed | none |
 | **Name** `$41:$4539` | 256 entries | in range | repoint only |
@@ -814,6 +853,9 @@ groundwork doc (folded here). Empirically located via SameBoy (probe ROM, bp
   whole script and plays it to completion → no hang, flash + SFX restored.
   MagicBurn's proxy = `$09` (Infernos); it animates/flashes/sounds identically.
   Stock skills are unaffected (resolver is the identity for `< $DE`).
+  **S110:** for stock ids it now reads `StockPresentTable` (identity unless a
+  project sets `looks_like`, §11.8); the cast SFX of the per-skill bank-$55 tables
+  is NOT one of the 12 reads — it has its own door, `SfxPresentId` at `$55:$4061`.
 
 ### 13.3 Skill #1 file set (the complete working stack)
 - `patches/bank_072.asm` (NEW) — far-call table + `CustomBattleExec`/`SkillMagicBurn` (effect).

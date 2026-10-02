@@ -1200,3 +1200,16 @@ def _arena_regions():
 
 
 REGISTRY += _arena_regions()
+
+
+def _skill_regions():
+    # S110 (P3.11): skill names (bank $41), SKIL-menu descriptions + their
+    # pointer rows + the spill pad (bank $56), and the looks-like tables
+    # (banks $5f / $55) from gamedata.skills (editor2/core/skills.py,
+    # PROJECT_COMPILER §2.26). No edits == the original bytes.
+    from . import skills as SK
+    return [(name, "gamedata.skills", f"region:{path}#{name}", fn, [bank])
+            for name, path, fn, bank in SK.REGIONS]
+
+
+REGISTRY += _skill_regions()

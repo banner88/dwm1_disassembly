@@ -483,6 +483,13 @@ class MonstersTab(QWidget):
         try:
             self._model = doc.monsters_model()
             cat = doc.species_catalog()
+            # S110: skill lists show the project's skill names (Skills tab renames)
+            self.skills = doc.skill_names_effective()
+            for c in self.w_skill:
+                for i in range(c.count()):
+                    sid = c.itemData(i)
+                    if sid is not None and sid < G.SKILL_COUNT:
+                        c.setItemText(i, self.skills.get(sid, str(sid)))
         except Exception as ex:                     # noqa: BLE001
             self.title.setText('The project does not validate')
             self.subtitle.setText(str(ex))

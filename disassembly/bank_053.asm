@@ -1263,6 +1263,7 @@ jr_053_46a8:
 
     ld hl, $5402
     rst $10
+    ; [S110 rec] flags7 bit3: keeps its committed target (no act-time re-resolve)
     ld a, [$dcfd]
     bit 3, a
     jr nz, jr_053_4733
@@ -1397,6 +1398,7 @@ jr_053_47b2:
     cp $53
     jr z, jr_053_47d1
 
+    ; [S110 rec] target mode bit0: single target -> dead-target redirect scan
     ld a, [$dcfc]
     and $01
     jr z, DeadTargetRedirectScan_47e8
@@ -1483,6 +1485,7 @@ SetupSub_480e:
     ld [$db4d], a
     ld a, $04
     ld [$db4e], a
+    ; [S110 rec] record +4 = battle MP cost: act-time afford check (0 = free)
     ld hl, $5400
     rst $10
     ld a, [$db4c]
@@ -1507,6 +1510,7 @@ SetupSub_480e:
 
     call LoadBtlC_49dc
     call z, LoadBtlC_490a
+    ; [S110 rec] flags7 bit6/5/4 = spell / dance / breath: the "not enough MP" verb ($F7 casts / $F9 dances / $F8 spits)
     ld a, [$dcfd]
     bit 6, a
     jr z, jr_053_485b
@@ -1538,6 +1542,7 @@ jr_053_486d:
 
 Jump_053_4871:
 jr_053_4871:
+    ; [S110 rec] flags7 bit6 spell: side +0 bit3 "spell was broken" ($1F) / StopSpell (+3 bit0) "blocked" ($1E); bit5 dance: DanceShut ($21); bit4 breath: MouthShut ($20)
     ld a, [$dcfd]
     bit 6, a
     jr z, jr_053_48af
@@ -1832,6 +1837,7 @@ LoadBtlC_4a04:
     ld [$db4d], a
     ld a, $04
     ld [$db4e], a
+    ; [S110 rec] record +4 = battle MP cost: DEDUCTED here (Farewell $32 then zeroes MP)
     ld hl, $5400
     rst $10
     ld a, [$db4c]
@@ -2077,6 +2083,7 @@ SaveBtlC_4b4f:
     ld [$db4d], a
     ld a, $04
     ld [$db4e], a
+    ; [S110 rec] record +4 = battle MP cost: deducted (floor 0)
     ld hl, $5400
     rst $10
     ld a, [$db4c]
@@ -2132,6 +2139,7 @@ CmpBtlC_4b92:
     cp $96
     jr z, jr_053_4bd1
 
+    ; [S110 rec] flags7 bit6/5/4: the same seal checks (CmpBtlC_4b92)
     ld a, [$dcfd]
     bit 6, a
     jr z, jr_053_4bd1
@@ -2522,6 +2530,7 @@ jr_053_4d97:
     ld [$db4d], a
     ld a, $09
     ld [$db4e], a
+    ; [S110 rec] record +9 bit1 (meta-actions $A0-$A9 only): allowed in a boss battle ($db73), else re-rolled
     ld hl, $5400
     rst $10
     ld a, [$db73]
@@ -3564,6 +3573,7 @@ jr_053_5313:
     jr jr_053_5352
 
 jr_053_5349:
+    ; [S110 rec] flags8 bit4: an attacker with $db42 &3 (ChargeUP armed) "attacks with full force!" ($67)
     ld a, [$dcfe]
     bit 4, a
     jr z, jr_053_535e
@@ -3632,6 +3642,7 @@ jr_053_53a3:
 jr_053_53a9:
     ld hl, $d9ee
     inc [hl]
+    ; [S110 rec] flags7 bit7 (physical): a target with $db42 bit5 grabs an ally as a shield ($6C)
     ld a, [$dcfd]
     bit 7, a
     jr z, jr_053_5411
@@ -3701,6 +3712,7 @@ jr_053_5411:
     and $0c
     jr z, jr_053_5458
 
+    ; [S110 rec] flags9 bit5: "But it doesn't reach X!" ($C1) vs an airborne target (+6 &$0C, HighJump)
     ld a, [$dcff]
     bit 5, a
     jr z, jr_053_5458
@@ -3722,6 +3734,7 @@ jr_053_5411:
 
 
 jr_053_5458:
+    ; [S110 rec] flags7 bit4 (breath): a side with +0 bit6 (SuckAll) "absorbs the attack!" ($81)
     ld a, [$dcfd]
     bit 4, a
     jp z, Jump_053_54d6
@@ -3799,6 +3812,7 @@ jr_053_5458:
 
 
 Jump_053_54d6:
+    ; [S110 rec] flags8 bit1: Cover / Guardian redirect to the protector ($80)
     ld a, [$dcfe]
     bit 1, a
     jr z, jr_053_554d
@@ -3867,6 +3881,7 @@ jr_053_554d:
     or a
     jp nz, Jump_053_5622
 
+    ; [S110 rec] flags7 bit7 (physical): the $db42 bit5 shield grab
     ld a, [$dcfd]
     bit 7, a
     jr z, jr_053_5594
@@ -3906,6 +3921,7 @@ jr_053_557a:
 
 
 jr_053_5594:
+    ; [S110 rec] flags7 bit4 (breath): TailWind (+4 bit6) "the wind reflects the attack!" ($7D) — not SuckAir $43 / SuckAll $8F
     ld a, [$dcfd]
     bit 4, a
     jp z, Jump_053_55ca
@@ -3936,6 +3952,7 @@ jr_053_5594:
 
 Jump_053_55ca:
 jr_053_55ca:
+    ; [S110 rec] flags8 bit0: MagicBack / Bounce (+4 & $22) "wall of light reflects the spell" ($7B/$7C)
     ld a, [$dcfe]
     bit 0, a
     jp z, Jump_053_5622
@@ -4014,6 +4031,7 @@ jr_053_563c:
     call GetMonsterSlotInfo
     jr c, jr_053_56a8
 
+    ; [S110 rec] flags8 bit7: a target with $db42 bit7 "easily dodges" ($6E)
     ld a, [$dcfe]
     bit 7, a
     jr z, jr_053_56a8
@@ -4042,6 +4060,7 @@ jr_053_563c:
 
 
 jr_053_5678:
+    ; [S110 rec] flags8 bit1: Cover / Guardian redirect
     ld a, [$dcfe]
     bit 1, a
     jr z, jr_053_563c
@@ -4123,6 +4142,7 @@ jr_053_56e1:
     and $c0
     jr z, jr_053_5747
 
+    ; [S110 rec] flags8 bit2: an IRON target (+7 &$C0, Ironize) makes the action fail ($BA)
     ld a, [$dcfe]
     bit 2, a
     jr z, jr_053_5747
@@ -4191,6 +4211,7 @@ jr_053_5746:
 ; surround-missed. The bank $52 twins ($51B3/$51CA) are DEAD CODE
 ; (zero references ROM-wide). §15.10.9.
 jr_053_5747:
+    ; [S110 rec] flags7 bit7 (physical) vs an airborne target (+6 bit2): "doesn't reach" ($C1)
     ld a, [$dcfd]
     bit 7, a
     jr z, jr_053_5763
@@ -4208,6 +4229,7 @@ jr_053_5747:
 
 jr_053_5763:
     call LoadBtlC_4e33
+    ; [S110 rec] flags7 bit1 (physical): Surround (+3 bit1) 62.5 % miss, then +7 &3 37.5 % miss
     ld a, [$dcfd]
     bit 1, a
     jr z, jr_053_579e
@@ -4243,6 +4265,7 @@ jr_053_5785:
 
 
 jr_053_579e:
+    ; [S110 rec] flags8 bit7: DODGE-able (Dodge status 50 %, else the AGL ladder)
     ld a, [$dcfe]
     bit 7, a
     jr z, jr_053_57f5
@@ -4385,6 +4408,7 @@ jr_053_586a:
     rst $10
     ld hl, $d9ee
     inc [hl]
+    ; [S110 rec] flags8 bits4-6: critical / TwinHits / ChargeUP family
     ld a, [$dcfe]
     and $70
     ret z
@@ -4398,6 +4422,7 @@ jr_053_586a:
     bit 2, [hl]
     ret nz
 
+    ; [S110 rec] flags8 bit4: may land a CRITICAL hit ($79 / $7A by side)
     ld a, [$dcfe]
 
 jr_053_588b:
@@ -4493,6 +4518,7 @@ jr_053_5912:
     bit 2, [hl]
     jr z, jr_053_5941
 
+    ; [S110 rec] flags8 bit5: doubled by TwinHits (attacker +3 bit2)
     ld a, [$dcfe]
     bit 5, a
     jr z, jr_053_5941
@@ -4547,6 +4573,7 @@ jr_053_5978:
     bit 0, [hl]
     jr z, jr_053_599a
 
+    ; [S110 rec] flags8 bit6: ChargeUP armed (+6 bit0) -> x2-2.5 (SaveBtlC_5db1)
     ld a, [$dcfe]
     bit 6, a
     jr z, jr_053_599a
@@ -4566,6 +4593,7 @@ jr_053_599a:
     bit 4, [hl]
     jr z, jr_053_59c3
 
+    ; [S110 rec] flags7 bit4 (breath), ids $5C-$63: SuckAir charge (+6 bit4) -> x2-2.5
     ld a, [$dcfd]
     bit 4, a
     jr z, jr_053_59c3
@@ -4630,6 +4658,7 @@ jr_053_59ec:
     ld h, a
     jr nz, jr_053_5a15
 
+    ; [S110 rec] flags7 bit7 (physical): BladeD (defence level 4) halves it
     ld a, [$dcfd]
     bit 7, a
     jp z, Jump_053_5a6f
@@ -4640,6 +4669,7 @@ jr_053_5a0f:
     jr jr_053_5a25
 
 jr_053_5a15:
+    ; [S110 rec] flags7 bit0: Defence (level 1) halves, StrongD (level 2) /10
     ld a, [$dcfd]
     bit 0, a
     jr z, jr_053_5a6f
@@ -4677,6 +4707,7 @@ jr_053_5a44:
     bit 2, [hl]
     jr z, jr_053_5a6f
 
+    ; [S110 rec] flags7 bit7 (physical) vs target +8 bit2: doubled (not $3C/$3E)
     ld a, [$dcfd]
     bit 7, a
     jr z, jr_053_5a6f
@@ -5126,6 +5157,7 @@ jr_053_5c9a:
 
 
 LoadBtlC_5ca1:
+    ; [S110 rec] flags7 bit4 (breath) vs TailWind (+4 bit6): reflected unless SuckAir $43 / SuckAll $8F
     ld a, [$dcfd]
     bit 4, a
     ret z
@@ -5153,6 +5185,7 @@ LoadBtlC_5cbc:
 
     ld hl, $5402
     rst $10
+    ; [S110 rec] flags9 bit0: a TakeMagic target gains this skill's battle MP cost
     ld a, [$dcff]
     bit 0, a
     ret z
@@ -5163,6 +5196,7 @@ LoadBtlC_5cbc:
     ld [$db4d], a
     ld a, $04
     ld [$db4e], a
+    ; [S110 rec] record +4 = the MP a TakeMagic target ($db04 bit0) soaks up (flags9 bit0 skills)
     ld hl, $5400
     rst $10
     ld a, [$db4c]
@@ -5432,6 +5466,7 @@ CallBtlC_5e38:
     call FuncBtlC_5de7
     ld a, [wBattleTargetIdx]
     ld [wBattleAttackerIdx], a
+    ; [S110 rec] target mode bit0: single target
     ld a, [$dcfc]
     bit 0, a
     jr nz, jr_053_5e53
@@ -5603,6 +5638,7 @@ jr_053_5f0f:
     and $90
     jr z, jr_053_5f66
 
+    ; [S110 rec] flags9 bit3: a landed hit may SNAP a confused target out (§15.8c)
     ld a, [$dcff]
     bit 3, a
     jr z, jr_053_5f66
@@ -7214,6 +7250,7 @@ jr_053_68fd:
 
 
 LoadBtlC_690e:
+    ; [S110 rec] flags8 bit0: MagicBack / Bounce reflection (second site)
     ld a, [$dcfe]
     bit 0, a
     ret z

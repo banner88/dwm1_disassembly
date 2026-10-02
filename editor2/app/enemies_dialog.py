@@ -145,7 +145,10 @@ class EnemiesDialog(QDialog):
         f.addRow('join version', self.join_as)
         sk = QHBoxLayout()
         self.skills = []
-        names = skill_names()
+        try:                                   # S110: the project's skill names
+            names = self.doc.skill_names_effective()
+        except Exception:                      # noqa: BLE001
+            names = skill_names()
         for i in range(4):
             c = QComboBox()
             c.setMinimumContentsLength(10)

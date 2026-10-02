@@ -1496,11 +1496,52 @@ recipes are pure authoring.
       victory cascade shown read-only. Bracket-shape constants = expert
       knob only. *Accept:* one arena match's team re-authored in GUI and
       fought as-authored in PyBoy.
-- [ ] **P3.11 — Skills tab**: the S74 knob surface as forms with the
+- [x] **P3.11 — Skills tab** — **built S110, test ROM `DWM_S110_skills_test.gbc`
+      USER-CONFIRMED 2026-10-02 09:09 ("Excellent work. Give me editor files").** User scope (S110 audit): "Start with vanilla skills
+      and add custom skills if there is scope and context" (custom → P3.11c,
+      not done); names + SKIL texts in scope; target mode editable; the
+      poorly-understood record fields shown with hover hints + the Help tab,
+      editable where genuinely useful (→ a full reader census decoded every
+      byte / bit, BATTLE_SKILL_SYSTEM §7); "looks / sounds like skill X"
+      offered; battle items (176-212) shown read-only (an Items tab edits
+      them later); the announce line read-only.
+      **As built:** `gamedata.skills.<0-221>` gains `name` (1-9) /
+      `description` (1-3 × 18) / `looks_like` (a donor id 0-221) next to
+      `mp` / `learn` / `record`; `mp` now writes BOTH copies (the field
+      table `$07` u16 AND record +4, the one the battle charges) — except
+      Farewell / MegaMagic ("ALL") and the field-only StepGuard / MapMagic.
+      Regions `gd_skill_names` ($41), `gd_skill_desc` / `gd_skill_desc_ptrs`
+      / `gd_skill_desc_extra` ($56, bank re-sectioned), `gd_present_proxy_5f`
+      (`StockPresentTable`, `GetPresentId` reads it for ids < $DE) and
+      `gd_present_proxy_55` (NEW hand patch `patches/bank_055.asm`:
+      `SfxPresentId` + `StockSfxTable` at the one SFX-table reader $55:$4061).
+      Skills tab with sections (text, MP + learning, power, targets, AI,
+      behaviour flags, looks, who has it) (PROJECT_COMPILER §2.26,
+      EDITOR_DESIGN §5.3 "As built S110"). *Accept (re-scoped to vanilla
+      skills by the user):* met — the demo authored through the GUI document
+      model builds `ed8222b2…` (patched) == the PyBoy-verified demo on the
+      user's save (Zap → "Spark": SKIL menu name + text + 1 MP, "Slib casts
+      Spark!" with Bang's look, 78/77/78 to 3 foes; MetalCut aimed at all foes
+      hits all 3; HealMore → "Cure" heals 200 for 1 MP). Residuals: (a) the
+      custom skills ($DE-$E9) = P3.11c; (b) the announce line (bank $58
+      `AnnounceTemplateTable`) read-only until P3.6; (c) items = an Items tab
+      (P3.13); (d) a look made for the other side shows nothing (measured:
+      Heal with Bang's look — no explosion on the party side) — warned, not
+      refused; (e) record bits nobody reads (+0, +1 low nibble, +7 b2, +8 b3,
+      +9 b6/b7) shown greyed; (f) NEW animations composed from existing frames
+      (user S110 question: "if I wanted spark to be the first frames of a
+      skill") — not built; needs first the Iron-Rule-6 re-section of the
+      frame tables ($5C/$5D/$5E $4071+) and the bank $5F per-skill tables
+      (blocked by the $5F map-script boundaries, BATTLE_SKILL_SYSTEM §11.5),
+      then a PyBoy trace of the frame timing and of where an animation's
+      tiles come from (the `$c9` tile base); frames reuse only the tiles
+      their own bank's animation has loaded.
+      Original box text: the S74 knob surface as forms with the
       invariant validators (MP pair sync, budgets, table existence).
       **S100 hazard:** `SkillLearnReqTable` has 218 rows ($00-$D9); learn
       reqs for ids $DA-$DD are bank $06 `FieldStateDispatch` code — never
-      offer them (build_skill_tables.py refuses such an emission).
+      offer them (build_skill_tables.py refuses such an emission; the tab
+      greys them).
       *Accept:* a custom skill's damage tier + description edited in GUI,
       verified in battle in PyBoy.
 - [ ] **P3.11c — The custom skills are PROJECT DATA** (S105: the one

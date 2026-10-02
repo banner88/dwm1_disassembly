@@ -1,5 +1,91 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-01 (Session 108 — **ROADMAP P3.10 PART 3: RENAMING THE
+> ORIGINAL MONSTERS — NAME, DEFAULT NICKNAME, LIBRARY DESCRIPTION — + EVERY
+> DIALOGUE TEXT, MEASURED AND SEARCHABLE** (user 19:03 on the audit: "1) Yes, need to
+> be able to rename everything. 2) 1-4 like new species is fine 3) Yeah I want to be
+> able to pull all dialogue so I can inspect to see if needs changes or not … only
+> system-related names (breeding, library, battle system, etc) have to be adjusted
+> dynamically. 4) Doesnt matter 5) Ok to regenerate, fix typo"). S107 USER-CONFIRMED
+> at session start. **Test ROM r2 USER-CONFIRMED 2026-10-01 21:07 ("COnfirrmed. Hand off
+> please")**; the editor half (Monsters tab text fields, Dialogue tab) travels with
+> this hand-off — test_app-verified, not yet run on the user's Mac.
+> Verifier PASS 6/6 (+ `dump_dialogue.py` selftest); clean `1ca6579…` byte-perfect
+> (bank $4D descriptions re-sectioned, bank $41 nickname labels renamed, 6,520 script-
+> bank text previews + 70 bank-$47 id comments refreshed, bank $09 naming comments —
+> comments / labels only); **patched pin UNCHANGED `77ccdab8…` (patched)** — every new
+> region reproduces the original bytes; the user's project as-is still builds
+> `7f6df249…` (patched). test_compiler --rom 575/575, test_app PASS. `EDITOR_REVISION`
+> = 'S108'.
+>
+> **Built (PROJECT_COMPILER §2.24, TEXT_SYSTEM "Monster text blocks (S108)" + "Text id
+> resolution (measured S108)", EDITOR_DESIGN §5.2 "As built S108"):**
+> `gamedata.monster_text.<0-214>` = `name` (1-9), `nickname` (1-4), `description`
+> (1-3 lines × 18 cells) → three compiler regions over the blocks the game reads them
+> from — names `$41:$5B1F-$628D` (mode 5, 1,903 B), default nicknames
+> `$41:$69F2-$6C76` (mode 7, 645 B), descriptions `$4D:$53D3-$7719` (mode 1, 9,031 B)
+> — first-fit in id order, labels unchanged (no pointer moves); what no longer fits
+> spills into the new-species text extents (names / nicknames) or the new region
+> `gd_monster_desc_extra` (bank $4D tail). The library recipe lines naming a renamed
+> monster are regenerated (Akubar's vanilla "Grenadal" typo goes with it); new species
+> may have their OWN description (`custom.species[].description`). Names share one
+> encoder (letters, digits, space, `' , . ! ? - &`). Editor: Monsters tab **Name and
+> library text** (originals + new species; game-font preview; back to original;
+> "Texts that name it…"), new **Dialogue** tab (every text, search, per-monster
+> mentions under the old + new name, save as text file). Iron Rule 8 holds (215-220
+> refused).
+>
+> **Found (foundational):** (1) the join naming screen PRE-FILLS the nickname with the
+> species' 2-letter code — text mode 7, the table mgbdis called `FamilyCodePtrTable`
+> (renamed `MonsterNickPtrTable` / `MonsterNick_NNN_XX`, both trees); the family name
+> pools (mode 3) are only the random name for a blank name at END (bank $09
+> `FuncFld9_621f` / `LoadFld9_688e` annotated; BREEDING_SYSTEM corrected). (2) **Text
+> ids**: each corpus bank forwards the upper part of its index range to an OVERFLOW
+> bank — $42→$1A, $43→$1A, $44→$1B, $45→$1F, $46→$1B, $47→$21, $48→$1F, $49→$18,
+> $4A→$22, $4B→$3F, $4E→$4F (1,177 of the 2,560 ids). `extracted/text_id_map.json`
+> modelled the cascade (fixed $400B base, guessed index rule, no overflow): **62 of
+> its 2,061 entries matched the game** — so 6,520 script-bank previews and bank $47's
+> TextStr id comments named the wrong text (DOC_AUDIT S108). New
+> `tools/dump_dialogue.py` stub-calls the game's TextBankDispatch in PyBoy for all
+> 2,560 ids (intro screenshot: id $0000 = "Milayou:Terry! Wait! It's time for bed!"),
+> `text_id_map.json` is derived from it, the comments refreshed.
+>
+> **Measured in PyBoy on the user's save** (test ROM r1 `DWM_S108_rename_demo.gbc`,
+> patched `6fc98013…` (historical) = the user's project + a demo overlay NOT in their project:
+> Slime → Goober / GOOB / new description, Healer → Medic / MD, BattleRex → TyrantRex
+> + description, Grendal → Grendel, Darkdrium → Doomdrium, Klamutra's own
+> description, the wild Slime row always joins): INFO pages "Doomdrium" / "TyrantRex"
+> / "Medic"; Gate of Beginning "Look out! Goober monster!", "Goober takes 506 damage
+> pts!", "Please name Goober♂.", the naming field pre-filled "GOOB"; the running game's
+> text engine (stub calls of bank $41 / $4D entry 0) returns the new name / nickname /
+> description for every edited species, Akubar's recipe line "Grendel  Grendel" and
+> Klamutra's own description.
+>
+> **S108 r2 (user 20:10 on the r1 ROM: "Slime didnt appear once in 20 battles and library
+> inaccessible"):** both were the DEMO, not the build — (1) the user's own Gate of
+> Beginning list gives the wild Slime 10 % (PyBoy, 20 encounters on r1: Klamutra 9,
+> Slime 4, EID 3 4, EID 4 3), the demo never raised it; (2) the user's project routes
+> the GreatTree Library door ($01 screen 8 (5,3)) to cities_fount (`entrance_redirects`)
+> and the demo did not lift that (the S107 demo did). r2 demo = r1 + Slime 50 % in list 0
+> + that redirect removed (both demo-only): PyBoy 20 encounters → Slime 11; through the
+> real Library door → the librarian → the library list shows Goober / Medic (Slime
+> family), TyrantRex (Dragon), Doomdrium (???); Goober's page = the new 3-line
+> description; Grendel's page; Akubar's page parents "Grendel / Grendel". Test ROM
+> **`DWM_S108r2_rename_demo.gbc`** (patched `dceafc5c…`; r1 `6fc98013…` patched,
+> historical). No compiler / editor change. **USER-CONFIRMED 2026-10-01 21:07.**
+>
+> **Hand-off (user 21:07: "Hand off please, all files since last repo push. Also are there
+> files in repo I should delete? Are these Python cache files part of repo?"):** every S108
+> change = the diff against `8463831` (origin/master), delivered as
+> `DWM-S108-monster-text-changed-files.zip`, the APPLY list pasted in the chat. Repo
+> cleanup in the same list: the 23 tracked `__pycache__/*.pyc` files and the 39 tracked
+> files of `editor2/example-project/build/` (regenerable compiler output — every test /
+> build run rewrote them; nothing reads them) leave git; `.gitignore` gains
+> `__pycache__/`, `*.pyc`, `*.ram` (PyBoy battery files next to a ROM),
+> `editor2/example-project/build/`. **Next session:** the user's pick — the next
+> unchecked Phase 3 item is P3.10b (Arena editor); P3.6 (dialogue editor) now has its
+> data (`extracted/dialogue.json`) and a read-only tab to grow from.
+
 > Last verified: 2026-10-01 (Session 107 — **ROADMAP P3.10 PART 2a: NEW ART
 > FOR THE ORIGINAL MONSTERS + PART 2b: WALKING LAYOUTS + PART 2c: FAMILY ICONS** (user 15:52 on the audit: "I think we can do 2a-c
 > this session but lets start with 2a and see how we go. 2) I probably WONT edit

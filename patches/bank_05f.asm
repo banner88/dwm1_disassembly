@@ -13224,254 +13224,53 @@ jr_05f_68d1:
     nop
     nop
     nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
+; [S110] per-stock-skill presentation id (identity = each skill plays its own
+; script). Compiler region: gd_present_proxy_5f (gamedata.skills.<id>.looks_like).
+StockPresentTable:
+; @BUILD_PROJECT BEGIN gd_present_proxy_5f
+    db $00, $01, $02, $03, $04, $05, $06, $07, $08, $09, $0A, $0B, $0C, $0D, $0E, $0F   ; [  0- 15]
+    db $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $1A, $1B, $1C, $1D, $1E, $1F   ; [ 16- 31]
+    db $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $2A, $2B, $2C, $2D, $2E, $2F   ; [ 32- 47]
+    db $30, $31, $32, $33, $34, $35, $36, $37, $38, $39, $3A, $3B, $3C, $3D, $3E, $3F   ; [ 48- 63]
+    db $40, $41, $42, $43, $44, $45, $46, $47, $48, $49, $4A, $4B, $4C, $4D, $4E, $4F   ; [ 64- 79]
+    db $50, $51, $52, $53, $54, $55, $56, $57, $58, $59, $5A, $5B, $5C, $5D, $5E, $5F   ; [ 80- 95]
+    db $60, $61, $62, $63, $64, $65, $66, $67, $68, $69, $6A, $6B, $6C, $6D, $6E, $6F   ; [ 96-111]
+    db $70, $71, $72, $73, $74, $75, $76, $77, $78, $79, $7A, $7B, $7C, $7D, $7E, $7F   ; [112-127]
+    db $80, $81, $82, $83, $84, $85, $86, $87, $88, $89, $8A, $8B, $8C, $8D, $8E, $8F   ; [128-143]
+    db $90, $91, $92, $93, $94, $95, $96, $97, $98, $99, $9A, $9B, $9C, $9D, $9E, $9F   ; [144-159]
+    db $A0, $A1, $A2, $A3, $A4, $A5, $A6, $A7, $A8, $A9, $AA, $AB, $AC, $AD, $AE, $AF   ; [160-175]
+    db $B0, $B1, $B2, $B3, $B4, $B5, $B6, $B7, $B8, $B9, $BA, $BB, $BC, $BD, $BE, $BF   ; [176-191]
+    db $C0, $C1, $C2, $C3, $C4, $C5, $C6, $C7, $C8, $C9, $CA, $CB, $CC, $CD, $CE, $CF   ; [192-207]
+    db $D0, $D1, $D2, $D3, $D4, $D5, $D6, $D7, $D8, $D9, $DA, $DB, $DC, $DD   ; [208-221]
+; @BUILD_PROJECT END gd_present_proxy_5f
 ; === Custom-skill presentation indirection (GetPresentId) ============== [S2d]
 ; Forked into bank $5f animation-selection reads of $db8a. Returns the skill id
 ; unchanged for stock skills (<$DE); for custom skills it returns a PROXY id so
 ; the whole anim/flash pipeline borrows a real skill's animation -> no hang,
 ; hit-flash restored. Per-skill proxy = one byte in CustomProxyTable. (21+16=37 B)
+; [S110] Stock ids (< $DE) now also read a per-skill table, StockPresentTable
+; (222 B, compiler region gd_present_proxy_5f = gamedata.skills.<id>.looks_like;
+; identity = vanilla): a skill can borrow another stock skill's whole script
+; (animation + flash + cast sound) — PROJECT_COMPILER §2.26. Funded from the pad.
 GetPresentId::
     ld a, [$db8a]      ; 3
-    cp $DE             ; 2  custom range?
-    ret c              ; 1  stock id -> unchanged
     push hl            ; 1
-    sub $DE            ; 2  index into proxy table
+    cp $DE             ; 2  custom range?
+    jr nc, .custom     ; 2
+    ld hl, StockPresentTable ; 3  [S110] stock ids: the looks-like table
+    jr .look           ; 2
+.custom:
+    sub $DE            ; 2  index into the custom proxy table
     ld hl, CustomProxyTable  ; 3
+.look:
     add l              ; 1
     ld l, a            ; 1
     ld a, $00          ; 2
     adc h              ; 1
     ld h, a            ; 1
-    ld a, [hl]         ; 1  proxy presentation id
+    ld a, [hl]         ; 1  presentation id
     pop hl             ; 1
-    ret                ; 1   (=21 bytes)
+    ret                ; 1   (=27 bytes; was 21 before S110)
 CustomProxyTable:      ; [skill_id-$DE] -> presentation proxy id; default $09 (Infernos)
     db $09, $09, $09, $c2, $c2, $c2, $09, $09   ; $DE-$E5  ($E0 MagicBurn=$09; $E1-$E3 Tame=$c2 HEART; $E5 Tremor=$09 Infernos [QUAKE: proven-complete proxy; $2c HealMore STALLS the $52:$6c4d done-spin on the offense side — PyBoy S74])
     db $09, $09, $09, $40, $09, $09, $09, $09   ; $E6-$ED  ($E6-$E8 Quake=$09; $E9 Mourn=$40 EvilSlash [MOURN S75]; rest reserved)

@@ -418,3 +418,17 @@ gate you assumed".
 | BANK04_SCRIPT_ENGINE / DATA_STRUCTURES opcode `$04` "GameActionDispatch … 0 = shop, others = gate events"; the bank $09 entry 0 handler (mgbdis `label9_4005`, "screen effects") | INCOMPLETE (S109) | `$C8EF` indexes bank $09's `ScreenEffectTable09` ($09:$4009, 16 words); type 4 = `ArenaClassMenu` (the arena class-registration menu). Both names describe the same path; the table is now labelled with per-type comments. |
 | disassembly bank_009 $5B64-$5EA4 (mgbdis code: `Jump_009_5c0a`, `SetFld9_5c28` …) | DATA DECODED AS CODE (in part) | Re-sectioned both trees (`tools/resection_arena_menu.py`): the 5-state outer + 9-state inner machines, `ArenaClassLetterTable`, `ArenaClassFeeTable` (0 10 50 100 500 1000 5000 10000), the two cursor tables; helpers renamed `ArenaMenu…`. |
 | disassembly bank_004 / bank_050 `ld hl, $5e22` / `ld hl, $6778` (raw addresses into data) | RAW POINTER → LABEL | `ld hl, ArenaMasterSpriteTable` / `ArenaMasterSpriteTable50` (same bytes; the compiler regions own the tables). |
+
+## S110 addendum (2026-10-02; the Skills tab, ROADMAP P3.11)
+
+| Claim (where) | Verdict | Correct |
+|---|---|---|
+| BATTLE_SKILL_SYSTEM §7 / §10 / bank_054 comment: `SkillMagnitudeBySide` = "dispatch entry 5, `$535F`" | WRONG (S110 reader census) | The side-selected power read is entry 3 `$52C7` (`SkillPowerBySide`); entry 4 `$5313` is a twin with no caller; entry 5 `$535F` is the battle ITEM target lookup (+10, +2). Dispatch rows relabelled, both trees. |
+| BATTLE_SKILL_SYSTEM §7: +5 "status_id … groups by effect (Sleep fam=$08 …)" | WRONG | +5 is read only by the AI (bank $57): a resistance slot 1-27 the AI assumes; the damage element comes from the handler. |
+| §7: +0 "effect_class … HIGH"; +7/+8/+9 "presentation / anim / cast-behaviour bitfield (MED)"; +10 "small class flag (LOW)" | WRONG / INCOMPLETE | +0 is NOT READ; every read bit of +7/+8/+9 is named (§7 table: breath / dance / spell seals, reflects, redirects, crits, dodge, …); +7 b2, +8 b3, +9 b6/b7 and +1's low nibble are NOT READ; +10 is items only (1 = not usable in battle). |
+| PROJECT_COMPILER §2.20: record +4 `mp_byte` "reader untraced" + the editor warning | WRONG | +4 is the BATTLE MP cost (menu afford $50, act-time afford + deduct $53, AI veto $57, TakeMagic). `mp` now writes it; the warning is retired. |
+| BATTLE_SKILL_SYSTEM §12.3 table: the bank-$55 sound table "indexed at `$55:$4067`" | WRONG ADDRESS | The one reader is `$55:$4061` (`ld a, [$db8a]`). |
+| EDITOR_DESIGN Appendix (S74): "GetAnimPresentId"; "MP … menu shows one, battle spends the other" | WRONG NAME / INCOMPLETE | `GetPresentId`; the battle menu also checks the +4 copy — only the FIELD menu reads `$07`. |
+| patches/bank_041.asm `SkillName_215_BugCut: db "BugCut", $F0, $F0, $F0, $F0` (S44) | HIDDEN HAND EDIT | Restored to `SkillName_215_Sheldodge`; the rename is example-project data (`gamedata.skills.215.name`). |
+| S74 note "HealMore's look stalls" (as a rule for looks) | NOT REPRODUCED for stock skills | 1,554 PyBoy battles: no donor stalls a stock borrower (BATTLE_SKILL_SYSTEM §11.8). The note belongs to the custom-skill path. |
+| disassembly bank_056 $4E4C-$6866 (mgbdis code over the SKIL texts, the mode table, the pointer table) | DATA DECODED AS CODE | Re-sectioned both trees (`tools/resection_skill_desc.py`): `SkillDesc_NNN_<Name>` / `_Blank` / `_None` strings, `SkillDescModeTable` $664B, `SkillDebugTextPtrs` $664F (12 debug strings), `SkillDescPtrTable` $6667 (256 dw); `ld de, $664b` by label. |

@@ -1,0 +1,8929 @@
+{
+ "_generator": "tools/census_skill_present.py (S110) on census_rom.gbc + a real .sav; PyBoy, 2400 frames per run, stall = a frozen action machine >= 600 frames; corrected act-time forcing (S110), donors 0-221 in two halves merged; 1,554 runs, all ok, longest frozen gap 157 frames",
+ "borrowers": {
+  "party/foe1": {
+   "caster_slot": 0,
+   "skill": 0,
+   "target": 4,
+   "enemies": 1
+  },
+  "party/foeall": {
+   "caster_slot": 0,
+   "skill": 3,
+   "target": 4,
+   "enemies": 3
+  },
+  "party/ally1": {
+   "caster_slot": 0,
+   "skill": 43,
+   "target": 0,
+   "enemies": 1
+  },
+  "party/allyall": {
+   "caster_slot": 0,
+   "skill": 45,
+   "target": 0,
+   "enemies": 1
+  },
+  "party/self": {
+   "caster_slot": 0,
+   "skill": 65,
+   "target": 0,
+   "enemies": 1
+  },
+  "enemy/foe1": {
+   "caster_slot": 4,
+   "skill": 0,
+   "target": 0,
+   "enemies": 1
+  },
+  "enemy/ally1": {
+   "caster_slot": 4,
+   "skill": 43,
+   "target": 4,
+   "enemies": 1
+  }
+ },
+ "results": {
+  "0": {
+   "name": "Blaze",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 76,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "1": {
+   "name": "Blazemore",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 117,
+     "acts": 4
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 118,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 76,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "2": {
+   "name": "Blazemost",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 110,
+     "acts": 4
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 111,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 76,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "3": {
+   "name": "Firebal",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 76,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "4": {
+   "name": "Firebane",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 74,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 74,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 76,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "5": {
+   "name": "Firebolt",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 115,
+     "acts": 4
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 116,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 76,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "6": {
+   "name": "Bang",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 7
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 76,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "7": {
+   "name": "Boom",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 95,
+     "acts": 4
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 95,
+     "acts": 6
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 76,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "8": {
+   "name": "Explodet",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 133,
+     "acts": 4
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 133,
+     "acts": 8
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 76,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "9": {
+   "name": "Infernos",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 7
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 76,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "10": {
+   "name": "Infermore",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 70,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 70,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 76,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "11": {
+   "name": "Infermost",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 131,
+     "acts": 4
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 131,
+     "acts": 8
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 76,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "12": {
+   "name": "IceBolt",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 98,
+     "acts": 4
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 99,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 76,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "13": {
+   "name": "SnowStorm",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 87,
+     "acts": 4
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 88,
+     "acts": 6
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 76,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "14": {
+   "name": "Blizzard",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 114,
+     "acts": 4
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 114,
+     "acts": 7
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 76,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "15": {
+   "name": "Bolt",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 80,
+     "acts": 4
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 81,
+     "acts": 6
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 76,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "16": {
+   "name": "Zap",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 100,
+     "acts": 4
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 101,
+     "acts": 6
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 76,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "17": {
+   "name": "Thordain",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 105,
+     "acts": 4
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 106,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 76,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "18": {
+   "name": "Beat",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "19": {
+   "name": "Defeat",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "20": {
+   "name": "Sacrifice",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "21": {
+   "name": "Sleep",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 104,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 104,
+     "acts": 7
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 74,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "22": {
+   "name": "SleepAll",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 104,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 104,
+     "acts": 7
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 74,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "23": {
+   "name": "StopSpell",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 81,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 81,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 74,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "24": {
+   "name": "Surround",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 74,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "25": {
+   "name": "PanicAll",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 87,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 87,
+     "acts": 8
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 74,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "26": {
+   "name": "RobMagic",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 81,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 81,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 74,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 122,
+     "acts": 4
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "27": {
+   "name": "TakeMagic",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 74,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 122,
+     "acts": 4
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "28": {
+   "name": "Sap",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 81,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 81,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 74,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "29": {
+   "name": "Defence",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 81,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 81,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 74,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "30": {
+   "name": "Upper",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 74,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "31": {
+   "name": "Increase",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 74,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "32": {
+   "name": "Slow",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 81,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 81,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 74,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "33": {
+   "name": "SlowAll",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 81,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 81,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 74,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "34": {
+   "name": "Speed",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 74,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "35": {
+   "name": "SpeedUp",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 74,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "36": {
+   "name": "Barrier",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 73,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "37": {
+   "name": "TwinHits",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "38": {
+   "name": "MagicWall",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "39": {
+   "name": "MagicBack",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "40": {
+   "name": "Bounce",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "41": {
+   "name": "Transform",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 122,
+     "acts": 4
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "42": {
+   "name": "Ironize",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "43": {
+   "name": "Heal",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "44": {
+   "name": "HealMore",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "45": {
+   "name": "HealAll",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "46": {
+   "name": "HealUs",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "47": {
+   "name": "HealUsAll",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "48": {
+   "name": "Vivify",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "49": {
+   "name": "Revive",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "50": {
+   "name": "Farewell",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "51": {
+   "name": "Antidote",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "52": {
+   "name": "NumbOff",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "53": {
+   "name": "DeChaos",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "54": {
+   "name": "CurseOff",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "55": {
+   "name": "StepGuard",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "56": {
+   "name": "MapMagic",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "57": {
+   "name": "Chance",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 76,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 77,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 77,
+     "acts": 4
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 77,
+     "acts": 4
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 4
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 91,
+     "acts": 4
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 77,
+     "acts": 4
+    }
+   }
+  },
+  "58": {
+   "name": "Attack",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "59": {
+   "name": "TwinSlash",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 79,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "60": {
+   "name": "Ramming",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 77,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "61": {
+   "name": "Beserker",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "62": {
+   "name": "Kamikaze",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "63": {
+   "name": "Massacre",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "64": {
+   "name": "EvilSlash",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "65": {
+   "name": "ChargeUP",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "66": {
+   "name": "HighJump",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "67": {
+   "name": "SuckAir",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "68": {
+   "name": "FireSlash",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 137,
+     "acts": 4
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 138,
+     "acts": 7
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "69": {
+   "name": "BoltSlash",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 116,
+     "acts": 4
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 117,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "70": {
+   "name": "VacuSlash",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 121,
+     "acts": 4
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 121,
+     "acts": 8
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "71": {
+   "name": "IceSlash",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 124,
+     "acts": 4
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 125,
+     "acts": 8
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "72": {
+   "name": "MetalCut",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 93,
+     "acts": 4
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 93,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "73": {
+   "name": "DrakSlash",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "74": {
+   "name": "BeastCut",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "75": {
+   "name": "BirdBlow",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "76": {
+   "name": "DevilCut",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 105,
+     "acts": 4
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 105,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "77": {
+   "name": "ZombieCut",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 105,
+     "acts": 4
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 105,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "78": {
+   "name": "CleanCut",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 93,
+     "acts": 4
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 93,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "79": {
+   "name": "MultiCut",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 114,
+     "acts": 4
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 114,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "80": {
+   "name": "BiAttack",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "81": {
+   "name": "QuadHits",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "82": {
+   "name": "CallHelp",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 78,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "83": {
+   "name": "YellHelp",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 78,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "84": {
+   "name": "Focus",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "85": {
+   "name": "SquallHit",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "86": {
+   "name": "PsycheUp",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "87": {
+   "name": "RainSlash",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 7
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "88": {
+   "name": "WindBeast",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "89": {
+   "name": "Vacuum",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 131,
+     "acts": 4
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 131,
+     "acts": 8
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "90": {
+   "name": "Lightning",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 80,
+     "acts": 4
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 81,
+     "acts": 7
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "91": {
+   "name": "RockThrow",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 7
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "92": {
+   "name": "FireAir",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "93": {
+   "name": "BlazeAir",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 74,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 74,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "94": {
+   "name": "Scorching",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 115,
+     "acts": 4
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 116,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "95": {
+   "name": "WhiteFire",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 145,
+     "acts": 4
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 146,
+     "acts": 7
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "96": {
+   "name": "FrigidAir",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 98,
+     "acts": 4
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 99,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "97": {
+   "name": "IceAir",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 87,
+     "acts": 4
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 88,
+     "acts": 6
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "98": {
+   "name": "IceStorm",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 114,
+     "acts": 4
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 114,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "99": {
+   "name": "WhiteAir",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 115,
+     "acts": 4
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 116,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "100": {
+   "name": "Hellblast",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 79,
+     "acts": 4
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 79,
+     "acts": 7
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "101": {
+   "name": "BigBang",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 156,
+     "acts": 4
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 157,
+     "acts": 7
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "102": {
+   "name": "MegaMagic",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 132,
+     "acts": 4
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 132,
+     "acts": 8
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "103": {
+   "name": "PoisonHit",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 78,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "104": {
+   "name": "NapAttack",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 78,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "105": {
+   "name": "Paralyze",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 78,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "106": {
+   "name": "SleepAir",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 104,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 104,
+     "acts": 7
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "107": {
+   "name": "PalsyAir",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 104,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 104,
+     "acts": 7
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "108": {
+   "name": "PoisonGas",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 104,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 104,
+     "acts": 7
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "109": {
+   "name": "PoisonAir",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 104,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 104,
+     "acts": 7
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "110": {
+   "name": "PaniDance",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 87,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 87,
+     "acts": 8
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "111": {
+   "name": "Curse",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 87,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 87,
+     "acts": 8
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "112": {
+   "name": "Ahhh",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 87,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 87,
+     "acts": 8
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "113": {
+   "name": "K.O.Dance",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "114": {
+   "name": "SandStorm",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "115": {
+   "name": "Radiant",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 86,
+     "acts": 4
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "116": {
+   "name": "EerieLite",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 86,
+     "acts": 4
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "117": {
+   "name": "OddDance",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 81,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 81,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "118": {
+   "name": "RobDance",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 81,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 81,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "119": {
+   "name": "SideStep",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 74,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "120": {
+   "name": "LureDance",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 87,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 87,
+     "acts": 8
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "121": {
+   "name": "LushLicks",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 104,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 104,
+     "acts": 7
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "122": {
+   "name": "SickLick",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 104,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 104,
+     "acts": 7
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "123": {
+   "name": "LegSweep",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 74,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "124": {
+   "name": "BigTrip",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 74,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "125": {
+   "name": "WarCry",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 78,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "126": {
+   "name": "Whistle",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 78,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "127": {
+   "name": "Imitate",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "128": {
+   "name": "DeMagic",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 72,
+     "acts": 4
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 72,
+     "acts": 7
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 127,
+     "acts": 4
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 4
+    }
+   }
+  },
+  "129": {
+   "name": "Surge",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 106,
+     "acts": 4
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "130": {
+   "name": "UltraDown",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 83,
+     "acts": 4
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 85,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 83,
+     "acts": 4
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 83,
+     "acts": 4
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 4
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 88,
+     "acts": 4
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 85,
+     "acts": 4
+    }
+   }
+  },
+  "131": {
+   "name": "ThickFog",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 83,
+     "acts": 4
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 85,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 83,
+     "acts": 4
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 83,
+     "acts": 4
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 4
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 88,
+     "acts": 4
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 85,
+     "acts": 4
+    }
+   }
+  },
+  "132": {
+   "name": "TatsuCall",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 4
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 73,
+     "acts": 5
+    }
+   }
+  },
+  "133": {
+   "name": "DiagoCall",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 4
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 73,
+     "acts": 5
+    }
+   }
+  },
+  "134": {
+   "name": "SamsiCall",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 4
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 73,
+     "acts": 5
+    }
+   }
+  },
+  "135": {
+   "name": "BazooCall",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 4
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 73,
+     "acts": 5
+    }
+   }
+  },
+  "136": {
+   "name": "Cover",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "137": {
+   "name": "Guardian",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "138": {
+   "name": "TailWind",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "139": {
+   "name": "StormWind",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "140": {
+   "name": "Dodge",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "141": {
+   "name": "Defence",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "142": {
+   "name": "StrongD",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "143": {
+   "name": "SuckAll",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "144": {
+   "name": "BladeD",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "145": {
+   "name": "DanceShut",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 81,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 81,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 74,
+     "acts": 5
+    }
+   }
+  },
+  "146": {
+   "name": "MouthShut",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 81,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 81,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 74,
+     "acts": 5
+    }
+   }
+  },
+  "147": {
+   "name": "Meditate",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "148": {
+   "name": "Hustle",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 74,
+     "acts": 5
+    }
+   }
+  },
+  "149": {
+   "name": "LifeSong",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "150": {
+   "name": "LifeDance",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 74,
+     "acts": 5
+    }
+   }
+  },
+  "151": {
+   "name": "Run",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "152": {
+   "name": "Daze",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "153": {
+   "name": "HitAlly",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 78,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "154": {
+   "name": "HitEnemy",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 78,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "155": {
+   "name": "HitRandom",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 78,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "156": {
+   "name": "Scared",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "157": {
+   "name": "Dance",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "158": {
+   "name": "Trip",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "159": {
+   "name": "Paralyze",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "160": {
+   "name": "CANTMOVE",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "161": {
+   "name": "RUN",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "162": {
+   "name": "CALLHOROR",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "163": {
+   "name": "HealUsAll",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 100,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 101,
+     "acts": 8
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "164": {
+   "name": "Smashed",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 98,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "165": {
+   "name": "FILTHZONE",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 83,
+     "acts": 4
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 85,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 85,
+     "acts": 4
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 83,
+     "acts": 4
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 4
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 89,
+     "acts": 4
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 85,
+     "acts": 4
+    }
+   }
+  },
+  "166": {
+   "name": "ALLCHANGE",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "167": {
+   "name": "BIGSLEEP",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 104,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 104,
+     "acts": 7
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "168": {
+   "name": "MP0",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "169": {
+   "name": "ECHO",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "170": {
+   "name": "CHGDRAGON",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 122,
+     "acts": 4
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "171": {
+   "name": "CALLEVIL",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 78,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "172": {
+   "name": "FREEZY",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 4
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "173": {
+   "name": "ALLREVIVE",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 4
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "174": {
+   "name": "RESTOREMP",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "175": {
+   "name": "METEOR",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 74,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 78,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "176": {
+   "name": "HERB",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 100,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 101,
+     "acts": 8
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "177": {
+   "name": "HEALWATER",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 100,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 101,
+     "acts": 8
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "178": {
+   "name": "SAGESTONE",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 100,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 101,
+     "acts": 8
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "179": {
+   "name": "WARLDDEW",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 100,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 101,
+     "acts": 8
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "180": {
+   "name": "POTION",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 100,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 101,
+     "acts": 8
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "181": {
+   "name": "ELFWATER",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 100,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 101,
+     "acts": 8
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "182": {
+   "name": "ANTIDOTE",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 100,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 101,
+     "acts": 8
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "183": {
+   "name": "MOONHERB",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 100,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 101,
+     "acts": 8
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "184": {
+   "name": "SKYBELL",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 100,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 101,
+     "acts": 8
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "185": {
+   "name": "LAUREL",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 100,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 101,
+     "acts": 8
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "186": {
+   "name": "AWAKESAND",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 100,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 101,
+     "acts": 8
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "187": {
+   "name": "WARLDLEAF",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "188": {
+   "name": "LIFEACORN",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "189": {
+   "name": "MYSTICNUT",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "190": {
+   "name": "PWRSEED",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "191": {
+   "name": "DEFSEED",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "192": {
+   "name": "AGILSEED",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "193": {
+   "name": "INTSEED",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "194": {
+   "name": "FEEDMEAT",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 91,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 91,
+     "acts": 8
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "195": {
+   "name": "BEFFJERKY",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 91,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 91,
+     "acts": 8
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "196": {
+   "name": "PORKCHOP",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 91,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 91,
+     "acts": 8
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "197": {
+   "name": "BADMEAT",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 104,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 104,
+     "acts": 7
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "198": {
+   "name": "SIRLOIN",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 91,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 91,
+     "acts": 8
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "199": {
+   "name": "BOLTSTAFF",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 106,
+     "acts": 4
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 109,
+     "acts": 6
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "200": {
+   "name": "STAFF",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 87,
+     "acts": 4
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 91,
+     "acts": 6
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "201": {
+   "name": "BLOKSTAFF",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 81,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 81,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "202": {
+   "name": "LAVASTAFF",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 99,
+     "acts": 4
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 102,
+     "acts": 6
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "203": {
+   "name": "SNOWSTAFF",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 140,
+     "acts": 4
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 142,
+     "acts": 6
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "204": {
+   "name": "FIRESTAFF",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "205": {
+   "name": "WARPWING",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "206": {
+   "name": "TINYMEDAL",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "207": {
+   "name": "QuestBk",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "208": {
+   "name": "HORRORBK",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "209": {
+   "name": "BENICEBK",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "210": {
+   "name": "CHEATERBK",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "211": {
+   "name": "SMARTBK",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "212": {
+   "name": "COMEDYBK",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 136,
+     "acts": 4
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 139,
+     "acts": 6
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 75,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "213": {
+   "name": "BeDragon",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 122,
+     "acts": 4
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 73,
+     "acts": 5
+    }
+   }
+  },
+  "214": {
+   "name": "Smashlime",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 78,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "215": {
+   "name": "Sheldodge",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 78,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "216": {
+   "name": "Branching",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 78,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "217": {
+   "name": "GigaSlash",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 123,
+     "acts": 4
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 124,
+     "acts": 8
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 78,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "218": {
+   "name": "LIFE",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 83,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "219": {
+   "name": "RUN",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 83,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "220": {
+   "name": "IRONIZE",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 83,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 97,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  },
+  "221": {
+   "name": "Ahhh",
+   "runs": {
+    "party/foe1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/foeall": {
+     "result": "ok",
+     "gap": 66,
+     "acts": 9
+    },
+    "party/ally1": {
+     "result": "ok",
+     "gap": 68,
+     "acts": 5
+    },
+    "party/allyall": {
+     "result": "ok",
+     "gap": 67,
+     "acts": 5
+    },
+    "party/self": {
+     "result": "ok",
+     "gap": 128,
+     "acts": 5
+    },
+    "enemy/foe1": {
+     "result": "ok",
+     "gap": 78,
+     "acts": 5
+    },
+    "enemy/ally1": {
+     "result": "ok",
+     "gap": 69,
+     "acts": 5
+    }
+   }
+  }
+ }
+}

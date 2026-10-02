@@ -1917,6 +1917,7 @@ jr_050_4a65:
     ld [$db4d], a
     ld a, $02
     ld [$db4e], a
+    ; [S110 rec] record +2 target mode -> the battle menu: bit0 single = ask for a target
     ld hl, $5400
     rst $10
     call RefreshBattleScreen
@@ -2085,6 +2086,7 @@ SaveBtl_4ba4:
     ld [$db4d], a
     ld a, $04
     ld [$db4e], a
+    ; [S110 rec] record +4 = the BATTLE MP cost (8-bit; menu afford check; the field menu uses $07 SkillMPCostTable)
     ld hl, $5400
     rst $10
     ld a, [$db4c]
@@ -2826,6 +2828,7 @@ jr_050_4fec:
     ld [$db4d], a
     ld a, $0a
     ld [$db4e], a
+    ; [S110 rec] record +10 of an ITEM skill: 1 = not usable in battle (seeds, books, medals)
     ld hl, $5400
     rst $10
     ld a, [$db4c]

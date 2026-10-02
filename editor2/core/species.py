@@ -283,10 +283,17 @@ def _spills(prj):
     """S108: original monsters' names / nicknames that no longer fit their
     bank-$41 blocks (gamedata.monster_text) share the free extents."""
     from . import monster_text as MT
+    from . import skills as SK
+    out = []
     try:
-        return MT.bank41_spills(prj)
+        out += MT.bank41_spills(prj)
     except MT.MonsterTextError:
-        return []                                 # reported by the validator
+        pass                                      # reported by the validator
+    try:
+        out += SK.bank41_spills(prj)              # S110: renamed skills too
+    except SK.SkillError:
+        pass
+    return out
 
 
 # ---------------------------------------------------------------------------

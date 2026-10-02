@@ -472,6 +472,75 @@ def main():
     print('OK: Arena tab (S109) — Starry Night match 1 = one Lv-5 Slime, match 3 master = '
           'Coatol, G class fee 20; a summon in a team refused; undo restores everything')
 
+    # S110 (P3.11): the Skills tab — Zap renamed Spark with a new SKIL text, MP 1,
+    # party power 150-159, looks like Bang; MetalCut aimed at all foes; a flag;
+    # a bad name refused without an undo step; a battle item is read-only;
+    # other tabs' skill lists follow the rename; undo restores everything
+    from editor2.core import skills as SKm
+    import editor2.app.skills_tab as STm
+    before = doc.dumps()
+    warned = []
+    orig_warn = STm.QMessageBox.warning
+    STm.QMessageBox.warning = staticmethod(lambda *a, **k: warned.append(a[1:3]))
+    st = w.skills_tab
+    w.tabs.setCurrentWidget(st)
+    app.processEvents()
+    assert st.list.count() == 222, st.list.count()
+
+    def pick(sid):
+        for i in range(st.list.count()):
+            if st.list.item(i).data(0x0100) == sid:
+                st.list.setCurrentRow(i)
+        app.processEvents()
+        assert st.sid == sid, (st.sid, sid)
+    pick(16)
+    assert st.name.text() == 'Zap' and st.mp.value() == 10
+    st.name.setText('Spark')
+    st.name.editingFinished.emit()
+    st.desc[0].setText('Sparks leap at')
+    st.desc[1].setText('every foe')
+    st.desc[2].setText('')
+    st.desc[0].editingFinished.emit()
+    st.mp.setValue(1)
+    st.power['party'][0].setValue(150)
+    st.power['party'][1].setValue(159)
+    st.looks.setCurrentIndex(st.looks.findData(6))
+    app.processEvents()
+    e = doc.data['gamedata']['skills']['16']
+    assert e['name'] == 'Spark' and e['description'] == ['Sparks leap at', 'every foe'] \
+        and e['mp'] == 1 and e['looks_like'] == 6 \
+        and e['record'] == {'party_min': 150, 'party_range': 9}, e
+    assert 'Spark' in st.title.text() and '(was Zap)' in st.list.currentItem().text()
+    pick(72)
+    st.target.setCurrentIndex(st.target.findData(0x12))
+    st.flags['f8_dodge'].setChecked(False)
+    app.processEvents()
+    assert doc.data['gamedata']['skills']['72']['record']['target_mode'] == 0x12
+    assert doc.skill_detail(72)['record']['flags']['f8_dodge'] is False
+    assert not warned, warned                          # no modal popped so far
+    n_undo = w.session.undo.index()
+    st.name.setText('Sp@rk')                           # a character the font lacks
+    st.name.editingFinished.emit()
+    app.processEvents()
+    STm.QMessageBox.warning = orig_warn
+    assert warned and w.session.undo.index() == n_undo, (warned, w.session.undo.index(), n_undo)
+    pick(176)                                          # HERB, a battle item
+    assert not st.sec_text.content.isEnabled() and 'read-only' in st.kind_note.text()
+    assert doc.skill_names_effective()[16] == 'Spark'
+    w.monsters_tab.refresh()
+    assert any(c.itemText(c.findData(16)) == 'Spark' for c in w.monsters_tab.w_skill)
+    assert 'Spark' in SKm.names(doc.data)[16]
+    while w.session.undo.index() > 0 and doc.dumps() != before:
+        w.session.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'undo must restore project.json exactly'
+    hlp = open(os.path.join(REPO, 'editor2', 'help', '54_skills.md')).read()
+    for _o, _b, key, label, _h in SKm.FLAG_BITS:
+        assert label in hlp, f'help 54_skills.md lacks the behaviour box "{label}"'
+    print('OK: Skills tab (S110) — Zap -> Spark (SKIL text, MP 1, 150-159, looks like '
+          'Bang), MetalCut at all foes, a flag; a bad name refused; items read-only; '
+          'the Monsters tab follows the rename; undo restores everything')
+
     if do_rom:
         from editor2.app.build_worker import BuildWorker  # noqa: E402
         results = []

@@ -4584,3 +4584,48 @@ same rule makes species 239 (draw id 239 + $10 = $FF) undrawable — refused as 
 before the display-list branch); a display entry's draw id goes straight to the sheet table.
 **Rule**: derive a picker's legal set from the CODE PATH the value takes (here: ids < $E0 +
 the ids vanilla masters use), and say why in the module.
+
+## S110 — the Skills tab: who chooses the action, a stall claim that did not reproduce, hand edits hiding in a region
+
+### Under FIGHT the action is chosen at ACT time — force the skill every frame
+**Symptom**: the first looks-like census (222 donors × 7 borrowers) came back "all ok" —
+and was void: the borrowers never cast. "Slib attacks!" in the screenshots.
+**Root cause**: with FIGHT selected the party AND the enemies pick their action when they
+ACT (act state $18 = bank $57 entry 0, the AI machine) and overwrite the queue `$DCEC+`;
+the rig forced the queue only outside phase 7, so the AI replaced the forced skill with
+Attack. Forcing the TARGET bytes every frame instead breaks group skills (phase 7 steps
+the queue target per victim).
+**Fix**: force the SKILL bytes every frame, the TARGET bytes (and keep-alive HP / MP)
+only in phases 4 ≤ `$D9EC` ≤ 6; count an act as (`$D9EC` 7, `$D9ED` 1, `$DB8A` = the
+skill, `$DB88` = the caster) — the moment the MP is charged.
+**Rule**: a rig result is only as good as its proof that the forced thing HAPPENED —
+assert the act (and look at one screenshot) before trusting any "ok".
+
+### A remembered "X stalls" is a claim about one path
+**Symptom**: S74's note "HealMore's look stalls" would have refused 4 donors and every
+cross-side look.
+**Root cause**: it was measured on the CUSTOM-skill presentation path (bank $72 / the
+cast-anim slot), not on stock skills lending a look through `GetPresentId`.
+**Rule**: re-measure a hazard on the path you are building before turning it into a
+validator; the corrected census (1,554 battles) found no stall, so nothing is refused and
+the two real effects (other-side looks show nothing; summons only blink) are warnings.
+
+### A compiler region can hide a hand edit
+**Symptom**: the first `gd_skill_names` build failed `Unknown symbol SkillName_215_BugCut`.
+**Root cause**: S44 had renamed skill 215 by hand INSIDE the names block (label
+`SkillName_215_BugCut`, "BugCut" + 3 `$F0` pad); the region emitter (vanilla labels)
+could not see it.
+**Fix**: patches/ back to the vanilla line; the rename is example-project data
+(`gamedata.skills.215.name`) — the pin moved because the names after it no longer carry
+the pad.
+**Rule**: before turning a block into a compiler region, diff the patched block against
+the clean one; every difference is either project data or engine and must be moved
+deliberately.
+
+### `build_project --apply` rewrites region bodies — keep hand comments OUTSIDE the markers
+**Symptom**: an `--apply` run dropped the S110 FIELD MAP header (it had been inserted
+between `@BUILD_PROJECT BEGIN` and the region's own comment) and the hand-readable forms
+of earlier regions (address comments, S108/S109 notes).
+**Rule**: comments that must survive go above `; @BUILD_PROJECT BEGIN`; and `--apply`
+is not needed for a patched build to be right (the compiler injects the regions) —
+diff before keeping its output.

@@ -3712,6 +3712,7 @@ GetAttackerBattleSlot:
     ld [$db4d], a
     ld a, $02
     ld [$db4e], a
+    ; [S110 rec] record +2 target mode: bit1 = a GROUP skill
     ld hl, $5400
     rst $10
     ld a, [$db4c]
@@ -5805,6 +5806,7 @@ jr_052_6024:
     push bc
     push de
     push hl
+    ; [S110 rec] record +1 high nibble = AI option-list tag
     ld hl, $5400
     rst $10
     pop hl
@@ -8767,6 +8769,7 @@ jr_052_6ed7:
     bit 2, [hl]
     ret z
 
+    ; [S110 rec] flags7 bit7 (physical) vs BladeD (target +9 bit2 = defence level 4)
     ld a, [$dcfd]
     bit 7, a
     ret
@@ -8883,6 +8886,7 @@ Jump_052_6f56:
 
 Jump_052_6f5b:
     res 6, [hl]
+    ; [S110 rec] flags9 bit4: may be a FOLLOW-UP action when the actor's +6 bit6 is set (writer not found; never seen in 11k measured events)
     ld a, [$dcff]
     bit 4, a
     jp z, Jump_052_706c
@@ -9065,6 +9069,7 @@ jr_052_706c:
     ld h, a
     ld a, $03
     ld [hl], a
+    ; [S110 rec] target mode &3 == 1: single target, else the group loop steps every victim
     ld a, [$dcfc]
     and $03
     cp $01
@@ -9737,6 +9742,7 @@ jr_052_747f:
     ld [$db4d], a
     ld a, $02
     ld [$db4e], a
+    ; [S110 rec] record +2 target mode: bit0 = single target
     ld hl, $5400
     rst $10
     ld a, [$db4c]
@@ -11421,6 +11427,7 @@ jr_052_7df9:
     cp $0c
     ret z
 
+    ; [S110 rec] target mode bit4 (aimed at the foes) + target Imitate (+8 bit3) -> flags9 bit2 decides
     ld a, [$dcfc]
     bit 4, a
     jr z, jr_052_7dde
@@ -11435,6 +11442,7 @@ jr_052_7df9:
     call GetMonsterSlotInfo
     jr c, jr_052_7dde
 
+    ; [S110 rec] flags9 bit2: Imitate turns it back ("gets even!" $D3), else "can't get even!" $D4
     ld a, [$dcff]
     bit 2, a
     jr z, jr_052_7e44
@@ -11463,6 +11471,7 @@ jr_052_7e44:
     ld a, [wBattleTargetIdx]
     ld hl, $db03
     call HL_AddA_x8
+    ; [S110 rec] flags7 bit6 spell / bit5 dance / bit4 breath -> which seal applies (StopSpell or side +0 bit3 / DanceShut / MouthShut)
     ld a, [$dcfd]
     bit 6, a
     jr nz, jr_052_7e64

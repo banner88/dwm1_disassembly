@@ -301,6 +301,11 @@ class MonstersMixin:
             AR.check(prj)                  # no summon in a fighting arena team
         except AR.ArenaError as ex:
             raise SP.SpeciesError(str(ex))
+        from editor2.core import skills as SK
+        try:                               # S110: skill names / descriptions / looks
+            SK.check(prj)
+        except SK.SkillError as ex:
+            raise SP.SpeciesError(str(ex))
         self.data.clear()
         self.data.update(data)
         self.touch()

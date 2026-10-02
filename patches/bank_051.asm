@@ -1206,6 +1206,7 @@ jr_051_473a:
     ld [$db4d], a
     ld a, $01
     ld [$db4e], a
+    ; [S110 rec] record +1 high nibble = the AI option-list TAG (1 attack / 2 status / 3 heal-support); low nibble never read
     ld hl, $5400
     rst $10
     ld a, [$db4c]
@@ -1793,6 +1794,7 @@ jr_051_4a2e:
     ld [$db4d], a
     ld a, $01
     ld [$db4e], a
+    ; [S110 rec] record +1 high nibble = AI option-list tag (see SkillRecordData header)
     ld hl, $5400
     rst $10
     ld a, [$db4c]

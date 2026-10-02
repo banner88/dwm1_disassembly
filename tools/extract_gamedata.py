@@ -98,6 +98,10 @@ TABLES = {
     "arena_masters": (0x04, 0x5E22, 30, 2, "ArenaMasterSpriteTable"),
     "arena_masters_50": (0x50, 0x6778, 27, 2, "ArenaMasterSpriteTable50"),
     "arena_fees": (0x09, 0x5D23, 8, 2, "ArenaClassFeeTable"),
+    # S110 (P3.11, read-only in the Skills tab): the battle message id each
+    # skill is ANNOUNCED with (bank $58 entry 6; $FF = silent) — the text is
+    # dialogue.json's battle_message table
+    "skill_announce": (0x58, 0x5806, 222, 1, "AnnounceTemplateTable"),
 }
 # the eight copies of the follower gfx-ID table at species 0 (MONSTER_DATA
 # "Follower-art table has EIGHT copies"): identical for species 0-214 —
@@ -140,6 +144,7 @@ def extract(rom):
         names.append(rom[q:end].hex() if 0x4000 <= ptr < 0x8000 and end > 0 else "")
     out["monster_name_bytes"] = names
     out["monster_text"] = monster_text(rom)
+    out["skill_text"] = skill_text(rom)
 
     # --- bank $4D library recipe text ------------------------------------
     base = flat(LIB_BANK, 0x4000)
@@ -230,6 +235,41 @@ def monster_text(rom):
     }
 
 
+# S110 (P3.11): the skill names (bank $41 text mode 6) and the SKIL-menu
+# descriptions (bank $56 SkillDescPtrTable, mode 1 of SkillDescModeTable) —
+# PROJECT_COMPILER §2.26
+SKILL_NAME_PTRS, SKILL_NAME_BLOCK = 0x4539, (0x628E, 0x69F2)   # bank $41
+SKILL_DESC_PTRS, SKILL_DESC_BLOCK = 0x6667, (0x502F, 0x664B)   # bank $56
+SKILL_IDS = 222
+SKILL_DESC_BLANK, SKILL_DESC_NONE = 0x6599, 0x664A
+
+
+def skill_text(rom):
+    w = lambda bank, addr: rom[flat(bank, addr)] | rom[flat(bank, addr) + 1] << 8
+    nptr = [w(0x41, SKILL_NAME_PTRS + 2 * i) for i in range(256)]
+    names = _strings_in_order(rom, 0x41, nptr[:SKILL_IDS + 1], SKILL_NAME_BLOCK,
+                              "skill names")
+    if any(nptr[i] != nptr[SKILL_IDS] for i in range(SKILL_IDS, 256)):
+        raise SystemExit("skill names: ids 222-255 must share the empty string")
+    dptr = [w(0x56, SKILL_DESC_PTRS + 2 * i) for i in range(256)]
+    order = sorted(set(dptr))
+    _strings_in_order(rom, 0x56, order, SKILL_DESC_BLOCK, "skill descriptions")
+    shared = {SKILL_DESC_BLANK: "blank", SKILL_DESC_NONE: "none"}
+    if any(dptr.count(p) > 1 for p in order if p not in shared):
+        raise SystemExit("skill descriptions: only $6599 / $664A are shared")
+
+    def text(p):
+        o = flat(0x56, p)
+        return rom[o:rom.index(b"\xf0", o)].hex()
+    return {
+        "name_block": list(SKILL_NAME_BLOCK), "names": names[:SKILL_IDS],
+        "desc_block": list(SKILL_DESC_BLOCK),
+        "descs": [text(dptr[i]) for i in range(SKILL_IDS)],
+        "desc_shared": {str(i): shared[dptr[i]] for i in range(SKILL_IDS)
+                        if dptr[i] in shared},
+    }
+
+
 def load_rom():
     rom = open(ROM_PATH, "rb").read()
     if hashlib.md5(rom).hexdigest() != ORIGINAL_MD5:
@@ -263,7 +303,8 @@ def selftest():
         return 1
     print(f"OK: gamedata_vanilla.json == ROM ({len(want['tables'])} tables, "
           "library text, names, chance codes; monster name / nickname / "
-          "description blocks contiguous + id-ordered; arena master copies agree)")
+          "description blocks contiguous + id-ordered; arena master copies agree;\n"
+          "    skill name / description blocks contiguous, 2 shared empty descriptions)")
     return 0
 
 

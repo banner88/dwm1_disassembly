@@ -10,6 +10,62 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
+> Last verified: 2026-10-02 (Session 110 — **ROADMAP P3.11: THE SKILLS TAB — THE 222
+> ORIGINAL SKILLS: NAMES, SKIL TEXTS, MP, LEARNING, POWER, TARGETS, AI, BEHAVIOUR BITS,
+> "LOOKS AND SOUNDS LIKE"** (user on the audit: "Start with vanilla skills and add custom
+> skills if there is scope and context / 2) in scope [names + texts] / 3) yes editable
+> [target mode] / 4) show and give hover hints what they do; use help tab. If they are
+> genuinely useful, let me edit [the poorly-understood record fields] / 5) Offer [looks
+> like skill X] / 6) Edit in item tab [battle items] / 7) Your choice [announce line →
+> read-only]"). **Test ROM `DWM_S110_skills_test.gbc` USER-CONFIRMED 2026-10-02 09:09 ("Excellent work. Give me editor files")**;
+> the editor half test_app-verified, not yet run on the user's Mac. Verifier PASS; clean
+> `1ca6579…` byte-perfect (bank $56 SKIL texts + pointer tables re-sectioned by
+> `tools/resection_skill_desc.py`; 60 record-reader sites + the FIELD MAP header +
+> bank $54 entries 3/4/5 relabelled by `tools/annotate_skill_record.py`; comments /
+> labels only); **patched pin `534bfb62…` (patched)**, was `482c949f…` (patched,
+> historical) — the two looks proxies + the example project's skill 215 rename moved out
+> of a hand edit; the user's project as-is now builds `32133c7c…` (patched; was
+> `f995cb88…`, historical). test_compiler --rom 650/650, test_app + test_app --rom PASS
+> (GUI build == pin). `EDITOR_REVISION` = 'S110'.
+>
+> **Built (PROJECT_COMPILER §2.26 + §2.20, BATTLE_SKILL_SYSTEM §7 / §11.8, TEXT_SYSTEM
+> "Skill text blocks (S110)", EDITOR_DESIGN §5.3 "As built S110"):**
+> `gamedata.skills.<0-221>` gains `name` / `description` / `looks_like` → regions
+> `gd_skill_names` ($41), `gd_skill_desc` / `gd_skill_desc_ptrs` / `gd_skill_desc_extra`
+> ($56), `gd_present_proxy_5f` (`StockPresentTable`, read by `GetPresentId` for ids <
+> $DE) and `gd_present_proxy_55` (NEW hand patch `patches/bank_055.asm`: the one SFX-table
+> reader `$55:$4061` → `call SfxPresentId`). `mp` now writes both MP copies (field `$07`
+> u16 + battle record +4); "ALL" for Farewell / MegaMagic only; `target_mode` from five.
+> New **Skills** tab (sections: text with the game font, MP + learning, power, targets,
+> AI, behaviour boxes with hover hints, looks, who has it; battle items read-only; the
+> announce line read-only); help `54_skills.md`; other tabs follow skill renames.
+>
+> **Found (foundational — the RECORD READER CENSUS, BATTLE_SKILL_SYSTEM §7):** every
+> byte / bit of the 19-byte record has a named reader or is proven unread: +0, +1 low
+> nibble, +7 b2, +8 b3, +9 b6/b7 NOT READ; +4 is the BATTLE MP cost (menu, act time,
+> deduct, AI veto — the old "reader untraced" warning retired); +5 is the AI's assumed
+> element (not "status_id"); flags7/8/9 = breath / dance / spell seals, reflect,
+> redirect, iron, crits, TwinHits, ChargeUP, dodge, TakeMagic, Imitate, confusion snap,
+> airborne reach; +10 items only. Bank $54 entry 3 = the side power read ($52C7; docs
+> said entry 5 / $535F = the item lookup); the $55 SFX reader is $4061 (docs $4067);
+> S44 had renamed skill 215 by hand inside the names block (DOC_AUDIT S110).
+>
+> **Measured in PyBoy on the user's save:** (1) the LOOKS census
+> (`tools/census_skill_present.py` → `extracted/skill_present_census.json`): 222 donors
+> × 7 borrowers = 1,554 battles, every borrower acted 4-9 times, longest frozen action
+> machine 157 frames — **no stall** (the first pass was void: the AI replaced the forced
+> skill at act time — KEY_LESSONS S110); a cross-side look shows nothing (Heal with
+> Bang's look); (2) the demo `ed8222b2…` (patched) = the user's project + a demo overlay
+> NOT in their project: Zap → "Spark" (SKIL menu: name, "Sparks leap at / every foe",
+> USE MP 1; battle "Slib casts Spark!" with Bang's look, 78/77/78 to three foes),
+> MetalCut aimed at all foes (hits all three; one in the original), HealMore → "Cure" (+200 HP for 1 MP).
+> **Test ROM `DWM_S110_skills_test.gbc` (= that demo) USER-CONFIRMED 2026-10-02 09:09 ("Excellent work. Give me editor files").** **Hand-off:** every S110
+> change = the diff against `bf8bb5f` (origin/master), delivered as
+> `DWM-S110-skills-tab-changed-files.zip`, the APPLY list pasted in the chat. The user also
+> asked how hard building new skill animations from existing frames would be — answered
+> in chat from BATTLE_SKILL_SYSTEM §11 (no new measurement; ROADMAP P3.11c residual).
+> **Next:** P3.11c (the custom skills as project data) or the user's pick.
+
 > Last verified: 2026-10-01 (Session 109 — **ROADMAP P3.10b: THE ARENA EDITOR — ENTRY
 > FEES, MASTERS, TEAMS OF 1-3 MONSTERS** (user on the audit: "Agree with proposed scope.
 > Its own tab. Yes include in scope [master sprites + fees]. Yes I want 1-2 monsters.
@@ -62,95 +118,10 @@
 > pasted in the chat. **Next session:** the user's pick — the next unchecked item after
 > P3.10b is P3.11 (Skills tab); P3.6 (dialogue editing) would also free the arena text.
 
-> Last verified: 2026-10-01 (Session 108 — **ROADMAP P3.10 PART 3: RENAMING THE
-> ORIGINAL MONSTERS — NAME, DEFAULT NICKNAME, LIBRARY DESCRIPTION — + EVERY
-> DIALOGUE TEXT, MEASURED AND SEARCHABLE** (user 19:03 on the audit: "1) Yes, need to
-> be able to rename everything. 2) 1-4 like new species is fine 3) Yeah I want to be
-> able to pull all dialogue so I can inspect to see if needs changes or not … only
-> system-related names (breeding, library, battle system, etc) have to be adjusted
-> dynamically. 4) Doesnt matter 5) Ok to regenerate, fix typo"). S107 USER-CONFIRMED
-> at session start. **Test ROM r2 USER-CONFIRMED 2026-10-01 21:07 ("COnfirrmed. Hand off
-> please")**; the editor half (Monsters tab text fields, Dialogue tab) travels with
-> this hand-off — test_app-verified, not yet run on the user's Mac.
-> Verifier PASS 6/6 (+ `dump_dialogue.py` selftest); clean `1ca6579…` byte-perfect
-> (bank $4D descriptions re-sectioned, bank $41 nickname labels renamed, 6,520 script-
-> bank text previews + 70 bank-$47 id comments refreshed, bank $09 naming comments —
-> comments / labels only); **patched pin UNCHANGED `77ccdab8…` (patched)** — every new
-> region reproduces the original bytes; the user's project as-is still builds
-> `7f6df249…` (patched). test_compiler --rom 575/575, test_app PASS. `EDITOR_REVISION`
-> = 'S108'.
->
-> **Built (PROJECT_COMPILER §2.24, TEXT_SYSTEM "Monster text blocks (S108)" + "Text id
-> resolution (measured S108)", EDITOR_DESIGN §5.2 "As built S108"):**
-> `gamedata.monster_text.<0-214>` = `name` (1-9), `nickname` (1-4), `description`
-> (1-3 lines × 18 cells) → three compiler regions over the blocks the game reads them
-> from — names `$41:$5B1F-$628D` (mode 5, 1,903 B), default nicknames
-> `$41:$69F2-$6C76` (mode 7, 645 B), descriptions `$4D:$53D3-$7719` (mode 1, 9,031 B)
-> — first-fit in id order, labels unchanged (no pointer moves); what no longer fits
-> spills into the new-species text extents (names / nicknames) or the new region
-> `gd_monster_desc_extra` (bank $4D tail). The library recipe lines naming a renamed
-> monster are regenerated (Akubar's vanilla "Grenadal" typo goes with it); new species
-> may have their OWN description (`custom.species[].description`). Names share one
-> encoder (letters, digits, space, `' , . ! ? - &`). Editor: Monsters tab **Name and
-> library text** (originals + new species; game-font preview; back to original;
-> "Texts that name it…"), new **Dialogue** tab (every text, search, per-monster
-> mentions under the old + new name, save as text file). Iron Rule 8 holds (215-220
-> refused).
->
-> **Found (foundational):** (1) the join naming screen PRE-FILLS the nickname with the
-> species' 2-letter code — text mode 7, the table mgbdis called `FamilyCodePtrTable`
-> (renamed `MonsterNickPtrTable` / `MonsterNick_NNN_XX`, both trees); the family name
-> pools (mode 3) are only the random name for a blank name at END (bank $09
-> `FuncFld9_621f` / `LoadFld9_688e` annotated; BREEDING_SYSTEM corrected). (2) **Text
-> ids**: each corpus bank forwards the upper part of its index range to an OVERFLOW
-> bank — $42→$1A, $43→$1A, $44→$1B, $45→$1F, $46→$1B, $47→$21, $48→$1F, $49→$18,
-> $4A→$22, $4B→$3F, $4E→$4F (1,177 of the 2,560 ids). `extracted/text_id_map.json`
-> modelled the cascade (fixed $400B base, guessed index rule, no overflow): **62 of
-> its 2,061 entries matched the game** — so 6,520 script-bank previews and bank $47's
-> TextStr id comments named the wrong text (DOC_AUDIT S108). New
-> `tools/dump_dialogue.py` stub-calls the game's TextBankDispatch in PyBoy for all
-> 2,560 ids (intro screenshot: id $0000 = "Milayou:Terry! Wait! It's time for bed!"),
-> `text_id_map.json` is derived from it, the comments refreshed.
->
-> **Measured in PyBoy on the user's save** (test ROM r1 `DWM_S108_rename_demo.gbc`,
-> patched `6fc98013…` (historical) = the user's project + a demo overlay NOT in their project:
-> Slime → Goober / GOOB / new description, Healer → Medic / MD, BattleRex → TyrantRex
-> + description, Grendal → Grendel, Darkdrium → Doomdrium, Klamutra's own
-> description, the wild Slime row always joins): INFO pages "Doomdrium" / "TyrantRex"
-> / "Medic"; Gate of Beginning "Look out! Goober monster!", "Goober takes 506 damage
-> pts!", "Please name Goober♂.", the naming field pre-filled "GOOB"; the running game's
-> text engine (stub calls of bank $41 / $4D entry 0) returns the new name / nickname /
-> description for every edited species, Akubar's recipe line "Grendel  Grendel" and
-> Klamutra's own description.
->
-> **S108 r2 (user 20:10 on the r1 ROM: "Slime didnt appear once in 20 battles and library
-> inaccessible"):** both were the DEMO, not the build — (1) the user's own Gate of
-> Beginning list gives the wild Slime 10 % (PyBoy, 20 encounters on r1: Klamutra 9,
-> Slime 4, EID 3 4, EID 4 3), the demo never raised it; (2) the user's project routes
-> the GreatTree Library door ($01 screen 8 (5,3)) to cities_fount (`entrance_redirects`)
-> and the demo did not lift that (the S107 demo did). r2 demo = r1 + Slime 50 % in list 0
-> + that redirect removed (both demo-only): PyBoy 20 encounters → Slime 11; through the
-> real Library door → the librarian → the library list shows Goober / Medic (Slime
-> family), TyrantRex (Dragon), Doomdrium (???); Goober's page = the new 3-line
-> description; Grendel's page; Akubar's page parents "Grendel / Grendel". Test ROM
-> **`DWM_S108r2_rename_demo.gbc`** (patched `dceafc5c…`; r1 `6fc98013…` patched,
-> historical). No compiler / editor change. **USER-CONFIRMED 2026-10-01 21:07.**
->
-> **Hand-off (user 21:07: "Hand off please, all files since last repo push. Also are there
-> files in repo I should delete? Are these Python cache files part of repo?"):** every S108
-> change = the diff against `8463831` (origin/master), delivered as
-> `DWM-S108-monster-text-changed-files.zip`, the APPLY list pasted in the chat. Repo
-> cleanup in the same list: the 23 tracked `__pycache__/*.pyc` files and the 39 tracked
-> files of `editor2/example-project/build/` (regenerable compiler output — every test /
-> build run rewrote them; nothing reads them) leave git; `.gitignore` gains
-> `__pycache__/`, `*.pyc`, `*.ram` (PyBoy battery files next to a ROM),
-> `editor2/example-project/build/`. **Next session:** the user's pick — the next
-> unchecked Phase 3 item is P3.10b (Arena editor); P3.6 (dialogue editor) now has its
-> data (`extracted/dialogue.json`) and a read-only tab to grow from.
-
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
-- **S109** (2026-10-01): P3.10b the Arena editor — `gamedata.arena` (class fees, the master of each match, team sizes 1-3) → regions over the two master-sprite tables ($04/$50), the class fee table ($09) and bank $6E `ArenaTeamSizeTable`; NEW engine bank $6E `ArenaTeamFixup` (same-size tails of `ArenaBattleSetup` / `LoadArenaEnemyStats`); team members = the enemy rows; new Arena tab; bank $09 class menu re-sectioned + decoded; found `AddGold` subtracts, display-list order, the King = one match; pin `482c949f…`. Test ROM USER-CONFIRMED 2026-10-01 22:57. Verbose block in this file. Owning: PROJECT_COMPILER §2.25, SIDEQUEST_MAP "Arena authoring as built — S109", EDITOR_DESIGN §5.2b, KEY_LESSONS S109, DOC_AUDIT S109, TOOLS_AND_DATA S109.
-- **S108** (2026-10-01): P3.10 part 3 — renaming the original monsters: `gamedata.monster_text` (name / default nickname / description) → regions over the three text blocks (banks $41 / $4D; spill into the new-species extents / `gd_monster_desc_extra`), recipe lines follow renames, new species' own description; Monsters tab "Name and library text" + new Dialogue tab; found: the join naming prefill = mode 7 (`FamilyCodePtrTable` → `MonsterNickPtrTable`), text ids' overflow banks, `text_id_map.json` 62/2,061 right (now measured: `dump_dialogue.py`; 6,520 script previews refreshed); bank $4D descriptions re-sectioned; pin unchanged. Test ROM r2 USER-CONFIRMED 2026-10-01 (r1: the demo's Slime rate + the user's Library-door redirect, fixed in the demo); repo cleanup (.pyc + example build/ out of git). Verbose block in this file. Owning: PROJECT_COMPILER §2.24, TEXT_SYSTEM "Monster text blocks" + "Text id resolution", EDITOR_DESIGN §5.2, KEY_LESSONS S108, DOC_AUDIT S108, TOOLS_AND_DATA S108.
+- **S110** (2026-10-02): P3.11 the Skills tab — the 222 original skills: `gamedata.skills` + `name` / `description` / `looks_like` → regions over the name block ($41), the SKIL texts + pointers + a 2,993-B spare ($56, re-sectioned), `StockPresentTable` ($5F, `GetPresentId`) and NEW hand patch bank $55 `SfxPresentId` + `StockSfxTable`; `mp` writes both MP copies; the record READER CENSUS (every byte / bit named or proven unread; entry 3/4/5 labels, $55:$4061, +4 = battle MP, +5 = AI element); looks census 1,554 PyBoy battles, no stall (first pass void — act-time AI); S44 hand rename of skill 215 moved to project data; pin `534bfb62…`. Test ROM USER-CONFIRMED 2026-10-02 09:09 ("Excellent work. Give me editor files"). Verbose block in this file. Owning: PROJECT_COMPILER §2.26, BATTLE_SKILL_SYSTEM §7 + §11.8, TEXT_SYSTEM "Skill text blocks", EDITOR_DESIGN §5.3, KEY_LESSONS S110, DOC_AUDIT S110, TOOLS_AND_DATA S110.
+- **S109** (2026-10-01): P3.10b the Arena editor — `gamedata.arena` (class fees, the master of each match, team sizes 1-3) → regions over the two master-sprite tables ($04/$50), the class fee table ($09) and bank $6E `ArenaTeamSizeTable`; NEW engine bank $6E `ArenaTeamFixup` (same-size tails of `ArenaBattleSetup` / `LoadArenaEnemyStats`); team members = the enemy rows; new Arena tab; bank $09 class menu re-sectioned + decoded; found `AddGold` subtracts, display-list order, the King = one match; pin `482c949f…` (patched, historical). Test ROM USER-CONFIRMED 2026-10-01 22:57. Verbose block in this file. Owning: PROJECT_COMPILER §2.25, SIDEQUEST_MAP "Arena authoring as built — S109", EDITOR_DESIGN §5.2b, KEY_LESSONS S109, DOC_AUDIT S109, TOOLS_AND_DATA S109.
+- **S108** (2026-10-01): P3.10 part 3 — renaming the original monsters: `gamedata.monster_text` (name / default nickname / description) → regions over the three text blocks (banks $41 / $4D; spill into the new-species extents / `gd_monster_desc_extra`), recipe lines follow renames, new species' own description; Monsters tab "Name and library text" + new Dialogue tab; found: the join naming prefill = mode 7 (`FamilyCodePtrTable` → `MonsterNickPtrTable`), text ids' overflow banks, `text_id_map.json` 62/2,061 right (now measured: `dump_dialogue.py`; 6,520 script previews refreshed); bank $4D descriptions re-sectioned; pin unchanged. Test ROM r2 USER-CONFIRMED 2026-10-01 (r1: the demo's Slime rate + the user's Library-door redirect, fixed in the demo); repo cleanup (.pyc + example build/ out of git). Verbose block in SESSION_HISTORY.md. Owning: PROJECT_COMPILER §2.24, TEXT_SYSTEM "Monster text blocks" + "Text id resolution", EDITOR_DESIGN §5.2, KEY_LESSONS S108, DOC_AUDIT S108, TOOLS_AND_DATA S108.
 - **S107** (2026-10-01): P3.10 part 2a — new art for the ORIGINAL monsters (`gamedata.art` 0-214 → battle gfx / palettes / the 8 walking copies / bank $10-$11 layout + attr regions + art banks $7F/$7C/$7A; Name & art page for originals; Iron Rule 8: 215-220 are not monsters); 7 walking tables + bank $10 tables re-sectioned; pin unchanged — USER-CONFIRMED 2026-10-01 (but the library parent icon stood still). Part 2b — walking layouts: any of the 155 for originals + new species (packer + ranking, `walk_layouts.py`), cross-bank copies in the follower banks' zero tails, bank-$11 `FollowerLayoutBase11` + `NewFollowerL1Table` (donor write gone), Walk style picker; pin `9740c1c9…`. 2b USER-CONFIRMED 2026-10-01. Part 2c — family icons as project data (glyph + streams, Families tab pixel editor) + two missed Spirit icon readers forked (JOURNAL stall); pin `77ccdab8…`; USER-CONFIRMED 2026-10-01. Verbose block in SESSION_HISTORY.md. Owning: PROJECT_COMPILER §2.21/§2.23, MONSTER_DATA "New art for ORIGINAL species" + "Walking layouts as project data", EDITOR_DESIGN §5.2, KEY_LESSONS S107, DOC_AUDIT S107, TOOLS_AND_DATA S107.
 - **S106** (2026-10-01): P3.10 part 1 — the Monsters tab (species data, enemy rows + where met, new species cut from sprite sheets with draggable boxes), one species source + sprite renderer; fixed: the LZ decoder (213 battle / 49 walking streams garbled since S22; `census_lz_decode.py` 442/442 == the game), bank-$11 follower attr extraction, resistance wording. USER-CONFIRMED 2026-10-01 (r2 test ROM; r3 tab + gate insertion on the Mac). Verbose block in SESSION_HISTORY.md. Owning: EDITOR_DESIGN §5.2, PROJECT_COMPILER §2.21, MONSTER_DATA (sprite graphics, resistances), KEY_LESSONS S106, DOC_AUDIT S106, TOOLS_AND_DATA S106.
 - **S105** (2026-09-30): P3.9b purge of the POC content — new species = project data (`custom.species`, `ns_*` regions + bank $7E) + G3 capacity 19 (ids 221-239, computed follower gfx-ID, packed bank-$41 names), Dracky Clam + S12 mirror gone, Anchor's dialogs built into every build (skill scripts, type $FF); fixed: Anchor soft-lock in projects without room $71, ChopClown / Grendal follower attrs, Spirit parents in the shadow checks, SpellUseText_11 tail, stale build/patches files. USER-CONFIRMED 2026-09-30 ("Confirm all three appear as expected"). Verbose block in SESSION_HISTORY.md. Owning: PROJECT_COMPILER §2.21/§2.22, MONSTER_DATA overshoot registry + follower section, BATTLE_SKILL_SYSTEM §14, KEY_LESSONS S105, DOC_AUDIT S105.
@@ -271,6 +242,7 @@
 | Room tile animation | bank $01 `PerRoomVRAMDispatch` $60E7 → `rst $00` table `$01:$6119`, **112** entries ($00-$6F), per field frame; clock `$C8A6/$C8A7`; the ONLY BG tile animation (none in gates). Custom rooms: bank $71 entry 3 `CustomAnimSource` (S99), which first runs bank $6C `CustomTileAnimate` — the room's OWN animations (S102, `tile_anims`, GDMA frame copies, any slot / speed). Census `extracted/room_animations.json`; ROOM_DATA_FORMAT "Animated tiles". |
 | LZ graphics streams | `WaitDMATransfer` `$00:$1577` (DE = gfx-ID, HL = dest): literal / `[marker, lo, hi4:len4]` copies from dest + 12-bit offset, count len4+4 or next byte + $13 (8-bit, 0 = 256); EVERY source byte re-wrapped 4 KB down when at/after the end, written 0 when that lands below dest. No shared pool. Python twin `dwm/sprite_codec.decode` (S106 fix) == the game for all 442 monster streams (`tools/census_lz_decode.py`). |
 | Monster text blocks (S108) | Names `$41:$5B1F-$628D` (mode 5 `MonsterNamePtrTable` $4339; species 0-219 in id order, then "" (220-224) and "?????" (225-255); 1,903 B); default nicknames `$41:$69F2-$6C76` (mode 7 `MonsterNickPtrTable` $4739 — was `FamilyCodePtrTable`; 2 letters; the JOIN naming screen pre-fills the nickname with it, measured S108); descriptions `$4D:$53D3-$7719` (mode 1 = dispatch entries 261-475, ≤ 3 × 18 cells, `$F1` newline, `$67` 't / `$68` 's one cell). Contiguous, id-ordered, unshared (extract_gamedata --selftest). Compiler regions `gd_monster_names` / `gd_monster_nicks` / `gd_monster_desc` (PROJECT_COMPILER §2.24). |
+| Skill text + looks (S110) | Names `$41:$628E-$69F1` (mode 6 `SkillNamePtrTable` $4539; 1,892 B); SKIL texts `$56:$502F-$664A` (`SkillDescModeTable` $664B → `SkillDescPtrTable` $6667; ids 151-212 share `SkillDesc_Blank`, 219-255 `SkillDesc_None`) + the spare `$56:$7291-$7E41` (2,993 B). The look of the acting skill = bank $5F `GetPresentId` (12 reads) + bank $55's SFX tables (ONE reader `$55:$4061`); patched build: `StockPresentTable` / `StockSfxTable` (identity = vanilla). Record field map = BATTLE_SKILL_SYSTEM §7 (S110 reader census). |
 | Text id → bank (S108, measured) | ROM0 `TextBankDispatch` $0AD9 (HL = id) → corpus bank by range (TEXT_SYSTEM), whose entry 0 forwards the upper part of its index range to an OVERFLOW bank: $42/$43→$1A, $44/$46→$1B, $45/$48→$1F, $47→$21, $49→$18, $4A→$22, $4B→$3F, $4E→$4F (1,177 of 2,560 ids). `extracted/dialogue.json` = the PyBoy-measured map + every text table (`tools/dump_dialogue.py`); `text_id_map.json` is derived from it (the pre-S108 file matched 62 / 2,061). |
 | Verifier | `python3 tools/verify_integrity.py` — run at session start AND end |
 
@@ -361,6 +333,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | New art for ORIGINAL monsters (0-214: battle pose + colours, walking art + palette + walk style) | 🟢 built S107 (P3.10 part 2a, USER-CONFIRMED 2026-10-01; part 2b walk styles USER-CONFIRMED 2026-10-01 — any of the 155 layouts, packed from the sheet, copied across follower banks): `gamedata.art` → the battle gfx / palette tables, the 8 walking copies, the bank $10/$11 layout + attr tables, art banks $7F/$7C/$7A (≈ 58 re-arted monsters fit); Monsters tab Name & art for originals; PyBoy on the user's save (field, menu, library, battle, join). TERRY? / summons excluded (Iron Rule 8) | PROJECT_COMPILER §2.23; MONSTER_DATA "New art for ORIGINAL species"; EDITOR_DESIGN §5.2 |
 | Renaming the ORIGINAL monsters (0-214: name 1-9, default nickname 1-4, library description 3 × 18) + a new species' own description | 🟢 built S108 (P3.10 part 3), test ROM USER-CONFIRMED 2026-10-01 (editor half test_app-verified): `gamedata.monster_text` → regions over the name / nickname / description blocks (banks $41 / $4D; spill into the new-species extents / `gd_monster_desc_extra`), recipe lines follow renames; Monsters tab "Name and library text"; Dialogue tab (every text, measured id map, per-monster mentions); PyBoy on the user's save (INFO, battle messages, naming prefill, text-engine stub calls). TERRY? / summons excluded (Iron Rule 8). Dialogue keeps literal names (read-only list) | PROJECT_COMPILER §2.24; TEXT_SYSTEM "Monster text blocks (S108)"; EDITOR_DESIGN §5.2 |
 | Arena authoring (class fees, the master of each match, teams of 1-3 monsters, the teams' enemy rows) | 🟢 built S109 (P3.10b), test ROM USER-CONFIRMED 2026-10-01 22:57 (PyBoy on the user's save: Starry Night 1 / 2 / 3, the King with 2, a monster master, fee 20 charged): `gamedata.arena` → `gd_arena_masters_04/_50`, `gd_arena_fees`, `gd_arena_team_sizes` + bank $6E `ArenaTeamFixup`; Arena tab | PROJECT_COMPILER §2.25; SIDEQUEST_MAP "Arena authoring as built — S109"; EDITOR_DESIGN §5.2b |
+| Editing the ORIGINAL skills (0-221: name, SKIL text, MP — both copies, learning, power, targets, AI fields, behaviour bits, looks + sounds of another skill) | 🟢 built S110 (P3.11), test ROM `DWM_S110_skills_test.gbc` USER-CONFIRMED 2026-10-02 09:09 ("Excellent work. Give me editor files") (PyBoy on the user's save: a renamed Zap with its own text, 1 MP and Bang's look hitting 3 foes; MetalCut at all foes; HealMore → Cure 200 HP): `gamedata.skills` name / description / looks_like → `gd_skill_names`, `gd_skill_desc*`, `gd_present_proxy_5f/_55` (+ bank $55 `SfxPresentId`); Skills tab. Battle items read-only (Items tab later); custom skills = P3.11c | PROJECT_COMPILER §2.26; BATTLE_SKILL_SYSTEM §7 / §11.8; EDITOR_DESIGN §5.3 |
 | Custom rooms (mapID ≥ $6B) | ✅ table-driven to editor scale: render/palette/attr/$26DD records + per-room encounters via bank $71 tables (S40/S42); multi-screen scroll (v28); gate-rotation insertion + descent (S41; data-driven S100 — next row). | EDITOR_DESIGN §2; GATE_GENERATION §7; CROSSBANK_ROOMS |
 | Custom NPCs with scripts | ✅ working | bank $60 entry 4 dispatch |
 | Custom text, multi-page, line breaks | ✅ working | IDs $0A00+, two-level ptr table |
@@ -403,7 +376,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Arena/boss roster AUTHORING (E1→E2 wiring) | RE ✅ DECODED S67; **ARENA half built S109 (P3.10b, test ROM USER-CONFIRMED 2026-10-01 22:57)** — `gamedata.arena` + the enemy rows, Arena tab (the "Arena authoring" primitive row). Gate-boss rosters: their enemy rows are editable on the Monsters tab (S106); a boss editor is not built |
 | Combat simulator (arc S78-S88) | 🟢 **COMPLETE through the pacing layer (S86) + commit-model close-out (S87: party bases from the instance record, obedience EXACT 889/889 on the WLD stat, $7997 + TRUE-loaf closed)**: `simulator/damage.py` 698/698 (S78) + specials (S79); `turn_order.py` 143/143 (S79); AI `ai.py` 26/26 + rule chains `ai_rules.py` 240/240 (S80/S81); `battle.py` loop glue 6614/6614 (S85) + 802/802 on fresh S86 captures; **S86: measured RNG idle model (`measure_idle.py` → `s86_idle_model.json`), full-battle driver `pacing.py` (commit + rounds + TTK), aggregate-validated (`validate_pacing.py`: round-level PIT uniform over 197 rounds; 5 fresh real-save battles inside sim envelopes), `sweep_ttk.py` gate-pool sweeps, `profile_check --ttk` gating**. **S88 (built, NOT yet user-tested): confusion end-to-end + snap-out (2824/0), riders 40/40 ($69 boss veto = application-only), curse MP MaxMP//6, poison cap 15/15, PsycheUp closed empty, $DB06/$DB07 writer map, dodge incapacity exemption; 3 new corpora; the S79 $7AB5 confusion attribution corrected to Transform (DOC_AUDIT S88).** Residuals (§15.9 + ROADMAP S89): the low-stat calcdef edge (2 deterministic SameBoy repros), meta-actions (hero-slot MENU verbs — PARTIAL, named box), and +8/+9 defensive-flag consumers. **S89 (built, NOT yet user-tested): Group-B residuals CLOSED — $DB07 = IRONIZE counter (not stun); interception = Cover/Guardian guard table (`guard_redirect`, 14/14); WLD level-up writer = none; `board_from_event` consumes real ai_bases/WLD; defensive-set sweep folded into status.py. New corpora s89_fresh (426/1 flagged) + s89_guard (14/14). Annotation: $670E re-sectioned, guard/iron handlers commented.** **S90: arc adjudicated DONE FOR PURPOSE (user-conferred); residuals banked as non-blocking boxes ($DB42 setter, +8/+9 consumers, meta-actions menu drive, guard-validator polish).** | BATTLE_SKILL_SYSTEM §15, §15.6, §15.9; TOOLS_AND_DATA §2.10 + S89 rows; ROADMAP S89/S90 |
 | Randomizer (standalone; English + German builds) | ✅ **SHIPPED, USER-TESTED, part 2 S77** — `randomizer/`, data tables only plus ONE code change (`plusgrowth.py`, opt-out). Breeding tree regenerated to a target depth profile (3-6) with deeper = better; bosses/arena/wild stratified against vanilla's measured correlations; skills dealt from vanilla's usage bag and never below vanilla's minimum placement level; growth shuffled within vanilla-ordering bands; paralysis + full heals banned on boss/arena rows; pools de-duplicated. Gate: `randomizer/profile_check.py` (per-entity envelopes) + `randomizer/audit_threat.py` (per-row damage parity). | randomizer/README.md; BATTLE_SKILL_SYSTEM §record power field is BLIND; BREEDING_SYSTEM §Depth is a function of matcher SPECIFICITY; MONSTER_DATA §Growth randomization needs a per-species envelope; PROJECT_COMPILER §Validation the editor must run |
-| Editor app (Phase 3) | 🟢 Skeleton S72 → design v2 S90 → P3.0-P3.2b S91/S92 → **P3.3 canvas v1 + shell S93** → **S94 canvas v2 + real room model + S94b entrance redirects & per-state rooms (built, NOT yet user-tested):** vanilla/custom room columns (every vanilla state browsable), clone-with-confirm carrying ALL vanilla states (paintable at once), New/Copy/Rename/Delete, File→New project (blank template), metatiles (4 subtiles + palette) as the editing unit, Select-first with real selection, Walkability mode (BR-subtile twin swap, tileset copied into the project), 4×4 grid, vanilla-format per-(screen,state) attr+palette tables (engine), records for every room (ROM0 region), **"Route a vanilla door here" = `custom.entrance_redirects` → per-(map,screen) exit overrides (Entry 6 + Entry 9)** — the in-game test route for any custom room; **S95:** picker = the room's whole vocabulary (never shrinks) + borrow tiles from any vanilla room under this room's palettes (import across tilesets, PyBoy-verified) + on-open migration of pre-S94 projects. Acceptance PyBoy-verified incl. walking and the door walk-through. **S96 (USER-CONFIRMED 2026-09-25 ("Everything works")): P3.3c Tileset tab (slot map + release) + P3.3d (change tileset / blank sheets, Import art tab for PNG rips, per-subtile metatile palettes, bank space meters) + Make editable works on all 98 vanilla rooms (opcode arity from the handlers).** **S97 (USER-CONFIRMED 2026-09-26): rooms group B — P3.5a flag state rules (engine entry 8 + bank $17 hook; persistent custom-room versions) + P3.5 NPC inspector (13 measured behaviours, hidden bit, talk text, presence, drag; **r2**: per-box talk editor with ROM-font preview, cream dialog/YES-NO boxes in free-colour rooms, NPC section, sections start folded).** **S98 (doors USER-CONFIRMED 2026-09-26; the rest built, NOT yet user-tested): rooms group C = P3.7 — named door objects linked two-way (+ Door, double-click to connect, arrive ON the door), one-way teleports, examine / step-on spots (the "$8F spawn" misnomer retired), talk scripts with YES/NO + set/clear flags + move, edge-vs-scroll guards, World tab v0; tileset tools (own copies, split move, purge).** **S99 (built; signed off 2026-09-27, r7 not yet re-tested in-game): P3.3e animated tiles — measured census, per-room animation source (engine), canvas outline + ▶ Play preview, inspector choice, clones = source, migration; Make animated tab (r3-r7: paint pads + part tools, still quarters, take-over, split move, count) + stray repair / Make still (r4).** **S100 (built, NOT yet user-tested): P3.7b part 1 — Gates tab v1 (32 gates, rules per gate, floor plan, rule dialog) + Rooms-tab "Inside gates" (arrival, Stairs down, saving, battles, music) → custom rooms served on gate floors.** Later rows: S101-S105 (boss floors, own animated tiles, gamedata, Spirit / Families tab, new species as project data — dashboard rows above). **S106 (USER-CONFIRMED 2026-10-01): P3.10 part 1 — the Monsters tab (species data, enemy rows + where met, new species from sprite sheets).** **S107: P3.10 part 2a — new art for the original monsters (USER-CONFIRMED 2026-10-01); part 2b — walk styles (any of the 155 layouts; USER-CONFIRMED 2026-10-01); part 2c — family icon editor (Families tab; USER-CONFIRMED 2026-10-01).** **S108 (test ROM USER-CONFIRMED 2026-10-01): P3.10 part 3 — renames / default nicknames / descriptions (Monsters tab) + the read-only Dialogue tab.** **S109 (test ROM USER-CONFIRMED 2026-10-01 22:57): P3.10b — the Arena tab (fees, masters, teams of 1-3, the team rows).** Next: the user's choice (P3.7b part 2, P3.4 PyBoy preview deferred by the user, P3.6 dialogue, P3.8 storyboard). | EDITOR_DESIGN §5.1 as built S94; ROADMAP P3.3b |
+| Editor app (Phase 3) | 🟢 Skeleton S72 → design v2 S90 → P3.0-P3.2b S91/S92 → **P3.3 canvas v1 + shell S93** → **S94 canvas v2 + real room model + S94b entrance redirects & per-state rooms (built, NOT yet user-tested):** vanilla/custom room columns (every vanilla state browsable), clone-with-confirm carrying ALL vanilla states (paintable at once), New/Copy/Rename/Delete, File→New project (blank template), metatiles (4 subtiles + palette) as the editing unit, Select-first with real selection, Walkability mode (BR-subtile twin swap, tileset copied into the project), 4×4 grid, vanilla-format per-(screen,state) attr+palette tables (engine), records for every room (ROM0 region), **"Route a vanilla door here" = `custom.entrance_redirects` → per-(map,screen) exit overrides (Entry 6 + Entry 9)** — the in-game test route for any custom room; **S95:** picker = the room's whole vocabulary (never shrinks) + borrow tiles from any vanilla room under this room's palettes (import across tilesets, PyBoy-verified) + on-open migration of pre-S94 projects. Acceptance PyBoy-verified incl. walking and the door walk-through. **S96 (USER-CONFIRMED 2026-09-25 ("Everything works")): P3.3c Tileset tab (slot map + release) + P3.3d (change tileset / blank sheets, Import art tab for PNG rips, per-subtile metatile palettes, bank space meters) + Make editable works on all 98 vanilla rooms (opcode arity from the handlers).** **S97 (USER-CONFIRMED 2026-09-26): rooms group B — P3.5a flag state rules (engine entry 8 + bank $17 hook; persistent custom-room versions) + P3.5 NPC inspector (13 measured behaviours, hidden bit, talk text, presence, drag; **r2**: per-box talk editor with ROM-font preview, cream dialog/YES-NO boxes in free-colour rooms, NPC section, sections start folded).** **S98 (doors USER-CONFIRMED 2026-09-26; the rest built, NOT yet user-tested): rooms group C = P3.7 — named door objects linked two-way (+ Door, double-click to connect, arrive ON the door), one-way teleports, examine / step-on spots (the "$8F spawn" misnomer retired), talk scripts with YES/NO + set/clear flags + move, edge-vs-scroll guards, World tab v0; tileset tools (own copies, split move, purge).** **S99 (built; signed off 2026-09-27, r7 not yet re-tested in-game): P3.3e animated tiles — measured census, per-room animation source (engine), canvas outline + ▶ Play preview, inspector choice, clones = source, migration; Make animated tab (r3-r7: paint pads + part tools, still quarters, take-over, split move, count) + stray repair / Make still (r4).** **S100 (built, NOT yet user-tested): P3.7b part 1 — Gates tab v1 (32 gates, rules per gate, floor plan, rule dialog) + Rooms-tab "Inside gates" (arrival, Stairs down, saving, battles, music) → custom rooms served on gate floors.** Later rows: S101-S105 (boss floors, own animated tiles, gamedata, Spirit / Families tab, new species as project data — dashboard rows above). **S106 (USER-CONFIRMED 2026-10-01): P3.10 part 1 — the Monsters tab (species data, enemy rows + where met, new species from sprite sheets).** **S107: P3.10 part 2a — new art for the original monsters (USER-CONFIRMED 2026-10-01); part 2b — walk styles (any of the 155 layouts; USER-CONFIRMED 2026-10-01); part 2c — family icon editor (Families tab; USER-CONFIRMED 2026-10-01).** **S108 (test ROM USER-CONFIRMED 2026-10-01): P3.10 part 3 — renames / default nicknames / descriptions (Monsters tab) + the read-only Dialogue tab.** **S109 (test ROM USER-CONFIRMED 2026-10-01 22:57): P3.10b — the Arena tab (fees, masters, teams of 1-3, the team rows).** **S110 (test ROM USER-CONFIRMED 2026-10-02): P3.11 — the Skills tab (the 222 original skills).** Next: P3.11c (custom skills as project data) or the user's choice (P3.7b part 2, P3.4 PyBoy preview deferred by the user, P3.6 dialogue, P3.8 storyboard). | EDITOR_DESIGN §5.1 as built S94; ROADMAP P3.3b |
 
 ### Disassembly annotation (measured 2026-06-13, not estimated)
 

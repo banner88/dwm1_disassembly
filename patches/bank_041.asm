@@ -943,7 +943,7 @@ SkillNamePtrTable:  ; $4539 — 256 entries, indexed by skill ID
     dw SkillName_212_COMEDYBK  ; [212]
     dw SkillName_213_BeDragon  ; [213]
     dw SkillName_214_Smashlime  ; [214]
-    dw SkillName_215_BugCut  ; [215] renamed from "Sheldodge" (= Bug-family cut)
+    dw SkillName_215_Sheldodge  ; [215] the Bug-family cut (FAQ "BugBlow"); S110: the S44 "BugCut" rename is project data (gamedata.skills.215.name)
     dw SkillName_216_Branching  ; [216]
     dw SkillName_217_GigaSlash  ; [217]
     dw SkillName_218_LIFE  ; [218]
@@ -2112,6 +2112,10 @@ MonsterName_225_Unused_225: db "?????", $F0
 ; Entries 222-255 in the pointer table point to the empty entry
 ; ---------------------------------------------------------------
 
+; S110 (P3.11): the skill-name strings are the compiler region gd_skill_names
+; (gamedata.skills.<id>.name, PROJECT_COMPILER §2.26): first-fit in id order
+; under these labels; a name that no longer fits moves to the ns_text_* extents.
+; @BUILD_PROJECT BEGIN gd_skill_names
 SkillNameStrings:
 SkillName_000_Blaze: db "Blaze", $F0
 SkillName_001_Blazemore: db "Blazemore", $F0
@@ -2328,7 +2332,7 @@ SkillName_211_SMARTBK: db "SMARTBK", $F0
 SkillName_212_COMEDYBK: db "COMEDYBK", $F0
 SkillName_213_BeDragon: db "BeDragon", $F0
 SkillName_214_Smashlime: db "Smashlime", $F0
-SkillName_215_BugCut: db "BugCut", $F0, $F0, $F0, $F0  ; was "Sheldodge" (placeholder); id 215 = Bug-family cut (family code $05). 3 trailing $F0 pad keeps the 10-byte slot so downstream strings don't shift.
+SkillName_215_Sheldodge: db "Sheldodge", $F0
 SkillName_216_Branching: db "Branching", $F0
 SkillName_217_GigaSlash: db "GigaSlash", $F0
 SkillName_218_LIFE: db "LIFE", $F0
@@ -2336,6 +2340,7 @@ SkillName_219_RUN: db "RUN", $F0
 SkillName_220_IRONIZE: db "IRONIZE", $F0
 SkillName_221_Ahhh: db "Ahhh", $F0
 SkillName_222_Unused_222: db $F0
+; @BUILD_PROJECT END gd_skill_names
 
 ; ---------------------------------------------------------------
 ; Monster Default-Nickname Strings ($69F2-$6C77)

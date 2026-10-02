@@ -911,6 +911,7 @@ LoadBtlAI_4532:
     ld [$db4d], a
     ld a, $05
     ld [$db4e], a
+    ; [S110 rec] record +5 = AI ELEMENT: a resistance slot (1-27) the AI assumes; damage itself takes the element from the handler
     ld hl, $5400
     rst $10
     ld a, [$db4c]
@@ -1081,6 +1082,7 @@ AIRuleVetoUsability_45f2:
     ld [$db4d], a
     ld a, $04
     ld [$db4e], a
+    ; [S110 rec] record +4 = battle MP cost: AI veto when the caster cannot pay
     ld hl, $5400
     rst $10
     ld a, [$db4c]
@@ -8401,6 +8403,7 @@ jr_057_6c31:
     push bc
     push de
     push hl
+    ; [S110 rec] record +6 = AI damage class (0 none / 4 spell / 5 breath): nonzero = "deals damage"
     ld hl, $5400
     rst $10
     pop hl
@@ -9942,6 +9945,7 @@ Jump_057_7441:
     ld [$db4d], a
     ld a, $07
     ld [$db4e], a
+    ; [S110 rec] record +7 flags7 -> $dd6b for the AI rules (bits 4/5/6 seal veto, bit7 rule $4B8C)
     ld hl, $5400
     rst $10
     ld a, [$db4c]
@@ -10028,6 +10032,7 @@ jr_057_74d7:
     ld [$db4d], a
     ld a, $07
     ld [$db4e], a
+    ; [S110 rec] record +7 flags7 -> $dd6b for the AI rules
     ld hl, $5400
     rst $10
     ld a, [$db4c]
@@ -10103,6 +10108,7 @@ jr_057_753a:
     ld a, $03
     ld [$db4e], a
     push bc
+    ; [S110 rec] record +3 = the AI weight summed per category
     ld hl, $5400
     rst $10
     pop bc
@@ -11778,6 +11784,7 @@ LoadBtlAI_7d73:
     ld [$db4d], a
     ld a, $05
     ld [$db4e], a
+    ; [S110 rec] record +5 = AI element (resistance slot)
     ld hl, $5400
     rst $10
     ld a, [$db4c]

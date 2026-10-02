@@ -1150,6 +1150,35 @@ scaffolding covers the DATA knobs; net-new ASM handlers remain an expert
 escape hatch (patches/), surfaced but not WYSIWYG. The S74 editor-safety
 invariants are hard validators.
 
+**As built S110 (ROADMAP P3.11 — the 222 ORIGINAL skills; test ROM
+USER-CONFIRMED 2026-10-02, the tab test_app-verified; the custom skills are P3.11c).** `editor2/app/skills_tab.py` over
+`editor2/core/skills_doc.py` (`SkillsMixin`); compiler §2.26 + §2.20. Left: the
+list (number + name, "(was X)" after a rename, bold = edited, items grey), a filter,
+a kind combo (all / skills / battle actions + boss moves / battle items), the block
+meters (name bytes incl. spill, SKIL text bytes + the 2,993-B spare). Right, in
+collapsible sections (remembered open/closed):
+- **Name and SKIL text** — name (1-9), three 18-cell lines with the game-font
+  preview (`monsters_tab.text_pixmap`); ids sharing Blank / None say so.
+- **MP and learning** — ONE MP field writing both copies (field `$07` u16 + battle
+  record +4); Farewell / MegaMagic shown as "All MP" (fixed), StepGuard / MapMagic
+  "field-only"; learn level + six stat minimums + "Evolves from" (names or ids, ≤ 5);
+  ids $DA-$DD greyed (no learn row — the S100 hazard).
+- **Power** — party / enemy min-to-max (typing a min above the max moves the max,
+  and vice versa — no popup); a note names the skills sharing this handler.
+- **Targets** — one foe / all foes / one ally / all allies / the user.
+- **Monster AI** — plan (tag), weight, element (resistance names), damage class.
+- **Behaviour** — one checkbox per READ bit of flags7/8/9 (`skills.FLAG_BITS`,
+  each with its hover hint), the unread bits / fields greyed (`skills.DEAD`).
+- **Looks and sounds** — "its own look" or any of the 222 (other-side donors
+  labelled "(other side)", summons "(summon)", tooltips with the warning); **Announced as** = the
+  battle line (bank $58 template → dialogue.json), read-only.
+- **Who has it** — natural learners, enemy rows, the evolve chain (read-only).
+- **Back to the original skill**.
+Battle items (176-212) are shown read-only (an Items tab will edit them, user S110).
+Every edit is one `SnapshotCommand`; a refused edit (bad name / text / number)
+shows the compiler's message and leaves no undo step. Other tabs' skill pickers use
+`doc.skill_names_effective()` (renames follow). Help: `54_skills.md`.
+
 ### 5.4 Breeding tab (edit + simulate — user spec "see randomizer")
 
 - **Table editor**: special recipes (bank `$69` full authoring stack
@@ -1445,3 +1474,11 @@ within the 3×18 + terminator budget; announce/banner within 2×18; prereq
 ids must exist; animation ids must exist in all three presentation
 tables; custom ids stay within the de-aliased range wired through
 DispatchBoundsStub ($E6+ AI-commit guard, S84).
+
+**S110 corrections to the table above (kept verbatim otherwise):** the bank-$5F
+resolver is `GetPresentId` (not "GetAnimPresentId"); since S110 it also reads a
+per-skill `StockPresentTable` for ids < $DE, and the cast SFX of the bank-$55 tables
+has its own door `SfxPresentId` ($55:$4061) — BATTLE_SKILL_SYSTEM §11.8. "MP cost …
+menu shows one, battle spends the other": the BATTLE menu also checks the record +4
+copy (afford check, bank $50); only the FIELD SKIL menu shows / charges the `$07` table
+(BATTLE_SKILL_SYSTEM §7 census).

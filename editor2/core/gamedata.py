@@ -89,6 +89,8 @@ RESIST_NAMES = [
 STATS = ('hp', 'mp', 'atk', 'def', 'agl', 'int')
 LEARN_ROWS = 218             # $00-$D9; $DA-$DD are bank-$06 code (S100)
 SKILL_COUNT = 222
+ALL_MP = 999                 # SkillMPCostTable value of Farewell / MegaMagic
+TARGET_MODES_OK = (0x11, 0x12, 0x21, 0x22, 0x41)   # skills.TARGET_MODES (S110)
 VANILLA_EID_MAX = 486
 # S105 (P3.9b): EID 518 (the S30 Gorbunok row in the bank-$14 free tail) is gone;
 # a new species' enemy rows are ordinary project enemies (EID 519+, bank $6B).
@@ -158,6 +160,13 @@ def _int(v, what):
     if not isinstance(x, int) or isinstance(v, bool):
         raise GamedataError(f"{what}: not a number: {v!r}")
     return x
+
+
+def _mp_value(v, what):
+    """An MP cost: a number, or "ALL" / "All MP" (= 999)."""
+    if isinstance(v, str) and v.strip().lower() in ('all', 'all mp'):
+        return ALL_MP
+    return _range(v, 0, ALL_MP, what)
 
 
 def _key_ids(sec, what, lo, hi):
@@ -357,6 +366,8 @@ class Gamedata:
         self.learn = _rows(self.v, 'skill_learn')
         self.mp = _rows(self.v, 'skill_mp')
         self.record = _rows(self.v, 'skill_records')
+        self.v_mp = _rows(self.v, 'skill_mp')            # S110: vanilla copies
+        self.v_record = _rows(self.v, 'skill_records')
         self.redirects = [(_u16(r, 0), _u16(r, 2)) for r in _rows(self.v, 'boss_redirects')]
         self.edited = {k: set() for k in ('monster', 'enemy', 'pool', 'family',
                                           'exp', 'growth', 'learn', 'mp',
@@ -529,15 +540,42 @@ class Gamedata:
 
     # -- skills ---------------------------------------------------------
     def _skills(self):
+        # S110 (P3.11): `name` / `description` / `looks_like` are validated and
+        # emitted by editor2/core/skills.py (their own regions); here: mp, learn,
+        # record. MP (BATTLE_SKILL_SYSTEM §7 "Field map — S110 reader census"):
+        # the BATTLE reads record +4 (8-bit: menu afford, act-time afford and
+        # deduct, the AI veto, TakeMagic) and the FIELD menu reads the $07
+        # SkillMPCostTable word — `mp` writes BOTH, except where vanilla keeps them
+        # apart on purpose: the two "All MP" skills (Farewell $32, MegaMagic $66:
+        # table 999, record 1 — the zeroing is code) and the field-only StepGuard /
+        # MapMagic (record 0 — never charged in battle). `record.mp_byte` still
+        # overrides the battle byte (expert).
         for sid, o in _key_ids(self.gd.get('skills'), 'skills', 0, SKILL_COUNT - 1):
             what = f"gamedata.skills.{sid}"
-            _check_keys(o, ('mp', 'learn', 'record'), what)
+            _check_keys(o, ('mp', 'learn', 'record', 'name', 'description', 'looks_like',
+                            'comment'), what)
             if 'mp' in o:
-                mp = _range(o['mp'], 0, 999, what + '.mp')
+                van_mp = _u16(self.v_mp[sid], 0)
+                mp = _mp_value(o['mp'], what + '.mp')
+                if mp == ALL_MP and van_mp != ALL_MP:
+                    raise GamedataError(
+                        f"{what}.mp: \"All MP\" exists only for Farewell / MegaMagic — "
+                        "the game empties the MP in their own code")
+                if mp != ALL_MP and mp > 255:
+                    raise GamedataError(f"{what}.mp = {mp}: 0-255 (the battle keeps the cost "
+                                        "in one byte)")
+                if van_mp == ALL_MP and mp != ALL_MP:
+                    raise GamedataError(f"{what}.mp: this skill always takes all MP (code); "
+                                        "its cost cannot be a number")
                 before = bytes(self.mp[sid])
                 _put16(self.mp[sid], 0, mp)
                 if bytes(self.mp[sid]) != before:
                     self.edited['mp'].add(sid)
+                vr = self.v_record[sid]
+                if van_mp != ALL_MP and vr[4] == (van_mp & 0xFF) and mp <= 255:
+                    if self.record[sid][4] != mp:
+                        self.record[sid][4] = mp           # the battle copy
+                        self.edited['record'].add(sid)
             if 'learn' in o:
                 if sid >= LEARN_ROWS:
                     raise GamedataError(
@@ -565,7 +603,7 @@ class Gamedata:
                 R = o['record']
                 _check_keys(R, [n for n, _, _ in RECORD_FIELDS], what + '.record')
                 r = self.record[sid]
-                before = bytes(r)
+                before = bytes(self.v_record[sid])
                 for n, off, size in RECORD_FIELDS:
                     if n in R:
                         v = _range(R[n], 0, 0xFF if size == 1 else 0xFFFF,
@@ -574,14 +612,13 @@ class Gamedata:
                             r[off] = v
                         else:
                             _put16(r, off, v)
+                if 'target_mode' in R and r[2] not in TARGET_MODES_OK and \
+                        r[2] != self.v_record[sid][2]:
+                    raise GamedataError(
+                        f"{what}.record.target_mode ${r[2]:02X}: one of $11 one foe, $12 all "
+                        "foes, $21 one ally, $22 all allies, $41 the user (or the original)")
                 if bytes(r) != before:
                     self.edited['record'].add(sid)
-            if sid in self.edited['mp'] and 'mp_byte' not in (o.get('record') or {}):
-                mp = _u16(self.mp[sid], 0)
-                if self.record[sid][4] != (mp & 0xFF):
-                    self.warnings.append(
-                        f"{what}: record +4 (mp_byte) still holds the old cost; its "
-                        "reader is not traced (GetSkillMPCost reads the $07 table)")
 
     # -- curves ---------------------------------------------------------
     def _curves(self):
