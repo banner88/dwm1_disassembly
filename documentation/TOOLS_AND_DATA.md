@@ -1014,3 +1014,32 @@ verified overrides.
 | editor2/help/61_music.md (NEW), 00_start.md, 60_gates.md, _revision.md; `EDITOR_REVISION` = 'S116' (S116b after the player fix; 61_music.md += the `[music]` terminal line); README / main.py run line + numpy | help | test_app |
 | editor2/tests/test_compiler.py (pin `7bab4921…` patched; S116 tests), test_app.py (S116 block) | tests | 874/874 --rom; test_app + --rom PASS; test_canvas --rom PASS |
 
+
+## S117 rows (extended flags; ROADMAP NG2 gate swirls / cleared; ROADMAP P3.13c shops)
+
+| Tool / data | What | Verified |
+|---|---|---|
+| tools/map_gate_names.py → extracted/gate_names.json (REGENERATED) | + per gate `cleared_flag` / `cleared_flags`: the flag(s) its boss room's win scripts set before the castle return (`set_flag F` … `write_ram $D92B 7`; Medal also scans room $41; Demolition $27 + $28; gate 31 none) — read by editor2/core/gates.py | `--check` (verify check 5); the flags == the 31 bosses' scripts |
+| tools/extract_gamedata.py → extracted/gamedata_vanilla.json (REGENERATED) | + tables `item_info` ($03:$71DA, 44 × 12) and `shop_bazaar` / `_starry` / `_books` / `_rare` / `_gate` ($09:$476B / $4774 / $477D / $4784 / $478C); selftest: each shop list is one `$FF`-terminated id list | `--selftest` (verify check 5) |
+| tools/resection_shops.py (NEW) | one-shot annotation: bank $03 `SpriteFrameDataTable` → `ItemInfoTable` 44 `db` rows (both trees; the patched copy inside region `gd_item_info`) + the bank $09 renames (`renames()`: ScreenEffectSay, ShopCountItems, ShopDrawNames, ShopDrawPrices, ShopSellPrice); builds | clean `1ca6579…` byte-perfect after the run |
+| tools/resection_shops_09.py (NEW) | one-shot annotation: the bank $09 shop tables (ShopOuterStateTable, ShopMenuCursorTable, ShopMenuTable, ShopBuyStateTable, ShopBuyStockFill, ShopSellStateTable) by EXACT text-block replacement in both trees (KEY_LESSONS S117: the splice probe's `.local` trap); calls `resection_shops.renames()`; builds | clean byte-perfect; text diff = only the intended lines |
+| patches/bank_000.asm | ROM0 `ComputeFlagAddress` SAME-SIZE (34 B) → bank $73 entry 21 | verifier PASS; test_compiler `test_flags_ng2_rom` (SM83 sweep 0-$1FFF, the 1,934 script flags == the original) |
+| patches/bank_073.asm | entry 21 `FlagAddr`; `ExtFlagsCommit` / `ExtFlagsRestore` called from entries 5 / 6 (SRAM bank 3 "X1"); every later bank $73 byte +2 | PyBoy on the user's save (save → reload, unsaved rewind, new game) |
+| patches/bank_00b.asm | `GetRoomDataPtr` after the gate test SAME-SIZE (21 B) → bank $60 entry 1 for every non-gate room | A/B old vs new over the user's project: 212 vanilla + 25 custom screens' NPC slots (only room $23 differs, by design) |
+| patches/bank_050.asm | the boss-win `ld a,$0E / ld [$C8ED],a / ret` → `ld hl,$7602 / rst $10 / ret / nop` | test_compiler `test_s117_engine_rom`; PyBoy gate-32 boss win |
+| patches/bank_009.asm, patches/game.asm, patches/wram.asm, tools/verify_integrity.py | the shop fill (64 B) and close tail (10 B) → bank $77 entries 0 / 1; `bank_077.asm` included (blank bank file dropped); `wExtFlags` $D140 (256 B) + `wShopID` $D240 from wCustomPool; PATCH_NEW_FILES += bank_077.asm | verifier PASS; test_compiler `test_shops_rom` (address map, ShopFill census == the original, wShopID lists, ShopClose) |
+| editor2/core/templates/bank_060_head.asm (re-pinned `364ee530…`), bank_076_head.asm (re-pinned `40972da2…`), bank_077_head.asm (NEW, pinned `fb9aefd1…`) | `CustomReadInteract` for every non-gate room + `VanillaNPCExtTable` + `CopyNPCListToBuffer` ($A0/$A1); `GateBossWin`; `ShopFill` / `ShopClose`; TEMPLATE_SIZE 678 / 358 / 93 | test_compiler |
+| editor2/core/project.py, validators.py, emitters.py, encounters.py, gates.py, document.py, gamedata.py, shops.py (NEW), shops_doc.py (NEW) | the flag pool + `gate:N`; `npc_conditions` / `vanilla_swirl_overrides` / `gate_clear_rows`; `_npc_cond_lines`, `VanillaNPCExtTable`, `GateClearTable`, `shops77` + `gd_item_info`; swirl / portal-redirect / `paint_swirl` helpers; `ShopsMixin` (PROJECT_COMPILER §2.32) | test_compiler `test_flags_ng2_s117`, `test_shops_s117` |
+| editor2/app/shops_tab.py (NEW), main.py, rooms/tab.py, rooms/inspector.py, rooms/npc_panel.py, rooms/rules_panel.py, rooms/talk_editor.py, gates_tab.py, encounters_tab.py | the Shops tab; "Gate entrance here…" adds the swirl + paints it; "Lead this portal to another gate…"; NPC "Shopkeeper…"; `gate:N cleared` in flag pickers; the Gates tab's cleared line | test_app (S117 block) |
+| editor2/help/62_shops.md (NEW), 60_gates.md, 30_flags.md, 20_npcs.md, _revision.md; `EDITOR_REVISION` = 'S117' | help | test_app |
+| editor2/tests/test_compiler.py (pin `31cc5b31…` patched; S117 tests; the 26-targets list + bank $77; the gamedata unknown-section fixture now `potions`), test_app.py (S117 block) | tests | 936/936 --rom; test_app + --rom PASS (GUI build == pin); test_canvas --rom PASS |
+
+## S117b rows (user feedback on the S117 test ROMs: shop menus in free-colour rooms, sprite limits)
+
+| Tool / data | What | Verified |
+|---|---|---|
+| patches/bank_009.asm, patches/wram.asm | `LoadFld9_40fa` (the screen push, 53 B) → same-size `ld hl,$7702 / rst $10 / ret` + 48 nops; `wPushAttrOn` / `wPushAttrRow` ($D241-$D242) from wCustomPool | verifier PASS; test_compiler `test_screen_push_rom` (LoadFld9_412f keeps its address) |
+| editor2/core/templates/bank_077_head.asm (re-pinned `b8af2c91…`) | entry 2 `ScreenPush` + `PushRowAttrs` / `PushAttrActive` / `PushNextCol`; `ShopClose` → `ShopBoxBottom`; TEMPLATE_SIZE 438 | `test_screen_push_rom`: 576 tile writes == the original in a vanilla / plain custom room / DMG, attrs in a free-colour room, a top box re-seated, a bottom box untouched; PyBoy (Bazaar, hall, Cities_FOUNT) |
+| editor2/core/formats.py (`sprite_budget`), validators.py, app/rooms/tab.py | the sprite-limit warnings (build + the Rooms tab note) | test_compiler `test_sprite_budget_s117b`; test_app (S117 block) |
+| editor2/help/20_npcs.md, 90_limits.md, _revision.md; `EDITOR_REVISION` = 'S117b' | help | test_app |
+| editor2/tests/test_compiler.py (pin `110210b0…` patched; `31cc5b31…` historical), test_app.py | tests | 947/947 --rom; test_app + --rom PASS (GUI build == pin); test_canvas --rom PASS |

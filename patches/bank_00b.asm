@@ -519,14 +519,20 @@ GetRoomDataPtr:
     or a
     jr nz, jr_00b_42ac       ; Gate world uses different lookup path
 
-    ; Check for custom overflow room
-    ld a, [wMapID]
-    cp CUSTOM_ROOM_START
-    jr c, .normalInteract
+    ; S117 (NG2): SAME-SIZE rewrite (21 B: 16 + 5 nop). Bank $60 entry 1
+    ; now answers for EVERY non-gate room, like entry 7 does for exits:
+    ; custom rooms -> their list copied to wCustomNPCBuffer (as before, plus
+    ; the $A0/$A1 "shown only when flag ..." prefixes resolved into the hidden
+    ; bit); vanilla rooms with a compiler-authored NPC override
+    ; (VanillaNPCExtTable — the gate swirls of a re-bossed or re-routed
+    ; portal) -> that list, same buffer; anything else -> HL = 0 -> the
+    ; vanilla SharedPtrChase path below, byte-for-byte the original.
+    ; rst $10 keeps HL, clobbers A — test HL.
     ld hl, $6001                ; rst $10: bank $60, entry 1 (CustomReadInteract)
     rst $10
-    ret
-.normalInteract:
+    ld a, h
+    or l
+    ret nz
     ; Shared pointer table read → HL = step_entry
     call SharedPtrChase
     inc hl
@@ -535,6 +541,11 @@ GetRoomDataPtr:
     ld h, [hl]
     ld l, a                  ; HL = interact_ptr (NPC list)
     ret
+    nop
+    nop
+    nop
+    nop
+    nop
 
 
 jr_00b_42ac:

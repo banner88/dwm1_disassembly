@@ -273,3 +273,57 @@ def anim_source(room):
     if v in ANIM_EXCLUDED:
         raise ValueError(f"animation source ${v:02X}: {ANIM_EXCLUDED[v]}")
     return v, kind, f"{kind}: map ${v:02X}"
+
+
+# ---------------------------------------------------------------------------
+# S117b — the Game Boy's SPRITE LIMITS on a screen (hardware, measured S117b on
+# the Portal Hall demo: the user's emulator dropped NPCs while their party
+# walked along the NPCs' row; ROOM_DATA_FORMAT "Sprite limits (S117b)").
+# The field draws in OAM order: the player + up to 3 following monsters first
+# (OAM 0-15, 8x8 objects, 4 per 16x16 character, 2 per screen line), then the
+# NPCs in list order. The PPU shows at most 10 objects per screen line (the
+# lowest OAM indices win) and the OAM holds 40 objects.
+# ---------------------------------------------------------------------------
+SPRITE_LINE_MAX = 10        # objects per screen line (hardware)
+SPRITE_OAM_MAX = 40         # objects on screen (hardware)
+PARTY_LINE_PIECES = 8       # player + 3 monsters lined up on one row, 2 each
+PARTY_PIECES = 16           # player + 3 monsters, 4 each
+
+
+def sprite_budget(npcs):
+    """[warning text] for one screen state's npcs[] entries: rows whose NPCs
+    the hardware hides while the party walks along that row, and NPCs past
+    what fits in the 40-object OAM. Hidden NPCs do not count; conditional
+    ones (shown_when / swirl_of) do — they may all be shown at once."""
+    rows, n = {}, 0
+    for e in npcs or []:
+        k = e.get('kind')
+        if k == 'npc':
+            if e.get('hidden'):
+                continue
+            fac = e.get('facing', 'down')
+            if not isinstance(fac, str) and val(fac) & 0x40:
+                continue
+            y = int(val(e.get('y', 0)))
+        elif k == 'raw' and e.get('bytes') and val(e['bytes'][0]) < 0x80:
+            if val(e['bytes'][0]) & 0x40:
+                continue
+            y = int(val(e['bytes'][3]))
+        else:
+            continue
+        rows[y] = rows.get(y, 0) + 1
+        n += 1
+    out = []
+    room = (SPRITE_LINE_MAX - PARTY_LINE_PIECES) // 2          # NPCs a full row can still show
+    for y in sorted(rows):
+        if rows[y] > room:
+            out.append(f"row {y} has {rows[y]} NPCs: when you and your 3 monsters walk along "
+                       f"that row, the Game Boy shows only {room} of them (at most "
+                       f"{SPRITE_LINE_MAX} sprite pieces per line; your party uses "
+                       f"{PARTY_LINE_PIECES}) — the later ones in the list vanish while you are on it")
+    fit = (SPRITE_OAM_MAX - PARTY_PIECES) // 4
+    if n > fit:
+        out.append(f"{n} NPCs on screen: with you and 3 monsters only the first {fit} in the "
+                   f"list are drawn ({SPRITE_OAM_MAX} sprite pieces in all; your party uses "
+                   f"{PARTY_PIECES})")
+    return out

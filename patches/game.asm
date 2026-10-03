@@ -138,7 +138,7 @@ INCLUDE "bank_073.asm"
 INCLUDE "bank_074.asm"          ; M3a/S63: custom song bank (song_codec.py emit-song-bank)
 INCLUDE "bank_075.asm"          ; S116: the second custom song bank (compiler-generated)
 INCLUDE "bank_076.asm"          ; S114: encounter lists — EncResolve + project lists / room + gate plans (compiler-generated)
-INCLUDE "blank/Empty_bank_077.asm"
+INCLUDE "bank_077.asm"          ; S117: shops — ShopFill + the shop lists (compiler-generated)
 INCLUDE "bank_078.asm"
 INCLUDE "blank/Empty_bank_079.asm"
 INCLUDE "bank_07a.asm"

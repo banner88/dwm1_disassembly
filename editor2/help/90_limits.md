@@ -1,6 +1,10 @@
 # Limits and known issues
 
 - 8 NPCs per screen (engine cap); up to 4 different monster NPCs per screen.
+- Sprite limits (hardware, S117b): one NPC per row stays visible while you
+  and 3 monsters walk along that row (10 sprite pieces per line, your party
+  uses 8); about 6 NPCs per screen are drawn with your party (40 pieces).
+  Shown as warnings — see *NPCs*.
 - Monster species Diago, Samsi, Bazoo and the last row cannot be NPCs
   (crash); Tatsu draws blank.
 - After a battle started by talking to a monster NPC, that monster is not
@@ -47,3 +51,12 @@
   fixed; entry fees are 0-65535 gold; TERRY? and the summons cannot fight in
   or lead a team; the announcer and the masters' words are text (not editable
   yet).
+- Flags (S117): 1,968 named flags of your own (16 left over from the game +
+  1,952 new ones); 8 conditions per state rule / variant / NPC. Defeating a
+  custom boss of a game's gate does not move that portal room's own step
+  counter (other people in that room stay as the game leaves them; the
+  swirl itself follows your boss).
+- Shops (S117): a shop sells 1-20 items; at most 250 shops; prices are per
+  item (every shop), 0-65535 gold; what shops pay is the game's rule (3/4,
+  staffs 1/10, the gate shop the full price) and is not editable. Item
+  effects are not editable yet.

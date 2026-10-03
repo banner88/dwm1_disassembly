@@ -24,7 +24,8 @@ All other flag setting goes through script opcode $03.
 **Reader added S97:** custom-room STATE RULES (bank $60 entry 8
 `CustomStateRules`, PROJECT_COMPILER §2.13) call `TestEventFlag` at every
 custom (re)load — a rule may test ANY flag (vanilla story flags included);
-named project flags come from the safe pool below (16 flags).
+named project flags come from the safe pool below (16 flags) — S117: plus the
+2,048 extended flags `$1000`-`$17FF` ("Extended flags (S117)").
 
 ### Script Opcodes
 | Opcode | Name | Purpose |
@@ -136,6 +137,39 @@ pending farm-exp accumulator (24-bit LE; fed by bank $50
 BECAUSE they are clean, save-imaged (in-gate save rooms exist, so pending
 must survive save+reload), and boot-cleared. Flag indices $0168–$017F must
 never be allocated.
+
+## Extended flags (S117 — built S117, PyBoy-verified, NOT yet user-tested)
+
+The user needs "dozens if not hundreds of flags" for a custom campaign; the vanilla
+bitfield has 16 safe persistent ones (above). Patched builds add **2,048 flags,
+indices `$1000`-`$17FF`**, in `wExtFlags` (`$D140`-`$D23F`, 256 B carved from
+wCustomPool — known_RAM_map), saved with the game.
+
+- **One chokepoint.** `SetEventFlag` / `ClearEventFlag` / `TestEventFlag` all call ROM0
+  `ComputeFlagAddress` ($26B3; BC = index → HL = byte, A = mask). Patched: a SAME-SIZE
+  34-byte rewrite (12 B code + 22 nops) that far-calls **bank $73 entry 21 `FlagAddr`**
+  (DE = index → HL = address, C = mask; BC / DE preserved for the caller): `$1000`-`$17FF`
+  → `wExtFlags + (index − $1000) / 8`; every other index → the vanilla `$D99B + index /
+  8` (unchanged, out-of-range indices included); mask `$80 >> (index & 7)` (MSB-first, as
+  the vanilla mask table `$26D5`, which keeps its address — ROM0 `GetBitAndMask` reads it too).
+  Scripts reach the new range with the ordinary opcodes $00-$03 (the index is a word).
+- **Saved / loaded / cleared like the vanilla bitfield.** Bank $73 entry 5's main-save
+  detector also runs `ExtFlagsCommit` (SRAM bank 3: magic `"X1"` at `$A000`, the 256 B at
+  `$A010`); entry 6's main-load detector runs `ExtFlagsRestore` after its zero-fill of
+  `$CC80`-`$D664` (copied back only when the magic is there — an old save loads with all
+  extended flags clear). A new game zeroes them (`CF3NewGameClear` covers `$C8EA`-`$D9E9`).
+  An unsaved flag is lost on reload exactly like a vanilla one. ARCHITECTURE "SRAM bank 3
+  (S117)".
+- **Measured S117:** the address of every flag index the game's scripts reference (1,934)
+  is identical to the original; an SM83 stub sweep of 0-`$1FFF` = the formula above with
+  BC / DE preserved; on the user's save a flag set in the new range survives save → power
+  off → continue, an unsaved one rewinds, a new game clears it.
+- **Editor pool** (`editor2/core/project.py FLAG_SAFE_RANGES`): `$0158`-`$0167` (16) +
+  `$1000`-`$179F` (1,952) for named project flags; **`$17A0`-`$17FF` = the gates'
+  own cleared flags** (`$17A0` + gate number — GATE_GENERATION §7.9). `flag_persistent()`
+  treats the whole extended range as persistent.
+- **New SetEventFlag caller (patched builds):** bank $76 entry 2 `GateBossWin` (the
+  cleared mark of re-bossed / new gates, GATE_GENERATION §7.9).
 
 ## Analysis Tool
 

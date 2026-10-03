@@ -216,6 +216,7 @@ class NpcPanel(QGroupBox):
     spriteRequested = Signal()
     newTalkRequested = Signal()
     newConversationRequested = Signal()  # S101
+    shopRequested = Signal()             # S117 (P3.13c): make this NPC a shopkeeper
     editTalkRequested = Signal()
     presenceToggled = Signal(int, bool)  # state index, present
     deleteRequested = Signal()
@@ -287,8 +288,13 @@ class NpcPanel(QGroupBox):
                                      'checks, flags, a battle of 1-3 enemies, the helper who '
                                      'takes the player away — boss rooms')
         self.btn_new_conv.clicked.connect(self.newConversationRequested.emit)
+        self.btn_shop = QPushButton('Shopkeeper…')
+        self.btn_shop.setToolTip('S117: this NPC runs a shop — pick which shop (the game\'s '
+                                 'five or one of yours, Shops tab) and an optional greeting')
+        self.btn_shop.clicked.connect(self.shopRequested.emit)
         brow.addWidget(self.btn_new_talk)
         brow.addWidget(self.btn_new_conv)
+        brow.addWidget(self.btn_shop)
         brow.addWidget(self.btn_edit_talk)
         f.addRow('', brow)
         self.talk_preview = QLabel('')

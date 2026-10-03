@@ -1,5 +1,60 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-03 (Session 115 — **ROADMAP ARC NG, NG1: NEW RANDOM GATES — A
+> COPY OF A VANILLA GATE WITH ITS OWN NUMBER, NAME, FLOORS, BOSS ROOM, MONSTERS AND AN
+> ENTRANCE** (user: "Hang on. 1) How do I make a new random gate and set floors +
+> encounters? 2) How do I add encounters to a series of custom rooms?" → "I want new gates
+> now ideally, can you add and give updated files?"). **Test ROM
+> `DWM_S115_newgates_test.gbc` (`649218aa…`, patched) USER-CONFIRMED 2026-10-03 12:39 ("Excellent, confirm works")**;
+> the editor half test_app-verified, not yet run on the user's Mac.
+> Verifier PASS (6/6); clean `1ca6579…` byte-perfect (bank $16 entry 5's two row readers
+> commented in both trees: the 8-bit gate·8 wraps at 32 — comments only); **patched pin
+> `c8995d91…` (patched)**, was `dbc4dee9…` (patched, historical); the user's project
+> (my-dwm-hack_6) as-is now builds `f779c4af…` (patched; was `0a45fbf4…`, historical — the
+> engine change only: it has no new gates). test_compiler --rom 844/844, test_app +
+> test_app --rom PASS (GUI build == pin), test_canvas --rom PASS. `EDITOR_REVISION` =
+> 'S115'.
+>
+> **Engine (GATE_GENERATION §7.8, PROJECT_COMPILER §2.31):** the ONLY readers of
+> `GateFloorDataTable` are bank $16 entry 5's `jr_016_5b72` (the row) and `jr_016_5be1`
+> (row + 4, the boss floor) — both an 8-bit `wGateID·8`, so gate n ≥ 32 read gate n & 31.
+> Both are now SAME-SIZE calls (15 → 15 B) to **`GateRowPtr`** (bank $16 free tail $7CFD):
+> gates 0-31 = the table as before; gate ≥ 32 → bank $76 **entry 1 `NewGateRowCopy`**
+> copies the project's row (compiler-owned `NewGateRows`) to **`wGateRowBuf` ($D138, 8 B
+> carved from wCustomPool)**; an undefined number keeps the old wrap. `EncVanillaNumber`
+> walks a new gate's SOURCE gate (`NewGateSource`) — its unplanned floors and floor value
+> (floor gold) are the source's. Everything else in a dive already used the 8-bit
+> `wGateID` (GateDecisionFork, CustomGateInsert / wGateDiveGate, the Anchor, EncResolve).
+> Entrance = the vanilla portal exit form (gate_flag 1, dest = the gate, screen 0, spawn
+> 0,0 — all 34 vanilla portal rows). **Schema:** `custom.gates[]` entries 32-95 with
+> `copy_of` (0-31) + `name` (+ floors / boss / hand_made / encounters as any gate); exit
+> rows `{"dest": "gate:N", "gate_flag": 1, …}`; gate_inserts / encounters accept new gates;
+> validator: entrances to undefined gates refused, a new gate with no entrance / a vanilla
+> boss room warned. **Editor:** Gates tab New gate… / Rename… / Delete (rules + entrances
+> go too) + the entrance line; Rooms tab More ▾ → "Gate entrance here…" (paints the hole);
+> the Encounters tab lists new gates; help 60_gates.md "New gates".
+>
+> **Measured on the user's save (demo = the user's project + "Ember Hall" behind the
+> GreatTree 2F Library door, a painted hole = the entrance to new gate 32 "Ember Gate",
+> copy of Memories, 4 floors, floors 1-2 / 3 on two project lists, boss room "Ember
+> Throne" — NOT in their project):** walking onto the hole → wGateID 32, floor 0, last 4,
+> boss $72, the row in wGateRowBuf, Memories' maze (map $0D), `GateRowPtr` and
+> `NewGateRowCopy` each hit once; floor 1 battles SpotSlime+Gremlin / Gremlin / DragonKid
+> (list 128); floor 3 a vanilla special room ($50, then $51) on some dives and the maze on
+> others, battles FairyDrak / MadCat+FairyDrak×2 / Wyvern (list 129); floor 4 = Ember
+> Throne at (4,6), the King's MadCat battle (EID 51) → join → the helper → the Castle,
+> priest blessing. Gate 2 (vanilla) on the same build: row 6 floors / boss $32 as the ROM.
+> Stub calls of `GateRowPtr` for gates 0-40, 95, 96, 200, 255: all as designed (0 bad).
+> `census_encounters.py` (now also covers new gates): demo 636 choices + 15,264 draws, 0
+> mismatches (negative control mismatches); example 633 + 15,192, 0.
+> **Open:** NG2 (entrance unlocks / conditions — a portal is a plain exit today) and NG3
+> (fully custom branching gates — the four S114 questions) wait for the user; a new
+> gate's own floor types (maze look) = ROADMAP residual.
+> **Hand-off:** S114 was not pushed, so every S114 + S115 change = the diff against
+> `c37879e` (origin/master, the S113 push), delivered as
+> `DWM-S115-newgates-changed-files.zip` (it supersedes the S114 zip), the APPLY list pasted
+> in the chat. **Next:** P3.13b Music tab (user, S114) or NG2 / NG3 (user's pick).
+
 > Last verified: 2026-10-03 (Session 114 — **ROADMAP P3.13a: THE ENCOUNTERS TAB — LISTS OF
 > YOUR OWN, A LIST PER GATE FLOOR, ROOMS WITH THEIR OWN LIST, FLAG VARIANTS, BATTLE RATES**
 > (user on the audit: "1) Music next is fine. 2) Give option. Especially if I want to

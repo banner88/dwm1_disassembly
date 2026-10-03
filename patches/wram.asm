@@ -318,7 +318,23 @@ wEncListBuf:: ds 26 ;d11e-d137 — the 26-byte encounter list in use
 ; of GateFloorDataTable + wGateID*8. Written right before every read, so it
 ; is transient by design.
 wGateRowBuf:: ds 8 ;d138-d13f — the current new gate's 8-byte row
-wCustomPool:: ds $5A4 - 132 - 5 - 2 * TILEANIM_MAX_GROUPS - 2 - 18 - 26 - 8 ;d140-d5e4 — transient reserve (was $664; FX1 carved 64+128; S97 132; S102 69; S105 2; S111 18; S114 26; S115 8)
+; S117 (FLAG EXPANSION): the extended event flags, indices $1000-$17FF
+; (2,048 flags, MSB-first like the vanilla bitfield). Every flag op reaches
+; them through ROM0 ComputeFlagAddress -> bank $73 entry 21 FlagAddr. NOT
+; transient: bank $73 ExtFlagsCommit / ExtFlagsRestore carry them through
+; the explicit save (SRAM bank 3, magic "X1"); new game zeroes them
+; (CF3NewGameClear covers $C8EA-$D9E9).
+wExtFlags:: ds 256 ;d140-d23f — extended event flags $1000-$17FF (saved via SRAM bank 3)
+; S117 (P3.13c Shops): which shop list a shopkeeper sells — a `shop` script
+; writes list index + 1 right before opcode $04 $0000 $0680; bank $77 ShopFill
+; reads it at every BUY (0 = the vanilla room rule) and bank $77 ShopClose
+; clears it when the shop closes. Transient by design.
+wShopID:: db ;d240 — the next shop's list (index + 1), 0 = by room (bank $77 ShopFill)
+; S117b: bank $77 ScreenPush scratch (the bank $09 screen push writes palette
+; attributes in free-colour custom rooms). Transient by design.
+wPushAttrOn:: db ;d241 — $80 = this push also writes attributes
+wPushAttrRow:: db ;d242 — the row being written (0-17)
+wCustomPool:: ds $5A4 - 132 - 5 - 2 * TILEANIM_MAX_GROUPS - 2 - 18 - 26 - 8 - 256 - 1 - 2 ;d243-d5e4 — transient reserve (was $664; FX1 carved 64+128; S97 132; S102 69; S105 2; S111 18; S114 26; S115 8; S117 256 wExtFlags + 1 wShopID; S117b 2 push scratch)
 ; FX1 (S71): wPoolBounce — 128-byte staging for sleep-pool bank-2 record
 ; swaps (per-byte scratch in CF3PoolSwapRecord). Transient. (The v1 drain's
 ; halved-pending scratch use was removed with the S71v2 exp-scale veto.)

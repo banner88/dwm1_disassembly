@@ -219,6 +219,11 @@ class MainWindow(QMainWindow):
                 from editor2.app.music_tab import MusicTab
                 self.music_tab = MusicTab(self.session)
                 self.tabs.addTab(self.music_tab, 'Music')
+                # S117 (P3.13c): shops — the five vanilla lists, the project's
+                # own shops (sold by NPCs made shopkeepers), item prices
+                from editor2.app.shops_tab import ShopsTab
+                self.shops_tab = ShopsTab(self.session)
+                self.tabs.addTab(self.shops_tab, 'Shops')
                 continue
             if title == 'Breeding' and self.session:
                 # S113 (P3.12): recipes, depth, try a cross, generate a tree

@@ -86,6 +86,7 @@ SECTION "ROM Bank $073", ROMX[$4000], BANK[$73]
     dw ChoiceBoxOpen                ; entry 18 — S97 r2: YES/NO open ($56:$48A1): cursor gfx + choice attrs -> 7
     dw GateWipeAttr                 ; entry 19 — S100 r3: in-gate transition blank rows -> palette 7 (free-colour rooms)
     dw GateLeaveFreePal             ; entry 20 — S100 r3: in-gate transition, room squeezed: colour 1 := cream (buffer + HW)
+    dw FlagAddr                     ; entry 21 — S117: event-flag address + mask (ROM0 ComputeFlagAddress; + extended flags $1000-$17FF)
 
 ; -----------------------------------------------------------------------------
 ; Entry 0 — map-change commit hook: displaced store + conditional drain.
@@ -976,6 +977,7 @@ CF3CopyToSRAM:
     ld [$bfca], a
     ld a, [wGateDiveMask]
     ld [$bfcb], a
+    call ExtFlagsCommit             ; S117: extended flags -> SRAM bank 3 (+ magic "X1")
     jp CF3SnapCommit
 
 ; -----------------------------------------------------------------------------
@@ -1060,6 +1062,7 @@ CF3CopyFromSRAM:
     ld [wGateDiveGate], a
     ld a, [$bfcb]
     ld [wGateDiveMask], a
+    call ExtFlagsRestore            ; S117: SRAM bank 3 -> wExtFlags (magic "X1"; else they stay zero)
     ; S69v2: bank-1 roster snapshot — restore over the eager image if the
     ; magic is present, else SEED it (one-time migration of pre-v3 saves).
     jp CF3SnapRestore
@@ -2192,3 +2195,119 @@ GateLeaveFreePal:
     dec c
     jr nz, .slot
     jp MenuOpenFreePal
+
+; =============================================================================
+; S117 — THE EXTENDED EVENT FLAGS (2,048 flags, indices $1000-$17FF).
+;
+; Why: the vanilla bitfield $D99B+ has exactly 16 indices that are clean AND
+; inside the save image ($0158-$0167, EVENT_FLAGS "Free Flag Slots"); a
+; campaign needs hundreds. Every flag access in the game goes through ROM0
+; ComputeFlagAddress (SetEventFlag $26A0 / ClearEventFlag $26A6 /
+; TestEventFlag $26AE: script ops $00-$03, bank $09 / $12 users, bank $60 /
+; $71 / $76 rule walkers — census S117), so ONE same-size rewrite of it (a
+; far call to entry 21 below) gives every one of them the new range at once.
+;
+; Storage: wExtFlags (256 B, carved from wCustomPool — patches/wram.asm).
+; That window is outside the save image (CF3 skips it both ways), so the
+; flags ride the EXPLICIT save themselves, exactly like the gate dive state:
+;   * entry 5's main-save detector -> ExtFlagsCommit: SRAM bank 3 $A000-$A001
+;     = magic "X1" ($58,$31), $A010-$A10F = the 256 bytes;
+;   * entry 6's main-load detector (AFTER the window zero-fill) ->
+;     ExtFlagsRestore: magic present -> copy back; absent (a save made before
+;     S117, a fresh cart) -> the flags stay zero.
+;   * new game: CF3NewGameClear zeroes $C8EA-$D9E9, which covers wExtFlags.
+; So they rewind on a reset without saving, like every vanilla flag. Bank 3
+; is otherwise unclaimed (bank 1 = roster snapshot "R4", bank 2 = sleep pool
+; "P1"). Access discipline = the snapshot hooks' (S69 audit: no ISR touches
+; SRAM or RAMB under the pin, so short RAMB=3 windows need no di/ei);
+; RAMB is back to 0 on exit.
+; =============================================================================
+EXT_FLAG_FIRST_HI EQU $10           ; first extended index = $1000
+EXT_FLAG_PAGES    EQU $08           ; $1000-$17FF (8 x 256 indices = 256 bytes)
+
+; Entry 21 — FlagAddr. In: DE = flag index. Out: HL = byte address,
+; C = bit mask ($80 >> (index & 7)) — the vanilla mask order (MSB first).
+; Clobbers A, B. (Reached only from ROM0 ComputeFlagAddress, which saves
+; BC/DE around the rst and returns the mask in A.)
+FlagAddr:
+    ld a, d
+    sub EXT_FLAG_FIRST_HI
+    jr c, .vanilla
+    cp EXT_FLAG_PAGES
+    jr nc, .vanilla
+    ld h, a                         ; HL = index - $1000
+    ld l, e
+    ld bc, wExtFlags
+    jr .byte
+.vanilla:
+    ld h, d                         ; HL = index (any value: the vanilla formula)
+    ld l, e
+    ld bc, $d99b                    ; wEventFlags
+.byte:
+    srl h
+    rr l
+    srl h
+    rr l
+    srl h
+    rr l                            ; HL = index / 8
+    add hl, bc                      ; + base (16-bit wrap as vanilla's add hl,bc)
+    ld a, e
+    and $07
+    ld c, $80
+    ret z
+.shift:
+    srl c
+    dec a
+    jr nz, .shift
+    ret
+
+; ExtFlagsCommit — wExtFlags -> SRAM bank 3 $A010 (256 B) + magic. SRAM is
+; enabled by the calling entry. Clobbers A, BC, DE, HL. RAMB = 0 on exit.
+ExtFlagsCommit:
+    ld a, 3
+    ld [$4100], a
+    ld hl, wExtFlags
+    ld de, $a010
+    ld b, 0                         ; 256 bytes
+.c:
+    ld a, [hl+]
+    ld [de], a
+    inc de
+    dec b
+    jr nz, .c
+    ld hl, $a000
+    ld a, $58
+    ld [hl+], a
+    ld [hl], $31                    ; magic "X1"
+    xor a
+    ld [$4100], a
+    ret
+
+; ExtFlagsRestore — magic "X1" in bank 3 -> wExtFlags := $A010.. (256 B);
+; else leave them (the caller just zeroed the window). Clobbers A, BC, DE,
+; HL. RAMB = 0 on exit.
+ExtFlagsRestore:
+    ld a, $0a
+    ld [$0100], a
+    ld a, 3
+    ld [$4100], a
+    ld hl, $a000
+    ld a, [hl+]
+    cp $58
+    jr nz, .done
+    ld a, [hl]
+    cp $31
+    jr nz, .done
+    ld hl, $a010
+    ld de, wExtFlags
+    ld b, 0
+.r:
+    ld a, [hl+]
+    ld [de], a
+    inc de
+    dec b
+    jr nz, .r
+.done:
+    xor a
+    ld [$4100], a
+    ret

@@ -35,7 +35,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QButtonGroup, QCheckBox, QComb
                                QVBoxLayout, QWidget)
 
 from editor2.app.rooms import commands as C
-from editor2.app.rooms.rules_panel import WELL_KNOWN
+from editor2.app.rooms.rules_panel import WELL_KNOWN, well_known
 from editor2.core import encounters as EN
 from editor2.core import encounters_doc as ED
 
@@ -91,7 +91,7 @@ class FlagTerms(QWidget):
             c.addItem(f"{fl['name']}  (project flag)", fl['name'])
         for nm in self.new_flags:
             c.addItem(f'{nm}  (new project flag)', nm)
-        for idx, name in WELL_KNOWN:
+        for idx, name in well_known(self.doc):
             c.addItem(f'{idx}  {name}', idx)
         if value is not None:
             i = c.findData(value)

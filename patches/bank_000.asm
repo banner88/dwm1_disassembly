@@ -8030,28 +8030,47 @@ TestFlagDirect:
 ; Output: A = bit mask, HL = byte address in event bitfield
 ; ---------------------------------------------------------------------------
 ComputeFlagAddress:
+    ; S117 (FLAG EXPANSION): same-size rewrite (34 -> 12 B + 22 nop; the mask
+    ; table $26D5 below stays put — GetBitAndMask reads it). The whole
+    ; computation moved to bank $73 entry 21 FlagAddr, which keeps the vanilla
+    ; result for every index ($D99B + idx/8, mask $80>>(idx&7)) EXCEPT the
+    ; extended flags $1000-$17FF -> wExtFlags (WRAM, saved to SRAM bank 3 by
+    ; the explicit save — bank $73 ExtFlagsCommit / ExtFlagsRestore).
+    ; rst $10 clobbers BC (dispatcher) and A (bank restore), so the index
+    ; travels in DE and the mask comes back in C. Contract unchanged:
+    ; in BC = index (preserved), out A = mask, HL = byte address; DE preserved.
+    push de
     push bc
-    srl b
-    rr c                     ; BC >>= 1
-    srl b
-    rr c                     ; BC >>= 2
-    srl b
-    rr c                     ; BC >>= 3 (BC / 8 = byte offset)
-    ld hl, $d99b
-    add hl, bc               ; HL = $D99B + (flag_index / 8) = byte address
+    ld d, b
+    ld e, c
+    ld hl, $7315             ; rst $10: bank $73, entry 21 (FlagAddr)
+    rst $10
+    ld a, c                  ; A = bit mask
     pop bc
-    push hl
-    ld hl, $26d5             ; Bit mask lookup table
-    ld a, c
-    and $07                  ; C & 7 = bit position within byte
-    add l
-    ld l, a
-    ld a, $00
-    adc h
-    ld h, a                  ; HL = $26D5 + (C & 7)
-    ld a, [hl]               ; A = bit mask ($80,$40,$20,$10,$08,$04,$02,$01)
-    pop hl                   ; HL = byte address
+    pop de
     ret
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
 
 
     add b

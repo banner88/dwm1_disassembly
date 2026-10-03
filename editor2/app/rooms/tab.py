@@ -463,6 +463,7 @@ class RoomsTab(QWidget):
         self.inspector.addRedirectRequested.connect(self._add_redirect)
         self.inspector.removeRedirectRequested.connect(self._remove_redirect)
         self.inspector.routeDoorRequested.connect(self._route_door)
+        self.inspector.portalGateRequested.connect(self._portal_to_gate)   # S117
         self.inspector.statePaletteChosen.connect(self._state_palette_chosen)
         self.inspector.addExitRequested.connect(self._add_exit)
         self.inspector.removeExitRequested.connect(self._remove_exit)
@@ -546,6 +547,7 @@ class RoomsTab(QWidget):
         npc.spriteRequested.connect(self._npc_sprite)
         npc.newTalkRequested.connect(self._npc_new_talk)
         npc.newConversationRequested.connect(self._npc_new_conversation)     # S101
+        npc.shopRequested.connect(self._npc_shop)                            # S117
         npc.editTalkRequested.connect(self._npc_edit_talk)
         npc.presenceToggled.connect(self._npc_presence)
         npc.deleteRequested.connect(self._npc_delete)
@@ -949,6 +951,10 @@ class RoomsTab(QWidget):
                             '— painting changes all of them.')
         if self.canvas.attr_note.startswith('WARNING'):
             msgs.append(self.canvas.attr_note)
+        # S117b: sprite limits — NPCs the Game Boy hides with your party around
+        from editor2.core import formats as _F
+        for msg in _F.sprite_budget(self.s.doc._state_target(room, self.key, self.state_idx).get('npcs')):
+            msgs.append('Sprite limit: ' + msg + '.')
         self.banner.setText('\n'.join(msgs))
         self.banner.setVisible(bool(msgs))
         gfx, pals = self.canvas.gfx, self.canvas.pals
@@ -1623,8 +1629,9 @@ class RoomsTab(QWidget):
 
     def _add_gate_entrance(self, cell):
         """S115 (NG1): an exit that enters a gate (a vanilla gate or one of the
-        project's new gates) — the vanilla portal form; the cell gets the
-        next-floor hole picture (repaint it as you like)."""
+        project's new gates) — the vanilla portal form. S117 (NG2): the cell
+        gets the vanilla portal's still swirl and the spinning swirl object,
+        shown until the gate is cleared (repaint / delete either as you like)."""
         from PySide6.QtWidgets import QInputDialog
         room = self.current_room()
         if room is None:
@@ -1647,20 +1654,23 @@ class RoomsTab(QWidget):
 
         def op(doc):
             r = doc.room(rid)
-            doc.add_gate_entrance(r, key, st, cx, cy, gid)
+            full = doc.add_gate_entrance(r, key, st, cx, cy, gid)
+            notes = []
+            if full:
+                notes.append('no room for the swirl object (8 NPCs on this screen)')
             try:
-                doc.paint_well(r, key, st, cx, cy)
-                doc.last_import_note = ''
+                doc.paint_swirl(r, key, st, cx, cy)       # S117 (NG2): the portal look
             except RuntimeError as ex:
-                doc.last_import_note = f'Gate entrance added, but the hole picture was not: {ex}'
+                notes.append(f'the swirl picture was not painted: {ex}')
+            doc.last_import_note = ('Gate entrance added, but ' + '; '.join(notes)) if notes else ''
         cmd = self._door_op(f'Gate entrance ({cx},{cy}) -> gate {gid}', op)
         if cmd is not None:
             self._show()
             self._select_exit_at((cx, cy))
             note = getattr(self.s.doc, 'last_import_note', '')
             self.status_line.setText(note or f'Gate entrance at ({cx},{cy}) -> '
-                                     f'{self.s.doc.gate_name(gid)} — painted with the hole '
-                                     'picture. Walking onto it starts a dive at floor 1.')
+                                     f'{self.s.doc.gate_name(gid)} — a swirl that spins until the '
+                                     'gate is cleared. Walking onto it starts a dive at floor 1.')
 
     def _add_spot(self, cell, kind):
         room = self.current_room()
@@ -1908,6 +1918,61 @@ class RoomsTab(QWidget):
             return sid
         if self._npc_op('New talk', op) is not None:
             (self._after_spot_edit if spot else self._after_npc_edit)(idx)
+
+    def _npc_shop(self):
+        """S117 (P3.13c): the selected NPC becomes a shopkeeper — which shop
+        (Shops tab) + an optional greeting (two-line boxes; empty = the game's
+        "Item shop. May I help you?")."""
+        idx = self._sel_npc
+        room = self.current_room()
+        if idx is None or room is None or self._sel_is_spot():
+            return
+        from PySide6.QtWidgets import QPlainTextEdit
+        doc = self.s.doc
+        try:
+            shops = doc.shop_list()
+        except Exception as ex:
+            QMessageBox.warning(self, 'Shopkeeper', str(ex))
+            return
+        cur = doc.shopkeeper_of(room, self.key, self.state_idx, idx)
+        dlg = QDialog(self)
+        dlg.setWindowTitle('Shopkeeper')
+        v = QVBoxLayout(dlg)
+        v.addWidget(QLabel('This NPC sells:'))
+        combo = QComboBox()
+        for sh in shops:
+            combo.addItem(f"{sh['name']}  ({len(sh['items'])} items)"
+                          + ('' if sh['vanilla'] else '  — yours'), sh['key'])
+        if cur:
+            combo.setCurrentIndex(max(0, combo.findData(cur[0])))
+        v.addWidget(combo)
+        v.addWidget(QLabel('Greeting (optional; a blank line starts a new box, '
+                           'two lines of 16 per box). Empty = "Item shop. May I help you?"'))
+        ed = QPlainTextEdit()
+        if cur and cur[1]:
+            ed.setPlainText('\n\n'.join('\n'.join(b) for b in cur[1]))
+        v.addWidget(ed)
+        v.addWidget(QLabel('Then the game\'s BUY / SELL / EXIT shop, then "Thank you. '
+                           'Come again!". Edit the lists and prices on the Shops tab.'))
+        bb = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        bb.accepted.connect(dlg.accept)
+        bb.rejected.connect(dlg.reject)
+        v.addWidget(bb)
+        if dlg.exec() != QDialog.Accepted:
+            return
+        shop = combo.currentData()
+        txt = ed.toPlainText().strip()
+        boxes = None
+        if txt:
+            boxes = [[ln for ln in blk.split('\n') if ln.strip()][:2]
+                     for blk in txt.split('\n\n') if blk.strip()]
+
+        def op(d, r, k, st):
+            return d.make_shopkeeper(r, k, st, idx, shop, boxes)
+        if self._npc_op('Shopkeeper', op) is not None:
+            self._after_npc_edit(idx)
+            self.status_line.setText(f'This NPC now sells "{combo.currentText()}". '
+                                     'Lists and prices: the Shops tab.')
 
     def _npc_edit_talk(self):
         idx = self._sel_npc
@@ -2402,6 +2467,44 @@ class RoomsTab(QWidget):
         self.s.undo.push(C.SnapshotCommand(
             self.s, f"Remove entrance {rd['mapID']} ({rd['x']},{rd['y']})",
             lambda doc: doc.remove_redirect(index)))
+
+    def _portal_to_gate(self, preset):
+        """S117 (NG2): a vanilla gate portal enters another gate (an entrance
+        redirect with dest gate:N); its swirl follows that gate's cleared flag."""
+        from PySide6.QtWidgets import QInputDialog
+        gates = self.s.doc.all_gates()
+        gates = [g for g in gates if g.get('new')] + [g for g in gates if not g.get('new')]
+        items = [f"{g['id']:2d}  {g['name']}" + ('  (new)' if g.get('new') else '')
+                 for g in gates]
+        mid, scr, x, y = preset['mapID'], preset['screen'], preset['x'], preset['y']
+        name = self.s.renderer.vanilla_name(mid)
+        mine = [i for i, rd in self.s.doc.portal_redirects()
+                if (val(rd['mapID']), val(rd['screen']), val(rd['x']), val(rd['y']))
+                == (mid, scr, x, y)]
+        undo_item = '(back to the gate the game gives it)'
+        if mine:
+            items = [undo_item] + items
+        it, okd = QInputDialog.getItem(self, 'Lead this portal to a gate',
+                                       'Walking onto this portal enters gate:', items, 0, False)
+        if not okd:
+            return
+        if it == undo_item:
+            idx = mine[0]
+            self.s.undo.push(C.SnapshotCommand(
+                self.s, f'{name} portal ({x},{y}) back to its own gate',
+                lambda doc: doc.remove_redirect(idx)))
+            self._show()
+            return
+        gid = gates[items.index(it) - (1 if mine else 0)]['id']
+        self.s.undo.push(C.SnapshotCommand(
+            self.s, f'{name} portal ({x},{y}) → gate {gid}',
+            lambda doc: doc.add_portal_redirect(
+                mid, scr, x, y, gid,
+                comment=f'{name} screen {scr} portal ({x},{y}) -> gate {gid}')))
+        self._show()
+        self.status_line.setText(f'{name} portal ({x},{y}) now enters '
+                                 f'{self.s.doc.gate_name(gid)}; its swirl spins until that '
+                                 'gate is cleared. (Entrances list: Remove puts it back.)')
 
     def _route_door(self, preset):
         """From the vanilla view: pick WHICH custom room this door should

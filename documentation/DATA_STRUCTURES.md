@@ -255,6 +255,80 @@ flag set every floor → the night list; the value (wEncounterPoolIndex) stayed 
 
 ---
 
+### Shops (S117 — ROM-verified + PyBoy-measured; patched builds: ROADMAP P3.13c)
+
+**A shop is a script opcode.** Every vanilla shopkeeper runs the same four words: text
+`$0680` ("Item shop. May I help you?"), **`$FF04 $0000 $0680`** (opcode $04 =
+`game_action`, handler `$04:$57A1`: `$C8EF` := type 0 = the shop, `$C8F0/1` := the text
+base), text `$0682` ("Thank you. Come again!"), end. Type 0 runs bank $09's shop
+machines (annotated S117 in both trees): `ShopOuterMachine` on `$C905` (0 window, 1 one
+frame, 2 gold box, 3 cursor, 4 the choice — `ShopOuterStateTable` $45F7) →
+`ShopMenuTable` ($46EB: BUY `$4707` / SELL `$4AEB` / QUIT `$46F1`, which also is the B
+exit: `wGameState` bit 4 off, `$C905` := 0); BUY = `ShopBuyStateTable` ($470B, 11 states
+on `$C906`), SELL = `ShopSellStateTable` ($4AEF, 13 states).
+
+**The list.** BUY state 0 `ShopBuyStockFill` ($4721) says text base + 3, then fills
+**`$C0D8`** (20 B cleared, the list copied up to its `$FF`) from one of five lists chosen
+by the ROOM the shopkeeper stands in: **map `$50`** (the gate-floor shop room) →
+`GateworldShopInventory` ($478C); any other map by **`wScreenIndex`**: 0 →
+`BazaarInventory` ($476B), 2 → `StarryNightShopInventory` ($4774), 4 →
+`BookstoreInventory` ($477D), anything else → `RareItemShopInventory` ($4784). Every BUY
+from the menu re-runs state 0 (measured: a second BUY in one visit refills). The menu
+shows 4 rows per page (`$C8E3` = page; left / right turn it), at most 20 items
+(`ShopCountItems` stops at 20). Vanilla lists (price): Bazaar — Herb 8, Lovewater 80,
+Antidote 10, Repellant 200, BeefJerky 20, PorkChop 80, WarpWing 100, BeastTail 400;
+Starry Night — Potion 200, WorldDew 500, SageStone 1000, WorldLeaf 1000, MapHerb 70,
+BookMark 100, Rib 300, MistStaff 700; Bookstore — the six books at 5000; Rare — Sirloin
+1000, ShinyHarp 3000, Wind / Lava / Bolt / Snow / FireStaff 1500 / 2000 / 3000 / 4000 /
+5000; gate floor — Herb, Lovewater, Antidote, MoonHerb 30, AwakeSand 50, SkyBell 50,
+Laurel 80, WorldLeaf. (`extracted/gamedata_vanilla.json` tables `shop_*`.)
+
+**Prices** live in the item records: **`ItemInfoTable` `$03:$71DA`** (44 × 12 B, index =
+item id 0-43; bank $03 entry 2 copies one to `$DA62-$DA6D`) — **+$01/+$02 = the buy
+price** (16-bit LE), +$00 group, +$0B bit 2 = kept after a lost battle; +$03-$0A not
+decoded. The table was mgbdis fake code labelled `SpriteFrameDataTable` (DOC_AUDIT
+S117); re-sectioned S117 (`tools/resection_shops.py`). **Sell price** = bank $09
+`ShopSellPrice` ($4BC8): the full price in the gate-floor shop (map `$50`), a staff
+(`$18-$1C`, `$25`, `$27`) price / 10, anything else price − price / 4.
+
+**Patched (S117):** `ShopBuyStockFill`'s choice + copy ($472B-$476A, 64 B) is `ld
+hl,$7700 / rst $10 / ret` + 59 nops → **bank $77 entry 0 `ShopFill`**: **`wShopID`
+($D240)** ≠ 0 → list `wShopID − 1` of `ShopPtrTable` (out of range → the room rule),
+else the vanilla room rule on lists 0-4 (the five vanilla lists, vanilla order); then
+the same clear + copy. `wShopID` is written by a project `shop` script right before
+the opcode (`write_ram wShopID, n`) and lasts the visit; the shop's close tail (after
+`ShopMenuTable`, 10 B) is `ld hl,$7701 / rst $10 / ret` + 5 nops → **entry 1
+`ShopClose`** (the same close + `wShopID` := 0). Every bank $09 address after the
+patch is unchanged (test_compiler's address-map check). Prices = compiler region
+`gd_item_info` over `ItemInfoTable`. A census of `ShopFill` (stub calls, maps $00-$6A
+× screens 0-15 + custom ids) == the original's choice; schema PROJECT_COMPILER §2.32.
+
+**The shop screens (S117b, user: "menu glitches with background colours from custom
+tiles").** Every bank $09 screen (shops, the arena class menu, the other screen effects)
+is composed in WRAM — `SetFld9_4204` copies the room's tiles `$C300` (16 rows × 32) + the
+HUD `$C1C0` (2 rows) to **`$C500`** (18 × 32), the windows are drawn into it
+(`LoadFld9_40c9`, font / frame tiles **≥ $80**, the `$8800` block; room tiles are $00-$7F
+at `$9000`) — and `LoadFld9_40fa` pushes all 18 × 32 to the BG map at `[$C909]` (the
+scroll-aligned screen origin). TILE ids only: the cells keep the room's GBC attributes,
+which vanilla hides because every BG colour 1 is cream; a free-colour custom room showed
+its own colours in the menus. Patched: `LoadFld9_40fa` (53 B) = `ld hl,$7702 / rst $10 /
+ret` + 48 nops → **bank $77 entry 2 `ScreenPush`**: the same 576 tile writes in the same
+order, and — only on GBC in a custom room with a free-colour marker (the S97 r2 test) —
+after each row its attributes: a tile ≥ $80 → palette 7, a room tile (rows 0-15) → its
+palette from **`$C200`** (`[row·16 + col/2]`, high nibble for even columns), HUD rows' room
+tiles untouched. **The dialog box after a shop:** the field dialog box goes to the TOP
+(rows 0-4) when the player stands in the lower half of the screen (bank $06: player y −
+scroll y ≥ $50); the shop's screens assume the BOTTOM (its close draws the box frame at
+rows 13-17 and the dialog types "Thank you. Come again!" there), so the dialog's close
+restored the top and left the bottom box on screen — vanilla shopkeepers never allow
+that (measured S117b, PyBoy). `ShopClose` → `ShopBoxBottom`: when `[$C919]` is not the
+bottom (`[$C909] + $01A0`, bank $06's wrap), the box base, the `$C100` tile backup (room
+rows 13-15 from `$C300`, HUD rows from `$C1C0`) and the S97 r2 attribute save
+(`wBoxAttrSave` rows 0-2 from `$C200`, `wBoxAttrMask` bits 0-2; free-colour rooms only)
+are re-seated at the bottom. Checked: stub calls (test_compiler `test_screen_push_rom`) +
+PyBoy on the user's save (Bazaar, a plain and a free-colour custom room: tiles and
+attributes back to the room's after the dialog closes).
+
 ### Encounter Runtime Flow (verified end-to-end, June 2026)
 
 The full chain from "player takes a step" to "wild battle starts". Every
@@ -488,7 +562,7 @@ Master table indexing: the script engine reads `$41BA + $D8D3 × 2` where `$D8D3
 | $01 | 2 | if_flag_set | Branch if event flag IS set (Z = flag byte is nonzero) |
 | $02 | 1 | clear_flag | Clear event flag in $D99B+ |
 | $03 | 1 | set_flag | Set event flag in $D99B+ |
-| $04 | 2 | game_action | **GameActionDispatch via bank $09.** $C8EF=subcommand (0=shop). NOT give-item. Invalid indices crash. |
+| $04 | 2 | game_action | **GameActionDispatch via bank $09.** $C8EF=subcommand (0=shop — every vanilla shopkeeper: `$FF04 $0000 $0680`, "Shops (S117)"), $C8F0/1 = text base. NOT give-item. Invalid indices crash. |
 | $05 | 1 | trigger_battle | Set enemy in $DA03, start fight |
 | $07 | 1 | init_dialog | Set dialogue mode, suppress input |
 | $08 | 0 | nop | No operation (just `ret`). NOT CheckInventoryFull. |
@@ -1190,7 +1264,7 @@ the correct table. Method + rule: KEY_LESSONS "Session 14 Lessons — Bank $0B r
 
 **All other 19 targets from the original 22 have been fixed** with proper labels
 and LOW/HIGH conversions. New labels created: NPCWalkDataTable, ScreenTransDataTable,
-SpriteFrameDataTable, MapNPCPosDataTable, SkillMPCostTable (×3, renamed S51), TileRefLookupTable,
+SpriteFrameDataTable (S117: really the item records — `ItemInfoTable`, "Shops (S117)"), MapNPCPosDataTable, SkillMPCostTable (×3, renamed S51), TileRefLookupTable,
 FieldPtrLookupTable, ItemSlotPtrTable, EnemyGroupTable, TransitionLookupTable,
 RoomAttrDataBlocks, PaletteColorData, AttrMapData, AttrMapDataB, TextDataPtrLookup,
 EnemyDupConvFlagTable_41df (ex-BattleHPLookupTable, S85), SaveSlotPtrTable.

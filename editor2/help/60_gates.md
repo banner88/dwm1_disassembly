@@ -39,10 +39,40 @@ tier) — and starts with its boss room and monsters. Then make it yours:
 - **custom rooms** — rules on this tab work on new gates like on any gate.
 - **entrance** — Rooms tab: select a cell, then More ▾ →
   **Gate entrance here…** and pick the gate. Stepping on that cell starts a dive at floor 1
-  (the way the vanilla portals work). The cell gets the next-floor hole
-  picture; repaint it as you like. Until a gate has an entrance nothing can
-  enter it (the head line and the build warnings say so).
+  (the way the vanilla portals work). The cell gets the portal's **swirl**
+  — the still swirl picture and the spinning swirl object on top — like the
+  vanilla portals. Repaint or delete either as you like. Until a gate has an
+  entrance nothing can enter it (the head line and the build warnings say so).
 
 **Rename…** and **Delete** work on new gates only. Deleting a gate also
 removes its custom-room rules and entrances (Undo brings them back). The
 name is for the editor; the build does not put it into the game.
+
+## Swirls and "cleared"
+
+Every gate has a **cleared** flag — the head line on this tab names it. The
+game's gates use their own (Villager = `$0011` …); a new gate — or a game's
+gate you gave a custom boss floor — uses its own project flag (`$17A0` + the
+gate number: gate 32 = `$17C0`). Beating a gate's boss turns it ON (for a
+re-bossed game gate, the game's own flag too).
+
+The swirl on a portal **spins until its gate is cleared**, then stops (the
+still picture stays, and the portal still enters the gate — as in the game).
+The editor does this for you:
+
+- **Boss cleared → no swirl.** A gate entrance you add (*Gate entrance
+  here…*) gets a swirl object that shows only while its gate is not cleared.
+- **A new boss → the swirl comes back.** Give a vanilla gate a custom boss
+  floor and its portals in the vanilla rooms spin again until YOUR boss is
+  beaten (the gate's own cleared flag, not the game's).
+- **Re-route a portal → its swirl follows the new gate.** In a vanilla room
+  (e.g. the Villager / Talisman portal room), select a portal's exit and press
+  **Lead this portal to another gate…**: walking onto it enters the gate you pick, and
+  its swirl spins until THAT gate is cleared. Pick *(back to the gate the
+  game gives it)* to undo it. The Gates tab lists re-routed portals as the
+  gate's entrances.
+
+In flag lists the cleared flags appear as **gate:N cleared — name**: use
+them anywhere a flag can be tested (a state rule, a conversation's *If
+flags…*, an encounter variant) — e.g. a guard who moves once your gate is
+cleared.

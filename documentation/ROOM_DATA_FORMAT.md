@@ -303,6 +303,25 @@ offset misread as the stride. See DOC_AUDIT.md A.3.
 Entries ≥$80 (examine spots / step-on triggers) are skipped by the NPC
 parser (they don't consume NPC slots).
 
+### Condition prefixes $A0 / $A1 and the gate swirl (S117, patched builds)
+
+In patched builds every non-gate room's list reaches the engine through bank $60
+`CopyNPCListToBuffer` (bank $0B `GetRoomDataPtr` → bank $60 entry 1 —
+GATE_GENERATION §7.9). There a 5-byte entry **`$A0` / `$A1, flag lo, flag hi, $FF,
+$FF`** is a CONDITION PREFIX, never copied: the next NPC entry is shown only while
+that event flag is SET (`$A0`) / CLEAR (`$A1`); several prefixes AND. A failed
+condition sets the NPC's hidden bit (bit 6), so the slots of later NPCs do not move.
+The compiler emits them for `shown_when` and `swirl_of` (PROJECT_COMPILER §2.32);
+vanilla rooms get conditioned copies of their lists only through
+`VanillaNPCExtTable` (re-bossed / re-routed gate portals). `$A0`/`$A1` are not a
+vanilla interact kind (the engine's ≥$80 kinds are examine `$8x` / step-on `$90`).
+
+**The gate swirl object** (vanilla, measured S117): NPC type `$00`, sprite **`$4D`**,
+script `$FF`, standing on the portal cell — the spinning part of a portal; the still
+swirl under it is background art (room $24 sheet tiles $20-$23, palette 3). Portal
+rooms drop it from their step lists once the gate's boss is beaten (room $24: counter
+`$D969`).
+
 ## Exit Checker Block (at bytes 4-5, "exit_ptr")
 
 Read by Entry 6 (runs EVERY step) for walk-on exit detection.
@@ -503,6 +522,21 @@ $FF = 50 uses) deterministically render nothing in field contexts.
 Hand-curated names/classes live in `extracted/npc_names.json`
 (`sprite_names` + `sprite_classes`) and merge into the catalog at
 `--finalize`.
+
+**Sprite limits (S117b, hardware — the user's emulator report + an OAM model of PyBoy
+runs).** The field uses 8×8 objects (LCDC bit 2 = 0); a 16×16 character = 4 objects, 2 on
+each screen line. The OAM is rebuilt each frame from `$C000` (HRAM `$CB` = the next
+index; the metasprite writers stop at 40) in this order: the player (OAM 0-3), the 3
+following monsters (4-15), then the NPC slots in list order. The PPU draws at most **10
+objects per screen line** — the lowest OAM indices win — and the OAM holds **40**. So:
+with the player + 3 monsters lined up on one row (8 objects per line), only **one** NPC of
+that row is drawn while the party is on it (the later ones in the list vanish); and with
+the party on screen (16 objects) about **6** 16×16 NPCs fit (some sprites use 3 objects).
+Vanilla rooms respect this by layout. User report S117b (Portal Hall demo, 3 NPCs + the
+party on one row): the bell keeper and the slime vanished. PyBoy screenshots do NOT show
+the per-line drop (count objects per line instead — KEY_LESSONS S117b). The editor warns
+(`formats.sprite_budget`: a row with > 1 NPC, > 6 NPCs on screen — the user chose
+warnings over an engine flicker).
 
 **Screens per room.** Engine ceiling = **16** (4×4): `RoomEntry2` scroll
 math clamps row = Y/128 to 0-3 and col = X/160 to 0-3. Vanilla max = the

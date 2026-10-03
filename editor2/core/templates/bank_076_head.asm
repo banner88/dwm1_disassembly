@@ -55,6 +55,19 @@
 ;   NewGateRows: NEW_GATE_LEN x 8 B, index wGateID - 32.
 ;   NewGateSource: NEW_GATE_LEN x db, the vanilla gate (0-31) each new gate
 ;     copies — its encounter rule and floor value (EncVanillaNumber).
+;
+; Entry 2 (HL=$7602) GateBossWin (S117, ROADMAP NG2 — a gate's CLEARED mark):
+;   called by bank $50 BattleExitHandler's boss-win branch (outcome = win,
+;   $DA09 == 3 — every scripted boss / conversation battle), a same-size
+;   replacement of its `ld a,$0E / ld [$C8ED],a / ret`, which it performs
+;   first. Then, when the battle was fought ON A BOSS FLOOR (wInGateworld 0,
+;   wMapID == wBossMapType, wCurrentFloor + 1 == wLastFloor) of a gate below
+;   GATE_CLEAR_LEN, it sets that gate's GateClearTable flags: the gate's own
+;   cleared flag (new gates, re-bossed vanilla gates; extended range $17A0 +
+;   gate) and a re-bossed vanilla gate's vanilla flag. $FFFF = none. A
+;   vanilla gate with its own boss has two $FFFF (its scripts set its flag).
+;   Clobbers A/BC/DE/HL (the caller returns right after).
+;   GateClearTable: GATE_CLEAR_LEN x [dw own flag, dw vanilla flag].
 ; =============================================================================
 
 SECTION "ROM Bank $076", ROMX[$4000], BANK[$76]
@@ -64,6 +77,7 @@ SECTION "ROM Bank $076", ROMX[$4000], BANK[$76]
 ; rst-$10 entry table at $4001
     dw EncResolve                       ; entry 0  (HL=$7600)
     dw NewGateRowCopy                   ; entry 1  (HL=$7601, S115)
+    dw GateBossWin                      ; entry 2  (HL=$7602, S117 — gate cleared on the boss-floor win)
 
 ENC_VANILLA_GATES EQU 32
 
@@ -300,3 +314,47 @@ NewGateRowCopy:
     jr nz, .copy
     ld e, $01
     ret
+
+; -----------------------------------------------------------------------------
+; Entry 2 — GateBossWin (S117). See the bank banner.
+; -----------------------------------------------------------------------------
+GateBossWin:
+    ld a, $0e                           ; the displaced bank $50 store (follower
+    ld [$c8ed], a                       ; render mask after a boss win, S68)
+    ld a, [wInGateworld]
+    or a
+    ret nz
+    ld a, [wBossMapType]
+    ld b, a
+    ld a, [wMapID]
+    cp b
+    ret nz                              ; not the boss room of the dive
+    ld a, [wCurrentFloor]
+    inc a
+    ld b, a
+    ld a, [wLastFloor]
+    cp b
+    ret nz                              ; not on the boss floor
+    ld a, [wGateID]
+    cp GATE_CLEAR_LEN
+    ret nc
+    ld l, a
+    ld h, $00
+    add hl, hl
+    add hl, hl                          ; x4
+    ld de, GateClearTable
+    add hl, de
+    call .one                           ; the gate's own flag
+.one:                                   ; ... then (fall through) the vanilla flag
+    ld a, [hl+]
+    ld c, a
+    ld a, [hl+]
+    ld b, a
+    and c
+    inc a
+    ret z                               ; $FFFF = none
+    push hl
+    call SetEventFlag                   ; ROM0; BC = flag (-> bank $73 FlagAddr)
+    pop hl
+    ret
+

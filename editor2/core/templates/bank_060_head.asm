@@ -3,7 +3,8 @@
 ; =============================================================================
 ; Entry points (called via rst $10):
 ;   Entry 0: CustomReadStep     — returns DE = [step_id, tileset_bank]
-;   Entry 1: CustomReadInteract — copies NPC data to wCustomNPCBuffer
+;   Entry 1: CustomReadInteract — copies NPC data to wCustomNPCBuffer (S117:
+;            every non-gate room; flag-conditioned NPCs; vanilla NPC overrides)
 ;   Entry 2: CustomExitCheck    — copies exit data to wCustomExitBuffer
 ;   Entry 3: CustomTilesetInfo  — returns source mapID from wCustomRoomFlag
 ;   Entry 4: CustomScriptRead   — triple-index script data reader
@@ -116,18 +117,107 @@ CustomReadStep:
     ret
 
 CustomReadInteract:
+    ; S117 (NG2): reached for EVERY non-gate room (bank $0B GetRoomDataPtr,
+    ; same-size rewrite — the exits' entry-7 pattern). Returns HL = the NPC /
+    ; interact list to parse (wCustomNPCBuffer) or HL = 0 = "no override —
+    ; run the vanilla SharedPtrChase path". rst $10 keeps HL, clobbers A.
+    ld a, [wMapID]
+    cp CUSTOM_ROOM_START
+    jr c, .vanilla
     call CustomPtrChase
     inc hl
     inc hl
     ld a, [hl+]
     ld h, [hl]
     ld l, a
+    jr CopyNPCListToBuffer
+.vanilla:
+    ; VanillaNPCExtTable (compiler-generated, bank $60): the vanilla rooms
+    ; whose gate-swirl objects follow a project gate's "cleared" flag (a
+    ; portal re-bossed or re-routed). Row format = VanillaExitExtTable's:
+    ; db mapID, screen / dw step_counter / db n_steps / dw list0..listN-1;
+    ; db $FF ends the table. Variant = min([counter], n-1).
+    ld c, a
+    ld hl, VanillaNPCExtTable
+.scan:
+    ld a, [hl+]
+    cp $FF
+    jr z, .none
+    cp c
+    jr nz, .skipRow
+    ld a, [hl]
+    ld b, a
+    ld a, [wScreenIndex]
+    cp b
+    jr z, .match
+.skipRow:
+    inc hl                      ; screen
+    inc hl                      ; step counter (2)
+    inc hl
+    ld a, [hl+]                 ; n_steps
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    jr .scan
+.none:
+    ld hl, $0000
+    ret
+.match:
+    inc hl
+    ld a, [hl+]
+    ld e, a
+    ld a, [hl+]
+    ld d, a                     ; DE = the screen's vanilla step counter
+    ld a, [hl+]
+    ld b, a                     ; B = n_steps
+    ld a, [de]
+    cp b
+    jr c, .stepOk
+    ld a, b
+    dec a
+.stepOk:
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a                     ; HL = the variant's list (ROM, bank $60)
+    ; fall through
+
+; -----------------------------------------------------------------------------
+; CopyNPCListToBuffer (S117) — HL = a 5-byte interact list ($FF-terminated)
+; -> wCustomNPCBuffer, returns HL = the buffer. CONDITION PREFIXES: an entry
+; whose byte 0 is $A0 / $A1 is not copied; it says "the NEXT NPC is shown only
+; while flag [byte1 | byte2 << 8] is SET ($A0) / CLEAR ($A1)". Several
+; prefixes AND together. A failed condition sets the NPC's HIDDEN bit (type
+; bit 6 — measured S97: not drawn, not solid, no behaviour, no talk), so the
+; slot numbers of every later NPC are unchanged. Examine / step spots (bit 7)
+; are copied verbatim. The engine never sees a prefix (bit 7 set + $A_ is no
+; vanilla interact kind; both bank $0B scans stop at the first NPC anyway).
+; Clobbers A/BC/DE.
+; -----------------------------------------------------------------------------
+CopyNPCListToBuffer:
     ld de, wCustomNPCBuffer
+    ld b, $00                   ; B = $40 when the next NPC must be hidden
 .copyNPC:
     ld a, [hl]
     cp $FF
     jr z, .npcDone
+    and $FE
+    cp $A0
+    jr z, .cond
     ld a, [hl+]
+    bit 7, a
+    jr nz, .verbatim            ; a spot: never hidden
+    or b
+    ld b, $00
+.verbatim:
     ld [de], a
     inc de
     ld a, [hl+]
@@ -142,6 +232,36 @@ CustomReadInteract:
     ld a, [hl+]
     ld [de], a
     inc de
+    jr .copyNPC
+.cond:
+    ld a, [hl+]                 ; $A0 = must be SET, $A1 = must be CLEAR
+    push de
+    and $01
+    ld d, a                     ; D = 1: the flag must be clear
+    ld e, b                     ; E = hide so far
+    ld c, [hl]
+    inc hl
+    ld b, [hl]                  ; BC = flag index
+    inc hl
+    inc hl                      ; bytes 3-4 are padding
+    inc hl
+    push hl
+    call TestEventFlag          ; Z = clear, NZ = set (A/HL clobbered; BC/DE kept)
+    pop hl
+    ld a, d
+    jr z, .isClear
+    or a
+    jr nz, .fail                ; set, but must be clear
+    jr .condOk
+.isClear:
+    or a
+    jr z, .fail                 ; clear, but must be set
+    jr .condOk
+.fail:
+    ld e, $40
+.condOk:
+    ld b, e
+    pop de
     jr .copyNPC
 .npcDone:
     ld a, $FF

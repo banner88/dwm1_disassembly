@@ -17,7 +17,21 @@ is present in. Drag it on the canvas to move it.
 
 An NPC says or does something through a **talk** (New talk…: text, an
 optional YES/NO, flags, moving the player) or a **conversation** (New
-conversation…: the full step tree — see *Conversations*).
+conversation…: the full step tree — see *Conversations*). **Shopkeeper…**
+makes the NPC sell a shop (its own greeting, then the game's BUY / SELL —
+see *Shops*).
+
+The spinning **swirl** objects on gate entrances are NPCs too (sprite
+`$4D`): they show only until their gate is cleared (see *Gates*).
 
 The engine caps a screen at 8 NPCs; many different sprites on one screen
 can draw blank (sprite memory) — repeats are free.
+
+**Sprite limits (the Game Boy's own).** It draws at most 10 sprite pieces
+on one line of the screen, and you and your 3 monsters walking in a line
+use 8 of them — so on a row of the room only **one** NPC stays visible
+while your party walks along that row; the later ones in the NPC list
+vanish until you leave the row. It also draws 40 pieces in all: with your
+party, about **6 NPCs** per screen. Put NPCs on different rows. The Rooms
+tab (the note above the canvas) and the build warnings tell you when a
+screen goes over.

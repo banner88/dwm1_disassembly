@@ -194,7 +194,59 @@ def emit_bank_060(prj, warnings):
         lines += _room_data(prj, r)
 
     lines += _vanilla_exit_exts(prj)
+    lines += _vanilla_npc_exts(prj)
     return "\n".join(lines) + "\n"
+
+
+def _npc_cond_lines(conds):
+    """S117 (NG2): the $A0 / $A1 condition prefixes before an NPC entry (bank
+    $60 CopyNPCListToBuffer: shown only while the flag is SET / CLEAR; a
+    failed one sets the NPC's hidden bit)."""
+    return [F.db_line([0xA1 if clr else 0xA0, idx & 0xFF, idx >> 8, 0xFF, 0xFF],
+                      comment=f"next NPC shown only while flag {F.hexw(idx)} is "
+                              f"{'CLEAR' if clr else 'SET'}")
+            for idx, clr in conds]
+
+
+def _vanilla_npc_exts(prj):
+    """S117 (ROADMAP NG2) — VanillaNPCExtTable, read by bank $60 entry 1
+    (CustomReadInteract's vanilla branch) for every vanilla room's NPC /
+    interact list. Emitted ALWAYS (the template references the label); an
+    empty table = a lone $FF. Rows as VanillaExitExtTable: db mapID, screen /
+    dw step_counter / db n_steps / dw variant ptrs. Each variant is the
+    vanilla list with the gate swirls of a re-bossed / re-routed portal
+    conditioned on that gate's cleared flag (Project.vanilla_swirl_overrides)."""
+    out = banner("VANILLA-ROOM NPC OVERRIDES — gate swirls (S117, generated)", [
+        "Read by bank $60 entry 1 (CustomReadInteract) for every vanilla room",
+        "via bank $0B GetRoomDataPtr; no row = the vanilla list unchanged."])
+    rows = prj.vanilla_swirl_overrides()
+    out.append("VanillaNPCExtTable:")
+    bodies = []
+    for row in rows:
+        mid, k = row['mapID'], row['screen']
+        out.append(f"    db {F.hexb(mid)}, {k}   ; {row['name']} screen {k}")
+        out.append(f"    dw {F.hexw(row['step_counter'])}   ; vanilla step counter")
+        out.append(f"    db {len(row['steps'])}")
+        labels = []
+        for v, ents in enumerate(row['steps']):
+            lbl = f"VNpc{mid:02X}_{k}_V{v}"
+            labels.append(lbl)
+            bodies.append((lbl, ents))
+        out.append("    dw " + ", ".join(labels))
+    out.append("    db $FF   ; table terminator")
+    out.append("")
+    for lbl, ents in bodies:
+        out.append(f"{lbl}:")
+        for en in ents:
+            if en['cond']:
+                flag, tgt = en['cond']
+                out += _npc_cond_lines([(flag, True)])
+            out.append(F.db_line(en['bytes'], comment=(
+                f"gate swirl -> gate {en['cond'][1]} (until cleared)" if en['cond']
+                else "vanilla entry")))
+        out.append("    db $FF")
+        out.append("")
+    return out
 
 
 def _monster_cast_tables(prj, rooms):
@@ -420,6 +472,8 @@ def _room_data(prj, r):
                     # ($90 walk-on markers, $82 markers, $8F spawns with
                     # spawn-id params — forms the typed schema doesn't model)
                     b = [F.val(v) for v in n['bytes']]
+                    if b[0] < 0x80:
+                        out += _npc_cond_lines(prj.npc_conditions(r, i, n))
                     out.append(F.db_line(b, comment=n.get('comment',
                                'raw interact entry (cloned verbatim)')))
                 elif n['kind'] == 'spawn':
@@ -449,6 +503,7 @@ def _room_data(prj, r):
                                     n['x'], n['y'], sidx,
                                     behaviour=n.get('behaviour', 0),
                                     hidden=bool(n.get('hidden', False)))
+                    out += _npc_cond_lines(prj.npc_conditions(r, i, n))
                     out.append(F.db_line(
                         b, comment=f"NPC ({n['x']},{n['y']}) script "
                                    f"{sid if sid not in (None,'none') else 'none'}"))
@@ -1090,6 +1145,13 @@ def _sp(fn):
     return emit
 
 
+def emit_bank_077(prj, warnings):
+    """S117 (P3.13c): bank $77 = ShopFill (template bank_077_head.asm) + the
+    shop lists (editor2/core/shops.py, PROJECT_COMPILER §2.32)."""
+    from . import shops as SH
+    return SH.emit_bank_077(prj, warnings, template('bank_077_head.asm'))
+
+
 def emit_bank_076(prj, warnings):
     from . import encounters as EN
     return EN.emit_bank_076(prj, warnings, template('bank_076_head.asm'))
@@ -1140,6 +1202,11 @@ REGISTRY = [
     # encounters.py, PROJECT_COMPILER §2.30). No data == the vanilla rule.
     ("enc76", "custom.encounter_lists", "file:patches/bank_076.asm",
      emit_bank_076, [0x76]),
+    # S117 (P3.13c): SHOPS — bank $77 ShopFill + every shop list (the five
+    # vanilla lists, edited or not, + custom.shops) and the item records'
+    # prices (region gd_item_info, bank $03). No data == the vanilla shops.
+    ("shops77", "custom.shops", "file:patches/bank_077.asm",
+     emit_bank_077, [0x77]),
     ("gd_monsters", "gamedata.monsters",
      "region:patches/bank_003.asm#gd_monster_info", _gd('emit_monster_info'), [0x03]),
     ("gd_enemies", "gamedata.enemies",
@@ -1236,6 +1303,15 @@ def _arena_regions():
 
 
 REGISTRY += _arena_regions()
+
+
+def _shop_regions():
+    from . import shops as SH
+    return [(name, "gamedata.items", f"region:{path}#{name}", fn, [bank])
+            for name, path, fn, bank in SH.REGIONS]
+
+
+REGISTRY += _shop_regions()
 
 
 def _skill_regions():

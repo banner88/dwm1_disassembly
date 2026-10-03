@@ -770,6 +770,90 @@ Castle (priest blessing). Gate 2 on the same build: its vanilla row. Stub calls 
 `GateRowPtr` for gates 0-40 / 95 / 96 / 200 / 255: HL = the table row for 0-31, $D138 for
 32, the wrap row for every undefined number (0 bad).
 
+## 7.9 Gate swirls and "cleared" (S117, ROADMAP NG2) — built S117, PyBoy-verified, NOT yet user-tested
+
+**What the game does (measured S117, PyBoy on the user's save + the scripts).** A portal
+looks like a portal because of two things: (1) the **still swirl** — background art (in
+room $24, the Villager / Talisman room: sheet tiles $20-$23, palette 3), always there;
+(2) a **spinning swirl object** — an NPC with sprite `$4D` and no script (`$FF`) standing
+on the portal cell. The objects are ordinary entries of the room's step-indexed NPC lists:
+the boss's win script sets the gate's **cleared flag** and advances the portal room's
+step counter, and the next step's list no longer has that swirl (room $24, counter
+`$D969`: 0 = both swirls spin, 1 = only Talisman's, 2 = only Villager's, 3 = none). The
+swirl NEVER blocks the portal — a cleared gate is still entered. On the user's save
+Villager is cleared (`$0011` set), Talisman is not.
+
+**Cleared flags** (`tools/map_gate_names.py` → `extracted/gate_names.json`
+`cleared_flag` / `cleared_flags`, from each boss room's win script: `$FF03 F` …
+`$FF12 $D92B $0007`): gate n = `$0010 + n` except Wisdom (13) `$001A`, Farm (11) `$001B`,
+Joy (12) `$001C`, Anger (10) `$001D`; Medal (17) `$0021` (its boss lives in room $41),
+Demolition (23) `$0027` + `$0028` (Sidoh); gate 31 (unused) none.
+
+**What the editor needs** (user S117: "Boss cleared - no swirly. Boss cleared BUT we are
+inputting new boss or redirecting to new gate - swirly"): a swirl that follows the flag
+of the gate the portal ENTERS — a new gate's, or a vanilla gate's that now has a custom
+boss (whose vanilla win script no longer runs), or another gate's when a vanilla portal is
+re-routed.
+
+**Engine (patched builds, all same-size forks):**
+
+- **NPC lists for every room — bank $0B `GetRoomDataPtr`.** The only reader of a room's
+  NPC / interact list (NPC load, `TalkScanExamineSpots`, `SearchStepTriggers` all come
+  here). After its gate test (gate floors keep the vanilla path) a same-size 21-byte
+  rewrite calls **bank $60 entry 1 `CustomReadInteract`** for EVERY non-gate room (the
+  exits' entry-7 "divert" pattern): HL ≠ 0 = the list to parse, HL = 0 = the vanilla
+  `SharedPtrChase` path, byte-for-byte as before.
+- **`CustomReadInteract`**: custom rooms → `CustomPtrChase` → `CopyNPCListToBuffer`;
+  vanilla rooms → `VanillaNPCExtTable` (compiler-generated; rows `db mapID, screen / dw
+  step counter / db n_steps / dw list ×n`, `$FF` ends; variant = min([counter], n − 1))
+  → `CopyNPCListToBuffer`, or HL = 0 when the room has no row (the vanilla list).
+- **`CopyNPCListToBuffer`** — **condition prefixes**: a 5-byte entry `$A0` / `$A1, flag
+  lo, flag hi, $FF, $FF` is not copied; it makes the NEXT NPC shown only while the flag
+  is SET (`$A0`) / CLEAR (`$A1`) (`TestEventFlag`; several prefixes AND). A failed one
+  sets the NPC's **hidden bit** (type bit 6: not drawn, not solid, not talkable, S97), so
+  every later NPC keeps its slot. Spots (bit 7) are copied verbatim.
+- **The cleared mark — bank $50 `BattleExitHandler`.** Its boss-win branch (win, `$DA09 ==
+  3`: every scripted boss / conversation battle) ended `ld a,$0E / ld [$C8ED],a / ret`;
+  now `ld hl,$7602 / rst $10 / ret / nop` → **bank $76 entry 2 `GateBossWin`**: performs
+  the displaced store, then — only on a boss floor (`wInGateworld` 0, `wMapID ==
+  wBossMapType`, `wCurrentFloor + 1 == wLastFloor`) of a gate < `GATE_CLEAR_LEN` — sets
+  that gate's `GateClearTable` flags (`dw own, vanilla`; `$FFFF` = none).
+- **Own cleared flags** live in the extended flag range (EVENT_FLAGS "Extended flags
+  (S117)"): **`$17A0 + gate`** (gate 32 = `$17C0`). A new gate and a RE-BOSSED vanilla
+  gate (a custom boss floor) use their own; GateBossWin also sets a re-bossed gate's
+  vanilla flag (so the game's story checks still see it cleared). An unchanged vanilla
+  gate's row is `$FFFF, $FFFF` — its own win script sets its flag, as in the game.
+
+**Compiler (PROJECT_COMPILER §2.32):** an NPC entry's `swirl_of: N` → an `$A1` prefix on
+gate N's cleared flag; `shown_when: [{flag, is}]` → `$A0` / `$A1` prefixes (≤ 8).
+`Project.vanilla_swirl_overrides()` makes the `VanillaNPCExtTable` rows: for each vanilla
+portal (its exit rows' valid steps, `entrance_redirects` applied) that enters a re-bossed
+gate or is re-routed, every step variant of that room's list gets the swirl object on
+that cell conditioned on the entered gate's cleared flag (the vanilla swirl entry gets
+the prefix; with no swirl at that cell and < 8 NPCs one is appended). The example project
+has none (the table is a lone `$FF`, `GateClearTable` rows all `$FFFF`).
+
+**Editor:** "Gate entrance here…" adds the swirl object (`swirl_of`) and paints the
+still swirl (`paint_swirl`: room $24's swirl metatile, its tiles borrowed into the room);
+Rooms tab (vanilla room, a portal exit selected) → **Lead this portal to another gate…**
+(an `entrance_redirects` row `dest gate:N, gate_flag 1`); flag pickers list
+`gate:N cleared — name` (`resolve_flag_ref`); the Gates tab names each gate's cleared flag
+and its re-routed portals; help 60_gates.md "Swirls and cleared".
+
+**Measured S117 on the user's save** (demo = the user's project + "Portal Hall" $71 behind
+the GreatTree 2F Library door with entrances to new gate 32 "Swirl Gate" (copy of
+Beginning, 2 floors, boss room "Swirl Throne" $72), Villager and Talisman; the $24 (2,2)
+Villager portal re-routed to gate 32 — NOT in their project): the hall shows the gate-32
+and Talisman swirls, Villager's hidden (its `$0011` is set); room $24 shows (2,2)'s swirl
+(now gate 32's) and Talisman's; gate 32 dive → the boss conversation battle → GateBossWin
+hit once, `$17C0` set → back in the hall and in room $24 the gate-32 swirls are hidden,
+the rest unchanged. A/B old vs new engine over the user's project: 212 vanilla screens'
+NPC slots identical except room $23 (gate 0 there has the user's custom boss "SBOSS", so
+its swirl now spins until that boss is beaten), the 25 custom screens identical.
+**Residual:** a custom boss win does not advance the vanilla portal room's step counter
+(other step-gated NPCs of that room stay where the vanilla counter leaves them; the swirl
+itself is handled by the override).
+
 ## 8. Floor completion / exit ✅
 
 - **Down-staircase**: `Jump_00b_46A7` checks `wScreenIndex == [$C960]` and the

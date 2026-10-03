@@ -21,7 +21,19 @@ Every gate must agree on BOTH or the tool fails (non-zero exit).
 
 Output: extracted/gate_names.json
   {"_generator": ..., "gates": [{"id", "name", "faq_name", "floors",
-    "boss_map", "boss_room", "floor_types", "depth_tier"} x 32]}
+    "boss_map", "boss_room", "floor_types", "depth_tier", "boss_spawn", "row",
+    "cleared_flag", "cleared_flags"} x 32]}
+
+S117 (ROADMAP NG2): + the gate's CLEARED flag, read from the boss room's own
+scripts in the ROM (the script decoder of tools/dump_all_scripts.py): every
+vanilla boss win tail ends `set_flag F` ... `write_ram $D92B 7` (the castle
+return) — F is the gate's cleared flag, the one the portal rooms' swirl
+objects follow (the boss script also moves the portal room's step counter:
+measured S117, Villager/Talisman room $24, counter $D969). The Medal Gate's
+GateFloorDataTable boss map is the KingSlime decision room $40; its bosses
+fight in $41, so both rooms are scanned. "cleared_flags" lists every such
+flag in script order (the Gate of Demolition has two: $27 Hargon, $28 Sidoh
+when $D9E3 = $C7); "cleared_flag" = the first; null for the unused gate 31.
 Readers: tools/dump_room_data.py, tools/gen_encounter_db.py, editor2 Gates tab
 (editor2/core/gates.py).
 
@@ -81,6 +93,32 @@ BOSS_MAP_TO_GATE = {
 }
 
 
+def cleared_flags(rom: bytes, boss_map: int) -> list:
+    """Flags a boss room's scripts set right before `write_ram $D92B 7` (the
+    vanilla boss-win tail) — within the 12 script words before it."""
+    from tools.dump_all_scripts import bank_for, rw, dump_script, MASTER_TABLE
+    found = []
+    for mt in (boss_map, boss_map + 1) if boss_map == 0x40 else (boss_map,):
+        bank = bank_for(mt)
+        tbl = rw(rom, bank, MASTER_TABLE + mt * 2)
+        if not 0x4000 <= tbl < 0x8000:
+            continue
+        a = tbl
+        for _ in range(100):
+            ptr = rw(rom, bank, a)
+            if not 0x4000 <= ptr < 0x8000:
+                break
+            a += 2
+            words = [int(w[1:], 16) for w in dump_script(rom, bank, ptr)[0]]
+            for i in range(len(words) - 2):
+                if words[i:i + 3] == [0xFF12, 0xD92B, 0x0007]:
+                    back = words[max(0, i - 12):i]
+                    fl = [back[j + 1] for j in range(len(back) - 1) if back[j] == 0xFF03]
+                    if fl and fl[-1] not in found:
+                        found.append(fl[-1])
+    return found
+
+
 def derive(rom: bytes) -> dict:
     base = GATE_TABLE_BANK * 0x4000 + GATE_TABLE_ADDR - 0x4000
     gates, problems = [], []
@@ -109,6 +147,9 @@ def derive(rom: bytes) -> dict:
             "boss_spawn": [sx, sy],
             "row": row.hex(),
         })
+        cf = cleared_flags(rom, boss)
+        gates[-1]["cleared_flag"] = f"0x{cf[0]:04X}" if cf else None
+        gates[-1]["cleared_flags"] = [f"0x{x:04X}" for x in cf]
     if len({x["boss_map"] for x in gates}) != len(gates):
         problems.append("two gates share a boss map")
     if problems:
@@ -116,7 +157,8 @@ def derive(rom: bytes) -> dict:
     return {
         "_generator": "tools/map_gate_names.py (S100) from data/DWM-original.gbc "
                       "GateFloorDataTable $16:$70A6 (floors byte 3 + boss map byte 4; "
-                      "S101: + boss_spawn bytes 5/6 + the raw row), "
+                      "S101: + boss_spawn bytes 5/6 + the raw row; S117: + cleared_flag(s) "
+                      "from the boss rooms' win tails), "
                       "cross-checked vs FULL_FAQ.txt 'Levels:'",
         "gates": gates,
     }

@@ -12,7 +12,7 @@ built from it (the original ROM is never changed).
 - **Gates** — which custom rooms appear on which gate floors, per-gate
   settings (floor count, boss floor, hand-made gates, project enemies) and
   **new gates** of your own (a copy of a vanilla gate; entrances on the Rooms
-  tab).
+  tab). A portal's swirl spins until its gate's boss is beaten.
 - **Families** — which monsters belong to which family, family icons,
   arena dialogue, Spirit's default names.
 - **Monsters** — every monster's species data (family, growth, resistances,
@@ -36,6 +36,9 @@ built from it (the original ROM is never changed).
 - **Music** — every song (the game's, DWM2's, MIDI files you import) with ▶
   preview on the game's own sound engine, your names for them, and the song of
   each room, gate and kind of battle.
+- **Shops** — the game's five shops and your own: what each sells (up to 20
+  items) and every item's price; an NPC sells a shop via Rooms tab → NPC →
+  Shopkeeper….
 - **World** — the graph of rooms and the doors between them (mouse wheel =
   zoom, drag empty space = move around, Fit / + / −).
 - **Build & Play** — build the ROM (Ctrl+B) and run it (Ctrl+R).

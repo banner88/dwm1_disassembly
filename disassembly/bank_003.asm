@@ -3696,10 +3696,10 @@ SaveMon_6987:
     ld c, $0c
     call Mul8x8To16
     ld a, l
-    add LOW(SpriteFrameDataTable)
+    add LOW(ItemInfoTable)
     ld l, a
     ld a, h
-    adc HIGH(SpriteFrameDataTable)
+    adc HIGH(ItemInfoTable)
     ld h, a
     pop de
     ld b, $0c
@@ -5170,458 +5170,63 @@ jr_003_71d4:
     ret
 
 
-SpriteFrameDataTable:
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld [$6400], sp
-    nop
-    inc b
-    nop
-    inc bc
-    inc b
-    ld e, $28
-    nop
-    nop
-    ld d, b
-    nop
-    ld h, h
-    nop
-    inc b
-    ld bc, $0403
-    inc a
-    ld b, [hl]
-    nop
-    nop
-    add sp, $03
-    inc d
-    ld [bc], a
-    dec b
-    nop
-    dec b
-    inc b
-    dec l
-    scf
-    nop
-    nop
-    db $f4
-    ld bc, $0064
-    dec b
-    ld bc, $0406
-    rst $38
-    rst $38
-    nop
-    nop
-    ret z
-
-    nop
-    ld h, h
-    nop
-    inc b
-    ld bc, $0703
-    inc d
-    ld e, $00
-    nop
-    ret nc
-
-    rlca
-    ld h, h
-    nop
-    inc b
-    ld bc, $0703
-    rst $38
-    rst $38
-    nop
-    ld bc, $000a
-    ld h, h
-    nop
-    inc b
-    nop
-    inc bc
-    ld [$0000], sp
-    nop
-    ld bc, $001e
-    ld h, h
-    nop
-    inc b
-    nop
-    inc bc
-    add hl, bc
-    nop
-    nop
-    nop
-    ld bc, $0032
-    ld h, h
-    nop
-    inc b
-    ld [bc], a
-    inc bc
-    ld a, [bc]
-    nop
-    nop
-    nop
-    ld bc, $0050
-    ld h, h
-    nop
-    inc b
-    ld b, $06
-    dec bc
-    nop
-    nop
-    nop
-    ld bc, $0032
-    ld h, h
-    nop
-    inc b
-    ld bc, $0c03
-    nop
-    nop
-    nop
-    ld bc, $03e8
-    ld h, h
-    nop
-    inc b
-    nop
-    inc bc
-    dec c
-    nop
-    nop
-    nop
-    ld [bc], a
-    ld a, [de]
-    nop
-    ld h, h
-    nop
-    inc b
-    inc bc
-    inc bc
-    ld c, $05
-    nop
-    nop
-    ld [bc], a
-    ld e, $00
-    ld h, h
-    nop
-    inc b
-    inc bc
-    inc bc
-    rrca
-    dec b
-    nop
-    nop
-    ld [bc], a
-    ld d, $00
-    ld h, h
-    nop
-    inc b
-    inc bc
-    inc bc
-    db $10
-    inc bc
-    nop
-    nop
-    ld [bc], a
-    ld d, $00
-    ld h, h
-    nop
-    inc b
-    inc bc
-    inc bc
-    ld de, $0003
-    nop
-    ld [bc], a
-    ld [de], a
-    nop
-    ld h, h
-    nop
-    inc b
-    inc bc
-    inc bc
-    ld [de], a
-    inc bc
-    nop
-    nop
-    ld [bc], a
-    rrca
-    nop
-    ld h, h
-    nop
-    inc b
-    inc bc
-    inc bc
-    inc de
-    inc bc
-    nop
-    nop
-    inc bc
-    inc d
-    nop
-    ld h, h
-    nop
-    inc b
-    inc b
-    inc d
-    dec d
-    dec b
-    ld a, [bc]
-    nop
-    inc bc
-    ld d, b
-    nop
-    ld h, h
-    nop
-    inc b
-    inc b
-    inc d
-    dec d
-    ld a, [bc]
-    ld e, $00
-    inc bc
-    inc l
-
-jr_003_72d8:
-    ld bc, $0064
-    inc b
-    inc b
-    inc d
-    dec d
-    inc d
-    ld h, h
-    nop
-    inc bc
-    inc d
-    nop
-    ld h, h
-    nop
-    inc b
-    inc b
-    inc d
-    ld d, $05
-    dec b
-    ld bc, $e803
-    inc bc
-    ld h, h
-    nop
-    inc b
-    inc b
-    inc d
-    dec d
-    ld h, h
-    rst $38
-    nop
-    inc b
-    cp b
-    dec bc
-    inc d
-    ld [bc], a
-    inc bc
-    dec b
-    rla
-    jr jr_003_7327
-
-    ld [hl-], a
-    nop
-    inc b
-    call c, $0a05
-    ld [bc], a
-    inc bc
-    dec b
-    rla
-    add hl, de
-    ld [$0018], sp
-    inc b
-    cp h
-    ld [bc], a
-    inc d
-    ld [bc], a
-    inc bc
-    dec b
-    rla
-    ld a, [de]
-    nop
-    nop
-    nop
-    inc b
-    ret nc
-
-    rlca
-    inc d
-    ld [bc], a
-    inc bc
-    dec b
-    rla
-    dec de
-
-jr_003_7327:
-    ld e, $2a
-    nop
-    inc b
-    and b
-    rrca
-    inc d
-    ld [bc], a
-    inc bc
-    dec b
-    rla
-    inc e
-    ld a, b
-    adc h
-    nop
-    dec b
-    ld h, h
-    nop
-    ld h, h
-    ld bc, $0607
-    dec e
-    nop
-    nop
-    nop
-    nop
-    ld b, $01
-    nop
-    ld h, h
-    inc bc
-    rlca
-    rlca
-    ld e, $00
-    nop
-    nop
-    dec b
-    ld [bc], a
-    adc b
-    inc de
-    ld h, h
-    ld bc, $0000
-    rra
-    jr nz, jr_003_72d8
-
-    add b
-    nop
-    ld [bc], a
-    adc b
-    inc de
-    ld h, h
-    ld bc, $0000
-    rra
-    ld hl, $8080
-    nop
-    ld [bc], a
-    adc b
-    inc de
-    ld h, h
-    ld bc, $0000
-    rra
-    ld [hl+], a
-    add b
-    add b
-    nop
-    ld [bc], a
-    adc b
-    inc de
-    ld h, h
-    ld bc, $0000
-    rra
-    inc hl
-    add b
-    add b
-    nop
-    ld [bc], a
-    adc b
-    inc de
-    ld h, h
-    ld bc, $0000
-    rra
-    inc h
-    add b
-    add b
-    nop
-    ld [bc], a
-    adc b
-    inc de
-    ld h, h
-    ld bc, $0000
-    rra
-    dec h
-    add b
-    add b
-    nop
-    inc b
-    adc b
-    inc de
-    inc d
-    ld [bc], a
-    ld [bc], a
-    dec b
-    rla
-    ld h, $b4
-    ret z
-
-    nop
-    rlca
-    sub b
-    ld bc, Boot
-    ld bc, Div8Subtract
-    ld a, [hl+]
-    nop
-    nop
-    inc b
-    rlca
-    ld h, h
-    nop
-    ld h, h
-    ld bc, $0701
-    ld e, $00
-    nop
-    nop
-    inc b
-    rlca
-    ret z
-
-    nop
-    ld h, h
-    ld bc, $0701
-    ld e, $2b
-    nop
-    nop
-    nop
-    rlca
-    cp b
-    dec bc
-    nop
-    ld bc, $0701
-    inc l
-    nop
-    nop
-    nop
-    inc b
-    rlca
-    ld b, [hl]
-    nop
-    ld h, h
-    ld bc, $0701
-    ld e, $2d
-    nop
-    nop
-    nop
-    rlca
-    ld h, h
-    nop
-    ld h, h
-    ld bc, $0707
-    ld e, $2e
-    nop
-    nop
-    inc b
+ItemInfoTable:
+    ; ITEM RECORDS ($03:$71DA, 44 x 12 B, index = item id; S117 — was
+    ; mgbdis fake code under the name SpriteFrameDataTable). Bank $03
+    ; entry 2 copies one to $DA62-$DA6D for [$DA5E]. Fields decoded so far:
+    ;   +$00 group (0 HP/MP restore, 1 cure, 2 seeds / nuts / books,
+    ;        3 meat, 4 staff, 5 WarpWing, 6 TinyMedal, 7 key / field)
+    ;   +$01/+$02 BUY PRICE, 16-bit LE ($DA63/$DA64; the shop lists, the
+    ;        sell price = bank $09 ShopSellPrice; == the FAQ's prices)
+    ;   +$0B flags: bit 2 = kept after a lost battle (bank $50)
+    ;   +$03-$0A: not decoded yet (ROADMAP E9 item authoring).
+    ; The patched build owns this table as compiler region gd_item_info
+    ; (gamedata.items: prices). Re-sectioned S117 (tools/resection_shops.py).
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00   ; [ 0] id 0 = no item
+    db $00, $08, $00, $64, $00, $04, $00, $03, $04, $1e, $28, $00   ; [ 1] ITEM_HERB — HP/MP restore, price 8
+    db $00, $50, $00, $64, $00, $04, $01, $03, $04, $3c, $46, $00   ; [ 2] ITEM_LOVEWATER — HP/MP restore, price 80
+    db $00, $e8, $03, $14, $02, $05, $00, $05, $04, $2d, $37, $00   ; [ 3] ITEM_SAGE_STONE — HP/MP restore, price 1000
+    db $00, $f4, $01, $64, $00, $05, $01, $06, $04, $ff, $ff, $00   ; [ 4] ITEM_WORLD_DEW — HP/MP restore, price 500
+    db $00, $c8, $00, $64, $00, $04, $01, $03, $07, $14, $1e, $00   ; [ 5] ITEM_POTION — HP/MP restore, price 200
+    db $00, $d0, $07, $64, $00, $04, $01, $03, $07, $ff, $ff, $00   ; [ 6] ITEM_ELF_WATER — HP/MP restore, price 2000
+    db $01, $0a, $00, $64, $00, $04, $00, $03, $08, $00, $00, $00   ; [ 7] ITEM_ANTIDOTE — status cure / field, price 10
+    db $01, $1e, $00, $64, $00, $04, $00, $03, $09, $00, $00, $00   ; [ 8] ITEM_MOON_HERB — status cure / field, price 30
+    db $01, $32, $00, $64, $00, $04, $02, $03, $0a, $00, $00, $00   ; [ 9] ITEM_SKY_BELL — status cure / field, price 50
+    db $01, $50, $00, $64, $00, $04, $06, $06, $0b, $00, $00, $00   ; [10] ITEM_LAUREL — status cure / field, price 80
+    db $01, $32, $00, $64, $00, $04, $01, $03, $0c, $00, $00, $00   ; [11] ITEM_AWAKE_SAND — status cure / field, price 50
+    db $01, $e8, $03, $64, $00, $04, $00, $03, $0d, $00, $00, $00   ; [12] ITEM_WORLD_LEAF — status cure / field, price 1000
+    db $02, $1a, $00, $64, $00, $04, $03, $03, $0e, $05, $00, $00   ; [13] ITEM_LIFE_ACORN — seed / nut / book, price 26
+    db $02, $1e, $00, $64, $00, $04, $03, $03, $0f, $05, $00, $00   ; [14] ITEM_MYSTIC_NUT — seed / nut / book, price 30
+    db $02, $16, $00, $64, $00, $04, $03, $03, $10, $03, $00, $00   ; [15] ITEM_ATK_SEED — seed / nut / book, price 22
+    db $02, $16, $00, $64, $00, $04, $03, $03, $11, $03, $00, $00   ; [16] ITEM_DEF_SEED — seed / nut / book, price 22
+    db $02, $12, $00, $64, $00, $04, $03, $03, $12, $03, $00, $00   ; [17] ITEM_AGL_SEED — seed / nut / book, price 18
+    db $02, $0f, $00, $64, $00, $04, $03, $03, $13, $03, $00, $00   ; [18] ITEM_INT_SEED — seed / nut / book, price 15
+    db $03, $14, $00, $64, $00, $04, $04, $14, $15, $05, $0a, $00   ; [19] ITEM_BEEF_JERKY — meat, price 20
+    db $03, $50, $00, $64, $00, $04, $04, $14, $15, $0a, $1e, $00   ; [20] ITEM_PORK_CHOP — meat, price 80
+    db $03, $2c, $01, $64, $00, $04, $04, $14, $15, $14, $64, $00   ; [21] ITEM_RIB — meat, price 300
+    db $03, $14, $00, $64, $00, $04, $04, $14, $16, $05, $05, $01   ; [22] ITEM_BAD_MEAT — meat, price 20
+    db $03, $e8, $03, $64, $00, $04, $04, $14, $15, $64, $ff, $00   ; [23] ITEM_SIRLOIN — meat, price 1000
+    db $04, $b8, $0b, $14, $02, $03, $05, $17, $18, $23, $32, $00   ; [24] ITEM_BOLT_STAFF — staff, price 3000
+    db $04, $dc, $05, $0a, $02, $03, $05, $17, $19, $08, $18, $00   ; [25] ITEM_WIND_STAFF — staff, price 1500
+    db $04, $bc, $02, $14, $02, $03, $05, $17, $1a, $00, $00, $00   ; [26] ITEM_MIST_STAFF — staff, price 700
+    db $04, $d0, $07, $14, $02, $03, $05, $17, $1b, $1e, $2a, $00   ; [27] ITEM_LAVA_STAFF — staff, price 2000
+    db $04, $a0, $0f, $14, $02, $03, $05, $17, $1c, $78, $8c, $00   ; [28] ITEM_SNOW_STAFF — staff, price 4000
+    db $05, $64, $00, $64, $01, $07, $06, $1d, $00, $00, $00, $00   ; [29] ITEM_WARP_WING — WarpWing, price 100
+    db $06, $01, $00, $64, $03, $07, $07, $1e, $00, $00, $00, $05   ; [30] ITEM_TINY_MEDAL — TinyMedal, price 1
+    db $02, $88, $13, $64, $01, $00, $00, $1f, $20, $80, $80, $00   ; [31] ITEM_QUEST_BK — seed / nut / book, price 5000
+    db $02, $88, $13, $64, $01, $00, $00, $1f, $21, $80, $80, $00   ; [32] ITEM_HORROR_BK — seed / nut / book, price 5000
+    db $02, $88, $13, $64, $01, $00, $00, $1f, $22, $80, $80, $00   ; [33] ITEM_BENICE_BK — seed / nut / book, price 5000
+    db $02, $88, $13, $64, $01, $00, $00, $1f, $23, $80, $80, $00   ; [34] ITEM_CHEATER_BK — seed / nut / book, price 5000
+    db $02, $88, $13, $64, $01, $00, $00, $1f, $24, $80, $80, $00   ; [35] ITEM_SMART_BK — seed / nut / book, price 5000
+    db $02, $88, $13, $64, $01, $00, $00, $1f, $25, $80, $80, $00   ; [36] ITEM_COMEDY_BK — seed / nut / book, price 5000
+    db $04, $88, $13, $14, $02, $02, $05, $17, $26, $b4, $c8, $00   ; [37] ITEM_FIRE_STAFF — staff, price 5000
+    db $07, $90, $01, $00, $01, $01, $07, $1e, $2a, $00, $00, $04   ; [38] ITEM_BEAST_TAIL — key / field, price 400
+    db $07, $64, $00, $64, $01, $01, $07, $1e, $00, $00, $00, $04   ; [39] ITEM_WARP_STAFF — key / field, price 100
+    db $07, $c8, $00, $64, $01, $01, $07, $1e, $2b, $00, $00, $00   ; [40] ITEM_REPELLANT — key / field, price 200
+    db $07, $b8, $0b, $00, $01, $01, $07, $2c, $00, $00, $00, $04   ; [41] ITEM_SHINY_HARP — key / field, price 3000
+    db $07, $46, $00, $64, $01, $01, $07, $1e, $2d, $00, $00, $00   ; [42] ITEM_MAP_HERB — key / field, price 70
+    db $07, $64, $00, $64, $01, $07, $07, $1e, $2e, $00, $00, $04   ; [43] ITEM_BOOK_MARK — key / field, price 100
+; NOTE: unreferenced fake-decode labels removed with this block: jr_003_72d8, jr_003_7327
     xor a
     ld [$cdc7], a
     call LoadMon_7409

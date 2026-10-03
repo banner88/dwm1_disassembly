@@ -4875,3 +4875,85 @@ output is a device (audio) is not tested until a real device driver has consumed
 up a virtual one (PipeWire + `support.null-audio-sink`) and stress play / replay / stop /
 device loss; and when a user reports a hang in a backend you cannot run, read that
 backend's source for the version they run (the FFmpeg version Qt prints identifies it).
+
+## S117 — extended flags, gate swirls, shops
+
+### A byte-perfect rebuild does not prove a re-section is right
+**Symptom**: the first bank $09 shop re-section (the same splice tool that had done bank
+$03) rebuilt byte-perfect — and had turned live shop CODE into `db` rows. **Root cause**:
+the splice probe matched assembled bytes to source lines and skipped `.local`-scoped label
+lines, so its spans widened past the tables into the code around them; `db` of the same
+bytes assembles identically, so the clean build could not notice. **Fix**: both trees
+restored from git; `tools/resection_shops_09.py` replaces exact text blocks (each table
+quoted verbatim, asserted to occur once) and builds. **Rule**: a re-section is checked by
+its TEXT diff (only the intended lines changed: code stays code) as well as the byte-perfect
+build; never let a heuristic choose the span in a bank with local labels.
+
+### Every same-size patch gets an address check of what follows it
+**Symptom**: the bank $09 ShopBuyStockFill replacement was 65 bytes for a 64-byte hole
+(60 nops instead of 59). The build succeeded; `BazaarInventory` and every later bank $09
+address moved by one — the BUY / SELL jump tables would have jumped one byte off. **Caught
+by** test_compiler's address map (the labels after the patch in the patched game.sym ==
+the original's) before any ROM went out. **Rule**: for every same-size rewrite, compare the
+address of the next labels (and the bank's last label) against the original build, in a
+test — counting nops by hand is where the byte goes missing.
+
+### A mailbox is cleared when the whole interaction ends, not when it is first read
+**Symptom**: a project shop sold its own list on the first BUY and the Bazaar's on the
+second BUY of the same visit. **Root cause**: `ShopFill` cleared `wShopID` after reading
+it, assuming the fill runs once per visit; BUY state 0 runs again every time BUY is
+picked from the menu. **Fix**: `ShopFill` only reads; bank $77 entry 1 `ShopClose` (a
+same-size call in the shop's close tail, reached by QUIT and by B) clears it. **Rule**:
+before giving a script → engine mailbox "consume" semantics, measure how often its reader
+runs during one interaction (PyBoy hook count), and clear it at the interaction's exit.
+
+### The op-name table is a migration input
+**Symptom**: test_app's first check ("the document model must round-trip project.json")
+failed after `'game_action': (0x04, 2)` was added to `scriptgen.OPS`. **Root cause**:
+`Document._migrate` regroups every script by `regroup_ops`, which names opcodes from
+`OPS`: every raw `["op", "0x04", …]` in an existing project (the example has 17)
+became `["op", "game_action", …]` on open — same bytes, but a dirty, rewritten project.
+**Fix**: the shop lowering emits `["op", "0x04", 0, $0680]`; `OPS` unchanged. **Rule**:
+naming an opcode that saved projects already contain is a schema migration — do it on
+purpose (with a note) or not at all.
+
+### Measure what a "simple" visual is made of before designing around it
+**Situation**: the user expected NG2 to be "connecting swirly thing to gate, then setting a
+flag". Measured first: the swirl is TWO things — still background art and a spinning NPC
+object (`$4D`) — and the object disappears because the boss script advances the room's
+STEP counter, not because anything tests a flag; and the portal never checks the swirl.
+So "stop swirling" = hide an NPC on a flag, which needed a general NPC condition
+(`$A0`/`$A1` prefixes) and a way into vanilla rooms' lists (bank $0B `GetRoomDataPtr`, the
+single reader) — the same machinery then gave every NPC `shown_when`. **Rule**: dump the
+RAM slots and the scripts of the thing the user sees before choosing the mechanism; the
+measured structure decides the design, and often generalizes it.
+
+### S117b — PyBoy's screen does not show the 10-sprites-per-line limit
+**Symptom** (user, their emulator): in the Portal Hall, walking left / right along the
+NPCs' row with 3 following monsters made the bell keeper and the slime vanish. Every
+PyBoy screenshot showed them. **Root cause**: hardware — at most 10 objects per screen
+line, lowest OAM index first; the player + 3 monsters (OAM 0-15) lined up use 8 of a
+line, the first NPC takes the rest. PyBoy draws them all. **Fix**: none in the engine (the
+user chose warnings: "Just warning is fine for now, and Ill build around it");
+`formats.sprite_budget` warns on the Rooms tab and in the build; the demo hall has one NPC
+per row. **Rule**: for anything sprite-dense, model the per-line budget from OAM ($FE00,
+y/x/tile, 8×8 or 8×16 per LCDC bit 2) frame by frame instead of trusting screenshots; and
+lay demo NPCs out the way the game's own rooms do.
+
+### S117b — Test a colour fix in a room whose colours differ from cream
+**Symptom** (user): the new shop's menus in their own custom room took the room's tile
+colours. All S117 shop screenshots had looked right — they were taken in the demo hall,
+a non-free-colour room whose colour 1 IS cream. **Fix**: bank $77 `ScreenPush` (the bank
+$09 screen push) writes attributes in free-colour rooms. **Rule**: the S97 r2 rule again
+("list every renderer that relied on colour 1 = cream"): any new UI shown in custom rooms
+is checked in a free-colour room (the user's own `free_color1` rooms) before it ships.
+
+### S117b — A vanilla layout assumption that a custom placement breaks
+**Symptom** (found while testing the colour fix): after a custom shop, the "Thank you"
+box stayed on screen in every custom room. **Root cause**: the dialog box goes to the top
+when the player stands in the lower half of the screen; the shop's screens assume the
+bottom. Every vanilla shopkeeper is talked to from the upper half. **Fix**: `ShopClose`
+re-seats a top box at the bottom (base, tile backup, attribute save). **Rule**: when a
+vanilla engine feature becomes placeable anywhere, check the position-dependent branches
+its vanilla placements never reach (here bank $06's top / bottom box choice) — and verify
+the screen AFTER the feature closes, not only while it is open.

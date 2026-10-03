@@ -584,6 +584,18 @@ def emit_bank_076(prj, warnings, head):
     for src, why in srcs:
         out.append(f"    db {src}  ; {why}")
     out.append("")
+    # S117 (ROADMAP NG2): the flags a boss-floor win sets (entry 2 GateBossWin)
+    crow = prj.gate_clear_rows()
+    out += [f"GATE_CLEAR_LEN EQU {len(crow)}",
+            "GateClearTable:  ; per gate: [dw own cleared flag, dw vanilla flag] ($FFFF = none)"]
+    for gid, own, van in crow:
+        if own is None:
+            out.append(f"    dw $FFFF, $FFFF  ; gate {gid}: its own boss scripts set its flag")
+        else:
+            out.append(f"    dw {F.hexw(own)}, {F.hexw(van) if van is not None else '$FFFF'}"
+                       f"  ; gate {gid}: " + (cfg[gid]['name'] if gid in cfg else '')
+                       + (" (new gate)" if gid >= 32 else " (another boss)"))
+    out.append("")
     # project lists
     out.append("ProjectEncLists:  ; 26 B each, numbers 128+ (EncounterPoolData format)")
     for e in m.lists:

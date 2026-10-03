@@ -21,14 +21,15 @@ from . import scriptgen as S
 # --pin-templates after a successful regression build; None = check skipped
 # with a warning.
 TEMPLATE_SIZE = {
-    0x60: 558,   # addr(CustomScriptMasterTable)-$4000 — S105 reference game.sym (549 + CustomScriptRead's SKILL_SCRIPT_TYPE branch, 9 B). Prev 549 S101 reference game.sym (492 S97 + CustomMonsterCast + its call at the head of CustomStateRules). Prev: S97 reference game.sym (383 S94b -> 492 S97: entry-8 dw + CustomStateRules + the CustomReadStep call)
+    0x60: 678,   # addr(CustomScriptMasterTable)-$4000 — S117 (558 + CustomReadInteract's vanilla VanillaNPCExtTable branch + CopyNPCListToBuffer with the $A0/$A1 condition prefixes; measured from the S117 game.sym). Prev 558 S105 reference game.sym (549 + CustomScriptRead's SKILL_SCRIPT_TYPE branch, 9 B). Prev 549 S101 reference game.sym (492 S97 + CustomMonsterCast + its call at the head of CustomStateRules). Prev: S97 reference game.sym (383 S94b -> 492 S97: entry-8 dw + CustomStateRules + the CustomReadStep call)
                  # (283 S53 -> 348 S70 -> 358 S70v3 (+2x5B wCustomY7Cmp arming): entry-7 dw + VanillaExitResolve +
                  # factored CopyExitListToBuffer in the template head; 383 S94: VanillaExitResolve rows keyed
                  # by (mapID, screen) — `db mapID, screen` with $FF = any screen)
     0x71: 688,    # addr(Custom26DDTable)-$4000, S116 (444 S102 + entries 6/7 dw + CustomRoomBGMResolve gate songs + CustomBGMStart + BattleBGMResolve; measured from the S116 example game.sym). Prev 444 S102 (440 S101 + CustomAnimSource's far call to bank $6C entry 0, 4 B; measured from the S102 reference game.sym). Prev 440 S101 (395 S100 + CustomRoomBGMResolve .gatePath: the custom boss song on the floor before the boss). Prev 395 S100 (164 S99 + entries 4/5 dw + CustomGateInsert + CustomRoomFlags + entry-1 follow-gate test; measured from the S100 reference game.sym). Prev 164 S99 (142 S64 + entry-3 dw + CustomAnimSource 20 B; measured from the S99 reference game.sym). Prev 142 S64 (S55 116 + entry-2 dw + CustomRoomBGMResolve; measured from the S64 reference game.sym)
     0x6C: 285,    # addr(TileAnimRoomTable)-$4000, S102 (bank self-ID + entry table + CustomTileAnimate / TileAnimRestart / TileAnimCopy; measured from the S102 reference game.sym)
     0x6F: 391,    # addr(CustomAnimFrameTable)-$4000, S112 (bank self-ID + 4-entry table + CustomAnimTick / Init / Load / Step + CustomAnimNone; measured from the S112 game.sym)
-    0x76: 296,    # addr(EncRoomTable)-$4000, S115 (+2 entry-1 dw, +17 EncVanillaNumber new-gate source, +36 NewGateRowCopy; measured from the S115 game.sym). Prev 241 S114 (bank self-ID + entry table + EncResolve / EncPickVariant / EncFloorRun / EncVanillaNumber)
+    0x76: 358,    # addr(EncRoomTable)-$4000, S117 (+2 entry-2 dw, +60 GateBossWin; measured from the S117 game.sym). Prev 296 S115 (+2 entry-1 dw, +17 EncVanillaNumber new-gate source, +36 NewGateRowCopy; measured from the S115 game.sym). Prev 241 S114 (bank self-ID + entry table + EncResolve / EncPickVariant / EncFloorRun / EncVanillaNumber)
+    0x77: 438,    # addr(ShopPtrTable)-$4000 = $41B6: S117b (+ entry 2 ScreenPush / PushRowAttrs, ShopClose -> ShopBoxBottom; was 93 S117; measured from the S117b game.sym)
     0x6B: 53,     # addr(ProjectEnemyRows)-$4000, S101 (bank self-ID + entry table + CopyEnemyRowExt; measured from the S101 reference game.sym)
 }
 BANK_SIZE = 0x4000
@@ -127,6 +128,13 @@ def validate(prj, generated=None):
         try:
             warnings += [w for w in AR.check(prj) if w not in warnings]
         except AR.ArenaError as e:
+            errors.append(str(e))
+        # S117 (P3.13c, PROJECT_COMPILER §2.32): gamedata.items prices,
+        # gamedata.shops (the vanilla lists), custom.shops
+        from . import shops as SH
+        try:
+            SH.check(prj)
+        except SH.ShopError as e:
             errors.append(str(e))
         # S110 (P3.11, PROJECT_COMPILER §2.26): gamedata.skills names /
         # descriptions / looks_like — encode, fit, and only same-side looks
@@ -282,12 +290,12 @@ def validate(prj, generated=None):
             except Exception as e:
                 errors.append(str(e))
                 resolved = []
-            from .project import FLAG_PERSIST_LIMIT
+            from .project import flag_persistent
             seen = set()
             for k, lst in resolved:
                 for st, terms in lst:
                     for idx, _clr in terms:
-                        if idx >= FLAG_PERSIST_LIMIT and idx not in seen:
+                        if not flag_persistent(idx) and idx not in seen:
                             seen.add(idx)
                             warnings.append(
                                 f"room {rid}: state rule tests flag "
@@ -756,6 +764,10 @@ def _validate_state(prj, r, rid, i, v, st, n_states, errors, warnings):
             "the per-screen sprite-sheet VRAM budget (S91: order-filled; "
             "8 light sheets fit, ~2-3 heavy exhaust; overflow renders "
             "BLANK, no crash) — verify in PyBoy")
+    # S117b: the hardware sprite limits (10 per line, 40 on screen) with the
+    # player + 3 monsters (formats.sprite_budget; user: "Just warning is fine")
+    for msg in F.sprite_budget(st.get('npcs', [])):
+        warnings.append(f"{tag}: {msg}")
     try:
         prj.resolve_layout(st['layout'], ctx=tag)
     except Exception as ex:
@@ -1018,6 +1030,11 @@ def bank_usage(generated):
     if text is not None:
         gen_bytes = _payload_bytes(text.split('ENCOUNTER DATA (generated', 1)[-1])
         out[0x76] = ((TEMPLATE_SIZE.get(0x76) or 0) + gen_bytes, BANK_SIZE)
+    # S117: bank $77 = shops (template head + lists)
+    text = generated.get("file:patches/bank_077.asm")
+    if text is not None:
+        gen_bytes = _payload_bytes(text.split('SHOP LISTS (generated', 1)[-1])
+        out[0x77] = ((TEMPLATE_SIZE.get(0x77) or 0) + gen_bytes, BANK_SIZE)
     text = generated.get("file:patches/bank_070.asm")
     if text is not None:
         out[0x70] = (_payload_bytes(text), BANK_SIZE)
@@ -1076,7 +1093,7 @@ def _validate_gates(prj, rooms, errors, warnings):
     """custom.gate_inserts[] + the rooms they serve (S100, ROADMAP P3.7b;
     PROJECT_COMPILER §2.16). Engine facts: GATE_GENERATION §7.6."""
     from . import gates as G
-    from .project import FLAG_PERSIST_LIMIT
+    from .project import flag_persistent
     for r in rooms:
         if 'can_save' in r and not isinstance(r['can_save'], bool):
             errors.append(f"room {r.get('id')}: can_save must be true/false")
@@ -1154,9 +1171,10 @@ def _validate_gates(prj, rooms, errors, warnings):
         if not c['boss_room']:
             warnings.append(
                 f"new gate {gid} ({c['name']}) ends in a VANILLA boss room "
-                f"({F.hexb(c['boss_map'])}): its vanilla scripts run unchanged — the "
-                "original gate's cleared flag, boss and King speech. Give it a custom "
-                "boss room for its own ending")
+                f"({F.hexb(c['boss_map'])}): its vanilla scripts run unchanged — they "
+                "also mark the ORIGINAL gate cleared and play its King speech (this "
+                "gate's own cleared flag, which stops its swirls, is still set by the "
+                "win). Give it a custom boss room for its own ending")
     try:
         rows = prj.gate_insert_rows()
     except Exception as e:
@@ -1180,7 +1198,7 @@ def _validate_gates(prj, rooms, errors, warnings):
     for row in rows:
         served.setdefault(row['room_id'], []).append(row)
         for idx, _clr in row['terms']:
-            if idx >= FLAG_PERSIST_LIMIT:
+            if not flag_persistent(idx):
                 warnings.append(
                     f"custom.gate_inserts[{row['index']}]: tests flag "
                     f"{F.hexw(idx)} — $0278+ is not saved (EVENT_FLAGS.md)")

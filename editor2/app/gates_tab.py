@@ -37,7 +37,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QCheckBox, QComboBox, QDialog,
                                QVBoxLayout, QWidget)
 
 from editor2.app.rooms import commands as C
-from editor2.app.rooms.rules_panel import WELL_KNOWN
+from editor2.app.rooms.rules_panel import WELL_KNOWN, well_known
 from editor2.core import gates as G
 from editor2.core.document import val
 
@@ -180,7 +180,7 @@ class GateRuleDialog(QDialog):
             c.addItem(f"{fl['name']}  (project flag)", fl['name'])
         for nm in self.new_flags if hasattr(self, 'new_flags') else []:
             c.addItem(f'{nm}  (new project flag)', nm)
-        for idx, name in WELL_KNOWN:
+        for idx, name in well_known(self.doc):
             c.addItem(f'{idx}  {name}', idx)
         if value is not None:
             i = c.findData(value)
@@ -535,9 +535,11 @@ class GatesTab(QWidget):
                           + (f" — NEW, a copy of {self.gates[g['copy_of']]['name']})"
                              if new else ')'))
         ents = doc.gate_entrances(g['id'])
-        if ents:
-            where = ', '.join(f"{doc.room_name(r)} screen {k} ({e['x']},{e['y']})"
-                              for r, k, _n, e in ents[:3]) + (' …' if len(ents) > 3 else '')
+        places = [f"{doc.room_name(r)} screen {k} ({e['x']},{e['y']})" for r, k, _n, e in ents]
+        for _i, rd in doc.portal_redirects(g['id']):      # S117: re-routed vanilla portals
+            places.append(f"vanilla {rd['mapID']} screen {rd['screen']} portal ({rd['x']},{rd['y']})")
+        if places:
+            where = ', '.join(places[:3]) + (' …' if len(places) > 3 else '')
             ent = f" · entrance: {where}"
         elif new:
             ent = (" · ⚠ no entrance yet — Rooms tab: pick a cell, then "
@@ -548,7 +550,9 @@ class GatesTab(QWidget):
                          f"({doc.gate_boss_label(g['id'])}) · depth tier {g['depth_tier']} · floor-type rows "
                          f"{g['floor_types'][0]}/{g['floor_types'][1]}/{g['floor_types'][2]}"
                          + (' · no special rooms in this gate' if g['id'] == 0 else '')
-                         + ent)
+                         + ent
+                         + (f" · {doc.gate_cleared_text(g['id'])}" if doc.gate_cleared_text(g['id'])
+                            else ''))
         rules = doc.gate_rules_for(g['id'])
         self.rules.setRowCount(len(rules))
         for row, (idx, r) in enumerate(rules):

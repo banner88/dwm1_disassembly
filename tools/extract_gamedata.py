@@ -36,6 +36,10 @@ against the patched build's game.sym — every label sits at the same address):
                                           first 27 rows of bank $04's)
   arena_fees        $09:$5D23    8 x 2    ArenaClassFeeTable (entry fee G..S)
   chance_percent    $01:$69C0    8        EncounterChancePercent (code -> %)
+  item_info         $03:$71DA   44 x 12   ItemInfoTable (S117: +1/+2 = buy price)
+  shop_bazaar / _starry / _books / _rare / _gate
+                    $09:$476B / $4774 / $477D / $4784 / $478C  the five vanilla
+                    shop lists ($FF-terminated; S117 P3.13c)
   library           bank $4D recipe TEXT (dispatch entry = species + 5):
                     the 221 pointers, the raw $43CE-$53D2 string block, pad
                     byte, family tokens, and the bank-$41 monster name bytes
@@ -113,6 +117,16 @@ TABLES = {
     "encounter_rate_mod": (0x16, 0x702B, 8, 1, "EncounterRateModifierTable"),
     "encounter_rate_data": (0x16, 0x6FAB, 16, 8, "EncounterRateData"),
     "encounter_counter_seeds": (0x16, 0x6E3D, 50, 4, "RandomEncounterCounterTable"),
+    # S117 (P3.13c Shops, editor2/core/shops.py): the 44 item records (+1/+2 =
+    # the buy price; the rest is re-emitted verbatim) and the five vanilla
+    # shop lists of bank $09 ($FF-terminated; the patched build copies them
+    # into bank $77, whose ShopFill replaced the bank $09 choice)
+    "item_info": (0x03, 0x71DA, 44, 12, "ItemInfoTable"),
+    "shop_bazaar": (0x09, 0x476B, 9, 1, "BazaarInventory"),
+    "shop_starry": (0x09, 0x4774, 9, 1, "StarryNightShopInventory"),
+    "shop_books": (0x09, 0x477D, 7, 1, "BookstoreInventory"),
+    "shop_rare": (0x09, 0x4784, 8, 1, "RareItemShopInventory"),
+    "shop_gate": (0x09, 0x478C, 9, 1, "GateworldShopInventory"),
 }
 # the eight copies of the follower gfx-ID table at species 0 (MONSTER_DATA
 # "Follower-art table has EIGHT copies"): identical for species 0-214 —
@@ -309,6 +323,11 @@ def selftest():
     if t["arena_masters_50"]["rows"] != t["arena_masters"]["rows"][:27]:
         print("FAIL: the bank $50 arena master table is not the first 27 rows of bank $04's")
         return 1
+    for k in ("shop_bazaar", "shop_starry", "shop_books", "shop_rare", "shop_gate"):
+        rows = t[k]["rows"]
+        if rows[-1] != "ff" or "ff" in rows[:-1] or "00" in rows:
+            print(f"FAIL: {k} is not one $FF-terminated list of item ids")
+            return 1
     if sorted(want["library"]["family_tokens"]) != [str(i) for i in range(10)]:
         print("FAIL: library family tokens incomplete")
         return 1

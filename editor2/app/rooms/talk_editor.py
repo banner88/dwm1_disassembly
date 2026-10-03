@@ -398,14 +398,14 @@ class FlagList(QWidget):
         v.addLayout(row)
 
     def _fill_pick(self):
-        from editor2.app.rooms.rules_panel import WELL_KNOWN
+        from editor2.app.rooms.rules_panel import WELL_KNOWN, well_known
         self.pick.clear()
         if self.doc is not None:
             for fl in self.doc.flags():
                 self.pick.addItem(f"{fl['name']}  (project flag)", fl['name'])
         for nm in self.new_flags:
             self.pick.addItem(f'{nm}  (new project flag)', nm)
-        for idx, name in WELL_KNOWN:
+        for idx, name in well_known(self.doc):
             self.pick.addItem(f'{idx}  {name}', idx)
         self.pick.setToolTip('A project flag, or any event flag number (e.g. 0x0030). '
                              'EVENT_FLAGS.md lists the vanilla story flags.')

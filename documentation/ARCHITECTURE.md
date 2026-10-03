@@ -105,7 +105,7 @@ SaveGameState (ROM0, bank_000.asm line 6577) copies game state to SRAM:
 | wGateDiveGate/Mask $DEBC-$DEBD (S100) | $BFCA-$BFCB | 2 B | **Gate dive state (S100)** — once-per-dive custom gate rooms (GATE_GENERATION §7.6). Written by bank $73 entry 5's main-image detector (explicit save, BEFORE the checksum pass — inside v3 segment 3), read back by entry 6's detector at load. Reserved-tail carve after the F2 gate: $BFCC-$BFFF (52 B) left. |
 | (bank 2, S71) | b2 $A010 | $1744 (40×$95) | **Farm SLEEP pool (S55; → BANK 2 in FX1/S71)** — now a FULL 40-slot non-party mirror (whole-swap at any party size), records at bank2 $A010+c*$95, magic "P1" at bank2 $A000-1. Still gated by $CA41 bit 7; accessed ONLY via bank $73 entries 10 (record swap) / 11 (zero-init+magic) / 12 (census) + entry 4's migration/.sum2 — short RAMB≠0 windows, pin-safe (S69 ISR audit). Vanilla-eager (sleep force-saves); the sleep flag rewinds in the main image, gating stale copies exactly as vanilla. |
 
-Checksum (v3, FX1/S71): three segments $A002×$1C5 + $AD9F×$385 + $BCC8×$338 (seed $4638) → stored at $A000-$A001; excludes the eager roster image AND extended farm. Valid flag: $A002 (1 = save exists). Bank 1 = roster snapshot "R4" (dual-region: $A1BF ×95 chunks + $B124 ×94 chunks; R3 auto-upgrades). **S104 r4:** the R4 RESTORE copies $B124 ×93 chunks + 4 bytes ($B124-$BCC7) — the 94th chunk's other 28 bytes are the tile image $BCC8-$BCE3, which in bank 1 is the PREVIOUS save's (the commit runs before SaveGameState's tile block); restoring it broke checksum segment 3 (save lost after a reset). Bank 2 = sleep pool "P1". Bank 3 free.
+Checksum (v3, FX1/S71): three segments $A002×$1C5 + $AD9F×$385 + $BCC8×$338 (seed $4638) → stored at $A000-$A001; excludes the eager roster image AND extended farm. Valid flag: $A002 (1 = save exists). Bank 1 = roster snapshot "R4" (dual-region: $A1BF ×95 chunks + $B124 ×94 chunks; R3 auto-upgrades). **S104 r4:** the R4 RESTORE copies $B124 ×93 chunks + 4 bytes ($B124-$BCC7) — the 94th chunk's other 28 bytes are the tile image $BCC8-$BCE3, which in bank 1 is the PREVIOUS save's (the commit runs before SaveGameState's tile block); restoring it broke checksum segment 3 (save lost after a reset). Bank 2 = sleep pool "P1". Bank 3 = the extended event flags "X1" (S117, below; $A002-$A00F and $A110+ free).
 
 ### SRAM banking as built S69 — 32 KB expansion via the RAMB PIN
 
@@ -162,8 +162,9 @@ interrupts *better* than under the convention. Residual, not a hazard.
 $52,$33 at bank1 $A000-$A001, snapshot region $A1BF-$AD9E, written by the
 explicit-save funnel and restored at load; it self-seeds on first load of
 a pre-v3 save (see MONSTER_DATA "Persistence model (v3)"). Banks 2-3
-remain uninitialized and unclaimed — any future consumer brings its own
-format/magic. The CF3 checksum covers bank-0 regions only, unaffected.
+remained uninitialized and unclaimed — any future consumer brings its own
+format/magic (S71: bank 2 = the sleep pool "P1"; S117: bank 3 = the extended
+flags "X1", below). The CF3 checksum covers bank-0 regions only, unaffected.
 **Pin invariant, stated precisely (S69v2):** RAMB==0 except inside
 CF3-owned banked-access windows — entry 9's per-byte di brackets, and the
 entry 5/6 snapshot hooks' ~200-cycle chunk windows, which need no di/ei
@@ -171,6 +172,20 @@ because the ISR graph neither reads SRAM nor writes RAMB (audited S69:
 vblank audio has zero SRAM literals; LCDC is display-only; timer is reti;
 serial is inactive in save/load contexts and pin-safe regardless). Entry 9
 remains the conservative any-context primitive for future code.
+
+### SRAM bank 3 (S117) — the extended event flags "X1"
+
+**Built S117, PyBoy-verified, NOT yet user-tested.** Bank 3 `$A000-$A001` = magic
+`$58,$31` ("X1"), `$A010-$A10F` = a copy of `wExtFlags` ($D140-$D23F, flags
+`$1000-$17FF`; EVENT_FLAGS "Extended flags (S117)"). Written by bank $73
+`ExtFlagsCommit`, called from entry 5's main-save detector right before its
+`CF3SnapCommit` tail (the explicit save); read by `ExtFlagsRestore`, called from entry
+6's main-load detector after its zero-fill of $CC80-$D664 and before the
+`CF3SnapRestore` tail — copied back only when the magic is present (a pre-S117 save
+loads with every extended flag clear). Both write RAMB = 3 for a 256-byte loop and
+restore RAMB = 0, the same no-di chunk window as the entry 5/6 snapshot hooks (pin
+invariant above: the ISR graph neither reads SRAM nor writes RAMB). Outside the CF3
+checksum (bank 0 only), like banks 1-2. Free in bank 3: `$A002-$A00F`, `$A110-$BFFF`.
 
 **What remains open in E3** (see ROADMAP): (a2) new-game INIT data as an
 authorable object; (b2) story-variable headroom schema on top of the new

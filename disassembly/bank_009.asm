@@ -216,6 +216,14 @@ jr_009_40f7:
     jr jr_009_40d8
 
 LoadFld9_40fa:
+    ; THE BANK $09 SCREEN PUSH (S117b): every bank $09 screen (shops, the arena
+    ; class menu, the other screen effects) is composed in WRAM at $C500
+    ; (18 rows x 32: SetFld9_4204 copies the room's tiles $C300 + the HUD
+    ; $C1C0, then the windows are drawn into it — font / frame tiles >= $80)
+    ; and pushed here to the BG map at [$C909] (the scroll-aligned origin,
+    ; map rows wrap). Tile ids only: the cells keep the room's GBC attributes.
+    ; Patched builds: a same-size far call to bank $77 ScreenPush (palette
+    ; attributes in free-colour custom rooms; DATA_STRUCTURES "Shops (S117)").
     ld a, [$c909]
     ld l, a
     ld a, [$c90a]
@@ -1196,7 +1204,11 @@ jr_009_45ce:
     inc b
     jr jr_009_4593
 
-LoadFld9_45e5:
+; ScreenEffectSay (S117): HL = a text OFFSET; adds the screen effect's text
+; base [$C8F0/$C8F1] (script opcode $04's second word — $0680 for the shops:
+; $0681 Anything else? $0683 What would you like? $0685 How many? ...) and
+; queues it (ROM0 TextBankDispatch).
+ScreenEffectSay:
     ld a, [$c8f0]
     add l
     ld l, a
@@ -1207,17 +1219,18 @@ LoadFld9_45e5:
     ret
 
 
+ShopOuterMachine:
+    ; SHOP (screen effect type 0 = script opcode $04 $0000 <text base>; S117).
+    ; Outer machine on $C905: 0 window, 1 one frame, 2 gold box, 3 menu
+    ; cursor, 4 = the BUY / SELL / QUIT choice (ShopMenuTable).
     ld a, [$c905]
     rst $00
-
-    ld bc, $4c46
-    ld b, [hl]
-    sub c
-    ld b, [hl]
-    rst $20
-    ld b, [hl]
-    pop af
-    ld b, [hl]
+ShopOuterStateTable:
+    dw $4601   ; [ 0]
+    dw $464c   ; [ 1]
+    dw $4691   ; [ 2]
+    dw $46e7   ; [ 3]
+    dw $46f1   ; [ 4] -> state 4 = the menu choice (the wMenu_selection dispatch)
     ld hl, $ffb7
     call ReadFld9_403d
     ld hl, $ffbb
@@ -1283,13 +1296,13 @@ SetFld9_465a:
     call LoadFld9_406d
     call ConvertNumberToText
     call ClrFld9_442a
-    ld de, $46df
+    ld de, ShopMenuCursorTable
     ld a, [wMenu_selection]
     call FuncFld9_4530
     ret
 
 
-    ld de, $46df
+    ld de, ShopMenuCursorTable
     ld hl, wMenu_selection
     ld b, $03
     call FuncFld9_42f1
@@ -1330,22 +1343,15 @@ jr_009_46de:
     ret
 
 
-    ld hl, $6100
-    nop
-    and c
-    nop
-    rst $38
-    rst $38
+ShopMenuCursorTable:
+    ; the BUY / SELL / QUIT cursor table (column word, rows, $FFFF; S117)
+    db $21, $00, $61, $00, $a1, $00, $ff, $ff
     ld a, [wMenu_selection]
     rst $00
-
-
-    rlca
-    ld b, a
-    db $eb
-    ld c, d
-    pop af
-    ld b, [hl]
+ShopMenuTable:
+    dw $4707   ; [ 0] BUY  (ShopBuyStateTable)
+    dw $4aeb   ; [ 1] SELL (ShopSellStateTable)
+    dw $46f1   ; [ 2] QUIT (close: wGameState bit 4 off, $C905 := 0)
     call SetFld9_4204
     ld de, $2e07
     call LoadFld9_40c9
@@ -1359,28 +1365,29 @@ jr_009_46de:
 
     ld a, [$c906]
     rst $00
-
-
-    ld hl, $9547
-    ld b, a
-    sub b
-    ld c, b
-    ld hl, sp+$48
-    ld [$4c49], sp
-    ld c, c
-    sub e
-    ld c, c
-    ld a, [$1e49]
-    ld c, d
-    ld l, d
-    ld c, d
-    jp z, $214a
-
-    inc bc
-    nop
-
-
-    call LoadFld9_45e5
+ShopBuyStateTable:
+    ; BUY inner machine on $C906 (S117). State 0 = the STOCK FILL below.
+    dw $4721   ; [ 0] ShopBuyStockFill
+    dw $4795   ; [ 1]
+    dw $4890   ; [ 2]
+    dw $48f8   ; [ 3]
+    dw $4908   ; [ 4]
+    dw $494c   ; [ 5]
+    dw $4993   ; [ 6]
+    dw $49fa   ; [ 7]
+    dw $4a1e   ; [ 8]
+    dw $4a6a   ; [ 9]
+    dw $4aca   ; [10]
+ShopBuyStockFill:
+    ; buy state 0: 'What would you like?' (text base + 3), then the shop's
+    ; list -> $C0D8 (20 B, $FF-terminated): map $50 (the gate-floor shop) ->
+    ; GateworldShopInventory, else by wScreenIndex 0 Bazaar / 2 StarryNight /
+    ; 4 Bookstore / 5 (and any other screen) RareItemShopInventory — so a
+    ; vanilla shop is chosen by the SCREEN it stands on. Patched builds
+    ; replace the choice + copy with a same-size far call to bank $77
+    ; ShopFill (the project's shops, gamedata.shops; S117).
+    ld hl, $0003
+    call ScreenEffectSay
     ld hl, $c906
     inc [hl]
     ld a, [wMapID]
@@ -1483,8 +1490,8 @@ GateworldShopInventory:
     or a
     ret nz
 
-    call SetFld9_4875
-    call SetFld9_47cd
+    call ShopCountItems
+    call ShopDrawNames
     call CallFld9_47a8
     ld hl, $c906
 
@@ -1498,7 +1505,7 @@ CallFld9_47a8:
     call SetFld9_465a
     ld de, $6f7d
     call LoadFld9_40c9
-    call SetFld9_480a
+    call ShopDrawPrices
     call ClrFld9_442a
     ld de, $48ec
     ld b, $04
@@ -1510,7 +1517,9 @@ CallFld9_47a8:
     ret
 
 
-SetFld9_47cd:
+; ShopDrawNames (S117): the names of the 3 visible list rows from [$C8E3]
+; (the first row shown) to VRAM $8800.
+ShopDrawNames:
     ld de, $c0d8
     ld a, [$c8e3]
     add a
@@ -1552,7 +1561,9 @@ jr_009_47f0:
     ret
 
 
-SetFld9_480a:
+; ShopDrawPrices (S117): the BUY price of the 3 visible rows (ItemInfoTable
+; +1/+2 via bank $03 entry 2 -> $DA63/$DA64) as numbers + 'G'.
+ShopDrawPrices:
     ld de, $c0d8
     ld a, [$c8e3]
     add a
@@ -1627,7 +1638,9 @@ jr_009_4869:
     ret
 
 
-SetFld9_4875:
+; ShopCountItems (S117): [$C8E9] := the number of items in the shop list at
+; $C0D8 (stops at 0 / $FF, at most 20).
+ShopCountItems:
     ld hl, $c0d8
     call FuncFld9_4880
     ld a, c
@@ -1680,8 +1693,8 @@ jr_009_48b1:
     cp [hl]
     jr z, jr_009_48c1
 
-    call SetFld9_47cd
-    call SetFld9_480a
+    call ShopDrawNames
+    call ShopDrawPrices
     call LoadFld9_40fa
 
 jr_009_48c1:
@@ -1690,7 +1703,7 @@ jr_009_48c1:
     jr z, jr_009_48d5
 
     ld hl, $0001
-    call LoadFld9_45e5
+    call ScreenEffectSay
     ld a, $01
     ld [$c905], a
     jr jr_009_48eb
@@ -1721,7 +1734,7 @@ jr_009_48eb:
     rst $38
     rst $38
     ld hl, $0005
-    call LoadFld9_45e5
+    call ScreenEffectSay
     ld a, $01
     ld [wPLAN_selection], a
     ld hl, $c906
@@ -1744,7 +1757,7 @@ CallFld9_4915:
     call SetFld9_465a
     ld de, $6f7d
     call LoadFld9_40c9
-    call SetFld9_480a
+    call ShopDrawPrices
     ld de, $48ec
     ld b, $04
     ld a, [$c8e9]
@@ -1774,7 +1787,7 @@ CallFld9_4915:
 
     call CallFld9_47a8
     ld hl, $0004
-    call LoadFld9_45e5
+    call ScreenEffectSay
     ld hl, $c906
     dec [hl]
     ld hl, $c906
@@ -1849,7 +1862,7 @@ jr_009_498c:
     ld hl, $c1a0
     call FormatLargeNumber
     ld hl, $0006
-    call LoadFld9_45e5
+    call ScreenEffectSay
     xor a
     ld [$c8de], a
     ld hl, $c906
@@ -1886,7 +1899,7 @@ jr_009_498c:
 jr_009_4a30:
     call CallFld9_4915
     ld hl, $0005
-    call LoadFld9_45e5
+    call ScreenEffectSay
     ld hl, $c906
     dec [hl]
     ld hl, $c906
@@ -1970,7 +1983,7 @@ jr_009_4abb:
     ld hl, $0009
 
 jr_009_4ac2:
-    call LoadFld9_45e5
+    call ScreenEffectSay
     ld hl, $c906
     inc [hl]
     ret
@@ -1995,33 +2008,21 @@ jr_009_4ac2:
 
     ld a, [$c906]
     rst $00
-    add hl, bc
-    ld c, e
-    daa
-    ld c, e
-    add c
-    ld c, h
-    jp hl
-
-
-    ld c, h
-    ld sp, hl
-    ld c, h
-    ld l, e
-    ld c, l
-    cp e
-    ld c, l
-    dec b
-    ld c, [hl]
-    add hl, hl
-    ld c, [hl]
-    ld [hl], e
-    ld c, [hl]
-    cp h
-    ld c, [hl]
-    db $dd
-    ld c, [hl]
-    add sp, $4e
+ShopSellStateTable:
+    ; SELL inner machine on $C906 (S117); state 0 builds the sellable list.
+    dw $4b09   ; [ 0]
+    dw $4b27   ; [ 1]
+    dw $4c81   ; [ 2]
+    dw $4ce9   ; [ 3]
+    dw $4cf9   ; [ 4]
+    dw $4d6b   ; [ 5]
+    dw $4dbb   ; [ 6]
+    dw $4e05   ; [ 7]
+    dw $4e29   ; [ 8]
+    dw $4e73   ; [ 9]
+    dw $4ebc   ; [10]
+    dw $4edd   ; [11]
+    dw $4ee8   ; [12]
     call SetFld9_4c24
     ld hl, $c0d8
     call FuncFld9_4880
@@ -2036,7 +2037,7 @@ jr_009_4ac2:
 
 jr_009_4b1c:
     ld hl, $000a
-    call LoadFld9_45e5
+    call ScreenEffectSay
     ld hl, $c906
     inc [hl]
     ret
@@ -2047,8 +2048,8 @@ jr_009_4b1c:
     ret nz
 
     call SetFld9_4c24
-    call SetFld9_4875
-    call SetFld9_47cd
+    call ShopCountItems
+    call ShopDrawNames
     call CallFld9_4b3d
     ld hl, $c906
     inc [hl]
@@ -2113,7 +2114,7 @@ jr_009_4b94:
     push hl
     ld a, [de]
     ld [$da5e], a
-    call SetFld9_4bc8
+    call ShopSellPrice
     ld a, l
     ldh [$d5], a
     ld a, h
@@ -2146,7 +2147,10 @@ jr_009_4bbc:
     ret
 
 
-SetFld9_4bc8:
+; ShopSellPrice (S117): HL = what the shop PAYS for item [$DA5E]: the full
+; price in the gate-floor shop (map $50); a staff ($18-$1C, $25 FireStaff,
+; $27 WarpStaff) price / 10; anything else price - price / 4 (3/4).
+ShopSellPrice:
     ld hl, $0302
     rst $10
     ld a, [$da63]
@@ -2306,7 +2310,7 @@ jr_009_4ca2:
     cp [hl]
     jr z, jr_009_4cb2
 
-    call SetFld9_47cd
+    call ShopDrawNames
     call SetFld9_4b62
     call LoadFld9_40fa
 
@@ -2316,7 +2320,7 @@ jr_009_4cb2:
     jr z, jr_009_4cc6
 
     ld hl, $0001
-    call LoadFld9_45e5
+    call ScreenEffectSay
     ld a, $01
     ld [$c905], a
     jr jr_009_4cdc
@@ -2347,7 +2351,7 @@ jr_009_4cdc:
     rst $38
     rst $38
     ld hl, $000c
-    call LoadFld9_45e5
+    call ScreenEffectSay
     ld a, $01
     ld [wPLAN_selection], a
     ld hl, $c906
@@ -2471,7 +2475,7 @@ jr_009_4db4:
     ld a, [$c8dd]
     ld hl, $c190
     call ExtractDigits
-    call SetFld9_4bc8
+    call ShopSellPrice
     ld c, l
     ld b, h
     ld a, [$c8dd]
@@ -2491,7 +2495,7 @@ jr_009_4db4:
     ld hl, $c1a0
     call FormatLargeNumber
     ld hl, $000d
-    call LoadFld9_45e5
+    call ScreenEffectSay
     xor a
     ld [$c8de], a
     ld hl, $c906
@@ -2604,7 +2608,7 @@ jr_009_4ea8:
     ld hl, $000f
 
 jr_009_4eb4:
-    call LoadFld9_45e5
+    call ScreenEffectSay
     ld hl, $c906
     inc [hl]
     ret
@@ -2628,7 +2632,7 @@ jr_009_4eb4:
 
 
     ld hl, $000b
-    call LoadFld9_45e5
+    call ScreenEffectSay
     ld hl, $c906
     inc [hl]
     ret
@@ -2639,7 +2643,7 @@ jr_009_4eb4:
     ret nz
 
     ld hl, $0001
-    call LoadFld9_45e5
+    call ScreenEffectSay
     ld a, $01
     ld [$c905], a
     ret
@@ -2795,7 +2799,7 @@ jr_009_4fdc:
     ld hl, $000e
 
 jr_009_5015:
-    call LoadFld9_45e5
+    call ScreenEffectSay
     jr jr_009_501a
 
 jr_009_501a:
@@ -2866,7 +2870,7 @@ SetFld9_5049:
     call LoadFld9_4f69
     call LoadFld9_40fa
     ld hl, $0001
-    call LoadFld9_45e5
+    call ScreenEffectSay
     ld hl, $c905
     dec [hl]
     ld hl, $c905
@@ -2979,12 +2983,12 @@ Jump_009_5104:
     ld hl, $c906
     inc [hl]
     ld hl, $0004
-    call LoadFld9_45e5
+    call ScreenEffectSay
     ret
 
 
 jr_009_5158:
-    call LoadFld9_45e5
+    call ScreenEffectSay
     ld a, $08
     ld [$c906], a
     ret
@@ -2996,7 +3000,7 @@ jr_009_5158:
 
     call SetFld9_5199
     call SetFld9_51e5
-    call SetFld9_47cd
+    call ShopDrawNames
     call CallFld9_5177
     ld hl, $c906
     inc [hl]
@@ -3131,7 +3135,7 @@ jr_009_5221:
     cp [hl]
     jr z, jr_009_522b
 
-    call SetFld9_47cd
+    call ShopDrawNames
 
 jr_009_522b:
     ld a, [wJoypad_current_frame]
@@ -3149,7 +3153,7 @@ jr_009_522b:
     call SetFld9_5049
     call LoadFld9_40fa
     ld hl, $0003
-    call LoadFld9_45e5
+    call ScreenEffectSay
     ld a, $04
     ld [$c905], a
     jr jr_009_5271
@@ -3182,7 +3186,7 @@ jr_009_5271:
     rst $38
     rst $38
     ld hl, $0007
-    call LoadFld9_45e5
+    call ScreenEffectSay
     ld a, $01
     ld [$c8dd], a
     ld hl, $c906
@@ -3267,7 +3271,7 @@ CallFld9_529b:
 
     call CallFld9_5177
     ld hl, $0004
-    call LoadFld9_45e5
+    call ScreenEffectSay
     ld hl, $c906
     dec [hl]
     ld hl, $c906
@@ -3321,7 +3325,7 @@ jr_009_5366:
     ld hl, $0009
 
 jr_009_5375:
-    call LoadFld9_45e5
+    call ScreenEffectSay
     ld hl, $c906
     inc [hl]
     ret
@@ -3349,7 +3353,7 @@ jr_009_5375:
     ret nz
 
     ld hl, $0001
-    call LoadFld9_45e5
+    call ScreenEffectSay
     ld a, $01
     ld [$c905], a
     ret
@@ -3366,7 +3370,7 @@ jr_009_5375:
     rst $38
     ld d, h
     ld hl, $000a
-    call LoadFld9_45e5
+    call ScreenEffectSay
     ld a, $02
     ld [wPLAN_selection], a
     ld a, $00
@@ -3442,7 +3446,7 @@ CallFld9_53e9:
     call SetFld9_5049
     call LoadFld9_40fa
     ld hl, $0003
-    call LoadFld9_45e5
+    call ScreenEffectSay
     ld a, $04
     ld [$c905], a
     jr jr_009_548e
@@ -3532,7 +3536,7 @@ jr_009_548e:
     ld hl, $000d
 
 jr_009_54f7:
-    call LoadFld9_45e5
+    call ScreenEffectSay
     ld hl, $c906
     inc [hl]
     ret
@@ -3546,7 +3550,7 @@ jr_009_54f7:
     call LoadFld9_4f69
     call LoadFld9_40fa
     ld hl, $0001
-    call LoadFld9_45e5
+    call ScreenEffectSay
     ld a, $01
     ld [$c905], a
     ret
@@ -3589,12 +3593,12 @@ jr_009_54f7:
     ld hl, $c906
     inc [hl]
     ld hl, $0010
-    call LoadFld9_45e5
+    call ScreenEffectSay
     ret
 
 
 jr_009_5557:
-    call LoadFld9_45e5
+    call ScreenEffectSay
     ld a, $08
     ld [$c906], a
     ret
@@ -3606,7 +3610,7 @@ jr_009_5557:
 
     call CallFld9_5598
     call SetFld9_51e5
-    call SetFld9_47cd
+    call ShopDrawNames
     call CallFld9_5576
     ld hl, $c906
     inc [hl]
@@ -3710,7 +3714,7 @@ jr_009_5601:
     cp [hl]
     jr z, jr_009_560b
 
-    call SetFld9_47cd
+    call ShopDrawNames
 
 jr_009_560b:
     ld a, [wJoypad_current_frame]
@@ -3728,7 +3732,7 @@ jr_009_560b:
     call SetFld9_5049
     call LoadFld9_40fa
     ld hl, $000e
-    call LoadFld9_45e5
+    call ScreenEffectSay
     ld a, $04
     ld [$c905], a
     jr jr_009_5651
@@ -3761,7 +3765,7 @@ jr_009_5651:
     rst $38
     rst $38
     ld hl, $0013
-    call LoadFld9_45e5
+    call ScreenEffectSay
     ld a, $01
     ld [$c8dd], a
     ld hl, $c906
@@ -3846,7 +3850,7 @@ CallFld9_567b:
 
     call CallFld9_5576
     ld hl, $0010
-    call LoadFld9_45e5
+    call ScreenEffectSay
     ld hl, $c906
     dec [hl]
     ld hl, $c906
@@ -3899,7 +3903,7 @@ jr_009_5744:
     ld hl, $0015
 
 jr_009_5753:
-    call LoadFld9_45e5
+    call ScreenEffectSay
     ld hl, $c906
     inc [hl]
     ret
@@ -3927,7 +3931,7 @@ jr_009_5753:
     ret nz
 
     ld hl, $0001
-    call LoadFld9_45e5
+    call ScreenEffectSay
     ld a, $01
     ld [$c905], a
     ret
@@ -3953,7 +3957,7 @@ jr_009_5753:
     jr nz, jr_009_57b0
 
     ld hl, $000f
-    call LoadFld9_45e5
+    call ScreenEffectSay
     ld a, $04
     ld [$c906], a
     ret
@@ -3961,7 +3965,7 @@ jr_009_5753:
 
 jr_009_57b0:
     ld hl, $0016
-    call LoadFld9_45e5
+    call ScreenEffectSay
     ld a, $02
     ld [wPLAN_selection], a
     ld a, $00
@@ -4037,7 +4041,7 @@ CallFld9_57dc:
     call SetFld9_5049
     call LoadFld9_40fa
     ld hl, $000e
-    call LoadFld9_45e5
+    call ScreenEffectSay
     ld a, $04
     ld [$c905], a
     jr jr_009_5881
@@ -4127,7 +4131,7 @@ jr_009_5881:
     ld hl, $0019
 
 jr_009_58ea:
-    call LoadFld9_45e5
+    call ScreenEffectSay
     ld hl, $c906
     inc [hl]
     ret
@@ -4141,7 +4145,7 @@ jr_009_58ea:
     call LoadFld9_4f69
     call LoadFld9_40fa
     ld hl, $0001
-    call LoadFld9_45e5
+    call ScreenEffectSay
     ld a, $01
     ld [$c905], a
     ret
@@ -4920,7 +4924,7 @@ jr_009_5d51:
     jp z, Jump_009_5d81
 
     ld hl, $0006
-    call LoadFld9_45e5
+    call ScreenEffectSay
     ld a, $08
     ld [$c906], a
     jr jr_009_5da1
@@ -4984,7 +4988,7 @@ ArenaClassMenu_State3:
     jr nc, jr_009_5de1
 
     ld hl, $0005
-    call LoadFld9_45e5
+    call ScreenEffectSay
     ld a, $08
     ld [$c906], a
     ret
@@ -5009,7 +5013,7 @@ jr_009_5de1:
     ld a, $f0
     ld [$c181], a
     ld hl, $0004
-    call LoadFld9_45e5
+    call ScreenEffectSay
     ld hl, $c906
     inc [hl]
     ret
@@ -5052,7 +5056,7 @@ ArenaClassMenu_State5:
 jr_009_5e40:
     call ArenaMenuDraw
     ld hl, $0001
-    call LoadFld9_45e5
+    call ScreenEffectSay
     ld hl, $c906
     dec [hl]
     ld hl, $c906
@@ -5140,7 +5144,7 @@ ArenaClassMenu_State8:
 
     call ArenaMenuDraw
     ld hl, $0001
-    call LoadFld9_45e5
+    call ScreenEffectSay
     ld a, $01
     ld [$c906], a
     ret

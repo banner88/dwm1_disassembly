@@ -1,5 +1,5 @@
 {
- "_generator": "tools/map_gate_names.py (S100) from data/DWM-original.gbc GateFloorDataTable $16:$70A6 (floors byte 3 + boss map byte 4; S101: + boss_spawn bytes 5/6 + the raw row), cross-checked vs FULL_FAQ.txt 'Levels:'",
+ "_generator": "tools/map_gate_names.py (S100) from data/DWM-original.gbc GateFloorDataTable $16:$70A6 (floors byte 3 + boss map byte 4; S101: + boss_spawn bytes 5/6 + the raw row; S117: + cleared_flag(s) from the boss rooms' win tails), cross-checked vs FULL_FAQ.txt 'Levels:'",
  "gates": [
   {
    "id": 0,
@@ -18,7 +18,11 @@
     7,
     2
    ],
-   "row": "0000000530070201"
+   "row": "0000000530070201",
+   "cleared_flag": "0x0010",
+   "cleared_flags": [
+    "0x0010"
+   ]
   },
   {
    "id": 1,
@@ -37,7 +41,11 @@
     1,
     6
    ],
-   "row": "0101010531010601"
+   "row": "0101010531010601",
+   "cleared_flag": "0x0011",
+   "cleared_flags": [
+    "0x0011"
+   ]
   },
   {
    "id": 2,
@@ -56,7 +64,11 @@
     5,
     1
    ],
-   "row": "0101020632050101"
+   "row": "0101020632050101",
+   "cleared_flag": "0x0012",
+   "cleared_flags": [
+    "0x0012"
+   ]
   },
   {
    "id": 3,
@@ -75,7 +87,11 @@
     4,
     6
    ],
-   "row": "0201020533040601"
+   "row": "0201020533040601",
+   "cleared_flag": "0x0013",
+   "cleared_flags": [
+    "0x0013"
+   ]
   },
   {
    "id": 4,
@@ -94,7 +110,11 @@
     0,
     7
    ],
-   "row": "0202030634000701"
+   "row": "0202030634000701",
+   "cleared_flag": "0x0014",
+   "cleared_flags": [
+    "0x0014"
+   ]
   },
   {
    "id": 5,
@@ -113,7 +133,11 @@
     1,
     6
    ],
-   "row": "0302030935010601"
+   "row": "0302030935010601",
+   "cleared_flag": "0x0015",
+   "cleared_flags": [
+    "0x0015"
+   ]
   },
   {
    "id": 6,
@@ -132,7 +156,11 @@
     5,
     1
    ],
-   "row": "0302040836050102"
+   "row": "0302040836050102",
+   "cleared_flag": "0x0016",
+   "cleared_flags": [
+    "0x0016"
+   ]
   },
   {
    "id": 7,
@@ -151,7 +179,11 @@
     5,
     7
    ],
-   "row": "0303040937050702"
+   "row": "0303040937050702",
+   "cleared_flag": "0x0017",
+   "cleared_flags": [
+    "0x0017"
+   ]
   },
   {
    "id": 8,
@@ -170,7 +202,11 @@
     8,
     3
    ],
-   "row": "0403050c38080302"
+   "row": "0403050c38080302",
+   "cleared_flag": "0x0018",
+   "cleared_flags": [
+    "0x0018"
+   ]
   },
   {
    "id": 9,
@@ -189,7 +225,11 @@
     2,
     1
    ],
-   "row": "0404050b39020102"
+   "row": "0404050b39020102",
+   "cleared_flag": "0x0019",
+   "cleared_flags": [
+    "0x0019"
+   ]
   },
   {
    "id": 10,
@@ -208,7 +248,11 @@
     2,
     6
    ],
-   "row": "0404050b3c020602"
+   "row": "0404050b3c020602",
+   "cleared_flag": "0x001D",
+   "cleared_flags": [
+    "0x001D"
+   ]
   },
   {
    "id": 11,
@@ -227,7 +271,11 @@
     8,
     5
    ],
-   "row": "0404060c10080502"
+   "row": "0404060c10080502",
+   "cleared_flag": "0x001B",
+   "cleared_flags": [
+    "0x001B"
+   ]
   },
   {
    "id": 12,
@@ -246,7 +294,11 @@
     4,
     1
    ],
-   "row": "0506060e3b040102"
+   "row": "0506060e3b040102",
+   "cleared_flag": "0x001C",
+   "cleared_flags": [
+    "0x001C"
+   ]
   },
   {
    "id": 13,
@@ -265,7 +317,11 @@
     1,
     7
    ],
-   "row": "0506060f3a010702"
+   "row": "0506060f3a010702",
+   "cleared_flag": "0x001A",
+   "cleared_flags": [
+    "0x001A"
+   ]
   },
   {
    "id": 14,
@@ -284,7 +340,11 @@
     4,
     7
    ],
-   "row": "050607103d040702"
+   "row": "050607103d040702",
+   "cleared_flag": "0x001E",
+   "cleared_flags": [
+    "0x001E"
+   ]
   },
   {
    "id": 15,
@@ -303,7 +363,11 @@
     4,
     1
    ],
-   "row": "060707123e040103"
+   "row": "060707123e040103",
+   "cleared_flag": "0x001F",
+   "cleared_flags": [
+    "0x001F"
+   ]
   },
   {
    "id": 16,
@@ -322,7 +386,11 @@
     6,
     3
    ],
-   "row": "070708143f060303"
+   "row": "070708143f060303",
+   "cleared_flag": "0x0020",
+   "cleared_flags": [
+    "0x0020"
+   ]
   },
   {
    "id": 17,
@@ -341,7 +409,11 @@
     4,
     6
    ],
-   "row": "0705081340040603"
+   "row": "0705081340040603",
+   "cleared_flag": "0x0021",
+   "cleared_flags": [
+    "0x0021"
+   ]
   },
   {
    "id": 18,
@@ -360,7 +432,11 @@
     4,
     6
    ],
-   "row": "0808091742040603"
+   "row": "0808091742040603",
+   "cleared_flag": "0x0022",
+   "cleared_flags": [
+    "0x0022"
+   ]
   },
   {
    "id": 19,
@@ -379,7 +455,11 @@
     5,
     5
    ],
-   "row": "0809091943050503"
+   "row": "0809091943050503",
+   "cleared_flag": "0x0023",
+   "cleared_flags": [
+    "0x0023"
+   ]
   },
   {
    "id": 20,
@@ -398,7 +478,11 @@
     0,
     3
    ],
-   "row": "0805091944000303"
+   "row": "0805091944000303",
+   "cleared_flag": "0x0024",
+   "cleared_flags": [
+    "0x0024"
+   ]
   },
   {
    "id": 21,
@@ -417,7 +501,11 @@
     4,
     7
    ],
-   "row": "090a0a1d45040703"
+   "row": "090a0a1d45040703",
+   "cleared_flag": "0x0025",
+   "cleared_flags": [
+    "0x0025"
+   ]
   },
   {
    "id": 22,
@@ -436,7 +524,11 @@
     5,
     6
    ],
-   "row": "0a0b0b1e46050603"
+   "row": "0a0b0b1e46050603",
+   "cleared_flag": "0x0026",
+   "cleared_flags": [
+    "0x0026"
+   ]
   },
   {
    "id": 23,
@@ -455,7 +547,12 @@
     5,
     6
    ],
-   "row": "0a0b0b1d47050603"
+   "row": "0a0b0b1d47050603",
+   "cleared_flag": "0x0027",
+   "cleared_flags": [
+    "0x0027",
+    "0x0028"
+   ]
   },
   {
    "id": 24,
@@ -474,7 +571,11 @@
     4,
     7
    ],
-   "row": "0a0b0b1b48040703"
+   "row": "0a0b0b1b48040703",
+   "cleared_flag": "0x0029",
+   "cleared_flags": [
+    "0x0029"
+   ]
   },
   {
    "id": 25,
@@ -493,7 +594,11 @@
     4,
     7
    ],
-   "row": "0b0c0c1e49040703"
+   "row": "0b0c0c1e49040703",
+   "cleared_flag": "0x002A",
+   "cleared_flags": [
+    "0x002A"
+   ]
   },
   {
    "id": 26,
@@ -512,7 +617,11 @@
     9,
     7
    ],
-   "row": "0b0c0c1e4a090703"
+   "row": "0b0c0c1e4a090703",
+   "cleared_flag": "0x002B",
+   "cleared_flags": [
+    "0x002B"
+   ]
   },
   {
    "id": 27,
@@ -531,7 +640,11 @@
     4,
     7
    ],
-   "row": "0b0d0d1e4b040703"
+   "row": "0b0d0d1e4b040703",
+   "cleared_flag": "0x002C",
+   "cleared_flags": [
+    "0x002C"
+   ]
   },
   {
    "id": 28,
@@ -550,7 +663,11 @@
     5,
     5
    ],
-   "row": "0c0d0d1e4c050503"
+   "row": "0c0d0d1e4c050503",
+   "cleared_flag": "0x002D",
+   "cleared_flags": [
+    "0x002D"
+   ]
   },
   {
    "id": 29,
@@ -569,7 +686,11 @@
     5,
     7
    ],
-   "row": "0d0e0e1b4d050703"
+   "row": "0d0e0e1b4d050703",
+   "cleared_flag": "0x002E",
+   "cleared_flags": [
+    "0x002E"
+   ]
   },
   {
    "id": 30,
@@ -588,7 +709,11 @@
     8,
     12
    ],
-   "row": "0e0e0e1e4e080c03"
+   "row": "0e0e0e1e4e080c03",
+   "cleared_flag": "0x002F",
+   "cleared_flags": [
+    "0x002F"
+   ]
   },
   {
    "id": 31,
@@ -607,7 +732,9 @@
     5,
     6
    ],
-   "row": "0f0f0f634f050603"
+   "row": "0f0f0f634f050603",
+   "cleared_flag": null,
+   "cleared_flags": []
   }
  ]
 }

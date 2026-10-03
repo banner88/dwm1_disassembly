@@ -1786,11 +1786,31 @@ recipes are pure authoring.
       big song at the boundary can waste up to ~one song of bank $74); (c) no per-floor gate
       songs (user: not necessary); (d) the synth is documentation-accurate, SameBoy is the
       ear test.
-- [ ] **P3.13c — Shops (E8, promoted from Phase E)** [G-K]: decode the
+- [x] **P3.13c — Shops (E8, promoted from Phase E)** [G-K] — **built S117, PyBoy-verified,
+      NOT yet user-tested** (user S117: "Do shops as well while you're there"): decode the
       stock/price table (opcode $04 sub 0 → bank $09; expected shallow
       per user S72), `gamedata.shops` emitter, shopkeeper-NPC click
       surface. *Accept:* a changed price + item list visible in SameBoy;
       a NEW shopkeeper in a custom room sells an authored list.
+      As built (DATA_STRUCTURES "Shops (S117)", PROJECT_COMPILER §2.32, EDITOR_DESIGN §5.6b,
+      help `62_shops.md`): every vanilla shopkeeper = `text $0680 / $FF04 $0000 $0680 / text
+      $0682 / end`; the list is chosen by the ROOM (map $50 → gate shop, else wScreenIndex
+      0/2/4/other); prices = `ItemInfoTable` $03:$71DA +1/+2 (was the mislabel
+      `SpriteFrameDataTable`); bank $09 shop machines annotated (both trees). Engine: the
+      64-byte choice + copy → bank $77 entry 0 `ShopFill` (`wShopID` $D240, else the room
+      rule), the close tail → entry 1 `ShopClose`; `gamedata.items.<id>.price`,
+      `gamedata.shops.<vanilla>`, `custom.shops[]`, `shop` scripts; the Shops tab + Rooms
+      NPC "Shopkeeper…". *Accept met in PyBoy on the user's save* (demo "Portal Hall"
+      stall, NOT in their project): the stall's own 12-item list (3 pages), Herb at 12G
+      bought (gold −12), DEFseed on page 3 bought at its price; the Bazaar's vanilla list
+      with Herb at 12G; the shop closes with wShopID 0; `ShopFill` census == the original
+      for every map × screen. **Residuals:** sell prices are the game's rule (not
+      editable); item EFFECTS / names / new items = E9; a shop's own greeting texts beyond
+      the first box (the "What would you like?" family $0683+) are the vanilla ones.
+      **S117b (user on the S117 ROM: "The rest works" + "New shop in custom room - menu
+      glitches with background colours from custom tiles"):** every bank $09 screen push →
+      bank $77 `ScreenPush` (palette 7 for menu tiles in free-colour rooms) + `ShopBoxBottom`
+      (a top dialog box re-seated at the bottom after a shop); built, NOT yet user-tested.
 - [ ] **ARC NG — NEW GATES (user S114: "I WANT TO MAKE NEW GATES. This includes a) random
       gates just like vanilla - maybe copy a vanilla gate and edit encounters & link to new
       boss room, and b) FULLY CUSTOM GATES - ie series of rooms with branching structures,
@@ -1817,9 +1837,38 @@ recipes are pure authoring.
         and cleared (boss battle → helper → Castle).
         Residual: PRIVATE floor-type rows (maze look) + depth tier per new gate (today the
         source's — bytes 0-2 / 7 of `NewGateRows` are copied); entrance conditions = NG2.
-  - [ ] **NG2 — Gate entrances + unlocks:** which door / pedestal opens which gate and when
+  - [x] **NG2 — Gate entrances + unlocks:** which door / pedestal opens which gate and when
         it appears (flag-conditioned exits / NPCs — the Triggers backend), what clearing it
         sets (flag, next gate, King speech — S101 `$D9E3` codes). Ask the user first.
+        **Built S117, PyBoy-verified, NOT yet user-tested** — scope set by the user on the
+        audit ("What is NG2? Is this literally just connecting swirly thing to gate, then
+        setting a flag to stop swirtly thing from swirling? Sure" → "1) I am going to need
+        dozens if not hundreds of flags … 3) … Boss cleared - no swirly. Boss cleared BUT we
+        are inputting new boss or redirecting to new gate - swirly"). As built
+        (GATE_GENERATION §7.9, EVENT_FLAGS "Extended flags (S117)", PROJECT_COMPILER §2.32):
+        **FLAG EXPANSION** — ROM0 `ComputeFlagAddress` same-size → bank $73 entry 21: 2,048
+        extended flags `$1000-$17FF` (`wExtFlags` $D140, saved via SRAM bank 3 "X1"); the
+        editor's pool = 1,968 named flags. **Swirls** — the spinning swirl is NPC `$4D` hidden
+        by the boss script's step advance; bank $0B `GetRoomDataPtr` same-size → bank $60
+        entry 1 for every non-gate room: `$A0`/`$A1` flag-condition prefixes (the hidden bit)
+        + `VanillaNPCExtTable` (vanilla portal rooms whose gate is re-bossed / re-routed);
+        bank $50 boss win → bank $76 entry 2 `GateBossWin` (`GateClearTable`: own flag
+        `$17A0 + gate`, + a re-bossed gate's vanilla flag). Editor: gate entrances get the
+        swirl automatically, "Lead this portal to another gate…", `gate:N cleared` in every
+        flag list, `shown_when` on NPCs (JSON). *Accept met in PyBoy on the user's save*:
+        swirls of uncleared gates spin, cleared ones hidden; the gate-32 boss win sets
+        `$17C0` and stops its swirls (the hall + the re-routed $24 portal); extended flags
+        survive save / reload and rewind unsaved; the user's own project as-is: only room
+        $23's swirl changes (gate 0 has their custom boss). Not built (not asked): new
+        unlock pedestals / conditional EXITS (a portal stays a plain exit, as in the game);
+        the King's-speech codes. S117 ROM USER-REPORTED 2026-10-03 21:57 ("The rest works").
+        **S117b:** the user's vanishing NPCs = the hardware 10-objects-per-line limit (the
+        party lined up on the NPCs' row) → warnings only, by user decision ("Just warning is
+        fine for now, and Ill build around it"); an engine flicker (rotating the NPC OAM
+        order each frame) stays an OPTION, not built. **Residuals:** (a) a custom boss win does not advance the
+        vanilla portal room's step counter; (b) no GUI for an NPC's `shown_when` yet (JSON
+        only; the Triggers / P3.14 flag UI); (c) the extended flags are not in the
+        flag-usage cross-reference (P3.14).
   - [ ] **NG3 — Fully custom gates:** a graph of custom rooms (stairs / doors, branches) run
         as a dive (gate rules: saving, escape, losing, music), per-room lists (S114), a boss
         at the end; Gates tab graph view. Open questions for the user (asked S114): which
@@ -2146,7 +2195,8 @@ is campaign-BLOCKING** — the POV flip cannot ship without it; E8/E9
       addresses documented in MONSTER_DATA or a new ARCHITECTURE subsec.
       *Confidence: MEDIUM-HIGH (pipeline proven; location unknown).*
 
-- [ ] **E8 — Shop system RE + authoring (ADDED S72).** EDITOR_DESIGN §1
+- [x] **E8 — Shop system RE + authoring (ADDED S72).** **DONE S117 as P3.13c** (DATA_STRUCTURES
+      "Shops (S117)"; built, PyBoy-verified, NOT yet user-tested). EDITOR_DESIGN §1
       assumes "new shops = scripted room type, replicable" — UNVERIFIED.
       Total current knowledge: script opcode `$04` GameActionDispatch →
       bank `$09`, subcommand 0 = shop (BANK04_SCRIPT_ENGINE). Inventory
@@ -2161,7 +2211,9 @@ is campaign-BLOCKING** — the POV flip cannot ship without it; E8/E9
 - [ ] **E9 — Item authoring: edit vanilla items + custom items (ADDED S72;
       carries a concrete user spec).** Read-only knowledge exists
       (ItemNamePtrTable/ItemDescPtrTable `$41`, 44 items; 37 item_effect
-      records in `skill_records.json`); there is NO edit/add arc. Wanted:
+      records in `skill_records.json`); there is NO edit/add arc. **S117:** the 12-byte
+      item records = `ItemInfoTable` $03:$71DA (+0 group, +1/+2 buy price — editable since
+      S117, +$0B bit 2 keep-on-defeat; +3..+$0A undecoded) — DATA_STRUCTURES "Shops (S117)". Wanted:
       (a) edit existing items — names/descriptions (T-author path),
       effects (item_effect record edits), and item CLASS bits (what makes
       BeastTail single-slot/non-stacking, what makes an item consumed on
@@ -2242,8 +2294,11 @@ layer (record params, item/meat, animation dispatch) is decoded (S46, `BATTLE_SK
         $dd70/71 = a packed hit/miss message-id PAIR (mode-0 two-level table
         $4c:$4019); 67/67 statically-resolved skills FAQ-validated. Tool
         decode_effect_messages.py → effect_messages.json. → §9; archive: SESSION_HISTORY.
-  - [ ] **S2c-anim-cleanup — convert the verified battle-anim DATA tables to `db`/`dw` in the
-        disassembly (label-only, byte-neutral). [OPEN — blocked on `$5f` map-script RE]** The
+  - [x] **S2c-anim-cleanup — convert the verified battle-anim DATA tables to `db`/`dw` in the
+        disassembly (label-only, byte-neutral).** **DONE S112** (box found stale S117: bank $5F
+        `AnimCmdTableFoe/Own`, `AnimRoutineTable`, `AnimRoutineIdxParty/Enemy/Link` and the
+        `AnimFrameTable5C/5D/5E` are `db`/`dw` with comments — BATTLE_SKILL_SYSTEM §11.9).
+        Original text: [OPEN — blocked on `$5f` map-script RE] The
         anim tables (`$5f:$56ed/$57d5/$58bd/$58dd/$59c3/$5aa9`; `$5c/$5d/$5e` frame tables at
         `$4071`+) currently mis-disassemble as instructions. `tools/emit_anim_data_sections.py`
         emits byte-exact directives, but the `$5f` span overlaps mgbdis `Map*_Script*` labels

@@ -59,6 +59,7 @@ class Inspector(QWidget):
     addRedirectRequested = Signal()
     removeRedirectRequested = Signal(int)      # index into custom.entrance_redirects
     routeDoorRequested = Signal(object)        # vanilla door preset dict
+    portalGateRequested = Signal(object)       # S117 (NG2): vanilla portal -> another gate
     tilesetChangeRequested = Signal()          # S96
     addNpcRequested = Signal(object)           # (cx, cy)  S97
     addDoorRequested = Signal(object)          # (cx, cy)  S98
@@ -238,6 +239,12 @@ class Inspector(QWidget):
         self.sel_route = QPushButton('Route this door into a custom room…')
         self.sel_route.clicked.connect(self._route_selected)
         self.sel_route.setVisible(False)
+        self.sel_portal = QPushButton('Lead this portal to another gate…')
+        self.sel_portal.setToolTip('S117: this vanilla gate portal enters the gate you pick '
+                                   '(e.g. one of your new gates). Its swirl then spins until '
+                                   'THAT gate is cleared.')
+        self.sel_portal.clicked.connect(self._portal_selected)
+        self.sel_portal.setVisible(False)
         self._sel_door = None
         # S98: what can be placed on a cell (the rare ones under "More")
         from PySide6.QtWidgets import QMenu, QToolButton
@@ -279,6 +286,7 @@ class Inspector(QWidget):
         v.addWidget(self.sel_title)
         v.addWidget(self.sel_tree)
         v.addWidget(self.sel_route)
+        v.addWidget(self.sel_portal)
         v.addWidget(self.sel_add_row)
         v.addWidget(self.sel_del_exit)
         v.addWidget(self.sel_note)
@@ -620,6 +628,7 @@ class Inspector(QWidget):
     def show_cell(self, cell, mt, walkable, editable=False):
         self.sel_tree.clear()
         self.sel_route.setVisible(False)
+        self.sel_portal.setVisible(False)
         self.sel_del_exit.setVisible(False)
         if self.npc is not None:
             self.npc.setVisible(False)
@@ -646,6 +655,7 @@ class Inspector(QWidget):
     def show_selection(self, sel, editable=False):
         self.sel_tree.clear()
         self.sel_route.setVisible(False)
+        self.sel_portal.setVisible(False)
         self.sel_add_row.setVisible(False)
         self.sel_del_exit.setVisible(False)
         if self.npc is not None:
@@ -662,6 +672,12 @@ class Inspector(QWidget):
             self._sel_door = {'mapID': mid, 'screen': key,
                               'x': sel['x'], 'y': sel['y']}
             self.sel_route.setVisible(True)
+            try:
+                gf = sel['ref'][2].get('gate_flag', 0)
+                gf = int(str(gf), 0) if not isinstance(gf, int) else gf
+            except (TypeError, ValueError, IndexError, AttributeError):
+                gf = 0
+            self.sel_portal.setVisible(gf == 1)
         self.sel_note.setText('' if sel['kind'] in ('npc', 'door', 'exit', 'examine', 'step',
                                                      'spawn') else
                               'Edit it in the Object section below.')
@@ -688,6 +704,10 @@ class Inspector(QWidget):
     def _route_selected(self):
         if self._sel_door:
             self.routeDoorRequested.emit(dict(self._sel_door))
+
+    def _portal_selected(self):
+        if self._sel_door:
+            self.portalGateRequested.emit(dict(self._sel_door))
 
     def reveal(self, widget):
         """Scroll the inspector so `widget` is in view (S97: the NPC form

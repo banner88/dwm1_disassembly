@@ -41,6 +41,7 @@ from editor2.core.anims_doc import AnimsMixin
 from editor2.core.breeding_doc import BreedingMixin
 from editor2.core.encounters_doc import EncountersMixin
 from editor2.core.music_doc import MusicMixin
+from editor2.core.shops_doc import ShopsMixin
 from editor2.core.formats import anim_source as F_anim
 
 SCREEN_W, SCREEN_H = 20, 16
@@ -107,7 +108,7 @@ class ThresholdShiftNeeded(RuntimeError):
 class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
                ConversationMixin, EnemiesMixin, FamiliesMixin, MonstersMixin,
                ArenaMixin, SkillsMixin, AnimsMixin, BreedingMixin, EncountersMixin,
-               MusicMixin):
+               MusicMixin, ShopsMixin):
     def __init__(self, path):
         self.path = path if path.endswith('.json') else \
             os.path.join(path, 'project.json')
@@ -1985,6 +1986,16 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         scr = self.screen(room, key)
         target = scr['states'][state_idx] if scr.get('states') else scr
         gone = target['exits'].pop(index)
+        # S117 (NG2): a gate entrance takes its swirl object with it
+        try:
+            from .gates import is_gate_entrance, entrance_gate
+            if is_gate_entrance(gone) and target.get('npcs'):
+                g, xy = entrance_gate(gone), (val(gone['x']), val(gone['y']))
+                target['npcs'] = [e for e in target['npcs'] if not (
+                    e.get('swirl_of') is not None and val(e['swirl_of']) == g
+                    and (val(e['x']), val(e['y'])) == xy)]
+        except (KeyError, TypeError, ValueError):
+            pass
         self.touch()
         return gone
 
@@ -2128,6 +2139,9 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         if old.get('comment') and not old.get('kind') == 'raw':
             v['comment'] = old['comment']
         lst[index] = self._npc_entry(v)
+        for k in ('swirl_of', 'shown_when'):        # S117: conditions ride along
+            if old.get(k) is not None:
+                lst[index][k] = copy.deepcopy(old[k])
         self.touch()
         return old
 
@@ -2290,7 +2304,8 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         return name
 
     def flag_pool(self):
-        """(used, capacity) of the named-flag safe pool."""
+        """(used, capacity) of the named-flag pool (S117: the 16 vanilla-safe
+        flags + the extended flags $1000-$179F)."""
         from editor2.core.project import FLAG_SAFE_RANGES
         cap = sum(hi - lo + 1 for lo, hi in FLAG_SAFE_RANGES)
         return len(self.flags()), cap

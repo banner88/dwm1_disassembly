@@ -28,6 +28,24 @@ WELL_KNOWN = [   # vanilla story flags worth offering by name (EVENT_FLAGS.md)
 ]
 
 
+def well_known(doc=None):
+    """WELL_KNOWN + S117 (NG2): one "gate N cleared" entry per gate (vanilla
+    gates with a cleared flag and the project's new gates) — the reference
+    `gate:N` resolves to the gate's own flag when it has one (a new gate, a
+    re-bossed vanilla gate), else the game's flag."""
+    out = list(WELL_KNOWN)
+    try:
+        gates = doc.all_gates() if doc is not None else []
+    except Exception:
+        gates = []
+    for g in gates:
+        info = doc.gate_cleared_info(g['id']) if doc is not None else None
+        if not info or info['flag'] is None:
+            continue
+        out.append((f"gate:{g['id']}", f"gate {g['id']} cleared — {g['name']}"))
+    return out
+
+
 class RuleDialog(QDialog):
     """Edit one rule: state, AND-ed flag terms, screens."""
 
@@ -120,7 +138,7 @@ class RuleDialog(QDialog):
             c.addItem(f"{fl['name']}  (project flag)", fl['name'])
         for nm in getattr(self, 'new_flags', []):        # created in this dialog
             c.addItem(f'{nm}  (new project flag)', nm)
-        for idx, name in WELL_KNOWN:
+        for idx, name in well_known(self.doc):
             c.addItem(f'{idx}  {name}', idx)
         c.setToolTip('A project flag name, or any event flag number (e.g. 0x0030). '
                      'EVENT_FLAGS.md lists the vanilla story flags.')

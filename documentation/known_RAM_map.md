@@ -233,7 +233,20 @@
                  [S115] wGateRowBuf $D138-$D13F — a NEW gate's 8-byte
                  GateFloorDataTable-format row (bank $76 NewGateRowCopy,
                  written right before bank $16 entry 5 reads it) /
-                 wCustomPool $D140-$D5E4 (transient reserve) /
+                 [S117] wExtFlags $D140-$D23F — the extended event flags
+                 $1000-$17FF (ROM0 ComputeFlagAddress -> bank $73 entry 21
+                 FlagAddr). The ONE non-transient carve of this window: bank
+                 $73 ExtFlagsCommit / ExtFlagsRestore carry it through the
+                 explicit save via SRAM bank 3 "X1" (EVENT_FLAGS "Extended
+                 flags (S117)", ARCHITECTURE "SRAM bank 3 (S117)") /
+                 [S117] wShopID $D240 — the shop list a shopkeeper sells
+                 (list index + 1, written by a `shop` script right before
+                 opcode $04; read by bank $77 ShopFill at every BUY, cleared
+                 by ShopClose; 0 = the vanilla room rule) /
+                 [S117b] wPushAttrOn $D241 / wPushAttrRow $D242 — bank $77
+                 ScreenPush scratch (attributes of the bank $09 screen push in
+                 free-colour custom rooms; transient) /
+                 wCustomPool $D243-$D5E4 (transient reserve) /
                  wPoolBounce $D5E5-$D664 (128 B, FX1: sleep-pool swap
                  scratch; the v1 drain halved-pending use died with the
                  S71v2 exp-scale veto).

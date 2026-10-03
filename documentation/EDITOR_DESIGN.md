@@ -923,6 +923,30 @@ help `60_gates.md` "New gates"):**
 - Not yet: a new gate's own floor types / depth tier (the source's), entrance conditions
   (NG2), fully custom gates (NG3).
 
+**As built S117 (ROADMAP NG2 — swirls / cleared; built, PyBoy-verified, NOT yet
+user-tested; help `60_gates.md` "Swirls and cleared").** User: "Make is as simple and
+straightforward in editor as possible. Boss cleared - no swirly. Boss cleared BUT we are
+inputting new boss or redirecting to new gate - swirly."
+- Nothing to set by hand: **"Gate entrance here…"** now also adds the spinning swirl
+  object (an NPC entry with `swirl_of: N`, shown while gate N is not cleared) and paints
+  the still swirl (`paint_swirl`, room $24's swirl metatile borrowed into the room — the
+  S115 hole picture is gone); the status line says when the screen had no room for the
+  object (8 NPCs) or the tileset no room for the picture. Delete either freely; removing
+  the exit removes its swirl.
+- A vanilla gate given a custom boss floor: its vanilla portals' swirls spin again until
+  the new boss is beaten (automatic — `VanillaNPCExtTable`, PROJECT_COMPILER §2.32).
+- **"Lead this portal to another gate…"** (Rooms tab, a vanilla room, a portal exit
+  selected; inspector button) → pick a gate, or "(back to the gate the game gives it)"
+  to undo; the swirl follows the new gate.
+- Gates tab: the sub line names the gate's cleared flag ("cleared flag $0011 (the game's
+  own) — its swirls stop when its boss is beaten" / "cleared flag $17C0 — its own (a new
+  gate) …", and for a re-bossed gate that its vanilla flag is set too) and lists re-routed
+  portals among the entrances.
+- Flag pickers everywhere (state rules, talks, conversations, encounter variants) list
+  **`gate:N cleared — name`** (`rules_panel.well_known(doc)`).
+- NPC entries accept `shown_when` (flag terms) in project.json; no GUI for it yet
+  (ROADMAP residual) — the swirl uses the same mechanism.
+
 ### 5.1c Triggers (v2.1 — first-class concept, user spec S90)
 
 Authored as sentences: **"When [flag set / quest state / item owned] →
@@ -1393,9 +1417,35 @@ more variety"); include the channel-count extension; MIDI import automatic.
   enough, could be lazy); no per-channel mute / tempo view; the synth's tone is
   documentation-accurate, not SameBoy-exact.
 
+### 5.6b Shops tab (as built S117 — ROADMAP P3.13c; built, PyBoy-verified, NOT yet user-tested)
+
+`app/shops_tab.py`, model `core/shops_doc.py`; help `62_shops.md`. User (S117): "Do shops
+as well while you're there."
+* **Shops** (left): the game's five (Bazaar item shop, Starry Night shop, Bookstore, Rare
+  item shop, gate-floor shop — edited ones orange) + the project's own ("— yours");
+  **New shop… / Rename… / Delete** (project shops; Delete unbinds its shopkeepers, one
+  undo step).
+* **Items for sale** (right): the list (number, name, price, page when > 4) with an item
+  combo (items 1-43), **Add** (after the selected row) / **Remove** / **▲ ▼**, **Original
+  list** (a game shop back to vanilla); a line saying where it sells — the game's room rule
+  for the five, "Sold by: room (x,y)" for NPC shopkeepers, or "⚠ nobody sells this shop
+  yet". Limits enforced: 1-20 items.
+* **Item prices** (below): every item 1-43 — editable Buy price (orange when changed),
+  "Shops pay" (the game's sell rule), the original price, the shops that sell it.
+* **Rooms tab → NPC → "Shopkeeper…"**: pick the shop + an optional greeting (two-line
+  boxes; empty = the game's "Item shop. May I help you?") → a `shop` script on that NPC
+  (`make_shopkeeper`; re-running it edits the same script).
+* Every edit = one SnapshotCommand; the tab refreshes on undo.
+* **S117b (built, NOT yet user-tested):** the shop menus in free-colour custom rooms are
+  drawn in the menu palette (engine, bank $77 `ScreenPush`); the Rooms tab note above the
+  canvas carries **"Sprite limit: …"** lines (`formats.sprite_budget`: a row with > 1 NPC,
+  > 6 NPCs on screen — the hardware hides the rest while your party is around; user: "Just
+  warning is fine for now, and Ill build around it"); help `20_npcs.md` "Sprite limits".
+
 ### 5.7 Progression & Flags tab
 
-- **Flag manager**: named flags, auto-allocation from the safe pool,
+- **Flag manager**: named flags, auto-allocation from the safe pool (S117: 1,968 —
+  the 16 vanilla spares + the extended `$1000-$179F`; EVENT_FLAGS "Extended flags"),
   usage cross-ref (who sets/reads — `all_scripts.json` branch
   following), vanilla flag map read-only with SIDEQUEST_MAP annotations.
 - **Quest editor**: `progression.quests[]`/`enemies[]` (E2, built +

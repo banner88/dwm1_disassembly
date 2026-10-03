@@ -47,6 +47,13 @@ STAIRS_DOWN_FIELDS = {'dest': '0x00', 'gate_flag': '0x80', 'screen_byte': '0x00'
 WELL_SRC_MAP = 0x51
 WELL_SRC_TILES = (0x2C, 0x2D, 0x2E, 0x2F)
 WELL_NAME = 'Next floor down (well)'
+# S117 (NG2): the still swirl in the floor art of every vanilla portal —
+# room $24 (Villager/Talisman) cells (2,2) / (2,6) = sheet slots $20-$23
+# (BG map read in PyBoy S117; palette slot 3 there). The spinning swirl over
+# it is an NPC (SWIRL_SPRITE), shown until the gate is cleared.
+SWIRL_SRC_MAP = 0x24
+SWIRL_SRC_TILES = (0x20, 0x21, 0x22, 0x23)
+SWIRL_NAME = 'Gate swirl (portal floor)'
 
 
 def _overlay_hole(hole, floor):
@@ -245,6 +252,92 @@ def entrance_gate(e):
         return _val(s)
     except (TypeError, ValueError):
         return None
+
+
+# ---------------------------------------------------------------------------
+# S117 (ROADMAP NG2) — a gate's CLEARED mark and its swirl.
+# Vanilla (measured S117, the user's save): every portal cell carries a
+# spinning swirl OBJECT (NPC sprite $4D, script $FF) over the still swirl in
+# the floor art while the gate's boss is unbeaten; the boss win tail sets the
+# gate's cleared flag (extracted/gate_names.json cleared_flag) and moves the
+# portal room's step counter to a version without that object. The swirl
+# never blocks the portal (entered in every version).
+# Project rule (user S117: "Boss cleared - no swirly. Boss cleared BUT we are
+# inputting new boss or redirecting to new gate - swirly"):
+#   * a vanilla gate with its own boss -> its vanilla flag (nothing changes);
+#   * a vanilla gate with ANOTHER boss (custom.gates boss) and every new gate
+#     -> a flag of its own, GATE_FLAG_BASE + gate (extended range, never
+#     moves), set by the engine on the boss-floor win (bank $76 GateBossWin;
+#     a re-bossed vanilla gate also gets its vanilla flag, so story checks of
+#     "gate cleared" keep working);
+#   * a portal leads to the gate its exit row names (an entrance redirect
+#     can re-route a vanilla portal), and its swirl follows THAT gate.
+# ---------------------------------------------------------------------------
+SWIRL_SPRITE = 0x4D
+GATE_FLAG_BASE = 0x17A0          # + gate number (0-95): $17A0-$17FF (project.py)
+
+
+def vanilla_cleared_flag(gate_id, start=None):
+    for g in vanilla_gates(start):
+        if g['id'] == int(gate_id):
+            cf = g.get('cleared_flag')
+            return _val(cf) if cf else None
+    return None
+
+
+def gate_rebossed(custom, gate_id, start=None):
+    """A VANILLA gate whose boss floor serves another room than its own."""
+    gid = int(gate_id)
+    if gid >= 32:
+        return False
+    b = gate_settings(custom, gid).get('boss')
+    if b in (None, '', 'vanilla'):
+        return False
+    if isinstance(b, str) and b.startswith('vanilla:'):
+        own = next((g for g in vanilla_gates(start) if g['id'] == gid), None)
+        try:
+            return own is None or _val(b.split(':', 1)[1]) != _val(own['boss_map'])
+        except (TypeError, ValueError):
+            return True
+    return True
+
+
+def gate_cleared(custom, gate_id, start=None):
+    """{'flag': the flag that means "this gate's boss is beaten" (None = the
+    gate has none: the unused gate 31 with its own boss), 'own': True when it
+    is the gate's OWN project flag (GATE_FLAG_BASE + gate), 'vanilla_flag':
+    the vanilla gate's flag (None for new gates)} — or None when the gate
+    does not exist."""
+    gid = int(gate_id)
+    if not gate_exists(custom, gid):
+        return None
+    vf = vanilla_cleared_flag(gid, start) if gid < 32 else None
+    if gid >= 32 or gate_rebossed(custom, gid, start):
+        return {'flag': GATE_FLAG_BASE + gid, 'own': True, 'vanilla_flag': vf}
+    return {'flag': vf, 'own': False, 'vanilla_flag': vf}
+
+
+def gate_ref(gate_id):
+    """The flag reference that means "gate N is cleared" (resolve_flag_ref)."""
+    return f'gate:{int(gate_id)}'
+
+
+def parse_gate_ref(ref):
+    s = str(ref)
+    if s.startswith('gate:'):
+        try:
+            return int(_val(s.split(':', 1)[1]))
+        except (TypeError, ValueError):
+            return None
+    return None
+
+
+def swirl_npc(x, y, gate_id):
+    """The spinning swirl object over a gate entrance: shown while the gate is
+    not cleared (the compiler turns `swirl_of` into that condition)."""
+    return {'kind': 'npc', 'x': int(x), 'y': int(y), 'sprite': hex(SWIRL_SPRITE),
+            'script': None, 'facing': 'down', 'swirl_of': int(gate_id),
+            'comment': f'gate swirl (gate {int(gate_id)}): spins until the gate is cleared'}
 
 
 def gate_entrance_row(x, y, gate_id, comment=None):
@@ -494,14 +587,31 @@ class GatesMixin:
                                                   and entrance_gate(e) == gid)]
                     n_ent += len(ex) - len(keep)
                     st['exits'] = keep
+                for st in self.states(r, k):          # S117: its swirl objects
+                    if st.get('npcs'):
+                        st['npcs'] = [e for e in st['npcs']
+                                      if not (e.get('swirl_of') is not None
+                                              and int(_val(e['swirl_of'])) == gid)]
+        reds = self.custom.get('entrance_redirects') or []
+        keep = [rd for rd in reds if not (_val(rd.get('gate_flag', 0)) == 1
+                                          and entrance_gate(rd) == gid)]
+        n_ent += len(reds) - len(keep)
+        if reds:
+            if keep:
+                self.custom['entrance_redirects'] = keep
+            else:
+                self.custom.pop('entrance_redirects', None)
         self.touch()
         return {'rules': n_rules, 'entrances': n_ent}
 
-    def add_gate_entrance(self, room, key, state_idx, x, y, gate_id, states=None):
+    def add_gate_entrance(self, room, key, state_idx, x, y, gate_id, states=None,
+                          swirl=True):
         """A gate entrance exit on (x, y): stepping on it enters gate
         `gate_id` (a vanilla gate 0-31 or a new gate) at its first floor —
-        the vanilla portal form (gate_flag 1, dest = the gate). The cell's
-        picture is the author's (paint a portal on it)."""
+        the vanilla portal form (gate_flag 1, dest = the gate). S117 (NG2):
+        plus the spinning swirl object on the cell, shown until the gate is
+        cleared (`swirl_npc`; the 8-NPC cap permitting — returns the states
+        where it did not fit)."""
         gid = int(gate_id)
         if not gate_exists(self.custom, gid):
             raise ValueError(f'gate {gid} does not exist')
@@ -510,10 +620,88 @@ class GatesMixin:
             for e in self.exits_of(room, key, n):
                 if (_val(e['x']), _val(e['y'])) == (int(x), int(y)):
                     raise ValueError(f"cell ({x},{y}) already holds an exit in state {n}")
+        full = []
         for n in states:
             self.exits_of(room, key, n).append(
                 gate_entrance_row(x, y, gid, f'gate entrance: {self.gate_name(gid)}'))
+            if swirl:
+                if self.state_capacity(room, key, n)[0] >= self.state_capacity(room, key, n)[1]:
+                    full.append(n)
+                else:
+                    self.npc_entries(room, key, n).append(swirl_npc(x, y, gid))
         self.touch()
+        return full
+
+    def gate_swirls(self, gate_id=None):
+        """[(room, key, state, npc entry)] of the swirl objects (swirl_of)."""
+        out = []
+        for r in self.rooms:
+            if r.get('placeholder'):
+                continue
+            for k in self.screen_keys(r):
+                for n, st in enumerate(self.states(r, k)):
+                    for e in st.get('npcs') or []:
+                        if e.get('swirl_of') is not None and (
+                                gate_id is None or int(_val(e['swirl_of'])) == int(gate_id)):
+                            out.append((r, k, n, e))
+        return out
+
+    def gate_cleared_info(self, gate_id):
+        """gate_cleared() for this document (S117)."""
+        return gate_cleared(self.custom, gate_id, getattr(self, 'project_dir', None))
+
+    def gate_cleared_text(self, gate_id):
+        """One line for the Gates tab: which flag means "cleared"."""
+        info = self.gate_cleared_info(gate_id)
+        if info is None:
+            return ''
+        if info['flag'] is None:
+            return 'no cleared flag (the unused gate)'
+        if info['own']:
+            extra = (f" — beating its boss also sets the vanilla flag ${info['vanilla_flag']:04X}"
+                     if info.get('vanilla_flag') is not None and int(gate_id) < 32 else '')
+            why = 'a new gate' if int(gate_id) >= 32 else 'it has another boss'
+            return (f"cleared flag ${info['flag']:04X} — its own ({why}): beating its boss "
+                    f"sets it and its swirls stop{extra}")
+        return (f"cleared flag ${info['flag']:04X} (the game's own) — its swirls stop when "
+                "its boss is beaten")
+
+    def portal_redirects(self, gate_id=None):
+        """S117: entrance redirects that make a VANILLA portal lead to a gate
+        (dest gate:N, gate_flag 1) — [(index, row)]."""
+        out = []
+        for i, rd in enumerate(self.custom.get('entrance_redirects') or []):
+            try:
+                if _val(rd.get('gate_flag', 0)) != 1:
+                    continue
+            except (TypeError, ValueError):
+                continue
+            g = entrance_gate(rd)
+            if gate_id is None or g == int(gate_id):
+                out.append((i, rd))
+        return out
+
+    def add_portal_redirect(self, source_mid, screen, x, y, gate_id, comment=None):
+        """S117: make the vanilla portal (source_mid, screen, x, y) lead to
+        gate `gate_id` (a new gate, or another vanilla gate). Its swirl in the
+        vanilla room follows that gate's cleared flag (VanillaNPCExtTable)."""
+        gid = int(gate_id)
+        if not gate_exists(self.custom, gid):
+            raise ValueError(f'gate {gid} does not exist')
+        entry = {'mapID': f'0x{int(source_mid):02X}', 'screen': int(screen),
+                 'x': int(x), 'y': int(y), 'dest': f'gate:{gid}'}
+        entry.update(GATE_ENTRANCE_FIELDS)
+        entry['comment'] = comment or f'portal -> gate {gid} ({self.gate_name(gid)})'
+        lst = self.custom.setdefault('entrance_redirects', [])
+        for i, r in enumerate(lst):
+            if (_val(r['mapID']), _val(r['screen']), _val(r['x']), _val(r['y'])) == \
+                    (int(source_mid), int(screen), int(x), int(y)):
+                lst[i] = entry
+                self.touch()
+                return i
+        lst.append(entry)
+        self.touch()
+        return len(lst) - 1
 
     def conversation_exits(self, room):
         """S101: helper / move steps in the conversations of a room's script table."""
@@ -774,6 +962,43 @@ class GatesMixin:
         return self.import_metatile(room, {'name': WELL_NAME, 'tiles': [0x7C, 0x7D, 0x7E, 0x7F],
                                            'pal': 0},
                                     bytes(fake), 0, own_sheet=own, name=WELL_NAME)
+
+    def swirl_metatile(self, room, key=0, state_idx=0, x=0, y=0):
+        """S117: the vanilla portal's still swirl ($24 slots $20-$23), brought
+        into the room's tileset like the well (drawn in the cell's palette)."""
+        if getattr(self, 'vanilla', None) is None:
+            raise RuntimeError('no ROM renderer loaded')
+        src = bytes(self.vanilla.vanilla_gfx(SWIRL_SRC_MAP).sheet[:2048])
+        cell, sheet = self._cell_tiles_and_sheet(room, key, state_idx, x, y)
+        comp = [bytes(src[w * 16:w * 16 + 16]) for w in SWIRL_SRC_TILES]
+        tid = room['record'].get('tileset')
+        if tid is not None:
+            for mt in self.metatiles(tid):
+                if [bytes(sheet[t * 16:t * 16 + 16]) for t in mt['tiles']] == comp:
+                    return mt
+        fake = bytearray(2048)
+        for i, g in enumerate(comp):
+            fake[(0x7C + i) * 16:(0x7D + i) * 16] = g
+        own = None if tid is not None else sheet
+        return self.import_metatile(room, {'name': SWIRL_NAME, 'tiles': [0x7C, 0x7D, 0x7E, 0x7F],
+                                           'pal': 0},
+                                    bytes(fake), 0, own_sheet=own, name=SWIRL_NAME)
+
+    def paint_swirl(self, room, key, state_idx, x, y):
+        """S117: paint the still portal swirl on cell (x, y) (tiles only)."""
+        self._paint_cell(room, key, state_idx, x, y,
+                         self.swirl_metatile(room, key, state_idx, x, y))
+
+    def _paint_cell(self, room, key, state_idx, x, y, mt):
+        ref = self.state_layout_ref(room, key, state_idx)
+        if 'id' not in ref:
+            grid = [list(r) for r in self.vanilla.layout_grid(ref)[0]]
+            self.localize_layout(room, key, state_idx, grid)
+            ref = self.state_layout_ref(room, key, state_idx)
+        tiles = self.layout(ref['id'])['tiles']
+        for j, (dr, dc) in enumerate(((0, 0), (0, 1), (1, 0), (1, 1))):
+            tiles[int(y) * 2 + dr][int(x) * 2 + dc] = mt['tiles'][j]
+        self.touch()
 
     def paint_well(self, room, key, state_idx, x, y):
         """Paint the well on cell (x, y) of screen `key` / state `state_idx`

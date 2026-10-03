@@ -24,13 +24,34 @@ REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 # are wPendingFarmExp (CF2). Flags $01E0-$01EF ($D9D7-$D9D8) are RETIRED S73:
 # those bytes are wAnchorGate/wAnchorFloor (custom skill $E4 Anchor persistent
 # state). See EVENT_FLAGS.md "Free Flag Slots".
-FLAG_SAFE_RANGES = [(0x0158, 0x0167)]
+# S117 (FLAG EXPANSION): + the EXTENDED flags $1000-$17FF (2,048; WRAM
+# wExtFlags $D140, saved to SRAM bank 3 by the explicit save — bank $73
+# FlagAddr / ExtFlagsCommit / ExtFlagsRestore; EVENT_FLAGS "Extended flags").
+# The allocator takes the 16 vanilla-safe flags first (so pre-S117 projects
+# keep their numbers), then $1000 up. The top 96 ($17A0-$17FF) are the gates'
+# own "cleared" flags (gate n -> GATE_FLAG_BASE + n; NG2, gates.py) — never
+# allocated to names, so a gate's flag never moves when names are added.
+EXT_FLAG_FIRST, EXT_FLAG_LAST = 0x1000, 0x17FF
+GATE_FLAG_BASE = 0x17A0                  # + gate number 0-95
+FLAG_SAFE_RANGES = [(0x0158, 0x0167), (EXT_FLAG_FIRST, GATE_FLAG_BASE - 1)]
 # S97 state rules may TEST any event flag (vanilla story flags included). The
 # bitfield is $D99B + idx/8; vanilla references reach $02C1 (EVENT_FLAGS.md),
 # and $0278+ is not in the save image — readable, but a rule on it resets on
-# reload. The cap keeps a typo from reading unrelated WRAM.
-FLAG_INDEX_MAX = 0x02FF
+# reload. The cap keeps a typo from reading unrelated WRAM: $0300-$0FFF (and
+# above $17FF) would land past the vanilla bitfield in live WRAM — refused.
+FLAG_INDEX_MAX = EXT_FLAG_LAST
+FLAG_VANILLA_MAX = 0x02FF
 FLAG_PERSIST_LIMIT = 0x0278
+
+
+def flag_persistent(idx):
+    """True when event flag `idx` is inside a save image (vanilla $0000-$0277
+    or the S117 extended range)."""
+    return idx < FLAG_PERSIST_LIMIT or EXT_FLAG_FIRST <= idx <= EXT_FLAG_LAST
+
+
+def flag_index_ok(idx):
+    return 0 <= idx <= FLAG_VANILLA_MAX or EXT_FLAG_FIRST <= idx <= EXT_FLAG_LAST
 STATE_RULE_MAX_TERMS = 8
 # S65 migration: step counters live in the CF3-freed window (WRAM $CC80-$D664,
 # freed S60 — MONSTER_DATA "CF3 as built"). $CD80-$CFFF is the counter region;
@@ -100,6 +121,7 @@ class Project:
         self.quest_enemies = self._resolve_quest_enemies()
         self._lower_quests()
         self._lower_talk_scripts()
+        self._lower_shop_scripts()
         self.vanilla_exit_exts = (list(self.custom.get('vanilla_exit_extensions', []))
                                   + self._lower_entrance_redirects())
         self.rooms = self._dense_rooms()
@@ -798,6 +820,36 @@ class Project:
             s['ops'] = ops
             s['_talk_lowered'] = True
 
+    def _lower_shop_scripts(self):
+        """S117 (P3.13c, PROJECT_COMPILER §2.32): a shopkeeper's script
+        {"shop": {"shop": <list id>, "text": <greeting dialogue, optional>}} ->
+        the vanilla shopkeeper's four words (text $0680 / $FF04 $0000 $0680 /
+        text $0682 / end) with its own greeting and `write_ram wShopID,
+        list+1` right before the opcode (bank $77 ShopFill reads it)."""
+        from . import shops as SH
+        for s in self.custom.get('scripts', []):
+            sp = s.get('shop')
+            if sp is None or s.get('_shop_lowered'):
+                continue
+            ctx = f"scripts[{s.get('id')}].shop"
+            if 'ops' in s or 'talk' in s:
+                raise ProjectError(f"{ctx}: a shop script has no 'ops' / 'talk'")
+            if not isinstance(sp, dict) or not sp.get('shop'):
+                raise ProjectError(f"{ctx}: {{\"shop\": <shop id>, \"text\": <greeting>}}")
+            unknown = set(sp) - {'shop', 'text', 'comment'}
+            if unknown:
+                raise ProjectError(f"{ctx}: unknown keys {sorted(unknown)}")
+            try:
+                n = SH.shop_id_byte(self, sp['shop'], ctx)
+            except SH.ShopError as e:
+                raise ProjectError(str(e))
+            s['ops'] = [['text', sp.get('text') or SH.SHOP_TEXT_BASE],
+                        ['op', 'write_ram', 'wShopID', n],
+                        ['op', '0x04', 0, SH.SHOP_TEXT_BASE],   # the shop opcode
+                        ['text', SH.SHOP_TEXT_BASE + 2],
+                        ['end']]
+            s['_shop_lowered'] = True
+
     def quest_battle_eid(self, q):
         b = q.get('battle') or {}
         if 'eid' in b:
@@ -1142,6 +1194,126 @@ class Project:
             return self.MONSTER_SPRITE_BASE + idx
         return F.val(n['sprite'])
 
+    # ------------------------------------------- S117 (ROADMAP NG2) swirls
+    def npc_conditions(self, r, k, n):
+        """[(flag index, must_be_clear)] an NPC entry is shown under —
+        `shown_when` terms (state-rule shape) + `swirl_of: N` (shown while
+        gate N is not cleared). Lowered to the $A0/$A1 prefix entries that
+        bank $60 CopyNPCListToBuffer turns into the hidden bit."""
+        c = f"room {r.get('id')} screen {k} NPC ({n.get('x')},{n.get('y')})"
+        out = []
+        if n.get('swirl_of') is not None:
+            out.append((self.resolve_flag_ref(f"gate:{int(F.val(n['swirl_of']))}", c), True))
+        for t in n.get('shown_when') or []:
+            is_ = t.get('is', 'set')
+            if is_ not in ('set', 'clear'):
+                raise ProjectError(f"{c}: shown_when 'is' must be set/clear, got {is_!r}")
+            out.append((self.resolve_flag_ref(t.get('flag'), c), is_ == 'clear'))
+        if len(out) > STATE_RULE_MAX_TERMS:
+            raise ProjectError(f"{c}: {len(out)} conditions (max {STATE_RULE_MAX_TERMS})")
+        return out
+
+    def gate_clear_rows(self):
+        """GateClearTable (bank $76, GateBossWin): per gate 0 .. last defined
+        gate, the two flags a won boss-floor battle sets ($FFFF = none):
+        (the gate's own flag, the vanilla flag of a re-bossed vanilla gate).
+        A vanilla gate with its own boss sets nothing here (its scripts do)."""
+        from . import gates as G
+        start = self.repo_root or self.root
+        cfg = self.gate_configs()
+        last = max(cfg) if cfg else 31
+        rows = []
+        for gid in range(max(32, last + 1)):
+            info = G.gate_cleared(self.custom, gid, start) if gid in cfg else None
+            if info and info['own']:
+                vf = info['vanilla_flag'] if gid < 32 else None
+                rows.append((gid, info['flag'], vf))
+            else:
+                rows.append((gid, None, None))
+        return rows
+
+    def vanilla_swirl_overrides(self):
+        """VanillaNPCExtTable rows: the vanilla portal screens whose swirl
+        objects must follow a PROJECT gate's cleared flag — a portal whose
+        gate (after entrance redirects) is a new gate or a re-bossed vanilla
+        gate, or a portal re-routed to another gate. Per valid step version of
+        the screen: the vanilla interact list with each such portal's swirl
+        object conditioned on that gate's flag (shown while clear), or a swirl
+        appended in versions that have the portal but no swirl object.
+        Returns [{mapID, screen, step_counter, steps: [[entry dicts]]}]."""
+        from . import gates as G
+        from .vanilla import VanillaTable
+        start = self.repo_root or self.root
+        vt = VanillaTable(start)
+        redirects = {}
+        for rr in self.custom.get('entrance_redirects') or []:
+            try:
+                key = (F.val(rr['mapID']), int(F.val(rr['screen'])),
+                       int(F.val(rr['x'])), int(F.val(rr['y'])))
+            except Exception:
+                continue
+            redirects[key] = rr
+        out = []
+        for mid in sorted(vt.entries):
+            e = vt.entries[mid]
+            for sr in e.get('sub_rooms', []):
+                k = sr.get('c925')
+                try:
+                    steps = vt.valid_steps(mid, k)
+                except Exception:
+                    continue
+                portals = {}
+                for st in steps:
+                    for ex in st.get('exit_data', []):
+                        if ex.get('gate_flag') == 1:
+                            portals[(ex['trigger_x'], ex['trigger_y'])] = ex['dest_map_type']
+                if not portals:
+                    continue
+                affected = {}
+                for (x, y), g in portals.items():
+                    rr = redirects.get((mid, k, x, y))
+                    tgt = g
+                    if rr is not None:
+                        if F.val(rr.get('gate_flag', 0)) != 1:
+                            continue           # re-routed to a room: no gate
+                        tgt = G.entrance_gate(rr)
+                    info = G.gate_cleared(self.custom, tgt, start)
+                    if info is None or info['flag'] is None:
+                        continue
+                    if tgt != g or info['own']:
+                        affected[(x, y)] = (tgt, info['flag'])
+                if not affected:
+                    continue
+                variants = []
+                for st in steps:
+                    ents = []
+                    for it in st.get('interact_data', []):
+                        ents.append({'bytes': [int(b, 16) for b in it['raw'].split()],
+                                     'cond': None})
+                    have = {(xx, yy) for xx, yy in
+                            ((ex['trigger_x'], ex['trigger_y']) for ex in st.get('exit_data', [])
+                             if ex.get('gate_flag') == 1)}
+                    for (x, y), (tgt, flag) in sorted(affected.items()):
+                        if (x, y) not in have:
+                            continue
+                        hit = [en for en in ents if en['bytes'][0] < 0x80
+                               and en['bytes'][1] == G.SWIRL_SPRITE
+                               and (en['bytes'][2], en['bytes'][3]) == (x, y)]
+                        if hit:
+                            for en in hit:
+                                en['bytes'][0] &= ~0x40     # never hidden by itself
+                                en['cond'] = (flag, tgt)
+                        else:
+                            n_npc = sum(1 for en in ents if en['bytes'][0] < 0x80)
+                            if n_npc < 8:
+                                ents.append({'bytes': [0x00, G.SWIRL_SPRITE, x, y, 0xFF],
+                                             'cond': (flag, tgt)})
+                    variants.append(ents)
+                out.append({'mapID': mid, 'screen': k,
+                            'step_counter': int(sr['ram_counter'], 16),
+                            'steps': variants, 'name': e.get('name', '')})
+        return out
+
     def gate_rooms(self):
         """{room id: [rule rows]} for rooms served inside gates."""
         out = {}
@@ -1470,6 +1642,19 @@ class Project:
         (EVENT_FLAGS.md). Indices >= $0278 are readable but not saved."""
         if isinstance(ref, str) and ref in self._flags:
             return self._flags[ref]
+        if isinstance(ref, str) and ref.startswith('gate:'):
+            # S117 (NG2): "gate N cleared" — the gate's own flag when it has
+            # one (new gates, re-bossed vanilla gates), else its vanilla flag
+            from . import gates as G
+            gid = G.parse_gate_ref(ref)
+            info = (G.gate_cleared(self.custom, gid, self.repo_root or self.root)
+                    if gid is not None else None)
+            if info is None:
+                raise ProjectError(f"{ctx}: {ref!r} — no such gate")
+            if info['flag'] is None:
+                raise ProjectError(f"{ctx}: {ref!r} — this gate has no cleared flag "
+                                   "(the unused gate 31 with its own boss)")
+            return info['flag']
         try:
             idx = F.val(ref)
         except Exception:
@@ -1477,9 +1662,10 @@ class Project:
         if not isinstance(idx, int):
             raise ProjectError(f"{ctx}: flag {ref!r} is neither a named flag "
                                "(custom.flags) nor a flag number")
-        if not 0 <= idx <= FLAG_INDEX_MAX:
+        if not flag_index_ok(idx):
             raise ProjectError(f"{ctx}: flag {F.hexw(idx)} outside the event "
-                               f"flag bitfield ($0000-{F.hexw(FLAG_INDEX_MAX)})")
+                               f"flags ($0000-{F.hexw(FLAG_VANILLA_MAX)} vanilla, "
+                               f"{F.hexw(EXT_FLAG_FIRST)}-{F.hexw(EXT_FLAG_LAST)} extended)")
         return idx
 
     def state_rules(self, r):

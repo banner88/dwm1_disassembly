@@ -1122,6 +1122,134 @@ def main():
           'going (3 s); replay = reset + start (no draining stop); a stream the system '
           'stops is restarted and the song continues; stop discards')
 
+    # S117 (ROADMAP NG2 + P3.13c): a gate entrance gets the spinning swirl (shown
+    # while the gate is not cleared) and the still swirl picture; a vanilla portal
+    # led to another gate; an NPC made a shopkeeper; the Shops tab — a new shop,
+    # items, a price; compiles; undo restores project.json
+    import editor2.app.shops_tab as STm
+    import editor2.app.rooms.tab as RTm
+    import PySide6.QtWidgets as QW
+    doc = w.session.doc
+    before = doc.dumps()
+    rt = w.rooms_tab
+    w.tabs.setCurrentWidget(rt)
+    rt.open_node(('room', 'dusk_mirror'))
+    app.processEvents()
+    q_gi = QW.QInputDialog.getItem
+    QW.QInputDialog.getItem = staticmethod(
+        lambda _p, _t, _l, items, *a, **k: (next(i for i in items if i.startswith(' 2 ')), True))
+    rt._add_gate_entrance((2, 3))
+    QW.QInputDialog.getItem = q_gi
+    app.processEvents()
+    sw = doc.gate_swirls(2)
+    assert len(sw) == 1 and (sw[0][3]['x'], sw[0][3]['y']) == (2, 3) and \
+        sw[0][3]['swirl_of'] == 2, sw
+    assert 'Gate entrance' in rt.status_line.text() and 'swirl' in rt.status_line.text(), \
+        rt.status_line.text()
+    QW.QInputDialog.getItem = staticmethod(
+        lambda _p, _t, _l, items, *a, **k: (next(i for i in items if i.startswith(' 5 ')), True))
+    rt._portal_to_gate({'mapID': 0x24, 'screen': 0, 'x': 2, 'y': 2})
+    QW.QInputDialog.getItem = q_gi
+    app.processEvents()
+    pr = doc.portal_redirects()
+    assert len(pr) == 1 and pr[0][1]['dest'] == 'gate:5', pr
+    gt = w.gates_tab
+    gt.refresh()
+    gt.list.setCurrentRow(5)
+    app.processEvents()
+    assert 'cleared' in gt.sub.text(), gt.sub.text()
+    room = doc.room('dusk_mirror')
+    cmd = rt._npc_op('Add NPC', lambda d, r, k, st: d.add_npc(r, k, st, 6, 4, 0x06))
+    rt._after_npc_edit(cmd.result)
+    app.processEvents()
+    assert rt._sel_npc == cmd.result
+    STm.QInputDialog.getText = staticmethod(lambda *a, **k: ('Mirror stall', True))
+    st = w.shops_tab
+    w.tabs.setCurrentWidget(st)
+    st.refresh()
+    app.processEvents()
+    assert st.list.count() == 5 and st.prices.rowCount() == 43, (st.list.count(),
+                                                                 st.prices.rowCount())
+    st._new_shop()
+    STm.QInputDialog.getText = QW.QInputDialog.getText
+    app.processEvents()
+    assert st.list.count() == 6 and st.current()['key'] == 'mirror_stall', st.current()
+    assert 'nobody sells' in st.where.text(), st.where.text()
+    st.pick.setCurrentIndex(st.pick.findData(29))              # ...
+    st._add_item()
+    st.items.setCurrentRow(1)
+    st._move(-1)
+    app.processEvents()
+    assert st.current()['items'] == [29, 1], st.current()['items']
+    st.prices.item(0, 1).setText('12')                         # Herb costs 12
+    app.processEvents()
+    assert doc.data['gamedata']['items'] == {'1': {'price': 12}}, doc.data.get('gamedata')
+    w.tabs.setCurrentWidget(rt)
+    rt.open_node(('room', 'dusk_mirror'))
+    app.processEvents()
+    rt._after_npc_edit(cmd.result)
+    d_exec = RTm.QDialog.exec
+
+    def _pick_shop(dlg):
+        cb = dlg.findChild(QW.QComboBox)
+        cb.setCurrentIndex(cb.findData('mirror_stall'))
+        dlg.findChild(QW.QPlainTextEdit).setPlainText('MIRROR STALL.\nLook around!')
+        return QW.QDialog.Accepted
+    RTm.QDialog.exec = _pick_shop
+    rt._npc_shop()
+    RTm.QDialog.exec = d_exec
+    app.processEvents()
+    room = doc.room('dusk_mirror')
+    so = doc.shopkeeper_of(room, rt.key, rt.state_idx, cmd.result)
+    assert so == ('mirror_stall', [['MIRROR STALL.', 'Look around!']]), so
+    w.tabs.setCurrentWidget(st)
+    st.refresh()
+    app.processEvents()
+    st.list.setCurrentRow(5)
+    app.processEvents()
+    assert 'Sold by:' in st.where.text(), st.where.text()
+    from editor2.core import compiler as Cc                # the edits compile
+    td = tempfile.mkdtemp()
+    _sh.copytree(doc.project_dir, os.path.join(td, 'p'), ignore=_sh.ignore_patterns('build'))
+    open(os.path.join(td, 'p', 'project.json'), 'w').write(doc.dumps())
+    outs, _pp, _ww = Cc.compile_project(os.path.join(td, 'p'), REPO)
+    b77 = outs['patches/bank_077.asm']
+    assert 'SHOP_COUNT EQU 6' in b77 and 'Mirror stall' in b77 and '$1d, $01, $ff' in b77, b77
+    assert 'price 12' in outs['patches/bank_003.asm']
+    b60 = outs['patches/bank_060.asm']
+    assert 'VanillaNPCExtTable:' in b60 and 'is CLEAR' in b60, 'no swirl conditions'
+    e_q = STm.QMessageBox.question
+    STm.QMessageBox.question = staticmethod(lambda *a, **k: STm.QMessageBox.Yes)
+    st._delete()
+    STm.QMessageBox.question = e_q
+    app.processEvents()
+    assert st.list.count() == 5 and doc.shopkeeper_of(doc.room('dusk_mirror'), rt.key,
+                                                       rt.state_idx, cmd.result) is None
+    # S117b: the sprite limits show on the Rooms tab banner (3 NPCs on one row)
+    w.tabs.setCurrentWidget(rt)
+    rt.open_node(('room', 'dusk_mirror'))
+    app.processEvents()
+    for x in (1, 3, 5):
+        rt._npc_op('Add NPC', lambda d, r, k, st_, x=x: d.add_npc(r, k, st_, x, 6, 0x06))
+    rt._show()
+    app.processEvents()
+    assert 'Sprite limit: row 6 has' in rt.banner.text(), rt.banner.text()
+    while w.session.undo.index() > 0 and doc.dumps() != before:
+        w.session.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'undo must restore project.json exactly'
+    for fn, words in (('60_gates.md', ('swirl', 'cleared', 'Lead this portal')),
+                      ('62_shops.md', ('Shopkeeper', 'New shop', 'Shops pay', '20 items')),
+                      ('30_flags.md', ('gate:', '$1000'))):
+        hlp = open(os.path.join(REPO, 'editor2', 'help', fn)).read()
+        for word in words:
+            assert word in hlp, f'help {fn} lacks "{word}"'
+    print('OK: Swirls + shops (S117) — a gate entrance gets its swirl (shown until gate 2 is '
+          'cleared); the Villager / Talisman room portal (2,2) led to gate 5; the Shops tab makes "Mirror '
+          'stall" (2 items, reordered), Herb at 12; an NPC sells it with its own greeting; '
+          'compiles (6 lists, swirl conditions); Delete unbinds it; the sprite-limit banner (S117b); '
+          'undo restores everything')
+
     if do_rom:
         from editor2.app.build_worker import BuildWorker  # noqa: E402
         results = []

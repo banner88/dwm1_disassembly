@@ -38,7 +38,8 @@ to the proven overlay:
 | `gd_monster_names` / `gd_monster_nicks` in `patches/bank_041.asm`, `gd_monster_desc` / `gd_monster_desc_extra` in `patches/bank_04d.asm` | the ORIGINAL monsters' names, default nicknames and library descriptions (+ new species' own descriptions), from `gamedata.monster_text` / `custom.species[].description` (S108 P3.10 part 3, §2.24) |
 | `gd_arena_masters_04` / `gd_arena_masters_50` / `gd_arena_fees` / `gd_arena_team_sizes` in `patches/bank_004/050/009/06e.asm` | the arena: each match's master, the class entry fees, the team sizes, from `gamedata.arena` (S109 P3.10b, §2.25; the team members are `gamedata.enemies` rows) |
 | `patches/bank_075.asm` + region `rom0_audio_master` in `patches/bank_000.asm` | S116: the second song bank and the `AudioMasterTableExt` rows (§2.9) |
-| `patches/bank_076.asm` | whole file = template head (`EncResolve`, S115 + `NewGateRowCopy`) + the project's encounter lists, rooms' lists / variants / rates, gates' plans (S114 P3.13a, §2.30) + the new gates' rows / sources (S115 NG1, §2.31) |
+| `patches/bank_076.asm` | whole file = template head (`EncResolve`, S115 + `NewGateRowCopy`) + the project's encounter lists, rooms' lists / variants / rates, gates' plans (S114 P3.13a, §2.30) + the new gates' rows / sources (S115 NG1, §2.31) + `GateClearTable` (S117 NG2, §2.32) |
+| `patches/bank_077.asm` + region `gd_item_info` in `patches/bank_003.asm` | S117: the shop lists (`ShopFill` / `ShopClose` template head) and the item buy prices, from `gamedata.shops` / `custom.shops` / `gamedata.items` (§2.32) |
 
 Everything else — engine intercepts in banks `$00/$01/$04/$06/$07/$0B/$16`,
 layouts (`bank_064.asm` via `tools/build_gate_room.py` /
@@ -495,6 +496,17 @@ user-confirmed hand-authored code:
   `EncPickVariant` / `EncFloorRun` / `EncVanillaNumber` (which encounter list a
   battle uses, §2.30; S115: a new gate walks its source's rule); pinned
   `94cb8ece…5d90` (S115; was `2f0634f5…9f` S114); TEMPLATE_SIZE 296 B (241 S114).
+* `editor2/core/templates/bank_077_head.asm` (S117) — bank byte, 2-entry table,
+  `ShopFill` (entry 0) / `ShopClose` (entry 1) (§2.32, DATA_STRUCTURES "Shops (S117)");
+  pinned `fb9aefd1…3da0`; TEMPLATE_SIZE 93 B. **S117b:** + entry 2 `ScreenPush` (bank $09's
+  screen push with palette attributes in free-colour rooms) and `ShopClose` → `ShopBoxBottom`
+  (re-seats a top dialog box at the bottom); re-pinned `b8af2c91…873a` (the S117 value
+  `fb9aefd1…` is historical); TEMPLATE_SIZE 438 B (`ShopPtrTable` $41B6).
+* S117 re-pins: `bank_060_head.asm` `364ee530…1604` (entry 1 `CustomReadInteract` for
+  every non-gate room + `VanillaNPCExtTable` scan + `CopyNPCListToBuffer` with the
+  `$A0`/`$A1` prefixes; TEMPLATE_SIZE 678 B; the S105 value `650278bb…` is historical);
+  `bank_076_head.asm` `40972da2…2635` (entry 2 `GateBossWin`; TEMPLATE_SIZE 358 B; the
+  S115 value `94cb8ece…5d90` is historical).
 * `editor2/core/templates/bank_071_head.asm` — bank byte, 8-entry table
   (S116: entry 6 `CustomBGMStart`, entry 7 `BattleBGMResolve`, entry 2 + the gate
   songs — SOUND_SYSTEM §10; TEMPLATE_SIZE 688 B, measured `Custom26DDTable` $42B0
@@ -2326,7 +2338,85 @@ GATE_GENERATION §7.8 (the engine, measured); EDITOR_DESIGN §5.1b "As built S11
   gate's cleared flag, boss, King's speech).
 * **Not editable yet:** a new gate's own floor-type rows (bytes 0-2) and depth tier
   (byte 7) — the source's. Entrance conditions (NG2) are plain exit rows / room states
-  today.
+  today (S117: the swirl + the cleared flag — §2.32; the portal itself stays a plain exit,
+  like the game's).
+
+## §2.32 S117 — extended flags, gate swirls / "cleared" (ROADMAP NG2), shops + item prices (ROADMAP P3.13c)
+
+Engine: EVENT_FLAGS "Extended flags (S117)", GATE_GENERATION §7.9, DATA_STRUCTURES "Shops
+(S117)", ROOM_DATA_FORMAT "Condition prefixes". Editor: EDITOR_DESIGN §5.1b / §5.7 "As
+built S117"; help `30_flags.md`, `60_gates.md` "Swirls and cleared", `62_shops.md`.
+Modules: `project.py` (flag pool, `npc_conditions`, `gate_clear_rows`,
+`vanilla_swirl_overrides`, `_lower_shop_scripts`), `gates.py` (`gate_cleared`,
+`swirl_npc`, `GatesMixin` swirls / portal redirects / `paint_swirl`), `shops.py` (resolve,
+emitters), `shops_doc.py` (`ShopsMixin`).
+
+```jsonc
+"custom": {
+  "flags": [{"name": "hall_bell", "index": "0x1100"}],   // 0x1000-0x179F now allowed
+  "rooms": [{ … "screens": {"0": {"npcs": [
+    {"kind": "npc", "x": 2, "y": 2, "sprite": "0x4d", "script": null,
+     "swirl_of": 32},                                     // shown while gate 32 is NOT cleared
+    {"kind": "npc", "x": 7, "y": 5, "sprite": "0x4c", "script": "slime",
+     "shown_when": [{"flag": "hall_bell", "is": "set"}]}  // "set" | "clear"; ANDed
+  ]}}}],
+  "entrance_redirects": [                                 // a vanilla PORTAL led to another gate
+    {"mapID": "0x24", "screen": 0, "x": 2, "y": 2, "dest": "gate:32", "gate_flag": 1}],
+  "shops": [{"id": "hall_shop", "name": "Portal Hall stall", "items": [1, 5, 3, 29]}],
+  "scripts": [{"id": "hall_keeper", "shop": {"shop": "hall_shop",       // or a vanilla key
+                                            "text": "hall_shop_hi"}}]   // greeting (optional)
+},
+"gamedata": {
+  "items": {"1": {"price": 12}},                          // buy price, every shop (0-65535)
+  "shops": {"bazaar": [1, 2, 7, 40, 19, 20, 29, 38]}      // bazaar starry books rare gate
+}
+```
+
+* **Flags.** `FLAG_SAFE_RANGES` = `$0158-$0167` + **`$1000-$179F`** (1,968 named
+  flags); `$17A0-$17FF` = the gates' own cleared flags (`GATE_FLAG_BASE + gate`). Any
+  flag reference may be **`gate:N`** = gate N's cleared flag (`resolve_flag_ref` →
+  `gates.gate_cleared`): the vanilla flag of an unchanged vanilla gate
+  (`extracted/gate_names.json`), the own flag of a new gate or a re-bossed vanilla gate.
+  `flag_persistent()` covers the extended range (state-rule / variant persistence checks).
+* **Swirls / conditions** (`Project.npc_conditions`): `swirl_of: N` → `(cleared flag,
+  CLEAR)`; `shown_when` terms → `(flag, SET|CLEAR)`; ≤ 8 per NPC. Emitted (`_npc_cond_lines`)
+  as `db $A0|$A1, lo, hi, $FF, $FF` before the NPC (typed and raw entries). Bank $60 data
+  also gets **`VanillaNPCExtTable`** (always emitted; `$FF` = empty) from
+  `vanilla_swirl_overrides()` — per vanilla portal room / screen whose portal enters a
+  re-bossed gate or is re-routed (`entrance_redirects` with `dest gate:N`): rows `db mapID,
+  screen / dw step counter / db n_steps / dw VNpcMM_k_Vn …`, each variant = the vanilla
+  step list with the swirl at that cell conditioned on the entered gate's cleared flag
+  (appended when the list has none there and < 8 NPCs).
+* **Cleared mark** (`enc76`, bank $76 data): `GATE_CLEAR_LEN` + **`GateClearTable`**
+  (`gate_clear_rows()`): per gate 0 .. highest gate needing one, `dw own, vanilla`
+  (`$FFFF` = none; an unchanged vanilla gate = both `$FFFF`). Read by bank $76 entry 2
+  `GateBossWin`.
+* **Shops** (`shops77` → `patches/bank_077.asm`, the whole file = template head + data):
+  `SHOP_COUNT`, `ShopPtrTable` (the five vanilla lists in the vanilla order, then
+  `custom.shops`), `ShopList_n` (item ids, `$FF`). **Prices** = region `gd_item_info`
+  (`patches/bank_003.asm`, `ItemInfoTable` 44 × 12 B; only +1/+2 change).
+  A `shop` script is lowered (`_lower_shop_scripts`, before the talk lowering) to `text
+  <greeting or $0680>`, `op write_ram wShopID n+1`, `op 0x04 0 $0680` (the shop opcode —
+  deliberately left unnamed in `scriptgen.OPS`: a name there would make
+  `Document._migrate`'s regrouping rewrite every raw `"0x04"` of existing projects),
+  `text $0682`, `end`.
+* **Hard errors:** a flag index outside the pool / the vanilla range; `swirl_of` an
+  undefined gate; more than 8 conditions; an item id outside 1-43; a shop list empty or
+  longer than 20; a price outside 0-65535; an unknown vanilla shop key / duplicate shop
+  id; a `shop` script naming an unknown shop; more than 250 shop lists (wShopID is a
+  byte); `entrance_redirects` with `gate:N` to an undefined gate.
+* **Sprite-limit warnings (S117b; user: "Just warning is fine for now, and Ill build
+  around it"):** `formats.sprite_budget(npcs)` per screen state (visible NPC entries;
+  conditional ones count): a ROW with more than 1 NPC (10 objects per screen line, the
+  player + 3 monsters in a line use 8) and more than 6 NPCs on screen (40 objects, the
+  party 16) — build warnings (`_validate_state`) and the Rooms tab note
+  (ROOM_DATA_FORMAT "Sprite limits (S117b)").
+* **Bank accounting:** bank $77 = template (438 B since S117b; 93 B S117) + 2 B per list + the lists; bank $60 /
+  $76 TEMPLATE_SIZE 678 / 358 B (validators.py).
+* **Example project:** no swirls / conditions / shops / prices → `VanillaNPCExtTable` =
+  `$FF`, `GateClearTable` rows `$FFFF`, the five vanilla lists, `ItemInfoTable` = the
+  ROM's bytes. Pin `110210b0…` (patched, S117b; S117: `31cc5b31…`, patched, historical) —
+  the engine change only.
 
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 
