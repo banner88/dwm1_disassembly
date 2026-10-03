@@ -38,7 +38,7 @@ STUB_TABS = [
     ('Monsters', 'P3.10', 'Species data, enemy rows, new species from sprite sheets (open a project).'),
     ('Skills', 'P3.11', 'Names, SKIL text, MP, learning, power, targets, AI, looks (open a project).'),
     ('Breeding', 'P3.12', 'Recipe editor + the randomizer tree explorer, live re-sim.'),
-    ('Encounters', 'P3.13a', 'Cross-room pool view; custom pools; flag-keyed variants.'),
+    ('Encounters', 'P3.13a', 'Every wild-monster list, gate floor plans, room battles, flag variants (open a project).'),
     ('Music', 'P3.13b', 'Song library, MIDI import, room assignment matrix, audition.'),
     ('Progression && Flags', 'P3.14', 'Flag manager, quest forms, triggers-as-sentences.'),
     ('Balance', 'P3.15', 'TTK sweeps, what-if deltas, obedience curves (validated only).'),
@@ -204,6 +204,13 @@ class MainWindow(QMainWindow):
                 from editor2.app.anims_tab import AnimationsTab
                 self.anims_tab = AnimationsTab(self.session)
                 self.tabs.addTab(self.anims_tab, 'Animations')
+                continue
+            if title == 'Encounters' and self.session:
+                # S114 (P3.13a): every wild-monster list, gate floor plans,
+                # room battles, flag variants
+                from editor2.app.encounters_tab import EncountersTab
+                self.encounters_tab = EncountersTab(self.session)
+                self.tabs.addTab(self.encounters_tab, 'Encounters')
                 continue
             if title == 'Breeding' and self.session:
                 # S113 (P3.12): recipes, depth, try a cross, generate a tree

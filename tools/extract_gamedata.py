@@ -102,6 +102,17 @@ TABLES = {
     # skill is ANNOUNCED with (bank $58 entry 6; $FF = silent) — the text is
     # dialogue.json's battle_message table
     "skill_announce": (0x58, 0x5806, 222, 1, "AnnounceTemplateTable"),
+    # S114 (P3.13a, editor2/core/encounters.py): the vanilla gate+floor -> list
+    # rule (bank $01 LoadNextDungeonFloor; copied into bank $76 by the compiler —
+    # the patched build reads the copies) and the encounter-rate tables of bank
+    # $16 (per-step drain = base * modifier / 64; the counter is re-seeded from
+    # RandomEncounterCounterTable) for the editor's "steps between battles"
+    "gate_base_pool": (0x01, 0x6A22, 32, 1, "GateBasePoolIndex"),
+    "gate_bp_ptrs": (0x01, 0x6A42, 32, 2, "GateFloorBreakpoints"),
+    "floor_breakpoints": (0x01, 0x6A82, 44, 1, "FloorBreakpointData"),
+    "encounter_rate_mod": (0x16, 0x702B, 8, 1, "EncounterRateModifierTable"),
+    "encounter_rate_data": (0x16, 0x6FAB, 16, 8, "EncounterRateData"),
+    "encounter_counter_seeds": (0x16, 0x6E3D, 50, 4, "RandomEncounterCounterTable"),
 }
 # the eight copies of the follower gfx-ID table at species 0 (MONSTER_DATA
 # "Follower-art table has EIGHT copies"): identical for species 0-214 —

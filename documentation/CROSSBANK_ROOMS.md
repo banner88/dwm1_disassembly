@@ -328,7 +328,12 @@ The whitelist hook scans it: no match → `ret` (encounters OFF); match → seed
 (Patch 2) becomes part of every encounter-enabled room's entry script. Editor
 project fields per room: `encounters: bool`, `gate_id: 0-31`, `floor: int`.
 
-**#2 — fully custom monster pool (not tied to a vanilla gate).**
+**#2 — fully custom monster pool (not tied to a vanilla gate).** **BUILT S114** (route
+(b), in a new bank $76 with a same-size bank $01 fork; rooms pick a list of their own —
+no gate pin — with flag variants and a rate; PROJECT_COMPILER §2.30, DATA_STRUCTURES
+"Encounter list choice (S114)"). The spec below is the pre-S114 plan, kept for the record.
+Also S114: the engine DOES re-seed the step counter at every room load (bank $0B Entry 0
+→ bank $16 entry 6), so "Patch 2" below is not needed (DOC_AUDIT S114).
 Two viable routes, both needing a 26-byte pool in the exact format (header
 selection sub-fields at +2/+5 matter — copy a working pool's header and only
 swap EID slots +10 and weights +20):
@@ -367,6 +372,12 @@ cap, not a crash). Census + per-site verdicts: `tools/audit_mapid_range.py`
 (SELFTEST-pinned; 58 clean / 56 patched `ld a, [wMapID]` sites, zero
 pointer-form or literal-`$C968` references in either tree, 21 writers all
 constants/copies/table reads with no masking) → `extracted/mapid_range_audit.json`.
+
+**S114 burn-down:** the nine sites added S100-S114 that `--selftest` still reported
+NEEDS_REVIEW are adjudicated (`SaveAllowCheck` both trees, `CustomRoomBGMResolve#1`,
+`CustomTileAnimate#1`, `GateLeaveFreePal` = CP_UNSIGNED; `CustomMonsterCast` =
+IDX8_SUB6B; `CustomTileAnimate#0`, `CustomRoomFlags`, bank $76 `EncResolve` = BOUNDED);
+selftest PASS (clean 58, patched 75); `extracted/mapid_range_audit.json` regenerated.
 
 ### Why the "sign test" fear was unfounded
 
@@ -441,6 +452,9 @@ and the template hashes (`editor2/core/validators.py:23`).
 1. **Exits targeting custom rooms MUST use `gate_flag=0`.** With flag=1 the
    gate-entry path (bank $16, `label16_5b4e`) writes the mapID into wGateID
    and ×8-indexes GateFloorDataTable with it — garbage floor config.
+   S115: flag=1 IS the gate entrance — dest = a gate number, 0-31 vanilla or
+   32-95 a project NEW gate (bank $16 `GateRowPtr`; GATE_GENERATION §7.8);
+   the validator refuses a flag-1 exit to an undefined gate.
 2. **`trigger_x=$FF` is forbidden** in exit entries ($FF is the list
    terminator; trigger_y 0/7 are already validator-warned).
 3. **wInGateworld must be 0 while custom-room scripts run** (wScriptMapType is

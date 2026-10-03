@@ -468,3 +468,31 @@ gate you assumed".
 | BREEDING_SYSTEM Plus Value "Read both parents' plus values from party struct offset `$CB23`" | INCOMPLETE | Via `GetMonsterDataPtr` with the slot numbers in `$DA75/$DA76`; link session uses the pedigree's plus only. |
 | ROADMAP Phase D "STILL PENDING … bank $16 breeding-determination internals" | DONE S113 | Annotated both trees (BREEDING_SYSTEM "The resolver as measured (S113)"). |
 | PROJECT_COMPILER §2.20 validators "a shadowed special append / override" | SUPERSEDED S113 | The special table is auto-ordered; the error is two rows with the same parents + min plus (§2.29). |
+
+## S114 addendum (2026-10-03; encounter lists, ROADMAP P3.13a)
+
+| Claim (where) | Verdict | Correct |
+|---|---|---|
+| `extracted/encounters.json` (dump_encounters.py) floor ranges "Floors 1-3 / 4-6 / 7+" | WRONG (measured S114, 633 / 633 on the ORIGINAL ROM) | The breakpoint walk counts breakpoints ≤ the floor (the game's numbering): Gate of Villager list 1 = floors 1-2, list 2 = floors 3-4 (floor 5 is the boss). Ranges also ignored the floor count; only 4 of 5 slots were read; "weight" = the +20 max count; its gate-name list was out of order. Tool rewritten + data regenerated (TOOLS_AND_DATA S114). |
+| DATA_STRUCTURES / bank_001 `CalcEncounterPoolIdx` "returns the first entry whose sum exceeds the draw" | WRONG (measured S114) | First entry whose running sum is 100 or **≥** the draw; the draw is (wRNG2:wRNG1) mod 100. The first slot with a chance gets one point more (30/50/20 → 31/50/19). |
+| DATA_STRUCTURES Encounter Runtime Flow step 6 + KEY_LESSONS S11 "SetRandomEncounterCounter's only caller `label16_5b4e` … never seeds the counter when wInGateworld = 0" | WRONG (grep + measured S114) | The one caller is bank $16 entry 6 `label16_5fe4` (the call precedes its wInGateworld test), far-called by bank $0B Entry 0 at every room load — measured re-seeds in a custom room at entry and after each battle. Corrected in place. |
+| DATA_STRUCTURES step 3 "Non-gate default: 100×16/64 = 25 per step" | WRONG | wC8A9 = the list's rate code, reloaded by LoadNextDungeonFloor at every step (vanilla codes 2-4): 50-125 per step outside gates; measured 100 (code 3), 200 (code 7). |
+| bank_001 (both trees) `EncounterPoolData` banner "Header (10 bytes) / Weights / Unknown (usually 8 or 15)" | STALE (S103 decoded it) | Banner rewritten to the S103 field map (both trees, comments only). |
+| bank_016 `RandomEncounterCounterTable` comments "→ 1,100 steps" | WRONG UNIT | Counter units; steps = counter / the per-step drain (base × modifier / 64). Corrected (comments). |
+| bank_016 `EncounterRateData` "Per-gate-floor-threshold encounter rate parameters" | WRONG | Indexed by wMapID ×8 on gate maze floors (= the floor TYPE), three words by the player's tile row class $0C/$0D/$0E — the step's base rate. Corrected (comments). |
+| randomizer/romdata.py `Pool.weights` (+20) "0 = slot unusable" (and simulator/sweep_ttk weighting by it) | WRONG SEMANTICS (S103; still in code) | +20 = the slot's max count; the chance is the +5..+9 code. Not changed (the randomizer is shipped); ROADMAP P3.15 note: the Balance service uses `encounters_doc.enc_list_threat_rows` (real chances). |
+| PROJECT_STATE Bank allocation "Unallocated: $75–$77, $79–$7A, $7C" | STALE since S107 | $7A / $7C are art banks (S107); S114 takes $76. Unallocated now $75 (next song bank), $77, $79 + reserved $7F. |
+| PYBOY_DEBUGGING S100 "staircase kick: wCurrentFloor = floor − 2 (entry 5 increments)" | CONTEXT-DEPENDENT (measured S114) | From a maze floor (wInGateworld 1) the kick did not increment: poke floor − 1. The S100 value was measured from special rooms. |
+| PROJECT_COMPILER §1 "compat build == hand-staged tree" (property restored S63, re-verified S64) | DRIFTED (found S114) | The committed `patches/bank_041.asm` regions differed from the example's compiled output (name pointer bytes, $41:$46E9-$4735): the verifier's patched build was not the pin. Regenerated S114 (the other region files differ from the compile in comments only — byte-identical). The CI box (test_compiler --rom in CI) would catch it. |
+| tools/audit_mapid_range.py `--selftest` | FAILING since S100 (found S114) | 8 sites added S100-S102 were never adjudicated (+ S114's EncResolve); adjudicated S114, PASS. |
+
+## S115 addendum (2026-10-03; new gates, ROADMAP NG1)
+
+| Claim (where) | Verdict | Correct |
+|---|---|---|
+| ROADMAP ARC NG facts "every gate-number reader that indexes `GateFloorDataTable` … (bank $16 `jr_016_5b72`, `jr_016_5be1`, …)" | CONFIRMED + CLOSED (census S115) | Exactly two readers; no script reads `$C935`; every other `wGateID` user is 8-bit and table-free (GATE_GENERATION §7.8). |
+| PROJECT_COMPILER §2.17 validators "gate outside 0-31 = ERROR"; gates.py "gate: 0-31"; help 60_gates.md "the 32 vanilla gates" | SUPERSEDED S115 | 0-95: 32-95 are the project's NEW gates (`copy_of` + `name`, §2.31). Updated in place. |
+| bank_076_head.asm / encounters.py "Gate numbers past the 32 vanilla gates give 0" (S114) | SUPERSEDED S115 | A new gate walks its source gate's rule (`NewGateSource`); undefined numbers still 0. |
+| GATE_GENERATION §1 "byte 7 … selects … the floor's visual tier" vs §7.7 "byte 7 = depth tier (only reader: the bank $01 item tier)" | UNRESOLVED (not measured S115) | The two sections disagree on whether byte 7 reaches the tileset; S115 copies byte 7 from the source gate, so new gates are unaffected. Left for the private-floor-types residual (ROADMAP NG1). |
+| PYBOY_DEBUGGING S114 "the staircase kick did NOT increment wCurrentFloor: poke floor − 1 for the floor you want" | CONTRADICTED as worded (measured S115, two kicks from maze floors) | The kick added one: poke 1 → wCurrentFloor 2, poke 2 → 3 (= the game's floor − 2). Kept the S114 line, the S115 measurement added beside it. |
+

@@ -7,9 +7,8 @@ breeding recipes — can be changed by the project.
 
 **The Monsters tab edits the species rows and the battle rows, and puts a
 row into a gate's wild list (Monsters help); skills have the Skills tab and
-breeding the Breeding tab (Breeding help); the rest of the encounter lists are
-still edited in `project.json` (the `gamedata` section) until their tab
-comes.** The project only stores what you change: an empty `gamedata`
+breeding the Breeding tab (Breeding help); the encounter lists the Encounters
+tab (Encounters help).** The project only stores what you change: an empty `gamedata`
 is the original game.
 
 What the build does for you:

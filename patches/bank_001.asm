@@ -53,9 +53,10 @@ SECTION "ROM Bank $001", ROMX[$4000], BANK[$1]
     dw label1_683e
     ; Entry 11: Random encounter monster selection ($683E)
     dw LoadFloorAndEncounterData
-    ; Entry 12
+    ; Entry 12: the pool's maze size -> $C93D (floor setup, bank $16 entry 5)
     dw LoadNextDungeonFloor
-    ; Entry 13: Load next dungeon floor ($69E1)
+    ; Entry 13: gate + floor -> the encounter pool + its rate code ($69E1; every
+    ;   encounter step; S114 patched: the bank $76 EncResolve fork)
 
 GameInit:
     ld hl, sp+$00
@@ -4800,11 +4801,11 @@ jr_001_5ae0:
     jr jr_001_5b22
 
 jr_001_5af8:
-    ld a, [wEncounterPoolIndex]
-    add $0a
-    ld c, a
-    ld a, [wCurrentFloor]
-    inc a
+    ld a, [wEncounterPoolIndex]   ; the gold lying on depth-tier-3 gate floors:
+    add $0a                       ;   (pool + 10) * (floor + 1) * (50..99) / 100 —
+    ld c, a                       ;   wEncounterPoolIndex's one reader besides the
+    ld a, [wCurrentFloor]         ;   list fetch (S114: EncResolve keeps the
+    inc a                         ;   floor's VANILLA pool number here)
     call Mul8x8To16
     push hl
     ld a, [wRNG1]
@@ -7473,15 +7474,9 @@ IncrementEncounterCounter:
 EncounterMonsterSelect:
 label1_683e:  ; original label
     call LoadNextDungeonFloor
-    ld a, [wEncounterPoolIndex]
-    ld bc, $001a
-    call Mul16x8To24
-    ld a, l
-    add LOW(EncounterPoolData + 2)
-    ld l, a
-    ld a, h
-    adc HIGH(EncounterPoolData + 2)
-    ld h, a
+    ld hl, wEncListBuf + 2           ; S114: the list in use, +2 = the 1/2/3-monster
+    ld bc, $0000                        ;   codes (was EncounterPoolData + number*26 + 2
+    ds 11, $00                          ;   via Mul16x8To24, 17 B, which also left BC = 0)
     ld b, $00
     ld de, $c0d8
     call LookupEncounterEntry
@@ -7490,15 +7485,10 @@ label1_683e:  ; original label
     ld hl, $c0d8
     call CalcEncounterPoolIdx
     ld [$da02], a
-    ld a, [wEncounterPoolIndex]
-    ld bc, $001a
-    call Mul16x8To24
-    ld a, l
-    add LOW(EncounterPoolData + 5)
-    ld l, a
-    ld a, h
-    adc HIGH(EncounterPoolData + 5)
-    ld h, a
+    ld hl, wEncListBuf + 5           ; S114: the list in use, +5 = the slot codes
+    ld bc, $0000                        ;   (was EncounterPoolData + number*26 + 5 via
+    ds 11, $00                          ;   Mul16x8To24, which left BC = 0 — the sums
+                                        ;   below start from B: KEY_LESSONS S114)
     ld de, $c0d8
     call LookupEncounterEntry
     call LookupEncounterEntry
@@ -7547,15 +7537,9 @@ jr_001_68c6:
     jr z, jr_001_68c6
 
 jr_001_68d8:
-    ld a, [wEncounterPoolIndex]
-    ld bc, $001a
-    call Mul16x8To24
-    ld a, l
-    add LOW(EncounterPoolData + 10)
-    ld l, a
-    ld a, h
-    adc HIGH(EncounterPoolData + 10)
-    ld h, a
+    ld hl, wEncListBuf + 10          ; S114: the list in use, +10 = the five EIDs
+    ld bc, $0000                        ;   (was EncounterPoolData + number*26 + 10
+    ds 11, $00                          ;   via Mul16x8To24, 17 B, BC = 0 kept)
     ld a, [wTempEnemyId1]
     cp $ff
     jr z, jr_001_6940
@@ -7664,15 +7648,9 @@ jr_001_6966:
 SaveRegsForEncounter:
     push af
     push bc
-    ld a, [wEncounterPoolIndex]
-    ld bc, $001a
-    call Mul16x8To24
-    ld a, l
-    add LOW(EncounterPoolData + 20)
-    ld l, a
-    ld a, h
-    adc HIGH(EncounterPoolData + 20)
-    ld h, a
+    ld hl, wEncListBuf + 20          ; S114: the list in use, +20 = the max counts
+    ld bc, $0000                        ;   (was EncounterPoolData + number*26 + 20
+    ds 11, $00                          ;   via Mul16x8To24, 17 B; BC is popped below)
     pop bc
     pop af
     add l
@@ -7685,9 +7663,13 @@ SaveRegsForEncounter:
 
 
 ; CalcEncounterPoolIdx: RNG mod 100 against the cumulative % list at HL;
-; returns the index of the first entry whose sum exceeds the draw (zero-%
-; entries are skipped; a sum of exactly 100 always stops). A list that never
-; reaches 100 walks past its end (the compiler refuses such pools, S103).
+; returns the index of the first entry whose running sum is 100 or >= the draw
+; (leading zero sums skipped). The draw = (wRNG2:wRNG1) mod 100 after a
+; GenerateRNG — L is loaded from wRNG1, H from wRNG2 (measured S114, 15,192
+; draws == editor2/core/encounters.simulate_battle): so the first entry with a
+; chance also takes draw 0 and the entry ending at 100 loses one (30/50/20 % ->
+; 31/50/19). A list that never reaches 100 walks past its end (the compiler
+; refuses such pools, S103).
 CalcEncounterPoolIdx:
     push hl
     call GenerateRNG
@@ -7750,21 +7732,23 @@ EncounterChancePercent:
 LoadFloorAndEncounterData:
     ; pool +25 (maze size) -> $C93D, read by the bank $16 maze builder
     call LoadNextDungeonFloor
-    ld a, [wEncounterPoolIndex]
-    ld bc, $001a
-    call Mul16x8To24
-    ld a, l
-    add LOW(EncounterPoolData + 25)
-    ld l, a
-    ld a, h
-    adc HIGH(EncounterPoolData + 25)
-    ld h, a
+    ld hl, wEncListBuf + 25          ; S114: the list in use, +25 = the maze size
+    ld bc, $0000                        ;   (was EncounterPoolData + number*26 + 25
+    ds 11, $00                          ;   via Mul16x8To24, 17 B, BC = 0 kept)
     ld a, [hl]
     ld [$c93d], a
     ret
 
 
 ; EncounterPoolSelect — Determine encounter pool index from gate + floor
+; Bank $01 entry $0D. Called at EVERY encounter step (bank $16 entry 8, before
+; the counter drain — it is what loads the rate code into wC8A9), at floor setup
+; (LoadFloorAndEncounterData, entry $0C), by EncounterMonsterSelect (entry $0B)
+; and by the floor-gold code ($5AF8). The floor in the walk is the game's
+; numbering (wCurrentFloor + 1): sub-index = how many breakpoints are <= it
+; (measured S114 for every vanilla gate floor; DATA_STRUCTURES "Encounter list
+; choice (S114)"). In patched builds this routine is a same-size fork into bank
+; $76 EncResolve (PROJECT_COMPILER §2.30).
 ; Input: wGateID = current gate, $C939 = current floor number
 ; Output: $CA38 = pool index
 ; Algorithm:
@@ -7774,50 +7758,45 @@ LoadFloorAndEncounterData:
 ;   4. Pool index = base + floor_offset
 ;   5. Calculate pool data address = $6AAE + pool_index × 26($1A)
 LoadNextDungeonFloor:
-    ld a, [wGateID]
-    ld hl, GateBasePoolIndex             ; per-gate base pool index table
-    add l
-    ld l, a
-    ld a, $00
-    adc h
-    ld h, a
-    ld a, [hl]               ; A = base pool index for this gate
-    push af
-    ld a, [wGateID]
-    add a                    ; × 2 for pointer table
-    ld hl, GateFloorBreakpoints             ; per-gate floor breakpoint pointer table
-    add l
-    ld l, a
-    ld a, $00
-    adc h
-    ld h, a
-    ld a, [hl+]              ; read pointer (little-endian)
-    ld h, [hl]
-    ld l, a                  ; HL = floor breakpoint list for this gate
-    ld c, $ff                ; C = floor sub-index counter
-
-jr_001_6a01:
-    ld a, [wCurrentFloor]            ; current floor
-    inc a
-    cp [hl]                  ; compare with breakpoint
-    inc c                    ; advance sub-index
-    inc hl
-    jr nc, jr_001_6a01       ; if floor >= breakpoint, keep checking
-
-    pop af                   ; A = base pool index
-    add c                    ; + floor sub-index
-    ld [wEncounterPoolIndex], a            ; store final pool index
+    ; S114 (P3.13a) SAME-SIZE FORK (65 B, like the vanilla walk it replaces):
+    ; bank $76 EncResolve chooses the list — the vanilla gate+floor rule (its
+    ; tables copied there), a gate's own plan, or a custom room's own list,
+    ; with flag variants (PROJECT_COMPILER §2.30). A vanilla list (0-127) is
+    ; copied from EncounterPoolData below; a project list (128+) is already in
+    ; wEncListBuf. wEncounterPoolIndex keeps the floor's VANILLA number for its
+    ; other reader (depth-tier-3 floor gold, $5AF8); the readers of the list
+    ; bytes read wEncListBuf. GateBasePoolIndex / GateFloorBreakpoints /
+    ; FloorBreakpointData below are no longer read in the patched build.
+    ld hl, $7600                        ; bank $76 entry 0 EncResolve
+    rst $10                             ; D = list, E = value, B = rate ($FF = own)
+    ld a, e
+    ld [wEncounterPoolIndex], a
+    ld a, d
+    bit 7, a
+    jr nz, .listInBuf                   ; a project list: copied by bank $76
+    push bc
     ld bc, $001a
-    call Mul16x8To24
-    ld a, l
-    add LOW(EncounterPoolData)
-    ld l, a
-    ld a, h
-    adc HIGH(EncounterPoolData)
-    ld h, a
-    ld a, [hl]
-    ld [$c8a9], a            ; pool +0 = encounter RATE code (EncounterRateModifierTable index, S103)
+    call Mul16x8To24                    ; HL = list * 26
+    ld de, EncounterPoolData
+    add hl, de
+    ld de, wEncListBuf
+    ld c, $1a
+.copy:
+    ld a, [hl+]
+    ld [de], a
+    inc de
+    dec c
+    jr nz, .copy
+    pop bc
+.listInBuf:
+    ld a, b
+    cp $ff
+    jr nz, .rate                        ; the room's own rate code
+    ld a, [wEncListBuf]                 ; list +0 = rate code
+.rate:
+    ld [$c8a9], a                       ; wC8A9 (EncounterRateModifierTable index)
     ret
+    ds 17, $00                          ; pad to the vanilla routine's 65 B
 
 
 
@@ -7871,7 +7850,10 @@ GateFloorBreakpoints:
 
 ; Floor breakpoint data ($6A82)
 ; Variable-length lists of floor thresholds, $FF-terminated
-; Referenced by pointers above
+; Referenced by pointers above. A gate's sub-index = how many of its breakpoints
+; are <= the floor (1 = the first floor): Villager [3, 6] -> floors 1-2 pool 1,
+; floors 3-5 pool 2 (floor 5 is its boss floor). Pools 42, 43, 63 are reached by
+; no gate floor (S114, extracted/encounters.json).
 FloorBreakpointData:
     db $FF, $03, $06, $FF, $04, $06, $09, $FF, $04, $06, $09, $FF, $04, $06, $09, $0D  ; $6A82
     db $FF, $05, $09, $0D, $11, $FF, $06, $0B, $10, $15, $FF, $06, $0B, $10, $15, $1A  ; $6A92

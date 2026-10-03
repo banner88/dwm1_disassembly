@@ -1038,8 +1038,9 @@ class Project:
                 raise ProjectError(f"{c}: room {ru.get('room')!r} is not a "
                                    "custom room of this project")
             gate = int(F.val(ru.get('gate', -1)))
-            if not 0 <= gate <= 31:
-                raise ProjectError(f"{c}: gate must be 0-31 (got {gate})")
+            if not G.gate_exists(self.custom, gate):
+                raise ProjectError(f"{c}: gate must be 0-31 or one of this project's "
+                                   f"new gates (got {gate})")
             floors = G.gate_floor_count(self.custom, gate, self.repo_root or self.root)
             minf = G.gate_min_floor(self.custom, gate)
             try:
@@ -1173,16 +1174,37 @@ class Project:
             if unknown:
                 raise ProjectError(f"{c}: unknown keys {sorted(unknown)}")
             gid = int(F.val(g.get('gate', -1)))
-            if not 0 <= gid <= 31:
-                raise ProjectError(f"{c}: gate must be 0-31 (got {gid})")
+            if not 0 <= gid <= G.NEW_GATE_LAST:
+                raise ProjectError(f"{c}: gate must be 0-31 (a vanilla gate) or "
+                                   f"{G.NEW_GATE_FIRST}-{G.NEW_GATE_LAST} (a new gate; "
+                                   f"got {gid})")
             if gid in seen:
                 raise ProjectError(f"{c}: gate {gid} has two entries")
             seen.add(gid)
+            # S115 (ROADMAP NG1): a NEW gate copies a vanilla gate
+            if G.is_new_gate(gid):
+                try:
+                    src = int(F.val(g.get('copy_of', -1)))
+                except Exception:
+                    src = -1
+                if not 0 <= src <= 31:
+                    raise ProjectError(f"{c}: new gate {gid} needs \"copy_of\": the "
+                                       "vanilla gate (0-31) it starts as")
+                nm = g.get('name')
+                if not isinstance(nm, str) or not nm.strip():
+                    raise ProjectError(f"{c}: new gate {gid} needs a \"name\"")
+            else:
+                bad = sorted(set(g) & G.NEW_GATE_ONLY_KEYS)
+                if bad:
+                    raise ProjectError(f"{c}: {bad} only apply to new gates "
+                                       f"({G.NEW_GATE_FIRST}-{G.NEW_GATE_LAST})")
         out = {}
-        for gid in range(32):
-            v = van[gid]
-            row = list(bytes.fromhex(v['row']))
+        new_ids = [int(F.val(g['gate'])) for g in G.new_gate_entries(self.custom)]
+        for gid in list(range(32)) + new_ids:
             gs = G.gate_settings(self.custom, gid)
+            src = gid if gid < 32 else int(F.val(gs['copy_of']))
+            v = van[src]
+            row = list(bytes.fromhex(v['row']))
             c = f"custom.gates[gate {gid}]"
             boss_room = None
             if gs.get('floors') is not None:
@@ -1224,10 +1246,13 @@ class Project:
                     tx, ty = G.arrival_tile(scr, arr['x'], arr['y'])
                     row[4], row[5], row[6] = mid, tx, ty
                     boss_room = b
+            new = gid >= 32
             out[gid] = {'floors': row[3], 'boss_map': row[4], 'spawn': (row[5], row[6]),
                         'boss_room': boss_room, 'hand_made': bool(gs.get('hand_made')),
-                        'edited': bool(gs), 'row': row, 'name': v['name'],
-                        'comment': gs.get('comment', '')}
+                        'edited': bool(gs), 'row': row,
+                        'name': gs.get('name') if new else v['name'],
+                        'comment': gs.get('comment', ''),
+                        'new': new, 'source': src}
         self._gate_cfg = out
         return out
 

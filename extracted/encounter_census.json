@@ -1,0 +1,7 @@
+{
+ "_generator": "tools/census_encounters.py (S114, ROADMAP P3.13a; new gates S115) \u2014 PyBoy stub calls of bank $01 LoadNextDungeonFloor / EncounterMonsterSelect vs editor2/core/encounters.py; ROM c8995d91d8d839ac2f80b3e61b1f38ab (editor2/example-project (the regression pin c8995d91, patched))",
+ "list_choices": 633,
+ "battle_draws": 15192,
+ "mismatches": 0,
+ "first_mismatches": []
+}

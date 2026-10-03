@@ -6,9 +6,15 @@
 - After a battle started by talking to a monster NPC, that monster is not
   drawn again until the screen reloads (like a vanilla boss leaving).
 - In a 2-3 enemy battle only the enemy knocked out last can join.
-- Gate floor-type rows, per-gate monster pools / floor bands, battles inside
-  a dive per room, more than 32 gates and gate entrances are not editable
-  yet (ROADMAP P3.7b part 2).
+- New gates (S115): at most 64 (numbers 32-95). A new gate shares the maze
+  look, special rooms and depth tier of the gate it copies — its own floor
+  types are not editable yet, nor are any gate's floor-type rows (ROADMAP
+  P3.7b part 2). Fully custom branching gates are the next step of the
+  new-gates arc (NG3). Per-gate lists per floor, rooms' own lists inside and
+  outside dives and flag variants are on the Encounters tab (S114).
+- Encounters: at most 128 lists of your own (numbers 128-255); 8 flag
+  conditions per variant. A battle rate is one of the game's 8 codes; on gate
+  floors the floor type also changes how often battles come (not shown yet).
 - Monster names are up to 9 characters, default nicknames up to 4,
   library descriptions 3 lines of 18 cells (S108). The 215 names have 1,903
   bytes, the nicknames 645, the descriptions 9,031 (+ about 2 KB free at the

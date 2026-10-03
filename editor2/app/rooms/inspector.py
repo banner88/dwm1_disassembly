@@ -66,6 +66,7 @@ class Inspector(QWidget):
     removeDoorRequested = Signal(str)          # door id  S98
     goDoorRequested = Signal(str)              # door id: select its end here  S98
     addStairsRequested = Signal(object)        # (cx, cy)  S100 gate rooms
+    addGateEntranceRequested = Signal(object)  # (cx, cy)  S115 new gates (NG1)
     animationChosen = Signal(str)              # 'none' | 'source' | '0xNN'  S99
 
     def __init__(self, parent=None):
@@ -257,6 +258,7 @@ class Inspector(QWidget):
         m.addAction('One-way teleport here…', self._add_exit_here)
         m.addAction('Step-on trigger here…', lambda: self._emit_spot('step'))
         m.addAction('Stairs down here (gate rooms)', lambda: self._emit_cell(self.addStairsRequested))
+        m.addAction('Gate entrance here…', lambda: self._emit_cell(self.addGateEntranceRequested))
         self.sel_more.setMenu(m)
         self.sel_add_row = QWidget()
         ar = QHBoxLayout(self.sel_add_row)
@@ -406,8 +408,12 @@ class Inspector(QWidget):
         self.r_attr.setText(str(at.get('id') if at and 'id' in at else at or 'none'))
         enc = room.get('encounters')
         self.r_enc.setText(
-            ("follows the gate being dived" if enc.get('follow_gate')
+            (f"its own list {enc.get('list')}" + (f" (+{len(enc['variants'])} flag "
+             "variant(s))" if enc.get('variants') else '') if enc.get('list') is not None
+             else "follows the gate being dived" if enc.get('follow_gate')
              else f"gate {enc.get('gate_id')} floor {enc.get('floor')}")
+            + (f", rate code {enc['rate']}" if enc.get('rate') is not None else '')
+            + '  (Encounters tab)'
             if enc and enc.get('enabled') else 'off')
         self.r_music.setText(str(room.get('music', 'default')))
         self._fill_anim(doc, renderer, room)

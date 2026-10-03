@@ -1,5 +1,139 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-02 (Session 113 — **ROADMAP P3.12: THE BREEDING TAB — EVERY
+> RECIPE, EVERY MONSTER'S DEPTH, "TRY A CROSS", AN AUTO-ORDERED SPECIAL TABLE, A TREE
+> GENERATOR — AND THE FX1 EGG-PLUS BUG FIXED** (user on the audit: "1) [mutation] No I
+> have no idea where it came from. Monsters with + can have different breeding route,
+> thats it. Scope: 1) Fold in [the generator] if possible … 2) No gifts. You can get egg
+> from skydragon if it plops on your head. however, IN ROMHACK THERE WILL BE EGG REWARDS.
+> 3) [plus in depth] you decide. 4) Auto order sounds good. Keep in mind I will mess with
+> vanilla breeding table HARD in this romhack and try multiple iterations. Also we have
+> new sprite family, this is important to be aware of! 5) [offspring skills] you decide").
+> **Test ROM `DWM_S113_breeding_test.gbc` (`56b35922…`, patched) USER-CONFIRMED 2026-10-03 00:19 ("Tested, works")**; the
+> editor half test_app-verified, not yet run on the user's Mac.
+> Verifier PASS; clean `1ca6579…` byte-perfect (bank $16's breeding resolver annotated in
+> both trees: `BreedCreateOffspring` / `BreedResolveOffspring` / `BreedResolvePreview` /
+> `BreedFamilySearch` / `BreedFamilyScan` / `BreedPlusAndSpecial` /
+> `BreedSpecialEntryCheck` / `BreedGenderThreshold` / `BreedClearRareFlag` /
+> `BreedRareMutation_Unreferenced` / `CountSeenInRange` / `NthSeenInRange` /
+> `InheritSkillList` / `InheritOneSkill`; labels / comments only — closes the Phase D
+> "bank $16 breeding-determination internals" item); **patched pin `8cf0b93b…`
+> (patched)**, was `9ce03bd0…` (patched, historical); the user's project (my-dwm-hack_5)
+> as-is now builds `3a09e1b2…` (patched; was `c90a69c2…`, historical — the bank $16 fix
+> only: it has no breeding edits). test_compiler --rom 773/773, test_app + test_app --rom PASS (GUI build == pin).
+> `EDITOR_REVISION` = 'S113'.
+>
+> **Measured (BREEDING_SYSTEM "The resolver as measured (S113)"):** the Python model
+> `editor2/core/breeding.py` == the game: `tools/census_breeding.py` stub-calls bank $16
+> entry 2 for every ordered pair of parents (0-214 + new species), a plus sweep and a
+> random sample (53,156 calls, 0 mismatches; negative control — no family second pass —
+> 31,433 mismatches) and the EGG ITSELF through entry 0 with the real staging records
+> (300 / 300). **No mutation:** `$16:$44DA` has no caller (ROM-wide call/jp search; 0
+> executions in the census), so `$D9E6` is never set and the bank $0D "Wow! It's a rare
+> breed!" line never shows (the old "~1-5 % mutation" doc claim was wrong).
+> **FOUND + FIXED (FX1 regression, S71 → S112):** `BreedCreateOffspring` still put the
+> parents' slot NUMBERS 20/21 in `$DA75/$DA76`; since FX1 those are farm slots 20/21 in
+> SRAM (the staging records are indices 40/41), so every egg's plus + level bonus came
+> from those slots — empty: every egg +1 and no "+N" recipe ever fired (the shrine
+> PREVIEW, which passes the real slots, still showed the right answer). Now `$28/$29`
+> (same size, `patches/bank_016.asm`). PyBoy through the real shrine menus on the user's
+> save, MadCat × BattleRex with a +2 route: before Yeti +1, after GoldSlime +2.
+>
+> **Built (PROJECT_COMPILER §2.29, EDITOR_DESIGN §5.4 "As built S113", help
+> `58_breeding.md`):** the special table is AUTO-ORDERED whenever a project edits it
+> (species × species, species × family, family × species, family × family, higher min
+> plus first — vanilla's own 825 sorted this way give identical results for every pair
+> and plus); `special.removes`; `special.table` (the whole table, for heavy rework / the
+> generator); two rows with the same parents + min plus refused. Analysis
+> (`breeding.Analysis`): obtainable without breeding (wild joinable rows, starter, boss
+> joins, vanilla script gifts — SkyDragon egg, farm Slime eggs, Watabou, StoneMan — and
+> the project's `add_monster` egg rewards), depth from the resolver (vanilla: deepest
+> DeathMore 9), what makes / what it makes, rows that never fire, library pages that do
+> not give their monster. Generator `editor2/core/breed_gen.py` (the randomizer's
+> depth-profile builder on the project: 11 families, new species, pinned monsters; S113b:
+> any depth up to 40, one share box per depth — the ceiling is the number of monsters
+> not obtainable without breeding).
+> **Breeding** tab: By monster (depth, how you get it, Made by / Makes, add / change /
+> remove), Try a cross, depth chart vs original, Problems; Special recipes (the whole
+> table in scan order); Family recipes ("works for n of m"); Work on the whole table;
+> Generate a tree….
+> **Measured in PyBoy on the user's save, through the Old Man's BREED menu (S113 test
+> ROM = the user's project + a demo overlay authored through the editor model, NOT in
+> their project):** Healer × BattleRex → "I suspect Klamutra+2 will be born" → Klamutra
+> +2 (a new species × species row beating the vanilla [Slime] × [Dragon] family recipe);
+> MadCat × BattleRex → GoldSlime +2 (a +2 row; levels 23 + 23); Dragon × BattleRex →
+> Dragon +2 (original row 755 [Dragon] × BattleRex → GreatDrak removed).
+> **Open / to ask:** boss gender (the 15 boss species have female ratio 0 = always
+> male by `BreedGenderThreshold`, yet vanilla recipes pair two of them — no gender rule is
+> modelled); offspring skills / stats in "Try a cross" (bank $16 entry 4) = ROADMAP
+> residual; family "last match wins" is code-read (no project data has exercised it).
+> **Hand-off:** every S113 change = the diff against `56daf61` (origin/master, the S112
+> push), delivered as `DWM-S113-breeding-changed-files.zip`, the APPLY list pasted in the
+> chat. **Next:** the user's pick (P3.13 Encounters + Music is the next mandatory box;
+> P3.11b AI ban-list optional).
+
+
+> Last verified: 2026-10-02 (Session 112 — **ROADMAP P3.11e: SKILL ANIMATION EDITING —
+> NEW BATTLE ANIMATIONS MADE FROM THE GAME'S FRAMES, AND WHAT EACH SKILL SHOWS** (user on
+> the audit: "Sounds perfect. The in-built editor viewer and sound playback is the
+> perfect way to do it. 1) New tile art later. 2) Stock tiles should all be fine, this
+> will be 5-10 mashup skills at MOST on top of vanilla ones. 3) Same as vanilla. 4) yes I
+> want to choose. 5) Preview in editor enough, I can assign to monster and build. 6) One
+> session preferred. 7) No idea."). **Test ROM `DWM_S112_animations_test.gbc`
+> (`16f7a43d…`, patched) USER-CONFIRMED 2026-10-02 18:29 ("Fantastic, everything checks out")**; the editor half test_app-verified, not yet run on the user's Mac.
+> Verifier PASS; clean `1ca6579…` byte-perfect (the animation system re-sectioned and
+> labelled in banks $00/$02/$17/$50/$5A/$5B/$5C/$5D/$5E/$5F by
+> `tools/resection_battle_anims.py` + the debugger's shade copy `EffectDebugShadeTable`
+> and the ROM0 tick / bank $50 `$DA80` comments by hand; labels / data / comments only);
+> **patched pin `9ce03bd0…` (patched)**, was `5a1c5404…` (patched, historical); the
+> user's project (my-dwm-hack_5) as-is now builds `c90a69c2…` (patched; was `c3499e39…`,
+> historical) and plays exactly as on S111 (PyBoy A/B, RNG pinned). test_compiler --rom
+> 754/754, test_app + test_app --rom PASS (GUI build == pin). `EDITOR_REVISION` = 'S112'.
+>
+> **Built (PROJECT_COMPILER §2.28, BATTLE_SKILL_SYSTEM §11.9, EDITOR_DESIGN §5.3 "As
+> built S112"):** `custom.animations` = NEW animations $2D-$4C (≤ 32), each a list of
+> steps — a frame of one of the 45 stock animations + how long it shows, a sound cue, a
+> blank; ≤ 4 source animations (one OBJ palette each), ≤ 128 tiles. The compiler gathers
+> the frames into bank **$6F** (engine template `bank_06f_head.asm` + generated tables)
+> and their tiles into one sheet per animation in bank **$70**.
+> `gamedata.skills.<id>.presentation` = an animation (stock or new) + motion (at the
+> target / middle / each target / flies across), a screen effect (11), or nothing —
+> regions `gd_anim_routine` / `gd_anim_cmd` (bank $5F, by real skill id), applied on the
+> sides where the look shows something (vanilla sides, user). Forks: ROM0 two operands,
+> NEW hand patch `patches/bank_002.asm` (`ReadSeqStepFork`), bank $50 `AnimLoadFork50`,
+> bank $5F routine / number forks + the developers' viewer (mode 5) listing $00-$4C.
+> Editor: NEW **Animations** tab (list, playing preview with the game's own sounds —
+> `extracted/anim_sounds/`, recorded from the ROM's sound engine —, steps with
+> thumbnails and frame counts, Add frames… from any stock animation, Add sound / blank)
+> and the Skills tab's **Animation** section (with preview); help `57_animations.md`
+> (new), `54_skills.md`, `00_start.md`.
+>
+> **Found (BATTLE_SKILL_SYSTEM §11.9 — corrects §11.1-11.5):** the per-skill
+> `$56ED`/`$57D5` byte is the ANIMATION NUMBER (frames + timeline + tiles + colours), not
+> "sound + flash"; the sounds are `$FD` cues in the timeline; the timelines are bank $02
+> sequencer row $60 (`AnimTimelineTable` $46A1); the routine index (16 routines,
+> measured) picks the motion / a screen effect / nothing; the OBJ colours pass through
+> the DMG shade with the order [1,2,0,3] (identity $D2) — measured on SCREEN; game mode 5
+> is the developers' "Effect" animation viewer. Stale: DOC_AUDIT #15's "map-script"
+> blocker (bank $0F's labels at the same addresses); bank $50's "$DA80 master-intro" label; PROJECT_COMPILER's `StockPresentTable
+> $7EEB` (it is $7EDA).
+>
+> **Measured in PyBoy on the user's save:** the developers' viewer census
+> (`tools/census_battle_anims.py`): all 45 stock animations = the decoded model frame by
+> frame (frames, timing, sounds, tiles, colours; negative control 45/45 fail) and the
+> demo's $2D / $2E = the editor's model. Battles (RNG pinned, 14 cases, no stall): the
+> demo overlay (NOT in the user's project, authored through the editor model) — Zap →
+> "Spark storm" $2D (Zap's opening + bolt, then Bang's burst) on each foe, MetalCut →
+> "Frost slash" $2E (TwinSlash's cut + IceStorm's shards) at the target, Scorching → the
+> screen blink, EvilSlash → stock $26 (GigaSlash); IceStorm / Blaze / Firebal / Bang /
+> HealMore / enemy Zap → party unchanged; an enemy's HealMore on itself showed $2D in the
+> first demo build. **Test ROM `DWM_S112_animations_test.gbc` = that demo — USER-CONFIRMED 2026-10-02 18:29 ("Fantastic, everything checks out").**
+> **Hand-off:** every S112 change = the diff against `a5f28f6` (origin/master, the S111b
+> push), delivered as `DWM-S112-skill-animations-changed-files.zip`, the APPLY list pasted
+> in the chat. **Next:** the user's pick (P3.11b AI ban-list is optional; P3.12 Breeding
+> tab is the next mandatory box).
+
+
 > Last verified: 2026-10-02 (Session 111 — **ROADMAP P3.11c + P3.11d: THE CUSTOM SKILLS AS
 > PROJECT DATA, NEW CUSTOM SKILLS FROM STOCK ONES, AN ELEMENT FOR EVERY SKILL** (user on
 > the audit: "1) Yes start with vanilla but given 3.11d is kind of tied, dont feel

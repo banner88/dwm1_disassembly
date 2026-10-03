@@ -201,6 +201,29 @@ class TeleportPanel(QGroupBox):
             self.note.setText(note)
             self.note.setVisible(bool(note))
             return
+        if G.is_gate_entrance(row):                # S115 (NG1): enters a gate
+            gid = G.entrance_gate(row)
+            self.setTitle('Gate entrance')
+            self._dest = None
+            try:
+                name = doc.gate_name(gid)
+            except Exception:
+                name = '?'
+            self.info.setText(f'gate {gid} — {name}, floor 1')
+            self.what.setText('Stepping on this cell starts a dive into that gate (the vanilla '
+                              'portal form). The gate\'s floors, boss and monsters are set on '
+                              'the Gates and Encounters tabs.')
+            if presence and len(presence) > 1:
+                self.states.show_states(presence, 'entrance present in state {n} of this screen')
+                self.form.setRowVisible(self.states, True)
+            else:
+                self.form.setRowVisible(self.states, False)
+            self.btn_del.setEnabled(editable)
+            self.states.setEnabled(editable)
+            self.btn_go.setEnabled(False)
+            self.note.setText(note)
+            self.note.setVisible(bool(note))
+            return
         self.setTitle('One-way exit / teleport')
         dest = str(row.get('dest', ''))
         sb = val(row.get('screen_byte', 0))

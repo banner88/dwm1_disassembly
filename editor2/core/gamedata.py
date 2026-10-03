@@ -328,6 +328,83 @@ def apply_monster_fields(r, o, what, extra_keys=()):
         r[42] = _range(o['tier'], 0, 7, what + '.tier')
 
 
+# ---------------------------------------------------------------------------
+# Encounter lists (S103; S114: shared with the project's OWN lists,
+# editor2/core/encounters.py). 26 B — DATA_STRUCTURES "Encounter pool entry".
+# ---------------------------------------------------------------------------
+LIST_KEYS = ('rate', 'unk1', 'size_chance', 'slot_chance', 'eids', 'max_count',
+             'maze_size')
+
+
+def apply_list_fields(r, o, what, eid_of):
+    """Write the fields of `o` (gamedata.encounters.<n> / a custom.encounter_lists
+    entry) into the 26-byte list `r`. eid_of(ref, what) -> EID."""
+    if 'rate' in o:
+        r[0] = _range(o['rate'], 0, 7, what + '.rate')
+    if 'unk1' in o:
+        r[1] = _range(o['unk1'], 0, 255, what + '.unk1')
+    if 'size_chance' in o:
+        r[2:5] = bytes(_list(o['size_chance'], 3, 0, 7, what + '.size_chance'))
+    if 'slot_chance' in o:
+        r[5:10] = bytes(_list(o['slot_chance'], 5, 0, 7, what + '.slot_chance'))
+    if 'eids' in o:
+        raw = o['eids']
+        if not isinstance(raw, list) or len(raw) != 5:
+            raise GamedataError(f"{what}.eids: must be a list of 5")
+        for i, x in enumerate(raw):
+            _put16(r, 10 + 2 * i, eid_of(x, f"{what}.eids[{i}]"))
+    if 'max_count' in o:
+        r[20:25] = bytes(_list(o['max_count'], 5, 0, 3, what + '.max_count'))
+    if 'maze_size' in o:
+        r[25] = _range(o['maze_size'], 0, 255, what + '.maze_size')
+
+
+def check_list(r, what, pct):
+    """The engine rules for one 26-byte list: raises GamedataError for a list
+    the game would walk off or freeze on; returns warnings."""
+    warnings = []
+    # CalcEncounterPoolIdx walks cumulative percentages until one exceeds
+    # a 0-99 draw: a list that never reaches 100 runs off its end.
+    if sum(pct[c] for c in r[2:5]) < 100:
+        raise GamedataError(f"{what}.size_chance: the 1/2/3-monster chances "
+                            "add up to less than 100 %")
+    if sum(pct[c] for c in r[5:10]) < 100:
+        raise GamedataError(f"{what}.slot_chance: the slot chances add up "
+                            "to less than 100 %")
+    if sum(pct[c] for c in r[5:10]) > 100:
+        # S106 r3: every original list is exactly 100; above it the
+        # running sums pass 100 early and the last slots are never drawn
+        warnings.append(f"{what}.slot_chance: the slot chances add up to "
+                        f"{sum(pct[c] for c in r[5:10])} % — the last slots "
+                        "are cut (every original list is exactly 100 %)")
+    eids = [_u16(r, 10 + 2 * i) for i in range(5)]
+    for i in range(5):
+        if r[5 + i] and not eids[i]:
+            raise GamedataError(f"{what}: slot {i} has a chance but no EID")
+    # Group size: the 2nd/3rd monster is re-drawn until a slot passes
+    # SetupEncounterCalc (max_count >= copies so far incl. itself, and
+    # != 1). A first pick with max 1 ends the group at one monster; a
+    # first pick with max 0 or >= 2 and no slot able to follow re-draws
+    # FOREVER — measured S103 (PyBoy: 28,257 passes, no battle).
+    maxes = [r[20 + i] for i in range(5) if r[5 + i] and eids[i]]
+    cap = sum(x for x in maxes if x >= 2)
+    if any(x != 1 for x in maxes):
+        if pct[r[3]] + pct[r[4]] and cap < 2:
+            raise GamedataError(
+                f"{what}: 2-3 monsters can be drawn, but no slot may appear "
+                "twice (max_count >= 2) — the game would re-draw the second "
+                "monster forever (freeze)")
+        if pct[r[4]] and cap < 3:
+            raise GamedataError(
+                f"{what}: 3 monsters can be drawn, but the slots allow only "
+                f"{cap} copies in all (max_count) — the third draw never ends")
+    live = [e for i, e in enumerate(eids) if e and r[5 + i]]
+    if len(live) != len(set(live)):
+        warnings.append(f"{what}: the same EID sits in two slots "
+                        "(vanilla never does — S77)")
+    return warnings
+
+
 class Gamedata:
     """Vanilla tables + a project's `gamedata` overrides, resolved once.
 
@@ -453,90 +530,33 @@ class Gamedata:
 
     # -- encounters -----------------------------------------------------
     def _encounters(self):
-        keys = ('rate', 'unk1', 'size_chance', 'slot_chance', 'eids', 'max_count',
-                'maze_size')
         pct = self.v['chance_percent']
         for pid, o in _key_ids(self.gd.get('encounters'), 'encounters', 0, 127):
             what = f"gamedata.encounters.{pid}"
-            _check_keys(o, keys, what)
+            _check_keys(o, LIST_KEYS, what)
             r = self.pool[pid]
             before = bytes(r)
-            if 'rate' in o:
-                r[0] = _range(o['rate'], 0, 7, what + '.rate')
-            if 'unk1' in o:
-                r[1] = _range(o['unk1'], 0, 255, what + '.unk1')
-            if 'size_chance' in o:
-                r[2:5] = bytes(_list(o['size_chance'], 3, 0, 7, what + '.size_chance'))
-            if 'slot_chance' in o:
-                r[5:10] = bytes(_list(o['slot_chance'], 5, 0, 7, what + '.slot_chance'))
-            if 'eids' in o:
-                raw = o['eids']
-                if not isinstance(raw, list) or len(raw) != 5:
-                    raise GamedataError(f"{what}.eids: must be a list of 5")
-                # S105: a slot may name a progression.enemies id (its EID is
-                # assigned by the compiler: 519 + position)
-                for i, x in enumerate(raw):
-                    if isinstance(x, str) and x not in self.enemy_ids and \
-                            not re.match(r'^(\$|0x)?[0-9A-Fa-f]+$', x):
-                        raise GamedataError(
-                            f"{what}.eids[{i}] = {x!r}: no such enemy row — not a "
-                            "progression.enemies id of this project")
-                e = [self.enemy_ids[x] if isinstance(x, str) and x in self.enemy_ids
-                     else x for x in raw]
-                e = _list(e, 5, 0, 0xFFFF, what + '.eids')
-                for i, x in enumerate(e):
-                    if x and x not in self.valid_eids:
-                        raise GamedataError(
-                            f"{what}.eids[{i}] = {raw[i]!r}: no such enemy row "
-                            "(0-486, or a project enemy — its progression.enemies "
-                            "id or EID >= 519; 487-518 are code / free space)")
-                    _put16(r, 10 + 2 * i, x)
-            if 'max_count' in o:
-                r[20:25] = bytes(_list(o['max_count'], 5, 0, 3, what + '.max_count'))
-            if 'maze_size' in o:
-                r[25] = _range(o['maze_size'], 0, 255, what + '.maze_size')
+            apply_list_fields(r, o, what, self.list_eid)
             if bytes(r) == before:
                 continue
             self.edited['pool'].add(pid)
-            # CalcEncounterPoolIdx walks cumulative percentages until one exceeds
-            # a 0-99 draw: a list that never reaches 100 runs off its end.
-            if sum(pct[c] for c in r[2:5]) < 100:
-                raise GamedataError(f"{what}.size_chance: the 1/2/3-monster chances "
-                                    "add up to less than 100 %")
-            if sum(pct[c] for c in r[5:10]) < 100:
-                raise GamedataError(f"{what}.slot_chance: the slot chances add up "
-                                    "to less than 100 %")
-            if sum(pct[c] for c in r[5:10]) > 100:
-                # S106 r3: every original list is exactly 100; above it the
-                # running sums pass 100 early and the last slots are never drawn
-                self.warnings.append(f"{what}.slot_chance: the slot chances add up to "
-                                     f"{sum(pct[c] for c in r[5:10])} % — the last slots "
-                                     "are cut (every original list is exactly 100 %)")
-            eids = [_u16(r, 10 + 2 * i) for i in range(5)]
-            for i in range(5):
-                if r[5 + i] and not eids[i]:
-                    raise GamedataError(f"{what}: slot {i} has a chance but no EID")
-            # Group size: the 2nd/3rd monster is re-drawn until a slot passes
-            # SetupEncounterCalc (max_count >= copies so far incl. itself, and
-            # != 1). A first pick with max 1 ends the group at one monster; a
-            # first pick with max 0 or >= 2 and no slot able to follow re-draws
-            # FOREVER — measured S103 (PyBoy: 28,257 passes, no battle).
-            maxes = [r[20 + i] for i in range(5) if r[5 + i] and eids[i]]
-            cap = sum(x for x in maxes if x >= 2)
-            if any(x != 1 for x in maxes):
-                if pct[r[3]] + pct[r[4]] and cap < 2:
-                    raise GamedataError(
-                        f"{what}: 2-3 monsters can be drawn, but no slot may appear "
-                        "twice (max_count >= 2) — the game would re-draw the second "
-                        "monster forever (freeze)")
-                if pct[r[4]] and cap < 3:
-                    raise GamedataError(
-                        f"{what}: 3 monsters can be drawn, but the slots allow only "
-                        f"{cap} copies in all (max_count) — the third draw never ends")
-            live = [e for i, e in enumerate(eids) if e and r[5 + i]]
-            if len(live) != len(set(live)):
-                self.warnings.append(f"{what}: the same EID sits in two slots "
-                                     "(vanilla never does — S77)")
+            self.warnings += check_list(r, what, pct)
+
+    def list_eid(self, x, what):
+        """An encounter-list slot's enemy: an EID number (0-486 or a project
+        EID) or, S105, a progression.enemies id -> the EID."""
+        if isinstance(x, str) and x not in self.enemy_ids and \
+                not re.match(r'^(\$|0x)?[0-9A-Fa-f]+$', x):
+            raise GamedataError(f"{what} = {x!r}: no such enemy row — not a "
+                                "progression.enemies id of this project")
+        e = self.enemy_ids[x] if isinstance(x, str) and x in self.enemy_ids else x
+        e = _range(e, 0, 0xFFFF, what)
+        if e and e not in self.valid_eids:
+            raise GamedataError(
+                f"{what} = {x!r}: no such enemy row (0-486, or a project enemy — "
+                "its progression.enemies id or EID >= 519; 487-518 are code / "
+                "free space)")
+        return e
 
     # -- skills ---------------------------------------------------------
     def _skills(self):

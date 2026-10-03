@@ -491,6 +491,7 @@ class RoomsTab(QWidget):
         gg.openGatesRequested.connect(lambda: self.gatesRequested.emit(self.room_id or ''))
         gg.arrivalConversationRequested.connect(self._arrival_conversation)   # S101
         self.inspector.addStairsRequested.connect(self._add_stairs)
+        self.inspector.addGateEntranceRequested.connect(self._add_gate_entrance)   # S115
         self.sec_insp = Section('Room / screen / selection', self.inspector, 'rooms_inspector',
                                 expanded=False, remember=False)
         self.right_split.addWidget(self.sec_insp)
@@ -1619,6 +1620,47 @@ class RoomsTab(QWidget):
             note = getattr(self.s.doc, 'last_import_note', '')
             self.status_line.setText(note or f'Stairs down at ({cx},{cy}) — painted with the '
                                      'next-floor well. Walking onto it goes one floor down.')
+
+    def _add_gate_entrance(self, cell):
+        """S115 (NG1): an exit that enters a gate (a vanilla gate or one of the
+        project's new gates) — the vanilla portal form; the cell gets the
+        next-floor hole picture (repaint it as you like)."""
+        from PySide6.QtWidgets import QInputDialog
+        room = self.current_room()
+        if room is None:
+            return
+        cx, cy = cell
+        dead = self._dead_edge((cx, cy), 'exit')
+        if dead:
+            QMessageBox.warning(self, 'Gate entrance', dead)
+            return
+        gates = self.s.doc.all_gates()
+        gates = [g for g in gates if g.get('new')] + [g for g in gates if not g.get('new')]
+        items = [f"{g['id']:2d}  {g['name']}" + ('  (new)' if g.get('new') else '')
+                 for g in gates]
+        it, okd = QInputDialog.getItem(self, 'Gate entrance',
+                                       'Stepping on this cell enters gate:', items, 0, False)
+        if not okd:
+            return
+        gid = gates[items.index(it)]['id']
+        rid, key, st = self.room_id, self.key, self.state_idx
+
+        def op(doc):
+            r = doc.room(rid)
+            doc.add_gate_entrance(r, key, st, cx, cy, gid)
+            try:
+                doc.paint_well(r, key, st, cx, cy)
+                doc.last_import_note = ''
+            except RuntimeError as ex:
+                doc.last_import_note = f'Gate entrance added, but the hole picture was not: {ex}'
+        cmd = self._door_op(f'Gate entrance ({cx},{cy}) -> gate {gid}', op)
+        if cmd is not None:
+            self._show()
+            self._select_exit_at((cx, cy))
+            note = getattr(self.s.doc, 'last_import_note', '')
+            self.status_line.setText(note or f'Gate entrance at ({cx},{cy}) -> '
+                                     f'{self.s.doc.gate_name(gid)} — painted with the hole '
+                                     'picture. Walking onto it starts a dive at floor 1.')
 
     def _add_spot(self, cell, kind):
         room = self.current_room()

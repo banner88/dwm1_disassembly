@@ -88,7 +88,8 @@
                  [S109, PyBoy]
    D7D2   257    NPC slots: 8 x 32 B + terminator cell $D8D2 (field map:
                  ROOM_DATA_FORMAT "NPC RAM slot") [S91/S97]
-   C935     1    Current Gate (wGateID)
+   C935     1    Current Gate (wGateID): 0-31 vanilla, 32-95 the project's NEW
+                 gates (S115; GATE_GENERATION §7.8)
    C936     3    Floor type 1/2/3 (maze biome / special-room / contents rolls)
    C939     1    Current Floor
    C93A     1    Last floor (floors before boss)
@@ -225,7 +226,12 @@
                  [S111] wLearnRowBuf $D10C-$D11D — one custom-skill learn
                  row (18 B), copied by bank $72 CustomLearnRow72 right
                  before bank $06 LearnLoopFork's scanner reads it /
-                 wCustomPool $D11E-$D5E4 (transient reserve) /
+                 [S114] wEncListBuf $D11E-$D137 — the 26-byte encounter
+                 list in use (bank $01 LoadNextDungeonFloor copies it) /
+                 [S115] wGateRowBuf $D138-$D13F — a NEW gate's 8-byte
+                 GateFloorDataTable-format row (bank $76 NewGateRowCopy,
+                 written right before bank $16 entry 5 reads it) /
+                 wCustomPool $D140-$D5E4 (transient reserve) /
                  wPoolBounce $D5E5-$D664 (128 B, FX1: sleep-pool swap
                  scratch; the v1 drain halved-pending use died with the
                  S71v2 exp-scale veto).

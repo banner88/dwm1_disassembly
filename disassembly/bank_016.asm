@@ -65,9 +65,9 @@ SECTION "ROM Bank $016", ROMX[$4000], BANK[$16]
     dw BreedResolvePreview    ; Entry 3: same result, no $44D0 call — the shrine's pair evaluator (bank $0A $5470)
     dw label16_474a          ; Entry 4: Skill/stat inheritance
     dw label16_5b4e          ; Entry 5
-    dw label16_5fe4          ; Entry 6
+    dw EncounterSeedOnRoomLoad ; Entry 6 (was label16_5fe4; S114 name)
     dw SetBrd_6db0          ; Entry 7
-    dw label16_6f05          ; Entry 8
+    dw EncounterStep         ; Entry 8 (was label16_6f05; S114 name)
     dw LoadFloorDataPointer          ; Entry 9
 
 ; BreedCreateOffspring (entry 0, S113 annotation) — builds the egg/offspring.
@@ -1908,6 +1908,10 @@ label16_5b4e:
 jr_016_5b72:
     ld hl, $010c
     rst $10
+    ; GateFloorDataTable row of wGateID (S115 census: one of its only TWO
+    ; readers, with jr_016_5be1). The multiply is 8-bit: a gate number
+    ; n >= 32 reads the row of gate n & 31. Patched builds route both readers
+    ; through GateRowPtr (new gates 32-95 — GATE_GENERATION §7.8).
     ld a, [wGateID]
     add a
     add a
@@ -1984,7 +1988,7 @@ jr_016_5bbf:
 ; special-room contract); wBossMapType is also read by LoadNewBGMIdIntoA on
 ; the floor BEFORE the boss floor (RoomBGMTable[wBossMapType]).
 jr_016_5be1:
-    ld a, [wGateID]
+    ld a, [wGateID]                 ; row + 4 of wGateID (8-bit gate*8, as above)
     add a
     add a
     add a
@@ -2591,7 +2595,14 @@ jr_016_5fe2:
     ret
 
 
-label16_5fe4:
+; Entry 6 — far-called by bank $0B Entry 0 at EVERY room load (post-battle
+; reloads included, gate or not): re-seeds the encounter counter FIRST, then
+; (outside gates) resets the floor-content bytes, or (gate floors) loads the
+; map-overview tiles. So custom rooms are seeded by the engine too — measured
+; S114 on the user's save (the S11 "never seeded when wInGateworld = 0" claim was
+; wrong; DOC_AUDIT S114).
+EncounterSeedOnRoomLoad:
+label16_5fe4:  ; original label
     call SetRandomEncounterCounter
     ld a, [wInGateworld]
     or a
@@ -5007,67 +5018,77 @@ jr_016_6e32:
 
 ; ---------------------------------------------------------------
 ; RandomEncounterCounterTable — 50 entries × 4 bytes
-; After PRNG mod 101, the result selects a step counter before
+; After PRNG mod 101, the result selects the encounter COUNTER before
 ; the next random encounter. Format per entry:
 ;   byte 0: PRN threshold (if PRNG result <= this, select entry)
 ;   byte 1: $00 (padding)
-;   bytes 2-3: step counter (little-endian 16-bit)
+;   bytes 2-3: counter (little-endian 16-bit) — counter UNITS, not steps:
+;   steps = counter / the per-step drain (base * modifier / 64; S114). The
+;   "-> n steps" row comments below are counter units (mean about 3,547).
 ; Last entry uses $FF threshold as catch-all.
 ; ---------------------------------------------------------------
 RandomEncounterCounterTable:
-    db $02, $00, $4c, $04 ;  3/101 chance → 1,100 steps
-    db $04, $00, $b0, $04 ;  2/101 chance → 1,200 steps
-    db $06, $00, $14, $05 ;  2/101 chance → 1,300 steps
-    db $08, $00, $78, $05 ;  2/101 chance → 1,400 steps
-    db $0a, $00, $dc, $05 ;  2/101 chance → 1,500 steps
-    db $0c, $00, $40, $06 ;  2/101 chance → 1,600 steps
-    db $0e, $00, $a4, $06 ;  2/101 chance → 1,700 steps
-    db $10, $00, $08, $07 ;  2/101 chance → 1,800 steps
-    db $12, $00, $6c, $07 ;  2/101 chance → 1,900 steps
-    db $14, $00, $d0, $07 ;  2/101 chance → 2,000 steps
-    db $16, $00, $34, $08 ;  2/101 chance → 2,100 steps
-    db $18, $00, $98, $08 ;  2/101 chance → 2,200 steps
-    db $1a, $00, $fc, $08 ;  2/101 chance → 2,300 steps
-    db $1c, $00, $60, $09 ;  2/101 chance → 2,400 steps
-    db $1e, $00, $c4, $09 ;  2/101 chance → 2,500 steps
-    db $20, $00, $28, $0a ;  2/101 chance → 2,600 steps
-    db $22, $00, $8c, $0a ;  2/101 chance → 2,700 steps
-    db $24, $00, $f0, $0a ;  2/101 chance → 2,800 steps
-    db $26, $00, $54, $0b ;  2/101 chance → 2,900 steps
-    db $28, $00, $b8, $0b ;  2/101 chance → 3,000 steps
-    db $2a, $00, $1c, $0c ;  2/101 chance → 3,100 steps
-    db $2c, $00, $80, $0c ;  2/101 chance → 3,200 steps
-    db $2e, $00, $e4, $0c ;  2/101 chance → 3,300 steps
-    db $30, $00, $48, $0d ;  2/101 chance → 3,400 steps
-    db $32, $00, $ac, $0d ;  2/101 chance → 3,500 steps
-    db $34, $00, $10, $0e ;  2/101 chance → 3,600 steps
-    db $36, $00, $74, $0e ;  2/101 chance → 3,700 steps
-    db $38, $00, $d8, $0e ;  2/101 chance → 3,800 steps
-    db $3a, $00, $3c, $0f ;  2/101 chance → 3,900 steps
-    db $3c, $00, $a0, $0f ;  2/101 chance → 4,000 steps
-    db $3e, $00, $04, $10 ;  2/101 chance → 4,100 steps
-    db $40, $00, $68, $10 ;  2/101 chance → 4,200 steps
-    db $42, $00, $cc, $10 ;  2/101 chance → 4,300 steps
-    db $44, $00, $30, $11 ;  2/101 chance → 4,400 steps
-    db $46, $00, $94, $11 ;  2/101 chance → 4,500 steps
-    db $48, $00, $f8, $11 ;  2/101 chance → 4,600 steps
-    db $4a, $00, $5c, $12 ;  2/101 chance → 4,700 steps
-    db $4c, $00, $c0, $12 ;  2/101 chance → 4,800 steps
-    db $4e, $00, $24, $13 ;  2/101 chance → 4,900 steps
-    db $50, $00, $88, $13 ;  2/101 chance → 5,000 steps
-    db $52, $00, $ec, $13 ;  2/101 chance → 5,100 steps
-    db $54, $00, $50, $14 ;  2/101 chance → 5,200 steps
-    db $56, $00, $b4, $14 ;  2/101 chance → 5,300 steps
-    db $58, $00, $18, $15 ;  2/101 chance → 5,400 steps
-    db $5a, $00, $7c, $15 ;  2/101 chance → 5,500 steps
-    db $5c, $00, $e0, $15 ;  2/101 chance → 5,600 steps
-    db $5e, $00, $44, $16 ;  2/101 chance → 5,700 steps
-    db $60, $00, $a8, $16 ;  2/101 chance → 5,800 steps
-    db $62, $00, $0c, $17 ;  2/101 chance → 5,900 steps
-    db $ff, $00, $70, $17 ;  catch-all   → 6,000 steps
+    db $02, $00, $4c, $04 ;  3/101 chance → 1,100 (counter)
+    db $04, $00, $b0, $04 ;  2/101 chance → 1,200 (counter)
+    db $06, $00, $14, $05 ;  2/101 chance → 1,300 (counter)
+    db $08, $00, $78, $05 ;  2/101 chance → 1,400 (counter)
+    db $0a, $00, $dc, $05 ;  2/101 chance → 1,500 (counter)
+    db $0c, $00, $40, $06 ;  2/101 chance → 1,600 (counter)
+    db $0e, $00, $a4, $06 ;  2/101 chance → 1,700 (counter)
+    db $10, $00, $08, $07 ;  2/101 chance → 1,800 (counter)
+    db $12, $00, $6c, $07 ;  2/101 chance → 1,900 (counter)
+    db $14, $00, $d0, $07 ;  2/101 chance → 2,000 (counter)
+    db $16, $00, $34, $08 ;  2/101 chance → 2,100 (counter)
+    db $18, $00, $98, $08 ;  2/101 chance → 2,200 (counter)
+    db $1a, $00, $fc, $08 ;  2/101 chance → 2,300 (counter)
+    db $1c, $00, $60, $09 ;  2/101 chance → 2,400 (counter)
+    db $1e, $00, $c4, $09 ;  2/101 chance → 2,500 (counter)
+    db $20, $00, $28, $0a ;  2/101 chance → 2,600 (counter)
+    db $22, $00, $8c, $0a ;  2/101 chance → 2,700 (counter)
+    db $24, $00, $f0, $0a ;  2/101 chance → 2,800 (counter)
+    db $26, $00, $54, $0b ;  2/101 chance → 2,900 (counter)
+    db $28, $00, $b8, $0b ;  2/101 chance → 3,000 (counter)
+    db $2a, $00, $1c, $0c ;  2/101 chance → 3,100 (counter)
+    db $2c, $00, $80, $0c ;  2/101 chance → 3,200 (counter)
+    db $2e, $00, $e4, $0c ;  2/101 chance → 3,300 (counter)
+    db $30, $00, $48, $0d ;  2/101 chance → 3,400 (counter)
+    db $32, $00, $ac, $0d ;  2/101 chance → 3,500 (counter)
+    db $34, $00, $10, $0e ;  2/101 chance → 3,600 (counter)
+    db $36, $00, $74, $0e ;  2/101 chance → 3,700 (counter)
+    db $38, $00, $d8, $0e ;  2/101 chance → 3,800 (counter)
+    db $3a, $00, $3c, $0f ;  2/101 chance → 3,900 (counter)
+    db $3c, $00, $a0, $0f ;  2/101 chance → 4,000 (counter)
+    db $3e, $00, $04, $10 ;  2/101 chance → 4,100 (counter)
+    db $40, $00, $68, $10 ;  2/101 chance → 4,200 (counter)
+    db $42, $00, $cc, $10 ;  2/101 chance → 4,300 (counter)
+    db $44, $00, $30, $11 ;  2/101 chance → 4,400 (counter)
+    db $46, $00, $94, $11 ;  2/101 chance → 4,500 (counter)
+    db $48, $00, $f8, $11 ;  2/101 chance → 4,600 (counter)
+    db $4a, $00, $5c, $12 ;  2/101 chance → 4,700 (counter)
+    db $4c, $00, $c0, $12 ;  2/101 chance → 4,800 (counter)
+    db $4e, $00, $24, $13 ;  2/101 chance → 4,900 (counter)
+    db $50, $00, $88, $13 ;  2/101 chance → 5,000 (counter)
+    db $52, $00, $ec, $13 ;  2/101 chance → 5,100 (counter)
+    db $54, $00, $50, $14 ;  2/101 chance → 5,200 (counter)
+    db $56, $00, $b4, $14 ;  2/101 chance → 5,300 (counter)
+    db $58, $00, $18, $15 ;  2/101 chance → 5,400 (counter)
+    db $5a, $00, $7c, $15 ;  2/101 chance → 5,500 (counter)
+    db $5c, $00, $e0, $15 ;  2/101 chance → 5,600 (counter)
+    db $5e, $00, $44, $16 ;  2/101 chance → 5,700 (counter)
+    db $60, $00, $a8, $16 ;  2/101 chance → 5,800 (counter)
+    db $62, $00, $0c, $17 ;  2/101 chance → 5,900 (counter)
+    db $ff, $00, $70, $17 ;  catch-all   → 6,000 (counter)
 
 
-label16_6f05:
+; Entry 8 — the encounter step, run once per step in an encounter room (gate
+; maze floors via the bank $0B gate exit handler; whitelisted maps / custom rooms
+; with encounters via bank $0B Jump_00b_4674 / CustomRoomEncCheck): base rate
+; (outside gates $64, $50 on maps $54-$56; on gate floors EncounterRateData by
+; floor type and the tile row class), then bank $01 entry $0D (the list +
+; its rate code -> wC8A9), drain = base * modifier / 64; underflow = a battle
+; (bank $01 entry $0B). Measured S114: 100 per step at code 3, 200 at code 7.
+EncounterStep:
+label16_6f05:  ; original label
     ld a, [wGameState]
     bit 2, a
     ret nz
@@ -5189,7 +5210,10 @@ jr_016_6fa2:
 
 ; ---------------------------------------------------------------
 ; EncounterRateData — 16 entries × 8 bytes
-; Per-gate-floor-threshold encounter rate parameters.
+; The step's BASE rate on gate maze floors, indexed wMapID * 8 (= the floor
+; TYPE there): word 0 / 1 / 2 by the class of the tile row the player stands
+; on ($0C / $0D / $0E — other rows: no encounter check). (S114 correction: not
+; "per gate-floor threshold".)
 ; Each entry: 3 × 16-bit values (little-endian) + 2 bytes padding.
 ; ---------------------------------------------------------------
 EncounterRateData:
@@ -5212,7 +5236,8 @@ EncounterRateData:
 
 ; ---------------------------------------------------------------
 ; EncounterRateModifierTable — 8 bytes
-; Indexed by wC8A9 (gate floor threshold index from Bank $01).
+; Indexed by wC8A9 = the encounter LIST's rate code (+0), loaded by bank $01
+; entry $0D at every step (S114).
 ; Multiplied with encounter counter to determine encounter rate.
 ; ---------------------------------------------------------------
 EncounterRateModifierTable:

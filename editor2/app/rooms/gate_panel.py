@@ -67,6 +67,8 @@ class GateRoomGroup(QGroupBox):
         self.enc.addItem('off — no battles', 'off')
         self.enc.addItem("follow the gate — the dive's own monsters", 'follow')
         self.enc.addItem('fixed pool (not for gate rooms)', 'fixed')
+        # S114 (P3.13a): a list of its own (chosen on the Encounters tab)
+        self.enc.addItem('its own list — set on the Encounters tab', 'own')
         self.enc.currentIndexChanged.connect(self._enc_changed)
         f.addRow('battles', self.enc)
         self.music = QComboBox()
@@ -107,7 +109,7 @@ class GateRoomGroup(QGroupBox):
         rules = doc.rules_serving(room.get('id'))
         if rules:
             from editor2.core import gates as G
-            names = {g['id']: g['name'] for g in G.vanilla_gates(getattr(doc, 'project_dir', None))}
+            names = {g['id']: g['name'] for g in doc.all_gates()}      # S115: + new gates
             self.served.setText('Served in: ' + '; '.join(
                 f"{names.get(int(G._val(r.get('gate', 0))), 'gate ' + str(r.get('gate')))} "
                 f"{doc.describe_gate_rule(r)}" for _i, r in rules))
@@ -128,8 +130,7 @@ class GateRoomGroup(QGroupBox):
         self.can_save.setChecked(room.get('can_save', not boss_of))
         if boss_of:
             from editor2.core import gates as G
-            names = {g['id']: g['name'] for g in
-                     G.vanilla_gates(getattr(doc, 'project_dir', None))}
+            names = {g['id']: g['name'] for g in doc.all_gates()}      # S115: + new gates
             self.boss.setText('Boss floor of: ' + ', '.join(names.get(g, f'gate {g}')
                                                             for g in boss_of)
                               + '. The fight is a conversation with a Battle step (an NPC '

@@ -412,8 +412,15 @@ an arbitrary later step. `write_ram` (opcode $12) *does* work in custom rooms
 (params route via `DispatchBank0F_Ext → CustomScriptRead`), but its firing
 *timing* is the trap, not the write itself.
 
-### Vanilla counter seeding skips non-gate rooms
-**Discovery**: `SetRandomEncounterCounter` ($16:$6E14) is only reached via
+### Vanilla counter seeding skips non-gate rooms — WRONG (S114 correction)
+**S114 (grep + PyBoy):** the one `call SetRandomEncounterCounter` is at the head of
+bank $16 entry 6 (`label16_5fe4`), BEFORE its `wInGateworld` test, and entry 6 is
+far-called by bank $0B Entry 0 at every room load (post-battle reloads included).
+Measured in a custom room (wInGateworld 0) on the user's save: the counter at entry
+and after every battle was a `RandomEncounterCounterTable` value. The text below is
+the S11 belief, kept for the record; the entry-script seed it recommends is
+harmless but not needed (DOC_AUDIT S114).
+**Discovery (S11, superseded)**: `SetRandomEncounterCounter` ($16:$6E14) is only reached via
 `label16_5b4e`, which `ret z`s when `wInGateworld = 0`. So a non-gate custom
 room's `wEncounterCounter` is never armed by the engine.
 **Fix**: Seed `wEncounterCounter` ($CA39/$CA3A) from the custom room's entry
@@ -4752,3 +4759,59 @@ title screen).
 `"Slime"` as a breeding matcher resolves to the Slime FAMILY (family names are checked
 first); a test meant for the Slime species changed every slime's eggs. **Rule**: the
 editor writes species as ids and families by name; tests use ids for species.
+
+## S114 — encounter lists: a fork must leave the registers its callers relied on, a census of the draw, an A that talks again
+
+### A same-size fork must reproduce the REGISTERS the replaced code left, not only memory
+**Symptom**: after replacing the five `EncounterPoolData + number*26 + k` sequences in
+bank $01 with `ld hl, wEncListBuf + k` + padding, every list choice matched the model
+(633/633) but 2,366 of 15,192 battle draws differed — always the second / third monster.
+**Root cause**: the old sequence called `Mul16x8To24`, which leaves BC = 0 (its first
+partial product, popped into BC). `LookupEncounterEntry` accumulates the running sum of
+the slot chances in B — and the slot-sum site never set B itself: it inherited 0 from the
+multiply. After the fork B still held the group-size index (0-2), so the slot sums started
+at 0, 1 or 2.
+**Fix**: each site writes `ld hl, wEncListBuf + k` / `ld bc, $0000` + pad (same size).
+**Rule**: when replacing code that calls a helper, list what the helper leaves in every
+register and flag, and check the instructions after the site for reads before writes; a
+census of the WHOLE routine (here the battle draw, not only the list choice) is what
+catches it.
+
+### Census the draw with the RNG pinned, against an exact model, plus a negative control
+The model of the battle draw (`encounters.simulate_battle`) first mismatched 14,855 of
+15,192 draws on the ORIGINAL ROM: `CalcEncounterPoolIdx` draws from wRNG2:wRNG1 (L is
+loaded from wRNG1), not wRNG1:wRNG2. With that fixed: 0 mismatches; a model with `>`
+instead of `>=` gives 1,417. **Rule**: pin the RNG state before each stub call
+(GenerateRNG is a pure LCG — nothing else feeds it), compare whole outcomes, and always
+run the deliberately wrong model to prove the census can fail.
+
+### In a PyBoy talk, an extra A after the answer starts the talk again
+Driving the Den keeper's YES with "A × 8 to close" set the flag and then cleared it: the
+later A presses re-opened the talk (the player still faces the NPC) and the next
+question, which starts on NO, took the A. **Rule**: after a YES/NO answer advance exactly
+the answer's boxes, then wait for `wGameState` 0 and the script flag clear — never A to
+close (PYBOY_DEBUGGING "S114 techniques").
+
+## S115 — new gates: widen the readers, not the table; a menu left open is not "no battle"
+
+### Before widening a fixed-size table, count its readers and fork THEM
+**Situation**: `GateFloorDataTable` is 32 × 8 B in the middle of bank $16 (tables follow
+it); gate numbers past 31 were wanted. **What worked**: a census of every reader of the
+table and of `wGateID` / `$C935` (labels, raw addresses, scripts) found exactly two table
+readers, both `ld a,[wGateID] / add a ×3 / … adc h` — an 8-bit gate·8, so gate n ≥ 32
+silently read gate n & 31 — and showed every other gate-number user was already 8-bit and
+table-free. Forking the two 15-byte sequences into one `call GateRowPtr` (same size) that
+serves 0-31 from the table and the rest from a compiler-owned bank kept every byte of the
+table and its neighbours in place, and the old wrap for any undefined number.
+**Rule**: to grow an indexed table, find ALL its readers first; route them through one
+accessor (same size at each site) and keep the old behaviour for out-of-range indices —
+then a stub-call sweep of the accessor over the whole index range (0-255) proves it.
+
+### A field menu left open by the battle loop looks like "no battle"
+**Symptom**: the PyBoy battle loop reported "no battle" after 400 steps on a gate floor.
+**Root cause**: the single B press after a won battle had opened the field menu (INFO
+page shown) — the walk inputs went to the menu. **Rule**: after a battle press B until
+`wGameState` ($C8EB) is 0 before walking again; when a joining boss asks "Choose a
+monster back to farm" (full party), the A mash needs a `down` now and then to reach OK
+(PYBOY_DEBUGGING "S115 techniques").
+

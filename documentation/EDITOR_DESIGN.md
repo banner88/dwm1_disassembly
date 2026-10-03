@@ -901,6 +901,28 @@ PyBoy-verified, NOT yet user-tested):**
   weighting rows, depth tier, monster-pool binding), a custom boss floor
   (template + boss fight/join + no saving), gate entrances / unlock triggers.
 
+**As built S115 (ARC NG / NG1 — new gates; built, PyBoy-verified, test ROM USER-CONFIRMED 2026-10-03 12:39 ("Excellent, confirm works");
+help `60_gates.md` "New gates"):**
+- Gates tab: the list = the 32 vanilla gates + the project's new gates (NEW, orange,
+  tooltip "a copy of gate n"); **New gate…** (dialog: copy of [vanilla gate], name,
+  floors — default the source's) → the next free number 32-95, selected; **Rename…** /
+  **Delete** (new gates only; Delete confirms and removes the gate's custom-room rules and
+  entrances; one undo step). The head line names the source; the sub line lists the
+  entrances ("⚠ no entrance yet — Rooms tab: …" for a new gate without one). Gate
+  settings work unchanged on new gates; the boss combo's "Vanilla — …" item is the
+  source's boss room, marked "(⚠ runs that gate's story scripts)"; other gates' vanilla
+  boss rooms stay offered.
+- Rooms tab: Room / screen / selection → More ▾ → **"Gate entrance here…"** (pick a gate,
+  new gates first) writes the vanilla portal exit row (`gate:N`, gate_flag 1) and paints
+  the next-floor hole (`paint_well`, like Stairs down); the object panel shows **Gate
+  entrance** ("gate N — name, floor 1"); the canvas tooltip says "gate entrance → gate N".
+  The World graph does not draw gate entrances as map links.
+- Encounters tab → Gates: new gates at the end of the list ("NEW (copy of gate n)"); their
+  floors start on the source's rule. Rooms tab "Inside gates": served-in / boss-of names
+  include new gates.
+- Not yet: a new gate's own floor types / depth tier (the source's), entrance conditions
+  (NG2), fully custom gates (NG3).
+
 ### 5.1c Triggers (v2.1 — first-class concept, user spec S90)
 
 Authored as sentences: **"When [flag set / quest state / item owned] →
@@ -1255,7 +1277,7 @@ projectile "go back" loop is not authorable (copy frames instead).
   re-simulate live.
 - Coherence Set 1 (recipes ↔ library text) enforced as you type.
 
-**As built S113 (ROADMAP P3.12; NOT yet user-tested; help `58_breeding.md`):**
+**As built S113 (ROADMAP P3.12; test ROM USER-CONFIRMED 2026-10-03 00:19 ("Tested, works"); help `58_breeding.md`):**
 `editor2/app/breeding_tab.py` over `editor2/core/breeding_doc.py` (`BreedingMixin`) and
 the resolver model `editor2/core/breeding.py` (== the game for every pair, PyBoy census —
 BREEDING_SYSTEM "The resolver as measured (S113)"). Top: a summary (how many monsters
@@ -1292,6 +1314,35 @@ Cross-room/gate view of pools: which species at which levels where, per
 gate/floor; per-row threat parity vs the author's stat edits
 (`audit_threat.py` logic as a service); jump to any room's Encounters
 sub-tab. Needs custom pools [G-C]; per-room enable/rate already built.
+
+**As built S114 (ROADMAP P3.13a; test ROM USER-CONFIRMED 2026-10-03 09:52 ("Looks good. Give editor files"); help `59_encounters.md`;
+model `editor2/core/encounters_doc.py`, compiler `encounters.py` / PROJECT_COMPILER §2.30).**
+User decisions S114: per-gate per-floor lists as an option ("especially if I want to insert
+custom rooms with its own encounters"); flag variants for gates too ("great idea"); a
+separate rate per room; level ranges now, fight-length numbers later (Balance) — the model
+exposes `enc_list_threat_rows` for it; the 'unused gate' does not matter; the new-gates arc
+(ROADMAP NG1-NG3) builds on this. The tab, three pages:
+- **Lists** — every list (the game's 128 + the project's 128+): "number · first use (+n) ·
+  Lv a-b · monsters", bold = edited, grey = nothing uses it; "hide lists nothing uses";
+  **New list (copy)** (a byte copy of the selected, named) / **Delete** (refused while
+  used). Editor: name (own lists), battle rate (codes 0-7 named very rare … relentless,
+  with "≈ N steps between battles outside gates" = the counter-table mean / the drain),
+  monsters per battle (1/2/3 codes + real %), maze size, five slots (Monster… picker over
+  your enemies + the game's 486 rows, chance, real chance, most in one battle) — slot and
+  size edits are STAGED and written by **Apply** as one undo step only when they add up
+  (the compiler refuses a list under 100 %), **Revert**; "Battles it gives most often"
+  (`group_odds`, the measured draw); "Used by"; a Balance placeholder line.
+- **Gates** — the 32 gates (bold = own plan) with floor counts; per floor a list combo +
+  where the list comes from (the game's rule / your plan / this variant); **Show** picks
+  the default plan or a flag variant; + Flag variant… / Edit variant flags… / Remove
+  variant / Back to the game's rule; a **Shared** warning when a list the gate uses is
+  also used elsewhere (copy it to change only this gate).
+- **Rooms** — every custom room: No battles / A gate floor's list (gate + floor, pinned) /
+  The dive's own list / Its own list; own battle rate (+ steps estimate); flag variants
+  table (own list). The Rooms tab's "Inside gates" combo gained "its own list" and the
+  inspector line shows the list / variants / rate.
+Monsters tab "where met" and the pool dialog read the same live usage (floor counts, plans,
+rooms) instead of `extracted/encounters.json`.
 
 ### 5.6 Music tab
 
@@ -1476,10 +1527,10 @@ row is click-navigable (§5.0).
 |-----|------|----------------|
 | G-A | Bank `$64` (layouts/attr) + `$67` (combined tilesets) emission folded behind project.json (today tool-owned, referenced by {bank,entry}) | ✅ CLOSED S92 (`custom.layouts[]` / `custom.tilesets[]`, PROJECT_COMPILER §2.10); painted by the S93 canvas |
 | G-B | NPC sprite-id catalog | ✅ CLOSED S91: `extracted/npc_sprite_catalog.json` + sheet + per-id crops (`npc_field_sprites/`), tools/dump_npc_sprite_catalog.py; classes/names hand-curated in npc_names.json. No id crashes ($11-crash was custom-room context); $23 = boss-composite fragment; aliases $4E/$4F/$F0-$F3 → $00. ROOM_DATA_FORMAT S91 section owns the facts |
-| G-C | Encounters #2 — custom monster pools in a free bank | ROADMAP P3.13a (pre-existing Phase-2 box, re-slotted) |
+| G-C | Encounters #2 — custom monster pools in a free bank | ✅ CLOSED S114 (test ROM USER-CONFIRMED 2026-10-03 09:52 ("Looks good. Give editor files")): the project's own lists 128-255 in bank $76, chosen by `EncResolve` behind a same-size bank $01 fork (PROJECT_COMPILER §2.30; DATA_STRUCTURES "Encounter list choice (S114)") |
 | G-D | Layer A-lite `gamedata` emitters + readers (monsters/skills/breeding/encounters; port randomizer `romdata.py`) | ROADMAP P3.9 — **CLOSED S103** (backend; GUI = P3.10-P3.13) |
 | G-E | Embedded PyBoy preview widget (cached savestate → warp → Qt blit + input) | ROADMAP P3.4 (pre-existing box, re-slotted) |
-| G-F | E4 gate-network / world-hub schema | ROADMAP Phase E (design item; World tab ships without it) |
+| G-F | E4 gate-network / world-hub schema | ROADMAP Phase E (design item; World tab ships without it). S115: gate NUMBERS beyond 32 exist (NG1 — `custom.gates[]` 32-95, gate-entrance exits); the network / unlock half stays open (ARC NG NG2 / NG3) |
 | G-G | First-class `states[]` (step-counter variants) in the custom-room schema | ✅ CLOSED: schema/emitter S92 (PROJECT_COMPILER §2.10); GUI state switcher + add/duplicate/own-layout/remove S93 (ROADMAP P3.3) |
 | G-H | Cutscene storyboard model over compile/decompile_script | ROADMAP P3.8 (new) |
 | G-I | Music audition harness (PyBoy play-song) | ROADMAP P3.13b sub-item (new) |
@@ -1488,7 +1539,7 @@ row is click-navigable (§5.0).
 | G-L | E1→E2 arena authoring wiring (tiers×matches×slots grid over rows 224-304) | ROADMAP P3.10b (v2.1; promoted from Phase E) |
 | G-M | CAPACITIES reference | ✅ CLOSED S91 (core): `extracted/capacities.json` (hand-compiled, evidence per entry); NPCs/screen = 8 hard (9th corrupts script state, measured) + a distinct-sprite-sheet VRAM budget (order-filled, blanks on overflow); screens/room engine=16, vanilla max 12-declared/9-valid, custom schema=8. Residual boxes live in the file's `_deferred_measurement_boxes` (E6 text budget, gate slots, per-sheet tile counts, 4x4 schema extension) |
 | G-N | AI ban-list mechanism (knows-it-never-casts-it option-list filter) — OPTIONAL | ROADMAP P3.11b (v2.1, optional) |
-| G-O | Flag-keyed encounter-pool variants (bank-$71 RoomEncTable resolver extension) | ROADMAP P3.13a acceptance (v2.1) |
+| G-O | Flag-keyed encounter-pool variants (bank-$71 RoomEncTable resolver extension) | ✅ CLOSED S114 (test ROM USER-CONFIRMED 2026-10-03 09:52 ("Looks good. Give editor files")) — in bank $76 rather than $71: rooms' and gates' variants (flag terms, first match wins) |
 | G-P | Family-icon editor slot pipeline (+ the custom-sprite background white-vs-cream defect — RESOLVED, user S106 r2 "background colour is perfect") — **built S107** (§5.2a) | ROADMAP P3.10 part 2c |
 
 ## 10. Milestones v2 (→ ROADMAP Phase 3, re-sequenced S90)

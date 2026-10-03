@@ -81,6 +81,8 @@ def gate_pools(gates_filter=None):
     enc = json.load(open(os.path.join(ROOT, 'extracted', 'encounters.json')))
     out = []
     for gid, g in enc.items():
+        if str(gid).startswith('_'):          # S114: the _generator key
+            continue
         if gates_filter is not None and int(gid) not in gates_filter:
             continue
         for fg in g['floor_groups']:

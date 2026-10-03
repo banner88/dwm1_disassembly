@@ -28,6 +28,7 @@ TEMPLATE_SIZE = {
     0x71: 444,    # addr(Custom26DDTable)-$4000, S102 (440 S101 + CustomAnimSource's far call to bank $6C entry 0, 4 B; measured from the S102 reference game.sym). Prev 440 S101 (395 S100 + CustomRoomBGMResolve .gatePath: the custom boss song on the floor before the boss). Prev 395 S100 (164 S99 + entries 4/5 dw + CustomGateInsert + CustomRoomFlags + entry-1 follow-gate test; measured from the S100 reference game.sym). Prev 164 S99 (142 S64 + entry-3 dw + CustomAnimSource 20 B; measured from the S99 reference game.sym). Prev 142 S64 (S55 116 + entry-2 dw + CustomRoomBGMResolve; measured from the S64 reference game.sym)
     0x6C: 285,    # addr(TileAnimRoomTable)-$4000, S102 (bank self-ID + entry table + CustomTileAnimate / TileAnimRestart / TileAnimCopy; measured from the S102 reference game.sym)
     0x6F: 391,    # addr(CustomAnimFrameTable)-$4000, S112 (bank self-ID + 4-entry table + CustomAnimTick / Init / Load / Step + CustomAnimNone; measured from the S112 game.sym)
+    0x76: 296,    # addr(EncRoomTable)-$4000, S115 (+2 entry-1 dw, +17 EncVanillaNumber new-gate source, +36 NewGateRowCopy; measured from the S115 game.sym). Prev 241 S114 (bank self-ID + entry table + EncResolve / EncPickVariant / EncFloorRun / EncVanillaNumber)
     0x6B: 53,     # addr(ProjectEnemyRows)-$4000, S101 (bank self-ID + entry table + CopyEnemyRowExt; measured from the S101 reference game.sym)
 }
 BANK_SIZE = 0x4000
@@ -147,6 +148,13 @@ def validate(prj, generated=None):
         try:
             warnings += [w for w in BA.check(prj) if w not in warnings]
         except BA.AnimError as e:
+            errors.append(str(e))
+        # S114 (P3.13a, PROJECT_COMPILER §2.30): the project's own encounter
+        # lists, the rooms' lists / variants / rates, the gates' plans
+        from . import encounters as EN
+        try:
+            warnings += [w for w in EN.check(prj) if w not in warnings]
+        except EN.EncounterError as e:
             errors.append(str(e))
         # S105 G3: up to 19 new species can land in ONE family's encyclopedia
         # tab — its 32-member cap is checked here, not only when bank $12 is
@@ -1013,6 +1021,11 @@ def bank_usage(generated):
     if text is not None:
         gen_bytes = _payload_bytes(text.split('NEW ANIMATION DATA (generated', 1)[-1])
         out[0x6F] = ((TEMPLATE_SIZE.get(0x6F) or 0) + gen_bytes, BANK_SIZE)
+    # S114: bank $76 = encounter lists (template head + data)
+    text = generated.get("file:patches/bank_076.asm")
+    if text is not None:
+        gen_bytes = _payload_bytes(text.split('ENCOUNTER DATA (generated', 1)[-1])
+        out[0x76] = ((TEMPLATE_SIZE.get(0x76) or 0) + gen_bytes, BANK_SIZE)
     text = generated.get("file:patches/bank_070.asm")
     if text is not None:
         out[0x70] = (_payload_bytes(text), BANK_SIZE)
@@ -1112,6 +1125,46 @@ def _validate_gates(prj, rooms, errors, warnings):
                 f"room {r.get('id')}: boss room of gate {gid} has no song — the "
                 "gate theme ($34) keeps playing (vanilla boss rooms have their "
                 "own boss song, which starts on the floor before)")
+    # ---- new gates (S115, ROADMAP NG1) + gate entrances
+    entered = {}
+    for r in rooms:
+        if r.get('placeholder'):
+            continue
+        for k, scr in prj.room_screens(r).items():
+            for st in prj.screen_states(scr):
+                for e in st.get('exits', []) or []:
+                    if not G.is_gate_entrance(e):
+                        continue
+                    gid = G.entrance_gate(e)
+                    where = f"room {r.get('id')} screen {k} ({e.get('x')},{e.get('y')})"
+                    if gid is None or not G.gate_exists(prj.custom, gid):
+                        errors.append(
+                            f"{where}: gate entrance to gate {e.get('dest')!r}, which is "
+                            "neither a vanilla gate (0-31) nor one of this project's new "
+                            "gates — the dive would read a wrong gate row")
+                        continue
+                    entered.setdefault(gid, []).append(where)
+    for rd in prj.custom.get('entrance_redirects') or []:
+        if G.is_gate_entrance(rd):
+            gid = G.entrance_gate(rd)
+            if gid is not None and G.gate_exists(prj.custom, gid):
+                entered.setdefault(gid, []).append(f"vanilla map {rd.get('mapID')}")
+            else:
+                errors.append(f"entrance_redirects ({rd.get('mapID')}): gate entrance "
+                              f"to undefined gate {rd.get('dest')!r}")
+    for gid, c in sorted(cfg.items()):
+        if not c.get('new'):
+            continue
+        if gid not in entered:
+            warnings.append(
+                f"new gate {gid} ({c['name']}) has no entrance — add one on a room "
+                "cell (Rooms tab: \"Gate entrance here\") or nothing can enter it")
+        if not c['boss_room']:
+            warnings.append(
+                f"new gate {gid} ({c['name']}) ends in a VANILLA boss room "
+                f"({F.hexb(c['boss_map'])}): its vanilla scripts run unchanged — the "
+                "original gate's cleared flag, boss and King speech. Give it a custom "
+                "boss room for its own ending")
     try:
         rows = prj.gate_insert_rows()
     except Exception as e:

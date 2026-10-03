@@ -1885,228 +1885,450 @@ DispatchText_72:
 ; extents (ns_text_*) under the same label.
 ; @BUILD_PROJECT BEGIN gd_monster_names
 MonsterNameStrings:
-MonsterName_000_DrakSlime: db "DrakSlime", $F0
-MonsterName_001_SpotSlime: db "SpotSlime", $F0
-MonsterName_002_WingSlime: db "WingSlime", $F0
-MonsterName_003_TreeSlime: db "TreeSlime", $F0
-MonsterName_004_Snaily: db "Snaily", $F0
-MonsterName_005_SlimeNite: db "SlimeNite", $F0
-MonsterName_006_Babble: db "Babble", $F0
-MonsterName_007_BoxSlime: db "BoxSlime", $F0
-MonsterName_008_Slime: db "Slime", $F0
-MonsterName_009_Healer: db "Healer", $F0
-MonsterName_010_FangSlime: db "FangSlime", $F0
-MonsterName_011_RockSlime: db "RockSlime", $F0
-MonsterName_012_SlimeBorg: db "SlimeBorg", $F0
-MonsterName_013_Slabbit: db "Slabbit", $F0
-MonsterName_014_SpotKing: db "SpotKing", $F0
-MonsterName_015_KingSlime: db "KingSlime", $F0
-MonsterName_016_Metaly: db "Metaly", $F0
-MonsterName_017_Metabble: db "Metabble", $F0
-MonsterName_018_MetalKing: db "MetalKing", $F0
-MonsterName_019_GoldSlime: db "GoldSlime", $F0
-MonsterName_020_DragonKid: db "DragonKid", $F0
-MonsterName_021_Tortragon: db "Tortragon", $F0
-MonsterName_022_Pteranod: db "Pteranod", $F0
-MonsterName_023_Gasgon: db "Gasgon", $F0
-MonsterName_024_FairyDrak: db "FairyDrak", $F0
-MonsterName_025_LizardMan: db "LizardMan", $F0
-MonsterName_026_Poisongon: db "Poisongon", $F0
-MonsterName_027_Swordgon: db "Swordgon", $F0
-MonsterName_028_Dragon: db "Dragon", $F0
-MonsterName_029_MiniDrak: db "MiniDrak", $F0
-MonsterName_030_MadDragon: db "MadDragon", $F0
-MonsterName_031_Rayburn: db "Rayburn", $F0
-MonsterName_032_Chamelgon: db "Chamelgon", $F0
-MonsterName_033_LizardFly: db "LizardFly", $F0
-MonsterName_034_Andreal: db "Andreal", $F0
-MonsterName_035_KingCobra: db "KingCobra", $F0
-MonsterName_036_Spikerous: db "Spikerous", $F0
-MonsterName_037_GreatDrak: db "GreatDrak", $F0
-MonsterName_038_Crestpent: db "Crestpent", $F0
-MonsterName_039_WingSnake: db "WingSnake", $F0
-MonsterName_040_Coatol: db "Coatol", $F0
-MonsterName_041_Orochi: db "Orochi", $F0
-MonsterName_042_BattleRex: db "BattleRex", $F0
-MonsterName_043_SkyDragon: db "SkyDragon", $F0
-MonsterName_044_Divinegon: db "Divinegon", $F0
-MonsterName_045_Tonguella: db "Tonguella", $F0
-MonsterName_046_Almiraj: db "Almiraj", $F0
-MonsterName_047_CatFly: db "CatFly", $F0
-MonsterName_048_PillowRat: db "PillowRat", $F0
-MonsterName_049_Saccer: db "Saccer", $F0
-MonsterName_050_GulpBeast: db "GulpBeast", $F0
-MonsterName_051_Skullroo: db "Skullroo", $F0
-MonsterName_052_WindBeast: db "WindBeast", $F0
-MonsterName_053_Anteater: db "Anteater", $F0
-MonsterName_054_SuperTen: db "SuperTen", $F0
-MonsterName_055_IronTurt: db "IronTurt", $F0
-MonsterName_056_Mommonja: db "Mommonja", $F0
-MonsterName_057_HammerMan: db "HammerMan", $F0
-MonsterName_058_Grizzly: db "Grizzly", $F0
-MonsterName_059_Yeti: db "Yeti", $F0
-MonsterName_060_MadGopher: db "MadGopher", $F0
-MonsterName_061_FairyRat: db "FairyRat", $F0
-MonsterName_062_Unicorn: db "Unicorn", $F0
-MonsterName_063_Goategon: db "Goategon", $F0
-MonsterName_064_WildApe: db "WildApe", $F0
-MonsterName_065_Trumpeter: db "Trumpeter", $F0
-MonsterName_066_KingLeo: db "KingLeo", $F0
-MonsterName_067_DarkHorn: db "DarkHorn", $F0
-MonsterName_068_MadCat: db "MadCat", $F0
-MonsterName_069_BigEye: db "BigEye", $F0
-MonsterName_070_Picky: db "Picky", $F0
-MonsterName_071_Wyvern: db "Wyvern", $F0
-MonsterName_072_BullBird: db "BullBird", $F0
-MonsterName_073_Florajay: db "Florajay", $F0
-MonsterName_074_DuckKite: db "DuckKite", $F0
-MonsterName_075_MadPecker: db "MadPecker", $F0
-MonsterName_076_MadRaven: db "MadRaven", $F0
-MonsterName_077_MistyWing: db "MistyWing", $F0
-MonsterName_078_Dracky: db "Dracky", $F0
-MonsterName_079_BigRoost: db "BigRoost", $F0
-MonsterName_080_StubBird: db "StubBird", $F0
-MonsterName_081_LandOwl: db "LandOwl", $F0
-MonsterName_082_MadGoose: db "MadGoose", $F0
-MonsterName_083_MadCondor: db "MadCondor", $F0
-MonsterName_084_Blizzardy: db "Blizzardy", $F0
-MonsterName_085_Phoenix: db "Phoenix", $F0
-MonsterName_086_ZapBird: db "ZapBird", $F0
-MonsterName_087_WhipBird: db "WhipBird", $F0
-MonsterName_088_FunkyBird: db "FunkyBird", $F0
-MonsterName_089_RainHawk: db "RainHawk", $F0
-MonsterName_090_MadPlant: db "MadPlant", $F0
-MonsterName_091_FireWeed: db "FireWeed", $F0
-MonsterName_092_FloraMan: db "FloraMan", $F0
-MonsterName_093_WingTree: db "WingTree", $F0
-MonsterName_094_CactiBall: db "CactiBall", $F0
-MonsterName_095_Gulpple: db "Gulpple", $F0
-MonsterName_096_Toadstool: db "Toadstool", $F0
-MonsterName_097_AmberWeed: db "AmberWeed", $F0
-MonsterName_098_Stubsuck: db "Stubsuck", $F0
-MonsterName_099_Oniono: db "Oniono", $F0
-MonsterName_100_DanceVegi: db "DanceVegi", $F0
-MonsterName_101_TreeBoy: db "TreeBoy", $F0
-MonsterName_102_FaceTree: db "FaceTree", $F0
-MonsterName_103_HerbMan: db "HerbMan", $F0
-MonsterName_104_BeanMan: db "BeanMan", $F0
-MonsterName_105_EvilSeed: db "EvilSeed", $F0
-MonsterName_106_ManEater: db "ManEater", $F0
-MonsterName_107_Snapper: db "Snapper", $F0
-MonsterName_108_Rosevine: db "Rosevine", $F0
-MonsterName_109_Watabou: db "Watabou", $F0
-MonsterName_110_GiantSlug: db "GiantSlug", $F0
-MonsterName_111_Catapila: db "Catapila", $F0
-MonsterName_112_Gophecada: db "Gophecada", $F0
-MonsterName_113_Butterfly: db "Butterfly", $F0
-MonsterName_114_WeedBug: db "WeedBug", $F0
-MonsterName_115_GiantWorm: db "GiantWorm", $F0
-MonsterName_116_Lipsy: db "Lipsy", $F0
-MonsterName_117_StagBug: db "StagBug", $F0
-MonsterName_118_ArmyAnt: db "ArmyAnt", $F0
-MonsterName_119_GoHopper: db "GoHopper", $F0
-MonsterName_120_TailEater: db "TailEater", $F0
-MonsterName_121_ArmorPede: db "ArmorPede", $F0
-MonsterName_122_Eyeder: db "Eyeder", $F0
-MonsterName_123_GiantMoth: db "GiantMoth", $F0
-MonsterName_124_Droll: db "Droll", $F0
-MonsterName_125_ArmyCrab: db "ArmyCrab", $F0
-MonsterName_126_MadHornet: db "MadHornet", $F0
-MonsterName_127_HornBeet: db "HornBeet", $F0
-MonsterName_128_Armorpion: db "Armorpion", $F0
-MonsterName_129_Digster: db "Digster", $F0
-MonsterName_130_Pixy: db "Pixy", $F0
-MonsterName_131_ArcDemon: db "ArcDemon", $F0
-MonsterName_132_AgDevil: db "AgDevil", $F0
-MonsterName_133_Demonite: db "Demonite", $F0
-MonsterName_134_DarkEye: db "DarkEye", $F0
-MonsterName_135_EyeBall: db "EyeBall", $F0
-MonsterName_136_SkulRider: db "SkulRider", $F0
-MonsterName_137_EvilBeast: db "EvilBeast", $F0
-MonsterName_138_1EyeClown: db "1EyeClown", $F0
-MonsterName_139_Gremlin: db "Gremlin", $F0
-MonsterName_140_MedusaEye: db "MedusaEye", $F0
-MonsterName_141_Lionex: db "Lionex", $F0
-MonsterName_142_GoatHorn: db "GoatHorn", $F0
-MonsterName_143_Orc: db "Orc", $F0
-MonsterName_144_Ogre: db "Ogre", $F0
-MonsterName_145_GateGuard: db "GateGuard", $F0
-MonsterName_146_ChopClown: db "ChopClown", $F0
-MonsterName_147_Grendal: db "Grendal", $F0
-MonsterName_148_Akubar: db "Akubar", $F0
-MonsterName_149_MadKnight: db "MadKnight", $F0
-MonsterName_150_Gigantes: db "Gigantes", $F0
-MonsterName_151_Centasaur: db "Centasaur", $F0
-MonsterName_152_EvilArmor: db "EvilArmor", $F0
-MonsterName_153_Jamirus: db "Jamirus", $F0
-MonsterName_154_Durran: db "Durran", $F0
-MonsterName_155_Spooky: db "Spooky", $F0
-MonsterName_156_Skullgon: db "Skullgon", $F0
-MonsterName_157_Putrepup: db "Putrepup", $F0
-MonsterName_158_RotRaven: db "RotRaven", $F0
-MonsterName_159_Mummy: db "Mummy", $F0
-MonsterName_160_DarkCrab: db "DarkCrab", $F0
-MonsterName_161_DeadNite: db "DeadNite", $F0
-MonsterName_162_Shadow: db "Shadow", $F0
-MonsterName_163_Hork: db "Hork", $F0
-MonsterName_164_Mudron: db "Mudron", $F0
-MonsterName_165_NiteWhip: db "NiteWhip", $F0
-MonsterName_166_MadSpirit: db "MadSpirit", $F0
-MonsterName_167_WindMerge: db "WindMerge", $F0
-MonsterName_168_Reaper: db "Reaper", $F0
-MonsterName_169_DeadNoble: db "DeadNoble", $F0
-MonsterName_170_WhiteKing: db "WhiteKing", $F0
-MonsterName_171_BoneSlave: db "BoneSlave", $F0
-MonsterName_172_Skeletor: db "Skeletor", $F0
-MonsterName_173_Servant: db "Servant", $F0
-MonsterName_174_Copycat: db "Copycat", $F0
-MonsterName_175_JewelBag: db "JewelBag", $F0
-MonsterName_176_EvilWand: db "EvilWand", $F0
-MonsterName_177_MadCandle: db "MadCandle", $F0
-MonsterName_178_CoilBird: db "CoilBird", $F0
-MonsterName_179_Facer: db "Facer", $F0
-MonsterName_180_SpikyBoy: db "SpikyBoy", $F0
-MonsterName_181_MadMirror: db "MadMirror", $F0
-MonsterName_182_RogueNite: db "RogueNite", $F0
-MonsterName_183_Goopi: db "Goopi", $F0
-MonsterName_184_Voodoll: db "Voodoll", $F0
-MonsterName_185_MetalDrak: db "MetalDrak", $F0
-MonsterName_186_Balzak: db "Balzak", $F0
-MonsterName_187_SabreMan: db "SabreMan", $F0
-MonsterName_188_CurseLamp: db "CurseLamp", $F0
-MonsterName_189_Roboster: db "Roboster", $F0
-MonsterName_190_EvilPot: db "EvilPot", $F0
-MonsterName_191_Gismo: db "Gismo", $F0
-MonsterName_192_LavaMan: db "LavaMan", $F0
-MonsterName_193_IceMan: db "IceMan", $F0
-MonsterName_194_Mimic: db "Mimic", $F0
-MonsterName_195_MudDoll: db "MudDoll", $F0
-MonsterName_196_Golem: db "Golem", $F0
-MonsterName_197_StoneMan: db "StoneMan", $F0
-MonsterName_198_BombCrag: db "BombCrag", $F0
-MonsterName_199_GoldGolem: db "GoldGolem", $F0
-MonsterName_200_DracoLord: db "DracoLord", $F0
-MonsterName_201_DracoLord: db "DracoLord", $F0
-MonsterName_202_Hargon: db "Hargon", $F0
-MonsterName_203_Sidoh: db "Sidoh", $F0
-MonsterName_204_Baramos: db "Baramos", $F0
-MonsterName_205_Zoma: db "Zoma", $F0
-MonsterName_206_Pizzaro: db "Pizzaro", $F0
-MonsterName_207_Esterk: db "Esterk", $F0
-MonsterName_208_Mirudraas: db "Mirudraas", $F0
-MonsterName_209_Mirudraas: db "Mirudraas", $F0
-MonsterName_210_Mudou: db "Mudou", $F0
-MonsterName_211_DeathMore: db "DeathMore", $F0
-MonsterName_212_DeathMore: db "DeathMore", $F0
-MonsterName_213_DeathMore: db "DeathMore", $F0
-MonsterName_214_Darkdrium: db "Darkdrium", $F0
-MonsterName_215_TERRY: db "TERRY?", $F0
-MonsterName_216_Tatsu: db "Tatsu", $F0
-MonsterName_217_Diago: db "Diago", $F0
-MonsterName_218_Samsi: db "Samsi", $F0
-MonsterName_219_Bazoo: db "Bazoo", $F0
-MonsterName_220_Unused_220: db $F0
-MonsterName_225_Unused_225: db "?????", $F0
+MonsterName_000_DrakSlime:  ; "DrakSlime"
+    db $27, $4F, $3E, $48, $36, $49, $46, $4A, $42, $F0
+MonsterName_001_SpotSlime:  ; "SpotSlime"
+    db $36, $4D, $4C, $51, $36, $49, $46, $4A, $42, $F0
+MonsterName_002_WingSlime:  ; "WingSlime"
+    db $3A, $46, $4B, $44, $36, $49, $46, $4A, $42, $F0
+MonsterName_003_TreeSlime:  ; "TreeSlime"
+    db $37, $4F, $42, $42, $36, $49, $46, $4A, $42, $F0
+MonsterName_004_Snaily:  ; "Snaily"
+    db $36, $4B, $3E, $46, $49, $56, $F0
+MonsterName_005_SlimeNite:  ; "SlimeNite"
+    db $36, $49, $46, $4A, $42, $31, $46, $51, $42, $F0
+MonsterName_006_Babble:  ; "Babble"
+    db $25, $3E, $3F, $3F, $49, $42, $F0
+MonsterName_007_BoxSlime:  ; "BoxSlime"
+    db $25, $4C, $55, $36, $49, $46, $4A, $42, $F0
+MonsterName_008_Slime:  ; "Slime"
+    db $36, $49, $46, $4A, $42, $F0
+MonsterName_009_Healer:  ; "Healer"
+    db $2B, $42, $3E, $49, $42, $4F, $F0
+MonsterName_010_FangSlime:  ; "FangSlime"
+    db $29, $3E, $4B, $44, $36, $49, $46, $4A, $42, $F0
+MonsterName_011_RockSlime:  ; "RockSlime"
+    db $35, $4C, $40, $48, $36, $49, $46, $4A, $42, $F0
+MonsterName_012_SlimeBorg:  ; "SlimeBorg"
+    db $36, $49, $46, $4A, $42, $25, $4C, $4F, $44, $F0
+MonsterName_013_Slabbit:  ; "Slabbit"
+    db $36, $49, $3E, $3F, $3F, $46, $51, $F0
+MonsterName_014_SpotKing:  ; "SpotKing"
+    db $36, $4D, $4C, $51, $2E, $46, $4B, $44, $F0
+MonsterName_015_KingSlime:  ; "KingSlime"
+    db $2E, $46, $4B, $44, $36, $49, $46, $4A, $42, $F0
+MonsterName_016_Metaly:  ; "Metaly"
+    db $30, $42, $51, $3E, $49, $56, $F0
+MonsterName_017_Metabble:  ; "Metabble"
+    db $30, $42, $51, $3E, $3F, $3F, $49, $42, $F0
+MonsterName_018_MetalKing:  ; "MetalKing"
+    db $30, $42, $51, $3E, $49, $2E, $46, $4B, $44, $F0
+MonsterName_019_GoldSlime:  ; "GoldSlime"
+    db $2A, $4C, $49, $41, $36, $49, $46, $4A, $42, $F0
+MonsterName_020_DragonKid:  ; "DragonKid"
+    db $27, $4F, $3E, $44, $4C, $4B, $2E, $46, $41, $F0
+MonsterName_021_Tortragon:  ; "Tortragon"
+    db $37, $4C, $4F, $51, $4F, $3E, $44, $4C, $4B, $F0
+MonsterName_022_Pteranod:  ; "Pteranod"
+    db $33, $51, $42, $4F, $3E, $4B, $4C, $41, $F0
+MonsterName_023_Gasgon:  ; "Gasgon"
+    db $2A, $3E, $50, $44, $4C, $4B, $F0
+MonsterName_024_FairyDrak:  ; "FairyDrak"
+    db $29, $3E, $46, $4F, $56, $27, $4F, $3E, $48, $F0
+MonsterName_025_LizardMan:  ; "LizardMan"
+    db $2F, $46, $57, $3E, $4F, $41, $30, $3E, $4B, $F0
+MonsterName_026_Poisongon:  ; "Poisongon"
+    db $33, $4C, $46, $50, $4C, $4B, $44, $4C, $4B, $F0
+MonsterName_027_Swordgon:  ; "Swordgon"
+    db $36, $54, $4C, $4F, $41, $44, $4C, $4B, $F0
+MonsterName_028_Dragon:  ; "Dragon"
+    db $27, $4F, $3E, $44, $4C, $4B, $F0
+MonsterName_029_MiniDrak:  ; "MiniDrak"
+    db $30, $46, $4B, $46, $27, $4F, $3E, $48, $F0
+MonsterName_030_MadDragon:  ; "MadDragon"
+    db $30, $3E, $41, $27, $4F, $3E, $44, $4C, $4B, $F0
+MonsterName_031_Rayburn:  ; "Rayburn"
+    db $35, $3E, $56, $3F, $52, $4F, $4B, $F0
+MonsterName_032_Chamelgon:  ; "Chamelgon"
+    db $26, $45, $3E, $4A, $42, $49, $44, $4C, $4B, $F0
+MonsterName_033_LizardFly:  ; "LizardFly"
+    db $2F, $46, $57, $3E, $4F, $41, $29, $49, $56, $F0
+MonsterName_034_Andreal:  ; "Andreal"
+    db $24, $4B, $41, $4F, $42, $3E, $49, $F0
+MonsterName_035_KingCobra:  ; "KingCobra"
+    db $2E, $46, $4B, $44, $26, $4C, $3F, $4F, $3E, $F0
+MonsterName_036_Spikerous:  ; "Spikerous"
+    db $36, $4D, $46, $48, $42, $4F, $4C, $52, $50, $F0
+MonsterName_037_GreatDrak:  ; "GreatDrak"
+    db $2A, $4F, $42, $3E, $51, $27, $4F, $3E, $48, $F0
+MonsterName_038_Crestpent:  ; "Crestpent"
+    db $26, $4F, $42, $50, $51, $4D, $42, $4B, $51, $F0
+MonsterName_039_WingSnake:  ; "WingSnake"
+    db $3A, $46, $4B, $44, $36, $4B, $3E, $48, $42, $F0
+MonsterName_040_Coatol:  ; "Coatol"
+    db $26, $4C, $3E, $51, $4C, $49, $F0
+MonsterName_041_Orochi:  ; "Orochi"
+    db $32, $4F, $4C, $40, $45, $46, $F0
+MonsterName_042_BattleRex:  ; "BattleRex"
+    db $25, $3E, $51, $51, $49, $42, $35, $42, $55, $F0
+MonsterName_043_SkyDragon:  ; "SkyDragon"
+    db $36, $48, $56, $27, $4F, $3E, $44, $4C, $4B, $F0
+MonsterName_044_Divinegon:  ; "Divinegon"
+    db $27, $46, $53, $46, $4B, $42, $44, $4C, $4B, $F0
+MonsterName_045_Tonguella:  ; "Tonguella"
+    db $37, $4C, $4B, $44, $52, $42, $49, $49, $3E, $F0
+MonsterName_046_Almiraj:  ; "Almiraj"
+    db $24, $49, $4A, $46, $4F, $3E, $47, $F0
+MonsterName_047_CatFly:  ; "CatFly"
+    db $26, $3E, $51, $29, $49, $56, $F0
+MonsterName_048_PillowRat:  ; "PillowRat"
+    db $33, $46, $49, $49, $4C, $54, $35, $3E, $51, $F0
+MonsterName_049_Saccer:  ; "Saccer"
+    db $36, $3E, $40, $40, $42, $4F, $F0
+MonsterName_050_GulpBeast:  ; "GulpBeast"
+    db $2A, $52, $49, $4D, $25, $42, $3E, $50, $51, $F0
+MonsterName_051_Skullroo:  ; "Skullroo"
+    db $36, $48, $52, $49, $49, $4F, $4C, $4C, $F0
+MonsterName_052_WindBeast:  ; "WindBeast"
+    db $3A, $46, $4B, $41, $25, $42, $3E, $50, $51, $F0
+MonsterName_053_Anteater:  ; "Anteater"
+    db $24, $4B, $51, $42, $3E, $51, $42, $4F, $F0
+MonsterName_054_SuperTen:  ; "SuperTen"
+    db $36, $52, $4D, $42, $4F, $37, $42, $4B, $F0
+MonsterName_055_IronTurt:  ; "IronTurt"
+    db $2C, $4F, $4C, $4B, $37, $52, $4F, $51, $F0
+MonsterName_056_Mommonja:  ; "Mommonja"
+    db $30, $4C, $4A, $4A, $4C, $4B, $47, $3E, $F0
+MonsterName_057_HammerMan:  ; "HammerMan"
+    db $2B, $3E, $4A, $4A, $42, $4F, $30, $3E, $4B, $F0
+MonsterName_058_Grizzly:  ; "Grizzly"
+    db $2A, $4F, $46, $57, $57, $49, $56, $F0
+MonsterName_059_Yeti:  ; "Yeti"
+    db $3C, $42, $51, $46, $F0
+MonsterName_060_MadGopher:  ; "MadGopher"
+    db $30, $3E, $41, $2A, $4C, $4D, $45, $42, $4F, $F0
+MonsterName_061_FairyRat:  ; "FairyRat"
+    db $29, $3E, $46, $4F, $56, $35, $3E, $51, $F0
+MonsterName_062_Unicorn:  ; "Unicorn"
+    db $38, $4B, $46, $40, $4C, $4F, $4B, $F0
+MonsterName_063_Goategon:  ; "Goategon"
+    db $2A, $4C, $3E, $51, $42, $44, $4C, $4B, $F0
+MonsterName_064_WildApe:  ; "WildApe"
+    db $3A, $46, $49, $41, $24, $4D, $42, $F0
+MonsterName_065_Trumpeter:  ; "Trumpeter"
+    db $37, $4F, $52, $4A, $4D, $42, $51, $42, $4F, $F0
+MonsterName_066_KingLeo:  ; "KingLeo"
+    db $2E, $46, $4B, $44, $2F, $42, $4C, $F0
+MonsterName_067_DarkHorn:  ; "DarkHorn"
+    db $27, $3E, $4F, $48, $2B, $4C, $4F, $4B, $F0
+MonsterName_068_MadCat:  ; "MadCat"
+    db $30, $3E, $41, $26, $3E, $51, $F0
+MonsterName_069_BigEye:  ; "BigEye"
+    db $25, $46, $44, $28, $56, $42, $F0
+MonsterName_070_Picky:  ; "Picky"
+    db $33, $46, $40, $48, $56, $F0
+MonsterName_071_Wyvern:  ; "Wyvern"
+    db $3A, $56, $53, $42, $4F, $4B, $F0
+MonsterName_072_BullBird:  ; "BullBird"
+    db $25, $52, $49, $49, $25, $46, $4F, $41, $F0
+MonsterName_073_Florajay:  ; "Florajay"
+    db $29, $49, $4C, $4F, $3E, $47, $3E, $56, $F0
+MonsterName_074_DuckKite:  ; "DuckKite"
+    db $27, $52, $40, $48, $2E, $46, $51, $42, $F0
+MonsterName_075_MadPecker:  ; "MadPecker"
+    db $30, $3E, $41, $33, $42, $40, $48, $42, $4F, $F0
+MonsterName_076_MadRaven:  ; "MadRaven"
+    db $30, $3E, $41, $35, $3E, $53, $42, $4B, $F0
+MonsterName_077_MistyWing:  ; "MistyWing"
+    db $30, $46, $50, $51, $56, $3A, $46, $4B, $44, $F0
+MonsterName_078_Dracky:  ; "Dracky"
+    db $27, $4F, $3E, $40, $48, $56, $F0
+MonsterName_079_BigRoost:  ; "BigRoost"
+    db $25, $46, $44, $35, $4C, $4C, $50, $51, $F0
+MonsterName_080_StubBird:  ; "StubBird"
+    db $36, $51, $52, $3F, $25, $46, $4F, $41, $F0
+MonsterName_081_LandOwl:  ; "LandOwl"
+    db $2F, $3E, $4B, $41, $32, $54, $49, $F0
+MonsterName_082_MadGoose:  ; "MadGoose"
+    db $30, $3E, $41, $2A, $4C, $4C, $50, $42, $F0
+MonsterName_083_MadCondor:  ; "MadCondor"
+    db $30, $3E, $41, $26, $4C, $4B, $41, $4C, $4F, $F0
+MonsterName_084_Blizzardy:  ; "Blizzardy"
+    db $25, $49, $46, $57, $57, $3E, $4F, $41, $56, $F0
+MonsterName_085_Phoenix:  ; "Phoenix"
+    db $33, $45, $4C, $42, $4B, $46, $55, $F0
+MonsterName_086_ZapBird:  ; "ZapBird"
+    db $3D, $3E, $4D, $25, $46, $4F, $41, $F0
+MonsterName_087_WhipBird:  ; "WhipBird"
+    db $3A, $45, $46, $4D, $25, $46, $4F, $41, $F0
+MonsterName_088_FunkyBird:  ; "FunkyBird"
+    db $29, $52, $4B, $48, $56, $25, $46, $4F, $41, $F0
+MonsterName_089_RainHawk:  ; "RainHawk"
+    db $35, $3E, $46, $4B, $2B, $3E, $54, $48, $F0
+MonsterName_090_MadPlant:  ; "MadPlant"
+    db $30, $3E, $41, $33, $49, $3E, $4B, $51, $F0
+MonsterName_091_FireWeed:  ; "FireWeed"
+    db $29, $46, $4F, $42, $3A, $42, $42, $41, $F0
+MonsterName_092_FloraMan:  ; "FloraMan"
+    db $29, $49, $4C, $4F, $3E, $30, $3E, $4B, $F0
+MonsterName_093_WingTree:  ; "WingTree"
+    db $3A, $46, $4B, $44, $37, $4F, $42, $42, $F0
+MonsterName_094_CactiBall:  ; "CactiBall"
+    db $26, $3E, $40, $51, $46, $25, $3E, $49, $49, $F0
+MonsterName_095_Gulpple:  ; "Gulpple"
+    db $2A, $52, $49, $4D, $4D, $49, $42, $F0
+MonsterName_096_Toadstool:  ; "Toadstool"
+    db $37, $4C, $3E, $41, $50, $51, $4C, $4C, $49, $F0
+MonsterName_097_AmberWeed:  ; "AmberWeed"
+    db $24, $4A, $3F, $42, $4F, $3A, $42, $42, $41, $F0
+MonsterName_098_Stubsuck:  ; "Stubsuck"
+    db $36, $51, $52, $3F, $50, $52, $40, $48, $F0
+MonsterName_099_Oniono:  ; "Oniono"
+    db $32, $4B, $46, $4C, $4B, $4C, $F0
+MonsterName_100_DanceVegi:  ; "DanceVegi"
+    db $27, $3E, $4B, $40, $42, $39, $42, $44, $46, $F0
+MonsterName_101_TreeBoy:  ; "TreeBoy"
+    db $37, $4F, $42, $42, $25, $4C, $56, $F0
+MonsterName_102_FaceTree:  ; "FaceTree"
+    db $29, $3E, $40, $42, $37, $4F, $42, $42, $F0
+MonsterName_103_HerbMan:  ; "HerbMan"
+    db $2B, $42, $4F, $3F, $30, $3E, $4B, $F0
+MonsterName_104_BeanMan:  ; "BeanMan"
+    db $25, $42, $3E, $4B, $30, $3E, $4B, $F0
+MonsterName_105_EvilSeed:  ; "EvilSeed"
+    db $28, $53, $46, $49, $36, $42, $42, $41, $F0
+MonsterName_106_ManEater:  ; "ManEater"
+    db $30, $3E, $4B, $28, $3E, $51, $42, $4F, $F0
+MonsterName_107_Snapper:  ; "Snapper"
+    db $36, $4B, $3E, $4D, $4D, $42, $4F, $F0
+MonsterName_108_Rosevine:  ; "Rosevine"
+    db $35, $4C, $50, $42, $53, $46, $4B, $42, $F0
+MonsterName_109_Watabou:  ; "Watabou"
+    db $3A, $3E, $51, $3E, $3F, $4C, $52, $F0
+MonsterName_110_GiantSlug:  ; "GiantSlug"
+    db $2A, $46, $3E, $4B, $51, $36, $49, $52, $44, $F0
+MonsterName_111_Catapila:  ; "Catapila"
+    db $26, $3E, $51, $3E, $4D, $46, $49, $3E, $F0
+MonsterName_112_Gophecada:  ; "Gophecada"
+    db $2A, $4C, $4D, $45, $42, $40, $3E, $41, $3E, $F0
+MonsterName_113_Butterfly:  ; "Butterfly"
+    db $25, $52, $51, $51, $42, $4F, $43, $49, $56, $F0
+MonsterName_114_WeedBug:  ; "WeedBug"
+    db $3A, $42, $42, $41, $25, $52, $44, $F0
+MonsterName_115_GiantWorm:  ; "GiantWorm"
+    db $2A, $46, $3E, $4B, $51, $3A, $4C, $4F, $4A, $F0
+MonsterName_116_Lipsy:  ; "Lipsy"
+    db $2F, $46, $4D, $50, $56, $F0
+MonsterName_117_StagBug:  ; "StagBug"
+    db $36, $51, $3E, $44, $25, $52, $44, $F0
+MonsterName_118_ArmyAnt:  ; "ArmyAnt"
+    db $24, $4F, $4A, $56, $24, $4B, $51, $F0
+MonsterName_119_GoHopper:  ; "GoHopper"
+    db $2A, $4C, $2B, $4C, $4D, $4D, $42, $4F, $F0
+MonsterName_120_TailEater:  ; "TailEater"
+    db $37, $3E, $46, $49, $28, $3E, $51, $42, $4F, $F0
+MonsterName_121_ArmorPede:  ; "ArmorPede"
+    db $24, $4F, $4A, $4C, $4F, $33, $42, $41, $42, $F0
+MonsterName_122_Eyeder:  ; "Eyeder"
+    db $28, $56, $42, $41, $42, $4F, $F0
+MonsterName_123_GiantMoth:  ; "GiantMoth"
+    db $2A, $46, $3E, $4B, $51, $30, $4C, $51, $45, $F0
+MonsterName_124_Droll:  ; "Droll"
+    db $27, $4F, $4C, $49, $49, $F0
+MonsterName_125_ArmyCrab:  ; "ArmyCrab"
+    db $24, $4F, $4A, $56, $26, $4F, $3E, $3F, $F0
+MonsterName_126_MadHornet:  ; "MadHornet"
+    db $30, $3E, $41, $2B, $4C, $4F, $4B, $42, $51, $F0
+MonsterName_127_HornBeet:  ; "HornBeet"
+    db $2B, $4C, $4F, $4B, $25, $42, $42, $51, $F0
+MonsterName_128_Armorpion:  ; "Armorpion"
+    db $24, $4F, $4A, $4C, $4F, $4D, $46, $4C, $4B, $F0
+MonsterName_129_Digster:  ; "Digster"
+    db $27, $46, $44, $50, $51, $42, $4F, $F0
+MonsterName_130_Pixy:  ; "Pixy"
+    db $33, $46, $55, $56, $F0
+MonsterName_131_ArcDemon:  ; "ArcDemon"
+    db $24, $4F, $40, $27, $42, $4A, $4C, $4B, $F0
+MonsterName_132_AgDevil:  ; "AgDevil"
+    db $24, $44, $27, $42, $53, $46, $49, $F0
+MonsterName_133_Demonite:  ; "Demonite"
+    db $27, $42, $4A, $4C, $4B, $46, $51, $42, $F0
+MonsterName_134_DarkEye:  ; "DarkEye"
+    db $27, $3E, $4F, $48, $28, $56, $42, $F0
+MonsterName_135_EyeBall:  ; "EyeBall"
+    db $28, $56, $42, $25, $3E, $49, $49, $F0
+MonsterName_136_SkulRider:  ; "SkulRider"
+    db $36, $48, $52, $49, $35, $46, $41, $42, $4F, $F0
+MonsterName_137_EvilBeast:  ; "EvilBeast"
+    db $28, $53, $46, $49, $25, $42, $3E, $50, $51, $F0
+MonsterName_138_1EyeClown:  ; "1EyeClown"
+    db $01, $28, $56, $42, $26, $49, $4C, $54, $4B, $F0
+MonsterName_139_Gremlin:  ; "Gremlin"
+    db $2A, $4F, $42, $4A, $49, $46, $4B, $F0
+MonsterName_140_MedusaEye:  ; "MedusaEye"
+    db $30, $42, $41, $52, $50, $3E, $28, $56, $42, $F0
+MonsterName_141_Lionex:  ; "Lionex"
+    db $2F, $46, $4C, $4B, $42, $55, $F0
+MonsterName_142_GoatHorn:  ; "GoatHorn"
+    db $2A, $4C, $3E, $51, $2B, $4C, $4F, $4B, $F0
+MonsterName_143_Orc:  ; "Orc"
+    db $32, $4F, $40, $F0
+MonsterName_144_Ogre:  ; "Ogre"
+    db $32, $44, $4F, $42, $F0
+MonsterName_145_GateGuard:  ; "GateGuard"
+    db $2A, $3E, $51, $42, $2A, $52, $3E, $4F, $41, $F0
+MonsterName_146_ChopClown:  ; "ChopClown"
+    db $26, $45, $4C, $4D, $26, $49, $4C, $54, $4B, $F0
+MonsterName_147_Grendal:  ; "Grendal"
+    db $2A, $4F, $42, $4B, $41, $3E, $49, $F0
+MonsterName_148_Akubar:  ; "Akubar"
+    db $24, $48, $52, $3F, $3E, $4F, $F0
+MonsterName_149_MadKnight:  ; "MadKnight"
+    db $30, $3E, $41, $2E, $4B, $46, $44, $45, $51, $F0
+MonsterName_150_Gigantes:  ; "Gigantes"
+    db $2A, $46, $44, $3E, $4B, $51, $42, $50, $F0
+MonsterName_151_Centasaur:  ; "Centasaur"
+    db $26, $42, $4B, $51, $3E, $50, $3E, $52, $4F, $F0
+MonsterName_152_EvilArmor:  ; "EvilArmor"
+    db $28, $53, $46, $49, $24, $4F, $4A, $4C, $4F, $F0
+MonsterName_153_Jamirus:  ; "Jamirus"
+    db $2D, $3E, $4A, $46, $4F, $52, $50, $F0
+MonsterName_154_Durran:  ; "Durran"
+    db $27, $52, $4F, $4F, $3E, $4B, $F0
+MonsterName_155_Spooky:  ; "Spooky"
+    db $36, $4D, $4C, $4C, $48, $56, $F0
+MonsterName_156_Skullgon:  ; "Skullgon"
+    db $36, $48, $52, $49, $49, $44, $4C, $4B, $F0
+MonsterName_157_Putrepup:  ; "Putrepup"
+    db $33, $52, $51, $4F, $42, $4D, $52, $4D, $F0
+MonsterName_158_RotRaven:  ; "RotRaven"
+    db $35, $4C, $51, $35, $3E, $53, $42, $4B, $F0
+MonsterName_159_Mummy:  ; "Mummy"
+    db $30, $52, $4A, $4A, $56, $F0
+MonsterName_160_DarkCrab:  ; "DarkCrab"
+    db $27, $3E, $4F, $48, $26, $4F, $3E, $3F, $F0
+MonsterName_161_DeadNite:  ; "DeadNite"
+    db $27, $42, $3E, $41, $31, $46, $51, $42, $F0
+MonsterName_162_Shadow:  ; "Shadow"
+    db $36, $45, $3E, $41, $4C, $54, $F0
+MonsterName_163_Hork:  ; "Hork"
+    db $2B, $4C, $4F, $48, $F0
+MonsterName_164_Mudron:  ; "Mudron"
+    db $30, $52, $41, $4F, $4C, $4B, $F0
+MonsterName_165_NiteWhip:  ; "NiteWhip"
+    db $31, $46, $51, $42, $3A, $45, $46, $4D, $F0
+MonsterName_166_MadSpirit:  ; "MadSpirit"
+    db $30, $3E, $41, $36, $4D, $46, $4F, $46, $51, $F0
+MonsterName_167_WindMerge:  ; "WindMerge"
+    db $3A, $46, $4B, $41, $30, $42, $4F, $44, $42, $F0
+MonsterName_168_Reaper:  ; "Reaper"
+    db $35, $42, $3E, $4D, $42, $4F, $F0
+MonsterName_169_DeadNoble:  ; "DeadNoble"
+    db $27, $42, $3E, $41, $31, $4C, $3F, $49, $42, $F0
+MonsterName_170_WhiteKing:  ; "WhiteKing"
+    db $3A, $45, $46, $51, $42, $2E, $46, $4B, $44, $F0
+MonsterName_171_BoneSlave:  ; "BoneSlave"
+    db $25, $4C, $4B, $42, $36, $49, $3E, $53, $42, $F0
+MonsterName_172_Skeletor:  ; "Skeletor"
+    db $36, $48, $42, $49, $42, $51, $4C, $4F, $F0
+MonsterName_173_Servant:  ; "Servant"
+    db $36, $42, $4F, $53, $3E, $4B, $51, $F0
+MonsterName_174_Copycat:  ; "Copycat"
+    db $26, $4C, $4D, $56, $40, $3E, $51, $F0
+MonsterName_175_JewelBag:  ; "JewelBag"
+    db $2D, $42, $54, $42, $49, $25, $3E, $44, $F0
+MonsterName_176_EvilWand:  ; "EvilWand"
+    db $28, $53, $46, $49, $3A, $3E, $4B, $41, $F0
+MonsterName_177_MadCandle:  ; "MadCandle"
+    db $30, $3E, $41, $26, $3E, $4B, $41, $49, $42, $F0
+MonsterName_178_CoilBird:  ; "CoilBird"
+    db $26, $4C, $46, $49, $25, $46, $4F, $41, $F0
+MonsterName_179_Facer:  ; "Facer"
+    db $29, $3E, $40, $42, $4F, $F0
+MonsterName_180_SpikyBoy:  ; "SpikyBoy"
+    db $36, $4D, $46, $48, $56, $25, $4C, $56, $F0
+MonsterName_181_MadMirror:  ; "MadMirror"
+    db $30, $3E, $41, $30, $46, $4F, $4F, $4C, $4F, $F0
+MonsterName_182_RogueNite:  ; "RogueNite"
+    db $35, $4C, $44, $52, $42, $31, $46, $51, $42, $F0
+MonsterName_183_Goopi:  ; "Goopi"
+    db $2A, $4C, $4C, $4D, $46, $F0
+MonsterName_184_Voodoll:  ; "Voodoll"
+    db $39, $4C, $4C, $41, $4C, $49, $49, $F0
+MonsterName_185_MetalDrak:  ; "MetalDrak"
+    db $30, $42, $51, $3E, $49, $27, $4F, $3E, $48, $F0
+MonsterName_186_Balzak:  ; "Balzak"
+    db $25, $3E, $49, $57, $3E, $48, $F0
+MonsterName_187_SabreMan:  ; "SabreMan"
+    db $36, $3E, $3F, $4F, $42, $30, $3E, $4B, $F0
+MonsterName_188_CurseLamp:  ; "CurseLamp"
+    db $26, $52, $4F, $50, $42, $2F, $3E, $4A, $4D, $F0
+MonsterName_189_Roboster:  ; "Roboster"
+    db $35, $4C, $3F, $4C, $50, $51, $42, $4F, $F0
+MonsterName_190_EvilPot:  ; "EvilPot"
+    db $28, $53, $46, $49, $33, $4C, $51, $F0
+MonsterName_191_Gismo:  ; "Gismo"
+    db $2A, $46, $50, $4A, $4C, $F0
+MonsterName_192_LavaMan:  ; "LavaMan"
+    db $2F, $3E, $53, $3E, $30, $3E, $4B, $F0
+MonsterName_193_IceMan:  ; "IceMan"
+    db $2C, $40, $42, $30, $3E, $4B, $F0
+MonsterName_194_Mimic:  ; "Mimic"
+    db $30, $46, $4A, $46, $40, $F0
+MonsterName_195_MudDoll:  ; "MudDoll"
+    db $30, $52, $41, $27, $4C, $49, $49, $F0
+MonsterName_196_Golem:  ; "Golem"
+    db $2A, $4C, $49, $42, $4A, $F0
+MonsterName_197_StoneMan:  ; "StoneMan"
+    db $36, $51, $4C, $4B, $42, $30, $3E, $4B, $F0
+MonsterName_198_BombCrag:  ; "BombCrag"
+    db $25, $4C, $4A, $3F, $26, $4F, $3E, $44, $F0
+MonsterName_199_GoldGolem:  ; "GoldGolem"
+    db $2A, $4C, $49, $41, $2A, $4C, $49, $42, $4A, $F0
+MonsterName_200_DracoLord:  ; "DracoLord"
+    db $27, $4F, $3E, $40, $4C, $2F, $4C, $4F, $41, $F0
+MonsterName_201_DracoLord:  ; "DracoLord"
+    db $27, $4F, $3E, $40, $4C, $2F, $4C, $4F, $41, $F0
+MonsterName_202_Hargon:  ; "Hargon"
+    db $2B, $3E, $4F, $44, $4C, $4B, $F0
+MonsterName_203_Sidoh:  ; "Sidoh"
+    db $36, $46, $41, $4C, $45, $F0
+MonsterName_204_Baramos:  ; "Baramos"
+    db $25, $3E, $4F, $3E, $4A, $4C, $50, $F0
+MonsterName_205_Zoma:  ; "Zoma"
+    db $3D, $4C, $4A, $3E, $F0
+MonsterName_206_Pizzaro:  ; "Pizzaro"
+    db $33, $46, $57, $57, $3E, $4F, $4C, $F0
+MonsterName_207_Esterk:  ; "Esterk"
+    db $28, $50, $51, $42, $4F, $48, $F0
+MonsterName_208_Mirudraas:  ; "Mirudraas"
+    db $30, $46, $4F, $52, $41, $4F, $3E, $3E, $50, $F0
+MonsterName_209_Mirudraas:  ; "Mirudraas"
+    db $30, $46, $4F, $52, $41, $4F, $3E, $3E, $50, $F0
+MonsterName_210_Mudou:  ; "Mudou"
+    db $30, $52, $41, $4C, $52, $F0
+MonsterName_211_DeathMore:  ; "DeathMore"
+    db $27, $42, $3E, $51, $45, $30, $4C, $4F, $42, $F0
+MonsterName_212_DeathMore:  ; "DeathMore"
+    db $27, $42, $3E, $51, $45, $30, $4C, $4F, $42, $F0
+MonsterName_213_DeathMore:  ; "DeathMore"
+    db $27, $42, $3E, $51, $45, $30, $4C, $4F, $42, $F0
+MonsterName_214_Darkdrium:  ; "Darkdrium"
+    db $27, $3E, $4F, $48, $41, $4F, $46, $52, $4A, $F0
+MonsterName_215_TERRY:  ; "TERRY?"
+    db $37, $28, $35, $35, $3C, $64, $F0
+MonsterName_216_Tatsu:  ; "Tatsu"
+    db $37, $3E, $51, $50, $52, $F0
+MonsterName_217_Diago:  ; "Diago"
+    db $27, $46, $3E, $44, $4C, $F0
+MonsterName_218_Samsi:  ; "Samsi"
+    db $36, $3E, $4A, $50, $46, $F0
+MonsterName_219_Bazoo:  ; "Bazoo"
+    db $25, $3E, $57, $4C, $4C, $F0
+MonsterName_220_Unused_220:  ; ""
+    db $F0
+MonsterName_225_Unused_225:  ; "?????"
+    db $64, $64, $64, $64, $64, $F0
 ; @BUILD_PROJECT END gd_monster_names
 
 ; ---------------------------------------------------------------
@@ -2121,229 +2343,453 @@ MonsterName_225_Unused_225: db "?????", $F0
 ; under these labels; a name that no longer fits moves to the ns_text_* extents.
 ; @BUILD_PROJECT BEGIN gd_skill_names
 SkillNameStrings:
-SkillName_000_Blaze: db "Blaze", $F0
-SkillName_001_Blazemore: db "Blazemore", $F0
-SkillName_002_Blazemost: db "Blazemost", $F0
-SkillName_003_Firebal: db "Firebal", $F0
-SkillName_004_Firebane: db "Firebane", $F0
-SkillName_005_Firebolt: db "Firebolt", $F0
-SkillName_006_Bang: db "Bang", $F0
-SkillName_007_Boom: db "Boom", $F0
-SkillName_008_Explodet: db "Explodet", $F0
-SkillName_009_Infernos: db "Infernos", $F0
-SkillName_010_Infermore: db "Infermore", $F0
-SkillName_011_Infermost: db "Infermost", $F0
-SkillName_012_IceBolt: db "IceBolt", $F0
-SkillName_013_SnowStorm: db "SnowStorm", $F0
-SkillName_014_Blizzard: db "Blizzard", $F0
-SkillName_015_Bolt: db "Bolt", $F0
-SkillName_016_Zap: db "Zap", $F0
-SkillName_017_Thordain: db "Thordain", $F0
-SkillName_018_Beat: db "Beat", $F0
-SkillName_019_Defeat: db "Defeat", $F0
-SkillName_020_Sacrifice: db "Sacrifice", $F0
-SkillName_021_Sleep: db "Sleep", $F0
-SkillName_022_SleepAll: db "SleepAll", $F0
-SkillName_023_StopSpell: db "StopSpell", $F0
-SkillName_024_Surround: db "Surround", $F0
-SkillName_025_PanicAll: db "PanicAll", $F0
-SkillName_026_RobMagic: db "RobMagic", $F0
-SkillName_027_TakeMagic: db "TakeMagic", $F0
-SkillName_028_Sap: db "Sap", $F0
-SkillName_029_Defence: db "Defence", $F0
-SkillName_030_Upper: db "Upper", $F0
-SkillName_031_Increase: db "Increase", $F0
-SkillName_032_Slow: db "Slow", $F0
-SkillName_033_SlowAll: db "SlowAll", $F0
-SkillName_034_Speed: db "Speed", $F0
-SkillName_035_SpeedUp: db "SpeedUp", $F0
-SkillName_036_Barrier: db "Barrier", $F0
-SkillName_037_TwinHits: db "TwinHits", $F0
-SkillName_038_MagicWall: db "MagicWall", $F0
-SkillName_039_MagicBack: db "MagicBack", $F0
-SkillName_040_Bounce: db "Bounce", $F0
-SkillName_041_Transform: db "Transform", $F0
-SkillName_042_Ironize: db "Ironize", $F0
-SkillName_043_Heal: db "Heal", $F0
-SkillName_044_HealMore: db "HealMore", $F0
-SkillName_045_HealAll: db "HealAll", $F0
-SkillName_046_HealUs: db "HealUs", $F0
-SkillName_047_HealUsAll: db "HealUsAll", $F0
-SkillName_048_Vivify: db "Vivify", $F0
-SkillName_049_Revive: db "Revive", $F0
-SkillName_050_Farewell: db "Farewell", $F0
-SkillName_051_Antidote: db "Antidote", $F0
-SkillName_052_NumbOff: db "NumbOff", $F0
-SkillName_053_DeChaos: db "DeChaos", $F0
-SkillName_054_CurseOff: db "CurseOff", $F0
-SkillName_055_StepGuard: db "StepGuard", $F0
-SkillName_056_MapMagic: db "MapMagic", $F0
-SkillName_057_Chance: db "Chance", $F0
-SkillName_058_Attack: db "Attack", $F0
-SkillName_059_TwinSlash: db "TwinSlash", $F0
-SkillName_060_Ramming: db "Ramming", $F0
-SkillName_061_Beserker: db "Beserker", $F0
-SkillName_062_Kamikaze: db "Kamikaze", $F0
-SkillName_063_Massacre: db "Massacre", $F0
-SkillName_064_EvilSlash: db "EvilSlash", $F0
-SkillName_065_ChargeUP: db "ChargeUP", $F0
-SkillName_066_HighJump: db "HighJump", $F0
-SkillName_067_SuckAir: db "SuckAir", $F0
-SkillName_068_FireSlash: db "FireSlash", $F0
-SkillName_069_BoltSlash: db "BoltSlash", $F0
-SkillName_070_VacuSlash: db "VacuSlash", $F0
-SkillName_071_IceSlash: db "IceSlash", $F0
-SkillName_072_MetalCut: db "MetalCut", $F0
-SkillName_073_DrakSlash: db "DrakSlash", $F0
-SkillName_074_BeastCut: db "BeastCut", $F0
-SkillName_075_BirdBlow: db "BirdBlow", $F0
-SkillName_076_DevilCut: db "DevilCut", $F0
-SkillName_077_ZombieCut: db "ZombieCut", $F0
-SkillName_078_CleanCut: db "CleanCut", $F0
-SkillName_079_MultiCut: db "MultiCut", $F0
-SkillName_080_BiAttack: db "BiAttack", $F0
-SkillName_081_QuadHits: db "QuadHits", $F0
-SkillName_082_CallHelp: db "CallHelp", $F0
-SkillName_083_YellHelp: db "YellHelp", $F0
-SkillName_084_Focus: db "Focus", $F0
-SkillName_085_SquallHit: db "SquallHit", $F0
-SkillName_086_PsycheUp: db "PsycheUp", $F0
-SkillName_087_RainSlash: db "RainSlash", $F0
-SkillName_088_WindBeast: db "WindBeast", $F0
-SkillName_089_Vacuum: db "Vacuum", $F0
-SkillName_090_Lightning: db "Lightning", $F0
-SkillName_091_RockThrow: db "RockThrow", $F0
-SkillName_092_FireAir: db "FireAir", $F0
-SkillName_093_BlazeAir: db "BlazeAir", $F0
-SkillName_094_Scorching: db "Scorching", $F0
-SkillName_095_WhiteFire: db "WhiteFire", $F0
-SkillName_096_FrigidAir: db "FrigidAir", $F0
-SkillName_097_IceAir: db "IceAir", $F0
-SkillName_098_IceStorm: db "IceStorm", $F0
-SkillName_099_WhiteAir: db "WhiteAir", $F0
-SkillName_100_Hellblast: db "Hellblast", $F0
-SkillName_101_BigBang: db "BigBang", $F0
-SkillName_102_MegaMagic: db "MegaMagic", $F0
-SkillName_103_PoisonHit: db "PoisonHit", $F0
-SkillName_104_NapAttack: db "NapAttack", $F0
-SkillName_105_Paralyze: db "Paralyze", $F0
-SkillName_106_SleepAir: db "SleepAir", $F0
-SkillName_107_PalsyAir: db "PalsyAir", $F0
-SkillName_108_PoisonGas: db "PoisonGas", $F0
-SkillName_109_PoisonAir: db "PoisonAir", $F0
-SkillName_110_PaniDance: db "PaniDance", $F0
-SkillName_111_Curse: db "Curse", $F0
-SkillName_112_Ahhh: db "Ahhh", $F0
-SkillName_113_KODance: db "K.O.Dance", $F0
-SkillName_114_SandStorm: db "SandStorm", $F0
-SkillName_115_Radiant: db "Radiant", $F0
-SkillName_116_EerieLite: db "EerieLite", $F0
-SkillName_117_OddDance: db "OddDance", $F0
-SkillName_118_RobDance: db "RobDance", $F0
-SkillName_119_SideStep: db "SideStep", $F0
-SkillName_120_LureDance: db "LureDance", $F0
-SkillName_121_LushLicks: db "LushLicks", $F0
-SkillName_122_SickLick: db "SickLick", $F0
-SkillName_123_LegSweep: db "LegSweep", $F0
-SkillName_124_BigTrip: db "BigTrip", $F0
-SkillName_125_WarCry: db "WarCry", $F0
-SkillName_126_Whistle: db "Whistle", $F0
-SkillName_127_Imitate: db "Imitate", $F0
-SkillName_128_DeMagic: db "DeMagic", $F0
-SkillName_129_Surge: db "Surge", $F0
-SkillName_130_UltraDown: db "UltraDown", $F0
-SkillName_131_ThickFog: db "ThickFog", $F0
-SkillName_132_TatsuCall: db "TatsuCall", $F0
-SkillName_133_DiagoCall: db "DiagoCall", $F0
-SkillName_134_SamsiCall: db "SamsiCall", $F0
-SkillName_135_BazooCall: db "BazooCall", $F0
-SkillName_136_Cover: db "Cover", $F0
-SkillName_137_Guardian: db "Guardian", $F0
-SkillName_138_TailWind: db "TailWind", $F0
-SkillName_139_StormWind: db "StormWind", $F0
-SkillName_140_Dodge: db "Dodge", $F0
-SkillName_141_Defence: db "Defence", $F0
-SkillName_142_StrongD: db "StrongD", $F0
-SkillName_143_SuckAll: db "SuckAll", $F0
-SkillName_144_BladeD: db "BladeD", $F0
-SkillName_145_DanceShut: db "DanceShut", $F0
-SkillName_146_MouthShut: db "MouthShut", $F0
-SkillName_147_Meditate: db "Meditate", $F0
-SkillName_148_Hustle: db "Hustle", $F0
-SkillName_149_LifeSong: db "LifeSong", $F0
-SkillName_150_LifeDance: db "LifeDance", $F0
-SkillName_151_Run: db "Run", $F0
-SkillName_152_Daze: db "Daze", $F0
-SkillName_153_HitAlly: db "HitAlly", $F0
-SkillName_154_HitEnemy: db "HitEnemy", $F0
-SkillName_155_HitRandom: db "HitRandom", $F0
-SkillName_156_Scared: db "Scared", $F0
-SkillName_157_Dance: db "Dance", $F0
-SkillName_158_Trip: db "Trip", $F0
-SkillName_159_Paralyze: db "Paralyze", $F0
-SkillName_160_CANTMOVE: db "CANTMOVE", $F0
-SkillName_161_RUN: db "RUN", $F0
-SkillName_162_CALLHOROR: db "CALLHOROR", $F0
-SkillName_163_HealUsAll: db "HealUsAll", $F0
-SkillName_164_Smashed: db "Smashed", $F0
-SkillName_165_FILTHZONE: db "FILTHZONE", $F0
-SkillName_166_ALLCHANGE: db "ALLCHANGE", $F0
-SkillName_167_BIGSLEEP: db "BIGSLEEP", $F0
-SkillName_168_MP0: db "MP0", $F0
-SkillName_169_ECHO: db "ECHO", $F0
-SkillName_170_CHGDRAGON: db "CHGDRAGON", $F0
-SkillName_171_CALLEVIL: db "CALLEVIL", $F0
-SkillName_172_FREEZY: db "FREEZY", $F0
-SkillName_173_ALLREVIVE: db "ALLREVIVE", $F0
-SkillName_174_RESTOREMP: db "RESTOREMP", $F0
-SkillName_175_METEOR: db "METEOR", $F0
-SkillName_176_HERB: db "HERB", $F0
-SkillName_177_HEALWATER: db "HEALWATER", $F0
-SkillName_178_SAGESTONE: db "SAGESTONE", $F0
-SkillName_179_WARLDDEW: db "WARLDDEW", $F0
-SkillName_180_POTION: db "POTION", $F0
-SkillName_181_ELFWATER: db "ELFWATER", $F0
-SkillName_182_ANTIDOTE: db "ANTIDOTE", $F0
-SkillName_183_MOONHERB: db "MOONHERB", $F0
-SkillName_184_SKYBELL: db "SKYBELL", $F0
-SkillName_185_LAUREL: db "LAUREL", $F0
-SkillName_186_AWAKESAND: db "AWAKESAND", $F0
-SkillName_187_WARLDLEAF: db "WARLDLEAF", $F0
-SkillName_188_LIFEACORN: db "LIFEACORN", $F0
-SkillName_189_MYSTICNUT: db "MYSTICNUT", $F0
-SkillName_190_PWRSEED: db "PWRSEED", $F0
-SkillName_191_DEFSEED: db "DEFSEED", $F0
-SkillName_192_AGILSEED: db "AGILSEED", $F0
-SkillName_193_INTSEED: db "INTSEED", $F0
-SkillName_194_FEEDMEAT: db "FEEDMEAT", $F0
-SkillName_195_BEFFJERKY: db "BEFFJERKY", $F0
-SkillName_196_PORKCHOP: db "PORKCHOP", $F0
-SkillName_197_BADMEAT: db "BADMEAT", $F0
-SkillName_198_SIRLOIN: db "SIRLOIN", $F0
-SkillName_199_BOLTSTAFF: db "BOLTSTAFF", $F0
-SkillName_200_STAFF: db "STAFF", $F0
-SkillName_201_BLOKSTAFF: db "BLOKSTAFF", $F0
-SkillName_202_LAVASTAFF: db "LAVASTAFF", $F0
-SkillName_203_SNOWSTAFF: db "SNOWSTAFF", $F0
-SkillName_204_FIRESTAFF: db "FIRESTAFF", $F0
-SkillName_205_WARPWING: db "WARPWING", $F0
-SkillName_206_TINYMEDAL: db "TINYMEDAL", $F0
-SkillName_207_QuestBk: db "QuestBk", $F0
-SkillName_208_HORRORBK: db "HORRORBK", $F0
-SkillName_209_BENICEBK: db "BENICEBK", $F0
-SkillName_210_CHEATERBK: db "CHEATERBK", $F0
-SkillName_211_SMARTBK: db "SMARTBK", $F0
-SkillName_212_COMEDYBK: db "COMEDYBK", $F0
-SkillName_213_BeDragon: db "BeDragon", $F0
-SkillName_214_Smashlime: db "Smashlime", $F0
-SkillName_215_Sheldodge: db "Sheldodge", $F0
-SkillName_216_Branching: db "Branching", $F0
-SkillName_217_GigaSlash: db "GigaSlash", $F0
-SkillName_218_LIFE: db "LIFE", $F0
-SkillName_219_RUN: db "RUN", $F0
-SkillName_220_IRONIZE: db "IRONIZE", $F0
-SkillName_221_Ahhh: db "Ahhh", $F0
-SkillName_222_Unused_222: db $F0
+SkillName_000_Blaze:  ; "Blaze"
+    db $25, $49, $3E, $57, $42, $F0
+SkillName_001_Blazemore:  ; "Blazemore"
+    db $25, $49, $3E, $57, $42, $4A, $4C, $4F, $42, $F0
+SkillName_002_Blazemost:  ; "Blazemost"
+    db $25, $49, $3E, $57, $42, $4A, $4C, $50, $51, $F0
+SkillName_003_Firebal:  ; "Firebal"
+    db $29, $46, $4F, $42, $3F, $3E, $49, $F0
+SkillName_004_Firebane:  ; "Firebane"
+    db $29, $46, $4F, $42, $3F, $3E, $4B, $42, $F0
+SkillName_005_Firebolt:  ; "Firebolt"
+    db $29, $46, $4F, $42, $3F, $4C, $49, $51, $F0
+SkillName_006_Bang:  ; "Bang"
+    db $25, $3E, $4B, $44, $F0
+SkillName_007_Boom:  ; "Boom"
+    db $25, $4C, $4C, $4A, $F0
+SkillName_008_Explodet:  ; "Explodet"
+    db $28, $55, $4D, $49, $4C, $41, $42, $51, $F0
+SkillName_009_Infernos:  ; "Infernos"
+    db $2C, $4B, $43, $42, $4F, $4B, $4C, $50, $F0
+SkillName_010_Infermore:  ; "Infermore"
+    db $2C, $4B, $43, $42, $4F, $4A, $4C, $4F, $42, $F0
+SkillName_011_Infermost:  ; "Infermost"
+    db $2C, $4B, $43, $42, $4F, $4A, $4C, $50, $51, $F0
+SkillName_012_IceBolt:  ; "IceBolt"
+    db $2C, $40, $42, $25, $4C, $49, $51, $F0
+SkillName_013_SnowStorm:  ; "SnowStorm"
+    db $36, $4B, $4C, $54, $36, $51, $4C, $4F, $4A, $F0
+SkillName_014_Blizzard:  ; "Blizzard"
+    db $25, $49, $46, $57, $57, $3E, $4F, $41, $F0
+SkillName_015_Bolt:  ; "Bolt"
+    db $25, $4C, $49, $51, $F0
+SkillName_016_Zap:  ; "Zap"
+    db $3D, $3E, $4D, $F0
+SkillName_017_Thordain:  ; "Thordain"
+    db $37, $45, $4C, $4F, $41, $3E, $46, $4B, $F0
+SkillName_018_Beat:  ; "Beat"
+    db $25, $42, $3E, $51, $F0
+SkillName_019_Defeat:  ; "Defeat"
+    db $27, $42, $43, $42, $3E, $51, $F0
+SkillName_020_Sacrifice:  ; "Sacrifice"
+    db $36, $3E, $40, $4F, $46, $43, $46, $40, $42, $F0
+SkillName_021_Sleep:  ; "Sleep"
+    db $36, $49, $42, $42, $4D, $F0
+SkillName_022_SleepAll:  ; "SleepAll"
+    db $36, $49, $42, $42, $4D, $24, $49, $49, $F0
+SkillName_023_StopSpell:  ; "StopSpell"
+    db $36, $51, $4C, $4D, $36, $4D, $42, $49, $49, $F0
+SkillName_024_Surround:  ; "Surround"
+    db $36, $52, $4F, $4F, $4C, $52, $4B, $41, $F0
+SkillName_025_PanicAll:  ; "PanicAll"
+    db $33, $3E, $4B, $46, $40, $24, $49, $49, $F0
+SkillName_026_RobMagic:  ; "RobMagic"
+    db $35, $4C, $3F, $30, $3E, $44, $46, $40, $F0
+SkillName_027_TakeMagic:  ; "TakeMagic"
+    db $37, $3E, $48, $42, $30, $3E, $44, $46, $40, $F0
+SkillName_028_Sap:  ; "Sap"
+    db $36, $3E, $4D, $F0
+SkillName_029_Defence:  ; "Defence"
+    db $27, $42, $43, $42, $4B, $40, $42, $F0
+SkillName_030_Upper:  ; "Upper"
+    db $38, $4D, $4D, $42, $4F, $F0
+SkillName_031_Increase:  ; "Increase"
+    db $2C, $4B, $40, $4F, $42, $3E, $50, $42, $F0
+SkillName_032_Slow:  ; "Slow"
+    db $36, $49, $4C, $54, $F0
+SkillName_033_SlowAll:  ; "SlowAll"
+    db $36, $49, $4C, $54, $24, $49, $49, $F0
+SkillName_034_Speed:  ; "Speed"
+    db $36, $4D, $42, $42, $41, $F0
+SkillName_035_SpeedUp:  ; "SpeedUp"
+    db $36, $4D, $42, $42, $41, $38, $4D, $F0
+SkillName_036_Barrier:  ; "Barrier"
+    db $25, $3E, $4F, $4F, $46, $42, $4F, $F0
+SkillName_037_TwinHits:  ; "TwinHits"
+    db $37, $54, $46, $4B, $2B, $46, $51, $50, $F0
+SkillName_038_MagicWall:  ; "MagicWall"
+    db $30, $3E, $44, $46, $40, $3A, $3E, $49, $49, $F0
+SkillName_039_MagicBack:  ; "MagicBack"
+    db $30, $3E, $44, $46, $40, $25, $3E, $40, $48, $F0
+SkillName_040_Bounce:  ; "Bounce"
+    db $25, $4C, $52, $4B, $40, $42, $F0
+SkillName_041_Transform:  ; "Transform"
+    db $37, $4F, $3E, $4B, $50, $43, $4C, $4F, $4A, $F0
+SkillName_042_Ironize:  ; "Ironize"
+    db $2C, $4F, $4C, $4B, $46, $57, $42, $F0
+SkillName_043_Heal:  ; "Heal"
+    db $2B, $42, $3E, $49, $F0
+SkillName_044_HealMore:  ; "HealMore"
+    db $2B, $42, $3E, $49, $30, $4C, $4F, $42, $F0
+SkillName_045_HealAll:  ; "HealAll"
+    db $2B, $42, $3E, $49, $24, $49, $49, $F0
+SkillName_046_HealUs:  ; "HealUs"
+    db $2B, $42, $3E, $49, $38, $50, $F0
+SkillName_047_HealUsAll:  ; "HealUsAll"
+    db $2B, $42, $3E, $49, $38, $50, $24, $49, $49, $F0
+SkillName_048_Vivify:  ; "Vivify"
+    db $39, $46, $53, $46, $43, $56, $F0
+SkillName_049_Revive:  ; "Revive"
+    db $35, $42, $53, $46, $53, $42, $F0
+SkillName_050_Farewell:  ; "Farewell"
+    db $29, $3E, $4F, $42, $54, $42, $49, $49, $F0
+SkillName_051_Antidote:  ; "Antidote"
+    db $24, $4B, $51, $46, $41, $4C, $51, $42, $F0
+SkillName_052_NumbOff:  ; "NumbOff"
+    db $31, $52, $4A, $3F, $32, $43, $43, $F0
+SkillName_053_DeChaos:  ; "DeChaos"
+    db $27, $42, $26, $45, $3E, $4C, $50, $F0
+SkillName_054_CurseOff:  ; "CurseOff"
+    db $26, $52, $4F, $50, $42, $32, $43, $43, $F0
+SkillName_055_StepGuard:  ; "StepGuard"
+    db $36, $51, $42, $4D, $2A, $52, $3E, $4F, $41, $F0
+SkillName_056_MapMagic:  ; "MapMagic"
+    db $30, $3E, $4D, $30, $3E, $44, $46, $40, $F0
+SkillName_057_Chance:  ; "Chance"
+    db $26, $45, $3E, $4B, $40, $42, $F0
+SkillName_058_Attack:  ; "Attack"
+    db $24, $51, $51, $3E, $40, $48, $F0
+SkillName_059_TwinSlash:  ; "TwinSlash"
+    db $37, $54, $46, $4B, $36, $49, $3E, $50, $45, $F0
+SkillName_060_Ramming:  ; "Ramming"
+    db $35, $3E, $4A, $4A, $46, $4B, $44, $F0
+SkillName_061_Beserker:  ; "Beserker"
+    db $25, $42, $50, $42, $4F, $48, $42, $4F, $F0
+SkillName_062_Kamikaze:  ; "Kamikaze"
+    db $2E, $3E, $4A, $46, $48, $3E, $57, $42, $F0
+SkillName_063_Massacre:  ; "Massacre"
+    db $30, $3E, $50, $50, $3E, $40, $4F, $42, $F0
+SkillName_064_EvilSlash:  ; "EvilSlash"
+    db $28, $53, $46, $49, $36, $49, $3E, $50, $45, $F0
+SkillName_065_ChargeUP:  ; "ChargeUP"
+    db $26, $45, $3E, $4F, $44, $42, $38, $33, $F0
+SkillName_066_HighJump:  ; "HighJump"
+    db $2B, $46, $44, $45, $2D, $52, $4A, $4D, $F0
+SkillName_067_SuckAir:  ; "SuckAir"
+    db $36, $52, $40, $48, $24, $46, $4F, $F0
+SkillName_068_FireSlash:  ; "FireSlash"
+    db $29, $46, $4F, $42, $36, $49, $3E, $50, $45, $F0
+SkillName_069_BoltSlash:  ; "BoltSlash"
+    db $25, $4C, $49, $51, $36, $49, $3E, $50, $45, $F0
+SkillName_070_VacuSlash:  ; "VacuSlash"
+    db $39, $3E, $40, $52, $36, $49, $3E, $50, $45, $F0
+SkillName_071_IceSlash:  ; "IceSlash"
+    db $2C, $40, $42, $36, $49, $3E, $50, $45, $F0
+SkillName_072_MetalCut:  ; "MetalCut"
+    db $30, $42, $51, $3E, $49, $26, $52, $51, $F0
+SkillName_073_DrakSlash:  ; "DrakSlash"
+    db $27, $4F, $3E, $48, $36, $49, $3E, $50, $45, $F0
+SkillName_074_BeastCut:  ; "BeastCut"
+    db $25, $42, $3E, $50, $51, $26, $52, $51, $F0
+SkillName_075_BirdBlow:  ; "BirdBlow"
+    db $25, $46, $4F, $41, $25, $49, $4C, $54, $F0
+SkillName_076_DevilCut:  ; "DevilCut"
+    db $27, $42, $53, $46, $49, $26, $52, $51, $F0
+SkillName_077_ZombieCut:  ; "ZombieCut"
+    db $3D, $4C, $4A, $3F, $46, $42, $26, $52, $51, $F0
+SkillName_078_CleanCut:  ; "CleanCut"
+    db $26, $49, $42, $3E, $4B, $26, $52, $51, $F0
+SkillName_079_MultiCut:  ; "MultiCut"
+    db $30, $52, $49, $51, $46, $26, $52, $51, $F0
+SkillName_080_BiAttack:  ; "BiAttack"
+    db $25, $46, $24, $51, $51, $3E, $40, $48, $F0
+SkillName_081_QuadHits:  ; "QuadHits"
+    db $34, $52, $3E, $41, $2B, $46, $51, $50, $F0
+SkillName_082_CallHelp:  ; "CallHelp"
+    db $26, $3E, $49, $49, $2B, $42, $49, $4D, $F0
+SkillName_083_YellHelp:  ; "YellHelp"
+    db $3C, $42, $49, $49, $2B, $42, $49, $4D, $F0
+SkillName_084_Focus:  ; "Focus"
+    db $29, $4C, $40, $52, $50, $F0
+SkillName_085_SquallHit:  ; "SquallHit"
+    db $36, $4E, $52, $3E, $49, $49, $2B, $46, $51, $F0
+SkillName_086_PsycheUp:  ; "PsycheUp"
+    db $33, $50, $56, $40, $45, $42, $38, $4D, $F0
+SkillName_087_RainSlash:  ; "RainSlash"
+    db $35, $3E, $46, $4B, $36, $49, $3E, $50, $45, $F0
+SkillName_088_WindBeast:  ; "WindBeast"
+    db $3A, $46, $4B, $41, $25, $42, $3E, $50, $51, $F0
+SkillName_089_Vacuum:  ; "Vacuum"
+    db $39, $3E, $40, $52, $52, $4A, $F0
+SkillName_090_Lightning:  ; "Lightning"
+    db $2F, $46, $44, $45, $51, $4B, $46, $4B, $44, $F0
+SkillName_091_RockThrow:  ; "RockThrow"
+    db $35, $4C, $40, $48, $37, $45, $4F, $4C, $54, $F0
+SkillName_092_FireAir:  ; "FireAir"
+    db $29, $46, $4F, $42, $24, $46, $4F, $F0
+SkillName_093_BlazeAir:  ; "BlazeAir"
+    db $25, $49, $3E, $57, $42, $24, $46, $4F, $F0
+SkillName_094_Scorching:  ; "Scorching"
+    db $36, $40, $4C, $4F, $40, $45, $46, $4B, $44, $F0
+SkillName_095_WhiteFire:  ; "WhiteFire"
+    db $3A, $45, $46, $51, $42, $29, $46, $4F, $42, $F0
+SkillName_096_FrigidAir:  ; "FrigidAir"
+    db $29, $4F, $46, $44, $46, $41, $24, $46, $4F, $F0
+SkillName_097_IceAir:  ; "IceAir"
+    db $2C, $40, $42, $24, $46, $4F, $F0
+SkillName_098_IceStorm:  ; "IceStorm"
+    db $2C, $40, $42, $36, $51, $4C, $4F, $4A, $F0
+SkillName_099_WhiteAir:  ; "WhiteAir"
+    db $3A, $45, $46, $51, $42, $24, $46, $4F, $F0
+SkillName_100_Hellblast:  ; "Hellblast"
+    db $2B, $42, $49, $49, $3F, $49, $3E, $50, $51, $F0
+SkillName_101_BigBang:  ; "BigBang"
+    db $25, $46, $44, $25, $3E, $4B, $44, $F0
+SkillName_102_MegaMagic:  ; "MegaMagic"
+    db $30, $42, $44, $3E, $30, $3E, $44, $46, $40, $F0
+SkillName_103_PoisonHit:  ; "PoisonHit"
+    db $33, $4C, $46, $50, $4C, $4B, $2B, $46, $51, $F0
+SkillName_104_NapAttack:  ; "NapAttack"
+    db $31, $3E, $4D, $24, $51, $51, $3E, $40, $48, $F0
+SkillName_105_Paralyze:  ; "Paralyze"
+    db $33, $3E, $4F, $3E, $49, $56, $57, $42, $F0
+SkillName_106_SleepAir:  ; "SleepAir"
+    db $36, $49, $42, $42, $4D, $24, $46, $4F, $F0
+SkillName_107_PalsyAir:  ; "PalsyAir"
+    db $33, $3E, $49, $50, $56, $24, $46, $4F, $F0
+SkillName_108_PoisonGas:  ; "PoisonGas"
+    db $33, $4C, $46, $50, $4C, $4B, $2A, $3E, $50, $F0
+SkillName_109_PoisonAir:  ; "PoisonAir"
+    db $33, $4C, $46, $50, $4C, $4B, $24, $46, $4F, $F0
+SkillName_110_PaniDance:  ; "PaniDance"
+    db $33, $3E, $4B, $46, $27, $3E, $4B, $40, $42, $F0
+SkillName_111_Curse:  ; "Curse"
+    db $26, $52, $4F, $50, $42, $F0
+SkillName_112_Ahhh:  ; "Ahhh"
+    db $24, $45, $45, $45, $F0
+SkillName_113_KODance:  ; "K.O.Dance"
+    db $2E, $5F, $32, $5F, $27, $3E, $4B, $40, $42, $F0
+SkillName_114_SandStorm:  ; "SandStorm"
+    db $36, $3E, $4B, $41, $36, $51, $4C, $4F, $4A, $F0
+SkillName_115_Radiant:  ; "Radiant"
+    db $35, $3E, $41, $46, $3E, $4B, $51, $F0
+SkillName_116_EerieLite:  ; "EerieLite"
+    db $28, $42, $4F, $46, $42, $2F, $46, $51, $42, $F0
+SkillName_117_OddDance:  ; "OddDance"
+    db $32, $41, $41, $27, $3E, $4B, $40, $42, $F0
+SkillName_118_RobDance:  ; "RobDance"
+    db $35, $4C, $3F, $27, $3E, $4B, $40, $42, $F0
+SkillName_119_SideStep:  ; "SideStep"
+    db $36, $46, $41, $42, $36, $51, $42, $4D, $F0
+SkillName_120_LureDance:  ; "LureDance"
+    db $2F, $52, $4F, $42, $27, $3E, $4B, $40, $42, $F0
+SkillName_121_LushLicks:  ; "LushLicks"
+    db $2F, $52, $50, $45, $2F, $46, $40, $48, $50, $F0
+SkillName_122_SickLick:  ; "SickLick"
+    db $36, $46, $40, $48, $2F, $46, $40, $48, $F0
+SkillName_123_LegSweep:  ; "LegSweep"
+    db $2F, $42, $44, $36, $54, $42, $42, $4D, $F0
+SkillName_124_BigTrip:  ; "BigTrip"
+    db $25, $46, $44, $37, $4F, $46, $4D, $F0
+SkillName_125_WarCry:  ; "WarCry"
+    db $3A, $3E, $4F, $26, $4F, $56, $F0
+SkillName_126_Whistle:  ; "Whistle"
+    db $3A, $45, $46, $50, $51, $49, $42, $F0
+SkillName_127_Imitate:  ; "Imitate"
+    db $2C, $4A, $46, $51, $3E, $51, $42, $F0
+SkillName_128_DeMagic:  ; "DeMagic"
+    db $27, $42, $30, $3E, $44, $46, $40, $F0
+SkillName_129_Surge:  ; "Surge"
+    db $36, $52, $4F, $44, $42, $F0
+SkillName_130_UltraDown:  ; "UltraDown"
+    db $38, $49, $51, $4F, $3E, $27, $4C, $54, $4B, $F0
+SkillName_131_ThickFog:  ; "ThickFog"
+    db $37, $45, $46, $40, $48, $29, $4C, $44, $F0
+SkillName_132_TatsuCall:  ; "TatsuCall"
+    db $37, $3E, $51, $50, $52, $26, $3E, $49, $49, $F0
+SkillName_133_DiagoCall:  ; "DiagoCall"
+    db $27, $46, $3E, $44, $4C, $26, $3E, $49, $49, $F0
+SkillName_134_SamsiCall:  ; "SamsiCall"
+    db $36, $3E, $4A, $50, $46, $26, $3E, $49, $49, $F0
+SkillName_135_BazooCall:  ; "BazooCall"
+    db $25, $3E, $57, $4C, $4C, $26, $3E, $49, $49, $F0
+SkillName_136_Cover:  ; "Cover"
+    db $26, $4C, $53, $42, $4F, $F0
+SkillName_137_Guardian:  ; "Guardian"
+    db $2A, $52, $3E, $4F, $41, $46, $3E, $4B, $F0
+SkillName_138_TailWind:  ; "TailWind"
+    db $37, $3E, $46, $49, $3A, $46, $4B, $41, $F0
+SkillName_139_StormWind:  ; "StormWind"
+    db $36, $51, $4C, $4F, $4A, $3A, $46, $4B, $41, $F0
+SkillName_140_Dodge:  ; "Dodge"
+    db $27, $4C, $41, $44, $42, $F0
+SkillName_141_Defence:  ; "Defence"
+    db $27, $42, $43, $42, $4B, $40, $42, $F0
+SkillName_142_StrongD:  ; "StrongD"
+    db $36, $51, $4F, $4C, $4B, $44, $27, $F0
+SkillName_143_SuckAll:  ; "SuckAll"
+    db $36, $52, $40, $48, $24, $49, $49, $F0
+SkillName_144_BladeD:  ; "BladeD"
+    db $25, $49, $3E, $41, $42, $27, $F0
+SkillName_145_DanceShut:  ; "DanceShut"
+    db $27, $3E, $4B, $40, $42, $36, $45, $52, $51, $F0
+SkillName_146_MouthShut:  ; "MouthShut"
+    db $30, $4C, $52, $51, $45, $36, $45, $52, $51, $F0
+SkillName_147_Meditate:  ; "Meditate"
+    db $30, $42, $41, $46, $51, $3E, $51, $42, $F0
+SkillName_148_Hustle:  ; "Hustle"
+    db $2B, $52, $50, $51, $49, $42, $F0
+SkillName_149_LifeSong:  ; "LifeSong"
+    db $2F, $46, $43, $42, $36, $4C, $4B, $44, $F0
+SkillName_150_LifeDance:  ; "LifeDance"
+    db $2F, $46, $43, $42, $27, $3E, $4B, $40, $42, $F0
+SkillName_151_Run:  ; "Run"
+    db $35, $52, $4B, $F0
+SkillName_152_Daze:  ; "Daze"
+    db $27, $3E, $57, $42, $F0
+SkillName_153_HitAlly:  ; "HitAlly"
+    db $2B, $46, $51, $24, $49, $49, $56, $F0
+SkillName_154_HitEnemy:  ; "HitEnemy"
+    db $2B, $46, $51, $28, $4B, $42, $4A, $56, $F0
+SkillName_155_HitRandom:  ; "HitRandom"
+    db $2B, $46, $51, $35, $3E, $4B, $41, $4C, $4A, $F0
+SkillName_156_Scared:  ; "Scared"
+    db $36, $40, $3E, $4F, $42, $41, $F0
+SkillName_157_Dance:  ; "Dance"
+    db $27, $3E, $4B, $40, $42, $F0
+SkillName_158_Trip:  ; "Trip"
+    db $37, $4F, $46, $4D, $F0
+SkillName_159_Paralyze:  ; "Paralyze"
+    db $33, $3E, $4F, $3E, $49, $56, $57, $42, $F0
+SkillName_160_CANTMOVE:  ; "CANTMOVE"
+    db $26, $24, $31, $37, $30, $32, $39, $28, $F0
+SkillName_161_RUN:  ; "RUN"
+    db $35, $38, $31, $F0
+SkillName_162_CALLHOROR:  ; "CALLHOROR"
+    db $26, $24, $2F, $2F, $2B, $32, $35, $32, $35, $F0
+SkillName_163_HealUsAll:  ; "HealUsAll"
+    db $2B, $42, $3E, $49, $38, $50, $24, $49, $49, $F0
+SkillName_164_Smashed:  ; "Smashed"
+    db $36, $4A, $3E, $50, $45, $42, $41, $F0
+SkillName_165_FILTHZONE:  ; "FILTHZONE"
+    db $29, $2C, $2F, $37, $2B, $3D, $32, $31, $28, $F0
+SkillName_166_ALLCHANGE:  ; "ALLCHANGE"
+    db $24, $2F, $2F, $26, $2B, $24, $31, $2A, $28, $F0
+SkillName_167_BIGSLEEP:  ; "BIGSLEEP"
+    db $25, $2C, $2A, $36, $2F, $28, $28, $33, $F0
+SkillName_168_MP0:  ; "MP0"
+    db $30, $33, $00, $F0
+SkillName_169_ECHO:  ; "ECHO"
+    db $28, $26, $2B, $32, $F0
+SkillName_170_CHGDRAGON:  ; "CHGDRAGON"
+    db $26, $2B, $2A, $27, $35, $24, $2A, $32, $31, $F0
+SkillName_171_CALLEVIL:  ; "CALLEVIL"
+    db $26, $24, $2F, $2F, $28, $39, $2C, $2F, $F0
+SkillName_172_FREEZY:  ; "FREEZY"
+    db $29, $35, $28, $28, $3D, $3C, $F0
+SkillName_173_ALLREVIVE:  ; "ALLREVIVE"
+    db $24, $2F, $2F, $35, $28, $39, $2C, $39, $28, $F0
+SkillName_174_RESTOREMP:  ; "RESTOREMP"
+    db $35, $28, $36, $37, $32, $35, $28, $30, $33, $F0
+SkillName_175_METEOR:  ; "METEOR"
+    db $30, $28, $37, $28, $32, $35, $F0
+SkillName_176_HERB:  ; "HERB"
+    db $2B, $28, $35, $25, $F0
+SkillName_177_HEALWATER:  ; "HEALWATER"
+    db $2B, $28, $24, $2F, $3A, $24, $37, $28, $35, $F0
+SkillName_178_SAGESTONE:  ; "SAGESTONE"
+    db $36, $24, $2A, $28, $36, $37, $32, $31, $28, $F0
+SkillName_179_WARLDDEW:  ; "WARLDDEW"
+    db $3A, $24, $35, $2F, $27, $27, $28, $3A, $F0
+SkillName_180_POTION:  ; "POTION"
+    db $33, $32, $37, $2C, $32, $31, $F0
+SkillName_181_ELFWATER:  ; "ELFWATER"
+    db $28, $2F, $29, $3A, $24, $37, $28, $35, $F0
+SkillName_182_ANTIDOTE:  ; "ANTIDOTE"
+    db $24, $31, $37, $2C, $27, $32, $37, $28, $F0
+SkillName_183_MOONHERB:  ; "MOONHERB"
+    db $30, $32, $32, $31, $2B, $28, $35, $25, $F0
+SkillName_184_SKYBELL:  ; "SKYBELL"
+    db $36, $2E, $3C, $25, $28, $2F, $2F, $F0
+SkillName_185_LAUREL:  ; "LAUREL"
+    db $2F, $24, $38, $35, $28, $2F, $F0
+SkillName_186_AWAKESAND:  ; "AWAKESAND"
+    db $24, $3A, $24, $2E, $28, $36, $24, $31, $27, $F0
+SkillName_187_WARLDLEAF:  ; "WARLDLEAF"
+    db $3A, $24, $35, $2F, $27, $2F, $28, $24, $29, $F0
+SkillName_188_LIFEACORN:  ; "LIFEACORN"
+    db $2F, $2C, $29, $28, $24, $26, $32, $35, $31, $F0
+SkillName_189_MYSTICNUT:  ; "MYSTICNUT"
+    db $30, $3C, $36, $37, $2C, $26, $31, $38, $37, $F0
+SkillName_190_PWRSEED:  ; "PWRSEED"
+    db $33, $3A, $35, $36, $28, $28, $27, $F0
+SkillName_191_DEFSEED:  ; "DEFSEED"
+    db $27, $28, $29, $36, $28, $28, $27, $F0
+SkillName_192_AGILSEED:  ; "AGILSEED"
+    db $24, $2A, $2C, $2F, $36, $28, $28, $27, $F0
+SkillName_193_INTSEED:  ; "INTSEED"
+    db $2C, $31, $37, $36, $28, $28, $27, $F0
+SkillName_194_FEEDMEAT:  ; "FEEDMEAT"
+    db $29, $28, $28, $27, $30, $28, $24, $37, $F0
+SkillName_195_BEFFJERKY:  ; "BEFFJERKY"
+    db $25, $28, $29, $29, $2D, $28, $35, $2E, $3C, $F0
+SkillName_196_PORKCHOP:  ; "PORKCHOP"
+    db $33, $32, $35, $2E, $26, $2B, $32, $33, $F0
+SkillName_197_BADMEAT:  ; "BADMEAT"
+    db $25, $24, $27, $30, $28, $24, $37, $F0
+SkillName_198_SIRLOIN:  ; "SIRLOIN"
+    db $36, $2C, $35, $2F, $32, $2C, $31, $F0
+SkillName_199_BOLTSTAFF:  ; "BOLTSTAFF"
+    db $25, $32, $2F, $37, $36, $37, $24, $29, $29, $F0
+SkillName_200_STAFF:  ; "STAFF"
+    db $36, $37, $24, $29, $29, $F0
+SkillName_201_BLOKSTAFF:  ; "BLOKSTAFF"
+    db $25, $2F, $32, $2E, $36, $37, $24, $29, $29, $F0
+SkillName_202_LAVASTAFF:  ; "LAVASTAFF"
+    db $2F, $24, $39, $24, $36, $37, $24, $29, $29, $F0
+SkillName_203_SNOWSTAFF:  ; "SNOWSTAFF"
+    db $36, $31, $32, $3A, $36, $37, $24, $29, $29, $F0
+SkillName_204_FIRESTAFF:  ; "FIRESTAFF"
+    db $29, $2C, $35, $28, $36, $37, $24, $29, $29, $F0
+SkillName_205_WARPWING:  ; "WARPWING"
+    db $3A, $24, $35, $33, $3A, $2C, $31, $2A, $F0
+SkillName_206_TINYMEDAL:  ; "TINYMEDAL"
+    db $37, $2C, $31, $3C, $30, $28, $27, $24, $2F, $F0
+SkillName_207_QuestBk:  ; "QuestBk"
+    db $34, $52, $42, $50, $51, $25, $48, $F0
+SkillName_208_HORRORBK:  ; "HORRORBK"
+    db $2B, $32, $35, $35, $32, $35, $25, $2E, $F0
+SkillName_209_BENICEBK:  ; "BENICEBK"
+    db $25, $28, $31, $2C, $26, $28, $25, $2E, $F0
+SkillName_210_CHEATERBK:  ; "CHEATERBK"
+    db $26, $2B, $28, $24, $37, $28, $35, $25, $2E, $F0
+SkillName_211_SMARTBK:  ; "SMARTBK"
+    db $36, $30, $24, $35, $37, $25, $2E, $F0
+SkillName_212_COMEDYBK:  ; "COMEDYBK"
+    db $26, $32, $30, $28, $27, $3C, $25, $2E, $F0
+SkillName_213_BeDragon:  ; "BeDragon"
+    db $25, $42, $27, $4F, $3E, $44, $4C, $4B, $F0
+SkillName_214_Smashlime:  ; "Smashlime"
+    db $36, $4A, $3E, $50, $45, $49, $46, $4A, $42, $F0
+SkillName_215_Sheldodge:  ; "BugCut"
+    db $25, $52, $44, $26, $52, $51, $F0
+SkillName_216_Branching:  ; "Branching"
+    db $25, $4F, $3E, $4B, $40, $45, $46, $4B, $44, $F0
+SkillName_217_GigaSlash:  ; "GigaSlash"
+    db $2A, $46, $44, $3E, $36, $49, $3E, $50, $45, $F0
+SkillName_218_LIFE:  ; "LIFE"
+    db $2F, $2C, $29, $28, $F0
+SkillName_219_RUN:  ; "RUN"
+    db $35, $38, $31, $F0
+SkillName_220_IRONIZE:  ; "IRONIZE"
+    db $2C, $35, $32, $31, $2C, $3D, $28, $F0
+SkillName_221_Ahhh:  ; "Ahhh"
+    db $24, $45, $45, $45, $F0
+SkillName_222_Unused_222:  ; ""
+    db $F0
+    ds 3, $00   ; unused (3 B)
 ; @BUILD_PROJECT END gd_skill_names
 
 ; ---------------------------------------------------------------
@@ -2356,221 +2802,436 @@ SkillName_222_Unused_222: db $F0
 ; letters; overflow -> the ns_text_* extents under the same label).
 ; @BUILD_PROJECT BEGIN gd_monster_nicks
 MonsterNickStrings:
-MonsterNick_000_DS: db "DS", $F0
-MonsterNick_001_SP: db "SP", $F0
-MonsterNick_002_WS: db "WS", $F0
-MonsterNick_003_TS: db "TS", $F0
-MonsterNick_004_SN: db "SN", $F0
-MonsterNick_005_KN: db "KN", $F0
-MonsterNick_006_BB: db "BB", $F0
-MonsterNick_007_BX: db "BX", $F0
-MonsterNick_008_SL: db "SL", $F0
-MonsterNick_009_HL: db "HL", $F0
-MonsterNick_010_FS: db "FS", $F0
-MonsterNick_011_RS: db "RS", $F0
-MonsterNick_012_SB: db "SB", $F0
-MonsterNick_013_ST: db "ST", $F0
-MonsterNick_014_SK: db "SK", $F0
-MonsterNick_015_KS: db "KS", $F0
-MonsterNick_016_MK: db "MK", $F0
-MonsterNick_017_MB: db "MB", $F0
-MonsterNick_018_MT: db "MT", $F0
-MonsterNick_019_GS: db "GS", $F0
-MonsterNick_020_DK: db "DK", $F0
-MonsterNick_021_TG: db "TG", $F0
-MonsterNick_022_PT: db "PT", $F0
-MonsterNick_023_BG: db "BG", $F0
-MonsterNick_024_BD: db "BD", $F0
-MonsterNick_025_LM: db "LM", $F0
-MonsterNick_026_PG: db "PG", $F0
-MonsterNick_027_SD: db "SD", $F0
-MonsterNick_028_DR: db "DR", $F0
-MonsterNick_029_MD: db "MD", $F0
-MonsterNick_030_DK: db "DK", $F0
-MonsterNick_031_RB: db "RB", $F0
-MonsterNick_032_CH: db "CH", $F0
-MonsterNick_033_LF: db "LF", $F0
-MonsterNick_034_AD: db "AD", $F0
-MonsterNick_035_LC: db "LC", $F0
-MonsterNick_036_SS: db "SS", $F0
-MonsterNick_037_GD: db "GD", $F0
-MonsterNick_038_CP: db "CP", $F0
-MonsterNick_039_WS: db "WS", $F0
-MonsterNick_040_CT: db "CT", $F0
-MonsterNick_041_OR: db "OR", $F0
-MonsterNick_042_BR: db "BR", $F0
-MonsterNick_043_SD: db "SD", $F0
-MonsterNick_044_DG: db "DG", $F0
-MonsterNick_045_TG: db "TG", $F0
-MonsterNick_046_HB: db "HB", $F0
-MonsterNick_047_CF: db "CF", $F0
-MonsterNick_048_PR: db "PR", $F0
-MonsterNick_049_SC: db "SC", $F0
-MonsterNick_050_GB: db "GB", $F0
-MonsterNick_051_SL: db "SL", $F0
-MonsterNick_052_WB: db "WB", $F0
-MonsterNick_053_AE: db "AE", $F0
-MonsterNick_054_ST: db "ST", $F0
-MonsterNick_055_IT: db "IT", $F0
-MonsterNick_056_MM: db "MM", $F0
-MonsterNick_057_HM: db "HM", $F0
-MonsterNick_058_GZ: db "GZ", $F0
-MonsterNick_059_YT: db "YT", $F0
-MonsterNick_060_MG: db "MG", $F0
-MonsterNick_061_FR: db "FR", $F0
-MonsterNick_062_UC: db "UC", $F0
-MonsterNick_063_GG: db "GG", $F0
-MonsterNick_064_KA: db "KA", $F0
-MonsterNick_065_TP: db "TP", $F0
-MonsterNick_066_KL: db "KL", $F0
-MonsterNick_067_DH: db "DH", $F0
-MonsterNick_068_MC: db "MC", $F0
-MonsterNick_069_BE: db "BE", $F0
-MonsterNick_070_PK: db "PK", $F0
-MonsterNick_071_WV: db "WV", $F0
-MonsterNick_072_BB: db "BB", $F0
-MonsterNick_073_FJ: db "FJ", $F0
-MonsterNick_074_DK: db "DK", $F0
-MonsterNick_075_MP: db "MP", $F0
-MonsterNick_076_MR: db "MR", $F0
-MonsterNick_077_MW: db "MW", $F0
-MonsterNick_078_DK: db "DK", $F0
-MonsterNick_079_BR: db "BR", $F0
-MonsterNick_080_SB: db "SB", $F0
-MonsterNick_081_LO: db "LO", $F0
-MonsterNick_082_MG: db "MG", $F0
-MonsterNick_083_MC: db "MC", $F0
-MonsterNick_084_BZ: db "BZ", $F0
-MonsterNick_085_PN: db "PN", $F0
-MonsterNick_086_TH: db "TH", $F0
-MonsterNick_087_WH: db "WH", $F0
-MonsterNick_088_FB: db "FB", $F0
-MonsterNick_089_RB: db "RB", $F0
-MonsterNick_090_MP: db "MP", $F0
-MonsterNick_091_FW: db "FW", $F0
-MonsterNick_092_FM: db "FM", $F0
-MonsterNick_093_WT: db "WT", $F0
-MonsterNick_094_CB: db "CB", $F0
-MonsterNick_095_GP: db "GP", $F0
-MonsterNick_096_FG: db "FG", $F0
-MonsterNick_097_AW: db "AW", $F0
-MonsterNick_098_SS: db "SS", $F0
-MonsterNick_099_ON: db "ON", $F0
-MonsterNick_100_DV: db "DV", $F0
-MonsterNick_101_TB: db "TB", $F0
-MonsterNick_102_FT: db "FT", $F0
-MonsterNick_103_HM: db "HM", $F0
-MonsterNick_104_BM: db "BM", $F0
-MonsterNick_105_ES: db "ES", $F0
-MonsterNick_106_ME: db "ME", $F0
-MonsterNick_107_SP: db "SP", $F0
-MonsterNick_108_OV: db "OV", $F0
-MonsterNick_109_WT: db "WT", $F0
-MonsterNick_110_GS: db "GS", $F0
-MonsterNick_111_CP: db "CP", $F0
-MonsterNick_112_GC: db "GC", $F0
-MonsterNick_113_BF: db "BF", $F0
-MonsterNick_114_WB: db "WB", $F0
-MonsterNick_115_GW: db "GW", $F0
-MonsterNick_116_LP: db "LP", $F0
-MonsterNick_117_SB: db "SB", $F0
-MonsterNick_118_AA: db "AA", $F0
-MonsterNick_119_GH: db "GH", $F0
-MonsterNick_120_TE: db "TE", $F0
-MonsterNick_121_AP: db "AP", $F0
-MonsterNick_122_ED: db "ED", $F0
-MonsterNick_123_GM: db "GM", $F0
-MonsterNick_124_DR: db "DR", $F0
-MonsterNick_125_AC: db "AC", $F0
-MonsterNick_126_MH: db "MH", $F0
-MonsterNick_127_HB: db "HB", $F0
-MonsterNick_128_AP: db "AP", $F0
-MonsterNick_129_DG: db "DG", $F0
-MonsterNick_130_PX: db "PX", $F0
-MonsterNick_131_AD: db "AD", $F0
-MonsterNick_132_AD: db "AD", $F0
-MonsterNick_133_DM: db "DM", $F0
-MonsterNick_134_DE: db "DE", $F0
-MonsterNick_135_EB: db "EB", $F0
-MonsterNick_136_BR: db "BR", $F0
-MonsterNick_137_EB: db "EB", $F0
-MonsterNick_138_1E: db "1E", $F0
-MonsterNick_139_GR: db "GR", $F0
-MonsterNick_140_MD: db "MD", $F0
-MonsterNick_141_LX: db "LX", $F0
-MonsterNick_142_GH: db "GH", $F0
-MonsterNick_143_OC: db "OC", $F0
-MonsterNick_144_OG: db "OG", $F0
-MonsterNick_145_GG: db "GG", $F0
-MonsterNick_146_CC: db "CC", $F0
-MonsterNick_147_GR: db "GR", $F0
-MonsterNick_148_AK: db "AK", $F0
-MonsterNick_149_MK: db "MK", $F0
-MonsterNick_150_GG: db "GG", $F0
-MonsterNick_151_CS: db "CS", $F0
-MonsterNick_152_EA: db "EA", $F0
-MonsterNick_153_JA: db "JA", $F0
-MonsterNick_154_DR: db "DR", $F0
-MonsterNick_155_SP: db "SP", $F0
-MonsterNick_156_SK: db "SK", $F0
-MonsterNick_157_DZ: db "DZ", $F0
-MonsterNick_158_RR: db "RR", $F0
-MonsterNick_159_MM: db "MM", $F0
-MonsterNick_160_DC: db "DC", $F0
-MonsterNick_161_DN: db "DN", $F0
-MonsterNick_162_SH: db "SH", $F0
-MonsterNick_163_PT: db "PT", $F0
-MonsterNick_164_MD: db "MD", $F0
-MonsterNick_165_NW: db "NW", $F0
-MonsterNick_166_ES: db "ES", $F0
-MonsterNick_167_WM: db "WM", $F0
-MonsterNick_168_ST: db "ST", $F0
-MonsterNick_169_DN: db "DN", $F0
-MonsterNick_170_IK: db "IK", $F0
-MonsterNick_171_BS: db "BS", $F0
-MonsterNick_172_SK: db "SK", $F0
-MonsterNick_173_SV: db "SV", $F0
-MonsterNick_174_CC: db "CC", $F0
-MonsterNick_175_JB: db "JB", $F0
-MonsterNick_176_EW: db "EW", $F0
-MonsterNick_177_MC: db "MC", $F0
-MonsterNick_178_CB: db "CB", $F0
-MonsterNick_179_MK: db "MK", $F0
-MonsterNick_180_SB: db "SB", $F0
-MonsterNick_181_MM: db "MM", $F0
-MonsterNick_182_RA: db "RA", $F0
-MonsterNick_183_MH: db "MH", $F0
-MonsterNick_184_VD: db "VD", $F0
-MonsterNick_185_DM: db "DM", $F0
-MonsterNick_186_BZ: db "BZ", $F0
-MonsterNick_187_SM: db "SM", $F0
-MonsterNick_188_CL: db "CL", $F0
-MonsterNick_189_KB: db "KB", $F0
-MonsterNick_190_EP: db "EP", $F0
-MonsterNick_191_GZ: db "GZ", $F0
-MonsterNick_192_LM: db "LM", $F0
-MonsterNick_193_IC: db "IC", $F0
-MonsterNick_194_MM: db "MM", $F0
-MonsterNick_195_MD: db "MD", $F0
-MonsterNick_196_GL: db "GL", $F0
-MonsterNick_197_MS: db "MS", $F0
-MonsterNick_198_BC: db "BC", $F0
-MonsterNick_199_GG: db "GG", $F0
-MonsterNick_200_DL: db "DL", $F0
-MonsterNick_201_DL: db "DL", $F0
-MonsterNick_202_HG: db "HG", $F0
-MonsterNick_203_SD: db "SD", $F0
-MonsterNick_204_BM: db "BM", $F0
-MonsterNick_205_ZM: db "ZM", $F0
-MonsterNick_206_PZ: db "PZ", $F0
-MonsterNick_207_ES: db "ES", $F0
-MonsterNick_208_MD: db "MD", $F0
-MonsterNick_209_MD: db "MD", $F0
-MonsterNick_210_MD: db "MD", $F0
-MonsterNick_211_DM: db "DM", $F0
-MonsterNick_212_DM: db "DM", $F0
-MonsterNick_213_DM: db "DM", $F0
-MonsterNick_214_DD: db "DD", $F0
+MonsterNick_000_DS:  ; "DS"
+    db $27, $36, $F0
+MonsterNick_001_SP:  ; "SP"
+    db $36, $33, $F0
+MonsterNick_002_WS:  ; "WS"
+    db $3A, $36, $F0
+MonsterNick_003_TS:  ; "TS"
+    db $37, $36, $F0
+MonsterNick_004_SN:  ; "SN"
+    db $36, $31, $F0
+MonsterNick_005_KN:  ; "KN"
+    db $2E, $31, $F0
+MonsterNick_006_BB:  ; "BB"
+    db $25, $25, $F0
+MonsterNick_007_BX:  ; "BX"
+    db $25, $3B, $F0
+MonsterNick_008_SL:  ; "SL"
+    db $36, $2F, $F0
+MonsterNick_009_HL:  ; "HL"
+    db $2B, $2F, $F0
+MonsterNick_010_FS:  ; "FS"
+    db $29, $36, $F0
+MonsterNick_011_RS:  ; "RS"
+    db $35, $36, $F0
+MonsterNick_012_SB:  ; "SB"
+    db $36, $25, $F0
+MonsterNick_013_ST:  ; "ST"
+    db $36, $37, $F0
+MonsterNick_014_SK:  ; "SK"
+    db $36, $2E, $F0
+MonsterNick_015_KS:  ; "KS"
+    db $2E, $36, $F0
+MonsterNick_016_MK:  ; "MK"
+    db $30, $2E, $F0
+MonsterNick_017_MB:  ; "MB"
+    db $30, $25, $F0
+MonsterNick_018_MT:  ; "MT"
+    db $30, $37, $F0
+MonsterNick_019_GS:  ; "GS"
+    db $2A, $36, $F0
+MonsterNick_020_DK:  ; "DK"
+    db $27, $2E, $F0
+MonsterNick_021_TG:  ; "TG"
+    db $37, $2A, $F0
+MonsterNick_022_PT:  ; "PT"
+    db $33, $37, $F0
+MonsterNick_023_BG:  ; "BG"
+    db $25, $2A, $F0
+MonsterNick_024_BD:  ; "BD"
+    db $25, $27, $F0
+MonsterNick_025_LM:  ; "LM"
+    db $2F, $30, $F0
+MonsterNick_026_PG:  ; "PG"
+    db $33, $2A, $F0
+MonsterNick_027_SD:  ; "SD"
+    db $36, $27, $F0
+MonsterNick_028_DR:  ; "DR"
+    db $27, $35, $F0
+MonsterNick_029_MD:  ; "MD"
+    db $30, $27, $F0
+MonsterNick_030_DK:  ; "DK"
+    db $27, $2E, $F0
+MonsterNick_031_RB:  ; "RB"
+    db $35, $25, $F0
+MonsterNick_032_CH:  ; "CH"
+    db $26, $2B, $F0
+MonsterNick_033_LF:  ; "LF"
+    db $2F, $29, $F0
+MonsterNick_034_AD:  ; "AD"
+    db $24, $27, $F0
+MonsterNick_035_LC:  ; "LC"
+    db $2F, $26, $F0
+MonsterNick_036_SS:  ; "SS"
+    db $36, $36, $F0
+MonsterNick_037_GD:  ; "GD"
+    db $2A, $27, $F0
+MonsterNick_038_CP:  ; "CP"
+    db $26, $33, $F0
+MonsterNick_039_WS:  ; "WS"
+    db $3A, $36, $F0
+MonsterNick_040_CT:  ; "CT"
+    db $26, $37, $F0
+MonsterNick_041_OR:  ; "OR"
+    db $32, $35, $F0
+MonsterNick_042_BR:  ; "BR"
+    db $25, $35, $F0
+MonsterNick_043_SD:  ; "SD"
+    db $36, $27, $F0
+MonsterNick_044_DG:  ; "DG"
+    db $27, $2A, $F0
+MonsterNick_045_TG:  ; "TG"
+    db $37, $2A, $F0
+MonsterNick_046_HB:  ; "HB"
+    db $2B, $25, $F0
+MonsterNick_047_CF:  ; "CF"
+    db $26, $29, $F0
+MonsterNick_048_PR:  ; "PR"
+    db $33, $35, $F0
+MonsterNick_049_SC:  ; "SC"
+    db $36, $26, $F0
+MonsterNick_050_GB:  ; "GB"
+    db $2A, $25, $F0
+MonsterNick_051_SL:  ; "SL"
+    db $36, $2F, $F0
+MonsterNick_052_WB:  ; "WB"
+    db $3A, $25, $F0
+MonsterNick_053_AE:  ; "AE"
+    db $24, $28, $F0
+MonsterNick_054_ST:  ; "ST"
+    db $36, $37, $F0
+MonsterNick_055_IT:  ; "IT"
+    db $2C, $37, $F0
+MonsterNick_056_MM:  ; "MM"
+    db $30, $30, $F0
+MonsterNick_057_HM:  ; "HM"
+    db $2B, $30, $F0
+MonsterNick_058_GZ:  ; "GZ"
+    db $2A, $3D, $F0
+MonsterNick_059_YT:  ; "YT"
+    db $3C, $37, $F0
+MonsterNick_060_MG:  ; "MG"
+    db $30, $2A, $F0
+MonsterNick_061_FR:  ; "FR"
+    db $29, $35, $F0
+MonsterNick_062_UC:  ; "UC"
+    db $38, $26, $F0
+MonsterNick_063_GG:  ; "GG"
+    db $2A, $2A, $F0
+MonsterNick_064_KA:  ; "KA"
+    db $2E, $24, $F0
+MonsterNick_065_TP:  ; "TP"
+    db $37, $33, $F0
+MonsterNick_066_KL:  ; "KL"
+    db $2E, $2F, $F0
+MonsterNick_067_DH:  ; "DH"
+    db $27, $2B, $F0
+MonsterNick_068_MC:  ; "MC"
+    db $30, $26, $F0
+MonsterNick_069_BE:  ; "BE"
+    db $25, $28, $F0
+MonsterNick_070_PK:  ; "PK"
+    db $33, $2E, $F0
+MonsterNick_071_WV:  ; "WV"
+    db $3A, $39, $F0
+MonsterNick_072_BB:  ; "BB"
+    db $25, $25, $F0
+MonsterNick_073_FJ:  ; "FJ"
+    db $29, $2D, $F0
+MonsterNick_074_DK:  ; "DK"
+    db $27, $2E, $F0
+MonsterNick_075_MP:  ; "MP"
+    db $30, $33, $F0
+MonsterNick_076_MR:  ; "MR"
+    db $30, $35, $F0
+MonsterNick_077_MW:  ; "MW"
+    db $30, $3A, $F0
+MonsterNick_078_DK:  ; "DK"
+    db $27, $2E, $F0
+MonsterNick_079_BR:  ; "BR"
+    db $25, $35, $F0
+MonsterNick_080_SB:  ; "SB"
+    db $36, $25, $F0
+MonsterNick_081_LO:  ; "LO"
+    db $2F, $32, $F0
+MonsterNick_082_MG:  ; "MG"
+    db $30, $2A, $F0
+MonsterNick_083_MC:  ; "MC"
+    db $30, $26, $F0
+MonsterNick_084_BZ:  ; "BZ"
+    db $25, $3D, $F0
+MonsterNick_085_PN:  ; "PN"
+    db $33, $31, $F0
+MonsterNick_086_TH:  ; "TH"
+    db $37, $2B, $F0
+MonsterNick_087_WH:  ; "WH"
+    db $3A, $2B, $F0
+MonsterNick_088_FB:  ; "FB"
+    db $29, $25, $F0
+MonsterNick_089_RB:  ; "RB"
+    db $35, $25, $F0
+MonsterNick_090_MP:  ; "MP"
+    db $30, $33, $F0
+MonsterNick_091_FW:  ; "FW"
+    db $29, $3A, $F0
+MonsterNick_092_FM:  ; "FM"
+    db $29, $30, $F0
+MonsterNick_093_WT:  ; "WT"
+    db $3A, $37, $F0
+MonsterNick_094_CB:  ; "CB"
+    db $26, $25, $F0
+MonsterNick_095_GP:  ; "GP"
+    db $2A, $33, $F0
+MonsterNick_096_FG:  ; "FG"
+    db $29, $2A, $F0
+MonsterNick_097_AW:  ; "AW"
+    db $24, $3A, $F0
+MonsterNick_098_SS:  ; "SS"
+    db $36, $36, $F0
+MonsterNick_099_ON:  ; "ON"
+    db $32, $31, $F0
+MonsterNick_100_DV:  ; "DV"
+    db $27, $39, $F0
+MonsterNick_101_TB:  ; "TB"
+    db $37, $25, $F0
+MonsterNick_102_FT:  ; "FT"
+    db $29, $37, $F0
+MonsterNick_103_HM:  ; "HM"
+    db $2B, $30, $F0
+MonsterNick_104_BM:  ; "BM"
+    db $25, $30, $F0
+MonsterNick_105_ES:  ; "ES"
+    db $28, $36, $F0
+MonsterNick_106_ME:  ; "ME"
+    db $30, $28, $F0
+MonsterNick_107_SP:  ; "SP"
+    db $36, $33, $F0
+MonsterNick_108_OV:  ; "OV"
+    db $32, $39, $F0
+MonsterNick_109_WT:  ; "WT"
+    db $3A, $37, $F0
+MonsterNick_110_GS:  ; "GS"
+    db $2A, $36, $F0
+MonsterNick_111_CP:  ; "CP"
+    db $26, $33, $F0
+MonsterNick_112_GC:  ; "GC"
+    db $2A, $26, $F0
+MonsterNick_113_BF:  ; "BF"
+    db $25, $29, $F0
+MonsterNick_114_WB:  ; "WB"
+    db $3A, $25, $F0
+MonsterNick_115_GW:  ; "GW"
+    db $2A, $3A, $F0
+MonsterNick_116_LP:  ; "LP"
+    db $2F, $33, $F0
+MonsterNick_117_SB:  ; "SB"
+    db $36, $25, $F0
+MonsterNick_118_AA:  ; "AA"
+    db $24, $24, $F0
+MonsterNick_119_GH:  ; "GH"
+    db $2A, $2B, $F0
+MonsterNick_120_TE:  ; "TE"
+    db $37, $28, $F0
+MonsterNick_121_AP:  ; "AP"
+    db $24, $33, $F0
+MonsterNick_122_ED:  ; "ED"
+    db $28, $27, $F0
+MonsterNick_123_GM:  ; "GM"
+    db $2A, $30, $F0
+MonsterNick_124_DR:  ; "DR"
+    db $27, $35, $F0
+MonsterNick_125_AC:  ; "AC"
+    db $24, $26, $F0
+MonsterNick_126_MH:  ; "MH"
+    db $30, $2B, $F0
+MonsterNick_127_HB:  ; "HB"
+    db $2B, $25, $F0
+MonsterNick_128_AP:  ; "AP"
+    db $24, $33, $F0
+MonsterNick_129_DG:  ; "DG"
+    db $27, $2A, $F0
+MonsterNick_130_PX:  ; "PX"
+    db $33, $3B, $F0
+MonsterNick_131_AD:  ; "AD"
+    db $24, $27, $F0
+MonsterNick_132_AD:  ; "AD"
+    db $24, $27, $F0
+MonsterNick_133_DM:  ; "DM"
+    db $27, $30, $F0
+MonsterNick_134_DE:  ; "DE"
+    db $27, $28, $F0
+MonsterNick_135_EB:  ; "EB"
+    db $28, $25, $F0
+MonsterNick_136_BR:  ; "BR"
+    db $25, $35, $F0
+MonsterNick_137_EB:  ; "EB"
+    db $28, $25, $F0
+MonsterNick_138_1E:  ; "1E"
+    db $01, $28, $F0
+MonsterNick_139_GR:  ; "GR"
+    db $2A, $35, $F0
+MonsterNick_140_MD:  ; "MD"
+    db $30, $27, $F0
+MonsterNick_141_LX:  ; "LX"
+    db $2F, $3B, $F0
+MonsterNick_142_GH:  ; "GH"
+    db $2A, $2B, $F0
+MonsterNick_143_OC:  ; "OC"
+    db $32, $26, $F0
+MonsterNick_144_OG:  ; "OG"
+    db $32, $2A, $F0
+MonsterNick_145_GG:  ; "GG"
+    db $2A, $2A, $F0
+MonsterNick_146_CC:  ; "CC"
+    db $26, $26, $F0
+MonsterNick_147_GR:  ; "GR"
+    db $2A, $35, $F0
+MonsterNick_148_AK:  ; "AK"
+    db $24, $2E, $F0
+MonsterNick_149_MK:  ; "MK"
+    db $30, $2E, $F0
+MonsterNick_150_GG:  ; "GG"
+    db $2A, $2A, $F0
+MonsterNick_151_CS:  ; "CS"
+    db $26, $36, $F0
+MonsterNick_152_EA:  ; "EA"
+    db $28, $24, $F0
+MonsterNick_153_JA:  ; "JA"
+    db $2D, $24, $F0
+MonsterNick_154_DR:  ; "DR"
+    db $27, $35, $F0
+MonsterNick_155_SP:  ; "SP"
+    db $36, $33, $F0
+MonsterNick_156_SK:  ; "SK"
+    db $36, $2E, $F0
+MonsterNick_157_DZ:  ; "DZ"
+    db $27, $3D, $F0
+MonsterNick_158_RR:  ; "RR"
+    db $35, $35, $F0
+MonsterNick_159_MM:  ; "MM"
+    db $30, $30, $F0
+MonsterNick_160_DC:  ; "DC"
+    db $27, $26, $F0
+MonsterNick_161_DN:  ; "DN"
+    db $27, $31, $F0
+MonsterNick_162_SH:  ; "SH"
+    db $36, $2B, $F0
+MonsterNick_163_PT:  ; "PT"
+    db $33, $37, $F0
+MonsterNick_164_MD:  ; "MD"
+    db $30, $27, $F0
+MonsterNick_165_NW:  ; "NW"
+    db $31, $3A, $F0
+MonsterNick_166_ES:  ; "ES"
+    db $28, $36, $F0
+MonsterNick_167_WM:  ; "WM"
+    db $3A, $30, $F0
+MonsterNick_168_ST:  ; "ST"
+    db $36, $37, $F0
+MonsterNick_169_DN:  ; "DN"
+    db $27, $31, $F0
+MonsterNick_170_IK:  ; "IK"
+    db $2C, $2E, $F0
+MonsterNick_171_BS:  ; "BS"
+    db $25, $36, $F0
+MonsterNick_172_SK:  ; "SK"
+    db $36, $2E, $F0
+MonsterNick_173_SV:  ; "SV"
+    db $36, $39, $F0
+MonsterNick_174_CC:  ; "CC"
+    db $26, $26, $F0
+MonsterNick_175_JB:  ; "JB"
+    db $2D, $25, $F0
+MonsterNick_176_EW:  ; "EW"
+    db $28, $3A, $F0
+MonsterNick_177_MC:  ; "MC"
+    db $30, $26, $F0
+MonsterNick_178_CB:  ; "CB"
+    db $26, $25, $F0
+MonsterNick_179_MK:  ; "MK"
+    db $30, $2E, $F0
+MonsterNick_180_SB:  ; "SB"
+    db $36, $25, $F0
+MonsterNick_181_MM:  ; "MM"
+    db $30, $30, $F0
+MonsterNick_182_RA:  ; "RA"
+    db $35, $24, $F0
+MonsterNick_183_MH:  ; "MH"
+    db $30, $2B, $F0
+MonsterNick_184_VD:  ; "VD"
+    db $39, $27, $F0
+MonsterNick_185_DM:  ; "DM"
+    db $27, $30, $F0
+MonsterNick_186_BZ:  ; "BZ"
+    db $25, $3D, $F0
+MonsterNick_187_SM:  ; "SM"
+    db $36, $30, $F0
+MonsterNick_188_CL:  ; "CL"
+    db $26, $2F, $F0
+MonsterNick_189_KB:  ; "KB"
+    db $2E, $25, $F0
+MonsterNick_190_EP:  ; "EP"
+    db $28, $33, $F0
+MonsterNick_191_GZ:  ; "GZ"
+    db $2A, $3D, $F0
+MonsterNick_192_LM:  ; "LM"
+    db $2F, $30, $F0
+MonsterNick_193_IC:  ; "IC"
+    db $2C, $26, $F0
+MonsterNick_194_MM:  ; "MM"
+    db $30, $30, $F0
+MonsterNick_195_MD:  ; "MD"
+    db $30, $27, $F0
+MonsterNick_196_GL:  ; "GL"
+    db $2A, $2F, $F0
+MonsterNick_197_MS:  ; "MS"
+    db $30, $36, $F0
+MonsterNick_198_BC:  ; "BC"
+    db $25, $26, $F0
+MonsterNick_199_GG:  ; "GG"
+    db $2A, $2A, $F0
+MonsterNick_200_DL:  ; "DL"
+    db $27, $2F, $F0
+MonsterNick_201_DL:  ; "DL"
+    db $27, $2F, $F0
+MonsterNick_202_HG:  ; "HG"
+    db $2B, $2A, $F0
+MonsterNick_203_SD:  ; "SD"
+    db $36, $27, $F0
+MonsterNick_204_BM:  ; "BM"
+    db $25, $30, $F0
+MonsterNick_205_ZM:  ; "ZM"
+    db $3D, $30, $F0
+MonsterNick_206_PZ:  ; "PZ"
+    db $33, $3D, $F0
+MonsterNick_207_ES:  ; "ES"
+    db $28, $36, $F0
+MonsterNick_208_MD:  ; "MD"
+    db $30, $27, $F0
+MonsterNick_209_MD:  ; "MD"
+    db $30, $27, $F0
+MonsterNick_210_MD:  ; "MD"
+    db $30, $27, $F0
+MonsterNick_211_DM:  ; "DM"
+    db $27, $30, $F0
+MonsterNick_212_DM:  ; "DM"
+    db $27, $30, $F0
+MonsterNick_213_DM:  ; "DM"
+    db $27, $30, $F0
+MonsterNick_214_DD:  ; "DD"
+    db $27, $27, $F0
 ; @BUILD_PROJECT END gd_monster_nicks
 ItemName_00_Empty: db $F0  ; no item
 

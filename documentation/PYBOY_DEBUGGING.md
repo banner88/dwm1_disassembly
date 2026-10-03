@@ -241,3 +241,44 @@ edge and the battle waits for input forever.
   the next match). Gold = `$CA4B-$CA4D` (24-bit) before/after the class menu
   gives the fee actually charged.
 
+## S114 techniques — census of a choice + a draw, field battles in a loop, talks with YES/NO
+
+- **Stub-call census of a chooser and a draw.** `tools/census_encounters.py` boots to the
+  title screen and stub-calls bank $01 entry $0D (the list choice) and $0B (the battle
+  draw) with wInGateworld / wMapID / wGateID / wCurrentFloor / event flags poked, wRNG1/2
+  pinned before every draw; it reads wEncounterPoolIndex, wC8A9, `wEncListBuf` and
+  $DA02-$DA08. Works on the ORIGINAL ROM too (it reads the list from the ROM there), so the
+  same tool proves the vanilla model and a patched build.
+- **Field battles in a loop.** Walk left-left-right-right in 18-frame holds; a battle has
+  started when `wGameState` ($C8EB) bit 6 is set or `$C88A` leaves 1 — read $DA02-$DA08
+  then (EncounterMonsterSelect wrote them). Mash A (4 on / 4 off) until `$C88A == 1`, the
+  map is back and `wGameState == 0`; read the counter ($CA39/A) to see the re-seed. A strong
+  enemy can outlast 9,000 frames of A — treat a timeout as "no result", not a stall.
+- **YES/NO talks.** A on the NPC, advance the question's boxes, `up` (the cursor starts on
+  NO), A, then exactly the answer's boxes; then wait for `wGameState` 0 and the script
+  flag ($D8D7 bit 0) clear. An extra A re-opens the talk (KEY_LESSONS S114).
+- **Gate entry and floor kicks (measured S114 on the user's save).** Real entry =
+  `$C96D` = gate, `$C96E` = 1, `$C96C` = 1, `$C88F` = 1 (~700 frames) → floor 1. From a maze
+  floor (wInGateworld 1) the staircase kick (`$C96D` 0, `$C96E` $80) did NOT increment
+  wCurrentFloor: poke `floor - 1` for the floor you want (the S100 note "floor − 2" was
+  measured from special rooms). **S115 re-measure (contradicts the line above as worded):**
+  from a maze floor the kick DID add one — poke wCurrentFloor 1 → 2, poke 2 → 3 (0-based;
+  game floors 3 and 4) — i.e. poke (the game's floor number − 2); see DOC_AUDIT S115. Settle ~120 frames and B away any box before poking a warp
+  after a battle, or the mailbox is ignored.
+
+## S115 techniques — a gate entered by walking, the accessor swept by stub calls, boss joins
+
+- **Enter a gate the real way.** Put the entrance in a room you can warp into (the demo's
+  custom room), warp next to it, walk onto it (`up` holds of 18 frames) and wait ~1,200
+  frames: wGateID / wCurrentFloor / wLastFloor / wBossMapType and the row buffer
+  (`wGateRowBuf`, $D138) tell what entry 5 read. Hook the accessor and the far entry
+  (`hook_register(0x16, GateRowPtr)`, `(0x76, NewGateRowCopy)`) to count the calls.
+- **Sweep an accessor over its whole index range.** At the title screen write `di / ld
+  a,<bank> / ld [$2000],a / call <addr> / jr $` at $DD40, poke the index (wGateID), set
+  PC = $DD40 and SP, tick 3 frames, read `register_file.HL` — gates 0-255 in seconds; a
+  sentinel in the buffer ($EE) shows which indices copied.
+- **After battles:** press B until `wGameState` ($C8EB) is 0 before walking — a lone B can
+  leave the field menu open (the loop then sees "no battle"). A boss that joins a full
+  party asks "Choose a monster back to farm": mash A with a `down` every ~25 presses to
+  reach OK. Floor kicks from a maze floor: see the S115 re-measure above.
+

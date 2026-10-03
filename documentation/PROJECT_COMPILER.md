@@ -37,6 +37,7 @@ to the proven overlay:
 | the `lay_copies_10` / `lay_copies_11` regions (the zero tails of `patches/bank_010.asm` / `bank_011.asm`) | walking layouts copied into the other follower bank, from `gamedata.art` + `custom.species` (S107 2b, §2.23 "Walking layouts") |
 | `gd_monster_names` / `gd_monster_nicks` in `patches/bank_041.asm`, `gd_monster_desc` / `gd_monster_desc_extra` in `patches/bank_04d.asm` | the ORIGINAL monsters' names, default nicknames and library descriptions (+ new species' own descriptions), from `gamedata.monster_text` / `custom.species[].description` (S108 P3.10 part 3, §2.24) |
 | `gd_arena_masters_04` / `gd_arena_masters_50` / `gd_arena_fees` / `gd_arena_team_sizes` in `patches/bank_004/050/009/06e.asm` | the arena: each match's master, the class entry fees, the team sizes, from `gamedata.arena` (S109 P3.10b, §2.25; the team members are `gamedata.enemies` rows) |
+| `patches/bank_076.asm` | whole file = template head (`EncResolve`, S115 + `NewGateRowCopy`) + the project's encounter lists, rooms' lists / variants / rates, gates' plans (S114 P3.13a, §2.30) + the new gates' rows / sources (S115 NG1, §2.31) |
 
 Everything else — engine intercepts in banks `$00/$01/$04/$06/$07/$0B/$16`,
 layouts (`bank_064.asm` via `tools/build_gate_room.py` /
@@ -415,6 +416,7 @@ registering an emitter; nothing existing changes.
 | `gd_monster_names` `gd_monster_nicks` `gd_monster_desc` `gd_monster_desc_extra` (S108) | `gamedata.monster_text` (+ `custom.species[].description`) (§2.24; editor2/core/monster_text.py) | `region:` in banks $41 / $4D | those banks |
 | `gd_arena_masters_04` `gd_arena_masters_50` `gd_arena_fees` `gd_arena_team_sizes` (S109) | `gamedata.arena` (§2.25; editor2/core/arena.py) | `region:` in banks $04 / $50 / $09 / $6E | those banks |
 | `anims6f` `anims70` + `gd_anim_routine` `gd_anim_cmd` (S112) | `custom.animations` + `gamedata.skills.<id>.presentation` (§2.28; editor2/core/battle_anims.py) | `file:patches/bank_06f.asm` / `bank_070.asm` + `region:` in bank $5F | `$6F` `$70` $5F |
+| `enc76` (S114) | `custom.encounter_lists` + `custom.rooms[].encounters` + `custom.gates[].encounters` (§2.30; editor2/core/encounters.py) | `file:patches/bank_076.asm` | `$76` |
 | `lay_copies_10` `lay_copies_11` (S107 2b) + `ns_follower_layout` (in the species list) | `gamedata.art` + `custom.species` (§2.23 "Walking layouts"; editor2/core/walk_layouts.py) | `region:` in banks $10 / $11 | those banks |
 
 `bank_060` generated layout order (fixed, deterministic): script master
@@ -443,6 +445,11 @@ user-confirmed hand-authored code:
   table, `CustomAnimTick` / `CustomAnimInit` / `CustomAnimLoad` /
   `CustomAnimStep` + `CustomAnimNone` (the project's new battle animations,
   §2.28); pinned `aec1d3b8…286e`; TEMPLATE_SIZE 391 B.
+* `editor2/core/templates/bank_076_head.asm` (S114) — bank byte, 2-entry
+  table (S115: entry 1 `NewGateRowCopy`, §2.31), `EncResolve` /
+  `EncPickVariant` / `EncFloorRun` / `EncVanillaNumber` (which encounter list a
+  battle uses, §2.30; S115: a new gate walks its source's rule); pinned
+  `94cb8ece…5d90` (S115; was `2f0634f5…9f` S114); TEMPLATE_SIZE 296 B (241 S114).
 * `editor2/core/templates/bank_071_head.asm` — bank byte, 6-entry table
   (S100; 4 S99, 3 S64), `CopyCustomRoomRecord`, `CustomEncResolve` (S100:
   gate byte $FF = follow the dive, no pin), `CustomRoomBGMResolve` (entry 2:
@@ -1116,7 +1123,7 @@ A custom boss room gets `room_flags` no-saving by DEFAULT (explicit
 `can_save: true` wins, with a warning). Music: `CustomRoomBGMResolve`
 (bank $71 entry 2) plays the boss room's song on the floor before it (or $34
 without one — warning "no song"). **Validators:** unknown keys / gate outside
-0-31 / duplicate gate / floors outside 2-99 / missing boss room / boss room
+0-31 (S115: 0-95 — 32-95 are NEW gates, §2.31) / duplicate gate / floors outside 2-99 / missing boss room / boss room
 without `gate_arrival` / `vanilla:$xx` that is not a vanilla boss map =
 ERROR; boss room with a fixed encounter pool = ERROR; boss room also served
 by a rule, boss mapID > $7F, no song, `can_save: true` = warning; a
@@ -1423,7 +1430,7 @@ learn row buffer, `CustomSfxTable`, the bank $50 name fix (§2.27) → pin
 since S111b). Prev `534bfb62…` (patched, historical).
 **S111b:** the built-in custom skills' RATIOS as data (`gd_custom_ratios`, `ScaleHL72`, bank
 $72 entry 7 for Anchor) + the MagicBurn / Tame AI target rows (§2.27) → pin
-**`5a1c540487f9043e9d6431685527f1ad`** (patched; built S111, NOT yet user-tested;
+**`5a1c540487f9043e9d6431685527f1ad`** (patched; built S111, test ROM USER-CONFIRMED 2026-10-03 00:19 ("Tested, works");
 test_compiler `REFERENCE_MD5`). Prev `4a2860cf…` (patched, historical).
 **S104 r2:** `gamedata.families` (voices + Spirit names, two new regions;
 empty == the r1 bytes) and the user-picked ghost-wisp icon → pin
@@ -2155,6 +2162,123 @@ BREEDING_SYSTEM "Auto-ordered special table (S113)" + "The resolver as measured
   removes; table; refusals) + `test_breeding_analysis` (indexed resolver == the model,
   vanilla tree, gifts, the example, the generator: seeded, compiles, pins kept);
   test_app "Breeding tab (S113)".
+
+## §2.30 S114 — encounter lists: the project's own lists, room lists, gate plans, flag variants, rates (`custom.encounter_lists`, `custom.rooms[].encounters`, `custom.gates[].encounters`; ROADMAP P3.13a)
+
+DATA_STRUCTURES "Encounter list choice (S114)" (the engine, measured); EDITOR_DESIGN §5.5
+"As built S114"; help `59_encounters.md`. Module `editor2/core/encounters.py` (the model +
+the emitter), `editor2/core/encounters_doc.py` (`EncountersMixin` on Document),
+`editor2/app/encounters_tab.py`.
+
+```jsonc
+"custom": {
+  "encounter_lists": [                    // numbers 128, 129, … in order (≤ 128 lists)
+    {"id": "den_by_day", "name": "Den by day",
+     "rate": 3, "unk1": 3, "size_chance": [5, 5, 0],           // the 26-byte pool format,
+     "slot_chance": [5, 3, 2, 0, 0], "eids": [17, 32, "klamutra", 0, 0],   // same field
+     "max_count": [2, 1, 2, 0, 0], "maze_size": 15}],          // names as gamedata.encounters
+  "rooms": [{"id": "howling_den", …, "encounters": {
+     "enabled": true, "list": "den_by_day",                   // its OWN list (no gate pin)
+     "variants": [{"when": [{"flag": "den_night"}], "list": "den_at_night"}],
+     "rate": 7}}],                                            // own rate code 0-7 (any mode)
+  "gates": [{"gate": 0, "encounters": {
+     "floors": [{"floors": [1, 2], "list": "beginning_dragons"}],   // game numbering
+     "variants": [{"when": [{"flag": "den_night"}],
+                   "floors": [{"floors": "all", "list": "den_at_night"}]}]}}]
+}
+```
+
+* **List refs:** a number 0-127 (the game's lists, still edited through
+  `gamedata.encounters`, §2.20), a number 128+ (a project list) or a project list id.
+  A project list's omitted fields default to rate 3, unk1 3, size [7,0,0], slots
+  [7,0,0,0,0], max [1,1,1,1,1], maze 15; the S103 list checks apply (`gamedata.
+  apply_list_fields` / `check_list`, shared): chances ≥ 100 %, no freezing 2-3 draw, real
+  EIDs (0-486 or a project enemy by id / EID).
+* **Rooms:** `list` present = its own list — RoomEncTable (bank $71) row `[1, $FF, 0]`
+  (never pins wGateID, so a room served inside a dive keeps the dive) and bank $76
+  `EncRoomTable` names the variant list. Without `list`: `gate_id` / `floor` (pinned at each
+  step, S42) or `follow_gate` (S100) as before; `rate` alone = the gate's list at the
+  room's rate. `variants` need `list`; each needs ≥ 1 flag term (≤ 8; the gate-insert term
+  form). WARN: list / rate on a room with encounters off; `gate_id` / `floor` ignored next
+  to `list`.
+* **Gates:** `custom.gates[]` may now carry only `encounters` (GATE_KEYS += `encounters`).
+  `floors` runs (`[a, b]` / `n` / `"all"` = 1 .. floor count − 1) set a floor's list; a floor
+  no run covers keeps the vanilla rule (`encounters.vanilla_number` — the bank $01 walk:
+  sub-index = breakpoints ≤ floor) and follows the gate's floor count. A variant's
+  uncovered floors take the gate's own plan. ERROR: a floor in two runs, a floor outside
+  1 .. floor count. Gate numbers 0-255 are accepted by the engine table (`GATE_PLAN_LEN`
+  = the highest planned gate + 1); custom.gates still validates 0-31 until the new-gates
+  arc (ROADMAP NG1).
+* **Emitter `enc76`** → `patches/bank_076.asm` (whole file): template
+  `bank_076_head.asm` (`EncResolve` / `EncPickVariant` / `EncFloorRun` /
+  `EncVanillaNumber`, TEMPLATE_SIZE 241 B, pinned `2f0634f5…9f`) + `ENC_ROOM_LEN` /
+  `EncRoomTable` (3 B per room, index mapID − $6B: dw variant list, db rate $FF = none) +
+  the variant lists (`[n_terms][terms][dw target]`, last n_terms 0) + `GATE_PLAN_LEN` /
+  `GatePlanPtrs` + per gate `EncGatePlan_GG` / `EncGateRuns_GG_k|d` (`[last floor, list]`,
+  the last `$FF`) + `ProjectEncLists` (26 B each) + `VanillaGateBase` /
+  `VanillaGateBpPtrs` / `VanillaBreakpoints` (byte copies of bank $01's rule, from
+  `extracted/gamedata_vanilla.json` tables `gate_base_pool` / `gate_bp_ptrs` /
+  `floor_breakpoints`). No data = the vanilla rule. Accounting: template + payload ≤ $4000.
+* **Engine (hand, same delivery):** `patches/bank_001.asm` — `LoadNextDungeonFloor`
+  same-size (65 B) far-calls bank $76 entry 0 and copies the chosen list into
+  `wEncListBuf` ($D11E, carved from wCustomPool, `patches/wram.asm`); the five list
+  readers `ld hl, wEncListBuf + k / ld bc, $0000` + pad (same size; BC = 0 is what the old
+  `Mul16x8To24` left — the slot sums start from B, KEY_LESSONS S114); `patches/game.asm`
+  includes `bank_076.asm`; verify_integrity PATCH_NEW_FILES += `bank_076.asm`.
+* **Pin:** **`dbc4dee947ccc3dbf1fb3092fdf9e143`** (patched; built S114, test ROM
+  USER-CONFIRMED 2026-10-03 09:52 ("Looks good. Give editor files")) — the example has no encounter data; the delta is the bank $01 forks + bank
+  $76. Prev `8cf0b93b…` (patched, historical; S113).
+* **Measured (tools/census_encounters.py, PyBoy stub calls):** ORIGINAL ROM vs the
+  vanilla model 633 list choices + 15,192 battle draws, 0 mismatches; the example build
+  the same; the S114 fixture (lists, room + gate variants, rates) 641 + 15,384, 0; the
+  user's project 633 + 15,192, 0; the demo 639 + 15,336, 0; negative control (draw rule
+  `>` for `>=`) 1,417 mismatches. Field runs on the user's save: DATA_STRUCTURES.
+* **Tests:** test_compiler `test_encounters_s114` (vanilla rule == the regenerated
+  `encounters.json`, real chances, steps, the fixture's tables, the model, 12 refusals,
+  128 lists compile, the doc API) + `test_encounters_rom` (the forks' bytes, $6A22-$6AAD
+  unmoved, ProjectEncLists / VanillaGateBase read back) on the example and the fixture;
+  test_app "Encounters tab (S114)".
+
+## §2.31 S115 — NEW gates 32-95 (`custom.gates[]` with `copy_of`; gate-entrance exits; ROADMAP NG1)
+
+GATE_GENERATION §7.8 (the engine, measured); EDITOR_DESIGN §5.1b "As built S115"; help
+`60_gates.md` "New gates". Modules: `editor2/core/gates.py` (helpers + `GatesMixin`
+`new_gate` / `delete_gate` / `add_gate_entrance` / `gate_entrances` / `all_gates`),
+`project.gate_configs` (rows), `encounters.py` (`Model.vanilla`, the bank $76 data).
+
+```jsonc
+"custom": {
+  "gates": [
+    {"gate": 32,                 // 32-95: a NEW gate number
+     "copy_of": 3,               // required: the vanilla gate (0-31) it starts as
+     "name": "Ember Gate",       // required (editor only; not put into the game)
+     "floors": 4,                // optional, 2-99 incl. the boss floor (default: the source's)
+     "boss": "ember_throne",     // optional, as §2.17 (default: the source's vanilla boss room)
+     "hand_made": false,         // optional, as §2.17
+     "encounters": {…}}          // optional, as §2.30 (unplanned floors: the source's rule)
+  ],
+  "rooms": [{ … "screens": {"0": {"exits": [
+    {"x": 5, "y": 2, "dest": "gate:32", "gate_flag": 1,     // a gate entrance (any gate 0-95)
+     "screen_byte": "0x00", "spawn_x": 0, "spawn_y": 0}]}}}]
+}
+```
+
+* **Emitted** (`enc76`, bank $76 data after the template): `NEW_GATE_LEN` = highest new
+  gate − 31; `NewGateRows` 8 B per number 32 .. (the source's `GateFloorDataTable` row with
+  byte 3 = floors, bytes 4-6 = boss map + arrival tile; a gap = gate 0's row — never
+  entered, the validator refuses entrances to it); `NewGateSource` 1 B each.
+  `gates16` still emits exactly the 32 vanilla rows (an example without new gates is
+  byte-identical there). `custom.gate_inserts[].gate` and `custom.gates[].encounters`
+  accept defined new gates (`GateInsertTable` gate byte = the number).
+* **Hard errors:** a new gate without `copy_of` (0-31) or `name`; a gate number outside
+  0-95; `copy_of` / `name` on a vanilla gate; a rule on an undefined gate; a gate
+  entrance (gate_flag 1) to an undefined gate.
+* **Warnings:** a new gate with no entrance in any room / entrance redirect; a new gate
+  whose boss floor is a VANILLA boss room (its scripts run unchanged: the original
+  gate's cleared flag, boss, King's speech).
+* **Not editable yet:** a new gate's own floor-type rows (bytes 0-2) and depth tier
+  (byte 7) — the source's. Entrance conditions (NG2) are plain exit rows / room states
+  today.
 
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 

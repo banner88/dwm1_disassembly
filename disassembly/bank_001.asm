@@ -53,9 +53,10 @@ SECTION "ROM Bank $001", ROMX[$4000], BANK[$1]
     dw label1_683e
     ; Entry 11: Random encounter monster selection ($683E)
     dw LoadFloorAndEncounterData
-    ; Entry 12
+    ; Entry 12: the pool's maze size -> $C93D (floor setup, bank $16 entry 5)
     dw LoadNextDungeonFloor
-    ; Entry 13: Load next dungeon floor ($69E1)
+    ; Entry 13: gate + floor -> the encounter pool + its rate code ($69E1; every
+    ;   encounter step; S114 patched: the bank $76 EncResolve fork)
 
 GameInit:
     ld hl, sp+$00
@@ -4596,11 +4597,11 @@ jr_001_5ae0:
     jr jr_001_5b22
 
 jr_001_5af8:
-    ld a, [wEncounterPoolIndex]
-    add $0a
-    ld c, a
-    ld a, [wCurrentFloor]
-    inc a
+    ld a, [wEncounterPoolIndex]   ; the gold lying on depth-tier-3 gate floors:
+    add $0a                       ;   (pool + 10) * (floor + 1) * (50..99) / 100 —
+    ld c, a                       ;   wEncounterPoolIndex's one reader besides the
+    ld a, [wCurrentFloor]         ;   list fetch (S114: patched builds keep the
+    inc a                         ;   floor's VANILLA pool number here)
     call Mul8x8To16
     push hl
     ld a, [wRNG1]
@@ -7298,8 +7299,8 @@ label1_683e:  ; original label
     ld [$da02], a
     ld a, [wEncounterPoolIndex]
     ld bc, $001a
-    call Mul16x8To24
-    ld a, l
+    call Mul16x8To24             ; NB: also leaves BC = 0 — LookupEncounterEntry
+    ld a, l                      ;   below sums into B from here (KEY_LESSONS S114)
     add LOW(EncounterPoolData + 5)
     ld l, a
     ld a, h
@@ -7491,9 +7492,13 @@ SaveRegsForEncounter:
 
 
 ; CalcEncounterPoolIdx: RNG mod 100 against the cumulative % list at HL;
-; returns the index of the first entry whose sum exceeds the draw (zero-%
-; entries are skipped; a sum of exactly 100 always stops). A list that never
-; reaches 100 walks past its end (the compiler refuses such pools, S103).
+; returns the index of the first entry whose running sum is 100 or >= the draw
+; (leading zero sums skipped). The draw = (wRNG2:wRNG1) mod 100 after a
+; GenerateRNG — L is loaded from wRNG1, H from wRNG2 (measured S114, 15,192
+; draws == editor2/core/encounters.simulate_battle): so the first entry with a
+; chance also takes draw 0 and the entry ending at 100 loses one (30/50/20 % ->
+; 31/50/19). A list that never reaches 100 walks past its end (the compiler
+; refuses such pools, S103).
 CalcEncounterPoolIdx:
     push hl
     call GenerateRNG
@@ -7571,6 +7576,14 @@ LoadFloorAndEncounterData:
 
 
 ; EncounterPoolSelect — Determine encounter pool index from gate + floor
+; Bank $01 entry $0D. Called at EVERY encounter step (bank $16 entry 8, before
+; the counter drain — it is what loads the rate code into wC8A9), at floor setup
+; (LoadFloorAndEncounterData, entry $0C), by EncounterMonsterSelect (entry $0B)
+; and by the floor-gold code ($5AF8). The floor in the walk is the game's
+; numbering (wCurrentFloor + 1): sub-index = how many breakpoints are <= it
+; (measured S114 for every vanilla gate floor; DATA_STRUCTURES "Encounter list
+; choice (S114)"). In patched builds this routine is a same-size fork into bank
+; $76 EncResolve (PROJECT_COMPILER §2.30).
 ; Input: wGateID = current gate, $C939 = current floor number
 ; Output: $CA38 = pool index
 ; Algorithm:
@@ -7677,7 +7690,10 @@ GateFloorBreakpoints:
 
 ; Floor breakpoint data ($6A82)
 ; Variable-length lists of floor thresholds, $FF-terminated
-; Referenced by pointers above
+; Referenced by pointers above. A gate's sub-index = how many of its breakpoints
+; are <= the floor (1 = the first floor): Villager [3, 6] -> floors 1-2 pool 1,
+; floors 3-5 pool 2 (floor 5 is its boss floor). Pools 42, 43, 63 are reached by
+; no gate floor (S114, extracted/encounters.json).
 FloorBreakpointData:
     db $FF, $03, $06, $FF, $04, $06, $09, $FF, $04, $06, $09, $FF, $04, $06, $09, $0D  ; $6A82
     db $FF, $05, $09, $0D, $11, $FF, $06, $0B, $10, $15, $FF, $06, $0B, $10, $15, $1A  ; $6A92
@@ -7687,929 +7703,934 @@ FloorBreakpointData:
 ; Encounter Pool Data ($6AAE)
 ; 128 pools x 26 bytes = 3328 bytes
 ;
-; Format (26 bytes per pool):
-;   +$00-$09  Header (10 bytes)
-;   +$0A-$13  EID slots (5 x 2 bytes LE, $0000 = unused)
-;   +$14-$18  Weights (5 x 1 byte, 0 = unused)
-;   +$19      Unknown (usually 8 or 15)
+; Format (26 bytes per pool; decoded S103, DATA_STRUCTURES "Encounter pool entry"):
+;   +$00      rate code -> wC8A9 (EncounterRateModifierTable index; vanilla 2-4)
+;   +$01      read by no pool reader (vanilla 1-3)
+;   +$02-$04  chance CODES of a battle with 1 / 2 / 3 monsters
+;   +$05-$09  chance CODES of each slot (code -> % via EncounterChancePercent)
+;   +$0A-$13  EID slots (5 x 2 bytes LE)
+;   +$14-$18  MAX COUNT per slot (not a weight: 1 = only alone, 0 = never 2nd/3rd)
+;   +$19      maze size -> $C93D (vanilla 3 / 8 / 15)
+; Each pool's header comment names the gate floors that use it (the game's floor
+; numbering, measured S114 by tools/census_encounters.py; extracted/encounters.json).
+; Patched builds (S114) read the list in use from wEncListBuf ($D11E) — a copy of
+; one of these or of a project list in bank $76 (PROJECT_COMPILER §2.30).
 ; ---------------------------------------------------------------
 
 EncounterPoolData:
-; --- Pool 0 ($6AAE): Gate of Beginning ---
+; --- Pool 0 ($6AAE): Gate of Beginning floors 1-4 ---
 ;
 ; ===== PHASE N NEW-SPECIES SEAM (wild encounter) — IN-PLACE, NO FORK ===
-; Each pool has 5 EID slots (+$0A, 5x2 LE) + 5 weights (+$14, 5x1); an UNUSED
-; slot is EID $0000 / weight 0. A new species is added to the wild by filling a
-; provably-empty slot with its EID(+10,*2) and a weight(+20) — a SAME-SIZE,
-; in-place edit (Iron-Rule-2 safe: pool table is fixed 128*26 B, nothing shifts).
-; This is NOT a reader fork; it just populates an existing hole. Gorbunok
-; (species 224 = EID 518) -> pool 0 SLOT 3, which is EID $0000/wt 0 in vanilla
-; below. patches/bank_001.asm sets `dw 2,4,3,518,0` + weight 1 (and bumps the
-; +5 header selection-weights). Tool: tools/build_new_species.py.
-; Refs: MONSTER_DATA overshoot registry (Wild encounters row); PROJECT_STATE N3.
+; Each pool has 5 EID slots (+$0A, 5x2 LE), 5 slot chance codes (+$05) and 5
+; max counts (+$14, NOT weights — S103); an UNUSED slot is EID $0000 / code 0.
+; A new species reaches the wild through an enemy row in a slot with a chance — a
+; SAME-SIZE edit of these 26 bytes (gamedata.encounters, PROJECT_COMPILER §2.20)
+; or, since S114, a project list of its own (bank $76, §2.30). The S30-S38
+; Gorbunok POC (EID 518, tools/build_new_species.py) is retired (S105).
+; Refs: MONSTER_DATA overshoot registry (Wild encounters row).
 ; ======================================================================
 EncounterPool_000:
-    db $03, $01, $07, $00, $00, $03, $05, $02, $00, $00  ; Header
+    db $03, $01, $07, $00, $00, $03, $05, $02, $00, $00  ; rate 3, (+1 unread), 1/2/3 monsters 100/0/0 %, slots 30/50/20/0/0 %
     dw 2, 4, 3, 0, 0  ; EIDs: Slime, Dracky, Anteater, (none), (none)
-    db 1, 1, 1, 0, 0  ; Weights
-    db 8  ; Extra
+    db 1, 1, 1, 0, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 8  ; maze size ($C93D)
 
-; --- Pool 1 ($6AC8): Gate of Villager ---
+; --- Pool 1 ($6AC8): Gate of Villager floors 1-2 ---
 EncounterPool_001:
-    db $03, $02, $05, $05, $00, $03, $03, $02, $02, $00  ; Header
+    db $03, $02, $05, $05, $00, $03, $03, $02, $02, $00  ; rate 3, (+1 unread), 1/2/3 monsters 50/50/0 %, slots 30/30/20/20/0 %
     dw 5, 6, 3, 14, 0  ; EIDs: Stubsuck, GoHopper, Anteater, Picky, (none)
-    db 3, 3, 3, 1, 0  ; Weights
-    db 8  ; Extra
+    db 3, 3, 3, 1, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 8  ; maze size ($C93D)
 
-; --- Pool 2 ($6AE2): Gate of Villager ---
+; --- Pool 2 ($6AE2): Gate of Villager floors 3-4 ---
 EncounterPool_002:
-    db $03, $03, $03, $05, $02, $03, $03, $03, $01, $00  ; Header
+    db $03, $03, $03, $05, $02, $03, $03, $03, $01, $00  ; rate 3, (+1 unread), 1/2/3 monsters 30/50/20 %, slots 30/30/30/10/0 %
     dw 5, 6, 7, 15, 0  ; EIDs: Stubsuck, GoHopper, Gremlin, PillowRat, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 8  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 8  ; maze size ($C93D)
 
-; --- Pool 3 ($6AFC): Gate of Talisman ---
+; --- Pool 3 ($6AFC): Gate of Talisman floors 1-2 ---
 EncounterPool_003:
-    db $03, $03, $03, $05, $02, $03, $03, $02, $02, $00  ; Header
+    db $03, $03, $03, $05, $02, $03, $03, $02, $02, $00  ; rate 3, (+1 unread), 1/2/3 monsters 30/50/20 %, slots 30/30/20/20/0 %
     dw 8, 10, 3, 13, 0  ; EIDs: Spooky, ArmyAnt, Anteater, MiniDrak, (none)
-    db 3, 3, 3, 1, 0  ; Weights
-    db 8  ; Extra
+    db 3, 3, 3, 1, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 8  ; maze size ($C93D)
 
-; --- Pool 4 ($6B16): Gate of Talisman ---
+; --- Pool 4 ($6B16): Gate of Talisman floors 3-5 ---
 EncounterPool_004:
-    db $03, $03, $03, $05, $02, $03, $03, $03, $01, $00  ; Header
+    db $03, $03, $03, $05, $02, $03, $03, $03, $01, $00  ; rate 3, (+1 unread), 1/2/3 monsters 30/50/20 %, slots 30/30/30/10/0 %
     dw 8, 9, 10, 14, 0  ; EIDs: Spooky, Goopi, ArmyAnt, Picky, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 8  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 8  ; maze size ($C93D)
 
-; --- Pool 5 ($6B30): Gate of Memories ---
+; --- Pool 5 ($6B30): Gate of Memories floors 1-2 ---
 EncounterPool_005:
-    db $03, $03, $03, $06, $00, $03, $03, $02, $02, $00  ; Header
+    db $03, $03, $03, $06, $00, $03, $03, $02, $02, $00  ; rate 3, (+1 unread), 1/2/3 monsters 30/70/0 %, slots 30/30/20/20/0 %
     dw 9, 15, 17, 19, 0  ; EIDs: Goopi, PillowRat, DragonKid, Catapila, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 8  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 8  ; maze size ($C93D)
 
-; --- Pool 6 ($6B4A): Gate of Memories ---
+; --- Pool 6 ($6B4A): Gate of Memories floors 3-4 ---
 EncounterPool_006:
-    db $03, $03, $02, $03, $05, $04, $03, $02, $01, $00  ; Header
+    db $03, $03, $02, $03, $05, $04, $03, $02, $01, $00  ; rate 3, (+1 unread), 1/2/3 monsters 20/30/50 %, slots 40/30/20/10/0 %
     dw 14, 20, 19, 25, 0  ; EIDs: Picky, FairyRat, Catapila, SpotSlime, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 8  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 8  ; maze size ($C93D)
 
-; --- Pool 7 ($6B64): Gate of Bewilder ---
+; --- Pool 7 ($6B64): Gate of Bewilder floors 1-2 ---
 EncounterPool_007:
-    db $03, $03, $03, $06, $00, $03, $03, $02, $02, $00  ; Header
+    db $03, $03, $03, $06, $00, $03, $03, $02, $02, $00  ; rate 3, (+1 unread), 1/2/3 monsters 30/70/0 %, slots 30/30/20/20/0 %
     dw 13, 21, 17, 25, 0  ; EIDs: MiniDrak, BigRoost, DragonKid, SpotSlime, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 8  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 8  ; maze size ($C93D)
 
-; --- Pool 8 ($6B7E): Gate of Bewilder ---
+; --- Pool 8 ($6B7E): Gate of Bewilder floors 3-5 ---
 EncounterPool_008:
-    db $03, $03, $02, $03, $05, $04, $03, $02, $01, $00  ; Header
+    db $03, $03, $02, $03, $05, $04, $03, $02, $01, $00  ; rate 3, (+1 unread), 1/2/3 monsters 20/30/50 %, slots 40/30/20/10/0 %
     dw 18, 22, 25, 16, 0  ; EIDs: EvilSeed, Demonite, SpotSlime, Hork, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 8  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 8  ; maze size ($C93D)
 
-; --- Pool 9 ($6B98): Bazaar Gate ---
+; --- Pool 9 ($6B98): Bazaar Gate floors 1-2 ---
 EncounterPool_009:
-    db $04, $03, $03, $05, $02, $03, $03, $02, $02, $00  ; Header
+    db $04, $03, $03, $05, $02, $03, $03, $02, $02, $00  ; rate 4, (+1 unread), 1/2/3 monsters 30/50/20 %, slots 30/30/20/20/0 %
     dw 20, 21, 25, 26, 0  ; EIDs: FairyRat, BigRoost, SpotSlime, Crestpent, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 3  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 3  ; maze size ($C93D)
 
-; --- Pool 10 ($6BB2): Bazaar Gate ---
+; --- Pool 10 ($6BB2): Bazaar Gate floors 3-5 ---
 EncounterPool_010:
-    db $04, $03, $03, $05, $02, $04, $03, $02, $01, $00  ; Header
+    db $04, $03, $03, $05, $02, $04, $03, $02, $01, $00  ; rate 4, (+1 unread), 1/2/3 monsters 30/50/20 %, slots 40/30/20/10/0 %
     dw 21, 17, 19, 27, 0  ; EIDs: BigRoost, DragonKid, Catapila, BeanMan, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 3  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 3  ; maze size ($C93D)
 
-; --- Pool 11 ($6BCC): Bazaar Gate ---
+; --- Pool 11 ($6BCC): Bazaar Gate floors 6-8 ---
 EncounterPool_011:
-    db $04, $03, $03, $04, $03, $04, $03, $02, $01, $00  ; Header
+    db $04, $03, $03, $04, $03, $04, $03, $02, $01, $00  ; rate 4, (+1 unread), 1/2/3 monsters 30/40/30 %, slots 40/30/20/10/0 %
     dw 22, 19, 16, 28, 0  ; EIDs: Demonite, Catapila, Hork, 1EyeClown, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 3  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 3  ; maze size ($C93D)
 
-; --- Pool 12 ($6BE6): Gate of Peace ---
+; --- Pool 12 ($6BE6): Gate of Peace floors 1-3 ---
 EncounterPool_012:
-    db $03, $03, $03, $05, $02, $03, $03, $03, $01, $00  ; Header
+    db $03, $03, $03, $05, $02, $03, $03, $03, $01, $00  ; rate 3, (+1 unread), 1/2/3 monsters 30/50/20 %, slots 30/30/30/10/0 %
     dw 21, 25, 29, 26, 0  ; EIDs: BigRoost, SpotSlime, CoilBird, Crestpent, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 13 ($6C00): Gate of Peace ---
+; --- Pool 13 ($6C00): Gate of Peace floors 4-5 ---
 EncounterPool_013:
-    db $03, $03, $02, $05, $03, $04, $03, $02, $01, $00  ; Header
+    db $03, $03, $02, $05, $03, $04, $03, $02, $01, $00  ; rate 3, (+1 unread), 1/2/3 monsters 20/50/30 %, slots 40/30/20/10/0 %
     dw 17, 26, 23, 33, 0  ; EIDs: DragonKid, Crestpent, BoneSlave, Almiraj, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 14 ($6C1A): Gate of Peace ---
+; --- Pool 14 ($6C1A): Gate of Peace floors 6-7 ---
 EncounterPool_014:
-    db $03, $03, $03, $04, $03, $04, $03, $02, $01, $00  ; Header
+    db $03, $03, $03, $04, $03, $04, $03, $02, $01, $00  ; rate 3, (+1 unread), 1/2/3 monsters 30/40/30 %, slots 40/30/20/10/0 %
     dw 16, 26, 33, 34, 0  ; EIDs: Hork, Crestpent, Almiraj, BullBird, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 15 ($6C34): Gate of Bravery ---
+; --- Pool 15 ($6C34): Gate of Bravery floors 1-3 ---
 EncounterPool_015:
-    db $03, $03, $03, $05, $02, $03, $03, $03, $01, $00  ; Header
+    db $03, $03, $03, $05, $02, $03, $03, $03, $01, $00  ; rate 3, (+1 unread), 1/2/3 monsters 30/50/20 %, slots 30/30/30/10/0 %
     dw 22, 27, 28, 35, 0  ; EIDs: Demonite, BeanMan, 1EyeClown, FloraMan, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 16 ($6C4E): Gate of Bravery ---
+; --- Pool 16 ($6C4E): Gate of Bravery floors 4-5 ---
 EncounterPool_016:
-    db $03, $03, $02, $05, $03, $04, $03, $02, $01, $00  ; Header
+    db $03, $03, $02, $05, $03, $04, $03, $02, $01, $00  ; rate 3, (+1 unread), 1/2/3 monsters 20/50/30 %, slots 40/30/20/10/0 %
     dw 27, 35, 24, 36, 0  ; EIDs: BeanMan, FloraMan, SabreMan, GiantWorm, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 17 ($6C68): Gate of Bravery ---
+; --- Pool 17 ($6C68): Gate of Bravery floors 6-8 ---
 EncounterPool_017:
-    db $03, $03, $03, $04, $03, $04, $03, $02, $01, $00  ; Header
+    db $03, $03, $03, $04, $03, $04, $03, $02, $01, $00  ; rate 3, (+1 unread), 1/2/3 monsters 30/40/30 %, slots 40/30/20/10/0 %
     dw 27, 35, 36, 34, 0  ; EIDs: BeanMan, FloraMan, GiantWorm, BullBird, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 18 ($6C82): Well Gate ---
+; --- Pool 18 ($6C82): Well Gate floors 1-3 ---
 EncounterPool_018:
-    db $04, $03, $00, $06, $03, $03, $03, $03, $01, $00  ; Header
+    db $04, $03, $00, $06, $03, $03, $03, $03, $01, $00  ; rate 4, (+1 unread), 1/2/3 monsters 0/70/30 %, slots 30/30/30/10/0 %
     dw 23, 33, 35, 38, 0  ; EIDs: BoneSlave, Almiraj, FloraMan, GiantSlug, (none)
-    db 3, 3, 3, 3, 0  ; Weights
-    db 3  ; Extra
+    db 3, 3, 3, 3, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 3  ; maze size ($C93D)
 
-; --- Pool 19 ($6C9C): Well Gate ---
+; --- Pool 19 ($6C9C): Well Gate floors 4-5 ---
 EncounterPool_019:
-    db $04, $03, $00, $06, $03, $04, $03, $02, $01, $00  ; Header
+    db $04, $03, $00, $06, $03, $04, $03, $02, $01, $00  ; rate 4, (+1 unread), 1/2/3 monsters 0/70/30 %, slots 40/30/20/10/0 %
     dw 33, 40, 35, 38, 0  ; EIDs: Almiraj, TreeSlime, FloraMan, GiantSlug, (none)
-    db 3, 3, 3, 3, 0  ; Weights
-    db 3  ; Extra
+    db 3, 3, 3, 3, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 3  ; maze size ($C93D)
 
-; --- Pool 20 ($6CB6): Well Gate ---
+; --- Pool 20 ($6CB6): Well Gate floors 6-8 ---
 EncounterPool_020:
-    db $04, $03, $00, $06, $03, $04, $03, $02, $01, $00  ; Header
+    db $04, $03, $00, $06, $03, $04, $03, $02, $01, $00  ; rate 4, (+1 unread), 1/2/3 monsters 0/70/30 %, slots 40/30/20/10/0 %
     dw 36, 34, 35, 39, 0  ; EIDs: GiantWorm, BullBird, FloraMan, MudDoll, (none)
-    db 3, 3, 3, 3, 0  ; Weights
-    db 3  ; Extra
+    db 3, 3, 3, 3, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 3  ; maze size ($C93D)
 
-; --- Pool 21 ($6CD0): Well Gate ---
+; --- Pool 21 ($6CD0): Well Gate floors 9-11 ---
 EncounterPool_021:
-    db $04, $03, $00, $06, $03, $03, $02, $02, $02, $01  ; Header
+    db $04, $03, $00, $06, $03, $03, $02, $02, $02, $01  ; rate 4, (+1 unread), 1/2/3 monsters 0/70/30 %, slots 30/20/20/20/10 %
     dw 34, 24, 35, 39, 30  ; EIDs: BullBird, SabreMan, FloraMan, MudDoll, Metaly
-    db 3, 3, 3, 3, 3  ; Weights
-    db 3  ; Extra
+    db 3, 3, 3, 3, 3  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 3  ; maze size ($C93D)
 
-; --- Pool 22 ($6CEA): Gate of Strength ---
+; --- Pool 22 ($6CEA): Gate of Strength floors 1-3 ---
 EncounterPool_022:
-    db $03, $03, $01, $05, $04, $03, $03, $02, $02, $00  ; Header
+    db $03, $03, $01, $05, $04, $03, $03, $02, $02, $00  ; rate 3, (+1 unread), 1/2/3 monsters 10/50/40 %, slots 30/30/20/20/0 %
     dw 39, 40, 37, 47, 0  ; EIDs: MudDoll, TreeSlime, SkulRider, FairyDrak, (none)
-    db 3, 3, 3, 3, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 23 ($6D04): Gate of Strength ---
+; --- Pool 23 ($6D04): Gate of Strength floors 4-5 ---
 EncounterPool_023:
-    db $03, $03, $01, $05, $04, $03, $03, $03, $01, $00  ; Header
+    db $03, $03, $01, $05, $04, $03, $03, $03, $01, $00  ; rate 3, (+1 unread), 1/2/3 monsters 10/50/40 %, slots 30/30/30/10/0 %
     dw 39, 37, 47, 43, 0  ; EIDs: MudDoll, SkulRider, FairyDrak, WingTree, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 24 ($6D1E): Gate of Strength ---
+; --- Pool 24 ($6D1E): Gate of Strength floors 6-8 ---
 EncounterPool_024:
-    db $03, $03, $01, $05, $04, $04, $03, $02, $01, $00  ; Header
+    db $03, $03, $01, $05, $04, $04, $03, $02, $01, $00  ; rate 3, (+1 unread), 1/2/3 monsters 10/50/40 %, slots 40/30/20/10/0 %
     dw 40, 37, 43, 46, 0  ; EIDs: TreeSlime, SkulRider, WingTree, DrakSlime, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 25 ($6D38): Gate of Strength ---
+; --- Pool 25 ($6D38): Gate of Strength floors 9-10 ---
 EncounterPool_025:
-    db $03, $03, $01, $05, $04, $04, $03, $02, $01, $00  ; Header
+    db $03, $03, $01, $05, $04, $04, $03, $02, $01, $00  ; rate 3, (+1 unread), 1/2/3 monsters 10/50/40 %, slots 40/30/20/10/0 %
     dw 40, 43, 47, 46, 0  ; EIDs: TreeSlime, WingTree, FairyDrak, DrakSlime, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 26 ($6D52): Gate of Anger ---
+; --- Pool 26 ($6D52): Gate of Anger floors 1-3 ---
 EncounterPool_026:
-    db $03, $03, $01, $05, $04, $03, $03, $02, $02, $00  ; Header
+    db $03, $03, $01, $05, $04, $03, $03, $02, $02, $00  ; rate 3, (+1 unread), 1/2/3 monsters 10/50/40 %, slots 30/30/20/20/0 %
     dw 36, 38, 41, 42, 0  ; EIDs: GiantWorm, GiantSlug, Poisongon, CatFly, (none)
-    db 3, 3, 3, 3, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 27 ($6D6C): Gate of Anger ---
+; --- Pool 27 ($6D6C): Gate of Anger floors 4-5 ---
 EncounterPool_027:
-    db $03, $03, $01, $05, $04, $03, $03, $03, $01, $00  ; Header
+    db $03, $03, $01, $05, $04, $03, $03, $03, $01, $00  ; rate 3, (+1 unread), 1/2/3 monsters 10/50/40 %, slots 30/30/30/10/0 %
     dw 38, 41, 42, 44, 0  ; EIDs: GiantSlug, Poisongon, CatFly, Eyeder, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 28 ($6D86): Gate of Anger ---
+; --- Pool 28 ($6D86): Gate of Anger floors 6-8 ---
 EncounterPool_028:
-    db $03, $03, $01, $05, $04, $04, $03, $02, $01, $00  ; Header
+    db $03, $03, $01, $05, $04, $04, $03, $02, $01, $00  ; rate 3, (+1 unread), 1/2/3 monsters 10/50/40 %, slots 40/30/20/10/0 %
     dw 42, 41, 44, 45, 0  ; EIDs: CatFly, Poisongon, Eyeder, Putrepup, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 29 ($6DA0): Gate of Anger ---
+; --- Pool 29 ($6DA0): Gate of Anger floors 9-10 ---
 EncounterPool_029:
-    db $03, $03, $01, $05, $04, $04, $03, $02, $01, $00  ; Header
+    db $03, $03, $01, $05, $04, $04, $03, $02, $01, $00  ; rate 3, (+1 unread), 1/2/3 monsters 10/50/40 %, slots 40/30/20/10/0 %
     dw 42, 44, 45, 46, 0  ; EIDs: CatFly, Eyeder, Putrepup, DrakSlime, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 30 ($6DBA): Farm Gate ---
+; --- Pool 30 ($6DBA): Farm Gate floors 1-3 ---
 EncounterPool_030:
-    db $04, $03, $00, $05, $05, $03, $03, $02, $02, $00  ; Header
+    db $04, $03, $00, $05, $05, $03, $03, $02, $02, $00  ; rate 4, (+1 unread), 1/2/3 monsters 0/50/50 %, slots 30/30/20/20/0 %
     dw 47, 49, 50, 48, 0  ; EIDs: FairyDrak, Butterfly, MadRaven, Skullroo, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 3  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 3  ; maze size ($C93D)
 
-; --- Pool 31 ($6DD4): Farm Gate ---
+; --- Pool 31 ($6DD4): Farm Gate floors 4-5 ---
 EncounterPool_031:
-    db $04, $03, $00, $05, $05, $03, $03, $03, $01, $00  ; Header
+    db $04, $03, $00, $05, $05, $03, $03, $03, $01, $00  ; rate 4, (+1 unread), 1/2/3 monsters 0/50/50 %, slots 30/30/30/10/0 %
     dw 47, 50, 48, 57, 0  ; EIDs: FairyDrak, MadRaven, Skullroo, Mudron, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 3  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 3  ; maze size ($C93D)
 
-; --- Pool 32 ($6DEE): Farm Gate ---
+; --- Pool 32 ($6DEE): Farm Gate floors 6-8 ---
 EncounterPool_032:
-    db $04, $03, $00, $05, $05, $04, $03, $02, $01, $00  ; Header
+    db $04, $03, $00, $05, $05, $04, $03, $02, $01, $00  ; rate 4, (+1 unread), 1/2/3 monsters 0/50/50 %, slots 40/30/20/10/0 %
     dw 46, 50, 48, 58, 0  ; EIDs: DrakSlime, MadRaven, Skullroo, Facer, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 3  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 3  ; maze size ($C93D)
 
-; --- Pool 33 ($6E08): Farm Gate ---
+; --- Pool 33 ($6E08): Farm Gate floors 9-11 ---
 EncounterPool_033:
-    db $04, $03, $00, $05, $05, $04, $03, $02, $01, $00  ; Header
+    db $04, $03, $00, $05, $05, $04, $03, $02, $01, $00  ; rate 4, (+1 unread), 1/2/3 monsters 0/50/50 %, slots 40/30/20/10/0 %
     dw 46, 48, 57, 58, 0  ; EIDs: DrakSlime, Skullroo, Mudron, Facer, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 3  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 3  ; maze size ($C93D)
 
-; --- Pool 34 ($6E22): Gate of Joy ---
+; --- Pool 34 ($6E22): Gate of Joy floors 1-3 ---
 EncounterPool_034:
-    db $03, $03, $01, $04, $05, $03, $03, $02, $02, $00  ; Header
+    db $03, $03, $01, $04, $05, $03, $03, $02, $02, $00  ; rate 3, (+1 unread), 1/2/3 monsters 10/40/50 %, slots 30/30/20/20/0 %
     dw 59, 60, 62, 61, 0  ; EIDs: Snaily, Saccer, Gulpple, MadPecker, (none)
-    db 3, 3, 3, 1, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 1, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 35 ($6E3C): Gate of Joy ---
+; --- Pool 35 ($6E3C): Gate of Joy floors 4-5 ---
 EncounterPool_035:
-    db $03, $03, $01, $04, $05, $03, $03, $03, $01, $00  ; Header
+    db $03, $03, $01, $04, $05, $03, $03, $03, $01, $00  ; rate 3, (+1 unread), 1/2/3 monsters 10/40/50 %, slots 30/30/30/10/0 %
     dw 59, 60, 62, 61, 0  ; EIDs: Snaily, Saccer, Gulpple, MadPecker, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 36 ($6E56): Gate of Joy ---
+; --- Pool 36 ($6E56): Gate of Joy floors 6-8 ---
 EncounterPool_036:
-    db $03, $03, $01, $04, $05, $04, $03, $02, $01, $00  ; Header
+    db $03, $03, $01, $04, $05, $04, $03, $02, $01, $00  ; rate 3, (+1 unread), 1/2/3 monsters 10/40/50 %, slots 40/30/20/10/0 %
     dw 60, 62, 63, 61, 0  ; EIDs: Saccer, Gulpple, EyeBall, MadPecker, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 37 ($6E70): Gate of Joy ---
+; --- Pool 37 ($6E70): Gate of Joy floors 9-12 ---
 EncounterPool_037:
-    db $03, $03, $01, $04, $05, $04, $03, $02, $01, $00  ; Header
+    db $03, $03, $01, $04, $05, $04, $03, $02, $01, $00  ; rate 3, (+1 unread), 1/2/3 monsters 10/40/50 %, slots 40/30/20/10/0 %
     dw 60, 63, 65, 64, 0  ; EIDs: Saccer, EyeBall, Babble, Mummy, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 38 ($6E8A): Gate of Joy ---
+; --- Pool 38 ($6E8A): Gate of Joy floor 13 ---
 EncounterPool_038:
-    db $04, $03, $01, $04, $05, $04, $03, $02, $01, $00  ; Header
+    db $04, $03, $01, $04, $05, $04, $03, $02, $01, $00  ; rate 4, (+1 unread), 1/2/3 monsters 10/40/50 %, slots 40/30/20/10/0 %
     dw 65, 63, 61, 64, 0  ; EIDs: Babble, EyeBall, MadPecker, Mummy, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 39 ($6EA4): Gate of Wisdom ---
+; --- Pool 39 ($6EA4): Gate of Wisdom floors 1-2 ---
 EncounterPool_039:
-    db $03, $03, $01, $04, $05, $03, $03, $02, $02, $00  ; Header
+    db $03, $03, $01, $04, $05, $03, $03, $02, $02, $00  ; rate 3, (+1 unread), 1/2/3 monsters 10/40/50 %, slots 30/30/20/20/0 %
     dw 58, 67, 68, 66, 0  ; EIDs: Facer, Tonguella, Florajay, Pteranod, (none)
-    db 3, 3, 3, 1, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 1, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 40 ($6EBE): Gate of Wisdom ---
+; --- Pool 40 ($6EBE): Gate of Wisdom floors 3-5 ---
 EncounterPool_040:
-    db $03, $03, $01, $04, $05, $03, $03, $03, $01, $00  ; Header
+    db $03, $03, $01, $04, $05, $03, $03, $03, $01, $00  ; rate 3, (+1 unread), 1/2/3 monsters 10/40/50 %, slots 30/30/30/10/0 %
     dw 58, 67, 68, 66, 0  ; EIDs: Facer, Tonguella, Florajay, Pteranod, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 41 ($6ED8): Gate of Wisdom ---
+; --- Pool 41 ($6ED8): Gate of Wisdom floors 6-14 ---
 EncounterPool_041:
-    db $03, $03, $01, $04, $05, $04, $03, $02, $01, $00  ; Header
+    db $03, $03, $01, $04, $05, $04, $03, $02, $01, $00  ; rate 3, (+1 unread), 1/2/3 monsters 10/40/50 %, slots 40/30/20/10/0 %
     dw 67, 68, 66, 70, 0  ; EIDs: Tonguella, Florajay, Pteranod, ArmorPede, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 42 ($6EF2): Gate of Wisdom ---
+; --- Pool 42 ($6EF2): no gate floor reaches it (S114) ---
 EncounterPool_042:
-    db $03, $03, $01, $04, $05, $04, $03, $02, $01, $00  ; Header
+    db $03, $03, $01, $04, $05, $04, $03, $02, $01, $00  ; rate 3, (+1 unread), 1/2/3 monsters 10/40/50 %, slots 40/30/20/10/0 %
     dw 67, 66, 69, 70, 0  ; EIDs: Tonguella, Pteranod, MadPlant, ArmorPede, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 43 ($6F0C): Gate of Wisdom ---
+; --- Pool 43 ($6F0C): no gate floor reaches it (S114) ---
 EncounterPool_043:
-    db $04, $03, $01, $04, $05, $04, $03, $02, $01, $00  ; Header
+    db $04, $03, $01, $04, $05, $04, $03, $02, $01, $00  ; rate 4, (+1 unread), 1/2/3 monsters 10/40/50 %, slots 40/30/20/10/0 %
     dw 66, 69, 71, 70, 0  ; EIDs: Pteranod, MadPlant, MedusaEye, ArmorPede, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 44 ($6F26): Arena - Left Gate ---
+; --- Pool 44 ($6F26): Arena - Left Gate floors 1-3 ---
 EncounterPool_044:
-    db $04, $03, $00, $03, $06, $03, $03, $02, $02, $00  ; Header
+    db $04, $03, $00, $03, $06, $03, $03, $02, $02, $00  ; rate 4, (+1 unread), 1/2/3 monsters 0/30/70 %, slots 30/30/20/20/0 %
     dw 73, 72, 71, 74, 0  ; EIDs: WingSlime, MadCandle, MedusaEye, MadGopher, (none)
-    db 3, 3, 3, 1, 0  ; Weights
-    db 3  ; Extra
+    db 3, 3, 3, 1, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 3  ; maze size ($C93D)
 
-; --- Pool 45 ($6F40): Arena - Left Gate ---
+; --- Pool 45 ($6F40): Arena - Left Gate floors 4-5 ---
 EncounterPool_045:
-    db $04, $03, $00, $03, $06, $03, $03, $03, $01, $00  ; Header
+    db $04, $03, $00, $03, $06, $03, $03, $03, $01, $00  ; rate 4, (+1 unread), 1/2/3 monsters 0/30/70 %, slots 30/30/30/10/0 %
     dw 73, 72, 71, 74, 0  ; EIDs: WingSlime, MadCandle, MedusaEye, MadGopher, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 3  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 3  ; maze size ($C93D)
 
-; --- Pool 46 ($6F5A): Arena - Left Gate ---
+; --- Pool 46 ($6F5A): Arena - Left Gate floors 6-8 ---
 EncounterPool_046:
-    db $04, $03, $00, $03, $06, $04, $03, $02, $01, $00  ; Header
+    db $04, $03, $00, $03, $06, $04, $03, $02, $01, $00  ; rate 4, (+1 unread), 1/2/3 monsters 0/30/70 %, slots 40/30/20/10/0 %
     dw 72, 71, 74, 81, 0  ; EIDs: MadCandle, MedusaEye, MadGopher, Slabbit, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 3  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 3  ; maze size ($C93D)
 
-; --- Pool 47 ($6F74): Arena - Left Gate ---
+; --- Pool 47 ($6F74): Arena - Left Gate floors 9-12 ---
 EncounterPool_047:
-    db $04, $03, $00, $03, $06, $04, $03, $02, $01, $00  ; Header
+    db $04, $03, $00, $03, $06, $04, $03, $02, $01, $00  ; rate 4, (+1 unread), 1/2/3 monsters 0/30/70 %, slots 40/30/20/10/0 %
     dw 72, 74, 83, 81, 0  ; EIDs: MadCandle, MadGopher, WindBeast, Slabbit, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 3  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 3  ; maze size ($C93D)
 
-; --- Pool 48 ($6F8E): Arena - Left Gate ---
+; --- Pool 48 ($6F8E): Arena - Left Gate floors 13-15 ---
 EncounterPool_048:
-    db $04, $03, $00, $03, $06, $04, $03, $02, $01, $00  ; Header
+    db $04, $03, $00, $03, $06, $04, $03, $02, $01, $00  ; rate 4, (+1 unread), 1/2/3 monsters 0/30/70 %, slots 40/30/20/10/0 %
     dw 74, 83, 81, 82, 0  ; EIDs: MadGopher, WindBeast, Slabbit, Gasgon, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 3  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 3  ; maze size ($C93D)
 
-; --- Pool 49 ($6FA8): Gate of Happiness ---
+; --- Pool 49 ($6FA8): Gate of Happiness floors 1-4 ---
 EncounterPool_049:
-    db $03, $03, $01, $04, $05, $03, $03, $02, $02, $00  ; Header
+    db $03, $03, $01, $04, $05, $03, $03, $02, $02, $00  ; rate 3, (+1 unread), 1/2/3 monsters 10/40/50 %, slots 30/30/20/20/0 %
     dw 85, 86, 87, 82, 0  ; EIDs: Oniono, Gophecada, Pixy, Gasgon, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 50 ($6FC2): Gate of Happiness ---
+; --- Pool 50 ($6FC2): Gate of Happiness floors 5-8 ---
 EncounterPool_050:
-    db $03, $03, $01, $04, $05, $03, $03, $03, $01, $00  ; Header
+    db $03, $03, $01, $04, $05, $03, $03, $03, $01, $00  ; rate 3, (+1 unread), 1/2/3 monsters 10/40/50 %, slots 30/30/30/10/0 %
     dw 85, 86, 87, 88, 0  ; EIDs: Oniono, Gophecada, Pixy, DeadNite, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 51 ($6FDC): Gate of Happiness ---
+; --- Pool 51 ($6FDC): Gate of Happiness floors 9-12 ---
 EncounterPool_051:
-    db $03, $03, $01, $04, $05, $04, $03, $02, $01, $00  ; Header
+    db $03, $03, $01, $04, $05, $04, $03, $02, $01, $00  ; rate 3, (+1 unread), 1/2/3 monsters 10/40/50 %, slots 40/30/20/10/0 %
     dw 85, 86, 87, 88, 0  ; EIDs: Oniono, Gophecada, Pixy, DeadNite, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 52 ($6FF6): Gate of Happiness ---
+; --- Pool 52 ($6FF6): Gate of Happiness floors 13-16 ---
 EncounterPool_052:
-    db $03, $03, $01, $04, $05, $04, $03, $02, $01, $00  ; Header
+    db $03, $03, $01, $04, $05, $04, $03, $02, $01, $00  ; rate 3, (+1 unread), 1/2/3 monsters 10/40/50 %, slots 40/30/20/10/0 %
     dw 86, 87, 88, 84, 0  ; EIDs: Gophecada, Pixy, DeadNite, StubBird, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 53 ($7010): Gate of Happiness ---
+; --- Pool 53 ($7010): Gate of Happiness floor 17 ---
 EncounterPool_053:
-    db $04, $03, $01, $04, $05, $04, $03, $02, $01, $00  ; Header
+    db $04, $03, $01, $04, $05, $04, $03, $02, $01, $00  ; rate 4, (+1 unread), 1/2/3 monsters 10/40/50 %, slots 40/30/20/10/0 %
     dw 86, 88, 89, 84, 0  ; EIDs: Gophecada, DeadNite, SpikyBoy, StubBird, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 54 ($702A): Gate of Temptation ---
+; --- Pool 54 ($702A): Gate of Temptation floors 1-4 ---
 EncounterPool_054:
-    db $03, $03, $01, $04, $05, $03, $03, $02, $02, $00  ; Header
+    db $03, $03, $01, $04, $05, $03, $03, $02, $02, $00  ; rate 3, (+1 unread), 1/2/3 monsters 10/40/50 %, slots 30/30/20/20/0 %
     dw 89, 91, 92, 90, 0  ; EIDs: SpikyBoy, KingCobra, Mommonja, SlimeNite, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 55 ($7044): Gate of Temptation ---
+; --- Pool 55 ($7044): Gate of Temptation floors 5-8 ---
 EncounterPool_055:
-    db $03, $03, $01, $04, $05, $03, $03, $03, $01, $00  ; Header
+    db $03, $03, $01, $04, $05, $03, $03, $03, $01, $00  ; rate 3, (+1 unread), 1/2/3 monsters 10/40/50 %, slots 30/30/30/10/0 %
     dw 89, 91, 92, 90, 0  ; EIDs: SpikyBoy, KingCobra, Mommonja, SlimeNite, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 56 ($705E): Gate of Temptation ---
+; --- Pool 56 ($705E): Gate of Temptation floors 9-12 ---
 EncounterPool_056:
-    db $03, $03, $01, $04, $05, $04, $03, $02, $01, $00  ; Header
+    db $03, $03, $01, $04, $05, $04, $03, $02, $01, $00  ; rate 3, (+1 unread), 1/2/3 monsters 10/40/50 %, slots 40/30/20/10/0 %
     dw 91, 92, 90, 94, 0  ; EIDs: KingCobra, Mommonja, SlimeNite, StagBug, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 57 ($7078): Gate of Temptation ---
+; --- Pool 57 ($7078): Gate of Temptation floors 13-16 ---
 EncounterPool_057:
-    db $03, $03, $01, $04, $05, $04, $03, $02, $01, $00  ; Header
+    db $03, $03, $01, $04, $05, $04, $03, $02, $01, $00  ; rate 3, (+1 unread), 1/2/3 monsters 10/40/50 %, slots 40/30/20/10/0 %
     dw 91, 90, 93, 94, 0  ; EIDs: KingCobra, SlimeNite, MistyWing, StagBug, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 58 ($7092): Gate of Temptation ---
+; --- Pool 58 ($7092): Gate of Temptation floors 17-19 ---
 EncounterPool_058:
-    db $04, $03, $01, $04, $05, $04, $03, $02, $01, $00  ; Header
+    db $04, $03, $01, $04, $05, $04, $03, $02, $01, $00  ; rate 4, (+1 unread), 1/2/3 monsters 10/40/50 %, slots 40/30/20/10/0 %
     dw 90, 93, 95, 94, 0  ; EIDs: SlimeNite, MistyWing, DarkEye, StagBug, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 59 ($70AC): Medal Gate ---
+; --- Pool 59 ($70AC): Medal Gate floors 1-3 ---
 EncounterPool_059:
-    db $04, $03, $00, $03, $06, $03, $03, $02, $02, $00  ; Header
+    db $04, $03, $00, $03, $06, $03, $03, $02, $02, $00  ; rate 4, (+1 unread), 1/2/3 monsters 0/30/70 %, slots 30/30/20/20/0 %
     dw 96, 98, 107, 105, 0  ; EIDs: NiteWhip, BoxSlime, Gismo, Orc, (none)
-    db 3, 3, 3, 1, 0  ; Weights
-    db 3  ; Extra
+    db 3, 3, 3, 1, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 3  ; maze size ($C93D)
 
-; --- Pool 60 ($70C6): Medal Gate ---
+; --- Pool 60 ($70C6): Medal Gate floors 4-5 ---
 EncounterPool_060:
-    db $04, $03, $00, $03, $06, $03, $03, $03, $01, $00  ; Header
+    db $04, $03, $00, $03, $06, $03, $03, $03, $01, $00  ; rate 4, (+1 unread), 1/2/3 monsters 0/30/70 %, slots 30/30/30/10/0 %
     dw 96, 98, 107, 105, 0  ; EIDs: NiteWhip, BoxSlime, Gismo, Orc, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 3  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 3  ; maze size ($C93D)
 
-; --- Pool 61 ($70E0): Medal Gate ---
+; --- Pool 61 ($70E0): Medal Gate floors 6-8 ---
 EncounterPool_061:
-    db $04, $03, $00, $03, $06, $04, $03, $02, $01, $00  ; Header
+    db $04, $03, $00, $03, $06, $04, $03, $02, $01, $00  ; rate 4, (+1 unread), 1/2/3 monsters 0/30/70 %, slots 40/30/20/10/0 %
     dw 98, 107, 105, 97, 0  ; EIDs: BoxSlime, Gismo, Orc, RogueNite, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 3  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 3  ; maze size ($C93D)
 
-; --- Pool 62 ($70FA): Medal Gate ---
+; --- Pool 62 ($70FA): Medal Gate floors 9-18 ---
 EncounterPool_062:
-    db $04, $03, $00, $03, $06, $04, $03, $02, $01, $00  ; Header
+    db $04, $03, $00, $03, $06, $04, $03, $02, $01, $00  ; rate 4, (+1 unread), 1/2/3 monsters 0/30/70 %, slots 40/30/20/10/0 %
     dw 98, 105, 106, 97, 0  ; EIDs: BoxSlime, Orc, Reaper, RogueNite, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 3  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 3  ; maze size ($C93D)
 
-; --- Pool 63 ($7114): Medal Gate ---
+; --- Pool 63 ($7114): no gate floor reaches it (S114) ---
 EncounterPool_063:
-    db $04, $03, $00, $03, $06, $04, $03, $02, $01, $00  ; Header
+    db $04, $03, $00, $03, $06, $04, $03, $02, $01, $00  ; rate 4, (+1 unread), 1/2/3 monsters 0/30/70 %, slots 40/30/20/10/0 %
     dw 105, 106, 107, 97, 0  ; EIDs: Orc, Reaper, Gismo, RogueNite, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 3  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 3  ; maze size ($C93D)
 
-; --- Pool 64 ($712E): Gate of Labyrinth ---
+; --- Pool 64 ($712E): Gate of Labyrinth floors 1-5 ---
 EncounterPool_064:
-    db $03, $03, $01, $04, $05, $03, $02, $02, $02, $01  ; Header
+    db $03, $03, $01, $04, $05, $03, $02, $02, $02, $01  ; rate 3, (+1 unread), 1/2/3 monsters 10/40/50 %, slots 30/20/20/20/10 %
     dw 108, 109, 112, 113, 107  ; EIDs: RockSlime, Chamelgon, CactiBall, TailEater, Gismo
-    db 3, 3, 3, 3, 2  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 2  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 65 ($7148): Gate of Labyrinth ---
+; --- Pool 65 ($7148): Gate of Labyrinth floors 6-10 ---
 EncounterPool_065:
-    db $03, $03, $01, $04, $05, $03, $02, $02, $02, $01  ; Header
+    db $03, $03, $01, $04, $05, $03, $02, $02, $02, $01  ; rate 3, (+1 unread), 1/2/3 monsters 10/40/50 %, slots 30/20/20/20/10 %
     dw 108, 111, 112, 113, 107  ; EIDs: RockSlime, DuckKite, CactiBall, TailEater, Gismo
-    db 3, 3, 3, 3, 2  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 2  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 66 ($7162): Gate of Labyrinth ---
+; --- Pool 66 ($7162): Gate of Labyrinth floors 11-15 ---
 EncounterPool_066:
-    db $03, $03, $01, $04, $05, $03, $02, $02, $02, $01  ; Header
+    db $03, $03, $01, $04, $05, $03, $02, $02, $02, $01  ; rate 3, (+1 unread), 1/2/3 monsters 10/40/50 %, slots 30/20/20/20/10 %
     dw 108, 111, 112, 107, 114  ; EIDs: RockSlime, DuckKite, CactiBall, Gismo, AgDevil
-    db 3, 3, 3, 2, 2  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 2, 2  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 67 ($717C): Gate of Labyrinth ---
+; --- Pool 67 ($717C): Gate of Labyrinth floors 16-20 ---
 EncounterPool_067:
-    db $03, $03, $01, $04, $05, $03, $02, $02, $02, $01  ; Header
+    db $03, $03, $01, $04, $05, $03, $02, $02, $02, $01  ; rate 3, (+1 unread), 1/2/3 monsters 10/40/50 %, slots 30/20/20/20/10 %
     dw 108, 111, 113, 107, 114  ; EIDs: RockSlime, DuckKite, TailEater, Gismo, AgDevil
-    db 3, 3, 3, 2, 2  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 2, 2  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 68 ($7196): Gate of Labyrinth ---
+; --- Pool 68 ($7196): Gate of Labyrinth floors 21-22 ---
 EncounterPool_068:
-    db $04, $03, $01, $04, $05, $02, $02, $02, $02, $02  ; Header
+    db $04, $03, $01, $04, $05, $02, $02, $02, $02, $02  ; rate 4, (+1 unread), 1/2/3 monsters 10/40/50 %, slots 20/20/20/20/20 %
     dw 108, 111, 107, 114, 115  ; EIDs: RockSlime, DuckKite, Gismo, AgDevil, WindMerge
-    db 3, 3, 3, 3, 2  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 2  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 69 ($71B0): Gate of Judgement ---
+; --- Pool 69 ($71B0): Gate of Judgement floors 1-5 ---
 EncounterPool_069:
-    db $03, $03, $01, $04, $05, $03, $02, $02, $02, $01  ; Header
+    db $03, $03, $01, $04, $05, $03, $02, $02, $02, $01  ; rate 3, (+1 unread), 1/2/3 monsters 10/40/50 %, slots 30/20/20/20/10 %
     dw 116, 119, 120, 121, 117  ; EIDs: WeedBug, HammerMan, MadGoose, TreeBoy, SpotKing
-    db 3, 3, 3, 3, 2  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 2  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 70 ($71CA): Gate of Judgement ---
+; --- Pool 70 ($71CA): Gate of Judgement floors 6-10 ---
 EncounterPool_070:
-    db $03, $03, $01, $04, $05, $03, $02, $02, $02, $01  ; Header
+    db $03, $03, $01, $04, $05, $03, $02, $02, $02, $01  ; rate 3, (+1 unread), 1/2/3 monsters 10/40/50 %, slots 30/20/20/20/10 %
     dw 119, 120, 121, 122, 117  ; EIDs: HammerMan, MadGoose, TreeBoy, Droll, SpotKing
-    db 3, 3, 3, 3, 2  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 2  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 71 ($71E4): Gate of Judgement ---
+; --- Pool 71 ($71E4): Gate of Judgement floors 11-15 ---
 EncounterPool_071:
-    db $03, $03, $01, $04, $05, $03, $02, $02, $02, $01  ; Header
+    db $03, $03, $01, $04, $05, $03, $02, $02, $02, $01  ; rate 3, (+1 unread), 1/2/3 monsters 10/40/50 %, slots 30/20/20/20/10 %
     dw 119, 121, 122, 117, 118  ; EIDs: HammerMan, TreeBoy, Droll, SpotKing, LizardFly
-    db 3, 3, 3, 2, 2  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 2, 2  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 72 ($71FE): Gate of Judgement ---
+; --- Pool 72 ($71FE): Gate of Judgement floors 16-20 ---
 EncounterPool_072:
-    db $03, $03, $01, $04, $05, $03, $02, $02, $02, $01  ; Header
+    db $03, $03, $01, $04, $05, $03, $02, $02, $02, $01  ; rate 3, (+1 unread), 1/2/3 monsters 10/40/50 %, slots 30/20/20/20/10 %
     dw 119, 121, 129, 117, 118  ; EIDs: HammerMan, TreeBoy, GiantMoth, SpotKing, LizardFly
-    db 3, 3, 3, 2, 2  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 2, 2  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 73 ($7218): Gate of Judgement ---
+; --- Pool 73 ($7218): Gate of Judgement floors 21-24 ---
 EncounterPool_073:
-    db $04, $03, $01, $04, $05, $02, $02, $02, $02, $02  ; Header
+    db $04, $03, $01, $04, $05, $02, $02, $02, $02, $02  ; rate 4, (+1 unread), 1/2/3 monsters 10/40/50 %, slots 20/20/20/20/20 %
     dw 119, 120, 129, 117, 118  ; EIDs: HammerMan, MadGoose, GiantMoth, SpotKing, LizardFly
-    db 3, 3, 3, 3, 2  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 2  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 74 ($7232): Library Gate ---
+; --- Pool 74 ($7232): Library Gate floors 1-5 ---
 EncounterPool_074:
-    db $04, $03, $00, $03, $06, $03, $02, $02, $02, $01  ; Header
+    db $04, $03, $00, $03, $06, $03, $02, $02, $02, $01  ; rate 4, (+1 unread), 1/2/3 monsters 0/30/70 %, slots 30/20/20/20/10 %
     dw 130, 132, 136, 137, 131  ; EIDs: ArcDemon, CurseLamp, AmberWeed, ArmyCrab, MadSpirit
-    db 3, 3, 3, 3, 2  ; Weights
-    db 3  ; Extra
+    db 3, 3, 3, 3, 2  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 3  ; maze size ($C93D)
 
-; --- Pool 75 ($724C): Library Gate ---
+; --- Pool 75 ($724C): Library Gate floors 6-10 ---
 EncounterPool_075:
-    db $04, $03, $00, $03, $06, $03, $02, $02, $02, $01  ; Header
+    db $04, $03, $00, $03, $06, $03, $02, $02, $02, $01  ; rate 4, (+1 unread), 1/2/3 monsters 0/30/70 %, slots 30/20/20/20/10 %
     dw 130, 132, 134, 137, 131  ; EIDs: ArcDemon, CurseLamp, WildApe, ArmyCrab, MadSpirit
-    db 3, 3, 3, 3, 2  ; Weights
-    db 3  ; Extra
+    db 3, 3, 3, 3, 2  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 3  ; maze size ($C93D)
 
-; --- Pool 76 ($7266): Library Gate ---
+; --- Pool 76 ($7266): Library Gate floors 11-15 ---
 EncounterPool_076:
-    db $04, $03, $00, $03, $06, $03, $02, $02, $02, $01  ; Header
+    db $04, $03, $00, $03, $06, $03, $02, $02, $02, $01  ; rate 4, (+1 unread), 1/2/3 monsters 0/30/70 %, slots 30/20/20/20/10 %
     dw 130, 132, 134, 137, 133  ; EIDs: ArcDemon, CurseLamp, WildApe, ArmyCrab, Tortragon
-    db 3, 3, 3, 3, 2  ; Weights
-    db 3  ; Extra
+    db 3, 3, 3, 3, 2  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 3  ; maze size ($C93D)
 
-; --- Pool 77 ($7280): Library Gate ---
+; --- Pool 77 ($7280): Library Gate floors 16-20 ---
 EncounterPool_077:
-    db $04, $03, $00, $03, $06, $03, $02, $02, $02, $01  ; Header
+    db $04, $03, $00, $03, $06, $03, $02, $02, $02, $01  ; rate 4, (+1 unread), 1/2/3 monsters 0/30/70 %, slots 30/20/20/20/10 %
     dw 130, 131, 134, 137, 133  ; EIDs: ArcDemon, MadSpirit, WildApe, ArmyCrab, Tortragon
-    db 3, 3, 3, 3, 2  ; Weights
-    db 3  ; Extra
+    db 3, 3, 3, 3, 2  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 3  ; maze size ($C93D)
 
-; --- Pool 78 ($729A): Library Gate ---
+; --- Pool 78 ($729A): Library Gate floors 21-24 ---
 EncounterPool_078:
-    db $04, $03, $00, $03, $06, $02, $02, $02, $02, $02  ; Header
+    db $04, $03, $00, $03, $06, $02, $02, $02, $02, $02  ; rate 4, (+1 unread), 1/2/3 monsters 0/30/70 %, slots 20/20/20/20/20 %
     dw 130, 131, 133, 134, 135  ; EIDs: ArcDemon, MadSpirit, Tortragon, WildApe, LandOwl
-    db 3, 3, 3, 3, 2  ; Weights
-    db 3  ; Extra
+    db 3, 3, 3, 3, 2  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 3  ; maze size ($C93D)
 
-; --- Pool 79 ($72B4): Gate of Reflection ---
+; --- Pool 79 ($72B4): Gate of Reflection floors 1-5 ---
 EncounterPool_079:
-    db $03, $03, $00, $03, $06, $03, $02, $02, $02, $01  ; Header
+    db $03, $03, $00, $03, $06, $03, $02, $02, $02, $01  ; rate 3, (+1 unread), 1/2/3 monsters 0/30/70 %, slots 30/20/20/20/10 %
     dw 138, 139, 140, 141, 142  ; EIDs: EvilBeast, Shadow, EvilWand, SlimeBorg, LizardMan
-    db 3, 3, 3, 3, 2  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 2  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 80 ($72CE): Gate of Reflection ---
+; --- Pool 80 ($72CE): Gate of Reflection floors 6-10 ---
 EncounterPool_080:
-    db $03, $03, $00, $03, $06, $03, $02, $02, $02, $01  ; Header
+    db $03, $03, $00, $03, $06, $03, $02, $02, $02, $01  ; rate 3, (+1 unread), 1/2/3 monsters 0/30/70 %, slots 30/20/20/20/10 %
     dw 138, 139, 141, 142, 143  ; EIDs: EvilBeast, Shadow, SlimeBorg, LizardMan, Grizzly
-    db 3, 3, 3, 3, 2  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 2  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 81 ($72E8): Gate of Reflection ---
+; --- Pool 81 ($72E8): Gate of Reflection floors 11-15 ---
 EncounterPool_081:
-    db $03, $03, $00, $03, $06, $03, $02, $02, $02, $01  ; Header
+    db $03, $03, $00, $03, $06, $03, $02, $02, $02, $01  ; rate 3, (+1 unread), 1/2/3 monsters 0/30/70 %, slots 30/20/20/20/10 %
     dw 142, 141, 144, 145, 143  ; EIDs: LizardMan, SlimeBorg, Wyvern, FireWeed, Grizzly
-    db 3, 3, 3, 3, 2  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 2  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 82 ($7302): Gate of Reflection ---
+; --- Pool 82 ($7302): Gate of Reflection floors 16-20 ---
 EncounterPool_082:
-    db $03, $03, $00, $03, $06, $03, $02, $02, $02, $01  ; Header
+    db $03, $03, $00, $03, $06, $03, $02, $02, $02, $01  ; rate 3, (+1 unread), 1/2/3 monsters 0/30/70 %, slots 30/20/20/20/10 %
     dw 142, 144, 146, 157, 143  ; EIDs: LizardMan, Wyvern, MadHornet, Lionex, Grizzly
-    db 3, 3, 3, 3, 2  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 2  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 83 ($731C): Gate of Reflection ---
+; --- Pool 83 ($731C): Gate of Reflection floors 21-25 ---
 EncounterPool_083:
-    db $03, $03, $00, $03, $06, $03, $02, $02, $02, $01  ; Header
+    db $03, $03, $00, $03, $06, $03, $02, $02, $02, $01  ; rate 3, (+1 unread), 1/2/3 monsters 0/30/70 %, slots 30/20/20/20/10 %
     dw 144, 146, 157, 158, 143  ; EIDs: Wyvern, MadHornet, Lionex, RotRaven, Grizzly
-    db 3, 3, 3, 3, 2  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 2  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 84 ($7336): Gate of Reflection ---
+; --- Pool 84 ($7336): Gate of Reflection floors 26-28 ---
 EncounterPool_084:
-    db $04, $03, $00, $03, $06, $02, $02, $02, $02, $02  ; Header
+    db $04, $03, $00, $03, $06, $02, $02, $02, $02, $02  ; rate 4, (+1 unread), 1/2/3 monsters 0/30/70 %, slots 20/20/20/20/20 %
     dw 143, 146, 157, 158, 159  ; EIDs: Grizzly, MadHornet, Lionex, RotRaven, JewelBag
-    db 3, 3, 3, 3, 3  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 3  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 85 ($7350): Gate of Ambition ---
+; --- Pool 85 ($7350): Gate of Ambition floors 1-5 ---
 EncounterPool_085:
-    db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; rate 2, (+1 unread), 1/2/3 monsters 0/0/100 %, slots 30/30/20/20/0 %
     dw 6, 10, 19, 36, 0  ; EIDs: GoHopper, ArmyAnt, Catapila, GiantWorm, (none)
-    db 3, 3, 3, 3, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 86 ($736A): Gate of Ambition ---
+; --- Pool 86 ($736A): Gate of Ambition floors 6-10 ---
 EncounterPool_086:
-    db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; rate 2, (+1 unread), 1/2/3 monsters 0/0/100 %, slots 30/30/20/20/0 %
     dw 38, 44, 49, 70, 0  ; EIDs: GiantSlug, Eyeder, Butterfly, ArmorPede, (none)
-    db 3, 3, 3, 3, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 87 ($7384): Gate of Ambition ---
+; --- Pool 87 ($7384): Gate of Ambition floors 11-20 ---
 EncounterPool_087:
-    db $03, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    db $03, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; rate 3, (+1 unread), 1/2/3 monsters 0/0/100 %, slots 30/30/20/20/0 %
     dw 86, 94, 113, 116, 0  ; EIDs: Gophecada, StagBug, TailEater, WeedBug, (none)
-    db 3, 3, 3, 3, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 88 ($739E): Gate of Ambition ---
+; --- Pool 88 ($739E): Gate of Ambition floors 21-29 ---
 EncounterPool_088:
-    db $04, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    db $04, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; rate 4, (+1 unread), 1/2/3 monsters 0/0/100 %, slots 30/30/20/20/0 %
     dw 122, 129, 137, 146, 0  ; EIDs: Droll, GiantMoth, ArmyCrab, MadHornet, (none)
-    db 3, 3, 3, 3, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 89 ($73B8): Gate of Demolition ---
+; --- Pool 89 ($73B8): Gate of Demolition floors 1-5 ---
 EncounterPool_089:
-    db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; rate 2, (+1 unread), 1/2/3 monsters 0/0/100 %, slots 30/30/20/20/0 %
     dw 5, 18, 27, 35, 0  ; EIDs: Stubsuck, EvilSeed, BeanMan, FloraMan, (none)
-    db 3, 3, 3, 3, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 90 ($73D2): Gate of Demolition ---
+; --- Pool 90 ($73D2): Gate of Demolition floors 6-10 ---
 EncounterPool_090:
-    db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; rate 2, (+1 unread), 1/2/3 monsters 0/0/100 %, slots 30/30/20/20/0 %
     dw 43, 62, 69, 85, 0  ; EIDs: WingTree, Gulpple, MadPlant, Oniono, (none)
-    db 3, 3, 3, 3, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 91 ($73EC): Gate of Demolition ---
+; --- Pool 91 ($73EC): Gate of Demolition floors 11-20 ---
 EncounterPool_091:
-    db $03, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    db $03, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; rate 3, (+1 unread), 1/2/3 monsters 0/0/100 %, slots 30/30/20/20/0 %
     dw 112, 121, 136, 145, 0  ; EIDs: CactiBall, TreeBoy, AmberWeed, FireWeed, (none)
-    db 3, 3, 3, 3, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 92 ($7406): Gate of Demolition ---
+; --- Pool 92 ($7406): Gate of Demolition floors 21-28 ---
 EncounterPool_092:
     ; Header
     db $04
 EncounterDataTable_1:
     db $03, $00, $00, $07, $03, $03, $02, $02, $00
     dw 145, 163, 169, 189, 0  ; EIDs
-    db 3, 3, 3, 3, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 93 ($7420): Gate of Mastermind ---
+; --- Pool 93 ($7420): Gate of Mastermind floors 1-5 ---
 EncounterPool_093:
     ; Header
 EncounterDataTable_2:
     db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00
     dw 4, 14, 21, 34, 0  ; EIDs
-    db 3, 3, 3, 3, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 94 ($743A): Gate of Mastermind ---
+; --- Pool 94 ($743A): Gate of Mastermind floors 6-10 ---
 EncounterPool_094:
-    db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; rate 2, (+1 unread), 1/2/3 monsters 0/0/100 %, slots 30/30/20/20/0 %
     dw 50, 61, 68, 84, 0  ; EIDs: MadRaven, MadPecker, Florajay, StubBird, (none)
-    db 3, 3, 3, 3, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 95 ($7454): Gate of Mastermind ---
+; --- Pool 95 ($7454): Gate of Mastermind floors 11-20 ---
 EncounterPool_095:
-    db $03, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    db $03, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; rate 3, (+1 unread), 1/2/3 monsters 0/0/100 %, slots 30/30/20/20/0 %
     dw 93, 111, 120, 135, 0  ; EIDs: MistyWing, DuckKite, MadGoose, LandOwl, (none)
-    db 3, 3, 3, 3, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 96 ($746E): Gate of Mastermind ---
+; --- Pool 96 ($746E): Gate of Mastermind floors 21-26 ---
 EncounterPool_096:
-    db $04, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    db $04, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; rate 4, (+1 unread), 1/2/3 monsters 0/0/100 %, slots 30/30/20/20/0 %
     ; EIDs (split by label)
     db $90, $00, $A2
 EncounterWeightTable:
     db $00, $C5, $00, $C6, $00, $00, $00
-    db 3, 3, 3, 3, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 97 ($7488): Gate of Control ---
+; --- Pool 97 ($7488): Gate of Control floors 1-5 ---
 EncounterPool_097:
-    db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; rate 2, (+1 unread), 1/2/3 monsters 0/0/100 %, slots 30/30/20/20/0 %
     dw 2, 25, 30, 40, 0  ; EIDs: Slime, SpotSlime, Metaly, TreeSlime, (none)
-    db 3, 3, 3, 3, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 98 ($74A2): Gate of Control ---
+; --- Pool 98 ($74A2): Gate of Control floors 6-10 ---
 EncounterPool_098:
-    db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; rate 2, (+1 unread), 1/2/3 monsters 0/0/100 %, slots 30/30/20/20/0 %
     dw 46, 59, 65, 73, 0  ; EIDs: DrakSlime, Snaily, Babble, WingSlime, (none)
-    db 3, 3, 3, 3, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 99 ($74BC): Gate of Control ---
+; --- Pool 99 ($74BC): Gate of Control floors 11-20 ---
 EncounterPool_099:
-    db $03, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    db $03, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; rate 3, (+1 unread), 1/2/3 monsters 0/0/100 %, slots 30/30/20/20/0 %
     dw 81, 90, 98, 108, 0  ; EIDs: Slabbit, SlimeNite, BoxSlime, RockSlime, (none)
-    db 3, 3, 3, 3, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 100 ($74D6): Gate of Control ---
+; --- Pool 100 ($74D6): Gate of Control floors 21-29 ---
 EncounterPool_100:
-    db $04, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    db $04, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; rate 4, (+1 unread), 1/2/3 monsters 0/0/100 %, slots 30/30/20/20/0 %
     dw 108, 117, 141, 181, 0  ; EIDs: RockSlime, SpotKing, SlimeBorg, Metabble, (none)
-    db 3, 3, 3, 2, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 2, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 101 ($74F0): Gate of Extinction ---
+; --- Pool 101 ($74F0): Gate of Extinction floors 1-5 ---
 EncounterPool_101:
-    db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; rate 2, (+1 unread), 1/2/3 monsters 0/0/100 %, slots 30/30/20/20/0 %
     dw 7, 22, 28, 37, 0  ; EIDs: Gremlin, Demonite, 1EyeClown, SkulRider, (none)
-    db 3, 3, 3, 3, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 102 ($750A): Gate of Extinction ---
+; --- Pool 102 ($750A): Gate of Extinction floors 6-10 ---
 EncounterPool_102:
-    db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; rate 2, (+1 unread), 1/2/3 monsters 0/0/100 %, slots 30/30/20/20/0 %
     dw 63, 71, 87, 95, 0  ; EIDs: EyeBall, MedusaEye, Pixy, DarkEye, (none)
-    db 3, 3, 3, 3, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 103 ($7524): Gate of Extinction ---
+; --- Pool 103 ($7524): Gate of Extinction floors 11-20 ---
 EncounterPool_103:
-    db $03, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    db $03, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; rate 3, (+1 unread), 1/2/3 monsters 0/0/100 %, slots 30/30/20/20/0 %
     dw 105, 114, 130, 138, 0  ; EIDs: Orc, AgDevil, ArcDemon, EvilBeast, (none)
-    db 3, 3, 3, 3, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 104 ($753E): Gate of Extinction ---
+; --- Pool 104 ($753E): Gate of Extinction floors 21-29 ---
 EncounterPool_104:
-    db $04, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    db $04, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; rate 4, (+1 unread), 1/2/3 monsters 0/0/100 %, slots 30/30/20/20/0 %
     dw 157, 164, 170, 190, 0  ; EIDs: Lionex, Grendal, Ogre, GoatHorn, (none)
-    db 3, 3, 3, 3, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 105 ($7558): Gate of Sleep ---
+; --- Pool 105 ($7558): Gate of Sleep floors 1-5 ---
 EncounterPool_105:
-    db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; rate 2, (+1 unread), 1/2/3 monsters 0/0/100 %, slots 30/30/20/20/0 %
     dw 8, 16, 23, 45, 0  ; EIDs: Spooky, Hork, BoneSlave, Putrepup, (none)
-    db 3, 3, 3, 3, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 106 ($7572): Gate of Sleep ---
+; --- Pool 106 ($7572): Gate of Sleep floors 6-10 ---
 EncounterPool_106:
-    db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; rate 2, (+1 unread), 1/2/3 monsters 0/0/100 %, slots 30/30/20/20/0 %
     dw 57, 64, 88, 96, 0  ; EIDs: Mudron, Mummy, DeadNite, NiteWhip, (none)
-    db 3, 3, 3, 3, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 107 ($758C): Gate of Sleep ---
+; --- Pool 107 ($758C): Gate of Sleep floors 11-20 ---
 EncounterPool_107:
-    db $03, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    db $03, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; rate 3, (+1 unread), 1/2/3 monsters 0/0/100 %, slots 30/30/20/20/0 %
     dw 106, 115, 131, 139, 0  ; EIDs: Reaper, WindMerge, MadSpirit, Shadow, (none)
-    db 3, 3, 3, 3, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 108 ($75A6): Gate of Sleep ---
+; --- Pool 108 ($75A6): Gate of Sleep floors 21-29 ---
 EncounterPool_108:
-    db $04, $03, $00, $00, $07, $02, $02, $02, $02, $02  ; Header
+    db $04, $03, $00, $00, $07, $02, $02, $02, $02, $02  ; rate 4, (+1 unread), 1/2/3 monsters 0/0/100 %, slots 20/20/20/20/20 %
     dw 158, 165, 171, 186, 191  ; EIDs: RotRaven, DarkCrab, Skullgon, Skeletor, DeadNoble
-    db 3, 3, 3, 3, 3  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 3  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 109 ($75C0): Bazaar Edge Gate ---
+; --- Pool 109 ($75C0): Bazaar Edge Gate floors 1-5 ---
 EncounterPool_109:
-    db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; rate 2, (+1 unread), 1/2/3 monsters 0/0/100 %, slots 30/30/20/20/0 %
     dw 9, 24, 29, 39, 0  ; EIDs: Goopi, SabreMan, CoilBird, MudDoll, (none)
-    db 3, 3, 3, 3, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 110 ($75DA): Bazaar Edge Gate ---
+; --- Pool 110 ($75DA): Bazaar Edge Gate floors 6-10 ---
 EncounterPool_110:
-    db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; rate 2, (+1 unread), 1/2/3 monsters 0/0/100 %, slots 30/30/20/20/0 %
     dw 58, 72, 89, 97, 0  ; EIDs: Facer, MadCandle, SpikyBoy, RogueNite, (none)
-    db 3, 3, 3, 3, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 111 ($75F4): Bazaar Edge Gate ---
+; --- Pool 111 ($75F4): Bazaar Edge Gate floors 11-20 ---
 EncounterPool_111:
-    db $03, $03, $00, $00, $07, $02, $02, $02, $02, $02  ; Header
+    db $03, $03, $00, $00, $07, $02, $02, $02, $02, $02  ; rate 3, (+1 unread), 1/2/3 monsters 0/0/100 %, slots 20/20/20/20/20 %
     dw 107, 132, 140, 159, 166  ; EIDs: Gismo, CurseLamp, EvilWand, JewelBag, MadMirror
-    db 3, 3, 3, 3, 3  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 3  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 112 ($760E): Bazaar Edge Gate ---
+; --- Pool 112 ($760E): Bazaar Edge Gate floors 21-29 ---
 EncounterPool_112:
-    db $04, $03, $00, $00, $07, $02, $02, $02, $02, $02  ; Header
+    db $04, $03, $00, $00, $07, $02, $02, $02, $02, $02  ; rate 4, (+1 unread), 1/2/3 monsters 0/0/100 %, slots 20/20/20/20/20 %
     dw 172, 183, 187, 192, 193  ; EIDs: Voodoll, Balzak, MetalDrak, Roboster, BombCrag
-    db 3, 3, 3, 3, 3  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 3  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 113 ($7628): Arena - Right Gate ---
+; --- Pool 113 ($7628): Arena - Right Gate floors 1-5 ---
 EncounterPool_113:
-    db $02, $03, $00, $00, $07, $02, $02, $02, $02, $02  ; Header
+    db $02, $03, $00, $00, $07, $02, $02, $02, $02, $02  ; rate 2, (+1 unread), 1/2/3 monsters 0/0/100 %, slots 20/20/20/20/20 %
     dw 15, 20, 33, 42, 48  ; EIDs: PillowRat, FairyRat, Almiraj, CatFly, Skullroo
-    db 3, 3, 3, 3, 3  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 3  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 114 ($7642): Arena - Right Gate ---
+; --- Pool 114 ($7642): Arena - Right Gate floors 6-10 ---
 EncounterPool_114:
-    db $02, $03, $00, $00, $07, $02, $02, $02, $02, $02  ; Header
+    db $02, $03, $00, $00, $07, $02, $02, $02, $02, $02  ; rate 2, (+1 unread), 1/2/3 monsters 0/0/100 %, slots 20/20/20/20/20 %
     dw 60, 67, 74, 83, 92  ; EIDs: Saccer, Tonguella, MadGopher, WindBeast, Mommonja
-    db 3, 3, 3, 3, 3  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 3  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 115 ($765C): Arena - Right Gate ---
+; --- Pool 115 ($765C): Arena - Right Gate floors 11-20 ---
 EncounterPool_115:
-    db $03, $03, $00, $00, $07, $02, $02, $02, $02, $02  ; Header
+    db $03, $03, $00, $00, $07, $02, $02, $02, $02, $02  ; rate 3, (+1 unread), 1/2/3 monsters 0/0/100 %, slots 20/20/20/20/20 %
     dw 110, 119, 134, 143, 161  ; EIDs: Goategon, HammerMan, WildApe, Grizzly, SuperTen
-    db 3, 3, 3, 3, 3  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 3  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 116 ($7676): Arena - Right Gate ---
+; --- Pool 116 ($7676): Arena - Right Gate floors 21-26 ---
 EncounterPool_116:
-    db $04, $03, $00, $00, $07, $02, $02, $02, $02, $02  ; Header
+    db $04, $03, $00, $00, $07, $02, $02, $02, $02, $02  ; rate 4, (+1 unread), 1/2/3 monsters 0/0/100 %, slots 20/20/20/20/20 %
     dw 168, 174, 182, 185, 195  ; EIDs: Yeti, IronTurt, GulpBeast, Trumpeter, Unicorn
-    db 3, 3, 3, 3, 3  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 3  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 117 ($7690): Old Man's Gate ---
+; --- Pool 117 ($7690): Old Man's Gate floors 1-5 ---
 EncounterPool_117:
-    db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    db $02, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; rate 2, (+1 unread), 1/2/3 monsters 0/0/100 %, slots 30/30/20/20/0 %
     dw 13, 17, 26, 41, 0  ; EIDs: MiniDrak, DragonKid, Crestpent, Poisongon, (none)
-    db 3, 3, 3, 3, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 118 ($76AA): Old Man's Gate ---
+; --- Pool 118 ($76AA): Old Man's Gate floors 6-10 ---
 EncounterPool_118:
-    db $02, $03, $00, $00, $07, $02, $02, $02, $02, $02  ; Header
+    db $02, $03, $00, $00, $07, $02, $02, $02, $02, $02  ; rate 2, (+1 unread), 1/2/3 monsters 0/0/100 %, slots 20/20/20/20/20 %
     dw 47, 66, 82, 91, 109  ; EIDs: FairyDrak, Pteranod, Gasgon, KingCobra, Chamelgon
-    db 3, 3, 3, 3, 3  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 3  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 119 ($76C4): Old Man's Gate ---
+; --- Pool 119 ($76C4): Old Man's Gate floors 11-20 ---
 EncounterPool_119:
-    db $03, $03, $00, $00, $07, $02, $02, $02, $02, $02  ; Header
+    db $03, $03, $00, $00, $07, $02, $02, $02, $02, $02  ; rate 3, (+1 unread), 1/2/3 monsters 0/0/100 %, slots 20/20/20/20/20 %
     dw 118, 133, 142, 160, 167  ; EIDs: LizardFly, Tortragon, LizardMan, Swordgon, WingSnake
-    db 3, 3, 3, 3, 3  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 3  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 120 ($76DE): Old Man's Gate ---
+; --- Pool 120 ($76DE): Old Man's Gate floors 21-29 ---
 EncounterPool_120:
-    db $04, $03, $00, $00, $07, $02, $02, $02, $02, $02  ; Header
+    db $04, $03, $00, $00, $07, $02, $02, $02, $02, $02  ; rate 4, (+1 unread), 1/2/3 monsters 0/0/100 %, slots 20/20/20/20/20 %
     dw 173, 184, 188, 194, 196  ; EIDs: Rayburn, Spikerous, MadDragon, Andreal, GreatDrak
-    db 3, 3, 3, 3, 3  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 3  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 121 ($76F8): Unused Gate ---
+; --- Pool 121 ($76F8): Unused Gate floors 1-5 ---
 EncounterPool_121:
-    db $04, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    db $04, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; rate 4, (+1 unread), 1/2/3 monsters 0/0/100 %, slots 30/30/20/20/0 %
     dw 186, 185, 187, 188, 0  ; EIDs: Skeletor, Trumpeter, MetalDrak, MadDragon, (none)
-    db 3, 3, 3, 3, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 122 ($7712): Unused Gate ---
+; --- Pool 122 ($7712): Unused Gate floors 6-10 ---
 EncounterPool_122:
-    db $04, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    db $04, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; rate 4, (+1 unread), 1/2/3 monsters 0/0/100 %, slots 30/30/20/20/0 %
     dw 187, 188, 189, 190, 0  ; EIDs: MetalDrak, MadDragon, Snapper, GoatHorn, (none)
-    db 3, 3, 3, 3, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 123 ($772C): Unused Gate ---
+; --- Pool 123 ($772C): Unused Gate floors 11-20 ---
 EncounterPool_123:
-    db $04, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    db $04, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; rate 4, (+1 unread), 1/2/3 monsters 0/0/100 %, slots 30/30/20/20/0 %
     dw 189, 190, 191, 192, 0  ; EIDs: Snapper, GoatHorn, DeadNoble, Roboster, (none)
-    db 3, 3, 3, 3, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 124 ($7746): Unused Gate ---
+; --- Pool 124 ($7746): Unused Gate floors 21-40 ---
 EncounterPool_124:
-    db $04, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    db $04, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; rate 4, (+1 unread), 1/2/3 monsters 0/0/100 %, slots 30/30/20/20/0 %
     dw 191, 192, 193, 194, 0  ; EIDs: DeadNoble, Roboster, BombCrag, Andreal, (none)
-    db 3, 3, 3, 3, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 125 ($7760): Unused Gate ---
+; --- Pool 125 ($7760): Unused Gate floors 41-60 ---
 EncounterPool_125:
-    db $04, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    db $04, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; rate 4, (+1 unread), 1/2/3 monsters 0/0/100 %, slots 30/30/20/20/0 %
     dw 193, 194, 195, 196, 0  ; EIDs: BombCrag, Andreal, Unicorn, GreatDrak, (none)
-    db 3, 3, 3, 3, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 126 ($777A): Unused Gate ---
+; --- Pool 126 ($777A): Unused Gate floors 61-80 ---
 EncounterPool_126:
-    db $04, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    db $04, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; rate 4, (+1 unread), 1/2/3 monsters 0/0/100 %, slots 30/30/20/20/0 %
     dw 195, 196, 197, 198, 0  ; EIDs: Unicorn, GreatDrak, ZapBird, WhipBird, (none)
-    db 3, 3, 3, 3, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
-; --- Pool 127 ($7794): Unused Gate ---
+; --- Pool 127 ($7794): Unused Gate floors 81-98 ---
 EncounterPool_127:
-    db $04, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; Header
+    db $04, $03, $00, $00, $07, $03, $03, $02, $02, $00  ; rate 4, (+1 unread), 1/2/3 monsters 0/0/100 %, slots 30/30/20/20/0 %
     dw 197, 198, 30, 181, 0  ; EIDs: ZapBird, WhipBird, Metaly, Metabble, (none)
-    db 3, 3, 3, 3, 0  ; Weights
-    db 15  ; Extra
+    db 3, 3, 3, 3, 0  ; max count per slot (1 = only alone, 0 = never 2nd / 3rd)
+    db 15  ; maze size ($C93D)
 
     ld e, d
     rst $20

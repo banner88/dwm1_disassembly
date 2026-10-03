@@ -801,6 +801,172 @@ def main():
           'and brought back; Slime\'s library recipe; the whole table; a generated tree; '
           'undo restores everything')
 
+    # S114 (P3.13a): the Encounters tab — lists (staged slot edits + Apply), a
+    # project list copied, a gate floor given it + a flag variant, a room on its
+    # own list with a rate; undo restores project.json exactly
+    import editor2.app.encounters_tab as ETm
+    et = w.encounters_tab
+    doc = w.session.doc
+    before = doc.dumps()
+    w.tabs.setCurrentWidget(et)
+    app.processEvents()
+    assert et.list_w.count() == 128, et.list_w.count()
+    assert et.list_w.item(1).text().startswith('1 · Gate of Villager floors 1-2'), \
+        et.list_w.item(1).text()
+    et.show_list(0)
+    app.processEvents()
+    le = et.list_ed
+    assert 'Gorbunok' in le.odds.text() and 'Gate of Beginning floors 1-4' in le.uses.text(), \
+        (le.odds.text(), le.uses.text())
+    # staged: 10 % then 20 % — Apply only once the slots add up to 100 %
+    le.table.cellWidget(0, 1).setCurrentIndex(0)            # Slime 10 % -> 0 %
+    app.processEvents()
+    assert not le.apply_btn.isEnabled() and 'must be exactly' in le.total.text()
+    le.table.cellWidget(1, 1).setCurrentIndex(2)            # Dracky 10 % -> 20 %
+    app.processEvents()
+    assert le.apply_btn.isEnabled(), le.total.text()
+    le._apply()
+    app.processEvents()
+    assert doc.data['gamedata']['encounters']['0']['slot_chance'][:2] == [0, 2]
+    e_q = ETm.QInputDialog.getText
+    ETm.QInputDialog.getText = staticmethod(lambda *a, **k: ('Night wolves', True))
+    et.cur_list = 12
+    et._new_list()
+    app.processEvents()
+    assert et.cur_list == 128 and doc.data['custom']['encounter_lists'][0]['id'] == 'night_wolves'
+    ETm.QInputDialog.getText = e_q
+    et.pages.setCurrentIndex(1)
+    app.processEvents()
+    et.gate_w.setCurrentRow(1)                              # Gate of Villager
+    app.processEvents()
+    ge = et.gate_ed
+    assert ge.table.rowCount() == 4 and "the game's rule (list 1)" in ge.table.item(0, 2).text()
+    c = ge.table.cellWidget(0, 1)
+    c.setCurrentIndex(c.findData(128))
+    app.processEvents()
+    g1 = next(g for g in doc.data['custom']['gates'] if g['gate'] == 1)
+    assert g1['encounters'] == {'floors': [{'floors': 1, 'list': 'night_wolves'}]}, g1
+    assert ge.table.item(0, 2).text() == 'your plan'
+    assert et.push('variant', lambda d: d.set_gate_variants(
+        1, [{'when': [{'flag': '0x0030'}], 'floors': [{'floors': 'all', 'list': 5}]}]))
+    app.processEvents()
+    assert ge.which.count() == 2 and 'when' in ge.which.itemText(1)
+    ge.which.setCurrentIndex(1)
+    app.processEvents()
+    assert all(ge.table.item(i, 2).text() == 'this variant' for i in range(4))
+    et.pages.setCurrentIndex(2)
+    app.processEvents()
+    k = et.room_ids.index('dusk_mirror')
+    et.room_w.setCurrentRow(k)
+    app.processEvents()
+    re_ = et.room_ed
+    re_.mode_btn['own'].setChecked(True)
+    app.processEvents()
+    re_.rate_on.setChecked(True)
+    app.processEvents()
+    re_.rate.setCurrentIndex(7)
+    app.processEvents()
+    dm = next(r for r in doc.data['custom']['rooms'] if r['id'] == 'dusk_mirror')
+    assert dm['encounters'] == {'enabled': True, 'list': 0, 'rate': 7}, dm['encounters']
+    assert 'steps between battles' in re_.rate_steps.text()
+    from editor2.core import compiler as Cc                # the edits compile
+    import tempfile
+    import shutil as _sh
+    td = tempfile.mkdtemp()
+    _sh.copytree(doc.project_dir, os.path.join(td, 'p'), ignore=_sh.ignore_patterns('build'))
+    open(os.path.join(td, 'p', 'project.json'), 'w').write(doc.dumps())
+    outs, _pp, _ww = Cc.compile_project(os.path.join(td, 'p'), REPO)
+    assert 'EncGatePlan_01' in outs['patches/bank_076.asm'] and \
+        '; list 128: night_wolves' in outs['patches/bank_076.asm']
+    while w.session.undo.index() > 0 and doc.dumps() != before:
+        w.session.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'undo must restore project.json exactly'
+    hlp = open(os.path.join(REPO, 'editor2', 'help', '59_encounters.md')).read()
+    for word in ('Lists', 'Real chance', 'Apply', 'Gates', 'Flag variants', 'Rooms',
+                 'Its own list', 'Shared'):
+        assert word in hlp, f'help 59_encounters.md lacks "{word}"'
+    print('OK: Encounters tab (S114) — list 0 staged to 0/20 % and applied; a copy of list 12 '
+          'as list 128; Villager floor 1 on it + a flag variant; dusk_mirror on its own list at '
+          'rate 7; compiles; undo restores everything')
+
+    # S115 (ROADMAP NG1): new gates — Gates tab New gate… (a copy of Memories, 4
+    # floors), rename, the Encounters tab lists it, the Rooms tab puts a gate
+    # entrance on a cell; compiles; Delete gate; undo restores project.json
+    import editor2.app.gates_tab as GTm
+    gt = w.gates_tab
+    doc = w.session.doc
+    before = doc.dumps()
+    w.tabs.setCurrentWidget(gt)
+    app.processEvents()
+    n0 = gt.list.count()
+    assert n0 == 32, n0
+    e_exec, e_vals = GTm.NewGateDialog.exec, GTm.NewGateDialog.values
+    GTm.NewGateDialog.exec = lambda self: GTm.QDialog.Accepted
+    GTm.NewGateDialog.values = lambda self: (3, 'Ember Gate', 4)
+    gt._new_gate()
+    GTm.NewGateDialog.exec, GTm.NewGateDialog.values = e_exec, e_vals
+    app.processEvents()
+    assert gt.list.count() == 33 and 'NEW' in gt.list.item(32).text(), gt.list.item(32).text()
+    assert gt.list.currentRow() == 32 and gt._btn_delete.isEnabled()
+    assert 'no entrance yet' in gt.sub.text(), gt.sub.text()
+    assert doc.data['custom']['gates'][-1] == {'gate': 32, 'copy_of': 3, 'name': 'Ember Gate',
+                                               'floors': 4}, doc.data['custom']['gates']
+    e_t = GTm.QInputDialog.getText
+    GTm.QInputDialog.getText = staticmethod(lambda *a, **k: ('Cinder Gate', True))
+    gt._rename_gate()
+    GTm.QInputDialog.getText = e_t
+    app.processEvents()
+    assert doc.gate_name(32) == 'Cinder Gate' and 'Cinder Gate' in gt.list.item(32).text()
+    et = w.encounters_tab
+    w.tabs.setCurrentWidget(et)
+    et.refresh() if hasattr(et, 'refresh') else None
+    app.processEvents()
+    et.pages.setCurrentIndex(1)
+    app.processEvents()
+    assert et.gate_ids[-1] == 32 and 'NEW (copy of gate 3)' in et.gate_w.item(32).text()
+    rt = w.rooms_tab
+    w.tabs.setCurrentWidget(rt)
+    rt.open_node(('room', 'dusk_mirror'))
+    app.processEvents()
+    import PySide6.QtWidgets as QW
+    q_gi = QW.QInputDialog.getItem
+    QW.QInputDialog.getItem = staticmethod(lambda _p, _t, _l, items, *a, **k: (items[0], True))
+    rt._add_gate_entrance((2, 3))
+    QW.QInputDialog.getItem = q_gi
+    app.processEvents()
+    ents = doc.gate_entrances(32)
+    assert len(ents) == 1 and ents[0][3]['gate_flag'] == 1 and ents[0][3]['dest'] == 'gate:32', ents
+    w.tabs.setCurrentWidget(gt)
+    gt.refresh()
+    app.processEvents()
+    gt.list.setCurrentRow(32)
+    app.processEvents()
+    assert 'entrance:' in gt.sub.text(), gt.sub.text()
+    from editor2.core import compiler as Cc                # the edits compile
+    td = tempfile.mkdtemp()
+    _sh.copytree(doc.project_dir, os.path.join(td, 'p'), ignore=_sh.ignore_patterns('build'))
+    open(os.path.join(td, 'p', 'project.json'), 'w').write(doc.dumps())
+    outs, _pp, _ww = Cc.compile_project(os.path.join(td, 'p'), REPO)
+    assert 'NEW_GATE_LEN EQU 1' in outs['patches/bank_076.asm'] and \
+        'gate 32 Cinder Gate' in outs['patches/bank_076.asm']
+    e_q = GTm.QMessageBox.question
+    GTm.QMessageBox.question = staticmethod(lambda *a, **k: GTm.QMessageBox.Yes)
+    gt._delete_gate()
+    GTm.QMessageBox.question = e_q
+    app.processEvents()
+    assert gt.list.count() == 32 and not doc.gate_entrances(32)
+    while w.session.undo.index() > 0 and doc.dumps() != before:
+        w.session.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'undo must restore project.json exactly'
+    hlp = open(os.path.join(REPO, 'editor2', 'help', '60_gates.md')).read()
+    for word in ('New gate', 'copy of', 'Gate entrance here', 'Delete'):
+        assert word in hlp, f'help 60_gates.md lacks "{word}"'
+    print('OK: New gates (S115) — Gates tab New gate (copy of Memories, 4 floors) as gate 32, '
+          'renamed; listed on the Encounters tab; a gate entrance on dusk_mirror (2,3); '
+          'compiles; Delete gate removes it and its entrance; undo restores everything')
+
     if do_rom:
         from editor2.app.build_worker import BuildWorker  # noqa: E402
         results = []

@@ -319,6 +319,11 @@ class MonstersMixin:
             BA.check(prj)
         except BA.AnimError as ex:
             raise SP.SpeciesError(str(ex))
+        from editor2.core import encounters as EN
+        try:                               # S114: lists, room battles, gate plans
+            EN.check(prj)
+        except EN.EncounterError as ex:
+            raise SP.SpeciesError(str(ex))
         self.data.clear()
         self.data.update(data)
         self.touch()
@@ -380,13 +385,21 @@ class MonstersMixin:
         (gate boss conversations, monster NPC battles, quests)."""
         g = g or self.monsters_model()[0]
         out = {k: list(v) for k, v in _vanilla_where().items()}
-        places = _pool_places()
-        for pi, row in enumerate(g.pool):
+        # S114: where each list is used, live (the project's floor counts, gate
+        # plans, rooms, its own lists — editor2/core/encounters_doc.py)
+        try:
+            M, _prj = self.enc_model()
+            places = self.list_places(M)
+            lists = [(n, M.list_bytes(n)) for n in places]
+        except Exception:                  # noqa: BLE001 — a project mid-edit
+            places = _pool_places()
+            lists = list(enumerate(g.pool))
+        for pi, row in lists:
             for k in range(5):
                 eid = row[10 + 2 * k] | row[11 + 2 * k] << 8
-                if eid == 0 and row[20 + k] == 0:
+                if eid == 0 or row[5 + k] == 0:
                     continue
-                for pl in places.get(pi, [f'encounter pool {pi}']):
+                for pl in places.get(pi, [f'encounter list {pi}']):
                     t = f'wild: {pl}'
                     lst = out.setdefault(eid, [])
                     if t not in lst:
@@ -784,8 +797,13 @@ class MonstersMixin:
         (extracted/encounters.json: 32 gates -> pools; a pool can serve several
         gates / floor ranges)."""
         out = []
-        for pi, places in sorted(_pool_places().items()):
-            out.append((pi, ' / '.join(places)))
+        try:                               # S114: live usage (encounters_doc)
+            places = self.list_places()
+        except Exception:                  # noqa: BLE001
+            places = _pool_places()
+        for pi, pl in sorted(places.items()):
+            if pi < 128:
+                out.append((pi, ' / '.join(pl)))
         return out
 
     def chance_percent(self):

@@ -124,11 +124,16 @@ Documentation: `BREEDING_SYSTEM.md`
 | 0 | floor_type_1 | → FloorTypeSelectionTable index |
 | 1 | floor_type_2 | → FloorTypeSelectionTable2 index |
 | 2 | floor_type_3 | → FloorTypeSelectionTable3 index |
-| 3 | last_floor | Floor count before boss |
-| 4 | boss_room_map_type | → Bank $0B RoomPtrTable |
-| 5 | boss_spawn_x | |
-| 6 | boss_spawn_y | |
-| 7 | boss_tileset | |
+| 3 | last_floor | Floor count INCLUDING the boss floor (wLastFloor; GATE_GENERATION §7.7) |
+| 4 | boss_room_map_type | → Bank $0B RoomPtrTable (wBossMapType) |
+| 5 | boss_spawn_x | arrival TILE x, absolute (pixels = 16·b + 8) |
+| 6 | boss_spawn_y | arrival TILE y, absolute |
+| 7 | boss_tileset | depth tier 1/2/3 (wBossTileset; GATE_GENERATION §1 / §7.7) |
+
+Readers (S115 census): only bank $16 entry 5 (`jr_016_5b72`, `jr_016_5be1`), both an
+8-bit gate·8 in the original (gate n ≥ 32 reads gate n & 31). Patched: both go through
+`GateRowPtr`; NEW gates 32-95 read their row from bank $76 `NewGateRows` via
+`wGateRowBuf` ($D138) — GATE_GENERATION §7.8.
 
 **Gate index → name:** 0=Beginning, 1=Villager, 2=Talisman, 3=Memories, 4=Bewilder, 6=Peace, 7=Bravery, 18=Labyrinth, 22=Ambition, 29=Arena Right, 31=Unused(99 floors).
 
@@ -187,6 +192,67 @@ draw has max 0 and where no slot may appear twice re-draws the 2nd monster
 forever (28,257 passes, the battle never starts); every slot at max 1 is safe
 (always alone). Every vanilla pool is consistent (checked over all 128).
 
+**The draw, exactly (S114, measured — `tools/census_encounters.py`: 15,192 stub-called
+battles on the ORIGINAL ROM == `editor2/core/encounters.simulate_battle`, 0 mismatches;
+negative control 1,417):** `CalcEncounterPoolIdx` calls `GenerateRNG` (HL = wRNG1:wRNG2;
+HL := HL·5 + $1357) and then draws **(wRNG2:wRNG1) mod 100** — L is loaded from wRNG1, H
+from wRNG2 — and returns the first entry whose running sum **is 100 or ≥ the draw**
+(leading 0 sums skipped; the sums are 8-bit). So the first slot with a chance also takes
+draw 0 and the slot ending at 100 loses one: Slime / Dracky / Anteater 30 / 50 / 20 % are
+really 31 / 50 / 19 % (the same for the 1/2/3-monster codes). (The LCG has full period, so
+the 16-bit word is uniform; 65,536 mod 100 = 36 gives draws 0-35 a 1/65,536 edge.)
+
+**Which list (S114):** see "Encounter list choice (S114)" below — in patched builds the
+list a battle uses can be a project list (128+), a gate's own per-floor plan or a room's
+own list, with flag variants.
+
+---
+
+### Encounter list choice (S114 — patched builds; ROADMAP P3.13a)
+
+Vanilla `LoadNextDungeonFloor` (bank $01 entry $0D) is the ONE place the list number is
+computed (wGateID + wCurrentFloor → `GateBasePoolIndex` + breakpoints; the floor is the
+game's numbering = wCurrentFloor + 1, sub-index = how many breakpoints are ≤ it —
+measured S114 for every vanilla gate floor: Gate of Villager list 1 = floors 1-2, list 2 =
+floors 3-4, floor 5 = the boss; the pre-S114 `extracted/encounters.json` said "Floors 1-3"). It runs at EVERY
+encounter step (bank $16 entry 8 calls `$010D` before the drain — it is what loads the
+rate code into wC8A9), at floor setup (`LoadFloorAndEncounterData`, entry $0C) and when a
+battle fires (`EncounterMonsterSelect`, entry $0B — also called from banks $03 / $14 / $15,
+field effects that start a battle at once). Its readers re-derived
+`EncounterPoolData + number·26 + offset` five times (+2 / +5 / +10 in
+EncounterMonsterSelect, +20 in SaveRegsForEncounter, +25 in LoadFloorAndEncounterData);
+`wEncounterPoolIndex`'s one other reader is the gold lying on depth-tier-3 gate floors
+(bank $01 `$5AF8`: (number + 10) · (floor + 1) · (50-99) / 100).
+
+**Patched (S114, all same size):** `LoadNextDungeonFloor` far-calls bank $76 entry 0
+`EncResolve` (compiler-owned, PROJECT_COMPILER §2.30), which returns D = the list, E =
+the floor's VALUE (always the vanilla number of the gate floor — the floor gold keeps its
+value), B = a rate override ($FF = the list's own +0); a vanilla list (0-127) is then
+copied from bank $01 into **`wEncListBuf` ($D11E, 26 B)**, a project list (128-255) was
+copied there by bank $76; wC8A9 := B or the list's +0. The five readers read
+`wEncListBuf + offset` (`ld hl` + `ld bc, $0000` — the old `Mul16x8To24` left BC = 0 and
+the slot sums start from B: KEY_LESSONS S114). `EncResolve` order: (1) a CUSTOM room
+(wInGateworld = 0, wMapID ≥ $6B) whose `EncRoomTable` row names a variant list → the first
+variant whose flag terms hold, else its default list (the room never pins a gate: its
+RoomEncTable gate byte is $FF, so it works inside a dive too); (2) otherwise the gate rule
+for (wGateID, floor) — the vanilla walk on byte copies of bank $01's tables, replaced by
+the gate's own plan when `GatePlanPtrs[wGateID]` has one (first variant whose flags hold →
+floor runs `[last floor, list]`). A room's rate applies in either case. No RNG is drawn,
+so battles roll as in vanilla. A NEW gate (32-95, S115) with no plan for a floor walks
+the vanilla rule of the gate it copies (`NewGateSource`) — list and value; other numbers
+≥ 32 give list 0 / value 0.
+
+**Measured (S114):** the stub census (`tools/census_encounters.py`) — every gate floor ×
+flag state + every room with encounters, list bytes / value / rate + 24 battle draws each
+== the model on the ORIGINAL ROM (633 + 15,192), the example, a fixture with lists /
+variants / rates (641 + 15,384), the user's project and the demo — 0 mismatches. Field,
+on the user's save (demo ROM = the user's project + a room "Howling Den" behind the
+GreatTree 2F Library door): its own list only (Hork / DragonKid / Golem); the keeper's YES
+sets the flag → the night list (Gremlin / Spooky, a 3-group 8-7-8); rate code 7 → a
+drain of 200 per step: 1,700 → 8 steps, 3,500 → 17; Gate of Beginning floors 1-2 → the
+project list (DragonKid), floor 3 → the user's own list 0 (Anteater, Klamutra), with the
+flag set every floor → the night list; the value (wEncounterPoolIndex) stayed 0.
+
 ---
 
 ### Encounter Runtime Flow (verified end-to-end, June 2026)
@@ -213,8 +279,11 @@ Early-outs (no encounter) on: `wGameState` bits 2/5/6 set, `$C850 != 0`, or
 
 **3. Rate + counter — `jr_016_6f62`.**
 `modifier = EncounterRateModifierTable[wC8A9]` (`$10`–`$80`);
-`decrement = (base_rate × modifier) / $40`. (Non-gate default: 100×16/64 = **25
-per step**.) Subtract `decrement` from `wEncounterCounter` (`$CA39` lo /`$CA3A`
+`decrement = (base_rate × modifier) / $40`. **S114:** wC8A9 is the list's rate code
+(+0), reloaded by `ld hl,$010d / rst $10` (LoadNextDungeonFloor) right before this, at
+every step — not a stale gate value; vanilla codes are 2-4, so a non-gate room drains
+50-125 per step (measured: 100 at code 3, 200 at code 7; the old "100×16/64 = 25 per
+step" assumed code 0). Subtract `decrement` from `wEncounterCounter` (`$CA39` lo /`$CA3A`
 hi). No borrow → store decremented counter and `ret`. **Borrow (underflow) →
 fire battle.** The counter value ≈ steps remaining (e.g. seed 100 → ~4-5 steps
 at the non-gate rate).
@@ -234,10 +303,16 @@ fully determined by `wGateID` (`$C935`) + `wCurrentFloor` (`$C939`).** Gate 0's
 breakpoint list is a lone `$FF` (catch-all) → all floors map to pool 0.
 
 **6. Counter seeding — `SetRandomEncounterCounter` (`$16:$6E14`).** PRNG → mod
-101 → `RandomEncounterCounterTable` lookup → `wEncounterCounter`. Its only
-caller, `label16_5b4e`, does `ld a,[wInGateworld]; or a; ret z` first — so
-**the vanilla path never seeds the counter when `wInGateworld = 0`** (custom
-non-gate rooms must seed it themselves; see CROSSBANK_ROOMS.md).
+101 → `RandomEncounterCounterTable` lookup → `wEncounterCounter` (counter units
+1,100-6,000, mean ≈ 3,547 — NOT steps: steps = counter / the per-step drain).
+**S114 correction (grep + PyBoy):** its one caller is bank $16 entry 6
+`label16_5fe4` (`call SetRandomEncounterCounter` first, THEN the `wInGateworld`
+branch), and entry 6 is far-called by bank $0B Entry 0 — every room load, a
+post-battle reload included, gate or not. Measured in a custom room (wInGateworld
+0) on the user's save: the counter after each battle = a table value (1,700 /
+1,800 / 3,500 / 4,100 …) and at entry (1,100). The old "only caller
+`label16_5b4e` … never seeds when `wInGateworld = 0`" was wrong (DOC_AUDIT S114;
+KEY_LESSONS S11 corrected).
 
 Key RAM: `wGateID $C935`, `wCurrentFloor $C939`, `wEncounterPoolIndex $CA38`,
 `wEncounterCounterLo/Hi $CA39/$CA3A`, `wC8A9` rate-modifier index,

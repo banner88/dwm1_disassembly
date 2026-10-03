@@ -533,6 +533,15 @@ class RoomCanvas(QGraphicsView):
                                      'Stairs down — the next floor of the gate dive '
                                      '(works while the room is served inside a gate)',
                                      ('exit', i, e)))
+            elif G.is_gate_entrance(e):           # S115 (NG1)
+                gid = G.entrance_gate(e)
+                try:
+                    nm = self.s.doc.gate_name(gid)
+                except Exception:
+                    nm = f'gate {gid}'
+                self.markers.append(('exit', int(e['x']), int(e['y']), None,
+                                     f"gate entrance → gate {gid} ({nm}), floor 1",
+                                     ('exit', i, e)))
             else:
                 self.markers.append(('exit', int(e['x']), int(e['y']), None,
                                      f"one-way exit → {e.get('dest')} screen "

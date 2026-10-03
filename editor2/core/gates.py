@@ -131,8 +131,128 @@ def gate_floors(gate_id, start=None):
 # hand_made: the gate's floors are the author's rooms — rules may take floor 1
 # and the validator wants every floor 1..N-1 covered by an always-served rule.
 # ---------------------------------------------------------------------------
-GATE_KEYS = {'gate', 'floors', 'boss', 'hand_made', 'comment'}
+GATE_KEYS = {'gate', 'floors', 'boss', 'hand_made', 'comment',
+             'encounters',   # S114: the gate's own encounter plan (encounters.py)
+             'copy_of', 'name'}   # S115: NEW gates only (see below)
 FLOORS_MIN, FLOORS_MAX = 2, 99
+
+# ---------------------------------------------------------------------------
+# NEW gates (S115, ROADMAP NG1). custom.gates[] entries with "gate" 32-95 are
+# brand-new gate numbers: {"gate": 32-95, "copy_of": 0-31, "name": "...",
+#   + floors / boss / hand_made / encounters as for any gate}.
+# Engine: bank $16 entry 5's two GateFloorDataTable readers go through
+# GateRowPtr (S115 same-size forks); for gate >= 32 it far-calls bank $76
+# entry 1 NewGateRowCopy, which copies the gate's 8-byte row (compiler-owned
+# NewGateRows, generated from the source gate's row + this entry) to
+# wGateRowBuf. Everything else in a dive already took the 8-bit wGateID
+# (GateDecisionFork, CustomGateInsert, the anchor, EncResolve). The copy
+# shares the source's floor-type rows (maze look, special rooms) and depth
+# tier; its vanilla encounter rule / floor value is the source's
+# (NewGateSource). Entered by an exit with gate_flag 1 and dest = the gate
+# number (the vanilla portal form, add_gate_entrance). The cap 95 keeps the
+# number below the custom map ids ($6B+) and below every engine sentinel.
+# ---------------------------------------------------------------------------
+NEW_GATE_FIRST = 32
+NEW_GATE_LAST = 95
+NEW_GATE_ONLY_KEYS = {'copy_of', 'name'}
+# a gate entrance exit: gate_flag 1 = "enter gate <dest>" (34 vanilla portal
+# exits, all screen 0 / spawn 0,0 — extracted/all_exits.json)
+GATE_ENTRANCE_FIELDS = {'gate_flag': 1, 'screen_byte': '0x00', 'spawn_x': 0, 'spawn_y': 0}
+
+
+def is_new_gate(gate_id):
+    try:
+        return NEW_GATE_FIRST <= int(gate_id) <= NEW_GATE_LAST
+    except (TypeError, ValueError):
+        return False
+
+
+def new_gate_entries(custom):
+    """custom.gates[] entries of NEW gates, by number."""
+    out = []
+    for g in (custom or {}).get('gates') or []:
+        try:
+            gid = int(_val(g.get('gate', -1)))
+        except (TypeError, ValueError):
+            continue
+        if is_new_gate(gid):
+            out.append(g)
+    return sorted(out, key=lambda g: int(_val(g['gate'])))
+
+
+def gate_source(custom, gate_id):
+    """The vanilla gate a gate copies (itself for 0-31; None if unknown)."""
+    gid = int(gate_id)
+    if 0 <= gid < NEW_GATE_FIRST:
+        return gid
+    g = gate_settings(custom, gid)
+    try:
+        src = int(_val(g.get('copy_of')))
+    except (TypeError, ValueError):
+        return None
+    return src if 0 <= src < NEW_GATE_FIRST else None
+
+
+def gate_exists(custom, gate_id):
+    try:
+        gid = int(gate_id)
+    except (TypeError, ValueError):
+        return False
+    if 0 <= gid < NEW_GATE_FIRST:
+        return True
+    return is_new_gate(gid) and gate_source(custom, gid) is not None
+
+
+def gate_name(custom, gate_id, start=None):
+    gid = int(gate_id)
+    if gid < NEW_GATE_FIRST:
+        v = next((x for x in vanilla_gates(start) if x['id'] == gid), None)
+        return v['name'] if v else f'Gate {gid}'
+    g = gate_settings(custom, gid)
+    return g.get('name') or f'New gate {gid}'
+
+
+def all_gates(custom, start=None):
+    """The 32 vanilla gates (vanilla_gates rows) + the project's new gates
+    as rows of the same shape plus 'new': True and 'copy_of'."""
+    van = vanilla_gates(start)
+    out = [dict(g, new=False) for g in van]
+    by_id = {g['id']: g for g in van}
+    for g in new_gate_entries(custom):
+        gid = int(_val(g['gate']))
+        src = gate_source(custom, gid)
+        base = dict(by_id.get(src, {}))
+        base.update({'id': gid, 'name': g.get('name') or f'New gate {gid}',
+                     'faq_name': '', 'new': True, 'copy_of': src})
+        out.append(base)
+    return out
+
+
+def is_gate_entrance(e):
+    """An exit row that enters a gate (gate_flag 1, dest = the gate number)."""
+    try:
+        return _val(e.get('gate_flag', 0)) == 1
+    except (TypeError, ValueError):
+        return False
+
+
+def entrance_gate(e):
+    d = e.get('dest')
+    s = str(d)
+    if ':' in s:
+        s = s.split(':', 1)[1]
+    try:
+        return _val(s)
+    except (TypeError, ValueError):
+        return None
+
+
+def gate_entrance_row(x, y, gate_id, comment=None):
+    row = {'x': int(x), 'y': int(y), 'dest': f'gate:{int(gate_id)}'}
+    row.update(GATE_ENTRANCE_FIELDS)
+    if comment:
+        row['comment'] = comment
+    return row
 
 
 def gate_settings(custom, gate_id):
@@ -150,7 +270,8 @@ def gate_floor_count(custom, gate_id, start=None):
     g = gate_settings(custom, gate_id)
     if g.get('floors') is not None:
         return int(_val(g['floors']))
-    return gate_floors(gate_id, start)
+    src = gate_source(custom, gate_id)          # S115: a new gate = its source's
+    return gate_floors(src if src is not None else gate_id, start)
 
 
 def gate_min_floor(custom, gate_id):
@@ -264,11 +385,20 @@ class GatesMixin:
         lst = self.custom.setdefault('gates', [])
         g = gate_settings(self.custom, gate_id)
         if not g:
+            if is_new_gate(gate_id):
+                raise ValueError(f'gate {gate_id} is not one of this project\'s gates')
             g = {'gate': int(gate_id)}
             lst.append(g)
         for k, v in fields.items():
             if k not in GATE_KEYS - {'gate'}:
                 raise ValueError(f'unknown gate setting {k!r}')
+            if k in NEW_GATE_ONLY_KEYS:
+                if not is_new_gate(gate_id):
+                    raise ValueError(f'{k!r} only applies to new gates')
+                if v in (None, '') or (k == 'name' and not str(v).strip()):
+                    raise ValueError(f'a new gate always has a {k}')
+                if k == 'copy_of' and not 0 <= int(v) < NEW_GATE_FIRST:
+                    raise ValueError('copy_of must be a vanilla gate 0-31')
             if v in (None, False, '') and k != 'floors':
                 g.pop(k, None)
             elif k == 'floors' and v is None:
@@ -280,6 +410,109 @@ class GatesMixin:
         lst.sort(key=lambda x: int(_val(x.get('gate', 0))))
         if not lst:
             self.custom.pop('gates', None)
+        self.touch()
+
+    # ------------------------------------------------ new gates (S115, NG1)
+    def all_gates(self):
+        return all_gates(self.custom, getattr(self, 'project_dir', None))
+
+    def gate_name(self, gate_id):
+        return gate_name(self.custom, gate_id, getattr(self, 'project_dir', None))
+
+    def new_gate_ids(self):
+        return [int(_val(g['gate'])) for g in new_gate_entries(self.custom)]
+
+    def new_gate(self, copy_of, name, floors=None, gate_id=None):
+        """Add a NEW gate (number 32-95) that starts as a copy of vanilla gate
+        `copy_of`: same maze look, floor count (unless `floors`), boss room
+        and encounter rule until edited. Returns its number."""
+        copy_of = int(copy_of)
+        if not 0 <= copy_of < NEW_GATE_FIRST:
+            raise ValueError('copy_of must be a vanilla gate 0-31')
+        if not str(name or '').strip():
+            raise ValueError('a new gate needs a name')
+        used = set(self.new_gate_ids())
+        if gate_id is None:
+            free = [n for n in range(NEW_GATE_FIRST, NEW_GATE_LAST + 1) if n not in used]
+            if not free:
+                raise ValueError(f'all {NEW_GATE_LAST - NEW_GATE_FIRST + 1} new gate '
+                                 'numbers are used')
+            gate_id = free[0]
+        gate_id = int(gate_id)
+        if not is_new_gate(gate_id) or gate_id in used:
+            raise ValueError(f'gate number {gate_id} is not free')
+        g = {'gate': gate_id, 'copy_of': copy_of, 'name': str(name).strip()}
+        if floors is not None:
+            n = int(floors)
+            if not FLOORS_MIN <= n <= FLOORS_MAX:
+                raise ValueError(f'floors must be {FLOORS_MIN}-{FLOORS_MAX}')
+            g['floors'] = n
+        lst = self.custom.setdefault('gates', [])
+        lst.append(g)
+        lst.sort(key=lambda x: int(_val(x.get('gate', 0))))
+        self.touch()
+        return gate_id
+
+    def gate_entrances(self, gate_id=None):
+        """[(room, screen key, state index, exit row)] of every gate entrance
+        (of one gate, or all)."""
+        out = []
+        for r in self.rooms:
+            if r.get('placeholder'):
+                continue
+            for k in self.screen_keys(r):
+                for n, st in enumerate(self.states(r, k)):
+                    for e in st.get('exits') or []:
+                        if is_gate_entrance(e) and (gate_id is None
+                                                    or entrance_gate(e) == int(gate_id)):
+                            out.append((r, k, n, e))
+        return out
+
+    def delete_gate(self, gate_id):
+        """Remove a NEW gate, its custom-room rules and its entrances.
+        Returns {'rules': n, 'entrances': n}."""
+        gid = int(gate_id)
+        if not is_new_gate(gid) or not gate_settings(self.custom, gid):
+            raise ValueError(f'gate {gid} is not one of this project\'s new gates')
+        self.custom['gates'] = [g for g in self.custom.get('gates') or []
+                                if int(_val(g.get('gate', -1))) != gid]
+        if not self.custom['gates']:
+            self.custom.pop('gates')
+        rules = [r for r in self.gate_inserts() if int(_val(r.get('gate', -1))) != gid]
+        n_rules = len(self.gate_inserts()) - len(rules)
+        self.set_gate_inserts(rules)
+        n_ent = 0
+        for r in self.rooms:
+            if r.get('placeholder'):
+                continue
+            for k in self.screen_keys(r):
+                for st in self.states(r, k):
+                    ex = st.get('exits')
+                    if not ex:
+                        continue
+                    keep = [e for e in ex if not (is_gate_entrance(e)
+                                                  and entrance_gate(e) == gid)]
+                    n_ent += len(ex) - len(keep)
+                    st['exits'] = keep
+        self.touch()
+        return {'rules': n_rules, 'entrances': n_ent}
+
+    def add_gate_entrance(self, room, key, state_idx, x, y, gate_id, states=None):
+        """A gate entrance exit on (x, y): stepping on it enters gate
+        `gate_id` (a vanilla gate 0-31 or a new gate) at its first floor —
+        the vanilla portal form (gate_flag 1, dest = the gate). The cell's
+        picture is the author's (paint a portal on it)."""
+        gid = int(gate_id)
+        if not gate_exists(self.custom, gid):
+            raise ValueError(f'gate {gid} does not exist')
+        states = list(states if states is not None else [state_idx])
+        for n in states:
+            for e in self.exits_of(room, key, n):
+                if (_val(e['x']), _val(e['y'])) == (int(x), int(y)):
+                    raise ValueError(f"cell ({x},{y}) already holds an exit in state {n}")
+        for n in states:
+            self.exits_of(room, key, n).append(
+                gate_entrance_row(x, y, gid, f'gate entrance: {self.gate_name(gid)}'))
         self.touch()
 
     def conversation_exits(self, room):
@@ -315,8 +548,9 @@ class GatesMixin:
         g = gate_settings(self.custom, gate_id)
         b = g.get('boss')
         if not b:
+            src = gate_source(self.custom, gate_id)       # S115: a new gate = its source's
             v = next((x for x in vanilla_gates(getattr(self, 'project_dir', None))
-                      if x['id'] == int(gate_id)), None)
+                      if x['id'] == src), None)
             return f"vanilla: {v['boss_room']}" if v else 'vanilla'
         if isinstance(b, str) and b.startswith('vanilla:'):
             mid = int(b.split(':', 1)[1].lstrip('$'), 16)
@@ -429,16 +663,32 @@ class GatesMixin:
         enc = room.get('encounters') or {}
         if not enc.get('enabled'):
             return 'off'
+        if enc.get('list') is not None:
+            return 'own'                   # S114: its own list (encounters_doc)
         return 'follow' if enc.get('follow_gate') else 'fixed'
 
     def set_encounter_mode(self, room, mode):
         """'off' | 'follow' (the dive's own gate/floor) | 'fixed' (keep the
         room's pinned gate/floor — never for rooms served in gates)."""
         enc = dict(room.get('encounters') or {})
+        if mode == 'own':
+            # S114: the list itself is chosen on the Encounters tab; picking
+            # 'own' here keeps a room that already has one, else starts it on
+            # the dive's list number (list 0 = the Gate of Beginning's)
+            if enc.get('list') is None:
+                enc = {'enabled': True, 'list': 0}
+            enc['enabled'] = True
+            enc.pop('follow_gate', None)
+            room['encounters'] = enc
+            self.touch()
+            return
         if mode == 'off':
             room.pop('encounters', None)
         elif mode == 'follow':
             room['encounters'] = {'enabled': True, 'follow_gate': True}
+            for k in ('rate', 'comment'):           # S114: keep the room's rate
+                if k in enc:
+                    room['encounters'][k] = enc[k]
         elif mode == 'fixed':
             enc.pop('follow_gate', None)
             enc['enabled'] = True
@@ -576,7 +826,8 @@ class GatesMixin:
             notes.append(f'{other} ordinary exit(s): walking through one leaves the dive')
         notes.append('saving allowed' if room.get('can_save', not boss_of) else 'no saving here')
         notes.append({'off': 'no battles', 'follow': "battles: the gate's own monsters",
-                      'fixed': 'battles: fixed pool'}[mode])
+                      'fixed': 'battles: fixed pool',
+                      'own': 'battles: its own list (S114 — never re-routes the dive)'}[mode])
         notes.append(f"music: {room.get('music')}" if room.get('music')
                      else "music: the gate's (keeps playing)")
         return {'ready': not problems, 'problems': problems, 'notes': notes,

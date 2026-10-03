@@ -711,6 +711,61 @@ always (validator warning otherwise; the floor plan shows the maze where
 none is). Measured: Gate of Beginning, 3 floors — floor 1 / floor 2 custom
 rooms at 100 %, their Stairs down descend, floor 3 = a custom boss room.
 
+**Encounters per gate floor (S114, ROADMAP P3.13a):** which LIST a gate floor draws from
+(the vanilla breakpoint rule, or the gate's own per-floor plan + flag variants, or a served
+room's own list) is chosen by bank $76 `EncResolve` behind the bank $01
+`LoadNextDungeonFloor` fork — DATA_STRUCTURES "Encounter list choice (S114)",
+PROJECT_COMPILER §2.30. Gate numbers ≥ 32 are the project's NEW gates (S115, §7.8).
+
+## 7.8 New gates — gate numbers 32-95 (S115, ROADMAP NG1) — built, PyBoy-verified, test ROM USER-CONFIRMED 2026-10-03 12:39 ("Excellent, confirm works")
+
+**What reads the gate row.** `GateFloorDataTable` ($16:$70A6, 32 × 8 B) has exactly two
+readers, both in bank $16 entry 5 (`label16_5b4e`): `jr_016_5b72` (bytes 0-3 + 4 + 7 →
+wFloorType1-3, wLastFloor, wBossMapType, wBossTileset) and `jr_016_5be1` (row + 4: the
+boss map and arrival tile). Both compute `ld a,[wGateID] / add a ×3 / ld hl,X / add l /
+ld l,a / ld a,0 / adc h / ld h,a` — an 8-BIT gate·8, so in the original a gate number n ≥
+32 reads the row of gate n & 31. Entry 5 sets `wGateID := wMapID` on the first floor of a
+dive (wInGateworld bit 7 clear) — a portal exit's dest IS the gate number, nothing reads
+it as a map id before that (only bank $73 entry 0, the transition commit, runs first).
+Every other gate-number user is 8-bit and table-free: `GateDecisionFork` (gate 0 = no
+special rooms), bank $71 `CustomGateInsert` (`wGateDiveGate` = gate+1), the Anchor
+(bank $73), bank $76 `EncResolve` / `GatePlanPtrs` (index 0-255). No vanilla script
+reads `$C935` (ROM-wide search S115).
+
+**Patched (same size, `patches/bank_016.asm`):** both readers are `call GateRowPtr` +
+nops (15 → 15 B; the boss site adds `inc hl` ×4). `GateRowPtr` (bank $16 free tail,
+$7CFD): gates 0-31 → `GateFloorDataTable + gate·8` (unchanged bytes); gate ≥ 32 → `ld
+hl,$7601 / rst $10` = bank $76 **entry 1 `NewGateRowCopy`**: a project new gate (32 ..
+32 + NEW_GATE_LEN − 1) has its 8-byte row copied from `NewGateRows` to **`wGateRowBuf`
+($D138)** and returns E = 1 → HL = wGateRowBuf; any other number returns E = 0 → the old
+wrap (gate & 31), byte-for-byte what the original read. `EncVanillaNumber` (bank $76)
+walks the vanilla encounter rule of a new gate's SOURCE (`NewGateSource`), so its floors
+with no list of their own — and the floor value (`wEncounterPoolIndex`, the tier-3 floor
+gold) — are the source gate's.
+
+**A new gate's row** = the source's row with the project's floor count (byte 3) and boss
+room (bytes 4-6) — so bytes 0-2 (floor-type rows: the maze look and the special rooms on
+floors 3, 6, 9 …) and byte 7 (depth tier: tileset + item tier) are the source's. Gate 0
+as a source keeps "no special rooms" only for gate 0 itself (`GateDecisionFork` tests
+`wGateID == 0`); a copy of gate 0 gets special rooms like any gate (code-read, not
+measured).
+
+**Entrance:** the vanilla portal exit row — trigger cell, dest = the gate number,
+gate_flag 1, screen byte 0, spawn 0,0 (all 34 vanilla portal exits,
+`extracted/all_exits.json`). The dive starts on floor 1 (the maze of the source's floor
+type 1).
+
+**Measured S115 on the user's save** (demo: new gate 32 "Ember Gate", copy of Memories,
+4 floors, boss = custom room $72, entrance = a painted hole in custom room $71): the hole
+→ wGateID 32, wCurrentFloor 0, wLastFloor 4, wBossMapType $72, wFloorType2/3 = 1/2,
+tier 1, wGateRowBuf = `02 01 02 04 72 04 06 01`, `GateRowPtr` and `NewGateRowCopy` each
+ran once, map $0D (Memories' maze); floor 1 battles from list 128 (the project's), floor
+3 a special room ($50 / $51) or the maze depending on the RNG, battles from list 129;
+floor 4 = $72 at tile (4,6); its conversation battle (EID 51) → join → helper → the
+Castle (priest blessing). Gate 2 on the same build: its vanilla row. Stub calls of
+`GateRowPtr` for gates 0-40 / 95 / 96 / 200 / 255: HL = the table row for 0-31, $D138 for
+32, the wrap row for every undefined number (0 bad).
+
 ## 8. Floor completion / exit ✅
 
 - **Down-staircase**: `Jump_00b_46A7` checks `wScreenIndex == [$C960]` and the

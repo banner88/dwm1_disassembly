@@ -161,6 +161,15 @@ V = {
     ("bank_071.asm", "CopyCustomRoomRecord", 2): "IDX16",        # sla/rl x8
     ("bank_071.asm", "CustomEncResolve", 0): "BOUNDED",          # cp ENC_TABLE_LEN
     ("bank_071.asm", "CustomRoomBGMResolve", 0): "BOUNDED",      # cp $80 (FEATURE cap $7F; ROADMAP follow-up)
+    # S114 burn-down: the sites added S100-S114 that were left NEEDS_REVIEW
+    ("bank_007.asm", "SaveAllowCheck", 0): "CP_UNSIGNED",        # S100 (clean: cp $60..$64 chain)
+    ("bank_060.asm", "CustomMonsterCast", 0): "IDX8_SUB6B",      # S101: sub $6B / ret c / add a
+    ("bank_06c.asm", "CustomTileAnimate", 0): "BOUNDED",         # S102: cp TILEANIM_ROOMS, 16-bit index
+    ("bank_06c.asm", "CustomTileAnimate", 1): "CP_UNSIGNED",     # S102: == wTileAnimRoom (restart test)
+    ("bank_071.asm", "CustomRoomBGMResolve", 1): "CP_UNSIGNED",  # S101: cp $61
+    ("bank_071.asm", "CustomRoomFlags", 0): "BOUNDED",           # S100: cp ROOMFLAGS_TABLE_LEN
+    ("bank_073.asm", "GateLeaveFreePal", 0): "CP_UNSIGNED",      # S100 r3: cp CUSTOM_ROOM_START
+    ("bank_076.asm", "EncResolve", 0): "BOUNDED",                # S114: cp ENC_ROOM_LEN, 16-bit index *3
 }
 
 # Site-count pins (S66). A mismatch = the tree changed; re-adjudicate.

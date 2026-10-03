@@ -16,7 +16,12 @@ gate's own unless the gate is HAND-MADE.
 Gate settings (S101, P3.7b part 2): floor count 2-99 (incl. the boss floor),
 the boss floor (vanilla / another gate's vanilla boss room / any custom room,
 arriving on its "Inside gates" cell), hand-made (rules may take floor 1).
-Still to come: floor weighting, monster pools per gate, gate entrances.
+
+NEW gates (S115, ROADMAP NG1): "New gate…" adds gate 32-95 as a copy of a
+vanilla gate (its maze look, special rooms, depth tier and — until edited —
+floor count, boss room and monsters); rename / delete; the head line lists
+its entrances (Rooms tab: "Gate entrance here"). Monsters per floor are on
+the Encounters tab. Still to come: floor weighting, private floor types.
 
 Every edit is one undo step (SnapshotCommand).
 """
@@ -26,7 +31,8 @@ from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (QAbstractItemView, QCheckBox, QComboBox, QDialog,
                                QDialogButtonBox, QFormLayout, QGroupBox, QHBoxLayout,
                                QHeaderView, QInputDialog, QLabel, QListWidget,
-                               QListWidgetItem, QMessageBox, QPushButton, QSpinBox,
+                               QLineEdit, QListWidgetItem, QMessageBox, QPushButton,
+                               QSpinBox,
                                QSplitter, QTableWidget, QTableWidgetItem, QToolButton,
                                QVBoxLayout, QWidget)
 
@@ -262,13 +268,70 @@ class GateRuleDialog(QDialog):
         self.accept()
 
 
+class NewGateDialog(QDialog):
+    """S115 (NG1): a new gate = a copy of a vanilla gate, with a name."""
+
+    def __init__(self, doc, parent=None, start=0):
+        super().__init__(parent)
+        self.setWindowTitle('New gate')
+        self.resize(460, 220)
+        self.van = G.vanilla_gates(getattr(doc, 'project_dir', None))
+        v = QVBoxLayout(self)
+        f = QFormLayout()
+        self.src = QComboBox()
+        for g in self.van:
+            self.src.addItem(f"{g['id']:2d}  {g['name']} — {g['floors']} floors", g['id'])
+        self.src.setCurrentIndex(max(0, min(int(start), 31)))
+        self.src.currentIndexChanged.connect(self._src_changed)
+        f.addRow('copy of', self.src)
+        self.name = QLineEdit()
+        self.name.setPlaceholderText('e.g. Ember Gate')
+        f.addRow('name', self.name)
+        self.floors = QSpinBox()
+        self.floors.setRange(G.FLOORS_MIN, G.FLOORS_MAX)
+        self.floors.setToolTip('Floors in one dive, INCLUDING the boss floor')
+        f.addRow('floors', self.floors)
+        v.addLayout(f)
+        note = QLabel('The new gate looks like the one it copies (maze floors, special rooms, '
+                      'depth tier) and starts with its boss room and monsters. Give it a custom '
+                      'boss room (a vanilla one runs its own story scripts) and its own monsters '
+                      '(Encounters tab), then put an entrance on a room cell (Rooms tab → '
+                      '"Gate entrance here").')
+        note.setWordWrap(True)
+        note.setStyleSheet('color:#aaa;')
+        v.addWidget(note)
+        self.warn = QLabel('')
+        self.warn.setStyleSheet('color:#e0b040;')
+        v.addWidget(self.warn)
+        bb = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        bb.accepted.connect(self._ok)
+        bb.rejected.connect(self.reject)
+        v.addWidget(bb)
+        self._src_changed(self.src.currentIndex())
+
+    def _src_changed(self, i):
+        self.floors.setValue(self.van[max(i, 0)]['floors'])
+
+    def _ok(self):
+        if not self.name.text().strip():
+            self.warn.setText('Give the gate a name.')
+            return
+        self.accept()
+
+    def values(self):
+        src = self.src.currentData()
+        n = self.floors.value()
+        van = self.van[src]['floors']
+        return src, self.name.text().strip(), (None if n == van else n)
+
+
 class GatesTab(QWidget):
     openRoomRequested = Signal(str)          # custom room id
 
     def __init__(self, session, parent=None):
         super().__init__(parent)
         self.s = session
-        self.gates = G.vanilla_gates(self.s.project_dir)
+        self.gates = self.s.doc.all_gates()
         split = QSplitter(Qt.Horizontal, self)
         lay = QVBoxLayout(self)
         lay.setContentsMargins(0, 0, 0, 0)
@@ -276,7 +339,25 @@ class GatesTab(QWidget):
         self.list = QListWidget()
         self.list.setMinimumWidth(240)
         self.list.currentRowChanged.connect(self._show_gate)
-        split.addWidget(self.list)
+        left = QWidget()
+        lv = QVBoxLayout(left)
+        lv.setContentsMargins(0, 0, 0, 0)
+        lv.addWidget(self.list)
+        nrow = QHBoxLayout()
+        for text, fn, tip in (
+                ('New gate…', self._new_gate, 'A brand-new gate (32-95) made as a copy of a '
+                                             'vanilla gate'),
+                ('Rename…', self._rename_gate, 'Rename the selected NEW gate'),
+                ('Delete', self._delete_gate, 'Delete the selected NEW gate (its custom-room '
+                                              'rules and entrances go too)')):
+            b = QPushButton(text)
+            b.setToolTip(tip)
+            b.clicked.connect(fn)
+            nrow.addWidget(b)
+            if text != 'New gate…':
+                setattr(self, '_btn_' + text.strip('.…').lower(), b)
+        lv.addLayout(nrow)
+        split.addWidget(left)
         right = QWidget()
         rv = QVBoxLayout(right)
         self.head = QLabel('')
@@ -389,8 +470,9 @@ class GatesTab(QWidget):
         rv.addWidget(hl)
         nl = QLabel('Boss rooms (S101): any custom room — its "Inside gates" arrival cell is '
                     'where the player appears; the fight is a conversation (NPC or arrival) '
-                    'with a Battle step. Still to come (ROADMAP P3.7b part 2): floor '
-                    'weighting and monster pools per gate, gate entrances.')
+                    'with a Battle step. New gates (S115): "New gate…" below the list; '
+                    'entrances on the Rooms tab ("Gate entrance here"); monsters per floor on '
+                    'the Encounters tab. Still to come: floor weighting, private floor types.')
         nl.setWordWrap(True)
         nl.setStyleSheet('color:#777;')
         rv.addWidget(nl)
@@ -403,6 +485,7 @@ class GatesTab(QWidget):
     # ------------------------------------------------------------ views
     def refresh(self):
         cur = max(self.list.currentRow(), 0)
+        self.gates = self.s.doc.all_gates()
         self.list.blockSignals(True)
         self.list.clear()
         for g in self.gates:
@@ -412,10 +495,17 @@ class GatesTab(QWidget):
             it = QListWidgetItem(f"{g['id']:2d}  {g['name']} — {fl} fl"
                                  + (f"   ★{n}" if n else '')
                                  + ('   ♛' if gs.get('boss') else '')
-                                 + ('   ✎' if gs.get('hand_made') else ''))
-            it.setToolTip(f"boss room {g['boss_map']} {g['boss_room']} · depth tier "
-                          f"{g['depth_tier']} · FAQ: {g['faq_name']}")
-            if n or gs:
+                                 + ('   ✎' if gs.get('hand_made') else '')
+                                 + ('   NEW' if g.get('new') else ''))
+            if g.get('new'):
+                it.setToolTip(f"new gate — a copy of gate {g['copy_of']} "
+                              f"({self.gates[g['copy_of']]['name']}) · depth tier "
+                              f"{g['depth_tier']}")
+                it.setForeground(QColor(255, 170, 60))
+            else:
+                it.setToolTip(f"boss room {g['boss_map']} {g['boss_room']} · depth tier "
+                              f"{g['depth_tier']} · FAQ: {g['faq_name']}")
+            if (n or gs) and not g.get('new'):
                 it.setForeground(QColor(0, 200, 255))
             self.list.addItem(it)
         self.list.setCurrentRow(min(cur, self.list.count() - 1))
@@ -438,11 +528,27 @@ class GatesTab(QWidget):
         g = self.gate(i)
         doc = self.s.doc
         self._show_settings(g)
-        self.head.setText(f"<b>{g['name']}</b>  (gate {g['id']})")
+        new = bool(g.get('new'))
+        self._btn_rename.setEnabled(new)
+        self._btn_delete.setEnabled(new)
+        self.head.setText(f"<b>{g['name']}</b>  (gate {g['id']}"
+                          + (f" — NEW, a copy of {self.gates[g['copy_of']]['name']})"
+                             if new else ')'))
+        ents = doc.gate_entrances(g['id'])
+        if ents:
+            where = ', '.join(f"{doc.room_name(r)} screen {k} ({e['x']},{e['y']})"
+                              for r, k, _n, e in ents[:3]) + (' …' if len(ents) > 3 else '')
+            ent = f" · entrance: {where}"
+        elif new:
+            ent = (" · ⚠ no entrance yet — Rooms tab: pick a cell, then "
+                   "\"Gate entrance here\"")
+        else:
+            ent = ''
         self.sub.setText(f"{g['floors']} floors — boss on floor {g['floors']} "
                          f"({doc.gate_boss_label(g['id'])}) · depth tier {g['depth_tier']} · floor-type rows "
                          f"{g['floor_types'][0]}/{g['floor_types'][1]}/{g['floor_types'][2]}"
-                         + (' · no special rooms in this gate' if g['id'] == 0 else ''))
+                         + (' · no special rooms in this gate' if g['id'] == 0 else '')
+                         + ent)
         rules = doc.gate_rules_for(g['id'])
         self.rules.setRowCount(len(rules))
         for row, (idx, r) in enumerate(rules):
@@ -498,7 +604,8 @@ class GatesTab(QWidget):
     def _show_settings(self, g):
         doc = self.s.doc
         gs = doc.gate_setting(g['id'])
-        van = next(x for x in self.gates if x['id'] == g['id'])
+        src = g['copy_of'] if g.get('new') else g['id']      # S115: a new gate's source
+        van = next(x for x in self.gates if x['id'] == src)
         self.set_floors.blockSignals(True)
         self.set_floors.setValue(g['floors'])
         self.set_floors.blockSignals(False)
@@ -506,9 +613,11 @@ class GatesTab(QWidget):
                                  + ('' if gs.get('floors') is None else ' (changed)'))
         self.set_boss.blockSignals(True)
         self.set_boss.clear()
-        self.set_boss.addItem(f"Vanilla — {van['boss_room']}", None)
+        self.set_boss.addItem(f"Vanilla — {van['boss_room']}"
+                              + ('  (⚠ runs that gate\'s story scripts)' if g.get('new') else ''),
+                              None)
         for x in self.gates:
-            if x['id'] != g['id']:
+            if x['id'] != g['id'] and not x.get('new'):
                 self.set_boss.addItem(f"Vanilla room of {x['name']} — {x['boss_room']}",
                                       f"vanilla:${int(x['boss_map'], 16):02X}")
         for r in doc.rooms:
@@ -567,7 +676,8 @@ class GatesTab(QWidget):
         if g is None or self.set_floors.value() == g['floors']:
             return
         n = self.set_floors.value()
-        van = next(x for x in self.gates if x['id'] == g['id'])['floors']
+        src = g['copy_of'] if g.get('new') else g['id']
+        van = next(x for x in self.gates if x['id'] == src)['floors']
         self._setting('floors', None if n == van else n, f'{n} floors')
 
     def _set_boss(self, _i):
@@ -595,6 +705,61 @@ class GatesTab(QWidget):
         self.s.undo.push(cmd)
         if cmd.error is not None:
             QMessageBox.warning(self, 'Project enemies', str(cmd.error))
+
+    # ------------------------------------------------------- new gates (S115)
+    def _select_gate(self, gid):
+        for i, x in enumerate(self.gates):
+            if x['id'] == gid:
+                self.list.setCurrentRow(i)
+                return
+
+    def _new_gate(self):
+        g = self.gate()
+        start = (g['copy_of'] if g and g.get('new') else g['id']) if g else 0
+        dlg = NewGateDialog(self.s.doc, self, start=start)
+        if dlg.exec() != QDialog.Accepted:
+            return
+        src, name, floors = dlg.values()
+        got = {}
+        cmd = C.SnapshotCommand(self.s, f'New gate {name}', lambda doc: got.update(
+            id=doc.new_gate(src, name, floors)))
+        self.s.undo.push(cmd)
+        if cmd.error is not None:
+            QMessageBox.warning(self, 'New gate', str(cmd.error))
+            return
+        self.refresh()
+        if 'id' in got:
+            self._select_gate(got['id'])
+
+    def _rename_gate(self):
+        g = self.gate()
+        if g is None or not g.get('new'):
+            return
+        name, okd = QInputDialog.getText(self, 'Rename gate', 'name', text=g['name'])
+        if not okd or not name.strip() or name.strip() == g['name']:
+            return
+        self._setting('name', name.strip(), f'Rename gate {g["id"]}')
+        self._select_gate(g['id'])
+
+    def _delete_gate(self):
+        g = self.gate()
+        if g is None or not g.get('new'):
+            return
+        n_rules = len(self.s.doc.gate_rules_for(g['id']))
+        n_ent = len(self.s.doc.gate_entrances(g['id']))
+        if QMessageBox.question(
+                self, 'Delete gate',
+                f"Delete {g['name']} (gate {g['id']})? Its {n_rules} custom-room rule(s) and "
+                f"{n_ent} entrance(s) go too; its encounter plan goes with it. "
+                "(Undo brings everything back.)") != QMessageBox.Yes:
+            return
+        gid = g['id']
+        cmd = C.SnapshotCommand(self.s, f"Delete gate {g['name']}",
+                                lambda doc: doc.delete_gate(gid))
+        self.s.undo.push(cmd)
+        if cmd.error is not None:
+            QMessageBox.warning(self, 'Delete gate', str(cmd.error))
+        self.refresh()
 
     # ------------------------------------------------------------ edits
     def _sel_index(self):

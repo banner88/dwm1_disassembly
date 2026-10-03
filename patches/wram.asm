@@ -304,7 +304,21 @@ wNewSpeciesGid:: dw ;d10a-d10b — computed new-species follower gfx-ID (lo, hi=
 ; LearnLoopFork / bank $72 CustomLearnRow72 copy one 18-byte CustomLearnTable
 ; row here right before the scanner reads it). Transient by design.
 wLearnRowBuf:: ds 18 ;d10c-d11d — one custom-skill learn row
-wCustomPool:: ds $5A4 - 132 - 5 - 2 * TILEANIM_MAX_GROUPS - 2 - 18 ;d11e-d5e4 — transient reserve (was $664; FX1 carved 64+128; S97 132; S102 69; S105 2; S111 18)
+; S114 (P3.13a): the encounter list in use. Bank $01 LoadNextDungeonFloor
+; (same-size fork) copies the list bank $76 EncResolve chose here — a vanilla
+; list from bank $01 EncounterPoolData, a project list from bank $76 — and
+; EncounterMonsterSelect / SaveRegsForEncounter / LoadFloorAndEncounterData
+; read it instead of EncounterPoolData + number*26. Every reader runs right
+; after LoadNextDungeonFloor in the same routine, so it is transient by design.
+wEncListBuf:: ds 26 ;d11e-d137 — the 26-byte encounter list in use
+; S115 (ROADMAP NG1, new gates): the 8-byte GateFloorDataTable-format row of a
+; NEW gate (wGateID >= 32). Bank $16 GateRowPtr (the two same-size reader
+; forks in entry 5) far-calls bank $76 entry 1 NewGateRowCopy, which copies
+; NewGateRows[wGateID-32] here, and the readers take HL = wGateRowBuf instead
+; of GateFloorDataTable + wGateID*8. Written right before every read, so it
+; is transient by design.
+wGateRowBuf:: ds 8 ;d138-d13f — the current new gate's 8-byte row
+wCustomPool:: ds $5A4 - 132 - 5 - 2 * TILEANIM_MAX_GROUPS - 2 - 18 - 26 - 8 ;d140-d5e4 — transient reserve (was $664; FX1 carved 64+128; S97 132; S102 69; S105 2; S111 18; S114 26; S115 8)
 ; FX1 (S71): wPoolBounce — 128-byte staging for sleep-pool bank-2 record
 ; swaps (per-byte scratch in CF3PoolSwapRecord). Transient. (The v1 drain's
 ; halved-pending scratch use was removed with the S71v2 exp-scale veto.)

@@ -483,7 +483,9 @@ pipeline — never retrofit the overlay.
       the hardcoded `cp $6B`. `$6B` reproduces its old gate-0/floor-1 behavior exactly;
       `$6C-$6F` silent; `$70` enabled (proof). Project fields per room: `encounters`,
       `gate_id` (0-31), `floor`. Spec in CROSSBANK_ROOMS.md.
-- [ ] **Encounters #2 — custom monster pools**: 26-byte pool in a free bank +
+- [x] **Encounters #2 — custom monster pools** — **DONE S114 (P3.13a; test ROM
+      USER-CONFIRMED 2026-10-03 09:52 ("Looks good. Give editor files")):** bank $76 + the same-size bank $01 fork; see P3.13a. Original box:
+      26-byte pool in a free bank +
       intercept of `EncounterMonsterSelect`'s pool fetch for custom mapIDs (or
       reuse a verified-unreferenced pool slot). Project fields: up to 5
       `{enemy_stats_id, weight}` + header template. Spec in CROSSBANK_ROOMS.md.
@@ -1111,9 +1113,10 @@ recipes are pure authoring.
         (sprite + facing) → r2 `DWM_S101r2_warubou_test.gbc` (patched,
         `2934c12a…`), NOT yet user-tested.
         **Still open in part 2:** private floor-type rows per gate (bytes 0-2
-        are shared today — the compiler copies the vanilla row), per-gate
+        are shared today — the compiler copies the vanilla row), ~~per-gate
         monster pools / floor bands (user: "then edit bands … dont care
-        when"), per-room encounters inside dives, more than 32 gates, gate
+        when"), per-room encounters inside dives~~ (DONE S114, P3.13a), ~~more than 32 gates~~
+        (DONE S115, ARC NG / NG1), gate
         entrances + unlock triggers, the maze look in the editor (the game's
         own tileset / palette). Measured residuals: (i) after a battle
         started by TALKING to a monster NPC the NPC is not redrawn until the
@@ -1565,7 +1568,7 @@ recipes are pure authoring.
       edit compiles into CustomMPCostTable + record +4 (test_compiler, `MPPtrFromId` run
       from the ROM) and Tremor → "Rumble" (MP 8, Explosion, own line, power 60-80) works in
       PyBoy on the user's save — met; user-confirmed on the test ROM.
-      **S111b (user 15:20 "Fix it now"; built, test ROM NOT yet user-tested):** the
+      **S111b (user 15:20 "Fix it now"; built, test ROM USER-CONFIRMED 2026-10-03 00:19 ("Tested, works")):** the
       built-ins' fixed RATIOS are editable too (MagicBurn burn / damage per MP, Tame damage
       of ATK, Anchor MP charge, Quake allies' share, Mourn bonus per fallen ally; bank $72
       `CustomRatioTable` + `ScaleHL72`), defaults PyBoy-identical; fixed: the AI cast
@@ -1653,7 +1656,7 @@ recipes are pure authoring.
       then the per-boss checkbox UI. *Accept:* a boss with HealAll
       learned NEVER casts it across a scripted battle corpus; field-only
       skills confirmed already rejected (S73b).
-- [x] **P3.12 — Breeding tab: edit + simulation — built S113, test ROM `DWM_S113_breeding_test.gbc` NOT yet user-tested** (needs P3.9): table
+- [x] **P3.12 — Breeding tab: edit + simulation — built S113, test ROM `DWM_S113_breeding_test.gbc` USER-CONFIRMED 2026-10-03 00:19 ("Tested, works")** (needs P3.9): table
       editor over the B1-B7 stack + the randomizer-derived tree explorer
       (depth profiles, reachability, orphans; live re-sim on edit;
       coherence Set 1 live). *Accept:* an added recipe shows correct tree
@@ -1722,30 +1725,92 @@ recipes are pure authoring.
       ceiling is the number of monsters not obtainable without breeding (43 on the
       user's project, 173 are wild); (e) the generator drops duplicate rows it draws (fewer rows than vanilla's 825 — e.g.
       552 on the user's project) — fine for the game, could redraw instead.
-- [ ] **P3.13 — Encounters + Music tabs** (S106 r3: ONE list at a time is
-      already editable from the Monsters tab — `app/pool_dialog.py`, put a row in
-      a slot, chances, max in a group; the cross-view, list size / rate / maze
-      size, new lists and per-room pools are what remain): (a) Encounters cross-view +
-      per-room pools — requires **Encounters #2 custom pools** [G-C]
-      (the Phase-2 box, folded here if not done earlier) — PLUS
-      **flag-keyed pool variants** [G-O] (bank-$71 RoomEncTable resolver
-      extension; the Triggers backend); (b) Music library/assignment
-      matrix + MIDI import UI + audition harness [G-I]. *Accept:* a
-      custom pool authored in GUI spawns in-game; a trigger flips a
-      room's pool variant in-game; a MIDI-imported song assigned to a
-      room plays on entry.
+- [x] **P3.13a — Encounters tab: the project's own lists, per-gate floor lists, room lists,
+      flag variants, rates [G-C, G-O] — built S114, test ROM `DWM_S114_encounters_test.gbc`
+      USER-CONFIRMED 2026-10-03 09:52 ("Looks good. Give editor files")** (S114 split P3.13 into a / b; user S114: "Music next is fine"). User
+      decisions: per-gate per-floor lists as an option ("especially if I want to insert custom
+      rooms with its own encounters"); flag variants for gates too; a separate rate per room;
+      level ranges now ("keep in mind future real fight-length numbers") — `encounters_doc.
+      enc_list_threat_rows` is the hook; the unused gate 31 is irrelevant; NEW GATES wanted
+      (arc NG below). As built (PROJECT_COMPILER §2.30, DATA_STRUCTURES "Encounter list choice
+      (S114)", EDITOR_DESIGN §5.5 "As built S114", help `59_encounters.md`): bank $01
+      `LoadNextDungeonFloor` same-size fork → NEW compiler bank **$76** `EncResolve` (the
+      vanilla rule on byte copies; a gate's own per-floor plan; a custom room's own list —
+      no gate pin, works inside dives —; flag variants first-match; a room's rate code) +
+      the chosen list copied to `wEncListBuf` $D11E, the five readers read it; schema
+      `custom.encounter_lists` (numbers 128-255), `custom.rooms[].encounters.{list,
+      variants, rate}`, `custom.gates[].encounters.{floors, variants}`; the Encounters tab
+      (Lists / Gates / Rooms). Found + corrected: the draw rule (first sum ≥ the draw, RNG
+      word wRNG2:wRNG1 — the first slot +1 point), `encounters.json` floor ranges one floor
+      late, the counter IS re-seeded at every room load (KEY_LESSONS S11 corrected),
+      wC8A9 = the list's rate code at every step (DOC_AUDIT S114). *Accept:* met in PyBoy on
+      the user's save (demo = the user's project + "Howling Den" behind the GreatTree 2F
+      Library door): the den's own list only, the keeper's YES flips it (flag variant), rate
+      code 7 = 200 per step; Gate of Beginning floors 1-2 on a project list, floor 3 on the
+      user's list, the flag switches every floor; census 0 mismatches on the ORIGINAL ROM, the
+      example, a fixture, the user's project and the demo. **Residuals:** (a) gate floors'
+      base rate (EncounterRateData by floor type) is not shown in the steps estimate; (b)
+      the list editor's "Monster…" picker is a flat list (no species art); (c) the
+      randomizer / sweep_ttk still read +20 as a weight (P3.15 note).
+- [ ] **P3.13b — Music tab** [G-I] (next, user S114): song library (vanilla songs named,
+      the DWM2 31-song catalog, MIDI import UI over `midi_to_song.py` with conversion
+      warnings), the 95-slot bank $74 budget, the room-assignment matrix
+      (`music.room_defaults` + per-room), gate / event music (the open M3 box), and
+      AUDITION — decide first (confer): project / MIDI songs cannot be pre-recorded like
+      the S112 animation sounds, so playback needs the sound engine at edit time (PyBoy on
+      the user's Mac, or a render step at build time, or a Python model of the engine).
+      *Accept:* a MIDI-imported song assigned to a room plays on entry; audition in the
+      editor matches the game.
 - [ ] **P3.13c — Shops (E8, promoted from Phase E)** [G-K]: decode the
       stock/price table (opcode $04 sub 0 → bank $09; expected shallow
       per user S72), `gamedata.shops` emitter, shopkeeper-NPC click
       surface. *Accept:* a changed price + item list visible in SameBoy;
       a NEW shopkeeper in a custom room sells an authored list.
+- [ ] **ARC NG — NEW GATES (user S114: "I WANT TO MAKE NEW GATES. This includes a) random
+      gates just like vanilla - maybe copy a vanilla gate and edit encounters & link to new
+      boss room, and b) FULLY CUSTOM GATES - ie series of rooms with branching structures,
+      with per-room encounters settable").** Builds on P3.13a (lists are keyed by gate number
+      0-255, rooms' own lists work inside dives) and P3.7b (served rooms, boss floors,
+      hand-made gates). Facts already grepped (S114): a gate is entered by an exit row with
+      gate flag 1 and dest = the gate number (ROOM_DATA_FORMAT exit byte 3; bank $16
+      `label16_5b4e` sets wGateID := wMapID on the first floor); every gate-number reader
+      that indexes `GateFloorDataTable` does `ld a,[wGateID] / add a / add a / add a` in 8
+      bits — gate 32 wraps to gate 0 — and bank $01's breakpoint tables are 32 long (S114
+      already reads them through bank $76); `GateDecisionFork` special-cases gate 0; wGateID
+      is saved by bank $73. One box per session:
+  - [x] **NG1 — New random gates (> 32)** — **built S115, test ROM USER-CONFIRMED 2026-10-03 12:39 ("Excellent, confirm works")** (test ROM
+        `DWM_S115_newgates_test.gbc`): census of the readers = exactly two
+        (`jr_016_5b72` / `jr_016_5be1`; no script reads `$C935`) → same-size calls to
+        bank $16 `GateRowPtr` → bank $76 entry 1 `NewGateRowCopy` → `wGateRowBuf` ($D138);
+        `custom.gates[]` 32-95 with `copy_of` + `name` (+ floors / boss / hand_made /
+        encounters); unplanned floors + the floor gold value walk the SOURCE gate
+        (`NewGateSource`); gate-entrance exits (`gate:N`, gate_flag 1); Gates tab New gate…
+        / Rename / Delete, Rooms tab "Gate entrance here…" (GATE_GENERATION §7.8,
+        PROJECT_COMPILER §2.31). *Accept met in PyBoy on the user's save:* gate 32 (copy of
+        Memories) with its own lists and a custom boss room, entered from a painted hole in a
+        new room, dived (floors 1 / 3 battles from its lists, a special room on floor 3)
+        and cleared (boss battle → helper → Castle).
+        Residual: PRIVATE floor-type rows (maze look) + depth tier per new gate (today the
+        source's — bytes 0-2 / 7 of `NewGateRows` are copied); entrance conditions = NG2.
+  - [ ] **NG2 — Gate entrances + unlocks:** which door / pedestal opens which gate and when
+        it appears (flag-conditioned exits / NPCs — the Triggers backend), what clearing it
+        sets (flag, next gate, King speech — S101 `$D9E3` codes). Ask the user first.
+  - [ ] **NG3 — Fully custom gates:** a graph of custom rooms (stairs / doors, branches) run
+        as a dive (gate rules: saving, escape, losing, music), per-room lists (S114), a boss
+        at the end; Gates tab graph view. Open questions for the user (asked S114): which
+        gate behaviours matter, can paths rejoin / go up, how many gates, what clearing does.
 - [ ] **P3.14 — Progression & Flags tab**: flag manager (named flags,
       cross-ref), quest editor forms over progression.quests, orphaned-
       trigger report, **Triggers-as-sentences authoring** (EDITOR_DESIGN
       §5.1c; compiles to flag branches / state advances / show-hide /
       [G-O] pool variants). *Accept:* the S70 demo quest is fully re-authorable
       in forms; report lists preserved-island dependencies.
-- [ ] **P3.15 — Balance tab** (simulator-as-a-service): TTK/pacing sweeps,
+- [ ] **P3.15 — Balance tab** (simulator-as-a-service) — S114 note: per-list fight length
+      should start from `encounters_doc.enc_list_threat_rows(n)` (the real slot chances, the
+      levels, the max counts) and the measured draw (`encounters.simulate_battle` /
+      `group_odds`); `randomizer/romdata.Pool.weights` and `simulator/sweep_ttk.py` still
+      weigh slots by +20 (the max count, not a chance — DOC_AUDIT S114): fix there or wrap.
+      TTK/pacing sweeps,
       what-if deltas on gamedata edits, obedience curves; unvalidated
       subsystems greyed. *Accept:* a stat edit shows its TTK delta for an
       affected pool before Build; numbers match a CLI sweep_ttk run.
@@ -1785,7 +1850,7 @@ Driven by what the editor must EDIT, not completionism:
       conversion had already landed in an earlier pass).
 - [x] Bank $14 enemy stats + boss tables → `db` ✅ VERIFIED S51: `EnemyStatsTable`
       + per-EID `EnemyStats_NNN:` labeled field-commented `db`/`dw` blocks.
-- [ ] Bank $01 encounter pools → `db` (editor-driven — Encounters #2)
+- [x] Bank $01 encounter pools → `db` ✅ VERIFIED S114 (`EncounterPool_NNN` labeled `db` blocks since an earlier pass; S114 fixed the stale "Weights / Extra" banner and the per-pool comments in the clean tree, comments only).
 - [x] Bank $16 breeding tables → `db` ✅ VERIFIED S51: `SpecialRecipeTable` +
       `FamilyRecipeTable` labeled `db` blocks.
 - [ ] Bank $51: annotate transitions + prove/disprove the 1,228 B

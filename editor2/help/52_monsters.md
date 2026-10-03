@@ -178,6 +178,9 @@ A wild monster is an **enemy row** in a gate floor's **encounter list**.
    chance" shows what each slot really gets. OK — one undo step.
 3. Build. The row's "Where" column now names the gate.
 
+For more (a list of your own, a different list per floor, a room's own list,
+flag variants, battle rates) use the **Encounters** tab (Encounters help).
+
 For a boss, use the row in a boss floor's conversation (Battle step — Boss
 floors help). The full Encounters tab (all lists at once, list size, rate,
 monsters per battle) comes later.

@@ -54,6 +54,7 @@ SELFTEST_TOOLS = [
     "extract_monster_follower_layouts.py",  # S107: the 155 walking layouts (+ stored bytes, per-bank instances / frames) == ROM
     "dump_dialogue.py",          # S108: dialogue.json (all 2,560 text ids, measured; + the text tables) raw bytes == ROM
     "decode_battle_animations.py",  # S112: battle_animations.json (schema 2: 45 animations, per-skill tables) == ROM
+    "dump_encounters.py",        # S114: encounters.json (gate floor -> list by the game's rule, 5 slots, chance / max count) == ROM
 ]
 
 PATCH_FILES = [
@@ -69,7 +70,7 @@ PATCH_FILES = [
     "bank_002.asm",  # S112 P3.11e: ReadSeqStepFork (new battle animations' timelines)
     "wram.asm", "game.asm",
 ]
-PATCH_NEW_FILES = ["bank_060.asm", "bank_064.asm", "bank_067.asm", "bank_069.asm", "bank_06a.asm", "bank_06b.asm", "bank_06c.asm", "bank_06d.asm", "bank_06e.asm", "bank_06f.asm", "bank_070.asm", "bank_071.asm", "bank_072.asm", "bank_073.asm", "bank_074.asm", "bank_07a.asm", "bank_07c.asm", "bank_07e.asm", "bank_07f.asm"]  # S107: art banks $7A/$7C/$7F (gamedata.art); S112: $6F/$70 new battle animations  # don't exist in clean disassembly/
+PATCH_NEW_FILES = ["bank_060.asm", "bank_064.asm", "bank_067.asm", "bank_069.asm", "bank_06a.asm", "bank_06b.asm", "bank_06c.asm", "bank_06d.asm", "bank_06e.asm", "bank_06f.asm", "bank_070.asm", "bank_071.asm", "bank_072.asm", "bank_073.asm", "bank_074.asm", "bank_076.asm", "bank_07a.asm", "bank_07c.asm", "bank_07e.asm", "bank_07f.asm"]  # S107: art banks $7A/$7C/$7F (gamedata.art); S112: $6F/$70 new battle animations; S114: $76 encounter lists  # don't exist in clean disassembly/
 
 BUILD_ARTIFACTS = ["game.o", "game.gbc", "game.sym", "game.map"]
 

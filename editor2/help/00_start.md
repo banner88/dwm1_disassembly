@@ -9,8 +9,10 @@ built from it (the original ROM is never changed).
 - **Rooms** — paint rooms, their screens and states; NPCs, doors, spots,
   talk and conversations; "Inside gates" settings for gate / boss floors.
 - **Import art** — turn a PNG rip into a room tileset.
-- **Gates** — which custom rooms appear on which gate floors, and per-gate
-  settings (floor count, boss floor, hand-made gates, project enemies).
+- **Gates** — which custom rooms appear on which gate floors, per-gate
+  settings (floor count, boss floor, hand-made gates, project enemies) and
+  **new gates** of your own (a copy of a vanilla gate; entrances on the Rooms
+  tab).
 - **Families** — which monsters belong to which family, family icons,
   arena dialogue, Spirit's default names.
 - **Monsters** — every monster's species data (family, growth, resistances,
@@ -28,12 +30,15 @@ built from it (the original ROM is never changed).
 - **Breeding** — every monster's breeding depth and how you get it, the
   recipes that make it and what it makes, the special and family recipe
   tables, "Try a cross", and a tree generator.
+- **Encounters** — every wild-monster list (the game's 128 and your own),
+  which list each gate floor and each room uses, flag variants that switch
+  them, and battle rates.
 - **World** — the graph of rooms and the doors between them (mouse wheel =
   zoom, drag empty space = move around, Fit / + / −).
 - **Build & Play** — build the ROM (Ctrl+B) and run it (Ctrl+R).
 - **Help** — this tab (F1).
 
-Tabs marked with a roadmap box (Encounters, Music, …) are not built yet.
+Tabs marked with a roadmap box (Music, …) are not built yet.
 
 **Every edit can be undone** (Edit → Undo / Redo; View → History shows
 the list). File → Save saves the project.
