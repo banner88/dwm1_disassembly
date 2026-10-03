@@ -33,12 +33,15 @@ built from it (the original ROM is never changed).
 - **Encounters** — every wild-monster list (the game's 128 and your own),
   which list each gate floor and each room uses, flag variants that switch
   them, and battle rates.
+- **Music** — every song (the game's, DWM2's, MIDI files you import) with ▶
+  preview on the game's own sound engine, your names for them, and the song of
+  each room, gate and kind of battle.
 - **World** — the graph of rooms and the doors between them (mouse wheel =
   zoom, drag empty space = move around, Fit / + / −).
 - **Build & Play** — build the ROM (Ctrl+B) and run it (Ctrl+R).
 - **Help** — this tab (F1).
 
-Tabs marked with a roadmap box (Music, …) are not built yet.
+Tabs marked with a roadmap box (Progression & Flags, Balance) are not built yet.
 
 **Every edit can be undone** (Edit → Undo / Redo; View → History shows
 the list). File → Save saves the project.

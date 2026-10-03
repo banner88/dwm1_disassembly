@@ -187,6 +187,10 @@ Make that a 10-second drop-in, not a reconstruction job. Deliver **one zip**:
   unchanged files, the whole `disassembly/` tree, or build artifacts.
 - **The test ROM is delivered separately** (it is a build artifact / gitignored, not a
   repo source file) — present it as its own `.gbc`, do not put it in the changed-files zip.
+- **Order (user decision S116, 2026-10-03: "Please give editor files first then rom second if
+  necessary"):** deliver the changed-files zip (+ the APPLY list) FIRST, the test ROM second —
+  the user tests the editor and the ROM together. Do not hold the zip back waiting for a ROM
+  sign-off.
 - **The APPLY list is pasted IN THE CHAT as plain text, NOT put in the zip** (user decision
   S106, 2026-10-01: "please NOT include [it] … and instead paste it as txt here? I want that
   to be standard from now on. I always have to delete it before rsync"). The zip is then a

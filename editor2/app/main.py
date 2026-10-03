@@ -10,7 +10,7 @@ first — the compiler reads project.json from disk, same code path as
 tools/build_project.py, byte-identical by construction), Play ⌘R,
 Validate. Build log + undo history docks.
 
-Run:  pip install PySide6 Pillow   then   python3 -m editor2.app
+Run:  pip install PySide6 Pillow numpy   then   python3 -m editor2.app
 """
 
 import hashlib
@@ -39,7 +39,7 @@ STUB_TABS = [
     ('Skills', 'P3.11', 'Names, SKIL text, MP, learning, power, targets, AI, looks (open a project).'),
     ('Breeding', 'P3.12', 'Recipe editor + the randomizer tree explorer, live re-sim.'),
     ('Encounters', 'P3.13a', 'Every wild-monster list, gate floor plans, room battles, flag variants (open a project).'),
-    ('Music', 'P3.13b', 'Song library, MIDI import, room assignment matrix, audition.'),
+    ('Music', 'P3.13b', 'Song library with preview, MIDI import, room / gate / battle music (open a project).'),
     ('Progression && Flags', 'P3.14', 'Flag manager, quest forms, triggers-as-sentences.'),
     ('Balance', 'P3.15', 'TTK sweeps, what-if deltas, obedience curves (validated only).'),
 ]
@@ -211,6 +211,14 @@ class MainWindow(QMainWindow):
                 from editor2.app.encounters_tab import EncountersTab
                 self.encounters_tab = EncountersTab(self.session)
                 self.tabs.addTab(self.encounters_tab, 'Encounters')
+                continue
+            if title == 'Music' and self.session:
+                # S116 (P3.13b): the song library (the game's songs, DWM2, MIDI)
+                # with preview on the game's own sound engine, MIDI import,
+                # room / gate / battle music
+                from editor2.app.music_tab import MusicTab
+                self.music_tab = MusicTab(self.session)
+                self.tabs.addTab(self.music_tab, 'Music')
                 continue
             if title == 'Breeding' and self.session:
                 # S113 (P3.12): recipes, depth, try a cross, generate a tree

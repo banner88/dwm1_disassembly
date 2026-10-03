@@ -229,8 +229,8 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
       in $0B:Jump_00b_4674 + pin wGateID/wCurrentFloor + arm wEncounterCounter);
       generalized per-room S42 (RoomEncTable, bank $71 — see Encounters #1).
       → CROSSBANK_ROOMS "Random Encounters"; KEY_LESSONS S11; archive: SESSION_HISTORY.
-- [ ] Custom music — parked; sound engine unexplored, BGM-change suffices
-      for v1 stories.
+- [x] Custom music — ~~parked; sound engine unexplored~~ DONE: Arc 3 M1-M3c
+      (S61-S64) + the Music tab (P3.13b, S116 — built, NOT yet user-tested).
 
 ### Arc COLD FARM — farm slots → SRAM, exp via chokepoint (editor-era WRAM strategy; scoped S55)
 The structural fix for ALL custom-WRAM scarcity, replacing the retired cap-18
@@ -1752,15 +1752,40 @@ recipes are pure authoring.
       base rate (EncounterRateData by floor type) is not shown in the steps estimate; (b)
       the list editor's "Monster…" picker is a flat list (no species art); (c) the
       randomizer / sweep_ttk still read +20 as a weight (P3.15 note).
-- [ ] **P3.13b — Music tab** [G-I] (next, user S114): song library (vanilla songs named,
-      the DWM2 31-song catalog, MIDI import UI over `midi_to_song.py` with conversion
-      warnings), the 95-slot bank $74 budget, the room-assignment matrix
-      (`music.room_defaults` + per-room), gate / event music (the open M3 box), and
-      AUDITION — decide first (confer): project / MIDI songs cannot be pre-recorded like
-      the S112 animation sounds, so playback needs the sound engine at edit time (PyBoy on
-      the user's Mac, or a render step at build time, or a Python model of the engine).
-      *Accept:* a MIDI-imported song assigned to a room plays on entry; audition in the
-      editor matches the game.
+- [x] **P3.13b — Music tab** [G-I] — **built S116, test ROM `DWM_S116_music_test.gbc`
+      (`ecf4ca9a…`, patched) USER-REPORTED 2026-10-03 18:29 ("rom seems to work fine");
+      the editor's ▶ "stopped early after a few seconds" and replay "froze completely" on
+      the user's Mac → preview player rewritten S116b (EDITOR_DESIGN §5.6), NOT yet
+      user-tested** (user on the audit: "Do music. 1) Can you
+      not extract songs? 2) Doesnt matter their names as long as I can preview and name
+      them myself. 3) Not per-floor … Need to set music for custom gates. And custom rooms
+      obviously. 4) Battle music would be good. Specifically Milayou starry tournament uses
+      different battle music … 5) Whatever is best. If you need to lay groundwork now, do
+      it. 6) Include. 7) … Automatic please. 8) Great."). As built (SOUND_SYSTEM §9 / §10,
+      PROJECT_COMPILER §2.9 "S116", EDITOR_DESIGN §5.6 "As built S116", help `61_music.md`):
+      AUDITION = the game's own ROM0 sequencer run on the editor's SM83 interpreter
+      (`dwm/sm83.py`, 498,000 SingleStepTests cases, 0 failures) + a synth
+      (`core/apu_synth.py`); census: 85 vanilla ids × 2 paths × 3,000 frames and every
+      project song of 5 builds (all 31 DWM2 songs, a MIDI import) identical to PyBoy. The
+      vanilla catalog (`dump_sound_catalog.py` -> `sound_catalog.json`). Engine: InitBGM
+      same-size rewrite + bank $71 entry 6 `CustomBGMStart` (a song's own 1-6 channels — the
+      S64 trio rule gone), a second song bank $75 (master-table row 5 = region
+      `rom0_audio_master`), gate songs in entry 2 (`$FF` = follow the gate), bank $51
+      LoadBattle same-size -> entry 7 `BattleBGMResolve` (fight / arena / Starry final /
+      room / gate / boss / normal); `tools/census_music_resolve.py` 4,000 stub calls ==
+      the models. Music tab: Songs (▶, names, add / remove, Import MIDI automatic), Rooms,
+      Gates, Battles. *Accept met in PyBoy on the user's save* (demo = the user's project
+      + "Sound Stage" behind the GreatTree 2F Library door, the new gate 32 "Song Gate"
+      (copy of Villager, 3 floors) and its boss room "Encore Hall" — NOT in their project):
+      the stage plays DWM2 BGM #04 with 4 channels (noise alive); the DrumSlime fight its
+      own song; the gate's floors (bank $75) + battles their songs, the floor before the
+      boss and the boss room the gate song; the boss fight $2B; an arena match the arena
+      song; vanilla gates $34 / $27 unchanged. **Residuals:** (a) battle VICTORY / level-up
+      jingles and other event jingles ($4B/$4D battle start, $47, $4F …) are not editable
+      (scripts' `set_bgm` already can play any song); (b) bank packing is first-id order (a
+      big song at the boundary can waste up to ~one song of bank $74); (c) no per-floor gate
+      songs (user: not necessary); (d) the synth is documentation-accurate, SameBoy is the
+      ear test.
 - [ ] **P3.13c — Shops (E8, promoted from Phase E)** [G-K]: decode the
       stock/price table (opcode $04 sub 0 → bank $09; expected shallow
       per user S72), `gamedata.shops` emitter, shopkeeper-NPC click
@@ -2332,8 +2357,9 @@ ROM0 `$3466`); banks $61+ hold sparse non-audio data. Owning doc: SOUND_SYSTEM.m
   - [ ] **CI gap (S63)**: `.github/workflows/verify.yml` runs only
         `verify_integrity.py` — add `editor2/tests/test_compiler.py --rom` so
         compiler-owned-bank hand edits fail in CI, not two sessions later.
-  - [ ] **M3b — USER REQUIREMENTS (S62): song LIBRARY in the editor** — import multiple
+  - [x] **M3b — USER REQUIREMENTS (S62): song LIBRARY in the editor** — import multiple
         custom songs, assign to rooms/gates/events (SetBGM wiring per assignment).
+        **DONE S116 (P3.13b, the Music tab; NOT yet user-tested).**
         *v5 BUILT + USER-CONFIRMED S63*: **DWM2 BGM #07**
         (GBS index 6 → internal id $19; song map @ GBS $0FC0) → DWM1 ids $A1-$A3,
         2,471 B in bank $74 via new `add-gbs-song` mode; room $6C screen 0 NPC (5,6)
@@ -2365,13 +2391,16 @@ ROM0 `$3466`); banks $61+ hold sparse non-audio data. Owning doc: SOUND_SYSTEM.m
         auto-map, $A7 tie-holds past 255 frames, `$A3 $80` groove-off
         (every groove row is live vibrato — §5), `B0 $FC` whole-song loop,
         decode round-trip check. dq6_town1: 3ch, 1,325 B, 92s loop.
-  - [ ] **InitBGM channel-count extension** (unblocks DWM2 BGM #04's noise
+  - [x] **DONE S116 (CustomBGMChanTable, bank $71 entry 6; SOUND_SYSTEM §1).**
+        **InitBGM channel-count extension** (unblocks DWM2 BGM #04's noise
         channel + 4/5-channel jingles as BGM): InitBGM starts exactly 3
         consecutive ids for a normal BGM; the music emitter currently pads
         2ch→3ch silent and DROPS >trio channels with a warning. Extension =
         a per-first-id channel-count column (or id-range rule) in the
         InitBGM path.
-  - [ ] **Gate/event music assignment**: gate floors derive music from the
+  - [x] **DONE S116 (gates: `music.gates`, bank $71 entry 2; battles: `music.battle`,
+        entry 7 — SOUND_SYSTEM §10; event jingles stay script `set_bgm`).**
+        **Gate/event music assignment**: gate floors derive music from the
         floor path ($34 / boss-type table), deliberately excluded from
         CustomRoomBGMResolve (wMapID is not room-meaningful in gateworld).
         Assigning per-gate/per-floor music needs its own hook at the

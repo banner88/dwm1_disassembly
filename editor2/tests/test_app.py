@@ -967,6 +967,161 @@ def main():
           'renamed; listed on the Encounters tab; a gate entrance on dusk_mirror (2,3); '
           'compiles; Delete gate removes it and its entrance; undo restores everything')
 
+    # S116 (ROADMAP P3.13b): the Music tab — the song list (the game's sounds,
+    # DWM2, MIDI library, the project's), rename, Add to the project, a room song,
+    # a gate's songs, a battle setting, a fight; the preview renders through the
+    # game's engine (headless: no audio device, the renderer is called directly);
+    # compiles; undo restores project.json exactly
+    mt = w.music_tab
+    doc = w.session.doc
+    before = doc.dumps()
+    w.tabs.setCurrentWidget(mt)
+    app.processEvents()
+    kinds = {r['kind'] for r in mt._rows()}
+    assert kinds == {'project', 'game', 'effect', 'dwm2', 'midi'}, kinds
+    n_game = sum(1 for r in mt._rows() if r['kind'] in ('game', 'effect'))
+    assert n_game >= 85 and mt.ids_bar.value() == 12, (n_game, mt.ids_bar.value())
+    mt.filter.setCurrentIndex(mt.filter.findData('dwm2'))
+    app.processEvents()
+    assert mt.song_list.count() == 31, mt.song_list.count()
+    mt.song_list.setCurrentRow(3)                      # BGM #04: four channels
+    app.processEvents()
+    assert mt.cur['lib'] == 'dwm2_bgm04' and '4 channel(s)' in mt.info.text() and \
+        'noise' in mt.info.text(), mt.info.text()
+    pcm = mt._renderer(mt.cur).render(seconds=1.0)
+    assert pcm.shape[1] == 2 and len(pcm) > 30000 and abs(pcm).max() > 1000, pcm.shape
+    mt.name_e.setText('Drum song')
+    mt._rename()
+    mt._add_song()
+    app.processEvents()
+    assert doc.song_name('dwm2_bgm04') == 'Drum song' and \
+        doc.project_song('dwm2_bgm04') is not None and mt.cur['kind'] == 'project', mt.cur
+    assert mt.ids_bar.value() == 16, mt.ids_bar.value()
+    mt.filter.setCurrentIndex(mt.filter.findData('game'))
+    app.processEvents()
+    r27 = next(i for i, r in enumerate(mt.shown) if r['key'] == '$27')
+    mt.song_list.setCurrentRow(r27)
+    app.processEvents()
+    assert 'battle start' in mt.info.text() and '4 channel(s)' in mt.info.text(), mt.info.text()
+    mt.push('room', lambda d: d.set_room_music_id(0x01, 'dwm2_bgm04'))
+    mt.push('gate', lambda d: d.set_gate_music(2, floors='dwm2_bgm04', battles=0x2B))
+    mt.push('battle', lambda d: d.set_battle_music('starry', 'dwm2_bgm04'))
+    mt.push('fight', lambda d: d.set_fight_music(325, 0x31))
+    mt.refresh()
+    app.processEvents()
+    gl = [mt.gates_t.cellWidget(i, 1).currentData() for i in range(mt.gates_t.rowCount())]
+    assert gl[2] == 'dwm2_bgm04' and mt.fights_t.rowCount() == 1, (gl[:4], mt.fights_t.rowCount())
+    rows = [mt.rooms_t.item(i, 0).text() for i in range(mt.rooms_t.rowCount())]
+    i01 = next(i for i, t in enumerate(rows) if t.startswith('$01 '))
+    assert mt.rooms_t.cellWidget(i01, 2).currentData() == 'dwm2_bgm04'
+    from editor2.core import compiler as Cc                # the edits compile
+    td = tempfile.mkdtemp()
+    _sh.copytree(doc.project_dir, os.path.join(td, 'p'), ignore=_sh.ignore_patterns('build'))
+    open(os.path.join(td, 'p', 'project.json'), 'w').write(doc.dumps())
+    outs, pp, _ww = Cc.compile_project(os.path.join(td, 'p'), REPO)
+    P = pp.music_plan()
+    assert P.room_bgm[0x01] == P.song_ids['dwm2_bgm04'] and P.gate_battle[2] == 0x2B and \
+        P.fights == [(325, 0x31)] and P.chan_table[P.song_ids['dwm2_bgm04'] - 0x9E] == 4
+    while w.session.undo.index() > 0 and doc.dumps() != before:
+        w.session.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'undo must restore project.json exactly'
+    hlp = open(os.path.join(REPO, 'editor2', 'help', '61_music.md')).read()
+    for word in ('Import MIDI', 'Add to the project', 'Starry Night final', 'battles here',
+                 'numpy', '95 song ids'):
+        assert word in hlp, f'help 61_music.md lacks "{word}"'
+    print('OK: Music tab (S116) — every kind of song listed; DWM2 BGM #04 shows 4 channels '
+          '(noise) and renders through the game engine; renamed + added (16 ids); $27 = the '
+          'battle start; room / gate / Starry / fight songs compile; undo restores everything')
+
+    # S116b: the song player (user report, macOS: "stopped early after a few seconds,
+    # replay froze completely"). A fake sink (headless: no audio device) with a buffer
+    # SMALLER than the old 0.25 s feed chunk and partial writes must keep the song
+    # going; replay / stop discard (reset), never drain (stop); a stream the system
+    # stops (device change) is restarted and the song continues.
+    import time as _time
+    from editor2.app.music_tab import SongPlayer
+
+    class _Nm:
+        def __init__(self, n):
+            self.name = n
+
+    class FakeSink:
+        def __init__(self, cap):
+            self.cap, self.fill, self.calls, self.st, self.got = cap, 0, [], 'ActiveState', 0
+
+        def bytesFree(self):
+            return self.cap - self.fill
+
+        def bufferSize(self):
+            return self.cap
+
+        def state(self):
+            return _Nm(self.st)
+
+        def error(self):
+            return _Nm('IOError' if self.st == 'StoppedState' else 'NoError')
+
+        def reset(self):
+            self.calls.append('reset')
+            self.fill, self.st = 0, 'StoppedState'
+
+        def stop(self):
+            self.calls.append('stop')
+
+        def start(self):
+            self.calls.append('start')
+            self.st = 'ActiveState'
+            return self
+
+        def write(self, b):
+            n = min(len(b), self.cap - self.fill, 1000)       # partial writes
+            self.fill += n
+            self.got += n
+            return n
+
+        def consume(self, n):
+            self.fill = max(0, self.fill - n)
+
+        def deleteLater(self):
+            pass
+
+    fake = FakeSink(int(48000 * 0.1) * 4)                  # 0.1 s buffer < 0.25 s
+    pl = SongPlayer()
+
+    def _fake_sink():
+        pl.sink, pl.rate, pl._dev_id = fake, 48000, b'fake'
+    pl._ensure_sink = _fake_sink
+    from editor2.core import music_preview as MPv
+    pl.play(MPv.Renderer.vanilla(mt._rom(), 0x09))
+    pl.timer.stop()                                         # the test drives the ticks
+    for _ in range(150):                                    # 3 s of device time
+        fake.consume(48000 * 4 // 50)
+        pl._feed()
+    assert pl.playing and pl.r.frames >= int(59.7 * 2.9), pl.r.frames
+    assert fake.got >= 48000 * 4 * 2.9, fake.got
+    pl.play(MPv.Renderer.vanilla(mt._rom(), 0x09))          # replay
+    pl.timer.stop()
+    assert fake.calls[-2:] == ['reset', 'start'] and 'stop' not in fake.calls, fake.calls
+    f0 = pl.r.frames
+    fake.st = 'StoppedState'                                # the system stopped the stream
+    pl._feed()
+    t_end = _time.time() + 1.0
+    while _time.time() < t_end and fake.calls.count('start') < 3:
+        app.processEvents()
+        _time.sleep(0.01)
+    pl.timer.stop()
+    for _ in range(50):
+        fake.consume(48000 * 4 // 50)
+        pl._feed()
+    assert fake.calls.count('start') == 3 and pl.playing and pl.r.frames >= f0 + 50, \
+        (fake.calls, pl.r.frames, f0)
+    pl.stop()
+    assert not pl.playing and 'stop' not in fake.calls, fake.calls
+    print('OK: song player (S116b) — a 0.1 s buffer with partial writes keeps the song '
+          'going (3 s); replay = reset + start (no draining stop); a stream the system '
+          'stops is restarted and the song continues; stop discards')
+
     if do_rom:
         from editor2.app.build_worker import BuildWorker  # noqa: E402
         results = []

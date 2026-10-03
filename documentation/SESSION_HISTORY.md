@@ -1,5 +1,62 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-03 (Session 114 — **ROADMAP P3.13a: THE ENCOUNTERS TAB — LISTS OF
+> YOUR OWN, A LIST PER GATE FLOOR, ROOMS WITH THEIR OWN LIST, FLAG VARIANTS, BATTLE RATES**
+> (user on the audit: "1) Music next is fine. 2) Give option. Especially if I want to
+> insert custom rooms with its own encounters. 3) Gate too, great idea. 4) Yes separate
+> rate is good. 5) Doesnt matter. 1 random unused gate is irrelevant … 6) Ranges for now is
+> fine, just keep in mind future real fight-length numbers for balance and prepare for it.
+> … I WANT TO MAKE NEW GATES. This includes a) random gates just like vanilla - maybe copy
+> a vanilla gate and edit encounters & link to new boss room, and b) FULLY CUSTOM GATES -
+> ie series of rooms with branching structures, with per-room encounters settable" — the
+> new gates are ROADMAP arc NG; P3.13 was split into a (this) / b (Music, next)).
+> **Test ROM `DWM_S114_encounters_test.gbc` (`241c458b…`, patched) USER-CONFIRMED 2026-10-03 09:52 ("Looks good. Give editor files")**; the editor half test_app-verified, not yet run on the user's Mac.
+> Verifier PASS (6/6; check 5 += `dump_encounters.py`); clean `1ca6579…` byte-perfect
+> (bank $01 encounter code + bank $16 counter / rate tables annotated in both trees:
+> comments only); **patched pin `dbc4dee9…` (patched)**, was `8cf0b93b…` (patched,
+> historical); the user's project (my-dwm-hack_6) as-is now builds `0a45fbf4…` (patched)
+> and draws exactly the vanilla way (census below). test_compiler --rom 818/818, test_app
+> + test_app --rom PASS (GUI build == pin), test_canvas --rom PASS. `EDITOR_REVISION` =
+> 'S114'. S113's and S111b's test ROMs USER-CONFIRMED 2026-10-03 00:19 ("Tested, works").
+> Also: the verifier's hand-staged patched build == the pin again (`patches/bank_041.asm`
+> regions had drifted from the compiler's output — regenerated); `audit_mapid_range.py
+> --selftest` PASS again (9 sites since S100 adjudicated, json regenerated).
+>
+> **Built (PROJECT_COMPILER §2.30, DATA_STRUCTURES "Encounter list choice (S114)",
+> EDITOR_DESIGN §5.5 "As built S114", help `59_encounters.md`):** bank $01
+> `LoadNextDungeonFloor` SAME-SIZE fork → NEW compiler bank **$76** `EncResolve` (template
+> `bank_076_head.asm`): the vanilla gate+floor rule on byte copies of bank $01's tables, a
+> gate's own per-floor plan, a CUSTOM room's own list (no gate pin — works inside a dive),
+> flag variants (first whose terms hold), a room's rate code; the chosen list is copied
+> to `wEncListBuf` ($D11E) and the five list readers read it (`ld hl` + `ld bc, $0000`, same
+> size); `wEncounterPoolIndex` keeps the floor's vanilla number (floor gold). Schema:
+> `custom.encounter_lists` (numbers 128-255), `custom.rooms[].encounters.{list, variants,
+> rate}`, `custom.gates[].encounters.{floors, variants}`. Editor: the **Encounters** tab
+> (Lists: all 128 + yours, usage, real chances, staged slot edits + Apply, the commonest
+> battles, New list (copy); Gates: a list per floor, flag variants, shared-list warning;
+> Rooms: off / a gate floor's list / the dive's / its own + variants, own rate); the Rooms
+> tab knows "its own list"; Monsters "where met" + the pool dialog use the live usage.
+>
+> **Measured:** `tools/census_encounters.py` (stub calls, RNG pinned): ORIGINAL ROM vs the
+> vanilla model 633 list choices + 15,192 battle draws, 0 mismatches (negative control
+> 1,417); the example, a lists / variants / rates fixture (641 + 15,384), the user's
+> project and the demo: 0. Field, on the user's save (demo = the user's project + "Howling
+> Den", a new red room behind the GreatTree 2F Library door, NOT in their project): the
+> den's own list only (Hork / DragonKid / Golem), the keeper's YES sets `den_night` → the
+> night list (Gremlin / Spooky / Shadow), rate code 7 = a drain of 200 per step (1,700 → 8
+> steps); Gate of Beginning floors 1-2 → a project list (DragonKid), floor 3 → the user's
+> own list 0 (Anteater, Klamutra), with the flag every floor → the night list; the guide's
+> YES returns to the GreatTree. **Found + corrected:** the draw = first running sum ≥ (or
+> = 100) the draw, the draw = (wRNG2:wRNG1) mod 100 — the first slot +1 point;
+> `encounters.json` floor ranges one floor late (tool rewritten + regenerated); the
+> counter IS re-seeded at every room load (bank $0B Entry 0 → bank $16 entry 6; KEY_LESSONS
+> S11 corrected); wC8A9 = the list's rate code at every step; a same-size fork must leave
+> BC = 0 like the `Mul16x8To24` it replaced (KEY_LESSONS S114, caught by the census).
+> **Hand-off:** every S114 change = the diff against `c37879e` (origin/master, the S113
+> push), delivered as `DWM-S114-encounters-changed-files.zip`, the APPLY list pasted in the
+> chat. **Next:** P3.13b Music tab (user); then ARC NG (new gates — questions asked S114).
+
+
 > Last verified: 2026-10-02 (Session 113 — **ROADMAP P3.12: THE BREEDING TAB — EVERY
 > RECIPE, EVERY MONSTER'S DEPTH, "TRY A CROSS", AN AUTO-ORDERED SPECIAL TABLE, A TREE
 > GENERATOR — AND THE FX1 EGG-PLUS BUG FIXED** (user on the audit: "1) [mutation] No I

@@ -1352,6 +1352,47 @@ import** (`midi_to_song.py`, built S64) with conversion warnings; the
 (`music.room_defaults` + per-room overrides); audition in PyBoy [G-I].
 Open engine boxes stay listed in ROADMAP (InitBGM channel-count ext).
 
+**As built S116 (ROADMAP P3.13b; built, PyBoy-verified, NOT yet user-tested;
+`app/music_tab.py`, `core/music_doc.py`; help `61_music.md`).** User decisions
+(S116): names don't matter as long as every song can be previewed and named;
+custom gates and custom rooms need music (random vanilla gates keep theirs);
+battle music wanted ("Milayou starry tournament uses different battle music …
+more variety"); include the channel-count extension; MIDI import automatic.
+* **Audition = the game's own engine, no emulator** (user: "Can you not extract
+  songs?"): the ROM0 sequencer runs on `dwm/sm83.py` (`core/sound_engine.py`),
+  `core/apu_synth.py` synthesizes, `SongPlayer` streams through QAudioSink
+  (push mode). **S116b rewrite** (user, macOS: "stopped early after a few
+  seconds … replay froze completely"; built S116b, NOT yet user-tested): the
+  sink runs at the device's OWN rate (32,768 Hz resampled in the editor — Qt
+  6.10/6.11's CoreAudio sink switches the output device's hardware rate to the
+  requested one, and a device reconfiguration stops the stream); the buffer
+  (0.4 s) is topped up every 15 ms with exactly bytesFree() (partial writes
+  kept) — the S116 player only wrote once a whole 0.25 s chunk fitted, which on
+  a small buffer never happens again; stop / replay = `reset()` on ONE reused
+  sink (Qt's `stop()` drains asynchronously and the S116 player deleted /
+  recreated the sink meanwhile); a stream the system stops is restarted (state
+  POLLED each tick — PySide cannot deliver `QAudioSink.stateChanged`, and Qt
+  >= 6.10 returns `QtAudio` enums that never equal `QAudio`'s: compare by
+  `.name`); audio errors print `[music] …` to the terminal. Census-proven == the game (SOUND_SYSTEM §9). This supersedes the
+  "audition in PyBoy" plan above — still within §7's rule: the sequence is
+  EMULATED (the game's code), only the analog synthesis is the editor's.
+* **Songs page:** every vanilla start id (extracted/sound_catalog.json — kind,
+  channels, where the game uses it, an automatic label), the 31 DWM2 songs, the
+  MIDI library, the project's songs (bold); filter + search; ▶ / ■ / Save as
+  WAV…; a name for any song (`music.names`); Add to the project / Remove from the
+  project (clears its assignments); Import MIDI… (automatic; the song file goes
+  to `assets/music/<id>.json`, `source.file`). Meters: 95 song ids, bank $74,
+  bank $75 bytes.
+* **Rooms page:** every custom + vanilla room: the game's song, your song,
+  "battles here". **Gates page:** every gate (vanilla + new): floors song,
+  battle song. **Battles page:** normal / boss / arena / Starry final + a song
+  per fight (the first enemy; pick from `enemy_choices`).
+* Every edit is one SnapshotCommand; the plan is re-validated after the push
+  (a refused edit is undone with the compiler's message).
+* Residuals: the rooms table rebuilds ~200 combo boxes per refresh (fast
+  enough, could be lazy); no per-channel mute / tempo view; the synth's tone is
+  documentation-accurate, not SameBoy-exact.
+
 ### 5.7 Progression & Flags tab
 
 - **Flag manager**: named flags, auto-allocation from the safe pool,
@@ -1533,7 +1574,7 @@ row is click-navigable (§5.0).
 | G-F | E4 gate-network / world-hub schema | ROADMAP Phase E (design item; World tab ships without it). S115: gate NUMBERS beyond 32 exist (NG1 — `custom.gates[]` 32-95, gate-entrance exits); the network / unlock half stays open (ARC NG NG2 / NG3) |
 | G-G | First-class `states[]` (step-counter variants) in the custom-room schema | ✅ CLOSED: schema/emitter S92 (PROJECT_COMPILER §2.10); GUI state switcher + add/duplicate/own-layout/remove S93 (ROADMAP P3.3) |
 | G-H | Cutscene storyboard model over compile/decompile_script | ROADMAP P3.8 (new) |
-| G-I | Music audition harness (PyBoy play-song) | ROADMAP P3.13b sub-item (new) |
+| G-I | Music audition harness (PyBoy play-song) | ✅ CLOSED S116 (built, NOT yet user-tested) — not PyBoy: the game's own sequencer on the editor's SM83 interpreter + a synth (SOUND_SYSTEM §9), streamed in the Music tab (§5.6 "As built S116") |
 | G-J | Clone-to-custom room extractor (vanilla room → full project.json custom clone + entrance repoint; per-island literal-mapID audit) | ROADMAP P3.2b (v2.1) — the fork mechanism |
 | G-K | E8 shops: stock/price table decode + `gamedata.shops` + shopkeeper NPC surface | ROADMAP P3.13c (v2.1; promoted from Phase E) |
 | G-L | E1→E2 arena authoring wiring (tiers×matches×slots grid over rows 224-304) | ROADMAP P3.10b (v2.1; promoted from Phase E) |

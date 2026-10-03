@@ -4815,3 +4815,63 @@ page shown) — the walk inputs went to the menu. **Rule**: after a battle press
 monster back to farm" (full party), the A mash needs a `down` now and then to reach OK
 (PYBOY_DEBUGGING "S115 techniques").
 
+
+## S116 — the Music tab: run the game's code instead of re-implementing it
+
+### When the editor needs a subsystem's behaviour, execute the ROM's code
+**Situation**: the editor had to play any song exactly as the game does — vanilla, DWM2
+ports, MIDI conversions — and the sequencer's effect handlers (`$Cn`, `$A5`, `$A8`) were
+never fully decoded. A Python re-implementation would have needed every handler right and
+a census to prove it, and would drift with every engine patch. **What worked**: a complete
+SM83 interpreter (`dwm/sm83.py`, checked against the 498,000 SingleStepTests cases)
+running the ROM0 engine itself over a 60-line memory map (`sound_engine.Machine`), with
+the hardware's register read-back rules where the engine reads them (NR52 bit 2, the NRx2
+envelopes). It plays the PATCHED engine too (the census ran the built InitBGM → bank $71
+custom path) at ~1.7 M instructions/s — 18× real time for the sound driver.
+**Rule**: for a self-contained engine routine (no interrupts, a known memory footprint),
+an interpreter over the ROM bytes is the exact model; spend the effort on the census that
+proves the footprint (log reads outside it — here only wCurrPlayingBGM), not on
+transcribing the routine.
+
+### Hook the routine you replay, not the path you expect to reach it
+**Symptom**: the first census compared the game at the instruction after `call
+ProcessBGMQueue` with the model after one `frame()` — the game was one driver tick ahead
+at random points. **Root cause**: the frame driver is ALSO called from `VBlankReentry` on
+lag frames, without the queue pass; a per-VBlank hook missed those ticks. **Fix**: hook the
+driver's own entry ($3473) and the queue call, record them as events, replay the events.
+**Rule**: when replaying a routine against the game, hook the routine's entry (every
+caller) and replay what happened, never an assumed per-frame pattern.
+
+### PyBoy's sound registers exist only with sound emulation on
+**Symptom**: NR50 read 0 in PyBoy while the engine had written $77. **Root cause**: with
+`sound_emulated=False` PyBoy keeps no APU registers; with it on, reads apply the hardware
+masks (NR32 $20 reads $BF), and a CGB read of wave RAM while the wave channel plays returns
+the sample being played. **Rule**: compare sound registers with `sound_emulated=True`, as
+read back (masked), and wave RAM only while the wave channel is off.
+
+### A doc address that "everyone uses" still gets checked against game.sym
+**Symptom**: the first census requests did nothing — `$C8B4` (SOUND_SYSTEM §1's wBGM) is
+not wBGM; game.sym says **$C8B7**. Nobody had poked wBGM from Python before. **Rule**: an
+address quoted in prose is a claim; take addresses from the build's game.sym (the
+KEY_LESSONS S80 grep lesson, again).
+
+### S116b — Qt audio output: feed what fits, at the device's rate, and never drain on restart
+**Symptom** (user, macOS): "pressing play on castle theme button 1) stopped early after a few
+seconds, 2) I went to press replay and the whole thing froze completely". Headless tests had
+only rendered PCM — no audio device ever ran the player. **Root causes** (reproduced on a
+PipeWire null sink + read from Qt Multimedia 6.10.3 / 6.11.0's CoreAudio sink): (1) the player
+wrote only when a whole 0.25 s chunk fitted in `bytesFree()` — the sink's real buffer can be
+smaller (a 0.34 s buffer left 0.09 s of margin; a smaller one never takes another write);
+(2) it opened the sink at 32,768 Hz — Qt's macOS sink then sets the output DEVICE's hardware
+rate to the nearest one, and a device reconfiguration stops the stream; (3) replay = `stop()`
+(drains asynchronously, the stream outlives the call) + delete + a new sink. Also:
+PySide cannot deliver `QAudioSink.stateChanged` ("QAudio::State cannot be converted", even
+to a lambda), and Qt >= 6.10 returns `QtAudio` enums that never equal `QAudio`'s.
+**Fix**: open at the device's preferred rate and resample in the editor; top up exactly
+`bytesFree()` every 15 ms (keep the unwritten tail of a partial write); `reset()` (discard)
+on ONE reused sink for stop / replay; poll `state()` each tick, compare enums by `.name`,
+restart a stream the system stopped; print `[music] …` to stderr. **Rule**: a feature whose
+output is a device (audio) is not tested until a real device driver has consumed it — set
+up a virtual one (PipeWire + `support.null-audio-sink`) and stress play / replay / stop /
+device loss; and when a user reports a hang in a backend you cannot run, read that
+backend's source for the version they run (the FFmpeg version Qt prints identifies it).

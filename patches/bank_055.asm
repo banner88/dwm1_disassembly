@@ -3328,6 +3328,10 @@ jr_055_50b2:
     ret
 
 
+    ; S116: the developer sound test's two id lists (debug menu, this bank) —
+    ; BGM_IDS go through SetBGM (InitBGM), SE_IDS through PlaySoundEffect. The
+    ; game's own split of its sounds into music/jingles vs effects
+    ; (tools/dump_sound_catalog.py -> extracted/sound_catalog.json).
     BGM_IDS:
     db $02
     db $06

@@ -1,0 +1,1725 @@
+{
+ "_generator": "tools/dump_sound_catalog.py (S116): vanilla sounds \u2014 kind from the bank $55 sound test + a measured play (editor2/core/sound_engine.py), uses from RoomBGMTable $01:$4373, set_bgm scripts, SetBGM code sites",
+ "_rom": "DWM-original.gbc 1ca6579359f21d8e27b446f865bf6b83",
+ "sound_test": {
+  "addr": "$55:$50B4",
+  "bgm_ids": [
+   "$02",
+   "$06",
+   "$09",
+   "$0C",
+   "$0F",
+   "$12",
+   "$15",
+   "$18",
+   "$1B",
+   "$1E",
+   "$21",
+   "$24",
+   "$27",
+   "$2B",
+   "$2E",
+   "$31",
+   "$34",
+   "$37",
+   "$3A",
+   "$3C",
+   "$3F",
+   "$41",
+   "$44",
+   "$47",
+   "$49",
+   "$4B",
+   "$4D",
+   "$4F",
+   "$9F"
+  ],
+  "se_ids": [
+   "$00",
+   "$51",
+   "$52",
+   "$53",
+   "$54",
+   "$55",
+   "$56",
+   "$57",
+   "$59",
+   "$5A",
+   "$5B",
+   "$5C",
+   "$5D",
+   "$5F",
+   "$60",
+   "$61",
+   "$64",
+   "$65",
+   "$66",
+   "$67",
+   "$68",
+   "$69",
+   "$6B",
+   "$6C",
+   "$6D",
+   "$6E",
+   "$6F",
+   "$70",
+   "$71",
+   "$72",
+   "$73",
+   "$74",
+   "$76",
+   "$78",
+   "$7A",
+   "$7B",
+   "$7C",
+   "$7E",
+   "$7F",
+   "$80",
+   "$81",
+   "$82",
+   "$83",
+   "$84",
+   "$85",
+   "$86",
+   "$88",
+   "$89",
+   "$8A",
+   "$8C",
+   "$8D",
+   "$8E",
+   "$8F",
+   "$90",
+   "$92",
+   "$93",
+   "$94",
+   "$95",
+   "$96",
+   "$97",
+   "$99",
+   "$9B",
+   "$9C",
+   "$9D"
+  ]
+ },
+ "sounds": [
+  {
+   "id": "$02",
+   "id_int": 2,
+   "kind": "jingle",
+   "channels": 3,
+   "slots": [
+    "$34",
+    "$4E",
+    "$68"
+   ],
+   "sound_test": "BGM",
+   "starts_as": "bgm",
+   "length_frames": 1,
+   "rooms": [
+    "$5E Arena Setup Room (white, 2 Terrys)",
+    "$5F Map5F"
+   ],
+   "scripts": [
+    "Arena Battle (script 0)",
+    "Arena Setup Room (white, 2 Terrys) (script 0)",
+    "Castle (script 0)",
+    "Starry Shrine Breeding Cutscene (script 0)"
+   ],
+   "code": [
+    "$00 \u2014 many sites (map transitions, battle ends, ...): id $02 starts the silent channels \u2014 music off"
+   ]
+  },
+  {
+   "id": "$06",
+   "id_int": 6,
+   "kind": "jingle",
+   "channels": 3,
+   "slots": [
+    "$34",
+    "$4E",
+    "$68"
+   ],
+   "sound_test": "BGM",
+   "starts_as": "bgm",
+   "length_frames": 5488,
+   "rooms": [],
+   "scripts": [],
+   "code": [
+    "$5F \u2014 bank $5F screen (two sites)"
+   ]
+  },
+  {
+   "id": "$09",
+   "id_int": 9,
+   "kind": "music",
+   "channels": 3,
+   "slots": [
+    "$34",
+    "$4E",
+    "$68"
+   ],
+   "sound_test": "BGM",
+   "starts_as": "bgm",
+   "length_frames": null,
+   "rooms": [
+    "$00 Castle",
+    "$01 GreatTree",
+    "$02 Bazaar",
+    "$03 Gate Hub",
+    "$04 Farm",
+    "$05 Stable",
+    "$0A Secret Passage",
+    "$0B Castle: Chest Room (variant)",
+    "$0C Egg Evaluator",
+    "$0D Old Man Gate Room",
+    "$0E Castle: Chest Room (variant)",
+    "$0F Vault",
+    "$10 Copycat House",
+    "$11 Castle: Chest Room (variant)",
+    "$12 Library",
+    "$13 Library Gate Room",
+    "$14 Castle: Chest Room (variant)",
+    "$15 Castle: Chest Room (variant)",
+    "$16 MedalMan",
+    "$17 Copycat House (Glitched)",
+    "$18 Well",
+    "$19 Goopy Room 1 (scr8)",
+    "$1A Goopy Room 2 (scr8)",
+    "$1B Stable: KingSlime Room",
+    "$1C Stable: Coffin Room",
+    "$1F Queen Room",
+    "$20 Map20",
+    "$21 Map21",
+    "$22 Map22",
+    "$23 Room of Beginning",
+    "$24 Room: Villager/Talisman",
+    "$25 Room: Memories/Bewilder",
+    "$26 Room: Peace/Bravery",
+    "$27 Room: Strength/Anger",
+    "$28 Room: Joy/Wisdom",
+    "$29 Room: Happiness/Temptation",
+    "$2A Room: Labyrinth/Judgment",
+    "$2B Room: Reflection",
+    "$2C Room: Ambition/Demolition",
+    "$2D Room: Mastermind/Control",
+    "$2E Room: Extinction/Sleep"
+   ],
+   "scripts": [
+    "Castle (script 0)"
+   ],
+   "code": []
+  },
+  {
+   "id": "$0C",
+   "id_int": 12,
+   "kind": "music",
+   "channels": 3,
+   "slots": [
+    "$34",
+    "$4E",
+    "$68"
+   ],
+   "sound_test": "BGM",
+   "starts_as": "bgm",
+   "length_frames": null,
+   "rooms": [
+    "$31 Boss: Villager (Dragon)",
+    "$32 Boss: Talisman (Golem)",
+    "$35 Boss: Bazaar (MadKnight)",
+    "$46 Boss: Ambition (DracoLord)"
+   ],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$0F",
+   "id_int": 15,
+   "kind": "music",
+   "channels": 3,
+   "slots": [
+    "$34",
+    "$4E",
+    "$68"
+   ],
+   "sound_test": "BGM",
+   "starts_as": "bgm",
+   "length_frames": null,
+   "rooms": [
+    "$38 Boss: Well (Gigantes)",
+    "$47 Boss: Demolition (Hargon/Sidoh)"
+   ],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$12",
+   "id_int": 18,
+   "kind": "music",
+   "channels": 3,
+   "slots": [
+    "$34",
+    "$4E",
+    "$68"
+   ],
+   "sound_test": "BGM",
+   "starts_as": "bgm",
+   "length_frames": null,
+   "rooms": [
+    "$3A Boss: Wisdom (SkyDragon)",
+    "$3D Boss: Arena Left (Digster)",
+    "$44 Boss: Library (Orochi)",
+    "$48 Boss: Mastermind (Baramos)",
+    "$49 Boss: Control (Zoma)"
+   ],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$15",
+   "id_int": 21,
+   "kind": "music",
+   "channels": 3,
+   "slots": [
+    "$34",
+    "$4E",
+    "$68"
+   ],
+   "sound_test": "BGM",
+   "starts_as": "bgm",
+   "length_frames": null,
+   "rooms": [
+    "$34 Boss: Bewilder (FaceTree)",
+    "$4A Boss: Extinction (Pizzaro)",
+    "$4B Boss: Sleep (Esterk)"
+   ],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$18",
+   "id_int": 24,
+   "kind": "music",
+   "channels": 3,
+   "slots": [
+    "$34",
+    "$4E",
+    "$68"
+   ],
+   "sound_test": "BGM",
+   "starts_as": "bgm",
+   "length_frames": null,
+   "rooms": [
+    "$33 Boss: Memories (MadCat)",
+    "$37 Boss: Bravery (BigEye)",
+    "$39 Boss: Strength (StoneMan)",
+    "$4C Boss: Bazaar Edge (Mirudraas)"
+   ],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$1B",
+   "id_int": 27,
+   "kind": "music",
+   "channels": 3,
+   "slots": [
+    "$34",
+    "$4E",
+    "$68"
+   ],
+   "sound_test": "BGM",
+   "starts_as": "bgm",
+   "length_frames": null,
+   "rooms": [
+    "$3C Boss: Anger (BattleRex)",
+    "$3E Boss: Happiness (Jamirus)",
+    "$3F Boss: Temptation (Servant)",
+    "$40 KingSlime Decision Room (3 doors)",
+    "$41 Boss: Medal (Lipsy variant)",
+    "$42 Labyrinth",
+    "$43 Boss: Judgment (Akubar)",
+    "$45 Boss: Reflection (Durran)",
+    "$4D Boss: Arena Right (Mudou)",
+    "$4E Boss: Grandpa's Gate (DeathMore)",
+    "$4F Boss: Unused (DarkDrium)",
+    "$60 Labyrinth Final"
+   ],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$1E",
+   "id_int": 30,
+   "kind": "music",
+   "channels": 3,
+   "slots": [
+    "$34",
+    "$4E",
+    "$68"
+   ],
+   "sound_test": "BGM",
+   "starts_as": "bgm",
+   "length_frames": null,
+   "rooms": [
+    "$06 Arena Lobby",
+    "$07 Arena Rooms",
+    "$1D Monster School",
+    "$1E Restaurant"
+   ],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$21",
+   "id_int": 33,
+   "kind": "music",
+   "channels": 3,
+   "slots": [
+    "$34",
+    "$4E",
+    "$68"
+   ],
+   "sound_test": "BGM",
+   "starts_as": "bgm",
+   "length_frames": null,
+   "rooms": [],
+   "scripts": [],
+   "code": [
+    "$5F \u2014 bank $5F field-UI screen (after SetGBCPalette $FC)"
+   ]
+  },
+  {
+   "id": "$24",
+   "id_int": 36,
+   "kind": "music",
+   "channels": 3,
+   "slots": [
+    "$34",
+    "$4E",
+    "$68"
+   ],
+   "sound_test": "BGM",
+   "starts_as": "bgm",
+   "length_frames": null,
+   "rooms": [],
+   "scripts": [],
+   "code": [
+    "$15 \u2014 bank $15 \u2014 three screens set up after DrawWhiteScreen"
+   ]
+  },
+  {
+   "id": "$27",
+   "id_int": 39,
+   "kind": "music",
+   "channels": 4,
+   "slots": [
+    "$34",
+    "$4E",
+    "$68",
+    "$82"
+   ],
+   "sound_test": "BGM",
+   "starts_as": "bgm",
+   "length_frames": null,
+   "rooms": [],
+   "scripts": [],
+   "code": [
+    "$51:$4073 \u2014 battle start (bank $51 LoadBattle) \u2014 every battle"
+   ]
+  },
+  {
+   "id": "$2B",
+   "id_int": 43,
+   "kind": "music",
+   "channels": 3,
+   "slots": [
+    "$34",
+    "$4E",
+    "$68"
+   ],
+   "sound_test": "BGM",
+   "starts_as": "bgm",
+   "length_frames": null,
+   "rooms": [],
+   "scripts": [],
+   "code": [
+    "$51:$4089 \u2014 battle start in the arena battle room when wArenaStarryBattle == 2 (the Starry Night final)"
+   ]
+  },
+  {
+   "id": "$2E",
+   "id_int": 46,
+   "kind": "music",
+   "channels": 3,
+   "slots": [
+    "$34",
+    "$4E",
+    "$68"
+   ],
+   "sound_test": "BGM",
+   "starts_as": "bgm",
+   "length_frames": null,
+   "rooms": [
+    "$36 Boss: Peace (FangSlime)",
+    "$3B Boss: Joy (FunkyBird)"
+   ],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$31",
+   "id_int": 49,
+   "kind": "music",
+   "channels": 3,
+   "slots": [
+    "$34",
+    "$4E",
+    "$68"
+   ],
+   "sound_test": "BGM",
+   "starts_as": "bgm",
+   "length_frames": null,
+   "rooms": [
+    "$08 Starry Shrine Breeding Cutscene",
+    "$09 Starry Shrine"
+   ],
+   "scripts": [],
+   "code": [
+    "$5F \u2014 bank $5F field-UI screen (after SetGBCPalette $FC)"
+   ]
+  },
+  {
+   "id": "$34",
+   "id_int": 52,
+   "kind": "music",
+   "channels": 3,
+   "slots": [
+    "$34",
+    "$4E",
+    "$68"
+   ],
+   "sound_test": "BGM",
+   "starts_as": "bgm",
+   "length_frames": null,
+   "rooms": [
+    "$30 Boss: Beginning (Healer)",
+    "$50 Gate Floor: Item Shop",
+    "$51 Gate Floor: Priest",
+    "$53 Forest Maze",
+    "$54 Conveyor Maze 1",
+    "$55 Conveyor Maze 2",
+    "$56 Conveyor Maze 3",
+    "$57 Maze 1",
+    "$58 Maze 2",
+    "$59 Maze 3",
+    "$5A Gate Floor: 6 Chests Diagonal",
+    "$5B Gate Floor: 6 Chests Rows",
+    "$5C Gate Floor: 8 Chests Rows",
+    "$61 Forest Maze Gate Floor 1",
+    "$62 Forest Maze Gate Floor 2",
+    "$63 Forest Maze Gate Floor 3",
+    "$64 Forest Maze Gate Floor 4",
+    "$65 Map65",
+    "$66 Map66",
+    "$67 Map67",
+    "$68 Map68",
+    "$69 Map69",
+    "$6A Map6A",
+    "$6B Map6B",
+    "$6C Map6C",
+    "$6D Map6D",
+    "$6E Map6E",
+    "$6F Map6F",
+    "every gate floor (the gate path)"
+   ],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$37",
+   "id_int": 55,
+   "kind": "jingle",
+   "channels": 3,
+   "slots": [
+    "$34",
+    "$4E",
+    "$68"
+   ],
+   "sound_test": "BGM",
+   "starts_as": "bgm",
+   "length_frames": 427,
+   "rooms": [],
+   "scripts": [
+    "Arena Battle (script 0)"
+   ],
+   "code": []
+  },
+  {
+   "id": "$3A",
+   "id_int": 58,
+   "kind": "jingle",
+   "channels": 2,
+   "slots": [
+    "$34",
+    "$4E"
+   ],
+   "sound_test": "BGM",
+   "starts_as": "bgm",
+   "length_frames": 111,
+   "rooms": [],
+   "scripts": [
+    "Arena Battle (script 0)"
+   ],
+   "code": []
+  },
+  {
+   "id": "$3C",
+   "id_int": 60,
+   "kind": "jingle",
+   "channels": 3,
+   "slots": [
+    "$34",
+    "$4E",
+    "$68"
+   ],
+   "sound_test": "BGM",
+   "starts_as": "bgm",
+   "length_frames": 1059,
+   "rooms": [],
+   "scripts": [
+    "Arena Battle (script 0)"
+   ],
+   "code": []
+  },
+  {
+   "id": "$3F",
+   "id_int": 63,
+   "kind": "jingle",
+   "channels": 2,
+   "slots": [
+    "$00",
+    "$1A"
+   ],
+   "sound_test": "BGM",
+   "starts_as": "bgm",
+   "length_frames": 163,
+   "rooms": [],
+   "scripts": [
+    "Castle (script 0)"
+   ],
+   "code": []
+  },
+  {
+   "id": "$41",
+   "id_int": 65,
+   "kind": "jingle",
+   "channels": 3,
+   "slots": [
+    "$34",
+    "$4E",
+    "$68"
+   ],
+   "sound_test": "BGM",
+   "starts_as": "bgm",
+   "length_frames": 349,
+   "rooms": [],
+   "scripts": [
+    "Gate Floor: Priest (script 1)",
+    "Gate Floor: Priest (script 2)"
+   ],
+   "code": []
+  },
+  {
+   "id": "$44",
+   "id_int": 68,
+   "kind": "jingle",
+   "channels": 3,
+   "slots": [
+    "$34",
+    "$4E",
+    "$68"
+   ],
+   "sound_test": "BGM",
+   "starts_as": "bgm",
+   "length_frames": 576,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$47",
+   "id_int": 71,
+   "kind": "jingle",
+   "channels": 2,
+   "slots": [
+    "$00",
+    "$1A"
+   ],
+   "sound_test": "BGM",
+   "starts_as": "bgm",
+   "length_frames": 106,
+   "rooms": [],
+   "scripts": [
+    "Intro Bedroom (2-screen, crashes) (script 13)",
+    "Intro Bedroom (2-screen, crashes) (script 14)"
+   ],
+   "code": [
+    "$51 \u2014 bank $51 after ExtractDigits (a party monster value drawn)"
+   ]
+  },
+  {
+   "id": "$49",
+   "id_int": 73,
+   "kind": "jingle",
+   "channels": 2,
+   "slots": [
+    "$00",
+    "$1A"
+   ],
+   "sound_test": "BGM",
+   "starts_as": "bgm",
+   "length_frames": 157,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$4B",
+   "id_int": 75,
+   "kind": "jingle",
+   "channels": 2,
+   "slots": [
+    "$34",
+    "$4E"
+   ],
+   "sound_test": "BGM",
+   "starts_as": "bgm",
+   "length_frames": 84,
+   "rooms": [],
+   "scripts": [],
+   "code": [
+    "$13:$7370 \u2014 bank $13 label13_7370 (state $C905 = 0): in a gate or below map $30"
+   ]
+  },
+  {
+   "id": "$4D",
+   "id_int": 77,
+   "kind": "jingle",
+   "channels": 2,
+   "slots": [
+    "$34",
+    "$4E"
+   ],
+   "sound_test": "BGM",
+   "starts_as": "bgm",
+   "length_frames": 108,
+   "rooms": [],
+   "scripts": [],
+   "code": [
+    "$13:$737F \u2014 bank $13 label13_7370 (state $C905 = 0): maps $30+ outside gates (the boss rooms)"
+   ]
+  },
+  {
+   "id": "$4F",
+   "id_int": 79,
+   "kind": "jingle",
+   "channels": 2,
+   "slots": [
+    "$00",
+    "$1A"
+   ],
+   "sound_test": "BGM",
+   "starts_as": "bgm",
+   "length_frames": 325,
+   "rooms": [],
+   "scripts": [],
+   "code": [
+    "$01 \u2014 bank $01 after SetupPartyBattleData"
+   ]
+  },
+  {
+   "id": "$51",
+   "id_int": 81,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 54,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$52",
+   "id_int": 82,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 437,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$53",
+   "id_int": 83,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 11,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$54",
+   "id_int": 84,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 13,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$55",
+   "id_int": 85,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 55,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$56",
+   "id_int": 86,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 12,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$57",
+   "id_int": 87,
+   "kind": "effect",
+   "channels": 2,
+   "slots": [
+    "$00",
+    "$1A"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 110,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$59",
+   "id_int": 89,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 7,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$5A",
+   "id_int": 90,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 2,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$5B",
+   "id_int": 91,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 2,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$5C",
+   "id_int": 92,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 22,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$5D",
+   "id_int": 93,
+   "kind": "effect",
+   "channels": 2,
+   "slots": [
+    "$34",
+    "$4E"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": null,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$5F",
+   "id_int": 95,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 10,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$60",
+   "id_int": 96,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 15,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$61",
+   "id_int": 97,
+   "kind": "music",
+   "channels": 3,
+   "slots": [
+    "$34",
+    "$4E",
+    "$68"
+   ],
+   "sound_test": "SE",
+   "starts_as": "bgm",
+   "length_frames": null,
+   "rooms": [
+    "$52 Gate Floor: Coliseum",
+    "$5D Arena Battle"
+   ],
+   "scripts": [
+    "Arena Battle (script 0)"
+   ],
+   "code": []
+  },
+  {
+   "id": "$64",
+   "id_int": 100,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 44,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$65",
+   "id_int": 101,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 46,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$66",
+   "id_int": 102,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 77,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$67",
+   "id_int": 103,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 17,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$68",
+   "id_int": 104,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": null,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$69",
+   "id_int": 105,
+   "kind": "effect",
+   "channels": 2,
+   "slots": [
+    "$00",
+    "$1A"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 76,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$6B",
+   "id_int": 107,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 19,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$6C",
+   "id_int": 108,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 15,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$6D",
+   "id_int": 109,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 34,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$6E",
+   "id_int": 110,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 28,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$6F",
+   "id_int": 111,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 18,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$70",
+   "id_int": 112,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 49,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$71",
+   "id_int": 113,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 47,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$72",
+   "id_int": 114,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 42,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$73",
+   "id_int": 115,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 59,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$74",
+   "id_int": 116,
+   "kind": "effect",
+   "channels": 2,
+   "slots": [
+    "$00",
+    "$1A"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 23,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$76",
+   "id_int": 118,
+   "kind": "effect",
+   "channels": 2,
+   "slots": [
+    "$00",
+    "$1A"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 107,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$78",
+   "id_int": 120,
+   "kind": "effect",
+   "channels": 2,
+   "slots": [
+    "$00",
+    "$1A"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 74,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$7A",
+   "id_int": 122,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 83,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$7B",
+   "id_int": 123,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 37,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$7C",
+   "id_int": 124,
+   "kind": "effect",
+   "channels": 2,
+   "slots": [
+    "$00",
+    "$1A"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 111,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$7E",
+   "id_int": 126,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 63,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$7F",
+   "id_int": 127,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 135,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$80",
+   "id_int": 128,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 91,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$81",
+   "id_int": 129,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 89,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$82",
+   "id_int": 130,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 77,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$83",
+   "id_int": 131,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 77,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$84",
+   "id_int": 132,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 41,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$85",
+   "id_int": 133,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 27,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$86",
+   "id_int": 134,
+   "kind": "effect",
+   "channels": 2,
+   "slots": [
+    "$00",
+    "$1A"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 43,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$88",
+   "id_int": 136,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 65,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$89",
+   "id_int": 137,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 27,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$8A",
+   "id_int": 138,
+   "kind": "effect",
+   "channels": 2,
+   "slots": [
+    "$00",
+    "$1A"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 116,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$8C",
+   "id_int": 140,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 24,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$8D",
+   "id_int": 141,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 115,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$8E",
+   "id_int": 142,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 100,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$8F",
+   "id_int": 143,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 89,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$90",
+   "id_int": 144,
+   "kind": "effect",
+   "channels": 2,
+   "slots": [
+    "$00",
+    "$1A"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 109,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$92",
+   "id_int": 146,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 28,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$93",
+   "id_int": 147,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 54,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$94",
+   "id_int": 148,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 107,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$95",
+   "id_int": 149,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 91,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$96",
+   "id_int": 150,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 66,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$97",
+   "id_int": 151,
+   "kind": "effect",
+   "channels": 2,
+   "slots": [
+    "$00",
+    "$1A"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 150,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$99",
+   "id_int": 153,
+   "kind": "effect",
+   "channels": 2,
+   "slots": [
+    "$00",
+    "$1A"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 131,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$9B",
+   "id_int": 155,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 63,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$9C",
+   "id_int": 156,
+   "kind": "effect",
+   "channels": 1,
+   "slots": [
+    "$00"
+   ],
+   "sound_test": "SE",
+   "starts_as": "se",
+   "length_frames": 27,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$9D",
+   "id_int": 157,
+   "kind": "music",
+   "channels": 2,
+   "slots": [
+    "$34",
+    "$4E"
+   ],
+   "sound_test": "SE",
+   "starts_as": "bgm",
+   "length_frames": null,
+   "rooms": [
+    "$2F Intro Bedroom (2-screen, crashes)"
+   ],
+   "scripts": [],
+   "code": []
+  },
+  {
+   "id": "$9F",
+   "id_int": 159,
+   "kind": "music",
+   "channels": 3,
+   "slots": [
+    "$34",
+    "$4E",
+    "$68"
+   ],
+   "sound_test": "BGM",
+   "starts_as": "bgm",
+   "length_frames": null,
+   "rooms": [],
+   "scripts": [],
+   "code": []
+  }
+ ]
+}

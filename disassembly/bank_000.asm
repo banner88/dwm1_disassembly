@@ -5349,6 +5349,13 @@ SetBGM:
     ret
 
 
+; InitBGM (A = sound id; ProcessBGMQueue's wBGM request, S116 decode): reset the
+; audio system (InitAudioSystem: every channel state dead, NR52 on, NR50 $77),
+; remember the id in wCurrPlayingBGM, then start CONSECUTIVE ids from it, one
+; AudioProcess each: 4 for $27 (the battle theme, noise channel included), 2 for
+; $3A/$3F/$47/$49/$4B/$4D/$4F/$5D/$9D, 3 for every other id. Id 0 = silence only.
+; (Patched builds: the same rule as a table scan + ids >= $9E far-call bank $71
+; entry 6 CustomBGMStart = the project song's own channel count — S116.)
 InitBGM:
     ld [wCurrPlayingBGM], a
     di
@@ -5519,6 +5526,11 @@ LoadSEDouble:
     ret
 
 
+; ProcessBGMQueue — VBlank, right after the frame driver (VBlankProcessAudio):
+; a pending wBGM ($C8B7, SetBGM) request -> InitBGM, a pending wSoundEffect
+; ($C8B8, PlaySoundEffect) -> LoadSE; $FF = empty, $9D = ignored. So a request
+; made during frame n sounds from the driver tick of frame n+1 (measured S116,
+; tools/census_sound_engine.py).
 ProcessBGMQueue:
     ld a, [wBGM]
     cp $ff
@@ -10914,7 +10926,7 @@ AudioProcess:
     push de
     push hl
     ld a, [$de24]
-    ld hl, $3466
+    ld hl, AudioMasterTable         ; $3466
 
 AudioCompareAndJump:
     cp [hl]
@@ -11062,16 +11074,25 @@ AudioRestoreBank:
     ret
 
 
-    nop
-    ld bc, $1c40
-    ld hl, $4001
-    dec e
-    scf
+; The vanilla master sound table @ $3466 (S116 re-section: it was misassembled
+; as `nop / ld bc,$1c40 / ld hl,$4001 / dec e / scf / ld bc,$1e40 / rst $38`).
+; Rows [base_id, ptr_lo, ptr_hi, bank]; AudioProcess scans for the first base >
+; the id and uses the PREVIOUS row: record = bank:ptr + (id - base) * 4
+; (SOUND_SYSTEM §2). Sentinel $FF.
+AudioMasterTable:
+    db $00, $01, $40, $1C       ; ids $00-$20 -> $1C:$4001
+    db $21, $01, $40, $1D       ; ids $21-$36 -> $1D:$4001
+    db $37, $01, $40, $1E       ; ids $37+    -> $1E:$4001
+    db $FF                      ; sentinel
 
-AudioSetBC1E40:
-    ld bc, $1e40
-    rst $38
-
+; SaveBankAndAudioState — THE FRAME DRIVER: one tick of all 6 channel states
+; ($DD80 + 26*k; slots $00/$1A = sound effects, $34/$4E/$68/$82 = music
+; pulse1/pulse2/wave/noise), each copied to HRAM $FFE4-$FFFD, ticked
+; (AudioProcessChannel: groove, slides, note countdown, the next stream pair),
+; copied back; then NR51 and the saved ROM bank are restored. Called once per
+; VBlank — from VBlankEnableInt, and from VBlankReentry on lag frames (so music
+; keeps time when the main loop runs late). The editor runs exactly this
+; routine on its own SM83 interpreter (editor2/core/sound_engine.py, S116).
 SaveBankAndAudioState:
     ld a, [$4000]
 

@@ -447,6 +447,15 @@ trigger — engine-forced during the intro (bank `$2D` per `$CAB9` note);
 (c) matches 2/3 re-entry: HW showed the bank `$50` clone firing post-battle
 as predicted; the full loop wasn't single-stepped but is consistent.
 
+### Arena battle music (S116, code-read + PyBoy on the user's save)
+
+Every arena battle starts the battle theme **$27** (bank $51 LoadBattle) except the
+**Starry Night final** — the battle after the tournament's three matches,
+wArenaStarryBattle = 2 — which starts **$2B**; the arena battle room itself plays $61.
+Project: `music.battle.arena` / `music.battle.starry` (and a song per fight by EID) —
+SOUND_SYSTEM §10. Measured S116 on the user's save: a Starry match (wArenaStarryBattle 1,
+EID 296) played the project's arena song.
+
 ### Arena authoring as built — S109 (ROADMAP P3.10b) ✅ [built S109, PyBoy-measured on the user's save; test ROM USER-CONFIRMED 2026-10-01 22:57]
 
 **The editor surface** (Arena tab; PROJECT_COMPILER §2.25 `gamedata.arena`;

@@ -61,6 +61,11 @@ LoadBattle:
     ld [wSoundEffect], a
     call InitAudioSystem
 
+; The battle's music (S116 decode; patched builds: bank $71 entry 7
+; BattleBGMResolve, a same-size rewrite of this window): $27, the battle theme —
+; except in the arena battle room ($5D), which also clears $C8EA bit 7 and plays
+; $2B when wArenaStarryBattle == 2 (the Starry Night tournament's final match).
+; Every other battle (wild, boss, arena class, scripted) starts $27 here.
 jr_051_4073:
     ld b, $27
     ld a, [wMapID]

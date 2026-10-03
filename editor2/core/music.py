@@ -1,32 +1,51 @@
-"""music.py — custom.music resolution (M3b, S64; owning doc PROJECT_COMPILER.md).
+"""music.py — custom.music resolution (M3b S64; S116 P3.13b; owning doc PROJECT_COMPILER.md §2.9).
 
 Schema (§2.9):
   "music": {
-    "libraries": ["extracted/dwm2_song_library.json", ...],   # repo-relative
-    "songs": [ {"id": "...", "source": {"library": "<lib song id>"}
-                            | {"inline": {"channels": [...]}},
-                "first_id": "0xA1" | "auto"} ],
-    "room_defaults": { "<mapID>": "<song id>" | <raw DWM1 BGM id> }
+    "libraries": ["extracted/dwm2_song_library.json", ...],   # repo-relative catalogs
+    "songs": [ {"id": "...",
+                "source": {"library": "<lib song id>"}
+                        | {"inline": {"channels": [...]}}
+                        | {"file": "assets/music/x.json"},     # S116: project-relative
+                "first_id": "0xA1" | "auto",
+                "name": "..."} ],                              # S116: editor label
+    "names": {"0x09": "...", "dwm2_bgm07": "..."},              # S116: editor-only labels
+    "room_defaults": { "<mapID>": "<song id>" | <raw DWM1 BGM id> },
+    "gates":  { "<gate 0-95>": {"floors": <song>, "battles": <song>} },   # S116
+    "battle": { "normal": <song>, "boss": <song>, "arena": <song>,       # S116
+                "starry": <song>,
+                "rooms":  { "<mapID>": <song> },
+                "fights": { "<enemy row EID>": <song> } }
   }
 plus `custom.rooms[].music` sugar (merged into room_defaults).
 
-Resolution rules:
-  * first_id "auto" allocates upward from $9E skipping explicit claims;
-    channel count reserves consecutive ids (SetBGM starts 3 consecutive ids
-    for a normal BGM — SOUND_SYSTEM §1).
-  * Every BGM song is normalized to EXACTLY the 3-channel trio (slots
-    $34/$4E/$68): missing trio slots get a 6-byte silent stream (header +
-    $FF) so InitBGM's third dispatch never runs into the NEXT song's
-    channel; channels outside the trio (e.g. DWM2 noise 4th channels) are
-    DROPPED with a warning (InitBGM channel-count extension is a boxed
-    ROADMAP follow-up).
-  * room_defaults values: a song id -> that song's first_id; a raw int/hex
-    -> used verbatim (assign INBUILT vanilla music to any room).
-  * The 128-entry CustomRoomBGMTable (bank $71, resolver entry 2) is
-    indexed by wMapID; 0 = no assignment -> full vanilla derivation.
+A <song> value is a project song id (its first sound id) or a raw sound id
+(1-$FC: any vanilla sound, or a custom id). 0 / null = not set.
 
-The byte emitter is tools/song_codec.py (emit_song_bank / song_bank_asm) —
-one proven spec->bytes path for DWM2, MIDI, and inline sources.
+Resolution rules:
+  * first_id "auto" allocates upward from $9E skipping explicit claims; a song
+    reserves one consecutive id per channel (1-6 channels, any of the 6 state
+    slots, each slot at most once). S116: a song keeps EXACTLY its channels —
+    the rewritten InitBGM (patches/bank_000.asm) starts a project song through
+    bank $71 entry 6 CustomBGMStart with the count from CustomBGMChanTable
+    (the S64 trio padding / dropping is gone).
+  * Two song banks (S116): songs in first-id order fill bank $74 (streams
+    $4180-$7FFF, 16,000 B), the rest bank $75 from the first id that no longer
+    fits (the split) — AudioMasterTableExt (ROM0 $3FE8, region
+    rom0_audio_master) gets a 5th row [split, $4001, $75].
+  * room_bgm (CustomRoomBGMTable, bank $71 entry 2): 0 = vanilla derivation;
+    $FF (S116) = "a gate room with no song of its own — play the dive's gate
+    song" (rooms served on gate floors + custom boss rooms, only when some gate
+    has a floors song).
+  * Gate tables (96 entries, wGateID 0-95): gate_bgm (maze floors, the special
+    rooms, the gate rooms marked $FF), gate_battle.
+  * Battle (bank $71 entry 7 BattleBGMResolve, from bank $51 LoadBattle):
+    per fight (leader EID $DA03) > arena (Starry final / other matches) > the
+    room's table (CustomRoomBattleBGMTable, $FF = follow the gate) > the gate >
+    boss fights ($DA09 = 3) > normal; 0 everywhere = vanilla ($27, Starry final $2B).
+
+The byte emitter is tools/song_codec.py (emit_song_bank / song_bank_asm) — one
+proven spec->bytes path for DWM2, MIDI, and inline sources.
 """
 import importlib.util
 import json
@@ -34,19 +53,39 @@ import os
 
 from . import formats as F
 
-TRIO = [(0x34, 0), (0x4E, 1), (0x68, 2)]      # (slot, hw): pulse1/pulse2/wave
-SILENT_CHANNEL = {"header": [0, 0, 0, 0], "tokens": [{"op": "end"}]}
 FIRST_ID = 0x9E
 LAST_ID = 0xFC
+SLOTS = (0x00, 0x1A, 0x34, 0x4E, 0x68, 0x82)
+SLOT_HW = {0x00: 0, 0x1A: 1, 0x34: 0, 0x4E: 1, 0x68: 2, 0x82: 3}
+SE_SLOTS = (0x00, 0x1A)
+SONG_BANKS = (0x74, 0x75)
+STREAMS_AT = 0x4180
+BANK_STREAM_CAP = 0x8000 - STREAMS_AT            # 16,000 B per song bank
+GATE_TABLE_LEN = 96                              # gates 0-95 (S115 NG1)
+MAX_FIGHTS = 255
+FOLLOW_GATE = 0xFF                               # room tables: "the gate's song"
+MUSIC_KEYS = ('libraries', 'songs', 'room_defaults', 'names', 'gates', 'battle')
+BATTLE_KEYS = ('normal', 'boss', 'arena', 'starry', 'rooms', 'fights')
+GATE_MUSIC_KEYS = ('floors', 'battles')
+# vanilla battle songs (bank $51 LoadBattle)
+VANILLA_BATTLE = 0x27
+VANILLA_STARRY_FINAL = 0x2B
+
+
+_OWN_REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 def _repo_root(start):
-    d = os.path.abspath(start)
+    """The repo the libraries are relative to: the one holding `start`, else the
+    editor's own checkout (a user project usually lives outside the repo)."""
+    d = os.path.abspath(start or _OWN_REPO)
     for _ in range(6):
         if os.path.exists(os.path.join(d, 'tools', 'verify_integrity.py')):
             return d
         d = os.path.dirname(d)
-    raise RuntimeError("repo root not found from " + start)
+    if os.path.exists(os.path.join(_OWN_REPO, 'tools', 'verify_integrity.py')):
+        return _OWN_REPO
+    raise RuntimeError("repo root not found from " + str(start))
 
 
 def song_codec(repo_root):
@@ -61,15 +100,9 @@ class MusicError(ValueError):
     pass
 
 
-def resolve(prj):
-    """-> (bank74_library, room_bgm[128], song_ids{song_id: first_id},
-    warnings). bank74_library feeds song_codec.song_bank_asm."""
-    warnings = []
-    music = prj.custom.get('music') or {}
-    repo = _repo_root(getattr(prj, 'repo_root', prj.root))
-
+def load_libraries(repo, rels):
     lib_index = {}
-    for rel in music.get('libraries', []):
+    for rel in rels:
         path = os.path.join(repo, rel)
         if not os.path.exists(path):
             raise MusicError(f"music library {rel!r} not found (repo-relative)")
@@ -77,21 +110,120 @@ def resolve(prj):
         for s in lib.get('songs', []):
             if s['id'] in lib_index:
                 raise MusicError(f"song id {s['id']!r} defined in two libraries")
-            lib_index[s['id']] = s
+            lib_index[s['id']] = dict(s, _library=rel)
+    return lib_index
 
-    # ---- resolve song list + id allocation --------------------------------
+
+def song_channels(song, lib_index, project_root):
+    """A project song's channels [{slot, hw, header, tokens}] from its source."""
+    src = song.get('source') or {}
+    sid = song.get('id')
+    if 'library' in src:
+        if src['library'] not in lib_index:
+            raise MusicError(f"song {sid!r}: library ref {src['library']!r} not found "
+                             "in music.libraries")
+        chans = lib_index[src['library']]['channels']
+    elif 'inline' in src:
+        chans = src['inline']['channels']
+    elif 'file' in src:
+        path = os.path.join(project_root, src['file'])
+        if not os.path.exists(path):
+            raise MusicError(f"song {sid!r}: file {src['file']!r} not found in the project")
+        data = json.load(open(path))
+        chans = data['channels'] if 'channels' in data else data['songs'][0]['channels']
+    else:
+        raise MusicError(f"song {sid!r}: source needs 'library', 'inline' or 'file'")
+    out = []
+    seen = set()
+    for c in chans:
+        slot = F.val(c['slot'])
+        if slot not in SLOTS:
+            raise MusicError(f"song {sid!r}: channel slot ${slot:02X} is not one of the "
+                             "six state slots $00/$1A/$34/$4E/$68/$82")
+        if slot in seen:
+            raise MusicError(f"song {sid!r}: two channels on slot ${slot:02X}")
+        seen.add(slot)
+        out.append({"slot": slot, "hw": F.val(c['hw']),
+                    "header": list(c['header']), "tokens": c['tokens']})
+    if not 1 <= len(out) <= 6:
+        raise MusicError(f"song {sid!r}: {len(out)} channels (1-6 allowed)")
+    return out
+
+
+class Plan:
+    """Everything the music emitters need, resolved once per compile."""
+
+    def __init__(self):
+        self.songs = []               # [{id, first_id, channels, bank}]
+        self.song_ids = {}            # project song id -> first sound id
+        self.banks = {}               # bank -> [songs]
+        self.split = None             # first id resolved from bank $75 (None: one bank)
+        self.room_bgm = [0] * 128
+        self.chan_table = [0] * (LAST_ID - FIRST_ID + 1)
+        self.gate_bgm = [0] * GATE_TABLE_LEN
+        self.gate_battle = [0] * GATE_TABLE_LEN
+        self.room_battle = [0] * 128
+        self.battle = {'normal': 0, 'boss': 0, 'arena': 0, 'starry': 0}
+        self.fights = []              # [(eid, sound id)]
+        self.warnings = []
+        self.stream_bytes = {}        # bank -> bytes used
+
+    def legacy(self):
+        """(bank74_library, room_bgm, song_ids, warnings) — the S64 tuple."""
+        return ({"_source": "project.json custom.music", "songs": self.banks.get(0x74, [])},
+                self.room_bgm, self.song_ids, self.warnings)
+
+
+def _value(v, song_ids, used, ctx, warnings):
+    """A <song> value -> sound id (0 = not set)."""
+    if v is None or v == '' or v == 0:
+        return 0
+    if isinstance(v, str) and v in song_ids:
+        return song_ids[v]
+    if isinstance(v, str) and not v[:1].isdigit() and not v.startswith(('$', '0x', '0X')):
+        raise MusicError(f"{ctx}: {v!r} is not a defined song id (music.songs) nor a "
+                         "numeric sound id")
+    n = F.val(v)
+    if not 1 <= n <= LAST_ID:
+        raise MusicError(f"{ctx}: sound id {F.hexb(n)} outside $01-$FC")
+    if n >= FIRST_ID and n not in used:
+        warnings.append(f"{ctx}: raw id ${n:02X} is in the project range but no song "
+                        "claims it")
+    return n
+
+
+def plan(prj):
+    P = Plan()
+    music = prj.custom.get('music') or {}
+    for k in music:
+        if k not in MUSIC_KEYS and not k.startswith('_'):
+            raise MusicError(f"unknown key {k!r}")
+    repo = _repo_root(getattr(prj, 'repo_root', None) or prj.root)
+    lib_index = load_libraries(repo, music.get('libraries', []))
+    sc = song_codec(repo)
+
+    # ---- songs + id allocation --------------------------------------------
     songs = music.get('songs', [])
-    explicit = {}
-    for s in songs:
-        fid = s.get('first_id', 'auto')
-        if str(fid) != 'auto':
-            explicit[s['id']] = F.val(fid)
+    names = set()
     resolved = []
+    for s in songs:
+        if not s.get('id'):
+            raise MusicError("a song without an id")
+        if s['id'] in names:
+            raise MusicError(f"song id {s['id']!r} defined twice")
+        names.add(s['id'])
+        chans = song_channels(s, lib_index, prj.root)
+        if any(c['slot'] in SE_SLOTS for c in chans):
+            P.warnings.append(f"song {s['id']}: plays on a sound-effect slot "
+                              "($00/$1A) — a sound effect cuts that channel until the "
+                              "song restarts")
+        fid = s.get('first_id', 'auto')
+        resolved.append({"id": s['id'], "channels": chans,
+                         "_explicit": None if str(fid) == 'auto' else F.val(fid)})
     used = set()
 
     def claim(fid, n, sid):
-        ids = list(range(fid, fid + n))
-        for i in ids:
+        for i in range(fid, fid + n):
             if not (FIRST_ID <= i <= LAST_ID):
                 raise MusicError(f"song {sid!r}: id ${i:02X} outside "
                                  f"${FIRST_ID:02X}-${LAST_ID:02X}")
@@ -99,100 +231,343 @@ def resolve(prj):
                 raise MusicError(f"song {sid!r}: id ${i:02X} already claimed")
             used.add(i)
 
-    for s in songs:
-        src = s.get('source') or {}
-        if 'library' in src:
-            if src['library'] not in lib_index:
-                raise MusicError(f"song {s['id']!r}: library ref "
-                                 f"{src['library']!r} not found in "
-                                 "music.libraries")
-            entry = lib_index[src['library']]
-            chans = [dict(c) for c in entry['channels']]
-        elif 'inline' in src:
-            chans = [dict(c) for c in src['inline']['channels']]
-        else:
-            raise MusicError(f"song {s['id']!r}: source needs 'library' or "
-                             "'inline'")
-        # normalize to the exact BGM trio
-        by_slot = {}
-        for c in chans:
-            slot = F.val(c['slot'])
-            if slot in dict(TRIO):
-                if slot in by_slot:
-                    raise MusicError(f"song {s['id']!r}: two channels on "
-                                     f"slot ${slot:02X}")
-                by_slot[slot] = c
-            else:
-                warnings.append(
-                    f"song {s['id']}: channel on slot ${slot:02X} dropped — "
-                    "BGM ids init exactly the 3-channel trio (InitBGM "
-                    "channel-count extension is a ROADMAP box)")
-        trio = []
-        for slot, hw in TRIO:
-            c = by_slot.get(slot)
-            if c is None:
-                c = {"slot": slot, "hw": hw, **SILENT_CHANNEL}
-                warnings.append(f"song {s['id']}: slot ${slot:02X} padded "
-                                "silent (source has fewer channels)")
-            trio.append({"slot": F.val(c['slot']), "hw": F.val(c['hw']),
-                         "header": c['header'], "tokens": c['tokens']})
-        resolved.append({"id": s['id'], "channels": trio,
-                         "_explicit": explicit.get(s['id'])})
-
-    nxt = FIRST_ID
     for r in resolved:
-        n = len(r['channels'])
         if r['_explicit'] is not None:
             r['first_id'] = r['_explicit']
-            claim(r['first_id'], n, r['id'])
+            claim(r['first_id'], len(r['channels']), r['id'])
+    nxt = FIRST_ID
     for r in resolved:
-        if '_explicit' in r and r['_explicit'] is None:
+        if r['_explicit'] is None:
             while any(i in used for i in range(nxt, nxt + len(r['channels']))):
                 nxt += 1
             r['first_id'] = nxt
             claim(nxt, len(r['channels']), r['id'])
         r.pop('_explicit')
     resolved.sort(key=lambda r: r['first_id'])
-    song_ids = {r['id']: r['first_id'] for r in resolved}
+    P.song_ids = {r['id']: r['first_id'] for r in resolved}
+
+    # ---- bank packing ($74 then $75) --------------------------------------
+    bank, fill = 0x74, 0
+    for r in resolved:
+        n = sum(len(sc.emit_tokens(c['header'], c['tokens'])) for c in r['channels'])
+        r['bytes'] = n
+        if bank == 0x74 and fill + n > BANK_STREAM_CAP:
+            bank, fill = 0x75, 0
+            P.split = r['first_id']
+        if fill + n > BANK_STREAM_CAP:
+            raise MusicError(f"songs need more than the two song banks ($74/$75, "
+                             f"{BANK_STREAM_CAP} B each) — remove or shorten songs "
+                             f"(stopped at {r['id']!r})")
+        fill += n
+        r['bank'] = bank
+        P.banks.setdefault(bank, []).append(r)
+        P.stream_bytes[bank] = fill
+        P.chan_table[r['first_id'] - FIRST_ID] = len(r['channels'])
+    P.songs = resolved
+
+    def val(v, ctx):
+        return _value(v, P.song_ids, used, ctx, P.warnings)
 
     # ---- room defaults ----------------------------------------------------
-    room_bgm = [0] * 128
-    defaults = {}                      # mapID int -> assignment (normalized)
-    for key, val in (music.get('room_defaults') or {}).items():
+    defaults = {}
+    for key, v in (music.get('room_defaults') or {}).items():
         mid = F.val(key)
         if mid in defaults:
             raise MusicError(f"room_defaults declares mapID {key!r} twice")
-        defaults[mid] = val
+        defaults[mid] = v
     for r in prj.rooms:
         m = r.get('music')
         if m is not None:
             mid = F.val(r['mapID'])
             if mid in defaults and defaults[mid] != m:
                 raise MusicError(f"room {r.get('id')}: rooms[].music and "
-                                 f"music.room_defaults disagree for "
-                                 f"{F.hexb(mid)}")
+                                 f"music.room_defaults disagree for {F.hexb(mid)}")
             defaults[mid] = m
-    for mid, val in defaults.items():
+    for mid, v in defaults.items():
         if not (0 <= mid < 128):
-            raise MusicError(f"room_defaults mapID {F.hexb(mid)} outside "
-                             "$00-$7F (CustomRoomBGMTable range)")
-        if isinstance(val, str) and val in song_ids:
-            bgm = song_ids[val]
-        elif isinstance(val, str) and not val[:1].isdigit() \
-                and not val.startswith(('$', '0x', '0X')):
-            raise MusicError(f"room_defaults {F.hexb(mid)}: {val!r} is not a "
-                             "defined song id (music.songs) nor a numeric "
-                             "BGM id")
-        else:
-            bgm = F.val(val)
-            if bgm >= FIRST_ID and bgm not in used:
-                warnings.append(f"room_defaults {F.hexb(mid)}: raw id "
-                                f"${bgm:02X} is in the custom range but no "
-                                "song claims it")
-        if bgm == 0:
-            raise MusicError(f"room_defaults {F.hexb(mid)}: id 0 is the "
-                             "no-assignment sentinel — it cannot be assigned")
-        room_bgm[mid] = bgm
+            raise MusicError(f"room_defaults mapID {F.hexb(mid)} outside $00-$7F "
+                             "(CustomRoomBGMTable range)")
+        if v in (0, '0', '0x00', '$00'):
+            raise MusicError(f"room_defaults {F.hexb(mid)}: id 0 is the no-assignment "
+                             "sentinel — it cannot be assigned")
+        P.room_bgm[mid] = val(v, f"room_defaults {F.hexb(mid)}")
 
-    library = {"_source": "project.json custom.music", "songs": resolved}
-    return library, room_bgm, song_ids, warnings
+    # ---- gates ------------------------------------------------------------
+    for key, g in (music.get('gates') or {}).items():
+        gid = F.val(key)
+        if not 0 <= gid < GATE_TABLE_LEN:
+            raise MusicError(f"music.gates: gate {key!r} outside 0-{GATE_TABLE_LEN - 1}")
+        if not isinstance(g, dict):
+            raise MusicError(f"music.gates {key}: an object {{floors, battles}}")
+        bad = [k for k in g if k not in GATE_MUSIC_KEYS and not k.startswith('_')]
+        if bad:
+            raise MusicError(f"music.gates {key}: unknown key(s) {bad}")
+        P.gate_bgm[gid] = val(g.get('floors'), f"music.gates {key} floors")
+        P.gate_battle[gid] = val(g.get('battles'), f"music.gates {key} battles")
+
+    # gate rooms with no song of their own follow the gate (only matters when a
+    # gate has a song: otherwise the vanilla path is byte-for-byte what it was)
+    try:
+        served = set(prj.gate_rooms())
+    except Exception:
+        served = set()
+    try:
+        bosses = set(prj.boss_room_ids())
+    except Exception:
+        bosses = set()
+    if any(P.gate_bgm):
+        for r in prj.rooms:
+            mid = F.val(r['mapID'])
+            if mid < 128 and P.room_bgm[mid] == 0 and (r.get('id') in served
+                                                       or r.get('id') in bosses):
+                P.room_bgm[mid] = FOLLOW_GATE
+
+    # ---- battle -----------------------------------------------------------
+    b = music.get('battle') or {}
+    bad = [k for k in b if k not in BATTLE_KEYS and not k.startswith('_')]
+    if bad:
+        raise MusicError(f"music.battle: unknown key(s) {bad}")
+    for k in ('normal', 'boss', 'arena', 'starry'):
+        P.battle[k] = val(b.get(k), f"music.battle.{k}")
+    for key, v in (b.get('rooms') or {}).items():
+        mid = F.val(key)
+        if not 0 <= mid < 128:
+            raise MusicError(f"music.battle.rooms: mapID {key!r} outside $00-$7F")
+        P.room_battle[mid] = val(v, f"music.battle.rooms {F.hexb(mid)}")
+    if any(P.gate_battle):
+        for r in prj.rooms:
+            mid = F.val(r['mapID'])
+            if mid < 128 and P.room_battle[mid] == 0 and r.get('id') in served:
+                P.room_battle[mid] = FOLLOW_GATE
+    for key, v in (b.get('fights') or {}).items():
+        eid = F.val(key)
+        if not 0 <= eid < 0xFFFF:
+            raise MusicError(f"music.battle.fights: EID {key!r} out of range")
+        sid = val(v, f"music.battle.fights {eid}")
+        if sid:
+            P.fights.append((eid, sid))
+    P.fights.sort()
+    if len(P.fights) > MAX_FIGHTS:
+        raise MusicError(f"music.battle.fights: {len(P.fights)} fights (at most {MAX_FIGHTS})")
+    return P
+
+
+def resolve(prj):
+    """S64 interface: (bank74_library, room_bgm[128], song_ids, warnings)."""
+    return prj.music_plan().legacy()
+
+
+# ---------------------------------------------------------------- emitters
+def master_table_rows(P):
+    rows = [(0x00, 0x4001, 0x1C), (0x21, 0x4001, 0x1D), (0x37, 0x4001, 0x1E),
+            (FIRST_ID, 0x4001, 0x74)]
+    if P.split is not None:
+        rows.append((P.split, 0x4001, 0x75))
+    return rows
+
+
+def emit_region_master_table(prj, warnings):
+    """region rom0_audio_master (patches/bank_000.asm, inside AudioMasterTableExt
+    @ $3FE8, 24 B): the 3 vanilla rows, the bank $74 row, the bank $75 row when
+    songs spill there, the $FF sentinel, $FF filler."""
+    P = prj.music_plan()
+    rows = master_table_rows(P)
+    out = []
+    what = {0x1C: 'vanilla row', 0x1D: 'vanilla row', 0x1E: 'vanilla row',
+            0x74: 'project song bank 1', 0x75: 'project song bank 2 (S116)'}
+    ends = [r[0] for r in rows[1:]] + [0xFD]
+    for (base, ptr, bank), end in zip(rows, ends):
+        out.append(f"    db ${base:02X}, ${ptr & 0xFF:02X}, ${ptr >> 8:02X}, ${bank:02X}"
+                   f"       ; ids ${base:02X}-${end - 1:02X} -> ${bank:02X}:${ptr:04X} ({what[bank]})")
+    n = 4 * len(rows)
+    out.append("    db $FF                      ; sentinel")
+    n += 1
+    pad = 24 - n
+    out.append("    db " + ", ".join(["$FF"] * pad) + f"   ; filler ({pad} B; slot $3FE8-$3FFF)")
+    return "\n".join(out) + "\n"
+
+
+def song_bank_asm(prj, bank):
+    P = prj.music_plan()
+    repo = _repo_root(getattr(prj, 'repo_root', None) or prj.root)
+    sc = song_codec(repo)
+    base = FIRST_ID if bank == 0x74 else (P.split or FIRST_ID)
+    lib = {"_source": "project.json custom.music (music emitter, S116)",
+           "songs": P.banks.get(bank, [])}
+    return sc.song_bank_asm(lib, bank=bank, base_id=base)
+
+
+def bank_images(prj):
+    """{bank: 16 KB image} of the project's song banks (preview + census)."""
+    P = prj.music_plan()
+    repo = _repo_root(getattr(prj, 'repo_root', None) or prj.root)
+    sc = song_codec(repo)
+    out = {}
+    for bank in SONG_BANKS:
+        base = FIRST_ID if bank == 0x74 else (P.split or FIRST_ID)
+        img, _, _ = sc.emit_song_bank({"songs": P.banks.get(bank, [])}, bank=bank,
+                                      base_id=base)
+        out[bank] = img
+    return out
+
+
+def _table_lines(label, values, width=16, start=0, fmt=None):
+    out = [f"{label}:"]
+    for i in range(0, len(values), width):
+        row = values[i:i + width]
+        out.append(F.db_line(row, comment=fmt(start + i, row) if fmt else None))
+    return out
+
+
+def emit_bank_071_tables(prj, warnings):
+    """The S116 tables of bank $71 (after the S64 CustomRoomBGMTable)."""
+    P = prj.music_plan()
+    for w in P.warnings:
+        if w not in warnings:
+            warnings.append(w)
+    by_id = {v: k for k, v in P.song_ids.items()}
+
+    def tag(v):
+        if v == FOLLOW_GATE:
+            return 'follow the gate'
+        return by_id.get(v, F.hexb(v))
+
+    lines = ["; " + "-" * 77,
+             "; CustomBGMChanTable — channel count of the project song starting at",
+             f"; each id ${FIRST_ID:02X}-${LAST_ID:02X} (0 = no song starts here: the old",
+             "; 3-channel default). Read by entry 6 CustomBGMStart (S116). (generated)",
+             "; " + "-" * 77]
+    lines += _table_lines("CustomBGMChanTable", P.chan_table, start=FIRST_ID,
+                          fmt=lambda i, row: f"ids ${i:02X}-${i + len(row) - 1:02X}"
+                          + "".join(f" ${i + j:02X}:{by_id.get(i + j, '?')}={n}ch"
+                                    for j, n in enumerate(row) if n))
+    lines.append("")
+    lines += ["; " + "-" * 77,
+              "; CustomGateBGMTable / CustomGateBattleBGMTable — per gate 0-95 (wGateID):",
+              "; the song of its floors / of its battles, 0 = vanilla. Read by entries",
+              "; 2 and 7 (S116). (generated)",
+              "; " + "-" * 77,
+              f"GATE_BGM_LEN EQU {GATE_TABLE_LEN}"]
+    for label, vals in (("CustomGateBGMTable", P.gate_bgm),
+                        ("CustomGateBattleBGMTable", P.gate_battle)):
+        lines += _table_lines(label, vals, fmt=lambda i, row: f"gates {i}-{i + len(row) - 1}"
+                              + (": " + ", ".join(f"{i + j}={tag(v)}" for j, v in enumerate(row) if v)
+                                 if any(row) else ""))
+    lines.append("")
+    lines += ["; " + "-" * 77,
+              "; CustomRoomBattleBGMTable — 128 entries by wMapID: the song of battles",
+              "; in that room (0 = not set, $FF = follow the gate being dived). Read by",
+              "; entry 7 BattleBGMResolve (S116). (generated)",
+              "; " + "-" * 77]
+    lines += _table_lines("CustomRoomBattleBGMTable", P.room_battle,
+                          fmt=lambda i, row: f"mapIDs ${i:02X}-${i + 15:02X}"
+                          + (": " + ", ".join(f"${i + j:02X}={tag(v)}"
+                                              for j, v in enumerate(row) if v)
+                             if any(row) else ""))
+    lines.append("")
+    lines += ["; " + "-" * 77,
+              "; BattleBGMSettings — [normal, boss, arena, Starry final] (0 = vanilla:",
+              "; $27 / $27 / $27 / $2B). BattleFightBGMTable — [EID lo, EID hi, song]",
+              "; per fight (the first enemy's row, $DA03), $FF $FF ends. (generated)",
+              "; " + "-" * 77,
+              "BattleBGMSettings:",
+              F.db_line([P.battle['normal'], P.battle['boss'], P.battle['arena'],
+                         P.battle['starry']],
+                        comment="normal, boss, arena, Starry final: "
+                        + ", ".join(f"{k}={tag(v)}" for k, v in P.battle.items() if v)),
+              "BattleFightBGMTable:"]
+    for eid, sid in P.fights:
+        lines.append(F.db_line([eid & 0xFF, eid >> 8, sid], comment=f"EID {eid} -> {tag(sid)}"))
+    lines.append("    db $FF, $FF")
+    lines.append("")
+    return lines
+
+
+# ---------------------------------------------------------------- models
+# Python twins of the bank $71 resolvers (the template head, S116), used by the
+# editor to say what plays where and by tools/census_music_resolve.py, which
+# stub-calls the built ROM's entries 2 / 7 over a grid of game states and
+# requires the same answers.
+def model_room_bgm(P, ctx):
+    """CustomRoomBGMResolve: ctx = {in_gate, map, gate, floor, last, boss_map}
+    -> E (0 = the vanilla derivation decides)."""
+    room = P.room_bgm
+
+    def floor_song(d):
+        if not d or ctx['gate'] >= GATE_TABLE_LEN:
+            return 0
+        return P.gate_bgm[ctx['gate']]
+
+    def dive(d):
+        if ctx['floor'] != (ctx['last'] - 2) & 0xFF:
+            return floor_song(d)
+        bm = ctx['boss_map']
+        if bm < 0x6B:
+            return 0
+        if bm < 0x80:
+            e = room[bm]
+            if e not in (0, FOLLOW_GATE):
+                return e
+        e = floor_song(d)
+        return e if e else 0x34
+
+    if ctx['in_gate']:
+        return dive(True)
+    m = ctx['map']
+    if m >= 0x80:
+        return 0
+    e = room[m]
+    if e == FOLLOW_GATE:
+        return dive(True)
+    if e:
+        return e
+    if m >= 0x61:
+        return dive(False)
+    if m < 0x50 or m == 0x52 or m >= 0x5D:
+        return 0
+    return dive(True)
+
+
+def model_battle_bgm(P, ctx):
+    """BattleBGMResolve: ctx = {link, map, starry, eid, in_gate, gate, mode}
+    -> E (the song the battle starts with)."""
+    e = 0x27
+    if ctx['map'] == 0x5D and ctx['starry'] == 2:
+        e = 0x2B
+    if ctx['link']:
+        return e
+    for eid, sid in P.fights:
+        if eid == ctx['eid']:
+            return sid
+    b = P.battle
+    if ctx['map'] == 0x5D:
+        if e == 0x2B and b['starry']:
+            return b['starry']
+        if b['arena']:
+            return b['arena']
+
+    def gate():
+        if ctx['gate'] < GATE_TABLE_LEN and P.gate_battle[ctx['gate']]:
+            return P.gate_battle[ctx['gate']]
+        return None
+
+    def typ():
+        if ctx['mode'] == 3 and b['boss']:
+            return b['boss']
+        if e != 0x27:
+            return e
+        return b['normal'] or e
+
+    if ctx['in_gate']:
+        return gate() or typ()
+    m = ctx['map']
+    if m >= 0x80:
+        return typ()
+    v = P.room_battle[m]
+    if v == FOLLOW_GATE:
+        return gate() or typ()
+    if v:
+        return v
+    if m < 0x50 or m == 0x52 or m >= 0x5D:
+        return typ()
+    return gate() or typ()

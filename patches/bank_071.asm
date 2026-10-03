@@ -65,6 +65,27 @@
 ;     E := CustomRoomFlagsTable[wMapID-$6B] (0 for out-of-range ids). Bit 0 =
 ;     saving is NOT allowed in this room. Read by the bank $07 save-permission
 ;     ladder (same-size rewrite, patches/bank_007.asm SaveAllowCheck).
+;
+; Entry 6 (HL=$7106) CustomBGMStart (S116, ROADMAP P3.13b):
+;     Called by the rewritten ROM0 InitBGM (patches/bank_000.asm) for a BGM
+;     request id >= $9E, after InitAudioSystem and with [$de24] = the id:
+;     starts CustomBGMChanTable[id-$9E] consecutive sound ids (one ROM0
+;     AudioProcess each — it maps the song bank itself and returns to this
+;     bank), 3 when the table holds 0 (not a song's first id: the old
+;     default). Runs inside InitBGM's di.
+;
+; Entry 7 (HL=$7107) BattleBGMResolve (S116, ROADMAP P3.13b):
+;     E := the song a battle starts with. Called by the same-size rewrite of
+;     bank $51 LoadBattle's music pick (patches/bank_051.asm). Vanilla: $27,
+;     or $2B in the arena battle room ($5D) when wArenaStarryBattle == 2 (the
+;     Starry Night final). Project order: link battle ($C86C) = vanilla; this
+;     fight (BattleFightBGMTable, the first enemy's EID $DA03/$DA04); the arena
+;     (BattleBGMSettings Starry final / arena); the room
+;     (CustomRoomBattleBGMTable[wMapID], $FF = follow the gate); the gate being
+;     dived (CustomGateBattleBGMTable[wGateID] — maze floors, the special
+;     rooms $50/$51/$53-$5C, rooms marked $FF); a boss fight ($DA09 == 3,
+;     opcodes $5A/$5B) = the boss setting; else the normal setting (only where
+;     vanilla plays $27). 0 everywhere = the vanilla pick.
 ; =============================================================================
 
 SECTION "ROM Bank $071", ROMX[$4000], BANK[$71]
@@ -78,6 +99,8 @@ SECTION "ROM Bank $071", ROMX[$4000], BANK[$71]
     dw CustomAnimSource                 ; entry 3  (HL=$7103, S99 P3.3e)
     dw CustomGateInsert                 ; entry 4  (HL=$7104, S100 P3.7b)
     dw CustomRoomFlags                  ; entry 5  (HL=$7105, S100)
+    dw CustomBGMStart                   ; entry 6  (HL=$7106, S116 P3.13b)
+    dw BattleBGMResolve                 ; entry 7  (HL=$7107, S116 P3.13b)
 
 ; -----------------------------------------------------------------------------
 ; Entry 0: CopyCustomRoomRecord — 8-byte $26DD record for wMapID → wRoomRecScratch
@@ -175,41 +198,84 @@ CustomEncResolve:
 ; an unassigned custom room at that floor (a served room, or stale dive
 ; values), E := the boss room's CustomRoomBGMTable entry, or $34 (the gate
 ; theme) when it has none. Vanilla boss maps keep the vanilla derivation.
+; S116: a gate's OWN song (CustomGateBGMTable[wGateID], music.gates[].floors)
+; plays where vanilla plays the gate theme: maze floors, the special rooms
+; ($50/$51/$53-$5C — vanilla routes them to the gate path; they only occur in
+; dives) and custom rooms whose table byte is $FF (gate rooms with no song of
+; their own — the compiler marks them only when some gate has a song). The
+; floor before a VANILLA boss room keeps the vanilla boss song; before a
+; custom boss room with no song: the gate's song, else $34. Unmarked custom
+; rooms (0) behave exactly as before S116 (no gate song: wGateID may be stale
+; outside a dive).
 ; -----------------------------------------------------------------------------
 CustomRoomBGMResolve:
     ld e, $00                           ; default: no assignment
+    ld d, $01                           ; D = 1: the gate's own song may play
     ld a, [wInGateworld]
     or a
-    jr nz, .gatePath                    ; maze floors: only the custom-boss case
+    jr nz, .dive                        ; maze floors
     ld a, [wMapID]
     cp $80
     ret nc                              ; out of table range
     call .lookup                        ; E = CustomRoomBGMTable[wMapID]
     ld a, e
+    cp $FF
+    jr z, .dive                         ; a gate room with no song of its own
     or a
     ret nz                              ; assigned: wins
     ld a, [wMapID]
     cp $61
+    jr nc, .noGateSong                  ; unmarked custom room: S101 path only
+    cp $50
     ret c                               ; RoomBGMTable rooms: vanilla derivation
-.gatePath:
-    ld a, [wBossMapType]
-    cp CUSTOM_ROOM_START
-    ret c                               ; vanilla boss map: vanilla is safe
+    cp $52
+    ret z                               ; the coliseum: RoomBGMTable
+    cp $5D
+    ret nc                              ; $5D-$60: RoomBGMTable
+    jr .dive                            ; a special room inside a dive
+.noGateSong:
+    ld d, $00
+.dive:
+    ld e, $00
     ld a, [wLastFloor]
     sub $02
     ld b, a
     ld a, [wCurrentFloor]
     cp b
-    ret nz                              ; not the floor before the boss floor
+    jr nz, .floorSong                   ; not the floor before the boss floor
     ld a, [wBossMapType]
+    cp CUSTOM_ROOM_START
+    ret c                               ; vanilla boss map: vanilla (its boss song)
     cp $80
-    jr nc, .gateTheme
+    jr nc, .bossNoSong
     call .lookup                        ; the custom boss room's own song
     ld a, e
     or a
-    ret nz
-.gateTheme:
+    jr z, .bossNoSong
+    inc a
+    ret nz                              ; a song (not 0, not $FF): it plays
+.bossNoSong:
+    call .floorSong
+    ld a, e
+    or a
+    ret nz                              ; the gate's song
     ld e, $34                           ; no song: the gate theme
+    ret
+.floorSong:                             ; E := the gate's song if D, else 0
+    ld e, $00
+    ld a, d
+    or a
+    ret z
+    ld a, [wGateID]
+    cp GATE_BGM_LEN
+    ret nc
+    ld hl, CustomGateBGMTable
+    add l
+    ld l, a
+    adc h
+    sub l
+    ld h, a
+    ld e, [hl]
     ret
 .lookup:                                ; A = mapID -> E = table byte
     ld hl, CustomRoomBGMTable
@@ -400,6 +466,136 @@ CustomRoomFlags:
     ret
 
 ; -----------------------------------------------------------------------------
+; Entry 6: CustomBGMStart — start a project song's own channels (S116)
+; -----------------------------------------------------------------------------
+CustomBGMStart:
+    ld a, [$de24]                       ; the requested id (>= $9E)
+    sub $9e
+    ld hl, CustomBGMChanTable
+    add l
+    ld l, a
+    adc h
+    sub l
+    ld h, a
+    ld a, [hl]
+    or a
+    jr nz, .go
+    ld a, $03                           ; not a song's first id: 3, as before S116
+.go:
+    ld b, a
+.loop:
+    call AudioProcess                   ; one channel; keeps BC/DE/HL, ++[$de24]
+    dec b
+    jr nz, .loop
+    ret
+
+; -----------------------------------------------------------------------------
+; Entry 7: BattleBGMResolve — E := the song this battle starts with (S116)
+; -----------------------------------------------------------------------------
+BattleBGMResolve:
+    ld e, $27                           ; vanilla: the battle theme
+    ld a, [wMapID]
+    cp $5d
+    jr nz, .vanillaDone
+    ld a, [wArenaStarryBattle]
+    cp $02
+    jr nz, .vanillaDone
+    ld e, $2b                           ; vanilla: the Starry Night final
+.vanillaDone:
+    ld a, [$c86c]                       ; a link battle: always the vanilla pick
+    or a
+    ret nz
+    ld hl, BattleFightBGMTable          ; 1. this fight: [EID lo, EID hi, song]
+.fight:
+    ld a, [hl+]
+    ld c, a
+    ld a, [hl+]
+    ld b, a
+    and c
+    inc a
+    jr z, .arena                        ; $FF $FF: end of the table
+    ld a, [$da03]                       ; the first enemy's EID (lo)
+    cp c
+    jr nz, .nextFight
+    ld a, [$da04]                       ; (hi)
+    cp b
+    jr nz, .nextFight
+    ld a, [hl]
+    jr .use
+.nextFight:
+    inc hl
+    jr .fight
+.arena:                                 ; 2. the arena battle room
+    ld a, [wMapID]
+    cp $5d
+    jr nz, .room
+    ld a, e
+    cp $2b
+    jr nz, .arenaMatch
+    ld a, [BattleBGMSettings + 3]       ; the Starry Night final
+    or a
+    jr nz, .use
+.arenaMatch:
+    ld a, [BattleBGMSettings + 2]       ; any other arena battle
+    or a
+    jr nz, .use
+.room:                                  ; 3. the room
+    ld a, [wInGateworld]
+    or a
+    jr nz, .gate                        ; maze floor
+    ld a, [wMapID]
+    cp $80
+    jr nc, .type
+    ld hl, CustomRoomBattleBGMTable
+    add l
+    ld l, a
+    adc h
+    sub l
+    ld h, a
+    ld a, [hl]
+    cp $ff
+    jr z, .gate                         ; a gate room: the dive's gate
+    or a
+    jr nz, .use
+    ld a, [wMapID]                      ; the special rooms (only in dives)
+    cp $50
+    jr c, .type
+    cp $52
+    jr z, .type
+    cp $5d
+    jr nc, .type
+.gate:                                  ; 4. the gate being dived
+    ld a, [wGateID]
+    cp GATE_BGM_LEN
+    jr nc, .type
+    ld hl, CustomGateBattleBGMTable
+    add l
+    ld l, a
+    adc h
+    sub l
+    ld h, a
+    ld a, [hl]
+    or a
+    jr nz, .use
+.type:                                  ; 5. boss fights ($5A/$5B: mode 3)
+    ld a, [$da09]
+    cp $03
+    jr nz, .normal
+    ld a, [BattleBGMSettings + 1]
+    or a
+    jr nz, .use
+.normal:                                ; 6. every battle vanilla plays $27 for
+    ld a, e
+    cp $27
+    ret nz
+    ld a, [BattleBGMSettings]
+    or a
+    ret z
+.use:
+    ld e, a
+    ret
+
+; -----------------------------------------------------------------------------
 ; Custom26DDTable — 8-byte $26DD-style records for mapIDs $70+,
 ; indexed (mapID-$70): [step_id, gfx_bank, w_lo, w_hi, h_lo,
 ;  h_hi, threshold, pad] (generated by build_project.py).
@@ -475,7 +671,8 @@ CustomRoomFlagsTable:
 ; Read by entry 2 (CustomRoomBGMResolve, template head) for the
 ; rewritten LoadNewBGMIdIntoA (patches/bank_001.asm). 0 = no
 ; assignment -> vanilla derivation; nonzero = the room's default
-; BGM id (survives save/reload: the load path re-derives here).
+; BGM id (survives save/reload: the load path re-derives here);
+; $FF = a gate room with no song: the dive's gate song (S116).
 ; Covers VANILLA and custom rooms alike; gate floors
 ; (wInGateworld!=0) are excluded by the resolver. (generated)
 ; -----------------------------------------------------------------------------
@@ -488,3 +685,63 @@ CustomRoomBGMTable:
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; mapIDs $50-$5F
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $A1, $00, $00, $00, $00  ; mapIDs $60-$6F: $6B=dwm2_bgm07
     db $00, $A7, $1E, $A1, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; mapIDs $70-$7F: $71=dwm2_bgm10, $72=$1E, $73=dwm2_bgm07
+
+; -----------------------------------------------------------------------------
+; CustomBGMChanTable — channel count of the project song starting at
+; each id $9E-$FC (0 = no song starts here: the old
+; 3-channel default). Read by entry 6 CustomBGMStart (S116). (generated)
+; -----------------------------------------------------------------------------
+CustomBGMChanTable:
+    db $03, $00, $00, $03, $00, $00, $03, $00, $00, $03, $00, $00, $00, $00, $00, $00  ; ids $9E-$AD $9E:dwm2_bgm06_well=3ch $A1:dwm2_bgm07=3ch $A4:dq6_town1=3ch $A7:dwm2_bgm10=3ch
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; ids $AE-$BD
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; ids $BE-$CD
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; ids $CE-$DD
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; ids $DE-$ED
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; ids $EE-$FC
+
+; -----------------------------------------------------------------------------
+; CustomGateBGMTable / CustomGateBattleBGMTable — per gate 0-95 (wGateID):
+; the song of its floors / of its battles, 0 = vanilla. Read by entries
+; 2 and 7 (S116). (generated)
+; -----------------------------------------------------------------------------
+GATE_BGM_LEN EQU 96
+CustomGateBGMTable:
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; gates 0-15
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; gates 16-31
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; gates 32-47
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; gates 48-63
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; gates 64-79
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; gates 80-95
+CustomGateBattleBGMTable:
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; gates 0-15
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; gates 16-31
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; gates 32-47
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; gates 48-63
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; gates 64-79
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; gates 80-95
+
+; -----------------------------------------------------------------------------
+; CustomRoomBattleBGMTable — 128 entries by wMapID: the song of battles
+; in that room (0 = not set, $FF = follow the gate being dived). Read by
+; entry 7 BattleBGMResolve (S116). (generated)
+; -----------------------------------------------------------------------------
+CustomRoomBattleBGMTable:
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; mapIDs $00-$0F
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; mapIDs $10-$1F
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; mapIDs $20-$2F
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; mapIDs $30-$3F
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; mapIDs $40-$4F
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; mapIDs $50-$5F
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; mapIDs $60-$6F
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; mapIDs $70-$7F
+
+; -----------------------------------------------------------------------------
+; BattleBGMSettings — [normal, boss, arena, Starry final] (0 = vanilla:
+; $27 / $27 / $27 / $2B). BattleFightBGMTable — [EID lo, EID hi, song]
+; per fight (the first enemy's row, $DA03), $FF $FF ends. (generated)
+; -----------------------------------------------------------------------------
+BattleBGMSettings:
+    db $00, $00, $00, $00  ; normal, boss, arena, Starry final: 
+BattleFightBGMTable:
+    db $FF, $FF
+

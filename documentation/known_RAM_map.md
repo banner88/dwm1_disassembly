@@ -34,7 +34,8 @@
    C8A9     1    Encounter RATE code = the current pool's +0 byte (bank $01
                  LoadNextDungeonFloor); indexes EncounterRateModifierTable
                  in the per-step encounter drain [S103]
-   C8B5     1    BGM (offset)
+   C8B5     1    wCurrPlayingBGM — the sound id InitBGM last started (LoadNewBGMIdIntoA's caller compares
+                 with it; the editor's sound engine reads it — its one WRAM read outside audio RAM) [S116]
                  0x02 - No music
                  0x06 - Title Screen
                  0x09 - BigTree
@@ -66,8 +67,9 @@
                  0x5D - Test Stereo BGM 1 (also used for intro)
                  0x9D - Test Stereo BGM 2
                  0x9F - 
-   C8B7     1    BGM (offset) to load
-   C8B8     1    ? (related to BGM)
+   C8B7     1    wBGM — the BGM request queue (SetBGM writes; ProcessBGMQueue -> InitBGM in VBlank;
+                 $FF = empty, $9D = ignored). SOUND_SYSTEM once said $C8B4 — wrong (DOC_AUDIT S116)
+   C8B8     1    wSoundEffect — the sound-effect request queue (PlaySoundEffect; -> LoadSE) [S116]
    C8B9     1    ? (related to BGM)
    C8A6     1    Frame counter used as the NPC behaviour clock (bank $06:
                  `and $01` = every 2nd frame, `and $07/$0F` = 8/16) [S97]
@@ -348,6 +350,10 @@
                  Written by Arena Lobby scr6: 0 = normal arena, 1 = Starry
                  Night, 4 = King battle. Bank $50 post-battle advances the
                  Starry phase 1→2→3 ($50:Jump_050_640a). [S67]
+                 S116 (code-read, bank $50 ~$6470): 1 for the Starry Night's three
+                 matches (wColiseumBattle 0-2); winning the third sets 2 = the FINAL
+                 battle — the one bank $51 LoadBattle gives battle song $2B (vanilla;
+                 project: music.battle.starry); after it 3.
    1:D9CD   1    wColiseumBattle — match index 0-2 within an arena class OR
                  within the in-gate Coliseum trio; also used during Starry
                  Night. Sentinels: $FE = class complete (Arena Lobby scr0

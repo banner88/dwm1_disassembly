@@ -5385,6 +5385,15 @@ SetBGM:
     ret
 
 
+; S116 (ROADMAP P3.13b) — SAME-SIZE rewrite (71 B, $1AE5-$1B2B; PlaySoundEffect
+; stays at $1B2C). Vanilla: a BGM request starts 3 consecutive sound ids
+; (AudioUpdate2x), 4 for $27, 2 for the nine ids in InitBGMTwoChannelIds — the
+; vanilla compare chain became a 9-byte table scan with identical results for
+; every id < $9E. NEW: ids >= $9E (the project's songs, banks $74/$75) far-call
+; bank $71 entry 6 CustomBGMStart, which starts the song's OWN channel count
+; (1-6, CustomBGMChanTable — 3 when the id is not a song's first id, the old
+; behaviour). Registers: vanilla InitBGM already clobbered BC/DE/HL
+; (InitAudioSystem); the callers (ProcessBGMQueue) read none of them.
 InitBGM:
     ld [wCurrPlayingBGM], a
     di
@@ -5394,37 +5403,22 @@ InitBGM:
     jr z, InitBGMReturn
 
     ld [$de24], a
+    cp $9e
+    jr nc, InitBGMCustom            ; a project song: its own channel count
+
     cp $27
-    jr z, InitBGMPlayback
+    jr z, InitBGMPlayback           ; the battle theme: 4 channels
 
-    cp $3a
-    jr z, InitBGMAlt
+    ld hl, InitBGMTwoChannelIds
+    ld b, $09
+.scan:
+    cp [hl]
+    jr z, InitBGMAlt                ; 2 channels
+    inc hl
+    dec b
+    jr nz, .scan
 
-    cp $3f
-    jr z, InitBGMAlt
-
-    cp $47
-    jr z, InitBGMAlt
-
-    cp $49
-    jr z, InitBGMAlt
-
-    cp $4b
-    jr z, InitBGMAlt
-
-    cp $4d
-    jr z, InitBGMAlt
-
-    cp $4f
-    jr z, InitBGMAlt
-
-    cp $5d
-    jr z, InitBGMAlt
-
-    cp $9d
-    jr z, InitBGMAlt
-
-    call AudioUpdate2x
+    call AudioUpdate2x              ; 3 channels
     ei
     ret
 
@@ -5435,12 +5429,26 @@ InitBGMPlayback:
     ret
 
 
+InitBGMCustom:
+    ld hl, $7106                    ; bank $71 entry 6: CustomBGMStart
+    rst $10
+    jr InitBGMReturn
+
+
 InitBGMAlt:
     call AudioUpdate1x
 
 InitBGMReturn:
     ei
     ret
+
+InitBGMTwoChannelIds:               ; the vanilla compare chain's ids, in order
+    db $3a, $3f, $47, $49, $4b, $4d, $4f, $5d, $9d
+    nop                             ; pad: the rewrite keeps the 71-byte footprint
+    nop
+    nop
+    nop
+    nop
 
 
 PlaySoundEffect:
@@ -5555,6 +5563,11 @@ LoadSEDouble:
     ret
 
 
+; ProcessBGMQueue — VBlank, right after the frame driver (VBlankProcessAudio):
+; a pending wBGM ($C8B7, SetBGM) request -> InitBGM, a pending wSoundEffect
+; ($C8B8, PlaySoundEffect) -> LoadSE; $FF = empty, $9D = ignored. So a request
+; made during frame n sounds from the driver tick of frame n+1 (measured S116,
+; tools/census_sound_engine.py).
 ProcessBGMQueue:
     ld a, [wBGM]
     cp $ff
@@ -11251,16 +11264,27 @@ AudioRestoreBank:
     ret
 
 
-    nop
-    ld bc, $1c40
-    ld hl, $4001
-    dec e
-    scf
+; The vanilla master sound table @ $3466 (S116 re-section: it was misassembled
+; as `nop / ld bc,$1c40 / ld hl,$4001 / dec e / scf / ld bc,$1e40 / rst $38`).
+; Rows [base_id, ptr_lo, ptr_hi, bank]; AudioProcess scans for the first base >
+; the id and uses the PREVIOUS row: record = bank:ptr + (id - base) * 4
+; (SOUND_SYSTEM §2). Sentinel $FF.
+; Patched builds read the extended copy AudioMasterTableExt @ $3FE8 instead
+; (S63); these 13 bytes stay, unreferenced.
+AudioMasterTable:
+    db $00, $01, $40, $1C       ; ids $00-$20 -> $1C:$4001
+    db $21, $01, $40, $1D       ; ids $21-$36 -> $1D:$4001
+    db $37, $01, $40, $1E       ; ids $37+    -> $1E:$4001
+    db $FF                      ; sentinel
 
-AudioSetBC1E40:
-    ld bc, $1e40
-    rst $38
-
+; SaveBankAndAudioState — THE FRAME DRIVER: one tick of all 6 channel states
+; ($DD80 + 26*k; slots $00/$1A = sound effects, $34/$4E/$68/$82 = music
+; pulse1/pulse2/wave/noise), each copied to HRAM $FFE4-$FFFD, ticked
+; (AudioProcessChannel: groove, slides, note countdown, the next stream pair),
+; copied back; then NR51 and the saved ROM bank are restored. Called once per
+; VBlank — from VBlankEnableInt, and from VBlankReentry on lag frames (so music
+; keeps time when the main loop runs late). The editor runs exactly this
+; routine on its own SM83 interpreter (editor2/core/sound_engine.py, S116).
 SaveBankAndAudioState:
     ld a, [$4000]
 
@@ -13839,12 +13863,17 @@ MenuCheckEnd:
 ; song_codec.py emit-song-bank; records $4001, fixed 95-slot area).
 ; Growth: ONE more row (a future song bank $75+) fits by consuming 4 filler
 ; bytes; the sentinel moves down. Beyond that, relocate the table again.
+; S116 (ROADMAP P3.13b): the rows are a COMPILER REGION (rom0_audio_master,
+; editor2/core/music.py emit_region_master_table): the 3 vanilla rows + the
+; bank $74 row + a 5th row [split, $4001, $75] when the project's songs spill
+; into the second song bank — the one future row this slot had room for.
 AudioMasterTableExt::
+; @BUILD_PROJECT BEGIN rom0_audio_master
     db $00, $01, $40, $1C       ; ids $00-$20 -> $1C:$4001 (vanilla row)
     db $21, $01, $40, $1D       ; ids $21-$36 -> $1D:$4001 (vanilla row)
     db $37, $01, $40, $1E       ; ids $37-$9D -> $1E:$4001 (vanilla row)
-    db $9E, $01, $40, $74       ; ids $9E-$FC -> $74:$4001 (custom song bank)
+    db $9E, $01, $40, $74       ; ids $9E-$FC -> $74:$4001 (project song bank 1)
     db $FF                      ; sentinel
-    db $FF, $FF, $FF, $FF       ; 7 filler bytes = room for one future row
-    db $FF, $FF, $FF            ;   (slot is $3FE8-$3FFF, 24 B total)
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; filler (7 B; slot $3FE8-$3FFF)
+; @BUILD_PROJECT END rom0_audio_master
 

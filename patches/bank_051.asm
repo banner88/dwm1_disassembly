@@ -61,24 +61,34 @@ LoadBattle:
     ld [wSoundEffect], a
     call InitAudioSystem
 
+; S116 (ROADMAP P3.13b) — SAME-SIZE rewrite of the battle music pick (28 B,
+; $4073-$408E). Vanilla: B := $27 (the battle theme); in the arena battle room
+; ($5D) clear $C8EA bit 7 and, when wArenaStarryBattle == 2 (the Starry Night
+; final), B := $2B; then SetBGM B. Now bank $71 entry 7 BattleBGMResolve makes
+; the same vanilla pick and lets the project override it (per fight / arena /
+; room / gate / boss / normal — music.battle, PROJECT_COMPILER §2.9). The
+; $C8EA write is kept here, arena-only as before. rst $10 clobbers BC/DE/HL:
+; the code after SetBGM reads none of them (it reloads every register).
 jr_051_4073:
-    ld b, $27
     ld a, [wMapID]
     cp $5d
-    jp nz, Jump_051_408b
+    jr nz, .pickSong
 
     ld hl, $c8ea
     res 7, [hl]
-    ld a, [wArenaStarryBattle]
-    cp $02
-    jr nz, jr_051_408b
-
-    ld b, $2b
-
-Jump_051_408b:
-jr_051_408b:
-    ld a, b
+.pickSong:
+    ld hl, $7107                    ; bank $71 entry 7: BattleBGMResolve -> E
+    rst $10
+    ld a, e
     call SetBGM
+    nop                             ; pad: the 28-byte footprint is kept
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
     ld a, $07
     ldh [$b5], a
     ld a, $ff

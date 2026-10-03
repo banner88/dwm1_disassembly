@@ -804,6 +804,10 @@ label13_7366:
     dw label13_73f5
 
 
+; S116: state 0 of this $C905 machine plays the battle-start jingle — $4B (2
+; channels) on gate floors and in rooms below map $30, $4D in maps $30+ outside
+; gates (the boss rooms, and custom rooms), measured in PyBoy before LoadBattle's
+; battle song; then $02 (silence) and the battle song.
 label13_7370:
     ld b, $4b
     ld a, [wInGateworld]

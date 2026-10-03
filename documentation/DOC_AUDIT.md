@@ -496,3 +496,16 @@ gate you assumed".
 | GATE_GENERATION §1 "byte 7 … selects … the floor's visual tier" vs §7.7 "byte 7 = depth tier (only reader: the bank $01 item tier)" | UNRESOLVED (not measured S115) | The two sections disagree on whether byte 7 reaches the tileset; S115 copies byte 7 from the source gate, so new gates are unaffected. Left for the private-floor-types residual (ROADMAP NG1). |
 | PYBOY_DEBUGGING S114 "the staircase kick did NOT increment wCurrentFloor: poke floor − 1 for the floor you want" | CONTRADICTED as worded (measured S115, two kicks from maze floors) | The kick added one: poke 1 → wCurrentFloor 2, poke 2 → 3 (= the game's floor − 2). Kept the S114 line, the S115 measurement added beside it. |
 
+
+## S116 addendum (2026-10-03; the Music tab, ROADMAP P3.13b)
+
+| Claim (where) | Verdict | Correct |
+|---|---|---|
+| SOUND_SYSTEM §1 "consume wBGM ($C8B4)" | WRONG (game.sym, S116) | wBGM = **$C8B7**, wSoundEffect $C8B8, wCurrPlayingBGM $C8B5. Corrected in place. |
+| SOUND_SYSTEM §1 flow "VBlankProcessAudio -> ProcessBGMQueue … SaveBankAndAudioState per-frame driver" (order implied queue first) | ORDER WRONG + INCOMPLETE (measured S116) | The driver runs first, then the queue; the driver also runs from VBlankReentry on lag frames (no queue pass). |
+| SOUND_SYSTEM §8 / PROJECT_COMPILER §2.9 "every BGM is normalized to the exact pulse1/pulse2/wave trio … extra channels dropped" | SUPERSEDED S116 | A song keeps its 1-6 channels; the rewritten InitBGM starts its own count (CustomBGMChanTable). |
+| PROJECT_COMPILER §6 "Custom music. Blocked on ROADMAP Arc 3 M1–M3 … Until then custom.music hard-errors." | STALE since S64 | Built S64 / S116 (struck through in place). |
+| EDITOR_DESIGN §5.6 / gap G-I "audition in PyBoy" | SUPERSEDED S116 | The editor runs the game's own sequencer on its SM83 interpreter (SOUND_SYSTEM §9) — no emulator needed on the user's Mac. |
+| ROADMAP Phase 1 "Custom music — parked; sound engine unexplored" | STALE since S64 | Checked (Arc 3 + P3.13b). |
+| bank_000 (both trees) `$3466` "nop / ld bc,$1c40 / ld hl,$4001 / dec e / scf / AudioSetBC1E40: ld bc,$1e40 / rst $38" | MISASSEMBLED DATA | The vanilla master sound table: 3 rows + $FF. Re-sectioned as `AudioMasterTable` (db), clean build byte-perfect; the unreferenced fake label `AudioSetBC1E40` is gone. |
+| known_RAM_map / SOUND_SYSTEM "battle music" (absent) | GAP CLOSED S116 | bank $51 LoadBattle: $27 for every battle, $2B in map $5D when wArenaStarryBattle == 2 (the Starry Night final); the battle-start jingle $4B / $4D comes first (bank $13 label13_7370). A conversation battle runs as $DA09 = 3 (a "boss" battle) — measured. |

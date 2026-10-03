@@ -37,6 +37,7 @@ to the proven overlay:
 | the `lay_copies_10` / `lay_copies_11` regions (the zero tails of `patches/bank_010.asm` / `bank_011.asm`) | walking layouts copied into the other follower bank, from `gamedata.art` + `custom.species` (S107 2b, §2.23 "Walking layouts") |
 | `gd_monster_names` / `gd_monster_nicks` in `patches/bank_041.asm`, `gd_monster_desc` / `gd_monster_desc_extra` in `patches/bank_04d.asm` | the ORIGINAL monsters' names, default nicknames and library descriptions (+ new species' own descriptions), from `gamedata.monster_text` / `custom.species[].description` (S108 P3.10 part 3, §2.24) |
 | `gd_arena_masters_04` / `gd_arena_masters_50` / `gd_arena_fees` / `gd_arena_team_sizes` in `patches/bank_004/050/009/06e.asm` | the arena: each match's master, the class entry fees, the team sizes, from `gamedata.arena` (S109 P3.10b, §2.25; the team members are `gamedata.enemies` rows) |
+| `patches/bank_075.asm` + region `rom0_audio_master` in `patches/bank_000.asm` | S116: the second song bank and the `AudioMasterTableExt` rows (§2.9) |
 | `patches/bank_076.asm` | whole file = template head (`EncResolve`, S115 + `NewGateRowCopy`) + the project's encounter lists, rooms' lists / variants / rates, gates' plans (S114 P3.13a, §2.30) + the new gates' rows / sources (S115 NG1, §2.31) |
 
 Everything else — engine intercepts in banks `$00/$01/$04/$06/$07/$0B/$16`,
@@ -335,7 +336,49 @@ neighbor's first channel as its own third); channels outside the trio drop
 with a warning (SOUND_SYSTEM §8; InitBGM channel-count extension = ROADMAP
 box). `room_defaults` values: song id → its `first_id`; raw number = used
 verbatim (vanilla music assignment); id 0 = the no-assignment sentinel and
-is rejected. Output: the 128-entry `CustomRoomBGMTable` in bank $71 (read
+is rejected.
+
+**S116 (ROADMAP P3.13b) — the schema grew and the trio rule is gone** (owning
+module `editor2/core/music.py` `plan()`; engine: SOUND_SYSTEM §2 / §10):
+
+```jsonc
+"music": {
+  "libraries": [...], "room_defaults": {...},
+  "songs": [ {"id": "my_tune", "source": {"file": "assets/music/my_tune.json"},  // NEW source:
+              "first_id": "auto", "name": "My Tune"} ],   // a project file (MIDI import)
+  "names":  {"0x09": "Castle theme", "dwm2_bgm07": "Dusk"},   // editor-only labels
+  "gates":  {"32": {"floors": "<song>", "battles": "<song>"}},   // gates 0-95
+  "battle": {"normal": "<song>", "boss": "<song>", "arena": "<song>",
+             "starry": "<song>",                       // the Starry Night final
+             "rooms":  {"0x01": "<song>"},             // battles that start in a room
+             "fights": {"521": "<song>"}}              // the battle's first enemy (EID)
+}
+```
+`<song>` = a project song id or a raw sound id ($01-$FC); unset = the game's.
+* **Channels:** a song keeps EXACTLY its channels — 1-6, any of the six state
+  slots ($00/$1A sound-effect slots warn: an effect cuts them), each once. The
+  S64 padding to the pulse1/pulse2/wave trio and the dropping of extra channels
+  are gone; `CustomBGMChanTable` (bank $71, 95 B) holds each song's count at its
+  first id, read by the rewritten InitBGM (bank $71 entry 6 `CustomBGMStart`).
+* **Two song banks:** songs in first-id order fill bank $74 (streams $4180-$7FFF,
+  16,000 B), the rest bank $75 from the first song that no longer fits (the
+  split); region `rom0_audio_master` (bank $00 `AudioMasterTableExt`) gets row 5
+  `[split, $4001, $75]`. Over 2 × 16,000 B or ids past $FC = error.
+* **Gate rooms:** when any gate has a floors song, custom rooms with no song
+  that a gate serves (gate_inserts) or ends in (custom boss rooms) get
+  `CustomRoomBGMTable` byte **$FF** = play the dive's gate song; when any gate
+  has a battle song, served rooms get $FF in `CustomRoomBattleBGMTable`.
+* **Emitted tables (bank $71, after `CustomRoomBGMTable`):** `CustomBGMChanTable`,
+  `GATE_BGM_LEN EQU 96`, `CustomGateBGMTable`, `CustomGateBattleBGMTable`,
+  `CustomRoomBattleBGMTable` (128), `BattleBGMSettings` [normal, boss, arena,
+  Starry final], `BattleFightBGMTable` ([EID lo, EID hi, song]…, `$FF $FF`).
+* **Validators:** unknown keys in music / gates / battle; a gate outside 0-95 or
+  not defined (vanilla 0-31 or a project new gate); a song value that is neither
+  a song id nor a sound id $01-$FC; two channels on one slot; 0 or > 6 channels;
+  a song file missing from the project; > 255 fights.
+* **Models:** `music.model_room_bgm(plan, ctx)` / `model_battle_bgm(plan, ctx)`
+  are the Python twins of entries 2 / 7 (`tools/census_music_resolve.py` proves
+  them against a built ROM by stub calls — SOUND_SYSTEM §10). Output: the 128-entry `CustomRoomBGMTable` in bank $71 (read
 by template entry 2 `CustomRoomBGMResolve` for the rewritten
 `LoadNewBGMIdIntoA`, patches/bank_001.asm — SOUND_SYSTEM §8) + the whole
 generated `patches/bank_074.asm` via `song_codec.song_bank_asm` (fixed
@@ -409,6 +452,8 @@ registering an emitter; nothing existing changes.
 | `render17` | `custom.rooms` (+ placement-b palettes) | `region:…#room_render_tables` | `$17` |
 | `wram_steps` | `custom.rooms` + `custom.wram` | `region:…#wram_step_counters` | — |
 | `music74` | `custom.music` (+ `rooms[].music`) | `file:patches/bank_074.asm` | `$74` |
+| `music75` (S116) | `custom.music` (songs past bank $74's 16,000 B) | `file:patches/bank_075.asm` | `$75` |
+| `audio_master` (S116) | `custom.music` (the bank $75 row) | `region:patches/bank_000.asm#rom0_audio_master` | `$00` |
 | `tileanim6c` (S102) | `custom.rooms[].tile_anims` | `file:patches/bank_06c.asm` | `$6C` |
 | `gd_monsters` `gd_enemies` `gd_encounters` `gd_family` `gd_special` `gd_exp_curves` `gd_growth_curves` `gd_skill_learn` `gd_skill_mp` `gd_skill_records` `gd_library` `gd_library_text` (S103) | `gamedata` (§2.20) | `region:` in banks $03 / $14 / $01 / $16 / $69 / $13 / $13 / $06 / $07 / $54 / $12 / $4D | those banks |
 | `species7e` + `ns_battle_gfx` `ns_follower_attr` `ns_battle_pal` `ns_recipe_pair` `ns_name_ptr` `ns_short_ptr` `ns_text_a`…`ns_text_g` `ns_detail_text` `ns_info` (S105; G3 layout) | `custom.species` (§2.21; editor2/core/species.py) | `file:patches/bank_07e.asm` + `region:` in banks $00 / $11 / $17 / $16 / $41 ×9 / $4D / $6A | those banks |
@@ -450,8 +495,11 @@ user-confirmed hand-authored code:
   `EncPickVariant` / `EncFloorRun` / `EncVanillaNumber` (which encounter list a
   battle uses, §2.30; S115: a new gate walks its source's rule); pinned
   `94cb8ece…5d90` (S115; was `2f0634f5…9f` S114); TEMPLATE_SIZE 296 B (241 S114).
-* `editor2/core/templates/bank_071_head.asm` — bank byte, 6-entry table
-  (S100; 4 S99, 3 S64), `CopyCustomRoomRecord`, `CustomEncResolve` (S100:
+* `editor2/core/templates/bank_071_head.asm` — bank byte, 8-entry table
+  (S116: entry 6 `CustomBGMStart`, entry 7 `BattleBGMResolve`, entry 2 + the gate
+  songs — SOUND_SYSTEM §10; TEMPLATE_SIZE 688 B, measured `Custom26DDTable` $42B0
+  in the S116 game.sym; re-pinned S116 — current value in `templates/PINNED_SHA256`;
+  S100: 6 entries; 4 S99, 3 S64), `CopyCustomRoomRecord`, `CustomEncResolve` (S100:
   gate byte $FF = follow the dive, no pin), `CustomRoomBGMResolve` (entry 2:
   E := `CustomRoomBGMTable[wMapID]` or 0; gate floors return 0 — SOUND_SYSTEM
   §8), `CustomAnimSource` (entry 3, S99: E := the room's animation source —
@@ -508,9 +556,9 @@ untouched.
   around those blocks, exactly like the bank-`$17` regions. Effect
   HANDLERS (bank `$72` code) stay hand/tool-authored; the schema references
   them by symbol, mirroring how rooms reference layouts.
-* **Custom music.** Blocked on ROADMAP Arc 3 M1–M3 (sound engine RE). Once
-  a song format exists, a `music` emitter owns a song bank the same way
-  `rooms60` owns `$60`. Until then `custom.music` hard-errors.
+* **Custom music.** ~~Blocked on ROADMAP Arc 3 M1–M3 … Until then
+  `custom.music` hard-errors.~~ Built S64 (§2.9, `music74`) and S116 (`music75`,
+  `audio_master`, the bank $71 music tables) — DOC_AUDIT S116.
 * Pattern for any subsystem: (1) formats into `formats.py` with doc
   citations, (2) rules into `validators.py` with KEY_LESSONS citations,
   (3) an emitter with a declared target (whole free bank, or marked region

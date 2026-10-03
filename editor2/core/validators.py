@@ -25,7 +25,7 @@ TEMPLATE_SIZE = {
                  # (283 S53 -> 348 S70 -> 358 S70v3 (+2x5B wCustomY7Cmp arming): entry-7 dw + VanillaExitResolve +
                  # factored CopyExitListToBuffer in the template head; 383 S94: VanillaExitResolve rows keyed
                  # by (mapID, screen) — `db mapID, screen` with $FF = any screen)
-    0x71: 444,    # addr(Custom26DDTable)-$4000, S102 (440 S101 + CustomAnimSource's far call to bank $6C entry 0, 4 B; measured from the S102 reference game.sym). Prev 440 S101 (395 S100 + CustomRoomBGMResolve .gatePath: the custom boss song on the floor before the boss). Prev 395 S100 (164 S99 + entries 4/5 dw + CustomGateInsert + CustomRoomFlags + entry-1 follow-gate test; measured from the S100 reference game.sym). Prev 164 S99 (142 S64 + entry-3 dw + CustomAnimSource 20 B; measured from the S99 reference game.sym). Prev 142 S64 (S55 116 + entry-2 dw + CustomRoomBGMResolve; measured from the S64 reference game.sym)
+    0x71: 688,    # addr(Custom26DDTable)-$4000, S116 (444 S102 + entries 6/7 dw + CustomRoomBGMResolve gate songs + CustomBGMStart + BattleBGMResolve; measured from the S116 example game.sym). Prev 444 S102 (440 S101 + CustomAnimSource's far call to bank $6C entry 0, 4 B; measured from the S102 reference game.sym). Prev 440 S101 (395 S100 + CustomRoomBGMResolve .gatePath: the custom boss song on the floor before the boss). Prev 395 S100 (164 S99 + entries 4/5 dw + CustomGateInsert + CustomRoomFlags + entry-1 follow-gate test; measured from the S100 reference game.sym). Prev 164 S99 (142 S64 + entry-3 dw + CustomAnimSource 20 B; measured from the S99 reference game.sym). Prev 142 S64 (S55 116 + entry-2 dw + CustomRoomBGMResolve; measured from the S64 reference game.sym)
     0x6C: 285,    # addr(TileAnimRoomTable)-$4000, S102 (bank self-ID + entry table + CustomTileAnimate / TileAnimRestart / TileAnimCopy; measured from the S102 reference game.sym)
     0x6F: 391,    # addr(CustomAnimFrameTable)-$4000, S112 (bank self-ID + 4-entry table + CustomAnimTick / Init / Load / Step + CustomAnimNone; measured from the S112 game.sym)
     0x76: 296,    # addr(EncRoomTable)-$4000, S115 (+2 entry-1 dw, +17 EncVanillaNumber new-gate source, +36 NewGateRowCopy; measured from the S115 game.sym). Prev 241 S114 (bank self-ID + entry table + EncResolve / EncPickVariant / EncFloorRun / EncVanillaNumber)
@@ -165,30 +165,22 @@ def validate(prj, generated=None):
             errors.append(str(e))
 
     # ------------------------------------------------------------- music
-    # M3b (S64): resolve custom.music up front so schema/reference errors
-    # surface as validation. Capacity: fixed 95-slot record area (ids
-    # $9E-$FC) + streams $4180-$7FFF (song_codec constants; SOUND_SYSTEM §8).
+    # M3b (S64) / S116: resolve custom.music up front so schema/reference errors
+    # surface as validation. Capacity (two song banks, 95 ids $9E-$FC, 1-6
+    # channels per song, gates 0-95) is enforced by music.plan.
     if prj.custom.get('music') or any(r.get('music') for r in prj.rooms):
         try:
-            lib, room_bgm, ids, mw = prj.music_resolved()
+            P = prj.music_plan()
         except Exception as e:
             errors.append(f"custom.music: {e}")
         else:
-            warnings += [w for w in mw if w not in warnings]
-            from . import music as M
-            repo = M._repo_root(getattr(prj, 'repo_root', None) or prj.root)
-            sc = M.song_codec(repo)
-            total = 0
-            for song in lib['songs']:
-                for c in song['channels']:
-                    total += len(sc.emit_tokens(c['header'], c['tokens']))
-            cap = 0x8000 - sc.SONG_BANK_STREAMS_AT
-            if total > cap:
-                errors.append(
-                    f"custom.music: {total} stream bytes exceed bank $74 "
-                    f"capacity ({cap}) — the libraries are a catalog; only "
-                    "assign what fits (or a second song bank is a future "
-                    "AudioMasterTableExt row)")
+            warnings += [w for w in P.warnings if w not in warnings]
+            gates = set((prj.gate_configs() or {}).keys()) if hasattr(prj, 'gate_configs') else set()
+            for key in ((prj.custom.get('music') or {}).get('gates') or {}):
+                g = F.val(key)
+                if gates and g not in gates:
+                    errors.append(f"custom.music.gates: gate {g} is not defined "
+                                  "(a vanilla gate 0-31 or a project new gate)")
 
     # ------------------------------------------------------------- master
     # KEY_LESSONS S53 finding: CustomScriptRead indexes the master table by
@@ -1123,8 +1115,8 @@ def _validate_gates(prj, rooms, errors, warnings):
         if not r.get('music'):
             warnings.append(
                 f"room {r.get('id')}: boss room of gate {gid} has no song — the "
-                "gate theme ($34) keeps playing (vanilla boss rooms have their "
-                "own boss song, which starts on the floor before)")
+                "gate's song (or the gate theme $34) keeps playing (vanilla boss "
+                "rooms have their own boss song, which starts on the floor before)")
     # ---- new gates (S115, ROADMAP NG1) + gate entrances
     entered = {}
     for r in rooms:

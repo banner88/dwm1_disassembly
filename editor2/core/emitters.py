@@ -559,7 +559,8 @@ def emit_bank_071(prj, warnings):
               "; Read by entry 2 (CustomRoomBGMResolve, template head) for the",
               "; rewritten LoadNewBGMIdIntoA (patches/bank_001.asm). 0 = no",
               "; assignment -> vanilla derivation; nonzero = the room's default",
-              "; BGM id (survives save/reload: the load path re-derives here).",
+              "; BGM id (survives save/reload: the load path re-derives here);",
+              "; $FF = a gate room with no song: the dive's gate song (S116).",
               "; Covers VANILLA and custom rooms alike; gate floors",
               "; (wInGateworld!=0) are excluded by the resolver. (generated)",
               "; " + "-" * 77,
@@ -569,10 +570,13 @@ def emit_bank_071(prj, warnings):
     by_id = {v: k for k, v in names.items()}
     for i in range(0, 128, 16):
         row = room_bgm[i:i + 16]
-        tags = [f"${i+j:02X}={by_id.get(v, F.hexb(v))}"
+        tags = [f"${i+j:02X}=" + ('follow the gate' if v == M.FOLLOW_GATE
+                                  else by_id.get(v, F.hexb(v)))
                 for j, v in enumerate(row) if v]
         lines.append(F.db_line(row, comment=f"mapIDs ${i:02X}-${i+15:02X}"
                      + (": " + ", ".join(tags) if tags else "")))
+    lines.append("")
+    lines += M.emit_bank_071_tables(prj, warnings)
     return "\n".join(lines) + "\n"
 
 
@@ -744,17 +748,24 @@ def emit_region_wram_steps(prj, warnings):
 # ---------------------------------------------------------------------------
 
 def emit_bank_074(prj, warnings):
-    """The song bank: project songs (library refs / inline) -> the proven
-    song_codec emit path (fixed 95-slot record area, streams from $4180).
-    Deterministic: pure function of project.json + the referenced library
-    JSONs (which are repo-committed extracted/ data)."""
-    library, _, _, mw = prj.music_resolved()
-    warnings += [w for w in mw if w not in warnings]
-    repo = M._repo_root(getattr(prj, 'repo_root', prj.root))
-    sc = M.song_codec(repo)
-    lib = {"_source": "project.json custom.music (music emitter, S64)",
-           "songs": library["songs"]}
-    return sc.song_bank_asm(lib)
+    """The first song bank: project songs (library refs / inline / files) ->
+    the proven song_codec emit path (fixed 95-slot record area, streams from
+    $4180). Deterministic: a pure function of project.json + the referenced
+    library JSONs (repo-committed extracted/ data) + project song files."""
+    P = prj.music_plan()
+    warnings += [w for w in P.warnings if w not in warnings]
+    return M.song_bank_asm(prj, 0x74)
+
+
+def emit_bank_075(prj, warnings):
+    """S116: the second song bank (the songs past bank $74's 16,000 stream
+    bytes, from the split id; AudioMasterTableExt row 5). All zero but the bank
+    byte when nothing spills."""
+    return M.song_bank_asm(prj, 0x75)
+
+
+def emit_region_audio_master(prj, warnings):
+    return M.emit_region_master_table(prj, warnings)
 
 
 # ---------------------------------------------------------------------------
@@ -1117,6 +1128,12 @@ REGISTRY = [
      []),
     ("music74", "custom.music", "file:patches/bank_074.asm",
      emit_bank_074, [0x74]),
+    # S116 (P3.13b): the second song bank + the master-table rows that reach it
+    ("music75", "custom.music", "file:patches/bank_075.asm",
+     emit_bank_075, [0x75]),
+    ("audio_master", "custom.music",
+     "region:patches/bank_000.asm#rom0_audio_master", emit_region_audio_master,
+     [0x00]),
     # S114 (P3.13a): which encounter list a battle draws from — bank $76
     # EncResolve (template bank_076_head.asm) + the project's own lists, the
     # rooms' lists / variants / rates and the gates' plans (editor2/core/

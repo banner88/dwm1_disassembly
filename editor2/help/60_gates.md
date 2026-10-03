@@ -19,7 +19,8 @@ shows, floor by floor, what the game serves.
 
 A room served on a gate floor needs (Rooms tab → *Inside gates*): an
 **arrival** cell, a **Stairs down** (More ▾ → Stairs down here), battles off
-or "follow the gate", and optionally its own song. Saving: allowed by
+or "follow the gate", and optionally its own song (without one it plays the
+gate's song when the gate has one — Music tab → Gates). Saving: allowed by
 default in gate rooms, off in boss rooms.
 
 ## New gates

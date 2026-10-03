@@ -93,7 +93,7 @@ tools/           100+ Python tools: dumpers, compilers, verify_integrity.py
 dwm/             Python support package (ROM access, text codec)
 editor2/         THE editor: core/ (headless compiler + live renderer + document model),
                  app/ (PySide6 shell + Rooms tab), example-project/, tests/
-                 Run:  pip install PySide6 Pillow   then   python3 -m editor2.app
+                 Run:  pip install PySide6 Pillow numpy   then   python3 -m editor2.app
 editor/          Legacy Streamlit editor — frozen, superseded by editor2/
 data/            DWM-original.gbc (user-provided, gitignored)
 ```

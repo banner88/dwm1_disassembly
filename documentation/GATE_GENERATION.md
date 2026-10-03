@@ -647,6 +647,10 @@ new game.
 
 ---
 
+**Music in served rooms (S116):** a served room with no song of its own plays the gate's
+own song when the gate has one (`music.gates[n].floors` — the compiler marks the room $FF
+in `CustomRoomBGMTable`); without a gate song, the gate theme as before (SOUND_SYSTEM §10).
+
 ## 7.7 Custom boss floors, hand-made gates (S101, ROADMAP P3.7b part 2) — built, PyBoy-verified, NOT yet user-tested
 
 **The boss floor.** Bank $16 entry 5 serves the boss when `wCurrentFloor ==

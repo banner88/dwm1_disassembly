@@ -222,11 +222,12 @@ class Project:
         music = (self.data.get('custom') or {}).get('music')
         if music is not None and not isinstance(music, dict):
             raise ProjectError(
-                "custom.music must be an object {libraries, songs, "
-                "room_defaults} (PROJECT_COMPILER.md §2.9; implemented S64)")
+                "custom.music must be an object {libraries, songs, names, "
+                "room_defaults, gates, battle} (PROJECT_COMPILER.md §2.9)")
         if music:
+            from . import music as _M
             bad = [k for k in music
-                   if k not in ('libraries', 'songs', 'room_defaults')
+                   if k not in _M.MUSIC_KEYS
                    and not k.startswith('_')]
             if bad:
                 raise ProjectError(
@@ -1705,13 +1706,17 @@ class Project:
         return list(room.get('tile_anims') or [])
 
     # ----------------------------------------------------------------- music
-    def music_resolved(self):
-        """(bank74_library, room_bgm[128], song_ids, warnings) — cached so
+    def music_plan(self):
+        """S116: the resolved music plan (editor2/core/music.Plan) — cached so
         the double-emit determinism check sees identical results."""
         if self._music is None:
             from . import music as M
-            self._music = M.resolve(self)
+            self._music = M.plan(self)
         return self._music
+
+    def music_resolved(self):
+        """(bank74_library, room_bgm[128], song_ids, warnings) — the S64 view."""
+        return self.music_plan().legacy()
 
     def music_room_bgm(self, warnings=None):
         lib, room_bgm, ids, mw = self.music_resolved()

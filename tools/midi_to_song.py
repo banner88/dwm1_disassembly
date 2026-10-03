@@ -240,9 +240,60 @@ def render_channel(role, evts, to_frames, opts, warnings):
 
 
 # ------------------------------------------------------------------- main ---
+class MidiError(ValueError):
+    pass
+
+
 def convert(opts):
+    """CLI: convert and write the entry into opts.library."""
+    try:
+        entry, warnings = convert_entry(opts)
+    except MidiError as e:
+        raise SystemExit(str(e))
+    write_library(entry, opts.library)
+    dur = entry["duration_frames"] / GB_FPS
+    print(f"'{opts.song_id}': {entry['channel_count']} channels, "
+          f"{entry['total_bytes']} stream bytes, {dur:.1f}s/loop, "
+          f"{entry['conversion']['overlap_cuts']} overlap cuts, map "
+          f"{entry['conversion']['map']} -> {opts.library}")
+    for w in sorted(set(warnings)):
+        print(f"  warn: {w} (x{warnings.count(w)})")
+
+
+def write_library(entry, library):
+    p = Path(library)
+    lib = json.loads(p.read_text()) if p.exists() else {
+        "_generator": "tools/midi_to_song.py (MIDI -> DWM1-native tokens; "
+                      "lengths in frames, decode round-trip checked)",
+        "songs": []}
+    lib["songs"] = [s for s in lib["songs"] if s.get("id") != entry["id"]]
+    lib["songs"].append(entry)
+    lib["songs"].sort(key=lambda s: s["id"])
+    p.write_text(json.dumps(lib, indent=1))
+
+
+def options(midi, song_id, name=None, **kw):
+    """The CLI defaults as an object (the editor's automatic import, S116)."""
+    o = argparse.Namespace(midi=midi, song_id=song_id, name=name, library=None,
+                           map=None, transpose=0, no_loop=False, pulse_duty=2,
+                           pulse_envelope=0x0B, wave_instrument=8, wave_outlevel=0x20)
+    for k, v in kw.items():
+        setattr(o, k, v)
+    return o
+
+
+def convert_entry(opts):
+    """MIDI -> (library entry, warnings). Raises MidiError. S116: with more
+    than 3 melodic MIDI channels and no --map, the automatic pick keeps the 3
+    that sound longest (total note time) — the dropped ones are warned — and
+    channel 10 (drums) goes to the noise channel."""
     warnings = []
-    div, tempos, notes = parse_midi(opts.midi)
+    try:
+        div, tempos, notes = parse_midi(opts.midi)
+    except (ValueError, IndexError, struct.error) as e:
+        raise MidiError(f"{Path(opts.midi).name}: {e}")
+    if not notes:
+        raise MidiError(f"{Path(opts.midi).name}: no notes")
     to_frames = tick_to_frames(div, tempos)
     # channel -> role
     mapping = {}
@@ -250,15 +301,21 @@ def convert(opts):
         for pair in opts.map.split(","):
             ch, role = pair.split(":")
             if role not in CH_SLOT:
-                raise SystemExit(f"unknown role {role!r}")
+                raise MidiError(f"unknown role {role!r}")
             mapping[int(ch)] = role
     else:
         melodic = [c for c in notes if c != 9]
         if 9 in notes:
             mapping[9] = "noise"
         if len(melodic) > 3:
-            raise SystemExit(f"more than 3 melodic MIDI channels "
-                             f"({sorted(notes)}) — pick 3 with --map")
+            def busy(c):
+                return sum(off - on for on, off, _, _ in notes[c])
+            keep = sorted(melodic, key=busy, reverse=True)[:3]
+            dropped = sorted(c for c in melodic if c not in keep)
+            warnings.append(f"{len(melodic)} melodic MIDI channels — kept the 3 that play "
+                            f"longest ({sorted(c + 1 for c in keep)}), dropped "
+                            f"{[c + 1 for c in dropped]} (MIDI channel numbers 1-16)")
+            melodic = keep
         # lowest mean pitch = bass -> wave; the rest -> pulse1/pulse2 in
         # first-note order (wave has no envelope decay: best for sustained bass)
         def mean_pitch(c):
@@ -275,7 +332,7 @@ def convert(opts):
                 mapping[ch] = next(roles)
     used = [r for r in mapping.values()]
     if len(set(used)) != len(used):
-        raise SystemExit("--map assigns one role twice")
+        raise MidiError("--map assigns one role twice")
 
     channels = []
     total_cut = 0
@@ -317,7 +374,7 @@ def convert(opts):
         if toks2[-1]["op"] != "end":
             toks2.append({"op": "end"})         # decode stops at the jump
         if SC.emit_tokens(hdr2, toks2) != blob:
-            raise SystemExit(f"{role}: decode round-trip mismatch (bug)")
+            raise MidiError(f"{role}: decode round-trip mismatch (bug)")
         out_channels.append({"slot": slot, "hw": hw, "header": header,
                              "tokens": toks, "bytes": len(blob),
                              "midi_channel": c["midi_channel"],
@@ -345,22 +402,7 @@ def convert(opts):
                        "overlap_cuts": total_cut,
                        "warnings": sorted(set(warnings))},
     }
-    p = Path(opts.library)
-    lib = json.loads(p.read_text()) if p.exists() else {
-        "_generator": "tools/midi_to_song.py (MIDI -> DWM1-native tokens; "
-                      "lengths in frames, decode round-trip checked)",
-        "songs": []}
-    lib["songs"] = [s for s in lib["songs"] if s.get("id") != opts.song_id]
-    lib["songs"].append(entry)
-    lib["songs"].sort(key=lambda s: s["id"])
-    p.write_text(json.dumps(lib, indent=1))
-    dur = song_end / GB_FPS
-    print(f"'{opts.song_id}': {len(out_channels)} channels, "
-          f"{entry['total_bytes']} stream bytes, {dur:.1f}s/loop, "
-          f"{total_cut} overlap cuts, map "
-          f"{entry['conversion']['map']} -> {opts.library}")
-    for w in sorted(set(warnings)):
-        print(f"  warn: {w} (x{warnings.count(w)})")
+    return entry, warnings
 
 
 def main():
