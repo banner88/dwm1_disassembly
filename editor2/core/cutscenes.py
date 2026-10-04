@@ -693,6 +693,26 @@ def still_notes(scene, npcs, screen, player_xy, facing=0):
 Recipe = namedtuple('Recipe', 'map screen room_step player facing stands action '
                                'flags_set flags_clear ram script_type script_idx start_pos '
                                'dialog notes names target', defaults=((), None))
+
+
+def room_recipe(mid, screen, x, y, facing=2):
+    """S120 (ROADMAP P3.4): just the room — warp to (screen, x, y) and play from there
+    (the room's own entry script runs as in the game). facing 0 down / 1 left / 2 up /
+    3 right."""
+    col, row = screen % 4, screen // 4
+    px, py = (col * 10 + x) * 16 + 8, (row * 8 + y) * 16 + 8
+    return Recipe(mid, screen, None, (px, py), facing, (), 'entry', (), (), {}, mid, 0, 0,
+                  False, (f'the room ${mid:02X} from screen {screen} ({x},{y})',))
+
+
+class RoomOnly:
+    """A stand-in scene for room_recipe (no steps, no storyboard)."""
+    steps = ()
+
+    class script:                                        # noqa: N801
+        steps = {}
+
+
 # action: 'entry'  — warp in; the room-entry script (0) starts by itself
 #         'talk'   — stand next to the NPC facing it, press A (the game's own talk)
 #         'examine'— stand facing the spot, press A

@@ -379,6 +379,37 @@ NEEDS_REVIEW are adjudicated (`SaveAllowCheck` both trees, `CustomRoomBGMResolve
 IDX8_SUB6B; `CustomTileAnimate#0`, `CustomRoomFlags`, bank $76 `EncResolve` = BOUNDED);
 selftest PASS (clean 58, patched 75); `extracted/mapid_range_audit.json` regenerated.
 
+**S120 burn-down (ROADMAP "audit_mapid_range re-adjudication").** The selftest had been
+failing since S116 with twelve NEEDS_REVIEW sites — not the "eleven S117 shop sites" the
+S118 ROADMAP note named. Read site by site:
+- `ShopBuyStockFill#0`, `ShopSellPrice#0` (bank $09, both trees; `cp $50` = the
+  gate-floor shop room), `ShopFill#0` (bank $77, `cp $50`), `GateBossWin#0` (bank $76,
+  `cp b` against `wBossMapType`, a full-byte equality), `PushAttrActive#0` (bank $77,
+  `cp CUSTOM_ROOM_START`), `CustomReadInteract#0` (bank $60 entry 1: `cp
+  CUSTOM_ROOM_START` → `CustomPtrChase`, IDX8_SUB6B; else a `cp c` equality scan of
+  `VanillaNPCExtTable`), `CutPatchRoute#0` (bank $60, S119: `cp CUSTOM_ROOM_START`, the
+  GateAwareDispatch rule), `BattleBGMResolve#0/#1/#3` (bank $71 entry 7: `cp $5d`, `cp
+  $50` / `$52` / `$5d`) = **CP_UNSIGNED**.
+- `BattleBGMResolve#2` = **BOUNDED**: `cp $80 / jr nc .type` before a correct 16-bit
+  `add l / ld l,a / adc h / sub l` index into the 128-entry `CustomRoomBattleBGMTable`. A
+  second FEATURE cap at $7F (like the room-default music below): a room ≥ $80 gets the
+  normal / boss battle song, and a gate-served room ≥ $80 does not follow the gate's
+  battle song. `editor2/core/music.py` refuses `music.battle.rooms` keys ≥ $80 (loud),
+  but the automatic "follow the gate" fill for served rooms skips them silently. The
+  ≥ $80 extension recipe below covers both tables (widen to 256, drop both `cp $80`).
+- **Four verdict keys had gone STALE** (labels renamed after they were keyed: `CmpFld_604d`
+  → `SaveAllowCheck` S100, `Jump_050_640a` → `BattleExitHandler`, `jr_009_46de` →
+  `ShopBuyStockFill` and `SetFld9_4bc8` → `ShopSellPrice` S117). A stale key hides
+  nothing by itself, but the renamed site re-appears as NEEDS_REVIEW and a NEW load
+  placed under the old label would inherit a verdict nobody gave it — the tool now FAILS
+  on a key that matches no site.
+- `CutPatchRoute` was missing from the S118/S119 runs because the committed
+  `patches/bank_060.asm` was still the S117 file (PROJECT_COMPILER §1 "S120").
+
+Selftest PASS (clean 58, patched 82; band raised to [50, 120]); the tool is now in
+`verify_integrity.py` check 5, so the next unkeyed site fails the verifier instead of
+waiting for someone to run it. `extracted/mapid_range_audit.json` regenerated.
+
 ### Why the "sign test" fear was unfounded
 
 The SM83 **has no sign flag** — `jp m`-class patterns (ROADMAP's original
@@ -461,9 +492,9 @@ and the template hashes (`editor2/core/validators.py:23`).
    forced to the gateworld sentinel $70 when set; harmless for the S41
    transient pattern, wrong if made persistent). Room $70 itself is safe:
    GateAwareDispatch discriminates on wMapID, not wScriptMapType.
-4. Recommended **new compiler validators** (not yet implemented — ROADMAP A′1
-   follow-up): error on custom-destination exits with gate_flag≠0; error on
-   trigger_x=$FF.
+4. **Compiler validators** for rules 1 and 2 — both exist (`editor2/core/validators.py`:
+   custom-destination exit with gate_flag ≠ 0 = error; exit `trigger_x` $FF = error;
+   S120 re-check — this line said "not yet implemented" long after they landed).
 
 ### Re-running the audit
 

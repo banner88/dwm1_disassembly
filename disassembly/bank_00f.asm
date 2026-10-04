@@ -1424,7 +1424,7 @@ Bank0F_ScriptAddr_473E:
     dw $FF08  ; NOP
     dw $FF12  ; WriteRAM
     dw $D9E3  ; RAM $D9E3
-    dw $0043  ; Text $0043: "$42:$6466 Slio:Dn'a wanna know about the // farm? "
+    dw $0043  ; Text $0043: "$42:$6466 Slio:D'ya wanna know about the // farm? "
     dw $FF03  ; SetEventFlag
     dw $0023  ; Text $0023: "$42:$51DB *:I have a feeling that your // victory "
     dw $FF12  ; WriteRAM

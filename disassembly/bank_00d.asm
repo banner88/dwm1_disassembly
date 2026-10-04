@@ -4083,7 +4083,7 @@ ArenaRooms_Script23:
     dw $FF01  ; BranchIfFlagSet
     dw $0032  ; Text $0032: "$42:$5B99 *:Watabou brings us capable // masters. "
     dw Bank0D_ScriptAddr_5598          ; -> branch target
-    dw $010B  ; Text $010B: "$43:$5234 *:This is an llonigirill. C'mon // BeBe,"
+    dw $010B  ; Text $010B: "$43:$5234 *:This is an 'onigiri'. C'mon // BeBe, r"
     dw $010C  ; Text $010C: "$43:$526F BeBe:Boo Baa Boo Baa."
     dw $FF03  ; SetEventFlag
     dw $000F  ; Text $000F: "$42:$48B2 *:Oh, you must be the master. // You mus"
@@ -6549,7 +6549,7 @@ Bank0D_ScriptAddr_61F8:
     dw $D95E  ; RAM $D95E
     dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
     dw $FF03  ; SetEventFlag
-    dw $0043  ; Text $0043: "$42:$6466 Slio:Dn'a wanna know about the // farm? "
+    dw $0043  ; Text $0043: "$42:$6466 Slio:D'ya wanna know about the // farm? "
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -8002,7 +8002,7 @@ MedalMan_Script03:
     dw $005C  ; Text $005C: "$42:$7236 King:[HERO]. Go to the arena. // King:Yo"
     dw Bank0D_ScriptAddr_695C          ; -> branch target
     dw $FF01  ; BranchIfFlagSet
-    dw $0043  ; Text $0043: "$42:$6466 Slio:Dn'a wanna know about the // farm? "
+    dw $0043  ; Text $0043: "$42:$6466 Slio:D'ya wanna know about the // farm? "
     dw Bank0D_ScriptAddr_6954          ; -> branch target
     dw $FF01  ; BranchIfFlagSet
     dw $011E  ; Text $011E: "$43:$5CAD *:I'm Mick. Who are you? // *:Whew, thos"
@@ -8025,7 +8025,7 @@ Bank0D_ScriptAddr_68FA:
     dw Bank0D_ScriptAddr_693C          ; -> branch target
 Bank0D_ScriptAddr_6912:
     dw $FF01  ; BranchIfFlagSet
-    dw $0043  ; Text $0043: "$42:$6466 Slio:Dn'a wanna know about the // farm? "
+    dw $0043  ; Text $0043: "$42:$6466 Slio:D'ya wanna know about the // farm? "
     dw Bank0D_ScriptAddr_6934          ; -> branch target
     dw $FF01  ; BranchIfFlagSet
     dw $011E  ; Text $011E: "$43:$5CAD *:I'm Mick. Who are you? // *:Whew, thos"
@@ -8757,12 +8757,12 @@ Bank0D_ScriptAddr_6CB4:
 ; ---------------------------------------------------------------------------
 Map1A_Script02:
     dw $FF01  ; BranchIfFlagSet
-    dw $010B  ; Text $010B: "$43:$5234 *:This is an llonigirill. C'mon // BeBe,"
+    dw $010B  ; Text $010B: "$43:$5234 *:This is an 'onigiri'. C'mon // BeBe, r"
     dw Bank0D_ScriptAddr_6CC8          ; -> branch target
     dw $FF3C  ; Cmd3C
     dw $0811  ; Text $0811: "$3F:$4EDD *:I'm a monster namer. My job is // to c"
     dw $FF03  ; SetEventFlag
-    dw $010B  ; Text $010B: "$43:$5234 *:This is an llonigirill. C'mon // BeBe,"
+    dw $010B  ; Text $010B: "$43:$5234 *:This is an 'onigiri'. C'mon // BeBe, r"
     dw $FFFF  ; END
 
 Bank0D_ScriptAddr_6CC8:

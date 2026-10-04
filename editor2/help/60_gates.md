@@ -76,3 +76,23 @@ In flag lists the cleared flags appear as **gate:N cleared — name**: use
 them anywhere a flag can be tested (a state rule, a conversation's *If
 flags…*, an encounter variant) — e.g. a guard who moves once your gate is
 cleared.
+
+
+## Maze floors: look, special rooms, contents, item tier (S120)
+
+*Maze floors* (under Gate settings) sets what a gate's random floors are like.
+The game keeps three shared tables of **rows**; each gate points at one row of
+each. Pick the row of the gates you want yours to feel like — the list names
+the gates that use each row and what it rolls:
+
+- **maze look** — which of the 16 maze floor types appear (the pictures beside
+  it are the game's own floors, with their chances).
+- **special rooms** — what floors 3, 6, 9 … may be instead of a maze, about
+  half the time: treasure rooms, the forest maze, the priest, the item shop, the
+  Coliseum, the mazes, the conveyor mazes (never in gate 0).
+- **contents** — the mix of things lying on the floors (and the treasure
+  rooms' chests).
+- **item tier** 1-3 — how good the ground items are.
+
+**Vanilla** puts the gate's own rows back (a new gate: its source's). The rows
+are shared: picking one never changes another gate.

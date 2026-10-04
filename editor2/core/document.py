@@ -2169,7 +2169,10 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
                     # S101: a MONSTER NPC (a species drawn with its follower
                     # art — display-list ids $F0-$F3, CustomMonsterCast)
                     'monster': (val(entry['monster']) if entry.get('monster') is not None
-                                else None)}
+                                else None),
+                    # S120: flag conditions (read-only here; set_npc_shown_when edits them)
+                    'shown_when': copy.deepcopy(entry.get('shown_when') or []),
+                    'swirl_of': entry.get('swirl_of')}
         if k == 'raw':
             b = [val(x) for x in entry['bytes']]
             table = {int(i): sid for i, sid in (room.get('scripts') or {}).items()}
@@ -2267,6 +2270,27 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
                 lst[index][k] = copy.deepcopy(old[k])
         self.touch()
         return old
+
+    def set_npc_shown_when(self, room, key, state_idx, index, terms):
+        """S120 (ROADMAP NG2 residual b): the NPC is shown only while every term holds —
+        [{'flag': name | number, 'is': 'set' | 'clear'}] (AND; [] = always). Compiled as the
+        $A0 / $A1 condition prefixes (bank $60 entry 1 — PROJECT_COMPILER §2.32)."""
+        lst = self.npc_entries(room, key, state_idx)
+        e = lst[index]
+        if e.get('kind') != 'npc':
+            raise ValueError('only NPCs can be shown by flags')
+        clean = []
+        for t in terms or []:
+            if t.get('is') not in ('set', 'clear') or t.get('flag') in (None, ''):
+                raise ValueError(f'bad condition {t!r}')
+            clean.append({'flag': t['flag'], 'is': t['is']})
+        if len(clean) > 8:
+            raise ValueError('at most 8 flag conditions per NPC')
+        if clean:
+            e['shown_when'] = clean
+        else:
+            e.pop('shown_when', None)
+        self.touch()
 
     def remove_npc(self, room, key, state_idx, index):
         gone = self.npc_entries(room, key, state_idx).pop(index)

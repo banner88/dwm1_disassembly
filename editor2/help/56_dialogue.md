@@ -16,6 +16,9 @@ name and its new one if you renamed it (the Monsters tab's **Texts that name
 it…** opens this). Names are matched exactly as written (capitals count), so
 the plain word "slime" is not counted as the monster.
 
+S120: the texts are shown with the game's one-cell contractions (`D'ya`,
+`I'd`, `it's` …) — before S120 some were mis-read as letter pairs ("Dn'a").
+
 **Save as text file…** writes the current list (one block per text) for
 reading or searching elsewhere.
 

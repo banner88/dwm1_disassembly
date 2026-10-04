@@ -2185,21 +2185,12 @@ jr_016_5c1c:
     call SelectFloorType
     ld [wFloorType2], a
     rst $00
-    ld b, d
-    ld e, h
-    cp c
-    ld e, h
-    bit 3, h
-    db $ec
-    ld e, h
-    dec c
-    ld e, l
-    ld l, $5d
-    ret c
+SpecialRoomTable:               ; S120: wFloorType2 (rolled from FloorTypeSelectionTable2) -> the special room
+    dw SpecialRoom0_Treasure, SpecialRoom1_OneRareChest, SpecialRoom2_ForestMaze
+    dw SpecialRoom3_Priest, SpecialRoom4_ItemShop, SpecialRoom5_Coliseum
+    dw SpecialRoom6_Maze, SpecialRoom7_Conveyor
 
-    ld e, [hl]
-    ld c, h
-    ld e, a
+SpecialRoom0_Treasure:                 ; pick 0: treasure room; the 8 chests filled from FloorLayoutData[wFloorType3] (SetBrd_6db0)
     call SetBrd_6db0
 
 LoadBrd_5c45:
@@ -2266,6 +2257,7 @@ jr_016_5c98:
     ret
 
 
+SpecialRoom1_OneRareChest:                 ; pick 1: treasure room; chests $D9CF-$D9D6 empty but one (index 0-3) = an item of the 16 at $6E04
     ld hl, $d9cf
     ld bc, $0008
     ld a, $ff
@@ -2275,6 +2267,7 @@ jr_016_5c98:
     ret
 
 
+SpecialRoom2_ForestMaze:                 ; pick 2: Forest maze $53
     ld a, $53
     ld [wMapID], a
     ld a, $00
@@ -2292,6 +2285,7 @@ jr_016_5c98:
     ret
 
 
+SpecialRoom3_Priest:                 ; pick 3: the priest $51
     ld a, $51
     ld [wMapID], a
     ld a, $00
@@ -2309,6 +2303,7 @@ jr_016_5c98:
     ret
 
 
+SpecialRoom4_ItemShop:                 ; pick 4: the gate item shop $50
     ld a, $50
     ld [wMapID], a
     ld a, $00
@@ -2326,6 +2321,7 @@ jr_016_5c98:
     ret
 
 
+SpecialRoom5_Coliseum:                 ; pick 5: Coliseum $52 — three battle teams rolled into $D9D1-$D9DA first
     xor a
     ld [$d9cf], a
     ld [$d9d0], a
@@ -2571,6 +2567,7 @@ SaveBrd_5ec9:
     ret
 
 
+SpecialRoom6_Maze:                 ; pick 6: Maze 1 / 2 / 3 ($57-$59, wRNG1 mod 3)
     ld a, [wRNG1]
     ld b, a
     ld a, $03
@@ -2634,6 +2631,7 @@ jr_016_5f2b:
     ret
 
 
+SpecialRoom7_Conveyor:                 ; pick 7: Conveyor maze 1 / 2 / 3 ($54-$56, wRNG1 mod 3)
     ld a, [wRNG1]
     ld b, a
     ld a, $03

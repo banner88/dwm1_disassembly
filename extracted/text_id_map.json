@@ -445,14 +445,14 @@
     "bank": "$42",
     "index": 63,
     "addr": "$602C",
-    "text": "*:I'm Pulio I take care // of this farm. // Pulio:I heard about you from // the King.Take your monsters. // Pulio:Well, actually, I only // have one monster... // an old one... // Pulio:It's Slib. It was the // favorite of our last King. // Pulio:Choose {96}PICK UP{97} to take // the monster."
+    "text": "*:I'm Pulio I take care // of this farm. // Pulio:I heard about you from // the King.Take your monsters. // Pulio:Well, actually, I only // have one monster... // an old one... // Pulio:It's Slib. It was the // favorite of our last King. // Pulio:Choose [PICK UP] to take // the monster."
   },
   "64": {
     "id": "$0040",
     "bank": "$42",
     "index": 64,
     "addr": "$6159",
-    "text": "*:I'm Slio. I am the grandson // of Grandpa Slib. // Slio:Dn'a wanna know about the // farm? [YES/NO]"
+    "text": "*:I'm Slio. I am the grandson // of Grandpa Slib. // Slio:D'ya wanna know about the // farm? [YES/NO]"
   },
   "65": {
     "id": "$0041",
@@ -473,7 +473,7 @@
     "bank": "$42",
     "index": 67,
     "addr": "$6466",
-    "text": "Slio:Dn'a wanna know about the // farm? [YES/NO]"
+    "text": "Slio:D'ya wanna know about the // farm? [YES/NO]"
   },
   "68": {
     "id": "$0044",
@@ -634,7 +634,7 @@
     "bank": "$42",
     "index": 90,
     "addr": "$70BB",
-    "text": "King:Oh, [HERO]! Did you bring // back Hale!? // King:What? Hale said he doesn't // want to come back to me? // King:..But he said he would // rather join you? // King:Hmm.. I see.. // King:Hmm{A4} You sure are good // with monsters. Well done! // King:I'm pleased with your // performance! I will let Pulio // go!"
+    "text": "King:Oh, [HERO]! Did you bring // back Hale!? // King:What? Hale said he doesn't // want to come back to me? // King:..But he said he would // rather join you? // King:Hmm.. I see.. // King:Hmm\u2026 You sure are good // with monsters. Well done! // King:I'm pleased with your // performance! I will let Pulio // go!"
   },
   "91": {
     "id": "$005B",
@@ -732,14 +732,14 @@
     "bank": "$42",
     "index": 104,
     "addr": "$78FC",
-    "text": "*:Monsters have personalities too. // *:Depending on the PLAN used in // battles,their personalities // change. // *:When {96}CHARGE{97} is chosen, // they become brave monsters... // *:When {96}MIXED{97} is chosen, // they become thoughtful... // *:and when {96}CAUTIOUS{97} is // chosen they become considerate."
+    "text": "*:Monsters have personalities too. // *:Depending on the PLAN used in // battles,their personalities // change. // *:When [CHARGE] is chosen, // they become brave monsters... // *:When [MIXED] is chosen, // they become thoughtful... // *:and when [CAUTIOUS] is // chosen they become considerate."
   },
   "105": {
     "id": "$0069",
     "bank": "$42",
     "index": 105,
     "addr": "$7A31",
-    "text": "*:Hey Master! Dn'a have an egg? [YES/NO]"
+    "text": "*:Hey Master! D'ya have an egg? [YES/NO]"
   },
   "106": {
     "id": "$006A",
@@ -823,7 +823,7 @@
     "bank": "$1A",
     "index": 4,
     "addr": "$4362",
-    "text": "*:One day, Ith like to become // a monster... who protects // and assists others in battles and... // *:attacks enemies at the same time."
+    "text": "*:One day, I'd like to become // a monster... who protects // and assists others in battles and... // *:attacks enemies at the same time."
   },
   "118": {
     "id": "$0076",
@@ -1663,7 +1663,7 @@
     "bank": "$43",
     "index": 11,
     "addr": "$47A4",
-    "text": "*:H...Hello! I'm T..T..Teto. // *:I'm nervous beause the battle // starts soon! // *:Are you a new monster master // too? // *:You can learn useful information // out back!"
+    "text": "*:H...Hello! I'm T..T..Teto. // *:I'm nervous 'cause the battle // starts soon! // *:Are you a new monster master // too? // *:You can learn useful information // out back!"
   },
   "238": {
     "id": "$00EE",
@@ -1796,7 +1796,7 @@
     "bank": "$43",
     "index": 30,
     "addr": "$4DEC",
-    "text": "[HERO] looked into the jar. // An old lady's notebook is there. // llEducational Guidell // Read it? [YES/NO]"
+    "text": "[HERO] looked into the jar. // An old lady's notebook is there. // \"Educational Guide\" // Read it? [YES/NO]"
   },
   "257": {
     "id": "$0101",
@@ -1873,7 +1873,7 @@
     "bank": "$43",
     "index": 41,
     "addr": "$5234",
-    "text": "*:This is an llonigirill. C'mon // BeBe, repeat after me!"
+    "text": "*:This is an \"onigiri\". C'mon // BeBe, repeat after me!"
   },
   "268": {
     "id": "$010C",
@@ -2153,7 +2153,7 @@
     "bank": "$43",
     "index": 81,
     "addr": "$631C",
-    "text": "The Gate is shut tight. // Something's engraved on the // Gate. // llRoom of Strength & Angerll"
+    "text": "The Gate is shut tight. // Something's engraved on the // Gate. // \"Room of Strength & Anger\""
   },
   "308": {
     "id": "$0134",
@@ -3196,7 +3196,7 @@
     "bank": "$44",
     "index": 48,
     "addr": "$6413",
-    "text": "*:Oh! What a cute monster master // you are! // *:What's your name? // [HERO]... // So you're little [HERO]. // *:I am an egg consultant. // Nice to meet you! // *:I'll llevaluatell your egg at my // place. // *:And I can find out for you what // kind of baby is in your eggs! // *:My other job is llblessingll. // *:Blessing changes the gender of // monsters! // *:Got it? How can I help you?"
+    "text": "*:Oh! What a cute monster master // you are! // *:What's your name? // [HERO]... // So you're little [HERO]. // *:I am an egg consultant. // Nice to meet you! // *:I'll \"evaluate\" your egg at my // place. // *:And I can find out for you what // kind of baby is in your eggs! // *:My other job is \"blessing\". // *:Blessing changes the gender of // monsters! // *:Got it? How can I help you?"
   },
   "457": {
     "id": "$01C9",
@@ -3707,7 +3707,7 @@
     "bank": "$1B",
     "index": 23,
     "addr": "$487C",
-    "text": "*:I've lived here a long time. // *:So I know everything. // For example, // *:Monsters with larger {A2} numbers // added to their names, // *:grow to be stronger than // monsters of the same type with // lower {A2} numbers."
+    "text": "*:I've lived here a long time. // *:So I know everything. // For example, // *:Monsters with larger + numbers // added to their names, // *:grow to be stronger than // monsters of the same type with // lower + numbers."
   },
   "530": {
     "id": "$0212",
@@ -4106,7 +4106,7 @@
     "bank": "$45",
     "index": 6,
     "addr": "$4490",
-    "text": "*:Since [HERO] won{A4} // *:Customers have flooded our store! // *:It's all thanks to [HERO]'s // victory! // *:So, what can I do for you today?"
+    "text": "*:Since [HERO] won\u2026 // *:Customers have flooded our store! // *:It's all thanks to [HERO]'s // victory! // *:So, what can I do for you today?"
   },
   "587": {
     "id": "$024B",
@@ -4127,7 +4127,7 @@
     "bank": "$45",
     "index": 9,
     "addr": "$4625",
-    "text": "*:If you've got money you should // get a Sirloin! // *:Almost all the monsters will // become your pal... // *:if you givehem Sirloin 4 times."
+    "text": "*:If you've got money you should // get a Sirloin! // *:Almost all the monsters will // become your pal... // *:if you give'em Sirloin 4 times."
   },
   "590": {
     "id": "$024E",
@@ -4456,7 +4456,7 @@
     "bank": "$45",
     "index": 56,
     "addr": "$59A0",
-    "text": "*:Go to the Room of Strength & // Anger in the Chamber of // Travelers' Gates! // *:anill then, you can't fight in the // arena! The King commanded you! // *:You are our only hope! Don't // disappoint us."
+    "text": "*:Go to the Room of Strength & // Anger in the Chamber of // Travelers' Gates! // *:'Till then, you can't fight in the // arena! The King commanded you! // *:You are our only hope! Don't // disappoint us."
   },
   "637": {
     "id": "$027D",
@@ -4477,7 +4477,7 @@
     "bank": "$45",
     "index": 59,
     "addr": "$5B87",
-    "text": "*:{A4}I heard it's a kingdom of Devils // out there. // *:And the guardian used to be a // human! // *:Want to hear about the Gate // of Sleeping? [YES/NO]"
+    "text": "*:\u2026I heard it's a kingdom of Devils // out there. // *:And the guardian used to be a // human! // *:Want to hear about the Gate // of Sleeping? [YES/NO]"
   },
   "640": {
     "id": "$0280",
@@ -4505,7 +4505,7 @@
     "bank": "$45",
     "index": 63,
     "addr": "$5D31",
-    "text": "*:{A4}I heard it is overrun with // Zombies there! // *:The guardian there has been // sleeping for ages."
+    "text": "*:\u2026I heard it is overrun with // Zombies there! // *:The guardian there has been // sleeping for ages."
   },
   "644": {
     "id": "$0284",
@@ -4547,7 +4547,7 @@
     "bank": "$45",
     "index": 69,
     "addr": "$60F3",
-    "text": "*:{A4}I heard there are monsters in // the Bird family crowded in there. // *:A great evil lord seems to // be the guardian there."
+    "text": "*:\u2026I heard there are monsters in // the Bird family crowded in there. // *:A great evil lord seems to // be the guardian there."
   },
   "650": {
     "id": "$028A",
@@ -4610,7 +4610,7 @@
     "bank": "$45",
     "index": 78,
     "addr": "$652B",
-    "text": "*:{A4} {A4}"
+    "text": "*:\u2026 \u2026"
   },
   "659": {
     "id": "$0293",
@@ -4632,6 +4632,20 @@
     "index": 81,
     "addr": "$65D3",
     "text": "*:Come.....again.."
+  },
+  "662": {
+    "id": "$0296",
+    "bank": "$45",
+    "index": 82,
+    "addr": "$65EA",
+    "text": "*:\u2026 \u2026 \u2026"
+  },
+  "663": {
+    "id": "$0297",
+    "bank": "$45",
+    "index": 83,
+    "addr": "$65F6",
+    "text": "*:\u2026 \u2026 \u2026"
   },
   "664": {
     "id": "$0298",
@@ -5100,7 +5114,7 @@
     "bank": "$1F",
     "index": 26,
     "addr": "$4A66",
-    "text": "*:Despite my looks I have a high // growth limit. // *:I think its because I have {A2}5 // by my name! // *:I have no idea what it really // means though!"
+    "text": "*:Despite my looks I have a high // growth limit. // *:I think its because I have +5 // by my name! // *:I have no idea what it really // means though!"
   },
   "731": {
     "id": "$02DB",
@@ -6178,7 +6192,7 @@
     "bank": "$46",
     "index": 116,
     "addr": "$6FAF",
-    "text": "*:This kingdom is becoming // more lively. // *:I didn't know itth get this // busy for the tournament."
+    "text": "*:This kingdom is becoming // more lively. // *:I didn't know it'd get this // busy for the tournament."
   },
   "885": {
     "id": "$0375",
@@ -6598,7 +6612,7 @@
     "bank": "$1B",
     "index": 106,
     "addr": "$672C",
-    "text": "*:We gather hear seeking victory. // *:When you breed, a number like {A2}1 // is attached to a monster. // *:The bigger the number next to {A2} // the greater... // *:the capability to increase levels // and add strength."
+    "text": "*:We gather hear seeking victory. // *:When you breed, a number like +1 // is attached to a monster. // *:The bigger the number next to + // the greater... // *:the capability to increase levels // and add strength."
   },
   "945": {
     "id": "$03B1",
@@ -7802,7 +7816,7 @@
     "bank": "$21",
     "index": 92,
     "addr": "$6D68",
-    "text": "*:We all gather here seeking // victory. // *:At last you became the rep. // Congratulations. // *:You've only battled within // GreatTree. // *:You don't know the strength of // foreign masters... // *:Youth better stay on your toes!"
+    "text": "*:We all gather here seeking // victory. // *:At last you became the rep. // Congratulations. // *:You've only battled within // GreatTree. // *:You don't know the strength of // foreign masters... // *:You'd better stay on your toes!"
   },
   "1117": {
     "id": "$045D",
@@ -8887,7 +8901,7 @@
     "bank": "$1F",
     "index": 87,
     "addr": "$6ED6",
-    "text": "*:You did it! [HERO]!! // *:I knew youth win, [HERO]!"
+    "text": "*:You did it! [HERO]!! // *:I knew you'd win, [HERO]!"
   },
   "1272": {
     "id": "$04F8",
@@ -9419,7 +9433,7 @@
     "bank": "$49",
     "index": 49,
     "addr": "$4DA0",
-    "text": "*:Comrade! Now is the time // for us to unite... // *:{A4}and open the Gate to the new // age! // *:Yes! A world for monsters, of // monsters, and by monsters..."
+    "text": "*:Comrade! Now is the time // for us to unite... // *:\u2026and open the Gate to the new // age! // *:Yes! A world for monsters, of // monsters, and by monsters..."
   },
   "1348": {
     "id": "$0544",
@@ -9461,7 +9475,7 @@
     "bank": "$49",
     "index": 55,
     "addr": "$5038",
-    "text": "*:Hee hee hee. Burnhem burn'em // all! // *:Go burn them quick!"
+    "text": "*:Hee hee hee. Burn'em burn'em // all! // *:Go burn them quick!"
   },
   "1354": {
     "id": "$054A",
@@ -9811,7 +9825,7 @@
     "bank": "$49",
     "index": 105,
     "addr": "$61C9",
-    "text": "*:Welcome [HERO]! // *:I'm the King of Kings, // DracoLord! // DracoLord:I have been waiting{A4} // DracoLord:{A4}for a youth like you to // show up. // DracoLord:If you will become my // pal, // DracoLord:I will give you, [HERO] // half of the world. // DracoLord:What do you say? // Will you be my pal? [YES/NO]"
+    "text": "*:Welcome [HERO]! // *:I'm the King of Kings, // DracoLord! // DracoLord:I have been waiting\u2026 // DracoLord:\u2026for a youth like you to // show up. // DracoLord:If you will become my // pal, // DracoLord:I will give you, [HERO] // half of the world. // DracoLord:What do you say? // Will you be my pal? [YES/NO]"
   },
   "1404": {
     "id": "$057C",
@@ -9930,7 +9944,7 @@
     "bank": "$49",
     "index": 122,
     "addr": "$69E2",
-    "text": "*:At last you came here, pathetic // thing! // *:How dare you forget your // status, // *:and disobey the great lord of // evil, Baramos. // Baramos:You will regret that you // came here. // Baramos:I will eat your guts{A4} // Baramos:so you can't be brought // back to life ever again!"
+    "text": "*:At last you came here, pathetic // thing! // *:How dare you forget your // status, // *:and disobey the great lord of // evil, Baramos. // Baramos:You will regret that you // came here. // Baramos:I will eat your guts\u2026 // Baramos:so you can't be brought // back to life ever again!"
   },
   "1421": {
     "id": "$058D",
@@ -9993,7 +10007,7 @@
     "bank": "$49",
     "index": 131,
     "addr": "$70C7",
-    "text": "Pizzaro:Gwwrrr! Regret showing // yourself{A4} // Pizzaro:{A4}before me!"
+    "text": "Pizzaro:Gwwrrr! Regret showing // yourself\u2026 // Pizzaro:\u2026before me!"
   },
   "1430": {
     "id": "$0596",
@@ -10217,7 +10231,7 @@
     "bank": "$18",
     "index": null,
     "addr": "$5C31",
-    "text": "*:Oh, [HERO]! Welcome back!! // *:I believed youth return. // *:Everybody missed you while you were // away! // *:The King missed you very much. // *:Go see the King!"
+    "text": "*:Oh, [HERO]! Welcome back!! // *:I believed you'd return. // *:Everybody missed you while you were // away! // *:The King missed you very much. // *:Go see the King!"
   },
   "1462": {
     "id": "$05B6",
@@ -10301,7 +10315,7 @@
     "bank": "$18",
     "index": null,
     "addr": "$63A7",
-    "text": "*:Long long ago.. An ancestor of // Watabou locked monsters... // *:behind the Travelers' Gates // because they were a bane to humans. // *:Ours ancestors demanded we{A4} // *:{A4}hold a tournament every // Starry Night! // *:After many centuries, // [HERO] was victorious!"
+    "text": "*:Long long ago.. An ancestor of // Watabou locked monsters... // *:behind the Travelers' Gates // because they were a bane to humans. // *:Ours ancestors demanded we\u2026 // *:\u2026hold a tournament every // Starry Night! // *:After many centuries, // [HERO] was victorious!"
   },
   "1474": {
     "id": "$05C2",
@@ -12317,7 +12331,7 @@
     "bank": "$4A",
     "index": 257,
     "addr": "$684C",
-    "text": "Pulio:Select {96}PICK UP{97} to take // the monster with you."
+    "text": "Pulio:Select [PICK UP] to take // the monster with you."
   },
   "1762": {
     "id": "$06E2",
@@ -12842,7 +12856,7 @@
     "bank": "$22",
     "index": 44,
     "addr": "$48FF",
-    "text": "*:[HERO], you brought a total of // [INS 00] medal{A0}s{A1}. // *:I'll give you 1 [INS 20] egg // when the medals exceed [INS 10]!"
+    "text": "*:[HERO], you brought a total of // [INS 00] medal(s). // *:I'll give you 1 [INS 20] egg // when the medals exceed [INS 10]!"
   },
   "1837": {
     "id": "$072D",
@@ -12870,7 +12884,7 @@
     "bank": "$22",
     "index": 48,
     "addr": "$4A15",
-    "text": "*:Ah, you brought [INS 00] medal{A0}s{A1}! // *:You are actually not a bad person // after all."
+    "text": "*:Ah, you brought [INS 00] medal(s)! // *:You are actually not a bad person // after all."
   },
   "1841": {
     "id": "$0731",
@@ -13703,7 +13717,7 @@
     "bank": "$22",
     "index": 167,
     "addr": "$5E2B",
-    "text": "*:[HERO], congratulations // on your victory. // *:I...I am so... *sniffle* happy... // so... happy waaa waaaaaa! // *:I...I heard that there're monsters // that exist in this world that do not // belong to any family. // *:They're very strong & even if // you beathem, they won't become your // pals. // *:But they're so strong that youth // do anything to makehem your pals!"
+    "text": "*:[HERO], congratulations // on your victory. // *:I...I am so... *sniffle* happy... // so... happy waaa waaaaaa! // *:I...I heard that there're monsters // that exist in this world that do not // belong to any family. // *:They're very strong & even if // you beat'em, they won't become your // pals. // *:But they're so strong that you'd // do anything to make'em your pals!"
   },
   "1960": {
     "id": "$07A8",
@@ -13794,7 +13808,7 @@
     "bank": "$22",
     "index": 180,
     "addr": "$65C5",
-    "text": "*:You're at the monster farm, // Baoom. // *:Everybody's fine beause of the // Starry Night Baoom."
+    "text": "*:You're at the monster farm, // Baoom. // *:Everybody's fine 'cause of the // Starry Night Baoom."
   },
   "1973": {
     "id": "$07B5",
@@ -13892,7 +13906,7 @@
     "bank": "$4B",
     "index": 2,
     "addr": "$42C0",
-    "text": "Watabou:You made it! [HERO]!! // You beathem all! // Watabou:As I promised, I'll be // your pal, okay? [YES/NO]"
+    "text": "Watabou:You made it! [HERO]!! // You beat'em all! // Watabou:As I promised, I'll be // your pal, okay? [YES/NO]"
   },
   "1987": {
     "id": "$07C3",
@@ -13976,7 +13990,7 @@
     "bank": "$4B",
     "index": 14,
     "addr": "$46F0",
-    "text": "King:No, it's not an exaggeration. // Ith do it! // King:...well, that's an // exaggeration. Ha Ha Ha Ha Ha! // King:Well, you're dismissed... // Busy, Busy, Busy..."
+    "text": "King:No, it's not an exaggeration. // I'd do it! // King:...well, that's an // exaggeration. Ha Ha Ha Ha Ha! // King:Well, you're dismissed... // Busy, Busy, Busy..."
   },
   "1999": {
     "id": "$07CF",
@@ -14032,21 +14046,21 @@
     "bank": "$4B",
     "index": 22,
     "addr": "$4B2F",
-    "text": "*:Oh no! You tripped over // didn't you!? // *:Well... it's okay beuz you beat // the Master Monster Tamer!"
+    "text": "*:Oh no! You tripped over // didn't you!? // *:Well... it's okay 'cuz you beat // the Master Monster Tamer!"
   },
   "2007": {
     "id": "$07D7",
     "bank": "$4B",
     "index": 23,
     "addr": "$4B9F",
-    "text": "*:[HERO]! Congratulations // on your victory! // *:I, I am so... *sniff* happy.. // so.. happy Waaa waaaaaa! // *:I, I heard that there're monsters // that exist in this world that do not // belong to any families. // *:They're very strong & even if // you beathem, they won't be your pal. // *:But they're so strong that youth // do anything to get them to join!"
+    "text": "*:[HERO]! Congratulations // on your victory! // *:I, I am so... *sniff* happy.. // so.. happy Waaa waaaaaa! // *:I, I heard that there're monsters // that exist in this world that do not // belong to any families. // *:They're very strong & even if // you beat'em, they won't be your pal. // *:But they're so strong that you'd // do anything to get them to join!"
   },
   "2008": {
     "id": "$07D8",
     "bank": "$4B",
     "index": 24,
     "addr": "$4D0E",
-    "text": "*:I..I heard that monsters exist in // this world that do not belong to // any families. // *:They're very strong & even if // you beathem they won't be your pal. // *:But they're so strong that youth // do anything to get them to join!"
+    "text": "*:I..I heard that monsters exist in // this world that do not belong to // any families. // *:They're very strong & even if // you beat'em they won't be your pal. // *:But they're so strong that you'd // do anything to get them to join!"
   },
   "2009": {
     "id": "$07D9",
@@ -14088,7 +14102,7 @@
     "bank": "$4B",
     "index": 30,
     "addr": "$4F53",
-    "text": "*:The bishop I know told me an // intense song! // *:Gi-Gi, GigaSlash of MadKnight // *:Mu-Mu, MultiCut of SkyDragon // or MadCondor // *:HellBlast of MetalKing // or ZapBird // *:BigBang of GoldGolem // or Divinegon!"
+    "text": "*:The bishop I know told me an // intense song! // *:Gi-Gi, GigaSlash of MadKnight // *:Mu-Mu, MultiCut of SkyDragon // 'n MadCondor // *:HellBlast of MetalKing // 'n ZapBird // *:BigBang of GoldGolem // 'n Divinegon!"
   },
   "2015": {
     "id": "$07DF",
@@ -14235,7 +14249,7 @@
     "bank": "$4B",
     "index": 51,
     "addr": "$5D46",
-    "text": "*:Congratulations on your victory! // Let me give you a tip. // *:When you breed monsters with a // high number next to the {A2}, the // combination can produce a // rare monster."
+    "text": "*:Congratulations on your victory! // Let me give you a tip. // *:When you breed monsters with a // high number next to the +, the // combination can produce a // rare monster."
   },
   "2036": {
     "id": "$07F4",
@@ -14375,7 +14389,7 @@
     "bank": "$3F",
     "index": 494,
     "addr": "$48B2",
-    "text": "*:Oh [HERO], will you listen to me? // My boss told me, // *:Ith be an apprentice for // 10 more years! // *:I want to be the shopkeeper of this // shop sooner! // *:My wish will come true if // [HERO] wins. // *:No way! I can't stand being an // apprentice for 10 more years! Argh.."
+    "text": "*:Oh [HERO], will you listen to me? // My boss told me, // *:I'd be an apprentice for // 10 more years! // *:I want to be the shopkeeper of this // shop sooner! // *:My wish will come true if // [HERO] wins. // *:No way! I can't stand being an // apprentice for 10 more years! Argh.."
   },
   "2056": {
     "id": "$0808",
@@ -14935,7 +14949,7 @@
     "bank": "$3F",
     "index": null,
     "addr": "$6DE4",
-    "text": "*:You're at the castle of // GreatTree. // *:Itth be a good idea to take a // look around."
+    "text": "*:You're at the castle of // GreatTree. // *:It'd be a good idea to take a // look around."
   },
   "2136": {
     "id": "$0858",
@@ -15187,7 +15201,7 @@
     "bank": "$4E",
     "index": 19,
     "addr": "$4EF1",
-    "text": "*:Dragons with Metaly // parents // *:are more resistant to a // variety of things. // *:The more the {A2} for breeding, the // greater the tendency for that. // *:Breed with an understanding of // these characteristics. // *:Stronger monsters will be // born if they compensate for // each other's weak points."
+    "text": "*:Dragons with Metaly // parents // *:are more resistant to a // variety of things. // *:The more the + for breeding, the // greater the tendency for that. // *:Breed with an understanding of // these characteristics. // *:Stronger monsters will be // born if they compensate for // each other's weak points."
   },
   "2172": {
     "id": "$087C",
@@ -15292,7 +15306,7 @@
     "bank": "$4E",
     "index": 34,
     "addr": "$5B17",
-    "text": "*:Namely, dragons with Metaly // parents // *:are more resistant to a // variety of things. // *:The more the {A2} for breeding, the // greater the tendency for that."
+    "text": "*:Namely, dragons with Metaly // parents // *:are more resistant to a // variety of things. // *:The more the + for breeding, the // greater the tendency for that."
   },
   "2187": {
     "id": "$088B",
@@ -15341,7 +15355,7 @@
     "bank": "$4E",
     "index": 41,
     "addr": "$5FF1",
-    "text": "*:There are Onionos, // Gophecadas, Pixys, // Gasgons, // *:DeadNites, StubBirds, and // SpikyBoys living there. // *:Gophecades use Beat. Gethem // before they get you. // *:The guardian there is a // Jamirus. // *:Watch out for its QuadHits!"
+    "text": "*:There are Onionos, // Gophecadas, Pixys, // Gasgons, // *:DeadNites, StubBirds, and // SpikyBoys living there. // *:Gophecades use Beat. Get'em // before they get you. // *:The guardian there is a // Jamirus. // *:Watch out for its QuadHits!"
   },
   "2194": {
     "id": "$0892",
@@ -15628,7 +15642,7 @@
     "bank": "$4E",
     "index": 82,
     "addr": "$75EA",
-    "text": "*:Her Majesty, the Queen of // GreatTree, // *:and her guest, Mick. // *:Her Majesty desires // a WingSlime. // *:If a Slime is bred with a bird, // perhaps a WingSlime will be // Born{A4}"
+    "text": "*:Her Majesty, the Queen of // GreatTree, // *:and her guest, Mick. // *:Her Majesty desires // a WingSlime. // *:If a Slime is bred with a bird, // perhaps a WingSlime will be // Born\u2026"
   },
   "2235": {
     "id": "$08BB",
@@ -15705,35 +15719,35 @@
     "bank": "$4F",
     "index": null,
     "addr": "$5564",
-    "text": "*:Ith like to give you a reward, // but you can not carry anymore. // *:Get rid of some of your items."
+    "text": "*:I'd like to give you a reward, // but you can not carry anymore. // *:Get rid of some of your items."
   },
   "2246": {
     "id": "$08C6",
     "bank": "$4F",
     "index": null,
     "addr": "$55CF",
-    "text": "*:In other words, a Dragon with // Metaly as one of its parents // *:is resistant to more things. // *:The more {A2} for breeding, the more // it is so. // *:The motto of the month. // *:Aim at [HERO]!! You can be the // future [HERO] too!!"
+    "text": "*:In other words, a Dragon with // Metaly as one of its parents // *:is resistant to more things. // *:The more + for breeding, the more // it is so. // *:The motto of the month. // *:Aim at [HERO]!! You can be the // future [HERO] too!!"
   },
   "2247": {
     "id": "$08C7",
     "bank": "$4F",
     "index": null,
     "addr": "$56BE",
-    "text": "*:The growth limit of [INS 00] is // {96}Lv{97}[INS 10]."
+    "text": "*:The growth limit of [INS 00] is // [Lv][INS 10]."
   },
   "2248": {
     "id": "$08C8",
     "bank": "$4F",
     "index": null,
     "addr": "$56BE",
-    "text": "*:The growth limit of [INS 00] is // {96}Lv{97}[INS 10]."
+    "text": "*:The growth limit of [INS 00] is // [Lv][INS 10]."
   },
   "2249": {
     "id": "$08C9",
     "bank": "$4F",
     "index": null,
     "addr": "$56BE",
-    "text": "*:The growth limit of [INS 00] is // {96}Lv{97}[INS 10]."
+    "text": "*:The growth limit of [INS 00] is // [Lv][INS 10]."
   },
   "2250": {
     "id": "$08CA",

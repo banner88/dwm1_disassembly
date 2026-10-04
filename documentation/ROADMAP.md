@@ -176,7 +176,9 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
       --emit-relocation` help marked LEGACY (absence-tolerant). Verifier PASS 4/4.
       NEW defect found: `dump_monsters.py` WRITES the legacy `monsters.json`
       schema and READS `monsters_full.json` — the Tier-A generator attribution for
-      `monsters_full.json` is suspect (see PROJECT_STATE Open defects).
+      `monsters_full.json` is suspect (see PROJECT_STATE Open defects). **CLOSED S120:**
+      no tool writes `monsters_full.json` (first import); it == the ROM's
+      MonsterInfoTable (TOOLS_AND_DATA S120).
 - [x] **S51 — Doc consolidation + audit** (2026-07-02): PROJECT_STATE 1,071→~280 and
       ROADMAP 1,176→~640 lines with ZERO deletion (everything cut moved verbatim to
       the new cold archive `documentation/SESSION_HISTORY.md`); contradictions fixed
@@ -432,8 +434,10 @@ pipeline — never retrofit the overlay.
       rooms ≥$80). Full adjudication: CROSSBANK_ROOMS "mapID ≥$80 readiness
       audit". Follow-up (compiler-owned, do when first room ≥$80 ships —
       recipe in that section): extend CustomRoomBGMTable 128→256 + bank $71
-      `cp $80` guard + music.py validator + template re-pin; add validators
-      (custom-dest exits must have gate_flag=0; trigger_x≠$FF).
+      `cp $80` guard + music.py validator + template re-pin (S120: the same for
+      bank $71 entry 7's `CustomRoomBattleBGMTable`, CROSSBANK_ROOMS "S120
+      burn-down"); the two exit validators (custom-dest exits gate_flag=0;
+      trigger_x≠$FF) exist (`validators.py`, S120 re-check).
 - [ ] **A′2 — bank $0B in-place room emitter** (Layer A of project.json).
 - [ ] **A′3 — bank $60 multi-bank spill** (bank_map; 16 KB won't hold 75
       rooms of scripts+dialogue; 13 banks / 208 KB free).
@@ -515,9 +519,12 @@ pipeline — never retrofit the overlay.
 - [ ] **`piece_id → screen layout` map** — decode the table turning a grid cell's
       high nibble into the rendered screen layout (needed to author NEW maze
       pieces vs. only reweighting existing ones). (GATE_GENERATION.md §12.2.)
-- [ ] **Full `rst $00` dispatch enumeration** — list every special-floor handler
+- [x] **Full `rst $00` dispatch enumeration** — list every special-floor handler
       slot so reusable slots are known precisely. (§12.3.) (S100: no longer
       needed for custom rooms — they insert before the vanilla gating.)
+      **DONE S120 (byte-neutral):** `SpecialRoomTable` `$16:$5C32` = 8 picks (treasure ×2,
+      forest, priest, shop, Coliseum, mazes, conveyors), labelled in both trees;
+      GATE_GENERATION §2 / §12.3.
 - [ ] **`SetBrd_6744`/`SetBrd_6800` carve algorithm** — step-trace the maze
       connectivity guarantee. (§12.4.)
 
@@ -652,7 +659,8 @@ recipes are pure authoring.
       project.json sprite byte + stale `_sprite_note` are deliberately
       untouched (byte-neutral session); swap to $3A in the next
       project.json-touching session. npc_catalog.json phantom-step
-      contamination found (DOC_AUDIT S91); dumper regen = residual.
+      contamination found (DOC_AUDIT S91); ~~dumper regen = residual~~ (DONE S120:
+      `dump_all_npcs.py` valid-step rule, 772 → 716 entries, TOOLS_AND_DATA).
 - [x] **P3.2 — Bank $64/$67 emission behind project.json** [G-A] (S92, built, NOT yet user-tested) (the
       canvas prerequisite): layouts/attr ($64) + combined tilesets ($67)
       become compiler emitters driven by `custom.rooms[].layout` /
@@ -940,6 +948,10 @@ recipes are pure authoring.
       build, warp, Qt blit, sound, keys, the game in a child process —
       `editor2/core/playback.py` / `playback_server.py`); "play this room" from the
       Rooms tab = a recipe with action `entry` and no scene — small once wanted.
+      **S120 (mop-up, built, NOT yet user-tested):** Rooms inspector More ▾ → "▶ Play the
+      game here (last build)" = `cutscenes.room_recipe` + `RoomOnly` in the Playback
+      window (walkable at the clicked cell; the cached base state is reused). The < 10 s
+      timing on the user's machine is unmeasured — the box stays open until they try it.
 - [x] **P3.5a — Declarative room-state rules** — **DONE S97, USER-CONFIRMED
       2026-09-26** (user: "all of group B"; terms are AND-ed flag set/clear
       conditions — "Flag A set and Flag B set but C NOT set"). As built
@@ -982,13 +994,30 @@ recipes are pure authoring.
       core for PLAIN talk text; NPC section of its own, panels start folded;
       new-flag selection fixed. The NPC "sets flag X when talked to" option
       → built S98 (P3.7: talk scripts). *User half:* `DWM-S97-r2-textbox-test.gbc`.
-- [ ] **P3.6 — Dialogue editor**: WYSIWYG pages with ROM font tiles, live
+- [x] **P3.6 — Dialogue editor**: WYSIWYG pages with ROM font tiles, live
       wrap/DTE/page-split, YES/NO branch wiring. (S97 r2 built the per-box
       editor + ROM-font preview for plain talk text — `talk_editor.py`;
       S98 added the YES/NO question + per-answer reply/flags/move for talk
       scripts (TalkDialog tabs); remaining: nested choices, DTE, $EB indented
       opener, names.) *Accept:* GUI-authored
       multi-page + choice dialogue renders in-game byte-exact to preview.
+      **DONE S120 — built, PyBoy-verified on the user's save, NOT yet user-tested.**
+      Measured first (TEXT_SYSTEM "Glyphs, speakers and voices (S120)"): the game has NO
+      DTE — `$66-$71` are one-cell contractions ('s 't 'll …), now typed as `'s` etc.;
+      `$EA`/`$EB` are the low / high VOICE (blip sound), not an indent; `$F6` = the hero's
+      name, `$F9 00` after op `$3F` = the lead monster's name. As built: per-text Speaker
+      (hero / a typed name / nobody) + Voice (low / high / silent) in every box editor
+      (talk, YES/NO replies, conversations, cutscenes), Insert ▾ for {hero} / {lead} and the
+      extra glyphs ([ ] - ~ / * ( ) + : … &), the speaker label counted in line 1's width;
+      nested choices = conversation `ask` inside `ask` (measured on 3 paths).
+      *Accept MET (machine half):* 4 boxes preview == game pixel-exact (dark pixels), nested
+      YES/NO, voices by blip hook (TEXT_SYSTEM, PYBOY_DEBUGGING S120). *User half:*
+      `DWM_S120_dialogue_gates_test.gbc` (Echo Parlor). ~~Residual: the hero-name budget
+      (4 cells) is INFERRED~~ — MEASURED S120b (the naming screen takes ≤ 4 letters).
+      **S120b (user: "change TERRY to MILLY as default, but leave otherwise as 4 letters
+      … Romhack is about milayou"; built, PyBoy-verified, NOT yet user-tested):** the
+      font's 4 default-name tiles drawn "MILLY" in `patches/bank_04f.asm` (TEXT_SYSTEM
+      `$F6`); pin `97659a4a…` (patched); test ROM `DWM_S120b_milly_test.gbc`.
 - [x] **P3.7 — Triggers/exits editor + World graph v0** — **DONE S98;
       doors USER-CONFIRMED 2026-09-26 in the user's own project ("Works
       now", arrival "Its now fixed"); talk / flags / spots in game built,
@@ -1120,9 +1149,15 @@ recipes are pure authoring.
         are shared today — the compiler copies the vanilla row), ~~per-gate
         monster pools / floor bands (user: "then edit bands … dont care
         when"), per-room encounters inside dives~~ (DONE S114, P3.13a), ~~more than 32 gates~~
-        (DONE S115, ARC NG / NG1), gate
-        entrances + unlock triggers, the maze look in the editor (the game's
-        own tileset / palette). Measured residuals: (i) after a battle
+        (DONE S115, ARC NG / NG1), ~~gate
+        entrances + unlock triggers~~ (DONE S117, NG2), the maze look in the editor (the game's
+        own tileset / palette — S120: a picture per floor type beside the picker, captured
+        in PyBoy, `extracted/gate_floor_types/`; the full painted maze is still open).
+        **S120 (built, PyBoy-verified, NOT yet user-tested):** the three floor-type rows +
+        depth (item tier) per gate (`maze_row` / `special_row` / `contents_row` / `depth`,
+        GATE_GENERATION §7.8, PROJECT_COMPILER §2.17) — Gates tab "Maze floors" group;
+        the rows stay SHARED between gates (the vanilla rows are picked, not copied — the
+        tab says so). Measured residuals: (i) after a battle
         started by TALKING to a monster NPC the NPC is not redrawn until the
         screen reloads (slot active, cast intact — trace the post-battle
         sprite-sheet reload; an arrival fight keeps it); (ii) in a 2-3 enemy
@@ -1132,7 +1167,9 @@ recipes are pure authoring.
         THE WRONG WAY … lands left of player? Ideally always"); if that cell
         is the talked-to monster's own cell (player talking from its right)
         the helper overlaps it — the monster is not drawn after the battle
-        anyway (residual i).
+        anyway (residual i). **S120: (i) NOT reproducible** — three scenarios on the
+        user's save (talk → win, talk → join, arrival fight) all redrew the NPC
+        (ROOM_DATA_FORMAT "Monster NPCs"); closed unless the user sees it again.
         *Carry-overs from S100 r3:* (a) CLOSED — the user passed r3 at S101
         start ("1) yes passed"); (b) and (c) still open. Original list: (a) user test of r3 —
         the Crystal Well test ROM (`5295a028…` patched: cream wipe + cream
@@ -1150,7 +1187,12 @@ recipes are pure authoring.
       first"); helper *at the Castle* = nothing / priest heal / a gate's
       King speech (castle-arrival codes decoded, GATE_GENERATION §7.7);
       World tab wheel zoom + drag pan + Fit / + / −.
-- [ ] **audit_mapid_range re-adjudication** (found S118, open since S117): `python3
+- [x] **audit_mapid_range re-adjudication — DONE S120 (byte-neutral):** twelve sites
+      adjudicated (eleven CP_UNSIGNED, `BattleBGMResolve#2` BOUNDED = a second $7F
+      feature cap), four stale verdict keys found (renamed labels) and the tool now
+      fails on a stale key; selftest PASS (clean 58 / patched 82) and the tool is in
+      verify_integrity check 5 (CROSSBANK_ROOMS "S120 burn-down"). The list below
+      (S118) named the wrong sites. Original box: (found S118, open since S117): `python3
       tools/audit_mapid_range.py --selftest` FAILS — 11 wMapID loads in the S117 shop code
       (bank $09 `ShopBuyStockFill` / `ShopSellPrice` in both trees, the bank $76 / $77
       templates) are NEEDS_REVIEW and the pins (clean 58 / patched band) are stale. Read each
@@ -1297,7 +1339,7 @@ recipes are pure authoring.
       - [x] **Part d — tile patches (`$24` / `$61`) in custom rooms and copies — built S119,
         NOT yet user-tested:** residual (b) of part A measured (a copy drew nothing) and
         fixed: bank $04 same-size redirect → bank $60 entries 9 / 10, `patch_data`, clone
-        migration, the *Change tiles* step. Pin `d19259a1…` (patched).
+        migration, the *Change tiles* step. Pin `d19259a1…` (patched; historical since S120b).
       Earlier plan text (S101): symbolic stepper
       over ops, blocking keyframes on canvas, virtual flag/inventory
       branch walking; playback via P3.4. **S101 user direction (12:36):
@@ -2006,8 +2048,8 @@ recipes are pure authoring.
         party lined up on the NPCs' row) → warnings only, by user decision ("Just warning is
         fine for now, and Ill build around it"); an engine flicker (rotating the NPC OAM
         order each frame) stays an OPTION, not built. **Residuals:** (a) a custom boss win does not advance the
-        vanilla portal room's step counter; (b) no GUI for an NPC's `shown_when` yet (JSON
-        only; the Triggers / P3.14 flag UI); (c) the extended flags are not in the
+        vanilla portal room's step counter; ~~(b) no GUI for an NPC's `shown_when` yet~~
+        (DONE S120: NPC panel "Shown when … Flags…", up to 8 set / clear terms); (c) the extended flags are not in the
         flag-usage cross-reference (P3.14).
   - [ ] **NG3 — Fully custom gates:** a graph of custom rooms (stairs / doors, branches) run
         as a dive (gate rules: saving, escape, losing, music), per-room lists (S114), a boss

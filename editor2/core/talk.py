@@ -7,6 +7,8 @@ player (a warp — which reloads a room, so state rules re-pick its state
 straight away). The GUI edits a SPEC:
 
     {'boxes': [[line, line], ...],          # the text (box 1 = "*:" line)
+     'speaker': '*' | '' | 'hero' | name,   # S120, optional (default "*:")
+     'voice': 'low' | 'high' | 'none',      # S120, optional (default low = $EA)
      'question': bool,                      # last box ends in YES/NO
      'then': BLOCK,                          # no question
      'yes': BLOCK, 'no': BLOCK}              # question
@@ -23,6 +25,12 @@ becomes a `talk` script.
 import copy
 
 EMPTY_BLOCK = {'boxes': [], 'set': [], 'clear': [], 'move': None}
+TEXT_META = ('speaker', 'voice')          # S120: a text's speaker label + voice blip
+
+
+def text_meta(src):
+    """The S120 speaker / voice keys of a dialogue entry or a spec / block."""
+    return {k: src[k] for k in TEXT_META if (src or {}).get(k) is not None}
 
 
 def empty_block():
@@ -49,6 +57,12 @@ class TalkMixin:
         elif b is None and 'text' in d:
             b = [[d['text']]]
         return b
+
+    def _dlg_meta(self, did):
+        try:
+            return text_meta(self.dialogue(did))
+        except KeyError:
+            return {}
 
     def script_dialogue_ids(self, sc):
         out = []
@@ -90,11 +104,15 @@ class TalkMixin:
             if boxes is None:
                 return None
             spec['boxes'] = boxes
+            ids = self.script_dialogue_ids(sc)
+            if ids:
+                spec.update(self._dlg_meta(ids[0]))
             return spec
         try:
             spec['boxes'] = self._dlg_boxes(t['text']) or []
         except KeyError:
             return None
+        spec.update(self._dlg_meta(t['text']))
         spec['question'] = bool(t.get('question'))
         for part in ('then', 'yes', 'no'):
             b = t.get(part) or {}
@@ -104,6 +122,7 @@ class TalkMixin:
                     blk['boxes'] = self._dlg_boxes(b['text']) or []
                 except KeyError:
                     return None
+                blk.update(self._dlg_meta(b['text']))
             blk['set'] = list(b.get('set') or [])
             blk['clear'] = list(b.get('clear') or [])
             blk['move'] = copy.deepcopy(b.get('move')) if b.get('move') else None
@@ -140,12 +159,13 @@ class TalkMixin:
         return s
 
     # ---------------------------------------------------------------- write
-    def _new_dialogue(self, sid, suffix, boxes, choice=False):
+    def _new_dialogue(self, sid, suffix, boxes, choice=False, meta=None):
         dlg = self.custom.setdefault('dialogue', [])
         did = self._unique_id(f'{sid}_{suffix}', {d.get('id') for d in dlg})
         e = {'id': did, 'boxes': [list(b) for b in boxes]}
         if choice:
             e['choice'] = True
+        e.update(text_meta(meta))
         e['comment'] = f'{sid} {suffix} ({len(boxes)} box{"es" if len(boxes) != 1 else ""})'
         dlg.append(e)
         return did
@@ -163,15 +183,16 @@ class TalkMixin:
         if not spec.get('boxes'):
             raise ValueError('the talk needs some text')
         if not q and block_is_empty(spec.get('then')):
-            return 'ops', [['text', self._new_dialogue(sid, 'text', spec['boxes'])], ['end']]
-        t = {'text': self._new_dialogue(sid, 'text', spec['boxes'], choice=q),
+            return 'ops', [['text', self._new_dialogue(sid, 'text', spec['boxes'],
+                                                       meta=spec)], ['end']]
+        t = {'text': self._new_dialogue(sid, 'text', spec['boxes'], choice=q, meta=spec),
              'question': q}
 
         def blk(part):
             b = spec.get(part) or {}
             out = {}
             if b.get('boxes'):
-                out['text'] = self._new_dialogue(sid, part, b['boxes'])
+                out['text'] = self._new_dialogue(sid, part, b['boxes'], meta=b)
             if b.get('set'):
                 out['set'] = list(b['set'])
             if b.get('clear'):

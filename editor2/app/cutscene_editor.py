@@ -639,22 +639,25 @@ class StepForm(QWidget):
         (user: "Why is text box so slow to type in?")."""
         from editor2.app.rooms.talk_editor import BoxList
         boxes = [list(b) for b in ((v or {}).get('boxes') or []) if b] or [['']]
-        bl = BoxList(self.ed.s.renderer.rom, boxes, first_default='', vertical=True)
+        bl = BoxList(self.ed.s.renderer.rom, boxes, first_default='', vertical=True,
+                     meta=v if isinstance(v, dict) else None)
         bl.setMinimumHeight(min(640, 80 + 250 * len(boxes)))
         bl.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         pause = QTimer(bl)
         pause.setSingleShot(True)
         pause.setInterval(700)
-        start = [[ln for ln in b] for b in bl.boxes()]
+        start = ([[ln for ln in b] for b in bl.boxes()], bl.meta())
 
         def store():
             pause.stop()
             got = [b for b in bl.boxes() if any(ln.strip() for ln in b)] or [['']]
-            if got == getattr(bl, '_stored', start):
+            meta = bl.meta()                               # S120 speaker / voice
+            if (got, meta) == getattr(bl, '_stored', start):
                 return
-            bl._stored = got
-            val = dict(v or {})
+            bl._stored = (got, meta)
+            val = {k: x for k, x in dict(v or {}).items() if k not in ('speaker', 'voice')}
             val['boxes'] = got
+            val.update(meta)
             on(val)
         pause.timeout.connect(store)
         bl.changed.connect(pause.start)

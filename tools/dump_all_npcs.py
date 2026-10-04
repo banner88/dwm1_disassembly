@@ -11,6 +11,7 @@ from collections import defaultdict
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from dwm.rom import ROM, BANK_SIZE
 from dwm.map_names import MAP_NAMES  # canonical room names (97 entries)
+from editor2.core.vanilla import VALID_TILESET_BANKS  # S120: the valid-step rule
 
 BANK = 0x0B
 MAP_PTR_ADDR = 0x4B43
@@ -83,6 +84,17 @@ def parse_step_block(rom_data, block_addr):
         exit_ptr = rom_data[offset + 4] | (rom_data[offset + 5] << 8)
 
         if not (0x4000 <= interact <= 0x7FFF):
+            break
+        # S120 (DOC_AUDIT S91 residual): the engine checks only tileset_bank in (0, $80), so
+        # the words after a screen's real list decode as plausible "phantom" steps (e.g.
+        # Castle screen 0 step 6 with 28 NPCs). The valid-step rule of
+        # editor2/core/vanilla.valid_steps / dump_npc_sprite_catalog --census: a real
+        # tileset bank, both pointers in $4000-$7FFF, sane NPC cells; the first invalid
+        # entry ends the list.
+        if tileset not in VALID_TILESET_BANKS or not (0x4000 <= exit_ptr <= 0x7FFF):
+            break
+        ents = parse_interaction_block(rom_data, rom_data, interact)
+        if any(e['type'] == 'npc' and (e['x'] >= 16 or e['y'] >= 16) for e in ents):
             break
 
         steps.append({

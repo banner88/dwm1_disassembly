@@ -115,6 +115,18 @@
    C82D     2    Text print pointer: advances while a text box prints, stands
                  still when the box waits for A (the Playback window's auto
                  text presses A then) [S118, PyBoy]
+   C825     1    Text engine flags [S120, bank $56 TextCodeTable read]: bit 1 = no
+                 per-letter delay ($F5), bit 2 / 5 = clear / wait states ($F7 / $FA),
+                 bit 3 = custom delay $C833 ($F8), bit 4 = printing an INSERT ($F6 /
+                 $F9; $F0 returns to $C831/$C832), bits 6 / 7 = $FB / $FC params
+   C826     1    Text engine flags 2 [S120]: bit 0 = VOICE on (the per-letter blip;
+                 $EA / $EB / $FD set it, $FE clears it), bit 7 = print at once ($ED,
+                 or a held button)
+   C831     2    Saved text pointer while an insert prints ($F6 / $F9) [S120]
+   C840     1    The voice blip's sound id: $5B after $EA, $5A after $EB — bank $00
+                 HandleTextCharacter plays it per printed cell [S120, PyBoy-measured]
+   C0C8     9    Name buffer: $F6 copies the 8-byte hero name $CA42 here (+ $F0) and
+                 prints it [S120]; the naming screen's edit buffer too (bank $09)
    C850     1    Field busy (fade / room load / box): a tool must wait for 0
                  before interacting after a warp [S118, PyBoy]
    C968     1    [[Dragon_Warrior_Monsters/Notes#Map_Type_IDs|Map type]] (wMapID)

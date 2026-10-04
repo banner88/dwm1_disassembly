@@ -217,6 +217,7 @@ class NpcPanel(QGroupBox):
     newTalkRequested = Signal()
     newConversationRequested = Signal()  # S101
     shopRequested = Signal()             # S117 (P3.13c): make this NPC a shopkeeper
+    shownWhenRequested = Signal()        # S120: flag conditions (NG2 residual b)
     editTalkRequested = Signal()
     presenceToggled = Signal(int, bool)  # state index, present
     deleteRequested = Signal()
@@ -301,6 +302,17 @@ class NpcPanel(QGroupBox):
         self.talk_preview.setWordWrap(True)
         self.talk_preview.setStyleSheet('color: #9fd0ff;')
         f.addRow('', self.talk_preview)
+        wrow = QHBoxLayout()
+        self.shown_when = QLabel('')
+        self.shown_when.setWordWrap(True)
+        wrow.addWidget(self.shown_when, 1)
+        self.btn_shown = QPushButton('Flags…')
+        self.btn_shown.setToolTip('Show this NPC only while flags are ON / OFF (S117 engine: '
+                                  'checked whenever the screen loads — a flag set while you '
+                                  'are in the room shows / hides it at the next load)')
+        self.btn_shown.clicked.connect(self.shownWhenRequested.emit)
+        wrow.addWidget(self.btn_shown)
+        f.addRow('shown when', wrow)
         self.presence_box = QWidget()
         self.presence_lay = QHBoxLayout(self.presence_box)
         self.presence_lay.setContentsMargins(0, 0, 0, 0)
@@ -356,6 +368,14 @@ class NpcPanel(QGroupBox):
         self.btn_edit_talk.setEnabled(talk_pages is not None or conversation is not None)
         self.talk_preview.setText(('Conversation: ' + conversation) if conversation is not None
                                   else talk_summary(talk_pages, cur))
+        sw = view.get('shown_when') or []
+        if view.get('swirl_of') is not None:
+            self.shown_when.setText(f"a gate swirl: shown until gate {view['swirl_of']} is cleared")
+        elif sw:
+            self.shown_when.setText(' AND '.join(f"{t['flag']} {'ON' if t['is'] == 'set' else 'OFF'}"
+                                                 for t in sw))
+        else:
+            self.shown_when.setText('always')
         while self.presence_lay.count():
             w = self.presence_lay.takeAt(0).widget()
             if w:
@@ -374,7 +394,8 @@ class NpcPanel(QGroupBox):
         self.raw_note.setText(('Cloned entry (' + bytes_hint + '): editing a field turns it into '
                                'a typed NPC with the same bytes.') if view.get('raw') else '')
         for w in (self.sprite_btn, self.facing, self.beh, self.obj, self.script,
-                  self.btn_new_talk, self.btn_new_conv, self.btn_del, self.presence_box):
+                  self.btn_new_talk, self.btn_new_conv, self.btn_del, self.presence_box,
+                  self.btn_shown):
             w.setEnabled(editable)
         if not editable:
             self.btn_edit_talk.setEnabled(False)
@@ -400,3 +421,41 @@ class NpcPanel(QGroupBox):
         if self._building:
             return
         self._emit('script', self.script.currentData())
+
+
+
+class ShownWhenDialog(QDialog):
+    """S120 (ROADMAP NG2 residual b): which flags must be ON / OFF for an NPC to be shown
+    (all must hold). Uses the talk editor's flag lists (project flags, New flag…, the
+    well-known story flags, any number)."""
+
+    def __init__(self, doc, terms=None, parent=None):
+        super().__init__(parent)
+        from PySide6.QtWidgets import QDialogButtonBox, QVBoxLayout
+        from editor2.app.rooms.talk_editor import FlagList
+        self.setWindowTitle('Shown when…')
+        v = QVBoxLayout(self)
+        intro = QLabel('The NPC is there only while ALL of these hold. The game checks them '
+                       'whenever the screen loads (entering it, scrolling to it, after a '
+                       'battle) — a flag set by a talk shows / hides the NPC at the next load. '
+                       'Nothing listed = always there.')
+        intro.setWordWrap(True)
+        v.addWidget(intro)
+        terms = terms or []
+        self.on = FlagList(doc, 'These flags are ON:',
+                           [t['flag'] for t in terms if t.get('is') == 'set'])
+        self.off = FlagList(doc, 'These flags are OFF:',
+                            [t['flag'] for t in terms if t.get('is') == 'clear'])
+        v.addWidget(self.on)
+        v.addWidget(self.off)
+        bb = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        bb.accepted.connect(self.accept)
+        bb.rejected.connect(self.reject)
+        v.addWidget(bb)
+
+    def terms(self):
+        return ([{'flag': f, 'is': 'set'} for f in self.on.flags()]
+                + [{'flag': f, 'is': 'clear'} for f in self.off.flags()])
+
+    def new_flags(self):
+        return self.on.new_flags + [f for f in self.off.new_flags if f not in self.on.new_flags]

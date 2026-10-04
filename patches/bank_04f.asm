@@ -157,7 +157,22 @@ SpiritFamilyIconGlyph:
     db $ff, $00, $ff, $00, $ff, $00, $ff, $00, $ff, $00, $ff, $00, $ff, $00, $ff, $00
     db $ff, $00, $ff, $00, $ff, $00, $ff, $00, $ff, $00, $ff, $00, $ff, $00, $ff, $00
 
-    INCBIN "gfx/image_04f_4d40.2bpp"	;TERRY
+; S120b (user 2026-10-05: "I just want to change TERRY to MILLY as default, but leave
+; otherwise as 4 letters ... Romhack is about milayou"): the new-game hero name $D3-$D6
+; (bank $01 writes them; the naming screen offers them; text $F6 prints them) drawn
+; "MILLY" in the same 4 tiles (was INCBIN "gfx/image_04f_4d40.2bpp" ;TERRY — same 64 B):
+;   .#...#..###..#.....#.....#...#..
+;   .##.##...#...#.....#.....#...#..
+;   .#.#.#...#...#.....#......#.#...
+;   .#...#...#...#.....#.......#....
+;   .#...#...#...#.....#.......#....
+;   .#...#...#...#.....#.......#....
+;   .#...#..###..####..####....#....
+;   ................................
+    db $ff, $44, $ff, $6c, $ff, $54, $ff, $44, $ff, $44, $ff, $44, $ff, $44, $ff, $00	;MILLY
+    db $ff, $e4, $ff, $44, $ff, $44, $ff, $44, $ff, $44, $ff, $44, $ff, $e7, $ff, $00
+    db $ff, $10, $ff, $10, $ff, $10, $ff, $10, $ff, $10, $ff, $10, $ff, $9e, $ff, $00
+    db $ff, $44, $ff, $44, $ff, $28, $ff, $10, $ff, $10, $ff, $10, $ff, $10, $ff, $00
 
     db $ff, $00, $ff, $00, $ff, $00, $ff, $00, $ff, $00, $ff, $00, $ff, $00, $ff, $00
     db $ff, $00, $ff, $00, $ff, $00, $ff, $00, $ff, $00, $ff, $00, $ff, $00, $ff, $00

@@ -88,6 +88,10 @@ OPS = {
     'face_left':          (0x49, 1),   # $6866 (the old 'npc_show' name)
     'face_right':         (0x4A, 1),   # $687F
     'long_delay':         (0x4D, 1),   # $68BA: $D8DB := n, $D8D8.2
+    # S120 (P3.6 names): $6632 — the lead party monster's SPECIES name into
+    # $C180 (text mode 5), printed by text code $F9 $00 = `{lead}`; the
+    # compiler puts it before every text that uses {lead} (Project).
+    'load_lead_name':     (0x3F, 0),
     'boss_battle':        (0x5B, 0),   # $6D84: preset slots $DA03/05/07 +
                                        #        $DA02 = count-1, $DA09 = 3
 }

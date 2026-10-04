@@ -760,9 +760,21 @@ door is still vanilla.
    per ROOM_DATA_FORMAT §"which mechanism to use" — flag-gated
    visibility, script binding.
 4. **Dialogue** — per NPC/script: page-accurate WYSIWYG with the real
-   ROM font tiles, live 18-cell wrap, auto-DTE, auto page-split, YES/NO
+   ROM font tiles, live 18-cell wrap, ~~auto-DTE~~ (S120: no DTE exists — one-cell
+   contractions instead, TEXT_SYSTEM), auto page-split, YES/NO
    choice wiring with branch preview (built: `core/textenc.py` +
    `dwm/text.py`; preview rendering = Tier-1, §7).
+   **As built S120 (ROADMAP P3.6; built, PyBoy-verified, NOT yet user-tested; help
+   `20_npcs.md` "Text: speakers, voices, names"):** the shared box editor (`talk_editor.
+   BoxList`, used by talks, conversations and cutscene texts) has a header **Speaker**
+   ("*:" / a name… / the hero's name / nobody — line 1's cell limit follows it) and
+   **Voice** (low $EA / high $EB / silent), and each box an **Insert ▾** (the hero's name
+   `{hero}`, the lead monster's kind `{lead}`, `…`, `"`); every glyph of the font that
+   dialogue uses is typed as itself and contractions are one cell, as in the game. The
+   preview == the game, pixel for pixel (measured on 4 boxes; the hero's name previews
+   as the new-game "TERRY" tiles). Nested questions are the conversation / cutscene trees
+   (S101 / S119). Not offered: `$E8` positions, `$E9` sounds and `$F9` slots other than
+   the lead monster (their contents are filled by game code).
 5. **Triggers** — interact entries (examine spots / step-on triggers — the
    "spawn point" was a misnomer, S98), doors and exits (custom↔custom
    and custom↔vanilla incl. `vanilla_exit_extensions`), step-counter
@@ -944,8 +956,21 @@ inputting new boss or redirecting to new gate - swirly."
   portals among the entrances.
 - Flag pickers everywhere (state rules, talks, conversations, encounter variants) list
   **`gate:N cleared — name`** (`rules_panel.well_known(doc)`).
-- NPC entries accept `shown_when` (flag terms) in project.json; no GUI for it yet
-  (ROADMAP residual) — the swirl uses the same mechanism.
+- NPC entries accept `shown_when` (flag terms) in project.json — S120: authored in the
+  NPC panel (*shown when* → **Flags…**: lists of flags that must be ON / OFF,
+  `ShownWhenDialog`, `Document.set_npc_shown_when`) — the swirl uses the same mechanism.
+
+**As built S120 (ROADMAP P3.7b part 2 — maze floors; built, PyBoy-verified, NOT yet
+user-tested; help `60_gates.md` "Maze floors").** Gates tab → **Maze floors** group:
+*maze look* / *special rooms* / *contents* — 16 rows each, every row named by the gates
+that use it and what it rolls (`gates.row_summary`), the maze look with the row's floor
+types as the game draws them beside the picker (`extracted/gate_floor_types/ft_NN.png`,
+measured); *item tier* 1-3; **Vanilla** = the gate's own rows. One undo step each
+(`set_gate_setting` maze_row / special_row / contents_row / depth). The right-hand panel
+now scrolls (the groups no longer squeeze each other on a laptop screen).
+**Rooms tab (S120, ROADMAP P3.4):** More ▾ → **▶ Play the game here (last build)** opens
+the cutscene Playback window on the selected cell of this room (`cutscenes.room_recipe` +
+`RoomOnly`; a new game, or the save picked on the Cutscenes tab).
 
 ### 5.1c Triggers (v2.1 — first-class concept, user spec S90)
 

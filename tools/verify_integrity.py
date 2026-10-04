@@ -6,7 +6,14 @@ Checks, in order:
                    This is the byte-perfect guarantee. If it fails, the session
                    must fix it before doing ANYTHING else.
   2. PATCHED BUILD patches/*.asm applied on top builds without errors and
-                   bank $60 is populated (custom content present).
+                   bank $60 is populated (custom content present), AND (S120)
+                   its md5 == editor2/tests/test_compiler.py REFERENCE_MD5: the
+                   committed overlay must be exactly what the compiler emits for
+                   editor2/example-project (S119 re-pinned the template but left
+                   the S117 patches/bank_060.asm committed — bank $04 then
+                   far-called a bank $60 entry 9 that the overlay lacked, and
+                   nothing failed). Fix on failure: `python3 tools/build_project.py
+                   --project editor2/example-project --apply`.
   3. TREE RESTORE  working tree is restored to clean state afterwards.
   4. DOC SANITY    no documentation file claims a different "original MD5".
   5. TOOL SELFTESTS the table generators' --selftest round-trips still pass, so a
@@ -57,6 +64,8 @@ SELFTEST_TOOLS = [
     "dump_encounters.py",        # S114: encounters.json (gate floor -> list by the game's rule, 5 slots, chance / max count) == ROM
     "dump_sound_catalog.py",     # S116: sound_catalog.json anchors (RoomBGMTable, the SetBGM code sites, the bank $55 sound test) == ROM
     "census_cutscenes.py",       # S118: cutscene_census.json scene list == the cutscene catalogue decoded from the ROM (+ totals)
+    "census_gate_floor_types.py",  # S120: gate_floor_types.json tables + 32 gate rows == ROM bank $16, the 16 floor-type pictures present
+    "audit_mapid_range.py",      # S120: every `ld a, [wMapID]` site in both trees has a verdict (no NEEDS_REVIEW, no stale key); was failing unseen S73-S99 and S116-S119
 ]
 
 PATCH_FILES = [
@@ -125,6 +134,13 @@ def check_clean_build():
     return True
 
 
+def reference_md5():
+    """S120: the example project's pinned patched md5 (test_compiler)."""
+    path = os.path.join(REPO, "editor2", "tests", "test_compiler.py")
+    m = re.search(r'^REFERENCE_MD5\s*=\s*"([0-9a-f]{32})"', open(path).read(), re.M)
+    return m.group(1) if m else None
+
+
 def check_patched_build():
     print("[2/6] Patched build (custom content check)...")
     # Snapshot clean files we are about to overwrite
@@ -155,7 +171,19 @@ def check_patched_build():
             print("  FAIL: patched build MD5 equals original — patches"
                   " were not applied")
             return False
-        print(f"  OK: patched ROM builds, bank $60 holds {used} bytes")
+        # S120: the committed overlay == the compiler's example-project build.
+        pin = reference_md5()
+        if pin is None:
+            print("  FAIL: REFERENCE_MD5 not found in editor2/tests/test_compiler.py")
+            return False
+        if got != pin:
+            print(f"  FAIL: committed overlay builds {got}, the compiler pin "
+                  f"(test_compiler REFERENCE_MD5) is {pin} — a compiler-owned "
+                  "file in patches/ is stale. Run: python3 tools/build_project.py "
+                  "--project editor2/example-project --apply (PROJECT_COMPILER §1)")
+            return False
+        print(f"  OK: patched ROM builds, bank $60 holds {used} bytes, "
+              f"== compiler pin {pin[:8]}…")
         return True
     finally:
         # Always restore the clean tree

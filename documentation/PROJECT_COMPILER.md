@@ -41,6 +41,18 @@ to the proven overlay:
 | `patches/bank_076.asm` | whole file = template head (`EncResolve`, S115 + `NewGateRowCopy`) + the project's encounter lists, rooms' lists / variants / rates, gates' plans (S114 P3.13a, §2.30) + the new gates' rows / sources (S115 NG1, §2.31) + `GateClearTable` (S117 NG2, §2.32) |
 | `patches/bank_077.asm` + region `gd_item_info` in `patches/bank_003.asm` | S117: the shop lists (`ShopFill` / `ShopClose` template head) and the item buy prices, from `gamedata.shops` / `custom.shops` / `gamedata.items` (§2.32) |
 
+**S120 — the committed overlay IS the compiler's example build.** `patches/*` must
+assemble to the pin (`editor2/tests/test_compiler.py` `REFERENCE_MD5`) —
+`verify_integrity.py` check 2 now FAILS otherwise. S119 re-pinned the bank $60 template
+(entries 9 / 10) but never ran `--apply`: the committed `patches/bank_060.asm` stayed the
+S117 file while `patches/bank_004.asm` already far-called `$6009` / `$600a`, so the
+repo's own overlay built `0591928d…` (patched, historical, broken: a `$24` / `$61` op
+would dispatch past the bank $60 table) and nothing failed. After an engine-template
+change: `python3 tools/build_project.py --project editor2/example-project --apply`, then
+keep only the files whose BYTES changed (`--apply` also rewrites the gd_* region comments
+of banks $04 / $4D / $56 / $6E, dropping the address comments the committed copies carry
+— S120 kept those).
+
 Everything else — engine intercepts in banks `$00/$01/$04/$06/$07/$0B/$16`,
 layouts (`bank_064.asm` via `tools/build_gate_room.py` /
 `tile_layout_compiler.py`), tilesets (`bank_067.asm` via
@@ -210,8 +222,38 @@ name from TEXT_SYSTEM (`choice`, `wait`, `hero`…), `["bytes", …]`.
 Strings emit as `db "…"` and rely on the **global charmap**
 (`disassembly/charmap.asm`, included by `game.asm` line 86). The safe
 character set excludes anything the charmap doesn't define (`-` is
-rejected, not guessed). **No DTE in v1** — matches the proven hand-authored
-custom text; a space-optimising DTE pass is a future flag.
+rejected, not guessed). ~~No DTE in v1~~ — **S120: there is no DTE in this game**
+(TEXT_SYSTEM "One-cell contractions"); see below.
+
+**S120 (ROADMAP P3.6, `editor2/core/textenc.py`, measured in PyBoy on the user's save):**
+* **Glyphs** in `boxes` / `lines` / auto `text`: letters, digits, `. , ; ! ? '`, `..` (one
+  cell), and `" - & ( ) + : / ~ [ ] *` + `…` (`EXTRA`, hex-emitted); an apostrophe + one of
+  `l t s r m y v d e c n T` is written as the font's ONE-cell contraction (`$66-$71`, as the
+  game writes "don't" = `don` + `$67`). Runs of charmap characters stay quoted `db "…"`
+  strings (old texts emit the same bytes; a text with a contraction is one byte and one
+  cell shorter per contraction — the user's "Let's" becomes `Let` + `$68`).
+* **Inserts:** `{hero}` = `$F6` (counts **4** cells), `{lead}` = `$F9 $00` (counts **9**:
+  the lead monster's species name) — `Project._assign_text_ids` puts op **`$3F`
+  `load_lead_name`** right before every `text` op whose entry uses `{lead}` (the cutscene
+  lowering emits it itself, so the editor's step model stays exact).
+* **`speaker`** (boxes / auto text): absent or `"*"` = "*:" (the S97 bytes), `""` = no
+  label (18 cells on line 1), `"hero"` = `$F6 $A3`, any name ≤ 9 glyphs = the name +
+  `$A3`; line 1's limit = 18 − the label's cells (`line_limit(b, l, speaker)`).
+  **`voice`**: `"low"` (default) = `$EA`, `"high"` = `$EB`, `"none"` = no opener (silent).
+  No speaker / voice = `$EA $9F $A3`, byte-identical to S97-S119. `talk` specs (`speaker` /
+  `voice` beside `boxes`, per block too), conversation `say` / `ask` dicts and cutscene
+  `say` / `ask` texts carry them into the dialogue entry.
+* **`raw` strings** are validated: only charmap characters (a `:` in a raw string used to
+  assemble as the ASCII byte `$3A` = "W", silently — S120 probe).
+* **S120b — the hero's default name is "MILLY"** (user: "I just want to change TERRY to
+  MILLY as default, but leave otherwise as 4 letters"): a hand patch in the overlay, not
+  project data — `patches/bank_04f.asm` replaces the font's 4 "TERRY" tiles `$D3-$D6`
+  (`$4F:$4D40`, 64 B, outside the `gd_family_icons` region) with "MILLY", so every
+  project builds it. Names stay ≤ 4 letters; `{hero}` still counts 4 cells.
+  `textenc.PATCHED_GLYPHS` = the same bytes for the previews (test_compiler checks both
+  the source and the built ROM). Pin `97659a4a…` (patched; built S120b, NOT yet
+  user-tested), was `d19259a1…` (patched, historical) — 64 font bytes + the checksum.
+
 
 ### 2.4 `custom.scripts[]`
 
@@ -1198,6 +1240,19 @@ gate without an entry is emitted verbatim. Lowering: `Project.gate_configs()`
 (`GateFloorDataTable`, 32 rows × 8 B; bytes 0-2 and 7 vanilla — private
 floor-type rows are open). `floors` also bounds `gate_inserts` (§2.16: 2 ..
 N−1, or 1 .. N−1 when hand-made) and the Gates-tab floor plan.
+
+**S120 (ROADMAP P3.7b part 2): the floor-type rows + depth tier** — `maze_row` (0-15 →
+byte 0: the row of `FloorTypeSelectionTable` = which of the 16 maze floor types),
+`special_row` (0-15 → byte 1: `FloorTypeSelectionTable2` = the special room of floors 3,
+6, 9 …), `contents_row` (0-15 → byte 2: `FloorTypeSelectionTable3`), `depth` (1-3 →
+byte 7: the ground-item tier). Any gate, vanilla (the `gate_floor_table` region) or new
+(`NewGateRows`); absent = the gate's own / the source's byte; out of range = ERROR. The
+rows are SHARED tables — the Gates tab names each row by the gates that use it and
+shows the maze floor types as the game draws them
+(`extracted/gate_floor_types/`, `tools/census_gate_floor_types.py`, GATE_GENERATION
+§2 "S120"). Measured on the user's save: gate 5 with `maze_row` 0 / `special_row` 10 /
+`contents_row` 12 / `depth` 3 → `wMapID` 13 (row 0's only type), `wFloorType2/3` 10 / 12,
+`wBossTileset` 3 (unedited: type 12, 2 / 3, tier 1).
 
 A custom boss room gets `room_flags` no-saving by DEFAULT (explicit
 `can_save: true` wins, with a warning). Music: `CustomRoomBGMResolve`
@@ -2356,8 +2411,8 @@ GATE_GENERATION §7.8 (the engine, measured); EDITOR_DESIGN §5.1b "As built S11
 * **Warnings:** a new gate with no entrance in any room / entrance redirect; a new gate
   whose boss floor is a VANILLA boss room (its scripts run unchanged: the original
   gate's cleared flag, boss, King's speech).
-* **Not editable yet:** a new gate's own floor-type rows (bytes 0-2) and depth tier
-  (byte 7) — the source's. Entrance conditions (NG2) are plain exit rows / room states
+* **S120:** a new gate's floor-type rows (bytes 0-2) and depth tier (byte 7) are
+  editable like any gate's (§2.17 "S120") — without them, the source's. Entrance conditions (NG2) are plain exit rows / room states
   today (S117: the swirl + the cleared flag — §2.32; the portal itself stays a plain exit,
   like the game's).
 
@@ -2399,7 +2454,8 @@ emitters), `shops_doc.py` (`ShopsMixin`).
   (`extracted/gate_names.json`), the own flag of a new gate or a re-bossed vanilla gate.
   `flag_persistent()` covers the extended range (state-rule / variant persistence checks).
 * **Swirls / conditions** (`Project.npc_conditions`): `swirl_of: N` → `(cleared flag,
-  CLEAR)`; `shown_when` terms → `(flag, SET|CLEAR)`; ≤ 8 per NPC. Emitted (`_npc_cond_lines`)
+  CLEAR)`; `shown_when` terms → `(flag, SET|CLEAR)`; ≤ 8 per NPC (S120: authored in the
+  NPC panel's *shown when* → Flags… — `Document.set_npc_shown_when`; was JSON-only). Emitted (`_npc_cond_lines`)
   as `db $A0|$A1, lo, hi, $FF, $FF` before the NPC (typed and raw entries). Bank $60 data
   also gets **`VanillaNPCExtTable`** (always emitted; `$FF` = empty) from
   `vanilla_swirl_overrides()` — per vanilla portal room / screen whose portal enters a
@@ -2532,7 +2588,7 @@ two slot numbers, a cell too far off the screen, a tile piece past the edge, a t
 does not fit, a fly for the player …). The editor shows the same list live (`analyse`).
 
 **Pin:** the engine change (bank $04 redirect + the bank $60 template, re-pinned)
-moves the example build: **`d19259a1…` (patched; built S119, NOT yet user-tested)**,
+moves the example build: **`d19259a1…` (patched, historical since S120b → `97659a4a…`, §2.3)**,
 was `110210b0…` (patched, historical). The example project has no cutscenes.
 
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room

@@ -222,7 +222,7 @@ decode proof is what rules out a hidden increment there.
 | $3C | $6618 | 0 | continue |  |  |
 | $3D | $6620 | 0 | continue |  |  |
 | $3E | $6628 | 0 | ret |  |  |
-| $3F | $6632 | 0 | continue |  | decompile_script said 2 |
+| $3F | $6632 | 0 | continue |  | decompile_script said 2. S120: `load_lead_name` — the first party monster's SPECIES name (mode 5) into $C180 = text `$F9 $00`; the compiler emits it before every text with `{lead}` (PROJECT_COMPILER §2.3) |
 | $40 | $6646 | 2 | branch/continue | **branch** (last param = target) | decompile_script said 1 |
 | $41 | $669D | 1 | continue |  | decompile_script said 2 |
 | $42 | $66BD | 2 | continue |  | decompile_script said 0 |
@@ -628,7 +628,7 @@ the code S118f, cited; "script" = inferred from the script word streams only).
 | `$C8B1` / `$C8B2` | screen shake up-down / left-right | frames (BATTLE_SKILL_SYSTEM) |
 | `$C8EC` | all field sprites hidden | code: non-zero → player, followers (bank_001:3786), NPCs (bank_006:2401), gate object (bank_001:5394) not drawn; room transitions set 1 (bank_006:5970), the engine clears it only when `$D92B` ∉ 1-5 (bank_006:5996) — early-story scripts unhide with 0 |
 | `$C8ED` | hidden sprites | code (bank_001:3775-3876): bit 0 Terry, bits 1-3 followers 1-3; reset to 0 every frame without a script except the boss-win `$0E`. 15 = everyone, 14 = the monsters only |
-| `$C8F2` (word) | the name the naming screen edits | code (bank_009:5701): `$CA42` = the HERO's name — text code `$F6` [HERO] prints those 8 bytes (bank $56, the handler before `jr_056_478a`); a new game holds the placeholder `$D3-$D6` (prints "TERRY0000") until the Castle intro's naming screen. (An S118f helper reading said "the new monster" — wrong, corrected the same round.) |
+| `$C8F2` (word) | the name the naming screen edits | code (bank_009:5701): `$CA42` = the HERO's name — text code `$F6` [HERO] prints those 8 bytes (bank $56, the handler before `jr_056_478a`); a new game holds the placeholder `$D3-$D6` (prints "TERRY0000" — the 4 tiles + `$00` × 4) until the Castle intro's naming screen (map `$00` script 0 pos 107-113: `$12` `$C8F4`=0, `$13` `$C8F2`=`$CA42`, `$04 15`), which offers those tiles and, accepted, stores them + `$F0` × 4 (S120b, PyBoy; the project's builds draw them "MILLY", TEXT_SYSTEM). (An S118f helper reading said "the new monster" — wrong, corrected the same round.) |
 | `$C8F4` | the naming screen's default name | 0 = none |
 | `$CAB4` | arena classes won | 1-8 after G…S (bank_009:4634-4709) |
 | `$D8E1` | the last check's result | written by the party / bag / library checks |

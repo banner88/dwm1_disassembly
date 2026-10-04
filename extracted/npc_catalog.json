@@ -4238,331 +4238,6 @@
     "interact_ptr": 23537
   },
   {
-    "map_type": 8,
-    "room": "Gate(08)",
-    "screen": 0,
-    "step_id": 30,
-    "npc_type": 32,
-    "sprite": 8,
-    "x": 5,
-    "y": 8,
-    "script": 255,
-    "flat": 187584,
-    "interact_ptr": 23744
-  },
-  {
-    "map_type": 8,
-    "room": "Gate(08)",
-    "screen": 0,
-    "step_id": 30,
-    "npc_type": 64,
-    "sprite": 240,
-    "x": 5,
-    "y": 4,
-    "script": 255,
-    "flat": 187589,
-    "interact_ptr": 23744
-  },
-  {
-    "map_type": 8,
-    "room": "Gate(08)",
-    "screen": 0,
-    "step_id": 30,
-    "npc_type": 64,
-    "sprite": 241,
-    "x": 5,
-    "y": 4,
-    "script": 255,
-    "flat": 187594,
-    "interact_ptr": 23744
-  },
-  {
-    "map_type": 8,
-    "room": "Gate(08)",
-    "screen": 0,
-    "step_id": 30,
-    "npc_type": 32,
-    "sprite": 8,
-    "x": 5,
-    "y": 8,
-    "script": 255,
-    "flat": 187600,
-    "interact_ptr": 23760
-  },
-  {
-    "map_type": 8,
-    "room": "Gate(08)",
-    "screen": 0,
-    "step_id": 30,
-    "npc_type": 0,
-    "sprite": 85,
-    "x": 5,
-    "y": 4,
-    "script": 255,
-    "flat": 187605,
-    "interact_ptr": 23760
-  },
-  {
-    "map_type": 8,
-    "room": "Gate(08)",
-    "screen": 0,
-    "step_id": 30,
-    "npc_type": 0,
-    "sprite": 85,
-    "x": 5,
-    "y": 4,
-    "script": 255,
-    "flat": 187610,
-    "interact_ptr": 23760
-  },
-  {
-    "map_type": 8,
-    "room": "Gate(08)",
-    "screen": 0,
-    "step_id": 30,
-    "npc_type": 32,
-    "sprite": 8,
-    "x": 5,
-    "y": 8,
-    "script": 255,
-    "flat": 187616,
-    "interact_ptr": 23776
-  },
-  {
-    "map_type": 8,
-    "room": "Gate(08)",
-    "screen": 0,
-    "step_id": 30,
-    "npc_type": 64,
-    "sprite": 240,
-    "x": 5,
-    "y": 4,
-    "script": 255,
-    "flat": 187621,
-    "interact_ptr": 23776
-  },
-  {
-    "map_type": 8,
-    "room": "Gate(08)",
-    "screen": 0,
-    "step_id": 30,
-    "npc_type": 64,
-    "sprite": 85,
-    "x": 5,
-    "y": 4,
-    "script": 255,
-    "flat": 187626,
-    "interact_ptr": 23776
-  },
-  {
-    "map_type": 8,
-    "room": "Gate(08)",
-    "screen": 0,
-    "step_id": 30,
-    "npc_type": 32,
-    "sprite": 8,
-    "x": 5,
-    "y": 8,
-    "script": 255,
-    "flat": 187632,
-    "interact_ptr": 23792
-  },
-  {
-    "map_type": 8,
-    "room": "Gate(08)",
-    "screen": 0,
-    "step_id": 30,
-    "npc_type": 64,
-    "sprite": 240,
-    "x": 5,
-    "y": 4,
-    "script": 255,
-    "flat": 187637,
-    "interact_ptr": 23792
-  },
-  {
-    "map_type": 8,
-    "room": "Gate(08)",
-    "screen": 0,
-    "step_id": 30,
-    "npc_type": 64,
-    "sprite": 241,
-    "x": 5,
-    "y": 4,
-    "script": 255,
-    "flat": 187642,
-    "interact_ptr": 23792
-  },
-  {
-    "map_type": 8,
-    "room": "Gate(08)",
-    "screen": 0,
-    "step_id": 30,
-    "npc_type": 32,
-    "sprite": 8,
-    "x": 5,
-    "y": 8,
-    "script": 255,
-    "flat": 187648,
-    "interact_ptr": 23808
-  },
-  {
-    "map_type": 8,
-    "room": "Gate(08)",
-    "screen": 0,
-    "step_id": 30,
-    "npc_type": 0,
-    "sprite": 85,
-    "x": 5,
-    "y": 4,
-    "script": 255,
-    "flat": 187653,
-    "interact_ptr": 23808
-  },
-  {
-    "map_type": 8,
-    "room": "Gate(08)",
-    "screen": 0,
-    "step_id": 30,
-    "npc_type": 0,
-    "sprite": 85,
-    "x": 5,
-    "y": 4,
-    "script": 255,
-    "flat": 187658,
-    "interact_ptr": 23808
-  },
-  {
-    "map_type": 8,
-    "room": "Gate(08)",
-    "screen": 0,
-    "step_id": 30,
-    "npc_type": 96,
-    "sprite": 8,
-    "x": 5,
-    "y": 8,
-    "script": 255,
-    "flat": 187664,
-    "interact_ptr": 23824
-  },
-  {
-    "map_type": 8,
-    "room": "Gate(08)",
-    "screen": 0,
-    "step_id": 30,
-    "npc_type": 32,
-    "sprite": 94,
-    "x": 5,
-    "y": 4,
-    "script": 255,
-    "flat": 187669,
-    "interact_ptr": 23824
-  },
-  {
-    "map_type": 8,
-    "room": "Gate(08)",
-    "screen": 0,
-    "step_id": 30,
-    "npc_type": 96,
-    "sprite": 8,
-    "x": 5,
-    "y": 8,
-    "script": 255,
-    "flat": 187675,
-    "interact_ptr": 23835
-  },
-  {
-    "map_type": 8,
-    "room": "Gate(08)",
-    "screen": 0,
-    "step_id": 30,
-    "npc_type": 112,
-    "sprite": 33,
-    "x": 0,
-    "y": 4,
-    "script": 255,
-    "flat": 187680,
-    "interact_ptr": 23835
-  },
-  {
-    "map_type": 8,
-    "room": "Gate(08)",
-    "screen": 0,
-    "step_id": 30,
-    "npc_type": 64,
-    "sprite": 85,
-    "x": 5,
-    "y": 4,
-    "script": 255,
-    "flat": 187685,
-    "interact_ptr": 23835
-  },
-  {
-    "map_type": 8,
-    "room": "Gate(08)",
-    "screen": 0,
-    "step_id": 30,
-    "npc_type": 32,
-    "sprite": 94,
-    "x": 5,
-    "y": 7,
-    "script": 255,
-    "flat": 187690,
-    "interact_ptr": 23835
-  },
-  {
-    "map_type": 8,
-    "room": "Gate(08)",
-    "screen": 0,
-    "step_id": 30,
-    "npc_type": 32,
-    "sprite": 8,
-    "x": 5,
-    "y": 7,
-    "script": 255,
-    "flat": 187696,
-    "interact_ptr": 23856
-  },
-  {
-    "map_type": 8,
-    "room": "Gate(08)",
-    "screen": 0,
-    "step_id": 30,
-    "npc_type": 64,
-    "sprite": 33,
-    "x": 5,
-    "y": 4,
-    "script": 255,
-    "flat": 187701,
-    "interact_ptr": 23856
-  },
-  {
-    "map_type": 8,
-    "room": "Gate(08)",
-    "screen": 0,
-    "step_id": 30,
-    "npc_type": 64,
-    "sprite": 85,
-    "x": 5,
-    "y": 4,
-    "script": 255,
-    "flat": 187706,
-    "interact_ptr": 23856
-  },
-  {
-    "map_type": 8,
-    "room": "Gate(08)",
-    "screen": 0,
-    "step_id": 30,
-    "npc_type": 32,
-    "sprite": 94,
-    "x": 5,
-    "y": 6,
-    "script": 255,
-    "flat": 187711,
-    "interact_ptr": 23856
-  },
-  {
     "map_type": 9,
     "room": "Starry Shrine",
     "screen": 0,
@@ -4941,7 +4616,7 @@
   },
   {
     "map_type": 12,
-    "room": "Renamer",
+    "room": "Egg Evaluator",
     "screen": 0,
     "step_id": 39,
     "npc_type": 0,
@@ -4954,7 +4629,7 @@
   },
   {
     "map_type": 12,
-    "room": "Renamer",
+    "room": "Egg Evaluator",
     "screen": 2,
     "step_id": 1,
     "npc_type": 0,
@@ -4967,7 +4642,7 @@
   },
   {
     "map_type": 12,
-    "room": "Renamer",
+    "room": "Egg Evaluator",
     "screen": 2,
     "step_id": 1,
     "npc_type": 0,
@@ -4980,7 +4655,7 @@
   },
   {
     "map_type": 12,
-    "room": "Renamer",
+    "room": "Egg Evaluator",
     "screen": 2,
     "step_id": 1,
     "npc_type": 0,
@@ -4993,7 +4668,7 @@
   },
   {
     "map_type": 12,
-    "room": "Renamer",
+    "room": "Egg Evaluator",
     "screen": 2,
     "step_id": 1,
     "npc_type": 0,
@@ -5006,7 +4681,7 @@
   },
   {
     "map_type": 12,
-    "room": "Renamer",
+    "room": "Egg Evaluator",
     "screen": 2,
     "step_id": 1,
     "npc_type": 0,
@@ -5019,7 +4694,7 @@
   },
   {
     "map_type": 12,
-    "room": "Renamer",
+    "room": "Egg Evaluator",
     "screen": 2,
     "step_id": 1,
     "npc_type": 0,
@@ -5032,7 +4707,7 @@
   },
   {
     "map_type": 12,
-    "room": "Renamer",
+    "room": "Egg Evaluator",
     "screen": 2,
     "step_id": 1,
     "npc_type": 0,
@@ -5214,7 +4889,7 @@
   },
   {
     "map_type": 19,
-    "room": "Map_13",
+    "room": "Library Gate Room",
     "screen": 0,
     "step_id": 11,
     "npc_type": 16,
@@ -5227,7 +4902,7 @@
   },
   {
     "map_type": 19,
-    "room": "Map_13",
+    "room": "Library Gate Room",
     "screen": 0,
     "step_id": 11,
     "npc_type": 0,
@@ -5240,7 +4915,7 @@
   },
   {
     "map_type": 19,
-    "room": "Map_13",
+    "room": "Library Gate Room",
     "screen": 0,
     "step_id": 11,
     "npc_type": 16,
@@ -5526,7 +5201,7 @@
   },
   {
     "map_type": 25,
-    "room": "Map_19",
+    "room": "Goopy Room 1 (scr8)",
     "screen": 0,
     "step_id": 20,
     "npc_type": 6,
@@ -5539,7 +5214,7 @@
   },
   {
     "map_type": 25,
-    "room": "Map_19",
+    "room": "Goopy Room 1 (scr8)",
     "screen": 3,
     "step_id": 24,
     "npc_type": 0,
@@ -5552,7 +5227,7 @@
   },
   {
     "map_type": 25,
-    "room": "Map_19",
+    "room": "Goopy Room 1 (scr8)",
     "screen": 3,
     "step_id": 24,
     "npc_type": 0,
@@ -5565,7 +5240,7 @@
   },
   {
     "map_type": 25,
-    "room": "Map_19",
+    "room": "Goopy Room 1 (scr8)",
     "screen": 3,
     "step_id": 24,
     "npc_type": 0,
@@ -5578,7 +5253,7 @@
   },
   {
     "map_type": 25,
-    "room": "Map_19",
+    "room": "Goopy Room 1 (scr8)",
     "screen": 3,
     "step_id": 24,
     "npc_type": 0,
@@ -5591,7 +5266,7 @@
   },
   {
     "map_type": 25,
-    "room": "Map_19",
+    "room": "Goopy Room 1 (scr8)",
     "screen": 3,
     "step_id": 24,
     "npc_type": 0,
@@ -5604,7 +5279,7 @@
   },
   {
     "map_type": 25,
-    "room": "Map_19",
+    "room": "Goopy Room 1 (scr8)",
     "screen": 3,
     "step_id": 24,
     "npc_type": 0,
@@ -5617,7 +5292,7 @@
   },
   {
     "map_type": 25,
-    "room": "Map_19",
+    "room": "Goopy Room 1 (scr8)",
     "screen": 3,
     "step_id": 24,
     "npc_type": 0,
@@ -5630,7 +5305,7 @@
   },
   {
     "map_type": 26,
-    "room": "Map_1A",
+    "room": "Goopy Room 2 (scr8)",
     "screen": 0,
     "step_id": 22,
     "npc_type": 6,
@@ -5643,7 +5318,7 @@
   },
   {
     "map_type": 26,
-    "room": "Map_1A",
+    "room": "Goopy Room 2 (scr8)",
     "screen": 0,
     "step_id": 22,
     "npc_type": 0,
@@ -5656,7 +5331,7 @@
   },
   {
     "map_type": 26,
-    "room": "Map_1A",
+    "room": "Goopy Room 2 (scr8)",
     "screen": 0,
     "step_id": 22,
     "npc_type": 8,
@@ -5669,7 +5344,7 @@
   },
   {
     "map_type": 26,
-    "room": "Map_1A",
+    "room": "Goopy Room 2 (scr8)",
     "screen": 5,
     "step_id": 26,
     "npc_type": 64,
@@ -5682,7 +5357,7 @@
   },
   {
     "map_type": 26,
-    "room": "Map_1A",
+    "room": "Goopy Room 2 (scr8)",
     "screen": 5,
     "step_id": 26,
     "npc_type": 64,
@@ -5695,7 +5370,7 @@
   },
   {
     "map_type": 26,
-    "room": "Map_1A",
+    "room": "Goopy Room 2 (scr8)",
     "screen": 5,
     "step_id": 26,
     "npc_type": 2,
@@ -5708,7 +5383,7 @@
   },
   {
     "map_type": 26,
-    "room": "Map_1A",
+    "room": "Goopy Room 2 (scr8)",
     "screen": 5,
     "step_id": 26,
     "npc_type": 64,
@@ -5721,7 +5396,7 @@
   },
   {
     "map_type": 26,
-    "room": "Map_1A",
+    "room": "Goopy Room 2 (scr8)",
     "screen": 5,
     "step_id": 26,
     "npc_type": 64,
@@ -5734,7 +5409,7 @@
   },
   {
     "map_type": 26,
-    "room": "Map_1A",
+    "room": "Goopy Room 2 (scr8)",
     "screen": 5,
     "step_id": 26,
     "npc_type": 2,
@@ -6020,7 +5695,7 @@
   },
   {
     "map_type": 36,
-    "room": "Villager/Talisman",
+    "room": "Room: Villager/Talisman",
     "screen": 0,
     "step_id": 5,
     "npc_type": 16,
@@ -6033,7 +5708,7 @@
   },
   {
     "map_type": 36,
-    "room": "Villager/Talisman",
+    "room": "Room: Villager/Talisman",
     "screen": 0,
     "step_id": 5,
     "npc_type": 0,
@@ -6046,7 +5721,7 @@
   },
   {
     "map_type": 36,
-    "room": "Villager/Talisman",
+    "room": "Room: Villager/Talisman",
     "screen": 0,
     "step_id": 5,
     "npc_type": 0,
@@ -6059,7 +5734,7 @@
   },
   {
     "map_type": 36,
-    "room": "Villager/Talisman",
+    "room": "Room: Villager/Talisman",
     "screen": 0,
     "step_id": 5,
     "npc_type": 16,
@@ -6072,7 +5747,7 @@
   },
   {
     "map_type": 36,
-    "room": "Villager/Talisman",
+    "room": "Room: Villager/Talisman",
     "screen": 0,
     "step_id": 5,
     "npc_type": 0,
@@ -6085,7 +5760,7 @@
   },
   {
     "map_type": 36,
-    "room": "Villager/Talisman",
+    "room": "Room: Villager/Talisman",
     "screen": 0,
     "step_id": 5,
     "npc_type": 16,
@@ -6098,7 +5773,7 @@
   },
   {
     "map_type": 36,
-    "room": "Villager/Talisman",
+    "room": "Room: Villager/Talisman",
     "screen": 0,
     "step_id": 5,
     "npc_type": 0,
@@ -6111,7 +5786,7 @@
   },
   {
     "map_type": 36,
-    "room": "Villager/Talisman",
+    "room": "Room: Villager/Talisman",
     "screen": 0,
     "step_id": 5,
     "npc_type": 16,
@@ -6124,7 +5799,7 @@
   },
   {
     "map_type": 36,
-    "room": "Villager/Talisman",
+    "room": "Room: Villager/Talisman",
     "screen": 6,
     "step_id": 7,
     "npc_type": 0,
@@ -6137,7 +5812,7 @@
   },
   {
     "map_type": 36,
-    "room": "Villager/Talisman",
+    "room": "Room: Villager/Talisman",
     "screen": 6,
     "step_id": 7,
     "npc_type": 0,
@@ -6150,7 +5825,7 @@
   },
   {
     "map_type": 36,
-    "room": "Villager/Talisman",
+    "room": "Room: Villager/Talisman",
     "screen": 6,
     "step_id": 7,
     "npc_type": 0,
@@ -6163,7 +5838,7 @@
   },
   {
     "map_type": 36,
-    "room": "Villager/Talisman",
+    "room": "Room: Villager/Talisman",
     "screen": 6,
     "step_id": 7,
     "npc_type": 0,
@@ -6176,7 +5851,7 @@
   },
   {
     "map_type": 36,
-    "room": "Villager/Talisman",
+    "room": "Room: Villager/Talisman",
     "screen": 6,
     "step_id": 7,
     "npc_type": 0,
@@ -6189,7 +5864,7 @@
   },
   {
     "map_type": 36,
-    "room": "Villager/Talisman",
+    "room": "Room: Villager/Talisman",
     "screen": 6,
     "step_id": 7,
     "npc_type": 0,
@@ -6202,7 +5877,7 @@
   },
   {
     "map_type": 36,
-    "room": "Villager/Talisman",
+    "room": "Room: Villager/Talisman",
     "screen": 6,
     "step_id": 7,
     "npc_type": 0,
@@ -6215,7 +5890,7 @@
   },
   {
     "map_type": 36,
-    "room": "Villager/Talisman",
+    "room": "Room: Villager/Talisman",
     "screen": 6,
     "step_id": 7,
     "npc_type": 0,
@@ -6228,7 +5903,7 @@
   },
   {
     "map_type": 37,
-    "room": "Memories/Bewilder",
+    "room": "Room: Memories/Bewilder",
     "screen": 6,
     "step_id": 9,
     "npc_type": 0,
@@ -6241,7 +5916,7 @@
   },
   {
     "map_type": 37,
-    "room": "Memories/Bewilder",
+    "room": "Room: Memories/Bewilder",
     "screen": 6,
     "step_id": 9,
     "npc_type": 0,
@@ -6254,7 +5929,7 @@
   },
   {
     "map_type": 37,
-    "room": "Memories/Bewilder",
+    "room": "Room: Memories/Bewilder",
     "screen": 6,
     "step_id": 9,
     "npc_type": 0,
@@ -6267,7 +5942,7 @@
   },
   {
     "map_type": 37,
-    "room": "Memories/Bewilder",
+    "room": "Room: Memories/Bewilder",
     "screen": 6,
     "step_id": 9,
     "npc_type": 0,
@@ -6280,7 +5955,7 @@
   },
   {
     "map_type": 37,
-    "room": "Memories/Bewilder",
+    "room": "Room: Memories/Bewilder",
     "screen": 6,
     "step_id": 9,
     "npc_type": 0,
@@ -6293,7 +5968,7 @@
   },
   {
     "map_type": 37,
-    "room": "Memories/Bewilder",
+    "room": "Room: Memories/Bewilder",
     "screen": 6,
     "step_id": 9,
     "npc_type": 0,
@@ -6306,7 +5981,7 @@
   },
   {
     "map_type": 37,
-    "room": "Memories/Bewilder",
+    "room": "Room: Memories/Bewilder",
     "screen": 6,
     "step_id": 9,
     "npc_type": 0,
@@ -6319,7 +5994,7 @@
   },
   {
     "map_type": 37,
-    "room": "Memories/Bewilder",
+    "room": "Room: Memories/Bewilder",
     "screen": 6,
     "step_id": 9,
     "npc_type": 0,
@@ -6332,7 +6007,7 @@
   },
   {
     "map_type": 38,
-    "room": "Peace/Bravery",
+    "room": "Room: Peace/Bravery",
     "screen": 6,
     "step_id": 11,
     "npc_type": 1,
@@ -6345,7 +6020,7 @@
   },
   {
     "map_type": 38,
-    "room": "Peace/Bravery",
+    "room": "Room: Peace/Bravery",
     "screen": 6,
     "step_id": 11,
     "npc_type": 1,
@@ -6358,7 +6033,7 @@
   },
   {
     "map_type": 38,
-    "room": "Peace/Bravery",
+    "room": "Room: Peace/Bravery",
     "screen": 6,
     "step_id": 11,
     "npc_type": 0,
@@ -6371,7 +6046,7 @@
   },
   {
     "map_type": 38,
-    "room": "Peace/Bravery",
+    "room": "Room: Peace/Bravery",
     "screen": 6,
     "step_id": 11,
     "npc_type": 0,
@@ -6384,7 +6059,7 @@
   },
   {
     "map_type": 38,
-    "room": "Peace/Bravery",
+    "room": "Room: Peace/Bravery",
     "screen": 6,
     "step_id": 11,
     "npc_type": 32,
@@ -6397,7 +6072,7 @@
   },
   {
     "map_type": 38,
-    "room": "Peace/Bravery",
+    "room": "Room: Peace/Bravery",
     "screen": 6,
     "step_id": 11,
     "npc_type": 16,
@@ -6410,7 +6085,7 @@
   },
   {
     "map_type": 38,
-    "room": "Peace/Bravery",
+    "room": "Room: Peace/Bravery",
     "screen": 6,
     "step_id": 11,
     "npc_type": 0,
@@ -6423,7 +6098,7 @@
   },
   {
     "map_type": 38,
-    "room": "Peace/Bravery",
+    "room": "Room: Peace/Bravery",
     "screen": 6,
     "step_id": 11,
     "npc_type": 32,
@@ -6436,7 +6111,7 @@
   },
   {
     "map_type": 38,
-    "room": "Peace/Bravery",
+    "room": "Room: Peace/Bravery",
     "screen": 6,
     "step_id": 11,
     "npc_type": 16,
@@ -6449,7 +6124,7 @@
   },
   {
     "map_type": 40,
-    "room": "Joy/Wisdom",
+    "room": "Room: Joy/Wisdom",
     "screen": 0,
     "step_id": 13,
     "npc_type": 16,
@@ -6462,7 +6137,7 @@
   },
   {
     "map_type": 40,
-    "room": "Joy/Wisdom",
+    "room": "Room: Joy/Wisdom",
     "screen": 0,
     "step_id": 13,
     "npc_type": 0,
@@ -6475,7 +6150,7 @@
   },
   {
     "map_type": 40,
-    "room": "Joy/Wisdom",
+    "room": "Room: Joy/Wisdom",
     "screen": 0,
     "step_id": 13,
     "npc_type": 0,
@@ -6488,7 +6163,7 @@
   },
   {
     "map_type": 40,
-    "room": "Joy/Wisdom",
+    "room": "Room: Joy/Wisdom",
     "screen": 0,
     "step_id": 13,
     "npc_type": 16,
@@ -6501,7 +6176,7 @@
   },
   {
     "map_type": 40,
-    "room": "Joy/Wisdom",
+    "room": "Room: Joy/Wisdom",
     "screen": 0,
     "step_id": 13,
     "npc_type": 0,
@@ -6514,7 +6189,7 @@
   },
   {
     "map_type": 40,
-    "room": "Joy/Wisdom",
+    "room": "Room: Joy/Wisdom",
     "screen": 0,
     "step_id": 13,
     "npc_type": 16,
@@ -6527,7 +6202,7 @@
   },
   {
     "map_type": 40,
-    "room": "Joy/Wisdom",
+    "room": "Room: Joy/Wisdom",
     "screen": 0,
     "step_id": 13,
     "npc_type": 0,
@@ -6540,7 +6215,7 @@
   },
   {
     "map_type": 40,
-    "room": "Joy/Wisdom",
+    "room": "Room: Joy/Wisdom",
     "screen": 0,
     "step_id": 13,
     "npc_type": 16,
@@ -6553,7 +6228,7 @@
   },
   {
     "map_type": 40,
-    "room": "Joy/Wisdom",
+    "room": "Room: Joy/Wisdom",
     "screen": 6,
     "step_id": 15,
     "npc_type": 16,
@@ -6566,7 +6241,7 @@
   },
   {
     "map_type": 40,
-    "room": "Joy/Wisdom",
+    "room": "Room: Joy/Wisdom",
     "screen": 6,
     "step_id": 15,
     "npc_type": 0,
@@ -6579,7 +6254,7 @@
   },
   {
     "map_type": 40,
-    "room": "Joy/Wisdom",
+    "room": "Room: Joy/Wisdom",
     "screen": 6,
     "step_id": 15,
     "npc_type": 0,
@@ -6592,7 +6267,7 @@
   },
   {
     "map_type": 40,
-    "room": "Joy/Wisdom",
+    "room": "Room: Joy/Wisdom",
     "screen": 6,
     "step_id": 15,
     "npc_type": 16,
@@ -6605,7 +6280,7 @@
   },
   {
     "map_type": 40,
-    "room": "Joy/Wisdom",
+    "room": "Room: Joy/Wisdom",
     "screen": 6,
     "step_id": 15,
     "npc_type": 0,
@@ -6618,7 +6293,7 @@
   },
   {
     "map_type": 40,
-    "room": "Joy/Wisdom",
+    "room": "Room: Joy/Wisdom",
     "screen": 6,
     "step_id": 15,
     "npc_type": 16,
@@ -6631,7 +6306,7 @@
   },
   {
     "map_type": 40,
-    "room": "Joy/Wisdom",
+    "room": "Room: Joy/Wisdom",
     "screen": 6,
     "step_id": 15,
     "npc_type": 0,
@@ -6644,7 +6319,7 @@
   },
   {
     "map_type": 40,
-    "room": "Joy/Wisdom",
+    "room": "Room: Joy/Wisdom",
     "screen": 6,
     "step_id": 15,
     "npc_type": 16,
@@ -6657,7 +6332,7 @@
   },
   {
     "map_type": 41,
-    "room": "Happiness/Temptation",
+    "room": "Room: Happiness/Temptation",
     "screen": 6,
     "step_id": 17,
     "npc_type": 0,
@@ -6670,7 +6345,7 @@
   },
   {
     "map_type": 41,
-    "room": "Happiness/Temptation",
+    "room": "Room: Happiness/Temptation",
     "screen": 6,
     "step_id": 17,
     "npc_type": 0,
@@ -6683,7 +6358,7 @@
   },
   {
     "map_type": 41,
-    "room": "Happiness/Temptation",
+    "room": "Room: Happiness/Temptation",
     "screen": 6,
     "step_id": 17,
     "npc_type": 0,
@@ -6696,7 +6371,7 @@
   },
   {
     "map_type": 41,
-    "room": "Happiness/Temptation",
+    "room": "Room: Happiness/Temptation",
     "screen": 6,
     "step_id": 17,
     "npc_type": 0,
@@ -6709,7 +6384,7 @@
   },
   {
     "map_type": 41,
-    "room": "Happiness/Temptation",
+    "room": "Room: Happiness/Temptation",
     "screen": 6,
     "step_id": 17,
     "npc_type": 0,
@@ -6722,7 +6397,7 @@
   },
   {
     "map_type": 41,
-    "room": "Happiness/Temptation",
+    "room": "Room: Happiness/Temptation",
     "screen": 6,
     "step_id": 17,
     "npc_type": 0,
@@ -6735,7 +6410,7 @@
   },
   {
     "map_type": 41,
-    "room": "Happiness/Temptation",
+    "room": "Room: Happiness/Temptation",
     "screen": 6,
     "step_id": 17,
     "npc_type": 0,
@@ -6748,7 +6423,7 @@
   },
   {
     "map_type": 41,
-    "room": "Happiness/Temptation",
+    "room": "Room: Happiness/Temptation",
     "screen": 6,
     "step_id": 17,
     "npc_type": 0,
@@ -6761,7 +6436,7 @@
   },
   {
     "map_type": 42,
-    "room": "Labyrinth/Judgment",
+    "room": "Room: Labyrinth/Judgment",
     "screen": 6,
     "step_id": 19,
     "npc_type": 48,
@@ -6774,7 +6449,7 @@
   },
   {
     "map_type": 42,
-    "room": "Labyrinth/Judgment",
+    "room": "Room: Labyrinth/Judgment",
     "screen": 6,
     "step_id": 19,
     "npc_type": 0,
@@ -6787,7 +6462,7 @@
   },
   {
     "map_type": 42,
-    "room": "Labyrinth/Judgment",
+    "room": "Room: Labyrinth/Judgment",
     "screen": 6,
     "step_id": 19,
     "npc_type": 48,
@@ -6800,7 +6475,7 @@
   },
   {
     "map_type": 44,
-    "room": "Ambition/Demolition",
+    "room": "Room: Ambition/Demolition",
     "screen": 0,
     "step_id": 21,
     "npc_type": 48,
@@ -6813,7 +6488,7 @@
   },
   {
     "map_type": 44,
-    "room": "Ambition/Demolition",
+    "room": "Room: Ambition/Demolition",
     "screen": 0,
     "step_id": 21,
     "npc_type": 0,
@@ -6826,7 +6501,7 @@
   },
   {
     "map_type": 44,
-    "room": "Ambition/Demolition",
+    "room": "Room: Ambition/Demolition",
     "screen": 0,
     "step_id": 21,
     "npc_type": 0,
@@ -6839,7 +6514,7 @@
   },
   {
     "map_type": 44,
-    "room": "Ambition/Demolition",
+    "room": "Room: Ambition/Demolition",
     "screen": 0,
     "step_id": 21,
     "npc_type": 48,
@@ -6852,7 +6527,7 @@
   },
   {
     "map_type": 44,
-    "room": "Ambition/Demolition",
+    "room": "Room: Ambition/Demolition",
     "screen": 0,
     "step_id": 21,
     "npc_type": 0,
@@ -6865,7 +6540,7 @@
   },
   {
     "map_type": 44,
-    "room": "Ambition/Demolition",
+    "room": "Room: Ambition/Demolition",
     "screen": 0,
     "step_id": 21,
     "npc_type": 48,
@@ -6878,7 +6553,7 @@
   },
   {
     "map_type": 44,
-    "room": "Ambition/Demolition",
+    "room": "Room: Ambition/Demolition",
     "screen": 0,
     "step_id": 21,
     "npc_type": 0,
@@ -6891,7 +6566,7 @@
   },
   {
     "map_type": 44,
-    "room": "Ambition/Demolition",
+    "room": "Room: Ambition/Demolition",
     "screen": 0,
     "step_id": 21,
     "npc_type": 48,
@@ -6904,7 +6579,7 @@
   },
   {
     "map_type": 44,
-    "room": "Ambition/Demolition",
+    "room": "Room: Ambition/Demolition",
     "screen": 6,
     "step_id": 23,
     "npc_type": 0,
@@ -6917,7 +6592,7 @@
   },
   {
     "map_type": 44,
-    "room": "Ambition/Demolition",
+    "room": "Room: Ambition/Demolition",
     "screen": 6,
     "step_id": 23,
     "npc_type": 0,
@@ -6930,7 +6605,7 @@
   },
   {
     "map_type": 44,
-    "room": "Ambition/Demolition",
+    "room": "Room: Ambition/Demolition",
     "screen": 6,
     "step_id": 23,
     "npc_type": 0,
@@ -6943,7 +6618,7 @@
   },
   {
     "map_type": 44,
-    "room": "Ambition/Demolition",
+    "room": "Room: Ambition/Demolition",
     "screen": 6,
     "step_id": 23,
     "npc_type": 0,
@@ -6956,7 +6631,7 @@
   },
   {
     "map_type": 44,
-    "room": "Ambition/Demolition",
+    "room": "Room: Ambition/Demolition",
     "screen": 6,
     "step_id": 23,
     "npc_type": 0,
@@ -6969,7 +6644,7 @@
   },
   {
     "map_type": 44,
-    "room": "Ambition/Demolition",
+    "room": "Room: Ambition/Demolition",
     "screen": 6,
     "step_id": 23,
     "npc_type": 0,
@@ -6982,7 +6657,7 @@
   },
   {
     "map_type": 44,
-    "room": "Ambition/Demolition",
+    "room": "Room: Ambition/Demolition",
     "screen": 6,
     "step_id": 23,
     "npc_type": 0,
@@ -6995,7 +6670,7 @@
   },
   {
     "map_type": 44,
-    "room": "Ambition/Demolition",
+    "room": "Room: Ambition/Demolition",
     "screen": 6,
     "step_id": 23,
     "npc_type": 0,
@@ -7008,7 +6683,7 @@
   },
   {
     "map_type": 45,
-    "room": "Mastermind/Control",
+    "room": "Room: Mastermind/Control",
     "screen": 6,
     "step_id": 25,
     "npc_type": 0,
@@ -7021,7 +6696,7 @@
   },
   {
     "map_type": 45,
-    "room": "Mastermind/Control",
+    "room": "Room: Mastermind/Control",
     "screen": 6,
     "step_id": 25,
     "npc_type": 0,
@@ -7034,7 +6709,7 @@
   },
   {
     "map_type": 45,
-    "room": "Mastermind/Control",
+    "room": "Room: Mastermind/Control",
     "screen": 6,
     "step_id": 25,
     "npc_type": 0,
@@ -7047,7 +6722,7 @@
   },
   {
     "map_type": 45,
-    "room": "Mastermind/Control",
+    "room": "Room: Mastermind/Control",
     "screen": 6,
     "step_id": 25,
     "npc_type": 0,
@@ -7060,7 +6735,7 @@
   },
   {
     "map_type": 45,
-    "room": "Mastermind/Control",
+    "room": "Room: Mastermind/Control",
     "screen": 6,
     "step_id": 25,
     "npc_type": 0,
@@ -7073,7 +6748,7 @@
   },
   {
     "map_type": 45,
-    "room": "Mastermind/Control",
+    "room": "Room: Mastermind/Control",
     "screen": 6,
     "step_id": 25,
     "npc_type": 0,
@@ -7086,7 +6761,7 @@
   },
   {
     "map_type": 45,
-    "room": "Mastermind/Control",
+    "room": "Room: Mastermind/Control",
     "screen": 6,
     "step_id": 25,
     "npc_type": 0,
@@ -7099,7 +6774,7 @@
   },
   {
     "map_type": 45,
-    "room": "Mastermind/Control",
+    "room": "Room: Mastermind/Control",
     "screen": 6,
     "step_id": 25,
     "npc_type": 0,
@@ -7112,7 +6787,7 @@
   },
   {
     "map_type": 47,
-    "room": "Map_2F",
+    "room": "Intro Bedroom (2-screen, crashes)",
     "screen": 1,
     "step_id": 27,
     "npc_type": 80,
@@ -7125,7 +6800,7 @@
   },
   {
     "map_type": 47,
-    "room": "Map_2F",
+    "room": "Intro Bedroom (2-screen, crashes)",
     "screen": 1,
     "step_id": 27,
     "npc_type": 0,
@@ -7138,7 +6813,7 @@
   },
   {
     "map_type": 47,
-    "room": "Map_2F",
+    "room": "Intro Bedroom (2-screen, crashes)",
     "screen": 1,
     "step_id": 27,
     "npc_type": 64,
@@ -7151,7 +6826,7 @@
   },
   {
     "map_type": 47,
-    "room": "Map_2F",
+    "room": "Intro Bedroom (2-screen, crashes)",
     "screen": 1,
     "step_id": 27,
     "npc_type": 80,
@@ -7164,7 +6839,7 @@
   },
   {
     "map_type": 47,
-    "room": "Map_2F",
+    "room": "Intro Bedroom (2-screen, crashes)",
     "screen": 1,
     "step_id": 27,
     "npc_type": 80,
@@ -7177,7 +6852,7 @@
   },
   {
     "map_type": 47,
-    "room": "Map_2F",
+    "room": "Intro Bedroom (2-screen, crashes)",
     "screen": 1,
     "step_id": 27,
     "npc_type": 0,
@@ -7190,7 +6865,7 @@
   },
   {
     "map_type": 47,
-    "room": "Map_2F",
+    "room": "Intro Bedroom (2-screen, crashes)",
     "screen": 1,
     "step_id": 27,
     "npc_type": 64,
@@ -7203,7 +6878,7 @@
   },
   {
     "map_type": 47,
-    "room": "Map_2F",
+    "room": "Intro Bedroom (2-screen, crashes)",
     "screen": 1,
     "step_id": 27,
     "npc_type": 64,
@@ -7216,7 +6891,7 @@
   },
   {
     "map_type": 47,
-    "room": "Map_2F",
+    "room": "Intro Bedroom (2-screen, crashes)",
     "screen": 1,
     "step_id": 27,
     "npc_type": 80,
@@ -7229,7 +6904,7 @@
   },
   {
     "map_type": 47,
-    "room": "Map_2F",
+    "room": "Intro Bedroom (2-screen, crashes)",
     "screen": 1,
     "step_id": 27,
     "npc_type": 80,
@@ -7242,7 +6917,7 @@
   },
   {
     "map_type": 47,
-    "room": "Map_2F",
+    "room": "Intro Bedroom (2-screen, crashes)",
     "screen": 1,
     "step_id": 27,
     "npc_type": 0,
@@ -7255,7 +6930,7 @@
   },
   {
     "map_type": 47,
-    "room": "Map_2F",
+    "room": "Intro Bedroom (2-screen, crashes)",
     "screen": 1,
     "step_id": 27,
     "npc_type": 64,
@@ -7268,7 +6943,7 @@
   },
   {
     "map_type": 47,
-    "room": "Map_2F",
+    "room": "Intro Bedroom (2-screen, crashes)",
     "screen": 1,
     "step_id": 27,
     "npc_type": 64,
@@ -7281,7 +6956,7 @@
   },
   {
     "map_type": 47,
-    "room": "Map_2F",
+    "room": "Intro Bedroom (2-screen, crashes)",
     "screen": 1,
     "step_id": 27,
     "npc_type": 16,
@@ -7294,7 +6969,7 @@
   },
   {
     "map_type": 47,
-    "room": "Map_2F",
+    "room": "Intro Bedroom (2-screen, crashes)",
     "screen": 1,
     "step_id": 27,
     "npc_type": 64,
@@ -7307,7 +6982,7 @@
   },
   {
     "map_type": 47,
-    "room": "Map_2F",
+    "room": "Intro Bedroom (2-screen, crashes)",
     "screen": 1,
     "step_id": 27,
     "npc_type": 112,
@@ -7320,7 +6995,7 @@
   },
   {
     "map_type": 47,
-    "room": "Map_2F",
+    "room": "Intro Bedroom (2-screen, crashes)",
     "screen": 1,
     "step_id": 27,
     "npc_type": 64,
@@ -7333,7 +7008,7 @@
   },
   {
     "map_type": 47,
-    "room": "Map_2F",
+    "room": "Intro Bedroom (2-screen, crashes)",
     "screen": 1,
     "step_id": 27,
     "npc_type": 64,
@@ -7346,7 +7021,7 @@
   },
   {
     "map_type": 47,
-    "room": "Map_2F",
+    "room": "Intro Bedroom (2-screen, crashes)",
     "screen": 1,
     "step_id": 27,
     "npc_type": 80,
@@ -7359,7 +7034,7 @@
   },
   {
     "map_type": 47,
-    "room": "Map_2F",
+    "room": "Intro Bedroom (2-screen, crashes)",
     "screen": 1,
     "step_id": 27,
     "npc_type": 80,
@@ -7372,7 +7047,7 @@
   },
   {
     "map_type": 47,
-    "room": "Map_2F",
+    "room": "Intro Bedroom (2-screen, crashes)",
     "screen": 1,
     "step_id": 27,
     "npc_type": 0,
@@ -7385,7 +7060,7 @@
   },
   {
     "map_type": 47,
-    "room": "Map_2F",
+    "room": "Intro Bedroom (2-screen, crashes)",
     "screen": 1,
     "step_id": 27,
     "npc_type": 0,
@@ -7398,7 +7073,7 @@
   },
   {
     "map_type": 47,
-    "room": "Map_2F",
+    "room": "Intro Bedroom (2-screen, crashes)",
     "screen": 1,
     "step_id": 27,
     "npc_type": 0,
@@ -7411,7 +7086,7 @@
   },
   {
     "map_type": 47,
-    "room": "Map_2F",
+    "room": "Intro Bedroom (2-screen, crashes)",
     "screen": 1,
     "step_id": 28,
     "npc_type": 64,
@@ -7424,7 +7099,7 @@
   },
   {
     "map_type": 47,
-    "room": "Map_2F",
+    "room": "Intro Bedroom (2-screen, crashes)",
     "screen": 1,
     "step_id": 28,
     "npc_type": 64,
@@ -7437,7 +7112,7 @@
   },
   {
     "map_type": 47,
-    "room": "Map_2F",
+    "room": "Intro Bedroom (2-screen, crashes)",
     "screen": 1,
     "step_id": 28,
     "npc_type": 80,
@@ -7450,7 +7125,7 @@
   },
   {
     "map_type": 47,
-    "room": "Map_2F",
+    "room": "Intro Bedroom (2-screen, crashes)",
     "screen": 1,
     "step_id": 28,
     "npc_type": 64,
@@ -7463,7 +7138,7 @@
   },
   {
     "map_type": 48,
-    "room": "Boss: Beginning",
+    "room": "Boss: Beginning (Healer)",
     "screen": 0,
     "step_id": 13,
     "npc_type": 0,
@@ -7476,7 +7151,7 @@
   },
   {
     "map_type": 48,
-    "room": "Boss: Beginning",
+    "room": "Boss: Beginning (Healer)",
     "screen": 0,
     "step_id": 13,
     "npc_type": 80,
@@ -7489,7 +7164,7 @@
   },
   {
     "map_type": 49,
-    "room": "Map_31",
+    "room": "Boss: Villager (Dragon)",
     "screen": 0,
     "step_id": 16,
     "npc_type": 0,
@@ -7502,7 +7177,7 @@
   },
   {
     "map_type": 49,
-    "room": "Map_31",
+    "room": "Boss: Villager (Dragon)",
     "screen": 0,
     "step_id": 16,
     "npc_type": 112,
@@ -7515,7 +7190,7 @@
   },
   {
     "map_type": 49,
-    "room": "Map_31",
+    "room": "Boss: Villager (Dragon)",
     "screen": 0,
     "step_id": 17,
     "npc_type": 0,
@@ -7528,7 +7203,7 @@
   },
   {
     "map_type": 49,
-    "room": "Map_31",
+    "room": "Boss: Villager (Dragon)",
     "screen": 3,
     "step_id": 22,
     "npc_type": 0,
@@ -7541,7 +7216,7 @@
   },
   {
     "map_type": 49,
-    "room": "Map_31",
+    "room": "Boss: Villager (Dragon)",
     "screen": 3,
     "step_id": 22,
     "npc_type": 64,
@@ -7554,7 +7229,7 @@
   },
   {
     "map_type": 49,
-    "room": "Map_31",
+    "room": "Boss: Villager (Dragon)",
     "screen": 3,
     "step_id": 22,
     "npc_type": 80,
@@ -7567,7 +7242,7 @@
   },
   {
     "map_type": 50,
-    "room": "Map_32",
+    "room": "Boss: Talisman (Golem)",
     "screen": 6,
     "step_id": 22,
     "npc_type": 6,
@@ -7580,7 +7255,7 @@
   },
   {
     "map_type": 50,
-    "room": "Map_32",
+    "room": "Boss: Talisman (Golem)",
     "screen": 6,
     "step_id": 22,
     "npc_type": 6,
@@ -7593,7 +7268,7 @@
   },
   {
     "map_type": 50,
-    "room": "Map_32",
+    "room": "Boss: Talisman (Golem)",
     "screen": 6,
     "step_id": 22,
     "npc_type": 6,
@@ -7606,7 +7281,7 @@
   },
   {
     "map_type": 50,
-    "room": "Map_32",
+    "room": "Boss: Talisman (Golem)",
     "screen": 6,
     "step_id": 22,
     "npc_type": 6,
@@ -7619,7 +7294,7 @@
   },
   {
     "map_type": 50,
-    "room": "Map_32",
+    "room": "Boss: Talisman (Golem)",
     "screen": 6,
     "step_id": 22,
     "npc_type": 80,
@@ -7632,7 +7307,7 @@
   },
   {
     "map_type": 51,
-    "room": "Map_33",
+    "room": "Boss: Memories (MadCat)",
     "screen": 0,
     "step_id": 19,
     "npc_type": 0,
@@ -7645,7 +7320,7 @@
   },
   {
     "map_type": 51,
-    "room": "Map_33",
+    "room": "Boss: Memories (MadCat)",
     "screen": 0,
     "step_id": 19,
     "npc_type": 80,
@@ -7658,7 +7333,7 @@
   },
   {
     "map_type": 52,
-    "room": "Map_34",
+    "room": "Boss: Bewilder (FaceTree)",
     "screen": 3,
     "step_id": 25,
     "npc_type": 16,
@@ -7671,7 +7346,7 @@
   },
   {
     "map_type": 52,
-    "room": "Map_34",
+    "room": "Boss: Bewilder (FaceTree)",
     "screen": 3,
     "step_id": 25,
     "npc_type": 80,
@@ -7684,7 +7359,7 @@
   },
   {
     "map_type": 54,
-    "room": "Map_36",
+    "room": "Boss: Peace (FangSlime)",
     "screen": 0,
     "step_id": 28,
     "npc_type": 0,
@@ -7697,7 +7372,7 @@
   },
   {
     "map_type": 54,
-    "room": "Map_36",
+    "room": "Boss: Peace (FangSlime)",
     "screen": 0,
     "step_id": 28,
     "npc_type": 0,
@@ -7710,7 +7385,7 @@
   },
   {
     "map_type": 54,
-    "room": "Map_36",
+    "room": "Boss: Peace (FangSlime)",
     "screen": 0,
     "step_id": 28,
     "npc_type": 48,
@@ -7723,7 +7398,7 @@
   },
   {
     "map_type": 54,
-    "room": "Map_36",
+    "room": "Boss: Peace (FangSlime)",
     "screen": 0,
     "step_id": 28,
     "npc_type": 32,
@@ -7736,7 +7411,7 @@
   },
   {
     "map_type": 54,
-    "room": "Map_36",
+    "room": "Boss: Peace (FangSlime)",
     "screen": 0,
     "step_id": 28,
     "npc_type": 112,
@@ -7749,7 +7424,7 @@
   },
   {
     "map_type": 54,
-    "room": "Map_36",
+    "room": "Boss: Peace (FangSlime)",
     "screen": 0,
     "step_id": 29,
     "npc_type": 0,
@@ -7762,7 +7437,7 @@
   },
   {
     "map_type": 54,
-    "room": "Map_36",
+    "room": "Boss: Peace (FangSlime)",
     "screen": 0,
     "step_id": 29,
     "npc_type": 0,
@@ -7775,7 +7450,7 @@
   },
   {
     "map_type": 54,
-    "room": "Map_36",
+    "room": "Boss: Peace (FangSlime)",
     "screen": 0,
     "step_id": 29,
     "npc_type": 48,
@@ -7788,7 +7463,7 @@
   },
   {
     "map_type": 55,
-    "room": "Map_37",
+    "room": "Boss: Bravery (BigEye)",
     "screen": 0,
     "step_id": 27,
     "npc_type": 64,
@@ -7801,7 +7476,7 @@
   },
   {
     "map_type": 55,
-    "room": "Map_37",
+    "room": "Boss: Bravery (BigEye)",
     "screen": 0,
     "step_id": 27,
     "npc_type": 64,
@@ -7814,7 +7489,7 @@
   },
   {
     "map_type": 55,
-    "room": "Map_37",
+    "room": "Boss: Bravery (BigEye)",
     "screen": 0,
     "step_id": 27,
     "npc_type": 64,
@@ -7827,7 +7502,7 @@
   },
   {
     "map_type": 55,
-    "room": "Map_37",
+    "room": "Boss: Bravery (BigEye)",
     "screen": 0,
     "step_id": 27,
     "npc_type": 64,
@@ -7840,7 +7515,7 @@
   },
   {
     "map_type": 55,
-    "room": "Map_37",
+    "room": "Boss: Bravery (BigEye)",
     "screen": 0,
     "step_id": 27,
     "npc_type": 0,
@@ -7853,7 +7528,7 @@
   },
   {
     "map_type": 55,
-    "room": "Map_37",
+    "room": "Boss: Bravery (BigEye)",
     "screen": 0,
     "step_id": 27,
     "npc_type": 96,
@@ -7866,7 +7541,7 @@
   },
   {
     "map_type": 55,
-    "room": "Map_37",
+    "room": "Boss: Bravery (BigEye)",
     "screen": 0,
     "step_id": 27,
     "npc_type": 80,
@@ -7879,7 +7554,7 @@
   },
   {
     "map_type": 55,
-    "room": "Map_37",
+    "room": "Boss: Bravery (BigEye)",
     "screen": 0,
     "step_id": 28,
     "npc_type": 64,
@@ -7892,7 +7567,7 @@
   },
   {
     "map_type": 55,
-    "room": "Map_37",
+    "room": "Boss: Bravery (BigEye)",
     "screen": 0,
     "step_id": 28,
     "npc_type": 64,
@@ -7905,7 +7580,7 @@
   },
   {
     "map_type": 55,
-    "room": "Map_37",
+    "room": "Boss: Bravery (BigEye)",
     "screen": 0,
     "step_id": 28,
     "npc_type": 64,
@@ -7918,7 +7593,7 @@
   },
   {
     "map_type": 55,
-    "room": "Map_37",
+    "room": "Boss: Bravery (BigEye)",
     "screen": 0,
     "step_id": 28,
     "npc_type": 64,
@@ -7931,7 +7606,7 @@
   },
   {
     "map_type": 56,
-    "room": "Map_38",
+    "room": "Boss: Well (Gigantes)",
     "screen": 0,
     "step_id": 1,
     "npc_type": 64,
@@ -7944,7 +7619,7 @@
   },
   {
     "map_type": 56,
-    "room": "Map_38",
+    "room": "Boss: Well (Gigantes)",
     "screen": 0,
     "step_id": 1,
     "npc_type": 64,
@@ -7957,7 +7632,7 @@
   },
   {
     "map_type": 56,
-    "room": "Map_38",
+    "room": "Boss: Well (Gigantes)",
     "screen": 0,
     "step_id": 1,
     "npc_type": 64,
@@ -7970,7 +7645,7 @@
   },
   {
     "map_type": 56,
-    "room": "Map_38",
+    "room": "Boss: Well (Gigantes)",
     "screen": 0,
     "step_id": 1,
     "npc_type": 64,
@@ -7983,7 +7658,7 @@
   },
   {
     "map_type": 56,
-    "room": "Map_38",
+    "room": "Boss: Well (Gigantes)",
     "screen": 0,
     "step_id": 1,
     "npc_type": 64,
@@ -7996,7 +7671,7 @@
   },
   {
     "map_type": 56,
-    "room": "Map_38",
+    "room": "Boss: Well (Gigantes)",
     "screen": 0,
     "step_id": 1,
     "npc_type": 0,
@@ -8009,7 +7684,7 @@
   },
   {
     "map_type": 56,
-    "room": "Map_38",
+    "room": "Boss: Well (Gigantes)",
     "screen": 0,
     "step_id": 1,
     "npc_type": 112,
@@ -8022,7 +7697,7 @@
   },
   {
     "map_type": 56,
-    "room": "Map_38",
+    "room": "Boss: Well (Gigantes)",
     "screen": 0,
     "step_id": 2,
     "npc_type": 64,
@@ -8035,7 +7710,7 @@
   },
   {
     "map_type": 56,
-    "room": "Map_38",
+    "room": "Boss: Well (Gigantes)",
     "screen": 0,
     "step_id": 2,
     "npc_type": 64,
@@ -8048,7 +7723,7 @@
   },
   {
     "map_type": 56,
-    "room": "Map_38",
+    "room": "Boss: Well (Gigantes)",
     "screen": 0,
     "step_id": 2,
     "npc_type": 64,
@@ -8061,7 +7736,7 @@
   },
   {
     "map_type": 56,
-    "room": "Map_38",
+    "room": "Boss: Well (Gigantes)",
     "screen": 0,
     "step_id": 2,
     "npc_type": 64,
@@ -8074,7 +7749,7 @@
   },
   {
     "map_type": 57,
-    "room": "Map_39",
+    "room": "Boss: Strength (StoneMan)",
     "screen": 0,
     "step_id": 4,
     "npc_type": 0,
@@ -8087,7 +7762,7 @@
   },
   {
     "map_type": 57,
-    "room": "Map_39",
+    "room": "Boss: Strength (StoneMan)",
     "screen": 0,
     "step_id": 4,
     "npc_type": 80,
@@ -8100,7 +7775,7 @@
   },
   {
     "map_type": 58,
-    "room": "Map_3A",
+    "room": "Boss: Wisdom (SkyDragon)",
     "screen": 0,
     "step_id": 4,
     "npc_type": 64,
@@ -8113,7 +7788,7 @@
   },
   {
     "map_type": 58,
-    "room": "Map_3A",
+    "room": "Boss: Wisdom (SkyDragon)",
     "screen": 0,
     "step_id": 4,
     "npc_type": 64,
@@ -8126,7 +7801,7 @@
   },
   {
     "map_type": 58,
-    "room": "Map_3A",
+    "room": "Boss: Wisdom (SkyDragon)",
     "screen": 0,
     "step_id": 4,
     "npc_type": 64,
@@ -8139,7 +7814,7 @@
   },
   {
     "map_type": 58,
-    "room": "Map_3A",
+    "room": "Boss: Wisdom (SkyDragon)",
     "screen": 0,
     "step_id": 5,
     "npc_type": 64,
@@ -8152,7 +7827,7 @@
   },
   {
     "map_type": 58,
-    "room": "Map_3A",
+    "room": "Boss: Wisdom (SkyDragon)",
     "screen": 0,
     "step_id": 5,
     "npc_type": 64,
@@ -8165,7 +7840,7 @@
   },
   {
     "map_type": 58,
-    "room": "Map_3A",
+    "room": "Boss: Wisdom (SkyDragon)",
     "screen": 0,
     "step_id": 5,
     "npc_type": 64,
@@ -8178,7 +7853,7 @@
   },
   {
     "map_type": 58,
-    "room": "Map_3A",
+    "room": "Boss: Wisdom (SkyDragon)",
     "screen": 0,
     "step_id": 5,
     "npc_type": 64,
@@ -8191,7 +7866,7 @@
   },
   {
     "map_type": 59,
-    "room": "Map_3B",
+    "room": "Boss: Joy (FunkyBird)",
     "screen": 0,
     "step_id": 7,
     "npc_type": 5,
@@ -8204,7 +7879,7 @@
   },
   {
     "map_type": 59,
-    "room": "Map_3B",
+    "room": "Boss: Joy (FunkyBird)",
     "screen": 0,
     "step_id": 7,
     "npc_type": 80,
@@ -8217,7 +7892,7 @@
   },
   {
     "map_type": 60,
-    "room": "Map_3C",
+    "room": "Boss: Anger (BattleRex)",
     "screen": 0,
     "step_id": 7,
     "npc_type": 96,
@@ -8230,7 +7905,7 @@
   },
   {
     "map_type": 60,
-    "room": "Map_3C",
+    "room": "Boss: Anger (BattleRex)",
     "screen": 0,
     "step_id": 7,
     "npc_type": 112,
@@ -8243,7 +7918,7 @@
   },
   {
     "map_type": 60,
-    "room": "Map_3C",
+    "room": "Boss: Anger (BattleRex)",
     "screen": 0,
     "step_id": 7,
     "npc_type": 0,
@@ -8256,7 +7931,7 @@
   },
   {
     "map_type": 60,
-    "room": "Map_3C",
+    "room": "Boss: Anger (BattleRex)",
     "screen": 0,
     "step_id": 7,
     "npc_type": 0,
@@ -8269,7 +7944,7 @@
   },
   {
     "map_type": 60,
-    "room": "Map_3C",
+    "room": "Boss: Anger (BattleRex)",
     "screen": 0,
     "step_id": 7,
     "npc_type": 0,
@@ -8282,7 +7957,7 @@
   },
   {
     "map_type": 61,
-    "room": "Map_3D",
+    "room": "Boss: Arena Left (Digster)",
     "screen": 0,
     "step_id": 7,
     "npc_type": 64,
@@ -8295,7 +7970,7 @@
   },
   {
     "map_type": 61,
-    "room": "Map_3D",
+    "room": "Boss: Arena Left (Digster)",
     "screen": 0,
     "step_id": 7,
     "npc_type": 64,
@@ -8308,7 +7983,7 @@
   },
   {
     "map_type": 61,
-    "room": "Map_3D",
+    "room": "Boss: Arena Left (Digster)",
     "screen": 0,
     "step_id": 7,
     "npc_type": 64,
@@ -8321,7 +7996,7 @@
   },
   {
     "map_type": 61,
-    "room": "Map_3D",
+    "room": "Boss: Arena Left (Digster)",
     "screen": 0,
     "step_id": 7,
     "npc_type": 64,
@@ -8334,7 +8009,7 @@
   },
   {
     "map_type": 61,
-    "room": "Map_3D",
+    "room": "Boss: Arena Left (Digster)",
     "screen": 0,
     "step_id": 7,
     "npc_type": 96,
@@ -8347,7 +8022,7 @@
   },
   {
     "map_type": 61,
-    "room": "Map_3D",
+    "room": "Boss: Arena Left (Digster)",
     "screen": 4,
     "step_id": 9,
     "npc_type": 80,
@@ -8360,7 +8035,7 @@
   },
   {
     "map_type": 61,
-    "room": "Map_3D",
+    "room": "Boss: Arena Left (Digster)",
     "screen": 4,
     "step_id": 9,
     "npc_type": 0,
@@ -8373,7 +8048,7 @@
   },
   {
     "map_type": 61,
-    "room": "Map_3D",
+    "room": "Boss: Arena Left (Digster)",
     "screen": 4,
     "step_id": 9,
     "npc_type": 0,
@@ -8386,7 +8061,7 @@
   },
   {
     "map_type": 61,
-    "room": "Map_3D",
+    "room": "Boss: Arena Left (Digster)",
     "screen": 4,
     "step_id": 9,
     "npc_type": 0,
@@ -8399,7 +8074,7 @@
   },
   {
     "map_type": 62,
-    "room": "Map_3E",
+    "room": "Boss: Happiness (Jamirus)",
     "screen": 5,
     "step_id": 22,
     "npc_type": 0,
@@ -8412,7 +8087,7 @@
   },
   {
     "map_type": 62,
-    "room": "Map_3E",
+    "room": "Boss: Happiness (Jamirus)",
     "screen": 5,
     "step_id": 22,
     "npc_type": 0,
@@ -8425,7 +8100,7 @@
   },
   {
     "map_type": 62,
-    "room": "Map_3E",
+    "room": "Boss: Happiness (Jamirus)",
     "screen": 5,
     "step_id": 22,
     "npc_type": 0,
@@ -8438,7 +8113,7 @@
   },
   {
     "map_type": 63,
-    "room": "Map_3F",
+    "room": "Boss: Temptation (Servant)",
     "screen": 0,
     "step_id": 1,
     "npc_type": 0,
@@ -8451,7 +8126,7 @@
   },
   {
     "map_type": 63,
-    "room": "Map_3F",
+    "room": "Boss: Temptation (Servant)",
     "screen": 0,
     "step_id": 1,
     "npc_type": 80,
@@ -8464,7 +8139,7 @@
   },
   {
     "map_type": 65,
-    "room": "Map_41",
+    "room": "Boss: Medal (Lipsy variant)",
     "screen": 0,
     "step_id": 24,
     "npc_type": 0,
@@ -8477,7 +8152,7 @@
   },
   {
     "map_type": 65,
-    "room": "Map_41",
+    "room": "Boss: Medal (Lipsy variant)",
     "screen": 0,
     "step_id": 24,
     "npc_type": 80,
@@ -8490,7 +8165,7 @@
   },
   {
     "map_type": 65,
-    "room": "Map_41",
+    "room": "Boss: Medal (Lipsy variant)",
     "screen": 0,
     "step_id": 24,
     "npc_type": 0,
@@ -8503,7 +8178,7 @@
   },
   {
     "map_type": 65,
-    "room": "Map_41",
+    "room": "Boss: Medal (Lipsy variant)",
     "screen": 0,
     "step_id": 24,
     "npc_type": 80,
@@ -8516,7 +8191,7 @@
   },
   {
     "map_type": 65,
-    "room": "Map_41",
+    "room": "Boss: Medal (Lipsy variant)",
     "screen": 0,
     "step_id": 24,
     "npc_type": 0,
@@ -8529,7 +8204,7 @@
   },
   {
     "map_type": 65,
-    "room": "Map_41",
+    "room": "Boss: Medal (Lipsy variant)",
     "screen": 0,
     "step_id": 24,
     "npc_type": 0,
@@ -8542,7 +8217,7 @@
   },
   {
     "map_type": 65,
-    "room": "Map_41",
+    "room": "Boss: Medal (Lipsy variant)",
     "screen": 0,
     "step_id": 24,
     "npc_type": 0,
@@ -8555,7 +8230,7 @@
   },
   {
     "map_type": 65,
-    "room": "Map_41",
+    "room": "Boss: Medal (Lipsy variant)",
     "screen": 0,
     "step_id": 24,
     "npc_type": 80,
@@ -8568,7 +8243,7 @@
   },
   {
     "map_type": 65,
-    "room": "Map_41",
+    "room": "Boss: Medal (Lipsy variant)",
     "screen": 7,
     "step_id": 20,
     "npc_type": 0,
@@ -8581,7 +8256,7 @@
   },
   {
     "map_type": 65,
-    "room": "Map_41",
+    "room": "Boss: Medal (Lipsy variant)",
     "screen": 7,
     "step_id": 20,
     "npc_type": 112,
@@ -8594,7 +8269,7 @@
   },
   {
     "map_type": 67,
-    "room": "Map_43",
+    "room": "Boss: Judgment (Akubar)",
     "screen": 0,
     "step_id": 16,
     "npc_type": 80,
@@ -8607,7 +8282,7 @@
   },
   {
     "map_type": 67,
-    "room": "Map_43",
+    "room": "Boss: Judgment (Akubar)",
     "screen": 0,
     "step_id": 16,
     "npc_type": 6,
@@ -8620,7 +8295,7 @@
   },
   {
     "map_type": 67,
-    "room": "Map_43",
+    "room": "Boss: Judgment (Akubar)",
     "screen": 0,
     "step_id": 16,
     "npc_type": 0,
@@ -8633,7 +8308,7 @@
   },
   {
     "map_type": 67,
-    "room": "Map_43",
+    "room": "Boss: Judgment (Akubar)",
     "screen": 0,
     "step_id": 16,
     "npc_type": 0,
@@ -8646,7 +8321,7 @@
   },
   {
     "map_type": 68,
-    "room": "Map_44",
+    "room": "Boss: Library (Orochi)",
     "screen": 0,
     "step_id": 25,
     "npc_type": 96,
@@ -8659,7 +8334,7 @@
   },
   {
     "map_type": 68,
-    "room": "Map_44",
+    "room": "Boss: Library (Orochi)",
     "screen": 0,
     "step_id": 25,
     "npc_type": 80,
@@ -8672,7 +8347,7 @@
   },
   {
     "map_type": 68,
-    "room": "Map_44",
+    "room": "Boss: Library (Orochi)",
     "screen": 0,
     "step_id": 25,
     "npc_type": 0,
@@ -8685,7 +8360,7 @@
   },
   {
     "map_type": 68,
-    "room": "Map_44",
+    "room": "Boss: Library (Orochi)",
     "screen": 0,
     "step_id": 25,
     "npc_type": 96,
@@ -8698,7 +8373,7 @@
   },
   {
     "map_type": 68,
-    "room": "Map_44",
+    "room": "Boss: Library (Orochi)",
     "screen": 0,
     "step_id": 25,
     "npc_type": 96,
@@ -8711,7 +8386,7 @@
   },
   {
     "map_type": 68,
-    "room": "Map_44",
+    "room": "Boss: Library (Orochi)",
     "screen": 0,
     "step_id": 25,
     "npc_type": 96,
@@ -8724,7 +8399,7 @@
   },
   {
     "map_type": 68,
-    "room": "Map_44",
+    "room": "Boss: Library (Orochi)",
     "screen": 0,
     "step_id": 25,
     "npc_type": 96,
@@ -8737,7 +8412,7 @@
   },
   {
     "map_type": 68,
-    "room": "Map_44",
+    "room": "Boss: Library (Orochi)",
     "screen": 0,
     "step_id": 25,
     "npc_type": 0,
@@ -8750,7 +8425,7 @@
   },
   {
     "map_type": 69,
-    "room": "Map_45",
+    "room": "Boss: Reflection (Durran)",
     "screen": 0,
     "step_id": 10,
     "npc_type": 32,
@@ -8763,7 +8438,7 @@
   },
   {
     "map_type": 69,
-    "room": "Map_45",
+    "room": "Boss: Reflection (Durran)",
     "screen": 0,
     "step_id": 10,
     "npc_type": 64,
@@ -8776,7 +8451,7 @@
   },
   {
     "map_type": 69,
-    "room": "Map_45",
+    "room": "Boss: Reflection (Durran)",
     "screen": 0,
     "step_id": 10,
     "npc_type": 64,
@@ -8789,7 +8464,7 @@
   },
   {
     "map_type": 69,
-    "room": "Map_45",
+    "room": "Boss: Reflection (Durran)",
     "screen": 0,
     "step_id": 10,
     "npc_type": 64,
@@ -8802,7 +8477,7 @@
   },
   {
     "map_type": 69,
-    "room": "Map_45",
+    "room": "Boss: Reflection (Durran)",
     "screen": 0,
     "step_id": 10,
     "npc_type": 64,
@@ -8815,7 +8490,7 @@
   },
   {
     "map_type": 69,
-    "room": "Map_45",
+    "room": "Boss: Reflection (Durran)",
     "screen": 0,
     "step_id": 10,
     "npc_type": 80,
@@ -8828,7 +8503,7 @@
   },
   {
     "map_type": 69,
-    "room": "Map_45",
+    "room": "Boss: Reflection (Durran)",
     "screen": 0,
     "step_id": 10,
     "npc_type": 0,
@@ -8841,7 +8516,7 @@
   },
   {
     "map_type": 69,
-    "room": "Map_45",
+    "room": "Boss: Reflection (Durran)",
     "screen": 0,
     "step_id": 10,
     "npc_type": 32,
@@ -8854,7 +8529,7 @@
   },
   {
     "map_type": 69,
-    "room": "Map_45",
+    "room": "Boss: Reflection (Durran)",
     "screen": 0,
     "step_id": 10,
     "npc_type": 64,
@@ -8867,7 +8542,7 @@
   },
   {
     "map_type": 69,
-    "room": "Map_45",
+    "room": "Boss: Reflection (Durran)",
     "screen": 0,
     "step_id": 10,
     "npc_type": 64,
@@ -8880,7 +8555,7 @@
   },
   {
     "map_type": 69,
-    "room": "Map_45",
+    "room": "Boss: Reflection (Durran)",
     "screen": 0,
     "step_id": 10,
     "npc_type": 32,
@@ -8893,7 +8568,7 @@
   },
   {
     "map_type": 69,
-    "room": "Map_45",
+    "room": "Boss: Reflection (Durran)",
     "screen": 0,
     "step_id": 10,
     "npc_type": 64,
@@ -8906,7 +8581,7 @@
   },
   {
     "map_type": 69,
-    "room": "Map_45",
+    "room": "Boss: Reflection (Durran)",
     "screen": 0,
     "step_id": 10,
     "npc_type": 80,
@@ -8919,7 +8594,7 @@
   },
   {
     "map_type": 69,
-    "room": "Map_45",
+    "room": "Boss: Reflection (Durran)",
     "screen": 0,
     "step_id": 10,
     "npc_type": 0,
@@ -8932,7 +8607,7 @@
   },
   {
     "map_type": 69,
-    "room": "Map_45",
+    "room": "Boss: Reflection (Durran)",
     "screen": 8,
     "step_id": 1,
     "npc_type": 80,
@@ -8945,7 +8620,7 @@
   },
   {
     "map_type": 69,
-    "room": "Map_45",
+    "room": "Boss: Reflection (Durran)",
     "screen": 8,
     "step_id": 1,
     "npc_type": 0,
@@ -8958,7 +8633,7 @@
   },
   {
     "map_type": 69,
-    "room": "Map_45",
+    "room": "Boss: Reflection (Durran)",
     "screen": 8,
     "step_id": 1,
     "npc_type": 0,
@@ -8971,7 +8646,7 @@
   },
   {
     "map_type": 69,
-    "room": "Map_45",
+    "room": "Boss: Reflection (Durran)",
     "screen": 8,
     "step_id": 1,
     "npc_type": 0,
@@ -8984,7 +8659,7 @@
   },
   {
     "map_type": 70,
-    "room": "Map_46",
+    "room": "Boss: Ambition (DracoLord)",
     "screen": 3,
     "step_id": 13,
     "npc_type": 80,
@@ -8997,7 +8672,7 @@
   },
   {
     "map_type": 70,
-    "room": "Map_46",
+    "room": "Boss: Ambition (DracoLord)",
     "screen": 3,
     "step_id": 13,
     "npc_type": 0,
@@ -9010,7 +8685,7 @@
   },
   {
     "map_type": 70,
-    "room": "Map_46",
+    "room": "Boss: Ambition (DracoLord)",
     "screen": 3,
     "step_id": 13,
     "npc_type": 0,
@@ -9023,7 +8698,7 @@
   },
   {
     "map_type": 70,
-    "room": "Map_46",
+    "room": "Boss: Ambition (DracoLord)",
     "screen": 3,
     "step_id": 13,
     "npc_type": 0,
@@ -9036,7 +8711,7 @@
   },
   {
     "map_type": 71,
-    "room": "Map_47",
+    "room": "Boss: Demolition (Hargon/Sidoh)",
     "screen": 0,
     "step_id": 28,
     "npc_type": 80,
@@ -9049,7 +8724,7 @@
   },
   {
     "map_type": 71,
-    "room": "Map_47",
+    "room": "Boss: Demolition (Hargon/Sidoh)",
     "screen": 0,
     "step_id": 28,
     "npc_type": 0,
@@ -9062,7 +8737,7 @@
   },
   {
     "map_type": 71,
-    "room": "Map_47",
+    "room": "Boss: Demolition (Hargon/Sidoh)",
     "screen": 0,
     "step_id": 28,
     "npc_type": 0,
@@ -9075,7 +8750,7 @@
   },
   {
     "map_type": 71,
-    "room": "Map_47",
+    "room": "Boss: Demolition (Hargon/Sidoh)",
     "screen": 0,
     "step_id": 28,
     "npc_type": 0,
@@ -9088,7 +8763,7 @@
   },
   {
     "map_type": 71,
-    "room": "Map_47",
+    "room": "Boss: Demolition (Hargon/Sidoh)",
     "screen": 0,
     "step_id": 28,
     "npc_type": 80,
@@ -9101,7 +8776,7 @@
   },
   {
     "map_type": 71,
-    "room": "Map_47",
+    "room": "Boss: Demolition (Hargon/Sidoh)",
     "screen": 0,
     "step_id": 28,
     "npc_type": 0,
@@ -9114,7 +8789,7 @@
   },
   {
     "map_type": 71,
-    "room": "Map_47",
+    "room": "Boss: Demolition (Hargon/Sidoh)",
     "screen": 0,
     "step_id": 28,
     "npc_type": 0,
@@ -9127,7 +8802,7 @@
   },
   {
     "map_type": 71,
-    "room": "Map_47",
+    "room": "Boss: Demolition (Hargon/Sidoh)",
     "screen": 0,
     "step_id": 28,
     "npc_type": 0,
@@ -9140,7 +8815,7 @@
   },
   {
     "map_type": 71,
-    "room": "Map_47",
+    "room": "Boss: Demolition (Hargon/Sidoh)",
     "screen": 7,
     "step_id": 12,
     "npc_type": 80,
@@ -9153,7 +8828,7 @@
   },
   {
     "map_type": 71,
-    "room": "Map_47",
+    "room": "Boss: Demolition (Hargon/Sidoh)",
     "screen": 7,
     "step_id": 12,
     "npc_type": 0,
@@ -9166,7 +8841,7 @@
   },
   {
     "map_type": 71,
-    "room": "Map_47",
+    "room": "Boss: Demolition (Hargon/Sidoh)",
     "screen": 7,
     "step_id": 12,
     "npc_type": 0,
@@ -9179,7 +8854,7 @@
   },
   {
     "map_type": 71,
-    "room": "Map_47",
+    "room": "Boss: Demolition (Hargon/Sidoh)",
     "screen": 7,
     "step_id": 12,
     "npc_type": 0,
@@ -9192,7 +8867,7 @@
   },
   {
     "map_type": 72,
-    "room": "Map_48",
+    "room": "Boss: Mastermind (Baramos)",
     "screen": 4,
     "step_id": 11,
     "npc_type": 80,
@@ -9205,7 +8880,7 @@
   },
   {
     "map_type": 72,
-    "room": "Map_48",
+    "room": "Boss: Mastermind (Baramos)",
     "screen": 4,
     "step_id": 11,
     "npc_type": 0,
@@ -9218,7 +8893,7 @@
   },
   {
     "map_type": 72,
-    "room": "Map_48",
+    "room": "Boss: Mastermind (Baramos)",
     "screen": 4,
     "step_id": 11,
     "npc_type": 0,
@@ -9231,7 +8906,7 @@
   },
   {
     "map_type": 72,
-    "room": "Map_48",
+    "room": "Boss: Mastermind (Baramos)",
     "screen": 4,
     "step_id": 11,
     "npc_type": 0,
@@ -9244,7 +8919,7 @@
   },
   {
     "map_type": 73,
-    "room": "Map_49",
+    "room": "Boss: Control (Zoma)",
     "screen": 3,
     "step_id": 14,
     "npc_type": 80,
@@ -9257,7 +8932,7 @@
   },
   {
     "map_type": 73,
-    "room": "Map_49",
+    "room": "Boss: Control (Zoma)",
     "screen": 3,
     "step_id": 14,
     "npc_type": 0,
@@ -9270,7 +8945,7 @@
   },
   {
     "map_type": 73,
-    "room": "Map_49",
+    "room": "Boss: Control (Zoma)",
     "screen": 3,
     "step_id": 14,
     "npc_type": 0,
@@ -9283,7 +8958,7 @@
   },
   {
     "map_type": 73,
-    "room": "Map_49",
+    "room": "Boss: Control (Zoma)",
     "screen": 3,
     "step_id": 14,
     "npc_type": 0,
@@ -9296,7 +8971,7 @@
   },
   {
     "map_type": 74,
-    "room": "Map_4A",
+    "room": "Boss: Extinction (Pizzaro)",
     "screen": 3,
     "step_id": 17,
     "npc_type": 80,
@@ -9309,7 +8984,7 @@
   },
   {
     "map_type": 74,
-    "room": "Map_4A",
+    "room": "Boss: Extinction (Pizzaro)",
     "screen": 3,
     "step_id": 17,
     "npc_type": 0,
@@ -9322,7 +8997,7 @@
   },
   {
     "map_type": 74,
-    "room": "Map_4A",
+    "room": "Boss: Extinction (Pizzaro)",
     "screen": 3,
     "step_id": 17,
     "npc_type": 0,
@@ -9335,7 +9010,7 @@
   },
   {
     "map_type": 74,
-    "room": "Map_4A",
+    "room": "Boss: Extinction (Pizzaro)",
     "screen": 3,
     "step_id": 17,
     "npc_type": 0,
@@ -9348,7 +9023,7 @@
   },
   {
     "map_type": 75,
-    "room": "Map_4B",
+    "room": "Boss: Sleep (Esterk)",
     "screen": 3,
     "step_id": 15,
     "npc_type": 80,
@@ -9361,7 +9036,7 @@
   },
   {
     "map_type": 75,
-    "room": "Map_4B",
+    "room": "Boss: Sleep (Esterk)",
     "screen": 3,
     "step_id": 15,
     "npc_type": 0,
@@ -9374,7 +9049,7 @@
   },
   {
     "map_type": 75,
-    "room": "Map_4B",
+    "room": "Boss: Sleep (Esterk)",
     "screen": 3,
     "step_id": 15,
     "npc_type": 0,
@@ -9387,7 +9062,7 @@
   },
   {
     "map_type": 75,
-    "room": "Map_4B",
+    "room": "Boss: Sleep (Esterk)",
     "screen": 3,
     "step_id": 15,
     "npc_type": 0,
@@ -9400,7 +9075,7 @@
   },
   {
     "map_type": 76,
-    "room": "Map_4C",
+    "room": "Boss: Bazaar Edge (Mirudraas)",
     "screen": 4,
     "step_id": 18,
     "npc_type": 80,
@@ -9413,7 +9088,7 @@
   },
   {
     "map_type": 76,
-    "room": "Map_4C",
+    "room": "Boss: Bazaar Edge (Mirudraas)",
     "screen": 4,
     "step_id": 18,
     "npc_type": 10,
@@ -9426,7 +9101,7 @@
   },
   {
     "map_type": 76,
-    "room": "Map_4C",
+    "room": "Boss: Bazaar Edge (Mirudraas)",
     "screen": 4,
     "step_id": 18,
     "npc_type": 0,
@@ -9439,7 +9114,7 @@
   },
   {
     "map_type": 76,
-    "room": "Map_4C",
+    "room": "Boss: Bazaar Edge (Mirudraas)",
     "screen": 4,
     "step_id": 18,
     "npc_type": 0,
@@ -9452,7 +9127,7 @@
   },
   {
     "map_type": 76,
-    "room": "Map_4C",
+    "room": "Boss: Bazaar Edge (Mirudraas)",
     "screen": 4,
     "step_id": 18,
     "npc_type": 0,
@@ -9465,7 +9140,7 @@
   },
   {
     "map_type": 79,
-    "room": "Boss: Unused Gate",
+    "room": "Boss: Unused (DarkDrium)",
     "screen": 0,
     "step_id": 4,
     "npc_type": 64,
@@ -9478,7 +9153,7 @@
   },
   {
     "map_type": 79,
-    "room": "Boss: Unused Gate",
+    "room": "Boss: Unused (DarkDrium)",
     "screen": 0,
     "step_id": 4,
     "npc_type": 64,
@@ -9491,7 +9166,7 @@
   },
   {
     "map_type": 79,
-    "room": "Boss: Unused Gate",
+    "room": "Boss: Unused (DarkDrium)",
     "screen": 0,
     "step_id": 4,
     "npc_type": 64,
@@ -9504,7 +9179,7 @@
   },
   {
     "map_type": 79,
-    "room": "Boss: Unused Gate",
+    "room": "Boss: Unused (DarkDrium)",
     "screen": 3,
     "step_id": 1,
     "npc_type": 0,
@@ -9517,7 +9192,7 @@
   },
   {
     "map_type": 79,
-    "room": "Boss: Unused Gate",
+    "room": "Boss: Unused (DarkDrium)",
     "screen": 5,
     "step_id": 5,
     "npc_type": 0,
@@ -9530,7 +9205,7 @@
   },
   {
     "map_type": 79,
-    "room": "Boss: Unused Gate",
+    "room": "Boss: Unused (DarkDrium)",
     "screen": 5,
     "step_id": 5,
     "npc_type": 0,
@@ -9543,7 +9218,7 @@
   },
   {
     "map_type": 79,
-    "room": "Boss: Unused Gate",
+    "room": "Boss: Unused (DarkDrium)",
     "screen": 5,
     "step_id": 5,
     "npc_type": 0,
@@ -9556,7 +9231,7 @@
   },
   {
     "map_type": 79,
-    "room": "Boss: Unused Gate",
+    "room": "Boss: Unused (DarkDrium)",
     "screen": 5,
     "step_id": 5,
     "npc_type": 0,
@@ -9569,7 +9244,7 @@
   },
   {
     "map_type": 79,
-    "room": "Boss: Unused Gate",
+    "room": "Boss: Unused (DarkDrium)",
     "screen": 5,
     "step_id": 5,
     "npc_type": 32,
@@ -9582,7 +9257,7 @@
   },
   {
     "map_type": 79,
-    "room": "Boss: Unused Gate",
+    "room": "Boss: Unused (DarkDrium)",
     "screen": 5,
     "step_id": 5,
     "npc_type": 32,
@@ -9595,7 +9270,7 @@
   },
   {
     "map_type": 79,
-    "room": "Boss: Unused Gate",
+    "room": "Boss: Unused (DarkDrium)",
     "screen": 5,
     "step_id": 5,
     "npc_type": 32,
@@ -9608,7 +9283,7 @@
   },
   {
     "map_type": 79,
-    "room": "Boss: Unused Gate",
+    "room": "Boss: Unused (DarkDrium)",
     "screen": 5,
     "step_id": 5,
     "npc_type": 32,
@@ -9621,7 +9296,7 @@
   },
   {
     "map_type": 81,
-    "room": "Map_51",
+    "room": "Gate Floor: Priest",
     "screen": 0,
     "step_id": 3,
     "npc_type": 0,
@@ -9631,408 +9306,5 @@
     "script": 1,
     "flat": 194569,
     "interact_ptr": 30724
-  },
-  {
-    "map_type": 91,
-    "room": "Map_5B",
-    "screen": 2,
-    "step_id": 20,
-    "npc_type": 16,
-    "sprite": 240,
-    "x": 4,
-    "y": 9,
-    "script": 255,
-    "flat": 195687,
-    "interact_ptr": 31847
-  },
-  {
-    "map_type": 91,
-    "room": "Map_5B",
-    "screen": 2,
-    "step_id": 20,
-    "npc_type": 16,
-    "sprite": 241,
-    "x": 4,
-    "y": 10,
-    "script": 255,
-    "flat": 195692,
-    "interact_ptr": 31847
-  },
-  {
-    "map_type": 91,
-    "room": "Map_5B",
-    "screen": 2,
-    "step_id": 20,
-    "npc_type": 16,
-    "sprite": 243,
-    "x": 4,
-    "y": 11,
-    "script": 255,
-    "flat": 195697,
-    "interact_ptr": 31847
-  },
-  {
-    "map_type": 91,
-    "room": "Map_5B",
-    "screen": 2,
-    "step_id": 20,
-    "npc_type": 16,
-    "sprite": 242,
-    "x": 4,
-    "y": 12,
-    "script": 255,
-    "flat": 195702,
-    "interact_ptr": 31847
-  },
-  {
-    "map_type": 91,
-    "room": "Map_5B",
-    "screen": 2,
-    "step_id": 20,
-    "npc_type": 16,
-    "sprite": 224,
-    "x": 7,
-    "y": 5,
-    "script": 255,
-    "flat": 195707,
-    "interact_ptr": 31847
-  },
-  {
-    "map_type": 91,
-    "room": "Map_5B",
-    "screen": 2,
-    "step_id": 20,
-    "npc_type": 16,
-    "sprite": 225,
-    "x": 6,
-    "y": 5,
-    "script": 255,
-    "flat": 195712,
-    "interact_ptr": 31847
-  },
-  {
-    "map_type": 91,
-    "room": "Map_5B",
-    "screen": 2,
-    "step_id": 20,
-    "npc_type": 16,
-    "sprite": 226,
-    "x": 6,
-    "y": 4,
-    "script": 255,
-    "flat": 195717,
-    "interact_ptr": 31847
-  },
-  {
-    "map_type": 91,
-    "room": "Map_5B",
-    "screen": 2,
-    "step_id": 20,
-    "npc_type": 16,
-    "sprite": 227,
-    "x": 6,
-    "y": 6,
-    "script": 255,
-    "flat": 195722,
-    "interact_ptr": 31847
-  },
-  {
-    "map_type": 91,
-    "room": "Map_5B",
-    "screen": 2,
-    "step_id": 21,
-    "npc_type": 64,
-    "sprite": 240,
-    "x": 4,
-    "y": 5,
-    "script": 255,
-    "flat": 195728,
-    "interact_ptr": 31888
-  },
-  {
-    "map_type": 91,
-    "room": "Map_5B",
-    "screen": 2,
-    "step_id": 21,
-    "npc_type": 112,
-    "sprite": 243,
-    "x": 3,
-    "y": 4,
-    "script": 255,
-    "flat": 195733,
-    "interact_ptr": 31888
-  },
-  {
-    "map_type": 91,
-    "room": "Map_5B",
-    "screen": 2,
-    "step_id": 21,
-    "npc_type": 112,
-    "sprite": 241,
-    "x": 3,
-    "y": 5,
-    "script": 255,
-    "flat": 195738,
-    "interact_ptr": 31888
-  },
-  {
-    "map_type": 91,
-    "room": "Map_5B",
-    "screen": 2,
-    "step_id": 21,
-    "npc_type": 112,
-    "sprite": 242,
-    "x": 3,
-    "y": 6,
-    "script": 255,
-    "flat": 195743,
-    "interact_ptr": 31888
-  },
-  {
-    "map_type": 91,
-    "room": "Map_5B",
-    "screen": 2,
-    "step_id": 21,
-    "npc_type": 16,
-    "sprite": 225,
-    "x": 6,
-    "y": 5,
-    "script": 255,
-    "flat": 195748,
-    "interact_ptr": 31888
-  },
-  {
-    "map_type": 91,
-    "room": "Map_5B",
-    "screen": 2,
-    "step_id": 21,
-    "npc_type": 16,
-    "sprite": 226,
-    "x": 6,
-    "y": 4,
-    "script": 255,
-    "flat": 195753,
-    "interact_ptr": 31888
-  },
-  {
-    "map_type": 91,
-    "room": "Map_5B",
-    "screen": 2,
-    "step_id": 21,
-    "npc_type": 16,
-    "sprite": 227,
-    "x": 6,
-    "y": 6,
-    "script": 255,
-    "flat": 195758,
-    "interact_ptr": 31888
-  },
-  {
-    "map_type": 91,
-    "room": "Map_5B",
-    "screen": 2,
-    "step_id": 21,
-    "npc_type": 64,
-    "sprite": 82,
-    "x": 4,
-    "y": 5,
-    "script": 255,
-    "flat": 195763,
-    "interact_ptr": 31888
-  },
-  {
-    "map_type": 91,
-    "room": "Map_5B",
-    "screen": 2,
-    "step_id": 21,
-    "npc_type": 48,
-    "sprite": 240,
-    "x": 2,
-    "y": 5,
-    "script": 255,
-    "flat": 195769,
-    "interact_ptr": 31929
-  },
-  {
-    "map_type": 91,
-    "room": "Map_5B",
-    "screen": 2,
-    "step_id": 21,
-    "npc_type": 48,
-    "sprite": 243,
-    "x": 3,
-    "y": 4,
-    "script": 255,
-    "flat": 195774,
-    "interact_ptr": 31929
-  },
-  {
-    "map_type": 91,
-    "room": "Map_5B",
-    "screen": 2,
-    "step_id": 21,
-    "npc_type": 48,
-    "sprite": 241,
-    "x": 3,
-    "y": 5,
-    "script": 255,
-    "flat": 195779,
-    "interact_ptr": 31929
-  },
-  {
-    "map_type": 91,
-    "room": "Map_5B",
-    "screen": 2,
-    "step_id": 21,
-    "npc_type": 48,
-    "sprite": 242,
-    "x": 3,
-    "y": 6,
-    "script": 255,
-    "flat": 195784,
-    "interact_ptr": 31929
-  },
-  {
-    "map_type": 91,
-    "room": "Map_5B",
-    "screen": 2,
-    "step_id": 21,
-    "npc_type": 16,
-    "sprite": 225,
-    "x": 6,
-    "y": 5,
-    "script": 255,
-    "flat": 195789,
-    "interact_ptr": 31929
-  },
-  {
-    "map_type": 91,
-    "room": "Map_5B",
-    "screen": 2,
-    "step_id": 21,
-    "npc_type": 16,
-    "sprite": 226,
-    "x": 6,
-    "y": 4,
-    "script": 255,
-    "flat": 195794,
-    "interact_ptr": 31929
-  },
-  {
-    "map_type": 91,
-    "room": "Map_5B",
-    "screen": 2,
-    "step_id": 21,
-    "npc_type": 80,
-    "sprite": 57,
-    "x": 10,
-    "y": 1,
-    "script": 255,
-    "flat": 195799,
-    "interact_ptr": 31929
-  },
-  {
-    "map_type": 91,
-    "room": "Map_5B",
-    "screen": 2,
-    "step_id": 21,
-    "npc_type": 16,
-    "sprite": 227,
-    "x": 6,
-    "y": 6,
-    "script": 255,
-    "flat": 195804,
-    "interact_ptr": 31929
-  },
-  {
-    "map_type": 94,
-    "room": "Arena Battle(5E)",
-    "screen": 0,
-    "step_id": 23,
-    "npc_type": 16,
-    "sprite": 224,
-    "x": 7,
-    "y": 5,
-    "script": 255,
-    "flat": 195838,
-    "interact_ptr": 31998
-  },
-  {
-    "map_type": 94,
-    "room": "Arena Battle(5E)",
-    "screen": 0,
-    "step_id": 23,
-    "npc_type": 64,
-    "sprite": 87,
-    "x": 4,
-    "y": 0,
-    "script": 255,
-    "flat": 195843,
-    "interact_ptr": 31998
-  },
-  {
-    "map_type": 94,
-    "room": "Arena Battle(5E)",
-    "screen": 0,
-    "step_id": 23,
-    "npc_type": 64,
-    "sprite": 82,
-    "x": 4,
-    "y": 5,
-    "script": 255,
-    "flat": 195848,
-    "interact_ptr": 31998
-  },
-  {
-    "map_type": 94,
-    "room": "Arena Battle(5E)",
-    "screen": 0,
-    "step_id": 23,
-    "npc_type": 112,
-    "sprite": 8,
-    "x": 0,
-    "y": 4,
-    "script": 255,
-    "flat": 195854,
-    "interact_ptr": 32014
-  },
-  {
-    "map_type": 94,
-    "room": "Arena Battle(5E)",
-    "screen": 0,
-    "step_id": 23,
-    "npc_type": 64,
-    "sprite": 85,
-    "x": 5,
-    "y": 4,
-    "script": 255,
-    "flat": 195859,
-    "interact_ptr": 32014
-  },
-  {
-    "map_type": 94,
-    "room": "Arena Battle(5E)",
-    "screen": 0,
-    "step_id": 23,
-    "npc_type": 32,
-    "sprite": 224,
-    "x": 5,
-    "y": 5,
-    "script": 255,
-    "flat": 195865,
-    "interact_ptr": 32025
-  },
-  {
-    "map_type": 94,
-    "room": "Arena Battle(5E)",
-    "screen": 0,
-    "step_id": 23,
-    "npc_type": 80,
-    "sprite": 33,
-    "x": 9,
-    "y": 5,
-    "script": 255,
-    "flat": 195870,
-    "interact_ptr": 32025
   }
 ]

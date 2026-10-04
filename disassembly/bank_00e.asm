@@ -3715,7 +3715,7 @@ BossBewilder_Script03:
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_543E:
-    dw $0292  ; Text $0292: "$45:$652B *:{A4} {A4}"
+    dw $0292  ; Text $0292: "$45:$652B *:… …"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -3734,7 +3734,7 @@ BossBewilder_Script04:
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_5456:
-    dw $0292  ; Text $0292: "$45:$652B *:{A4} {A4}"
+    dw $0292  ; Text $0292: "$45:$652B *:… …"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -3753,7 +3753,7 @@ BossBewilder_Script05:
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_546E:
-    dw $0292  ; Text $0292: "$45:$652B *:{A4} {A4}"
+    dw $0292  ; Text $0292: "$45:$652B *:… …"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -3772,7 +3772,7 @@ BossBewilder_Script06:
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_5486:
-    dw $0292  ; Text $0292: "$45:$652B *:{A4} {A4}"
+    dw $0292  ; Text $0292: "$45:$652B *:… …"
     dw $FFFF  ; END
 
 ; ---------------------------------------------------------------------------
@@ -3858,11 +3858,11 @@ Map35_Script02:
 ; Map35_Script03
 ; ---------------------------------------------------------------------------
 Map35_Script03:
-    dw $0296  ; Text $0296: "$45:$65EA *:{A4} {A4} {A4}"
+    dw $0296  ; Text $0296: "$45:$65EA *:… … …"
     dw $FF5A  ; Cmd5A
     dw $0037  ; Text $0037: "$42:$5D55 [HERO] read the sign. // :When the Great"
     dw $FF07  ; InitDialogMode
-    dw $0297  ; Text $0297: "$45:$65F6 *:{A4} {A4} {A4}"
+    dw $0297  ; Text $0297: "$45:$65F6 *:… … …"
     dw $FF09  ; SetDelay
     dw $0008  ; Text $0008: "$42:$44BA *:Are you Milayou? // *:Hm, You don't lo"
     dw $FF0D  ; WriteNPCByte

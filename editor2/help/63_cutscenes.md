@@ -246,3 +246,8 @@ parameters (numbers like `$0020`, RAM / flag names, `@LABEL` of the script for
 a branch); the line under it says what the step will do. The copy's chests and
 doors that open by a tile patch (opcode $24 / $61) now draw in the copy too
 (the patch is copied into your room; before S119 a copy drew nothing there).
+
+
+**Texts (S120):** Say / Ask steps use the same box editor as the NPC talks —
+**Speaker**, **Voice**, **Insert ▾** (the hero's name, the lead monster's kind);
+see *NPCs*, "Text: speakers, voices, names".

@@ -1119,61 +1119,33 @@ jr_056_44a2:		;copy blank tile from rom to vram when in vblank
 
     INCBIN "gfx/image_056_44b7.2bpp"	;blank tile
 
+; Text control codes $E0-$FF (S120, ROADMAP P3.6 — TEXT_SYSTEM "Control Codes"): bank $00
+; HandleTextCharacter far-calls entry 6 ($5606) with D = the code; dispatched through
+; TextCodeTable (32 words, was misassembled as instructions). Codes $E8 / $E9 / $F8 /
+; $F9 / $FB / $FC read parameter bytes from the text.
+TextControlCode:
     ld a, d
     ld [$c83a], a
     sub $e0
     rst $00
+TextCodeTable:
+    dw TextCode_E0_E6, TextCode_E0_E6, TextCode_E0_E6, TextCode_E0_E6   ; $E0-$E3
+    dw TextCode_E0_E6, TextCode_E0_E6, TextCode_E0_E6                   ; $E4-$E6
+    dw TextCode_E7_Choice, TextCode_E8_Pos, TextCode_E9_Sound           ; $E7-$E9
+    dw TextCode_EA_VoiceLow, TextCode_EB_VoiceHigh, TextCode_EC_Speed   ; $EA-$EC
+    dw TextCode_ED_Fast, TextCode_EE_Newline, TextCode_EF_Page          ; $ED-$EF
+    dw TextCode_F0_End, TextCode_F1_NextRow, TextCode_F2_Refresh        ; $F0-$F2
+    dw TextCode_F3_NewCanvas, SetB56_4771, TextCode_F5_Instant          ; $F3-$F5 ($F4 = SetB56_4771)
+    dw TextCode_F6_Hero, TextCode_F7_Clear, TextCode_F8_SpeedN          ; $F6-$F8
+    dw TextCode_F9_Insert, TextCode_FA_Wait, TextCode_FB_ParamC835      ; $F9-$FB
+    dw TextCode_FC_ParamC836, TextCode_FD_VoiceOn, TextCode_FE_VoiceOff ; $FC-$FE
+    dw SetB56_4855                                                      ; $FF CHOICE2 (the YES/NO box)
 
-    ld c, $45
-    ld c, $45
-    ld c, $45
-    ld c, $45
-    ld c, $45
-    ld c, $45
-    ld c, $45
-    ld de, $1f45
-    ld b, l
-    ld d, h
-    ld b, l
-
-    db $5e, $45
-
-    ld l, c
-    ld b, l
-    ld [hl], h
-    ld b, l
-    and a
-    ld b, l
-
-    db $ad, $45, $40, $46, $fe, $46, $2b, $47
-
-    ld c, a
-    ld b, a
-    ld e, b
-    ld b, a
-    ld [hl], c
-    ld b, a
-    ld a, h
-    ld b, a
-
-    db $82, $47, $b4, $47
-
-    cp a
-    ld b, a
-
-    db $ce, $47, $1b, $48
-
-    ld hl, $3548
-    ld c, b
-    ld c, c
-    ld c, b
-    ld c, a
-    ld c, b
-    ld d, l
-    ld c, b
+TextCode_E0_E6:                         ; $E0-$E6: unused codes -> the YES/NO box ($FF)
     jp Jump_056_4855
 
 
+TextCode_E7_Choice:                         ; $E7 CHOICE: the YES/NO box, then $C83C := 1 (NO) and $C83A := $FF (the script tests $C83C)
     call SetB56_4855
     ld a, $01
     ld [$c83c], a
@@ -1182,6 +1154,7 @@ jr_056_44a2:		;copy blank tile from rom to vram when in vblank
     ret
 
 
+TextCode_E8_Pos:                         ; $E8 x y: set the draw position (2 parameter bytes)
     call GetTilemapByte
     ld d, $00
     call ReadNextTextByte
@@ -1212,12 +1185,14 @@ jr_056_44a2:		;copy blank tile from rom to vram when in vblank
     ret
 
 
+TextCode_E9_Sound:                         ; $E9 n: play sound effect n (1 parameter byte)
     call GetTilemapByte
     call ReadNextTextByte
     call PlaySoundEffect
     ret
 
 
+TextCode_EA_VoiceLow:                         ; $EA: voice ON, blip = sound $5B ($C840) — the King / bosses / most townsfolk (S120 measured)
     ld hl, $c826
     set 0, [hl]
     ld a, $5b
@@ -1225,6 +1200,7 @@ jr_056_44a2:		;copy blank tile from rom to vram when in vblank
     ret
 
 
+TextCode_EB_VoiceHigh:                         ; $EB: voice ON, blip = sound $5A — Milayou / Pulio / Watabou (S120 measured). Prints nothing, indents nothing
     ld hl, $c826
     set 0, [hl]
     ld a, $5a
@@ -1232,13 +1208,14 @@ jr_056_44a2:		;copy blank tile from rom to vram when in vblank
     ret
 
 
+TextCode_EC_Speed:                         ; $EC: text speed from the menu setting (wTextSpeed -> TextSpeedFrames; 7 = instant)
     ld hl, $c826
     res 7, [hl]
     ld a, [wTextSpeed]
     cp $07
     jr z, jr_056_4593
 
-    ld hl, $45a0
+    ld hl, TextSpeedFrames
     add l
     ld l, a
     ld a, $00
@@ -1260,18 +1237,16 @@ jr_056_4593:
     ret
 
 
-    ld b, $0c
-    inc d
-    ld a, [de]
-    jr nz, @+$2a
+TextSpeedFrames:                ; frames per letter for menu text speeds 0-6 (7 = instant; read by $EC)
+    db $06, $0c, $14, $1a, $20, $28, $30
 
-    jr nc, jr_056_45c9
-
-    ld h, $c8
+TextCode_ED_Fast:               ; $ED: $C826 bit 7 — print the rest at once (as when a button is held)
+    ld hl, $c826
     set 7, [hl]
     ret
 
 
+TextCode_EE_Newline:                         ; $EE NEWLINE (after $EF)
     ld a, [$c827]
     ld e, a
     ld a, [$c828]
@@ -1364,6 +1339,7 @@ jr_056_461f:
     ret
 
 
+TextCode_EF_Page:                         ; $EF PAGE: advance the line position
     ld a, [$c82a]
     ld l, a
     ld h, $00
@@ -1483,6 +1459,7 @@ jr_056_46e6:
     ret
 
 
+TextCode_F0_End:                         ; $F0 END: inside an insert ($C825 bit 4: $F6 / $F9) go back to the saved pointer $C831, else the text ends
     ld a, [$c825]
     bit 4, a
     jp z, Jump_056_4722
@@ -1510,6 +1487,7 @@ Jump_056_4722:
     ret
 
 
+TextCode_F1_NextRow:                         ; $F1: next row (the descriptions' line break)
     ld a, [$c82a]
     ld l, a
     ld h, $00
@@ -1533,9 +1511,11 @@ Jump_056_4722:
     ret
 
 
+TextCode_F2_Refresh:                         ; $F2: redraw the canvas
     call HandleScreenRefresh
     call SetB56_4771
     call SetB56_4485
+TextCode_F3_NewCanvas:                         ; $F3: redraw + clear the canvas, position back to its start (a box opener in 20 ids)
     ld a, [$c827]
     ld l, a
     ld a, [$c828]
@@ -1559,11 +1539,13 @@ SetB56_4771:
     ret
 
 
+TextCode_F5_Instant:                         ; $F5: $C825 bit 1 — print without the per-letter delay
     ld hl, $c825
     set 1, [hl]
     ret
 
 
+TextCode_F6_Hero:                         ; $F6 HERO: copy the 8-byte hero name $CA42 -> $C0C8 (+$F0) and print it (all 8 letters; S120 measured)
     ld hl, $ca42
     ld de, $c0c8
     ld b, $08
@@ -1595,6 +1577,7 @@ jr_056_478a:
     ret
 
 
+TextCode_F7_Clear:                         ; $F7 CLEAR
     ld hl, $c825
     set 2, [hl]
     ld hl, $c826
@@ -1602,6 +1585,7 @@ jr_056_478a:
     ret
 
 
+TextCode_F8_SpeedN:                         ; $F8 n: custom letter delay n ($C833; 1 parameter byte; unused in dialogue)
     ld hl, $c825
     set 3, [hl]
     call GetTilemapByte
@@ -1610,6 +1594,7 @@ jr_056_478a:
     ret
 
 
+TextCode_F9_Insert:                         ; $F9 nn: print the name in slot $C180 + nn (op $3F load_lead_name fills slot 0 = {lead}, S120)
     ld hl, $c825
     set 4, [hl]
     ld a, [$c82d]
@@ -1653,11 +1638,13 @@ jr_056_4806:                    ; text code $F9 nn (insert a name): print the $F
     ret
 
 
+TextCode_FA_Wait:                         ; $FA WAIT: the arrow; wait for A
     ld hl, $c825
     set 5, [hl]
     ret
 
 
+TextCode_FB_ParamC835:                         ; $FB n: $C825 bit 6, $C835 := n (1 parameter byte; unused in dialogue)
     ld hl, $c825
     set 6, [hl]
     call GetTilemapByte
@@ -1668,6 +1655,7 @@ jr_056_4806:                    ; text code $F9 nn (insert a name): print the $F
     ret
 
 
+TextCode_FC_ParamC836:                         ; $FC n: $C825 bit 7, $C836 := n (1 parameter byte; battle messages)
     ld hl, $c825
     set 7, [hl]
     call GetTilemapByte
@@ -1678,11 +1666,13 @@ jr_056_4806:                    ; text code $F9 nn (insert a name): print the $F
     ret
 
 
+TextCode_FD_VoiceOn:                         ; $FD: voice ON with the current blip ($C826 bit 0)
     ld hl, $c826
     set 0, [hl]
     ret
 
 
+TextCode_FE_VoiceOff:                         ; $FE: voice OFF (silent letters)
     ld hl, $c826
     res 0, [hl]
     ret

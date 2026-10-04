@@ -121,6 +121,56 @@ def vanilla_gates(start=None):
     return _GATES_CACHE[root]
 
 
+_FT_CACHE = {}
+
+
+def floor_types(start=None):
+    """S120: extracted/gate_floor_types/gate_floor_types.json (tools/census_gate_floor_types.py,
+    measured): the three floor-type tables (rows + odds), every vanilla gate's row bytes 0-2
+    / 7, the rows each gate uses, the 16 maze pictures, the 8 special picks."""
+    root = _repo_root(start or os.path.dirname(os.path.abspath(__file__)))
+    if root not in _FT_CACHE:
+        path = os.path.join(root, 'extracted', 'gate_floor_types', 'gate_floor_types.json')
+        d = json.load(open(path)) if os.path.exists(path) else None
+        if d is not None:
+            d['_root'] = root
+        _FT_CACHE[root] = d
+    return _FT_CACHE[root]
+
+
+def row_settings(custom, gate_id, start=None):
+    """{'maze_row', 'special_row', 'contents_row', 'depth'} in effect for a gate (its own
+    S120 settings, else its source's vanilla bytes) + 'vanilla' = the source's values."""
+    ft = floor_types(start)
+    gs = gate_settings(custom, gate_id)
+    src = int(_val(gs['copy_of'])) if is_new_gate(gate_id) and gs.get('copy_of') is not None \
+        else int(gate_id)
+    van = dict(ft['gates'][src]) if ft else {k: 0 for k in ROW_KEYS}
+    out = {k: (int(_val(gs[k])) if gs.get(k) is not None else van[k]) for k in ROW_KEYS}
+    out['vanilla'] = {k: van[k] for k in ROW_KEYS}
+    return out
+
+
+def row_summary(kind, row, start=None, names=None):
+    """A row of table `kind` ('maze' / 'special' / 'contents') in words: who uses it and
+    what it rolls."""
+    ft = floor_types(start)
+    if not ft:
+        return f'row {row}'
+    users = ft['rows_used_by'][kind].get(str(row), [])
+    who = ('like ' + ', '.join((names or {}).get(g, f'gate {g}') for g in users[:3])
+           + (' …' if len(users) > 3 else '')) if users else 'no vanilla gate'
+    odds = ft['tables'][kind][row]['odds']
+    if kind == 'maze':
+        what = ', '.join(f'type {i} {p} %' for i, p in odds)
+    elif kind == 'special':
+        what = ', '.join(f"{ft['specials'][i].split(' (')[0].split(' —')[0]} {p} %"
+                         for i, p in odds if i < len(ft['specials']))
+    else:
+        what = ', '.join(f'mix {i} {p} %' for i, p in odds)
+    return f'row {row} — {who}: {what}'
+
+
 def gate_floors(gate_id, start=None):
     for g in vanilla_gates(start):
         if g['id'] == gate_id:
@@ -140,7 +190,15 @@ def gate_floors(gate_id, start=None):
 # ---------------------------------------------------------------------------
 GATE_KEYS = {'gate', 'floors', 'boss', 'hand_made', 'comment',
              'encounters',   # S114: the gate's own encounter plan (encounters.py)
-             'copy_of', 'name'}   # S115: NEW gates only (see below)
+             'copy_of', 'name',   # S115: NEW gates only (see below)
+             'maze_row', 'special_row', 'contents_row', 'depth'}   # S120 (below)
+# S120 (ROADMAP P3.7b part 2): the row bytes 0-2 + 7 of any gate (vanilla or new):
+# which ROW of FloorTypeSelectionTable 1 / 2 / 3 the gate rolls (the maze look, the
+# special room of floors 3, 6, 9 …, the contents mix) and the depth tier (the ground
+# items' tier, bank $01). The rows themselves are shared tables — choosing a row = "like
+# the gates that use it" (extracted/gate_floor_types/gate_floor_types.json, measured).
+ROW_KEYS = {'maze_row': (0, 15, 0), 'special_row': (0, 15, 1),
+            'contents_row': (0, 15, 2), 'depth': (1, 3, 7)}
 FLOORS_MIN, FLOORS_MAX = 2, 99
 
 # ---------------------------------------------------------------------------
@@ -492,7 +550,12 @@ class GatesMixin:
                     raise ValueError(f'a new gate always has a {k}')
                 if k == 'copy_of' and not 0 <= int(v) < NEW_GATE_FIRST:
                     raise ValueError('copy_of must be a vanilla gate 0-31')
-            if v in (None, False, '') and k != 'floors':
+            if k in ROW_KEYS and v is not None:
+                lo, hi, _at = ROW_KEYS[k]
+                if not lo <= int(v) <= hi:
+                    raise ValueError(f'{k} must be {lo}-{hi}')
+            # (S120: `v in (None, False, '')` was True for 0 — row 0 could not be chosen)
+            if (v is None or v is False or v == '') and k != 'floors':
                 g.pop(k, None)
             elif k == 'floors' and v is None:
                 g.pop('floors', None)

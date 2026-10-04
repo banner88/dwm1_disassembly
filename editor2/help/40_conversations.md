@@ -50,3 +50,9 @@ battle only the enemy knocked out LAST can join.
 **Arrival conversations** run on every arrival (also after a battle or
 loading a save) — start with *If flags…* so a finished fight does not
 start again.
+
+
+**Texts (S120):** each Say / Ask text has its own **Speaker** and **Voice** and
+the **Insert ▾** menu (the hero's name, the lead monster's kind) — see *NPCs*,
+"Text: speakers, voices, names". An Ask inside a YES or NO branch is a question
+inside the answer (as deep as you like); the branches join again after it.

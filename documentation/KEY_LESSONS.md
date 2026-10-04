@@ -5258,3 +5258,57 @@ instead of raising. **Rule**: anything a user can leave half-done while editing 
 a step) is a BUILD error, not a construction error of the model every tab uses; test an
 in-progress mistake by OPENING the user's project in the editor, not only by building.
 
+
+## S120 — a stale generated file, a table from another game, and Python's falsy zero
+
+### A generated file the repo commits must be checked against its generator, not just built
+**Symptom**: the S120 start audit found `patches/bank_060.asm` still the S117 file although
+S119 had re-pinned its template — `patches/bank_004.asm` already far-called bank $60
+entries 9 / 10 that the committed file lacked. The verifier passed (check 2 only asked
+"does it assemble?"), test_compiler passed (it builds from project.json, not from
+`patches/`). **Root cause**: the S119 delivery changed the template and the pin but never
+ran `build_project.py --apply`. **Fix**: regenerated; verify check 2 now requires the
+committed overlay to build to `REFERENCE_MD5`. **Rule**: every committed build artifact
+needs a check that it equals what its generator makes NOW — a check that it merely
+assembles proves nothing; after any template change run `--apply` in the same session.
+
+### Read the font before trusting a text table (no DTE here)
+**Symptom**: TEXT_SYSTEM, `dwm/text.py` and the dialogue dumper decoded `$6D` as "th",
+`$6B` as "n'", `$65` as "ll" — the Dialogue tab showed "Dn'a wanna know…". **Root cause**:
+the "DTE" table was another game's; nobody rendered the glyphs. **Fix**: the font drawn
+(`$4F:$4010 + code×16`) shows one-cell contractions and a quote; usage counts agree ('t
+after "don" 228×); decoders + data fixed. **Rule**: a code → character table is verified by
+drawing the glyphs and by its contexts in the real text, before any tool relies on it.
+
+### Measure what a control code does before naming it
+**Symptom**: docs said `$EB` "indents under *:", `$EC` "inserts an NPC name", `$ED` "a
+monster name", `$EA` "takes 2 parameter bytes". **Root cause**: names guessed from where
+the codes appear. **Fix**: the bank $56 handlers read + the same text under `$EA` / `$EB`
+in PyBoy with a `PlaySoundEffect` hook: identical layout, different blip; `$EC` / `$ED` are
+speed codes that never occur in dialogue. **Rule**: a control code's name comes from its
+handler and a side-by-side run, not from the texts it sits in.
+
+### `0 in (None, False, '')` is True
+**Symptom**: test_app: picking maze row 0 for a gate stored nothing. **Root cause**:
+`set_gate_setting` dropped a key when `v in (None, False, '')` — `0 == False` in Python.
+**Fix**: `v is None or v is False or v == ''`. **Rule**: never test "unset" with `in (None,
+False, …)` when 0 is a legal value; compare with `is`.
+
+### A `raw` string is assembled through the charmap — unknown characters are not errors
+**Symptom**: an S120 probe text "Name:" printed "NameW". **Root cause**: rgbasm passes a
+character the charmap lacks as its ASCII byte (`:` = `$3A` = the glyph W). **Fix**: raw
+strings are validated (charmap characters only); other glyphs go through `boxes` / `lines`
+(hex-emitted) or `["bytes", …]`. **Rule**: any text that reaches `db "…"` must be checked
+against the charmap first — the assembler will not complain.
+
+### An inferred limit is a guess until the game is played to it (S120b)
+**Symptom**: S120 set the hero-name budget to 4 cells from vanilla line widths and the
+4-byte new-game placeholder — "inferred", flagged to the user as an open question; the
+editor's Playback meanwhile put the hero in as "TERRY" in FIVE normal letters (S118),
+another guess. **Measured S120b** (the real Castle naming scene in PyBoy, found by
+searching the scripts for op `$04 15`): the naming screen stops at 4 letters, the offered
+default is the 4 tiles `$D3-$D6`, and accepting it stores them + `$F0` × 4. The tiles
+exist once in the ROM (font `$4F:$4D40`), so "MILLY" is 64 bytes in the overlay, not an
+engine change. **Rule**: when a limit or a stored value is only inferred, find the game's
+own code path that produces it (here: a script search for the op) and play it before
+building on the guess; and grep the ROM for a tile's bytes before assuming it has copies.

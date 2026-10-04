@@ -512,14 +512,14 @@
    "bank": "$42",
    "addr": "$602C",
    "raw": "eb9fa32c6a62335249464cefee2c62513e484262403e4f42faf7efee4c43625145465062433e4f4a5fefeefaf7efee335249464ca32c6245423e4f41efee3e3f4c525162564c5262434f4c4afaf7efee514542622e464b445f373e484262564c524fefee4a4c4b5051424f505ffaf7efee335249464ca33a4249495eefee3e4051523e4949565e622c624c4b4956faf7efee453e5342624c4b42efee4a4c4b5051424f5f5f5ffaf7efee3e4b624c4941624c4b425f5f5fefeefaf7efee335249464ca32c5168623649463f5fefee2c5162543e5062514542faf7efee433e534c4f465142624c43624c524fefee493e5051622e464b445ffaf7efee335249464ca326454c4c5042efee96332c262e6238339762514c62513e4842faf7efee514542624a4c4b5051424f5fefee",
-   "text": "*:I'm Pulio\nI take care\n\nof this farm.\n\nPulio:I heard\nabout you from\n\nthe King.Take your\nmonsters.\n\nPulio:Well,\nactually, I only\n\nhave one\nmonster...\n\nan old one...\n\nPulio:It's Slib.\nIt was the\n\nfavorite of our\nlast King.\n\nPulio:Choose\n{96}PICK UP{97} to take\n\nthe monster."
+   "text": "*:I'm Pulio\nI take care\n\nof this farm.\n\nPulio:I heard\nabout you from\n\nthe King.Take your\nmonsters.\n\nPulio:Well,\nactually, I only\n\nhave one\nmonster...\n\nan old one...\n\nPulio:It's Slib.\nIt was the\n\nfavorite of our\nlast King.\n\nPulio:Choose\n[PICK UP] to take\n\nthe monster."
   },
   {
    "id": "$0040",
    "bank": "$42",
    "addr": "$6159",
    "raw": "eb9fa32c6a623649464c5f622c62efee3e4a6251454262444f3e4b41504c4bfaf7efee4c43622a4f3e4b414d3e623649463f5fefeefaf7efee3649464ca3276b3e62543e4b4b3eefee484b4c54623e3f4c525162514542faf7efee433e4f4a64efeeff",
-   "text": "*:I'm Slio. I\nam the grandson\n\nof Grandpa Slib.\n\nSlio:Dn'a wanna\nknow about the\n\nfarm?\n [YES/NO]"
+   "text": "*:I'm Slio. I\nam the grandson\n\nof Grandpa Slib.\n\nSlio:D'ya wanna\nknow about the\n\nfarm?\n [YES/NO]"
   },
   {
    "id": "$0041",
@@ -540,7 +540,7 @@
    "bank": "$42",
    "addr": "$6466",
    "raw": "eb3649464ca3276b3e62543e4b4b3eefee484b4c54623e3f4c525162514542faf7efee433e4f4a64efeeff",
-   "text": "Slio:Dn'a wanna\nknow about the\n\nfarm?\n [YES/NO]"
+   "text": "Slio:D'ya wanna\nknow about the\n\nfarm?\n [YES/NO]"
   },
   {
    "id": "$0044",
@@ -701,7 +701,7 @@
    "bank": "$42",
    "addr": "$70BB",
    "raw": "ea2e464b44a332455e62f663efee27464162564c52623f4f464b44faf7efee3f3e4048622b3e49426364efeefaf7efee2e464b44a33a453e5164622b3e4942efee503e464162454262414c42504b67faf7efee543e4b5162514c62404c4a42efee3f3e404862514c624a4264faf7efee2e464b44a35f5f255251624542efee503e464162454262544c524941faf7efee4f3e5145424f62474c464b62564c5264efeefaf7efee2e464b44a32b4a4a5f5f622c625042425f5fefeefaf7efee2e464b44a32b4a4aa4623c4c52efee50524f42623e4f4262444c4c41faf7efee54465145624a4c4b5051424f505fefee3a42494962414c4b4263faf7efee2e464b44a32c6a624d49423e504241efee5446514562564c524ffaf7efee4d424f434c4f4a3e4b404263efee2c62544649496249425162335249464cfaf7efee444c63efeef7",
-   "text": "King:Oh, [HERO]!\nDid you bring\n\nback Hale!?\n\nKing:What? Hale\nsaid he doesn't\n\nwant to come\nback to me?\n\nKing:..But he\nsaid he would\n\nrather join you?\n\nKing:Hmm.. I see..\n\nKing:Hmm{A4} You\nsure are good\n\nwith monsters.\nWell done!\n\nKing:I'm pleased\nwith your\n\nperformance!\nI will let Pulio\n\ngo!"
+   "text": "King:Oh, [HERO]!\nDid you bring\n\nback Hale!?\n\nKing:What? Hale\nsaid he doesn't\n\nwant to come\nback to me?\n\nKing:..But he\nsaid he would\n\nrather join you?\n\nKing:Hmm.. I see..\n\nKing:Hmm… You\nsure are good\n\nwith monsters.\nWell done!\n\nKing:I'm pleased\nwith your\n\nperformance!\nI will let Pulio\n\ngo!"
   },
   {
    "id": "$005B",
@@ -799,14 +799,14 @@
    "bank": "$42",
    "addr": "$78FC",
    "raw": "ea9fa3304c4b5051424f5062453e5342efee4d424f504c4b3e49465146425062514c4c5ffaf7efee9fa327424d424b41464b44624c4b62514542efee332f2431625250424162464bfaf7efee3f3e51514942505e514542464fefee4d424f504c4b3e494651464250faf7efee40453e4b44425fefeefaf7efee9fa33a45424b6296262b24352a2897efee46506240454c50424b5efaf7efee51454256623f42404c4a42623f4f3e5342efee4a4c4b5051424f505f5f5ffaf7efee9fa33a45424b6296302c3b282797efee46506240454c50424b5efaf7efee51454256623f42404c4a42efee51454c524445514352495f5f5ffaf7efee9fa33e4b41625445424befee96262438372c32383697624650faf7efee40454c50424b6251454256623f42404c4a42efee404c4b504641424f3e51425ff7",
-   "text": "*:Monsters have\npersonalities too.\n\n*:Depending on the\nPLAN used in\n\nbattles,their\npersonalities\n\nchange.\n\n*:When {96}CHARGE{97}\nis chosen,\n\nthey become brave\nmonsters...\n\n*:When {96}MIXED{97}\nis chosen,\n\nthey become\nthoughtful...\n\n*:and when\n{96}CAUTIOUS{97} is\n\nchosen they become\nconsiderate."
+   "text": "*:Monsters have\npersonalities too.\n\n*:Depending on the\nPLAN used in\n\nbattles,their\npersonalities\n\nchange.\n\n*:When [CHARGE]\nis chosen,\n\nthey become brave\nmonsters...\n\n*:When [MIXED]\nis chosen,\n\nthey become\nthoughtful...\n\n*:and when\n[CAUTIOUS] is\n\nchosen they become\nconsiderate."
   },
   {
    "id": "$0069",
    "bank": "$42",
    "addr": "$7A31",
    "raw": "ea9fa32b425662303e5051424f6362276b3eefee453e5342623e4b6242444464ff",
-   "text": "*:Hey Master! Dn'a\nhave an egg? [YES/NO]"
+   "text": "*:Hey Master! D'ya\nhave an egg? [YES/NO]"
   },
   {
    "id": "$006A",
@@ -890,7 +890,7 @@
    "bank": "$1A",
    "addr": "$4362",
    "raw": "ea9fa3324b4262413e565e622c6defee4946484262514c623f42404c4a42faf7efee3e624a4c4b5051424f5f5f5fefee54454c624d4f4c5142405150faf7efee3e4b41623e505046505150624c5145424f50efee464b623f3e5151494250623e4b415f5f5ffaf7efee9fa33e51513e40485062424b424a464250efee3e516251454262503e4a426251464a425ff7",
-   "text": "*:One day, Ith\nlike to become\n\na monster...\nwho protects\n\nand assists others\nin battles and...\n\n*:attacks enemies\nat the same time."
+   "text": "*:One day, I'd\nlike to become\n\na monster...\nwho protects\n\nand assists others\nin battles and...\n\n*:attacks enemies\nat the same time."
   },
   {
    "id": "$0076",
@@ -1730,7 +1730,7 @@
    "bank": "$43",
    "addr": "$47A4",
    "raw": "ea9fa32b5f5f5f2b4249494c63efee2c6a62375f5f375f5f3742514c5ffaf7efee9fa32c6a624b424f534c5250efee6f3e52504262514542623f3e51514942faf7efee50513e4f515062504c4c4b63efeefaf7efee9fa3244f4262564c52623e624b4254efee4a4c4b5051424f624a3e5051424ffaf7efee514c4c64efeefaf7efee9fa33c4c5262403e4b6249423e4f4befee52504243524962464b434c4f4a3e51464c4bfaf7efee4c5251623f3e404863efeef7",
-   "text": "*:H...Hello!\nI'm T..T..Teto.\n\n*:I'm nervous\nbeause the battle\n\nstarts soon!\n\n*:Are you a new\nmonster master\n\ntoo?\n\n*:You can learn\nuseful information\n\nout back!"
+   "text": "*:H...Hello!\nI'm T..T..Teto.\n\n*:I'm nervous\n'cause the battle\n\nstarts soon!\n\n*:Are you a new\nmonster master\n\ntoo?\n\n*:You can learn\nuseful information\n\nout back!"
   },
   {
    "id": "$00EE",
@@ -1863,7 +1863,7 @@
    "bank": "$43",
    "addr": "$4DEC",
    "raw": "f662494c4c48424162464b514cefee51454262473e4f5ffaf7efee244b624c494162493e415668efee4b4c51423f4c4c48624650625145424f425ffaf7efee65284152403e51464c4b3e49efee2a5246414265faf7efee35423e4162465164efeeff",
-   "text": "[HERO] looked into\nthe jar.\n\nAn old lady's\nnotebook is there.\n\nllEducational\nGuidell\n\nRead it?\n [YES/NO]"
+   "text": "[HERO] looked into\nthe jar.\n\nAn old lady's\nnotebook is there.\n\n\"Educational\nGuide\"\n\nRead it?\n [YES/NO]"
   },
   {
    "id": "$0101",
@@ -1940,7 +1940,7 @@
    "bank": "$43",
    "addr": "$5234",
    "raw": "ea9fa337454650624650623e4befee654c4b4644464f46655f62266a4c4bfaf7efee254225425e624f424d423e51efee3e4351424f624a4263f7",
-   "text": "*:This is an\nllonigirill. C'mon\n\nBeBe, repeat\nafter me!"
+   "text": "*:This is an\n\"onigiri\". C'mon\n\nBeBe, repeat\nafter me!"
   },
   {
    "id": "$010C",
@@ -2220,7 +2220,7 @@
    "bank": "$43",
    "addr": "$631C",
    "raw": "374542622a3e51426246506250455251efee51464445515ffaf7efee364c4a425145464b4468efee424b444f3e534241624c4b62514542faf7efee2a3e51425fefeefaf7efee65354c4c4a624c436236514f424b445145efeeb662244b44424f65f7",
-   "text": "The Gate is shut\ntight.\n\nSomething's\nengraved on the\n\nGate.\n\nllRoom of Strength\n& Angerll"
+   "text": "The Gate is shut\ntight.\n\nSomething's\nengraved on the\n\nGate.\n\n\"Room of Strength\n& Anger\""
   },
   {
    "id": "$0134",
@@ -3263,7 +3263,7 @@
    "bank": "$44",
    "addr": "$6413",
    "raw": "eb9fa3324563623a453e51623e6240525142efee4a4c4b5051424f624a3e5051424ffaf7efee564c52623e4f4263efeefaf7efee9fa33a453e516862564c524fefee4b3e4a4264faf7efeef65f5f5fefeefaf7efee364c62564c52694262494651514942efeef65ffaf7efee9fa32c623e4a623e4b62424444efee404c4b505249513e4b515ffaf7efee3146404262514c624a42425162564c5263efeefaf7efee9fa32c6649626542533e49523e514265efee564c524f62424444623e51624a56faf7efee4d493e40425fefeefaf7efee9fa3244b41622c62403e4b6243464b41efee4c525162434c4f62564c526254453e51faf7efee48464b41624c43623f3e3f5662465062464befee564c524f624244445063faf7efee9fa33056624c5145424f62474c3fefee465062653f49425050464b44655ffaf7efee9fa32549425050464b446240453e4b444250efee5145426244424b41424f624c43faf7efee4a4c4b5051424f5063efeefaf7efee9fa32a4c5162465164622b4c5462403e4befee2c624542494d62564c5264f7",
-   "text": "*:Oh! What a cute\nmonster master\n\nyou are!\n\n*:What's your\nname?\n\n[HERO]...\n\nSo you're little\n[HERO].\n\n*:I am an egg\nconsultant.\n\nNice to meet you!\n\n*:I'll llevaluatell\nyour egg at my\n\nplace.\n\n*:And I can find\nout for you what\n\nkind of baby is in\nyour eggs!\n\n*:My other job\nis llblessingll.\n\n*:Blessing changes\nthe gender of\n\nmonsters!\n\n*:Got it? How can\nI help you?"
+   "text": "*:Oh! What a cute\nmonster master\n\nyou are!\n\n*:What's your\nname?\n\n[HERO]...\n\nSo you're little\n[HERO].\n\n*:I am an egg\nconsultant.\n\nNice to meet you!\n\n*:I'll \"evaluate\"\nyour egg at my\n\nplace.\n\n*:And I can find\nout for you what\n\nkind of baby is in\nyour eggs!\n\n*:My other job\nis \"blessing\".\n\n*:Blessing changes\nthe gender of\n\nmonsters!\n\n*:Got it? How can\nI help you?"
   },
   {
    "id": "$01C9",
@@ -3774,7 +3774,7 @@
    "bank": "$1B",
    "addr": "$487C",
    "raw": "ea9fa32c6c426249465342416245424f42efee3e62494c4b446251464a425ffaf7efee9fa3364c622c62484b4c54efee4253424f565145464b445ffaf7efee294c4f6242553e4a4d49425eefeefaf7efee9fa3304c4b5051424f506254465145efee493e4f44424f62a2624b524a3f424f50faf7efee3e4141424162514c62514542464fefee4b3e4a42505efaf7efee9fa3444f4c5462514c623f42efee50514f4c4b44424f6251453e4bfaf7efee4a4c4b5051424f50624c4362514542efee503e4a426251564d426254465145faf7efee494c54424f62a2624b524a3f424f505fefeef7",
-   "text": "*:I've lived here\na long time.\n\n*:So I know\neverything.\n\nFor example,\n\n*:Monsters with\nlarger {A2} numbers\n\nadded to their\nnames,\n\n*:grow to be\nstronger than\n\nmonsters of the\nsame type with\n\nlower {A2} numbers."
+   "text": "*:I've lived here\na long time.\n\n*:So I know\neverything.\n\nFor example,\n\n*:Monsters with\nlarger + numbers\n\nadded to their\nnames,\n\n*:grow to be\nstronger than\n\nmonsters of the\nsame type with\n\nlower + numbers."
   },
   {
    "id": "$0212",
@@ -4173,7 +4173,7 @@
    "bank": "$45",
    "addr": "$4490",
    "raw": "ea9fa336464b404262f6efee544c4ba4faf7efee9fa3265250514c4a424f5062453e5342efee43494c4c414241624c524f6250514c4f4263faf7efee9fa32c5168623e49496251453e4b4850efee514c62f668faf7efee534640514c4f5663efeefaf7efee9fa3364c5e6254453e5162403e4b622cefee414c62434c4f62564c5262514c413e5664",
-   "text": "*:Since [HERO]\nwon{A4}\n\n*:Customers have\nflooded our store!\n\n*:It's all thanks\nto [HERO]'s\n\nvictory!\n\n*:So, what can I\ndo for you today?"
+   "text": "*:Since [HERO]\nwon…\n\n*:Customers have\nflooded our store!\n\n*:It's all thanks\nto [HERO]'s\n\nvictory!\n\n*:So, what can I\ndo for you today?"
   },
   {
    "id": "$024B",
@@ -4194,7 +4194,7 @@
    "bank": "$45",
    "addr": "$4625",
    "raw": "ea9fa32c4362564c526c4262444c51efee4a4c4b425662564c526250454c524941faf7efee444251623e6236464f494c464b63efeefaf7efee9fa324494a4c5051623e494962514542efee4a4c4b5051424f506254464949faf7efee3f42404c4a4262564c524f624d3e495f5f5fefeefaf7efee9fa3464362564c5262444653426e4aefee36464f494c464b62046251464a42505ff7",
-   "text": "*:If you've got\nmoney you should\n\nget a Sirloin!\n\n*:Almost all the\nmonsters will\n\nbecome your pal...\n\n*:if you givehem\nSirloin 4 times."
+   "text": "*:If you've got\nmoney you should\n\nget a Sirloin!\n\n*:Almost all the\nmonsters will\n\nbecome your pal...\n\n*:if you give'em\nSirloin 4 times."
   },
   {
    "id": "$024E",
@@ -4523,7 +4523,7 @@
    "bank": "$45",
    "addr": "$59A0",
    "raw": "ea9fa32a4c62514c6251454262354c4c4aefee4c436236514f424b44514562b6faf7efee244b44424f62464b62514542efee26453e4a3f424f624c43faf7efee374f3e534249424f505c622a3e51425063efeefaf7efee9fa371464949625145424b5e62564c52efee403e4b6762434644455162464b62514542faf7efee3e4f424b3e6362374542622e464b44efee404c4a4a3e4b41424162564c5263faf7efee9fa33c4c52623e4f42624c524fefee4c4b495662454c4d426362274c4b67faf7efee4146503e4d4d4c464b516252505fefeef7",
-   "text": "*:Go to the Room\nof Strength &\n\nAnger in the\nChamber of\n\nTravelers' Gates!\n\n*:anill then, you\ncan't fight in the\n\narena! The King\ncommanded you!\n\n*:You are our\nonly hope! Don't\n\ndisappoint us."
+   "text": "*:Go to the Room\nof Strength &\n\nAnger in the\nChamber of\n\nTravelers' Gates!\n\n*:'Till then, you\ncan't fight in the\n\narena! The King\ncommanded you!\n\n*:You are our\nonly hope! Don't\n\ndisappoint us."
   },
   {
    "id": "$027D",
@@ -4544,7 +4544,7 @@
    "bank": "$45",
    "addr": "$5B87",
    "raw": "ea9fa3a42c6245423e4f4162465168623eefee48464b44414c4a624c4362274253464950faf7efee4c5251625145424f425fefeefaf7efee9fa3244b41625145426244523e4f41463e4befee5250424162514c623f42623efaf7efee45524a3e4b63efeefaf7efee9fa33a3e4b5162514c6245423e4fefee3e3f4c525162514542622a3e5142faf7efee4c4362364942424d464b4464efeeff",
-   "text": "*:{A4}I heard it's a\nkingdom of Devils\n\nout there.\n\n*:And the guardian\nused to be a\n\nhuman!\n\n*:Want to hear\nabout the Gate\n\nof Sleeping?\n [YES/NO]"
+   "text": "*:…I heard it's a\nkingdom of Devils\n\nout there.\n\n*:And the guardian\nused to be a\n\nhuman!\n\n*:Want to hear\nabout the Gate\n\nof Sleeping?\n [YES/NO]"
   },
   {
    "id": "$0280",
@@ -4572,7 +4572,7 @@
    "bank": "$45",
    "addr": "$5D31",
    "raw": "ea9fa3a42c6245423e4f41624651624650efee4c53424f4f524b6254465145faf7efee3d4c4a3f464250625145424f4263efeefaf7efee9fa33745426244523e4f41463e4befee5145424f4262453e50623f42424bfaf7efee504942424d464b4462434c4f623e4442505fefeef7",
-   "text": "*:{A4}I heard it is\noverrun with\n\nZombies there!\n\n*:The guardian\nthere has been\n\nsleeping for ages."
+   "text": "*:…I heard it is\noverrun with\n\nZombies there!\n\n*:The guardian\nthere has been\n\nsleeping for ages."
   },
   {
    "id": "$0284",
@@ -4614,7 +4614,7 @@
    "bank": "$45",
    "addr": "$60F3",
    "raw": "ea9fa3a42c6245423e4f41625145424f42efee3e4f42624a4c4b5051424f5062464bfaf7efee5145426225464f4162433e4a464956efee404f4c5441424162464b625145424f425ffaf7efee9fa32462444f423e516242534649efee494c4f41625042424a5062514cfaf7efee3f42625145426244523e4f41463e4befee5145424f425ff7",
-   "text": "*:{A4}I heard there\nare monsters in\n\nthe Bird family\ncrowded in there.\n\n*:A great evil\nlord seems to\n\nbe the guardian\nthere."
+   "text": "*:…I heard there\nare monsters in\n\nthe Bird family\ncrowded in there.\n\n*:A great evil\nlord seems to\n\nbe the guardian\nthere."
   },
   {
    "id": "$028A",
@@ -4677,7 +4677,7 @@
    "bank": "$45",
    "addr": "$652B",
    "raw": "ea9fa3a462a4efeef7",
-   "text": "*:{A4} {A4}"
+   "text": "*:… …"
   },
   {
    "id": "$0293",
@@ -4705,16 +4705,14 @@
    "bank": "$45",
    "addr": "$65EA",
    "raw": "ea9fa3a462a462a4efeef7",
-   "text": "*:{A4} {A4} {A4}",
-   "suspect": true
+   "text": "*:… … …"
   },
   {
    "id": "$0297",
    "bank": "$45",
    "addr": "$65F6",
    "raw": "ea9fa3a462a462a4efeef7",
-   "text": "*:{A4} {A4} {A4}",
-   "suspect": true
+   "text": "*:… … …"
   },
   {
    "id": "$0298",
@@ -5183,7 +5181,7 @@
    "bank": "$1F",
    "addr": "$4A66",
    "raw": "eb9fa32742504d465142624a5662494c4c4850efee2c62453e5342623e6245464445faf7efee444f4c5451456249464a46515fefeefaf7efee9fa32c625145464b4862465150efee3f42403e525042622c62453e534262a205faf7efee3f56624a56624b3e4a4263efeefaf7efee9fa32c62453e5342624b4c624641423eefee54453e51624651624f423e494956faf7efee4a423e4b506251454c52444563efeef7",
-   "text": "*:Despite my looks\nI have a high\n\ngrowth limit.\n\n*:I think its\nbecause I have {A2}5\n\nby my name!\n\n*:I have no idea\nwhat it really\n\nmeans though!"
+   "text": "*:Despite my looks\nI have a high\n\ngrowth limit.\n\n*:I think its\nbecause I have +5\n\nby my name!\n\n*:I have no idea\nwhat it really\n\nmeans though!"
   },
   {
    "id": "$02DB",
@@ -6261,7 +6259,7 @@
    "bank": "$46",
    "addr": "$6FAF",
    "raw": "eb9fa3374546506248464b44414c4aefee4650623f42404c4a464b44faf7efee4a4c4f42624946534249565fefeefaf7efee9fa32c624146414b6762484b4c54efee46516d624442516251454650faf7efee3f52505662434c4f62514542efee514c524f4b3e4a424b515ff7",
-   "text": "*:This kingdom\nis becoming\n\nmore lively.\n\n*:I didn't know\nitth get this\n\nbusy for the\ntournament."
+   "text": "*:This kingdom\nis becoming\n\nmore lively.\n\n*:I didn't know\nit'd get this\n\nbusy for the\ntournament."
   },
   {
    "id": "$0375",
@@ -6681,7 +6679,7 @@
    "bank": "$1B",
    "addr": "$672C",
    "raw": "ea9fa33a4262443e5145424f6245423e4fefee50424248464b4462534640514c4f565ffaf7efee9fa33a45424b62564c52623f4f4242415eefee3e624b524a3f424f624946484262a201faf7efee4650623e51513e4045424162514c623eefee4a4c4b5051424f5ffaf7efee9fa3374542623f464444424f62514542efee4b524a3f424f624b42555162514c62a2faf7efee51454262444f423e51424f5f5f5fefeefaf7efee9fa351454262403e4d3e3f4649465156efee514c62464b404f423e504262494253424950faf7efee3e4b41623e41416250514f424b4451455fefeef7",
-   "text": "*:We gather hear\nseeking victory.\n\n*:When you breed,\na number like {A2}1\n\nis attached to a\nmonster.\n\n*:The bigger the\nnumber next to {A2}\n\nthe greater...\n\n*:the capability\nto increase levels\n\nand add strength."
+   "text": "*:We gather hear\nseeking victory.\n\n*:When you breed,\na number like +1\n\nis attached to a\nmonster.\n\n*:The bigger the\nnumber next to +\n\nthe greater...\n\n*:the capability\nto increase levels\n\nand add strength."
   },
   {
    "id": "$03B1",
@@ -7885,7 +7883,7 @@
    "bank": "$21",
    "addr": "$6D68",
    "raw": "ea9fa33a42623e494962443e5145424fefee45424f426250424248464b44faf7efee534640514c4f565fefeefaf7efee9fa3245162493e505162564c52efee3f42403e4a4262514542624f424d5ffaf7efee264c4b444f3e5152493e51464c4b505fefeefaf7efee9fa33c4c526c42624c4b4956efee3f3e51514942416254465145464bfaf7efee2a4f423e51374f42425fefeefaf7efee9fa33c4c5262414c4b6762484b4c54efee5145426250514f424b445145624c43faf7efee434c4f4246444b624a3e5051424f505f5f5fefeefaf7efee9fa33c4c526d623f425151424fefee50513e56624c4b62564c524f62514c425063f7",
-   "text": "*:We all gather\nhere seeking\n\nvictory.\n\n*:At last you\nbecame the rep.\n\nCongratulations.\n\n*:You've only\nbattled within\n\nGreatTree.\n\n*:You don't know\nthe strength of\n\nforeign masters...\n\n*:Youth better\nstay on your toes!"
+   "text": "*:We all gather\nhere seeking\n\nvictory.\n\n*:At last you\nbecame the rep.\n\nCongratulations.\n\n*:You've only\nbattled within\n\nGreatTree.\n\n*:You don't know\nthe strength of\n\nforeign masters...\n\n*:You'd better\nstay on your toes!"
   },
   {
    "id": "$045D",
@@ -8970,7 +8968,7 @@
    "bank": "$1F",
    "addr": "$6ED6",
    "raw": "eb9fa33c4c526241464162465163efeef66363faf7efee9fa32c62484b425462564c526defee54464b5e62f663f7",
-   "text": "*:You did it!\n[HERO]!!\n\n*:I knew youth\nwin, [HERO]!"
+   "text": "*:You did it!\n[HERO]!!\n\n*:I knew you'd\nwin, [HERO]!"
   },
   {
    "id": "$04F8",
@@ -9502,7 +9500,7 @@
    "bank": "$49",
    "addr": "$4DA0",
    "raw": "ea9fa3264c4a4f3e414263efee314c54624650625145426251464a42faf7efee434c4f62525062514c62524b4651425f5f5fefeefaf7efee9fa3a43e4b41624c4d424b62514542efee2a3e514262514c62514542624b4254faf7efee3e444263efeefaf7efee9fa33c425063622462544c4f4941efee434c4f624a4c4b5051424f505e624c43faf7efee4a4c4b5051424f505e623e4b41623f56efee4a4c4b5051424f505f5f5ff7",
-   "text": "*:Comrade!\nNow is the time\n\nfor us to unite...\n\n*:{A4}and open the\nGate to the new\n\nage!\n\n*:Yes! A world\nfor monsters, of\n\nmonsters, and by\nmonsters..."
+   "text": "*:Comrade!\nNow is the time\n\nfor us to unite...\n\n*:…and open the\nGate to the new\n\nage!\n\n*:Yes! A world\nfor monsters, of\n\nmonsters, and by\nmonsters..."
   },
   {
    "id": "$0544",
@@ -9544,7 +9542,7 @@
    "bank": "$49",
    "addr": "$5038",
    "raw": "ea9fa32b424262454242624542425fefee25524f4b6e4a623f524f4b5c424afaf7efee3e494963efeefaf7efee9fa32a4c623f524f4b625145424aefee4e5246404863f7",
-   "text": "*:Hee hee hee.\nBurnhem burn'em\n\nall!\n\n*:Go burn them\nquick!"
+   "text": "*:Hee hee hee.\nBurn'em burn'em\n\nall!\n\n*:Go burn them\nquick!"
   },
   {
    "id": "$054A",
@@ -9894,7 +9892,7 @@
    "bank": "$49",
    "addr": "$61C9",
    "raw": "ea9fa33a4249404c4a4262f663efeefaf7efee9fa32c6a62514542622e464b44efee4c43622e464b44505efaf7efee274f3e404c2f4c4f4163efeefaf7efee274f3e404c2f4c4f41a32c62453e5342efee3f42424b62543e4651464b44a4faf7efee274f3e404c2f4c4f41a3a4434c4f623eefee564c525145624946484262564c5262514cfaf7efee50454c5462524d5f62efeefaf7efee274f3e404c2f4c4f41a32c4362564c52efee54464949623f42404c4a42624a5662faf7efee4d3e495eefeefaf7efee274f3e404c2f4c4f41a32c6254464949efee4446534262564c525e62f6faf7efee453e4943624c436251454262544c4f49415fefeefaf7efee274f3e404c2f4c4f41a33a453e51efee414c62564c5262503e5664faf7efee3a46494962564c52623f42624a56efee4d3e4964ff",
-   "text": "*:Welcome [HERO]!\n\n*:I'm the King\nof Kings,\n\nDracoLord!\n\nDracoLord:I have\nbeen waiting{A4}\n\nDracoLord:{A4}for a\nyouth like you to\n\nshow up.\n\nDracoLord:If you\nwill become my\n\npal,\n\nDracoLord:I will\ngive you, [HERO]\n\nhalf of the world.\n\nDracoLord:What\ndo you say?\n\nWill you be my\npal? [YES/NO]"
+   "text": "*:Welcome [HERO]!\n\n*:I'm the King\nof Kings,\n\nDracoLord!\n\nDracoLord:I have\nbeen waiting…\n\nDracoLord:…for a\nyouth like you to\n\nshow up.\n\nDracoLord:If you\nwill become my\n\npal,\n\nDracoLord:I will\ngive you, [HERO]\n\nhalf of the world.\n\nDracoLord:What\ndo you say?\n\nWill you be my\npal? [YES/NO]"
   },
   {
    "id": "$057C",
@@ -10013,7 +10011,7 @@
    "bank": "$49",
    "addr": "$69E2",
    "raw": "ea9fa3245162493e505162564c5262403e4a42efee45424f425e624d3e51454251464062faf7efee5145464b4463efeefaf7efee9fa32b4c5462413e4f4262564c52efee434c4f44425162564c524f62faf7efee50513e5152505eefeefaf7efee9fa33e4b41624146504c3f425662514542efee444f423e5162494c4f41624c4362faf7efee425346495e62253e4f3e4a4c505fefeefaf7efee253e4f3e4a4c50a33c4c526254464949efee4f42444f42516251453e5162564c5262faf7efee403e4a426245424f425fefeefaf7efee253e4f3e4a4c50a32c625446494962efee423e5162564c524f6244525150a4faf7efee253e4f3e4a4c50a3504c62564c52efee403e4b67623f42623f4f4c52444551faf7efee3f3e404862514c6249464342624253424fefee3e443e464b63f7",
-   "text": "*:At last you came\nhere, pathetic\n\nthing!\n\n*:How dare you\nforget your\n\nstatus,\n\n*:and disobey the\ngreat lord of\n\nevil, Baramos.\n\nBaramos:You will\nregret that you\n\ncame here.\n\nBaramos:I will\neat your guts{A4}\n\nBaramos:so you\ncan't be brought\n\nback to life ever\nagain!"
+   "text": "*:At last you came\nhere, pathetic\n\nthing!\n\n*:How dare you\nforget your\n\nstatus,\n\n*:and disobey the\ngreat lord of\n\nevil, Baramos.\n\nBaramos:You will\nregret that you\n\ncame here.\n\nBaramos:I will\neat your guts…\n\nBaramos:so you\ncan't be brought\n\nback to life ever\nagain!"
   },
   {
    "id": "$058D",
@@ -10076,7 +10074,7 @@
    "bank": "$49",
    "addr": "$70C7",
    "raw": "ea334657573e4f4ca32a54544f4f4f63efee3542444f42516250454c54464b44faf7efee564c524f50424943a4efeefaf7efee334657573e4f4ca3a43f42434c4f42efee4a4263f7",
-   "text": "Pizzaro:Gwwrrr!\nRegret showing\n\nyourself{A4}\n\nPizzaro:{A4}before\nme!"
+   "text": "Pizzaro:Gwwrrr!\nRegret showing\n\nyourself…\n\nPizzaro:…before\nme!"
   },
   {
    "id": "$0596",
@@ -10300,7 +10298,7 @@
    "bank": "$18",
    "addr": "$5C31",
    "raw": "ea9fa332455e62f663efee3a4249404c4a42623f3e40486363faf7efee9fa32c623f4249464253424162efee564c526d624f4251524f4b5ffaf7efee9fa32853424f563f4c4156624a4650504241efee564c5262544546494262564c526254424f42faf7efee3e543e5663efeefaf7efee9fa3374542622e464b44624a4650504241efee564c526253424f56624a5240455ffaf7efee9fa32a4c6250424262514542622e464b4463efeef7",
-   "text": "*:Oh, [HERO]!\nWelcome back!!\n\n*:I believed\nyouth return.\n\n*:Everybody missed\nyou while you were\n\naway!\n\n*:The King missed\nyou very much.\n\n*:Go see the King!"
+   "text": "*:Oh, [HERO]!\nWelcome back!!\n\n*:I believed\nyou'd return.\n\n*:Everybody missed\nyou while you were\n\naway!\n\n*:The King missed\nyou very much.\n\n*:Go see the King!"
   },
   {
    "id": "$05B6",
@@ -10384,7 +10382,7 @@
    "bank": "$18",
    "addr": "$63A7",
    "raw": "eb9fa32f4c4b4462494c4b44623e444c5f5fefee244b623e4b404250514c4f624c43faf7efee3a3e513e3f4c5262494c40484241efee4a4c4b5051424f505f5f5ffaf7efee9fa33f4245464b4162514542efee374f3e534249424f505c622a3e514250faf7efee3f42403e52504262514542566254424f42efee3e623f3e4b4262514c6245524a3e4b505ffaf7efee9fa332524f50623e4b404250514c4f5062efee41424a3e4b414241625442a4faf7efee9fa3a4454c4941623e62efee514c524f4b3e4a424b51624253424f56faf7efee36513e4f4f5662314644455163efeefaf7efee9fa3244351424f624a3e4b5662efee40424b51524f4642505e62faf7efeef662543e5062efee534640514c4f464c525063f7",
-   "text": "*:Long long ago..\nAn ancestor of\n\nWatabou locked\nmonsters...\n\n*:behind the\nTravelers' Gates\n\nbecause they were\na bane to humans.\n\n*:Ours ancestors\ndemanded we{A4}\n\n*:{A4}hold a\ntournament every\n\nStarry Night!\n\n*:After many\ncenturies,\n\n[HERO] was\nvictorious!"
+   "text": "*:Long long ago..\nAn ancestor of\n\nWatabou locked\nmonsters...\n\n*:behind the\nTravelers' Gates\n\nbecause they were\na bane to humans.\n\n*:Ours ancestors\ndemanded we…\n\n*:…hold a\ntournament every\n\nStarry Night!\n\n*:After many\ncenturies,\n\n[HERO] was\nvictorious!"
   },
   {
    "id": "$05C2",
@@ -12474,7 +12472,7 @@
    "bank": "$4A",
    "addr": "$684C",
    "raw": "eb335249464ca3364249424051efee96332c262e6238339762514c62513e4842faf7efee514542624a4c4b5051424f6254465145efee564c525f",
-   "text": "Pulio:Select\n{96}PICK UP{97} to take\n\nthe monster with\nyou."
+   "text": "Pulio:Select\n[PICK UP] to take\n\nthe monster with\nyou."
   },
   {
    "id": "$06E2",
@@ -13018,7 +13016,7 @@
    "bank": "$22",
    "addr": "$48FF",
    "raw": "ea9fa3f65e62564c52efee3f4f4c52444551623e62514c513e49624c43faf7efeef900624a42413e49a050a15fefeefaf7efee9fa32c6649624446534262564c526201efeef92062424444faf7efee5445424b62514542624a42413e4950efee42554042424162f91063f7",
-   "text": "*:[HERO], you\nbrought a total of\n\n[INS 00] medal{A0}s{A1}.\n\n*:I'll give you 1\n[INS 20] egg\n\nwhen the medals\nexceed [INS 10]!"
+   "text": "*:[HERO], you\nbrought a total of\n\n[INS 00] medal(s).\n\n*:I'll give you 1\n[INS 20] egg\n\nwhen the medals\nexceed [INS 10]!"
   },
   {
    "id": "$072D",
@@ -13046,7 +13044,7 @@
    "bank": "$22",
    "addr": "$4A15",
    "raw": "ea9fa324455e62564c52623f4f4c52444551efeef900624a42413e49a050a163faf7efee9fa33c4c52623e4f42623e4051523e494956efee4b4c51623e623f3e41624d424f504c4bfaf7efee3e4351424f623e49495fefeefaf7",
-   "text": "*:Ah, you brought\n[INS 00] medal{A0}s{A1}!\n\n*:You are actually\nnot a bad person\n\nafter all."
+   "text": "*:Ah, you brought\n[INS 00] medal(s)!\n\n*:You are actually\nnot a bad person\n\nafter all."
   },
   {
    "id": "$0731",
@@ -13935,7 +13933,7 @@
    "bank": "$22",
    "addr": "$5E2B",
    "raw": "ea9fa3f65eefee404c4b444f3e5152493e51464c4b50faf7efee4c4b62564c524f62534640514c4f565fefeefaf7efee9fa32c5f5f5f2c623e4a62504c5f5f5fefee9f504b46434349429f62453e4d4d565f5f5ffaf7efee504c5f5f5f62453e4d4d5662543e3e3eefee543e3e3e3e3e3e63faf7efee9fa32c5f5f5f2c6245423e4f416251453e51efee5145424f426942624a4c4b5051424f50faf7efee51453e5162425546505162464b6251454650efee544c4f49416251453e5162414c624b4c51faf7efee3f42494c4b4462514c623e4b56efee433e4a4649565ffaf7efee9fa33745425669426253424f56efee50514f4c4b4462b6624253424b624643faf7efee564c52623f423e516e4a5e6251454256efee544c4b67623f42404c4a4262564c524ffaf7efee4d3e49505fefeefaf7efee9fa32552516251454256694262504cefee50514f4c4b446251453e5162564c526dfaf7efee414c623e4b565145464b4462514cefee4a3e48426e4a62564c524f624d3e495063f7",
-   "text": "*:[HERO],\ncongratulations\n\non your victory.\n\n*:I...I am so...\n*sniffle* happy...\n\nso... happy waaa\nwaaaaaa!\n\n*:I...I heard that\nthere're monsters\n\nthat exist in this\nworld that do not\n\nbelong to any\nfamily.\n\n*:They're very\nstrong & even if\n\nyou beathem, they\nwon't become your\n\npals.\n\n*:But they're so\nstrong that youth\n\ndo anything to\nmakehem your pals!"
+   "text": "*:[HERO],\ncongratulations\n\non your victory.\n\n*:I...I am so...\n*sniffle* happy...\n\nso... happy waaa\nwaaaaaa!\n\n*:I...I heard that\nthere're monsters\n\nthat exist in this\nworld that do not\n\nbelong to any\nfamily.\n\n*:They're very\nstrong & even if\n\nyou beat'em, they\nwon't become your\n\npals.\n\n*:But they're so\nstrong that you'd\n\ndo anything to\nmake'em your pals!"
   },
   {
    "id": "$07A8",
@@ -14026,7 +14024,7 @@
    "bank": "$22",
    "addr": "$65C5",
    "raw": "ea9fa33c4c526942623e5162514542efee4a4c4b5051424f62433e4f4a5efaf7efee253e4c4c4a5fefeefaf7efee9fa32853424f563f4c4156686243464b42efee6f3e525042624c4362514542faf7efee36513e4f4f56623146444551efee253e4c4c4a5ff7",
-   "text": "*:You're at the\nmonster farm,\n\nBaoom.\n\n*:Everybody's fine\nbeause of the\n\nStarry Night\nBaoom."
+   "text": "*:You're at the\nmonster farm,\n\nBaoom.\n\n*:Everybody's fine\n'cause of the\n\nStarry Night\nBaoom."
   },
   {
    "id": "$07B5",
@@ -14124,7 +14122,7 @@
    "bank": "$4B",
    "addr": "$42C0",
    "raw": "eb3a3e513e3f4c52a33c4c52624a3e4142efee46516362f66363faf7efee3c4c52623f423e516e4a623e494963efeefaf7efee3a3e513e3f4c52a32450622cefee4d4f4c4a465042415e622c6649623f42faf7efee564c524f624d3e495e624c483e5664efeeff",
-   "text": "Watabou:You made\nit! [HERO]!!\n\nYou beathem all!\n\nWatabou:As I\npromised, I'll be\n\nyour pal, okay?\n [YES/NO]"
+   "text": "Watabou:You made\nit! [HERO]!!\n\nYou beat'em all!\n\nWatabou:As I\npromised, I'll be\n\nyour pal, okay?\n [YES/NO]"
   },
   {
    "id": "$07C3",
@@ -14208,7 +14206,7 @@
    "bank": "$4B",
    "addr": "$46F0",
    "raw": "ea2e464b44a3314c5e62465168624b4c51efee3e4b6242553e4444424f3e51464c4b5ffaf7efee2c6d62414c62465163efeefaf7efee2e464b44a35f5f5f544249495eefee51453e5168623e4bfaf7efee42553e4444424f3e51464c4b5fefee2b3e622b3e622b3e622b3e622b3e63faf7efee2e464b44a33a4249495e62564c526942efee4146504a46505042415f5f5ffaf7efee255250565e62255250565eefee255250565f5f5ff7",
-   "text": "King:No, it's not\nan exaggeration.\n\nIth do it!\n\nKing:...well,\nthat's an\n\nexaggeration.\nHa Ha Ha Ha Ha!\n\nKing:Well, you're\ndismissed...\n\nBusy, Busy,\nBusy..."
+   "text": "King:No, it's not\nan exaggeration.\n\nI'd do it!\n\nKing:...well,\nthat's an\n\nexaggeration.\nHa Ha Ha Ha Ha!\n\nKing:Well, you're\ndismissed...\n\nBusy, Busy,\nBusy..."
   },
   {
    "id": "$07CF",
@@ -14264,21 +14262,21 @@
    "bank": "$4B",
    "addr": "$4B2F",
    "raw": "eb9fa33245624b4c63623c4c52efee514f464d4d4241624c53424ffaf7efee4146414b6762564c526364efeefaf7efee9fa33a4249495f5f5f62465168efee4c483e56626f525762564c52623f423e51faf7efee51454262303e5051424fefee304c4b5051424f62373e4a424f63f7",
-   "text": "*:Oh no! You\ntripped over\n\ndidn't you!?\n\n*:Well... it's\nokay beuz you beat\n\nthe Master\nMonster Tamer!"
+   "text": "*:Oh no! You\ntripped over\n\ndidn't you!?\n\n*:Well... it's\nokay 'cuz you beat\n\nthe Master\nMonster Tamer!"
   },
   {
    "id": "$07D7",
    "bank": "$4B",
    "addr": "$4B9F",
    "raw": "ea9fa3f663efee264c4b444f3e5152493e51464c4b50faf7efee4c4b62564c524f62534640514c4f5663efeefaf7efee9fa32c5e622c623e4a62504c5f5f5fefee9f504b4643439f62453e4d4d565f5ffaf7efee504c5f5f62453e4d4d56623a3e3e3eefee543e3e3e3e3e3e63faf7efee9fa32c5e622c6245423e4f416251453e51efee5145424f426942624a4c4b5051424f50faf7efee51453e5162425546505162464b6251454650efee544c4f49416251453e5162414c624b4c51faf7efee3f42494c4b4462514c623e4b56efee433e4a46494642505ffaf7efee9fa33745425669426253424f56efee50514f4c4b4462b6624253424b624643faf7efee564c52623f423e516e4a5e6251454256efee544c4b67623f4262564c524f624d3e495ffaf7efee9fa32552516251454256694262504cefee50514f4c4b446251453e5162564c526dfaf7efee414c623e4b565145464b4462514cefee444251625145424a62514c62474c464b63f7",
-   "text": "*:[HERO]!\nCongratulations\n\non your victory!\n\n*:I, I am so...\n*sniff* happy..\n\nso.. happy Waaa\nwaaaaaa!\n\n*:I, I heard that\nthere're monsters\n\nthat exist in this\nworld that do not\n\nbelong to any\nfamilies.\n\n*:They're very\nstrong & even if\n\nyou beathem, they\nwon't be your pal.\n\n*:But they're so\nstrong that youth\n\ndo anything to\nget them to join!"
+   "text": "*:[HERO]!\nCongratulations\n\non your victory!\n\n*:I, I am so...\n*sniff* happy..\n\nso.. happy Waaa\nwaaaaaa!\n\n*:I, I heard that\nthere're monsters\n\nthat exist in this\nworld that do not\n\nbelong to any\nfamilies.\n\n*:They're very\nstrong & even if\n\nyou beat'em, they\nwon't be your pal.\n\n*:But they're so\nstrong that you'd\n\ndo anything to\nget them to join!"
   },
   {
    "id": "$07D8",
    "bank": "$4B",
    "addr": "$4D0E",
    "raw": "ea9fa32c5f5f2c6245423e4f416251453e51efee4a4c4b5051424f5062425546505162464bfaf7efee5145465062544c4f49416251453e51efee414c624b4c51623f42494c4b4462514cfaf7efee3e4b5662433e4a46494642505fefeefaf7efee9fa33745425669426253424f56efee50514f4c4b4462b6624253424b624643faf7efee564c52623f423e516e4a6251454256efee544c4b67623f4262564c524f624d3e495ffaf7efee9fa32552516251454256694262504cefee50514f4c4b446251453e5162564c526dfaf7efee414c623e4b565145464b4462514cefee444251625145424a62514c62474c464b63f7",
-   "text": "*:I..I heard that\nmonsters exist in\n\nthis world that\ndo not belong to\n\nany families.\n\n*:They're very\nstrong & even if\n\nyou beathem they\nwon't be your pal.\n\n*:But they're so\nstrong that youth\n\ndo anything to\nget them to join!"
+   "text": "*:I..I heard that\nmonsters exist in\n\nthis world that\ndo not belong to\n\nany families.\n\n*:They're very\nstrong & even if\n\nyou beat'em they\nwon't be your pal.\n\n*:But they're so\nstrong that you'd\n\ndo anything to\nget them to join!"
   },
   {
    "id": "$07D9",
@@ -14320,7 +14318,7 @@
    "bank": "$4B",
    "addr": "$4F53",
    "raw": "eb9fa3374542623f4650454c4d622cefee484b4c5462514c4941624a42623e4bfaf7efee464b51424b504262504c4b4463efeefaf7efee9fa32a469c2a465e622a46443e36493e5045efee4c4362303e412e4b46444551faf7efee9fa330529c30525e623052495146265251efee4c4362364856274f3e444c4bfaf7efee7062303e41264c4b414c4fefeefaf7efee9fa32b42494925493e5051624c43efee3042513e492e464b44faf7efee70623d3e4d25464f41efeefaf7efee9fa3254644253e4b44624c43efee2a4c49412a4c49424afaf7efee7062274653464b42444c4b63efeef7",
-   "text": "*:The bishop I\nknow told me an\n\nintense song!\n\n*:Gi-Gi, GigaSlash\nof MadKnight\n\n*:Mu-Mu, MultiCut\nof SkyDragon\n\nor MadCondor\n\n*:HellBlast of\nMetalKing\n\nor ZapBird\n\n*:BigBang of\nGoldGolem\n\nor Divinegon!"
+   "text": "*:The bishop I\nknow told me an\n\nintense song!\n\n*:Gi-Gi, GigaSlash\nof MadKnight\n\n*:Mu-Mu, MultiCut\nof SkyDragon\n\n'n MadCondor\n\n*:HellBlast of\nMetalKing\n\n'n ZapBird\n\n*:BigBang of\nGoldGolem\n\n'n Divinegon!"
   },
   {
    "id": "$07DF",
@@ -14467,7 +14465,7 @@
    "bank": "$4B",
    "addr": "$5D46",
    "raw": "eb9fa3264c4b444f3e5152493e51464c4b50efee4c4b62564c524f62534640514c4f5663faf7efee2f4251624a42624446534262564c52623eefee51464d5ffaf7efee9fa33a45424b62564c52623f4f424241efee4a4c4b5051424f506254465145623efaf7efee45464445624b524a3f424f624b425551efee514c6251454262a25e62514542faf7efee404c4a3f464b3e51464c4befee403e4b624d4f4c41524042623efaf7efee4f3e4f42624a4c4b5051424f5fefeef7",
-   "text": "*:Congratulations\non your victory!\n\nLet me give you a\ntip.\n\n*:When you breed\nmonsters with a\n\nhigh number next\nto the {A2}, the\n\ncombination\ncan produce a\n\nrare monster."
+   "text": "*:Congratulations\non your victory!\n\nLet me give you a\ntip.\n\n*:When you breed\nmonsters with a\n\nhigh number next\nto the +, the\n\ncombination\ncan produce a\n\nrare monster."
   },
   {
    "id": "$07F4",
@@ -14607,7 +14605,7 @@
    "bank": "$3F",
    "addr": "$48B2",
    "raw": "ea9fa3324562f65e6254464949efee564c526249465051424b62514c624a4264faf7efee3056623f4c505062514c4941624a425eefeefaf7efee9fa32c6d623f42623e4befee3e4d4d4f424b5146404262434c4ffaf7efee0100624a4c4f426256423e4f5063efeefaf7efee9fa32c62543e4b5162514c623f4262514542efee50454c4d4842424d424f624c436251454650faf7efee50454c4d62504c4c4b424f63efeefaf7efee9fa3305662544650456254464949efee404c4a4262514f5242624643faf7efeef66254464b505fefeefaf7efee9fa3314c62543e5663622c62403e4b67efee50513e4b41623f42464b44623e4bfaf7efee3e4d4d4f424b5146404262434c4f620100efee4a4c4f426256423e4f506362244f44455f5ff7",
-   "text": "*:Oh [HERO], will\nyou listen to me?\n\nMy boss told me,\n\n*:Ith be an\napprentice for\n\n10 more years!\n\n*:I want to be the\nshopkeeper of this\n\nshop sooner!\n\n*:My wish will\ncome true if\n\n[HERO] wins.\n\n*:No way! I can't\nstand being an\n\napprentice for 10\nmore years! Argh.."
+   "text": "*:Oh [HERO], will\nyou listen to me?\n\nMy boss told me,\n\n*:I'd be an\napprentice for\n\n10 more years!\n\n*:I want to be the\nshopkeeper of this\n\nshop sooner!\n\n*:My wish will\ncome true if\n\n[HERO] wins.\n\n*:No way! I can't\nstand being an\n\napprentice for 10\nmore years! Argh.."
   },
   {
    "id": "$0808",
@@ -15167,7 +15165,7 @@
    "bank": "$3F",
    "addr": "$6DE4",
    "raw": "ea9fa33c4c526942623e5162514542efee403e50514942624c43faf7efee2a4f423e51374f42425fefeefaf7efee9fa32c516d623f42623e62444c4c41efee4641423e62514c62513e4842623efaf7efee494c4c48623e4f4c524b415fefeef7",
-   "text": "*:You're at the\ncastle of\n\nGreatTree.\n\n*:Itth be a good\nidea to take a\n\nlook around."
+   "text": "*:You're at the\ncastle of\n\nGreatTree.\n\n*:It'd be a good\nidea to take a\n\nlook around."
   },
   {
    "id": "$0858",
@@ -15419,7 +15417,7 @@
    "bank": "$4E",
    "addr": "$4EF1",
    "raw": "ea9fa3274f3e444c4b50efee54465145623042513e4956faf7efee4d3e4f424b5150efeefaf7efee9fa33e4f42624a4c4f42efee4f42504650513e4b5162514c623efaf7efee533e4f46425156624c43625145464b44505fefeefaf7efee9fa3374542624a4c4f426251454262a2efee434c4f623f4f424241464b445e62514542faf7efee444f423e51424f62514542efee51424b41424b405662434c4f6251453e515ffaf7efee9fa3254f4242416254465145623e4befee524b41424f50513e4b41464b44624c43faf7efee514542504262efee40453e4f3e4051424f4650514640505ffaf7efee9fa336514f4c4b44424fefee4a4c4b5051424f506254464949623f42faf7efee3f4c4f4b6246436251454256efee404c4a4d424b503e514262434c4ffaf7efee423e4045624c5145424f686254423e48efee4d4c464b51505ff7",
-   "text": "*:Dragons\nwith Metaly\n\nparents\n\n*:are more\nresistant to a\n\nvariety of things.\n\n*:The more the {A2}\nfor breeding, the\n\ngreater the\ntendency for that.\n\n*:Breed with an\nunderstanding of\n\nthese\ncharacteristics.\n\n*:Stronger\nmonsters will be\n\nborn if they\ncompensate for\n\neach other's weak\npoints."
+   "text": "*:Dragons\nwith Metaly\n\nparents\n\n*:are more\nresistant to a\n\nvariety of things.\n\n*:The more the +\nfor breeding, the\n\ngreater the\ntendency for that.\n\n*:Breed with an\nunderstanding of\n\nthese\ncharacteristics.\n\n*:Stronger\nmonsters will be\n\nborn if they\ncompensate for\n\neach other's weak\npoints."
   },
   {
    "id": "$087C",
@@ -15524,7 +15522,7 @@
    "bank": "$4E",
    "addr": "$5B17",
    "raw": "9fa3313e4a4249565e62414f3e444c4b50efee54465145623042513e4956faf7efee4d3e4f424b5150efeefaf7efee9fa33e4f42624a4c4f42efee4f42504650513e4b5162514c623efaf7efee533e4f46425156624c43625145464b44505fefeefaf7efee9fa3374542624a4c4f426251454262a2efee434c4f623f4f424241464b445e62514542faf7efee444f423e51424f62514542efee51424b41424b405662434c4f6251453e515ff7",
-   "text": "*:Namely, dragons\nwith Metaly\n\nparents\n\n*:are more\nresistant to a\n\nvariety of things.\n\n*:The more the {A2}\nfor breeding, the\n\ngreater the\ntendency for that."
+   "text": "*:Namely, dragons\nwith Metaly\n\nparents\n\n*:are more\nresistant to a\n\nvariety of things.\n\n*:The more the +\nfor breeding, the\n\ngreater the\ntendency for that."
   },
   {
    "id": "$088B",
@@ -15573,7 +15571,7 @@
    "bank": "$4E",
    "addr": "$5FF1",
    "raw": "ea9fa33745424f42623e4f42efee324b464c4b4c505efaf7efee2a4c4d4542403e413e505eefee33465556505efaf7efee2a3e50444c4b505eefeefaf7efee9fa327423e4131465142505eefee3651523f25464f41505e623e4b41faf7efee364d464856254c565062494653464b44efee5145424f425ffaf7efee9fa32a4c4d4542403e41425062525042efee25423e515f622a42516e4afaf7efee3f42434c4f42625145425662444251efee564c525ffaf7efee9fa33745426244523e4f41463e4befee5145424f42624650623efaf7efee2d3e4a464f52505fefeefaf7efee9fa33a3e514045624c525162434c4fefee4651506234523e412b46515063f7",
-   "text": "*:There are\nOnionos,\n\nGophecadas,\nPixys,\n\nGasgons,\n\n*:DeadNites,\nStubBirds, and\n\nSpikyBoys living\nthere.\n\n*:Gophecades use\nBeat. Gethem\n\nbefore they get\nyou.\n\n*:The guardian\nthere is a\n\nJamirus.\n\n*:Watch out for\nits QuadHits!"
+   "text": "*:There are\nOnionos,\n\nGophecadas,\nPixys,\n\nGasgons,\n\n*:DeadNites,\nStubBirds, and\n\nSpikyBoys living\nthere.\n\n*:Gophecades use\nBeat. Get'em\n\nbefore they get\nyou.\n\n*:The guardian\nthere is a\n\nJamirus.\n\n*:Watch out for\nits QuadHits!"
   },
   {
    "id": "$0892",
@@ -15860,7 +15858,7 @@
    "bank": "$4E",
    "addr": "$75EA",
    "raw": "ea9fa32b424f62303e47425051565eefee51454262345242424b624c43faf7efee2a4f423e51374f42425eefeefaf7efee9fa33e4b416245424f6244524250515eefee304640485ffaf7efee9fa32b424f62303e4742505156efee414250464f4250faf7efee3e623a464b443649464a425fefeefaf7efee9fa32c43623e623649464a42624650efee3f4f42416254465145623e623f464f415efaf7efee4d424f453e4d50623eefee3a464b443649464a426254464949623f42faf7efee254c4f4ba4efeef7",
-   "text": "*:Her Majesty,\nthe Queen of\n\nGreatTree,\n\n*:and her guest,\nMick.\n\n*:Her Majesty\ndesires\n\na WingSlime.\n\n*:If a Slime is\nbred with a bird,\n\nperhaps a\nWingSlime will be\n\nBorn{A4}"
+   "text": "*:Her Majesty,\nthe Queen of\n\nGreatTree,\n\n*:and her guest,\nMick.\n\n*:Her Majesty\ndesires\n\na WingSlime.\n\n*:If a Slime is\nbred with a bird,\n\nperhaps a\nWingSlime will be\n\nBorn…"
   },
   {
    "id": "$08BB",
@@ -15937,28 +15935,28 @@
    "bank": "$4F",
    "addr": "$5564",
    "raw": "eb9fa32c6d624946484262514cefee4446534262564c52623e624f42543e4f415efaf7efee3f525162564c5262403e4b624b4c51efee403e4f4f56623e4b564a4c4f425ffaf7efee9fa32a4251624f4641624c4362504c4a42efee4c4362564c524f624651424a505ff7",
-   "text": "*:Ith like to\ngive you a reward,\n\nbut you can not\ncarry anymore.\n\n*:Get rid of some\nof your items."
+   "text": "*:I'd like to\ngive you a reward,\n\nbut you can not\ncarry anymore.\n\n*:Get rid of some\nof your items."
   },
   {
    "id": "$08C6",
    "bank": "$4F",
    "addr": "$55CF",
    "raw": "9fa32c4b624c5145424f62544c4f41505eefee3e62274f3e444c4b6254465145faf7efee3042513e4956623e50624c4b42624c43efee465150624d3e4f424b5150faf7efee9fa34650624f42504650513e4b51efee514c624a4c4f42625145464b44505ffaf7efee9fa3374542624a4c4f4262a262434c4fefee3f4f424241464b445e62514542624a4c4f42faf7efee465162465062504c5fefeefaf7efee9fa3374542624a4c51514c624c4362514542efee4a4c4b51455ffaf7efee9fa324464a623e5162f66363efee3c4c5262403e4b623f4262514542faf7efee435251524f4262f662514c4c6363efeef7",
-   "text": "*:In other words,\na Dragon with\n\nMetaly as one of\nits parents\n\n*:is resistant\nto more things.\n\n*:The more {A2} for\nbreeding, the more\n\nit is so.\n\n*:The motto of the\nmonth.\n\n*:Aim at [HERO]!!\nYou can be the\n\nfuture [HERO] too!!"
+   "text": "*:In other words,\na Dragon with\n\nMetaly as one of\nits parents\n\n*:is resistant\nto more things.\n\n*:The more + for\nbreeding, the more\n\nit is so.\n\n*:The motto of the\nmonth.\n\n*:Aim at [HERO]!!\nYou can be the\n\nfuture [HERO] too!!"
   },
   {
    "id": "$08C7",
    "bank": "$4F",
    "addr": "$56BE",
    "raw": "ea9fa337454262444f4c5451456249464a4651efee4c4362f900624650faf7efee962f5397f9105fefeefaf7",
-   "text": "*:The growth limit\nof [INS 00] is\n\n{96}Lv{97}[INS 10]."
+   "text": "*:The growth limit\nof [INS 00] is\n\n[Lv][INS 10]."
   },
   {
    "id": "$08C8",
    "bank": "$4F",
    "addr": "$56BE",
    "raw": "ea9fa337454262444f4c5451456249464a4651efee4c4362f900624650faf7efee962f5397f9105fefeefaf7",
-   "text": "*:The growth limit\nof [INS 00] is\n\n{96}Lv{97}[INS 10].",
+   "text": "*:The growth limit\nof [INS 00] is\n\n[Lv][INS 10].",
    "same_as": "$08C7"
   },
   {
@@ -15966,7 +15964,7 @@
    "bank": "$4F",
    "addr": "$56BE",
    "raw": "ea9fa337454262444f4c5451456249464a4651efee4c4362f900624650faf7efee962f5397f9105fefeefaf7",
-   "text": "*:The growth limit\nof [INS 00] is\n\n{96}Lv{97}[INS 10].",
+   "text": "*:The growth limit\nof [INS 00] is\n\n[Lv][INS 10].",
    "same_as": "$08C7"
   },
   {
@@ -18378,7 +18376,7 @@
    "bank": "$4C",
    "addr": "$4305",
    "raw": "ed2f4c4c48624c525163f1f900624a4c4b5051424f63fc10ec",
-   "text": "{ED}Look out!\n[INS 00] monster!{FC}<slime>{EC}"
+   "text": "{ED}Look out!\n[INS 00] monster!{FC}{EC}"
   },
   {
    "source": "battle_message",
@@ -18386,7 +18384,7 @@
    "bank": "$4C",
    "addr": "$431F",
    "raw": "ed38459c4c4563622462443e4b44624c43f1f900624a4c4b5051424f50fc10ec",
-   "text": "{ED}Uh-oh! A gang of\n[INS 00] monsters{FC}<slime>{EC}"
+   "text": "{ED}Uh-oh! A gang of\n[INS 00] monsters{FC}{EC}"
   },
   {
    "source": "battle_message",
@@ -18394,7 +18392,7 @@
    "bank": "$4C",
    "addr": "$4340",
    "raw": "ed3a3e514045624c525163f1f900623e4b41fc10ecf2f910f14a4c4b5051424f5063fc10ec",
-   "text": "{ED}Watch out!\n[INS 00] and{FC}<slime>{EC}{F2}[INS 10]\nmonsters!{FC}<slime>{EC}"
+   "text": "{ED}Watch out!\n[INS 00] and{FC}{EC}{F2}[INS 10]\nmonsters!{FC}{EC}"
   },
   {
    "source": "battle_message",
@@ -18402,7 +18400,7 @@
    "bank": "$4C",
    "addr": "$4366",
    "raw": "ed25525162465162453e504b67f1504d4c515142416252506256425163fc10ec",
-   "text": "{ED}But it hasn't\nspotted us yet!{FC}<slime>{EC}"
+   "text": "{ED}But it hasn't\nspotted us yet!{FC}{EC}"
   },
   {
    "source": "battle_message",
@@ -18410,7 +18408,7 @@
    "bank": "$4C",
    "addr": "$4387",
    "raw": "ed255251625145425662453e53424b67f1504d4c515142416252506256425163fc10ec",
-   "text": "{ED}But they haven't\nspotted us yet!{FC}<slime>{EC}"
+   "text": "{ED}But they haven't\nspotted us yet!{FC}{EC}"
   },
   {
    "source": "battle_message",
@@ -18418,7 +18416,7 @@
    "bank": "$4C",
    "addr": "$43AB",
    "raw": "ed255251625145425662453e53424b67f1504d4c515142416252506256425163fc10ec",
-   "text": "{ED}But they haven't\nspotted us yet!{FC}<slime>{EC}"
+   "text": "{ED}But they haven't\nspotted us yet!{FC}{EC}"
   },
   {
    "source": "battle_message",
@@ -18426,7 +18424,7 @@
    "bank": "$4C",
    "addr": "$43CF",
    "raw": "ed2552516254426c4262403e52444551f14651624c43439c44523e4f4163fc10ec",
-   "text": "{ED}But we've caught\nit off-guard!{FC}<slime>{EC}"
+   "text": "{ED}But we've caught\nit off-guard!{FC}{EC}"
   },
   {
    "source": "battle_message",
@@ -18434,7 +18432,7 @@
    "bank": "$4C",
    "addr": "$43F1",
    "raw": "ed2552516254426c4262403e52444551f15145424a624c43439c44523e4f4163fc10ec",
-   "text": "{ED}But we've caught\nthem off-guard!{FC}<slime>{EC}"
+   "text": "{ED}But we've caught\nthem off-guard!{FC}{EC}"
   },
   {
    "source": "battle_message",
@@ -18442,7 +18440,7 @@
    "bank": "$4C",
    "addr": "$4415",
    "raw": "2552516254426c4262403e52444551f15145424a624c43439c44523e4f4163fc10ec",
-   "text": "But we've caught\nthem off-guard!{FC}<slime>{EC}"
+   "text": "But we've caught\nthem off-guard!{FC}{EC}"
   },
   {
    "source": "battle_message",
@@ -18450,7 +18448,7 @@
    "bank": "$4C",
    "addr": "$4438",
    "raw": "36524141424b4956629cf1f900623e51513e40485063fc10ec",
-   "text": "Suddenly -\n[INS 00] attacks!{FC}<slime>{EC}"
+   "text": "Suddenly -\n[INS 00] attacks!{FC}{EC}"
   },
   {
    "source": "battle_message",
@@ -18458,7 +18456,7 @@
    "bank": "$4C",
    "addr": "$4452",
    "raw": "36524141424b49565e623e62443e4b44f14c4362f900fc10ecf24a4c4b5051424f50623e51513e40485063f1fc10ec",
-   "text": "Suddenly, a gang\nof [INS 00]{FC}<slime>{EC}{F2}monsters attacks!\n{FC}<slime>{EC}"
+   "text": "Suddenly, a gang\nof [INS 00]{FC}{EC}{F2}monsters attacks!\n{FC}{EC}"
   },
   {
    "source": "battle_message",
@@ -18466,7 +18464,7 @@
    "bank": "$4C",
    "addr": "$4482",
    "raw": "36524141424b49565e623e62443e4b44f14c43624a4c4b5051424f50fc10ecf23e51513e40485063f1fc10ec",
-   "text": "Suddenly, a gang\nof monsters{FC}<slime>{EC}{F2}attacks!\n{FC}<slime>{EC}"
+   "text": "Suddenly, a gang\nof monsters{FC}{EC}{F2}attacks!\n{FC}{EC}"
   },
   {
    "source": "battle_message",
@@ -18474,7 +18472,7 @@
    "bank": "$4C",
    "addr": "$44AF",
    "raw": "f90062493e524b40454250f13e6250524f4d4f465042623e51513e404863fc10ec",
-   "text": "[INS 00] launches\na surprise attack!{FC}<slime>{EC}"
+   "text": "[INS 00] launches\na surprise attack!{FC}{EC}"
   },
   {
    "source": "battle_message",
@@ -18482,7 +18480,7 @@
    "bank": "$4C",
    "addr": "$44D1",
    "raw": "244a3f5250456362f900f14a4c4b5051424f50623e51513e404863fc10ec",
-   "text": "Ambush! [INS 00]\nmonsters attack!{FC}<slime>{EC}"
+   "text": "Ambush! [INS 00]\nmonsters attack!{FC}{EC}"
   },
   {
    "source": "battle_message",
@@ -18490,7 +18488,7 @@
    "bank": "$4C",
    "addr": "$44F0",
    "raw": "244a3f52504563622462443e4b44624c43f14a4c4b5051424f50623e51513e40485063fc10ec",
-   "text": "Ambush! A gang of\nmonsters attacks!{FC}<slime>{EC}"
+   "text": "Ambush! A gang of\nmonsters attacks!{FC}{EC}"
   },
   {
    "source": "battle_message",
@@ -18578,7 +18576,7 @@
    "bank": "$4C",
    "addr": "$45E6",
    "raw": "246240524f504262465062403e5051f14c4b62f90063fc10ecf2f900624650f1404c4b435250424163ec",
-   "text": "A curse is cast\non [INS 00]!{FC}<slime>{EC}{F2}[INS 00] is\nconfused!{EC}"
+   "text": "A curse is cast\non [INS 00]!{FC}{EC}{F2}[INS 00] is\nconfused!{EC}"
   },
   {
    "source": "battle_message",
@@ -18586,7 +18584,7 @@
    "bank": "$4C",
    "addr": "$4611",
    "raw": "246240524f504262465062403e5051f14c4b62f90063fc10ecf2f90062403e4b67f14a4c534263ec",
-   "text": "A curse is cast\non [INS 00]!{FC}<slime>{EC}{F2}[INS 00] can't\nmove!{EC}"
+   "text": "A curse is cast\non [INS 00]!{FC}{EC}{F2}[INS 00] can't\nmove!{EC}"
   },
   {
    "source": "battle_message",
@@ -18594,7 +18592,7 @@
    "bank": "$4C",
    "addr": "$463A",
    "raw": "ed246240524f504262465062403e5051f14c4b62f90063fc10ecf2f90062494c504250f1f910622b3363ec",
-   "text": "{ED}A curse is cast\non [INS 00]!{FC}<slime>{EC}{F2}[INS 00] loses\n[INS 10] HP!{EC}"
+   "text": "{ED}A curse is cast\non [INS 00]!{FC}{EC}{F2}[INS 00] loses\n[INS 10] HP!{EC}"
   },
   {
    "source": "battle_message",
@@ -18602,7 +18600,7 @@
    "bank": "$4C",
    "addr": "$4666",
    "raw": "ed246240524f504262465062403e5051f14c4b62f90063fc10ecf2f90062494c504250f1f91062303363ec",
-   "text": "{ED}A curse is cast\non [INS 00]!{FC}<slime>{EC}{F2}[INS 00] loses\n[INS 10] MP!{EC}"
+   "text": "{ED}A curse is cast\non [INS 00]!{FC}{EC}{F2}[INS 00] loses\n[INS 10] MP!{EC}"
   },
   {
    "source": "battle_message",
@@ -18610,7 +18608,7 @@
    "bank": "$4C",
    "addr": "$4692",
    "raw": "f90062514f464250f1514c6252504262f91063fc10ecf2255251624b4c5162424b4c52444562303363f1ec",
-   "text": "[INS 00] tries\nto use [INS 10]!{FC}<slime>{EC}{F2}But not enough MP!\n{EC}"
+   "text": "[INS 00] tries\nto use [INS 10]!{FC}{EC}{F2}But not enough MP!\n{EC}"
   },
   {
    "source": "battle_message",
@@ -18618,7 +18616,7 @@
    "bank": "$4C",
    "addr": "$46BE",
    "raw": "edf90062403e505150f1f91063fc10ecf22552516251454262504d424949624650f13f494c40484241ec",
-   "text": "{ED}[INS 00] casts\n[INS 10]!{FC}<slime>{EC}{F2}But the spell is\nblocked{EC}"
+   "text": "{ED}[INS 00] casts\n[INS 10]!{FC}{EC}{F2}But the spell is\nblocked{EC}"
   },
   {
    "source": "battle_message",
@@ -18626,7 +18624,7 @@
    "bank": "$4C",
    "addr": "$46E9",
    "raw": "edf90062403e505150f1f91063fc10ecf225525162504d42494962543e50f13f4f4c48424b63ec",
-   "text": "{ED}[INS 00] casts\n[INS 10]!{FC}<slime>{EC}{F2}But spell was\nbroken!{EC}"
+   "text": "{ED}[INS 00] casts\n[INS 10]!{FC}{EC}{F2}But spell was\nbroken!{EC}"
   },
   {
    "source": "battle_message",
@@ -18634,7 +18632,7 @@
    "bank": "$4C",
    "addr": "$4711",
    "raw": "f90062514f46425062514cf1504d465162f91063fc10ecf225525162465150624a4c525145f14650623f4c524b41625045525163ec",
-   "text": "[INS 00] tries to\nspit [INS 10]!{FC}<slime>{EC}{F2}But its mouth\nis bound shut!{EC}"
+   "text": "[INS 00] tries to\nspit [INS 10]!{FC}{EC}{F2}But its mouth\nis bound shut!{EC}"
   },
   {
    "source": "battle_message",
@@ -18642,7 +18640,7 @@
    "bank": "$4C",
    "addr": "$4747",
    "raw": "f900f14d424f434c4f4a5062514542fc10ecf2f91063f1fc10ecf22552516251454262413e4b4042624650f13f494c4048424163ec",
-   "text": "[INS 00]\nperforms the{FC}<slime>{EC}{F2}[INS 10]!\n{FC}<slime>{EC}{F2}But the dance is\nblocked!{EC}"
+   "text": "[INS 00]\nperforms the{FC}{EC}{F2}[INS 10]!\n{FC}{EC}{F2}But the dance is\nblocked!{EC}"
   },
   {
    "source": "battle_message",
@@ -18682,7 +18680,7 @@
    "bank": "$4C",
    "addr": "$47B6",
    "raw": "f900f14d424f434c4f4a50fc10ecf251454262f91063f1ec",
-   "text": "[INS 00]\nperforms{FC}<slime>{EC}{F2}the [INS 10]!\n{EC}"
+   "text": "[INS 00]\nperforms{FC}{EC}{F2}the [INS 10]!\n{EC}"
   },
   {
    "source": "battle_message",
@@ -18746,7 +18744,7 @@
    "bank": "$4C",
    "addr": "$485F",
    "raw": "f900f1493e524b40454250623e6250524640464142fc10ecf23e51513e4048624c4bf1f92063ec",
-   "text": "[INS 00]\nlaunches a suicide{FC}<slime>{EC}{F2}attack on\n[INS 20]!{EC}"
+   "text": "[INS 00]\nlaunches a suicide{FC}{EC}{F2}attack on\n[INS 20]!{EC}"
   },
   {
    "source": "battle_message",
@@ -18754,7 +18752,7 @@
    "bank": "$4C",
    "addr": "$4887",
    "raw": "edf900623e51513e404850f1f92062464bfc10ecf24f3e444263f1ec",
-   "text": "{ED}[INS 00] attacks\n[INS 20] in{FC}<slime>{EC}{F2}rage!\n{EC}"
+   "text": "{ED}[INS 00] attacks\n[INS 20] in{FC}{EC}{F2}rage!\n{EC}"
   },
   {
    "source": "battle_message",
@@ -18770,7 +18768,7 @@
    "bank": "$4C",
    "addr": "$48B5",
    "raw": "edf900624650f140453e4f44464b4462465150fc10ecf23e51513e404863f1ec",
-   "text": "{ED}[INS 00] is\ncharging its{FC}<slime>{EC}{F2}attack!\n{EC}"
+   "text": "{ED}[INS 00] is\ncharging its{FC}{EC}{F2}attack!\n{EC}"
   },
   {
    "source": "battle_message",
@@ -18802,7 +18800,7 @@
    "bank": "$4C",
    "addr": "$4926",
    "raw": "edf900624d4f3e5650f1434c4f623e624a464f3e4049425ffc10ecf224624d4c54424f4352496254464b41f150494640425062f92063ec",
-   "text": "{ED}[INS 00] prays\nfor a miracle.{FC}<slime>{EC}{F2}A powerful wind\nslices [INS 20]!{EC}"
+   "text": "{ED}[INS 00] prays\nfor a miracle.{FC}{EC}{F2}A powerful wind\nslices [INS 20]!{EC}"
   },
   {
    "source": "battle_message",
@@ -18826,7 +18824,7 @@
    "bank": "$4C",
    "addr": "$498D",
    "raw": "edf90062403e494a50f1465150424943623e4b41fc10ecf2434c405250425063f1ec",
-   "text": "{ED}[INS 00] calms\nitself and{FC}<slime>{EC}{F2}focuses!\n{EC}"
+   "text": "{ED}[INS 00] calms\nitself and{FC}{EC}{F2}focuses!\n{EC}"
   },
   {
    "source": "battle_message",
@@ -18890,7 +18888,7 @@
    "bank": "$4C",
    "addr": "$4A6A",
    "raw": "f9006252504250f13e4949624a3e444640624d4c54424f5063fc10ecf2246245524442623f524f5051624c43f14a3e44464062424b424f445663ec",
-   "text": "[INS 00] uses\nall magic powers!{FC}<slime>{EC}{F2}A huge burst of\nmagic energy!{EC}"
+   "text": "[INS 00] uses\nall magic powers!{FC}{EC}{F2}A huge burst of\nmagic energy!{EC}"
   },
   {
    "source": "battle_message",
@@ -18994,7 +18992,7 @@
    "bank": "$4C",
    "addr": "$4BB5",
    "raw": "f900624650f14a424146513e51464b4462403e494a495663fc10ecf2f900686250403e4f50f150513e4f5162514c6245423e4963ec",
-   "text": "[INS 00] is\nmeditating calmly!{FC}<slime>{EC}{F2}[INS 00]'s scars\nstart to heal!{EC}"
+   "text": "[INS 00] is\nmeditating calmly!{FC}{EC}{F2}[INS 00]'s scars\nstart to heal!{EC}"
   },
   {
    "source": "battle_message",
@@ -19002,7 +19000,7 @@
    "bank": "$4C",
    "addr": "$4BEB",
    "raw": "edf9006250513e4f5150f1514c6250464b4462514542fc10ecf22f464342364c4b4463f1ec",
-   "text": "{ED}[INS 00] starts\nto sing the{FC}<slime>{EC}{F2}LifeSong!\n{EC}"
+   "text": "{ED}[INS 00] starts\nto sing the{FC}{EC}{F2}LifeSong!\n{EC}"
   },
   {
    "source": "battle_message",
@@ -19010,7 +19008,7 @@
    "bank": "$4C",
    "addr": "$4C11",
    "raw": "edf900f143464b46504542506250464b44464b44fc10ecf251454262504c4b4463f1ec",
-   "text": "{ED}[INS 00]\nfinishes singing{FC}<slime>{EC}{F2}the song!\n{EC}"
+   "text": "{ED}[INS 00]\nfinishes singing{FC}{EC}{F2}the song!\n{EC}"
   },
   {
    "source": "battle_message",
@@ -19026,7 +19024,7 @@
    "bank": "$4C",
    "addr": "$4C4C",
    "raw": "edf900f14d4f4c405142405150fc10ecf2f92063f1ec",
-   "text": "{ED}[INS 00]\nproctects{FC}<slime>{EC}{F2}[INS 20]!\n{EC}"
+   "text": "{ED}[INS 00]\nproctects{FC}{EC}{F2}[INS 20]!\n{EC}"
   },
   {
    "source": "battle_message",
@@ -19034,7 +19032,7 @@
    "bank": "$4C",
    "addr": "$4C63",
    "raw": "edf900f14d4f424d3e4f425062434c4f62424b424a56fc10ecf23e51513e404863f1ec",
-   "text": "{ED}[INS 00]\nprepares for enemy{FC}<slime>{EC}{F2}attack!\n{EC}"
+   "text": "{ED}[INS 00]\nprepares for enemy{FC}{EC}{F2}attack!\n{EC}"
   },
   {
    "source": "battle_message",
@@ -19042,7 +19040,7 @@
    "bank": "$4C",
    "addr": "$4C87",
    "raw": "edf900f14650624f423e415662514c6243424b41fc10ecf23e4b623e51513e40485ff1ec",
-   "text": "{ED}[INS 00]\nis ready to fend{FC}<slime>{EC}{F2}an attack.\n{EC}"
+   "text": "{ED}[INS 00]\nis ready to fend{FC}{EC}{F2}an attack.\n{EC}"
   },
   {
    "source": "battle_message",
@@ -19050,7 +19048,7 @@
    "bank": "$4C",
    "addr": "$4CAC",
    "raw": "edf900f14d4f424d3e4f425062434c4f62424b424a56fc10ecf23e51513e404863f1ec",
-   "text": "{ED}[INS 00]\nprepares for enemy{FC}<slime>{EC}{F2}attack!\n{EC}"
+   "text": "{ED}[INS 00]\nprepares for enemy{FC}{EC}{F2}attack!\n{EC}"
   },
   {
    "source": "battle_message",
@@ -19058,7 +19056,7 @@
    "bank": "$4C",
    "addr": "$4CD0",
    "raw": "edf900f14d4f424d3e4f425062514cfc10ecf2404c524b51424f3e51513e404863f1ec",
-   "text": "{ED}[INS 00]\nprepares to{FC}<slime>{EC}{F2}counterattack!\n{EC}"
+   "text": "{ED}[INS 00]\nprepares to{FC}{EC}{F2}counterattack!\n{EC}"
   },
   {
    "source": "battle_message",
@@ -19066,7 +19064,7 @@
    "bank": "$4C",
    "addr": "$4CF4",
    "raw": "f900624c4d424b50f1465150624a4c52514562514c6250524048fc10ecf24253424f565145464b4462464b63f1ec",
-   "text": "[INS 00] opens\nits mouth to suck{FC}<slime>{EC}{F2}everything in!\n{EC}"
+   "text": "[INS 00] opens\nits mouth to suck{FC}{EC}{F2}everything in!\n{EC}"
   },
   {
    "source": "battle_message",
@@ -19074,7 +19072,7 @@
    "bank": "$4C",
    "addr": "$4D23",
    "raw": "f900f13e51513e4048506254464941495663fc10ecf22552516246516245465150f146515042494363ec",
-   "text": "[INS 00]\nattacks wildly!{FC}<slime>{EC}{F2}But it hits\nitself!{EC}"
+   "text": "[INS 00]\nattacks wildly!{FC}{EC}{F2}But it hits\nitself!{EC}"
   },
   {
    "source": "battle_message",
@@ -19090,7 +19088,7 @@
    "bank": "$4C",
    "addr": "$4D5D",
    "raw": "edf90062413e50454250f1514c543e4f4150fc10ecf2f92063f1fc10ecf2255251625051524a3f494250623e4b41f1433e49495063ec",
-   "text": "{ED}[INS 00] dashes\ntowards{FC}<slime>{EC}{F2}[INS 20]!\n{FC}<slime>{EC}{F2}But stumbles and\nfalls!{EC}"
+   "text": "{ED}[INS 00] dashes\ntowards{FC}{EC}{F2}[INS 20]!\n{FC}{EC}{F2}But stumbles and\nfalls!{EC}"
   },
   {
    "source": "battle_message",
@@ -19130,7 +19128,7 @@
    "bank": "$4C",
    "addr": "$4DE8",
    "raw": "f9006251454f4c5450f1f910623e51fc10ecf2f92063f1ec",
-   "text": "[INS 00] throws\n[INS 10] at{FC}<slime>{EC}{F2}[INS 20]!\n{EC}"
+   "text": "[INS 00] throws\n[INS 10] at{FC}{EC}{F2}[INS 20]!\n{EC}"
   },
   {
    "source": "battle_message",
@@ -19154,7 +19152,7 @@
    "bank": "$4C",
    "addr": "$4E33",
    "raw": "f9006252504250f1f91063fc10ecf2374542623f4c4951623f524f505150f14c5251624c43625145426250513e434363ec",
-   "text": "[INS 00] uses\n[INS 10]!{FC}<slime>{EC}{F2}The bolt bursts\nout of the staff!{EC}"
+   "text": "[INS 00] uses\n[INS 10]!{FC}{EC}{F2}The bolt bursts\nout of the staff!{EC}"
   },
   {
    "source": "battle_message",
@@ -19162,7 +19160,7 @@
    "bank": "$4C",
    "addr": "$4E65",
    "raw": "f9006252504250f1f91063fc10ecf22c5162404f423e514250623ef15445464f49464b4462533e4052524a63ec",
-   "text": "[INS 00] uses\n[INS 10]!{FC}<slime>{EC}{F2}It creates a\nwhirling vacuum!{EC}"
+   "text": "[INS 00] uses\n[INS 10]!{FC}{EC}{F2}It creates a\nwhirling vacuum!{EC}"
   },
   {
    "source": "battle_message",
@@ -19170,7 +19168,7 @@
    "bank": "$4C",
    "addr": "$4E93",
    "raw": "f9006252504250f1f91063fc10ecf224624a565051424f464c5250624a465051f1404c53424f50624253424f565145464b4463ec",
-   "text": "[INS 00] uses\n[INS 10]!{FC}<slime>{EC}{F2}A mysterious mist\ncovers everything!{EC}"
+   "text": "[INS 00] uses\n[INS 10]!{FC}{EC}{F2}A mysterious mist\ncovers everything!{EC}"
   },
   {
    "source": "battle_message",
@@ -19178,7 +19176,7 @@
    "bank": "$4C",
    "addr": "$4EC8",
    "raw": "f9006252504250f1f91063fc10ecf22b4c5162493e533e6243494c4c4150f151454262444f4c524b4163ec",
-   "text": "[INS 00] uses\n[INS 10]!{FC}<slime>{EC}{F2}Hot lava floods\nthe ground!{EC}"
+   "text": "[INS 00] uses\n[INS 10]!{FC}{EC}{F2}Hot lava floods\nthe ground!{EC}"
   },
   {
    "source": "battle_message",
@@ -19186,7 +19184,7 @@
    "bank": "$4C",
    "addr": "$4EF4",
    "raw": "f9006252504250f1f91063fc10ecf2244b62464056623f494657573e4f41f13f493e505150624c525163ec",
-   "text": "[INS 00] uses\n[INS 10]!{FC}<slime>{EC}{F2}An icy blizzard\nblasts out!{EC}"
+   "text": "[INS 00] uses\n[INS 10]!{FC}{EC}{F2}An icy blizzard\nblasts out!{EC}"
   },
   {
    "source": "battle_message",
@@ -19194,7 +19192,7 @@
    "bank": "$4C",
    "addr": "$4F20",
    "raw": "f9006252504250f1f91063fc10ecf2246243464f423f3e4949623f524f505150f14c5251624c43625145426250513e434363ec",
-   "text": "[INS 00] uses\n[INS 10]!{FC}<slime>{EC}{F2}A fireball bursts\nout of the staff!{EC}"
+   "text": "[INS 00] uses\n[INS 10]!{FC}{EC}{F2}A fireball bursts\nout of the staff!{EC}"
   },
   {
    "source": "battle_message",
@@ -19202,7 +19200,7 @@
    "bank": "$4C",
    "addr": "$4F54",
    "raw": "edf900f13e51513e404850fc10ecf254465145624352494962434c4f404263f1ec",
-   "text": "{ED}[INS 00]\nattacks{FC}<slime>{EC}{F2}with full force!\n{EC}"
+   "text": "{ED}[INS 00]\nattacks{FC}{EC}{F2}with full force!\n{EC}"
   },
   {
    "source": "battle_message",
@@ -19226,7 +19224,7 @@
    "bank": "$4C",
    "addr": "$4FAB",
    "raw": "f900f1404c524b51424f50624346424f4042495663fc10ecf2f9006244425150f14253424b63ec",
-   "text": "[INS 00]\ncounters fiercely!{FC}<slime>{EC}{F2}[INS 00] gets\neven!{EC}"
+   "text": "[INS 00]\ncounters fiercely!{FC}{EC}{F2}[INS 00] gets\neven!{EC}"
   },
   {
    "source": "battle_message",
@@ -19242,7 +19240,7 @@
    "bank": "$4C",
    "addr": "$4FF1",
    "raw": "f90062444f3e3f50f1f910623e4b41fc10ecf252504250624651623e50623ef150454642494163ec",
-   "text": "[INS 00] grabs\n[INS 10] and{FC}<slime>{EC}{F2}uses it as a\nshield!{EC}"
+   "text": "[INS 00] grabs\n[INS 10] and{FC}{EC}{F2}uses it as a\nshield!{EC}"
   },
   {
    "source": "battle_message",
@@ -19298,7 +19296,7 @@
    "bank": "$4C",
    "addr": "$50BC",
    "raw": "9626453e4b40426226453e4b4042f126453e4b40426226453e4b40425f5f5f97fc10ecf237454262534c464042624240454c4250f13e4949623e4f4c524b4163ec",
-   "text": "{96}Chance Chance\nChance Chance...{97}{FC}<slime>{EC}{F2}The voice echoes\nall around!{EC}"
+   "text": "[Chance Chance\nChance Chance...]{FC}{EC}{F2}The voice echoes\nall around!{EC}"
   },
   {
    "source": "battle_message",
@@ -19306,7 +19304,7 @@
    "bank": "$4C",
    "addr": "$50FE",
    "raw": "24624446443e4b514640624142534649f1424a424f44425063fc10ecf22742534649623e51513e404863f1ec",
-   "text": "A gigantic devil\nemerges!{FC}<slime>{EC}{F2}Devil attack!\n{EC}"
+   "text": "A gigantic devil\nemerges!{FC}{EC}{F2}Devil attack!\n{EC}"
   },
   {
    "source": "battle_message",
@@ -19362,7 +19360,7 @@
    "bank": "$4C",
    "addr": "$51B9",
    "raw": "2462543e4949624c43624946444551f14f4243494240515062514542fc10ecf2504d42494963f1ec",
-   "text": "A wall of light\nreflects the{FC}<slime>{EC}{F2}spell!\n{EC}"
+   "text": "A wall of light\nreflects the{FC}{EC}{F2}spell!\n{EC}"
   },
   {
    "source": "battle_message",
@@ -19370,7 +19368,7 @@
    "bank": "$4C",
    "addr": "$51E2",
    "raw": "37454262504d424949624650f14f4243494240514241623f56623efc10ecf2543e4949624c4362494644455163f1ec",
-   "text": "The spell is\nreflected by a{FC}<slime>{EC}{F2}wall of light!\n{EC}"
+   "text": "The spell is\nreflected by a{FC}{EC}{F2}wall of light!\n{EC}"
   },
   {
    "source": "battle_message",
@@ -19378,7 +19376,7 @@
    "bank": "$4C",
    "addr": "$5212",
    "raw": "ed3745426254464b41623e4f4c524b41f1f900fc10ecf24f4243494240515062514542f13e51513e404863ec",
-   "text": "{ED}The wind around\n[INS 00]{FC}<slime>{EC}{F2}reflects the\nattack!{EC}"
+   "text": "{ED}The wind around\n[INS 00]{FC}{EC}{F2}reflects the\nattack!{EC}"
   },
   {
    "source": "battle_message",
@@ -19402,7 +19400,7 @@
    "bank": "$4C",
    "addr": "$5271",
    "raw": "edf900f14d4f4c5142405150fc10ecf2f91063f1ec",
-   "text": "{ED}[INS 00]\nprotects{FC}<slime>{EC}{F2}[INS 10]!\n{EC}"
+   "text": "{ED}[INS 00]\nprotects{FC}{EC}{F2}[INS 10]!\n{EC}"
   },
   {
    "source": "battle_message",
@@ -19426,7 +19424,7 @@
    "bank": "$4C",
    "addr": "$52B9",
    "raw": "edf900f14f42404246534250fc10ecf2f91062413e4a3e4442f14d515063ec",
-   "text": "{ED}[INS 00]\nreceives{FC}<slime>{EC}{F2}[INS 10] damage\npts!{EC}"
+   "text": "{ED}[INS 00]\nreceives{FC}{EC}{F2}[INS 10] damage\npts!{EC}"
   },
   {
    "source": "battle_message",
@@ -19442,7 +19440,7 @@
    "bank": "$4C",
    "addr": "$52EB",
    "raw": "f900f14f42404246534250623e62433e513e49fc10ecf23f494c5463f1ec",
-   "text": "[INS 00]\nreceives a fatal{FC}<slime>{EC}{F2}blow!\n{EC}"
+   "text": "[INS 00]\nreceives a fatal{FC}{EC}{F2}blow!\n{EC}"
   },
   {
    "source": "battle_message",
@@ -19546,7 +19544,7 @@
    "bank": "$4C",
    "addr": "$5439",
    "raw": "edf90068f1414243424b504262444c425062524dfc10ecf23f5662f91063f1ec",
-   "text": "{ED}[INS 00]'s\ndefense goes up{FC}<slime>{EC}{F2}by [INS 10]!\n{EC}"
+   "text": "{ED}[INS 00]'s\ndefense goes up{FC}{EC}{F2}by [INS 10]!\n{EC}"
   },
   {
    "source": "battle_message",
@@ -19570,7 +19568,7 @@
    "bank": "$4C",
    "addr": "$5494",
    "raw": "f9006862504d424241f1444c425062414c544b623f56fc10ecf2f91063f1ec",
-   "text": "[INS 00]'s speed\ngoes down by{FC}<slime>{EC}{F2}[INS 10]!\n{EC}"
+   "text": "[INS 00]'s speed\ngoes down by{FC}{EC}{F2}[INS 10]!\n{EC}"
   },
   {
    "source": "battle_message",
@@ -19594,7 +19592,7 @@
    "bank": "$4C",
    "addr": "$54E6",
    "raw": "244b624649495250464c4bf1424b4452494350fc10ecf2f90063f1ec",
-   "text": "An illusion\nengulfs{FC}<slime>{EC}{F2}[INS 00]!\n{EC}"
+   "text": "An illusion\nengulfs{FC}{EC}{F2}[INS 00]!\n{EC}"
   },
   {
    "source": "battle_message",
@@ -19602,7 +19600,7 @@
    "bank": "$4C",
    "addr": "$5503",
    "raw": "2462543e4949624c43624946444551f14f46504250623f42434c4f42fc10ecf2f90063f1ec",
-   "text": "A wall of light\nrises before{FC}<slime>{EC}{F2}[INS 00]!\n{EC}"
+   "text": "A wall of light\nrises before{FC}{EC}{F2}[INS 00]!\n{EC}"
   },
   {
    "source": "battle_message",
@@ -19610,7 +19608,7 @@
    "bank": "$4C",
    "addr": "$5529",
    "raw": "2462543e4949624c43624946444551f1465062404f423e514241623f42434c4f42fc10ecf2f90063f1ec",
-   "text": "A wall of light\nis created before{FC}<slime>{EC}{F2}[INS 00]!\n{EC}"
+   "text": "A wall of light\nis created before{FC}{EC}{F2}[INS 00]!\n{EC}"
   },
   {
    "source": "battle_message",
@@ -19618,7 +19616,7 @@
    "bank": "$4C",
    "addr": "$5554",
    "raw": "246253424649624c43624946444551f1404c53424f5062f900fc10ecf23e4b416251454262443e4b4463f1ec",
-   "text": "A veil of light\ncovers [INS 00]{FC}<slime>{EC}{F2}and the gang!\n{EC}"
+   "text": "A veil of light\ncovers [INS 00]{FC}{EC}{F2}and the gang!\n{EC}"
   },
   {
    "source": "battle_message",
@@ -19690,7 +19688,7 @@
    "bank": "$4C",
    "addr": "$563C",
    "raw": "f900624650624b4c54f15352494b424f3e3f494262514cfc10ecf24a3e44464062504d4249495063f1ec",
-   "text": "[INS 00] is now\nvulnerable to{FC}<slime>{EC}{F2}magic spells!\n{EC}"
+   "text": "[INS 00] is now\nvulnerable to{FC}{EC}{F2}magic spells!\n{EC}"
   },
   {
    "source": "battle_message",
@@ -19706,7 +19704,7 @@
    "bank": "$4C",
    "addr": "$5677",
    "raw": "f900624650f149524f424162464b514cfc10ecf2413e4b40464b4463f1ec",
-   "text": "[INS 00] is\nlured into{FC}<slime>{EC}{F2}dancing!\n{EC}"
+   "text": "[INS 00] is\nlured into{FC}{EC}{F2}dancing!\n{EC}"
   },
   {
    "source": "battle_message",
@@ -19714,7 +19712,7 @@
    "bank": "$4C",
    "addr": "$5696",
    "raw": "f900625042424a50f1514c623f426243424249464b44fc10ecf2444c4c4163f1ec",
-   "text": "[INS 00] seems\nto be feeling{FC}<slime>{EC}{F2}good!\n{EC}"
+   "text": "[INS 00] seems\nto be feeling{FC}{EC}{F2}good!\n{EC}"
   },
   {
    "source": "battle_message",
@@ -19730,7 +19728,7 @@
    "bank": "$4C",
    "addr": "$56CE",
    "raw": "f9006244425150f1444c4c5042623f524a4d5063fc10ecf2f90068f1414243424b504262414f4c4d5062514c6201ec",
-   "text": "[INS 00] gets\ngoose bumps!{FC}<slime>{EC}{F2}[INS 00]'s\ndefense drops to 1{EC}"
+   "text": "[INS 00] gets\ngoose bumps!{FC}{EC}{F2}[INS 00]'s\ndefense drops to 1{EC}"
   },
   {
    "source": "battle_message",
@@ -19754,7 +19752,7 @@
    "bank": "$4C",
    "addr": "$5722",
    "raw": "37454262504d424949624c4bf1f900fc10ecf24650623f4f4c48424b63f1ec",
-   "text": "The spell on\n[INS 00]{FC}<slime>{EC}{F2}is broken!\n{EC}"
+   "text": "The spell on\n[INS 00]{FC}{EC}{F2}is broken!\n{EC}"
   },
   {
    "source": "battle_message",
@@ -19786,7 +19784,7 @@
    "bank": "$4C",
    "addr": "$5795",
    "raw": "edf900f145564d4b4c51464062413e4b4042624650fc10ecf250514c4d4d424163f1ec",
-   "text": "{ED}[INS 00]\nhypnotic dance is{FC}<slime>{EC}{F2}stopped!\n{EC}"
+   "text": "{ED}[INS 00]\nhypnotic dance is{FC}{EC}{F2}stopped!\n{EC}"
   },
   {
    "source": "battle_message",
@@ -19794,7 +19792,7 @@
    "bank": "$4C",
    "addr": "$57B9",
    "raw": "edf900f145564d4b4c514640fc10ecf2413e4b404262465062434f4c57424b63f1ec",
-   "text": "{ED}[INS 00]\nhypnotic{FC}<slime>{EC}{F2}dance is frozen!\n{EC}"
+   "text": "{ED}[INS 00]\nhypnotic{FC}{EC}{F2}dance is frozen!\n{EC}"
   },
   {
    "source": "battle_message",
@@ -19834,7 +19832,7 @@
    "bank": "$4C",
    "addr": "$583C",
    "raw": "30465050425063f1f90063fc10ecf2465062524b453e4f4a424163f1ec",
-   "text": "Misses!\n[INS 00]!{FC}<slime>{EC}{F2}is unharmed!\n{EC}"
+   "text": "Misses!\n[INS 00]!{FC}{EC}{F2}is unharmed!\n{EC}"
   },
   {
    "source": "battle_message",
@@ -19866,7 +19864,7 @@
    "bank": "$4C",
    "addr": "$58A6",
    "raw": "f900686251524f4b50f1514c62464f4c4b623e4b41fc10ecf23f42404c4a4250f1464b5352494b424f3e3f49425fec",
-   "text": "[INS 00]'s turns\nto iron and{FC}<slime>{EC}{F2}becomes\ninvulnerable.{EC}"
+   "text": "[INS 00]'s turns\nto iron and{FC}{EC}{F2}becomes\ninvulnerable.{EC}"
   },
   {
    "source": "battle_message",
@@ -20178,7 +20176,7 @@
    "bank": "$4C",
    "addr": "$5C04",
    "raw": "334c46504c4b424163f1fc10ecf2f90062494c504250f1f910622b3363ec",
-   "text": "Poisoned!\n{FC}<slime>{EC}{F2}[INS 00] loses\n[INS 10] HP!{EC}"
+   "text": "Poisoned!\n{FC}{EC}{F2}[INS 00] loses\n[INS 10] HP!{EC}"
   },
   {
    "source": "battle_message",
@@ -20186,7 +20184,7 @@
    "bank": "$4C",
    "addr": "$5C23",
    "raw": "246250514f4c4b44624d4c46504c4bf1513e48425062f910622b33fc10ecf2434f4c4a62f90063f1fc10ecf2f90068622b33f14142404f423e504250623f56ecf2f91062434f4c4af1514542624d4c46504c4b63fc10ec",
-   "text": "A strong poison\ntakes [INS 10] HP{FC}<slime>{EC}{F2}from [INS 00]!\n{FC}<slime>{EC}{F2}[INS 00]'s HP\ndecreases by{EC}{F2}[INS 10] from\nthe poison!{FC}<slime>{EC}"
+   "text": "A strong poison\ntakes [INS 10] HP{FC}{EC}{F2}from [INS 00]!\n{FC}{EC}{F2}[INS 00]'s HP\ndecreases by{EC}{F2}[INS 10] from\nthe poison!{FC}{EC}"
   },
   {
    "source": "battle_message",
@@ -20354,7 +20352,7 @@
    "bank": "$4C",
    "addr": "$5E8D",
    "raw": "f90062403e505150f1f91063fc10ecf2255251624b4c5162424b4c52444562303363f1ec",
-   "text": "[INS 00] casts\n[INS 10]!{FC}<slime>{EC}{F2}But not enough MP!\n{EC}"
+   "text": "[INS 00] casts\n[INS 10]!{FC}{EC}{F2}But not enough MP!\n{EC}"
   },
   {
    "source": "battle_message",
@@ -20362,7 +20360,7 @@
    "bank": "$4C",
    "addr": "$5EB2",
    "raw": "f90062504d465150f1f91063fc10ecf2255251624b4c5162424b4c52444562303363f1ec",
-   "text": "[INS 00] spits\n[INS 10]!{FC}<slime>{EC}{F2}But not enough MP!\n{EC}"
+   "text": "[INS 00] spits\n[INS 10]!{FC}{EC}{F2}But not enough MP!\n{EC}"
   },
   {
    "source": "battle_message",
@@ -20370,7 +20368,7 @@
    "bank": "$4C",
    "addr": "$5ED7",
    "raw": "f90062413e4b404250f1f91063fc10ecf2255251624b4c5162424b4c52444562303363f1ec",
-   "text": "[INS 00] dances\n[INS 10]!{FC}<slime>{EC}{F2}But not enough MP!\n{EC}"
+   "text": "[INS 00] dances\n[INS 10]!{FC}{EC}{F2}But not enough MP!\n{EC}"
   },
   {
    "source": "battle_message",
@@ -20410,7 +20408,7 @@
    "bank": "$4C",
    "addr": "$5F6D",
    "raw": "edf900624446534250f1f91062514cfc18ecf2f92063f1ec",
-   "text": "{ED}[INS 00] gives\n[INS 10] to{FC}<material>{EC}{F2}[INS 20]!\n{EC}"
+   "text": "{ED}[INS 00] gives\n[INS 10] to{FC}{EC}{F2}[INS 20]!\n{EC}"
   },
   {
    "source": "battle_message",
@@ -20418,7 +20416,7 @@
    "bank": "$4C",
    "addr": "$5F86",
    "raw": "f900624446534250f1f91062514c62514542fc18ecf2f92062443e4b4463f1ec",
-   "text": "[INS 00] gives\n[INS 10] to the{FC}<material>{EC}{F2}[INS 20] gang!\n{EC}"
+   "text": "[INS 00] gives\n[INS 10] to the{FC}{EC}{F2}[INS 20] gang!\n{EC}"
   },
   {
    "source": "field_message",
@@ -20722,7 +20720,7 @@
    "bank": "$41",
    "addr": "$5214",
    "raw": "26454c4c5042624a4c4b5051424fa050a1f1434c4f62514542623f3e515149425f",
-   "text": "Choose monster{A0}s{A1}\nfor the battle."
+   "text": "Choose monster(s)\nfor the battle."
   },
   {
    "source": "field_message",
@@ -20842,7 +20840,7 @@
    "bank": "$41",
    "addr": "$539D",
    "raw": "6967156f1c1d",
-   "text": "'r't<bug>be{1C}{1D}"
+   "text": "'r't<bug>'c{1C}{1D}"
   },
   {
    "source": "field_message",
@@ -21922,7 +21920,7 @@
    "bank": "$41",
    "addr": "$7588",
    "raw": "edf900e80800303e55622b3362a2f920e800012f39f910e80801303e5562303362a2f924faf7f2edf900e8080024372e62a2f928e800012f39f910e8080127282962a2f92cfaf7f2edf900e80800242a2f62a2f930e800012f39f910e808012c313762a2f934faf7",
-   "text": "{ED}[INS 00]Max HP {A2}[INS 20]LV[INS 10]Max MP {A2}[INS 24]\n\n{F2}{ED}[INS 00]ATK {A2}[INS 28]LV[INS 10]DEF {A2}[INS 2C]\n\n{F2}{ED}[INS 00]AGL {A2}[INS 30]LV[INS 10]INT {A2}[INS 34]"
+   "text": "{ED}[INS 00]Max HP +[INS 20]LV[INS 10]Max MP +[INS 24]\n\n{F2}{ED}[INS 00]ATK +[INS 28]LV[INS 10]DEF +[INS 2C]\n\n{F2}{ED}[INS 00]AGL +[INS 30]LV[INS 10]INT +[INS 34]"
   },
   {
    "source": "misc_message",

@@ -282,3 +282,31 @@ edge and the battle waits for input forever.
   party asks "Choose a monster back to farm": mash A with a `down` every ~25 presses to
   reach OK. Floor kicks from a maze floor: see the S115 re-measure above.
 
+
+## S120 techniques — text boxes as pictures, voices by hook, talk battles, forcing a floor type
+
+- **Capture each text box.** Compare only the box's rows between frames and leave out the
+  blinking wait arrow (rows 137-142, x 80-87): a box is "resting" after ~24 identical
+  frames; then snap and press A (a YES: `up`, then A). The field box is the bottom 5 tiles
+  (y 104-143) — but when the player stands low on the screen the game opens it at the TOP.
+  Rooms with animated tiles change the screen every few frames, so whole-screen equality
+  never settles.
+- **Which voice a text used.** Hook `PlaySoundEffect` (`$00:$1B2C`, from game.sym) and
+  record `register_file.A` with the text pointer `$C82D`; attribute each blip to the
+  bank $60 `CustomText_NN` label at or below the pointer (an insert prints from RAM —
+  `$C0C8` / `$C180`).
+- **Preview == game.** Render the editor's box (`talk_editor.render_box(…, scale=1)`) and
+  compare its dark pixels (value < 60) with the game's box crop (0, 104, 160, 144): 0
+  differences on 4 boxes S120 (the hero's name differs on purpose: the preview draws
+  the new-game "TERRY" tiles).
+- **Trap — the first warp after a CONTINUE base state can be ignored** (the mailbox is
+  consumed, the map stays): repeat the warp until `wMapID` changes (`goto2` in the S120
+  scratch helper; KEY_LESSONS S119 "wait for $C850").
+- **Win a talk battle.** Wait for `$C88A` ≠ 1 with A taps 40 frames apart (multi-box
+  texts come first), then ONE A every 50 frames (FIGHT is the default; a 4-on / 4-off
+  mash ends up in the skill list). A joinable enemy with a full party asks "Choose a
+  monster back to farm" — fight a project enemy with `joinability` 7 and 1 HP instead.
+- **Force a gate's maze floor type.** Hook `$16:$5BD2` (right after the maze path's
+  `SelectFloorType`) and set `register_file.A` = the type; enter gate 1 with the portal
+  mailbox (`$C96D` = 1, `$C96E` = 1, `$C96C` = 1, `$C88F` = 1), keep `$CA39/$CA3A` high
+  (a new game has no party) — `tools/census_gate_floor_types.py`.

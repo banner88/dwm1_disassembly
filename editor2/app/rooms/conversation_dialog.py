@@ -76,12 +76,12 @@ def spec_problems(spec, doc=None):
     """[text] — what keeps the conversation from compiling as intended."""
     out = []
 
-    def boxes_bad(boxes, where):
+    def boxes_bad(boxes, where, speaker=None):
         if not boxes or not any(any(ln for ln in b) for b in boxes):
             out.append(f'{where}: no text')
             return
         for bi, b in enumerate(boxes):
-            p = analyse_box(bi, b)[0]
+            p = analyse_box(bi, b, speaker)[0]
             if p:
                 out.append(f'{where} box {bi + 1}: {p[0]}')
 
@@ -90,7 +90,7 @@ def spec_problems(spec, doc=None):
             k = step_kind(st)
             where = f'{path}{i + 1} {STEP_NAMES.get(k, "?")}'
             if k in ('say', 'ask'):
-                boxes_bad((st[k] or {}).get('boxes'), where)
+                boxes_bad((st[k] or {}).get('boxes'), where, (st[k] or {}).get('speaker'))
             elif k == 'if' and not st['if']:
                 out.append(f'{where}: no flags to check')
             elif k in ('set', 'clear') and not st[k]:
@@ -102,7 +102,8 @@ def spec_problems(spec, doc=None):
             elif k == 'helper':
                 h = st['helper'] or {}
                 if isinstance(h.get('say'), dict):
-                    boxes_bad(h['say'].get('boxes'), where + ' (helper text)')
+                    boxes_bad(h['say'].get('boxes'), where + ' (helper text)',
+                              h['say'].get('speaker'))
             if k in ('helper', 'move', 'end') and i != len(steps) - 1:
                 out.append(f'{where}: the steps after it never run')
             for key, lab in BRANCHES.get(k, ()):
@@ -414,11 +415,11 @@ class ConversationDialog(QDialog):
         return fl
 
     def _boxes(self, holder, key, default):
-        bl = BoxList(self.rom, (holder.get(key) or {}).get('boxes') or None,
-                     first_default=default)
+        cur = holder.get(key) if isinstance(holder.get(key), dict) else {}
+        bl = BoxList(self.rom, cur.get('boxes') or None, first_default=default, meta=cur)
 
         def ch():
-            holder[key] = {'boxes': bl.boxes()}
+            holder[key] = bl.text()                 # boxes + S120 speaker / voice
             self._refresh_label()
         bl.changed.connect(ch)
         return bl

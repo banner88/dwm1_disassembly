@@ -85,6 +85,25 @@ It returns an **index** (0–15), not the table value. Each of the three
 These three tables are **pure data, same-size editable** — the primary knobs for
 re-weighting what a gate produces.
 
+**S120 — what the indices mean (read + measured; `tools/census_gate_floor_types.py` →
+`extracted/gate_floor_types/`).** Table 1 rolls the **maze floor type 0-15** = `wMapID`
+inside the dive (tileset via `$00:$2A5D`, palette `$17:$51F5`); the census forces each
+type with a code hook after the maze path's `SelectFloorType` ($16:$5BD2, `A` := type)
+on a new game, gate 1 floor 1, and keeps a picture of each (16 distinct looks: grass,
+grey rock, sand, red rock, ice blocks, purple brick ×2, yellow brick, boulders, forest,
+yellow + tile floor, two mountain greens, sea + islands ×2, snow). Vanilla gates use
+rows 0-15 of table 1 in order of depth (row 0 = gate 0 only = type 13; row 15 = gate 31).
+**The special picks** — table 2's index → `SpecialRoomTable` ($16:$5C32, labelled S120):
+0 `SpecialRoom0_Treasure` (map $5A / $5B / $5C by wRNG1 mod 3; the 8 chests $D9CF-$D9D6
+from `FloorLayoutData[wFloorType3 · 48]` via `SetBrd_6db0`); 1 `SpecialRoom1_OneRareChest`
+(same rooms; all chests empty but one of the first four, an item of the 16 at `$16:$6E04`);
+2 Forest maze $53; 3 Priest $51; 4 Item shop $50; 5 `SpecialRoom5_Coliseum` $52 (three
+teams rolled into $D9D1-$D9DA first); 6 Maze 1/2/3 $57-$59; 7 Conveyor maze 1/2/3
+$54-$56 (`dwm/map_names`). Table 3 (contents) rows roll feature types 0 / 7 / 8 (not
+named further here). **Per gate** (PROJECT_COMPILER §2.17 "S120"): `maze_row` /
+`special_row` / `contents_row` / `depth` pick bytes 0-2 / 7 — measured: gate 5 with
+`maze_row` 0 rolled type 13 on every floor-1 entry tried.
+
 ---
 
 ## 3. Branch decision (standard vs special) ✅
@@ -663,8 +682,8 @@ floor is DATA only: byte 4 = the custom mapID, 5/6 = the room's
 region (`; @BUILD_PROJECT BEGIN gate_floor_table`, emitter `gates16`) fed by
 `custom.gates[]` (PROJECT_COMPILER §2.17); a gate without settings keeps its
 vanilla 8 bytes, so the example project's region is byte-identical to the
-ROM. Bytes 0-2 (floor-type rows) are still the vanilla values — private rows
-per gate are open (ROADMAP P3.7b part 2).
+ROM. Bytes 0-2 (floor-type rows) and 7 (depth tier): the vanilla values unless the
+gate sets `maze_row` / `special_row` / `contents_row` / `depth` (S120, §2).
 
 **What happens in the boss room** is the room's scripts — nothing in bank
 $16. Vanilla (28 boss rooms): the entry script sets `D92B = 6`; the
@@ -749,7 +768,8 @@ gold) — are the source gate's.
 
 **A new gate's row** = the source's row with the project's floor count (byte 3) and boss
 room (bytes 4-6) — so bytes 0-2 (floor-type rows: the maze look and the special rooms on
-floors 3, 6, 9 …) and byte 7 (depth tier: tileset + item tier) are the source's. Gate 0
+floors 3, 6, 9 …) and byte 7 (depth tier: the item tier) are the source's unless the gate
+sets its own (S120, §2 / PROJECT_COMPILER §2.17). Gate 0
 as a source keeps "no special rooms" only for gate 0 itself (`GateDecisionFork` tests
 `wGateID == 0`); a copy of gate 0 gets special rooms like any gate (code-read, not
 measured).
@@ -980,9 +1000,10 @@ itself is handled by the override).
    `(piece<<4)|variant`, but the table turning a piece id into the rendered
    screen's tile layout isn't fully pinned. Needed to author *new* maze pieces
    (vs. reweighting existing ones).
-3. **Full `rst $00` dispatch enumeration** 🟡 (S100: custom rooms no longer need a
-   dispatch slot — §7.6 inserts before the vanilla gating) — mechanism + ~7 handlers confirmed;
-   enumerate every slot so reusable slots are known precisely.
+3. **Full `rst $00` dispatch enumeration** ✅ **DONE S120** — the 8 slots of
+   `SpecialRoomTable` ($16:$5C32, both trees labelled): §2 "The special picks (S120)".
+   No slot is free (the table holds exactly the 8 indices `FloorTypeSelectionTable2`
+   rows can roll); custom rooms insert before it (§7.6).
 4. **`SetBrd_6744`/`SetBrd_6800` carve algorithm** 🟡 — outline understood;
    step-trace pending for guaranteed-connectivity guarantees.
 

@@ -5720,7 +5720,7 @@ Bank0C_ScriptAddr_5847:
     dw $00EE  ; Text $00EE: "$43:$485A *:Gwrr, Gwrr..."
     dw $5873
     dw $FF01  ; BranchIfFlagSet
-    dw $0043  ; Text $0043: "$42:$6466 Slio:Dn'a wanna know about the // farm? "
+    dw $0043  ; Text $0043: "$42:$6466 Slio:D'ya wanna know about the // farm? "
     dw $5865
     dw $FF01  ; BranchIfFlagSet
     dw $011E  ; Text $011E: "$43:$5CAD *:I'm Mick. Who are you? // *:Whew, thos"
@@ -6935,7 +6935,7 @@ Bank0C_ScriptAddr_5ED9:
     dw $FFFF  ; END
 
 Bank0C_ScriptAddr_5EE5:
-    dw $024A  ; Text $024A: "$45:$4490 *:Since [HERO] won{A4} // *:Customers ha"
+    dw $024A  ; Text $024A: "$45:$4490 *:Since [HERO] won… // *:Customers have "
     dw $FF03  ; SetEventFlag
     dw $0115  ; Text $0115: "$43:$5793 *:It's helpful to take a WarpWing // wit"
     dw $FF04  ; ScreenEffect
@@ -9288,7 +9288,7 @@ Farm_Script01:
     dw $FF01  ; BranchIfFlagSet
     dw $0031  ; Text $0031: "$42:$5B3C *:Upper floor, the monster farm. // *:Pu"
     dw Bank0C_ScriptAddr_6AD9          ; -> branch target
-    dw $0069  ; Text $0069: "$42:$7A31 *:Hey Master! Dn'a have an egg? [YES/NO]"
+    dw $0069  ; Text $0069: "$42:$7A31 *:Hey Master! D'ya have an egg? [YES/NO]"
     dw $FF15  ; PlaySE
     dw $C83C  ; RAM $C83C
     dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
@@ -10115,7 +10115,7 @@ Bank0C_ScriptAddr_6F5B:
     dw $FFFF  ; END
 
 Bank0C_ScriptAddr_6F5F:
-    dw $0043  ; Text $0043: "$42:$6466 Slio:Dn'a wanna know about the // farm? "
+    dw $0043  ; Text $0043: "$42:$6466 Slio:D'ya wanna know about the // farm? "
     dw $FF15  ; PlaySE
     dw $C83C  ; RAM $C83C
     dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."

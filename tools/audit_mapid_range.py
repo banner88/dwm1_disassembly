@@ -99,9 +99,9 @@ V = {
     ("bank_006.asm", "jr_006_6893", 0): "CP_UNSIGNED",
     ("bank_006.asm", "Jump_006_6b87", 0): "CP_UNSIGNED",
     ("bank_007.asm", "jr_007_6004", 0): "CP_UNSIGNED",
-    ("bank_007.asm", "CmpFld_604d", 0): "CP_UNSIGNED",
-    ("bank_009.asm", "jr_009_46de", 0): "CP_UNSIGNED",
-    ("bank_009.asm", "SetFld9_4bc8", 0): "CP_UNSIGNED",
+    # (S120: the old "CmpFld_604d" key = the S100-named SaveAllowCheck, keyed below)
+    ("bank_009.asm", "ShopBuyStockFill", 0): "CP_UNSIGNED",  # was keyed "jr_009_46de" (S117 name): cp $50
+    ("bank_009.asm", "ShopSellPrice", 0): "CP_UNSIGNED",     # was keyed "SetFld9_4bc8" (S117 name): cp $50 / ret z
     # ---- bank_00b (the room-data readers)
     ("bank_00b.asm", "jr_00b_4037", 0): "IDX16",
     ("bank_00b.asm", "jr_00b_4037", 1): "DEAD",
@@ -127,7 +127,6 @@ V = {
     ("bank_017.asm", "jr_017_4071", 0): "GATE_CTX",          # FloorPalettePtrTable (floortype)
     ("bank_017.asm", "label17_409e", 0): "LOSSY_DIVERTED",   # AttrPtrTable #2 (patched: clamp call)
     # ---- bank_050 / _051 / _055
-    ("bank_050.asm", "Jump_050_640a", 0): "CP_UNSIGNED",
     ("bank_050.asm", "Jump_050_64e0", 0): "CP_UNSIGNED",
     ("bank_051.asm", "jr_051_4073", 0): "CP_UNSIGNED",
     ("bank_055.asm", "jr_055_4a47", 0): "DEBUG",
@@ -170,12 +169,24 @@ V = {
     ("bank_071.asm", "CustomRoomFlags", 0): "BOUNDED",           # S100: cp ROOMFLAGS_TABLE_LEN
     ("bank_073.asm", "GateLeaveFreePal", 0): "CP_UNSIGNED",      # S100 r3: cp CUSTOM_ROOM_START
     ("bank_076.asm", "EncResolve", 0): "BOUNDED",                # S114: cp ENC_ROOM_LEN, 16-bit index *3
+    # S120 burn-down: the sites added S116-S119 (ROADMAP "audit_mapid_range
+    # re-adjudication"); reasoning in CROSSBANK_ROOMS "S120 burn-down".
+    ("bank_060.asm", "CustomReadInteract", 0): "CP_UNSIGNED",    # S117: cp CUSTOM_ROOM_START, then == scan of VanillaNPCExtTable
+    ("bank_060.asm", "CutPatchRoute", 0): "CP_UNSIGNED",         # S119: cp CUSTOM_ROOM_START (GateAwareDispatch rule)
+    ("bank_071.asm", "BattleBGMResolve", 0): "CP_UNSIGNED",      # S116: cp $5d (the arena battle room)
+    ("bank_071.asm", "BattleBGMResolve", 1): "CP_UNSIGNED",      # S116: cp $5d
+    ("bank_071.asm", "BattleBGMResolve", 2): "BOUNDED",          # S116: cp $80 / jr nc, 16-bit index (FEATURE cap $7F,
+                                                                 # music.py refuses battle.rooms >= $80)
+    ("bank_071.asm", "BattleBGMResolve", 3): "CP_UNSIGNED",      # S116: cp $50 / $52 / $5d special-room tests
+    ("bank_076.asm", "GateBossWin", 0): "CP_UNSIGNED",           # S117: == wBossMapType (full byte)
+    ("bank_077.asm", "ShopFill", 0): "CP_UNSIGNED",              # S117: cp $50
+    ("bank_077.asm", "PushAttrActive", 0): "CP_UNSIGNED",        # S117b: cp CUSTOM_ROOM_START
 }
 
 # Site-count pins (S66). A mismatch = the tree changed; re-adjudicate.
 PIN_CLEAN = 58
 PIN_PATCHED_MIN = 50   # patched loses raw loads to clamp/intercept rewrites…
-PIN_PATCHED_MAX = 90   # …and gains custom-bank sites; band, not exact, so
+PIN_PATCHED_MAX = 120  # …and gains custom-bank sites; band, not exact, so
                        # compiler-regenerated banks don't false-alarm.
 
 
@@ -234,6 +245,17 @@ def main():
     if not (PIN_PATCHED_MIN <= len(patched) <= PIN_PATCHED_MAX):
         print(f"SELFTEST FAIL: patched-tree loads = {len(patched)}, "
               f"outside pin band [{PIN_PATCHED_MIN},{PIN_PATCHED_MAX}]")
+        ok = False
+    # S120: a verdict key that matches no site = a renamed label (four had
+    # gone stale silently: S100 / S117 names); its site then shows up as
+    # NEEDS_REVIEW under the new name, or worse, a new load under the old
+    # name would inherit a verdict nobody gave it.
+    seen = {(s["file"], s["label"], s["occ"]) for s in clean + patched}
+    stale = [k for k in V if k not in seen]
+    if stale:
+        print(f"STALE: {len(stale)} verdict key(s) match no site (label renamed?):")
+        for k in stale:
+            print(f"  {k}")
         ok = False
     review = [s for s in clean + patched if s["verdict"] == "NEEDS_REVIEW"]
     if review:

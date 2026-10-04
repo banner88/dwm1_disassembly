@@ -68,6 +68,7 @@ class Inspector(QWidget):
     goDoorRequested = Signal(str)              # door id: select its end here  S98
     addStairsRequested = Signal(object)        # (cx, cy)  S100 gate rooms
     addGateEntranceRequested = Signal(object)  # (cx, cy)  S115 new gates (NG1)
+    playHereRequested = Signal(object)         # (cx, cy)  S120 (P3.4): play the room from here
     animationChosen = Signal(str)              # 'none' | 'source' | '0xNN'  S99
 
     def __init__(self, parent=None):
@@ -266,6 +267,9 @@ class Inspector(QWidget):
         m.addAction('Step-on trigger here…', lambda: self._emit_spot('step'))
         m.addAction('Stairs down here (gate rooms)', lambda: self._emit_cell(self.addStairsRequested))
         m.addAction('Gate entrance here…', lambda: self._emit_cell(self.addGateEntranceRequested))
+        m.addSeparator()
+        m.addAction('▶ Play the game here (last build)',
+                    lambda: self._emit_cell(self.playHereRequested))
         self.sel_more.setMenu(m)
         self.sel_add_row = QWidget()
         ar = QHBoxLayout(self.sel_add_row)

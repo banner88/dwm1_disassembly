@@ -554,3 +554,22 @@ gate you assumed".
 | extracted/npc_field_sprites/id_XX.png as "the NPC's look" | INCOMPLETE (S119) | one facing, on the throne-room floor; `extracted/npc_facing_sprites/` = four facings + step frames, transparent, captured from the game (tools/extract_npc_facings.py) |
 | BANK04 "Script opcodes as measured (S118)": text boxes need `$07 init_dialog` "for scripts that did not start from a talk" | INCOMPLETE (S119, PyBoy) | after ANY yielding step a text needs it, talk / examine / step-on scripts included (BANK04 "Writing scenes (S119)") |
 
+
+## S120 addendum (2026-10-05; overlay guard, mapID audit, dialogue P3.6, gate rows P3.7b, mop-up)
+
+| Claim (where) | Verdict | Correct |
+|---|---|---|
+| PROJECT_COMPILER §1 "compat build == hand-staged tree" (held since S63) | BROKEN S119, unseen (S120) | the S119 template re-pin was never `--apply`'d: `patches/bank_060.asm` stayed S117 while `bank_004.asm` called its entries 9 / 10 (overlay `0591928d…`, patched, historical). Regenerated; verify check 2 now compares the overlay with `REFERENCE_MD5`. |
+| ROADMAP "audit_mapid_range re-adjudication": "11 wMapID loads in the S117 shop code" | WRONG LIST (S120) | 12 sites (bank $09 ×3, $60 `CustomReadInteract` + `CutPatchRoute`, $71 `BattleBGMResolve` ×4, $76 `GateBossWin`, $77 ×2) + 4 stale verdict keys (renamed labels) — CROSSBANK_ROOMS "S120 burn-down". |
+| CROSSBANK_ROOMS authoring rule 4: the gate_flag / trigger_x $FF validators are "not yet implemented" | STALE (S120) | both exist in `editor2/core/validators.py`. |
+| TEXT_SYSTEM "DTE (Dual-Tile Encoding) — $65-$7F" (`$65 ll`, `$6D th`, `$6E he` … `$7F al`); dwm/text.py `DTE`; tools/dump_dialogue.py `DTE`; EDITOR_DESIGN "auto-DTE" | WRONG (S120: font rendered, vanilla usage counted, PyBoy) | no letter pairs exist: `$65` = `"`, `$66-$71` = one-cell contractions 'l 't 's 'r 'm 'y 'v 'd 'e 'c 'n 'T, `$72-$7F` blank. 57 text ids + 85 table texts were mis-decoded ("Dn'a" = "D'ya"). Tables fixed, dialogue.json re-decoded. |
+| TEXT_SYSTEM "Text boxes": "the vanilla indent under '*:' comes from the `$EB` opener"; textenc / talk_editor comments | WRONG (S120, PyBoy) | `$EA` / `$EB` take no parameters, print nothing and indent nothing: they turn the voice on with blip sound `$5B` / `$5A`. |
+| TEXT_SYSTEM control table: `$EA` "Text box init (2 param bytes)", `$EB` "BOX2 alternate box", `$EC` NAME "insert NPC name", `$ED` MONSTER "insert monster name" | WRONG (S120, bank $56 handlers + PyBoy) | `$EA` / `$EB` voices (no params); `$EC` = text speed from the menu; `$ED` = print at once. Neither `$EC` nor `$ED` occurs in field dialogue. |
+| TEXT_SYSTEM: control-code handler table "at `$56:$44CD`" | OFF BY ONE (S120) | `rst $00` is at `$44CD`, `TextCodeTable` at `$44CE` (labelled both trees). |
+| TEXT_SYSTEM / decoders: only `$E8` (2), `$E9`, `$F9` (1) take parameter bytes | INCOMPLETE (S120, handlers) | `$F8`, `$FB`, `$FC` read 1 parameter byte too (`$FC` in 89 battle messages — the decoder printed its byte as a glyph). |
+| dwm/text.py `decode`: `$EA` skips 2 parameter bytes | WRONG (S120) | the "*:" after `$EA` is text; nothing is skipped. |
+| ROOM_DATA_FORMAT "Monster NPCs": a monster NPC is not redrawn after a talk battle (S101) | NOT REPRODUCIBLE (S120, PyBoy on the user's save: 1-enemy, 3-enemy, the user's helper conversation) | OAM / VRAM / pixels identical before and after; the S101 observation is unexplained (the S101 r1 helper landed on fixed cells). |
+| GATE_GENERATION §1 "byte 7 … drives tileset *and* item tier" | CONTRADICTS §7.7 (S101: "only reader: the bank $01 item tier") | S120 wording follows §7.7 (the item tier) in the new text; the census pictures show the floor type alone sets the look. |
+| PROJECT_STATE open defect: "TOOLS_AND_DATA's attribution monsters_full.json ← dump_monsters.py is suspect" | RESOLVED (S120) | no repo tool writes it (first import `cba8952`); its 221 rows equal the ROM's MonsterInfoTable on every numeric field checked. |
+| TEXT_SYSTEM `$F6`: the 4-cell hero budget "inferred" (S120) | MEASURED (S120b, PyBoy: the Castle naming scene) | the naming screen takes ≤ 4 letters; the default `$D3-$D6` is stored + `$F0` × 4; the END check refuses 4 identical letters + a 14-name list (`$09:$6985`). |
+| editor2/core/playback.py `_hero_name`: "Put in TERRY the way the naming screen leaves a name" (5 letters `encode_name('TERRY')` + `$F0` × 3) | WRONG (S120b, PyBoy) | accepting the default leaves the 4 tiles + `$F0` × 4; fixed (S120b: the tiles kept, `$F0` padding). |

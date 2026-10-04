@@ -321,6 +321,11 @@ def plan(prj):
             if mid < 128 and P.room_bgm[mid] == 0 and (r.get('id') in served
                                                        or r.get('id') in bosses):
                 P.room_bgm[mid] = FOLLOW_GATE
+            elif mid >= 128 and (r.get('id') in served or r.get('id') in bosses):
+                # S120 (CROSSBANK_ROOMS "S120 burn-down"): the tables stop at $7F
+                P.warnings.append(f"room {r.get('id')} (${mid:02X}): rooms from $80 up cannot "
+                                  "follow the gate's song (the room-song table has 128 rows) — "
+                                  "the gate theme plays")
 
     # ---- battle -----------------------------------------------------------
     b = music.get('battle') or {}
@@ -339,6 +344,10 @@ def plan(prj):
             mid = F.val(r['mapID'])
             if mid < 128 and P.room_battle[mid] == 0 and r.get('id') in served:
                 P.room_battle[mid] = FOLLOW_GATE
+            elif mid >= 128 and r.get('id') in served:
+                P.warnings.append(f"room {r.get('id')} (${mid:02X}): rooms from $80 up cannot "
+                                  "follow the gate's battle song (bank $71 entry 7 tests "
+                                  "cp $80) — battles there use the normal / boss song")
     for key, v in (b.get('fights') or {}).items():
         eid = F.val(key)
         if not 0 <= eid < 0xFFFF:

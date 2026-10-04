@@ -14,41 +14,110 @@ The dispatch table at `$01:$6119` is a **per-room VRAM visual update** system
 | $3E-$57 | a-z |
 | $5C-$64 | ' → , . ; .. (space) ! ? |
 
-## DTE (Dual-Tile Encoding) — $65-$7F
+## One-cell contractions and extra glyphs — $65-$71, $80-$BF (S120, measured; there is NO DTE)
 
-Single bytes expanding to common 2-character pairs:
+**Corrected S120 (DOC_AUDIT S120):** this section used to be a "DTE" table of letter
+PAIRS (`$65 ll`, `$6D th`, `$6E he` … `$7F al`) copied from another game. The font has no
+such pairs. Rendered from the font (bank `$4F` `$4010` + code × 16) and shown in PyBoy on
+the user's save (S120 probe texts): **`$65` = `"`** (the double quote; 10 vanilla uses);
+**`$66-$71` = ONE-cell contractions — an apostrophe + a letter drawn in one tile**:
 
-| Code | Pair | Code | Pair | Code | Pair |
-|------|------|------|------|------|------|
-| $65 | ll | $6E | he | $77 | ou |
-| $66 | 'l | $6F | be | $78 | te |
-| $67 | 't | $70 | or | $79 | nd |
-| $68 | 's | $71 | an | $7A | to |
-| $69 | 'r | $72 | in | $7B | it |
-| $6A | 'm | $73 | er | $7C | es |
-| $6B | n' | $74 | re | $7D | at |
-| $6C | 'v | $75 | on | $7E | en |
-| $6D | th | $76 | st | $7F | al |
+| Code | Glyph | Vanilla uses | Example |
+|---|---|---|---|
+| $66 | 'l | 205 | `I` + $66 + `l` = "I'll" |
+| $67 | 't | 341 | `don` + $67 = "don't" |
+| $68 | 's | 445 | `it` + $68 = "it's" |
+| $69 | 'r | 415 | `you` + $69 + `e` = "you're" |
+| $6A | 'm | 392 | `I` + $6A = "I'm" |
+| $6B | 'y | 3 | `D` + $6B + `a` = "D'ya" (the old decoders printed "Dn'a") |
+| $6C | 'v | 39 | `you` + $6C + `e` = "you've" |
+| $6D | 'd | 12 | `I` + $6D = "I'd" |
+| $6E | 'e | 8 | `t` + $6E + `m` = "t'em" |
+| $6F | 'c | 3 | |
+| $70 | 'n | 3 | |
+| $71 | 'T | 1 | |
+
+`$72-$7F` are blank tiles (never used). Other glyphs of the font that text uses
+(`$80-$BF`): `$96 [`, `$97 ]`, `$9C -`, `$9D ~`, `$9E /`, `$9F *` (the speaker star),
+`$A0 (`, `$A1 )`, `$A2 +`, `$A3 :`, `$A4 …`, `$B6 &` (also `$8F` °, `$A5` Lv, `$A6` Ex,
+`$AC` ★, arrows `$A9 $AD-$B3`, `$B4` Zz, `$B5` ©). Vanilla dialogue uses `$9F` 3,860 ×,
+`$A3` 4,818 ×, `$B6` 175 ×, `$9C` 40 ×, `$A4` 22 ×, `$A2` 9 ×, `$96`/`$97` 8 ×.
+The charmap (`disassembly/charmap.asm`) stops at `$64`; the editor emits the rest as
+hex bytes (`editor2/core/textenc.py`, PROJECT_COMPILER §2.3 "S120").
+
+## Glyphs, speakers and voices (S120, PyBoy on the user's save)
+
+- **The opener only picks the VOICE.** `$EA` and `$EB` take NO parameter bytes and print
+  nothing: they set `$C826` bit 0 (voice on) and `$C840` = the blip sound — **`$EA` →
+  sound `$5B`**, **`$EB` → sound `$5A`** — which bank $00 `HandleTextCharacter` plays per
+  printed cell (spaces included; measured: 62 blips for 62 cells). A text with **no
+  opener is silent** (the hero's lines: 115 vanilla ids start with `$F6 $A3`). `$FD` /
+  `$FE` turn the blip on / off mid-text. Layout is IDENTICAL for `$EA` and `$EB` (line 2
+  starts at cell 0 under both — the old "the vanilla indent comes from `$EB`" note was
+  wrong). Vanilla speakers per opener: `$EA` "*" 1,371, King 67, Mick, Durran, the
+  bosses; `$EB` "*" 656, Pulio 50, Watabou 47, Milayou 31, Slio, Santi, May.
+- **The speaker label is ordinary text**: `$9F $A3` = "*:", or a name + `$A3`
+  ("Milayou:"), or `$F6 $A3` (the hero's name + ":"). Its cells count against line 1's 18
+  ("Milayou:" leaves 10: "Terry! Wait!" lost "t!" in the probe).
+- **`$F6` HERO** copies the 8 bytes at `$CA42` to `$C0C8` (+ `$F0`), saves the text
+  pointer in `$C831/$C832`, sets `$C825` bit 4 and prints from `$C0C8`; `$F0` there returns
+  to the saved pointer. All 8 letters print when the name has no `$F0`. The editor counts
+  `{hero}` as **4 cells** — **MEASURED S120b** (PyBoy, the Castle's naming scene on the
+  original ROM): the naming screen takes at most **4** letters (8 presses of A gave
+  "AAAA", the cursor then jumps to END); a new game holds the 4 tiles `$D3-$D6` (bank $01
+  writes them; font bank $4F `$4D40-$4D7F`, the ONLY copy of those tile bytes in the
+  ROM), the naming screen offers them (`$C8F2/$C8F3` → `$CA42`, `$C8F4` = 0; the copy to
+  `$C0C8` stops at `$00` / `$F0` / `$9F`) and accepting the offer stores `$D3 $D4 $D5
+  $D6 $F0 $F0 $F0 $F0`; a typed name is stored the same way ("MILY" = `$30 $2C $2F $3C`
+  + `$F0` × 4). The END check (bank $09 `SetFld9_68ef`) refuses four identical letters
+  and a 14-name list at `$09:$6985` (8 B each, `$FF` end) with "Please choose another".
+  **Patched (S120b, user: "change TERRY to MILLY as default, but leave otherwise as 4
+  letters"):** `patches/bank_04f.asm` draws those 4 tiles as "MILLY" (64 B, same size;
+  the clean tree's INCBIN still says TERRY) — the naming box offers MILLY and "King:Oh
+  MILLY!" follows (PyBoy, the user's project). The editor previews use the same bytes
+  (`textenc.PATCHED_GLYPHS`). Inserted names blip like other letters.
+- **`$F9 nn`** prints the name in slot `$C180 + nn` the same way; script op **`$3F`
+  `load_lead_name`** fills slot 0 with the first party monster's SPECIES name (text mode 5,
+  ≤ 9 cells) — the editor's `{lead}` (the compiler puts `$3F` before the text).
+- **Where the box opens:** at the bottom normally, at the TOP when the player stands low
+  on the screen (the S120 sign NPC at row 5 of a 1-screen room).
+- **Nested YES/NO** (a question inside an answer) works as written: measured S120 YES→YES,
+  YES→NO, NO, each branch rejoining (talk.steps / cutscene ask).
 
 ## Control Codes ($E0+)
 
 | Code | Name | Purpose |
 |------|------|---------|
-| $E7 | **CHOICE** | **YES/NO box + continuation flags. NOT "END".** Sets $C83C, $C83A=$FF. Script checks result via opcode $15. |
+| $E0-$E6 | — | unused codes: open the YES/NO box like `$FF` (handler `TextCode_E0_E6`) |
+| $E7 | **CHOICE** | **YES/NO box + continuation flags. NOT "END".** Sets $C83C (= 1, NO), $C83A=$FF. Script checks result via opcode $15. (Vanilla dialogue mostly uses `$FF`: 220 ids; `$E7`: 1.) |
 | $E8 | POS | Set the draw position — **2 parameter bytes** (S108, handler $56:$451F; was listed as "PAUSE"; textenc keeps the token name `PAUSE`) |
 | $E9 | SOUND | Play a sound effect — **1 parameter byte** (S108, handler $56:$4554 `PlaySoundEffect`; was listed as "NUM") |
-| $EA | BOX | Text box init (2 param bytes: $9F $A3 = standard NPC box) |
-| $EB | BOX2 | Alternate text box init (same params as $EA) |
-| $EC | NAME | Insert NPC/character name |
-| $ED | MONSTER | Insert monster name |
+| $EA | VOICE_LOW | Voice on, blip sound `$5B` (S120 — prints nothing, takes no parameter; the "*:" after it is text) |
+| $EB | VOICE_HIGH | Voice on, blip sound `$5A` (S120 — same layout as `$EA`; was "BOX2 / indented") |
+| $EC | SPEED | Text speed back to the menu setting (`TextSpeedFrames`, 7 = instant) — S120; was listed as "NAME" (never used in field text) |
+| $ED | FAST | Print the rest at once (`$C826` bit 7) — S120; was listed as "MONSTER" (field text: never; battle messages use their own `$ED`) |
 | $EE | NEWLINE | Line break — **MUST be preceded by $EF** or overwrites line 1 |
 | $EF | PAGE | Advance rendering position. Use `$EF $EE` together for line breaks |
-| $F0 | SECTION | End text section. Stops rendering (unless bit 4 of $C825 set) |
-| $F6 | HERO | Insert player's name |
+| $F0 | END | End the text — or, inside a `$F6` / `$F9` insert ($C825 bit 4), return to the saved pointer |
+| $F1 | NEXTROW | Next row (the descriptions' line break) |
+| $F2 | REFRESH | Redraw the canvas |
+| $F3 | NEWCANVAS | Redraw + clear the canvas, position to its start (20 ids, before the speaker) |
+| $F4 | — | `$C826` bit 7 off, `$C825` bit 1 off (`SetB56_4771`) |
+| $F5 | INSTANT | `$C825` bit 1: no per-letter delay |
+| $F6 | HERO | Insert the hero's name (`$CA42`, 8 bytes — S120) |
 | $F7 | CLEAR | Clear text box contents |
-| $F9 | CONTINUE | Set continuation flag (bit 4 $C825), update base pointer |
+| $F8 | SPEEDN | `$C833` := n — **1 parameter byte** (S120; unused in dialogue) |
+| $F9 | INSERT | `$F9 nn` — print the name in slot `$C180 + nn` (**1 parameter byte**) |
 | $FA | WAIT | Wait for A button press |
+| $FB | — | `$C825` bit 6, `$C835` := n — **1 parameter byte** (S120; unused in dialogue) |
+| $FC | — | `$C825` bit 7, `$C836` := n — **1 parameter byte** (S120; battle messages) |
+| $FD | VOICE_ON | Voice blip on (current sound) |
+| $FE | VOICE_OFF | Voice blip off |
 | $FF | CHOICE2 | YES/NO box only, does NOT set continuation flags |
+
+(S120: the handler of every code is labelled in `bank_056.asm` — `TextCodeTable` at
+**`$56:$44CE`** (the dispatch `rst $00` is at `$44CD`; this doc said the table was there),
+`TextCode_E7_Choice` … `TextCode_FE_VoiceOff`, `TextSpeedFrames` `$45A0`.)
 
 **Text strings terminate with `$F7 $F0` (CLEAR + SECTION), NOT `$E7`.**
 
@@ -62,8 +131,9 @@ $EA $9F $A3 line1_text $EF $EE line2_text $F7 $F0
   $C2-$D3; the glyphs are typed into those tiles, not into the BG map).
 - `$EA $9F $A3` prints "*:" in the first 2 cells of line 1 → **16 cells left
   on the first line**; every other line (and every later box) starts at cell
-  0 — no indent. (The vanilla indent under "*:" comes from the **$EB**
-  opener: Bazaar `$EB $9F $A3 "Hello, welcome" $EF $EE "to the Bazaar!"`.)
+  0 — no indent, under `$EA` and `$EB` alike (S120 measured; this line said the
+  `$EB` opener indents — it only picks the other voice, see "Glyphs, speakers
+  and voices").
 - **Between boxes: `$FA $F7 $EF $EE`** (6,029 vanilla uses): WAIT (arrow,
   waits for A) + CLEAR + PAGE/NEWLINE → the next box starts clean on line 1.
 - **A line past its cells is NOT wrapped safely**: the extra cells go to the
@@ -71,8 +141,8 @@ $EA $9F $A3 line1_text $EF $EE line2_text $F7 $F0
   engine's line counter is then off by one (the next box scrolled instead of
   clearing). A third `$EF $EE` line scrolls the box up **without waiting**.
 - The editor's `boxes` form (PROJECT_COMPILER §dialogue) emits exactly
-  these rules; custom text uses no DTE, but the charmap's ".." is ONE glyph
-  ($61), so "..." takes 2 cells.
+  these rules; the charmap's ".." is ONE glyph ($61), so "..." takes 2 cells,
+  and (S120) a contraction ("don't") is one cell for the apostrophe + letter.
 - **Font:** 2bpp 8×8 tiles at bank **$4F $4010 + code×16** (glyph = text
   code; `disassembly/bank_04f.asm` INCBINs "0-9", "A-P" …) — verified: the
   canvas tiles hold exactly these bytes for "*:Hello". The box frame tiles
@@ -192,7 +262,7 @@ previews and bank $47's TextStr id comments built from it named the wrong lines 
 S108 (`tools/refresh_script_text_comments.py`; DOC_AUDIT S108). `text_id_map.json` is
 now derived from `dialogue.json` (`tools/dump_text_id_map.py`).
 
-**Control-code parameters (bank $56 handler table $44CD, read S108 for the decoder):**
+**Control-code parameters (bank $56 handler table $44CE — S120 address fix, read S108 for the decoder):**
 `$E8` takes 2 bytes (sets the draw position — not "PAUSE"), `$E9` 1 byte (plays a
 sound effect — not "NUM"; 7 uses in the ids, all `$E9 $60`), `$F9` 1 byte (insert:
 `$00` / `$10` / `$20` / `$30` — the inserted names of the join / upgrade messages; S118:
@@ -315,7 +385,8 @@ indexed by `wMapID` to the table at `$6119`. Each handler does room-specific vis
 
 ## Bank $56 Text Control Code Jump Table
 
-Located at `$56:$44CD` (after `sub $E0` / `rst $00` at `$44CB`).
+Located at **`$56:$44CE`** (S120 correction: `sub $E0` is at `$44CB`, `rst $00` at
+`$44CD`; labelled `TextCodeTable` in both trees).
 32 entries (2 bytes each) for control codes $E0-$FF:
 
 | Code | Handler | Code | Handler | Code | Handler | Code | Handler |

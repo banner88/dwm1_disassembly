@@ -314,11 +314,14 @@ class Env:
         if isinstance(txt, dict) and txt.get('boxes'):
             from . import textenc as T
             try:
-                T.check_boxes(txt['boxes'])
+                T.check_boxes(txt['boxes'], txt.get('speaker'), txt.get('voice'))
             except T.TextError as ex:
                 raise CutsceneError(f'{ctx}: {ex}')
             ent = {'id': ident, 'boxes': [list(b) for b in txt['boxes']],
                    'comment': f'cutscene text ({ctx})'}
+            for k in ('speaker', 'voice'):              # S120: who speaks, which blip
+                if txt.get(k) is not None:
+                    ent[k] = txt[k]
             if choice:
                 ent['choice'] = True
             self.dialogue.append(ent)
@@ -476,6 +479,9 @@ class Lowerer:
             # S119 measured: a text after any yielding step needs init_dialog
             # (talk scripts too); init_dialog with the box already open is harmless
             self.op('init_dialog')
+        from . import textenc as _T
+        if isinstance(txt, dict) and _T.uses_lead({'boxes': txt.get('boxes')}):
+            self.op('load_lead_name')        # S120: {lead} = $F9 $00 needs $C180 filled
         self.ops.append(['text', tid])
         self.box = True
         nb = len(txt['boxes']) if isinstance(txt, dict) and txt.get('boxes') else 1

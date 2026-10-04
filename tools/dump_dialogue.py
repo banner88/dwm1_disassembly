@@ -32,6 +32,7 @@ is not shown (every box but the last ends with it).
   pip install pyboy --break-system-packages
   python3 tools/dump_dialogue.py             # measure + write extracted/dialogue.json
   python3 tools/dump_dialogue.py --selftest  # JSON raw bytes == ROM (no PyBoy; verify check 5)
+  python3 tools/dump_dialogue.py --redecode  # S120: re-decode with the measured map kept (no PyBoy)
 """
 import hashlib
 import io
@@ -59,12 +60,13 @@ CHARS.update({0x5C: "'", 0x5D: '>', 0x5E: ',', 0x5F: '.', 0x60: ';', 0x61: '..',
 CHARS.update({0x10 + i: f'<{n}>' for i, n in enumerate(
     ('slime', 'dragon', 'beast', 'bird', 'plant', 'bug', 'devil', 'zombie',
      'material', '???', 'spirit'))})
-DTE = {0x65: 'll', 0x66: "'l", 0x67: "'t", 0x68: "'s", 0x69: "'r", 0x6A: "'m",
-       0x6B: "n'", 0x6C: "'v", 0x6D: 'th', 0x6E: 'he', 0x6F: 'be', 0x70: 'or',
-       0x71: 'an', 0x72: 'in', 0x73: 'er', 0x74: 're', 0x75: 'on', 0x76: 'st',
-       0x77: 'ou', 0x78: 'te', 0x79: 'nd', 0x7A: 'to', 0x7B: 'it', 0x7C: 'es',
-       0x7D: 'at', 0x7E: 'en', 0x7F: 'al'}
-PARAMS = {0xE8: 2, 0xE9: 1, 0xF9: 1}
+# S120: one-cell glyphs, not letter pairs (dwm/text.py has the note)
+DTE = {0x65: '"', 0x66: "'l", 0x67: "'t", 0x68: "'s", 0x69: "'r", 0x6A: "'m",
+       0x6B: "'y", 0x6C: "'v", 0x6D: "'d", 0x6E: "'e", 0x6F: "'c", 0x70: "'n",
+       0x71: "'T"}
+CHARS.update({0x96: '[', 0x97: ']', 0x9D: '~', 0x9E: '/', 0xA0: '(', 0xA1: ')',
+              0xA2: '+', 0xA4: '\u2026'})
+PARAMS = {0xE8: 2, 0xE9: 1, 0xF8: 1, 0xF9: 1, 0xFB: 1, 0xFC: 1}   # S120: + $F8 / $FB / $FC (bank $56 TextCodeTable)
 
 # (source, bank, table address, count, title)
 TABLES = [
@@ -233,7 +235,14 @@ def main():
     if '--selftest' in sys.argv:
         sys.exit(selftest())
     rom = load_rom()
-    data = build(rom, measure(ROM_PATH))
+    if '--redecode' in sys.argv:
+        # S120: keep the MEASURED id -> (bank, address) map, re-read the bytes and
+        # re-decode (the glyph table changed; nothing about where texts live did)
+        old = json.load(open(OUT))
+        resolved = [(int(e['bank'][1:], 16), int(e['addr'][1:], 16)) for e in old['text_ids']]
+        data = build(rom, resolved)
+    else:
+        data = build(rom, measure(ROM_PATH))
     with open(OUT, 'w') as f:
         json.dump(data, f, indent=1, ensure_ascii=False)
         f.write('\n')

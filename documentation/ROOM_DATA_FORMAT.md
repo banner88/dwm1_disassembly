@@ -645,10 +645,15 @@ screen 0, DragonKid on screen 1). Census (`tools/census_monster_npc_sprites.py`,
 221-223 do not exist — the compiler refuses 217-223, and (S105) a species ≥ 224
 unless it is the project's own `custom.species` (the census's id-224 row was
 captured on the pre-S105 example build = that project's Gorbunok). Heavy monster sheets
-count against the per-screen sprite budget (above). **Observed S101, not yet
-traced:** after a battle started by TALKING to a monster NPC, that NPC is not
-drawn again until the screen reloads (its slot stays active, the cast is
-intact); after a fight started by the entry script the monster NPC stays.
+count against the per-screen sprite budget (above). ~~Observed S101, not yet
+traced: after a battle started by TALKING to a monster NPC, that NPC is not
+drawn again until the screen reloads~~ — **not reproducible S120** (PyBoy, the user's
+save, room $70's monster NPC $F0 = MegaOgre): after a talk battle of 1 enemy (`$5A`),
+of 3 enemies (`$5B`) and the user's own conversation (MegaOgre fight → helper → Castle)
+the NPC's OAM entries (tiles $80-$83), its VRAM tiles ($8800-$88FF, both banks) and its
+16 × 16 screen pixels are identical before the talk, after the battle and through the
+helper's fly-in. What the S101 run saw is not identified (that build's helper landed on
+fixed cells and could cover the monster — S101 r2 moved it beside the player).
 
 ## Animated tiles (S99, PyBoy-measured) — ROADMAP P3.3e
 

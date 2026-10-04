@@ -74,6 +74,10 @@ _NAME_CHARS.update({"'": 0x5C, ',': 0x5E, '.': 0x5F, ' ': 0x62, '!': 0x63,
 NAME_CHARS = ''.join(sorted(_NAME_CHARS))
 # descriptions: + the one-cell ligatures vanilla uses (longest match first)
 _DESC_MULTI = {"'t": 0x67, "'s": 0x68, '..': 0x61}
+# S120: every one-cell contraction of the font ('l 'r 'm 'y 'v 'd 'e 'c 'n 'T too —
+# textenc.CONTRACTIONS; vanilla descriptions use 't / 's only)
+_DESC_MULTI.update({"'l": 0x66, "'r": 0x69, "'m": 0x6A, "'y": 0x6B, "'v": 0x6C,
+                    "'d": 0x6D, "'e": 0x6E, "'c": 0x6F, "'n": 0x70, "'T": 0x71})
 _DESC_CHARS = dict(_NAME_CHARS, **{';': 0x60})
 _DECODE = {v: k for k, v in _DESC_CHARS.items()}
 _DECODE.update({v: k for k, v in _DESC_MULTI.items()})

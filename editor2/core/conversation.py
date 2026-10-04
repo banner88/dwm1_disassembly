@@ -197,7 +197,7 @@ class ConversationMixin:
     def _dlg_spec(self, did):
         if not did:
             return None
-        return {'boxes': self._dlg_boxes(did) or []}
+        return dict({'boxes': self._dlg_boxes(did) or []}, **self._dlg_meta(did))
 
     def conversation_spec(self, sid):
         """GUI spec of a steps-form script (texts inline), or None."""
@@ -234,9 +234,9 @@ class ConversationMixin:
     def _conversation_payload(self, sid, spec):
         n = [0]
 
-        def dlg(part, boxes, choice=False):
+        def dlg(part, boxes, choice=False, meta=None):
             n[0] += 1
-            return self._new_dialogue(sid, f'{part}{n[0]}', boxes, choice=choice)
+            return self._new_dialogue(sid, f'{part}{n[0]}', boxes, choice=choice, meta=meta)
 
         def conv(steps):
             out = []
@@ -246,12 +246,12 @@ class ConversationMixin:
                     b = (st['say'] or {}).get('boxes') or []
                     if not b:
                         raise ValueError('a Say step needs some text')
-                    st['say'] = dlg('say', b)
+                    st['say'] = dlg('say', b, meta=st['say'])
                 elif 'ask' in st:
                     b = (st['ask'] or {}).get('boxes') or []
                     if not b:
                         raise ValueError('an Ask step needs a question')
-                    st['ask'] = dlg('ask', b, choice=True)
+                    st['ask'] = dlg('ask', b, choice=True, meta=st['ask'])
                     st['yes'] = conv(st.get('yes'))
                     st['no'] = conv(st.get('no'))
                 elif 'if' in st:
@@ -262,7 +262,7 @@ class ConversationMixin:
                     b = (h.get('say') or {}).get('boxes') if isinstance(h.get('say'), dict) \
                         else None
                     if b:
-                        h['say'] = dlg('helper', b)
+                        h['say'] = dlg('helper', b, meta=h['say'])
                     else:
                         h.pop('say', None)
                     st['helper'] = h

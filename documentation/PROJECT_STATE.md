@@ -10,6 +10,70 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
+> Last verified: 2026-10-05 (Session 120 + S120b — **MOP-UP: THE STALE BANK $60 OVERLAY FIXED AND
+> GUARDED; THE wMapID AUDIT RE-ADJUDICATED; P3.6 THE DIALOGUE EDITOR FINISHED (SPEAKERS,
+> VOICES, THE HERO'S / LEAD MONSTER'S NAMES, THE GAME'S CONTRACTIONS AND EXTRA GLYPHS);
+> P3.7b PART 2 — EACH GATE'S FLOOR-TYPE ROWS + ITEM TIER WITH A PICTURE PER FLOOR TYPE;
+> SMALL RESIDUALS** (user: "s119 is fine. Please fix $60 do A then also D and E, or just a
+> lot of mop-up. No new ticket items but as many oustanding smaller things as reasonably fit
+> into session"). **Built S120, NOT yet user-tested.**
+> **$60:** `patches/bank_060.asm` was the S117 file — the S119 template change was never
+> applied, so the patched overlay built `0591928d…` (patched, historical) instead of the pin
+> → regenerated with `--apply` (bank_060 only); verify_integrity check 2 now FAILS when the
+> overlay's md5 ≠ test_compiler's `REFERENCE_MD5` (negative control measured; KEY_LESSONS S120).
+> **A:** `audit_mapid_range.py` — 12 sites adjudicated (11 CP_UNSIGNED, `BattleBGMResolve#2`
+> BOUNDED), 4 stale keys renamed / removed and now an error, selftest PASS (clean 58 /
+> patched 82), in verify_integrity check 5 (CROSSBANK_ROOMS "S120 burn-down").
+> **D — P3.6 (measured on the user's save, TEXT_SYSTEM "Glyphs, speakers and voices
+> (S120)"):** there is NO DTE — `$66-$71` are one-cell contractions; `$EA`/`$EB` = the low /
+> high voice blip (not an indent); `$EC`/`$ED` = menu speed / print at once; `$F6` = the
+> hero's name; op `$3F` `load_lead_name` + `$F9 00` = the lead monster's species name;
+> `TextCodeTable` is `$56:$44CE` (labelled both trees, `TextSpeedFrames` misassembly fixed,
+> byte-perfect). Built: `textenc.py` (glyphs, contractions, `{hero}` / `{lead}`,
+> speaker + voice per text, raw strings validated), every box editor (talk, YES/NO replies,
+> conversations, cutscenes) gets Speaker / name / Voice + Insert ▾; the compiler adds
+> `load_lead_name` before a `{lead}` text; `dwm/text.py` + `dump_dialogue.py` decode the
+> contractions (dialogue.json / text_id_map.json regenerated, 17 script previews refreshed).
+> **Preview == game pixel-exact on 4 boxes**; nested YES/NO played on 3 paths.
+> **E — P3.7b part 2:** `custom.gates[].maze_row` / `special_row` / `contents_row` (0-15)
+> + `depth` (1-3 item tier) → `GateFloorDataTable` bytes 0-2 / 7 (rows stay shared — the
+> tab says so); Gates tab "Maze floors" with a picture per floor type
+> (`tools/census_gate_floor_types.py` → `extracted/gate_floor_types/`, PyBoy hook
+> `$16:$5BD2`); `SpecialRoomTable` `$16:$5C32` labelled (the rst $00 enumeration, Phase 2C).
+> **Mop-up:** NPC "Shown when … Flags…" (NG2 residual b); Rooms → More ▾ → "▶ Play the game
+> here (last build)" (P3.4); music warnings for rooms ≥ $80; `npc_catalog.json` rebuilt
+> without phantom steps (772 → 716); the talk-battle redraw residual (P3.7b i) not
+> reproducible in 3 scenarios; the gate-setting `0` bug (`0 in (None, False, '')`); `monsters_full.json` has no generator (== the ROM, frozen — open defect closed).
+> **Verifier PASS; clean `1ca6579…` byte-perfect** (labels / comments only in disassembly/);
+> **patched pin `d19259a1…` (patched; historical since S120b) unchanged by S120** (the example project uses none of the new
+> fields). test_compiler 726/726, --rom 1007/1007; test_app PASS; test_canvas --rom PASS.
+> `EDITOR_REVISION` = 'S120'. The user's project (my-dwm-hack_11) as-is builds `98631830…`
+> (patched); its only changed byte run is "Let's" → the game's own `'s` cell ($68).
+> **Test ROM `DWM_S120_dialogue_gates_test.gbc` (`da7f9941…`, patched; built, NOT yet
+> user-tested):** the user's project + "Echo Parlor" ($71) behind the GreatTree screen-12
+> Copycat House door (4, 4): Echo (high voice, contractions + glyphs, 3 boxes), the bell
+> NPC (nested YES/NO, `{lead}` / `{hero}`, sets `parlor_bell`, a silent hero line), a ghost
+> shown when `parlor_bell` is set (leave and come back), a silent sign; the Gate of
+> Villager's maze row = 0 (every maze floor the sea type 13). Open question for the user:
+> the hero-name budget (4 cells) is inferred from vanilla line widths.
+> **Hand-off:** every S120 change = the diff against `6543815`, delivered as
+> `DWM-S120-mopup-dialogue-gates-changed-files.zip`, the APPLY list pasted in the chat.
+> **Next:** the user's test, then the user's pick (ROADMAP P3.8 residuals, NG3, P3.H).
+> **S120b (user 2026-10-05 09:00: "I just want to change TERRY to MILLY as default, but
+> leave otherwise as 4 letters. Thats all. Romhack is about milayou"; built, PyBoy-verified,
+> NOT yet user-tested):** measured first (the Castle naming scene, PyBoy, original ROM): a
+> name is ≤ 4 letters, the default is the 4 font tiles `$D3-$D6` (`$4F:$4D40`, the only
+> copy), accepting it stores them + `$F0` × 4 (TEXT_SYSTEM `$F6`). `patches/bank_04f.asm`
+> draws those tiles "MILLY" (64 B, same size); the editor previews use the same bytes
+> (`textenc.PATCHED_GLYPHS`), Playback's new-game hero name fixed (was "TERRY" in 5
+> letters). **Patched pin `97659a4a…` (patched)**, was `d19259a1…` (patched, historical) —
+> the 64 bytes + the checksum only. test_compiler 730/730, --rom 1011/1011. The user's
+> project as-is builds `fed98e56…` (patched; vs S120 the same 64 bytes). **Test ROM
+> `DWM_S120b_milly_test.gbc` (`fed98e56…`, patched):** a new game → the King's naming box
+> offers MILLY → "King:Oh MILLY!" (PyBoy). `EDITOR_REVISION` = 'S120b'. Delivered in the
+> cumulative `DWM-S120-mopup-dialogue-gates-changed-files.zip` (S120 + S120b).
+
+
 > Last verified: 2026-10-04 (Session 119 — **ROADMAP P3.8 PART B: THE CUTSCENE EDITOR — THE
 > PROJECT'S OWN SCENES WITH NAMED NPCs, A CAST THAT APPEARS / DISAPPEARS, EVERY STEP ON THE
 > ROOM PICTURE IN TILES, PREVIEW + PLAY IN THE GAME; OP EDITING OF A COPIED ROOM'S SCRIPTS;
@@ -108,115 +172,11 @@
 > pick.
 
 
-> Last verified: 2026-10-04 (Session 118 — **ROADMAP P3.8 PART A: THE CUTSCENES TAB —
-> EVERY SCENE OF THE GAME AND OF THE PROJECT READ, SHOWN AS A STORYBOARD AND PLAYED IN THE
-> REAL GAME INSIDE THE EDITOR (NO NAVIGATING), THE INTRO CHAIN, AUTO TEXT, SOUND** (user:
-> "I want you to work next on the Cutscene tab … Reading in, displaying and playing back
-> all existing cutscenes in all relevant rooms. This includes the more tough case of the
-> intro … Cutscene playback window … Include skipping text boxes as an option · Cutscene
-> editor …" → on the audit: "1) Sounds good. 2) If I dont have to navigate to cut-scene
-> in-game, ok. 3) Ok but obviously might depend on cut scene. 4) a auto. You can turn off
-> and on to press manually. 5) Good. Yes sound. 6) Probably always clone room")).
-> **Built S118, NOT yet user-tested.** Part B (the editor) is next; part C (in-place
-> vanilla override) dropped — vanilla scenes are changed in a cloned room (ROADMAP P3.8).
-> **Byte-neutral:** no ROM byte changed — clean `1ca6579…` byte-perfect (labels /
-> comments only, both trees), patched pin `110210b0…` (patched) unchanged, so no test ROM.
-> Verifier PASS (6/6; check 5 += `census_cutscenes.py`); test_compiler --rom
-> 947/947; test_app PASS. `EDITOR_REVISION` = 'S118' (S118b below). **Playback needs pyboy** on the user's
-> Mac (`pip install pyboy`).
->
-> **The script VM decoded (BANK04_SCRIPT_ENGINE "Script opcodes as measured (S118)"):** all
-> 102 opcodes named (`editor2/core/script_ops.py`; bank $04 handlers `ScriptCmdNN_*`,
-> `MoveProgNN_*` / `PlayerProgNN_*`, `MoveProgramsAll` … in both trees); `$D8D7` bits
-> rewritten (3 = a waited walk, 4 = movement programs, 5 = lock facing, 6 = walk_fast),
-> `$D8D8` (text box bottom / top, long delay), the movement buffers `$D8E9 + 8n`, the `$1C`
-> programs measured (hop, jumps, leaps, fly in / off, appear / vanish …); wrong names
-> fixed (`$22` walk_fast is not required, `$4C` waits for the D-pad, `$21` = sound, DOC_AUDIT
-> S118); `$24` / `$61` read ONE param through the script bank (the S96 tracer stopped at
-> `rst $10` — `script_param_counts.py` follows it now; every decode was already consistent).
-> **Model / playback (EDITOR_DESIGN §5.1d):** `editor2/core/cutscenes.py` — 519 vanilla
-> scenes (+ the project's, as the compiler lowers them), path conditions, triggers, the actor
-> model, the RECIPE that sets a scene up (flags / RAM, the room-entry script kept quiet, the
-> warp, the game's own talk / examine / step-on; scenes after a battle win start at their
-> first step); `editor2/core/playback.py` — PyBoy from a cached new-game (or .sav) state;
-> **`editor2/core/playback_server.py` — the game in a CHILD PROCESS** (a crashed game froze
-> PyBoy's tick: KEY_LESSONS S118). The tab: Chains (the intro: bedtime → Warubou → the
-> dresser → tree tunnel → Starry Shrine → the old man up GreatTree → Castle) / Your rooms /
-> Game rooms, the storyboard, recorded pictures; the Playback window (auto text + read time
-> + YES/NO, auto D-pad, sound at 1×, 2-8×, keys, the storyboard follows); help
-> `63_cutscenes.md`.
-> **Measured:** `tools/census_cutscenes.py` (every map in a worker process) — 519 scenes,
-> 514 reached (442 by the game's own trigger), 417 ended, 86 handed to a battle, 0 hung;
-> the position model 3,887 / 3,909 checks exact; the intro chain plays from the dresser to
-> the Castle minister by itself (PyBoy screenshots). **Found:** text code `$F9 nn` prints
-> the name at `$C180 + nn` — an unfilled slot runs the text engine through RAM and crashes
-> the game (the egg scenes; TEXT_SYSTEM, KEY_LESSONS S118); never poke the player's HRAM
-> position; a savestate made without sound plays back silent.
-> **S118b (the user's first look, 2026-10-04 09:12; built, NOT yet user-tested):** "Oh boy
-> this looks dangerous - the wrong NPC jumps down … 2) Some of the 'cutscenes' are just text
-> boxes? Like egg evaluator? 3) Playing some cutscenes doesnt do anything? Like old man room
-> script … 4) Are 'play' for per-script line or entire window? Unclear. 5) Can you edit any
-> of this?" → the room state from the story's own counter writes + NPC-count rule (BANK04
-> "Room state (S118b)", KEY_LESSONS S118b); the filter = someone moves (218 / 519); a
-> walk-to that moves nobody is named (the Old Man Gate Room: he already stands there — the
-> game too); ▶ Play scene / ▶ From this step; fly programs per `$D8E3`/`$D8E4` measured.
-> Census: 516 reached, 0 hung, 1 empty-slot step, 3,989 / 3,998 exact. **Found: a CLONED
-> room keeps its own state counters** — the vanilla scripts' writes never reach it, so the
-> user's GreatTree clone shows the old man jumping (in their game too); whether clones
-> should follow the vanilla counters is the user's call (ROADMAP P3.8). `EDITOR_REVISION`
-> = 'S118b'. Delivered as `DWM-S118b-cutscenes-fixes-changed-files.zip` (on top of S118).
-> **S118c (user 2026-10-04 10:10: "Yeah obviously" — the copied room must do what the game
-> does; "I really would like to step through animation step by step"; built, NOT yet
-> user-tested):** copies of game rooms follow the game's room state —
-> `step_counter.vanilla` (the original's counter, EQU, saved; PROJECT_COMPILER §2.6
-> "S118c"), Make editable writes it, existing copies migrated on open, Rooms → *Follow the
-> game's room state*; PyBoy on the user's project: the copied GreatTree screen 0 follows
-> `$D92D` and the cliff scene moves the cliff man. Playback **Step ▸▸ / ◂ Step back**, one
-> recorded picture per step. The example project has no copies: pin `110210b0…` (patched)
-> unchanged; the user's project builds differently once opened (the migration).
-> `EDITOR_REVISION` = 'S118c'. Delivered as `DWM-S118c-copies-steps-changed-files.zip` + test
-> ROM `DWM_S118c_test.gbc` (`5ef856d8…`, patched = the user's my-dwm-hack_9 opened in the
-> S118c editor; was `c2db7f54…`, patched, historical).
-> **S118d (user 2026-10-04 10:40: "Arena rooms - script 0 - … game resets and plays logo";
-> scene clicks after a playback showed nothing — their traceback: `script_ops` without
-> `FLY`, i.e. the S118b zip not applied; "Are you sure you tested this stuff?"):** entry
-> scenes reached through another script's room change are set up as that script leaves the
-> game (`Catalogue.entry_caller`, BANK04); resets detected in the census and the Playback
-> log (KEY_LESSONS S118d: "ended" ≠ worked); test_app opens every 7th scene; one CUMULATIVE
-> zip for the whole session (SESSION_PROTOCOL). Census 516 reached, 0 resets, 3,994 /
-> 3,998. `EDITOR_REVISION` = 'S118d'. Delivered as `DWM-S118-all-changed-files.zip` (every
-> file changed in S118-S118d; supersedes the three earlier zips).
-> **S118e (user 2026-10-04 12:00: "Game intro where milayou and terry run around … both are
-> in wrong positions"; "PLEASE … give ability to mute preview pyboy player GLOBALLY in the
-> menu"):** the bedtime scene plays from a real new game (== an uninterrupted new game,
-> PyBoy); 36 room-entry scenes that started the player at the screen centre now use the gate
-> table's arrival (boss rooms) or walk in from the next screen (Warubou's east room); View →
-> **Mute game playback** (⌘⇧M) overrides every Playback window (BANK04 "Where the player
-> starts", KEY_LESSONS S118e). `EDITOR_REVISION` = 'S118e'. Delivered as
-> `DWM-S118-all-changed-files.zip` (cumulative, S118-S118e).
-> **S118f (user 2026-10-04 12:41: "I want everything interpretable please"):** every
-> storyboard step in words — room states, the decoded script variables ($C8EC, $C8ED,
-> $D951, $D9CB, the chests $D9CF-$D9D6, $D9E2/E4/E5/E8, $C8F2 …, BANK04 "Script variables
-> (S118f)"), flags (known names, else where the game sets them; $0007 = Pulio's first
-> pick-up), screen types, tile patches, NPC animation fields. `EDITOR_REVISION` = 'S118f'.
-> **S118g (user 2026-10-04 14:05: "why are random things named Warubou? … ARE YOU NOT
-> TAKING THIS INFO FROM GAME?"):** the storyboard's NPC names had come from a hand-made
-> sprite table, room names are hand labels — now an NPC is named only by its own text's
-> speaker, each room header shows how the game's exit tables / scripts enter it; the hero's
-> name (was "TERRY0000"); `$C8F2` corrected to the hero's name. The arena-win scene the
-> user spot-checked IS where the game puts it (arena battle script → map $06 tile (14, 4);
-> played: messenger, warp, King). `EDITOR_REVISION` = 'S118g'.
-> **Hand-off:** every S118 change = the diff against the S117b push, delivered as
-> `DWM-S118-cutscenes-changed-files.zip`, the APPLY list pasted in the chat. **Next:** P3.8
-> part B (the cutscene editor — the questions in ROADMAP P3.8) or the user's pick.
-
-
-
-
 
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
-- **S119** (2026-10-04): P3.8 part B — the cutscene editor: the project's own scenes (`custom.rooms[].cutscenes[]`, 4 triggers + flag conditions + once, 25 step kinds in cells; named NPCs + cast members; `cutscene_build.py` lowers each trigger's scenes into one script, init_dialog / close_text rules measured), the stage + step tree + preview + Play in the game; part c op editing of a copied room's scripts; part d bank $04 `$24`/`$61` redirect → bank $60 entries 9/10 (copies draw their tile patches; `patch_data`); NPC facing sprites extracted (128/132); `ScreenShakeTick` named; pin `d19259a1…` (patched). Test ROM `DWM_S119_cutscenes_test.gbc` (`28029018…`, patched; r2 — the Copycat House door) built, NOT yet user-tested. **S119b**: unnamed NPCs pickable in every actor list (named when picked). **S119b**: unnamed NPCs pickable in every actor list (named on pick; user: "Why cant I select npc in a custom room"). Verbose block in this file. Owning: PROJECT_COMPILER §2.33, BANK04_SCRIPT_ENGINE "Writing scenes (S119)", EDITOR_DESIGN §5.1d, CUSTOM_CUTSCENES, known_RAM_map, KEY_LESSONS S119, DOC_AUDIT S119, TOOLS_AND_DATA S119.
-- **S118** (2026-10-04): P3.8 part A — the Cutscenes tab: the 102 script opcodes named + measured (`script_ops.py`; bank $04 handlers labelled both trees; `$D8D7`/`$D8D8` bits; the `$1C` movement programs; `$24`/`$61` arity 1), 519 vanilla scenes + the project's as storyboards (`cutscenes.py`), played in the real game without navigating (`playback.py` recipes; PyBoy in a child process, `playback_server.py`), the intro chain, auto text / sound / keys; `census_cutscenes.py` 514 / 519 reached, 0 hung, model 3,887 / 3,909; byte-neutral (pin `110210b0…` patched, unchanged). Built, NOT yet user-tested. **S118b** (user's first look): room state from the story's counter writes (the wrong NPC jumped), filter = someone moves, ▶ From this step, `FLY` table; census 516 reached, 3,989 / 3,998; copies keep their own state counters → **S118c**: copies follow the game's room state (`step_counter.vanilla`), Step ▸▸ / back, a picture per step. **S118d**: entry scenes set up as the calling script leaves the game (the arena reset), resets detected, cumulative zip. **S118e**: the intro from a real new game, gate arrivals / walk-in instead of the screen centre, View → Mute game playback. **S118f**: every storyboard step in words (`ram_names.py`). **S118g**: names only from the game (speaker texts, exit tables). Verbose block in this file. Owning: BANK04_SCRIPT_ENGINE "Script opcodes as measured (S118)", EDITOR_DESIGN §5.1d, CUSTOM_CUTSCENES, TEXT_SYSTEM ($F9 slots), KEY_LESSONS S118, DOC_AUDIT S118, TOOLS_AND_DATA S118.
+- **S120** (2026-10-05): mop-up — `patches/bank_060.asm` regenerated (stale since S119: the overlay built `0591928d…`, not the pin) + verify_integrity check 2 compares the pin; `audit_mapid_range.py` re-adjudicated (12 sites, stale-key check, in check 5); P3.6 done — no DTE (`$66-$71` contractions), `$EA`/`$EB` voices, `$F6` hero / op `$3F` + `$F9 00` lead names, extra glyphs, speaker + voice + Insert in every box editor, preview == game pixel-exact; P3.7b part 2 — per-gate `maze_row` / `special_row` / `contents_row` / `depth` with floor-type pictures (`census_gate_floor_types.py`), `SpecialRoomTable` labelled; NPC shown-when GUI, Rooms "Play the game here", npc_catalog rebuilt (716); pin `d19259a1…` (patched) unchanged. Test ROM `DWM_S120_dialogue_gates_test.gbc` (`da7f9941…`, patched) built, NOT yet user-tested. **S120b**: the hero's default name MILLY (`patches/bank_04f.asm`, 4 tiles; names stay ≤ 4 letters, measured), pin `97659a4a…` (patched), test ROM `DWM_S120b_milly_test.gbc`. Verbose block in this file. Owning: TEXT_SYSTEM "Glyphs, speakers and voices (S120)", PROJECT_COMPILER §2.3 / §2.17, GATE_GENERATION §2 / §7.8, CROSSBANK_ROOMS "S120 burn-down", EDITOR_DESIGN §5.1b, KEY_LESSONS S120, PYBOY_DEBUGGING S120, DOC_AUDIT S120, TOOLS_AND_DATA S120.
+- **S119** (2026-10-04): P3.8 part B — the cutscene editor: the project's own scenes (`custom.rooms[].cutscenes[]`, 4 triggers + flag conditions + once, 25 step kinds in cells; named NPCs + cast members; `cutscene_build.py` lowers each trigger's scenes into one script, init_dialog / close_text rules measured), the stage + step tree + preview + Play in the game; part c op editing of a copied room's scripts; part d bank $04 `$24`/`$61` redirect → bank $60 entries 9/10 (copies draw their tile patches; `patch_data`); NPC facing sprites extracted (128/132); `ScreenShakeTick` named; pin `d19259a1…` (patched). Test ROM `DWM_S119_cutscenes_test.gbc` (`28029018…`, patched; r2 — the Copycat House door) built, NOT yet user-tested. **S119b**: unnamed NPCs pickable in every actor list (named on pick; user: "Why cant I select npc in a custom room"). Verbose block in this file. Owning: PROJECT_COMPILER §2.33, BANK04_SCRIPT_ENGINE "Writing scenes (S119)", EDITOR_DESIGN §5.1d, CUSTOM_CUTSCENES, known_RAM_map, KEY_LESSONS S119, DOC_AUDIT S119, TOOLS_AND_DATA S119.
+- **S118** (2026-10-04): P3.8 part A — the Cutscenes tab: the 102 script opcodes named + measured (`script_ops.py`; bank $04 handlers labelled both trees; `$D8D7`/`$D8D8` bits; the `$1C` movement programs; `$24`/`$61` arity 1), 519 vanilla scenes + the project's as storyboards (`cutscenes.py`), played in the real game without navigating (`playback.py` recipes; PyBoy in a child process, `playback_server.py`), the intro chain, auto text / sound / keys; `census_cutscenes.py` 514 / 519 reached, 0 hung, model 3,887 / 3,909; byte-neutral (pin `110210b0…` patched, unchanged). Built, NOT yet user-tested. **S118b** (user's first look): room state from the story's counter writes (the wrong NPC jumped), filter = someone moves, ▶ From this step, `FLY` table; census 516 reached, 3,989 / 3,998; copies keep their own state counters → **S118c**: copies follow the game's room state (`step_counter.vanilla`), Step ▸▸ / back, a picture per step. **S118d**: entry scenes set up as the calling script leaves the game (the arena reset), resets detected, cumulative zip. **S118e**: the intro from a real new game, gate arrivals / walk-in instead of the screen centre, View → Mute game playback. **S118f**: every storyboard step in words (`ram_names.py`). **S118g**: names only from the game (speaker texts, exit tables). Verbose block in SESSION_HISTORY.md. Owning: BANK04_SCRIPT_ENGINE "Script opcodes as measured (S118)", EDITOR_DESIGN §5.1d, CUSTOM_CUTSCENES, TEXT_SYSTEM ($F9 slots), KEY_LESSONS S118, DOC_AUDIT S118, TOOLS_AND_DATA S118.
 - **S117** (2026-10-03): NG2 + P3.13c — extended event flags `$1000-$17FF` (ROM0 `ComputeFlagAddress` same-size → bank $73 entry 21; `wExtFlags` $D140, SRAM bank 3 "X1"; editor pool 1,968); gate swirls follow each gate's cleared flag (bank $0B `GetRoomDataPtr` same-size → bank $60 entry 1 for every non-gate room: `$A0`/`$A1` NPC flag conditions + `VanillaNPCExtTable`; bank $50 boss win → bank $76 entry 2 `GateBossWin`, own flags `$17A0 + gate`); shops (bank $09 fill / close same-size → NEW compiler bank $77 `ShopFill` / `ShopClose`, `wShopID` $D240; `ItemInfoTable` $03:$71DA re-sectioned, prices editable; the Shops tab, NPC Shopkeeper…); pin `31cc5b31…` (patched). Test ROM `DWM_S117_swirls_shops_test.gbc` USER-REPORTED 2026-10-03 21:57 ("The rest works" + 2 bugs) → **S117b**: hardware sprite-limit warnings (`formats.sprite_budget`), bank $09 screen push → bank $77 `ScreenPush` (menu palettes in free-colour rooms), `ShopBoxBottom`; pin `110210b0…` (patched); test ROM `DWM_S117b_test.gbc` built, NOT yet user-tested. Verbose block in SESSION_HISTORY.md. Owning: EVENT_FLAGS "Extended flags (S117)", GATE_GENERATION §7.9, DATA_STRUCTURES "Shops (S117)", PROJECT_COMPILER §2.32, ARCHITECTURE "SRAM bank 3 (S117)", ROOM_DATA_FORMAT "Condition prefixes", EDITOR_DESIGN §5.1b / §5.6b, KEY_LESSONS S117, DOC_AUDIT S117, TOOLS_AND_DATA S117.
 - **S116** (2026-10-03): P3.13b the Music tab — the game's own sound engine run in the editor (`dwm/sm83.py` SM83 interpreter + `core/sound_engine.py` + `core/apu_synth.py`; census == PyBoy for every vanilla id and every project song of 5 builds), `sound_catalog.json`; InitBGM same-size -> bank $71 entry 6 (a song's own 1-6 channels), second song bank $75 (`rom0_audio_master` row 5), gate songs (entry 2, `$FF` follow), battle songs (bank $51 same-size -> entry 7; `census_music_resolve.py` 4,000 == the models); the tab (Songs / Rooms / Gates / Battles, names, automatic MIDI import); pin `7bab4921…` (patched). Test ROM `DWM_S116_music_test.gbc` USER-REPORTED 2026-10-03 18:29 ("rom seems to work fine"); the S116b player fix USER-REPORTED working at the S117 start ("rewritten preview player works"). Verbose block in SESSION_HISTORY.md. Owning: SOUND_SYSTEM §1/§2/§9/§10, PROJECT_COMPILER §2.9 "S116", EDITOR_DESIGN §5.6, KEY_LESSONS S116, DOC_AUDIT S116, TOOLS_AND_DATA S116.
 - **S115** (2026-10-03): ARC NG / NG1 new random gates — bank $16 entry 5's two GateFloorDataTable readers (8-bit, wrapped at 32) → same-size calls to `GateRowPtr` (free tail $7CFD): 0-31 = the table, 32-95 = bank $76 entry 1 `NewGateRowCopy` → `wGateRowBuf` $D138, else the old wrap; `EncVanillaNumber` walks a new gate's source; `custom.gates[]` 32-95 `copy_of` + `name`; gate-entrance exits (gate_flag 1, `gate:N`); Gates tab New gate / Rename / Delete, Rooms "Gate entrance here…"; PyBoy on the user's save: portal → gate 32 floors (own lists) → special room → custom boss → castle; pin `c8995d91…` (patched). Test ROM `DWM_S115_newgates_test.gbc` USER-CONFIRMED 2026-10-03 12:39 ("Excellent, confirm works"). Verbose block in SESSION_HISTORY.md. Owning: GATE_GENERATION §7.8, PROJECT_COMPILER §2.31, EDITOR_DESIGN §5.1b, KEY_LESSONS S115, DOC_AUDIT S115, TOOLS_AND_DATA S115.
@@ -458,6 +418,8 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Custom rooms (mapID ≥ $6B) | ✅ table-driven to editor scale: render/palette/attr/$26DD records + per-room encounters via bank $71 tables (S40/S42); multi-screen scroll (v28); gate-rotation insertion + descent (S41; data-driven S100 — next row). | EDITOR_DESIGN §2; GATE_GENERATION §7; CROSSBANK_ROOMS |
 | Custom NPCs with scripts | ✅ working | bank $60 entry 4 dispatch |
 | Custom text, multi-page, line breaks | ✅ working | IDs $0A00+, two-level ptr table |
+| Text speakers (hero / a name / nobody), voices (low / high / silent), `{hero}` / `{lead}` names, the game's contractions + extra glyphs, in every box editor | 🟢 built S120 (ROADMAP P3.6), preview == game pixel-exact (PyBoy), test ROM `DWM_S120_dialogue_gates_test.gbc` NOT yet user-tested | TEXT_SYSTEM "Glyphs, speakers and voices (S120)"; PROJECT_COMPILER §2.3 |
+| Per-gate floor-type rows (maze / special / contents) + item tier, floor-type pictures | 🟢 built S120 (ROADMAP P3.7b part 2), PyBoy-verified, NOT yet user-tested | GATE_GENERATION §7.8; PROJECT_COMPILER §2.17 |
 | YES/NO choices with branching | ✅ working | $E7 $F0 + opcode $15 on $C83C |
 | Item give + inventory-full check | ✅ working | opcodes $2A (wrapped) / $2C |
 | Monster/egg give + storage-full check | ✅ working | opcodes $29 (wrapped) / $28; egg path is the practical choice |
@@ -467,7 +429,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | BGM change | ✅ working | opcode $41 (SetBGM); reverts to the ROOM DEFAULT on exit/reload |
 | Room-default music (vanilla + custom rooms) | ✅ working (S64, user-confirmed v6): `music.room_defaults`/`rooms[].music` → `CustomRoomBGMTable` (bank $71 entry 2) consulted first by the rewritten `LoadNewBGMIdIntoA`; survives save/reload by construction; sources = inbuilt ids, DWM2 catalog (all 31), MIDI conversions | SOUND_SYSTEM §8; PROJECT_COMPILER §2.9 |
 | Event flags set/clear/check | ✅ working | opcodes $00/$01/$03; 328 referenced, 298 with sets (branch-following) |
-| Extended event flags (2,048, `$1000-$17FF`, saved) + NPCs shown by flag (`shown_when`) | 🟢 built S117, test ROM USER-REPORTED 2026-10-03 21:57 ("The rest works"); editor pool 1,968 named flags | EVENT_FLAGS "Extended flags (S117)"; PROJECT_COMPILER §2.32 |
+| Extended event flags (2,048, `$1000-$17FF`, saved) + NPCs shown by flag (`shown_when`) | 🟢 built S117, test ROM USER-REPORTED 2026-10-03 21:57 ("The rest works"); editor pool 1,968 named flags; S120: `shown_when` editable in the NPC panel (built, NOT yet user-tested) | EVENT_FLAGS "Extended flags (S117)"; PROJECT_COMPILER §2.32 |
 | Gate swirls follow each gate's cleared flag (new gates, re-bossed vanilla gates, re-routed portals) + the cleared mark of custom bosses | 🟢 built S117 (ROADMAP NG2), test ROM USER-REPORTED 2026-10-03 21:57 ("The rest works") | GATE_GENERATION §7.9; PROJECT_COMPILER §2.32 |
 | Shops — the game's five lists, the project's own shops (any NPC a shopkeeper), item buy prices | 🟢 built S117 (ROADMAP P3.13c), test ROM USER-REPORTED 2026-10-03 21:57 ("The rest works"; the menu colours in free-colour rooms + the leftover box fixed S117b, NOT yet user-tested) | DATA_STRUCTURES "Shops (S117)"; PROJECT_COMPILER §2.32; EDITOR_DESIGN §5.6b |
 | The project's own cutscenes (named NPCs, cast that appears / disappears, walks / faces / programs in cells, texts / YES-NO / flags / items / battles / tiles / effects; 4 triggers + flag conditions) + op editing of copied rooms' scripts + copies' tile patches | 🟢 built S119 (ROADMAP P3.8 parts B / c / d), test ROM `DWM_S119_cutscenes_test.gbc` NOT yet user-tested | `custom.rooms[].cutscenes[]` → `cutscene_build.py`; bank $60 entries 9 / 10; PROJECT_COMPILER §2.33 |
@@ -546,22 +508,16 @@ re-section items).
   (DOC_AUDIT S59; KEY_LESSONS S59.)
 - DOC_AUDIT.md's full-corpus audit is dated 2026-06-13; later findings are dated
   addenda inside it, not a re-audit.
-- `extracted/npc_catalog.json` is contaminated by phantom-step rows (dumper walks
-  past each screen's real step list — DOC_AUDIT S91); filter per
-  `dump_npc_sprite_catalog.py --census` rules until the dumper is regenerated
-  (ROADMAP residual). The S91 sprite catalog + max-8-NPC census already use the
-  filtered path.
 - (S108) Bank $47's T1 re-section (S43) started its string region at the pre-S108
   `text_id_map.json` address $4174: the bank's FIRST string `$47:$40C1` (text id
   $03C8, measured) is still mgbdis fake code. Re-run the T1 region bounds from the
   measured `extracted/dialogue.json` when Phase F T2… resumes (ROADMAP Arc 1 note).
   The tool `gen_script_banks.py` / `decompile_script.py` read `text_id_map.json`,
   which is correct again (derived from dialogue.json).
-- `dump_monsters.py` WRITES the legacy `monsters.json` schema (43-byte parse) while
-  READING `monsters_full.json` for names — TOOLS_AND_DATA's Tier-A attribution
-  "monsters_full.json ← dump_monsters.py" is suspect (the legacy note says
-  `randomize.py` writes monsters_full). Verify the real generator before relying on
-  regen; don't re-run dump_monsters casually (it recreates the deleted legacy file).
+- `dump_monsters.py` WRITES the legacy `monsters.json` schema (43-byte parse) — don't
+  re-run it casually (it recreates the deleted legacy file). (S120: `monsters_full.json`
+  has NO generator — first import, == the ROM, frozen; `npc_catalog.json` rebuilt
+  without phantom steps — both former defects closed, TOOLS_AND_DATA S120.)
 
 ---
 

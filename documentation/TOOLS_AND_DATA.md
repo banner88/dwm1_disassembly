@@ -25,7 +25,7 @@ Regen produces identical output to committed file. Safe to re-run.
 | midi_song_library.json | midi_to_song.py | **NEW (S64, M3c).** MIDI conversions in the same catalog schema. 1 song: `dq6_town1` (3ch, 1,325 B, 92.0 s loop; source m3u/md5/tempo-map + full conversion options recorded for reproducibility). Owning prose: SOUND_SYSTEM.md §8. |
 | sound_catalog.json | dump_sound_catalog.py | **NEW (S116, P3.13b).** Every vanilla START id (92: the 85 sound first ids + the other ids the room table / scripts / code / sound test start, e.g. $61): kind (music / jingle / effect — the bank $55 developer sound test lists + a measured play on the editor's sound engine: music = still sounding after 3 minutes), channels + state slots as started, length in frames, the rooms (RoomBGMTable $01:$4373), the set_bgm scenes (all_scripts.json) and the SetBGM code sites (code-read, the `ld a/b, n` bytes checked). `--selftest` = the anchors (verify check 5). The Music tab's vanilla list. Owning prose: SOUND_SYSTEM.md §9. |
 | ~~custom_songs.json~~ | — | **RETIRED S64** (was S63's M3a library). Song ownership moved to project.json `custom.music` + the library JSONs above; its two songs re-emit BYTE-IDENTICALLY from `dwm2_song_library.json` (verified against the pre-S64 `patches/bank_074.asm` — the fixed-record-area property held). |
-| monsters_full.json | dump_monsters.py | 221 monsters, all 43 fields. Verified identical. |
+| monsters_full.json | none (first import `cba8952`; S120 — no tool writes it) | 221 monsters, all 43 fields. S120: == the ROM's MonsterInfoTable rows — a frozen, correct input. |
 | encounters.json | dump_encounters.py | **REWRITTEN + REGENERATED S114** (tool + data together): 32 gates → their floors (1 .. floor count − 1, the game's numbering) grouped by list, 125 lists reached; per list rate code, 1/2/3-monster %, five slots (EID, species, level, chance %, real chance, max count) and `_generator`. The pre-S114 file had the floor ranges one floor late, ignored floor counts, read 4 slots and called +20 a weight (DOC_AUDIT S114). `--selftest` (verify check 5). Readers: editor2/core/monsters.py (fallback only — live usage comes from encounters_doc), simulator/sweep_ttk.py (skips `_` keys), tools/gen_encounter_db.py. |
 | boss_table.json | dump_boss_table.py | $4897 table, 32 gates. Verified identical. **SEMANTICS CORRECTED S67:** this is the tail of the fight→join REDIRECT table ($4893, recruitment mapping) — it does NOT select which boss you fight (that's the $5A/$05 param in each boss room script; see arena_brackets.json). Data unchanged. |
 | arena_brackets.json | dump_arena_brackets.py | **NEW (S67, E1).** The complete opponent-roster system: arena formula rosters (10 groups × 3 matches × 3 slots, EIDs 224-304/481-483 with full stats), master lobby sprites ($04:$5E22), entry gold ($09:$5D23), all 53 script battle-trigger sites (opcodes $5A/$05/write_ram2, script-attributed), redirect table, coliseum RNG level bands + prize tables, Mimic ($04:$63EF, $CAB4-tiered) and random-scaled ($04:$6A3C) tables. Self-checking ROM anchors. Arena path USER-VERIFIED S67 on HW. Owning prose: SIDEQUEST_MAP "Arena / gate-boss ROSTER format — DECODED S67". |
@@ -83,7 +83,7 @@ was lost; they were intentionally curated. Treat as documentation.
 ### Tier L — Legacy / superseded (safe to delete)
 | File | Why |
 |------|-----|
-| monsters.json | Old schema, superseded by monsters_full.json. **Already absent before S51** (stale queue row). ⚠️ `dump_monsters.py` still WRITES this legacy schema when run — and reads monsters_full for names, so the Tier-A "monsters_full ← dump_monsters" attribution is suspect (open defect, PROJECT_STATE). |
+| monsters.json | Old schema, superseded by monsters_full.json. **Already absent before S51** (stale queue row). ⚠️ `dump_monsters.py` still WRITES this legacy schema when run — and reads monsters_full for names, the Tier-A "monsters_full ← dump_monsters" attribution was wrong (S120: no tool writes monsters_full). |
 | event_flags.json | Superseded by event_flags_complete.json. **Was already absent** (untracked at HEAD; stale Tier-L row, verified S51). |
 | edits.json | Legacy Streamlit-editor patch store. **Was already absent** (untracked at HEAD; stale Tier-L row, verified S51 — legacy tools already tolerate absence). |
 | breeding_extra_recipes.json | B3 append path, superseded by B5. **DELETED S51** (was tracked → recoverable from git; content = one self-described capacity-proof TEST recipe, BattleRex×MadCat→DracoLord, archived in SESSION_HISTORY B3); `build_breeding.py --emit-relocation` is marked LEGACY and tolerates absence (emits base table only). |
@@ -93,11 +93,9 @@ npc_with_text, npc_text_mapping, free_space, gate_names, orphan_pointers,
 pointer_tables, routing_table, screen_counts, sprite_reference,
 text_blobs): regenerable from named dumpers; not
 freshness-tested this session — verify before relying on one for the
-editor (snapshot → regen → diff). ⚠️ npc_catalog.json is CONTAMINATED by
-phantom-step rows (dump_all_npcs walks past each screen's real step list;
-DOC_AUDIT S91) — filter per the valid-step rules in
-tools/dump_npc_sprite_catalog.py --census, or regenerate the dumper with
-them (open ROADMAP residual).
+editor (snapshot → regen → diff). ~~npc_catalog.json is CONTAMINATED by
+phantom-step rows~~ — **S120: dump_all_npcs.py applies the valid-step rule and
+npc_catalog.json / sprite_reference.json are regenerated** (772 → 716 rows; S120 rows).
 
 ## 2. tools/ — classification (102 files in tools/ + the `dwm/` package)
 
@@ -433,7 +431,7 @@ and aborts on drift. `--print` dumps the range-gate table. See BATTLE_SKILL_SYST
 
 ### Legacy (frozen Streamlit editor)
 `build_rom.py` · root-level `build.py` ·
-`randomize.py` (writes monsters_full.json when run — never commit after)
+`randomize.py` (reads monsters_full.json, writes `extracted/edits.json` when run — never commit after; S120 corrected)
 
 ## 2.9 randomizer/ — standalone game randomizer (NEW S76)
 
@@ -1144,3 +1142,34 @@ verified overrides.
 | disassembly/bank_004.asm (+ patches) , bank_00c/00d/00e/00f.asm | comments: init_dialog rule (S119), the `$24`/`$61` redirect, "measured S119" | byte-perfect |
 | editor2/tests/test_compiler.py, test_app.py | S119 tests; REFERENCE_MD5 → `d19259a1…` (patched); the S118 tree indices follow the new top row | PASS |
 | editor2/help/63_cutscenes.md, 00_start.md, 90_limits.md, _revision.md; `EDITOR_REVISION` = 'S119' | help | test_app |
+
+## S120 rows (overlay guard, mapID audit, ROADMAP P3.6 dialogue, P3.7b part 2 maze floors, mop-up)
+
+| Tool / data | What | Verified |
+|---|---|---|
+| tools/verify_integrity.py | check 2: the committed overlay's md5 must equal test_compiler `REFERENCE_MD5` (the S119 stale `patches/bank_060.asm` built `0591928d…`, patched, historical, and passed); check 5 += `audit_mapid_range.py`, `census_gate_floor_types.py` | PASS; negative control (the S117 bank_060 back) FAILS check 2 |
+| patches/bank_060.asm (REGENERATED) | `build_project.py --project editor2/example-project --apply`, bank $60 only (the other `--apply` diffs were comment-only — the committed copies kept) | overlay == pin `d19259a1…` (patched) |
+| tools/audit_mapid_range.py → extracted/mapid_range_audit.json (REGENERATED) | 12 S116-S119 sites adjudicated; 4 stale keys renamed; FAILS on a key that matches no site; band [50, 120] | selftest PASS (clean 58 / patched 82); CROSSBANK_ROOMS "S120 burn-down" |
+| dwm/text.py | the "DTE" pair table replaced by the font's one-cell contractions ($65 " , $66-$71 'l 't 's 'r 'm 'y 'v 'd 'e 'c 'n 'T); + the extra glyphs ($96-$B6); S120 control names; `$EA` no longer skips 2 "parameter" bytes; PARAMS $E8 2, $E9 / $F8 / $F9 / $FB / $FC 1 | test_compiler S120 decode test |
+| tools/dump_dialogue.py (`--redecode`, NEW option) → **extracted/dialogue.json (REGENERATED)** | same glyph fix + PARAMS; `--redecode` keeps the MEASURED id → (bank, address) map and re-decodes the raw bytes (no PyBoy) | 57 ids' and 85 table texts' decoded text changed (e.g. "Dn'a" → "D'ya", battle `$FC` params no longer printed); raw bytes / addresses unchanged; `--selftest` PASS |
+| tools/dump_text_id_map.py → extracted/text_id_map.json (REGENERATED) | derived from the new dialogue.json | — |
+| tools/refresh_script_text_comments.py --apply → disassembly/bank_00e.asm, bank_00f.asm (+2 more) | 17 previews rewritten from the corrected decode | clean `1ca6579…` byte-perfect |
+| tools/census_gate_floor_types.py (NEW) → **extracted/gate_floor_types/gate_floor_types.json + ft_00-15.png (NEW)** | the three floor-type tables (rows + odds), the 32 gate rows (bytes 0-2, 7), which gates use each row, the 8 special picks, and a PICTURE of each maze floor type: PyBoy, the original ROM, a new game, gate 1 floor 1 with `A` := type at $16:$5BD2 | 16 / 16 reached (`wMapID` == type, in a gate); `--selftest` (no PyBoy) in verify check 5 |
+| tools/dump_all_npcs.py → **extracted/npc_catalog.json + sprite_reference.json (REGENERATED)** | the valid-step rule of `editor2/core/vanilla.valid_steps` (tileset bank, both pointers, NPC cells < 16; the first invalid step ends the list) — the S91 phantom-step contamination is gone | 772 → 716 rows (56 phantom rows removed, none added; e.g. map $08's eight id-30 "steps"); max 8 NPCs per state (the engine cap) |
+| extracted/monsters_full.json (UNCHANGED) | the generator question (PROJECT_STATE open defect): NO tool in the repo writes it — it came with the first import (`cba8952`); `randomize.py` / `dump_monsters.py` only read it | S120: all 221 monsters == the ROM's MonsterInfoTable rows (family, level cap, exp table, fly, metal, 3 skills; `female_ratio` is stored as a label) — treat as a frozen, correct input |
+| editor2/core/textenc.py, scriptgen.py (`load_lead_name` $3F), project.py (`{lead}` op insertion, gate row keys), talk.py, conversation.py, cutscene_build.py, cutscenes.py (`room_recipe`, `RoomOnly`), gates.py (`ROW_KEYS`, `floor_types`, `row_settings`, `row_summary`; a `0` value is no longer dropped), music.py (≥ $80 warnings), monster_text.py (all contractions), document.py (`set_npc_shown_when`, `npc_view` + shown_when / swirl_of) | PROJECT_COMPILER §2.3 / §2.17 "S120" | test_compiler 726 (+25); --rom 1007 |
+| editor2/app/rooms/talk_editor.py, conversation_dialog.py, cutscene_editor.py, npc_panel.py (`ShownWhenDialog`), inspector.py, tab.py (`_play_here`, `_npc_shown_when`), gates_tab.py (Maze floors, scrolling panel) | EDITOR_DESIGN §5.1 item 4 / §5.1b "As built S120" | test_app `s120_dialogue`, `s120_gates`; offscreen screenshots |
+| disassembly/bank_056.asm (+ patches) | `TextControlCode`, `TextCodeTable` ($44CE, was misassembled code), `TextCode_E0_E6` … `TextCode_FE_VoiceOff`, `TextSpeedFrames` + `TextCode_ED_Fast` (was misassembled) | byte-perfect, labels at the measured addresses (game.sym) |
+| disassembly/bank_016.asm (+ patches) | `SpecialRoomTable` ($5C32, was misassembled code) + `SpecialRoom0_Treasure` … `SpecialRoom7_Conveyor` | byte-perfect |
+| disassembly/bank_000.asm (+ patches) | comment: the voice blip read (`$C840`) | byte-perfect |
+| editor2/help/20_npcs.md, 40_conversations.md, 56_dialogue.md, 60_gates.md, 63_cutscenes.md, _revision.md; `EDITOR_REVISION` = 'S120' | help | test_app |
+
+## S120b rows (the hero's default name "MILLY")
+
+| Tool / data | What | Verified |
+|---|---|---|
+| patches/bank_04f.asm | the font's hero-name tiles `$D3-$D6` (`$4F:$4D40`, 64 B; the INCBIN `;TERRY` replaced by `db` rows drawing "MILLY"; same size, outside the `gd_family_icons` region) | pin `97659a4a…` (patched); diff vs `d19259a1…` = those bytes + the header checksum; PyBoy: the Castle naming box offers MILLY, "King:Oh MILLY!" (the user's project) |
+| editor2/core/textenc.py `PATCHED_GLYPHS` | the same 4 tiles for every preview (`glyph_2bpp`) — the previews read the ORIGINAL ROM | test_compiler `test_hero_default_s120b` (source) + `--rom` (built ROM) |
+| editor2/core/playback.py `_hero_name` | a new game's hero name = the 4 tiles + `$F0` × 4 (what accepting the default leaves — measured), was "TERRY" as 5 letters | DOC_AUDIT S120b |
+| editor2/tests/test_compiler.py | `REFERENCE_MD5` → `97659a4a…` (patched); `test_hero_default_s120b` | 730 / --rom PASS |
+| editor2/help/20_npcs.md, talk_editor.py tooltip, `_revision.md`; `EDITOR_REVISION` = 'S120b' | the hero's name: ≤ 4 letters, default MILLY | test_app |

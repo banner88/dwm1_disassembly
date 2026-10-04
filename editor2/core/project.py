@@ -85,6 +85,14 @@ def _unlinked_door(e):
     nothing to emit (validators warn)."""
     return bool(e.get('door')) and 'dest' not in e
 
+def _pv(v):
+    """A script text param as an int when it is one (dialogue ids resolved)."""
+    try:
+        return F.val(v)
+    except Exception:                                        # noqa: BLE001
+        return v
+
+
 class ProjectError(ValueError):
     pass
 
@@ -1433,6 +1441,17 @@ class Project:
                     tx, ty = G.arrival_tile(scr, arr['x'], arr['y'])
                     row[4], row[5], row[6] = mid, tx, ty
                     boss_room = b
+            # S120: the floor-type rows + depth tier (bytes 0-2, 7) — GATE_GENERATION §1
+            for k, (lo, hi, at) in G.ROW_KEYS.items():
+                if gs.get(k) is None:
+                    continue
+                try:
+                    n = int(F.val(gs[k]))
+                except Exception:                                # noqa: BLE001
+                    n = -1
+                if not lo <= n <= hi:
+                    raise ProjectError(f"{c}: {k} must be {lo}-{hi} (got {gs[k]!r})")
+                row[at] = n
             new = gid >= 32
             out[gid] = {'floors': row[3], 'boss_map': row[4], 'spawn': (row[5], row[6]),
                         'boss_room': boss_room, 'hand_made': bool(gs.get('hand_made')),
@@ -1585,6 +1604,24 @@ class Project:
                         and isinstance(it[1], str) \
                         and it[1] in by_name:
                     it[1] = by_name[it[1]]
+        # S120 (P3.6): a text that prints {lead} ($F9 $00) needs op $3F
+        # load_lead_name right before it — the name slot $C180 is shared, so
+        # it is filled at the last moment (the cutscene lowering emits its
+        # own, so its step model stays exact)
+        from . import textenc as _T
+        lead = {e['_tid'] for e in self._dialogue if _T.uses_lead(
+            {k: v for k, v in e.items() if k in ('boxes', 'text', 'lines')})}
+        if lead:
+            for s in list(self.custom.get('scripts', [])) + self.skill_scripts:
+                ops, out = s.get('ops') or [], []
+                for it in ops:
+                    if isinstance(it, list) and it and it[0] == 'text' \
+                            and _pv(it[1]) in lead \
+                            and not (out and out[-1] == ['op', 'load_lead_name']):
+                        out.append(['op', 'load_lead_name'])
+                    out.append(it)
+                if len(out) != len(ops):
+                    s['ops'] = out
 
     def text_sections(self):
         secs = {}

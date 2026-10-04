@@ -26,8 +26,10 @@ the Encounters tab. Still to come: floor weighting, private floor types.
 Every edit is one undo step (SnapshotCommand).
 """
 
+import os
+
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QColor
+from PySide6.QtGui import QColor, QPixmap
 from PySide6.QtWidgets import (QAbstractItemView, QCheckBox, QComboBox, QDialog,
                                QDialogButtonBox, QFormLayout, QGroupBox, QHBoxLayout,
                                QHeaderView, QInputDialog, QLabel, QListWidget,
@@ -420,6 +422,54 @@ class GatesTab(QWidget):
         er.addStretch(1)
         sf.addRow('', er)
         rv.addWidget(sg)
+        # S120 (ROADMAP P3.7b part 2): the floor-type rows + depth tier (bytes 0-2, 7)
+        mg = QGroupBox('Maze floors — look, special rooms, contents (shared rows: pick the '
+                       'row of the gates you want it to feel like)')
+        mf = QFormLayout(mg)
+        self.row_combos = {}
+        for key, label, tip in (
+                ('maze_row', 'maze look', 'Which maze floor types the gate rolls (pictures '
+                                          'below) — FloorTypeSelectionTable, byte 0.'),
+                ('special_row', 'special rooms', 'What floors 3, 6, 9 … may be instead of a '
+                                                 'maze (about half the time; never in gate 0) '
+                                                 '— FloorTypeSelectionTable2, byte 1.'),
+                ('contents_row', 'contents', 'The mix of things lying on the floors (and the '
+                                             'treasure rooms\' chests) — '
+                                             'FloorTypeSelectionTable3, byte 2.')):
+            cb = QComboBox()
+            cb.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
+            cb.setMinimumContentsLength(24)
+            cb.setToolTip(tip)
+            cb.activated.connect(lambda _i, k=key: self._set_row(k))
+            self.row_combos[key] = cb
+            if key == 'maze_row':
+                # the row's floor types as the game draws them, beside the picker
+                hb = QHBoxLayout()
+                hb.addWidget(cb, 1)
+                self.maze_pics = QLabel()
+                self.maze_pics.setToolTip('The maze floor types this row rolls, as the game '
+                                          'draws them (tools/census_gate_floor_types.py)')
+                hb.addWidget(self.maze_pics)
+                mf.addRow(label, hb)
+            else:
+                mf.addRow(label, cb)
+        drow = QHBoxLayout()
+        self.set_depth = QSpinBox()
+        self.set_depth.setRange(1, 3)
+        self.set_depth.setToolTip('Byte 7: the tier of the items lying on maze floors (bank $01: '
+                                  '1 = early items, 2 = later ones, 3 = the deepest gates)')
+        self.set_depth.editingFinished.connect(lambda: self._set_row('depth'))
+        drow.addWidget(self.set_depth)
+        self.depth_note = QLabel('')
+        self.depth_note.setStyleSheet('color:#aaa;')
+        drow.addWidget(self.depth_note, 1)
+        b = QToolButton()
+        b.setText('Vanilla')
+        b.setToolTip("Back to the gate's own rows and tier (a new gate: its source's)")
+        b.clicked.connect(self._rows_vanilla)
+        drow.addWidget(b)
+        mf.addRow('item tier', drow)
+        rv.addWidget(mg)
         g = QGroupBox('Custom rooms in this gate — tried top-down')
         gv = QVBoxLayout(g)
         self.rules = QTableWidget(0, 6)
@@ -472,11 +522,19 @@ class GatesTab(QWidget):
                     'where the player appears; the fight is a conversation (NPC or arrival) '
                     'with a Battle step. New gates (S115): "New gate…" below the list; '
                     'entrances on the Rooms tab ("Gate entrance here"); monsters per floor on '
-                    'the Encounters tab. Still to come: floor weighting, private floor types.')
+                    'the Encounters tab. Maze floors (S120): pick each row from the gates you '
+                    'want it to feel like.')
         nl.setWordWrap(True)
         nl.setStyleSheet('color:#777;')
         rv.addWidget(nl)
-        split.addWidget(right)
+        # S120: the panel scrolls instead of squeezing its groups (the Maze floors group
+        # made it taller than a laptop screen)
+        from PySide6.QtWidgets import QScrollArea
+        sa = QScrollArea()
+        sa.setWidgetResizable(True)
+        sa.setWidget(right)
+        right.setMinimumHeight(980)
+        split.addWidget(sa)
         split.setStretchFactor(1, 1)
         self.s.structureChanged.connect(self.refresh)
         self.refresh()
@@ -546,9 +604,10 @@ class GatesTab(QWidget):
                    "\"Gate entrance here\"")
         else:
             ent = ''
+        rs = G.row_settings(doc.custom, g['id'], getattr(doc, 'project_dir', None))   # S120
         self.sub.setText(f"{g['floors']} floors — boss on floor {g['floors']} "
-                         f"({doc.gate_boss_label(g['id'])}) · depth tier {g['depth_tier']} · floor-type rows "
-                         f"{g['floor_types'][0]}/{g['floor_types'][1]}/{g['floor_types'][2]}"
+                         f"({doc.gate_boss_label(g['id'])}) · item tier {rs['depth']} · floor-type rows "
+                         f"{rs['maze_row']}/{rs['special_row']}/{rs['contents_row']}"
                          + (' · no special rooms in this gate' if g['id'] == 0 else '')
                          + ent
                          + (f" · {doc.gate_cleared_text(g['id'])}" if doc.gate_cleared_text(g['id'])
@@ -634,6 +693,7 @@ class GatesTab(QWidget):
         self.set_boss.setCurrentIndex(max(i, 0))
         self.set_boss.blockSignals(False)
         self.set_hand.setChecked(bool(gs.get('hand_made')))
+        self._show_rows(g)
         b = gs.get('boss')
         if b and not str(b).startswith('vanilla:'):
             try:
@@ -662,6 +722,80 @@ class GatesTab(QWidget):
         else:
             self.boss_note.setStyleSheet('color:#aaa;')
             self.boss_note.setText('')
+
+    def _show_rows(self, g):
+        """S120: the maze-look / special / contents rows and the item tier of gate g."""
+        doc = self.s.doc
+        ft = G.floor_types(getattr(doc, 'project_dir', None))
+        names = {x['id']: x['name'] for x in self.gates}
+        rs = G.row_settings(doc.custom, g['id'], getattr(doc, 'project_dir', None))
+        for key, kind in (('maze_row', 'maze'), ('special_row', 'special'),
+                          ('contents_row', 'contents')):
+            cb = self.row_combos[key]
+            cb.blockSignals(True)
+            cb.clear()
+            for r in range(16):
+                txt = G.row_summary(kind, r, getattr(doc, 'project_dir', None), names)
+                if r == rs['vanilla'][key]:
+                    txt += '   (this gate\'s own)' if not g.get('new') else '   (the source\'s)'
+                cb.addItem(txt, r)
+            cb.setCurrentIndex(rs[key])
+            cb.setEnabled(ft is not None)
+            cb.blockSignals(False)
+        self.set_depth.blockSignals(True)
+        self.set_depth.setValue(rs['depth'])
+        self.set_depth.blockSignals(False)
+        self.depth_note.setText(f"vanilla {rs['vanilla']['depth']}"
+                                + ('' if rs['depth'] == rs['vanilla']['depth'] else ' (changed)'))
+        self.maze_pics.setPixmap(self._maze_pixmap(ft, rs['maze_row']) if ft else QPixmap())
+
+    @staticmethod
+    def _maze_pixmap(ft, row):
+        """The maze floor types of a row as the game draws them (census pictures) + odds."""
+        from PySide6.QtGui import QPainter, QPixmap
+        odds = ft['tables']['maze'][row]['odds']
+        w, h = 58, 50
+        pm = QPixmap(max(1, len(odds)) * (w + 6), h)
+        pm.fill(QColor(40, 40, 40))
+        p = QPainter(pm)
+        for k, (t, pc) in enumerate(odds):
+            img = QPixmap(os.path.join(ft['_root'], ft['maze_types'][t]['png']))
+            if not img.isNull():
+                p.drawPixmap(k * (w + 6), 0, img.scaled(w, h))
+            p.fillRect(k * (w + 6), h - 13, w, 13, QColor(0, 0, 0, 170))
+            p.setPen(QColor(235, 235, 235))
+            f = p.font()
+            f.setPointSize(8)
+            p.setFont(f)
+            p.drawText(k * (w + 6) + 2, h - 13, w - 2, 13, Qt.AlignLeft | Qt.AlignVCenter,
+                       f'{t}: {pc}%')
+        p.end()
+        return pm
+
+    def _set_row(self, key):
+        g = self.gate()
+        if g is None:
+            return
+        rs = G.row_settings(self.s.doc.custom, g['id'], getattr(self.s.doc, 'project_dir', None))
+        v = self.set_depth.value() if key == 'depth' else self.row_combos[key].currentData()
+        if v == rs[key]:
+            return
+        self._setting(key, None if v == rs['vanilla'][key] else v,
+                      {'maze_row': 'Maze look', 'special_row': 'Special rooms',
+                       'contents_row': 'Floor contents', 'depth': 'Item tier'}[key] + f' {v}')
+
+    def _rows_vanilla(self):
+        g = self.gate()
+        if g is None:
+            return
+        gid = g['id']
+        cmd = C.SnapshotCommand(self.s, f"Vanilla maze floors ({g['name']})",
+                                lambda doc: doc.set_gate_setting(
+                                    gid, **{k: None for k in G.ROW_KEYS}))
+        self.s.undo.push(cmd)
+        if cmd.error is not None:
+            QMessageBox.warning(self, 'Vanilla maze floors', str(cmd.error))
+        self.refresh()
 
     def _setting(self, key, value, label):
         g = self.gate()

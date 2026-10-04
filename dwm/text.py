@@ -1,4 +1,4 @@
-"""DWM1 text encoding: charmap, DTE pairs, decode/encode."""
+"""DWM1 text encoding: charmap, the one-cell contraction glyphs, decode/encode."""
 
 END_OF_STRING = 0xF0
 
@@ -27,24 +27,35 @@ TABLE = {
     0x61: "..", 0x62: " ", 0x63: "!", 0x64: "?",
 }
 
-# DTE (Dual-Tile Encoding) pairs: single byte -> two characters
+# S120: there is NO letter-pair DTE in this game. $65-$71 are one-cell glyphs of
+# the text font (bank $4F $4010 + code*16, rendered and shown in PyBoy S120):
+# $65 = the double quote, $66-$71 = apostrophe contractions ("don't" = "don" +
+# $67, "I'll" = "I" + $66 + "l"). $72-$7F are blank tiles (never used). The old
+# table here ("ll", "th", "he", "be", "or", "an", "in" …) came from another game's
+# DTE and mis-decoded every 'd 'y 'e 'c 'n 'T and every quote (TEXT_SYSTEM
+# "Glyphs, speakers and voices (S120)"; DOC_AUDIT S120).
 DTE = {
-    0x65: "ll", 0x66: "'l", 0x67: "'t", 0x68: "'s", 0x69: "'r",
-    0x6A: "'m", 0x6B: "n'", 0x6C: "'v", 0x6D: "th", 0x6E: "he",
-    0x6F: "be", 0x70: "or", 0x71: "an", 0x72: "in", 0x73: "er",
-    0x74: "re", 0x75: "on", 0x76: "st", 0x77: "ou", 0x78: "te",
-    0x79: "nd", 0x7A: "to", 0x7B: "it", 0x7C: "es", 0x7D: "at",
-    0x7E: "en", 0x7F: "al",
+    0x65: '"', 0x66: "'l", 0x67: "'t", 0x68: "'s", 0x69: "'r",
+    0x6A: "'m", 0x6B: "'y", 0x6C: "'v", 0x6D: "'d", 0x6E: "'e",
+    0x6F: "'c", 0x70: "'n", 0x71: "'T",
 }
+# the other glyphs of the text font that dialogue uses (S120)
+TABLE.update({0x96: "[", 0x97: "]", 0x9C: "-", 0x9D: "~", 0x9E: "/", 0x9F: "*",
+              0xA0: "(", 0xA1: ")", 0xA2: "+", 0xA3: ":", 0xA4: "\u2026",
+              0xB6: "&"})
 
 # Control codes
+# (S120 names: $E7 = the YES/NO choice, not an end; $EA / $EB = the voice
+# openers (blip $5B / $5A) — they take NO parameter bytes, the "*:" after them
+# is ordinary text; $EC = text speed from the menu, $ED = print at once)
 CONTROLS = {
-    0xE7: "<END>", 0xE8: "<PAUSE>", 0xE9: "<NUM>",
-    0xEA: "<BOX>", 0xEB: "<ITEM>", 0xEC: "<NAME>",
-    0xED: "<MONSTER>", 0xEE: "\n", 0xEF: "<PAGE>",
+    0xE7: "<CHOICE>", 0xE8: "<POS>", 0xE9: "<SOUND>",
+    0xEA: "<VOICE_LOW>", 0xEB: "<VOICE_HIGH>", 0xEC: "<SPEED>",
+    0xED: "<FAST>", 0xEE: "\n", 0xEF: "<PAGE>",
     0xF0: "<SECTION>", 0xF6: "<HERO>", 0xF7: "<CLEAR>",
-    0xFA: "<WAIT>", 0xFF: "<CHOICE>",
+    0xFA: "<WAIT>", 0xFF: "<CHOICE2>",
 }
+PARAMS = {0xE8: 2, 0xE9: 1, 0xF8: 1, 0xF9: 1, 0xFB: 1, 0xFC: 1}   # control codes with parameter bytes (bank $56 TextCodeTable, S120)
 
 # Build reverse lookups for encoding
 REVERSE_SINGLE = {v: k for k, v in TABLE.items()}
@@ -66,9 +77,10 @@ def decode(data: bytes) -> tuple[str, int]:
             result.append(DTE[b])
         elif b in CONTROLS:
             result.append(CONTROLS[b])
-            # BOX control has 2 parameter bytes
-            if b == 0xEA and i + 2 < len(data):
-                i += 2
+            i += PARAMS.get(b, 0)
+        elif b == 0xF9 and i + 1 < len(data):
+            result.append(f"<INS {data[i + 1]:02X}>")
+            i += 1
         else:
             result.append(f"[{b:02X}]")
         i += 1

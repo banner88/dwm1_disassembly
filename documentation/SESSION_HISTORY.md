@@ -1,5 +1,108 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-04 (Session 118 — **ROADMAP P3.8 PART A: THE CUTSCENES TAB —
+> EVERY SCENE OF THE GAME AND OF THE PROJECT READ, SHOWN AS A STORYBOARD AND PLAYED IN THE
+> REAL GAME INSIDE THE EDITOR (NO NAVIGATING), THE INTRO CHAIN, AUTO TEXT, SOUND** (user:
+> "I want you to work next on the Cutscene tab … Reading in, displaying and playing back
+> all existing cutscenes in all relevant rooms. This includes the more tough case of the
+> intro … Cutscene playback window … Include skipping text boxes as an option · Cutscene
+> editor …" → on the audit: "1) Sounds good. 2) If I dont have to navigate to cut-scene
+> in-game, ok. 3) Ok but obviously might depend on cut scene. 4) a auto. You can turn off
+> and on to press manually. 5) Good. Yes sound. 6) Probably always clone room")).
+> **Built S118, NOT yet user-tested.** Part B (the editor) is next; part C (in-place
+> vanilla override) dropped — vanilla scenes are changed in a cloned room (ROADMAP P3.8).
+> **Byte-neutral:** no ROM byte changed — clean `1ca6579…` byte-perfect (labels /
+> comments only, both trees), patched pin `110210b0…` (patched) unchanged, so no test ROM.
+> Verifier PASS (6/6; check 5 += `census_cutscenes.py`); test_compiler --rom
+> 947/947; test_app PASS. `EDITOR_REVISION` = 'S118' (S118b below). **Playback needs pyboy** on the user's
+> Mac (`pip install pyboy`).
+>
+> **The script VM decoded (BANK04_SCRIPT_ENGINE "Script opcodes as measured (S118)"):** all
+> 102 opcodes named (`editor2/core/script_ops.py`; bank $04 handlers `ScriptCmdNN_*`,
+> `MoveProgNN_*` / `PlayerProgNN_*`, `MoveProgramsAll` … in both trees); `$D8D7` bits
+> rewritten (3 = a waited walk, 4 = movement programs, 5 = lock facing, 6 = walk_fast),
+> `$D8D8` (text box bottom / top, long delay), the movement buffers `$D8E9 + 8n`, the `$1C`
+> programs measured (hop, jumps, leaps, fly in / off, appear / vanish …); wrong names
+> fixed (`$22` walk_fast is not required, `$4C` waits for the D-pad, `$21` = sound, DOC_AUDIT
+> S118); `$24` / `$61` read ONE param through the script bank (the S96 tracer stopped at
+> `rst $10` — `script_param_counts.py` follows it now; every decode was already consistent).
+> **Model / playback (EDITOR_DESIGN §5.1d):** `editor2/core/cutscenes.py` — 519 vanilla
+> scenes (+ the project's, as the compiler lowers them), path conditions, triggers, the actor
+> model, the RECIPE that sets a scene up (flags / RAM, the room-entry script kept quiet, the
+> warp, the game's own talk / examine / step-on; scenes after a battle win start at their
+> first step); `editor2/core/playback.py` — PyBoy from a cached new-game (or .sav) state;
+> **`editor2/core/playback_server.py` — the game in a CHILD PROCESS** (a crashed game froze
+> PyBoy's tick: KEY_LESSONS S118). The tab: Chains (the intro: bedtime → Warubou → the
+> dresser → tree tunnel → Starry Shrine → the old man up GreatTree → Castle) / Your rooms /
+> Game rooms, the storyboard, recorded pictures; the Playback window (auto text + read time
+> + YES/NO, auto D-pad, sound at 1×, 2-8×, keys, the storyboard follows); help
+> `63_cutscenes.md`.
+> **Measured:** `tools/census_cutscenes.py` (every map in a worker process) — 519 scenes,
+> 514 reached (442 by the game's own trigger), 417 ended, 86 handed to a battle, 0 hung;
+> the position model 3,887 / 3,909 checks exact; the intro chain plays from the dresser to
+> the Castle minister by itself (PyBoy screenshots). **Found:** text code `$F9 nn` prints
+> the name at `$C180 + nn` — an unfilled slot runs the text engine through RAM and crashes
+> the game (the egg scenes; TEXT_SYSTEM, KEY_LESSONS S118); never poke the player's HRAM
+> position; a savestate made without sound plays back silent.
+> **S118b (the user's first look, 2026-10-04 09:12; built, NOT yet user-tested):** "Oh boy
+> this looks dangerous - the wrong NPC jumps down … 2) Some of the 'cutscenes' are just text
+> boxes? Like egg evaluator? 3) Playing some cutscenes doesnt do anything? Like old man room
+> script … 4) Are 'play' for per-script line or entire window? Unclear. 5) Can you edit any
+> of this?" → the room state from the story's own counter writes + NPC-count rule (BANK04
+> "Room state (S118b)", KEY_LESSONS S118b); the filter = someone moves (218 / 519); a
+> walk-to that moves nobody is named (the Old Man Gate Room: he already stands there — the
+> game too); ▶ Play scene / ▶ From this step; fly programs per `$D8E3`/`$D8E4` measured.
+> Census: 516 reached, 0 hung, 1 empty-slot step, 3,989 / 3,998 exact. **Found: a CLONED
+> room keeps its own state counters** — the vanilla scripts' writes never reach it, so the
+> user's GreatTree clone shows the old man jumping (in their game too); whether clones
+> should follow the vanilla counters is the user's call (ROADMAP P3.8). `EDITOR_REVISION`
+> = 'S118b'. Delivered as `DWM-S118b-cutscenes-fixes-changed-files.zip` (on top of S118).
+> **S118c (user 2026-10-04 10:10: "Yeah obviously" — the copied room must do what the game
+> does; "I really would like to step through animation step by step"; built, NOT yet
+> user-tested):** copies of game rooms follow the game's room state —
+> `step_counter.vanilla` (the original's counter, EQU, saved; PROJECT_COMPILER §2.6
+> "S118c"), Make editable writes it, existing copies migrated on open, Rooms → *Follow the
+> game's room state*; PyBoy on the user's project: the copied GreatTree screen 0 follows
+> `$D92D` and the cliff scene moves the cliff man. Playback **Step ▸▸ / ◂ Step back**, one
+> recorded picture per step. The example project has no copies: pin `110210b0…` (patched)
+> unchanged; the user's project builds differently once opened (the migration).
+> `EDITOR_REVISION` = 'S118c'. Delivered as `DWM-S118c-copies-steps-changed-files.zip` + test
+> ROM `DWM_S118c_test.gbc` (`5ef856d8…`, patched = the user's my-dwm-hack_9 opened in the
+> S118c editor; was `c2db7f54…`, patched, historical).
+> **S118d (user 2026-10-04 10:40: "Arena rooms - script 0 - … game resets and plays logo";
+> scene clicks after a playback showed nothing — their traceback: `script_ops` without
+> `FLY`, i.e. the S118b zip not applied; "Are you sure you tested this stuff?"):** entry
+> scenes reached through another script's room change are set up as that script leaves the
+> game (`Catalogue.entry_caller`, BANK04); resets detected in the census and the Playback
+> log (KEY_LESSONS S118d: "ended" ≠ worked); test_app opens every 7th scene; one CUMULATIVE
+> zip for the whole session (SESSION_PROTOCOL). Census 516 reached, 0 resets, 3,994 /
+> 3,998. `EDITOR_REVISION` = 'S118d'. Delivered as `DWM-S118-all-changed-files.zip` (every
+> file changed in S118-S118d; supersedes the three earlier zips).
+> **S118e (user 2026-10-04 12:00: "Game intro where milayou and terry run around … both are
+> in wrong positions"; "PLEASE … give ability to mute preview pyboy player GLOBALLY in the
+> menu"):** the bedtime scene plays from a real new game (== an uninterrupted new game,
+> PyBoy); 36 room-entry scenes that started the player at the screen centre now use the gate
+> table's arrival (boss rooms) or walk in from the next screen (Warubou's east room); View →
+> **Mute game playback** (⌘⇧M) overrides every Playback window (BANK04 "Where the player
+> starts", KEY_LESSONS S118e). `EDITOR_REVISION` = 'S118e'. Delivered as
+> `DWM-S118-all-changed-files.zip` (cumulative, S118-S118e).
+> **S118f (user 2026-10-04 12:41: "I want everything interpretable please"):** every
+> storyboard step in words — room states, the decoded script variables ($C8EC, $C8ED,
+> $D951, $D9CB, the chests $D9CF-$D9D6, $D9E2/E4/E5/E8, $C8F2 …, BANK04 "Script variables
+> (S118f)"), flags (known names, else where the game sets them; $0007 = Pulio's first
+> pick-up), screen types, tile patches, NPC animation fields. `EDITOR_REVISION` = 'S118f'.
+> **S118g (user 2026-10-04 14:05: "why are random things named Warubou? … ARE YOU NOT
+> TAKING THIS INFO FROM GAME?"):** the storyboard's NPC names had come from a hand-made
+> sprite table, room names are hand labels — now an NPC is named only by its own text's
+> speaker, each room header shows how the game's exit tables / scripts enter it; the hero's
+> name (was "TERRY0000"); `$C8F2` corrected to the hero's name. The arena-win scene the
+> user spot-checked IS where the game puts it (arena battle script → map $06 tile (14, 4);
+> played: messenger, warp, King). `EDITOR_REVISION` = 'S118g'.
+> **Hand-off:** every S118 change = the diff against the S117b push, delivered as
+> `DWM-S118-cutscenes-changed-files.zip`, the APPLY list pasted in the chat. **Next:** P3.8
+> part B (the cutscene editor — the questions in ROADMAP P3.8) or the user's pick.
+
+
 > Last verified: 2026-10-03 (Session 117 — **ROADMAP NG2 + P3.13c: 2,048 EXTENDED EVENT
 > FLAGS, GATE SWIRLS THAT FOLLOW EACH GATE'S "CLEARED" FLAG (NEW GATES, NEW BOSSES,
 > RE-ROUTED PORTALS), NPCs SHOWN BY FLAG, AND SHOPS — THE GAME'S FIVE AND THE PROJECT'S

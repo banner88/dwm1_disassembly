@@ -208,6 +208,84 @@ def s119_cutscene_editor(app, w, ct):
           f'{n_ok} steps of a copied room\'s script mapped to their ops, undone again')
 
 
+def s120_dialogue(app, w):
+    """S120 (ROADMAP P3.6): the box editor's Speaker / Voice / Insert — through the
+    TalkDialog and the document's talk + conversation round trips."""
+    from editor2.app.rooms.talk_editor import TalkDialog
+    import copy
+    from editor2.core.document import Document
+    doc = Document(w.session.doc.path)                  # a private copy: the window's doc untouched
+    rom = w.session.renderer.rom if getattr(w.session, 'renderer', None) else None
+    spec = {'boxes': [["I'll show", "what's [new]: x&y"]], 'speaker': 'Milayou', 'voice': 'high'}
+    dlg = TalkDialog(rom=rom, spec=spec, doc=doc)
+    bl = dlg.box_list
+    assert bl.speaker() == 'Milayou' and bl.meta() == {'speaker': 'Milayou', 'voice': 'high'}, bl.meta()
+    assert not bl.bad_boxes(), bl.bad_boxes()
+    ed = bl.editors[0]
+    assert '10 cells' in ed.title.text(), ed.title.text()
+    ed.edit.setPlainText("I'll show you more")           # 16 cells > 10 after "Milayou:"
+    app.processEvents()
+    assert bl.bad_boxes() == [1], bl.bad_boxes()
+    bl.sp_kind.setCurrentIndex(bl.sp_kind.findData(''))   # no label: 18 cells
+    app.processEvents()
+    assert not bl.bad_boxes() and bl.meta() == {'speaker': '', 'voice': 'high'}, bl.meta()
+    ed.edit.setPlainText('Hi ')
+    from PySide6.QtGui import QTextCursor
+    ed.edit.moveCursor(QTextCursor.End)
+    ed._insert('{hero}')
+    assert ed.lines() == ['Hi {hero}'] and not ed.problems(), (ed.lines(), ed.problems())
+    got = dlg.spec()
+    assert got['speaker'] == '' and got['voice'] == 'high', got
+    # the document keeps them (talk form + conversation form)
+    room = next(r for r in doc.rooms if not r.get('placeholder'))
+    sid = doc.new_talk(room, got, name='s120')
+    back = doc.talk_spec(sid)
+    assert back['speaker'] == '' and back['voice'] == 'high' and back['boxes'] == [['Hi {hero}']], back
+    csid = doc.new_conversation(room, {'steps': [
+        {'say': {'boxes': [['Hello']], 'speaker': 'hero', 'voice': 'none'}},
+        {'ask': {'boxes': [['Sure?']]}, 'yes': [{'ask': {'boxes': [['Really?']]},
+                                                 'yes': [{'say': {'boxes': [['Your {lead}']]}}],
+                                                 'no': []}], 'no': []}]}, name='s120c')
+    cs = doc.conversation_spec(csid)
+    st = cs['steps']
+    assert st[0]['say'].get('speaker') == 'hero' and st[0]['say'].get('voice') == 'none', st[0]
+    assert st[1]['yes'][0]['yes'][0]['say']['boxes'] == [['Your {lead}']], st[1]
+    dlg.deleteLater()
+    print('OK: S120 — Speaker / Voice / Insert in the box editor (limits follow the speaker), '
+          'kept by the talk and the nested conversation forms')
+
+
+def s120_gates(app, w):
+    """S120 (ROADMAP P3.7b part 2): the Gates tab's Maze floors group — rows named by the
+    gates that use them, the maze pictures, one undo step per change."""
+    gt = w.gates_tab
+    w.tabs.setCurrentWidget(gt)
+    app.processEvents()
+    gt.list.setCurrentRow(5)
+    app.processEvents()
+    cb = gt.row_combos['maze_row']
+    assert cb.count() == 16 and cb.currentData() == 3 and 'Bazaar Gate' in cb.currentText(), \
+        cb.currentText()
+    assert not gt.maze_pics.pixmap().isNull(), 'no maze pictures'
+    n0 = w.session.undo.count()
+    cb.setCurrentIndex(0)
+    gt._set_row('maze_row')
+    app.processEvents()
+    assert w.session.doc.gate_setting(5).get('maze_row') == 0, w.session.doc.gate_setting(5)
+    assert w.session.undo.count() == n0 + 1
+    gt.set_depth.setValue(3)
+    gt._set_row('depth')
+    assert w.session.doc.gate_setting(5).get('depth') == 3
+    gt._rows_vanilla()
+    assert w.session.doc.gate_setting(5) == {}, w.session.doc.gate_setting(5)
+    for _ in range(3):
+        w.session.undo.undo()
+    app.processEvents()
+    assert w.session.doc.gate_setting(5) == {}, w.session.doc.gate_setting(5)
+    print('OK: S120 — Gates tab maze floors: 16 rows per table named by their gates, the '
+          'pictures, maze row / item tier / Vanilla as undo steps')
+
+
 def main():
     do_rom = '--rom' in sys.argv
     app = QApplication.instance() or QApplication(sys.argv)
@@ -251,6 +329,8 @@ def main():
         assert all(t in shown for t in tail), f'help {fname} is cut off when shown (look for <…>)'
     print(f'OK: Help tab — {len(topics)} topics, search, help revision == {EDITOR_REVISION}, '
           f'every topic shown to its end')
+    s120_dialogue(app, w)
+    s120_gates(app, w)
 
     # S101 r3: World tab zoom (wheel, around the mouse) + pan (drag empty canvas)
     from PySide6.QtCore import QPoint, QPointF, Qt

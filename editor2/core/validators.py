@@ -543,7 +543,7 @@ def validate(prj, generated=None):
             if 'lines' in e and 'raw' not in e and \
                     not str(e.get('id', '')).startswith('skill:'):
                 ls = e['lines']
-                if len(ls) > T.BOX_LINES or (ls and len(ls[0]) > T.FIRST_LINE):
+                if len(ls) > T.BOX_LINES or (ls and T.cells(ls[0]) > T.FIRST_LINE):
                     warnings.append(
                         f"text {F.hexw(tid)} ({e.get('id','')}): 'lines' form — "
                         f"lines past {T.BOX_LINES} scroll without waiting and the "

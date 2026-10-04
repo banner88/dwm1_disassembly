@@ -494,6 +494,7 @@ class RoomsTab(QWidget):
         gg.arrivalConversationRequested.connect(self._arrival_conversation)   # S101
         self.inspector.addStairsRequested.connect(self._add_stairs)
         self.inspector.addGateEntranceRequested.connect(self._add_gate_entrance)   # S115
+        self.inspector.playHereRequested.connect(self._play_here)                  # S120
         self.sec_insp = Section('Room / screen / selection', self.inspector, 'rooms_inspector',
                                 expanded=False, remember=False)
         self.right_split.addWidget(self.sec_insp)
@@ -549,6 +550,7 @@ class RoomsTab(QWidget):
         npc.newTalkRequested.connect(self._npc_new_talk)
         npc.newConversationRequested.connect(self._npc_new_conversation)     # S101
         npc.shopRequested.connect(self._npc_shop)                            # S117
+        npc.shownWhenRequested.connect(self._npc_shown_when)                 # S120
         npc.editTalkRequested.connect(self._npc_edit_talk)
         npc.presenceToggled.connect(self._npc_presence)
         npc.deleteRequested.connect(self._npc_delete)
@@ -1919,6 +1921,71 @@ class RoomsTab(QWidget):
             return sid
         if self._npc_op('New talk', op) is not None:
             (self._after_spot_edit if spot else self._after_npc_edit)(idx)
+
+    def _play_here(self, cell):
+        """S120 (ROADMAP P3.4): the game from the selected cell of this room, in the
+        Playback window (the last build; a new game, or the save picked on the Cutscenes
+        tab)."""
+        import os
+        from editor2.core import cutscenes as CS
+        from editor2.core import playback as PB
+        room = self.current_room()
+        mid = val(room['mapID']) if room is not None else self.vanilla_mid
+        if mid is None:
+            return
+        rom = getattr(self.s, 'last_rom', None)
+        if not (rom and os.path.exists(rom)):
+            QMessageBox.information(self, 'Play', 'Build the project first (⌘B / Ctrl+B) — '
+                                    'the room plays from your build.')
+            return
+        ok, why = PB.available()
+        if not ok:
+            QMessageBox.information(self, 'Play', why)
+            return
+        if self.s.dirty:
+            self._say_status('Playing the LAST build — build again to see your newest edits.')
+        from editor2.app.cutscenes_tab import PlaybackWindow
+        sav = self.s.settings.value('cutscenes/sav') or None
+        sav = sav if sav and os.path.exists(sav) else None
+        cache = os.path.join(self.s.project_dir, 'build', 'playback')
+        os.makedirs(cache, exist_ok=True)
+        rec = CS.room_recipe(mid, int(self.key), int(cell[0]), int(cell[1]))
+        title = f"${mid:02X} {self.s.doc.room_name(room) if room is not None else ''}".strip()
+        old = getattr(self, 'playback', None)
+        if old is not None:
+            try:
+                old.close()
+            except RuntimeError:
+                pass
+        self.playback = PlaybackWindow(self, rom, sav, cache, [(rec, CS.RoomOnly, title)], title)
+        self.playback.show()
+
+    def _say_status(self, msg):
+        try:
+            self.window().statusBar().showMessage(msg, 6000)
+        except Exception:                                      # noqa: BLE001
+            pass
+
+    def _npc_shown_when(self):
+        """S120 (ROADMAP NG2 residual b): show the selected NPC only while flags hold."""
+        idx = self._sel_npc
+        room = self.current_room()
+        if idx is None or room is None or self._sel_is_spot():
+            return
+        from editor2.app.rooms.npc_panel import ShownWhenDialog
+        cur = self.s.doc.npc_entries(room, self.key, self.state_idx)[idx].get('shown_when')
+        dlg = ShownWhenDialog(self.s.doc, cur, parent=self)
+        if dlg.exec() != QDialog.Accepted:
+            return
+        terms, new_flags = dlg.terms(), dlg.new_flags()
+
+        def op(doc, r, k, st):
+            for nm in new_flags:
+                if not any(f.get('name') == nm for f in doc.flags()):
+                    doc.add_flag(nm)
+            doc.set_npc_shown_when(r, k, st, idx, terms)
+        if self._npc_op('NPC shown when', op) is not None:
+            self._after_npc_edit(idx)
 
     def _npc_shop(self):
         """S117 (P3.13c): the selected NPC becomes a shopkeeper — which shop

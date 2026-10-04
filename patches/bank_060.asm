@@ -14,6 +14,8 @@
 ;            compiler-authored vanilla-room exit EXTENSIONS; HL=list or 0)
 ;   Entry 8: CustomStateRules   — S97: flag-driven room states (P3.5a); writes
 ;            the current screen's step counter from CustomStateRulePtrTable
+;   Entry 9: CustomDrawTiles    — S119: script op $24 (tile patch) in a custom room
+;   Entry 10: CustomDrawAttrs   — S119: script op $61 (the patch's colours)
 ; =============================================================================
 
 SECTION "ROM Bank $060", ROMX[$4000], BANK[$60]
@@ -28,6 +30,8 @@ SECTION "ROM Bank $060", ROMX[$4000], BANK[$60]
     dw GateAwareDispatch    ; Entry 6 — gate-entry regression fix (B-fix): route by wMapID
     dw VanillaExitResolve   ; Entry 7 — S70 unified exit resolve (bank $0B Entry 6 calls this for EVERY non-gate room)
     dw CustomStateRules     ; Entry 8 — S97 state rules (bank $17 CustomAttrCheck + CustomReadStep call it)
+    dw CustomDrawTiles      ; Entry 9 — S119 op $24 in custom rooms (bank $04 ScriptCmd24 same-size redirect)
+    dw CustomDrawAttrs      ; Entry 10 — S119 op $61 in custom rooms (bank $04 ScriptCmd61 same-size redirect)
 
 ; =============================================================================
 ; CustomPtrChase
@@ -653,6 +657,309 @@ CustomScriptRead:
 CustomTextDisplay:
     ld de, CustomTextPtrTable
     call CallTextEngine
+    ret
+
+; =============================================================================
+; Entries 9 / 10: CustomDrawTiles / CustomDrawAttrs (S119, ROADMAP P3.8 part d)
+; =============================================================================
+; Script ops $24 draw_tiles / $61 draw_attrs far-call entry 1 / 2 of the map's
+; SCRIPT bank, which reads ONE more script word (the patch address in that
+; bank) and draws the patch [offset word, bytes …, $D8 next row, $D9 end]
+; onto the visible BG map (bank $0C entries 1 / 2, BANK04_SCRIPT_ENGINE "Tile
+; patches"). Every map type >= $40 went to bank $0F, whose reader looks the
+; word up in bank $0F's tables — wrong for a custom room (bank $60 scripts).
+; Bank $04 now calls these two entries instead of $0F01 / $0F02 (same size):
+; a custom script (the GateAwareDispatch rule) reads its word through
+; CustomScriptRead and its patch from bank $60 (the compiler's patch_data);
+; anything else goes on to bank $0F exactly as before. The drawing below is a
+; copy of bank $0C's (ScriptBank0CDrawTiles / …DrawAttrs, byte for byte the
+; same algorithm): offset = row * 32 + column in 8-px tiles from the visible
+; top-left ($FFB7 / $FFBB scroll), tiles also staged at $C300 + offset, the
+; colour nibbles at $C200 + offset / 2.
+CustomDrawTiles:
+    call CutPatchRoute
+    jr c, .custom
+    ld hl, $0f01
+    rst $10
+    ret
+.custom:
+    call CutPatchCursor
+    call CutPatchParam
+    push bc
+    call CutPatchStage
+    pop bc
+    jp CutPatchDraw
+
+CustomDrawAttrs:
+    call CutPatchRoute
+    jr c, .custom
+    ld hl, $0f02
+    rst $10
+    ret
+.custom:
+    call CutPatchCursor
+    call CutPatchParam
+    push bc
+    call CutPatchStageAttr
+    pop bc
+    ld a, [wIsGBC]
+    or a
+    ret z
+    di
+    call WaitVRAM
+    ld a, $01
+    ldh [rVBK], a
+    ei
+    call CutPatchDraw
+    di
+    call WaitVRAM
+    ld a, $00
+    ldh [rVBK], a
+    ei
+    ret
+
+; CF set = the running script is a bank $60 script (GateAwareDispatch's rule)
+CutPatchRoute:
+    ld a, [wScriptMapType]
+    cp $70
+    jr z, .byRoom
+    cp CUSTOM_ROOM_START
+    jr nc, .custom
+.byRoom:
+    ld a, [wMapID]
+    cp CUSTOM_ROOM_START
+    jr nc, .custom
+    and a
+    ret
+.custom:
+    scf
+    ret
+
+; BC = the next script word (the patch address), counter advanced
+CutPatchParam:
+    ld a, [wScriptCounter]
+    add $01
+    ld [wScriptCounter], a
+    ld a, [$d8d6]
+    adc $00
+    ld [$d8d6], a
+    jp CustomScriptRead
+
+; $D8E7/$D8E8 = the BG map address of the visible top-left tile
+CutPatchCursor:
+    ld hl, $ffb7
+    ld a, [hl]
+    and $f8
+    ld [hl], a
+    ld hl, $ffbb
+    ld a, [hl]
+    and $f8
+    ld [hl], a
+    ldh a, [$bb]
+    ld l, a
+    ld h, $00
+    add hl, hl
+    add hl, hl
+    ldh a, [$b7]
+    rrca
+    rrca
+    rrca
+    add l
+    ld l, a
+    ld a, h
+    adc $98
+    ld h, a
+    ld a, h
+    and $03
+    or $98
+    ld h, a
+    ld a, l
+    ld [$d8e7], a
+    ld a, h
+    ld [$d8e8], a
+    ret
+
+; draw the patch at BC onto the BG map (VRAM bank as selected)
+CutPatchDraw:
+    ld a, [bc]
+    ld l, a
+    inc bc
+    ld a, [bc]
+    ld h, a
+    inc bc
+    push bc
+    ld b, l
+    ld a, l
+    and $e0
+    ld l, a
+    ld a, [$d8e7]
+    add l
+    ld l, a
+    ld a, [$d8e8]
+    adc h
+    and $03
+    ld h, a
+    ld a, [$d8e8]
+    and $fc
+    or h
+    ld h, a
+    ld a, b
+    and $1f
+    jr z, .col0
+    ld b, a
+.cols:
+    call CutPatchNextCol
+    dec b
+    jr nz, .cols
+.col0:
+    ld a, l
+    ld [$d8e7], a
+    ld a, h
+    ld [$d8e8], a
+    pop bc
+.byte:
+    ld a, [bc]
+    inc bc
+    cp $d9
+    ret z
+    cp $d8
+    jr nz, .put
+    ld a, [$d8e7]
+    ld l, a
+    ld a, [$d8e8]
+    ld h, a
+    ld a, l
+    add $20
+    ld l, a
+    ld a, h
+    adc $00
+    ld h, a
+    ld a, h
+    and $03
+    or $98
+    ld h, a
+    ld a, l
+    ld [$d8e7], a
+    ld a, h
+    ld [$d8e8], a
+    jr .byte
+.put:
+    call Write_gfx_tile
+    call CutPatchNextCol
+    jr .byte
+
+CutPatchNextCol:
+    ld a, l
+    and $e0
+    push af
+    ld a, l
+    inc a
+    and $1f
+    ld l, a
+    pop af
+    or l
+    ld l, a
+    ret
+
+; the tiles also go to the $C300 screen buffer (rows of 32)
+CutPatchStage:
+    ld a, [bc]
+    ld l, a
+    inc bc
+    ld a, [bc]
+    ld h, a
+    inc bc
+    ld a, l
+    add $00
+    ld l, a
+    ld a, h
+    adc $c3
+    ld h, a
+.row:
+    push hl
+.byte:
+    ld a, [bc]
+    inc bc
+    cp $d9
+    jr z, .done
+    cp $d8
+    jr nz, .put
+    pop hl
+    ld a, l
+    add $20
+    ld l, a
+    ld a, h
+    adc $00
+    ld h, a
+    jr .row
+.put:
+    ld [hl+], a
+    jr .byte
+.done:
+    pop hl
+    ret
+
+; the colours also go to the $C200 nibble buffer (two tiles per byte)
+CutPatchStageAttr:
+    ld a, [bc]
+    ld l, a
+    inc bc
+    ld a, [bc]
+    ld h, a
+    inc bc
+.row:
+    push hl
+.byte:
+    ld a, [bc]
+    inc bc
+    cp $d9
+    jr z, .done
+    cp $d8
+    jr nz, .put
+    pop hl
+    ld a, l
+    add $20
+    ld l, a
+    ld a, h
+    adc $00
+    ld h, a
+    jr .row
+.put:
+    call CutPatchNibble
+    inc hl
+    jr .byte
+.done:
+    pop hl
+    ret
+
+CutPatchNibble:
+    push hl
+    srl h
+    rr l
+    push af
+    ld a, l
+    add $00
+    ld l, a
+    ld a, h
+    adc $c2
+    ld h, a
+    pop af
+    jr c, .low
+    swap a
+    and $f0
+    ld d, a
+    ld a, [hl]
+    and $0f
+    jr .put
+.low:
+    and $0f
+    ld d, a
+    ld a, [hl]
+    and $f0
+.put:
+    or d
+    ld [hl], a
+    pop hl
     ret
 
 ; =============================================================================

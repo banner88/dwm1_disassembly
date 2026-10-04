@@ -8,6 +8,13 @@ its cells is wrapped by the engine in the middle of a word, and a third line
 scrolls the box without waiting — so text is authored box by box, and each
 box shows exactly what the game will draw (ROM font, bank $4F $4010).
 
+S120 (P3.6): the font's one-cell contractions ('t 's 'll …) and extra glyphs
+(- & ( ) + : / ~ [ ] " * …) are typed as themselves; {hero} / {lead} insert the
+hero's / the lead monster's name (previewed at the cells they may take); each
+text may name its SPEAKER (the vanilla "*:", nobody, the hero, a name) and its
+VOICE (the per-letter blip: low $EA like the King, high $EB like Milayou, or
+silent) — BoxList's header (TEXT_SYSTEM "Glyphs, speakers and voices (S120)").
+
 S98: the dialog also edits what the talk DOES (editor2/core/talk.py spec):
 an optional YES/NO question (the last box ends in the choice box), and per
 answer (or once, afterwards) a reply, flags to turn on / off, and moving the
@@ -28,6 +35,31 @@ from editor2.core import textenc as T
 PAL = [QColor(255, 255, 255), QColor(222, 255, 214), QColor(140, 140, 140), QColor(0, 0, 0)]
 PAL[1] = QColor((0x1F * 255) // 31, (0x1F * 255) // 31, (0x1A * 255) // 31)
 OVER = QColor(230, 40, 40)
+
+# S120 (P3.6): BoxList header choices + BoxEditor's Insert menu
+SPEAKERS = [
+    ('"*:" (most people)', '*', 'The star + colon the game shows for townsfolk (2 cells).'),
+    ('a name…', 'name', 'Your name + ":" — like "Milayou:" or "King:" in the game.'),
+    ("the hero's name", 'hero', "The player's name + \":\" (text code $F6; 4 cells + \":\")."),
+    ('nobody (no label)', '', 'No label: signs, narration, the game\'s own messages.'),
+]
+VOICES = [
+    ('low (King, bosses)', 'low', 'Opener $EA: blip sound $5B — the King, Mick, Durran, the '
+                                  'bosses and most townsfolk.'),
+    ('high (Milayou, Pulio)', 'high', 'Opener $EB: blip sound $5A — Milayou, Pulio, Watabou, '
+                                      'Santi, May.'),
+    ('silent', 'none', 'No opener: no blip — the hero\'s own lines, signs.'),
+]
+INSERTS = [
+    ("the hero's name", '{hero}', 'Text code $F6 — the name the player chose (at most 4 letters; '
+                                  'the default is MILLY in 4 cells, shown in the preview). '
+                                  'Counts as 4 cells.'),
+    ("the lead monster's kind", '{lead}', 'The species name of the first party monster '
+                                          '(e.g. "DrakSlime"; op $3F before the text). Counts '
+                                          'as 9 cells.'),
+    ('… (one cell)', '\u2026', 'The ellipsis glyph — one cell (".." is also one cell).'),
+    ('" (quote)', '"', 'The font\'s quote mark (one cell).'),
+]
 
 # The dialog frame tiles as VRAM holds them while a box is open (PyBoy S97
 # r2, $8E00-$8FFF; they are not the font's glyphs at those codes).
@@ -60,19 +92,27 @@ def _blit(img, tile, tx, ty, tint=None):
 
 
 def _tolerant(s):
-    """Glyph codes, unknown characters shown as '?'."""
+    """Glyph codes, unknown characters shown as '?' (an unfinished {insert}
+    as its characters)."""
+    try:
+        return T.codes(s)
+    except T.TextError:
+        pass
     out, i = [], 0
     while i < len(s):
         if s.startswith('..', i):
             out.append(0x61)
             i += 2
+        elif s[i:i + 2] in T.CONTRACTIONS:
+            out.append(T.CONTRACTIONS[s[i:i + 2]])
+            i += 2
         else:
-            out.append(T.CHARMAP.get(s[i], 0x64))
+            out.append(T.GLYPHS.get(s[i], 0x64))
             i += 1
     return out
 
 
-def analyse_box(bi, lines):
+def analyse_box(bi, lines, speaker=None):
     """-> (problems, rows) for one box. rows = [(codes, red_from)] per
     authored line; red_from = the cell where the word that crosses the edge
     starts (None when the line fits). PyBoy S97 r2: cells past a line's edge
@@ -89,7 +129,7 @@ def analyse_box(bi, lines):
         except T.TextError as e:
             problems.append(f'line {li + 1}: {e}')
             cs = _tolerant(ln)
-        lim = T.line_limit(bi, li)
+        lim = T.line_limit(bi, li, speaker)
         if len(cs) > lim:
             pos, cut, room = 0, None, 0
             for w in ln.split(' '):
@@ -113,11 +153,15 @@ def analyse_box(bi, lines):
     return problems, rows
 
 
-def render_box(rom, bi, lines, scale=SCALE):
+def render_box(rom, bi, lines, scale=SCALE, speaker=None):
     """QPixmap of the box as the game draws it (20x5 tiles); the word that
     crosses an edge is red, and a strip under the box shows (in red) what
     does not fit — lost cells and scrolled-away lines."""
-    _p, rows = analyse_box(bi, lines)
+    _p, rows = analyse_box(bi, lines, speaker)
+    try:
+        label = T.speaker_codes(speaker)[0]
+    except T.TextError:
+        label = list(T.SPEAKER)
     extra = sum(1 for r in rows if r[1] is not None) + max(0, len(rows) - T.BOX_LINES)
     h_tiles = 5 + (2 * extra if extra else 0)
     img = QImage(160, h_tiles * 8, QImage.Format_RGB32)
@@ -138,12 +182,13 @@ def render_box(rom, bi, lines, scale=SCALE):
 
     spill = []
     for li, (cs, over) in enumerate(rows):
-        seq = (T.SPEAKER + cs) if (bi, li) == (0, 0) else cs
+        first = (bi, li) == (0, 0)
+        seq = (label + cs) if first else cs
         start = 0
         if li < T.BOX_LINES:
             ty = 1 + 2 * li
             for k, c in enumerate(seq[:18]):
-                tint = OVER if over is not None and (k - (2 if (bi, li) == (0, 0) else 0)) >= over else None
+                tint = OVER if over is not None and (k - (len(label) if first else 0)) >= over else None
                 _blit(img, glyph(c), 1 + k, ty, tint)
             start = 18
         if len(seq) > start or li >= T.BOX_LINES:
@@ -168,6 +213,7 @@ class BoxEditor(QWidget):
         super().__init__(parent)
         self.rom = rom
         self.index = 0
+        self.speaker = None                 # S120: set by the BoxList header
         # vertical (S119b, the cutscene editor's narrow form): the game picture
         # under the text instead of beside it
         h = QVBoxLayout(self) if vertical else QHBoxLayout(self)
@@ -199,6 +245,18 @@ class BoxEditor(QWidget):
             btns.addWidget(b)
             if txt == 'Fit':
                 self.fit_btn = b
+        ins = QToolButton()
+        ins.setText('Insert ▾')
+        ins.setToolTip('Put a name or a symbol at the cursor')
+        ins.setPopupMode(QToolButton.InstantPopup)
+        from PySide6.QtWidgets import QMenu
+        im = QMenu(ins)
+        for label, txt, tip in INSERTS:
+            a = im.addAction(label)
+            a.setToolTip(tip)
+            a.triggered.connect(lambda _c=False, t=txt: self._insert(t))
+        ins.setMenu(im)
+        btns.addWidget(ins)
         btns.addStretch(1)
         left.addLayout(btns)
         h.addLayout(left)
@@ -219,27 +277,41 @@ class BoxEditor(QWidget):
             ls.pop()
         return [' '.join(ln.split()) for ln in ls]
 
+    def _insert(self, txt):
+        self.edit.insertPlainText(txt)
+        self.edit.setFocus()
+
     def problems(self):
         ls = self.lines()
         if not any(ls):
             return ['empty box']
-        return analyse_box(self.index, ls)[0]
+        return analyse_box(self.index, ls, self.speaker)[0]
+
+    def set_speaker(self, speaker):
+        self.speaker = speaker
+        self.set_index(self.index)
 
     def set_index(self, i):
         self.index = i
-        self.title.setText(f'Box {i + 1}' + ('  (starts with "*:" — line 1 has 16 cells)'
-                                             if i == 0 else ''))
+        try:
+            n = T.speaker_cells(self.speaker)
+        except T.TextError:
+            n = 2
+        what = {None: '"*:"', '*': '"*:"', '': 'no speaker label',
+                'hero': "the hero's name + \":\""}.get(self.speaker, f'"{self.speaker}:"')
+        self.title.setText(f'Box {i + 1}' + (f'  (starts with {what} — line 1 has '
+                                             f'{T.MAX_LINE - n} cells)' if i == 0 else ''))
         self._update()
 
     def _update(self):
         ls = self.lines() or ['']
-        self.prev.setPixmap(render_box(self.rom, self.index, ls))
+        self.prev.setPixmap(render_box(self.rom, self.index, ls, speaker=self.speaker))
         probs = self.problems()
         if probs:
             self.status.setText('<span style="color:#ff6060;">' + '<br>'.join(probs) + '</span>')
         else:
             used = [T.cells(ln) for ln in ls]
-            lims = [T.line_limit(self.index, k) for k in range(len(ls))]
+            lims = [T.line_limit(self.index, k, self.speaker) for k in range(len(ls))]
             self.status.setText('<span style="color:#80d080;">fits — '
                                 + ', '.join(f'line {k + 1}: {u}/{m}'
                                             for k, (u, m) in enumerate(zip(used, lims)))
@@ -252,12 +324,48 @@ class BoxList(QWidget):
     """A list of BoxEditors (+ Add box / Fit all, OK-gating summary)."""
     changed = Signal()
 
-    def __init__(self, rom, boxes=None, first_default='Hello!', parent=None, vertical=False):
+    def __init__(self, rom, boxes=None, first_default='Hello!', parent=None, vertical=False,
+                 meta=None):
         super().__init__(parent)
         self.rom = rom
         self.vertical = vertical
         v = QVBoxLayout(self)
         v.setContentsMargins(0, 0, 0, 0)
+        # S120: who speaks (the first line's label) and the per-letter voice
+        meta = meta or {}
+        hr = QHBoxLayout()
+        hr.addWidget(QLabel('Speaker'))
+        self.sp_kind = QComboBox()
+        for label, data, tip in SPEAKERS:
+            self.sp_kind.addItem(label, data)
+            self.sp_kind.setItemData(self.sp_kind.count() - 1, tip, Qt.ToolTipRole)
+        from PySide6.QtWidgets import QLineEdit
+        self.sp_name = QLineEdit()
+        self.sp_name.setPlaceholderText('name, e.g. Milayou')
+        self.sp_name.setMaximumWidth(140)
+        sp = meta.get('speaker')
+        if sp in (None, '*', '', 'hero'):
+            self.sp_kind.setCurrentIndex(max(0, self.sp_kind.findData('*' if sp is None else sp)))
+        else:
+            self.sp_kind.setCurrentIndex(self.sp_kind.findData('name'))
+            self.sp_name.setText(sp)
+        hr.addWidget(self.sp_kind)
+        hr.addWidget(self.sp_name)
+        hr.addSpacing(12)
+        hr.addWidget(QLabel('Voice'))
+        self.voice = QComboBox()
+        for label, data, tip in VOICES:
+            self.voice.addItem(label, data)
+            self.voice.setItemData(self.voice.count() - 1, tip, Qt.ToolTipRole)
+        self.voice.setCurrentIndex(max(0, self.voice.findData(meta.get('voice') or 'low')))
+        self.voice.setToolTip('The blip each letter makes while the text prints (measured: '
+                              '$EA = sound $5B, $EB = sound $5A, no opener = silent)')
+        hr.addWidget(self.voice)
+        hr.addStretch(1)
+        v.addLayout(hr)
+        self.sp_kind.currentIndexChanged.connect(self._speaker_changed)
+        self.sp_name.textChanged.connect(self._speaker_changed)
+        self.voice.currentIndexChanged.connect(lambda _i: self.changed.emit())
         self.scroll = QScrollArea()
         self.scroll.setWidgetResizable(True)
         self.holder = QWidget()
@@ -281,10 +389,51 @@ class BoxList(QWidget):
         start = boxes if boxes is not None else ([[first_default]] if first_default else [])
         for b in start:
             self._add('\n'.join(b))
+        self._speaker_changed()
+
+    def speaker(self):
+        k = self.sp_kind.currentData()
+        self.sp_name.setVisible(k == 'name')
+        if k == 'name':
+            return self.sp_name.text().strip() or '*'
+        return k
+
+    def meta(self):
+        """The S120 speaker / voice keys (only what differs from the vanilla
+        "*:" + low voice, so old texts keep their exact bytes)."""
+        out = {}
+        sp = self.speaker()
+        if sp != '*':
+            out['speaker'] = sp
+        if self.voice.currentData() != 'low':
+            out['voice'] = self.voice.currentData()
+        return out
+
+    def text(self):
+        """{'boxes': …, + speaker / voice} — what a say / ask step stores."""
+        return dict({'boxes': self.boxes()}, **self.meta())
+
+    def _speaker_changed(self, *_a):
+        sp = self.speaker()
+        try:
+            T.check_speaker(sp, None)
+            self.sp_name.setStyleSheet('')
+        except T.TextError:
+            self.sp_name.setStyleSheet('color:#ff6060;')
+        for ed in self.editors:
+            ed.speaker = sp
         self._renumber()
+
+    def speaker_problem(self):
+        try:
+            T.check_speaker(self.speaker(), self.voice.currentData())
+        except T.TextError as e:
+            return str(e)
+        return None
 
     def _add(self, text, at=None, focus=False):
         ed = BoxEditor(self.rom, text, vertical=getattr(self, 'vertical', False))
+        ed.speaker = self.speaker() if hasattr(self, 'sp_kind') else None
         ed.changed.connect(self._validate)
         ed.moveRequested.connect(self._move)
         ed.removeRequested.connect(self._remove)
@@ -326,7 +475,7 @@ class BoxList(QWidget):
         i = self.editors.index(ed)
         text = ' '.join(ln for ln in ed.lines() if ln)
         try:
-            boxes = T.flow_boxes(text, first_box=(i == 0))
+            boxes = T.flow_boxes(text, first_box=(i == 0), speaker=self.speaker())
         except T.TextError:
             return
         if not boxes:
@@ -342,7 +491,10 @@ class BoxList(QWidget):
                 self._fit(ed)
 
     def bad_boxes(self):
-        return [i + 1 for i, ed in enumerate(self.editors) if ed.problems()]
+        bad = [i + 1 for i, ed in enumerate(self.editors) if ed.problems()]
+        if self.speaker_problem() and 1 not in bad:
+            bad.insert(0, 1)
+        return bad
 
     def is_blank(self):
         return all(not any(ed.lines()) for ed in self.editors)
@@ -471,7 +623,7 @@ class BlockEditor(QWidget):
         self.say = QCheckBox('Say something')
         self.say.setChecked(bool(b.get('boxes')))
         v.addWidget(self.say)
-        self.reply = BoxList(rom, b.get('boxes') or None, first_default='OK.')
+        self.reply = BoxList(rom, b.get('boxes') or None, first_default='OK.', meta=b)
         self.reply.setMinimumHeight(140)
         self.reply.setVisible(self.say.isChecked())
         self.say.toggled.connect(self.reply.setVisible)
@@ -527,6 +679,8 @@ class BlockEditor(QWidget):
         b = {'boxes': self.reply.boxes() if self.say.isChecked() and not self.reply.is_blank()
              else [],
              'set': self.set_list.flags(), 'clear': self.clear_list.flags(), 'move': None}
+        if b['boxes']:
+            b.update(self.reply.meta())             # S120 speaker / voice
         if self.move_group.isChecked() and self.m_room.currentData():
             b['move'] = {'dest': self.m_room.currentData(), 'screen': self.m_screen.value(),
                          'x': self.m_x.value(), 'y': self.m_y.value()}
@@ -560,10 +714,11 @@ class TalkDialog(QDialog):
                        'Line 1 of box 1 has 16 cells (after "*:"), every other line 18. '
                        'Press Enter to start the second line. Red = does not fit (the game '
                        'loses the cells past the edge, a third line scrolls without waiting). Letters, digits, '
-                       "space and . , ; ! ? ' only.")
+                       "space and . , ; ! ? ' \" - & ( ) + : / ~ [ ] * … ; contractions like don't, "
+                       "it's, I'll take ONE cell, as in the game. Insert ▾ adds the hero's name.")
         intro.setWordWrap(True)
         v.addWidget(intro)
-        self.box_list = BoxList(rom, boxes)
+        self.box_list = BoxList(rom, boxes, meta=spec)
         self.box_list.changed.connect(self._validate)
         v.addWidget(self.box_list, 3)
         self.question = QCheckBox('Ask YES / NO after the text (the last box is the question)')
@@ -609,10 +764,11 @@ class TalkDialog(QDialog):
     def spec(self):
         from editor2.core.talk import empty_block
         q = self.question.isChecked()
-        return {'boxes': self.boxes(), 'question': q,
-                'then': empty_block() if q else self.then.block(),
-                'yes': self.yes.block() if q else empty_block(),
-                'no': self.no.block() if q else empty_block()}
+        return dict({'boxes': self.boxes(), 'question': q,
+                     'then': empty_block() if q else self.then.block(),
+                     'yes': self.yes.block() if q else empty_block(),
+                     'no': self.no.block() if q else empty_block()},
+                    **self.box_list.meta())                    # S120 speaker / voice
 
     def new_flags(self):
         out = []

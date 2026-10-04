@@ -1532,7 +1532,7 @@ CheckTile9A:
     cp $9a
     jr z, RestoreBankReturn
 
-    ld a, [$c840]
+    ld a, [$c840]              ; S120: the per-letter voice blip ($EA -> sound $5B, $EB -> $5A; $C826 bit 0 = voice on, $FD / $FE)
     call PlaySoundEffect
     ld hl, $c826
     set 1, [hl]
