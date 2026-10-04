@@ -60,12 +60,16 @@
   item (every shop), 0-65535 gold; what shops pay is the game's rule (3/4,
   staffs 1/10, the gate shop the full price) and is not editable. Item
   effects are not editable yet.
-- Cutscenes (S118): the Cutscenes tab shows and plays scenes; writing your
-  own cutscenes is the next step (the cutscene editor). Playback needs
-  `pip install pyboy`. A game scene that needs a party monster of a given
-  species, a full bag or a won battle state is started at its own first
-  step (the window says so). **Cloned rooms:** a game script that draws a
-  tile patch (opcode $24 / $61 — Castle and Bazaar doors, treasure chests)
-  reads its patch from the game's script bank, which a cloned room does not
-  have (read from the code; not yet tested) — avoid those steps in clones
-  until the cutscene editor handles them.
+- Cutscenes (S118, S119): Playback needs `pip install pyboy`. A game scene
+  that needs a party monster of a given species, a full bag or a won battle
+  state is started at its own first step (the window says so). **Your own
+  cutscenes** (S119): a screen has 8 NPC slots (actors + cast members + pads);
+  a cast member shown or moved by a scene is back in its place, hidden, when
+  the room loads again (a lasting change = the room's state rules); "Change
+  tiles" lasts until the room loads again too; the flickering appear /
+  disappear takes about 4 seconds (the game's own effect); flying is for NPCs
+  only; a Flash turns the screen to each palette's FIRST colour (white in the
+  game's rooms, your own first colours in your own-colour rooms). A battle in
+  a scene keeps everyone where the scene put them (measured S119). **Copied
+  rooms:** game steps that draw a tile patch (opcode $24 /
+  $61 — Castle and Bazaar doors, chests) work in copies since S119.

@@ -588,7 +588,7 @@ GameStateUpdate_036F:
 ScreenRefreshVBlank:
     call LoadGBCPalettes
     call ApplyScrollRegisters
-    call CheckSoundQueueState
+    call ScreenShakeTick           ; S119: the script screen shake ($C8B1 / $C8B2)
     call WaitVRAMAccess
     ld a, [$c86c]
     or a
@@ -941,7 +941,15 @@ RetFromCrossBankCall:
     ret
 
 
-CheckSoundQueueState:
+; ---------------------------------------------------------------------------
+; ScreenShakeTick (S119, read from the code + PyBoy; was "CheckSoundQueueState"):
+; the screen SHAKE. [$C8B1] = frames of up-down shake, [$C8B2] = frames of
+; left-right shake; each counts down once per frame and while it runs rSCY /
+; rSCX get an offset of -4..+3 px (a triangle pattern of the counter). Scripts
+; start it with write_ram $C8B1 / $C8B2 n (vanilla: the Arena $44 script 1,
+; the Well boss $3C script 8); the cutscene editor's Shake step (S119).
+; ---------------------------------------------------------------------------
+ScreenShakeTick:
 Jump_000_056e:
     ld a, [$c8b1]
     or a

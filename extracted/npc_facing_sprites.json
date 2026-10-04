@@ -1,0 +1,534 @@
+{
+ "_generator": "tools/extract_npc_facings.py (S119) \u2014 PyBoy on data/DWM-original.gbc: each sprite solo in the Castle throne room, every facing drawn by the game, composed from OAM + VRAM + CGB object palettes",
+ "_strip": "down, down-step, left, left-step, up, up-step, right, right-step (16x16 each)",
+ "ids": {
+  "0x00": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x01": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x02": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x03": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x04": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x05": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x06": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x07": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x08": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x09": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x0A": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x0B": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x0C": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x0D": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x0E": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x0F": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x10": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x11": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x12": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x13": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x14": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x15": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x16": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x17": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x18": {
+   "drawn": true,
+   "objects": 7
+  },
+  "0x19": {
+   "drawn": true,
+   "objects": 6
+  },
+  "0x1A": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x1B": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x1C": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x1D": {
+   "drawn": true,
+   "objects": 6
+  },
+  "0x1E": {
+   "drawn": true,
+   "objects": 6
+  },
+  "0x1F": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x20": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x21": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x22": {
+   "drawn": true,
+   "objects": 9
+  },
+  "0x23": {
+   "drawn": true,
+   "objects": 7
+  },
+  "0x24": {
+   "drawn": true,
+   "objects": 7
+  },
+  "0x25": {
+   "drawn": true,
+   "objects": 8
+  },
+  "0x26": {
+   "drawn": true,
+   "objects": 8
+  },
+  "0x27": {
+   "drawn": true,
+   "objects": 9
+  },
+  "0x28": {
+   "drawn": true,
+   "objects": 6
+  },
+  "0x29": {
+   "drawn": true,
+   "objects": 7
+  },
+  "0x2A": {
+   "drawn": true,
+   "objects": 7
+  },
+  "0x2B": {
+   "drawn": true,
+   "objects": 8
+  },
+  "0x2C": {
+   "drawn": true,
+   "objects": 7
+  },
+  "0x2D": {
+   "drawn": true,
+   "objects": 7
+  },
+  "0x2E": {
+   "drawn": true,
+   "objects": 7
+  },
+  "0x2F": {
+   "drawn": true,
+   "objects": 6
+  },
+  "0x30": {
+   "drawn": true,
+   "objects": 7
+  },
+  "0x31": {
+   "drawn": true,
+   "objects": 7
+  },
+  "0x32": {
+   "drawn": true,
+   "objects": 7
+  },
+  "0x33": {
+   "drawn": true,
+   "objects": 9
+  },
+  "0x34": {
+   "drawn": true,
+   "objects": 7
+  },
+  "0x35": {
+   "drawn": true,
+   "objects": 6
+  },
+  "0x36": {
+   "drawn": true,
+   "objects": 7
+  },
+  "0x37": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x38": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x39": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x3A": {
+   "drawn": true,
+   "objects": 3
+  },
+  "0x3B": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x3C": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x3D": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x3E": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x3F": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x40": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x41": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x42": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x43": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x44": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x45": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x46": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x47": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x48": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x49": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x4A": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x4B": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x4C": {
+   "drawn": true,
+   "objects": 3
+  },
+  "0x4D": {
+   "drawn": true,
+   "objects": 7
+  },
+  "0x4E": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x4F": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x50": {
+   "drawn": true,
+   "objects": 7
+  },
+  "0x51": {
+   "drawn": true,
+   "objects": 7
+  },
+  "0x52": {
+   "drawn": true,
+   "objects": 7
+  },
+  "0x53": {
+   "drawn": true,
+   "objects": 12
+  },
+  "0x54": {
+   "drawn": true,
+   "objects": 1
+  },
+  "0x55": {
+   "drawn": true,
+   "objects": 7
+  },
+  "0x56": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x57": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x58": {
+   "drawn": true,
+   "objects": 7
+  },
+  "0x59": {
+   "drawn": true,
+   "objects": 7
+  },
+  "0x5A": {
+   "drawn": true,
+   "objects": 7
+  },
+  "0x5B": {
+   "drawn": true,
+   "objects": 7
+  },
+  "0x5C": {
+   "drawn": true,
+   "objects": 7
+  },
+  "0x5D": {
+   "drawn": true,
+   "objects": 7
+  },
+  "0x5E": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x5F": {
+   "drawn": true,
+   "objects": 8
+  },
+  "0x60": {
+   "drawn": true,
+   "objects": 8
+  },
+  "0x61": {
+   "drawn": true,
+   "objects": 7
+  },
+  "0x62": {
+   "drawn": true,
+   "objects": 2
+  },
+  "0x63": {
+   "drawn": true,
+   "objects": 7
+  },
+  "0x64": {
+   "drawn": true,
+   "objects": 5
+  },
+  "0x65": {
+   "drawn": true,
+   "objects": 7
+  },
+  "0x66": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x67": {
+   "drawn": true,
+   "objects": 7
+  },
+  "0x68": {
+   "drawn": false,
+   "objects": 0
+  },
+  "0x69": {
+   "drawn": true,
+   "objects": 16
+  },
+  "0x6A": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x6B": {
+   "drawn": true,
+   "objects": 16
+  },
+  "0x6C": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x6D": {
+   "drawn": true,
+   "objects": 15
+  },
+  "0x6E": {
+   "drawn": true,
+   "objects": 27
+  },
+  "0x6F": {
+   "drawn": true,
+   "objects": 6
+  },
+  "0x70": {
+   "drawn": true,
+   "objects": 23
+  },
+  "0x71": {
+   "drawn": true,
+   "objects": 2
+  },
+  "0x72": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x73": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x74": {
+   "drawn": true,
+   "objects": 15
+  },
+  "0x75": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x76": {
+   "drawn": true,
+   "objects": 23
+  },
+  "0x77": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x78": {
+   "drawn": true,
+   "objects": 15
+  },
+  "0x79": {
+   "drawn": true,
+   "objects": 11
+  },
+  "0x7A": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x7B": {
+   "drawn": true,
+   "objects": 6
+  },
+  "0x7C": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x7D": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x7E": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0x7F": {
+   "drawn": true,
+   "objects": 23
+  },
+  "0xE0": {
+   "drawn": true,
+   "objects": 4
+  },
+  "0xE1": {
+   "drawn": false,
+   "objects": 0
+  },
+  "0xE2": {
+   "drawn": false,
+   "objects": 0
+  },
+  "0xE3": {
+   "drawn": false,
+   "objects": 0
+  }
+ }
+}

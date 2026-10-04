@@ -475,9 +475,16 @@ patch `[dest offset, tiles…, $D8 next row, $D9 end]` drawn onto the visible BG
 (Castle / Bazaar doors, treasure chests). The S96 tracer stopped at the rst $10 and
 counted 0 params; `tools/script_param_counts.py` now follows the read (`cross_bank`).
 Every decode was already consistent (the word decoded as a "text"), so no project or
-ROM byte changes. In a CLONED room (bank $60) the far call still goes to bank $0F's
-entry, which reads bank $0F's tables — not the clone's (read from the code, not
-measured): a residual for the cutscene editor (ROADMAP P3.8 part B).
+ROM byte changes. In a CLONED room (bank $60) the far call still went to bank $0F's
+entry, which reads bank $0F's tables — not the clone's: **MEASURED S119** (PyBoy, a copy
+of the Castle: its chest patch is not drawn). **Fixed S119 (patched builds):** bank $04
+calls bank $60 entries 9 / 10 (`CustomDrawTiles` / `CustomDrawAttrs`) instead, which draw
+a bank $60 script's patch from bank $60 (`patch_data`, PROJECT_COMPILER §2.33) and far-call
+bank $0F for every other script; the copy now draws the chest at the same BG cells as the
+original. The patch offset = 8-px row · 32 + column from the visible top-left
+(`$FFB7`/`$FFBB` & $F8); the tiles are also staged at `$C300 + offset` (rows of 32) and
+the colours as nibbles at `$C200 + offset / 2` — so a text box closing over the patch
+restores it (PyBoy S119). A patch lasts until the room is loaded again.
 
 **Other names settled.** `$21` = play sound effect (was "TriggerBattle2" / "SkipScriptData2"),
 `$13` = 16-bit RAM write, `$14` = goto, `$16` = redraw sprites (one tick), `$17` = the
@@ -564,6 +571,45 @@ game; the census did not see resets then); off, not yet explained: `$01` script 
 script 5 @-125 (a branch target before the script start), `$09` @81, `$5D` @1064 (behind
 the final battle). (S118: 514 reached, 22 off — the Castle King's prize scenes now play
 in Castle state 4, the fly programs follow `$D8E3`/`$D8E4`.)
+
+## Writing scenes (S119) — rules the cutscene editor's compiler follows (PyBoy-measured)
+
+ROADMAP P3.8 part B; the compiler: `editor2/core/cutscene_build.py` (PROJECT_COMPILER
+§2.33). Every rule below was measured in PyBoy on custom rooms of the user's project
+(scratch builds), not read from the code alone.
+
+* **Text needs `init_dialog` after any yielding step — in a talk script too.** The
+  dialog mode the A press opens holds only while the script's first words run without
+  yielding: `face; npc_walk_x; wait_movement; text` and `delay 2; text` in an NPC's talk
+  script both left the text queued (`$D8D7` = 3) forever; examine and step-on scripts
+  behave the same. `init_dialog` when the box is already open is harmless (a guard of
+  flag tests before it, then init_dialog + text, works). A text followed directly by the
+  end after an `init_dialog` stalled once: the compiler always `close_text`s before any
+  other step and before the end.
+* **`$10` / `$11` walk the player too** (actor 0: the handler reads `$FF92` / `$FF95`),
+  to an absolute pixel, script waits — exact wherever he stands (a talk can start from
+  any side). Queued `$1A`/`$1B` of the player are exact only when his start is known.
+* **The flicker-in program `$08`** toggles type bit 6 for ~255 frames and ends with type
+  `$00`; the facing at slot `+$06` is kept (the NPC appears facing its own way).
+  `npc_write n,0,t` shows / hides instantly with the entry's own facing / behaviour.
+* **Shake:** `$C8B1` = frames of up-down, `$C8B2` = frames of left-right; ROM0
+  `ScreenShakeTick` (was "CheckSoundQueueState") counts them down and offsets rSCY / rSCX
+  by -4..+3 px each frame; the script goes on while it shakes.
+* **Shades `$C89B` (BG) / `$C89C` / `$C89D` (OBJ)**: normal `$D2 / $D2 / $E2`; the vanilla
+  fade to black writes `$E7/$E7/$F7`, `$FB`×3, `$FF`×3 with `delay 2` between (Castle
+  script 0 @1372); `$00` = every pixel takes its palette's colour 0 — white in the game's
+  rooms, the palette's own first colour in a free-colour custom room (a "flash" there is
+  not white).
+* **A battle inside a scene keeps the NPC slots** (positions, shown / hidden) as the scene
+  left them (the cast member shown before the fight is still shown after a won battle).
+* **The room-entry script runs at the FIRST arrival** (door, warp mailbox) — the S11/S53
+  "not dependably at initial entry" is history (the `$01:$4C3E` site was reverted in
+  S70v3; DOC_AUDIT S119).
+* **A room load resets** what scenes did to NPC slots (a cast member is hidden again at
+  its own cell) and to the BG (tile patches): the demo's fourth entry.
+* `give_item` ($2A) is silent — the game's own scripts test `$2C` (bag full) first and
+  say "[HERO] got …" themselves; the editor's Give step does the same.
+
 
 ## Script variables — what `$xxxx := v` means (S118f)
 

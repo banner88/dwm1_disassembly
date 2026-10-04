@@ -167,6 +167,9 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         self._migrate_animation(notes)
         # S118c: cloned rooms follow the game's room state
         self._migrate_clone_state(notes)
+        # S119: the tile patches ($24 / $61) of cloned game scripts are copied
+        # into the room (bank $60 entries 9 / 10 draw them from there)
+        self._migrate_clone_patches(notes)
         if notes:
             self.dirty = True
         return notes
@@ -766,6 +769,7 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         if music:
             self.custom.setdefault('music', {}).setdefault(
                 'room_defaults', {}).update(music)
+        self._migrate_clone_patches([])
         self.touch()
         return rid
 
@@ -1355,6 +1359,72 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
             r['animation'] = kind
             notes.append(f"room {r.get('id')}: animation = {kind!r} (S99 — was "
                          "Castle's tile 77-78 roll in every custom room)")
+
+    PATCH_OPS = {'0x24', '0x61', 'draw_tiles', 'draw_attrs', 36, 97}
+
+    def _migrate_clone_patches(self, notes):
+        """S119 (ROADMAP P3.8 part d): a cloned game script's ops $24 / $61 carry
+        an ADDRESS in the original's script bank (a tile patch: Castle / Bazaar
+        doors, chests). In a copy that address means nothing (bank $60 holds
+        the copy's scripts), so the patch bytes are copied from the ROM into
+        the room (`patch_data`) and the op points at them (`patch:<name>`),
+        which bank $60 entries 9 / 10 draw. Same-size the rest: nothing else in
+        the script moves."""
+        rom = None
+        from editor2.core.cutscenes import script_bank
+        by_id = {sc.get('id'): sc for sc in self.custom.get('scripts', [])}
+        for r in self.custom.get('rooms', []):
+            src = r.get('source_mapID')
+            if r.get('placeholder') or src is None:
+                continue
+            try:
+                src = val(src)
+            except Exception:                            # noqa: BLE001
+                continue
+            if not isinstance(src, int) or src >= 0x6B:
+                continue
+            bank = script_bank(src)
+            for _i, sid in sorted((r.get('scripts') or {}).items()):
+                sc = by_id.get(sid)
+                for op in (sc or {}).get('ops', []):
+                    if not (isinstance(op, list) and len(op) >= 3 and op[0] == 'op'
+                            and op[1] in self.PATCH_OPS):
+                        continue
+                    try:
+                        addr = val(op[2])
+                    except Exception:                    # noqa: BLE001
+                        continue
+                    if not isinstance(addr, int) or not 0x4000 <= addr < 0x8000:
+                        continue
+                    if rom is None:
+                        rom = self._rom_bytes()
+                        if not rom:
+                            return
+                    o = bank * 0x4000 + addr - 0x4000
+                    data = list(rom[o:o + 2])
+                    k = o + 2
+                    while k < len(rom) and rom[k] != 0xD9 and k - o < 512:
+                        data.append(rom[k])
+                        k += 1
+                    data.append(0xD9)
+                    name = f'v{bank:02X}_{addr:04X}'
+                    r.setdefault('patch_data', {})[name] = [f'0x{b:02X}' for b in data]
+                    op[2] = f'patch:{name}'
+                    notes.append(f"room {r.get('id')}: script {sid} tile patch ${addr:04X} "
+                                 "copied into the room (S119 — copies read their own)")
+        # a script shared by several rooms: every room that runs it holds its patches
+        have = {}
+        for r in self.custom.get('rooms', []):
+            for nm, data in (r.get('patch_data') or {}).items():
+                have.setdefault(nm, data)
+        for r in self.custom.get('rooms', []):
+            for _i, sid in sorted((r.get('scripts') or {}).items()):
+                for op in (by_id.get(sid) or {}).get('ops', []):
+                    if isinstance(op, list) and len(op) >= 3 and isinstance(op[2], str) \
+                            and op[2].startswith('patch:'):
+                        nm = op[2].split(':', 1)[1]
+                        if nm in have and nm not in (r.get('patch_data') or {}):
+                            r.setdefault('patch_data', {})[nm] = list(have[nm])
 
     def _rom_bytes(self):
         if getattr(self, '_rom_cache', None) is None:
@@ -2191,7 +2261,8 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         if old.get('comment') and not old.get('kind') == 'raw':
             v['comment'] = old['comment']
         lst[index] = self._npc_entry(v)
-        for k in ('swirl_of', 'shown_when'):        # S117: conditions ride along
+        for k in ('swirl_of', 'shown_when',         # S117: conditions ride along
+                  'actor', 'cast'):                 # S119: a cutscene actor's name / cast mark
             if old.get(k) is not None:
                 lst[index][k] = copy.deepcopy(old[k])
         self.touch()

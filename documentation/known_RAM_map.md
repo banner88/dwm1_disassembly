@@ -138,6 +138,14 @@
                  breeding list, 7 = egg evaluator, 11 = shrine entry) [S104]
                  S109: indexes bank $09 ScreenEffectTable09 first; type 4 =
                  the arena class-registration menu (ArenaClassMenu)
+   C89B     1    BG shade map: $D2 normal; the vanilla fade steps $E7 / $FB / $FF
+                 (black); $00 = every pixel its palette's colour 0 (BANK04 "Writing
+                 scenes") [S119, PyBoy]
+   C89C     1    OBJ shade map 0 (normal $D2) [S119]
+   C89D     1    OBJ shade map 1 (normal $E2) [S119]
+   C8B1     1    Screen shake up-down: frames left (ROM0 ScreenShakeTick, rSCY -4..+3)
+                 [S119, code + PyBoy]
+   C8B2     1    Screen shake left-right: frames left (rSCX) [S119]
    C8EC     1    All field sprites hidden (non-zero: player, followers, NPCs, the
                  gate object not drawn); set 1 by room transitions, cleared by
                  the engine only when $D92B is not 1-5 [S118f, code]

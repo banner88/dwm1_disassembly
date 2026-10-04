@@ -10,6 +10,104 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
+> Last verified: 2026-10-04 (Session 119 — **ROADMAP P3.8 PART B: THE CUTSCENE EDITOR — THE
+> PROJECT'S OWN SCENES WITH NAMED NPCs, A CAST THAT APPEARS / DISAPPEARS, EVERY STEP ON THE
+> ROOM PICTURE IN TILES, PREVIEW + PLAY IN THE GAME; OP EDITING OF A COPIED ROOM'S SCRIPTS;
+> THE `$24`/`$61` TILE PATCH FIX FOR COPIES** (user: "Should be specific NPCs. Design should
+> be visual, ie you should indicate which NPC faces where, moves where, and operates by tile,
+> etc. Custom cutscenes should be previewable. Everything should be in tiles. 1) Step list
+> plus room picture of course. Plus appear/disappear NPCs if they come out of nowhere or
+> disappear 2) ALways in tiles. Make visual. 3) Enter room, talking npc, enter room +
+> specific flag is ON, etc. 4) … I am not going to reuse ANY vanilla cutscenes … 5) Yes of
+> course 6) ALL FOUR 7) Yes.")). **Built S119, NOT yet user-tested.**
+> **Model + compiler (PROJECT_COMPILER §2.33, `editor2/core/cutscene_build.py`):**
+> `custom.rooms[].cutscenes[]` — trigger (entry / talk to a named NPC / examine a cell /
+> step on a cell; `when_on` / `when_off` flags, `once` flag), `player_start`, a step list of 25
+> kinds (say / ask with YES + NO branches / if flag / walk in cells (first x|y, together,
+> fast, keep facing) / face (dir or toward) / show + hide (instant, flicker, spin, `at` a
+> cell) / anim (the measured `$1C` programs) / fly in + off / wait / music / sound / shake /
+> fade / flash / followers / give item / give monster / set + clear flag / tiles (a block
+> copied from another room state, `$24` + `$61`) / battle / move to a room / end). NPCs are
+> named on their entries (`actor`), cast members are hidden NPCs at the same NPC number in
+> every state of the screen (`cutscene_doc.py`). Scenes of one trigger are lowered into ONE
+> script (`cut:<room>:<key>` = guard + body per scene, then the room's original trigger
+> script inlined). Measured rules it follows: a text after any yielding step needs
+> `init_dialog` (talk / examine / step-on scripts too); every scene `close_text`s before
+> other steps and at the end (BANK04 "Writing scenes (S119)", KEY_LESSONS S119).
+> **Editor (EDITOR_DESIGN §5.1d "As built S119", help `63_cutscenes.md`):** Cutscenes →
+> "＋ New cutscene…", "Your cutscenes (edit)": the stage (the room picture 480×384: actors as
+> their real sprites from `extracted/npc_facing_sprites/` with facing wedges + names, move
+> arrows, text boxes; drag an actor to move it, right-click for steps), the step tree with
+> one form per kind, the trigger header, ▶ preview (the model, scrubbable, YES / NO), ▶ Play
+> in the game (saves, builds, Playback). **Part c:** Edit / Insert / Delete step on the
+> storyboard of a copied room's own op scripts (`OpDialog`, all 102 ops).
+> **Part d (engine):** a copied Castle drew no chest patch — bank $04 `CallBank0FForItem` /
+> `CallBank0F_Gold` same-size redirect `$0f01`/`$0f02` → bank $60 entries 9 / 10
+> `CustomDrawTiles` / `CustomDrawAttrs` (custom routes by map type / mapID, else bank $0C's own
+> code); clone migration copies each `$24`/`$61` patch into `patch_data` (`patch:<name>`).
+> PyBoy: the copy draws the chest like the original; the redirect flipped back draws nothing.
+> **Measured S119 (PyBoy):** shake `$C8B1`/`$C8B2` (ROM0 `CheckSoundQueueState` renamed
+> `ScreenShakeTick`, both trees), shades `$C89B-$C89D` (normal D2/D2/E2), a battle keeps the
+> NPC slots' positions + visibility, a room reload resets them and the tile patches, the
+> entry script runs at the first entry (the S11 / S53 note was stale), the YES/NO cursor
+> starts on NO; Playback auto-answer now gets a project scene's questions from the editor
+> (`questions_of`). 128 / 132 NPC sprites extracted with their 4 facings
+> (`tools/extract_npc_facings.py`; $68, $E1-$E3 draw nothing).
+> **Verifier PASS; clean `1ca6579…` byte-perfect** (labels / comments only in disassembly/);
+> **patched pin `d19259a1…` (patched)**, was `110210b0…` (patched, historical) — bank $60
+> entries 9 / 10 + bank $04's two words; template sha `f58f82b4…`. test_compiler --rom
+> 975/975 (S119b: 982/982), test_app PASS, test_canvas --rom PASS. `EDITOR_REVISION` = 'S119'. The user's
+> project (my-dwm-hack_10) as-is builds `6d4de4a3…` (patched; the S118c migration of their
+> GreatTree copy + the engine change; no scenes of their own).
+> **Test ROM `DWM_S119_cutscenes_test.gbc` (`28029018…`, patched; built, NOT yet
+> user-tested):** the user's project + "Stage Hall" ($71) behind the GreatTree screen-12
+> Copycat House door (4, 4) — **r2:** the first ROM (`85a1ae8c…`, patched, historical) put
+> it on the screen-4 door (5, 3) = the right half of the ARENA LOBBY door and called it the
+> Library door; user 2026-10-04 18:55: "No it doesnt, leads to my own custom room" (their
+> Library door, screen 8, goes to their own room) → moved to a door their project does not
+> use (KEY_LESSONS S119 "Name a door from the game's data"): the Host (named) + the cast member Imp; 4 scenes — "Welcome to the stage"
+> (entry, once: the Imp flickers in, walks, spin-jumps, shake, flies off), "The Host's
+> trick" (talk; YES: walks, fade, Herb given, flag), "Encore" (entry + flag ON, once), "The
+> magic table" (examine: flash + tiles from state 1). PyBoy on the user's save through the
+> real door: all four play and end where the model says; a 4th entry plays nothing.
+> **Hand-off:** every S119 change = the diff against `9a8d2d2`, delivered as
+> `DWM-S119-cutscene-editor-changed-files.zip`, the APPLY list pasted in the chat
+> (user 2026-10-04 19:03: "alirght yep i see it. give editor files so I can test things
+> properly" — the r2 ROM's door seen).
+> **S119b (user 2026-10-04 19:23: "Why cant I select npc in a custom room when creating new
+> cutscene? Want to select npc in Cities_FOUNT"; built, NOT yet user-tested):** the actor
+> lists held only NAMED NPCs (their Cities_FOUNT shopkeeper had no name) → every actor list
+> and the New cutscene dialog list unnamed NPCs too, named when picked in the same undo step
+> (EDITOR_DESIGN §5.1d "S119b"). PyBoy on their project: a once-only talk scene on the
+> shopkeeper plays, the second talk opens the shop. **Then (user 2026-10-04 20:04: picking
+> an unnamed NPC in a walk's Who list → "Segmentation fault: 11" on the Mac):** every
+> step-form edit rebuilt the form INSIDE the sending combo's signal (the combo deleted while
+> running) → form edits, the trigger / player-start commits and *New flag…* are applied after
+> the signal returns (KEY_LESSONS "Never rebuild a widget inside its own signal"). **Then
+> (user 20:43: "Why is text box so slow to type in?"):** 1.1 s per key measured on their
+> project (a whole-project commit per key, every tab reloading, the box rebuilt — the cursor
+> reset) → texts stored on a pause / focus-out, unchanged forms kept, the Cutscenes / Import
+> tabs' refreshes narrowed: 4 ms per key, one ~0.4 s commit per pause (KEY_LESSONS "An edit
+> per key press is not an edit model"). **Then (user 21:15: "1) Why cant I copy paste build
+> log? … 2) Why not preview message using in-game boxes … already implemented in NPC
+> conversations?? 3) Your help tab is cut off for cutscenes 4) Can you not hover or explain
+> what is e.g. 'wait until everyone stops'?"):** the log keyboard-selectable + *Copy all* + a
+> build-error dialog with *Copy error*; cutscene texts in the conversations' box editor
+> (game font / frame, Fit); the help's raw `<selected actor>` fixed (every topic now
+> render-checked); every step kind / form field / header control explained (EDITOR_DESIGN
+> §5.1d "S119b — the user's four"). **Then (user 22:44: the editor crashed at open —
+> "gamedata.encounters.0.eids[3] = 'klamutra': no such enemy row"):** caused by S119 —
+> `Project()` raised on their scene's 54-cell line, the Families tab's fallback model lacks
+> project enemies → `Project()` now records `cutscene_error`, the build's validation reports
+> it (PROJECT_COMPILER §2.33, KEY_LESSONS "A half-written scene must never stop the editor
+> from opening"); measured: their project + that scene opens, Build stops with the scene's
+> message. Editor-only
+> (no ROM byte, pin unchanged). `EDITOR_REVISION` = 'S119b'. Delivered as the cumulative
+> `DWM-S119-cutscene-editor-changed-files.zip` (S119 + S119b).
+> **Next:** the user's test of the ROM + editor, then P3.8 residuals (ROADMAP) or the user's
+> pick.
+
+
 > Last verified: 2026-10-04 (Session 118 — **ROADMAP P3.8 PART A: THE CUTSCENES TAB —
 > EVERY SCENE OF THE GAME AND OF THE PROJECT READ, SHOWN AS A STORYBOARD AND PLAYED IN THE
 > REAL GAME INSIDE THE EDITOR (NO NAVIGATING), THE INTRO CHAIN, AUTO TEXT, SOUND** (user:
@@ -113,99 +211,13 @@
 > part B (the cutscene editor — the questions in ROADMAP P3.8) or the user's pick.
 
 
-> Last verified: 2026-10-03 (Session 117 — **ROADMAP NG2 + P3.13c: 2,048 EXTENDED EVENT
-> FLAGS, GATE SWIRLS THAT FOLLOW EACH GATE'S "CLEARED" FLAG (NEW GATES, NEW BOSSES,
-> RE-ROUTED PORTALS), NPCs SHOWN BY FLAG, AND SHOPS — THE GAME'S FIVE AND THE PROJECT'S
-> OWN, ITEM PRICES** (user on the audit: "rewritten preview player works. What is NG2? Is
-> this literally just connecting swirly thing to gate, then setting a flag to stop swirtly
-> thing from swirling? Sure we can seems like a tiny thing to do" → "1) I am going to need
-> dozens if not hundreds of flags for new custom campaign. 2) Does each swirl-containing
-> screen contain step variants then? 3) Make is as simple and straightforward in editor as
-> possible. Boss cleared - no swirly. Boss cleared BUT we are inputting new boss or
-> redirecting to new gate - swirly. However you do it its fine. 4) Do shops as well while
-> you're there.")). **Test ROM `DWM_S117_swirls_shops_test.gbc` (`e208972a…`, patched,
-> historical) USER-REPORTED 2026-10-03 21:57: "The rest works" + two bugs → S117b below.**
-> S116b's player USER-REPORTED working (S116 block).
->
-> **S117b (built, NOT yet user-tested; test ROMs `DWM_S117b_shopfix_test.gbc`
-> (`fcb6bc4d…`, patched, historical) and `DWM_S117b_test.gbc` (`56d308bc…`, patched — the
-> same engine, the demo hall re-laid out one NPC per row)):** (1) user: "when I walk over my follower monsters … the left-most NPC
-> glitches out and is hidden … Same thing happens to newly appeared slime" → measured:
-> the HARDWARE limit of 10 objects per screen line (the player + 3 monsters lined up on
-> the NPCs' row use 8; PyBoy draws them all, so it never showed) — user: "Just warning is
-> fine for now, and Ill build around it" → `formats.sprite_budget` build + Rooms-tab
-> warnings (a row with > 1 NPC; > 6 NPCs on screen — 40 objects), the demo hall one NPC per
-> row (ROOM_DATA_FORMAT "Sprite limits (S117b)"). (2) user: "New shop in custom room - menu
-> glitches with background colours from custom tiles" → every bank $09 screen is pushed by
-> `LoadFld9_40fa` (tiles only); SAME-SIZE → bank $77 entry 2 `ScreenPush` (palette 7 for
-> menu tiles, `$C200` palettes for room tiles, free-colour custom rooms only); and a second
-> bug found testing it: a shopkeeper talked to from the lower half put the dialog box at
-> the top and the shop left its "Thank you" box on screen → `ShopClose` → `ShopBoxBottom`
-> (DATA_STRUCTURES "Shops (S117)" → "The shop screens"). **Patched pin `110210b0…`
-> (patched)**, was `31cc5b31…` (patched, historical); the user's project (my-dwm-hack_8)
-> as-is builds `8cbebea1…` (patched; one sprite-limit warning: greattree screen 8 row 6).
-> test_compiler --rom 947/947, test_app + --rom PASS, test_canvas --rom PASS, verifier
-> PASS. `EDITOR_REVISION` = 'S117b'. Hand-off: S117 + S117b together = the diff against
-> `b59c026`, `DWM-S117b-swirls-flags-shops-changed-files.zip`.
-> Verifier PASS (6/6); clean `1ca6579…` byte-perfect (bank $03 `SpriteFrameDataTable` →
-> `ItemInfoTable` 44 `db` rows, bank $09's shop machines / tables labelled + five renames, in
-> both trees — labels / comments / db only); **patched pin `31cc5b31…` (patched,
-> historical — S117b: `110210b0…`)**, was `7bab4921…` (patched, historical); the user's
-> project (my-dwm-hack_8) as-is built `b020c1bf…` (patched, historical; the engine change only — on it, room $23's swirl now follows their
-> custom gate-0 boss). test_compiler --rom 936/936, test_app + test_app --rom PASS (GUI
-> build == pin), test_canvas --rom PASS. `EDITOR_REVISION` = 'S117'.
->
-> **Flags (EVENT_FLAGS "Extended flags (S117)", ARCHITECTURE "SRAM bank 3 (S117)"):** ROM0
-> `ComputeFlagAddress` (the one chokepoint of Set / Clear / Test) SAME-SIZE → bank $73 entry
-> 21 `FlagAddr`: indices `$1000-$17FF` → **`wExtFlags` $D140** (256 B), the rest the vanilla
-> formula; saved by bank $73 entries 5 / 6 to SRAM bank 3 ("X1"), zeroed by a new game. The
-> editor's named pool = **1,968** (`$0158-$0167` + `$1000-$179F`); `$17A0-$17FF` = the gates'
-> own cleared flags; `gate:N` = "gate N cleared" anywhere a flag is picked.
-> **Swirls (GATE_GENERATION §7.9):** measured — the spinning swirl is NPC sprite `$4D`
-> (script `$FF`) on the portal cell, dropped by the boss script's STEP advance (room $24
-> `$D969`); the still swirl is BG art; the portal never tests either. Engine: bank $0B
-> `GetRoomDataPtr` SAME-SIZE → bank $60 entry 1 for every non-gate room —
-> `CopyNPCListToBuffer` reads **`$A0`/`$A1` flag-condition prefixes** (→ the hidden bit) and
-> `VanillaNPCExtTable` (vanilla portal rooms of re-bossed / re-routed gates); bank $50's
-> boss-win tail SAME-SIZE → bank $76 entry 2 **`GateBossWin`** (`GateClearTable`: own flag
-> `$17A0 + gate`, + a re-bossed vanilla gate's vanilla flag). Schema `swirl_of`, `shown_when`,
-> portal `entrance_redirects` with `gate:N` (PROJECT_COMPILER §2.32).
-> **Shops (DATA_STRUCTURES "Shops (S117)"):** a shop = opcode `$FF04 $0000 $0680`; the list
-> is chosen by the ROOM (map $50 gate shop, else wScreenIndex 0 / 2 / 4 / other); prices =
-> `ItemInfoTable` +1/+2. Engine: bank $09's 64-byte choice + copy → NEW compiler bank
-> **$77** entry 0 `ShopFill` (**`wShopID` $D240** set by a `shop` script, else the room rule);
-> the close tail → entry 1 `ShopClose`. Schema `gamedata.items.<id>.price`,
-> `gamedata.shops`, `custom.shops[]`, `shop` scripts.
-> **Editor (EDITOR_DESIGN §5.1b / §5.6b "As built S117"):** "Gate entrance here…" adds the
-> swirl object + paints the still swirl; "Lead this portal to another gate…"; `gate:N
-> cleared` in every flag list; the Gates tab names each gate's cleared flag; **the Shops
-> tab** (the five + your shops, items 1-20, Original list, prices with what shops pay) +
-> Rooms NPC "Shopkeeper…"; help `62_shops.md`, `60_gates.md` "Swirls and cleared",
-> `30_flags.md`, `20_npcs.md`, `00_start.md`, `90_limits.md`.
->
-> **Measured on the user's save (demo = the user's project + "Portal Hall" $71 behind the
-> GreatTree 2F Library door: a guide, a bell keeper (extended flag `$1100`) and the slime it
-> calls (`shown_when`), a stall selling its own 12 items, entrances to the new gate 32
-> "Swirl Gate" (copy of Beginning, 2 floors, boss room "Swirl Throne" $72) / Villager /
-> Talisman; the room-$24 Villager portal re-routed to gate 32; Herb costs 12 — NOT in their
-> project):** the hall's gate-32 and Talisman swirls spin, Villager's (cleared) is hidden;
-> the bell sets `$1100`, the slime appears, survives save → reload; an unsaved flag rewinds;
-> the stall's list (3 pages), Herb bought for 12G, page 3's last item bought; the Bazaar's
-> vanilla list with Herb 12G; the shop closes with wShopID 0; gate 32 → boss conversation
-> battle → `GateBossWin` once, `$17C0` set → the gate-32 swirls in the hall and room $24
-> hidden. A/B over the user's project: 212 vanilla + 25 custom screens' NPC slots identical
-> except $23 (by design); `ShopFill` census == the original's choice for every map × screen;
-> the 1,934 script flags' addresses == the original.
-> **Hand-off:** every S117 change = the diff against `b59c026` (origin/master, the S116
-> push), delivered as `DWM-S117-swirls-flags-shops-changed-files.zip`, the APPLY list
-> pasted in the chat. **Next:** NG3 (fully custom gates — the S114 questions) or the user's
-> pick; residuals in ROADMAP NG2 / P3.13c.
 
 
 
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S119** (2026-10-04): P3.8 part B — the cutscene editor: the project's own scenes (`custom.rooms[].cutscenes[]`, 4 triggers + flag conditions + once, 25 step kinds in cells; named NPCs + cast members; `cutscene_build.py` lowers each trigger's scenes into one script, init_dialog / close_text rules measured), the stage + step tree + preview + Play in the game; part c op editing of a copied room's scripts; part d bank $04 `$24`/`$61` redirect → bank $60 entries 9/10 (copies draw their tile patches; `patch_data`); NPC facing sprites extracted (128/132); `ScreenShakeTick` named; pin `d19259a1…` (patched). Test ROM `DWM_S119_cutscenes_test.gbc` (`28029018…`, patched; r2 — the Copycat House door) built, NOT yet user-tested. **S119b**: unnamed NPCs pickable in every actor list (named when picked). **S119b**: unnamed NPCs pickable in every actor list (named on pick; user: "Why cant I select npc in a custom room"). Verbose block in this file. Owning: PROJECT_COMPILER §2.33, BANK04_SCRIPT_ENGINE "Writing scenes (S119)", EDITOR_DESIGN §5.1d, CUSTOM_CUTSCENES, known_RAM_map, KEY_LESSONS S119, DOC_AUDIT S119, TOOLS_AND_DATA S119.
 - **S118** (2026-10-04): P3.8 part A — the Cutscenes tab: the 102 script opcodes named + measured (`script_ops.py`; bank $04 handlers labelled both trees; `$D8D7`/`$D8D8` bits; the `$1C` movement programs; `$24`/`$61` arity 1), 519 vanilla scenes + the project's as storyboards (`cutscenes.py`), played in the real game without navigating (`playback.py` recipes; PyBoy in a child process, `playback_server.py`), the intro chain, auto text / sound / keys; `census_cutscenes.py` 514 / 519 reached, 0 hung, model 3,887 / 3,909; byte-neutral (pin `110210b0…` patched, unchanged). Built, NOT yet user-tested. **S118b** (user's first look): room state from the story's counter writes (the wrong NPC jumped), filter = someone moves, ▶ From this step, `FLY` table; census 516 reached, 3,989 / 3,998; copies keep their own state counters → **S118c**: copies follow the game's room state (`step_counter.vanilla`), Step ▸▸ / back, a picture per step. **S118d**: entry scenes set up as the calling script leaves the game (the arena reset), resets detected, cumulative zip. **S118e**: the intro from a real new game, gate arrivals / walk-in instead of the screen centre, View → Mute game playback. **S118f**: every storyboard step in words (`ram_names.py`). **S118g**: names only from the game (speaker texts, exit tables). Verbose block in this file. Owning: BANK04_SCRIPT_ENGINE "Script opcodes as measured (S118)", EDITOR_DESIGN §5.1d, CUSTOM_CUTSCENES, TEXT_SYSTEM ($F9 slots), KEY_LESSONS S118, DOC_AUDIT S118, TOOLS_AND_DATA S118.
-- **S117** (2026-10-03): NG2 + P3.13c — extended event flags `$1000-$17FF` (ROM0 `ComputeFlagAddress` same-size → bank $73 entry 21; `wExtFlags` $D140, SRAM bank 3 "X1"; editor pool 1,968); gate swirls follow each gate's cleared flag (bank $0B `GetRoomDataPtr` same-size → bank $60 entry 1 for every non-gate room: `$A0`/`$A1` NPC flag conditions + `VanillaNPCExtTable`; bank $50 boss win → bank $76 entry 2 `GateBossWin`, own flags `$17A0 + gate`); shops (bank $09 fill / close same-size → NEW compiler bank $77 `ShopFill` / `ShopClose`, `wShopID` $D240; `ItemInfoTable` $03:$71DA re-sectioned, prices editable; the Shops tab, NPC Shopkeeper…); pin `31cc5b31…` (patched). Test ROM `DWM_S117_swirls_shops_test.gbc` USER-REPORTED 2026-10-03 21:57 ("The rest works" + 2 bugs) → **S117b**: hardware sprite-limit warnings (`formats.sprite_budget`), bank $09 screen push → bank $77 `ScreenPush` (menu palettes in free-colour rooms), `ShopBoxBottom`; pin `110210b0…` (patched); test ROM `DWM_S117b_test.gbc` built, NOT yet user-tested. Verbose block in this file. Owning: EVENT_FLAGS "Extended flags (S117)", GATE_GENERATION §7.9, DATA_STRUCTURES "Shops (S117)", PROJECT_COMPILER §2.32, ARCHITECTURE "SRAM bank 3 (S117)", ROOM_DATA_FORMAT "Condition prefixes", EDITOR_DESIGN §5.1b / §5.6b, KEY_LESSONS S117, DOC_AUDIT S117, TOOLS_AND_DATA S117.
+- **S117** (2026-10-03): NG2 + P3.13c — extended event flags `$1000-$17FF` (ROM0 `ComputeFlagAddress` same-size → bank $73 entry 21; `wExtFlags` $D140, SRAM bank 3 "X1"; editor pool 1,968); gate swirls follow each gate's cleared flag (bank $0B `GetRoomDataPtr` same-size → bank $60 entry 1 for every non-gate room: `$A0`/`$A1` NPC flag conditions + `VanillaNPCExtTable`; bank $50 boss win → bank $76 entry 2 `GateBossWin`, own flags `$17A0 + gate`); shops (bank $09 fill / close same-size → NEW compiler bank $77 `ShopFill` / `ShopClose`, `wShopID` $D240; `ItemInfoTable` $03:$71DA re-sectioned, prices editable; the Shops tab, NPC Shopkeeper…); pin `31cc5b31…` (patched). Test ROM `DWM_S117_swirls_shops_test.gbc` USER-REPORTED 2026-10-03 21:57 ("The rest works" + 2 bugs) → **S117b**: hardware sprite-limit warnings (`formats.sprite_budget`), bank $09 screen push → bank $77 `ScreenPush` (menu palettes in free-colour rooms), `ShopBoxBottom`; pin `110210b0…` (patched); test ROM `DWM_S117b_test.gbc` built, NOT yet user-tested. Verbose block in SESSION_HISTORY.md. Owning: EVENT_FLAGS "Extended flags (S117)", GATE_GENERATION §7.9, DATA_STRUCTURES "Shops (S117)", PROJECT_COMPILER §2.32, ARCHITECTURE "SRAM bank 3 (S117)", ROOM_DATA_FORMAT "Condition prefixes", EDITOR_DESIGN §5.1b / §5.6b, KEY_LESSONS S117, DOC_AUDIT S117, TOOLS_AND_DATA S117.
 - **S116** (2026-10-03): P3.13b the Music tab — the game's own sound engine run in the editor (`dwm/sm83.py` SM83 interpreter + `core/sound_engine.py` + `core/apu_synth.py`; census == PyBoy for every vanilla id and every project song of 5 builds), `sound_catalog.json`; InitBGM same-size -> bank $71 entry 6 (a song's own 1-6 channels), second song bank $75 (`rom0_audio_master` row 5), gate songs (entry 2, `$FF` follow), battle songs (bank $51 same-size -> entry 7; `census_music_resolve.py` 4,000 == the models); the tab (Songs / Rooms / Gates / Battles, names, automatic MIDI import); pin `7bab4921…` (patched). Test ROM `DWM_S116_music_test.gbc` USER-REPORTED 2026-10-03 18:29 ("rom seems to work fine"); the S116b player fix USER-REPORTED working at the S117 start ("rewritten preview player works"). Verbose block in SESSION_HISTORY.md. Owning: SOUND_SYSTEM §1/§2/§9/§10, PROJECT_COMPILER §2.9 "S116", EDITOR_DESIGN §5.6, KEY_LESSONS S116, DOC_AUDIT S116, TOOLS_AND_DATA S116.
 - **S115** (2026-10-03): ARC NG / NG1 new random gates — bank $16 entry 5's two GateFloorDataTable readers (8-bit, wrapped at 32) → same-size calls to `GateRowPtr` (free tail $7CFD): 0-31 = the table, 32-95 = bank $76 entry 1 `NewGateRowCopy` → `wGateRowBuf` $D138, else the old wrap; `EncVanillaNumber` walks a new gate's source; `custom.gates[]` 32-95 `copy_of` + `name`; gate-entrance exits (gate_flag 1, `gate:N`); Gates tab New gate / Rename / Delete, Rooms "Gate entrance here…"; PyBoy on the user's save: portal → gate 32 floors (own lists) → special room → custom boss → castle; pin `c8995d91…` (patched). Test ROM `DWM_S115_newgates_test.gbc` USER-CONFIRMED 2026-10-03 12:39 ("Excellent, confirm works"). Verbose block in SESSION_HISTORY.md. Owning: GATE_GENERATION §7.8, PROJECT_COMPILER §2.31, EDITOR_DESIGN §5.1b, KEY_LESSONS S115, DOC_AUDIT S115, TOOLS_AND_DATA S115.
 - **S114** (2026-10-03): P3.13a the Encounters tab — bank $01 `LoadNextDungeonFloor` same-size fork → NEW compiler bank $76 `EncResolve` (vanilla rule copies, gate per-floor plans, rooms' own lists, flag variants, room rates) + `wEncListBuf` $D11E read by the five list readers; `custom.encounter_lists` (128-255), `rooms[].encounters.{list,variants,rate}`, `gates[].encounters`; the tab (Lists / Gates / Rooms); census (stub calls, RNG pinned) 0 mismatches on the ORIGINAL ROM + 4 builds; found: draw rule ≥ / RNG word order, encounters.json one floor late (rewritten), counter re-seeded at every room load (S11 corrected); pin `dbc4dee9…` (patched). Test ROM `DWM_S114_encounters_test.gbc` USER-CONFIRMED 2026-10-03 09:52 ("Looks good. Give editor files"). Verbose block in SESSION_HISTORY.md. Owning: PROJECT_COMPILER §2.30, DATA_STRUCTURES "Encounter list choice (S114)", EDITOR_DESIGN §5.5, KEY_LESSONS S114, DOC_AUDIT S114, TOOLS_AND_DATA S114.
@@ -346,6 +358,7 @@
 | Shops (S117) | Shopkeeper = `text $0680 / $FF04 $0000 $0680 / text $0682 / end`; list by ROOM (map $50 → gate list $09:$478C, else wScreenIndex 0 Bazaar $476B / 2 Starry $4774 / 4 Bookstore $477D / other Rare $4784) → `$C0D8` (≤ 20); buy price = `ItemInfoTable` $03:$71DA (44 × 12 B) +1/+2; sell = bank $09 `ShopSellPrice` (gate shop full, staffs /10, else −1/4). Patched: bank $77 `ShopFill` (`wShopID` $D240) / `ShopClose`; S117b: every bank $09 screen push → bank $77 `ScreenPush` (attributes in free-colour rooms). DATA_STRUCTURES "Shops (S117)". |
 | Sprite limits (S117b) | Hardware: ≤ 10 objects per screen line (lowest OAM index wins), 40 in all; the field draws 8×8 objects, player OAM 0-3 + 3 monsters 4-15 first, then NPCs in list order → with the party lined up on a row only 1 NPC of that row shows, ~6 NPCs per screen. PyBoy screenshots do not show the per-line drop. Editor: warnings (`formats.sprite_budget`). ROOM_DATA_FORMAT "Sprite limits (S117b)". |
 | Script VM (S118) | 102 opcodes, names / params / kinds = `editor2/core/script_ops.py` (arity from the handlers, `extracted/script_param_counts.json`; `$24`/`$61` = 1 via the script bank). Actor 0 = the player (HRAM `$92`/`$95` X/Y, `$8E` facing, `$90` bit 6 hidden), n ≥ 1 = NPC slot n-1 (`$D7D2 + 32(n-1)`). `$0A/$0B/$10/$11` = waited walk (`$D8D7` bit 3); `$1A/$1B/$1C` = queued (buffers `$D8E9 + 8n`, `$19` waits); 1 px on 3 frames of 4; `$22` doubles. Counter rests only on yielding steps. BANK04_SCRIPT_ENGINE "Script opcodes as measured (S118)". |
+| Cutscenes (S119) | The project's own scenes = `custom.rooms[].cutscenes[]` (PROJECT_COMPILER §2.33), lowered per trigger into one script `cut:<room>:<key>` (the original trigger script inlined after); a text after any yielding step needs `init_dialog` (measured); tile patches of rooms ≥ `$6B` / type `$70` = `custom.rooms[].patch_data` read by bank $60 entries 9 / 10 (bank $04 `CallBank0FForItem` / `CallBank0F_Gold` same-size `$6009` / `$600a`); shake `$C8B1`/`$C8B2`, shades `$C89B-$C89D` |
 | Verifier | `python3 tools/verify_integrity.py` — run at session start AND end |
 
 **The MD5 `b90957482011c8083a068781033715b7` is WRONG.** It was a drifted
@@ -360,7 +373,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 
 | Bank | Owner | Emitted by |
 |------|-------|-----------|
-| $60 | Custom rooms / NPCs / scripts / text (+ `CustomMonsterCast` monster-NPC cast tables, S101; S117: entry 1 serves EVERY non-gate room — `$A0`/`$A1` NPC flag conditions, `VanillaNPCExtTable`) | hand-authored `patches/bank_060.asm` (→ `build_project.py` later) |
+| $60 | Custom rooms / NPCs / scripts / text (+ `CustomMonsterCast` monster-NPC cast tables, S101; S117: entry 1 serves EVERY non-gate room — `$A0`/`$A1` NPC flag conditions, `VanillaNPCExtTable`; S119: entries 9 / 10 `CustomDrawTiles` / `CustomDrawAttrs` — the `$24`/`$61` tile patches of custom rooms + copies, from `patch_data`) | hand-authored `patches/bank_060.asm` (→ `build_project.py` later) |
 | $64 | Custom tile layouts + attr data (`custom.layouts[]`, S92; per-screen attr maps S94) | compiler-generated `patches/bank_064.asm` (`layouts64`) |
 | $67 | Custom tileset sheets (`custom.tilesets[]`: raw2bpp incl. editor-copied vanilla sheets, or mashup spec) | compiler-generated `patches/bank_067.asm` (`tilesets67`) |
 | $69 | Breeding special scanner (B2) + the live special table | hand-kept `patches/bank_069.asm` (scanner) + compiler region `gd_special_recipes` (`gamedata.breeding.special`, S103; `build_breeding.py --emit-special` retired) |
@@ -457,6 +470,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Extended event flags (2,048, `$1000-$17FF`, saved) + NPCs shown by flag (`shown_when`) | 🟢 built S117, test ROM USER-REPORTED 2026-10-03 21:57 ("The rest works"); editor pool 1,968 named flags | EVENT_FLAGS "Extended flags (S117)"; PROJECT_COMPILER §2.32 |
 | Gate swirls follow each gate's cleared flag (new gates, re-bossed vanilla gates, re-routed portals) + the cleared mark of custom bosses | 🟢 built S117 (ROADMAP NG2), test ROM USER-REPORTED 2026-10-03 21:57 ("The rest works") | GATE_GENERATION §7.9; PROJECT_COMPILER §2.32 |
 | Shops — the game's five lists, the project's own shops (any NPC a shopkeeper), item buy prices | 🟢 built S117 (ROADMAP P3.13c), test ROM USER-REPORTED 2026-10-03 21:57 ("The rest works"; the menu colours in free-colour rooms + the leftover box fixed S117b, NOT yet user-tested) | DATA_STRUCTURES "Shops (S117)"; PROJECT_COMPILER §2.32; EDITOR_DESIGN §5.6b |
+| The project's own cutscenes (named NPCs, cast that appears / disappears, walks / faces / programs in cells, texts / YES-NO / flags / items / battles / tiles / effects; 4 triggers + flag conditions) + op editing of copied rooms' scripts + copies' tile patches | 🟢 built S119 (ROADMAP P3.8 parts B / c / d), test ROM `DWM_S119_cutscenes_test.gbc` NOT yet user-tested | `custom.rooms[].cutscenes[]` → `cutscene_build.py`; bank $60 entries 9 / 10; PROJECT_COMPILER §2.33 |
 | NPC show/hide by step | ✅ working | step system; counters at $CD80+ (S65; transient); opcode $12 advances (v25) |
 | Flag-driven room states (persistent) | ✅ built S97, USER-CONFIRMED 2026-09-26 | `custom.rooms[].state_rules` → bank $60 entry 8 (+ bank $17 hook); PROJECT_COMPILER §2.13 |
 | NPC behaviours (movement types) | ✅ decoded + authorable S97, USER-CONFIRMED 2026-09-26 | type byte low nibble, bank $06 NPCBehaviourTable; ROOM_DATA_FORMAT "NPC behaviour types" |

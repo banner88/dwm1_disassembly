@@ -403,9 +403,54 @@ def _room_scripts(prj, r, text_names, warnings):
     out.append("")
     for idx, sid in table:
         script = prj.script(sid)
-        out += S.emit_script(f"{tag}_Scr{idx:02d}", script['ops'],
+        out += S.emit_script(f"{tag}_Scr{idx:02d}", _patch_params(r, script['ops']),
                              text_names=text_names, warnings=warnings)
         out.append("")
+    out += _patch_data_lines(r)
+    return out
+
+
+def patch_label(r, name):
+    """S119: the bank $60 label of a room's tile patch (custom.rooms[].patch_data)."""
+    return f"{room_tag(r)}_Patch_" + ''.join(c if c.isalnum() else '_' for c in str(name))
+
+
+def _patch_params(r, ops):
+    """S119: script params 'patch:NAME' (ops $24 / $61) -> the room's patch label."""
+    names = r.get('patch_data') or {}
+    out = []
+    for it in ops:
+        if isinstance(it, list) and it and it[0] == 'op':
+            row = list(it[:2])
+            for p in it[2:]:
+                if isinstance(p, str) and p.startswith('patch:'):
+                    nm = p.split(':', 1)[1]
+                    if nm not in names:
+                        raise ValueError(f"room {r.get('id')}: tile patch {nm!r} has no "
+                                         "patch_data")
+                    row.append(patch_label(r, nm))
+                else:
+                    row.append(p)
+            out.append(row)
+        else:
+            out.append(it)
+    return out
+
+
+def _patch_data_lines(r):
+    """S119 (ROADMAP P3.8 part d): a room's tile patches for script ops $24 / $61
+    in bank $60 (read by entries 9 / 10 CustomDrawTiles / CustomDrawAttrs):
+    [offset word = row * 32 + column, bytes …, $D8 next row, $D9 end]."""
+    pd = r.get('patch_data') or {}
+    if not pd:
+        return []
+    out = [f"; --- {F.hexb(F.val(r['mapID']))} ({r.get('id','')}) tile patches (S119) ---"]
+    for name in sorted(pd):
+        b = [F.val(x) & 0xFF for x in pd[name]]
+        out.append(f"{patch_label(r, name)}:")
+        for i in range(0, len(b), 16):
+            out.append(F.db_line(b[i:i + 16]))
+    out.append("")
     return out
 
 

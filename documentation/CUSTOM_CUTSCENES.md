@@ -119,7 +119,16 @@ scene". The intro is a chain of three scenes: bedtime ($2F script 0 step 7), the
 room ($2F script 0 step 727, Warubou / Watabou) and the dresser ($2F script 10), which
 runs through the tree tunnel ($08), the Starry Shrine ($09), the old man's walk up
 GreatTree ($01 script 0, legs keyed on `$D951 = $FF` and the screen) and the Castle
-minister ($00) without stopping. Writing new cutscenes in the editor = part B.
+minister ($00) without stopping.
+
+**Writing your own (S119, ROADMAP P3.8 part B):** ＋ New cutscene in the Cutscenes tab —
+named NPCs and cast members on the room itself, every place a tile, previewed from the
+model or played in the game (EDITOR_DESIGN §5.1d "As built S119"; the data and the
+compiler: PROJECT_COMPILER §2.33; the rules it follows: BANK04_SCRIPT_ENGINE "Writing
+scenes (S119)"). The hand-written patterns below remain valid for raw op scripts; the
+editor writes them for you (init_dialog before every text after a yielding step — in a
+talk too —, close_text before anything else, exact `$10`/`$11` walks when the actor's
+place is unknown).
 
 ## How to Add a Custom Cutscene
 

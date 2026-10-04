@@ -2876,6 +2876,11 @@ ScriptCmd06_CloseText:
     inc [hl]
     ret
 
+; S119 (PyBoy, ROADMAP P3.8 part B): a text word after ANY step that yields
+; (a walk, a wait, a delay, close_text …) needs this op first — in a talk
+; script too: the dialog mode the A press opens holds only while the first
+; words run without yielding; without it the text stays queued ($D8D7 bit 1)
+; and the script never goes on. With the box already open it is harmless.
 ScriptCmd07_InitDialog:
     ld a, [wGameState]
     bit 0, a
@@ -3954,7 +3959,10 @@ CheckMapType40:
 
 
 CallBank0FForItem:
-    ld hl, $0f01
+    ; S119 (ROADMAP P3.8 part d): same-size redirect — was ld hl, $0f01. Bank
+    ; $60 entry 9 CustomDrawTiles draws a CUSTOM room's patch from bank $60 (its
+    ; own script word + patch_data) and calls $0f01 for everything else.
+    ld hl, $6009
     rst $10
     ret
 
@@ -6603,7 +6611,9 @@ CheckGoldMapType40:
 
 
 CallBank0F_Gold:
-    ld hl, $0f02
+    ; S119: same-size redirect — was ld hl, $0f02 (bank $60 entry 10
+    ; CustomDrawAttrs; $0f02 for every non-custom script, as before).
+    ld hl, $600a
     rst $10
     ret
 

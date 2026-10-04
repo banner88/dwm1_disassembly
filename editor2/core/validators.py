@@ -80,6 +80,8 @@ def validate(prj, generated=None):
         _validate_accounting(prj, generated, errors, warnings)
         return errors, warnings
     warnings += list(prj.warnings)
+    if getattr(prj, 'cutscene_error', None):            # S119b: recorded by Project()
+        errors.append(prj.cutscene_error)
     rooms = [r for r in prj.rooms if not r.get('placeholder')]
     # S118c: a screen that follows the game's own room state names one of the
     # ORIGINAL rooms' step counters ($D92A-$D99A, ROOM_DATA_FORMAT)

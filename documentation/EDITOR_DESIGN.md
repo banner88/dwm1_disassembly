@@ -1588,6 +1588,103 @@ first-class button).
 
 ---
 
+**As built S119 — the cutscene EDITOR (ROADMAP P3.8 parts B / c / d; built, NOT yet
+user-tested).** User (S119): "Should be specific NPCs. Design should be visual, ie you
+should indicate which NPC faces where, moves where, and operates by tile, etc. Custom
+cutscenes should be previewable. Everything should be in tiles." + on the audit: step
+list plus room picture "of course", appear / disappear for NPCs that come out of nowhere,
+"always in tiles", triggers = entering the room / talking / entering + a flag ON …, vanilla
+scenes will not be reused ("all romhack scenes will be custom") but all four parts asked.
+Data: `custom.rooms[].cutscenes[]` + `actor` names / `cast` NPCs (PROJECT_COMPILER §2.33);
+model + compiler `core/cutscene_build.py` (one pass: ops + the per-step state + a frame
+timeline); edits `core/cutscene_doc.py`; GUI `app/cutscene_editor.py` in the Cutscenes tab
+(a QStackedWidget page; "Your cutscenes (edit)" tops the tree, ＋ New cutscene… dialog:
+name / room / screen / trigger).
+
+* **Header:** name, room · screen · id, Duplicate / Delete; *Plays when* (entering the
+  room — this screen / talking to <named NPC> / examining / stepping on a tile + Pick
+  tile), *Only when flags… ▾* (ON / OFF lists, New flag…), *Plays once* (makes the flag
+  `<id>_seen`); *Player starts at* (entry; prefilled from a door / redirect that leads
+  to the screen — `cutscene_doc.default_player_start`).
+* **Left:** the step tree (branches as *If YES / If NO / Then / Otherwise* rows, colour =
+  kind, the model's notes), ＋ Add step ▾ (grouped: Actors / Text / Time / Screen / Sound
+  / Story), ▲ ▼ ⧉ ✕, ＋ Cast member… (sprite picker → name → the clicked tile), Name an
+  NPC….
+* **Middle — the stage:** the screen rendered live ×3 with a tile grid; every named
+  actor drawn with its real sprite in its facing (`extracted/npc_facing_sprites`, NEW
+  S119: every sprite id in four facings + step frames captured from the game, transparent
+  — tools/extract_npc_facings.py), a facing wedge, a name tag (*?* = place not known),
+  faded = hidden; unnamed NPCs drawn grey ("NPC n"); the selected step's movement as
+  arrows (the walk's L path, an arc for hops / flights, a ring for appear / vanish), a
+  dashed box for a tile piece, its text in a box. Drag an actor onto a tile = a walk (or
+  moves the selected walk / landing); right-click an actor = face (a direction / toward
+  someone), appear / disappear (instant / flicker), every program of its kind, fly,
+  rename, move / remove a cast member; right-click a tile = name the NPC there, new cast
+  member here, "<selected> walks here", change the tiles here; *Room state shown*.
+  **▶ Preview** = the model animated (walk 3 px / 4 frames, programs / flights with their
+  measured frames and an arc, texts per box, shake / fade / flash), a slider scrubs,
+  *answer YES / NO* picks the branch; **▶ Play in the game** = save + build (when the build
+  is older than the project) then the S118 Playback window with the scene's recipe
+  (`CutscenesTab.scene_ref`: the combined script's head for this scene — `<prefix>_go` or
+  the previous scene's `_skip` label —, path flags, `player_start` as the arrival).
+  Problems (red errors / orange warnings) from the same model, live.
+* **Right — the step form:** per kind (actor pickers, tile x / y + *Pick on the picture*,
+  path order, together / run / backwards, facing or toward, how, programs filtered for
+  player / NPC, flight + landing + length / curve, frames, songs / sounds from
+  `sound_catalog.json` with ▶ Hear it (the game's own engine), shake / fade / flash, items /
+  enemies, the tile piece's size + "Look like screen k, state n", battle enemies, warp).
+  Text boxes typed with an empty line between boxes, checked as you type
+  (`textenc.check_boxes`).
+* **Part c — copied rooms' game scripts:** under *Your rooms*, the storyboard of a copy's
+  own op script gets **Edit step… / Insert step before… / Delete step** (`OpDialog`: any of
+  the 102 opcodes with its doc, parameters as numbers / symbols / `@label`, a live
+  sentence of what it does); `_op_target` maps a storyboard step (word position) to its op
+  (checked over every step of the user's GreatTree copy: 506 / 506).
+* **Part d — tile patches:** the *Change tiles* step + copies' own patches
+  (PROJECT_COMPILER §2.33 "patch_data"; BANK04 "Tile patches").
+
+**S119b — picking an NPC that has no name (user 2026-10-04 19:23: "Why cant I select
+npc in a custom room when creating new cutscene?"):** the actor lists held only named
+NPCs, so a screen whose NPCs nobody had named offered nothing to talk to. Every actor
+list (talk trigger, New cutscene → *Talking to*, the step forms' *Who* / *toward*) now
+ends with the screen's unnamed NPCs ("NPC 1 at (7, 3) — no name yet"); the item holds a
+token `#<state>:<n>` and `commit()` resolves tokens inside the SAME SnapshotCommand that
+writes the scene (`cutscene_doc.resolve_tokens` → `ensure_named`: *Shopkeeper* for a
+`shop` script, else *NPC n*, unique on the screen). One undo step undoes both.
+**S119b crash fix (user's Mac: "Segmentation fault: 11"):** `StepForm._emit` no longer
+emits synchronously — the edit `(path, step)` is queued and flushed by
+`QTimer.singleShot(0)`, because the commit's reload rebuilds the form and deletes the very
+widget whose signal is running; `_trigger_changed` / `_player_start_changed` use
+`_later_commit`, the form's *New flag…* button is deferred too. `_form_changed` writes to
+the queued path (skipped when the step there changed kind).
+**S119b typing (user: "Why is text box so slow to type in?" — 1.1 s per key on their
+project, the cursor reset per key):** text boxes store after a 0.7 s pause / on focus-out
+(`StepForm._text`; pending stores are flushed before the form shows another step); a
+commit whose step equals the shown one keeps the form when its list context
+(`_form_context`: actors, unnamed NPCs, flags, rooms) is unchanged; spin boxes use
+`setKeyboardTracking(False)`; the Cutscenes tab refreshes only "Your cutscenes" while the
+editor page is shown (`_refresh_mine`, the catalogue re-read on returning to the viewer —
+`_page_changed`); the Import tab skips its palette re-fit unless the rooms (cutscenes
+excluded) changed. Measured: 4 ms per key, one ~0.4 s commit per pause (the undo snapshot
+and the Rooms tab's refill remain).
+**S119b — the user's four (2026-10-04 21:15):** (1) "Why cant I copy paste build log?" —
+the read-only log was mouse-selectable only: + keyboard selection (⌘A / ⌘C), right-click
+*Copy all* / *Clear*, and a failed build opens a dialog with the error (*Copy error*,
+the traceback as details). (2) "Why not preview message using in-game boxes … already
+implemented in NPC conversations??" — every cutscene text field (say, ask, give
+got / full) is `talk_editor.BoxList(vertical=True)`: one editor per box with the game's
+font / frame / red overflow, Fit / Fit all / + Add box (stored after a pause; flushed
+before preview, Play, Save — `StepForm.flush`); the form column ≥ 440 px. (3) "Your help
+tab is cut off for cutscenes" — a raw `<selected actor>` (KEY_LESSONS S119b). (4) "Can you
+not hover or explain what is e.g. 'wait until everyone stops'?" — `STEP_HELP` (every step
+kind: under the form title, on the Add step menu, on the step list rows), `FIELD_HELP` /
+`CHECK_HELP` (every form row), header hover text (`_header_tips`, the trigger items).
+
+Verification: test_compiler `test_cutscenes_s119` (ops, wiring, errors, patch bytes,
+the model); test_app `s119_cutscene_editor` (name / cast / new scene, steps incl. a drag,
+stage arrows, preview, op mapping, undo); PyBoy on the user's save — the demo "Stage Hall"
+(PROJECT_STATE S119): four scenes through the real door, every end position == the model.
+
 ## 6. Vanilla editability — CLONE-TO-CUSTOM + Layer A-lite (v2.1, user decision S90)
 
 Two mechanisms, matched to the two kinds of vanilla content. In-place

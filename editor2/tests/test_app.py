@@ -40,6 +40,174 @@ def pinned_md5():
     return m.group(1)
 
 
+def s119_cutscene_editor(app, w, ct):
+    """S119 (ROADMAP P3.8 part B, user: "Should be specific NPCs … visual … in
+    tiles … previewable"): the cutscene editor on the example project — name an
+    NPC, add a cast member, a new entry scene, steps added (incl. a drag on the
+    stage), the model's picture / preview, the op editing of a copied room's
+    script (part c); everything undone again (the project is not saved)."""
+    from editor2.app.rooms import commands as C
+    from editor2.core import cutscene_doc as CD
+    from editor2.core import cutscene_build as CB
+    from editor2.app.cutscenes_tab import questions_of
+    from editor2.core import cutscenes as CSm
+    from collections import namedtuple
+    _st = {0: CSm.Step(0, CSm.TEXT, [5], None, None), 1: CSm.Step(1, 0x15, [0xC83C, 0, 9], 9, None),
+           4: CSm.Step(4, CSm.TEXT, [6], None, None), 5: CSm.Step(5, CSm.END, [], None, None)}
+    _sc = namedtuple('Sc', 'script')(CSm.Script(('project', 'x'), _st))
+    _rc = namedtuple('Rc', 'script_type script_idx')(0x171, 3)
+    assert questions_of(_rc, _sc) == [[0x71, 3, 0]], questions_of(_rc, _sc)
+    print('OK: S119 questions_of — a project script\'s YES/NO text found for the auto answer')
+    s = w.session
+    start = s.undo.index()
+    s.undo.push(C.SnapshotCommand(s, 'n', lambda doc: CD.name_actor(doc, 'gate_island', 0, 0, 1, 'Guard')))
+    s.undo.push(C.SnapshotCommand(s, 'c', lambda doc: CD.add_cast(doc, 'gate_island', 0, 'Ghost', 0x0B, 1, 3, 'right')))
+    cmd = C.SnapshotCommand(s, 'new', lambda doc: CD.new_cutscene(doc, 'gate_island', 'Haunt', 0, 'entry'))
+    s.undo.push(cmd)
+    sid = cmd.result
+    app.processEvents()
+    tops = [ct.tree.topLevelItem(i).text(0) for i in range(ct.tree.topLevelItemCount())]
+    mine = ct.tree.topLevelItem(0)
+    assert mine.text(0).startswith('Your cutscenes') and mine.child(0).childCount() == 1, tops
+    ct.tree.setCurrentItem(mine.child(0).child(0))
+    app.processEvents()
+    ed = ct.editor
+    assert ct.pages.currentIndex() == 1 and ed.scene_id == sid
+    ed.add_step('show', {'show': {'actor': 'Ghost', 'how': 'flicker'}})
+    ed.add_step('walk', {'walk': {'actor': 'Ghost', 'to': [3, 3]}})
+    ed.add_step('face', {'face': {'actor': 'Ghost', 'toward': 'Guard'}})
+    ed.add_step('say', {'say': {'boxes': [['Boo!']]}})
+    ed._dragged('Guard', 4, 6)                     # a drag on the stage = a walk
+    ed.add_step('anim', {'anim': {'actor': 'Ghost', 'move': 'hop'}})
+    app.processEvents()
+    r, sc = CD.find(s.doc, sid)
+    kinds = [CB.step_kind(x) for x in sc['steps']]
+    assert kinds == ['show', 'walk', 'face', 'say', 'walk', 'anim'], kinds
+    assert sc['steps'][4]['walk'] == {'actor': 'Guard', 'to': [4, 6]}
+    assert 'no problems' in ed.problems.text(), ed.problems.text()
+    assert ed.tree.topLevelItemCount() == 7                    # 6 steps + the end row
+    ed.path = (1,)
+    ed.refresh()
+    assert ed.stage.moves and ed.stage.moves[0][0] == 'Ghost', ed.stage.moves
+    g = ed.stage.actors['Ghost']
+    assert (g['x'], g['y']) == CB.cell_px(0, 3, 3) and g['shown'], g
+    ed.preview()
+    for _ in range(4000):
+        ed._tick()
+        if not ed.timer.isActive():
+            break
+    assert not ed.timer.isActive()
+    ed._scrub(int(ed.t_end))                       # the preview's last frame
+    last = ed.lw.info[-1]['state']
+    assert ed.stage.actors['Guard']['x'] == last['Guard']['x'] == CB.cell_px(0, 4, 6)[0]
+    grab = ed.stage.grab()
+    assert grab.width() == 480 and grab.height() == 384
+    # S119 r2 (user: "Why cant I select npc in a custom room …"): the talk trigger
+    # lists the NPCs without a scene name too; picking one names it
+    ed.trig.setCurrentIndex(ed.trig.findData('talk'))
+    app.processEvents()
+    toks = [i for i in range(ed.trig_actor.count()) if CD.is_token(ed.trig_actor.itemData(i))]
+    assert toks, [ed.trig_actor.itemText(i) for i in range(ed.trig_actor.count())]
+    ed.trig_actor.setCurrentIndex(toks[0])
+    app.processEvents()
+    r, sc = CD.find(s.doc, sid)
+    nm = sc['trigger'].get('actor')
+    assert nm and not CD.is_token(nm) and any(
+        e.get('actor') == nm for e in r['screens']['0']['npcs']), sc['trigger']
+    assert ed.trig_actor.currentData() == nm, ed.trig_actor.currentData()
+    print(f'OK: S119 r2 — an NPC without a scene name picked for "talking to" -> named “{nm}”')
+    # S119b (user's Mac: "Segmentation fault: 11" picking an unnamed NPC in a walk's
+    # Who list): a form widget must outlive its own signal — the edit is applied
+    # after it returns (macOS crashes when a combo dies while its popup closes)
+    import shiboken6
+    from PySide6.QtWidgets import QComboBox as _QCB
+    s.undo.push(C.SnapshotCommand(s, 'npc', lambda doc: doc.room('gate_island')['screens']['0']
+                                  ['npcs'].append({'kind': 'npc', 'sprite': '0x10', 'x': 8, 'y': 2,
+                                                   'facing': 'down', 'script': 'none'})))
+    app.processEvents()
+    ed.path = (1,)                                  # the Ghost's walk
+    ed.refresh()
+    cb = ed.form.body.findChildren(_QCB)[0]
+    toks = [i for i in range(cb.count()) if CD.is_token(cb.itemData(i))]
+    assert toks, [cb.itemText(i) for i in range(cb.count())]
+    cb.setCurrentIndex(toks[0])
+    assert shiboken6.isValid(cb), 'the Who combo was deleted inside its own signal'
+    app.processEvents()
+    r, sc = CD.find(s.doc, sid)
+    who = sc['steps'][1]['walk']['actor']
+    assert who and not CD.is_token(who) and who != 'Ghost', sc['steps'][1]
+    # S119b (user: "Why is text box so slow to type in?"): keys are not commits —
+    # the text is stored once after a pause, the box keeps its cursor (it was
+    # rebuilt per key: "Hello" came out "olleH")
+    import time as _time
+    from PySide6.QtTest import QTest
+    from PySide6.QtWidgets import QPlainTextEdit as _QPT
+    ed.path = (3,)                                  # the "Boo!" text
+    ed.refresh()
+    te = ed.form.body.findChildren(_QPT)[0]
+    te.moveCursor(te.textCursor().MoveOperation.End)
+    n0 = s.undo.index()
+    for ch in ' Hello':
+        QTest.keyClicks(te, ch)
+        app.processEvents()
+    assert s.undo.index() == n0, 'a key press must not be an undo step'
+    t0 = _time.time()
+    while _time.time() - t0 < 1.2:
+        app.processEvents()
+        _time.sleep(0.02)
+    assert shiboken6.isValid(te) and ed.form.body.findChildren(_QPT)[0] is te, 'box rebuilt'
+    r, sc = CD.find(s.doc, sid)
+    assert sc['steps'][3]['say']['boxes'] == [['Boo! Hello']], sc['steps'][3]
+    assert s.undo.index() == n0 + 1, (n0, s.undo.index())
+    print('OK: S119b — typing in a text step: no commit per key, one undo step after the '
+          'pause, the box (and its cursor) kept')
+    # S119b (user: "Why not preview message using in-game boxes …" / "Can you not hover or
+    # explain what is e.g. 'wait until everyone stops'?" / "Why cant I copy paste build log?")
+    from editor2.app.rooms.talk_editor import BoxList as _BL
+    from editor2.app.cutscene_editor import STEP_HELP
+    from PySide6.QtCore import Qt as _Qt
+    assert ed.form.body.findChildren(_BL), 'the text step has no in-game box editor'
+    assert ed.form.about.text() == STEP_HELP['say']
+    missing = [k for k in CB.STEP_KINDS if not STEP_HELP.get(k)]
+    assert not missing, f'steps without an explanation: {missing}'
+    assert ed.tree.topLevelItem(3).toolTip(0), 'step list rows have no hover text'
+    assert w.log.textInteractionFlags() & _Qt.TextSelectableByKeyboard, 'build log: ⌘A / ⌘C'
+    print('OK: S119b — text steps use the in-game box editor; every step kind explained '
+          '(form + hover); the build log selectable by keyboard')
+    print(f'OK: S119b — a walk\'s Who changed to an unnamed NPC: applied after the combo\'s '
+          f'signal (the combo survives it), the NPC named “{who}”')
+    # part c: a copied room's script, step by step (arena_clone $72)
+    from editor2.app.cutscenes_tab import SceneRef, OpDialog
+    ct._load_project()
+    scs = [x for x in ct.pcat.scenes(0x72, min_show=0) if len(x.steps) > 3]
+    assert scs
+    ct.pages.setCurrentIndex(0)
+    ct.cur = SceneRef('project', 0x72, scs[0], ct.pcat, 't')
+    ct.show_scene()
+    n_ok = 0
+    for row, st in enumerate(scs[0].steps):
+        ct.steps.setCurrentRow(row)
+        t = ct._op_target()
+        assert t is not None, row
+        sc2, i = t
+        it = sc2['ops'][i]
+        assert (it[0] == 'end') == (st.code == 0x100) and (it[0] == 'text') == (st.code == 0x101)
+        if it[0] == 'op':
+            assert OpDialog._code(it[1]) == st.code, (it, st)
+        n_ok += 1
+    assert ct.b_edit_op.isEnabled()
+    d = OpDialog(ct, ['op', 'npc_walk_x', '0x0001', '0xFFF0'], [])
+    d._ok()
+    assert d.value == ['op', '0x1A', '0x0001', '0xFFF0'], d.value
+    while s.undo.index() > start:
+        s.undo.undo()
+    app.processEvents()
+    assert s.doc.dumps() == open(s.doc.path).read(), 'undo restores the project exactly'
+    print(f'OK: Cutscene editor (S119) — named NPC + cast member, a new scene of 6 steps '
+          f'(one by dragging on the stage), the stage picture / arrows / preview, '
+          f'{n_ok} steps of a copied room\'s script mapped to their ops, undone again')
+
+
 def main():
     do_rom = '--rom' in sys.argv
     app = QApplication.instance() or QApplication(sys.argv)
@@ -70,7 +238,19 @@ def main():
     assert help_revision() == EDITOR_REVISION, (
         f'editor2/help/_revision.md says {help_revision()!r} but EDITOR_REVISION is '
         f'{EDITOR_REVISION!r} — update the help topics for this delivery, then the stamp')
-    print(f'OK: Help tab — {len(topics)} topics, search, help revision == {EDITOR_REVISION}')
+    # S119b (user: "Your help tab is cut off for cutscenes"): a raw <word> outside a
+    # code span is read as an HTML tag and hides the rest of the topic — every topic
+    # must render to its last words
+    import re as _re
+    from PySide6.QtGui import QTextDocument
+    for title, md, fname in topics:
+        d = QTextDocument()
+        d.setMarkdown(md)
+        shown = ' '.join(d.toPlainText().split())
+        tail = _re.findall(r'[A-Za-z]{5,}', md)[-3:]
+        assert all(t in shown for t in tail), f'help {fname} is cut off when shown (look for <…>)'
+    print(f'OK: Help tab — {len(topics)} topics, search, help revision == {EDITOR_REVISION}, '
+          f'every topic shown to its end')
 
     # S101 r3: World tab zoom (wheel, around the mouse) + pan (drag empty canvas)
     from PySide6.QtCore import QPoint, QPointF, Qt
@@ -1262,10 +1442,11 @@ def main():
         print('SKIP: Cutscenes tab needs data/DWM-original.gbc')
     else:
         tops = [ct.tree.topLevelItem(i).text(0) for i in range(ct.tree.topLevelItemCount())]
-        assert tops[0].startswith('Chains') and 'Your rooms' in tops and 'Game rooms' in tops, tops
-        game = ct.tree.topLevelItem(2)
+        assert tops[0].startswith('Your cutscenes') and tops[1].startswith('Chains') and \
+            'Your rooms' in tops and 'Game rooms' in tops, tops
+        game = ct.tree.topLevelItem(3)
         assert game.childCount() >= 40, game.childCount()
-        chain = ct.tree.topLevelItem(0).child(0)
+        chain = ct.tree.topLevelItem(1).child(0)
         ct.tree.setCurrentItem(chain)
         app.processEvents()
         rows = [ct.steps.item(i).text() for i in range(ct.steps.count())]
@@ -1278,11 +1459,11 @@ def main():
         assert ct._model_picture(10).width() == 320
         ct.search.setText('Watabou')
         app.processEvents()
-        n_hits = sum(ct.tree.topLevelItem(2).child(i).childCount()
-                     for i in range(ct.tree.topLevelItem(2).childCount()))
+        n_hits = sum(ct.tree.topLevelItem(3).child(i).childCount()
+                     for i in range(ct.tree.topLevelItem(3).childCount()))
         ct.search.setText('')
         app.processEvents()
-        chain = ct.tree.topLevelItem(0).child(0)
+        chain = ct.tree.topLevelItem(1).child(0)
         assert n_hits > 0, 'search finds Watabou scenes'
         for word in ('Play', 'Auto text', 'intro', 'pyboy', 'save file'):
             assert word in open(os.path.join(REPO, 'editor2', 'help', '63_cutscenes.md')).read(), word
@@ -1376,10 +1557,11 @@ def main():
             def _walk(it):
                 for i in range(it.childCount()):
                     c = it.child(i)
-                    if c.data(0, ROLE_CS) is not None:
+                    if isinstance(c.data(0, ROLE_CS), SceneRef_CS):
                         refs.append(c)
                     _walk(c)
             from editor2.app.cutscenes_tab import ROLE as ROLE_CS
+            from editor2.app.cutscenes_tab import SceneRef as SceneRef_CS
             for i in range(ct.tree.topLevelItemCount()):
                 _walk(ct.tree.topLevelItem(i))
             saved_auto = ct._auto_record
@@ -1426,6 +1608,7 @@ def main():
                   f'game ({1500}+ frames, storyboard highlight); a hung game is killed, Restart works; From this step; Step ▸▸ / back')
         else:
             print('OK: Cutscenes (S118) — storyboard (Playback SKIPPED: no PyBoy)')
+        s119_cutscene_editor(app, w, ct)
 
     if do_rom:
         from editor2.app.build_worker import BuildWorker  # noqa: E402

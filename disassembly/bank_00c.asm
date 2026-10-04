@@ -84,7 +84,10 @@ LoadBc_4007:
 ; onto the visible BG map ($FFB7/$FFBB scroll, $D8E7/$D8E8 cursor) and staged
 ; at $C300+. So op $24 takes 1 parameter (the S96 tracer stops at rst $10).
 ; Custom rooms (bank $60): $24 goes to bank $0F entry 1, whose lookup reads bank
-; $0F's own tables, not bank $60 (read from the code; not measured S118).
+; $0F's own tables, not bank $60 — MEASURED S119 (PyBoy, a copy of the Castle:
+; its chest patch is not drawn). Patched builds: bank $04 calls bank $60
+; entries 9 / 10 (CustomDrawTiles / CustomDrawAttrs) instead, which draw a
+; custom room's patch from bank $60 and pass everything else on to here.
 ScriptBank0CDrawTiles:
     ld hl, $ffb7	;jump table address 2
     ld a, [hl]

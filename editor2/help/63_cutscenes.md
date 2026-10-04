@@ -124,8 +124,7 @@ editor; the original game cannot read it).
 first Play of a new build takes a few seconds (the start state is made
 once and kept in your project's build/playback folder).
 
-**Limits (this version):** the tab shows and plays scenes; writing your own
-cutscenes comes next (the cutscene editor). A few game scenes need things
+**Limits (this version):** see also *Your own cutscenes* below. A few game scenes need things
 the set-up cannot fake (a monster of a given species in the party, a full
 bag …): the window says so and starts the scene at its own first step. The
 set-up does not fight: a scene that plays **after a battle is won** (a boss
@@ -136,3 +135,114 @@ appraiser's baby) show as "Slime" when the set-up has none.
 Game scenes that draw tile patches (opcode $24 — treasure chests, doors
 opening in the Castle and Bazaar) play right in the game but are not yet
 safe inside a CLONED room (see Limits).
+
+
+## Your own cutscenes (the editor)
+
+**＋ New cutscene…** (top left) makes a scene in one of your rooms (a copy of a
+game room works too): its name, the room, the **screen** it plays on and what
+starts it. Your scenes are listed under **Your cutscenes (edit)**; click one to
+edit it. Everything is in **tiles** of that screen (0-9 across, 0-7 down) and
+every actor is a **named** NPC — the game moves NPCs by their number in the
+room's list, the editor does that for you.
+
+**What starts it (Plays when):**
+
+- **Entering the room (this screen)** — when the player arrives on the screen
+  (a door, a warp, or walking across from the next screen). **Player starts
+  at** = where he arrives (filled from the door that leads here); his walks
+  are counted from there. Afterwards the room's own arrival script still runs.
+- **Talking to an NPC** — pick the NPC (in **＋ New cutscene…** too). Every NPC
+  of the screen is in the list; one that has no name yet ("NPC 1 at (7, 3) — no
+  name yet") gets one when you pick it — *Shopkeeper* for a shopkeeper, else
+  *NPC 1* … (rename it any time: right-click it). After the scene (or when it
+  does not play) the NPC does what it always does — says its text, opens its
+  shop.
+- **Examining a tile** / **Stepping on a tile** — pick the tile (**Pick tile**,
+  then click it on the picture); the spot is made for you. Remember: a test ROM
+  for other people should put such spots on art that looks like something.
+- **Only when flags… ▾** — the scene plays only when these flags are ON (and
+  those OFF). **Plays once** — a flag of its own is turned on when it starts,
+  so it never plays again (saved with the game).
+
+**What does a step do?** Every step's form starts with a line saying what it does;
+hover a step in the list, a step in **＋ Add step ▾**, or any field of the form for
+more (e.g. *Wait until everyone stops* = wait for the walks / hops / flights that were
+started with "the next step starts at once").
+
+**The picture (the stage)** is the room screen with every actor drawn as the
+game draws them, **facing** the way the scene has turned them (the yellow wedge
+shows it too), after the step selected in the list. The selected step's
+movement is drawn as an **arrow** (walks: the path tile by tile; hops / flights:
+an arc; appearing: a ring). Faded = hidden at that moment; *?* after a name =
+the editor does not know where he stands there (see below). NPCs nobody has
+named are drawn grey ("NPC 2").
+
+- **Drag an actor onto a tile** = he walks there (a new step after the
+  selected one — or, when the selected step is that actor's walk / flight, it
+  changes where it goes).
+- **Right-click an actor**: faces (a direction, or toward someone), appears /
+  disappears (instantly or flickering), hops / jumps / leaps…, flies in / off,
+  rename; on a cast member: move it, remove it.
+- **Right-click an empty tile**: name the NPC standing there, **new cast
+  member here**, "(the selected actor) walks here", change the tiles here.
+- **Room state shown** — which state of the screen the picture shows (rooms
+  with states).
+
+**Actors.** *Player* is always there. An NPC takes part once it has a name:
+**Name an NPC…** (or right-click it), or simply pick it in any "Who" list — the
+NPCs without a name are listed at the end and named when picked. The name goes on that NPC in every room
+state of the screen. A **cast member** (＋ Cast member…) is an NPC that is
+hidden until a scene shows it — it "comes out of nowhere": pick its look, name
+it, put it on a tile (it appears there, or with *Appear … somewhere else* /
+*Fly in … lands on* anywhere). It gets the same NPC number in every state of the
+screen (shorter states get invisible pads — the game has 8 NPC slots per
+screen). After the room is loaded again it is hidden again (for a lasting
+change use the room's state rules).
+
+**Steps** (＋ Add step ▾ adds after the selected step — or into a selected *If
+YES / If NO / Then / Otherwise* row; ▲ ▼ ⧉ ✕ move, duplicate, remove):
+
+| Step | What the game does |
+|---|---|
+| Walk to a tile | the actor walks there (left/right first or up/down first); *the next step starts at once* = he walks while the next steps run (several actors walking together); *run* = double speed; *keep facing* = walks backwards |
+| Turn to face | a direction, or toward another actor |
+| Appear / Disappear | instantly, flickering (about 4 seconds — the game's own effect) or spinning; *Appear somewhere else* puts a cast member on another tile first |
+| Hop / jump / leap… | the game's movement programs (hop, jump, spin jump, jump up, leaps, drops, floating …; some are NPC-only, some player-only) |
+| Fly in / fly off | the helper's flight: in = lands on a tile coming from the upper left / right; off = up and away; length and curve |
+| Say / Ask YES-NO | the same box editor as NPC conversations: one editor per box, each drawn as the game draws it (red = does not fit; **Fit** / **Fit all** wraps it into boxes; **+ Add box**); top / bottom; YES / NO branches. What you type is kept when you pause (one undo step per pause) |
+| If flags… | the steps under *Then* / *Otherwise* |
+| Wait / Wait until everyone stops | frames (60 = 1 second) |
+| Music / Sound effect | a song (or back to the room's song) / a sound (▶ Hear it) |
+| Shake / Fade / Flash | the screen shakes up-down / left-right; fades to black and back; flashes |
+| Hide / show the monsters | the player's following monsters (they come back by themselves after the scene) |
+| Change tiles of the room | a piece of the screen takes the look it has in another screen / room state of this room (paint the open door there) — until the room is loaded again |
+| Turn flags ON / OFF, Give an item / a monster, Battle, Warp the player, Stop here | as in conversations |
+
+**Where the player stands.** In an entry scene the walks of the player are
+counted from *Player starts at*; on a step-on spot he stands on it. When the
+editor cannot know (a talk: he can stand on any side; after a branch that
+moved him differently), his walk goes to the tile **exactly** wherever he is —
+the scene then waits for that walk (it cannot run together with others), and
+the picture marks him *?*.
+
+**Previews.** **▶ Preview** plays the scene on the picture from the editor's
+model (instantly, no build; walking speed, jumps, flights and waits are the
+game's measured times; the slider scrubs; *answer YES / NO* picks the way at
+questions and flag tests). **▶ Play in the game** saves, builds and plays the
+scene in the real game (the Playback window, set up for you: flags, the room,
+the trigger) — the exact thing.
+
+**Problems** are listed under the picture (red = it cannot be built: an
+unknown actor, an NPC with different numbers in different states, a piece of
+tiles past the screen edge …; orange = worth knowing).
+
+## Changing a game scene in a copied room
+
+A copied room ("Make editable") carries the game's own scripts. Pick one of its
+scenes under **Your rooms**, select a step and use **Edit step… / Insert step
+before… / Delete step**: any of the game's opcodes (named and explained), its
+parameters (numbers like `$0020`, RAM / flag names, `@LABEL` of the script for
+a branch); the line under it says what the step will do. The copy's chests and
+doors that open by a tile patch (opcode $24 / $61) now draw in the copy too
+(the patch is copied into your room; before S119 a copy drew nothing there).

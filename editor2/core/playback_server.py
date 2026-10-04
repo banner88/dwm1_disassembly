@@ -74,6 +74,7 @@ def serve():
                 _send({'ok': True, 'made_base': made})
             elif c == 'start':
                 r = _recipe(cmd['recipe'])
+                eng.questions = frozenset(tuple(q) for q in cmd.get('questions') or [])
                 eng.start(r, party=bool(cmd.get('party')))
                 eng._step_stack, eng._step_last = [], set()
                 _send({'ok': True, 'log': list(eng.log)})
@@ -170,6 +171,7 @@ def serve():
                         for p_ in here:
                             frames[p_] = img
                 eng.watchers = [watch]
+                eng.questions = frozenset(tuple(q) for q in cmd.get('questions') or [])
                 try:
                     eng.start(r, party=bool(cmd.get('party')))
                     for _ in range(int(cmd.get('max_frames', 15000))):

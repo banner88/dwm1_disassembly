@@ -1126,3 +1126,21 @@ verified overrides.
 | editor2/core/ram_names.py | `$C8F2` → "the hero's name"; `INFERRED` (8 variables no game code reads — $D9CD/CE, $D9E2-E5, $C96D/E — shown "meaning inferred from the scripts that use it") | text code $F6 reads $CA42; code readers grepped per address |
 | editor2/app/cutscenes_tab.py | actors named by `script_speaker` (no sprite table), the "entered from" header line | test_app |
 | editor2/help/63_cutscenes.md, _revision.md; `EDITOR_REVISION` = 'S118g' | help | test_app |
+
+## S119 rows (ROADMAP P3.8 parts B / c / d: the cutscene editor, copies' tile patches)
+
+| Tool / data | What | Verified |
+|---|---|---|
+| tools/extract_npc_facings.py (NEW) → **extracted/npc_facing_sprites/id_XX.png + player.png, extracted/npc_facing_sprites.json** (NEW) | every NPC sprite id ($00-$7F, $E0-$E3) solo in the Castle throne room (the S91 catalog's slot, a temp ROM copy), the animation frozen (slot +$05 := $80), every facing (+$06) and step frame (+$14) drawn by the game and composed from OAM + VRAM + the CGB object palettes (transparent); the player from OAM 0-3 with his HRAM facing. 128x16 strips: down, down-step, left, left-step, up, up-step, right, right-step. JSON: `_generator`, per id drawn / object count | S119 run: 128 drawn, 4 not drawn ($68, $E1-$E3 — the S91 catalog's empty / glitch ids); eyeballed on a contact sheet; the cutscene editor's stage uses them. PyBoy-only (not a verifier selftest) |
+| editor2/core/cutscene_build.py (NEW) | the cutscene compiler AND model: `Cast` (names → slot numbers per state), `Lowerer` (steps → ops + per-step state + frame timeline + problems), `lower_project` (trigger scripts, wiring, inline dialogue, `patch_data`), `analyse` (the editor), `layout_grid` / `tiles_rows` / `patch_bytes`, `describe`, `trigger_key` / `scene_prefix` / `trigger_script_id` | test_compiler `test_cutscenes_s119` (24 checks); PyBoy scratch builds (cities_fount) and the demo on the user's save |
+| editor2/core/cutscene_doc.py (NEW) | the editor's data edits: new / set / duplicate / delete scene, `name_actor` (every state, same sprite + cell), `add_cast` / `move_cast` / `remove_cast` (pads keep one NPC number), `ensure_flag`, `default_player_start`, `problems` | test_app `s119_cutscene_editor` |
+| editor2/app/cutscene_editor.py (NEW), editor2/app/cutscenes_tab.py | the cutscene editor (header, step tree, `Stage`, `StepForm`, preview, Build & Play) + the tab's "Your cutscenes", ＋ New cutscene, `scene_ref` / `play_cutscene`, part c `OpDialog` / `_op_target` / `edit_op` | test_app (S119 block); offscreen screenshots |
+| editor2/core/project.py | calls `cutscene_build.lower_project` after the helper scripts | test_compiler |
+| editor2/core/emitters.py | `patch:<name>` params → `CustomRoom<n>_Patch_<name>`; `_patch_data_lines` (bank $60) | test_compiler |
+| editor2/core/templates/bank_060_head.asm + PINNED_SHA256 (re-pinned) | entries 9 / 10 `CustomDrawTiles` / `CustomDrawAttrs` (+ `CutPatchRoute` / `Param` / `Cursor` / `Draw` / `Stage` / `StageAttr`) | test_compiler --rom pin `d19259a1…` (patched); PyBoy: a custom room's patch and a Castle copy's chest drawn |
+| patches/bank_004.asm | `CallBank0FForItem` / `CallBank0F_Gold`: `ld hl,$0f01/$0f02` → `$6009/$600a` (same size) | as above |
+| editor2/core/document.py | `_migrate_clone_patches` (on open + Make editable); `update_npc` keeps `actor` / `cast` | PyBoy: Castle copy; test_canvas --rom |
+| disassembly/bank_000.asm + patches/bank_000.asm | `CheckSoundQueueState` → `ScreenShakeTick` + comment | clean `1ca6579…` byte-perfect |
+| disassembly/bank_004.asm (+ patches) , bank_00c/00d/00e/00f.asm | comments: init_dialog rule (S119), the `$24`/`$61` redirect, "measured S119" | byte-perfect |
+| editor2/tests/test_compiler.py, test_app.py | S119 tests; REFERENCE_MD5 → `d19259a1…` (patched); the S118 tree indices follow the new top row | PASS |
+| editor2/help/63_cutscenes.md, 00_start.md, 90_limits.md, _revision.md; `EDITOR_REVISION` = 'S119' | help | test_app |

@@ -5,7 +5,11 @@
 
 Messages in the **Build log**:
 
-- **ERROR** — the build stops; the message names the room / script / field.
+- **ERROR** — the build stops; the message names the room / script / field. A
+  window shows it too, with **Copy error**.
+
+Copying from the log: select with the mouse (or click in it and ⌘A / Ctrl+A), then
+⌘C / Ctrl+C — or right-click → **Copy all**.
 - **WARN** — builds, but read it: e.g. a boss room without a song, too many
   different sprites on a screen, a joinable enemy without a join version.
 

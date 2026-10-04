@@ -603,6 +603,17 @@ class ImportTab(QWidget):
         i = self.room_box.findData(cur)
         self.room_box.setCurrentIndex(max(i, 0))
         self.room_box.blockSignals(False)
+        # S119b: every project change (a cutscene's text included) re-fitted the
+        # palettes here (~0.3 s, the bulk of a cutscene edit's pause) — only when
+        # something this tab reads changed (the rooms minus their cutscenes)
+        import json as _json
+        cu = self.s.doc.custom
+        sig = (self.room_box.currentData(), _json.dumps(
+            dict(cu, rooms=[{k: v for k, v in r.items() if k != 'cutscenes'}
+                            for r in cu.get('rooms') or []]), default=str))
+        if sig == getattr(self, '_room_sig', None):
+            return
+        self._room_sig = sig
         self._room_changed()
 
     def target_room(self):

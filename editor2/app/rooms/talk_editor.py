@@ -164,11 +164,13 @@ class BoxEditor(QWidget):
     removeRequested = Signal(object)
     fitRequested = Signal(object)
 
-    def __init__(self, rom, text='', parent=None):
+    def __init__(self, rom, text='', parent=None, vertical=False):
         super().__init__(parent)
         self.rom = rom
         self.index = 0
-        h = QHBoxLayout(self)
+        # vertical (S119b, the cutscene editor's narrow form): the game picture
+        # under the text instead of beside it
+        h = QVBoxLayout(self) if vertical else QHBoxLayout(self)
         h.setContentsMargins(0, 2, 0, 2)
         left = QVBoxLayout()
         self.title = QLabel('')
@@ -250,9 +252,10 @@ class BoxList(QWidget):
     """A list of BoxEditors (+ Add box / Fit all, OK-gating summary)."""
     changed = Signal()
 
-    def __init__(self, rom, boxes=None, first_default='Hello!', parent=None):
+    def __init__(self, rom, boxes=None, first_default='Hello!', parent=None, vertical=False):
         super().__init__(parent)
         self.rom = rom
+        self.vertical = vertical
         v = QVBoxLayout(self)
         v.setContentsMargins(0, 0, 0, 0)
         self.scroll = QScrollArea()
@@ -281,7 +284,7 @@ class BoxList(QWidget):
         self._renumber()
 
     def _add(self, text, at=None, focus=False):
-        ed = BoxEditor(self.rom, text)
+        ed = BoxEditor(self.rom, text, vertical=getattr(self, 'vertical', False))
         ed.changed.connect(self._validate)
         ed.moveRequested.connect(self._move)
         ed.removeRequested.connect(self._remove)

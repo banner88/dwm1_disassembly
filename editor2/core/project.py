@@ -129,6 +129,20 @@ class Project:
         # S101: helper-exit conversations need their NPC slot, known only
         # once rooms resolve — place the helpers, then lower those scripts
         self._lower_talk_scripts(self._place_helpers())
+        # S119 (ROADMAP P3.8 part B): the rooms' own cutscenes become ordinary
+        # scripts wired to their triggers (entry / talk / examine / step-on) —
+        # after the helpers, so every script they wrap is already ops
+        from . import cutscene_build as CB
+        # S119b (user's editor would not open: a scene's too-long text made every
+        # Project() fail — the Families / Breeding / Monsters tabs build one for their
+        # models): a cutscene problem is recorded here and reported by
+        # validators.validate, so it stops a BUILD (with its message), never the editor
+        self.cutscene_error = None
+        try:
+            self.cutscene_patches = CB.lower_project(self)
+        except CB.CutsceneError as ex:
+            self.cutscene_error = str(ex)
+            self.cutscene_patches = {}
         self._gate_rows = None
         self.palettes = self.custom.get('palettes', [])
         self._pal_by_id = {p['id']: p for p in self.palettes}

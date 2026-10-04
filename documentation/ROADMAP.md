@@ -1156,7 +1156,9 @@ recipes are pure authoring.
       templates) are NEEDS_REVIEW and the pins (clean 58 / patched band) are stale. Read each
       site (full byte vs < $70 assumption, CROSSBANK_ROOMS audit section), add the verdicts
       and pins, then put the tool in verify_integrity's SELFTEST_TOOLS so it cannot drift
-      again. Small; annotation-class (DOC_AUDIT S118).
+      again. Small; annotation-class (DOC_AUDIT S118). S119 adds one more site to
+      adjudicate: the bank $60 template's `CutPatchRoute` (`ld a,[wMapID] / cp
+      CUSTOM_ROOM_START` — CP_UNSIGNED, the GateAwareDispatch rule).
 - [ ] **P3.H — Editor Help tab** (user S101 r2: "The editor needs a help
       tab … needs lookup"; "a) needs to be built out and b) always kept up
       to date as editor progresses"). **Wired S101 r3:** Help tab (topic list,
@@ -1194,8 +1196,8 @@ recipes are pure authoring.
         survives a killed game. *User half:* play the intro + a few rooms' scenes on the
         Mac (pyboy installed).
         Residuals: (a) 3 scenes not reached + 9 model misses (BANK04 "Census S118b");
-        (b) `$24`/`$61` tile patches in a CLONED room still read bank $0F's tables (read
-        from the code, not measured) — fix with part B; (c) the recorded pictures are the
+        (b) ~~`$24`/`$61` tile patches in a CLONED room still read bank $0F's tables~~ —
+        measured + fixed S119 (part d); (c) the recorded pictures are the
         last frame of each resting step (non-yielding steps share a picture); (d) project
         scenes play from the last build (build first).
       - [x] **S118b round (user's first look, built, NOT yet user-tested):** (1) "the
@@ -1237,13 +1239,65 @@ recipes are pure authoring.
         INFO FROM GAME?"):** NPC names only from their own dialogue's speaker; room headers
         show how the game enters the room (exit tables + scripts); the hero's name; the
         naming-screen step corrected to "the hero's name" (KEY_LESSONS S118g).
-      - [ ] **Part B — the cutscene editor** (next session): author scenes from the
-        decoded ops — appear / vanish / move / face NPCs (existing or new), the player,
-        texts, flags, music / sounds, waits; the storyboard as the editing surface, the
-        Playback window as the preview; vanilla scenes edited in a cloned room. Open
-        questions for the user before building: the editing surface (step list vs
-        dragging actors on the room), which triggers (entry / talk / examine / step-on /
-        after a flag).
+      - [x] **Part B — the cutscene editor — built S119, NOT yet user-tested** (user S119:
+        "Should be specific NPCs. Design should be visual … operates by tile … Custom
+        cutscenes should be previewable. Everything should be in tiles" + "1) Step list
+        plus room picture of course. Plus appear/disappear NPCs … 2) ALways in tiles …
+        3) Enter room, talking npc, enter room + specific flag is ON, etc. 4) … All
+        romhack scenes will be custom. 5) Yes of course 6) ALL FOUR 7) Yes"). As built
+        (PROJECT_COMPILER §2.33, EDITOR_DESIGN §5.1d "As built S119", BANK04_SCRIPT_ENGINE
+        "Writing scenes (S119)"): `custom.rooms[].cutscenes[]` with named actors
+        (`actor` on NPC entries) and cast members (hidden, one NPC number in every state),
+        25 step kinds in tiles (walk / face / appear / disappear / the game's movement
+        programs / fly in-off / texts / YES-NO / flag tests / waits / music / sounds /
+        shake / fade / flash / followers / give item-monster / change tiles / battle /
+        warp / end), triggers entry / talk / examine / step-on + flags ON / OFF + plays
+        once; one compiler pass = the ops AND the editor's model; the editor (step tree,
+        the room as a stage with every actor in its facing — sprites captured from the
+        game —, arrows, drag-to-walk, right-click actions, the step form, ▶ Preview from
+        the model, ▶ Play in the game = build + the Playback window). *Accept MET (machine
+        half):* test_compiler `test_cutscenes_s119`, test_app `s119_cutscene_editor`, PyBoy
+        on the user's save: the demo "Stage Hall" (PROJECT_STATE S119) — four scenes through
+        the real door, every end position == the model. *User half:* the test ROM + the
+        editor on the Mac. **S119b (user 2026-10-04 19:23: "Why cant I select npc in a
+        custom room when creating new cutscene? Want to select npc in Cities_FOUNT"; built,
+        NOT yet user-tested):** the talk list held only NAMED NPCs (their shopkeeper had
+        none) — every "talking to" / "Who" / "toward" list and the New cutscene dialog now
+        list the screen's NPCs without a name too; picking one names it in the same undo
+        step (`Shopkeeper` for a shop NPC, else `NPC n`; `cutscene_doc.unnamed_npcs` /
+        `npc_token` / `resolve_tokens`). PyBoy on their project: a once-only talk scene on
+        the Cities_FOUNT shopkeeper plays (texts + hop), the second talk opens his shop.
+        Then (user 20:04: a walk's Who → an unnamed NPC → "Segmentation fault: 11" on the
+        Mac): form edits rebuilt the form inside the sending combo's signal → deferred to
+        the event loop (EDITOR_DESIGN §5.1d "S119b crash fix"). Then (user 20:43: "Why is
+        text box so slow to type in?"): 1.1 s per key (a whole-project commit + every tab
+        reloading + the box rebuilt, cursor reset) → texts stored on a pause / focus-out,
+        forms kept when unchanged, the tabs' refreshes narrowed: 4 ms per key
+        (EDITOR_DESIGN §5.1d "S119b typing"). Residual: one ~0.4 s commit per pause (the
+        whole-project undo snapshot + the Rooms tab refill — every editor tab pays it).
+        Then (user 21:15): the build log copyable + a build-error dialog; cutscene texts in
+        the conversations' in-game box editor; the cut-off Cutscenes help (a raw `<…>`);
+        every step / field explained on hover (EDITOR_DESIGN §5.1d "S119b — the user's
+        four"). Then (user 22:44, the editor crashed at open): a cutscene error no longer
+        fails `Project()` — the build's validation reports it (PROJECT_COMPILER §2.33).
+        Residuals: (a) a talk scene cannot know which side the player talks from — his
+        walks are the exact `$10`/`$11` (the scene waits for them); (b) the preview is the
+        model (linear moves, a generic arc for programs; exact = Play in the game); (c) a
+        cast member / tile change lasts until the room loads again (lasting = state
+        rules); (d) helper exits / conversations stay in the Conversation dialog (a scene
+        cannot use the `helper` step); (e) the YES/NO box opens on NO, as in the game
+        (PyBoy: the cursor starts at NO). The Playback auto-answer reads only the game's
+        banks to spot a question, so the editor now passes a project script's
+        questions with Play / the step pictures (`questions_of`: texts followed by the
+        `$C83C` test — measured on the demo: YES chosen, trick flag set).
+      - [x] **Part c — editing a copied room's game scripts — built S119, NOT yet
+        user-tested:** Edit / Insert / Delete step on the storyboard of a copy's own op
+        scripts (`OpDialog`, any opcode + its doc, a live sentence); mapping checked on the
+        user's GreatTree copy (506 / 506 steps).
+      - [x] **Part d — tile patches (`$24` / `$61`) in custom rooms and copies — built S119,
+        NOT yet user-tested:** residual (b) of part A measured (a copy drew nothing) and
+        fixed: bank $04 same-size redirect → bank $60 entries 9 / 10, `patch_data`, clone
+        migration, the *Change tiles* step. Pin `d19259a1…` (patched).
       Earlier plan text (S101): symbolic stepper
       over ops, blocking keyframes on canvas, virtual flag/inventory
       branch walking; playback via P3.4. **S101 user direction (12:36):

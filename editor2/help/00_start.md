@@ -12,7 +12,9 @@ built from it (the original ROM is never changed).
 - **Cutscenes** — every scene of the game and of your rooms as a storyboard
   (steps in words, pictures recorded from the game) and **▶ Play**: the
   game plays the scene right here, with sound, set up for you (the intro
-  chain included).
+  chain included); **＋ New cutscene** makes your own scenes on the room
+  itself, in tiles, with named NPCs and cast members, previewed instantly or
+  played in the game.
 - **Gates** — which custom rooms appear on which gate floors, per-gate
   settings (floor count, boss floor, hand-made gates, project enemies) and
   **new gates** of your own (a copy of a vanilla gate; entrances on the Rooms

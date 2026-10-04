@@ -612,7 +612,11 @@ room-entry script (index 0) has TWO trigger paths that set
   script 0** runs (benign: its actions are flag/var-guarded). The inline
   comment "`$16` for custom rooms" at that site is stale (pre-S42). This is
   the concrete mechanism behind KEY_LESSONS S11's "script 0 runs on scroll
-  and reload but not dependably at initial entry".
+  and reload but not dependably at initial entry". **Superseded since S70v3**
+  (CROSSBANK_ROOMS: the `$4C3E` site was reverted to `ld a,[wMapID]`): the
+  room-entry script DOES run at initial entry — re-measured S119 (PyBoy: an
+  entry cutscene plays on the first arrival through a door and through the
+  warp mailbox; DOC_AUDIT S119).
 
 **The latent defect.** The hand-authored master table had **3 entries**
 (`$6B/$6C/$6D`) while rooms extend to `$70` (index 5). On the scroll path a
@@ -2433,6 +2437,103 @@ emitters), `shops_doc.py` (`ShopsMixin`).
   `$FF`, `GateClearTable` rows `$FFFF`, the five vanilla lists, `ItemInfoTable` = the
   ROM's bytes. Pin `110210b0…` (patched, S117b; S117: `31cc5b31…`, patched, historical) —
   the engine change only.
+
+## §2.33 S119 — the project's own CUTSCENES (`custom.rooms[].cutscenes[]`, ROADMAP P3.8 part B)
+
+User direction (S119): "Should be specific NPCs. Design should be visual … operates by
+tile … Custom cutscenes should be previewable. Everything should be in tiles." A
+cutscene belongs to a room; actors are NAMED NPCs of its screen; every place is a cell
+(0-9 x 0-7, a little outside allowed for walking off). Code: `editor2/core/cutscene_build.py`
+(the lowering AND the editor's model — one pass, so the picture and the bytes cannot
+drift), `editor2/core/cutscene_doc.py` (the editor's data edits), GUI
+`editor2/app/cutscene_editor.py` (EDITOR_DESIGN §5.1d "As built S119").
+
+```jsonc
+"cutscenes": [{
+  "id": "welcome", "name": "Welcome", "screen": 0,
+  "trigger": {"on": "entry" | "talk" | "examine" | "stepon",
+              "actor": "Host",                 // talk: the NPC talked to
+              "x": 4, "y": 3, "facing": "any", // examine / step-on cell (the spot is
+                                               // made when the screen has none there)
+              "when_on": ["flag"], "when_off": ["flag"],
+              "once": "welcome_seen"},         // a custom.flags name: tested + set first
+  "player_start": {"x": 4, "y": 6, "face": "up"},   // entry scenes (optional)
+  "disabled": false,
+  "steps": [ … ]}]
+```
+
+**Actors.** `"actor": "<name>"` on an NPC entry (typed or `raw`; every state of the
+screen); `"player"` = the player. `Cast(room, screen)` resolves a name to the slot
+number the game uses (NPC n = the n-th NPC entry of the state's list, spots not
+counted — the emitter puts spots first, so the number is the authored order of the
+NPCs); a name at DIFFERENT numbers in different states is an ERROR (the game moves NPCs
+by number); a name missing from a state = warning. A **cast member** = `"hidden": true,
+"cast": true` (+ hidden pads `sprite $FF` so it has the same number in every state —
+`cutscene_doc.add_cast`; 8 NPCs per screen).
+
+**Steps** (exactly one kind key each — the list and the meanings: the module doc /
+`STEP_NAMES`): say, ask (+ yes / no), if (+ then / else), set, clear, walk {actor, to,
+first x|y, together, fast, keep_facing}, face {actor, dir | toward}, show / hide {actor,
+how instant|flicker|spin, at}, anim {actor, move (`ANIMS`, the measured `$1C` programs)},
+fly {actor, dir in_left|in_right|off_left|off_right, to (in), length 1-9, curve 0-5},
+wait {frames}, wait_walks, music {song} | "back", sound <id>, shake {dir, frames, wait},
+fade {to black|normal, step}, flash {frames}, followers hide|show, give_item {item, got,
+full}, give_monster {enemy, got, full}, tiles {x, y, w, h, copy {screen, state}} or
+{x, y, rows}, battle, move, end. TEXT = a dialogue id or `{"boxes": [[…]]}` (inline; the
+lowering adds the dialogue entry `cs_<id>_sayN` …; checked like `boxes` dialogue).
+
+**Lowering (`lower_project`, called by `Project.__init__` right after the helper
+scripts are lowered, so every script it wraps is already ops).** Per room, the scenes
+are grouped by trigger (`trigger_key`); each group becomes ONE script
+`cut:<room>:<key>`: for each scene a guard (`branch_screen` on multi-screen rooms for
+entry scenes, `if_flag_clear`/`if_flag_set` for when_on / when_off, `once` = test +
+`set_flag` FIRST) then its body, then the trigger's ORIGINAL script inlined (labels
+prefixed `o_`): an entry scene ends with `goto` to the room's own arrival script, a
+talk / spot scene ends there (the NPC's own talk runs when no scene plays). Wiring:
+entry → `scripts["0"]`; talk → every entry of the named NPC on that screen gets the
+new script (raw entries: byte 4 = its index); examine / step-on → the spot at that cell
+(made, all states, when missing). Rules from PyBoy (BANK04_SCRIPT_ENGINE "Writing
+scenes (S119)"): `init_dialog` before every text after a yielding step (talk scripts
+too), `close_text` before any other step and before the end; a walk of an actor whose
+place the model KNOWS is a queued `$1A`/`$1B` in pixels (together = no `wait_movement`
+until the next waited step), else the exact `$10`/`$11` (absolute pixels; the scene
+waits); `face toward` needs both places known; `show` instant = `npc_write n,0,<the
+entry's own type byte & ~$40>`; flicker / spin = programs `$08` / `$0D` / `$14`; fly in
+= the start pixels written to the slot (`+$18`/`+$1A`) so it LANDS on the cell, `$D8E3`
+= curve·256 + length, then `$15`-`$18`; shake = `$C8B1`/`$C8B2`; fade = the vanilla
+`$C89B-$C89D` shade steps; give = `check_inv_full` / `check_storage_full` first.
+**tiles** (part d): the cells (copied from another screen / state's layout + attr
+grids — `layout_grid`: the BG bytes the loader writes ARE the layout bytes, measured
+S119) → `room.patch_data["cs_<id>_<n>"]` / `…_attr` = `[offset lo, hi, bytes…, $D8 next
+row, $D9]` (offset = 8-px row·32 + column from the visible top-left) and ops `$24` /
+`$61` with the param `patch:<name>`.
+
+**`patch_data` (S119 part d).** `custom.rooms[].patch_data = {name: [bytes]}`; a script
+param `"patch:<name>"` is replaced by `CustomRoom<n>_Patch_<name>` (emitted after the
+room's scripts in bank $60, `emitters._patch_data_lines`). Engine: bank $04
+`ScriptCmd24` / `ScriptCmd61` call bank $60 entries 9 / 10 (`CustomDrawTiles` /
+`CustomDrawAttrs`, template) instead of bank $0F's — same size (`ld hl,$0f01` →
+`$6009`, `$0f02` → `$600a`); for a bank $60 script (GateAwareDispatch's rule) they read
+the param through `CustomScriptRead` and draw the patch from bank $60 (bank $0C's
+drawing, copied), else they far-call bank $0F as before. **Copies of game rooms:**
+`Document._migrate_clone_patches` (on open and in Make editable) copies each `$24` /
+`$61` patch of the copied scripts from the source's script bank in the ROM into
+`patch_data["v<bank>_<addr>"]` and points the op at it (shared scripts: every room
+running it gets the data). PyBoy S119: a copy of the Castle draws its chest patch at the
+same BG cells as the original; without the redirect nothing is drawn.
+
+**Validators / errors (S119b: recorded at load as `Project.cutscene_error`, reported by
+`validators.validate` — the build stops; `Project()` itself no longer raises, because the
+editor's Families / Breeding / Monsters models build one and a half-written scene crashed
+the editor at open, KEY_LESSONS S119b):** a scene id twice; trigger problems
+(`trigger_problems`: no such screen, talk to an unnamed / hidden NPC or the player, a
+spot off the screen); every step problem the lowering finds (unknown actor, a name at
+two slot numbers, a cell too far off the screen, a tile piece past the edge, a text that
+does not fit, a fly for the player …). The editor shows the same list live (`analyse`).
+
+**Pin:** the engine change (bank $04 redirect + the bank $60 template, re-pinned)
+moves the example build: **`d19259a1…` (patched; built S119, NOT yet user-tested)**,
+was `110210b0…` (patched, historical). The example project has no cutscenes.
 
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 

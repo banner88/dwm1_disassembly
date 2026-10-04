@@ -1,5 +1,94 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-03 (Session 117 — **ROADMAP NG2 + P3.13c: 2,048 EXTENDED EVENT
+> FLAGS, GATE SWIRLS THAT FOLLOW EACH GATE'S "CLEARED" FLAG (NEW GATES, NEW BOSSES,
+> RE-ROUTED PORTALS), NPCs SHOWN BY FLAG, AND SHOPS — THE GAME'S FIVE AND THE PROJECT'S
+> OWN, ITEM PRICES** (user on the audit: "rewritten preview player works. What is NG2? Is
+> this literally just connecting swirly thing to gate, then setting a flag to stop swirtly
+> thing from swirling? Sure we can seems like a tiny thing to do" → "1) I am going to need
+> dozens if not hundreds of flags for new custom campaign. 2) Does each swirl-containing
+> screen contain step variants then? 3) Make is as simple and straightforward in editor as
+> possible. Boss cleared - no swirly. Boss cleared BUT we are inputting new boss or
+> redirecting to new gate - swirly. However you do it its fine. 4) Do shops as well while
+> you're there.")). **Test ROM `DWM_S117_swirls_shops_test.gbc` (`e208972a…`, patched,
+> historical) USER-REPORTED 2026-10-03 21:57: "The rest works" + two bugs → S117b below.**
+> S116b's player USER-REPORTED working (S116 block).
+>
+> **S117b (built, NOT yet user-tested; test ROMs `DWM_S117b_shopfix_test.gbc`
+> (`fcb6bc4d…`, patched, historical) and `DWM_S117b_test.gbc` (`56d308bc…`, patched — the
+> same engine, the demo hall re-laid out one NPC per row)):** (1) user: "when I walk over my follower monsters … the left-most NPC
+> glitches out and is hidden … Same thing happens to newly appeared slime" → measured:
+> the HARDWARE limit of 10 objects per screen line (the player + 3 monsters lined up on
+> the NPCs' row use 8; PyBoy draws them all, so it never showed) — user: "Just warning is
+> fine for now, and Ill build around it" → `formats.sprite_budget` build + Rooms-tab
+> warnings (a row with > 1 NPC; > 6 NPCs on screen — 40 objects), the demo hall one NPC per
+> row (ROOM_DATA_FORMAT "Sprite limits (S117b)"). (2) user: "New shop in custom room - menu
+> glitches with background colours from custom tiles" → every bank $09 screen is pushed by
+> `LoadFld9_40fa` (tiles only); SAME-SIZE → bank $77 entry 2 `ScreenPush` (palette 7 for
+> menu tiles, `$C200` palettes for room tiles, free-colour custom rooms only); and a second
+> bug found testing it: a shopkeeper talked to from the lower half put the dialog box at
+> the top and the shop left its "Thank you" box on screen → `ShopClose` → `ShopBoxBottom`
+> (DATA_STRUCTURES "Shops (S117)" → "The shop screens"). **Patched pin `110210b0…`
+> (patched)**, was `31cc5b31…` (patched, historical); the user's project (my-dwm-hack_8)
+> as-is builds `8cbebea1…` (patched; one sprite-limit warning: greattree screen 8 row 6).
+> test_compiler --rom 947/947, test_app + --rom PASS, test_canvas --rom PASS, verifier
+> PASS. `EDITOR_REVISION` = 'S117b'. Hand-off: S117 + S117b together = the diff against
+> `b59c026`, `DWM-S117b-swirls-flags-shops-changed-files.zip`.
+> Verifier PASS (6/6); clean `1ca6579…` byte-perfect (bank $03 `SpriteFrameDataTable` →
+> `ItemInfoTable` 44 `db` rows, bank $09's shop machines / tables labelled + five renames, in
+> both trees — labels / comments / db only); **patched pin `31cc5b31…` (patched,
+> historical — S117b: `110210b0…`)**, was `7bab4921…` (patched, historical); the user's
+> project (my-dwm-hack_8) as-is built `b020c1bf…` (patched, historical; the engine change only — on it, room $23's swirl now follows their
+> custom gate-0 boss). test_compiler --rom 936/936, test_app + test_app --rom PASS (GUI
+> build == pin), test_canvas --rom PASS. `EDITOR_REVISION` = 'S117'.
+>
+> **Flags (EVENT_FLAGS "Extended flags (S117)", ARCHITECTURE "SRAM bank 3 (S117)"):** ROM0
+> `ComputeFlagAddress` (the one chokepoint of Set / Clear / Test) SAME-SIZE → bank $73 entry
+> 21 `FlagAddr`: indices `$1000-$17FF` → **`wExtFlags` $D140** (256 B), the rest the vanilla
+> formula; saved by bank $73 entries 5 / 6 to SRAM bank 3 ("X1"), zeroed by a new game. The
+> editor's named pool = **1,968** (`$0158-$0167` + `$1000-$179F`); `$17A0-$17FF` = the gates'
+> own cleared flags; `gate:N` = "gate N cleared" anywhere a flag is picked.
+> **Swirls (GATE_GENERATION §7.9):** measured — the spinning swirl is NPC sprite `$4D`
+> (script `$FF`) on the portal cell, dropped by the boss script's STEP advance (room $24
+> `$D969`); the still swirl is BG art; the portal never tests either. Engine: bank $0B
+> `GetRoomDataPtr` SAME-SIZE → bank $60 entry 1 for every non-gate room —
+> `CopyNPCListToBuffer` reads **`$A0`/`$A1` flag-condition prefixes** (→ the hidden bit) and
+> `VanillaNPCExtTable` (vanilla portal rooms of re-bossed / re-routed gates); bank $50's
+> boss-win tail SAME-SIZE → bank $76 entry 2 **`GateBossWin`** (`GateClearTable`: own flag
+> `$17A0 + gate`, + a re-bossed vanilla gate's vanilla flag). Schema `swirl_of`, `shown_when`,
+> portal `entrance_redirects` with `gate:N` (PROJECT_COMPILER §2.32).
+> **Shops (DATA_STRUCTURES "Shops (S117)"):** a shop = opcode `$FF04 $0000 $0680`; the list
+> is chosen by the ROOM (map $50 gate shop, else wScreenIndex 0 / 2 / 4 / other); prices =
+> `ItemInfoTable` +1/+2. Engine: bank $09's 64-byte choice + copy → NEW compiler bank
+> **$77** entry 0 `ShopFill` (**`wShopID` $D240** set by a `shop` script, else the room rule);
+> the close tail → entry 1 `ShopClose`. Schema `gamedata.items.<id>.price`,
+> `gamedata.shops`, `custom.shops[]`, `shop` scripts.
+> **Editor (EDITOR_DESIGN §5.1b / §5.6b "As built S117"):** "Gate entrance here…" adds the
+> swirl object + paints the still swirl; "Lead this portal to another gate…"; `gate:N
+> cleared` in every flag list; the Gates tab names each gate's cleared flag; **the Shops
+> tab** (the five + your shops, items 1-20, Original list, prices with what shops pay) +
+> Rooms NPC "Shopkeeper…"; help `62_shops.md`, `60_gates.md` "Swirls and cleared",
+> `30_flags.md`, `20_npcs.md`, `00_start.md`, `90_limits.md`.
+>
+> **Measured on the user's save (demo = the user's project + "Portal Hall" $71 behind the
+> GreatTree 2F Library door: a guide, a bell keeper (extended flag `$1100`) and the slime it
+> calls (`shown_when`), a stall selling its own 12 items, entrances to the new gate 32
+> "Swirl Gate" (copy of Beginning, 2 floors, boss room "Swirl Throne" $72) / Villager /
+> Talisman; the room-$24 Villager portal re-routed to gate 32; Herb costs 12 — NOT in their
+> project):** the hall's gate-32 and Talisman swirls spin, Villager's (cleared) is hidden;
+> the bell sets `$1100`, the slime appears, survives save → reload; an unsaved flag rewinds;
+> the stall's list (3 pages), Herb bought for 12G, page 3's last item bought; the Bazaar's
+> vanilla list with Herb 12G; the shop closes with wShopID 0; gate 32 → boss conversation
+> battle → `GateBossWin` once, `$17C0` set → the gate-32 swirls in the hall and room $24
+> hidden. A/B over the user's project: 212 vanilla + 25 custom screens' NPC slots identical
+> except $23 (by design); `ShopFill` census == the original's choice for every map × screen;
+> the 1,934 script flags' addresses == the original.
+> **Hand-off:** every S117 change = the diff against `b59c026` (origin/master, the S116
+> push), delivered as `DWM-S117-swirls-flags-shops-changed-files.zip`, the APPLY list
+> pasted in the chat. **Next:** NG3 (fully custom gates — the S114 questions) or the user's
+> pick; residuals in ROADMAP NG2 / P3.13c.
+
+
 > Last verified: 2026-10-03 (Session 116 — **ROADMAP P3.13b: THE MUSIC TAB — EVERY SONG
 > PREVIEWED ON THE GAME'S OWN SOUND ENGINE (NO EMULATOR), NAMES, AUTOMATIC MIDI IMPORT, A
 > SONG'S OWN 1-6 CHANNELS, A SECOND SONG BANK, GATE SONGS AND BATTLE SONGS** (user on the

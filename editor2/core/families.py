@@ -37,7 +37,12 @@ class FamiliesMixin:
             # S105: the compiler's own construction (project enemies by EID and
             # by id, the project's custom.species) — one source of truth
             return prj.gamedata()
-        return G.Gamedata(data.get('gamedata') or {}, REPO, [])
+        try:
+            return G.Gamedata(data.get('gamedata') or {}, REPO, [])
+        except G.GamedataError:
+            # S119b: this fallback has no project enemies — an encounter list naming
+            # one ("klamutra") crashed the editor at open; the game's own data then
+            return G.Gamedata({}, REPO, [])
 
     def species_names(self):
         return G.monster_names(REPO)

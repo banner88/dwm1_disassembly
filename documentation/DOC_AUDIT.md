@@ -544,3 +544,13 @@ gate you assumed".
 | dwm/map_names.py "human-verified" room names | LABELS (S118g) | typed by people, not in the ROM; the Cutscenes header now adds how the game's exit tables / scripts enter each room. |
 | BANK04 "Script variables (S118f)" `$C8F2` "= the new monster's name" | WRONG (S118g) | `$CA42` is the HERO's name (text code `$F6` prints it); corrected in place. |
 | PROJECT_COMPILER §2.6 / ROOM_DATA_FORMAT "custom-room step counters are transient (`$CD80`), state comes from flags + entry scripts" applied to COPIES of game rooms | INCOMPLETE (S118c, user report S118b) | A copy of a game room now uses the ORIGINAL's counter (`step_counter.vanilla`, EQU, saved) so the story's writes from other rooms reach it; new rooms keep `$CD80` counters (PROJECT_COMPILER §2.6 "S118c"). |
+## S119 addendum (2026-10-04; the cutscene editor, ROADMAP P3.8 parts B / c / d)
+
+| Claim (where) | Verdict | Correct |
+|---|---|---|
+| KEY_LESSONS S11 / S53, PROJECT_COMPILER §7: a custom room's entry script runs "not dependably at initial entry" | STALE since S70v3 (CROSSBANK_ROOMS: `$01:$4C3E` reverted) — re-measured S119 | the entry script runs at the first arrival (door and warp mailbox); notes added in place |
+| BANK04 "Tile patches", CUSTOM_CUTSCENES, help 90_limits: `$24` / `$61` in a copied room read bank $0F's tables "(read from the code, not measured)" | CONFIRMED S119 (PyBoy: nothing drawn) and FIXED (patched builds) | bank $04 → bank $60 entries 9 / 10; the copy's patches live in the room (`patch_data`) |
+| ROM0 label `CheckSoundQueueState` ($00:$056E) | WRONG NAME (S119, code + PyBoy) | `ScreenShakeTick` — the `$C8B1` / `$C8B2` screen shake (both trees, byte-perfect) |
+| extracted/npc_field_sprites/id_XX.png as "the NPC's look" | INCOMPLETE (S119) | one facing, on the throne-room floor; `extracted/npc_facing_sprites/` = four facings + step frames, transparent, captured from the game (tools/extract_npc_facings.py) |
+| BANK04 "Script opcodes as measured (S118)": text boxes need `$07 init_dialog` "for scripts that did not start from a talk" | INCOMPLETE (S119, PyBoy) | after ANY yielding step a text needs it, talk / examine / step-on scripts included (BANK04 "Writing scenes (S119)") |
+

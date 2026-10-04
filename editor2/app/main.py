@@ -127,6 +127,12 @@ class MainWindow(QMainWindow):
         self.log = QPlainTextEdit()
         self.log.setReadOnly(True)
         self.log.setMaximumBlockCount(5000)
+        # S119b (user: "Why cant I copy paste build log?"): read-only text is
+        # selectable by mouse only — ⌘A / ⌘C did nothing; + a right-click
+        # "Copy all" (the dock is a few lines tall)
+        self.log.setTextInteractionFlags(Qt.TextSelectableByMouse | Qt.TextSelectableByKeyboard)
+        self.log.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.log.customContextMenuRequested.connect(self._log_menu)
         self.log_dock = QDockWidget('Build log', self)
         self.log_dock.setWidget(self.log)
         self.log_dock.setFeatures(QDockWidget.DockWidgetMovable
@@ -581,6 +587,12 @@ class MainWindow(QMainWindow):
     def save(self):
         if not self.session:
             return False
+        ct = getattr(self, 'cutscenes_tab', None)        # S119b: a text still being typed
+        if ct is not None and getattr(ct, 'editor', None) is not None:
+            try:
+                ct.editor.form.flush()
+            except RuntimeError:
+                pass
         try:
             self.session.save()
         except Exception as e:
@@ -637,6 +649,31 @@ class MainWindow(QMainWindow):
         self.worker.finished_build.connect(self._build_done)
         self.worker.start()
 
+    def _log_menu(self, pos):
+        from PySide6.QtWidgets import QMenu
+        m = self.log.createStandardContextMenu()
+        m.addSeparator()
+        a = m.addAction('Copy all')
+        a.triggered.connect(lambda: QApplication.clipboard().setText(self.log.toPlainText()))
+        a = m.addAction('Clear')
+        a.triggered.connect(self.log.clear)
+        m.exec(self.log.mapToGlobal(pos))
+
+    def _show_build_error(self, text):
+        """The build's error in a dialog whose text can be selected and copied."""
+        box = QMessageBox(self)
+        box.setIcon(QMessageBox.Warning)
+        box.setWindowTitle('Build failed')
+        first = str(text).strip().splitlines()[0] if str(text).strip() else 'unknown error'
+        box.setText('The project could not be built:')
+        box.setInformativeText(first[:600])
+        box.setDetailedText(str(text))
+        box.setTextInteractionFlags(Qt.TextSelectableByMouse | Qt.TextSelectableByKeyboard)
+        copy = box.addButton('Copy error', QMessageBox.ActionRole)
+        box.addButton(QMessageBox.Ok)
+        copy.clicked.connect(lambda: QApplication.clipboard().setText(str(text)))
+        box.exec()
+
     def _build_done(self, res):
         self.last_result = res
         self.a_build.setEnabled(True)
@@ -650,6 +687,8 @@ class MainWindow(QMainWindow):
             self.session.buildFinished.emit(res.rom_path)
         else:
             self.statusBar().showMessage('Build failed — see Build log')
+            if not getattr(self, '_quiet_build_errors', False):
+                self._show_build_error(res.error)
         self.build_tab.refresh(self)
 
     def validate(self):

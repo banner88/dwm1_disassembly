@@ -5108,3 +5108,153 @@ leaves it (the placeholder printed "TERRY0000"). **Rule**: every name or meaning
 editor shows is either read from the game (text, tables, code) or marked as a label; a
 helper's reading is checked against a second game source (here the text engine) before it
 is shown.
+
+## S119 — the cutscene editor: dialog mode, a suspected bug measured, keys a rebuild drops
+
+### A text after a walk needs init_dialog — even inside a talk script
+**Symptom**: a scratch talk script `text / close_text / npc_walk_x / wait_movement /
+face / text` showed the first box, walked, then hung forever (`$D8D7` = 3: text queued,
+never shown); `delay 2 / text` hung the same way, in talk, examine and step-on scripts.
+**Root cause**: the dialog mode the A press opens holds only while the script's first
+words run without yielding; after a yield (a wait, a walk, a delay, a close) the field
+no longer services the text queue — exactly the S70 rule for entry scripts, which also
+applies to talks. **Fix**: the cutscene compiler emits `init_dialog` before every text
+that follows a yielding step (harmless when the box is still open) and `close_text`
+before any other step and before the end (PROJECT_COMPILER §2.33, BANK04 "Writing scenes
+(S119)"). **Rule**: when a generator interleaves texts with other steps, re-open the
+dialog before each text group; never rely on the interaction's dialog surviving a yield.
+
+### A "read from the code, not measured" residual must be measured before it is built on
+**Symptom**: S118 recorded that `$24` / `$61` tile patches in a copied room "still read
+bank $0F's tables (read from the code, not measured)". Part d of the cutscene editor
+depended on it. **Root cause** (measured S119, PyBoy): in a copy of the Castle the chest
+patch is not drawn at all; the far call reads the param word through bank $0F's tables.
+The first try at verifying the fix showed NO difference between the copy and the
+original — because the chest scene's patch redraws tiles that are already there; only a
+poke-then-replay (BG cells overwritten, script re-armed at the patch) showed the patch
+landing, and flipping the two redirect bytes back in the ROM image showed the copy
+without the fix drawing nothing. **Fix**: bank $60 entries 9 / 10 + the same-size bank
+$04 redirect; clone migration copies the patches into the room. **Rule**: a visual
+effect is verified only when the test can tell "drawn" from "already there" — make the
+before-state differ from the expected after-state, and run the same check with the fix
+removed (a byte flip in a copy of the ROM) to prove the check can fail.
+
+### A Document method that rebuilds an entry drops the keys it does not know
+**Symptom** (found by reading before shipping): naming an NPC for cutscenes adds
+`actor` / `cast` to its entry; `Document.update_npc` rebuilds the entry from its view
+(`_npc_entry(v)`) and re-attached only `swirl_of` / `shown_when` — any Rooms-tab edit of
+that NPC (facing, sprite, behaviour) would have silently unnamed it and broken every
+scene using it. **Fix**: `actor` and `cast` ride along (S119). **Rule**: when a feature
+adds keys to an existing schema object, grep every place that REBUILDS that object
+(not only the places that read it) and carry the new keys through.
+
+### A documented limitation can be stale — check the later docs and measure
+**Symptom**: KEY_LESSONS S11 / S53 and PROJECT_COMPILER §7 say a custom room's entry
+script "runs on scroll and reload but not dependably at initial entry" — which would
+have made "play when entering the room" impossible. **Root cause**: S70v3 reverted the
+`$01:$4C3E` site (CROSSBANK_ROOMS); the older texts were never updated. PyBoy S119: the
+entry scene plays at the first arrival (door and warp). **Fix**: the old texts carry an
+S119 note; DOC_AUDIT S119. **Rule**: before designing around a documented limitation,
+grep the docs for the same mechanism in LATER sessions and measure it once.
+
+### A save-file start state is field-busy — wait for $C850 before a warp
+**Symptom**: the demo check from the user's .sav warped nowhere and then opened the
+field menu. **Root cause**: right after CONTINUE `$C850` = 252 (the field is busy); the
+warp mailbox is ignored while it is set; the A taps meant for the scene opened the menu.
+**Fix**: wait until `$C850` = 0 (and press B) before warping (Engine.start's own wait
+already covers its path). **Rule**: every scripted warp waits for the game's busy flags
+first (S118 rule, now also for the start state itself).
+
+### Name a door from the game's data, and check what the project already does with it (S119 r2)
+
+**Symptom**: the S119 test ROM's hand-off said "go through the Library door on GreatTree
+screen 4". The demo had redirected GreatTree screen 4 cell (5, 3) — the right half of the
+**Arena Lobby** door (map $06) — and the user's real Library door (screen 8, (5, 3) → map
+$12) already leads to their own room: "No it doesnt, leads to my own custom room". The
+PyBoy check passed because it warped next to the redirected cell, so it proved the door
+worked, not that it was the door the text named.
+**Fix**: the demo's room moved to the Copycat House door (screen 12, (4, 4) → map $10),
+which the user's project does not redirect; the way back lands ON that door (the S98 r3
+rule).
+**Rule**: before telling the user which door to use, name it from the game's own data
+(the door's destination map from the exit table → `Rooms.name`) and list the project's
+`entrance_redirects` for that screen. Never take over a door the player needs (an arena,
+the castle). In a hand-off, give the screen, the cell and what the door normally leads to.
+
+### A picker must offer everything the user can mean, not only what is prepared (S119b)
+**Symptom**: user: "Why cant I select npc in a custom room when creating new cutscene?
+Want to select npc in Cities_FOUNT" — the talk trigger listed only NPCs that already had a
+scene name; their room's one NPC (a shopkeeper) had none, so the list was empty and the
+New cutscene dialog had no NPC choice at all. The S119 tests named NPCs first, so they
+never saw an unnamed screen. **Fix**: every actor list ends with the screen's unnamed
+NPCs; picking one names it in the same undo step. **Rule**: when an object needs a
+preparation step (a name, a flag, a slot) before a list can use it, list the unprepared
+ones too and do the preparation on pick; test the picker on a project that has done none
+of the preparation (the user's own project, not the fixture).
+
+### Never open a file for writing in the same expression that reads it (S119, twice)
+**Symptom**: `open(p,'w').write(open(p).read().replace(…))` emptied
+`editor2/help/_revision.md` — the `'w'` open truncates before the read runs (Python
+evaluates the call target first). It happened twice in S119; both times restored from
+`git show HEAD:`. **Rule**: read into a variable first, then write; or use `sed -i` for a
+one-line change; check the file's size after a scripted edit.
+
+### Never rebuild a widget inside its own signal — macOS segfaults (S119b)
+**Symptom**: user's Mac: picking an unnamed NPC in a walk step's *Who* list → "Segmentation
+fault: 11". Every step-form edit committed synchronously; the commit's `structureChanged`
+reloads the editor, whose `StepForm.show_step` → `QFormLayout.removeRow` DELETES the
+form's widgets — including the combo whose `currentIndexChanged` was still running.
+Offscreen Linux survived it in the editor (luck), but a minimal PySide6 case (a combo that
+removes its own form row in its signal) segfaults on Linux too. **Fix**: `StepForm._emit`
+queues the edit (with the step's path) and emits it from `QTimer.singleShot(0)`; the
+header's trigger / player-start commits and the form's *New flag…* button are deferred the
+same way. test_app asserts the combo is still valid right after `setCurrentIndex`.
+**Rule**: a slot that can end in a rebuild of the widget that sent the signal must defer
+the work to the event loop; check with `shiboken6.isValid(sender)` after triggering it.
+
+### An edit per key press is not an edit model (S119b)
+**Symptom**: user: "Why is text box so slow to type in? When making cutscene?" — measured
+on their project: 1.1 s per key. Every keystroke was a SnapshotCommand (a whole-project
+snapshot) → `structureChanged` → every tab reloaded (the Cutscenes tab re-lowered the
+whole project into its catalogue, the Import tab re-fitted palettes, the Rooms tab
+re-rendered) and the step form was rebuilt — the text box came back with the cursor at
+the start ("Hello there" was stored "ereht olleH") and without focus. **Fix**: a text box
+stores its text after a 0.7 s pause or when it loses focus (one undo step); a commit that
+leaves the shown step unchanged keeps the form (cursor / focus), unless the lists it was
+built from changed; spin boxes count typed digits on Enter / leaving; while the cutscene
+editor is open the Cutscenes tab refreshes only "Your cutscenes" (the compiled catalogue
+on return); the Import tab re-fits only when the rooms (minus cutscenes) changed. 4 ms
+per key, ~0.4 s once per pause. **Rule**: free-text and number fields commit on a pause /
+focus-out, never per key; time an edit on the user's own project (not the small
+example) with every tab alive before calling a form done.
+
+### A raw <word> in a help topic hides the rest of it (S119b)
+**Symptom**: user: "Your help tab is cut off for cutscenes" — `63_cutscenes.md` had
+`"<selected actor> walks here"`; Qt's `setMarkdown` passes raw HTML through, reads
+`<selected actor>` as an unknown tag and drops everything after it (15,196 chars of
+markdown rendered as 10,462). **Fix**: the text reworded; test_app renders every topic and
+checks its last words are shown. **Rule**: in help markdown, angle-bracket placeholders go
+in code spans (`` `<id>` ``) or are written in words.
+
+### Reuse the editor's own widget for the same job (S119b)
+**Symptom**: user: "Why not preview message using in-game boxes for new line and next box
+type thing? This is already implemented in NPC conversations??" — the cutscene form had a
+plain text box (an empty line = next box) while the conversation dialog already drew
+every box with the game's font, frame and red overflow, with Fit. **Fix**: the cutscene
+text fields use `talk_editor.BoxList` (a `vertical` layout for the narrow form). **Rule**:
+before building a field, look for the widget the editor already uses for that kind of
+data — the user expects the same behaviour everywhere.
+
+### A half-written scene must never stop the editor from opening (S119b)
+**Symptom**: the user's editor crashed at open: "gamedata.encounters.0.eids[3] =
+'klamutra': no such enemy row — not a progression.enemies id of this project". Cause: S119
+made `Project.__init__` lower the cutscenes and RAISE on a cutscene error; their scene had
+a 54-cell text line, so every `Project()` failed — and the Families tab (also Breeding,
+Monsters) builds one for its model; its fallback model has no project enemies, so their
+encounter list naming the project enemy `klamutra` raised at window creation. **Fix**:
+`Project()` records `cutscene_error` and goes on; `validators.validate` reports it, so the
+build stops with the scene's message; the Families fallback falls back to the game's data
+instead of raising. **Rule**: anything a user can leave half-done while editing (a text,
+a step) is a BUILD error, not a construction error of the model every tab uses; test an
+in-progress mistake by OPENING the user's project in the editor, not only by building.
+

@@ -23,11 +23,12 @@ import os
 
 from PySide6.QtCore import QObject, QThread, QTimer, Qt, Signal
 from PySide6.QtGui import QColor, QFont, QImage, QPainter, QPen, QPixmap
-from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QFileDialog, QGroupBox,
+from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox,
+                               QFileDialog, QFormLayout, QGroupBox,
                                QHBoxLayout, QLabel, QLineEdit, QListWidget,
                                QListWidgetItem, QMessageBox, QPlainTextEdit,
-                               QPushButton, QSlider, QSplitter, QTreeWidget,
-                               QTreeWidgetItem, QVBoxLayout, QWidget)
+                               QPushButton, QSlider, QSpinBox, QSplitter, QStackedWidget,
+                               QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget)
 
 from editor2.app.session import REPO
 from editor2.core import cutscenes as CS
@@ -48,7 +49,8 @@ TRIGGER_WORDS = {'entry': 'entering the room', 'talk': 'talking to someone',
                  'head': 'its own first step (it plays after a battle is won)'}
 HELP = ('Every scene the game plays with its scripts — and your rooms\' scenes as you built '
         'them. ▶ Play runs it in the real game right here (set up for you: no walking '
-        'there). Pictures on the right are recorded from the game.')
+        'there). Pictures on the right are recorded from the game. Your own cutscenes '
+        '(＋ New cutscene) are made on the room itself, in tiles, and previewed here.')
 
 
 def _qimage(arr):
@@ -179,6 +181,19 @@ class TextCtx:
         return self.labels.get(pos, f'step {pos}')
 
 
+def questions_of(recipe, scene):
+    """S119: the YES/NO texts of a scene's script — (type, script, pos) of every
+    text followed by the $C83C test — for the auto answer in project scripts."""
+    out = []
+    steps = scene.script.steps
+    for st in steps.values():
+        nx = steps.get(st.pos + 1)
+        if st.code == CS.TEXT and nx is not None and nx.code == 0x15 and nx.params \
+                and nx.params[0] == 0xC83C:
+            out.append([recipe.script_type & 0xFF, recipe.script_idx, st.pos])
+    return out
+
+
 class SceneRef:
     def __init__(self, kind, mid, scene, cat, title, chain=None):
         self.kind, self.mid, self.scene, self.cat = kind, mid, scene, cat
@@ -221,6 +236,7 @@ class Recorder(QObject):
                 {'cmd': 'record', 'recipe': recipe_dict(self.recipe),
                  'party': any(st.code in (0x05, 0x5A, 0x5B, 0x20) for st in self.scene.steps),
                  'script_type': self.recipe.script_type, 'script_idx': self.recipe.script_idx,
+                 'questions': questions_of(self.recipe, self.scene),
                  'max_frames': self.max_frames}, timeout=180)
             out, off = {}, 0
             for ctr in head.get('order', []):
@@ -412,7 +428,8 @@ class PlaybackWindow(QDialog):
         try:
             head, _p = self.eng.call({'cmd': 'start', 'recipe': recipe_dict(recipe),
                                       'party': any(st.code in (0x05, 0x5A, 0x5B, 0x20)
-                                                   for st in scene.steps)}, timeout=60)
+                                                   for st in scene.steps),
+                                      'questions': questions_of(recipe, scene)}, timeout=60)
             for line in head.get('log', []):
                 self._say(line)
         except GameHung as ex:
@@ -684,6 +701,131 @@ class PlaybackWindow(QDialog):
         super().closeEvent(ev)
 
 
+# ---------------------------------------------------------------- S119 part c: one script step
+
+class OpDialog(QDialog):
+    """One step of a copied room's script: any of the game's 102 opcodes (named and
+    explained — script_ops), a text, or the end; its parameters as numbers ($xx /
+    decimal), RAM / flag symbols, or a label of the script (branches)."""
+
+    def __init__(self, parent, cur, labels):
+        super().__init__(parent)
+        self.setWindowTitle('Script step')
+        self.resize(560, 360)
+        self.labels = labels
+        self.value = None
+        v = QVBoxLayout(self)
+        f = QFormLayout()
+        v.addLayout(f)
+        self.kind = QComboBox()
+        self.kind.addItem('Text (a dialogue id)', 'text')
+        self.kind.addItem('End — control back to the player', 'end')
+        for c, o in sorted(SO.OPS.items()):
+            self.kind.addItem(f'${c:02X} {o.name} — {o.doc.split(".")[0][:60]}', c)
+        f.addRow('Step', self.kind)
+        self.params = [QLineEdit() for _ in range(3)]
+        self.plabels = [QLabel('') for _ in range(3)]
+        for lb, ed in zip(self.plabels, self.params):
+            ed.textChanged.connect(self._preview)
+            f.addRow(lb, ed)
+        self.doc = QLabel('')
+        self.doc.setWordWrap(True)
+        self.doc.setStyleSheet('color:#9ab;')
+        v.addWidget(self.doc)
+        self.prev = QLabel('')
+        self.prev.setWordWrap(True)
+        v.addWidget(self.prev)
+        if labels:
+            lab = QLabel('Labels of this script (for branches, write @NAME): ' + ', '.join(labels[:40]))
+            lab.setWordWrap(True)
+            lab.setStyleSheet('color:#888;')
+            v.addWidget(lab)
+        bb = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        bb.accepted.connect(self._ok)
+        bb.rejected.connect(self.reject)
+        v.addWidget(bb)
+        self.kind.currentIndexChanged.connect(self._kind)
+        if cur:
+            if cur[0] == 'text':
+                self.kind.setCurrentIndex(0)
+                self.params[0].setText(str(cur[1]))
+            elif cur[0] == 'end':
+                self.kind.setCurrentIndex(1)
+            else:
+                code = self._code(cur[1])
+                i = self.kind.findData(code)
+                self.kind.setCurrentIndex(max(0, i))
+                for k, prm in enumerate(cur[2:5]):
+                    self.params[k].setText(str(prm))
+        self._kind()
+
+    @staticmethod
+    def _code(name):
+        from editor2.core import scriptgen as SG
+        if isinstance(name, str) and name in SG.OPS:
+            return SG.OPS[name][0]
+        for c, o in SO.OPS.items():
+            if o.name == name:
+                return c
+        try:
+            return CS._pv(name)
+        except Exception:                                # noqa: BLE001
+            return None
+
+    def _kind(self, *_a):
+        k = self.kind.currentData()
+        names = ['text id'] if k == 'text' else [] if k == 'end' else list(SO.OPS[k].params)
+        self.nparams = len(names)
+        for i in range(3):
+            show = i < len(names)
+            self.params[i].setVisible(show)
+            self.plabels[i].setVisible(show)
+            if show:
+                br = isinstance(k, int) and SO.OPS[k].branch == i
+                self.plabels[i].setText(names[i] + (' (@label)' if br else ''))
+        self.doc.setText('' if k in ('text', 'end') else SO.OPS[k].doc)
+        self._preview()
+
+    def _vals(self):
+        return [ed.text().strip() for ed in self.params[:getattr(self, 'nparams', 0)]]
+
+    def _preview(self, *_a):
+        k = self.kind.currentData()
+        if k in ('text', 'end'):
+            self.prev.setText('')
+            return
+        nums = []
+        for t in self._vals():
+            v = CS._pv(t) if t and not t.startswith('@') else 0
+            nums.append(v if isinstance(v, int) else 0)
+        try:
+            self.prev.setText('Reads: ' + SO.sentence(k, nums))
+        except Exception:                                # noqa: BLE001
+            self.prev.setText('')
+
+    def _ok(self):
+        k = self.kind.currentData()
+        vals = self._vals()
+        if k == 'end':
+            self.value = ['end']
+        elif k == 'text':
+            t = vals[0] if vals else ''
+            if not t:
+                QMessageBox.warning(self, 'Script step', 'A text id is needed')
+                return
+            self.value = ['text', t]
+        else:
+            for i, t in enumerate(vals):
+                if not t:
+                    QMessageBox.warning(self, 'Script step', f'Parameter {i + 1} is empty')
+                    return
+                if t.startswith('@') and t[1:] not in self.labels:
+                    QMessageBox.warning(self, 'Script step', f'No label {t[1:]!r} in this script')
+                    return
+            self.value = ['op', f'0x{k:02X}'] + vals
+        self.accept()
+
+
 # ---------------------------------------------------------------- the tab
 
 class CutscenesTab(QWidget):
@@ -715,6 +857,11 @@ class CutscenesTab(QWidget):
         self.search.setPlaceholderText('Search (room, words of a text, a step)…')
         self.search.textChanged.connect(self.refresh)
         lv.addWidget(self.search)
+        b = QPushButton('＋ New cutscene…')
+        b.setToolTip('A scene of your own in one of your rooms: NPCs (named, or cast members '
+                     'that appear) walk, turn, jump, talk — all in tiles, on the room itself')
+        b.clicked.connect(self.new_cutscene)
+        lv.addWidget(b)
         self.tree = QTreeWidget()
         self.tree.setHeaderHidden(True)
         self.tree.currentItemChanged.connect(self._picked)
@@ -768,7 +915,26 @@ class CutscenesTab(QWidget):
         self.textbox.setReadOnly(True)
         self.textbox.setMaximumHeight(110)
         mv.addWidget(self.textbox)
-        split.addWidget(mid)
+        # S119 (ROADMAP P3.8 part c): a copied room's game scripts, step by step
+        erow = QHBoxLayout()
+        self.b_edit_op = QPushButton('Edit step…')
+        self.b_edit_op.setToolTip('Change this step of your copied room\'s script (any game '
+                                  'opcode, its parameters in words)')
+        self.b_edit_op.clicked.connect(lambda: self.edit_op('edit'))
+        self.b_ins_op = QPushButton('Insert step before…')
+        self.b_ins_op.clicked.connect(lambda: self.edit_op('insert'))
+        self.b_del_op = QPushButton('Delete step')
+        self.b_del_op.clicked.connect(lambda: self.edit_op('delete'))
+        for b in (self.b_edit_op, self.b_ins_op, self.b_del_op):
+            erow.addWidget(b)
+        self.op_note = QLabel('')
+        self.op_note.setStyleSheet('color:#9ab;')
+        erow.addWidget(self.op_note, 1)
+        mv.addLayout(erow)
+        self.viewer = QWidget()
+        vh = QHBoxLayout(self.viewer)
+        vh.setContentsMargins(0, 0, 0, 0)
+        vh.addWidget(mid, 1)
         # ---- right: the picture
         right = QGroupBox('The step')
         rv = QVBoxLayout(right)
@@ -782,8 +948,21 @@ class CutscenesTab(QWidget):
         self.pic_note.setStyleSheet('color:#aaa;')
         rv.addWidget(self.pic_note)
         rv.addStretch(1)
-        split.addWidget(right)
+        vh.addWidget(right)
+        # S119 (ROADMAP P3.8 part B): the cutscene editor (your own scenes)
+        from editor2.app.cutscene_editor import CutsceneEditor
+        self.editor = CutsceneEditor(self.s)
+        self.editor.playRequested.connect(self.play_cutscene)
+        self.editor.closed.connect(lambda: (self.pages.setCurrentIndex(0), self.refresh()))
+        self.pages = QStackedWidget()
+        self.pages.addWidget(self.viewer)
+        self.pages.addWidget(self.editor)
+        self.pages.currentChanged.connect(self._page_changed)
+        split.addWidget(self.pages)
         split.setStretchFactor(1, 1)
+        self._pending_play = None
+        self.s.buildFinished.connect(self._built)
+        self.s.structureChanged.connect(self._structure)
         self.s.buildFinished.connect(lambda _p: self._fill_roms())
         self._fill_roms()
 
@@ -872,6 +1051,36 @@ class CutscenesTab(QWidget):
         q = self.search.text().strip()
         self.tree.blockSignals(True)
         self.tree.clear()
+        # S119: the project's own cutscenes (the editor)
+        from editor2.core import cutscene_doc as CD
+        mine = QTreeWidgetItem(['Your cutscenes (edit)'])
+        self.tree.addTopLevelItem(mine)
+        self._fill_mine(mine, q)
+        self._fill_rest(q)
+
+    def _fill_mine(self, mine, q):
+        from editor2.core import cutscene_doc as CD
+        by_room = {}
+        for r, sc in CD.scenes(self.s.doc):
+            if q and q.lower() not in (sc.get('name', '') + ' ' + sc['id']).lower():
+                continue
+            by_room.setdefault(r['id'], (r, []))[1].append(sc)
+        for rid, (r, lst) in by_room.items():
+            node = QTreeWidgetItem([f"{r.get('name') or rid}  ({len(lst)})"])
+            for sc in lst:
+                tr = (sc.get('trigger') or {}).get('on', 'entry')
+                c = QTreeWidgetItem([f"{sc.get('name') or sc['id']}  · {tr}"])
+                c.setData(0, ROLE, ('cutscene', rid, sc['id']))
+                node.addChild(c)
+                if self.editor.scene_id == sc['id']:
+                    self._sel_cut = c
+            mine.addChild(node)
+            node.setExpanded(True)
+        if not by_room:
+            mine.addChild(QTreeWidgetItem(['(none yet — ＋ New cutscene…)']))
+        mine.setExpanded(True)
+
+    def _fill_rest(self, q):
         # chains
         top = QTreeWidgetItem(['Chains (scenes played one after another)'])
         self.tree.addTopLevelItem(top)
@@ -939,10 +1148,281 @@ class CutscenesTab(QWidget):
     # ------------------------------------------------------------ showing
     def _picked(self, item, _prev=None):
         ref = item.data(0, ROLE) if item is not None else None
+        if isinstance(ref, tuple) and ref and ref[0] == 'cutscene':
+            self.pages.setCurrentIndex(1)
+            self.editor.open(ref[1], ref[2])
+            return
         if not isinstance(ref, SceneRef):
             return
+        self.pages.setCurrentIndex(0)
         self.cur = ref
         self.show_scene()
+
+    # ------------------------------------------------------------ S119: own cutscenes
+    def _structure(self):
+        """A project change (undo / redo / an edit): re-read the project's scenes."""
+        if not self._loaded or self.cat is None:
+            return
+        if self.pages.currentIndex() == 1:
+            # S119b (typing was ~1 s per key): while the cutscene editor is open only
+            # its own list is redone; the project's compiled scenes (a whole-project
+            # lowering) are re-read when the scene viewer comes back
+            self._pcat_stale = True
+            self._refresh_mine()
+            return
+        self._pcat_stale = False
+        self._load_project()
+        keep = self.editor.scene_id if self.pages.currentIndex() == 1 else None
+        self._sel_cut = None
+        self.refresh()
+        if keep and getattr(self, '_sel_cut', None) is not None:
+            self.tree.blockSignals(True)
+            self.tree.setCurrentItem(self._sel_cut)
+            self.tree.blockSignals(False)
+
+    def _refresh_mine(self):
+        top = self.tree.topLevelItem(0) if self.tree.topLevelItemCount() else None
+        if top is None or not top.text(0).startswith('Your cutscenes'):
+            return
+        self.tree.blockSignals(True)
+        top.takeChildren()
+        self._sel_cut = None
+        self._fill_mine(top, self.search.text().strip())
+        if self._sel_cut is not None:
+            self.tree.setCurrentItem(self._sel_cut)
+        self.tree.blockSignals(False)
+
+    def _page_changed(self, idx):
+        if idx == 0 and getattr(self, '_pcat_stale', False):
+            self._structure()
+
+    def new_cutscene(self):
+        from editor2.core import cutscene_build as CB
+        from editor2.core import cutscene_doc as CD
+        from editor2.app.rooms import commands as C
+        rooms = [r for r in self.s.doc.rooms if not r.get('placeholder') and r.get('screens')]
+        if not rooms:
+            QMessageBox.information(self, 'New cutscene', 'Make a room first (Rooms tab): a '
+                                    'cutscene plays in one of your rooms (a copy of a game room '
+                                    'works too).')
+            return
+        dlg = QDialog(self)
+        dlg.setWindowTitle('New cutscene')
+        f = QFormLayout(dlg)
+        name = QLineEdit('New scene')
+        f.addRow('Name', name)
+        rb = QComboBox()
+        for r in rooms:
+            rb.addItem(f"{r.get('name') or r['id']} ({r['mapID']})", r['id'])
+        f.addRow('Room', rb)
+        sb = QComboBox()
+
+        def fill(_i=0):
+            sb.clear()
+            r = self.s.doc.room(rb.currentData())
+            for k in sorted(int(x) for x in r.get('screens') or {}):
+                sb.addItem(f'screen {k}', k)
+        rb.currentIndexChanged.connect(fill)
+        fill()
+        f.addRow('Screen', sb)
+        tb = QComboBox()
+        for k, lbl in (('entry', 'entering the room'), ('talk', 'talking to an NPC'),
+                       ('examine', 'examining a tile'), ('stepon', 'stepping on a tile')):
+            tb.addItem(lbl, k)
+        f.addRow('Plays when', tb)
+        who = QComboBox()
+        who_lbl = QLabel('Talking to')
+
+        def fill_who(_i=0):
+            # every NPC of the screen: the named ones, then the ones without a
+            # scene name yet (picking one names it — S119 r2, user: "Why cant I
+            # select npc in a custom room when creating new cutscene?")
+            who.clear()
+            r = self.s.doc.room(rb.currentData())
+            k = sb.currentData() or 0
+            try:
+                for nm, n, _e in CD.actors(r, k):
+                    if n:
+                        who.addItem(f'{nm} (NPC {n})', nm)
+                for st, n, e in CD.unnamed_npcs(r, k):
+                    x, y = CB.entry_cell(e)
+                    who.addItem(f'NPC {n} at ({x}, {y})' + (f', state {st}' if st else '')
+                                + ' — no name yet', CD.npc_token(st, n))
+            except Exception:                            # noqa: BLE001
+                pass
+            if not who.count():
+                who.addItem('(no NPCs on this screen — add one in the Rooms tab)', None)
+            talk = tb.currentData() == 'talk'
+            who.setVisible(talk)
+            who_lbl.setVisible(talk)
+        rb.currentIndexChanged.connect(fill_who)
+        sb.currentIndexChanged.connect(fill_who)
+        tb.currentIndexChanged.connect(fill_who)
+        f.addRow(who_lbl, who)
+        fill_who()
+        bb = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        bb.accepted.connect(dlg.accept)
+        bb.rejected.connect(dlg.reject)
+        f.addRow(bb)
+        if not dlg.exec():
+            return
+        rid, scr, on, nm = rb.currentData(), sb.currentData(), tb.currentData(), name.text().strip() or 'scene'
+        actor = who.currentData() if on == 'talk' else None
+        cmd = C.SnapshotCommand(self.s, 'New cutscene',
+                                lambda doc: CD.new_cutscene(doc, rid, nm, scr, on, actor))
+        self.s.undo.push(cmd)
+        if cmd.error is not None:
+            QMessageBox.warning(self, 'New cutscene', str(cmd.error))
+            return
+        self.pages.setCurrentIndex(1)
+        self.editor.open(rid, cmd.result)
+        self._structure()
+
+    def play_cutscene(self, scene_id):
+        """Save + build (when the build is older than the project), then play the
+        scene in the game (the Playback window)."""
+        if not scene_id:
+            return
+        from editor2.core import playback as PB
+        ok, why = PB.available()
+        if not ok:
+            QMessageBox.information(self, 'Playback', why)
+            return
+        win = self.window()
+        if self.s.dirty or not (self.s.last_rom and os.path.exists(self.s.last_rom)) or \
+                self._build_stale():
+            if not hasattr(win, 'build'):
+                QMessageBox.information(self, 'Playback', 'Build the project first (⌘B).')
+                return
+            self._pending_play = scene_id
+            win.build()
+            return
+        self._play_built(scene_id)
+
+    def _build_stale(self):
+        try:
+            return os.path.getmtime(self.s.doc.path) > os.path.getmtime(self.s.last_rom)
+        except OSError:
+            return True
+
+    def _built(self, rom):
+        sid, self._pending_play = self._pending_play, None
+        if sid and rom:
+            QTimer.singleShot(200, lambda: self._play_built(sid))
+
+    def scene_ref(self, scene_id):
+        """(mid, Scene, recipe) of one of the project's cutscenes in the last build."""
+        from editor2.core import cutscene_build as CB
+        from editor2.core import cutscene_doc as CD
+        from editor2.core.render import find_build
+        self._load_project()
+        r, sc = CD.find(self.s.doc, scene_id)
+        mid = CS._pv(r['mapID'])
+        gid = CB.trigger_script_id(r, sc)
+        script = next((x for x in self.pcat.scripts(mid) if x.key[3] == gid), None)
+        if script is None:
+            raise RuntimeError('the scene is not in the build (does the project compile?)')
+        labels = {v: k for k, v in getattr(script, 'labels', {}).items()}
+        p = CB.scene_prefix(sc)
+        group = [x for x in r.get('cutscenes') or [] if CB.trigger_key(x) == CB.trigger_key(sc)
+                 and not x.get('disabled')]
+        i = group.index(sc) if sc in group else 0
+        head = labels.get(f'{p}_go')
+        if head is None:
+            head = 0 if i == 0 else labels.get(f'{CB.scene_prefix(group[i - 1])}_skip', 0)
+        scene = CS.Scene(script, head, script.run_from(head, stop_at_heads=False),
+                         script.path_to(head), sc.get('name', ''), None, 1)
+        rec = self.pcat.recipe(scene, mid)
+        ps = sc.get('player_start')
+        if (sc.get('trigger') or {}).get('on', 'entry') == 'entry' and isinstance(ps, dict):
+            rec = rec._replace(player=CB.cell_px(int(sc.get('screen', 0)), int(ps['x']), int(ps['y'])),
+                               screen=int(sc.get('screen', 0)))
+        return mid, scene, rec
+
+    def _play_built(self, scene_id):
+        try:
+            mid, scene, rec = self.scene_ref(scene_id)
+        except Exception as ex:                          # noqa: BLE001
+            QMessageBox.warning(self, 'Playback', f'Cannot play it: {ex}')
+            return
+        if self.playback is not None:
+            try:
+                self.playback.close()
+            except RuntimeError:
+                pass
+        title = scene.title or scene_id
+        self.playback = PlaybackWindow(self, self.s.last_rom, self._sav(), self._cache_dir(),
+                                       [(rec, scene, title[:60])], title[:60])
+        self.playback.show()
+
+    # ------------------------------------------------------------ S119 part c: op editing
+    def _op_target(self):
+        """(script dict, op index) of the selected storyboard step when it is a step
+        of one of the project's own op scripts (a copied room's script), else None."""
+        if self.cur is None or self.cur.kind != 'project':
+            return None
+        key = self.cur.scene.script.key
+        sid = key[3] if len(key) > 3 else None
+        if not sid or str(sid).startswith(('cut:', 'skill:', 'quest:', 'entry:')):
+            return None
+        sc = next((x for x in self.s.doc.custom.get('scripts', []) if x.get('id') == sid), None)
+        if sc is None or 'ops' not in sc or any(k in sc for k in ('talk', 'shop')):
+            return None
+        row = self.steps.currentRow()
+        if row < 0:
+            return None
+        pos = self.cur.scene.steps[row].pos
+        w = 0
+        for i, it in enumerate(sc['ops']):
+            if isinstance(it, str):
+                continue
+            if w == pos:
+                return sc, i
+            w += 1 if it[0] in ('end', 'text') else 1 + len(it) - 2
+        return None
+
+    def _op_buttons(self):
+        t = self._op_target()
+        for b in (self.b_edit_op, self.b_ins_op, self.b_del_op):
+            b.setEnabled(t is not None)
+        self.op_note.setText('' if t is not None else
+                             ('your own cutscenes are edited in the cutscene editor'
+                              if self.cur is not None and self.cur.kind == 'project' else
+                              'game scenes: copy the room (Rooms → Make editable) to change them'))
+
+    def edit_op(self, what):
+        from editor2.app.rooms import commands as C
+        t = self._op_target()
+        if t is None:
+            return
+        sc, i = t
+        sid = sc['id']
+        if what == 'delete':
+            if QMessageBox.question(self, 'Delete step', 'Delete this step of the script?') \
+                    != QMessageBox.Yes:
+                return
+
+            def op(doc):
+                s2 = next(x for x in doc.custom['scripts'] if x.get('id') == sid)
+                s2['ops'].pop(i)
+                doc.touch()
+            self.s.undo.push(C.SnapshotCommand(self.s, 'Script: delete a step', op))
+            return
+        cur = sc['ops'][i] if what == 'edit' else None
+        labels = [x.split(':', 1)[1] for x in sc['ops'] if isinstance(x, str) and x.startswith('label:')]
+        dlg = OpDialog(self, cur, labels)
+        if not dlg.exec():
+            return
+        new = dlg.value
+
+        def op2(doc):
+            s2 = next(x for x in doc.custom['scripts'] if x.get('id') == sid)
+            if what == 'edit':
+                s2['ops'][i] = new
+            else:
+                s2['ops'].insert(i, new)
+            doc.touch()
+        self.s.undo.push(C.SnapshotCommand(self.s, 'Script: edit a step', op2))
 
     def recipe_of(self, ref, scene=None):
         scene = scene or ref.scene
@@ -1039,6 +1519,7 @@ class CutscenesTab(QWidget):
     def _step_picked(self, row):
         if row < 0 or self.cur is None:
             return
+        self._op_buttons()
         st = self.cur.scene.steps[row]
         if st.code == CS.TEXT:
             self.textbox.setPlainText(self.cur.cat.text(st.params[0]) or '(text not found)')

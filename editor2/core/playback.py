@@ -609,9 +609,17 @@ class Engine:
             self.p.button_press(b)
         self._held = want
 
+    questions = frozenset()   # S119: (type, script, text pos) of a project's YES/NO texts
+
     def _is_question(self):
         m = self.m
         ctr = m[SCRIPT_CTR] | (m[SCRIPT_CTR + 1] << 8)
+        if self.questions and any((m[SCRIPT_TYPE], m[SCRIPT_ID], (ctr + d) & 0xFFFF)
+                                  in self.questions for d in (0, 1)):
+            # a project script (bank $60 — _word_at reads the game's banks only):
+            # the caller listed its texts followed by the $C83C test (S119: the
+            # editor's own scenes' YES / NO answers)
+            return True
         for d in (1, 2):
             w = self._word_at(m[SCRIPT_TYPE], m[SCRIPT_ID], (ctr + d) & 0xFFFF)
             if w == 0xFF15:
