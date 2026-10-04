@@ -438,7 +438,7 @@ class Project:
             if not (0 <= k <= 15 and 0 <= x <= 9 and 0 <= y <= 7):
                 raise ProjectError(f"{ctx}: move to screen {k} cell ({x},{y}) outside "
                                    "the 4x4 grid / 10x8 cells")
-            # MapTransitionFull ($0F, bank $04 label4_5a02): word 1 = mapID
+            # MapTransitionFull ($0F, bank $04 ScriptCmd0F_MapTransition): word 1 = mapID
             # (high byte = gate flag 0), words 2/3 = ABSOLUTE pixel x/y of the
             # cell centre (screen col*10 / row*8 cells + cell*16 + 8)
             px = ((k % 4) * 10 + x) * 16 + 8
@@ -1735,9 +1735,23 @@ class Project:
         alloc, used = [], {}
         explicit = []
         auto = []
+        self._step_game = []
         for r in self.rooms:
             for i, s in sorted(self.room_screens(r).items()):
                 sc = s.get('step_counter', 'auto')
+                if isinstance(sc, dict) and sc.get('vanilla') is not None and \
+                        not r.get('state_rules'):
+                    # S118c: a cloned room's screen that FOLLOWS THE GAME — its
+                    # state is the original room's own counter (written by the
+                    # game's story scripts, saved with the game): the label is
+                    # an EQU of that address, nothing is allocated. (A room with
+                    # state_rules keeps its own counter: the rules write it.)
+                    lbl = sc.get('label') or self._def_step_label(r, i)
+                    self._step_game.append((lbl, F.val(sc['vanilla']),
+                                            f"Room {F.hexb(F.val(r['mapID']))} screen {i} "
+                                            f"({r.get('id', '')}) follows the game's counter"))
+                    s['_ctr_label'] = lbl
+                    continue
                 if isinstance(sc, dict):
                     explicit.append((r, i, s, sc))
                 else:
@@ -1791,6 +1805,12 @@ class Project:
     def _def_step_comment(r, i):
         return (f"Room {F.hexb(F.val(r['mapID']))} screen {i} step counter"
                 f" ({r.get('id','')})")
+
+    def step_counter_game(self):
+        """[(label, vanilla addr, comment)] — screens whose state is the game's
+        own counter (S118c, cloned rooms)."""
+        self.step_counter_allocation()
+        return list(self._step_game)
 
     def step_counter_label(self, r, i, s):
         self.step_counter_allocation()

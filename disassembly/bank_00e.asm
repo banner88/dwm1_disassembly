@@ -8,8 +8,8 @@ SECTION "ROM Bank $00e", ROMX[$4000], BANK[$e]
     db $0e ;ROM BANK
 
     dw LoadBe_4007
-    dw labele_402f
-    dw labele_4110
+    dw ScriptBank0EDrawTiles
+    dw ScriptBank0EDrawAttrs
 
 ; ---------------------------------------------------------------------------
 ; ScriptDataLookup — Same triple-index as bank $0C (see bank_00c.asm)
@@ -47,7 +47,15 @@ LoadBe_4007:
     dec hl
     ret
 
-labele_402f:
+; S118: script op $24 draw_tiles (bank $04 ScriptCmd24_DrawTiles far-calls
+; entry 1 of the map's script bank). It READS ONE MORE SCRIPT WORD itself
+; (counter + 1, then the entry-0 lookup): an address in THIS bank of a tile
+; patch — [dest offset word, tile bytes …, $D8 = next row, $D9 = end] — drawn
+; onto the visible BG map ($FFB7/$FFBB scroll, $D8E7/$D8E8 cursor) and staged
+; at $C300+. So op $24 takes 1 parameter (the S96 tracer stops at rst $10).
+; Custom rooms (bank $60): $24 goes to bank $0F entry 1, whose lookup reads bank
+; $0F's own tables, not bank $60 (read from the code; not measured S118).
+ScriptBank0EDrawTiles:
     ld hl, $ffb7
     ld a, [hl]
     and $f8
@@ -221,7 +229,10 @@ jr_00e_410e:
     pop hl
     ret
 
-labele_4110:
+; S118: script op $61 draw_attrs (ScriptCmd61_DrawAttrs, entry 2): like entry 1
+; it reads ONE more script word (a patch address in this bank) and writes the
+; patch to VRAM bank 1 (the BG attributes) on GBC.
+ScriptBank0EDrawAttrs:
     ld hl, $ffb7
     ld a, [hl]
     and $f8

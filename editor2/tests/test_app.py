@@ -1250,6 +1250,183 @@ def main():
           'compiles (6 lists, swirl conditions); Delete unbinds it; the sprite-limit banner (S117b); '
           'undo restores everything')
 
+    # S118 (P3.8 part A): the Cutscenes tab — every scene, the storyboard, the
+    # model picture, and (with PyBoy + the ROM) the Playback window playing the
+    # intro chain in the real game with auto text
+    ct = w.cutscenes_tab
+    w.tabs.setCurrentWidget(ct)
+    app.processEvents()
+    if ct.cat is None:
+        ct.load()
+    if ct.cat is None:
+        print('SKIP: Cutscenes tab needs data/DWM-original.gbc')
+    else:
+        tops = [ct.tree.topLevelItem(i).text(0) for i in range(ct.tree.topLevelItemCount())]
+        assert tops[0].startswith('Chains') and 'Your rooms' in tops and 'Game rooms' in tops, tops
+        game = ct.tree.topLevelItem(2)
+        assert game.childCount() >= 40, game.childCount()
+        chain = ct.tree.topLevelItem(0).child(0)
+        ct.tree.setCurrentItem(chain)
+        app.processEvents()
+        rows = [ct.steps.item(i).text() for i in range(ct.steps.count())]
+        assert len(rows) > 80 and any('walks left 2 tiles' in r for r in rows), rows[:10]
+        assert any('Milayou:Terry!' in r for r in rows), 'the bedtime text'
+        assert 'starts by' in ct.head.text(), ct.head.text()
+        # S118e (user: "Milayou and Terry … both are in wrong positions"): the
+        # bedtime scene is played from a new game itself
+        assert ct._recipe.action == 'newgame', ct._recipe
+        assert ct._model_picture(10).width() == 320
+        ct.search.setText('Watabou')
+        app.processEvents()
+        n_hits = sum(ct.tree.topLevelItem(2).child(i).childCount()
+                     for i in range(ct.tree.topLevelItem(2).childCount()))
+        ct.search.setText('')
+        app.processEvents()
+        chain = ct.tree.topLevelItem(0).child(0)
+        assert n_hits > 0, 'search finds Watabou scenes'
+        for word in ('Play', 'Auto text', 'intro', 'pyboy', 'save file'):
+            assert word in open(os.path.join(REPO, 'editor2', 'help', '63_cutscenes.md')).read(), word
+        from editor2.core import playback as PB
+        if PB.available()[0]:
+            ct.tree.setCurrentItem(chain)
+            app.processEvents()
+            ct.play()
+            pw = ct.playback
+            pw.speed_box.setCurrentIndex(3)          # 8x (no sound) keeps the test short
+            import time as _t
+            t0 = _t.time()
+            def frames():
+                return pw.st.get('frames', 0) if pw.st else 0
+            while _t.time() - t0 < 30 and (pw.eng is None or frames() < 1500):
+                app.processEvents()
+                _t.sleep(0.002)
+            assert pw.eng is not None and frames() >= 1500, 'playback did not run'
+            assert pw.st['map'] == 0x2F, pw.st
+            assert ct.steps.currentRow() > 5, 'the storyboard follows the game'
+            # the game runs in its own process: a game that stops answering is
+            # killed and reported, the editor keeps going (Restart starts it again)
+            import signal
+            pw.toggle()                              # pause
+            os.kill(pw.eng.proc.pid, signal.SIGSTOP)
+            t1 = _t.time()
+            pw._run_frames(1)
+            for _ in range(20):
+                app.processEvents()
+            assert pw.hung and pw.eng is None, 'a hung game is reported'
+            assert _t.time() - t1 < 15
+            pw.restart()
+            t0 = _t.time()
+            while _t.time() - t0 < 30 and (pw.eng is None or frames() < 300):
+                app.processEvents()
+                _t.sleep(0.002)
+            assert pw.eng is not None and not pw.hung and frames() >= 300, 'restart after a hang'
+            pw.close()
+            app.processEvents()
+            # ▶ From this step: the steps before it run fast, then normal play
+            ct.tree.setCurrentItem(chain)
+            app.processEvents()
+            ct.steps.setCurrentRow(40)
+            target = ct.cur.scene.steps[40].pos
+            ct.play(from_step=True)
+            pw = ct.playback
+            assert pw.skip_to == target
+            t0 = _t.time()
+            while _t.time() - t0 < 60 and (pw.eng is None or pw.skipping or not pw.st):
+                app.processEvents()
+                _t.sleep(0.002)
+            assert not pw.skipping, 'the fast run reached the chosen step'
+            from editor2.core import cutscenes as CS2
+            cur = CS2.step_at_counter(ct.cur.scene.script, pw.st['pos'])
+            assert cur is not None and cur.pos >= target, (cur, target)
+            assert pw.speed_box.currentData() == 8 or pw.clock.isActive() or pw.player
+            # S118e: View → Mute game playback overrides every window's Sound box
+            was = w.a_mute.isChecked()
+            w.a_mute.setChecked(True)
+            app.processEvents()
+            assert not pw.c_sound.isEnabled() and (pw.player is None or not pw.player.playing)
+            w.a_mute.setChecked(False)
+            app.processEvents()
+            assert pw.c_sound.isEnabled()
+            w.a_mute.setChecked(was)
+            # Step ▸▸ / ◂ Step back (S118b: step through the scene step by step)
+            f0 = pw.st.get('frames', 0)
+            pw.step_script()
+            pw.step_script()
+            app.processEvents()
+            log = pw.log.toPlainText()
+            assert log.count('▸▸ after') + log.count('no new step') + \
+                log.count('has ended') >= 2, log[-400:]
+            f2 = pw.st.get('frames', 0)
+            pw.step_script(back=True)
+            assert pw.st.get('frames', 0) <= f2 and not pw.clock.isActive()
+            assert f2 >= f0
+            pw.close()
+            app.processEvents()
+            # S118c (user: "selecting a script then clicking on another … after
+            # playing a GreatTree cutscene — new cutscene doesnt appear"): after a
+            # playback, other scenes still open; every 7th scene of the whole
+            # tree opens without an error and shows its own steps
+            errs = []
+            old_hook = sys.excepthook
+            sys.excepthook = lambda t, v, tb: errs.append(f'{t.__name__}: {v}')
+            ct.only_moves.setChecked(False)
+            app.processEvents()
+            refs = []
+
+            def _walk(it):
+                for i in range(it.childCount()):
+                    c = it.child(i)
+                    if c.data(0, ROLE_CS) is not None:
+                        refs.append(c)
+                    _walk(c)
+            from editor2.app.cutscenes_tab import ROLE as ROLE_CS
+            for i in range(ct.tree.topLevelItemCount()):
+                _walk(ct.tree.topLevelItem(i))
+            saved_auto = ct._auto_record
+            ct._auto_record = lambda: False
+            for c in refs[::7]:
+                ct.tree.setCurrentItem(c)
+                app.processEvents()
+                ref = c.data(0, ROLE_CS)
+                assert ct.cur is ref and ct.steps.count() == len(ref.scene.steps), c.text(0)
+            ct._auto_record = saved_auto
+            sys.excepthook = old_hook
+            assert not errs, errs[:3]
+            assert len(refs) > 500, len(refs)
+            ct.only_moves.setChecked(True)
+            app.processEvents()
+            # S118f (user: "I want everything interpretable"): no step of any game
+            # script is left as a bare address / number
+            import re as _re
+            from editor2.core import script_ops as SO2
+            from editor2.app.cutscenes_tab import TextCtx as _TC
+            raw = []
+            for _m in ct.cat.map_types():
+                _ctx = _TC(ct.cat.text, {}, {}, cat=ct.cat, vanilla=ct.cat)
+                _ctx.bank = CS2.script_bank(_m)
+                for _sc in ct.cat.scripts(_m):
+                    for _st in (_sc.steps.values() if _sc else []):
+                        _t = SO2.sentence(_st.code, _st.params, _ctx, _st.target)
+                        if ('not yet named' in _t or 'game screen' in _t or 'slot byte' in _t
+                                or _re.search(r'\(\w+ \$[0-9A-F]{4}\)$', _t)):
+                            raw.append(_t)
+            assert not raw, raw[:5]
+            _ctx = _TC(ct.cat.text, {}, {}, cat=ct.cat, vanilla=ct.cat)
+            assert SO2.sentence(0x12, (0xD92B, 0), _ctx).startswith('Room state of Castle screen 1')
+            assert 'arena class G won' in SO2.sentence(0x03, (0x30,), _ctx)
+            # the egg appraiser's plain talk is not a "moving" scene; the GreatTree
+            # cliff scene plays in the room state the Castle leaves (S118 user report)
+            egg = [s for s in ct.cat.scenes(0x09) if s.entry == 20][0]
+            assert not CS2.moves(egg)
+            cliff = [s for s in ct.cat.scenes(0x01) if s.entry == 202][0]
+            assert ct.cat.recipe(cliff, 0x01).room_step == 2
+            ct.shutdown()
+            print('OK: Cutscenes (S118) — chains / your rooms / game rooms, the intro storyboard '
+                  f'({len(rows)} steps), search, model picture; Playback ran the intro in the '
+                  f'game ({1500}+ frames, storyboard highlight); a hung game is killed, Restart works; From this step; Step ▸▸ / back')
+        else:
+            print('OK: Cutscenes (S118) — storyboard (Playback SKIPPED: no PyBoy)')
+
     if do_rom:
         from editor2.app.build_worker import BuildWorker  # noqa: E402
         results = []

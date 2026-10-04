@@ -81,6 +81,24 @@ def validate(prj, generated=None):
         return errors, warnings
     warnings += list(prj.warnings)
     rooms = [r for r in prj.rooms if not r.get('placeholder')]
+    # S118c: a screen that follows the game's own room state names one of the
+    # ORIGINAL rooms' step counters ($D92A-$D99A, ROOM_DATA_FORMAT)
+    for r in rooms:
+        for k, scr in (r.get('screens') or {}).items():
+            sc = scr.get('step_counter') if isinstance(scr, dict) else None
+            if isinstance(sc, dict) and sc.get('vanilla') is not None:
+                try:
+                    a = F.val(sc['vanilla'])
+                except Exception:                      # noqa: BLE001
+                    a = -1
+                if not 0xD92A <= a <= 0xD99A:
+                    errors.append(f"room {r.get('id')} screen {k}: step_counter.vanilla "
+                                  f"{sc['vanilla']} is not one of the game's room-state "
+                                  "counters ($D92A-$D99A)")
+                elif r.get('state_rules'):
+                    warnings.append(f"room {r.get('id')} screen {k}: has state rules, so it "
+                                    "keeps its own room-state counter (it does not follow "
+                                    "the game's)")
 
     # ---------------------------------------------------------- gamedata
     # S103 (P3.9, PROJECT_COMPILER §2.20): Layer A-lite overrides. Any schema

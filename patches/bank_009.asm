@@ -19,18 +19,18 @@ label9_4005:                        ; bank $09 entry 0: screen effects
 ScreenEffectTable09:
     dw $45F3               ; type  0
     dw $4033               ; type  1 — close (no menu)
-    dw $4EF9               ; type  2
-    dw $402E               ; type  3 — bank $12 entry 0
+    dw $4EF9               ; type  2 — the Vault menu (S118f: the Vault keeper's $04 2)
+    dw $402E               ; type  3 — bank $12 entry 0: Pulio's farm menu (pick up / leave monsters; $12:$4EBC sets flag $0007, S118f)
     dw ArenaClassMenu      ; type  4 — ARENA CLASS-REGISTRATION MENU
     dw $4029               ; type  5 — bank $0A entry 0
     dw $4029               ; type  6 — bank $0A entry 0
     dw $4029               ; type  7 — bank $0A entry 0
-    dw $402E               ; type  8 — bank $12 entry 0
-    dw $402E               ; type  9 — bank $12 entry 0
-    dw $402E               ; type 10 — bank $12 entry 0
+    dw $402E               ; type  8 — bank $12 entry 0: the Library (look up a family)
+    dw $402E               ; type  9 — bank $12 entry 0: the Monster Namer (rename)
+    dw $402E               ; type 10 — bank $12 entry 0: MedalMan's medal exchange
     dw $4029               ; type 11 — bank $0A entry 0
     dw $45F3               ; type 12
-    dw $5ECA               ; type 13
+    dw $5ECA               ; type 13 — the list of Travelers' Gates (Gate Hub guide, S118f)
     dw $4033               ; type 14 — close (no menu)
     dw label9_6120         ; type 15
     ld hl, $0a00

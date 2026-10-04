@@ -476,6 +476,7 @@ class RoomsTab(QWidget):
         self.inspector.removeDoorRequested.connect(self._remove_door)
         self.inspector.goDoorRequested.connect(self._go_door_here)
         self.inspector.rules.rulesEdited.connect(self._rules_edited)
+        self.inspector.rules.followEdited.connect(self._follow_edited)
         # S100 (P3.7b part 1): rooms served as gate floors
         gg = self.inspector.gate_group
         gg.arrivalHereRequested.connect(self._gate_arrival_here)
@@ -2125,6 +2126,18 @@ class RoomsTab(QWidget):
         self.s.undo.push(cmd)
         if cmd.error is not None:
             QMessageBox.warning(self, 'State rules', str(cmd.error))
+        self._show()
+
+    def _follow_edited(self, on):
+        room = self.current_room()
+        if room is None:
+            return
+        rid = self.room_id
+        cmd = C.SnapshotCommand(self.s, "Follow the game's room state" if on else
+                                'Own room state', lambda doc: doc.set_follow_game(doc.room(rid), on))
+        self.s.undo.push(cmd)
+        if cmd.error is not None:
+            QMessageBox.warning(self, 'Room state', str(cmd.error))
         self._show()
 
     def _cell_selected(self, cell):

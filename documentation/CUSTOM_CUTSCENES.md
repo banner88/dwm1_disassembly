@@ -18,120 +18,108 @@ Scripts are sequences of `dw` words:
 - Values $0000-$FEFF (with high byte ≠ $FF) = text ID or opcode parameter
 - Values $4000-$7FFF (odd-aligned) = branch target addresses
 
-Each opcode consumes 0-4 parameter words after it. See PARAM_COUNTS in
-`tools/decompile_script.py` for the exact count per opcode.
+Each opcode consumes 0-3 parameter words after it: `extracted/script_param_counts.json`
+(`tools/script_param_counts.py`, handler-derived; S118: $24 / $61 = 1, read through the
+script bank). The old PARAM_COUNTS table in `tools/decompile_script.py` is wrong for 36
+opcodes (DOC_AUDIT S96).
 
-## The Verified Opcode Reference
+## The Verified Opcode Reference (S118 rewrite)
 
-### Movement (confirmed via Warubou cutscene trace)
+**Every opcode, with the editor's names: BANK04_SCRIPT_ENGINE "Script Command Reference
+— S118 rewrite" and "Script opcodes as measured (S118)"; in code
+`editor2/core/script_ops.py`.** The names this guide used before S118 were partly wrong
+(DOC_AUDIT S118): `$47-$4A` are FACE up/down/left/right (not buffer write / hide /
+show), `$22` is "walk fast" (not a required "begin walk"), `$0A/$0B` are walks the
+script waits for (not instant moves), `$4C` waits for the D-pad.
+
+### Movement (actor 0 = the player, n ≥ 1 = the n-th NPC of the screen)
 ```
-$1A  npc_walk_x  npc, delta    Animated horizontal walk (delta in pixels, signed 16-bit)
-$1B  npc_walk_y  npc, delta    Animated vertical walk
-$0A  npc_move_x  npc, delta    Instant horizontal position change
-$0B  npc_move_y  npc, delta    Instant vertical position change
-$22  begin_walk                 Start walk-toward sequence (required before $1A/$1B)
-$19  wait_movement              Pause script until all pending movement completes
-$1D  lock_movement              Suppress NPC facing updates during movement
-$1E  unlock_movement            Restore NPC facing updates
+$1A  npc_walk_x  actor, px     Queue a left/right walk (actors walk together)
+$1B  npc_walk_y  actor, px     Queue an up/down walk
+$19  wait_movement             Wait until every queued walk / program has finished
+$22  walk_fast                 The next queued walks run at double speed
+$0A  walk_x_wait actor, px     One actor walks; the SCRIPT WAITS for it
+$0B  walk_y_wait actor, px
+$10  walk_to_x   actor, x      One actor walks to an absolute pixel X (script waits)
+$11  walk_to_y   actor, y
+$1C  trigger_anim $PPNN        Movement program PP on actor NN: $01 hop, $04 jump,
+                               $09 spin jump, $08 appear (flicker in), $0D vanish,
+                               $15/$16 fly in, $17/$18 fly off, $02/$0F leap up,
+                               $10-$12 drop … (the measured table: BANK04 S118)
+$1D  lock_movement             Walks no longer turn the actors (walk backwards)
+$1E  unlock_movement
 ```
+Movement values are signed 16-bit pixels: negative = left / up. 1 tile = 16 px.
+Speed: 1 px on 3 frames of 4 (32 px ≈ 44 frames), double after `$22`.
 
-Movement values are signed 16-bit: negative = left/up, positive = right/down.
-1 tile = 16 pixels. $FFE0 = -32 = 2 tiles left. $0030 = +48 = 3 tiles right.
-
-### NPC Visibility & Animation
+### Facing and visibility
 ```
-$47/$48/$49/$4A  face_up/down/left/right  npc   Set NPC facing (0 = player) — S101
-                 correction: were catalogued as npc_buffer_write / npc_hide / npc_show
-$1C  trigger_anim  $XXYY        Play animation: XX=type (01=jump, 02=dresser-jump,
-                                $04 hop, $16 fly-in: $D8E3*8 frames +2 px right, curve $D8E4), YY=npc
-$0D  npc_write   npc, field, val Write byte to NPC RAM buffer
+$47/$48/$49/$4A  face_up/down/left/right  actor
+$0C  face        actor, dir      0 down, 1 left, 2 up, 3 right
+$0D  npc_write   actor, field, value
+                 field 0 = the type byte: $00 shown, $40 hidden (bit 6)
+                 actor 0: field = an ADDRESS — $FF90 = the player ($40 hides him)
 ```
-
-NPC numbers are 0-based within the current room's NPC list.
-Field $0000 with value $00 = visible, $40 = hidden (in npc_write) — the way to show / hide an NPC.
-
-**Note:** These opcodes control NPC visibility at runtime (during the
-current room visit). They reset on room re-entry because NPCs reload
-from the current step entry. For persistent NPC changes across room
-loads, use the **step system** — multiple step entries per screen with
-different NPC lists, advanced via opcode $12 (WriteRAM to step counter).
-See ROOM_DATA_FORMAT.md "Room State System" for details.
+The vanilla way to make someone appear: place the NPC HIDDEN in the room's step list
+(type bit 6), then `npc_write n,0,0` (or program $08 for a flicker-in). These run-time
+changes reset when the room reloads (the step entry's own bytes come back); for a
+lasting change use the step system / flag state rules (ROOM_DATA_FORMAT "Room State
+System").
 
 ### Timing
 ```
-$09  delay       frames         Wait N frames (low byte of param)
-$4C  long_delay  frames         Extended delay via secondary timer
-$19  wait_movement              Wait until movement completes (0 params)
+$09  delay       ticks          Wait; one tick = 8 frames in the field
+$4D  long_delay  frames         Wait; counts every frame
+$19  wait_movement
+$4C  wait_dpad                  Wait for a D-pad press
 ```
 
-### Flow Control
+### Flow control, game state, text, screen / map
 ```
-$00  if_flag_clear flag, target  Branch to target if event flag NOT set
-$01  if_flag_set  flag, target   Branch to target if event flag IS set
-$0E  branch_by_screen scr, target Branch if current screen matches
-$14  goto         target         Unconditional jump
-$08  nop                         No operation
-     end ($FFFF)                 End script, return player control
-```
-
-### Game State
-```
-$03  set_flag     flag           Set event flag in $D99B+ bitfield
-$02  clear_flag   flag           Clear event flag
-$12  write_ram    addr, value    Write value to any RAM address (335 uses!)
-$07  init_dialog  param          Set up dialogue mode
-$06  inc_counter                 Advance script dialogue counter
+$00  if_flag_clear flag, target  $01 if_flag_set flag, target
+$0E  branch_screen scr, target   $15 check_and_branch addr, value, target ([addr] == value)
+$14  goto target                 $FFFF end (the player gets control back)
+$03  set_flag  $02 clear_flag    $12 write_ram addr, byte   $13 write_ram2 addr, word
+$07  init_dialog (before text in a script that did not start by talking)
+     text $XXXX (any word with high byte != $FF)    $06 close_text
+$3C / $3D  the next text box at the bottom / top
+$0F  map_transition map, x, y    $3B warp_fade map, x, y (the wavy boss-exit fade)
+$41  set_bgm song   $4B restore_bgm   $21 sound effect
+$24 / $61  draw a tile patch (1 param: an address in the script bank)
 ```
 
-### Text Display
-```
-     say $XXXX                   Display text (any word with high byte ≠ $FF)
-```
-Text IDs route through ROM0 $0AD9 → handler banks $42-$4E → data banks.
-See `extracted/text_id_map.json` for 2,067 decoded text strings.
-
-### Screen/Map
-```
-$0F  map_transition  map, gate, param  Trigger room transition
-$41  set_bgm         bgm_id, param     Save current BGM to $C8B6, play new
-$4B  restore_bgm                       Restore BGM saved by set_bgm
-$40  check_monster_bgm  param          Monster check + BGM (complex, rarely needed)
-$24  update_screen_vram                Call screen rendering update
-$21  screen_setup    param1, param2    Visual effect setup
-```
-
-## Cutscene Construction Pattern
-
-Every cutscene in the game follows this pattern:
+## Cutscene Construction Pattern (as the game does it)
 
 ```
-; --- SCRIPT START (player control taken automatically) ---
-
-; 1. Setup NPCs
-npc_write npc#1, field[$0000] = $00    ; make NPC visible
-npc_show npc#1                          ; show sprite
-
-; 2. Movement sequence
-begin_walk                              ; REQUIRED before walk commands
-npc_walk_x npc#0, -32                   ; Terry walks left 2 tiles
-npc_walk_x npc#1, +16                   ; NPC walks right 1 tile
-wait_movement                           ; wait until both finish
-
-; 3. Dialogue
-say $XXXX                               ; display text box
-                                        ; (script pauses until player dismisses)
-
-; 4. More movement + effects
-trigger_anim npc#0, jump                ; Terry jumps ($0100)
+; the room's entry script (script 0) or an NPC's talk script
+npc_write 1, 0, $00        ; reveal NPC 1 (placed hidden in the step list)
+face_left 0                ; Terry faces left
+walk_fast                  ; (optional) the next batch at double speed
+npc_walk_x 0, -32          ; Terry and NPC 1 walk left 2 tiles together
+npc_walk_x 1, -32
 wait_movement
-delay 8 frames
-
-; 5. Cleanup
-npc_hide npc#1                          ; hide NPC
-set_flag $XXXX                          ; mark event as completed
-
-end                                     ; player regains control
+init_dialog                ; only in a script that did not start by talking
+text $XXXX                 ; a text box (the script waits for A)
+close_text
+trigger_anim $0401         ; NPC 1 jumps (program $04)
+wait_movement
+delay 8
+npc_write 1, 0, $40        ; hide NPC 1
+set_flag $XXXX             ; mark the event done (the entry script tests it first)
+end                        ; the player gets control back
 ```
+
+## The editor: the Cutscenes tab (S118, ROADMAP P3.8 part A)
+
+Every scene of the game and of the project is listed, readable and PLAYABLE in the
+editor (EDITOR_DESIGN §5.1d): the storyboard shows each step as a sentence, the
+picture of every step is recorded from the real game, and ▶ Play runs the scene in the
+game (PyBoy) set up automatically — the recipe is in BANK04_SCRIPT_ENGINE "Playing a
+scene". The intro is a chain of three scenes: bedtime ($2F script 0 step 7), the east
+room ($2F script 0 step 727, Warubou / Watabou) and the dresser ($2F script 10), which
+runs through the tree tunnel ($08), the Starry Shrine ($09), the old man's walk up
+GreatTree ($01 script 0, legs keyed on `$D951 = $FF` and the screen) and the Castle
+minister ($00) without stopping. Writing new cutscenes in the editor = part B.
 
 ## How to Add a Custom Cutscene
 
@@ -180,7 +168,7 @@ $38B38: 02 → 01    ; exit delay (2→1 frames)
 
 - ScriptInit sets `$D8D7` bit 0 → player input suppressed
 - Script `end` ($FFFF) clears `$D8D7` → player regains control
-- During script: `lock_movement`/`unlock_movement` controls NPC facing
+- During script: `lock_movement`/`unlock_movement` stop / restore walks turning the actors
 - `init_dialog` ($07) sets additional dialogue mode flags
 - No explicit "freeze player" opcode needed — it's automatic
 

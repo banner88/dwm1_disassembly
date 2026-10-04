@@ -195,7 +195,11 @@ now derived from `dialogue.json` (`tools/dump_text_id_map.py`).
 **Control-code parameters (bank $56 handler table $44CD, read S108 for the decoder):**
 `$E8` takes 2 bytes (sets the draw position — not "PAUSE"), `$E9` 1 byte (plays a
 sound effect — not "NUM"; 7 uses in the ids, all `$E9 $60`), `$F9` 1 byte (insert:
-`$00` / `$10` / `$20` / `$30` — the inserted names of the join / upgrade messages),
+`$00` / `$10` / `$20` / `$30` — the inserted names of the join / upgrade messages; S118:
+the name is read from **`$C180 + nn`** (16-byte slots, `$F0`-terminated; bank $56
+`jr_056_4806`; in game mode `$0B` from `$0D8A` "MSGBUF" instead) — filled by the
+caller's code right before the text: a slot left unfilled prints on through RAM and
+crashes the game, KEY_LESSONS S118),
 `$F3` none (a box opener like `$EA` / `$EB`, 20 uses before the speaker). The Control
 Codes table above carries these corrections.
 Battle messages (bank $4C) use their own codes (`$ED`, `$FC xx`, `$EC`, `$F2` — not

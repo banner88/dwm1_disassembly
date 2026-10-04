@@ -58,7 +58,7 @@ It takes 0 params (reads wArenaGroup/wColiseumBattle from WRAM).
 
 ### Handler Code Logic
 ```
-label4_6064:
+ScriptCmd2C_IfBagFull:
     ; Advance script counter (read 1 param)
     inc [wScriptCounter]
     
@@ -118,7 +118,7 @@ Each NPC follows: check RAM state → show dialogue → `check_inv_full` → giv
 
 ### Handler Code Logic
 ```
-label4_6093:
+ScriptCmd2D_MonsterSlotDialogue:
     ; Read param (slot index)
     inc [wScriptCounter]
     call MapTypeDispatch → C = param value

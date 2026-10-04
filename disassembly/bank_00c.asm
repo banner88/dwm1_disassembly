@@ -18,8 +18,8 @@ SECTION "ROM Bank $00c", ROMX[$4000], BANK[$c]
 
     ;code jump table
     dw ScriptDataLookup      ; Entry 0: Triple-index script data read
-    dw labelc_402f           ; Entry 1: VRAM tile update (screen rendering)
-    dw labelc_4110           ; Entry 2: (unknown)
+    dw ScriptBank0CDrawTiles           ; Entry 1: script op $24 draw_tiles (S118)
+    dw ScriptBank0CDrawAttrs           ; Entry 2: script op $61 draw_attrs (S118)
 
 ; ---------------------------------------------------------------------------
 ; Entry 0: ScriptDataLookup — Triple-index script data reader
@@ -77,7 +77,15 @@ LoadBc_4007:
     dec hl                   ; HL points back to current entry (for ScriptBranch)
     ret
 
-labelc_402f:
+; S118: script op $24 draw_tiles (bank $04 ScriptCmd24_DrawTiles far-calls
+; entry 1 of the map's script bank). It READS ONE MORE SCRIPT WORD itself
+; (counter + 1, then the entry-0 lookup): an address in THIS bank of a tile
+; patch — [dest offset word, tile bytes …, $D8 = next row, $D9 = end] — drawn
+; onto the visible BG map ($FFB7/$FFBB scroll, $D8E7/$D8E8 cursor) and staged
+; at $C300+. So op $24 takes 1 parameter (the S96 tracer stops at rst $10).
+; Custom rooms (bank $60): $24 goes to bank $0F entry 1, whose lookup reads bank
+; $0F's own tables, not bank $60 (read from the code; not measured S118).
+ScriptBank0CDrawTiles:
     ld hl, $ffb7	;jump table address 2
     ld a, [hl]
     and $f8
@@ -251,7 +259,10 @@ jr_00c_410e:
     pop hl
     ret
 
-labelc_4110:
+; S118: script op $61 draw_attrs (ScriptCmd61_DrawAttrs, entry 2): like entry 1
+; it reads ONE more script word (a patch address in this bank) and writes the
+; patch to VRAM bank 1 (the BG attributes) on GBC.
+ScriptBank0CDrawAttrs:
     ld hl, $ffb7		;jump table address 3
     ld a, [hl]
     and $f8

@@ -274,7 +274,23 @@ layout stability. `wRoomRecScratch` stays pinned at `$DE7B` by a static
 relocated `wCustomNPCBuffer`/`wCustomExitBuffer` (`$CC80`/`$CD00`) and the
 `wCustomPool` reserve (S65 `$D001-$D664`; now `$D0C5-$D5E4` after the FX1 and
 S97 r2 carves — see `patches/wram.asm`) are hand-declared in
-`patches/wram.asm`, not compiler-emitted. The example project's auto
+`patches/wram.asm`, not compiler-emitted.
+
+**S118c — a copy that follows the game's room state:** `screens[k].step_counter =
+{"label": "wCustomStep_<id>_S<k>", "vanilla": "0xD92D"}` makes the screen's state the
+ORIGINAL room's own counter (`$D92A-$D99A`, validated): the region emits `<label> EQU
+$D92D` and allocates nothing, so the game's story scripts (the Castle's `$D92D := 2` with
+flag `$0009`) change the copy's NPCs / layout exactly as the original's, and the save keeps
+it (the vanilla counters are in the saved image). "Make editable" writes this form for
+every screen (`Document.clone_vanilla`); projects with copies made earlier are
+migrated on open (`_migrate_clone_state`: a room whose every screen carries the copy
+label, no `state_rules`); the Rooms tab's *Follow the game's room state* toggles it
+(`set_follow_game`). A room with `state_rules` keeps its own counter (the rules write it —
+a warning names it). Why (user S118b): the copied GreatTree stayed in state 0 forever and
+moved the old man where the game moves the man by the cliff. PyBoy on the user's project:
+copy `$6D` screen 0 with `$D92D` = 2 loads only the cliff man (the original's state 2);
+with 0, the old man + the cliff man; the old own-counter build shows the state-0 list
+for both. The example project's auto
 allocation reproduces the proven relative layout at the new base (legacy
 hole `0xCD84`, was `0xDE78`/`0xD47C`).
 
@@ -617,7 +633,7 @@ loop proves non-regression rather than exercising the new no-op path.
 ## 8. Known tool defect: `compile_script.py` `set_bgm` param count  (S53 finding #3)
 
 `tools/compile_script.py` declares `set_bgm` (opcode `$41`) with **2**
-params. The handler (`$04:$669D`, `label4_669d`) advances the script
+params. The handler (`$04:$669D`, `ScriptCmd41_SetBGM`) advances the script
 counter once and consumes **one** word (`ld a, c / call SetBGM`) — and the
 user-confirmed hand-authored script uses one param. The compiler's own
 table uses 1. `compile_script.py` is NOT fixed this session (out of scope;

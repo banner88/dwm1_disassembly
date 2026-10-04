@@ -3305,6 +3305,48 @@ def test_sprite_budget_s117b():
        str([x for x in warns if 'sprite pieces' in x][:2]))
 
 
+def test_clone_follows_game_s118c():
+    """S118c (user S118b: the copied GreatTree showed the old man where the game
+    shows the man by the cliff — "obviously" fix it): a screen whose
+    step_counter names `vanilla` uses the ORIGINAL room's counter (an EQU, no
+    byte in the region); a bad address is refused; state rules keep their own
+    counter; the editor migrates rooms cloned before S118c."""
+    d = base()
+    r = next(x for x in d['custom']['rooms'] if x['id'] == 'gate_island')
+    r['screens']['0']['step_counter'] = {'label': 'wCustomStep_t118_S0', 'vanilla': '0xD92D'}
+    out, prj, _w = compile_data(d)
+    txt = '\n'.join(v for v in out.values() if isinstance(v, str))
+    ok("S118c clone state: the label is an EQU of the game's counter",
+       'wCustomStep_t118_S0 EQU $D92D' in txt)
+    ok("S118c clone state: nothing allocated for it in the $CD80 region",
+       all(lbl != 'wCustomStep_t118_S0' for lbl, _a, _c in prj.step_counter_allocation()))
+    d2 = base()
+    r2 = next(x for x in d2['custom']['rooms'] if x['id'] == 'gate_island')
+    r2['screens']['0']['step_counter'] = {'label': 'wCustomStep_t118_S0', 'vanilla': '0xC000'}
+    expect_error("S118c clone state: a non-counter address is refused", d2,
+                 "is not one of the game's room-state counters")
+    import shutil
+    import tempfile
+    from editor2.core.document import Document
+    tmp = tempfile.mkdtemp()
+    d3 = base()
+    r3 = next(x for x in d3['custom']['rooms'] if x['id'] == 'gate_island')
+    r3['source_mapID'] = '0x01'
+    for k, scr in r3['screens'].items():
+        scr['step_counter'] = {'label': f'wCustomStep_gate_island_S{k}'}
+    json.dump(d3, open(os.path.join(tmp, 'project.json'), 'w'))
+    src_assets = os.path.join(os.path.dirname(EXAMPLE), 'assets')
+    if os.path.isdir(src_assets):
+        shutil.copytree(src_assets, os.path.join(tmp, 'assets'), dirs_exist_ok=True)
+    doc = Document(tmp)
+    r4 = next(x for x in doc.custom['rooms'] if x['id'] == 'gate_island')
+    ok("S118c clone state: a pre-S118c clone is migrated on open (GreatTree screens 0 / 4)",
+       r4['screens']['0']['step_counter'].get('vanilla') == '0xD92D' and
+       r4['screens']['4']['step_counter'].get('vanilla') == '0xD92F' and
+       any('follow the game' in n for n in doc.migrations), str(doc.migrations))
+    shutil.rmtree(tmp, ignore_errors=True)
+
+
 def test_screen_push_rom(tag, rom, sym, origb):
     """S117b: bank $09's screen push (LoadFld9_40fa) is a same-size far call to
     bank $77 ScreenPush — the same BG tile writes in the same order as the
@@ -4473,6 +4515,7 @@ def main():
     out117 = test_flags_ng2_s117()
     outshop = test_shops_s117()
     test_sprite_budget_s117b()
+    test_clone_follows_game_s118c()
 
     if '--rom' in sys.argv:
         from editor2.core import builder as B

@@ -147,6 +147,13 @@ class MainWindow(QMainWindow):
         self.statusBar().addPermanentWidget(self.rom_status)
 
     def _fill_tabs(self):
+        old = getattr(self, 'cutscenes_tab', None)
+        if old is not None:                      # S118: stop its recorder / playback
+            try:
+                old.shutdown()
+            except RuntimeError:
+                pass
+            self.cutscenes_tab = None
         self.tabs.clear()
         if self.session:
             self.rooms_tab = RoomsTab(self.session)
@@ -156,6 +163,11 @@ class MainWindow(QMainWindow):
             from editor2.app.import_tab import ImportTab
             self.import_tab = ImportTab(self.session)
             self.tabs.addTab(self.import_tab, 'Import art')
+            # S118 (P3.8 part A): every scene of the game and the project —
+            # storyboard, recorded frames, Playback in the real game
+            from editor2.app.cutscenes_tab import CutscenesTab
+            self.cutscenes_tab = CutscenesTab(self.session)
+            self.tabs.addTab(self.cutscenes_tab, 'Cutscenes')
         else:
             self.rooms_tab = None
             self.tabs.addTab(_stub('Rooms', 'P3.3', 'Open a project (File → Open) to edit rooms.'),
@@ -340,6 +352,16 @@ class MainWindow(QMainWindow):
         m_view = self.menuBar().addMenu('&View')
         m_view.addAction(self.log_dock.toggleViewAction())
         m_view.addAction(self.undo_dock.toggleViewAction())
+        m_view.addSeparator()
+        # S118e (user: "mute preview pyboy player GLOBALLY in the menu … Overrides
+        # all others. Can be toggled.")
+        self.a_mute = QAction('Mute game playback (every Playback window)', self)
+        self.a_mute.setCheckable(True)
+        self.a_mute.setShortcut(QKeySequence('Ctrl+Shift+M'))
+        self.a_mute.setChecked(self.settings.value('playback/mute', False) in
+                               (True, 'true', '1', 1))
+        self.a_mute.toggled.connect(self._mute_toggled)
+        m_view.addAction(self.a_mute)
 
         m_help = self.menuBar().addMenu('&Help')
         a_help = QAction('Editor &help', self)
@@ -577,8 +599,23 @@ class MainWindow(QMainWindow):
             return self.save()
         return r == QMessageBox.Discard
 
+    def _mute_toggled(self, on):
+        self.settings.setValue('playback/mute', bool(on))
+        self.settings.sync()
+        ct = getattr(self, 'cutscenes_tab', None)
+        if ct is not None:
+            ct.apply_mute()
+        self.statusBar().showMessage('Game playback muted' if on else 'Game playback sound on',
+                                     3000)
+
     def closeEvent(self, ev):
         if self._confirm_discard():
+            ct = getattr(self, 'cutscenes_tab', None)
+            if ct is not None:
+                try:
+                    ct.shutdown()
+                except RuntimeError:
+                    pass
             ev.accept()
         else:
             ev.ignore()

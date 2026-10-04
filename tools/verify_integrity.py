@@ -56,6 +56,7 @@ SELFTEST_TOOLS = [
     "decode_battle_animations.py",  # S112: battle_animations.json (schema 2: 45 animations, per-skill tables) == ROM
     "dump_encounters.py",        # S114: encounters.json (gate floor -> list by the game's rule, 5 slots, chance / max count) == ROM
     "dump_sound_catalog.py",     # S116: sound_catalog.json anchors (RoomBGMTable, the SetBGM code sites, the bank $55 sound test) == ROM
+    "census_cutscenes.py",       # S118: cutscene_census.json scene list == the cutscene catalogue decoded from the ROM (+ totals)
 ]
 
 PATCH_FILES = [

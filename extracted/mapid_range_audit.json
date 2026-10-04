@@ -4,7 +4,7 @@
   {
    "tree": "clean",
    "file": "bank_000.asm",
-   "line": 6117,
+   "line": 6129,
    "label": "UseGateWorldTable",
    "occ": 0,
    "pattern": [],
@@ -13,7 +13,7 @@
   {
    "tree": "clean",
    "file": "bank_000.asm",
-   "line": 7788,
+   "line": 7800,
    "label": "CheckGateWorldMapType",
    "occ": 0,
    "pattern": [
@@ -24,7 +24,7 @@
   {
    "tree": "clean",
    "file": "bank_000.asm",
-   "line": 7795,
+   "line": 7807,
    "label": "CheckGateWorldMapType",
    "occ": 1,
    "pattern": [
@@ -205,8 +205,8 @@
   {
    "tree": "clean",
    "file": "bank_004.asm",
-   "line": 3364,
-   "label": "label4_5bdb",
+   "line": 3421,
+   "label": "ScriptCmd17_BedroomTileSwap",
    "occ": 0,
    "pattern": [
     "cp"
@@ -216,8 +216,8 @@
   {
    "tree": "clean",
    "file": "bank_004.asm",
-   "line": 5054,
-   "label": "label4_66bd",
+   "line": 5111,
+   "label": "ScriptCmd42_SaveReturnPoint",
    "occ": 0,
    "pattern": [],
    "verdict": "COPY"
@@ -225,8 +225,8 @@
   {
    "tree": "clean",
    "file": "bank_004.asm",
-   "line": 5335,
-   "label": "label4_68d7",
+   "line": 5392,
+   "label": "ScriptCmd4E_SavePosition",
    "occ": 0,
    "pattern": [],
    "verdict": "COPY"
@@ -323,24 +323,24 @@
   {
    "tree": "clean",
    "file": "bank_009.asm",
-   "line": 1386,
-   "label": "jr_009_46de",
+   "line": 1393,
+   "label": "ShopBuyStockFill",
    "occ": 0,
    "pattern": [
     "cp"
    ],
-   "verdict": "CP_UNSIGNED"
+   "verdict": "NEEDS_REVIEW"
   },
   {
    "tree": "clean",
    "file": "bank_009.asm",
-   "line": 2156,
-   "label": "SetFld9_4bc8",
+   "line": 2160,
+   "label": "ShopSellPrice",
    "occ": 0,
    "pattern": [
     "cp"
    ],
-   "verdict": "CP_UNSIGNED"
+   "verdict": "NEEDS_REVIEW"
   },
   {
    "tree": "clean",
@@ -487,7 +487,7 @@
   {
    "tree": "clean",
    "file": "bank_013.asm",
-   "line": 1029,
+   "line": 1033,
    "label": "label13_7370",
    "occ": 0,
    "pattern": [
@@ -509,7 +509,7 @@
   {
    "tree": "clean",
    "file": "bank_016.asm",
-   "line": 5111,
+   "line": 5115,
    "label": "label16_6f05",
    "occ": 0,
    "pattern": [
@@ -520,7 +520,7 @@
   {
    "tree": "clean",
    "file": "bank_016.asm",
-   "line": 5126,
+   "line": 5130,
    "label": "jr_016_6f39",
    "occ": 0,
    "pattern": [
@@ -587,7 +587,7 @@
   {
    "tree": "clean",
    "file": "bank_051.asm",
-   "line": 66,
+   "line": 71,
    "label": "jr_051_4073",
    "occ": 0,
    "pattern": [
@@ -622,7 +622,7 @@
   {
    "tree": "patched",
    "file": "bank_000.asm",
-   "line": 7892,
+   "line": 7905,
    "label": "CheckGateWorldMapType",
    "occ": 0,
    "pattern": [
@@ -633,7 +633,7 @@
   {
    "tree": "patched",
    "file": "bank_000.asm",
-   "line": 7899,
+   "line": 7912,
    "label": "CheckGateWorldMapType",
    "occ": 1,
    "pattern": [
@@ -644,7 +644,7 @@
   {
    "tree": "patched",
    "file": "bank_000.asm",
-   "line": 13039,
+   "line": 13082,
    "label": "MapIDClampForPalette",
    "occ": 0,
    "pattern": [
@@ -798,8 +798,8 @@
   {
    "tree": "patched",
    "file": "bank_004.asm",
-   "line": 3358,
-   "label": "label4_5bdb",
+   "line": 3415,
+   "label": "ScriptCmd17_BedroomTileSwap",
    "occ": 0,
    "pattern": [
     "cp"
@@ -809,8 +809,8 @@
   {
    "tree": "patched",
    "file": "bank_004.asm",
-   "line": 5054,
-   "label": "label4_66bd",
+   "line": 5111,
+   "label": "ScriptCmd42_SaveReturnPoint",
    "occ": 0,
    "pattern": [],
    "verdict": "COPY"
@@ -818,8 +818,8 @@
   {
    "tree": "patched",
    "file": "bank_004.asm",
-   "line": 5335,
-   "label": "label4_68d7",
+   "line": 5392,
+   "label": "ScriptCmd4E_SavePosition",
    "occ": 0,
    "pattern": [],
    "verdict": "COPY"
@@ -905,24 +905,13 @@
   {
    "tree": "patched",
    "file": "bank_009.asm",
-   "line": 1386,
-   "label": "jr_009_46de",
+   "line": 2204,
+   "label": "ShopSellPrice",
    "occ": 0,
    "pattern": [
     "cp"
    ],
-   "verdict": "CP_UNSIGNED"
-  },
-  {
-   "tree": "patched",
-   "file": "bank_009.asm",
-   "line": 2156,
-   "label": "SetFld9_4bc8",
-   "occ": 0,
-   "pattern": [
-    "cp"
-   ],
-   "verdict": "CP_UNSIGNED"
+   "verdict": "NEEDS_REVIEW"
   },
   {
    "tree": "patched",
@@ -956,18 +945,7 @@
   {
    "tree": "patched",
    "file": "bank_00b.asm",
-   "line": 523,
-   "label": "GetRoomDataPtr",
-   "occ": 0,
-   "pattern": [
-    "cp"
-   ],
-   "verdict": "LOSSY_DIVERTED"
-  },
-  {
-   "tree": "patched",
-   "file": "bank_00b.asm",
-   "line": 1353,
+   "line": 1364,
    "label": "jr_00b_4601",
    "occ": 0,
    "pattern": [
@@ -978,7 +956,7 @@
   {
    "tree": "patched",
    "file": "bank_00b.asm",
-   "line": 1370,
+   "line": 1381,
    "label": "jr_00b_462c",
    "occ": 0,
    "pattern": [],
@@ -987,7 +965,7 @@
   {
    "tree": "patched",
    "file": "bank_00b.asm",
-   "line": 1417,
+   "line": 1428,
    "label": "jr_00b_4674",
    "occ": 0,
    "pattern": [],
@@ -996,7 +974,7 @@
   {
    "tree": "patched",
    "file": "bank_00b.asm",
-   "line": 1418,
+   "line": 1429,
    "label": "jr_00b_4674",
    "occ": 1,
    "pattern": [
@@ -1007,7 +985,7 @@
   {
    "tree": "patched",
    "file": "bank_00b.asm",
-   "line": 2032,
+   "line": 2043,
    "label": "jr_00b_492a",
    "occ": 0,
    "pattern": [
@@ -1018,7 +996,7 @@
   {
    "tree": "patched",
    "file": "bank_00b.asm",
-   "line": 2059,
+   "line": 2070,
    "label": "Jump_00b_4945",
    "occ": 0,
    "pattern": [
@@ -1029,7 +1007,7 @@
   {
    "tree": "patched",
    "file": "bank_00b.asm",
-   "line": 2443,
+   "line": 2454,
    "label": "SharedPtrChase",
    "occ": 0,
    "pattern": [
@@ -1040,7 +1018,7 @@
   {
    "tree": "patched",
    "file": "bank_00b.asm",
-   "line": 2522,
+   "line": 2533,
    "label": "CustomDescentInGate",
    "occ": 0,
    "pattern": [
@@ -1051,7 +1029,7 @@
   {
    "tree": "patched",
    "file": "bank_013.asm",
-   "line": 813,
+   "line": 817,
    "label": "label13_7370",
    "occ": 0,
    "pattern": [
@@ -1073,7 +1051,7 @@
   {
    "tree": "patched",
    "file": "bank_016.asm",
-   "line": 5239,
+   "line": 5235,
    "label": "label16_6f05",
    "occ": 0,
    "pattern": [
@@ -1084,7 +1062,7 @@
   {
    "tree": "patched",
    "file": "bank_016.asm",
-   "line": 5254,
+   "line": 5250,
    "label": "jr_016_6f39",
    "occ": 0,
    "pattern": [
@@ -1173,7 +1151,7 @@
   {
    "tree": "patched",
    "file": "bank_051.asm",
-   "line": 66,
+   "line": 73,
    "label": "jr_051_4073",
    "occ": 0,
    "pattern": [
@@ -1206,7 +1184,7 @@
   {
    "tree": "patched",
    "file": "bank_060.asm",
-   "line": 36,
+   "line": 37,
    "label": "CustomPtrChase",
    "occ": 0,
    "pattern": [
@@ -1217,7 +1195,7 @@
   {
    "tree": "patched",
    "file": "bank_060.asm",
-   "line": 46,
+   "line": 47,
    "label": "CustomPtrChase",
    "occ": 1,
    "pattern": [
@@ -1229,7 +1207,18 @@
   {
    "tree": "patched",
    "file": "bank_060.asm",
-   "line": 220,
+   "line": 124,
+   "label": "CustomReadInteract",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "NEEDS_REVIEW"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_060.asm",
+   "line": 340,
    "label": "CustomStateRules",
    "occ": 0,
    "pattern": [
@@ -1240,7 +1229,7 @@
   {
    "tree": "patched",
    "file": "bank_060.asm",
-   "line": 319,
+   "line": 439,
    "label": "CustomMonsterCast",
    "occ": 0,
    "pattern": [
@@ -1251,7 +1240,7 @@
   {
    "tree": "patched",
    "file": "bank_060.asm",
-   "line": 387,
+   "line": 507,
    "label": "VanillaExitResolve",
    "occ": 0,
    "pattern": [
@@ -1262,7 +1251,7 @@
   {
    "tree": "patched",
    "file": "bank_060.asm",
-   "line": 471,
+   "line": 591,
    "label": "GateAwareDispatch",
    "occ": 0,
    "pattern": [
@@ -1293,7 +1282,7 @@
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 93,
+   "line": 116,
    "label": "CopyCustomRoomRecord",
    "occ": 0,
    "pattern": [
@@ -1304,7 +1293,7 @@
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 100,
+   "line": 123,
    "label": "CopyCustomRoomRecord",
    "occ": 1,
    "pattern": [
@@ -1315,7 +1304,7 @@
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 110,
+   "line": 133,
    "label": "CopyCustomRoomRecord",
    "occ": 2,
    "pattern": [
@@ -1326,7 +1315,7 @@
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 142,
+   "line": 165,
    "label": "CustomEncResolve",
    "occ": 0,
    "pattern": [
@@ -1338,7 +1327,7 @@
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 184,
+   "line": 217,
    "label": "CustomRoomBGMResolve",
    "occ": 0,
    "pattern": [
@@ -1349,7 +1338,7 @@
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 191,
+   "line": 226,
    "label": "CustomRoomBGMResolve",
    "occ": 1,
    "pattern": [
@@ -1360,7 +1349,7 @@
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 231,
+   "line": 297,
    "label": "CustomAnimSource",
    "occ": 0,
    "pattern": [
@@ -1372,13 +1361,58 @@
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 388,
+   "line": 454,
    "label": "CustomRoomFlags",
    "occ": 0,
    "pattern": [
     "sub"
    ],
    "verdict": "BOUNDED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_071.asm",
+   "line": 497,
+   "label": "BattleBGMResolve",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "NEEDS_REVIEW"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_071.asm",
+   "line": 529,
+   "label": "BattleBGMResolve",
+   "occ": 1,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "NEEDS_REVIEW"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_071.asm",
+   "line": 546,
+   "label": "BattleBGMResolve",
+   "occ": 2,
+   "pattern": [
+    "cp",
+    "sub"
+   ],
+   "verdict": "NEEDS_REVIEW"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_071.asm",
+   "line": 560,
+   "label": "BattleBGMResolve",
+   "occ": 3,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "NEEDS_REVIEW"
   },
   {
    "tree": "patched",
@@ -1394,7 +1428,7 @@
   {
    "tree": "patched",
    "file": "bank_073.asm",
-   "line": 1643,
+   "line": 1646,
    "label": "MenuOpenFreePal",
    "occ": 0,
    "pattern": [
@@ -1405,7 +1439,7 @@
   {
    "tree": "patched",
    "file": "bank_073.asm",
-   "line": 1699,
+   "line": 1702,
    "label": "BoxAttrActive",
    "occ": 0,
    "pattern": [
@@ -1416,7 +1450,7 @@
   {
    "tree": "patched",
    "file": "bank_073.asm",
-   "line": 2171,
+   "line": 2174,
    "label": "GateLeaveFreePal",
    "occ": 0,
    "pattern": [
@@ -1427,7 +1461,7 @@
   {
    "tree": "patched",
    "file": "bank_076.asm",
-   "line": 61,
+   "line": 89,
    "label": "EncResolve",
    "occ": 0,
    "pattern": [
@@ -1435,6 +1469,39 @@
     "sub"
    ],
    "verdict": "BOUNDED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_076.asm",
+   "line": 329,
+   "label": "GateBossWin",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "NEEDS_REVIEW"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_077.asm",
+   "line": 63,
+   "label": "ShopFill",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "NEEDS_REVIEW"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_077.asm",
+   "line": 284,
+   "label": "PushAttrActive",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "NEEDS_REVIEW"
   }
  ],
  "ceilings": {

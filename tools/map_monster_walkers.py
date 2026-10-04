@@ -91,12 +91,12 @@ CAC0_WRITERS = {
         "class": "single-slot",
         "role": "link/debug viewer slot-- (BCD/daa, floor $00)"},
     # --- bank $04: script engine ----------------------------------------------
-    ("bank_004.asm", "label4_64c2", 0): {
+    ("bank_004.asm", "ScriptCmd3A_ToBreedingScene", 0): {
         "class": "farm-write",
         "role": "script opcode: $CAC0 := [$CA40] (slot chosen by bank $16 "
                 "first-empty scan jr_016_402d) then bank $16 entry 4 — "
                 "offspring/hatch record finalization path"},
-    ("bank_004.asm", "label4_6bdf", 0): {
+    ("bank_004.asm", "ScriptCmd59_TrainSlot", 0): {
         "class": "party-only",
         "role": "script opcode: $CAC0 := party list [$CA8E+c] (also cached "
                 "to $D8E1), reads MP (+$52 via $CB13) — party-member MP "
@@ -216,7 +216,7 @@ CAC0_WRITERS = {
     ("bank_016.asm", "jr_016_402d", 0): {
         "class": "farm-write",
         "role": "breeding offspring insert: first-empty scan result c -> "
-                "$CAC0 AND $CA40 (persisted for label4_64c2), zero-fill "
+                "$CAC0 AND $CA40 (persisted for ScriptCmd3A_ToBreedingScene), zero-fill "
                 "record via LoadBrd_41b1"},
     # --- bank $18: link trade ------------------------------------------------------
     ("bank_018.asm", "jr_018_4abd", 0): {
@@ -279,12 +279,12 @@ REGISTER_WALKERS = {
                 "label, not the wild-encounter roll)"},
     ("bank_004.asm", "CheckEnemyData"): {
         "class": "farm-write",
-        "role": "script opcode $29 give (label4_5c14): first-empty scan -> "
+        "role": "script opcode $18 give (ScriptCmd18_GiveMonster): first-empty scan -> "
                 "$DA14 -> $1402 build; if $CA8D<3 ALSO appends slot to party "
                 "list + $CA8D++ (given monster joins party when room)"},
     ("bank_004.asm", "CheckInventorySlot"): {
         "class": "all-slot",
-        "role": "script opcode storage-full check (label4_5f67): count "
+        "role": "script opcode storage-full check (ScriptCmd28_IfStorageFull): count "
                 "occupied, branch if 20"},
     ("bank_004.asm", "CheckItemData"): {
         "class": "farm-write",
@@ -439,9 +439,9 @@ REGISTER_WALKERS = {
 # Paths that CREATE, DELETE, or MOVE records (roster mutations) — the
 # farm-write summary table for Cold Farm CF3 redirect planning.
 MUTATION_PATHS = [
-    {"path": "script give $29", "where": "$04 label4_5c14",
+    {"path": "script give $18", "where": "$04 ScriptCmd18_GiveMonster",
      "action": "create @ first-empty ($DA14); party-list append if $CA8D<3"},
-    {"path": "script give $28", "where": "$04 label4_5f9a/CheckItemData",
+    {"path": "script give $29", "where": "$04 ScriptCmd29_AddMonster/CheckItemData",
      "action": "create @ first-empty; storage only"},
     {"path": "egg receive", "where": "$12 jr_012_6c0a",
      "action": "create @ first-empty; +$63:=1 (egg)"},

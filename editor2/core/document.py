@@ -165,6 +165,8 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         self._migrate_door_arrivals(notes)
         # S99: room tile animation source
         self._migrate_animation(notes)
+        # S118c: cloned rooms follow the game's room state
+        self._migrate_clone_state(notes)
         if notes:
             self.dirty = True
         return notes
@@ -672,8 +674,13 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
                 scr = room['screens'][k]
                 steps = renderer.vanilla_steps(source_mid, int(k))
                 label = f"wCustomStep_{rid}_S{k}".replace('-', '_')
-                scr['step_counter'] = {'label': label}
-                counters[renderer.vanilla_counter(source_mid, int(k))] = label
+                vctr = renderer.vanilla_counter(source_mid, int(k))
+                # S118c: the clone FOLLOWS THE GAME — its screen's state is the
+                # original room's counter, which the story scripts write and the
+                # game saves (user S118b: the copied GreatTree must show the man
+                # by the cliff, not the old man, when the Castle has set it)
+                scr['step_counter'] = {'label': label, 'vanilla': f'0x{vctr:04X}'}
+                counters[vctr] = label
                 # S96: a screen whose step-0 palette is not the room's (e.g.
                 # Labyrinth $42 screen 1) gets its own screens[k].palette — the
                 # all-rooms clone parity sweep caught it
@@ -1276,6 +1283,51 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         r['animation'] = value
         self.touch()
         return old
+
+    def _migrate_clone_state(self, notes):
+        """S118c: a room cloned before S118c ("Make editable") had its own
+        transient state counters, so the game's story scripts (the Castle
+        setting GreatTree's state …) never reached it — the copied GreatTree
+        showed the old man where the game shows the man by the cliff. A clone
+        is recognised by the counter labels the clone step gave it
+        (wCustomStep_<id>_S<k> on every screen); without state rules it now
+        follows the original room's counters (same bytes the game uses)."""
+        from .vanilla import VanillaTable
+        vt = None
+        for r in self.custom.get('rooms', []):
+            if r.get('placeholder') or r.get('state_rules'):
+                continue
+            try:
+                src = val(r.get('source_mapID'))
+            except Exception:                            # noqa: BLE001
+                continue
+            if src is None or not 0 <= src < 0x6B:
+                continue
+            rid = str(r.get('id', ''))
+            screens = r.get('screens') or {}
+            want = {k: f"wCustomStep_{rid}_S{k}".replace('-', '_') for k in screens}
+            if not screens or not all(
+                    isinstance(scr.get('step_counter'), dict)
+                    and scr['step_counter'].get('label') == want[k]
+                    for k, scr in screens.items()):
+                continue
+            if any('vanilla' in scr['step_counter'] for scr in screens.values()):
+                continue
+            if vt is None:
+                vt = VanillaTable(os.path.dirname(os.path.dirname(os.path.dirname(
+                    os.path.abspath(__file__)))))
+            done = 0
+            for k, scr in screens.items():
+                try:
+                    a = vt.counter(src, int(k))
+                except (KeyError, ValueError):
+                    continue
+                scr['step_counter']['vanilla'] = f'0x{a:04X}'
+                done += 1
+            if done:
+                notes.append(f"room {rid} (a copy of room ${src:02X}): its room states now "
+                             "follow the game's own (the story's changes reach the copy) — "
+                             f"{done} screen(s)")
 
     def _migrate_animation(self, notes):
         """S99: rooms saved before `animation` existed ran Castle's handler
@@ -2313,6 +2365,58 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
     # ================================================= state rules (P3.5a)
     def state_rules(self, room):
         return room.get('state_rules') or []
+
+    # ------------------------------------------- S118c: follow the game's state
+    def follow_game_counters(self, room):
+        """{screen key: vanilla counter} a copy of a vanilla room can follow
+        (its screens that exist in the original)."""
+        from .vanilla import VanillaTable
+        try:
+            src = val(room.get('source_mapID'))
+        except Exception:                                # noqa: BLE001
+            return {}
+        if src is None or not 0 <= src < 0x6B:
+            return {}
+        # only a COPY of a game room ("Make editable": every screen carries the
+        # counter label the copy step gave it) — a new room drawn from a game
+        # room's tiles has the same source_mapID but is not that room
+        rid = str(room.get('id', ''))
+        scrs = room.get('screens') or {}
+        if not scrs or not all(
+                isinstance(sc.get('step_counter'), dict) and (
+                    sc['step_counter'].get('vanilla') is not None or
+                    sc['step_counter'].get('label') == f"wCustomStep_{rid}_S{k}".replace('-', '_'))
+                for k, sc in scrs.items()):
+            return {}
+        vt = VanillaTable(os.path.dirname(os.path.dirname(os.path.dirname(
+            os.path.abspath(__file__)))))
+        out = {}
+        for k in (room.get('screens') or {}):
+            try:
+                out[k] = vt.counter(src, int(k))
+            except (KeyError, ValueError):
+                pass
+        return out
+
+    def follows_game(self, room):
+        return any(isinstance(scr.get('step_counter'), dict) and
+                   scr['step_counter'].get('vanilla') is not None
+                   for scr in (room.get('screens') or {}).values())
+
+    def set_follow_game(self, room, on):
+        """A copied room's states follow the original's (the game's story writes
+        them, the save keeps them) or the room's own counters."""
+        ctrs = self.follow_game_counters(room) if on else {}
+        for k, scr in (room.get('screens') or {}).items():
+            sc = scr.get('step_counter')
+            if on and k in ctrs:
+                if not isinstance(sc, dict):
+                    sc = {'label': f"wCustomStep_{room.get('id')}_S{k}".replace('-', '_')}
+                sc['vanilla'] = f'0x{ctrs[k]:04X}'
+                scr['step_counter'] = sc
+            elif not on and isinstance(sc, dict):
+                sc.pop('vanilla', None)
+        self.touch()
 
     def set_state_rules(self, room, rules):
         if rules:

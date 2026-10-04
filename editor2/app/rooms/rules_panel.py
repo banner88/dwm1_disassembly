@@ -235,6 +235,7 @@ def split_otherwise(rules):
 class RulesGroup(QGroupBox):
     """Inspector group: the room's ordered rule list + 'otherwise'."""
     rulesEdited = Signal(list, list)       # new rules, new flag names to create
+    followEdited = Signal(bool)            # S118c: a copy follows the game's room state
     HELP = ('Flag rules pick the room\'s state when a screen loads — and, because flags are '
             'saved, they are how a custom room remembers its version after a reload.')
 
@@ -247,6 +248,14 @@ class RulesGroup(QGroupBox):
         lab.setWordWrap(True)
         lab.setStyleSheet('color: #aaa;')
         v.addWidget(lab)
+        self.follow = QCheckBox("Follow the game's room state (like the original room)")
+        self.follow.setToolTip(
+            "For a copy of a game room: its states change when the game's story changes "
+            "the original's (the Castle setting GreatTree's state …) and are saved with the "
+            "game. Off: the copy keeps its own state (state 0 after a reload, or your "
+            "rules). Rules below override it.")
+        self.follow.toggled.connect(self._follow_toggled)
+        v.addWidget(self.follow)
         self.list = QListWidget()
         self.list.setMaximumHeight(110)
         self.list.itemDoubleClicked.connect(lambda _i: self._edit())
@@ -279,10 +288,19 @@ class RulesGroup(QGroupBox):
         v.addLayout(orow)
         self._building = False
 
+    def _follow_toggled(self, on):
+        if not self._building and self.room is not None:
+            self.followEdited.emit(bool(on))
+
     def show_room(self, doc, room, key, state_idx):
         self.doc, self.room = doc, room
         self._state_view = (key, state_idx)
         self.list.clear()
+        self._building = True
+        can = bool(doc.follow_game_counters(room))
+        self.follow.setVisible(can)
+        self.follow.setChecked(can and doc.follows_game(room))
+        self._building = False
         explicit, other = split_otherwise(doc.state_rules(room))
         self._building = True
         self.otherwise.clear()

@@ -4957,3 +4957,154 @@ re-seats a top box at the bottom (base, tile backup, attribute save). **Rule**: 
 vanilla engine feature becomes placeable anywhere, check the position-dependent branches
 its vanilla placements never reach (here bank $06's top / bottom box choice) — and verify
 the screen AFTER the feature closes, not only while it is open.
+
+## S118 — the Cutscenes tab: playing any scene from a synthetic state
+
+### Never poke the player's HRAM position to satisfy a script condition
+**Symptom**: the census froze on a scene whose path tested the player's X (`$FF92`): the
+set-up wrote the tested value straight into HRAM and the game never reached the room.
+**Root cause**: `$FF92/$FF95/$FF97/$FF98` are the live player position the field engine
+scrolls and collides with; a stray value left it in a state it never leaves. **Fix**:
+`cutscenes._apply_pos` turns a position test into WHERE the player is placed (warp
+arrival / the side he talks from); HRAM is never written. **Rule**: a scene's conditions
+are reproduced through the game's own inputs (warp, walk, talk, flags in WRAM) — never
+by writing HRAM a tool did not decode completely.
+
+### A crashed game freezes PyBoy's tick() — put the emulator in its own process
+**Symptom**: the census hung for good on three of the Starry Shrine's egg scenes
+("Inside it is a baby [INS 20]! …"); py-spy showed it inside `PyBoy.tick()`. **Root
+cause**: text code `$F9 $20` prints the name at `$C180 + $20` (bank $56, `jr_056_4806`),
+which the egg appraiser fills right before; set up from a new game the slot was never
+filled, the text engine printed on through RAM (`$C1A0` … `$C529`, screenshot: a box of
+garbage) for ~9,000 frames, then the game jumped into VRAM with interrupts off (PC
+`$8020`, IE 0) and PyBoy never finished that frame — a Python deadline checked between
+frames cannot fire. **Fix**: (1) `Engine._name_slots` puts a placeholder name in every
+insert slot that has no end mark (the three scenes now play: "Oh, you don't have enough
+money."); (2) `editor2/core/playback_server.py` runs the game in a child process; every
+call has a timeout, a silent game is killed and reported ("the game stopped answering …
+the editor is fine", Restart starts it again); the census plays each map in a worker
+process and records `hung` scenes. **Rule**: an emulator driven from a GUI or a long
+census runs out of process with a watchdog — never trust a per-frame time check to catch
+a crash; and a scene started from a synthetic state needs every buffer its texts READ
+(inserted names), not only the flags its branches test.
+
+### A savestate made without sound plays back silent
+**Symptom**: the Playback window had no sound although the emulator was created with
+sound. **Root cause**: the cached start state had been saved by a sound-less emulator
+(the recorder / census); PyBoy restores the APU from the state and `sound.ndarray` stays
+empty. **Fix**: one cached start state per sound mode (`base_<md5>_snd.state`). **Rule**:
+key cached emulator states by every constructor option that the state carries.
+
+### A scene's steps can run inside one frame — detect "reached" by a code hook
+**Symptom**: the census said the Castle King's speech at step 761 was "not reached"
+although it played. **Root cause**: the counter only RESTS on yielding steps; a run of
+flag writes / faces / branches executes within one tick and the per-frame counter never
+shows them. **Fix**: `Engine.trace_ops()` hooks `MarkScriptActive` (`$04:$5613`, every
+dispatched word) for the census; the Playback window (no hook: hooks perturb timing,
+PYBOY_DEBUGGING S80) maps a resting counter to the step with `step_at_counter`.
+**Rule**: per-frame sampling of a VM's program counter misses non-yielding instructions;
+hook the dispatcher when every step matters.
+
+### An interaction right after a warp is swallowed — wait for the field to be idle
+**Symptom**: placing the player next to an NPC and pressing A after a warp did nothing
+about half the time. **Root cause**: the fade-in / room load holds `$C850` (field busy);
+the A press landed during it. **Fix**: `Engine._settle` waits for the map, `$C96C` clear
+AND `$C850` clear before pressing; a failed side is retried from a savestate. **Rule**:
+after any warp, wait for the game's own busy flags, not a fixed frame count.
+
+### A tracer that stops at a far call undercounts the parameters
+**Symptom**: opcodes `$24` / `$61` were catalogued with 0 parameters, so the word after
+them decoded as a "text". **Root cause**: their handlers `rst $10` into the script bank's
+entry 1 / 2, which reads one more script word itself. **Fix**: `script_param_counts.py`
+follows `rst $10` into the script banks (`cross_bank`) — `$24` / `$61` = 1; every
+existing decode was already byte-consistent. **Rule**: a handler's arity is every read of
+the script counter on every path, including the banks it far-calls.
+
+### S118b — "NPC n" is a slot of the CURRENT room state: pick the state, not just the flags
+**Symptom** (user, the S118 Cutscenes tab): "Oh boy this looks dangerous — the wrong NPC
+jumps down. OLD MAN shouldnt be jumping down the stairs, it should be NPC down the
+cliffs." The census had said REACHED with the model exact. **Root cause**: the set-up
+chose GreatTree screen 0's state from the scene's conditions only; they never test
+`$D92D`, so it fell to state 0, where NPC 1 is the old man; in the game the Castle's
+script has set `$D92D := 2` together with flag `$0009` (state 2: NPC 1 = the man by the
+cliff). The census checked positions against a model seeded from RAM — it agreed with
+whatever stood in the slot, so it could not see a wrong PERSON. **Fix**:
+`Catalogue.state_hint` (the counter value the game writes in the run that sets the
+scene's flags), the NPC-count rule and the sibling-test rule (`recipe_for`); the census
+now records `missing_npcs` (a step acting on an empty slot); the header names the state
+and why. **Rule**: a scene's identity of actors comes from the room STATE; derive the
+state from where the game writes it (the story's own scripts), and verify identity with
+a check that does not read its expectation from the emulator it is checking (a model
+seeded from RAM only proves positions).
+
+### S118b — An empty NPC slot is type `$FF`, not sprite `$FF`
+**Symptom**: the first `missing_npcs` census flagged the boss rooms' body parts as
+missing. **Root cause**: a big boss sprite's extra parts keep sprite byte `$FF` in an
+OCCUPIED slot (type `$40`); only an empty slot has type byte `$FF`. The census'
+`ram_actors` had skipped those parts too (fewer model checks). **Rule**: test slot
+occupancy on byte +0 (`$FF` = empty) — measured in PyBoy on room `$37`.
+
+### S118c — A copied room must keep the original's story state, not just its bytes
+**Symptom** (user, S118b): the copied GreatTree ("Make editable") moved the old man in the
+cliff scene; the user: "this doesn't happen in the vanilla game". **Root cause**: the copy
+step (S94) gave every screen its own transient counter in `$CD80+` and rewired the copy's
+OWN scripts to it — but the story writes the room state from OTHER rooms' scripts (the
+Castle sets `$D92D := 2` with flag `$0009`), and those still wrote the original's counter;
+the copy stayed in state 0 forever (and lost its state on reload). **Fix**: S118c —
+`step_counter.vanilla`: the copy's screens ARE the original's counters (EQU; saved with
+the game); existing copies migrated on open; a toggle for copies that should keep their
+own state. **Rule**: when a feature copies game content, list every place in the WHOLE
+game that writes the copied thing's state (here: `write_ram` on the counter in every
+room's scripts, not just the copied room's), and keep those writes reaching the copy.
+
+### S118d — "Ended" is not "worked": a census must check the game is still the game
+**Symptom** (user): "Arena Rooms - script 0 - a random npc moves down, then game resets
+and plays logo, while glitching colours" — the census had listed that scene REACHED and
+ENDED. **Root cause**: the census' end test was "the script is no longer active"; a
+crash-reset also ends the script. The scene had been set up on the wrong screen: it is
+reached only by falling through the Farm's hole (`$04` scripts 41 / 42 write `$D9E5 = 1`,
+`$C8ED = 15` and warp to screen 6, whose state has the falling party's NPC slots); on
+screen 0 the slots were empty. **Fix**: `Catalogue.entry_caller` (set an entry scene up as
+the script that sends you there leaves the game); `Engine.reset` (wGameMode 0 during a
+scene) in the census (`reset`) and in the Playback log. **Rule**: every automated "it
+played" check also asserts the machine is still in the expected mode / room at the end
+(no reset, no title, no unexpected map) — and a user-visible feature is clicked through
+in the GUI test (every scene opened), not only exercised through its model.
+
+### S118d — Deliver session work as one cumulative overlay
+**Symptom** (user's traceback): `module 'editor2.core.script_ops' has no attribute 'FLY'`
+on every scene click — the S118c zip carried `cutscenes.py` that needs S118b's
+`script_ops.py`, and the S118b zip had not been applied. **Rule**: inside one session,
+each re-delivery is the CUMULATIVE set of files changed since the session's base (the
+previous push), never a delta on top of an earlier zip of the same session.
+
+### S118e — A set-up that lands the player somewhere plausible is still wrong
+**Symptom** (user): "Game intro where milayou and terry run around … is completely wrong -
+both are in wrong positions". **Root cause**: the bedtime scene's set-up warped Terry to
+the room's arrival point; a new game places him elsewhere, and the scene's walks are
+relative, so every later position was off. The census could not see it: its position
+model is seeded from RAM at the scene's start, so it checks the steps, not the start. 36
+other entry scenes started the player at the screen centre (no arrival data). **Fix**: the
+new-game scene plays from a real new game (`newgame_state`), boss rooms use the gate
+table's arrival, walk-only screens are walked into; the first frames of the bedtime scene
+were compared against an uninterrupted new game (identical). **Rule**: for a scene the
+START state is part of the scene — compare it against the game reaching the scene by
+itself (or derive it from the game's own data); a check seeded from the emulator's state
+can never catch a wrong start.
+
+### S118g — Labels are not game data: never show a hand-made name as a fact
+**Symptom** (user): "Why are random things named Warubou?" / "ARE YOU NOT TAKING THIS INFO
+FROM GAME?" — the storyboard called 215 different NPCs "Watabou / generic helper" and the
+GreatTree old man "Terry / Player sprite", and room names read like facts. **Root cause**:
+NPC names came from `extracted/npc_names.json` `sprite_names` (hand-typed guesses per
+SPRITE id — a sprite is shared by many characters), room names from `dwm/map_names.py`
+(hand-typed labels). Also, in S118f the naming-screen step was labelled "the new monster"
+from a helper agent's reading taken unchecked — the game's own `[HERO]` text code reads
+that buffer ($CA42), so it names the hero. **Fix**: an NPC is named only by the speaker
+prefix of its OWN talk text (`cutscenes.script_speaker`; anonymous "*" → "NPC n (sprite
+$xx)"); every room header says how the game's exit tables / scripts enter it
+(`Catalogue.room_origin`); the hero's name buffer gets TERRY like the naming screen
+leaves it (the placeholder printed "TERRY0000"). **Rule**: every name or meaning the
+editor shows is either read from the game (text, tables, code) or marked as a label; a
+helper's reading is checked against a second game source (here the text engine) before it
+is shown.

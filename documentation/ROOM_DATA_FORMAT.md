@@ -145,7 +145,7 @@ event flags (which ARE saved) at every custom (re)load.
 ### Runtime NPC show/hide (opcodes $48/$49) — UNVERIFIED (S97)
 
 > S97: the bank-$04 handler table lists $48/$49 as 1-param flow ops
-> (`label4_684d` / `label4_6866`: read a word, `ld c,$01/$03`, jp
+> (`ScriptCmd48_FaceDown` / `ScriptCmd49_FaceLeft`: read a word, `ld c,$01/$03`, jp
 > CheckZeroJPEnd) — nothing in them touches the NPC slots. The hide/show
 > semantics below were never measured; treat them as unconfirmed
 > (DOC_AUDIT S97). The measured NPC-visibility bit is type bit 6 (see
@@ -615,6 +615,7 @@ leaves the 10×8 screen.
 | +$06 | facing 0-3 | parser ((type>>4)&3), behaviours, talk |
 | +$07 | pause timer (counts down per frame; $10 per tile, $20 when blocked, $08/$04 gate wanderers) | bank $06 |
 | +$08 | pattern phase | walkers |
+| +$10-+$15 | the animation player record (S118f, bank $02 `SeqStepper`): +$10 running (0 → restart at the first frame), +$11 row, +$12 animation id, +$13 step, +$14 shown frame (0/1 down, 2/3 side, 4/5 up; `$FF` nothing — bank_006:2466-2510), +$15 frames left | bank $06 `NPCAnimSelect` |
 | +$11 | sprite id copy | parser |
 | +$16 | sprite-sheet VRAM slot (`Call_00b_4839`) | parser |
 | +$17 | OAM flip for the facing (`NPCFacingFlipTable`: left = X-flip) | `NPCAnimSetFlip` |

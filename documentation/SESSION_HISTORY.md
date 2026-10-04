@@ -1,5 +1,71 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-03 (Session 116 — **ROADMAP P3.13b: THE MUSIC TAB — EVERY SONG
+> PREVIEWED ON THE GAME'S OWN SOUND ENGINE (NO EMULATOR), NAMES, AUTOMATIC MIDI IMPORT, A
+> SONG'S OWN 1-6 CHANNELS, A SECOND SONG BANK, GATE SONGS AND BATTLE SONGS** (user on the
+> audit: "Do music. 1) Can you not extract songs? 2) Doesnt matter their names as long as I
+> can preview and name them myself. 3) Not per-floor, not necessary. Default is fine for
+> random gates. Need to set music for custom gates. And custom rooms obviously. 4) Battle
+> music would be good. Specifically Milayou starry tournament uses different battle music.
+> Would be good to have more variety. 5) Whatever is best. If you need to lay groundwork now,
+> do it. 6) Include. 7) Sure, dont care. Automatic please. 8) Great.").
+> **Test ROM `DWM_S116_music_test.gbc` (`ecf4ca9a…`, patched) USER-REPORTED 2026-10-03
+> 18:29 ("rom seems to work fine")**. The editor half on the user's Mac: ▶ on the Castle
+> theme "stopped early after a few seconds", ▶ again "froze completely" → **S116b: the
+> preview player rewritten** (EDITOR_DESIGN §5.6 "S116b rewrite", KEY_LESSONS S116b;
+> test_app's fake-sink check fails on the S116 player) — **USER-REPORTED 2026-10-03 at the
+> S117 start ("rewritten preview player works")**.
+> Verifier PASS (6/6; check 5 += `dump_sound_catalog.py`); clean `1ca6579…` byte-perfect
+> (the vanilla master sound table $3466 re-sectioned as `AudioMasterTable` db rows in both
+> trees; InitBGM / ProcessBGMQueue / the frame driver / bank $51's battle pick / bank $13's
+> battle-start jingle / bank $55's sound-test lists commented — comments + one label only);
+> **patched pin `7bab4921…` (patched)**, was `c8995d91…` (patched, historical); the user's
+> project (my-dwm-hack_7) as-is now builds `7504b910…` (patched; the engine change only: no
+> project songs). test_compiler --rom 874/874, test_app + test_app --rom PASS (GUI build ==
+> pin), test_canvas --rom PASS. `EDITOR_REVISION` = 'S116b'. **Preview needs numpy** on the
+> user's Mac (`pip install PySide6 Pillow numpy`).
+>
+> **The editor runs the game's sound engine (SOUND_SYSTEM §9):** `dwm/sm83.py` (a complete
+> SM83 interpreter — SingleStepTests 498,000 cases, 0 failures) executes the ROM0 sequencer
+> (`editor2/core/sound_engine.py`); `editor2/core/apu_synth.py` synthesizes (32,768 Hz,
+> box-filtered); `music_preview.Renderer` streams. `tools/census_sound_engine.py`: the 85
+> vanilla sound ids × wBGM + wSoundEffect × 3,000 frames and every project song of 5 builds
+> (all 31 DWM2 songs across both banks, 2-5 channels, a MIDI import with noise) == PyBoy at
+> every frame-driver entry; negative control fails. The vanilla catalog
+> `extracted/sound_catalog.json` (92 start ids: kind, channels, rooms / scenes / code).
+>
+> **Engine (SOUND_SYSTEM §1 / §2 / §10, PROJECT_COMPILER §2.9 "S116"):** ROM0 InitBGM
+> SAME-SIZE rewrite (71 B; ids ≥ $9E -> bank $71 entry 6 `CustomBGMStart`: the song's own
+> channel count from `CustomBGMChanTable` — the S64 trio padding / dropping is gone);
+> `AudioMasterTableExt` rows = compiler region `rom0_audio_master` (+ row `[split, $4001,
+> $75]`) and NEW compiler bank **$75** (second song bank); entry 2 plays a gate's own song
+> (`CustomGateBGMTable`; `$FF` in `CustomRoomBGMTable` = a gate room following the gate);
+> bank $51 LoadBattle's 28-byte pick SAME-SIZE -> entry 7 `BattleBGMResolve` (fight EID >
+> arena / Starry final > room > gate > boss ($DA09 = 3, also conversation battles) > normal;
+> link vanilla). `tools/census_music_resolve.py`: 4,000 stub calls == the models
+> (`music.model_room_bgm` / `model_battle_bgm`). Schema: `music.names`, `music.gates`,
+> `music.battle`, song `source.file`. **Editor (EDITOR_DESIGN §5.6 "As built S116"):** the
+> Music tab — Songs (▶ / ■ / Save as WAV, names, Add / Remove, Import MIDI… automatic: the 3
+> busiest melodic channels + drums -> noise), Rooms (your song, battles here), Gates
+> (floors, battles), Battles (normal / boss / arena / Starry final, per fight); meters for
+> the 95 ids and both banks; help `61_music.md`.
+>
+> **Measured on the user's save (demo = the user's project + "Sound Stage" behind the
+> GreatTree 2F Library door, the new gate 32 "Song Gate" (copy of Villager, 3 floors) and its
+> boss room "Encore Hall" — NOT in their project):** the stage = DWM2 BGM #04 ($9E) with 4
+> channels (noise alive); the DrumSlime fight $A2 (bank $74), back to $9E after; the hole ->
+> gate 32 floor 1 = $A5 (bank $75), a wild battle $A8; floor 2 (before the custom boss) and
+> Encore Hall $A5 (follow); the boss fight $2B; the helper -> Castle $09; vanilla gate 1 $34 /
+> battle $27 (4 ch); an arena Starry match (wArenaStarryBattle 1) $AB (the arena song).
+> **Found:** wBGM is $C8B7 (SOUND_SYSTEM said $C8B4); the driver also runs on lag frames
+> (VBlankReentry); conversation battles are $DA09 = 3; wArenaStarryBattle 2 = the Starry
+> final (after the three matches) — DOC_AUDIT S116.
+> **Hand-off:** every S116 change = the diff against `8b94f26` (origin/master, the S115 push),
+> delivered as `DWM-S116-music-changed-files.zip`, the APPLY list pasted in the chat; the
+> S116b player fix = `DWM-S116b-player-fix.zip` (changed files only, on top of S116).
+> **Next:** NG2 / NG3 (gate unlocks; fully custom gates — the S114 questions) or the user's
+> pick; Music residuals in ROADMAP P3.13b.
+
 > Last verified: 2026-10-03 (Session 115 — **ROADMAP ARC NG, NG1: NEW RANDOM GATES — A
 > COPY OF A VANILLA GATE WITH ITS OWN NUMBER, NAME, FLOORS, BOSS ROOM, MONSTERS AND AN
 > ENTRANCE** (user: "Hang on. 1) How do I make a new random gate and set floors +

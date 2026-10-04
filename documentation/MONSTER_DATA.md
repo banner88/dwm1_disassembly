@@ -994,7 +994,7 @@ They are inside the `$C8EA-$D9E9` save image. Uses found:
   NPC-mate flow at `$0A:~$4F00` (mate synthesized from EID `$C8F7/8`
   directly into slot 21). Offspring is inserted later at first-empty by
   `$16:jr_016_402d`, which persists the chosen slot in **`$CA40`** for the
-  script-side finalizer (`$04:label4_64c2`). NOTE (S58): `$CA40` is ALSO the farm
+  script-side finalizer (`$04:ScriptCmd3A_ToBreedingScene`). NOTE (S58): `$CA40` is ALSO the farm
   drop/pick flow's live candidate register — written per selection at
   `$0A:~$5CC4` (together with `$CAC0`/`$C908`), consumed by the working-set
   filler `SetFldA_6ad5` ($0A:$6AD5 — party list + `[$CA40]`) and the
@@ -1018,8 +1018,8 @@ copies enemy-stats-derived fields, rolls stats 80-100%, sets in-use `$01`):
 
 | Path | Where | Behavior |
 |------|-------|----------|
-| Script give $29 | `$04:label4_5c14` | first-empty → `$DA14` → build; if `$CA8D`<3 ALSO appends to party list (`$CA8D`++) |
-| Script give $28 | `$04:label4_5f9a` | first-empty → build; storage only |
+| Script give `$18` (S118: the dispatch table — was listed as "$29") | `$04:ScriptCmd18_GiveMonster` | first-empty → `$DA14` → build; if `$CA8D`<3 ALSO appends to party list (`$CA8D`++) |
+| Script give `$29` (S118: was listed as "$28"; `$28` = the storage-full test `ScriptCmd28_IfStorageFull`) | `$04:ScriptCmd29_AddMonster` | first-empty → build; storage only |
 | Egg receive | `$12:jr_012_6c0a` | first-empty → build → +$63:=1; EID pair from table `$12:$6D2B` by egg id (event flags $0050-$0057) |
 | Battle join | `$51:SetBtlS_63e8` scan + `$50:jr_050_63ea` (fight→join EID via boss redirect `$1406`) | first-empty → build → party-list append if room → canonicalize |
 | Breeding offspring | `$16:jr_016_402d` (+`$CA40` persist) | first-empty → zero-fill → bank $16 fills |

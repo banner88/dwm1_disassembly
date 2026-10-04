@@ -247,8 +247,8 @@ farm SRAM data is CURRENT whenever any reader can run → the "proxy all 44
 walkers" problem collapses to: (1) re-bound the post-battle exp-add +
 level-scan loops (level-scan found S55: bank $50 `jr_050_6318`, b=0..$13 over
 `CmpBtl_6383`) to party + accumulator, (2) one chokepoint hook, (3) redirect
-the genuine farm read/write paths (farm UI drop/pick, give `label4_5c14`,
-full-check `label4_5f67`, breeding parent fetch, trades) to SRAM addressing.
+the genuine farm read/write paths (farm UI drop/pick, give `ScriptCmd18_GiveMonster`,
+full-check `ScriptCmd28_IfStorageFull`, breeding parent fetch, trades) to SRAM addressing.
 In-gate farm touches (give/full-check) read occupancy only — exp staleness
 invisible. Farm level-ups apply at the chokepoint ("grew while you were away").
 Prize: ~2.5 KB contiguous WRAM freed ($CBEB-$D664) + the S54 collision class
@@ -935,7 +935,11 @@ recipes are pure authoring.
 - [ ] **P3.4 — Embedded PyBoy preview panel** [G-E] (EDITOR_DESIGN §7
       Tier 2): Build → cached post-boot savestate → warp to the room under
       edit → frames in a Qt widget with input. *Accept:* one click plays
-      the room being edited, < 10 s from Build-done to walkable.
+      the room being edited, < 10 s from Build-done to walkable. **S118:** the
+      cutscene Playback window IS this machinery for scenes (cached base state per
+      build, warp, Qt blit, sound, keys, the game in a child process —
+      `editor2/core/playback.py` / `playback_server.py`); "play this room" from the
+      Rooms tab = a recipe with action `entry` and no scene — small once wanted.
 - [x] **P3.5a — Declarative room-state rules** — **DONE S97, USER-CONFIRMED
       2026-09-26** (user: "all of group B"; terms are AND-ed flag set/clear
       conditions — "Flag A set and Flag B set but C NOT set"). As built
@@ -1146,6 +1150,13 @@ recipes are pure authoring.
       first"); helper *at the Castle* = nothing / priest heal / a gate's
       King speech (castle-arrival codes decoded, GATE_GENERATION §7.7);
       World tab wheel zoom + drag pan + Fit / + / −.
+- [ ] **audit_mapid_range re-adjudication** (found S118, open since S117): `python3
+      tools/audit_mapid_range.py --selftest` FAILS — 11 wMapID loads in the S117 shop code
+      (bank $09 `ShopBuyStockFill` / `ShopSellPrice` in both trees, the bank $76 / $77
+      templates) are NEEDS_REVIEW and the pins (clean 58 / patched band) are stale. Read each
+      site (full byte vs < $70 assumption, CROSSBANK_ROOMS audit section), add the verdicts
+      and pins, then put the tool in verify_integrity's SELFTEST_TOOLS so it cannot drift
+      again. Small; annotation-class (DOC_AUDIT S118).
 - [ ] **P3.H — Editor Help tab** (user S101 r2: "The editor needs a help
       tab … needs lookup"; "a) needs to be built out and b) always kept up
       to date as editor progresses"). **Wired S101 r3:** Help tab (topic list,
@@ -1158,7 +1169,82 @@ recipes are pure authoring.
       screenshots or small diagrams per topic, context help (a "?" on each
       section / dialog opening its topic), a glossary. Never "done" — it
       grows with every editor feature.
-- [ ] **P3.8 — Cutscene storyboard + playback** [G-H]: symbolic stepper
+- [ ] **P3.8 — Cutscene storyboard + playback** [G-H]. **S118 user direction:** "Reading
+      in, displaying and playing back all existing cutscenes in all relevant rooms … the
+      intro … Cutscene playback window … Include skipping text boxes as an option ·
+      Cutscene editor where you can encode your own cutscenes, using appear/disappear/move
+      npcs, use existing npcs" → on the audit: playback in the real game "if I dont have to
+      navigate to cut-scene in-game"; start state "might depend on cut scene"; text auto
+      with a manual toggle; sound yes; vanilla scenes are changed by CLONING the room
+      ("Probably always clone room"). Split: **part A** (read / show / play) S118,
+      **part B** (the editor) next, **part C** (vanilla in-place override) DROPPED.
+      - [x] **Part A — built S118, NOT yet user-tested** (EDITOR_DESIGN §5.1d,
+        BANK04_SCRIPT_ENGINE "Script opcodes as measured (S118)"): the 102 opcodes named /
+        decoded (`editor2/core/script_ops.py`; bank $04 handlers labelled both trees,
+        byte-perfect; `$24`/`$61` arity 0 → 1), the movement programs measured, every
+        vanilla scene (519) + the project's (`editor2/core/cutscenes.py`), the Cutscenes tab
+        (Chains / Your rooms / Game rooms, storyboard, recorded pictures), the Playback
+        window (PyBoy in a child process — `editor2/core/playback_server.py`; set up
+        without navigating: flags / RAM / quiet entry script / warp / the game's own talk /
+        examine / step-on; auto text + YES/NO + D-pad, sound, keys); the intro chain
+        (bedtime → Warubou → the dresser → tree tunnel → Starry Shrine → GreatTree with the
+        old man → Castle) plays from the dresser on its own. *Accept MET (machine half):*
+        `tools/census_cutscenes.py` — 519 scenes, 514 reached, 0 hung, the position model
+        3,887 / 3,909 checks exact (BANK04 "Playing a scene"; S118b: 516, 3,989 / 3,998); test_app plays the intro and
+        survives a killed game. *User half:* play the intro + a few rooms' scenes on the
+        Mac (pyboy installed).
+        Residuals: (a) 3 scenes not reached + 9 model misses (BANK04 "Census S118b");
+        (b) `$24`/`$61` tile patches in a CLONED room still read bank $0F's tables (read
+        from the code, not measured) — fix with part B; (c) the recorded pictures are the
+        last frame of each resting step (non-yielding steps share a picture); (d) project
+        scenes play from the last build (build first).
+      - [x] **S118b round (user's first look, built, NOT yet user-tested):** (1) "the
+        wrong NPC jumps down" (GreatTree "Oh boy! This looks dangerous!") — the room state
+        is now chosen from where the game writes it + an NPC-count / sibling-test rule
+        (BANK04 "Room state (S118b)"; census `missing_npcs` 14 → 1); in the user's CLONED
+        GreatTree the old man still jumped — a clone kept its own state counters, which
+        the vanilla scripts never write (fixed S118c, below); (2) talks listed as cutscenes — the filter now means "someone
+        moves" (218 of 519); (3) "nothing happens" — the Old Man Gate Room's step-on scene
+        sends him where he already stands (the game does the same; the header says so);
+        (4) ▶ Play scene / ▶ From this step; (5) editing = part B. Also: the fly programs
+        per `$D8E3`/`$D8E4` measured (`script_ops.FLY`), NPC-slot RAM writes modelled —
+        census 3,989 / 3,998 exact, 516 reached.
+      - [x] **S118c — copies follow the game's room state** (user: "Yeah obviously";
+        built, NOT yet user-tested): `step_counter.vanilla` (PROJECT_COMPILER §2.6
+        "S118c"), Make editable writes it, existing copies migrated on open, Rooms →
+        *Follow the game's room state*; PyBoy on the user's project: the copied
+        GreatTree's screen 0 follows `$D92D` (state 2 = the cliff man only). Also
+        **step-by-step**: Playback **Step ▸▸ / ◂ Step back** (the dispatch hook in the
+        game process stops after the frame that runs the next step) and one recorded
+        picture PER STEP (turns included; the arrow keys step through the storyboard).
+      - [x] **S118d (user: the "Arena Rooms" scene reset the game; scene clicks did nothing —
+        the S118b files were missing; "Are you sure you tested this stuff?"):** entry scenes
+        reached through another script's room change are set up as that script leaves the
+        game (`entry_caller`, 45 scenes); resets detected (census `reset`, the Playback
+        log); test_app opens every 7th scene of the tree; deliveries are cumulative.
+        Census: 516 reached, 0 hung, 0 resets, 0 empty-slot steps, 3,994 / 3,998.
+      - [x] **S118e (user: the intro's Milayou / Terry in the wrong positions; "mute preview
+        pyboy player GLOBALLY in the menu"):** the bedtime scene plays from a real new game;
+        boss rooms use the gate table's arrival; walk-only screens are walked into (Warubou);
+        View → Mute game playback (⌘⇧M), overriding every window (BANK04 "Where the player
+        starts", KEY_LESSONS S118e).
+      - [x] **S118f (user: "Some of these steps are uninterpretable … I want everything
+        interpretable"):** every step in words — `editor2/core/ram_names.py` (room states,
+        the decoded script variables, NPC slot fields), flags (`Catalogue.flag_desc`),
+        rooms / items / monsters / skills / music / screen types / tile patches; test_app:
+        no game-script step left as a bare address (BANK04 "Script variables").
+      - [x] **S118g (user: "why are random things named Warubou? … ARE YOU NOT TAKING THIS
+        INFO FROM GAME?"):** NPC names only from their own dialogue's speaker; room headers
+        show how the game enters the room (exit tables + scripts); the hero's name; the
+        naming-screen step corrected to "the hero's name" (KEY_LESSONS S118g).
+      - [ ] **Part B — the cutscene editor** (next session): author scenes from the
+        decoded ops — appear / vanish / move / face NPCs (existing or new), the player,
+        texts, flags, music / sounds, waits; the storyboard as the editing surface, the
+        Playback window as the preview; vanilla scenes edited in a cloned room. Open
+        questions for the user before building: the editing surface (step list vs
+        dragging actors on the room), which triggers (entry / talk / examine / step-on /
+        after a flag).
+      Earlier plan text (S101): symbolic stepper
       over ops, blocking keyframes on canvas, virtual flag/inventory
       branch walking; playback via P3.4. **S101 user direction (12:36):
       "Our cutscene editor can then edit or extend king's cutscenes etc."**

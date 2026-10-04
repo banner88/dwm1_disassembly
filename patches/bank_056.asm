@@ -1638,9 +1638,9 @@ jr_056_478a:
     ret
 
 
-jr_056_4806:
-    call ReadNextTextByte
-    ld de, $c180
+jr_056_4806:                    ; text code $F9 nn (insert a name): print the $F0-terminated name at $C180 + nn
+    call ReadNextTextByte       ; (slots $00/$10/$20/$30, filled by the caller before the text — an unfilled
+    ld de, $c180                ;  slot prints on through RAM and crashes the game: KEY_LESSONS S118)
     add e
     ld l, a
     ld a, $00

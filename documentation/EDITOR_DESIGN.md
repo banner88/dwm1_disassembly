@@ -961,6 +961,93 @@ variants** [G-O], a small extension to our own bank-`$71`
 `RoomEncTable` resolver (touches nothing vanilla). The Progression tab
 lists all triggers globally; the room inspector lists the local ones.
 
+### 5.1d Cutscenes tab (as built S118 — ROADMAP P3.8 part A; built, NOT yet user-tested)
+
+User direction (S118): "Reading in, displaying and playing back all existing cutscenes
+in all relevant rooms … the intro … Cutscene playback window, where you can playback
+vanilla and custom cutscenes. Include skipping text boxes as an option" — then on the
+audit: playback is the real game "if I don't have to navigate to cut-scene in-game";
+start state "might depend on cut scene"; text auto with a manual toggle; sound yes;
+vanilla cutscenes are edited by CLONING the room (no in-place override). The editor
+half (authoring) is part B.
+
+**Model (headless, `editor2/core/`):** `script_ops.py` — the 102 opcodes' names,
+params, kinds, sentences and the measured movement programs (BANK04_SCRIPT_ENGINE
+"Script opcodes as measured (S118)"); `cutscenes.py` — the vanilla scripts decoded
+from the ROM (banks $0C-$0F; positions = the live script counter), the project's
+scripts as the compiler lowers them (`ProjectCatalogue` runs `Project`'s own lowering:
+talk / conversation / shop / quest scripts, cloned rooms' raw ops; RAM symbols from
+the build's game.sym), SCENES (every branch that shows something; path conditions
+from the script start; triggers from the room data: entry / NPC talk / examine /
+step-on), the actor model (positions / facing / shown per step) and the RECIPE that
+sets a scene up; `CHAINS` (the intro). `playback.py` — the game itself (PyBoy) from a
+cached base state per ROM (new game, or the author's .sav via CONTINUE), the recipe
+applied, auto text / YES-NO / naming screen / D-pad, the live script position.
+
+**Tab (`editor2/app/cutscenes_tab.py`):** left — Chains / Your rooms / Game rooms,
+"Only scenes where actors move", search (texts, names, steps); middle — the header
+(room, script, trigger, Plays when, notes, chain), ▶ Play / Record frames / Play on
+(your last build / the original game) / Start from (a new game / my save file), the
+step list (colour = kind, tooltip = the opcode's meaning, double-click a branch = its
+scene), the full text of a text step; right — the step's picture: recorded from the
+game (a background QThread plays the scene silently and keeps the last frame of every
+step; one recording at a time) or, without PyBoy, the room render + the model's actors.
+
+**Playback window:** 480×432 game picture; Pause / Frame ▸ / Restart / Next scene /
+speed 1× (sound, audio-clocked through music_tab.SongPlayer) 2× 4× 8× (no sound);
+Auto text + read time (frames a printed box stays) + the YES/NO answer; Auto D-pad;
+Sound; keys (arrows, Z/Space = A, X = B, Enter = Start, Backspace = Select) for manual
+play; a set-up log; the storyboard follows the game's step. A chain plays its scenes
+in order (2 s after a scene's script ends; a scene that changes room simply carries on).
+
+**S118b (the user's first look: "the wrong NPC jumps down"; "some 'cutscenes' are just
+text boxes … egg evaluator"; "playing some cutscenes doesnt do anything … old man room";
+"are 'play' for per-script line or entire window? Unclear"; "can you edit any of
+this?"):** the ROOM STATE is chosen from where the game writes it (BANK04_SCRIPT_ENGINE
+"Room state (S118b)") and named in the header; "Only scenes where actors move" = a walk,
+a movement program or an NPC shown / hidden (`cutscenes.moves` — turning and the player's
+own "shown" no longer count: 218 of 519 game scenes); titles skip the housekeeping step;
+a walk-to that moves nobody says so in the header (the Old Man Gate Room: he already
+stands there); **▶ Play scene** (the whole scene) and **▶ From this step** (the steps
+before the selected one run fast — 24 frames a tick, no sound, text skipped — then normal
+play). Editing = part B (not built).
+
+**S118c (user: "Yeah obviously" — the copied room must behave like the game; "I really
+would like to step through animation step by step"):** copies of game rooms follow the
+game's room state (PROJECT_COMPILER §2.6 "S118c"; Rooms → State rules → *Follow the game's
+room state*); the Playback window's **Step ▸▸** runs until the scene's next step is
+dispatched (the server registers the `$04:$5613` hook on the first Step; steps that take
+no time share a frame and are logged together) and **◂ Step back** restores the state
+before it (up to 400 kept in the game process); the recorder keeps ONE picture PER STEP
+(the frame the game ran it in) so the storyboard steps picture by picture. PyBoy stays the
+engine: the scenes are the game's own code (sprites, movement programs, text, palettes) —
+a model can only approximate them (the census shows where it does).
+
+**S118e:** View → **Mute game playback** (⌘⇧M; QSettings `playback/mute`; overrides
+every Playback window's Sound box, applied live); the bedtime scene from a real new game,
+gate arrivals, walk-in (BANK04 "Where the player starts").
+
+**S118d:** entry scenes reached through another script's room change are set up the way
+that script leaves the game (BANK04 "Entry scenes reached by another script's room
+change"); a crash-RESET is reported in the Playback log; test_app clicks through the tree.
+
+**The game runs in its own process** (`editor2/core/playback_server.py`): the Playback
+window and the frame recorder talk to a child `python3 -m editor2.core.playback_server`
+over pipes (one JSON command per line; answers = length + JSON header + payload: the
+RGBA frame, int16 audio, or the recorded PNGs). Every call has a timeout (10 s for a
+batch of frames); a game that stops answering is killed and reported in the window —
+"the game stopped answering (it crashed in this scene) … the editor is fine" — and
+Restart starts a new one. Measured S118: a scene set up from a synthetic state can
+crash the game, and PyBoy then never returns from the frame (KEY_LESSONS S118). One
+cached start state per ROM, save file and sound mode (a state saved without sound plays
+back silent).
+
+**Verification:** `tools/census_cutscenes.py` plays every vanilla scene through the
+same recipe and checks the position model at every wait (`extracted/cutscene_census.json`;
+S118b: 519 scenes, 516 reached, 0 hung, 1 step on an empty NPC slot, 3,989 / 3,998
+model checks exact); test_app drives
+the tab, plays the intro in the Playback window and kills a hung game.
+
 ### 5.2 Monsters tab
 
 Species list: 221 vanilla + custom (ids 221-239, S105 G3; Gorbunok proven end-to-end).
@@ -1620,10 +1707,10 @@ row is click-navigable (§5.0).
 | G-B | NPC sprite-id catalog | ✅ CLOSED S91: `extracted/npc_sprite_catalog.json` + sheet + per-id crops (`npc_field_sprites/`), tools/dump_npc_sprite_catalog.py; classes/names hand-curated in npc_names.json. No id crashes ($11-crash was custom-room context); $23 = boss-composite fragment; aliases $4E/$4F/$F0-$F3 → $00. ROOM_DATA_FORMAT S91 section owns the facts |
 | G-C | Encounters #2 — custom monster pools in a free bank | ✅ CLOSED S114 (test ROM USER-CONFIRMED 2026-10-03 09:52 ("Looks good. Give editor files")): the project's own lists 128-255 in bank $76, chosen by `EncResolve` behind a same-size bank $01 fork (PROJECT_COMPILER §2.30; DATA_STRUCTURES "Encounter list choice (S114)") |
 | G-D | Layer A-lite `gamedata` emitters + readers (monsters/skills/breeding/encounters; port randomizer `romdata.py`) | ROADMAP P3.9 — **CLOSED S103** (backend; GUI = P3.10-P3.13) |
-| G-E | Embedded PyBoy preview widget (cached savestate → warp → Qt blit + input) | ROADMAP P3.4 (pre-existing box, re-slotted) |
+| G-E | Embedded PyBoy preview widget (cached savestate → warp → Qt blit + input) | ROADMAP P3.4 — the cutscene Playback window (S118, §5.1d) is this widget for scenes (cached base state, recipe, Qt blit, sound, keys); "play this room" from the Rooms tab is still open |
 | G-F | E4 gate-network / world-hub schema | ROADMAP Phase E (design item; World tab ships without it). S115: gate NUMBERS beyond 32 exist (NG1 — `custom.gates[]` 32-95, gate-entrance exits); the network / unlock half stays open (ARC NG NG2 / NG3) |
 | G-G | First-class `states[]` (step-counter variants) in the custom-room schema | ✅ CLOSED: schema/emitter S92 (PROJECT_COMPILER §2.10); GUI state switcher + add/duplicate/own-layout/remove S93 (ROADMAP P3.3) |
-| G-H | Cutscene storyboard model over compile/decompile_script | ROADMAP P3.8 (new) |
+| G-H | Cutscene storyboard model over compile/decompile_script | 🟢 read + display + play BUILT S118 (§5.1d; `editor2/core/cutscenes.py` / `script_ops.py` / `playback.py`), NOT yet user-tested; authoring = ROADMAP P3.8 part B |
 | G-I | Music audition harness (PyBoy play-song) | ✅ CLOSED S116 (built, NOT yet user-tested) — not PyBoy: the game's own sequencer on the editor's SM83 interpreter + a synth (SOUND_SYSTEM §9), streamed in the Music tab (§5.6 "As built S116") |
 | G-J | Clone-to-custom room extractor (vanilla room → full project.json custom clone + entrance repoint; per-island literal-mapID audit) | ROADMAP P3.2b (v2.1) — the fork mechanism |
 | G-K | E8 shops: stock/price table decode + `gamedata.shops` + shopkeeper NPC surface | ROADMAP P3.13c (v2.1; promoted from Phase E) |

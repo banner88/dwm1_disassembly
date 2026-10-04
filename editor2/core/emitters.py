@@ -795,6 +795,10 @@ def emit_region_wram_steps(prj, warnings):
     if cursor < end:
         out.append(f"    ds {end - cursor} ; reserved (padded to region_size; "
                    "region ends at $D000 — PROJECT_COMPILER.md §2.6)")
+    # S118c: screens of cloned rooms that follow the game's own room state —
+    # the label IS the original room's counter (no byte here; saved by the game)
+    for label, addr, cm in prj.step_counter_game():
+        out.append(f"{label} EQU ${addr:04X} ; {cm}")
     return "\n".join(out) + "\n"
 
 

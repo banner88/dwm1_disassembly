@@ -20,6 +20,9 @@ bit_mask     = bitmask_table[flag_index & 7]  ; $80,$40,$20,$10,$08,$04,$02,$01
 There are only **3 call sites** to SetEventFlag in the entire ROM: the
 script engine opcode $03 handler (bank $04:$579B), and two engine-code
 sites in bank $12 ($4EE1 sets flag $0007, $6C78 conditionally sets $0057).
+S118f: the `$4EE1` site is state 6 (`$4EBC`) of Pulio's farm menu (screen type 3): taking
+a monster into an EMPTY party sets `$0007` ("Pulio: Train it well"); read only by the
+Castle entry script.
 All other flag setting goes through script opcode $03.
 **Reader added S97:** custom-room STATE RULES (bank $60 entry 8
 `CustomStateRules`, PROJECT_COMPILER §2.13) call `TestEventFlag` at every

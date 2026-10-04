@@ -173,7 +173,9 @@ This project does not let Claude run git, so the user applies changes by hand.
 Make that a 10-second drop-in, not a reconstruction job. Deliver **one zip**:
 
 - **Filename:** `DWM-S<NN>-<slug>-changed-files.zip` (e.g. `DWM-S41-pillarB-changed-files.zip`).
-- **Contents = ONLY files changed this session**, each at its **repo-relative path**, inside a
+- **Contents = ONLY files changed this session** (S118d: a re-delivery within the session is
+  CUMULATIVE — every file changed since the session's base, never a delta on an earlier zip of
+  the same session; KEY_LESSONS S118d), each at its **repo-relative path**, inside a
   single top wrapper folder named like the zip's stem, e.g.:
   ```
   S41_pillarB/

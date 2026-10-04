@@ -24,5 +24,13 @@ Rules are checked top-down every time a screen loads; the first that holds
 wins. Flags are saved with the game, so this is how a room remembers its
 version. See *Boss floors → the "beaten" version*.
 
+**A copy of a game room follows the game's state** (*Follow the game's room
+state*, in the State rules section — on for every copy): its states change
+when the game's story changes the original's (the Castle moves GreatTree to
+"the man by the cliff"), and they are saved with the game, exactly like the
+original. Untick it for a copy that should keep its own state (a copied boss
+room you use for a NEW boss — otherwise beating the original boss shows the
+copy beaten too). A copy with state rules uses its own state.
+
 **Animated tiles:** select cells → Metatiles → **Animate** tab. See the
 *Animated tiles* topic.

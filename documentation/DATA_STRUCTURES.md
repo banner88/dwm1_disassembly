@@ -1294,7 +1294,7 @@ and writes item. Original uses `ret` not `jp ScriptExecContinue`, freezing scrip
 **Fix (proven):** Redirect jump table entry to wrapper in padding:
 ```asm
 GiveItemWrapper:
-    call label4_5fdb         ; original handler (ret returns here)
+    call ScriptCmd2A_GiveItem         ; original handler (ret returns here)
     jp Jump_004_55f5         ; ScriptExecContinue
 ```
 Zero insertion. Use with `$FF2C` (CheckInvFull) before `$FF2A` for full pattern.

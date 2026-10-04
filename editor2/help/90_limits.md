@@ -60,3 +60,12 @@
   item (every shop), 0-65535 gold; what shops pay is the game's rule (3/4,
   staffs 1/10, the gate shop the full price) and is not editable. Item
   effects are not editable yet.
+- Cutscenes (S118): the Cutscenes tab shows and plays scenes; writing your
+  own cutscenes is the next step (the cutscene editor). Playback needs
+  `pip install pyboy`. A game scene that needs a party monster of a given
+  species, a full bag or a won battle state is started at its own first
+  step (the window says so). **Cloned rooms:** a game script that draws a
+  tile patch (opcode $24 / $61 — Castle and Bazaar doors, treasure chests)
+  reads its patch from the game's script bank, which a cloned room does not
+  have (read from the code; not yet tested) — avoid those steps in clones
+  until the cutscene editor handles them.

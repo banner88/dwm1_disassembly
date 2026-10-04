@@ -103,7 +103,7 @@ jr_016_401c:
 
 
 ; Offspring insert (S56): c = first-empty slot from jr_016_401c; persisted
-; in BOTH $CAC0 and $CA40 (script finalizer label4_64c2 re-reads $CA40).
+; in BOTH $CAC0 and $CA40 (script finalizer ScriptCmd3A_ToBreedingScene re-reads $CA40).
 jr_016_402d:
     ld a, c
     ld [$cac0], a

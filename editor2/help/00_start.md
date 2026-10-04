@@ -9,6 +9,10 @@ built from it (the original ROM is never changed).
 - **Rooms** — paint rooms, their screens and states; NPCs, doors, spots,
   talk and conversations; "Inside gates" settings for gate / boss floors.
 - **Import art** — turn a PNG rip into a room tileset.
+- **Cutscenes** — every scene of the game and of your rooms as a storyboard
+  (steps in words, pictures recorded from the game) and **▶ Play**: the
+  game plays the scene right here, with sound, set up for you (the intro
+  chain included).
 - **Gates** — which custom rooms appear on which gate floors, per-gate
   settings (floor count, boss floor, hand-made gates, project enemies) and
   **new gates** of your own (a copy of a vanilla gate; entrances on the Rooms

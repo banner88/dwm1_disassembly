@@ -274,7 +274,7 @@ data_4157:
 ;    - If set, check bit 1 (text queued):
 ;      * If text queued → return (wait for text display to finish)
 ; 3. Handle pending operations:
-;    - Bit 4/6: NPC position updates via LoadScr_43ec
+;    - Bit 4/6: NPC position updates via MoveProgramsAll
 ;    - Bit 2: Delay countdown ($D8DB)
 ;    - Bit 3: NPC walk-toward via CheckPendingNPC → ResolveNPCIndex
 ; 4. If none pending: call LoadScr_55f5 to execute next script command
@@ -322,16 +322,17 @@ CheckScriptBusy:
     jp nz, RetFromFrameUpdate     ; Bit 1 set = text queued, wait for display → return
 
     ld a, [wScriptStateFlags]
-    bit 4, a                 ; Bit 4: NPC position update pending (group A)
-    call nz, LoadScr_43ec
+    bit 4, a                 ; Bit 4: movement programs queued ($1A/$1B/$1C, $D8E9 + 8n)
+    call nz, MoveProgramsAll
     ld a, [wScriptStateFlags]
-    bit 6, a                 ; Bit 6: NPC position update pending (group B)
-    call nz, LoadScr_43ec
+    bit 6, a                 ; Bit 6: walk_fast (op $22): the movement programs run a
+    call nz, MoveProgramsAll ; SECOND time this frame = double speed (S118, PyBoy)
     ld a, [wScriptStateFlags]
     bit 2, a                 ; Bit 2: delay/wait active
     jr nz, CheckFrameCounter
 
-    bit 3, a                 ; Bit 3: NPC walk-toward pending
+    bit 3, a                 ; Bit 3: a walk the script WAITS for ($0A/$0B/$10/$11:
+                             ; actor $D8DC by $D8DD/$D8DF px, 3 px per 4 frames)
     jp nz, CheckPendingNPC
 
 CheckSecondaryDelay:
@@ -493,7 +494,7 @@ ProcessNPCMoveY:
 
 CallWalkAndReturnAlias:
 CallWalkAndReturn:
-    call LoadScr_454b
+    call PlayerFacingToSprite
     jp RetToCallerAlias
 
 
@@ -732,45 +733,45 @@ JumpRetFromFrame2:
 ; If all NPCs have finished moving (result is zero), clears bits 4 and 6
 ; of $D8D7 (position update pending flags).
 ; ---------------------------------------------------------------------------
-LoadScr_43ec:
+MoveProgramsAll:
     ld a, [$d8e9]
     push af
-    call LoadScr_443d
+    call PlayerMoveProgram
     pop af
     ld hl, $d8f1
     or [hl]
     push af
-    call ReadScr_4584
+    call NpcMoveProgram
     pop af
     ld hl, $d8f9
     or [hl]
     push af
-    call ReadScr_4584
+    call NpcMoveProgram
     pop af
     ld hl, $d901
     or [hl]
     push af
-    call ReadScr_4584
+    call NpcMoveProgram
     pop af
     ld hl, $d909
     or [hl]
     push af
-    call ReadScr_4584
+    call NpcMoveProgram
     pop af
     ld hl, $d911
     or [hl]
     push af
-    call ReadScr_4584
+    call NpcMoveProgram
     pop af
     ld hl, $d919
     or [hl]
     push af
-    call ReadScr_4584
+    call NpcMoveProgram
     pop af
     ld hl, $d921
     or [hl]
     push af
-    call ReadScr_4584
+    call NpcMoveProgram
     pop af
     or a
     ret nz
@@ -781,7 +782,7 @@ LoadScr_43ec:
     ret
 
 
-LoadScr_443d:
+PlayerMoveProgram:
     ld a, [$d8e9]
     or a
     ret z
@@ -797,22 +798,22 @@ LoadScr_443d:
     ld a, [$d8eb]
     ld hl, $ff95
     cp $01
-    jp z, SetupOpcodeTable
+    jp z, MoveProg01_Hop
 
     cp $03
-    jp z, OpcodeHandler0B
+    jp z, PlayerProg03_SpinFloatUp
 
     cp $04
-    jp z, OpcodeHandler1A
+    jp z, MoveProg04_Jump
 
     cp $06
-    jp z, OpcodeHandlerAdvance
+    jp z, PlayerProg06_TrailPause
 
     cp $07
-    jp z, OpcodeHandler0D
+    jp z, PlayerProg07_LeapLeft
 
     cp $1a
-    jp z, OpcodeHandler2D
+    jp z, PlayerProg1A_SpinJump
 
     ld hl, $ff90
     set 0, [hl]
@@ -937,7 +938,7 @@ AdvanceWalkCounterY:
 ;   Dir 2 (right): $8D=$00, $8F=$02
 ;   Dir 3 (left):  $8D=$00, $8F=$01
 ; ---------------------------------------------------------------------------
-LoadScr_454b:
+PlayerFacingToSprite:
 Jump_004_454b:
 ClearMovementFlags:
     ld a, $00
@@ -979,7 +980,7 @@ ClearMoveLockBit:
     ret
 
 
-ReadScr_4584:
+NpcMoveProgram:
     ld a, [hl]
     or a
     ret z
@@ -1024,70 +1025,70 @@ ReadScr_4584:
     ld h, a
     pop af
     cp $01
-    jp z, SetupOpcodeTable
+    jp z, MoveProg01_Hop
 
     cp $02
-    jp z, OpcodeHandler0A
+    jp z, MoveProg02_JumpUp2Tiles
 
     cp $04
-    jp z, OpcodeHandler1A
+    jp z, MoveProg04_Jump
 
     cp $05
-    jp z, OpcodeHandler1B
+    jp z, MoveProg05_LeapRight
 
     cp $08
-    jp z, OpcodeHandlerAdvance2
+    jp z, MoveProg08_Appear
 
     cp $09
-    jp z, OpcodeHandler0E
+    jp z, MoveProg09_SpinJump
 
     cp $0a
-    jp z, OpcodeHandler12
+    jp z, MoveProg0A_JumpUpStay
 
     cp $0b
-    jp z, OpcodeHandler1C
+    jp z, MoveProg0B_DoubleJumpUp
 
     cp $0c
-    jp z, OpcodeHandler47
+    jp z, MoveProg0C_RunOffLeft
 
     cp $0d
-    jp z, OpcodeHandlerAdvance3
+    jp z, MoveProg0D_Vanish
 
     cp $0e
-    jp z, OpcodeHandler48
+    jp z, MoveProg0E_FloatUp
 
     cp $0f
-    jp z, OpcodeHandler49
+    jp z, MoveProg0F_LeapUp4
 
     cp $10
-    jp z, OpcodeHandler14
+    jp z, MoveProg10_HopDrop4
 
     cp $11
-    jp z, OpcodeHandler15
+    jp z, MoveProg11_Drop4
 
     cp $12
-    jp z, OpcodeHandler16
+    jp z, MoveProg12_HopDrop2
 
     cp $13
-    jp z, OpcodeHandler17
+    jp z, MoveProg13_RiseHangSettle
 
     cp $14
-    jp z, OpcodeHandler22
+    jp z, MoveProg14_AppearSpinning
 
     cp $15
-    jp z, OpcodeHandlerAdvance4
+    jp z, MoveProg15_FlyDownLeft
 
     cp $16
-    jp z, OpcodeHandlerAdvance5
+    jp z, MoveProg16_FlyDownRight
 
     cp $17
-    jp z, OpcodeHandlerE3
+    jp z, MoveProg17_FlyUpLeft
 
     cp $18
-    jp z, OpcodeHandlerE3B
+    jp z, MoveProg18_FlyUpRight
 
     cp $19
-    jp z, OpcodeHandler2C
+    jp z, MoveProg19_LeapLeft
 
     ldh a, [$d5]
     add $05
@@ -1309,10 +1310,11 @@ CacheNPCPtrLow:
     ret
 
 
-SetupOpcodeTable:
+; S118 movement program $01 for an NPC (script op $1C $01NN): hop — measured net (+0, +0) px, 13 frames
+MoveProg01_Hop:
     ld bc, $4770
 
-HramScr_4745:
+MoveProgCurveStep:
 Jump_004_4745:
     ldh a, [$d7]
     add $01
@@ -1357,7 +1359,8 @@ ReadScriptWord:
     db $fd, $ff, $fd, $ff, $fe, $ff, $ff, $ff, $ff, $ff, $00, $00, $00, $00, $01, $00
     db $01, $00, $02, $00, $03, $00, $03, $00, $80, $80
 
-OpcodeHandler0A:
+; S118 movement program $02 for an NPC (script op $1C $02NN): jump up 2 tiles — measured net (+0, -32) px, 23 frames
+MoveProg02_JumpUp2Tiles:
     ld bc, $4790
     jp Jump_004_4745
 
@@ -1366,9 +1369,10 @@ OpcodeHandler0A:
     db $fd, $ff, $fe, $ff, $fe, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $00, $00, $00, $00
     db $01, $00, $01, $00, $01, $00, $02, $00, $02, $00, $03, $00, $80, $80
 
-OpcodeHandler0B:
+; S118 movement program $03 for the player (buffer $D8E9) (script op $1C $03NN): spin and float up 3 tiles — measured net (+0, -48) px, 63 frames
+PlayerProg03_SpinFloatUp:
     ld bc, $47d9
-    call HramScr_4745
+    call MoveProgCurveStep
     ld a, [$c850]
     or a
     ret nz
@@ -1393,7 +1397,8 @@ OpcodeHandler0B:
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $04, $00, $04, $00
     db $04, $00, $04, $00, $04, $00, $04, $00, $04, $00, $04, $00, $80, $80
 
-OpcodeHandler1A:
+; S118 movement program $04 for an NPC (script op $1C $04NN): jump — measured net (+0, +0) px, 17 frames
+MoveProg04_Jump:
     ld bc, $485d
     jp Jump_004_4745
 
@@ -1402,9 +1407,10 @@ OpcodeHandler1A:
     db $00, $00, $01, $00, $01, $00, $02, $00, $02, $00, $03, $00, $03, $00, $04, $00
     db $80, $80
 
-OpcodeHandler1B:
+; S118 movement program $05 for an NPC (script op $1C $05NN): leap 5 tiles right — measured net (+80, -8) px, 40 frames; X steps the LOW byte only (no carry)
+MoveProg05_LeapRight:
     ld bc, $4892
-    call HramScr_4745
+    call MoveProgCurveStep
     ldh a, [$d5]
     add $18
     ld l, a
@@ -1422,7 +1428,8 @@ OpcodeHandler1B:
     db $04, $00, $fa, $ff, $fc, $ff, $fd, $ff, $fe, $ff, $ff, $ff, $ff, $ff, $00, $00
     db $00, $00, $01, $00, $01, $00, $02, $00, $03, $00, $04, $00, $06, $00, $80, $80
 
-OpcodeHandlerAdvance:
+; S118 movement program $06 for the player (buffer $D8E9) (script op $1C $06NN): pause 64 frames (followers catch up) — measured net (+0, +0) px, 64 frames
+PlayerProg06_TrailPause:
     ldh a, [$d7]
     add $01
     ld e, a
@@ -1481,9 +1488,10 @@ ReadPartyMemberAddr:
     ret
 
 
-OpcodeHandler0D:
+; S118 movement program $07 for the player (buffer $D8E9) (script op $1C $07NN): leap 4 tiles left — measured net (-64, +0) px, 32 frames
+PlayerProg07_LeapLeft:
     ld bc, $494c
-    call HramScr_4745
+    call MoveProgCurveStep
     ldh a, [$92]
     ld l, a
     ldh a, [$93]
@@ -1506,7 +1514,8 @@ OpcodeHandler0D:
     db $00, $00, $00, $00, $00, $00, $01, $00, $01, $00, $01, $00, $01, $00, $02, $00
     db $02, $00, $02, $00, $02, $00, $03, $00, $03, $00, $04, $00, $04, $00, $80, $80
 
-OpcodeHandlerAdvance2:
+; S118 movement program $08 for an NPC (script op $1C $08NN): appear (flicker in) — measured net (+0, +0) px, 255 frames
+MoveProg08_Appear:
     ldh a, [$d7]
     add $01
     ld e, a
@@ -1563,9 +1572,10 @@ CheckAndBranch:
     ret
 
 
-OpcodeHandler0E:
+; S118 movement program $09 for an NPC (script op $1C $09NN): spin jump — measured net (+0, +0) px, 17 frames
+MoveProg09_SpinJump:
     ld bc, $4a0a
-    call HramScr_4745
+    call MoveProgCurveStep
     ld a, [$c850]
     or a
     ret nz
@@ -1603,7 +1613,8 @@ OpcodeHandler0E:
     db $00, $00, $01, $00, $01, $00, $02, $00, $02, $00, $03, $00, $03, $00, $04, $00
     db $80, $80
 
-OpcodeHandler12:
+; S118 movement program $0A for an NPC (script op $1C $0ANN): jump up and stay (38 px) — measured net (+0, -38) px, 16 frames
+MoveProg0A_JumpUpStay:
     ld bc, $4a32
     jp Jump_004_4745
 
@@ -1611,7 +1622,8 @@ OpcodeHandler12:
     db $fb, $ff, $fb, $ff, $fc, $ff, $fc, $ff, $fc, $ff, $fd, $ff, $fd, $ff, $fd, $ff
     db $fe, $ff, $fe, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $00, $00, $00, $00, $80, $80
 
-OpcodeHandler1C:
+; S118 movement program $0B for an NPC (script op $1C $0BNN): double jump up (58 px) — measured net (+0, -58) px, 37 frames
+MoveProg0B_DoubleJumpUp:
     ld bc, $4a58
     jp Jump_004_4745
 
@@ -1622,9 +1634,10 @@ OpcodeHandler1C:
     db $fc, $ff, $fc, $ff, $fd, $ff, $fd, $ff, $fd, $ff, $fe, $ff, $fe, $ff, $ff, $ff
     db $ff, $ff, $ff, $ff, $00, $00, $00, $00, $80, $80
 
-OpcodeHandler47:
+; S118 movement program $0C for an NPC (script op $1C $0CNN): run off left, sinking — measured net (-114, +46) px, 57 frames; X steps the LOW byte only (no carry)
+MoveProg0C_RunOffLeft:
     ld bc, $4ab5
-    call HramScr_4745
+    call MoveProgCurveStep
     ldh a, [$d5]
     add $18
     ld l, a
@@ -1645,7 +1658,8 @@ OpcodeHandler47:
     db $02, $00, $02, $00, $02, $00, $02, $00, $02, $00, $03, $00, $02, $00, $03, $00
     db $80, $80
 
-OpcodeHandlerAdvance3:
+; S118 movement program $0D for an NPC (script op $1C $0DNN): vanish (flicker out) — measured net (+0, +0) px, 255 frames
+MoveProg0D_Vanish:
     ldh a, [$d7]
     add $01
     ld e, a
@@ -1702,7 +1716,8 @@ CheckAndBranch2:
     ret
 
 
-OpcodeHandler48:
+; S118 movement program $0E for an NPC (script op $1C $0ENN): float up 1 tile — measured net (+0, -16) px, 66 frames
+MoveProg0E_FloatUp:
     ld a, [$c8a6]
     and $03
     ret nz
@@ -1715,7 +1730,8 @@ OpcodeHandler48:
     db $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff
     db $80, $80
 
-OpcodeHandler49:
+; S118 movement program $0F for an NPC (script op $1C $0FNN): leap up 4 tiles — measured net (+0, -64) px, 35 frames
+MoveProg0F_LeapUp4:
     ld bc, $4ba1
     jp Jump_004_4745
 
@@ -1726,7 +1742,8 @@ OpcodeHandler49:
     db $00, $00, $00, $00, $01, $00, $01, $00, $01, $00, $02, $00, $02, $00, $03, $00
     db $03, $00, $03, $00, $80, $80
 
-OpcodeHandler14:
+; S118 movement program $10 for an NPC (script op $1C $10NN): hop, then drop 4 tiles — measured net (+0, +64) px, 35 frames
+MoveProg10_HopDrop4:
     ld bc, $4bed
     jp Jump_004_4745
 
@@ -1737,7 +1754,8 @@ OpcodeHandler14:
     db $04, $00, $04, $00, $04, $00, $04, $00, $04, $00, $04, $00, $04, $00, $04, $00
     db $04, $00, $04, $00, $80, $80
 
-OpcodeHandler15:
+; S118 movement program $11 for an NPC (script op $1C $11NN): drop 4 tiles — measured net (+0, +64) px, 22 frames
+MoveProg11_Drop4:
     ld bc, $4c39
     jp Jump_004_4745
 
@@ -1746,7 +1764,8 @@ OpcodeHandler15:
     db $03, $00, $03, $00, $03, $00, $03, $00, $03, $00, $03, $00, $03, $00, $03, $00
     db $03, $00, $03, $00, $03, $00, $03, $00, $04, $00, $80, $80
 
-OpcodeHandler16:
+; S118 movement program $12 for an NPC (script op $1C $12NN): hop, then drop 2 tiles — measured net (+0, +32) px, 27 frames
+MoveProg12_HopDrop2:
     ld bc, $4c6b
     jp Jump_004_4745
 
@@ -1756,7 +1775,8 @@ OpcodeHandler16:
     db $03, $00, $03, $00, $04, $00, $04, $00, $04, $00, $05, $00, $05, $00, $05, $00
     db $05, $00, $80, $80
 
-OpcodeHandler17:
+; S118 movement program $13 for an NPC (script op $1C $13NN): rise high, hang, settle 40 px up — measured net (+0, -40) px, 66 frames
+MoveProg13_RiseHangSettle:
     ld bc, $4ca5
     jp Jump_004_4745
 
@@ -1771,7 +1791,8 @@ OpcodeHandler17:
     db $04, $00, $04, $00, $04, $00, $04, $00, $04, $00, $04, $00, $04, $00, $04, $00
     db $80, $80
 
-OpcodeHandler22:
+; S118 movement program $14 for an NPC (script op $1C $14NN): appear spinning (slow flicker) — measured net (+0, +0) px, 0 frames
+MoveProg14_AppearSpinning:
     call LoadScr_4d5c
     ld a, [$c850]
     or a
@@ -1867,7 +1888,8 @@ CheckAndBranch3:
     ret
 
 
-OpcodeHandlerAdvance4:
+; S118 movement program $15 for an NPC (script op $1C $15NN): fly in down-left ($D8E3/$D8E4) — measured net (-48, +43) px, 24 frames
+MoveProg15_FlyDownLeft:
     ldh a, [$d7]
     add $01
     ld e, a
@@ -1905,7 +1927,7 @@ SetupBranchTable:
     ld bc, $4fd9
 
 CallAndCachePtr:
-    call HramScr_4745
+    call MoveProgCurveStep
     ldh a, [$d5]
     add $18
     ld l, a
@@ -1968,7 +1990,8 @@ CallAndCachePtr:
 ; S101 r2: a fly step (program $16) — first call sets the frame counter
 ; [de] = (10 - $D8E3)*8 + 1 counting down; $D8E4 picks the curve table
 ; ($4DF3/$4E95/$4F37/$4FD9 = dy per frame); the pixel X (+$18) steps +2.
-OpcodeHandlerAdvance5:
+; S118 movement program $16 for an NPC (script op $1C $16NN): fly in down-right ($D8E3/$D8E4) — measured net (+48, +43) px, 24 frames
+MoveProg16_FlyDownRight:
     ldh a, [$d7]
     add $01
     ld e, a
@@ -2006,7 +2029,7 @@ SetupBranchTable2:
     ld bc, $4fd9
 
 CallAndCachePtr2:
-    call HramScr_4745
+    call MoveProgCurveStep
     ldh a, [$d5]
     add $18
     ld l, a
@@ -2024,7 +2047,8 @@ CallAndCachePtr2:
     ret
 
 
-OpcodeHandlerE3:
+; S118 movement program $17 for an NPC (script op $1C $17NN): fly off up-left ($D8E3 curve) — measured net (-48, -44) px, 26 frames
+MoveProg17_FlyUpLeft:
     ld a, [$d8e3]
     ld bc, $5144
     cp $01
@@ -2171,7 +2195,8 @@ OpcodeAdvanceE3:
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
     db $00, $00, $80, $80
 
-OpcodeHandlerE3B:
+; S118 movement program $18 for an NPC (script op $1C $18NN): fly off up-right ($D8E3 curve) — measured net (+48, -44) px, 26 frames
+MoveProg18_FlyUpRight:
     ld a, [$d8e3]
     ld bc, $5144
     cp $01
@@ -2260,9 +2285,10 @@ OpcodeAdvanceE3B:
     ret
 
 
-OpcodeHandler2C:
+; S118 movement program $19 for an NPC (script op $1C $19NN): leap 5 tiles left — measured net (-80, +8) px, 41 frames; X steps the LOW byte only (no carry)
+MoveProg19_LeapLeft:
     ld bc, $5559
-    call HramScr_4745
+    call MoveProgCurveStep
     ldh a, [$d5]
     add $18
     ld l, a
@@ -2280,9 +2306,10 @@ OpcodeHandler2C:
     db $ff, $ff, $00, $00, $00, $00, $00, $00, $01, $00, $01, $00, $02, $00, $03, $00
     db $03, $00, $04, $00, $04, $00, $04, $00, $05, $00, $05, $00, $05, $00, $80, $80
 
-OpcodeHandler2D:
+; S118 movement program $1A for the player (buffer $D8E9) (script op $1C $1ANN): spin jump — measured net (+0, +0) px, 17 frames
+PlayerProg1A_SpinJump:
     ld bc, $55ca
-    call HramScr_4745
+    call MoveProgCurveStep
     ld a, [$c850]
     or a
     ret nz
@@ -2387,228 +2414,258 @@ MarkScriptActive:
 ; Commands handle: conditional branches, variable reads/writes, NPC movement,
 ; sound effects, screen effects, event triggers, menu operations, etc.
 ;
-; SCRIPT COMMAND CATALOG (refined via code analysis):
-; Cmd  Label       Cat          Description
-; ---  ----------  -----------  -----------
-; $00  $5711       Flow         ConditionalBranchNZ: branch if flag clear
-; $01  $5740       Flow         ConditionalBranchZ: branch if flag set
-; $02  $576F       Event        ClearEventFlag: clear bit in $D99B+ bitfield
-; $03  $5788       Event        SetEventFlag: set bit in $D99B+ bitfield
-; $04  $57A1       Screen       TriggerScreenEffect: set $C8EF/$C8F0/$C8F1
-; $05  $57EB       Battle       TriggerBattle(ByEID): 1 param = EID -> $DA03/04, 1 enemy, $DA09=1
-; $06  $5819       State        IncrementC915: inc $C915 = close the open text box (S101: every boss win tail uses it after its text)
-; $07  $5824       State        InitDialogMode: set wGameState bit 0, init $C917
-; $08  $5842       Flow         NOP: no operation
-; $09  $5843       Timer        SetDelay: set frame countdown in $D8DB
-; $0A  $5860       NPC          SetNPCMoveX: set NPC + X delta, trigger walk
-; $0B  $5898       NPC          SetNPCMoveY: set NPC + Y delta, trigger walk
-; $0C  $58D0       NPC          SetNPCFacing: set facing via NPC buffer (81 lines)
-; $0D  $5968       NPC          WriteNPCBuffer (npc, field, value): slot byte write; field 0 = the TYPE byte, so `$0D n,0,0` REVEALS a hidden (bit-6) NPC (S101: Villager boss reveals Watabou, slot 1 $70 -> $00)
-; $0E  $59D2       Flow         BranchByScreen: branch based on $C925 screen index
-; $0F  $5A02       Map          MapTransitionFull: write $C96D-$C96F, set $C88F
-; $10  $5A6F       NPC          NPCMoveToPos: move NPC to position via $D7EA (47 lines)
-; $11  $5AC5       NPC          NPCMoveToPos2: move NPC to position via $D7EC
-; $12  $5B1B       Flow         write_ram: param1=addr, param2=value (ScriptWriteRAM)
-; $13  $5B49       Flow         ReadScriptParams: read 2 params, store to RAM
-; $14  $5B79       Flow         BranchAlways: unconditional branch via $7212
-; $15  $5B8F       Flow         ConditionalBranch3: complex condition + branch
-; $16  $5BD4       State        ReturnFromScript: pop and continue
-; $17  $5BDB       Map          GateSetup: configure gate tileset ($9380/$9600)
-; $18  $5C14       Monster      MonsterPartyOp: party monster operation (bank $01/$14)
-; $19  $5C6D       Timer        SetDelayAndFlags: delay + set $D8D7 flags
-; $1A  $5C86       NPC          NPCMoveSequence: multi-step NPC movement ($D8E9)
-; $1B  $5CCF       NPC          NPCMoveSequence2: movement variant with $D8E9
-; $1C  $5D1A       NPC          NpcRunAnim ($AANN): $D8E9+8*NN := [1,0,AA,NN], sets $D8D7.4 — NPC NN runs movement/anim program AA. S101 r2 (PyBoy-measured): AA=$16 = FLY IN from the NPC's current pixel position: $D8E3*8 frames, +2 px right per frame, down along the curve $D8E4 picks (1-3, else 4); $D8E3=3/$D8E4=3 = +48 px right, +43 px down (vanilla Healer exit: $0307 from an off-screen home). NOT a destination tile. AA=$04 = hop in place; $19 waits for it
-; $1D  $5D4B       NPC          LockMovement: set $D8D7 bit 5, suppress facing
-; $1E  $5D53       NPC          UnlockMovement: clear $D8D7 bit 5
-; $1F  $5D5B       Battle       ArenaBattleSetup: 3-enemy arena party from
-;                                wArenaGroup/wColiseumBattle (EID $E0+9g+3m+slot);
-;                                lobby display list $D7CA-$D7D1 (see routine header)
-; $20  $5E5E       Battle       SetBattleMode: set $DA09, $C905, $C8EB
-; $21  $5E6D       Flow         SkipScriptData2: read 1 param, discard
-; $22  $5E87       Script       SetD8D7Bit3: set NPC walk-toward flag
-; $23  $5E8F       Monster      MonsterCheck: check monster in $CAC1 storage (62 lines)
-; $24  $5F13       Data         CallScriptBank_E1: call bank $0C/$0D/$0E entry 1
-; $25  $5F36       Monster      CheckPartyMonster: check party via bank $01
-; $26  $5F52       State        SetC88F: set movement suppression flag
-; $27  $5F5C       Monster      MonsterPartyOp2: bank $01 entry 3/9
-; $28  $5F67       Monster      CheckStorageFull: branch if 20 monsters stored
-; $29  $5F9A       Monster      AddMonster: add to storage by enemy stats ID
-; $2A  $5FDB       Inventory    GiveItem: add item to first empty slot
-; $2B  $6002       Monster      CheckMonsterLevel: check levels in storage (62 lines)
-; $2C  $6064       Inventory    CheckInvFull: branch if inventory full
-; $2D  $6093       Event        MassiveEventHandler: 263-line event processor
-;                                Accesses $C600-$C800, bank $03/$01
-; $2E  $61E0       Event        CheckStepVariable: read $D9DF/$D9E0
-; $2F  $623A       Flow         ReadAndDiscard: read 2 params, continue
-; $30  $6253       Monster      CheckMonsterSpecies: check $CAC2 species data
-; $31  $62AB       Monster      CheckPartyLevel: check $CA94 party level
-; $32  $62DD       Monster      CheckMonsterSpecies2: check $CACA species
-; $33  $6332       Flow         SkipScriptData3: skip params
-; $34  $634F       Monster      CheckMonsterSpecies3: check $CAEA species (50 lines)
-; $35  $63BB       Monster      ResetPartyOrder: bank $01 entry 3/9
-; $36  $63C6       Battle       MimicBattleSetup: [$CAB4 arena-progress tier] ->
-;                                word table $63EF (EIDs 317-324 Mimic L1-L38), 1 enemy
-; $37  $6401       Event        CheckStoryVariable: check $D9CF region
-; $38  $643F       Monster      CheckPartyMonster2: check $CAEA data (48 lines)
-; $39  $64A7       Flow         ReadAndContinue: read params, continue
-; $3A  $64C2       Map          GateTransition: 113-line gate transition handler
-;                                Accesses $C8F2-$C8FF, bank $00/$16
-; $3B  $65AB       Map          MapTransitionFade: transition with $C96D + fade
-; $3C  $6618       Script       SetSecondaryDelay: set $D8D8 bit 2
-; $3D  $6620       Script       ClearSecondaryDelay: clear $D8D8 bit 2
-; $3E  $6628       State        ToggleC88E: toggle map rendering flag
-; $3F  $6632       Monster      CheckSpeciesInParty: check $CACA for species
-; $40  $6646       Monster      CheckMonsterWithBGM: monster check + $C8B6 BGM
-; $41  $669D       Sound        SetBGM: save current, play new BGM
-; $42  $66BD       Map          SaveMapPosition: save $C8F7-$C8FF for return
-; $43  $6723       Map          RestoreMapPosition: restore and transition back
-; $44  $676F       NPC          SetNPCPosAndFace: set position+facing via buffer
-; $45  $67B1       Monster      FullMonsterOp: bank $01 entries 3/5/9
-; $46  $67FD       Event        CheckDungeonFlags: check $DDB4/$DDCE/$DDE8
-; $47  $6822       NPC          FaceUp n: slot n-1 +6 (facing) := 2; n=0 -> the PLAYER (HRAM $8D-$8F via the shared tail, mislabeled ScriptEndCheck) — S101 (the S97 facing field; the old 'buffer/show/hide' names were wrong)
-; $48  $684D       NPC          FaceDown n: facing := 0 (see $47; the boss scenes spin Watabou with $47/$49/$48/$4A + $4D delays)
-; $49  $6866       NPC          FaceLeft n: facing := 1 (see $47)
-; $4A  $687F       NPC          FaceRight n: facing := 3 (see $47)
-; $4B  $6898       Sound        ReadSavedBGM: read $C8B6 (prev BGM)
-; $4C  $68A1       Sound        RestoreBGM: restore BGM from $C8B6
-; $4D  $68BA       Timer        SetLongDelay: extended delay via $D8D8
-; $4E  $68D7       Map          SaveGateInfo: save $C8FB-$C8FF gate state
-; $4F  $690B       Map          RestoreFromGate: restore gate state, transition
-; $50  $6957       NPC          SetNPCField: write to $D7F8 NPC field
-; $51  $696C       Event        CheckAndBranch: check $CA94, branch (42 lines)
-; $52  $69A9       Battle       RandomScaledBattle: 3 random EIDs from word table
-;                                $6A3C (8 bases $0160..$01D0 by (party level sum+1)/20,
-;                                cap 7; EID=base+rand&$0F), $DA09=2
-; $53  $6A61       NPC          NPCComplexOp: 74-line NPC buffer manipulation
-; $54  $6ACE       State        CheckC180: check $C180 game flag
-; $55  $6AFA       Monster      MonsterGive: give monster via bank $03
-; $56  $6B3A       State        CheckC180_2: check $C180 variant
-; $57  $6B73       State        CheckC180_3: check $C180 variant
-; $58  $6BA0       Map          MapTransitionSpec: special map transition ($C939)
-; $59  $6BDF       Event        HugeNPCHandler: 184-line NPC event processor
-;                                Accesses $CAC0-$CAC2, bank $00/$14
-; $5A  $6D56       Battle       TriggerBattle3: 1 param = EID -> $DA03/04, 1 enemy,
-;                                $DA09=3 (boss mode). ALL gate-boss fights use this
-; $5B  $6D84       Battle       SetBattleFlags: set $C905/$DA09
-; $5C  $6D93       Battle       ColiseumInitPrize: generates the 3 in-gate Coliseum
-;                                master parties (random, level-banded windows keyed on
-;                                MAX party level) + rolls prize $D9D0 ($6F44/$6F54)
-; $5D  $6F64       Event        CheckStoryRegion: check $D9D0 region var
-; $5E  $6F89       State        CheckLabyrinth: check $D951/$C0D8
-; $5F  $6F9B       Monster      CheckMultiSpecies: check party species (44 lines)
-; $60  $6FFB       Monster      CheckInventoryItem: check $CA40/$CB23
-; $61  $7038       Data         CallScriptBank_E2: call bank $0C/$0D/$0E entry 2
-; $62  $705B       Screen       VRAMTileOp: VRAM operation at $9800
-; $63  $707F       Monster      MonsterSpecialOp: bank $01 entry 3 (62 lines)
-; $64  $70D5       Flow         BranchIfPartyHealthy (1 param = target): for each
-;                                party slot < $CA8D: not KO ($CB0B=0), HP full
-;                                ($CB13==$CB11), MP full ($CB17==$CB15) → branch;
-;                                any slot fails → continue (the Priest's "no need")
-; $65  $71D2       Flow         WaitDD80: 0 params; repeats itself (counter-1,
-;                                ret) until [$DD80] & [$DD9A] == $FF
+; SCRIPT COMMAND CATALOG — S118 rewrite (handler code read + PyBoy-measured;
+; the editor's names: editor2/core/script_ops.py; prose: BANK04_SCRIPT_ENGINE
+; "Script opcodes as measured (S118)"). Params = script words after the opcode.
+; Actor n: 0 = the player (HRAM $92/$93 X, $95/$96 Y, $8E facing), n >= 1 = NPC
+; slot n-1 ($D7D2 + 32*(n-1); +6 facing, +$18 X, +$1A Y). Facing 0 down 1 left
+; 2 up 3 right. Field-mode ticks: delays count once per 8 frames ($C8A4 & 7).
+; Cmd  Handler  Name / params — meaning
+; ---  -------  --------------------------------------------------------------
+; $00  $5711    if_flag_clear(flag, target) — Go to target when the event flag is CLEAR (else
+;                 carry on).
+; $01  $5740    if_flag_set(flag, target) — Go to target when the event flag is SET.
+; $02  $576F    clear_flag(flag) — Clear an event flag.
+; $03  $5788    set_flag(flag) — Set an event flag.
+; $04  $57A1    open_screen(kind, text) — Open a game screen of bank $09 (0 / 12 = the shop, 4 =
+;                 the arena class menu, …) speaking with the text id; plays sound $59 unless
+;                 kind is 9 or 10.
+; $05  $57EB    battle(enemy) — Fight one enemy (enemy-stats row). A win resumes the script; a
+;                 loss sends you to the Castle.
+; $06  $5819    close_text() — Close the open text box.
+; $07  $5824    init_dialog() — Open dialog mode (needed before text in a script that did not
+;                 start by talking to someone).
+; $08  $5842    nop() — Nothing (one tick).
+; $09  $5843    delay(ticks) — Wait. Counts down once every 8 frames (field mode; PyBoy S118).
+; $0A  $5860    walk_x_wait(actor, pixels) — One actor walks left/right by pixels; the script
+;                 waits for it. 3 px per 4 frames.
+; $0B  $5898    walk_y_wait(actor, pixels) — One actor walks up/down by pixels; the script waits
+;                 for it.
+; $0C  $58D0    face(actor, direction) — Turn an actor: 0 down, 1 left, 2 up, 3 right (0 = the
+;                 player).
+; $0D  $5968    npc_write(actor, field, value) — Write one byte of an actor's RAM slot. Field 0
+;                 is the type byte: $00 = shown, $40 = hidden (bit 6). Actor 0: the field word
+;                 is an ADDRESS ($FF90 = the player's flags; $40 hides the player).
+; $0E  $59D2    branch_screen(screen, target) — Go to target when the current screen is this
+;                 one.
+; $0F  $5A02    map_transition(map, x, y) — Change room: map (low byte; high byte = the gate
+;                 flag) and the arrival in absolute pixels. Ends the script.
+; $10  $5A6F    walk_to_x(actor, x) — One actor walks to an absolute pixel X; the script waits.
+; $11  $5AC5    walk_to_y(actor, y) — One actor walks to an absolute pixel Y; the script waits.
+; $12  $5B1B    write_ram(address, value) — Write a byte to RAM (step counters, story variables
+;                 …).
+; $13  $5B49    write_ram2(address, value) — Write a 16-bit word to RAM.
+; $14  $5B79    goto(target) — Go to target.
+; $15  $5B8F    check_and_branch(address, value, target) — Go to target when the RAM byte equals
+;                 value (YES/NO answers are $C83C: 0 = YES).
+; $16  $5BD4    refresh_sprites() — Redraw the sprites and the screen position (one tick).
+; $17  $5BDB    bedroom_tile_swap() — Intro bedroom only (screens 4/5): swap tiles $9380<->$9360
+;                 and $9600<->$9620 (the night look).
+; $18  $5C14    give_monster(enemy) — A monster built from the enemy row joins (party if fewer
+;                 than 3).
+; $19  $5C6D    wait_movement() — Wait until every queued movement / animation has finished.
+; $1A  $5C86    npc_walk_x(actor, pixels) — Queue a left/right walk for an actor (actors walk
+;                 together; use wait_movement). 3 px per 4 frames, double with walk_fast.
+; $1B  $5CCF    npc_walk_y(actor, pixels) — Queue an up/down walk (after a queued X walk of the
+;                 same actor).
+; $1C  $5D1A    trigger_anim(program_actor) — Run movement program $PP on actor $NN (word
+;                 $PPNN): jumps, hops, flights, appearing / vanishing … (PROGRAMS). Use
+;                 wait_movement.
+; $1D  $5D4B    lock_movement() — Walks and programs no longer turn the actors (walk backwards).
+; $1E  $5D53    unlock_movement() — Walks turn the actors again.
+; $1F  $5D5B    arena_setup() — Set the arena team from wArenaGroup / wColiseumBattle.
+; $20  $5E5E    start_battle() — Start the battle already set up ($DA02-$DA08).
+; $21  $5E6D    sound(sound) — Play a sound effect.
+; $22  $5E87    walk_fast() — The next queued walks run at double speed (until they finish).
+; $23  $5E8F    if_slot_skill_a(slot, target) — Go to target when party monster slot knows one
+;                 of skills $00-$05/$44/$5C-$5F (its name to $C180).
+; $24  $5F13    draw_tiles(data) — Draw a tile patch (data = address in this script bank) onto
+;                 the visible background.
+; $25  $5F36    remove_monster() — Remove the monster picked by the last party check ($D8E1).
+; $26  $5F52    reload_room() — Reload the room.
+; $27  $5F5C    refresh_party() — Re-count the party (bank $01 entries 9 + 3).
+; $28  $5F67    if_storage_full(target) — Go to target when all 20 monster slots are taken.
+; $29  $5F9A    add_monster(enemy) — Add a monster (enemy row) to the farm.
+; $2A  $5FDB    give_item(item) — Give an item.
+; $2B  $6002    if_monster_pedigree(target) — Go to target when a stored monster of level 10+
+;                 matches the 8 bytes at $04:$605C.
+; $2C  $6064    check_inv_full(target) — Go to target when the bag (20) is full.
+; $2D  $6093    monster_slot_dialogue(slot) — Say the family line of party monster slot (arena
+;                 lobby).
+; $2E  $61E0    pick_from_table(row) — $D9E0 := table $04:$620D[row*5 + $D9DF - 1].
+; $2F  $623A    inc_ram(address) — Add 1 to a RAM byte.
+; $30  $6253    if_slot_stat_100(slot, target) — Go to target when party slot's $CB19 word >=
+;                 100.
+; $31  $62AB    if_seen_100(target) — Go to target when 100+ species are marked in the library.
+; $32  $62DD    if_slot_species_af(slot, target) — Go to target when party slot is species $AF.
+; $33  $6332    compare_gold(amount) — Compare the gold with amount.
+; $34  $634F    if_slot_skill_b(slot, target) — Go to target when party slot knows skill
+;                 $0F/$10/$11/$45/$5A.
+; $35  $63BB    refresh_party2() — Re-count the party.
+; $36  $63C6    mimic_battle() — Fight the Mimic of the current arena tier.
+; $37  $6401    give_stored_item(index) — Give the item stored at $D9CF + index (name to $C180).
+; $38  $643F    if_slot_skill_c(slot, target) — Go to target when party slot knows skill
+;                 $84-$87.
+; $39  $64A7    load_text(text) — Resolve a text id (TextBankDispatch) without showing it.
+; $3A  $64C2    to_breeding_scene() — Go to the breeding ceremony (map $08) with the chosen
+;                 monster.
+; $3B  $65AB    warp_fade(map, x, y) — Change room with the wavy fade (the boss-win exit).
+; $3C  $6618    text_box_bottom() — The next text box opens at the BOTTOM of the screen (one
+;                 box; $D8D8 bit 0, read by bank $06).
+; $3D  $6620    text_box_top() — The next text box opens at the TOP of the screen ($D8D8 bit 1).
+; $3E  $6628    change_game_mode() — Fade out and switch to the game mode in $C88B (e.g. a
+;                 naming screen) — $C88E is the main loop's mode request.
+; $3F  $6632    load_lead_name() — Put the first party monster's name in $C180 for the next
+;                 text.
+; $40  $6646    if_party_has_species(species, target) — Go to target when a monster of that
+;                 species is in the party.
+; $41  $669D    set_bgm(song) — Play a song (the current one is kept for restore_bgm).
+; $42  $66BD    save_return_point(text, actor) — Remember this room and the player's spot /
+;                 facing for a return (the text and actor are used by $44 on the way back).
+; $43  $6723    return_to_saved_point() — Go back to the room / spot saved by save_return_point.
+; $44  $676F    back_from_return() — After the return: face as saved, turn the saved actor to
+;                 the player and say the saved text + 9.
+; $45  $67B1    restore_party_snapshot() — Restore the party list from the $CAB9 snapshot.
+; $46  $67FD    wait_dungeon_flags() — Wait until $DDB4/$DDCE/$DDE8/$DE02 are all $FF.
+; $47  $6822    face_up(actor) — Actor faces up (0 = the player).
+; $48  $684D    face_down(actor) — Actor faces down.
+; $49  $6866    face_left(actor) — Actor faces left.
+; $4A  $687F    face_right(actor) — Actor faces right.
+; $4B  $6898    restore_bgm() — Play the song set_bgm replaced.
+; $4C  $68A1    wait_dpad() — Wait until the player presses a direction on the D-pad.
+; $4D  $68BA    long_delay(frames) — Wait, counting every script tick ($D8D8 bit 2).
+; $4E  $68D7    save_position() — Remember this room and the player's spot / facing.
+; $4F  $690B    return_to_saved_position() — Go back to the room / spot saved by save_position.
+; $50  $6957    face_saved() — The player faces as saved; NPC 2 faces the player.
+; $51  $696C    library_tier() — Count the library entries -> tier 0-11 in $D8E1 (number to
+;                 $C180).
+; $52  $69A9    random_battle() — Fight 3 random monsters scaled to the party's levels.
+; $53  $6A61    npc1_face_player() — NPC 1 turns toward the player.
+; $54  $6ACE    give_random_item() — Give a random item 1-37.
+; $55  $6AFA    take_random_item() — Take a random item from the bag (count to $D8E1).
+; $56  $6B3A    gold_value() — Gold / 10 to $D8E1 (and the number to $C180); adds it back.
+; $57  $6B73    give_random_item2() — Give a random item $13-$17.
+; $58  $6BA0    floor_skip() — Gate floors: jump about 20 floors deeper.
+; $59  $6BDF    train_slot(slot) — Raise party slot's weakest stat by 20.
+; $5A  $6D56    trigger_battle3(enemy) — Boss fight with one enemy ($DA09 = 3). A win resumes
+;                 the script.
+; $5B  $6D84    boss_battle() — Boss fight with the preset enemies ($DA02-$DA08).
+; $5C  $6D93    coliseum_init() — Roll the three Coliseum teams and the prize.
+; $5D  $6F64    give_coliseum_prize() — Give the Coliseum prize item.
+; $5E  $6F89    reset_ceremony() — $D951 := 7 and clear $C0D8 x 40.
+; $5F  $6F9B    if_slot_level_below(slot, target) — Go to target when party slot's level is
+;                 below its maximum.
+; $60  $6FFB    if_gold_short(target) — Go to target when gold < (lead monster level + 1) x 10;
+;                 else pay it.
+; $61  $7038    draw_attrs(data) — Draw a background patch's colours (VRAM bank 1) from data in
+;                 this script bank.
+; $62  $705B    blank_screen() — Fill tile $DA with $FF and the whole background map with it.
+; $63  $707F    draw_buffer() — Copy the 20x16 $C300 buffer onto the visible background.
+; $64  $70D5    if_party_healthy(target) — Go to target when every party monster is at full HP
+;                 and MP.
+; $65  $71D2    wait_dd80() — Wait until [$DD80] & [$DD9A] == $FF.
 ; ===========================================================================
 
-    dw label4_5711
-    dw label4_5740
-    dw label4_576f
-    dw label4_5788
-    dw label4_57a1
+    dw ScriptCmd00_IfFlagClear
+    dw ScriptCmd01_IfFlagSet
+    dw ScriptCmd02_ClearFlag
+    dw ScriptCmd03_SetFlag
+    dw ScriptCmd04_OpenScreen
     dw TriggerBattleByEID
-    dw label4_5819
-    dw label4_5824
-    dw label4_5842
-    dw label4_5843
-    dw label4_5860
-    dw label4_5898
-    dw label4_58d0
-    dw label4_5968
-    dw label4_59d2
-    dw label4_5a02
-    dw label4_5a6f
-    dw label4_5ac5
+    dw ScriptCmd06_CloseText
+    dw ScriptCmd07_InitDialog
+    dw ScriptCmd08_Nop
+    dw ScriptCmd09_Delay
+    dw ScriptCmd0A_WalkXWait
+    dw ScriptCmd0B_WalkYWait
+    dw ScriptCmd0C_Face
+    dw ScriptCmd0D_NpcWrite
+    dw ScriptCmd0E_BranchScreen
+    dw ScriptCmd0F_MapTransition
+    dw ScriptCmd10_WalkToX
+    dw ScriptCmd11_WalkToY
     dw ScriptWriteRAM
-    dw label4_5b49
-    dw label4_5b79
-    dw label4_5b8f
-    dw label4_5bd4
-    dw label4_5bdb
-    dw label4_5c14
-    dw label4_5c6d
-    dw label4_5c86
-    dw label4_5ccf
-    dw label4_5d1a
-    dw label4_5d4b
-    dw label4_5d53
+    dw ScriptCmd13_WriteRAM2
+    dw ScriptCmd14_Goto
+    dw ScriptCmd15_CheckAndBranch
+    dw ScriptCmd16_RefreshSprites
+    dw ScriptCmd17_BedroomTileSwap
+    dw ScriptCmd18_GiveMonster
+    dw ScriptCmd19_WaitMovement
+    dw ScriptCmd1A_QueueWalkX
+    dw ScriptCmd1B_QueueWalkY
+    dw ScriptCmd1C_MoveProgram
+    dw ScriptCmd1D_LockFacing
+    dw ScriptCmd1E_UnlockFacing
     dw ArenaBattleSetup
-    dw label4_5e5e
-    dw label4_5e6d
-    dw label4_5e87
-    dw label4_5e8f
-    dw label4_5f13
-    dw label4_5f36
-    dw label4_5f52
-    dw label4_5f5c
-    dw label4_5f67
-    dw label4_5f9a
-    dw label4_5fdb
-    dw label4_6002
-    dw label4_6064
-    dw label4_6093
-    dw label4_61e0
-    dw label4_623a
-    dw label4_6253
-    dw label4_62ab
-    dw label4_62dd
-    dw label4_6332
-    dw label4_634f
-    dw label4_63bb
-    dw label4_63c6
-    dw label4_6401
-    dw label4_643f
-    dw label4_64a7
-    dw label4_64c2
-    dw label4_65ab
-    dw label4_6618
-    dw label4_6620
-    dw label4_6628
-    dw label4_6632
-    dw label4_6646
-    dw label4_669d
-    dw label4_66bd
-    dw label4_6723
-    dw label4_676f
-    dw label4_67b1
-    dw label4_67fd
-    dw label4_6822
-    dw label4_684d
-    dw label4_6866
-    dw label4_687f
-    dw label4_6898
-    dw label4_68a1
-    dw label4_68ba
-    dw label4_68d7
-    dw label4_690b
-    dw label4_6957
-    dw label4_696c
-    dw label4_69a9
-    dw label4_6a61
-    dw label4_6ace
-    dw label4_6afa
-    dw label4_6b3a
-    dw label4_6b73
-    dw label4_6ba0
-    dw label4_6bdf
-    dw label4_6d56
-    dw label4_6d84
+    dw ScriptCmd20_StartBattle
+    dw ScriptCmd21_Sound
+    dw ScriptCmd22_WalkFast
+    dw ScriptCmd23_IfSlotSkillA
+    dw ScriptCmd24_DrawTiles
+    dw ScriptCmd25_RemoveMonster
+    dw ScriptCmd26_ReloadRoom
+    dw ScriptCmd27_RefreshParty
+    dw ScriptCmd28_IfStorageFull
+    dw ScriptCmd29_AddMonster
+    dw ScriptCmd2A_GiveItem
+    dw ScriptCmd2B_IfMonsterPedigree
+    dw ScriptCmd2C_IfBagFull
+    dw ScriptCmd2D_MonsterSlotDialogue
+    dw ScriptCmd2E_PickFromTable
+    dw ScriptCmd2F_IncRAM
+    dw ScriptCmd30_IfSlotStat100
+    dw ScriptCmd31_IfSeen100
+    dw ScriptCmd32_IfSlotSpeciesAF
+    dw ScriptCmd33_CompareGold
+    dw ScriptCmd34_IfSlotSkillB
+    dw ScriptCmd35_RefreshParty2
+    dw ScriptCmd36_MimicBattle
+    dw ScriptCmd37_GiveStoredItem
+    dw ScriptCmd38_IfSlotSkillC
+    dw ScriptCmd39_LoadText
+    dw ScriptCmd3A_ToBreedingScene
+    dw ScriptCmd3B_WarpFade
+    dw ScriptCmd3C_TextBoxBottom
+    dw ScriptCmd3D_TextBoxTop
+    dw ScriptCmd3E_ChangeGameMode
+    dw ScriptCmd3F_LoadLeadName
+    dw ScriptCmd40_IfPartyHasSpecies
+    dw ScriptCmd41_SetBGM
+    dw ScriptCmd42_SaveReturnPoint
+    dw ScriptCmd43_ReturnToSavedPoint
+    dw ScriptCmd44_BackFromReturn
+    dw ScriptCmd45_RestorePartySnapshot
+    dw ScriptCmd46_WaitDungeonFlags
+    dw ScriptCmd47_FaceUp
+    dw ScriptCmd48_FaceDown
+    dw ScriptCmd49_FaceLeft
+    dw ScriptCmd4A_FaceRight
+    dw ScriptCmd4B_RestoreBGM
+    dw ScriptCmd4C_WaitDpad
+    dw ScriptCmd4D_LongDelay
+    dw ScriptCmd4E_SavePosition
+    dw ScriptCmd4F_ReturnToSavedPosition
+    dw ScriptCmd50_FaceSaved
+    dw ScriptCmd51_LibraryTier
+    dw ScriptCmd52_RandomBattle
+    dw ScriptCmd53_Npc1FacePlayer
+    dw ScriptCmd54_GiveRandomItem
+    dw ScriptCmd55_TakeRandomItem
+    dw ScriptCmd56_GoldValue
+    dw ScriptCmd57_GiveRandomItem2
+    dw ScriptCmd58_FloorSkip
+    dw ScriptCmd59_TrainSlot
+    dw ScriptCmd5A_BossBattleEID
+    dw ScriptCmd5B_BossBattle
     dw ColiseumInitPrize
-    dw label4_6f64
-    dw label4_6f89
-    dw label4_6f9b
-    dw label4_6ffb
-    dw label4_7038
-    dw label4_705b
-    dw label4_707f
+    dw ScriptCmd5D_GiveColiseumPrize
+    dw ScriptCmd5E_ResetCeremony
+    dw ScriptCmd5F_IfSlotLevelBelow
+    dw ScriptCmd60_IfGoldShort
+    dw ScriptCmd61_DrawAttrs
+    dw ScriptCmd62_BlankScreen
+    dw ScriptCmd63_DrawBuffer
     dw label4_70d5
     dw label4_71d2
 
@@ -2660,7 +2717,7 @@ ClearTextQueuedFlag:
 ; If NZ (condition true): continue to next command.
 ; If Z (condition false): read another BC and branch via ScriptBranch.
 ; ---------------------------------------------------------------------------
-label4_5711:
+ScriptCmd00_IfFlagClear:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -2684,7 +2741,7 @@ label4_5711:
 ; Script Command $01: ConditionalBranchZ
 ; Same as $00 but inverted: branches if condition IS true (Z flag).
 ; ---------------------------------------------------------------------------
-label4_5740:
+ScriptCmd01_IfFlagSet:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -2709,7 +2766,7 @@ label4_5740:
 ; Reads event flag index from script, clears that bit in the $D99B
 ; event bitfield via ClearEventFlag. Used to reset story state.
 ; ---------------------------------------------------------------------------
-label4_576f:
+ScriptCmd02_ClearFlag:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -2725,7 +2782,7 @@ label4_576f:
 ; Reads event flag index from script, sets that bit in the $D99B
 ; event bitfield via SetEventFlag. Used to mark story progress.
 ; ---------------------------------------------------------------------------
-label4_5788:
+ScriptCmd03_SetFlag:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -2742,7 +2799,7 @@ label4_5788:
 ; $C8F0/$C8F1 (effect parameters). Sets wGameState bit 4.
 ; Plays sound effect $59 unless effect type is $09 or $0A.
 ; ---------------------------------------------------------------------------
-label4_57a1:
+ScriptCmd04_OpenScreen:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -2815,7 +2872,7 @@ TriggerBattleByEID:
     ret
 
 
-label4_5819:
+ScriptCmd06_CloseText:
     ld a, [wGameState]
     bit 0, a
     ret z
@@ -2824,7 +2881,7 @@ label4_5819:
     inc [hl]
     ret
 
-label4_5824:
+ScriptCmd07_InitDialog:
     ld a, [wGameState]
     bit 0, a
     ret nz
@@ -2844,7 +2901,7 @@ label4_5824:
 ; ---------------------------------------------------------------------------
 ; Script Command $08: NOP — No operation, just returns
 ; ---------------------------------------------------------------------------
-label4_5842:
+ScriptCmd08_Nop:
     ret
 
 ; ---------------------------------------------------------------------------
@@ -2853,7 +2910,7 @@ label4_5842:
 ; Sets $D8D7 bit 2 (delay active). Entry 4 will decrement each frame
 ; and resume script execution when counter reaches 0.
 ; ---------------------------------------------------------------------------
-label4_5843:
+ScriptCmd09_Delay:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -2874,7 +2931,7 @@ label4_5843:
 ; Sets $D8D7 bit 3 (NPC walk-toward pending).
 ; Entry 4 will animate the NPC moving step-by-step.
 ; ---------------------------------------------------------------------------
-label4_5860:
+ScriptCmd0A_WalkXWait:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -2904,7 +2961,7 @@ label4_5860:
 ; Same as $0A but for Y axis. Reads NPC number → $D8DC,
 ; Y movement delta → $D8DF/$D8E0. Sets bit 3.
 ; ---------------------------------------------------------------------------
-label4_5898:
+ScriptCmd0B_WalkYWait:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -2929,7 +2986,7 @@ label4_5898:
     set 3, [hl]
     ret
 
-label4_58d0:
+ScriptCmd0C_Face:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -2939,7 +2996,7 @@ label4_58d0:
     call MapTypeDispatch
     ld a, c
     or a
-    jr nz, TextOpcodeNPCIndex
+    jr nz, FaceNpcSlot
 
     ld a, [wScriptCounter]
     add $01
@@ -2949,10 +3006,10 @@ label4_58d0:
     ld [$d8d6], a
     call MapTypeDispatch
 
-ScriptEndCheck:
+FacePlayerTail:
     ld a, c
     or a
-    jr nz, TextOpcodeCheck1
+    jr nz, FacePlayerDir1
 
     ld a, $00
     ldh [$8d], a
@@ -2963,9 +3020,9 @@ ScriptEndCheck:
     jp Jump_004_55f5
 
 TextOpcodeCheck1Alias:
-TextOpcodeCheck1:
+FacePlayerDir1:
     cp $01
-    jr nz, TextOpcodeCheck2
+    jr nz, FacePlayerDir2
 
     ld a, $20
     ldh [$8d], a
@@ -2976,9 +3033,9 @@ TextOpcodeCheck1:
     jp Jump_004_55f5
 
 TextOpcodeCheck2Alias:
-TextOpcodeCheck2:
+FacePlayerDir2:
     cp $02
-    jr nz, TextOpcodeCheck3
+    jr nz, FacePlayerDir3
 
     ld a, $00
     ldh [$8d], a
@@ -2989,7 +3046,7 @@ TextOpcodeCheck2:
     jp Jump_004_55f5
 
 TextOpcodeCheck3Alias:
-TextOpcodeCheck3:
+FacePlayerDir3:
     ld a, $00
     ldh [$8d], a
     ld a, $01
@@ -2999,7 +3056,7 @@ TextOpcodeCheck3:
     jp Jump_004_55f5
 
 TextOpcodeNPCIndexAlias:
-TextOpcodeNPCIndex:
+FaceNpcSlot:
     dec a
     swap a
     add a
@@ -3021,7 +3078,7 @@ TextOpcodeNPCIndex:
     ld [hl], c
     jp Jump_004_55f5
 
-label4_5968:
+ScriptCmd0D_NpcWrite:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -3031,7 +3088,7 @@ label4_5968:
     call MapTypeDispatch
     ld a, c
     or a
-    jr nz, TextOpcodeNPCIndex2
+    jr nz, NpcWriteSlot
 
     ld a, [wScriptCounter]
     add $01
@@ -3042,9 +3099,9 @@ label4_5968:
     call MapTypeDispatch
     ld l, c
     ld h, b
-    jr TextReadScriptPtr
+    jr NpcWriteValue
 
-TextOpcodeNPCIndex2:
+NpcWriteSlot:
     dec a
     swap a
     add a
@@ -3065,7 +3122,7 @@ TextOpcodeNPCIndex2:
     pop hl
     add hl, bc
 
-TextReadScriptPtr:
+NpcWriteValue:
     push hl
     ld a, [wScriptCounter]
     add $01
@@ -3085,7 +3142,7 @@ TextReadScriptPtr:
 ; Otherwise skips both params and continues.
 ; NOTE: This is NOT a map transition (that is opcode $0F).
 ; ---------------------------------------------------------------------------
-label4_59d2:
+ScriptCmd0E_BranchScreen:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -3106,7 +3163,7 @@ label4_59d2:
     call MapTypeDispatch
     jp ScriptReturnProcess
 
-label4_5a02:
+ScriptCmd0F_MapTransition:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -3154,7 +3211,7 @@ label4_5a02:
     ld [$c825], a
     ret
 
-label4_5a6f:
+ScriptCmd10_WalkToX:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -3166,7 +3223,7 @@ label4_5a6f:
     ld [$d8dc], a
     ld hl, $ff92
     or a
-    jr z, TextFollowPointer
+    jr z, WalkToXFrom
 
     dec a
     swap a
@@ -3178,7 +3235,7 @@ label4_5a6f:
     adc h
     ld h, a
 
-TextFollowPointer:
+WalkToXFrom:
     ld a, [hl+]
     ld h, [hl]
     ld l, a
@@ -3205,7 +3262,7 @@ TextFollowPointer:
     set 3, [hl]
     ret
 
-label4_5ac5:
+ScriptCmd11_WalkToY:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -3217,7 +3274,7 @@ label4_5ac5:
     ld [$d8dc], a
     ld hl, $ff95
     or a
-    jr z, TextFollowPointer2
+    jr z, WalkToYFrom
 
     dec a
     swap a
@@ -3229,7 +3286,7 @@ label4_5ac5:
     adc h
     ld h, a
 
-TextFollowPointer2:
+WalkToYFrom:
     ld a, [hl+]
     ld h, [hl]
     ld l, a
@@ -3284,7 +3341,7 @@ ScriptWriteRAM:
     ld [hl], c          ; load c (chests id bit) into the contents of hl (opened chest bit plane)
     jp Jump_004_55f5
 
-label4_5b49:
+ScriptCmd13_WriteRAM2:
     ld a, [wScriptCounter]       ; inc unknown counter
     add $01
     ld [wScriptCounter], a
@@ -3310,7 +3367,7 @@ label4_5b49:
     ld [hl], b          ; loads b into the contents of hl (unknown)
     jp Jump_004_55f5
 
-label4_5b79:
+ScriptCmd14_Goto:
     ld a, [wScriptCounter]       ; inc unknown counter
     add $01
     ld [wScriptCounter], a
@@ -3321,7 +3378,7 @@ label4_5b79:
     call MapTypeDispatch
     jp ScriptReturnProcess
 
-label4_5b8f:
+ScriptCmd15_CheckAndBranch:
     ld a, [wScriptCounter]       ; inc unknown counter
     add $01
     ld [wScriptCounter], a
@@ -3355,12 +3412,12 @@ label4_5b8f:
     call MapTypeDispatch
     jp ScriptReturnProcess
 
-label4_5bd4:
+ScriptCmd16_RefreshSprites:
     call UpdateOAMSprites
     call GetBGMapAddress
     ret
 
-label4_5bdb:
+ScriptCmd17_BedroomTileSwap:
     ld a, [wMapID]
     cp MAP_TERRYS
     jr nz, RetFromArena
@@ -3406,7 +3463,7 @@ jr_004_5c05:
 
 ; Script give (S56): first-empty scan -> $DA14 -> bank $14 builder; if
 ; party count $CA8D < 3 the new slot is ALSO appended to the party list.
-label4_5c14:
+ScriptCmd18_GiveMonster:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -3464,7 +3521,7 @@ CallBank01ForArena:
     rst $10
     ret
 
-label4_5c6d:
+ScriptCmd19_WaitMovement:
     ld a, [wScriptStateFlags]
     bit 4, a
     jp z, Jump_004_55f5
@@ -3477,7 +3534,7 @@ label4_5c6d:
     ld [$d8d6], a
     ret
 
-label4_5c86:
+ScriptCmd1A_QueueWalkX:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -3518,7 +3575,7 @@ label4_5c86:
     set 4, [hl]
     jp Jump_004_55f5
 
-label4_5ccf:
+ScriptCmd1B_QueueWalkY:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -3561,7 +3618,7 @@ label4_5ccf:
     set 4, [hl]
     jp Jump_004_55f5
 
-label4_5d1a:
+ScriptCmd1C_MoveProgram:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -3596,7 +3653,7 @@ label4_5d1a:
 ; during walk-toward sequences. Used during cutscenes to prevent NPCs
 ; from turning to face the player while being scripted to move.
 ; ---------------------------------------------------------------------------
-label4_5d4b:
+ScriptCmd1D_LockFacing:
     ld hl, wScriptStateFlags
     set 5, [hl]              ; Lock NPC facing updates
     jp Jump_004_55f5          ; Continue script
@@ -3605,7 +3662,7 @@ label4_5d4b:
 ; Script Command $1E: UnlockMovement
 ; Clears bit 5 of $D8D7, re-enabling normal NPC facing behavior.
 ; ---------------------------------------------------------------------------
-label4_5d53:
+ScriptCmd1E_UnlockFacing:
     ld hl, wScriptStateFlags
     res 5, [hl]              ; Unlock NPC facing updates
     jp Jump_004_55f5          ; Continue script
@@ -3768,7 +3825,7 @@ ArenaMasterSpriteTable:
     db $08, $00, $08, $00, $08, $00  ; King (group 9; sprite $08 = King)
 
 
-label4_5e5e:
+ScriptCmd20_StartBattle:
     ld hl, $c8eb
     set 6, [hl]
     xor a
@@ -3777,7 +3834,7 @@ label4_5e5e:
     ld [$da09], a
     ret
 
-label4_5e6d:
+ScriptCmd21_Sound:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -3789,12 +3846,12 @@ label4_5e6d:
     call PlaySoundEffect
     jp Jump_004_55f5
 
-label4_5e87:
+ScriptCmd22_WalkFast:
     ld hl, wScriptStateFlags
     set 6, [hl]
     jp Jump_004_55f5
 
-label4_5e8f:
+ScriptCmd23_IfSlotSkillA:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -3875,7 +3932,7 @@ StoreItemResult:
     call MapTypeDispatch
     jp ScriptReturnProcess
 
-label4_5f13:
+ScriptCmd24_DrawTiles:
     ld a, [wScriptMapType]
     cp $06
     jr nc, CheckMapType20
@@ -3908,7 +3965,7 @@ CallBank0FForItem:
     rst $10
     ret
 
-label4_5f36:
+ScriptCmd25_RemoveMonster:
     ld a, [$d8e1]
     ld hl, $cac1
     call GetCurrentMonsterPtr
@@ -3921,14 +3978,14 @@ label4_5f36:
     call GetBGMapAddress
     jp Jump_004_55f5
 
-label4_5f52:
+ScriptCmd26_ReloadRoom:
     ld a, $03
     call SetGBCPalette
     ld hl, $c88f
     inc [hl]
     ret
 
-label4_5f5c:
+ScriptCmd27_RefreshParty:
     ld hl, $0109
     rst $10
     ld hl, $0103
@@ -3941,7 +3998,7 @@ label4_5f5c:
 ; Counts occupied slots. If count >= 20 (all full), reads branch target
 ; and jumps. Otherwise continues script execution.
 ; ---------------------------------------------------------------------------
-label4_5f67:
+ScriptCmd28_IfStorageFull:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -3981,7 +4038,7 @@ CheckItemCount14:
 ; Finds first empty monster slot in $CAC1 array (20 slots, stride $95).
 ; Loads enemy stats and copies to the empty slot to add the monster.
 ; ---------------------------------------------------------------------------
-label4_5f9a:
+ScriptCmd29_AddMonster:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -4031,7 +4088,7 @@ RetFromItem:
 ; slot ($00 or $FF). If found, places item there. If full, returns
 ; without giving (script should check with CheckInvFull first).
 ; ---------------------------------------------------------------------------
-label4_5fdb:
+ScriptCmd2A_GiveItem:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -4061,7 +4118,7 @@ WriteItemToSlot:
     ld [hl], c  ;loads item into empty inventory slot from treasure chest [MAY BE MORE]
     ret
 
-label4_6002:
+ScriptCmd2B_IfMonsterPedigree:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -4138,7 +4195,7 @@ PopAndAdvance:
     ldh a, [$f0]
 
 
-label4_6064:
+ScriptCmd2C_IfBagFull:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -4169,7 +4226,7 @@ CheckSlotCount14:
     call MapTypeDispatch
     jp ScriptReturnProcess
 
-label4_6093:
+ScriptCmd2D_MonsterSlotDialogue:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -4364,7 +4421,7 @@ FamilyTextGroup_D:  ; $61AA — Boss
     dw $00DC
     dw $00E1
 
-label4_61e0:
+ScriptCmd2E_PickFromTable:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -4395,7 +4452,7 @@ label4_61e0:
     db $01, $00, $02, $01, $00, $02, $00, $00, $00, $01, $02, $00, $00, $01, $00, $01
     db $01, $01, $01, $02, $01, $02, $01, $00, $01, $01, $00, $01, $00
 
-label4_623a:
+ScriptCmd2F_IncRAM:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -4408,7 +4465,7 @@ label4_623a:
     inc [hl]
     jp Jump_004_55f5
 
-label4_6253:
+ScriptCmd30_IfSlotStat100:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -4451,7 +4508,7 @@ label4_6253:
     call MapTypeDispatch
     jp ScriptReturnProcess
 
-label4_62ab:
+ScriptCmd31_IfSeen100:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -4484,7 +4541,7 @@ IncrementAndCheck:
     call MapTypeDispatch
     jp ScriptReturnProcess
 
-label4_62dd:
+ScriptCmd32_IfSlotSpeciesAF:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -4525,7 +4582,7 @@ label4_62dd:
     call MapTypeDispatch
     jp ScriptReturnProcess
 
-label4_6332:
+ScriptCmd33_CompareGold:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -4539,7 +4596,7 @@ label4_6332:
     call CompareGold
     jp Jump_004_55f5
 
-label4_634f:
+ScriptCmd34_IfSlotSkillB:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -4602,14 +4659,14 @@ StoreMonsterResult:
     call MapTypeDispatch
     jp ScriptReturnProcess
 
-label4_63bb:
+ScriptCmd35_RefreshParty2:
     ld hl, $0109
     rst $10
     ld hl, $0103
     rst $10
     jp Jump_004_55f5
 
-label4_63c6:
+ScriptCmd36_MimicBattle:
     ld a, [$cab4]
     add a
     ld hl, $63ef
@@ -4636,7 +4693,7 @@ label4_63c6:
     db $3d, $01, $3e, $01, $3f, $01, $40, $01, $41, $01, $42, $01, $43, $01, $44, $01
     db $44, $01
 
-label4_6401:
+ScriptCmd37_GiveStoredItem:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -4679,7 +4736,7 @@ SetupMonsterHL:
     call SetupVRAMParams
     jp Jump_004_55f5
 
-label4_643f:
+ScriptCmd38_IfSlotSkillC:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -4739,7 +4796,7 @@ StoreSkillResult:
     call MapTypeDispatch
     jp ScriptReturnProcess
 
-label4_64a7:
+ScriptCmd39_LoadText:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -4752,7 +4809,7 @@ label4_64a7:
     call TextBankDispatch
     jp Jump_004_55f5
 
-label4_64c2:
+ScriptCmd3A_ToBreedingScene:
     ld a, [$ca40]
     ld [$cac0], a
     ld hl, $1604
@@ -4881,7 +4938,7 @@ SaveReadDE:
 ; vanilla gate-boss win tail (28 boss rooms, ROM survey S101) ends with
 ; `$3B $0000, $00E8, $0058` = Castle (map $00) pixel (232,88) = tile (14,5),
 ; the throne room on screen 1 (PyBoy S101, Villager boss on the user's save).
-label4_65ab:
+ScriptCmd3B_WarpFade:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -4930,19 +4987,19 @@ label4_65ab:
     ret
 
 
-label4_6618:
+ScriptCmd3C_TextBoxBottom:
     ld hl, $d8d8
     set 0, [hl]
     jp Jump_004_55f5
 
 
-label4_6620:
+ScriptCmd3D_TextBoxTop:
     ld hl, $d8d8
     set 1, [hl]
     jp Jump_004_55f5
 
 
-label4_6628:
+ScriptCmd3E_ChangeGameMode:
     ld a, $04
     call SetGBCPalette
     ld hl, $c88e
@@ -4950,7 +5007,7 @@ label4_6628:
     ret
 
 
-label4_6632:
+ScriptCmd3F_LoadLeadName:
     ld a, $00
     ld hl, $caca
     call GetCurrentMonsterPtr
@@ -4961,7 +5018,7 @@ label4_6632:
     jp Jump_004_55f5
 
 
-label4_6646:
+ScriptCmd40_IfPartyHasSpecies:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -5024,7 +5081,7 @@ PopAndAdvanceL:
 ; Saves current BGM to $C8B6 (for later restore), reads new BGM offset
 ; from script, calls SetBGM to change the music.
 ; ---------------------------------------------------------------------------
-label4_669d:
+ScriptCmd41_SetBGM:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -5039,7 +5096,7 @@ label4_669d:
     jp Jump_004_55f5
 
 
-label4_66bd:
+ScriptCmd42_SaveReturnPoint:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -5089,7 +5146,7 @@ label4_66bd:
     jp Jump_004_55f5
 
 
-label4_6723:
+ScriptCmd43_ReturnToSavedPoint:
     ld a, [$c8fb]
     ld c, a
     ld a, [$c8fc]
@@ -5129,10 +5186,10 @@ label4_6723:
     ret
 
 
-label4_676f:
+ScriptCmd44_BackFromReturn:
     ld a, [$c901]
     ldh [$8e], a
-    call LoadScr_454b
+    call PlayerFacingToSprite
     ld a, [$c902]
     dec a
     swap a
@@ -5168,7 +5225,7 @@ label4_676f:
     ret
 
 
-label4_67b1:
+ScriptCmd45_RestorePartySnapshot:
     ld hl, $cab9
     ld a, [hl+]
     ld [$ca8d], a
@@ -5209,7 +5266,7 @@ CmpScr_67f1:
     ret
 
 
-label4_67fd:
+ScriptCmd46_WaitDungeonFlags:
     ld a, [$ddb4]
     ld hl, $ddce
     and [hl]
@@ -5229,7 +5286,7 @@ label4_67fd:
     ret
 
 
-label4_6822:
+ScriptCmd47_FaceUp:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -5240,9 +5297,9 @@ label4_6822:
     ld a, c
     ld c, $02
 
-CheckZeroJPEnd:
+FaceActorTail:
     or a
-    jp z, ScriptEndCheck
+    jp z, FacePlayerTail
 
     dec a
     swap a
@@ -5257,7 +5314,7 @@ CheckZeroJPEnd:
     jp Jump_004_55f5
 
 
-label4_684d:
+ScriptCmd48_FaceDown:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -5267,10 +5324,10 @@ label4_684d:
     call MapTypeDispatch
     ld a, c
     ld c, $00
-    jp CheckZeroJPEnd
+    jp FaceActorTail
 
 
-label4_6866:
+ScriptCmd49_FaceLeft:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -5280,10 +5337,10 @@ label4_6866:
     call MapTypeDispatch
     ld a, c
     ld c, $01
-    jp CheckZeroJPEnd
+    jp FaceActorTail
 
 
-label4_687f:
+ScriptCmd4A_FaceRight:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -5293,16 +5350,16 @@ label4_687f:
     call MapTypeDispatch
     ld a, c
     ld c, $03
-    jp CheckZeroJPEnd
+    jp FaceActorTail
 
 
-label4_6898:
+ScriptCmd4B_RestoreBGM:
     ld a, [$c8b6]
     call SetBGM
     jp Jump_004_55f5
 
 
-label4_68a1:
+ScriptCmd4C_WaitDpad:
     ld a, [wJoypad_current_frame]
     and $f0
     jp nz, Jump_004_55f5
@@ -5316,7 +5373,7 @@ label4_68a1:
     ret
 
 
-label4_68ba:
+ScriptCmd4D_LongDelay:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -5331,7 +5388,7 @@ label4_68ba:
     ret
 
 
-label4_68d7:
+ScriptCmd4E_SavePosition:
     ld a, [wMapID]
     ld c, a
     ld a, [wInGateworld]
@@ -5361,7 +5418,7 @@ label4_68d7:
     jp Jump_004_55f5
 
 
-label4_690b:
+ScriptCmd4F_ReturnToSavedPosition:
     ld a, [$c8fb]
     ld c, a
     ld a, [$c8fc]
@@ -5401,10 +5458,10 @@ label4_690b:
     ret
 
 
-label4_6957:
+ScriptCmd50_FaceSaved:
     ld a, [$c901]
     ldh [$8e], a
-    call LoadScr_454b
+    call PlayerFacingToSprite
     ld hl, $d7f8
     ldh a, [$8e]
     add $02
@@ -5413,7 +5470,7 @@ label4_6957:
     jp Jump_004_55f5
 
 
-label4_696c:
+ScriptCmd51_LibraryTier:
     ld b, $00
     ld c, $00
 
@@ -5466,7 +5523,7 @@ CompareAndAdvance:
     rst $10
     rst $38
 
-label4_69a9:
+ScriptCmd52_RandomBattle:
     ld bc, $0000
     ld a, [$ca8e]
     call $6a4e
@@ -5582,7 +5639,7 @@ LookupOpcodeTable:
     ret
 
 
-label4_6a61:
+ScriptCmd53_Npc1FacePlayer:
     ldh a, [$95]
     and $f0
     ld l, a
@@ -5658,7 +5715,7 @@ JumpToScriptInit:
 
 StoreAndClearMove:
     ldh [$8e], a
-    call LoadScr_454b
+    call PlayerFacingToSprite
     ld hl, $d7d8
     ldh a, [$8e]
     add $02
@@ -5667,7 +5724,7 @@ StoreAndClearMove:
     jp Jump_004_55f5
 
 
-label4_6ace:
+ScriptCmd54_GiveRandomItem:
     ld a, [wRNG1]
     ld b, a
     ld a, $25
@@ -5701,7 +5758,7 @@ WriteAndSetupHL:
     jp Jump_004_55f5
 
 
-label4_6afa:
+ScriptCmd55_TakeRandomItem:
     ld hl, wInventory
     ld b, $14
     ld c, $00
@@ -5746,7 +5803,7 @@ StoreScriptResult:
     jp Jump_004_55f5
 
 
-label4_6b3a:
+ScriptCmd56_GoldValue:
     ld a, [wCurrGoldLo]
     ld l, a
     ld a, [wCurrGoldMid]
@@ -5780,7 +5837,7 @@ label4_6b3a:
     jp Jump_004_55f5
 
 
-label4_6b73:
+ScriptCmd57_GiveRandomItem2:
     ld a, [wRNG1]
     ld b, a
     ld a, $05
@@ -5821,7 +5878,7 @@ WriteAndSetupHLB:
 ; the maze staircase (wWarpGateId 0, wWarpFlag $80). ROM scan S101: the only
 ; script user is the gate-world script set (map type $70) script 4 at
 ; $0F:$6ED0, after a RandomScaledBattle ($52) win.
-label4_6ba0:
+ScriptCmd58_FloorSkip:
     ld a, [wLastFloor]
     dec a
     dec a
@@ -5858,7 +5915,7 @@ SetMapChangeFlag:
     ld [$c825], a
     ret
 
-label4_6bdf:
+ScriptCmd59_TrainSlot:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -6077,7 +6134,7 @@ SaveScr_6d4a:
     ret
 
 
-label4_6d56:
+ScriptCmd5A_BossBattleEID:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -6100,7 +6157,7 @@ label4_6d56:
     ret
 
 
-label4_6d84:
+ScriptCmd5B_BossBattle:
     ld hl, wGameState
     set 6, [hl]
     xor a
@@ -6393,7 +6450,7 @@ SaveScr_6f35:
     ld [hl+], a
     inc hl
 
-label4_6f64:
+ScriptCmd5D_GiveColiseumPrize:
     ld a, [$d9d0]
     ld l, a
     ld h, $08
@@ -6425,7 +6482,7 @@ WriteToEmptySlot:
     jp Jump_004_55f5
 
 
-label4_6f89:
+ScriptCmd5E_ResetCeremony:
     ld a, $07
     ld [$d951], a
     xor a
@@ -6435,7 +6492,7 @@ label4_6f89:
     jp Jump_004_55f5
 
 
-label4_6f9b:
+ScriptCmd5F_IfSlotLevelBelow:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -6485,7 +6542,7 @@ label4_6f9b:
     jp ScriptReturnProcess
 
 
-label4_6ffb:
+ScriptCmd60_IfGoldShort:
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -6517,7 +6574,7 @@ AddGoldReward:
     jp Jump_004_55f5
 
 
-label4_7038:
+ScriptCmd61_DrawAttrs:
     ld a, [wScriptMapType]
     cp $06
     jr nc, CheckGoldMapType20
@@ -6551,7 +6608,7 @@ CallBank0F_Gold:
     ret
 
 
-label4_705b:
+ScriptCmd62_BlankScreen:
     ld hl, $8da0
     ld b, $10
     ld a, $ff
@@ -6576,7 +6633,7 @@ WriteTilePair:
     ret
 
 
-label4_707f:
+ScriptCmd63_DrawBuffer:
     ldh a, [$bb]
     and $f8
     ld l, a
@@ -8186,7 +8243,7 @@ OpcodeData_77ED:
     ld d, c
     add d
     nop
-    ld bc, OpcodeHandler2C
+    ld bc, MoveProg19_LeapLeft
     sbc c
     ld bc, $f65f
     sbc $56

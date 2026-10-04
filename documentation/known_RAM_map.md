@@ -112,6 +112,11 @@
                  BG-map address (rows 13-17 or 0-4). The YES/NO box backs
                  the 18 visible BG rows (32 each, 576 B) up to $C500
                  (bank $56 SetB56_4855; bank $00 ClearTextBitsRedraw).
+   C82D     2    Text print pointer: advances while a text box prints, stands
+                 still when the box waits for A (the Playback window's auto
+                 text presses A then) [S118, PyBoy]
+   C850     1    Field busy (fade / room load / box): a tool must wait for 0
+                 before interacting after a warp [S118, PyBoy]
    C968     1    [[Dragon_Warrior_Monsters/Notes#Map_Type_IDs|Map type]] (wMapID)
    C969     1    flag_in_gate (wInGateworld)
                  00 - Not in a Gate (or fixed special-room template)
@@ -133,6 +138,12 @@
                  breeding list, 7 = egg evaluator, 11 = shrine entry) [S104]
                  S109: indexes bank $09 ScreenEffectTable09 first; type 4 =
                  the arena class-registration menu (ArenaClassMenu)
+   C8EC     1    All field sprites hidden (non-zero: player, followers, NPCs, the
+                 gate object not drawn); set 1 by room transitions, cleared by
+                 the engine only when $D92B is not 1-5 [S118f, code]
+   C8F2     2    The name buffer the naming screen edits ($CA42 = the HERO's name,
+                 printed by text code $F6 [HERO]) [S118f]
+   CA42     8    The hero's name ($F0-terminated; new game: placeholder $D3-$D6) [S118f]
    C8F4     1    Naming screen: species + $10 of the monster being named
                  (0 = placeholder name); set by the recruit (bank $51) and
                  script (bank $04) paths; read by bank $09 LoadFld9_688e [S104]
@@ -160,7 +171,7 @@
    CA39     2    Counter before random encounter
    CA40     1    Breeding/hatch offspring slot (S56): first-empty index chosen
                  by $16:jr_016_402d, persisted for the script-side finalizer
-                 $04:label4_64c2 ($CAC0 := [$CA40] then bank $16 entry 4)
+                 $04:ScriptCmd3A_ToBreedingScene ($CAC0 := [$CA40] then bank $16 entry 4)
    CA41     1    bit7 = farm SLEEP pool active (SRAM $B124; see sleep row
                  below / ARCHITECTURE SRAM map). Other bits unknown.
    CA42     9    Monster-name text scratch (S56): nickname (+$0C, 8-9 B) of
@@ -322,13 +333,25 @@
    1:D8D4   1    NPC script_id (selects per-NPC script in banks $0C-$0F)
                  Used by ScriptDataLookup: $41BA[map_type×2] → per_map_table[script_id×2] → data
    1:D8D5   2    Script counter (16-bit position in NPC script data)
-   1:D8D7   1    Script state flags (bit0=active, bit1=text_queued, bit2=delay,
-                 bit3=NPC_walk, bit4/6=pos_update, bit5=movement_lock)
+   1:D8D7   1    Script state flags (S118, handler code + PyBoy): bit0 active,
+                 bit1 text queued, bit2 delay ($09), bit3 a WAITED walk
+                 ($0A/$0B/$10/$11: actor $D8DC, deltas $D8DD/$D8DF), bit4
+                 movement programs queued (buffers $D8E9), bit5 lock facing
+                 ($1D/$1E), bit6 walk_fast ($22: programs run twice a frame).
+                 BANK04_SCRIPT_ENGINE "Script State Flags".
+   1:D8D8   1    Script flags 2 (S118): bit0 next text box at the BOTTOM ($3C),
+                 bit1 at the TOP ($3D) — read + cleared by bank $06's box
+                 placer; bit2 long delay ($4D: $D8DB counts every tick)
    1:D8D9   2    Queued text ID (16-bit) for ROM0 dispatch
    1:D8DB   1    Delay frame counter (decremented by entry 4)
    1:D8DC   1    NPC number for pending walk-toward (1-based)
    1:D8DD   2    NPC X movement delta (signed 16-bit)
    1:D8DF   2    NPC Y movement delta (signed 16-bit)
+   1:D8E3   2    Movement-program parameters for programs $15-$18 (length /
+                 curve set, curve) — written with write_ram2 before $1C [S101/S118]
+   1:D8E9  64    Movement buffers, 8 × 8 B (buffer n = actor n; 0 = player):
+                 [active, step, program, actor, dx lo/hi, dy lo/hi]; written by
+                 $1A/$1B/$1C, run by MoveProgramsAll ($04:$43EC) [S118]
    1:D92A ~113   Room step counters ($D92A–$D99A). One byte per screen, value
                  selects which step entry (NPC set + exit set + tile layout) is
                  active. Set by script opcode $12 (WriteRAM). Full mapping in
@@ -402,6 +425,12 @@
                  which cutscene to play and which step counters to advance.
                  CAUTION: shares byte with event flag indices $0240-$0247.
                  Editor must never allocate custom flags at those indices.
+   1:D9E2   1    Arriving at the Farm by the Shrine warp (script) [S118f]
+   1:D9E4   1    The Well boss's tile event seen (script) [S118f]
+   1:D9E5   1    The party is falling through a hole (script; the next room's
+                 entry scene shows the fall and clears it) [S118f]
+   1:D9E8   1    Player input locked during a scripted scroll (non-zero skips free
+                 walking, bank_006:3697; cleared by the scroll handler) [S118f]
    1:D9E6   1    Breeding "rare breed" flag — only the UNREFERENCED mutation $16:$44DA sets it; never set (S113)
                  CAUTION: shares byte with event flag indices $0258-$025F
    1:D9E9   1    Current step in multi-step screens
@@ -711,6 +740,14 @@
                  FollowerLayoutBase11 picks the level-1 table instead
                  (NewFollowerL1Table - 2*$5D for $C7 >= $5D), so the new
                  species' own row is read. [S105/S107]
+   FF8E     1    Player facing (0 down, 1 left, 2 up, 3 right); script ops
+                 $0C / $47-$4A write it for actor 0 ($FF8D / $FF8F derived) [S118]
+   FF90     1    Player sprite flags: bit 6 = hidden (script $0D 0,$FF90,$40)
+                 [S118]
+   FF92     4    Player X ($FF92/$FF93) and Y ($FF95/$FF96) in room pixels;
+                 $FF97/$FF98 the screen-relative copy. NEVER poke these from a
+                 tool to "move" the player — a stray write wedged the game
+                 (KEY_LESSONS S118); warp or walk instead [S118]
    FFC8     1    Sprite frame/facing index (level-2 layout table). [S24]
    FFCA     1    Base OAM attribute for the draw (per-species attr OR-ed in;
                  bit5 set by the engine for LEFT facing). [S24/S34]

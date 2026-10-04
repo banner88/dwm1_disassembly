@@ -1,5 +1,5 @@
 {
- "_generator": "tools/script_param_counts.py (S96) over the original ROM (md5 1ca6579359f21d8e27b446f865bf6b83)",
+ "_generator": "tools/script_param_counts.py (S96; S118: + the words ops $24/$61 read through script-bank entries 1/2) over the original ROM (md5 1ca6579359f21d8e27b446f865bf6b83)",
  "_method": "per-path count of `call MapTypeDispatch` ($04:$71EF) in each bank-$04 script opcode handler; counter writes = branch paths",
  "_variable": [],
  "ops": {
@@ -422,13 +422,14 @@
   "0x24": {
    "handler": "$04:5F13",
    "counts": [
-    0
+    1
    ],
    "ends": [
     "ret"
    ],
    "branch_paths": [],
-   "exact": true
+   "exact": true,
+   "cross_bank": "+1 word read by script-bank entry 1 (S118)"
   },
   "0x25": {
    "handler": "$04:5F36",
@@ -1133,13 +1134,14 @@
   "0x61": {
    "handler": "$04:7038",
    "counts": [
-    0
+    1
    ],
    "ends": [
     "ret"
    ],
    "branch_paths": [],
-   "exact": true
+   "exact": true,
+   "cross_bank": "+1 word read by script-bank entry 2 (S118)"
   },
   "0x62": {
    "handler": "$04:705B",

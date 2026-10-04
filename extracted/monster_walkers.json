@@ -24,7 +24,7 @@
     {
       "file": "bank_001.asm",
       "label": "jr_001_4947",
-      "line": 1802,
+      "line": 1736,
       "occ": 0,
       "addr": "$01:$4947",
       "class": "party-only",
@@ -33,7 +33,7 @@
     {
       "file": "bank_001.asm",
       "label": "jr_001_4947",
-      "line": 1810,
+      "line": 1744,
       "occ": 1,
       "addr": "$01:$4947",
       "class": "party-only",
@@ -42,7 +42,7 @@
     {
       "file": "bank_001.asm",
       "label": "jr_001_4947",
-      "line": 1818,
+      "line": 1752,
       "occ": 2,
       "addr": "$01:$4947",
       "class": "party-only",
@@ -51,7 +51,7 @@
     {
       "file": "bank_003.asm",
       "label": "jr_003_7e9d",
-      "line": 7545,
+      "line": 7150,
       "occ": 0,
       "addr": "$03:$7e9d",
       "class": "single-slot",
@@ -60,7 +60,7 @@
     {
       "file": "bank_003.asm",
       "label": "jr_003_7ec1",
-      "line": 7563,
+      "line": 7168,
       "occ": 0,
       "addr": "$03:$7ec1",
       "class": "single-slot",
@@ -68,8 +68,8 @@
     },
     {
       "file": "bank_004.asm",
-      "label": "label4_64c2",
-      "line": 4721,
+      "label": "ScriptCmd3A_ToBreedingScene",
+      "line": 4814,
       "occ": 0,
       "addr": "$04:$64c2",
       "class": "farm-write",
@@ -77,8 +77,8 @@
     },
     {
       "file": "bank_004.asm",
-      "label": "label4_6bdf",
-      "line": 5833,
+      "label": "ScriptCmd59_TrainSlot",
+      "line": 5938,
       "occ": 0,
       "addr": "$04:$6bdf",
       "class": "party-only",
@@ -87,7 +87,7 @@
     {
       "file": "bank_007.asm",
       "label": "SetFld_44e3",
-      "line": 803,
+      "line": 810,
       "occ": 0,
       "addr": "$07:$44e3",
       "class": "single-slot",
@@ -96,7 +96,7 @@
     {
       "file": "bank_007.asm",
       "label": "LoadFld_45ee",
-      "line": 929,
+      "line": 936,
       "occ": 0,
       "addr": "$07:$45ee",
       "class": "single-slot",
@@ -105,7 +105,7 @@
     {
       "file": "bank_007.asm",
       "label": "jr_007_4704",
-      "line": 1169,
+      "line": 1176,
       "occ": 0,
       "addr": "$07:$4704",
       "class": "single-slot",
@@ -114,7 +114,7 @@
     {
       "file": "bank_007.asm",
       "label": "jr_007_47ca",
-      "line": 1189,
+      "line": 1196,
       "occ": 0,
       "addr": "$07:$47ca",
       "class": "single-slot",
@@ -123,7 +123,7 @@
     {
       "file": "bank_007.asm",
       "label": "jr_007_5330",
-      "line": 2960,
+      "line": 2967,
       "occ": 0,
       "addr": "$07:$5330",
       "class": "single-slot",
@@ -132,7 +132,7 @@
     {
       "file": "bank_007.asm",
       "label": "jr_007_5330",
-      "line": 3014,
+      "line": 3021,
       "occ": 1,
       "addr": "$07:$5330",
       "class": "single-slot",
@@ -141,7 +141,7 @@
     {
       "file": "bank_007.asm",
       "label": "label7_6468",
-      "line": 5543,
+      "line": 5561,
       "occ": 0,
       "addr": "$07:$6468",
       "class": "single-slot",
@@ -150,7 +150,7 @@
     {
       "file": "bank_007.asm",
       "label": "jr_007_6531",
-      "line": 5651,
+      "line": 5669,
       "occ": 0,
       "addr": "$07:$6531",
       "class": "single-slot",
@@ -159,7 +159,7 @@
     {
       "file": "bank_00a.asm",
       "label": "jr_00a_47f0",
-      "line": 1476,
+      "line": 1471,
       "occ": 0,
       "addr": "$0a:$47f0",
       "class": "single-slot",
@@ -168,7 +168,7 @@
     {
       "file": "bank_00a.asm",
       "label": "jr_00a_4f76",
-      "line": 2581,
+      "line": 2579,
       "occ": 0,
       "addr": "$0a:$4f76",
       "class": "single-slot",
@@ -177,7 +177,7 @@
     {
       "file": "bank_00a.asm",
       "label": "jr_00a_52ae",
-      "line": 3076,
+      "line": 3074,
       "occ": 0,
       "addr": "$0a:$52ae",
       "class": "single-slot",
@@ -186,7 +186,7 @@
     {
       "file": "bank_00a.asm",
       "label": "label5c5b",
-      "line": 4442,
+      "line": 4445,
       "occ": 0,
       "addr": "$0a:$5c5b",
       "class": "single-slot",
@@ -195,7 +195,7 @@
     {
       "file": "bank_00a.asm",
       "label": "label5c92",
-      "line": 4460,
+      "line": 4463,
       "occ": 0,
       "addr": "$0a:$5c92",
       "class": "single-slot",
@@ -240,7 +240,7 @@
     {
       "file": "bank_012.asm",
       "label": "SetItem_6242",
-      "line": 5464,
+      "line": 5466,
       "occ": 0,
       "addr": "$12:$6242",
       "class": "single-slot",
@@ -249,7 +249,7 @@
     {
       "file": "bank_012.asm",
       "label": "jr_012_6369",
-      "line": 5665,
+      "line": 5667,
       "occ": 0,
       "addr": "$12:$6369",
       "class": "single-slot",
@@ -258,7 +258,7 @@
     {
       "file": "bank_012.asm",
       "label": "LoadItem_6544",
-      "line": 5978,
+      "line": 5980,
       "occ": 0,
       "addr": "$12:$6544",
       "class": "single-slot",
@@ -267,7 +267,7 @@
     {
       "file": "bank_012.asm",
       "label": "jr_012_6a61",
-      "line": 6997,
+      "line": 6760,
       "occ": 0,
       "addr": "$12:$6a61",
       "class": "single-slot",
@@ -276,7 +276,7 @@
     {
       "file": "bank_014.asm",
       "label": "jr_014_42fe",
-      "line": 382,
+      "line": 393,
       "occ": 0,
       "addr": "$14:$42fe",
       "class": "farm-write",
@@ -357,16 +357,16 @@
     {
       "file": "bank_016.asm",
       "label": "jr_016_402d",
-      "line": 95,
+      "line": 109,
       "occ": 0,
       "addr": "$16:$402d",
       "class": "farm-write",
-      "role": "breeding offspring insert: first-empty scan result c -> $CAC0 AND $CA40 (persisted for label4_64c2), zero-fill record via LoadBrd_41b1"
+      "role": "breeding offspring insert: first-empty scan result c -> $CAC0 AND $CA40 (persisted for ScriptCmd3A_ToBreedingScene), zero-fill record via LoadBrd_41b1"
     },
     {
       "file": "bank_018.asm",
       "label": "jr_018_4abd",
-      "line": 1938,
+      "line": 1701,
       "occ": 0,
       "addr": "$18:$4abd",
       "class": "single-slot",
@@ -375,7 +375,7 @@
     {
       "file": "bank_050.asm",
       "label": "CallBtl_61e2",
-      "line": 5905,
+      "line": 5957,
       "occ": 0,
       "addr": "$50:$61e2",
       "class": "all-slot",
@@ -384,7 +384,7 @@
     {
       "file": "bank_050.asm",
       "label": "jr_050_6337",
-      "line": 6148,
+      "line": 6204,
       "occ": 0,
       "addr": "$50:$6337",
       "class": "party-only",
@@ -393,7 +393,7 @@
     {
       "file": "bank_050.asm",
       "label": "CmpBtl_6383",
-      "line": 6189,
+      "line": 6249,
       "occ": 0,
       "addr": "$50:$6383",
       "class": "all-slot",
@@ -402,7 +402,7 @@
     {
       "file": "bank_051.asm",
       "label": "CmpBtlS_6650",
-      "line": 6375,
+      "line": 6406,
       "occ": 0,
       "addr": "$51:$6650",
       "class": "single-slot",
@@ -411,7 +411,7 @@
     {
       "file": "bank_051.asm",
       "label": "jr_051_66d7",
-      "line": 6445,
+      "line": 6476,
       "occ": 0,
       "addr": "$51:$66d7",
       "class": "single-slot",
@@ -452,14 +452,14 @@
       "label": "CheckEnemyData",
       "addr": "$04:$5c36",
       "class": "farm-write",
-      "role": "script opcode $29 give (label4_5c14): first-empty scan -> $DA14 -> $1402 build; if $CA8D<3 ALSO appends slot to party list + $CA8D++ (given monster joins party when room)"
+      "role": "script opcode $18 give (ScriptCmd18_GiveMonster): first-empty scan -> $DA14 -> $1402 build; if $CA8D<3 ALSO appends slot to party list + $CA8D++ (given monster joins party when room)"
     },
     {
       "file": "bank_004.asm",
       "label": "CheckInventorySlot",
       "addr": "$04:$5f7e",
       "class": "all-slot",
-      "role": "script opcode storage-full check (label4_5f67): count occupied, branch if 20"
+      "role": "script opcode storage-full check (ScriptCmd28_IfStorageFull): count occupied, branch if 20"
     },
     {
       "file": "bank_004.asm",
@@ -842,13 +842,13 @@
   ],
   "mutation_paths": [
     {
-      "path": "script give $29",
-      "where": "$04 label4_5c14",
+      "path": "script give $18",
+      "where": "$04 ScriptCmd18_GiveMonster",
       "action": "create @ first-empty ($DA14); party-list append if $CA8D<3"
     },
     {
-      "path": "script give $28",
-      "where": "$04 label4_5f9a/CheckItemData",
+      "path": "script give $29",
+      "where": "$04 ScriptCmd29_AddMonster/CheckItemData",
       "action": "create @ first-empty; storage only"
     },
     {

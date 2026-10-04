@@ -1043,3 +1043,86 @@ verified overrides.
 | editor2/core/formats.py (`sprite_budget`), validators.py, app/rooms/tab.py | the sprite-limit warnings (build + the Rooms tab note) | test_compiler `test_sprite_budget_s117b`; test_app (S117 block) |
 | editor2/help/20_npcs.md, 90_limits.md, _revision.md; `EDITOR_REVISION` = 'S117b' | help | test_app |
 | editor2/tests/test_compiler.py (pin `110210b0…` patched; `31cc5b31…` historical), test_app.py | tests | 947/947 --rom; test_app + --rom PASS (GUI build == pin); test_canvas --rom PASS |
+
+## S118 rows (ROADMAP P3.8 part A: the Cutscenes tab — read / show / play every scene)
+
+| Tool / data | What | Verified |
+|---|---|---|
+| tools/census_cutscenes.py (NEW) → **extracted/cutscene_census.json** (NEW) | Plays EVERY vanilla script scene (the editor's catalogue, 519) in PyBoy through the Playback recipe — each map in a worker process (`--worker`, a silent worker killed after `--hang` s and the scene recorded `hung`), `--jobs 2` — and records per scene: how it started, reached / forced, ended, outcome (`battle` / `menu`), stalls (`stall_at`), the position model checked at every wait (checks / mismatches / examples). `--programs` re-measures the `$1C` movement programs; `--check` / `--selftest` = the JSON's totals == its rows and its scene list == the catalogue now (verify_integrity check 5; SKIP without the ROM) | S118 full run: 519 scenes, 514 reached (442 unforced), 417 ended, 86 battle, 0 hung, model 3,887 / 3,909 (BANK04_SCRIPT_ENGINE "Census S118") |
+| tools/script_param_counts.py → extracted/script_param_counts.json (REGENERATED) | follows `rst $10` into the script banks' entries 1 / 2 (`cross_bank` reads): `$24` / `$61` = 1 param (were 0) | `--check` (verify check 5) |
+| tools/verify_integrity.py | SELFTEST_TOOLS += census_cutscenes.py | PASS |
+| disassembly/bank_004.asm + patches/bank_004.asm | handler labels `ScriptCmdNN_*`, `MoveProgNN_*` / `PlayerProgNN_*`, `MoveProgramsAll`, `PlayerMoveProgram`, `NpcMoveProgram`, `MoveProgCurveStep`, `FacePlayerDir1-3`, `WalkToXFrom` …; the opcode catalog comment block regenerated from script_ops; program / `$D8D7` comments | clean `1ca6579…` byte-perfect; patched pin unchanged |
+| disassembly/ + patches/ bank_00c/00d/00e/00f.asm, bank_016.asm (comment), bank_056.asm (comment) | `ScriptBank0XDrawTiles` / `…DrawAttrs` (the `$24` / `$61` far-call targets); the `$F9` name-insert handler commented (`$C180 + nn`) | byte-perfect |
+| editor2/core/script_ops.py (NEW) | the 102 opcodes: name, params, kind, branch / wait, doc, sentence; `SCREEN_KINDS`, `TERMINAL`, the measured `PROGRAMS` / `PLAYER_PROGRAMS` | test_app (S118); census |
+| editor2/core/cutscenes.py (NEW) | vanilla scripts decoded from the ROM; project scripts via `Project` lowering (`ProjectCatalogue`, game.sym symbols); scenes (block heads that show something, path literals, `after_battle`); triggers; the actor model (`apply_step` / `actor_frames`); `Recipe` (+ `names` = insert slots) / `recipe_for` / `quiet_literals`; `Catalogue`; `CHAINS` (the intro) | census; test_app |
+| editor2/core/playback.py (NEW) | `Engine`: PyBoy on a private ROM copy, cached base state per ROM / .sav / sound mode (`base_<md5>[_sav][_snd].state`), `start(recipe)` (flags / RAM / warp / settle / talk-examine-stepon from each side / arm / `head` start), auto text / YES-NO / naming / D-pad, `_name_slots`, `trace_ops` (census only), `where()` | census; test_app |
+| editor2/core/playback_server.py (NEW) | the game in a child process: commands open / start / run / record / quit (JSON line in; length + JSON header + payload out); `PlaybackClient` (timeouts → `GameHung`, kill), `recipe_dict` | test_app (S118: a SIGSTOPped game is reported within 15 s, Restart works); scratch run: 800 frames + audio, record 34 PNGs |
+| editor2/app/cutscenes_tab.py (NEW), main.py | the Cutscenes tab + `Recorder` (QThread → server `record`) + `PlaybackWindow` (server `run` per timer tick / per audio block) | test_app (S118 block) |
+| editor2/help/63_cutscenes.md (NEW), 00_start.md, 90_limits.md, _revision.md; `EDITOR_REVISION` = 'S118' | help | test_app |
+| editor2/tests/test_app.py | S118 block: the tree, the intro storyboard (121 steps), search, model picture, help words, Playback at 8× ≥ 1,500 frames on map $2F with the storyboard following, a hung game killed + Restart | PASS |
+| tools/audit_mapid_range.py → extracted/mapid_range_audit.json (REGENERATED) | the three bank $04 verdict keys follow the S118 renames (`ScriptCmd17_BedroomTileSwap`, `ScriptCmd42_SaveReturnPoint`, `ScriptCmd4E_SavePosition`); JSON = the current trees (line numbers, labels) | `--selftest` still FAILS on 11 S117 shop sites (pre-existing; ROADMAP "audit_mapid_range re-adjudication", DOC_AUDIT S118) — the bank $04 sites are adjudicated |
+| tools/map_monster_walkers.py → extracted/monster_walkers.json (REGENERATED, with a clean build's game.sym) | the bank $04 keys / roles follow the S118 renames; the script give paths' opcode numbers corrected (`$18` give_monster, `$29` add_monster) | diff vs the old JSON = line numbers + those names / numbers only |
+| editor2/core/project.py, documentation (MONSTER_DATA, BREEDING_SYSTEM, PROJECT_COMPILER, ROOM_DATA_FORMAT, DATA_STRUCTURES, QUEST_OPCODES, known_RAM_map, ROADMAP) | the old `label4_XXXX` handler names → the S118 names (comments / references only) | grep: no stale bank $04 handler name outside SESSION_HISTORY / DOC_AUDIT |
+
+## S118b rows (the user's first look at the Cutscenes tab)
+
+| Tool / data | What | Verified |
+|---|---|---|
+| editor2/core/cutscenes.py | `Catalogue.state_hint` (room state from the story's own counter writes), `npc_actors_needed` + the NPC-count / sibling-test rules in `recipe_for` (+ `ProjectCatalogue.recipe`), `moves` (the "actors move" filter), `still_notes`, titles skip housekeeping, `apply_step` follows `$D8E3/$D8E4` (fly) and RAM writes into the NPC slots (`NPC_SLOTS`) | census; test_app (GreatTree cliff scene = state 2, egg talk not "moving") |
+| editor2/core/script_ops.py | `FLY` — the fly programs $15-$18 per `$D8E3` 1-9 × `$D8E4` 0-5 (216 rows, measured) | `census_cutscenes.py --fly` reproduces it |
+| tools/census_cutscenes.py → extracted/cutscene_census.json (REGENERATED) | `missing_npcs` (a step acting on an empty slot — type byte `$FF`), `ram_actors` counts big-sprite parts, `--fly` | 519 scenes, 516 reached, 0 hung, 1 missing, 3,989 / 3,998 exact |
+| editor2/app/cutscenes_tab.py | ▶ Play scene / ▶ From this step (fast silent run to the selected step), the filter = `cutscenes.moves` | test_app (S118 block: from step 40 of the intro) |
+| editor2/help/63_cutscenes.md, _revision.md; `EDITOR_REVISION` = 'S118b' | what a scene is, the two Play buttons, room state, cloned rooms | test_app |
+| editor2/tests/test_app.py | + From this step, the egg talk filter, the cliff scene's state | PASS |
+
+## S118c rows (copies follow the game's room state; step-by-step playback)
+
+| Tool / data | What | Verified |
+|---|---|---|
+| editor2/core/project.py (`step_counter_allocation` / `step_counter_game`), emitters.py (`emit_region_wram_steps`: `<label> EQU $addr`), builder.py (manifest), validators.py | `screens[k].step_counter.vanilla` — a copy's screen uses the original room's counter | test_compiler `test_clone_follows_game_s118c`; the example pin unchanged |
+| editor2/core/document.py (`clone_vanilla` writes `vanilla`, `_migrate_clone_state`, `follow_game_counters` / `follows_game` / `set_follow_game`), app/rooms/rules_panel.py + tab.py | Make editable / migration on open / the Rooms toggle | test_compiler (migration); PyBoy on the user's project (copy `$6D` screen 0 follows `$D92D`) |
+| editor2/core/cutscenes.py | `ProjectCatalogue`: the project's counter symbols (EQUs are not in game.sym), a following screen's state from `state_hint` | the user's copied GreatTree cliff scene plays the cliff man (PyBoy strip) |
+| editor2/core/playback_server.py | `step` command (dispatch hook, save-state stack, back), `record` one picture per step (`by: 'pos'`), the hook list cleared on `run` | test_app (S118 block: Step ▸▸ ×2, Step back) |
+| editor2/app/cutscenes_tab.py | Step ▸▸ / ◂ Step back, per-step pictures | test_app |
+| editor2/help/10_rooms.md, 63_cutscenes.md, _revision.md; `EDITOR_REVISION` = 'S118c' | help | test_app |
+
+## S118d rows (user round: a scene reset the game; scene clicks failed on a partial install)
+
+| Tool / data | What | Verified |
+|---|---|---|
+| editor2/core/cutscenes.py | `Catalogue.entry_caller` — an entry scene set up as the script that sends you there leaves the game (arrival, RAM writes, flags) | census (0 resets); PyBoy strips (`$07` @12 lands the party, no reset) |
+| editor2/core/playback.py | `Engine.reset` — wGameMode 0 during a scene, logged | the old `$07` recipe → `reset` True at frame 215 |
+| tools/census_cutscenes.py → extracted/cutscene_census.json (REGENERATED) | `reset` per scene + total | 519 scenes, 516 reached, 0 resets, 3,994 / 3,998 |
+| editor2/tests/test_app.py | every 7th scene of the tree opens after a playback, no errors | PASS |
+| editor2/help/63_cutscenes.md, _revision.md; `EDITOR_REVISION` = 'S118d' | resets, scenes reached from another script | test_app |
+
+## S118e rows (user round: the intro's positions; a global mute)
+
+| Tool / data | What | Verified |
+|---|---|---|
+| editor2/core/playback.py | `newgame_state` (a new game at the moment the bedroom loads, made from power-on, cached per ROM / sound mode), `_power_on`, action `newgame` (started once the script runs), action `walkin` (`_walk_in`: stop the neighbour's entry scene, walk across the edge) | the bedtime scene == an uninterrupted new game (positions + script counter at frames 60 / 120 / 240); Warubou's scene: Terry enters through the west doorway (PyBoy strip) |
+| editor2/core/cutscenes.py | `newgame_scene`, `Catalogue.gate_arrivals` (`GateFloorDataTable` $16:$70A6), `Catalogue.walk_in`, `Recipe.target` | census |
+| tools/census_cutscenes.py → extracted/cutscene_census.json (REGENERATED) | `queued_moves(finish_step=)`: a walked-in player's step in progress | see BANK04 "Census" |
+| editor2/app/main.py (View → Mute game playback, ⌘⇧M, QSettings `playback/mute`), app/cutscenes_tab.py (`game_muted`, `apply_mute`; trigger words for `newgame` / `head`) | the editor-wide mute, applied live | test_app (S118 block: mute on → the Sound box disabled, no audio player; off → enabled) |
+| editor2/help/63_cutscenes.md, _revision.md; `EDITOR_REVISION` = 'S118e' | where the player starts, the mute | test_app |
+
+## S118f rows (every storyboard step in words)
+
+| Tool / data | What | Verified |
+|---|---|---|
+| editor2/core/ram_names.py (NEW) | `RamNames`: room states from the room table, the curated script variables (BANK04 "Script variables (S118f)"), NPC slot fields, HRAM position | test_app (S118 block) |
+| editor2/core/script_ops.py | sentences: RAM writes / tests / increments, flags, rooms, items, monsters, skills, music, screen types (+ 2/3/8/9/10/13), tile patches, NPC status / animation fields, the remaining ops in words | test_app: no step of any game script left as a bare address |
+| editor2/core/cutscenes.py | `Catalogue.flag_desc` / `ProjectCatalogue.flag_desc` | test_app |
+| editor2/app/cutscenes_tab.py | `TextCtx`: names, flags, rooms, items, enemies, skills, species, music, patches | test_app |
+| disassembly/ + patches/ bank_009.asm | `ScreenEffectTable09` type comments (2 / 3 / 8 / 9 / 10 / 13) | clean byte-perfect |
+| editor2/help/63_cutscenes.md, _revision.md; `EDITOR_REVISION` = 'S118f' | help | test_app |
+
+## S118g rows (names from the game only)
+
+| Tool / data | What | Verified |
+|---|---|---|
+| editor2/core/cutscenes.py | `script_speaker` (an NPC's name = the speaker prefix of its own talk text), `Catalogue.room_origin` (the game's exits / scripted moves into a room); `initial_actors` takes the speaker | 1,010 vanilla NPC entries: 24 named by their text (Milayou, Pulio, King, Mick, Watabou, Warubou), 986 anonymous |
+| editor2/core/playback.py | `_hero_name`: TERRY in $CA42 instead of the new-game placeholder | PyBoy: "*:Oh, Sir TERRY." (was "TERRY0000") |
+| editor2/core/ram_names.py | `$C8F2` → "the hero's name"; `INFERRED` (8 variables no game code reads — $D9CD/CE, $D9E2-E5, $C96D/E — shown "meaning inferred from the scripts that use it") | text code $F6 reads $CA42; code readers grepped per address |
+| editor2/app/cutscenes_tab.py | actors named by `script_speaker` (no sprite table), the "entered from" header line | test_app |
+| editor2/help/63_cutscenes.md, _revision.md; `EDITOR_REVISION` = 'S118g' | help | test_app |

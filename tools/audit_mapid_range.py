@@ -88,9 +88,9 @@ V = {
     ("bank_001.asm", "CheckPaletteAnimActive", 0): "CP_UNSIGNED",
     # ---- bank_003 / _004
     ("bank_003.asm", "jr_003_6dd9", 0): "CP_UNSIGNED",
-    ("bank_004.asm", "label4_5bdb", 0): "CP_UNSIGNED",
-    ("bank_004.asm", "label4_66bd", 0): "COPY",              # -> $c8fb pair (teleport params; full byte)
-    ("bank_004.asm", "label4_68d7", 0): "COPY",
+    ("bank_004.asm", "ScriptCmd17_BedroomTileSwap", 0): "CP_UNSIGNED",
+    ("bank_004.asm", "ScriptCmd42_SaveReturnPoint", 0): "COPY",              # -> $c8fb pair (teleport params; full byte)
+    ("bank_004.asm", "ScriptCmd4E_SavePosition", 0): "COPY",
     # ---- bank_006 / _007 / _009
     ("bank_006.asm", "jr_006_4d99", 0): "CP_UNSIGNED",
     ("bank_006.asm", "jr_006_60b8", 0): "CP_UNSIGNED",

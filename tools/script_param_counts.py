@@ -167,6 +167,37 @@ def handler_table(rom, t):
     raise SystemExit('ScriptCommandTable not found after MarkScriptActive')
 
 
+INC_COUNTER = bytes([0xFA, 0xD5, 0xD8, 0xC6, 0x01, 0xEA, 0xD5, 0xD8])   # ld a,[$D8D5] / add 1 / ld [$D8D5],a
+
+
+def script_bank_entry_reads(rom, entry):
+    """S118: counter increments inside entry `entry` (1 or 2) of the script
+    banks $0C-$0F — the words ops $24 / $61 read THROUGH rst $10, which the
+    tracer cannot follow. Every bank must agree; returns that count."""
+    counts = set()
+    for bank in (0x0C, 0x0D, 0x0E, 0x0F):
+        base = bank * 0x4000
+        ptrs = [rom[base + 1 + 2 * i] | rom[base + 2 + 2 * i] << 8 for i in range(3)]
+        lo = ptrs[entry]
+        hi = ptrs[entry + 1] if entry + 1 < 3 else 0x41BA
+        code = rom[base + lo - 0x4000: base + hi - 0x4000]
+        counts.add(code.count(INC_COUNTER))
+    if len(counts) != 1:
+        raise SystemExit(f'script banks disagree on entry {entry} reads: {counts}')
+    return counts.pop()
+
+
+def cross_bank_reads(rom, handler):
+    """Extra words a handler reads through a script bank's entry 1 / 2
+    (`ld hl,$0Cnn / rst $10` and its $0D/$0E/$0F twins)."""
+    o = 0x04 * 0x4000 + handler - 0x4000
+    code = rom[o:o + 48]
+    for entry in (1, 2):
+        if bytes([0x21, entry, 0x0C, 0xD7]) in code:
+            return script_bank_entry_reads(rom, entry), entry
+    return 0, None
+
+
 def analyse(rom):
     t = Tracer(rom)
     tbl = handler_table(rom, t)
@@ -177,6 +208,9 @@ def analyse(rom):
         # its last read was NOT consumed (e.g. a skipped optional word) — the
         # decoder cares about how far the counter moved, i.e. reads - 1 there
         moved = {(r - 1 if k == 'continue_same' else r) for r, _w, _e, k in res}
+        extra, entry = cross_bank_reads(rom, h)
+        if extra:
+            moved = {r + extra for r in moved}
         counts = sorted(moved)
         out[f'0x{op:02X}'] = {
             'handler': f'$04:{h:04X}',
@@ -185,6 +219,9 @@ def analyse(rom):
             'branch_paths': sorted({r for r, w, _e, k in res if w}),
             'exact': all(e for _r, _w, e, _k in res),
         }
+        if extra:
+            out[f'0x{op:02X}']['cross_bank'] = (f'+{extra} word read by script-bank entry '
+                                                f'{entry} (S118)')
     return out
 
 
@@ -198,7 +235,8 @@ def main():
         return 0
     rom = open(a.rom, 'rb').read()
     res = analyse(rom)
-    doc = {'_generator': 'tools/script_param_counts.py (S96) over the original ROM '
+    doc = {'_generator': 'tools/script_param_counts.py (S96; S118: + the words ops $24/$61 '
+                         'read through script-bank entries 1/2) over the original ROM '
                          '(md5 1ca6579359f21d8e27b446f865bf6b83)',
            '_method': 'per-path count of `call MapTypeDispatch` ($04:$71EF) in each '
                       'bank-$04 script opcode handler; counter writes = branch paths',
