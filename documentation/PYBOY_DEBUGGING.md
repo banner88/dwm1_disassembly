@@ -310,3 +310,29 @@ edge and the battle waits for input forever.
   `SelectFloorType`) and set `register_file.A` = the type; enter gate 1 with the portal
   mailbox (`$C96D` = 1, `$C96E` = 1, `$C96C` = 1, `$C88F` = 1), keep `$CA39/$CA3A` high
   (a new game has no party) — `tools/census_gate_floor_types.py`.
+
+## S122 techniques — a generator re-run in place, screens vs the model, a walk on the user's save
+
+- **Re-run a routine in place (census of a generator).** `tools/census_maze.py floors`:
+  hook the generator's ENTRY (`$16:$605B`) and its END (`$16:$63AE`); at the entry write the
+  inputs (RNG `$C899/$C89A`, maze size `$C93D`, contents row, `$CAB4`, `$C92D`), at the end
+  capture every output, then set `PC` back to the entry from the hook and write the next
+  inputs. Thousands of floors run without a room change or a frame of gameplay between
+  them; the frame budget per batch is `max(3000, 40·n)`. A hook that never fires for a
+  case = the routine hung (the freeze probe uses exactly that).
+- **Capture after the terminator.** Hook the instruction after the last write of the data
+  you read (`$63AE`, the `ret` after `ld [hl], $FF`), not the one before it — the list was
+  unterminated at `$63AC` (KEY_LESSONS S122).
+- **A screen vs the editor's picture.** Warp / walk in, wait 30 frames, take
+  `p.screen.image`, render the same screen with `ProjectRenderer.render_screen` and compare
+  every 8×8 tile that no sprite covers (OAM `$FE00`: Y-16 / X-8, 8×16 objects) — 0 tiles
+  differing = the preview is the game (`verify_theme.py`, the S122 demo walk).
+- **Walk a demo end to end.** Movement = hold the D-pad 18 frames per tile (with the
+  random-battle counter `$CA39/$CA3A` held at `$FF/$7F`), then 6 frames; walk to a tile by x
+  then y and stop when `MAP_ID` leaves the expected set; talk = A, then A at every text box
+  (`$C8EB` bit 0) until the box flag clears, saving a picture per box.
+- **Stub-call a far routine from a hook.** Write `ld hl, $<bank><entry> / rst $10 / jp <PC>`
+  into free WRAM (`$DD40`), set `PC` there, advance 3 frames, restore the bytes — used for
+  the 20 GateBossWin calls (`wintail_check.py`) with random starting flags.
+- **Trap: `pkill -f <pattern>` matches the shell running it** and kills the tool call; kill
+  by PID instead.

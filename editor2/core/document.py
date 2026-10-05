@@ -100,6 +100,14 @@ class AnimationSwitchNeeded(RuntimeError):
     imports the tile still, anim_src=None)."""
 
 
+class VocabReleaseWouldHelp(RuntimeError):
+    """S122: a borrowed metatile needs a slot on a side of the split where
+    every free-looking slot is VOCABULARY the room does not use (a gate theme
+    keeps all 48 wall slots for the maze's tiles) — releasing the unused
+    vocabulary (Tileset tab, P3.3c) would make room. The GUI asks and retries
+    with the vocabulary released (one undo step)."""
+
+
 class ThresholdShiftNeeded(RuntimeError):
     """S98 r2: the walkable side of the sheet is full but the wall side has
     room — moving the wall/walkable split DOWN one slot would make space.
@@ -841,11 +849,18 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         self.touch()
         return rid
 
-    def new_room(self, name, source_mid, renderer, blank_tileset=False):
+    def new_room(self, name, source_mid, renderer, blank_tileset=False,
+                 gate_theme=None):
         """Blank single-screen room using a VANILLA room's tileset, palette
         and collision threshold (source_mid). Floor = first walkable tile.
         blank_tileset (S96): the room gets its own EMPTY project sheet
-        (threshold $40) for imported art instead of the vanilla sheet."""
+        (threshold $40) for imported art instead of the vanilla sheet.
+        gate_theme (S122, 0-15): the room draws with that maze floor type's
+        sheet (bank $28, threshold $30) in its colours (a new project palette)
+        and starts on the theme's plain floor; source_mid is then ignored
+        ($00 — the byte is vestigial at run time, PROJECT_COMPILER §2.35)."""
+        if gate_theme is not None:
+            return self._new_theme_room(name, int(gate_theme), renderer)
         rid = self.unique_room_id(self._slug(name))
         rec = renderer.vanilla_record(source_mid)
         rec['width_px'], rec['height_px'] = 160, 128
@@ -873,6 +888,123 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         self.rooms.append(room)
         self.touch()
         return rid
+
+    # ------------------------------------------------ gate themes (S122)
+    def gate_theme(self, room):
+        """0-15 when the room draws with a maze floor type's sheet (bank $28
+        id 0-15, or a project copy of one — its origin), else None."""
+        from editor2.core.maze import theme_of_origin
+        rec = room.get('record') or {}
+        if 'tileset' in rec:
+            return theme_of_origin(self.tileset_origin(rec['tileset']))
+        if 'gfx_bank' in rec and 'gfx_id' in rec:
+            return theme_of_origin((val(rec['gfx_bank']), val(rec['gfx_id'])))
+        return None
+
+    def _theme_words(self, t):
+        from editor2.core.maze import MazeRom, SYSTEM_ROWS
+        if self.vanilla is not None and hasattr(self.vanilla, 'theme_palette_words'):
+            rows = self.vanilla.theme_palette_words(t)
+        else:
+            rom = self._rom_bytes()
+            if rom is None:
+                raise RuntimeError('the original ROM is needed for the theme colours')
+            rows = MazeRom(rom).theme_palette_words(t)
+        return [list(r) for r in rows] + [list(r) for r in SYSTEM_ROWS]
+
+    def add_theme_palette(self, t, base_id):
+        from editor2.core.maze import THEME_NAMES
+        return self.add_palette_from_words(
+            base_id, self._theme_words(t),
+            f'gate theme {t} ({THEME_NAMES[t]}): the maze floor colours '
+            f'($17:$51F5[{t}], colours 1/3 as the engine forces them)')
+
+    def _new_theme_room(self, name, t, renderer):
+        from editor2.core.maze import THEME_BANK, THEME_THRESHOLD, N_THEMES
+        if not 0 <= t < N_THEMES:
+            raise ValueError(f'gate theme {t}: 0-15')
+        rid = self.unique_room_id(self._slug(name))
+        rec = {'gfx_id': hexs(t), 'gfx_bank': hexs(THEME_BANK), 'width_px': 160,
+               'height_px': 128, 'collision_threshold': hexs(THEME_THRESHOLD)}
+        pid = self.add_theme_palette(t, f'pal_{rid}')
+        floor = 0x33                       # the theme's plain floor tile (walkable)
+        lid = self.unique_layout_id(f'{rid}_s0')
+        fp = 3                             # its palette in the maze screens
+        try:
+            fl = next(m for m in renderer.maze_vocab()
+                      if all(0x30 <= x <= 0x33 for x in m['tiles']))
+            fp = fl['pal'] if isinstance(fl['pal'], int) else fl['pal'][3]
+        except Exception:                                # noqa: BLE001
+            pass
+        self.add_layout(lid, tiles=self.blank_grid(floor), attr=self.blank_grid(fp))
+        room = {'id': rid, 'name': name, 'mapID': hexs(self.next_free_mapid()),
+                'source_mapID': hexs(0), 'record': rec,
+                'animation': 'none',       # maze floors never animate
+                'render': {'attr': {'id': lid}, 'palette': pid},
+                'screens': {'0': {'layout': {'id': lid}, 'step_counter': 'auto',
+                                  'npcs': [], 'exits': []}}}
+        self.rooms.append(room)
+        self.touch()
+        return rid
+
+    def use_theme_palette(self, room_id, t):
+        """S122: give a room theme t's colours — a new project palette as the
+        room default; screens / states that showed the old default (or had
+        none) follow it, ones with a palette of their own keep it. Returns
+        (palette id, [(screen, state) kept])."""
+        room = self.room(room_id)
+        render = room.setdefault('render', {})
+        old = render.get('palette')
+        pid = self.add_theme_palette(t, f'pal_{room_id}_theme')
+        render['palette'] = pid
+        kept = []
+        for k, scr in (room.get('screens') or {}).items():
+            for n, st in enumerate(scr.get('states') or [scr]):
+                p = st.get('palette')
+                if p is None:
+                    continue
+                if p == old:
+                    st.pop('palette')
+                else:
+                    kept.append((int(k), n))
+            if scr.get('states') and scr.get('palette') is not None:
+                if scr['palette'] == old:
+                    scr.pop('palette')
+                else:
+                    kept.append((int(k), None))
+        self.touch()
+        return pid, kept
+
+    def stamp_maze_screen(self, room_id, key, state_idx, cell, mode=0, renderer=None):
+        """S122: this screen/state starts from a maze screen of the gates —
+        its tiles AND palette slots (MazeScreenTable / GateAttrTable, the cell
+        byte piece*16 + variant; mode 2 = the pattern tables). A new layout
+        item carries both; the state points at it (layout and attr). Returns
+        the layout id. The room should draw with a gate theme (same tile
+        numbers); otherwise the screen shows this room's own tiles."""
+        from editor2.core.maze import MazeRom
+        if renderer is not None and hasattr(renderer, 'maze_piece_grids'):
+            tiles, attr = renderer.maze_piece_grids(int(cell), int(mode))
+        else:
+            rom = self._rom_bytes()
+            if rom is None:
+                raise RuntimeError('the original ROM is needed for the maze screens')
+            tiles, attr = MazeRom(rom).cell_grids(int(cell), int(mode))
+        room = self.room(room_id)
+        scr = self.screen(room, key)
+        target = scr['states'][state_idx] if scr.get('states') else scr
+        old = (target.get('layout') or {}).get('id')
+        lid = self.unique_layout_id(f'{room_id}_s{key}')
+        self.add_layout(lid, tiles=tiles, attr=attr,
+                        comment=f'maze screen ${int(cell):02X}'
+                                f"{' (pattern tables)' if int(mode) == 2 else ''} "
+                                f'({room_id} screen {key})')
+        target['layout'] = {'id': lid}
+        target['attr'] = {'id': lid}
+        if old and old != lid and self.has_layout(old) and not self.layout_users(old):
+            self.remove_layout(old)          # the screen owned it alone
+        self.touch()
+        return lid
 
     def delete_room(self, room_id):
         """Remove a room (the compiler fills mapID gaps with placeholders).
@@ -1067,7 +1199,9 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
                       collision threshold (record gfx_bank/gfx_id);
           'project' — value = a custom.tilesets id (threshold = the given one,
                       else that of another room on the sheet, else kept);
-          'blank'   — a new all-empty project sheet (threshold given or $40).
+          'blank'   — a new all-empty project sheet (threshold given or $40);
+          'gate'    — value = a maze floor type 0-15 (S122): its bank $28
+                      sheet, threshold $30 (colours: use_theme_palette).
         Layout grids keep their tile NUMBERS — they draw with the new sheet's
         graphics. Returns the tileset key now in effect."""
         room = self.room(room_id)
@@ -1105,6 +1239,17 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
                     raise RuntimeError('no renderer bound — cannot read the vanilla sheet')
                 sheet = self.vanilla.rom_sheet(val(rec['gfx_bank']), val(rec['gfx_id']))
                 self.localize_tileset(room, sheet, name=f'ts_{room_id}')
+        elif kind == 'gate':
+            # S122: a maze floor type's sheet (bank $28 id = the type, $30)
+            from editor2.core.maze import THEME_BANK, THEME_THRESHOLD, N_THEMES
+            t = int(value)
+            if not 0 <= t < N_THEMES:
+                raise ValueError(f'gate theme {t}: 0-15')
+            rec.pop('tileset', None)
+            rec['gfx_id'], rec['gfx_bank'] = hexs(t), hexs(THEME_BANK)
+            rec['collision_threshold'] = hexs(THEME_THRESHOLD if threshold is None else threshold)
+            if room.get('animation') == 'source':
+                room['animation'] = 'none'    # maze floors never animate
         elif kind == 'blank':
             tid = self.new_blank_tileset(f"ts_{room_id}")
             rec.pop('gfx_id', None)
@@ -1228,6 +1373,10 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         """Vanilla tile vocabulary that belongs to this room's sheet: the
         source room's tiles, when the room still draws with (a copy of) the
         source room's sheet. Empty without a renderer."""
+        if self.gate_theme(room) is not None:
+            # S122: the maze screens use $00-$3B, the floor stairs $3C-$3F;
+            # $40-$7F of every theme sheet are blank — free for borrowing
+            return set(range(0x40))
         if self.vanilla is None or room.get('source_mapID') is None:
             return set()
         src = val(room['source_mapID'])
@@ -1581,6 +1730,16 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
                 pool = side or ([] if strict else free)
                 if not pool:
                     nw = sum(1 for i in free if i < thr)
+                    spare = [i for i, u in enumerate(self.tile_usage(tid))
+                             if u['status'] == 'vocab' and (i < thr) == want_wall]
+                    if spare:
+                        raise VocabReleaseWouldHelp(
+                            f"The {'wall' if want_wall else 'walkable'} side of "
+                            f"{tid!r} is full of this room's vocabulary — "
+                            f"{len(spare)} of those slots hold tiles no screen of "
+                            "the room uses (e.g. maze tiles of a gate theme). Release "
+                            "the unused vocabulary and borrow? (The picker then marks "
+                            "vocabulary metatiles whose tiles change.)")
                     raise RuntimeError(
                         f"tileset {tid!r} has no free "
                         f"{'wall' if want_wall else 'walkable'} slot — "

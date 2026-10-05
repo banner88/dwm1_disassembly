@@ -100,10 +100,24 @@
    C93D     1    Maze size = the current pool's +25 byte (bank $01
                  LoadFloorAndEncounterData); the bank $16 maze carve count
                  (vanilla 3 / 8 / 15) [S103, static]
-   C93F     1    Floor shape mode ([$16:$6056 + RNG%5])
+                 S122: 3-15 only — 1-2 can carve an empty floor (freeze,
+                 measured), 0 / 16+ overrun the grid (GATE_GENERATION §4.2)
+   C93F     1    Floor shape mode ([$16:$6056 + RNG%5]; 0 carved, 1 plain, 2 pattern)
    C940    16    Floor screen GRID (4×4): byte = (piece<<4)|variant; $Fx = empty
-   C950    16    Floor grid paired per-cell state buffer
+                 (piece = MazePieceTable row, variant 0-11, 12 = plain) [S122]
+   C950    16    Floor grid paired per-cell state buffer (explored, map overview)
    C960     1    Staircase screen index (down-stairs cell)
+   C962     2    Stairs tile offset in the 32-wide screen map [S122]
+   C964     4    Stairs absolute pixel X / Y [S122]
+   C926     5    Wandering maze NPC: screen ($FF = none) + pixels [S122]
+   C92B     3    Maze NPC kind / sub-kind / explored state ($C92D) [S122]
+   C0A0     9    Maze builder scratch: class counts (carve), then arrival screen +
+                 pixels ($C0A0-$C0A4), stairs pixels ($C0A5-$C0A8) [S122]
+   C0A9     1    Placement try counter (64 per pass, 16 per item) [S122]
+   C0B0     9    MazePassableTest 3×3 blocked map [S122]
+   C500    ~40   MazePickPiece candidate list [piece, running share], $FF $FF [S122]
+   D793    ~49   Maze floor item list [kind, sub-kind, X, Y] (absolute metatiles),
+                 $FF after the last (GATE_GENERATION §5) [S122, PyBoy census]
    C100    16    Per-screen content state (item/master placement)
                  [S97 r2] ALSO the field dialog box's tile backup: the 5 box
                  rows x 20 at $C100/$C114/$C128/$C13C/$C150 (bank $06 dialog

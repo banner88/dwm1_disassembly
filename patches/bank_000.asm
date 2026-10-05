@@ -6061,7 +6061,18 @@ Div24NextBit:
     ret
 
 
-WaitInputRelease:
+; ---------------------------------------------------------------------------
+; TileAtPixel (S122; was "WaitInputRelease" — it never touches input). In:
+; $FFA5/$FFA6 = X, $FFA7/$FFA8 = Y (pixels in the room). Out: $FFAA = the tile
+; id at that pixel in the $C300 screen shadow ($C300 + (Y & $F8)*4 + X/8 —
+; after subtracting the scroll $FFB7/$FFBB), $FFA9 = $0F when that id is at
+; or above the room's collision threshold (ROM0 $26E3 / gate $2A63 record
+; +6), else $FF. Leaves $FFAA untouched (and $FFA9 = $FF) when the pixel is
+; negative, past the room size ($FF9D/$FF9F), off the visible screen, or
+; wGameState bit 2 is set. The maze builder samples a metatile at
+; (16k + 8, 16j + 8) = its BOTTOM-RIGHT 8x8 tile (bank $16 MazeSpotBlocked).
+; ---------------------------------------------------------------------------
+TileAtPixel:
     ld a, $ff
     ldh [$a9], a
     ldh a, [$a6]
@@ -9608,53 +9619,35 @@ WriteRotatedBytesDown:
     ASSERT @ == $2d7f
     db $0f, $32, $0f, $32, $0f, $32, $0f, $32, $0f, $32, $0f, $32, $0f, $32, $0f, $32   ; $2d7f
     db $0f, $32, $0f, $32, $0f, $32, $0f, $32, $0f, $32, $0f, $32, $0f, $32, $0f, $32   ; $2d8f
-    db $0f, $32, $0f, $32, $0f, $32, $0f, $32, $00   ; $2d9f
-
+    db $0f, $32, $0f, $32, $0f, $32, $0f, $32   ; $2d9f
+; ScreenOriginTable (S122, re-sectioned from mgbdis fake code — bytes
+; unchanged): $2DA7, 16 screens x [X lo, X hi, Y lo, Y hi] = the pixel origin
+; of grid screen n (col n & 3 * 160, row n / 4 * 128). Readers: bank $16
+; MazePlacements / MazePlaceItem (stairs, NPC, arrival and item spots -> room
+; pixels) and bank $07 ($50E9). The two mgbdis labels inside it are kept at
+; their offsets (fake-code references elsewhere).
+ScreenOriginTable:
+    db $00                      ; screen 0: X lo
 TileRotatePadding:
-    nop
-    nop
-    nop
-    and b
-    nop
-    nop
-    nop
-    ld b, b
-    ld bc, $0000
-    ldh [rSB], a
-    nop
-    nop
-    nop
-    nop
-    add b
-    nop
-    and b
-    nop
-    add b
-    nop
-    ld b, b
-    ld bc, $0080
-    ldh [rSB], a
-    add b
-    nop
-    nop
+    db $00, $00, $00            ;           X hi, Y $0000
+    db $a0, $00, $00, $00       ; screen 1: X  160, Y   0
+    db $40, $01, $00, $00       ; screen 2: X  320, Y   0
+    db $e0, $01, $00, $00       ; screen 3: X  480, Y   0
+    db $00, $00, $80, $00       ; screen 4: X    0, Y 128
+    db $a0, $00, $80, $00       ; screen 5: X  160, Y 128
+    db $40, $01, $80, $00       ; screen 6: X  320, Y 128
+    db $e0, $01, $80, $00       ; screen 7: X  480, Y 128
+    db $00                      ; screen 8: X lo
 
 MenuBorderDraw:
-    nop
-    nop
-    ld bc, $00a0
-    nop
-    ld bc, $0140
-    nop
-    ld bc, $01e0
-    nop
-    ld bc, $0000
-    add b
-    ld bc, $00a0
-    add b
-    ld bc, $0140
-    add b
-    ld bc, $01e0
-    add b
+    db $00, $00, $01            ;           X hi, Y 256
+    db $a0, $00, $00, $01       ; screen 9: X  160, Y 256
+    db $40, $01, $00, $01       ; screen 10: X 320, Y 256
+    db $e0, $01, $00, $01       ; screen 11: X 480, Y 256
+    db $00, $00, $80, $01       ; screen 12: X   0, Y 384
+    db $a0, $00, $80, $01       ; screen 13: X 160, Y 384
+    db $40, $01, $80, $01       ; screen 14: X 320, Y 384
+    db $e0, $01, $80            ; screen 15: X 480, Y 384 (lo) …
     ld bc, $0000
     ld a, [bc]
     nop

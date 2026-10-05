@@ -119,6 +119,92 @@ def cleared_flags(rom: bytes, boss_map: int) -> list:
     return found
 
 
+# S122 (ROADMAP NG2 residual a): the vanilla win tail after `write_ram $D92B 7`
+# — the boss script's story bookkeeping (the portal room's step counter, the
+# boss room's state, "both gates of this portal cleared" tests) up to its first
+# op that is not bookkeeping (close_text / the warp …). A re-bossed vanilla
+# gate's custom boss win replays it (bank $76 GateBossWin -> RunWinTail).
+WIN_TAIL_OPS = {0x00, 0x01, 0x02, 0x03, 0x12, 0x13, 0x14}
+
+
+def _arity():
+    d = json.loads((ROOT / "extracted" / "script_param_counts.json").read_text())
+    return {int(k, 16): v["counts"][0] for k, v in d["ops"].items()}
+
+
+def win_tails(rom: bytes, boss_map: int) -> list:
+    """[{flag, bank, start, ops: [[addr, op, [params]], …]}] — every boss-room
+    script's win tail (ops reachable from the word after `$FF12 $D92B $0007`;
+    branch targets followed; an op outside WIN_TAIL_OPS ends a path and is
+    listed with op = that opcode and no params, as a stop). Deduplicated by
+    content (the Medal Gate's three boss scripts share one tail)."""
+    from tools.dump_all_scripts import bank_for, rw, dump_script, MASTER_TABLE
+    ar = _arity()
+    out, seen_ops = [], set()
+    for mt in (boss_map, boss_map + 1) if boss_map == 0x40 else (boss_map,):
+        bank = bank_for(mt)
+        tbl = rw(rom, bank, MASTER_TABLE + mt * 2)
+        if not 0x4000 <= tbl < 0x8000:
+            continue
+        a = tbl
+        for _ in range(100):
+            ptr = rw(rom, bank, a)
+            if not 0x4000 <= ptr < 0x8000:
+                break
+            a += 2
+            cmds = dump_script(rom, bank, ptr)[1]
+            for i, c in enumerate(cmds):
+                if c.get("type") != "opcode" or c.get("opcode") != 0x12:
+                    continue
+                pa = [x.get("value") for x in cmds[i + 1:i + 3]]
+                if pa != [0xD92B, 0x0007]:
+                    continue
+                start = int(c["addr"][1:], 16) + 6
+                flag = None
+                for b in cmds[max(0, i - 24):i]:
+                    if b.get("type") == "opcode" and b.get("opcode") == 0x03:
+                        k = cmds.index(b)
+                        flag = cmds[k + 1].get("value")
+                ops, todo, done = {}, [start], set()
+                while todo:
+                    at = todo.pop()
+                    while at not in done and 0x4000 <= at < 0x8000:
+                        done.add(at)
+                        w = rw(rom, bank, at)
+                        if w >> 8 != 0xFF:
+                            ops[at] = [at, w, []]
+                            break
+                        op = w & 0xFF
+                        if op not in WIN_TAIL_OPS:
+                            ops[at] = [at, op, []]
+                            break
+                        n = ar[op]
+                        prm = [rw(rom, bank, at + 2 + 2 * j) for j in range(n)]
+                        ops[at] = [at, op, prm]
+                        if op in (0x00, 0x01):
+                            todo.append(prm[1])
+                        if op == 0x14:
+                            todo.append(prm[0])
+                            break
+                        at += 2 + 2 * n
+                def rel(o):        # flow targets relative to the tail's start
+                    prm = list(o[2])
+                    if o[1] in (0x00, 0x01):
+                        prm[1] -= start
+                    elif o[1] == 0x14:
+                        prm[0] -= start
+                    return (o[0] - start, o[1], tuple(prm))
+                key = tuple(rel(o) for o in sorted(ops.values()))
+                if (flag, key) in seen_ops:
+                    continue
+                seen_ops.add((flag, key))
+                out.append({"flag": None if flag is None else f"0x{flag:04X}",
+                            "bank": f"0x{bank:02X}", "start": f"0x{start:04X}",
+                            "ops": [[f"0x{o[0]:04X}", o[1], [f"0x{x:04X}" for x in o[2]]]
+                                    for o in sorted(ops.values())]})
+    return out
+
+
 def derive(rom: bytes) -> dict:
     base = GATE_TABLE_BANK * 0x4000 + GATE_TABLE_ADDR - 0x4000
     gates, problems = [], []
@@ -150,6 +236,7 @@ def derive(rom: bytes) -> dict:
         cf = cleared_flags(rom, boss)
         gates[-1]["cleared_flag"] = f"0x{cf[0]:04X}" if cf else None
         gates[-1]["cleared_flags"] = [f"0x{x:04X}" for x in cf]
+        gates[-1]["win_tails"] = win_tails(rom, boss)
     if len({x["boss_map"] for x in gates}) != len(gates):
         problems.append("two gates share a boss map")
     if problems:
@@ -158,7 +245,8 @@ def derive(rom: bytes) -> dict:
         "_generator": "tools/map_gate_names.py (S100) from data/DWM-original.gbc "
                       "GateFloorDataTable $16:$70A6 (floors byte 3 + boss map byte 4; "
                       "S101: + boss_spawn bytes 5/6 + the raw row; S117: + cleared_flag(s) "
-                      "from the boss rooms' win tails), "
+                      "from the boss rooms' win tails; S122: + win_tails, the tails' "
+                      "bookkeeping ops), "
                       "cross-checked vs FULL_FAQ.txt 'Levels:'",
         "gates": gates,
     }

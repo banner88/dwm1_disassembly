@@ -343,6 +343,19 @@ def vanilla_cleared_flag(gate_id, start=None):
     return None
 
 
+def vanilla_win_program(gate_id, start=None):
+    """S122 (NG2 residual a): what a custom boss win of re-bossed vanilla gate
+    N replays — (extra flags, tails): the gate's further cleared flags beyond
+    the first (Demolition: Sidoh's $28) and every win tail of its boss room
+    (gate_names.json `win_tails`, tools/map_gate_names.py: the game's own
+    bookkeeping after `write_ram $D92B 7`). Empty for gates without one."""
+    for g in vanilla_gates(start):
+        if g['id'] == int(gate_id):
+            extra = [_val(f) for f in (g.get('cleared_flags') or [])[1:]]
+            return extra, list(g.get('win_tails') or [])
+    return [], []
+
+
 def gate_rebossed(custom, gate_id, start=None):
     """A VANILLA gate whose boss floor serves another room than its own."""
     gid = int(gate_id)
@@ -1007,6 +1020,20 @@ class GatesMixin:
         Brought into the room's tileset (identical graphics reuse their
         slots; the bottom-right lands on the walkable side). Returns the
         metatile dict. Raises RuntimeError without a renderer or free slots."""
+        theme = self.gate_theme(room)
+        if theme is not None and getattr(self, 'vanilla', None) is not None:
+            _c, sheet = self._cell_tiles_and_sheet(room, key, state_idx, x, y)
+            orig = bytes(self.vanilla.theme_gfx(theme).sheet[:2048])
+            if bytes(sheet[0x3C * 16:0x40 * 16]) != orig[0x3C * 16:0x40 * 16]:
+                theme = None        # slots $3C-$3F were reused: import the well
+        if theme is not None:
+            # S122: a room drawn with a gate theme's own sheet has the maze's
+            # stairs at $3C-$3F — the same picture bank $0B stamps on a real
+            # floor's stairs (Call_00b_4309); no import. (Inert as a tile in a
+            # custom room — wInGateworld is 0 there; the Stairs down exit row
+            # is what moves the player.)
+            from editor2.core.maze import STAIR_TILES
+            return {'name': 'Maze stairs (the theme\'s own)', 'tiles': list(STAIR_TILES), 'pal': 0}
         if getattr(self, 'vanilla', None) is None:
             raise RuntimeError('no ROM renderer loaded')
         src = bytes(self.vanilla.vanilla_gfx(WELL_SRC_MAP).sheet[:2048])

@@ -38,6 +38,9 @@ from editor2.app.rooms.tileset_dialog import TilesetDialog
 from editor2.app.collapsible import Section
 
 
+THEME_KEY = 0x100      # S122: Borrow-list data for gate theme t = THEME_KEY + t
+
+
 class NewRoomDialog(QDialog):
     def __init__(self, renderer, parent=None):
         super().__init__(parent)
@@ -56,6 +59,20 @@ class NewRoomDialog(QDialog):
         self.blank.setToolTip('The room gets its own empty 128-slot sheet; palette and '
                               'engine source still come from the room above.')
         f.addRow('', self.blank)
+        # S122: a maze floor type of the gates as the room's tiles + colours
+        from editor2.core.maze import THEME_NAMES
+        self.theme = QComboBox()
+        self.theme.addItem('(none — tiles from the room above)', None)
+        for t, nm in enumerate(THEME_NAMES):
+            self.theme.addItem(f'{t:2d}  {nm}', t)
+        self.theme.setToolTip('Start on a GATE THEME: the sheet and colours of one of the 16 '
+                              'maze floor types (the screens of the gates). The room gets the '
+                              'theme\'s metatiles in its picker; "Maze screen…" fills a screen '
+                              'with a real maze screen; Borrow adds tiles from any room.')
+        self.theme.currentIndexChanged.connect(
+            lambda _i: (self.src.setEnabled(self.theme.currentData() is None),
+                        self.blank.setEnabled(self.theme.currentData() is None)))
+        f.addRow('Or a gate theme', self.theme)
         f.addRow(QLabel('The room starts as one screen of floor. Connect it with "Add door '
                         'here…" on a cell (a vanilla door as the other end is the quickest '
                         'in-game test).'))
@@ -300,6 +317,14 @@ class RoomsTab(QWidget):
         self.state_del.clicked.connect(self._remove_state)
         sb.addWidget(self.state_add)
         sb.addWidget(self.state_del)
+        # S122: this screen/state starts from a real maze screen of the gates
+        self.maze_btn = QToolButton()
+        self.maze_btn.setText('Maze screen…')
+        self.maze_btn.setToolTip('Replace this screen (this state) with one of the gates\' maze '
+                                 'screens — tiles and palette slots. Best in a room on a gate theme '
+                                 '(New room / Change tileset → a gate theme). Undo restores it.')
+        self.maze_btn.clicked.connect(self._maze_screen)
+        sb.addWidget(self.maze_btn)
         sb.addStretch(1)
         # S99: the animation preview sits on the screen/state row (always
         # visible; the tool bar overflows on narrow windows)
@@ -819,8 +844,19 @@ class RoomsTab(QWidget):
                     continue
                 self._harvest_grid(tiles, attr or [[0] * 20 for _ in range(16)], seen, out)
         src = val(room.get('source_mapID', 0)) if room.get('source_mapID') is not None else None
-        if src is not None and src < 0x6B:
-            for mt in self._vanilla_vocab(src):
+        theme = self.s.doc.gate_theme(room)
+        if theme is not None:
+            # S122: a gate-theme room's vocabulary = the maze screens' metatiles
+            extra = self.s.renderer.maze_vocab()
+        elif src is not None and src < 0x6B and self.s.doc.room_sources_vocab(room):
+            # only while the room still draws with (a copy of) its source's
+            # sheet — the same rule as the protected slots (S122: a blank or
+            # imported sheet no longer lists the source room's tile numbers)
+            extra = self._vanilla_vocab(src)
+        else:
+            extra = []
+        if extra:
+            for mt in extra:
                 key = metatile_key(mt)
                 if key not in seen:
                     seen.add(key)
@@ -845,6 +881,10 @@ class RoomsTab(QWidget):
         self.foreign_box.addItem('(none)', None)
         for mid, name, _scr in self.s.renderer.vanilla_rooms():
             self.foreign_box.addItem(f'${mid:02X}  {name}', int(mid))
+        # S122: the 16 maze floor types (gate themes) — data THEME_KEY + type
+        from editor2.core.maze import THEME_NAMES
+        for t, nm in enumerate(THEME_NAMES):
+            self.foreign_box.addItem(f'Gate theme {t}: {nm}', THEME_KEY + t)
         self.foreign_box.blockSignals(False)
 
     def _refresh_foreign(self):
@@ -855,12 +895,17 @@ class RoomsTab(QWidget):
             return
         r = self.s.renderer
         mid = int(sel)
-        gfx = r.vanilla_gfx(mid)
+        if mid >= THEME_KEY:                     # S122: a gate theme
+            from editor2.core.maze import THEME_NAMES
+            gfx = r.theme_gfx(mid - THEME_KEY)
+            title, vocab = f'Gate theme: {THEME_NAMES[mid - THEME_KEY]}', r.maze_vocab()
+        else:
+            gfx = r.vanilla_gfx(mid)
+            title, vocab = r.vanilla_name(mid), self._vanilla_vocab(mid)
         same = (bytes(gfx.sheet[:2048]) == bytes(self.canvas.gfx.sheet[:2048]))
-        title = r.vanilla_name(mid)
         if room is None:
             same = same  # vanilla view: brush only when the sheets match
-        self.picker_foreign.set_foreign(title, self._vanilla_vocab(mid), gfx.sheet, gfx.threshold, same)
+        self.picker_foreign.set_foreign(title, vocab, gfx.sheet, gfx.threshold, same)
 
     def _import_metatile(self, mt):
         room = self.current_room()
@@ -871,26 +916,44 @@ class RoomsTab(QWidget):
             return
         r = self.s.renderer
         mid = int(sel)
-        gfx = r.vanilla_gfx(mid)
+        from editor2.core import animation as ANIM
+        from editor2.core.document import AnimationSwitchNeeded, VocabReleaseWouldHelp
+        if mid >= THEME_KEY:                     # S122: a gate theme (never animated)
+            from editor2.core.maze import THEME_NAMES
+            gfx = r.theme_gfx(mid - THEME_KEY)
+            src_name = f'gate theme {THEME_NAMES[mid - THEME_KEY]}'
+            anim = None
+        else:
+            gfx = r.vanilla_gfx(mid)
+            src_name = r.vanilla_name(mid)
+            # S99 r2: a tile the source room ANIMATES keeps moving — it goes into
+            # the same slots and the room plays that room's animation
+            e = ANIM.map_entry(mid)
+            anim = mid if (e.get('slots') and not e.get('inert_in_vanilla')
+                           and any((t & 0x7F) in ANIM.slots(mid) for t in mt['tiles'])) else None
         src_sheet, src_thr = bytes(gfx.sheet[:2048]), gfx.threshold
         own = bytes(self.canvas.gfx.sheet[:2048])
-        name = f"{r.vanilla_name(mid)} {mt['tiles']}"
+        name = f"{src_name} {mt['tiles']}"
         rid = room['id']
-        # S99 r2: a tile the source room ANIMATES keeps moving — it goes into
-        # the same slots and the room plays that room's animation
-        from editor2.core import animation as ANIM
-        from editor2.core.document import AnimationSwitchNeeded
-        e = ANIM.map_entry(mid)
-        anim = mid if (e.get('slots') and not e.get('inert_in_vanilla')
-                       and any((t & 0x7F) in ANIM.slots(mid) for t in mt['tiles'])) else None
         switch = False
-        for _attempt in range(3):          # ask at most once, then retry once
+        release = False
+
+        def _imp(doc, a, sw, rel):
+            if rel:                     # S122: release the unused vocabulary first
+                doc.set_released(doc.tileset_key(doc.room(rid)), True)
+            return doc.import_metatile(doc.room(rid), mt, src_sheet, src_thr, own_sheet=own,
+                                       name=name, anim_src=a, switch_ok=sw)
+        for _attempt in range(4):          # ask at most once each, then retry
             cmd = C.SnapshotCommand(
-                self.s, f'Import metatile from {r.vanilla_name(mid)}',
-                lambda doc, a=anim, sw=switch: doc.import_metatile(
-                    doc.room(rid), mt, src_sheet, src_thr, own_sheet=own, name=name,
-                    anim_src=a, switch_ok=sw))
+                self.s, f'Import metatile from {src_name}',
+                lambda doc, a=anim, sw=switch, rel=release: _imp(doc, a, sw, rel))
             self.s.undo.push(cmd)
+            if isinstance(cmd.error, VocabReleaseWouldHelp) and not release:
+                # (a failed command is obsolete — the stack has already dropped it)
+                if QMessageBox.question(self, 'Borrow', str(cmd.error)) != QMessageBox.Yes:
+                    return
+                release = True
+                continue
             if isinstance(cmd.error, AnimationSwitchNeeded):
                 box = QMessageBox(self)
                 box.setWindowTitle('Animated tile')
@@ -1004,6 +1067,36 @@ class RoomsTab(QWidget):
         self.picker.set_flags(flags, f"{fc['wall']} wall / {fc['walkable']} walkable slots free")
         self.picker.set_animated(self.canvas.anim_slots)
 
+    def _maze_screen(self):
+        """S122: fill the current screen/state from a maze screen."""
+        room = self.current_room()
+        if room is None:
+            QMessageBox.information(self, 'Maze screen', 'Select a custom room first — a vanilla '
+                                    'room is read-only.')
+            return
+        from editor2.app.rooms.maze_dialog import MazeScreenDialog
+        theme = self.s.doc.gate_theme(room)
+        dlg = MazeScreenDialog(self.s.renderer, theme, self.canvas.gfx, self.canvas.pals, self)
+        if dlg.exec() != QDialog.Accepted or dlg.choice() is None:
+            return
+        cell, mode = dlg.choice()
+        if theme is None and QMessageBox.question(
+                self, 'Maze screen',
+                'This room does not draw with a gate theme, so the maze screen will show THIS '
+                'room\'s tiles in those places (the tile numbers of the maze). Use "Change tileset '
+                '→ A gate theme" first for the real look.\n\nFill the screen anyway?') \
+                != QMessageBox.Yes:
+            return
+        rid, key, st = room['id'], self.key, self.state_idx
+        rend = self.s.renderer
+        cmd = C.SnapshotCommand(self.s, f'Maze screen ${cell:02X} on screen {key}',
+                                lambda doc: doc.stamp_maze_screen(rid, key, st, cell, mode, rend))
+        self.s.undo.push(cmd)
+        if cmd.error is not None:
+            QMessageBox.warning(self, 'Maze screen', str(cmd.error))
+            return
+        self._show()
+
     def _change_tileset(self):
         room = self.current_room()
         if room is None:
@@ -1013,11 +1106,22 @@ class RoomsTab(QWidget):
             return
         kind, value, thr = dlg.choice()
         rid = room['id']
-        cmd = C.SnapshotCommand(self.s, f'Change tileset ({kind})',
-                                lambda doc: doc.set_room_tileset(rid, kind, value, thr))
+        colours = kind == 'gate' and dlg.theme_colours()
+
+        def run(doc):
+            key = doc.set_room_tileset(rid, kind, value, thr)
+            if colours:                          # S122: the theme's own colours too
+                return key, doc.use_theme_palette(rid, int(value))[1]
+            return key, []
+        cmd = C.SnapshotCommand(self.s, f'Change tileset ({kind})', run)
         self.s.undo.push(cmd)
         if cmd.error is not None:
             QMessageBox.warning(self, 'Change tileset', str(cmd.error))
+        elif cmd.result and cmd.result[1]:
+            self.status_line.setText(
+                'Theme colours set as the room\'s palette; screens with a palette of their own '
+                'kept it: ' + ', '.join(f'screen {k}' + (f' state {n}' if n else '')
+                                        for k, n in cmd.result[1]))
 
     def _purge_metatiles(self, kind):
         """S98 r2: drop every unused own / borrowed metatile of this room's
@@ -1201,7 +1305,7 @@ class RoomsTab(QWidget):
         the metatile's slots but this room does not, offer its animation."""
         room = self.current_room()
         sel = self.foreign_box.currentData()
-        if room is not None and sel is not None:
+        if room is not None and sel is not None and int(sel) < THEME_KEY:
             from editor2.core import animation as ANIM
             mid = int(sel)
             e = ANIM.map_entry(mid)
@@ -2465,9 +2569,11 @@ class RoomsTab(QWidget):
         name = dlg.name.currentText().strip() or 'New room'
         src = dlg.src.currentData()
         blank = dlg.blank.isChecked()
+        theme = dlg.theme.currentData()
         rend = self.s.renderer
         cmd = C.SnapshotCommand(self.s, f'New room {name}',
-                                lambda doc: doc.new_room(name, src, rend, blank_tileset=blank))
+                                lambda doc: doc.new_room(name, src, rend, blank_tileset=blank,
+                                                         gate_theme=theme))
         self.s.undo.push(cmd)
         self.vanilla_mid = None
         self.room_id = cmd.result

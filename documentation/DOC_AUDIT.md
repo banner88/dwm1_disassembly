@@ -584,3 +584,19 @@ gate you assumed".
 | PROJECT_COMPILER §2.3 / TEXT_SYSTEM: every project builds the MILLY tiles (S120b) | CHANGED (S121, user) | only with the Milly hook on; the example builds TERRY again. |
 | PROJECT_STATE bank allocation: `$79` unallocated; Canonical Facts: overflow order ends `$79` | STALE (S121) | `$79` = story hooks; `dwm/sprite_bank.py` no longer lists it. |
 | disassembly/bank_00e.asm bedroom script: mgbdis comments `$FF17 ; SetupBossBattle`, `$0060 ; Text $0060 …` | MISLEADING (S121) | `$17` = `bedroom_tile_swap` (script_ops / BANK04 already say so) and the "Text $00xx" words are opcode parameters (sound `$60`, delay 8 …); a comment before the tail says so (both trees). |
+
+## S122 addendum (2026-10-05; gate themes as room tilesets, the maze carve, NG2 residual a — ROADMAP P3.7b part 2)
+
+| Claim (where) | Verdict | Correct |
+|---|---|---|
+| bank $16 labels `FloorTypeSortData` `$7055`, `FloorTypeOrderTable` `$7096`, `FloorTilePatterns` `$7736`, `FloorDataPtrTable1/2` `$7896` / `$7A96` (both trees; DATA_STRUCTURES, GATE_GENERATION) | MISLABELLED (S122) | `MazePieceTable` (16 × [openings, piece, class, 0]), `MazeCellOrder` (the carve's cell visiting order — not "a permutation of piece ids"), `MazePatterns` (21 ready-made grids), `MazeScreenTable` / `MazeScreenTableB` (cell → [layout id, bank]); renamed both trees, byte-perfect. |
+| ROM0 `WaitInputRelease` `$1E31` (DATA_STRUCTURES "Input") | MISNOMER (S122) | `TileAtPixel`: tile id at pixel `$FFA5-$FFA8` → `$AA`, walkable → `$A9`; no input wait. Renamed both trees + the 3 callers' banks. |
+| ROM0 `$2DA7` assembled as code (`TileRotatePadding` …) | MISASSEMBLY (S122) | `ScreenOriginTable` — 16 × 4 B per-screen origins, re-sectioned as `db` (same bytes). |
+| bank $17 comments on `GateAttrTable_A` / `_B`: "shape mode == 0" / "== 1" | WRONG (S122) | A = shape modes 0 / 1, B = mode 2 (`$C93F == 2`). |
+| DATA_STRUCTURES `FloorLayoutData` `$16:$7436` "1120 bytes"; GATE_GENERATION §4.3 "per-floor feature / piece sub-selection, mapping not pinned" | WRONG SIZE / ROLE (S122) | 16 rows × 48 B = 768 B of item sub-kind odds by contents row; the remaining bytes are `MazePatterns` + `MazeNPCChance`. |
+| DATA_STRUCTURES `FloorTypeSelectionTable3` "17 rows" | WRONG (S122) | 16 rows; the "17th" (`$7426`) is `MazeItemSubKind` (16 B by item kind). |
+| GATE_GENERATION §4.1 / §4.2: variants 0-11 "unless shape mode 1 fixes the variant"; the carve "understood in outline" | INCOMPLETE (S122) | Variant 12 = the plain drawing (mode 1); the carve, re-fit and placements are traced and modelled bit-exact (`census_maze.py` 4,000 / 0). |
+| `gamedata.encounters[].maze_size` editable 0-255 (Encounters tab, PROJECT_COMPILER) | UNSAFE (S122) | 1-2 can freeze (measured), 0 / 16+ overrun; 3-15 enforced. |
+| GATE_GENERATION §7: gate floors override BG palette slot 4 | NOT USED (S122) | all 275 maze attr streams use palettes 0-3 only; the floor palette `$17:$51F5[type]` fills slots 0-3. |
+| ROADMAP P3.7b S100 r3 carry-over (b): normal door exits from an own-colour-1 room "likely" fade to that colour | REFUTED (S122, PyBoy) | they fade to white (248,248,248) like any room. |
+| GATE_GENERATION §7.9 / PROJECT_COMPILER §2.32 (S117): the boss win's portal-counter write "was not found" / not replicated | INCOMPLETE (S122) | it is in the boss script's tail after `write_ram $D92B 7`, past the window `cleared_flags` read; decoded as `win_tails` and run by `RunWinTail`. |

@@ -10,11 +10,16 @@
 - After a battle started by talking to a monster NPC, that monster is not
   drawn again until the screen reloads (like a vanilla boss leaving).
 - In a 2-3 enemy battle only the enemy knocked out last can join.
-- New gates (S115): at most 64 (numbers 32-95). A new gate shares the maze
-  look, special rooms and depth tier of the gate it copies — its own floor
-  types are not editable yet, nor are any gate's floor-type rows (ROADMAP
-  P3.7b part 2). Fully custom branching gates are the next step of the
-  new-gates arc (NG3). Per-gate lists per floor, rooms' own lists inside and
+- New gates (S115): at most 64 (numbers 32-95). A new gate starts with the
+  maze look, special rooms and depth tier of the gate it copies; since S120
+  every gate can point at other rows (Gates tab → Maze floors) — the rows
+  themselves are shared and not editable. New maze PIECES (screens) are not
+  editable yet. Fully custom branching gates are the next step of the
+  new-gates arc (NG3).
+- Maze size (S122): 3-15 per battle list (1-2 can freeze the game).
+- Gate themes (S122): the 16 maze looks only (their sheet slots $00-$3F; $40-$7F
+  free); theme rooms do not animate; the damage floors do not hurt in your
+  rooms. Per-gate lists per floor, rooms' own lists inside and
   outside dives and flag variants are on the Encounters tab (S114).
 - Encounters: at most 128 lists of your own (numbers 128-255); 8 flag
   conditions per variant. A battle rate is one of the game's 8 codes; on gate

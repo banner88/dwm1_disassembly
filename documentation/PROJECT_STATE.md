@@ -10,6 +10,53 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
+> Last verified: 2026-10-05 (Session 122 — **ROADMAP P3.7b PART 2 FINISHED: THE GATES' 16 MAZE
+> LOOKS AS TILESETS FOR THE PROJECT'S OWN ROOMS (THEIR COLOURS, THEIR METATILES, THE 254 MAZE
+> SCREENS, BORROWING BOTH WAYS); THE MAZE CARVE TRACED AND MODELLED BIT-EXACT; MAZE SIZE 3-15;
+> NG2 RESIDUAL (a) — A RE-BOSSED GATE'S WIN RUNS THE VANILLA TAIL; P3.8 CROSSED OFF** (user:
+> "P3.7b part 2 / I dont get it, are they not random? How is previewing them helpful if gate
+> generation is random? … Help tab also should be updated / Cutscenes you can cross off. /
+> Regarding gates - can I currently use gate themes for custom room build? … I would love to
+> use them for custom rooms as an option for tileset, properly coloured" → "1) Yep … Obviously
+> with the option of starting with gate tiles/palettes then borrowing additional tiles
+> elsewhere. 2) Yeah include carve trace")). **Built S122, NOT yet user-tested.**
+> **Trace (byte-neutral, GATE_GENERATION §4 / §5 / §7):** a maze floor = a 4 × 4 grid at
+> `$C940` (cell = piece·16 + variant; `MazePieceTable` `$16:$7055`, `MazeCellOrder` `$7096`,
+> `MazeShapeModes` `$6056` = carved 3/5, plain 1/5, one of 21 `MazePatterns` `$7736` 1/5);
+> cell → screen `MazeScreenTable` `$7896` / `MazeScreenTableB` `$7A96` (254 screens);
+> attributes `GateAttrTable_A/B` `$17:$5215/$5415` (comments corrected); placements
+> (`MazePlacements`: stairs, NPC, arrival, items — `TileAtPixel` ROM0, was `WaitInputRelease`).
+> Labels / comments in banks $00/$01/$06/$07/$16/$17, both trees. **Model:**
+> `editor2/core/maze.py` — `tools/census_maze.py` 4,000 game floors (sizes 3-15) == the model,
+> 0 mismatches; 64 screens pixel-equal; negative control fails. **Found:** maze size 1-2 can
+> carve an empty floor → the game freezes (measured), 0 / 16+ write past the grid →
+> `gamedata.check_list` error + the Encounters tab's range 3-15.
+> **Gate themes (PROJECT_COMPILER §2.35, GATE_GENERATION §7.10, help `12_gate_themes.md`):**
+> no schema change — a room on bank $28 sheet 0-15 (threshold `$30`) or a copy of one IS a
+> theme room. New room → *Or a gate theme*; Change tileset → *A gate theme* (+ its colours);
+> the picker = the maze's 15 metatiles + stairs; **Maze screen…** (`maze_dialog.py`: sides
+> filter, pattern screens, theme pictures); themes in Borrow, borrowing into `$40-$7F` of a
+> theme room (a "release unused vocabulary?" prompt, `VocabReleaseWouldHelp`); Stairs down
+> here = the theme's own stairs. **NG2 (a):** bank $76 `GateClearTable` rows ×6 (+ `WinTail`)
+> and `RunWinTail` (ops `$00-$03`, `$12-$14`) run a re-bossed vanilla gate's own win tail
+> (`map_gate_names.py` → `gate_names.json` `win_tails`): 20 / 20 PyBoy stub calls == the model.
+> Template re-pinned `65e12e5b…`, `TEMPLATE_SIZE[0x76]` 460. **S100 r3 carry-over (b)
+> refuted:** door exits from a free-colour-1 room fade to white like any other (PyBoy).
+> **Verifier PASS; clean `1ca6579…` byte-perfect; patched pin `bd0652da…` (patched)**, was
+> `e43e5f58…` (patched, historical) — the bank $76 template only. test_compiler 784/784,
+> --rom 1073/1073; test_app PASS (new `s122_gate_themes`); test_canvas --rom PASS.
+> `EDITOR_REVISION` = 'S122'.
+> **Test ROM `DWM-S122-gate-themes-test.gbc` (`6777da8e…`, patched; built, NOT yet
+> user-tested):** the user's project (my-dwm-hack_12) + two rooms made with the editor's own
+> operations: the GreatTree screen-12 Copycat House door (4, 4) → **Ice Gallery** ($71, theme
+> 4: a corridor screen + a four-way screen, a guide NPC, the Library bookshelf borrowed into
+> the theme's spare tiles, a sign, the theme's stairs) → **Forest Gallery** ($72, theme 9, a
+> pattern-floor screen, a guide, stairs back to GreatTree screen 12). PyBoy on the user's save,
+> walked end to end: 3 / 3 screens == the editor preview tile for tile, every text box shown.
+> **Hand-off:** `DWM-S122-gate-themes-changed-files.zip` (cumulative) + the APPLY list in the chat.
+> **Next:** the user's test, then the user's pick (NG3, P3.14, P3.H build-out).
+
+
 > Last verified: 2026-10-05 (Session 121 — **ROADMAP P3.16 + E7: THE MILLY HOOK — MILAYOU
 > GOES INTO THE DRESSER, THE SCREEN WHIRLS, AND THE GAME GOES ON AS MILLY (HER SPRITE IN EVERY
 > ROOM, THE NAMING SCREEN'S ICON, THE DEFAULT NAME MILLY) IN A ROOM OF THE PROJECT'S CHOICE;
@@ -94,73 +141,10 @@
 > **Next:** the user's test of the r2 dresser moment + the editor files, then the user's pick.
 
 
-> Last verified: 2026-10-05 (Session 120 + S120b — **MOP-UP: THE STALE BANK $60 OVERLAY FIXED AND
-> GUARDED; THE wMapID AUDIT RE-ADJUDICATED; P3.6 THE DIALOGUE EDITOR FINISHED (SPEAKERS,
-> VOICES, THE HERO'S / LEAD MONSTER'S NAMES, THE GAME'S CONTRACTIONS AND EXTRA GLYPHS);
-> P3.7b PART 2 — EACH GATE'S FLOOR-TYPE ROWS + ITEM TIER WITH A PICTURE PER FLOOR TYPE;
-> SMALL RESIDUALS** (user: "s119 is fine. Please fix $60 do A then also D and E, or just a
-> lot of mop-up. No new ticket items but as many oustanding smaller things as reasonably fit
-> into session"). **Built S120, NOT yet user-tested.**
-> **$60:** `patches/bank_060.asm` was the S117 file — the S119 template change was never
-> applied, so the patched overlay built `0591928d…` (patched, historical) instead of the pin
-> → regenerated with `--apply` (bank_060 only); verify_integrity check 2 now FAILS when the
-> overlay's md5 ≠ test_compiler's `REFERENCE_MD5` (negative control measured; KEY_LESSONS S120).
-> **A:** `audit_mapid_range.py` — 12 sites adjudicated (11 CP_UNSIGNED, `BattleBGMResolve#2`
-> BOUNDED), 4 stale keys renamed / removed and now an error, selftest PASS (clean 58 /
-> patched 82), in verify_integrity check 5 (CROSSBANK_ROOMS "S120 burn-down").
-> **D — P3.6 (measured on the user's save, TEXT_SYSTEM "Glyphs, speakers and voices
-> (S120)"):** there is NO DTE — `$66-$71` are one-cell contractions; `$EA`/`$EB` = the low /
-> high voice blip (not an indent); `$EC`/`$ED` = menu speed / print at once; `$F6` = the
-> hero's name; op `$3F` `load_lead_name` + `$F9 00` = the lead monster's species name;
-> `TextCodeTable` is `$56:$44CE` (labelled both trees, `TextSpeedFrames` misassembly fixed,
-> byte-perfect). Built: `textenc.py` (glyphs, contractions, `{hero}` / `{lead}`,
-> speaker + voice per text, raw strings validated), every box editor (talk, YES/NO replies,
-> conversations, cutscenes) gets Speaker / name / Voice + Insert ▾; the compiler adds
-> `load_lead_name` before a `{lead}` text; `dwm/text.py` + `dump_dialogue.py` decode the
-> contractions (dialogue.json / text_id_map.json regenerated, 17 script previews refreshed).
-> **Preview == game pixel-exact on 4 boxes**; nested YES/NO played on 3 paths.
-> **E — P3.7b part 2:** `custom.gates[].maze_row` / `special_row` / `contents_row` (0-15)
-> + `depth` (1-3 item tier) → `GateFloorDataTable` bytes 0-2 / 7 (rows stay shared — the
-> tab says so); Gates tab "Maze floors" with a picture per floor type
-> (`tools/census_gate_floor_types.py` → `extracted/gate_floor_types/`, PyBoy hook
-> `$16:$5BD2`); `SpecialRoomTable` `$16:$5C32` labelled (the rst $00 enumeration, Phase 2C).
-> **Mop-up:** NPC "Shown when … Flags…" (NG2 residual b); Rooms → More ▾ → "▶ Play the game
-> here (last build)" (P3.4); music warnings for rooms ≥ $80; `npc_catalog.json` rebuilt
-> without phantom steps (772 → 716); the talk-battle redraw residual (P3.7b i) not
-> reproducible in 3 scenarios; the gate-setting `0` bug (`0 in (None, False, '')`); `monsters_full.json` has no generator (== the ROM, frozen — open defect closed).
-> **Verifier PASS; clean `1ca6579…` byte-perfect** (labels / comments only in disassembly/);
-> **patched pin `d19259a1…` (patched; historical since S120b) unchanged by S120** (the example project uses none of the new
-> fields). test_compiler 726/726, --rom 1007/1007; test_app PASS; test_canvas --rom PASS.
-> `EDITOR_REVISION` = 'S120'. The user's project (my-dwm-hack_11) as-is builds `98631830…`
-> (patched); its only changed byte run is "Let's" → the game's own `'s` cell ($68).
-> **Test ROM `DWM_S120_dialogue_gates_test.gbc` (`da7f9941…`, patched; built, NOT yet
-> user-tested):** the user's project + "Echo Parlor" ($71) behind the GreatTree screen-12
-> Copycat House door (4, 4): Echo (high voice, contractions + glyphs, 3 boxes), the bell
-> NPC (nested YES/NO, `{lead}` / `{hero}`, sets `parlor_bell`, a silent hero line), a ghost
-> shown when `parlor_bell` is set (leave and come back), a silent sign; the Gate of
-> Villager's maze row = 0 (every maze floor the sea type 13). Open question for the user:
-> the hero-name budget (4 cells) is inferred from vanilla line widths.
-> **Hand-off:** every S120 change = the diff against `6543815`, delivered as
-> `DWM-S120-mopup-dialogue-gates-changed-files.zip`, the APPLY list pasted in the chat.
-> **Next:** the user's test, then the user's pick (ROADMAP P3.8 residuals, NG3, P3.H).
-> **S120b (user 2026-10-05 09:00: "I just want to change TERRY to MILLY as default, but
-> leave otherwise as 4 letters. Thats all. Romhack is about milayou"; built, PyBoy-verified,
-> NOT yet user-tested):** measured first (the Castle naming scene, PyBoy, original ROM): a
-> name is ≤ 4 letters, the default is the 4 font tiles `$D3-$D6` (`$4F:$4D40`, the only
-> copy), accepting it stores them + `$F0` × 4 (TEXT_SYSTEM `$F6`). `patches/bank_04f.asm`
-> draws those tiles "MILLY" (64 B, same size); the editor previews use the same bytes
-> (`textenc.PATCHED_GLYPHS`), Playback's new-game hero name fixed (was "TERRY" in 5
-> letters). **Patched pin `97659a4a…` (patched)**, was `d19259a1…` (patched, historical) —
-> the 64 bytes + the checksum only. test_compiler 730/730, --rom 1011/1011. The user's
-> project as-is builds `fed98e56…` (patched; vs S120 the same 64 bytes). **Test ROM
-> `DWM_S120b_milly_test.gbc` (`fed98e56…`, patched):** a new game → the King's naming box
-> offers MILLY → "King:Oh MILLY!" (PyBoy). `EDITOR_REVISION` = 'S120b'. Delivered in the
-> cumulative `DWM-S120-mopup-dialogue-gates-changed-files.zip` (S120 + S120b).
-
-
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S122** (2026-10-05): P3.7b part 2 finished — the 16 gate themes as room tilesets (bank $28 sheets 0-15 in their own colours; New room / Change tileset / the maze metatiles + stairs / **Maze screen…** = the 254 maze screens / borrowing both ways, `VocabReleaseWouldHelp`); the maze carve + placements traced (bank $16 / $17 / ROM0 labels both trees, byte-neutral) and modelled (`editor2/core/maze.py`, `census_maze.py` 4,000 floors == the game); maze size 3-15 enforced (1-2 freeze, measured); NG2 residual (a) — bank $76 `RunWinTail` runs a re-bossed gate's vanilla win tail (20 / 20); S100 r3 (b) refuted; P3.8 crossed off by the user; pin `bd0652da…` (patched). Test ROM `DWM-S122-gate-themes-test.gbc` (`6777da8e…`, patched) built, NOT yet user-tested. Verbose block in this file. Owning: GATE_GENERATION §4 / §5 / §7 / §7.9 / §7.10, PROJECT_COMPILER §2.35, EDITOR_DESIGN §5.1 "Gate themes (S122)", known_RAM_map (maze RAM), KEY_LESSONS S122, PYBOY_DEBUGGING S122, DOC_AUDIT S122, TOOLS_AND_DATA S122.
 - **S121** (2026-10-05): P3.16 + E7 — the Milly hook (`custom.milly_hook`, `editor2/core/milly.py`): the bedroom tail ends at the dresser glow, sets `$179F`, writes MILLY and whirls (`$3B`) to the chosen room; her arrival scene (spin, cast NPC `$14`); the player shape = her frames + palette via bank $04 entries 2/3 → NEW bank $79 (`wMillyLayout` WRAM, field + naming icon), her sheet via bank $01 / $09; S120b's MILLY tiles under the hook; Roots room (Milly) with grey Warubou; the Name the hero step; text-box sprite rule for copies of `$08`/`$5D` (bank $71 entry 8); `dump_map_table` `$FFFF` exits fixed; pin `e43e5f58…` (patched). Test ROMs `DWM-S121-milly-hook-test.gbc` (`d104cb84…`) / `-naming-test.gbc` (`399a3365…`), patched, USER-CONFIRMED 2026-10-05 ("everything works"); r2 (Terry kept through the whirl) `57bac7c3…` / `b23f941d…` (patched), NOT yet user-tested. Verbose block in this file. Owning: PROJECT_COMPILER §2.34, MONSTER_DATA "The player's sprite (S121)", ROOM_DATA_FORMAT "Text boxes and sprites (S121)", EVENT_FLAGS, TEXT_SYSTEM, BANK04_SCRIPT_ENGINE, EDITOR_DESIGN §5.1d, CROSSBANK_ROOMS "S121 site", KEY_LESSONS S121, DOC_AUDIT S121, TOOLS_AND_DATA S121.
-- **S120** (2026-10-05): mop-up — `patches/bank_060.asm` regenerated (stale since S119: the overlay built `0591928d…`, not the pin) + verify_integrity check 2 compares the pin; `audit_mapid_range.py` re-adjudicated (12 sites, stale-key check, in check 5); P3.6 done — no DTE (`$66-$71` contractions), `$EA`/`$EB` voices, `$F6` hero / op `$3F` + `$F9 00` lead names, extra glyphs, speaker + voice + Insert in every box editor, preview == game pixel-exact; P3.7b part 2 — per-gate `maze_row` / `special_row` / `contents_row` / `depth` with floor-type pictures (`census_gate_floor_types.py`), `SpecialRoomTable` labelled; NPC shown-when GUI, Rooms "Play the game here", npc_catalog rebuilt (716); pin `d19259a1…` (patched) unchanged. Test ROM `DWM_S120_dialogue_gates_test.gbc` (`da7f9941…`, patched) built, NOT yet user-tested. **S120b**: the hero's default name MILLY (`patches/bank_04f.asm`, 4 tiles; names stay ≤ 4 letters, measured), pin `97659a4a…` (patched), test ROM `DWM_S120b_milly_test.gbc`. Verbose block in this file. Owning: TEXT_SYSTEM "Glyphs, speakers and voices (S120)", PROJECT_COMPILER §2.3 / §2.17, GATE_GENERATION §2 / §7.8, CROSSBANK_ROOMS "S120 burn-down", EDITOR_DESIGN §5.1b, KEY_LESSONS S120, PYBOY_DEBUGGING S120, DOC_AUDIT S120, TOOLS_AND_DATA S120.
+- **S120** (2026-10-05): mop-up — `patches/bank_060.asm` regenerated (stale since S119: the overlay built `0591928d…`, not the pin) + verify_integrity check 2 compares the pin; `audit_mapid_range.py` re-adjudicated (12 sites, stale-key check, in check 5); P3.6 done — no DTE (`$66-$71` contractions), `$EA`/`$EB` voices, `$F6` hero / op `$3F` + `$F9 00` lead names, extra glyphs, speaker + voice + Insert in every box editor, preview == game pixel-exact; P3.7b part 2 — per-gate `maze_row` / `special_row` / `contents_row` / `depth` with floor-type pictures (`census_gate_floor_types.py`), `SpecialRoomTable` labelled; NPC shown-when GUI, Rooms "Play the game here", npc_catalog rebuilt (716); pin `d19259a1…` (patched) unchanged. Test ROM `DWM_S120_dialogue_gates_test.gbc` (`da7f9941…`, patched) built, NOT yet user-tested. **S120b**: the hero's default name MILLY (`patches/bank_04f.asm`, 4 tiles; names stay ≤ 4 letters, measured), pin `97659a4a…` (patched), test ROM `DWM_S120b_milly_test.gbc`. Verbose block in SESSION_HISTORY.md. Owning: TEXT_SYSTEM "Glyphs, speakers and voices (S120)", PROJECT_COMPILER §2.3 / §2.17, GATE_GENERATION §2 / §7.8, CROSSBANK_ROOMS "S120 burn-down", EDITOR_DESIGN §5.1b, KEY_LESSONS S120, PYBOY_DEBUGGING S120, DOC_AUDIT S120, TOOLS_AND_DATA S120.
 - **S119** (2026-10-04): P3.8 part B — the cutscene editor: the project's own scenes (`custom.rooms[].cutscenes[]`, 4 triggers + flag conditions + once, 25 step kinds in cells; named NPCs + cast members; `cutscene_build.py` lowers each trigger's scenes into one script, init_dialog / close_text rules measured), the stage + step tree + preview + Play in the game; part c op editing of a copied room's scripts; part d bank $04 `$24`/`$61` redirect → bank $60 entries 9/10 (copies draw their tile patches; `patch_data`); NPC facing sprites extracted (128/132); `ScreenShakeTick` named; pin `d19259a1…` (patched). Test ROM `DWM_S119_cutscenes_test.gbc` (`28029018…`, patched; r2 — the Copycat House door) built, NOT yet user-tested. **S119b**: unnamed NPCs pickable in every actor list (named on pick; user: "Why cant I select npc in a custom room"). Verbose block in SESSION_HISTORY.md. Owning: PROJECT_COMPILER §2.33, BANK04_SCRIPT_ENGINE "Writing scenes (S119)", EDITOR_DESIGN §5.1d, CUSTOM_CUTSCENES, known_RAM_map, KEY_LESSONS S119, DOC_AUDIT S119, TOOLS_AND_DATA S119.
 - **S118** (2026-10-04): P3.8 part A — the Cutscenes tab: the 102 script opcodes named + measured (`script_ops.py`; bank $04 handlers labelled both trees; `$D8D7`/`$D8D8` bits; the `$1C` movement programs; `$24`/`$61` arity 1), 519 vanilla scenes + the project's as storyboards (`cutscenes.py`), played in the real game without navigating (`playback.py` recipes; PyBoy in a child process, `playback_server.py`), the intro chain, auto text / sound / keys; `census_cutscenes.py` 514 / 519 reached, 0 hung, model 3,887 / 3,909; byte-neutral (pin `110210b0…` patched, unchanged). Built, NOT yet user-tested. **S118b** (user's first look): room state from the story's counter writes (the wrong NPC jumped), filter = someone moves, ▶ From this step, `FLY` table; census 516 reached, 3,989 / 3,998; copies keep their own state counters → **S118c**: copies follow the game's room state (`step_counter.vanilla`), Step ▸▸ / back, a picture per step. **S118d**: entry scenes set up as the calling script leaves the game (the arena reset), resets detected, cumulative zip. **S118e**: the intro from a real new game, gate arrivals / walk-in instead of the screen centre, View → Mute game playback. **S118f**: every storyboard step in words (`ram_names.py`). **S118g**: names only from the game (speaker texts, exit tables). Verbose block in SESSION_HISTORY.md. Owning: BANK04_SCRIPT_ENGINE "Script opcodes as measured (S118)", EDITOR_DESIGN §5.1d, CUSTOM_CUTSCENES, TEXT_SYSTEM ($F9 slots), KEY_LESSONS S118, DOC_AUDIT S118, TOOLS_AND_DATA S118.
 - **S117** (2026-10-03): NG2 + P3.13c — extended event flags `$1000-$17FF` (ROM0 `ComputeFlagAddress` same-size → bank $73 entry 21; `wExtFlags` $D140, SRAM bank 3 "X1"; editor pool 1,968); gate swirls follow each gate's cleared flag (bank $0B `GetRoomDataPtr` same-size → bank $60 entry 1 for every non-gate room: `$A0`/`$A1` NPC flag conditions + `VanillaNPCExtTable`; bank $50 boss win → bank $76 entry 2 `GateBossWin`, own flags `$17A0 + gate`); shops (bank $09 fill / close same-size → NEW compiler bank $77 `ShopFill` / `ShopClose`, `wShopID` $D240; `ItemInfoTable` $03:$71DA re-sectioned, prices editable; the Shops tab, NPC Shopkeeper…); pin `31cc5b31…` (patched). Test ROM `DWM_S117_swirls_shops_test.gbc` USER-REPORTED 2026-10-03 21:57 ("The rest works" + 2 bugs) → **S117b**: hardware sprite-limit warnings (`formats.sprite_budget`), bank $09 screen push → bank $77 `ScreenPush` (menu palettes in free-colour rooms), `ShopBoxBottom`; pin `110210b0…` (patched); test ROM `DWM_S117b_test.gbc` built, NOT yet user-tested. Verbose block in SESSION_HISTORY.md. Owning: EVENT_FLAGS "Extended flags (S117)", GATE_GENERATION §7.9, DATA_STRUCTURES "Shops (S117)", PROJECT_COMPILER §2.32, ARCHITECTURE "SRAM bank 3 (S117)", ROOM_DATA_FORMAT "Condition prefixes", EDITOR_DESIGN §5.1b / §5.6b, KEY_LESSONS S117, DOC_AUDIT S117, TOOLS_AND_DATA S117.
@@ -306,6 +290,7 @@
 | Script VM (S118) | 102 opcodes, names / params / kinds = `editor2/core/script_ops.py` (arity from the handlers, `extracted/script_param_counts.json`; `$24`/`$61` = 1 via the script bank). Actor 0 = the player (HRAM `$92`/`$95` X/Y, `$8E` facing, `$90` bit 6 hidden), n ≥ 1 = NPC slot n-1 (`$D7D2 + 32(n-1)`). `$0A/$0B/$10/$11` = waited walk (`$D8D7` bit 3); `$1A/$1B/$1C` = queued (buffers `$D8E9 + 8n`, `$19` waits); 1 px on 3 frames of 4; `$22` doubles. Counter rests only on yielding steps. BANK04_SCRIPT_ENGINE "Script opcodes as measured (S118)". |
 | Cutscenes (S119) | The project's own scenes = `custom.rooms[].cutscenes[]` (PROJECT_COMPILER §2.33), lowered per trigger into one script `cut:<room>:<key>` (the original trigger script inlined after); a text after any yielding step needs `init_dialog` (measured); tile patches of rooms ≥ `$6B` / type `$70` = `custom.rooms[].patch_data` read by bank $60 entries 9 / 10 (bank $04 `CallBank0FForItem` / `CallBank0F_Gold` same-size `$6009` / `$600a`); shake `$C8B1`/`$C8B2`, shades `$C89B-$C89D` |
 | The player's sprite (S121) | Sheet gfx-ID `$2F00` (20 tiles) → VRAM `$8000` by bank $01 `LoadFieldTilesDMA`; drawn as sprite type 0 (HRAM `$FF8A`-`$FF8D`: type / frame 0-5 / tile base / attr, X-flip = left) through bank $04 entries 2 / 3 (`data_4137[0]` = `$04:$7237`, palette `data_4157` = `$02`); the naming screen's hero icon = type 0 too (sheet `FollowerGfxTable09[0]` → `$8500`). NPC sprites: bank $05 `$407F[id]` (6 frames) / `$4152[id]` palette / ROM0 `$2ADF[id]` sheet. MONSTER_DATA "The player's sprite (S121)" |
+| Maze floors (S122) | Grid `$C940` 4 × 4, cell = piece·16 + variant (piece 15 = empty); `MazePieceTable` `$16:$7055` 4 B [openings 8↑ 4↓ 2← 1→, piece, weight class, 0]; `MazeShapeModes` `$16:$6056` (`0,0,0,1,2`: carved / plain / one of 21 `MazePatterns` `$7736`); screens `MazeScreenTable` `$7896` (modes 0/1) / `MazeScreenTableB` `$7A96` (mode 2) = 256 × [layout id, bank]; attributes `GateAttrTable_A` `$17:$5215` / `_B` `$5415`; theme = bank $28 sheet id = floor type (tiles `$00-$3B` maze, `$3C-$3F` stairs, `$40-$7F` blank), palettes `$17:$51F5`[type] slots 0-3. Maze size (battle list) must be **3-15** (1-2 can freeze, 0 / 16+ overrun). Model = `editor2/core/maze.py` (GATE_GENERATION §4). |
 | Verifier | `python3 tools/verify_integrity.py` — run at session start AND end |
 
 **The MD5 `b90957482011c8083a068781033715b7` is WRONG.** It was a drifted
@@ -336,7 +321,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | $73 | Cold Farm systems (CF2 drain, entry 0; CF3 party-first sort, entry 1; … S117: entry 21 `FlagAddr` (the extended flags) + `ExtFlagsCommit` / `ExtFlagsRestore` in entries 5 / 6) | hand-authored `patches/bank_073.asm` |
 | $74 | Custom song bank (M3a: records $4001-$417C fixed 95-slot, streams $4180+; resolved by AudioMasterTableExt row $9E; S116: songs keep their own 1-6 channels — no trio padding) | compiler-generated `patches/bank_074.asm` (`music74` emitter → `song_codec.song_bank_asm` ← project.json `custom.music` + `extracted/*_song_library.json`; S64 — `custom_songs.json` retired) |
 | $75 | Second custom song bank (S116, P3.13b): the songs past bank $74's 16,000 stream bytes, records indexed from the split id (AudioMasterTableExt row 5 = region `rom0_audio_master`); bank byte + zeros when nothing spills | compiler-generated `patches/bank_075.asm` (`music75`, editor2/core/music.py) |
-| $76 | Encounter lists (S114): entry 0 `EncResolve` (+ `EncPickVariant` / `EncFloorRun` / `EncVanillaNumber`) + `EncRoomTable`, `GatePlanPtrs`, the variant lists / floor runs, `ProjectEncLists` (26 B each, numbers 128-255), the vanilla rule's byte copies; far-called by the bank $01 `LoadNextDungeonFloor` fork. S115 (NG1 new gates): entry 1 `NewGateRowCopy` (far-called by bank $16 `GateRowPtr`) + `NewGateRows` (8 B per gate 32+) / `NewGateSource`; template 296 B (S115); S117 (NG2): entry 2 `GateBossWin` (far-called by bank $50's boss-win tail) + `GateClearTable`; template 358 B | compiler-generated `patches/bank_076.asm` (`enc76`, editor2/core/encounters.py) |
+| $76 | Encounter lists (S114): entry 0 `EncResolve` (+ `EncPickVariant` / `EncFloorRun` / `EncVanillaNumber`) + `EncRoomTable`, `GatePlanPtrs`, the variant lists / floor runs, `ProjectEncLists` (26 B each, numbers 128-255), the vanilla rule's byte copies; far-called by the bank $01 `LoadNextDungeonFloor` fork. S115 (NG1 new gates): entry 1 `NewGateRowCopy` (far-called by bank $16 `GateRowPtr`) + `NewGateRows` (8 B per gate 32+) / `NewGateSource`; template 296 B (S115); S117 (NG2): entry 2 `GateBossWin` (far-called by bank $50's boss-win tail) + `GateClearTable`; template 358 B S122: `GateClearTable` rows 6 B (+ `WinTail`) + `RunWinTail` (a re-bossed vanilla gate's win tail; template 460 B). | compiler-generated `patches/bank_076.asm` (`enc76`, editor2/core/encounters.py) |
 | $77 | Shops (S117, P3.13c; S117b: entry 2 `ScreenPush` = bank $09's screen push with palette attributes in free-colour rooms, `ShopClose` → `ShopBoxBottom`): entry 0 `ShopFill` (far-called by bank $09 `ShopBuyStockFill`'s same-size stub; `wShopID` list or the vanilla room rule) / entry 1 `ShopClose` (the shop's close tail) + `SHOP_COUNT`, `ShopPtrTable`, `ShopList_n` (the five vanilla lists, then `custom.shops`); template 438 B (S117b; 93 B S117) | compiler-generated `patches/bank_077.asm` (`shops77`, editor2/core/shops.py) |
 | $79 | Story hooks (S121, ROADMAP P3.16 + E7): the Milly hook — entry 0 `MillyShapeTable` (bank $04 entries 2 / 3, same-size regions `milly_shape_04a/b`), entry 1 `MillyPlayerSheet` (bank $01 `LoadFieldTilesDMA`, region `milly_player_sheet`) + Milayou's palette / sheet / frame-table image (copied to WRAM `wMillyLayout`); the empty vanilla bank when the hook is off | compiler-generated `patches/bank_079.asm` (`hooks79`, template `bank_079_head.asm`, editor2/core/milly.py) |
 | $7E | The project's NEW-SPECIES art streams (38-word pointer table: index (id-221)*2 follower, +1 battle; S105: compiler-owned, all zero without `custom.species`) | compiler-generated `patches/bank_07e.asm` (`species7e`, editor2/core/species.py; streams from `bake_follower_overflow.py --stream-dir`) |
@@ -408,6 +393,8 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Custom text, multi-page, line breaks | ✅ working | IDs $0A00+, two-level ptr table |
 | Text speakers (hero / a name / nobody), voices (low / high / silent), `{hero}` / `{lead}` names, the game's contractions + extra glyphs, in every box editor | 🟢 built S120 (ROADMAP P3.6), preview == game pixel-exact (PyBoy), test ROM `DWM_S120_dialogue_gates_test.gbc` NOT yet user-tested | TEXT_SYSTEM "Glyphs, speakers and voices (S120)"; PROJECT_COMPILER §2.3 |
 | Per-gate floor-type rows (maze / special / contents) + item tier, floor-type pictures | 🟢 built S120 (ROADMAP P3.7b part 2), PyBoy-verified, NOT yet user-tested | GATE_GENERATION §7.8; PROJECT_COMPILER §2.17 |
+| Gate themes as room tilesets (the 16 maze looks in their own colours, the maze metatiles + stairs, the 254 maze screens stamped by open sides, borrowing into / out of a theme) | 🟢 built S122 (ROADMAP P3.7b part 2), PyBoy: theme screens == the editor preview tile for tile; test ROM `DWM-S122-gate-themes-test.gbc` NOT yet user-tested | GATE_GENERATION §7.10; PROJECT_COMPILER §2.35; help `12_gate_themes.md` |
+| Maze floor generation modelled (carve, variants, stairs / NPC / arrival / items) + maze size 3-15 enforced | 🟢 built S122 (Phase 2C), `census_maze.py` 4,000 game floors == the model | GATE_GENERATION §4 / §5; `editor2/core/maze.py`; `extracted/maze_pieces.json` |
 | YES/NO choices with branching | ✅ working | $E7 $F0 + opcode $15 on $C83C |
 | Item give + inventory-full check | ✅ working | opcodes $2A (wrapped) / $2C |
 | Monster/egg give + storage-full check | ✅ working | opcodes $29 (wrapped) / $28; egg path is the practical choice |

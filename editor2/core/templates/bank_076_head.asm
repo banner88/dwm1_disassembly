@@ -66,8 +66,11 @@
 ;   cleared flag (new gates, re-bossed vanilla gates; extended range $17A0 +
 ;   gate) and a re-bossed vanilla gate's vanilla flag. $FFFF = none. A
 ;   vanilla gate with its own boss has two $FFFF (its scripts set its flag).
+;   S122: then runs a re-bossed vanilla gate's WinTail (RunWinTail) — the
+;   game's own story bookkeeping of that boss's win (portal room step
+;   counter, boss room state, "both portal gates cleared" tests).
 ;   Clobbers A/BC/DE/HL (the caller returns right after).
-;   GateClearTable: GATE_CLEAR_LEN x [dw own flag, dw vanilla flag].
+;   GateClearTable: GATE_CLEAR_LEN x [dw own flag, dw vanilla flag, dw WinTail].
 ; =============================================================================
 
 SECTION "ROM Bank $076", ROMX[$4000], BANK[$76]
@@ -340,12 +343,22 @@ GateBossWin:
     ret nc
     ld l, a
     ld h, $00
-    add hl, hl
+    add hl, hl                          ; x2
+    ld d, h
+    ld e, l
     add hl, hl                          ; x4
+    add hl, de                          ; x6 (S122: + the win tail)
     ld de, GateClearTable
     add hl, de
     call .one                           ; the gate's own flag
-.one:                                   ; ... then (fall through) the vanilla flag
+    call .one                           ; the vanilla flag
+    ld a, [hl+]                         ; S122: the game's own win bookkeeping
+    ld h, [hl]                          ; (a re-bossed vanilla gate; $0000 =
+    ld l, a                             ; none)
+    or h
+    ret z
+    jp RunWinTail
+.one:
     ld a, [hl+]
     ld c, a
     ld a, [hl+]
@@ -357,4 +370,84 @@ GateBossWin:
     call SetEventFlag                   ; ROM0; BC = flag (-> bank $73 FlagAddr)
     pop hl
     ret
+
+; -----------------------------------------------------------------------------
+; RunWinTail (S122, ROADMAP NG2 residual a) — HL = a WinTail program in this
+; bank: the vanilla boss script's bookkeeping after its `write_ram $D92B 7`
+; (tools/map_gate_names.py win_tails -> extracted/gate_names.json), copied as
+; script words with its jump targets relabelled: $FF12 adr val = write the
+; byte, $FF13 adr val = write the word, $FF03 / $FF02 flag = set / clear,
+; $FF00 / $FF01 flag target = go to target when the flag is clear / set,
+; $FF14 target = go to; any other word ends ($FFFF). The script engine does
+; the same per op (bank $04 handlers, S118 script_ops). Clobbers A/BC/DE/HL.
+; -----------------------------------------------------------------------------
+RunWinTail:
+    ld a, [hl+]
+    ld e, a                             ; E = op
+    ld a, [hl+]
+    inc a
+    ret nz                              ; not an op word ($FFxx): the end
+    ld a, e
+    cp $14
+    jr z, .goto
+    cp $04
+    jr c, .flag                         ; $00-$03 take a flag
+    cp $12
+    jr z, .write
+    cp $13
+    ret nz                              ; anything else: the end
+.write:
+    ld a, [hl+]
+    ld c, a
+    ld a, [hl+]
+    ld b, a                             ; BC = address
+    ld a, [hl+]
+    ld [bc], a                          ; the byte (both ops)
+    ld a, e
+    cp $13
+    ld a, [hl+]                         ; the value's high byte
+    jr nz, RunWinTail
+    inc bc
+    ld [bc], a
+    jr RunWinTail
+.goto:
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a
+    jr RunWinTail
+.flag:
+    ld a, [hl+]
+    ld c, a
+    ld a, [hl+]
+    ld b, a                             ; BC = flag
+    ld a, e
+    cp $02
+    jr nc, .setclr
+    push hl                             ; $00 / $01: test, maybe jump
+    push de
+    call TestEventFlag                  ; Z = clear, NZ = set
+    pop de
+    pop hl
+    ld a, $00
+    jr z, .tested
+    inc a                               ; A = 1 when set
+.tested:
+    cp e                                ; op $00 jumps on clear (A 0), $01 on set (A 1)
+    jr z, .goto
+    inc hl
+    inc hl                              ; skip the target
+    jr RunWinTail
+.setclr:
+    push hl
+    push de
+    cp $03
+    jr z, .set
+    call ClearEventFlag
+    jr .flagdone
+.set:
+    call SetEventFlag
+.flagdone:
+    pop de
+    pop hl
+    jr RunWinTail
 

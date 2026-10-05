@@ -2698,11 +2698,57 @@ the current name (MILLY with the hook).
 screen, a facing (`HookError` → the build stops; the dialog says it first via
 `milly_arrival_problem`).
 
-**Pin:** the example has the hook OFF; S121 moved its build to **`e43e5f58…` (patched)**,
+**Pin:** the example has the hook OFF; S121 moved its build to **`e43e5f58…` (patched; historical since S122, §2.35)**,
 was `97659a4a…` (patched, historical): the hero tiles back to TERRY (§2.3) + the bank $71
 template (entry 8). test_compiler `test_milly_hook_s121` / `test_milly_rom` (the constants
 vs the original ROM, the hook-off bytes, a hook-on build: tiles, bedroom tail, bank $79
 table + image resolving to her frames, no label moved in banks $01/$04/$09/$0E/$4F).
+
+## §2.35 S122 — gate themes in custom rooms, maze screens, maze size, the win tails of re-bossed gates (ROADMAP P3.7b part 2, NG2 residual a)
+
+Built S122, PyBoy-verified, NOT yet user-tested. Engine facts: GATE_GENERATION §4 / §7 /
+§7.9 / §7.10.
+
+**No new schema keys for themes.** A gate-theme room is an ordinary room whose `record`
+draws with a maze floor type's sheet — `gfx_bank "0x28"`, `gfx_id` = the type (0-15),
+`collision_threshold "0x30"` — or with a project copy of one (`custom.tilesets[]` whose
+origin, `_editor.tileset_origin` / the "copied from vanilla bank $28 id $NN" comment, is
+`$28:$0N`). `editor2/core/maze.py theme_of_origin` / `Document.gate_theme(room)` recognise
+it (no ordinary room uses those sheets). The example project's S39 island rooms (`$28:$0D`)
+are theme 13. Editor operations (`editor2/core/document.py`):
+
+- `new_room(…, gate_theme=t)` → the record above, `render.palette` = a new project palette
+  (`add_theme_palette`: the four palettes of `$17:$51F5[t]` with colours 1 / 3 as forced +
+  the system rows), `animation 'none'`, `source_mapID "0x00"` (the byte is vestigial at run
+  time: the patched `MapIDClampForPalette` sends every custom room to the Castle fallback and
+  `wCustomRoomFlag` is re-derived per frame; the user's own project already has three such
+  rooms), a floor of tile `$33` on the floor's palette slot.
+- `set_room_tileset(rid, 'gate', t)` (+ `use_theme_palette(rid, t)`: a new palette as the
+  room default; screens / states with a palette of their own keep it).
+- `stamp_maze_screen(rid, key, state, cell, mode)` → a new layout item with the maze
+  screen's tiles AND attr (`MazeRom.cell_grids`); the state's `layout` and `attr` both point at
+  it; the replaced item goes when nothing else uses it.
+- `room_sources_vocab` → `$00-$3F` for a theme room (protected); the Rooms tab picker lists
+  the renderer's `maze_vocab()` (15 metatiles + the stairs). `import_metatile` raises
+  **`VocabReleaseWouldHelp`** when the needed side is full of unused vocabulary (the GUI asks,
+  then releases + borrows in one undo step). `well_metatile` (Stairs down here) returns the
+  theme's own stairs `$3C-$3F` while the sheet still holds them.
+
+**Validation:** `gamedata.check_list` — an encounter list's `maze_size` must be **3-15**
+(error; GATE_GENERATION §4.2: 1-2 can freeze, 0 / 16+ write past the grid); applies to
+`gamedata.encounters` overrides and `custom.encounter_lists`.
+
+**Bank $76 (engine template re-pinned `65e12e5b…d706`; the S117 value `40972da2…` is
+historical; TEMPLATE_SIZE 358 → 460):** `GateClearTable` rows are 6 B — `dw own flag,
+vanilla flag, WinTail` (`$0000` = none); `GateBossWin` (x6 index) then `jp RunWinTail` for a
+row with a tail. `Project.gate_clear_rows()` returns `(gate, own, vanilla, (extra flags,
+tails))`; tails = `gates.vanilla_win_program(gate)` from `extracted/gate_names.json`
+`win_tails` (tools/map_gate_names.py); `encounters.win_tail_programs` writes per re-bossed
+VANILLA gate `WinTail_<gate>:` — `dw $FF03, flag` for the further cleared flags, each tail's
+ops (`dw $FFxx, params`; jump targets → local labels `.t<k>_<addr>`; the op that ends the
+game's tail → `dw $FF14, <next tail>`), `WinTail_<gate>_end: dw $FFFF`. New gates (32+)
+have no tail. The example project re-bosses no vanilla gate: every row `$FFFF, $FFFF,
+$0000` — **regression pin `bd0652da…` (patched)**, was `e43e5f58…` (patched, historical).
 
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 

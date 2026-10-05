@@ -2559,7 +2559,7 @@ jr_007_50df:
     ld a, [wScreenIndex]
     add a
     add a
-    ld hl, $2da7
+    ld hl, ScreenOriginTable
     add l
     ld l, a
     ld a, $00
@@ -2675,7 +2675,7 @@ jr_007_5160:
     ldh [$a7], a
     ld a, h
     ldh [$a8], a
-    call WaitInputRelease
+    call TileAtPixel
     ldh a, [$aa]
     srl a
     srl a

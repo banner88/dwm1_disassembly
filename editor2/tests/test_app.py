@@ -341,6 +341,113 @@ def s121_milly(app, w):
           'cleanly')
 
 
+def s122_gate_themes(app, w):
+    """S122 (ROADMAP P3.7b part 2; user: "can I currently use gate themes for custom
+    room build? … as an option for tileset, properly coloured" + "the option of starting
+    with gate tiles/palettes then borrowing additional tiles elsewhere"): New room on a
+    gate theme, its picker = the maze metatiles, the themes in the Borrow list, the Maze
+    screen dialog (filters, 254 screens) stamping a screen, Change tileset -> a gate theme
+    with its colours; everything undoes to the original project.json."""
+    from PySide6.QtCore import Qt
+    from PySide6.QtWidgets import QDialog
+    from editor2.app.rooms import tab as RT
+    from editor2.app.rooms import maze_dialog as MD
+    from editor2.app.rooms.tileset_dialog import TilesetDialog
+    from editor2.core import maze as MZ
+    s = w.session
+    doc = s.doc
+    before = doc.dumps()
+    n0 = s.undo.index()
+    rt = w.rooms_tab
+    w.tabs.setCurrentWidget(rt)
+    app.processEvents()
+    d = RT.NewRoomDialog(s.renderer, rt)
+    assert d.theme.count() == 17, d.theme.count()
+    d.theme.setCurrentIndex(5)
+    assert d.theme.currentData() == 4 and not d.src.isEnabled() and not d.blank.isEnabled()
+
+    class _New(RT.NewRoomDialog):
+        def exec(self_):
+            self_.name.setCurrentText('Ice room')
+            self_.theme.setCurrentIndex(5)
+            return QDialog.Accepted
+    keep = RT.NewRoomDialog
+    RT.NewRoomDialog = _New
+    try:
+        rt._new_room()
+    finally:
+        RT.NewRoomDialog = keep
+    app.processEvents()
+    room = rt.current_room()
+    assert room is not None and doc.gate_theme(room) == 4, room
+    voc = rt._room_vocab(room)
+    assert any(m['tiles'] == [0x3C, 0x3D, 0x3E, 0x3F] for m in voc) and len(voc) >= 16, len(voc)
+    data = [rt.foreign_box.itemData(i) for i in range(rt.foreign_box.count())]
+    assert all(RT.THEME_KEY + t in data for t in range(16)), 'the 16 themes in Borrow'
+    rt.foreign_box.setCurrentIndex(rt.foreign_box.findData(RT.THEME_KEY + 13))
+    app.processEvents()
+    md = MD.MazeScreenDialog(s.renderer, 4, rt.canvas.gfx, rt.canvas.pals, rt)
+    assert md.list.count() == 254, md.list.count()
+    md.open[MZ.OPEN_UP].setChecked(True)
+    md.exact.setChecked(True)
+    vis = [md.list.item(i) for i in range(md.list.count()) if not md.list.item(i).isHidden()]
+    assert vis and all(it.data(Qt.UserRole)[2] == MZ.OPEN_UP for it in vis), len(vis)
+    md.list.setCurrentItem(vis[0])
+    pick = md.choice()
+    assert pick is not None and pick[0] >> 4 == 11, pick      # piece 11 = open up only
+
+    class _Pick(MD.MazeScreenDialog):
+        def exec(self_):
+            for i in range(self_.list.count()):
+                if self_.list.item(i).data(Qt.UserRole)[:2] == (0x5C, 0):
+                    self_.list.setCurrentRow(i)
+            return QDialog.Accepted
+    keep = MD.MazeScreenDialog
+    MD.MazeScreenDialog = _Pick
+    try:
+        rt._maze_screen()
+    finally:
+        MD.MazeScreenDialog = keep
+    app.processEvents()
+    tiles, attr = MZ.MazeRom(s.renderer.rom).cell_grids(0x5C, 0)
+    lid = rt.current_room()['screens']['0']['layout']['id']
+    assert doc.layout(lid)['tiles'] == tiles and doc.layout(lid)['attr'] == attr
+    # borrow a Library WALL metatile: the theme's wall slots are all vocabulary ->
+    # the editor offers to release the unused vocabulary (S122), Yes -> borrowed
+    rt.foreign_box.setCurrentIndex(rt.foreign_box.findData(0x12))
+    app.processEvents()
+    lib = [m for m in rt._vanilla_vocab(0x12)
+           if m['tiles'][3] < s.renderer.vanilla_gfx(0x12).threshold][0]
+    asked = []
+    q_keep = RT.QMessageBox.question
+    RT.QMessageBox.question = staticmethod(
+        lambda *a, **k: (asked.append(a[2]), RT.QMessageBox.Yes)[1])
+    try:
+        rt._import_metatile(lib)
+    finally:
+        RT.QMessageBox.question = q_keep
+    app.processEvents()
+    room = rt.current_room()
+    assert asked and 'Release' in asked[0], asked
+    assert doc.released(doc.tileset_key(room)) and doc.gate_theme(room) == 4
+    assert any(m.get('src') == 'borrowed' for m in doc.metatiles(doc.tileset_key(room)))
+    td = TilesetDialog(doc, s.renderer, doc.room('dusk_mirror'), rt.canvas.pals, rt)
+    td.rb_g.setChecked(True)
+    td.g_box.setCurrentIndex(9)
+    assert td.choice() == ('gate', 9, None) and td.theme_colours()
+    while s.undo.index() > n0:
+        s.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'undo must restore project.json exactly'
+    hlp = open(os.path.join(REPO, 'editor2', 'help', '12_gate_themes.md')).read()
+    for word in ('Gate theme', 'Maze screen', 'Borrow', 'Stairs down', '3-15'):
+        assert word in hlp, f'help 12_gate_themes.md lacks "{word}"'
+    print('OK: S122 — gate themes: New room on theme 4 (maze metatiles in the picker), the 16 '
+          'themes in Borrow, the Maze screen dialog (254 screens, openings filter) stamping a '
+          'screen, a Library wall borrowed after "release unused vocabulary", Change tileset -> '
+          'a gate theme + colours; undo restores project.json')
+
+
 def main():
     do_rom = '--rom' in sys.argv
     app = QApplication.instance() or QApplication(sys.argv)
@@ -387,6 +494,7 @@ def main():
     s120_dialogue(app, w)
     s120_gates(app, w)
     s121_milly(app, w)
+    s122_gate_themes(app, w)
 
     # S101 r3: World tab zoom (wheel, around the mouse) + pan (drag empty canvas)
     from PySide6.QtCore import QPoint, QPointF, Qt

@@ -17,8 +17,10 @@ A battle draws its monsters from a **list**:
 - **Battle rate** — how often battles come (0 very rare … 3 normal … 7
   relentless). Outside gates the editor shows the average number of steps
   between battles; on gate floors the floor type changes it.
-- **Maze size** — gate floors only: how many pieces the maze is carved from
-  (the game uses 3, 8 or 15).
+- **Maze size** — gate floors only: the most pieces a maze floor is carved
+  from, minus one (the game uses 3, 8 or 15; a floor has 2 to size + 1
+  screens). **3-15 only**: 1 or 2 can carve an empty floor that freezes the
+  game (measured S122) — see *Gate themes → How the gates build a floor*.
 
 The game has **128 lists** (0-127); several gates share some of them. **New
 list (copy)** makes a list of your own (numbers 128 and up, at most 128) from

@@ -4,7 +4,11 @@
 > the special-room substitutions, item/master placement, tileset/depth selection,
 > and rendering. Distinguishes the **truly procedural standard floors** from the
 > **fixed special/boss rooms**. Last verified against the ROM: Session 39
-> (palette derivation + the `$28`/`$0D` maze tileset arrangement, §7.1–7.3).
+> (palette derivation + the `$28`/`$0D` maze tileset arrangement, §7.1–7.3);
+> **S122: the whole standard-floor builder (§4, §5) and how a cell is drawn (§7)
+> traced, modelled (`editor2/core/maze.py`) and PROVED in PyBoy (`tools/census_maze.py`:
+> 4,000 forced floors, every field equal; 64 arrival screens pixel-equal), the
+> 16 floor looks usable as "gate themes" in custom rooms (§7.10).**
 >
 > Companion docs:
 > - `ROOM_DATA_FORMAT.md` — the static room/screen/step-entry format (bank `$0B`).
@@ -140,68 +144,150 @@ last_floor`. So the game's floor N is `wCurrentFloor = N − 1`, and `last_floor
 
 ---
 
-## 4. Standard maze generation ✅🟡
+## 4. Standard maze generation ✅ (fully traced + modelled S122)
 
-Entry: `$16:$605B` (reached from entry 6, `label16_5FE4` `$16:$5FE4`, which first
-DMAs the Select-button map-overview tiles into VRAM `$8500-$86C0`).
+Entry: `$16:$605B` **`MazeBuildFloor`** (= `label16_605b`; reached from entry 6,
+`label16_5FE4` `$16:$5FE4`, which first DMAs the Select-button map-overview tiles
+into VRAM `$8500-$86C0`). It ends at `$16:$63AE` (the `ret` after
+`jr_016_63ac` writes the item list's `$FF`). Every step below is reproduced by
+`editor2/core/maze.py` `MazeRom.generate(rng, size, contents_row, $CAB4, $C92D)`
+from the RNG state at the entry; **`tools/census_maze.py` (S122) forced 4,000
+floors (random RNG states, maze sizes 3-15, contents rows 0-15, `$CAB4` 0-3,
+`$C92D` 0-7) in PyBoy and every field the game wrote — grid, shape mode,
+stairs, NPC, arrival, item list, the RNG after — equalled the model; 4 of them
+regenerated (the 64-try path); a deliberately broken model (two cells of
+`MazeCellOrder` swapped) failed on 103 / 300.** The RNG is `GenerateRNG`
+($00:$3795): s = wRNG1·256 + wRNG2 → s·5 + $1357.
 
-### 4.1 The grid (✅)
+### 4.1 The grid and the pieces (✅)
 
 The floor is a **4×4 cell grid at `$C940-$C94F`** (16 screens max). Each cell byte:
 
 ```
-high nibble = screen-piece id      ; $Fx (high nibble $F) = empty / wall cell
-low  nibble = variant (0–11)        ; RNG mod 12, picks a layout variant of the piece
+high nibble = PIECE (0-15)   ; which sides of the screen are open
+low  nibble = variant (0-12) ; which of the piece's 13 drawings
 ```
 
-A paired 16-byte buffer at `$C950-$C95F` holds per-cell state. `$C960` holds the
-screen index of the **down-staircase** (the "gate to the next floor").
+**`MazePieceTable`** (`$16:$7055`, was mislabelled `FloorTypeSortData`): 16 × 4 B
++ `$FF`, `[openings, piece, weight class, 0]`, rows in piece order. Openings:
+bit 3 = up, bit 2 = down, bit 1 = left, bit 0 = right. Piece 0 = all four (class
+4), pieces 1-4 three sides (class 3), 5-10 two sides (class 2), 11-14 one side
+(class 1), **15 = none = an empty / wall screen** (class 0; a `$Fx` cell).
+Variants 0-11 are rolled; **12 is the "plain" drawing** used by shape mode 1;
+13-15 are never produced. (How a cell is DRAWN: §7.)
 
-### 4.2 Build strategy (🟡)
+A paired 16-byte buffer at `$C950-$C95F` holds per-cell explored state (bank
+`$0B` sets it on entry; the map overview reads it). `$C960` = the stairs screen.
 
-A macro-shape mode is rolled first: `wShapeMode = [$6056 + (RNG mod 5)]`
-(`$C93F`, 5 modes at `$16:$6056`).
+### 4.2 Build strategy (✅)
 
-- **Mode 2** ✅ — copy a ready-made 16-byte pattern from `FloorTilePatterns`
-  (`$16:$7736`, RNG-selected) straight into `$C940`. (Mode 2 also selects the
-  alternate attribute table `GateAttrTable_B`, see §7.)
-- **Other modes** 🟡 — carve a connected layout into `$C940` using
-  `FloorTypeOrderTable` (`$16:$7096`, a 16-byte permutation of piece ids) and two
-  primitives: `SetBrd_6744` (neighbour/connectivity test) and `SetBrd_6800`
-  (place/link a piece). The carve count comes from `$C93D` = the floor's
-  encounter pool +25 byte ("maze size", vanilla 3 / 8 / 15; S103 static read —
-  DATA_STRUCTURES "Encounter pool entry", `gamedata.encounters[].maze_size`). The exact carve algorithm (how connectivity is guaranteed)
-  is understood in outline but not step-traced.
+1. **Shape mode** `wShapeMode` (`$C93F`) = **`MazeShapeModes`** (`$16:$6056` =
+   `0,0,0,1,2`)[wRNG1 mod 5] → mode 0 (3/5), 1 (1/5), 2 (1/5). `$C950-F` := 0,
+   `$C940-F` := `$FF`.
+2. **Mode 2** — copy **`MazePatterns`** (`$16:$7736`, 21 ready-made 4×4 grids,
+   was `FloorTilePatterns`)[wRNG1 mod 21] into `$C940`; done (→ §4.3). These
+   cells draw from the mode-2 tables (§7).
+3. **Modes 0 / 1 — the carve.** `MazeCellOrder` (`$16:$7096`, was
+   `FloorTypeOrderTable`) = the order the 16 cells are visited:
+   `5 6 10 9 8 4 0 1 2 3 7 11 15 14 13 12`. `b` = `[$C93D]` (the **maze size**,
+   the floor's encounter list +25 byte, vanilla 3 / 8 / 15) + 1.
+   - **First cell** (5): `MazePickPiece` with required openings B = (wRNG1 + k) & 5
+     (the first k ≥ 1 making it non-zero: down and/or right) when b < 9, else
+     none; repeated until the piece is not 15.
+   - **The next `size` cells** of the order: `MazeCellConstraints` (was
+     `SetBrd_6744`) gives B = the sides whose PLACED neighbour opens toward this
+     cell and C = the sides off the grid or whose placed neighbour does not; an
+     EMPTY (`$FF`) neighbour is free. B = 0 → the cell stays empty; else
+     `MazePickPiece` (was `SetBrd_6800`) picks a piece with all of B and none of C.
+   - **`MazePickPiece`** lists the matching rows as [piece, class] pairs at
+     `$C500`, counts the rows per class 0-4 (`$C0A0+`), gives each row the share
+     20·class / count-of-its-class (integer, class 0 = 0) as a running 8-bit sum,
+     rolls (wRNG2:wRNG1) mod sum and returns the first piece whose sum ≥ the roll
+     (`$0F` when nothing matches, or when a running sum is exactly `$FF`, which the
+     scan reads as the list end).
+   - **Re-fit pass** — every cell in `MazeCellOrder`, using the CURRENT grid: B = 0
+     → piece 15; else exactly the piece whose openings = B (C = ~B). This closes
+     every opening nobody answers and turns empty cells next to an opening into
+     dead-ends, so **a carved floor is always ONE connected maze** (model sweep
+     over every 7th RNG state, sizes 3-15: 0 empty, 0 split floors; 2 to size + 1
+     screens).
+   - **Variants**: every cell := piece·16 + (12 in mode 1, else wRNG1 mod 12, one
+     roll per cell in cell order 0-15).
 
-After the grid is built, a final pass folds in the per-cell `variant` nibble
-(`swap` the piece id into the high nibble, `or` the `RNG mod 12` variant) — unless
-shape mode 1 fixes the variant.
+**Maze size limits (measured S122).** Sizes 1-2: in 623 of 7,498 carved floors
+(model, every 7th RNG state) the re-fit pass closes the first cell too and the
+whole grid is empty — the stairs search (§4.3) then spins forever: PyBoy, size 2,
+RNG `$8192` → the builder never returns (`census_maze.py` freeze probe). Size 0
+(b wraps to 0 after the first cell) and 16+ read past `MazeCellOrder` into
+`GateFloorDataTable` and write past the grid. **The editor accepts 3-15 only**
+(`gamedata.check_list`, Encounters tab); every vanilla list uses 3, 8 or 15.
 
-### 4.3 Placement passes (🟡)
+### 4.3 Placement passes (✅) — `MazePlacements` (`$16:$616C`, was `Jump_016_616c`)
 
-Spawn point and staircase are placed by passes that use a **64-iteration retry**
-(`$C0A9 = $40`); on exhaustion the whole floor regenerates (`jp $605B`). Player/
-staircase screen coordinates are resolved through a ROM0 per-screen offset table
-at `$00:$2DA7` (4 bytes/screen). The staircase screen lands in `$C960`.
+Every spot is a metatile (16 px) of one screen, chosen by random tries and
+accepted by the class of its **bottom-right 8×8 tile**: `TileAtPixel` (ROM0
+`$1E31`, was misnamed `WaitInputRelease`) reads the tile id at pixel (16k + 8,
+16j + 8) of the screen decoded into the `$C300` shadow (bank `$0B` entry 8 → the
+gate step reader → `MazeScreenTable`, §7) → `$FFAA`; class = id >> 2: `$0C` /
+`$0D` / `$0E` = ids `$30-$3B` (floor, trees, mounds). The screen pick (each
+`MazePick…Spot`): one `GenerateRNG`, then screens wRNG1 + 1, + 2 … (mod 16),
+the first non-empty; 64 failed positions (`$FFD5`) → the next non-empty screen.
 
-`FloorLayoutData` (`$16:$7436`, 1120 B, indexed `wFloorType3 × 48`) is re-walked by
-`SelectFloorType` during `LoadFloorDataPointer` (entry 9, `$16:$6F..`) to drive a
-sub-selection within the chosen floor-type's 48-byte block. 🟡 (role: per-floor
-feature/piece sub-selection; precise output mapping not fully pinned.)
+| Pass | Routine | Positions | Classes | Rules |
+|---|---|---|---|---|
+| **Stairs** | `MazePickStairsSpot` (was `CallBrd_66ae`) | x 2-7 (RNG1 mod 6 + 2), y 2-5 (mod 4 + 2) | `$0C-$0E` | `MazeStairsPassable` (was `LoadBrd_6afb`) must pass — the 3×3 around it stays connected (`MazePassableTest`) |
+| **Wandering NPC** | `MazePickNPCSpot` (was `CallBrd_6585`) | x 1-8, y 1-6 | `$0C-$0E` | not the stairs screen; then kept or dropped (below) |
+| **Arrival** | `MazePickArrivalSpot` (was `CallBrd_661b`) | x 1-8, y 1-6 | `$0C-$0D` | re-picked once if on the stairs screen; not the stairs spot; not the NPC's screen |
 
----
+Each of the three gets 64 tries (`$C0A9`); running out **regenerates the whole
+floor** (`jp MazeBuildFloor`, with the RNG as it stands — the model does the
+same; 4 / 4,000 census floors).
 
-## 5. Contents: items, gold, masters ✅🟡
+Results: stairs screen `$C960`, its tile offset in the 32-wide map `$C962/3`
+(bank `$0B` `Call_00b_4309` stamps tiles `$3C $3D / $3E $3F` there when that
+screen loads), absolute pixels `$C964-$C967`; NPC screen `$C926` (`$FF` = none),
+pixels `$C927-$C92A`, kind `$C92B`, sub-kind `$C92C`; arrival `wWarpSpawn`
+(`$C96F-$C972`) and `$C0A0` (screen) / `$C0A1-$C0A4` (pixels in the screen).
+Pixel origins of the 16 screens: **`ScreenOriginTable`** ROM0 `$2DA7` (16 ×
+[X lo, X hi, Y lo, Y hi] = col·160, row·128; re-sectioned from fake code S122).
 
-`SaveBrd_6432` (`$16:$6432`, the FloorType3 path) is the **content placement** pass.
-It scatters features onto generated screens, tracking per-screen content state at
-**`$C100-$C10F`** and explicitly avoiding the staircase screen (`$C960`), the spawn
-screen (`$C0AF`), and already-occupied screens. It uses `FloorTypeSelectionTable3`
-to pick a feature type (`$C0AE`, with a `+$10` adjust on one branch) and a
-16-iteration retry per placement.
+**The wandering NPC is kept when**: `$CAB4` (the progress tier) 0 / 1 → `$C92D`
+:= 0 first; `$C92B` := `$C92D`; if that is 4-7 → kept when a new wRNG1 has bit 0
+clear (kind = `$C92D`); else kept when a new wRNG1 < **`MazeNPCChance`**
+(`$16:$7886`)[wFloorType3] (0 / 13 / 26 / 38 of 256 by contents row) with
+`$C92C` := wRNG1 mod 5, `$C92B` := wRNG1 & 3 (two more rolls). Dropped →
+`$C926` = `$FF`, `$C92B-$C92E` = 0. (`$C92D` is written by bank `$0B`
+`Call_00b_46da`: 5 when every screen was explored, 6 when only 2 … — the GATE
+NPC list `GatePtrTable_42c8` is indexed by `$C92B`.) Then `$C92D` := 0.
 
-The placed feature's data lives in a per-screen list at **`$D793`** — entries of
-`[type/flags, ?, tileX, tileY]`. When the player's tile matches a feature
+The item pass follows (§5).
+
+## 5. Contents: items, gold, masters ✅ (placement traced + modelled S122)
+
+**How many** (end of `MazePlacements`): count = row[9] + (wRNG1 mod (row[10] +
+1)) of the gate's contents row (`FloorTypeSelectionTable3`[wFloorType3], 16 B;
+wRNG1 as it stands, no new roll), halved when fewer than 6 cells are used; row[11]
+= the % chance of the blocking variant. `$C100-$C10F` (items per screen) := 0.
+
+**Each item** — **`MazePlaceItem`** (`$16:$6432`, was `SaveBrd_6432`): kind =
+SelectFloorType over the contents row (bytes 0-8 used: kinds 0 / 7 / 8 in the
+vanilla rows); + `$10` when (wRNG2:wRNG1) mod 100 < row[11] (such kinds must pass
+`MazeItemPassable` — the same 3×3 test as the stairs). 15 tries (`$C0A9` =
+`$10`, decremented first): a spot from `MazePickItemSpot` (was `CallBrd_63af`;
+x 1-8, y 1-6, classes `$0C` / `$0D`, NO try limit on a screen), re-picked once
+each when it lands on the stairs screen, on the arrival screen, or on a screen
+that already holds an item; refused (next try) when it is the stairs spot, the
+arrival spot, the **same screen and ROW** as an earlier item (`MazeItemRowTaken`
+/ `MazeItemRowMatch` decode an entry back to screen + Y only — X is never
+compared), the NPC's screen, or a screen with 3 items. Sub-kind =
+**`MazeItemSubKind`** (`$16:$7426`, 16 B, was read as a 17th "type 16" row of
+table 3)[kind & 15]; when that is 1, SelectFloorType over the 48-byte
+`FloorLayoutData` row of wFloorType3 (`$16:$7436 + 48·row`, 16 rows = 768 B).
+Out of tries = no item.
+
+**The list at `$D793`**: 4 B per item `[kind, sub-kind, X, Y]` — X / Y = the
+ABSOLUTE metatile (screen col·10 + x, screen row·8 + y), `$FF` after the last.
+When the player's tile matches a feature
 (`CheckFieldMovementAllowed`, `$01:$5A6E`-ish), it's processed by the pickup
 handlers in bank `$01` (`$01:$5B68`+):
 
@@ -213,8 +299,6 @@ handlers in bank `$01` (`$01:$5B68`+):
 tier `$01` → item id `RNG mod $0D + $07`; tier `$02` → `RNG mod $1E + $28`. So
 late gates draw from higher item ranges. Masters/other feature types share the
 same placement machinery (rarely rolled).
-
----
 
 ## 5.1 Damage tiles ✅ (resolved S37, code-derived + watchpoint-confirmed)
 
@@ -300,21 +384,45 @@ padding (no mid-bank insertion). Bank `$16` is not on the never-insert list
 
 ---
 
-## 7. Rendering a generated floor ✅
+## 7. Rendering a generated floor ✅ (piece → screen map decoded S122)
 
 - **Tileset graphics**: `$0B:$4027` picks the tileset table by `wInGateworld` —
-  gate rooms use `$00:$2A5D`, normal rooms `$00:$26DD` (8 B/entry:
+  gate rooms use `$00:$2A5D` (the 16 records: bank `$28` id = the floor type,
+  640 × 512 px, collision threshold `$30`), normal rooms `$00:$26DD` (8 B/entry:
   `[gfx_ptr:2][spawn_data:6]`), indexed by `wMapID × 8`; the gfx pointer is DMA'd
-  to VRAM `$9000`. Bank `$16` entry 5 (`$1605`) preps the tileset first.
+  to VRAM `$9000`. Bank `$16` entry 5 (`$1605`) preps the tileset first. Each
+  sheet is 128 tiles: `$00-$3B` the maze art, `$3C-$3F` the stairs, `$40-$7F`
+  **blank** (S122). No ordinary room uses these 16 sheets (ROM check S122).
+- **The screen's tiles — `MazeScreenTable`** (`$16:$7896`, 256 × `[layout id,
+  layout bank]`, was `FloorDataPtrTable1`; shape mode 2: **`MazeScreenTableB`**
+  `$16:$7A96`, was `FloorDataPtrTable2`), indexed by the cell byte
+  `$C940[wScreenIndex]`: bank `$0B` `ReadStepBlock` (entry 8) sends gate rooms to
+  bank `$16` entry 9 `LoadFloorDataPointer`, which returns exactly the `[step id,
+  tileset bank]` pair a normal room's step entry holds — an ordinary LZ screen
+  layout stream (512 B, 32 × 16). Modes 0/1 use 195 drawings (pieces 0-14 × 13
+  variants; piece 15 is open water / wall), mode 2 another 60 → **254 distinct
+  screens** (`extracted/maze_pieces.json`). The stairs screen gets `$3C-$3F`
+  stamped in after decoding (§4.3).
 - **Palette / attributes**: bank `$17` (`Jump_017_4064` / `Jump_017_40DA`) resolves
-  per-screen attributes from `GateAttrTable_A` (`$17:$5215`) — or `GateAttrTable_B`
-  (`$17:$5415`) when shape mode `$C93F == 2` — indexed by the grid cell at
-  `$C940[wScreenIndex]` (256 entries × 2 B: `attr_idx, attr_bank`). The floor
-  palette comes from `$17:$51F5[wMapID]`.
+  per-screen attributes from `GateAttrTable_A` (`$17:$5215`, shape modes 0/1) — or
+  `GateAttrTable_B` (`$17:$5415`) when shape mode `$C93F == 2` (S122: the bank
+  $17 comments said "== 0" / "== 1" — corrected) — indexed by the same cell byte
+  (256 entries × 2 B: `attr_idx, attr_bank` = an LZ attr stream, nibble per tile).
+  All 275 attr streams use **palettes 0-3 only**, never the VRAM-bank-1 bit
+  (census S122). The floor palette comes from `$17:$51F5[wMapID]` — **4
+  palettes, slots 0-3** (`LoadPal_46a1`, b = 4); the slot-4 override this doc
+  noted for gate floors is never referenced by a maze tile.
 
-This is why **maze tilesets are reusable in custom rooms**: they are ordinary LZSS
-layouts referenced through the same tileset/attr tables the custom-room pipeline
-already manipulates.
+**The screens are SHARED by all 16 floor types** — a floor type changes only
+the sheet and the four colours. Measured S122 (`census_maze.py` screens):
+4 arrivals per floor type (all 16, 6 of them on the stairs screen) — the PyBoy
+screen equals the model's picture (`MazeScreenTable` + `GateAttrTable` + the
+type's sheet and palettes + the stairs stamp) on every 8×8 tile not under a
+sprite.
+
+This is why **maze tilesets are reusable in custom rooms**: they are ordinary
+LZSS layouts referenced through the same tileset/attr tables the custom-room
+pipeline already manipulates (§7.10).
 
 ---
 
@@ -870,9 +978,56 @@ hit once, `$17C0` set → back in the hall and in room $24 the gate-32 swirls ar
 the rest unchanged. A/B old vs new engine over the user's project: 212 vanilla screens'
 NPC slots identical except room $23 (gate 0 there has the user's custom boss "SBOSS", so
 its swirl now spins until that boss is beaten), the 25 custom screens identical.
-**Residual:** a custom boss win does not advance the vanilla portal room's step counter
-(other step-gated NPCs of that room stay where the vanilla counter leaves them; the swirl
-itself is handled by the override).
+**Residual (S117):** a custom boss win did not advance the vanilla portal room's step
+counter. **FIXED S122 (built, PyBoy-verified, NOT yet user-tested):** the game's own
+win scripts do it in their TAIL — after `write_ram $D92B 7` (the Castle return; the
+S117 text "the boss script moves the portal room's step counter" was right, the tail
+was simply past the window `cleared_flags` read): e.g. Villager `write_ram $D969 1`,
+`write_ram $D977 1`, `if_flag_clear $0012 → end`, `write_ram $D969 3` (both portal
+gates cleared), then `close_text` / the warp. `tools/map_gate_names.py` decodes every
+gate's tail (branches followed, up to the first op that is not bookkeeping) into
+`gate_names.json` `win_tails`; a re-bossed vanilla gate's `GateClearTable` row (now 6
+B: own flag, vanilla flag, **`dw WinTail`**) points at a compiler-made copy of its
+tail(s) (`encounters.win_tail_programs`: jump targets relabelled, the closing op → the
+next tail; Demolition: Hargon's then Sidoh's tail + `set_flag $0028`), which
+**`RunWinTail`** (bank $76) interprets: `$12` / `$13` write byte / word, `$03` / `$02`
+set / clear flag, `$00` / `$01` jump when the flag is clear / set, `$14` jump, anything
+else ends. Measured: stub-calling `GateBossWin` on a faked boss floor of re-bossed
+gates 0 / 1 / 2 / 5 / 23 with random starting flags, 20 / 20 times the RAM and flags
+equalled the tail run in Python. The Castle-return code `$D92B` and the King's speech
+code `$D9E3` stay the custom boss flow's business (the conversation's Helper step).
+
+## 7.10 Gate themes in custom rooms (S122, ROADMAP P3.7b part 2) — built S122, PyBoy-verified, NOT yet user-tested
+
+User (S122): "can I currently use gate themes for custom room build? … I would love to
+use them for custom rooms as an option for tileset, properly coloured" + "the option of
+starting with gate tiles/palettes then borrowing additional tiles elsewhere".
+
+**Engine: nothing new.** A custom room's record (`$26DD`-style row, PROJECT_COMPILER
+§2.11) with `gfx_bank $28`, `gfx_id` = the type, threshold `$30` loads that floor
+type's sheet; its four palettes are an ordinary project palette (custom rooms load
+slots 0-3 — the same four the maze uses, §7); a screen copied from `MazeScreenTable` +
+`GateAttrTable` is an ordinary layout + attr item. Outside a gate (`wInGateworld` = 0)
+the theme's special tiles are inert: the damage floors (`$38-$3B`) do no damage
+(`ApplyFloorDamage` runs only in gate mode or the `CheckSpecialMapExits` maze maps) and
+the stairs (`$3C-$3F`) do nothing (bank `$0B` reaches the gate-exit check
+`Jump_00b_46a7` only through `jp nz` on `wInGateworld`). Rooms on a theme never animate.
+
+**Measured (PyBoy, the user's save):** a room created with *New room → gate theme 4*, a
+second screen filled from a maze screen, and SBOSS switched to theme 9 + its colours —
+4 / 4 screens: the game's screen == the editor's preview on every tile not under a
+sprite. The S122 demo (Ice Gallery / Forest Gallery) is walked end to end (PROJECT_STATE
+S122).
+
+**What a theme room has:** sheet slots `$00-$3F` are the theme's (the room's protected
+VOCABULARY — `Document.room_sources_vocab`); the 15 maze metatiles (tiles + per-subtile
+palettes, harvested from the 254 screens) + the stairs are its picker vocabulary;
+**`$40-$7F` (64 slots) are free — all on the walkable side** of the `$30` split. A
+borrowed WALL tile therefore needs a wall slot: the maze's 48 wall slots are all
+vocabulary, so the borrow offers to release the room's unused vocabulary first
+(`VocabReleaseWouldHelp`, one undo step; a room built from a few maze screens leaves
+a dozen or more unused). A sheet copy (own copy / a borrow) keeps its origin, so the
+room stays the theme.
 
 ## 8. Floor completion / exit ✅
 
@@ -903,6 +1058,17 @@ itself is handled by the override).
 | `$C940-F` | `wFloorGrid` | 4×4 screen grid, `(piece<<4)|variant`; `$Fx`=empty |
 | `$C950-F` | — | paired per-cell state buffer |
 | `$C960` | `wStaircaseScreen` | screen index holding the down-staircase |
+| `$C962-$C963` | — | the stairs' tile offset in the 32-wide screen map (S122) |
+| `$C964-$C967` | — | the stairs' absolute pixel X / Y (S122) |
+| `$C926` | — | wandering NPC's screen (`$FF` = none); `$C927-$C92A` its pixels (S122) |
+| `$C92B` / `$C92C` / `$C92D` | — | NPC kind (→ bank $0B `GatePtrTable_42c8`) / sub-kind / explored state (S122) |
+| `$C93D` | — | maze size (the encounter list +25 byte; 3-15 safe, §4.2) |
+| `$C0A0-$C0A4` | — | arrival screen + pixels (S122; the carve uses `$C0A0-$C0A4` for class counts first) |
+| `$C0A5-$C0A8` | — | stairs pixels within the screen (S122) |
+| `$C0A9` | — | try counter (64 per placement pass, 16 per item) |
+| `$C0AA-$C0AF` | — | item candidate pixels / kind `$C0AE` / arrival screen `$C0AF` (S122) |
+| `$C0B0-$C0B8` | — | the 3×3 "blocked" map of `MazePassableTest` (S122) |
+| `$C500` | — | `MazePickPiece` candidate list [piece, running share] … `$FF $FF` (S122) |
 | `$C100-F` | — | per-screen content state (placement) |
 | `$C969` | `wInGateworld` | 1 = generated maze mode; 0 = fixed template / overworld |
 | `$DEBC` | `wGateDiveGate` | S100 patched: wGateID+1 of the dive in progress (0 = none); SRAM `$BFCA` |
@@ -911,7 +1077,7 @@ itself is handled by the override).
 | `$AA` (HRAM) | — | tile id under the player; behavior class = `$AA >> 2` |
 | `$CB0B` | — | party slot 0 status byte (`+$0B`); bit7 set = skipped by floor damage |
 | `$CA8D` | — | active (front-line) party count |
-| `$D793` | — | per-screen feature list `[type/flags, ?, tileX, tileY]` |
+| `$D793` | — | floor item list `[kind, sub-kind, X, Y]` (absolute metatiles), `$FF` end (S122) |
 
 ---
 
@@ -931,12 +1097,16 @@ itself is handled by the override).
 | `$07:$6061` | `SaveAllowCheck` | JOURNAL permission ladder (label S100; patched same-size rewrite, §7.6) |
 | `$06:$6034` | `FieldStateDispatch` | bank $06 entry 6, per-frame field router (S100; bit 5 → `MapTransitionMachine`) |
 | `$16:$5FE4` | `label16_5fe4` (entry 6) | map-overview VRAM + grid build kickoff |
-| `$16:$605B` | `label16_605b` | the maze grid builder |
-| `$16:$6432` | `SaveBrd_6432` | content (item/master) placement |
+| `$16:$605B` | `MazeBuildFloor` (= `label16_605b`) | the floor builder (§4) |
+| `$16:$616C` | `MazePlacements` | stairs / NPC / arrival / item count (§4.3) |
+| `$16:$6432` | `MazePlaceItem` | one floor item (§5) |
+| `$16:$63AF` / `$6585` / `$661B` / `$66AE` | `MazePickItemSpot` / `MazePickNPCSpot` / `MazePickArrivalSpot` / `MazePickStairsSpot` | screen + metatile tries (§4.3) |
+| `$16:$6955` / `$6AFB` / `$6C96` | `MazeItemPassable` / `MazeStairsPassable` / `MazePassableTest` | the 3×3 passage test |
+| `$16:$68C6` / `$68EA` / `$690E` | `MazeAtStairs` / `MazeAtArrival` / `MazeItemRowTaken` | spot clash tests |
 | `$16:$6F05` | `label16_6f05` (entry 8) | per-step encounter decrement |
-| `$16:$6Fxx` | `LoadFloorDataPointer` (entry 9) | FloorLayoutData sub-selection |
-| `$16:$6800` | `SetBrd_6800` | place/link maze piece |
-| `$16:$6744` | `SetBrd_6744` | connectivity / neighbour test |
+| `$16:$7033` | `LoadFloorDataPointer` (entry 9) | the cell's screen layout `[id, bank]` from `MazeScreenTable(B)` (§7) |
+| `$16:$6800` | `MazePickPiece` | weighted piece with required / forbidden openings |
+| `$16:$6744` | `MazeCellConstraints` | a cell's required / forbidden openings |
 | `$0B:$4027` | — | tileset-table select (gate vs normal) |
 | `$0B:$4674` | `Jump_00b_4674` | per-step special-room map-type list |
 | `$0B:$46A7` | `Jump_00b_46a7` | down-staircase exit at `$C960` |
@@ -945,24 +1115,28 @@ itself is handled by the override).
 | `$01:$5B68…` | — | item/gold pickup handlers (`$D78F`) |
 | `$01:$5E23` | `jr_001_5e23` | **ApplyFloorDamage** (per-step damage-tile handler) |
 | `$01:$5E7D` | — | **FloorDamageTable** (16 B, by floor type) |
+| `$00:$1E31` | `TileAtPixel` (was `WaitInputRelease`) | tile id at pixel `$FFA5-$FFA8` → `$AA`, walkable → `$A9` (S122) |
 | `$00:$1E96` | `TileBuffer_1E96` | standing-tile lookup → `$AA` (+ behavior class) |
 | `$17:$4064/$40DA` | — | gate per-screen attr/palette (`GateAttrTable_A/B`) |
 | `$00:$2A5D` | — | gate-room tileset table (8 B/entry) |
-| `$00:$2DA7` | — | per-screen coordinate offset table (4 B/entry) |
+| `$00:$2DA7` | `ScreenOriginTable` | per-screen pixel origin, 16 × 4 B (re-sectioned S122) |
 
 ### Data tables (bank `$16`)
 
 | Address | Label | Notes |
 |---------|-------|-------|
-| `$16:$6056` | shape-mode table | 5 bytes, `[ + RNG%5]` → `wShapeMode` |
-| `$16:$7055` | `FloorTypeSortData` | 16 × 4 (`type, idx, weight, pad`) + `$FF` |
-| `$16:$7096` | `FloorTypeOrderTable` | 16-byte piece-id permutation |
+| `$16:$6056` | `MazeShapeModes` | 5 bytes `0,0,0,1,2`, `[RNG1 % 5]` → `wShapeMode` |
+| `$16:$7055` | `MazePieceTable` (was `FloorTypeSortData`) | 16 × 4 `[openings, piece, weight class, 0]` + `$FF` |
+| `$16:$7096` | `MazeCellOrder` (was `FloorTypeOrderTable`) | the carve's cell visiting order |
 | `$16:$70A6` | `GateFloorDataTable` | 32 × 8 (§1) |
 | `$16:$71A6` | `FloorTypeSelectionTable` | 16 × 16 |
 | `$16:$72A6` | `FloorTypeSelectionTable2` | 16 × 8 |
-| `$16:$7326` | `FloorTypeSelectionTable3` | 17 × 16 |
-| `$16:$7436` | `FloorLayoutData` | 1120 B, `wFloorType3 × 48` |
-| `$16:$7736` | `FloorTilePatterns` | ready-made 16-byte grid patterns (shape mode 2) |
+| `$16:$7326` | `FloorTypeSelectionTable3` | 16 × 16 (bytes 9-11: item count base / range / blocking %) |
+| `$16:$7426` | `MazeItemSubKind` | 16 B by item kind (was read as table 3's 17th row) |
+| `$16:$7436` | `FloorLayoutData` | 16 × 48 B: item sub-kind odds by contents row |
+| `$16:$7736` | `MazePatterns` (was `FloorTilePatterns`) | 21 ready-made 4×4 grids (shape mode 2) |
+| `$16:$7886` | `MazeNPCChance` | wandering-NPC threshold by contents row |
+| `$16:$7896` / `$7A96` | `MazeScreenTable` / `MazeScreenTableB` | 256 × `[layout id, bank]` by cell byte (§7) |
 | `$17:$5215` | `GateAttrTable_A` | 256 × 2 (attr_idx, attr_bank) |
 | `$17:$5415` | `GateAttrTable_B` | 256 × 2 (shape mode 2) |
 | `$17:$476F` | `AttrPtrTable` | normal-room palette/attr root, by mapID (§7.1) |
@@ -978,15 +1152,15 @@ itself is handled by the override).
   grid with random staircase/items + 64-retry regen; special/boss rooms are fixed
   templates substituted in.
 - **Can we guide it** ✅ — three same-size data levers: `GateFloorDataTable`,
-  the three `FloorTypeSelectionTable`s, and `FloorTilePatterns`/shape-mode table.
+  the three `FloorTypeSelectionTable`s, and `MazePatterns` / `MazeShapeModes` (S122 names).
 - **Reuse maze tilesets in custom rooms** ✅ — yes; same tileset/attr tables.
 - **Insert new special rooms / link custom-bank rooms** ✅ — yes, via a `rst $00`
   dispatch slot that sets `wMapID = <custom id>` + a `FloorTypeSelectionTable2`
   weight; dovetails with the existing `wInGateworld=0` custom-room path (§6).
-- **Annotation** 🟡 — bank `$16` data tables + key entries are now labelled;
-  the carve primitives (`SetBrd_6744/6800`) and the `rst $00` handlers still carry
-  raw `jr_016_xxxx` internals. Comment annotations added this session; full label
-  rename pass is a follow-up (needs ref updates, build-sensitive).
+- **Annotation** ✅ (S122) — the whole floor builder is labelled and commented in
+  both trees (`MazeBuildFloor` … `MazePassableTest`, the data tables renamed by
+  what they are; ROM0 `TileAtPixel` / `ScreenOriginTable`), byte-perfect; the
+  special-room handlers were labelled S120. Loop-internal `jr_016_xxxx` labels stay.
 
 ---
 
@@ -996,16 +1170,15 @@ itself is handled by the override).
    standing-tile behavior class `$0E` (tile ids `$38-$3B`) via `$AA`; amount =
    `FloorDamageTable` (`$01:$5E7D`) by floor type (red 5 / blue 10 / brown 2).
    Routines `$00:$1E96` and `$01:$5E23` annotated.
-2. **`piece_id → screen tile-layout` map** 🟡 — the grid encodes
-   `(piece<<4)|variant`, but the table turning a piece id into the rendered
-   screen's tile layout isn't fully pinned. Needed to author *new* maze pieces
-   (vs. reweighting existing ones).
+2. **`piece_id → screen tile-layout` map** ✅ **DONE S122** — `MazeScreenTable` /
+   `MazeScreenTableB` + `GateAttrTable_A/B` by cell byte (§7), pixel-proved.
+   Authoring NEW pieces = new layout streams + rows of those tables (not built).
 3. **Full `rst $00` dispatch enumeration** ✅ **DONE S120** — the 8 slots of
    `SpecialRoomTable` ($16:$5C32, both trees labelled): §2 "The special picks (S120)".
    No slot is free (the table holds exactly the 8 indices `FloorTypeSelectionTable2`
    rows can roll); custom rooms insert before it (§7.6).
-4. **`SetBrd_6744`/`SetBrd_6800` carve algorithm** 🟡 — outline understood;
-   step-trace pending for guaranteed-connectivity guarantees.
+4. **`SetBrd_6744`/`SetBrd_6800` carve algorithm** ✅ **DONE S122** — §4.2 (the
+   re-fit pass is the connectivity guarantee; sizes 1-2 can empty the floor).
 
 ## §12 Town → arbitrary gate floor re-entry (S73, PyBoy-measured)
 

@@ -1694,7 +1694,9 @@ RoomAttr_Map5E:
     db $bd, $62, $dd, $62
 
 GateAttrTable_A:  ; $5215 — 256 entries × 2B (attr_idx, attr_bank)
-; Used when $C93F == 0. Indexed by $C940[screen_index].
+; Used when $C93F (shape mode) != 2 (S122 — was "== 0"). Indexed by the grid
+; cell byte $C940[wScreenIndex] like bank $16 MazeScreenTable; attribute
+; nibbles of all 196 streams use palettes 0-3 only (census S122).
     db $00, $3D  ; [  0] attr_idx=$00 bank=$3D
     db $01, $3D  ; [  1] attr_idx=$01 bank=$3D
     db $02, $3D  ; [  2] attr_idx=$02 bank=$3D
@@ -1953,7 +1955,8 @@ GateAttrTable_A:  ; $5215 — 256 entries × 2B (attr_idx, attr_bank)
     db $B4, $3D  ; [255] attr_idx=$B4 bank=$3D
 
 GateAttrTable_B:  ; $5415 — 256 entries × 2B (attr_idx, attr_bank)
-; Used when $C93F == 1. Indexed by $C940[screen_index].
+; Used when $C93F (shape mode) == 2 (S122 — was "== 1"): the MazePatterns
+; cells, like bank $16 MazeScreenTableB.
     db $00, $3E  ; [  0] attr_idx=$00 bank=$3E
     db $01, $3E  ; [  1] attr_idx=$01 bank=$3E
     db $02, $3E  ; [  2] attr_idx=$02 bank=$3E

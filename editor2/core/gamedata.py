@@ -357,7 +357,7 @@ def apply_list_fields(r, o, what, eid_of):
     if 'max_count' in o:
         r[20:25] = bytes(_list(o['max_count'], 5, 0, 3, what + '.max_count'))
     if 'maze_size' in o:
-        r[25] = _range(o['maze_size'], 0, 255, what + '.maze_size')
+        r[25] = _range(o['maze_size'], 0, 255, what + '.maze_size')   # 3-15: check_list
 
 
 def check_list(r, what, pct):
@@ -378,6 +378,16 @@ def check_list(r, what, pct):
         warnings.append(f"{what}.slot_chance: the slot chances add up to "
                         f"{sum(pct[c] for c in r[5:10])} % — the last slots "
                         "are cut (every original list is exactly 100 %)")
+    # S122 (GATE_GENERATION §4 "As traced S122"): the maze carve visits
+    # maze_size + 1 cells of the 16-byte MazeCellOrder. 1-2 can close every
+    # cell (8 % of carved floors, the model over all seeds) and the stairs
+    # search then spins forever (measured: PyBoy, a size-2 floor never
+    # finished); 0 and 16+ walk past the table and write past the 4x4 grid.
+    # Every original list uses 3, 8 or 15; 3-15 always carve a connected floor.
+    if not 3 <= r[25] <= 15:
+        raise GamedataError(f"{what}.maze_size: {r[25]} — gate floors need 3-15 "
+                            "(1-2 can carve an empty floor and freeze the game; 0 and "
+                            "16+ write past the maze grid)")
     eids = [_u16(r, 10 + 2 * i) for i in range(5)]
     for i in range(5):
         if r[5 + i] and not eids[i]:

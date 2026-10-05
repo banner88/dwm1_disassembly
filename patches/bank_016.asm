@@ -2784,15 +2784,20 @@ jr_016_6002:
     ld [$c8ec], a
     ret
 
+; MazeShapeModes (S122): the floor's shape mode = this[wRNG1 mod 5] -> $C93F:
+; 0 carve (3/5), 1 carve with the plain variant 12 of every piece, 2 a
+; ready-made pattern (MazePatterns, drawn from MazeScreenTableB / GateAttrTable_B).
+MazeShapeModes:
     db $00, $00, $00, $01, $02
 
-label16_605b:
+MazeBuildFloor:
+label16_605b:  ; original label (docs cite it)
     call GenerateRNG
     ld a, [wRNG1]
     ld b, a
     ld a, $05
     call Div8x8
-    ld hl, $6056
+    ld hl, MazeShapeModes
     add l
     ld l, a
     ld a, $00
@@ -2824,10 +2829,10 @@ label16_605b:
     add hl, hl
     add hl, hl
     ld a, l
-    add LOW(FloorTilePatterns)
+    add LOW(MazePatterns)
     ld l, a
     ld a, h
-    adc HIGH(FloorTilePatterns)
+    adc HIGH(MazePatterns)
     ld h, a
     ld de, $c940
     ld b, $10
@@ -2839,11 +2844,11 @@ jr_016_60b0:
     dec b
     jr nz, jr_016_60b0
 
-    jp Jump_016_616c
+    jp MazePlacements
 
 
 jr_016_60b9:
-    ld hl, FloorTypeOrderTable
+    ld hl, MazeCellOrder
     ld a, [$c93d]
     inc a
     ld b, a
@@ -2869,7 +2874,7 @@ jr_016_60d1:
 
 jr_016_60d8:
     push bc
-    call SetBrd_6800
+    call MazePickPiece
     pop bc
     cp $0f
     jr z, jr_016_60d8
@@ -2894,13 +2899,13 @@ jr_016_60f2:
     ld a, [hl]
     ld c, a
     push bc
-    call SetBrd_6744
+    call MazeCellConstraints
     ld a, b
     or a
     ld a, $ff
     jr z, jr_016_6102
 
-    call SetBrd_6800
+    call MazePickPiece
 
 jr_016_6102:
     pop bc
@@ -2919,7 +2924,7 @@ jr_016_6102:
     dec b
     jr nz, jr_016_60f2
 
-    ld hl, FloorTypeOrderTable
+    ld hl, MazeCellOrder
     ld b, $10
 
 jr_016_611a:
@@ -2930,7 +2935,7 @@ jr_016_611a:
 
     ld c, a
     push bc
-    call SetBrd_6744
+    call MazeCellConstraints
     ld a, b
     or a
     ld a, $0f
@@ -2939,7 +2944,7 @@ jr_016_611a:
     ld a, b
     xor $0f
     ld c, a
-    call SetBrd_6800
+    call MazePickPiece
 
 jr_016_6132:
     pop bc
@@ -2988,7 +2993,22 @@ jr_016_6162:
     dec b
     jr nz, jr_016_614a
 
-Jump_016_616c:
+; ---------------------------------------------------------------------------
+; MazePlacements (was Jump_016_616c; S122, PyBoy-proved — every field of 4,000
+; forced floors == editor2/core/maze.py). After the grid: (1) the down-stairs
+; ($C960 screen, $C962/$C963 tile offset for bank $0B's stamp, $C964-$C967
+; absolute pixels) — MazePickStairsSpot, kept only if MazeStairsPassable;
+; (2) the wandering NPC ($C926 screen, $C927-$C92A pixels, $C92B kind /
+; $C92C sub-kind — bank $0B GatePtrTable_42c8) — MazePickNPCSpot on another
+; screen, then kept / dropped by $CAB4, $C92D and MazeNPCChance[wFloorType3];
+; (3) the player's arrival (wWarpSpawn, $C0A0-$C0A4) — MazePickArrivalSpot,
+; not the stairs spot nor the NPC's screen; (4) the floor items (MazePlaceItem
+; x the count from FloorTypeSelectionTable3 bytes 9-11 of the contents row,
+; halved when fewer than 6 cells are used) into the list at $D793. Each of
+; (1)-(3) gets 64 tries ($C0A9); running out regenerates the WHOLE floor from
+; MazeBuildFloor with the RNG as it stands.
+; ---------------------------------------------------------------------------
+MazePlacements:
     ld a, $40
     ld [$c0a9], a
 
@@ -2996,9 +3016,9 @@ jr_016_6171:
     ld a, [$c0a9]
     dec a
     ld [$c0a9], a
-    jp z, $605b
+    jp z, MazeBuildFloor
 
-    call CallBrd_66ae
+    call MazePickStairsSpot
     ld a, [wScreenIndex]
     ld [$c960], a
     ldh a, [$a5]
@@ -3009,7 +3029,7 @@ jr_016_6171:
     ld [$c0a7], a
     ldh a, [$a8]
     ld [$c0a8], a
-    call LoadBrd_6afb
+    call MazeStairsPassable
     jr z, jr_016_6171
 
     ld a, [$c0a7]
@@ -3045,7 +3065,7 @@ jr_016_6171:
     ld a, [$c960]
     add a
     add a
-    ld hl, $2da7
+    ld hl, ScreenOriginTable
     add l
     ld l, a
     ld a, $00
@@ -3074,9 +3094,9 @@ jr_016_620a:
     ld a, [$c0a9]
     dec a
     ld [$c0a9], a
-    jp z, $605b
+    jp z, MazeBuildFloor
 
-    call CallBrd_6585
+    call MazePickNPCSpot
     ld a, [$c960]
     ld b, a
     ld a, [wScreenIndex]
@@ -3087,7 +3107,7 @@ jr_016_620a:
     ld [$c926], a
     add a
     add a
-    ld hl, $2da7
+    ld hl, ScreenOriginTable
     add l
     ld l, a
     ld a, $00
@@ -3154,7 +3174,7 @@ jr_016_627e:
 jr_016_628a:
     call GenerateRNG
     ld a, [wFloorType3]
-    ld hl, $7886
+    ld hl, MazeNPCChance
     add l
     ld l, a
     ld a, $00
@@ -3199,20 +3219,20 @@ jr_016_62d8:
     ld a, [$c0a9]
     dec a
     ld [$c0a9], a
-    jp z, $605b
+    jp z, MazeBuildFloor
 
-    call CallBrd_661b
+    call MazePickArrivalSpot
     ld hl, $c960
     ld a, [wScreenIndex]
     cp [hl]
     jr nz, jr_016_62f1
 
-    call CallBrd_661b
+    call MazePickArrivalSpot
 
 jr_016_62f1:
     ld a, [wScreenIndex]
     ld [$c0af], a
-    call SetBrd_68c6
+    call MazeAtStairs
     jp z, Jump_016_62d8
 
     ld a, [$c926]
@@ -3225,7 +3245,7 @@ jr_016_62f1:
     ld [$c0a0], a
     add a
     add a
-    ld hl, $2da7
+    ld hl, ScreenOriginTable
     add l
     ld l, a
     ld a, $00
@@ -3266,7 +3286,7 @@ jr_016_62f1:
     xor a
     call FillNBytesWithRegA
     ld a, [wFloorType3]
-    ld hl, $732f
+    ld hl, FloorTypeSelectionTable3 + 9 ; bytes 9-11 of the contents row: item count base, range, blocking %
     add a
     add a
     add a
@@ -3324,7 +3344,7 @@ jr_016_639b:
 jr_016_63a2:
     push bc
     ld [hl], $ff
-    call SaveBrd_6432
+    call MazePlaceItem
     pop bc
     dec b
     jr nz, jr_016_63a2
@@ -3334,7 +3354,17 @@ jr_016_63ac:
     ret
 
 
-CallBrd_63af:
+; ---------------------------------------------------------------------------
+; MazePickItemSpot (was CallBrd_63af; S122). A random non-empty screen
+; (wScreenIndex: wRNG1 + 1, + 1 … mod 16, skipping $Fx cells), its layout
+; decoded to $C300 (bank $0B entry 8 = the gate step reader), then random
+; metatiles x = (wRNG1 mod 8 + 1)*16 + 8, y = (wRNG1 mod 6 + 1)*16 + 8 into
+; $FFA5-$FFA8 until TileAtPixel's tile (the metatile's BOTTOM-RIGHT 8x8) is
+; class $0C / $0D (tile ids $30-$37). No try limit. MazePickNPCSpot /
+; MazePickArrivalSpot / MazePickStairsSpot are the same with other ranges,
+; classes and a 64-try limit per screen ($FFD5) before the next screen.
+; ---------------------------------------------------------------------------
+MazePickItemSpot:
     call GenerateRNG
     ld a, [wRNG1]
     ld b, a
@@ -3403,7 +3433,7 @@ jr_016_63e1:
     ldh [$a7], a
     ld a, h
     ldh [$a8], a
-    call WaitInputRelease
+    call TileAtPixel
     ldh a, [$aa]
     srl a
     srl a
@@ -3415,7 +3445,22 @@ jr_016_63e1:
 
     jr jr_016_63e1
 
-SaveBrd_6432:
+; ---------------------------------------------------------------------------
+; MazePlaceItem (was SaveBrd_6432; S122, PyBoy-proved). HL = the next slot of
+; the item list at $D793 (4 B: kind, sub-kind, X metatile, Y metatile —
+; absolute, X = screen col*10 + x, Y = screen row*8 + y). Kind = SelectFloorType
+; over the contents row (FloorTypeSelectionTable3[wFloorType3]); + $10 when
+; (wRNG2:wRNG1) mod 100 < row byte 11 (the blocking variant, which must pass
+; MazeItemPassable). 15 tries ($C0A9 = $10, decremented first): a spot from
+; MazePickItemSpot (re-picked once each if on the stairs screen, the arrival
+; screen or a screen already holding an item), refused when it is the stairs
+; spot, the arrival spot, the same SCREEN + ROW (Y) as an earlier item
+; (MazeItemRowTaken — X is not compared), the NPC's screen or the 4th item of a
+; screen ($C100[screen] counts). Sub-kind = MazeItemSubKind[kind & $0F], or —
+; when that is 1 — SelectFloorType over the 48-byte FloorLayoutData row of
+; wFloorType3. Out of tries = no item (HL unchanged).
+; ---------------------------------------------------------------------------
+MazePlaceItem:
     push hl
     ld a, $10
     ld [$c0a9], a
@@ -3462,14 +3507,14 @@ jr_016_646d:
 
 
 jr_016_6478:
-    call CallBrd_63af
+    call MazePickItemSpot
     ld a, [wScreenIndex]
     ld b, a
     ld a, [$c960]
     cp b
     jr nz, jr_016_6488
 
-    call CallBrd_63af
+    call MazePickItemSpot
 
 jr_016_6488:
     ld a, [wScreenIndex]
@@ -3478,7 +3523,7 @@ jr_016_6488:
     cp b
     jr nz, jr_016_6495
 
-    call CallBrd_63af
+    call MazePickItemSpot
 
 jr_016_6495:
     ld a, [wScreenIndex]
@@ -3492,7 +3537,7 @@ jr_016_6495:
     or a
     jr z, jr_016_64a8
 
-    call CallBrd_63af
+    call MazePickItemSpot
 
 jr_016_64a8:
     ldh a, [$a5]
@@ -3503,7 +3548,7 @@ jr_016_64a8:
     ld [$c0ac], a
     ldh a, [$a8]
     ld [$c0ad], a
-    call LoadBrd_6955
+    call MazeItemPassable
     jr z, jr_016_646d
 
     ld a, [$c0aa]
@@ -3514,13 +3559,13 @@ jr_016_64a8:
     ldh [$a7], a
     ld a, [$c0ad]
     ldh [$a8], a
-    call SetBrd_68c6
+    call MazeAtStairs
     jr z, jr_016_646d
 
-    call SetBrd_68ea
+    call MazeAtArrival
     jr z, jr_016_646d
 
-    call SetBrd_690e
+    call MazeItemRowTaken
     jr z, jr_016_646d
 
     ld a, [wScreenIndex]
@@ -3544,7 +3589,7 @@ jr_016_64a8:
     ld a, [wScreenIndex]
     add a
     add a
-    ld hl, $2da7
+    ld hl, ScreenOriginTable
     add l
     ld l, a
     ld a, $00
@@ -3578,7 +3623,7 @@ jr_016_64a8:
     push hl
     ld a, [$c0ae]
     and $0f
-    ld hl, $7426
+    ld hl, MazeItemSubKind
     add l
     ld l, a
     ld a, $00
@@ -3631,7 +3676,7 @@ jr_016_6564:
     ret
 
 
-CallBrd_6585:
+MazePickNPCSpot:
     call GenerateRNG
     ld a, [wRNG1]
     ld b, a
@@ -3703,7 +3748,7 @@ jr_016_65bb:
     ldh [$a7], a
     ld a, h
     ldh [$a8], a
-    call WaitInputRelease
+    call TileAtPixel
     ldh a, [$aa]
     srl a
     srl a
@@ -3726,7 +3771,7 @@ jr_016_65bb:
     jp Jump_016_658c
 
 
-CallBrd_661b:
+MazePickArrivalSpot:
     call GenerateRNG
     ld a, [wRNG1]
     ld b, a
@@ -3798,7 +3843,7 @@ jr_016_6651:
     ldh [$a7], a
     ld a, h
     ldh [$a8], a
-    call WaitInputRelease
+    call TileAtPixel
     ldh a, [$aa]
     srl a
     srl a
@@ -3818,7 +3863,7 @@ jr_016_6651:
     jp Jump_016_6622
 
 
-CallBrd_66ae:
+MazePickStairsSpot:
     call GenerateRNG
     ld a, [wRNG1]
     ld b, a
@@ -3890,7 +3935,7 @@ jr_016_66e4:
     ldh [$a7], a
     ld a, h
     ldh [$a8], a
-    call WaitInputRelease
+    call TileAtPixel
     ldh a, [$aa]
     srl a
     srl a
@@ -3913,7 +3958,14 @@ jr_016_66e4:
     jp Jump_016_66b5
 
 
-SetBrd_6744:
+; ---------------------------------------------------------------------------
+; MazeCellConstraints (was SetBrd_6744; S122, PyBoy-proved — tools/census_maze.py)
+; A = a grid cell 0-15. Returns B = openings the cell MUST have, C = openings
+; it must NOT have (bits: 8 up, 4 down, 2 left, 1 right — MazePieceTable).
+; Per side: off the 4x4 grid -> C; neighbour empty ($FF) -> free; neighbour
+; placed and opening toward this cell -> B, else -> C. Clobbers BC/DE/HL.
+; ---------------------------------------------------------------------------
+MazeCellConstraints:
     ld bc, $0000
     ld d, a
     sub $04
@@ -3931,7 +3983,7 @@ SetBrd_6744:
 
     add a
     add a
-    ld hl, FloorTypeSortData
+    ld hl, MazePieceTable
     add l
     ld l, a
     ld a, $00
@@ -3968,7 +4020,7 @@ jr_016_6773:
 
     add a
     add a
-    ld hl, FloorTypeSortData
+    ld hl, MazePieceTable
     add l
     ld l, a
     ld a, $00
@@ -4006,7 +4058,7 @@ jr_016_67a1:
 
     add a
     add a
-    ld hl, FloorTypeSortData
+    ld hl, MazePieceTable
     add l
     ld l, a
     ld a, $00
@@ -4045,7 +4097,7 @@ jr_016_67cf:
 
     add a
     add a
-    ld hl, FloorTypeSortData
+    ld hl, MazePieceTable
     add l
     ld l, a
     ld a, $00
@@ -4068,9 +4120,19 @@ jr_016_67ff:
     ret
 
 
-SetBrd_6800:
+; ---------------------------------------------------------------------------
+; MazePickPiece (was SetBrd_6800; S122, PyBoy-proved). B = required openings,
+; C = forbidden ones (MazeCellConstraints). Lists every MazePieceTable row with
+; all of B and none of C at $C500 as [piece, weight class] pairs ($FF $FF end),
+; counts the rows per class 0-4 at $C0A0+, gives each row the share
+; 20*class / count-of-its-class (class 0 = 0), turns the shares into a running
+; 8-bit sum, rolls (wRNG2:wRNG1) mod sum and returns A = the first piece whose
+; sum >= the roll; $0F (the closed piece) when the list is empty — or when a
+; running sum happens to equal $FF, which the scan reads as the list end.
+; ---------------------------------------------------------------------------
+MazePickPiece:
     ld de, $c500
-    ld hl, FloorTypeSortData
+    ld hl, MazePieceTable
 
 jr_016_6806:
     ld a, [hl]
@@ -4218,7 +4280,10 @@ jr_016_68c5:
     ret
 
 
-SetBrd_68c6:
+; MazeAtStairs (was SetBrd_68c6; S122): Z = wScreenIndex / $FFA5-$FFA8 are the
+; stairs spot ($C960 / $C0A5-$C0A8). MazeAtArrival: the same for the arrival
+; ($C0A0 / $C0A1-$C0A4).
+MazeAtStairs:
     ld hl, $c960
     ld a, [wScreenIndex]
     cp [hl]
@@ -4245,7 +4310,7 @@ SetBrd_68c6:
     ret
 
 
-SetBrd_68ea:
+MazeAtArrival:
     ld hl, $c0a0
     ld a, [wScreenIndex]
     cp [hl]
@@ -4272,7 +4337,10 @@ SetBrd_68ea:
     ret
 
 
-SetBrd_690e:
+; MazeItemRowTaken (was SetBrd_690e; S122): Z = an item already in the $D793
+; list sits on wScreenIndex in the same ROW (MazeItemRowMatch decodes its X/Y
+; metatile back to screen + pixel Y; X is never compared).
+MazeItemRowTaken:
     ld hl, $d793
 
 jr_016_6911:
@@ -4286,7 +4354,7 @@ jr_016_6911:
 
 jr_016_6918:
     push hl
-    call CalcBrd_6924
+    call MazeItemRowMatch
     pop hl
     ret z
 
@@ -4296,7 +4364,7 @@ jr_016_6918:
     inc hl
     jr jr_016_6911
 
-CalcBrd_6924:
+MazeItemRowMatch:
     inc hl
     inc hl
     ld b, [hl]
@@ -4330,7 +4398,7 @@ CalcBrd_6924:
     ret
 
 
-LoadBrd_6955:
+MazeItemPassable:
     ld a, [$c0ae]
     and $f0
     jp z, Jump_016_6d93
@@ -4363,7 +4431,7 @@ LoadBrd_6955:
     ldh [$a7], a
     ld a, h
     ldh [$a8], a
-    call CallBrd_6d99
+    call MazeSpotBlocked
     ld a, b
     ld [$c0b0], a
     ld a, [$c0aa]
@@ -4388,7 +4456,7 @@ LoadBrd_6955:
     ldh [$a7], a
     ld a, h
     ldh [$a8], a
-    call CallBrd_6d99
+    call MazeSpotBlocked
     ld a, b
     ld [$c0b1], a
     ld a, [$c0aa]
@@ -4419,7 +4487,7 @@ LoadBrd_6955:
     ldh [$a7], a
     ld a, h
     ldh [$a8], a
-    call CallBrd_6d99
+    call MazeSpotBlocked
     ld a, b
     ld [$c0b2], a
     ld a, [$c0aa]
@@ -4444,7 +4512,7 @@ LoadBrd_6955:
     ldh [$a7], a
     ld a, h
     ldh [$a8], a
-    call CallBrd_6d99
+    call MazeSpotBlocked
     ld a, b
     ld [$c0b3], a
     ld a, [$c0aa]
@@ -4463,7 +4531,7 @@ LoadBrd_6955:
     ldh [$a7], a
     ld a, h
     ldh [$a8], a
-    call CallBrd_6d99
+    call MazeSpotBlocked
     ld a, b
     ld [$c0b4], a
     ld a, [$c0aa]
@@ -4488,7 +4556,7 @@ LoadBrd_6955:
     ldh [$a7], a
     ld a, h
     ldh [$a8], a
-    call CallBrd_6d99
+    call MazeSpotBlocked
     ld a, b
     ld [$c0b5], a
     ld a, [$c0aa]
@@ -4519,7 +4587,7 @@ LoadBrd_6955:
     ldh [$a7], a
     ld a, h
     ldh [$a8], a
-    call CallBrd_6d99
+    call MazeSpotBlocked
     ld a, b
     ld [$c0b6], a
     ld a, [$c0aa]
@@ -4544,7 +4612,7 @@ LoadBrd_6955:
     ldh [$a7], a
     ld a, h
     ldh [$a8], a
-    call CallBrd_6d99
+    call MazeSpotBlocked
     ld a, b
     ld [$c0b7], a
     ld a, [$c0aa]
@@ -4575,13 +4643,20 @@ LoadBrd_6955:
     ldh [$a7], a
     ld a, h
     ldh [$a8], a
-    call CallBrd_6d99
+    call MazeSpotBlocked
     ld a, b
     ld [$c0b8], a
-    jp Jump_016_6c96
+    jp MazePassableTest
 
 
-LoadBrd_6afb:
+; ---------------------------------------------------------------------------
+; MazeStairsPassable (was LoadBrd_6afb; S122). The 3x3 metatiles around the
+; stairs spot ($C0A5-$C0A8) -> $C0B0-$C0B8 (0 = walkable class $0C-$0E, 1 =
+; blocked; NW N NE / W centre E / SW S SE) via MazeSpotBlocked, then
+; MazePassableTest. MazeItemPassable (was LoadBrd_6955) is the same around
+; $C0AA-$C0AD, skipped (passable) for item kinds below $10.
+; ---------------------------------------------------------------------------
+MazeStairsPassable:
     ld a, [$c0a5]
     ld l, a
     ld a, [$c0a6]
@@ -4610,7 +4685,7 @@ LoadBrd_6afb:
     ldh [$a7], a
     ld a, h
     ldh [$a8], a
-    call CallBrd_6d99
+    call MazeSpotBlocked
     ld a, b
     ld [$c0b0], a
     ld a, [$c0a5]
@@ -4635,7 +4710,7 @@ LoadBrd_6afb:
     ldh [$a7], a
     ld a, h
     ldh [$a8], a
-    call CallBrd_6d99
+    call MazeSpotBlocked
     ld a, b
     ld [$c0b1], a
     ld a, [$c0a5]
@@ -4666,7 +4741,7 @@ LoadBrd_6afb:
     ldh [$a7], a
     ld a, h
     ldh [$a8], a
-    call CallBrd_6d99
+    call MazeSpotBlocked
     ld a, b
     ld [$c0b2], a
     ld a, [$c0a5]
@@ -4691,7 +4766,7 @@ LoadBrd_6afb:
     ldh [$a7], a
     ld a, h
     ldh [$a8], a
-    call CallBrd_6d99
+    call MazeSpotBlocked
     ld a, b
     ld [$c0b3], a
     ld a, [$c0a5]
@@ -4710,7 +4785,7 @@ LoadBrd_6afb:
     ldh [$a7], a
     ld a, h
     ldh [$a8], a
-    call CallBrd_6d99
+    call MazeSpotBlocked
     ld a, b
     ld [$c0b4], a
     ld a, [$c0a5]
@@ -4735,7 +4810,7 @@ LoadBrd_6afb:
     ldh [$a7], a
     ld a, h
     ldh [$a8], a
-    call CallBrd_6d99
+    call MazeSpotBlocked
     ld a, b
     ld [$c0b5], a
     ld a, [$c0a5]
@@ -4766,7 +4841,7 @@ LoadBrd_6afb:
     ldh [$a7], a
     ld a, h
     ldh [$a8], a
-    call CallBrd_6d99
+    call MazeSpotBlocked
     ld a, b
     ld [$c0b6], a
     ld a, [$c0a5]
@@ -4791,7 +4866,7 @@ LoadBrd_6afb:
     ldh [$a7], a
     ld a, h
     ldh [$a8], a
-    call CallBrd_6d99
+    call MazeSpotBlocked
     ld a, b
     ld [$c0b7], a
     ld a, [$c0a5]
@@ -4822,11 +4897,15 @@ LoadBrd_6afb:
     ldh [$a7], a
     ld a, h
     ldh [$a8], a
-    call CallBrd_6d99
+    call MazeSpotBlocked
     ld a, b
     ld [$c0b8], a
 
-Jump_016_6c96:
+; MazePassableTest (was Jump_016_6c96; S122): NZ = an object at the centre
+; leaves its walkable neighbours connected, Z = it would cut a passage (e.g. W
+; blocked and any of NE/E/SE blocked; a blocked corner with an open side
+; between it and another blocked cell …). editor2/core/maze.py _passable.
+MazePassableTest:
     ld a, [$c0b3]
     or a
     jr z, jr_016_6cb1
@@ -5015,8 +5094,10 @@ jr_016_6d97:
     ret
 
 
-CallBrd_6d99:
-    call WaitInputRelease
+; MazeSpotBlocked (was CallBrd_6d99; S122): B = 0 when TileAtPixel's tile at
+; $FFA5-$FFA8 is class $0C / $0D / $0E (ids $30-$3B), else 1.
+MazeSpotBlocked:
+    call TileAtPixel
     ld b, $00
     ldh a, [$aa]
     srl a
@@ -5362,12 +5443,12 @@ EncounterRateModifierTable:
     db $10, $15, $20, $40, $50, $60, $70, $80
 
 LoadFloorDataPointer:
-    ld de, FloorDataPtrTable1
+    ld de, MazeScreenTable
     ld a, [$c93f]
     cp $02
     jr nz, jr_016_7040
 
-    ld de, FloorDataPtrTable2
+    ld de, MazeScreenTableB
 
 jr_016_7040:
     ld a, [wScreenIndex]
@@ -5388,11 +5469,14 @@ jr_016_7040:
 
 
 ; ---------------------------------------------------------------
-; FloorTypeSortData — 16 entries × 4 bytes
-; Floor type sorting/ranking data used in gate floor generation.
-; Format: [floor_type_id, sequential_index, weight, padding]
+; MazePieceTable (was "FloorTypeSortData" — S122, PyBoy-proved) — 16 × 4 B +
+; $FF: [openings, piece, weight class, 0]. A maze piece = which sides of a
+; screen are open: 8 up, 4 down, 2 left, 1 right; rows are in piece order
+; (MazeCellConstraints reads row [piece] byte 0). Piece $0F opens nowhere =
+; an empty screen (cell $Fx). Weight class 0-4 -> MazePickPiece shares.
+; The "type / idx / weight" column labels below read the old names.
 ; ---------------------------------------------------------------
-FloorTypeSortData:
+MazePieceTable:
     db $0f, $00, $04, $00 ; type $0F, idx  0, weight 4
     db $07, $01, $03, $00 ; type $07, idx  1, weight 3
     db $0b, $02, $03, $00 ; type $0B, idx  2, weight 3
@@ -5413,10 +5497,11 @@ FloorTypeSortData:
     db $ff ; delimiter
 
 ; ---------------------------------------------------------------
-; FloorTypeOrderTable — 16 bytes
-; Permutation/ordering of floor type IDs.
+; MazeCellOrder (was "FloorTypeOrderTable" — S122): the order in which the
+; carve visits the 16 grid cells (cell 5 first). The first 1 + [$C93D] cells
+; get pieces, then every cell is re-fitted in this order.
 ; ---------------------------------------------------------------
-FloorTypeOrderTable:
+MazeCellOrder:
     db $05, $06, $0a, $09, $08, $04, $00, $01, $02, $03, $07, $0b, $0f, $0e, $0d, $0c
 
 ; ---------------------------------------------------------------
@@ -5518,9 +5603,12 @@ FloorTypeSelectionTable2:
     db $05, $19, $23, $2d, $37, $50, $5a, $64 ; type 15
 
 ; ---------------------------------------------------------------
-; FloorTypeSelectionTable3 — 17 entries × 16 bytes
-; Third floor type probability table.
-; Used by SaveBrd_6432 with index from GateFloorDataTable byte 2.
+; FloorTypeSelectionTable3 — 16 rows × 16 bytes (S122: the 17th "row" is
+; MazeItemSubKind) — the CONTENTS row of a gate (wFloorType3):
+; bytes 0-8 = cumulative % of item kinds 0-8 (SelectFloorType), bytes
+; 9 / 10 / 11 = item count base / random range / % chance of the blocking
+; (+$10) variant (MazePlacements, MazePlaceItem).
+; Used by MazePlaceItem with index from GateFloorDataTable byte 2.
 ; ---------------------------------------------------------------
 FloorTypeSelectionTable3:
     db $64, $00, $00, $00, $00, $00, $00, $00, $00, $02, $02, $00, $00, $00, $00, $00 ; type 0
@@ -5539,12 +5627,17 @@ FloorTypeSelectionTable3:
     db $50, $00, $00, $00, $00, $00, $00, $5a, $64, $00, $04, $1e, $00, $00, $00, $00 ; type 13
     db $50, $00, $00, $00, $00, $00, $00, $5a, $64, $00, $04, $1e, $00, $00, $00, $00 ; type 14
     db $46, $00, $00, $00, $00, $00, $00, $5a, $64, $00, $02, $1e, $00, $00, $00, $00 ; type 15
-    db $01, $01, $01, $01, $01, $01, $01, $00, $ff, $01, $01, $01, $01, $01, $01, $01 ; type 16
+; MazeItemSubKind (S122; was listed as a 17th "type 16" row): indexed by an
+; item kind & $0F — 1 = MazePlaceItem rolls a sub-kind from the 48-byte
+; FloorLayoutData row of wFloorType3; else the byte itself is the sub-kind.
+MazeItemSubKind:
+    db $01, $01, $01, $01, $01, $01, $01, $00, $ff, $01, $01, $01, $01, $01, $01, $01
 
 ; ---------------------------------------------------------------
-; FloorLayoutData — 1120 bytes at $7436
-; Floor layout configuration data.
-; Indexed with ×48 multiplier from gate code.
+; FloorLayoutData — 16 rows × 48 bytes at $7436 (S122: 768 B; MazePatterns
+; and MazeNPCChance follow): per contents row (wFloorType3) the
+; cumulative % of item sub-kinds — SelectFloorType from MazePlaceItem and
+; the treasure rooms' chests (SetBrd_6db0).
 ; ---------------------------------------------------------------
 FloorLayoutData:
     db $00, $5d, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00 ; $7436
@@ -5595,7 +5688,10 @@ FloorLayoutData:
     db $00, $00, $0f, $00, $14, $00, $18, $1a, $1c, $1e, $20, $22, $23, $24, $25, $26 ; $7706
     db $27, $28, $29, $00, $00, $45, $47, $4c, $00, $00, $4d, $00, $50, $54, $55, $00 ; $7716
     db $00, $00, $00, $00, $00, $00, $00, $5d, $5f, $00, $64, $00, $00, $00, $00, $00 ; $7726
-FloorTilePatterns:  ; $7736 — within FloorLayoutData
+; MazePatterns (was "FloorTilePatterns" — S122): 21 ready-made 4x4 grids for
+; shape mode 2 (MazeBuildFloor copies [wRNG1 mod 21] to $C940); their cells
+; draw from MazeScreenTableB. ($7736 — after FloorLayoutData's 16 rows.)
+MazePatterns:
     db $60, $10, $10, $70, $30, $00, $00, $40, $30, $00, $00, $40, $80, $20, $20, $90 ; $7736
     db $60, $70, $60, $70, $30, $40, $30, $40, $30, $40, $30, $40, $80, $22, $23, $90 ; $7746
     db $60, $70, $60, $70, $80, $0c, $0d, $90, $60, $0b, $0a, $70, $80, $90, $80, $90 ; $7756
@@ -5617,14 +5713,24 @@ FloorTilePatterns:  ; $7736 — within FloorLayoutData
     db $e0, $71, $62, $d0, $61, $0a, $0b, $72, $b0, $33, $42, $b0, $e0, $91, $81, $d0 ; $7856
     db $64, $71, $62, $74, $a0, $31, $41, $a0, $a0, $33, $42, $a0, $84, $91, $81, $94 ; $7866
     db $64, $71, $62, $74, $b0, $a1, $a1, $b0, $62, $94, $84, $71, $81, $51, $52, $91 ; $7876
+; MazeNPCChance (S122): by wFloorType3 — a wandering NPC stays on the floor when
+; wRNG1 < this (out of 256; the S122 census: its kind $C92B = wRNG1 & 3, sub-kind
+; $C92C = wRNG1 mod 5 — bank $0B GatePtrTable_42c8). $CAB4 0/1 and a $C92D of
+; 4-7 take other paths (MazePlacements).
+MazeNPCChance:
     db $00, $0d, $0d, $0d, $0d, $0d, $1a, $1a, $1a, $1a, $1a, $26, $26, $26, $26, $26 ; $7886
 
 ; ---------------------------------------------------------------
-; FloorDataPtrTable1 — 512 bytes at $7896
-; Pointer/data table loaded when $C93F != 2.
-; Referenced by code at $7033 (ld de, FloorDataPtrTable1).
+; MazeScreenTable — 512 bytes at $7896
+; MazeScreenTable (was "FloorDataPtrTable1" — S122, PyBoy pixel-proved):
+; 256 × [layout id, layout bank], indexed by a grid cell byte
+; (piece*16 + variant). The pair is an ordinary screen layout stream —
+; the [step id, tileset bank] of a normal room's step entry — so
+; LoadFloorDataPointer (entry 9) is bank $0B ReadStepBlock's gate path.
+; Shape modes 0 / 1. Variants 0-11 rolled, 12 = mode 1; 13-15 unused.
+; Shared by every floor type (the type only picks the sheet + palettes).
 ; ---------------------------------------------------------------
-FloorDataPtrTable1:
+MazeScreenTable:
     db $10, $28, $11, $28, $12, $28, $13, $28, $14, $28, $15, $28, $00, $2b, $01, $2b ; $7896
     db $02, $2b, $03, $2b, $04, $2b, $05, $2b, $14, $2c, $10, $28, $10, $28, $10, $28 ; $78A6
     db $16, $28, $17, $28, $18, $28, $19, $28, $1a, $28, $1b, $28, $06, $2b, $07, $2b ; $78B6
@@ -5659,11 +5765,11 @@ FloorDataPtrTable1:
     db $4e, $27, $4e, $27, $4e, $27, $4e, $27, $4e, $27, $4e, $27, $4e, $27, $4e, $27 ; $7A86
 
 ; ---------------------------------------------------------------
-; FloorDataPtrTable2 — at $7A96
-; Pointer/data table loaded when $C93F == 2.
-; Referenced by code at $7033 (ld de, $7A96).
+; MazeScreenTableB — at $7A96
+; MazeScreenTableB (was "FloorDataPtrTable2" — S122): the same for shape
+; mode 2 (the MazePatterns cells).
 ; ---------------------------------------------------------------
-FloorDataPtrTable2:
+MazeScreenTableB:
     db $23, $2c, $24, $2c, $25, $2c, $26, $2c, $27, $2c, $28, $2c, $29, $2c, $2a, $2c ; $7A96
     db $2b, $2c, $2c, $2c, $2d, $2c, $2e, $2c, $2f, $2c, $30, $2c, $23, $2c, $23, $2c ; $7AA6
     db $00, $3b, $01, $3b, $02, $3b, $03, $3b, $04, $3b, $05, $3b, $06, $3b, $23, $2c ; $7AB6

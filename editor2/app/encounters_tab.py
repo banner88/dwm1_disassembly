@@ -307,10 +307,12 @@ class ListEditor(QWidget):
         sz.addWidget(self.size_real, 1)
         f.addRow('Monsters per battle', sz)
         self.maze = QSpinBox()
-        self.maze.setRange(0, 255)
+        self.maze.setRange(3, 15)
         self.maze.setKeyboardTracking(False)
-        self.maze.setToolTip('Gate floors only: how many pieces the maze is carved from '
-                             '(the game uses 3, 8 or 15).')
+        self.maze.setToolTip('Gate floors only: the most screens a maze floor is carved '
+                             'from, minus one (the game uses 3, 8 or 15; a floor has 2 to '
+                             'size + 1 screens). 3-15 only: 1-2 can carve an empty floor '
+                             'that freezes the game.')
         self.maze.valueChanged.connect(lambda val: self._field('maze_size', val))
         f.addRow('Maze size (gate floors)', self.maze)
         v.addLayout(f)

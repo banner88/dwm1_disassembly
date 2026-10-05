@@ -1197,3 +1197,17 @@ verified overrides.
 | editor2/core/project.py `move_screen_problem` / `vanilla_screens` | a move / helper / conversation warp to a screen the room lacks stops the build | test_compiler (S121 r3); PyBoy: SBOSS screen 12 = crash, screen 4 = fine |
 | editor2/core/milly.py `ROOTS_TEXT_ASK` / `ROOTS_TEXT_AFTER` / `set_naming`, milly_doc.py `set_roots_naming` | the naming screen between Warubou's lines | test_compiler, test_app; PyBoy end to end |
 | editor2/app/milly_dialog.py, cutscene_editor.py (`dest_screens`) | screen lists of the chosen room; "Warubou asks her name" | test_app |
+
+## S122 rows (ROADMAP P3.7b part 2: gate themes as room tilesets, the maze model, NG2 residual a)
+
+| Tool / data | What | Verified |
+|---|---|---|
+| tools/census_maze.py + extracted/maze_pieces.json (generated together) | the maze model vs the game: `floors` (PyBoy hooks `$16:$605B` entry / `$16:$63AE` after the item list's `$FF`, the routine re-run in place by setting PC; sizes 3-15, RNG seeded per run), `screens` (rendered screens vs the model, pixel), `freeze_probe` (size 2, seed `$8192` → an empty grid, the game spins), `carve_sweep`, `--negative` (a broken piece table must fail), `--selftest` (in verify_integrity SELFTEST_TOOLS). Writes the piece catalogue (254 screens), 27 game-recorded sample floors, the census numbers | floors 4,000 / 0 mismatches; screens 64 / 0; negative control fails; selftest PASS |
+| editor2/core/maze.py | `MazeRom` — tables, cell → screen grids (tiles + attr), theme sheet / palette words, `carve` / `generate` / placements bit-exact (`rng_step`, `div8`, `div16` = the ROM's Div8x8 / Div16x8To16), `pieces()` (254), `metatiles()` (15); `theme_of_origin`, `theme_palette_rows`, `THEME_NAMES`, `MazeHang` (spin cap) | census_maze.py; test_compiler `test_maze_s122` (the JSON's samples) |
+| editor2/app/rooms/maze_dialog.py (NEW) | **Maze screen…**: theme combo, ↑↓←→ filter + "exactly these sides", pattern screens, picture list → (cell, mode) | test_app `s122_gate_themes` |
+| editor2/core/document.py, render_project.py, gates.py, app/rooms/tab.py, tileset_dialog.py | theme rooms (`new_room(gate_theme=)`, `set_room_tileset('gate')`, `use_theme_palette`, `stamp_maze_screen`, theme vocab, `VocabReleaseWouldHelp` + the GUI prompt, the theme's own stairs) | test_compiler, test_app; PyBoy `verify_theme` 4 / 4 + the demo walk 3 / 3 screens == the preview |
+| tools/map_gate_names.py + extracted/gate_names.json (regenerated together) | `win_tails` per gate: the vanilla boss script's ops after `write_ram $D92B 7` (ops `$00-$03`, `$12-$14`; deduplicated, addresses relative to the start) | 20 / 20 PyBoy GateBossWin stub calls == the tail model (gates 0, 1, 2, 5, 23) |
+| editor2/core/templates/bank_076_head.asm + patches/bank_076.asm, encounters.py, project.py, validators.py | `GateClearTable` 6-byte rows + `RunWinTail`; `TEMPLATE_SIZE[0x76]` 460; template sha `65e12e5b…` | test_compiler --rom; regression pin `bd0652da…` (patched) |
+| editor2/core/gamedata.py, app/encounters_tab.py | maze size 3-15 (error / spin range) | test_compiler |
+| disassembly/ + patches/ banks $00 / $01 / $06 / $07 / $16 / $17 | labels + comments: the maze routines / tables (`MazeBuildFloor` … `MazePlacements`), `TileAtPixel` (was `WaitInputRelease`), `ScreenOriginTable` re-sectioned as `db`, `GateAttrTable_A/B` comments | clean `1ca6579…` byte-perfect |
+| editor2/help/12_gate_themes.md (NEW), 10_rooms.md, 59_encounters.md, 60_gates.md, 90_limits.md, _revision.md; `EDITOR_REVISION` = 'S122' | help | test_app |

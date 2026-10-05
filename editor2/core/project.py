@@ -1302,7 +1302,8 @@ class Project:
     def gate_clear_rows(self):
         """GateClearTable (bank $76, GateBossWin): per gate 0 .. last defined
         gate, the two flags a won boss-floor battle sets ($FFFF = none):
-        (the gate's own flag, the vanilla flag of a re-bossed vanilla gate).
+        (the gate's own flag, the vanilla flag of a re-bossed vanilla gate,
+        S122: + (extra flags, win tails) the win replays — RunWinTail).
         A vanilla gate with its own boss sets nothing here (its scripts do)."""
         from . import gates as G
         start = self.repo_root or self.root
@@ -1313,9 +1314,12 @@ class Project:
             info = G.gate_cleared(self.custom, gid, start) if gid in cfg else None
             if info and info['own']:
                 vf = info['vanilla_flag'] if gid < 32 else None
-                rows.append((gid, info['flag'], vf))
+                # S122: a re-bossed vanilla gate replays the game's own win
+                # bookkeeping (G.vanilla_win_program); new gates have none
+                prog = G.vanilla_win_program(gid, start) if gid < 32 else ([], [])
+                rows.append((gid, info['flag'], vf, prog))
             else:
-                rows.append((gid, None, None))
+                rows.append((gid, None, None, ([], [])))
         return rows
 
     def vanilla_swirl_overrides(self):

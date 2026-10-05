@@ -147,7 +147,7 @@ InitFieldState:
     ldh [$a7], a
     ldh a, [$96]
     ldh [$a8], a
-    call WaitInputRelease
+    call TileAtPixel
     ld a, [wMapID]
     ld [$c96a], a
     ld a, [wInGateworld]
@@ -712,7 +712,7 @@ Jump_001_44ba:
     ldh [$a7], a
     ldh a, [$96]
     ldh [$a8], a
-    call WaitInputRelease
+    call TileAtPixel
     ldh a, [$92]
     ld l, a
     ldh a, [$93]
@@ -2826,7 +2826,7 @@ jr_001_5012:
     ldh [$a7], a
     ldh a, [$96]
     ldh [$a8], a
-    call WaitInputRelease
+    call TileAtPixel
     ldh a, [$a9]
     cp $ff
     jp nz, Jump_001_51b2
@@ -2903,7 +2903,7 @@ jr_001_508b:
     ldh [$a7], a
     ldh a, [$96]
     ldh [$a8], a
-    call WaitInputRelease
+    call TileAtPixel
     ldh a, [$a9]
     cp $ff
     jp nz, Jump_001_51b2
@@ -2977,7 +2977,7 @@ jr_001_50fe:
     ldh [$a5], a
     ldh a, [$93]
     ldh [$a6], a
-    call WaitInputRelease
+    call TileAtPixel
     ldh a, [$a9]
     cp $ff
     jp nz, Jump_001_51b2
@@ -3046,7 +3046,7 @@ jr_001_5178:
     ldh [$a5], a
     ldh a, [$93]
     ldh [$a6], a
-    call WaitInputRelease
+    call TileAtPixel
     ldh a, [$a9]
     cp $ff
     jr nz, jr_001_51b2
@@ -3102,7 +3102,7 @@ jr_001_51ea:
     ldh [$a7], a
     ldh a, [$96]
     ldh [$a8], a
-    call WaitInputRelease
+    call TileAtPixel
 
 Jump_001_51fd:
     ldh a, [$90]
@@ -4230,7 +4230,7 @@ jr_001_57ab:
     ldh [$a7], a
     ldh a, [$96]
     ldh [$a8], a
-    call WaitInputRelease
+    call TileAtPixel
     ldh a, [$a9]
     cp $ff
     jr z, jr_001_57fc
@@ -4260,7 +4260,7 @@ jr_001_57fc:
     ldh [$a5], a
     ldh a, [$93]
     ldh [$a6], a
-    call WaitInputRelease
+    call TileAtPixel
     ldh a, [$a9]
     cp $ff
     jr z, jr_001_5852
@@ -4319,7 +4319,7 @@ jr_001_5852:
     ldh [$a5], a
     ldh a, [$93]
     ldh [$a6], a
-    call WaitInputRelease
+    call TileAtPixel
     ldh a, [$a9]
     cp $ff
     jr z, jr_001_58a8
@@ -4378,7 +4378,7 @@ jr_001_58a8:
     ldh [$a7], a
     ldh a, [$96]
     ldh [$a8], a
-    call WaitInputRelease
+    call TileAtPixel
     ldh a, [$a9]
     cp $ff
     jr z, jr_001_58fe

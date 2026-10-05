@@ -96,3 +96,7 @@ the gates that use each row and what it rolls:
 
 **Vanilla** puts the gate's own rows back (a new gate: its source's). The rows
 are shared: picking one never changes another gate.
+
+How a maze floor is put together (pieces, stairs, items) and how to use the
+16 maze looks in your own rooms: see **Gate themes**. The size of the maze is
+the *Maze size* of the floor's battle list (Encounters tab, 3-15).

@@ -4,7 +4,10 @@ Three sources, one sheet per room (engine: 128 slots):
   • another room's VANILLA tileset (that room's ROM sheet + its collision
     threshold) — e.g. start a cave on the Library's sheet;
   • a tileset already in this PROJECT (copied/edited sheets, imports);
-  • a NEW BLANK tileset — every slot free, for art imported from PNGs.
+  • a NEW BLANK tileset — every slot free, for art imported from PNGs;
+  • a GATE THEME (S122) — one of the 16 maze floor types: its sheet (bank
+    $28, threshold $30) and, ticked by default, its colours as the room's
+    palette (Document.use_theme_palette).
 The screens keep their tile NUMBERS, so they will draw with the new sheet's
 graphics until repainted; the dialog says so and previews the sheet under
 the room's current palette.
@@ -13,9 +16,9 @@ the room's current palette.
 from PIL import ImageQt
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
-from PySide6.QtWidgets import (QButtonGroup, QComboBox, QDialog, QDialogButtonBox,
-                               QGridLayout, QLabel, QRadioButton, QSpinBox,
-                               QVBoxLayout)
+from PySide6.QtWidgets import (QButtonGroup, QCheckBox, QComboBox, QDialog,
+                               QDialogButtonBox, QGridLayout, QLabel, QRadioButton,
+                               QSpinBox, QVBoxLayout)
 
 from editor2.core.document import val
 
@@ -38,8 +41,19 @@ class TilesetDialog(QDialog):
                                  + ', '.join(doc.room_name(r) for r in others) + ')'
                                  if others else 'Own copy of the current tileset')
         self.rb_o.setVisible(bool(others))
-        for i, rb in enumerate((self.rb_v, self.rb_p, self.rb_b, self.rb_o)):
+        self.rb_g = QRadioButton('A gate theme (a maze floor type of the gates)')
+        for i, rb in enumerate((self.rb_v, self.rb_p, self.rb_b, self.rb_o, self.rb_g)):
             self.group.addButton(rb, i)
+        from editor2.core.maze import THEME_NAMES
+        self.g_box = QComboBox()
+        for t, nm in enumerate(THEME_NAMES):
+            self.g_box.addItem(f'{t:2d}  {nm}', t)
+        cur = doc.gate_theme(room)
+        self.g_box.setCurrentIndex(13 if cur is None else cur)
+        self.g_colours = QCheckBox("and the theme's colours (a new palette for the room)")
+        self.g_colours.setChecked(True)
+        self.g_colours.setToolTip('The maze floors\' four colours. Screens with a palette of '
+                                  'their own keep it.')
         self.v_box = QComboBox()
         for mid, name, _scr in renderer.vanilla_rooms():
             self.v_box.addItem(f'${mid:02X}  {name}', mid)
@@ -61,8 +75,11 @@ class TilesetDialog(QDialog):
         g.addWidget(self.p_box, 1, 1)
         g.addWidget(self.rb_b, 2, 0)
         g.addWidget(self.rb_o, 3, 0, 1, 2)
-        g.addWidget(QLabel('wall | walkable split at'), 4, 0, Qt.AlignRight)
-        g.addWidget(self.thr, 4, 1)
+        g.addWidget(self.rb_g, 4, 0)
+        g.addWidget(self.g_box, 4, 1)
+        g.addWidget(self.g_colours, 5, 1)
+        g.addWidget(QLabel('wall | walkable split at'), 6, 0, Qt.AlignRight)
+        g.addWidget(self.thr, 6, 1)
         v.addLayout(g)
         self.preview = QLabel()
         self.preview.setFixedSize(16 * 16 + 4, 8 * 16 + 4)
@@ -79,14 +96,17 @@ class TilesetDialog(QDialog):
         bb.rejected.connect(self.reject)
         v.addWidget(bb)
         self.rb_v.setChecked(True)
+        self.g_colours.toggled.connect(lambda _on: self._update())
         self.group.idToggled.connect(lambda *_a: self._update())
         self.v_box.currentIndexChanged.connect(lambda _i: self._update())
         self.p_box.currentIndexChanged.connect(lambda _i: self._update())
+        self.g_box.currentIndexChanged.connect(lambda _i: self._update())
         self._update()
 
     def _update(self):
         kind = self.choice()[0]
-        self.thr.setEnabled(kind not in ('vanilla', 'own'))
+        self.thr.setEnabled(kind not in ('vanilla', 'own', 'gate'))
+        self.g_colours.setEnabled(kind == 'gate')
         if kind == 'blank' and getattr(self, '_last_kind', None) != 'blank':
             self.thr.setValue(0x40)
         self._last_kind = kind
@@ -103,6 +123,10 @@ class TilesetDialog(QDialog):
                     self.thr.setValue(val(users[0]['record']['collision_threshold']))
             elif kind == 'own':
                 sheet = self.r.tileset_sheet(self.doc.tileset_key(self.room))
+            elif kind == 'gate':
+                g = self.r.theme_gfx(self.g_box.currentData())
+                sheet = g.sheet
+                self.thr.setValue(g.threshold)
             else:
                 sheet = bytes(2048)
         except Exception:
@@ -110,7 +134,11 @@ class TilesetDialog(QDialog):
         if sheet is None:
             self.preview.clear()
             return
-        img = self.r.tile_sheet_image(sheet, self.pals, 0, 16, 2)
+        pals = self.pals
+        if kind == 'gate' and self.g_colours.isChecked():
+            pals = self.r.theme_palettes(self.g_box.currentData())
+        # the maze art is mostly palette slot 3 (floors) / 1 (walls)
+        img = self.r.tile_sheet_image(sheet, pals, 3 if kind == 'gate' else 0, 16, 2)
         self.preview.setPixmap(QPixmap.fromImage(ImageQt.ImageQt(img)))
 
     def choice(self):
@@ -122,4 +150,9 @@ class TilesetDialog(QDialog):
             return 'project', self.p_box.currentData(), self.thr.value()
         if i == 3:
             return 'own', None, None
+        if i == 4:
+            return 'gate', self.g_box.currentData(), None
         return 'blank', None, self.thr.value()
+
+    def theme_colours(self):
+        return self.g_colours.isChecked()

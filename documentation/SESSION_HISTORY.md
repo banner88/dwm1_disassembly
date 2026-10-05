@@ -1,5 +1,69 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-05 (Session 120 + S120b — **MOP-UP: THE STALE BANK $60 OVERLAY FIXED AND
+> GUARDED; THE wMapID AUDIT RE-ADJUDICATED; P3.6 THE DIALOGUE EDITOR FINISHED (SPEAKERS,
+> VOICES, THE HERO'S / LEAD MONSTER'S NAMES, THE GAME'S CONTRACTIONS AND EXTRA GLYPHS);
+> P3.7b PART 2 — EACH GATE'S FLOOR-TYPE ROWS + ITEM TIER WITH A PICTURE PER FLOOR TYPE;
+> SMALL RESIDUALS** (user: "s119 is fine. Please fix $60 do A then also D and E, or just a
+> lot of mop-up. No new ticket items but as many oustanding smaller things as reasonably fit
+> into session"). **Built S120, NOT yet user-tested.**
+> **$60:** `patches/bank_060.asm` was the S117 file — the S119 template change was never
+> applied, so the patched overlay built `0591928d…` (patched, historical) instead of the pin
+> → regenerated with `--apply` (bank_060 only); verify_integrity check 2 now FAILS when the
+> overlay's md5 ≠ test_compiler's `REFERENCE_MD5` (negative control measured; KEY_LESSONS S120).
+> **A:** `audit_mapid_range.py` — 12 sites adjudicated (11 CP_UNSIGNED, `BattleBGMResolve#2`
+> BOUNDED), 4 stale keys renamed / removed and now an error, selftest PASS (clean 58 /
+> patched 82), in verify_integrity check 5 (CROSSBANK_ROOMS "S120 burn-down").
+> **D — P3.6 (measured on the user's save, TEXT_SYSTEM "Glyphs, speakers and voices
+> (S120)"):** there is NO DTE — `$66-$71` are one-cell contractions; `$EA`/`$EB` = the low /
+> high voice blip (not an indent); `$EC`/`$ED` = menu speed / print at once; `$F6` = the
+> hero's name; op `$3F` `load_lead_name` + `$F9 00` = the lead monster's species name;
+> `TextCodeTable` is `$56:$44CE` (labelled both trees, `TextSpeedFrames` misassembly fixed,
+> byte-perfect). Built: `textenc.py` (glyphs, contractions, `{hero}` / `{lead}`,
+> speaker + voice per text, raw strings validated), every box editor (talk, YES/NO replies,
+> conversations, cutscenes) gets Speaker / name / Voice + Insert ▾; the compiler adds
+> `load_lead_name` before a `{lead}` text; `dwm/text.py` + `dump_dialogue.py` decode the
+> contractions (dialogue.json / text_id_map.json regenerated, 17 script previews refreshed).
+> **Preview == game pixel-exact on 4 boxes**; nested YES/NO played on 3 paths.
+> **E — P3.7b part 2:** `custom.gates[].maze_row` / `special_row` / `contents_row` (0-15)
+> + `depth` (1-3 item tier) → `GateFloorDataTable` bytes 0-2 / 7 (rows stay shared — the
+> tab says so); Gates tab "Maze floors" with a picture per floor type
+> (`tools/census_gate_floor_types.py` → `extracted/gate_floor_types/`, PyBoy hook
+> `$16:$5BD2`); `SpecialRoomTable` `$16:$5C32` labelled (the rst $00 enumeration, Phase 2C).
+> **Mop-up:** NPC "Shown when … Flags…" (NG2 residual b); Rooms → More ▾ → "▶ Play the game
+> here (last build)" (P3.4); music warnings for rooms ≥ $80; `npc_catalog.json` rebuilt
+> without phantom steps (772 → 716); the talk-battle redraw residual (P3.7b i) not
+> reproducible in 3 scenarios; the gate-setting `0` bug (`0 in (None, False, '')`); `monsters_full.json` has no generator (== the ROM, frozen — open defect closed).
+> **Verifier PASS; clean `1ca6579…` byte-perfect** (labels / comments only in disassembly/);
+> **patched pin `d19259a1…` (patched; historical since S120b) unchanged by S120** (the example project uses none of the new
+> fields). test_compiler 726/726, --rom 1007/1007; test_app PASS; test_canvas --rom PASS.
+> `EDITOR_REVISION` = 'S120'. The user's project (my-dwm-hack_11) as-is builds `98631830…`
+> (patched); its only changed byte run is "Let's" → the game's own `'s` cell ($68).
+> **Test ROM `DWM_S120_dialogue_gates_test.gbc` (`da7f9941…`, patched; built, NOT yet
+> user-tested):** the user's project + "Echo Parlor" ($71) behind the GreatTree screen-12
+> Copycat House door (4, 4): Echo (high voice, contractions + glyphs, 3 boxes), the bell
+> NPC (nested YES/NO, `{lead}` / `{hero}`, sets `parlor_bell`, a silent hero line), a ghost
+> shown when `parlor_bell` is set (leave and come back), a silent sign; the Gate of
+> Villager's maze row = 0 (every maze floor the sea type 13). Open question for the user:
+> the hero-name budget (4 cells) is inferred from vanilla line widths.
+> **Hand-off:** every S120 change = the diff against `6543815`, delivered as
+> `DWM-S120-mopup-dialogue-gates-changed-files.zip`, the APPLY list pasted in the chat.
+> **Next:** the user's test, then the user's pick (ROADMAP P3.8 residuals, NG3, P3.H).
+> **S120b (user 2026-10-05 09:00: "I just want to change TERRY to MILLY as default, but
+> leave otherwise as 4 letters. Thats all. Romhack is about milayou"; built, PyBoy-verified,
+> NOT yet user-tested):** measured first (the Castle naming scene, PyBoy, original ROM): a
+> name is ≤ 4 letters, the default is the 4 font tiles `$D3-$D6` (`$4F:$4D40`, the only
+> copy), accepting it stores them + `$F0` × 4 (TEXT_SYSTEM `$F6`). `patches/bank_04f.asm`
+> draws those tiles "MILLY" (64 B, same size); the editor previews use the same bytes
+> (`textenc.PATCHED_GLYPHS`), Playback's new-game hero name fixed (was "TERRY" in 5
+> letters). **Patched pin `97659a4a…` (patched)**, was `d19259a1…` (patched, historical) —
+> the 64 bytes + the checksum only. test_compiler 730/730, --rom 1011/1011. The user's
+> project as-is builds `fed98e56…` (patched; vs S120 the same 64 bytes). **Test ROM
+> `DWM_S120b_milly_test.gbc` (`fed98e56…`, patched):** a new game → the King's naming box
+> offers MILLY → "King:Oh MILLY!" (PyBoy). `EDITOR_REVISION` = 'S120b'. Delivered in the
+> cumulative `DWM-S120-mopup-dialogue-gates-changed-files.zip` (S120 + S120b).
+
+
 > Last verified: 2026-10-04 (Session 119 — **ROADMAP P3.8 PART B: THE CUTSCENE EDITOR — THE
 > PROJECT'S OWN SCENES WITH NAMED NPCs, A CAST THAT APPEARS / DISAPPEARS, EVERY STEP ON THE
 > ROOM PICTURE IN TILES, PREVIEW + PLAY IN THE GAME; OP EDITING OF A COPIED ROOM'S SCRIPTS;

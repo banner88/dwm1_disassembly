@@ -808,6 +808,36 @@ like any other; its inspector adds the stock/price editor
 `$09`; user testimony S72: community hex editors already edit
 stock/prices, so a shallow table is expected).
 
+**Gate themes (S122 — ROADMAP P3.7b part 2; as built S122, NOT yet user-tested).** User:
+"can I currently use gate themes for custom room build? … I would love to use them for
+custom rooms as an option for tileset, properly coloured" + "with the option of starting
+with gate tiles/palettes then borrowing additional tiles elsewhere". The 16 maze floor
+types (bank $28 sheets 0-15) are tilesets like any other — no schema change (PROJECT_COMPILER
+§2.35):
+- **New room** dialog: *Or a gate theme* combo (`THEME_KEY` `0x100 + t` in the source list)
+  → `Document.new_room(gate_theme=t)`: the theme sheet, a new project palette from
+  `$17:$51F5[t]`, one screen of the theme's floor.
+- **Change tileset** dialog: *A gate theme* radio + theme combo + *and the theme's colours*
+  (ticked) → `set_room_tileset(rid, 'gate', t)` (+ `use_theme_palette`).
+- **Metatiles picker**: a theme room lists the maze's own 15 metatiles + the stairs
+  (`ProjectRenderer.maze_vocab`) before anything borrowed; the vanilla source vocab only
+  when `room_sources_vocab` is non-empty.
+- **Maze screen…** (screen / state row): `MazeScreenDialog` (`editor2/app/rooms/maze_dialog.py`)
+  — theme combo (defaults to the room's), ↑ ↓ ← → toggles + *exactly these sides*, a
+  *Pattern floors* group, a picture list of the 254 screens (`ProjectRenderer.render_maze_piece`)
+  → `stamp_maze_screen` (tiles + attr, one undo step).
+- **Borrow**: the foreign-room box lists *Gate theme N: …* (16) after the game rooms;
+  borrowing INTO a theme room fills `$40-$7F`. When the needed side is full of unused
+  vocabulary the import raises `VocabReleaseWouldHelp` and the tab asks "release unused
+  vocabulary and borrow?" — yes = release + borrow in one undo step (a failed command is
+  already off the undo stack; nothing to undo).
+- **Stairs down here** in a theme room paints the theme's own stairs (`$3C-$3F`).
+- Help `12_gate_themes.md`. Verified: test_app `s122_gate_themes`; PyBoy theme screens ==
+  the preview (PROJECT_STATE S122).
+Not built (by design): animated / damaging theme floors (the game does neither outside its
+maze floors); a preview of a gate's random floors (the user: "are they not random?") — the
+model (`editor2/core/maze.py`) backs validation instead.
+
 ### 5.1b Gates tab (v2.1 — user spec S90)
 
 The gate system as an authorable object; every element decoded

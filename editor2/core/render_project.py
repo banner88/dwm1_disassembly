@@ -577,3 +577,52 @@ class ProjectRenderer:
                 off += 7
         return npcs, exits
 
+
+    # ------------------------------------------------------ gate themes (S122)
+    # The 16 maze floor types as tilesets for custom rooms (ROADMAP P3.7b
+    # part 2; editor2/core/maze.py, GATE_GENERATION §7 "Gate themes"). The
+    # screens of a maze are shared by every theme; a theme = sheet + colours.
+    def maze(self):
+        if getattr(self, '_maze', None) is None:
+            from editor2.core.maze import MazeRom
+            self._maze = MazeRom(self.rom)
+        return self._maze
+
+    def theme_gfx(self, t):
+        rec = self.maze().theme_record(t)
+        return RoomGfx(self._sheet_from_rom(rec['gfx_bank'], rec['gfx_id']),
+                       rec['gfx_bank'], rec['gfx_id'], rec['collision_threshold'])
+
+    def theme_palette_words(self, t):
+        return self.maze().theme_palette_words(t)
+
+    def theme_palettes(self, t):
+        pals = [[rgb555(c) for c in row] for row in self.theme_palette_words(t)]
+        while len(pals) < 8:
+            pals.append(list(SYSTEM_PAL))
+        return pals
+
+    def maze_vocab(self):
+        """The metatiles of the maze screens (tiles + per-subtile palettes,
+        most used first) + the floor stairs — a gate-theme room's vocabulary
+        (theme independent: the same tile numbers in every theme)."""
+        if getattr(self, '_maze_vocab', None) is None:
+            from editor2.core.maze import STAIR_TILES
+            out = [{'tiles': m['tiles'], 'pal': m['pal'] if len(set(m['pal'])) > 1
+                    else m['pal'][0]} for m in self.maze().metatiles()]
+            floor = next((m for m in out if all(0x30 <= t <= 0x33 for t in m['tiles'])), None)
+            fp = floor['pal'] if floor else 0
+            out.append({'tiles': list(STAIR_TILES), 'pal': fp,
+                        'name': 'Maze stairs (look only — see Help: Gate themes)'})
+            self._maze_vocab = out
+        return self._maze_vocab
+
+    def maze_piece_grids(self, cell, mode=0):
+        return self.maze().cell_grids(cell, mode)
+
+    def render_maze_piece(self, cell, mode, sheet, pals, scale=1):
+        tiles, attr = self.maze_piece_grids(cell, mode)
+        img = self.compose(sheet, tiles, attr, pals)
+        if scale != 1:
+            img = img.resize((img.width * scale, img.height * scale), Image.NEAREST)
+        return img

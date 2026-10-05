@@ -111,10 +111,15 @@ Documentation: `BREEDING_SYSTEM.md`
 | Gate floor data | `$16:$70A6` | `GateFloorDataTable` | 32 | 8 bytes |
 | Floor type selection 1 | `$16:$71A6` | `FloorTypeSelectionTable` | 16 | 16 bytes |
 | Floor type selection 2 | `$16:$72A6` | `FloorTypeSelectionTable2` | 16 | 8 bytes |
-| Floor type selection 3 | `$16:$7326` | `FloorTypeSelectionTable3` | 17 | 16 bytes |
-| Floor layout data | `$16:$7436` | `FloorLayoutData` | — | 1120 bytes |
-| Floor data ptrs 1 | `$16:$7896` | `FloorDataPtrTable1` | — | 512 bytes |
-| Floor data ptrs 2 | `$16:$7A96` | `FloorDataPtrTable2` | — | to bank end |
+| Floor type selection 3 | `$16:$7326` | `FloorTypeSelectionTable3` | 16 | 16 bytes (S122: 16 rows; the 17th "row" `$7426` is `MazeItemSubKind`) |
+| Item sub-kind by item kind | `$16:$7426` | `MazeItemSubKind` | 16 | 1 byte (S122) |
+| Floor layout data | `$16:$7436` | `FloorLayoutData` | 16 | 48 bytes (768 B; S122 — the old "1120 bytes" ran on over `MazePatterns` + `MazeNPCChance`) |
+| Maze pattern floors | `$16:$7736` | `MazePatterns` (was `FloorTilePatterns`) | 21 | 16 bytes (4 × 4 cells) |
+| Maze NPC chance (by contents row) | `$16:$7886` | `MazeNPCChance` | 16 | 1 byte |
+| Maze cell → screen (modes 0/1) | `$16:$7896` | `MazeScreenTable` (was `FloorDataPtrTable1`) | 256 | 2 bytes [layout id, bank] (S122, GATE_GENERATION §7) |
+| Maze cell → screen (mode 2) | `$16:$7A96` | `MazeScreenTableB` (was `FloorDataPtrTable2`) | 256 | 2 bytes |
+| Maze pieces | `$16:$7055` | `MazePieceTable` (was `FloorTypeSortData`) | 16 + `$FF` | 4 bytes [openings, piece, weight class, 0] |
+| Maze cell order | `$16:$7096` | `MazeCellOrder` (was `FloorTypeOrderTable`) | 16 | 1 byte |
 | Floor damage (by type) | `$01:$5E7D` | `FloorDamageTable` | 16 | 1 byte (per-step HP dmg; class-`$0E` tiles; GATE_GENERATION.md §5.1) |
 
 **GateFloorDataTable entry (8 bytes):**
@@ -830,7 +835,7 @@ Tables initialized by Bank $51 battle setup. Each table holds 16 bytes (up to 8 
 | Label | Address | Refs | Signature |
 |-------|---------|------|-----------|
 | `UpdateJoypadState` | $1364 | 10 | Read joypad with edge detection/debounce |
-| `WaitInputRelease` | $1E31 | 23 | Wait for button release |
+| `TileAtPixel` (was `WaitInputRelease`, a misnomer — S122) | $1E31 | 23 | Tile id at pixel `$FFA5-$FFA8` → `$AA`, walkable → `$A9` (GATE_GENERATION §4.3) |
 | `RequestScreenUpdate` | $0609 | 34 | Set screen refresh flag |
 | `UpdateOAMSprites` | $2518 | 22 | Update sprite OAM |
 
@@ -1237,9 +1242,9 @@ Each was converted to `add LOW(Label) / adc HIGH(Label)` so the table can move.
 | $13 | $41E6 | `ExpCurveTables` | EXP curves (32×99×3B) |
 | $13 | $6706 | `StatGrowthTables` | Growth curves (32×99×1B) |
 | $01 | $6AAE | `EncounterPoolData` | Encounter pools (128×26B) — 6 refs fixed |
-| $16 | $7436 | `FloorLayoutData` | Floor layouts (1120B) — 2 refs fixed |
+| $16 | $7436 | `FloorLayoutData` | Item sub-kind odds, 16 × 48 B (S122; was "1120B") — 2 refs fixed |
 | $16 | $4974 | `FamilyRecipeTable` | Breeding family recipes — label created + 2 refs fixed |
-| $16 | $7736 | `FloorTilePatterns` | Floor tile sub-table — label created |
+| $16 | $7736 | `MazePatterns` (was `FloorTilePatterns`, S122) | 21 ready-made 4 × 4 maze grids — label created |
 | $08 | $447E | `label8_447e` | Audio instrument data |
 
 ### Remaining Hardcoded Offset References (2 total — need Priority 3 data conversion)

@@ -516,17 +516,27 @@ pipeline — never retrofit the overlay.
       GATE_GENERATION §7.6).**
 - [x] **Room-palette derivation from ROM** (S39) — derive_room_palette.py, validated
       30/30 SameBoy dumps + gate floor. → GATE_GENERATION §7.1.
-- [ ] **`piece_id → screen layout` map** — decode the table turning a grid cell's
+- [x] **`piece_id → screen layout` map** — decode the table turning a grid cell's
       high nibble into the rendered screen layout (needed to author NEW maze
       pieces vs. only reweighting existing ones). (GATE_GENERATION.md §12.2.)
+      **DONE S122 (byte-neutral):** cell = piece·16 + variant → `MazeScreenTable`
+      `$16:$7896` (modes 0/1) / `MazeScreenTableB` `$16:$7A96` (mode 2) = 256 × [layout id,
+      bank]; 254 distinct screens; attributes `GateAttrTable_A/B` `$17:$5215/$5415`
+      (GATE_GENERATION §7; `editor2/core/maze.py`, `extracted/maze_pieces.json`).
 - [x] **Full `rst $00` dispatch enumeration** — list every special-floor handler
       slot so reusable slots are known precisely. (§12.3.) (S100: no longer
       needed for custom rooms — they insert before the vanilla gating.)
       **DONE S120 (byte-neutral):** `SpecialRoomTable` `$16:$5C32` = 8 picks (treasure ×2,
       forest, priest, shop, Coliseum, mazes, conveyors), labelled in both trees;
       GATE_GENERATION §2 / §12.3.
-- [ ] **`SetBrd_6744`/`SetBrd_6800` carve algorithm** — step-trace the maze
-      connectivity guarantee. (§12.4.)
+- [x] **`SetBrd_6744`/`SetBrd_6800` carve algorithm** — step-trace the maze
+      connectivity guarantee. (§12.4.) **DONE S122 (byte-neutral, the labels renamed
+      `MazeCellConstraints` / `MazePickPiece` …):** first piece, then up to *maze size*
+      cells chosen by required / forbidden openings, a refit pass, variants; the placements
+      (stairs, NPC, arrival, items). Modelled bit-exact in `editor2/core/maze.py`:
+      `tools/census_maze.py` 4,000 game floors (sizes 3-15) == the model, 0 mismatches
+      (GATE_GENERATION §4 / §5). Found: maze size 1-2 can carve an empty floor that freezes
+      the game, 0 / 16+ overrun the grid → the build refuses them (§4.2).
 
 ### Phase 2B — Breeding overhaul & extension (specced Session 12; see BREEDING_SYSTEM.md)
 Keep 10 families. Defaults rewritten; special recipes extended to 1×–2× (→~1650).
@@ -1079,7 +1089,7 @@ recipes are pure authoring.
       checked in the editor (screen pixel-identical) but was not exercised
       in PyBoy (the test room had no placed tile at the moved slot);
       (7) animated tiles → P3.3e (DONE S99).
-- [ ] **P3.7b — Gates tab** [G-F partial] — split S100 (user OK'd: "Yes but
+- [x] **P3.7b — Gates tab** [G-F partial] — both parts built (S100 / S101-S122); split S100 (user OK'd: "Yes but
       give a sense of how much work"; estimate given: part 2 ≈ 3-4 sessions).
   - [x] **P3.7b part 1 — custom rooms on gate floors** — **DONE S100, built,
         PyBoy-verified on the user's save, NOT yet user-tested** (user
@@ -1108,7 +1118,7 @@ recipes are pure authoring.
         player into a floor of the last gate dived (validator warning); (b) the floor plan assumes flags do not change mid-dive (toggle:
         hold / do not hold); (c) music picker lists
         project songs + raw ids only (no vanilla song names yet — P3.13b).
-  - [ ] **P3.7b part 2 — gate settings, boss floor, entrances** (S101: boss floors built — see below; ≈3-4
+  - [x] **P3.7b part 2 — gate settings, boss floor, entrances** (DONE S122, built, NOT yet user-tested; S101: boss floors built — see below; ≈3-4
         sessions, S100 estimate): (1) per-gate config rows — floor count,
         the three floor-type rows (shared between gates — the UI must say so),
         depth tier, monster-pool binding — as a compiler-owned bank-$16
@@ -1151,9 +1161,12 @@ recipes are pure authoring.
         monster pools / floor bands (user: "then edit bands … dont care
         when"), per-room encounters inside dives~~ (DONE S114, P3.13a), ~~more than 32 gates~~
         (DONE S115, ARC NG / NG1), ~~gate
-        entrances + unlock triggers~~ (DONE S117, NG2), the maze look in the editor (the game's
+        entrances + unlock triggers~~ (DONE S117, NG2), ~~the maze look in the editor (the game's
         own tileset / palette — S120: a picture per floor type beside the picker, captured
-        in PyBoy, `extracted/gate_floor_types/`; the full painted maze is still open).
+        in PyBoy, `extracted/gate_floor_types/`; the full painted maze is still open)~~
+        (DONE S122 — see below: the floors are random, so the editor got the MODEL and the
+        themes as room tilesets, not a preview; user: "are they not random? How is
+        previewing them helpful").
         **S120 (built, PyBoy-verified, NOT yet user-tested):** the three floor-type rows +
         depth (item tier) per gate (`maze_row` / `special_row` / `contents_row` / `depth`,
         GATE_GENERATION §7.8, PROJECT_COMPILER §2.17) — Gates tab "Maze floors" group;
@@ -1183,6 +1196,26 @@ recipes are pure authoring.
         imported room, fix like entry 20 if confirmed; (c) the PNG-imported
         rooms authored before S100 r3 must be REBUILT (LZSS MAX_COPY fix) —
         any whose sheet had 17+ leading empty slots drew shifted in-game.
+        **S122: (b) MEASURED and REFUTED** (PyBoy, the user's save): a door exit from the
+        free-colour-1 Cities_FOUNT room and from the Temptation boss room both fade to white
+        (248,248,248) and fade in normally — no own-colour fade on doors (DOC_AUDIT S122).
+        **S122 — part 2 finished (user: "P3.7b part 2" + "can I currently use gate themes for
+        custom room build? … I would love to use them for custom rooms as an option for
+        tileset, properly coloured" + "Obviously with the option of starting with gate
+        tiles/palettes then borrowing additional tiles elsewhere" + "include carve trace";
+        built S122, PyBoy-verified, NOT yet user-tested):** (1) **gate themes as room
+        tilesets** — New room → *Or a gate theme* (16 themes in their own colours),
+        Change tileset → *A gate theme* (+ its colours), the maze's own metatiles + stairs in
+        the picker, *Maze screen…* (the 254 maze screens by open sides / pattern floors),
+        themes in the Borrow list and borrowing INTO a theme room (`$40-$7F` free; a
+        "release unused vocabulary?" prompt when the side is full) (GATE_GENERATION §7.10,
+        PROJECT_COMPILER §2.35, help `12_gate_themes.md`); PyBoy: 4 / 4 theme screens == the
+        editor preview tile for tile, and the demo walk (below) 3 / 3 screens; (2) **the carve
+        trace** (Phase 2C boxes above); (3) **maze size 3-15** validated (Encounters tab
+        range + build error); (4) NG2 residual (a) fixed (the win tails, ARC NG below).
+        Residuals: theme rooms do not animate and their damage floors do no damage (the game
+        hurts only on maze floors) — both by design, in the help; the per-gate floor-type rows
+        stay shared (S120 decision).
 - [x] **S101 r3/r4 user round (built, NOT yet user-tested):** helper text
       moved to the top of the helper editor ("Warubou says something
       first"); helper *at the Castle* = nothing / priest heal / a gate's
@@ -1213,8 +1246,11 @@ recipes are pure authoring.
       tools, doors / teleports / World tab, palettes, talk dialog details,
       screenshots or small diagrams per topic, context help (a "?" on each
       section / dialog opening its topic), a glossary. Never "done" — it
-      grows with every editor feature.
-- [ ] **P3.8 — Cutscene storyboard + playback** [G-H]. **S118 user direction:** "Reading
+      grows with every editor feature. **S122:** new topic `12_gate_themes.md` (themes,
+      Maze screen…, borrowing, how a gate floor is built) + Rooms / Encounters / Gates /
+      Limits updated (user: "Help tab also should be updated").
+- [x] **P3.8 — Cutscene storyboard + playback** [G-H] — **CROSSED OFF by the user at the
+      S122 start ("Cutscenes you can cross off"); the residuals below stay as notes.** **S118 user direction:** "Reading
       in, displaying and playing back all existing cutscenes in all relevant rooms … the
       intro … Cutscene playback window … Include skipping text boxes as an option ·
       Cutscene editor where you can encode your own cutscenes, using appear/disappear/move
@@ -2048,8 +2084,12 @@ recipes are pure authoring.
         **S117b:** the user's vanishing NPCs = the hardware 10-objects-per-line limit (the
         party lined up on the NPCs' row) → warnings only, by user decision ("Just warning is
         fine for now, and Ill build around it"); an engine flicker (rotating the NPC OAM
-        order each frame) stays an OPTION, not built. **Residuals:** (a) a custom boss win does not advance the
-        vanilla portal room's step counter; ~~(b) no GUI for an NPC's `shown_when` yet~~
+        order each frame) stays an OPTION, not built. **Residuals:** ~~(a) a custom boss win does not advance the
+        vanilla portal room's step counter~~ (FIXED S122, built, NOT yet user-tested: a
+        re-bossed vanilla gate's win runs the vanilla boss script's own tail — the portal-room
+        counter writes, the partner-flag tests, the further cleared flags — through bank $76
+        `RunWinTail`; `extracted/gate_names.json` `win_tails`; 20 / 20 stub calls == the model;
+        GATE_GENERATION §7.9, PROJECT_COMPILER §2.35); ~~(b) no GUI for an NPC's `shown_when` yet~~
         (DONE S120: NPC panel "Shown when … Flags…", up to 8 set / clear terms); (c) the extended flags are not in the
         flag-usage cross-reference (P3.14).
   - [ ] **NG3 — Fully custom gates:** a graph of custom rooms (stairs / doors, branches) run

@@ -1342,7 +1342,7 @@ Jump_006_472e:
     ld a, h
     ldh [$a8], a
     push bc
-    call WaitInputRelease
+    call TileAtPixel
     ldh a, [$aa]
     push af
     ldh a, [$92]
@@ -1353,7 +1353,7 @@ Jump_006_472e:
     ldh [$a7], a
     ldh a, [$96]
     ldh [$a8], a
-    call WaitInputRelease
+    call TileAtPixel
     pop af
     pop bc
     srl a
@@ -1574,7 +1574,7 @@ Jump_006_4874:
     ld a, h
     ldh [$a6], a
     push bc
-    call WaitInputRelease
+    call TileAtPixel
     ldh a, [$aa]
     push af
     ldh a, [$92]
@@ -1585,7 +1585,7 @@ Jump_006_4874:
     ldh [$a7], a
     ldh a, [$96]
     ldh [$a8], a
-    call WaitInputRelease
+    call TileAtPixel
     pop af
     pop bc
     srl a
@@ -4372,7 +4372,7 @@ jr_006_6427:
     ldh [$a7], a
     ldh a, [$96]
     ldh [$a8], a
-    call WaitInputRelease
+    call TileAtPixel
     ld hl, $010a
     rst $10
     xor a

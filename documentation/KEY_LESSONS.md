@@ -5348,3 +5348,51 @@ The Milly dialog's "Warubou leads her to" kept GreatTree's screen 12 when the us
 SBOSS (screens 0 / 4); the build took it and the game crashed on arrival. A screen /
 cell / index field depends on the room chosen above it: list only what that room has,
 reset when the choice changes, and have the build refuse the impossible value anyway.
+
+### A "random" thing needs a model, not a preview (S122)
+
+The plan offered a preview of each gate's maze floors; the user asked "are they not
+random? How is previewing them helpful". A random floor has no single picture — what
+helps is (a) the rules modelled exactly (so the editor can show what CAN happen and
+refuse what breaks) and (b) the parts reusable (the themes as room tilesets). Before
+proposing a preview of generated content, ask what the user would do with it.
+
+### Hook after the last write you read (S122)
+
+The maze census first hooked `$16:$63AC`, one instruction BEFORE `ld [hl], $FF` closed the
+item list — the captured list ran on into stale bytes and "mismatched" the model. Hook
+the instruction after the terminator / the last store of the data you capture
+(`$63AE`), and check one capture by hand before trusting a census.
+
+### An editable count without the engine's range is a freeze (S122)
+
+Maze size was a free 0-255 spin box. The carve loop takes it as given: 1-2 can produce a
+grid with no reachable cell (the stairs search spins forever — measured with seed
+`$8192`), 0 / 16+ write past the 16-cell grid. Every editable number that a game loop
+consumes needs its range MEASURED and enforced in both the build and the widget.
+
+### Restore from git only after reading the diff (S122)
+
+A two-pass annotation script failed half way through the second tree; four already
+correct files were then restored from memory of "what it touched" and the work had to
+be redone. When a scripted edit fails part way, `git diff --stat` first, then restore
+EVERY touched file with `git show HEAD:path` and rerun the whole script once.
+
+### A failed SnapshotCommand is already gone from the undo stack (S122)
+
+The borrow-retry path called `undo()` after a command that raised — it undid the
+user's PREVIOUS edit. A failed command restores its snapshot and marks itself obsolete,
+so Qt drops it; there is nothing to undo. Test the undo stack's index around an error.
+
+### `pkill -f <name>` can kill the shell that runs it (S122)
+
+`pkill -f census_maze` matched the bash command line that contained the pattern and
+killed the tool call itself. Kill by PID (`$!`, `pgrep -f … | grep -v $$`) or use a
+pattern that does not occur in the invoking command.
+
+### A copied event tail must be the WHOLE tail (S122)
+
+S117's `GateBossWin` re-created only the cleared flag of a re-bossed vanilla gate; the
+vanilla boss script also bumps the portal room's state counter and tests partner flags
+after it. Copying "the important write" of a vanilla routine drops the rest: decode the
+whole tail (`win_tails`) and run it, then compare every flag / RAM byte against the model.

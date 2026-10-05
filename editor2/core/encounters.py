@@ -587,15 +587,22 @@ def emit_bank_076(prj, warnings, head):
     # S117 (ROADMAP NG2): the flags a boss-floor win sets (entry 2 GateBossWin)
     crow = prj.gate_clear_rows()
     out += [f"GATE_CLEAR_LEN EQU {len(crow)}",
-            "GateClearTable:  ; per gate: [dw own cleared flag, dw vanilla flag] ($FFFF = none)"]
-    for gid, own, van in crow:
+            "GateClearTable:  ; per gate: [dw own cleared flag, dw vanilla flag, dw WinTail] "
+            "($FFFF = no flag, $0000 = no tail)"]
+    progs = []
+    for gid, own, van, (extra, tails) in crow:
         if own is None:
-            out.append(f"    dw $FFFF, $FFFF  ; gate {gid}: its own boss scripts set its flag")
-        else:
-            out.append(f"    dw {F.hexw(own)}, {F.hexw(van) if van is not None else '$FFFF'}"
-                       f"  ; gate {gid}: " + (cfg[gid]['name'] if gid in cfg else '')
-                       + (" (new gate)" if gid >= 32 else " (another boss)"))
+            out.append(f"    dw $FFFF, $FFFF, $0000  ; gate {gid}: its own boss scripts set its flag")
+            continue
+        tail = '$0000'
+        if extra or tails:
+            tail = f'WinTail_{gid}'
+            progs.append((gid, extra, tails))
+        out.append(f"    dw {F.hexw(own)}, {F.hexw(van) if van is not None else '$FFFF'}, {tail}"
+                   f"  ; gate {gid}: " + (cfg[gid]['name'] if gid in cfg else '')
+                   + (" (new gate)" if gid >= 32 else " (another boss)"))
     out.append("")
+    out += win_tail_programs(progs)
     # project lists
     out.append("ProjectEncLists:  ; 26 B each, numbers 128+ (EncounterPoolData format)")
     for e in m.lists:
@@ -620,3 +627,42 @@ def emit_bank_076(prj, warnings, head):
     for k in range(0, len(bps), 16):
         out.append("    db " + ", ".join(f"${b:02X}" for b in bps[k:k + 16]))
     return "\n".join(out) + "\n"
+
+
+def win_tail_programs(progs):
+    """S122 (NG2 residual a): bank $76 WinTail programs for RunWinTail — per
+    re-bossed vanilla gate: set_flag for its further cleared flags, then its
+    boss room's win tails (gate_names.json, the game's own script words) in
+    order; jump targets become local labels, an op that ends a tail (the
+    text close / the warp …) becomes a jump to the next tail; $FFFF ends."""
+    out = []
+    for gid, extra, tails in progs:
+        out.append(f"WinTail_{gid}:  ; gate {gid}: the game's own win bookkeeping "
+                   "(tools/map_gate_names.py win_tails)")
+        for f in extra:
+            out.append(f"    dw $FF03, {F.hexw(f)}  ; set_flag (a further cleared flag)")
+        for k, t in enumerate(tails):
+            ops = [(int(a, 16), op, [int(x, 16) for x in prm]) for a, op, prm in t['ops']]
+            addrs = {a for a, _o, _p in ops}
+            nxt = f"WinTail_{gid}_{k + 1}" if k + 1 < len(tails) else f"WinTail_{gid}_end"
+            out.append(f"WinTail_{gid}_{k}:  ; tail {k}: bank {t['bank']} {t['start']}"
+                       + (f" (after set_flag {t['flag']})" if t.get('flag') else ''))
+
+            def lab(a):
+                if a not in addrs:
+                    raise ValueError(f"win tail of gate {gid}: target ${a:04X} outside the tail")
+                return f".t{k}_{a:04X}"
+            for a, op, prm in ops:
+                out.append(f"{lab(a)}:")
+                if op in (0x00, 0x01):
+                    out.append(f"    dw $FF{op:02X}, {F.hexw(prm[0])}, {lab(prm[1])}")
+                elif op == 0x14:
+                    out.append(f"    dw $FF14, {lab(prm[0])}")
+                elif op in (0x02, 0x03, 0x12, 0x13):
+                    out.append("    dw " + ", ".join([f"$FF{op:02X}"] + [F.hexw(x) for x in prm]))
+                else:
+                    out.append(f"    dw $FF14, {nxt}  ; op ${op:02X} ends the game's tail here")
+        out.append(f"WinTail_{gid}_end:")
+        out.append("    dw $FFFF")
+        out.append("")
+    return out
