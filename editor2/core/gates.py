@@ -191,7 +191,8 @@ def gate_floors(gate_id, start=None):
 GATE_KEYS = {'gate', 'floors', 'boss', 'hand_made', 'comment',
              'encounters',   # S114: the gate's own encounter plan (encounters.py)
              'copy_of', 'name',   # S115: NEW gates only (see below)
-             'maze_row', 'special_row', 'contents_row', 'depth'}   # S120 (below)
+             'maze_row', 'special_row', 'contents_row', 'depth',   # S120 (below)
+             'world', 'cleared_swirl'}   # S123 (ROADMAP NG3): worlds, swirl colour (below)
 # S120 (ROADMAP P3.7b part 2): the row bytes 0-2 + 7 of any gate (vanilla or new):
 # which ROW of FloorTypeSelectionTable 1 / 2 / 3 the gate rolls (the maze look, the
 # special room of floors 3, 6, 9 …, the contents mix) and the depth tier (the ground
@@ -419,6 +420,67 @@ def gate_entrance_row(x, y, gate_id, comment=None):
     return row
 
 
+# ---------------------------------------------------------------------------
+# S123 (ROADMAP NG3, user: "it doesnt need to act as a random gate, it needs to
+# act as a world that can have encounters, encounter-free rooms (where you can
+# also save), mini-bosses, endbosses, flags and triggers. Enter via swirling
+# portal, portal stops when boss beaten, OR portal is different colour when boss
+# beaten" — "Entering should be JUST like entering a gate. Losing: Same as a
+# gate"). A WORLD is a NEW gate (32-95) whose dive is one hand-made floor: the
+# portal (an ordinary gate entrance, gate_flag 1) runs the game's own gate entry
+# (the wave, the cream fade — measured S123) and bank $16 entry 5 serves the
+# world's START room on floor 1 (a GateInsertTable record the compiler adds,
+# 100 %); from there the world is the author's rooms joined by doors / exits —
+# ordinary custom rooms (wInGateworld 0) with their own battle lists, saving,
+# NPCs, conversations and state rules. A lost battle anywhere = the gate rule
+# (bank $50 BattleExitHandler: Castle, priest heal, half the gold — measured in
+# a world room S123). Nothing marks a world cleared by itself (GateBossWin needs
+# the boss floor, floor 2, which a world never reaches): a boss conversation
+# turns `gate:N` ON. Schema (PROJECT_COMPILER §2.36):
+#   {"gate": 32-95, "copy_of": 0-31, "name": ..., "world": {
+#      "start": {"room": id, "screen": k, "x": 0-9, "y": 0-7},
+#      "rooms": [room ids]          # the world's rooms (start included)
+#      "saving": "calm" | "everywhere" | "nowhere"},   # default rule per room
+#    "cleared_swirl": "stop" | 0-7}   # any gate: the swirl after clearing
+# ---------------------------------------------------------------------------
+WORLD_FLOORS = 2                      # floor 1 = the world; floor 2 never reached
+WORLD_KEYS = {'start', 'rooms', 'saving', 'comment'}
+WORLD_SAVING = ('calm', 'everywhere', 'nowhere')
+SWIRL_GREEN = 1                       # OBJ palette 1 colour 2 = (0, 25, 5) green ($17:$5615)
+OBJ_PALETTE_NAMES = ('grey / red', 'green', 'blue (the swirl)', 'yellow', 'purple',
+                     'grey', 'orange', 'brown')   # by colour 2 of $17:$5615 (S123)
+
+
+def world_settings(custom, gate_id):
+    """The `world` block of gate N (or None)."""
+    w = gate_settings(custom, gate_id).get('world')
+    return w if isinstance(w, dict) else None
+
+
+def world_gates(custom):
+    """[gate number] of the project's worlds, in number order."""
+    return [int(_val(g['gate'])) for g in new_gate_entries(custom)
+            if isinstance(g.get('world'), dict)]
+
+
+def world_of_room(custom, room_id):
+    """The gate number of the world a room belongs to (or None)."""
+    for gid in world_gates(custom):
+        w = world_settings(custom, gid)
+        if room_id in (w.get('rooms') or []) or (w.get('start') or {}).get('room') == room_id:
+            return gid
+    return None
+
+
+def cleared_swirl(custom, gate_id):
+    """What a gate's swirl objects do once it is cleared: None = disappear
+    (the game's way) or an OBJ palette 0-7 they are drawn in from then on."""
+    v = gate_settings(custom, gate_id).get('cleared_swirl')
+    if v in (None, '', 'stop'):
+        return None
+    return int(_val(v))
+
+
 def gate_settings(custom, gate_id):
     """The custom.gates[] entry of one gate (or {})."""
     for g in (custom or {}).get('gates') or []:
@@ -434,13 +496,17 @@ def gate_floor_count(custom, gate_id, start=None):
     g = gate_settings(custom, gate_id)
     if g.get('floors') is not None:
         return int(_val(g['floors']))
+    if g.get('world') is not None:             # S123: a world = floor 1 + an unused boss floor
+        return WORLD_FLOORS
     src = gate_source(custom, gate_id)          # S115: a new gate = its source's
     return gate_floors(src if src is not None else gate_id, start)
 
 
 def gate_min_floor(custom, gate_id):
-    """First floor a custom room may take: 1 on a hand-made gate, else 2."""
-    return 1 if gate_settings(custom, gate_id).get('hand_made') else MIN_FLOOR
+    """First floor a custom room may take: 1 on a hand-made gate (S123: and a
+    world, which is one), else 2."""
+    g = gate_settings(custom, gate_id)
+    return 1 if (g.get('hand_made') or g.get('world') is not None) else MIN_FLOOR
 
 
 def vanilla_boss_spawn(boss_map, start=None):
@@ -733,6 +799,13 @@ class GatesMixin:
             return ''
         if info['flag'] is None:
             return 'no cleared flag (the unused gate)'
+        if world_settings(self.custom, gate_id) is not None:      # S123
+            pal = cleared_swirl(self.custom, gate_id)
+            after = ('stops' if pal is None else
+                     f'turns {OBJ_PALETTE_NAMES[pal]} (palette {pal})')
+            return (f"cleared flag ${info['flag']:04X} (gate:{int(gate_id)}) — a boss "
+                    f"conversation turns it ON (Make boss… → end boss); its portal swirl "
+                    f"then {after}")
         if info['own']:
             extra = (f" — beating its boss also sets the vanilla flag ${info['vanilla_flag']:04X}"
                      if info.get('vanilla_flag') is not None and int(gate_id) < 32 else '')
@@ -916,11 +989,30 @@ class GatesMixin:
         room.pop('gate_arrival', None)
         self.touch()
 
+    def room_save_default(self, room):
+        """Whether the JOURNAL works in a room that sets nothing itself: a gate's
+        boss room no (S101), a world's room by its world's saving rule (S123: calm =
+        rooms without battles), any other room yes (the S8 behaviour)."""
+        wid = world_of_room(self.custom, room.get('id'))
+        if wid is not None:
+            mode = (world_settings(self.custom, wid) or {}).get('saving', 'calm')
+            if mode == 'everywhere':
+                return True
+            if mode == 'nowhere':
+                return False
+            return not bool((room.get('encounters') or {}).get('enabled'))
+        return not self.boss_gates_of(room.get('id'))
+
+    def room_can_save(self, room):
+        return bool(room.get('can_save', self.room_save_default(room)))
+
     def set_can_save(self, room, on):
-        if on:
-            room.pop('can_save', None)          # default = allowed
+        """S123: stores the choice only when it differs from the room's default
+        (room_save_default), so a world's rule keeps applying to rooms you leave alone."""
+        if bool(on) == self.room_save_default(room):
+            room.pop('can_save', None)
         else:
-            room['can_save'] = False
+            room['can_save'] = bool(on)
         self.touch()
 
     def encounter_mode(self, room):
@@ -1139,7 +1231,7 @@ class GatesMixin:
                             'that gate; pick "follow the gate" or off')
         if other:
             notes.append(f'{other} ordinary exit(s): walking through one leaves the dive')
-        notes.append('saving allowed' if room.get('can_save', not boss_of) else 'no saving here')
+        notes.append('saving allowed' if self.room_can_save(room) else 'no saving here')
         notes.append({'off': 'no battles', 'follow': "battles: the gate's own monsters",
                       'fixed': 'battles: fixed pool',
                       'own': 'battles: its own list (S114 — never re-routes the dive)'}[mode])

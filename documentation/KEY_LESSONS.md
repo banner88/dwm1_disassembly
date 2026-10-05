@@ -5396,3 +5396,47 @@ S117's `GateBossWin` re-created only the cleared flag of a re-bossed vanilla gat
 vanilla boss script also bumps the portal room's state counter and tests partner flags
 after it. Copying "the important write" of a vanilla routine drops the rest: decode the
 whole tail (`win_tails`) and run it, then compare every flag / RAM byte against the model.
+
+### `shown_when` is read when the screen loads — a beaten NPC needs a Vanish (S123)
+
+The first world demo set the warden's `…_beaten` flag after the battle and relied on
+`shown_when` to hide him: he stood there until the next screen load (the `$A0`/`$A1`
+prefixes are evaluated only in `CopyNPCListToBuffer`). Anything that must change NOW is a
+script action (the S123 Vanish step: `trigger_anim $0Dnn` / `npc_write n,0,$40`); the
+condition only makes it last.
+
+### A size table nobody re-measures goes stale silently (S123)
+
+`validators.TEMPLATE_SIZE[0x60]` still said 678 while the bank $60 template was 1070 B
+(S122) — the check guarded nothing. When a template grows, re-measure its size in the same
+commit as the pin (`--pin-templates`) and let the test compare the table with the real size.
+
+### Initialise every attribute a lazy path can reach before the first call (S123)
+
+A conversation testing `gate:N` reached `resolve_flag_ref` → `self.repo_root` before
+`__init__` had set it (AttributeError, an existing bug). Set such attributes (`repo_root`,
+`_rooms_resolved`, `_vanish_places`) at the top of `__init__`, not where they are first
+filled.
+
+### An EID is a word — read both bytes (S123)
+
+A PyBoy probe read the enemy id's low byte and "found" EID 8 in a Woods battle; it was 520
+(Klamutra, `$0208`). Read 16-bit ids as words, always.
+
+### "Like the game" is measured on the game's path AND on ours — not on a shortcut (S123 r2)
+
+The r1 world portal was declared "the game's own gate entry (measured)" from a warp written
+into the exit mailbox while standing in a VANILLA room. The real path — walking onto a
+portal in a CUSTOM room — went through S41's `CustomDescentInGate`, which turned every
+gate-flag exit of a custom room into the floor-change whoosh; the user saw it at once. When
+the claim is "behaves like X", walk both X and ours the way a player does and compare the
+same trace (here the `$C905` state ladder + the sound id), frame for frame.
+
+### "Looks wrong" — check the game before the editor, and the editor before the game (S123 r3)
+
+The user's "the roots room looks like tiles are missing" read like an engine bug. PyBoy
+showed the copy == vanilla tile for tile; the missing tiles were the editor's preview,
+which had carried a guessed rule ("ids ≥ 128 draw tile 0") since S93. A rule copied from
+an older tool is a hypothesis: the one-line `ld a, $08` (not `cp`) before the second sheet
+load made every room carry 48 extra tiles. Compare the editor's picture with a PyBoy frame
+of the same screen pixel for pixel before deciding which side is wrong.

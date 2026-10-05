@@ -114,7 +114,8 @@ jr_00b_4037:
     ld hl, $9000
     call WaitDMATransfer
     ld a, [wMapID]
-    ld a, $08
+    ld a, $08                       ; S123 r3: NOT a compare (bytes 3E 08): Z still comes from WaitDMATransfer (ends xor a), so
+                                    ; the jr nz never branches: sheet $29:$1D -> $8800 (BG tiles $80-$AF) in EVERY room (PyBoy)
     jr nz, jr_00b_4076
 
     ld de, $291d
@@ -181,7 +182,8 @@ jr_00b_4094:
     ld hl, $9000
     call WaitDMATransfer
     ld a, [wMapID]
-    ld a, $08
+    ld a, $08                       ; S123 r3: NOT a compare (bytes 3E 08): Z still comes from WaitDMATransfer (ends xor a), so
+                                    ; the jr nz never branches: sheet $29:$1D -> $8800 (BG tiles $80-$AF) in EVERY room (PyBoy)
     jr nz, jr_00b_40c0
 
     ld de, $291d

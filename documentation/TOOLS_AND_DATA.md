@@ -1211,3 +1211,16 @@ verified overrides.
 | editor2/core/gamedata.py, app/encounters_tab.py | maze size 3-15 (error / spin range) | test_compiler |
 | disassembly/ + patches/ banks $00 / $01 / $06 / $07 / $16 / $17 | labels + comments: the maze routines / tables (`MazeBuildFloor` … `MazePlacements`), `TileAtPixel` (was `WaitInputRelease`), `ScreenOriginTable` re-sectioned as `db`, `GateAttrTable_A/B` comments | clean `1ca6579…` byte-perfect |
 | editor2/help/12_gate_themes.md (NEW), 10_rooms.md, 59_encounters.md, 60_gates.md, 90_limits.md, _revision.md; `EDITOR_REVISION` = 'S122' | help | test_app |
+## S123 rows (ROADMAP NG3: worlds, NPC colours, the Vanish step)
+
+| Tool / data | What | Verified |
+|---|---|---|
+| editor2/core/worlds.py (NEW) | `WorldsMixin`: worlds (new / start / rooms / saving / swirl / entrance / music / delete / report) and `make_boss` | test_compiler `test_worlds_s123` / `test_worlds_rom`; test_app `s123_worlds` |
+| editor2/core/gates.py, project.py, emitters.py, validators.py, conversation.py, document.py | the `world` / `cleared_swirl` keys, world start rows, world saving, NPC `colour` → `$A2`, the `vanish` step, `_validate_worlds`, `TEMPLATE_SIZE[0x60]` 1273 | test_compiler (+ --rom) |
+| editor2/core/templates/bank_060_head.asm + patches/bank_060.asm, patches/bank_006.asm, patches/wram.asm | `$A2` in `CopyNPCListToBuffer`, `NpcColourRecord`, entry 11 `NpcColourDraw`; `NPCDrawSlot` → entry 11; `wNpcColour` | PyBoy (OAM attr per slot, the swirl in palette 1); regression pin `e93b23b5…` (patched) |
+| editor2/app/world_tab.py (Worlds panel), app/rooms/boss_dialog.py (NEW), npc_panel.py, conversation_dialog.py, canvas.py, inspector.py, tab.py, gate_panel.py, rules_panel.py, gates_tab.py | the GUI (EDITOR_DESIGN §5.1 "Worlds (S123)") | test_app `s123_worlds` |
+| editor2/core/templates/bank_060_head.asm entry 12 + patches/bank_00b.asm (S123 r2) | `CustomDescentFeel`: the S41 in-gate transition feel for Stairs down only; a custom room's gate entrance runs the vanilla portal whirl | PyBoy: the `$C905` ladder + sound of room $24's portal == the Rift Gate Hall portal; a world-room Stairs down still `$10-$17`; the demo re-walked end to end; pin `6b0738c1…` (patched) |
+| editor2/app/rooms/cell_picker.py (NEW, S123 r3) + world_tab.py `PortalDialog` / *The way in*, canvas markers P / W↓, `Document.world_portals` / `remove_world_entrance` | cells picked on the room picture (New world…, the landing, Add portal…) | test_app `s123_worlds` (r3 block) |
+| editor2/core/render_project.py `common_blocks` + tools/render_rooms.py `_common_sheet` (S123 r3) | BG ids `$80-$AF` drawn from sheet `$29:$1D` (every room) | PyBoy: `$8800-$8AFF` == `$29:$1D` in 6 rooms; the roots room preview == the game frame, 0 px differ |
+| tools/audit_mapid_range.py | new sites `CopyNPCListToBuffer#0` COPY, `NpcColourDraw#0` CP_UNSIGNED (CROSSBANK_ROOMS "S123 sites") | selftest PASS |
+| editor2/help/65_worlds.md, 11_doors.md, 13_tilesets.md, 14_import_art.md (NEW) + 00/10/20/30/40/59/60/70/80/90, _revision.md; `EDITOR_REVISION` = 'S123' | help | test_app |

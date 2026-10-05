@@ -1634,7 +1634,7 @@ the original ROM (DMA hooks at ROM0 `$1577`/`$14CF`, bank $04 entries 2 / 3 hook
   → `$5E`) uses the same sheet and layout through the NPC path.
 * **NPC sprites (for comparison):** bank $05 entries 0 / 1: level-1 `$05:$407F[id]` → 6
   frames (the same order and facing rule), palette `$05:$4152[id]` (ORed by
-  `HramAudE_406e`), sheet ROM0 `$2ADF[id]` (16 tiles). Milayou = `$14` (palette `$03`, gfx
+  `NPCSpritePaletteOr`, was `HramAudE_406e`), sheet ROM0 `$2ADF[id]` (16 tiles). Milayou = `$14` (palette `$03`, gfx
   `$3114`), grey Warubou `$39`, Watabou `$21`, the old man `$08`.
 * **The Milly hook (PROJECT_COMPILER §2.34):** with event flag `$179F` set, bank $04's two
   type < `$10` paths call bank $79 entry 0 (her palette, her frame tables copied to WRAM

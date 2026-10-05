@@ -2750,6 +2750,67 @@ game's tail → `dw $FF14, <next tail>`), `WinTail_<gate>_end: dw $FFFF`. New ga
 have no tail. The example project re-bosses no vanilla gate: every row `$FFFF, $FFFF,
 $0000` — **regression pin `bd0652da…` (patched)**, was `e43e5f58…` (patched, historical).
 
+## §2.36 S123 — WORLDS, NPC colours, the swirl after clearing, the Vanish step (ROADMAP NG3)
+
+Built S123, PyBoy-verified on the user's save, NOT yet user-tested. Engine facts:
+GATE_GENERATION §7.11, ROOM_DATA_FORMAT (`$A2`), known_RAM_map (`wNpcColour`).
+
+**`custom.gates[]` (GATE_KEYS += `world`, `cleared_swirl`):**
+
+- `world: {start: {room, screen, x, y}, rooms: [room ids], saving: "calm" | "everywhere" |
+  "nowhere", comment}` on a NEW gate (32-95). `Project.gate_configs` forces the gate's
+  floor count to **2** (`WORLD_FLOORS`; floor 1 = the world, floor 2 is never reached) and
+  `hand_made`, and `gate_insert_rows` appends the start row (`index None`, `world: gid`,
+  floor 1, 100 %); a gate rule (`custom.gate_rules`) that targets a world is an ERROR. The
+  start room's arrival cell = `start`. A room belongs to at most one world (error).
+  `rooms` lists the other rooms (doors join them — ordinary §2.12 doors).
+- **Saving:** `room_flags` → JOURNAL by `GateMixin.room_can_save`: a room's own `can_save`
+  wins, else the world's rule (`calm` = rooms without battles, `room_has_battles`). The
+  editor stores `can_save` only when it differs from that default (`set_can_save`).
+- `cleared_swirl: "stop" | 0-7` on ANY gate: `stop` / absent = the S116 hide (`$A1` on the
+  gate's `swirl_of` NPCs — custom entrances and `VanillaNPCExtTable` swirls); a palette =
+  no hide, the swirl gets `colour {palette, when: gate:N}` instead (`npc_conditions` /
+  `npc_colour`). Anything else is an error ("cleared_swirl must be …").
+- The world's cleared flag is the gate's own `gate:N` = `$17A0 + N`. `GateBossWin` never
+  fires in a world (floor 0+1 ≠ last floor 2); only a conversation step sets it.
+
+**NPC `colour`** (typed and raw NPC entries): `0-7` (always) or `{palette, when: flag ref}`
+(only while that flag is SET). Error on a monster NPC (they walk in their own palettes).
+Emitted by `emitters._npc_colour_lines` as the prefix `db $A2, pal, flag lo, flag hi, $FF`
+(`$FFFF` = always) before the entry.
+
+**Conversation step `{"vanish": {"how": "flicker" | "instant"}}`** (STEP_KINDS += vanish):
+for every place the conversation's NPC stands (`_vanish_places`, resolved after the rooms
+— `_resolve_vanish_slots`, the scripts are lowered once `_rooms_resolved`): per screen a
+`branch_screen`, then `trigger_anim $0Dnn` (the game's vanish-flicker program, slot nn) +
+`wait_movement`, or `npc_write n, 0, $40` (hidden at once). Lasting absence = the NPC's
+`shown_when` (load-time only — KEY_LESSONS S123).
+
+**Editor (`editor2/core/worlds.py` WorldsMixin):** `new_world`, `set_world_start`,
+`add_world_room` / `remove_world_room`, `new_world_room`, `set_world_saving`,
+`set_cleared_swirl`, `add_world_entrance` (= `add_gate_entrance` + `paint_swirl`),
+`set_world_music`, `world_portal_spot`, `world_report`, and **`make_boss(room, key, state,
+index, enemies, flag_name, intro, outro, end_of_world, leave)`** = an ordinary conversation
+say → battle → set [own flag (+ `gate:N`)] → vanish → [say] → [helper] + the NPC's
+`shown_when` [own flag clear]. `Document.set_npc_colour`. Validators: `_validate_worlds`
+(no portal, nothing sets the cleared flag, a room no door reaches, no way out, battles
+without a list — warnings).
+
+**Bank $60 (template re-pinned; `TEMPLATE_SIZE[0x60]` 1070 → 1273 (r2: 1293) — the table still said
+678, stale since before S122):** `CopyNPCListToBuffer` handles `$A2` (TestEventFlag unless
+`$FFFF`) and records `wNpcColour[slot] = $80|pal` via `NpcColourRecord`, tagged with
+`wMapID` / `wScreenIndex`; **entry 11 `NpcColourDraw`** (called from bank $06
+`NPCDrawSlot`, patched `ld hl, $600b`) draws through bank $05 entry 0, then rewrites
+OAM-buffer attr bits 0-2 of the pieces just drawn. WRAM: `wNpcColour` (8 B, `$D2E3`) +
+4 bytes of tags/scratch, carved from `wCustomPool` (now `$D2EF-$D5E4`).
+**S123 r2 (user: the portal should run "a full start-of-gate effect … instead of
+go-down-a-floor"):** + entry 12 **`CustomDescentFeel`** (TEMPLATE_SIZE 1293): the body of
+bank $0B `CustomDescentInGate` (hand-kept `patches/bank_00b.asm`, now a far call) — the
+in-gate transition feel only for a custom room's Stairs-down exit (gate flag `$80`), never
+for a gate entrance (flag 1). GATE_GENERATION §7.5.1 / §7.11.
+**Regression pin `6b0738c1…` (patched)**; was `e93b23b5…` (patched, historical — S123 r1),
+`bd0652da…` (patched, historical).
+
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 
 The user's "fastest way to test": hook a custom room onto a door the player

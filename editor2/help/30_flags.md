@@ -25,7 +25,13 @@ checks it with *If flags…*.
 `gate:N cleared — name` (N = the gate number). It is the game's own flag for
 a vanilla gate (Villager = `$0011`), and its own flag for a new gate or a
 vanilla gate you gave a custom boss (`$17A0` + the gate number; gate 32 =
-`$17C0`). See *Gates* → *Swirls and "cleared"*.
+`$17C0`). See *Gates* → *Swirls and "cleared"*. A **world's** cleared flag
+is listed as `world cleared — name (gate N)`; its end boss turns it on
+(*Worlds*).
+
+**Boss flags:** *Make boss…* makes each boss its own `…_beaten` flag — a
+mini-boss can open a door (a room state), change what people say, switch a
+room's battles (an encounter flag variant) or show / hide NPCs, on its own.
 
 **Numbers:** `$0000`-`$02FF` are the game's (most are story flags — only
 `$0158`-`$0167` are free), `$1000`-`$17FF` the editor's extra ones

@@ -838,6 +838,34 @@ Not built (by design): animated / damaging theme floors (the game does neither o
 maze floors); a preview of a gate's random floors (the user: "are they not random?") — the
 model (`editor2/core/maze.py`) backs validation instead.
 
+**Worlds (S123 — ROADMAP NG3; as built S123, NOT yet user-tested).** User: "a world that
+can have encounters, encounter-free rooms (where you can also save), mini-bosses,
+endbosses, flags and triggers. Enter via swirling portal, portal stops when boss beaten,
+OR portal is different colour" + "Entering should be JUST like entering a gate". Schema
+PROJECT_COMPILER §2.36, engine GATE_GENERATION §7.11.
+- **World tab → Worlds panel** (`world_tab.WorldsPanel`, left of the graph): list +
+  New world… (`NewWorldDialog`: name, a NEW start room in a gate look or an existing room,
+  the landing cell) / Rename… / Delete; *start* (Change… = `StartDialog`), *portals*,
+  *after clearing, the swirl*, *saving (JOURNAL)*, *cleared*; *Its rooms* table (battles,
+  save, bosses, doors to) with Add room… / New room… / Remove / Open / Music for every
+  room…; *Still needs* (the report); *only this world* filters the graph (green frames).
+- **Rooms tab:** More ▾ → *World entrance here…*; NPC panel *colour* (8 swatches, canvas
+  preview via `SpriteCache.get_coloured`) and **Make boss…** (`boss_dialog.MakeBossDialog`
+  → `Document.make_boss`); the section *Inside gates and worlds* (world-aware texts).
+- **Conversation dialog:** the *Vanish (this NPC leaves)* step (flicker / at once).
+- **Gates tab:** a world is listed as WORLD with its settings locked (edited on the World
+  tab); every other gate gets *after clearing, the swirl* (stop / 8 colours).
+- Help `65_worlds.md`. Verified: test_app `s123_worlds`; PyBoy, the Verdant Rift demo
+  walked end to end (PROJECT_STATE S123).
+- **S123 r3 (user: "SHOW VISUALLY"):** every world cell is picked on the room's picture
+  (`cell_picker.CellPicker`: 2x screen, grid, click; LAND green / PORTAL blue; walls
+  refused; doors / exits / portals drawn) — New world… (a NEW theme room previewed as its
+  plain floor), *Change…* (the landing), **Add portal…** (`PortalDialog`). The Worlds
+  panel opens with **The way in**: ① the portal's room picture (◀ ▶ through several, Add
+  portal… / Go to / Remove) ➜ ② the landing picture (Change… / Go to). Rooms canvas: **P**
+  (a world portal; tooltip = where it lands) and **W↓** (the landing; drag = move).
+Not built: random floors inside a world, a Gates-tab graph, clearing by a battle alone.
+
 ### 5.1b Gates tab (v2.1 — user spec S90)
 
 The gate system as an authorable object; every element decoded

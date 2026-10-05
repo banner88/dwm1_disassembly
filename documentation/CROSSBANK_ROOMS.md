@@ -385,6 +385,14 @@ $08 / $5D, ROOM_DATA_FORMAT "Text boxes and sprites (S121)"): `ld a,[wMapID]` �
 ret nc`, then a 16-bit add into `CustomRoomFlagsTable` — **BOUNDED** (as `CustomRoomFlags`).
 Bank $79 reads no mapID (the hook's room is a `$3B` word written by the compiler).
 
+**S123 sites (NPC colours, PROJECT_COMPILER §2.36).** Bank $60 `CopyNPCListToBuffer`
+stores `wMapID` (and `wScreenIndex`) into the tag `wNpcColourMap` / `wNpcColourScr` —
+**COPY** (never an index); entry 11 `NpcColourDraw` compares `wMapID` with that tag (`cp b`,
+a full-byte equality) — **CP_UNSIGNED**. Neither indexes a table by mapID, so any id
+$00-$FE is safe. **S123 r2:** bank $0B `CustomDescentInGate`'s `cp CUSTOM_ROOM_START / jr c`
+moved into bank $60 entry 12 `CustomDescentFeel` (`cp` / `ret c`) — still **CP_UNSIGNED**
+(the bank $0B key retired; the routine is a far call now).
+
 **S120 burn-down (ROADMAP "audit_mapid_range re-adjudication").** The selftest had been
 failing since S116 with twelve NEEDS_REVIEW sites — not the "eleven S117 shop sites" the
 S118 ROADMAP note named. Read site by site:

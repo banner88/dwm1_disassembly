@@ -600,3 +600,17 @@ gate you assumed".
 | GATE_GENERATION §7: gate floors override BG palette slot 4 | NOT USED (S122) | all 275 maze attr streams use palettes 0-3 only; the floor palette `$17:$51F5[type]` fills slots 0-3. |
 | ROADMAP P3.7b S100 r3 carry-over (b): normal door exits from an own-colour-1 room "likely" fade to that colour | REFUTED (S122, PyBoy) | they fade to white (248,248,248) like any room. |
 | GATE_GENERATION §7.9 / PROJECT_COMPILER §2.32 (S117): the boss win's portal-counter write "was not found" / not replicated | INCOMPLETE (S122) | it is in the boss script's tail after `write_ram $D92B 7`, past the window `cleared_flags` read; decoded as `win_tails` and run by `RunWinTail`. |
+## S123 addendum (2026-10-05; worlds, NPC colours, the Vanish step — ROADMAP NG3)
+
+| Claim (where) | Verdict | Correct |
+|---|---|---|
+| bank $06 `SaveMapS_4d0a` (auto-label) | MISNOMER (S123) | `NPCDrawSlot` — draws one NPC slot's sprite pieces into the OAM buffer; renamed both trees (patched: calls bank $60 entry 11). |
+| bank $05 `HramAudE_406e` (auto-label) | MISNOMER (S123) | `NPCSpritePaletteOr` — ORs the sprite id's own palette (`$05:$4152`) into each piece; renamed (MONSTER_DATA updated). Clean build byte-perfect. |
+| `validators.TEMPLATE_SIZE[0x60]` = 678 | STALE (S123) | the template was 1070 B since S122; 1273 after S123. |
+| PROJECT_COMPILER §2.32 / help: a cleared gate's swirl always disappears | SUPERSEDED (S123) | `cleared_swirl` = a palette keeps it spinning in that colour. |
+| help `90_limits.md`: "Fully custom branching gates are the next step (NG3)" | SUPERSEDED (S123) | NG3 redefined by the user as worlds (built S123). |
+| help `20_npcs.md`: "they show only until their gate is cleared" | INCOMPLETE (S123) | unless the gate's swirl turns a colour. |
+| GATE_GENERATION §7.11 (S123 r1): a world portal = "the game's (wave + cream fade, measured)" | WRONG (S123 r2) | it ran the floor-change ladder ($C905 $10-$17, sound $55) — the measurement injected a warp from a vanilla room; fixed (bank $60 entry 12) and re-measured == room $24's portal. |
+| GATE_GENERATION §7.5.1 (S41): `CustomDescentInGate` for "custom-room descents" | TOO BROAD (S123 r2) | it fired for every gate-flag exit of a custom room, gate entrances included (S115 new-gate entrances too); now Stairs down ($80) only. |
+| render_project.py header / tools/render_rooms.py: "tile ids >= 128 draw tile 0" | WRONG for `$80-$AF` (S123 r3) | every room has sheet `$29:$1D` at `$8800` (bank $0B loader; `ld a, $08` is not a compare) — the roots room (copy of `$08`) previewed with a black cross; in-game it was right. Fixed; ROOM_DATA_FORMAT "Common tiles". |
+| `Project.repo_root` "set in `__init__`" (implicit) | WRONG ORDER (S123) | set late; a conversation testing `gate:N` crashed — now set first. |

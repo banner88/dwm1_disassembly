@@ -37,5 +37,10 @@ original. Untick it for a copy that should keep its own state (a copied boss
 room you use for a NEW boss — otherwise beating the original boss shows the
 copy beaten too). A copy with state rules uses its own state.
 
+**Inside gates and worlds** (the section under the inspector): the room's
+settings for gate floors (arrival cell, music, battles, saving, arrival
+conversation, stairs) — and, for a room of a **world**, which world it belongs
+to and whether the player can save there (see *Worlds*).
+
 **Animated tiles:** select cells → Metatiles → **Animate** tab. See the
 *Animated tiles* topic.

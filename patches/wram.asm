@@ -340,7 +340,16 @@ wPushAttrRow:: db ;d242 — the row being written (0-17)
 ; builders, which read them with bank $04 mapped). Transient by design: rebuilt per
 ; load; entry 0 falls back to Terry's tables while the high byte at +1 is zero.
 wMillyLayout:: ds 160 ;d243-d2e2 — Milly's level-1/2 frame tables
-wCustomPool:: ds $5A4 - 132 - 5 - 2 * TILEANIM_MAX_GROUPS - 2 - 18 - 26 - 8 - 256 - 1 - 2 - 160 ;d2e3-d5e4 — transient reserve (was $664; FX1 carved 64+128; S97 132; S102 69; S105 2; S111 18; S114 26; S115 8; S117 256 wExtFlags + 1 wShopID; S117b 2 push scratch; S121 160 wMillyLayout)
+; S123 (NPC colours): bank $60 CopyNPCListToBuffer writes, per NPC slot, $80 |
+; OBJ palette (0 = the sprite's own) from the room list's $A2 prefixes, tagged
+; with the map / screen it was copied for; bank $60 entry 11 NpcColourDraw reads
+; them at every field NPC draw. Transient by design (rebuilt at every list copy).
+wNpcColour:: ds 8 ;d2e3-d2ea — per NPC slot: $80 | palette, 0 = own colours
+wNpcColourMap:: db ;d2eb — wMapID of the last list copy
+wNpcColourScr:: db ;d2ec — wScreenIndex of the last list copy
+wNpcColourNext:: db ;d2ed — copy scratch: the colour for the next NPC entry
+wNpcColourK:: db ;d2ee — copy scratch: NPC entries seen so far
+wCustomPool:: ds $5A4 - 132 - 5 - 2 * TILEANIM_MAX_GROUPS - 2 - 18 - 26 - 8 - 256 - 1 - 2 - 160 - 12 ;d2ef-d5e4 — transient reserve (was $664; FX1 carved 64+128; S97 132; S102 69; S105 2; S111 18; S114 26; S115 8; S117 256 wExtFlags + 1 wShopID; S117b 2 push scratch; S121 160 wMillyLayout; S123 12 NPC colours)
 ; FX1 (S71): wPoolBounce — 128-byte staging for sleep-pool bank-2 record
 ; swaps (per-byte scratch in CF3PoolSwapRecord). Transient. (The v1 drain's
 ; halved-pending scratch use was removed with the S71v2 exp-scale veto.)

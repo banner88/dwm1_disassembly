@@ -21,7 +21,7 @@ from . import scriptgen as S
 # --pin-templates after a successful regression build; None = check skipped
 # with a warning.
 TEMPLATE_SIZE = {
-    0x60: 678,   # addr(CustomScriptMasterTable)-$4000 — S117 (558 + CustomReadInteract's vanilla VanillaNPCExtTable branch + CopyNPCListToBuffer with the $A0/$A1 condition prefixes; measured from the S117 game.sym). Prev 558 S105 reference game.sym (549 + CustomScriptRead's SKILL_SCRIPT_TYPE branch, 9 B). Prev 549 S101 reference game.sym (492 S97 + CustomMonsterCast + its call at the head of CustomStateRules). Prev: S97 reference game.sym (383 S94b -> 492 S97: entry-8 dw + CustomStateRules + the CustomReadStep call)
+    0x60: 1293,  # addr(CustomScriptMasterTable)-$4000 — S123 r2 ($450D: + entry 12 CustomDescentFeel, 20 B). Prev 1273 S123 ($44F9 in the S123 example game.sym: + entry 11 NpcColourDraw, NpcColourRecord, the $A2 colour prefix — 203 B over S122's real $42E = 1070; the 678 below was never re-measured after S119's entries 9/10 + patch readers, so the pre-build check under-counted bank $60 by 392 B — DOC_AUDIT S123). Prev 678 S117 (558 + CustomReadInteract's vanilla VanillaNPCExtTable branch + CopyNPCListToBuffer with the $A0/$A1 condition prefixes; measured from the S117 game.sym). Prev 558 S105 reference game.sym (549 + CustomScriptRead's SKILL_SCRIPT_TYPE branch, 9 B). Prev 549 S101 reference game.sym (492 S97 + CustomMonsterCast + its call at the head of CustomStateRules). Prev: S97 reference game.sym (383 S94b -> 492 S97: entry-8 dw + CustomStateRules + the CustomReadStep call)
                  # (283 S53 -> 348 S70 -> 358 S70v3 (+2x5B wCustomY7Cmp arming): entry-7 dw + VanillaExitResolve +
                  # factored CopyExitListToBuffer in the template head; 383 S94: VanillaExitResolve rows keyed
                  # by (mapID, screen) — `db mapID, screen` with $FF = any screen)
@@ -283,6 +283,7 @@ def validate(prj, generated=None):
 
     # ------------------------------------------ gate insertion (S100, P3.7b)
     _validate_gates(prj, rooms, errors, warnings)
+    _validate_worlds(prj, rooms, errors, warnings)      # S123 (ROADMAP NG3)
 
     # ------------------------------------------------- per-room structure
     for r in rooms:
@@ -1144,7 +1145,7 @@ def _validate_gates(prj, rooms, errors, warnings):
                 f"room {r.get('id')}: gate {gid}'s boss room is also served on "
                 "ordinary floors (custom.gate_inserts)")
         enc = r.get('encounters') or {}
-        if enc.get('enabled') and not enc.get('follow_gate'):
+        if enc.get('enabled') and not enc.get('follow_gate') and 'list' not in enc:
             errors.append(
                 f"room {r.get('id')}: boss room of gate {gid} with a FIXED encounter "
                 "pool — pinning rewrites the current gate/floor every step")
@@ -1189,9 +1190,17 @@ def _validate_gates(prj, rooms, errors, warnings):
         if not c.get('new'):
             continue
         if gid not in entered:
-            warnings.append(
-                f"new gate {gid} ({c['name']}) has no entrance — add one on a room "
-                "cell (Rooms tab: \"Gate entrance here\") or nothing can enter it")
+            if c.get('world'):
+                warnings.append(
+                    f"world {c['name']} (gate {gid}) has no portal — add one on a room "
+                    "cell (Rooms tab: More ▾ → \"World entrance here…\") or nothing "
+                    "can enter it")
+            else:
+                warnings.append(
+                    f"new gate {gid} ({c['name']}) has no entrance — add one on a room "
+                    "cell (Rooms tab: \"Gate entrance here\") or nothing can enter it")
+        if c.get('world'):
+            continue                   # S123: a world never reaches its boss floor
         if not c['boss_room']:
             warnings.append(
                 f"new gate {gid} ({c['name']}) ends in a VANILLA boss room "
@@ -1241,6 +1250,8 @@ def _validate_gates(prj, rooms, errors, warnings):
                 break
     for rid, rrows in served.items():
         r = prj.room_by_id(rid)
+        if all(rw.get('world') is not None for rw in rrows):
+            continue        # S123: a world's start room — doors, not stairs (_validate_worlds)
         stairs, other = 0, []
         for k, scr in prj.room_screens(r).items():
             for st in prj.screen_states(scr):
@@ -1285,11 +1296,100 @@ def _validate_gates(prj, rooms, errors, warnings):
                 f"({sorted(set(ways_in))[0]}) — entered that way, outside a dive, its "
                 "Stairs down drops the player into a floor of the last gate dived")
         enc = r.get('encounters') or {}
-        if enc.get('enabled') and not enc.get('follow_gate'):
+        if enc.get('enabled') and not enc.get('follow_gate') and 'list' not in enc:
             errors.append(
                 f"room {rid}: served inside gates with a FIXED encounter pool "
                 f"(gate {enc.get('gate_id')}, floor {enc.get('floor')}) — the pool "
                 "is pinned by rewriting the current gate/floor every step, so the "
                 "next floor would belong to that gate. Use \"follow the gate\" "
                 "(encounters.follow_gate) or turn encounters off")
+
+
+def _validate_worlds(prj, rooms, errors, warnings):
+    """S123 (ROADMAP NG3): custom.gates[].world (PROJECT_COMPILER §2.36,
+    GATE_GENERATION §7.11). The engine facts were measured: the portal = the
+    game's gate entry, the start room = floor 1 (100 %), the rest = doors."""
+    from . import gates as G
+    try:
+        worlds = prj.worlds()
+    except Exception as e:                                         # noqa: BLE001
+        errors.append(str(e))
+        return
+    if not worlds:
+        return
+    by_mid = {F.val(r['mapID']): r.get('id') for r in rooms if not r.get('placeholder')}
+    # which flags any script turns ON (after every lowering: conversations,
+    # talks, cutscenes, quests)
+    set_flags = set()
+    for sc in list(prj._scripts.values()):
+        for op in sc.get('ops') or []:
+            if isinstance(op, list) and len(op) >= 3 and op[0] == 'op' and op[1] == 'set_flag':
+                try:
+                    set_flags.add(op[2] if isinstance(op[2], int)
+                                  else prj.resolve_flag_ref(op[2], 'world check'))
+                except Exception:                                  # noqa: BLE001
+                    pass
+    for gid, w in sorted(worlds.items()):
+        name = w['name']
+        members = set(w['rooms'])
+        flag = prj.resolve_flag_ref(f"gate:{gid}", f"world {name}")
+        if flag not in set_flags:
+            warnings.append(
+                f"world {name}: nothing turns its cleared flag (gate:{gid}) ON — its "
+                "portal swirl never stops / changes colour. Give the end boss's "
+                "conversation a \"Turn flags ON\" with \"gate:{gid} cleared\" (Make "
+                "boss… → end boss does it)")
+        # reachability inside the world from the start room
+        edges, leaves = {}, False
+        for rid in members:
+            r = prj.room_by_id(rid)
+            for k, scr in prj.room_screens(r).items():
+                for st in prj.screen_states(scr):
+                    for e in st.get('exits', []) or []:
+                        if 'dest' not in e or G.is_stairs_down(e):
+                            continue
+                        try:
+                            mid = prj.resolve_dest(e['dest'])
+                        except Exception:                          # noqa: BLE001
+                            continue
+                        if G.is_gate_entrance(e):
+                            leaves = True
+                            continue
+                        to = by_mid.get(mid)
+                        if to in members:
+                            edges.setdefault(rid, set()).add(to)
+                        else:
+                            leaves = True
+            for _i, sid in prj.room_script_table(r):
+                sc = prj._scripts.get(sid) if isinstance(sid, str) else None
+                for op in (sc or {}).get('ops') or []:
+                    if isinstance(op, list) and len(op) >= 2 and op[0] == 'op' and \
+                            op[1] in ('map_transition', 'warp_fade'):
+                        leaves = True
+        seen, todo = {w['start_room']}, [w['start_room']]
+        while todo:
+            for nx in edges.get(todo.pop(), ()):
+                if nx not in seen:
+                    seen.add(nx)
+                    todo.append(nx)
+        for rid in w['rooms']:
+            if rid not in seen:
+                warnings.append(
+                    f"world {name}: room {rid} cannot be reached from the start room by "
+                    "the world's doors / exits")
+        if not leaves:
+            warnings.append(
+                f"world {name}: no door, exit or warp leads out of it — the player can "
+                "only leave by losing a battle")
+        for rid in w['rooms']:
+            r = prj.room_by_id(rid)
+            enc = r.get('encounters') or {}
+            if enc.get('enabled') and 'list' not in enc:
+                warnings.append(
+                    f"world {name}: room {rid} has battles without a list of its own — "
+                    "they "
+                    + ("follow the world's source gate (its floor 1 list)"
+                       if enc.get('follow_gate') else
+                       f"use gate {enc.get('gate_id')} floor {enc.get('floor')} (pinned)")
+                    + "; pick a list for the room (Encounters tab → Rooms)")
 

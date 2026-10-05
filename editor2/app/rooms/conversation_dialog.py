@@ -44,6 +44,10 @@ KIND_TIPS = {
               'to the destination — at the Castle optionally with the priest\'s heal or the '
               'King\'s speech. Nothing after it runs.',
     'move': 'Warps the player (the room reloads, so state rules pick the new state).',
+    'vanish': 'Every NPC that runs this conversation on this screen leaves NOW — the game\'s '
+              'own flicker-out (or gone at once). Use it after a boss battle: the boss is gone '
+              'and its corridor opens at once. For good: also turn a flag ON and show the NPC '
+              'only while that flag is OFF (NPC → shown when; Make boss… does all of it).',
     'end': 'Ends the conversation here.',
 }
 
@@ -69,6 +73,8 @@ def new_step(kind, doc, room, key):
     if kind == 'move':
         mid = int(str(room['mapID']), 0) if room is not None else 0
         return {'move': {'dest': f'room:${mid:02X}', 'screen': int(key), 'x': 4, 'y': 4}}
+    if kind == 'vanish':                            # S123
+        return {'vanish': {'how': 'flicker'}}
     return {'end': True}
 
 
@@ -708,6 +714,31 @@ class ConversationDialog(QDialog):
     def _ed_move(self, st):
         mv = st['move'] = st.get('move') or {}
         self.rv.addWidget(DestEditor(self.doc, mv, self._refresh_label))
+        self.rv.addStretch(1)
+
+    def _ed_vanish(self, st):
+        """S123: how the NPCs running this conversation leave."""
+        v = st['vanish'] = st.get('vanish') or {}
+        f = QFormLayout()
+        how = QComboBox()
+        how.addItem('flicker out (the game\'s own vanish, about half a second)', 'flicker')
+        how.addItem('gone at once', 'instant')
+        how.setCurrentIndex(max(0, how.findData(v.get('how', 'flicker'))))
+
+        def ch(_i=None):
+            v['how'] = how.currentData()
+            self._refresh_label()
+        how.activated.connect(ch)
+        f.addRow('how', how)
+        w = QWidget()
+        w.setLayout(f)
+        self.rv.addWidget(w)
+        note = QLabel('Only for this visit: when the screen loads again the NPC is back — '
+                      'unless it is shown only while a flag is OFF that this conversation '
+                      'turns ON (NPC → shown when).')
+        note.setWordWrap(True)
+        note.setStyleSheet('color:#aaa;')
+        self.rv.addWidget(note)
         self.rv.addStretch(1)
 
     def _ed_end(self, st):

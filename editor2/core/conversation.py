@@ -27,11 +27,13 @@ import copy
 import json
 import os
 
-STEP_KINDS = ('say', 'ask', 'if', 'set', 'clear', 'battle', 'helper', 'move', 'end')
+STEP_KINDS = ('say', 'ask', 'if', 'set', 'clear', 'battle', 'helper', 'move', 'vanish', 'end')
 STEP_NAMES = {
     'say': 'Say', 'ask': 'Ask YES / NO', 'if': 'If flags…', 'set': 'Turn flags ON',
     'clear': 'Turn flags OFF', 'battle': 'Battle', 'helper': 'Helper takes the player away',
-    'move': 'Move the player', 'end': 'Stop here'}
+    'move': 'Move the player',
+    'vanish': 'Vanish (this NPC leaves)',      # S123: every NPC running this conversation
+    'end': 'Stop here'}
 HELPER_SPRITE = 0x39            # Warubou, the darker Watabou (user S101 r2); vanilla uses $21 Watabou
 WATABOU_SPRITE = 0x21
 CASTLE_THRONE = {'dest': 'vanilla:$00', 'screen': 1, 'x': 4, 'y': 5}   # vanilla boss exits
@@ -363,6 +365,10 @@ class ConversationMixin:
             m = st['move'] or {}
             return f"Move the player to {m.get('dest')} screen {m.get('screen', 0)} " \
                    f"({m.get('x')},{m.get('y')})"
+        if k == 'vanish':
+            how = (st['vanish'] or {}).get('how', 'flicker')
+            return ('Vanish: this NPC flickers out' if how == 'flicker'
+                    else 'Vanish: this NPC is gone at once')
         if k == 'end':
             return 'Stop here'
         return '?'

@@ -69,5 +69,10 @@ Every custom room's battles:
   these flags hold, use that list"). Works inside and outside gates.
 - **Own battle rate** — a rate for this room, whatever list it uses.
 
-The Rooms tab's "Inside gates" box shows "its own list" for such rooms; the
-list itself is set here.
+The Rooms tab's "Inside gates and worlds" box shows "its own list" for such
+rooms; the list itself is set here.
+
+**World rooms** (see *Worlds*) use **Its own list** (or *No battles* — a calm
+room, where the player can save by default). A flag variant switches the list
+once a boss is beaten, e.g. `world cleared — name` or a mini-boss's
+`…_beaten`. The World tab lists each world room's list and variants.

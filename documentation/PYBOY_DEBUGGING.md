@@ -336,3 +336,30 @@ edge and the battle waits for input forever.
   the 20 GateBossWin calls (`wintail_check.py`) with random starting flags.
 - **Trap: `pkill -f <pattern>` matches the shell running it** and kills the tool call; kill
   by PID instead.
+## S123 techniques — single-tile moves, text boxes at rest, winning battles by script, colour by OAM
+
+- **One tile per press.** Hold the D-pad a few frames, release, then wait until
+  `PLAYER_TX/TY` changes (cap ~40 frames) — `move1`. Holding a fixed 18 frames overshoots
+  after a slowdown (a coloured-NPC room, a scroll) and the walk drifts.
+- **Edge doors need a second push.** A door on x = 9 / y = 7 fires only when the player
+  pushes against the screen edge from the door cell: one more press in the same direction.
+- **A text box at rest.** Snap when the box rows (crop y 104-136 minus the blinking
+  ▼ arrow's cells) are unchanged for 8 frames; the arrow alone otherwise makes every frame
+  "new". Then A.
+- **Win a battle by script.** `GAME_MODE` 2 = battle; tap A every 50 frames (FIGHT → the
+  default target); poke `$DB85` = 7 to suppress the "wants to join" prompt; B closes a
+  menu opened by mistake; outside battle press A only while `$C8EB` bit 0 (a box) is set —
+  A in the field opens the menu.
+- **Is an NPC coloured?** Read the OAM (`$FE00`, 40 × 4 B): the pieces at the NPC's screen
+  position carry the palette in attr bits 0-2 — compare with the palette it should have;
+  scroll the screen and read again (the colours must follow the slot, not the position).
+- **Cost of a per-frame hook:** measure it in the emulator against the same room and
+  input with the feature off, never by counting cycles on paper — S123 colour path:
+  ≈ 1.2 scanlines per NPC, ~1.2 % dropped frames in a 4-NPC room with 2 coloured NPCs,
+  none seen in the user's rooms.
+- **Read enemy ids as words** (KEY_LESSONS S123).
+- **Which transition ran?** Log `$C905` (the transition ladder) and `$C8B8` (sound
+  requests) per frame while walking onto the exit: a portal / fresh gate entry = states
+  1-6 with sound `$52` (~350 frames), an in-gate floor change = `$10-$17` with sound
+  `$55`. Walk onto the real cell — a warp injected from another room takes another path
+  (KEY_LESSONS S123 r2).

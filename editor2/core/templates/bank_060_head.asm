@@ -16,6 +16,10 @@
 ;            the current screen's step counter from CustomStateRulePtrTable
 ;   Entry 9: CustomDrawTiles    — S119: script op $24 (tile patch) in a custom room
 ;   Entry 10: CustomDrawAttrs   — S119: script op $61 (the patch's colours)
+;   Entry 11: NpcColourDraw     — S123: the field NPC draw (bank $06) with the
+;            NPC colours of the room's $A2 prefixes (any of the 8 OBJ palettes)
+;   Entry 12: CustomDescentFeel — S123 r2: bank $0B CustomDescentInGate's body —
+;            only a STAIRS-DOWN exit of a custom room is an in-gate floor change
 ; =============================================================================
 
 SECTION "ROM Bank $060", ROMX[$4000], BANK[$60]
@@ -32,6 +36,8 @@ SECTION "ROM Bank $060", ROMX[$4000], BANK[$60]
     dw CustomStateRules     ; Entry 8 — S97 state rules (bank $17 CustomAttrCheck + CustomReadStep call it)
     dw CustomDrawTiles      ; Entry 9 — S119 op $24 in custom rooms (bank $04 ScriptCmd24 same-size redirect)
     dw CustomDrawAttrs      ; Entry 10 — S119 op $61 in custom rooms (bank $04 ScriptCmd61 same-size redirect)
+    dw NpcColourDraw        ; Entry 11 — S123 NPC colours (bank $06 NPCDrawSlot same-size redirect)
+    dw CustomDescentFeel    ; Entry 12 — S123 r2 gate-flag exit feel (bank $0B CustomDescentInGate far-calls it)
 
 ; =============================================================================
 ; CustomPtrChase
@@ -204,23 +210,47 @@ CustomReadInteract:
 ; slot numbers of every later NPC are unchanged. Examine / step spots (bit 7)
 ; are copied verbatim. The engine never sees a prefix (bit 7 set + $A_ is no
 ; vanilla interact kind; both bank $0B scans stop at the first NPC anyway).
+; S123 — COLOUR PREFIX: `$A2, palette, flag lo, flag hi, $FF` = the NEXT NPC is
+; drawn in OBJ palette 0-7 instead of its sprite's own (flag $FFFF = always,
+; else only while that flag is SET). The colours go to wNpcColour[slot] (slot =
+; the NPC's place among the list's NPC entries — spots take no slot, hidden
+; NPCs keep theirs: bank $0B Call_00b_477e) tagged with wMapID / wScreenIndex;
+; entry 11 NpcColourDraw applies them at draw time.
 ; Clobbers A/BC/DE.
 ; -----------------------------------------------------------------------------
 CopyNPCListToBuffer:
+    push hl
+    ld hl, wNpcColour
+    xor a
+    ld c, 8
+.clearColour:
+    ld [hl+], a
+    dec c
+    jr nz, .clearColour
+    ld [wNpcColourNext], a
+    ld [wNpcColourK], a
+    ld a, [wMapID]
+    ld [wNpcColourMap], a
+    ld a, [wScreenIndex]
+    ld [wNpcColourScr], a
+    pop hl
     ld de, wCustomNPCBuffer
     ld b, $00                   ; B = $40 when the next NPC must be hidden
 .copyNPC:
     ld a, [hl]
     cp $FF
     jr z, .npcDone
+    cp $A2
+    jp z, .colour
     and $FE
     cp $A0
     jr z, .cond
     ld a, [hl+]
     bit 7, a
-    jr nz, .verbatim            ; a spot: never hidden
+    jr nz, .verbatim            ; a spot: never hidden, takes no NPC slot
     or b
     ld b, $00
+    call NpcColourRecord        ; S123: this NPC's colour -> wNpcColour[slot]
 .verbatim:
     ld [de], a
     inc de
@@ -267,10 +297,163 @@ CopyNPCListToBuffer:
     ld b, e
     pop de
     jr .copyNPC
+.colour:
+    inc hl                      ; S123: $A2, palette, flag lo, flag hi, $FF
+    ld a, [hl+]
+    and $07
+    or $80
+    push de
+    ld d, a                     ; D = $80 | palette
+    ld a, [hl+]
+    ld c, a
+    ld a, [hl+]
+    inc hl                      ; byte 4 is padding
+    push hl
+    ld e, b                     ; E = hide so far
+    ld b, a                     ; BC = flag index ($FFFF = always)
+    and c
+    inc a
+    jr z, .colourOn
+    call TestEventFlag          ; Z = clear, NZ = set (A/HL clobbered; BC/DE kept)
+    jr z, .colourOff
+.colourOn:
+    ld a, d
+    ld [wNpcColourNext], a
+.colourOff:
+    ld b, e
+    pop hl
+    pop de
+    jp .copyNPC
 .npcDone:
     ld a, $FF
     ld [de], a
     ld hl, wCustomNPCBuffer
+    ret
+
+; NpcColourRecord (S123) — CopyNPCListToBuffer met an NPC entry: its slot
+; (wNpcColourK, the NPC entries so far) takes the pending colour. Keeps A/BC/DE/HL.
+NpcColourRecord:
+    push af
+    push hl
+    ld a, [wNpcColourK]
+    cp 8
+    jr nc, .full
+    ld l, a
+    inc a
+    ld [wNpcColourK], a
+    ld h, $00
+    push de
+    ld de, wNpcColour
+    add hl, de
+    pop de
+    ld a, [wNpcColourNext]
+    ld [hl], a
+    xor a
+    ld [wNpcColourNext], a
+.full:
+    pop hl
+    pop af
+    ret
+
+; -----------------------------------------------------------------------------
+; Entry 12: CustomDescentFeel (S123 r2; user: "The entry into the custom gate …
+; should be a full start-of-gate effect (screen whirling around and slowly
+; vanishing) instead of go-down-a-floor effect (screen closing with a whoosh
+; sound)"). Called by bank $0B CustomDescentInGate at the gate-flag exit
+; transition (jr_00b_466b). Since S41 that routine set wInGateworld = $01 for
+; EVERY gate-flag exit of a custom room, so the transition reads "already in a
+; gate" -> the floor-change ladder ($C905 states $10-$17, sound $55). That is
+; right for a STAIRS-DOWN cell (gate flag $80) but wrong for a GATE ENTRANCE
+; (gate flag 1, dest = the gate): there the vanilla portal flow must run as from
+; a vanilla portal room ($C905 states 1-6, the whirl) — wInGateworld stays 0.
+; Measured (PyBoy): vanilla room $24 portal = states 1..6; a custom-room portal
+; before this fix = $10..$17. Clobbers A only.
+; -----------------------------------------------------------------------------
+CustomDescentFeel:
+    ld a, [wMapID]
+    cp CUSTOM_ROOM_START
+    ret c                       ; vanilla source rooms: untouched (as since S41)
+    ld a, [wWarpFlag]
+    bit 7, a                    ; $80 = Stairs down (an in-gate floor change)
+    ret z                       ; 1 = a gate entrance: the game's own gate entry
+    ld a, $01
+    ld [wInGateworld], a        ; transient: the in-gate floor change feel
+    ret
+
+; -----------------------------------------------------------------------------
+; Entry 11: NpcColourDraw (S123) — bank $06 NPCDrawSlot (was SaveMapS_4d0a), the field draw of one
+; NPC slot (non-monster), far-calls this instead of bank $05 entry 0 (same-size:
+; `ld hl, $0500` -> `ld hl, $600B`). DE = the slot + $0F. The NPC is drawn by
+; bank $05 entry 0 exactly as before; then, if the last CopyNPCListToBuffer was
+; for THIS map and screen (never on gate floors) and gave this slot a colour,
+; the palette bits (attr bits 0-2) of the OAM buffer entries the draw added
+; ($C000 + 4 * index, index from the $FFCB counter before to after) become it.
+; Clobbers A/BC/HL (as the bank $05 call did); keeps DE.
+; -----------------------------------------------------------------------------
+NpcColourDraw:
+    ld a, [wInGateworld]
+    or a
+    jr nz, .plain
+    ld a, [wNpcColourMap]
+    ld b, a
+    ld a, [wMapID]
+    cp b
+    jr nz, .plain
+    ld a, [wNpcColourScr]
+    ld b, a
+    ld a, [wScreenIndex]
+    cp b
+    jr nz, .plain
+    ld a, e
+    sub LOW($D7D2 + $0F)        ; slot k: DE = $D7D2 + 32k + $0F
+    and $E0
+    swap a
+    srl a                       ; A = slot 0-7
+    ld hl, wNpcColour
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl]
+    bit 7, a
+    jr z, .plain
+    and $07
+    ld c, a                     ; C = palette
+    ldh a, [$CB]
+    ld b, a                     ; B = first OAM index of this draw
+    push de
+    push bc
+    ld hl, $0500
+    rst $10                     ; bank $05 entry 0 (keeps DE; A/BC clobbered)
+    pop bc
+    ldh a, [$CB]
+    sub b
+    jr z, .done
+    jr c, .done
+    ld e, a                     ; E = pieces drawn
+    ld a, b
+    add a
+    add a
+    add $03
+    ld l, a
+    ld h, $C0                   ; HL = attr byte of the first piece
+.recolour:
+    ld a, [hl]
+    and $F8
+    or c
+    ld [hl+], a
+    inc hl
+    inc hl
+    inc hl
+    dec e
+    jr nz, .recolour
+.done:
+    pop de
+    ret
+.plain:
+    ld hl, $0500
+    rst $10
     ret
 
 CustomExitCheck:

@@ -448,6 +448,246 @@ def s122_gate_themes(app, w):
           'a gate theme + colours; undo restores project.json')
 
 
+def s123_worlds(app, w):
+    """S123 (ROADMAP NG3; user: "a world that can have encounters, encounter-free rooms
+    (where you can also save), mini-bosses, endbosses, flags and triggers. Enter via
+    swirling portal, portal stops when boss beaten, OR portal is different colour"):
+    the World tab's Worlds panel (New world with a new start room in a gate look, the
+    swirl colour, the saving rule, a second room, the report), the Rooms tab's World
+    entrance here…, an NPC's colour, Make boss… (end boss of the world), the Vanish step
+    in the conversation dialog, the Gates tab showing the world locked; everything
+    undoes to the original project.json."""
+    from PySide6.QtWidgets import QDialog, QInputDialog, QMessageBox
+    from editor2.app import world_tab as WT
+    from editor2.app.rooms import boss_dialog as BD
+    from editor2.app.rooms import conversation_dialog as CD
+    s = w.session
+    doc = s.doc
+    before = doc.dumps()
+    n0 = s.undo.index()
+    wt = w.world_tab
+    w.tabs.setCurrentWidget(wt)
+    app.processEvents()
+    wp = wt.worlds
+    assert wp.list.count() == 0 and not wp.form_box.isEnabled()
+
+    class _NW(WT.NewWorldDialog):
+        def exec(self_):
+            self_.name.setText('Fern World')
+            self_.start.setCurrentIndex(0)          # a NEW start room
+            self_.theme.setCurrentIndex(9)          # Forest
+            return QDialog.Accepted
+    keep = WT.NewWorldDialog
+    WT.NewWorldDialog = _NW
+    try:
+        wp._new()
+    finally:
+        WT.NewWorldDialog = keep
+    app.processEvents()
+    gid = wp.current()
+    assert gid == 32 and doc.world(gid)['start']['room'] == 'fern_world_start', doc.world(gid)
+    assert doc.gate_theme(doc.room('fern_world_start')) == 9
+    assert wp.rooms.rowCount() == 1 and 'portal' in wp.problems.text().lower()
+    wp.swirl.setCurrentIndex(wp.swirl.findData(1))
+    wp._swirl_changed(0)
+    assert doc.gate_setting(gid).get('cleared_swirl') == 1
+    wp.saving.setCurrentIndex(wp.saving.findData('everywhere'))
+    wp._saving_changed(0)
+    assert doc.world(gid)['saving'] == 'everywhere'
+    keep_t, keep_i = QInputDialog.getText, QInputDialog.getItem
+    QInputDialog.getText = staticmethod(lambda *a, **k: ('Fern cave', True))
+    QInputDialog.getItem = staticmethod(lambda *a, **k: (a[3][1], True))   # gate theme 1
+    try:
+        wp._new_room()
+    finally:
+        QInputDialog.getText, QInputDialog.getItem = keep_t, keep_i
+    app.processEvents()
+    assert doc.world_rooms(gid) == ['fern_world_start', 'fern_cave'], doc.world_rooms(gid)
+    assert wp.rooms.rowCount() == 2
+    # the Gates tab: the world is listed and locked
+    gt = w.gates_tab
+    gt.refresh()
+    row = next(i for i, g in enumerate(gt.gates) if g['id'] == gid)
+    assert 'WORLD' in gt.list.item(row).text()
+    gt.list.setCurrentRow(row)
+    gt._show_gate(row)
+    assert not any(b.isEnabled() for b in gt._world_boxes) and 'WORLD' in gt.head.text()
+    # an ordinary gate: its swirl turns green once cleared (Gates tab), and back
+    row1 = next(i for i, g in enumerate(gt.gates) if g['id'] == 1)
+    gt.list.setCurrentRow(row1)
+    gt._show_gate(row1)
+    assert all(b.isEnabled() for b in gt._world_boxes)
+    gt.set_swirl.setCurrentIndex(gt.set_swirl.findData(1))
+    gt.set_swirl.activated.emit(gt.set_swirl.currentIndex())
+    assert doc.gate_setting(1).get('cleared_swirl') == 1, doc.gate_setting(1)
+    gt.list.setCurrentRow(row1)
+    gt._show_gate(row1)
+    assert gt.set_swirl.currentData() == 1
+    gt.set_swirl.setCurrentIndex(0)
+    gt.set_swirl.activated.emit(0)
+    assert doc.gate_setting(1).get('cleared_swirl') is None
+    # Rooms tab: the portal in the example's dusk_mirror, an NPC colour, Make boss
+    rt = w.rooms_tab
+    w.tabs.setCurrentWidget(rt)
+    for i in range(rt.room_list.count()):
+        if 'dusk_mirror' in rt.room_list.item(i).text() or 'Dusk' in rt.room_list.item(i).text():
+            rt.room_list.setCurrentRow(i)
+            break
+    app.processEvents()
+    assert rt.current_room() is not None and rt.current_room()['id'] == 'dusk_mirror'
+    QInputDialog.getItem = staticmethod(lambda *a, **k: (a[3][0], True))
+    try:
+        rt._add_world_entrance((4, 2))
+    finally:
+        QInputDialog.getItem = keep_i
+    app.processEvents()
+    ents = doc.gate_entrances(gid)
+    assert len(ents) == 1 and ents[0][0]['id'] == 'dusk_mirror' and doc.gate_swirls(gid)
+    # an NPC in the cave: colour + Make boss (end boss)
+    for i in range(rt.room_list.count()):
+        if 'Fern cave' in rt.room_list.item(i).text():
+            rt.room_list.setCurrentRow(i)
+            break
+    app.processEvents()
+    cave = rt.current_room()
+    assert cave['id'] == 'fern_cave'
+    cmd = rt._npc_op('Add NPC', lambda d, r, k, st: d.add_npc(r, k, st, 5, 3, 0x08))
+    idx = cmd.result                                  # a person (Make boss works on any NPC)
+    rt._show()
+    rt._sel_npc = idx
+    rt._show_npc_panel(idx)
+    panel = rt.npc_panel
+    assert panel.colour.count() == 9 and panel.colour.isEnabled()
+    rt._npc_colour(4)
+    assert doc.npc_entries(doc.room('fern_cave'), 0, 0)[idx].get('colour') == 4
+
+    class _MB(BD.MakeBossDialog):
+        def exec(self_):
+            self_.name.setText('fern lord')
+            self_.end_boss.setChecked(True)
+            return QDialog.Accepted
+    keep = BD.MakeBossDialog
+    BD.MakeBossDialog = _MB
+    try:
+        rt._npc_make_boss()
+    finally:
+        BD.MakeBossDialog = keep
+    app.processEvents()
+    e = doc.npc_entries(doc.room('fern_cave'), 0, 0)[idx]
+    t = doc.conversation(e['script'])
+    kinds = [list(st)[0] for st in t['steps']]
+    assert kinds == ['say', 'battle', 'set', 'vanish', 'helper'], kinds
+    assert t['steps'][2]['set'] == ['fern_lord_beaten', 'gate:32'], t['steps'][2]
+    assert t['steps'][4]['helper']['dest'] == f"room:${int(doc.room('dusk_mirror')['mapID'], 16):02X}"
+    assert e.get('shown_when') == [{'flag': 'fern_lord_beaten', 'is': 'clear'}]
+    assert e.get('colour') == 4, 'Make boss keeps the colour (update_npc carries it)'
+    # the Vanish step in the conversation dialog
+    from PySide6.QtGui import QAction
+    dlg = CD.ConversationDialog(doc, rom=s.renderer.rom, room=doc.room('fern_cave'), key=0,
+                                spec=doc.conversation_spec(e['script']), parent=rt)
+    assert any(a.text().startswith('Vanish') for a in dlg.findChildren(QAction)), \
+        'no Vanish in + Add step'
+    dlg.add_step('vanish')
+    app.processEvents()
+    assert any('vanish' in st for st in dlg.spec()['steps'])
+    dlg.reject()
+    # the World tab report now: the end boss clears it, the portal exists
+    w.tabs.setCurrentWidget(wt)
+    wp.refresh()
+    app.processEvents()
+    assert 'END boss' in ' '.join(wp.rooms.item(r, 3).text() for r in range(wp.rooms.rowCount()))
+    assert 'portal' not in wp.problems.text().lower(), wp.problems.text()
+    wt.only_world.setChecked(True)
+    app.processEvents()
+    keys = set(wt.nodes)
+    assert ('room', 'fern_world_start') in keys and ('room', 'fern_cave') in keys and \
+        ('room', 'dusk_mirror') in keys and ('room', 'gate_rotation') not in keys, keys
+    wt.only_world.setChecked(False)
+    # S123 r3 (user: "SHOW VISUALLY … where it lands player INSIDE new world"): the
+    # way in as pictures; a portal added by clicking a cell; the landing changed by a
+    # click; Go to opens the cell; the Rooms canvas marks the portal + the landing
+    wp.refresh()
+    app.processEvents()
+    assert wp.land_pic.pixmap() is not None and not wp.land_pic.pixmap().isNull()
+    assert wp.portal_pic.pixmap() is not None and not wp.portal_pic.pixmap().isNull()
+    assert len(wp._portals) == 1 and wp._portals[0][:5] == ('room', 'dusk_mirror', 0, 4, 2), \
+        wp._portals
+    assert 'dusk' in wp.portal_lbl.text().lower() or 'Dusk' in wp.portal_lbl.text()
+
+    class _PD(WT.PortalDialog):
+        def exec(self_):
+            i = self_.room.findData('gate_rotation')
+            self_.room.setCurrentIndex(i)
+            assert self_.picker.pic.img is not None, 'the portal room is drawn'
+            self_.picker._clicked(3, 3)                 # a click on the picture
+            return QDialog.Accepted
+    keep_pd = WT.PortalDialog
+    WT.PortalDialog = _PD
+    try:
+        wp._add_portal()
+    finally:
+        WT.PortalDialog = keep_pd
+    app.processEvents()
+    assert ('room', 'gate_rotation', 0, 3, 3) in [c[:5] for c in doc.world_portals(gid)], \
+        doc.world_portals(gid)
+    assert '2 of 2' in wp.portal_lbl.text() or '1 of 2' in wp.portal_lbl.text()
+    keep_q = QMessageBox.question
+    QMessageBox.question = staticmethod(lambda *a, **k: QMessageBox.Yes)
+    try:
+        wp._portal_i = [c[:5] for c in wp._portals].index(('room', 'gate_rotation', 0, 3, 3))
+        wp._remove_portal()
+    finally:
+        QMessageBox.question = keep_q
+    assert ('room', 'gate_rotation', 0, 3, 3) not in [c[:5] for c in doc.world_portals(gid)]
+
+    class _SD(WT.StartDialog):
+        def exec(self_):
+            assert self_.picker.pic.img is not None, 'the start room is drawn'
+            self_.picker._clicked(6, 2)
+            return QDialog.Accepted
+    keep_sd = WT.StartDialog
+    WT.StartDialog = _SD
+    try:
+        wp._change_start()
+    finally:
+        WT.StartDialog = keep_sd
+    st0 = doc.world(gid)['start']
+    assert (st0['room'], st0['x'], st0['y']) == ('fern_world_start', 6, 2), st0
+    got = []
+    wt.openRequested.connect(lambda k: got.append(k))
+    wp._go_land()
+    wp._go_portal()
+    assert got[0] == ('room', 'fern_world_start', 0, 6, 2) and got[1][0] == 'room', got
+    w.tabs.setCurrentWidget(rt)
+    rt.open_node(got[0])
+    app.processEvents()
+    assert rt.current_room()['id'] == 'fern_world_start' and rt.canvas.selected_cell == (6, 2)
+    assert any(m[0] == 'world_land' and (m[1], m[2]) == (6, 2) for m in rt.canvas.markers), \
+        [m[:3] for m in rt.canvas.markers]
+    rt._move_marker(('world_land', gid, st0), 5, 5)            # drag the landing
+    assert (doc.world(gid)['start']['x'], doc.world(gid)['start']['y']) == (5, 5)
+    rt.open_node(('room', 'dusk_mirror', 0, 4, 2))
+    app.processEvents()
+    assert any(m[0] == 'portal' and (m[1], m[2]) == (4, 2) for m in rt.canvas.markers)
+    w.tabs.setCurrentWidget(wt)
+    # flag pickers name the world's cleared flag
+    from editor2.app.rooms.rules_panel import well_known
+    assert ('gate:32', 'world cleared — Fern World (gate 32)') in well_known(doc)
+    while s.undo.index() > n0:
+        s.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'undo must restore project.json exactly'
+    wp.refresh()
+    hlp = open(os.path.join(REPO, 'editor2', 'help', '65_worlds.md')).read()
+    for word in ('New world', 'World entrance here', 'Make boss', 'Vanish', 'green', 'JOURNAL',
+                 'Castle'):
+        assert word in hlp, f'help 65_worlds.md lacks "{word}"'
+    print('OK: S123 — worlds: New world (a new Forest start room), swirl turns green, saving '
+          'everywhere, a second room, the Gates tab locks it, World entrance here…, an NPC '
+          'colour, Make boss (end boss: own flag + gate:32 + Vanish + helper to the portal), '
+          'the Vanish step, the report and "only this world"; undo restores project.json')
+
+
 def main():
     do_rom = '--rom' in sys.argv
     app = QApplication.instance() or QApplication(sys.argv)
@@ -495,6 +735,7 @@ def main():
     s120_gates(app, w)
     s121_milly(app, w)
     s122_gate_themes(app, w)
+    s123_worlds(app, w)
 
     # S101 r3: World tab zoom (wheel, around the mouse) + pan (drag empty canvas)
     from PySide6.QtCore import QPoint, QPointF, Qt

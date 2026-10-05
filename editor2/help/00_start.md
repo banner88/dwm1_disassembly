@@ -7,8 +7,10 @@ built from it (the original ROM is never changed).
 **Tabs**
 
 - **Rooms** — paint rooms, their screens and states; NPCs, doors, spots,
-  talk and conversations; "Inside gates" settings for gate / boss floors.
-- **Import art** — turn a PNG rip into a room tileset.
+  talk and conversations; NPC colours and **Make boss…**; "Inside gates and
+  worlds" settings for gate / boss floors and world rooms. See *Rooms*,
+  *Doors, teleports and the World tab*, *Tilesets, metatiles and palettes*.
+- **Import art** — turn a PNG rip into a room tileset (see *Import art*).
 - **Cutscenes** — every scene of the game and of your rooms as a storyboard
   (steps in words, pictures recorded from the game) and **▶ Play**: the
   game plays the scene right here, with sound, set up for you (the intro
@@ -18,7 +20,8 @@ built from it (the original ROM is never changed).
 - **Gates** — which custom rooms appear on which gate floors, per-gate
   settings (floor count, boss floor, hand-made gates, project enemies) and
   **new gates** of your own (a copy of a vanilla gate; entrances on the Rooms
-  tab). A portal's swirl spins until its gate's boss is beaten.
+  tab). A portal's swirl spins until its gate's boss is beaten — or, per
+  gate, turns another colour instead. A **world** shows here as WORLD.
 - **Families** — which monsters belong to which family, family icons,
   arena dialogue, Spirit's default names.
 - **Monsters** — every monster's species data (family, growth, resistances,
@@ -46,7 +49,10 @@ built from it (the original ROM is never changed).
   items) and every item's price; an NPC sells a shop via Rooms tab → NPC →
   Shopkeeper….
 - **World** — the graph of rooms and the doors between them (mouse wheel =
-  zoom, drag empty space = move around, Fit / + / −).
+  zoom, drag empty space = move around, Fit / + / −), and the **Worlds**
+  panel: your own worlds — places of hand-made rooms entered through a portal
+  like a gate, with per-room battles, mini-bosses and an end boss that clears
+  the world (see *Worlds*).
 - **Build & Play** — build the ROM (Ctrl+B) and run it (Ctrl+R).
 - **Help** — this tab (F1).
 

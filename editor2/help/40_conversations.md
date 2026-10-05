@@ -2,7 +2,7 @@
 
 A conversation is a list of **steps**, run top to bottom. Open it with
 **New conversation…** (NPC selected) or **Arrival conversation…** (Inside
-gates section — runs when the player arrives on the room, optionally on one
+gates and worlds section — runs when the player arrives on the room, optionally on one
 screen only). Edit an existing one with **Edit talk…**.
 
 **+ Add step ▾** adds after the selected step, or INTO the selected branch
@@ -19,10 +19,13 @@ none.
 | Battle | 1-3 enemies; the steps after it run only if the player WINS (a loss = back to the castle, as vanilla) |
 | Helper takes the player away | the boss exit: Warubou flies in next to the player, spins, can speak, and the screen fades to the destination |
 | Move the player | a plain warp to a room / screen / cell |
+| Vanish (this NPC leaves) | the NPC talking **flickers out** (the game's own vanish) or disappears **at once**, there and then. To keep it gone, give it *shown when* a flag (set before the Vanish) is OFF — *Make boss…* does both |
 | Stop here | ends the conversation |
 
 **You do not need any *If*.** A straight boss is simply:
-`Say` → `Battle` → `Helper takes the player away`.
+`Say` → `Battle` → `Helper takes the player away`. A boss that stays in the
+room: `Say` → `Battle` → `Turn flags ON` (its beaten flag) → `Vanish` →
+`Say` … — NPC → **Make boss…** builds this for you.
 
 **The helper step** (top to bottom in the editor):
 

@@ -519,6 +519,7 @@ class RoomsTab(QWidget):
         gg.arrivalConversationRequested.connect(self._arrival_conversation)   # S101
         self.inspector.addStairsRequested.connect(self._add_stairs)
         self.inspector.addGateEntranceRequested.connect(self._add_gate_entrance)   # S115
+        self.inspector.addWorldEntranceRequested.connect(self._add_world_entrance)  # S123
         self.inspector.playHereRequested.connect(self._play_here)                  # S120
         self.sec_insp = Section('Room / screen / selection', self.inspector, 'rooms_inspector',
                                 expanded=False, remember=False)
@@ -531,7 +532,7 @@ class RoomsTab(QWidget):
         gscroll.setFrameShape(QScrollArea.NoFrame)
         gscroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         gscroll.setWidget(gg)
-        self.sec_gate = Section('Inside gates (gate floor)', gscroll, 'rooms_gate',
+        self.sec_gate = Section('Inside gates and worlds', gscroll, 'rooms_gate',
                                 expanded=False)
         self.right_split.addWidget(self.sec_gate)
         gg.shownChanged.connect(self.sec_gate.setVisible)
@@ -576,6 +577,13 @@ class RoomsTab(QWidget):
         npc.newConversationRequested.connect(self._npc_new_conversation)     # S101
         npc.shopRequested.connect(self._npc_shop)                            # S117
         npc.shownWhenRequested.connect(self._npc_shown_when)                 # S120
+        npc.colourEdited.connect(self._npc_colour)                           # S123
+        npc.bossRequested.connect(self._npc_make_boss)                       # S123
+        from editor2.app.rooms.npc_panel import NpcPanel
+        if NpcPanel.OBJ_PAL is None:
+            NpcPanel.load_obj_palettes(self.s.renderer.rom)
+        from editor2.app.rooms.canvas import SpriteCache
+        SpriteCache.bind_rom(self.s.renderer.rom)
         npc.editTalkRequested.connect(self._npc_edit_talk)
         npc.presenceToggled.connect(self._npc_presence)
         npc.deleteRequested.connect(self._npc_delete)
@@ -1352,7 +1360,7 @@ class RoomsTab(QWidget):
                 self._show_spot_panel(ref[1], ref[2])
             elif sel['kind'] in ('door', 'door_open', 'door_dead') and ref:
                 self._show_door_panel(ref)
-            elif sel['kind'] in ('exit', 'stairs') and ref and ref[0] == 'exit':
+            elif sel['kind'] in ('exit', 'stairs', 'portal') and ref and ref[0] == 'exit':
                 self._show_exit_panel(ref[1], ref[2])
 
     def _show_object(self, panel):
@@ -1592,7 +1600,19 @@ class RoomsTab(QWidget):
                 self._select_exit_at(cell)
 
     def open_node(self, key):
-        """Open a room given a world-graph key (S98)."""
+        """Open a room given a world-graph key (S98). S123 r3: a key of 5,
+        (kind, id, screen, x, y), opens that screen with the cell selected
+        (the World tab's portal / landing pictures → Go to)."""
+        if len(key) == 5:
+            kind, ident, scr, x, y = key
+            if kind == 'room':
+                self._go_end({'kind': 'room', 'room': ident, 'screen': int(scr), 'x': int(x),
+                              'y': int(y), 'states': [0]})
+            else:
+                self._go_end({'kind': 'vanilla', 'mapID': int(ident), 'screen': int(scr),
+                              'x': int(x), 'y': int(y)})
+            self.canvas.viewport().update()
+            return
         if key[0] == 'room':
             room = self.s.doc.room(key[1])
             self._go_end({'kind': 'room', 'room': key[1],
@@ -1914,6 +1934,11 @@ class RoomsTab(QWidget):
         room = self.current_room()
         if not ref or room is None:
             return
+        if ref[0] == 'world_land':                 # S123 r3: drag the world's landing cell
+            gid, key, rid = ref[1], self.key, self.room_id
+            self._gate_room_op(f'World landing ({cx},{cy}) screen {key}',
+                               lambda doc, r: doc.set_world_start(gid, rid, key, cx, cy))
+            return
         if ref[0] == 'gate_arrival':               # S100
             key = self.key
             self._gate_room_op(f'Gate arrival ({cx},{cy}) screen {key}',
@@ -2090,6 +2115,84 @@ class RoomsTab(QWidget):
             doc.set_npc_shown_when(r, k, st, idx, terms)
         if self._npc_op('NPC shown when', op) is not None:
             self._after_npc_edit(idx)
+
+    def _npc_colour(self, palette):
+        """S123: draw the selected NPC in another OBJ palette (None = its own)."""
+        idx = self._sel_npc
+        room = self.current_room()
+        if idx is None or room is None or self._sel_is_spot():
+            return
+        label = 'NPC own colours' if palette is None else f'NPC colour: palette {palette}'
+        if self._npc_op(label, lambda doc, r, k, st: doc.set_npc_colour(r, k, st, idx, palette)) \
+                is not None:
+            self._after_npc_edit(idx)
+
+    def _npc_make_boss(self):
+        """S123 (ROADMAP NG3): Make boss… — words, a battle, its own flag, gone after
+        the win (Vanish + shown while the flag is OFF), optionally a world's END boss
+        and the helper's way out (WorldsMixin.make_boss)."""
+        idx = self._sel_npc
+        room = self.current_room()
+        if idx is None or room is None or self._sel_is_spot():
+            return
+        cur = self.s.doc.npc_entries(room, self.key, self.state_idx)[idx].get('script')
+        if cur not in (None, 'none') and QMessageBox.question(
+                self, 'Make boss', 'This NPC already has a talk script; the boss conversation '
+                'replaces it here (the old script stays in the project). Go on?') \
+                != QMessageBox.Yes:
+            return
+        from editor2.app.rooms.boss_dialog import MakeBossDialog
+        dlg = MakeBossDialog(self.s.doc, self.s.renderer.rom, room, self.key, parent=self)
+        if dlg.exec() != QDialog.Accepted:
+            return
+        args = dlg.result_args()
+        cmd = self._npc_op(f"Make boss ({args['flag_name']})",
+                           lambda doc, r, k, st: doc.make_boss(r, k, st, idx, **args))
+        if cmd is not None:
+            self._after_npc_edit(idx)
+            self._say_status(f"Boss made: flag {args['flag_name']} turns ON when it is beaten"
+                             + (' — and the world is cleared' if args['end_of_world'] is not None
+                                else ''))
+
+    def _add_world_entrance(self, cell):
+        """S123 (ROADMAP NG3): the PORTAL of a world on this cell — the game's own gate
+        entry into the world's start room; the swirl spins until the world is cleared,
+        then stops or takes the world's colour (World tab)."""
+        from PySide6.QtWidgets import QInputDialog
+        room = self.current_room()
+        if room is None:
+            return
+        doc = self.s.doc
+        ids = doc.world_ids()
+        if not ids:
+            QMessageBox.information(self, 'World entrance', 'This project has no world yet — '
+                                    'make one on the World tab (New world…), then come back.')
+            return
+        cx, cy = cell
+        dead = self._dead_edge((cx, cy), 'exit')
+        if dead:
+            QMessageBox.warning(self, 'World entrance', dead)
+            return
+        items = [f'{doc.world_name(g)}  (gate {g})' for g in ids]
+        it, okd = QInputDialog.getItem(self, 'World entrance',
+                                       'Stepping on this cell enters the world:', items, 0, False)
+        if not okd:
+            return
+        gid = ids[items.index(it)]
+        rid, key, st = self.room_id, self.key, self.state_idx
+
+        def op(doc):
+            full = doc.add_world_entrance(doc.room(rid), key, st, cx, cy, gid)
+            doc.last_import_note = ('World entrance added, but there was no room for the swirl '
+                                    'object (8 NPCs on this screen)') if full else ''
+        cmd = self._door_op(f'World entrance ({cx},{cy}) -> {doc.world_name(gid)}', op)
+        if cmd is not None:
+            self._show()
+            self._select_exit_at((cx, cy))
+            note = getattr(doc, 'last_import_note', '')
+            self.status_line.setText(note or f'World portal at ({cx},{cy}) -> '
+                                     f'{doc.world_name(gid)}: walking onto it enters the world '
+                                     'exactly like a gate (its start room).')
 
     def _npc_shop(self):
         """S117 (P3.13c): the selected NPC becomes a shopkeeper — which shop

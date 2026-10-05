@@ -12,17 +12,17 @@ SECTION "ROM Bank $005", ROMX[$4000], BANK[$5]
 
 ; Bank $05 = the NPC sprites (S121 trace): entries 0 / 1 build sprite type $FFC7
 ; with the level-1 table $407F[id] (6 frames: down A/B, side A/B, up A/B; side
-; frames face right) and OR the palette $4152[id] into $FFCA (HramAudE_406e);
+; frames face right) and OR the palette $4152[id] into $FFCA (NPCSpritePaletteOr);
 ; the sheet is ROM0 $2ADF[id] (gfx-ID, 16 tiles). E.g. Milayou $14 (palette 3,
 ; gfx $3114), grey Warubou $39, Watabou $21, the old man $08, Terry as an NPC $5E.
 label5_4005:
-    call HramAudE_406e
+    call NPCSpritePaletteOr
     ld de, $407f
     call $0d91
     ret
 
 label5_400f:
-    call HramAudE_406e
+    call NPCSpritePaletteOr
     ld de, $407f
     push af
     push bc
@@ -98,9 +98,14 @@ jr_005_4069:
     ret
 
 
-HramAudE_406e:
+; NPCSpritePaletteOr (S123 label, was HramAudE_406e): $FFCA |= NPCSpritePalTable
+; [$FFC7] — the sprite id's OBJ palette (0-7; the table at $05:$4152, one byte per id,
+; e.g. the gate swirl $4D = 2, Milayou $14 = 3). An OR, so a slot's own attr bits
+; can only add palette bits; S123's NPC colours rewrite the OAM pieces after the
+; draw instead (bank $60 entry 11 NpcColourDraw).
+NPCSpritePaletteOr:
     ldh a, [$c7]
-    ld hl, $4152
+    ld hl, $4152                 ; NPCSpritePalTable (1 B per sprite id)
     add l
     ld l, a
     ld a, $00

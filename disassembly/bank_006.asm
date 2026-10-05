@@ -2393,7 +2393,7 @@ jr_006_4c9c:
 
 ; -----------------------------------------------------------------------------
 ; Entry 1 (label6_4cbc) — NPC sprite draw loop (S97 annotation): for each slot
-; with sprite != $FF and type bit 6 CLEAR, SaveMapS_4d0a builds the OAM entries
+; with sprite != $FF and type bit 6 CLEAR, NPCDrawSlot builds the OAM entries
 ; from +$18/+$1A — hidden (bit 6) entries are never drawn (PyBoy S97: OAM loses
 ; the slot's 4 objects).
 ; -----------------------------------------------------------------------------
@@ -2448,7 +2448,7 @@ jr_006_4ced:
     dec de
     cp $ff
     push de
-    call nz, SaveMapS_4d0a
+    call nz, NPCDrawSlot
     pop de
 
 jr_006_4cff:
@@ -2463,7 +2463,16 @@ jr_006_4cff:
     ret
 
 
-SaveMapS_4d0a:
+; NPCDrawSlot (S123 label, was SaveMapS_4d0a) — draws one NPC slot (DE = the
+; slot base): HRAM $FFC3/$FFC4 = pixel X (+$18), $FFC5/$FFC6 = pixel Y + 8
+; (+$1A), $FFC7 = sprite id (+$11), $FFC8 = shown frame (+$14; $FF = nothing),
+; $FFC9 = tile base (+$16), $FFCA = OAM attr / flip (+$17); then +$0F (is
+; monster) picks the builder: 0 = bank $05 entry 0 (NPC sprites, palette from
+; $05:$4152[id]), else bank $04 entry 2 (monster followers). The pieces go to
+; the OAM buffer $C000 + 4 * [$FFCB]. Patched builds (S123): the bank $05 call
+; goes through bank $60 entry 11 NpcColourDraw (same size), which applies the
+; room list's $A2 NPC colour.
+NPCDrawSlot:
     push bc
     push de
     ld a, e

@@ -140,7 +140,7 @@ class MetatilePicker(QWidget):
             img = Image.new('RGB', (16, 16))
             pals = metatile_pals(mt) or [0] * 4
             for i, t in enumerate(mt['tiles']):
-                img.paste(self.renderer.render_tile(sheet, t & 0x7F, self.pals, pals[i]),
+                img.paste(self.renderer.render_tile(sheet, t, self.pals, pals[i]),
                           ((i % 2) * 8, (i // 2) * 8))
             img = img.resize((MT, MT), Image.NEAREST)
             self._pix[key] = QPixmap.fromImage(ImageQt.ImageQt(img))

@@ -218,6 +218,8 @@ class NpcPanel(QGroupBox):
     newConversationRequested = Signal()  # S101
     shopRequested = Signal()             # S117 (P3.13c): make this NPC a shopkeeper
     shownWhenRequested = Signal()        # S120: flag conditions (NG2 residual b)
+    colourEdited = Signal(object)        # S123: OBJ palette 0-7 or None (own colours)
+    bossRequested = Signal()             # S123: Make boss…
     editTalkRequested = Signal()
     presenceToggled = Signal(int, bool)  # state index, present
     deleteRequested = Signal()
@@ -313,6 +315,30 @@ class NpcPanel(QGroupBox):
         self.btn_shown.clicked.connect(self.shownWhenRequested.emit)
         wrow.addWidget(self.btn_shown)
         f.addRow('shown when', wrow)
+        # S123: the NPC's colour — any of the game's 8 sprite palettes (bank $60
+        # entry 11 NpcColourDraw rewrites the palette bits of its OAM pieces)
+        crow = QHBoxLayout()
+        self.colour = QComboBox()
+        self.colour.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
+        self.colour.setToolTip('Draw this NPC in another of the game\'s 8 sprite palettes '
+                               '(the swatch = its main colour). "own colours" = the sprite\'s '
+                               'usual palette. Not for monster NPCs (they walk in their own '
+                               'colours).')
+        self._fill_colours(None)
+        self.colour.activated.connect(self._colour_changed)
+        crow.addWidget(self.colour, 1)
+        f.addRow('colour', crow)
+        self.colour_note = QLabel('')
+        self.colour_note.setWordWrap(True)
+        self.colour_note.setStyleSheet('color: #aaa;')
+        f.addRow('', self.colour_note)
+        self.btn_boss = QPushButton('Make boss…')
+        self.btn_boss.setToolTip('S123: turn this NPC into a boss in one go — its words, a '
+                                 'battle, its own "beaten" flag, it leaves after the win and '
+                                 'stays gone; optionally the END boss of a world (its portal '
+                                 'swirl stops / changes colour) and a way out afterwards')
+        self.btn_boss.clicked.connect(self.bossRequested.emit)
+        f.addRow('', self.btn_boss)
         self.presence_box = QWidget()
         self.presence_lay = QHBoxLayout(self.presence_box)
         self.presence_lay.setContentsMargins(0, 0, 0, 0)
@@ -324,6 +350,41 @@ class NpcPanel(QGroupBox):
         self.btn_del = QPushButton('Delete NPC')
         self.btn_del.clicked.connect(self.deleteRequested.emit)
         f.addRow('', self.btn_del)
+
+    # ------------------------------------------------------------- colours
+    OBJ_PAL = None      # [(r, g, b)] colour 2 of the 8 OBJ palettes ($17:$5615), from the ROM
+
+    @classmethod
+    def load_obj_palettes(cls, rom):
+        try:
+            o = 0x17 * 0x4000 + 0x5615 - 0x4000
+            out = []
+            for p in range(8):
+                w = rom[o + p * 8 + 4] | rom[o + p * 8 + 5] << 8
+                out.append(((w & 31) * 255 // 31, ((w >> 5) & 31) * 255 // 31,
+                            ((w >> 10) & 31) * 255 // 31))
+            cls.OBJ_PAL = out
+        except Exception:                                    # noqa: BLE001
+            cls.OBJ_PAL = None
+
+    def _fill_colours(self, cur):
+        from PySide6.QtGui import QColor, QPixmap
+        from editor2.core import gates as G
+        self.colour.clear()
+        self.colour.addItem('own colours', None)
+        for p in range(8):
+            icon = QIcon()
+            if self.OBJ_PAL:
+                pm = QPixmap(14, 14)
+                pm.fill(QColor(*self.OBJ_PAL[p]))
+                icon = QIcon(pm)
+            self.colour.addItem(icon, f'palette {p}: {G.OBJ_PALETTE_NAMES[p]}', p)
+        self.colour.setCurrentIndex(max(0, self.colour.findData(cur)))
+
+    def _colour_changed(self, _i):
+        if self._building or self._view is None:
+            return
+        self.colourEdited.emit(self.colour.currentData())
 
     # --------------------------------------------------------------- show
     def show_npc(self, view, script_ids, talk_pages, presence, editable, bytes_hint='',
@@ -376,6 +437,19 @@ class NpcPanel(QGroupBox):
                                                  for t in sw))
         else:
             self.shown_when.setText('always')
+        col = view.get('colour')
+        pal = col.get('palette') if isinstance(col, dict) else col
+        self._fill_colours(pal)
+        monster = view.get('monster') is not None
+        if view.get('swirl_of') is not None:
+            self.colour_note.setText('A portal swirl: its colour after clearing is set per gate '
+                                     '/ world (World tab → "after clearing").')
+        elif monster:
+            self.colour_note.setText('A monster NPC walks in its own colours.')
+        elif isinstance(col, dict) and col.get('when'):
+            self.colour_note.setText(f"only while {col['when']} is ON (else its own colours)")
+        else:
+            self.colour_note.setText('')
         while self.presence_lay.count():
             w = self.presence_lay.takeAt(0).widget()
             if w:
@@ -395,8 +469,10 @@ class NpcPanel(QGroupBox):
                                'a typed NPC with the same bytes.') if view.get('raw') else '')
         for w in (self.sprite_btn, self.facing, self.beh, self.obj, self.script,
                   self.btn_new_talk, self.btn_new_conv, self.btn_del, self.presence_box,
-                  self.btn_shown):
+                  self.btn_shown, self.btn_boss):
             w.setEnabled(editable)
+        self.colour.setEnabled(editable and not monster and view.get('swirl_of') is None
+                               and not view.get('raw'))
         if not editable:
             self.btn_edit_talk.setEnabled(False)
         self._building = False

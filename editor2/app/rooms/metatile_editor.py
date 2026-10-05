@@ -112,7 +112,7 @@ class MetatileEditor(QDialog):
     def _refresh(self):
         img = Image.new('RGB', (16, 16))
         for i, t in enumerate(self.tiles):
-            img.paste(self.renderer.render_tile(self.sheet, t & 0x7F, self.pals, self.pals4[i]),
+            img.paste(self.renderer.render_tile(self.sheet, t, self.pals, self.pals4[i]),
                       ((i % 2) * 8, (i // 2) * 8))
         img = img.resize((96, 96), Image.NEAREST)
         self.preview.setPixmap(QPixmap.fromImage(ImageQt.ImageQt(img)))

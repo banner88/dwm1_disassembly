@@ -413,6 +413,20 @@ class GatesTab(QWidget):
                                                                'Hand-made gate' if on else
                                                                'Gate floors: vanilla first floor'))
         sf.addRow('', self.set_hand)
+        # S123 (NG3: "portal stops when boss beaten, OR portal is different
+        # colour when boss beaten"): what this gate's swirls do once cleared
+        self.set_swirl = QComboBox()
+        self.set_swirl.addItem("stops (the game's way)", None)
+        for p in range(8):
+            self.set_swirl.addItem(f'turns {G.OBJ_PALETTE_NAMES[p]} (palette {p})', p)
+        self.set_swirl.setToolTip('What the spinning swirl on this gate\'s portals does once '
+                                  'the gate is cleared: stop (the game\'s way), or keep spinning '
+                                  'in one of the 8 sprite colours (green = palette 1). Applies '
+                                  'to the entrances you add and to re-routed / re-bossed '
+                                  'vanilla portals.')
+        self.set_swirl.activated.connect(lambda _i: self._setting(
+            'cleared_swirl', self.set_swirl.currentData(), 'Swirl after clearing'))
+        sf.addRow('after clearing, the swirl', self.set_swirl)
         er = QHBoxLayout()
         b = QPushButton('Project enemies…')
         b.setToolTip('Your own enemies for boss battles (conversation Battle steps): stats, '
@@ -422,6 +436,7 @@ class GatesTab(QWidget):
         er.addStretch(1)
         sf.addRow('', er)
         rv.addWidget(sg)
+        self._world_boxes = [sg]                      # S123: off for a world (World tab)
         # S120 (ROADMAP P3.7b part 2): the floor-type rows + depth tier (bytes 0-2, 7)
         mg = QGroupBox('Maze floors — look, special rooms, contents (shared rows: pick the '
                        'row of the gates you want it to feel like)')
@@ -470,6 +485,7 @@ class GatesTab(QWidget):
         drow.addWidget(b)
         mf.addRow('item tier', drow)
         rv.addWidget(mg)
+        self._world_boxes.append(mg)
         g = QGroupBox('Custom rooms in this gate — tried top-down')
         gv = QVBoxLayout(g)
         self.rules = QTableWidget(0, 6)
@@ -498,6 +514,7 @@ class GatesTab(QWidget):
         row.addStretch(1)
         gv.addLayout(row)
         rv.addWidget(g, 2)
+        self._world_boxes.append(g)
         g = QGroupBox('Floor plan — what each floor can be, in one dive')
         gv = QVBoxLayout(g)
         self.flags_hold = QCheckBox('assume the rules\' flag conditions hold')
@@ -550,12 +567,19 @@ class GatesTab(QWidget):
             n = len(self.s.doc.gate_rules_for(g['id']))
             gs = self.s.doc.gate_setting(g['id'])
             fl = self.s.doc.gate_floor_count(g['id'])
-            it = QListWidgetItem(f"{g['id']:2d}  {g['name']} — {fl} fl"
-                                 + (f"   ★{n}" if n else '')
-                                 + ('   ♛' if gs.get('boss') else '')
-                                 + ('   ✎' if gs.get('hand_made') else '')
-                                 + ('   NEW' if g.get('new') else ''))
-            if g.get('new'):
+            world = gs.get('world') is not None                  # S123
+            it = QListWidgetItem(f"{g['id']:2d}  {g['name']} — "
+                                 + ('a world   WORLD' if world else
+                                    f"{fl} fl"
+                                    + (f"   ★{n}" if n else '')
+                                    + ('   ♛' if gs.get('boss') else '')
+                                    + ('   ✎' if gs.get('hand_made') else '')
+                                    + ('   NEW' if g.get('new') else '')))
+            if world:
+                it.setToolTip('a WORLD (S123): rooms joined by doors, entered through its portal '
+                              'like a gate — edit it on the World tab')
+                it.setForeground(QColor(120, 220, 120))
+            elif g.get('new'):
                 it.setToolTip(f"new gate — a copy of gate {g['copy_of']} "
                               f"({self.gates[g['copy_of']]['name']}) · depth tier "
                               f"{g['depth_tier']}")
@@ -604,6 +628,18 @@ class GatesTab(QWidget):
                    "\"Gate entrance here\"")
         else:
             ent = ''
+        world = doc.world(g['id']) is not None                          # S123
+        for box in self._world_boxes:
+            box.setEnabled(not world)
+        if world:
+            self.head.setText(f"<b>{g['name']}</b>  (gate {g['id']}) — a WORLD")
+            self.sub.setText('A world is not a random gate: its portal enters its start room '
+                             'exactly like a gate entrance, and its rooms are joined by doors. '
+                             'Edit it on the World tab (rooms, start, saving, the swirl after '
+                             'clearing). ' + doc.gate_cleared_text(g['id']) + ent)
+            self.rules.setRowCount(0)
+            self.plan.setRowCount(0)
+            return
         rs = G.row_settings(doc.custom, g['id'], getattr(doc, 'project_dir', None))   # S120
         self.sub.setText(f"{g['floors']} floors — boss on floor {g['floors']} "
                          f"({doc.gate_boss_label(g['id'])}) · item tier {rs['depth']} · floor-type rows "
@@ -693,6 +729,18 @@ class GatesTab(QWidget):
         self.set_boss.setCurrentIndex(max(i, 0))
         self.set_boss.blockSignals(False)
         self.set_hand.setChecked(bool(gs.get('hand_made')))
+        try:                                                 # S123: swatches when the ROM is there
+            from editor2.app.rooms.npc_panel import NpcPanel
+            from editor2.app.world_tab import _swatch_icon
+            if NpcPanel.OBJ_PAL is None:
+                NpcPanel.load_obj_palettes(self.s.renderer.rom)
+            if NpcPanel.OBJ_PAL:
+                for p in range(8):
+                    self.set_swirl.setItemIcon(p + 1, _swatch_icon(NpcPanel.OBJ_PAL[p]))
+        except Exception:                                  # noqa: BLE001
+            pass
+        self.set_swirl.setCurrentIndex(max(0, self.set_swirl.findData(
+            G.cleared_swirl(doc.custom, g['id']))))
         self._show_rows(g)
         b = gs.get('boss')
         if b and not str(b).startswith('vanilla:'):

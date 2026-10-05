@@ -107,7 +107,19 @@ class GateRoomGroup(QGroupBox):
         self._building = True
         self.room = room
         rules = doc.rules_serving(room.get('id'))
-        if rules:
+        wid = doc.world_of_room(room.get('id'))          # S123 (ROADMAP NG3)
+        if wid is not None:
+            w = doc.world(wid) or {}
+            st = w.get('start') or {}
+            if st.get('room') == room.get('id'):
+                where = (f"its START room: the portal lands the player on cell "
+                         f"({st.get('x')},{st.get('y')}) of screen {st.get('screen', 0)}")
+            else:
+                where = 'reached by the world\'s doors'
+            self.served.setText(f'In world {doc.world_name(wid)} — {where}. Battles, saving and '
+                                'music are this room\'s own; edit the world on the World tab.')
+            self.served.setStyleSheet('color:#7fd67f;')
+        elif rules:
             from editor2.core import gates as G
             names = {g['id']: g['name'] for g in doc.all_gates()}      # S115: + new gates
             self.served.setText('Served in: ' + '; '.join(
@@ -123,11 +135,17 @@ class GateRoomGroup(QGroupBox):
                              if arr else 'not set')
         self.btn_arr_clr.setEnabled(bool(arr))
         rep = doc.gate_room_report(room)
-        self.stairs.setText(f"{rep['stairs']} Stairs down" if rep['stairs'] else
-                            'none — select a cell, then Room / screen / selection → More ▾ → '
-                            '"Stairs down here" (paints the next-floor well)')
+        if wid is not None:
+            self.stairs.setText('not needed in a world (its doors lead on)')
+        else:
+            self.stairs.setText(f"{rep['stairs']} Stairs down" if rep['stairs'] else
+                                'none — select a cell, then Room / screen / selection → More ▾ → '
+                                '"Stairs down here" (paints the next-floor well)')
         boss_of = doc.boss_gates_of(room.get('id'))
-        self.can_save.setChecked(room.get('can_save', not boss_of))
+        self.can_save.setChecked(doc.room_can_save(room))
+        if wid is not None and 'can_save' not in room:
+            self.can_save.setToolTip('Follows the world\'s saving rule (World tab) until you '
+                                     'change it here.')
         if boss_of:
             from editor2.core import gates as G
             names = {g['id']: g['name'] for g in doc.all_gates()}      # S115: + new gates
@@ -150,7 +168,11 @@ class GateRoomGroup(QGroupBox):
         if cur is not None and self.music.findData(cur) < 0:
             self.music.addItem(str(cur), cur)
         self.music.setCurrentIndex(max(0, self.music.findData(cur)))
-        if rules or arr or boss_of:
+        if wid is not None:
+            self.status.setStyleSheet('color:#7fd67f;')
+            self.status.setText('Part of a world — the World tab lists what the world still '
+                                'needs.')
+        elif rules or arr or boss_of:
             if rep['ready']:
                 self.status.setStyleSheet('color:#7fd67f;')
                 self.status.setText('Ready for gates.')

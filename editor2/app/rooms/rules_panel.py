@@ -42,7 +42,9 @@ def well_known(doc=None):
         info = doc.gate_cleared_info(g['id']) if doc is not None else None
         if not info or info['flag'] is None:
             continue
-        out.append((f"gate:{g['id']}", f"gate {g['id']} cleared — {g['name']}"))
+        world = doc.world(g['id']) is not None if hasattr(doc, 'world') else False   # S123
+        out.append((f"gate:{g['id']}", (f"world cleared — {g['name']} (gate {g['id']})" if world
+                                        else f"gate {g['id']} cleared — {g['name']}")))
     # S121: the Milly hook's own flags (while the hook is on)
     try:
         out += list((doc.milly_flag_names() if doc is not None else {}).items())

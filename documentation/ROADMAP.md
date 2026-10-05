@@ -1248,7 +1248,13 @@ recipes are pure authoring.
       section / dialog opening its topic), a glossary. Never "done" — it
       grows with every editor feature. **S122:** new topic `12_gate_themes.md` (themes,
       Maze screen…, borrowing, how a gate floor is built) + Rooms / Encounters / Gates /
-      Limits updated (user: "Help tab also should be updated").
+      Limits updated (user: "Help tab also should be updated"). **S123** (user: "make sure
+      help is FULLY up to date with everything"): new topics `65_worlds.md`, `11_doors.md`
+      (doors, teleports, step-on triggers, stairs, game doors into your rooms, the World tab
+      graph), `13_tilesets.md` (tilesets, metatiles, the metatile editor, the slot budget,
+      Change tileset, BG palettes), `14_import_art.md` (the Import art tab, step by step);
+      every topic updated for worlds / NPC colour / Make boss / Vanish / the swirl colour.
+      Still open: screenshots / diagrams, context "?" help per section, a glossary.
 - [x] **P3.8 — Cutscene storyboard + playback** [G-H] — **CROSSED OFF by the user at the
       S122 start ("Cutscenes you can cross off"); the residuals below stay as notes.** **S118 user direction:** "Reading
       in, displaying and playing back all existing cutscenes in all relevant rooms … the
@@ -2092,10 +2098,38 @@ recipes are pure authoring.
         GATE_GENERATION §7.9, PROJECT_COMPILER §2.35); ~~(b) no GUI for an NPC's `shown_when` yet~~
         (DONE S120: NPC panel "Shown when … Flags…", up to 8 set / clear terms); (c) the extended flags are not in the
         flag-usage cross-reference (P3.14).
-  - [ ] **NG3 — Fully custom gates:** a graph of custom rooms (stairs / doors, branches) run
-        as a dive (gate rules: saving, escape, losing, music), per-room lists (S114), a boss
-        at the end; Gates tab graph view. Open questions for the user (asked S114): which
-        gate behaviours matter, can paths rejoin / go up, how many gates, what clearing does.
+  - [x] **NG3 — Worlds (was "Fully custom gates")** — **built S123, USER-CONFIRMED 2026-10-05 20:06 (r2).**
+        User S123 redefined it: "just normal rooms with set encounters, and a flag for boss that
+        can alter things (like encounters, NPC dialogue, things that used to block your path)
+        … it doesnt need to act as a random gate, it needs to act as a world that can have
+        encounters, encounter-free rooms (where you can also save), mini-bosses, endbosses,
+        flags and triggers. Enter via swirling portal, portal stops when boss beaten, OR portal
+        is different colour when boss beaten … Encounters should be set per-room" → "Entering
+        should be JUST like entering a gate. Losing: Same as a gate. Same rules overall …
+        minibosses with own flags are also ok". **Built:** a world = a new gate number (32-95)
+        with a `world` block (start room / cell, rooms, saving rule calm / everywhere /
+        nowhere): its portal is an ordinary gate entrance, the game's own gate entry serves
+        the start room (bank $71 GateInsertTable, floor 1 at 100 %, hand-made, 2 floors); the
+        other rooms are ordinary custom rooms joined by doors; per-room lists + flag variants
+        (S114); losing = bank $50 BattleExitHandler (Castle, priest, half the gold — measured);
+        the world's cleared flag `gate:N` is set only by a boss conversation. **Make boss…**
+        (say → battle → own `…_beaten` flag [+ `gate:N`] → **Vanish** step → say → [helper];
+        `shown_when` flag clear). **cleared_swirl** for ANY gate: stop, or spin in an OBJ
+        palette (green = 1). **NPC colour** for any person / object NPC (engine: `$A2`
+        prefix, bank $60 entry 11 `NpcColourDraw` via bank $06 `NPCDrawSlot`). Editor: World
+        tab Worlds panel, Rooms tab *World entrance here…* / colour / Make boss…, the Vanish
+        step, Gates tab *after clearing, the swirl*. Help `65_worlds.md` (+ every topic
+        touched). PROJECT_COMPILER §2.36, GATE_GENERATION §7.11, ROOM_DATA_FORMAT (`$A2`).
+        **User 19:35: "Its good"** + r2: the portal now runs the game's own start-of-gate whirl
+        (it ran the floor-change whoosh — S41's `CustomDescentInGate` now acts on Stairs down
+        only; bank $60 entry 12), built S123 r2, **USER-CONFIRMED 2026-10-05 20:06** ("Great, looks good").
+        **r3 (user 20:15, "SHOW VISUALLY"):** cells picked on the room picture (New world…,
+        the landing, Add portal…), the Worlds panel's *The way in* (portal picture ➜ landing
+        picture, Go to / Change… / Remove), canvas markers P / W↓ — built S123 r3, NOT yet
+        user-tested.
+        Not built (not asked): branching random dives inside a world, a Gates-tab graph view
+        (the World tab's *only this world* graph serves), an engine "world cleared" on a won
+        battle without a conversation.
 - [ ] **P3.14 — Progression & Flags tab**: flag manager (named flags,
       cross-ref), quest editor forms over progression.quests, orphaned-
       trigger report, **Triggers-as-sentences authoring** (EDITOR_DESIGN
@@ -2444,6 +2478,18 @@ is campaign-BLOCKING** — the POV flip cannot ship without it; E8/E9
       2bpp swap: with the hook's flag set she is drawn with the game's OWN Milayou NPC sprite
       (`$14`: sheet `$3114`, 6 frames, palette 3) — frame tables in WRAM, bank $79. *Accept
       MET (PyBoy):* walks all 4 directions as Milayou; the naming icon is her.
+      **Open residuals of copies of map $08 (user S123 r3: "roots room - why is it visually
+      weird looking … flag in documentation"):** the missing tiles were the EDITOR's preview
+      only (fixed S123 r3: BG ids `$80-$AF` = the common sheet `$29:$1D`, loaded in every
+      room — ROOM_DATA_FORMAT "Common tiles $80-$AF"); in-game the copy == vanilla tile for
+      tile. Still different: (a) no palette pulse — vanilla `$08`'s room handler cycles
+      `wBGPalette` $D2/$D1/$C1 every 32 frames (bank $01 `$6220` logic, needs `$D9CB` = 0);
+      a copy has `animation: none` → a bank $6C custom animation (palette cycle) would match
+      it (~½ session, low-medium risk); (b) RISK, code-read: a 4th NPC species on a screen
+      loads its sheet to `$8800-$88FF` (slot c at `$8500 + c·$100`) = BG tiles `$80-$8F`;
+      vanilla `$08` is special-cased by `cp $08` (bank $06 `$4D99`, bank $0B `$492A` /
+      `$4945`), copies are not — the roots room has 2 species today. A build warning (a
+      room drawing tiles `$80-$8F` with > 3 species on a screen) is the cheap guard.
 
 - [x] **E8 — Shop system RE + authoring (ADDED S72).** **DONE S117 as P3.13c** (DATA_STRUCTURES
       "Shops (S117)"; built, PyBoy-verified, NOT yet user-tested). EDITOR_DESIGN §1

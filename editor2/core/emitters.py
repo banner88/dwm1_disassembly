@@ -208,6 +208,19 @@ def _npc_cond_lines(conds):
             for idx, clr in conds]
 
 
+def _npc_colour_lines(colour):
+    """S123: the $A2 colour prefix before an NPC entry (bank $60
+    CopyNPCListToBuffer: the next NPC is drawn in OBJ palette p — always, or
+    while a flag is SET; entry 11 NpcColourDraw applies it)."""
+    if colour is None:
+        return []
+    pal, flag = colour
+    f = 0xFFFF if flag is None else flag
+    return [F.db_line([0xA2, pal, f & 0xFF, f >> 8, 0xFF],
+                      comment=f"next NPC drawn in OBJ palette {pal}" +
+                              ('' if flag is None else f" while flag {F.hexw(flag)} is SET"))]
+
+
 def _vanilla_npc_exts(prj):
     """S117 (ROADMAP NG2) — VanillaNPCExtTable, read by bank $60 entry 1
     (CustomReadInteract's vanilla branch) for every vanilla room's NPC /
@@ -240,7 +253,12 @@ def _vanilla_npc_exts(prj):
         for en in ents:
             if en['cond']:
                 flag, tgt = en['cond']
-                out += _npc_cond_lines([(flag, True)])
+                from . import gates as G
+                pal = G.cleared_swirl(prj.custom, tgt)     # S123: colour once cleared
+                if pal is None:
+                    out += _npc_cond_lines([(flag, True)])
+                else:
+                    out += _npc_colour_lines((pal, flag))
             out.append(F.db_line(en['bytes'], comment=(
                 f"gate swirl -> gate {en['cond'][1]} (until cleared)" if en['cond']
                 else "vanilla entry")))
@@ -519,6 +537,7 @@ def _room_data(prj, r):
                     b = [F.val(v) for v in n['bytes']]
                     if b[0] < 0x80:
                         out += _npc_cond_lines(prj.npc_conditions(r, i, n))
+                        out += _npc_colour_lines(prj.npc_colour(r, i, n))
                     out.append(F.db_line(b, comment=n.get('comment',
                                'raw interact entry (cloned verbatim)')))
                 elif n['kind'] == 'spawn':
@@ -549,6 +568,7 @@ def _room_data(prj, r):
                                     behaviour=n.get('behaviour', 0),
                                     hidden=bool(n.get('hidden', False)))
                     out += _npc_cond_lines(prj.npc_conditions(r, i, n))
+                    out += _npc_colour_lines(prj.npc_colour(r, i, n))
                     out.append(F.db_line(
                         b, comment=f"NPC ({n['x']},{n['y']}) script "
                                    f"{sid if sid not in (None,'none') else 'none'}"))

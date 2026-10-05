@@ -10,6 +10,110 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
+> Last verified: 2026-10-05 (Session 123 — **ROADMAP NG3 REDEFINED AND BUILT: WORLDS — HAND-MADE
+> PLACES OF THE PROJECT'S OWN ROOMS ENTERED THROUGH A SWIRLING PORTAL EXACTLY LIKE A GATE, WITH
+> PER-ROOM BATTLES, CALM ROOMS THAT SAVE, MINI-BOSSES AND AN END BOSS THAT CLEARS THE WORLD; THE
+> SWIRL STOPS OR TURNS GREEN; NPC COLOURS (THE 8 OBJ PALETTES) FOR ANY PERSON / OBJECT NPC; THE
+> VANISH STEP; MAKE BOSS…; HELP FULLY UPDATED** (user: "NG3: I want just normal rooms with set
+> encounters, and a flag for boss that can alter things (like encounters, NPC dialogue, things
+> that used to block your path) … it needs to act as a world that can have encounters,
+> encounter-free rooms (where you can also save), mini-bosses, endbosses, flags and triggers.
+> Enter via swirling portal, portal stops when boss beaten, OR portal is different colour when
+> boss beaten - also good. Like green or something … Encounters should be set per-room. Also at
+> the end of this session please make sure help is FULLY up to date with everything" →
+> "Entering should be JUST like entering a gate. Losing: Same as a gate. Same rules overall. I
+> assume minibosses with own flags are also ok?")). **Built S123; r2 test ROM USER-CONFIRMED 2026-10-05 20:06.**
+> **Model + compiler (PROJECT_COMPILER §2.36):** a world = a new gate (32-95) with a `world`
+> block (start room / cell, rooms, saving `calm` / `everywhere` / `nowhere`); 2 floors,
+> hand-made, the start room served on floor 1 at 100 % (bank $71 `GateInsertTable`); the other
+> rooms = ordinary custom rooms joined by doors; per-room lists + flag variants (S114); the
+> cleared flag `gate:N` (`$17A0+N`) set only by a boss conversation. `cleared_swirl` (ANY gate):
+> stop, or spin in an OBJ palette (green = 1). NPC `colour` → the `$A2` prefix. Conversation
+> step `vanish` (flicker = `trigger_anim $0Dnn`, instant = `npc_write n,0,$40`).
+> `editor2/core/worlds.py` (WorldsMixin, `make_boss`), `_validate_worlds`. Found + fixed: a
+> conversation testing `gate:N` crashed (`repo_root` set late); `TEMPLATE_SIZE[0x60]` stale.
+> **Engine (bank $60 template re-pinned, TEMPLATE_SIZE 1273):** `CopyNPCListToBuffer` + `$A2`
+> → `wNpcColour` ($D2E3, carved from `wCustomPool`), entry 11 `NpcColourDraw` via bank $06
+> `NPCDrawSlot` (was `SaveMapS_4d0a`; patched `ld hl, $600b`) and bank $05
+> `NPCSpritePaletteOr` (was `HramAudE_406e`) — labels both trees; `audit_mapid_range` 2 new
+> sites adjudicated (CROSSBANK_ROOMS "S123 sites").
+> **Editor:** World tab **Worlds** panel (new / rename / delete, start, portals, the swirl after
+> clearing, saving, rooms table, music for every room, *Still needs*, *only this world*);
+> Rooms tab *World entrance here…*, NPC *colour* (canvas preview), **Make boss…**, the section
+> *Inside gates and worlds*; the conversation dialog's Vanish step; Gates tab: worlds listed
+> WORLD and locked, every other gate *after clearing, the swirl*. **Help** (P3.H): new
+> `65_worlds.md`, `11_doors.md`, `13_tilesets.md`, `14_import_art.md`; 00/10/20/30/40/59/60/
+> 70/80/90 updated. `EDITOR_REVISION` = 'S123' (r2: 'S123r2').
+> **Measured (PyBoy, the user's save, GATE_GENERATION §7.11):** the portal's wave + cream fade
+> into the start room; JOURNAL ok in a calm room, refused in a battle room; wild battles from
+> the room's list; the warden: 2 boxes → battle → flickers out → "The way is open." → hidden
+> for good, the way east open; the king: battle → `$17C0` set → the helper → the hall; the
+> portal swirl then drawn in palette 1; re-entry: the villager's new text, list 9 (EIDs 20 / 25
+> / 26); a loss → the Castle, healed, 3800 → 1900 gold; colours follow the screen scroll;
+> cost ≈ 1.2 scanlines per coloured NPC.
+> **Verifier PASS; clean `1ca6579…` byte-perfect; patched pin `e93b23b5…` (patched; r2: `6b0738c1…`)**, was
+> `bd0652da…` (patched, historical). test_compiler --rom 1101/1101 (the S121 wMillyLayout
+> bound now checks against `wNpcColour`, the next WRAM symbol); test_app PASS (`s123_worlds`,
+> + the Gates tab swirl colour); test_canvas --rom PASS.
+> **Test ROM `DWM-S123-worlds-test.gbc` (`ef6551d1…`, patched; built, NOT yet user-tested):**
+> the user's project (my-dwm-hack_13) + the world **Verdant Rift** (gate 32) made with the
+> editor's own operations: GreatTree screen 12 Copycat House door (4, 4) → **Rift Gate Hall**
+> ($73, the portal at (4, 3)) → **Rift Landing** ($74, start, calm: saving, a guide, a villager
+> whose words change once cleared, a return swirl) → **Rift Woods** ($75, list 0 → list 9 once
+> cleared, no saving, the **Rift Warden** mini-boss with its own flag guarding the way) →
+> **Rift Throne** ($76, the **Rift King** end boss → the helper → the hall, swirl green).
+> Walked end to end in PyBoy.
+> **User 2026-10-05 19:35: "Its good. One minor thing: The entry into the custom gate
+> (non-green/green portal) should be a full start-of-gate effect (screen whirling around and
+> slowly vanishing) instead of go-down-a-floor effect (screen closing with a whoosh sound)."**
+> **r2:** reproduced in PyBoy — S41's bank $0B `CustomDescentInGate` gave every gate-flag
+> exit of a custom room the floor-change ladder (`$C905` `$10-$17`, sound `$55`); the r1
+> "measured" entry had been a warp injected from a vanilla room (KEY_LESSONS S123 r2). Fixed:
+> bank $60 entry 12 `CustomDescentFeel` (Stairs down `$80` only; a gate entrance keeps the
+> vanilla flow); now == room `$24`'s portal (states 1-6, same intervals, sound `$52`); a
+> world-room Stairs down still whooshes; the demo re-walked end to end (entry, JOURNAL, wild
+> battle, warden, king → green swirl, re-entry, list 9, loss → half gold). Also affects S115
+> new-gate entrances in custom rooms (the same path). Pin **`6b0738c1…` (patched)**, r1
+> `e93b23b5…` (patched, historical). **r2 ROM `DWM-S123r2-worlds-test.gbc` (`542771d0…`,
+> patched; built, NOT yet user-tested);** the r1 ROM (`ef6551d1…`, patched, historical) was
+> user-tested ("Its good") apart from the entry effect. r2 checks: verifier PASS
+> (`audit_mapid_range`: the moved site `CustomDescentFeel#0` CP_UNSIGNED, the bank $0B key
+> retired); test_compiler --rom 1101/1101; test_canvas --rom PASS; test_app PASS
+> (`EDITOR_REVISION` 'S123r2').
+> **User 2026-10-05 20:06: "Great, looks good. Give all files for handoff please"** — the r2
+> ROM USER-CONFIRMED.
+> **Hand-off:** `DWM-S123-worlds-changed-files.zip` (cumulative S123 + r2) + the APPLY list in the chat.
+> **r3 (user 20:15: "1) When making new world and entry coordinates, SHOW VISUALLY. How the
+> hell am I meant to know where in a room x/y is. 2) … the STARTING SWIRL that leads into
+> world, where else in game is it placed, and where it lands player INSIDE new world. That
+> needs to be visually clear. 3) … roots room - why is it visually weird looking, like some
+> tiles are missing? If too much to investigate push to later, but flag in documentation"):**
+> (1) `editor2/app/rooms/cell_picker.py` `CellPicker` — the room's screen at 2x, click a
+> cell (LAND / PORTAL outline, walls refused, doors / exits / portals drawn) — in New world…
+> (a NEW theme room is previewed as its plain floor), the landing (*Change…*) and the new
+> **Add portal…** dialog. (2) Worlds panel **The way in**: ① the portal's room picture
+> (blue PORTAL, ◀ ▶ through several, Add portal… / Go to / Remove) ➜ ② the landing picture
+> (green LAND, Change… / Go to); Rooms canvas markers **P** (a world portal, tooltip = where
+> it lands) and **W↓** (the landing, draggable); `Document.world_portals` /
+> `remove_world_entrance`; `open_node` takes (kind, id, screen, x, y). (3) The roots room is
+> fine IN-GAME (PyBoy: BG map, attributes and tiles == vanilla `$08`); the EDITOR drew a black
+> cross: BG ids `$80-$AF` are the common sheet `$29:$1D` that bank $0B
+> `RoomEntry0_TilesetLoader` loads to `$8800` in EVERY room (`ld a, $08` is not a compare —
+> WaitDMATransfer returns Z, the `jr nz` never branches; measured in rooms $00/$01/$08/$10/
+> $24/$74) and the renderer drew every id ≥ 128 as tile 0. Fixed (`render_project`
+> `common_blocks`, `tools/render_rooms.py`, tile thumbnails): the roots room preview == the
+> game, 0 pixels differ. Flagged, not built (ROADMAP P3.16 residuals): the copy has no
+> palette pulse (vanilla `$08` cycles `wBGPalette` $D2/$D1/$C1 every 32 frames; the copy's
+> `animation: none`), and a 4th NPC species on a screen would load into `$8800-$88FF`
+> (= tiles `$80-$8F`, code-read: slot c at `$8500 + c·$100`; vanilla `$08` is special-cased by
+> `cp $08` in banks $06/$0B) — the roots room uses 2. No ROM change (editor only):
+> `EDITOR_REVISION` 'S123r3'. Comments only in bank $0B both trees (the loader). Checks:
+> verifier PASS; test_compiler --rom 1101/1101; test_canvas --rom PASS; test_app PASS (the
+> `s123_worlds` r3 block: pictures, Add portal by a click, Remove, landing by a click, Go to,
+> the W↓ drag, the P marker).
+> **Next:** the user's test of the r3 editor, then the user's pick (P3.14, P3.H residuals, NG3 residuals).
+
+
 > Last verified: 2026-10-05 (Session 122 — **ROADMAP P3.7b PART 2 FINISHED: THE GATES' 16 MAZE
 > LOOKS AS TILESETS FOR THE PROJECT'S OWN ROOMS (THEIR COLOURS, THEIR METATILES, THE 254 MAZE
 > SCREENS, BORROWING BOTH WAYS); THE MAZE CARVE TRACED AND MODELLED BIT-EXACT; MAZE SIZE 3-15;
@@ -57,93 +161,10 @@
 > **Next:** the user's test, then the user's pick (NG3, P3.14, P3.H build-out).
 
 
-> Last verified: 2026-10-05 (Session 121 — **ROADMAP P3.16 + E7: THE MILLY HOOK — MILAYOU
-> GOES INTO THE DRESSER, THE SCREEN WHIRLS, AND THE GAME GOES ON AS MILLY (HER SPRITE IN EVERY
-> ROOM, THE NAMING SCREEN'S ICON, THE DEFAULT NAME MILLY) IN A ROOM OF THE PROJECT'S CHOICE;
-> "ROOTS ROOM (MILLY)" WITH GREY WARUBOU; THE "NAME THE HERO" CUTSCENE STEP** (user: "In the
-> intro, when Milayou disappears into dresser when Waroubou drags her in, do NOT return
-> control to player to play as terry. Instead, play the disappearing (screen whirling) effect
-> and sound … But redirect to a new custom room. At THIS POINT, player sprite is no longer
-> Terry, it is MILLY … make a copy of the roots room and instead of old man, it's grey
-> Waroubou … This whole thing can be switched off as a 'milly hook' patch"; answers: cut right
-> after the first dresser glow, the game's own Milayou sprite, Terry NPC sprites elsewhere
-> stay, "give me naming step and I'll build it in", the arrive-spinning tick, Warubou's text
-> editable, no starter monster)). **Built S121, NOT yet user-tested.**
-> **Model + compiler (PROJECT_COMPILER §2.34, `editor2/core/milly.py`):** `custom.milly_hook`
-> = `enabled`, `arrive` {room, screen, x, y, face}, `spin`. ON: the bedroom script's tail
-> (`$0E:$4AA4`, 94 words, region `milly_bedroom_script`) = the glow (sound `$60`, op `$17`,
-> delay 8), flag **`$179F`** set (r2: Terry stays drawn through the whirl), the name MILLY written, `$3B` warp_fade (the
-> whirl, sound `$52` — measured equal to Terry's dresser) to the arrival; the arrival room gets
-> a hidden cast NPC (Milayou `$14`) + an entry scene (spin in or appear, then she becomes the
-> player; flag `$179E` = played). The player shape: bank $04 entries 2 / 3 (regions
-> `milly_shape_04a/b`, same size) → NEW bank **$79** entry 0 `MillyShapeTable` (flag set: her
-> palette 3 + frame tables in WRAM `wMillyLayout` 160 B, carved from wCustomPool) — the field
-> player AND the naming screen's icon; bank $01 `LoadFieldTilesDMA` (region
-> `milly_player_sheet`) → entry 1 `MillyPlayerSheet` (her sheet `$3114` + the tables); bank
-> $09 `FollowerGfxTable09[0]` (region `milly_naming_icon`); bank $4F hero tiles (region
-> `milly_name_tiles`: S120b's MILLY moved under the hook — off = TERRY). OFF: every region is
-> the vanilla text, bank $79 empty. Hook flags `$179E`/`$179F` reserved (`hook:milly`,
-> `hook:milly_arrived`; editor pool now `$1000-$179D`). **Name the hero** step (`name_hero`:
-> the Castle's naming screen ops). **Text-box sprite rule** (ROM0 `SaveHLBC`: sprites on BG
-> tiles ≥ `$80` hidden while a box is open; vanilla exempts maps `$08`/`$5D`): copies of those
-> rooms keep it — `custom.rooms[].text_keeps_sprites` → room flag bit 1, bank $71 entry 8
-> `TextSpriteMode` via bank $06 region `text_sprite_mode`. Entry scenes chain
-> (`_then_next`). `dump_map_table.py` read map `$08`'s "no exits" pointer `$FFFF` as an error
-> → `$08`/`$5D`/`$5E` had no steps (map_table.json regenerated; copies of `$08` run no
-> animation handler).
-> **Editor:** Cutscenes → **Milly hook…** (the tick, the arrival room / screen / tile /
-> facing on its picture, arrive spinning; **Create the roots room** = a copy of `$08` where
-> grey Warubou walks up, talks (4 editable boxes) and leads her out — its last step is where
-> he leads her (default GreatTree, any room); Edit the scene…); the "Name the hero" step;
-> hook flags in the flag pickers; previews say MILLY only with the hook (`textenc.use_hero_glyphs`).
-> Help `64_milly_hook.md`. `EDITOR_REVISION` = 'S121'.
-> **Measured (PyBoy, the user's project + the roots room):** flag set at the dresser, the whirl
-> to the roots room, Milly spins in and becomes the player, Warubou walks up, 4 boxes, both
-> walk out, GreatTree; she walks in all four directions; the naming screen offers MILLY with
-> HER icon; CONTINUE on a save with `$179F` set → Milly (tables rebuilt after the load's
-> zero-fill); a gate battle → back as Milly; flag clear → Terry; arrival without the spin in
-> the user's "New roomS" (free colours). Hook on moves no label in banks $01/$04/$09/$0E/$4F.
-> **Verifier PASS; clean `1ca6579…` byte-perfect** (labels / comments only: bank $00
-> `SaveHLBC`, $01 player draw + `LoadFieldTilesDMA`, $04 `data_4137`, $05 NPC tables, $06
-> opener, $09 icon, $0E bedroom tail); **patched pin `e43e5f58…` (patched)**, was `97659a4a…`
-> (patched, historical) — the example has the hook OFF: hero tiles back to TERRY + the bank
-> $71 template (entry 8; sha re-pinned; bank $79 template pinned). test_compiler 763/763,
-> --rom 1052/1052 (r3); test_app PASS; test_canvas --rom PASS (all-clones now includes `$08`/`$5D`/`$5E`).
-> `audit_mapid_range.py`: `TextSpriteMode#0` BOUNDED (CROSSBANK_ROOMS "S121 site").
-> **Test ROMs (built, NOT yet user-tested):** `DWM-S121-milly-hook-test.gbc` (`d104cb84…`,
-> patched) = the user's project (my-dwm-hack_12) + "Roots room (Milly)" ($71) + the hook on
-> (arrival in the roots room, Warubou leads her to GreatTree screen 12); `DWM-S121-milly-hook-
-> naming-test.gbc` (`399a3365…`, patched) = the same + "Name the hero" after Warubou's lines.
-> **User 2026-10-05 12:29: "Perfect - everything works. The naming screen is honestly great
-> where it is for now"** (both ROMs) + one request — **r2:** "when milayou disappears into
-> dresser and screen waves, just before that, terry NPC sprite vanishes abruptly … if easily
-> fixable that would be preferred": the bedroom's `$0D` hide of Terry removed (he stays drawn
-> through the whirl — the flag only acts at the next field load), the arrival scene hides the
-> player as its first step instead. PyBoy, every frame: Terry visible through the glow and
-> the waves; no player-sheet sprite on screen in the roots room before the scene shows her;
-> without the spin she appears exactly when shown. r2 ROMs (built, NOT yet user-tested):
-> `DWM-S121r2-milly-hook-test.gbc` (`57bac7c3…`, patched), `DWM-S121r2-milly-hook-naming-
-> test.gbc` (`b23f941d…`, patched); the r1 ROMs (`d104cb84…` / `399a3365…`, patched,
-> historical) were user-confirmed. Example pin unchanged (hook off).
-> **r3 (user 13:04: "I tried redirecting to SBOSS and game crashes … Redirect from ROOTS
-> ROOM into SBOSS"; "Waroubou text box, naming screen, then another box"):** reproduced —
-> the dialog kept GreatTree's screen 12 for SBOSS (screens 0 / 4), the warp to a missing
-> screen crashes the game (PyBoy) → the build refuses a move to a screen the room lacks
-> (`Project.move_screen_problem`), the dialog / cutscene editor list only real screens. The
-> roots scene's naming option ("Warubou asks her name": his lines, the naming screen, a
-> box after; default for a new roots room). r3 ROM `DWM-S121r3-milly-hook-test.gbc`
-> (`1146f979…`, patched; built, NOT yet user-tested): the user's project + the roots room
-> with the naming sandwich, Warubou leading her into SBOSS screen 4 (7, 4) — PyBoy end to end.
-> **Hand-off:** `DWM-S121-milly-hook-changed-files.zip` (r3, cumulative) + the APPLY list in the chat.
-> **Residuals (ROADMAP P3.16):** debug-menu mode 3 and the link-battle teardown (mode 6) still
-> draw Terry's shape; the vanilla Castle naming before the dresser would show her icon with
-> Terry's frames (not reachable in the vanilla flow — the King names after it).
-> **Next:** the user's test of the r2 dresser moment + the editor files, then the user's pick.
-
-
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S123** (2026-10-05): NG3 redefined by the user and built — **worlds** (a new gate with a `world` block: the portal = a gate entrance into the start room, rooms joined by doors, per-room lists, saving calm / everywhere / nowhere, losing the gate way, the cleared flag set by an end boss's conversation); `cleared_swirl` (stop / an OBJ palette) for any gate; NPC `colour` (`$A2` prefix, bank $60 entry 11 `NpcColourDraw`, `wNpcColour`); the Vanish step; Make boss…; the Worlds panel; help fully updated (4 new topics); pin `e93b23b5…` (patched). Test ROM `DWM-S123-worlds-test.gbc` (`ef6551d1…`, patched) user-tested 19:35 ("Its good") but for the entry effect → r2: a custom room's gate entrance runs the vanilla portal whirl (bank $60 entry 12 `CustomDescentFeel`), pin `6b0738c1…` (patched), ROM `DWM-S123r2-worlds-test.gbc` (`542771d0…`, patched) USER-CONFIRMED 20:06. Verbose block in this file. Owning: PROJECT_COMPILER §2.36, GATE_GENERATION §7.11, ROOM_DATA_FORMAT ("Colour prefix $A2"), known_RAM_map (`wNpcColour`), EDITOR_DESIGN §5.1 "Worlds (S123)", CROSSBANK_ROOMS "S123 sites", KEY_LESSONS S123, PYBOY_DEBUGGING S123, DOC_AUDIT S123, TOOLS_AND_DATA S123.
 - **S122** (2026-10-05): P3.7b part 2 finished — the 16 gate themes as room tilesets (bank $28 sheets 0-15 in their own colours; New room / Change tileset / the maze metatiles + stairs / **Maze screen…** = the 254 maze screens / borrowing both ways, `VocabReleaseWouldHelp`); the maze carve + placements traced (bank $16 / $17 / ROM0 labels both trees, byte-neutral) and modelled (`editor2/core/maze.py`, `census_maze.py` 4,000 floors == the game); maze size 3-15 enforced (1-2 freeze, measured); NG2 residual (a) — bank $76 `RunWinTail` runs a re-bossed gate's vanilla win tail (20 / 20); S100 r3 (b) refuted; P3.8 crossed off by the user; pin `bd0652da…` (patched). Test ROM `DWM-S122-gate-themes-test.gbc` (`6777da8e…`, patched) built, NOT yet user-tested. Verbose block in this file. Owning: GATE_GENERATION §4 / §5 / §7 / §7.9 / §7.10, PROJECT_COMPILER §2.35, EDITOR_DESIGN §5.1 "Gate themes (S122)", known_RAM_map (maze RAM), KEY_LESSONS S122, PYBOY_DEBUGGING S122, DOC_AUDIT S122, TOOLS_AND_DATA S122.
-- **S121** (2026-10-05): P3.16 + E7 — the Milly hook (`custom.milly_hook`, `editor2/core/milly.py`): the bedroom tail ends at the dresser glow, sets `$179F`, writes MILLY and whirls (`$3B`) to the chosen room; her arrival scene (spin, cast NPC `$14`); the player shape = her frames + palette via bank $04 entries 2/3 → NEW bank $79 (`wMillyLayout` WRAM, field + naming icon), her sheet via bank $01 / $09; S120b's MILLY tiles under the hook; Roots room (Milly) with grey Warubou; the Name the hero step; text-box sprite rule for copies of `$08`/`$5D` (bank $71 entry 8); `dump_map_table` `$FFFF` exits fixed; pin `e43e5f58…` (patched). Test ROMs `DWM-S121-milly-hook-test.gbc` (`d104cb84…`) / `-naming-test.gbc` (`399a3365…`), patched, USER-CONFIRMED 2026-10-05 ("everything works"); r2 (Terry kept through the whirl) `57bac7c3…` / `b23f941d…` (patched), NOT yet user-tested. Verbose block in this file. Owning: PROJECT_COMPILER §2.34, MONSTER_DATA "The player's sprite (S121)", ROOM_DATA_FORMAT "Text boxes and sprites (S121)", EVENT_FLAGS, TEXT_SYSTEM, BANK04_SCRIPT_ENGINE, EDITOR_DESIGN §5.1d, CROSSBANK_ROOMS "S121 site", KEY_LESSONS S121, DOC_AUDIT S121, TOOLS_AND_DATA S121.
+- **S121** (2026-10-05): P3.16 + E7 — the Milly hook (`custom.milly_hook`, `editor2/core/milly.py`): the bedroom tail ends at the dresser glow, sets `$179F`, writes MILLY and whirls (`$3B`) to the chosen room; her arrival scene (spin, cast NPC `$14`); the player shape = her frames + palette via bank $04 entries 2/3 → NEW bank $79 (`wMillyLayout` WRAM, field + naming icon), her sheet via bank $01 / $09; S120b's MILLY tiles under the hook; Roots room (Milly) with grey Warubou; the Name the hero step; text-box sprite rule for copies of `$08`/`$5D` (bank $71 entry 8); `dump_map_table` `$FFFF` exits fixed; pin `e43e5f58…` (patched). Test ROMs `DWM-S121-milly-hook-test.gbc` (`d104cb84…`) / `-naming-test.gbc` (`399a3365…`), patched, USER-CONFIRMED 2026-10-05 ("everything works"); r2 (Terry kept through the whirl) `57bac7c3…` / `b23f941d…` (patched), NOT yet user-tested. Verbose block in SESSION_HISTORY. Owning: PROJECT_COMPILER §2.34, MONSTER_DATA "The player's sprite (S121)", ROOM_DATA_FORMAT "Text boxes and sprites (S121)", EVENT_FLAGS, TEXT_SYSTEM, BANK04_SCRIPT_ENGINE, EDITOR_DESIGN §5.1d, CROSSBANK_ROOMS "S121 site", KEY_LESSONS S121, DOC_AUDIT S121, TOOLS_AND_DATA S121.
 - **S120** (2026-10-05): mop-up — `patches/bank_060.asm` regenerated (stale since S119: the overlay built `0591928d…`, not the pin) + verify_integrity check 2 compares the pin; `audit_mapid_range.py` re-adjudicated (12 sites, stale-key check, in check 5); P3.6 done — no DTE (`$66-$71` contractions), `$EA`/`$EB` voices, `$F6` hero / op `$3F` + `$F9 00` lead names, extra glyphs, speaker + voice + Insert in every box editor, preview == game pixel-exact; P3.7b part 2 — per-gate `maze_row` / `special_row` / `contents_row` / `depth` with floor-type pictures (`census_gate_floor_types.py`), `SpecialRoomTable` labelled; NPC shown-when GUI, Rooms "Play the game here", npc_catalog rebuilt (716); pin `d19259a1…` (patched) unchanged. Test ROM `DWM_S120_dialogue_gates_test.gbc` (`da7f9941…`, patched) built, NOT yet user-tested. **S120b**: the hero's default name MILLY (`patches/bank_04f.asm`, 4 tiles; names stay ≤ 4 letters, measured), pin `97659a4a…` (patched), test ROM `DWM_S120b_milly_test.gbc`. Verbose block in SESSION_HISTORY.md. Owning: TEXT_SYSTEM "Glyphs, speakers and voices (S120)", PROJECT_COMPILER §2.3 / §2.17, GATE_GENERATION §2 / §7.8, CROSSBANK_ROOMS "S120 burn-down", EDITOR_DESIGN §5.1b, KEY_LESSONS S120, PYBOY_DEBUGGING S120, DOC_AUDIT S120, TOOLS_AND_DATA S120.
 - **S119** (2026-10-04): P3.8 part B — the cutscene editor: the project's own scenes (`custom.rooms[].cutscenes[]`, 4 triggers + flag conditions + once, 25 step kinds in cells; named NPCs + cast members; `cutscene_build.py` lowers each trigger's scenes into one script, init_dialog / close_text rules measured), the stage + step tree + preview + Play in the game; part c op editing of a copied room's scripts; part d bank $04 `$24`/`$61` redirect → bank $60 entries 9/10 (copies draw their tile patches; `patch_data`); NPC facing sprites extracted (128/132); `ScreenShakeTick` named; pin `d19259a1…` (patched). Test ROM `DWM_S119_cutscenes_test.gbc` (`28029018…`, patched; r2 — the Copycat House door) built, NOT yet user-tested. **S119b**: unnamed NPCs pickable in every actor list (named on pick; user: "Why cant I select npc in a custom room"). Verbose block in SESSION_HISTORY.md. Owning: PROJECT_COMPILER §2.33, BANK04_SCRIPT_ENGINE "Writing scenes (S119)", EDITOR_DESIGN §5.1d, CUSTOM_CUTSCENES, known_RAM_map, KEY_LESSONS S119, DOC_AUDIT S119, TOOLS_AND_DATA S119.
 - **S118** (2026-10-04): P3.8 part A — the Cutscenes tab: the 102 script opcodes named + measured (`script_ops.py`; bank $04 handlers labelled both trees; `$D8D7`/`$D8D8` bits; the `$1C` movement programs; `$24`/`$61` arity 1), 519 vanilla scenes + the project's as storyboards (`cutscenes.py`), played in the real game without navigating (`playback.py` recipes; PyBoy in a child process, `playback_server.py`), the intro chain, auto text / sound / keys; `census_cutscenes.py` 514 / 519 reached, 0 hung, model 3,887 / 3,909; byte-neutral (pin `110210b0…` patched, unchanged). Built, NOT yet user-tested. **S118b** (user's first look): room state from the story's counter writes (the wrong NPC jumped), filter = someone moves, ▶ From this step, `FLY` table; census 516 reached, 3,989 / 3,998; copies keep their own state counters → **S118c**: copies follow the game's room state (`step_counter.vanilla`), Step ▸▸ / back, a picture per step. **S118d**: entry scenes set up as the calling script leaves the game (the arena reset), resets detected, cumulative zip. **S118e**: the intro from a real new game, gate arrivals / walk-in instead of the screen centre, View → Mute game playback. **S118f**: every storyboard step in words (`ram_names.py`). **S118g**: names only from the game (speaker texts, exit tables). Verbose block in SESSION_HISTORY.md. Owning: BANK04_SCRIPT_ENGINE "Script opcodes as measured (S118)", EDITOR_DESIGN §5.1d, CUSTOM_CUTSCENES, TEXT_SYSTEM ($F9 slots), KEY_LESSONS S118, DOC_AUDIT S118, TOOLS_AND_DATA S118.
@@ -291,6 +312,7 @@
 | Cutscenes (S119) | The project's own scenes = `custom.rooms[].cutscenes[]` (PROJECT_COMPILER §2.33), lowered per trigger into one script `cut:<room>:<key>` (the original trigger script inlined after); a text after any yielding step needs `init_dialog` (measured); tile patches of rooms ≥ `$6B` / type `$70` = `custom.rooms[].patch_data` read by bank $60 entries 9 / 10 (bank $04 `CallBank0FForItem` / `CallBank0F_Gold` same-size `$6009` / `$600a`); shake `$C8B1`/`$C8B2`, shades `$C89B-$C89D` |
 | The player's sprite (S121) | Sheet gfx-ID `$2F00` (20 tiles) → VRAM `$8000` by bank $01 `LoadFieldTilesDMA`; drawn as sprite type 0 (HRAM `$FF8A`-`$FF8D`: type / frame 0-5 / tile base / attr, X-flip = left) through bank $04 entries 2 / 3 (`data_4137[0]` = `$04:$7237`, palette `data_4157` = `$02`); the naming screen's hero icon = type 0 too (sheet `FollowerGfxTable09[0]` → `$8500`). NPC sprites: bank $05 `$407F[id]` (6 frames) / `$4152[id]` palette / ROM0 `$2ADF[id]` sheet. MONSTER_DATA "The player's sprite (S121)" |
 | Maze floors (S122) | Grid `$C940` 4 × 4, cell = piece·16 + variant (piece 15 = empty); `MazePieceTable` `$16:$7055` 4 B [openings 8↑ 4↓ 2← 1→, piece, weight class, 0]; `MazeShapeModes` `$16:$6056` (`0,0,0,1,2`: carved / plain / one of 21 `MazePatterns` `$7736`); screens `MazeScreenTable` `$7896` (modes 0/1) / `MazeScreenTableB` `$7A96` (mode 2) = 256 × [layout id, bank]; attributes `GateAttrTable_A` `$17:$5215` / `_B` `$5415`; theme = bank $28 sheet id = floor type (tiles `$00-$3B` maze, `$3C-$3F` stairs, `$40-$7F` blank), palettes `$17:$51F5`[type] slots 0-3. Maze size (battle list) must be **3-15** (1-2 can freeze, 0 / 16+ overrun). Model = `editor2/core/maze.py` (GATE_GENERATION §4). |
+| Worlds + NPC colours (S123) | A world = a new gate (32-95) with a `world` block: 2 floors, hand-made, the start room served on floor 1 at 100 % (bank $71 `GateInsertTable`); the portal = an ordinary gate entrance (the game's wave + fade); door rooms run with `wInGateworld` 0; losing = bank $50 `BattleExitHandler` (Castle, heal, half gold); `GateBossWin` never fires (floor 0+1 ≠ 2) — the cleared flag `$17A0+N` comes from a conversation. NPC colour: list prefix `$A2, pal, flag lo, flag hi, $FF` → `wNpcColour` $D2E3 (tag `wMapID`/`wScreenIndex`) → bank $06 `NPCDrawSlot` → bank $60 entry 11 `NpcColourDraw` rewrites OAM attr bits 0-2; OBJ palettes `$17:$5615` (1 = green, 2 = the swirl's blue). GATE_GENERATION §7.11, ROOM_DATA_FORMAT "Colour prefix $A2". |
 | Verifier | `python3 tools/verify_integrity.py` — run at session start AND end |
 
 **The MD5 `b90957482011c8083a068781033715b7` is WRONG.** It was a drifted
@@ -305,7 +327,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 
 | Bank | Owner | Emitted by |
 |------|-------|-----------|
-| $60 | Custom rooms / NPCs / scripts / text (+ `CustomMonsterCast` monster-NPC cast tables, S101; S117: entry 1 serves EVERY non-gate room — `$A0`/`$A1` NPC flag conditions, `VanillaNPCExtTable`; S119: entries 9 / 10 `CustomDrawTiles` / `CustomDrawAttrs` — the `$24`/`$61` tile patches of custom rooms + copies, from `patch_data`) | hand-authored `patches/bank_060.asm` (→ `build_project.py` later) |
+| $60 | Custom rooms / NPCs / scripts / text (+ `CustomMonsterCast` monster-NPC cast tables, S101; S117: entry 1 serves EVERY non-gate room — `$A0`/`$A1` NPC flag conditions, `VanillaNPCExtTable`; S119: entries 9 / 10 `CustomDrawTiles` / `CustomDrawAttrs` — the `$24`/`$61` tile patches of custom rooms + copies, from `patch_data`; S123: entry 11 `NpcColourDraw` + the `$A2` colour prefix; r2: entry 12 `CustomDescentFeel` (bank $0B `CustomDescentInGate`'s body); template 1,293 B) | hand-authored `patches/bank_060.asm` (→ `build_project.py` later) |
 | $64 | Custom tile layouts + attr data (`custom.layouts[]`, S92; per-screen attr maps S94) | compiler-generated `patches/bank_064.asm` (`layouts64`) |
 | $67 | Custom tileset sheets (`custom.tilesets[]`: raw2bpp incl. editor-copied vanilla sheets, or mashup spec) | compiler-generated `patches/bank_067.asm` (`tilesets67`) |
 | $69 | Breeding special scanner (B2) + the live special table | hand-kept `patches/bank_069.asm` (scanner) + compiler region `gd_special_recipes` (`gamedata.breeding.special`, S103; `build_breeding.py --emit-special` retired) |
@@ -409,6 +431,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Shops — the game's five lists, the project's own shops (any NPC a shopkeeper), item buy prices | 🟢 built S117 (ROADMAP P3.13c), test ROM USER-REPORTED 2026-10-03 21:57 ("The rest works"; the menu colours in free-colour rooms + the leftover box fixed S117b, NOT yet user-tested) | DATA_STRUCTURES "Shops (S117)"; PROJECT_COMPILER §2.32; EDITOR_DESIGN §5.6b |
 | The project's own cutscenes (named NPCs, cast that appears / disappears, walks / faces / programs in cells, texts / YES-NO / flags / items / battles / tiles / effects; 4 triggers + flag conditions) + op editing of copied rooms' scripts + copies' tile patches | 🟢 built S119 (ROADMAP P3.8 parts B / c / d), test ROM `DWM_S119_cutscenes_test.gbc` NOT yet user-tested | `custom.rooms[].cutscenes[]` → `cutscene_build.py`; bank $60 entries 9 / 10; PROJECT_COMPILER §2.33 |
 | The Milly hook (the game goes on as MILLY after the dresser: her sprite, naming icon, default name; arrival room of the project's choice; Roots room (Milly) with grey Warubou) + the Name the hero step | 🟢 built S121 (ROADMAP P3.16 + E7), test ROMs `DWM-S121-milly-hook-test.gbc` / `-naming-test.gbc` NOT yet user-tested | `custom.milly_hook` → `milly.py`; bank $79; PROJECT_COMPILER §2.34 |
+| Worlds (hand-made places of the project's rooms entered through a portal like a gate: per-room battles, calm rooms that save, mini-bosses with own flags, an end boss that clears the world) + the swirl after clearing (stop / any of the 8 OBJ colours, any gate) + NPC colours + the Vanish step + Make boss… | 🟢 built S123 (ROADMAP NG3), PyBoy-walked on the user's save (Verdant Rift); r1 ROM user-tested 2026-10-05 19:35 ("Its good") except the portal entry effect → r2 (the vanilla portal whirl) `DWM-S123r2-worlds-test.gbc` (`542771d0…`, patched) USER-CONFIRMED 2026-10-05 20:06 ("Great, looks good") | GATE_GENERATION §7.11; PROJECT_COMPILER §2.36; ROOM_DATA_FORMAT "Colour prefix $A2"; EDITOR_DESIGN §5.1 "Worlds (S123)" |
 | NPC show/hide by step | ✅ working | step system; counters at $CD80+ (S65; transient); opcode $12 advances (v25) |
 | Flag-driven room states (persistent) | ✅ built S97, USER-CONFIRMED 2026-09-26 | `custom.rooms[].state_rules` → bank $60 entry 8 (+ bank $17 hook); PROJECT_COMPILER §2.13 |
 | NPC behaviours (movement types) | ✅ decoded + authorable S97, USER-CONFIRMED 2026-09-26 | type byte low nibble, bank $06 NPCBehaviourTable; ROOM_DATA_FORMAT "NPC behaviour types" |

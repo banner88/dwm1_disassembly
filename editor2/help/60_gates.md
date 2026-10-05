@@ -2,7 +2,7 @@
 
 The Gates tab lists the 32 vanilla gates and your **new gates** (★ = has
 custom-room rules, ♛ = custom boss floor, ✎ = hand-made, NEW = a gate of
-your own).
+your own, WORLD = one of your worlds — edited on the World tab, see *Worlds*).
 
 **Gate settings** (per gate):
 
@@ -12,12 +12,15 @@ your own).
   rooms (it needs an arrival cell). *Open room* jumps to it.
 - **hand-made gate** — your rooms may also take floor 1 (normally the gate's
   own). Give every floor a room served at 100 %.
+- **after clearing, the swirl** (S123) — *stops* (the game's way) or keeps
+  spinning in one of the 8 sprite colours (**green** = palette 1). See
+  *Swirls and "cleared"*.
 
 **Custom rooms in this gate** — rules "serve room R on floors a-b with
 chance p % [once per dive] [when flags …]", tried top-down. **Floor plan**
 shows, floor by floor, what the game serves.
 
-A room served on a gate floor needs (Rooms tab → *Inside gates*): an
+A room served on a gate floor needs (Rooms tab → *Inside gates and worlds*): an
 **arrival** cell, a **Stairs down** (More ▾ → Stairs down here), battles off
 or "follow the gate", and optionally its own song (without one it plays the
 gate's song when the gate has one — Music tab → Gates). Saving: allowed by
@@ -58,10 +61,13 @@ re-bossed game gate, the game's own flag too).
 
 The swirl on a portal **spins until its gate is cleared**, then stops (the
 still picture stays, and the portal still enters the gate — as in the game).
-The editor does this for you:
+Or, with *after clearing, the swirl turns …*, it keeps spinning in that colour
+(green, say) — a cleared gate you can see at a glance. The editor does this for
+you:
 
-- **Boss cleared → no swirl.** A gate entrance you add (*Gate entrance
-  here…*) gets a swirl object that shows only while its gate is not cleared.
+- **Boss cleared → no swirl** (or a swirl in the chosen colour). A gate
+  entrance you add (*Gate entrance here…*) gets a swirl object that shows only
+  while its gate is not cleared.
 - **A new boss → the swirl comes back.** Give a vanilla gate a custom boss
   floor and its portals in the vanilla rooms spin again until YOUR boss is
   beaten (the gate's own cleared flag, not the game's).

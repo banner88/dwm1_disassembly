@@ -666,7 +666,11 @@ point `jr_00b_466b` (`$0B:$45F9`), a byte-neutral `call CustomDescentInGate` (it
 `CustomGate1Setup` → back to `0`) before the room redraws. So the fade/BGM logic reads
 "already in the gate" during the transition, while the room never *displays* in the broken
 in-gate state. Result: whoosh + BGM continuous, render and descent unchanged. Non-custom
-rooms (`wMapID < $6B`) are untouched. (KEY_LESSONS S41.)
+rooms (`wMapID < $6B`) are untouched. (KEY_LESSONS S41.) **S123 r2:** only for a
+Stairs-down exit (`wWarpFlag` bit 7, gate flag `$80`); a custom room's GATE ENTRANCE (flag 1
+— S115 new-gate entrances, S123 world portals) keeps `wInGateworld` 0 and gets the game's
+own portal whirl. The body moved to bank $60 entry 12 `CustomDescentFeel` (bank $0B is full
+to `$4B42`; `CustomDescentInGate` = `ld hl, $600C / rst $10 / ld hl, wGameState / ret`).
 
 **Production note — DONE S100 (§7.6).** The POC forced `$6D` on every non-boss
 Villager floor from a hard-coded `.gate1` branch + `CustomGate1Setup`; both were
@@ -1028,6 +1032,51 @@ vocabulary, so the borrow offers to release the room's unused vocabulary first
 (`VocabReleaseWouldHelp`, one undo step; a room built from a few maze screens leaves
 a dozen or more unused). A sheet copy (own copy / a borrow) keeps its origin, so the
 room stays the theme.
+
+## 7.11 Worlds — hand-made places entered like a gate (S123, ROADMAP NG3) — built S123, PyBoy-verified, NOT yet user-tested
+
+User (S123): "a world that can have encounters, encounter-free rooms (where you can also
+save), mini-bosses, endbosses, flags and triggers. Enter via swirling portal …" +
+"Entering should be JUST like entering a gate. Losing: Same as a gate."
+
+**Engine: the game's own gate path, nothing new.** A world is a new gate (32-95) of 2
+floors, hand-made: its portal is an ordinary gate entrance (exit flag 1, §1), so the entry is
+the game's portal whirl (since S123 r2, below); floor 1 is served
+from bank $71 `GateInsertTable` at 100 % = the world's start room.
+
+**The entry effect (S123 r2).** Before r2, bank $0B `CustomDescentInGate` (§7.5.1) gave
+EVERY gate-flag exit of a custom room the in-gate floor-change feel, so a portal in a
+custom room ran the descent ladder (`$C905` states `$10-$17`, sound `$55`, the closing
+whoosh) — user r2: "should be a full start-of-gate effect (screen whirling around and
+slowly vanishing)". Now only a Stairs-down exit (gate flag `$80`) gets that feel (bank $60
+entry 12 `CustomDescentFeel`); a gate entrance (flag 1) keeps `wInGateworld` 0 and runs the
+vanilla portal flow. Measured (PyBoy, the user's save): room `$24`'s vanilla portal =
+states 1 → 2 (+31 frames) → 3 (+245) → 4 (+64) → 5 → map change (+6), sound `$52`; the
+Rift Gate Hall portal after the fix = the same states at the same intervals (+31 / +241 /
++64 / +1 / +5), sound `$52`; a Stairs-down cell in a world room still `$10-$17` + `$55`.
+The S123 r1 claim "wave + cream fade, measured" came from a warp injected from a VANILLA
+room — it never ran the custom-source path (KEY_LESSONS S123 r2). The other rooms are
+reached through ordinary custom doors, which leave the gate: `wInGateworld` = 0 there (as
+in any custom room). Consequences, all measured on the user's save:
+
+- **Losing** in a world room runs bank $50 (the same handler serves every room)
+  `BattleExitHandler`: Castle screen 1, the priest heals, half the gold (3800 → 1900).
+- **Saving:** bank $07 `SaveAllowCheck` + the room flag byte decide (JOURNAL ok in a calm
+  room, refused in a battle room, per the world's rule).
+- **Battles:** each room's own list (S114, `wCustomEncList`), flag variants switch it
+  (measured: list 0 before, list 9 after `gate:32`; EIDs 20 / 25 / 26).
+- **Clearing:** `GateBossWin` (bank $76) needs floor 0+1 == the last floor (2) and never
+  fires; the world's `gate:N` (`$17A0+N`) is set by the end boss's conversation (measured
+  `$17C0` set after the Rift King).
+- **The swirl:** hidden (`$A1`, S116) or — `cleared_swirl` — drawn in an OBJ palette
+  through the S123 NPC colour path (measured: the hall's swirl in palette 1 after clearing).
+  The still swirl tiles under it keep the room's BG colours.
+- **Music:** a world room without its own song keeps whatever plays (the gate theme after
+  the portal).
+
+The 8 OBJ palettes (`$17:$5615`, by colour 2): 0 grey/red, 1 green (0,25,5), 2 blue (the
+swirl's own, sprite `$4D`), 3 yellow, 4 purple, 5 grey, 6 orange, 7 brown (`$05:$4152`
+holds each sprite id's own palette).
 
 ## 8. Floor completion / exit ✅
 

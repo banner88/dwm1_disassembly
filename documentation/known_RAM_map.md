@@ -295,7 +295,15 @@
                  frame tables for the player shape (bank $79 entry 1 copies
                  them at every field load while flag $179F is set; entry 0
                  hands them to bank $04; transient, rebuilt per load) /
-                 wCustomPool $D2E3-$D5E4 (transient reserve; $D243 before S121) /
+                 [S123] wNpcColour $D2E3-$D2EA (per NPC slot: $80|OBJ palette, 0 =
+                 own colours; written by bank $60 CopyNPCListToBuffer from the $A2
+                 prefix, read by bank $60 entry 11 NpcColourDraw) / wNpcColourMap
+                 $D2EB / wNpcColourScr $D2EC (the wMapID / wScreenIndex the colours
+                 belong to — a stale list never colours another room) /
+                 wNpcColourNext $D2ED / wNpcColourK $D2EE (copy scratch); transient,
+                 rebuilt at every list copy /
+                 wCustomPool $D2EF-$D5E4 (transient reserve; $D2E3 before S123, $D243
+                 before S121) /
                  wPoolBounce $D5E5-$D664 (128 B, FX1: sleep-pool swap
                  scratch; the v1 drain halved-pending use died with the
                  S71v2 exp-scale veto).

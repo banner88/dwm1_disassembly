@@ -50,13 +50,16 @@ MARKER = {'npc': QColor(0, 200, 255), 'spawn': QColor(255, 170, 40),
           'examine': QColor(255, 210, 60),
           'step': QColor(255, 140, 200),
           # S100 (P3.7b): gate rooms
-          'stairs': QColor(170, 120, 255), 'gate_arrival': QColor(80, 245, 255)}
+          'stairs': QColor(170, 120, 255), 'gate_arrival': QColor(80, 245, 255),
+          # S123 r3: worlds — a portal into a world, where the world lands you
+          'portal': QColor(90, 200, 255), 'world_land': QColor(90, 255, 120)}
 MARKER_TEXT = {'spawn': 'X!', 'exit': '→', 'walkon': 'T', 'special': '?',
                'redirect': 'R', 'entrance': 'IN', 'door': 'D', 'door_open': 'D?',
                'door_dead': 'D!',
                'examine': 'X',
                'step': 'T',
-               'stairs': 'S↓', 'gate_arrival': 'G'}
+               'stairs': 'S↓', 'gate_arrival': 'G',
+               'portal': 'P', 'world_land': 'W↓'}
 SEL = QColor(255, 230, 0)
 
 
@@ -173,6 +176,61 @@ class SpriteCache:
                 continue
             px[x, y] = (0, 0, 0, 0)
             stack.extend(((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)))
+
+    _rom = None
+    _tinted = {}
+
+    @classmethod
+    def bind_rom(cls, rom):
+        """S123: the ROM bytes, for the NPC colour previews (OBJ palettes $17:$5615 and
+        each sprite's own palette $05:$4152[id])."""
+        if cls._rom is not rom:
+            cls._rom = rom
+            cls._tinted = {}
+
+    @classmethod
+    def _obj_palette(cls, p):
+        o = 0x17 * 0x4000 + 0x5615 - 0x4000 + 8 * p
+        out = []
+        for c in range(4):
+            w = cls._rom[o + 2 * c] | cls._rom[o + 2 * c + 1] << 8
+            out.append(((w & 31) * 255 // 31, ((w >> 5) & 31) * 255 // 31,
+                        ((w >> 10) & 31) * 255 // 31))
+        return out
+
+    @classmethod
+    def get_coloured(cls, sprite_id, palette):
+        """S123: the NPC drawn in OBJ palette `palette` instead of its own — each
+        opaque pixel is matched to the nearest colour 1-3 of the sprite's own palette
+        and repainted with that colour of the chosen palette (what bank $60 entry 11
+        does to the OAM pieces)."""
+        pm = cls.get(sprite_id)
+        if palette is None or pm is None or cls._rom is None or sprite_id >= MONSTER_KEY:
+            return pm
+        key = (sprite_id, palette)
+        if key not in cls._tinted:
+            try:
+                from PIL import Image, ImageQt
+                own = cls._rom[0x05 * 0x4000 + 0x4152 - 0x4000 + sprite_id] & 7
+                src = cls._obj_palette(own)[1:]
+                dst = cls._obj_palette(int(palette))[1:]
+                p = os.path.join(SPRITE_DIR, f'id_{sprite_id:02X}.png')
+                im = Image.open(p).convert('RGBA')
+                if im.size == (16, 16):
+                    cls.knock_out(im, cls.floor())
+                px = im.load()
+                for y in range(im.size[1]):
+                    for x in range(im.size[0]):
+                        r, g, b, a = px[x, y]
+                        if not a:
+                            continue
+                        k = min(range(3), key=lambda i: sum((u - v) ** 2 for u, v in
+                                                            zip((r, g, b), src[i])))
+                        px[x, y] = dst[k] + (a,)
+                cls._tinted[key] = QPixmap.fromImage(ImageQt.ImageQt(im))
+            except Exception:                                  # noqa: BLE001
+                cls._tinted[key] = pm
+        return cls._tinted[key]
 
     @classmethod
     def get(cls, sprite_id):
@@ -539,9 +597,20 @@ class RoomCanvas(QGraphicsView):
                     nm = self.s.doc.gate_name(gid)
                 except Exception:
                     nm = f'gate {gid}'
-                self.markers.append(('exit', int(e['x']), int(e['y']), None,
-                                     f"gate entrance → gate {gid} ({nm}), floor 1",
-                                     ('exit', i, e)))
+                if self.s.doc.world(gid) is not None:           # S123 r3
+                    st0 = self.s.doc.world(gid).get('start') or {}
+                    try:
+                        sn = self.s.doc.room_name(self.s.doc.room(st0.get('room')))
+                    except Exception:                       # noqa: BLE001
+                        sn = st0.get('room')
+                    self.markers.append(('portal', int(e['x']), int(e['y']), None,
+                                         f"PORTAL into the world {nm} — lands in {sn}, screen "
+                                         f"{st0.get('screen', 0)} ({st0.get('x')},{st0.get('y')})",
+                                         ('exit', i, e)))
+                else:
+                    self.markers.append(('exit', int(e['x']), int(e['y']), None,
+                                         f"gate entrance → gate {gid} ({nm}), floor 1",
+                                         ('exit', i, e)))
             else:
                 self.markers.append(('exit', int(e['x']), int(e['y']), None,
                                      f"one-way exit → {e.get('dest')} screen "
@@ -551,7 +620,17 @@ class RoomCanvas(QGraphicsView):
 
     def _mark_gate_arrival(self, room):
         """S100: where the player appears when the room is served on a gate
-        floor (room-level `gate_arrival`, shown on its screen)."""
+        floor (room-level `gate_arrival`, shown on its screen). S123 r3: and
+        where a world's portal lands the player (the world's start cell)."""
+        doc = self.s.doc
+        for gid in (doc.world_ids() if room else []):
+            st0 = (doc.world(gid) or {}).get('start') or {}
+            if st0.get('room') == room.get('id') and int(st0.get('screen', 0)) == int(self.key):
+                self.markers.append(('world_land', int(st0['x']), int(st0['y']), None,
+                                     f"World landing — walking into a portal of "
+                                     f"{doc.world_name(gid)} drops the player here (drag to "
+                                     "move; World tab → The way in)",
+                                     ('world_land', gid, st0)))
         arr = room.get('gate_arrival') if room else None
         if arr and int(arr.get('screen', 0)) == int(self.key):
             self.markers.append(('gate_arrival', int(arr['x']), int(arr['y']), None,
@@ -775,7 +854,11 @@ class RoomCanvas(QGraphicsView):
                 rc = QRectF(x * CELL, y * CELL, CELL, CELL)
                 col = MARKER[kind]
                 if kind == 'npc' and spr is not None:
-                    pm = SpriteCache.get(spr)
+                    ncol = (ref[2].get('colour') if ref and len(ref) > 2
+                            and isinstance(ref[2], dict) else None)
+                    pal = ncol.get('palette') if isinstance(ncol, dict) else ncol
+                    pm = (SpriteCache.get_coloured(spr, pal) if pal is not None
+                          else SpriteCache.get(spr))           # S123: the NPC's colour
                     if pm is not None:
                         painter.drawPixmap(rc.toRect(), pm)
                 pen = QPen(col)
@@ -1029,9 +1112,10 @@ class RoomCanvas(QGraphicsView):
             # S97: NPC / spawn markers of an editable custom room drag to move
             # S98: doors, one-way exits and examine/step spots too
             if (m and m[0] in ('npc', 'spawn', 'examine', 'step', 'door', 'door_open',
-                               'door_dead', 'exit', 'stairs', 'gate_arrival')
+                               'door_dead', 'exit', 'stairs', 'gate_arrival', 'portal',
+                               'world_land')
                     and not self.is_vanilla() and m[5]
-                    and m[5][0] in ('npc', 'exit', 'gate_arrival')):
+                    and m[5][0] in ('npc', 'exit', 'gate_arrival', 'world_land')):
                 self._drag = [m[5], cell, cell]
             self.viewport().update()
             if m:

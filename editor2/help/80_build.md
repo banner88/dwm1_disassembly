@@ -14,4 +14,10 @@ Copying from the log: select with the mouse (or click in it and ⌘A / Ctrl+A), 
   different sprites on a screen, a joinable enemy without a join version.
 
 Test with your own save: gate floors appear when you dive the gate; boss
-floors are the last floor of the gate.
+floors are the last floor of the gate; a **world** is entered through its
+portal (the World tab's *Still needs* list and the build warnings say what a
+world lacks: a portal, a way out, something that clears it, a room no door
+reaches, a room with battles but no list).
+
+More ▾ → **▶ Play the game here** (any selected cell) starts your last build
+right there — see *NPCs*.

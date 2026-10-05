@@ -12,7 +12,11 @@ pixel-identical against render.py (which is validated against PyBoy) on the
 example project — editor2/tests/test_render_parity.py. Every rule below is
 the same rule the engine applies, cited:
 
-  * tile ids >= 128 draw tile 0 (render_rooms.render_screen)
+  * tile ids $80-$AF draw the COMMON sheet $29:$1D (768 B) that bank $0B
+    RoomEntry0_TilesetLoader loads to $8800 in EVERY room (S123 r3: the
+    `ld a, $08 / jr nz` there never branches — WaitDMATransfer returns Z;
+    PyBoy: $8800-$8AFF == $29:$1D in rooms $00/$01/$08/$10/$24/$74);
+    ids >= $B0 draw tile 0 (render_rooms.render_screen)
   * attr nibble & 7 selects the BG palette (KEY_LESSONS S5 nibble packing)
   * palette idx1 = $6BFF, idx3 = $0000 are FORCED (KEY_LESSONS S7/S39)
   * attr per screen: screens[k].attr > the screen's layout item's own attr
@@ -65,6 +69,12 @@ def val(v):
 
 def rgb555(v):
     return ((v & 31) * 8, ((v >> 5) & 31) * 8, ((v >> 10) & 31) * 8)
+
+
+# S123 r3: bank $0B RoomEntry0_TilesetLoader loads sheet $29:$1D (48 tiles) to
+# $8800 after every room sheet -> BG tile ids $80-$AF in EVERY room (measured).
+COMMON_SHEET = (0x29, 0x1D)
+COMMON_FIRST, COMMON_END = 0x80, 0xB0
 
 
 def decode_tiles(sheet2048):
@@ -189,6 +199,17 @@ class ProjectRenderer:
         return RoomGfx(self._sheet_from_rom(b, g), b, g, thr,
                        f'legacy room without a build: showing vanilla '
                        f'${src:02X} tileset (approximation)')
+
+    def common_blocks(self):
+        """The 48 tiles every room has at ids $80-$AF: sheet $29:$1D (S123 r3)."""
+        if getattr(self, '_common_blocks', None) is None:
+            data = b''
+            if self.rom is not None:
+                r = decompress_lz(self.rom, COMMON_SHEET[0], COMMON_SHEET[1])
+                data = bytes(r[0]) if r else b''
+            data = (data + bytes(2048))[:2048]
+            self._common_blocks = decode_tiles(data)[:COMMON_END - COMMON_FIRST]
+        return self._common_blocks
 
     def tiles_of(self, sheet):
         if sheet not in self._tile_cache:
@@ -333,10 +354,12 @@ class ProjectRenderer:
             arow = attr_grid[ty] if attr_grid else None
             for tx in range(SCREEN_W):
                 t = row[tx]
-                if t >= 128 or t < 0:
-                    t = 0
                 p = (arow[tx] & 7) if arow else 0
-                blk = Image.frombytes('P', (8, 8), blocks[t].translate(tables[p]))
+                if COMMON_FIRST <= t < COMMON_END:          # S123 r3: $29:$1D at $8800
+                    src = self.common_blocks()[t - COMMON_FIRST]
+                else:
+                    src = blocks[t if 0 <= t < 128 else 0]
+                blk = Image.frombytes('P', (8, 8), src.translate(tables[p]))
                 img.paste(blk, (tx * 8, ty * 8))
         img.putpalette(self._p_palette(pals))
         return img.convert('RGB')
@@ -345,7 +368,11 @@ class ProjectRenderer:
         blocks = self.tiles_of(sheet)
         table = bytes([(pal_idx * 4 + (i if i < 4 else 0)) & 0xFF
                        for i in range(256)])
-        img = Image.frombytes('P', (8, 8), blocks[tile].translate(table))
+        if COMMON_FIRST <= tile < COMMON_END:              # S123 r3: $29:$1D
+            src = self.common_blocks()[tile - COMMON_FIRST]
+        else:
+            src = blocks[tile if 0 <= tile < 128 else 0]
+        img = Image.frombytes('P', (8, 8), src.translate(table))
         img.putpalette(self._p_palette(pals))
         img = img.convert('RGB')
         if scale != 1:

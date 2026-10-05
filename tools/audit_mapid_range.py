@@ -134,7 +134,7 @@ V = {
     # ---- patched-only code
     ("bank_000.asm", "MapIDClampForPalette", 0): "CLAMPED",  # the merged clamp body itself (unsigned cp/ret c)
     ("bank_00b.asm", "SharedPtrChase", 0): "TBL_GUARDED",    # reached only for mapID <$6B (custom diverted upstream)
-    ("bank_00b.asm", "CustomDescentInGate", 0): "CP_UNSIGNED",
+    # S123 r2: CustomDescentInGate is now a far call; its wMapID test moved to bank $60
     ("bank_017.asm", "CustomAttrCheck", 0): "IDX8_SUB6B",
     ("bank_017.asm", "CustomPalCheck", 0): "IDX8_SUB6B",
     # ---- S99 adjudication sweep: sites added S73-S97 without keys (the
@@ -184,6 +184,10 @@ V = {
     # S121: reasoning in CROSSBANK_ROOMS "S121 site".
     ("bank_071.asm", "TextSpriteMode", 0): "BOUNDED",            # S121: cp $08 / $5d, sub CUSTOM_ROOM_START
                                                                  # + ret c, cp ROOMFLAGS_TABLE_LEN + ret nc, 16-bit add
+    # S123: reasoning in CROSSBANK_ROOMS "S123 sites" (NPC colours).
+    ("bank_060.asm", "CopyNPCListToBuffer", 0): "COPY",          # S123: wMapID -> wNpcColourMap (the tag; never an index)
+    ("bank_060.asm", "NpcColourDraw", 0): "CP_UNSIGNED",         # S123: cp b against wNpcColourMap (full-byte equality)
+    ("bank_060.asm", "CustomDescentFeel", 0): "CP_UNSIGNED",     # S123 r2: cp CUSTOM_ROOM_START / ret c (was CustomDescentInGate in bank $0B)
 }
 
 # Site-count pins (S66). A mismatch = the tree changed; re-adjudicate.

@@ -137,6 +137,12 @@ def _skill_scripts():
 
 class Project:
     def __init__(self, data, root):
+        # S123: set first — the lowering below resolves `gate:N` flag refs (a
+        # conversation's If / Turn ON of a gate's cleared flag), which read it;
+        # compiler.compile_project sets the real value after construction
+        self.repo_root = None
+        self._rooms_resolved = False   # S123: Vanish conversations wait for the rooms
+        self._vanish_places = {}
         self._helper_screens = {}      # S101 r2: helper script -> screen keys
         self._lowering_sid = None
         self.data = data
@@ -164,6 +170,9 @@ class Project:
         self._normalize_stairs()
         # S101: helper-exit conversations need their NPC slot, known only
         # once rooms resolve — place the helpers, then lower those scripts
+        # (S123: Vanish steps need the talkers' slots too)
+        self._rooms_resolved = True
+        self._vanish_places = self._resolve_vanish_slots()
         self._lower_talk_scripts(self._place_helpers())
         # S119 (ROADMAP P3.8 part B): the rooms' own cutscenes become ordinary
         # scripts wired to their triggers (entry / talk / examine / step-on) —
@@ -522,7 +531,7 @@ class Project:
     #   {"end": true}
     # Text in FIELD context (a room-arrival script, or anything after a battle
     # or the helper's flight) gets its own init_dialog (the S70 protocol).
-    STEP_KINDS = ('say', 'ask', 'if', 'set', 'clear', 'battle', 'move', 'helper', 'end')
+    STEP_KINDS = ('say', 'ask', 'if', 'set', 'clear', 'battle', 'move', 'helper', 'vanish', 'end')
     HELPER_SPRITE = 0x39                # Warubou — the darker Watabou (user S101 r2: the
                                         # romhack's helper; vanilla boss exits use $21 Watabou)
     HELPER_FLY = 0x16                   # $1C anim: fly to ($D8E3, $D8E4)
@@ -689,9 +698,101 @@ class Project:
                             ['op', 'write_ram', '0xD92B', 7]]
                 ops.append(['op', 'warp_fade'] + list(self._move_words(h, c)))
                 field = True
+            elif kind == 'vanish':
+                # S123: the NPCs that run this conversation on the current screen
+                # leave at once — the game's own "vanish (flicker out)" program
+                # ($1C $0Dnn, script_ops.PROGRAMS) or an instant hide (type bit 6).
+                # Their slots are known once the rooms resolve (_vanish_slots).
+                how = (st['vanish'] or {}).get('how', 'flicker')
+                if how not in ('flicker', 'instant'):
+                    raise ProjectError(f"{c}: vanish how must be flicker / instant")
+                places = self._vanish_places.get(self._lowering_sid)
+                if places is None:
+                    raise ProjectError(f"{c}: Vanish needs the conversation to belong to "
+                                       "an NPC (no NPC runs this script)")
+                if field is False:
+                    ops.append(['op', 'close_text'])
+                lab[0] += 1
+                n = lab[0]
+                keys = sorted(places)
+                for k in keys:
+                    ops.append(['op', 'branch_screen', k, f'@vs{n}_{k}'])
+                ops.append(['op', 'goto', f'@vsd{n}'])
+                for k in keys:
+                    ops.append(f'label:vs{n}_{k}')
+                    for slot in places[k]:
+                        if how == 'flicker':
+                            ops.append(['op', 'trigger_anim', f'0x{(0x0D << 8) | slot:04X}'])
+                        else:
+                            ops.append(['op', 'npc_write', slot, 0, '0x0040'])
+                    if how == 'flicker':
+                        ops.append(['op', 'wait_movement'])
+                    ops.append(['op', 'goto', f'@vsd{n}'])
+                ops.append(f'label:vsd{n}')
+                field = True
             elif kind == 'end':
                 ops.append(['end'])
         return ops, field
+
+    def _vanish_scripts(self):
+        """Ids of steps-form scripts with a Vanish step (S123)."""
+        out = set()
+
+        def walk(steps):
+            for st in steps or []:
+                if not isinstance(st, dict):
+                    continue
+                if 'vanish' in st:
+                    return True
+                if any(walk(st.get(k)) for k in ('yes', 'no', 'then', 'else')):
+                    return True
+            return False
+        for sc in self.custom.get('scripts', []):
+            t = sc.get('talk') or {}
+            if t.get('steps') and walk(t['steps']):
+                out.add(sc['id'])
+        return out
+
+    def _resolve_vanish_slots(self):
+        """S123: {script id: {screen: [actor numbers]}} — the 1-based NPC slots
+        (spots take none; the emitted order = the authored NPC order) of every
+        NPC that runs a Vanish conversation. The same NPCs must sit in the same
+        slots in every state of a screen (else the step could hide another NPC)."""
+        want = self._vanish_scripts()
+        out = {}
+        if not want:
+            return out
+        for r in self.rooms:
+            if r.get('placeholder'):
+                continue
+            by_idx = {int(k): v for k, v in (r.get('scripts') or {}).items()}
+            for k, scr in self.room_screens(r).items():
+                per_state = []
+                for st in self.screen_states(scr):
+                    slots = {}
+                    n = 0
+                    for e in st.get('npcs', []) or []:
+                        if e.get('kind') == 'npc' or (e.get('kind') == 'raw' and
+                                                      F.val(e['bytes'][0]) < 0x80):
+                            n += 1
+                            sid = e.get('script')
+                            if isinstance(sid, int):
+                                sid = by_idx.get(sid)
+                            if sid in want:
+                                slots.setdefault(sid, []).append(n)
+                    per_state.append(slots)
+                for sid in want:
+                    seen = [tuple(ps.get(sid, ())) for ps in per_state]
+                    used = [x for x in seen if x]
+                    if not used:
+                        continue
+                    if len(set(used)) > 1:
+                        raise ProjectError(
+                            f"script {sid}: its NPCs sit in different NPC slots in the "
+                            f"states of room {r.get('id')} screen {k} — Vanish would hide "
+                            "another NPC; keep them in the same list position in every state")
+                    out.setdefault(sid, {})[int(k)] = list(used[0])
+        return out
 
     PLAYER_TX, PLAYER_TY = 0xFF97, 0xFF98     # HRAM: player tile, absolute
     # The fly program ($1C $16NN, measured S101 r2): each frame the NPC moves
@@ -876,6 +977,8 @@ class Project:
                     raise ProjectError(f"{ctx}: unknown keys {sorted(unknown)}")
                 if s['id'] in self._helper_scripts() and s['id'] not in helper_idx:
                     continue                 # lowered after rooms resolve (_place_helpers)
+                if s['id'] in self._vanish_scripts() and not self._rooms_resolved:
+                    continue                 # S123: lowered after rooms resolve (slots)
                 lab = [0]
                 ops = []
                 if t.get('screen') is not None:
@@ -1231,13 +1334,104 @@ class Project:
             if not (0 <= int(arr['x']) <= 9 and 0 <= int(arr['y']) <= 7):
                 raise ProjectError(f"{c}: gate_arrival cell outside the 10x8 grid")
             px, py = G.arrival_px(scr, arr['x'], arr['y'])
+            if G.world_settings(self.custom, gate) is not None:
+                raise ProjectError(
+                    f"{c}: gate {gate} is a WORLD — it has no random floors to serve "
+                    "rooms on (its start room is served by the world itself; the "
+                    "other rooms are reached by doors)")
             rows.append({'index': i, 'room_id': room.get('id'),
                          'mapID': F.val(room['mapID']), 'gate': gate,
                          'first': first, 'last': last, 'chance': chance,
                          'once_bit': once_bit, 'px': px, 'py': py,
                          'terms': terms, 'comment': ru.get('comment', '')})
+        # S123 (ROADMAP NG3): each world's start room = its floor 1, always
+        for gid, w in sorted(self.worlds().items()):
+            room = self.room_by_id(w['start_room'])
+            px, py = G.arrival_px(w['start_screen'], w['start_x'], w['start_y'])
+            rows.append({'index': None, 'room_id': room.get('id'),
+                         'mapID': F.val(room['mapID']), 'gate': gid,
+                         'first': 1, 'last': 1, 'chance': 100, 'once_bit': 0,
+                         'px': px, 'py': py, 'terms': [],
+                         'comment': f"world {w['name']}: the start room", 'world': gid})
         self._gate_rows = rows
         return rows
+
+    # ------------------------------------------------ worlds (S123, NG3)
+    def worlds(self):
+        """custom.gates[].world resolved (PROJECT_COMPILER §2.36, gates.py
+        "S123") -> {gate: {name, start_room, start_screen, start_x, start_y,
+        rooms [ids, start first], saving}}. Raises ProjectError on a broken
+        world (the validators report it)."""
+        if getattr(self, '_worlds', None) is not None:
+            return self._worlds
+        from . import gates as G
+        out, owner = {}, {}
+        for g in self.custom.get('gates') or []:
+            w = g.get('world')
+            if w is None:
+                continue
+            gid = int(F.val(g.get('gate', -1)))
+            c = f"custom.gates[gate {gid}].world"
+            if not G.is_new_gate(gid):
+                raise ProjectError(f"{c}: a world is a NEW gate ({G.NEW_GATE_FIRST}-"
+                                   f"{G.NEW_GATE_LAST}); a game's gate keeps its mazes")
+            if not isinstance(w, dict):
+                raise ProjectError(f"{c}: must be an object")
+            bad = set(w) - G.WORLD_KEYS
+            if bad:
+                raise ProjectError(f"{c}: unknown keys {sorted(bad)}")
+            if g.get('floors') is not None and int(F.val(g['floors'])) != G.WORLD_FLOORS:
+                raise ProjectError(f"{c}: a world has {G.WORLD_FLOORS} floors (floor 1 = "
+                                   "the world; leave 'floors' out)")
+            if g.get('boss') not in (None, '', 'vanilla'):
+                raise ProjectError(f"{c}: a world has no boss FLOOR — its bosses are "
+                                   "NPCs in its rooms (their conversations turn "
+                                   f"gate:{gid} ON)")
+            st = w.get('start') or {}
+            sid = st.get('room')
+            room = self.room_by_id(sid)
+            if room is None or room.get('placeholder'):
+                raise ProjectError(f"{c}: start room {sid!r} is not a custom room of "
+                                   "this project")
+            scr = int(F.val(st.get('screen', 0)))
+            if scr not in self.room_screens(room):
+                raise ProjectError(f"{c}: start screen {scr} — room {sid!r} has no such "
+                                   "screen")
+            x, y = int(F.val(st.get('x', -1))), int(F.val(st.get('y', -1)))
+            if not (0 <= x <= 9 and 0 <= y <= 7):
+                raise ProjectError(f"{c}: start cell ({x},{y}) is outside the 10x8 screen")
+            rooms = [sid] + [r for r in (w.get('rooms') or []) if r != sid]
+            for rid in rooms:
+                rr = self.room_by_id(rid)
+                if rr is None or rr.get('placeholder'):
+                    raise ProjectError(f"{c}: room {rid!r} is not a custom room of this "
+                                       "project")
+                if rid in owner and owner[rid] != gid:
+                    raise ProjectError(f"{c}: room {rid!r} is already in world "
+                                       f"{owner[rid]} — a room belongs to one world")
+                owner[rid] = gid
+            saving = w.get('saving', 'calm')
+            if saving not in G.WORLD_SAVING:
+                raise ProjectError(f"{c}: saving must be one of {list(G.WORLD_SAVING)}")
+            out[gid] = {'name': g.get('name') or f'World {gid}', 'start_room': sid,
+                        'start_screen': scr, 'start_x': x, 'start_y': y,
+                        'rooms': rooms, 'saving': saving}
+        self._worlds = out
+        self._world_of = owner
+        return out
+
+    def world_of(self, room_id):
+        """The world (gate number) a room belongs to, or None."""
+        try:
+            self.worlds()
+        except ProjectError:
+            return None
+        return self._world_of.get(room_id)
+
+    @staticmethod
+    def room_has_battles(r):
+        enc = r.get('encounters') or {}
+        return bool(enc.get('enabled'))
 
     # ------------------------------------------------ monster NPCs (S101)
     MONSTER_SPRITE_BASE = 0xF0      # display-list ids $F0-$F3 (bank $0B resolver)
@@ -1289,7 +1483,11 @@ class Project:
         c = f"room {r.get('id')} screen {k} NPC ({n.get('x')},{n.get('y')})"
         out = []
         if n.get('swirl_of') is not None:
-            out.append((self.resolve_flag_ref(f"gate:{int(F.val(n['swirl_of']))}", c), True))
+            from . import gates as G
+            gid = int(F.val(n['swirl_of']))
+            # S123: a gate whose swirl takes a colour once cleared keeps it shown
+            if G.cleared_swirl(self.custom, gid) is None:
+                out.append((self.resolve_flag_ref(f"gate:{gid}", c), True))
         for t in n.get('shown_when') or []:
             is_ = t.get('is', 'set')
             if is_ not in ('set', 'clear'):
@@ -1298,6 +1496,38 @@ class Project:
         if len(out) > STATE_RULE_MAX_TERMS:
             raise ProjectError(f"{c}: {len(out)} conditions (max {STATE_RULE_MAX_TERMS})")
         return out
+
+    def npc_colour(self, r, k, n):
+        """S123: (OBJ palette 0-7, flag index or None) an NPC entry is drawn in
+        — None = its sprite's own colours. `colour`: 0-7 (always) or {"palette":
+        0-7, "when": flag ref} (only while that flag is SET); a `swirl_of` gate
+        with cleared_swirl = a palette → that palette once the gate is cleared.
+        Lowered to the $A2 prefix (bank $60 CopyNPCListToBuffer / entry 11)."""
+        from . import gates as G
+        c = f"room {r.get('id')} screen {k} NPC ({n.get('x')},{n.get('y')})"
+        col = n.get('colour')
+        if col is not None:
+            if n.get('monster') is not None:
+                raise ProjectError(f"{c}: a monster NPC is drawn in its own walking "
+                                   "colours — 'colour' is for people and objects")
+            if isinstance(col, dict):
+                pal, when = col.get('palette'), col.get('when')
+            else:
+                pal, when = col, None
+            try:
+                pal = int(F.val(pal))
+            except Exception:                                    # noqa: BLE001
+                pal = -1
+            if not 0 <= pal <= 7:
+                raise ProjectError(f"{c}: colour must be an OBJ palette 0-7 (got {col!r})")
+            flag = self.resolve_flag_ref(when, c) if when not in (None, '') else None
+            return pal, flag
+        if n.get('swirl_of') is not None:
+            gid = int(F.val(n['swirl_of']))
+            pal = G.cleared_swirl(self.custom, gid)
+            if pal is not None:
+                return pal, self.resolve_flag_ref(f"gate:{gid}", c)
+        return None
 
     def gate_clear_rows(self):
         """GateClearTable (bank $76, GateBossWin): per gate 0 .. last defined
@@ -1417,6 +1647,13 @@ class Project:
         gate's BOSS room defaults to no saving, like vanilla boss rooms $30-$4F:
         user rule S100, S101)."""
         default = r.get('id') not in self.boss_room_ids()
+        # S123: a world's rooms follow its saving rule (calm = rooms without
+        # battles; explicit can_save wins)
+        wid = self.world_of(r.get('id'))
+        if wid is not None:
+            rule = self.worlds()[wid]['saving']
+            default = (rule == 'everywhere' or
+                       (rule == 'calm' and not self.room_has_battles(r)))
         fl = 0 if r.get('can_save', default) else 0x01
         # S121: bit 1 = sprites stay drawn while a text box is open (bank $71
         # entry 8 TextSpriteMode — vanilla does it for rooms $08 / $5D, whose
@@ -1533,8 +1770,22 @@ class Project:
                     raise ProjectError(f"{c}: {k} must be {lo}-{hi} (got {gs[k]!r})")
                 row[at] = n
             new = gid >= 32
+            world = isinstance(gs.get('world'), dict)
+            if world:                       # S123: floor 1 = the world, floor 2 unused
+                row[3] = G.WORLD_FLOORS
+            # S123: what its swirl objects do once cleared (None = vanish, else a palette)
+            cs = gs.get('cleared_swirl')
+            if cs not in (None, '', 'stop'):
+                try:
+                    csn = int(F.val(cs))
+                except Exception:                                # noqa: BLE001
+                    csn = -1
+                if not 0 <= csn <= 7:
+                    raise ProjectError(f"{c}: cleared_swirl must be \"stop\" or an "
+                                       f"OBJ palette 0-7 (got {cs!r})")
             out[gid] = {'floors': row[3], 'boss_map': row[4], 'spawn': (row[5], row[6]),
-                        'boss_room': boss_room, 'hand_made': bool(gs.get('hand_made')),
+                        'boss_room': boss_room,
+                        'hand_made': bool(gs.get('hand_made')) or world, 'world': world,
                         'edited': bool(gs), 'row': row,
                         'name': gs.get('name') if new else v['name'],
                         'comment': gs.get('comment', ''),

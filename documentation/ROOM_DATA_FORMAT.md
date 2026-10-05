@@ -316,6 +316,35 @@ vanilla rooms get conditioned copies of their lists only through
 `VanillaNPCExtTable` (re-bossed / re-routed gate portals). `$A0`/`$A1` are not a
 vanilla interact kind (the engine's ≥$80 kinds are examine `$8x` / step-on `$90`).
 
+### Common tiles $80-$AF in every room (S123 r3, measured)
+
+After a room's own sheet (`$9000`, ids `$00-$7F` via the signed `$8800` addressing), bank
+$0B `RoomEntry0_TilesetLoader` (both copies, `$404F` / the second loader) always loads
+sheet **`$29:$1D`** (768 B = 48 tiles) to `$8800` → BG ids **`$80-$AF`** are the same in
+every room. The guard before it (`FA 68 C9 3E 08 20 23` = `ld a, [wMapID] / ld a, $08 /
+jr nz`) is not a compare: Z comes from `WaitDMATransfer` (ends `xor a`), so the load always
+runs (PyBoy: `$8800-$8AFF` == `$29:$1D` in rooms $00 / $01 / $08 / $10 / $24 / custom $74).
+Vanilla `$08` (the roots room: bed, carpet) draws 53 cells with them. NPC sprite slots
+load at `$8500 + c·$100` (code-read), so a 4th species would overwrite `$80-$8F`; vanilla
+`$08` is special-cased (`cp $08`, banks $06 / $0B). The editor renders `$80-$AF` from this
+sheet since S123 r3 (`render_project.common_blocks`, `tools/render_rooms.py`); ids ≥ `$B0`
+still draw tile 0.
+
+### Colour prefix $A2 and the NPC draw path (S123, patched builds)
+
+**`$A2, palette, flag lo, flag hi, $FF`** (5 bytes, never copied) before an NPC entry
+draws that NPC in OBJ palette 0-7 (`$17:$5615`) instead of its sprite's own — always
+(flag `$FFFF`) or only while the flag is SET. `CopyNPCListToBuffer` records
+`wNpcColour[slot] = $80|pal` (slot = index among the NPC entries, spots ≥ `$80` not
+counted), tagged with `wMapID` / `wScreenIndex`. **The draw path:** bank $06
+`NPCDrawSlot` (was `SaveMapS_4d0a`; `$C000+4·idx` OAM buffer, `$FFCB` = next free piece)
+draws each NPC through bank $05 entry 0 (`NPCSpritePaletteOr`, was `HramAudE_406e`, ORs
+the sprite id's own palette from `$05:$4152`); the patched build calls bank $60 entry 11
+`NpcColourDraw` instead, which draws the same way and then rewrites attr bits 0-2 of
+the pieces just added (`$FFCB` before → after). Monster NPCs (walking palettes) are
+refused by the compiler. Cost measured ≈ 1.2 scanlines per NPC (PYBOY_DEBUGGING S123).
+Emitted for `colour` and for a `cleared_swirl` gate's swirls (PROJECT_COMPILER §2.36).
+
 **The gate swirl object** (vanilla, measured S117): NPC type `$00`, sprite **`$4D`**,
 script `$FF`, standing on the portal cell — the spinning part of a portal; the still
 swirl under it is background art (room $24 sheet tiles $20-$23, palette 3). Portal

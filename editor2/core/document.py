@@ -43,6 +43,7 @@ from editor2.core.encounters_doc import EncountersMixin
 from editor2.core.music_doc import MusicMixin
 from editor2.core.shops_doc import ShopsMixin
 from editor2.core.milly_doc import MillyMixin
+from editor2.core.worlds import WorldsMixin
 from editor2.core.formats import anim_source as F_anim
 
 SCREEN_W, SCREEN_H = 20, 16
@@ -117,7 +118,7 @@ class ThresholdShiftNeeded(RuntimeError):
 class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
                ConversationMixin, EnemiesMixin, FamiliesMixin, MonstersMixin,
                ArenaMixin, SkillsMixin, AnimsMixin, BreedingMixin, EncountersMixin,
-               MusicMixin, ShopsMixin, MillyMixin):
+               MusicMixin, ShopsMixin, MillyMixin, WorldsMixin):
     def __init__(self, path):
         self.path = path if path.endswith('.json') else \
             os.path.join(path, 'project.json')
@@ -2343,7 +2344,9 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
                                 else None),
                     # S120: flag conditions (read-only here; set_npc_shown_when edits them)
                     'shown_when': copy.deepcopy(entry.get('shown_when') or []),
-                    'swirl_of': entry.get('swirl_of')}
+                    'swirl_of': entry.get('swirl_of'),
+                    # S123: the NPC's colour (an OBJ palette 0-7, or {palette, when})
+                    'colour': copy.deepcopy(entry.get('colour'))}
         if k == 'raw':
             b = [val(x) for x in entry['bytes']]
             table = {int(i): sid for i, sid in (room.get('scripts') or {}).items()}
@@ -2436,7 +2439,10 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
             v['comment'] = old['comment']
         lst[index] = self._npc_entry(v)
         for k in ('swirl_of', 'shown_when',         # S117: conditions ride along
-                  'actor', 'cast'):                 # S119: a cutscene actor's name / cast mark
+                  'actor', 'cast',                  # S119: a cutscene actor's name / cast mark
+                  'colour'):                        # S123: the NPC's colour
+            if k == 'colour' and fields.get('monster') is not None:
+                continue                            # a monster keeps its own colours
             if old.get(k) is not None:
                 lst[index][k] = copy.deepcopy(old[k])
         self.touch()
@@ -2461,6 +2467,24 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
             e['shown_when'] = clean
         else:
             e.pop('shown_when', None)
+        self.touch()
+
+    def set_npc_colour(self, room, key, state_idx, index, palette, when=None):
+        """S123: draw the NPC in OBJ palette 0-7 (None = its sprite's own
+        colours); `when` = a flag ref — only while that flag is ON. Compiled as
+        the $A2 prefix (bank $60 entry 1 / entry 11 — PROJECT_COMPILER §2.36)."""
+        e = self.npc_entries(room, key, state_idx)[index]
+        if e.get('kind') != 'npc':
+            raise ValueError('only NPCs have a colour')
+        if e.get('monster') is not None and palette is not None:
+            raise ValueError('a monster NPC is drawn in its own walking colours')
+        if palette is None:
+            e.pop('colour', None)
+        else:
+            p = int(palette)
+            if not 0 <= p <= 7:
+                raise ValueError('colour = one of the 8 sprite palettes (0-7)')
+            e['colour'] = {'palette': p, 'when': when} if when not in (None, '') else p
         self.touch()
 
     def remove_npc(self, room, key, state_idx, index):

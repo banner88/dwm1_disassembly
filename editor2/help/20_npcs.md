@@ -15,10 +15,24 @@ Select an NPC to edit it in the *Object* section: sprite, facing, behaviour
 (stand / walk / spin …), hidden, which script it runs, and which states it
 is present in. Drag it on the canvas to move it.
 
+**colour** (S123): draw a person or an object in one of the game's 8 sprite
+palettes instead of its own — grey / red, green, blue, yellow, purple, grey,
+orange, brown (the swatch shows each one's main colour; the canvas previews
+it). *own colours* = as the game draws it. Monster NPCs keep their own colours.
+
+**Make boss…** (S123): turns the selected NPC into a boss in one go — what it
+says, a battle (1-3 enemies), what it says after, its own **beaten** flag, END
+boss of a world (also clears the world), and whether the helper then takes the
+player somewhere. It writes an ordinary conversation (Say → Battle → Turn flags
+ON → Vanish → …) you can edit afterwards, and makes the NPC *shown when* its
+beaten flag is OFF, so it stays gone. See *Worlds*.
+
 **Shown when…** (S120): the *shown when* row → **Flags…** — the NPC is there only
 while the listed flags are ON / OFF (all of them). The game checks when the
 screen loads: a flag a talk sets shows / hides the NPC the next time you enter
-or scroll back.
+or scroll back. To make an NPC leave **at once** (a beaten boss, a guard that
+steps aside), end its conversation with a **Vanish** step (see
+*Conversations*).
 
 **Play the game here** (S120): select a cell, More ▾ → **▶ Play the game here**
 — your last build starts in this room on that cell, in the Playback window (a
@@ -31,7 +45,9 @@ makes the NPC sell a shop (its own greeting, then the game's BUY / SELL —
 see *Shops*).
 
 The spinning **swirl** objects on gate entrances are NPCs too (sprite
-`$4D`): they show only until their gate is cleared (see *Gates*).
+`$4D`): they show only until their gate is cleared — or, when the gate (or
+world) says *after clearing, the swirl turns* a colour, they keep spinning in
+that colour (see *Gates* and *Worlds*).
 
 The engine caps a screen at 8 NPCs; many different sprites on one screen
 can draw blank (sprite memory) — repeats are free.

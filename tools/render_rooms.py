@@ -74,6 +74,18 @@ def get_gate_attr_data(rom, gate_idx, table_sel=0):
     result = decompress_lz(rom, attr_bank, attr_idx)
     return result[0] if result else None
 
+_COMMON = {}
+
+
+def _common_sheet(rom):
+    """Sheet $29:$1D (768 B, tiles $80-$AF in every room; S123 r3)."""
+    k = id(rom)
+    if k not in _COMMON:
+        r = decompress_lz(rom, 0x29, 0x1D)
+        _COMMON[k] = bytes(r[0]) if r else b''
+    return _COMMON[k]
+
+
 def render_screen(rom, gfx, layout, attr_data, palettes, scale=3):
     """Render a 20x16 tile screen to an RGB image."""
     W, H, STRIDE = 20, 16, 32
@@ -82,7 +94,13 @@ def render_screen(rom, gfx, layout, attr_data, palettes, scale=3):
     for ty in range(H):
         for tx in range(W):
             tile_idx = layout[ty * STRIDE + tx]
-            if tile_idx >= 128: tile_idx = 0
+            src = gfx
+            if 0x80 <= tile_idx < 0xB0:
+                # S123 r3: ids $80-$AF = the common sheet $29:$1D that bank $0B
+                # RoomEntry0_TilesetLoader loads to $8800 in every room (measured)
+                src = _common_sheet(rom)
+                tile_idx -= 0x80
+            elif tile_idx >= 128: tile_idx = 0
             
             if attr_data:
                 attr_off = ty * 16 + (tx // 2)
@@ -94,8 +112,8 @@ def render_screen(rom, gfx, layout, attr_data, palettes, scale=3):
             
             base = tile_idx * 16
             for py in range(8):
-                if base + py*2+1 >= len(gfx): continue
-                lo, hi = gfx[base+py*2], gfx[base+py*2+1]
+                if base + py*2+1 >= len(src): continue
+                lo, hi = src[base+py*2], src[base+py*2+1]
                 for px in range(8):
                     bit = 7 - px
                     ci = ((hi>>bit)&1)<<1 | ((lo>>bit)&1)

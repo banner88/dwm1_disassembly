@@ -14,8 +14,23 @@
   maze look, special rooms and depth tier of the gate it copies; since S120
   every gate can point at other rows (Gates tab → Maze floors) — the rows
   themselves are shared and not editable. New maze PIECES (screens) are not
-  editable yet. Fully custom branching gates are the next step of the
-  new-gates arc (NG3).
+  editable yet. Fully hand-made places entered like a gate are **worlds**
+  (S123, below).
+- Worlds (S123): each world takes one of the 64 new gate numbers (shared with
+  new gates). A room belongs to at most one world. Only a conversation (Make
+  boss → END boss, or *Turn flags ON* `world cleared — …`) clears a world —
+  winning a battle alone does not. Inside a world there are no maze floors or
+  stairs; losing works the gate way (the Castle, healed, half the gold). A
+  world room's music is its own song, else whatever is playing.
+- NPC colours (S123): the 8 sprite palettes are the game's own, shared by
+  every sprite on the screen (they are not editable here). Monster NPCs keep
+  their own colours. Each coloured NPC costs the game a little time per frame:
+  measured, a 4-NPC room with 2 coloured NPCs dropped about 1 frame in 80 — use
+  colours where they matter. The portal's still swirl picture keeps the room's
+  colours; only the spinning swirl changes colour.
+- Vanish (S123): the NPC leaves for the moment; it comes back when the screen
+  loads again unless its *shown when* flags say otherwise (Make boss sets this
+  up).
 - Maze size (S122): 3-15 per battle list (1-2 can freeze the game).
 - Gate themes (S122): the 16 maze looks only (their sheet slots $00-$3F; $40-$7F
   free); theme rooms do not animate; the damage floors do not hurt in your

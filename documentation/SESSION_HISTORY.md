@@ -1,5 +1,89 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-05 (Session 121 — **ROADMAP P3.16 + E7: THE MILLY HOOK — MILAYOU
+> GOES INTO THE DRESSER, THE SCREEN WHIRLS, AND THE GAME GOES ON AS MILLY (HER SPRITE IN EVERY
+> ROOM, THE NAMING SCREEN'S ICON, THE DEFAULT NAME MILLY) IN A ROOM OF THE PROJECT'S CHOICE;
+> "ROOTS ROOM (MILLY)" WITH GREY WARUBOU; THE "NAME THE HERO" CUTSCENE STEP** (user: "In the
+> intro, when Milayou disappears into dresser when Waroubou drags her in, do NOT return
+> control to player to play as terry. Instead, play the disappearing (screen whirling) effect
+> and sound … But redirect to a new custom room. At THIS POINT, player sprite is no longer
+> Terry, it is MILLY … make a copy of the roots room and instead of old man, it's grey
+> Waroubou … This whole thing can be switched off as a 'milly hook' patch"; answers: cut right
+> after the first dresser glow, the game's own Milayou sprite, Terry NPC sprites elsewhere
+> stay, "give me naming step and I'll build it in", the arrive-spinning tick, Warubou's text
+> editable, no starter monster)). **Built S121, NOT yet user-tested.**
+> **Model + compiler (PROJECT_COMPILER §2.34, `editor2/core/milly.py`):** `custom.milly_hook`
+> = `enabled`, `arrive` {room, screen, x, y, face}, `spin`. ON: the bedroom script's tail
+> (`$0E:$4AA4`, 94 words, region `milly_bedroom_script`) = the glow (sound `$60`, op `$17`,
+> delay 8), flag **`$179F`** set (r2: Terry stays drawn through the whirl), the name MILLY written, `$3B` warp_fade (the
+> whirl, sound `$52` — measured equal to Terry's dresser) to the arrival; the arrival room gets
+> a hidden cast NPC (Milayou `$14`) + an entry scene (spin in or appear, then she becomes the
+> player; flag `$179E` = played). The player shape: bank $04 entries 2 / 3 (regions
+> `milly_shape_04a/b`, same size) → NEW bank **$79** entry 0 `MillyShapeTable` (flag set: her
+> palette 3 + frame tables in WRAM `wMillyLayout` 160 B, carved from wCustomPool) — the field
+> player AND the naming screen's icon; bank $01 `LoadFieldTilesDMA` (region
+> `milly_player_sheet`) → entry 1 `MillyPlayerSheet` (her sheet `$3114` + the tables); bank
+> $09 `FollowerGfxTable09[0]` (region `milly_naming_icon`); bank $4F hero tiles (region
+> `milly_name_tiles`: S120b's MILLY moved under the hook — off = TERRY). OFF: every region is
+> the vanilla text, bank $79 empty. Hook flags `$179E`/`$179F` reserved (`hook:milly`,
+> `hook:milly_arrived`; editor pool now `$1000-$179D`). **Name the hero** step (`name_hero`:
+> the Castle's naming screen ops). **Text-box sprite rule** (ROM0 `SaveHLBC`: sprites on BG
+> tiles ≥ `$80` hidden while a box is open; vanilla exempts maps `$08`/`$5D`): copies of those
+> rooms keep it — `custom.rooms[].text_keeps_sprites` → room flag bit 1, bank $71 entry 8
+> `TextSpriteMode` via bank $06 region `text_sprite_mode`. Entry scenes chain
+> (`_then_next`). `dump_map_table.py` read map `$08`'s "no exits" pointer `$FFFF` as an error
+> → `$08`/`$5D`/`$5E` had no steps (map_table.json regenerated; copies of `$08` run no
+> animation handler).
+> **Editor:** Cutscenes → **Milly hook…** (the tick, the arrival room / screen / tile /
+> facing on its picture, arrive spinning; **Create the roots room** = a copy of `$08` where
+> grey Warubou walks up, talks (4 editable boxes) and leads her out — its last step is where
+> he leads her (default GreatTree, any room); Edit the scene…); the "Name the hero" step;
+> hook flags in the flag pickers; previews say MILLY only with the hook (`textenc.use_hero_glyphs`).
+> Help `64_milly_hook.md`. `EDITOR_REVISION` = 'S121'.
+> **Measured (PyBoy, the user's project + the roots room):** flag set at the dresser, the whirl
+> to the roots room, Milly spins in and becomes the player, Warubou walks up, 4 boxes, both
+> walk out, GreatTree; she walks in all four directions; the naming screen offers MILLY with
+> HER icon; CONTINUE on a save with `$179F` set → Milly (tables rebuilt after the load's
+> zero-fill); a gate battle → back as Milly; flag clear → Terry; arrival without the spin in
+> the user's "New roomS" (free colours). Hook on moves no label in banks $01/$04/$09/$0E/$4F.
+> **Verifier PASS; clean `1ca6579…` byte-perfect** (labels / comments only: bank $00
+> `SaveHLBC`, $01 player draw + `LoadFieldTilesDMA`, $04 `data_4137`, $05 NPC tables, $06
+> opener, $09 icon, $0E bedroom tail); **patched pin `e43e5f58…` (patched)**, was `97659a4a…`
+> (patched, historical) — the example has the hook OFF: hero tiles back to TERRY + the bank
+> $71 template (entry 8; sha re-pinned; bank $79 template pinned). test_compiler 763/763,
+> --rom 1052/1052 (r3); test_app PASS; test_canvas --rom PASS (all-clones now includes `$08`/`$5D`/`$5E`).
+> `audit_mapid_range.py`: `TextSpriteMode#0` BOUNDED (CROSSBANK_ROOMS "S121 site").
+> **Test ROMs (built, NOT yet user-tested):** `DWM-S121-milly-hook-test.gbc` (`d104cb84…`,
+> patched) = the user's project (my-dwm-hack_12) + "Roots room (Milly)" ($71) + the hook on
+> (arrival in the roots room, Warubou leads her to GreatTree screen 12); `DWM-S121-milly-hook-
+> naming-test.gbc` (`399a3365…`, patched) = the same + "Name the hero" after Warubou's lines.
+> **User 2026-10-05 12:29: "Perfect - everything works. The naming screen is honestly great
+> where it is for now"** (both ROMs) + one request — **r2:** "when milayou disappears into
+> dresser and screen waves, just before that, terry NPC sprite vanishes abruptly … if easily
+> fixable that would be preferred": the bedroom's `$0D` hide of Terry removed (he stays drawn
+> through the whirl — the flag only acts at the next field load), the arrival scene hides the
+> player as its first step instead. PyBoy, every frame: Terry visible through the glow and
+> the waves; no player-sheet sprite on screen in the roots room before the scene shows her;
+> without the spin she appears exactly when shown. r2 ROMs (built, NOT yet user-tested):
+> `DWM-S121r2-milly-hook-test.gbc` (`57bac7c3…`, patched), `DWM-S121r2-milly-hook-naming-
+> test.gbc` (`b23f941d…`, patched); the r1 ROMs (`d104cb84…` / `399a3365…`, patched,
+> historical) were user-confirmed. Example pin unchanged (hook off).
+> **r3 (user 13:04: "I tried redirecting to SBOSS and game crashes … Redirect from ROOTS
+> ROOM into SBOSS"; "Waroubou text box, naming screen, then another box"):** reproduced —
+> the dialog kept GreatTree's screen 12 for SBOSS (screens 0 / 4), the warp to a missing
+> screen crashes the game (PyBoy) → the build refuses a move to a screen the room lacks
+> (`Project.move_screen_problem`), the dialog / cutscene editor list only real screens. The
+> roots scene's naming option ("Warubou asks her name": his lines, the naming screen, a
+> box after; default for a new roots room). r3 ROM `DWM-S121r3-milly-hook-test.gbc`
+> (`1146f979…`, patched; built, NOT yet user-tested): the user's project + the roots room
+> with the naming sandwich, Warubou leading her into SBOSS screen 4 (7, 4) — PyBoy end to end.
+> **Hand-off:** `DWM-S121-milly-hook-changed-files.zip` (r3, cumulative) + the APPLY list in the chat.
+> **Residuals (ROADMAP P3.16):** debug-menu mode 3 and the link-battle teardown (mode 6) still
+> draw Terry's shape; the vanilla Castle naming before the dresser would show her icon with
+> Terry's frames (not reachable in the vanilla flow — the King names after it).
+> **Next:** the user's test of the r2 dresser moment + the editor files, then the user's pick.
+
+
 > Last verified: 2026-10-05 (Session 120 + S120b — **MOP-UP: THE STALE BANK $60 OVERLAY FIXED AND
 > GUARDED; THE wMapID AUDIT RE-ADJUDICATED; P3.6 THE DIALOGUE EDITOR FINISHED (SPEAKERS,
 > VOICES, THE HERO'S / LEAD MONSTER'S NAMES, THE GAME'S CONTRACTIONS AND EXTRA GLYPHS);
