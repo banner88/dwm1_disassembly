@@ -387,8 +387,9 @@ class Engine:
         naming screen ($04 15 on $C8F2 = $CA42) — texts then print "TERRY0000"
         (user S118f). Put in the name the way the naming screen leaves its DEFAULT:
         the same four tiles + $F0 x 4 (measured S120b, PyBoy on the Castle naming:
-        accepting the offer stores $D3 $D4 $D5 $D6 $F0 $F0 $F0 $F0) — "MILLY" in
-        the project's builds (patches/bank_04f.asm). Was "TERRY" as 5 letters."""
+        accepting the offer stores $D3 $D4 $D5 $D6 $F0 $F0 $F0 $F0) — "TERRY", or
+        "MILLY" in builds with the Milly hook (S121; patches/bank_04f.asm region
+        milly_name_tiles). Was "TERRY" as 5 letters."""
         m = self.m
         if self.sav or [m[self.HERO_NAME + i] for i in range(4)] != [0xD3, 0xD4, 0xD5, 0xD6]:
             return

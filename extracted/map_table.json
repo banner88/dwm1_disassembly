@@ -9949,7 +9949,424 @@
         "room_data_flat": "0x02DC88",
         "ram_counter": "0xD951",
         "ram_label": "",
-        "steps": []
+        "steps": [
+          {
+            "step": 0,
+            "flat": "0x02DC8A",
+            "bytes_0_1": "0x291E",
+            "interact_ptr": "0x5CC0",
+            "interact_ptr_flat": "0x02DCC0",
+            "exit_ptr": "0xFFFF",
+            "exit_ptr_flat": null,
+            "interact_data": [
+              {
+                "entry_flat": "0x02DCC0",
+                "raw": "20 08 05 08 ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "up",
+                "sprite_id": 8,
+                "x": 5,
+                "y": 8,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02DCC5",
+                "raw": "40 f0 05 04 ff",
+                "kind": "npc",
+                "npc_type": "0x40",
+                "facing": "down",
+                "sprite_id": 240,
+                "x": 5,
+                "y": 4,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02DCCA",
+                "raw": "40 f1 05 04 ff",
+                "kind": "npc",
+                "npc_type": "0x40",
+                "facing": "down",
+                "sprite_id": 241,
+                "x": 5,
+                "y": 4,
+                "script_id": 255
+              }
+            ],
+            "exit_data": []
+          },
+          {
+            "step": 1,
+            "flat": "0x02DC90",
+            "bytes_0_1": "0x291E",
+            "interact_ptr": "0x5CD0",
+            "interact_ptr_flat": "0x02DCD0",
+            "exit_ptr": "0xFFFF",
+            "exit_ptr_flat": null,
+            "interact_data": [
+              {
+                "entry_flat": "0x02DCD0",
+                "raw": "20 08 05 08 ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "up",
+                "sprite_id": 8,
+                "x": 5,
+                "y": 8,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02DCD5",
+                "raw": "00 55 05 04 ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "down",
+                "sprite_id": 85,
+                "x": 5,
+                "y": 4,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02DCDA",
+                "raw": "00 55 05 04 ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "down",
+                "sprite_id": 85,
+                "x": 5,
+                "y": 4,
+                "script_id": 255
+              }
+            ],
+            "exit_data": []
+          },
+          {
+            "step": 2,
+            "flat": "0x02DC96",
+            "bytes_0_1": "0x291E",
+            "interact_ptr": "0x5CE0",
+            "interact_ptr_flat": "0x02DCE0",
+            "exit_ptr": "0xFFFF",
+            "exit_ptr_flat": null,
+            "interact_data": [
+              {
+                "entry_flat": "0x02DCE0",
+                "raw": "20 08 05 08 ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "up",
+                "sprite_id": 8,
+                "x": 5,
+                "y": 8,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02DCE5",
+                "raw": "40 f0 05 04 ff",
+                "kind": "npc",
+                "npc_type": "0x40",
+                "facing": "down",
+                "sprite_id": 240,
+                "x": 5,
+                "y": 4,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02DCEA",
+                "raw": "40 55 05 04 ff",
+                "kind": "npc",
+                "npc_type": "0x40",
+                "facing": "down",
+                "sprite_id": 85,
+                "x": 5,
+                "y": 4,
+                "script_id": 255
+              }
+            ],
+            "exit_data": []
+          },
+          {
+            "step": 3,
+            "flat": "0x02DC9C",
+            "bytes_0_1": "0x291E",
+            "interact_ptr": "0x5CE0",
+            "interact_ptr_flat": "0x02DCE0",
+            "exit_ptr": "0xFFFF",
+            "exit_ptr_flat": null,
+            "interact_data": [
+              {
+                "entry_flat": "0x02DCE0",
+                "raw": "20 08 05 08 ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "up",
+                "sprite_id": 8,
+                "x": 5,
+                "y": 8,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02DCE5",
+                "raw": "40 f0 05 04 ff",
+                "kind": "npc",
+                "npc_type": "0x40",
+                "facing": "down",
+                "sprite_id": 240,
+                "x": 5,
+                "y": 4,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02DCEA",
+                "raw": "40 55 05 04 ff",
+                "kind": "npc",
+                "npc_type": "0x40",
+                "facing": "down",
+                "sprite_id": 85,
+                "x": 5,
+                "y": 4,
+                "script_id": 255
+              }
+            ],
+            "exit_data": []
+          },
+          {
+            "step": 4,
+            "flat": "0x02DCA2",
+            "bytes_0_1": "0x291E",
+            "interact_ptr": "0x5CF0",
+            "interact_ptr_flat": "0x02DCF0",
+            "exit_ptr": "0xFFFF",
+            "exit_ptr_flat": null,
+            "interact_data": [
+              {
+                "entry_flat": "0x02DCF0",
+                "raw": "20 08 05 08 ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "up",
+                "sprite_id": 8,
+                "x": 5,
+                "y": 8,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02DCF5",
+                "raw": "40 f0 05 04 ff",
+                "kind": "npc",
+                "npc_type": "0x40",
+                "facing": "down",
+                "sprite_id": 240,
+                "x": 5,
+                "y": 4,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02DCFA",
+                "raw": "40 f1 05 04 ff",
+                "kind": "npc",
+                "npc_type": "0x40",
+                "facing": "down",
+                "sprite_id": 241,
+                "x": 5,
+                "y": 4,
+                "script_id": 255
+              }
+            ],
+            "exit_data": []
+          },
+          {
+            "step": 5,
+            "flat": "0x02DCA8",
+            "bytes_0_1": "0x291E",
+            "interact_ptr": "0x5D00",
+            "interact_ptr_flat": "0x02DD00",
+            "exit_ptr": "0xFFFF",
+            "exit_ptr_flat": null,
+            "interact_data": [
+              {
+                "entry_flat": "0x02DD00",
+                "raw": "20 08 05 08 ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "up",
+                "sprite_id": 8,
+                "x": 5,
+                "y": 8,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02DD05",
+                "raw": "00 55 05 04 ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "down",
+                "sprite_id": 85,
+                "x": 5,
+                "y": 4,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02DD0A",
+                "raw": "00 55 05 04 ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "down",
+                "sprite_id": 85,
+                "x": 5,
+                "y": 4,
+                "script_id": 255
+              }
+            ],
+            "exit_data": []
+          },
+          {
+            "step": 6,
+            "flat": "0x02DCAE",
+            "bytes_0_1": "0x291E",
+            "interact_ptr": "0x5D10",
+            "interact_ptr_flat": "0x02DD10",
+            "exit_ptr": "0xFFFF",
+            "exit_ptr_flat": null,
+            "interact_data": [
+              {
+                "entry_flat": "0x02DD10",
+                "raw": "60 08 05 08 ff",
+                "kind": "npc",
+                "npc_type": "0x40",
+                "facing": "up",
+                "sprite_id": 8,
+                "x": 5,
+                "y": 8,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02DD15",
+                "raw": "20 5e 05 04 ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "up",
+                "sprite_id": 94,
+                "x": 5,
+                "y": 4,
+                "script_id": 255
+              }
+            ],
+            "exit_data": []
+          },
+          {
+            "step": 7,
+            "flat": "0x02DCB4",
+            "bytes_0_1": "0x291E",
+            "interact_ptr": "0x5D1B",
+            "interact_ptr_flat": "0x02DD1B",
+            "exit_ptr": "0xFFFF",
+            "exit_ptr_flat": null,
+            "interact_data": [
+              {
+                "entry_flat": "0x02DD1B",
+                "raw": "60 08 05 08 ff",
+                "kind": "npc",
+                "npc_type": "0x40",
+                "facing": "up",
+                "sprite_id": 8,
+                "x": 5,
+                "y": 8,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02DD20",
+                "raw": "70 21 00 04 ff",
+                "kind": "npc",
+                "npc_type": "0x40",
+                "facing": "right",
+                "sprite_id": 33,
+                "x": 0,
+                "y": 4,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02DD25",
+                "raw": "40 55 05 04 ff",
+                "kind": "npc",
+                "npc_type": "0x40",
+                "facing": "down",
+                "sprite_id": 85,
+                "x": 5,
+                "y": 4,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02DD2A",
+                "raw": "20 5e 05 07 ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "up",
+                "sprite_id": 94,
+                "x": 5,
+                "y": 7,
+                "script_id": 255
+              }
+            ],
+            "exit_data": []
+          },
+          {
+            "step": 8,
+            "flat": "0x02DCBA",
+            "bytes_0_1": "0x291E",
+            "interact_ptr": "0x5D30",
+            "interact_ptr_flat": "0x02DD30",
+            "exit_ptr": "0xFFFF",
+            "exit_ptr_flat": null,
+            "interact_data": [
+              {
+                "entry_flat": "0x02DD30",
+                "raw": "20 08 05 07 ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "up",
+                "sprite_id": 8,
+                "x": 5,
+                "y": 7,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02DD35",
+                "raw": "40 21 05 04 ff",
+                "kind": "npc",
+                "npc_type": "0x40",
+                "facing": "down",
+                "sprite_id": 33,
+                "x": 5,
+                "y": 4,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02DD3A",
+                "raw": "40 55 05 04 ff",
+                "kind": "npc",
+                "npc_type": "0x40",
+                "facing": "down",
+                "sprite_id": 85,
+                "x": 5,
+                "y": 4,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02DD3F",
+                "raw": "20 5e 05 06 ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "up",
+                "sprite_id": 94,
+                "x": 5,
+                "y": 6,
+                "script_id": 255
+              }
+            ],
+            "exit_data": []
+          }
+        ]
       }
     ]
   },
@@ -42919,7 +43336,508 @@
         "room_data_flat": "0x02FC47",
         "ram_counter": "0xD999",
         "ram_label": "arena_battle_starry",
-        "steps": []
+        "steps": [
+          {
+            "step": 0,
+            "flat": "0x02FC49",
+            "bytes_0_1": "0x2314",
+            "interact_ptr": "0x7C67",
+            "interact_ptr_flat": "0x02FC67",
+            "exit_ptr": "0xFFFF",
+            "exit_ptr_flat": null,
+            "interact_data": [
+              {
+                "entry_flat": "0x02FC67",
+                "raw": "10 f0 04 09 ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "left",
+                "sprite_id": 240,
+                "x": 4,
+                "y": 9,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02FC6C",
+                "raw": "10 f1 04 0a ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "left",
+                "sprite_id": 241,
+                "x": 4,
+                "y": 10,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02FC71",
+                "raw": "10 f3 04 0b ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "left",
+                "sprite_id": 243,
+                "x": 4,
+                "y": 11,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02FC76",
+                "raw": "10 f2 04 0c ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "left",
+                "sprite_id": 242,
+                "x": 4,
+                "y": 12,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02FC7B",
+                "raw": "10 e0 07 05 ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "left",
+                "sprite_id": 224,
+                "x": 7,
+                "y": 5,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02FC80",
+                "raw": "10 e1 06 05 ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "left",
+                "sprite_id": 225,
+                "x": 6,
+                "y": 5,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02FC85",
+                "raw": "10 e2 06 04 ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "left",
+                "sprite_id": 226,
+                "x": 6,
+                "y": 4,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02FC8A",
+                "raw": "10 e3 06 06 ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "left",
+                "sprite_id": 227,
+                "x": 6,
+                "y": 6,
+                "script_id": 255
+              }
+            ],
+            "exit_data": []
+          },
+          {
+            "step": 1,
+            "flat": "0x02FC4F",
+            "bytes_0_1": "0x2315",
+            "interact_ptr": "0x7C67",
+            "interact_ptr_flat": "0x02FC67",
+            "exit_ptr": "0xFFFF",
+            "exit_ptr_flat": null,
+            "interact_data": [
+              {
+                "entry_flat": "0x02FC67",
+                "raw": "10 f0 04 09 ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "left",
+                "sprite_id": 240,
+                "x": 4,
+                "y": 9,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02FC6C",
+                "raw": "10 f1 04 0a ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "left",
+                "sprite_id": 241,
+                "x": 4,
+                "y": 10,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02FC71",
+                "raw": "10 f3 04 0b ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "left",
+                "sprite_id": 243,
+                "x": 4,
+                "y": 11,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02FC76",
+                "raw": "10 f2 04 0c ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "left",
+                "sprite_id": 242,
+                "x": 4,
+                "y": 12,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02FC7B",
+                "raw": "10 e0 07 05 ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "left",
+                "sprite_id": 224,
+                "x": 7,
+                "y": 5,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02FC80",
+                "raw": "10 e1 06 05 ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "left",
+                "sprite_id": 225,
+                "x": 6,
+                "y": 5,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02FC85",
+                "raw": "10 e2 06 04 ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "left",
+                "sprite_id": 226,
+                "x": 6,
+                "y": 4,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02FC8A",
+                "raw": "10 e3 06 06 ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "left",
+                "sprite_id": 227,
+                "x": 6,
+                "y": 6,
+                "script_id": 255
+              }
+            ],
+            "exit_data": []
+          },
+          {
+            "step": 2,
+            "flat": "0x02FC55",
+            "bytes_0_1": "0x2315",
+            "interact_ptr": "0x7C90",
+            "interact_ptr_flat": "0x02FC90",
+            "exit_ptr": "0xFFFF",
+            "exit_ptr_flat": null,
+            "interact_data": [
+              {
+                "entry_flat": "0x02FC90",
+                "raw": "40 f0 04 05 ff",
+                "kind": "npc",
+                "npc_type": "0x40",
+                "facing": "down",
+                "sprite_id": 240,
+                "x": 4,
+                "y": 5,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02FC95",
+                "raw": "70 f3 03 04 ff",
+                "kind": "npc",
+                "npc_type": "0x40",
+                "facing": "right",
+                "sprite_id": 243,
+                "x": 3,
+                "y": 4,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02FC9A",
+                "raw": "70 f1 03 05 ff",
+                "kind": "npc",
+                "npc_type": "0x40",
+                "facing": "right",
+                "sprite_id": 241,
+                "x": 3,
+                "y": 5,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02FC9F",
+                "raw": "70 f2 03 06 ff",
+                "kind": "npc",
+                "npc_type": "0x40",
+                "facing": "right",
+                "sprite_id": 242,
+                "x": 3,
+                "y": 6,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02FCA4",
+                "raw": "10 e1 06 05 ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "left",
+                "sprite_id": 225,
+                "x": 6,
+                "y": 5,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02FCA9",
+                "raw": "10 e2 06 04 ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "left",
+                "sprite_id": 226,
+                "x": 6,
+                "y": 4,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02FCAE",
+                "raw": "10 e3 06 06 ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "left",
+                "sprite_id": 227,
+                "x": 6,
+                "y": 6,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02FCB3",
+                "raw": "40 52 04 05 ff",
+                "kind": "npc",
+                "npc_type": "0x40",
+                "facing": "down",
+                "sprite_id": 82,
+                "x": 4,
+                "y": 5,
+                "script_id": 255
+              }
+            ],
+            "exit_data": []
+          },
+          {
+            "step": 3,
+            "flat": "0x02FC5B",
+            "bytes_0_1": "0x2315",
+            "interact_ptr": "0x7CB9",
+            "interact_ptr_flat": "0x02FCB9",
+            "exit_ptr": "0xFFFF",
+            "exit_ptr_flat": null,
+            "interact_data": [
+              {
+                "entry_flat": "0x02FCB9",
+                "raw": "30 f0 02 05 ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "right",
+                "sprite_id": 240,
+                "x": 2,
+                "y": 5,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02FCBE",
+                "raw": "30 f3 03 04 ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "right",
+                "sprite_id": 243,
+                "x": 3,
+                "y": 4,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02FCC3",
+                "raw": "30 f1 03 05 ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "right",
+                "sprite_id": 241,
+                "x": 3,
+                "y": 5,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02FCC8",
+                "raw": "30 f2 03 06 ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "right",
+                "sprite_id": 242,
+                "x": 3,
+                "y": 6,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02FCCD",
+                "raw": "10 e1 06 05 ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "left",
+                "sprite_id": 225,
+                "x": 6,
+                "y": 5,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02FCD2",
+                "raw": "10 e2 06 04 ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "left",
+                "sprite_id": 226,
+                "x": 6,
+                "y": 4,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02FCD7",
+                "raw": "50 39 0a 01 ff",
+                "kind": "npc",
+                "npc_type": "0x40",
+                "facing": "left",
+                "sprite_id": 57,
+                "x": 10,
+                "y": 1,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02FCDC",
+                "raw": "10 e3 06 06 ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "left",
+                "sprite_id": 227,
+                "x": 6,
+                "y": 6,
+                "script_id": 255
+              }
+            ],
+            "exit_data": []
+          },
+          {
+            "step": 4,
+            "flat": "0x02FC61",
+            "bytes_0_1": "0x2315",
+            "interact_ptr": "0x7C67",
+            "interact_ptr_flat": "0x02FC67",
+            "exit_ptr": "0xFFFF",
+            "exit_ptr_flat": null,
+            "interact_data": [
+              {
+                "entry_flat": "0x02FC67",
+                "raw": "10 f0 04 09 ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "left",
+                "sprite_id": 240,
+                "x": 4,
+                "y": 9,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02FC6C",
+                "raw": "10 f1 04 0a ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "left",
+                "sprite_id": 241,
+                "x": 4,
+                "y": 10,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02FC71",
+                "raw": "10 f3 04 0b ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "left",
+                "sprite_id": 243,
+                "x": 4,
+                "y": 11,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02FC76",
+                "raw": "10 f2 04 0c ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "left",
+                "sprite_id": 242,
+                "x": 4,
+                "y": 12,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02FC7B",
+                "raw": "10 e0 07 05 ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "left",
+                "sprite_id": 224,
+                "x": 7,
+                "y": 5,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02FC80",
+                "raw": "10 e1 06 05 ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "left",
+                "sprite_id": 225,
+                "x": 6,
+                "y": 5,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02FC85",
+                "raw": "10 e2 06 04 ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "left",
+                "sprite_id": 226,
+                "x": 6,
+                "y": 4,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02FC8A",
+                "raw": "10 e3 06 06 ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "left",
+                "sprite_id": 227,
+                "x": 6,
+                "y": 6,
+                "script_id": 255
+              }
+            ],
+            "exit_data": []
+          }
+        ]
       }
     ]
   },
@@ -42936,7 +43854,132 @@
         "room_data_flat": "0x02FCE4",
         "ram_counter": "0xD99A",
         "ram_label": "",
-        "steps": []
+        "steps": [
+          {
+            "step": 0,
+            "flat": "0x02FCE6",
+            "bytes_0_1": "0x2317",
+            "interact_ptr": "0x7CFE",
+            "interact_ptr_flat": "0x02FCFE",
+            "exit_ptr": "0xFFFF",
+            "exit_ptr_flat": null,
+            "interact_data": [
+              {
+                "entry_flat": "0x02FCFE",
+                "raw": "10 e0 07 05 ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "left",
+                "sprite_id": 224,
+                "x": 7,
+                "y": 5,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02FD03",
+                "raw": "40 57 04 00 ff",
+                "kind": "npc",
+                "npc_type": "0x40",
+                "facing": "down",
+                "sprite_id": 87,
+                "x": 4,
+                "y": 0,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02FD08",
+                "raw": "40 52 04 05 ff",
+                "kind": "npc",
+                "npc_type": "0x40",
+                "facing": "down",
+                "sprite_id": 82,
+                "x": 4,
+                "y": 5,
+                "script_id": 255
+              }
+            ],
+            "exit_data": []
+          },
+          {
+            "step": 1,
+            "flat": "0x02FCEC",
+            "bytes_0_1": "0x2317",
+            "interact_ptr": "0x7D0E",
+            "interact_ptr_flat": "0x02FD0E",
+            "exit_ptr": "0xFFFF",
+            "exit_ptr_flat": null,
+            "interact_data": [
+              {
+                "entry_flat": "0x02FD0E",
+                "raw": "70 08 00 04 ff",
+                "kind": "npc",
+                "npc_type": "0x40",
+                "facing": "right",
+                "sprite_id": 8,
+                "x": 0,
+                "y": 4,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02FD13",
+                "raw": "40 55 05 04 ff",
+                "kind": "npc",
+                "npc_type": "0x40",
+                "facing": "down",
+                "sprite_id": 85,
+                "x": 5,
+                "y": 4,
+                "script_id": 255
+              }
+            ],
+            "exit_data": []
+          },
+          {
+            "step": 2,
+            "flat": "0x02FCF2",
+            "bytes_0_1": "0x2317",
+            "interact_ptr": "0x7D19",
+            "interact_ptr_flat": "0x02FD19",
+            "exit_ptr": "0xFFFF",
+            "exit_ptr_flat": null,
+            "interact_data": [
+              {
+                "entry_flat": "0x02FD19",
+                "raw": "20 e0 05 05 ff",
+                "kind": "npc",
+                "npc_type": "0x00",
+                "facing": "up",
+                "sprite_id": 224,
+                "x": 5,
+                "y": 5,
+                "script_id": 255
+              },
+              {
+                "entry_flat": "0x02FD1E",
+                "raw": "50 21 09 05 ff",
+                "kind": "npc",
+                "npc_type": "0x40",
+                "facing": "left",
+                "sprite_id": 33,
+                "x": 9,
+                "y": 5,
+                "script_id": 255
+              }
+            ],
+            "exit_data": []
+          },
+          {
+            "step": 3,
+            "flat": "0x02FCF8",
+            "bytes_0_1": "0x2317",
+            "interact_ptr": "0x4B42",
+            "interact_ptr_flat": "0x02CB42",
+            "exit_ptr": "0xFFFF",
+            "exit_ptr_flat": null,
+            "interact_data": [],
+            "exit_data": []
+          }
+        ]
       }
     ]
   },

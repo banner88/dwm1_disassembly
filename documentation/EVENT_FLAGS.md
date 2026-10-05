@@ -174,6 +174,16 @@ wCustomPool — known_RAM_map), saved with the game.
 - **New SetEventFlag caller (patched builds):** bank $76 entry 2 `GateBossWin` (the
   cleared mark of re-bossed / new gates, GATE_GENERATION §7.9).
 
+## Reserved for the Milly hook (S121)
+
+`$179F` = the player is Milly (set by the hook's bedroom script at the dresser; bank $79
+reads it for every player draw / field load) and `$179E` = her arrival scene has played.
+Reserved: the editor's named pool is `$1000-$179D` (`FLAG_SAFE_RANGES`); scenes and NPC
+conditions refer to them as `hook:milly` / `hook:milly_arrived` (listed in the flag
+pickers while the hook is on). Byte `$D233` (`wExtFlags + $F3`), masks `$01` / `$02`.
+Saved / cleared like every extended flag (PyBoy S121: CONTINUE on a save with `$179F` →
+Milly).
+
 ## Analysis Tool
 
 ```bash

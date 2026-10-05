@@ -42,6 +42,7 @@ from editor2.core.breeding_doc import BreedingMixin
 from editor2.core.encounters_doc import EncountersMixin
 from editor2.core.music_doc import MusicMixin
 from editor2.core.shops_doc import ShopsMixin
+from editor2.core.milly_doc import MillyMixin
 from editor2.core.formats import anim_source as F_anim
 
 SCREEN_W, SCREEN_H = 20, 16
@@ -108,7 +109,7 @@ class ThresholdShiftNeeded(RuntimeError):
 class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
                ConversationMixin, EnemiesMixin, FamiliesMixin, MonstersMixin,
                ArenaMixin, SkillsMixin, AnimsMixin, BreedingMixin, EncountersMixin,
-               MusicMixin, ShopsMixin):
+               MusicMixin, ShopsMixin, MillyMixin):
     def __init__(self, path):
         self.path = path if path.endswith('.json') else \
             os.path.join(path, 'project.json')
@@ -630,6 +631,17 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         # S99 (P3.3e, user: "Clones SHOULD get source animation"): run the
         # source room's own bank-$01 tile animation (water, torches, swirls)
         room['animation'] = 'source'
+        # S121: map $08 became clonable (dump_map_table read its "no exits" pointer
+        # $FFFF as an error); its bank-$01 handler pulses the intro's palette, not
+        # tiles (formats.ANIM_EXCLUDED) — a copy runs no handler
+        from editor2.core.formats import ANIM_EXCLUDED
+        if source_mid in ANIM_EXCLUDED:
+            room['animation'] = 'none'
+        # S121: rooms $08 / $5D draw their art with tile ids >= $80, so the game
+        # keeps their sprites drawn while a text box is open (bank $06; the box
+        # rule otherwise hides sprites on those ids) — a copy needs it said
+        if source_mid in (0x08, 0x5D):
+            room['text_keeps_sprites'] = True
         for lay in layouts:
             for k in list(lay):
                 if k.startswith('_') or k == 'comment':

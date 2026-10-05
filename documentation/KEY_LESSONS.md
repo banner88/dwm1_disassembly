@@ -5312,3 +5312,39 @@ exist once in the ROM (font `$4F:$4D40`), so "MILLY" is 64 bytes in the overlay,
 engine change. **Rule**: when a limit or a stored value is only inferred, find the game's
 own code path that produces it (here: a script search for the op) and play it before
 building on the guess; and grep the ROM for a tile's bytes before assuming it has copies.
+
+### A "no data" sentinel read as an error hides whole rooms (S121)
+
+`tools/dump_map_table.py` rejected an exit pointer of `$FFFF` — which is how the game says
+"this room has no exits" (map `$08`, the tree roots; `$5D`; `$5E`). Those rooms came out
+with ZERO steps, so the editor could not copy them (the Milly hook needed `$08`). Before
+treating an odd pointer as corrupt, find what the ROM does with it.
+
+### Only the first entry scene of a room ever played (S121)
+
+Every lowered entry scene ended with `goto @cut_orig` (the room's own arrival script), so
+a second matching entry scene in the same room never ran. A scene that must hand on to
+the next (the Milly arrival before the roots room's own scene) needs a fall-through
+(`_then_next`). Test the second scene, not just the first.
+
+### Sprites over high tile ids vanish while a text box is open (S121)
+
+ROM0 `SaveHLBC` hides sprite pieces over BG tile ids ≥ `$80` while a box is open (the box
+is drawn with font tiles); the game exempts maps `$08` / `$5D` BY MAP ID, so a COPY of
+those rooms loses its actors during every text. Rules keyed on vanilla map ids do not
+follow a room into a copy — look for them when a copy behaves differently.
+
+### Hook the shared builder, not the caller you first found (S121)
+
+The first draw hook went into bank $01's field-player call; the naming screen's hero
+icon (bank $09) is the same sprite type through the same bank $04 entries, so it stayed
+Terry. Moving the hook to bank $04 entries 2 / 3 (with the frame tables in WRAM, because
+the builders read with bank $04 mapped) covered both. Trace every caller of the routine
+before choosing where to redirect.
+
+### A form must not keep a value the new choice cannot take (S121 r3)
+
+The Milly dialog's "Warubou leads her to" kept GreatTree's screen 12 when the user picked
+SBOSS (screens 0 / 4); the build took it and the game crashed on arrival. A screen /
+cell / index field depends on the room chosen above it: list only what that room has,
+reset when the choice changes, and have the build refuse the impossible value anyway.

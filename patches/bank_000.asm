@@ -3228,6 +3228,11 @@ SpriteGBCFlipWriteX:
     ret
 
 
+; SaveHLBC (S121 trace): the text-box sprite rule — while a box is open ($FFD3 =
+; 1 top / 2 bottom, set by the bank $06 opener) a sprite piece is skipped when
+; the BG tile under it is >= $FFD4 ($80 = the font tiles = the box). Rooms whose
+; own art uses tile ids >= $80 must turn it off: vanilla does for maps $08 / $5D
+; (bank $06 jr_006_6893 sets $FFD3 := 0 there).
 SaveHLBC:
     push hl
     push bc

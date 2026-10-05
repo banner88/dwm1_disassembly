@@ -57,8 +57,8 @@ Every text editor (talk, conversation, cutscene) has the same box editor:
   people), **high** (Milayou, Pulio, Watabou) or **silent** (the hero's own
   lines). It changes nothing else: both voices draw the same box.
 - **Insert ▾** — **the hero's name** (`{hero}`, counts 4 cells — a name is at most
-  4 letters; the default the naming box offers is **MILLY**, drawn in 4 cells, and
-  the preview shows it) and **the lead monster's kind** (`{lead}`, the
+  4 letters; the default the naming box offers is **TERRY** — **MILLY** with the
+  Milly hook (Cutscenes → Milly hook…) — drawn in 4 cells, and the preview shows it) and **the lead monster's kind** (`{lead}`, the
   species name of the first party monster, counts 9 cells).
 - **Letters**: besides letters, digits and `. , ; ! ? '` the font has
   `" - & ( ) + : / ~ [ ] *` and `…`. **Contractions** — `don't`, `it's`,

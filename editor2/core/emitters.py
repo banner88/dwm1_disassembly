@@ -645,14 +645,17 @@ def emit_bank_071(prj, warnings):
     lines += ["; " + "-" * 77,
               "; CustomRoomFlagsTable — 1 byte/room, indexed (mapID-$6B): bit 0 =",
               "; saving NOT allowed (custom.rooms[].can_save false). Read by entry",
-              "; 5 CustomRoomFlags for the bank $07 save ladder (S100). (generated)",
+              "; 5 CustomRoomFlags for the bank $07 save ladder (S100). Bit 1 =",
+              "; sprites stay drawn while a text box is open (text_keeps_sprites,",
+              "; entry 8 TextSpriteMode, S121). (generated)",
               "; " + "-" * 77,
               f"ROOMFLAGS_TABLE_LEN EQU {len(prj.rooms)}",
               "CustomRoomFlagsTable:"]
     for r in prj.rooms:
         fl = prj.room_flags(r)
         lines.append(F.db_line([fl], comment=f"{F.hexb(F.val(r['mapID']))} — "
-                     + ("no saving" if fl & 1 else "saving allowed")))
+                     + ("no saving" if fl & 1 else "saving allowed")
+                     + (", sprites over text" if fl & 2 else "")))
     lines.append("")
     lines += ["; " + "-" * 77,
               "; CustomRoomBGMTable — 128 entries indexed by wMapID (S64, M3b).",
@@ -1412,3 +1415,57 @@ def _anim_entries():
 
 
 REGISTRY += _anim_entries()
+
+
+def _milly_entries():
+    # S121 (ROADMAP P3.16 + E7): the MILLY HOOK — bank $79 (template
+    # bank_079_head.asm + Milayou's frames) and the same-size regions in banks
+    # $0E (the bedroom script), $01 (two redirects) and $4F (the MILLY tiles)
+    # — editor2/core/milly.py, PROJECT_COMPILER §2.34. Hook off == vanilla bytes.
+    from . import milly as MH
+
+    def e79(prj, warnings):
+        return MH.emit_bank_079(prj, warnings, template('bank_079_head.asm'))
+    e79.__name__ = 'emit_bank_079'
+    return ([("hooks79", "custom.milly_hook", "file:patches/bank_079.asm", e79, [0x79])]
+            + [(name, "custom.milly_hook", f"region:{path}#{name}", fn, [bank])
+               for name, path, fn, bank in MH.REGIONS])
+
+
+REGISTRY += _milly_entries()
+
+
+TEXT_SPRITE_VANILLA = """\
+jr_006_6893:
+    ld a, [wInGateworld]
+    or a
+    jr nz, jr_006_68a7
+
+    ld a, [wMapID]
+    cp $08
+    jr z, jr_006_68a4
+
+    cp $5d
+    jr nz, jr_006_68a7
+
+jr_006_68a4:
+    xor a
+    ldh [$d3], a
+"""
+
+
+def emit_region_text_sprites(prj, warnings):
+    """S121: the bank $06 text-box opener's "sprites stay in rooms $08 / $5D"
+    test (20 bytes) — vanilla, or (a room sets text_keeps_sprites) a same-size
+    call into bank $71 entry 8 TextSpriteMode, which also reads the room's
+    CustomRoomFlagsTable bit 1."""
+    if not prj.text_sprite_rooms():
+        return TEXT_SPRITE_VANILLA
+    return ("jr_006_6893:\n"
+            "    ld hl, $7108                   ; bank $71 entry 8 TextSpriteMode (S121): $08 / $5D +\n"
+            "    rst $10                        ;   custom rooms with text_keeps_sprites -> $FFD3 := 0\n"
+            + "    nop\n" * 16)
+
+
+REGISTRY += [("text_sprites06", "custom.rooms",
+              "region:patches/bank_006.asm#text_sprite_mode", emit_region_text_sprites, [0x06])]

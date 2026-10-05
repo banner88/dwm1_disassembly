@@ -66,6 +66,18 @@
 ;     saving is NOT allowed in this room. Read by the bank $07 save-permission
 ;     ladder (same-size rewrite, patches/bank_007.asm SaveAllowCheck).
 ;
+; Entry 8 (HL=$7108) TextSpriteMode (S121):
+;     Called by the bank $06 text-box opener (patches/bank_006.asm region
+;     text_sprite_mode, same size) right after it chose the box position
+;     ($FFD3 = 1 top / 2 bottom). While a box is open the ROM0 metasprite
+;     builder ($0D91 / SpriteGBCMode + SaveHLBC) hides every sprite standing on
+;     a BG tile id >= $FFD4 ($80 = the font: the box). Vanilla turns that off
+;     ($FFD3 := 0) in rooms $08 and $5D, whose own art uses tile ids >= $80;
+;     this does the same for those two and for every custom room whose
+;     CustomRoomFlagsTable bit 1 is set (custom.rooms[].text_keeps_sprites —
+;     the copies of $08 / $5D, e.g. the Milly hook's roots room). Gate floors
+;     keep the box rule (vanilla). Preserves DE (the caller's box offset).
+;
 ; Entry 6 (HL=$7106) CustomBGMStart (S116, ROADMAP P3.13b):
 ;     Called by the rewritten ROM0 InitBGM (patches/bank_000.asm) for a BGM
 ;     request id >= $9E, after InitAudioSystem and with [$de24] = the id:
@@ -101,6 +113,7 @@ SECTION "ROM Bank $071", ROMX[$4000], BANK[$71]
     dw CustomRoomFlags                  ; entry 5  (HL=$7105, S100)
     dw CustomBGMStart                   ; entry 6  (HL=$7106, S116 P3.13b)
     dw BattleBGMResolve                 ; entry 7  (HL=$7107, S116 P3.13b)
+    dw TextSpriteMode                   ; entry 8  (HL=$7108, S121)
 
 ; -----------------------------------------------------------------------------
 ; Entry 0: CopyCustomRoomRecord — 8-byte $26DD record for wMapID → wRoomRecScratch
@@ -466,6 +479,35 @@ CustomRoomFlags:
     ret
 
 ; -----------------------------------------------------------------------------
+; Entry 8: TextSpriteMode — sprites stay drawn over full-art rooms' text (S121)
+; -----------------------------------------------------------------------------
+TextSpriteMode:
+    ld a, [wInGateworld]
+    or a
+    ret nz                              ; gate floors: the box rule stays
+    ld a, [wMapID]
+    cp $08
+    jr z, .keep                         ; the vanilla two
+    cp $5d
+    jr z, .keep
+    sub CUSTOM_ROOM_START
+    ret c
+    cp ROOMFLAGS_TABLE_LEN
+    ret nc
+    ld hl, CustomRoomFlagsTable
+    add l
+    ld l, a
+    adc h
+    sub l
+    ld h, a
+    bit 1, [hl]
+    ret z
+.keep:
+    xor a
+    ldh [$d3], a
+    ret
+
+; -----------------------------------------------------------------------------
 ; Entry 6: CustomBGMStart — start a project song's own channels (S116)
 ; -----------------------------------------------------------------------------
 CustomBGMStart:
@@ -652,7 +694,9 @@ GateInsertTable:
 ; -----------------------------------------------------------------------------
 ; CustomRoomFlagsTable — 1 byte/room, indexed (mapID-$6B): bit 0 =
 ; saving NOT allowed (custom.rooms[].can_save false). Read by entry
-; 5 CustomRoomFlags for the bank $07 save ladder (S100). (generated)
+; 5 CustomRoomFlags for the bank $07 save ladder (S100). Bit 1 =
+; sprites stay drawn while a text box is open (text_keeps_sprites,
+; entry 8 TextSpriteMode, S121). (generated)
 ; -----------------------------------------------------------------------------
 ROOMFLAGS_TABLE_LEN EQU 9
 CustomRoomFlagsTable:

@@ -573,3 +573,14 @@ gate you assumed".
 | PROJECT_STATE open defect: "TOOLS_AND_DATA's attribution monsters_full.json ← dump_monsters.py is suspect" | RESOLVED (S120) | no repo tool writes it (first import `cba8952`); its 221 rows equal the ROM's MonsterInfoTable on every numeric field checked. |
 | TEXT_SYSTEM `$F6`: the 4-cell hero budget "inferred" (S120) | MEASURED (S120b, PyBoy: the Castle naming scene) | the naming screen takes ≤ 4 letters; the default `$D3-$D6` is stored + `$F0` × 4; the END check refuses 4 identical letters + a 14-name list (`$09:$6985`). |
 | editor2/core/playback.py `_hero_name`: "Put in TERRY the way the naming screen leaves a name" (5 letters `encode_name('TERRY')` + `$F0` × 3) | WRONG (S120b, PyBoy) | accepting the default leaves the 4 tiles + `$F0` × 4; fixed (S120b: the tiles kept, `$F0` padding). |
+
+## S121 addendum (2026-10-05; the Milly hook, ROADMAP P3.16 + E7)
+
+| Claim (where) | Verdict | Correct |
+|---|---|---|
+| ROADMAP E7: the player's sheet is "unlocated RE"; "likely small … same-size 2bpp swap" | LOCATED (S121) | MONSTER_DATA "The player's sprite (S121)"; not a swap — drawn with Milayou's NPC sprite under a flag (her 6 frames ≠ Terry's 21-frame layout). |
+| ROADMAP P3.16: the bifurcation = "the dresser repoint + Terry-intro strip, authored via the World tab", "preserved-island flag audit" | SUPERSEDED (S121) | the cut is in the bedroom script (no exit repoint), authored in the Cutscenes tab; the rest of the game is unchanged, so no flag audit was needed. |
+| extracted/map_table.json: maps `$08` / `$5D` / `$5E` have no steps | WRONG (S121) | `$FFFF` = "no exits" was read as an error by dump_map_table.py; 9 / 5 / 4 steps. |
+| PROJECT_COMPILER §2.3 / TEXT_SYSTEM: every project builds the MILLY tiles (S120b) | CHANGED (S121, user) | only with the Milly hook on; the example builds TERRY again. |
+| PROJECT_STATE bank allocation: `$79` unallocated; Canonical Facts: overflow order ends `$79` | STALE (S121) | `$79` = story hooks; `dwm/sprite_bank.py` no longer lists it. |
+| disassembly/bank_00e.asm bedroom script: mgbdis comments `$FF17 ; SetupBossBattle`, `$0060 ; Text $0060 …` | MISLEADING (S121) | `$17` = `bedroom_tile_swap` (script_ops / BANK04 already say so) and the "Text $00xx" words are opcode parameters (sound `$60`, delay 8 …); a comment before the tail says so (both trees). |

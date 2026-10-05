@@ -52,7 +52,7 @@ VOICES = [
 ]
 INSERTS = [
     ("the hero's name", '{hero}', 'Text code $F6 — the name the player chose (at most 4 letters; '
-                                  'the default is MILLY in 4 cells, shown in the preview). '
+                                  'the default is TERRY — MILLY with the Milly hook — in 4 cells, shown in the preview). '
                                   'Counts as 4 cells.'),
     ("the lead monster's kind", '{lead}', 'The species name of the first party monster '
                                           '(e.g. "DrakSlime"; op $3F before the text). Counts '

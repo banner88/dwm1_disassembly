@@ -79,9 +79,10 @@ PATCH_FILES = [
     "bank_013.asm",  # S103 P3.9: gamedata exp/growth curve regions
     "bank_010.asm",  # S107 P3.10 part 2a: gamedata.art follower layout/attr regions
     "bank_002.asm",  # S112 P3.11e: ReadSeqStepFork (new battle animations' timelines)
+    "bank_00e.asm",  # S121 the Milly hook: region milly_bedroom_script (the bedroom's dresser scene)
     "wram.asm", "game.asm",
 ]
-PATCH_NEW_FILES = ["bank_060.asm", "bank_064.asm", "bank_067.asm", "bank_069.asm", "bank_06a.asm", "bank_06b.asm", "bank_06c.asm", "bank_06d.asm", "bank_06e.asm", "bank_06f.asm", "bank_070.asm", "bank_071.asm", "bank_072.asm", "bank_073.asm", "bank_074.asm", "bank_075.asm", "bank_076.asm", "bank_077.asm", "bank_07a.asm", "bank_07c.asm", "bank_07e.asm", "bank_07f.asm"]  # S107: art banks $7A/$7C/$7F (gamedata.art); S112: $6F/$70 new battle animations; S114: $76 encounter lists; S116: $75 second song bank; S117: $77 shops  # don't exist in clean disassembly/
+PATCH_NEW_FILES = ["bank_060.asm", "bank_064.asm", "bank_067.asm", "bank_069.asm", "bank_06a.asm", "bank_06b.asm", "bank_06c.asm", "bank_06d.asm", "bank_06e.asm", "bank_06f.asm", "bank_070.asm", "bank_071.asm", "bank_072.asm", "bank_073.asm", "bank_074.asm", "bank_075.asm", "bank_076.asm", "bank_077.asm", "bank_079.asm", "bank_07a.asm", "bank_07c.asm", "bank_07e.asm", "bank_07f.asm"]  # S107: art banks $7A/$7C/$7F (gamedata.art); S112: $6F/$70 new battle animations; S114: $76 encounter lists; S116: $75 second song bank; S117: $77 shops; S121: $79 story hooks  # don't exist in clean disassembly/
 
 BUILD_ARTIFACTS = ["game.o", "game.gbc", "game.sym", "game.map"]
 

@@ -25,7 +25,7 @@ TEMPLATE_SIZE = {
                  # (283 S53 -> 348 S70 -> 358 S70v3 (+2x5B wCustomY7Cmp arming): entry-7 dw + VanillaExitResolve +
                  # factored CopyExitListToBuffer in the template head; 383 S94: VanillaExitResolve rows keyed
                  # by (mapID, screen) — `db mapID, screen` with $FF = any screen)
-    0x71: 688,    # addr(Custom26DDTable)-$4000, S116 (444 S102 + entries 6/7 dw + CustomRoomBGMResolve gate songs + CustomBGMStart + BattleBGMResolve; measured from the S116 example game.sym). Prev 444 S102 (440 S101 + CustomAnimSource's far call to bank $6C entry 0, 4 B; measured from the S102 reference game.sym). Prev 440 S101 (395 S100 + CustomRoomBGMResolve .gatePath: the custom boss song on the floor before the boss). Prev 395 S100 (164 S99 + entries 4/5 dw + CustomGateInsert + CustomRoomFlags + entry-1 follow-gate test; measured from the S100 reference game.sym). Prev 164 S99 (142 S64 + entry-3 dw + CustomAnimSource 20 B; measured from the S99 reference game.sym). Prev 142 S64 (S55 116 + entry-2 dw + CustomRoomBGMResolve; measured from the S64 reference game.sym)
+    0x71: 727,    # addr(Custom26DDTable)-$4000, S121 (+ entry 8 dw + TextSpriteMode, 39 B; measured from the S121 example game.sym $42D7). Prev 688 S116 (444 S102 + entries 6/7 dw + CustomRoomBGMResolve gate songs + CustomBGMStart + BattleBGMResolve; measured from the S116 example game.sym). Prev 444 S102 (440 S101 + CustomAnimSource's far call to bank $6C entry 0, 4 B; measured from the S102 reference game.sym). Prev 440 S101 (395 S100 + CustomRoomBGMResolve .gatePath: the custom boss song on the floor before the boss). Prev 395 S100 (164 S99 + entries 4/5 dw + CustomGateInsert + CustomRoomFlags + entry-1 follow-gate test; measured from the S100 reference game.sym). Prev 164 S99 (142 S64 + entry-3 dw + CustomAnimSource 20 B; measured from the S99 reference game.sym). Prev 142 S64 (S55 116 + entry-2 dw + CustomRoomBGMResolve; measured from the S64 reference game.sym)
     0x6C: 285,    # addr(TileAnimRoomTable)-$4000, S102 (bank self-ID + entry table + CustomTileAnimate / TileAnimRestart / TileAnimCopy; measured from the S102 reference game.sym)
     0x6F: 391,    # addr(CustomAnimFrameTable)-$4000, S112 (bank self-ID + 4-entry table + CustomAnimTick / Init / Load / Step + CustomAnimNone; measured from the S112 game.sym)
     0x76: 358,    # addr(EncRoomTable)-$4000, S117 (+2 entry-2 dw, +60 GateBossWin; measured from the S117 game.sym). Prev 296 S115 (+2 entry-1 dw, +17 EncVanillaNumber new-gate source, +36 NewGateRowCopy; measured from the S115 game.sym). Prev 241 S114 (bank self-ID + entry table + EncResolve / EncPickVariant / EncFloorRun / EncVanillaNumber)
@@ -82,6 +82,10 @@ def validate(prj, generated=None):
     warnings += list(prj.warnings)
     if getattr(prj, 'cutscene_error', None):            # S119b: recorded by Project()
         errors.append(prj.cutscene_error)
+    from . import milly as _MH                          # S121: the Milly hook
+    _e, _w = _MH.validate(prj)
+    errors += [e for e in _e if e != getattr(prj, 'cutscene_error', None)]
+    warnings += _w
     rooms = [r for r in prj.rooms if not r.get('placeholder')]
     # S118c: a screen that follows the game's own room state names one of the
     # ORIGINAL rooms' step counters ($D92A-$D99A, ROOM_DATA_FORMAT)

@@ -44,6 +44,15 @@ class Session(QObject):
         # S106: monster thumbnails of the project's own species (canvas, pickers)
         from editor2.app.rooms.canvas import MonsterCache
         MonsterCache.bind(self.doc)
+        # S121: text previews draw the default hero name as the build will (MILLY
+        # with the Milly hook on, else TERRY) — re-applied after every structural
+        # edit / undo (the Milly hook dialog pushes SnapshotCommands)
+        self._hero_glyphs()
+        self.structureChanged.connect(self._hero_glyphs)
+
+    def _hero_glyphs(self):
+        from editor2.core import milly as MH
+        MH.apply_preview_glyphs(self.doc.custom)
 
     # ------------------------------------------------------------ renderer
     def _make_renderer(self):

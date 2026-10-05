@@ -1,5 +1,103 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-04 (Session 119 — **ROADMAP P3.8 PART B: THE CUTSCENE EDITOR — THE
+> PROJECT'S OWN SCENES WITH NAMED NPCs, A CAST THAT APPEARS / DISAPPEARS, EVERY STEP ON THE
+> ROOM PICTURE IN TILES, PREVIEW + PLAY IN THE GAME; OP EDITING OF A COPIED ROOM'S SCRIPTS;
+> THE `$24`/`$61` TILE PATCH FIX FOR COPIES** (user: "Should be specific NPCs. Design should
+> be visual, ie you should indicate which NPC faces where, moves where, and operates by tile,
+> etc. Custom cutscenes should be previewable. Everything should be in tiles. 1) Step list
+> plus room picture of course. Plus appear/disappear NPCs if they come out of nowhere or
+> disappear 2) ALways in tiles. Make visual. 3) Enter room, talking npc, enter room +
+> specific flag is ON, etc. 4) … I am not going to reuse ANY vanilla cutscenes … 5) Yes of
+> course 6) ALL FOUR 7) Yes.")). **Built S119, NOT yet user-tested.**
+> **Model + compiler (PROJECT_COMPILER §2.33, `editor2/core/cutscene_build.py`):**
+> `custom.rooms[].cutscenes[]` — trigger (entry / talk to a named NPC / examine a cell /
+> step on a cell; `when_on` / `when_off` flags, `once` flag), `player_start`, a step list of 25
+> kinds (say / ask with YES + NO branches / if flag / walk in cells (first x|y, together,
+> fast, keep facing) / face (dir or toward) / show + hide (instant, flicker, spin, `at` a
+> cell) / anim (the measured `$1C` programs) / fly in + off / wait / music / sound / shake /
+> fade / flash / followers / give item / give monster / set + clear flag / tiles (a block
+> copied from another room state, `$24` + `$61`) / battle / move to a room / end). NPCs are
+> named on their entries (`actor`), cast members are hidden NPCs at the same NPC number in
+> every state of the screen (`cutscene_doc.py`). Scenes of one trigger are lowered into ONE
+> script (`cut:<room>:<key>` = guard + body per scene, then the room's original trigger
+> script inlined). Measured rules it follows: a text after any yielding step needs
+> `init_dialog` (talk / examine / step-on scripts too); every scene `close_text`s before
+> other steps and at the end (BANK04 "Writing scenes (S119)", KEY_LESSONS S119).
+> **Editor (EDITOR_DESIGN §5.1d "As built S119", help `63_cutscenes.md`):** Cutscenes →
+> "＋ New cutscene…", "Your cutscenes (edit)": the stage (the room picture 480×384: actors as
+> their real sprites from `extracted/npc_facing_sprites/` with facing wedges + names, move
+> arrows, text boxes; drag an actor to move it, right-click for steps), the step tree with
+> one form per kind, the trigger header, ▶ preview (the model, scrubbable, YES / NO), ▶ Play
+> in the game (saves, builds, Playback). **Part c:** Edit / Insert / Delete step on the
+> storyboard of a copied room's own op scripts (`OpDialog`, all 102 ops).
+> **Part d (engine):** a copied Castle drew no chest patch — bank $04 `CallBank0FForItem` /
+> `CallBank0F_Gold` same-size redirect `$0f01`/`$0f02` → bank $60 entries 9 / 10
+> `CustomDrawTiles` / `CustomDrawAttrs` (custom routes by map type / mapID, else bank $0C's own
+> code); clone migration copies each `$24`/`$61` patch into `patch_data` (`patch:<name>`).
+> PyBoy: the copy draws the chest like the original; the redirect flipped back draws nothing.
+> **Measured S119 (PyBoy):** shake `$C8B1`/`$C8B2` (ROM0 `CheckSoundQueueState` renamed
+> `ScreenShakeTick`, both trees), shades `$C89B-$C89D` (normal D2/D2/E2), a battle keeps the
+> NPC slots' positions + visibility, a room reload resets them and the tile patches, the
+> entry script runs at the first entry (the S11 / S53 note was stale), the YES/NO cursor
+> starts on NO; Playback auto-answer now gets a project scene's questions from the editor
+> (`questions_of`). 128 / 132 NPC sprites extracted with their 4 facings
+> (`tools/extract_npc_facings.py`; $68, $E1-$E3 draw nothing).
+> **Verifier PASS; clean `1ca6579…` byte-perfect** (labels / comments only in disassembly/);
+> **patched pin `d19259a1…` (patched)**, was `110210b0…` (patched, historical) — bank $60
+> entries 9 / 10 + bank $04's two words; template sha `f58f82b4…`. test_compiler --rom
+> 975/975 (S119b: 982/982), test_app PASS, test_canvas --rom PASS. `EDITOR_REVISION` = 'S119'. The user's
+> project (my-dwm-hack_10) as-is builds `6d4de4a3…` (patched; the S118c migration of their
+> GreatTree copy + the engine change; no scenes of their own).
+> **Test ROM `DWM_S119_cutscenes_test.gbc` (`28029018…`, patched; built, NOT yet
+> user-tested):** the user's project + "Stage Hall" ($71) behind the GreatTree screen-12
+> Copycat House door (4, 4) — **r2:** the first ROM (`85a1ae8c…`, patched, historical) put
+> it on the screen-4 door (5, 3) = the right half of the ARENA LOBBY door and called it the
+> Library door; user 2026-10-04 18:55: "No it doesnt, leads to my own custom room" (their
+> Library door, screen 8, goes to their own room) → moved to a door their project does not
+> use (KEY_LESSONS S119 "Name a door from the game's data"): the Host (named) + the cast member Imp; 4 scenes — "Welcome to the stage"
+> (entry, once: the Imp flickers in, walks, spin-jumps, shake, flies off), "The Host's
+> trick" (talk; YES: walks, fade, Herb given, flag), "Encore" (entry + flag ON, once), "The
+> magic table" (examine: flash + tiles from state 1). PyBoy on the user's save through the
+> real door: all four play and end where the model says; a 4th entry plays nothing.
+> **Hand-off:** every S119 change = the diff against `9a8d2d2`, delivered as
+> `DWM-S119-cutscene-editor-changed-files.zip`, the APPLY list pasted in the chat
+> (user 2026-10-04 19:03: "alirght yep i see it. give editor files so I can test things
+> properly" — the r2 ROM's door seen).
+> **S119b (user 2026-10-04 19:23: "Why cant I select npc in a custom room when creating new
+> cutscene? Want to select npc in Cities_FOUNT"; built, NOT yet user-tested):** the actor
+> lists held only NAMED NPCs (their Cities_FOUNT shopkeeper had no name) → every actor list
+> and the New cutscene dialog list unnamed NPCs too, named when picked in the same undo step
+> (EDITOR_DESIGN §5.1d "S119b"). PyBoy on their project: a once-only talk scene on the
+> shopkeeper plays, the second talk opens the shop. **Then (user 2026-10-04 20:04: picking
+> an unnamed NPC in a walk's Who list → "Segmentation fault: 11" on the Mac):** every
+> step-form edit rebuilt the form INSIDE the sending combo's signal (the combo deleted while
+> running) → form edits, the trigger / player-start commits and *New flag…* are applied after
+> the signal returns (KEY_LESSONS "Never rebuild a widget inside its own signal"). **Then
+> (user 20:43: "Why is text box so slow to type in?"):** 1.1 s per key measured on their
+> project (a whole-project commit per key, every tab reloading, the box rebuilt — the cursor
+> reset) → texts stored on a pause / focus-out, unchanged forms kept, the Cutscenes / Import
+> tabs' refreshes narrowed: 4 ms per key, one ~0.4 s commit per pause (KEY_LESSONS "An edit
+> per key press is not an edit model"). **Then (user 21:15: "1) Why cant I copy paste build
+> log? … 2) Why not preview message using in-game boxes … already implemented in NPC
+> conversations?? 3) Your help tab is cut off for cutscenes 4) Can you not hover or explain
+> what is e.g. 'wait until everyone stops'?"):** the log keyboard-selectable + *Copy all* + a
+> build-error dialog with *Copy error*; cutscene texts in the conversations' box editor
+> (game font / frame, Fit); the help's raw `<selected actor>` fixed (every topic now
+> render-checked); every step kind / form field / header control explained (EDITOR_DESIGN
+> §5.1d "S119b — the user's four"). **Then (user 22:44: the editor crashed at open —
+> "gamedata.encounters.0.eids[3] = 'klamutra': no such enemy row"):** caused by S119 —
+> `Project()` raised on their scene's 54-cell line, the Families tab's fallback model lacks
+> project enemies → `Project()` now records `cutscene_error`, the build's validation reports
+> it (PROJECT_COMPILER §2.33, KEY_LESSONS "A half-written scene must never stop the editor
+> from opening"); measured: their project + that scene opens, Build stops with the scene's
+> message. Editor-only
+> (no ROM byte, pin unchanged). `EDITOR_REVISION` = 'S119b'. Delivered as the cumulative
+> `DWM-S119-cutscene-editor-changed-files.zip` (S119 + S119b).
+> **Next:** the user's test of the ROM + editor, then P3.8 residuals (ROADMAP) or the user's
+> pick.
+
+
 > Last verified: 2026-10-04 (Session 118 — **ROADMAP P3.8 PART A: THE CUTSCENES TAB —
 > EVERY SCENE OF THE GAME AND OF THE PROJECT READ, SHOWN AS A STORYBOARD AND PLAYED IN THE
 > REAL GAME INSIDE THE EDITOR (NO NAVIGATING), THE INTRO CHAIN, AUTO TEXT, SOUND** (user:

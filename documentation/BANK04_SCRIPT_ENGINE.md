@@ -572,6 +572,25 @@ script 5 @-125 (a branch target before the script start), `$09` @81, `$5D` @1064
 the final battle). (S118: 514 reached, 22 off — the Castle King's prize scenes now play
 in Castle state 4, the fly programs follow `$D8E3`/`$D8E4`.)
 
+## The bedroom's dresser and `$3B` (S121, the Milly hook)
+
+The east-room scene ($2F script 0, entry 727) ends: Milayou + Warubou rise into the
+dresser (pos 929-947), the glow (pos 951 `$21 $60` sound, `$17` the tile swap, `$09 8`),
+then Terry / Watabou and the hand-back (to pos 1044, `$FFFF`). The Milly hook replaces the
+words from pos 951 (`$0E:$4AA4`, 94 words, same size): glow, `$03 $179F` (Terry stays drawn — r2),
+the name, **`$3B` warp_fade** — which ends the script itself (sets `wIsPlayerChangingMaps`
+and `wGameState` bit 5 = the wavy fade; PyBoy: sound `$52` on the same frame as Terry's own
+dresser exit, so "the whirl" is the same effect). `$3B`'s map word: low = the mapID, high
+= `wWarpFlag`. PROJECT_COMPILER §2.34.
+
+**Naming screen from a script (S121, the `name_hero` step):** `write_ram $C8F4 0`,
+`write_ram2 $C8F2 $CA42`, op `$04` 15 0 (the Castle's script 0 pos 107-113); the script
+waits while the screen runs and continues after "Is … okay?" YES.
+
+**Entry scenes chain (S121):** a lowered entry scene with `_then_next` falls through to
+the next scene of the same trigger instead of `goto` the room's own arrival script (the
+Milly arrival scene plays first, then the room's own scene).
+
 ## Writing scenes (S119) — rules the cutscene editor's compiler follows (PyBoy-measured)
 
 ROADMAP P3.8 part B; the compiler: `editor2/core/cutscene_build.py` (PROJECT_COMPILER

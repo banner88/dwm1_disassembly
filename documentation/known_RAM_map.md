@@ -277,7 +277,11 @@
                  [S117b] wPushAttrOn $D241 / wPushAttrRow $D242 — bank $77
                  ScreenPush scratch (attributes of the bank $09 screen push in
                  free-colour custom rooms; transient) /
-                 wCustomPool $D243-$D5E4 (transient reserve) /
+                 [S121] wMillyLayout $D243-$D2E2 (160 B) — the Milly hook's
+                 frame tables for the player shape (bank $79 entry 1 copies
+                 them at every field load while flag $179F is set; entry 0
+                 hands them to bank $04; transient, rebuilt per load) /
+                 wCustomPool $D2E3-$D5E4 (transient reserve; $D243 before S121) /
                  wPoolBounce $D5E5-$D664 (128 B, FX1: sleep-pool swap
                  scratch; the v1 drain halved-pending use died with the
                  S71v2 exp-scale veto).

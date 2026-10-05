@@ -105,8 +105,13 @@ label4081:
     cp $10              ; compare $10 to a(ffc7)
     jr nc, NPCDispatchBank10  ; jump if a(ffc7) >= $10
 
+; S121 (the Milly hook): region milly_shape_04a — this vanilla pair, or a same-size
+; `ld hl,$7900 / rst $10` (bank $79 entry 0 MillyShapeTable: the player shape
+; drawn with the NPC sprite's frames + palette once flag $179F is set).
+; @BUILD_PROJECT BEGIN milly_shape_04a
     call HramScr_4126
     ld de, data_4137        ; load 4137 into de
+; @BUILD_PROJECT END milly_shape_04a
     call $0d91
     ret
 
@@ -139,8 +144,13 @@ label40a7:
     cp $10             ; compare $10 to a(ffc7)
     jr nc, NPCDispatchBBank10 ; jump if a(ffc7) >= $10
 
+; S121 (the Milly hook): region milly_shape_04b — this vanilla pair, or a same-size
+; `ld hl,$7900 / rst $10` (bank $79 entry 0 MillyShapeTable: the player shape
+; drawn with the NPC sprite's frames + palette once flag $179F is set).
+; @BUILD_PROJECT BEGIN milly_shape_04b
     call HramScr_4126
     ld de, data_4137       ;  load 4137 into de
+; @BUILD_PROJECT END milly_shape_04b
     call SaveScr_40cd
     ret
 
@@ -249,6 +259,12 @@ HramScr_4126:
     ldh [$ca], a
     ret
 
+; data_4137: the level-1 frame tables of the sprite types < $10 (bank $04 entries
+; 2 / 3 when $FFC7 < $10; entry 2 builds via ROM0 $0D91, entry 3 via
+; SaveScr_40cd): [0] = $7237 = the PLAYER shape (Terry: 21 frames, 0-5 = walk
+; down / side / up), [1-15] = $7738. data_4157: their OAM palette, all $02, ORed
+; into $FFCA by HramScr_4126. Type 0 is drawn for the field player (bank $01)
+; and the naming screen's hero icon (bank $09, sheet FollowerGfxTable09[0]). (S121)
 data_4137:
     db $37, $72, $38, $77, $38, $77, $38, $77, $38, $77, $38, $77, $38, $77, $38, $77
     db $38, $77, $38, $77, $38, $77, $38, $77, $38, $77, $38, $77, $38, $77, $38, $77

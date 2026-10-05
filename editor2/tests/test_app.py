@@ -286,6 +286,61 @@ def s120_gates(app, w):
           'pictures, maze row / item tier / Vanilla as undo steps')
 
 
+def s121_milly(app, w):
+    """S121 (ROADMAP P3.16 + E7): the Cutscenes tab's Milly hook dialog — Create the
+    roots room (a copy of $08 with Warubou's scene; the arrival), tick the hook, send
+    Warubou's walk to one of the project's rooms; text previews draw MILLY only while
+    the hook is on; everything undoes, leaving the project files as they were."""
+    from editor2.app.milly_dialog import MillyHookDialog
+    from editor2.core import milly as MH
+    from editor2.core import textenc as Tx
+    s = w.session
+    pdir = s.doc.project_dir
+    files0 = sorted(os.path.relpath(os.path.join(dp, f), pdir)
+                    for dp, _d, fs in os.walk(pdir) for f in fs if '/build' not in dp)
+    n0 = s.undo.index()
+    assert Tx.PATCHED_GLYPHS == {}, 'the example has the hook off: previews say TERRY'
+    d = MillyHookDialog(s, w)
+    assert d.roots.count() == 0 and d.b_create.isEnabled()
+    d._create_roots()
+    app.processEvents()
+    rid = d.roots.currentData()
+    assert rid and d.room.currentData() == rid and (d.x.value(), d.y.value()) == (5, 4), \
+        (rid, d.room.currentData(), d.x.value(), d.y.value())
+    assert not d.b_create.isEnabled(), 'one roots room is enough'
+    assert d.naming.isEnabled() and d.naming.isChecked(), 'S121 r3: a new roots room asks her name'
+    d.on.setChecked(True)
+    d.dest.setCurrentIndex(d.dest.findData('room:$6D'))
+    assert [d.d_screen.itemData(i) for i in range(d.d_screen.count())] == [0], \
+        'S121 r3: only the screens the destination has'
+    d.dest.setCurrentIndex(d.dest.findData('room:$6B'))
+    assert [d.d_screen.itemData(i) for i in range(d.d_screen.count())] == [0, 4]
+    d.naming.setChecked(False)
+    d._ok()
+    assert not s.doc.roots_naming(rid), 'S121 r3: unticked = no naming screen'
+    app.processEvents()
+    h = s.doc.milly_hook()
+    assert h['enabled'] and h['arrive']['room'] == rid and h['spin'], h
+    assert s.doc.roots_scene_destination(rid)['dest'] == 'room:$6B'
+    assert s.doc.milly_arrival_problem() is None
+    assert Tx.PATCHED_GLYPHS == Tx.MILLY_GLYPHS, 'hook on: previews draw MILLY'
+    assert 'hook:milly' in [k for k, _n in __import__(
+        'editor2.app.rooms.rules_panel', fromlist=['x']).well_known(s.doc)]
+    assert s.undo.index() == n0 + 2, (n0, s.undo.index())
+    for _ in range(2):
+        s.undo.undo()
+    app.processEvents()
+    assert not s.doc.milly_hook() and Tx.PATCHED_GLYPHS == {}
+    assert not any(r['id'] == rid for r in s.doc.rooms)
+    files1 = sorted(os.path.relpath(os.path.join(dp, f), pdir)
+                    for dp, _d, fs in os.walk(pdir) for f in fs if '/build' not in dp)
+    assert files0 == files1, set(files0) ^ set(files1)
+    assert MH.ROOTS_SCENE == 'milly_roots'
+    print('OK: S121 — Milly hook dialog: Create the roots room (the arrival), the tick, '
+          'Warubou\'s destination, the naming option (r3), MILLY previews only with the hook, two undo steps undone '
+          'cleanly')
+
+
 def main():
     do_rom = '--rom' in sys.argv
     app = QApplication.instance() or QApplication(sys.argv)
@@ -331,6 +386,7 @@ def main():
           f'every topic shown to its end')
     s120_dialogue(app, w)
     s120_gates(app, w)
+    s121_milly(app, w)
 
     # S101 r3: World tab zoom (wheel, around the mouse) + pan (drag empty canvas)
     from PySide6.QtCore import QPoint, QPointF, Qt

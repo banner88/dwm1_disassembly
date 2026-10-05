@@ -5174,6 +5174,14 @@ jr_006_6882:
     ld [$c83d], a
     ld de, $01a0
 
+; Bank $06 text-box opener tail (S121 trace): in maps $08 and $5D (outside the
+; gate world) $FFD3 := 0 — those rooms draw their art with tile ids >= $80, so
+; the sprite rule of ROM0 SaveHLBC (hide sprites over tile ids >= $FFD4 while a
+; box is open) would hide everyone standing on them.
+; S121: region text_sprite_mode (editor2/core/emitters.py): this vanilla test, or a
+; same-size call into bank $71 entry 8 TextSpriteMode when a custom room (a copy of
+; $08 / $5D) keeps its sprites drawn while a text box is open.
+; @BUILD_PROJECT BEGIN text_sprite_mode
 jr_006_6893:
     ld a, [wInGateworld]
     or a
@@ -5189,7 +5197,7 @@ jr_006_6893:
 jr_006_68a4:
     xor a
     ldh [$d3], a
-
+; @BUILD_PROJECT END text_sprite_mode
 jr_006_68a7:
     ld hl, $ffb7
     call ReadMapS_6957

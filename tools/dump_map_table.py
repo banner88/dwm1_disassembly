@@ -168,8 +168,14 @@ def decode_step_entries(data: bytes, room_data_flat: int, max_steps: int = 16) -
         interact_ptr = read_u16(data, entry_flat + 2)
         exit_ptr = read_u16(data, entry_flat + 4)
 
-        # Validate: interact_ptr and exit_ptr should be valid bank-local addresses
-        if not is_valid_bank_ptr(interact_ptr) or not is_valid_bank_ptr(exit_ptr):
+        # Validate: interact_ptr and exit_ptr should be valid bank-local addresses.
+        # S121: an exit pointer of $FFFF = "this step has no exits" (rooms $08,
+        # $5D, $5E — every step of them; the engine's exit scan reads the
+        # pointer's $FF high byte as the empty list). The old test stopped there
+        # and dumped those rooms with NO steps, so the editor could neither show
+        # nor copy them (the Milly hook's roots room is a copy of $08).
+        if not is_valid_bank_ptr(interact_ptr) or not (is_valid_bank_ptr(exit_ptr)
+                                                       or exit_ptr == 0xFFFF):
             break
 
         entry = {
@@ -179,14 +185,16 @@ def decode_step_entries(data: bytes, room_data_flat: int, max_steps: int = 16) -
             "interact_ptr": f"0x{interact_ptr:04X}",
             "interact_ptr_flat": f"0x{local_to_flat(interact_ptr):06X}",
             "exit_ptr": f"0x{exit_ptr:04X}",
-            "exit_ptr_flat": f"0x{local_to_flat(exit_ptr):06X}",
+            "exit_ptr_flat": (None if exit_ptr == 0xFFFF
+                              else f"0x{local_to_flat(exit_ptr):06X}"),
         }
 
         # Decode exits
         entry["interact_data"] = decode_interact_entries(data, interact_ptr)
 
         # Decode NPCs
-        entry["exit_data"] = decode_exit_checker_entries(data, exit_ptr)
+        entry["exit_data"] = ([] if exit_ptr == 0xFFFF
+                              else decode_exit_checker_entries(data, exit_ptr))
 
         steps.append(entry)
 

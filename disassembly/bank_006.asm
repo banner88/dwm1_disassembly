@@ -5162,6 +5162,10 @@ jr_006_6882:
     ld [$c83d], a
     ld de, $01a0
 
+; Bank $06 text-box opener tail (S121 trace): in maps $08 and $5D (outside the
+; gate world) $FFD3 := 0 — those rooms draw their art with tile ids >= $80, so
+; the sprite rule of ROM0 SaveHLBC (hide sprites over tile ids >= $FFD4 while a
+; box is open) would hide everyone standing on them.
 jr_006_6893:
     ld a, [wInGateworld]
     or a

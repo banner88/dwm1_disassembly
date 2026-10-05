@@ -76,6 +76,12 @@ hex bytes (`editor2/core/textenc.py`, PROJECT_COMPILER §2.3 "S120").
   the clean tree's INCBIN still says TERRY) — the naming box offers MILLY and "King:Oh
   MILLY!" follows (PyBoy, the user's project). The editor previews use the same bytes
   (`textenc.PATCHED_GLYPHS`). Inserted names blip like other letters.
+  **S121: under the Milly hook** (PROJECT_COMPILER §2.34): region `milly_name_tiles` —
+  hook off = the original TERRY tiles, on = MILLY; the hook's bedroom script also writes
+  the 4 tiles + `$F0` × 4 to `$CA42` at the dresser. The cutscene step **Name the hero**
+  (`name_hero`) opens the Castle's naming screen anywhere (`write_ram $C8F4 0`,
+  `write_ram2 $C8F2 $CA42`, op `$04` 15 0 — Castle script 0 pos 107-113); it offers the
+  current name (PyBoy S121: "MILLY", then "Is MILLY okay?").
 - **`$F9 nn`** prints the name in slot `$C180 + nn` the same way; script op **`$3F`
   `load_lead_name`** fills slot 0 with the first party monster's SPECIES name (text mode 5,
   ≤ 9 cells) — the editor's `{lead}` (the compiler puts `$3F` before the text).

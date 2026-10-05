@@ -1017,7 +1017,8 @@ recipes are pure authoring.
       **S120b (user: "change TERRY to MILLY as default, but leave otherwise as 4 letters
       … Romhack is about milayou"; built, PyBoy-verified, NOT yet user-tested):** the
       font's 4 default-name tiles drawn "MILLY" in `patches/bank_04f.asm` (TEXT_SYSTEM
-      `$F6`); pin `97659a4a…` (patched); test ROM `DWM_S120b_milly_test.gbc`.
+      `$F6`); pin `97659a4a…` (patched, historical); test ROM `DWM_S120b_milly_test.gbc`.
+      **S121: moved under the Milly hook** (region `milly_name_tiles`; hook off = TERRY, P3.16).
 - [x] **P3.7 — Triggers/exits editor + World graph v0** — **DONE S98;
       doors USER-CONFIRMED 2026-09-26 in the user's own project ("Works
       now", arrival "Its now fixed"); talk / flags / spots in game built,
@@ -2070,11 +2071,31 @@ recipes are pure authoring.
       what-if deltas on gamedata edits, obedience curves; unvalidated
       subsystems greyed. *Accept:* a stat edit shows its TTK delta for an
       affected pool before Build; numbers match a CLI sweep_ttk run.
-- [ ] **P3.16 — M2R bifurcation** (one of the only remaining in-place
+- [x] **P3.16 — M2R bifurcation** (one of the only remaining in-place
       vanilla edits under clone-to-custom, EDITOR_DESIGN §6.3): the
       dresser repoint + Terry-intro strip, authored via the World tab. *Accept:* new game →
       dresser → Milayou's first custom room in SameBoy; preserved-island
       flag audit run.
+      **BUILT S121 as "the Milly hook" (user: "In the intro, when Milayou disappears into
+      dresser … do NOT return control to player to play as terry … redirect to a new custom
+      room. At THIS POINT, player sprite is no longer Terry, it is MILLY … This whole thing
+      can be switched off as a 'milly hook' patch"; built, PyBoy-verified, NOT yet
+      user-tested):** authored in the Cutscenes tab (Milly hook…), not the World tab:
+      `custom.milly_hook` (PROJECT_COMPILER §2.34) — the bedroom tail stops at the dresser
+      glow, sets `$179F`, names her MILLY and whirls (`$3B`, sound `$52` = Terry's) to the
+      chosen room / tile, where she spins in (or appears) and becomes the player; "Roots room
+      (Milly)" = a copy of `$08` with grey Warubou leading her out (editable scene, any
+      destination); the "Name the hero" step. No exit repoint and no flag audit were needed:
+      the Terry intro is cut at the script, the rest of the game is untouched (vanilla
+      islands keep their flags). *Accept MET (machine half, PyBoy on the user's project):*
+      new game → dresser → the roots room → GreatTree as Milly. *User half:* MET —
+      `DWM-S121-milly-hook-test.gbc` / `DWM-S121-milly-hook-naming-test.gbc` (user 2026-10-05:
+      "Perfect - everything works"); r2 keeps Terry drawn through the whirl (NOT yet user-tested).
+      **Residuals:** debug-menu mode 3 (bank $02) and the link-battle teardown (mode 6, bank
+      $18) still draw Terry's player shape; the Castle naming scene, if a project reached
+      it BEFORE the dresser with the hook on, would draw her sheet with Terry's frames (the
+      icon's sheet is a table entry; vanilla names after the dresser); other users of
+      `FollowerGfxTable`s' entry 0 not swept.
 - [ ] **CONTINGENCY (banked, not scheduled) — ROM expansion 2→4 MB**:
       assessed S90 (EDITOR_DESIGN §6.4) — MBC5 8-bit ROMB0 covers 256
       banks; needs header size byte + link layout + a stored-bank-number
@@ -2365,7 +2386,7 @@ is campaign-BLOCKING** — the POV flip cannot ship without it; E8/E9
       MEDIUM. Mostly covered by Phase 2; flag capacity-planning as an explicit acceptance test.
       Owning doc: TEXT_SYSTEM + Phase 2 `build_project.py` validations.*
 
-- [ ] **E7 — Player-character art = Milayou (ADDED S72 — the POV flip's most
+- [x] **E7 — Player-character art = Milayou (ADDED S72 — the POV flip's most
       glaring un-scoped requirement).** Zero coverage existed anywhere of
       the PLAYER's walking sprite (Terry's sheet) or any other player-art
       surface; the monster follower/battle sprite systems are solved but do
@@ -2376,6 +2397,13 @@ is campaign-BLOCKING** — the POV flip cannot ship without it; E8/E9
       walks all 4 directions as Milayou in SameBoy; loader + sheet
       addresses documented in MONSTER_DATA or a new ARCHITECTURE subsec.
       *Confidence: MEDIUM-HIGH (pipeline proven; location unknown).*
+      **DONE S121 (with P3.16, the Milly hook; built, PyBoy-verified, NOT yet user-tested):**
+      located (MONSTER_DATA "The player's sprite (S121)") — the sheet gfx-ID `$2F00` (bank $01
+      `LoadFieldTilesDMA`), the shape = sprite type 0 via bank $04 entries 2 / 3
+      (`data_4137` / `data_4157`), also the naming screen's icon (bank $09). Not a same-size
+      2bpp swap: with the hook's flag set she is drawn with the game's OWN Milayou NPC sprite
+      (`$14`: sheet `$3114`, 6 frames, palette 3) — frame tables in WRAM, bank $79. *Accept
+      MET (PyBoy):* walks all 4 directions as Milayou; the naming icon is her.
 
 - [x] **E8 — Shop system RE + authoring (ADDED S72).** **DONE S117 as P3.13c** (DATA_STRUCTURES
       "Shops (S117)"; built, PyBoy-verified, NOT yet user-tested). EDITOR_DESIGN §1

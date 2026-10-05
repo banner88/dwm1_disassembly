@@ -140,7 +140,7 @@ INCLUDE "bank_075.asm"          ; S116: the second custom song bank (compiler-ge
 INCLUDE "bank_076.asm"          ; S114: encounter lists — EncResolve + project lists / room + gate plans (compiler-generated)
 INCLUDE "bank_077.asm"          ; S117: shops — ShopFill + the shop lists (compiler-generated)
 INCLUDE "bank_078.asm"
-INCLUDE "blank/Empty_bank_079.asm"
+INCLUDE "bank_079.asm"          ; S121: story hooks — the Milly hook (compiler-generated; empty = vanilla zeros)
 INCLUDE "bank_07a.asm"
 INCLUDE "bank_07b.asm"
 INCLUDE "bank_07c.asm"

@@ -1173,3 +1173,27 @@ verified overrides.
 | editor2/core/playback.py `_hero_name` | a new game's hero name = the 4 tiles + `$F0` × 4 (what accepting the default leaves — measured), was "TERRY" as 5 letters | DOC_AUDIT S120b |
 | editor2/tests/test_compiler.py | `REFERENCE_MD5` → `97659a4a…` (patched); `test_hero_default_s120b` | 730 / --rom PASS |
 | editor2/help/20_npcs.md, talk_editor.py tooltip, `_revision.md`; `EDITOR_REVISION` = 'S120b' | the hero's name: ≤ 4 letters, default MILLY | test_app |
+
+## S121 rows (the Milly hook, ROADMAP P3.16 + E7)
+
+| Tool / data | What | Verified |
+|---|---|---|
+| tools/dump_map_table.py + extracted/map_table.json (regenerated together) | an exit pointer `$FFFF` = "no exits" (was rejected → maps `$08` / `$5D` / `$5E` had 0 steps; now 9 / 5 / 4); `exit_data` [], `exit_ptr_flat` None | only those three rooms changed; room_connections.json unchanged; test_canvas all-clones (copies of `$08` / `$5D` / `$5E`) |
+| editor2/core/milly.py, milly_doc.py, templates/bank_079_head.asm, app/milly_dialog.py | the Milly hook (PROJECT_COMPILER §2.34) | test_compiler `test_milly_hook_s121` / `test_milly_rom`; test_app `s121_milly`; PyBoy (PROJECT_STATE S121) |
+| patches/bank_00e.asm (NEW in the overlay), bank_001 / bank_004 / bank_006 / bank_009 / bank_04f.asm regions, bank_079.asm (NEW, `hooks79`), wram.asm (`wMillyLayout`), game.asm (`INCLUDE "bank_079.asm"`) | the hook's regions (vanilla text when off) | verify_integrity (PATCH_FILES / PATCH_NEW_FILES += bank_00e / bank_079); pin `e43e5f58…` (patched) |
+| patches/bank_071.asm + templates/bank_071_head.asm | entry 8 `TextSpriteMode`, room flag bit 1 (`text_keeps_sprites`) | re-pinned; test_compiler --rom |
+| editor2/core/cutscene_build.py | `name_hero` step; `_then_next` | test_compiler; PyBoy (the naming screen offers MILLY) |
+| editor2/core/textenc.py | `MILLY_GLYPHS`, `PATCHED_GLYPHS` filled by `use_hero_glyphs` (hook on only) | test_compiler, test_app |
+| editor2/core/document.py | `clone_vanilla`: `text_keeps_sprites` for `$08` / `$5D`, no animation handler for `$08` | test_canvas all-clones |
+| dwm/sprite_bank.py | `DEFAULT_OVERFLOW_BANKS` without `$79` (now the story-hook bank) | — |
+| tools/audit_mapid_range.py | `TextSpriteMode#0` BOUNDED | selftest PASS (clean 58 / patched 83) |
+| disassembly/ + patches/ banks $00 / $01 / $04 / $05 / $06 / $09 / $0E | comments: `SaveHLBC` text-box rule, the player draw + `LoadFieldTilesDMA`, `data_4137`, the NPC tables, the opener's $08/$5D test, the icon entry, the bedroom tail | clean `1ca6579…` byte-perfect |
+| editor2/help/64_milly_hook.md (NEW), 63_cutscenes.md, _revision.md; `EDITOR_REVISION` = 'S121' | help | test_app |
+
+## S121 r3 rows (the move-screen check, the roots naming option)
+
+| Tool / data | What | Verified |
+|---|---|---|
+| editor2/core/project.py `move_screen_problem` / `vanilla_screens` | a move / helper / conversation warp to a screen the room lacks stops the build | test_compiler (S121 r3); PyBoy: SBOSS screen 12 = crash, screen 4 = fine |
+| editor2/core/milly.py `ROOTS_TEXT_ASK` / `ROOTS_TEXT_AFTER` / `set_naming`, milly_doc.py `set_roots_naming` | the naming screen between Warubou's lines | test_compiler, test_app; PyBoy end to end |
+| editor2/app/milly_dialog.py, cutscene_editor.py (`dest_screens`) | screen lists of the chosen room; "Warubou asks her name" | test_app |

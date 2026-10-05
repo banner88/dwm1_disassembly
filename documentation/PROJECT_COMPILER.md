@@ -251,8 +251,12 @@ rejected, not guessed). ~~No DTE in v1~~ — **S120: there is no DTE in this gam
   (`$4F:$4D40`, 64 B, outside the `gd_family_icons` region) with "MILLY", so every
   project builds it. Names stay ≤ 4 letters; `{hero}` still counts 4 cells.
   `textenc.PATCHED_GLYPHS` = the same bytes for the previews (test_compiler checks both
-  the source and the built ROM). Pin `97659a4a…` (patched; built S120b, NOT yet
+  the source and the built ROM). Pin `97659a4a…` (patched, historical; built S120b, NOT yet
   user-tested), was `d19259a1…` (patched, historical) — 64 font bytes + the checksum.
+  **S121: now under the Milly hook** (§2.34) — region `milly_name_tiles`: hook off = the
+  original TERRY tiles (the example), on = MILLY; `textenc.MILLY_GLYPHS` holds the
+  drawing, `PATCHED_GLYPHS` is filled only while the open project has the hook on
+  (`textenc.use_hero_glyphs`).
 
 
 ### 2.4 `custom.scripts[]`
@@ -520,6 +524,8 @@ registering an emitter; nothing existing changes.
 | `gd_monster_names` `gd_monster_nicks` `gd_monster_desc` `gd_monster_desc_extra` (S108) | `gamedata.monster_text` (+ `custom.species[].description`) (§2.24; editor2/core/monster_text.py) | `region:` in banks $41 / $4D | those banks |
 | `gd_arena_masters_04` `gd_arena_masters_50` `gd_arena_fees` `gd_arena_team_sizes` (S109) | `gamedata.arena` (§2.25; editor2/core/arena.py) | `region:` in banks $04 / $50 / $09 / $6E | those banks |
 | `anims6f` `anims70` + `gd_anim_routine` `gd_anim_cmd` (S112) | `custom.animations` + `gamedata.skills.<id>.presentation` (§2.28; editor2/core/battle_anims.py) | `file:patches/bank_06f.asm` / `bank_070.asm` + `region:` in bank $5F | `$6F` `$70` $5F |
+| `hooks79` (S121) + regions `milly_bedroom_script` `milly_shape_04a` `milly_shape_04b` `milly_player_sheet` `milly_naming_icon` `milly_name_tiles` | `custom.milly_hook` (§2.34; editor2/core/milly.py) | `file:patches/bank_079.asm` + `region:` in banks $0E / $04 / $01 / $09 / $4F | `$79` |
+| `text_sprites06` (S121) | `custom.rooms[].text_keeps_sprites` (§2.34) | `region:patches/bank_006.asm#text_sprite_mode` | `$06` |
 | `enc76` (S114) | `custom.encounter_lists` + `custom.rooms[].encounters` + `custom.gates[].encounters` (§2.30; editor2/core/encounters.py) | `file:patches/bank_076.asm` | `$76` |
 | `lay_copies_10` `lay_copies_11` (S107 2b) + `ns_follower_layout` (in the species list) | `gamedata.art` + `custom.species` (§2.23 "Walking layouts"; editor2/core/walk_layouts.py) | `region:` in banks $10 / $11 | those banks |
 
@@ -565,6 +571,12 @@ user-confirmed hand-authored code:
   `$A0`/`$A1` prefixes; TEMPLATE_SIZE 678 B; the S105 value `650278bb…` is historical);
   `bank_076_head.asm` `40972da2…2635` (entry 2 `GateBossWin`; TEMPLATE_SIZE 358 B; the
   S115 value `94cb8ece…5d90` is historical).
+* `editor2/core/templates/bank_079_head.asm` (S121) — bank byte, 2-entry table, entry 0
+  `MillyShapeTable` / entry 1 `MillyPlayerSheet` (§2.34); only emitted with the hook on;
+  pinned `3d7cbdbe…ef95`; no TEMPLATE_SIZE (the bank holds a few hundred bytes).
+* S121 re-pin: `bank_071_head.asm` `27b5f30f…1b81` (+ entry 8 `TextSpriteMode`, §2.34;
+  TEMPLATE_SIZE 727 B, `Custom26DDTable` `$42D7` in the S121 game.sym; the S116 value is
+  historical).
 * `editor2/core/templates/bank_071_head.asm` — bank byte, 8-entry table
   (S116: entry 6 `CustomBGMStart`, entry 7 `BattleBGMResolve`, entry 2 + the gate
   songs — SOUND_SYSTEM §10; TEMPLATE_SIZE 688 B, measured `Custom26DDTable` $42B0
@@ -2532,6 +2544,7 @@ by number); a name missing from a state = warning. A **cast member** = `"hidden"
 first x|y, together, fast, keep_facing}, face {actor, dir | toward}, show / hide {actor,
 how instant|flicker|spin, at}, anim {actor, move (`ANIMS`, the measured `$1C` programs)},
 fly {actor, dir in_left|in_right|off_left|off_right, to (in), length 1-9, curve 0-5},
+name_hero (S121, §2.34),
 wait {frames}, wait_walks, music {song} | "back", sound <id>, shake {dir, frames, wait},
 fade {to black|normal, step}, flash {frames}, followers hide|show, give_item {item, got,
 full}, give_monster {enemy, got, full}, tiles {x, y, w, h, copy {screen, state}} or
@@ -2590,6 +2603,106 @@ does not fit, a fly for the player …). The editor shows the same list live (`a
 **Pin:** the engine change (bank $04 redirect + the bank $60 template, re-pinned)
 moves the example build: **`d19259a1…` (patched, historical since S120b → `97659a4a…`, §2.3)**,
 was `110210b0…` (patched, historical). The example project has no cutscenes.
+
+## §2.34 S121 — the MILLY HOOK (`custom.milly_hook`, ROADMAP P3.16 + E7)
+
+User direction (S121): "In the intro, when Milayou disappears into dresser when Waroubou
+drags her in, do NOT return control to player to play as terry. Instead, play the
+disappearing (screen whirling) effect and sound (just like when Terry steps into dresser)!
+But redirect to a new custom room. At THIS POINT, player sprite is no longer Terry, it is
+MILLY … This whole thing can be switched off as a 'milly hook' patch." Code:
+`editor2/core/milly.py` (lowering + emitters + the roots room), `milly_doc.py` (the
+Document mixin), GUI `editor2/app/milly_dialog.py` (Cutscenes → Milly hook…).
+
+```jsonc
+"milly_hook": {
+  "enabled": true,                       // false / absent = the game as before (Terry)
+  "arrive": {"room": "roots_room_milly", // one of the project's rooms
+             "screen": 0, "x": 5, "y": 4, "face": "down"},
+  "spin": true                           // she spins in (the cast NPC's program) or appears
+}
+```
+
+**What ON builds (every region same-size; OFF = each region's vanilla text, bank $79 the
+empty bank):**
+
+| Region / file | Vanilla | Hook on |
+|---|---|---|
+| `patches/bank_00e.asm#milly_bedroom_script` | bedroom ($2F) script 0 from pos 951 (`$0E:$4AA4`, 94 words: the glow, then Terry / Watabou) | glow sound `$60`, op `$17`, delay 8; `$03 $179F` (Terry stays drawn through the whirl: the flag acts at the next field load; S121 r2 removed a `$0D` hide here — the user: "terry NPC sprite vanishes abruptly");  four `$13` writes of `$D3 $D4 $D5 $D6 $F0×4` to `$CA42`; `$3B` warp_fade (map lo = the room's mapID, px, py of the arrival cell) — ends the script; `$FFFF` padding |
+| `patches/bank_004.asm#milly_shape_04a` / `#milly_shape_04b` | `call HramScr_4126 / ld de, data_4137` (bank $04 entries 2 / 3, type < $10) | `ld hl, $7900 / rst $10 / nop / nop` → bank $79 entry 0 `MillyShapeTable` |
+| `patches/bank_001.asm#milly_player_sheet` | `ld de, $2f00 / ld hl, $8000 / call WaitDMATransfer` (`LoadFieldTilesDMA`) | `ld hl, $7901 / rst $10` + 5 `nop` → entry 1 `MillyPlayerSheet` |
+| `patches/bank_009.asm#milly_naming_icon` | `FollowerGfxTable09[0]` = `$2f00` (the naming screen's hero icon sheet) | `$3114` (Milayou's sheet) |
+| `patches/bank_04f.asm#milly_name_tiles` | `INCBIN …4d40.2bpp ;TERRY` (tiles `$D3-$D6`) | the S120b MILLY drawing (§2.3) |
+| `patches/bank_079.asm` (`hooks79`) | `ds $4000, $00` | template `bank_079_head.asm` + `MillyPlayerAttr` (`$03`) + `MillyPlayerGfx` (`$3114`) + the frame-table image |
+
+Bank $79 (template, pinned): entry 0 `MillyShapeTable` — flag `$179F` clear, type ≠ 0 or
+the WRAM tables not built → exactly the replaced code (palette `$02`, DE = `data_4137`);
+else palette `MillyPlayerAttr` and DE = `wMillyLayout`. Entry 1 `MillyPlayerSheet` — flag
+clear → Terry's sheet; set → copies `MillyLayoutImage` (L1 → L2 of 21 words: frames 0-5 =
+her six NPC frames (`$05:$407F[$14]`, side frames face right — the player's X-flip makes
+left), 6-20 = an empty list) to `wMillyLayout` (WRAM, 160 B carved from wCustomPool, S121)
+and DMAs her sheet. The tables live in WRAM because the metasprite builders (ROM0 `$0D91`,
+bank $04 `SaveScr_40cd`) read them with bank $04 mapped. The load path's zero-fill of
+`$CC80-$D664` clears them; entry 0 then falls back until the next room load rebuilds them
+(CONTINUE: measured).
+
+**The arrival (lowered before the cutscenes, `milly.lower`):** the arrival room gets a
+hidden cast NPC `__milly_hook` (sprite `$14`, hidden pads so it has one number in every
+state of the screen) at the arrival cell and an entry scene `__milly_arrival` first in its
+list (trigger entry, once = `hook:milly_arrived` `$179E`, `player_start` = the arrival
+cell / facing): hide the player (S121 r2: was done in the bedroom — PyBoy, every frame: no
+player sprite before it in the roots room; without the spin she appears exactly when
+shown), spin → show the cast spinning, face, hide it; then show the player and face. `_then_next: true` = the scene falls through to the room's next entry scene instead
+of `goto` the room's own arrival script (cutscene_build: before S121 only the FIRST
+matching entry scene of a room ever played — every scene ended with `goto @cut_orig`).
+
+**Flags:** `$179F` (the player is Milly) and `$179E` (her arrival played) are reserved —
+refs `hook:milly` / `hook:milly_arrived` (`Project.resolve_flag_ref`), the named pool is
+`$1000-$179D` (`FLAG_SAFE_RANGES`), new games clear them, saves keep them (EVENT_FLAGS).
+
+**The roots room** (`Document.create_roots_room`): `clone_vanilla($08)` named "Roots room
+(Milly)", the copied `$08` scripts dropped, NPCs = grey Warubou (`$39`, actor `Warubou`,
+below the screen), `animation: none` (map $08's handler pulses a DMG palette —
+`formats.ANIM_EXCLUDED`), `text_keeps_sprites: true`, one cutscene `milly_roots` (entry,
+once `milly_roots_seen`, player_start (5, 4)): wait 48, Warubou walks up, 4 boxes
+(speaker `Warubou`), both walk out, `move` (default GreatTree `vanilla:$01` screen 12 (4,
+6); the dialog edits it). When the hook has no arrival yet, it arrives there (5, 4).
+**S121 r3 — the naming option** (user: "Waroubou text box, naming screen, then another box
+so I can sandwich it between"): a new roots room's scene = Warubou's lines
+(`ROOTS_TEXT_ASK`, ending "And who might / you be, girl?"), `name_hero`, a box after
+(`ROOTS_TEXT_AFTER`: "{hero}, eh? / Heh heh!", "Come along. The / King wants you.");
+`milly.set_naming` / `Document.set_roots_naming` (the dialog's "Warubou asks her name")
+adds the naming step + that box right after his first text, or removes each `name_hero`
+and the text right after it. PyBoy: boxes → the naming screen (MILLY, her icon) → "MILLY,
+eh?" → the walk out.
+
+**Move destinations must be real screens (S121 r3, user: "Redirect from ROOTS ROOM into
+SBOSS" crashed):** the dialog kept GreatTree's screen 12 when SBOSS (screens 0 / 4) was
+picked; PyBoy: the warp to a screen the room lacks crashes the game (PC in WRAM, map
+garbage). `Project._move_words` (every `move` / helper / conversation warp) now raises
+`move_screen_problem`: a project room's screens = its `screens` keys, a game room's =
+`project.vanilla_screens()` (map_table.json sub-rooms with room data); the Milly dialog
+and the cutscene editor's *Go to a room* list only the destination's screens.
+
+**`text_keeps_sprites` (S121):** `custom.rooms[].text_keeps_sprites` → `CustomRoomFlags`
+bit 1; bank $06's text-box opener (region `text_sprite_mode`, on when any room has it)
+calls bank $71 entry 8 `TextSpriteMode` (maps $08 / $5D as vanilla + these rooms → `$FFD3
+:= 0`, so sprites over BG tile ids ≥ `$80` stay drawn while a box is open — ROOM_DATA_FORMAT
+"Text boxes and sprites (S121)"). `clone_vanilla` sets it for copies of $08 / $5D.
+
+**The `name_hero` step** (`{"name_hero": true}`): `write_ram $C8F4 0`, `write_ram2 $C8F2
+$CA42`, op `$04` 15 0 — the Castle's naming screen (Castle script 0 pos 107-113); it offers
+the current name (MILLY with the hook).
+
+**Validators:** hook on → an arrival room that exists, a screen it has, a cell on the
+screen, a facing (`HookError` → the build stops; the dialog says it first via
+`milly_arrival_problem`).
+
+**Pin:** the example has the hook OFF; S121 moved its build to **`e43e5f58…` (patched)**,
+was `97659a4a…` (patched, historical): the hero tiles back to TERRY (§2.3) + the bank $71
+template (entry 8). test_compiler `test_milly_hook_s121` / `test_milly_rom` (the constants
+vs the original ROM, the hook-off bytes, a hook-on build: tiles, bedroom tail, bank $79
+table + image resolving to her frames, no label moved in banks $01/$04/$09/$0E/$4F).
 
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 

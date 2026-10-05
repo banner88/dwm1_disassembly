@@ -87,7 +87,7 @@ CONTRACTIONS = {"'l": 0x66, "'t": 0x67, "'s": 0x68, "'r": 0x69, "'m": 0x6A,
 HERO_CELLS = 4        # vanilla's widest $F6 line leaves 4 cells; the new-game name is 4 bytes
 LEAD_CELLS = 9        # a species name (monster_text NAME_MAX)
 TOKENS = {
-    '{hero}': ([0xF6], HERO_CELLS, [0xD3, 0xD4, 0xD5, 0xD6]),   # the new-game name tiles ("MILLY", S120b)
+    '{hero}': ([0xF6], HERO_CELLS, [0xD3, 0xD4, 0xD5, 0xD6]),   # the new-game name tiles (TERRY; MILLY with the Milly hook, S121)
     '{lead}': ([0xF9, 0x00], LEAD_CELLS,
                [0x27, 0x4F, 0x3E, 0x48, 0x36, 0x49, 0x46, 0x4A, 0x42]),  # "DrakSlime"
 }
@@ -189,16 +189,27 @@ def check_speaker(speaker, voice):
 FONT_ROM_OFFSET = 0x4F * 0x4000 + 0x0010
 
 
-# S120b (user: "change TERRY to MILLY as default, but leave otherwise as 4 letters"):
-# patches/bank_04f.asm draws the new-game hero name tiles $D3-$D6 as "MILLY" (the
-# original ROM's font says "TERRY"). The previews read glyphs from the ORIGINAL ROM,
-# so these four come from here — test_compiler checks them against the built ROM.
-PATCHED_GLYPHS = {
+# S120b (user: "change TERRY to MILLY as default, but leave otherwise as 4 letters")
+# drew the new-game hero name tiles $D3-$D6 as "MILLY"; S121 moved that under the
+# Milly hook (patches/bank_04f.asm region milly_name_tiles: MILLY with the hook, the
+# original TERRY without). The previews read glyphs from the ORIGINAL ROM, so the
+# MILLY tiles come from here while the open project has the hook on —
+# use_hero_glyphs() (Session / the Milly hook dialog); test_compiler checks
+# MILLY_GLYPHS against a hook-on build.
+MILLY_GLYPHS = {
     0xD3: bytes.fromhex('ff44ff6cff54ff44ff44ff44ff44ff00'),
     0xD4: bytes.fromhex('ffe4ff44ff44ff44ff44ff44ffe7ff00'),
     0xD5: bytes.fromhex('ff10ff10ff10ff10ff10ff10ff9eff00'),
     0xD6: bytes.fromhex('ff44ff44ff28ff10ff10ff10ff10ff00'),
 }
+PATCHED_GLYPHS = {}             # the glyphs the previews draw instead of the ROM's
+
+
+def use_hero_glyphs(milly_on):
+    """The previews' hero-name tiles: MILLY (True) or the ROM's TERRY (False)."""
+    PATCHED_GLYPHS.clear()
+    if milly_on:
+        PATCHED_GLYPHS.update(MILLY_GLYPHS)
 
 
 def glyph_2bpp(rom, code):

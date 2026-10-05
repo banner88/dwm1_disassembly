@@ -1608,3 +1608,37 @@ Residual to be aware of: per-STAT swing inside a species is still real (a 44 →
 127 INT is possible), and the ratio metric is misleading where the vanilla
 baseline is tiny — metal slimes and the rival species sit at 14 points by L30, so
 any change reads as 12x. Gate on ratio AND an absolute delta.
+
+## The player's sprite (S121 — traced in PyBoy, built as the Milly hook, NOT yet user-tested)
+
+ROADMAP E7 ("Zero coverage existed anywhere of the PLAYER's walking sprite"). Traced on
+the original ROM (DMA hooks at ROM0 `$1577`/`$14CF`, bank $04 entries 2 / 3 hooks at
+`$04:$408B` / `$04:$40B1`):
+
+* **Sheet.** gfx-ID **`$2F00`** (20 tiles, Terry) → VRAM `$8000` by bank $01
+  `LoadFieldTilesDMA` (`ld de,$2f00 / ld hl,$8000 / call WaitDMATransfer`, every field
+  load: a room, CONTINUE, the return from a battle / menu); `$2E1D` → `$8180` follows.
+* **Shape.** The field player is drawn by bank $01 (`jr_001_56ab`): HRAM `$FFC3-$FFCA` ←
+  X `$FF92/93`, Y + 8 `$FF95/96`, sprite TYPE `$FF8A` (= 0), FRAME `$FF8B` (0-5 = down A/B,
+  side A/B, up A/B), tile base `$FF8C`, OAM attr `$FF8D` (bit 5 = X-flip: the side frames
+  face RIGHT, left is flipped), then `ld hl,$0402 / rst $10`. Bank $04 entries 2 / 3, for
+  types < `$10`: `HramScr_4126` ORs `data_4157[type]` (all `$02` = OBJ palette 2) into
+  `$FFCA` and `ld de, data_4137` = the level-1 table (`[0]` = `$04:$7237`, Terry's 21
+  frames; `[1-15]` = `$7738`); entry 2 builds through ROM0 `$0D91`, entry 3 through
+  `SaveScr_40cd`. Metasprite format = the followers' (4-byte `(dy, dx, tile, attr)`, `$80`
+  end).
+* **Other type-0 users.** The naming screen's hero icon (bank $09): the sheet
+  `FollowerGfxTable09[0]` (`$2F00`) → VRAM `$8500`, frames 0 / 1 at tile base `$50` via bank
+  $04 entries 2 / 3. Debug-menu mode 3 (bank $02) and the link-battle teardown (mode 6, bank
+  $18) draw it too (not hooked — ROADMAP P3.16 residual). Terry as an NPC (`$5E`, `$E0`
+  → `$5E`) uses the same sheet and layout through the NPC path.
+* **NPC sprites (for comparison):** bank $05 entries 0 / 1: level-1 `$05:$407F[id]` → 6
+  frames (the same order and facing rule), palette `$05:$4152[id]` (ORed by
+  `HramAudE_406e`), sheet ROM0 `$2ADF[id]` (16 tiles). Milayou = `$14` (palette `$03`, gfx
+  `$3114`), grey Warubou `$39`, Watabou `$21`, the old man `$08`.
+* **The Milly hook (PROJECT_COMPILER §2.34):** with event flag `$179F` set, bank $04's two
+  type < `$10` paths call bank $79 entry 0 (her palette, her frame tables copied to WRAM
+  `wMillyLayout` — the builders read with bank $04 mapped) and the field load calls entry
+  1 (her sheet `$3114`); the naming icon's sheet entry = `$3114`. PyBoy: she walks all four
+  directions, the naming screen shows her, CONTINUE and a battle keep her, flag clear =
+  Terry.

@@ -254,6 +254,12 @@ HramScr_4126:
     ldh [$ca], a
     ret
 
+; data_4137: the level-1 frame tables of the sprite types < $10 (bank $04 entries
+; 2 / 3 when $FFC7 < $10; entry 2 builds via ROM0 $0D91, entry 3 via
+; SaveScr_40cd): [0] = $7237 = the PLAYER shape (Terry: 21 frames, 0-5 = walk
+; down / side / up), [1-15] = $7738. data_4157: their OAM palette, all $02, ORed
+; into $FFCA by HramScr_4126. Type 0 is drawn for the field player (bank $01)
+; and the naming screen's hero icon (bank $09, sheet FollowerGfxTable09[0]). (S121)
 data_4137:
     db $37, $72, $38, $77, $38, $77, $38, $77, $38, $77, $38, $77, $38, $77, $38, $77
     db $38, $77, $38, $77, $38, $77, $38, $77, $38, $77, $38, $77, $38, $77, $38, $77

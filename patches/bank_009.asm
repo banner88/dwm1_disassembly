@@ -7147,7 +7147,14 @@ FieldPtrLookupTable:   ; (mgbdis name, kept: referenced by the readers / patches
     ; A re-arted species writes the SAME new gfx-ID into all eight copies
     ; (S107: compiler region art_walk_09, gamedata.art).
     ; Re-sectioned S107 (tools/resection_monster_art_tables.py), byte-identical.
+; Entry 0 is also the naming screen's hero icon: bank $09 loads this sheet to
+; VRAM $8500 and draws sprite type 0 (frames 0 / 1, tile base $50) through bank
+; $04 entries 2 / 3 — the player shape (S121 trace).
+; S121 (the Milly hook): region milly_naming_icon — entry 0 = the hero's sheet,
+; read by the naming screen for its hero icon (type 0 at VRAM $8500, measured).
+; @BUILD_PROJECT BEGIN milly_naming_icon
     dw $2f00   ; [  0] default
+; @BUILD_PROJECT END milly_naming_icon
     dw $3140   ; [  1] non-monster (loader index 1-15)
     dw $3140   ; [  2] non-monster (loader index 1-15)
     dw $3140   ; [  3] non-monster (loader index 1-15)

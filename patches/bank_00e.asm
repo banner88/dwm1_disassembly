@@ -2234,100 +2234,106 @@ Bank0E_ScriptAddr_48E4:
 ; Milayou rose into it (pos 929-947); then Terry / Watabou's part and the hand-
 ; back to the player. The comments mgbdis put on these words read them as text
 ; ids — they are opcodes ($FFxx) and their parameters (BANK04_SCRIPT_ENGINE).
-    dw $FF21  ; TriggerBattle2
-    dw $0060  ; Text $0060: "$42:$7430 *:This is the castle of // GreatTree. //"
-    dw $FF17  ; SetupBossBattle
-    dw $FF09  ; SetDelay
-    dw $0008  ; Text $0008: "$42:$44BA *:Are you Milayou? // *:Hm, You don't lo"
-    dw $FF22  ; Cmd22
-    dw $FF1B  ; MultiRAMWrite
-    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
-    dw $FFE0  ; Cmd$E0
-    dw $FF19  ; FadeEffect
-    dw $FF22  ; Cmd22
-    dw $FF1A  ; Cmd1A
-    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
-    dw $0030  ; Text $0030: "$42:$5B00 *:Pulio from the farm is goofy but // a "
-    dw $FF19  ; FadeEffect
-    dw $FF09  ; SetDelay
-    dw $000C  ; Text $000C: "$42:$47BF Terry looked at the bookshelf. // Too di"
-    dw $FF21  ; TriggerBattle2
-    dw $0060  ; Text $0060: "$42:$7430 *:This is the castle of // GreatTree. //"
-    dw $FF17  ; SetupBossBattle
-    dw $FF09  ; SetDelay
-    dw $0008  ; Text $0008: "$42:$44BA *:Are you Milayou? // *:Hm, You don't lo"
-    dw $FF0D  ; WriteNPCByte
-    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
-    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
-    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
-    dw $FF21  ; TriggerBattle2
-    dw $0055  ; Text $0055: "$42:$6E72 *:Hale was the cherished pet of // the K"
-    dw $FF1C  ; CompareRAM
+; S121 (ROADMAP P3.16, the Milly hook): the bedroom script 0 from pos 951 ($0E:$4AA4)
+; to its end (pos 1044, $4B5E) — compiler region (editor2/core/milly.py): the vanilla
+; words, or the hook's dresser whirl to the project's arrival (custom.milly_hook).
+; @BUILD_PROJECT BEGIN milly_bedroom_script
+; vanilla (Milly hook off): the dresser glow, Terry runs up, Watabou, end
+    dw $FF21
+    dw $0060
+    dw $FF17
+    dw $FF09
+    dw $0008
+    dw $FF22
+    dw $FF1B
+    dw $0000
+    dw $FFE0
+    dw $FF19
+    dw $FF22
+    dw $FF1A
+    dw $0000
+    dw $0030
+    dw $FF19
+    dw $FF09
+    dw $000C
+    dw $FF21
+    dw $0060
+    dw $FF17
+    dw $FF09
+    dw $0008
+    dw $FF0D
+    dw $0001
+    dw $0000
+    dw $0000
+    dw $FF21
+    dw $0055
+    dw $FF1C
     dw $1201
-    dw $FF19  ; FadeEffect
-    dw $FF07  ; InitDialogMode
-    dw $0009  ; Text $0009: "$42:$4590 *:Huh? What happened? // Where is Milayo"
-    dw $FF06  ; IncrementCounter
-    dw $FF09  ; SetDelay
-    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
-    dw $FF49  ; Cmd49
-    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
-    dw $FF09  ; SetDelay
-    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
-    dw $FF4A  ; Cmd4A
-    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
-    dw $FF09  ; SetDelay
-    dw $0003  ; Text $0003: "$42:$42D0 Terry looked in front of him. // A flame"
-    dw $FF48  ; Cmd48
-    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
-    dw $FF09  ; SetDelay
-    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
-    dw $FF49  ; Cmd49
-    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
-    dw $FF09  ; SetDelay
-    dw $0005  ; Text $0005: "$42:$43B0 Terry looked at the bookshelf. // :Diary"
-    dw $FF1C  ; CompareRAM
-    dw $0100  ; Text $0100: "$43:$4DEC [HERO] looked into the jar. // An old la"
-    dw $FF19  ; FadeEffect
-    dw $FF09  ; SetDelay
-    dw $0004  ; Text $0004: "$42:$4323 Terry looked at the bookshelf. // :A Fai"
-    dw $FF1C  ; CompareRAM
-    dw $0101  ; Text $0101: "$43:$4E4F [HERO] looked into the jar. // A piece o"
-    dw $FF19  ; FadeEffect
-    dw $FF09  ; SetDelay
-    dw $0008  ; Text $0008: "$42:$44BA *:Are you Milayou? // *:Hm, You don't lo"
-    dw $FF0A  ; NPCMoveX
-    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
-    dw $FFD0  ; Cmd$D0
-    dw $FF07  ; InitDialogMode
-    dw $000A  ; Text $000A: "$42:$45C1 *:You speak monster talk // don't you? /"
-    dw $FF06  ; IncrementCounter
-    dw $FF0A  ; NPCMoveX
-    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
-    dw $0030  ; Text $0030: "$42:$5B00 *:Pulio from the farm is goofy but // a "
-    dw $FF47  ; Cmd47
-    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
-    dw $FF09  ; SetDelay
-    dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
-    dw $FF1C  ; CompareRAM
-    dw $0201  ; Text $0201: "$1B:$4344 *:Who does he think he is! // *:If he do"
-    dw $FF19  ; FadeEffect
-    dw $FF0D  ; WriteNPCByte
-    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
-    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
-    dw $0040  ; Text $0040: "$42:$6159 *:I'm Slio. I am the grandson // of Gran"
-    dw $FF0B  ; NPCMoveY
-    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
-    dw $FFF0  ; Cmd$F0
-    dw $FF21  ; TriggerBattle2
-    dw $0060  ; Text $0060: "$42:$7430 *:This is the castle of // GreatTree. //"
-    dw $FF17  ; SetupBossBattle
-    dw $FF03  ; SetEventFlag
-    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
-    dw $FF12  ; WriteRAM
-    dw $D974  ; RAM $D974
-    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
-    dw $FFFF  ; END
+    dw $FF19
+    dw $FF07
+    dw $0009
+    dw $FF06
+    dw $FF09
+    dw $0003
+    dw $FF49
+    dw $0001
+    dw $FF09
+    dw $0003
+    dw $FF4A
+    dw $0001
+    dw $FF09
+    dw $0003
+    dw $FF48
+    dw $0001
+    dw $FF09
+    dw $0005
+    dw $FF49
+    dw $0001
+    dw $FF09
+    dw $0005
+    dw $FF1C
+    dw $0100
+    dw $FF19
+    dw $FF09
+    dw $0004
+    dw $FF1C
+    dw $0101
+    dw $FF19
+    dw $FF09
+    dw $0008
+    dw $FF0A
+    dw $0001
+    dw $FFD0
+    dw $FF07
+    dw $000A
+    dw $FF06
+    dw $FF0A
+    dw $0001
+    dw $0030
+    dw $FF47
+    dw $0001
+    dw $FF09
+    dw $0002
+    dw $FF1C
+    dw $0201
+    dw $FF19
+    dw $FF0D
+    dw $0001
+    dw $0000
+    dw $0040
+    dw $FF0B
+    dw $0001
+    dw $FFF0
+    dw $FF21
+    dw $0060
+    dw $FF17
+    dw $FF03
+    dw $0000
+    dw $FF12
+    dw $D974
+    dw $0001
+    dw $FFFF
+; @BUILD_PROJECT END milly_bedroom_script
 
     db $0D
     db $FF

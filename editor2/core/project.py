@@ -14,6 +14,30 @@ from . import formats as F
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 
+
+_VANILLA_SCREENS = None
+
+
+def vanilla_screens():
+    """{mapID: [screen numbers]} of the game's rooms (extracted/map_table.json: the
+    sub-rooms with room data — what render_project.vanilla_rooms lists); {} when
+    the table is missing (S121 r3)."""
+    global _VANILLA_SCREENS
+    if _VANILLA_SCREENS is None:
+        out = {}
+        try:
+            for e in json.load(open(os.path.join(REPO_ROOT, 'extracted', 'map_table.json'))):
+                mid = e.get('map_type')
+                if mid is None or mid >= 0x6B:
+                    continue
+                scr = sorted(sr['c925'] for sr in e.get('sub_rooms', []) if sr.get('steps'))
+                if scr:
+                    out[mid] = scr
+        except (OSError, ValueError):
+            out = {}
+        _VANILLA_SCREENS = out
+    return _VANILLA_SCREENS
+
 # EVENT_FLAGS.md "Free Flag Slots" — safe+persistent ranges the allocator may
 # use. CORRECTED S57: the previous ranges were derived from script analysis
 # only and included bytes with live ENGINE literal refs ($D9CC, $D9D9-$D9E2,
@@ -33,7 +57,11 @@ REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 # allocated to names, so a gate's flag never moves when names are added.
 EXT_FLAG_FIRST, EXT_FLAG_LAST = 0x1000, 0x17FF
 GATE_FLAG_BASE = 0x17A0                  # + gate number 0-95
-FLAG_SAFE_RANGES = [(0x0158, 0x0167), (EXT_FLAG_FIRST, GATE_FLAG_BASE - 1)]
+# S121 (the Milly hook): $179E / $179F are the hook's own flags (milly.py
+# RESERVED_FLAGS: "the arrival scene played" / "the player is Milly") — taken
+# out of the named pool, so a name can never land on them.
+MILLY_FLAGS_FIRST = 0x179E
+FLAG_SAFE_RANGES = [(0x0158, 0x0167), (EXT_FLAG_FIRST, MILLY_FLAGS_FIRST - 1)]
 # S97 state rules may TEST any event flag (vanilla story flags included). The
 # bitfield is $D99B + idx/8; vanilla references reach $02C1 (EVENT_FLAGS.md),
 # and $0278+ is not in the save image — readable, but a rule on it resets on
@@ -146,10 +174,18 @@ class Project:
         # models): a cutscene problem is recorded here and reported by
         # validators.validate, so it stops a BUILD (with its message), never the editor
         self.cutscene_error = None
+        # S121 (ROADMAP P3.16 + E7, the Milly hook): the arrival room's generated
+        # spin-in scene goes in FIRST (milly.lower); its problems stop a build
+        # the same way a cutscene's do
+        from . import milly as _MH
+        try:
+            _MH.lower(self)
+        except _MH.HookError as ex:
+            self.cutscene_error = str(ex)
         try:
             self.cutscene_patches = CB.lower_project(self)
         except CB.CutsceneError as ex:
-            self.cutscene_error = str(ex)
+            self.cutscene_error = self.cutscene_error or str(ex)
             self.cutscene_patches = {}
         self._gate_rows = None
         self.palettes = self.custom.get('palettes', [])
@@ -517,9 +553,37 @@ class Project:
         if not (0 <= k <= 15 and 0 <= x <= 9 and 0 <= y <= 7):
             raise ProjectError(f"{ctx}: move to screen {k} cell ({x},{y}) outside "
                                "the 4x4 grid / 10x8 cells")
+        problem = self.move_screen_problem(dest, mid, k)
+        if problem:
+            raise ProjectError(f"{ctx}: {problem}")
         px = ((k % 4) * 10 + x) * 16 + 8
         py = ((k // 4) * 8 + y) * 16 + 8
         return f'0x{mid:04X}', f'0x{px:04X}', f'0x{py:04X}'
+
+    def move_screen_problem(self, dest, mid, k):
+        """S121 r3 (user: "I tried redirecting to SBOSS and game crashes"): a move to a
+        screen the room does not have warps into nothing — PyBoy: the roots scene sent
+        to SBOSS ($70, screens 0 / 4) at GreatTree's screen 12 crashed the game (PC in
+        WRAM). -> a sentence, or None."""
+        kind = str(dest).split(':', 1)[0]
+        if kind == 'room':
+            room = next((r for r in self.custom.get('rooms') or []
+                         if r.get('mapID') is not None and F.val(r['mapID']) == mid), None)
+            if room is None:
+                return f"move to room ${mid:02X}: no room of this project has that map id"
+            keys = sorted(int(x) for x in (room.get('screens') or {}))
+            if k not in keys:
+                return (f"move to {room.get('name') or room['id']} screen {k}: that room has "
+                        f"no screen {k} (its screens: {', '.join(map(str, keys)) or 'none'}) — "
+                        "the game would crash there")
+            return None
+        if kind == 'vanilla':
+            screens = vanilla_screens().get(mid)
+            if screens is not None and k not in screens:
+                return (f"move to game room ${mid:02X} screen {k}: the game has no screen {k} "
+                        f"there (its screens: {', '.join(map(str, screens))}) — the game "
+                        "would crash there")
+        return None
 
     def _lower_steps(self, steps, ctx, lab, field, helper_idx=None):
         """-> (ops, field_after). lab = [counter] for unique local labels."""
@@ -1349,7 +1413,19 @@ class Project:
         gate's BOSS room defaults to no saving, like vanilla boss rooms $30-$4F:
         user rule S100, S101)."""
         default = r.get('id') not in self.boss_room_ids()
-        return 0 if r.get('can_save', default) else 0x01
+        fl = 0 if r.get('can_save', default) else 0x01
+        # S121: bit 1 = sprites stay drawn while a text box is open (bank $71
+        # entry 8 TextSpriteMode — vanilla does it for rooms $08 / $5D, whose
+        # art uses tile ids >= $80; copies of them set text_keeps_sprites)
+        if r.get('text_keeps_sprites'):
+            fl |= 0x02
+        return fl
+
+    def text_sprite_rooms(self):
+        """S121: the rooms that need bank $71 entry 8 (the bank $06 region
+        text_sprite_mode is the vanilla code when there is none)."""
+        return [r.get('id') for r in self.rooms
+                if not r.get('placeholder') and r.get('text_keeps_sprites')]
 
     # ------------------------------------------ per-gate settings (S101)
     def gate_configs(self):
@@ -1693,6 +1769,14 @@ class Project:
         (EVENT_FLAGS.md). Indices >= $0278 are readable but not saved."""
         if isinstance(ref, str) and ref in self._flags:
             return self._flags[ref]
+        if isinstance(ref, str) and ref.startswith('hook:'):
+            # S121: the Milly hook's own flags ("hook:milly" = the player is
+            # Milly, "hook:milly_arrived" = her arrival scene has played)
+            from . import milly as _MH
+            if ref not in _MH.FLAG_REFS:
+                raise ProjectError(f"{ctx}: {ref!r} — hook flags: "
+                                   + ', '.join(sorted(_MH.FLAG_REFS)))
+            return _MH.FLAG_REFS[ref]
         if isinstance(ref, str) and ref.startswith('gate:'):
             # S117 (NG2): "gate N cleared" — the gate's own flag when it has
             # one (new gates, re-bossed vanilla gates), else its vanilla flag

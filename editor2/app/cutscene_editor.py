@@ -44,10 +44,10 @@ KIND_COLOUR = {
     'music': '#a0e6a0', 'sound': '#a0e6a0', 'shake': '#ffc878', 'fade': '#ffc878',
     'flash': '#ffc878', 'followers': '#ffc878', 'give_item': '#ffdc96',
     'give_monster': '#ffb4dc', 'tiles': '#ffc878', 'battle': '#ff7878', 'move': '#ffaa78',
-    'end': '#cccccc'}
+    'end': '#cccccc', 'name_hero': '#f0e6a0'}
 ADD_GROUPS = [
     ('Actors', ['walk', 'face', 'show', 'hide', 'anim', 'fly']),
-    ('Text and choices', ['say', 'ask', 'if']),
+    ('Text and choices', ['say', 'ask', 'if', 'name_hero']),
     ('Time', ['wait', 'wait_walks']),
     ('Screen', ['shake', 'fade', 'flash', 'tiles', 'followers']),
     ('Sound', ['music', 'sound']),
@@ -103,6 +103,9 @@ STEP_HELP = {
               'player wins.',
     'move': 'Sends the player to a room / screen / tile (the scene ends there).',
     'end': 'The scene stops here.',
+    'name_hero': 'Opens the game\'s naming screen (the King\'s "What is your name?" one): the player types the hero\'s name, confirms it, and the '
+                 'scene goes on. It offers the current name — MILLY with the Milly hook, '
+                 'else TERRY. Text after it can use the name ({hero}).',
 }
 FIELD_HELP = {
     'Who': 'Who this step is about. NPCs that have no name yet are listed at the end — '
@@ -675,6 +678,7 @@ class StepForm(QWidget):
         lw.setMaximumHeight(110)
         cur = list(cur or [])
         names = [f.get('name') for f in self.ed.s.doc.flags()]
+        names += list(self.ed.s.doc.milly_flag_names())          # S121: hook:milly …
         for n in names + [c for c in cur if c not in names]:
             it = QListWidgetItem(str(n))
             it.setFlags(it.flags() | Qt.ItemIsUserCheckable)
@@ -921,14 +925,36 @@ class StepForm(QWidget):
         self.form.addRow(QLabel('The steps after a battle run only when the player WINS.'))
 
     def f_move(self, v):
-        self._combo('To room', self.ed.room_items(), v.get('dest'), lambda d: self._upd('move', 'dest', d))
-        self._spin('Screen', 0, 15, v.get('screen', 0), lambda n: self._upd('move', 'screen', n))
+        def to_room(d):
+            mv = dict(self.step['move'] or {})
+            mv['dest'] = d
+            scr = dest_screens(self.ed.s, d)
+            if scr and int(mv.get('screen', 0)) not in scr:
+                mv['screen'] = scr[0]        # S121 r3: never keep a screen the room lacks
+            self._emit('move', mv)
+        self._combo('To room', self.ed.room_items(), v.get('dest'), to_room)
+        scr = dest_screens(self.ed.s, v.get('dest'))
+        cur = int(v.get('screen', 0))
+        if scr:
+            items = [(screen_label(k), k) for k in scr]
+            if cur not in scr:
+                items.append((f'screen {cur} — NOT IN THIS ROOM (the build stops)', cur))
+            self._combo('Screen', items, cur, lambda n: self._upd('move', 'screen', n))
+        else:
+            self._spin('Screen', 0, 15, cur, lambda n: self._upd('move', 'screen', n))
         self._spin('x', 0, 9, v.get('x', 4), lambda n: self._upd('move', 'x', n))
         self._spin('y', 0, 7, v.get('y', 4), lambda n: self._upd('move', 'y', n))
 
     def f_end(self, v):
         self.form.addRow(QLabel('The scene stops here (an entry scene then runs the room\'s own '
                                 'arrival script).'))
+
+    def f_name_hero(self, v):
+        lab = QLabel('The naming screen opens here; the scene goes on when the player has '
+                     'confirmed a name. Nothing to set — the screen offers the hero\'s '
+                     'current name.')
+        lab.setWordWrap(True)
+        self.form.addRow(lab)
 
 
 # ---------------------------------------------------------------- the editor
@@ -960,6 +986,44 @@ def list_at(steps, path):
     return cur, path[-1]
 
 
+def room_items(session):
+    """[(label, dest)] for a `move` step: the Castle throne room, the project's rooms,
+    then every game room (S121: the roots room's scene leads to GreatTree)."""
+    out = [('the Castle throne room', 'vanilla:$00')]
+    for r in session.doc.rooms:
+        if not r.get('placeholder'):
+            out.append((f"{r.get('name') or r['id']} (your room)", f"room:{r['mapID'].replace('0x', '$')}"))
+    try:
+        for mid, name, _scr in session.renderer.vanilla_rooms():
+            if mid != 0x00:
+                out.append((f'${mid:02X} {name} (game room)', f'vanilla:${mid:02X}'))
+    except Exception:                                   # noqa: BLE001 (no ROM)
+        pass
+    return out
+
+
+def dest_screens(session, dest):
+    """The screens a `move` destination has ([ints]; [] = unknown) — S121 r3: a move to
+    a screen the room does not have crashes the game (the build now refuses it)."""
+    from editor2.core import formats as F
+    from editor2.core.project import vanilla_screens
+    kind, _sep, num = str(dest or '').partition(':')
+    try:
+        mid = F.val(num)
+    except (TypeError, ValueError):
+        return []
+    if kind == 'room':
+        for r in session.doc.rooms:
+            if r.get('mapID') is not None and F.val(r['mapID']) == mid:
+                return sorted(int(k) for k in (r.get('screens') or {}))
+        return []
+    return list(vanilla_screens().get(mid) or [])
+
+
+def screen_label(k):
+    return f'screen {k}  (col {k % 4}, row {k // 4})'
+
+
 def default_step(kind, ed):
     first_npc = next((n for n, k, _e in ed.actor_list() if k), CB.PLAYER)
     return {
@@ -986,6 +1050,7 @@ def default_step(kind, ed):
         'battle': {'battle': {'enemies': [1]}},
         'move': {'move': {'dest': 'vanilla:$00', 'screen': 1, 'x': 4, 'y': 5}},
         'end': {'end': True},
+        'name_hero': {'name_hero': True},
     }[kind]
 
 
@@ -2074,11 +2139,7 @@ class CutsceneEditor(QWidget):
         return out
 
     def room_items(self):
-        out = [('the Castle throne room', 'vanilla:$00')]
-        for r in self.s.doc.rooms:
-            if not r.get('placeholder'):
-                out.append((f"{r.get('name') or r['id']} (your room)", f"room:{r['mapID'].replace('0x', '$')}"))
-        return out
+        return room_items(self.s)
 
     def state_items(self):
         out = []

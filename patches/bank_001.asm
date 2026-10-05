@@ -606,10 +606,18 @@ jr_001_4425:
     ret
 
 
+; LoadFieldTilesDMA (S121 trace): the field's two sprite sheets -> VRAM — gfx-ID
+; $2F00 = the PLAYER's sheet (Terry, 20 tiles) at $8000 (tile base $00 of the
+; player shape), $2E1D at $8180. The NPC sheets are ROM0 $2ADF[sprite id] (16 tiles).
 LoadFieldTilesDMA:
+; S121 (the Milly hook): the player's sheet -> VRAM $8000 (gfx-ID $2F00 = Terry);
+; region milly_player_sheet = these 9 bytes, or a same-size call into bank $79
+; entry 1 (MillyPlayerSheet: Milly's NPC sheet once flag $179F is set).
+; @BUILD_PROJECT BEGIN milly_player_sheet
     ld de, $2f00
     ld hl, $8000
     call WaitDMATransfer
+; @BUILD_PROJECT END milly_player_sheet
     ld de, $2e1d
     ld hl, $8180
     call WaitDMATransfer
@@ -4008,6 +4016,11 @@ jr_001_5690:
     cp $0f
     ret z
 
+; The PLAYER's sprite (S121 trace): HRAM $FFC3-$FFCA <- X ($FF92/93), Y + 8
+; ($FF95/96), sprite type $FF8A (0 = the player shape), frame $FF8B (0-5 = down
+; A/B, side A/B, up A/B; side frames face RIGHT, OAM attr $FF8D bit 5 = X-flip
+; for left), tile base $FF8C, attr $FF8D; then `ld hl, $0402 / rst $10` below:
+; bank $04 entry 2 builds it (type < $10: palette data_4157, frames data_4137).
 jr_001_56ab:
     ldh a, [$90]
     bit 6, a

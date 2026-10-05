@@ -11,7 +11,7 @@ Why a separate overflow region (vs. same-bank free space): the 221 battle sprite
 are spread across banks $2F,$32-$36 and followers across $2E,$2F,$38-$3A, each
 with only small trailing free space. To swap arbitrary / many monsters you need a
 dedicated, multi-bank allocator. The banks below are the EDITOR_DESIGN §8 canonical
-reservation ($7E-$7F monster-sprite overflow, then the $7C/$7A/$79 expansion
+reservation ($7E-$7F monster-sprite overflow, then the $7C/$7A expansion (S121: $79 = story hooks)
 reserve) — so this aligns with the planned editor SpritePanel backend, stays
 additive (never resizes the species tables, so it does NOT block new-species
 addition), and never touches breeding ($69) / custom-room ($6A-$6E) / text banks.
@@ -33,8 +33,10 @@ PTBL_BASE = 0x4001
 BANK_TOP = 0x8000
 
 # EDITOR_DESIGN §8 reserved map, in fill priority order:
-#   $7E-$7F = monster-sprite overflow ; $7C,$7A,$79 = expansion reserve.
-DEFAULT_OVERFLOW_BANKS = [0x7E, 0x7F, 0x7C, 0x7A, 0x79]
+#   $7E-$7F = monster-sprite overflow ; $7C,$7A = expansion reserve.
+# S121: $79 left this list — it is the compiler's story-hook bank (the Milly
+# hook, editor2/core/milly.py; PROJECT_STATE bank allocation).
+DEFAULT_OVERFLOW_BANKS = [0x7E, 0x7F, 0x7C, 0x7A]
 
 
 class SpriteOverflowAllocator:

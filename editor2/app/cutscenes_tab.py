@@ -862,6 +862,11 @@ class CutscenesTab(QWidget):
                      'that appear) walk, turn, jump, talk — all in tiles, on the room itself')
         b.clicked.connect(self.new_cutscene)
         lv.addWidget(b)
+        b = QPushButton('Milly hook…')
+        b.setToolTip('S121: Milayou goes into the dresser and the game goes on as MILLY — the '
+                     'tick, where she arrives, the Roots room (Milly) and its scene')
+        b.clicked.connect(self.milly_hook)
+        lv.addWidget(b)
         self.tree = QTreeWidget()
         self.tree.setHeaderHidden(True)
         self.tree.currentItemChanged.connect(self._picked)
@@ -1195,6 +1200,22 @@ class CutscenesTab(QWidget):
     def _page_changed(self, idx):
         if idx == 0 and getattr(self, '_pcat_stale', False):
             self._structure()
+
+    def milly_hook(self):
+        """S121: the Milly hook dialog (editor2/app/milly_dialog.py); "Edit the
+        scene…" there opens the roots room's scene here."""
+        from editor2.app.milly_dialog import MillyHookDialog
+        dlg = MillyHookDialog(self.s, self)
+        if dlg.exec() and dlg.edit_scene:
+            self.open_cutscene(*dlg.edit_scene)
+
+    def open_cutscene(self, room_id, scene_id):
+        """Open one of the project's cutscenes in the cutscene editor."""
+        if not self._loaded:
+            self._loaded = True
+            self.load()
+        self.pages.setCurrentIndex(1)
+        self.editor.open(room_id, scene_id)
 
     def new_cutscene(self):
         from editor2.core import cutscene_build as CB

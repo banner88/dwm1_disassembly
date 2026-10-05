@@ -10,6 +10,11 @@ SECTION "ROM Bank $005", ROMX[$4000], BANK[$5]
     dw label5_4005
     dw label5_400f
 
+; Bank $05 = the NPC sprites (S121 trace): entries 0 / 1 build sprite type $FFC7
+; with the level-1 table $407F[id] (6 frames: down A/B, side A/B, up A/B; side
+; frames face right) and OR the palette $4152[id] into $FFCA (HramAudE_406e);
+; the sheet is ROM0 $2ADF[id] (gfx-ID, 16 tiles). E.g. Milayou $14 (palette 3,
+; gfx $3114), grey Warubou $39, Watabou $21, the old man $08, Terry as an NPC $5E.
 label5_4005:
     call HramAudE_406e
     ld de, $407f

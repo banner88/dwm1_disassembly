@@ -39,6 +39,7 @@ screen, 0-9 x 0-7, a little outside allowed for walking off):
     give_item {item, got: TEXT, full: TEXT}    give_monster {enemy, got, full}
     tiles {x, y, rows: [[metatile, ...], ...]} (S119 part d — the room's metatiles)
     battle {enemies: [1-3]}    move {dest, screen, x, y}    end true
+    name_hero true            (S121: the game's naming screen for the hero's name)
 
 TEXT = a dialogue id (str) or {"boxes": [[line, line], ...]} (inline; the
 compiler adds the dialogue entry).
@@ -101,7 +102,8 @@ SHADE_REGS = (0xC89B, 0xC89C, 0xC89D)
 
 STEP_KINDS = ('say', 'ask', 'if', 'set', 'clear', 'walk', 'face', 'show', 'hide', 'anim',
               'fly', 'wait', 'wait_walks', 'music', 'sound', 'shake', 'fade', 'flash',
-              'followers', 'give_item', 'give_monster', 'tiles', 'battle', 'move', 'end')
+              'followers', 'give_item', 'give_monster', 'tiles', 'battle', 'move', 'end',
+              'name_hero')
 STEP_NAMES = {
     'say': 'Say', 'ask': 'Ask YES / NO', 'if': 'If flags…', 'set': 'Turn flags ON',
     'clear': 'Turn flags OFF', 'walk': 'Walk to a tile', 'face': 'Turn to face',
@@ -111,7 +113,7 @@ STEP_NAMES = {
     'fade': 'Fade to black / back', 'flash': 'Flash', 'followers': 'Hide / show the monsters',
     'give_item': 'Give an item', 'give_monster': 'Give a monster',
     'tiles': 'Change tiles of the room', 'battle': 'Battle', 'move': 'Warp the player',
-    'end': 'Stop here'}
+    'end': 'Stop here', 'name_hero': 'Name the hero'}
 TRIGGERS = ('entry', 'talk', 'examine', 'stepon')
 
 
@@ -596,6 +598,21 @@ class Lowerer:
 
     def s_clear(self, st, ctx, rec, pth):
         self.s_set(st, ctx, rec, pth, 'clear_flag')
+
+    NAMING_FRAMES = 600                 # the preview's time for the naming screen
+
+    def s_name_hero(self, st, ctx, rec, pth):
+        """S121: the naming screen for the hero (the Castle's own ops, $00 script 0
+        pos 107-113: $C8F4 := 0, $C8F2 := $CA42, op $04 15). It offers the name
+        the hero has — the default tiles $D3-$D6 (MILLY with the Milly hook)."""
+        self.close()
+        if self.busy:
+            self.wait_all()
+        self.op('write_ram', '0xC8F4', 0)
+        self.op('write_ram2', '0xC8F2', '0xCA42')
+        self.op('0x04', 15, 0)
+        self.T += self.NAMING_FRAMES
+        rec['note'].append('the naming screen (the player types the hero\'s name)')
 
     def s_end(self, st, ctx, rec, pth):
         self.close()
@@ -1239,7 +1256,11 @@ def lower_project(prj):
                 ops += body
                 # the end of a scene: an entry scene goes on into the room's own
                 # arrival script; a talk / spot scene ends there
-                ops.append(['op', 'goto', '@cut_orig'] if key[0] == 'entry' else ['end'])
+                if sc.get('_then_next') and key[0] == 'entry':
+                    pass        # S121: the Milly hook's arrival scene goes on into
+                                # the room's own entry scenes (milly.lower)
+                else:
+                    ops.append(['op', 'goto', '@cut_orig'] if key[0] == 'entry' else ['end'])
                 ops.append(f'label:{lw.p}_skip')
             orig = _original_ops(prj, r, key, by_id)
             ops.append('label:cut_orig')
@@ -1480,4 +1501,6 @@ def describe(st, names=None):
         return f'Warp the player to {v.get("dest")} screen {v.get("screen", 0)} ({v.get("x")}, {v.get("y")})'
     if k == 'end':
         return 'Stop here'
+    if k == 'name_hero':
+        return 'Name the hero (the naming screen)'
     return k

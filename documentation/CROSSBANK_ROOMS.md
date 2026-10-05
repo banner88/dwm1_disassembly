@@ -379,6 +379,12 @@ NEEDS_REVIEW are adjudicated (`SaveAllowCheck` both trees, `CustomRoomBGMResolve
 IDX8_SUB6B; `CustomTileAnimate#0`, `CustomRoomFlags`, bank $76 `EncResolve` = BOUNDED);
 selftest PASS (clean 58, patched 75); `extracted/mapid_range_audit.json` regenerated.
 
+**S121 site.** Bank $71 entry 8 `TextSpriteMode` (the text-box sprite rule for copies of
+$08 / $5D, ROOM_DATA_FORMAT "Text boxes and sprites (S121)"): `ld a,[wMapID]` → `cp $08` /
+`cp $5d` (equality, full byte), `sub CUSTOM_ROOM_START / ret c`, `cp ROOMFLAGS_TABLE_LEN /
+ret nc`, then a 16-bit add into `CustomRoomFlagsTable` — **BOUNDED** (as `CustomRoomFlags`).
+Bank $79 reads no mapID (the hook's room is a `$3B` word written by the compiler).
+
 **S120 burn-down (ROADMAP "audit_mapid_range re-adjudication").** The selftest had been
 failing since S116 with twelve NEEDS_REVIEW sites — not the "eleven S117 shop sites" the
 S118 ROADMAP note named. Read site by site:

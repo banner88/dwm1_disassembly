@@ -43,6 +43,11 @@ def well_known(doc=None):
         if not info or info['flag'] is None:
             continue
         out.append((f"gate:{g['id']}", f"gate {g['id']} cleared — {g['name']}"))
+    # S121: the Milly hook's own flags (while the hook is on)
+    try:
+        out += list((doc.milly_flag_names() if doc is not None else {}).items())
+    except Exception:
+        pass
     return out
 
 

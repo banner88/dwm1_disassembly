@@ -334,7 +334,13 @@ wShopID:: db ;d240 — the next shop's list (index + 1), 0 = by room (bank $77 S
 ; attributes in free-colour custom rooms). Transient by design.
 wPushAttrOn:: db ;d241 — $80 = this push also writes attributes
 wPushAttrRow:: db ;d242 — the row being written (0-17)
-wCustomPool:: ds $5A4 - 132 - 5 - 2 * TILEANIM_MAX_GROUPS - 2 - 18 - 26 - 8 - 256 - 1 - 2 ;d243-d5e4 — transient reserve (was $664; FX1 carved 64+128; S97 132; S102 69; S105 2; S111 18; S114 26; S115 8; S117 256 wExtFlags + 1 wShopID; S117b 2 push scratch)
+; S121 (the Milly hook): the player shape's frame tables while the player is Milly
+; (bank $79 entry 1 MillyPlayerSheet copies them here at every field tile load once
+; flag $179F is set; bank $79 entry 0 hands their address to bank $04's metasprite
+; builders, which read them with bank $04 mapped). Transient by design: rebuilt per
+; load; entry 0 falls back to Terry's tables while the high byte at +1 is zero.
+wMillyLayout:: ds 160 ;d243-d2e2 — Milly's level-1/2 frame tables
+wCustomPool:: ds $5A4 - 132 - 5 - 2 * TILEANIM_MAX_GROUPS - 2 - 18 - 26 - 8 - 256 - 1 - 2 - 160 ;d2e3-d5e4 — transient reserve (was $664; FX1 carved 64+128; S97 132; S102 69; S105 2; S111 18; S114 26; S115 8; S117 256 wExtFlags + 1 wShopID; S117b 2 push scratch; S121 160 wMillyLayout)
 ; FX1 (S71): wPoolBounce — 128-byte staging for sleep-pool bank-2 record
 ; swaps (per-byte scratch in CF3PoolSwapRecord). Transient. (The v1 drain's
 ; halved-pending scratch use was removed with the S71v2 exp-scale veto.)

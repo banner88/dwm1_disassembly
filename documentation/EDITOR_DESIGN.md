@@ -1073,6 +1073,19 @@ S118b: 519 scenes, 516 reached, 0 hung, 1 step on an empty NPC slot, 3,989 / 3,9
 model checks exact); test_app drives
 the tab, plays the intro in the Playback window and kills a hung game.
 
+**S121 — the Milly hook (ROADMAP P3.16 + E7; built, NOT yet user-tested).** Cutscenes tab
+→ **Milly hook…** (`editor2/app/milly_dialog.py`): the tick "Apply the Milly patch",
+where she arrives (one of the project's rooms, screen, tile on the screen's picture,
+facing, "arrive spinning"); "Roots room (Milly)": **Create the roots room** (one undo
+step; becomes the arrival when none is set), *Warubou leads her to* (the scene's last
+`move` step: Castle, the project's rooms, every game room), **Edit the scene…** (opens it
+in the cutscene editor — Warubou's four boxes, the walks). OK = one undo step; a problem
+the build would stop on is said at once. The cutscene editor: **Name the hero** under
+"Text and choices"; `move` offers every game room; `hook:milly` / `hook:milly_arrived` in
+the flag lists. Text previews draw the default name as the build does (MILLY only with the
+hook on — `textenc.use_hero_glyphs`, re-applied on every structural edit / undo). Help
+`64_milly_hook.md`.
+
 ### 5.2 Monsters tab
 
 Species list: 221 vanilla + custom (ids 221-239, S105 G3; Gorbunok proven end-to-end).

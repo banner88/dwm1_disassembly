@@ -820,6 +820,21 @@ with no BG cell using attribute bit 3 — checked in GreatTree, Castle, the
 Zoma room, Room of Beginning, a Farm room, a custom room and the menu. A
 room could draw up to 128 more tiles from there (ROADMAP P3.3g).
 
+## Text boxes and sprites (S121 — PyBoy-measured)
+
+While a text box is open (`$FFD3` = 1 top / 2 bottom, set by the bank $06 opener), ROM0
+`SaveHLBC` (the metasprite builder `$0D91` / `SpriteGBCMode`) SKIPS every sprite piece
+whose BG tile underneath is ≥ `$FFD4` (`$80` = the font tiles, i.e. the box). Rooms that
+draw their own art with tile ids ≥ `$80` would lose every sprite while a text shows —
+vanilla turns the rule off (`$FFD3 := 0`, bank $06 `jr_006_6893`) in maps **`$08`** (the
+tree roots) and **`$5D`**, outside the gate world. A custom COPY of those rooms has another
+mapID, so in S121's roots room Milly and Warubou vanished during his lines → the room
+field **`text_keeps_sprites: true`** (`CustomRoomFlags` bit 1; `clone_vanilla` sets it for
+copies of `$08` / `$5D`) and the bank $06 region `text_sprite_mode` → bank $71 entry 8
+`TextSpriteMode` (the vanilla two + these rooms). PyBoy: both stay drawn through the four
+boxes. A room painted with tile ids ≥ `$80` needs the field set (not offered in the
+Rooms tab yet — set by the copy).
+
 ## Gate Room Differences
 
 Gate rooms (wInGateworld ≠ 0) differ from normal rooms:

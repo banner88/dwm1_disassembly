@@ -181,6 +181,9 @@ V = {
     ("bank_076.asm", "GateBossWin", 0): "CP_UNSIGNED",           # S117: == wBossMapType (full byte)
     ("bank_077.asm", "ShopFill", 0): "CP_UNSIGNED",              # S117: cp $50
     ("bank_077.asm", "PushAttrActive", 0): "CP_UNSIGNED",        # S117b: cp CUSTOM_ROOM_START
+    # S121: reasoning in CROSSBANK_ROOMS "S121 site".
+    ("bank_071.asm", "TextSpriteMode", 0): "BOUNDED",            # S121: cp $08 / $5d, sub CUSTOM_ROOM_START
+                                                                 # + ret c, cp ROOMFLAGS_TABLE_LEN + ret nc, 16-bit add
 }
 
 # Site-count pins (S66). A mismatch = the tree changed; re-adjudicate.
