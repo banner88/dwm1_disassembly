@@ -1,0 +1,1616 @@
+{
+ "_generator": "tools/extract_service_lines.py (ROM md5 1ca6579359f21d8e27b446f865bf6b83)",
+ "_doc": "PROJECT_COMPILER §2.39; per service the lines its menu speaks (text id = base + offset), split into frame (voice, speaker, tail) and words (text); engine_offsets = the static census of the handler's say-helper calls (lines spoken only through computed offsets are missing from it).",
+ "kinds": {
+  "shop": {
+   "screen": 0,
+   "bank": "$09",
+   "base": "$0680",
+   "count": 16,
+   "handler": [
+    "$45F3",
+    "$4EF9"
+   ],
+   "vanilla_npc": "Bazaar shopkeepers (map $02)",
+   "engine_offsets": [
+    1,
+    3,
+    4,
+    5,
+    6,
+    9,
+    10,
+    11,
+    12,
+    13,
+    15
+   ],
+   "lines": [
+    {
+     "off": 0,
+     "id": "$0680",
+     "raw": "ea9fa32c51424a6250454c4d5fefee303e56622c624542494d62564c5264f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "f0",
+     "text": "Item shop.\nMay I help you?"
+    },
+    {
+     "off": 1,
+     "id": "$0681",
+     "raw": "ea9fa3244b565145464b44624249504264efeef0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "efeef0",
+     "text": "Anything else?"
+    },
+    {
+     "off": 2,
+     "id": "$0682",
+     "raw": "ea9fa337453e4b4862564c525fefee264c4a42623e443e464b63f7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "f7f0",
+     "text": "Thank you.\nCome again!"
+    },
+    {
+     "off": 3,
+     "id": "$0683",
+     "raw": "ea9fa33a453e5162544c52494162564c52efee4946484264f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "f0",
+     "text": "What would you\nlike?"
+    },
+    {
+     "off": 4,
+     "id": "$0684",
+     "raw": "ea9fa33a453e5162544c52494162564c52efee4946484264f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "f0",
+     "text": "What would you\nlike?"
+    },
+    {
+     "off": 5,
+     "id": "$0685",
+     "raw": "ea9fa32b4c54624a3e4b5664efeef0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "efeef0",
+     "text": "How many?"
+    },
+    {
+     "off": 6,
+     "id": "$0686",
+     "raw": "eaf910623b62f900efee465062f9202a5ff0",
+     "voice": "low",
+     "speaker": null,
+     "speaker_raw": "",
+     "tail": "f0",
+     "text": "{ins1} X {ins0}\nis {ins2}G."
+    },
+    {
+     "off": 7,
+     "id": "$0687",
+     "raw": "ea9fa33c4c5262414c4b6762453e5342efee424b4c524445624a4c4b42565ffaf7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "faf7f0",
+     "text": "You don't have\nenough money."
+    },
+    {
+     "off": 8,
+     "id": "$0688",
+     "raw": "ea9fa33c4c5262403e4b624c4b4956efee403e4f4f56620200624651424a5063faf7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "faf7f0",
+     "text": "You can only\ncarry 20 items!"
+    },
+    {
+     "off": 9,
+     "id": "$0689",
+     "raw": "ea9fa337453e4b4862564c5263efeef7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "efeef7f0",
+     "text": "Thank you!"
+    },
+    {
+     "off": 10,
+     "id": "$068A",
+     "raw": "ea9fa33a45464045624651424a506254464949efee564c52625042494962514c624a4264f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "f0",
+     "text": "Which items will\nyou sell to me?"
+    },
+    {
+     "off": 11,
+     "id": "$068B",
+     "raw": "ea9fa33c4c5262414c4b6762453e5342efee4651424a50622c62403e4b623f52565ffaf7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "faf7f0",
+     "text": "You don't have\nitems I can buy."
+    },
+    {
+     "off": 12,
+     "id": "$068C",
+     "raw": "ea9fa32b4c54624a3e4b5662544c524941efee564c52624946484262514c625042494964f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "f0",
+     "text": "How many would\nyou like to sell?"
+    },
+    {
+     "off": 13,
+     "id": "$068D",
+     "raw": "eaf910623b62f900efee465062f9202a5ff0",
+     "voice": "low",
+     "speaker": null,
+     "speaker_raw": "",
+     "tail": "f0",
+     "text": "{ins1} X {ins0}\nis {ins2}G."
+    },
+    {
+     "off": 14,
+     "id": "$068E",
+     "raw": "ea9fa33c4c5262403e4b624c4b4956efee453e534262524d62514cfaf7efee09090909092a63efeefaf7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "efeefaf7f0",
+     "text": "You can only\nhave up to\n\n99999G!"
+    },
+    {
+     "off": 15,
+     "id": "$068F",
+     "raw": "ea9fa337453e4b4850623e443e464b63efeef7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "efeef7f0",
+     "text": "Thanks again!"
+    }
+   ]
+  },
+  "vault": {
+   "screen": 2,
+   "bank": "$09",
+   "base": "$06A0",
+   "count": 26,
+   "handler": [
+    "$4EF9",
+    "$5B64"
+   ],
+   "vanilla_npc": "Vault keeper (map $0F script 1)",
+   "engine_offsets": [
+    1,
+    3,
+    4,
+    7,
+    9,
+    10,
+    13,
+    14,
+    15,
+    16,
+    19,
+    21,
+    22,
+    25
+   ],
+   "lines": [
+    {
+     "off": 0,
+     "id": "$06A0",
+     "raw": "ea9fa3393e5249515fefee303e56622c624542494d62564c5264f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "f0",
+     "text": "Vault.\nMay I help you?"
+    },
+    {
+     "off": 1,
+     "id": "$06A1",
+     "raw": "ea9fa3364c4a425145464b44624249504264efeef0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "efeef0",
+     "text": "Something else?"
+    },
+    {
+     "off": 2,
+     "id": "$06A2",
+     "raw": "ea9fa3264c4a42623e443e464befee3e4b5651464a425ff7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "f7f0",
+     "text": "Come again\nanytime."
+    },
+    {
+     "off": 3,
+     "id": "$06A3",
+     "raw": "ea9fa33a453e5162544c52494162564c52efee4946484262525062514c6250514c4f4264f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "f0",
+     "text": "What would you\nlike us to store?"
+    },
+    {
+     "off": 4,
+     "id": "$06A4",
+     "raw": "ea9fa33a45464045624c4b4264efeef0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "efeef0",
+     "text": "Which one?"
+    },
+    {
+     "off": 5,
+     "id": "$06A5",
+     "raw": "ea9fa33c4c5262414c4b6762453e5342efee3e4b565145464b445ffaf7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "faf7f0",
+     "text": "You don't have\nanything."
+    },
+    {
+     "off": 6,
+     "id": "$06A6",
+     "raw": "ea9fa3364c4f4f565f623a4262403e4b67efee50514c4f42623e4b564a4c4f425ffaf7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "faf7f0",
+     "text": "Sorry. We can't\nstore anymore."
+    },
+    {
+     "off": 7,
+     "id": "$06A7",
+     "raw": "ea9fa32b4c54624a3e4b5664f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "f0",
+     "text": "How many?"
+    },
+    {
+     "off": 8,
+     "id": "$06A8",
+     "raw": "ea9fa3374c4c624a52404563faf7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "faf7f0",
+     "text": "Too much!"
+    },
+    {
+     "off": 9,
+     "id": "$06A9",
+     "raw": "ea9fa33c4c52694262464b62503e4342efee453e4b415062544651456252505ffaf7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "faf7f0",
+     "text": "You're in safe\nhands with us."
+    },
+    {
+     "off": 10,
+     "id": "$06AA",
+     "raw": "ea9fa32b4c54624a52404562414c62564c52efee543e4b5162514c6241424d4c50465164f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "f0",
+     "text": "How much do you\nwant to deposit?"
+    },
+    {
+     "off": 11,
+     "id": "$06AB",
+     "raw": "ea9fa3314c5162424b4c524445efee4a4c4b42565ffaf7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "faf7f0",
+     "text": "Not enough\nmoney."
+    },
+    {
+     "off": 12,
+     "id": "$06AC",
+     "raw": "ea9fa3285540525042624a42623f5251efee564c5262403e4b624c4b4956faf7efee41424d4c50465162524d62514cefee0909090909092a5ffaf7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "faf7f0",
+     "text": "Excuse me but\nyou can only\n\ndeposit up to\n999999G."
+    },
+    {
+     "off": 13,
+     "id": "$06AD",
+     "raw": "ea9fa33c4c52694262464b62503e4342efee453e4b415062544651456252505ffaf7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "faf7f0",
+     "text": "You're in safe\nhands with us."
+    },
+    {
+     "off": 14,
+     "id": "$06AE",
+     "raw": "ea9fa33a453e5162544c52494162564c52efee4946484262514c62513e4842624c525164f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "f0",
+     "text": "What would you\nlike to take out?"
+    },
+    {
+     "off": 15,
+     "id": "$06AF",
+     "raw": "ea9fa33a4262414c4b6762453e5342efee3e4b56624c4362564c524f62444c49415ffaf7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "faf7f0",
+     "text": "We don't have\nany of your gold."
+    },
+    {
+     "off": 16,
+     "id": "$06B0",
+     "raw": "ea9fa3373e4842624c5251624651424a50efee4c4f6254465145414f3e5462444c494164f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "f0",
+     "text": "Take out items\nor withdraw gold?"
+    },
+    {
+     "off": 17,
+     "id": "$06B1",
+     "raw": "ea9fa33a4262414c4b6762453e5342efee3e4b56624c4362564c524f624651424a505ffaf7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "faf7f0",
+     "text": "We don't have\nany of your items."
+    },
+    {
+     "off": 18,
+     "id": "$06B2",
+     "raw": "ea9fa3374c4c624a524045625051524343efee514c6250514c4f425ffaf7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "faf7f0",
+     "text": "Too much stuff\nto store."
+    },
+    {
+     "off": 19,
+     "id": "$06B3",
+     "raw": "ea9fa3373e4842624c525162454c54efee4a3e4b5664f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "f0",
+     "text": "Take out how\nmany?"
+    },
+    {
+     "off": 20,
+     "id": "$06B4",
+     "raw": "ea9fa33c4c5262453e534262514c4cefee4a52404562514c62403e4f4f5663faf7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "faf7f0",
+     "text": "You have too\nmuch to carry!"
+    },
+    {
+     "off": 21,
+     "id": "$06B5",
+     "raw": "ea9fa32b424f426246516246505fefeefaf7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "efeefaf7f0",
+     "text": "Here it is."
+    },
+    {
+     "off": 22,
+     "id": "$06B6",
+     "raw": "ea9fa33a465145414f3e54efee454c54624a52404564f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "f0",
+     "text": "Withdraw\nhow much?"
+    },
+    {
+     "off": 23,
+     "id": "$06B7",
+     "raw": "ea9fa33c4c5262414c4b6762453e5342efee51453e51624a524045624a4c4b42565ffaf7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "faf7f0",
+     "text": "You don't have\nthat much money."
+    },
+    {
+     "off": 24,
+     "id": "$06B8",
+     "raw": "ea9fa33c4c5262403e4b6762403e4f4f56efee51453e51624a524045624a4c4b42565ffaf7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "faf7f0",
+     "text": "You can't carry\nthat much money."
+    },
+    {
+     "off": 25,
+     "id": "$06B9",
+     "raw": "ea9fa32b424f426246516246505fefeefaf7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "efeefaf7f0",
+     "text": "Here it is."
+    }
+   ]
+  },
+  "farm": {
+   "screen": 3,
+   "bank": "$12",
+   "base": "$06C0",
+   "count": 39,
+   "handler": [
+    "$442D",
+    "$6061"
+   ],
+   "vanilla_npc": "Pulio (map $04 script 26)",
+   "engine_offsets": [
+    1,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    26,
+    27,
+    28,
+    29,
+    30,
+    34,
+    35,
+    36,
+    37,
+    38
+   ],
+   "lines": [
+    {
+     "off": 0,
+     "id": "$06C0",
+     "raw": "eb335249464ca32b4256625145424f4263efee3a453e413e563e444c4b4b3e414c64f0",
+     "voice": "high",
+     "speaker": "Pulio",
+     "speaker_raw": "335249464ca3",
+     "tail": "f0",
+     "text": "Hey there!\nWhadayagonnado?"
+    },
+    {
+     "off": 1,
+     "id": "$06C1",
+     "raw": "eb335249464ca3244b565145464b44efee4249504264f0",
+     "voice": "high",
+     "speaker": "Pulio",
+     "speaker_raw": "335249464ca3",
+     "tail": "f0",
+     "text": "Anything\nelse?"
+    },
+    {
+     "off": 2,
+     "id": "$06C2",
+     "raw": "eb335249464ca32f3e51424f63623a426649efee3f426245424f4262434c4f62563e63f7f0",
+     "voice": "high",
+     "speaker": "Pulio",
+     "speaker_raw": "335249464ca3",
+     "tail": "f7f0",
+     "text": "Later! We'll\nbe here for ya!"
+    },
+    {
+     "off": 3,
+     "id": "$06C3",
+     "raw": "eb335249464ca3274f4c4d624c4343efee5445464045624c4b4264f0",
+     "voice": "high",
+     "speaker": "Pulio",
+     "speaker_raw": "335249464ca3",
+     "tail": "f0",
+     "text": "Drop off\nwhich one?"
+    },
+    {
+     "off": 4,
+     "id": "$06C4",
+     "raw": "eb335249464ca32b42565e62564c526942efee4b4c5162444c4b4b3e62453e5342faf7efee3e4b56624a4c4b5051424f50efee5446514562564c525ffaf7f0",
+     "voice": "high",
+     "speaker": "Pulio",
+     "speaker_raw": "335249464ca3",
+     "tail": "faf7f0",
+     "text": "Hey, you're\nnot gonna have\n\nany monsters\nwith you."
+    },
+    {
+     "off": 5,
+     "id": "$06C5",
+     "raw": "eb335249464ca3274f4c4d624c4343efee51454650624c4b4264f0",
+     "voice": "high",
+     "speaker": "Pulio",
+     "speaker_raw": "335249464ca3",
+     "tail": "f0",
+     "text": "Drop off\nthis one?"
+    },
+    {
+     "off": 6,
+     "id": "$06C6",
+     "raw": "eb335249464ca336514c4d623f56efee4c4b404262464b623e625445464942faf7efee514c6250424262454c54625442efee3e4f4262414c464b4463faf7f0",
+     "voice": "high",
+     "speaker": "Pulio",
+     "speaker_raw": "335249464ca3",
+     "tail": "faf7f0",
+     "text": "Stop by\nonce in a while\n\nto see how we\nare doing!"
+    },
+    {
+     "off": 7,
+     "id": "$06C7",
+     "raw": "eb335249464ca335424d493e4042efee465164f0",
+     "voice": "high",
+     "speaker": "Pulio",
+     "speaker_raw": "335249464ca3",
+     "tail": "f0",
+     "text": "Replace\nit?"
+    },
+    {
+     "off": 8,
+     "id": "$06C8",
+     "raw": "eb335249464ca335424d493e4042624651efee54465145625445464045624c4b4264f0",
+     "voice": "high",
+     "speaker": "Pulio",
+     "speaker_raw": "335249464ca3",
+     "tail": "f0",
+     "text": "Replace it\nwith which one?"
+    },
+    {
+     "off": 9,
+     "id": "$06C9",
+     "raw": "eb335249464ca335424d493e4042624651efee544651456251454650624c4b4264f0",
+     "voice": "high",
+     "speaker": "Pulio",
+     "speaker_raw": "335249464ca3",
+     "tail": "f0",
+     "text": "Replace it\nwith this one?"
+    },
+    {
+     "off": 10,
+     "id": "$06CA",
+     "raw": "eb335249464ca32c624f424d493e404241efeef900625446514562f91063faf7f0",
+     "voice": "high",
+     "speaker": "Pulio",
+     "speaker_raw": "335249464ca3",
+     "tail": "faf7f0",
+     "text": "I replaced\n{ins0} with {ins1}!"
+    },
+    {
+     "off": 11,
+     "id": "$06CB",
+     "raw": "eb335249464ca333464048464b4462524defee5445464045624c4b425e62f664f0",
+     "voice": "high",
+     "speaker": "Pulio",
+     "speaker_raw": "335249464ca3",
+     "tail": "f0",
+     "text": "Picking up\nwhich one, {hero}?"
+    },
+    {
+     "off": 12,
+     "id": "$06CC",
+     "raw": "eb335249464ca3314c624a4c4b5051424f50efee45424f4262514c62513e48425ffaf7f0",
+     "voice": "high",
+     "speaker": "Pulio",
+     "speaker_raw": "335249464ca3",
+     "tail": "faf7f0",
+     "text": "No monsters\nhere to take."
+    },
+    {
+     "off": 13,
+     "id": "$06CD",
+     "raw": "eb335249464ca33c4c5262403e4b67efee513e4842623e4b56624a4c4f4263faf7f0",
+     "voice": "high",
+     "speaker": "Pulio",
+     "speaker_raw": "335249464ca3",
+     "tail": "faf7f0",
+     "text": "You can't\ntake any more!"
+    },
+    {
+     "off": 14,
+     "id": "$06CE",
+     "raw": "eb335249464ca33c4c52694262444c4b4b3eefee4d4640486251454650624c4b4262524d64f0",
+     "voice": "high",
+     "speaker": "Pulio",
+     "speaker_raw": "335249464ca3",
+     "tail": "f0",
+     "text": "You're gonna\npick this one up?"
+    },
+    {
+     "off": 15,
+     "id": "$06CF",
+     "raw": "eb335249464ca3374f3e464b624651efee544249495e62f663faf7f0",
+     "voice": "high",
+     "speaker": "Pulio",
+     "speaker_raw": "335249464ca3",
+     "tail": "faf7f0",
+     "text": "Train it\nwell, {hero}!"
+    },
+    {
+     "off": 16,
+     "id": "$06D0",
+     "raw": "eb335249464ca335424d493e40464b44efee3e624a4c4b5051424f5e62f664f0",
+     "voice": "high",
+     "speaker": "Pulio",
+     "speaker_raw": "335249464ca3",
+     "tail": "f0",
+     "text": "Replacing\na monster, {hero}?"
+    },
+    {
+     "off": 17,
+     "id": "$06D1",
+     "raw": "eb335249464ca33a45464045624c4b42efee3e4f4262564c52624f424d493e40464b4464f0",
+     "voice": "high",
+     "speaker": "Pulio",
+     "speaker_raw": "335249464ca3",
+     "tail": "f0",
+     "text": "Which one\nare you replacing?"
+    },
+    {
+     "off": 18,
+     "id": "$06D2",
+     "raw": "eb335249464ca335424d493e4042efee51454650624c4b4264f0",
+     "voice": "high",
+     "speaker": "Pulio",
+     "speaker_raw": "335249464ca3",
+     "tail": "f0",
+     "text": "Replace\nthis one?"
+    },
+    {
+     "off": 19,
+     "id": "$06D3",
+     "raw": "eb335249464ca335424d493e4042efee54465145625445464045624c4b4264f0",
+     "voice": "high",
+     "speaker": "Pulio",
+     "speaker_raw": "335249464ca3",
+     "tail": "f0",
+     "text": "Replace\nwith which one?"
+    },
+    {
+     "off": 20,
+     "id": "$06D4",
+     "raw": "eb335249464ca335424d493e4042efee51454650624c4b4264f0",
+     "voice": "high",
+     "speaker": "Pulio",
+     "speaker_raw": "335249464ca3",
+     "tail": "f0",
+     "text": "Replace\nthis one?"
+    },
+    {
+     "off": 21,
+     "id": "$06D5",
+     "raw": "eb335249464ca32c624f424d493e404241efeef900625446514562f91063faf7f0",
+     "voice": "high",
+     "speaker": "Pulio",
+     "speaker_raw": "335249464ca3",
+     "tail": "faf7f0",
+     "text": "I replaced\n{ins0} with {ins1}!"
+    },
+    {
+     "off": 22,
+     "id": "$06D6",
+     "raw": "eb335249464ca32645424048624c4befee5445464045624c4b4264f0",
+     "voice": "high",
+     "speaker": "Pulio",
+     "speaker_raw": "335249464ca3",
+     "tail": "f0",
+     "text": "Check on\nwhich one?"
+    },
+    {
+     "off": 23,
+     "id": "$06D7",
+     "raw": "eb335249464ca32b42565e624b4c4b42efee514c624045424048624c4b63faf7f0",
+     "voice": "high",
+     "speaker": "Pulio",
+     "speaker_raw": "335249464ca3",
+     "tail": "faf7f0",
+     "text": "Hey, none\nto check on!"
+    },
+    {
+     "off": 24,
+     "id": "$06D8",
+     "raw": "eb335249464ca32645424048624c4befee5445464045624c4b425e62f664f0",
+     "voice": "high",
+     "speaker": "Pulio",
+     "speaker_raw": "335249464ca3",
+     "tail": "f0",
+     "text": "Check on\nwhich one, {hero}?"
+    },
+    {
+     "off": 25,
+     "id": "$06D9",
+     "raw": "eb335249464ca32645424048624c4befee5445464045624c4b425e62f664f0",
+     "voice": "high",
+     "speaker": "Pulio",
+     "speaker_raw": "335249464ca3",
+     "tail": "f0",
+     "text": "Check on\nwhich one, {hero}?"
+    },
+    {
+     "off": 26,
+     "id": "$06DA",
+     "raw": "eb335249464ca336424d3e4f3e5142efee54465145625445464045624c4b4264f0",
+     "voice": "high",
+     "speaker": "Pulio",
+     "speaker_raw": "335249464ca3",
+     "tail": "f0",
+     "text": "Separate\nwith which one?"
+    },
+    {
+     "off": 27,
+     "id": "$06DB",
+     "raw": "eb335249464ca32b42565e624b4c5145464b44efee45424f4263faf7f0",
+     "voice": "high",
+     "speaker": "Pulio",
+     "speaker_raw": "335249464ca3",
+     "tail": "faf7f0",
+     "text": "Hey, nothing\nhere!"
+    },
+    {
+     "off": 28,
+     "id": "$06DC",
+     "raw": "eb335249464ca336424d3e4f3e5142efee54465145625445464045624c4b4264f0",
+     "voice": "high",
+     "speaker": "Pulio",
+     "speaker_raw": "335249464ca3",
+     "tail": "f0",
+     "text": "Separate\nwith which one?"
+    },
+    {
+     "off": 29,
+     "id": "$06DD",
+     "raw": "eb335249464ca3244f4262564c52efee50524f4264623c4c526649faf7efee494c504262465162434c4f4253424f5fefeef0",
+     "voice": "high",
+     "speaker": "Pulio",
+     "speaker_raw": "335249464ca3",
+     "tail": "efeef0",
+     "text": "Are you\nsure? You'll\n\nlose it forever."
+    },
+    {
+     "off": 30,
+     "id": "$06DE",
+     "raw": "f90062543e50efee4f4251524f4b424162514c62514542faf7efee544649415fefeefaf7f0",
+     "voice": null,
+     "speaker": null,
+     "speaker_raw": "",
+     "tail": "efeefaf7f0",
+     "text": "{ins0} was\nreturned to the\n\nwild."
+    },
+    {
+     "off": 31,
+     "id": "$06DF",
+     "raw": "eb335249464ca3244f4262564c52efee50524f4264623c4c526649faf7efee494c504262465162434c4f4253424f5fefeef0",
+     "voice": "high",
+     "speaker": "Pulio",
+     "speaker_raw": "335249464ca3",
+     "tail": "efeef0",
+     "text": "Are you\nsure? You'll\n\nlose it forever."
+    },
+    {
+     "off": 32,
+     "id": "$06E0",
+     "raw": "f90062543e50efee4f4251524f4b424162514c62514542faf7efee544649415fefeefaf7f0",
+     "voice": null,
+     "speaker": null,
+     "speaker_raw": "",
+     "tail": "efeefaf7f0",
+     "text": "{ins0} was\nreturned to the\n\nwild."
+    },
+    {
+     "off": 33,
+     "id": "$06E1",
+     "raw": "eb335249464ca3364249424051efee96332c262e6238339762514c62513e4842faf7efee514542624a4c4b5051424f6254465145efee564c525ff0",
+     "voice": "high",
+     "speaker": "Pulio",
+     "speaker_raw": "335249464ca3",
+     "tail": "f0",
+     "text": "Select\n[PICK UP] to take\n\nthe monster with\nyou."
+    },
+    {
+     "off": 34,
+     "id": "$06E2",
+     "raw": "eb335249464ca33c4c5262543e4b4b3eefee4a3e484262514542624a4c4b5051424f50faf7efee564c5262453e534262464b62514542efee433e4f4a62444c62514c62504942424d64f0",
+     "voice": "high",
+     "speaker": "Pulio",
+     "speaker_raw": "335249464ca3",
+     "tail": "f0",
+     "text": "You wanna\nmake the monsters\n\nyou have in the\nfarm go to sleep?"
+    },
+    {
+     "off": 35,
+     "id": "$06E3",
+     "raw": "eb335249464ca324494962514542efee4a4c4b5051424f506245424f426254424b51faf7efee464b514c623e624142424d62504942424d63efeefaf7f0",
+     "voice": "high",
+     "speaker": "Pulio",
+     "speaker_raw": "335249464ca3",
+     "tail": "efeefaf7f0",
+     "text": "All the\nmonsters here went\n\ninto a deep sleep!"
+    },
+    {
+     "off": 36,
+     "id": "$06E4",
+     "raw": "eb335249464ca32c624d5251623e4949efee514542624a4c4b5051424f50624b4c51faf7efee504942424d464b4462464b514c623eefee4142424d62504942424dfaf7efee335249464ca33e4b4162544c4842efee524d6251454c50426254454cfaf7efee54424f4262504942424d464b4463efeefaf7f0",
+     "voice": "high",
+     "speaker": "Pulio",
+     "speaker_raw": "335249464ca3",
+     "tail": "efeefaf7f0",
+     "text": "I put all\nthe monsters not\n\nsleeping into a\ndeep sleep\n\nPulio:and woke\nup those who\n\nwere sleeping!"
+    },
+    {
+     "off": 37,
+     "id": "$06E5",
+     "raw": "eb335249464ca33a3e4b4b3e62543e4842efee524d6251454262504942424d464b44faf7efee4a4c4b5051424f5064efeef0",
+     "voice": "high",
+     "speaker": "Pulio",
+     "speaker_raw": "335249464ca3",
+     "tail": "efeef0",
+     "text": "Wanna wake\nup the sleeping\n\nmonsters?"
+    },
+    {
+     "off": 38,
+     "id": "$06E6",
+     "raw": "eb335249464ca32c62544c484262524defee51454262504942424d464b44faf7efee4a4c4b5051424f5063efeefaf7f0",
+     "voice": "high",
+     "speaker": "Pulio",
+     "speaker_raw": "335249464ca3",
+     "tail": "efeefaf7f0",
+     "text": "I woke up\nthe sleeping\n\nmonsters!"
+    }
+   ]
+  },
+  "eggs": {
+   "screen": 7,
+   "bank": "$0A",
+   "base": "$0750",
+   "count": 29,
+   "handler": [
+    "$6095",
+    "$6966"
+   ],
+   "vanilla_npc": "Egg Evaluator (map $0C scripts 4 / 5)",
+   "engine_offsets": [
+    1,
+    3,
+    4,
+    5,
+    6,
+    9,
+    12,
+    16,
+    18,
+    20,
+    21,
+    22,
+    23,
+    24,
+    26,
+    27,
+    28
+   ],
+   "lines": [
+    {
+     "off": 0,
+     "id": "$0750",
+     "raw": "eb9fa33245624a5662494651514942efeef65efaf7efee544249404c4a4263efeef0",
+     "voice": "high",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "efeef0",
+     "text": "Oh my little\n{hero},\n\nwelcome!"
+    },
+    {
+     "off": 1,
+     "id": "$0751",
+     "raw": "eb9fa33a2b243763622f423e53464b446463efee274c62504c4a425145464b446363f0",
+     "voice": "high",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "f0",
+     "text": "WHAT! Leaving?!\nDo something!!"
+    },
+    {
+     "off": 2,
+     "id": "$0752",
+     "raw": "eb9fa3324563623c4c526942efee49423e53464b4462504c62504c4c4b5ffaf7efee9fa3264c4a42623e443e464b63efeef7f0",
+     "voice": "high",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "efeef7f0",
+     "text": "Oh! You're\nleaving so soon.\n\n*:Come again!"
+    },
+    {
+     "off": 3,
+     "id": "$0753",
+     "raw": "eb9fa33a4546404562424444624b42424150efee4a566242533e49523e51464c4b64f0",
+     "voice": "high",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "f0",
+     "text": "Which egg needs\nmy evaluation?"
+    },
+    {
+     "off": 4,
+     "id": "$0754",
+     "raw": "eb9fa3324563623c4c5262414c4b67efee453e5342623e4b5662424444505ff7f0",
+     "voice": "high",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "f7f0",
+     "text": "Oh! You don't\nhave any eggs."
+    },
+    {
+     "off": 5,
+     "id": "$0755",
+     "raw": "eb9fa32c516649623f426202002a5fefee3a3e4b4b3e6242533e49523e51464c4b64faf7efee9fa3364c5e624650625145465062514542efee42444462514c6242533e49523e514264faf7f0",
+     "voice": "high",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "faf7f0",
+     "text": "It'll be 20G.\nWanna evaluation?\n\n*:So, is this the\negg to evaluate?"
+    },
+    {
+     "off": 6,
+     "id": "$0756",
+     "raw": "eb9fa3304a4a63efee26525142624946515149426242444463faf7efee9fa3373e494862514c624a4263efee373e494846425e62513e4948464263faf7f0",
+     "voice": "high",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "faf7f0",
+     "text": "Mmm!\nCute little egg!\n\n*:Talk to me!\nTalkie, talkie!"
+    },
+    {
+     "off": 7,
+     "id": "$0757",
+     "raw": "eb9fa3324563622c5168623e6253424f56efee45423e49514556624c4b425ffaf7efee9fa32c5162503e56505e6242554d424051efee3e62494c5162434f4c4a6246515ffaf7f0",
+     "voice": "high",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "faf7f0",
+     "text": "Oh! It's a very\nhealthy one.\n\n*:It says, expect\na lot from it."
+    },
+    {
+     "off": 8,
+     "id": "$0758",
+     "raw": "eb9fa33a4c54636237454650624052514642efee453e5062494c5150624c43624d4c54424f63faf7efee9fa32c5162503e565062465162403e4b67efee543e465162514c624a42425162564c5263faf7f0",
+     "voice": "high",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "faf7f0",
+     "text": "Wow! This cutie\nhas lots of power!\n\n*:It says it can't\nwait to meet you!"
+    },
+    {
+     "off": 9,
+     "id": "$0759",
+     "raw": "eb9fa3f65e62414c4b676244465342efee51454650623f3e3f56623e543e56636363faf7efee9fa32c5162503e565062564c5262403e4befee404c524b51624c4b62465163faf7f0",
+     "voice": "high",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "faf7f0",
+     "text": "{hero}, don't give\nthis baby away!!!\n\n*:It says you can\ncount on it!"
+    },
+    {
+     "off": 10,
+     "id": "$075A",
+     "raw": "eb9fa32c5162464b45424f46514241efee494c5150624c43625048464949505ffaf7f0",
+     "voice": "high",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "faf7f0",
+     "text": "It inherited\nlots of skills."
+    },
+    {
+     "off": 11,
+     "id": "$075B",
+     "raw": "eb9fa3324563622c5162464b45424f46514241efee533e4f464c5250625048464949505ffaf7f0",
+     "voice": "high",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "faf7f0",
+     "text": "Oh! It inherited\nvarious skills."
+    },
+    {
+     "off": 12,
+     "id": "$075C",
+     "raw": "eb9fa33a4c54636236524045efee53424f503e51464946515663faf7efee2c5162453e5062464b45424f46514241efee494c5150624c436250484649495063faf7f0",
+     "voice": "high",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "faf7f0",
+     "text": "Wow! Such\nversatility!\n\nIt has inherited\nlots of skills!"
+    },
+    {
+     "off": 13,
+     "id": "$075D",
+     "raw": "eb9fa337454650623f3e3f566254464949efee444f4c5462524d6253424f5662433e505163faf7f0",
+     "voice": "high",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "faf7f0",
+     "text": "This baby will\ngrow up very fast!"
+    },
+    {
+     "off": 14,
+     "id": "$075E",
+     "raw": "eb9fa32c51664962444f4c5462524defee4d4f4251515662433e50515ffaf7efee365f4a5f3e5f4f5f515f5663efeefaf7f0",
+     "voice": "high",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "efeefaf7f0",
+     "text": "It'll grow up\npretty fast.\n\nS.m.a.r.t.y!"
+    },
+    {
+     "off": 15,
+     "id": "$075F",
+     "raw": "eb9fa337454650623f3e3f566254464949efee513e484262504c4a426251464a4262514cfaf7efee444f4c5462524d5fefeefaf7f0",
+     "voice": "high",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "efeefaf7f0",
+     "text": "This baby will\ntake some time to\n\ngrow up."
+    },
+    {
+     "off": 16,
+     "id": "$0760",
+     "raw": "eb9fa32b4a4a4a5fefeefaf7efee9fa32c51664962513e48426251464a42efee514c62444f4c5462524d5ffaf7efee9fa325525162564c5262403e4befee42554d424051623e62494c5162434f4c4afaf7efee5145465062494651514942623f3e3f5663efeefaf7f0",
+     "voice": "high",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "efeefaf7f0",
+     "text": "Hmmm.\n\n\n*:It'll take time\nto grow up.\n\n*:But you can\nexpect a lot from\n\nthis little baby!"
+    },
+    {
+     "off": 17,
+     "id": "$0761",
+     "raw": "eb9fa32c516254464949623f42efee5352494b424f3e3f494262514cfaf7efee424b424a5662504846494950efee3e4b4162504d4249495063faf7f0",
+     "voice": "high",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "faf7f0",
+     "text": "It will be\nvulnerable to\n\nenemy skills\nand spells!"
+    },
+    {
+     "off": 18,
+     "id": "$0762",
+     "raw": "eb9fa32c516254464949623f42efee504c4a4254453e51624f42504650513e4b51faf7efee514c62424b424a5662504846494950efee3e4b4162504d4249495063faf7f0",
+     "voice": "high",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "faf7f0",
+     "text": "It will be\nsomewhat resistant\n\nto enemy skills\nand spells!"
+    },
+    {
+     "off": 19,
+     "id": "$0763",
+     "raw": "eb9fa32a46444449425f5fefee24623f4c56646362303e563f425ffaf7f0",
+     "voice": "high",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "faf7f0",
+     "text": "Giggle..\nA boy?! Maybe."
+    },
+    {
+     "off": 20,
+     "id": "$0764",
+     "raw": "eb9fa32a46444449425f5fefee246244464f49646362303e563f425ffaf7f0",
+     "voice": "high",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "faf7f0",
+     "text": "Giggle..\nA girl?! Maybe."
+    },
+    {
+     "off": 21,
+     "id": "$0765",
+     "raw": "eb9fa337453e5168623e4949622c62403e4befee5142494962564c5262434c4f624b4c545ffaf7f0",
+     "voice": "high",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "faf7f0",
+     "text": "That's all I can\ntell you for now."
+    },
+    {
+     "off": 22,
+     "id": "$0766",
+     "raw": "eb9fa33a4546404562424444624b42424150efee4a56623f49425050464b4464f0",
+     "voice": "high",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "f0",
+     "text": "Which egg needs\nmy blessing?"
+    },
+    {
+     "off": 23,
+     "id": "$0767",
+     "raw": "eb9fa332455e62564c5262414c4b67efee453e5342623e4b56624244445063f7f0",
+     "voice": "high",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "f7f0",
+     "text": "Oh, you don't\nhave any eggs!"
+    },
+    {
+     "off": 24,
+     "id": "$0768",
+     "raw": "eb9fa32c516649623f4262f9002aefee434c4f623e623f49425050464b445ffaf7efee3a3e4b51623e623f49425050464b4464efeef0",
+     "voice": "high",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "efeef0",
+     "text": "It'll be {ins0}G\nfor a blessing.\n\nWant a blessing?"
+    },
+    {
+     "off": 25,
+     "id": "$0769",
+     "raw": "eb9fa33245623f4c56636237454650efee3f3e3f5662543e50623e494f423e4156faf7efee3f49425050424163efeefaf7f0",
+     "voice": "high",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "efeefaf7f0",
+     "text": "Oh boy! This\nbaby was already\n\nblessed!"
+    },
+    {
+     "off": 26,
+     "id": "$076A",
+     "raw": "ea9fa32f3e62493e62493e62493e62493e6363efee2f3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e3e63faf7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "faf7f0",
+     "text": "La la la la la!!\nLaaaaaaaaaaaaaaaa!"
+    },
+    {
+     "off": 27,
+     "id": "$076B",
+     "raw": "eb9fa3274c4b4263faf7f0",
+     "voice": "high",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "faf7f0",
+     "text": "Done!"
+    },
+    {
+     "off": 28,
+     "id": "$076C",
+     "raw": "eb9fa32c6a62504c4f4f565e62564c52efee3e4f426250454c4f51624c4362403e50455ffaf7f0",
+     "voice": "high",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "faf7f0",
+     "text": "I'm sorry, you\nare short of cash."
+    }
+   ]
+  },
+  "library": {
+   "screen": 8,
+   "bank": "$12",
+   "base": "$0740",
+   "count": 5,
+   "handler": [
+    "$6061",
+    "$6842"
+   ],
+   "vanilla_npc": "Librarian (map $12 scripts 14 / 15)",
+   "engine_offsets": [
+    1,
+    3,
+    4
+   ],
+   "lines": [
+    {
+     "off": 0,
+     "id": "$0740",
+     "raw": "ea9fa33c4c526942623e5162514542efee49463f4f3e4f565f623a45464045faf7efee433e4a464956623e4f4262564c52efee494c4c48464b4462524d64f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "f0",
+     "text": "You're at the\nlibrary. Which\n\nfamily are you\nlooking up?"
+    },
+    {
+     "off": 1,
+     "id": "$0741",
+     "raw": "ea9fa3244b565145464b446242495042efee514c62494c4c4862524d64f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "f0",
+     "text": "Anything else\nto look up?"
+    },
+    {
+     "off": 2,
+     "id": "$0742",
+     "raw": "ea9fa33c4c526942623e49543e5650efee544249404c4a425ff7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "f7f0",
+     "text": "You're always\nwelcome."
+    },
+    {
+     "off": 3,
+     "id": "$0743",
+     "raw": "ea9fa32f4c4c4862524d625445464045efee4a4c4b5051424f64f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "f0",
+     "text": "Look up which\nmonster?"
+    },
+    {
+     "off": 4,
+     "id": "$0744",
+     "raw": "ea9fa33c4c5262453e53424b67efee403e52444551623e4b5662434f4c4afaf7efee51453e5162433e4a464956625642515fefeefaf7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "efeefaf7f0",
+     "text": "You haven't\ncaught any from\n\nthat family yet."
+    }
+   ]
+  },
+  "namer": {
+   "screen": 9,
+   "bank": "$12",
+   "base": "$0780",
+   "count": 6,
+   "handler": [
+    "$6842",
+    "$6AFE"
+   ],
+   "vanilla_npc": "Monster Namer (map $1A script 2)",
+   "engine_offsets": [
+    1,
+    3,
+    4,
+    5
+   ],
+   "lines": [
+    {
+     "off": 0,
+     "id": "$0780",
+     "raw": "ea9fa32c6a6251454262303e5051424fefee304c4b5051424f62313e4a424f5ffaf7efee3a3e4b4b3e6240453e4b4442efee564c524f624d3e4968624b3e4a4264fff0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "fff0",
+     "text": "I'm the Master\nMonster Namer.\n\nWanna change\nyour pal's name?"
+    },
+    {
+     "off": 1,
+     "id": "$0781",
+     "raw": "ea9fa33a3e4b4b3e6240453e4b4442efee564c524f624d3e4968624b3e4a4264f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "f0",
+     "text": "Wanna change\nyour pal's name?"
+    },
+    {
+     "off": 2,
+     "id": "$0782",
+     "raw": "ea9fa3264c4a42623f3e4048625445424befee564c52624b424241624a425ff7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "f7f0",
+     "text": "Come back when\nyou need me."
+    },
+    {
+     "off": 3,
+     "id": "$0783",
+     "raw": "ea9fa33a45464045624c4b4268624b3e4a42efee414c62564c5262543e4b5162514cfaf7efee40453e4b444264efeef0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "efeef0",
+     "text": "Which one's name\ndo you want to\n\nchange?"
+    },
+    {
+     "off": 4,
+     "id": "$0784",
+     "raw": "ea9fa32b4a5e6251454650624a4c4b5051424fefee5250424162514c623f42494c4b4462514cfaf7efee3e4b4c5145424f624a3e5051424f5eefee4146414b6762465164faf7efee9fa32c5168624b4c51623e62444c4c41efee5145464b4462514c6240453e4b4442faf7efee4b3e4a425062444653424b623f56efee4c5145424f624a3e5051424f505ffaf7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "faf7f0",
+     "text": "Hm, this monster\nused to belong to\n\nanother master,\ndidn't it?\n\n*:It's not a good\nthing to change\n\nnames given by\nother masters."
+    },
+    {
+     "off": 5,
+     "id": "$0785",
+     "raw": "ea9fa3244f4262564c526250524f42efee564c5262543e4b5162514cfaf7efee40453e4b444262514542624b3e4a4264efeef0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "efeef0",
+     "text": "Are you sure\nyou want to\n\nchange the name?"
+    }
+   ]
+  },
+  "medals": {
+   "screen": 10,
+   "bank": "$12",
+   "base": "$0720",
+   "count": 18,
+   "handler": [
+    "$6AFE",
+    "$7000"
+   ],
+   "vanilla_npc": "Medal Man (map $16 scripts 1 / 2)",
+   "engine_offsets": [
+    1,
+    2,
+    11,
+    12,
+    15,
+    16,
+    17
+   ],
+   "lines": [
+    {
+     "off": 0,
+     "id": "$0720",
+     "raw": "ea9fa32c6a62404c4949424051464b44efee4a42413e49506251453e51623e4f42faf7efee50403e5151424f4241623e4949efee4c53424f6251454262544c4f49415ffaf7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "faf7f0",
+     "text": "I'm collecting\nmedals that are\n\nscattered all\nover the world."
+    },
+    {
+     "off": 1,
+     "id": "$0721",
+     "raw": "ea9fa332455e623c4c5262453e5342efee4a42413e49505f622f4251624a42faf7efee513e4842625145424a62434c4f62564c525fefeefaf7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "efeefaf7f0",
+     "text": "Oh, You have\nmedals. Let me\n\ntake them for you."
+    },
+    {
+     "off": 2,
+     "id": "$0722",
+     "raw": "ea9fa3f65e62564c52efee3f4f4c52444551623e62514c513e49624c43faf7efeef900624a42413e49505fefeefaf7efee9fa32c6254464949624446534262564c52efee3e624f42543e4f41623f42403e525042faf7efee514542624a42413e4950efee425540424241424162f91063faf7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "faf7f0",
+     "text": "{hero}, you\nbrought a total of\n\n{ins0} medals.\n\n\n*:I will give you\na reward because\n\nthe medals\nexceeded {ins1}!"
+    },
+    {
+     "off": 3,
+     "id": "$0723",
+     "raw": "ea9fa32c5168623e4b62424444624c43efee3e623d3e4d25464f4163622c6649faf7efee50424b4162465162514c62514542efee433e4f4a63f7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "f7f0",
+     "text": "It's an egg of\na ZapBird! I'll\n\nsend it to the\nfarm!"
+    },
+    {
+     "off": 4,
+     "id": "$0724",
+     "raw": "ea9fa32c5168623e4b62424444624c43efee3e62374f524a4d4251424f63622c6649faf7efee50424b4162465162514c62514542efee433e4f4a63f7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "f7f0",
+     "text": "It's an egg of\na Trumpeter! I'll\n\nsend it to the\nfarm!"
+    },
+    {
+     "off": 5,
+     "id": "$0725",
+     "raw": "ea9fa32c5168623e4b62424444624c43efee3e62364d4648424f4c525063622c6649faf7efee50424b4162465162514c62514542efee433e4f4a63f7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "f7f0",
+     "text": "It's an egg of\na Spikerous! I'll\n\nsend it to the\nfarm!"
+    },
+    {
+     "off": 6,
+     "id": "$0726",
+     "raw": "ea9fa32c5168623e4b62424444624c43efee3e623042513e3f3f494263622c6649faf7efee50424b4162465162514c62514542efee433e4f4a63faf7efee9fa33245624b4c63efee2b4a4a4a4a5ffaf7efee9fa32c62453e5342624b4c624a4c4f42efee4f42543e4f415062514c624446534263faf7efee9fa3364c4f4f56623f52516254464949efee564c5262544c4f4862434c4f62434f4242faf7efee434f4c4a624b4c54624c4b64efeef7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "efeef7f0",
+     "text": "It's an egg of\na Metabble! I'll\n\nsend it to the\nfarm!\n\n*:Oh no!\nHmmmm.\n\n*:I have no more\nrewards to give!\n\n*:Sorry but will\nyou work for free\n\nfrom now on?"
+    },
+    {
+     "off": 7,
+     "id": "$0727",
+     "raw": "ea9fa32c5168623e62374f524a4d4251424fefee42444463622c66496250424b41624651faf7efee514c6251454262433e4f4a63efeef7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "efeef7f0",
+     "text": "It's a Trumpeter\negg! I'll send it\n\nto the farm!"
+    },
+    {
+     "off": 8,
+     "id": "$0728",
+     "raw": "ea9fa32c5168623e6226454c4d26494c544befee42444463622c66496250424b41624651faf7efee514c6251454262433e4f4a63efeef7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "efeef7f0",
+     "text": "It's a ChopClown\negg! I'll send it\n\nto the farm!"
+    },
+    {
+     "off": 9,
+     "id": "$0729",
+     "raw": "ea9fa32c5168623e62364d4648424f4c5250efee42444463622c66496250424b41624651faf7efee514c6251454262433e4f4a63efeef7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "efeef7f0",
+     "text": "It's a Spikerous\negg! I'll send it\n\nto the farm!"
+    },
+    {
+     "off": 10,
+     "id": "$072A",
+     "raw": "ea9fa32c5168623e623042513e3f3f4942efee42444463622c66496250424b41624651faf7efee514c6251454262433e4f4a63efeefaf7efee9fa33245624b4c63efee2b4a4a4a4a5ffaf7efee9fa32c62453e5342624b4c624a4c4f42efee4f42543e4f415062514c624446534263faf7efee9fa3364c4f4f56623f52516254464949efee564c5262544c4f4862434c4f62434f4242faf7efee434f4c4a624b4c54624c4b64efeef7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "efeef7f0",
+     "text": "It's a Metabble\negg! I'll send it\n\nto the farm!\n\n\n*:Oh no!\nHmmmm.\n\n*:I have no more\nrewards to give!\n\n*:Sorry but will\nyou work for free\n\nfrom now on?"
+    },
+    {
+     "off": 11,
+     "id": "$072B",
+     "raw": "ea9fa32c664962513e4842624651efee3f3e40485f622c51625042424a5062564c52faf7efee453e534262514c4c624a3e4b56efee4a4c4b5051424f505ffaf7efee9fa32c66496244465342624651efee514c62564c5262504c4a42faf7efee4c5145424f6251464a425fefeef7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "efeef7f0",
+     "text": "I'll take it\nback. It seems you\n\nhave too many\nmonsters.\n\n*:I'll give it\nto you some\n\nother time."
+    },
+    {
+     "off": 12,
+     "id": "$072C",
+     "raw": "ea9fa3f65e62564c52efee3f4f4c52444551623e62514c513e49624c43faf7efeef900624a42413e49a050a15fefeefaf7efee9fa32c6649624446534262564c526201efeef92062424444faf7efee5445424b62514542624a42413e4950efee42554042424162f91063f7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "f7f0",
+     "text": "{hero}, you\nbrought a total of\n\n{ins0} medal(s).\n\n\n*:I'll give you 1\n{ins2} egg\n\nwhen the medals\nexceed {ins1}!"
+    },
+    {
+     "off": 13,
+     "id": "$072D",
+     "raw": "ea9fa33245624b4c63efee2b4a4a4a4a5ffaf7efee9fa32c62453e5342624b4c624a4c4f42efee4f42543e4f415062514c624446534263faf7efee9fa3364c4f4f56623f52516254464949efee564c5262544c4f4862434c4f62434f4242faf7efee434f4c4a624b4c54624c4b64efeef7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "efeef7f0",
+     "text": "Oh no!\nHmmmm.\n\n*:I have no more\nrewards to give!\n\n*:Sorry but will\nyou work for free\n\nfrom now on?"
+    },
+    {
+     "off": 14,
+     "id": "$072E",
+     "raw": "ea9fa337453e4b4862564c5262f663efee3c4c52694262504c6248464b4163faf7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "faf7f0",
+     "text": "Thank you {hero}!\nYou're so kind!"
+    },
+    {
+     "off": 15,
+     "id": "$072F",
+     "raw": "ea9fa3324545636237464b563042413e495063faf7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "faf7f0",
+     "text": "Ohh! TinyMedals!"
+    },
+    {
+     "off": 16,
+     "id": "$0730",
+     "raw": "ea9fa324455e62564c52623f4f4c52444551efeef900624a42413e49a050a163faf7efee9fa33c4c52623e4f42623e4051523e494956efee4b4c51623e623f3e41624d424f504c4bfaf7efee3e4351424f623e49495fefeefaf7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "efeefaf7f0",
+     "text": "Ah, you brought\n{ins0} medal(s)!\n\n*:You are actually\nnot a bad person\n\nafter all."
+    },
+    {
+     "off": 17,
+     "id": "$0731",
+     "raw": "ea9fa3364c4f4f565e622c62414c4b67efee453e5342623e4b564a4c4f42faf7efee4f42543e4f41505fefeefaf7efee9fa32c4b5051423e415e622c6649efee4446534262564c5262504c4a42faf7efee3e41534640425fefeefaf7efee9fa3374542624a4c4b5051424fefee403e4949424162274f3e404c2f4c4f41faf7efee49464842506251454262414653464b42efee414f3e444c4b505ff7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "f7f0",
+     "text": "Sorry, I don't\nhave anymore\n\nrewards.\n\n\n*:Instead, I'll\ngive you some\n\nadvice.\n\n\n*:The monster\ncalled DracoLord\n\nlikes the divine\ndragons."
+    }
+   ]
+  }
+ },
+ "medal_rewards": {
+  "table": "$12:$6D29",
+  "count_sites": [
+   "$12:$6B5D",
+   "$12:$6B92",
+   "$12:$6CC0"
+  ],
+  "rows": [
+   {
+    "medals": 13,
+    "eid": 336
+   },
+   {
+    "medals": 18,
+    "eid": 337
+   },
+   {
+    "medals": 25,
+    "eid": 339
+   },
+   {
+    "medals": 30,
+    "eid": 340
+   }
+  ]
+ }
+}

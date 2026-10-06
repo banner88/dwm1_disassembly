@@ -1416,6 +1416,18 @@ def _shop_regions():
 REGISTRY += _shop_regions()
 
 
+def _service_regions():
+    # S126 (P3.14e1): the Medal Man's rewards (bank $12 MedalRewardTable +
+    # MEDAL_REWARD_COUNT; editor2/core/services.py). No gamedata.medals = the
+    # game's 4 rewards (the table moved to the bank's end).
+    from . import services as SV
+    return [(name, "gamedata.medals", f"region:{path}#{name}", fn, [bank])
+            for name, path, fn, bank in SV.REGIONS]
+
+
+REGISTRY += _service_regions()
+
+
 def _skill_regions():
     # S110 (P3.11): skill names (bank $41), SKIL-menu descriptions + their
     # pointer rows + the spill pad (bank $56), and the looks-like tables

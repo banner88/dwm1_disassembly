@@ -231,6 +231,19 @@ class Project:
         self._lower_quests()
         self._lower_talk_scripts()
         self._lower_shop_scripts()
+        # S126 (ROADMAP P3.14e1): service NPCs (+ shop line sets) — the vanilla
+        # NPC's shape, the project's lines (editor2/core/services.py). A bad
+        # service is reported by validators.validate (service_error); its
+        # script becomes a bare `end` so the editor still opens (S119b rule)
+        from . import services as _SV
+        self.service_error = None
+        try:
+            _SV.lower(self)
+        except _SV.ServiceError as ex:
+            self.service_error = str(ex)
+            for _s in self.custom.get('scripts', []):
+                if 'service' in _s and 'ops' not in _s:
+                    _s['ops'] = [['end']]
         self.vanilla_exit_exts = (list(self.custom.get('vanilla_exit_extensions', []))
                                   + self._lower_entrance_redirects())
         self.rooms = self._dense_rooms()
@@ -291,6 +304,13 @@ class Project:
                                    "reserved for the custom skills' built-in scripts "
                                    "(editor2/core/skill_scripts.json)")
         self._dialogue = list(self.custom.get('dialogue', [])) + skill_dialogue
+        # S126: the service lines a line set / the medal rewards replace
+        # (raw bytes in the vanilla frame; services.resolve) — after the
+        # skill texts, so no earlier id moves
+        try:
+            self._dialogue += [dict(e) for e in _SV.resolve(self)['dialogue']]
+        except _SV.ServiceError as ex:
+            self.service_error = self.service_error or str(ex)
         self._text_by_id = {}
         self._assign_text_ids()
         self._scripts = {s['id']: s for s in
@@ -1106,7 +1126,7 @@ class Project:
                 raise ProjectError(f"{ctx}: a shop script has no 'ops' / 'talk'")
             if not isinstance(sp, dict) or not sp.get('shop'):
                 raise ProjectError(f"{ctx}: {{\"shop\": <shop id>, \"text\": <greeting>}}")
-            unknown = set(sp) - {'shop', 'text', 'comment'}
+            unknown = set(sp) - {'shop', 'text', 'comment', 'lines'}   # S126: lines = a shop line set
             if unknown:
                 raise ProjectError(f"{ctx}: unknown keys {sorted(unknown)}")
             try:

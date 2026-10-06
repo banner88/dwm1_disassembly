@@ -583,6 +583,12 @@ user-confirmed hand-authored code:
 * `editor2/core/templates/bank_079_head.asm` (S121) — bank byte, 2-entry table, entry 0
   `MillyShapeTable` / entry 1 `MillyPlayerSheet` (§2.34); only emitted with the hook on;
   pinned `3d7cbdbe…ef95`; no TEMPLATE_SIZE (the bank holds a few hundred bytes).
+* S126 re-pins: `bank_071_head.asm` `b3588b7a…28a2` (`CustomAnimSource` pauses during
+  `AnimPauseTypes`, §2.39; TEMPLATE_SIZE 908 B; the S125 value `28d988db…` is historical);
+  `bank_077_head.asm` `cfe0dba0…bb53` (S126 r2: + `$FFD4` := `$80` in `ServiceTilesBack`;
+  TEMPLATE_SIZE 688 B; the first S126 value `4c9f5998…` (684 B: + entries 3 `SayText`, 4
+  `ServiceCloseBox`, 5 `ServiceCloseTiles`, 6 `ServiceOpenTiles`, the `ScreenPush` palette-7
+  rules, §2.39) and the S117b `b8af2c91…` are historical).
 * S125 re-pin: `bank_071_head.asm` `28d988db…6cc4` (+ entry 9 `HubWarp`, §2.38;
   TEMPLATE_SIZE 865 B, `Custom26DDTable` `$4361` in the S125 game.sym; the S121 value is
   historical).
@@ -2959,6 +2965,125 @@ flag is ON) → a loss lands in the throne room (screen 1, (14, 5)), `$D92B` 8, 
 heals; the WarpWing with the Castle hub → the Castle; the hub room's door out works.
 Not staged: the floor-damage wipe and the Starry final (the same call, MiniSM83-run in
 test_compiler `test_hub_rom`).
+
+## §2.39 S126 — SERVICE NPCs: the game's menus in any room, their lines, the Medal Man's rewards (ROADMAP P3.14e1)
+
+```json
+"scripts": [
+  {"id": "hall_vault", "service": {"kind": "vault", "lines": "clerk"}},
+  {"id": "hall_namer", "service": {"kind": "namer",
+     "first_time": {"text": "namer_intro", "flag": "namer_met"}}},
+  {"id": "hall_shop",  "shop": {"shop": "my_shop", "lines": "buk_lines"}}],
+"service_lines": [
+  {"id": "clerk", "kind": "vault", "name": "Clerk's lines", "speaker": "Clerk",
+   "voice": "low", "everywhere": false,
+   "lines": {"0": "Vault! What\ncan I keep?", "2": "Your things\nare safe with us!"}}]
+```
+`gamedata.medals = {"rewards": [{"medals": 3, "enemy": 336}, {"medals": 5, "enemy":
+"klamutra", "line": "A strange egg\nfor you!"}, …]}`.
+
+**Kinds** (`editor2/core/services.py` `KINDS`; the screen = script opcode `$04 <type>
+<text base>`, dispatched by `$C8EF` through bank $09 `ScreenEffectTable09`):
+
+| kind | screen | handler | text base | lines | the game's NPC |
+|---|---|---|---|---|---|
+| `vault` | 2 | `VaultScreen` `$09:$4EF9` | `$06A0` | 26 | map $0F script 1 |
+| `farm` | 3 | `FarmScreen` `$12:$442D` | `$06C0` | 39 | Pulio, map $04 script 26 |
+| `eggs` | 7 | `EggAppraiserScreen` `$0A:$6095` | `$0750` | 29 | |
+| `library` | 8 | `LibraryScreen` `$12:$6061` | `$0740` | 5 | |
+| `namer` | 9 | `NamerScreen` `$12:$6842` | `$0780` | 6 | (then type 15, the naming screen) |
+| `medals` | 10 | `MedalScreen` `$12:$6AFE` | `$0720` | 18 | map $16 |
+| `gates` | 13 | `GateListScreen` `$09:$5ECA` | — | — | the Gate Hub guide (`$0066` ask / `$047E` bye) |
+| (`shop`) | 0 | `ShopOuterMachine` | `$0680` | 16 | (line sets only; §2.32) |
+
+Block line +0 = the greeting, +2 = the farewell (the Medal Man has none; his reward
+line n = +2+n); the others are spoken by the menu (`engine_offsets` in
+`extracted/service_lines.json`, written by `tools/extract_service_lines.py`, selftested
+in the verifier: JSON == ROM, every line re-encodes to its bytes). The state behind every
+menu is global (one Vault, one farm, one medal count) — any number of NPCs of one kind.
+
+**Lowering (`services.lower`, after the shop lowering, before the dialogue resolves):**
+a `service` script → the vanilla NPC's own shape (`service_ops`): greeting (or, with
+`first_time`, `if_flag_set flag @known` / the intro / `set_flag` instead of it), op `$04
+<screen> <base>`, the farewell; the library adds `nop` + `init_dialog`; the egg appraiser
+and the namer open their bottom box with op `$3C`; the namer = YES / NO →
+`label:list` op `$04 9` → `check_and_branch $C8F4, 255, @bye` → `close_text` → op `$04
+15 0` (naming screen) → `goto @list`; the gate guide = its ask, `check_and_branch $C83C,
+1, @no`, op `$04 13 0`, `nop`, `init_dialog`, its bye. A script whose set is used (not
+`everywhere`) gets `write_ram wServiceLines, n` before op `$04` and `0` after it; a shop
+script's `lines` the same around its op `$04 0`.
+
+**Line sets (`resolve`):** each changed line = a generated dialogue entry `svc:<set>:<off>`
+(raw bytes, `_service`): the vanilla frame (voice `$EA`/`$EB`, the speaker label + `$A3`,
+the tail `$F0` / `$F7 $F0` / `$FA $F7 $F0` / `$FF $F0` YES-NO …) around the new body
+(`$EF $EE` line, `$FA $F7 $EF $EE` box, `{hero}` `$F6`, `{ins0..3}` `$F9 $00/$10/$20/$30`
+— the menu's inserts). Text equal to the game's keeps the game's exact body (`..` vs two
+`$5F`). A `speaker` / `voice` override re-frames every line that has a label / opener;
+untouched lines too long under the new name are re-flowed (`fit_text`); typed lines that
+do not fit are build ERRORS ("the game would wrap it in the middle of a word"). Set
+numbers 1..n (≤ 250) for sets a script uses; `everywhere` sets and the medal reward lines
+go to set 0. Bank $77 data (`set_table_lines`): `SERVICE_SET_COUNT`, `ServiceSetTable`
+(dw per set), `ServicePairs_n` (`dw vanilla id, dw project text id`, `$FFFF` ends).
+
+**Engine (bank $77 template entries 3-6; `TEMPLATE_SIZE[0x77]` 688 — 684 before r2):**
+- **entry 3 `SayText`** (DE = text id): ≥ `$0A00` → `CustomTextDisplay` (bank $60 entry
+  5, `$C822` = hi − `$0A`, `$C823` = lo); else `wServiceLines` 1..count → that set's pairs,
+  then set 0; a hit speaks the project's text, else `jp TextBankDispatch`. The three menu
+  say helpers call it: bank $09 `ScreenEffectSay` → `SayAny09` (in the `LoadFld9_40fa`
+  NOP run: `ld d,h / ld e,l / ld hl,$7703 / rst $10 / ret`), bank $0A `ScreenEffectSay0A`
+  → `SayAny0A`, bank $12 `ScreenEffectSay12` → `SayAny12` (in the old ScreenPush copies).
+  Two farm lines were spoken by absolute id (`$06E1`, `$06CC`) → made base-relative
+  (`ld hl,$0021` / `$000C` + `ScreenEffectSay12`, same size) so a set reaches them.
+- **entry 6 `ServiceOpenTiles`** (`FarmScreenOpen` / `EggScreenOpen` wrap the table
+  entries): in a custom room, once per screen, `$9600-$97FF` (room tile slots `$60-$7F`)
+  → `wServiceTileSave` (`$D2F0`, 512 B, STAT-waited); `wServiceTileSaved` `$D4F0`.
+- **entry 4 `ServiceCloseBox`** (the Vault's and the farm's close, 10 B replaced: `ld hl,
+  $7704 / rst $10 / ret` + 5 nop): tiles back + `ShopClose` (the box re-seated at the
+  bottom, wGameState bit 4 off, `$C905` := 0). **entry 5 `ServiceCloseTiles`** (the egg
+  appraiser's close): tiles back + bit 4 off + `$C905` := 0. "Tiles back"
+  (`ServiceTilesBack`) also sets `$FFD4` := `$80` (S126 r2): the farm leaves `$60`, the
+  text-box sprite threshold (ROOM_DATA_FORMAT "Text boxes and sprites") — the next talk in
+  a room drawn with tile ids ≥ `$60` hid every sprite. The game never restored the
+  farm's icons (`$60-$6F`) / the egg icons (`$70-$78`) — vanilla rooms do not draw with
+  those slots; custom rooms do.
+- **entry 2 `ScreenPush`** (S117b) now also serves banks $0A / $12 (`ScreenPush0A` /
+  `ScreenPush12` were identical 53-byte copies at `$40E5`; now `ld hl,$7702 / rst $10 /
+  ret`). In a free-colour room a pushed row cell whose tile differs from the room map
+  (`$C300` = DE − `$200`) gets palette 7 (the menus' cream); full screens type 13 (gate
+  list) / 15 (naming) → every cell palette 7 (`wPushAttrOn` = `$81`).
+- **bank $71 `CustomAnimSource`** (custom tile animation): returns at once while a
+  screen effect of `AnimPauseTypes` (3, 5, 6, 7, 8, 11, 13, 15) is open — those draw into
+  the room's tile slots (`TEMPLATE_SIZE[0x71]` 908). Vanilla pauses only type 15.
+
+**Medal Man (`gd_medal_rewards`, `patches/bank_012.asm` free tail):** `MEDAL_REWARD_COUNT
+EQU n` + `MedalRewardTable: dw medals, dw EID …, dw $FFFF, 0` — the readers (`$6B5D`,
+`$6B92`, `$6CC0` `cp MEDAL_REWARD_COUNT`; four `ld hl, MedalRewardTable(+2)`) moved off
+the old `$12:$6D29` table (left in place, dead). Index = eggs given `[$D9E1]`, flags
+`$0050-$0057` (max 8 rewards), total `$C903/$C904` capped 999; rising, ≥ 1. The egg comes
+from bank $14 entry 2 — a project enemy (EID ≥ 519) works via `LoadEnemyStatsExt`.
+Reward line n (block +2+n) = the row's `line` or the game's wording with the egg's
+species name (`reward_default`: re-flowed to the frame — +6 and the never-spoken
+alternates +7..+10 that rewards 5-8 take end with `$EF $EE`, so their last box holds one
+line); after the last reward the "no more rewards" boxes. The Services tab shows a typed
+line that does not fit (a build error). Edited rewards apply
+to every Medal Man (set 0).
+
+**Validation:** unknown kind / keys, a set of another kind, `lines` on the gate guide,
+first_time without text / flag, line glyphs, a speaker > 9 letters, line format
+(errors); a set no script uses, two `everywhere` sets of one kind (warnings). **Flag
+index:** kind `service` (`first_time.flag`: a TEST clear + an ON). **Editor:** Rooms tab
+NPC → **Service…** (`app/rooms/service_dialog.py`), the Shopkeeper dialog's lines picker,
+the **Services** tab (`app/services_tab.py`: service NPCs + Go to, line sets with the
+box preview, Medal Man rewards); model `core/services_doc.py` `ServicesMixin`.
+
+**Measured (PyBoy, the user's save, PROJECT_STATE S126):** all seven services in a
+free-colour room (`$6E`) and an animated room (`$6C`): windows cream, the gate list /
+naming screen palette 7, gate names intact, the room's map / attributes / tile data back
+after each close (both screen halves); custom lines (the Clerk's Vault, Mira's farm with
+`{hero}`, a shop set); medal rewards 3 / 5 / 8 → ZapBird, Klamutra (project EID 520),
+Slime eggs (seen in the appraiser's list), the 4th visit "no more rewards"; the game's
+own Medal Man (map $16) speaks the edited reward line; an item stored with a new Vault
+keeper is in the game's Vault (map $0F).
 
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 

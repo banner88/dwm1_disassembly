@@ -83,6 +83,12 @@
   item (every shop), 0-65535 gold; what shops pay is the game's rule (3/4,
   staffs 1/10, the gate shop the full price) and is not editable. Item
   effects are not editable yet.
+- Services (S126): the Vault, the farm and the medal count are one for the
+  whole game (every NPC of a kind shares them). The gate guide's list is the
+  original game's 31 gates. The Medal Man gives 1-8 eggs, at most 999
+  medals. A line set's speaker is at most 9 letters; a line too long for its
+  box stops the build. The menus' words are per line set; the menus
+  themselves (their choices, the naming screen) are the game's.
 - Cutscenes (S118, S119): Playback needs `pip install pyboy`. A game scene
   that needs a party monster of a given species, a full bag or a won battle
   state is started at its own first step (the window says so). **Your own

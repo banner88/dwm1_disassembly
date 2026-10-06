@@ -879,6 +879,36 @@ copies of `$08` / `$5D`) and the bank $06 region `text_sprite_mode` → bank $71
 `TextSpriteMode` (the vanilla two + these rooms). PyBoy: both stay drawn through the four
 boxes. A room painted with tile ids ≥ `$80` needs the field set (not offered in the
 Rooms tab yet — set by the copy).
+**`$FFD4` is not always `$80` (S126 r2, code-read + PyBoy):** bank $01 `ClearAnimationState`
+sets `$80` at every map load, but four screens lower it and never put it back: the farm
+menu `$60` (bank $12 `$44A7`, its icons sit in slots `$60-$6F`), bank $0A screen types 5
+(`$78` at `$4481`), 6 (`$40` at `$4C33`) and 11 (`$40` at `$69C3`). Until the next map load, every sprite over a BG tile ≥ that value
+is skipped while ANY text box is open — after a farm visit in a room whose floor is tile
+`$7B`, the next talk hid every NPC, the player and the party (the user's report). Vanilla
+rooms never show such tiles where the farm opens. Bank $77 `ServiceTilesBack` (the
+service closes in custom rooms) sets `$FFD4` := `$80` again.
+
+## The game's menus draw into the room's tile slots (S126 — PyBoy-measured)
+
+The service screens (script op `$04`, PROJECT_COMPILER §2.39) borrow the ROOM's own sheet
+slots (VRAM `$9000-$97FF`, ids `$00-$7F`) and the game puts back only some of them:
+
+| Screen | Slots it writes | Put back by the game |
+|---|---|---|
+| farm (3) | `$60-$6F` the family icons (`$9600`, 8 sites in `FarmScreen`); also `$FFD4` := `$60` ("Text boxes and sprites") | no |
+| egg appraiser (7) | `$70-$78` the egg icons (`$9700`) | no |
+| Library (8), farm CHECK, egg INFO | the room sheet (full screens) | yes — the room reloads (bank $0B entries 1 / 2) |
+| gate list (13) | `$38-$7F` the gate names as a bitmap | yes (room reload) |
+| naming screen (15) | the room sheet | yes (room reload) |
+
+No vanilla room shows slots `$60-$7F` where these menus open; a custom room may — before
+S126 a farm visit left monster icons in its floor. Now bank $77 entry 6
+`ServiceOpenTiles` saves `$9600-$97FF` (custom rooms, once per screen) and entries 4 / 5
+restore them at the close. A custom room's own tile animation (bank $71
+`CustomAnimSource`) pauses while any screen of `AnimPauseTypes` is open, else it would
+write its frames over the menu's tiles (vanilla pauses its animation only for type 15).
+In a free-colour room every pushed menu cell is palette 7 (bank $77 `ScreenPush`), so
+the windows stay cream.
 
 ## Gate Room Differences
 

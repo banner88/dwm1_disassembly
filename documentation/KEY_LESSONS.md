@@ -5532,3 +5532,69 @@ written only by the WarpWing item's use path. Both mattered here: the hub has a 
 sender. **Rule**: a site's name comes from what reaches it (its guard, its caller), not
 from the first case that was traced through it.
 
+
+## S126 — service NPCs: a menu is a room's guest
+
+### A vanilla screen can use the room's own tile slots and never give them back (S126)
+
+**Symptom**: after the farm menu closed in a custom room, monster family icons stayed in
+the floor; after the egg appraiser, egg icons. **Root cause** (PyBoy VRAM diff, then the
+8 `ld hl, $9600` sites): the farm writes its icons into the ROOM's sheet slots `$60-$6F`
+and the egg appraiser into `$70-$78`; the game never restores them because no vanilla
+room shows those slots where the menus open. **Fix**: save `$9600-$97FF` at the open,
+restore at the close (bank $77 entries 6 / 4 / 5), custom rooms only. **Rule**: a vanilla
+screen moved into a new room must be checked for VRAM it borrows — diff the room's tile
+data before / after, both screen halves, not only the picture.
+
+### A same-size patch must stay the same size, every time (S126)
+
+**Symptom**: the first close-tail replacement assembled to 11 bytes over a 10-byte
+original (6 NOPs instead of 5) and bank $12 overflowed by one byte — and in a bank with
+free space it would have silently shifted every label after it. **Rule**: count the
+original bytes, count the replacement's, and compare the `.sym` addresses of every label
+after the site with the previous build (S126: 0 moved) before trusting a "same size"
+patch.
+
+### A copied routine is copied in every bank (S126)
+
+**Symptom**: the S117b free-colour window fix worked for the shop and the Vault (bank $09)
+but the farm, Library, namer, Medal Man and egg windows were still garbled in a
+free-colour room. **Root cause**: banks $0A and $12 each carry their own byte-identical
+copy of bank $09's window push (`LoadFld9_40fa` = `ScreenPush0A` / `ScreenPush12` at
+`$40E5`, mis-named `GetScreenPos`) and of the say helper (`ScreenEffectSay0A` /
+`ScreenEffectSay12`, mis-named `LoadFldA_441f` / `AddCursorOffset`). **Rule**: before
+patching an engine routine, search the other banks for its byte pattern; mgbdis gives each
+copy a different auto-name.
+
+### A longer speaker name changes the game's own lines (S126)
+
+**Symptom**: giving the Vault keeper the speaker "Clerk" (6 cells with the colon, the
+game's is "*:" = 2) made untouched game lines overflow their first box line — the game
+wraps mid-word. **Fix**: untouched lines are re-flowed for the new label width
+(`services.fit_text`); lines the user typed are checked and refused when they do not fit.
+**Rule**: a frame change (label, opener) is an edit of every line that uses the frame.
+
+### A line's tail can own a line of its box (S126)
+
+**Symptom**: a shop set's "Want anything\nelse, friend?" scrolled the box over the shop's
+window (PyBoy screenshot: the second line drawn into the menu). **Root cause**: the game's
+line ("Anything else?", "How many?", "Thank you!") ENDS with `$EF $EE` — the menu writes
+its next text on the line after; two lines plus that break = a third line = a scroll.
+**Fix**: a line whose tail starts with `$EF $EE` holds one line in its last box
+(`services.tail_lines`, a build error otherwise; the re-flow splits). **Rule**: the
+format checks of a text must read its whole frame — opener, label AND tail.
+
+### A screen can leave a rule switched for the rest of the room (S126 r2)
+
+**Symptom** (user, the test ROM): "When I talk to e.g. service yard teleporter NPC, all
+NPCs vanish from screen … doesn't seem to be universal". **Root cause** (PyBoy: a talk
+showed 32 sprites before the farm, 0 after it; `$FFD4` read before / after): the farm menu
+sets `$FFD4` = `$60` (the threshold of the text-box sprite rule, ROOM_DATA_FORMAT "Text
+boxes and sprites") and leaves it; only the next map load sets `$80`. While any text box
+is open every sprite over a BG tile ≥ `$60` is skipped — the SERVICE HALL's floor is tile
+`$7B`, so the player, the party and every NPC vanished at the next talk in that room. Not
+universal: only after the farm, only in rooms drawn with tile ids ≥ `$60`, and only until
+the room reloads (the yard, `$44` grass, kept its sprites). **Fix**: the service close
+sets `$80` again in custom rooms (bank $77 `ServiceTilesBack`). **Rule**: the S126 "diff
+VRAM before / after a screen" check is not enough — diff the HRAM / WRAM a screen writes
+too (`$FF80-$FFFE` before / after), and test a TALK after every menu, not only the menu.

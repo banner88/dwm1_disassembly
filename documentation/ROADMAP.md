@@ -2220,9 +2220,22 @@ recipes are pure authoring.
           PyBoy on the user's save: loss / WarpWing / "home" → the demo hub with its scenes;
           the flag moves the hub to the Castle (priest heal). Not staged: the floor wipe and
           the Starry final (same call, MiniSM83-tested). *User half:* the test ROM.
-    - [ ] **P3.14e1 — Services in your rooms**: the farm (Pulio), the library, the vault, the
-          medal man, the egg evaluator, the gate guide, the namer as **service NPCs** (like
-          the Shopkeeper…), one instance each, usable from rooms of either realm.
+    - [x] **P3.14e1 — Services in your rooms** — **built S126, NOT yet user-tested** (r2: NPCs
+          vanished at a talk after the farm — `$FFD4` left at `$60`; the close restores it). The
+          Vault, a farm keeper, the librarian, the Monster Namer, the Medal Man, the egg
+          appraiser and the gate guide as **service NPCs** (`custom.scripts[].service`,
+          Rooms tab → NPC → **Service…**): the game's `$04` menus in any room, any number
+          of each (the state behind them is the game's one Vault / farm / medal count); their
+          menu lines editable per NPC or for every NPC of a kind (`custom.service_lines`,
+          also for shopkeepers — different shops, different words); an optional first visit
+          remembered by a flag; the Medal Man's rewards editable (`gamedata.medals`, 1-8,
+          any egg incl. project enemies); free-colour + animated rooms: the windows cream,
+          the room's tile slots restored, animations paused (PROJECT_COMPILER §2.39,
+          EDITOR_DESIGN §5.6c, help `67_services.md`). User answers S126: lines "editable",
+          medal rewards "editable!!", several of one kind fine, several shops with their own
+          lists, the post-game lines will differ anyway. Open: the user's "what gate
+          guide??" (the Gate Hub guide's Travelers' Gates list — kept as a kind; it lists
+          the original 31 gates only). *User half:* the test ROM.
     - [ ] **P3.14e2 — Breeding in your room**: the breeding NPC + the vanilla `$08` ceremony
           (a return to the room it came from).
     - [ ] **P3.14e3 — Your arena**: a copy of the arena battle room with role aliasing for the

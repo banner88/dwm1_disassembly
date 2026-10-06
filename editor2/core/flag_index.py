@@ -54,6 +54,7 @@ KINDS = {
     'gate_battles': 'battles',          # gates[].encounters.variants[].when
     'gate_room': 'gate floor room',     # custom.gate_inserts[].when
     'hub': 'hub',                       # custom.hub.rules[].when (S125)
+    'service': 'service NPC',           # scripts[].service.first_time.flag (S126)
     'quest': 'quest',                   # progression.quests[] flags / actions
     'gate_win': 'boss win',             # engine: bank $76 GateBossWin
     'hook': 'Milly hook',               # the Milly hook's own flags
@@ -477,6 +478,22 @@ class FlagIndex:
                         for j, f in enumerate(b.get(key) or []):
                             self._use(f, role, 'talk', where, ev + ctx, nav,
                                       base + ('talk', part, key, j), runs=runs)
+            elif isinstance(s.get('service'), dict):
+                # S126 (P3.14e1): a service NPC's first visit — the lowered script
+                # tests the flag (OFF: the intro instead of the greeting) and sets it
+                sv = s['service']
+                f = (sv.get('first_time') or {}).get('flag') if isinstance(
+                    sv.get('first_time'), dict) else None
+                if f:
+                    from . import services as _SV
+                    nm = _SV.KINDS.get(sv.get('kind'), {}).get('name', 'service NPC')
+                    ev = places[0].event() if places else f'the {nm} {sid}'
+                    path = base + ('service', 'first_time', 'flag')
+                    self._trigger('service', [(f, 'clear')], ev,
+                                  f'the {nm} says the first visit\'s words', where, nav, [path],
+                                  runs=runs)
+                    self._use(f, ON, 'service', where, ev + ' (the first visit)', nav, path,
+                              runs=runs)
             elif isinstance(s.get('ops'), list):
                 self._walk_ops(s['ops'], 'script', where, nav, runs,
                                f'the script “{sid}”', places)

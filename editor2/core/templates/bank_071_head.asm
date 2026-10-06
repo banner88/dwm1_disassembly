@@ -45,6 +45,8 @@
 ;     S102: first far-calls bank $6C entry 0 CustomTileAnimate (the room's
 ;     own tile animations, custom.rooms[].tile_anims — §2.19), so a room
 ;     can play authored animations AND a vanilla room's animation together.
+;     S126: returns ANIM_NONE (and skips bank $6C) while a screen effect of a
+;     type in AnimPauseTypes runs (its full screens use the room's tile slots).
 ;
 ; Entry 4 (HL=$7104) CustomGateInsert (S100, ROADMAP P3.7b part 1):
 ;     Called by bank $16 GateDecisionFork on every NON-boss gate floor (after
@@ -322,6 +324,31 @@ CustomRoomBGMResolve:
 ; Entry 3: CustomAnimSource — E := the room's animation source map ID (S99)
 ; -----------------------------------------------------------------------------
 CustomAnimSource:
+    ; S126 (ROADMAP P3.14e1): no animation while a screen effect whose screens
+    ; can cover the room runs — those full screens (the library, the list of
+    ; Travelers' Gates, the farm's CHECK, the egg appraiser's INFO …) draw
+    ; into the room's own tile slots ($9000), and an animation step wrote
+    ; over them (measured S126: "TASIS:IAN" in the gate list of a room with
+    ; its own animated tiles). Vanilla pauses only for the naming screen
+    ; ($C8EF 15, bank $01 PerRoomVRAMDispatch) — no other service ever ran in
+    ; an animated room. AnimPauseTypes is indexed by $C8EF.
+    ld e, $6b                           ; ANIM_NONE
+    ld a, [wGameState]
+    bit 4, a
+    jr z, .anim
+    ld a, [$c8ef]
+    cp $10
+    jr nc, .anim
+    ld hl, AnimPauseTypes
+    add l
+    ld l, a
+    adc h
+    sub l
+    ld h, a
+    ld a, [hl]
+    or a
+    ret nz                              ; paused: E = ANIM_NONE
+.anim:
     ld hl, $6c00                        ; S102: bank $6C entry 0 CustomTileAnimate —
     rst $10                             ; the room's OWN animated tiles (§2.19) first
     ld e, $6b                           ; ANIM_NONE: the table's bare-`ret` row
@@ -337,6 +364,12 @@ CustomAnimSource:
     ld h, a
     ld e, [hl]
     ret
+
+; S126: 1 = screen-effect type ($C8EF) whose screens can cover the room:
+; 3 farm (CHECK), 5 arena party list, 6 breeding list, 7 egg appraiser (INFO),
+; 8 Library, 11 shrine entry, 13 Travelers' Gates list (15 = vanilla's own rule)
+AnimPauseTypes:
+    db 0, 0, 0, 1, 0, 1, 1, 1, 1, 0, 0, 1, 0, 1, 0, 1
 
 ; -----------------------------------------------------------------------------
 ; Entry 4: CustomGateInsert — serve a custom room on a gate floor (S100)

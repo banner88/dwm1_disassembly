@@ -48,6 +48,9 @@ built from it (the original ROM is never changed).
 - **Shops** — the game's five shops and your own: what each sells (up to 20
   items) and every item's price; an NPC sells a shop via Rooms tab → NPC →
   Shopkeeper….
+- **Services** — the Vault, farm, library, namer, Medal Man, egg appraiser
+  and gate guide NPCs you placed (Rooms tab → NPC → Service…), what their
+  menus say (line sets), and the Medal Man's rewards.
 - **Progression & Flags** — every flag of your game: what turns it ON / OFF
   and what checks it, in words; **show** draws the place (the room screen in
   its state, the NPC outlined) in a panel on the right, where you can also

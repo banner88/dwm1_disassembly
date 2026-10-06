@@ -40,8 +40,52 @@
 ;   menus rely on every colour 1 being cream; a free-colour room broke that
 ;   (user S117: "menu glitches with background colours from custom tiles").
 ;   Clobbers A/BC/DE/HL.
+;   S126 (ROADMAP P3.14e1): a FULL-SCREEN effect — the list of Travelers'
+;   Gates ($C8EF 13) and the naming screen (15), whose pictures are drawn
+;   into the room's own tile slots ($9000, ids < $80: the gate names' bitmap
+;   $38-$7F, the letters) — gets palette 7 on every cell (wPushAttrOn = $81;
+;   measured S126: the gate names / letters took the room's palettes in a
+;   free-colour room). The library / farm CHECK / egg INFO full screens write
+;   their own attributes.
+;   S126: a room-row cell whose tile is < $80 but NOT the room's own tile
+;   there ($C300 + the cell = the $C500 cell - $200: the composer copied the
+;   room from $C300, so a real room cell always matches) is a picture the
+;   screen drew into the room's tile slots (the farm / library family icons)
+;   -> palette 7 too (measured S126: they took the room's colours).
+;   S126: banks $0A ScreenPush0A and $12 ScreenPush12 (byte-identical copies
+;   of bank $09's push) are same-size far calls here too.
+; Entry 3 (HL=$7703) SayText (S126, ROADMAP P3.14e1): a screen effect's text.
+;   Bank $09 ScreenEffectSay / $0A ScreenEffectSay0A / $12 ScreenEffectSay12 (the
+;   say helpers: text = op $04's base [$C8F0] + an offset) call SayAny09 /
+;   0A / 12 (bank-local, DE := HL) instead of ROM0 TextBankDispatch. DE >=
+;   $0A00 -> the project's own text (bank $60 entry 5 CustomTextDisplay, the
+;   bank $04 TextQueueCheck_Ext rule). Else the generated ServiceSetTable:
+;   first the pairs of line set [wServiceLines] (a service / shop script
+;   writes it around the opcode), then set 0 (the pairs for every NPC of a
+;   kind: "everywhere" sets, the medal reward lines): a listed vanilla id
+;   becomes the project's text. Else ROM0 TextBankDispatch (unchanged).
+;   Clobbers all.
+; Entries 4 / 5 / 6 (S126, ROADMAP P3.14e1) — service screens in custom rooms:
+;   6 ServiceOpenTiles: the farm (FarmScreenOpen, bank $12) and the egg
+;     appraiser (EggScreenOpen, bank $0A) draw their icons into the room's
+;     tile slots $60-$7F and never restore them (their vanilla rooms leave
+;     those slots unused; measured S126). In a custom room (wMapID >=
+;     CUSTOM_ROOM_START) and once per screen (wServiceTileSaved): copy
+;     $9600-$97FF (VRAM bank 0, 512 B, each byte in mode 0/1) to
+;     wServiceTileSave.
+;   4 ServiceCloseBox: the Vault's and the farm's close tails (same-size far
+;     calls): the tiles back if saved, then ShopClose (wGameState bit 4 off,
+;     $C905 := 0, wShopID := 0, ShopBoxBottom — both left the dialog box on
+;     the screen when talked to from the lower half, measured S126).
+;   5 ServiceCloseTiles: the egg appraiser's close: the tiles back if saved,
+;     then exactly the replaced tail (bit 4 off, $C905 := 0).
+;   "The tiles back" also sets $FFD4 := $80 (S126 r2): the farm leaves $60
+;     there (bank $12 $44A7) — the text-box sprite rule's threshold —
+;     so at the next talk every sprite over a BG tile >= $60 vanished in a
+;     room drawn with such ids (vanilla: reset by the next map load).
 ; Data (generated below): SHOP_COUNT, ShopPtrTable (dw per list),
-;   ShopList_n (item ids, $FF).
+;   ShopList_n (item ids, $FF), SERVICE_SET_COUNT + ServiceSetTable +
+;   ServicePairs_n (S126).
 ; =============================================================================
 
 SECTION "ROM Bank $077", ROMX[$4000], BANK[$77]
@@ -51,6 +95,10 @@ SECTION "ROM Bank $077", ROMX[$4000], BANK[$77]
     dw ShopFill                         ; entry 0 (HL=$7700)
     dw ShopClose                        ; entry 1 (HL=$7701)
     dw ScreenPush                       ; entry 2 (HL=$7702, S117b)
+    dw SayText                          ; entry 3 (HL=$7703, S126)
+    dw ServiceCloseBox                  ; entry 4 (HL=$7704, S126)
+    dw ServiceCloseTiles                ; entry 5 (HL=$7705, S126)
+    dw ServiceOpenTiles                 ; entry 6 (HL=$7706, S126)
 
 ShopFill:
     ld a, [wShopID]
@@ -223,7 +271,23 @@ ShopBoxBottom:
 
 ScreenPush:
     call PushAttrActive
-    ld [wPushAttrOn], a                 ; $80 = also write attributes
+    or a
+    jr z, .set                          ; not a free-colour custom room: tiles only
+    ld b, a
+    ld a, [wGameState]
+    bit 4, a                            ; a screen effect (op $04) running?
+    jr z, .keep
+    ld a, [$c8ef]
+    cp $0d                              ; S126: the list of Travelers' Gates
+    jr z, .full
+    cp $0f                              ; S126: the naming screen
+    jr nz, .keep
+.full:
+    ld b, $81                           ; every cell palette 7 (full-screen picture)
+.keep:
+    ld a, b
+.set:
+    ld [wPushAttrOn], a                 ; $80 = also write attributes, +1 = all palette 7
     ld a, [$c909]
     ld l, a
     ld a, [$c90a]
@@ -311,13 +375,27 @@ PushRowAttrs:
     ld [wPushAttrRow], a
     ld c, $00                           ; C = column
 .col:
+    ld b, $07
+    ld a, [wPushAttrOn]
+    rra
+    jr c, .put                          ; S126: a full-screen effect -> palette 7 everywhere
     ld a, [de]
-    cp $80
-    ld b, $07                           ; a menu / font tile -> palette 7
+    cp $80                              ; a menu / font tile -> palette 7
     jr nc, .put
     ld a, [wPushAttrRow]
     cp $10
     jr nc, .skip                        ; HUD rows: room tiles keep theirs
+    push hl
+    ld h, d
+    ld l, e
+    dec h
+    dec h                               ; HL = $C300 + the same cell: the room's own tile
+    ld a, [de]
+    cp [hl]
+    pop hl
+    jr nz, .put                         ; S126: a picture drawn into the room's tile slots
+                                        ; (family icons, the gate names) -> palette 7
+    ld a, [wPushAttrRow]
     push hl
     swap a                              ; row * 16
     ld l, a
@@ -360,3 +438,155 @@ PushRowAttrs:
     pop hl
     ret
 
+; -----------------------------------------------------------------------------
+; Entry 3: SayText (S126) — DE = text id (see the header)
+; -----------------------------------------------------------------------------
+SayText:
+    ld a, d
+    cp $0a
+    jr nc, .custom                      ; the project's own text id
+    ld a, [wServiceLines]
+    or a
+    jr z, .global
+    cp SERVICE_SET_COUNT + 1
+    jr nc, .global                      ; out of range: ignore
+    call SetPairs                       ; HL = set n's pairs
+    call ScanPairs
+    jr c, .custom
+.global:
+    xor a
+    call SetPairs                       ; set 0: every NPC of the kind
+    call ScanPairs
+    jr c, .custom
+    ld h, d
+    ld l, e
+    jp TextBankDispatch                 ; ROM0, as the say helpers did
+.custom:
+    ld a, d
+    sub $0a
+    ld [$c822], a                       ; the two-level index (bank $04 TextQueueCheck_Ext)
+    ld a, e
+    ld [$c823], a
+    ld hl, $6005                        ; bank $60 entry 5 CustomTextDisplay
+    rst $10
+    ret
+
+SetPairs:                               ; A = set number -> HL = ServiceSetTable[A]
+    add a
+    ld hl, ServiceSetTable
+    add l
+    ld l, a
+    adc h
+    sub l
+    ld h, a
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a
+    ret
+
+; HL = pairs (dw vanilla id, dw the project's id; $FFFF ends), DE = the id.
+; Found: CF set, DE = the project's id. Else CF clear, DE kept.
+ScanPairs:
+    ld a, [hl+]
+    ld c, a
+    ld a, [hl+]
+    ld b, a
+    and c
+    inc a
+    ret z                               ; $FFFF (and cleared CF; inc keeps it)
+    ld a, c
+    cp e
+    jr nz, .next
+    ld a, b
+    cp d
+    jr nz, .next
+    ld a, [hl+]
+    ld e, a
+    ld d, [hl]
+    scf
+    ret
+.next:
+    inc hl
+    inc hl
+    jr ScanPairs
+
+; -----------------------------------------------------------------------------
+; Entries 4 / 5 / 6 (S126): service screens' room tiles $60-$7F (see the header)
+; -----------------------------------------------------------------------------
+ServiceOpenTiles:
+    ld a, [wServiceTileSaved]
+    or a
+    ret nz                              ; this screen's tiles are already saved
+    ld a, [wMapID]
+    cp CUSTOM_ROOM_START
+    ret c                               ; vanilla rooms: unchanged
+    ld a, 1
+    ld [wServiceTileSaved], a
+    xor a
+    ldh [rVBK], a
+    ld hl, $9600
+    ld de, wServiceTileSave
+    ld bc, $0200
+.copy:
+    di
+.w:
+    ldh a, [rSTAT]
+    bit 1, a
+    jr nz, .w                           ; mode 0/1 (VRAM free; mode 2 follows)
+    ld a, [hl+]
+    ei
+    ld [de], a
+    inc de
+    dec bc
+    ld a, b
+    or c
+    jr nz, .copy
+    ret
+
+ServiceTilesBack:
+    ld a, [wServiceTileSaved]
+    or a
+    ret z
+    xor a
+    ld [wServiceTileSaved], a
+    ldh [rVBK], a
+    ld a, $80                           ; hSpriteHideTile ($FFD4) back to the font tiles: the
+    ldh [$d4], a                        ; farm sets $60 (bank $12 $44A7), bank $0A types 5 / 6 / 11 $78 / $40,
+                                        ; and while a text box is open every sprite piece over
+                                        ; a BG tile >= it is skipped (ROM0 SaveHLBC) — in a room
+                                        ; drawn with those ids ALL sprites vanished at the next
+                                        ; talk (user S126; vanilla resets it at the next map load)
+    ld hl, $9600
+    ld de, wServiceTileSave
+    ld bc, $0200
+.copy:
+    ld a, [de]
+    inc de
+    push bc
+    ld b, a
+    di
+.w:
+    ldh a, [rSTAT]
+    bit 1, a
+    jr nz, .w
+    ld [hl], b
+    ei
+    inc hl
+    pop bc
+    dec bc
+    ld a, b
+    or c
+    jr nz, .copy
+    ret
+
+ServiceCloseBox:
+    call ServiceTilesBack
+    jp ShopClose
+
+ServiceCloseTiles:
+    call ServiceTilesBack
+    ld hl, wGameState
+    res 4, [hl]
+    xor a
+    ld [$c905], a
+    ret

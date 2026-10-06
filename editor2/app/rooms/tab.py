@@ -576,6 +576,7 @@ class RoomsTab(QWidget):
         npc.newTalkRequested.connect(self._npc_new_talk)
         npc.newConversationRequested.connect(self._npc_new_conversation)     # S101
         npc.shopRequested.connect(self._npc_shop)                            # S117
+        npc.serviceRequested.connect(self._npc_service)                      # S126
         npc.shownWhenRequested.connect(self._npc_shown_when)                 # S120
         npc.colourEdited.connect(self._npc_colour)                           # S123
         npc.bossRequested.connect(self._npc_make_boss)                       # S123
@@ -1895,8 +1896,30 @@ class RoomsTab(QWidget):
                        bytes_hint=' '.join(str(b) for b in entry.get('bytes', [])),
                        conversation=(self.s.doc.describe_conversation(conv)
                                      if conv is not None else None),
-                       name=entry.get('actor'))
+                       name=entry.get('actor'),
+                       service=self._service_text(room, index))           # S126
         self._show_object(panel)                # selecting an NPC opens its section
+
+    def _service_text(self, room, index):
+        """S126: "Farm keeper — lines: Mira's lines — first visit: flag mira_met"
+        for a service NPC, else None."""
+        from editor2.core import services as SV
+        doc = self.s.doc
+        try:
+            sv = doc.service_of(room, self.key, self.state_idx, index)
+        except Exception:                                      # noqa: BLE001
+            return None
+        if sv is None:
+            return None
+        txt = SV.KINDS.get(sv.get('kind'), {}).get('name', sv.get('kind'))
+        if sv.get('lines'):
+            names = {st['id']: st['name'] for st in doc.service_line_sets()}
+            txt += f" — lines: {names.get(sv['lines'], sv['lines'])}"
+        else:
+            txt += " — the game's lines"
+        if sv.get('first_time'):
+            txt += f" — first visit (flag {sv['first_time'].get('flag')})"
+        return txt + '  (Service… to change; Services tab for the lines)'
 
     def _after_npc_edit(self, index):
         """Reload, then keep the edited NPC selected (marker refs are rebuilt)."""
@@ -2305,6 +2328,19 @@ class RoomsTab(QWidget):
         v.addWidget(ed)
         v.addWidget(QLabel('Then the game\'s BUY / SELL / EXIT shop, then "Thank you. '
                            'Come again!". Edit the lists and prices on the Shops tab.'))
+        # S126 (P3.14e1): the shop menu's own lines ("What will you buy?", …)
+        v.addWidget(QLabel('Shop menu lines (line sets are edited on the Services tab):'))
+        lines_combo = QComboBox()
+        lines_combo.addItem("the game's lines", None)
+        for st in doc.service_line_sets('shop'):
+            lines_combo.addItem(st['name'] + ('  (every shopkeeper)' if st['everywhere'] else ''),
+                                st['id'])
+        cur_lines = None
+        if cur:
+            sc = doc.shop_script(doc._npc_script_id(room, self.key, self.state_idx, idx))
+            cur_lines = (sc or {}).get('shop', {}).get('lines')
+        lines_combo.setCurrentIndex(max(0, lines_combo.findData(cur_lines)))
+        v.addWidget(lines_combo)
         bb = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         bb.accepted.connect(dlg.accept)
         bb.rejected.connect(dlg.reject)
@@ -2318,12 +2354,46 @@ class RoomsTab(QWidget):
             boxes = [[ln for ln in blk.split('\n') if ln.strip()][:2]
                      for blk in txt.split('\n\n') if blk.strip()]
 
+        sel_lines = lines_combo.currentData()
+
         def op(d, r, k, st):
-            return d.make_shopkeeper(r, k, st, idx, shop, boxes)
+            out = d.make_shopkeeper(r, k, st, idx, shop, boxes)
+            if sel_lines is not None:
+                d.set_shop_lines(r, k, st, idx, sel_lines)           # S126
+            return out
         if self._npc_op('Shopkeeper', op) is not None:
             self._after_npc_edit(idx)
             self.status_line.setText(f'This NPC now sells "{combo.currentText()}". '
                                      'Lists and prices: the Shops tab.')
+
+    def _npc_service(self):
+        """S126 (P3.14e1): the selected NPC becomes a service NPC — the Vault, a
+        farm keeper, the librarian, the namer, the Medal Man, the egg appraiser or
+        the gate guide (the game's menus; any room), with optional own lines and a
+        first visit."""
+        from editor2.app.rooms.service_dialog import ServiceDialog
+        idx = self._sel_npc
+        room = self.current_room()
+        if idx is None or room is None or self._sel_is_spot():
+            return
+        doc = self.s.doc
+        cur = doc.service_of(room, self.key, self.state_idx, idx)
+        dlg = ServiceDialog(doc, cur, self)
+        if dlg.exec() != QDialog.Accepted:
+            return
+        kind, lines, ft, new_set = dlg.result_spec()
+
+        def op(d, r, k, st):
+            ls = lines
+            if new_set:
+                ls = d.add_service_lines(kind, new_set)
+            return d.make_service_npc(r, k, st, idx, kind, ls, ft)
+        if self._npc_op('Service NPC', op) is not None:
+            self._after_npc_edit(idx)
+            from editor2.core import services as SV
+            self.status_line.setText(f"This NPC is now the {SV.KINDS[kind]['name']}"
+                                     + (". Edit its lines on the Services tab." if (lines or new_set)
+                                        else '.'))
 
     def _npc_edit_talk(self):
         idx = self._sel_npc

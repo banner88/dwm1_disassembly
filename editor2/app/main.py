@@ -242,6 +242,12 @@ class MainWindow(QMainWindow):
                 from editor2.app.shops_tab import ShopsTab
                 self.shops_tab = ShopsTab(self.session)
                 self.tabs.addTab(self.shops_tab, 'Shops')
+                # S126 (P3.14e1): service NPCs (Vault, farm, library, namer,
+                # Medal Man, eggs, gate guide), their menu lines, medal rewards
+                from editor2.app.services_tab import ServicesTab
+                self.services_tab = ServicesTab(self.session)
+                self.services_tab.navigate.connect(self.navigate_to)
+                self.tabs.addTab(self.services_tab, 'Services')
                 continue
             if title == 'Breeding' and self.session:
                 # S113 (P3.12): recipes, depth, try a cross, generate a tree

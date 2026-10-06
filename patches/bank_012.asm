@@ -27,17 +27,17 @@ label12_4003:
     rst $00
 
     ;function pointers
-    dw label12_4027
-    dw label12_4027
-    dw label12_4027
-    db $2d, $44
-    dw label12_4027
-    dw label12_4027
-    dw label12_4027
-    dw label12_4027
-    db $61, $60
-    db $42, $68
-    db $fe, $6a
+    dw label12_4027                   ; type 0
+    dw label12_4027                   ; type 1
+    dw label12_4027                   ; type 2
+    dw FarmScreenOpen                 ; type 3 — Pulio's farm menu (S126: FarmScreen after the room-tile save)
+    dw label12_4027                   ; type 4
+    dw label12_4027                   ; type 5
+    dw label12_4027                   ; type 6
+    dw label12_4027                   ; type 7
+    dw LibraryScreen                  ; type 8 — the Library (S126: was db $61, $60)
+    dw NamerScreen                    ; type 9 — the Monster Namer (S126: was db $42, $68)
+    dw MedalScreen                    ; type 10 — the Medal Man (S126: was db $fe, $6a)
     dw label12_4027
     dw label12_4027
     dw label12_4027
@@ -213,49 +213,29 @@ jr_012_40e2:
     ld [hl+], a
     jr jr_012_40c3
 
-GetScreenPos:
-    ld a, [$c909]
-    ld l, a
-    ld a, [$c90a]
-    ld h, a
-    ld de, $c500
-    ld c, $12
-
-jr_012_40f2:
-    ld b, $20
-    push hl
-
-jr_012_40f5:
-    ld a, [de]
-    call Write_gfx_tile
-    ld a, l
-    and $e0
-    push af
-    ld a, l
-    inc a
-    and $1f
-    ld l, a
-    pop af
-    or l
-    ld l, a
-    inc de
-    dec b
-    jr nz, jr_012_40f5
-
-    pop hl
-    push bc
-    ld bc, $0020
-    add hl, bc
-    ld a, h
-    and $03
-    or $98
-    ld h, a
-    pop bc
-    dec c
-    jr nz, jr_012_40f2
-
+ScreenPush12:
+    ; S126 (ROADMAP P3.14e1): bank $12's copy of the screen push (53 B: the
+    ; 18 x 32 $C500 -> BG map [$C909] tile writes, the same code as bank $09
+    ; LoadFld9_40fa) is a SAME-SIZE far call to bank $77 entry 2 ScreenPush —
+    ; palette attributes in free-colour custom rooms (the farm, Library, Monster Namer and medal windows took the room's
+    ; colours there, measured S126). The vanilla body is in
+    ; disassembly/bank_012.asm. The freed bytes hold SayAny12.
+    ld hl, $7702
+    rst $10
     ret
-
+SayAny12:
+    ; S126: the screen effect's text (HL = text id, from the say helper) goes
+    ; through bank $77 entry 3 SayText: ids >= $0A00 are the project's own
+    ; texts (a service NPC's own lines), lines the project remaps are swapped,
+    ; anything else is ROM0 TextBankDispatch as before.
+    ld d, h
+    ld e, l
+    ld hl, $7703
+    rst $10
+    ret
+    REPT 53 - 5 - 7
+    nop
+    ENDR
 
 LoadItem_411a:
     ld a, [$c827]
@@ -858,17 +838,24 @@ jr_012_440d:
     ret
 
 
-AddCursorOffset:
+; ScreenEffectSay12 (S126; was "AddCursorOffset" — a misnomer, DOC_AUDIT S126):
+; bank $12's copy of bank $09 ScreenEffectSay. HL = a text OFFSET; adds the screen
+; effect's text base [$C8F0/$C8F1] (script opcode $04's second word: farm $06C0,
+; Library $0740, Monster Namer $0780, Medal Man $0720) and speaks it. Every menu
+; line of FarmScreen / LibraryScreen / NamerScreen / MedalScreen goes through here.
+ScreenEffectSay12:
     ld a, [$c8f0]
     add l
     ld l, a
     ld a, [$c8f1]
     adc h
     ld h, a
-    call TextBankDispatch
+    call SayAny12                  ; S126: was call TextBankDispatch (bank $77 SayText)
     ret
 
 
+; FarmScreen: screen effect type 3 — Pulio's farm menu (DROP OFF / PICK UP / CHECK / SEPARATE / SLEEP; text base $06C0; family icons into the room's tile slots $60-$6F); S126 annotation
+FarmScreen:
     ld a, [$c905]
     rst $00
     dec sp
@@ -919,7 +906,7 @@ AddCursorOffset:
     ld [$c822], a
     ld a, $44
     ld [$c823], a
-    ld hl, $9600
+    ld hl, $9600                   ; S126: farm icons -> the ROOM's tile slots $60-$6F (VRAM $9600, the game never restores them; a free-colour room's are saved / restored by bank $77 ServiceOpenTiles / ServiceCloseTiles)
     ld de, $0501
     call LoadItem_411a
     ld a, $02
@@ -931,7 +918,7 @@ AddCursorOffset:
     call LoadItem_411a
     call ClrItem_4323
     ld a, $60
-    ldh [$d4], a
+    ldh [$d4], a                        ; S126 r2: hSpriteHideTile ($FFD4) := $60 — while a text box is open, sprites over BG tiles >= $60 (the farm icons) are skipped; never set back here (bank $01 ClearAnimationState sets $80 at the next map load; bank $77 ServiceTilesBack does in custom rooms)
     ld hl, $0105
     rst $10
     ld hl, $c905
@@ -949,7 +936,7 @@ AddCursorOffset:
     ld [$c8ec], a
     call SetItem_41ef
     call SetItem_44cb
-    call GetScreenPos
+    call ScreenPush12
     ret
 
 
@@ -1030,7 +1017,7 @@ jr_012_4531:
     call SetItem_41ef
     ld de, $2e07
     call ReadPtrFromDE
-    call GetScreenPos
+    call ScreenPush12
     call UpdateOAMSprites
     ld hl, $c13c
     ld de, $c1c0
@@ -1040,11 +1027,14 @@ jr_012_4531:
     call FuncItem_457f
     ld a, $80
     ldh [$d3], a
-    ld hl, wGameState
-    res 4, [hl]
-    xor a
-    ld [$c905], a
-    ret
+    ld hl, $7704                     ; S126: bank $77 entry 4 ServiceCloseBox — the farm's room tiles $60-$7F back + a top box re-seated
+    rst $10                             ; (was: ld hl, wGameState / res 4, [hl] / xor a /
+    ret                                 ;  ld [$c905], a / ret — 10 B, same size)
+    nop
+    nop
+    nop
+    nop
+    nop
 
 
 FuncItem_457f:
@@ -1114,7 +1104,7 @@ jr_012_4581:
     jr nz, jr_012_45e1
 
     ld hl, $0004
-    call AddCursorOffset
+    call ScreenEffectSay12
     call SetItem_4cb7
     or a
     jr nz, jr_012_45d7
@@ -1134,7 +1124,7 @@ jr_012_45d7:
 
 jr_012_45e1:
     ld hl, $0003
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld hl, $c906
     inc [hl]
     ret
@@ -1149,8 +1139,9 @@ jr_012_45ec:
     ld hl, $8aa0
     ld de, CopyDEtoHLByte
     call LoadItem_411a
-    ld hl, $06e1
-    call TextBankDispatch
+    ld hl, $0021                      ; S126: was ld hl, $06e1 / call TextBankDispatch — the
+    call ScreenEffectSay12                ; same farm line as base + 0021 (same size), so a
+                                        ; service NPC's own lines replace it too
     ld a, $01
     ld [$c905], a
     ret
@@ -1163,7 +1154,7 @@ jr_012_45ec:
     call LoadItem_4682
     call SetItem_4643
     call CallItem_4621
-    call GetScreenPos
+    call ScreenPush12
     ld hl, $c906
     inc [hl]
     ret
@@ -1364,7 +1355,7 @@ jr_012_473e:
     ld de, LibWinLayout_759a
     call ReadPtrFromDE
     call LoadItem_46fd
-    call GetScreenPos
+    call ScreenPush12
 
 jr_012_4772:
     ld a, [wJoypad_current_frame]
@@ -1379,7 +1370,7 @@ jr_012_4772:
     ld de, CopyDEtoHLByte
     call LoadItem_411a
     ld hl, $0001
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld a, $01
     ld [$c905], a
     jr jr_012_47ae
@@ -1409,7 +1400,7 @@ jr_012_47ae:
     rst $38
     rst $38
     ld hl, $0005
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld hl, $c906
     inc [hl]
     ret
@@ -1422,7 +1413,7 @@ jr_012_47ae:
     ld a, $5c
     call PlaySoundEffect
     call SetItem_47d7
-    call GetScreenPos
+    call ScreenPush12
     ld hl, $c906
     inc [hl]
     ret
@@ -1449,9 +1440,9 @@ SetItem_47d7:
     ld hl, $5605
     rst $10
     call CallItem_4621
-    call GetScreenPos
+    call ScreenPush12
     ld hl, $0003
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld a, $02
     ld [$c906], a
     jr jr_012_483a
@@ -1500,7 +1491,7 @@ jr_012_483a:
     ld hl, $0103
     rst $10
     ld hl, $0006
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld hl, $c906
     inc [hl]
     ret
@@ -1518,7 +1509,7 @@ jr_012_483a:
     ld de, CopyDEtoHLByte
     call LoadItem_411a
     ld hl, $0001
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld a, $01
     ld [$c905], a
     ret
@@ -1554,7 +1545,7 @@ jr_012_483a:
     ld [$c822], a
     ld a, $44
     ld [$c823], a
-    ld hl, $9600
+    ld hl, $9600                   ; S126: farm icons -> the ROOM's tile slots $60-$6F (VRAM $9600, the game never restores them; a free-colour room's are saved / restored by bank $77 ServiceOpenTiles / ServiceCloseTiles)
     ld de, $0501
     call LoadItem_411a
     ld a, $02
@@ -1570,9 +1561,9 @@ jr_012_483a:
     rst $10
     call CallItem_4621
     call SetItem_47d7
-    call GetScreenPos
+    call ScreenPush12
     ld hl, $0005
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld a, $05
     ld [$c906], a
     xor a
@@ -1585,7 +1576,7 @@ jr_012_483a:
     ret nz
 
     ld hl, $0007
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld hl, $c906
     inc [hl]
     ret
@@ -1598,7 +1589,7 @@ jr_012_483a:
     ld a, $5c
     call PlaySoundEffect
     call SetItem_492f
-    call GetScreenPos
+    call ScreenPush12
     ld hl, $c906
     inc [hl]
     ret
@@ -1631,7 +1622,7 @@ jr_012_4954:
     ld de, CopyDEtoHLByte
     call LoadItem_411a
     ld hl, $0001
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld a, $01
     ld [$c905], a
     jr jr_012_498c
@@ -1660,7 +1651,7 @@ jr_012_498c:
     call SetItem_4cb7
     call SetItem_4ce5
     ld hl, $0008
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld hl, $c906
     inc [hl]
     ret
@@ -1673,7 +1664,7 @@ jr_012_498c:
     call LoadItem_49e5
     call LoadItem_4d5d
     call CallItem_49ba
-    call GetScreenPos
+    call ScreenPush12
     ld hl, $c906
     inc [hl]
     ret
@@ -1758,7 +1749,7 @@ LoadItem_49ff:
 
     call LoadItem_49e5
     call LoadItem_49ff
-    call GetScreenPos
+    call ScreenPush12
 
 jr_012_4a42:
     pop af
@@ -1769,7 +1760,7 @@ jr_012_4a42:
     call LoadItem_4d5d
     call LoadItem_49e5
     call LoadItem_49ff
-    call GetScreenPos
+    call ScreenPush12
 
 jr_012_4a55:
     ld a, [wJoypad_current_frame]
@@ -1781,9 +1772,9 @@ jr_012_4a55:
     call SetItem_41ef
     call SetItem_44cb
     call SetItem_492f
-    call GetScreenPos
+    call ScreenPush12
     ld hl, $0007
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld a, $0c
     ld [$c906], a
     jr jr_012_4a8e
@@ -1806,7 +1797,7 @@ jr_012_4a8e:
 
 
     ld hl, $0009
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld hl, $c906
     inc [hl]
     ret
@@ -1819,7 +1810,7 @@ jr_012_4a8e:
     ld a, $5c
     call PlaySoundEffect
     call SetItem_4aaf
-    call GetScreenPos
+    call ScreenPush12
     ld hl, $c906
     inc [hl]
     ret
@@ -1848,9 +1839,9 @@ SetItem_4aaf:
     call LoadItem_49e5
     call LoadItem_4d5d
     call CallItem_49ba
-    call GetScreenPos
+    call ScreenPush12
     ld hl, $0008
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld a, $0f
     ld [$c906], a
     jr jr_012_4b17
@@ -1919,7 +1910,7 @@ jr_012_4b17:
     ld hl, $0103
     rst $10
     ld hl, $000a
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld hl, $c906
     inc [hl]
     ret
@@ -1937,7 +1928,7 @@ jr_012_4b17:
     ld de, CopyDEtoHLByte
     call LoadItem_411a
     ld hl, $0001
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld a, $01
     ld [$c905], a
     ret
@@ -1984,7 +1975,7 @@ jr_012_4b17:
     ld [$c822], a
     ld a, $44
     ld [$c823], a
-    ld hl, $9600
+    ld hl, $9600                   ; S126: farm icons -> the ROOM's tile slots $60-$6F (VRAM $9600, the game never restores them; a free-colour room's are saved / restored by bank $77 ServiceOpenTiles / ServiceCloseTiles)
     ld de, $0501
     call LoadItem_411a
     ld a, $02
@@ -2002,9 +1993,9 @@ jr_012_4b17:
     call LoadItem_49e5
     call CallItem_49ba
     call SetItem_4aaf
-    call GetScreenPos
+    call ScreenPush12
     ld hl, $0009
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld a, $12
     ld [$c906], a
     xor a
@@ -2084,7 +2075,7 @@ jr_012_4b17:
     jr nz, jr_012_4c92
 
     ld hl, $000c
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld a, $07
     ld [$c906], a
     ret
@@ -2096,7 +2087,7 @@ jr_012_4c92:
     jr nz, jr_012_4ca9
 
     ld hl, $000d
-    call AddCursorOffset
+    call ScreenEffectSay12
     xor a
     ld [$c8dd], a
     ld a, $0a
@@ -2107,7 +2098,7 @@ jr_012_4c92:
 jr_012_4ca9:
     call SetItem_4ce5
     ld hl, $000b
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld hl, $c906
     inc [hl]
     ret
@@ -2229,7 +2220,7 @@ CallItem_4d32:
     ld c, a
     ld hl, $c8e2
     call ReadItem_43c0
-    call GetScreenPos
+    call ScreenPush12
     ret
 
 
@@ -2319,7 +2310,7 @@ jr_012_4d99:
 
     call LoadItem_49e5
     call LoadItem_49ff
-    call GetScreenPos
+    call ScreenPush12
 
 jr_012_4dda:
     pop af
@@ -2330,7 +2321,7 @@ jr_012_4dda:
     call LoadItem_4d5d
     call LoadItem_49e5
     call LoadItem_49ff
-    call GetScreenPos
+    call ScreenPush12
 
 jr_012_4ded:
     ld a, [wJoypad_current_frame]
@@ -2345,7 +2336,7 @@ jr_012_4ded:
     ld de, CopyDEtoHLByte
     call LoadItem_411a
     ld hl, $0001
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld a, $01
     ld [$c905], a
     jr jr_012_4e25
@@ -2374,7 +2365,7 @@ jr_012_4e25:
     rst $38
     rst $38
     ld hl, $000e
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld hl, $c906
     inc [hl]
     ret
@@ -2387,7 +2378,7 @@ jr_012_4e25:
     ld a, $5c
     call PlaySoundEffect
     call SetItem_4e52
-    call GetScreenPos
+    call ScreenPush12
     ld hl, $c906
     inc [hl]
     ret
@@ -2414,9 +2405,9 @@ SetItem_4e52:
     ld hl, $5605
     rst $10
     call CallItem_4d32
-    call GetScreenPos
+    call ScreenPush12
     ld hl, $000b
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld a, $02
     ld [$c906], a
     jr jr_012_4eb5
@@ -2470,7 +2461,7 @@ jr_012_4eb5:
     ld bc, $0007                        ; S124: flag $0007 = a monster taken from the
     call SetEventFlag                   ; farm into an EMPTY party (Castle script 0 reads it)
     ld hl, $000f
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld hl, $c906
     inc [hl]
     ret
@@ -2497,7 +2488,7 @@ jr_012_4eef:
     ld hl, $0103
     rst $10
     ld hl, $000f
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld hl, $c906
     inc [hl]
     ret
@@ -2515,7 +2506,7 @@ jr_012_4eef:
     ld de, CopyDEtoHLByte
     call LoadItem_411a
     ld hl, $0001
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld a, $01
     ld [$c905], a
     ret
@@ -2562,7 +2553,7 @@ jr_012_4eef:
     ld [$c822], a
     ld a, $44
     ld [$c823], a
-    ld hl, $9600
+    ld hl, $9600                   ; S126: farm icons -> the ROOM's tile slots $60-$6F (VRAM $9600, the game never restores them; a free-colour room's are saved / restored by bank $77 ServiceOpenTiles / ServiceCloseTiles)
     ld de, $0501
     call LoadItem_411a
     ld a, $02
@@ -2578,9 +2569,9 @@ jr_012_4eef:
     rst $10
     call CallItem_4d32
     call SetItem_4e52
-    call GetScreenPos
+    call ScreenPush12
     ld hl, $000e
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld a, $05
     ld [$c906], a
     xor a
@@ -2593,7 +2584,7 @@ jr_012_4eef:
     ret nz
 
     ld hl, $0010
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld hl, $c906
     inc [hl]
     ret
@@ -2606,7 +2597,7 @@ jr_012_4eef:
     ld a, $5c
     call PlaySoundEffect
     call SetItem_4ffa
-    call GetScreenPos
+    call ScreenPush12
     ld hl, $c906
     inc [hl]
     ret
@@ -2639,7 +2630,7 @@ jr_012_501f:
     ld de, CopyDEtoHLByte
     call LoadItem_411a
     ld hl, $0001
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld a, $01
     ld [$c905], a
     jr jr_012_5058
@@ -2667,7 +2658,7 @@ jr_012_5058:
     ld bc, $ffff
     call SetItem_4ce5
     ld hl, $0013
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld hl, $c906
     inc [hl]
     ret
@@ -2680,7 +2671,7 @@ jr_012_5058:
     call LoadItem_49e5
     call LoadItem_4d5d
     call CallItem_5083
-    call GetScreenPos
+    call ScreenPush12
     ld hl, $c906
     inc [hl]
     ret
@@ -2727,7 +2718,7 @@ CallItem_5083:
 
     call LoadItem_49e5
     call LoadItem_49ff
-    call GetScreenPos
+    call ScreenPush12
 
 jr_012_50d7:
     pop af
@@ -2738,7 +2729,7 @@ jr_012_50d7:
     call LoadItem_4d5d
     call LoadItem_49e5
     call LoadItem_49ff
-    call GetScreenPos
+    call ScreenPush12
 
 jr_012_50ea:
     ld a, [wJoypad_current_frame]
@@ -2749,8 +2740,8 @@ jr_012_50ea:
     call SetItem_4643
     call CallItem_52ee
     ld hl, $0011
-    call AddCursorOffset
-    call GetScreenPos
+    call ScreenEffectSay12
+    call ScreenPush12
     ld a, $19
     ld [$c906], a
     jr jr_012_511f
@@ -2773,7 +2764,7 @@ jr_012_511f:
 
 
     ld hl, $0014
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld hl, $c906
     inc [hl]
     ret
@@ -2786,7 +2777,7 @@ jr_012_511f:
     ld a, $5c
     call PlaySoundEffect
     call SetItem_5140
-    call GetScreenPos
+    call ScreenPush12
     ld hl, $c906
     inc [hl]
     ret
@@ -2814,8 +2805,8 @@ SetItem_5140:
     call LoadItem_4d5d
     call CallItem_5083
     ld hl, $0013
-    call AddCursorOffset
-    call GetScreenPos
+    call ScreenEffectSay12
+    call ScreenPush12
     ld a, $0f
     ld [$c906], a
     jr jr_012_51a4
@@ -2900,7 +2891,7 @@ jr_012_51a4:
     ld hl, $0103
     rst $10
     ld hl, $0015
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld hl, $c906
     inc [hl]
     ret
@@ -2918,7 +2909,7 @@ jr_012_51a4:
     ld de, CopyDEtoHLByte
     call LoadItem_411a
     ld hl, $0001
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld a, $01
     ld [$c905], a
     ret
@@ -2965,7 +2956,7 @@ jr_012_51a4:
     ld [$c822], a
     ld a, $44
     ld [$c823], a
-    ld hl, $9600
+    ld hl, $9600                   ; S126: farm icons -> the ROOM's tile slots $60-$6F (VRAM $9600, the game never restores them; a free-colour room's are saved / restored by bank $77 ServiceOpenTiles / ServiceCloseTiles)
     ld de, $0501
     call LoadItem_411a
     ld a, $02
@@ -2982,9 +2973,9 @@ jr_012_51a4:
     rst $10
     call CallItem_5083
     call SetItem_5140
-    call GetScreenPos
+    call ScreenPush12
     ld hl, $0014
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld a, $12
     ld [$c906], a
     xor a
@@ -2993,7 +2984,7 @@ jr_012_51a4:
 
 
     ld hl, $0011
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld hl, $c906
     inc [hl]
     ret
@@ -3006,7 +2997,7 @@ jr_012_51a4:
     call LoadItem_5313
     call SetItem_4643
     call CallItem_52ee
-    call GetScreenPos
+    call ScreenPush12
     ld hl, $c906
     inc [hl]
     ret
@@ -3076,7 +3067,7 @@ LoadItem_5326:
     ld de, LibWinLayout_759a
     call ReadPtrFromDE
     call LoadItem_5326
-    call GetScreenPos
+    call ScreenPush12
 
 jr_012_5363:
     ld a, [wJoypad_current_frame]
@@ -3087,8 +3078,8 @@ jr_012_5363:
     call SetItem_44cb
     call SetItem_4ffa
     ld hl, $0010
-    call AddCursorOffset
-    call GetScreenPos
+    call ScreenEffectSay12
+    call ScreenPush12
     ld a, $0c
     ld [$c906], a
     jr jr_012_5398
@@ -3118,7 +3109,7 @@ jr_012_5398:
     rst $38
     rst $38
     ld hl, $0012
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld hl, $c906
     inc [hl]
     ret
@@ -3131,7 +3122,7 @@ jr_012_5398:
     ld a, $5c
     call PlaySoundEffect
     call SetItem_53c1
-    call GetScreenPos
+    call ScreenPush12
     ld hl, $c906
     inc [hl]
     ret
@@ -3159,8 +3150,8 @@ SetItem_53c1:
     call SetItem_4643
     call CallItem_52ee
     ld hl, $0011
-    call AddCursorOffset
-    call GetScreenPos
+    call ScreenEffectSay12
+    call ScreenPush12
     ld a, $19
     ld [$c906], a
     jr jr_012_5426
@@ -3224,7 +3215,7 @@ jr_012_5426:
     ld [$c822], a
     ld a, $44
     ld [$c823], a
-    ld hl, $9600
+    ld hl, $9600                   ; S126: farm icons -> the ROOM's tile slots $60-$6F (VRAM $9600, the game never restores them; a free-colour room's are saved / restored by bank $77 ServiceOpenTiles / ServiceCloseTiles)
     ld de, $0501
     call LoadItem_411a
     ld a, $02
@@ -3240,9 +3231,9 @@ jr_012_5426:
     rst $10
     call CallItem_52ee
     call SetItem_53c1
-    call GetScreenPos
+    call ScreenPush12
     ld hl, $0012
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld a, $1c
     ld [$c906], a
     xor a
@@ -3274,7 +3265,7 @@ jr_012_5426:
     jp z, Jump_012_45ec
 
     ld hl, $0016
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld hl, $c906
     inc [hl]
     ret
@@ -3300,7 +3291,7 @@ CallItem_54e5:
     ld de, LibTabColPos_564a
     ld a, [wOPTN_and_Item_selection]
     call FuncItem_43e2
-    call GetScreenPos
+    call ScreenPush12
     ret
 
 
@@ -3533,7 +3524,7 @@ jr_012_55f5:
     ld de, CopyDEtoHLByte
     call LoadItem_411a
     ld hl, $0001
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld a, $01
     ld [$c905], a
     jr jr_012_5649
@@ -3566,7 +3557,7 @@ LibTabColPos_564a:
     jr nz, jr_012_5662
 
     ld hl, $0017
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld a, $08
     ld [$c906], a
     ret
@@ -3575,7 +3566,7 @@ LibTabColPos_564a:
 jr_012_5662:
     call SetItem_56a6
     ld hl, $0018
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld hl, $c906
     inc [hl]
     ret
@@ -3728,7 +3719,7 @@ jr_012_5741:
     ld c, a
     ld hl, $c8e2
     call ReadItem_43c0
-    call GetScreenPos
+    call ScreenPush12
     ret
 
 
@@ -3965,7 +3956,7 @@ jr_012_5892:
 
     call LoadItem_49e5
     call LoadItem_49ff
-    call GetScreenPos
+    call ScreenPush12
 
 jr_012_58ba:
     pop af
@@ -3980,7 +3971,7 @@ jr_012_58ba:
 
     call LoadItem_49e5
     call LoadItem_49ff
-    call GetScreenPos
+    call ScreenPush12
 
 jr_012_58d4:
     ld a, [wJoypad_current_frame]
@@ -3989,7 +3980,7 @@ jr_012_58d4:
 
     call CallItem_54e5
     ld hl, $0016
-    call AddCursorOffset
+    call ScreenEffectSay12
     xor a
     ld [$c8ec], a
     ld hl, $c906
@@ -4076,7 +4067,7 @@ jr_012_5928:
     ld [$c822], a
     ld a, $44
     ld [$c823], a
-    ld hl, $9600
+    ld hl, $9600                   ; S126: farm icons -> the ROOM's tile slots $60-$6F (VRAM $9600, the game never restores them; a free-colour room's are saved / restored by bank $77 ServiceOpenTiles / ServiceCloseTiles)
     ld de, $0501
     call LoadItem_411a
     ld hl, $5605
@@ -4085,7 +4076,7 @@ jr_012_5928:
     call LoadItem_5751
     call CallItem_56fd
     ld hl, $0018
-    call AddCursorOffset
+    call ScreenEffectSay12
     call RequestScreenUpdate
     ld a, $05
     ld [$c906], a
@@ -4104,7 +4095,7 @@ jr_012_5928:
     ld de, CopyDEtoHLByte
     call LoadItem_411a
     ld hl, $0001
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld a, $01
     ld [$c905], a
     ret
@@ -4142,7 +4133,7 @@ jr_012_5928:
     jp z, Jump_012_45ec
 
     ld hl, $001a
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld hl, $c906
     inc [hl]
     ret
@@ -4153,7 +4144,7 @@ jr_012_5928:
     ret nz
 
     call CallItem_5a07
-    call GetScreenPos
+    call ScreenPush12
     ld hl, $c906
     inc [hl]
     ret
@@ -4188,7 +4179,7 @@ CallItem_5a07:
     ld de, CopyDEtoHLByte
     call LoadItem_411a
     ld hl, $0001
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld a, $01
     ld [$c905], a
     jr jr_012_5a74
@@ -4235,7 +4226,7 @@ LibTabColPos_5a8e:
     jr nz, jr_012_5aa6
 
     ld hl, $001b
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld a, $0a
     ld [$c906], a
     ret
@@ -4244,7 +4235,7 @@ LibTabColPos_5a8e:
 jr_012_5aa6:
     call SetItem_5aee
     ld hl, $001c
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld hl, $c906
     inc [hl]
     ret
@@ -4363,7 +4354,7 @@ jr_012_5b28:
     call LoadItem_5751
     call SetItem_41ef
     call CallItem_5b4f
-    call GetScreenPos
+    call ScreenPush12
     ld hl, $c906
     inc [hl]
     ret
@@ -4440,7 +4431,7 @@ jr_012_5baf:
 
     call LoadItem_49e5
     call LoadItem_49ff
-    call GetScreenPos
+    call ScreenPush12
 
 jr_012_5bd7:
     pop af
@@ -4455,7 +4446,7 @@ jr_012_5bd7:
 
     call LoadItem_49e5
     call LoadItem_49ff
-    call GetScreenPos
+    call ScreenPush12
 
 jr_012_5bf1:
     ld a, [wJoypad_current_frame]
@@ -4463,9 +4454,9 @@ jr_012_5bf1:
     jr z, jr_012_5c1a
 
     call CallItem_5a07
-    call GetScreenPos
+    call ScreenPush12
     ld hl, $001a
-    call AddCursorOffset
+    call ScreenEffectSay12
     xor a
     ld [$c8ec], a
     ld hl, $c906
@@ -4513,7 +4504,7 @@ jr_012_5c2f:
 jr_012_5c45:
     ld bc, $ffff
     ld hl, $001d
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld hl, $c906
     inc [hl]
     ret
@@ -4526,7 +4517,7 @@ jr_012_5c45:
     ld a, $5c
     call PlaySoundEffect
     call SetItem_5c68
-    call GetScreenPos
+    call ScreenPush12
     ld hl, $c906
     inc [hl]
     ret
@@ -4562,8 +4553,8 @@ jr_012_5c75:
     call SetItem_41ef
     call CallItem_5b4f
     ld hl, $001c
-    call AddCursorOffset
-    call GetScreenPos
+    call ScreenEffectSay12
+    call ScreenPush12
     ld a, $05
     ld [$c906], a
     jr jr_012_5cd8
@@ -4648,7 +4639,7 @@ jr_012_5d2c:
     ld hl, $0103
     rst $10
     ld hl, $001e
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld hl, $c906
     inc [hl]
     ret
@@ -4666,7 +4657,7 @@ jr_012_5d2c:
     ld de, CopyDEtoHLByte
     call LoadItem_411a
     ld hl, $0001
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld a, $01
     ld [$c905], a
     ret
@@ -4713,7 +4704,7 @@ jr_012_5d2c:
     ld [$c822], a
     ld a, $44
     ld [$c823], a
-    ld hl, $9600
+    ld hl, $9600                   ; S126: farm icons -> the ROOM's tile slots $60-$6F (VRAM $9600, the game never restores them; a free-colour room's are saved / restored by bank $77 ServiceOpenTiles / ServiceCloseTiles)
     ld de, $0501
     call LoadItem_411a
     call LoadItem_5a75
@@ -4724,9 +4715,9 @@ jr_012_5d2c:
     call SetItem_41ef
     call CallItem_5b4f
     call SetItem_5c68
-    call GetScreenPos
+    call ScreenPush12
     ld hl, $001d
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld a, $08
     ld [$c906], a
     xor a
@@ -4800,8 +4791,9 @@ jr_012_5e0b:
     nop
 
 jr_012_5e3c:
-    ld hl, $06cc
-    call TextBankDispatch
+    ld hl, $000c                      ; S126: was ld hl, $06cc / call TextBankDispatch — the
+    call ScreenEffectSay12                ; same farm line as base + 000c (same size), so a
+                                        ; service NPC's own lines replace it too
     ld a, $06
     ld [$c906], a
     ret
@@ -4815,7 +4807,7 @@ jr_012_5e4d:
     ld hl, $0022
 
 jr_012_5e50:
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld hl, $c906
     inc [hl]
     ret
@@ -4840,7 +4832,7 @@ CallItem_5e65:
     ld de, $5ecc
     ld a, [wPLAN_selection]
     call FuncItem_43e2
-    call GetScreenPos
+    call ScreenPush12
     ret
 
 
@@ -4861,7 +4853,7 @@ jr_012_5e93:
     ld de, CopyDEtoHLByte
     call LoadItem_411a
     ld hl, $0001
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld a, $01
     ld [$c905], a
     jr jr_012_5ecb
@@ -4952,7 +4944,7 @@ jr_012_5f1a:
     ld hl, $0024
 
 jr_012_5f1d:
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld hl, $c906
     inc [hl]
     ld hl, $c906
@@ -4965,7 +4957,7 @@ jr_012_5f1d:
     ret nz
 
     ld hl, $0022
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld hl, $c906
     dec [hl]
     ld hl, $c906
@@ -5033,7 +5025,7 @@ jr_012_5f68:
     pop af
     ld [wGameState], a
     ld hl, $0001
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld a, $01
     ld [$c905], a
     ret
@@ -5126,7 +5118,7 @@ SetItem_5fde:
     ld de, CopyDEtoHLByte
     call LoadItem_411a
     ld hl, $0001
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld a, $01
     ld [$c905], a
     ret
@@ -5198,6 +5190,8 @@ SaveItem_6052:
     ret
 
 
+; LibraryScreen: screen effect type 8 — the Library (look up a family; text base $0740; a full screen, the room reloaded at the close by bank $0B entries 1 / 2); S126 annotation
+LibraryScreen:
     ld a, [$c905]
     rst $00
     ld l, a
@@ -5242,7 +5236,7 @@ SaveItem_6052:
     call SetItem_4221
     ld de, $2e07
     call ReadPtrFromDE
-    call GetScreenPos
+    call ScreenPush12
     ld de, $2e14
     ld hl, $9000
     call WaitDMATransfer
@@ -5278,7 +5272,7 @@ SaveItem_6052:
 
 
     call SetItem_4221
-    call GetScreenPos
+    call ScreenPush12
     ld hl, $0b01
     rst $10
     ld hl, $0b02
@@ -5335,7 +5329,7 @@ Jump_012_6119:
     call LoadItem_616e
     call CallItem_614e
     call SetItem_61a0
-    call GetScreenPos
+    call ScreenPush12
     ld hl, $c906
     inc [hl]
     ret
@@ -5416,7 +5410,7 @@ SetItem_61a0:
 
     call LoadItem_616e
     call SetItem_61a0
-    call GetScreenPos
+    call ScreenPush12
 
 jr_012_61d9:
     pop af
@@ -5425,7 +5419,7 @@ jr_012_61d9:
     jr z, jr_012_61e6
 
     call SetItem_61a0
-    call GetScreenPos
+    call ScreenPush12
 
 jr_012_61e6:
     ld a, [wJoypad_current_frame]
@@ -5438,7 +5432,7 @@ jr_012_61e6:
     jr nz, jr_012_6205
 
     ld hl, $0004
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld a, $09
     ld [$c906], a
     jp Jump_012_6225
@@ -5478,7 +5472,7 @@ Jump_012_6225:
     rst $38
     call SetItem_6242
     ld hl, $0003
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld hl, $c906
     inc [hl]
     ret
@@ -5612,7 +5606,7 @@ CallItem_62af:
     ld c, a
     ld hl, $c8e2
     call ReadItem_43c0
-    call GetScreenPos
+    call ScreenPush12
     ret
 
 
@@ -5711,9 +5705,9 @@ jr_012_6349:
     call CallItem_614e
     ld de, LibWinLayout_7935
     call ReadPtrFromDE
-    call GetScreenPos
+    call ScreenPush12
     ld hl, $0001
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld a, $01
     ld [$c906], a
     jr jr_012_639d
@@ -5767,7 +5761,7 @@ jr_012_639d:
     add hl, hl
     ld bc, $ffff
     call SetItem_4221
-    call GetScreenPos
+    call ScreenPush12
     call LoadItem_63d0
     call SetItem_63bd
     ld hl, $c906
@@ -5781,7 +5775,7 @@ SetItem_63bd:
     call WaitDMATransfer
     ld de, LibWinLayout_79c6
     call ReadPtrFromDE
-    call GetScreenPos
+    call ScreenPush12
     ret
 
 
@@ -6018,7 +6012,7 @@ LoadItem_6544:
 
 
     call SetItem_4221
-    call GetScreenPos
+    call ScreenPush12
     call LoadItem_616e
     call LoadItem_62ce
     call CallItem_62af
@@ -6032,7 +6026,7 @@ LoadItem_6544:
     ret nz
 
     ld hl, $0001
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld a, $01
     ld [$c906], a
     ret
@@ -6453,6 +6447,8 @@ jr_012_6835:
     ret
 
 
+; NamerScreen: screen effect type 9 — the Monster Namer's list (text base $0780; the script then opens the naming screen, type 15); S126 annotation
+NamerScreen:
     ld a, [$c905]
     rst $00
     ld d, b
@@ -6530,7 +6526,7 @@ jr_012_6835:
     call SetItem_41ef
     ld de, $2e07
     call ReadPtrFromDE
-    call GetScreenPos
+    call ScreenPush12
     ld hl, wGameState
     res 4, [hl]
     xor a
@@ -6561,7 +6557,7 @@ jr_012_68dc:
     call LoadItem_6903
     call SetItem_690a
     ld hl, $0003
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld hl, $c906
     inc [hl]
     ret
@@ -6613,7 +6609,7 @@ jr_012_694d:
     ld c, a
     ld hl, $c8e2
     call ReadItem_43c0
-    call GetScreenPos
+    call ScreenPush12
     ret
 
 
@@ -6733,7 +6729,7 @@ jr_012_69ec:
     rst $38
     rst $38
     ld hl, $0005
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld hl, $c906
     inc [hl]
     xor a
@@ -6753,7 +6749,7 @@ jr_012_69ec:
     ld de, $6a62
     ld a, [$c8de]
     call FuncItem_43e2
-    call GetScreenPos
+    call ScreenPush12
     ld hl, $c906
     inc [hl]
     ret
@@ -6769,7 +6765,7 @@ jr_012_69ec:
 
 jr_012_6a3c:
     ld hl, $0001
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld a, $01
     ld [$c906], a
     jr jr_012_6a61
@@ -6823,7 +6819,7 @@ jr_012_6a8c:
     jr z, jr_012_6a9f
 
     ld hl, $0004
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld hl, $c906
     inc [hl]
     ld hl, $c906
@@ -6879,12 +6875,14 @@ jr_012_6a9f:
     ret nz
 
     ld hl, $0001
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld a, $01
     ld [$c906], a
     ret
 
 
+; MedalScreen: screen effect type 10 — the Medal Man's exchange (text base $0720; rewards MedalRewardTable, the eggs given [$D9E1]); S126 annotation
+MedalScreen:
     ld a, [$c905]
     rst $00
     ld c, $6b
@@ -6951,11 +6949,11 @@ jr_012_6b56:
     ld hl, $0305
     rst $10
     ld a, [$d9e1]
-    cp $04
+    cp MEDAL_REWARD_COUNT                ; S126: was cp $04 (gd_medal_rewards)
     jr z, jr_012_6b6c
 
     ld hl, $0001
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld hl, $c905
     inc [hl]
     ret
@@ -6963,7 +6961,7 @@ jr_012_6b56:
 
 jr_012_6b6c:
     ld hl, $000f
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld hl, $c905
     inc [hl]
     ret
@@ -6986,13 +6984,13 @@ jr_012_6b77:
     ld hl, $c180
     call FormatDecimalDigits
     ld a, [$d9e1]
-    cp $04
+    cp MEDAL_REWARD_COUNT                ; S126: was cp $04 (gd_medal_rewards)
     jr z, jr_012_6bd0
 
     ld a, [$d9e1]
     add a
     add a
-    ld hl, $6d29
+    ld hl, MedalRewardTable                ; S126: was ld hl, $6d29
     add l
     ld l, a
     ld a, $00
@@ -7018,7 +7016,7 @@ jr_012_6b77:
     jr c, jr_012_6bca
 
     ld hl, $0002
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld hl, $c905
     inc [hl]
     ret
@@ -7041,7 +7039,7 @@ jr_012_6bd0:
     ld hl, $c180
     call FormatDecimalDigits
     ld hl, $0010
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld a, $04
     ld [$c905], a
     ret
@@ -7080,7 +7078,7 @@ jr_012_6c0a:
     ld a, [$d9e1]
     add a
     add a
-    ld hl, $6d2b
+    ld hl, MedalRewardTable + 2            ; S126: was ld hl, $6d2b (the enemy row word)
     add l
     ld l, a
     ld a, $00
@@ -7149,7 +7147,7 @@ jr_012_6c7b:
 
 jr_012_6c84:
     ld hl, $000b
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld a, $05
     ld [$c905], a
     ret
@@ -7166,7 +7164,7 @@ jr_012_6c84:
     ld a, $00
     adc h
     ld h, a
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld a, $05
     ld [$c905], a
     ret
@@ -7183,13 +7181,13 @@ jr_012_6c84:
     ld hl, $c180
     call FormatDecimalDigits
     ld a, [$d9e1]
-    cp $04
+    cp MEDAL_REWARD_COUNT                ; S126: was cp $04 (gd_medal_rewards)
     jr z, jr_012_6d0f
 
     ld a, [$d9e1]
     add a
     add a
-    ld hl, $6d29
+    ld hl, MedalRewardTable                ; S126: was ld hl, $6d29
     add l
     ld l, a
     ld a, $00
@@ -7203,7 +7201,7 @@ jr_012_6c84:
     ld a, [$d9e1]
     add a
     add a
-    ld hl, $6d2b
+    ld hl, MedalRewardTable + 2            ; S126: was ld hl, $6d2b (the enemy row word)
     add l
     ld l, a
     ld a, $00
@@ -7224,7 +7222,7 @@ jr_012_6c84:
     ld de, $c1a0
     call SetupVRAMParams
     ld hl, $000c
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld hl, $c905
     inc [hl]
     ret
@@ -7232,7 +7230,7 @@ jr_012_6c84:
 
 jr_012_6d0f:
     ld hl, $0011
-    call AddCursorOffset
+    call ScreenEffectSay12
     ld hl, $c905
     inc [hl]
     ret
@@ -7249,18 +7247,19 @@ jr_012_6d0f:
     ret
 
 
-    dec c
-    nop
-    ld d, b
-    ld bc, $0012
-    ld d, c
-    ld bc, $0019
-    ld d, e
-    ld bc, $001e
-    ld d, h
-    ld bc, $ffff
-    nop
-    nop
+; MedalRewardTableVanilla ($12:$6D29, S126 re-section — was mgbdis fake code): the Medal
+; Man's rewards — per egg: dw the medals that earn it, dw the enemy row the egg
+; is made from (bank $14 entry 2 builds it into the farm); MedalScreen reads row
+; [$D9E1] (the eggs given so far) and stops at 4 (`cp $04` x 3); $FFFF ends.
+; 13 ZapBird (EID 336), 18 Trumpeter (337), 25 Spikerous (339), 30 Metabble (340).
+; Patched builds: dead — the readers use the generated MedalRewardTable (region
+; gd_medal_rewards at the bank's end; gamedata.medals, editor2 services.py).
+MedalRewardTableVanilla:
+    dw 13, 336
+    dw 18, 337
+    dw 25, 339
+    dw 30, 340
+    dw $FFFF, $0000
     ld a, [$efef]
     rst $28
     rst $28
@@ -8513,6 +8512,33 @@ FollowerArtResolve12:                ; in: HL = (species+$10)*2
     ld de, ItemSlotPtrTable
     add hl, de
     ret
+; =============================================================================
+; S126 (ROADMAP P3.14e1): the farm screen's room-tile save. The farm draws its
+; family / sleep icons into the room's tile slots $60-$6F and never puts them
+; back (the vanilla Farm's sheet leaves them unused); in a custom room that
+; uses them the room showed the icons until it reloaded (measured S126).
+; FarmScreenOpen (the type-3 dispatch word) far-calls bank $77 entry 6
+; ServiceOpenTiles (saves $9600-$97FF once per screen, custom rooms only);
+; the close (bank $77 entry 4) puts them back.
+; =============================================================================
+FarmScreenOpen:
+    ld hl, $7706
+    rst $10
+    jp FarmScreen
+
+; @BUILD_PROJECT BEGIN gd_medal_rewards
+; S126 (P3.14e1): the Medal Man's rewards (gamedata.medals; editor2 services.py).
+; Per egg: dw the medals that earn it, dw the enemy row the egg is made from.
+; Read by MedalScreen with the eggs given [$D9E1] (was $12:$6D29, 4 rows).
+MEDAL_REWARD_COUNT EQU 4
+MedalRewardTable:
+    dw 13, 336
+    dw 18, 337
+    dw 25, 339
+    dw 30, 340
+    dw $FFFF, $0000
+; @BUILD_PROJECT END gd_medal_rewards
+
     ; S104 r5: 39 fill nops consumed by LibTabToFamily / LibTabOrder / LibTabIconId.
     ; S105 G3: the remaining 714 $00 fill bytes are one `ds` to the bank end, so the
     ; compiler region gd_library_grouping can grow (each new species adds one list

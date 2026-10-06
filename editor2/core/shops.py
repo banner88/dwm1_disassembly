@@ -250,6 +250,10 @@ def emit_bank_077(prj, warnings, head):
         out.append(f"ShopList_{n}:  ; {label} — " + ", ".join(names.get(i, str(i)) for i in lst))
         out.append("    db " + ", ".join(f"${i:02x}" for i in lst) + ", $ff")
     out.append("")
+    # S126 (P3.14e1): the say helpers' remap rows (bank $77 entry 3 SayText)
+    from . import services as SV
+    out.extend(SV.set_table_lines(prj))
+    out.append("")
     if nv != 5:
         raise ShopError('internal: the template assumes five vanilla shops')
     return "\n".join(out) + "\n"

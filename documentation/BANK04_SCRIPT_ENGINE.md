@@ -671,7 +671,19 @@ animation at its first frame), `+$14` = the shown frame (0/1 down, 2/3 side, 4/5
 `+$15` frames left (ROOM_DATA_FORMAT "NPC RAM slot"). **`$04` screen types** (bank $09
 `ScreenEffectTable09`): 2 the Vault, 3 Pulio's farm menu, 8 the Library, 9 the Monster
 Namer, 10 MedalMan's exchange, 13 the list of Travelers' Gates (+ 0/12 shop, 4 arena
-class menu, 5/6/7/11 bank $0A, 15 naming). **Flags** are worded by `Catalogue.flag_desc`:
+class menu, 5/6/7/11 bank $0A, 15 naming). **S126 (ROADMAP P3.14e1):** the second word is the
+text BASE the menu speaks from (base + offset through the say helper of its bank: $09
+`ScreenEffectSay`, $0A `ScreenEffectSay0A`, $12 `ScreenEffectSay12` — all now via bank $77
+`SayText`): shop `$0680`, Vault `$06A0`, farm `$06C0`, Medal Man `$0720`, Library `$0740`,
+egg appraiser (7) `$0750`, Namer `$0780`; +0 greeting, +2 farewell, the rest the menu's.
+Handlers: `VaultScreen` `$09:$4EF9`, `FarmScreen` `$12:$442D`, `EggAppraiserScreen`
+`$0A:$6095`, `LibraryScreen` `$12:$6061`, `NamerScreen` `$12:$6842`, `MedalScreen`
+`$12:$6AFE`, `GateListScreen` `$09:$5ECA`. The menus never read the room: any NPC script
+can open them (PROJECT_COMPILER §2.39 — the vanilla scripts' shapes are copied there:
+the namer's YES / NO → list → `check_and_branch $C8F4, 255` → `close_text` → `$04 15 0`
+loop; the gate guide's `$0066` → `check_and_branch $C83C, 1` → `$04 13 0` → `nop` →
+`init_dialog` → `$047E`). `$C83C` is ALSO the live YES / NO cursor (0 YES, 1 NO; the box opens
+on NO — PYBOY_DEBUGGING S125; `up` / `down` move it without wrapping, PyBoy S126). **Flags** are worded by `Catalogue.flag_desc`:
 known names, else "set in <room>: «the scene's first words»"; `$0007` = a monster taken
 from the farm (Pulio, `$12:$4EBC`) into an empty party; `$0050-$0057` medal eggs.
 

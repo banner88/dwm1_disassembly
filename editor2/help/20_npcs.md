@@ -48,7 +48,9 @@ An NPC says or does something through a **talk** (New talk…: text, an
 optional YES/NO, flags, moving the player) or a **conversation** (New
 conversation…: the full step tree — see *Conversations*). **Shopkeeper…**
 makes the NPC sell a shop (its own greeting, then the game's BUY / SELL —
-see *Shops*).
+see *Shops*). **Service…** makes it the Vault keeper, a farm keeper, the
+librarian, the Monster Namer, the Medal Man, the egg appraiser or the gate
+guide — the game's menus, in any room (see *Services*).
 
 The spinning **swirl** objects on gate entrances are NPCs too (sprite
 `$4D`): they show only until their gate is cleared — or, when the gate (or

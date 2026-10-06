@@ -967,6 +967,166 @@ def s124r3_places(app, w, pt):
           'panel; Open → that screen / state / NPC; the Old Man Gate Room (3, 5)')
 
 
+def s126_services(app, w):
+    """S126 (ROADMAP P3.14e1): Rooms tab → NPC → Service… makes an NPC a service
+    NPC (here the farm keeper with a new line set and a first visit remembered
+    by a new flag); the Services tab lists it (Go to opens it), edits the line
+    set (speaker, a line with the box preview, the game's words back) and the
+    Medal Man's rewards; the project compiles; every edit undoes to the
+    original project.json."""
+    from PySide6 import QtWidgets as QW
+    import editor2.app.rooms.service_dialog as SDm
+    import editor2.app.services_tab as SVm
+    s = w.session
+    doc = s.doc
+    before = doc.dumps()
+    n0 = s.undo.index()
+    rt = w.rooms_tab
+    w.tabs.setCurrentWidget(rt)
+    rt.open_node(('room', 'dusk_mirror'))
+    app.processEvents()
+    cmd = rt._npc_op('Add NPC', lambda d, r, k, st: d.add_npc(r, k, st, 6, 4, 0x06))
+    idx = cmd.result
+    rt._after_npc_edit(idx)
+    app.processEvents()
+    assert rt.npc_panel.btn_service.isEnabled()
+    d_exec = SDm.ServiceDialog.exec
+    k_text = SDm.QInputDialog.getText
+
+    def _farm(dlg):
+        for i in range(dlg.kinds.count()):
+            if dlg.kinds.item(i).data(256) == 'farm':
+                dlg.kinds.setCurrentRow(i)
+        dlg.lines.setCurrentIndex(dlg.lines.findData(SDm.NEW_SET))
+        dlg.first.setChecked(True)
+        dlg.first_text.setPlainText('Hi! I keep the\nfarm up here.')
+        dlg.flag.setText('mira_met')
+        dlg._ok()
+        return QW.QDialog.Accepted
+    SDm.ServiceDialog.exec = _farm
+    SDm.QInputDialog.getText = staticmethod(lambda *a, **k: ("Mira's lines", True))
+    try:
+        rt._npc_service()
+    finally:
+        SDm.ServiceDialog.exec = d_exec
+        SDm.QInputDialog.getText = k_text
+    app.processEvents()
+    room = doc.room('dusk_mirror')
+    sv = doc.service_of(room, rt.key, rt.state_idx, idx)
+    assert sv['kind'] == 'farm' and sv['lines'] == 'mira_s_lines', sv
+    assert sv['first_time']['boxes'] == [['Hi! I keep the', 'farm up here.']], sv
+    assert any(f.get('name') == 'mira_met' for f in doc.flags()), 'first-visit flag not made'
+    assert 'Farm keeper' in rt.npc_panel.talk_preview.text(), rt.npc_panel.talk_preview.text()
+    # the flag's uses show on the Progression & Flags tab
+    from editor2.core import flag_index as FI
+    fx = FI.FlagIndex(doc.data, REPO)
+    num = doc.flag_numbers()['mira_met']
+    roles = sorted(u.role for u in fx.uses if u.idx == num)
+    assert roles == ['on', 'test'] and all(u.kind == 'service' for u in fx.uses
+                                           if u.idx == num), roles
+    # the Services tab
+    vt = w.services_tab
+    w.tabs.setCurrentWidget(vt)
+    vt.refresh()
+    app.processEvents()
+    assert vt.npcs.rowCount() == 1 and vt.npcs.item(0, 3).text() == 'Farm keeper', \
+        [vt.npcs.item(0, c).text() for c in range(5)]
+    got = []
+    vt.navigate.connect(got.append)
+    vt.npcs.setCurrentCell(0, 0)
+    vt._goto()
+    assert got and got[-1]['room'] == 'dusk_mirror' and (got[-1]['x'], got[-1]['y']) == (6, 4), got
+    vt.pages.setCurrentIndex(1)
+    assert vt.current_set_id() == 'mira_s_lines' and vt.lines.rowCount() == 39
+    vt.set_speaker.setText('Mira')
+    vt.set_speaker.editingFinished.emit()
+    app.processEvents()
+    assert doc._line_set('mira_s_lines')['speaker'] == 'Mira'
+    vt.lines.setCurrentCell(0, 0)
+    app.processEvents()
+    assert vt.line_edit.toPlainText().startswith('Hey there!'), vt.line_edit.toPlainText()
+    vt.line_edit.setPlainText('Howdy! What\ndo you need?')
+    app.processEvents()
+    assert vt.line_probs.text() == '' and vt.preview_v.count() == 2   # one box + stretch
+    vt._apply_line()
+    app.processEvents()
+    assert doc._line_set('mira_s_lines')['lines'] == {'0': 'Howdy! What\ndo you need?'}
+    assert vt.lines.item(0, 2).text().startswith('Howdy!')
+    vt.line_edit.setPlainText('This line is far too long for one box line')
+    app.processEvents()
+    assert 'cells' in vt.line_probs.text(), vt.line_probs.text()
+    vt._line_game()                                        # the game's words again
+    app.processEvents()
+    assert doc._line_set('mira_s_lines').get('lines') == {}, doc._line_set('mira_s_lines')
+    vt.lines.setCurrentCell(0, 0)
+    vt._show_line(0)
+    vt.line_edit.setPlainText('Howdy! What\ndo you need?')
+    vt._apply_line()
+    app.processEvents()
+    # the Medal Man
+    vt.pages.setCurrentIndex(2)
+    assert vt.medals.rowCount() == 4 and 'game' in vt.medals_state.text()
+    vt.medals.item(0, 0).setText('3')
+    app.processEvents()
+    rw = doc.data['gamedata']['medals']['rewards']
+    assert [r['medals'] for r in rw] == [3, 18, 25, 30], rw
+    warned = []
+    k_w = SVm.QMessageBox.warning
+    SVm.QMessageBox.warning = staticmethod(lambda *a, **k: warned.append(a[2]))
+    vt.medals.item(1, 0).setText('2')                       # not rising: refused
+    app.processEvents()
+    SVm.QMessageBox.warning = k_w
+    assert warned and 'more medals' in warned[0], warned
+    assert [r['medals'] for r in doc.data['gamedata']['medals']['rewards']] == [3, 18, 25, 30]
+    vt._medal_add()
+    app.processEvents()
+    assert vt.medals.rowCount() == 5 and doc.data['gamedata']['medals']['rewards'][-1]['medals'] == 35
+    cb = vt.medals.cellWidget(4, 1)
+    cb.setCurrentIndex(cb.findData(336))
+    app.processEvents()
+    assert doc.data['gamedata']['medals']['rewards'][-1]['enemy'] == 336
+    vt.medals.item(4, 2).setText("A gift ⏎ for you!")
+    app.processEvents()
+    assert doc.data['gamedata']['medals']['rewards'][-1]['line'] == 'A gift\nfor you!'
+    # reward 5 speaks block line +7, which ends with a line break: its last box holds one
+    assert 'reward 5' in vt.medal_probs.text() and 'holds 1' in vt.medal_probs.text(), \
+        vt.medal_probs.text()
+    vt.medals.item(4, 2).setText("A gift for you!")
+    app.processEvents()
+    assert doc.data['gamedata']['medals']['rewards'][-1]['line'] == 'A gift for you!' \
+        and vt.medal_probs.text() == '', vt.medal_probs.text()
+    # the edits compile (service script, line set, medal table)
+    import shutil as _sh
+    import tempfile
+    from editor2.core import compiler as Cc
+    td = tempfile.mkdtemp()
+    _sh.copytree(doc.project_dir, os.path.join(td, 'p'), ignore=_sh.ignore_patterns('build'))
+    open(os.path.join(td, 'p', 'project.json'), 'w').write(doc.dumps())
+    outs, _pp, _ww = Cc.compile_project(os.path.join(td, 'p'), REPO)
+    assert 'SERVICE_SET_COUNT EQU 1' in outs['patches/bank_077.asm']
+    assert 'MEDAL_REWARD_COUNT EQU 5' in outs['patches/bank_012.asm']
+    _sh.rmtree(td, ignore_errors=True)
+    vt._medal_reset()
+    app.processEvents()
+    assert 'medals' not in (doc.data.get('gamedata') or {})
+    k_q = SVm.QMessageBox.question
+    SVm.QMessageBox.question = staticmethod(lambda *a, **k: SVm.QMessageBox.Yes)
+    vt.pages.setCurrentIndex(1)
+    vt._delete_set()
+    SVm.QMessageBox.question = k_q
+    app.processEvents()
+    assert doc.service_line_sets() == [] and \
+        doc.service_of(doc.room('dusk_mirror'), rt.key, rt.state_idx, idx).get('lines') is None
+    while s.undo.index() > n0:
+        s.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'S126 service edits did not undo to the original'
+    print('OK: S126 Services — Service… (farm keeper, new line set, first visit + flag), '
+          'the Services tab (NPC list + Go to, speaker, a line with preview / problems / the '
+          "game's words, Medal Man rewards add / egg / line / refused / reset), compiles, "
+          'undoes to the original')
+
+
 def main():
     do_rom = '--rom' in sys.argv
     app = QApplication.instance() or QApplication(sys.argv)
@@ -1017,6 +1177,7 @@ def main():
     s123_worlds(app, w)
     s124_progression(app, w)
     s125_hub(app, w)
+    s126_services(app, w)
 
     # S101 r3: World tab zoom (wheel, around the mouse) + pan (drag empty canvas)
     from PySide6.QtCore import QPoint, QPointF, Qt

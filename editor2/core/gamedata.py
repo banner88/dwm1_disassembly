@@ -45,7 +45,8 @@ SECTIONS = ('monsters', 'enemies', 'encounters', 'skills', 'exp_curves',
             'growth_curves', 'breeding', 'boss_joins', 'families', 'art',
             'monster_text',   # S108: names / nicknames / descriptions (monster_text.py)
             'arena',          # S109: arena fees / masters / team sizes (arena.py)
-            'items', 'shops')  # S117: item prices / the vanilla shop lists (shops.py)
+            'items', 'shops',  # S117: item prices / the vanilla shop lists (shops.py)
+            'medals')          # S126: the Medal Man's rewards (services.py)
 
 # S104 (P3.10a): per-family settings. Arena-lobby party dialogue comes in four
 # VOICES (bank $04 FamilyTextGroup_A-D, 8 lines each); vanilla gives every

@@ -887,8 +887,8 @@ Tables initialized by Bank $51 battle setup. Each table holds 16 bytes (up to 8 
 | `RoomEntry4_TalkTargetLookup` | $0B:$4332 | — | A-press target at a cell: NPC slots (`TalkScanNPCSlots` $433F via `NPCSlotAtPos` $43E5), then EXAMINE spots $8x (`TalkScanExamineSpots` $4366, `ExamineSpotMatch` $438D, facing nibble) — S98 (was `RoomEntry4_NPCMovement`) |
 | `SearchStepTriggers` | $0B:$43B8 | — | STEP-ON trigger ($90) at the player's cell; entry 5 `RoomEntry5_StepTriggerLookup` $43A4 — S98 (was `SearchNPCAtFacing`) |
 | `InteractEntryAtPos` | $0B:$4452 | — | Coordinate match for an interact entry ≥$80; both scans stop at the first NPC entry — S98 (was `CheckExitCoords`) |
-| `AddCursorOffset` | $12:$441F | 82 | UI cursor offset calc |
-| `GetScreenPos` | $12:$40E5 | 62 | Screen position from RAM |
+| `ScreenEffectSay12` | $12:$441F | 82 | S126 (was `AddCursorOffset`, a misnomer): HL = a text offset + the screen effect's text base `[$C8F0]`, spoken — every menu line of the farm / Library / Namer / Medal Man; bank $0A's copy = `ScreenEffectSay0A` `$0A:$441F` (was `LoadFldA_441f`), bank $09's = `ScreenEffectSay` |
+| `ScreenPush12` | $12:$40E5 | 62 | S126 (was `GetScreenPos`, a misnomer): bank $12's copy of bank $09's window push (`LoadFld9_40fa`) — now a far call to bank $77 entry 2 `ScreenPush`; bank $0A's = `ScreenPush0A` |
 | `ReadPtrFromDE` | $12:$40B4 | 44 | Read 2-byte ptr from [DE] |
 | `LoadEnemyStats` | $14:$4849 | — | Copy enemy stats from table |
 | `LookupBossRedirect` | $14:$4869 | — | Multi-monster battle redirect |
@@ -1370,3 +1370,21 @@ deliberately excludes EID 1's species byte so the locator still works on an
 already-edited ROM. `randomizer/romdata.py::RomLayout` does this, with an MD5
 fast path for the two known builds and structural sanity checks that fail loudly
 on an unrecognised image.
+
+## Service screens — script op `$04` (S126, code-read + PyBoy)
+
+`$04 <type> <text base>` sets `$C8EF` = type, `$C8F0/$C8F1` = the base, bit 4 of
+wGameState, and the type's handler runs every frame from bank $09 `ScreenEffectTable09`
+(per-bank tables in $0A / $12 for their types) with its state in `$C905`; the handler
+clears bit 4 at its close. Lines = base + offset (block sizes and the speaking NPCs in
+`extracted/service_lines.json`; PROJECT_COMPILER §2.39 table).
+
+**Medal rewards** (`MedalRewardTable`, `$12:$6D29` in the original, 4 rows × 4 bytes +
+`$FFFF` end): `dw medals_needed, dw EID` — 13 / ZapBird (336), 18 / Trumpeter (337), 25 /
+Spikerous (339), 30 / Metabble (340). Indexed by the eggs given `[$D9E1]` (`cp $04` at
+`$6B5D`, `$6B92`, `$6CC0` = the count), the medals brought in all at `$C903/$C904` (capped
+999 at `$6B4B`), each reward sets flag `$0050 + [$D9E1]`. The egg is built by bank $14
+entry 2 from the EID's enemy row. Reward line n = text base + 2 + n (`$0723`..`$0726`;
+`$072A`, `$0727-$0729` the count / "exceeded" lines). S126: the table and the count are
+the region `gd_medal_rewards` (`MEDAL_REWARD_COUNT`); the old bytes stay, unread.
+

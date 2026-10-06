@@ -21,7 +21,7 @@ label4003:
     dw labela_4027
     dw label442d
     dw label4bc3
-    dw label6095
+    dw EggAppraiserScreen
     dw labela_4027
     dw labela_4027
     dw labela_4027
@@ -200,7 +200,7 @@ jr_00a_40e2:
     ld [hl+], a
     jr jr_00a_40c3
 
-LoadFldA_40e5:
+ScreenPush0A:
     ld a, [$c909]
     ld l, a
     ld a, [$c90a]
@@ -844,7 +844,11 @@ jr_00a_440d:
     ret
 
 
-LoadFldA_441f:
+; ScreenEffectSay0A (S126; was "LoadFldA_441f"): bank $0A's copy of bank $09
+; ScreenEffectSay. HL = a text OFFSET + the screen effect's text base
+; [$C8F0/$C8F1] (egg appraiser $0750), spoken. Every menu line of
+; EggAppraiserScreen goes through here.
+ScreenEffectSay0A:
     ld a, [$c8f0]
     add l
     ld l, a
@@ -902,7 +906,7 @@ label443b:
     call WaitDMATransfer
     call ClrFldA_4323
     ld a, $78
-    ldh [$d4], a
+    ldh [$d4], a                        ; S126 r2: hSpriteHideTile ($FFD4) := $78 (sprites over BG tiles >= it skipped while a text box is open); not set back until the next map load
     ld hl, $c905
     inc [hl]
     ret
@@ -914,7 +918,7 @@ label448a:
     call PlaySoundEffect
     call SetFldA_41ef
     call SetFldA_449d
-    call LoadFldA_40e5
+    call ScreenPush0A
     ret
 
 
@@ -989,7 +993,7 @@ label4516:
     call SetFldA_41ef
     ld de, $2e07
     call LoadFldA_40b4
-    call LoadFldA_40e5
+    call ScreenPush0A
     xor a
     ld [$c8ec], a
     ld a, $80
@@ -1031,7 +1035,7 @@ label455e:
     call SetFldA_459c
     call LoadFldA_4ba2
     ld hl, $0002
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld hl, $c906
     inc [hl]
     ret
@@ -1147,7 +1151,7 @@ CallFldA_45e5:
     ld c, a
     ld hl, $c8e2
     call ReadFldA_43c0
-    call LoadFldA_40e5
+    call ScreenPush0A
     ret
 
 
@@ -1422,7 +1426,7 @@ label479d:
 
     call LoadFldA_46c9
     call LoadFldA_474b
-    call LoadFldA_40e5
+    call ScreenPush0A
 
 jr_00a_47c6:
     pop af
@@ -1442,7 +1446,7 @@ jr_00a_47d9:
 
     call LoadFldA_4ba2
     ld hl, $0001
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld a, $01
     ld [$c905], a
     jr jr_00a_481e
@@ -1490,7 +1494,7 @@ jr_00a_481e:
 
 label482b:
     ld hl, $0005
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld hl, $c906
     inc [hl]
     ret
@@ -1526,7 +1530,7 @@ CallFldA_4843:
     ld de, $4914
     ld a, [wPLAN_selection]
     call FuncFldA_43e2
-    call LoadFldA_40e5
+    call ScreenPush0A
     ret
 
 label487d:
@@ -1541,7 +1545,7 @@ label487d:
     call CallFldA_45e5
     call LoadFldA_4ba2
     ld hl, $0002
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld hl, $c906
     dec [hl]
     ld hl, $c906
@@ -1579,7 +1583,7 @@ jr_00a_48cf:
     jr nc, jr_00a_48ea
 
     ld hl, $0003
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld a, $10
     ld [$c906], a
     jr jr_00a_4913
@@ -1598,7 +1602,7 @@ jr_00a_48ea:
     jr nz, jr_00a_490b
 
     ld hl, $0004
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld a, $10
     ld [$c906], a
     jr jr_00a_4913
@@ -1622,7 +1626,7 @@ jr_00a_4913:
 
 label491a:
     ld hl, $0006
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld hl, $c906
     inc [hl]
     ret
@@ -1640,7 +1644,7 @@ label4925:
     ld de, $4988
     ld a, [$c8de]
     call FuncFldA_43e2
-    call LoadFldA_40e5
+    call ScreenPush0A
     ld hl, $c906
     inc [hl]
     ret
@@ -1658,7 +1662,7 @@ label4949:
 jr_00a_495b:
     call LoadFldA_4ba2
     ld hl, $0001
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld a, $01
     ld [$c905], a
     jr jr_00a_4987
@@ -1696,9 +1700,9 @@ label498e:
     ld de, $2e07
     call LoadFldA_40b4
     call CallFldA_4b9e
-    call LoadFldA_40e5
+    call ScreenPush0A
     ld hl, $0007
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld hl, $c906
     inc [hl]
     ret
@@ -1716,7 +1720,7 @@ label49ab:
     ld de, $4a0a
     ld a, [$c8df]
     call FuncFldA_43e2
-    call LoadFldA_40e5
+    call ScreenPush0A
     ld hl, $c906
     inc [hl]
     ret
@@ -1733,7 +1737,7 @@ label49cf:
 jr_00a_49e1:
     call LoadFldA_4ba2
     ld hl, $0001
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld a, $01
     ld [$c905], a
     jr jr_00a_4a09
@@ -1765,9 +1769,9 @@ jr_00a_4a09:
 label4a10:
     ld de, $2e07
     call LoadFldA_40b4
-    call LoadFldA_40e5
+    call ScreenPush0A
     ld hl, $0008
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld hl, $c906
     inc [hl]
     ld a, [$cac0]
@@ -1932,7 +1936,7 @@ label4b46:
     call LoadFldA_46c9
     call LoadFldA_4610
     ld hl, $0005
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     call CallFldA_4843
     xor a
     ld [$c8ec], a
@@ -1949,7 +1953,7 @@ label4b81:
     call SetFldA_459c
     call LoadFldA_4ba2
     ld hl, $0002
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     call CallFldA_45e5
     ld a, $01
     ld [$c906], a
@@ -2025,7 +2029,7 @@ label4bd1:
     call SetFldA_41ef
     ld de, $2e07
     call LoadFldA_40b4
-    call LoadFldA_40e5
+    call ScreenPush0A
     ld de, $2e12
     ld hl, $8800
     call WaitDMATransfer
@@ -2038,7 +2042,7 @@ label4bd1:
     call LoadFldA_411a
     call ClrFldA_4323
     ld a, $40
-    ldh [$d4], a
+    ldh [$d4], a                        ; S126 r2: hSpriteHideTile ($FFD4) := $40 (sprites over BG tiles >= it skipped while a text box is open); not set back until the next map load
     ld hl, $c905
     inc [hl]
     ret
@@ -2048,7 +2052,7 @@ label4c3c:
     inc [hl]
     call SetFldA_41ef
     call SetFldA_4c4a
-    call LoadFldA_40e5
+    call ScreenPush0A
     ret
 
 
@@ -2139,7 +2143,7 @@ label4ce2:
     call SetFldA_41ef
     ld de, $2e07
     call LoadFldA_40b4
-    call LoadFldA_40e5
+    call ScreenPush0A
     xor a
     ld [$c8ec], a
     ld a, $80
@@ -2190,7 +2194,7 @@ label4d3c:
     call SetFldA_4d4d
     call SetFldA_4d77
     ld hl, $0003
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld hl, $c906
     inc [hl]
     ret
@@ -2306,7 +2310,7 @@ CallFldA_4dc0:
     ld c, a
     ld hl, $c8e2
     call ReadFldA_43c0
-    call LoadFldA_40e5
+    call ScreenPush0A
     ret
 
 
@@ -2529,7 +2533,7 @@ label4f14:
     ld de, $76a7
     call LoadFldA_40b4
     call LoadFldA_4ed3
-    call LoadFldA_40e5
+    call ScreenPush0A
 
 jr_00a_4f49:
     pop af
@@ -2542,7 +2546,7 @@ jr_00a_4f49:
     ld de, $76a7
     call LoadFldA_40b4
     call LoadFldA_4ed3
-    call LoadFldA_40e5
+    call ScreenPush0A
 
 jr_00a_4f62:
     ld a, [wJoypad_current_frame]
@@ -2550,7 +2554,7 @@ jr_00a_4f62:
     jr z, jr_00a_4f76
 
     ld hl, $0001
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld a, $01
     ld [$c905], a
     jr jr_00a_4fa7
@@ -2597,7 +2601,7 @@ jr_00a_4fa7:
 
 label4fb4:
     ld hl, $0005
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld hl, $c906
     inc [hl]
     ret
@@ -2633,7 +2637,7 @@ CallFldA_4fcc:
     ld de, $509a
     ld a, [wPLAN_selection]
     call FuncFldA_43e2
-    call LoadFldA_40e5
+    call ScreenPush0A
     ret
 
 label5006:
@@ -2647,7 +2651,7 @@ label5006:
 
     call CallFldA_4dc0
     ld hl, $0003
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld hl, $c906
     dec [hl]
     ld hl, $c906
@@ -2685,7 +2689,7 @@ jr_00a_5055:
     jr nc, jr_00a_5070
 
     ld hl, $0007
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld a, $16
     ld [$c906], a
     jr jr_00a_5099
@@ -2704,7 +2708,7 @@ jr_00a_5070:
     jr nz, jr_00a_5091
 
     ld hl, $0006
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld a, $16
     ld [$c906], a
     jr jr_00a_5099
@@ -2730,7 +2734,7 @@ label50a0:
     call SetFldA_50b1
     call SetFldA_50e4
     ld hl, $0004
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld hl, $c906
     inc [hl]
     ret
@@ -2856,7 +2860,7 @@ CallFldA_5133:
     ld c, a
     ld hl, $c8e4
     call ReadFldA_43c0
-    call LoadFldA_40e5
+    call ScreenPush0A
     ret
 
 
@@ -3010,7 +3014,7 @@ label5231:
     ld de, $76a7
     call LoadFldA_40b4
     call SetFldA_51c1
-    call LoadFldA_40e5
+    call ScreenPush0A
 
 jr_00a_5266:
     pop af
@@ -3023,7 +3027,7 @@ jr_00a_5266:
     ld de, $76a7
     call LoadFldA_40b4
     call SetFldA_51c1
-    call LoadFldA_40e5
+    call ScreenPush0A
 
 jr_00a_527f:
     ld a, [wJoypad_current_frame]
@@ -3031,7 +3035,7 @@ jr_00a_527f:
     jr z, jr_00a_52ae
 
     ld hl, $0003
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld hl, $c906
     dec [hl]
     ld hl, $c906
@@ -3090,7 +3094,7 @@ jr_00a_52dc:
 
 label52e9:
     ld hl, $0005
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld hl, $c906
     inc [hl]
     ret
@@ -3126,7 +3130,7 @@ CallFldA_5301:
     ld de, $541f
     ld a, [$c8dd]
     call FuncFldA_43e2
-    call LoadFldA_40e5
+    call ScreenPush0A
     ret
 
 
@@ -3141,7 +3145,7 @@ label533b:
 
     call CallFldA_5133
     ld hl, $0004
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld hl, $c906
     dec [hl]
     ld hl, $c906
@@ -3181,7 +3185,7 @@ jr_00a_538c:
     jr nc, jr_00a_53a7
 
     ld hl, $0007
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld a, $19
     ld [$c906], a
     jr jr_00a_541e
@@ -3223,7 +3227,7 @@ jr_00a_53d0:
 
 jr_00a_53e2:
     ld hl, $0006
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld a, $19
     ld [$c906], a
     jr jr_00a_541e
@@ -3246,7 +3250,7 @@ jr_00a_53ef:
     jr nz, jr_00a_541a
 
     ld hl, $0008
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld a, $19
     ld [$c906], a
     jr jr_00a_541e
@@ -3341,7 +3345,7 @@ jr_00a_54ba:
     jr jr_00a_54bf
 
 jr_00a_54bf:
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld hl, $c906
     inc [hl]
     ret
@@ -3471,9 +3475,9 @@ label55e0:
     ld de, $2e07
     call LoadFldA_40b4
     call SetFldA_5e1e
-    call LoadFldA_40e5
+    call ScreenPush0A
     ld hl, $000b
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld hl, $c906
     inc [hl]
     ret
@@ -3491,7 +3495,7 @@ label55fd:
     ld de, $5659
     ld a, [$c8df]
     call FuncFldA_43e2
-    call LoadFldA_40e5
+    call ScreenPush0A
     ld hl, $c906
     inc [hl]
     ret
@@ -3507,7 +3511,7 @@ label5621:
 
 jr_00a_5633:
     ld hl, $0001
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld a, $01
     ld [$c905], a
     jr jr_00a_5658
@@ -3537,9 +3541,9 @@ jr_00a_5658:
 label565f:
     ld de, $2e07
     call LoadFldA_40b4
-    call LoadFldA_40e5
+    call ScreenPush0A
     ld hl, $000c
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld hl, $c906
     inc [hl]
     ld a, [$c8e8]
@@ -3762,9 +3766,9 @@ label57e4:
     ld de, $76a7
     call LoadFldA_40b4
     call LoadFldA_4ed3
-    call LoadFldA_40e5
+    call ScreenPush0A
     ld hl, $0005
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     call CallFldA_4fcc
     ld a, $05
     ld [$c906], a
@@ -3780,7 +3784,7 @@ label584e:
     call SetFldA_4d4d
     call SetFldA_4d77
     ld hl, $0003
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     call CallFldA_4dc0
     ld a, $01
     ld [$c906], a
@@ -3836,9 +3840,9 @@ label5893:
     ld de, $76a7
     call LoadFldA_40b4
     call SetFldA_51c1
-    call LoadFldA_40e5
+    call ScreenPush0A
     ld hl, $0005
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     call CallFldA_5301
     ld a, $0b
     ld [$c906], a
@@ -3854,7 +3858,7 @@ label58ed:
     call SetFldA_50b1
     call SetFldA_50e4
     ld hl, $0004
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     call CallFldA_5133
     ld a, $07
     ld [$c906], a
@@ -3886,7 +3890,7 @@ label5927:
     jr nz, jr_00a_5939
 
     ld hl, $0013
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld a, $0b
     ld [$c906], a
     ret
@@ -3895,7 +3899,7 @@ label5927:
 jr_00a_5939:
     call SetFldA_5971
     ld hl, $0012
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld hl, $c906
     inc [hl]
     ret
@@ -3991,7 +3995,7 @@ label59a7:
 
     call LoadFldA_59d9
     call CallFldA_59ba
-    call LoadFldA_40e5
+    call ScreenPush0A
     ld hl, $c906
     inc [hl]
     ret
@@ -4224,7 +4228,7 @@ jr_00a_5b10:
     jr z, jr_00a_5b24
 
     ld hl, $0001
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld a, $01
     ld [$c905], a
     jr jr_00a_5b39
@@ -4282,7 +4286,7 @@ label5b46:
     ld hl, $c1b0
     call FormatDecimalDigits
     ld hl, $0014
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld hl, $c906
     inc [hl]
     ret
@@ -4298,7 +4302,7 @@ label5b7c:
     ld de, $5c46
     ld a, [$c8de]
     call FuncFldA_43e2
-    call LoadFldA_40e5
+    call ScreenPush0A
     ld hl, $c906
     inc [hl]
     ret
@@ -4313,9 +4317,9 @@ label5b9b:
     jr z, jr_00a_5bcb
 
     ld hl, $0012
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     call CallFldA_59ba
-    call LoadFldA_40e5
+    call ScreenPush0A
     ld hl, $c906
     dec [hl]
     ld hl, $c906
@@ -4374,7 +4378,7 @@ jr_00a_5bed:
     jr nc, jr_00a_5c2c
 
     ld hl, $001e
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld a, $0b
     ld [$c906], a
     jr jr_00a_5c45
@@ -4423,9 +4427,9 @@ label5c56:
 label5c5b:
     ld de, $2e07
     call LoadFldA_40b4
-    call LoadFldA_40e5
+    call ScreenPush0A
     ld hl, $0015
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld hl, $c906
     inc [hl]
     ld a, [$c8e3]
@@ -4538,7 +4542,7 @@ label5d51:
     ret nz
 
     ld hl, $0001
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld a, $01
     ld [$c905], a
     ret
@@ -4616,7 +4620,7 @@ label5d8d:
     ld hl, $c1b0
     call FormatDecimalDigits
     ld hl, $0014
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     call CallFldA_59ba
     ld de, $79be
     call LoadFldA_40b4
@@ -4624,7 +4628,7 @@ label5d8d:
     ld de, $5c46
     ld a, [$c8de]
     call FuncFldA_43e2
-    call LoadFldA_40e5
+    call ScreenPush0A
     ld a, $04
     ld [$c906], a
     xor a
@@ -5022,7 +5026,9 @@ jr_00a_6083:
     ld [de], a
     ret
 
-label6095:
+; EggAppraiserScreen: screen effect type 7 — the egg appraiser (EVAL / BLESS; text base $0750;
+; the egg icons into the room's tile slots $70-$7F); S126 annotation
+EggAppraiserScreen:
     ld a, [$c905]
     rst $00
 
@@ -5083,7 +5089,7 @@ label60ee:
     inc [hl]
     call SetFldA_41ef
     call SetFldA_6101
-    call LoadFldA_40e5
+    call ScreenPush0A
 
 jr_00a_6100:
     ret
@@ -5176,7 +5182,10 @@ label6198:
     call SetFldA_41ef
     ld de, $2e07
     call LoadFldA_40b4
-    call LoadFldA_40e5
+    call ScreenPush0A
+; S126: the egg appraiser's close — the room's tile slots $70-$78 still hold
+; the egg icons; patches/ replaces the 10 bytes below with a call of bank $77
+; ServiceCloseTiles (the room's tiles back).
     ld hl, wGameState
     res 4, [hl]
     xor a
@@ -5212,7 +5221,7 @@ label61d2:
     jr nz, jr_00a_61e4
 
     ld hl, $0004
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld a, $01
     ld [$c905], a
     ret
@@ -5221,7 +5230,7 @@ label61d2:
 jr_00a_61e4:
     call SetFldA_621c
     ld hl, $0003
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld hl, $c906
     inc [hl]
     ret
@@ -5317,7 +5326,7 @@ label6252:
     call LoadFldA_6287
     call LoadFldA_62e8
     call CallFldA_6268
-    call LoadFldA_40e5
+    call ScreenPush0A
     ld hl, $c906
     inc [hl]
     ret
@@ -5348,7 +5357,7 @@ LoadFldA_6287:
     ld a, $00
     adc d
     ld d, a
-    ld hl, $9700
+    ld hl, $9700                   ; S126: egg icons -> the ROOM's tile slots $70-$78 (VRAM $9700, never restored by the game; bank $77 ServiceOpenTiles / ServiceCloseBox save / restore them in a custom room)
     call SaveFldA_62a4
     ld hl, $8800
     call SaveFldA_62a4
@@ -5547,7 +5556,7 @@ jr_00a_63ba:
     jr z, jr_00a_63ce
 
     ld hl, $0001
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld a, $01
     ld [$c905], a
     jr jr_00a_63ea
@@ -5621,7 +5630,7 @@ label63f7:
     ld de, $c180
     call MaskFldA_606d
     ld hl, $0006
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld hl, $c906
     inc [hl]
     ret
@@ -5629,7 +5638,7 @@ label63f7:
 
 jr_00a_6453:
     ld hl, $001c
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld a, $09
     ld [$c906], a
     ret
@@ -5762,7 +5771,7 @@ jr_00a_64e3:
     ld hl, $0009
 
 jr_00a_6510:
-    call LoadFldA_441f
+    call ScreenEffectSay0A
 
 jr_00a_6513:
     ld hl, $c906
@@ -5806,7 +5815,7 @@ jr_00a_6530:
     ld hl, $000c
 
 jr_00a_6549:
-    call LoadFldA_441f
+    call ScreenEffectSay0A
 
 jr_00a_654c:
     ld hl, $c906
@@ -5840,7 +5849,7 @@ label6551:
     ld hl, $0010
 
 jr_00a_657c:
-    call LoadFldA_441f
+    call ScreenEffectSay0A
 
 jr_00a_657f:
     ld a, $0f
@@ -5863,7 +5872,7 @@ label6585:
     ld hl, $0014
 
 jr_00a_659e:
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld hl, $c906
     inc [hl]
     ret
@@ -5874,7 +5883,7 @@ label65a6:
     ret nz
 
     ld hl, $0015
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld a, [$cac0]
     ld hl, $cb24
     call GetMonsterDataPtr
@@ -5889,7 +5898,7 @@ label65c1:
     ret nz
 
     ld hl, $0001
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld a, $01
     ld [$c905], a
     ret
@@ -5897,7 +5906,7 @@ label65c1:
 
 label65d2:
     ld hl, $0005
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld hl, $c906
     inc [hl]
     ret
@@ -5910,7 +5919,7 @@ label65dd:
 
     call CallFldA_6268
     call SetFldA_65f0
-    call LoadFldA_40e5
+    call ScreenPush0A
     ld hl, $c906
     inc [hl]
     ret
@@ -5936,9 +5945,9 @@ label6603:
     jr z, jr_00a_6628
 
     call CallFldA_6268
-    call LoadFldA_40e5
+    call ScreenPush0A
     ld hl, $0003
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld a, $02
     ld [$c906], a
     jr jr_00a_6652
@@ -6007,10 +6016,10 @@ label667c:
     call LoadFldA_6287
     call LoadFldA_62e8
     ld hl, $0005
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     call CallFldA_6268
     call SetFldA_65f0
-    call LoadFldA_40e5
+    call ScreenPush0A
     ld a, $0b
     ld [$c906], a
     xor a
@@ -6050,7 +6059,7 @@ label66aa:
     ld hl, $0012
 
 jr_00a_66e4:
-    call LoadFldA_441f
+    call ScreenEffectSay0A
 
 jr_00a_66e7:
     ld a, $07
@@ -6093,7 +6102,7 @@ label670f:
     jr nz, jr_00a_6721
 
     ld hl, $0017
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld a, $01
     ld [$c905], a
     ret
@@ -6102,7 +6111,7 @@ label670f:
 jr_00a_6721:
     call SetFldA_621c
     ld hl, $0016
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld hl, $c906
     inc [hl]
     ret
@@ -6115,7 +6124,7 @@ label672f:
     call LoadFldA_6287
     call LoadFldA_62e8
     call CallFldA_6745
-    call LoadFldA_40e5
+    call ScreenPush0A
     ld hl, $c906
     inc [hl]
     ret
@@ -6162,7 +6171,7 @@ jr_00a_6786:
     jr z, jr_00a_679a
 
     ld hl, $0001
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld a, $01
     ld [$c905], a
     jr jr_00a_67b0
@@ -6250,7 +6259,7 @@ jr_00a_67ff:
     ld hl, $c180
     call FormatLargeNumber
     ld hl, $0018
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     xor a
     ld [$c8de], a
     ld hl, $c906
@@ -6266,7 +6275,7 @@ label6829:
     ld a, $5c
     call PlaySoundEffect
     call SetFldA_683e
-    call LoadFldA_40e5
+    call ScreenPush0A
     ld hl, $c906
     inc [hl]
     ret
@@ -6291,9 +6300,9 @@ label6851:
     jr z, jr_00a_6881
 
     call CallFldA_6745
-    call LoadFldA_40e5
+    call ScreenPush0A
     ld hl, $0016
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld hl, $c906
     dec [hl]
     ld hl, $c906
@@ -6347,7 +6356,7 @@ label68ae:
     jr nc, jr_00a_68d1
 
     ld hl, $001c
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld hl, $c906
     inc [hl]
     ld hl, $c906
@@ -6369,7 +6378,7 @@ jr_00a_68d1:
     xor $01
     ld [hl], a
     ld hl, $001a
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld hl, $c906
     inc [hl]
 
@@ -6382,7 +6391,7 @@ label68f8:
     ret nz
 
     ld hl, $001b
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld hl, $c906
     inc [hl]
     ret
@@ -6393,7 +6402,7 @@ label6908:
     ret nz
 
     ld hl, $0001
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld a, $01
     ld [$c905], a
     ret
@@ -6422,10 +6431,10 @@ label6923:
     ld hl, $c180
     call FormatLargeNumber
     ld hl, $0018
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     call CallFldA_6745
     call SetFldA_683e
-    call LoadFldA_40e5
+    call ScreenPush0A
     ld a, $05
     ld [$c906], a
     xor a
@@ -6478,13 +6487,13 @@ label6974:
     call SetFldA_41ef
     ld de, $2e07
     call LoadFldA_40b4
-    call LoadFldA_40e5
+    call ScreenPush0A
     ld de, $2e12
     ld hl, $8800
     call WaitDMATransfer
     call ClrFldA_4323
     ld a, $40
-    ldh [$d4], a
+    ldh [$d4], a                        ; S126 r2: hSpriteHideTile ($FFD4) := $40 (sprites over BG tiles >= it skipped while a text box is open); not set back until the next map load
     ld a, $00
     ld [$c83c], a
     ld hl, $c905
@@ -6496,7 +6505,7 @@ label69d1:
     inc [hl]
     call SetFldA_41ef
     call SetFldA_69df
-    call LoadFldA_40e5
+    call ScreenPush0A
     ret
 
 
@@ -6576,7 +6585,7 @@ label6a5a:
     call SetFldA_41ef
     ld de, $2e07
     call LoadFldA_40b4
-    call LoadFldA_40e5
+    call ScreenPush0A
     xor a
     ld [$c8ec], a
     ld a, $80
@@ -6631,7 +6640,7 @@ label6a7e:
     ld a, [$ca40]
     ld [hl], a
     ld hl, $001f
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld a, $0a
     ld [$c906], a
     ret
@@ -6641,7 +6650,7 @@ jr_00a_6abc:
     call LoadFldA_6acd
     call SetFldA_6ad5
     ld hl, $0019
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld hl, $c906
     inc [hl]
     ret
@@ -6706,7 +6715,7 @@ CallFldA_6b13:
     ld de, $6cef
     ld a, [wOPTN_and_Item_selection]
     call FuncFldA_43e2
-    call LoadFldA_40e5
+    call ScreenPush0A
     ret
 
 
@@ -6941,7 +6950,7 @@ jr_00a_6c56:
     ld de, $76e5
     call LoadFldA_40b4
     call LoadFldA_6b82
-    call LoadFldA_40e5
+    call ScreenPush0A
 
 jr_00a_6c9e:
     ld a, [wJoypad_current_frame]
@@ -6956,7 +6965,7 @@ jr_00a_6c9e:
     ld hl, $c180
     call Copy4Bytes
     ld hl, $0018
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld a, $01
     ld [$c905], a
     jr jr_00a_6cee
@@ -6996,7 +7005,7 @@ jr_00a_6cee:
     ld hl, SetFldA_6101
     ld bc, $ffff
     ld hl, $001a
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld hl, $c906
     inc [hl]
     ret
@@ -7030,7 +7039,7 @@ CallFldA_6d11:
     ld de, $6da0
     ld a, [wPLAN_selection]
     call FuncFldA_43e2
-    call LoadFldA_40e5
+    call ScreenPush0A
     ret
 
 
@@ -7044,7 +7053,7 @@ CallFldA_6d11:
 
     call CallFldA_6b13
     ld hl, $0019
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld hl, $c906
     dec [hl]
     ld hl, $c906
@@ -7105,7 +7114,7 @@ jr_00a_6d9f:
     ld hl, $c180
     call Copy4Bytes
     ld hl, $001b
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld hl, $c906
     inc [hl]
     ret
@@ -7214,7 +7223,7 @@ jr_00a_6e52:
     call SetFldA_6b38
     call CallFldA_6d11
     ld hl, $001a
-    call LoadFldA_441f
+    call ScreenEffectSay0A
     ld a, $05
     ld [$c906], a
     xor a

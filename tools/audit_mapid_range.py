@@ -181,6 +181,7 @@ V = {
     ("bank_076.asm", "GateBossWin", 0): "CP_UNSIGNED",           # S117: == wBossMapType (full byte)
     ("bank_077.asm", "ShopFill", 0): "CP_UNSIGNED",              # S117: cp $50
     ("bank_077.asm", "PushAttrActive", 0): "CP_UNSIGNED",        # S117b: cp CUSTOM_ROOM_START
+    ("bank_077.asm", "ServiceOpenTiles", 0): "CP_UNSIGNED",      # S126: cp CUSTOM_ROOM_START (save the room tiles in custom rooms only)
     # S121: reasoning in CROSSBANK_ROOMS "S121 site".
     ("bank_071.asm", "TextSpriteMode", 0): "BOUNDED",            # S121: cp $08 / $5d, sub CUSTOM_ROOM_START
                                                                  # + ret c, cp ROOMFLAGS_TABLE_LEN + ret nc, 16-bit add

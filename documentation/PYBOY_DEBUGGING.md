@@ -390,3 +390,29 @@ edge and the battle waits for input forever.
   one patched call, byte-patch it back to the original in a copy of the ROM (ROOM_DATA_FORMAT
   "What NPCs cost per frame").
 
+
+## S126 techniques — did a menu give the room back? walking to an NPC, logging every line
+
+- **Room restored after a menu?** Read VRAM bank 0 `$9000-$97FF` (the room sheet, slot =
+  (addr − `$9000`)/16) and the VISIBLE part of the map (`$9800 + 32·row + col`, rows
+  0-17, cols 0-19 at scroll 0) before the talk and after the script ends. Columns 20-31
+  of the map are the menus' scratch and stay changed — not a fault. Slots that change
+  without any menu are the room's tile animations (a hall copied from a room with
+  vanilla animation `$23`: `$13-$16`, `$19-$1C`; new_rooms' water `$0C-$0E`), so judge
+  the slots the menu writes (`$60-$7F`), not "any change".
+- **Walk, don't warp, to an NPC:** tap a direction (hold 6, wait 24), wait for idle,
+  check `PLAYER_TX/TY`; three tries per cell, then give up and report — a warp proves
+  nothing about whether the player can reach the NPC. Face it with a 2-frame tap.
+- **Every line a menu speaks:** hook ROM0 `TextBankDispatch` (HL = the text id; `[$4000]`
+  = the calling bank, the return address on the stack) AND bank $60 `CustomTextDisplay`
+  (id = `$0A00` + `$C822`·256 + `$C823`) — since S126 a service set's line arrives
+  through the second hook only.
+- **Answer YES to a guide:** `up` before every A while talking (it is harmless in a text
+  box and does not wrap in the choice box) until the map changes — no timer guessing
+  (the user's save has slow text).
+- **Finish whatever menu is open:** B every 100 frames until idle — alternating A and B
+  walks back into the menu.
+- **Every sprite vanishes during a talk (S126 r2)?** Count the visible OAM entries (Y 1-159,
+  X 1-167) with the box open and read `$FFD3` (1 top / 2 bottom box) and `$FFD4` (the tile
+  threshold: sprites over BG tiles ≥ it are skipped; `$80` normally). Diff HRAM
+  (`$FF80-$FFFE`) before / after each menu — the farm left `$60`.

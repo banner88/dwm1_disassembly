@@ -1625,6 +1625,33 @@ as well while you're there."
   > 6 NPCs on screen — the hardware hides the rest while your party is around; user: "Just
   warning is fine for now, and Ill build around it"); help `20_npcs.md` "Sprite limits".
 
+### 5.6c Services tab (as built S126 — ROADMAP P3.14e1; built, PyBoy-verified, NOT yet user-tested)
+
+`app/services_tab.py`, model `core/services_doc.py` (`ServicesMixin`), compiler
+`core/services.py` (PROJECT_COMPILER §2.39); help `67_services.md`. User (S126): the
+menus' own lines "editable", the medal rewards "editable!!", "multiple of same instance
+is fine. keep in mind ill have multiple different shops with different inventories",
+"romhack postgame lines will be totally different anyways".
+* **Rooms tab → NPC → "Service…"** (`app/rooms/service_dialog.py`): pick one of the seven
+  (each with what it does), its **menu lines** (the game's / a line set / a new line
+  set…), optional **first visit** text + the flag that remembers it (made when new); the
+  NPC panel shows "Service: …". `make_service_npc` re-uses the NPC's service script.
+* **Shopkeeper…** gains *Shop menu lines* (a `shop` line set).
+* **Service NPCs** page: every service NPC + every shopkeeper with its own lines (room,
+  where, NPC, service, lines / first visit); **Go to** / double-click →
+  `navigate_to {'tab': 'rooms', …}`.
+* **Menu lines** page: the line sets (New… asks the service and a name; Delete returns
+  their NPCs to the game's lines); name, for (the game's NPC), **speaker**, **voice**,
+  **every NPC of this kind**; who speaks it; the block's lines (# / the game's words /
+  yours, orange = changed, "(re-flowed)" = the game's words wrapped for a longer
+  speaker); a line editor with **Apply** / **The game's words**, the problems (red — a
+  build error) and the box(es) as the game draws them (`talk_editor.render_box`, the
+  game's box rule `services.text_boxes`, inserts drawn `xxxx`).
+* **Medal Man** page: rewards table (medals, egg — your enemies first, then every vanilla
+  row —, the line; ⏎ / ▸ for line / box breaks), **Add reward** / **Remove** / **The
+  game's rewards**; refusals (not rising, > 999, > 8) come back as the model's message.
+* Every edit = one SnapshotCommand; the tab refreshes on undo.
+
 ### 5.7 Progression & Flags tab
 
 - **Flag manager**: named flags, auto-allocation from the safe pool (S117: 1,968; S124: 1,965 fixed numbers, §5.7 "As built S124" —

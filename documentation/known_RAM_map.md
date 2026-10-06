@@ -311,8 +311,18 @@
                  script / 6 arena won — HUB_* EQUs; written by bank $71 entry 9
                  HubWarp and the "home" script ladders, read and cleared by the
                  hub room's arrival script; 0 after a Castle warp) /
-                 wCustomPool $D2F0-$D5E4 (transient reserve; $D2EF before S125,
-                 $D2E3 before S123, $D243 before S121) /
+                 [S126] wServiceTileSave $D2F0-$D4EF (512 B: the room's tile
+                 slots $60-$7F, VRAM $9600-$97FF, saved by bank $77 entry 6
+                 ServiceOpenTiles when the farm / egg appraiser opens in a
+                 custom room — they draw their icons there and the game never
+                 restores them; entries 4 / 5 put them back at the close) /
+                 wServiceTileSaved $D4F0 (1 = the save holds this screen's
+                 tiles; cleared at the restore) / wServiceLines $D4F1 (the
+                 active service line set, 0 = none: a service / shop script
+                 writes n before its op $04 and 0 after; read by bank $77
+                 entry 3 SayText) /
+                 wCustomPool $D4F2-$D5E4 (transient reserve; $D2F0 before S126,
+                 $D2EF before S125, $D2E3 before S123, $D243 before S121) /
                  wPoolBounce $D5E5-$D664 (128 B, FX1: sleep-pool swap
                  scratch; the v1 drain halved-pending use died with the
                  S71v2 exp-scale veto).

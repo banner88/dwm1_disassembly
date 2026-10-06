@@ -20,7 +20,9 @@ shop back the way it was.
   select the NPC → **Shopkeeper…** → pick the shop and, if you like, a
   greeting (empty = the game's "Item shop. May I help you?"). The NPC then
   opens the game's BUY / SELL menu with your list and says "Thank you. Come
-  again!" at the end. A shopkeeper can sell a game shop's list too.
+  again!" at the end. A shopkeeper can sell a game shop's list too, and
+  can speak its own **shop menu lines** ("What will you buy?", …): pick a
+  line set in the same dialog (line sets: the *Services* tab).
 
 **Prices** are per item — the same in every shop. Type a new **Buy price**
 (0-65535 gold) in the table; orange = changed. **Shops pay** is what a shop

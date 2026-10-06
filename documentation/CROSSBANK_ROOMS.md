@@ -393,6 +393,12 @@ $00-$FE is safe. **S123 r2:** bank $0B `CustomDescentInGate`'s `cp CUSTOM_ROOM_S
 moved into bank $60 entry 12 `CustomDescentFeel` (`cp` / `ret c`) — still **CP_UNSIGNED**
 (the bank $0B key retired; the routine is a far call now).
 
+**S126 site (service NPCs, PROJECT_COMPILER §2.39).** Bank $77 entry 6 `ServiceOpenTiles`
+reads `wMapID` once: `cp CUSTOM_ROOM_START / ret c` (vanilla rooms keep the game's
+behaviour, no tile save) — **CP_UNSIGNED** (`("bank_077.asm", "ServiceOpenTiles", 0)` in
+`tools/audit_mapid_range.py`; `extracted/mapid_range_audit.json` regenerated: clean 58,
+patched 86). `PushAttrActive` (S117b) is unchanged. No table is indexed by mapID.
+
 **S120 burn-down (ROADMAP "audit_mapid_range re-adjudication").** The selftest had been
 failing since S116 with twelve NEEDS_REVIEW sites — not the "eleven S117 shop sites" the
 S118 ROADMAP note named. Read site by site:

@@ -197,7 +197,7 @@ Besides script ops `$00-$03` (bank $04, through ROM0 Set / Clear / TestEventFlag
 | Where | Does | Flags |
 |-------|------|-------|
 | bank $12 `$4EE1` (Pulio's farm menu, state 6) | SetEventFlag when a monster is taken into an EMPTY party | `$0007` |
-| bank $12 `$6C4B-$6C78` (the medal man's egg reward) | SetEventFlag `$0050 + [$D9E1]`, then `[$D9E1]++`, `[$C905]++` | `$0050-$0057` (egg 1-8; [$D9E1] ≥ 8 sets nothing) |
+| bank $12 `$6C4B-$6C78` (the medal man's egg reward) | SetEventFlag `$0050 + [$D9E1]`, then `[$D9E1]++`, `[$C905]++` | `$0050-$0057` (egg 1-8; [$D9E1] ≥ 8 sets nothing). S126: the reward count is `MEDAL_REWARD_COUNT` (`gamedata.medals`, 1-8 — these 8 flags are why 8 is the cap; PROJECT_COMPILER §2.39), the game's 4 by default |
 | bank $09 `SaveFld9_6004` (the gate keeper's list, screen 13) | TestEventFlag on `GateListClearedFlags` `$09:$607E` — draws `GateListClearedByte` `$608E` (meaning not traced) for a cleared gate, `$E0` otherwise | the 16 main gates' cleared flags `$10 11 12 13 14 16 17 19 1D 1C 1A 1F 20 22 23 25` |
 | bank $09 `SetFld9_604d` (the same list) | TestEventFlag on `GateListUnlockFlags` `$09:$609E`: a gate is listed when its flag is set | `$0000` (Beginning), then two gates per arena class G..A `$0030-$0036`, Reflection on S `$0037` |
 

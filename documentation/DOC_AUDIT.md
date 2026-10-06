@@ -647,3 +647,14 @@ gate you assumed".
 | BANK04_SCRIPT_ENGINE / `script_ops.py` op `$27` `refresh_party`: "Re-count the party (bank $01 entries 9 + 3)" | WRONG (S125, PyBoy) | bank $01 entry 9 (`IteratePartySlots20`) HEALS every monster: status := 0, HP := max, MP := max (KO'd 0 HP / 0 MP → full); then entry 3. Corrected; the Heal step uses it. |
 | known_RAM_map `$C8EC`: "set 1 by room transitions, cleared … when `$D92B` is not 1-5" | INCOMPLETE (S125, PyBoy) | the WarpWing's exit sets it itself and relies on the Castle arrival to clear it; a warp elsewhere left every sprite hidden. Added. |
 
+
+## S126 addendum (2026-10-06; service NPCs — ROADMAP P3.14e1)
+
+| Claim (where) | Verdict | Correct |
+|---|---|---|
+| DATA_STRUCTURES label table + disassembly: `AddCursorOffset` `$12:$441F` "UI cursor offset calc" | WRONG name (S126, code-read + PyBoy hook) | it adds the screen effect's text base `[$C8F0]` to HL and speaks the line — bank $12's say helper (farm / Library / Namer / Medal Man). Renamed `ScreenEffectSay12` in both trees; bank $0A's copy `LoadFldA_441f` → `ScreenEffectSay0A`. |
+| DATA_STRUCTURES label table: `GetScreenPos` `$12:$40E5` "Screen position from RAM" | WRONG name (S126) | a byte-identical copy of bank $09's window push `LoadFld9_40fa` (bank $0A has a third at `$40E5`). Renamed `ScreenPush12` / `ScreenPush0A`; both now far-call bank $77 entry 2. |
+| disassembly bank $12 `$6D29` (mgbdis code) | WRONG (S126, code-read) | data: the Medal Man's reward table, 4 × (dw medals, dw EID) + `$FFFF` (re-sectioned `MedalRewardTable`, the readers use the label; text diff = those lines, clean build byte-perfect). |
+| S117b note "free-colour windows fixed (the shop, the Vault)" | INCOMPLETE (S126, PyBoy) | only bank $09's screens were fixed; the farm, Library, namer, Medal Man and egg windows used the bank $0A / $12 copies and were still garbled in a free-colour room. Fixed with them. |
+| BANK04_SCRIPT_ENGINE `$04` row: "Open a game screen of bank $09 … speaking with the text id" | IMPRECISE (S126) | the second word is the text BASE (every menu line = base + offset), not one line; the per-type bases are listed there now. |
+| ROOM_DATA_FORMAT "Text boxes and sprites" (S121): the rule skips sprites over tiles ≥ `$FFD4` "(`$80` = the font tiles)" | INCOMPLETE (S126 r2, code-read + PyBoy) | `$80` is set at every map load (bank $01 `ClearAnimationState`) but the farm menu sets `$60` (bank $12 `$44A7`) and bank $0A screen types 5 / 6 / 11 set `$78` / `$40` / `$40`, none restored — until the next map load. Added there; the service close restores it in custom rooms. |

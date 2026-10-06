@@ -19,7 +19,7 @@ label9_4005:                        ; bank $09 entry 0: screen effects
 ScreenEffectTable09:
     dw $45F3               ; type  0
     dw $4033               ; type  1 — close (no menu)
-    dw $4EF9               ; type  2 — the Vault menu (S118f: the Vault keeper's $04 2)
+    dw VaultScreen         ; type  2 — the Vault menu (S118f: the Vault keeper's $04 2)
     dw $402E               ; type  3 — bank $12 entry 0: Pulio's farm menu (pick up / leave monsters; $12:$4EBC sets flag $0007, S118f)
     dw ArenaClassMenu      ; type  4 — ARENA CLASS-REGISTRATION MENU
     dw $4029               ; type  5 — bank $0A entry 0
@@ -30,7 +30,7 @@ ScreenEffectTable09:
     dw $402E               ; type 10 — bank $12 entry 0: MedalMan's medal exchange
     dw $4029               ; type 11 — bank $0A entry 0
     dw $45F3               ; type 12
-    dw $5ECA               ; type 13 — the list of Travelers' Gates (Gate Hub guide, S118f)
+    dw GateListScreen      ; type 13 — the list of Travelers' Gates (Gate Hub guide, S118f)
     dw $4033               ; type 14 — close (no menu)
     dw label9_6120         ; type 15
     ld hl, $0a00
@@ -2649,6 +2649,8 @@ jr_009_4eb4:
     ret
 
 
+; VaultScreen: screen effect type 2 — the Vault menu (PUT / TAKE / EXIT; text base $06A0, op $04 2 $06A0); S126 annotation
+VaultScreen:
     ld a, [$c905]
     rst $00
 
@@ -2938,6 +2940,9 @@ Jump_009_5104:
     ld de, $2e07
     call LoadFld9_40c9
     call LoadFld9_40fa
+; S126: the Vault's close — the lower text box is left on screen (the room's
+; tiles under it are not redrawn); patches/ replaces the 10 bytes below with a
+; call of bank $77 ServiceCloseBox (re-seats the box like the shop's close).
     ld hl, wGameState
     res 4, [hl]
     xor a
@@ -5150,6 +5155,8 @@ ArenaClassMenu_State8:
     ret
 
 
+; GateListScreen: screen effect type 13 — the list of Travelers' Gates (a full screen: the gate names are a bitmap in the room's tile slots $38-$7F); S126 annotation
+GateListScreen:
     ld a, [$c905]
     rst $00
     sub $5e

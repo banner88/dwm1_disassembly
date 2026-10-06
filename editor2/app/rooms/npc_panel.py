@@ -217,6 +217,7 @@ class NpcPanel(QGroupBox):
     newTalkRequested = Signal()
     newConversationRequested = Signal()  # S101
     shopRequested = Signal()             # S117 (P3.13c): make this NPC a shopkeeper
+    serviceRequested = Signal()          # S126 (P3.14e1): make this NPC a service NPC
     shownWhenRequested = Signal()        # S120: flag conditions (NG2 residual b)
     colourEdited = Signal(object)        # S123: OBJ palette 0-7 or None (own colours)
     bossRequested = Signal()             # S123: Make boss…
@@ -308,9 +309,16 @@ class NpcPanel(QGroupBox):
         self.btn_shop.setToolTip('S117: this NPC runs a shop — pick which shop (the game\'s '
                                  'five or one of yours, Shops tab) and an optional greeting')
         self.btn_shop.clicked.connect(self.shopRequested.emit)
+        self.btn_service = QPushButton('Service…')
+        self.btn_service.setToolTip('S126: this NPC is one of the game\'s services — the '
+                                    'Vault, a farm keeper, the librarian, the Monster Namer, '
+                                    'the Medal Man, the egg appraiser or the gate guide '
+                                    '(their menus work in any room)')
+        self.btn_service.clicked.connect(self.serviceRequested.emit)
         brow.addWidget(self.btn_new_talk)
         brow.addWidget(self.btn_new_conv)
         brow.addWidget(self.btn_shop)
+        brow.addWidget(self.btn_service)
         brow.addWidget(self.btn_edit_talk)
         f.addRow('', brow)
         self.talk_preview = QLabel('')
@@ -401,7 +409,7 @@ class NpcPanel(QGroupBox):
 
     # --------------------------------------------------------------- show
     def show_npc(self, view, script_ids, talk_pages, presence, editable, bytes_hint='',
-                 conversation=None, name=None):
+                 conversation=None, name=None, service=None):
         """view = Document.npc_view(...); script_ids = [(index, id)];
         talk_pages = pages of a plain talk script or None; presence =
         [bool per state] or None (single-state screen)."""
@@ -442,6 +450,7 @@ class NpcPanel(QGroupBox):
         self.script.setCurrentIndex(max(0, k))
         self.btn_edit_talk.setEnabled(talk_pages is not None or conversation is not None)
         self.talk_preview.setText(('Conversation: ' + conversation) if conversation is not None
+                                  else ('Service: ' + service) if service is not None   # S126
                                   else talk_summary(talk_pages, cur))
         sw = view.get('shown_when') or []
         if view.get('swirl_of') is not None:
@@ -483,7 +492,7 @@ class NpcPanel(QGroupBox):
                                'a typed NPC with the same bytes.') if view.get('raw') else '')
         for w in (self.sprite_btn, self.facing, self.beh, self.obj, self.script,
                   self.btn_new_talk, self.btn_new_conv, self.btn_del, self.presence_box,
-                  self.btn_shown, self.btn_boss):
+                  self.btn_shown, self.btn_boss, self.btn_service):
             w.setEnabled(editable)
         self.colour.setEnabled(editable and not monster and view.get('swirl_of') is None
                                and not view.get('raw'))

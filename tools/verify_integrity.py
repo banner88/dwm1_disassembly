@@ -67,6 +67,7 @@ SELFTEST_TOOLS = [
     "census_gate_floor_types.py",  # S120: gate_floor_types.json tables + 32 gate rows == ROM bank $16, the 16 floor-type pictures present
     "audit_mapid_range.py",      # S120: every `ld a, [wMapID]` site in both trees has a verdict (no NEEDS_REVIEW, no stale key); was failing unseen S73-S99 and S116-S119
     "census_maze.py",            # S122: maze_pieces.json (maze tables, the 254 maze screens, 16 themes, metatiles) == ROM banks $16/$17/ROM0
+    "extract_service_lines.py",  # S126: service_lines.json (the service screens' lines in frame + words, the medal rewards) == ROM; every line rebuilds
 ]
 
 PATCH_FILES = [

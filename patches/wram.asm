@@ -363,7 +363,20 @@ HUB_WARPWING EQU 3      ; the WarpWing item (bank $07 item menu)
 HUB_FINAL_LOST EQU 4    ; the Starry Night final was lost (bank $50)
 HUB_HOME EQU 5          ; a script sent the player home (helper / move "hub")
 HUB_ARENA_WON EQU 6     ; a script after an arena class was won
-wCustomPool:: ds $5A4 - 132 - 5 - 2 * TILEANIM_MAX_GROUPS - 2 - 18 - 26 - 8 - 256 - 1 - 2 - 160 - 12 - 1 ;d2f0-d5e4 — transient reserve (was $664; FX1 carved 64+128; S97 132; S102 69; S105 2; S111 18; S114 26; S115 8; S117 256 wExtFlags + 1 wShopID; S117b 2 push scratch; S121 160 wMillyLayout; S123 12 NPC colours; S125 1 wHubReason)
+; S126 (ROADMAP P3.14e1, service NPCs): the room's tile slots $60-$7F ($9600-
+; $97FF, VRAM bank 0) while the farm (screen effect 3) or the egg appraiser (7)
+; draws its icons over them in a CUSTOM room: bank $77 entry 6 ServiceOpenTiles
+; saves them once per screen (wServiceTileSaved := 1), entries 4 / 5 (the
+; closes) copy them back and clear the flag. Transient by design (one screen);
+; the window-clear chain zeroes the flag at power-on / new game / CONTINUE.
+wServiceTileSave:: ds 512 ;d2f0-d4ef — saved room tiles $60-$7F
+wServiceTileSaved:: db ;d4f0 — 1 = wServiceTileSave holds this screen's room tiles
+; S126: which of the project's service line sets the screen effect speaks — a
+; service / shop script writes the set's number right before opcode $04 and 0
+; right after it (the opcode waits for the screen to close); bank $77 entry 3
+; SayText reads it (0 = only the lines that apply to every NPC of the kind).
+wServiceLines:: db ;d4f1 — the active line set (0 = none)
+wCustomPool:: ds $5A4 - 132 - 5 - 2 * TILEANIM_MAX_GROUPS - 2 - 18 - 26 - 8 - 256 - 1 - 2 - 160 - 12 - 1 - 514 ;d4f2-d5e4 — transient reserve (was $664; FX1 carved 64+128; S97 132; S102 69; S105 2; S111 18; S114 26; S115 8; S117 256 wExtFlags + 1 wShopID; S117b 2 push scratch; S121 160 wMillyLayout; S123 12 NPC colours; S125 1 wHubReason; S126 514: the service tile save + wServiceLines)
 ; FX1 (S71): wPoolBounce — 128-byte staging for sleep-pool bank-2 record
 ; swaps (per-byte scratch in CF3PoolSwapRecord). Transient. (The v1 drain's
 ; halved-pending scratch use was removed with the S71v2 exp-scale veto.)
