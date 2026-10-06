@@ -5388,7 +5388,8 @@ Jump_014_7e96:
     ds 31, $00
 ; ===== S101: PROJECT ENEMY ROWS + REDIRECT EXTENSION (was the S70 12-row
 ; quest_enemy_stats region; MONSTER_DATA "Project enemy rows") ============
-; LoadEnemyStatsExt — the LoadEnemyStats head jumps here. EIDs 519+ are the
+; LoadEnemyStatsExt — the LoadEnemyStats head jumps here. (S127: $0F00-$0F03 =
+; a random breeder's slot, resolved first.) EIDs 519+ are the
 ; project's enemy rows, stored in bank $6B (compiler-generated
 ; patches/bank_06b.asm, 25 B/row, row = EID-519): bank $6B entry 0
 ; CopyEnemyRowExt copies the row to [DE] (DE advanced by 25, as the vanilla
@@ -5398,6 +5399,12 @@ Jump_014_7e96:
 ; the vanilla path unchanged.
 LoadEnemyStatsExt:
     ld a, [$da13]            ; EID high
+    cp $0f                   ; S127 (P3.14e2): $0F00 + k = a RANDOM breeder's
+    jr nz, .notSlot          ;   mate (op $42): bank $77 entry 8 BreedSlotEID
+    ld hl, $7708             ;   rolls slot k once and writes the real row to
+    rst $10                  ;   wTempEnemyStatsId / $DA13 (keeps DE), then
+    jr LoadEnemyStatsExt     ;   that row loads as any other (PROJECT_COMPILER §2.40)
+.notSlot:
     cp $02
     jr c, .vanilla           ; < $0200
     jr nz, .ext              ; >= $0300

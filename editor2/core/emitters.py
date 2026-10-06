@@ -715,18 +715,24 @@ def _gate_insert_table(prj):
            "; " + "-" * 77,
            "GateInsertTable:"]
     for row in prj.gate_insert_rows():
-        b = [row['gate'], row['first'] - 1, row['last'] - 1, row['chance'],
+        b = [row['gate'], row['first'] - 1, row['last'] - 1, row['chance_byte'],
              row['once_bit'], row['mapID'],
              row['px'] & 0xFF, row['px'] >> 8, row['py'] & 0xFF, row['py'] >> 8,
              len(row['terms'])]
-        what = (f"gate {row['gate']} floors {row['first']}-{row['last']} "
-                f"{row['chance']}% -> {row['room_id']} ({F.hexb(row['mapID'])})"
+        what = (("every gate" if row['gate'] == 0xFE else f"gate {row['gate']}")
+                + f" floors {row['first']}-" + ("boss-1" if row['last'] > 255 else str(row['last']))
+                + (f" {row['chance']}%" if row['chance_byte'] < 0x80 else
+                   f" chance by level (row {row['chance_byte'] & 0x7F})")
+                + f" -> {row['room_id']} ({F.hexb(row['mapID'])})"
                 + (" once/dive" if row['once_bit'] else ""))
         out.append(F.db_line(b, comment=what))
         for idx, clr in row['terms']:
             out.append(f"    dw ${idx | (0x8000 if clr else 0):04X}   ; flag "
                        f"{F.hexw(idx)} must be {'clear' if clr else 'set'}")
     out.append("    db $FF")
+    out.append("")
+    from . import breeders as BR              # S127: GATE_ANY + ScaledChanceTable
+    out += BR.emit_chance_lines(prj)
     out.append("")
     return out
 

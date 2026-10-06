@@ -325,7 +325,7 @@ class BoxList(QWidget):
     changed = Signal()
 
     def __init__(self, rom, boxes=None, first_default='Hello!', parent=None, vertical=False,
-                 meta=None):
+                 meta=None, header=True):
         super().__init__(parent)
         self.rom = rom
         self.vertical = vertical
@@ -333,7 +333,9 @@ class BoxList(QWidget):
         v.setContentsMargins(0, 0, 0, 0)
         # S120: who speaks (the first line's label) and the per-letter voice
         meta = meta or {}
-        hr = QHBoxLayout()
+        self.header = QWidget()               # S127 r3: GameTextField hides it ("*:", low)
+        hr = QHBoxLayout(self.header)
+        hr.setContentsMargins(0, 0, 0, 0)
         hr.addWidget(QLabel('Speaker'))
         self.sp_kind = QComboBox()
         for label, data, tip in SPEAKERS:
@@ -362,7 +364,8 @@ class BoxList(QWidget):
                               '$EA = sound $5B, $EB = sound $5A, no opener = silent)')
         hr.addWidget(self.voice)
         hr.addStretch(1)
-        v.addLayout(hr)
+        v.addWidget(self.header)
+        self.header.setVisible(header)
         self.sp_kind.currentIndexChanged.connect(self._speaker_changed)
         self.sp_name.textChanged.connect(self._speaker_changed)
         self.voice.currentIndexChanged.connect(lambda _i: self.changed.emit())
@@ -467,6 +470,8 @@ class BoxList(QWidget):
             return
         self.editors.remove(ed)
         self.lay.removeWidget(ed)
+        ed.hide()
+        ed.setParent(None)
         ed.deleteLater()
         self._renumber()
 
@@ -511,6 +516,62 @@ class BoxList(QWidget):
 
     def boxes(self):
         return [[ln for ln in ed.lines()] for ed in self.editors]
+
+
+class GameTextField(BoxList):
+    """S127 r3 (user: "Use game text box previews. … make that default for all text
+    entries in editor"): an OPTIONAL game text edited box by box, each box beside the
+    game's own picture of it (ROM font, the "*:" label, the 16 / 18 cells) with Fit /
+    Fit all — the talk editor's BoxList without the speaker / voice row. Empty = None
+    (the caller's default words). The rule (EDITOR_DESIGN §5.0 "Game text"): every
+    field that becomes words in a text box is one of these or a BoxList — never a plain
+    text edit; test_app checks the app's sources for it."""
+
+    def __init__(self, rom, boxes=None, parent=None, empty_note='empty'):
+        self.empty_note = empty_note
+        super().__init__(rom, [list(b) for b in boxes] if boxes else [['']], first_default='',
+                         parent=parent, header=False)
+        self.setMinimumHeight(150)
+
+    def value(self):
+        """[[line, line], …] without empty boxes, or None when nothing is typed."""
+        if self.is_blank():
+            return None
+        return [[ln for ln in b if ln.strip()] for b in self.boxes() if any(ln.strip() for ln in b)]
+
+    def set_value(self, boxes):
+        for ed in list(self.editors):
+            self.editors.remove(ed)
+            self.lay.removeWidget(ed)
+            ed.hide()                          # S127 r4: gone NOW — deleteLater alone left
+            ed.setParent(None)                 #   the old box drawn under the new one
+            ed.deleteLater()
+        for b in (boxes or [['']]):
+            self._add('\n'.join(b))
+        self._renumber()
+
+    def problem(self):
+        """None, or why the text cannot show as typed (OK is refused with it)."""
+        if self.is_blank():
+            return None
+        bad = [i + 1 for i, ed in enumerate(self.editors)
+               if ed.problems() and ed.problems() != ['empty box']]
+        return (f"box {', '.join(map(str, bad))} does not fit the game's box — press Fit"
+                if bad else None)
+
+    def _validate(self):
+        if self.is_blank():
+            self.summary.setText(f'<span style="color:#888;">({self.empty_note})</span>')
+            for ed in self.editors:            # an empty optional text is not a problem
+                ed.status.setText('<span style="color:#888;">(empty)</span>')
+            self.changed.emit()
+            return
+        bad = [i + 1 for i, ed in enumerate(self.editors)
+               if ed.problems() and ed.problems() != ['empty box']]
+        n = len([ed for ed in self.editors if any(ed.lines())])
+        self.summary.setText((f'<span style="color:#ff6060;">fix box {", ".join(map(str, bad))}'
+                              ' (Fit)</span>') if bad else f'{n} box(es) — all fit')
+        self.changed.emit()
 
 
 class FlagList(QWidget):

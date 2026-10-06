@@ -254,6 +254,10 @@ def emit_bank_077(prj, warnings, head):
     from . import services as SV
     out.extend(SV.set_table_lines(prj))
     out.append("")
+    # S127 (P3.14e2): the breeding pools (bank $77 entry 8 / BreedRoll)
+    from . import breeders as BR
+    out.extend(BR.emit_pool_lines(prj))
+    out.append("")
     if nv != 5:
         raise ShopError('internal: the template assumes five vanilla shops')
     return "\n".join(out) + "\n"

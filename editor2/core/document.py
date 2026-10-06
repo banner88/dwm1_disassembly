@@ -46,6 +46,7 @@ from editor2.core.milly_doc import MillyMixin
 from editor2.core.worlds import WorldsMixin
 from editor2.core.hub_doc import HubMixin
 from editor2.core.services_doc import ServicesMixin
+from editor2.core.breeders_doc import BreedersMixin
 from editor2.core.formats import anim_source as F_anim
 
 SCREEN_W, SCREEN_H = 20, 16
@@ -120,7 +121,8 @@ class ThresholdShiftNeeded(RuntimeError):
 class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
                ConversationMixin, EnemiesMixin, FamiliesMixin, MonstersMixin,
                ArenaMixin, SkillsMixin, AnimsMixin, BreedingMixin, EncountersMixin,
-               MusicMixin, ShopsMixin, MillyMixin, WorldsMixin, HubMixin, ServicesMixin):
+               MusicMixin, ShopsMixin, MillyMixin, WorldsMixin, HubMixin, ServicesMixin,
+               BreedersMixin):
     def __init__(self, path):
         self.path = path if path.endswith('.json') else \
             os.path.join(path, 'project.json')
@@ -184,6 +186,8 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         self._migrate_clone_patches(notes)
         # S124: every flag carries a fixed number
         self._migrate_pin_flags(notes)
+        # S127 r2: breeder / first-visit words typed past the box width are wrapped
+        self._migrate_service_words(notes)
         if notes:
             self.dirty = True
         return notes

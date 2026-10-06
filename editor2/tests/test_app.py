@@ -999,7 +999,7 @@ def s126_services(app, w):
                 dlg.kinds.setCurrentRow(i)
         dlg.lines.setCurrentIndex(dlg.lines.findData(SDm.NEW_SET))
         dlg.first.setChecked(True)
-        dlg.first_text.setPlainText('Hi! I keep the\nfarm up here.')
+        dlg.first_text.set_value([['Hi! I keep the', 'farm up here.']])
         dlg.flag.setText('mira_met')
         dlg._ok()
         return QW.QDialog.Accepted
@@ -1127,6 +1127,225 @@ def s126_services(app, w):
           'undoes to the original')
 
 
+def s127r3_game_text_rule(app, w):
+    """S127 r3 (user: "Use game text box previews. FOr the love of god make that default
+    for all text entries in editor this is like the fifth time this comes up"): no plain
+    text edit in the app becomes game text — every QPlainTextEdit is a log / read-only
+    view, the box editor's own field or the Services tab's line editor (which draws its
+    boxes beside it). A new one fails here until it is a GameTextField / BoxList."""
+    import re as _re
+    allowed = {('app/main.py', 'self.log'), ('app/cutscenes_tab.py', 'self.log'),
+               ('app/cutscenes_tab.py', 'self.textbox'), ('app/dialogue_tab.py', 'self.detail'),
+               ('app/services_tab.py', 'self.line_edit'),
+               ('app/rooms/talk_editor.py', 'self.edit')}
+    found = []
+    base = os.path.join(REPO, 'editor2')
+    for sub in ('app', 'app/rooms'):
+        for fn in sorted(os.listdir(os.path.join(base, sub))):
+            if not fn.endswith('.py'):
+                continue
+            rel = f'{sub}/{fn}'
+            for ln in open(os.path.join(base, sub, fn), encoding='utf-8'):
+                m = _re.search(r'([\w.]+)\s*=\s*QPlainTextEdit\(', ln)
+                if m:
+                    found.append((rel, m.group(1)))
+    bad = [f for f in found if f not in allowed]
+    assert not bad, f'plain text edits that may become game text (use GameTextField): {bad}'
+    # the Services tab's line editor draws the boxes; a medal reward shows its boxes too
+    vt = w.services_tab
+    vt.refresh()
+    vt.pages.setCurrentIndex(2)
+    app.processEvents()
+    vt._medal_preview(0)
+    from PySide6.QtWidgets import QLabel as _QL
+    pics = [x for x in vt.medal_prev.findChildren(_QL) if x.pixmap() is not None and
+            not x.pixmap().isNull()]
+    assert pics, 'the medal reward has no game box preview'
+    # S127 r4 (user: "Why is first visit greyed out? Also why is box1 duplicated weirdly
+    # glitchily?"): a breeder has a first visit; a filled field holds exactly its boxes
+    import editor2.app.rooms.service_dialog as SDm
+    from editor2.app.rooms.talk_editor import BoxEditor as _BE
+    dlg = SDm.ServiceDialog(w.session.doc, {'kind': 'breeder',
+                                            'first_time': {'boxes': [['First time here?']],
+                                                           'flag': 'brd_met'},
+                                            'breeder': {'mate': 306, 'intro': [['Yo!']]}})
+    dlg.show()
+    app.processEvents()
+    assert dlg.first.isEnabled() and dlg.first.isChecked() and dlg.first_text.isVisible()
+    for fld in (dlg.first_text, dlg.brd_intro, dlg.brd_notyet, dlg.brd_after):
+        kids = [x for x in fld.holder.findChildren(_BE) if x.parent() is not None]
+        assert len(kids) == len(fld.editors) == 1, (len(kids), len(fld.editors))
+    dlg.first.setChecked(False)
+    app.processEvents()
+    assert not dlg.first_text.isVisible()
+    dlg.close()
+    print(f'OK: S127 r3 game text rule — {len(found)} QPlainTextEdit(s), all logs / views / the '
+          'box editor / the line editor; the Service… / Shopkeeper texts are box editors; a '
+          'medal reward previews its boxes')
+
+
+def s127_breeding(app, w):
+    """S127 (ROADMAP P3.14e2): the Services tab → Breeding pools (New, the scales, bands
+    in the table + Apply, Try it = the band nearest a player, a refused band), Rooms tab
+    → NPC → Service… → Breeder (rolled from the pool, offers only when a flag holds,
+    done flag + once) and → Grandpa; the Gates tab's rule dialog: every gate + the
+    chance by the party's level; the project compiles (bank $77 pool data, the room's
+    return script, GATE_ANY + ScaledChanceTable); every edit undoes to the original."""
+    from PySide6 import QtWidgets as QW
+    import editor2.app.rooms.service_dialog as SDm
+    import editor2.app.services_tab as SVm
+    import editor2.app.gates_tab as GTm
+    s = w.session
+    doc = s.doc
+    before = doc.dumps()
+    n0 = s.undo.index()
+    vt = w.services_tab
+    w.tabs.setCurrentWidget(vt)
+    vt.refresh()
+    vt.pages.setCurrentIndex(3)
+    k_text = SVm.QInputDialog.getText
+    SVm.QInputDialog.getText = staticmethod(lambda *a, **k: ('Wild mates', True))
+    try:
+        vt._new_pool()
+    finally:
+        SVm.QInputDialog.getText = k_text
+    app.processEvents()
+    assert vt.current_pool_id() == 'wild_mates' and vt.bands.rowCount() == 1
+    vt.pool_scales['arena'].setChecked(True)
+    app.processEvents()
+    assert doc._pool('wild_mates')['measures'] == ['level', 'arena']
+    vt._band_add()
+    for c, val in enumerate(['late', '35', '4', '0', '0', '310, 313×3']):
+        vt.bands.item(1, c).setText(val)
+    vt._bands_apply()
+    app.processEvents()
+    b = doc._pool('wild_mates')['bands']
+    assert len(b) == 2 and b[1]['mates'] == [{'enemy': 310}, {'enemy': 313, 'weight': 3}], b
+    vt.try_spins['level'].setValue(30)
+    vt.try_spins['arena'].setValue(3)
+    app.processEvents()
+    assert 'band 2 "late"' in vt.try_out.text() and '75 %' in vt.try_out.text(), vt.try_out.text()
+    vt.try_spins['level'].setValue(8)
+    vt.try_spins['arena'].setValue(0)
+    assert 'band 1' in vt.try_out.text(), vt.try_out.text()
+    warned = []
+    k_w = SVm.QMessageBox.warning
+    SVm.QMessageBox.warning = staticmethod(lambda *a, **k: warned.append(a[2]))
+    vt.bands.item(0, 1).setText('150')                       # level 150: refused
+    vt._bands_apply()
+    SVm.QMessageBox.warning = k_w
+    app.processEvents()
+    assert warned and '0-99' in warned[0], warned
+    assert doc._pool('wild_mates')['bands'][0]['level'] == 10
+    # Rooms tab: a random breeder + a Grandpa
+    rt = w.rooms_tab
+    w.tabs.setCurrentWidget(rt)
+    rt.open_node(('room', 'dusk_mirror'))
+    app.processEvents()
+    made = []
+    for x in (6, 7, 8):
+        cmd = rt._npc_op('Add NPC', lambda d, r, k, st, x=x: d.add_npc(r, k, st, x, 4, 0x08))
+        made.append(cmd.result)
+    d_exec = SDm.ServiceDialog.exec
+
+    def pick(dlg, kind):
+        for i in range(dlg.kinds.count()):
+            if dlg.kinds.item(i).data(256) == kind:
+                dlg.kinds.setCurrentRow(i)
+
+    def _breeder(dlg):
+        pick(dlg, 'breeder')
+        assert dlg.brd.isVisibleTo(dlg) or not dlg.isVisible()
+        dlg.brd_pool.setChecked(True)
+        dlg.brd_pools.setCurrentIndex(dlg.brd_pools.findData('wild_mates'))
+        dlg.brd_intro.set_value([['Fancy a match?']])
+        dlg.brd_when.setText('saw_ruins')
+        dlg.brd_after.set_value([['Come back', 'another time!']])
+        dlg._ok()
+        return QW.QDialog.Accepted
+
+    def _grandpa(dlg):
+        pick(dlg, 'grandpa')
+        dlg._ok()
+        return QW.QDialog.Accepted
+
+    def _breeder_lv(dlg):                 # S127 r2: a species at a level; long words
+        pick(dlg, 'breeder')
+        assert dlg.brd_level_rb.isChecked()                  # the default for a new breeder
+        dlg.brd_species.setCurrentIndex(dlg.brd_species.findData(47))
+        dlg.brd_level.setValue(25)
+        dlg.brd_flag.setText('lv_bred')
+        dlg.brd_once.setChecked(True)
+        dlg.brd_after.set_value([['THanks for breeding with me!']])
+        assert dlg.brd_after.problem() and 'Fit' in dlg.brd_after.problem()
+        dlg.brd_after._fit_all()                 # S127 r3: the box editor wraps it
+        assert dlg.brd_after.problem() is None, dlg.brd_after.boxes()
+        dlg._ok()
+        return QW.QDialog.Accepted
+    try:
+        for idx, fn in zip(made, (_breeder, _grandpa, _breeder_lv)):
+            rt._after_npc_edit(idx)
+            SDm.ServiceDialog.exec = fn
+            rt._npc_service()
+            app.processEvents()
+    finally:
+        SDm.ServiceDialog.exec = d_exec
+    room = doc.room('dusk_mirror')
+    sv = doc.service_of(room, rt.key, rt.state_idx, made[0])
+    assert sv['kind'] == 'breeder' and sv['breeder']['pool'] == 'wild_mates' and \
+        sv['breeder']['when'] == [{'flag': 'saw_ruins', 'is': 'set'}] and \
+        sv['breeder']['intro'] == [['Fancy a match?']] and \
+        sv['breeder']['after'] == [['Come back', 'another time!']], sv
+    assert any(f.get('name') == 'saw_ruins' for f in doc.flags())
+    assert doc.service_of(room, rt.key, rt.state_idx, made[1])['kind'] == 'grandpa'
+    sv3 = doc.service_of(room, rt.key, rt.state_idx, made[2])['breeder']
+    assert doc.mate_info(sv3['mate']) == (47, 25) and \
+        sv3['after'] == [['THanks for', 'breeding with me!']], sv3
+    vt.refresh()
+    kinds = sorted(vt.npcs.item(r, 3).text() for r in range(vt.npcs.rowCount()))
+    assert kinds == ['Breeder (my monster)', 'Breeder (my monster)', 'Grandpa (breeding)'], kinds
+    assert 'dusk_mirror_breeder' in vt.pool_users.text() or vt.current_pool()['users'], \
+        vt.pool_users.text()
+    # the Gates tab: a rule for every gate, its chance by level
+    gt = w.gates_tab
+    w.tabs.setCurrentWidget(gt)
+    gt.refresh()
+    gt.list.setCurrentRow(1)
+    app.processEvents()
+    dlg = GTm.GateRuleDialog(doc, gt.gate(), parent=gt)
+    dlg.room.setCurrentIndex(dlg.room.findData('gate_rotation'))
+    dlg.every.setChecked(True)
+    dlg.by_level.setChecked(True)
+    dlg.lv_from.setValue(5)
+    dlg.pc_from.setValue(10)
+    dlg.lv_to.setValue(40)
+    dlg.pc_to.setValue(60)
+    rule = dlg.rule()
+    assert rule['gate'] == 'any' and rule['chance_by_level'] == {'from': [5, 10], 'to': [40, 60]}
+    gt._push('every gate rule', [dict(r) for r in doc.gate_inserts()] + [rule], [])
+    app.processEvents()
+    import shutil as _sh
+    import tempfile
+    from editor2.core import compiler as Cc
+    td = tempfile.mkdtemp()
+    _sh.copytree(doc.project_dir, os.path.join(td, 'p'), ignore=_sh.ignore_patterns('build'))
+    open(os.path.join(td, 'p', 'project.json'), 'w').write(doc.dumps())
+    outs, _pp, _ww = Cc.compile_project(os.path.join(td, 'p'), REPO)
+    assert 'BREED_POOL_COUNT EQU 1' in outs['patches/bank_077.asm']
+    assert 'GATE_ANY EQU $FE' in outs['patches/bank_071.asm'] and \
+        '; row 0: level 5 -> 10 %, level 40 -> 60 %' in outs['patches/bank_071.asm']
+    assert 'breed:dusk_mirror:entry' in outs['patches/bank_060.asm']
+    _sh.rmtree(td, ignore_errors=True)
+    while s.undo.index() > n0:
+        s.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'S127 breeding edits did not undo to the original'
+    print('OK: S127 Breeding — Services tab Breeding pools (new, scales, bands + Apply, Try it, '
+          'a refused band), Service… Breeder (pool, when, words; r2: CatFly at level 25, long '
+          'words wrapped) + Grandpa, Gates tab every '
+          'gate + chance by level, compiles, undoes to the original')
+
+
 def main():
     do_rom = '--rom' in sys.argv
     app = QApplication.instance() or QApplication(sys.argv)
@@ -1178,6 +1397,8 @@ def main():
     s124_progression(app, w)
     s125_hub(app, w)
     s126_services(app, w)
+    s127_breeding(app, w)
+    s127r3_game_text_rule(app, w)
 
     # S101 r3: World tab zoom (wheel, around the mouse) + pan (drag empty canvas)
     from PySide6.QtCore import QPoint, QPointF, Qt

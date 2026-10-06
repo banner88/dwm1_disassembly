@@ -96,6 +96,24 @@ CF2WarpCommitDrain:
     ld a, [wWarpFlag]
     ld [wInGateworld], a
 
+    ; [S127, ROADMAP P3.14e2] a new appearance of a room: the random
+    ; breeders' slots (wBreedSlots) roll again — every state := 0. Kept on
+    ; the way into the breeding ceremony (wMapID = the destination, $08) and
+    ; back from it ($D951 >= $F0: the return codes), so the breeder the
+    ; player just bred with stays done (the room's return script writes 2).
+    ld a, [wMapID]
+    cp $08
+    jr z, .breedKeep
+    ld a, [$d951]
+    cp $f0
+    jr nc, .breedKeep
+    xor a
+    ld [wBreedSlots], a
+    ld [wBreedSlots + 4], a
+    ld [wBreedSlots + 8], a
+    ld [wBreedSlots + 12], a
+.breedKeep:
+
     ; ------------------------------------------------------------------
     ; [ANCHOR S73] arm protocol (runs at EVERY committed transition,
     ; BEFORE entry-5 floor setup — that ordering is what makes the

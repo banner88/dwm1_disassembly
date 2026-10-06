@@ -1284,7 +1284,7 @@
   {
    "tree": "patched",
    "file": "bank_060.asm",
-   "line": 912,
+   "line": 925,
    "label": "CutPatchRoute",
    "occ": 0,
    "pattern": [
@@ -1315,7 +1315,7 @@
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 149,
+   "line": 154,
    "label": "CopyCustomRoomRecord",
    "occ": 0,
    "pattern": [
@@ -1326,7 +1326,7 @@
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 156,
+   "line": 161,
    "label": "CopyCustomRoomRecord",
    "occ": 1,
    "pattern": [
@@ -1337,7 +1337,7 @@
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 166,
+   "line": 171,
    "label": "CopyCustomRoomRecord",
    "occ": 2,
    "pattern": [
@@ -1348,7 +1348,7 @@
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 198,
+   "line": 203,
    "label": "CustomEncResolve",
    "occ": 0,
    "pattern": [
@@ -1360,7 +1360,7 @@
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 250,
+   "line": 255,
    "label": "CustomRoomBGMResolve",
    "occ": 0,
    "pattern": [
@@ -1371,7 +1371,7 @@
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 259,
+   "line": 264,
    "label": "CustomRoomBGMResolve",
    "occ": 1,
    "pattern": [
@@ -1382,7 +1382,7 @@
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 355,
+   "line": 360,
    "label": "CustomAnimSource",
    "occ": 0,
    "pattern": [
@@ -1394,7 +1394,7 @@
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 518,
+   "line": 558,
    "label": "CustomRoomFlags",
    "occ": 0,
    "pattern": [
@@ -1405,7 +1405,7 @@
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 539,
+   "line": 579,
    "label": "TextSpriteMode",
    "occ": 0,
    "pattern": [
@@ -1417,7 +1417,7 @@
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 590,
+   "line": 630,
    "label": "BattleBGMResolve",
    "occ": 0,
    "pattern": [
@@ -1428,7 +1428,7 @@
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 622,
+   "line": 662,
    "label": "BattleBGMResolve",
    "occ": 1,
    "pattern": [
@@ -1439,7 +1439,7 @@
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 639,
+   "line": 679,
    "label": "BattleBGMResolve",
    "occ": 2,
    "pattern": [
@@ -1451,7 +1451,7 @@
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 653,
+   "line": 693,
    "label": "BattleBGMResolve",
    "occ": 3,
    "pattern": [
@@ -1473,7 +1473,18 @@
   {
    "tree": "patched",
    "file": "bank_073.asm",
-   "line": 1646,
+   "line": 104,
+   "label": "CF2WarpCommitDrain",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_073.asm",
+   "line": 1664,
    "label": "MenuOpenFreePal",
    "occ": 0,
    "pattern": [
@@ -1484,7 +1495,7 @@
   {
    "tree": "patched",
    "file": "bank_073.asm",
-   "line": 1702,
+   "line": 1720,
    "label": "BoxAttrActive",
    "occ": 0,
    "pattern": [
@@ -1495,7 +1506,7 @@
   {
    "tree": "patched",
    "file": "bank_073.asm",
-   "line": 2174,
+   "line": 2192,
    "label": "GateLeaveFreePal",
    "occ": 0,
    "pattern": [
@@ -1529,7 +1540,7 @@
   {
    "tree": "patched",
    "file": "bank_077.asm",
-   "line": 107,
+   "line": 151,
    "label": "ShopFill",
    "occ": 0,
    "pattern": [
@@ -1540,7 +1551,7 @@
   {
    "tree": "patched",
    "file": "bank_077.asm",
-   "line": 344,
+   "line": 388,
    "label": "PushAttrActive",
    "occ": 0,
    "pattern": [
@@ -1551,8 +1562,19 @@
   {
    "tree": "patched",
    "file": "bank_077.asm",
-   "line": 516,
+   "line": 560,
    "label": "ServiceOpenTiles",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_077.asm",
+   "line": 640,
+   "label": "BreedClose",
    "occ": 0,
    "pattern": [
     "cp"

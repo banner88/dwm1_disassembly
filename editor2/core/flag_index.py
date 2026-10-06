@@ -55,6 +55,8 @@ KINDS = {
     'gate_room': 'gate floor room',     # custom.gate_inserts[].when
     'hub': 'hub',                       # custom.hub.rules[].when (S125)
     'service': 'service NPC',           # scripts[].service.first_time.flag (S126)
+    'breeder': 'breeder',               # scripts[].service (kind breeder) when / flag / once (S127)
+    'breed_pool': 'breeding pool',      # custom.breeding_pools[].milestones (S127)
     'quest': 'quest',                   # progression.quests[] flags / actions
     'gate_win': 'boss win',             # engine: bank $76 GateBossWin
     'hook': 'Milly hook',               # the Milly hook's own flags
@@ -243,6 +245,7 @@ class FlagIndex:
         self._walk_gates()
         self._walk_gate_rooms()
         self._walk_hub()
+        self._walk_breed_pools()                    # S127
         self._walk_quests()
         self._walk_preludes()
         self._engine()
@@ -484,6 +487,26 @@ class FlagIndex:
                 sv = s['service']
                 f = (sv.get('first_time') or {}).get('flag') if isinstance(
                     sv.get('first_time'), dict) else None
+                if sv.get('kind') == 'breeder':
+                    # S127 (P3.14e2): a breeder offers while its `when` terms hold (else
+                    # its not-yet words); a done breeding turns its `flag` ON (the room's
+                    # return script); with `once` the flag ON = its `after` words
+                    ev = places[0].event() if places else f'the breeder {sid}'
+                    terms = [(t.get('flag'), t.get('is', 'set')) for t in sv.get('when') or []
+                             if isinstance(t, dict)]
+                    if terms:
+                        self._trigger('breeder', terms, ev, 'the breeder offers to breed',
+                                      where, nav, [base + ('service', 'when', j, 'flag')
+                                                   for j in range(len(terms))], runs=runs)
+                    if sv.get('flag'):
+                        path = base + ('service', 'flag')
+                        if sv.get('once'):
+                            self._trigger('breeder', [(sv['flag'], 'clear')], ev,
+                                          'the breeder offers (once: not done yet)', where, nav,
+                                          [path], runs=runs)
+                        self._use(sv['flag'], ON, 'breeder', where,
+                                  ev + ' — a breeding with them is done (after the ceremony)',
+                                  nav, path, runs=runs)
                 if f:
                     from . import services as _SV
                     nm = _SV.KINDS.get(sv.get('kind'), {}).get('name', 'service NPC')
@@ -790,13 +813,28 @@ class FlagIndex:
                 gid = int(F.val(ru.get('gate', 0)))
             except (TypeError, ValueError):
                 gid = None
+            gname = 'every gate' if ru.get('gate') == 'any' else f'gate {gid}'   # S127
             fl = ru.get('floors')
             fl = f" floors {fl[0]}-{fl[1]}" if isinstance(fl, list) and len(fl) == 2 else ''
+            ch = (f"{ru['chance_by_level']['from'][1]}-{ru['chance_by_level']['to'][1]} % by "
+                  "level" if isinstance(ru.get('chance_by_level'), dict) else
+                  f"{ru.get('chance', 100)} %")
             self._trigger('gate_room', terms, '',
-                          f"{rn} may appear on gate {gid}{fl} ({ru.get('chance', 100)} %)",
-                          f'gate {gid} · rooms on gate floors', {'tab': 'gates', 'gate': gid},
+                          f"{rn} may appear on {gname}{fl} ({ch})",
+                          f'{gname} · rooms on gate floors',
+                          {'tab': 'gates', 'gate': gid if gid is not None else 0},
                           [('custom', 'gate_inserts', j, 'when', t, 'flag')
                            for t in range(len(terms))])
+
+    def _walk_breed_pools(self):
+        """S127 (ROADMAP P3.14e2): a breeding pool's story scale counts its milestone
+        flags that are ON (bank $77 BreedRoll) — each is a check."""
+        for j, p in enumerate(self.custom.get('breeding_pools') or []):
+            for k, f in enumerate(p.get('milestones') or []):
+                self._use(f, TEST, 'breed_pool', f"breeding pool {p.get('name') or p.get('id')}",
+                          f'story milestone {k + 1} of the pool (counts when ON — the band '
+                          'nearest the story so far)', {'tab': 'services', 'pool': p.get('id')},
+                          ('custom', 'breeding_pools', j, 'milestones', k), want='set')
 
     def _walk_hub(self):
         """S125 (ROADMAP P3.14d): custom.hub.rules[].when — where the game sends the

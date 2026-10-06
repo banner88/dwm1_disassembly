@@ -658,3 +658,13 @@ gate you assumed".
 | S117b note "free-colour windows fixed (the shop, the Vault)" | INCOMPLETE (S126, PyBoy) | only bank $09's screens were fixed; the farm, Library, namer, Medal Man and egg windows used the bank $0A / $12 copies and were still garbled in a free-colour room. Fixed with them. |
 | BANK04_SCRIPT_ENGINE `$04` row: "Open a game screen of bank $09 … speaking with the text id" | IMPRECISE (S126) | the second word is the text BASE (every menu line = base + offset), not one line; the per-type bases are listed there now. |
 | ROOM_DATA_FORMAT "Text boxes and sprites" (S121): the rule skips sprites over tiles ≥ `$FFD4` "(`$80` = the font tiles)" | INCOMPLETE (S126 r2, code-read + PyBoy) | `$80` is set at every map load (bank $01 `ClearAnimationState`) but the farm menu sets `$60` (bank $12 `$44A7`) and bank $0A screen types 5 / 6 / 11 set `$78` / `$40` / `$40`, none restored — until the next map load. Added there; the service close restores it in custom rooms. |
+
+## S127 addendum (2026-10-06; breeding in the project's rooms — ROADMAP P3.14e2)
+
+| Claim (where) | Verdict | Correct |
+|---|---|---|
+| BANK04_SCRIPT_ENGINE / `editor2/core/script_ops.py` op `$42` `save_return_point`(**text**, actor) | WRONG (S127, code-read + PyBoy) | param 1 is the breeding MATE's enemy row → `$C8F7/8` (bank $0A `LoadFldA_4ba2` loads it, the type-5 menu names it); fixed in both, comments in both trees. |
+| BANK04_SCRIPT_ENGINE op `$50` "NPC 2 faces the player" | IMPRECISE (S127) | the FIXED NPC slot 1 (`$D7F8`, Grandpa in the shrine). |
+| known_RAM_map `$C8EF`: "5 = arena-lobby party list … 11 = shrine entry" | WRONG for bank $0A (S127, code + PyBoy) | 5 = a breeding master's own monster (base `$0600`), 6 = Grandpa's BREED / HATCH, 11 = "Take … with you now?"; noted there. |
+| `tools/decompile_script.py` / `compile_script.py` / `dump_all_scripts.py` param tables (`0x42:0`, …) | STALE (S127, seen) | the handler-derived counts are BANK04 "Parameter counts" (S96) and `editor2/core/script_ops.py`; these legacy tools are not used by the editor. Not changed. |
+

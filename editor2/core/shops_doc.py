@@ -18,6 +18,12 @@ def _ival(v):
     return int(s[1:], 16) if s.startswith('$') else int(s, 0)
 
 
+
+def _fit(boxes):
+    from editor2.core.breeders_doc import fit_boxes
+    return fit_boxes(boxes)
+
+
 class ShopsMixin:
     # ------------------------------------------------------------ reading
     def shops_resolved(self):
@@ -199,7 +205,7 @@ class ShopsMixin:
                                            if d.get('id') != did]
             spec = {'shop': shop}
             if greeting:
-                spec['text'] = self._talk_entry(sid, greeting)
+                spec['text'] = self._talk_entry(sid, _fit(greeting))   # S127 r3: fitted to the box
             prev['shop'] = spec
         else:
             sids = {s.get('id') for s in scripts}

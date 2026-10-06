@@ -648,6 +648,13 @@ average 110 lines with peaks of 173 → frames over budget. The vanilla throne
 room (3 NPCs) 597-598. Rule of thumb: at most 3 NPCs on a screen the player
 walks around in (PYBOY_DEBUGGING S125 "frame phases").
 
+**Ten sprite pieces per line (S127, PyBoy-measured).** The hardware draws at most 10 OAM
+entries on one scanline; the player alone is 8 on each of its lines (four palette layers
+× two 8-pixel columns, OAM order first) and a follower / NPC 2 more. In the S127 demo
+lodge (a copy of GateRoom1) three NPCs standing on the arrival's row 3 were in OAM at
+the right places but not shown while the player stood on that row (row 2 = drawn). Put
+NPCs one row above / below the cells the player stands on, the arrival first.
+
 ### NPC RAM slot ($D7D2 + 32·i, 8 slots) — fields known S97
 
 | off | field | writer / reader |
@@ -900,6 +907,7 @@ slots (VRAM `$9000-$97FF`, ids `$00-$7F`) and the game puts back only some of th
 | Library (8), farm CHECK, egg INFO | the room sheet (full screens) | yes — the room reloads (bank $0B entries 1 / 2) |
 | gate list (13) | `$38-$7F` the gate names as a bitmap | yes (room reload) |
 | naming screen (15) | the room sheet | yes (room reload) |
+| Grandpa (6) / a master (5) / "Take…" (11) — S127 | `$40-$7F` (the menu's icons); `$FFD4` := `$40` / `$78` / `$40` | no — S127: bank $77 `BreedClose` reloads the room sheet and sets `$80` in custom rooms |
 
 No vanilla room shows slots `$60-$7F` where these menus open; a custom room may — before
 S126 a farm visit left monster icons in its floor. Now bank $77 entry 6

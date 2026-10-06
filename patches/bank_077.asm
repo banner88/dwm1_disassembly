@@ -83,6 +83,43 @@
 ;     there (bank $12 $44A7) — the text-box sprite rule's threshold —
 ;     so at the next talk every sprite over a BG tile >= $60 vanished in a
 ;     room drawn with such ids (vanilla: reset by the next map load).
+; Entries 7 / 8 / 9 (S127, ROADMAP P3.14e2) — breeding NPCs (PROJECT_COMPILER §2.40):
+;   7 BreedClose: bank $0A's three breeding screens — 5 (a master offering their
+;     own monster: "Why not breed with my …?"), 6 (Grandpa's BREED / HATCH menu)
+;     and 11 ("Take … with you now?") — end with `ld hl, $0103 / rst $10 / ret`;
+;     those 5 bytes are a same-size call of this entry (patches/bank_00a.asm).
+;     It does the bank $01 entry 3 call, then, in a CUSTOM room: ShopBoxBottom (S127 r3:
+;     the dialog box re-seated at the bottom, as after a shop), $FFD4 := $80
+;     (types 5 / 6 / 11 leave $78 / $40 / $40 — the text-box sprite rule's
+;     threshold, so the next talk hid every sprite standing on a room tile >= it)
+;     and the room's own sheet again at $9000 (tiles $00-$7F: the record through
+;     bank $71 entry 0, as bank $0B RoomEntry1 does, then ROM0 WaitDMATransfer —
+;     the field menu's close heals the room the same way). The screens draw
+;     their icons and the INFO pages' pictures into $40-$7F and never restore
+;     them; vanilla rooms do not draw with those slots (measured S127: after
+;     BREED -> INFO -> back, slots $40-$48 / $61-$7A stayed overwritten).
+;   8 BreedSlotEID: bank $14 LoadEnemyStatsExt for a pseudo enemy row $0F00 + k
+;     (a random breeder's op $42): slot k of wBreedSlots — state 0 = roll it now
+;     (BreedRoll with the slot's pool), then wTempEnemyStatsId / $DA13 := the
+;     slot's real row, which LoadEnemyStats then copies (so the mate's name,
+;     picture and the egg's parent come from the real row). Keeps DE.
+;   9 PartyAvgLevel: A = E := the average level of the party (list $CA8E,
+;     records +$4B; 0 with no monster). A far caller reads E (rst $10 returns
+;     through `pop af`, so A comes back as the caller's bank). For BreedRoll and the bank $71 gate rooms' chance
+;     by level (entry 4).
+;  10 ScriptCommand (E = command): a project script's op $24 $FF00 + E (bank $60
+;     CustomDrawTiles hands a word $FFxx here — P3.14b's reserved range). 0 =
+;     insert slot 0 ($C180, text $F9 $00) := the species name of the breeding
+;     mate in $C8F7/$C8F8 (op $42's row; a random breeder's $0F00 + k rolls
+;     here): bank $14 entry 0 LoadEnemyStats, then the name of [$DA18] in text
+;     mode 5 (what the type 5 screen's LoadFldA_4ba2 does) — a breeder asks
+;     "Why not breed with my [INS 00]?" BEFORE its menu opens. Others: nothing.
+;   BreedRoll (A = pool): the player's place on the pool's scales — average party
+;     level; arena classes won ($CAB4) x 12; monsters seen (Library bits $CA94,
+;     0-$EF, as op $31 counts them) / 2; the pool's story milestones that are ON
+;     x 100 / their number — then the band with the smallest sum of distances
+;     over the scales the pool checks (the first band wins a tie), then a mate:
+;     RNG16 mod the band's total weight walked over its mates' weights.
 ; Data (generated below): SHOP_COUNT, ShopPtrTable (dw per list),
 ;   ShopList_n (item ids, $FF), SERVICE_SET_COUNT + ServiceSetTable +
 ;   ServicePairs_n (S126).
@@ -99,6 +136,10 @@ SECTION "ROM Bank $077", ROMX[$4000], BANK[$77]
     dw ServiceCloseBox                  ; entry 4 (HL=$7704, S126)
     dw ServiceCloseTiles                ; entry 5 (HL=$7705, S126)
     dw ServiceOpenTiles                 ; entry 6 (HL=$7706, S126)
+    dw BreedClose                       ; entry 7 (HL=$7707, S127)
+    dw BreedSlotEID                     ; entry 8 (HL=$7708, S127)
+    dw PartyAvgLevel                    ; entry 9 (HL=$7709, S127)
+    dw ScriptCommand                    ; entry 10 (HL=$770A, S127)
 
 ShopFill:
     ld a, [wShopID]
@@ -591,6 +632,316 @@ ServiceCloseTiles:
     ld [$c905], a
     ret
 
+; -----------------------------------------------------------------------------
+; Entries 7 / 8 / 9 (S127): breeding NPCs (see the header)
+; -----------------------------------------------------------------------------
+BreedClose:
+    ld hl, $0103                        ; bank $01 entry 3 — the replaced tail's call
+    rst $10
+    ld a, [wMapID]
+    cp CUSTOM_ROOM_START
+    ret c                               ; vanilla rooms: unchanged
+    call ShopBoxBottom                  ; S127 r3: the dialog box back at the bottom (a talk
+                                        ;   from the lower half opened it at the top; the
+                                        ;   farewell's scroll then drew there — measured)
+    ld a, $80
+    ldh [$d4], a                        ; the text-box sprite threshold back to the font
+    ld hl, $7100                        ; bank $71 entry 0: the room's record -> wRoomRecScratch
+    rst $10
+    ld hl, wRoomRecScratch
+    ld e, [hl]
+    inc hl
+    ld d, [hl]                          ; DE = the room sheet's gfx id
+    ld hl, $9000
+    jp WaitDMATransfer                  ; tiles $00-$7F = the room's own again
+
+BreedSlotEID:
+    push de
+    ld a, [wTempEnemyStatsId]
+    and BREED_SLOTS - 1
+    add a
+    add a
+    ld e, a
+    ld d, $00
+    ld hl, wBreedSlots
+    add hl, de                          ; HL = the slot [state, pool, lo, hi]
+    ld a, [hl]
+    or a
+    jr nz, .have
+    push hl
+    inc hl
+    ld a, [hl]                          ; the pool
+    call BreedRoll                      ; BC = the mate's enemy row
+    pop hl
+    ld a, $01
+    ld [hl+], a                         ; state 1: rolled for this appearance
+    inc hl
+    ld a, c
+    ld [hl+], a
+    ld [hl], b
+    dec hl
+    dec hl
+    dec hl
+.have:
+    inc hl
+    inc hl
+    ld a, [hl+]
+    ld [wTempEnemyStatsId], a
+    ld a, [hl]
+    ld [$da13], a
+    pop de
+    ret
+
+PartyAvgLevel:
+    ld de, $0000                        ; DE = the levels added up
+    ld b, $00                           ; B = monsters
+    ld c, $03                           ; C = list entries left
+    ld hl, $ca8e                        ; the party list (slot numbers, $FF = none)
+.next:
+    ld a, [hl+]
+    cp $ff
+    jr z, .skip
+    push hl
+    ld hl, $cac1 + $4b                  ; record +$4B = the level
+    call GetMonsterDataPtr              ; keeps BC / DE
+    ld a, [hl]
+    pop hl
+    add e
+    ld e, a
+    ld a, d
+    adc $00
+    ld d, a
+    inc b
+.skip:
+    dec c
+    jr nz, .next
+    ld a, b
+    or a
+    jr nz, .some
+    ld e, a                             ; no monster: 0 (A = E = 0)
+    ret
+.some:
+    ld c, $00                           ; C = the quotient
+.div:
+    ld a, e
+    sub b
+    ld e, a
+    ld a, d
+    sbc $00
+    ld d, a
+    jr c, .done
+    inc c
+    jr .div
+.done:
+    ld a, c
+    ld e, a                             ; E too: a far caller gets A back as its bank
+    ret                                 ;   (rst $10 returns through pop af)
+
+; A = pool -> BC = the mate's enemy row (see the header). Clobbers all.
+BreedRoll:
+    cp BREED_POOL_COUNT
+    jr c, .ok
+    ld bc, $0001                        ; no such pool (cannot be built): row 1
+    ret
+.ok:
+    add a
+    ld hl, BreedPoolPtrs
+    add l
+    ld l, a
+    adc h
+    sub l
+    ld h, a
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a                             ; HL = the pool
+    ld a, [hl+]
+    ld [wBreedMask], a
+    ld a, [hl+]
+    ld [wBreedStep], a
+    push hl
+    call PartyAvgLevel
+    ld [wBreedVals], a
+    ld a, [$cab4]                       ; arena classes won, 0-8
+    add a
+    add a
+    ld b, a                             ; x4
+    add a                               ; x8
+    add b                               ; x12
+    ld [wBreedVals + 1], a
+    ld bc, $0000                        ; B = Library bit, C = seen
+.seen:
+    push bc
+    ld hl, $ca94
+    ld a, b
+    call TestBitInArray                 ; Z = not seen
+    pop bc
+    jr z, .unseen
+    inc c
+.unseen:
+    inc b
+    ld a, b
+    cp $f0
+    jr nz, .seen
+    ld a, c
+    srl a
+    ld [wBreedVals + 2], a
+    pop hl
+    ld a, [hl+]                         ; milestones
+    ld b, a
+    ld c, $00                           ; C = milestones ON
+    or a
+    jr z, .msDone
+.ms:
+    push bc
+    ld c, [hl]
+    inc hl
+    ld b, [hl]
+    inc hl
+    push hl
+    call TestEventFlag                  ; Z = clear, NZ = set
+    pop hl
+    pop bc
+    jr z, .msOff
+    inc c
+.msOff:
+    dec b
+    jr nz, .ms
+.msDone:
+    xor a                               ; story = milestones ON x the step
+    ld b, c
+    inc b
+.mul:
+    dec b
+    jr z, .mulDone
+    ld e, a
+    ld a, [wBreedStep]
+    add e
+    jr .mul
+.mulDone:
+    ld [wBreedVals + 3], a
+    ; the band nearest to the player: HL = the band count
+    ld a, [hl+]
+    ld b, a                             ; B = bands left
+    ld de, $ffff                        ; DE = the best distance
+    push hl                             ; [sp] = the best band (the first, for now)
+.band:
+    push bc
+    push de
+    push hl
+    ld de, wBreedVals
+    ld bc, $0000                        ; BC = this band's distance
+    ld a, [wBreedMask]
+.scale:
+    srl a                               ; CF = this scale counts
+    push af
+    jr nc, .scaleNext
+    ld a, [de]
+    sub [hl]
+    jr nc, .pos
+    cpl
+    inc a                               ; |player - target|
+.pos:
+    add c
+    ld c, a
+    jr nc, .scaleNext
+    inc b
+.scaleNext:
+    inc hl
+    inc de
+    pop af
+    push af
+    ld a, e
+    cp LOW(wBreedVals + 4)
+    jr z, .sumDone
+    pop af
+    jr .scale
+.sumDone:
+    pop af                              ; HL = the band's mate count
+    pop hl                              ; HL = this band
+    pop de                              ; DE = the best so far
+    ld a, b                             ; this distance < the best?
+    cp d
+    jr c, .better
+    jr nz, .worse
+    ld a, c
+    cp e
+    jr nc, .worse
+.better:
+    ld d, b
+    ld e, c
+    pop bc                              ; bands left
+    add sp, 2                           ; drop the old best band
+    push hl                             ; the new best band
+    jr .after
+.worse:
+    pop bc
+.after:
+    push de
+    ld de, $0004
+    add hl, de                          ; HL = the mate count
+    ld a, [hl+]
+    inc hl                              ; past the total weight
+    ld e, a
+    add a
+    add e                               ; 3 bytes a mate
+    ld e, a
+    ld d, $00
+    add hl, de                          ; HL = the next band
+    pop de
+    dec b
+    jr nz, .band
+    pop hl                              ; HL = the nearest band
+    ld de, $0004
+    add hl, de
+    ld a, [hl+]
+    ld b, a                             ; B = mates
+    ld a, [hl+]                         ; the total weight
+    push hl
+    push bc
+    ld c, a
+    call GenerateRNG
+    ld a, [wRNG1]
+    ld l, a
+    ld a, [wRNG2]
+    ld h, a
+    ld a, c
+    call Div16x8To16                    ; A = RNG16 mod the total (clobbers DE, HL)
+    pop bc
+    pop hl
+    ld c, a                             ; C = the roll
+.mate:
+    ld e, [hl]
+    inc hl
+    ld d, [hl]
+    inc hl
+    ld a, c
+    sub [hl]                            ; roll - this mate's weight
+    inc hl
+    jr c, .picked
+    ld c, a
+    dec b
+    jr nz, .mate
+.picked:
+    ld b, d
+    ld c, e
+    ret
+
+ScriptCommand:
+    ld a, e
+    or a
+    ret nz                              ; only command 0 so far
+    ld a, [$c8f7]
+    ld [wTempEnemyStatsId], a
+    ld a, [$c8f8]
+    ld [$da13], a
+    ld hl, $1400                        ; bank $14 entry 0: LoadEnemyStats
+    rst $10
+    ld a, [$da18]                       ; the row's species
+    ld l, a
+    ld h, $05                           ; text mode 5: a species name
+    ld de, $c180                        ; insert slot 0
+    jp SetupVRAMParams
+
 ; =============================================================================
 ; SHOP LISTS (generated by editor2 `shops77` from gamedata.shops + custom.shops,
 ; PROJECT_COMPILER §2.32). Order: the five vanilla shops, then the project's.
@@ -623,4 +974,12 @@ ServiceSetTable:
     dw ServicePairs_0   ; every NPC (everywhere sets, medal rewards)
 ServicePairs_0:
     dw $FFFF
+
+; S127 (P3.14e2): breeding pools (custom.breeding_pools; editor2/core/breeders.py).
+; Pool: [measure mask (1 level, 2 arena, 4 seen, 8 story), story step,
+;  milestones n, dw flag x n, bands n] + per band [level, arena x12,
+;  seen / 2, story x step (the band's points), mates n, total weight]
+;  + per mate [dw enemy row, db weight]. Read by entry 8 / BreedRoll.
+BREED_POOL_COUNT EQU 0
+BreedPoolPtrs:
 

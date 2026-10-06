@@ -2236,8 +2236,28 @@ recipes are pure authoring.
           lists, the post-game lines will differ anyway. Open: the user's "what gate
           guide??" (the Gate Hub guide's Travelers' Gates list — kept as a kind; it lists
           the original 31 gates only). *User half:* the test ROM.
-    - [ ] **P3.14e2 — Breeding in your room**: the breeding NPC + the vanilla `$08` ceremony
-          (a return to the room it came from).
+    - [x] **P3.14e2 — Breeding in your room** — **built S127, NOT yet user-tested.**
+          **Grandpa** (BREED / HATCH / EXIT, the game's fee) and **breeders** offering
+          their own monster (`custom.scripts[].service` kinds `grandpa` / `breeder`, Rooms
+          tab → NPC → Service…): the vanilla `$08` ceremony comes back to the room (a return
+          script in front of the room's entry script turns the NPC the player talked to and
+          runs the game's follow-up); a breeder = one fixed enemy row (its level fixed) or a
+          mate **rolled from a breeding pool** each time the room appears (`custom.
+          breeding_pools`: bands on the party's average level / arena classes won / monsters
+          seen / story milestones — each scale checkable, the NEAREST band wins, then a mate
+          by weight; at most 4 random breeders a room, "done for this visit" after one
+          breeding); offers only when flags hold; a done flag; once only + new words. Gate
+          rules for **every gate** with the chance **by the party's average level** (a
+          wandering breeder room, at most once per dive). PROJECT_COMPILER §2.40,
+          EDITOR_DESIGN §5.6c (S127), help `68_breeding_npcs.md`. User answers S127:
+          Grandpa (not the priest), all four scales selectable, "the band snaps to the
+          closest hit", the mate's level fixed, re-roll "every time room appears", the
+          room at most once a gate, "once off only", breed once then new words / offer only
+          when flags set, the ceremony and fee vanilla. P3.14b's op-`$24` command range is
+          now in use (`$FF00` = the mate's name, bank $77 entry 10). r2 (user's first try): long
+          words wrapped into boxes; a mate = a species at a level you choose. r3: every text
+          box at the bottom (NO no longer splits the box); every text entry is a game box editor. *User half:*
+          the test ROM.
     - [ ] **P3.14e3 — Your arena**: a copy of the arena battle room with role aliasing for the
           `$5D` checks, lobby ↔ battle warps, a loss → the lobby, a class won → the hub
           (arrival reason `arena_won`, reserved in `wHubReason`); the Arena tab edits it.

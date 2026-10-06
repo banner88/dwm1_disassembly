@@ -59,6 +59,11 @@
 ;     and stays vanilla. Hit: writes wMapID, wInGateworld=0 and the spawn
 ;     pixels (exactly what the vanilla special-room handler $16:$5D0D writes),
 ;     sets the rule's once bit, returns E=1. Miss: E=0, nothing written.
+;     S127 (ROADMAP P3.14e2): a record's gate byte GATE_ANY ($FE) matches every
+;     gate (its floor_hi $FF = up to the floor before the boss — the boss floor
+;     is decided before this entry runs); a chance byte $80 | n is replaced by
+;     ScaledChanceTable[n][the party's average level] (bank $77 entry 9) — the
+;     rule's chance rising / falling with the player's level.
 ;     Dive tracking: wGateDiveGate = wGateID+1 of the current dive, reset
 ;     (with wGateDiveMask) on floor 0 or a different gate. Both bytes are
 ;     saved/loaded through SRAM $BFCA/$BFCB by bank $73 entries 5/6.
@@ -404,10 +409,13 @@ CustomGateInsert:
     cp $FF
     jp z, .none                         ; end of table
     push hl                             ; [sp] = record start
+    cp GATE_ANY
+    jr z, .anyGate                      ; S127: $FE = every gate
     ld b, a
     ld a, [wGateID]
     cp b
     jp nz, .next                        ; other gate
+.anyGate:
     inc hl
     ld a, [wCurrentFloor]
     cp [hl]
@@ -457,6 +465,8 @@ CustomGateInsert:
     inc hl
     inc hl                              ; +3 chance
     ld a, [hl]
+    bit 7, a
+    call nz, ScaledChance               ; S127: $80 | n = table n by the party's level
     cp 100
     jr nc, .hit                         ; 100% = always, no RNG drawn
     ld c, a                             ; C = chance (Div16x8To16 keeps BC)
@@ -508,6 +518,36 @@ CustomGateInsert:
     jp .rec
 .none:
     ld e, $00                           ; E = 0 (E held record sizes above)
+    ret
+
+; S127 (ROADMAP P3.14e2): A = $80 | n -> A = ScaledChanceTable[n][the party's
+; average level, 0-99] (bank $77 entry 9 PartyAvgLevel; the table = the chance
+; in % per level, generated from the rule's two points). Keeps the stack's
+; record pointer; clobbers BC / DE / HL (the caller reloads them).
+ScaledChance:
+    and $7f
+    push af
+    ld hl, $7709                        ; bank $77 entry 9: E = average level
+    rst $10                             ;   (A comes back as this bank: rst $10's pop af)
+    ld a, e
+    cp 100
+    jr c, .lvl
+    ld a, 99
+.lvl:
+    ld e, a
+    ld d, $00
+    pop af
+    ld hl, ScaledChanceTable
+    ld bc, 100
+.row:
+    or a
+    jr z, .got
+    add hl, bc
+    dec a
+    jr .row
+.got:
+    add hl, de
+    ld a, [hl]
     ret
 
 ; -----------------------------------------------------------------------------

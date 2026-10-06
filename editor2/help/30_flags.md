@@ -35,6 +35,9 @@ words
   the place in the panel on the right (see *The place panel* below);
 - **Checked by — and what it changes** — "while ON: the room shows state 2",
   "while OFF: the cutscene plays (once)", "while ON: says «…»; otherwise: …";
+  a breeder's done flag shows as "… — a breeding with them is done (after the
+  ceremony)", its *offers only when* flags as "the breeder offers to breed";
+  a breeding pool's story milestones as "story milestone n of the pool";
 - **In the original game** — where the game itself sets and checks it, with the
   words the game shows there.
 

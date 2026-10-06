@@ -416,3 +416,35 @@ edge and the battle waits for input forever.
   X 1-167) with the box open and read `$FFD3` (1 top / 2 bottom box) and `$FFD4` (the tile
   threshold: sprites over BG tiles ≥ it are skipped; `$80` normally). Diff HRAM
   (`$FF80-$FFFE`) before / after each menu — the farm left `$60`.
+
+## S127 techniques — breeding, gate floors from a room, harness traps
+
+- **Breed through a menu:** talk A, the question A (YES), the list A (the first
+  selectable monster), then **A again** ("Are you okay with this monster?" waits for A on
+  the user's slow text) and only then `down` + A for OK — a `down` sent while the line
+  prints is lost and A opens INFO. "Start the breeding ceremony?" A; then A every 24
+  frames until the map is the room again and `$D951` = `$F0` / `$F1` / `$F2` (log
+  `(map, $D951)` changes: 4 → map $08 → 5 → `$F2`).
+- **Naming screen:** START (jumps to END), then A.
+- **Is the random breeder rolled?** `wBreedSlots` (`$D4F3` + 4k: state, pool, row) and
+  `wBreedVals` (`$D503`: level, arena × 12, seen / 2, story points) right after the
+  question — the row must equal the name in the box.
+- **An every-gate room's chance:** from one floor-1 state, reload, wait 7k + 1 frames (the
+  RNG advances with time), staircase-kick floor 2 (S100 recipe), count map = the room
+  over 24 samples; from a hit kick floors 3-6 for once-per-dive.
+- **Trap — harness warps that hang PyBoy:** `warp()` keeps the screen index of the room
+  left; into map $09 (the Starry Shrine) or GreatTree screen 7 the game crashes or PyBoy
+  stops returning from `tick()` — identical on a pre-S127 build (a worktree of HEAD).
+  Reach those by walking through their doors from a place a warp reaches safely.
+- **Trap — `rest()` in animated rooms:** the shrine's stars never let the screen rest;
+  use fixed waits there.
+- **Trap — a driver with fixed timing re-rolls the same mate (S127 r2).** The game's RNG
+  (`GenerateRNG`, x' = 5x + $1357) advances every frame; a loop that leaves and re-enters
+  with exactly the same frames can land on the same value mod the weights (four Yeti in a
+  row). Vary the wait per visit (17 + 29k frames) before calling a roll "stuck".
+- **The mate a breeder staged:** during the ceremony the master's monster is roster slot 21
+  (`$CAC1 + 21 × $95`: +9 species, +`$4B` level, +`$50` HP).
+- **Box placement (S127 r3):** read `$FFD3` (1 top / 2 bottom) and the box base
+  `$C919/$C91A` (bottom = `[$C909] + $01A0`) after each box opens; drive the talk from a cell in
+  the lower half too (the default flips at player y − scroll ≥ `$50`).
+

@@ -1,5 +1,68 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-06 (Session 125 — **ROADMAP P3.14d RE-CUT WITH THE USER; P3.14d1 BUILT:
+> THE HUB — WHERE THE GAME SENDS THE PLAYER HOME (A LOST BATTLE, THE PARTY FALLEN ON DAMAGE
+> FLOORS, THE WARPWING / ANCHOR, A LOST STARRY FINAL, A SCRIPT'S "HOME") IS A ROOM OF THE
+> PROJECT CHOSEN BY FLAG-ORDERED RULES — THE CASTLE WHEN NONE HOLDS; ARRIVAL SCENES PER REASON;
+> THE HEAL STEP** (user: "Proceed with progression flags. Let's discuss what you do first" →
+> "Make a single room be HUB but yes I would like to make it be transferrable upon flag. Keep
+> in mind also how vanilla handles room variants with hub … Keep original [penalties]" → the
+> realms: "post-game will take place back in vanilla GreatTree … main game in custom game world
+> (GreatLog) … there should be just 1 instance [of each service] in game mirrored across
+> locations" → "It's one or the either NEVER both"; breeding: "nothing further is necessary";
+> the ending: night Farm → cutscenes → the house → credits → reset → CONTINUE → the hub in front
+> of the King). **Built S125; test ROM USER-CONFIRMED 2026-10-06 12:48.**
+> **Audit (code-read + PyBoy):** the engine's Castle sends = bank $50 `$6559` (an ordinary
+> loss, then half the gold + the items), `$64AF` (the lost Starry / arena final), bank $06
+> `$6A39` (the party wiped by damage floors), bank $07 `$5030` (the WarpWing item — the old
+> "code 6 = gate return"); the `$04` service menus are room-independent, their state global;
+> arena / breeding hard-wired to their rooms (P3.14e). The ending's night sky = game mode 3
+> (ARCHITECTURE; ROADMAP E5). ROADMAP P3.14d re-cut: d1 the hub (this session), e1 service
+> NPCs, e2 breeding, e3 the arena; the active hub decides the realm.
+> **Engine:** bank $71 template entry 9 `HubWarp` + `HubTable` (re-pinned `28d988db…`,
+> TEMPLATE_SIZE 865); the four sends → `ld e, HUB_x / ld hl, $7109 / rst $10` (same size,
+> labels unmoved, the penalties after them unchanged); `wHubReason` $D2EF (carved from
+> `wCustomPool`). No hub = the vanilla writes. **Compiler (PROJECT_COMPILER §2.38):**
+> `custom.hub.rules`; `dest: "hub"` ladders (talk / conversation move + helper / cutscene
+> move / the Anchor skill's gate exit); `trigger.arrival`; a hub room's arrival script (the
+> WarpWing reveal, arrival scenes first, the default heal); the Heal step (op `$27`, measured);
+> validators; flag index kind `hub`. **Editor:** World tab **Hub** box + rule dialog (cell
+> on the picture), Add the arrival scenes; the cutscene editor's Arrival home… / Heal / home;
+> the conversation dialog's Home / Heal; Rooms canvas **H**; Flags tab → the rule; help
+> `66_hub.md` + 00/30/40/63/65/90; `EDITOR_REVISION` 'S125'.
+> **Found + fixed:** the WarpWing's exit hides every sprite (`$C8EC` = 1) and leaves the
+> un-hiding to the Castle — in the hub the player and NPCs stayed invisible (PyBoy) → the
+> hub room's arrival script clears it for that reason (KEY_LESSONS S125). Op `$27` HEALS (it
+> was documented "re-count the party", DOC_AUDIT S125).
+> **Measured (PyBoy, the user's save, the demo below):** lost battle → HUB HALL (4, 5), the
+> loss scene, heal (0 HP / 0 MP / KO → full), 3800 → 1900 gold, items lost as in the game;
+> the WarpWing thrown on gate 0 floor 1 → the hub, its scene, sprites shown, the wing used;
+> the Guide's "home" → reason 5, its scene; the Keeper's flag → a loss lands in the Castle
+> throne room (screen 1, (14, 5)), `$D92B` 8, the priest heals; WarpWing with the Castle hub
+> → the Castle; the door (2, 0) → map $04 screen 5. Not staged: the floor wipe, the Starry
+> final (the same call; MiniSM83 runs HubWarp from the ROM in test_compiler).
+> **Annotation (Iron Rule 6):** bank $01 `IteratePartySlots20` = heal-all (both trees); the
+> four sends' callers (disassembly banks $06 / $07 / $50). Clean `1ca6579…` byte-perfect.
+> **Checks:** verifier PASS; patched pin **`c326fc96…` (patched)**, was `6b0738c1…`
+> (patched, historical); test_compiler --rom 1175/1175 (incl. `test_hub_s125` + `test_hub_rom`; an independent review found two arrival-order edge cases, fixed: a `once` arrival scene now takes the reason only after its guards, and the default heal runs before the room's other entry scenes); test_app PASS (`s125_hub`); test_canvas
+> --rom PASS.
+> **Test ROM `DWM-S125-hub-test.gbc` (`2885e316…`, patched; USER-CONFIRMED 12:48):**
+> the user's project (my-dwm-hack_15) + **HUB HALL** ($74, a copy of GateRoom1 made with the
+> editor's own operations) as hub rule 1 while flag `hub_to_castle` is OFF, the Castle after
+> (rule 2). In the hall: the **Guide** (says what the room is; YES = sends you home), the
+> **Sparring** NPC (YES = a battle with Esterk to lose on purpose), **Wings** (gives a
+> WarpWing), the **Keeper** (YES = the hub becomes the Castle, NO = back to the hall); three
+> arrival scenes (loss + heal, WarpWing + heal, home); the path at the top left (2, 0) → back
+> where the save continues. Reach it by losing any battle.
+> **User 2026-10-06 12:48: "Great, works"** — the test ROM USER-CONFIRMED. "The room you
+> made hub was laggy. Was it all the animated tiles, NPCs, or combinations thereof?" →
+> measured (PyBoy, variants of the room): the NPCs — 4 on one screen with the player and 3
+> followers drop ≈ 8 % of frames while walking (3: ≈ 3 %, 2: none); the four sway
+> animations cost nothing measurable; the S123 colour path is ≈ 1.4 of the ≈ 8 scanlines
+> each NPC's draw costs (ROOM_DATA_FORMAT "What NPCs cost per frame"). Docs only.
+> **Next:** P3.14e1 (service NPCs) or the user's pick.
+
+
 > Last verified: 2026-10-05 (Session 124 — **ROADMAP P3.14 RE-CUT WITH THE USER INTO a / b / c / d;
 > P3.14a BUILT: THE PROGRESSION & FLAGS TAB — EVERY FLAG OF THE GAME BEING MADE WITH WHAT TURNS
 > IT ON / OFF AND WHAT CHECKS IT, IN WORDS, WITH A LINK TO THE PLACE; EVERY "WHEN … → …" AS A

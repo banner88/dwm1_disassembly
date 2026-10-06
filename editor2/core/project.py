@@ -254,6 +254,19 @@ class Project:
         self._rooms_resolved = True
         self._vanish_places = self._resolve_vanish_slots()
         self._lower_talk_scripts(self._place_helpers())
+        # S127 (ROADMAP P3.14e2): Grandpa / breeder scripts need their NPC's slot —
+        # lowered now (a cutscene may wrap their talk next); the rooms' return
+        # scripts go in front of the entry scripts after the cutscenes (below)
+        from . import breeders as _BR
+        self.breed_error = None
+        try:
+            _BR.lower_talk(self)
+        except (_BR.BreedError, ProjectError, _SV.ServiceError) as ex:
+            self.breed_error = str(ex)
+            self._breeding = {}
+            for _s in self.custom.get('scripts', []):
+                if isinstance(_s.get('service'), dict) and 'ops' not in _s:
+                    _s['ops'] = [['end']]
         # S119 (ROADMAP P3.8 part B): the rooms' own cutscenes become ordinary
         # scripts wired to their triggers (entry / talk / examine / step-on) —
         # after the helpers, so every script they wrap is already ops
@@ -276,6 +289,10 @@ class Project:
         except CB.CutsceneError as ex:
             self.cutscene_error = self.cutscene_error or str(ex)
             self.cutscene_patches = {}
+        try:
+            _BR.lower_entries(self)
+        except (_BR.BreedError, ProjectError, _SV.ServiceError) as ex:
+            self.breed_error = self.breed_error or str(ex)
         self._gate_rows = None
         self.palettes = self.custom.get('palettes', [])
         self._pal_by_id = {p['id']: p for p in self.palettes}
@@ -1373,23 +1390,34 @@ class Project:
         for i, ru in enumerate(self.custom.get('gate_inserts') or []):
             c = f"custom.gate_inserts[{i}]"
             unknown = set(ru) - {'room', 'gate', 'floors', 'chance', 'when',
-                                 'once_per_dive', 'comment'}
+                                 'once_per_dive', 'comment', 'chance_by_level'}
             if unknown:
                 raise ProjectError(f"{c}: unknown keys {sorted(unknown)}")
             room = self.room_by_id(ru.get('room'))
             if room is None or room.get('placeholder'):
                 raise ProjectError(f"{c}: room {ru.get('room')!r} is not a "
                                    "custom room of this project")
-            gate = int(F.val(ru.get('gate', -1)))
-            if not G.gate_exists(self.custom, gate):
-                raise ProjectError(f"{c}: gate must be 0-31 or one of this project's "
-                                   f"new gates (got {gate})")
-            floors = G.gate_floor_count(self.custom, gate, self.repo_root or self.root)
-            minf = G.gate_min_floor(self.custom, gate)
-            try:
-                first, last = G.floor_range(ru.get('floors', 'all'), floors, minf)
-            except ValueError as e:
-                raise ProjectError(f"{c}: {e}")
+            any_gate = ru.get('gate') == 'any'      # S127: every gate (GATE_ANY)
+            gate = 0xFE if any_gate else int(F.val(ru.get('gate', -1)))
+            if not any_gate and not G.gate_exists(self.custom, gate):
+                raise ProjectError(f"{c}: gate must be 0-31, \"any\" or one of this "
+                                   f"project's new gates (got {ru.get('gate')!r})")
+            if any_gate:
+                # S127: any gate — floor 2 (or the given first floor) up to the floor
+                # before each gate's boss (the boss floor is decided before the rule)
+                fl = ru.get('floors', 'all')
+                first = 2 if fl == 'all' else int(F.val(fl[0] if isinstance(fl, list) else fl))
+                last, floors, minf = 256, 0, 2
+                if first < 2:
+                    raise ProjectError(f"{c}: every gate: from floor 2 (the first floor "
+                                       "stays the gate's own)")
+            else:
+                floors = G.gate_floor_count(self.custom, gate, self.repo_root or self.root)
+                minf = G.gate_min_floor(self.custom, gate)
+                try:
+                    first, last = G.floor_range(ru.get('floors', 'all'), floors, minf)
+                except ValueError as e:
+                    raise ProjectError(f"{c}: {e}")
             if first < minf:
                 raise ProjectError(f"{c}: floor {first} — custom rooms start at "
                                    f"floor {minf} (the first floor stays the gate's "
@@ -1404,6 +1432,14 @@ class Project:
             chance = int(F.val(ru.get('chance', 100)))
             if not 1 <= chance <= 100:
                 raise ProjectError(f"{c}: chance must be 1-100 % (got {chance})")
+            from . import breeders as _BR             # S127: the chance by level
+            try:
+                cbl = _BR.parse_chance_by_level(ru, c)
+            except _BR.BreedError as ex:
+                raise ProjectError(str(ex))
+            chance_byte = chance
+            if cbl is not None:
+                chance_byte = 0x80 | _BR.scaled_chance_rows(self).index(cbl)
             terms = []
             for t in ru.get('when') or []:
                 is_ = t.get('is', 'set')
@@ -1415,13 +1451,22 @@ class Project:
                 raise ProjectError(f"{c}: {len(terms)} flag terms (max {G.MAX_TERMS})")
             once_bit = 0
             if ru.get('once_per_dive'):
-                k = once_next.get(gate, 0)
-                if k >= G.MAX_ONCE_PER_GATE:
+                # S127: an every-gate rule takes a bit from the top (7, 6, …) in
+                # every gate's dive mask; a gate's own rules take them from the
+                # bottom — together at most 8 per gate
+                if any_gate:
+                    k = 7 - once_next.get('any', 0)
+                    once_next['any'] = once_next.get('any', 0) + 1
+                else:
+                    k = once_next.get(gate, 0)
+                    once_next[gate] = k + 1
+                used = max([once_next.get(g, 0) for g in once_next if g != 'any'] + [0])
+                if used + once_next.get('any', 0) > G.MAX_ONCE_PER_GATE or k < 0:
                     raise ProjectError(
                         f"{c}: more than {G.MAX_ONCE_PER_GATE} once-per-dive "
-                        f"rules on gate {gate} (one bit each in wGateDiveMask)")
+                        f"rules on one gate (every-gate rules count for each gate; "
+                        "one bit each in wGateDiveMask)")
                 once_bit = 1 << k
-                once_next[gate] = k + 1
             arr = room.get('gate_arrival')
             if not arr:
                 raise ProjectError(
@@ -1435,7 +1480,7 @@ class Project:
             if not (0 <= int(arr['x']) <= 9 and 0 <= int(arr['y']) <= 7):
                 raise ProjectError(f"{c}: gate_arrival cell outside the 10x8 grid")
             px, py = G.arrival_px(scr, arr['x'], arr['y'])
-            if G.world_settings(self.custom, gate) is not None:
+            if not any_gate and G.world_settings(self.custom, gate) is not None:
                 raise ProjectError(
                     f"{c}: gate {gate} is a WORLD — it has no random floors to serve "
                     "rooms on (its start room is served by the world itself; the "
@@ -1443,6 +1488,7 @@ class Project:
             rows.append({'index': i, 'room_id': room.get('id'),
                          'mapID': F.val(room['mapID']), 'gate': gate,
                          'first': first, 'last': last, 'chance': chance,
+                         'chance_byte': chance_byte, 'chance_by_level': cbl,
                          'once_bit': once_bit, 'px': px, 'py': py,
                          'terms': terms, 'comment': ru.get('comment', '')})
         # S123 (ROADMAP NG3): each world's start room = its floor 1, always
@@ -1451,7 +1497,8 @@ class Project:
             px, py = G.arrival_px(w['start_screen'], w['start_x'], w['start_y'])
             rows.append({'index': None, 'room_id': room.get('id'),
                          'mapID': F.val(room['mapID']), 'gate': gid,
-                         'first': 1, 'last': 1, 'chance': 100, 'once_bit': 0,
+                         'first': 1, 'last': 1, 'chance': 100, 'chance_byte': 100,
+                         'chance_by_level': None, 'once_bit': 0,
                          'px': px, 'py': py, 'terms': [],
                          'comment': f"world {w['name']}: the start room", 'world': gid})
         self._gate_rows = rows

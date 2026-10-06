@@ -48,9 +48,10 @@ built from it (the original ROM is never changed).
 - **Shops** — the game's five shops and your own: what each sells (up to 20
   items) and every item's price; an NPC sells a shop via Rooms tab → NPC →
   Shopkeeper….
-- **Services** — the Vault, farm, library, namer, Medal Man, egg appraiser
-  and gate guide NPCs you placed (Rooms tab → NPC → Service…), what their
-  menus say (line sets), and the Medal Man's rewards.
+- **Services** — the Vault, farm, library, namer, Medal Man, egg appraiser,
+  gate guide, Grandpa and breeder NPCs you placed (Rooms tab → NPC →
+  Service…), what their menus say (line sets), the Medal Man's rewards and
+  the **breeding pools** random breeders roll their monster from.
 - **Progression & Flags** — every flag of your game: what turns it ON / OFF
   and what checks it, in words; **show** draws the place (the room screen in
   its state, the NPC outlined) in a panel on the right, where you can also
@@ -77,3 +78,13 @@ the list). File → Save saves the project.
 
 **Testing:** build, then load the ROM with your own save in your emulator.
 Build warnings are listed in the Build log at the bottom — read them.
+
+## Game text
+
+Every text the game will show in a text box — talks, conversations, cutscene
+lines, a service NPC's first visit, a breeder's words, a shopkeeper's
+greeting — is typed **box by box**, each box beside the game's own picture of
+it (its font, the "*:" label, 16 / 18 letters a line, two lines a box). A box
+that does not fit turns red; **Fit** wraps it into as many boxes as it needs.
+Texts shown elsewhere (library descriptions, SKIL texts, a skill's battle
+message, a Medal Man reward) show the game's picture next to the field.

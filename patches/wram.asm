@@ -376,7 +376,31 @@ wServiceTileSaved:: db ;d4f0 — 1 = wServiceTileSave holds this screen's room t
 ; right after it (the opcode waits for the screen to close); bank $77 entry 3
 ; SayText reads it (0 = only the lines that apply to every NPC of the kind).
 wServiceLines:: db ;d4f1 — the active line set (0 = none)
-wCustomPool:: ds $5A4 - 132 - 5 - 2 * TILEANIM_MAX_GROUPS - 2 - 18 - 26 - 8 - 256 - 1 - 2 - 160 - 12 - 1 - 514 ;d4f2-d5e4 — transient reserve (was $664; FX1 carved 64+128; S97 132; S102 69; S105 2; S111 18; S114 26; S115 8; S117 256 wExtFlags + 1 wShopID; S117b 2 push scratch; S121 160 wMillyLayout; S123 12 NPC colours; S125 1 wHubReason; S126 514: the service tile save + wServiceLines)
+; S127 (ROADMAP P3.14e2, breeding NPCs): the breeding NPC the player talked to
+; last (the compiler's breeder number, 1-255; a breeder / Grandpa script writes
+; it right before its menu) — the room's generated return script (after the
+; breeding ceremony, $D951 = $F0 / $F1 / $F2) reads it to know which NPC turns
+; to the player, speaks and records the breeding. Transient.
+wBreedLast:: db ;d4f2 — 0 none, else the breeder number
+; S127: the RANDOM breeders of the room on screen — 4 slots of [state, pool,
+; enemy row lo, hi]. A random breeder's script writes its pool number to the
+; slot and gives op $42 the pseudo enemy row $0F00 + slot; bank $14
+; LoadEnemyStatsExt hands that to bank $77 entry 8 BreedSlotEID, which rolls the
+; slot once (state 0 -> 1: the pool's band for the player's progress, then a
+; weighted mate) and answers the real row. State 2 = this appearance's breeding
+; is done (the return script writes it). Bank $73 entry 0 (the map-change
+; commit) clears every state — a new appearance re-rolls — except on the way
+; into / back from the ceremony (map $08 / $D951 >= $F0). Transient.
+wBreedSlots:: ds 16 ;d4f3-d502 — 4 x [state, pool, row lo, row hi]
+BREED_SLOTS EQU 4
+; S127: BreedRoll's scratch — the player's progress on the pool's four scales
+; (average party level; arena classes won x 12; monsters seen / 2; the pool's
+; story milestones reached x the pool's step), then the pool's measure mask and
+; story step. Only live inside one roll.
+wBreedVals:: ds 4 ;d503-d506 — level, arena, seen, story (scaled 0-~120)
+wBreedMask:: db ;d507 — bit 0 level, 1 arena, 2 seen, 3 story
+wBreedStep:: db ;d508 — the story scale: 100 / milestones
+wCustomPool:: ds $5A4 - 132 - 5 - 2 * TILEANIM_MAX_GROUPS - 2 - 18 - 26 - 8 - 256 - 1 - 2 - 160 - 12 - 1 - 514 - 23 ;d509-d5e4 — transient reserve (was $664; FX1 carved 64+128; S97 132; S102 69; S105 2; S111 18; S114 26; S115 8; S117 256 wExtFlags + 1 wShopID; S117b 2 push scratch; S121 160 wMillyLayout; S123 12 NPC colours; S125 1 wHubReason; S126 514: the service tile save + wServiceLines; S127 23: wBreedLast + wBreedSlots + the roll scratch)
 ; FX1 (S71): wPoolBounce — 128-byte staging for sleep-pool bank-2 record
 ; swaps (per-byte scratch in CF3PoolSwapRecord). Transient. (The v1 drain's
 ; halved-pending scratch use was removed with the S71v2 exp-scale veto.)

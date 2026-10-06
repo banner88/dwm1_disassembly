@@ -54,6 +54,8 @@ class ServicesMixin:
         if s is None:
             return None
         sv = dict(s['service'])
+        if sv.get('kind') == 'breeder':                           # S127: its options
+            sv['breeder'] = self.breeder_options(s['id'])
         ft = sv.get('first_time')
         if isinstance(ft, dict):
             boxes = None
@@ -218,7 +220,8 @@ class ServicesMixin:
                 raise ValueError('the first visit needs a flag (it remembers the visit)')
             if not any(f.get('name') == flag for f in self.flags()):
                 self.add_flag(flag, f'{SV.KINDS[kind]["name"]}: met')
-            spec['first_time'] = {'text': self._talk_entry(sid, first_time['boxes']),
+            from editor2.core.breeders_doc import fit_boxes       # S127 r2: wrap long lines
+            spec['first_time'] = {'text': self._talk_entry(sid, fit_boxes(first_time['boxes'])),
                                   'flag': flag}
         if prev is not None:
             prev['service'] = spec
@@ -245,10 +248,17 @@ class ServicesMixin:
         return sid
 
     def _drop_first_time_text(self, s):
-        ft = (s.get('service') or {}).get('first_time')
+        sv = s.get('service') or {}
+        ft = sv.get('first_time')
+        drop = set()
         if isinstance(ft, dict) and ft.get('text'):
+            drop.add(ft['text'])
+        for k in ('intro', 'not_yet', 'after'):          # S127: a breeder's own words
+            if sv.get(k):
+                drop.add(sv[k])
+        if drop:
             self.custom['dialogue'] = [d for d in self.custom.get('dialogue', [])
-                                       if d.get('id') != ft['text']]
+                                       if d.get('id') not in drop]
 
     def add_service_lines(self, kind, name, speaker=None):
         """A new (empty) line set for `kind`; returns its id."""

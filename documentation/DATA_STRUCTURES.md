@@ -1388,3 +1388,17 @@ entry 2 from the EID's enemy row. Reward line n = text base + 2 + n (`$0723`..`$
 `$072A`, `$0727-$0729` the count / "exceeded" lines). S126: the table and the count are
 the region `gd_medal_rewards` (`MEDAL_REWARD_COUNT`); the old bytes stay, unread.
 
+**Breeding screens (S127, bank $0A):** type 5 a master's own monster (`label442d`, base
+`$0600`, 10 lines; the mate = enemy row `$C8F7/8`, set by op `$42`), type 6 Grandpa's
+BREED / HATCH / EXIT (`label4bc3`, base `$06F0`, 32 lines; +13 / +22 are spoken by the
+ceremony), type 11 "Take … with you now?" (`label6966`), type 15 naming. Types 5 / 6 set
+`$FFD4` = `$78` / `$40` and draw into BG tile slots `$40-$7F`; the confirms warp to the
+ceremony map $08 with `$D951` = 4 / 0 (BANK04_SCRIPT_ENGINE "Breeding"). Patched builds:
+the three close tails call bank $77 `BreedClose` (PROJECT_COMPILER §2.40). Line blocks in
+`extracted/service_lines.json` (kinds `grandpa`, `breeder`).
+
+**Breeding pools (patched builds, bank $77 `BreedPoolPtrs`):** per pool `db mask (1 level,
+2 arena, 4 seen, 8 story), story step, milestones n` + `dw flag × n` + `db bands` + per
+band `db level, arena × 12, seen / 2, story × step, mates n, total weight` + per mate `dw
+enemy row, db weight` (PROJECT_COMPILER §2.40).
+

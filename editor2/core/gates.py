@@ -549,6 +549,29 @@ def floors_text(spec, floors=None, min_floor=MIN_FLOOR):
     return f"floor {a}" if a == b else f"floors {a}-{b}"
 
 
+def rule_chance(r):
+    """A rule's chance in % for the floor plan: its chance, or (S127, chance by
+    the party's level) the middle of its two chances."""
+    cb = r.get('chance_by_level')
+    if isinstance(cb, dict):
+        try:
+            return (int(cb['from'][1]) + int(cb['to'][1])) // 2
+        except (KeyError, TypeError, ValueError, IndexError):
+            return 100
+    return int(_val(r.get('chance', 100)))
+
+
+def chance_text(r):
+    cb = r.get('chance_by_level')
+    if isinstance(cb, dict):
+        try:
+            return (f"{cb['from'][1]} % at level {cb['from'][0]} → {cb['to'][1]} % at "
+                    f"level {cb['to'][0]} (the party's average)")
+        except (KeyError, TypeError, IndexError):
+            return 'chance by level (incomplete)'
+    return f"{int(_val(r.get('chance', 100)))} %"
+
+
 def effective_chances(rules, gate_id, floor, flags_state=None):
     """Probability that each rule is the one served on `floor` of `gate_id`,
     in list order, assuming its flag terms hold (flags_state None) or
@@ -597,9 +620,10 @@ class GatesMixin:
         self.touch()
 
     def gate_rules_for(self, gate_id):
-        """[(index into gate_inserts, rule)] of one gate, in list order."""
+        """[(index into gate_inserts, rule)] of one gate, in list order — S127:
+        a rule for every gate (gate "any") is listed under each gate."""
         return [(i, r) for i, r in enumerate(self.gate_inserts())
-                if int(_val(r.get('gate', -1))) == int(gate_id)]
+                if r.get('gate') == 'any' or int(_val(r.get('gate', -1))) == int(gate_id)]
 
     def rules_serving(self, room_id):
         return [(i, r) for i, r in enumerate(self.gate_inserts()) if r.get('room') == room_id]
@@ -907,7 +931,7 @@ class GatesMixin:
             except ValueError:
                 continue
             rows.append({'index': i, 'rule': r, 'gate': int(gate_id), 'first': a,
-                         'last': b, 'chance': int(_val(r.get('chance', 100))),
+                         'last': b, 'chance': rule_chance(r),
                          'terms': [], 'once': bool(r.get('once_per_dive'))})
         return rows
 
@@ -970,7 +994,8 @@ class GatesMixin:
     @staticmethod
     def describe_gate_rule(r):
         floors = r.get('floors', 'all')
-        txt = f"{floors_text(floors)}, {int(_val(r.get('chance', 100)))} %"
+        txt = ('every gate, ' if r.get('gate') == 'any' else '') + floors_text(floors) + \
+            ', ' + chance_text(r)
         if r.get('once_per_dive'):
             txt += ', once per dive'
         terms = r.get('when') or []

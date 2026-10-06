@@ -10,6 +10,135 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
+> Last verified: 2026-10-06 (Session 127 — **ROADMAP P3.14e2 BUILT: BREEDING IN THE PROJECT'S
+> ROOMS — MONSTER GRANDPA (BREED / HATCH, THE GAME'S FEE) AND BREEDERS OFFERING THEIR OWN
+> MONSTER AS NPC ROLES; THE VANILLA CEREMONY COMES BACK TO THE ROOM; A BREEDER'S MATE FIXED OR
+> ROLLED FROM A BREEDING POOL (BANDS ON LEVEL / ARENA / MONSTERS SEEN / STORY, THE NEAREST WINS)
+> EACH TIME THE ROOM APPEARS; OFFERS BY FLAG, ONCE ONLY; GATE ROOMS FOR EVERY GATE WITH THE
+> CHANCE BY THE PARTY'S LEVEL** (user: "Proceed with progression flags" → "I want monster
+> grandpa (NOT PRIEST …) + breeding options … a new custom randomly appearing room will offer
+> randomized breeding … ability to randomize to a band (e.g. based on player level or monsters
+> unlocked) is crucial"; "average level/story flags/arena class won/monsters see should ALL be
+> options … The band snaps to the closest hit", "Mate's level should be fixed", "every time
+> room appears. Room should also not appear more than once a gate. Appearance rate should
+> scale with level or have the option to do so", "Once off only", "I will place breeding NPCs
+> in custom rooms, breed once, then new dialogue. Or … offer breeding only when flags set",
+> "This session try to finish off everything"). **Built S127, NOT yet user-tested.**
+> **Audit (code-read + PyBoy):** breeding = room-independent bank $0A menus (op `$04` 6
+> Grandpa `$06F0`, 5 a master's own monster `$0600`, 11 "Take…", 15 naming), the ceremony
+> always map $08 (stage machine `$D951`: 0→1→`$F0`, 2→`$F1`, 4→5→`$F2`), and the follow-up in
+> the ROOM's entry script. Op `$42`'s first param is the MATE's enemy row (`$C8F7/8`), not a
+> text (DOC_AUDIT S127); ops `$50` / `$44` turn a fixed slot / `$C902`; a yield ends a talk's
+> dialog; `rst $10` returns the caller's bank in A. Wandering gate NPCs are not level-based
+> (GATE_GENERATION §4.3, answered).
+> **Engine:** bank $77 template entries 7 `BreedClose` (the three bank $0A close tails, same
+> size: room sheet + `$FFD4` back in custom rooms), 8 `BreedSlotEID` + `BreedRoll`, 9
+> `PartyAvgLevel`, 10 `ScriptCommand` (op `$24 $FF00` = the mate's name; bank $60
+> `CustomDrawTiles` routes `$FFxx`), pool data; bank $71 `CustomGateInsert` `GATE_ANY` +
+> `ScaledChance`; bank $14 `LoadEnemyStatsExt` slot rows `$0F00+k`; bank $73 entry 0 clears
+> the slots at every committed map change; WRAM `wBreedLast` / `wBreedSlots` / `wBreedVals`
+> (from `wCustomPool`, now `$D509`). Re-pinned `56a5321a…` / `7c371e82…` / `b70c1cd6…`,
+> TEMPLATE_SIZE 1306 / 951 / 1107.
+> **Compiler (PROJECT_COMPILER §2.40):** kinds `grandpa` / `breeder` (`breeders.py`: lowering +
+> a return script in front of the room's entry script), `custom.breeding_pools`,
+> `gate: "any"`, `chance_by_level`; validators; flag index kinds `breeder` / `breed_pool`;
+> `extract_service_lines.py` + 2 blocks (9 / 181 lines). **Editor:** Service… → Grandpa /
+> Breeder (one monster or a pool, first words, offers only when, done flag, only once,
+> afterwards); Services tab → **Breeding pools** (scales, milestones, bands, Try it); Gates
+> tab → every gate + the chance by level; model `core/breeders_doc.py`; help
+> `68_breeding_npcs.md` + 00 / 20 / 30 / 60 / 67 / 90; `EDITOR_REVISION` 'S127'.
+> **Annotation (Iron Rule 6, both trees):** bank $04 `ScriptCmd42/43/44/4E/4F/50`, bank $0A
+> `label442d`, `label4ad3`, `LoadFldA_4ba2`, `label4bc3`, `label573e`, `label6966`; script_ops
+> op `$42` param = enemy. Clean `1ca6579…` byte-perfect.
+> **Checks:** verifier PASS (audit_mapid_range: 2 new sites adjudicated CP_UNSIGNED, patched 88);
+> patched pin **`a7dc3e71…` (patched)**, was `0b12d0df…` (patched, historical); test_compiler
+> --rom 1270/1270 (incl. `test_breeders_s127` 22 checks, `test_breeders_rom`: BreedRoll == the
+> model on 120 random players, PartyAvgLevel, ScaledChance, BreedSlotEID; the `s127` flag-index
+> fixture); test_app PASS (`s127_breeding`).
+> **Measured (PyBoy, the user's save, the final ROM below — walked from each arrival):**
+> Grandpa's first visit + the menu; Rosa "Why not breed with my Rayburn?" → ceremony → back
+> in the lodge, "I hope a strong monster will be born! I'll send the egg to the farm!" →
+> `rosa_bred` ON → her new words; Grandpa HATCH (the egg "Darkdrium?", 30 G, ceremony,
+> naming, "Take DD with you now?", "Take good care of it.", "Anything else?"), `$D951` 0,
+> `$FFD4` `$80`; Bram "ring the bell first!" → the Bell YES → "Why not breed with my
+> FangSlime?"; Wren rolled per visit — before the bell (story 1 of 2) band "seasoned"
+> (CatFly), after it (2 of 2) "veteran" (Swordgon / Yeti / Swordgon / MetalDrak; the save:
+> party level 14, all 8 arena classes, 8 seen), stable within a visit; bred → "WREN: done
+> for this visit." → slot state 0 again after leaving; the WANDERING NEST on gate 0 floor 2
+> in 50 of 84 RNG samples at party level 10 (row value 57 %), never again in that dive
+> (floors 3-6); bred in it (MetalDrak) → back in the nest, "Done for this dive.", its well
+> → floor 3, the slot cleared. Not walked: the game's own shrine (the harness warp into map
+> $09 / GreatTree screen 7 hangs PyBoy — identical on a pre-S127 build; the vanilla path =
+> the same bank $01 call + `ret`, MiniSM83-tested) — the user's test.
+> **Test ROM `DWM-S127-breeding-test.gbc` (`04febac5…`, patched; NOT yet user-tested):** the
+> user's project (my-dwm-hack_17) + three BRAND-NEW rooms (New room in a gate theme's look,
+> the editor's own operations): **NURSERY LODGE** ($74, Grassland look): Lodge Guide (2, 2),
+> Grandpa (4, 2), Rosa (8, 2; mate Rayburn L30, once, then new words); **PAIRING PORCH** ($75,
+> Sand look): Bram (2, 2; FangSlime L30, only after the bell), the Bell (4, 2; YES = flag
+> `porch_bell` ON, NO = OFF), Porch Guide (6, 2), Wren (8, 2; pool "S127 demo mates");
+> **WANDERING NEST** ($76, Purple-brick theme — green on screen): a random breeder (5, 3), its
+> well (8, 6) = Stairs down — served in EVERY gate from floor 2, once per dive, 50 % at party
+> level 5 → 100 % at 40. Pool: all 4 scales, milestones `porch_bell` + `rosa_bred`, bands
+> fledgling (DragonKid ×2, SpotSlime) / seasoned (CatFly, Eyeder ×2, LizardMan) / veteran
+> (Yeti, Swordgon, MetalDrak). Way in: the **S127 DEMO** NPC in Cities_FOUNT at (3, 4) (YES →
+> the lodge); the guides: YES = the other room, NO = Cities_FOUNT. The arrival is (4, 5);
+> NPCs stand on row 2 (ten sprites per line — ROOM_DATA_FORMAT).
+> **r2 (user 21:04, my-dwm-hack_18: "BUILD FAILED … text $0A07 (…breeder_after_text): box 1
+> line 1 is 28 cells (max 16): 'THanks for breeding with me!'" + "can I not make a monster
+> with a specific level, why is it a random selection?"):** the breeder's word boxes (and a
+> service NPC's first-visit text) were saved as typed — now wrapped into the game's boxes
+> (`breeders_doc.fit_boxes`; the dialog no longer drops a box's 3rd line), and projects saved
+> by S127 are wrapped on open (a MIGRATED note; the user's _18 then builds). The mate list was
+> the enemy rows (each species at the level the game gave it); Service… → Breeder now offers
+> **a monster at a level you choose** first: species + level → a project enemy noted "a
+> breeding mate" (`mate_for` / `mate_stats`: the species' non-boss row nearest that level,
+> stats moved by its growth curves — the baby takes a share of both parents' stats, bank $16
+> `SaveBrd_41b8`), re-used for the same pair. No engine change (pin unchanged). PyBoy on the
+> r2 ROM: Rosa "My CatFly is level 33" (wrapped into 2 boxes) → "Why not breed with my
+> CatFly?" → ceremony with the mate staged as species 47 level 33 (slot 21) → back, her
+> wrapped new words; Wren re-rolls with varied timing (MetalDrak / Yeti / MetalDrak / Yeti /
+> Swordgon / MetalDrak). test_compiler --rom 1280/1280 (`test_breeders_s127_r2`), test_app
+> PASS, verifier PASS; `EDITOR_REVISION` 'S127r2'. **Test ROM `DWM-S127r2-breeding-test.gbc`
+> (`18e82392…`, patched; NOT yet user-tested):** the same demo rooms on the user's
+> my-dwm-hack_18, Rosa's mate = CatFly at level 33.
+> **r3 (user 21:55: "Use game text box previews. FOr the love of god make that default for all
+> text entries in editor this is like the fifth time this comes up" + "If you say no to breeding
+> npc in $6b, 1) text box jumps around, and 2) text box BIFURCATES?"):** reproduced in PyBoy on
+> the user's _18 (the breeder at (4, 6), the player above it in the lower half): the intro opened
+> at the TOP (the default rule — `$3C` after `init_dialog` does not reach that box), the question
+> at the bottom (`$3C`), and after NO the farewell started at the bottom and its scroll continued
+> in a box at the top. **Fix:** every text / init_dialog of a breeding script follows op `$3C`
+> (`breeders._bottom`: Grandpa, breeders, the room's return script), and bank $77 `BreedClose`
+> calls `ShopBoxBottom` in custom rooms (the box re-seated at the bottom, as after a shop;
+> TEMPLATE_SIZE 1110, re-pinned; pin **`5d350ba9…` (patched)**, was `a7dc3e71…` (patched,
+> historical)). PyBoy after the fix: intro, question, NO → the whole farewell at the bottom, no
+> second box; YES → list → B → the question again; the "afterwards" words; a Grandpa talked to
+> from the lower half (menu, EXIT, farewell) — all at the bottom; the demo walk-through re-run
+> (Rosa's breeding + return, the hatch, Wren, the nest). **Game text rule (EDITOR_DESIGN §5.0):**
+> every field that becomes text-box words is edited box by box beside the game's picture of the
+> box — `talk_editor.GameTextField` (the BoxList without the speaker row, optional, Fit / Fit
+> all, OK refused while a box does not fit) for Service… first visit + the breeder's three texts
+> (tabs) and the Shopkeeper greeting; the Medal Man reward line and a skill's own battle message
+> got game-box previews; test_app `s127r3_game_text_rule` fails on any new `QPlainTextEdit` that
+> is not a log / view / the box editor / the line editor; shop greetings fitted in the model and
+> on open too. test_compiler --rom 1282/1282 (`test_breeders_s127_r3`), test_app PASS, verifier
+> PASS; `EDITOR_REVISION` 'S127r3'. **Test ROM `DWM-S127r3-breeding-test.gbc` (`584998ce…`,
+> patched; NOT yet user-tested):** the user's my-dwm-hack_18 (their $6B breeder) + the demo rooms.
+> **r4 (user 22:44: "Why is first visit greyed out? Also why is box1 duplicated weirdly
+> glitchily?"):** the first-visit field was disabled for a breeder (no first visit then) and
+> greyed for the others until ticked; the duplicate = the box editor `set_value` left the old
+> box drawn under the new one (`deleteLater` only — two BoxEditors per field, measured
+> offscreen). Now: a breeder has a first visit (`first_time`: its words instead of the first
+> words once, the flag remembers it — `breeder_ops`), the first-visit editor is shown only while
+> ticked (not greyed), removed boxes are hidden and unparented at once, the service list is
+> shorter. PyBoy (scratch build of the user's _18): the first talk says the first-visit words,
+> the second the first words, both at the bottom. test_compiler --rom 1284/1284
+> (`test_breeders_s127_r4`), test_app PASS (one box editor per field, first visit enabled for
+> a breeder), verifier PASS; `EDITOR_REVISION` 'S127r4'. No engine change (pin unchanged), no
+> new test ROM.
+> **Next:** the user's test of the ROM; then P3.14e3 (your arena) or the user's pick.
+
+
 > Last verified: 2026-10-06 (Session 126 — **ROADMAP P3.14e1 BUILT: SERVICE NPCs — THE VAULT, A
 > FARM KEEPER, THE LIBRARIAN, THE MONSTER NAMER, THE MEDAL MAN, THE EGG APPRAISER AND THE GATE
 > GUIDE AS ROLES OF ANY NPC IN ANY ROOM (THE GAME'S OWN MENUS, THEIR STATE THE GAME'S ONE VAULT /
@@ -87,73 +216,11 @@
 > **Next:** the user's test of the ROM; then P3.14e2 (breeding in your room) or the user's pick.
 
 
-> Last verified: 2026-10-06 (Session 125 — **ROADMAP P3.14d RE-CUT WITH THE USER; P3.14d1 BUILT:
-> THE HUB — WHERE THE GAME SENDS THE PLAYER HOME (A LOST BATTLE, THE PARTY FALLEN ON DAMAGE
-> FLOORS, THE WARPWING / ANCHOR, A LOST STARRY FINAL, A SCRIPT'S "HOME") IS A ROOM OF THE
-> PROJECT CHOSEN BY FLAG-ORDERED RULES — THE CASTLE WHEN NONE HOLDS; ARRIVAL SCENES PER REASON;
-> THE HEAL STEP** (user: "Proceed with progression flags. Let's discuss what you do first" →
-> "Make a single room be HUB but yes I would like to make it be transferrable upon flag. Keep
-> in mind also how vanilla handles room variants with hub … Keep original [penalties]" → the
-> realms: "post-game will take place back in vanilla GreatTree … main game in custom game world
-> (GreatLog) … there should be just 1 instance [of each service] in game mirrored across
-> locations" → "It's one or the either NEVER both"; breeding: "nothing further is necessary";
-> the ending: night Farm → cutscenes → the house → credits → reset → CONTINUE → the hub in front
-> of the King). **Built S125; test ROM USER-CONFIRMED 2026-10-06 12:48.**
-> **Audit (code-read + PyBoy):** the engine's Castle sends = bank $50 `$6559` (an ordinary
-> loss, then half the gold + the items), `$64AF` (the lost Starry / arena final), bank $06
-> `$6A39` (the party wiped by damage floors), bank $07 `$5030` (the WarpWing item — the old
-> "code 6 = gate return"); the `$04` service menus are room-independent, their state global;
-> arena / breeding hard-wired to their rooms (P3.14e). The ending's night sky = game mode 3
-> (ARCHITECTURE; ROADMAP E5). ROADMAP P3.14d re-cut: d1 the hub (this session), e1 service
-> NPCs, e2 breeding, e3 the arena; the active hub decides the realm.
-> **Engine:** bank $71 template entry 9 `HubWarp` + `HubTable` (re-pinned `28d988db…`,
-> TEMPLATE_SIZE 865); the four sends → `ld e, HUB_x / ld hl, $7109 / rst $10` (same size,
-> labels unmoved, the penalties after them unchanged); `wHubReason` $D2EF (carved from
-> `wCustomPool`). No hub = the vanilla writes. **Compiler (PROJECT_COMPILER §2.38):**
-> `custom.hub.rules`; `dest: "hub"` ladders (talk / conversation move + helper / cutscene
-> move / the Anchor skill's gate exit); `trigger.arrival`; a hub room's arrival script (the
-> WarpWing reveal, arrival scenes first, the default heal); the Heal step (op `$27`, measured);
-> validators; flag index kind `hub`. **Editor:** World tab **Hub** box + rule dialog (cell
-> on the picture), Add the arrival scenes; the cutscene editor's Arrival home… / Heal / home;
-> the conversation dialog's Home / Heal; Rooms canvas **H**; Flags tab → the rule; help
-> `66_hub.md` + 00/30/40/63/65/90; `EDITOR_REVISION` 'S125'.
-> **Found + fixed:** the WarpWing's exit hides every sprite (`$C8EC` = 1) and leaves the
-> un-hiding to the Castle — in the hub the player and NPCs stayed invisible (PyBoy) → the
-> hub room's arrival script clears it for that reason (KEY_LESSONS S125). Op `$27` HEALS (it
-> was documented "re-count the party", DOC_AUDIT S125).
-> **Measured (PyBoy, the user's save, the demo below):** lost battle → HUB HALL (4, 5), the
-> loss scene, heal (0 HP / 0 MP / KO → full), 3800 → 1900 gold, items lost as in the game;
-> the WarpWing thrown on gate 0 floor 1 → the hub, its scene, sprites shown, the wing used;
-> the Guide's "home" → reason 5, its scene; the Keeper's flag → a loss lands in the Castle
-> throne room (screen 1, (14, 5)), `$D92B` 8, the priest heals; WarpWing with the Castle hub
-> → the Castle; the door (2, 0) → map $04 screen 5. Not staged: the floor wipe, the Starry
-> final (the same call; MiniSM83 runs HubWarp from the ROM in test_compiler).
-> **Annotation (Iron Rule 6):** bank $01 `IteratePartySlots20` = heal-all (both trees); the
-> four sends' callers (disassembly banks $06 / $07 / $50). Clean `1ca6579…` byte-perfect.
-> **Checks:** verifier PASS; patched pin **`c326fc96…` (patched)**, was `6b0738c1…`
-> (patched, historical); test_compiler --rom 1175/1175 (incl. `test_hub_s125` + `test_hub_rom`; an independent review found two arrival-order edge cases, fixed: a `once` arrival scene now takes the reason only after its guards, and the default heal runs before the room's other entry scenes); test_app PASS (`s125_hub`); test_canvas
-> --rom PASS.
-> **Test ROM `DWM-S125-hub-test.gbc` (`2885e316…`, patched; USER-CONFIRMED 12:48):**
-> the user's project (my-dwm-hack_15) + **HUB HALL** ($74, a copy of GateRoom1 made with the
-> editor's own operations) as hub rule 1 while flag `hub_to_castle` is OFF, the Castle after
-> (rule 2). In the hall: the **Guide** (says what the room is; YES = sends you home), the
-> **Sparring** NPC (YES = a battle with Esterk to lose on purpose), **Wings** (gives a
-> WarpWing), the **Keeper** (YES = the hub becomes the Castle, NO = back to the hall); three
-> arrival scenes (loss + heal, WarpWing + heal, home); the path at the top left (2, 0) → back
-> where the save continues. Reach it by losing any battle.
-> **User 2026-10-06 12:48: "Great, works"** — the test ROM USER-CONFIRMED. "The room you
-> made hub was laggy. Was it all the animated tiles, NPCs, or combinations thereof?" →
-> measured (PyBoy, variants of the room): the NPCs — 4 on one screen with the player and 3
-> followers drop ≈ 8 % of frames while walking (3: ≈ 3 %, 2: none); the four sway
-> animations cost nothing measurable; the S123 colour path is ≈ 1.4 of the ≈ 8 scanlines
-> each NPC's draw costs (ROOM_DATA_FORMAT "What NPCs cost per frame"). Docs only.
-> **Next:** P3.14e1 (service NPCs) or the user's pick.
-
-
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
-- **S126** (2026-10-06): P3.14e1 built — service NPCs (`custom.scripts[].service`: the Vault, a farm keeper, the librarian, the namer, the Medal Man, the egg appraiser, the gate guide — the game's `$04` menus in any room, any number); r2: the farm left `$FFD4` = `$60` → NPCs vanished at the next talk, the close restores `$80`; line sets (`custom.service_lines`, shopkeepers too) through bank $77 entry 3 `SayText` + `wServiceLines`; first visit by flag; `gamedata.medals.rewards` (region `gd_medal_rewards`); free-colour windows for the bank $0A / $12 push copies, the room's tile slots `$60-$7F` saved / restored, custom tile animation paused; misnomers `AddCursorOffset` / `LoadFldA_441f` / `GetScreenPos` fixed; Services tab + Service…; `extract_service_lines.py`; pin `0b12d0df…` (patched); test ROM `DWM-S126r2-services-test.gbc` (three demo rooms).
-- **S125** (2026-10-06): P3.14d re-cut with the user (d1 the hub / e1 service NPCs / e2 breeding / e3 the arena; the active hub decides the realm; one instance of each service); P3.14d1 built — `custom.hub` flag-ordered rules (a project room or the Castle), bank $71 entry 9 `HubWarp` + `HubTable`, the four engine Castle sends same-size (bank $50 `$6559` / `$64AF`, $06 `$6A39`, $07 `$5030` = the WarpWing), `wHubReason`, "home" for scripts + the Anchor skill, arrival scenes, the Heal step (op `$27` heals — measured), the World tab Hub box; the WarpWing `$C8EC` sprite-hiding found + handled; ending = game mode 3 (E5); pin `c326fc96…` (patched). Test ROM `DWM-S125-hub-test.gbc` (`2885e316…`, patched) USER-CONFIRMED 2026-10-06 12:48 ("Great, works"); the demo room's lag = its 4 NPCs (measured). Verbose block in this file. Owning: PROJECT_COMPILER §2.38, GATE_GENERATION §7.7, known_RAM_map (`wHubReason`, `$C8EC`), BANK04_SCRIPT_ENGINE (`$27`), ARCHITECTURE (mode 3), EDITOR_DESIGN §5.8 "Hub (S125)", ROADMAP P3.14d / E5, KEY_LESSONS S125, PYBOY_DEBUGGING S125, DOC_AUDIT S125, TOOLS_AND_DATA S125.
-- **S124** (2026-10-05): P3.14 re-cut with the user (a: flag index / b: story checks / c: story + quests / d: the hub) after a 3-agent audit of how vanilla drives its story; P3.14a built — the Progression & Flags tab (every flag: what turns it ON / OFF, what checks it, in words with links; Triggers; Problems = the orphaned-trigger report), `editor2/core/flag_index.py` tied to the compiler (`compiler_coverage`), fixed flag numbers (`number_flags`, pinned on open), `$0158` found to be the game's (Arena Battle, PyBoy) → new flags skip it; doc corrections ($00F1 reached, speech $30 sets $0009, ops $33/$56/$5F/$60, SIDEQUEST §5, wInventory); bank $09 gate-list tables re-sectioned; byte-neutral (pin `6b0738c1…`, patched). Built, NOT yet user-tested. Verbose block in this file. Owning: PROJECT_COMPILER §2.7 / §2.37, EDITOR_DESIGN §5.7 "As built S124", EVENT_FLAGS "Safe pool" + "Engine-side flag setters and readers (S124)", GATE_GENERATION §7.7, BANK04_SCRIPT_ENGINE, SIDEQUEST_MAP §5, KEY_LESSONS S124, DOC_AUDIT S124, TOOLS_AND_DATA S124.
+- **S127** (2026-10-06): P3.14e2 built — breeding in the project's rooms: Grandpa (BREED / HATCH) and breeders (`custom.scripts[].service` kinds `grandpa` / `breeder`; a fixed enemy row or a mate rolled per appearance from `custom.breeding_pools` — bands on level / arena / seen / story, nearest wins; when-flags, done flag, once); the vanilla `$08` ceremony returns to the room (a return script before the entry script); gate rules `gate: "any"` + `chance_by_level`; bank $77 entries 7-10 + `BreedRoll`, bank $71 `ScaledChance`, bank $60 op `$24 $FFxx`, bank $14 slot rows, bank $73 slot clear, bank $0A close tails; op `$42` = the mate (DOC_AUDIT); Services tab Breeding pools, Service… Grandpa / Breeder, Gates every gate; pin `a7dc3e71…` (patched); test ROM `DWM-S127-breeding-test.gbc` (`04febac5…`, patched; three demo rooms); r2 (user: words too long for the box broke the build; a mate at a chosen level): words wrapped (+ on open), Service… → a species at a level → a project enemy, test ROM `DWM-S127r2-breeding-test.gbc` (`18e82392…`, patched); r3 (user: game text box previews everywhere; NO to a breeder in $6B → the box jumped and split): `$3C` before every breeding text / init_dialog + `BreedClose` → `ShopBoxBottom`, `GameTextField` for every text entry (+ a test), pin `5d350ba9…` (patched), test ROM `DWM-S127r3-breeding-test.gbc` (`584998ce…`, patched), NOT yet user-tested. Verbose block in this file. Owning: PROJECT_COMPILER §2.40, BANK04_SCRIPT_ENGINE "Breeding", DATA_STRUCTURES "Service screens", GATE_GENERATION §7.6, known_RAM_map (`wBreed*`, `$C8F7`, `$D951`), ROOM_DATA_FORMAT (ten sprites per line; breeding menus), CROSSBANK_ROOMS "S127 sites", EDITOR_DESIGN §5.6c (S127), KEY_LESSONS S127, PYBOY_DEBUGGING S127, DOC_AUDIT S127, TOOLS_AND_DATA S127.
+- **S126** (2026-10-06): P3.14e1 built — service NPCs (`custom.scripts[].service`: the Vault, a farm keeper, the librarian, the namer, the Medal Man, the egg appraiser, the gate guide — the game's `$04` menus in any room, any number); r2: the farm left `$FFD4` = `$60` → NPCs vanished at the next talk, the close restores `$80`; line sets (`custom.service_lines`, shopkeepers too) through bank $77 entry 3 `SayText` + `wServiceLines`; first visit by flag; `gamedata.medals.rewards` (region `gd_medal_rewards`); free-colour windows for the bank $0A / $12 push copies, the room's tile slots `$60-$7F` saved / restored, custom tile animation paused; misnomers `AddCursorOffset` / `LoadFldA_441f` / `GetScreenPos` fixed; Services tab + Service…; `extract_service_lines.py`; pin `0b12d0df…` (patched); test ROM `DWM-S126r2-services-test.gbc` (three demo rooms). Verbose block in this file. Owning: PROJECT_COMPILER §2.39, DATA_STRUCTURES "Service screens", ROOM_DATA_FORMAT (menus and tile slots, `$FFD4`), known_RAM_map (`wService*`), EDITOR_DESIGN §5.6c, KEY_LESSONS S126, PYBOY_DEBUGGING S126, DOC_AUDIT S126, TOOLS_AND_DATA S126.
+- **S125** (2026-10-06): P3.14d re-cut with the user (d1 the hub / e1 service NPCs / e2 breeding / e3 the arena; the active hub decides the realm; one instance of each service); P3.14d1 built — `custom.hub` flag-ordered rules (a project room or the Castle), bank $71 entry 9 `HubWarp` + `HubTable`, the four engine Castle sends same-size (bank $50 `$6559` / `$64AF`, $06 `$6A39`, $07 `$5030` = the WarpWing), `wHubReason`, "home" for scripts + the Anchor skill, arrival scenes, the Heal step (op `$27` heals — measured), the World tab Hub box; the WarpWing `$C8EC` sprite-hiding found + handled; ending = game mode 3 (E5); pin `c326fc96…` (patched). Test ROM `DWM-S125-hub-test.gbc` (`2885e316…`, patched) USER-CONFIRMED 2026-10-06 12:48 ("Great, works"); the demo room's lag = its 4 NPCs (measured). Verbose block in SESSION_HISTORY.md. Owning: PROJECT_COMPILER §2.38, GATE_GENERATION §7.7, known_RAM_map (`wHubReason`, `$C8EC`), BANK04_SCRIPT_ENGINE (`$27`), ARCHITECTURE (mode 3), EDITOR_DESIGN §5.8 "Hub (S125)", ROADMAP P3.14d / E5, KEY_LESSONS S125, PYBOY_DEBUGGING S125, DOC_AUDIT S125, TOOLS_AND_DATA S125.
+- **S124** (2026-10-05): P3.14 re-cut with the user (a: flag index / b: story checks / c: story + quests / d: the hub) after a 3-agent audit of how vanilla drives its story; P3.14a built — the Progression & Flags tab (every flag: what turns it ON / OFF, what checks it, in words with links; Triggers; Problems = the orphaned-trigger report), `editor2/core/flag_index.py` tied to the compiler (`compiler_coverage`), fixed flag numbers (`number_flags`, pinned on open), `$0158` found to be the game's (Arena Battle, PyBoy) → new flags skip it; doc corrections ($00F1 reached, speech $30 sets $0009, ops $33/$56/$5F/$60, SIDEQUEST §5, wInventory); bank $09 gate-list tables re-sectioned; byte-neutral (pin `6b0738c1…`, patched). Built, NOT yet user-tested. Verbose block in SESSION_HISTORY.md. Owning: PROJECT_COMPILER §2.7 / §2.37, EDITOR_DESIGN §5.7 "As built S124", EVENT_FLAGS "Safe pool" + "Engine-side flag setters and readers (S124)", GATE_GENERATION §7.7, BANK04_SCRIPT_ENGINE, SIDEQUEST_MAP §5, KEY_LESSONS S124, DOC_AUDIT S124, TOOLS_AND_DATA S124.
 - **S123** (2026-10-05): NG3 redefined by the user and built — **worlds** (a new gate with a `world` block: the portal = a gate entrance into the start room, rooms joined by doors, per-room lists, saving calm / everywhere / nowhere, losing the gate way, the cleared flag set by an end boss's conversation); `cleared_swirl` (stop / an OBJ palette) for any gate; NPC `colour` (`$A2` prefix, bank $60 entry 11 `NpcColourDraw`, `wNpcColour`); the Vanish step; Make boss…; the Worlds panel; help fully updated (4 new topics); pin `e93b23b5…` (patched). Test ROM `DWM-S123-worlds-test.gbc` (`ef6551d1…`, patched) user-tested 19:35 ("Its good") but for the entry effect → r2: a custom room's gate entrance runs the vanilla portal whirl (bank $60 entry 12 `CustomDescentFeel`), pin `6b0738c1…` (patched), ROM `DWM-S123r2-worlds-test.gbc` (`542771d0…`, patched) USER-CONFIRMED 20:06. Verbose block in SESSION_HISTORY.md. Owning: PROJECT_COMPILER §2.36, GATE_GENERATION §7.11, ROOM_DATA_FORMAT ("Colour prefix $A2"), known_RAM_map (`wNpcColour`), EDITOR_DESIGN §5.1 "Worlds (S123)", CROSSBANK_ROOMS "S123 sites", KEY_LESSONS S123, PYBOY_DEBUGGING S123, DOC_AUDIT S123, TOOLS_AND_DATA S123.
 - **S122** (2026-10-05): P3.7b part 2 finished — the 16 gate themes as room tilesets (bank $28 sheets 0-15 in their own colours; New room / Change tileset / the maze metatiles + stairs / **Maze screen…** = the 254 maze screens / borrowing both ways, `VocabReleaseWouldHelp`); the maze carve + placements traced (bank $16 / $17 / ROM0 labels both trees, byte-neutral) and modelled (`editor2/core/maze.py`, `census_maze.py` 4,000 floors == the game); maze size 3-15 enforced (1-2 freeze, measured); NG2 residual (a) — bank $76 `RunWinTail` runs a re-bossed gate's vanilla win tail (20 / 20); S100 r3 (b) refuted; P3.8 crossed off by the user; pin `bd0652da…` (patched). Test ROM `DWM-S122-gate-themes-test.gbc` (`6777da8e…`, patched) built, NOT yet user-tested. Verbose block in SESSION_HISTORY.md. Owning: GATE_GENERATION §4 / §5 / §7 / §7.9 / §7.10, PROJECT_COMPILER §2.35, EDITOR_DESIGN §5.1 "Gate themes (S122)", known_RAM_map (maze RAM), KEY_LESSONS S122, PYBOY_DEBUGGING S122, DOC_AUDIT S122, TOOLS_AND_DATA S122.
 - **S121** (2026-10-05): P3.16 + E7 — the Milly hook (`custom.milly_hook`, `editor2/core/milly.py`): the bedroom tail ends at the dresser glow, sets `$179F`, writes MILLY and whirls (`$3B`) to the chosen room; her arrival scene (spin, cast NPC `$14`); the player shape = her frames + palette via bank $04 entries 2/3 → NEW bank $79 (`wMillyLayout` WRAM, field + naming icon), her sheet via bank $01 / $09; S120b's MILLY tiles under the hook; Roots room (Milly) with grey Warubou; the Name the hero step; text-box sprite rule for copies of `$08`/`$5D` (bank $71 entry 8); `dump_map_table` `$FFFF` exits fixed; pin `e43e5f58…` (patched). Test ROMs `DWM-S121-milly-hook-test.gbc` (`d104cb84…`) / `-naming-test.gbc` (`399a3365…`), patched, USER-CONFIRMED 2026-10-05 ("everything works"); r2 (Terry kept through the whirl) `57bac7c3…` / `b23f941d…` (patched), NOT yet user-tested. Verbose block in SESSION_HISTORY. Owning: PROJECT_COMPILER §2.34, MONSTER_DATA "The player's sprite (S121)", ROOM_DATA_FORMAT "Text boxes and sprites (S121)", EVENT_FLAGS, TEXT_SYSTEM, BANK04_SCRIPT_ENGINE, EDITOR_DESIGN §5.1d, CROSSBANK_ROOMS "S121 site", KEY_LESSONS S121, DOC_AUDIT S121, TOOLS_AND_DATA S121.
@@ -300,6 +367,7 @@
 | Gate cleared + swirls (S117) | Cleared flag per vanilla gate = `extracted/gate_names.json` `cleared_flag` ($10+n except Anger $1D, Farm $1B, Joy $1C, Wisdom $1A; Demolition $27+$28; 31 none). The spinning swirl = NPC sprite `$4D` (script `$FF`) removed by the boss script's step advance (room $24 counter `$D969`); still swirl = BG art (room $24 sheet $20-$23, pal 3). Patched: every non-gate room's NPC list via bank $60 entry 1 (`$A0`/`$A1` flag prefixes → hidden bit; `VanillaNPCExtTable`); bank $76 entry 2 `GateBossWin` marks re-bossed / new gates cleared. GATE_GENERATION §7.9. |
 | Shops (S117) | Shopkeeper = `text $0680 / $FF04 $0000 $0680 / text $0682 / end`; list by ROOM (map $50 → gate list $09:$478C, else wScreenIndex 0 Bazaar $476B / 2 Starry $4774 / 4 Bookstore $477D / other Rare $4784) → `$C0D8` (≤ 20); buy price = `ItemInfoTable` $03:$71DA (44 × 12 B) +1/+2; sell = bank $09 `ShopSellPrice` (gate shop full, staffs /10, else −1/4). Patched: bank $77 `ShopFill` (`wShopID` $D240) / `ShopClose`; S117b: every bank $09 screen push → bank $77 `ScreenPush` (attributes in free-colour rooms). DATA_STRUCTURES "Shops (S117)". |
 | Service screens (S126) | Op `$04 <type> <text base>` (`$C8EF` / `$C8F0`), room-independent; lines = base + offset via `ScreenEffectSay` ($09) / `ScreenEffectSay0A` / `ScreenEffectSay12` → bank $77 `SayText`. Types / bases: 2 Vault `$06A0`, 3 farm `$06C0`, 7 eggs `$0750`, 8 Library `$0740`, 9 namer `$0780` (+ 15 naming), 10 Medal Man `$0720`, 13 gate list; +0 greeting, +2 farewell. The farm draws into room slots `$60-$6F`, the eggs `$70-$78` (never restored by the game; bank $77 entries 4-6 do). Medal rewards `MedalRewardTable` (`gd_medal_rewards`; vanilla `$12:$6D29` 13/336 18/337 25/339 30/340), index `[$D9E1]`, flags `$0050-$0057`, total `$C903` ≤ 999. `wServiceLines` $D4F1, `wServiceTileSave` $D2F0-$D4EF. | PROJECT_COMPILER §2.39; DATA_STRUCTURES "Service screens"; ROOM_DATA_FORMAT "The game's menus draw into the room's tile slots" |
+| Breeding (S127) | Bank $0A menus via op `$04`: 6 Grandpa `$06F0` (BREED / HATCH / EXIT), 5 a master's own monster `$0600` (+1 "Why not breed with my [INS 00]?" only on B-back), 11 "Take … with you now?", 15 naming; the ceremony is always map $08 (`$D951`: Grandpa 0→1→`$F0`, op `$3A` 2→`$F1`, a master 4→5→`$F2`), the follow-up in the ROOM's entry script. Op `$42 <mate EID> <actor>` (`$C8F7/8`, `$C902`) + op `$4E` save `$C8FB-$C901`; ops `$50` / `$44` turn slot 1 / `[$C902]`. Fee (plus + 1) × 10 G (op `$60`). Patched: `wBreedLast` $D4F2, `wBreedSlots` $D4F3-$D502 (4 × state / pool / row), slot rows `$0F00+k`. | PROJECT_COMPILER §2.40; BANK04_SCRIPT_ENGINE "Breeding"; DATA_STRUCTURES "Service screens" |
 | Sprite limits (S117b) | Hardware: ≤ 10 objects per screen line (lowest OAM index wins), 40 in all; the field draws 8×8 objects, player OAM 0-3 + 3 monsters 4-15 first, then NPCs in list order → with the party lined up on a row only 1 NPC of that row shows, ~6 NPCs per screen. PyBoy screenshots do not show the per-line drop. Editor: warnings (`formats.sprite_budget`). ROOM_DATA_FORMAT "Sprite limits (S117b)". |
 | Script VM (S118) | 102 opcodes, names / params / kinds = `editor2/core/script_ops.py` (arity from the handlers, `extracted/script_param_counts.json`; `$24`/`$61` = 1 via the script bank). Actor 0 = the player (HRAM `$92`/`$95` X/Y, `$8E` facing, `$90` bit 6 hidden), n ≥ 1 = NPC slot n-1 (`$D7D2 + 32(n-1)`). `$0A/$0B/$10/$11` = waited walk (`$D8D7` bit 3); `$1A/$1B/$1C` = queued (buffers `$D8E9 + 8n`, `$19` waits); 1 px on 3 frames of 4; `$22` doubles. Counter rests only on yielding steps. BANK04_SCRIPT_ENGINE "Script opcodes as measured (S118)". |
 | Cutscenes (S119) | The project's own scenes = `custom.rooms[].cutscenes[]` (PROJECT_COMPILER §2.33), lowered per trigger into one script `cut:<room>:<key>` (the original trigger script inlined after); a text after any yielding step needs `init_dialog` (measured); tile patches of rooms ≥ `$6B` / type `$70` = `custom.rooms[].patch_data` read by bank $60 entries 9 / 10 (bank $04 `CallBank0FForItem` / `CallBank0F_Gold` same-size `$6009` / `$600a`); shake `$C8B1`/`$C8B2`, shades `$C89B-$C89D` |
@@ -331,13 +399,13 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | $6E | Arena systems (S109: entry 0 `ArenaTeamFixup`, far-called from the same-size tails of `ArenaBattleSetup` $04 / `LoadArenaEnemyStats` $50; `ArenaTeamSizeTable` = compiler region `gd_arena_team_sizes`) | hand-authored `patches/bank_06e.asm` (the table region from `gamedata.arena`, editor2/core/arena.py) |
 | $6F | NEW battle animations (S112): engine entries 0-3 `CustomAnimTick` / `CustomAnimInit` / `CustomAnimLoad` / `CustomAnimStep` (template `bank_06f_head.asm`, 391 B) + per animation its frames, timeline, palettes, gfx id (`custom.animations`, ≤ 32) | compiler-generated `patches/bank_06f.asm` (`anims6f`, editor2/core/battle_anims.py) |
 | $70 | NEW battle animations' tile sheets (S112; one per animation, the bank $50 stream format) | compiler-generated `patches/bank_070.asm` (`anims70`) |
-| $71 | Custom-room dispatch tables (S42 keystone: `Custom26DDTable`, `RoomEncTable`; + `CustomRoomBGMTable` + resolver entry 2, S64; `CustomAnimSrcTable` + entry 3, S99 — S102: entry 3 far-calls bank $6C first; `GateInsertTable` + entry 4 `CustomGateInsert`, `CustomRoomFlagsTable` + entry 5, S100; S116: entry 6 `CustomBGMStart` + `CustomBGMChanTable`, entry 7 `BattleBGMResolve` + the battle tables, entry 2 + `CustomGateBGMTable`) | compiler-generated `patches/bank_071.asm` (template head + tables; S63 `--apply` route) |
+| $71 | Custom-room dispatch tables (S42 keystone: `Custom26DDTable`, `RoomEncTable`; + `CustomRoomBGMTable` + resolver entry 2, S64; `CustomAnimSrcTable` + entry 3, S99 — S102: entry 3 far-calls bank $6C first; `GateInsertTable` + entry 4 `CustomGateInsert`, `CustomRoomFlagsTable` + entry 5, S100; S116: entry 6 `CustomBGMStart` + `CustomBGMChanTable`, entry 7 `BattleBGMResolve` + the battle tables, entry 2 + `CustomGateBGMTable`; S127: `CustomGateInsert` `GATE_ANY` rows + `ScaledChance` / `ScaledChanceTable` — the chance by the party's level) | compiler-generated `patches/bank_071.asm` (template head + tables; S63 `--apply` route) |
 | $72 | Custom-skill system (de-aliased S2d/S2e code + tables; S111: `FarSkillFork` → `CustomBaseTable` (new skills run a stock handler), entries 5 `ElemLevel72` / 6 `CustomLearnRow72`) | hand-authored `patches/bank_072.asm` + compiler regions `gd_tame_meter`, `gd_quake_power`, `gd_custom_base`, `gd_skill_elements`, `gd_custom_learn` (editor2/core/custom_skills.py, S111) |
 | $73 | Cold Farm systems (CF2 drain, entry 0; CF3 party-first sort, entry 1; … S117: entry 21 `FlagAddr` (the extended flags) + `ExtFlagsCommit` / `ExtFlagsRestore` in entries 5 / 6) | hand-authored `patches/bank_073.asm` |
 | $74 | Custom song bank (M3a: records $4001-$417C fixed 95-slot, streams $4180+; resolved by AudioMasterTableExt row $9E; S116: songs keep their own 1-6 channels — no trio padding) | compiler-generated `patches/bank_074.asm` (`music74` emitter → `song_codec.song_bank_asm` ← project.json `custom.music` + `extracted/*_song_library.json`; S64 — `custom_songs.json` retired) |
 | $75 | Second custom song bank (S116, P3.13b): the songs past bank $74's 16,000 stream bytes, records indexed from the split id (AudioMasterTableExt row 5 = region `rom0_audio_master`); bank byte + zeros when nothing spills | compiler-generated `patches/bank_075.asm` (`music75`, editor2/core/music.py) |
 | $76 | Encounter lists (S114): entry 0 `EncResolve` (+ `EncPickVariant` / `EncFloorRun` / `EncVanillaNumber`) + `EncRoomTable`, `GatePlanPtrs`, the variant lists / floor runs, `ProjectEncLists` (26 B each, numbers 128-255), the vanilla rule's byte copies; far-called by the bank $01 `LoadNextDungeonFloor` fork. S115 (NG1 new gates): entry 1 `NewGateRowCopy` (far-called by bank $16 `GateRowPtr`) + `NewGateRows` (8 B per gate 32+) / `NewGateSource`; template 296 B (S115); S117 (NG2): entry 2 `GateBossWin` (far-called by bank $50's boss-win tail) + `GateClearTable`; template 358 B S122: `GateClearTable` rows 6 B (+ `WinTail`) + `RunWinTail` (a re-bossed vanilla gate's win tail; template 460 B). | compiler-generated `patches/bank_076.asm` (`enc76`, editor2/core/encounters.py) |
-| $77 | Shops (S117, P3.13c; S117b: entry 2 `ScreenPush` = bank $09's screen push with palette attributes in free-colour rooms, `ShopClose` → `ShopBoxBottom`): entry 0 `ShopFill` (far-called by bank $09 `ShopBuyStockFill`'s same-size stub; `wShopID` list or the vanilla room rule) / entry 1 `ShopClose` (the shop's close tail) + `SHOP_COUNT`, `ShopPtrTable`, `ShopList_n` (the five vanilla lists, then `custom.shops`); template 438 B (S117b; 93 B S117) | compiler-generated `patches/bank_077.asm` (`shops77`, editor2/core/shops.py) |
+| $77 | Shops (S117, P3.13c; S117b: entry 2 `ScreenPush` = bank $09's screen push with palette attributes in free-colour rooms, `ShopClose` → `ShopBoxBottom`): entry 0 `ShopFill` (far-called by bank $09 `ShopBuyStockFill`'s same-size stub; `wShopID` list or the vanilla room rule) / entry 1 `ShopClose` (the shop's close tail) + `SHOP_COUNT`, `ShopPtrTable`, `ShopList_n` (the five vanilla lists, then `custom.shops`); template 438 B (S117b; 93 B S117); S126: entries 3-6 (service lines, closes, tile save); S127 (P3.14e2): entries 7 `BreedClose` (bank $0A's type 5/6/11 close tails), 8 `BreedSlotEID` + `BreedRoll` (bank $14 `LoadEnemyStatsExt` slot rows), 9 `PartyAvgLevel`, 10 `ScriptCommand` (op `$24 $FFxx` via bank $60) + `BreedPoolPtrs` (`custom.breeding_pools`) | compiler-generated `patches/bank_077.asm` (`shops77`, editor2/core/shops.py) |
 | $79 | Story hooks (S121, ROADMAP P3.16 + E7): the Milly hook — entry 0 `MillyShapeTable` (bank $04 entries 2 / 3, same-size regions `milly_shape_04a/b`), entry 1 `MillyPlayerSheet` (bank $01 `LoadFieldTilesDMA`, region `milly_player_sheet`) + Milayou's palette / sheet / frame-table image (copied to WRAM `wMillyLayout`); the empty vanilla bank when the hook is off | compiler-generated `patches/bank_079.asm` (`hooks79`, template `bank_079_head.asm`, editor2/core/milly.py) |
 | $7E | The project's NEW-SPECIES art streams (38-word pointer table: index (id-221)*2 follower, +1 battle; S105: compiler-owned, all zero without `custom.species`) | compiler-generated `patches/bank_07e.asm` (`species7e`, editor2/core/species.py; streams from `bake_follower_overflow.py --stream-dir`) |
 | $7F | RESERVED next sprite-overflow bank (then $7C, $7A) | `dwm/sprite_bank.py` order |
@@ -428,6 +496,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Progression & Flags tab: every flag with what turns it ON / OFF and what checks it (in words, a link to the place — room / screen / state / cell, cutscene, battles, gate), the original game's flags your rooms check, every "When … → …" trigger, Problems (never-true checks, copied rooms waiting for the original game's progress, `$0158`, unused…); note / Rename (every use) / Renumber / Delete; fixed flag numbers | 🟢 built S124 (ROADMAP P3.14a), NOT yet user-tested; byte-neutral | `editor2/core/flag_index.py` + `app/flags_tab.py`; PROJECT_COMPILER §2.37; EDITOR_DESIGN §5.7 "As built S124" |
 | The hub (where a lost battle, a party fallen on damage floors, the WarpWing / Anchor, a lost Starry final and a script's "home" send the player: a room of the project, chosen by flag-ordered rules, the Castle as before when none holds; arrival scenes per reason; the Heal step) | 🟢 built S125 (ROADMAP P3.14d1), PyBoy on the user's save, test ROM `DWM-S125-hub-test.gbc` USER-CONFIRMED 2026-10-06 12:48 | PROJECT_COMPILER §2.38; EDITOR_DESIGN §5.8 "Hub (S125)"; help `66_hub.md` |
 | Service NPCs (the Vault, a farm keeper, the librarian, the Monster Namer, the Medal Man, the egg appraiser, the gate guide in any room, any number; their menu lines per NPC or for every NPC of a kind, shopkeepers too; a first visit by flag; the Medal Man's rewards) | 🟢 built S126 (ROADMAP P3.14e1), PyBoy-walked on the user's save, test ROM `DWM-S126r2-services-test.gbc` NOT yet user-tested (r2: NPCs no longer vanish at a talk after the farm) | PROJECT_COMPILER §2.39; EDITOR_DESIGN §5.6c; help `67_services.md` |
+| Breeding NPCs (Grandpa: BREED / HATCH; breeders offering one fixed monster or a mate rolled per appearance from a breeding pool — bands on level / arena / seen / story, nearest wins; offers by flag, done flag, once only) + gate rooms for every gate with the chance by the party's level | 🟢 built S127 (ROADMAP P3.14e2), PyBoy-walked on the user's save (the game's own shrine not walked — harness), test ROM `DWM-S127-breeding-test.gbc` NOT yet user-tested | PROJECT_COMPILER §2.40; EDITOR_DESIGN §5.6c (S127); help `68_breeding_npcs.md` |
 | NPC show/hide by step | ✅ working | step system; counters at $CD80+ (S65; transient); opcode $12 advances (v25) |
 | Flag-driven room states (persistent) | ✅ built S97, USER-CONFIRMED 2026-09-26 | `custom.rooms[].state_rules` → bank $60 entry 8 (+ bank $17 hook); PROJECT_COMPILER §2.13 |
 | NPC behaviours (movement types) | ✅ decoded + authorable S97, USER-CONFIRMED 2026-09-26 | type byte low nibble, bank $06 NPCBehaviourTable; ROOM_DATA_FORMAT "NPC behaviour types" |

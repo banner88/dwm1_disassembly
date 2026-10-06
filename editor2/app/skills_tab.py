@@ -412,8 +412,13 @@ class SkillsTab(QWidget):
                                   'page 2, line 2'][k])
             e.setToolTip(ANNOUNCE_HINT)
             e.editingFinished.connect(self._ann_lines_done)
+            e.textEdited.connect(self._ann_preview)
             g.addWidget(e, 5 + k, 1, 1, 2)
             self.ann_lines.append(e)
+        # S127 r3 (user: game text box previews for every text): the battle's message
+        # pages as the game draws them ({name} = a caster's name, {skill} = this skill)
+        self.ann_prev = QLabel()
+        g.addWidget(self.ann_prev, 9, 1, 1, 2)
         self.sec_looks = self._section('Looks and sounds', 'looks', w)
 
     def _build_anim(self):
@@ -953,6 +958,8 @@ class SkillsTab(QWidget):
         for e, t in zip(self.ann_lines, flat):
             e.setVisible(own)
             e.setText(t)
+        self.ann_prev.setVisible(own)
+        self._ann_preview()
         if own:
             self.announce.setText('')
         elif tpl == 0xFF:
@@ -1263,6 +1270,30 @@ class SkillsTab(QWidget):
             return
         sid = self.sid
         self._push(self._label(f'sounds like {v}'), lambda doc: doc.set_skill_sounds(sid, v))
+
+    def _ann_preview(self, *_a):
+        from PySide6.QtGui import QPainter, QPixmap
+        from editor2.app.monsters_tab import _rom
+        from editor2.app.rooms.talk_editor import render_box
+        if self._rom_bytes is None:
+            self._rom_bytes = _rom()
+        t = [e.text() for e in self.ann_lines]
+        name = (self.d or {}).get('name') or 'Skill'
+        pages = [[ln.replace('{name}', 'Slime').replace('{skill}', name) for ln in pg if ln.strip()]
+                 for pg in (t[:2], t[2:])]
+        pms = [render_box(self._rom_bytes, 1, pg, speaker='') for pg in pages if pg]
+        if not pms:
+            self.ann_prev.clear()
+            return
+        out = QPixmap(sum(p.width() for p in pms) + 8 * (len(pms) - 1), max(p.height() for p in pms))
+        out.fill(Qt.transparent)
+        qp = QPainter(out)
+        x = 0
+        for pm in pms:
+            qp.drawPixmap(x, 0, pm)
+            x += pm.width() + 8
+        qp.end()
+        self.ann_prev.setPixmap(out)
 
     def _ann_lines(self):
         t = [e.text() for e in self.ann_lines]

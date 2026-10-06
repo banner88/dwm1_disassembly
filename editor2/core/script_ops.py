@@ -188,9 +188,11 @@ OPS = {
              'Go to target when a monster of that species is in the party.'),
     0x41: Op('set_bgm', _P('song'), 'sound', None, False,
              'Play a song (the current one is kept for restore_bgm).'),
-    0x42: Op('save_return_point', _P('text', 'actor'), 'world', None, False,
-             'Remember this room and the player\'s spot / facing for a return '
-             '(the text and actor are used by $44 on the way back).'),
+    0x42: Op('save_return_point', _P('enemy', 'actor'), 'world', None, False,
+             'A breeder offers its monster: the mate (an enemy row -> $C8F7, named '
+             'by the type-5 menu) + this room and the player\'s spot / facing for '
+             'the ceremony\'s return; the actor is turned by $44 on the way back '
+             '(S127: param 1 was misnamed "text").'),
     0x43: Op('return_to_saved_point', _P(), 'world', None, True,
              'Go back to the room / spot saved by save_return_point.'),
     0x44: Op('back_from_return', _P(), 'text', None, True,
@@ -215,7 +217,8 @@ OPS = {
     0x4F: Op('return_to_saved_position', _P(), 'world', None, True,
              'Go back to the room / spot saved by save_position.'),
     0x50: Op('face_saved', _P(), 'actor', None, False,
-             'The player faces as saved; NPC 2 faces the player.'),
+             'The player faces as saved; NPC slot 1 ($D7F8 — Grandpa in the shrine) '
+             'faces the player.'),
     0x51: Op('library_tier', _P(), 'state', None, False,
              'Count the library entries -> tier 0-11 in $D8E1 (number to $C180).'),
     0x52: Op('random_battle', _P(), 'battle', None, True,
@@ -723,9 +726,9 @@ def sentence(code, params, ctx=None, target=None):
         t = ctx.text(a0) if ctx and hasattr(ctx, 'text') else ''
         return f'Prepare text ${a0:04X} without showing it' + (f': “{t}”' if t else '')
     if code == 0x42:
-        t = ctx.text(a0) if ctx and hasattr(ctx, 'text') else ''
-        return (f"Remember this room and Terry's spot for the way back (then {actor(p[1])} says "
-                f'«{t or "text $%04X" % a0}»)')
+        e = enemy(a0)
+        return (f"{actor(p[1])} offers its monster for breeding ({e or 'enemy row %d' % a0}); "
+                "remember this room and Terry's spot for the ceremony's way back")
     if code == 0x59:
         return f"{slot(a0)}: raise its weakest stat by 20"
     if code in (0x20, 0x5B):

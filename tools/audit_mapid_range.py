@@ -189,6 +189,9 @@ V = {
     ("bank_060.asm", "CopyNPCListToBuffer", 0): "COPY",          # S123: wMapID -> wNpcColourMap (the tag; never an index)
     ("bank_060.asm", "NpcColourDraw", 0): "CP_UNSIGNED",         # S123: cp b against wNpcColourMap (full-byte equality)
     ("bank_060.asm", "CustomDescentFeel", 0): "CP_UNSIGNED",     # S123 r2: cp CUSTOM_ROOM_START / ret c (was CustomDescentInGate in bank $0B)
+    # S127: reasoning in CROSSBANK_ROOMS "S127 sites" (breeding NPCs).
+    ("bank_073.asm", "CF2WarpCommitDrain", 0): "CP_UNSIGNED",    # S127: cp $08 (the ceremony map keeps the random-breeder slots; equality)
+    ("bank_077.asm", "BreedClose", 0): "CP_UNSIGNED",            # S127: cp CUSTOM_ROOM_START / jr c (reload the room sheet in custom rooms only)
 }
 
 # Site-count pins (S66). A mismatch = the tree changed; re-adjudicate.

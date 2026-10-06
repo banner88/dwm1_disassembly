@@ -854,7 +854,10 @@ CustomTextDisplay:
 ; Bank $04 now calls these two entries instead of $0F01 / $0F02 (same size):
 ; a custom script (the GateAwareDispatch rule) reads its word through
 ; CustomScriptRead and its patch from bank $60 (the compiler's patch_data);
-; anything else goes on to bank $0F exactly as before. The drawing below is a
+; anything else goes on to bank $0F exactly as before.
+; S127 (ROADMAP P3.14e2): a word $FF00-$FFFF is no patch (patches sit at
+; $4000-$7FFF) but a COMMAND of the compiler: bank $77 entry 10 ScriptCommand
+; with E = the low byte (0 = put the breeding mate's name in insert slot 0). The drawing below is a
 ; copy of bank $0C's (ScriptBank0CDrawTiles / …DrawAttrs, byte for byte the
 ; same algorithm): offset = row * 32 + column in 8-px tiles from the visible
 ; top-left ($FFB7 / $FFBB scroll), tiles also staged at $C300 + offset, the
@@ -866,12 +869,22 @@ CustomDrawTiles:
     rst $10
     ret
 .custom:
-    call CutPatchCursor
     call CutPatchParam
+    ld a, b
+    cp $ff
+    jr z, .command                      ; S127: op $24 $FFxx = a compiler command
+    push bc
+    call CutPatchCursor
+    pop bc
     push bc
     call CutPatchStage
     pop bc
     jp CutPatchDraw
+.command:                               ; (ROADMAP P3.14b's reserved word range)
+    ld e, c
+    ld hl, $770a                        ; bank $77 entry 10 ScriptCommand, E = xx
+    rst $10
+    ret
 
 CustomDrawAttrs:
     call CutPatchRoute

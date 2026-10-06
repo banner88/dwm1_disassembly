@@ -1,4 +1,4 @@
-# Services (Vault, farm, library, namer, Medal Man, eggs, gate guide)
+# Services (Vault, farm, library, namer, Medal Man, eggs, gate guide, breeding)
 
 The game's **service NPCs** work in **any room** — yours too. Rooms tab →
 select an NPC → **Service…** → pick one:
@@ -15,6 +15,9 @@ select an NPC → **Service…** → pick one:
 - **Gate guide** — shows the list of **Travelers' Gates** (the one the guide
   in the Gate Hub shows). It lists the original game's 31 gates; your own
   gates and worlds are not on it.
+- **Grandpa (breeding)** and **Breeder (my monster)** — breeding in your
+  room; a breeder can offer a monster rolled from a **breeding pool** (the
+  Services tab's *Breeding pools* page). See *Breeding NPCs*.
 
 There is **one Vault, one farm and one medal count for the whole game**: an
 item stored with your Vault keeper is in the game's Vault too, and every

@@ -782,6 +782,20 @@ new game.
 own song when the gate has one (`music.gates[n].floors` — the compiler marks the room $FF
 in `CustomRoomBGMTable`); without a gate song, the gate theme as before (SOUND_SYSTEM §10).
 
+**Every gate + the chance by level (S127, ROADMAP P3.14e2; PROJECT_COMPILER §2.40):** a
+record with gate byte `GATE_ANY` (`$FE`) applies in every gate (the game's 0-31 and new
+ones), floors 2 to 256 (the boss floor is never a decision point). A chance byte with bit
+7 set is a row index: `ScaledChance` calls bank $77 entry 9 `PartyAvgLevel` (the 1-3
+party monsters' average, clamped 99) and reads `ScaledChanceTable` + row × 100 + level
+(0-100 %, linear between the rule's two points, flat outside). Nothing changes for gates
+without such a record (no extra RNG draw). Measured (PyBoy S127, the user's save): an
+every-gate room at party level 10 (row value 57 %) → served on floor 2 of gate 0 in 50 of
+84 RNG samples; with `once_per_dive` never again on floors 3-6 of that dive.
+
+**Wandering NPCs in vanilla gates (asked S127):** they are not level-based — §4.3's
+placement pass keeps one by the floor's contents row (0 / 13 / 26 / 38 of 256); the S127
+"chance by level" is the project's own rule for its rooms.
+
 ## 7.7 Custom boss floors, hand-made gates (S101, ROADMAP P3.7b part 2) — built, PyBoy-verified, NOT yet user-tested
 
 **The boss floor.** Bank $16 entry 5 serves the boss when `wCurrentFloor ==

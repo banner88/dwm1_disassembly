@@ -21,15 +21,15 @@ from . import scriptgen as S
 # --pin-templates after a successful regression build; None = check skipped
 # with a warning.
 TEMPLATE_SIZE = {
-    0x60: 1293,  # addr(CustomScriptMasterTable)-$4000 — S123 r2 ($450D: + entry 12 CustomDescentFeel, 20 B). Prev 1273 S123 ($44F9 in the S123 example game.sym: + entry 11 NpcColourDraw, NpcColourRecord, the $A2 colour prefix — 203 B over S122's real $42E = 1070; the 678 below was never re-measured after S119's entries 9/10 + patch readers, so the pre-build check under-counted bank $60 by 392 B — DOC_AUDIT S123). Prev 678 S117 (558 + CustomReadInteract's vanilla VanillaNPCExtTable branch + CopyNPCListToBuffer with the $A0/$A1 condition prefixes; measured from the S117 game.sym). Prev 558 S105 reference game.sym (549 + CustomScriptRead's SKILL_SCRIPT_TYPE branch, 9 B). Prev 549 S101 reference game.sym (492 S97 + CustomMonsterCast + its call at the head of CustomStateRules). Prev: S97 reference game.sym (383 S94b -> 492 S97: entry-8 dw + CustomStateRules + the CustomReadStep call)
+    0x60: 1306,  # addr(CustomScriptMasterTable)-$4000 = $451A — S127 (CustomDrawTiles: op $24 $FFxx = a compiler command -> bank $77 entry 10, 13 B). Prev 1293 S123 r2 ($450D: + entry 12 CustomDescentFeel, 20 B). Prev 1273 S123 ($44F9 in the S123 example game.sym: + entry 11 NpcColourDraw, NpcColourRecord, the $A2 colour prefix — 203 B over S122's real $42E = 1070; the 678 below was never re-measured after S119's entries 9/10 + patch readers, so the pre-build check under-counted bank $60 by 392 B — DOC_AUDIT S123). Prev 678 S117 (558 + CustomReadInteract's vanilla VanillaNPCExtTable branch + CopyNPCListToBuffer with the $A0/$A1 condition prefixes; measured from the S117 game.sym). Prev 558 S105 reference game.sym (549 + CustomScriptRead's SKILL_SCRIPT_TYPE branch, 9 B). Prev 549 S101 reference game.sym (492 S97 + CustomMonsterCast + its call at the head of CustomStateRules). Prev: S97 reference game.sym (383 S94b -> 492 S97: entry-8 dw + CustomStateRules + the CustomReadStep call)
                  # (283 S53 -> 348 S70 -> 358 S70v3 (+2x5B wCustomY7Cmp arming): entry-7 dw + VanillaExitResolve +
                  # factored CopyExitListToBuffer in the template head; 383 S94: VanillaExitResolve rows keyed
                  # by (mapID, screen) — `db mapID, screen` with $FF = any screen)
-    0x71: 908,    # addr(Custom26DDTable)-$4000, S126 (+ CustomAnimSource's screen-effect pause + AnimPauseTypes, 43 B; measured $438C). Prev 865 S125 (+ entry 9 dw + HubWarp, 138 B; measured from the S125 example game.sym $4361). Prev 727 S121 (+ entry 8 dw + TextSpriteMode, 39 B; measured from the S121 example game.sym $42D7). Prev 688 S116 (444 S102 + entries 6/7 dw + CustomRoomBGMResolve gate songs + CustomBGMStart + BattleBGMResolve; measured from the S116 example game.sym). Prev 444 S102 (440 S101 + CustomAnimSource's far call to bank $6C entry 0, 4 B; measured from the S102 reference game.sym). Prev 440 S101 (395 S100 + CustomRoomBGMResolve .gatePath: the custom boss song on the floor before the boss). Prev 395 S100 (164 S99 + entries 4/5 dw + CustomGateInsert + CustomRoomFlags + entry-1 follow-gate test; measured from the S100 reference game.sym). Prev 164 S99 (142 S64 + entry-3 dw + CustomAnimSource 20 B; measured from the S99 reference game.sym). Prev 142 S64 (S55 116 + entry-2 dw + CustomRoomBGMResolve; measured from the S64 reference game.sym)
+    0x71: 951,    # addr(Custom26DDTable)-$4000 = $43B7, S127 (+ GATE_ANY in CustomGateInsert + ScaledChance reading E, 43 B). Prev 908 S126 (+ CustomAnimSource's screen-effect pause + AnimPauseTypes, 43 B; measured $438C). Prev 865 S125 (+ entry 9 dw + HubWarp, 138 B; measured from the S125 example game.sym $4361). Prev 727 S121 (+ entry 8 dw + TextSpriteMode, 39 B; measured from the S121 example game.sym $42D7). Prev 688 S116 (444 S102 + entries 6/7 dw + CustomRoomBGMResolve gate songs + CustomBGMStart + BattleBGMResolve; measured from the S116 example game.sym). Prev 444 S102 (440 S101 + CustomAnimSource's far call to bank $6C entry 0, 4 B; measured from the S102 reference game.sym). Prev 440 S101 (395 S100 + CustomRoomBGMResolve .gatePath: the custom boss song on the floor before the boss). Prev 395 S100 (164 S99 + entries 4/5 dw + CustomGateInsert + CustomRoomFlags + entry-1 follow-gate test; measured from the S100 reference game.sym). Prev 164 S99 (142 S64 + entry-3 dw + CustomAnimSource 20 B; measured from the S99 reference game.sym). Prev 142 S64 (S55 116 + entry-2 dw + CustomRoomBGMResolve; measured from the S64 reference game.sym)
     0x6C: 285,    # addr(TileAnimRoomTable)-$4000, S102 (bank self-ID + entry table + CustomTileAnimate / TileAnimRestart / TileAnimCopy; measured from the S102 reference game.sym)
     0x6F: 391,    # addr(CustomAnimFrameTable)-$4000, S112 (bank self-ID + 4-entry table + CustomAnimTick / Init / Load / Step + CustomAnimNone; measured from the S112 game.sym)
     0x76: 460,    # addr(EncRoomTable)-$4000, S122 (GateBossWin row x6 + the WinTail jump, +RunWinTail; measured from the S122 game.sym $41CC). Prev 358 S117 (+2 entry-2 dw, +60 GateBossWin; measured from the S117 game.sym). Prev 296 S115 (+2 entry-1 dw, +17 EncVanillaNumber new-gate source, +36 NewGateRowCopy; measured from the S115 game.sym). Prev 241 S114 (bank self-ID + entry table + EncResolve / EncPickVariant / EncFloorRun / EncVanillaNumber)
-    0x77: 688,    # addr(ShopPtrTable)-$4000 = $42B0: S126 r2 (+4: $FFD4 := $80 at the service close); S126 = 684 (+ entries 3-6 SayText / SetPairs / ScanPairs, ServiceClose*, ServiceOpenTiles, ScreenPush full-screen + room-tile rules, 246 B). Prev 438 = $41B6: S117b (+ entry 2 ScreenPush / PushRowAttrs, ShopClose -> ShopBoxBottom; was 93 S117; measured from the S117b game.sym)
+    0x77: 1110,   # addr(ShopPtrTable)-$4000 = $4456: S127 r3 (+3: BreedClose calls ShopBoxBottom). S127 = 1107 ($4453) (+ entries 7-10 BreedClose / BreedSlotEID / PartyAvgLevel / ScriptCommand + BreedRoll, 419 B). Prev 688 = $42B0: S126 r2 (+4: $FFD4 := $80 at the service close); S126 = 684 (+ entries 3-6 SayText / SetPairs / ScanPairs, ServiceClose*, ServiceOpenTiles, ScreenPush full-screen + room-tile rules, 246 B). Prev 438 = $41B6: S117b (+ entry 2 ScreenPush / PushRowAttrs, ShopClose -> ShopBoxBottom; was 93 S117; measured from the S117b game.sym)
     0x6B: 53,     # addr(ProjectEnemyRows)-$4000, S101 (bank self-ID + entry table + CopyEnemyRowExt; measured from the S101 reference game.sym)
 }
 BANK_SIZE = 0x4000
@@ -88,6 +88,10 @@ def validate(prj, generated=None):
     warnings += _w
     from . import services as _SV                       # S126: service NPCs + medal rewards
     _e, _w = _SV.validate(prj)
+    errors += _e
+    warnings += _w
+    from . import breeders as _BR                       # S127: breeding NPCs + pools
+    _e, _w = _BR.validate(prj)
     errors += _e
     warnings += _w
     rooms = [r for r in prj.rooms if not r.get('placeholder')]
@@ -1268,8 +1272,8 @@ def _validate_gates(prj, rooms, errors, warnings):
         if not c['hand_made']:
             continue
         for fl in range(1, c['floors']):
-            ok = any(rw['gate'] == gid and rw['first'] <= fl <= rw['last']
-                     and rw['chance'] >= 100 and not rw['terms'] and not rw['once_bit']
+            ok = any(rw['gate'] in (gid, 0xFE) and rw['first'] <= fl <= rw['last']
+                     and rw['chance_byte'] == 100 and not rw['terms'] and not rw['once_bit']
                      for rw in rows)
             if not ok:
                 warnings.append(
@@ -1288,13 +1292,14 @@ def _validate_gates(prj, rooms, errors, warnings):
     # wins on every floor it covers (100 %, no flags, not once-per-dive)
     for j, b in enumerate(rows):
         for a in rows[:j]:
-            if (a['gate'] == b['gate'] and a['chance'] >= 100 and not a['terms']
+            if (a['gate'] in (b['gate'], 0xFE) and a['chance_byte'] == 100 and not a['terms']
                     and not a['once_bit'] and a['first'] <= b['first']
                     and b['last'] <= a['last']):
                 warnings.append(
                     f"custom.gate_inserts[{b['index']}] ({b['room_id']}) can never "
                     f"be served: rule {a['index']} ({a['room_id']}) always takes "
-                    f"gate {a['gate']} floors {b['first']}-{b['last']} (100 %, no "
+                    + ('every gate' if a['gate'] == 0xFE else f"gate {a['gate']}")
+                    + f" floors {b['first']}-{b['last']} (100 %, no "
                     "flag terms, not once-per-dive)")
                 break
     for rid, rrows in served.items():

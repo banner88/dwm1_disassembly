@@ -5598,3 +5598,85 @@ the room reloads (the yard, `$44` grass, kept its sprites). **Fix**: the service
 sets `$80` again in custom rooms (bank $77 `ServiceTilesBack`). **Rule**: the S126 "diff
 VRAM before / after a screen" check is not enough — diff the HRAM / WRAM a screen writes
 too (`$FF80-$FFFE` before / after), and test a TALK after every menu, not only the menu.
+
+### A far call returns the CALLER's bank in A (S127)
+
+`rst $10` comes back through `pop af`: A is the calling bank again, whatever the callee
+left in it (BC is clobbered by `ld bc,$4001` too). bank $71 `ScaledChance` read the
+party's average level from A after calling bank $77 `PartyAvgLevel` — every gate room
+rolled with the bank number as the level. **Rule**: a far-called routine returns its
+result in E (or memory); the caller reads E.
+
+### A yield ends the talk's dialog (S127)
+
+Op `$24` yields the script for a frame; the talk's dialog state does not survive it — a
+text after it never showed (PyBoy: the box stayed closed, the script ran on). **Rule**:
+after any yielding op in a talk, `init_dialog` before the next text.
+
+### Test the routine, not its call site (S127)
+
+`PartyAvgLevel` kept the sum in A and wrote `ld e,a` early for the empty party — the low
+byte of the sum was clobbered and every average came out 1. The compiler tests passed (the
+call sites were right); the ROM test that RUNS the routine on MiniSM83 against a Python
+model on 120 random parties caught it. **Rule**: every engine routine gets a ROM test that
+executes it against the model, not only byte checks.
+
+### Ten sprites per line (S127)
+
+Three demo NPCs stood exactly where the room data put them (OAM checked) and were not on
+screen: they shared row 3 with the arrival, and the player alone is 8 OAM entries per line
+(4 palette layers × 2 columns); the hardware draws 10. **Rule**: NPCs one row off the
+player's paths (ROOM_DATA_FORMAT "What NPCs cost per frame"); when sprites are "missing",
+count the OAM entries per scanline before suspecting the loader.
+
+### A stale RAM byte is not a reading (S127, PyBoy)
+
+`$C8EF` (the last screen type) and `$C180` (insert slot 0) keep their values after a menu
+closes — a driver that checked them "after the talk" read the previous menu and
+reported a pass. **Rule**: poke a sentinel before the action and require the change.
+
+### A free-text box must be cut to the game's box before it is saved (S127 r2)
+
+**Symptom** (user): "BUILD FAILED … box 1 line 1 is 28 cells (max 16)" — a breeder's
+"afterwards" words typed as one line. The S126 / S127 dialogs split plain text on newlines
+only and kept it as typed (and dropped a box's third line); the compiler's box check then
+stopped the build, far from where the words were typed. **Fix**: the model wraps every box
+that does not fit (`breeders_doc.fit_boxes`, the game's rule: 16 cells after "*:", 18
+after, 2 lines a box), and projects saved before are wrapped on open. **Rule**: any field
+that becomes game text is fitted (or refused with the reason) where it is typed — never
+left for the build to find.
+
+### Show the choice the user means, not the table behind it (S127 r2)
+
+The mate picker listed the 487 enemy rows ("Slime Lv 1 (row 1)" …) — correct data, but the
+user read it as "a random selection" of levels. What they choose is a species and a level;
+the row is an implementation detail the editor can make (a project enemy). **Rule**: when a
+game table forces odd combinations, let the user pick the two things they think in and
+build the row for them; keep the raw table as the advanced option.
+
+### The game text rule, at last (S127 r3)
+
+**User**: "Use game text box previews. FOr the love of god make that default for all text
+entries in editor this is like the fifth time this comes up." The S97 r2 box editor existed;
+each new dialog (S117 shop greeting, S126 first visit, S127 breeder words) was built with a
+plain text field again, and r2 only wrapped the text after the fact. **Rule**: game words are
+typed in `GameTextField` / `BoxList` — the picture of the box beside the field — and a test
+(test_app `s127r3_game_text_rule`) now refuses a new plain text edit. Copy the widget, not the
+idea.
+
+### Test talks from where the player will stand (S127 r3)
+
+Every S127 PyBoy talk was from the upper half of the screen (the default box at the bottom).
+The user's NPC sat on row 6: the box opened at the top, the menu's question at the bottom, and
+the farewell split across two boxes. **Rule**: walk-throughs talk to each NPC from above and
+from below (the box placement flips at player y − scroll ≥ `$50`); a script that shows a
+screen effect puts `$3C` before `init_dialog` and every text.
+
+### deleteLater is not "gone" (S127 r4)
+
+A box editor field filled after it was built (`set_value`) removed its first box with
+`removeWidget` + `deleteLater` only; the old box stayed drawn under the new one until the
+event loop got to it (the user: "box1 duplicated weirdly glitchily"; offscreen: two BoxEditor
+children, one in the list). **Rule**: a widget taken out of a layout is `hide()`n and
+unparented before `deleteLater`; a test counts the children against the list.
+

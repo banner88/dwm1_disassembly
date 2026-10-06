@@ -2301,7 +2301,6 @@ class RoomsTab(QWidget):
         room = self.current_room()
         if idx is None or room is None or self._sel_is_spot():
             return
-        from PySide6.QtWidgets import QPlainTextEdit
         doc = self.s.doc
         try:
             shops = doc.shop_list()
@@ -2320,12 +2319,12 @@ class RoomsTab(QWidget):
         if cur:
             combo.setCurrentIndex(max(0, combo.findData(cur[0])))
         v.addWidget(combo)
-        v.addWidget(QLabel('Greeting (optional; a blank line starts a new box, '
-                           'two lines of 16 per box). Empty = "Item shop. May I help you?"'))
-        ed = QPlainTextEdit()
-        if cur and cur[1]:
-            ed.setPlainText('\n\n'.join('\n'.join(b) for b in cur[1]))
-        v.addWidget(ed)
+        v.addWidget(QLabel('Greeting (optional) — each box as the game shows it:'))
+        from editor2.app.rooms.talk_editor import GameTextField     # S127 r3
+        ed = GameTextField(self.s.renderer.rom, cur[1] if cur and cur[1] else None,
+                           empty_note='the game\'s "Item shop. May I help you?"')
+        v.addWidget(ed, 1)
+        dlg.resize(760, 560)
         v.addWidget(QLabel('Then the game\'s BUY / SELL / EXIT shop, then "Thank you. '
                            'Come again!". Edit the lists and prices on the Shops tab.'))
         # S126 (P3.14e1): the shop menu's own lines ("What will you buy?", …)
@@ -2348,11 +2347,10 @@ class RoomsTab(QWidget):
         if dlg.exec() != QDialog.Accepted:
             return
         shop = combo.currentData()
-        txt = ed.toPlainText().strip()
-        boxes = None
-        if txt:
-            boxes = [[ln for ln in blk.split('\n') if ln.strip()][:2]
-                     for blk in txt.split('\n\n') if blk.strip()]
+        if ed.problem():
+            QMessageBox.warning(self, 'Shopkeeper', f'Greeting: {ed.problem()}')
+            return
+        boxes = ed.value()
 
         sel_lines = lines_combo.currentData()
 
@@ -2382,12 +2380,16 @@ class RoomsTab(QWidget):
         if dlg.exec() != QDialog.Accepted:
             return
         kind, lines, ft, new_set = dlg.result_spec()
+        brd = dlg.breeder_spec()                                  # S127
 
         def op(d, r, k, st):
             ls = lines
             if new_set:
                 ls = d.add_service_lines(kind, new_set)
-            return d.make_service_npc(r, k, st, idx, kind, ls, ft)
+            sid = d.make_service_npc(r, k, st, idx, kind, ls, ft)
+            if brd is not None:
+                d.set_breeder_options(sid, **brd)
+            return sid
         if self._npc_op('Service NPC', op) is not None:
             self._after_npc_edit(idx)
             from editor2.core import services as SV

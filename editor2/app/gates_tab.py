@@ -121,6 +121,41 @@ class GateRuleDialog(QDialog):
         self.chance.setToolTip('Rolled on each floor in range (after the other conditions '
                                'hold). 100 % = always.')
         f.addRow('chance', self.chance)
+        # S127 (P3.14e2): the chance rising (or falling) with the party's average level
+        cb = rule.get('chance_by_level') or {}
+        self.by_level = QCheckBox('the chance follows the party\'s average level:')
+        self.by_level.setChecked(bool(cb))
+        lv = QHBoxLayout()
+        self.lv_from, self.pc_from, self.lv_to, self.pc_to = (QSpinBox() for _ in range(4))
+        for sb, lo, hi, dv, suf in ((self.lv_from, 1, 98, 5, ''), (self.pc_from, 0, 100, 10, ' %'),
+                                    (self.lv_to, 2, 99, 40, ''), (self.pc_to, 0, 100, 60, ' %')):
+            sb.setRange(lo, hi)
+            sb.setValue(dv)
+            sb.setSuffix(suf)
+        if cb:
+            try:
+                self.lv_from.setValue(int(cb['from'][0]))
+                self.pc_from.setValue(int(cb['from'][1]))
+                self.lv_to.setValue(int(cb['to'][0]))
+                self.pc_to.setValue(int(cb['to'][1]))
+            except (KeyError, TypeError, ValueError, IndexError):
+                pass
+        for wdg in (QLabel('level'), self.lv_from, QLabel('→'), self.pc_from,
+                    QLabel('   level'), self.lv_to, QLabel('→'), self.pc_to):
+            lv.addWidget(wdg)
+        lv.addStretch(1)
+        f.addRow(self.by_level)
+        f.addRow('', lv)
+        self.by_level.setToolTip('The chance is worked out from the party\'s average level '
+                                 'each time the floor is made: the first chance up to the '
+                                 'first level, the second from the second level on, a straight '
+                                 'line between. "chance" above is not used then.')
+        self.by_level.toggled.connect(self._by_level_toggled)
+        self._by_level_toggled(self.by_level.isChecked())
+        self.every = QCheckBox('every gate (the floors before each gate\'s boss; with '
+                               '"at most once per dive" at most once in each dive)')
+        self.every.setChecked(rule.get('gate') == 'any')
+        f.addRow('', self.every)
         self.once = QCheckBox('at most once per dive (resets when a new dive starts; '
                               'kept through a save)')
         self.once.setChecked(bool(rule.get('once_per_dive')))
@@ -235,14 +270,23 @@ class GateRuleDialog(QDialog):
             return d
         return txt.split()[0] if txt else None
 
+    def _by_level_toggled(self, on):
+        self.chance.setEnabled(not on)
+        for sb in (self.lv_from, self.pc_from, self.lv_to, self.pc_to):
+            sb.setEnabled(on)
+
     def rule(self):
-        r = {'room': self.room.currentData(), 'gate': self.gate['id']}
+        r = {'room': self.room.currentData(),
+             'gate': 'any' if self.every.isChecked() else self.gate['id']}
         if self.any.isChecked():
             r['floors'] = 'all'
         else:
             a, b = self.f_from.value(), self.f_to.value()
             r['floors'] = [a] if a == b else [a, b]
         r['chance'] = self.chance.value()
+        if self.by_level.isChecked():
+            r['chance_by_level'] = {'from': [self.lv_from.value(), self.pc_from.value()],
+                                    'to': [self.lv_to.value(), self.pc_to.value()]}
         if self.once.isChecked():
             r['once_per_dive'] = True
         terms = []
@@ -263,6 +307,9 @@ class GateRuleDialog(QDialog):
     def _ok(self):
         if self.room.currentData() is None:
             self.warn.setText('Pick a room.')
+            return
+        if self.by_level.isChecked() and self.lv_from.value() >= self.lv_to.value():
+            self.warn.setText('The second level must be higher than the first.')
             return
         if self.table.rowCount() > G.MAX_TERMS:
             self.warn.setText(f'At most {G.MAX_TERMS} conditions.')
@@ -658,13 +705,15 @@ class GatesTab(QWidget):
             except KeyError:
                 room, rname, rep = None, f"{r.get('room')} (missing)", None
             also = []
+            if r.get('gate') == 'any':
+                also.append('every gate')                         # S127
             if r.get('once_per_dive'):
                 also.append('once per dive')
             for t in r.get('when') or []:
                 also.append(f"{t.get('flag')} {'clear' if t.get('is') == 'clear' else 'set'}")
             cells = [str(row + 1), rname, G.floors_text(r.get('floors', 'all'), g['floors'],
                                                         g['min_floor']),
-                     f"{int(G._val(r.get('chance', 100)))} %", ', '.join(also) or '—',
+                     G.chance_text(r), ', '.join(also) or '—',
                      ('✓ ' + ' · '.join(rep['notes'])) if rep and rep['ready'] else
                      ('⚠ ' + '; '.join(rep['problems']) if rep else '⚠ room missing')]
             for c, txt in enumerate(cells):

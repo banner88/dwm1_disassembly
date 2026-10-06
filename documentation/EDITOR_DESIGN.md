@@ -173,6 +173,17 @@ project: Document + live renderer + QUndoStack + change signals.)*
 - Cross-navigation is a first-class rule: anywhere an id appears (a flag
   in a script, a monster in a pool, a song in a room) it is a link.
 
+**Game text (S127 r3, user: "Use game text box previews. … make that default for all text
+entries in editor this is like the fifth time this comes up").** Every field whose words end up
+in one of the game's text boxes is edited box by box BESIDE the game's own picture of that box
+(ROM font, the speaker label, 16 / 18 cells, two lines a box), with Fit / Fit all and a refusal
+while a box does not fit: `talk_editor.BoxList` (with the speaker / voice row) or
+`GameTextField` (an optional text, no speaker row). Never a plain text edit; text shown in other
+windows (library descriptions, SKIL texts, battle messages, a medal reward line) shows the
+game's picture next to the field. test_app `s127r3_game_text_rule` lists the allowed
+`QPlainTextEdit`s (logs, read-only views, the box editor's own field, the Services tab's line
+editor that draws its boxes) and fails on any other.
+
 ### 5.C Capacity meters (v2.1 principle — user spec S90 #4)
 
 **No invisible ceilings.** Every panel shows its meter, sourced from the
@@ -1651,6 +1662,29 @@ is fine. keep in mind ill have multiple different shops with different inventori
   row —, the line; ⏎ / ▸ for line / box breaks), **Add reward** / **Remove** / **The
   game's rewards**; refusals (not rising, > 999, > 8) come back as the model's message.
 * Every edit = one SnapshotCommand; the tab refreshes on undo.
+
+**S127 breeding (ROADMAP P3.14e2; built, PyBoy-verified, NOT yet user-tested;
+PROJECT_COMPILER §2.40, help `68_breeding_npcs.md`).** User: "monster grandpa (NOT
+PRIEST)", NPCs offering breeding with "the ability to randomize to a band (e.g. based on
+player level or monsters unlocked)", all four scales selectable, "the band snaps to the
+closest hit", the mate's level fixed, a re-roll "every time room appears", "once off
+only", "I will place breeding NPCs in custom rooms, breed once, then new dialogue. Or …
+they offer breeding only when flags set". Model `core/breeders_doc.py` (`BreedersMixin`).
+* **Service… → Grandpa (breeding) / Breeder (my monster)** — the breeder group (r2): *a
+  monster at a level you choose* (species + level → `mate_for`, the default), *an enemy row
+  as it is* (the project's enemies first, then the game's rows 1-486) or *rolled from a
+  breeding pool*; words typed freely (wrapped into boxes); *first words*; *offers only when* (flag names, `!name` =
+  OFF) + *not yet* words; *done flag*; *only once* + *afterwards* words.
+  `set_breeder_options` after `make_service_npc`.
+* **Services tab → Breeding pools** page: pools (New / Delete — refused while a breeder
+  uses it), name, the four **scales** (checkboxes), **story milestones** (flag names in
+  story order), the **bands** table (name, level, arena, seen, story, mates as `306×3,
+  305`), + band / − band / **Apply bands** (refusals come back as the compiler's own
+  `check_pool` message), a mate picker **add mate**, **Try it** (spins for the four
+  values → "band n "name"" + each mate's chance — `pool_preview` = the engine's choice).
+* **Gates tab → rule dialog**: **every gate** and **the chance follows the party's average
+  level** (from level / % to level / %); the rules list shows "every gate" and the
+  by-level chance (`gates.chance_text`).
 
 ### 5.7 Progression & Flags tab
 

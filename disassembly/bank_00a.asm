@@ -858,6 +858,10 @@ ScreenEffectSay0A:
     call TextBankDispatch
     ret
 
+; label442d (S127 annotation) — screen type 5 (op $04 5 <base>): a MASTER offers
+; their monster (map $09 breeders). Lines base+1..+8; +1 "Why not breed with my
+; [INS 00]?" is said only on B-back, so the NPC's script asks it first. Confirm ->
+; label4ad3 (the ceremony warp, $D951 := 4). Close tail = label4516.
 label442d:
     ld a, [$c905]
     rst $00
@@ -1858,6 +1862,9 @@ label4a10:
     ld [wGameState], a
     ret
 
+; label4ad3 (S127 annotation) — type 5 confirm: warp to the ceremony (map $08, pixel
+; $48,$48) with $D951 := 4; the ceremony's script 0 runs 4 -> 5 and returns through
+; op $43 with $D951 = $F2.
 label4ad3:
     ld a, [$c825]
     or a
@@ -1965,6 +1972,10 @@ CallFldA_4b9e:
     ret
 
 
+; LoadFldA_4ba2 (S127 annotation) — the mate synthesis: the enemy row [$C8F7] (set by
+; op $42) -> wTempEnemyStatsId/$DA13, bank $14 entry 0 builds it, its species [$DA18]
+; is named into insert slot 0 ($C180, mode 5). bank $77 ScriptCommand repeats this
+; for the editor's op $24 $FF00 (the breeder's question names the mate).
 LoadFldA_4ba2:
     ld a, [$c8f7]
     ld c, a
@@ -1983,6 +1994,9 @@ LoadFldA_4ba2:
     call SetupVRAMParams
     ret
 
+; label4bc3 (S127 annotation) — screen type 6 (op $04 6 $06F0): Grandpa's
+; BREED / HATCH / EXIT. BREED confirm -> label573e (ceremony, $D951 := 0). Close tail =
+; label4ce2.
 label4bc3:
     ld a, [$c905]
     rst $00
@@ -3640,6 +3654,8 @@ label565f:
     ld [wGameState], a
     ret
 
+; label573e (S127 annotation) — Grandpa's BREED confirm: warp to the ceremony
+; (map $08) with $D951 := 0; the ceremony returns via op $4F ($D951 $F0 = ask HATCH).
 label573e:
     ld a, [$c825]
     or a
@@ -6441,6 +6457,8 @@ label6923:
     ld [$c8ec], a
     ret
 
+; label6966 (S127 annotation) — screen type 11: "Take [name] with you now?" after
+; hatching + naming (type 15). Close tail = label6a5a.
 label6966:
     ld a, [$c905]
     rst $00

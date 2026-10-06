@@ -164,6 +164,16 @@
                  breeding list, 7 = egg evaluator, 11 = shrine entry) [S104]
                  S109: indexes bank $09 ScreenEffectTable09 first; type 4 =
                  the arena class-registration menu (ArenaClassMenu)
+                 S127 (code + PyBoy): bank $0A type 5 = a breeding MASTER's own
+                 monster (map $09 screen 1; base $0600, the mate in $C8F7/8),
+                 6 = Grandpa's BREED / HATCH / EXIT (base $06F0), 11 = "Take …
+                 with you now?" after the naming — DOC_AUDIT S127
+   C8F7     2    The breeding mate's enemy row (op $42 param 1; bank $0A
+                 LoadFldA_4ba2 builds it and names its species into $C180) [S127]
+   C8FB     7    The return point of op $4E / $42: $C8FB map, $C8FC gate flag,
+                 $C8FD-$C900 pixel X / Y, $C901 the player's facing; ops $43 /
+                 $4F go back there (the breeding ceremony) [S127]
+   C902     1    The actor op $42 saved; op $44 turns it to the player [S127]
    C89B     1    BG shade map: $D2 normal; the vanilla fade steps $E7 / $FB / $FF
                  (black); $00 = every pixel its palette's colour 0 (BANK04 "Writing
                  scenes") [S119, PyBoy]
@@ -321,8 +331,19 @@
                  active service line set, 0 = none: a service / shop script
                  writes n before its op $04 and 0 after; read by bank $77
                  entry 3 SayText) /
-                 wCustomPool $D4F2-$D5E4 (transient reserve; $D2F0 before S126,
-                 $D2EF before S125, $D2E3 before S123, $D243 before S121) /
+                 [S127] wBreedLast $D4F2 (the breeding NPC number 1-255 the player
+                 last talked to; the room's return script turns that NPC at
+                 $D951 $F0/$F1/$F2) / wBreedSlots $D4F3-$D502 (4 random-breeder
+                 slots x [state 0 roll / 1 rolled / 2 done, pool, enemy row lo,
+                 hi]; bank $77 entry 8 BreedSlotEID rolls a slot at its first
+                 mate load; bank $73 entry 0 clears the states at every
+                 committed map change except into map $08 / with $D951 >= $F0)
+                 / wBreedVals $D503-$D506 (the last roll's level, arena x12,
+                 seen/2, story points) / wBreedMask $D507 / wBreedStep $D508
+                 (BreedRoll scratch) /
+                 wCustomPool $D509-$D5E4 (transient reserve; $D4F2 before S127,
+                 $D2F0 before S126, $D2EF before S125, $D2E3 before S123, $D243
+                 before S121) /
                  wPoolBounce $D5E5-$D664 (128 B, FX1: sleep-pool swap
                  scratch; the v1 drain halved-pending use died with the
                  S71v2 exp-scale veto).
@@ -426,6 +447,10 @@
                    $D935-$D93A  Bazaar (6 screens)
                    $D93F-$D944  Farm (6 screens)
                    $D977-$D97A  Boss rooms (Villager/Talisman/Memories/Bewilder)
+                   $D951        Map $08 (the breeding ceremony): its stage 0-7 and
+                                the return codes $F0 (Grandpa: ask HATCH) / $F1
+                                (Grandpa: the naming) / $F2 (a master: "I hope…")
+                                that the room's entry script reads [S127]
                    $D998        Shared by maze/conveyor/forest rooms
                    $D99A        Last used (Room_5E)
                  Custom rooms: $D95E (room $6B, shares with MedalManRoom),

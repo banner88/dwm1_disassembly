@@ -399,6 +399,14 @@ behaviour, no tile save) — **CP_UNSIGNED** (`("bank_077.asm", "ServiceOpenTile
 `tools/audit_mapid_range.py`; `extracted/mapid_range_audit.json` regenerated: clean 58,
 patched 86). `PushAttrActive` (S117b) is unchanged. No table is indexed by mapID.
 
+**S127 sites (breeding NPCs, PROJECT_COMPILER §2.40).** Two reads, both **CP_UNSIGNED**:
+bank $73 entry 0 `CF2WarpCommitDrain` — `cp $08` (equality: the ceremony map $08 keeps
+the random-breeder slots, every other committed transition clears them); bank $77
+entry 7 `BreedClose` — `cp CUSTOM_ROOM_START / jr c` (vanilla rooms keep the game's
+close; custom rooms also reload the room sheet). Keys added to
+`tools/audit_mapid_range.py`; `extracted/mapid_range_audit.json` regenerated: clean 58,
+patched 88. No table is indexed by mapID.
+
 **S120 burn-down (ROADMAP "audit_mapid_range re-adjudication").** The selftest had been
 failing since S116 with twelve NEEDS_REVIEW sites — not the "eleven S117 shop sites" the
 S118 ROADMAP note named. Read site by site:

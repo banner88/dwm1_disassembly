@@ -60,6 +60,19 @@ KINDS = {
                     vanilla='Monster Namer (map $1A script 2)'),
     'medals':  dict(screen=10, bank=0x12, base=0x0720, count=0x12, rng=(0x6AFE, 0x7000),
                     vanilla='Medal Man (map $16 scripts 1 / 2)'),
+    # S127 (ROADMAP P3.14e2): breeding. Grandpa's block is spoken by his menu
+    # (screen 6, the BREED / HATCH machine $4BC3-$6095), by "Take … with you
+    # now?" (screen 11, $6966-$6E52) and by the Starry Shrine's entry script;
+    # +$0D / +$16 are the ceremony's own (map $08 script 0 speaks the ids).
+    'grandpa': dict(screen=6, bank=0x0A, base=0x06F0, count=0x20,
+                    rng=[(0x4BC3, 0x6095), (0x6966, 0x6E52)],
+                    vanilla='Grandpa (Starry Shrine, map $09 scripts 0 / 5 / 7)'),
+    # a master offering their own monster: the generic block $0600 ("Why not
+    # breed with my [INS 00]?" — the menu fills the mate's name); +0 the script's
+    # farewell, +1..+8 the menu ($442D-$4BC3), +9 the line after the ceremony
+    # (op $44 = base + 9). +$0A.. belong to the Teto / CatFly blocks.
+    'breeder': dict(screen=5, bank=0x0A, base=0x0600, count=0x0A, rng=(0x442D, 0x4BC3),
+                    vanilla='Teto (Arena Lobby, map $06 scripts 10 / 11)'),
 }
 HELPER = {0x09: 0x45E5, 0x0A: 0x441F, 0x12: 0x441F}
 MEDAL_TABLE = 0x6D29          # $12: [dw medals, dw EID] per egg; $FFFF ends
@@ -163,6 +176,12 @@ def engine_offsets(rom, bank, rng):
     return sorted(out)
 
 
+def _rngs(k):
+    """A kind's handler ranges (S127: Grandpa's lines come from two screens)."""
+    r = k['rng']
+    return r if isinstance(r, list) else [r]
+
+
 def extract():
     rom = rom_bytes()
     rev = _glyph_names()
@@ -182,9 +201,10 @@ def extract():
                           'text': text})
         kinds[kind] = {'screen': k['screen'], 'bank': f"${k['bank']:02X}",
                        'base': f"${k['base']:04X}", 'count': k['count'],
-                       'handler': [f"${k['rng'][0]:04X}", f"${k['rng'][1]:04X}"],
+                       'handler': [f"${a:04X}" for r in _rngs(k) for a in r],
                        'vanilla_npc': k['vanilla'],
-                       'engine_offsets': engine_offsets(rom, k['bank'], k['rng']),
+                       'engine_offsets': sorted({o for r in _rngs(k)
+                                                 for o in engine_offsets(rom, k['bank'], r)}),
                        'lines': lines}
     mb = 0x12 * 0x4000 - 0x4000
     rows = []

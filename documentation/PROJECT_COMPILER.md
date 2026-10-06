@@ -3085,6 +3085,148 @@ Slime eggs (seen in the appraiser's list), the 4th visit "no more rewards"; the 
 own Medal Man (map $16) speaks the edited reward line; an item stored with a new Vault
 keeper is in the game's Vault (map $0F).
 
+## §2.40 S127 — BREEDING in the project's rooms: Grandpa, breeders, breeding pools, every-gate rooms by level (ROADMAP P3.14e2)
+
+```json
+"scripts": [
+  {"id": "lodge_grandpa", "service": {"kind": "grandpa",
+     "first_time": {"text": "gp_intro", "flag": "gp_met"}}},
+  {"id": "lodge_rosa", "service": {"kind": "breeder", "mate": 309,
+     "intro": "rosa_intro", "flag": "rosa_bred", "once": true, "after": "rosa_after"}},
+  {"id": "porch_bram", "service": {"kind": "breeder", "mate": 311,
+     "when": [{"flag": "porch_bell", "is": "set"}], "not_yet": "bram_wait"}},
+  {"id": "porch_wren", "service": {"kind": "breeder", "pool": "wild", "after": "wren_done"}}],
+"breeding_pools": [
+  {"id": "wild", "name": "Wild mates", "measures": ["level", "arena", "seen", "story"],
+   "milestones": ["porch_bell", "rosa_bred"],
+   "bands": [{"name": "early", "level": 5, "arena": 0, "seen": 10, "story": 0,
+              "mates": [{"enemy": 17, "weight": 2}, {"enemy": 25}]}, …]}],
+"gate_inserts": [
+  {"room": "wandering_nest", "gate": "any", "once_per_dive": true,
+   "chance_by_level": {"from": [5, 50], "to": [40, 100]}}]
+```
+
+**How the game breeds (audit S127, code-read + PyBoy; BANK04_SCRIPT_ENGINE "Breeding").**
+Three parts. (1) The MENUS are room-independent bank $0A screen effects (op `$04 <type>
+<base>`): **6** = Grandpa's BREED / HATCH / EXIT (base `$06F0`, `label4bc3`), **5** = a
+master offering their own monster (base `$0600`, `label442d`; line +1 "Why not breed with
+my [INS 00]?" is spoken by the menu only on B-back — the master's script asks it first),
+**11** = "Take … with you now?" (`label6966`), **15** = naming. (2) The CEREMONY is always
+map $08 script 0, a stage machine on `$D951`: Grandpa's BREED confirm (`label573e`) warps
+there with 0 → 1 → back through op `$4F` with `$F0`; after op `$3A` (the HATCH night) stage
+2 → `$F1`; a master's confirm (`label4ad3`) 4 → 5 → back through op `$43` with `$F2`.
+(3) The FOLLOW-UP runs from the ROOM's entry script, which sees `$D951` = `$F0` / `$F1` /
+`$F2`. Op `$4E` saves the return point (`$C8FB` map, `$C8FC` gate flag, `$C8FD-$C900`
+pixel X/Y, `$C901` facing); op `$42 <EID> <actor>` (the masters) = the MATE's enemy row →
+`$C8F7/8` (param 1 was documented "text", DOC_AUDIT S127) + the same save + `$C902` =
+the actor; `LoadFldA_4ba2` builds that row (bank $14 entry 0) and names its species into
+insert slot 0. Ops `$50` / `$44` turn a FIXED NPC slot (`$D7F8`) / actor `[$C902]`. The
+fee is the game's: op `$60` if_gold_short, (plus + 1) × 10 G.
+
+**Kinds** (`services.KINDS`): `grandpa` (screen 6, greeting +0, farewell +2; lines +13 /
++22 are the ceremony's and refused in line sets — `FIXED_LINES`) and `breeder` (screen 5,
+farewell +0). Both accept `lines` (line sets, §2.39) and Grandpa `first_time`.
+
+**Lowering** (`breeders.lower_talk`, after the talk scripts; `lower_entries` after the
+cutscenes):
+- **Grandpa** (`grandpa_ops`): greeting (or first_time) / `write_ram wBreedLast n` / op
+  `$4E` / lines on / op `$04 6 $06F0` / lines off / farewell +2.
+- **Breeder** (`breeder_ops`): `when` → `if_flag_* @notyet`; `once` → `if_flag_set flag
+  @after`; a pool breeder → `write_ram wBreedSlots+4k+1 <pool>` and `check_and_branch
+  wBreedSlots+4k, 2, @after`; then `write_ram wBreedLast n`, op `$42 <mate> <actor>` (the
+  mate = the enemy row, or `$0F00 + k` for slot k), op `$24 $FF00` (the mate's name →
+  `$C180`), `init_dialog` (a yield ends the talk's dialog — KEY_LESSONS S127), op `$3C`,
+  [intro], line +1, lines on, op `$04 5 $0600`, lines off, op `$3C`, line +0; `@notyet` /
+  `@after` speak their texts.
+- **Return script** (`return_ops`) in FRONT of each such room's entry script
+  (`breed:<room>:entry`, the original after `label:br_orig` with its labels prefixed
+  `o_`): `$D951` `$F0` / `$F1` / `$F2` → dispatch on `wBreedLast`, the player faces `$C901`
+  and that NPC the opposite way (face ops `$47-$4A`), then the vanilla shrine's / master's
+  follow-up (`$F0`: the HATCH offer with op `$60`; `$F1`: naming, type 11, "Take good
+  care…", "Anything else?" → the menu again; `$F2`: `$D951` := 0, the player shown,
+  `set_flag` / slot := 2 (done), `init_dialog`, line +9).
+- Slots: a room holds at most `BREED_SLOTS` = 4 pool breeders (slot k = their order in the
+  room); breeder numbers `n` (wBreedLast) 1-255 per project.
+
+**Engine (S127):**
+- **bank $77 template** (`TEMPLATE_SIZE[0x77]` 1107, re-pinned): entry 7 `BreedClose`
+  (`$7707`; bank $0A's three close tails `label4516` / `label4ce2` / `label6a5a` call it
+  instead of `$0103`, same size): the bank $01 call, then in a custom room `$FFD4` := `$80`
+  and the room sheet back (bank $71 entry 0 → `wRoomRecScratch` → `WaitDMATransfer` to
+  `$9000`) — the menus draw into room tile slots `$40-$7F`. Entry 8 `BreedSlotEID` (from
+  bank $14 `LoadEnemyStatsExt` when `$DA13` = `$0F`): slot = id & 3; state 0 → `BreedRoll`
+  (its pool) → state 1 + the rolled row; then that row → `wTempEnemyStatsId` / `$DA13`.
+  Entry 9 `PartyAvgLevel` (A and E; the party list `$CA8E-$CA90`, record +`$4B`). Entry 10
+  `ScriptCommand` (E = 0: the mate's species name → `$C180`, mode 5). `BreedRoll`: the
+  pool's measures → `wBreedVals` (level; arena classes × 12 from flags; seen bits `$CA94`
+  / 2; milestones ON × step), the band with the smallest Σ|v − t| over the masked scales
+  (tie → the first), a mate by RNG16 mod total over the weights. Data (`emit_pool_lines`):
+  `BREED_POOL_COUNT`, `BreedPoolPtrs`, per pool `db mask, step, n` + `dw flag × n` + `db
+  bands` + per band `db level, arena, seen, story, mates, total` + per mate `dw row, db w`.
+- **bank $71 template** (`TEMPLATE_SIZE[0x71]` 951): `CustomGateInsert` takes gate
+  `GATE_ANY` (`$FE`) rows for every gate; a chance byte with bit 7 = row index into
+  `ScaledChanceTable` (100 bytes per row, level 0-99; `ScaledChance` calls entry 9 and
+  clamps 99).
+- **bank $60 template** (`TEMPLATE_SIZE[0x60]` 1306): `CustomDrawTiles` routes op `$24`
+  params `$FFxx` to bank $77 entry 10 (E = xx) — the first use of P3.14b's op-`$24`
+  command range.
+- **bank $14** `LoadEnemyStatsExt`: `[$DA13]` = `$0F` → `ld hl,$7708 / rst $10` then the
+  normal path. **bank $73** entry 0 `CF2WarpCommitDrain`: every committed map change except
+  into map $08 or with `$D951` ≥ `$F0` clears the four slots' state (a re-roll next time
+  the room appears). **WRAM** (`patches/wram.asm`, from `wCustomPool`): `wBreedLast`
+  `$D4F2`, `wBreedSlots` `$D4F3-$D502` (4 × state, pool, row lo, row hi; state 0 roll / 1
+  rolled / 2 done), `wBreedVals` `$D503-$D506`, `wBreedMask` `$D507`, `wBreedStep` `$D508`.
+
+**Gate rules (§2.31 rows):** `"gate": "any"` → every gate (the game's and new ones),
+floors 2 to the last (never the boss floor); `once_per_dive` bits allocated from bit 7
+down; `chance_by_level` {from: [level, %], to: [level, %]} (levels 1-99 rising, 0-100 %)
+→ `chance_byte` = `$80` | row; rows deduplicated (`scaled_chance_rows`).
+
+**Validation:** pool keys, measures, ranges (level 0-99, arena 0-8, seen 0-240, story 0 -
+milestones), 1-16 bands, 1-16 mates, weights 1-255 summing ≤ 255, ≤ 16 milestones, ≤ 100
+pools, mates = existing rows (errors); a breeder with both / neither of mate and pool,
+`once` without `flag`, more than 4 pool breeders in a room, a breeding NPC in a vanilla
+room (errors); an unplaced breeding script, `after` without `once` on a fixed breeder, an
+unused pool, bands without a scale (warnings). **Flag index:** kinds `breeder` (`when` →
+"the breeder offers to breed"; `flag` ON after the ceremony; `once` = a TEST clear) and
+`breed_pool` (milestones = TEST). **Editor:** Service… → Grandpa / Breeder (one monster
+or a pool, first words, offers only when, done flag, only once, afterwards); Services tab
+→ **Breeding pools** (scales, milestones, the bands table, add mate, Try it); Gates tab
+rule dialog → **every gate**, **the chance follows the party's average level**; model
+`core/breeders_doc.py` `BreedersMixin`; help `68_breeding_npcs.md`.
+
+**r2 (editor side; the compiler and engine unchanged):** a mate "at a level you choose" is
+a project enemy (`progression.enemies`, `comment` "a breeding mate (Rooms tab → Service… →
+Breeder)") made by `BreedersMixin.mate_for(species, level)`: the species' original row nearest
+the level (boss fight rows last — Pizzaro's 6000-HP row is not the monster), stats + the
+growth curves' increments above that row's level, or scaled by the curves' totals below it
+(clamped 1-999, MP ≥ 0); the same pair is re-used. The mate's stats matter: bank $16
+`BreedCreateOffspring` gives the baby a share of both parents' stats (`SaveBrd_41b8`) and
+their skills. A breeder's words and the first-visit text are wrapped into the game's boxes
+(`fit_boxes`; boxes that fit stay as typed), also on open (`_migrate_service_words`).
+
+**r3 — the dialog box stays at the bottom:** the menus (types 5 / 6 / 11) draw their windows
+for a BOTTOM box. A talk from the lower half of the screen opens the box at the TOP (bank $06:
+player y − scroll ≥ `$50`); `$3C` placed after `init_dialog` does not reach the box
+init_dialog opens. PyBoy (the user's $6B): intro at the top, the question at the bottom, and
+after NO the farewell's scroll drawn in a second box at the top. Now `breeders._bottom` puts
+op `$3C` before every text and init_dialog of Grandpa's, the breeders' and the return
+scripts, and `BreedClose` calls `ShopBoxBottom` in custom rooms (TEMPLATE_SIZE[0x77] 1110).
+
+**r4:** a breeder accepts `first_time` {text, flag} like the other services: `if_flag_set
+flag @known` / its words / `set_flag` / `goto @asked`; `@known`: the first words; `@asked`:
+the question.
+
+**Measured (PyBoy, the user's save, the S127 demo — PROJECT_STATE S127):** Grandpa
+first visit, BREED → ceremony → back in the room, HATCH (30 G) → naming → "Take DD with
+you now?" in the room; a fixed breeder ("Why not breed with my Rayburn?") → `$F2` → "I
+hope a strong monster will be born!" → its flag ON → `once` words; a flag-gated breeder
+(not yet → the bell → offers FangSlime); a pool breeder rolls per visit (MetalDrak / Yeti /
+Swordgon, stable within a visit), done → "done for this visit", re-rolls after leaving;
+the every-gate room on floor 2 in 50 of 84 RNG samples at party level 10 (row value 57 %), never twice
+in one dive; breeding inside it returns to the gate room, the stairs still lead on and the
+slot is cleared. `BreedRoll` == the Python model on 120 random players (test_compiler).
+
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 
 The user's "fastest way to test": hook a custom room onto a door the player
@@ -3199,6 +3341,11 @@ custom (walk-on boundary exits). bank_071 unchanged (142 B).
 head **492 B** (`TEMPLATE_SIZE[0x60]=492`, sha re-pinned). §2.13. Measure the size
 from `CustomScriptMasterTable - $4000` in the fresh `game.sym` after any
 head change; the validator compares the emitted head against it.
+
+**S127 re-pin (§2.40):** bank $60 head 1306 B (`CustomDrawTiles` op `$24 $FFxx` → bank
+$77 entry 10), bank $71 head 951 B (`GATE_ANY`, `ScaledChance`), bank $77 head 1107 B
+(entries 7-10 + `BreedRoll`); sha256s in PINNED_SHA256 (`56a5321a…`, `7c371e82…`,
+`b70c1cd6…`), `TEMPLATE_SIZE` in `editor2/core/validators.py`. S127 r3: bank $77 head 1110 B (`BreedClose` → `ShopBoxBottom`), re-pinned.
 
 ## New verified opcodes (S70, handler-byte-verified)
 

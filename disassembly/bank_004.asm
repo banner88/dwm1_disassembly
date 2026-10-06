@@ -5112,6 +5112,13 @@ ScriptCmd41_SetBGM:
     jp Jump_004_55f5
 
 
+; ScriptCmd42 (S127 annotation) — op $42 <mate EID word> <actor byte>: the BREEDER op
+; (map $09's masters). Param 1 is NOT a text id: it is the enemy-row id of the mate
+; the NPC offers -> $C8F7/$C8F8 (bank $0A LoadFldA_4ba2 loads that row into
+; wTempEnemyStatsId/$DA13 and names its species into insert slot 0 for the type-5
+; menu). Then the same return point as op $4E ($C8FB map, $C8FC gate flag, $C8FD-$C900
+; pixel X/Y, $C901 facing) and param 2 -> $C902 = the NPC's actor number (op $44
+; turns that actor). Editor: breeders.py breeder_ops (PROJECT_COMPILER §2.40).
 ScriptCmd42_SaveReturnPoint:
     ld a, [wScriptCounter]
     add $01
@@ -5162,6 +5169,9 @@ ScriptCmd42_SaveReturnPoint:
     jp Jump_004_55f5
 
 
+; ScriptCmd43 (S127 annotation) — warp back to the op $42/$4E return point. The
+; ceremony (map $08 script 0) uses it after a type-5 breeding ($D951 4 -> 5 -> $F2):
+; the room's ENTRY script sees $D951 = $F2 and speaks the breeder's line +9.
 ScriptCmd43_ReturnToSavedPoint:
     ld a, [$c8fb]
     ld c, a
@@ -5202,6 +5212,9 @@ ScriptCmd43_ReturnToSavedPoint:
     ret
 
 
+; ScriptCmd44 (S127 annotation) — after an op $43 return: the player faces $C901,
+; actor [$C902] (NPC n's facing byte = $D7D8 + 32*(n-1)) faces the opposite way, and
+; text [$C8F0] + 9 is queued (the breeder's "I hope a strong monster will be born!").
 ScriptCmd44_BackFromReturn:
     ld a, [$c901]
     ldh [$8e], a
@@ -5404,6 +5417,8 @@ ScriptCmd4D_LongDelay:
     ret
 
 
+; ScriptCmd4E (S127 annotation) — the return point only ($C8FB-$C901: map, gate flag,
+; pixel X/Y, facing); Grandpa's BREED path (map $09 shrine) uses it before the menu.
 ScriptCmd4E_SavePosition:
     ld a, [wMapID]
     ld c, a
@@ -5434,6 +5449,8 @@ ScriptCmd4E_SavePosition:
     jp Jump_004_55f5
 
 
+; ScriptCmd4F (S127 annotation) — the ceremony's return for Grandpa's paths:
+; $D951 0 -> 1 -> $F0 (breed done, ask HATCH) and 2 -> $F1 (after op $3A: the naming).
 ScriptCmd4F_ReturnToSavedPosition:
     ld a, [$c8fb]
     ld c, a
@@ -5474,6 +5491,9 @@ ScriptCmd4F_ReturnToSavedPosition:
     ret
 
 
+; ScriptCmd50 (S127 annotation) — the player faces $C901 and the FIXED NPC slot 1
+; ($D7F8) faces the opposite way (Grandpa is always NPC 1 in the shrine; the editor
+; emits face ops $47-$4A for its own actors instead).
 ScriptCmd50_FaceSaved:
     ld a, [$c901]
     ldh [$8e], a

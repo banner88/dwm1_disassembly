@@ -71,8 +71,21 @@ KINDS = {
                     what='evaluates and blesses eggs (for gold)'),
     'gates':   dict(name='Gate guide', screen=13, greet=None, bye=None,
                     what="shows the list of Travelers' Gates (the original game's 31)"),
+    # S127 (ROADMAP P3.14e2): breeding — lowered by breeders.py once the rooms
+    # resolve (the scripts need the NPC's slot; the room gets a return script)
+    'grandpa': dict(name='Grandpa (breeding)', screen=6, greet=0, bye=2, breeding=True,
+                    what='breeds two of your monsters (the night ceremony), hatches eggs '
+                         'from the farm, names the newborn'),
+    'breeder': dict(name='Breeder (my monster)', screen=5, greet=None, bye=0, breeding=True,
+                    what="offers ONE of their own monsters as the mate — a fixed one, or one "
+                         "rolled from a breeding pool each time the room appears"),
 }
-LINE_KINDS = ('shop', 'vault', 'farm', 'library', 'namer', 'medals', 'eggs')
+LINE_KINDS = ('shop', 'vault', 'farm', 'library', 'namer', 'medals', 'eggs', 'grandpa',
+              'breeder')
+# S127: lines of a block no line set can change — the breeding ceremony (map $08
+# script 0, a vanilla script) speaks them by their ids, not through SayText
+FIXED_LINES = {'grandpa': {0x0D: 'the ceremony says it ("… & … disappeared.")',
+                           0x16: 'the ceremony says it ("… was born. Give it a name.")'}}
 GATES_ASK, GATES_BYE = 0x0066, 0x047E     # the Gate Hub guide's question / farewell
 TOKENS = {'{hero}': [0xF6], '{ins0}': [0xF9, 0x00], '{ins1}': [0xF9, 0x10],
           '{ins2}': [0xF9, 0x20], '{ins3}': [0xF9, 0x30]}
@@ -259,6 +272,9 @@ def _sets(prj):
             except (TypeError, ValueError):
                 raise ServiceError(f"{ctx} {sid!r}: line key {k!r} is not an offset")
             vl = vline(kind, off, getattr(prj, 'repo_root', None))
+            if off in FIXED_LINES.get(kind, {}):
+                raise ServiceError(f"{ctx} {sid!r} +{off}: {FIXED_LINES[kind][off]} — "
+                                   "the game's words stay")
             if not isinstance(t, str):
                 raise ServiceError(f"{ctx} {sid!r} +{off}: the text must be a string")
             encode_line(vl, t, s.get('speaker'), s.get('voice'))   # raises on bad glyphs
@@ -337,6 +353,8 @@ def set_lines(prj, s):
     out = {}
     for vl in b['lines']:
         off = vl['off']
+        if off in FIXED_LINES.get(s['kind'], {}):
+            continue                     # S127: spoken by the ceremony script itself
         t = s['_lines'].get(off)
         relabel = (s.get('speaker') is not None and vl['speaker'] is not None
                    and s['speaker'] != vl['speaker']) or \
@@ -502,10 +520,12 @@ def lower(prj):
         if not isinstance(sv, dict) or sv.get('kind') not in KINDS:
             raise ServiceError(f"{ctx}: kind {sv.get('kind') if isinstance(sv, dict) else sv!r} "
                                f"(one of {', '.join(KINDS)})")
+        kind = sv['kind']
+        if KINDS[kind].get('breeding'):
+            continue                     # S127: breeders.lower_talk, after the rooms resolve
         unknown = set(sv) - {'kind', 'lines', 'first_time', 'comment', 'ask', 'bye'}
         if unknown:
             raise ServiceError(f"{ctx}: unknown keys {sorted(unknown)}")
-        kind = sv['kind']
         sid = sv.get('lines')
         if sid is not None:
             if kind == 'gates':

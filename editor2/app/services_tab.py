@@ -13,6 +13,12 @@ Three pages:
     the game draws it.
   * Medal Man — how many medals each reward needs and which egg it is (1-8
     rewards, any monster — a project enemy too), with its line.
+  * Breeding pools (S127, ROADMAP P3.14e2) — what a RANDOM breeder (Service… →
+    Breeder → "rolled from a breeding pool") offers: bands of mates, each band
+    placed on the scales you tick (the party's average level, arena classes won,
+    monsters seen, story milestones); the game picks the band NEAREST the player
+    each time the room appears, then a mate by weight. "Try it" shows the band
+    and the chances for any player.
 
 Every edit is one undo step (SnapshotCommand).
 """
@@ -24,7 +30,7 @@ from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (QAbstractItemView, QCheckBox, QComboBox, QFormLayout,
                                QGroupBox, QHBoxLayout, QHeaderView, QInputDialog, QLabel,
                                QLineEdit, QListWidget, QListWidgetItem, QMessageBox,
-                               QPlainTextEdit, QPushButton, QScrollArea, QSplitter,
+                               QPlainTextEdit, QPushButton, QScrollArea, QSpinBox, QSplitter,
                                QTableWidget, QTableWidgetItem, QTabWidget, QVBoxLayout,
                                QWidget)
 
@@ -32,10 +38,11 @@ from editor2.app.rooms import commands as C
 from editor2.core import services as SV
 
 HELP = ('The game\'s services work in any room: make an NPC the Vault keeper, a farm keeper, '
-        'the librarian, the Monster Namer, the Medal Man, the egg appraiser or the gate guide '
-        '(Rooms tab → select the NPC → Service…). There is one Vault, one farm and one medal '
-        'count for the whole game. Here: who they are, what their menus say, and the Medal '
-        'Man\'s rewards.')
+        'the librarian, the Monster Namer, the Medal Man, the egg appraiser, the gate guide, '
+        'Grandpa (breeding) or a Breeder offering their own monster (Rooms tab → select the '
+        'NPC → Service…). There is one Vault, one farm and one medal count for the whole game. '
+        'Here: who they are, what their menus say, the Medal Man\'s rewards and the breeding '
+        'pools random breeders roll from.')
 EDITED = QColor(255, 200, 80)
 KIND_NAMES = dict({k: v['name'] for k, v in SV.KINDS.items()}, shop='Shopkeeper')
 INS_PREVIEW = 'xxxx'               # {ins0}..{ins3}: what the menu fills in (a name, a count);
@@ -62,6 +69,7 @@ class ServicesTab(QWidget):
         self.pages.addTab(self._npcs_page(), 'Service NPCs')
         self.pages.addTab(self._lines_page(), 'Menu lines')
         self.pages.addTab(self._medals_page(), 'Medal Man')
+        self.pages.addTab(self._pools_page(), 'Breeding pools')            # S127
         self.s.undo.indexChanged.connect(self._undo_changed)    # bound: dies with the tab
         self.refresh()
 
@@ -211,7 +219,16 @@ class ServicesTab(QWidget):
         hh.setSectionResizeMode(2, QHeaderView.Stretch)
         self.medals.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.medals.itemChanged.connect(self._medal_cell)
+        self.medals.currentCellChanged.connect(lambda r, _c, _pr, _pc: self._medal_preview(r))
         v.addWidget(self.medals, 1)
+        # S127 r3 (user: game text box previews for every text): the selected reward's
+        # words as the game shows them
+        v.addWidget(QLabel('In the game (the selected reward):'))
+        self.medal_prev = QWidget()
+        self.medal_prev_h = QHBoxLayout(self.medal_prev)
+        self.medal_prev_h.setContentsMargins(0, 0, 0, 0)
+        self.medal_prev_h.addStretch(1)
+        v.addWidget(self.medal_prev)
         row = QHBoxLayout()
         for text, fn in (('Add reward', self._medal_add), ('Remove', self._medal_remove),
                          ("The game's rewards", self._medal_reset)):
@@ -236,11 +253,13 @@ class ServicesTab(QWidget):
             self._fill_npcs()
             self._fill_sets()
             self._fill_medals()
+            self._fill_pools()
         except Exception as ex:                                   # noqa: BLE001
             self.npcs_note.setText(f'⚠ {ex}')
         finally:
             self._building = False
         self._show_set(self.sets.currentRow())
+        self._show_pool(self.pools.currentRow())
 
     def _fill_npcs(self):
         doc = self.s.doc
@@ -522,6 +541,33 @@ class ServicesTab(QWidget):
                 self.medals.item(i, 2).setForeground(QColor(255, 120, 120))
         self.medal_probs.setText(('⚠ ' + ' · '.join(probs) + ' — the build stops until it fits')
                                  if probs else '')
+        self._medal_preview(max(0, self.medals.currentRow()))
+
+    def _medal_preview(self, r):
+        while self.medal_prev_h.count() > 1:
+            w = self.medal_prev_h.takeAt(0).widget()
+            if w is not None:
+                w.deleteLater()
+        rows = getattr(self, '_medal_rows', None) or []
+        if not 0 <= r < len(rows):
+            return
+        from editor2.app.rooms.talk_editor import render_box
+        row = rows[r]
+        text = row['line'] or row['default_line']
+        try:
+            vl = SV.vline('medals', min(3 + r, 10), self._repo())    # reward n = +2+n
+            sp = '' if vl['voice'] is None or vl['speaker'] is None else vl['speaker']
+        except Exception:                                         # noqa: BLE001
+            sp = '*'
+        rom = getattr(self.s.renderer, 'rom', None)
+        for bi, bx in enumerate(SV.text_boxes(text)):
+            lab = QLabel()
+            try:
+                lab.setPixmap(render_box(rom, bi, [re.sub(r'\{ins[0-3]\}', INS_PREVIEW, ln)
+                                                   for ln in bx], speaker=sp if bi == 0 else ''))
+            except Exception as ex:                               # noqa: BLE001
+                lab.setText(f'(preview: {ex})')
+            self.medal_prev_h.insertWidget(self.medal_prev_h.count() - 1, lab)
 
     def _rewards(self):
         return [{'medals': r['medals'], 'enemy': r['enemy'],
@@ -580,3 +626,309 @@ class ServicesTab(QWidget):
 
     def _medal_reset(self):
         self._set_rewards(None, "The game's medal rewards")
+
+    # ============================================================ S127 pools
+    POOL_SCALES = (('level', "the party's average level", 99),
+                   ('arena', 'arena classes won', 8),
+                   ('seen', 'monsters seen (Library)', 240),
+                   ('story', 'story milestones reached', 16))
+
+    def _pools_page(self):
+        w = QWidget()
+        h = QHBoxLayout(w)
+        left = QVBoxLayout()
+        note = QLabel('A random breeder rolls its mate here each time its room appears.')
+        note.setWordWrap(True)
+        left.addWidget(note)
+        self.pools = QListWidget()
+        self.pools.currentRowChanged.connect(self._show_pool)
+        left.addWidget(self.pools, 1)
+        row = QHBoxLayout()
+        for text, fn in (('New…', self._new_pool), ('Delete', self._delete_pool)):
+            b = QPushButton(text)
+            b.clicked.connect(fn)
+            row.addWidget(b)
+        left.addLayout(row)
+        lw = QWidget()
+        lw.setLayout(left)
+        lw.setMaximumWidth(280)
+        h.addWidget(lw)
+        right = QVBoxLayout()
+        f = QFormLayout()
+        self.pool_name = QLineEdit()
+        self.pool_name.editingFinished.connect(self._pool_name_changed)
+        f.addRow('name', self.pool_name)
+        sc = QHBoxLayout()
+        self.pool_scales = {}
+        for key, label, _hi in self.POOL_SCALES:
+            cb = QCheckBox(label)
+            cb.toggled.connect(self._pool_scales_changed)
+            self.pool_scales[key] = cb
+            sc.addWidget(cb)
+        sc.addStretch(1)
+        f.addRow('bands by', sc)
+        self.pool_miles = QLineEdit()
+        self.pool_miles.setPlaceholderText('story milestones: flag names in story order, comma '
+                                           'separated (beat_boss1, beat_boss2, …)')
+        self.pool_miles.editingFinished.connect(self._pool_miles_changed)
+        f.addRow('milestones', self.pool_miles)
+        self.pool_users = QLabel('')
+        self.pool_users.setWordWrap(True)
+        f.addRow('used by', self.pool_users)
+        right.addLayout(f)
+        right.addWidget(QLabel('Bands — the game takes the band NEAREST the player on the '
+                               'ticked scales (a tie: the upper row). Mates: rows, e.g. '
+                               '"306×3, 305" (row 306 three times as likely as 305).'))
+        self.bands = QTableWidget(0, 6)
+        self.bands.setHorizontalHeaderLabels(['name', 'level', 'arena', 'seen', 'story',
+                                              'mates (enemy row × weight)'])
+        hh = self.bands.horizontalHeader()
+        for c in range(5):
+            hh.setSectionResizeMode(c, QHeaderView.ResizeToContents)
+        hh.setSectionResizeMode(5, QHeaderView.Stretch)
+        self.bands.verticalHeader().setVisible(False)
+        self.bands.currentCellChanged.connect(lambda r, _c, _pr, _pc: self._band_mates_note(r))
+        right.addWidget(self.bands, 1)
+        brow = QHBoxLayout()
+        for text, fn in (('+ band', self._band_add), ('− band', self._band_remove),
+                         ('Apply bands', self._bands_apply)):
+            b = QPushButton(text)
+            b.clicked.connect(fn)
+            brow.addWidget(b)
+        self.mate_pick = QComboBox()
+        for eid, label in self.s.doc.mate_rows():
+            self.mate_pick.addItem(label, eid)
+        brow.addWidget(QLabel('  add mate:'))
+        brow.addWidget(self.mate_pick, 1)
+        b = QPushButton('to the band')
+        b.setToolTip('Adds the monster to the selected band (weight 1); Apply bands keeps it')
+        b.clicked.connect(self._band_add_mate)
+        brow.addWidget(b)
+        right.addLayout(brow)
+        self.band_note = QLabel('')
+        self.band_note.setWordWrap(True)
+        right.addWidget(self.band_note)
+        tg = QGroupBox('Try it — a player with:')
+        tl = QHBoxLayout(tg)
+        self.try_spins = {}
+        for key, label, hi in self.POOL_SCALES:
+            sb = QSpinBox()
+            sb.setRange(0, hi)
+            sb.valueChanged.connect(self._pool_try)
+            self.try_spins[key] = sb
+            tl.addWidget(QLabel({'level': 'avg level', 'arena': 'classes', 'seen': 'seen',
+                                 'story': 'milestones'}[key]))
+            tl.addWidget(sb)
+        self.try_out = QLabel('')
+        self.try_out.setWordWrap(True)
+        tl.addWidget(self.try_out, 1)
+        right.addWidget(tg)
+        self.pool_probs = QLabel('')
+        self.pool_probs.setWordWrap(True)
+        self.pool_probs.setStyleSheet('color: #f88;')
+        right.addWidget(self.pool_probs)
+        rw = QWidget()
+        rw.setLayout(right)
+        h.addWidget(rw, 1)
+        return w
+
+    def _fill_pools(self):
+        keep = self.current_pool_id()
+        self._pools = self.s.doc.breeding_pools_doc()
+        self.pools.clear()
+        for p in self._pools:
+            it = QListWidgetItem(p['name'])
+            if not p['users']:
+                it.setForeground(QColor(150, 150, 150))
+                it.setToolTip('No breeder uses this pool yet')
+            self.pools.addItem(it)
+        idx = next((i for i, p in enumerate(self._pools) if p['id'] == keep),
+                   0 if self._pools else -1)
+        self.pools.setCurrentRow(idx)
+
+    def current_pool_id(self):
+        i = self.pools.currentRow() if hasattr(self, 'pools') else -1
+        lst = getattr(self, '_pools', [])
+        return lst[i]['id'] if 0 <= i < len(lst) else None
+
+    def current_pool(self):
+        i = self.pools.currentRow()
+        return self._pools[i] if 0 <= i < len(getattr(self, '_pools', [])) else None
+
+    def _show_pool(self, _i):
+        if self._building:
+            return
+        p = self.current_pool()
+        on = p is not None
+        for wdg in [self.pool_name, self.pool_miles, self.bands] + list(self.pool_scales.values()):
+            wdg.setEnabled(on)
+        self._building = True
+        try:
+            if not on:
+                self.pool_name.setText('')
+                self.pool_users.setText('— New… makes a pool —')
+                self.bands.setRowCount(0)
+                self.try_out.setText('')
+                return
+            self.pool_name.setText(p['name'])
+            for key, cb in self.pool_scales.items():
+                cb.setChecked(key in p['measures'])
+            self.pool_miles.setText(', '.join(str(x) for x in p['milestones']))
+            self.pool_users.setText(', '.join(p['users']) if p['users'] else
+                                    'nobody yet — Rooms tab → an NPC → Service… → Breeder → '
+                                    '"rolled from a breeding pool"')
+            self.bands.setRowCount(len(p['bands']))
+            for r, b in enumerate(p['bands']):
+                vals = [b.get('name') or f'band {r + 1}'] + [str(b.get(k, 0)) for k in
+                                                             ('level', 'arena', 'seen', 'story')]
+                vals.append(', '.join(f"{m.get('enemy')}" + (f"×{m.get('weight')}"
+                                                              if int(m.get('weight', 1)) != 1 else '')
+                                      for m in b.get('mates') or []))
+                for c, val in enumerate(vals):
+                    it = QTableWidgetItem(val)
+                    if c in (1, 2, 3, 4):
+                        key = ('level', 'arena', 'seen', 'story')[c - 1]
+                        if key not in p['measures']:
+                            it.setForeground(QColor(130, 130, 130))
+                            it.setToolTip('not a scale of this pool (tick it above)')
+                    self.bands.setItem(r, c, it)
+            self.pool_probs.setText('')
+        finally:
+            self._building = False
+        self._pool_try()
+
+    def _band_mates_note(self, r):
+        p = self.current_pool()
+        if p is None or not 0 <= r < len(p['bands']):
+            self.band_note.setText('')
+            return
+        b = p['bands'][r]
+        tot = sum(int(m.get('weight', 1)) for m in b.get('mates') or []) or 1
+        self.band_note.setText(f"{b.get('name') or f'band {r + 1}'}: " + '; '.join(
+            f"{self.s.doc.mate_label(m.get('enemy'))} {100 * int(m.get('weight', 1)) / tot:.0f} %"
+            for m in b.get('mates') or []))
+
+    def _pool_try(self, *_a):
+        p = self.current_pool()
+        if p is None or self._building:
+            return
+        v = {k: sb.value() for k, sb in self.try_spins.items()}
+        try:
+            bi, name, rows = self.s.doc.pool_preview(p['id'], v['level'], v['arena'], v['seen'],
+                                                     v['story'])
+            self.try_out.setText(f'→ band {bi + 1} "{name}": ' + '; '.join(
+                f'{lab} {pct:.0f} %' for _e, lab, pct in rows))
+        except Exception as ex:                                   # noqa: BLE001
+            self.try_out.setText(f'⚠ {ex}')
+
+    def _pool_name_changed(self):
+        p = self.current_pool()
+        if p is None or self._building or self.pool_name.text().strip() == p['name']:
+            return
+        name, pid = self.pool_name.text(), p['id']
+        self._push(f'Pool {name}', lambda doc: doc.set_breeding_pool(pid, name=name))
+
+    def _pool_scales_changed(self, _on):
+        p = self.current_pool()
+        if p is None or self._building:
+            return
+        ms = [k for k, cb in self.pool_scales.items() if cb.isChecked()]
+        if ms == p['measures']:
+            return
+        pid = p['id']
+        self._push(f"Pool {p['name']}: scales", lambda doc: doc.set_breeding_pool(pid, measures=ms))
+
+    def _pool_miles_changed(self):
+        p = self.current_pool()
+        if p is None or self._building:
+            return
+        ms = [x.strip() for x in self.pool_miles.text().split(',') if x.strip()]
+        if ms == [str(x) for x in p['milestones']]:
+            return
+        pid = p['id']
+        self._push(f"Pool {p['name']}: milestones",
+                   lambda doc: doc.set_breeding_pool(pid, milestones=ms))
+
+    @staticmethod
+    def _parse_mates(txt):
+        """"306×3, 305, my_enemy*2" -> [{enemy, weight}] (× or * then a number =
+        the weight; a project enemy id may contain any letter)."""
+        out = []
+        for part in txt.split(','):
+            part = part.strip()
+            if not part:
+                continue
+            mt = re.match(r'^(.*?)\s*[×*]\s*(\d+)$', part)
+            ref, w = (mt.group(1).strip(), mt.group(2)) if mt else (part, None)
+            ref = int(ref, 0) if ref[:1].isdigit() else ref
+            m = {'enemy': ref}
+            if w:
+                m['weight'] = int(w)
+            out.append(m)
+        return out
+
+    def _bands_from_table(self):
+        bands = []
+        for r in range(self.bands.rowCount()):
+            cell = lambda c: (self.bands.item(r, c).text() if self.bands.item(r, c) else '').strip()
+            b = {'name': cell(0) or f'band {r + 1}'}
+            for c, key in enumerate(('level', 'arena', 'seen', 'story'), 1):
+                b[key] = int(cell(c) or 0)
+            b['mates'] = self._parse_mates(cell(5))
+            bands.append(b)
+        return bands
+
+    def _bands_apply(self):
+        p = self.current_pool()
+        if p is None:
+            return
+        try:
+            bands = self._bands_from_table()
+        except ValueError as ex:
+            self.pool_probs.setText(f'⚠ {ex} — numbers in level / arena / seen / story, '
+                                    'mates like "306×3, 305"')
+            return
+        pid = p['id']
+        cmd = self._push(f"Pool {p['name']}: bands", lambda doc: doc.set_breeding_pool(pid, bands=bands))
+        if getattr(cmd, 'error', None) is not None:
+            self.pool_probs.setText(f'⚠ {cmd.error}')
+
+    def _band_add(self):
+        r = self.bands.rowCount()
+        self.bands.insertRow(r)
+        for c, val in enumerate([f'band {r + 1}', '10', '0', '0', '0', '306']):
+            self.bands.setItem(r, c, QTableWidgetItem(val))
+
+    def _band_remove(self):
+        r = self.bands.currentRow()
+        if r >= 0:
+            self.bands.removeRow(r)
+
+    def _band_add_mate(self):
+        r = self.bands.currentRow()
+        if r < 0:
+            self.band_note.setText('Select a band first.')
+            return
+        it = self.bands.item(r, 5) or QTableWidgetItem('')
+        cur = it.text().strip()
+        it.setText((cur + ', ' if cur else '') + str(self.mate_pick.currentData()))
+        self.bands.setItem(r, 5, it)
+        self.band_note.setText('Added — press Apply bands to keep it.')
+
+    def _new_pool(self):
+        name, ok = QInputDialog.getText(self, 'New breeding pool', 'Name of the pool:',
+                                        text='Wild mates')
+        if not ok or not name.strip():
+            return
+        self._push(f'New pool {name.strip()}', lambda doc: doc.add_breeding_pool(name.strip()))
+
+    def _delete_pool(self):
+        p = self.current_pool()
+        if p is None:
+            return
+        if p['users']:
+            QMessageBox.information(self, 'Breeding pools', 'This pool is in use by '
+                                    + ', '.join(p['users']) + ' — give them another pool first.')
+            return
+        pid = p['id']
+        self._push(f"Delete pool {p['name']}", lambda doc: doc.delete_breeding_pool(pid))

@@ -351,7 +351,7 @@ disagrees, this one is the measured / handler-read truth (DOC_AUDIT S118).
 | $3F | `load_lead_name`() | text | Put the first party monster's name in $C180 for the next text. |
 | $40 | `if_party_has_species`(species, target) | flow | Go to target when a monster of that species is in the party. |
 | $41 | `set_bgm`(song) | sound | Play a song (the current one is kept for restore_bgm). |
-| $42 | `save_return_point`(text, actor) | world | Remember this room and the player's spot / facing for a return (the text and actor are used by $44 on the way back). |
+| $42 | `save_return_point`(enemy, actor) | world | A master offers their monster for breeding: param 1 = the MATE's enemy row → `$C8F7/8` (S127: was documented "text"), then this room + the player's spot / facing for the ceremony's return; the actor → `$C902` (turned by $44). See "Breeding" below. |
 | $43 | `return_to_saved_point`() | world | Go back to the room / spot saved by save_return_point. |
 | $44 | `back_from_return`() | text | After the return: face as saved, turn the saved actor to the player and say the saved text + 9. |
 | $45 | `restore_party_snapshot`() | party | Restore the party list from the $CAB9 snapshot. |
@@ -365,7 +365,7 @@ disagrees, this one is the measured / handler-read truth (DOC_AUDIT S118).
 | $4D | `long_delay`(frames) | wait | Wait, counting every script tick ($D8D8 bit 2). |
 | $4E | `save_position`() | world | Remember this room and the player's spot / facing. |
 | $4F | `return_to_saved_position`() | world | Go back to the room / spot saved by save_position. |
-| $50 | `face_saved`() | actor | The player faces as saved; NPC 2 faces the player. |
+| $50 | `face_saved`() | actor | The player faces as saved; NPC slot 1 (`$D7F8` — Grandpa in the shrine) faces the player (S127). |
 | $51 | `library_tier`() | state | Count the library entries -> tier 0-11 in $D8E1 (number to $C180). |
 | $52 | `random_battle`() | battle | Fight 3 random monsters scaled to the party's levels. |
 | $53 | `npc1_face_player`() | actor | NPC 1 turns toward the player. |
@@ -492,7 +492,7 @@ intro bedroom's tile swap, `$18` = a monster JOINS (party if < 3, S56), `$20` = 
 preset battle, `$26` = reload the room, `$2F` = increment a RAM byte, `$3A` = go to the
 breeding ceremony (map $08), `$3E` = switch game mode (`$C88B` → `$C88E`, e.g. the
 ending), `$04 15` = the naming screen, `$42/$43/$44` and `$4E/$4F/$50` = save / return to
-a room position, `$53` = NPC 1 faces the player, `$5E` = `$D951 := 7` (the breeding
+a room position (S127: `$42` = a master's mate + the return, see "Breeding"), `$53` = NPC 1 faces the player, `$5E` = `$D951 := 7` (the breeding
 ceremony state). Every row is in the table above.
 
 **Playing a scene (the editor's Playback, `editor2/core/playback.py`).** From a cached
@@ -571,6 +571,42 @@ game; the census did not see resets then); off, not yet explained: `$01` script 
 script 5 @-125 (a branch target before the script start), `$09` @81, `$5D` @1064 (behind
 the final battle). (S118: 514 reached, 22 off — the Castle King's prize scenes now play
 in Castle state 4, the fly programs follow `$D8E3`/`$D8E4`.)
+
+## Breeding (S127, code-read + PyBoy; PROJECT_COMPILER §2.40)
+
+Three parts, so breeding can be put in any room:
+- **The menus** — bank $0A screen effects of op `$04 <type> <base>`, room-independent:
+  type **6** Grandpa's BREED / HATCH / EXIT (`label4bc3`, base `$06F0`), type **5** a
+  master's own monster (`label442d`, base `$0600`; +1 "Why not breed with my [INS 00]?"
+  only on B-back — the masters' scripts say it first), type **11** "Take … with you
+  now?" (`label6966`), type **15** naming. Close tails `label4516` / `label4ce2` /
+  `label6a5a` (S127: bank $77 `BreedClose`). Types 5 / 6 set `$FFD4` (`$78` / `$40`) and
+  draw into BG tile slots `$40-$7F`.
+- **The ceremony** — map $08 script 0, a stage machine on `$D951`. Grandpa's BREED
+  confirm (`label573e`) warps there with `$D951` := 0; it runs 0 → 1 and comes back through
+  op `$4F` with `$F0`; op `$3A` (the HATCH night) → stage 2 → op `$4F` with `$F1`; a
+  master's confirm (`label4ad3`) := 4 → 5 → op `$43` with `$F2`. Op `$5E` := 7.
+- **The follow-up** — the ROOM's entry script tests `$D951`: `$F0` = "Inside it is a baby
+  …! Costs …G to hatch it." (op `$60` if_gold_short, fee (plus + 1) × 10), `$F1` = the
+  naming screen and type 11, `$F2` = op `$44` (the player faces `$C901`, actor `[$C902]`
+  the opposite way, line `[$C8F0]` + 9 "I hope a strong monster will be born!").
+- **Ops:** `$4E` saves map `$C8FB`, gate flag `$C8FC`, pixel X/Y `$C8FD-$C900`, facing
+  `$C901`; `$42 <EID> <actor>` = the mate's enemy row → `$C8F7/8` (`LoadFldA_4ba2`
+  builds it through bank $14 entry 0 and names the species into `$C180`) + the same save +
+  `$C902` = actor; `$50` turns the FIXED slot 1 (`$D7F8`), `$44` actor `[$C902]` (NPC n's
+  facing byte `$D7D8 + 32(n−1)`); face ops `$47` up 2 / `$48` down 0 / `$49` left 1 / `$4A`
+  right 3 (the opposite = +2).
+- **Where the box opens (S127 r3, PyBoy):** `$3C` (bottom) / `$3D` (top) set a bit that the
+  NEXT box opening reads and clears. `init_dialog` opens the box itself, so `init_dialog, $3C,
+  text` puts that text where the default rule says (the top when the player stands in the
+  lower half) — write `$3C, init_dialog`. A box re-opened after a screen effect (the farewell
+  after a breeding menu) scrolls in the box base `[$C919]`: re-seat it (bank $77
+  `ShopBoxBottom`) or the continuation is drawn at the top while the first lines stay at the
+  bottom.
+- **Op `$24` and yields (S127):** op `$24` yields; a yield ENDS the talk's dialog, so a
+  later text needs `init_dialog` first (the text was otherwise never shown). The project
+  engine reads op `$24` params `$FFxx` as commands (bank $60 → bank $77 entry 10;
+  `$FF00` = the mate's name into insert slot 0).
 
 ## The bedroom's dresser and `$3B` (S121, the Milly hook)
 

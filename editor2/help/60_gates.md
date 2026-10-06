@@ -20,6 +20,17 @@ your own, WORLD = one of your worlds — edited on the World tab, see *Worlds*).
 chance p % [once per dive] [when flags …]", tried top-down. **Floor plan**
 shows, floor by floor, what the game serves.
 
+- **every gate** (S127) — the rule serves its room in **every** gate (the
+  game's and your new ones; floors from 2 on, never the boss floor). Ticked
+  with *once per dive*, the room appears at most once in each dive. Such a
+  rule is listed under each gate as "every gate".
+- **the chance follows the party's average level** (S127) — two points, e.g.
+  10 % at level 5 and 60 % at level 40; between them the chance grows
+  in a straight line, below / above it stays at the end values (the average
+  of the 1-3 monsters with you, when the floor is made). Good for a room
+  that appears more often as the player grows — a wandering breeder (see
+  *Breeding NPCs*).
+
 A room served on a gate floor needs (Rooms tab → *Inside gates and worlds*): an
 **arrival** cell, a **Stairs down** (More ▾ → Stairs down here), battles off
 or "follow the gate", and optionally its own song (without one it plays the

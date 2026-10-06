@@ -89,6 +89,12 @@
   medals. A line set's speaker is at most 9 letters; a line too long for its
   box stops the build. The menus' words are per line set; the menus
   themselves (their choices, the naming screen) are the game's.
+- Breeding (S127): the ceremony and Grandpa's fee are the game's. At most 4
+  random breeders in one room; a breeding pool has 1-16 bands, 1-16 mates a
+  band (weights adding up to at most 255), up to 16 story milestones; at most
+  100 pools. A random breeder's roll and "done for this visit" are not saved
+  (Continue in that room rolls again). While a breeding menu is open, sprites
+  over some room tiles are hidden (the game's own rule). See *Breeding NPCs*.
 - Cutscenes (S118, S119): Playback needs `pip install pyboy`. A game scene
   that needs a party monster of a given species, a full bag or a won battle
   state is started at its own first step (the window says so). **Your own
