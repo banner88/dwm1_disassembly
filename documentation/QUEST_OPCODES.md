@@ -52,7 +52,7 @@ It takes 0 params (reads wArenaGroup/wColiseumBattle from WRAM).
 
 ### What it does
 1. Reads 1 param (branch target address) and advances script counter
-2. Iterates `wInventory` (20 slots at $D980), counting non-zero/non-$FF entries
+2. Iterates `wInventory` (20 slots at **$CA51** — wram.asm; "$D980" here until S124 was wrong, DOC_AUDIT S124), counting non-zero/non-$FF entries
 3. If count < 20 (NOT full): continues to next script command (skips branch)
 4. If count == 20 (inventory full): branches to the param address via ScriptBranch
 

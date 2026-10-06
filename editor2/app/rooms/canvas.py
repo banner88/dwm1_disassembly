@@ -559,11 +559,43 @@ class RoomCanvas(QGraphicsView):
                                  f"door ({rd['x']},{rd['y']})",
                                  ('redirect', i, rd)))
 
+    def _npc_names(self, st):
+        """S124 r3: {entry index: YOUR name} — a project NPC's actor name, a game
+        room's custom._editor.npc_names (npc_names.py); NPC n = 1-based, spots
+        not counted."""
+        from editor2.core import npc_names as NN
+        from editor2.core.cutscene_build import is_npc_entry
+        vn = {}
+        if self.is_vanilla():
+            custom = (self.s.doc.data.get('custom') or {}) if self.s.doc else {}
+            vn = NN.names_in(custom, self.source[1], self.key, self.state_idx)
+        out, n = {}, 0
+        for i, e in enumerate(st.get('npcs', [])):
+            try:
+                if not (isinstance(e, dict) and is_npc_entry(e)):
+                    continue
+            except Exception:                                    # noqa: BLE001
+                continue
+            n += 1
+            nm = e.get('actor') or vn.get(n)
+            if nm:
+                out[i] = str(nm)
+        return out
+
     def _build_markers(self, st):
         self.markers = []
+        self.npc_tags = {}
+        try:
+            names = self._npc_names(st)
+        except Exception:                                        # noqa: BLE001
+            names = {}
         for i, e in enumerate(st.get('npcs', [])):
             kind, x, y, spr, label = classify_npc(e)
-            self.markers.append((kind, x, y, spr, label, ('npc', i, e)))
+            ref = ('npc', i, e)
+            if i in names:
+                label = f'“{names[i]}” — {label}'
+                self.npc_tags[id(ref)] = names[i]
+            self.markers.append((kind, x, y, spr, label, ref))
         for i, e in enumerate(st.get('exits', [])):
             if e.get('door'):
                 # S98 r2: a named door OBJECT; orange 'D?' until connected
@@ -875,6 +907,15 @@ class RoomCanvas(QGraphicsView):
                                      QColor(0, 0, 0, 170))
                     painter.setPen(col)
                     painter.drawText(rc, Qt.AlignCenter, tag)
+                tag = getattr(self, 'npc_tags', {}).get(id(ref)) if kind == 'npc' else None
+                if tag:                              # S124 r3: your NPC names
+                    nm = tag[:16]
+                    painter.setFont(QFont('Helvetica', 4))
+                    tw = 3 + 2.6 * len(nm)
+                    tr = QRectF(rc.center().x() - tw / 2, rc.top() - 6, tw, 6)
+                    painter.fillRect(tr, QColor(0, 0, 0, 190))
+                    painter.setPen(QColor(255, 255, 255))
+                    painter.drawText(tr, Qt.AlignCenter, nm)
                 if kind in ('door', 'door_open', 'door_dead') and ref and isinstance(ref[2], dict) \
                         and ref[2].get('name'):
                     nm = str(ref[2]['name'])[:14]

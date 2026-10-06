@@ -15,6 +15,12 @@ Select an NPC to edit it in the *Object* section: sprite, facing, behaviour
 (stand / walk / spin …), hidden, which script it runs, and which states it
 is present in. Drag it on the canvas to move it.
 
+**name** (S124 r3): **Name…** gives the NPC your own name ("King — after class
+B"), shown as a tag over it on the canvas, in the Progression & Flags tab and in
+the cutscene storyboards. It works on the original game's rooms too (they are
+otherwise read-only — the name is only for you, never in the ROM). The same NPC
+in the screen's other states gets the name too. See *Flags* → *Naming NPCs*.
+
 **colour** (S123): draw a person or an object in one of the game's 8 sprite
 palettes instead of its own — grey / red, green, blue, yellow, purple, grey,
 orange, brown (the swatch shows each one's main colour; the canvas previews

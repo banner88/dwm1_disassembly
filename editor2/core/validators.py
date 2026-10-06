@@ -284,6 +284,13 @@ def validate(prj, generated=None):
     # ------------------------------------------ gate insertion (S100, P3.7b)
     _validate_gates(prj, rooms, errors, warnings)
     _validate_worlds(prj, rooms, errors, warnings)      # S123 (ROADMAP NG3)
+    # S124 (ROADMAP P3.14a): a named flag on a number the original game uses
+    from .project import GAME_SHARED_FLAGS
+    for nm, idx in sorted(prj.flag_map().items()):
+        if idx in GAME_SHARED_FLAGS:
+            warnings.append(
+                f"flag {nm!r} is ${idx:04X}, which {GAME_SHARED_FLAGS[idx]} also uses — "
+                "Progression & Flags → Renumber gives it a free number (S124)")
 
     # ------------------------------------------------- per-room structure
     for r in rooms:
@@ -1337,7 +1344,7 @@ def _validate_worlds(prj, rooms, errors, warnings):
             warnings.append(
                 f"world {name}: nothing turns its cleared flag (gate:{gid}) ON — its "
                 "portal swirl never stops / changes colour. Give the end boss's "
-                "conversation a \"Turn flags ON\" with \"gate:{gid} cleared\" (Make "
+                f"conversation a \"Turn flags ON\" with \"gate:{gid} cleared\" (Make "
                 "boss… → end boss does it)")
         # reachability inside the world from the start room
         edges, leaves = {}, False

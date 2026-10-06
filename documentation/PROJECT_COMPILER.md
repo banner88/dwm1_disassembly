@@ -342,16 +342,25 @@ hole `0xCD84`, was `0xDE78`/`0xD47C`).
 
 ### 2.7 `custom.flags[]`
 
-`{name, index: "auto"|"0x0158"}` → allocated from the EVENT_FLAGS.md
-safe+persistent pool (**`$0158–$0167` = 16 flags** — the S57 per-byte
-audit; `$01E0–$01EF` was retired S73 to `wAnchorGate`/`wAnchorFloor`, so the
-"32 flags" this line said until S100 was stale — DOC_AUDIT S100; the
-previously listed "broader" ranges were refuted, see EVENT_FLAGS "Free Flag
-Slots"), never the collision zones or the
-non-SRAM `$0278+` range. Resolved indices appear in the manifest; scripts
-reference flags by the resolved value (a name→`set_flag` sugar is a v1.1
-nicety). The example project uses none (the proven content predates named
-flags).
+`{name, index: "auto"|"0x1003", comment?}`. **Numbering** = `project.number_flags`
+(one function for the compiler and the editor, S124): an explicit `index` keeps its
+number (it must lie in `FLAG_SAFE_RANGES` = `$0158-$0167` + `$1000-$179D`, else a
+hard error); each `"auto"` entry takes the lowest free number of `FLAG_SAFE_RANGES`
+**in list order** — positional, so deleting or moving an auto entry renumbers every
+later one (old saves then mean something else). Legacy quest flag names not declared
+are appended after the list (`quest_flag_entries`). `$179E`/`$179F` = the Milly hook
+(§2.34), `$17A0-$17FF` = the gates (§2.32).
+**S124 (ROADMAP P3.14a): the editor writes numbers in.** `Document._migrate_pin_flags`
+writes the compiler's own numbers of every declared `"auto"` flag into the project on
+open (same numbers → same ROM, old saves keep their meaning); `Document.add_flag`
+gives a new flag the lowest free number of **`FLAG_AUTO_RANGES`** = `$0159-$0167` +
+`$1000-$179D` (1,965) — **`$0158` is the original game's** (Arena Battle `$5D`
+script 0, Milayou's rematch, measured S124: EVENT_FLAGS "Safe pool"), listed in
+`GAME_SHARED_FLAGS`; a named flag on it warns at build (`validators`) and on the
+Problems page, and Renumber moves it. The compiler's `"auto"` numbering is unchanged
+(hand-written JSON builds the same bytes as before). Rename (`Document.rename_flag`)
+rewrites every authored use through `flag_index` JSON paths; Delete is refused while
+used; the note = `comment`. The resolved indices appear in the manifest.
 
 ### 2.8 `build`
 
@@ -867,7 +876,9 @@ template `editor2/templates/blank-project/project.json` builds as-is.
 
 **`custom._editor`** (underscore = ignored by the compiler): editor-only data —
 `metatiles: {<tileset key>: [{name, tiles:[tl,tr,bl,br], pal}]}` where the key
-is the custom tileset id or `"<bank>:<id>"` for a vanilla tileset.
+is the custom tileset id or `"<bank>:<id>"` for a vanilla tileset. S124 r3:
+`npc_names: {"MM:screen:state:n": name}` — your names for the original game's NPCs
+(§2.37).
 
 **`custom.rooms[].name`**: display name (free text); `id` stays the stable
 reference. **`custom.tilesets[]` `raw2bpp` sheets may be created by the
@@ -2459,7 +2470,7 @@ emitters), `shops_doc.py` (`ShopsMixin`).
 }
 ```
 
-* **Flags.** `FLAG_SAFE_RANGES` = `$0158-$0167` + **`$1000-$179F`** (1,968 named
+* **Flags.** `FLAG_SAFE_RANGES` = `$0158-$0167` + **`$1000-$179F`** (S124: `$179D` since S121, new flags from `FLAG_AUTO_RANGES` without `$0158` — 1,965 — §2.7; was 1,968 named
   flags); `$17A0-$17FF` = the gates' own cleared flags (`GATE_FLAG_BASE + gate`). Any
   flag reference may be **`gate:N`** = gate N's cleared flag (`resolve_flag_ref` →
   `gates.gate_cleared`): the vanilla flag of an unchanged vanilla gate
@@ -2811,6 +2822,60 @@ for a gate entrance (flag 1). GATE_GENERATION §7.5.1 / §7.11.
 **Regression pin `6b0738c1…` (patched)**; was `e93b23b5…` (patched, historical — S123 r1),
 `bd0652da…` (patched, historical).
 
+## §2.37 S124 — the flag index (ROADMAP P3.14a, the Progression & Flags tab)
+
+No schema change except fixed flag numbers (§2.7) and the `comment` (note) of a flag.
+`editor2/core/flag_index.py` (headless) reads the project's JSON — what the author
+wrote, so every use knows its place in words and its JSON path — and, given a
+`cutscenes.Catalogue`, the original game's scripts:
+
+* **Use** = one place that turns a flag ON / OFF or tests it: role, the wanted state
+  of a test, `kind` (`KINDS`: talk, conversation, raw script ops, script preludes,
+  cutscene start / steps, state rules, NPC shown / colour / swirl, room / gate battle
+  variants, gate-floor rooms, legacy quests, the engine's GateBossWin + a re-bossed
+  gate's win tails, the Milly hook, the game's scripts, the game's code), `where` /
+  `what` sentences, a navigation target, `source` project / engine / game, `runs`
+  (False = its script is bound to no NPC / spot / entry). A **Trigger** = one "When …
+  → …" (its flag terms are test uses).
+* The sites are the compiler's own (`Project.resolve_flag_ref` / `_flag_index` call
+  sites). `compiler_coverage(project)` compiles while logging every resolved flag and
+  every flag op of the lowered scripts and returns what the index does not know —
+  test_compiler `test_flag_index_s124` runs it on the example, the S117 / encounter /
+  Milly / world fixtures and `_flag_sites_fixture` (every site) and requires nothing
+  missed and every `KINDS` site exercised: a new flag site in the compiler fails the
+  suite until the index walks it.
+* **Problems**: `undefined` (a name that resolves to nothing — the build stops),
+  `never_on` (a check that wants ON, nothing in the project / engine turns it ON),
+  `game_only` (only the original game turns it ON — e.g. a copied game room's
+  people waiting for arena ranks), `game_shares` (a named flag on a number the game
+  uses: `$0158`), `not_saved`, `never_read`, `unused`.
+* The game's own code: bank $12 Pulio `$0007`, the medal man `$0050+[$D9E1]`, the
+  gate keeper's list tables `$09:$607E` / `$609E` (EVENT_FLAGS "Engine-side flag
+  setters and readers").
+* **S124 r2 — who / where / when:** `Use.who` / `Use.when` / `Use.group`. The game's uses:
+  who = `Rooms.triggers` of the script (the NPC / examine / step-on / entry, all its cells),
+  named by the script's own speaker when it has exactly one ("Santi"); when = the last rung
+  of the scene path (`_path_when`) for a set, the whole path to a check (`Script.path_to`,
+  `_reach_when`: "once … is ON, before …"). Project uses: from their sentences (the place's
+  event + the conversation context). `FlagIndex.groups(uses)` / `summary(flag)` /
+  game-flag labels "set by …".
+* **S124 r3 — places and your NPC names:** every use carries `Use.places` — every place its
+  script runs at as a navigation dict: the game's `{'tab': 'game', map, screen, STATE, x, y,
+  n, who}` (one per `Rooms.triggers` row: n = the NPC number, 1-based, spots not counted),
+  a project script's `Place.nav()` (+ `n`), a cutscene's `{room, scene, screen}`; `Use.nav` =
+  `places[0]`. (Before r3 a game use's nav was the map only and the Rooms tab opened its first
+  screen in state 0 — user: "That's NOT where Santi is": she stands on GreatTree screen 12 from
+  state 1.) Names: a project NPC = its `actor` (`Place.event`: "talking to Bard at (5, 6)"); a
+  game room's NPC = `custom._editor.npc_names` (`editor2/core/npc_names.py`), else the one
+  speaker of the script's own lines, else its sprite. **`custom._editor.npc_names`**
+  `{"MM:screen:state:n": name}` — editor data, never compiled (test: naming changes no
+  generated byte); `Document.name_npc(name, room= | mid=, screen, state, n)` names the same
+  NPC (sprite + cell) in the screen's other states too, '' removes.
+* CLI: `python3 -m editor2.core.flag_index <project> [--rom ROM]` prints every flag,
+  trigger and problem.
+
+Byte-neutral: the example project's build is unchanged (pin `6b0738c1…`, patched).
+
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 
 The user's "fastest way to test": hook a custom room onto a door the player
@@ -2868,17 +2933,20 @@ arrival cell.
 ## §progression (S70) — quests + quest enemies
 
 `progression.quests[]` / `progression.enemies[]` (unknown keys hard-error).
-Enemies: dense EIDs from **519** (`auto` allocates), ≤**12** rows (308-byte
-`@BUILD_PROJECT quest_enemy_stats` region in patches/bank_014.asm, 25 B/row,
-zero-padded — the no-quest build regenerates the vanilla `ds 308` tail
-byte-identically; suite-enforced). Fields = the 25-byte enemy-stats layout
+Enemies: dense EIDs from **519** (`auto` allocates); S70-S100 kept ≤ 12 rows in the
+bank $14 tail — **since S101 every EID ≥ 519 is a row of compiler bank $6B**
+(`enemies6b`, cap `PROJECT_EID_CAP` 640; §2.18; the "12 rows" here was stale until
+S124, DOC_AUDIT S124). Fields = the 25-byte enemy-stats layout
 (MONSTER_DATA); `join 0` = always joins; hp>1023 with join warns.
 Quests lower to two generated scripts referenced from `rooms[].scripts`:
 `quest:<id>` (done-check → requires check_ram ladder → offer choice text
 ($C83C: 1 = NO) → prebattle → trigger_battle3 EID → **init_dialog-prefixed**
 win tail: set done flag + on_win actions) and `entry:<id>` (done → entry_done
-ops; seen-flag-gated entry_cutscene; sets seen). `flags.done`/`flags.seen`
-auto-register from the safe pool ($0158+). **Every text action lowered into
+ops; seen-flag-gated entry_cutscene; sets seen). `flags.done`/`flags.cutscene_seen`
+(the code's key — this said `flags.seen` until S124) auto-register from the safe pool
+($0158+; `quest_flag_entries`). **Known defect (S124, code-read, not run):** the
+actions `npc_hide` / `npc_show` emit opcodes `$48` / `$49` = face_down / face_left
+(S101) — they only turn the NPC; the legacy quest form is replaced in ROADMAP P3.14c. **Every text action lowered into
 a non-interaction context gets its own preceding `init_dialog`**
 (`_lower_actions(dialog_prefix=True)`) — field mode never services the text
 queue (KEY_LESSONS S70). emit_script hard-errors unless the item stream ends

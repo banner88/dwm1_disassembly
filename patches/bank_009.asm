@@ -5403,7 +5403,7 @@ SaveFld9_6004:
 
     ld a, [de]
     push de
-    ld de, $607e
+    ld de, GateListClearedFlags         ; S124: [gate] -> its cleared flag
     add e
     ld e, a
     ld a, $00
@@ -5422,7 +5422,7 @@ SaveFld9_6004:
     jr z, jr_009_6033
 
     ld a, [de]
-    ld de, $608e
+    ld de, GateListClearedByte          ; S124: [gate] -> drawn for a cleared gate
     add e
     ld e, a
     ld a, $00
@@ -5449,12 +5449,14 @@ jr_009_6033:
 
 
 SetFld9_604d:
+    ; S124: the gate list = every gate 0-15 whose GateListUnlockFlags flag is SET
+    ; ([$C0D8..] = gate numbers, [$C8E9] = how many)
     ld hl, $c0d8
     ld bc, $0010
     ld a, $ff
     call FillNBytesWithRegA
     ld hl, $c0d8
-    ld de, $609e
+    ld de, GateListUnlockFlags          ; S124: [gate] -> the flag that lists it
     ld b, $00
 
 jr_009_6060:
@@ -5486,46 +5488,23 @@ jr_009_6072:
     ret
 
 
-    db $10
-    ld de, $1312
-    inc d
-    ld d, $17
-    add hl, de
-    dec e
-    inc e
-    ld a, [de]
-    rra
-    jr nz, jr_009_60ae
-
-    inc hl
-    dec h
-    add hl, bc
-    inc e
-    call nz, $6644
-    ld a, [bc]
-    ld b, l
-    push bc
-    ld a, [hl+]
-    ld e, b
-    dec hl
-    sbc c
-    xor l
-    ld b, e
-    sub h
-    sbc d
-    nop
-    jr nc, @+$32
-
-    ld sp, $3231
-    ld [hl-], a
-    inc sp
-    inc sp
-    inc [hl]
-    inc [hl]
-    dec [hl]
-    dec [hl]
-    ld [hl], $36
-    scf
+; =============================================================================
+; S124 (ROADMAP P3.14a): the gate keeper's gate list (screen 13, open_screen 13 —
+; the Gate Hub guide). Three 16-byte tables, one byte per gate 0-15 (the 16 main
+; gates in list order). Re-sectioned from mgbdis fake code (byte-perfect; ROM bytes
+; $09:$607E-$60AD); EVENT_FLAGS "Engine-side flag setters and readers".
+; =============================================================================
+GateListClearedFlags:   ; $607E — the gate's CLEARED flag (low byte, flags $00xx):
+                        ; SaveFld9_6004 tests it (TestEventFlag) for each listed gate
+    db $10, $11, $12, $13, $14, $16, $17, $19, $1D, $1C, $1A, $1F, $20, $22, $23, $25
+GateListClearedByte:    ; $608E — the byte SaveFld9_6004 draws ([$C823], $C822 = 5) for
+                        ; a CLEARED gate ($E0 otherwise); its meaning is not traced (S124)
+    db $09, $1C, $C4, $44, $66, $0A, $45, $C5, $2A, $58, $2B, $99, $AD, $43, $94, $9A
+GateListUnlockFlags:    ; $609E — the flag that puts gate n on the list (SetFld9_604d:
+                        ; TestEventFlag, set -> listed; $0000 = set by the bedroom intro):
+                        ; Beginning; then 2 gates per arena class won G..A ($0030-$0036),
+                        ; Reflection on class S ($0037) — the arena ranks open the gates
+    db $00, $30, $30, $31, $31, $32, $32, $33, $33, $34, $34, $35, $35, $36, $36, $37
 
 jr_009_60ae:
     ld de, $60f2

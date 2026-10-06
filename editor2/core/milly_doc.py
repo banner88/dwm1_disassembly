@@ -78,8 +78,7 @@ class MillyMixin:
                                   if s.get('id') in before]
         MH.make_roots_room(r)
         if not any(f.get('name') == 'milly_roots_seen' for f in self.flags()):
-            self.custom.setdefault('flags', []).append({'name': 'milly_roots_seen',
-                                                        'index': 'auto'})
+            self.add_flag('milly_roots_seen')      # S124: a fixed number at once
         h = self.custom.setdefault('milly_hook', {})
         if not h.get('arrive'):
             k, x, y, face = MH.ROOTS_ARRIVAL

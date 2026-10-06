@@ -89,8 +89,13 @@ gates are cleared.
 - **Script**: Library script 16 — `cond_branch [$D8E1]==0..11` (12 tiers of collection progress)
 - **Flags**: $0042 = library access granted (checked by scripts 14/15), $011F = quest milestone, $0092/$0093 = progression
 - **Step counter**: $D95C has 2 steps (gate visible/hidden)
-- **Engine variable**: $D8E1 = collection evaluation result (set by opcode $34, CheckMonsterSpecies3)
-- **Opcode $34** checks species data at $CAEA against specific values ($0F, $10, $45, $11, $5A) and writes result to $D8E1
+- **Engine variable**: $D8E1 = collection evaluation result — set by opcode **$51**
+  `ScriptCmd51_LibraryTier` (tier 0-11), NOT $34 (S124 correction, DOC_AUDIT S124); the gate
+  itself is opcode **$31** `ScriptCmd31_IfSeen100` (100+ species marked in the library,
+  the bits of `$CA94`)
+- **Opcode $34** (`if_slot_skill_b`, editor2/core/script_ops.py) tests whether a party slot
+  KNOWS skill $0F / $10 / $11 / $45 / $5A (the Well Gate's Thunder family) — not species;
+  this line said "species data at $CAEA" until S124
 
 ### Arena Right Gate (map_type $07)
 - **Requirement**: Beat Starry Night Tournament ($00F1) + beat Goopi 2 in RPS
@@ -237,11 +242,12 @@ Used by: Bazaar scr23 (Bazaar Edge summoning check, 3 calls).
 Note: these summoning skills map to boss species 216-219, explaining
 why Bazaar scr7 checks $FF92 for values 215/216/217.
 
-### Opcode $40 — CheckMonsterInStorage (Queen Room, Old Man Gate)
+### Opcode $40 — IfPartyHasSpecies (Queen Room, Old Man Gate) (S124: was "CheckMonsterInStorage")
 ```
 Params: species_id, branch_target
-Loop all 20 storage slots ($CAC1, stride $95 = 149 bytes):
-  Skip if slot[0] == 0 or 1 (empty/unavailable)
+Loop all 20 monster records ($CAC1, stride $95 = 149 bytes):
+  Skip if slot[0] == 0 or 1 (0 = empty, 1 = FARM — MONSTER_DATA "Membership model"),
+  so only PARTY members (2) count — a GoldSlime on the farm does not open the Old Man's Gate
   If slot[+$09] == species_id → branch to target
 Fall through if no match.
 ```
@@ -258,12 +264,12 @@ Used by:
 | $28 | CheckStorageFull | Farm, Restaurant, Stable | Branch if 20 monsters stored (pre-AddMonster guard) |
 | $29 | AddMonster | Farm, Stable, Restaurant, Castle | Add monster by enemy stats ID |
 | $2E | CheckStepVariable | Goopy Rooms, Arena Rooms | Read $D9DF/$D9E0 (RPS/arena state machine) |
-| $31 | CheckPartyLevel | Library scr17 | Check $CA94 party level |
+| $31 | IfSeen100 (S124: was "CheckPartyLevel") | Library scr17 | 100+ species marked in the library (bits of $CA94) → branch |
 | $35 | ResetPartyOrder | Gate Priest | Reset party display order |
 | $3F | CheckSpeciesInParty | Boss: Arena Left | Check $CACA for specific species |
 | $45 | FullMonsterOp | Castle scr0 | Copy $CAB9→$CA8D, setup party display |
-| $5F | CheckMultiSpecies | Farm scr29 | Check party species (multi-slot scan) |
-| $60 | CheckInventoryItem | Starry Shrine | Check item at $CA40/$CB23 |
+| $5F | IfSlotLevelBelow (S124: branches when the slot's level is AT its cap +$4C) | Farm scr29 | "…is at its growth limit!" |
+| $60 | IfGoldShort (S124: was "CheckInventoryItem") | Starry Shrine | fee (plus value +$62 of monster [$CA40] + 1) × 10 gold: short → branch, else pay |
 | $63 | MonsterSpecialOp | Castle scr0 | Bank $01 special operation |
 
 ### Unused monster opcodes (not in any decoded script path)

@@ -1627,16 +1627,75 @@ as well while you're there."
 
 ### 5.7 Progression & Flags tab
 
-- **Flag manager**: named flags, auto-allocation from the safe pool (S117: 1,968 —
+- **Flag manager**: named flags, auto-allocation from the safe pool (S117: 1,968; S124: 1,965 fixed numbers, §5.7 "As built S124" —
   the 16 vanilla spares + the extended `$1000-$179F`; EVENT_FLAGS "Extended flags"),
   usage cross-ref (who sets/reads — `all_scripts.json` branch
   following), vanilla flag map read-only with SIDEQUEST_MAP annotations.
 - **Quest editor**: `progression.quests[]`/`enemies[]` (E2, built +
   user-confirmed S70) as forms: condition ladder, YES/NO offer, battle,
   on-win rewards, entry-cutscene gating; quest-EID capacity meter
-  (12-row tail).
+  (S124: the "12-row tail" is stale — project enemies live in bank $6B since
+  S101, cap EID 640). S124 decision: quests become first-class objects compiled
+  to conversations / flags (ROADMAP P3.14c), not this legacy lowering.
 - **Orphaned-trigger report** (§8) rendered as a checklist per preserved
   island.
+
+**As built S124 (ROADMAP P3.14a; built, NOT yet user-tested)** — `app/flags_tab.py`
+over `core/flag_index.py` (PROJECT_COMPILER §2.37). User direction (S124): "Make the
+whole thing sensible to work with from the point of view of designing basically a new
+game in same engine"; vanilla flags read-only ("most new flags in romhack will be
+novel"); "visual clear explanatory flags". Three pages:
+* **Flags** — groups: your flags (legacy quest flags marked), gates / worlds cleared,
+  the Milly hook, the original game's flags your rooms check, and (on demand) every
+  game flag. Counts = places in YOUR game (brackets = the game's own). The details:
+  number, saved or not, Problems, *Turned ON by* / *Turned OFF by* / *Checked by — and
+  what it changes* as sentences with the place and **open** (Rooms tab on the
+  room / screen / state / cell with the NPC selected — `RoomsTab.open_node` takes a
+  6th item = the state; the cutscene in the cutscene editor; Encounters
+  `show_room_battles` / `show_gate_battles`; the gate on the Gates tab; a game room),
+  *In the original game* with the game's own words around each check. Your flags:
+  a note (`comment`, commits on Enter / focus-out), Rename… (every use, via the index's
+  JSON paths; the number stays), Renumber… (a free number; old saves read it OFF),
+  Delete (refused while used), New flag….
+* **Triggers** — every "When … → …" grouped by place, filter by kind / words, copied
+  game scripts optional; a double-click opens the place.
+* **Problems** — grouped: undefined names (the build stops), checks never true,
+  checks waiting for the ORIGINAL game's progress (the orphaned-trigger report:
+  a copied game room's people branch on arena ranks / Durran / the post-game, which a
+  new game never sets), flags on a game number (`$0158`), not saved, never read,
+  unused.
+**r2 (user: game flag `$0080` "Looks like it just randomly turns on by a million things"):**
+every use = WHO (`Use.who`: "talking to Santi at (1, 6)" — the room data's triggers of the
+script, named by its own lines only), WHERE (room · screen), WHEN (`Use.when`: the branch's
+deciding rung; for checks the path conditions to reach them); the details show ONE entry per
+`Use.group` (a script / a place) with its branches folded ("in 9 of its branches: when …"),
+and an **In short** line (`FlagIndex.summary`).
+**r3 (user: "this should open a SIDE WINDOW PANEL on the RIGHT to show the specific NPC in
+the specific room … Rather than moving to a totally different tab. It should also allow
+naming all NPCs … and carry that through, both vanilla and in romhack"; "You dont actually
+show the correct NPC"):** `app/place_panel.py` `PlacePanel` on the right of the tab (a
+splitter; hidden until used, ✕ hides it). **show** (the details), a double-click (Triggers,
+Problems) → the place: the room screen rendered at 2× IN THE PLACE'S STATE with every NPC's
+sprite (hidden ones faded) and your names as tags, the place's cell outlined yellow, the
+picked NPC dotted cyan; ◀ ▶ through `Use.places` of the entry's branches; a Room-state box
+(the same NPC stays picked when it stands there in the other state); the NPC list (game
+order, spots greyed); **Name this NPC…** (click on the picture or the list; one
+SnapshotCommand, `Document.name_npc`); **Open in the Rooms tab** / Open the cutscene /
+battles / gate (`navigate`). Fixed with it: `MainWindow.navigate_to` 'game' passes screen /
+state / cell, `RoomsTab.open_node` takes them for a game room and `_go_end` keeps the state
+(it forced state 0), the NPC there is selected. Names everywhere: the Rooms tab canvas draws
+a name tag over a named NPC (`RoomCanvas._npc_names`, `npc_tags`) and its NPC section has a
+**name** row with **Name…** (game rooms too — read-only otherwise); the Cutscenes tab's
+storyboard actors take your name before the speaker's (`_actors`; `ProjectCatalogue.npcs`
+returns `actor`); the index's sentences (`_game_who`, `Place.event`).
+Fixed numbers (S124): every named flag carries its number in project.json (migration
+on open = the compiler's own numbers, so nothing moves); new flags never get `$0158`.
+**Design target (user S124: "the current project is purely POC I will start a new one for
+actual romhack … It wont have any copies of vanilla rooms or random custom rooms with no
+exits"):** the real project has only its own rooms, all connected to its hub. In it the
+"original game's flags" group and the `game_only` problem stay empty unless the author
+picks a game flag by mistake — they are a guard, not a workflow; every P3.14 part is
+designed and tested on such a project (no copied rooms, no vanilla destinations).
 
 ### 5.8 World tab
 

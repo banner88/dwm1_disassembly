@@ -336,7 +336,7 @@ disagrees, this one is the measured / handler-read truth (DOC_AUDIT S118).
 | $30 | `if_slot_stat_100`(slot, target) | flow | Go to target when party slot's $CB19 word >= 100. |
 | $31 | `if_seen_100`(target) | flow | Go to target when 100+ species are marked in the library. |
 | $32 | `if_slot_species_af`(slot, target) | flow | Go to target when party slot is species $AF. |
-| $33 | `compare_gold`(amount) | state | Compare the gold with amount. |
+| $33 | `compare_gold`(amount) | state | **GIVES** amount gold (cap 99,999) — S124 correction, code-read (`ScriptCmd33_GiveGold` → ROM0 `CompareGold` adds); the editor's op name is kept (saved projects). |
 | $34 | `if_slot_skill_b`(slot, target) | flow | Go to target when party slot knows skill $0F/$10/$11/$45/$5A. |
 | $35 | `refresh_party2`() | party | Re-count the party. |
 | $36 | `mimic_battle`() | battle | Fight the Mimic of the current arena tier. |
@@ -371,7 +371,7 @@ disagrees, this one is the measured / handler-read truth (DOC_AUDIT S118).
 | $53 | `npc1_face_player`() | actor | NPC 1 turns toward the player. |
 | $54 | `give_random_item`() | item | Give a random item 1-37. |
 | $55 | `take_random_item`() | item | Take a random item from the bag (count to $D8E1). |
-| $56 | `gold_value`() | state | Gold / 10 to $D8E1 (and the number to $C180); adds it back. |
+| $56 | `gold_value`() | state | **TAKES** a tenth of the gold: $D8E1 := nonzero when gold ≥ 10, the amount to $C180 (S124 correction: AddGold subtracts). |
 | $57 | `give_random_item2`() | item | Give a random item $13-$17. |
 | $58 | `floor_skip`() | world | Gate floors: jump about 20 floors deeper. |
 | $59 | `train_slot`(slot) | party | Raise party slot's weakest stat by 20. |
@@ -380,8 +380,8 @@ disagrees, this one is the measured / handler-read truth (DOC_AUDIT S118).
 | $5C | `coliseum_init`() | battle | Roll the three Coliseum teams and the prize. |
 | $5D | `give_coliseum_prize`() | item | Give the Coliseum prize item. |
 | $5E | `reset_ceremony`() | state | $D951 := 7 and clear $C0D8 x 40. |
-| $5F | `if_slot_level_below`(slot, target) | flow | Go to target when party slot's level is below its maximum. |
-| $60 | `if_gold_short`(target) | flow | Go to target when gold < (lead monster level + 1) x 10; else pay it. |
+| $5F | `if_slot_level_below`(slot, target) | flow | Go to target when party slot's level (+$4B) is **AT** its cap (+$4C) — S124 correction (the name says below; it falls through while the monster can grow); the cap's digits to $C190. |
+| $60 | `if_gold_short`(target) | flow | Go to target when gold < (plus value +$62 of monster [$CA40] + 1) x 10; else pay it — the breeding fee (S124 correction: not the lead's level). |
 | $61 | `draw_attrs`(data) | screen | Draw a background patch's colours (VRAM bank 1) from data in this script bank. |
 | $62 | `blank_screen`() | screen | Fill tile $DA with $FF and the whole background map with it. |
 | $63 | `draw_buffer`() | screen | Copy the 20x16 $C300 buffer onto the visible background. |
@@ -792,11 +792,11 @@ scripts: `[$CA8D]==1` = "only one monster in party" refusal gates).
 | $23 | $5E8F | per-monster field via slot → $CAEA-family | $D8E1 |
 | $30 | $6253 | per-monster field via slot → $CB19-family | $D8E1 |
 | $32 | $62DD | per-monster SPECIES via slot → $CACA-family | $D8E1 |
-| $34 | $634F | species vs value list (Library tiers) | $D8E1 |
+| $34 | $634F | S124 correction: party slot KNOWS skill $0F / $10 / $11 / $45 / $5A (the Well Gate's Thunder family, `if_slot_skill_b`) — not "Library tiers" (that is $51) | branch |
 | $38 | $643F | per-monster field via slot → $CAEA-family | $D8E1 |
 | $51 | $696C | count of SEEN library bits $CA94 (ids 0-$EF) → 12-tier compare table $04:$699D | $D8E1 |
 | $55 | $6AFA | count of non-empty item slots $CA51 (×20) | $D8E1 |
-| $56 | $6B3A | 24-bit gold $CA4B-4D ÷ 10 (magnitude test + digit display) | $D8E1 |
+| $56 | $6B3A | 24-bit gold $CA4B-4D ÷ 10 (magnitude test + digit display) — and TAKES that tenth (AddGold subtracts; S124) | $D8E1 |
 | $59 | $6BDF | party-list species via slot → $CB13-family | $D8E1 |
 | $5F | $6F9B | per-monster field via slot → $CB0D-family | $D8E1 |
 

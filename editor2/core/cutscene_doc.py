@@ -317,8 +317,7 @@ def actors(room, screen):
 def ensure_flag(doc, name):
     name = _slug(name)
     if not any(f.get('name') == name for f in doc.flags()):
-        doc.custom.setdefault('flags', []).append({'name': name, 'index': 'auto'})
-        doc.touch()
+        doc.add_flag(name)              # S124: a fixed number at once
     return name
 
 

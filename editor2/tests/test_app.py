@@ -688,6 +688,172 @@ def s123_worlds(app, w):
           'the Vanish step, the report and "only this world"; undo restores project.json')
 
 
+def s124_progression(app, w):
+    """S124 (ROADMAP P3.14a): the Progression & Flags tab — every flag with what turns
+    it ON / OFF and what checks it (with links to the place), New flag (a fixed
+    number, never $0158), a note, Rename (every use follows), Renumber, Delete,
+    the Triggers page (a double-click opens the place), the Problems page; every
+    edit undoes to the original project.json."""
+    from PySide6.QtWidgets import QInputDialog, QMessageBox
+    s = w.session
+    doc = s.doc
+    before = doc.dumps()
+    n0 = s.undo.index()
+    pt = w.progression_tab
+    w.tabs.setCurrentWidget(pt)
+    app.processEvents()
+    pt.refresh()
+    tops = [pt.tree.topLevelItem(i).text(0) for i in range(pt.tree.topLevelItemCount())]
+    assert tops[0].startswith('Your flags') and any(t.startswith('The original game') for t in tops), tops
+    # the example's quest flag sits on $0158 — the game's (Arena Battle): a problem
+    vg = doc.flag_numbers()['vault_guardian_beaten']
+    assert vg == 0x0158 and any(p.code == 'game_shares' for p in pt.problems)
+    pt.select_flag(vg)
+    assert 'vault_guardian_beaten' in pt.title.text() and 'Arena Battle' in pt.detail.toPlainText()
+    assert 'Turned ON by' in pt.detail.toPlainText() and pt.b_renumber.isEnabled()
+    keep_t, keep_q = QInputDialog.getText, QMessageBox.question
+    QInputDialog.getText = staticmethod(lambda *a, **k: ('Bridge repaired', True))
+    QMessageBox.question = staticmethod(lambda *a, **k: QMessageBox.Yes)
+    try:
+        pt._new_flag()
+        n = doc.flag_numbers()['bridge_repaired']
+        assert n != 0x0158 and str(doc.flag_entry('bridge_repaired')['index']).startswith('0x')
+        assert pt.cur == n and 'bridge_repaired' in pt.title.text()
+        pt.note.setText('The east bridge can be crossed')
+        pt._note_done()
+        app.processEvents()
+        assert doc.flag_entry('bridge_repaired').get('comment') == 'The east bridge can be crossed'
+        # rename a used flag (the quest's): every use follows, the number stays
+        pt.select_flag(vg)
+        QInputDialog.getText = staticmethod(lambda *a, **k: ('Vault guard beaten', True))
+        pt._rename()
+        q = doc.data['progression']['quests'][0]
+        assert q['flags']['done'] == 'vault_guard_beaten', q['flags']
+        assert doc.flag_numbers()['vault_guard_beaten'] == 0x0158
+        pt._renumber()
+        assert doc.flag_numbers()['vault_guard_beaten'] not in (0x0158, n)
+        assert not any(p.code == 'game_shares' and p.idx == 0x0158 for p in pt.problems)
+        # delete: refused while used, allowed when unused
+        keep_i = QMessageBox.information
+        QMessageBox.information = staticmethod(lambda *a, **k: QMessageBox.Ok)
+        try:
+            pt._delete()
+            assert doc.flag_entry('vault_guard_beaten') is not None
+        finally:
+            QMessageBox.information = keep_i
+        pt.select_flag(n)
+        pt._delete()
+        assert all(f.get('name') != 'bridge_repaired' for f in doc.flags())
+    finally:
+        QInputDialog.getText, QMessageBox.question = keep_t, keep_q
+    # the Triggers page: sentences grouped by place; a double-click SHOWS the place in
+    # the side panel (S124 r3), its Open button goes to the room
+    pt.pages.setCurrentIndex(1)
+    app.processEvents()
+    assert pt.t_tree.topLevelItemCount() > 0
+    g = pt.t_tree.topLevelItem(0)
+    it = g.child(0)
+    assert it.text(0).startswith('When ') and '→' in it.text(0), it.text(0)
+    nav = it.data(0, 0x0100)
+    pt._trigger_go(it, 0)
+    app.processEvents()
+    assert w.tabs.currentWidget() is pt and not pt.place_panel.isHidden()
+    if nav and nav.get('tab') == 'rooms':
+        pt.place_panel._open()
+        app.processEvents()
+        assert w.tabs.currentWidget() is w.rooms_tab and w.rooms_tab.room_id == nav['room']
+    s124r3_places(app, w, pt)
+    # undo -> the original project
+    s.undo.setIndex(n0)
+    app.processEvents()
+    assert doc.dumps() == before, 'S124 edits did not undo to the original project'
+    w.tabs.setCurrentWidget(pt)
+    pt.refresh()
+    print(f'OK: S124 Progression & Flags — {len(pt.fi.flags)} flags, {len(pt.fi.triggers)} '
+          'triggers, new / note / rename / renumber / delete, Triggers → the room, undo')
+
+
+def s124r3_places(app, w, pt):
+    """S124 r3 (user: "show the specific NPC in the specific room … rather than moving
+    to a totally different tab"; "allow naming all NPCs … carry that through";
+    "You dont actually show the correct NPC"): game flag $0080 (talked to Santi) —
+    "show" opens the side panel at GreatTree screen 8 / screen 12 IN THE RIGHT STATE
+    with the NPC outlined; Name… names a game room's NPC (editor data), the name
+    carries to the flag's sentences, the Rooms tab canvas and its NPC panel; Open
+    lands the Rooms tab on that screen, state and NPC."""
+    from PySide6.QtWidgets import QInputDialog
+    s = w.session
+    doc = s.doc
+    if pt.catalogue() is None:
+        print('SKIP: S124 r3 places (no ROM)')
+        return
+    w.tabs.setCurrentWidget(pt)
+    pt.pages.setCurrentIndex(0)
+    pt.show_box.setCurrentIndex(pt.show_box.findData(2))      # every game flag
+    app.processEvents()
+    pt.refresh()
+    pt.select_flag(0x0080)
+    key = next(k for k, (pl, _v) in pt._navs.items()
+               if any(p.get('map') == 1 and p.get('screen') == 12 for p in pl))
+    from PySide6.QtCore import QUrl
+    pt._anchor(QUrl(f'go:{key}'))
+    app.processEvents()
+    pp = pt.place_panel
+    assert w.tabs.currentWidget() is pt and not pp.isHidden()
+    p = pp.place()
+    assert (p['map'], p['screen'], p['state'], p['x'], p['y'], p['n']) == (1, 12, 1, 1, 6, 1), p
+    assert pp.state == 1 and pp.sel_n == 1
+    assert any(r[0] == 1 and (r[2], r[3]) == (1, 6) for r in pp.rows), pp.rows
+    assert 'GreatTree' in pp.head.text() and 'screen 12' in pp.head.text()
+    # state 0 of screen 12: Santi is NOT there (the bug the user saw: state 0 only)
+    pp.state_box.setCurrentIndex(0)
+    app.processEvents()
+    assert not any((r[2], r[3]) == (1, 6) and r[0] is not None for r in pp.rows)
+    pp.state_box.setCurrentIndex(1)
+    app.processEvents()
+    pp.sel_n = 1
+    from PySide6.QtWidgets import QMessageBox
+
+    def _fail(*a, **k):
+        raise AssertionError(f'Name this NPC refused: {a[2] if len(a) > 2 else a}')
+    keep, keep_w = QInputDialog.getText, QMessageBox.warning
+    QInputDialog.getText = staticmethod(lambda *a, **k: ('Santi', True))
+    QMessageBox.warning = staticmethod(_fail)
+    try:
+        pp._name()
+    finally:
+        QInputDialog.getText, QMessageBox.warning = keep, keep_w
+    app.processEvents()
+    names = doc.data['custom']['_editor']['npc_names']
+    assert names.get('01:12:1:1') == 'Santi' and names.get('01:12:2:1') == 'Santi', names
+    pt.refresh()
+    pt.select_flag(0x0080)
+    assert 'talking to Santi at (1, 6)' in pt.detail.toPlainText()
+    assert any(r[5] == 'Santi' for r in pp.rows)
+    # Open → the Rooms tab at GreatTree screen 12 state 1 with Santi selected and named
+    pp._open()
+    app.processEvents()
+    rt = w.rooms_tab
+    assert w.tabs.currentWidget() is rt
+    assert (rt.vanilla_mid, rt.key, rt.state_idx) == (1, 12, 1), (rt.vanilla_mid, rt.key, rt.state_idx)
+    ref = rt.canvas.selected_marker
+    assert ref is not None and rt.canvas.npc_tags.get(id(ref)) == 'Santi'
+    assert 'Santi' in rt.npc_panel.name_lbl.text()
+    # the father in the Old Man Gate Room ($0D) checks it: the panel shows him there
+    pt.select_flag(0x0080)
+    key = next(k for k, (pl, _v) in pt._navs.items()
+               if any(p.get('map') == 13 for p in pl))
+    pt._anchor(QUrl(f'go:{key}'))
+    app.processEvents()
+    p = pp.place()
+    assert (p['map'], p['x'], p['y']) == (13, 3, 5) and any(
+        r[0] == p['n'] and (r[2], r[3]) == (3, 5) for r in pp.rows)
+    pt.show_box.setCurrentIndex(0)
+    print('OK: S124 r3 the place panel — $0080: GreatTree screen 12 state 1 at (1, 6), '
+          'named Santi (game room, editor data) → the sentences, the canvas, the NPC '
+          'panel; Open → that screen / state / NPC; the Old Man Gate Room (3, 5)')
+
+
 def main():
     do_rom = '--rom' in sys.argv
     app = QApplication.instance() or QApplication(sys.argv)
@@ -736,6 +902,7 @@ def main():
     s121_milly(app, w)
     s122_gate_themes(app, w)
     s123_worlds(app, w)
+    s124_progression(app, w)
 
     # S101 r3: World tab zoom (wheel, around the mouse) + pan (drag empty canvas)
     from PySide6.QtCore import QPoint, QPointF, Qt

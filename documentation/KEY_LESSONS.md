@@ -5440,3 +5440,67 @@ which had carried a guessed rule ("ids ≥ 128 draw tile 0") since S93. A rule c
 an older tool is a hypothesis: the one-line `ld a, $08` (not `cp`) before the second sheet
 load made every room carry 48 extra tiles. Compare the editor's picture with a PyBoy frame
 of the same screen pixel for pixel before deciding which side is wrong.
+
+## S124 — the flag index: a "safe" pool that was not, numbers by position, an index tied to the compiler
+
+### "No reference found" is a statement about the decoder, not the game (S124)
+
+**Symptom**: the editor's flag pool started at `$0158`, rated SAFE since S8/S57 ("zero
+engine literals, zero script refs"); every project's first named flag got it (the user's
+`milly_roots_seen`). The S124 flag index, built on `cutscenes.Catalogue` (the ROM, the
+handler arities), listed the original game's Arena Battle script testing and setting
+`$0158` (Milayou's rematch) — PyBoy confirmed both branches. **Root cause**: the S57
+audit read `extracted/all_scripts.json`, decoded with the pre-S96 arity table, which never
+reached that branch; "zero refs" was the old decoder's reach. **Fix**: new flags come
+from `FLAG_AUTO_RANGES` (`$0159-$0167` + extended), `GAME_SHARED_FLAGS` warns, Renumber
+moves a flag off it. **Rule**: a "free / unused" verdict that rests on not finding a
+reference must be re-run whenever the decoder that searched improves — and the first
+number a pool hands out deserves one direct measurement.
+
+### Numbering by position turns a deletion into a save bug (S124)
+
+**Symptom** (audit): named flags were `"auto"` and numbered by their position in
+`custom.flags`; deleting or moving one renumbered every later flag, so a save made before
+meant something else (and the number appeared only in the build manifest). **Fix**: one
+numbering function (`project.number_flags`) for the compiler and the editor; the editor
+writes the compiler's own numbers into the project on open (same bytes) and gives a new
+flag a fixed number at once; Rename keeps the number. **Rule**: anything whose value a
+save keeps (flags, counters, ids) gets a fixed number written into the project when it is
+created — never one derived from list order at build time.
+
+### A cross-reference is only complete if the compiler says so (S124)
+
+**Situation**: "who sets / who reads this flag" had to cover ~15 places where the compiler
+resolves a flag (talks, conversations, cutscene starts and steps, state rules, NPC
+conditions, colours, swirls, battles, gate rules, quests, raw ops, preludes, the engine's
+boss win). A walker written from the schema alone silently misses the next site a later
+session adds. **Fix**: `flag_index.compiler_coverage` compiles a project while logging
+every `resolve_flag_ref` / `_flag_index` result and every flag op of the lowered scripts;
+test_compiler fails when the index does not know one, and requires every `KINDS` site to
+be exercised by a fixture. **Rule**: an editor view that claims "everything that uses X"
+is tested against the compiler's own resolution of X, not against a list of places.
+
+### A list of uses is not a story — group by who, say when (S124 r2)
+
+**Symptom** (user, on game flag `$0080`): "it is NOT clear how the progression goes from the
+screen. Looks like it just randomly turns on by a million things." The details listed ten
+"in the scene «…»" lines — nine were branches of ONE script (Santi's progress ladder, a line
+per arena rank, each setting "you have talked to Santi"). **Fix**: every use says who runs it
+(the room data's NPC / spot / entry, named by the script's own lines), where, and when (the
+branch's rung, or the conditions that reach a check); one script = one entry with its
+branches folded; an "In short" sentence per flag. **Rule**: a cross-reference meant for a
+designer shows the ACTOR and the CONDITION, grouped per actor — a flat list of occurrences
+reads as noise even when every line is correct.
+
+### "Go to" must carry the whole address — a room is screen + STATE + cell (S124 r3)
+
+**Symptom** (user): "When you go 'show' it takes me to default greatTree screen from initial
+new game screen where monster grandpa blocks stairs … That's NOT where Santi is." The
+index knew the exact script; its link carried only the map, and the Rooms tab's door-end
+path then reset the state to 0. Santi exists only in GreatTree screen 12 states 1-2, so the
+first screen in state 0 shows someone else entirely. **Fix**: every use carries all its places
+(map, screen, state, cell, NPC n) and every hop keeps them (`navigate_to` → `open_node` →
+`_go_end`); the test asserts the landing screen / state and the selected NPC, not just the
+tab. **Rule**: a navigation target in a room with states is (room, screen, state, cell) — test
+that the destination SHOWS the thing (the NPC is at the cell in that state), not that a tab
+opened.

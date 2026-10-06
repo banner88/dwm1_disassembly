@@ -1087,6 +1087,19 @@ class EncountersTab(QWidget):
         self.pages.setCurrentIndex(0)
         self._page_changed(0)
 
+    def show_room_battles(self, rid):
+        """S124: jump to a room's battles (Progression & Flags tab)."""
+        self.cur_room = rid
+        self.pages.setCurrentIndex(2)
+        self._page_changed(2)
+
+    def show_gate_battles(self, gid):
+        """S124: jump to a gate's floor plan of battles."""
+        if gid in self.gate_ids:
+            self.cur_gate = gid
+            self.pages.setCurrentIndex(1)
+            self._page_changed(1)
+
     # ---------------------------------------------------------------- edits
     def push(self, label, op):
         cmd = C.SnapshotCommand(self.s, label, op)

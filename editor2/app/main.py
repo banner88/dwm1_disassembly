@@ -249,6 +249,14 @@ class MainWindow(QMainWindow):
                 self.breeding_tab = BreedingTab(self.session)
                 self.tabs.addTab(self.breeding_tab, 'Breeding')
                 continue
+            if title.startswith('Progression') and self.session:
+                # S124 (P3.14a): every flag — what turns it ON / OFF, what checks
+                # it, in words with a link to the place; every trigger; problems
+                from editor2.app.flags_tab import ProgressionTab
+                self.progression_tab = ProgressionTab(self.session)
+                self.progression_tab.navigate.connect(self.navigate_to)
+                self.tabs.addTab(self.progression_tab, 'Progression && Flags')
+                continue
             if title == 'Balance':
                 # S98 (P3.7): the World graph sits before Balance, as in §5.0
                 if self.session:
@@ -289,6 +297,52 @@ class MainWindow(QMainWindow):
             return
         self.tabs.setCurrentWidget(self.rooms_tab)
         self.rooms_tab.open_node(('room', room_id))
+
+    def navigate_to(self, nav):
+        """S124: open the place of a flag use / trigger (Progression & Flags tab):
+        {'tab': 'rooms', room, screen, state, x, y} · {'tab': 'cutscene', room, scene}
+        · {'tab': 'encounters', room | gate} · {'tab': 'gates', gate}
+        · {'tab': 'game', map, screen, state, x, y} · {'tab': 'cutscenes'}."""
+        tab = (nav or {}).get('tab')
+        if tab == 'rooms' and self.rooms_tab is not None:
+            self.tabs.setCurrentWidget(self.rooms_tab)
+            if nav.get('screen') is None:
+                self.rooms_tab.open_node(('room', nav['room']))
+            else:
+                x = nav.get('x')
+                y = nav.get('y')
+                self.rooms_tab.open_node(('room', nav['room'], int(nav['screen']),
+                                          -1 if x is None else int(x),
+                                          -1 if y is None else int(y),
+                                          int(nav.get('state') or 0)))
+        elif tab == 'game' and self.rooms_tab is not None:
+            self.tabs.setCurrentWidget(self.rooms_tab)
+            if nav.get('screen') is None:
+                self.rooms_tab.open_node(('vanilla', int(nav['map'])))
+            else:                    # S124 r3: the screen, state and NPC it runs at
+                x, y = nav.get('x'), nav.get('y')
+                self.rooms_tab.open_node(('vanilla', int(nav['map']), int(nav['screen']),
+                                          -1 if x is None else int(x),
+                                          -1 if y is None else int(y),
+                                          int(nav.get('state') or 0)))
+        elif tab == 'cutscene' and getattr(self, 'cutscenes_tab', None) is not None:
+            self.tabs.setCurrentWidget(self.cutscenes_tab)
+            self.cutscenes_tab.open_cutscene(nav['room'], nav['scene'])
+        elif tab == 'cutscenes' and getattr(self, 'cutscenes_tab', None) is not None:
+            self.tabs.setCurrentWidget(self.cutscenes_tab)
+        elif tab == 'encounters' and getattr(self, 'encounters_tab', None) is not None:
+            self.tabs.setCurrentWidget(self.encounters_tab)
+            if nav.get('room'):
+                self.encounters_tab.show_room_battles(nav['room'])
+            elif nav.get('gate') is not None:
+                self.encounters_tab.show_gate_battles(int(nav['gate']))
+        elif tab == 'gates' and getattr(self, 'gates_tab', None) is not None:
+            gt = self.gates_tab
+            self.tabs.setCurrentWidget(gt)
+            gid = int(nav.get('gate') or 0)
+            row = next((i for i, g in enumerate(gt.gates) if g['id'] == gid), None)
+            if row is not None:
+                gt.list.setCurrentRow(row)
 
     def _open_world_node(self, key):
         """World graph double-click -> the room in the Rooms tab (S98)."""

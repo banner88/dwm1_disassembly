@@ -2623,7 +2623,7 @@ MarkScriptActive:
     dw ScriptCmd30_IfSlotStat100
     dw ScriptCmd31_IfSeen100
     dw ScriptCmd32_IfSlotSpeciesAF
-    dw ScriptCmd33_CompareGold
+    dw ScriptCmd33_GiveGold
     dw ScriptCmd34_IfSlotSkillB
     dw ScriptCmd35_RefreshParty2
     dw ScriptCmd36_MimicBattle
@@ -4595,7 +4595,10 @@ ScriptCmd32_IfSlotSpeciesAF:
     call MapTypeDispatch
     jp ScriptReturnProcess
 
-ScriptCmd33_CompareGold:
+ScriptCmd33_GiveGold:
+    ; S124 (code-read): op $33 <word> ADDS the word to the gold (ROM0 CompareGold ->
+    ; WriteStatAndRet, capped at 99,999) — not a compare; its one vanilla use is the
+    ; Castle's "Found 10,000G" ($2710). Was ScriptCmd33_CompareGold.
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -5817,6 +5820,9 @@ StoreScriptResult:
 
 
 ScriptCmd56_GoldValue:
+    ; S124 (code-read): TAKES a tenth of the gold — [$D8E1] := nonzero when gold / 10
+    ; is nonzero, the amount formatted at $C180 for the next text, then AddGold
+    ; (which subtracts, S109).
     ld a, [wCurrGoldLo]
     ld l, a
     ld a, [wCurrGoldMid]
@@ -6506,6 +6512,10 @@ ScriptCmd5E_ResetCeremony:
 
 
 ScriptCmd5F_IfSlotLevelBelow:
+    ; S124 (code-read): <slot> <target> — a slot past the party: no branch; else
+    ; $C190 := the digits of the level cap (+$4C), [$D8E1] := slot, $C180 := its name;
+    ; BRANCH when level (+$4B) >= the cap, i.e. AT the cap (the name says "below":
+    ; it falls through while the monster can still grow). Farm scr29.
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a
@@ -6556,6 +6566,9 @@ ScriptCmd5F_IfSlotLevelBelow:
 
 
 ScriptCmd60_IfGoldShort:
+    ; S124 (code-read): fee = (plus value +$62 of monster [$CA40] + 1) x 10 — gold
+    ; short -> branch to <target>; else AddGold (subtracts) pays it. The Starry
+    ; Shrine's breeding fee ($CA40 = the chosen parent, ScriptCmd3A).
     ld a, [wScriptCounter]
     add $01
     ld [wScriptCounter], a

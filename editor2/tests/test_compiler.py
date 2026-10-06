@@ -3736,6 +3736,213 @@ def _world_fixture():
     return doc, gid, {'start': start, 'cave': cave}
 
 
+def _flag_sites_fixture():
+    """S124: the example + one of every flag site the world / S117 / encounter
+    fixtures do not have: a simple talk (YES sets, NO clears), a cutscene whose
+    start tests flags ON / OFF / once and whose steps test, set, clear and ask, an
+    NPC drawn in a colour while a flag is ON, a gate-floor room rule on a flag, a
+    script prelude with a raw flag op; plus a flag nothing turns ON and an unused one."""
+    d, r = _cs_fixture([{
+        'id': 'ks_scene', 'name': 'Sites', 'screen': 0,
+        'trigger': {'on': 'entry', 'when_on': ['ks_a'], 'when_off': ['ks_b'], 'once': 'ks_c'},
+        'steps': [{'if': [{'flag': 'ks_a'}, {'flag': 'gate:1', 'is': 'clear'}],
+                   'then': [{'set': ['ks_b']}], 'else': [{'clear': ['ks_a']}]},
+                  {'ask': {'boxes': [['Again?']]}, 'yes': [{'set': ['ks_d']}],
+                   'no': [{'clear': ['ks_d']}]}]}],
+        flags=('ks_a', 'ks_b', 'ks_c', 'ks_d', 'ks_never', 'ks_unused'))
+    c = d['custom']
+    c['dialogue'] += [{'id': 'ks_q', 'boxes': [['Ring the bell?']], 'choice': True},
+                      {'id': 'ks_y', 'boxes': [['Dong.']]}]
+    c['scripts'].append({'id': 'ks_talk', 'talk': {
+        'text': 'ks_q', 'question': True, 'yes': {'text': 'ks_y', 'set': ['ks_a']},
+        'no': {'clear': ['ks_b', '0x1005']}}})
+    r['scripts']['7'] = 'ks_talk'
+    npcs = r['screens']['0']['npcs']
+    npcs[2]['script'] = 'ks_talk'
+    npcs[1]['colour'] = {'palette': 1, 'when': 'ks_d'}
+    npcs.append({'kind': 'npc', 'sprite': '0x0B', 'x': 8, 'y': 6, 'facing': 'down',
+                 'script': None, 'shown_when': [{'flag': 'ks_never'}]})
+    c['gate_inserts'][0]['when'] = [{'flag': 'ks_b'}, {'flag': 'ks_c', 'is': 'clear'}]
+    c['script_preludes']['give_jerky'] = [['op', 'set_flag', '0x1006']]
+    return d
+
+
+def test_flag_index_s124():
+    """S124 (ROADMAP P3.14a): every flag of a project and every place that touches it
+    (editor2/core/flag_index.py) — the index finds EVERY flag the compiler resolves and
+    every flag op it emits (a new site cannot be forgotten); Rename rewrites every use
+    and the ROM does not change; numbers are pinned on open with the compiler's own
+    numbering; new flags skip $0158 (the game's, Arena Battle); the problems."""
+    import copy
+    import shutil
+    from editor2.core import flag_index as FI
+    from editor2.core.document import Document
+
+    def at(data, tag):
+        tmp = f'/tmp/_t_flags_{tag}'
+        if os.path.exists(tmp):
+            shutil.rmtree(tmp)
+        os.makedirs(tmp)
+        json.dump(data, open(os.path.join(tmp, 'project.json'), 'w'))
+        shutil.copytree(os.path.join(os.path.dirname(EXAMPLE), 'assets'),
+                        os.path.join(tmp, 'assets'), dirs_exist_ok=True)
+        return tmp
+
+    kinds = set()
+    fx = {'example': base(), 's117': _s117_fixture(), 'enc': _en_fixture(),
+          'milly': _milly_fixture(), 'sites': _flag_sites_fixture()}
+    for tag, data in fx.items():
+        missed, fi = FI.compiler_coverage(at(data, tag), REPO)
+        ok(f"S124 flag index: finds every flag the compiler resolves / emits ({tag})",
+           not missed, missed[:5])
+        kinds |= {u.kind for u in fi.uses}
+    wdoc, _gid, _rooms = _world_fixture()
+    missed, fi = FI.compiler_coverage(wdoc.project_dir, REPO)
+    ok("S124 flag index: finds every flag the compiler resolves / emits (world)",
+       not missed, missed[:5])
+    kinds |= {u.kind for u in fi.uses}
+    want = set(FI.KINDS) - {'game', 'game_engine'}
+    ok("S124 flag index: the fixtures exercise every flag site",
+       want <= kinds, sorted(want - kinds))
+
+    # sentences + problems on the sites fixture
+    sites = _flag_sites_fixture()
+    fi = FI.FlagIndex(sites, repo=REPO)
+    sent = [s for _t, s in fi.triggers_sentences()]
+    ok("S124: a cutscene start reads as a sentence",
+       any(s.startswith('When you enter') and 'ks_a is ON' in s and 'ks_b is OFF' in s
+           and '“Sites” plays (once)' in s for s in sent), sent)
+    ok("S124: an NPC shown by a flag / drawn in a colour read as sentences",
+       any('ks_never is ON → the NPC at (8, 6) is there' in s for s in sent)
+       and any('drawn in colour 1' in s for s in sent), sent)
+    ks_a = fi.flags[fi.named['ks_a']]
+    on = [u for u in ks_a.uses if u.role == FI.ON]
+    ok("S124: who turns ks_a ON — the talk's YES answer, with the place (r3: called by "
+       "the NPC's name, its actor)",
+       any(u.kind == 'talk' and 'if the answer is YES' in u.what and
+           'talking to Bard at (5, 6)' in u.what for u in on), [(u.kind, u.what) for u in on])
+    probs = {(p.code, p.idx) for p in fi.problems()}
+    ok("S124 problems: a tested flag nothing turns ON / an unused flag",
+       ('never_on', fi.named['ks_never']) in probs and
+       ('unused', fi.named['ks_unused']) in probs, probs)
+    # S124 r2 (user: flag $0080 "Looks like it just randomly turns on by a million
+    # things"): the game's uses say WHO / WHERE / WHEN and one script = one group
+    rom_p = os.path.join(REPO, 'data', 'DWM-original.gbc')
+    if os.path.exists(rom_p):
+        from editor2.core.cutscenes import Catalogue
+        gi = FI.FlagIndex({'custom': {}}, repo=REPO, catalogue=Catalogue(open(rom_p, 'rb').read()))
+        f80 = gi.flags[0x0080]
+        ons = gi.groups([u for u in f80.uses if u.role == FI.ON])
+        santi = [g for h, g in ons if 'Santi' in h.who]
+        tests = [u for u in f80.uses if u.role == FI.TEST]
+        ok("S124 r2: $0080 = 2 setters (Santi's two scripts), Santi named by her own lines, "
+           "9 branches each with its rung; her father's check says when it is asked",
+           len(ons) == 2 and len(santi) == 1 and len(santi[0]) == 9 and
+           any('arena class S won' in u.when for u in santi[0]) and len(tests) == 1 and
+           'Gate of Anger cleared' in tests[0].when and 'Old Man Gate Room' in tests[0].where,
+           [(h.who, len(g)) for h, g in ons])
+        ok("S124 r2: a game flag without a game name is labelled by who sets it",
+           f80.label.startswith('set by talking to'), f80.label)
+        # S124 r3 (user: "You dont actually show the correct NPC … That's NOT where
+        # Santi is"): every game use carries its places — map, screen, STATE, cell, NPC n
+        pl = [p for u in santi[0] for p in (u.places or [])]
+        ok("S124 r3: Santi's script = GreatTree screen 12, states 1 and 2, NPC 1 at (1, 6)",
+           {(p['map'], p['screen'], p['state'], p['x'], p['y'], p['n']) for p in pl} ==
+           {(1, 12, 1, 1, 6, 1), (1, 12, 2, 1, 6, 1)}, pl)
+        h0 = [h for h, _g in ons if 'Santi' not in h.who][0]
+        ok("S124 r3: the other setter = screen 8 states 0 / 1 (the young Santi), nav = its place",
+           [(p['screen'], p['state'], p['x'], p['y']) for p in h0.places] ==
+           [(8, 0, 3, 6), (8, 1, 2, 7)] and h0.nav == h0.places[0], h0.places)
+        from editor2.core import npc_names as NN
+        cu = {}
+        NN.set_vanilla_name(cu, 1, 8, 0, 2, 'Young Santi')
+        ok("S124 r3: naming a game room's NPC names the same sprite + cell in other states "
+           "only", cu['_editor']['npc_names'] == {'01:8:0:2': 'Young Santi'},
+           cu['_editor']['npc_names'])
+        gi2 = FI.FlagIndex({'custom': cu}, repo=REPO, catalogue=gi.catalogue)
+        whos = [h.who for h, _g in gi2.groups([u for u in gi2.flags[0x0080].uses
+                                               if u.role == FI.ON])]
+        ok("S124 r3: your NPC name is the 'who' (before the game's speaker name)",
+           any(w.startswith('talking to Young Santi at (3, 6)') for w in whos), whos)
+        NN.set_vanilla_name(cu, 1, 8, 0, 2, '')
+        ok("S124 r3: an empty name removes it (and the empty table)", '_editor' in cu and
+           not cu['_editor'].get('npc_names'), cu)
+    ex = FI.FlagIndex(base(), repo=REPO)
+    ok("S124 problems: the example's first flag is $0158 — the game's (Arena Battle)",
+       any(p.code == 'game_shares' and p.idx == 0x0158 for p in ex.problems()))
+
+    # pinning on open = the compiler's numbers; the build does not change
+    out0, prj0, _w = compile_data(copy.deepcopy(sites))
+    p = os.path.join(at(sites, 'pin'), 'project.json')
+    doc = Document(p)
+    ok("S124: opening pins every flag number (a migration note)",
+       any('flag number' in n for n in doc.migrations) and
+       all(str(f.get('index')) != 'auto' for f in doc.flags()))
+    ok("S124: pinned numbers == the compiler's", doc.flag_numbers() == prj0.flag_map(),
+       (doc.flag_numbers(), prj0.flag_map()))
+    out1, _p, _w = compile_data(copy.deepcopy(doc.data))
+    ok("S124: pinning changes no generated byte", out0 == out1)
+    # rename everywhere: the ROM stays the same
+    doc.rename_flag('ks_a', 'Bell rung')
+    s = json.dumps(doc.data)
+    ok("S124 rename: no use of the old name is left", '"ks_a"' not in s and 'bell_rung' in s)
+    out2, prj2, _w = compile_data(copy.deepcopy(doc.data))
+    ok("S124 rename: the generated bytes are unchanged", out2 == out0)
+    ok("S124 rename: same number", prj2.flag_map()['bell_rung'] == prj0.flag_map()['ks_a'])
+    # S124 r3: naming NPCs (a project room's — its actor name — and a game room's —
+    # custom._editor.npc_names) changes no generated byte; the index uses the names
+    from editor2.core import cutscene_doc as CD
+    from editor2.core import npc_names as NN
+    named = None
+    for r in doc.rooms:
+        for k in doc.screen_keys(r):
+            rows = CD.npc_rows(r, k, 0)
+            if rows:
+                named = (r['id'], k, rows[0][0])
+                break
+        if named:
+            break
+    if named:
+        doc.name_npc('Bell keeper', room=named[0], screen=named[1], state=0, n=named[2])
+        ok("S124 r3: a project NPC's name = its actor name",
+           NN.name_of(doc.data['custom'], room=doc.room(named[0]), screen=named[1], state=0,
+                      n=named[2]) == 'Bell keeper')
+    doc.name_npc('Santi', mid=1, screen=12, state=1, n=1)
+    ok("S124 r3: a game room's NPC name = editor data, every state with that NPC",
+       doc.data['custom']['_editor']['npc_names'] == {'01:12:1:1': 'Santi', '01:12:2:1': 'Santi'},
+       doc.data['custom'].get('_editor'))
+    out3, _p, _w = compile_data(copy.deepcopy(doc.data))
+    ok("S124 r3: naming NPCs changes no generated byte", out3 == out0)
+    doc.name_npc('', mid=1, screen=12, state=1, n=1)
+    ok("S124 r3: an empty name removes it", 'npc_names' not in
+       (doc.data['custom'].get('_editor') or {}))
+    # delete / add / renumber
+    try:
+        doc.delete_flag('bell_rung')
+        ok("S124 delete: refused while used", False)
+    except ValueError as e:
+        ok("S124 delete: refused while used", 'still used' in str(e))
+    doc.delete_flag('ks_unused')
+    ok("S124 delete: an unused flag goes", doc.flag_entry('ks_unused') is None)
+    taken = set(doc.flag_numbers().values())
+    nm = doc.add_flag('Brand new')
+    n = doc.flag_numbers()[nm]
+    ok("S124 add: a fixed number, the lowest free, never $0158",
+       str(doc.flag_entry(nm)['index']).startswith('0x') and n not in taken and n != 0x0158
+       and n == min(i for i in list(range(0x0159, 0x0168)) + list(range(0x1000, 0x179E))
+                    if i not in taken), n)
+    ex_doc = Document(os.path.join(at(base(), 'ex'), 'project.json'))
+    old = ex_doc.flag_numbers()['vault_guardian_beaten']
+    new = ex_doc.renumber_flag('vault_guardian_beaten')
+    ok("S124 renumber: $0158 -> a free number", old == 0x0158 and new not in (0x0158, old)
+       and ex_doc.flag_numbers()['vault_guardian_beaten'] == new, (old, new))
+    try:
+        doc.add_flag('Brand new')
+        ok("S124 add: a duplicate name is refused", False)
+    except ValueError:
+        ok("S124 add: a duplicate name is refused", True)
+
+
 def test_worlds_s123():
     """S123 (ROADMAP NG3): worlds, NPC colours, the Vanish step (PROJECT_COMPILER
     §2.36). Engine facts measured in PyBoy on the user's save (GATE_GENERATION
@@ -5378,6 +5585,7 @@ def main():
     out121 = test_milly_hook_s121()
     test_maze_s122()
     out123 = test_worlds_s123()
+    test_flag_index_s124()
 
     if '--rom' in sys.argv:
         from editor2.core import builder as B

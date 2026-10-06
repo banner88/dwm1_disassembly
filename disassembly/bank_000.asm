@@ -7266,6 +7266,9 @@ Jump_000_2410:
     ret
 
 
+; S124 (code-read): CompareGold ADDS C:D:E (from E:H:L) to the gold at HL via
+; WriteStatAndRet — the sum is capped at 99,999 ($01869F); the name is mgbdis-era
+; (script op $33 = "give gold", BANK04_SCRIPT_ENGINE).
 CompareGold:
     ld c, e
     ld d, h

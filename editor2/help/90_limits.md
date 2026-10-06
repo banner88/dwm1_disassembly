@@ -71,8 +71,10 @@
   fixed; entry fees are 0-65535 gold; TERRY? and the summons cannot fight in
   or lead a team; the announcer and the masters' words are text (not editable
   yet).
-- Flags (S117): 1,968 named flags of your own (16 left over from the game +
-  1,952 new ones); 8 conditions per state rule / variant / NPC. Defeating a
+- Flags (S117, S124): 1,965 named flags of your own (15 left over from the game +
+  1,950 new ones; `$0158` is the game's own — Renumber moves a flag off it);
+  8 conditions per state rule / variant / NPC; conditions are flags ON / OFF
+  joined by AND (no OR yet), and a YES / NO answer. Defeating a
   custom boss of a game's gate does not move that portal room's own step
   counter (other people in that room stay as the game leaves them; the
   swirl itself follows your boss).

@@ -220,6 +220,7 @@ class NpcPanel(QGroupBox):
     shownWhenRequested = Signal()        # S120: flag conditions (NG2 residual b)
     colourEdited = Signal(object)        # S123: OBJ palette 0-7 or None (own colours)
     bossRequested = Signal()             # S123: Make boss…
+    nameRequested = Signal()             # S124 r3: Name… (game rooms too — editor data)
     editTalkRequested = Signal()
     presenceToggled = Signal(int, bool)  # state index, present
     deleteRequested = Signal()
@@ -246,6 +247,18 @@ class NpcPanel(QGroupBox):
         row.addWidget(self.sprite_btn)
         row.addStretch(1)
         f.addRow('sprite', row)
+        nrow = QHBoxLayout()                      # S124 r3: YOUR name for this NPC
+        self.name_lbl = QLabel('')
+        self.name_lbl.setWordWrap(True)
+        self.btn_name = QPushButton('Name…')
+        self.btn_name.setToolTip('Your name for this NPC (e.g. “King — after class B”): '
+                                 'shown on the canvas, in the Progression & Flags tab and '
+                                 'in the cutscene storyboards. Works in the original game\'s '
+                                 'rooms too (it is only for you, never in the ROM).')
+        self.btn_name.clicked.connect(self.nameRequested.emit)
+        nrow.addWidget(self.btn_name)
+        nrow.addWidget(self.name_lbl, 1)
+        f.addRow('name', nrow)
         self.pos = QLabel('')
         f.addRow('home cell', self.pos)
         self.facing = QComboBox()
@@ -388,7 +401,7 @@ class NpcPanel(QGroupBox):
 
     # --------------------------------------------------------------- show
     def show_npc(self, view, script_ids, talk_pages, presence, editable, bytes_hint='',
-                 conversation=None):
+                 conversation=None, name=None):
         """view = Document.npc_view(...); script_ids = [(index, id)];
         talk_pages = pages of a plain talk script or None; presence =
         [bool per state] or None (single-state screen)."""
@@ -407,6 +420,7 @@ class NpcPanel(QGroupBox):
         self.sprite_btn.setIcon(QIcon(pm.scaled(32, 32)) if pm is not None else QIcon())
         self.sprite_btn.setText(text)
         self.pos.setText(f"({view['x']},{view['y']})   drag on the canvas to move")
+        self.name_lbl.setText(f'“{name}”' if name else '<i>(no name)</i>')
         self.facing.setCurrentIndex(max(0, self.facing.findData(view.get('facing', 'down'))))
         b = int(view.get('behaviour', 0))
         i = self.beh.findData(b)

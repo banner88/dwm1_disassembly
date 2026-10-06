@@ -1,5 +1,52 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-05 (Session 122 — **ROADMAP P3.7b PART 2 FINISHED: THE GATES' 16 MAZE
+> LOOKS AS TILESETS FOR THE PROJECT'S OWN ROOMS (THEIR COLOURS, THEIR METATILES, THE 254 MAZE
+> SCREENS, BORROWING BOTH WAYS); THE MAZE CARVE TRACED AND MODELLED BIT-EXACT; MAZE SIZE 3-15;
+> NG2 RESIDUAL (a) — A RE-BOSSED GATE'S WIN RUNS THE VANILLA TAIL; P3.8 CROSSED OFF** (user:
+> "P3.7b part 2 / I dont get it, are they not random? How is previewing them helpful if gate
+> generation is random? … Help tab also should be updated / Cutscenes you can cross off. /
+> Regarding gates - can I currently use gate themes for custom room build? … I would love to
+> use them for custom rooms as an option for tileset, properly coloured" → "1) Yep … Obviously
+> with the option of starting with gate tiles/palettes then borrowing additional tiles
+> elsewhere. 2) Yeah include carve trace")). **Built S122, NOT yet user-tested.**
+> **Trace (byte-neutral, GATE_GENERATION §4 / §5 / §7):** a maze floor = a 4 × 4 grid at
+> `$C940` (cell = piece·16 + variant; `MazePieceTable` `$16:$7055`, `MazeCellOrder` `$7096`,
+> `MazeShapeModes` `$6056` = carved 3/5, plain 1/5, one of 21 `MazePatterns` `$7736` 1/5);
+> cell → screen `MazeScreenTable` `$7896` / `MazeScreenTableB` `$7A96` (254 screens);
+> attributes `GateAttrTable_A/B` `$17:$5215/$5415` (comments corrected); placements
+> (`MazePlacements`: stairs, NPC, arrival, items — `TileAtPixel` ROM0, was `WaitInputRelease`).
+> Labels / comments in banks $00/$01/$06/$07/$16/$17, both trees. **Model:**
+> `editor2/core/maze.py` — `tools/census_maze.py` 4,000 game floors (sizes 3-15) == the model,
+> 0 mismatches; 64 screens pixel-equal; negative control fails. **Found:** maze size 1-2 can
+> carve an empty floor → the game freezes (measured), 0 / 16+ write past the grid →
+> `gamedata.check_list` error + the Encounters tab's range 3-15.
+> **Gate themes (PROJECT_COMPILER §2.35, GATE_GENERATION §7.10, help `12_gate_themes.md`):**
+> no schema change — a room on bank $28 sheet 0-15 (threshold `$30`) or a copy of one IS a
+> theme room. New room → *Or a gate theme*; Change tileset → *A gate theme* (+ its colours);
+> the picker = the maze's 15 metatiles + stairs; **Maze screen…** (`maze_dialog.py`: sides
+> filter, pattern screens, theme pictures); themes in Borrow, borrowing into `$40-$7F` of a
+> theme room (a "release unused vocabulary?" prompt, `VocabReleaseWouldHelp`); Stairs down
+> here = the theme's own stairs. **NG2 (a):** bank $76 `GateClearTable` rows ×6 (+ `WinTail`)
+> and `RunWinTail` (ops `$00-$03`, `$12-$14`) run a re-bossed vanilla gate's own win tail
+> (`map_gate_names.py` → `gate_names.json` `win_tails`): 20 / 20 PyBoy stub calls == the model.
+> Template re-pinned `65e12e5b…`, `TEMPLATE_SIZE[0x76]` 460. **S100 r3 carry-over (b)
+> refuted:** door exits from a free-colour-1 room fade to white like any other (PyBoy).
+> **Verifier PASS; clean `1ca6579…` byte-perfect; patched pin `bd0652da…` (patched)**, was
+> `e43e5f58…` (patched, historical) — the bank $76 template only. test_compiler 784/784,
+> --rom 1073/1073; test_app PASS (new `s122_gate_themes`); test_canvas --rom PASS.
+> `EDITOR_REVISION` = 'S122'.
+> **Test ROM `DWM-S122-gate-themes-test.gbc` (`6777da8e…`, patched; built, NOT yet
+> user-tested):** the user's project (my-dwm-hack_12) + two rooms made with the editor's own
+> operations: the GreatTree screen-12 Copycat House door (4, 4) → **Ice Gallery** ($71, theme
+> 4: a corridor screen + a four-way screen, a guide NPC, the Library bookshelf borrowed into
+> the theme's spare tiles, a sign, the theme's stairs) → **Forest Gallery** ($72, theme 9, a
+> pattern-floor screen, a guide, stairs back to GreatTree screen 12). PyBoy on the user's save,
+> walked end to end: 3 / 3 screens == the editor preview tile for tile, every text box shown.
+> **Hand-off:** `DWM-S122-gate-themes-changed-files.zip` (cumulative) + the APPLY list in the chat.
+> **Next:** the user's test, then the user's pick (NG3, P3.14, P3.H build-out).
+
+
 > Last verified: 2026-10-05 (Session 121 — **ROADMAP P3.16 + E7: THE MILLY HOOK — MILAYOU
 > GOES INTO THE DRESSER, THE SCREEN WHIRLS, AND THE GAME GOES ON AS MILLY (HER SPRITE IN EVERY
 > ROOM, THE NAMING SCREEN'S ICON, THE DEFAULT NAME MILLY) IN A ROOM OF THE PROJECT'S CHOICE;

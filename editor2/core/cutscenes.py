@@ -1465,14 +1465,16 @@ class ProjectCatalogue:
                 b = [_pv(x) or 0 for x in e['bytes']]
                 if b[0] >= 0x80:
                     continue
-                out.append({'type': b[0], 'sprite': b[1], 'x': b[2], 'y': b[3], 'script': b[4]})
+                out.append({'type': b[0], 'sprite': b[1], 'x': b[2], 'y': b[3], 'script': b[4],
+                            'actor': e.get('actor')})
             elif k == 'npc':
                 fac = e.get('facing', 'down')
                 t = F.FACING[fac] if isinstance(fac, str) else (_pv(fac) or 0)
                 if e.get('hidden'):
                     t |= 0x40
                 out.append({'type': t, 'sprite': _pv(e.get('sprite', 0)) or 0,
-                            'x': int(e['x']), 'y': int(e['y']), 'script': e.get('script')})
+                            'x': int(e['x']), 'y': int(e['y']), 'script': e.get('script'),
+                            'actor': e.get('actor')})
         return out
 
     def triggers(self, mid, idx):

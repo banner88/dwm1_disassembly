@@ -1530,10 +1530,15 @@ class CutscenesTab(QWidget):
         except Exception:                                # noqa: BLE001
             by_idx = {}
         named = []
-        for n in npcs:
+        # S124 r3: YOUR names first (an NPC's actor name / custom._editor.npc_names)
+        from editor2.core import npc_names as NN
+        custom = (self.s.doc.data.get('custom') if getattr(self.s, 'doc', None) else None) or {}
+        for i, n in enumerate(npcs, 1):
             sid = n.get('script')
-            spk = CS.script_speaker(by_idx.get(sid), ref.cat.text) \
-                if isinstance(sid, int) and sid != 0xFF else None
+            user = (n.get('actor') if ref.kind == 'project'
+                    else NN.name_of(custom, ref.mid, r.screen, r.room_step, i))
+            spk = user or (CS.script_speaker(by_idx.get(sid), ref.cat.text)
+                           if isinstance(sid, int) and sid != 0xFF else None)
             named.append(dict(n, speaker=spk))
         return CS.initial_actors(named, r.screen, r.player, r.facing, {})
 

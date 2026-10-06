@@ -156,7 +156,8 @@ OPS = {
     0x32: Op('if_slot_species_af', _P('slot', 'target'), 'flow', 1, False,
              'Go to target when party slot is species $AF.'),
     0x33: Op('compare_gold', _P('amount'), 'state', None, False,
-             'Compare the gold with amount.'),
+             'GIVE amount gold (capped at 99,999) — the name is historical: the handler adds '
+             '(S124, code-read; the Castle\'s "Found 10,000G").'),
     0x34: Op('if_slot_skill_b', _P('slot', 'target'), 'flow', 1, False,
              'Go to target when party slot knows skill $0F/$10/$11/$45/$5A.'),
     0x35: Op('refresh_party2', _P(), 'party', None, False, 'Re-count the party.'),
@@ -225,7 +226,8 @@ OPS = {
     0x55: Op('take_random_item', _P(), 'item', None, False,
              'Take a random item from the bag (count to $D8E1).'),
     0x56: Op('gold_value', _P(), 'state', None, False,
-             'Gold / 10 to $D8E1 (and the number to $C180); adds it back.'),
+             'TAKE a tenth of the gold: $D8E1 := nonzero when gold >= 10, the amount to '
+             '$C180 for the next text (S124, code-read: AddGold subtracts).'),
     0x57: Op('give_random_item2', _P(), 'item', None, False,
              'Give a random item $13-$17.'),
     0x58: Op('floor_skip', _P(), 'world', None, True,
@@ -243,9 +245,11 @@ OPS = {
     0x5E: Op('reset_ceremony', _P(), 'state', None, False,
              '$D951 := 7 and clear $C0D8 x 40.'),
     0x5F: Op('if_slot_level_below', _P('slot', 'target'), 'flow', 1, False,
-             'Go to target when party slot\'s level is below its maximum.'),
+             'Go to target when party slot\'s level (+$4B) is AT its cap (+$4C); the cap\'s '
+             'digits go to $C190 (S124, code-read — was worded "below").'),
     0x60: Op('if_gold_short', _P('target'), 'flow', 0, False,
-             'Go to target when gold < (lead monster level + 1) x 10; else pay it.'),
+             'Go to target when gold < (plus value +$62 of monster [$CA40] + 1) x 10; '
+             'else pay it (the breeding fee; S124, code-read).'),
     0x61: Op('draw_attrs', _P('data'), 'screen', None, True,
              'Draw a background patch\'s colours (VRAM bank 1) from data in '
              'this script bank.'),
@@ -711,7 +715,7 @@ def sentence(code, params, ctx=None, target=None):
     if code == 0x2E:
         return f'Goopy game: draw the next pick (row {a0})'
     if code == 0x33:
-        return f'Compare the gold with {a0} G'
+        return f'Give {a0} G'
     if code == 0x37:
         return f'Give the item in treasure chest {a0 + 1} (and empty it)'
     if code == 0x39:
@@ -735,7 +739,7 @@ def sentence(code, params, ctx=None, target=None):
     if code == 0x51:
         return 'Count the library: tier 0-11 (to the check result) and the number (for the next text)'
     if code == 0x56:
-        return 'Gold ÷ 10 (to the check result) and the number for the next text'
+        return 'Take a tenth of the gold (the check result: had 10 G or more)'
     if op.branch is not None:
         tgt = p[op.branch]
         args = ', '.join(f'{n} {p[i]}' for i, n in enumerate(op.params) if i != op.branch)

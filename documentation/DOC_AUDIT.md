@@ -614,3 +614,26 @@ gate you assumed".
 | GATE_GENERATION §7.5.1 (S41): `CustomDescentInGate` for "custom-room descents" | TOO BROAD (S123 r2) | it fired for every gate-flag exit of a custom room, gate entrances included (S115 new-gate entrances too); now Stairs down ($80) only. |
 | render_project.py header / tools/render_rooms.py: "tile ids >= 128 draw tile 0" | WRONG for `$80-$AF` (S123 r3) | every room has sheet `$29:$1D` at `$8800` (bank $0B loader; `ld a, $08` is not a compare) — the roots room (copy of `$08`) previewed with a black cross; in-game it was right. Fixed; ROOM_DATA_FORMAT "Common tiles". |
 | `Project.repo_root` "set in `__init__`" (implicit) | WRONG ORDER (S123) | set late; a conversation testing `gate:N` crashed — now set first. |
+
+## S124 addendum (2026-10-05; the flag index and the Progression & Flags tab — ROADMAP P3.14a)
+
+| Claim (where) | Verdict | Correct |
+|---|---|---|
+| EVENT_FLAGS "Free Flag Slots": `$0158–$0167` "zero script refs … SAFE" (S8 / S57) | WRONG for `$0158` (S124) | Arena Battle (`$5D`) script 0 tests + sets `$0158` (`$0F:$6890` / `$6898`, Milayou's rematch); PyBoy S124: OFF → pos 857 then ON, ON → pos 862. The S57 scan read the pre-S96 `all_scripts.json`. Pool for new flags = `$0159-$0167` (`FLAG_AUTO_RANGES`); `GAME_SHARED_FLAGS` warns. |
+| EVENT_FLAGS: bank $12 `$6C78` "conditionally sets $0057" | IMPRECISE (S124, code-read) | sets `$0050 + [$D9E1]` (eggs already given 0-7) — `$0050-$0057` in turn. |
+| EVENT_FLAGS / SIDEQUEST_MAP: `$00F1` "set in an unreached branch ($0C:$46C4, guarded by $CAB9)", "after the Starry Night victory" | WRONG (S124) | reached by the S124 decoder (handler arities); `FF03 00F1` at `$0C:$46C4` then `$D92B := 5`; per the research read (code-read) it runs once `$00EE` (the ending) is set. |
+| EVENT_FLAGS Statistics: 328 flags / 298 with sets / 29 check-only | STALE (pre-S96 decoder) | S124 (`cutscenes.Catalogue`, handler arities): 587 scripts, 1,674 flag ops, 332 flags, 327 with a set; check-only `$0007` `$0050` `$0053` (the game's code) + `$00E5` `$02C1` (not traced). |
+| GATE_GENERATION §7.7: every King's speech "changes NO saved flag" | WRONG for `$30` (S124) | speech `$30` sets `$0009` (`$0C:$49F2` `FF03 0009`) + `$D92C` / `$D92D` / `$D92F` / `$D93C`. |
+| `script_ops.py` / bank $04 `ScriptCmd33_CompareGold`: op `$33` "compare the gold" | WRONG (S124, code-read) | ADDS the word to the gold (ROM0 `CompareGold` → `WriteStatAndRet`, cap 99,999); renamed `ScriptCmd33_GiveGold` both trees (the editor's op name kept: saved projects). |
+| `script_ops.py` `$56`: "Gold / 10 … adds it back" | WRONG (S124) | takes a tenth (AddGold subtracts, S109). |
+| `script_ops.py` `$5F`: "when the level is below its maximum" | INVERTED (S124) | branches when level +$4B is AT the cap +$4C. |
+| `script_ops.py` `$60`: "(lead monster level + 1) × 10" | WRONG (S124) | (plus value +$62 of monster `[$CA40]` + 1) × 10. |
+| SIDEQUEST_MAP §5: `$31` CheckPartyLevel, `$40` CheckMonsterInStorage, `$60` CheckInventoryItem, Library tier by `$34` | WRONG (S124) | `$31` = 100+ species seen; `$40` = PARTY only (status 2); `$60` = the gold fee above; the tier is `$51`; `$34` tests skills. |
+| QUEST_OPCODES: `wInventory` at `$D980` | WRONG (S124) | `$CA51` (wram.asm). |
+| bank $09 `$607E-$60AD` (mgbdis code) | MISASSEMBLED (S124) | three 16-byte tables of the gate keeper's list: `GateListClearedFlags` / `GateListClearedByte` / `GateListUnlockFlags`; re-sectioned both trees, byte-perfect, text diff = only those lines. |
+| PROJECT_COMPILER §progression / EDITOR_DESIGN §5.7: quest enemies "≤ 12 rows", "12-row tail"; `flags.seen` | STALE (S124) | bank $6B since S101 (cap EID 640); the key is `flags.cutscene_seen`. |
+| PROJECT_COMPILER §2.7: "16 flags", "the example uses none"; help / PROJECT_STATE: "1,968 named flags" | STALE (S121/S124) | `$179E`/`$179F` went to the Milly hook (S121) and `$0158` is the game's: 1,965 numbers for new flags. |
+| `validators._validate_worlds` warning text "gate:{gid} cleared" | BUG (S124) | one line lacked its `f` prefix — the build log showed `{gid}`; fixed. |
+| `scriptgen.OPS` `npc_hide` / `npc_show` (legacy quest actions) | WRONG OPCODES (S124, code-read) | `$48` / `$49` = face_down / face_left (S101) — a quest's "hide" only turns the NPC; the quest form is replaced in ROADMAP P3.14c. |
+| `extracted/all_scripts.json` `words` addresses | DRIFTS (S124, research read) | its word lists are not contiguous ROM words from Castle script 0 on — use `cutscenes.Catalogue` (the ROM) for addresses. |
+| EDITOR_DESIGN §5.7 "As built S124": **open** of a game room's use goes to "a game room" (implied: the place) | WRONG (S124 r3, user-reported) | it opened the room's FIRST screen in state 0 (nav = the map only; `_go_end` forced state 0) — e.g. `$0080` → GreatTree's start screen, not Santi (screen 12, states 1-2). Fixed: `Use.places` + `open_node` / `_go_end` keep screen / state / cell; text corrected (r3 paragraph). |

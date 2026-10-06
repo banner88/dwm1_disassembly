@@ -824,8 +824,13 @@ GreatTree blessing + heal (HP measured 1 → 999), `$D9E3 := $FF`; **7** (the
 vanilla boss win tails) → `$0C:$47E0` = the King's speech chain on
 **`$D9E3`** — one speech per gate boss ($30 Healer, $31 Dragon, … $4E
 DeathMore, $C7 Sidoh, $10 Copycat; `conversation.KING_SPEECHES`); every
-speech ends with `$D92B := 3` (5 for post-game codes) and changes NO saved
-flag; an unknown code falls to the priest path; 1-3 / 5 = no event.
+speech ends with `$D92B := 3` (5 for post-game codes); an unknown code falls to
+the priest path; 1-3 / 5 = no event. **S124 correction** (ROM bytes `$0C:$49F2`
+`FF03 0009`; the editor's flag index, game scripts): speech **`$30`** (the
+Beginning boss — "Oh, [HERO]! Did you bring back Hale…") DOES set a saved flag,
+**`$0009`** ("go to the arena"), and writes `$D92C` / `$D92D` / `$D92F` / `$D93C` (the
+Gate Hub door to the next rooms) — "changes NO saved flag" holds for the other
+codes only (DOC_AUDIT S124).
 `$D9E3` has one other reader, a castle NPC at `$0C:$5066` ($30 / $3C lines,
 else the herb). The helper step's *at the Castle* option writes these
 before its `$3B` warp (PROJECT_COMPILER §2.18).

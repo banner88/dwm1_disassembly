@@ -579,6 +579,7 @@ class RoomsTab(QWidget):
         npc.shownWhenRequested.connect(self._npc_shown_when)                 # S120
         npc.colourEdited.connect(self._npc_colour)                           # S123
         npc.bossRequested.connect(self._npc_make_boss)                       # S123
+        npc.nameRequested.connect(self._npc_name)                            # S124 r3
         from editor2.app.rooms.npc_panel import NpcPanel
         if NpcPanel.OBJ_PAL is None:
             NpcPanel.load_obj_palettes(self.s.renderer.rom)
@@ -1602,15 +1603,29 @@ class RoomsTab(QWidget):
     def open_node(self, key):
         """Open a room given a world-graph key (S98). S123 r3: a key of 5,
         (kind, id, screen, x, y), opens that screen with the cell selected
-        (the World tab's portal / landing pictures → Go to)."""
-        if len(key) == 5:
-            kind, ident, scr, x, y = key
+        (the World tab's portal / landing pictures → Go to). S124: a 6th item
+        = the room state to show (Progression & Flags tab)."""
+        if len(key) in (5, 6):
+            kind, ident, scr, x, y = key[:5]
+            st = int(key[5]) if len(key) == 6 else 0
             if kind == 'room':
+                self.state_idx = st
                 self._go_end({'kind': 'room', 'room': ident, 'screen': int(scr), 'x': int(x),
-                              'y': int(y), 'states': [0]})
+                              'y': int(y), 'states': [st]})
             else:
+                # S124 r3: the game room at ITS screen AND state (was: state 0 always,
+                # so an NPC of a later state — Santi — was not there)
                 self._go_end({'kind': 'vanilla', 'mapID': int(ident), 'screen': int(scr),
-                              'x': int(x), 'y': int(y)})
+                              'x': int(x), 'y': int(y), 'state': st})
+            if int(x) < 0:
+                self.canvas.selected_cell = None
+            elif self.canvas.selected_marker is None:
+                # S124: an NPC / spot there is selected (its panel opens)
+                m = self.canvas._marker_at((int(x), int(y)))
+                if m is not None and m[5] is not None:
+                    self.canvas.selected_marker = m[5]
+                    self._marker_selected({'kind': m[0], 'x': m[1], 'y': m[2],
+                                           'sprite': m[3], 'label': m[4], 'ref': m[5]})
             self.canvas.viewport().update()
             return
         if key[0] == 'room':
@@ -1663,7 +1678,7 @@ class RoomsTab(QWidget):
                     self.vanilla_list.blockSignals(True)
                     self.vanilla_list.setCurrentRow(i)
                     self.vanilla_list.blockSignals(False)
-            self.key, self.state_idx = int(end['screen']), 0
+            self.key, self.state_idx = int(end['screen']), int(end.get('state') or 0)
             self._show()
             self.canvas.selected_cell = (end['x'], end['y'])
             self.canvas.viewport().update()
@@ -1851,10 +1866,13 @@ class RoomsTab(QWidget):
         room = self.current_room()
         panel = self.npc_panel
         if room is None:
-            # vanilla view: read-only form from the raw bytes
+            # vanilla view: read-only form from the raw bytes (S124 r3: but it can
+            # be NAMED — editor data, custom._editor.npc_names)
             view = self.s.doc.npc_view({}, entry)
+            self._sel_vnpc = index
             panel.show_npc(view, [], None, None, editable=False,
-                           bytes_hint=' '.join(str(b) for b in entry.get('bytes', [])))
+                           bytes_hint=' '.join(str(b) for b in entry.get('bytes', [])),
+                           name=self._npc_user_name(index))
             self._show_object(panel)
             return
         lst = self.s.doc.npc_entries(room, self.key, self.state_idx)
@@ -1876,7 +1894,8 @@ class RoomsTab(QWidget):
                        pres if len(pres) > 1 else None, editable=True,
                        bytes_hint=' '.join(str(b) for b in entry.get('bytes', [])),
                        conversation=(self.s.doc.describe_conversation(conv)
-                                     if conv is not None else None))
+                                     if conv is not None else None),
+                       name=entry.get('actor'))
         self._show_object(panel)                # selecting an NPC opens its section
 
     def _after_npc_edit(self, index):
@@ -1890,6 +1909,63 @@ class RoomsTab(QWidget):
             self.inspector.show_selection({'kind': m[0], 'x': m[1], 'y': m[2], 'sprite': m[3],
                                            'label': m[4], 'ref': ref}, editable=True)
             self._show_npc_panel(index)
+
+    def _npc_number(self, index):
+        """S124 r3: entry index of this screen state -> NPC number n (1-based, spots
+        not counted — the game's numbering, npc_names.py)."""
+        from editor2.core.cutscene_build import is_npc_entry
+        room = self.current_room()
+        if room is not None:
+            lst = self.s.doc.npc_entries(room, self.key, self.state_idx)
+        else:
+            lst = self.s.renderer.vanilla_markers(self.vanilla_mid, self.key, self.state_idx)[0]
+        if not 0 <= index < len(lst) or not is_npc_entry(lst[index]):
+            return None
+        return sum(1 for e in lst[:index + 1] if is_npc_entry(e))
+
+    def _npc_user_name(self, index):
+        from editor2.core import npc_names as NN
+        n = self._npc_number(index)
+        if n is None or self.vanilla_mid is None:
+            return None
+        return NN.name_of(self.s.doc.data.get('custom') or {}, self.vanilla_mid, self.key,
+                          self.state_idx, n)
+
+    def _npc_name(self):
+        """Name… — the selected NPC (a project room's or a game room's)."""
+        room = self.current_room()
+        index = self._sel_npc if room is not None else getattr(self, '_sel_vnpc', None)
+        if index is None:
+            return
+        n = self._npc_number(index)
+        if n is None:
+            return
+        if room is not None:
+            cur = self.s.doc.npc_entries(room, self.key, self.state_idx)[index].get('actor') or ''
+        else:
+            cur = self._npc_user_name(index) or ''
+        text, ok = QInputDialog.getText(
+            self, 'Name this NPC', 'Your name for this NPC (empty = no name).\nThe same NPC '
+            '(sprite + cell) in this screen\'s other states gets it too:', text=cur)
+        if not ok:
+            return
+        rid, mid, key, st = self.room_id, self.vanilla_mid, self.key, self.state_idx
+        if room is not None:
+            op = lambda doc: doc.name_npc(text, room=rid, screen=key, state=st, n=n)  # noqa: E731
+        else:
+            op = lambda doc: doc.name_npc(text, mid=mid, screen=key, state=st, n=n)   # noqa: E731
+        cmd = C.SnapshotCommand(self.s, 'Name an NPC', op)
+        self.s.undo.push(cmd)
+        if cmd.error is not None:
+            QMessageBox.warning(self, 'Name this NPC', str(cmd.error))
+            return
+        self._show()
+        ref = self.canvas.select_npc(index)
+        m = next((m for m in self.canvas.markers if m[5] is ref), None) if ref else None
+        if m is not None:
+            self._marker_selected({'kind': m[0], 'x': m[1], 'y': m[2], 'sprite': m[3],
+                                   'label': m[4], 'ref': m[5]})
+            self.canvas.viewport().update()
 
     def _npc_op(self, label, fn, keep=True):
         room = self.current_room()

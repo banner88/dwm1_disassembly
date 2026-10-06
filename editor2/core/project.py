@@ -62,6 +62,15 @@ GATE_FLAG_BASE = 0x17A0                  # + gate number 0-95
 # out of the named pool, so a name can never land on them.
 MILLY_FLAGS_FIRST = 0x179E
 FLAG_SAFE_RANGES = [(0x0158, 0x0167), (EXT_FLAG_FIRST, MILLY_FLAGS_FIRST - 1)]
+# S124 (ROADMAP P3.14a): $0158 is NOT free — the original game's Arena Battle room
+# ($5D, script 0, bank $0F $6890 / $6898) tests and sets it (Milayou's rematch: her
+# first words, then "Are you challenging me again?"); the S8 audit's decoder never
+# reached that branch (EVENT_FLAGS "Safe pool"). A NAMED flag may still carry it
+# (projects numbered before S124 keep their numbers — old saves), but numbers are
+# handed out from FLAG_AUTO_RANGES only, and the Flags tab offers Renumber.
+GAME_SHARED_FLAGS = {0x0158: "the original game's Arena Battle room (Milayou's rematch: "
+                             "her first words, or \"Are you challenging me again?\")"}
+FLAG_AUTO_RANGES = [(0x0159, 0x0167), (EXT_FLAG_FIRST, MILLY_FLAGS_FIRST - 1)]
 # S97 state rules may TEST any event flag (vanilla story flags included). The
 # bitfield is $D99B + idx/8; vanilla references reach $02C1 (EVENT_FLAGS.md),
 # and $0278+ is not in the save image — readable, but a rule on it resets on
@@ -80,6 +89,62 @@ def flag_persistent(idx):
 
 def flag_index_ok(idx):
     return 0 <= idx <= FLAG_VANILLA_MAX or EXT_FLAG_FIRST <= idx <= EXT_FLAG_LAST
+
+
+def flag_in_pool(idx):
+    """True when `idx` may carry a NAMED project flag (FLAG_SAFE_RANGES)."""
+    return any(lo <= idx <= hi for lo, hi in FLAG_SAFE_RANGES)
+
+
+def number_flags(flags, check=None, ranges=None):
+    """[event flag number] of each custom.flags entry, in list order — THE
+    numbering of the compiler (Project._allocate_flags) and of the editor's
+    pinning (S124, Document._migrate_pin_flags / add_flag): an explicit
+    `index` keeps its number (`check(idx)` may refuse it); every `"auto"`
+    entry takes the lowest free number of FLAG_SAFE_RANGES, in list order.
+    Positional: deleting or moving an auto entry renumbers the later ones —
+    which is why the editor pins every number once (old saves keep their
+    meaning). `ranges` = where "auto" numbers come from: FLAG_SAFE_RANGES
+    (default — the compiler's numbering since S53, unchanged so every existing
+    project builds the same bytes) or FLAG_AUTO_RANGES (S124: the editor's
+    new flags never get $0158, GAME_SHARED_FLAGS). Raises ValueError when the
+    pool is exhausted."""
+    out = [None] * len(flags)
+    used = set()
+    for i, fl in enumerate(flags):
+        if str(fl.get('index', 'auto')) != 'auto':
+            idx = F.val(fl['index'])
+            if check is not None:
+                check(idx)
+            out[i] = idx
+            used.add(idx)
+    cursor = iter(i for lo, hi in (ranges or FLAG_SAFE_RANGES) for i in range(lo, hi + 1))
+    for i in range(len(flags)):
+        if out[i] is not None:
+            continue
+        for idx in cursor:
+            if idx not in used:
+                out[i] = idx
+                used.add(idx)
+                break
+        else:
+            raise ValueError("flag pool exhausted (EVENT_FLAGS.md safe ranges)")
+    return out
+
+
+def quest_flag_entries(custom, progression):
+    """The custom.flags entries the compiler adds for quest flag NAMES not
+    declared (Project._register_progression_flags), in its order."""
+    have = {f.get('name') for f in (custom or {}).get('flags', [])}
+    out = []
+    for q in (progression or {}).get('quests', []):
+        for role in ('done', 'cutscene_seen'):
+            name = (q.get('flags') or {}).get(role)
+            if name and name not in have:
+                out.append({'name': name,
+                            'comment': f"progression.quests[{q.get('id')}] {role}"})
+                have.add(name)
+    return out
 STATE_RULE_MAX_TERMS = 8
 # S65 migration: step counters live in the CF3-freed window (WRAM $CC80-$D664,
 # freed S60 — MONSTER_DATA "CF3 as built"). $CD80-$CFFF is the counter region;
@@ -353,14 +418,7 @@ class Project:
         """Quest flag NAMES become ordinary custom.flags entries (auto index
         from the EVENT_FLAGS safe pool) unless already declared."""
         flags = self.custom.setdefault('flags', [])
-        have = {f['name'] for f in flags}
-        for q in self.progression.get('quests', []):
-            for role in ('done', 'cutscene_seen'):
-                name = (q.get('flags') or {}).get(role)
-                if name and name not in have:
-                    flags.append({'name': name,
-                                  'comment': f"progression.quests[{q.get('id')}] {role}"})
-                    have.add(name)
+        flags.extend(quest_flag_entries(self.custom, self.progression))
 
     def _flag_index(self, name, ctx):
         if name not in self._flags:
@@ -1983,28 +2041,14 @@ class Project:
 
     # ----------------------------------------------------------------- flags
     def _allocate_flags(self):
-        used = set()
-        for fl in self.custom.get('flags', []):
-            if str(fl.get('index', 'auto')) != 'auto':
-                idx = F.val(fl['index'])
-                self._check_flag(idx)
-                fl['_index'] = idx
-                used.add(idx)
-        cursor = iter(i for lo, hi in FLAG_SAFE_RANGES
-                      for i in range(lo, hi + 1))
-        for fl in self.custom.get('flags', []):
-            if '_index' in fl:
-                continue
-            for idx in cursor:
-                if idx not in used:
-                    fl['_index'] = idx
-                    used.add(idx)
-                    break
-            else:
-                raise ProjectError("flag pool exhausted (EVENT_FLAGS.md safe "
-                                   "ranges)")
-        self._flags = {fl['name']: fl['_index']
-                       for fl in self.custom.get('flags', [])}
+        flags = self.custom.get('flags', [])
+        try:
+            nums = number_flags(flags, self._check_flag)
+        except ValueError as ex:
+            raise ProjectError(str(ex))
+        for fl, idx in zip(flags, nums):
+            fl['_index'] = idx
+        self._flags = {fl['name']: fl['_index'] for fl in flags}
 
     def _check_flag(self, idx):
         if not any(lo <= idx <= hi for lo, hi in FLAG_SAFE_RANGES):

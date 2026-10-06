@@ -2467,8 +2467,8 @@ jr_012_4eb5:
     ld [$ca8d], a
     ld hl, $0103
     rst $10
-    ld bc, $0007
-    call SetEventFlag
+    ld bc, $0007                        ; S124: flag $0007 = a monster taken from the
+    call SetEventFlag                   ; farm into an EMPTY party (Castle script 0 reads it)
     ld hl, $000f
     call AddCursorOffset
     ld hl, $c906
@@ -7135,6 +7135,8 @@ jr_012_6c0a:
     jr jr_012_6c7b
 
 jr_012_6c78:
+    ; S124 (code-read): flag $0050 + [$D9E1] (the number of medal eggs already
+    ; given, 0-7) — eggs 8+ set nothing; then [$D9E1]++ and [$C905]++
     call SetEventFlag
 
 jr_012_6c7b:

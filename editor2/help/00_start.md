@@ -48,6 +48,13 @@ built from it (the original ROM is never changed).
 - **Shops** — the game's five shops and your own: what each sells (up to 20
   items) and every item's price; an NPC sells a shop via Rooms tab → NPC →
   Shopkeeper….
+- **Progression & Flags** — every flag of your game: what turns it ON / OFF
+  and what checks it, in words; **show** draws the place (the room screen in
+  its state, the NPC outlined) in a panel on the right, where you can also
+  **name NPCs** (yours and the original game's); your flags' notes, Rename /
+  Renumber / Delete; every "When … → …" trigger; the Problems (checks that are
+  never true, copied rooms waiting for the original game's progress) — see
+  *Flags*.
 - **World** — the graph of rooms and the doors between them (mouse wheel =
   zoom, drag empty space = move around, Fit / + / −), and the **Worlds**
   panel: your own worlds — places of hand-made rooms entered through a portal
@@ -56,7 +63,9 @@ built from it (the original ROM is never changed).
 - **Build & Play** — build the ROM (Ctrl+B) and run it (Ctrl+R).
 - **Help** — this tab (F1).
 
-Tabs marked with a roadmap box (Progression & Flags, Balance) are not built yet.
+Tabs marked with a roadmap box (Balance) are not built yet. Story milestones,
+quests and new kinds of checks (items, gold, monsters) are coming to
+Progression & Flags (ROADMAP P3.14b-d).
 
 **Every edit can be undone** (Edit → Undo / Redo; View → History shows
 the list). File → Save saves the project.

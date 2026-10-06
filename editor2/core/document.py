@@ -180,6 +180,8 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         # S119: the tile patches ($24 / $61) of cloned game scripts are copied
         # into the room (bank $60 entries 9 / 10 draw them from there)
         self._migrate_clone_patches(notes)
+        # S124: every flag carries a fixed number
+        self._migrate_pin_flags(notes)
         if notes:
             self.dirty = True
         return notes
@@ -2633,23 +2635,180 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
     def flags(self):
         return self.custom.get('flags', [])
 
-    def add_flag(self, name):
-        """A named project flag, auto-allocated by the compiler from the
-        EVENT_FLAGS safe pool (PROJECT_COMPILER §2.7)."""
-        name = self._slug(name)
-        if not name:
-            raise ValueError('flag name is empty')
-        if any(f.get('name') == name for f in self.flags()):
-            raise ValueError(f'flag {name!r} already exists')
-        self.custom.setdefault('flags', []).append({'name': name, 'index': 'auto'})
+    # S124 (ROADMAP P3.14a): every named flag carries a FIXED number. The
+    # compiler numbers "auto" entries by their position in the list
+    # (project.number_flags), so deleting or moving one renumbered every later
+    # flag — and a save made with the old numbers then meant something else.
+    # On open the numbers the last build used are written in (_migrate_pin_flags);
+    # a new flag gets the lowest free number of FLAG_AUTO_RANGES at once.
+    def flag_numbers(self):
+        """{name: number} exactly as the compiler numbers them (+ quest flags)."""
+        from editor2.core.project import number_flags, quest_flag_entries
+        fl = list(self.flags()) + quest_flag_entries(self.custom, self.data.get('progression'))
+        try:
+            nums = number_flags(fl)
+        except (ValueError, TypeError):
+            return {}
+        return {f.get('name'): n for f, n in zip(fl, nums)}
+
+    def _free_flag_number(self, exclude=()):
+        from editor2.core.project import FLAG_AUTO_RANGES
+        used = set(self.flag_numbers().values()) | set(exclude)
+        for lo, hi in FLAG_AUTO_RANGES:
+            for i in range(lo, hi + 1):
+                if i not in used:
+                    return i
+        raise ValueError('the flag pool is full (every number of FLAG_AUTO_RANGES is taken)')
+
+    def _check_flag_name(self, name, old=None):
+        raw = str(name or '').strip()
+        if not raw:
+            raise ValueError('a flag needs a name')
+        nm = self._slug(raw)
+        if nm != old and any(f.get('name') == nm for f in self.flags()):
+            raise ValueError(f'a flag named {nm!r} already exists')
+        return nm
+
+    def add_flag(self, name, comment=None):
+        """A named project flag with its own fixed number (S124: the lowest free
+        number of the pool, written into the project at once)."""
+        name = self._check_flag_name(name)
+        idx = self._free_flag_number()
+        ent = {'name': name, 'index': f'0x{idx:04X}'}
+        if comment:
+            ent['comment'] = str(comment)
+        self.custom.setdefault('flags', []).append(ent)
         self.touch()
         return name
 
+    def flag_entry(self, name):
+        """The custom.flags entry of a project flag. A legacy quest's flag (the
+        compiler adds those at build time) is written in first — every quest flag
+        at its current number, so none of the others moves."""
+        ent = next((f for f in self.flags() if f.get('name') == name), None)
+        if ent is None:
+            from editor2.core.project import quest_flag_entries
+            implicit = quest_flag_entries(self.custom, self.data.get('progression'))
+            if any(f['name'] == name for f in implicit):
+                nums = self.flag_numbers()
+                for f in implicit:
+                    f['index'] = f"0x{nums[f['name']]:04X}"
+                    self.custom.setdefault('flags', []).append(f)
+                self.touch()
+                ent = next((f for f in self.flags() if f.get('name') == name), None)
+        return ent
+
+    def rename_flag(self, old, new):
+        """Rename a project flag everywhere it is used (its number stays — saves
+        keep it). Returns the new name."""
+        from editor2.core.flag_index import FlagIndex
+        ent = self.flag_entry(old)
+        if ent is None:
+            raise ValueError(f'no project flag named {old!r}')
+        new = self._check_flag_name(new, old)
+        if new == old:
+            return old
+        if str(ent.get('index', 'auto')) == 'auto':
+            ent['index'] = f"0x{self.flag_numbers()[old]:04X}"
+        for u in FlagIndex(self.data).uses_of_name(old):
+            if u.path is not None:
+                self._set_path(u.path, new)
+        ent['name'] = new
+        self.touch()
+        return new
+
+    def _set_path(self, path, value):
+        node = self.data
+        for k in path[:-1]:
+            node = node[k]
+        node[path[-1]] = value
+
+    def flag_uses(self, name):
+        from editor2.core.flag_index import FlagIndex
+        return FlagIndex(self.data).uses_of_name(name)
+
+    def delete_flag(self, name):
+        """Remove a project flag that nothing uses (refused otherwise)."""
+        n = len(self.flag_uses(name))
+        if n:
+            raise ValueError(f'{name!r} is still used in {n} place{"s" if n != 1 else ""} '
+                             '— remove those first')
+        if not any(f.get('name') == name for f in self.flags()):
+            raise ValueError(f'no project flag named {name!r}')
+        self.custom['flags'] = [f for f in self.flags() if f.get('name') != name]
+        if not self.custom['flags']:
+            self.custom.pop('flags')
+        self.touch()
+
+    def set_flag_comment(self, name, text):
+        ent = self.flag_entry(name)
+        if ent is None:
+            raise ValueError(f'no project flag named {name!r}')
+        text = str(text or '').strip()
+        if text:
+            ent['comment'] = text
+        else:
+            ent.pop('comment', None)
+        self.touch()
+
+    def name_npc(self, name, *, room=None, mid=None, screen=0, state=0, n=0):
+        """S124 r3: name NPC n of a screen state — a project room (`room` = its id:
+        the NPC's actor name, cutscene_doc.name_actor) or a game room (`mid`:
+        custom._editor.npc_names, editor data only). The same NPC (sprite + cell)
+        in the screen's other states gets the name too; '' removes it.
+        Returns how many entries were named."""
+        from . import cutscene_doc as CD
+        from . import npc_names as NN
+        if room is not None:
+            return CD.name_actor(self, room, int(screen), int(state), int(n), name)
+        cnt = NN.set_vanilla_name(self.custom, int(mid), int(screen), int(state), int(n),
+                                  name)
+        if not self.custom.get('_editor'):
+            self.custom.pop('_editor', None)
+        self.touch()
+        return cnt
+
+    def renumber_flag(self, name):
+        """Give a project flag the lowest free number (a save made before keeps
+        the OLD number's state, so the flag reads OFF there). -> the new number."""
+        ent = self.flag_entry(name)
+        if ent is None:
+            raise ValueError(f'no project flag named {name!r}')
+        if str(ent.get('index', 'auto')) == 'auto':
+            self._migrate_pin_flags([])
+        old = self.flag_numbers().get(name)
+        idx = self._free_flag_number(exclude=(old,) if old is not None else ())
+        ent['index'] = f'0x{idx:04X}'
+        self.touch()
+        return idx
+
+    def _migrate_pin_flags(self, notes):
+        """S124: write the numbers the compiler gives "auto" flags into the
+        project — the same numbers, so the ROM and old saves do not change; from
+        now on a rename / delete moves nothing. (The legacy quests' flags the
+        compiler adds at build time stay implicit: they come LAST in its list,
+        and a new flag never takes their numbers — _free_flag_number.)"""
+        flags = self.custom.get('flags') or []
+        if all(str(f.get('index', 'auto')) != 'auto' for f in flags):
+            return
+        nums = self.flag_numbers()
+        if not nums:
+            return
+        n = 0
+        for f in flags:
+            if str(f.get('index', 'auto')) == 'auto' and f.get('name') in nums:
+                f['index'] = f"0x{nums[f['name']]:04X}"
+                n += 1
+        if n:
+            notes.append(f'flags: {n} flag number{"s" if n != 1 else ""} written in (S124) — '
+                         'renaming or deleting a flag never renumbers the others, so old '
+                         'saves keep their meaning')
+
     def flag_pool(self):
-        """(used, capacity) of the named-flag pool (S117: the 16 vanilla-safe
-        flags + the extended flags $1000-$179F)."""
-        from editor2.core.project import FLAG_SAFE_RANGES
-        cap = sum(hi - lo + 1 for lo, hi in FLAG_SAFE_RANGES)
+        """(used, capacity) of the named-flag pool (S117: the vanilla-safe flags
+        + the extended flags $1000-$179D; S124: $0158 is the game's — 1,965)."""
+        from editor2.core.project import FLAG_AUTO_RANGES
+        cap = sum(hi - lo + 1 for lo, hi in FLAG_AUTO_RANGES)
         return len(self.flags()), cap
 
     # ================================================= state rules (P3.5a)
