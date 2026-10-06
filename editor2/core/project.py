@@ -210,6 +210,8 @@ class Project:
         self._vanish_places = {}
         self._helper_screens = {}      # S101 r2: helper script -> screen keys
         self._lowering_sid = None
+        self._hub = None               # S125: custom.hub resolved (hub_rules)
+        self._hub_lab = 0
         self.data = data
         self.root = root
         self.warnings = []
@@ -270,6 +272,10 @@ class Project:
         # dialogue so its text ids never move. Copies: never written back into
         # the project's data (the editor saves self.data).
         self.skill_scripts, skill_dialogue = _skill_scripts()
+        try:
+            self._hub_anchor()
+        except ProjectError as ex:            # S125: reported by validate, the editor opens
+            self.cutscene_error = self.cutscene_error or str(ex)
         # S111 (P3.11c): Anchor's dialog texts are editable project data
         # (gamedata.skills.228.dialogs -> the `lines` of the built-in texts)
         from . import custom_skills as CS
@@ -554,7 +560,10 @@ class Project:
         for f in b.get('clear') or []:
             ops.append(['op', 'clear_flag', self.resolve_flag_ref(f, ctx)])
         mv = b.get('move')
-        if mv:
+        if mv and mv.get('dest') == 'hub':
+            # S125: home — the project's hub (custom.hub), or the Castle
+            ops += self.hub_warp_ops('home', ctx + '.move')
+        elif mv:
             dest = str(mv.get('dest', ''))
             if ':' not in dest:
                 raise ProjectError(f"{ctx}: move.dest must be room:$xx or vanilla:$xx")
@@ -589,7 +598,8 @@ class Project:
     #   {"end": true}
     # Text in FIELD context (a room-arrival script, or anything after a battle
     # or the helper's flight) gets its own init_dialog (the S70 protocol).
-    STEP_KINDS = ('say', 'ask', 'if', 'set', 'clear', 'battle', 'move', 'helper', 'vanish', 'end')
+    STEP_KINDS = ('say', 'ask', 'if', 'set', 'clear', 'battle', 'move', 'helper', 'vanish',
+                  'heal', 'end')
     HELPER_SPRITE = 0x39                # Warubou — the darker Watabou (user S101 r2: the
                                         # romhack's helper; vanilla boss exits use $21 Watabou)
     HELPER_FLY = 0x16                   # $1C anim: fly to ($D8E3, $D8E4)
@@ -709,7 +719,14 @@ class Project:
                     ops.append(['op', 'boss_battle'])
                 field = True
             elif kind == 'move':
-                ops.append(['op', 'map_transition'] + list(self._move_words(st['move'], c)))
+                if (st['move'] or {}).get('dest') == 'hub':      # S125: home
+                    ops += self.hub_warp_ops('home', c)
+                else:
+                    ops.append(['op', 'map_transition'] + list(self._move_words(st['move'], c)))
+            elif kind == 'heal':
+                # S125: op $27 — every monster's HP / MP back to full, status
+                # cleared (bank $01 IteratePartySlots20 over the 20 slots; measured)
+                ops.append(['op', 'refresh_party'])
             elif kind == 'helper':
                 h = st['helper'] or {}
                 if helper_idx is None:
@@ -749,12 +766,18 @@ class Project:
                 ops += [['op', 'trigger_anim', f'0x{(self.HELPER_HOP << 8) | H:04X}'],
                         ['op', 'wait_movement']] + spin + face('b') + [['op', 'long_delay', 6]]
                 ev = h.get('castle') or 'none'
+                cev = []
                 if ev == 'heal':            # the priest's blessing + heal (S101 r3)
-                    ops.append(['op', 'write_ram', '0xD92B', 6])
+                    cev.append(['op', 'write_ram', '0xD92B', 6])
                 elif ev == 'king':          # the King's speech for one gate's boss
-                    ops += [['op', 'write_ram', '0xD9E3', int(F.val(h.get('king_speech', 0x31)))],
+                    cev += [['op', 'write_ram', '0xD9E3', int(F.val(h.get('king_speech', 0x31)))],
                             ['op', 'write_ram', '0xD92B', 7]]
-                ops.append(['op', 'warp_fade'] + list(self._move_words(h, c)))
+                if h.get('dest') == 'hub':
+                    # S125: home — the Castle branch keeps the chosen Castle event
+                    ops += self.hub_warp_ops('home', c, op='warp_fade', castle_pre=cev)
+                else:
+                    ops += cev
+                    ops.append(['op', 'warp_fade'] + list(self._move_words(h, c)))
                 field = True
             elif kind == 'vanish':
                 # S123: the NPCs that run this conversation on the current screen
@@ -1413,6 +1436,156 @@ class Project:
                          'comment': f"world {w['name']}: the start room", 'world': gid})
         self._gate_rows = rows
         return rows
+
+    # ------------------------------------------------ the hub (S125, P3.14d)
+    # Where the game sends the player "home": after a lost battle, a party wiped
+    # by floor damage, the WarpWing item / the Anchor skill's gate exit, the
+    # Starry/arena final, and a script's `dest: "hub"`. custom.hub.rules[] are
+    # tried in list order; the first whose flag terms all hold wins; none ->
+    # the vanilla Castle. Engine side: bank $71 entry 9 HubWarp + HubTable
+    # (template head), wHubReason (patches/wram.asm). PROJECT_COMPILER §2.38.
+    HUB_REASONS = {'lost': 1, 'wiped': 2, 'warpwing': 3, 'final_lost': 4,
+                   'home': 5, 'arena_won': 6}          # = HUB_* in patches/wram.asm
+    HUB_REASON_NAMES = {
+        'lost': 'lost a battle', 'wiped': 'the party fell (floor damage)',
+        'warpwing': 'WarpWing / Anchor', 'final_lost': 'lost the Starry / arena final',
+        'home': 'sent home by a script', 'arena_won': 'won an arena class'}
+    W_HUB_REASON = 0xD2EF                  # wHubReason (game.sym; test_compiler checks)
+    HUB_MAX_RULES = 16
+    HUB_MAX_TERMS = 8
+    CASTLE_MID, CASTLE_PX, CASTLE_PY = 0x00, 0xE8, 0x58   # the vanilla warp mailbox
+
+    @classmethod
+    def hub_castle_code(cls, reason):
+        """The $D92B arrival code the vanilla Castle runs: 8 = the priest after a
+        loss (heal), 6 = the WarpWing blessing (heal)."""
+        return 8 if reason in ('lost', 'wiped', 'final_lost') else 6
+
+    def hub_rules(self):
+        """custom.hub (S125, ROADMAP P3.14d; PROJECT_COMPILER §2.38):
+            {"rules": [{"when": [flag terms], "room": "<custom room id>" | "castle",
+                        "screen": k, "x": 0-9, "y": 0-7, "comment": "..."}],
+             "comment": "..."}
+        -> [{index, castle, room_id, mapID, screen, x, y, px, py,
+             terms[(idx, must_clear)], comment}] (list order). Reads custom.rooms
+        directly: the talk scripts lower before the rooms resolve."""
+        if self._hub is not None:
+            return self._hub
+        hub = self.custom.get('hub')
+        out = []
+        if hub:
+            if not isinstance(hub, dict):
+                raise ProjectError("custom.hub: an object {\"rules\": [...]}")
+            unknown = set(hub) - {'rules', 'comment', '_doc'}
+            if unknown:
+                raise ProjectError(f"custom.hub: unknown keys {sorted(unknown)}")
+            rules = hub.get('rules') or []
+            if len(rules) > self.HUB_MAX_RULES:
+                raise ProjectError(f"custom.hub: {len(rules)} rules (max {self.HUB_MAX_RULES})")
+            by_id = {r.get('id'): r for r in self.custom.get('rooms') or []}
+            for i, ru in enumerate(rules):
+                c = f"custom.hub.rules[{i}]"
+                unknown = set(ru) - {'when', 'room', 'screen', 'x', 'y', 'comment'}
+                if unknown:
+                    raise ProjectError(f"{c}: unknown keys {sorted(unknown)}")
+                terms = []
+                for t in ru.get('when') or []:
+                    is_ = t.get('is', 'set')
+                    if is_ not in ('set', 'clear'):
+                        raise ProjectError(f"{c}: term 'is' must be set/clear")
+                    terms.append((self.resolve_flag_ref(t.get('flag'), c), is_ == 'clear'))
+                if len(terms) > self.HUB_MAX_TERMS:
+                    raise ProjectError(f"{c}: {len(terms)} flag terms (max {self.HUB_MAX_TERMS})")
+                if out and not out[-1]['terms']:
+                    raise ProjectError(
+                        f"{c}: rule {i} has no conditions, so it always wins — "
+                        "the rules after it can never be used (put the rule with no "
+                        "conditions last)")
+                if ru.get('room') == 'castle':
+                    out.append({'index': i, 'castle': True, 'room_id': 'castle',
+                                'mapID': self.CASTLE_MID, 'screen': None, 'x': None,
+                                'y': None, 'px': self.CASTLE_PX, 'py': self.CASTLE_PY,
+                                'terms': terms, 'comment': ru.get('comment', '')})
+                    continue
+                room = by_id.get(ru.get('room'))
+                if room is None or room.get('placeholder') or room.get('mapID') is None:
+                    raise ProjectError(f"{c}: room {ru.get('room')!r} is not a custom room "
+                                       "of this project (or \"castle\")")
+                k = int(ru.get('screen', 0))
+                if str(k) not in {str(x) for x in (room.get('screens') or {})}:
+                    raise ProjectError(f"{c}: room {room['id']!r} has no screen {k}")
+                try:
+                    x, y = int(ru['x']), int(ru['y'])
+                except (KeyError, TypeError, ValueError):
+                    raise ProjectError(f"{c}: the arrival cell x / y is required")
+                if not (0 <= x <= 9 and 0 <= y <= 7):
+                    raise ProjectError(f"{c}: arrival cell ({x},{y}) outside the 10x8 grid")
+                px = ((k % 4) * 10 + x) * 16 + 8
+                py = ((k // 4) * 8 + y) * 16 + 8
+                out.append({'index': i, 'castle': False, 'room_id': room['id'],
+                            'mapID': F.val(room['mapID']), 'screen': k, 'x': x, 'y': y,
+                            'px': px, 'py': py, 'terms': terms,
+                            'comment': ru.get('comment', '')})
+        self._hub = out
+        return out
+
+    def _hub_anchor(self):
+        """S125: the Anchor skill's gate exit (skill:anchor_gate_confirm, the
+        WarpWing's Castle warp) goes to the hub. No hub -> the ops stay as they are."""
+        if not self.hub_rules():
+            return
+        for sc in self.skill_scripts:
+            if sc['id'] != 'skill:anchor_gate_confirm':
+                continue
+            ops = sc['ops']
+            for i in range(len(ops) - 1):
+                a, b = ops[i], ops[i + 1]
+                if (isinstance(a, list) and a[:2] == ['op', 'write_ram']
+                        and F.val(a[2]) == 0xD92B and isinstance(b, list)
+                        and b[:2] == ['op', 'map_transition'] and F.val(b[2]) == 0):
+                    sc['ops'] = ops[:i] + self.hub_warp_ops('warpwing', sc['id']) + ops[i + 2:]
+                    return
+            raise ProjectError("skill:anchor_gate_confirm: the Castle warp is not where "
+                               "the hub expects it (editor2/core/skill_scripts.json)")
+
+    def hub_room_ids(self):
+        """The custom rooms some hub rule sends the player to."""
+        return {r['room_id'] for r in self.hub_rules() if not r['castle']}
+
+    def hub_warp_ops(self, reason, ctx, op='map_transition', castle_pre=None):
+        """A script's way to the hub (S125): the rules as an if-ladder, each branch
+        a terminal warp — a custom room gets wHubReason := reason first (its arrival
+        scenes read it), the Castle gets its $D92B code (castle_pre replaces that
+        write, e.g. the helper exit's King speech). No hub -> the Castle alone:
+        byte-identical to a hand-written Castle warp."""
+        if reason not in self.HUB_REASONS:
+            raise ProjectError(f"{ctx}: hub reason {reason!r} — one of "
+                               f"{sorted(self.HUB_REASONS)}")
+        self._hub_lab += 1
+        p = f'hub{self._hub_lab}'
+        ops = []
+
+        def castle():
+            pre = (castle_pre if castle_pre is not None else
+                   [['op', 'write_ram', '0xD92B', self.hub_castle_code(reason)]])
+            return list(pre) + [['op', op, f'0x{self.CASTLE_MID:04X}',
+                                 f'0x{self.CASTLE_PX:04X}', f'0x{self.CASTLE_PY:04X}']]
+        rules = self.hub_rules()
+        for i, ru in enumerate(rules):
+            nxt = f'{p}_r{i}'
+            for idx, clr in ru['terms']:
+                ops.append(['op', 'if_flag_set' if clr else 'if_flag_clear', idx, '@' + nxt])
+            if ru['castle']:
+                ops += castle()
+            else:
+                ops += [['op', 'write_ram', f'0x{self.W_HUB_REASON:04X}',
+                         self.HUB_REASONS[reason]],
+                        ['op', op, f'0x{ru["mapID"]:04X}', f'0x{ru["px"]:04X}',
+                         f'0x{ru["py"]:04X}']]
+            if not ru['terms']:
+                return ops                  # always taken: nothing after it runs
+            ops.append(f'label:{nxt}')
+        return ops + castle()
 
     # ------------------------------------------------ worlds (S123, NG3)
     def worlds(self):

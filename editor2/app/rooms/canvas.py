@@ -52,14 +52,16 @@ MARKER = {'npc': QColor(0, 200, 255), 'spawn': QColor(255, 170, 40),
           # S100 (P3.7b): gate rooms
           'stairs': QColor(170, 120, 255), 'gate_arrival': QColor(80, 245, 255),
           # S123 r3: worlds — a portal into a world, where the world lands you
-          'portal': QColor(90, 200, 255), 'world_land': QColor(90, 255, 120)}
+          'portal': QColor(90, 200, 255), 'world_land': QColor(90, 255, 120),
+          # S125: where a hub rule brings the player home
+          'hub': QColor(255, 200, 40)}
 MARKER_TEXT = {'spawn': 'X!', 'exit': '→', 'walkon': 'T', 'special': '?',
                'redirect': 'R', 'entrance': 'IN', 'door': 'D', 'door_open': 'D?',
                'door_dead': 'D!',
                'examine': 'X',
                'step': 'T',
                'stairs': 'S↓', 'gate_arrival': 'G',
-               'portal': 'P', 'world_land': 'W↓'}
+               'portal': 'P', 'world_land': 'W↓', 'hub': 'H'}
 SEL = QColor(255, 230, 0)
 
 
@@ -663,6 +665,13 @@ class RoomCanvas(QGraphicsView):
                                      f"{doc.world_name(gid)} drops the player here (drag to "
                                      "move; World tab → The way in)",
                                      ('world_land', gid, st0)))
+        # S125: the hub — where a lost battle / the WarpWing / "home" bring the player
+        for i, ru in (doc.hub_rules_of_room(room.get('id')) if room else []):
+            if int(ru.get('screen', 0)) == int(self.key):
+                self.markers.append(('hub', int(ru['x']), int(ru['y']), None,
+                                     f"Hub (rule {i + 1}) — a lost battle, the WarpWing and "
+                                     "“home” bring the player here (World tab → Hub)",
+                                     ('hub', i, ru)))
         arr = room.get('gate_arrival') if room else None
         if arr and int(arr.get('screen', 0)) == int(self.key):
             self.markers.append(('gate_arrival', int(arr['x']), int(arr['y']), None,

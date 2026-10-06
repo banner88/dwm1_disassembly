@@ -34,6 +34,11 @@ OPS = {
                                        # linear) + handler $04:$5F5C (bank $01
                                        # entries 9+3, jp $55F5). NOT a branch.
                                        # SIDEQUEST_MAP: party display setup.
+    'refresh_party':      (0x27, 0),   # S125: the same op under its script_ops
+                                       # name — the cutscene / conversation Heal
+                                       # step: bank $01 entry 9 IteratePartySlots20
+                                       # (HP/MP := max, status cleared, 20 slots)
+                                       # then entry 3 (PyBoy-measured S125)
     'post_battle_check':  (0x27, 0),   # legacy alias — the old (0x27, 1) row
                                        # was a decompile_script-inherited
                                        # defect ($41/$07 class); never emitted

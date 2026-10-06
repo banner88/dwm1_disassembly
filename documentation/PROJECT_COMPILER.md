@@ -583,6 +583,9 @@ user-confirmed hand-authored code:
 * `editor2/core/templates/bank_079_head.asm` (S121) — bank byte, 2-entry table, entry 0
   `MillyShapeTable` / entry 1 `MillyPlayerSheet` (§2.34); only emitted with the hook on;
   pinned `3d7cbdbe…ef95`; no TEMPLATE_SIZE (the bank holds a few hundred bytes).
+* S125 re-pin: `bank_071_head.asm` `28d988db…6cc4` (+ entry 9 `HubWarp`, §2.38;
+  TEMPLATE_SIZE 865 B, `Custom26DDTable` `$4361` in the S125 game.sym; the S121 value is
+  historical).
 * S121 re-pin: `bank_071_head.asm` `27b5f30f…1b81` (+ entry 8 `TextSpriteMode`, §2.34;
   TEMPLATE_SIZE 727 B, `Custom26DDTable` `$42D7` in the S121 game.sym; the S116 value is
   historical).
@@ -2875,6 +2878,87 @@ wrote, so every use knows its place in words and its JSON path — and, given a
   trigger and problem.
 
 Byte-neutral: the example project's build is unchanged (pin `6b0738c1…`, patched).
+
+## §2.38 S125 — the HUB: where the game sends the player home (`custom.hub`, ROADMAP P3.14d part 1)
+
+```json
+"hub": {"rules": [
+  {"when": [{"flag": "post_game", "is": "clear"}], "room": "hub_hall",
+   "screen": 0, "x": 4, "y": 5, "comment": "the main game"},
+  {"room": "castle", "comment": "after the ending"}]}
+```
+
+Rules in list order; the first whose flag terms all hold is the hub (max 16 rules, 8
+terms each; a rule after one without conditions is refused — it could never apply). No
+rule holds / no `hub` = the vanilla Castle. `room` = a custom room id, or `"castle"`
+(map 0, pixel `$E8/$58`, the Castle's own `$D92B` arrival codes). Resolved by
+`Project.hub_rules()` (reads `custom.rooms` directly — the talk scripts lower before
+the rooms resolve).
+
+**Engine (bank $71 template, entry 9 `HubWarp`, HL = `$7109`, E = the reason):** the
+four engine Castle sends — bank $50 `BattleExitHandler` `$6559` (an ordinary lost
+battle) and `$64AF` (the lost Starry Night / arena final, `wBattlePostFlag` = 1), bank
+$06 `$6A39` (the party killed by damage floors, after message `$021A`), bank $07
+`$5030` (the WarpWing item) — were 38 bytes each of `$D92B := code` + the warp mailbox;
+now (same size, `patches/bank_050/006/007.asm`) `ld e, HUB_x / ld hl, $7109 / rst $10 /
+jr +30 / ds 30`; the code after (`wIsPlayerChangingMaps := 1`, the gold halving, the
+item loss) is unchanged, so the penalties stay. `HubWarp` stores E in `wHubReason`
+(`$D2EF`, `patches/wram.asm`, carved from `wCustomPool`) and walks **`HubTable`**
+(generated: `[n_terms] + n_terms × dw flag (bit 15 = must be CLEAR) + [mapID, px lo/hi,
+py lo/hi]`, `$FF` ends). A custom room: the mailbox := that room / pixel, gate flag 0,
+`wHubReason` kept. Map 0 / no match: exactly the vanilla writes (`$D92B` := 6 for the
+WarpWing, else 8; map 0 at `$E8/$58`) and `wHubReason` := 0. Reasons (`HUB_*` EQUs,
+`Project.HUB_REASONS`, `cutscene_build.ARRIVALS`): 1 `lost`, 2 `wiped`, 3 `warpwing`,
+4 `final_lost`, 5 `home` (a script), 6 `arena_won` (reserved for the P3.14e arena).
+`TEMPLATE_SIZE[0x71]` 865 (`Custom26DDTable` `$4361` in the S125 example game.sym).
+
+**Scripts going home (`dest: "hub"`):** a talk block's `move`, a conversation's `move`
+and `helper`, a cutscene's `move` → `Project.hub_warp_ops(reason)`: the rules as an
+if-ladder (`if_flag_clear` / `if_flag_set` per term), each branch a terminal warp — a
+custom room gets `write_ram $D2EF, reason` first; the Castle branch gets its `$D92B`
+write (6 for `home` / `warpwing`, 8 for a loss) or, for the helper, the helper's own
+Castle event (heal = 6, King = `$D9E3` + 7, none = nothing); `map_transition` (move) or
+`warp_fade` (helper). No hub → the Castle alone: byte-identical to a hand-written Castle
+warp. The Anchor skill's gate exit (`skill:anchor_gate_confirm`, the WarpWing recipe)
+is rewritten the same way with reason `warpwing` (`Project._hub_anchor`); unchanged
+without a hub.
+
+**Arrival scenes (`custom.rooms[].cutscenes[].trigger.arrival`):** an entry scene with
+`"arrival": ["lost", "wiped", …]` plays only when `wHubReason` is one of them: guard =
+`check_and_branch $D2EF, n, @arr` per reason, else skip; once every guard has passed
+(`once` included — a skipped scene leaves the reason to the default heal) the scene takes
+the reason (`write_ram $D2EF, 0`) so a reload of the room (scrolling, after a battle) does
+not replay it. A **hub room** (any rule's room) always gets a combined entry script
+`cut:<room>:entry` (`cutscene_build.lower_project`): (1) `hub_reveal_ops` — for the
+WarpWing reason `$C8EC := 0` (the item's exit sets `$C8EC` = 1, every field sprite
+hidden, and leaves the clearing to the Castle; PyBoy S125: elsewhere the player, the
+monsters and the NPCs stayed invisible), (2) the Milly hook's scene, then the arrival
+scenes (sorted first), (3) `hub_default_ops` — a reason no scene took: `refresh_party`
+(heal) + take it — BEFORE the room's other entry scenes (one of them may warp away;
+S125 review), then those scenes and, after `cut_orig`, the room's own entry script. Validators warn: an arrival scene in a room no rule reaches /
+on a screen no rule lands on (never plays), a loss arrival without a Heal step.
+
+**Heal step** (`{"heal": {}}`, cutscenes and conversations): op `$27` `refresh_party`
+(scriptgen alias of `monster_party_op2`) = bank $01 entry 9 `IteratePartySlots20`:
+every monster record's status := 0, HP := max, MP := max (PyBoy S125: three KO'd party
+monsters at 0 HP / 0 MP → full, status `$80` → 0), then entry 3.
+
+**Flag index:** kind `hub` (`custom.hub.rules[].when`, navigation `{'tab': 'worlds',
+'hub': n}`). **Editor:** World tab → **Hub** box (`HubBox`, `HubRuleDialog`),
+`editor2/core/hub_doc.py` `HubMixin` (`hub_rules` / `set_hub_rules` / `add_hub_rule` /
+`update_hub_rule` / `remove_hub_rule` / `move_hub_rule` / `hub_rule_text` /
+`hub_problems` / `add_arrival_scenes`); the cutscene editor's **Arrival home… ▾**, Heal
+step and "home — the hub" destination; the conversation dialog's Home destination and
+Heal step; the Rooms canvas **H** marker (EDITOR_DESIGN §5.8 "Hub (S125)").
+
+**Measured (PyBoy, the user's save + a demo hub room, PROJECT_STATE S125):** lost battle
+→ the hub at its cell, the arrival scene, heal, 3800 → 1900 gold, items lost as in the
+game; the WarpWing thrown on gate 0 floor 1 → the hub, its scene, sprites shown, the
+wing used up; a script's "home" → reason 5, its scene; hub rule 2 (the Castle once the
+flag is ON) → a loss lands in the throne room (screen 1, (14, 5)), `$D92B` 8, the priest
+heals; the WarpWing with the Castle hub → the Castle; the hub room's door out works.
+Not staged: the floor-damage wipe and the Starry final (the same call, MiniSM83-run in
+test_compiler `test_hub_rom`).
 
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 

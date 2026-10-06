@@ -2458,23 +2458,15 @@ jr_007_5012:
     ld hl, $0304
     rst $10
     call UpdateOAMSprites
-    ld a, $06                ; S101 r3: $D92B = 6 -> castle arrival = priest blessing + heal ($0C:$490A; gate return)
-    ld [$d92b], a
-    ld hl, $0000
-    ld a, l
-    ld [wWarpGateId], a
-    ld a, h
-    ld [wWarpFlag], a
-    ld hl, $00e8
-    ld a, l
-    ld [wWarpSpawnXLo], a
-    ld a, h
-    ld [wWarpSpawnXHi], a
-    ld hl, $0058
-    ld a, l
-    ld [wWarpSpawnYLo], a
-    ld a, h
-    ld [wWarpSpawnYHi], a
+    ; S125 (ROADMAP P3.14d): was `$D92B := 6` + the Castle warp mailbox (map 0,
+    ; pixel $E8/$58; 38 B) — now the project's hub: bank $71 entry 9 HubWarp
+    ; (the vanilla writes when the hub is the Castle or no hub is set).
+    ld e, HUB_WARPWING
+    ld hl, $7109
+    rst $10
+    jr .hubWarped
+    ds 30, $00                          ; same size: the 38 bytes of the old writes
+.hubWarped:
     ld a, $01
     ld [wIsPlayerChangingMaps], a
     ld hl, wGameState

@@ -53,6 +53,7 @@ KINDS = {
     'room_battles': 'battles',          # rooms[].encounters.variants[].when
     'gate_battles': 'battles',          # gates[].encounters.variants[].when
     'gate_room': 'gate floor room',     # custom.gate_inserts[].when
+    'hub': 'hub',                       # custom.hub.rules[].when (S125)
     'quest': 'quest',                   # progression.quests[] flags / actions
     'gate_win': 'boss win',             # engine: bank $76 GateBossWin
     'hook': 'Milly hook',               # the Milly hook's own flags
@@ -240,6 +241,7 @@ class FlagIndex:
         self._walk_rooms()
         self._walk_gates()
         self._walk_gate_rooms()
+        self._walk_hub()
         self._walk_quests()
         self._walk_preludes()
         self._engine()
@@ -777,6 +779,25 @@ class FlagIndex:
                           f"{rn} may appear on gate {gid}{fl} ({ru.get('chance', 100)} %)",
                           f'gate {gid} · rooms on gate floors', {'tab': 'gates', 'gate': gid},
                           [('custom', 'gate_inserts', j, 'when', t, 'flag')
+                           for t in range(len(terms))])
+
+    def _walk_hub(self):
+        """S125 (ROADMAP P3.14d): custom.hub.rules[].when — where the game sends the
+        player home (lost battle, WarpWing, a script's "the hub")."""
+        rooms = {r.get('id'): r for r in self.rooms}
+        for j, ru in enumerate((self.custom.get('hub') or {}).get('rules') or []):
+            terms = [(t.get('flag'), t.get('is', 'set')) for t in ru.get('when') or []
+                     if isinstance(t, dict)]
+            if not terms:
+                continue
+            if ru.get('room') == 'castle':
+                rn = 'the Castle (the original game\'s hub)'
+            else:
+                r = rooms.get(ru.get('room'))
+                rn = (r.get('name') or r.get('id')) if r else ru.get('room')
+            self._trigger('hub', terms, '', f"the hub is {rn} (rule {j + 1})",
+                          f'hub · rule {j + 1}', {'tab': 'worlds', 'hub': j},
+                          [('custom', 'hub', 'rules', j, 'when', t, 'flag')
                            for t in range(len(terms))])
 
     # ------------------------------------------------------------- quests (legacy, S70)

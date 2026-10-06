@@ -5504,3 +5504,31 @@ first screen in state 0 shows someone else entirely. **Fix**: every use carries 
 tab. **Rule**: a navigation target in a room with states is (room, screen, state, cell) — test
 that the destination SHOWS the thing (the NPC is at the cell in that state), not that a tab
 opened.
+
+## S125 — the hub: a warp that only worked because of where it went
+
+### A vanilla exit can leave work to its destination (S125)
+
+**Symptom**: the WarpWing sent the player to the new hub room correctly (map, cell, the
+arrival scene's text) but every sprite — the player, the monsters, the NPCs — stayed
+invisible, even after walking. A lost battle to the same room drew them fine. **Root
+cause** (PyBoy, RAM diff, then code): the WarpWing's own exit (bank $07, right after the
+warp mailbox) sets `$C8EC` = 1 (all field sprites hidden) and does not run the transition
+ladder that clears it; in the game it always lands in the Castle, whose arrival code
+(`$D92B` = 6, bank $06 `MapTrans_S04` + the priest's script) un-hides them. Redirecting
+the warp kept the hiding and lost the un-hiding. **Fix**: a hub room's arrival script
+starts with `$C8EC := 0` for the WarpWing reason (`cutscene_build.hub_reveal_ops`).
+**Rule**: when a hard-wired destination becomes a choice, test EVERY sender into a
+non-original destination in the emulator — the sender's side effects may have been
+finished by the original destination's own code. The same-size redirect was correct; the
+assumption "a warp is just a map and a cell" was not.
+
+### Read the sender before naming it (S125)
+
+**Symptom**: ROADMAP / PROJECT_STATE called bank $50 `$64AF` "the lost battle" and bank
+$07's code 6 "the gate return". **Measured / code-read S125**: an ordinary loss is
+`$6559` (`$64AF` is the Starry Night / arena final, `wBattlePostFlag` = 1); code 6 is
+written only by the WarpWing item's use path. Both mattered here: the hub has a reason per
+sender. **Rule**: a site's name comes from what reaches it (its guard, its caller), not
+from the first case that was traced through it.
+

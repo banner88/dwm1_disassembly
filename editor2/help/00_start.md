@@ -59,7 +59,9 @@ built from it (the original ROM is never changed).
   zoom, drag empty space = move around, Fit / + / −), and the **Worlds**
   panel: your own worlds — places of hand-made rooms entered through a portal
   like a gate, with per-room battles, mini-bosses and an end boss that clears
-  the world (see *Worlds*).
+  the world (see *Worlds*); and the **Hub** box: where a lost battle, the
+  WarpWing or "home" send the player — your room instead of the Castle,
+  changing with flags (see *The hub*).
 - **Build & Play** — build the ROM (Ctrl+B) and run it (Ctrl+R).
 - **Help** — this tab (F1).
 

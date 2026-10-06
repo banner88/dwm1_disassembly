@@ -662,6 +662,7 @@ def emit_bank_071(prj, warnings):
         lines.append(F.db_line([src], comment=f"{F.hexb(F.val(r['mapID']))} — {why}"))
     lines.append("")
     lines += _gate_insert_table(prj)
+    lines += _hub_table(prj)
     lines += ["; " + "-" * 77,
               "; CustomRoomFlagsTable — 1 byte/room, indexed (mapID-$6B): bit 0 =",
               "; saving NOT allowed (custom.rooms[].can_save false). Read by entry",
@@ -725,6 +726,35 @@ def _gate_insert_table(prj):
         for idx, clr in row['terms']:
             out.append(f"    dw ${idx | (0x8000 if clr else 0):04X}   ; flag "
                        f"{F.hexw(idx)} must be {'clear' if clr else 'set'}")
+    out.append("    db $FF")
+    out.append("")
+    return out
+
+
+def _hub_table(prj):
+    """HubTable (S125, ROADMAP P3.14d) — record layout in the bank $71 template
+    (entry 9 HubWarp); rules in custom.hub.rules[] list order."""
+    out = ["; " + "-" * 77,
+           "; HubTable — where the game sends the player home (S125, P3.14d).",
+           "; [n_terms] + n_terms x dw flag (bit 15 = must be CLEAR) + [mapID,",
+           ";  spawn_x lo/hi, spawn_y lo/hi]; mapID 0 = the Castle (the vanilla",
+           ";  arrival codes); $FF ends; no rule holds -> the Castle. Read by",
+           ";  entry 9 HubWarp. (generated)",
+           "; " + "-" * 77,
+           "HubTable:"]
+    for ru in prj.hub_rules():
+        out.append(F.db_line([len(ru['terms'])],
+                   comment=f"rule {ru['index'] + 1}: "
+                   + ('always' if not ru['terms'] else f"{len(ru['terms'])} flag term(s)")
+                   + (f" — {ru['comment']}" if ru.get('comment') else '')))
+        for idx, clr in ru['terms']:
+            out.append(f"    dw ${idx | (0x8000 if clr else 0):04X}   ; flag "
+                       f"{F.hexw(idx)} must be {'clear' if clr else 'set'}")
+        what = ('the Castle (vanilla)' if ru['castle'] else
+                f"{ru['room_id']} screen {ru['screen']} ({ru['x']},{ru['y']})")
+        out.append(F.db_line([ru['mapID'], ru['px'] & 0xFF, ru['px'] >> 8,
+                              ru['py'] & 0xFF, ru['py'] >> 8],
+                             comment=f"-> {F.hexb(ru['mapID'])} {what}"))
     out.append("    db $FF")
     out.append("")
     return out

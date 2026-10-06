@@ -18,6 +18,12 @@ project's worlds (editor2/core/worlds.py), each with its start room, portals, wh
 the swirl does once the world is cleared, the saving rule, its rooms (battles,
 saving, bosses, where their doors lead) and what it still needs; "only this
 world" draws just its rooms (green frames) and the rooms its doors touch.
+
+S125 (ROADMAP P3.14d, user: "Make a single room be HUB but … transferrable upon flag"):
+the HUB box at the top of the panel — where the game sends the player home (a lost
+battle, a party fallen on damage floors, the WarpWing / Anchor, "home" in a scene or
+conversation). Rules in order, the first that holds wins; none = the Castle
+(editor2/core/hub_doc.py, PROJECT_COMPILER §2.38).
 """
 
 import math
@@ -505,6 +511,256 @@ class PortalDialog(QDialog):
         self.accept()
 
 
+class HubRuleDialog(QDialog):
+    """One hub rule (S125): its flag conditions, the room (or the Castle) and the
+    cell the player arrives on."""
+
+    def __init__(self, session, rule=None, parent=None):
+        super().__init__(parent)
+        from editor2.app.encounters_tab import FlagTerms
+        from editor2.app.rooms.cell_picker import CellPicker
+        self.s = session
+        doc = session.doc
+        rule = rule or {}
+        self.setWindowTitle('Hub rule')
+        v = QVBoxLayout(self)
+        lab = QLabel('While these flags hold (none = always), the game sends the player home '
+                     'to this room. Rules are tried in order — the first that holds wins.')
+        lab.setWordWrap(True)
+        v.addWidget(lab)
+        v.addWidget(QLabel('<b>when</b> (every condition)'))
+        self.terms = FlagTerms(doc, rule.get('when') or [])
+        self.terms.setMinimumHeight(110)
+        v.addWidget(self.terms)
+        row = QHBoxLayout()
+        row.addWidget(QLabel('<b>home is</b>'))
+        self.room = QComboBox()
+        self.room.addItem('the Castle (the original game: the priest heals, the King…)', 'castle')
+        for r in doc.rooms:
+            if not r.get('placeholder'):
+                self.room.addItem(f"${int(str(r['mapID']), 0):02X} {doc.room_name(r)}", r['id'])
+        self.room.setCurrentIndex(max(0, self.room.findData(rule.get('room', 'castle'))))
+        row.addWidget(self.room, 1)
+        v.addLayout(row)
+        self.picker = CellPicker(session, 'LAND')
+        self.picker.set_cell(int(rule.get('screen', 0)), int(rule.get('x', 4)),
+                             int(rule.get('y', 4)))
+        v.addWidget(self.picker)
+        self.castle_note = QLabel('The Castle keeps its own arrival: the throne room, the '
+                                  'priest\'s heal after a loss, the blessing after the WarpWing.')
+        self.castle_note.setWordWrap(True)
+        v.addWidget(self.castle_note)
+        crow = QHBoxLayout()
+        crow.addWidget(QLabel('note'))
+        self.comment = QLineEdit(rule.get('comment', ''))
+        self.comment.setPlaceholderText('e.g. the main game / after the ending')
+        crow.addWidget(self.comment, 1)
+        v.addLayout(crow)
+        self.room.currentIndexChanged.connect(self._room)
+        self._room()
+        self.picker.set_cell(int(rule.get('screen', 0)), int(rule.get('x', 4)),
+                             int(rule.get('y', 4)))
+        bb = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        bb.accepted.connect(self._ok)
+        bb.rejected.connect(self.reject)
+        v.addWidget(bb)
+
+    def _room(self, _i=None):
+        rid = self.room.currentData()
+        castle = rid == 'castle'
+        self.picker.setVisible(not castle)
+        self.castle_note.setVisible(castle)
+        if not castle:
+            self.picker.set_room(rid)
+
+    def rule(self):
+        out = {}
+        t = self.terms.terms()
+        if t:
+            out['when'] = t
+        rid = self.room.currentData()
+        out['room'] = rid
+        if rid != 'castle':
+            k, x, y = self.picker.cell()
+            out.update(screen=k, x=x, y=y)
+        if self.comment.text().strip():
+            out['comment'] = self.comment.text().strip()
+        return out
+
+    def new_flags(self):
+        return list(self.terms.new_flags)
+
+    def _ok(self):
+        if self.room.currentData() != 'castle':
+            _k, x, y = self.picker.cell()
+            if self.picker.is_wall(x, y):
+                QMessageBox.warning(self, 'Hub rule', f'({x},{y}) is a wall — the player would '
+                                    'be stuck. Click a floor cell.')
+                return
+        self.accept()
+
+
+class HubBox(QGroupBox):
+    """S125 (ROADMAP P3.14d): the hub — where the game sends the player home."""
+
+    def __init__(self, tab):
+        super().__init__('Hub — where the game sends the player home')
+        self.tab, self.s = tab, tab.s
+        v = QVBoxLayout(self)
+        lab = QLabel('A lost battle, a party fallen on damage floors, the WarpWing (or Anchor) '
+                     'and “home” in a scene or conversation send the player here. The first '
+                     'rule that holds wins; with none, the Castle (the original game). The '
+                     'penalties stay: half the gold, the items.')
+        lab.setWordWrap(True)
+        lab.setStyleSheet('color:#aaa;')
+        v.addWidget(lab)
+        self.list = QListWidget()
+        self.list.setMaximumHeight(110)
+        self.list.itemDoubleClicked.connect(lambda _it: self._edit())
+        v.addWidget(self.list)
+        row = QHBoxLayout()
+        for txt, tip, fn in (('Add rule…', 'Where home is while some flags hold', self._add),
+                             ('Edit…', '', self._edit), ('Remove', '', self._remove),
+                             ('▲', 'Try this rule earlier', lambda: self._move(-1)),
+                             ('▼', 'Try this rule later', lambda: self._move(1))):
+            b = QPushButton(txt)
+            if tip:
+                b.setToolTip(tip)
+            if txt in ('▲', '▼'):
+                b.setMaximumWidth(36)
+            b.clicked.connect(fn)
+            row.addWidget(b)
+        row.addStretch(1)
+        v.addLayout(row)
+        row2 = QHBoxLayout()
+        b = QPushButton('Open room')
+        b.setToolTip('The rule\'s room on the Rooms tab')
+        b.clicked.connect(self._open)
+        row2.addWidget(b)
+        b = QPushButton('Add the arrival scenes')
+        b.setToolTip('Three entry scenes in the rule\'s room (Cutscenes tab): after a loss '
+                     '(a line + heal), after the WarpWing (a line + heal), sent home by a '
+                     'script (a line). Edit them like any scene; reasons a scene already '
+                     'takes are skipped.')
+        b.clicked.connect(self._arrivals)
+        row2.addWidget(b)
+        row2.addStretch(1)
+        v.addLayout(row2)
+        self.problems = QLabel('')
+        self.problems.setWordWrap(True)
+        self.problems.setStyleSheet('color:#f88;')
+        v.addWidget(self.problems)
+
+    def refresh(self):
+        doc = self.s.doc
+        cur = self.list.currentRow()
+        self.list.clear()
+        rules = doc.hub_rules()
+        for i, r in enumerate(rules):
+            txt = f'{i + 1}. {doc.hub_rule_text(r)}'
+            if r.get('comment'):
+                txt += f'   — {r["comment"]}'
+            self.list.addItem(txt)
+        if not rules or rules[-1].get('when'):
+            self.list.addItem(('otherwise' if rules else 'always') + ' → the Castle (the '
+                              'original game)')
+            it = self.list.item(self.list.count() - 1)
+            it.setFlags(it.flags() & ~Qt.ItemIsSelectable)
+            it.setForeground(QBrush(QColor(150, 150, 150)))
+        if 0 <= cur < len(rules):
+            self.list.setCurrentRow(cur)
+        probs = doc.hub_problems()
+        self.problems.setText('<br>'.join('⚠ ' + p for p in probs))
+        self.problems.setVisible(bool(probs))
+
+    def _index(self):
+        i = self.list.currentRow()
+        return i if 0 <= i < len(self.s.doc.hub_rules()) else None
+
+    def _op(self, label, fn, new_flags=()):
+        from editor2.app.rooms import commands as C
+
+        def op(doc):
+            for nm in new_flags:
+                if not any(f.get('name') == doc._slug(nm) for f in doc.flags()):
+                    doc.add_flag(nm)
+            return fn(doc)
+        cmd = C.SnapshotCommand(self.s, label, op)
+        self.s.undo.push(cmd)
+        if cmd.error is not None:
+            QMessageBox.warning(self, label, str(cmd.error))
+            return None
+        self.refresh()
+        return cmd
+
+    def _add(self):
+        dlg = HubRuleDialog(self.s, None, self)
+        if dlg.exec() != QDialog.Accepted:
+            return
+        rule = dlg.rule()
+        rules = self.s.doc.hub_rules()
+        # a rule with conditions goes before a final unconditional one
+        at = (len(rules) - 1 if rule.get('when') and rules and not rules[-1].get('when')
+              else None)
+        cmd = self._op('Hub: add rule', lambda doc: doc.add_hub_rule(rule, at), dlg.new_flags())
+        if cmd is not None:
+            self.list.setCurrentRow(len(rules) - 1 if at is not None else len(rules))
+
+    def _edit(self):
+        i = self._index()
+        if i is None:
+            return
+        dlg = HubRuleDialog(self.s, self.s.doc.hub_rules()[i], self)
+        if dlg.exec() != QDialog.Accepted:
+            return
+        rule = dlg.rule()
+        self._op('Hub: edit rule', lambda doc: doc.update_hub_rule(i, rule), dlg.new_flags())
+        self.list.setCurrentRow(i)
+
+    def _remove(self):
+        i = self._index()
+        if i is not None:
+            self._op('Hub: remove rule', lambda doc: doc.remove_hub_rule(i))
+
+    def _move(self, d):
+        i = self._index()
+        if i is None:
+            return
+        cmd = self._op('Hub: move rule', lambda doc: doc.move_hub_rule(i, d))
+        if cmd is not None:
+            self.list.setCurrentRow(cmd.result if cmd.result is not None else i)
+
+    def _rule_room(self):
+        i = self._index()
+        rules = self.s.doc.hub_rules()
+        if i is None:
+            i = next((j for j, r in enumerate(rules) if r.get('room') != 'castle'), None)
+        if i is None or rules[i].get('room') == 'castle':
+            QMessageBox.information(self, 'Hub', 'Pick a rule whose home is one of your rooms.')
+            return None
+        return rules[i]['room']
+
+    def _open(self):
+        rid = self._rule_room()
+        if rid:
+            self.tab.openRequested.emit(('room', rid))
+
+    def _arrivals(self):
+        rid = self._rule_room()
+        if not rid:
+            return
+        cmd = self._op('Hub: arrival scenes', lambda doc: doc.add_arrival_scenes(rid))
+        if cmd is None:
+            return
+        new = cmd.result or []
+        doc = self.s.doc
+        QMessageBox.information(
+            self, 'Arrival scenes',
+            (f'{len(new)} arrival scene(s) added to {doc.room_name(doc.room(rid))} — edit them '
+             'on the Cutscenes tab.') if new else
+            'Every reason already has an arrival scene in this room.')
+
+
 class WorldsPanel(QWidget):
     """The project's worlds: list, settings, rooms, problems (S123)."""
 
@@ -521,6 +777,8 @@ class WorldsPanel(QWidget):
         body = QWidget()
         sc.setWidget(body)
         v = QVBoxLayout(body)
+        self.hub = HubBox(tab)                     # S125: the hub
+        v.addWidget(self.hub)
         g = QGroupBox('Worlds')
         gv = QVBoxLayout(g)
         self.list = QListWidget()
@@ -703,6 +961,7 @@ class WorldsPanel(QWidget):
 
     def refresh(self):
         doc = self.s.doc
+        self.hub.refresh()
         cur = self.current()
         self._ids = doc.world_ids()
         self._building = True

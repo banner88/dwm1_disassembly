@@ -174,7 +174,11 @@
    C8B2     1    Screen shake left-right: frames left (rSCX) [S119]
    C8EC     1    All field sprites hidden (non-zero: player, followers, NPCs, the
                  gate object not drawn); set 1 by room transitions, cleared by
-                 the engine only when $D92B is not 1-5 [S118f, code]
+                 the engine only when $D92B is not 1-5 [S118f, code]. S125: the
+                 WarpWing's exit (bank $07, after the warp mailbox) sets it 1 itself
+                 and leaves the clearing to the Castle's arrival — a warp anywhere
+                 else kept every sprite hidden (PyBoy); a hub room's arrival script
+                 clears it for that reason (PROJECT_COMPILER §2.38)
    C8F2     2    The name buffer the naming screen edits ($CA42 = the HERO's name,
                  printed by text code $F6 [HERO]) [S118f]
    CA42     8    The hero's name ($F0-terminated; new game: placeholder $D3-$D6) [S118f]
@@ -302,8 +306,13 @@
                  belong to — a stale list never colours another room) /
                  wNpcColourNext $D2ED / wNpcColourK $D2EE (copy scratch); transient,
                  rebuilt at every list copy /
-                 wCustomPool $D2EF-$D5E4 (transient reserve; $D2E3 before S123, $D243
-                 before S121) /
+                 [S125] wHubReason $D2EF (why the player was just sent to the
+                 project's hub: 1 lost / 2 wiped / 3 WarpWing / 4 final lost / 5 a
+                 script / 6 arena won — HUB_* EQUs; written by bank $71 entry 9
+                 HubWarp and the "home" script ladders, read and cleared by the
+                 hub room's arrival script; 0 after a Castle warp) /
+                 wCustomPool $D2F0-$D5E4 (transient reserve; $D2EF before S125,
+                 $D2E3 before S123, $D243 before S121) /
                  wPoolBounce $D5E5-$D664 (128 B, FX1: sleep-pool swap
                  scratch; the v1 drain halved-pending use died with the
                  S71v2 exp-scale veto).

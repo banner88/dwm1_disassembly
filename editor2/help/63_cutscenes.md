@@ -161,6 +161,12 @@ room's list, the editor does that for you.
 - **Examining a tile** / **Stepping on a tile** — pick the tile (**Pick tile**,
   then click it on the picture); the spot is made for you. Remember: a test ROM
   for other people should put such spots on art that looks like something.
+- **Arrival home… ▾** (entry scenes in a hub room) — the scene plays only
+  when the game has just sent the player home for one of the ticked reasons:
+  a lost battle, the party fell on damage floors, the WarpWing / Anchor, a
+  lost Starry / arena final, sent home by a script. Such scenes play before
+  the room's other entry scenes; give a scene after a loss a **Heal** step.
+  See *The hub*.
 - **Only when flags… ▾** — the scene plays only when these flags are ON (and
   those OFF). **Plays once** — a flag of its own is turned on when it starts,
   so it never plays again (saved with the game).
@@ -218,7 +224,8 @@ YES / If NO / Then / Otherwise* row; ▲ ▼ ⧉ ✕ move, duplicate, remove):
 | Hide / show the monsters | the player's following monsters (they come back by themselves after the scene) |
 | Change tiles of the room | a piece of the screen takes the look it has in another screen / room state of this room (paint the open door there) — until the room is loaded again |
 | Name the hero | opens the game's naming screen (the King's "What is your name?"): the player types a name of up to 4 letters or takes the one offered (MILLY with the Milly hook, else TERRY); the scene goes on after "… okay?" YES. Texts after it can use the name (Insert ▾ → the hero's name) |
-| Turn flags ON / OFF, Give an item / a monster, Battle, Warp the player, Stop here | as in conversations; *Warp the player* can go to any of your rooms or any game room — only to a screen that room has (a missing screen would crash the game; the build stops) |
+| Heal the party | every monster's HP and MP back, ailments cured (the game's own heal; silent) |
+| Turn flags ON / OFF, Give an item / a monster, Battle, Warp the player, Stop here | as in conversations; *Warp the player* can go **home — the hub** (see *The hub*), to any of your rooms or any game room — only to a screen that room has (a missing screen would crash the game; the build stops) |
 
 **Where the player stands.** In an entry scene the walks of the player are
 counted from *Player starts at*; on a step-on spot he stands on it. When the

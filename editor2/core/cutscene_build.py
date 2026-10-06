@@ -103,7 +103,7 @@ SHADE_REGS = (0xC89B, 0xC89C, 0xC89D)
 STEP_KINDS = ('say', 'ask', 'if', 'set', 'clear', 'walk', 'face', 'show', 'hide', 'anim',
               'fly', 'wait', 'wait_walks', 'music', 'sound', 'shake', 'fade', 'flash',
               'followers', 'give_item', 'give_monster', 'tiles', 'battle', 'move', 'end',
-              'name_hero')
+              'name_hero', 'heal')
 STEP_NAMES = {
     'say': 'Say', 'ask': 'Ask YES / NO', 'if': 'If flags…', 'set': 'Turn flags ON',
     'clear': 'Turn flags OFF', 'walk': 'Walk to a tile', 'face': 'Turn to face',
@@ -113,8 +113,17 @@ STEP_NAMES = {
     'fade': 'Fade to black / back', 'flash': 'Flash', 'followers': 'Hide / show the monsters',
     'give_item': 'Give an item', 'give_monster': 'Give a monster',
     'tiles': 'Change tiles of the room', 'battle': 'Battle', 'move': 'Warp the player',
-    'end': 'Stop here', 'name_hero': 'Name the hero'}
+    'end': 'Stop here', 'name_hero': 'Name the hero', 'heal': 'Heal the party'}
 TRIGGERS = ('entry', 'talk', 'examine', 'stepon')
+# S125 (ROADMAP P3.14d): why the player was sent to the hub — an entry scene with
+# trigger.arrival [reasons] plays only for those (wHubReason, patches/wram.asm;
+# the numbers are Project.HUB_REASONS = the HUB_* EQUs)
+ARRIVALS = ('lost', 'wiped', 'warpwing', 'final_lost', 'home', 'arena_won')
+ARRIVAL_NUM = {k: i + 1 for i, k in enumerate(ARRIVALS)}
+ARRIVAL_NAMES = {'lost': 'lost a battle', 'wiped': 'the party fell (floor damage)',
+                 'warpwing': 'WarpWing / Anchor', 'final_lost': 'lost the Starry / arena final',
+                 'home': 'sent home by a script', 'arena_won': 'won an arena class'}
+W_HUB_REASON = 0xD2EF
 
 
 class CutsceneError(ValueError):
@@ -308,6 +317,13 @@ class Env:
         k, x, y = int(mv.get('screen', 0)), int(mv.get('x', 0)), int(mv.get('y', 0))
         px, py = ((k % 4) * 10 + x) * 16 + 8, ((k // 4) * 8 + y) * 16 + 8
         return f'0x{mid:04X}', f'0x{px:04X}', f'0x{py:04X}'
+
+    def hub_ops(self, reason, ctx):
+        """S125: the warp home (the hub ladder; the editor's preview: the Castle)."""
+        if self.prj is not None:
+            return self.prj.hub_warp_ops(reason, ctx)
+        return [['op', 'write_ram', '0xD92B', 6],
+                ['op', 'map_transition', '0x0000', '0x00E8', '0x0058']]
 
     def text(self, txt, ident, ctx, choice=False):
         """-> a dialogue id."""
@@ -622,10 +638,20 @@ class Lowerer:
     def s_move(self, st, ctx, rec, pth):
         self.close()
         try:
-            self.op('map_transition', *self.env.move_words(st['move'] or {}, ctx))
+            if (st['move'] or {}).get('dest') == 'hub':     # S125: home
+                self.ops += self.env.hub_ops('home', ctx)
+                rec['note'].append('to the hub (the first hub rule that holds, else the Castle)')
+            else:
+                self.op('map_transition', *self.env.move_words(st['move'] or {}, ctx))
         except Exception as ex:                       # noqa: BLE001
             self.err(ctx, str(ex))
         self.ended = True
+
+    def s_heal(self, st, ctx, rec, pth):
+        """S125: op $27 — every monster's HP / MP to full and its status cleared
+        (bank $01 IteratePartySlots20, all 20 slots; PyBoy-measured S125)."""
+        self.op('refresh_party')
+        rec['note'].append('every monster: HP / MP full, status cleared')
 
     def s_battle(self, st, ctx, rec, pth):
         b = st['battle'] or {}
@@ -1164,6 +1190,13 @@ def trigger_problems(room, scene):
         return out
     if on not in TRIGGERS:
         out.append(f'trigger {on!r}: entry / talk / examine / stepon')
+    arr = tr.get('arrival')
+    if arr:
+        if on != 'entry':
+            out.append('“arrival” reasons belong to an arrival (entry) scene')
+        bad = [a for a in (arr if isinstance(arr, list) else [arr]) if a not in ARRIVALS]
+        if bad or not isinstance(arr, list):
+            out.append(f'arrival reasons {bad or arr}: pick from {", ".join(ARRIVALS)}')
     if on == 'talk':
         cast = Cast(room, scr)
         n, prob = cast.slot(tr.get('actor') or '')
@@ -1216,13 +1249,17 @@ def lower_project(prj):
     custom = prj.custom
     scripts = custom.setdefault('scripts', [])
     by_id = {s.get('id'): s for s in scripts}
+    try:
+        hubs = prj.hub_room_ids() if hasattr(prj, 'hub_room_ids') else set()
+    except Exception as ex:                          # noqa: BLE001 (a ProjectError)
+        raise CutsceneError(str(ex))                 # recorded, the editor still opens
     for r in prj.rooms:
-        if r.get('placeholder') or not r.get('cutscenes'):
+        if r.get('placeholder') or not (r.get('cutscenes') or r.get('id') in hubs):
             continue
         rid = r.get('id')
         seen = set()
         groups = {}                  # target key -> [(scene, lowered ops)]
-        for k, sc in enumerate(r['cutscenes']):
+        for k, sc in enumerate(r.get('cutscenes') or []):
             ctx = f"rooms[{rid}].cutscenes[{sc.get('id', k)}]"
             if not sc.get('id') or sc['id'] in seen:
                 raise CutsceneError(f'{ctx}: every cutscene needs its own id')
@@ -1245,12 +1282,27 @@ def lower_project(prj):
                 pd[name + '_attr'] = ab
                 patches.append((name, r))
             groups.setdefault(trigger_key(sc), []).append((sc, body, lw))
+        hub = rid in hubs
+        if hub:
+            # S125: a hub room always has an arrival script: the arrival scenes go
+            # first (the Milly hook's spin-in before them), and a reason no scene
+            # took gets the default welcome — the party healed — below
+            groups.setdefault(('entry',), []).sort(
+                key=lambda it: 0 if it[0].get('_then_next') else
+                1 if (it[0].get('trigger') or {}).get('arrival') else 2)
         table = r.setdefault('scripts', {})
         for key, items in groups.items():
             tag = '_'.join(_sid(x) for x in key)
             gid = f'cut:{rid}:{tag}'
-            ops = []
+            ops = hub_reveal_ops() if hub and key[0] == 'entry' else []
+            pending = hub and key[0] == 'entry'
             for sc, body, lw in items:
+                if pending and not sc.get('_then_next') and not (
+                        sc.get('trigger') or {}).get('arrival'):
+                    # S125: a reason no arrival scene took is healed BEFORE the room's
+                    # other entry scenes (one of them may warp away)
+                    ops += hub_default_ops()
+                    pending = False
                 ops += _guard(prj, sc, lw.p, multi_screen=len(prj.room_screens(r)) > 1
                               and key[0] == 'entry')
                 ops += body
@@ -1263,6 +1315,8 @@ def lower_project(prj):
                     ops.append(['op', 'goto', '@cut_orig'] if key[0] == 'entry' else ['end'])
                 ops.append(f'label:{lw.p}_skip')
             orig = _original_ops(prj, r, key, by_id)
+            if pending:
+                ops += hub_default_ops()
             ops.append('label:cut_orig')
             ops += _prefix_ops(orig, 'o_') if orig else [['end']]
             new = {'id': gid, 'ops': ops, 'comment': f'cutscenes {[s["id"] for s, _b, _l in items]}'}
@@ -1275,6 +1329,26 @@ def lower_project(prj):
                 table[str(idx)] = gid
                 _wire(r, key, gid, idx)
     return patches
+
+
+def hub_reveal_ops():
+    """S125: first thing in a hub room's arrival script. The WarpWing's own exit
+    (bank $07, after HubWarp) sets $C8EC = 1 (every field sprite hidden) and leaves
+    the clearing to the Castle's arrival code — elsewhere the player, the monsters
+    and the NPCs stayed invisible (PyBoy-measured S125). A WarpWing arrival shows
+    them again."""
+    w = f'0x{W_HUB_REASON:04X}'
+    return [['op', 'check_and_branch', w, ARRIVAL_NUM['warpwing'], '@hub_ww'],
+            ['op', 'goto', '@hub_go'], 'label:hub_ww',
+            ['op', 'write_ram', '0xC8EC', 0], 'label:hub_go']
+
+
+def hub_default_ops():
+    """S125: a hub room's arrival for a reason no arrival scene took: the party
+    healed (the vanilla Castle's priest heals too), the reason taken."""
+    w = f'0x{W_HUB_REASON:04X}'
+    return [['op', 'check_and_branch', w, 0, '@hub_none'],
+            ['op', 'refresh_party'], ['op', 'write_ram', w, 0], 'label:hub_none']
 
 
 def trigger_key(sc):
@@ -1308,9 +1382,21 @@ def _guard(prj, sc, p, multi_screen):
         ops.append(['op', 'if_flag_clear', prj.resolve_flag_ref(f, ctx), f'@{p}_skip'])
     for f in tr.get('when_off') or []:
         ops.append(['op', 'if_flag_set', prj.resolve_flag_ref(f, ctx), f'@{p}_skip'])
+    if tr.get('arrival'):
+        # S125: only when the player was just sent to the hub for one of these
+        # reasons; the scene takes the reason (wHubReason := 0) so a reload of the
+        # room (scroll back, after a battle) does not play it again
+        for a in tr['arrival']:
+            ops.append(['op', 'check_and_branch', f'0x{W_HUB_REASON:04X}',
+                        ARRIVAL_NUM[a], f'@{p}_arr'])
+        ops += [['op', 'goto', f'@{p}_skip'], f'label:{p}_arr']
     if tr.get('once'):
         idx = prj.resolve_flag_ref(tr['once'], ctx)
         ops += [['op', 'if_flag_set', idx, f'@{p}_skip'], ['op', 'set_flag', idx]]
+    if tr.get('arrival'):
+        # taken only once every guard has passed (S125 review: a `once` scene that
+        # skips must leave the reason to the default heal)
+        ops.append(['op', 'write_ram', f'0x{W_HUB_REASON:04X}', 0])
     return ops
 
 
@@ -1498,7 +1584,11 @@ def describe(st, names=None):
     if k == 'battle':
         return 'Battle: ' + ', '.join(str(e) for e in (v or {}).get('enemies') or [])
     if k == 'move':
+        if v.get('dest') == 'hub':
+            return 'Send the player home (the hub)'
         return f'Warp the player to {v.get("dest")} screen {v.get("screen", 0)} ({v.get("x")}, {v.get("y")})'
+    if k == 'heal':
+        return 'Heal the party (HP / MP full, status cleared)'
     if k == 'end':
         return 'Stop here'
     if k == 'name_hero':

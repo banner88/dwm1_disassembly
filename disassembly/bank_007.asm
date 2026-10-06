@@ -2440,6 +2440,11 @@ jr_007_5012:
     ld hl, $0304
     rst $10
     call UpdateOAMSprites
+    ; S125: the WarpWing ITEM used in a gate (this is the item menu's use path;
+    ; DOC_AUDIT S125: the "gate return" code 6 is the WarpWing) — to the Castle
+    ; with the priest's blessing + heal. The 38 bytes up to `ld a, $01` are the
+    ; Castle writes; the patched build calls bank $71 entry 9 HubWarp
+    ; (HUB_WARPWING) in their place (ROADMAP P3.14d).
     ld a, $06                ; S101 r3: $D92B = 6 -> castle arrival = priest blessing + heal ($0C:$490A; gate return)
     ld [$d92b], a
     ld hl, $0000

@@ -1867,6 +1867,11 @@ FollowerFamilyGfxTable:
     dw $2e03, $2e04, $2e05, $2e06, $2e07, $2e08, $2e09, $2e0a
     dw $2e0b, $2e0c
 
+; Bank $01 entry 9 — HEAL ALL (S125; PyBoy-measured): for each of the 20 monster
+; records at $CAC1 (stride $95) whose flag byte is non-zero: status (+$4A) := 0,
+; then HP +$50 := max HP +$52 and MP +$54 := max MP +$56 (words). Script op $27 (`refresh_party`,
+; bank $04 ScriptCmd27_RefreshParty) runs it, then entry 3 — the cutscene /
+; conversation Heal step. (The name predates the decode; kept for the tools.)
 IteratePartySlots20:
     ld hl, $cac1
     ld b, $14

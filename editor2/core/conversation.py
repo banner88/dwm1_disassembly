@@ -27,12 +27,14 @@ import copy
 import json
 import os
 
-STEP_KINDS = ('say', 'ask', 'if', 'set', 'clear', 'battle', 'helper', 'move', 'vanish', 'end')
+STEP_KINDS = ('say', 'ask', 'if', 'set', 'clear', 'battle', 'helper', 'move', 'vanish', 'heal',
+              'end')
 STEP_NAMES = {
     'say': 'Say', 'ask': 'Ask YES / NO', 'if': 'If flags…', 'set': 'Turn flags ON',
     'clear': 'Turn flags OFF', 'battle': 'Battle', 'helper': 'Helper takes the player away',
     'move': 'Move the player',
     'vanish': 'Vanish (this NPC leaves)',      # S123: every NPC running this conversation
+    'heal': 'Heal the party',                  # S125: op $27 (HP / MP full, ailments cured)
     'end': 'Stop here'}
 HELPER_SPRITE = 0x39            # Warubou, the darker Watabou (user S101 r2); vanilla uses $21 Watabou
 WATABOU_SPRITE = 0x21
@@ -351,6 +353,7 @@ class ConversationMixin:
             h = st['helper'] or {}
             ev = h.get('castle') or 'none'
             where = ('the Castle' if str(h.get('dest')) == 'vanilla:$00' else
+                     'home (the hub)' if h.get('dest') == 'hub' else
                      f"{h.get('dest')} screen {h.get('screen', 0)} ({h.get('x')},{h.get('y')})")
             extra = {'heal': ' — priest heals', 'king': ' — King speech'}.get(ev, '')
             say = h.get('say')
@@ -363,12 +366,16 @@ class ConversationMixin:
             return f"Helper takes the player to {where}{extra}{said}"
         if k == 'move':
             m = st['move'] or {}
+            if m.get('dest') == 'hub':
+                return 'Send the player home (the hub)'
             return f"Move the player to {m.get('dest')} screen {m.get('screen', 0)} " \
                    f"({m.get('x')},{m.get('y')})"
         if k == 'vanish':
             how = (st['vanish'] or {}).get('how', 'flicker')
             return ('Vanish: this NPC flickers out' if how == 'flicker'
                     else 'Vanish: this NPC is gone at once')
+        if k == 'heal':
+            return 'Heal the party (HP / MP full, ailments cured)'
         if k == 'end':
             return 'Stop here'
         return '?'

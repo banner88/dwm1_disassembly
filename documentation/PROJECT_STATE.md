@@ -10,6 +10,69 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
+> Last verified: 2026-10-06 (Session 125 — **ROADMAP P3.14d RE-CUT WITH THE USER; P3.14d1 BUILT:
+> THE HUB — WHERE THE GAME SENDS THE PLAYER HOME (A LOST BATTLE, THE PARTY FALLEN ON DAMAGE
+> FLOORS, THE WARPWING / ANCHOR, A LOST STARRY FINAL, A SCRIPT'S "HOME") IS A ROOM OF THE
+> PROJECT CHOSEN BY FLAG-ORDERED RULES — THE CASTLE WHEN NONE HOLDS; ARRIVAL SCENES PER REASON;
+> THE HEAL STEP** (user: "Proceed with progression flags. Let's discuss what you do first" →
+> "Make a single room be HUB but yes I would like to make it be transferrable upon flag. Keep
+> in mind also how vanilla handles room variants with hub … Keep original [penalties]" → the
+> realms: "post-game will take place back in vanilla GreatTree … main game in custom game world
+> (GreatLog) … there should be just 1 instance [of each service] in game mirrored across
+> locations" → "It's one or the either NEVER both"; breeding: "nothing further is necessary";
+> the ending: night Farm → cutscenes → the house → credits → reset → CONTINUE → the hub in front
+> of the King). **Built S125; test ROM USER-CONFIRMED 2026-10-06 12:48.**
+> **Audit (code-read + PyBoy):** the engine's Castle sends = bank $50 `$6559` (an ordinary
+> loss, then half the gold + the items), `$64AF` (the lost Starry / arena final), bank $06
+> `$6A39` (the party wiped by damage floors), bank $07 `$5030` (the WarpWing item — the old
+> "code 6 = gate return"); the `$04` service menus are room-independent, their state global;
+> arena / breeding hard-wired to their rooms (P3.14e). The ending's night sky = game mode 3
+> (ARCHITECTURE; ROADMAP E5). ROADMAP P3.14d re-cut: d1 the hub (this session), e1 service
+> NPCs, e2 breeding, e3 the arena; the active hub decides the realm.
+> **Engine:** bank $71 template entry 9 `HubWarp` + `HubTable` (re-pinned `28d988db…`,
+> TEMPLATE_SIZE 865); the four sends → `ld e, HUB_x / ld hl, $7109 / rst $10` (same size,
+> labels unmoved, the penalties after them unchanged); `wHubReason` $D2EF (carved from
+> `wCustomPool`). No hub = the vanilla writes. **Compiler (PROJECT_COMPILER §2.38):**
+> `custom.hub.rules`; `dest: "hub"` ladders (talk / conversation move + helper / cutscene
+> move / the Anchor skill's gate exit); `trigger.arrival`; a hub room's arrival script (the
+> WarpWing reveal, arrival scenes first, the default heal); the Heal step (op `$27`, measured);
+> validators; flag index kind `hub`. **Editor:** World tab **Hub** box + rule dialog (cell
+> on the picture), Add the arrival scenes; the cutscene editor's Arrival home… / Heal / home;
+> the conversation dialog's Home / Heal; Rooms canvas **H**; Flags tab → the rule; help
+> `66_hub.md` + 00/30/40/63/65/90; `EDITOR_REVISION` 'S125'.
+> **Found + fixed:** the WarpWing's exit hides every sprite (`$C8EC` = 1) and leaves the
+> un-hiding to the Castle — in the hub the player and NPCs stayed invisible (PyBoy) → the
+> hub room's arrival script clears it for that reason (KEY_LESSONS S125). Op `$27` HEALS (it
+> was documented "re-count the party", DOC_AUDIT S125).
+> **Measured (PyBoy, the user's save, the demo below):** lost battle → HUB HALL (4, 5), the
+> loss scene, heal (0 HP / 0 MP / KO → full), 3800 → 1900 gold, items lost as in the game;
+> the WarpWing thrown on gate 0 floor 1 → the hub, its scene, sprites shown, the wing used;
+> the Guide's "home" → reason 5, its scene; the Keeper's flag → a loss lands in the Castle
+> throne room (screen 1, (14, 5)), `$D92B` 8, the priest heals; WarpWing with the Castle hub
+> → the Castle; the door (2, 0) → map $04 screen 5. Not staged: the floor wipe, the Starry
+> final (the same call; MiniSM83 runs HubWarp from the ROM in test_compiler).
+> **Annotation (Iron Rule 6):** bank $01 `IteratePartySlots20` = heal-all (both trees); the
+> four sends' callers (disassembly banks $06 / $07 / $50). Clean `1ca6579…` byte-perfect.
+> **Checks:** verifier PASS; patched pin **`c326fc96…` (patched)**, was `6b0738c1…`
+> (patched, historical); test_compiler --rom 1175/1175 (incl. `test_hub_s125` + `test_hub_rom`; an independent review found two arrival-order edge cases, fixed: a `once` arrival scene now takes the reason only after its guards, and the default heal runs before the room's other entry scenes); test_app PASS (`s125_hub`); test_canvas
+> --rom PASS.
+> **Test ROM `DWM-S125-hub-test.gbc` (`2885e316…`, patched; USER-CONFIRMED 12:48):**
+> the user's project (my-dwm-hack_15) + **HUB HALL** ($74, a copy of GateRoom1 made with the
+> editor's own operations) as hub rule 1 while flag `hub_to_castle` is OFF, the Castle after
+> (rule 2). In the hall: the **Guide** (says what the room is; YES = sends you home), the
+> **Sparring** NPC (YES = a battle with Esterk to lose on purpose), **Wings** (gives a
+> WarpWing), the **Keeper** (YES = the hub becomes the Castle, NO = back to the hall); three
+> arrival scenes (loss + heal, WarpWing + heal, home); the path at the top left (2, 0) → back
+> where the save continues. Reach it by losing any battle.
+> **User 2026-10-06 12:48: "Great, works"** — the test ROM USER-CONFIRMED. "The room you
+> made hub was laggy. Was it all the animated tiles, NPCs, or combinations thereof?" →
+> measured (PyBoy, variants of the room): the NPCs — 4 on one screen with the player and 3
+> followers drop ≈ 8 % of frames while walking (3: ≈ 3 %, 2: none); the four sway
+> animations cost nothing measurable; the S123 colour path is ≈ 1.4 of the ≈ 8 scanlines
+> each NPC's draw costs (ROOM_DATA_FORMAT "What NPCs cost per frame"). Docs only.
+> **Next:** P3.14e1 (service NPCs) or the user's pick.
+
+
 > Last verified: 2026-10-05 (Session 124 — **ROADMAP P3.14 RE-CUT WITH THE USER INTO a / b / c / d;
 > P3.14a BUILT: THE PROGRESSION & FLAGS TAB — EVERY FLAG OF THE GAME BEING MADE WITH WHAT TURNS
 > IT ON / OFF AND WHAT CHECKS IT, IN WORDS, WITH A LINK TO THE PLACE; EVERY "WHEN … → …" AS A
@@ -89,113 +152,10 @@
 > **Next:** the user's test of the tab, then P3.14d (the hub) or the user's pick.
 
 
-> Last verified: 2026-10-05 (Session 123 — **ROADMAP NG3 REDEFINED AND BUILT: WORLDS — HAND-MADE
-> PLACES OF THE PROJECT'S OWN ROOMS ENTERED THROUGH A SWIRLING PORTAL EXACTLY LIKE A GATE, WITH
-> PER-ROOM BATTLES, CALM ROOMS THAT SAVE, MINI-BOSSES AND AN END BOSS THAT CLEARS THE WORLD; THE
-> SWIRL STOPS OR TURNS GREEN; NPC COLOURS (THE 8 OBJ PALETTES) FOR ANY PERSON / OBJECT NPC; THE
-> VANISH STEP; MAKE BOSS…; HELP FULLY UPDATED** (user: "NG3: I want just normal rooms with set
-> encounters, and a flag for boss that can alter things (like encounters, NPC dialogue, things
-> that used to block your path) … it needs to act as a world that can have encounters,
-> encounter-free rooms (where you can also save), mini-bosses, endbosses, flags and triggers.
-> Enter via swirling portal, portal stops when boss beaten, OR portal is different colour when
-> boss beaten - also good. Like green or something … Encounters should be set per-room. Also at
-> the end of this session please make sure help is FULLY up to date with everything" →
-> "Entering should be JUST like entering a gate. Losing: Same as a gate. Same rules overall. I
-> assume minibosses with own flags are also ok?")). **Built S123; r2 test ROM USER-CONFIRMED 2026-10-05 20:06.**
-> **Model + compiler (PROJECT_COMPILER §2.36):** a world = a new gate (32-95) with a `world`
-> block (start room / cell, rooms, saving `calm` / `everywhere` / `nowhere`); 2 floors,
-> hand-made, the start room served on floor 1 at 100 % (bank $71 `GateInsertTable`); the other
-> rooms = ordinary custom rooms joined by doors; per-room lists + flag variants (S114); the
-> cleared flag `gate:N` (`$17A0+N`) set only by a boss conversation. `cleared_swirl` (ANY gate):
-> stop, or spin in an OBJ palette (green = 1). NPC `colour` → the `$A2` prefix. Conversation
-> step `vanish` (flicker = `trigger_anim $0Dnn`, instant = `npc_write n,0,$40`).
-> `editor2/core/worlds.py` (WorldsMixin, `make_boss`), `_validate_worlds`. Found + fixed: a
-> conversation testing `gate:N` crashed (`repo_root` set late); `TEMPLATE_SIZE[0x60]` stale.
-> **Engine (bank $60 template re-pinned, TEMPLATE_SIZE 1273):** `CopyNPCListToBuffer` + `$A2`
-> → `wNpcColour` ($D2E3, carved from `wCustomPool`), entry 11 `NpcColourDraw` via bank $06
-> `NPCDrawSlot` (was `SaveMapS_4d0a`; patched `ld hl, $600b`) and bank $05
-> `NPCSpritePaletteOr` (was `HramAudE_406e`) — labels both trees; `audit_mapid_range` 2 new
-> sites adjudicated (CROSSBANK_ROOMS "S123 sites").
-> **Editor:** World tab **Worlds** panel (new / rename / delete, start, portals, the swirl after
-> clearing, saving, rooms table, music for every room, *Still needs*, *only this world*);
-> Rooms tab *World entrance here…*, NPC *colour* (canvas preview), **Make boss…**, the section
-> *Inside gates and worlds*; the conversation dialog's Vanish step; Gates tab: worlds listed
-> WORLD and locked, every other gate *after clearing, the swirl*. **Help** (P3.H): new
-> `65_worlds.md`, `11_doors.md`, `13_tilesets.md`, `14_import_art.md`; 00/10/20/30/40/59/60/
-> 70/80/90 updated. `EDITOR_REVISION` = 'S123' (r2: 'S123r2').
-> **Measured (PyBoy, the user's save, GATE_GENERATION §7.11):** the portal's wave + cream fade
-> into the start room; JOURNAL ok in a calm room, refused in a battle room; wild battles from
-> the room's list; the warden: 2 boxes → battle → flickers out → "The way is open." → hidden
-> for good, the way east open; the king: battle → `$17C0` set → the helper → the hall; the
-> portal swirl then drawn in palette 1; re-entry: the villager's new text, list 9 (EIDs 20 / 25
-> / 26); a loss → the Castle, healed, 3800 → 1900 gold; colours follow the screen scroll;
-> cost ≈ 1.2 scanlines per coloured NPC.
-> **Verifier PASS; clean `1ca6579…` byte-perfect; patched pin `e93b23b5…` (patched; r2: `6b0738c1…`)**, was
-> `bd0652da…` (patched, historical). test_compiler --rom 1101/1101 (the S121 wMillyLayout
-> bound now checks against `wNpcColour`, the next WRAM symbol); test_app PASS (`s123_worlds`,
-> + the Gates tab swirl colour); test_canvas --rom PASS.
-> **Test ROM `DWM-S123-worlds-test.gbc` (`ef6551d1…`, patched; built, NOT yet user-tested):**
-> the user's project (my-dwm-hack_13) + the world **Verdant Rift** (gate 32) made with the
-> editor's own operations: GreatTree screen 12 Copycat House door (4, 4) → **Rift Gate Hall**
-> ($73, the portal at (4, 3)) → **Rift Landing** ($74, start, calm: saving, a guide, a villager
-> whose words change once cleared, a return swirl) → **Rift Woods** ($75, list 0 → list 9 once
-> cleared, no saving, the **Rift Warden** mini-boss with its own flag guarding the way) →
-> **Rift Throne** ($76, the **Rift King** end boss → the helper → the hall, swirl green).
-> Walked end to end in PyBoy.
-> **User 2026-10-05 19:35: "Its good. One minor thing: The entry into the custom gate
-> (non-green/green portal) should be a full start-of-gate effect (screen whirling around and
-> slowly vanishing) instead of go-down-a-floor effect (screen closing with a whoosh sound)."**
-> **r2:** reproduced in PyBoy — S41's bank $0B `CustomDescentInGate` gave every gate-flag
-> exit of a custom room the floor-change ladder (`$C905` `$10-$17`, sound `$55`); the r1
-> "measured" entry had been a warp injected from a vanilla room (KEY_LESSONS S123 r2). Fixed:
-> bank $60 entry 12 `CustomDescentFeel` (Stairs down `$80` only; a gate entrance keeps the
-> vanilla flow); now == room `$24`'s portal (states 1-6, same intervals, sound `$52`); a
-> world-room Stairs down still whooshes; the demo re-walked end to end (entry, JOURNAL, wild
-> battle, warden, king → green swirl, re-entry, list 9, loss → half gold). Also affects S115
-> new-gate entrances in custom rooms (the same path). Pin **`6b0738c1…` (patched)**, r1
-> `e93b23b5…` (patched, historical). **r2 ROM `DWM-S123r2-worlds-test.gbc` (`542771d0…`,
-> patched; built, NOT yet user-tested);** the r1 ROM (`ef6551d1…`, patched, historical) was
-> user-tested ("Its good") apart from the entry effect. r2 checks: verifier PASS
-> (`audit_mapid_range`: the moved site `CustomDescentFeel#0` CP_UNSIGNED, the bank $0B key
-> retired); test_compiler --rom 1101/1101; test_canvas --rom PASS; test_app PASS
-> (`EDITOR_REVISION` 'S123r2').
-> **User 2026-10-05 20:06: "Great, looks good. Give all files for handoff please"** — the r2
-> ROM USER-CONFIRMED.
-> **Hand-off:** `DWM-S123-worlds-changed-files.zip` (cumulative S123 + r2) + the APPLY list in the chat.
-> **r3 (user 20:15: "1) When making new world and entry coordinates, SHOW VISUALLY. How the
-> hell am I meant to know where in a room x/y is. 2) … the STARTING SWIRL that leads into
-> world, where else in game is it placed, and where it lands player INSIDE new world. That
-> needs to be visually clear. 3) … roots room - why is it visually weird looking, like some
-> tiles are missing? If too much to investigate push to later, but flag in documentation"):**
-> (1) `editor2/app/rooms/cell_picker.py` `CellPicker` — the room's screen at 2x, click a
-> cell (LAND / PORTAL outline, walls refused, doors / exits / portals drawn) — in New world…
-> (a NEW theme room is previewed as its plain floor), the landing (*Change…*) and the new
-> **Add portal…** dialog. (2) Worlds panel **The way in**: ① the portal's room picture
-> (blue PORTAL, ◀ ▶ through several, Add portal… / Go to / Remove) ➜ ② the landing picture
-> (green LAND, Change… / Go to); Rooms canvas markers **P** (a world portal, tooltip = where
-> it lands) and **W↓** (the landing, draggable); `Document.world_portals` /
-> `remove_world_entrance`; `open_node` takes (kind, id, screen, x, y). (3) The roots room is
-> fine IN-GAME (PyBoy: BG map, attributes and tiles == vanilla `$08`); the EDITOR drew a black
-> cross: BG ids `$80-$AF` are the common sheet `$29:$1D` that bank $0B
-> `RoomEntry0_TilesetLoader` loads to `$8800` in EVERY room (`ld a, $08` is not a compare —
-> WaitDMATransfer returns Z, the `jr nz` never branches; measured in rooms $00/$01/$08/$10/
-> $24/$74) and the renderer drew every id ≥ 128 as tile 0. Fixed (`render_project`
-> `common_blocks`, `tools/render_rooms.py`, tile thumbnails): the roots room preview == the
-> game, 0 pixels differ. Flagged, not built (ROADMAP P3.16 residuals): the copy has no
-> palette pulse (vanilla `$08` cycles `wBGPalette` $D2/$D1/$C1 every 32 frames; the copy's
-> `animation: none`), and a 4th NPC species on a screen would load into `$8800-$88FF`
-> (= tiles `$80-$8F`, code-read: slot c at `$8500 + c·$100`; vanilla `$08` is special-cased by
-> `cp $08` in banks $06/$0B) — the roots room uses 2. No ROM change (editor only):
-> `EDITOR_REVISION` 'S123r3'. Comments only in bank $0B both trees (the loader). Checks:
-> verifier PASS; test_compiler --rom 1101/1101; test_canvas --rom PASS; test_app PASS (the
-> `s123_worlds` r3 block: pictures, Add portal by a click, Remove, landing by a click, Go to,
-> the W↓ drag, the P marker).
-> **Next:** the user's test of the r3 editor, then the user's pick (P3.14, P3.H residuals, NG3 residuals).
-
-
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S125** (2026-10-06): P3.14d re-cut with the user (d1 the hub / e1 service NPCs / e2 breeding / e3 the arena; the active hub decides the realm; one instance of each service); P3.14d1 built — `custom.hub` flag-ordered rules (a project room or the Castle), bank $71 entry 9 `HubWarp` + `HubTable`, the four engine Castle sends same-size (bank $50 `$6559` / `$64AF`, $06 `$6A39`, $07 `$5030` = the WarpWing), `wHubReason`, "home" for scripts + the Anchor skill, arrival scenes, the Heal step (op `$27` heals — measured), the World tab Hub box; the WarpWing `$C8EC` sprite-hiding found + handled; ending = game mode 3 (E5); pin `c326fc96…` (patched). Test ROM `DWM-S125-hub-test.gbc` (`2885e316…`, patched) USER-CONFIRMED 2026-10-06 12:48 ("Great, works"); the demo room's lag = its 4 NPCs (measured). Verbose block in this file. Owning: PROJECT_COMPILER §2.38, GATE_GENERATION §7.7, known_RAM_map (`wHubReason`, `$C8EC`), BANK04_SCRIPT_ENGINE (`$27`), ARCHITECTURE (mode 3), EDITOR_DESIGN §5.8 "Hub (S125)", ROADMAP P3.14d / E5, KEY_LESSONS S125, PYBOY_DEBUGGING S125, DOC_AUDIT S125, TOOLS_AND_DATA S125.
 - **S124** (2026-10-05): P3.14 re-cut with the user (a: flag index / b: story checks / c: story + quests / d: the hub) after a 3-agent audit of how vanilla drives its story; P3.14a built — the Progression & Flags tab (every flag: what turns it ON / OFF, what checks it, in words with links; Triggers; Problems = the orphaned-trigger report), `editor2/core/flag_index.py` tied to the compiler (`compiler_coverage`), fixed flag numbers (`number_flags`, pinned on open), `$0158` found to be the game's (Arena Battle, PyBoy) → new flags skip it; doc corrections ($00F1 reached, speech $30 sets $0009, ops $33/$56/$5F/$60, SIDEQUEST §5, wInventory); bank $09 gate-list tables re-sectioned; byte-neutral (pin `6b0738c1…`, patched). Built, NOT yet user-tested. Verbose block in this file. Owning: PROJECT_COMPILER §2.7 / §2.37, EDITOR_DESIGN §5.7 "As built S124", EVENT_FLAGS "Safe pool" + "Engine-side flag setters and readers (S124)", GATE_GENERATION §7.7, BANK04_SCRIPT_ENGINE, SIDEQUEST_MAP §5, KEY_LESSONS S124, DOC_AUDIT S124, TOOLS_AND_DATA S124.
-- **S123** (2026-10-05): NG3 redefined by the user and built — **worlds** (a new gate with a `world` block: the portal = a gate entrance into the start room, rooms joined by doors, per-room lists, saving calm / everywhere / nowhere, losing the gate way, the cleared flag set by an end boss's conversation); `cleared_swirl` (stop / an OBJ palette) for any gate; NPC `colour` (`$A2` prefix, bank $60 entry 11 `NpcColourDraw`, `wNpcColour`); the Vanish step; Make boss…; the Worlds panel; help fully updated (4 new topics); pin `e93b23b5…` (patched). Test ROM `DWM-S123-worlds-test.gbc` (`ef6551d1…`, patched) user-tested 19:35 ("Its good") but for the entry effect → r2: a custom room's gate entrance runs the vanilla portal whirl (bank $60 entry 12 `CustomDescentFeel`), pin `6b0738c1…` (patched), ROM `DWM-S123r2-worlds-test.gbc` (`542771d0…`, patched) USER-CONFIRMED 20:06. Verbose block in this file. Owning: PROJECT_COMPILER §2.36, GATE_GENERATION §7.11, ROOM_DATA_FORMAT ("Colour prefix $A2"), known_RAM_map (`wNpcColour`), EDITOR_DESIGN §5.1 "Worlds (S123)", CROSSBANK_ROOMS "S123 sites", KEY_LESSONS S123, PYBOY_DEBUGGING S123, DOC_AUDIT S123, TOOLS_AND_DATA S123.
+- **S123** (2026-10-05): NG3 redefined by the user and built — **worlds** (a new gate with a `world` block: the portal = a gate entrance into the start room, rooms joined by doors, per-room lists, saving calm / everywhere / nowhere, losing the gate way, the cleared flag set by an end boss's conversation); `cleared_swirl` (stop / an OBJ palette) for any gate; NPC `colour` (`$A2` prefix, bank $60 entry 11 `NpcColourDraw`, `wNpcColour`); the Vanish step; Make boss…; the Worlds panel; help fully updated (4 new topics); pin `e93b23b5…` (patched). Test ROM `DWM-S123-worlds-test.gbc` (`ef6551d1…`, patched) user-tested 19:35 ("Its good") but for the entry effect → r2: a custom room's gate entrance runs the vanilla portal whirl (bank $60 entry 12 `CustomDescentFeel`), pin `6b0738c1…` (patched), ROM `DWM-S123r2-worlds-test.gbc` (`542771d0…`, patched) USER-CONFIRMED 20:06. Verbose block in SESSION_HISTORY.md. Owning: PROJECT_COMPILER §2.36, GATE_GENERATION §7.11, ROOM_DATA_FORMAT ("Colour prefix $A2"), known_RAM_map (`wNpcColour`), EDITOR_DESIGN §5.1 "Worlds (S123)", CROSSBANK_ROOMS "S123 sites", KEY_LESSONS S123, PYBOY_DEBUGGING S123, DOC_AUDIT S123, TOOLS_AND_DATA S123.
 - **S122** (2026-10-05): P3.7b part 2 finished — the 16 gate themes as room tilesets (bank $28 sheets 0-15 in their own colours; New room / Change tileset / the maze metatiles + stairs / **Maze screen…** = the 254 maze screens / borrowing both ways, `VocabReleaseWouldHelp`); the maze carve + placements traced (bank $16 / $17 / ROM0 labels both trees, byte-neutral) and modelled (`editor2/core/maze.py`, `census_maze.py` 4,000 floors == the game); maze size 3-15 enforced (1-2 freeze, measured); NG2 residual (a) — bank $76 `RunWinTail` runs a re-bossed gate's vanilla win tail (20 / 20); S100 r3 (b) refuted; P3.8 crossed off by the user; pin `bd0652da…` (patched). Test ROM `DWM-S122-gate-themes-test.gbc` (`6777da8e…`, patched) built, NOT yet user-tested. Verbose block in SESSION_HISTORY.md. Owning: GATE_GENERATION §4 / §5 / §7 / §7.9 / §7.10, PROJECT_COMPILER §2.35, EDITOR_DESIGN §5.1 "Gate themes (S122)", known_RAM_map (maze RAM), KEY_LESSONS S122, PYBOY_DEBUGGING S122, DOC_AUDIT S122, TOOLS_AND_DATA S122.
 - **S121** (2026-10-05): P3.16 + E7 — the Milly hook (`custom.milly_hook`, `editor2/core/milly.py`): the bedroom tail ends at the dresser glow, sets `$179F`, writes MILLY and whirls (`$3B`) to the chosen room; her arrival scene (spin, cast NPC `$14`); the player shape = her frames + palette via bank $04 entries 2/3 → NEW bank $79 (`wMillyLayout` WRAM, field + naming icon), her sheet via bank $01 / $09; S120b's MILLY tiles under the hook; Roots room (Milly) with grey Warubou; the Name the hero step; text-box sprite rule for copies of `$08`/`$5D` (bank $71 entry 8); `dump_map_table` `$FFFF` exits fixed; pin `e43e5f58…` (patched). Test ROMs `DWM-S121-milly-hook-test.gbc` (`d104cb84…`) / `-naming-test.gbc` (`399a3365…`), patched, USER-CONFIRMED 2026-10-05 ("everything works"); r2 (Terry kept through the whirl) `57bac7c3…` / `b23f941d…` (patched), NOT yet user-tested. Verbose block in SESSION_HISTORY. Owning: PROJECT_COMPILER §2.34, MONSTER_DATA "The player's sprite (S121)", ROOM_DATA_FORMAT "Text boxes and sprites (S121)", EVENT_FLAGS, TEXT_SYSTEM, BANK04_SCRIPT_ENGINE, EDITOR_DESIGN §5.1d, CROSSBANK_ROOMS "S121 site", KEY_LESSONS S121, DOC_AUDIT S121, TOOLS_AND_DATA S121.
 - **S120** (2026-10-05): mop-up — `patches/bank_060.asm` regenerated (stale since S119: the overlay built `0591928d…`, not the pin) + verify_integrity check 2 compares the pin; `audit_mapid_range.py` re-adjudicated (12 sites, stale-key check, in check 5); P3.6 done — no DTE (`$66-$71` contractions), `$EA`/`$EB` voices, `$F6` hero / op `$3F` + `$F9 00` lead names, extra glyphs, speaker + voice + Insert in every box editor, preview == game pixel-exact; P3.7b part 2 — per-gate `maze_row` / `special_row` / `contents_row` / `depth` with floor-type pictures (`census_gate_floor_types.py`), `SpecialRoomTable` labelled; NPC shown-when GUI, Rooms "Play the game here", npc_catalog rebuilt (716); pin `d19259a1…` (patched) unchanged. Test ROM `DWM_S120_dialogue_gates_test.gbc` (`da7f9941…`, patched) built, NOT yet user-tested. **S120b**: the hero's default name MILLY (`patches/bank_04f.asm`, 4 tiles; names stay ≤ 4 letters, measured), pin `97659a4a…` (patched), test ROM `DWM_S120b_milly_test.gbc`. Verbose block in SESSION_HISTORY.md. Owning: TEXT_SYSTEM "Glyphs, speakers and voices (S120)", PROJECT_COMPILER §2.3 / §2.17, GATE_GENERATION §2 / §7.8, CROSSBANK_ROOMS "S120 burn-down", EDITOR_DESIGN §5.1b, KEY_LESSONS S120, PYBOY_DEBUGGING S120, DOC_AUDIT S120, TOOLS_AND_DATA S120.
@@ -466,6 +426,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | The Milly hook (the game goes on as MILLY after the dresser: her sprite, naming icon, default name; arrival room of the project's choice; Roots room (Milly) with grey Warubou) + the Name the hero step | 🟢 built S121 (ROADMAP P3.16 + E7), test ROMs `DWM-S121-milly-hook-test.gbc` / `-naming-test.gbc` NOT yet user-tested | `custom.milly_hook` → `milly.py`; bank $79; PROJECT_COMPILER §2.34 |
 | Worlds (hand-made places of the project's rooms entered through a portal like a gate: per-room battles, calm rooms that save, mini-bosses with own flags, an end boss that clears the world) + the swirl after clearing (stop / any of the 8 OBJ colours, any gate) + NPC colours + the Vanish step + Make boss… | 🟢 built S123 (ROADMAP NG3), PyBoy-walked on the user's save (Verdant Rift); r1 ROM user-tested 2026-10-05 19:35 ("Its good") except the portal entry effect → r2 (the vanilla portal whirl) `DWM-S123r2-worlds-test.gbc` (`542771d0…`, patched) USER-CONFIRMED 2026-10-05 20:06 ("Great, looks good") | GATE_GENERATION §7.11; PROJECT_COMPILER §2.36; ROOM_DATA_FORMAT "Colour prefix $A2"; EDITOR_DESIGN §5.1 "Worlds (S123)" |
 | Progression & Flags tab: every flag with what turns it ON / OFF and what checks it (in words, a link to the place — room / screen / state / cell, cutscene, battles, gate), the original game's flags your rooms check, every "When … → …" trigger, Problems (never-true checks, copied rooms waiting for the original game's progress, `$0158`, unused…); note / Rename (every use) / Renumber / Delete; fixed flag numbers | 🟢 built S124 (ROADMAP P3.14a), NOT yet user-tested; byte-neutral | `editor2/core/flag_index.py` + `app/flags_tab.py`; PROJECT_COMPILER §2.37; EDITOR_DESIGN §5.7 "As built S124" |
+| The hub (where a lost battle, a party fallen on damage floors, the WarpWing / Anchor, a lost Starry final and a script's "home" send the player: a room of the project, chosen by flag-ordered rules, the Castle as before when none holds; arrival scenes per reason; the Heal step) | 🟢 built S125 (ROADMAP P3.14d1), PyBoy on the user's save, test ROM `DWM-S125-hub-test.gbc` USER-CONFIRMED 2026-10-06 12:48 | PROJECT_COMPILER §2.38; EDITOR_DESIGN §5.8 "Hub (S125)"; help `66_hub.md` |
 | NPC show/hide by step | ✅ working | step system; counters at $CD80+ (S65; transient); opcode $12 advances (v25) |
 | Flag-driven room states (persistent) | ✅ built S97, USER-CONFIRMED 2026-09-26 | `custom.rooms[].state_rules` → bank $60 entry 8 (+ bank $17 hook); PROJECT_COMPILER §2.13 |
 | NPC behaviours (movement types) | ✅ decoded + authorable S97, USER-CONFIRMED 2026-09-26 | type byte low nibble, bank $06 NPCBehaviourTable; ROOM_DATA_FORMAT "NPC behaviour types" |

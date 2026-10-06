@@ -16,9 +16,10 @@ none.
 | Ask YES / NO | text whose last box is the question; *If YES* and *If NO* branches, then both continue |
 | If flags… | all listed flags ON (and the second list OFF) → *Then*, else *Otherwise* |
 | Turn flags ON / OFF | set / clear flags (New flag… makes one) |
-| Battle | 1-3 enemies; the steps after it run only if the player WINS (a loss = back to the castle, as vanilla) |
+| Battle | 1-3 enemies; the steps after it run only if the player WINS (a loss = home: your hub, or the Castle as vanilla — see *The hub*) |
 | Helper takes the player away | the boss exit: Warubou flies in next to the player, spins, can speak, and the screen fades to the destination |
-| Move the player | a plain warp to a room / screen / cell |
+| Move the player | a plain warp to a room / screen / cell — or **Home — the hub** (see *The hub*) |
+| Heal the party | every monster's HP and MP back, ailments cured (silent — say it in a text) |
 | Vanish (this NPC leaves) | the NPC talking **flickers out** (the game's own vanish) or disappears **at once**, there and then. To keep it gone, give it *shown when* a flag (set before the Vanish) is OFF — *Make boss…* does both |
 | Stop here | ends the conversation |
 
@@ -31,9 +32,11 @@ room: `Say` → `Battle` → `Turn flags ON` (its beaten flag) → `Vanish` →
 
 - **Warubou says something first** — tick the box at the top and type the
   text (boxes, like a Say step). Leave it unticked for a silent exit.
-- **takes the player to** — the Castle throne room (where vanilla bosses
-  send you) or any of your rooms, plus screen and cell.
-- **at the Castle** (only when the destination is the Castle):
+- **takes the player to** — **Home — the hub** (where a lost battle sends
+  the player; the Castle without a hub), the Castle throne room (where
+  vanilla bosses send you) or any of your rooms, plus screen and cell.
+- **at the Castle** (only when the destination is the Castle, or home while
+  home is the Castle):
   - *nothing happens* — you just stand in the throne room;
   - *the priest blesses + heals the party* — the vanilla return from a gate
     (afterwards the castle NPC offers the herb again);

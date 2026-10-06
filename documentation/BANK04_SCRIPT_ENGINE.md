@@ -324,7 +324,7 @@ disagrees, this one is the measured / handler-read truth (DOC_AUDIT S118).
 | $24 | `draw_tiles`(data) | screen | Draw a tile patch (data = address in this script bank) onto the visible background. |
 | $25 | `remove_monster`() | party | Remove the monster picked by the last party check ($D8E1). |
 | $26 | `reload_room`() | world | Reload the room. |
-| $27 | `refresh_party`() | party | Re-count the party (bank $01 entries 9 + 3). |
+| $27 | `refresh_party`() | party | Heal every monster — HP and MP to full, ailments cured (bank $01 entry 9 `IteratePartySlots20` over the 20 slots; PyBoy-measured S125: KO'd party at 0 HP / 0 MP → full, status $80 → 0), then entry 3. The cutscene / conversation **Heal** step (S125; was "re-count the party" — DOC_AUDIT S125). |
 | $28 | `if_storage_full`(target) | flow | Go to target when all 20 monster slots are taken. |
 | $29 | `add_monster`(enemy) | party | Add a monster (enemy row) to the farm. |
 | $2A | `give_item`(item) | item | Give an item. |

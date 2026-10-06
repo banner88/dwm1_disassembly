@@ -363,3 +363,30 @@ edge and the battle waits for input forever.
   1-6 with sound `$52` (~350 frames), an in-gate floor change = `$10-$17` with sound
   `$55`. Walk onto the real cell — a warp injected from another room takes another path
   (KEY_LESSONS S123 r2).
+
+## S125 techniques — answering YES at the right frame, losing on purpose, the item menu
+
+- **When does the YES / NO box open?** `$C83C` (the answer byte) becomes 1 (NO, the
+  default) on the frame the choice box opens — measured: talk A at frame 0, `$C915`
+  climbs 4 → 11 in 15 frames, `$C83C` 0 → 1 at frame 157. Poke `$C83C` = 0 before the
+  talk, press A to advance boxes only while it is 0, and on 1: wait ~20 frames, `up`, A.
+  Pressing on a timer answers NO whenever the text is slower than the timer.
+- **Lose a battle on purpose:** set every party record's HP word (+$50) to 1 (MP +$54
+  too, to see the heal) before a talk battle against a strong enemy (EID 213 Esterk),
+  then tap A every 20 frames until `GAME_MODE` is 1 again on the destination map.
+- **Use an item in the field:** A opens the field menu (INFO ITEM / SKIL OPTN; `right`
+  needs a 40-frame settle before A or INFO opens), ITEM lists 5 per page (`right` turns
+  pages), A → USE / DEL, A → "… throws a WarpWing!", A. A gate floor to use it on: the
+  pedestal's own mailbox (`$C96D` = gate, `$C96E` = 1, `$C96C` = 1, `$C88F`++, ~1,200
+  frames, keep `$CA39/$CA3A` high), then A until `$C8EB` bit 0 clears.
+- **Invisible sprites after a warp:** compare `$C8EC` with an arrival that draws them
+  (KEY_LESSONS S125).
+- **Is a room laggy, and why? — frame phases.** Count `MainFieldLoop` ($01) entries per
+  600 frames while walking (600 = no frame dropped). For the why, hook the loop's own
+  points — entry, `jr_001_4e0b`, +4 (after the bank $04 VM), +8 (bank $06 entry 6), +11
+  (`CheckScriptBeforeAction`), +15 (bank $06 entry 1, the NPC sprite draw),
+  `jr_001_4e29` (the `ret`) — record `(frame, LY)` at each, cost = Δframe × 154 + ΔLY.
+  Build variants of the room (no NPCs, n NPCs, no tile animations) and compare; to price
+  one patched call, byte-patch it back to the original in a copy of the ROM (ROOM_DATA_FORMAT
+  "What NPCs cost per frame").
+

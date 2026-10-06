@@ -1,5 +1,108 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-05 (Session 123 — **ROADMAP NG3 REDEFINED AND BUILT: WORLDS — HAND-MADE
+> PLACES OF THE PROJECT'S OWN ROOMS ENTERED THROUGH A SWIRLING PORTAL EXACTLY LIKE A GATE, WITH
+> PER-ROOM BATTLES, CALM ROOMS THAT SAVE, MINI-BOSSES AND AN END BOSS THAT CLEARS THE WORLD; THE
+> SWIRL STOPS OR TURNS GREEN; NPC COLOURS (THE 8 OBJ PALETTES) FOR ANY PERSON / OBJECT NPC; THE
+> VANISH STEP; MAKE BOSS…; HELP FULLY UPDATED** (user: "NG3: I want just normal rooms with set
+> encounters, and a flag for boss that can alter things (like encounters, NPC dialogue, things
+> that used to block your path) … it needs to act as a world that can have encounters,
+> encounter-free rooms (where you can also save), mini-bosses, endbosses, flags and triggers.
+> Enter via swirling portal, portal stops when boss beaten, OR portal is different colour when
+> boss beaten - also good. Like green or something … Encounters should be set per-room. Also at
+> the end of this session please make sure help is FULLY up to date with everything" →
+> "Entering should be JUST like entering a gate. Losing: Same as a gate. Same rules overall. I
+> assume minibosses with own flags are also ok?")). **Built S123; r2 test ROM USER-CONFIRMED 2026-10-05 20:06.**
+> **Model + compiler (PROJECT_COMPILER §2.36):** a world = a new gate (32-95) with a `world`
+> block (start room / cell, rooms, saving `calm` / `everywhere` / `nowhere`); 2 floors,
+> hand-made, the start room served on floor 1 at 100 % (bank $71 `GateInsertTable`); the other
+> rooms = ordinary custom rooms joined by doors; per-room lists + flag variants (S114); the
+> cleared flag `gate:N` (`$17A0+N`) set only by a boss conversation. `cleared_swirl` (ANY gate):
+> stop, or spin in an OBJ palette (green = 1). NPC `colour` → the `$A2` prefix. Conversation
+> step `vanish` (flicker = `trigger_anim $0Dnn`, instant = `npc_write n,0,$40`).
+> `editor2/core/worlds.py` (WorldsMixin, `make_boss`), `_validate_worlds`. Found + fixed: a
+> conversation testing `gate:N` crashed (`repo_root` set late); `TEMPLATE_SIZE[0x60]` stale.
+> **Engine (bank $60 template re-pinned, TEMPLATE_SIZE 1273):** `CopyNPCListToBuffer` + `$A2`
+> → `wNpcColour` ($D2E3, carved from `wCustomPool`), entry 11 `NpcColourDraw` via bank $06
+> `NPCDrawSlot` (was `SaveMapS_4d0a`; patched `ld hl, $600b`) and bank $05
+> `NPCSpritePaletteOr` (was `HramAudE_406e`) — labels both trees; `audit_mapid_range` 2 new
+> sites adjudicated (CROSSBANK_ROOMS "S123 sites").
+> **Editor:** World tab **Worlds** panel (new / rename / delete, start, portals, the swirl after
+> clearing, saving, rooms table, music for every room, *Still needs*, *only this world*);
+> Rooms tab *World entrance here…*, NPC *colour* (canvas preview), **Make boss…**, the section
+> *Inside gates and worlds*; the conversation dialog's Vanish step; Gates tab: worlds listed
+> WORLD and locked, every other gate *after clearing, the swirl*. **Help** (P3.H): new
+> `65_worlds.md`, `11_doors.md`, `13_tilesets.md`, `14_import_art.md`; 00/10/20/30/40/59/60/
+> 70/80/90 updated. `EDITOR_REVISION` = 'S123' (r2: 'S123r2').
+> **Measured (PyBoy, the user's save, GATE_GENERATION §7.11):** the portal's wave + cream fade
+> into the start room; JOURNAL ok in a calm room, refused in a battle room; wild battles from
+> the room's list; the warden: 2 boxes → battle → flickers out → "The way is open." → hidden
+> for good, the way east open; the king: battle → `$17C0` set → the helper → the hall; the
+> portal swirl then drawn in palette 1; re-entry: the villager's new text, list 9 (EIDs 20 / 25
+> / 26); a loss → the Castle, healed, 3800 → 1900 gold; colours follow the screen scroll;
+> cost ≈ 1.2 scanlines per coloured NPC.
+> **Verifier PASS; clean `1ca6579…` byte-perfect; patched pin `e93b23b5…` (patched; r2: `6b0738c1…`)**, was
+> `bd0652da…` (patched, historical). test_compiler --rom 1101/1101 (the S121 wMillyLayout
+> bound now checks against `wNpcColour`, the next WRAM symbol); test_app PASS (`s123_worlds`,
+> + the Gates tab swirl colour); test_canvas --rom PASS.
+> **Test ROM `DWM-S123-worlds-test.gbc` (`ef6551d1…`, patched; built, NOT yet user-tested):**
+> the user's project (my-dwm-hack_13) + the world **Verdant Rift** (gate 32) made with the
+> editor's own operations: GreatTree screen 12 Copycat House door (4, 4) → **Rift Gate Hall**
+> ($73, the portal at (4, 3)) → **Rift Landing** ($74, start, calm: saving, a guide, a villager
+> whose words change once cleared, a return swirl) → **Rift Woods** ($75, list 0 → list 9 once
+> cleared, no saving, the **Rift Warden** mini-boss with its own flag guarding the way) →
+> **Rift Throne** ($76, the **Rift King** end boss → the helper → the hall, swirl green).
+> Walked end to end in PyBoy.
+> **User 2026-10-05 19:35: "Its good. One minor thing: The entry into the custom gate
+> (non-green/green portal) should be a full start-of-gate effect (screen whirling around and
+> slowly vanishing) instead of go-down-a-floor effect (screen closing with a whoosh sound)."**
+> **r2:** reproduced in PyBoy — S41's bank $0B `CustomDescentInGate` gave every gate-flag
+> exit of a custom room the floor-change ladder (`$C905` `$10-$17`, sound `$55`); the r1
+> "measured" entry had been a warp injected from a vanilla room (KEY_LESSONS S123 r2). Fixed:
+> bank $60 entry 12 `CustomDescentFeel` (Stairs down `$80` only; a gate entrance keeps the
+> vanilla flow); now == room `$24`'s portal (states 1-6, same intervals, sound `$52`); a
+> world-room Stairs down still whooshes; the demo re-walked end to end (entry, JOURNAL, wild
+> battle, warden, king → green swirl, re-entry, list 9, loss → half gold). Also affects S115
+> new-gate entrances in custom rooms (the same path). Pin **`6b0738c1…` (patched)**, r1
+> `e93b23b5…` (patched, historical). **r2 ROM `DWM-S123r2-worlds-test.gbc` (`542771d0…`,
+> patched; built, NOT yet user-tested);** the r1 ROM (`ef6551d1…`, patched, historical) was
+> user-tested ("Its good") apart from the entry effect. r2 checks: verifier PASS
+> (`audit_mapid_range`: the moved site `CustomDescentFeel#0` CP_UNSIGNED, the bank $0B key
+> retired); test_compiler --rom 1101/1101; test_canvas --rom PASS; test_app PASS
+> (`EDITOR_REVISION` 'S123r2').
+> **User 2026-10-05 20:06: "Great, looks good. Give all files for handoff please"** — the r2
+> ROM USER-CONFIRMED.
+> **Hand-off:** `DWM-S123-worlds-changed-files.zip` (cumulative S123 + r2) + the APPLY list in the chat.
+> **r3 (user 20:15: "1) When making new world and entry coordinates, SHOW VISUALLY. How the
+> hell am I meant to know where in a room x/y is. 2) … the STARTING SWIRL that leads into
+> world, where else in game is it placed, and where it lands player INSIDE new world. That
+> needs to be visually clear. 3) … roots room - why is it visually weird looking, like some
+> tiles are missing? If too much to investigate push to later, but flag in documentation"):**
+> (1) `editor2/app/rooms/cell_picker.py` `CellPicker` — the room's screen at 2x, click a
+> cell (LAND / PORTAL outline, walls refused, doors / exits / portals drawn) — in New world…
+> (a NEW theme room is previewed as its plain floor), the landing (*Change…*) and the new
+> **Add portal…** dialog. (2) Worlds panel **The way in**: ① the portal's room picture
+> (blue PORTAL, ◀ ▶ through several, Add portal… / Go to / Remove) ➜ ② the landing picture
+> (green LAND, Change… / Go to); Rooms canvas markers **P** (a world portal, tooltip = where
+> it lands) and **W↓** (the landing, draggable); `Document.world_portals` /
+> `remove_world_entrance`; `open_node` takes (kind, id, screen, x, y). (3) The roots room is
+> fine IN-GAME (PyBoy: BG map, attributes and tiles == vanilla `$08`); the EDITOR drew a black
+> cross: BG ids `$80-$AF` are the common sheet `$29:$1D` that bank $0B
+> `RoomEntry0_TilesetLoader` loads to `$8800` in EVERY room (`ld a, $08` is not a compare —
+> WaitDMATransfer returns Z, the `jr nz` never branches; measured in rooms $00/$01/$08/$10/
+> $24/$74) and the renderer drew every id ≥ 128 as tile 0. Fixed (`render_project`
+> `common_blocks`, `tools/render_rooms.py`, tile thumbnails): the roots room preview == the
+> game, 0 pixels differ. Flagged, not built (ROADMAP P3.16 residuals): the copy has no
+> palette pulse (vanilla `$08` cycles `wBGPalette` $D2/$D1/$C1 every 32 frames; the copy's
+> `animation: none`), and a 4th NPC species on a screen would load into `$8800-$88FF`
+> (= tiles `$80-$8F`, code-read: slot c at `$8500 + c·$100`; vanilla `$08` is special-cased by
+> `cp $08` in banks $06/$0B) — the roots room uses 2. No ROM change (editor only):
+> `EDITOR_REVISION` 'S123r3'. Comments only in bank $0B both trees (the loader). Checks:
+> verifier PASS; test_compiler --rom 1101/1101; test_canvas --rom PASS; test_app PASS (the
+> `s123_worlds` r3 block: pictures, Add portal by a click, Remove, landing by a click, Go to,
+> the W↓ drag, the P marker).
+> **Next:** the user's test of the r3 editor, then the user's pick (P3.14, P3.H residuals, NG3 residuals).
+
 > Last verified: 2026-10-05 (Session 122 — **ROADMAP P3.7b PART 2 FINISHED: THE GATES' 16 MAZE
 > LOOKS AS TILESETS FOR THE PROJECT'S OWN ROOMS (THEIR COLOURS, THEIR METATILES, THE 254 MAZE
 > SCREENS, BORROWING BOTH WAYS); THE MAZE CARVE TRACED AND MODELLED BIT-EXACT; MAZE SIZE 3-15;

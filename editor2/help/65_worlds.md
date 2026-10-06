@@ -2,8 +2,9 @@
 
 A **world** is a place of your own rooms that the player enters through a
 swirling **portal**, exactly like a gate: the same wave and cream fade, the
-same rules (lose a battle and you wake up in the Castle — the priest heals the
-party and half your gold is gone). But a world is not a random maze: inside it
+same rules (lose a battle and you wake up at home — the Castle, where the
+priest heals the party, or your own hub (see *The hub*) — and half your gold
+is gone). But a world is not a random maze: inside it
 is your rooms, joined by doors, each with its own battles (or none), saving,
 people, mini-bosses and an end boss. Beating the end boss **clears** the world:
 the portal's swirl stops, or keeps spinning in another colour (green, say).

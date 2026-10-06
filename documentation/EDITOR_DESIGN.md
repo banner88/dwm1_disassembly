@@ -1709,6 +1709,26 @@ vanilla exit (98 rooms / 206 links, ~0.8 s). Deterministic spring layout
 what the link is, double-click = open the room in the Rooms tab. Rebuilt on
 every structural change.
 
+**Hub (S125, ROADMAP P3.14d1; user: "Make a single room be HUB but … transferrable upon
+flag"; built S125, NOT yet user-tested):** the **Hub** box at the top of the World tab's
+left panel (`world_tab.HubBox`): the rules as sentences ("while post_game is ON → the
+Castle …", "otherwise → HUB HALL ($74), screen 0 (4,5)", a grey last line "otherwise →
+the Castle" when nothing is unconditional), **Add rule… / Edit… / Remove / ▲ ▼**, **Open
+room**, **Add the arrival scenes** (three entry scenes on the rule's screen: loss + heal,
+WarpWing + heal, home), the problems in red (`Document.hub_problems`). `HubRuleDialog`:
+the conditions (`encounters_tab.FlagTerms`, + New named flag…), the room (the Castle
+first) and the arrival cell clicked on the room picture (`CellPicker`; walls refused).
+A new conditional rule is inserted before a final unconditional one. Elsewhere: the
+cutscene editor's **Arrival home… ▾** (entry scenes; the reasons, a note when the room
+is not a hub), the **Heal the party** step, "home — the hub (World tab)" first in the
+Warp destinations (the form then shows where home is now); the conversation dialog's
+**Home — the hub** destination (screen / cell greyed) for Move and the helper (the "at
+the Castle" event applies when home is the Castle) and the Heal step; the Rooms canvas
+**H** marker (gold) at a rule's cell; the Progression & Flags tab's hub triggers open the
+Hub box on that rule (`navigate_to {'tab': 'worlds', 'hub': n}`). Headless model:
+`editor2/core/hub_doc.py` (`HubMixin`). Tests: test_compiler `test_hub_s125` (doc block),
+test_app `s125_hub`.
+
 *Target:* room/warp graph (custom + vanilla islands): nodes = rooms (thumbnail
 renders), edges = exits/warps/`vanilla_exit_extensions`/script
 teleports; the bifurcation edit (dresser repoint) is performed HERE

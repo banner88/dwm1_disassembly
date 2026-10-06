@@ -20,7 +20,8 @@
   new gates). A room belongs to at most one world. Only a conversation (Make
   boss → END boss, or *Turn flags ON* `world cleared — …`) clears a world —
   winning a battle alone does not. Inside a world there are no maze floors or
-  stairs; losing works the gate way (the Castle, healed, half the gold). A
+  stairs; losing works the gate way (home — the Castle or your hub — healed,
+  half the gold). A
   world room's music is its own song, else whatever is playing.
 - NPC colours (S123): the 8 sprite palettes are the game's own, shared by
   every sprite on the screen (they are not editable here). Monster NPCs keep

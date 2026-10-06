@@ -632,6 +632,22 @@ editor exposes these as `behaviour` names (PROJECT_COMPILER §2.13) and
 draws the walk path of the selected NPC; the compiler warns when a path
 leaves the 10×8 screen.
 
+### What NPCs cost per frame (S125, PyBoy-measured)
+
+User S125: "the room you made hub was laggy". Measured on the S125 demo HUB HALL
+(the user's save, the player + 3 followers, walking left / right): main-loop
+passes per 600 frames — 4 standing NPCs 542-556 (≈ 8 % of frames dropped while
+walking, ≈ 3 % standing), 3 NPCs 580-590, 2 NPCs 599, none 600; the room's
+four sway tile animations alone 600 (no cost seen); the sprite variety none
+(4 NPCs of one sprite = the same). Per pass (scanlines, budget 154): the NPC
+sprite draw (bank $06 entry 1) ≈ 8 per NPC, of which ≈ 1.4 is the S123 colour
+path (bank $60 entry 11 via `NPCDrawSlot`; bypassed: 556 → 577 passes); the
+per-frame NPC work before it (`VisualEffectsDispatch` … `CheckScriptActive`)
+≈ 6 per NPC; `CheckScriptBeforeAction` a constant ≈ 30 in every room. 4 NPCs
+average 110 lines with peaks of 173 → frames over budget. The vanilla throne
+room (3 NPCs) 597-598. Rule of thumb: at most 3 NPCs on a screen the player
+walks around in (PYBOY_DEBUGGING S125 "frame phases").
+
 ### NPC RAM slot ($D7D2 + 32·i, 8 slots) — fields known S97
 
 | off | field | writer / reader |

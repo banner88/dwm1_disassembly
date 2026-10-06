@@ -637,3 +637,13 @@ gate you assumed".
 | `scriptgen.OPS` `npc_hide` / `npc_show` (legacy quest actions) | WRONG OPCODES (S124, code-read) | `$48` / `$49` = face_down / face_left (S101) — a quest's "hide" only turns the NPC; the quest form is replaced in ROADMAP P3.14c. |
 | `extracted/all_scripts.json` `words` addresses | DRIFTS (S124, research read) | its word lists are not contiguous ROM words from Castle script 0 on — use `cutscenes.Catalogue` (the ROM) for addresses. |
 | EDITOR_DESIGN §5.7 "As built S124": **open** of a game room's use goes to "a game room" (implied: the place) | WRONG (S124 r3, user-reported) | it opened the room's FIRST screen in state 0 (nav = the map only; `_go_end` forced state 0) — e.g. `$0080` → GreatTree's start screen, not Santi (screen 12, states 1-2). Fixed: `Use.places` + `open_node` / `_go_end` keep screen / state / cell; text corrected (r3 paragraph). |
+
+## S125 addendum (2026-10-06; the hub — ROADMAP P3.14d1)
+
+| Claim (where) | Verdict | Correct |
+|---|---|---|
+| ROADMAP P3.14 / PROJECT_STATE S124: "a lost battle is hard-wired to the Castle (bank $50 `$64AF`)" | IMPRECISE (S125, code-read + PyBoy) | an ordinary lost battle is `$6559` (gold halved, items dropped after it); `$64AF` is reached with `wBattlePostFlag` = 1 — the lost Starry Night / arena final. Both write `$D92B` = 8. A third send: bank $06 `$6A39`, the party killed by damage floors (message `$021A`). |
+| GATE_GENERATION §7.7 / disassembly bank $07 comment: `$D92B` = 6 "(gate return)" | IMPRECISE (S125, PyBoy) | written by the **WarpWing item**'s use path (the item menu: "MILLY throws a WarpWing!"); the boss exits use 7 (King) or the script's own choice. |
+| BANK04_SCRIPT_ENGINE / `script_ops.py` op `$27` `refresh_party`: "Re-count the party (bank $01 entries 9 + 3)" | WRONG (S125, PyBoy) | bank $01 entry 9 (`IteratePartySlots20`) HEALS every monster: status := 0, HP := max, MP := max (KO'd 0 HP / 0 MP → full); then entry 3. Corrected; the Heal step uses it. |
+| known_RAM_map `$C8EC`: "set 1 by room transitions, cleared … when `$D92B` is not 1-5" | INCOMPLETE (S125, PyBoy) | the WarpWing's exit sets it itself and relies on the Castle arrival to clear it; a warp elsewhere left every sprite hidden. Added. |
+

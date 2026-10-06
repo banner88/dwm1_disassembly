@@ -133,7 +133,8 @@ OPS = {
              'Remove the monster picked by the last party check ($D8E1).'),
     0x26: Op('reload_room', _P(), 'world', None, True, 'Reload the room.'),
     0x27: Op('refresh_party', _P(), 'party', None, False,
-             'Re-count the party (bank $01 entries 9 + 3).'),
+             'Heal every monster — HP and MP to full, ailments cured (bank $01 entry 9 '
+             'IteratePartySlots20 over the 20 slots, PyBoy-measured S125), then entry 3.'),
     0x28: Op('if_storage_full', _P('target'), 'flow', 0, False,
              'Go to target when all 20 monster slots are taken.'),
     0x29: Op('add_monster', _P('enemy'), 'party', None, True,

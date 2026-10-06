@@ -34,7 +34,7 @@ the 4-byte mode block for overlay modes. Mode rows (init entry / tick entry):
 | 0 | $15:0 / $15:1 | Title / new-game / link menus |
 | 1 | $01:0 / $01:1 | FIELD (script VM ticks here via bank $04) |
 | 2 | $50:0 / $50:1 | BATTLE (BattleInit / per-frame driver) |
-| 3 | $02:1 / $02:2 | bank $02 mode |
+| 3 | $02:1 / $02:2 | the ENDING's night scenes (S125, PyBoy: after the Starry Night win — flag `$00E4` + `$D940` = 2 reach it — the special night Farm: the starry sky pan + the night palettes drawn by bank $02 over the ordinary blue-sky room data; ROADMAP E5) |
 | 4 | $5F:0 / $5F:1 | map-script/cutscene engine |
 | 5 | $5F:8 / $5F:9 | map-script/cutscene engine (2nd) |
 | 6 | $18:0 / $18:1 | bank $18 mode (link teardown target) |

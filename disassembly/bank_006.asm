@@ -5440,6 +5440,10 @@ jr_006_6a25:
     xor a
     ld [$c915], a
     ld [$c916], a
+    ; S125: the whole party fell on damage floors (message $021A just shown):
+    ; to the Castle with the lost-battle penalties (half the gold, items). The
+    ; 38 bytes up to `ld a, $01` are the Castle writes; the patched build calls
+    ; bank $71 entry 9 HubWarp (HUB_WIPED) in their place (ROADMAP P3.14d).
     ld a, $08                ; S101 r3: $D92B = 8 -> castle arrival = priest heal path ($0C:$490A)
     ld [$d92b], a
     ld hl, $0000

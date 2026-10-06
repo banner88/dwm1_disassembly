@@ -36,14 +36,17 @@ KIND_TIPS = {
     'if': 'Checks flags (all must hold): Then steps, else Otherwise steps.',
     'set': 'Turns flags on.',
     'clear': 'Turns flags off.',
-    'battle': '1-3 enemies. The steps after it run only after a WIN (a loss takes the player '
-              'back to the castle, as in vanilla). Whether the monster may join is the '
+    'battle': '1-3 enemies. The steps after it run only after a WIN (a loss sends the player '
+              'home — your hub, or the Castle as in vanilla). Whether the monster may join is the '
               "enemy's own setting (Enemies…).",
     'helper': 'The vanilla boss exit: the helper (Warubou by default) flies in next to the player, spins, can say '
               'something (the text box at the top), then the screen fades and the player is taken '
               'to the destination — at the Castle optionally with the priest\'s heal or the '
               'King\'s speech. Nothing after it runs.',
-    'move': 'Warps the player (the room reloads, so state rules pick the new state).',
+    'move': 'Warps the player (the room reloads, so state rules pick the new state) — or home, '
+            'to the hub (World tab; the Castle without one).',
+    'heal': 'Every monster gets its HP and MP back and its ailments cured (the game\'s own '
+            'heal, the one the Castle priest uses). Silent: say it in a text.',
     'vanish': 'Every NPC that runs this conversation on this screen leaves NOW — the game\'s '
               'own flicker-out (or gone at once). Use it after a boss battle: the boss is gone '
               'and its corridor opens at once. For good: also turn a flag ON and show the NPC '
@@ -75,6 +78,8 @@ def new_step(kind, doc, room, key):
         return {'move': {'dest': f'room:${mid:02X}', 'screen': int(key), 'x': 4, 'y': 4}}
     if kind == 'vanish':                            # S123
         return {'vanish': {'how': 'flicker'}}
+    if kind == 'heal':                              # S125
+        return {'heal': {}}
     return {'end': True}
 
 
@@ -121,7 +126,8 @@ def spec_problems(spec, doc=None):
 
 
 def _dest_choices(doc):
-    out = [('Castle — throne room (where vanilla bosses send you)', 'vanilla:$00')]
+    out = [('Home — the hub (World tab; the Castle without one)', 'hub'),
+           ('Castle — throne room (where vanilla bosses send you)', 'vanilla:$00')]
     if doc is not None:
         for r in doc.rooms:
             if r.get('placeholder'):
@@ -160,11 +166,23 @@ class DestEditor(QWidget):
             sb.valueChanged.connect(self._changed)
             self.sp[k] = sb
             h.addWidget(sb)
+        self._hub_state()
+
+    def _hub_state(self):
+        hub = self.room.currentData() == 'hub'
+        for sb in self.sp.values():
+            sb.setEnabled(not hub)
+            sb.setToolTip('the hub rules decide where (World tab)' if hub else '')
 
     def _changed(self, *_a):
         self.mv['dest'] = self.room.currentData()
-        for k, sb in self.sp.items():
-            self.mv[k] = sb.value()
+        if self.mv['dest'] == 'hub':              # S125: the hub rules decide where
+            for k in self.sp:
+                self.mv.pop(k, None)
+        else:
+            for k, sb in self.sp.items():
+                self.mv[k] = sb.value()
+        self._hub_state()
         self.on_change()
 
 
@@ -618,7 +636,7 @@ class ConversationDialog(QDialog):
         f.addRow('at the Castle', cw)
 
         def castle_state():
-            at_castle = str(h.get('dest')) == 'vanilla:$00'
+            at_castle = str(h.get('dest')) in ('vanilla:$00', 'hub')   # S125: hub = maybe
             castle.setEnabled(at_castle)
             if not at_castle:
                 h.pop('castle', None)
@@ -632,13 +650,14 @@ class ConversationDialog(QDialog):
                 h.pop('king_speech', None)
             else:
                 h['castle'] = ev
-                h.update(CASTLE_DEST)           # the events expect the throne spawn
-                i = dest.room.findData(CASTLE_DEST['dest'])
-                dest.room.setCurrentIndex(max(0, i))
-                for k in ('screen', 'x', 'y'):
-                    dest.sp[k].blockSignals(True)
-                    dest.sp[k].setValue(CASTLE_DEST[k])
-                    dest.sp[k].blockSignals(False)
+                if h.get('dest') != 'hub':      # S125: the hub's Castle branch has it
+                    h.update(CASTLE_DEST)       # the events expect the throne spawn
+                    i = dest.room.findData(CASTLE_DEST['dest'])
+                    dest.room.setCurrentIndex(max(0, i))
+                    for k in ('screen', 'x', 'y'):
+                        dest.sp[k].blockSignals(True)
+                        dest.sp[k].setValue(CASTLE_DEST[k])
+                        dest.sp[k].blockSignals(False)
                 if ev == 'king':
                     h['king_speech'] = speech.currentData()
                 else:
@@ -714,6 +733,13 @@ class ConversationDialog(QDialog):
     def _ed_move(self, st):
         mv = st['move'] = st.get('move') or {}
         self.rv.addWidget(DestEditor(self.doc, mv, self._refresh_label))
+        self.rv.addStretch(1)
+
+    def _ed_heal(self, st):
+        lab = QLabel('Every monster (party and farm) gets its HP and MP back and its ailments '
+                     'cured — the game\'s own heal. Nothing is shown: say it in a text.')
+        lab.setWordWrap(True)
+        self.rv.addWidget(lab)
         self.rv.addStretch(1)
 
     def _ed_vanish(self, st):

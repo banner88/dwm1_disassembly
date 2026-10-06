@@ -688,6 +688,119 @@ def s123_worlds(app, w):
           'the Vanish step, the report and "only this world"; undo restores project.json')
 
 
+def s125_hub(app, w):
+    """S125 (ROADMAP P3.14d; user: "Make a single room be HUB but … transferrable upon
+    flag"): the World tab's Hub box — a rule to the example's gate_island, a rule to the
+    Castle once a flag is ON (kept before the unconditional one), the order, Add the
+    arrival scenes; the H marker on the Rooms canvas; the cutscene editor's Arrival home
+    menu, the Heal step, "home" as a move destination; the conversation dialog's Home
+    destination; the Flags tab's way to a hub rule; everything undoes."""
+    from PySide6.QtWidgets import QDialog, QMessageBox
+    from editor2.app import world_tab as WT
+    from editor2.app.cutscene_editor import room_items
+    from editor2.app.rooms import conversation_dialog as CVD
+    from editor2.app.rooms import commands as C
+    from editor2.core import cutscene_doc as CD
+    s = w.session
+    doc = s.doc
+    before = doc.dumps()
+    n0 = s.undo.index()
+    wt = w.world_tab
+    w.tabs.setCurrentWidget(wt)
+    app.processEvents()
+    hb = wt.worlds.hub
+    hb.refresh()
+    assert hb.list.count() == 1 and 'Castle' in hb.list.item(0).text(), hb.list.item(0).text()
+    s.undo.push(C.SnapshotCommand(s, 'flag', lambda d: d.add_flag('post_game')))
+    plan = [('gate_island', [], (0, 4, 4)), ('castle', [{'flag': 'post_game'}], None)]
+
+    class _RD(WT.HubRuleDialog):
+        def exec(self_):
+            rid, terms, cell = plan.pop(0)
+            self_.room.setCurrentIndex(self_.room.findData(rid))
+            for t in terms:
+                self_.terms._add(t)
+            if cell:
+                assert self_.picker.pic.img is not None, 'the room is drawn'
+                self_.picker._clicked(cell[1], cell[2])
+            return QDialog.Accepted
+    keep = WT.HubRuleDialog
+    WT.HubRuleDialog = _RD
+    try:
+        hb._add()
+        hb._add()
+    finally:
+        WT.HubRuleDialog = keep
+    rules = doc.hub_rules()
+    assert [r['room'] for r in rules] == ['castle', 'gate_island'], rules
+    assert rules[0]['when'] == [{'flag': 'post_game'}] and (rules[1]['x'], rules[1]['y']) == (4, 4)
+    assert hb.list.count() == 2 and 'post_game is ON' in hb.list.item(0).text()
+    hb.list.setCurrentRow(1)
+    hb._move(-1)                                    # the unconditional rule first: a problem
+    assert 'never applies' in hb.problems.text(), hb.problems.text()
+    hb._move(1)
+    assert not hb.problems.isVisible() or not hb.problems.text()
+    keep_i = QMessageBox.information
+    QMessageBox.information = staticmethod(lambda *a, **k: None)
+    try:
+        hb.list.setCurrentRow(1)
+        hb._arrivals()
+    finally:
+        QMessageBox.information = keep_i
+    arr = doc.hub_arrival_scenes('gate_island')
+    assert [a[2] for a in arr] == [['lost', 'wiped', 'final_lost'], ['warpwing'], ['home']], arr
+    # the Rooms canvas marks the hub cell
+    rt = w.rooms_tab
+    w.tabs.setCurrentWidget(rt)
+    rt.open_node(('room', 'gate_island', 0, 4, 4))
+    app.processEvents()
+    assert any(m[0] == 'hub' and (m[1], m[2]) == (4, 4) for m in rt.canvas.markers), \
+        [m[:3] for m in rt.canvas.markers]
+    # the cutscene editor: Arrival home, Heal, a move home
+    ct = w.cutscenes_tab
+    w.tabs.setCurrentWidget(ct)
+    ct.open_cutscene('gate_island', arr[1][0])
+    app.processEvents()
+    ed = ct.editor
+    assert ed.arr_btn.isVisibleTo(ed) and 'WarpWing' in ed.arr_btn.text(), ed.arr_btn.text()
+    ed._toggle_arrival('home', True)
+    app.processEvents()
+    assert CD.find(doc, arr[1][0])[1]['trigger']['arrival'] == ['warpwing', 'home']
+    ed._toggle_arrival('home', False)
+    ed.add_step('heal')
+    ed.add_step('move', {'move': {'dest': 'hub'}})
+    app.processEvents()
+    steps = CD.find(doc, arr[1][0])[1]['steps']
+    assert {'heal': {}} in steps and {'move': {'dest': 'hub'}} == steps[-1], steps
+    assert room_items(s)[0] == ('home — the hub (World tab)', 'hub')
+    errs, _warns, _lw = CD.problems(doc, doc.room('gate_island'), CD.find(doc, arr[1][0])[1])
+    assert not errs, errs
+    # the conversation dialog: Home as a destination
+    mv = {'dest': 'vanilla:$00', 'screen': 1, 'x': 4, 'y': 5}
+    de = CVD.DestEditor(doc, mv, lambda: None)
+    de.room.setCurrentIndex(de.room.findData('hub'))
+    de._changed()
+    assert mv == {'dest': 'hub'} and not de.sp['x'].isEnabled(), mv
+    assert CVD.new_step('heal', doc, None, 0) == {'heal': {}}
+    # the Flags tab's link to a hub rule
+    w.navigate_to({'tab': 'worlds', 'hub': 0})
+    app.processEvents()
+    assert w.tabs.currentWidget() is wt and hb.list.currentRow() == 0
+    while s.undo.index() > n0:
+        s.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'undo must restore project.json exactly'
+    hb.refresh()
+    hlp = open(os.path.join(REPO, 'editor2', 'help', '66_hub.md')).read()
+    for word in ('Add rule', 'arrival scenes', 'Arrival home', 'Heal', 'WarpWing', 'Castle',
+                 'half the gold'):
+        assert word in hlp, f'help 66_hub.md lacks "{word}"'
+    print('OK: S125 — the hub: rules (a room, the Castle once a flag is ON) in order, the '
+          'order problem, Add the arrival scenes, the H marker, Arrival home / Heal / move '
+          'home in the cutscene editor, Home in conversations, the Flags tab link; undo '
+          'restores project.json')
+
+
 def s124_progression(app, w):
     """S124 (ROADMAP P3.14a): the Progression & Flags tab — every flag with what turns
     it ON / OFF and what checks it (with links to the place), New flag (a fixed
@@ -903,6 +1016,7 @@ def main():
     s122_gate_themes(app, w)
     s123_worlds(app, w)
     s124_progression(app, w)
+    s125_hub(app, w)
 
     # S101 r3: World tab zoom (wheel, around the mouse) + pan (drag empty canvas)
     from PySide6.QtCore import QPoint, QPointF, Qt

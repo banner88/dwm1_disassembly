@@ -349,7 +349,21 @@ wNpcColourMap:: db ;d2eb — wMapID of the last list copy
 wNpcColourScr:: db ;d2ec — wScreenIndex of the last list copy
 wNpcColourNext:: db ;d2ed — copy scratch: the colour for the next NPC entry
 wNpcColourK:: db ;d2ee — copy scratch: NPC entries seen so far
-wCustomPool:: ds $5A4 - 132 - 5 - 2 * TILEANIM_MAX_GROUPS - 2 - 18 - 26 - 8 - 256 - 1 - 2 - 160 - 12 ;d2ef-d5e4 — transient reserve (was $664; FX1 carved 64+128; S97 132; S102 69; S105 2; S111 18; S114 26; S115 8; S117 256 wExtFlags + 1 wShopID; S117b 2 push scratch; S121 160 wMillyLayout; S123 12 NPC colours)
+; S125 (ROADMAP P3.14d, the hub): why the player was sent to the project's hub.
+; Bank $71 entry 9 HubWarp (the four engine Castle warps) and the compiler's
+; "go to the hub" script ladders write it right before the warp; the hub
+; room's arrival scenes test it (op $15) and the hub room's entry script
+; clears it, so it lives for one arrival. 0 = no hub arrival (also after a
+; warp to the vanilla Castle, which keeps its own $D92B code). Transient:
+; the window-clear chain zeroes it at power-on / new game / CONTINUE.
+wHubReason:: db ;d2ef — 0 none, HUB_LOST .. HUB_ARENA_WON (below)
+HUB_LOST EQU 1          ; a battle was lost (bank $50 BattleExitHandler)
+HUB_WIPED EQU 2         ; the party fell on damage floors (bank $06, message $021A)
+HUB_WARPWING EQU 3      ; the WarpWing item (bank $07 item menu)
+HUB_FINAL_LOST EQU 4    ; the Starry Night final was lost (bank $50)
+HUB_HOME EQU 5          ; a script sent the player home (helper / move "hub")
+HUB_ARENA_WON EQU 6     ; a script after an arena class was won
+wCustomPool:: ds $5A4 - 132 - 5 - 2 * TILEANIM_MAX_GROUPS - 2 - 18 - 26 - 8 - 256 - 1 - 2 - 160 - 12 - 1 ;d2f0-d5e4 — transient reserve (was $664; FX1 carved 64+128; S97 132; S102 69; S105 2; S111 18; S114 26; S115 8; S117 256 wExtFlags + 1 wShopID; S117b 2 push scratch; S121 160 wMillyLayout; S123 12 NPC colours; S125 1 wHubReason)
 ; FX1 (S71): wPoolBounce — 128-byte staging for sleep-pool bank-2 record
 ; swaps (per-byte scratch in CF3PoolSwapRecord). Transient. (The v1 drain's
 ; halved-pending scratch use was removed with the S71v2 exp-scale veto.)

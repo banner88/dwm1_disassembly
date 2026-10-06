@@ -44,14 +44,14 @@ KIND_COLOUR = {
     'music': '#a0e6a0', 'sound': '#a0e6a0', 'shake': '#ffc878', 'fade': '#ffc878',
     'flash': '#ffc878', 'followers': '#ffc878', 'give_item': '#ffdc96',
     'give_monster': '#ffb4dc', 'tiles': '#ffc878', 'battle': '#ff7878', 'move': '#ffaa78',
-    'end': '#cccccc', 'name_hero': '#f0e6a0'}
+    'end': '#cccccc', 'name_hero': '#f0e6a0', 'heal': '#9fe0c0'}
 ADD_GROUPS = [
     ('Actors', ['walk', 'face', 'show', 'hide', 'anim', 'fly']),
     ('Text and choices', ['say', 'ask', 'if', 'name_hero']),
     ('Time', ['wait', 'wait_walks']),
     ('Screen', ['shake', 'fade', 'flash', 'tiles', 'followers']),
     ('Sound', ['music', 'sound']),
-    ('Story', ['set', 'clear', 'give_item', 'give_monster', 'battle', 'move', 'end']),
+    ('Story', ['set', 'clear', 'give_item', 'give_monster', 'heal', 'battle', 'move', 'end']),
 ]
 # S119b (user: "Can you not hover or explain what is e.g. 'wait until everyone
 # stops'?"): what each step does — under the form's title, on the Add step menu and
@@ -101,7 +101,10 @@ STEP_HELP = {
              'looks in another screen / state of the room. Until the room is loaded again.',
     'battle': 'Starts a battle with up to 3 enemies. The steps after it run only when the '
               'player wins.',
-    'move': 'Sends the player to a room / screen / tile (the scene ends there).',
+    'move': 'Sends the player to a room / screen / tile — or home, to the hub (the World '
+            'tab\'s Hub panel; the Castle when you have none). The scene ends there.',
+    'heal': 'Every monster gets its HP and MP back and its ailments cured (the game\'s own '
+            'heal, the one the Castle priest uses). Silent: say it in a text.',
     'end': 'The scene stops here.',
     'name_hero': 'Opens the game\'s naming screen (the King\'s "What is your name?" one): the player types the hero\'s name, confirms it, and the '
                  'scene goes on. It offers the current name — MILLY with the Milly hook, '
@@ -926,13 +929,23 @@ class StepForm(QWidget):
 
     def f_move(self, v):
         def to_room(d):
+            if d == 'hub':                   # S125: home — no screen / tile to pick
+                self._emit('move', {'dest': 'hub'})
+                return
             mv = dict(self.step['move'] or {})
             mv['dest'] = d
+            mv.setdefault('x', 4)
+            mv.setdefault('y', 4)
             scr = dest_screens(self.ed.s, d)
             if scr and int(mv.get('screen', 0)) not in scr:
                 mv['screen'] = scr[0]        # S121 r3: never keep a screen the room lacks
             self._emit('move', mv)
         self._combo('To room', self.ed.room_items(), v.get('dest'), to_room)
+        if v.get('dest') == 'hub':
+            lab = QLabel(hub_sentence(self.ed.s.doc))
+            lab.setWordWrap(True)
+            self.form.addRow(lab)
+            return
         scr = dest_screens(self.ed.s, v.get('dest'))
         cur = int(v.get('screen', 0))
         if scr:
@@ -944,6 +957,12 @@ class StepForm(QWidget):
             self._spin('Screen', 0, 15, cur, lambda n: self._upd('move', 'screen', n))
         self._spin('x', 0, 9, v.get('x', 4), lambda n: self._upd('move', 'x', n))
         self._spin('y', 0, 7, v.get('y', 4), lambda n: self._upd('move', 'y', n))
+
+    def f_heal(self, v):
+        lab = QLabel('Every monster (party and farm) gets its HP and MP back and its ailments '
+                     'cured. Nothing is shown — say it in a text before or after.')
+        lab.setWordWrap(True)
+        self.form.addRow(lab)
 
     def f_end(self, v):
         self.form.addRow(QLabel('The scene stops here (an entry scene then runs the room\'s own '
@@ -986,10 +1005,23 @@ def list_at(steps, path):
     return cur, path[-1]
 
 
+def hub_sentence(doc):
+    """S125: where "home" is now, in words (the hub rules, World tab)."""
+    rules = doc.hub_rules()
+    if not rules:
+        return ('Home = the Castle (no hub set — the World tab\'s Hub panel sets one). '
+                'The scene ends there.')
+    return ('Home = the first of these that holds: ' +
+            '; '.join(doc.hub_rule_text(r) for r in rules) +
+            ('' if not rules[-1].get('when') else '; else the Castle') +
+            '. The hub room\'s arrival scenes for "sent home by a script" play there.')
+
+
 def room_items(session):
-    """[(label, dest)] for a `move` step: the Castle throne room, the project's rooms,
-    then every game room (S121: the roots room's scene leads to GreatTree)."""
-    out = [('the Castle throne room', 'vanilla:$00')]
+    """[(label, dest)] for a `move` step: home (the hub, S125), the Castle throne room,
+    the project's rooms, then every game room (S121: the roots room's scene leads to
+    GreatTree)."""
+    out = [('home — the hub (World tab)', 'hub'), ('the Castle throne room', 'vanilla:$00')]
     for r in session.doc.rooms:
         if not r.get('placeholder'):
             out.append((f"{r.get('name') or r['id']} (your room)", f"room:{r['mapID'].replace('0x', '$')}"))
@@ -1051,6 +1083,7 @@ def default_step(kind, ed):
         'move': {'move': {'dest': 'vanilla:$00', 'screen': 1, 'x': 4, 'y': 5}},
         'end': {'end': True},
         'name_hero': {'name_hero': True},
+        'heal': {'heal': {}},
     }[kind]
 
 
@@ -1161,6 +1194,14 @@ class CutsceneEditor(QWidget):
         self.flags_btn.setPopupMode(QToolButton.InstantPopup)
         self.flags_btn.clicked.connect(self._flags_menu)
         h2.addWidget(self.flags_btn)
+        self.arr_btn = QToolButton()
+        self.arr_btn.setText('Arrival home… ▾')
+        self.arr_btn.setToolTip('S125: in a hub room — play only when the game has just sent '
+                                'the player home for one of these reasons (a lost battle, the '
+                                'WarpWing …). The scene then has that arrival to itself.')
+        self.arr_btn.setPopupMode(QToolButton.InstantPopup)
+        self.arr_btn.clicked.connect(self._arrival_menu)
+        h2.addWidget(self.arr_btn)
         self.once = QCheckBox('Plays once')
         self.once.setToolTip('A flag of its own is turned ON when the scene starts; the scene '
                              'does not play again (saved with the game).')
@@ -1977,6 +2018,11 @@ class CutsceneEditor(QWidget):
         ent = on == 'entry'
         for w in (self.start_lbl, self.ps_x, self.ps_y, self.ps_face, self.ps_pick):
             w.setVisible(ent)
+        self.arr_btn.setVisible(ent)
+        arr = ((self.scene or {}).get('trigger') or {}).get('arrival') or []
+        self.arr_btn.setText(('Arrival home: ' + ', '.join(CB.ARRIVAL_NAMES.get(a, a)
+                                                           for a in arr) + ' ▾')
+                             if arr else 'Arrival home… ▾')
         known = ent and bool((self.scene or {}).get('player_start'))
         self.ps_note.setText('' if not ent else (
             'the walks of the player are counted from here (where he arrives on this screen)'
@@ -1991,6 +2037,8 @@ class CutsceneEditor(QWidget):
         tr['on'] = on
         for k in ('actor', 'x', 'y', 'facing'):
             tr.pop(k, None)
+        if on != 'entry':
+            tr.pop('arrival', None)
         if on == 'talk':
             tr['actor'] = self.trig_actor.currentData()
         elif on in ('examine', 'stepon'):
@@ -2049,6 +2097,40 @@ class CutsceneEditor(QWidget):
         m.addSeparator()
         m.addAction('New flag…').triggered.connect(self.new_flag)
         m.exec(self.flags_btn.mapToGlobal(QPoint(0, self.flags_btn.height())))
+
+    def _arrival_menu(self):
+        """S125: the reasons this entry scene plays for (empty = every entry)."""
+        if self.scene is None:
+            return
+        tr = self.scene.get('trigger') or {}
+        cur = tr.get('arrival') or []
+        m = QMenu(self)
+        m.setToolTipsVisible(True)
+        m.addSection('Play only when the player was sent home because…')
+        for a in CB.ARRIVALS:
+            act = m.addAction(CB.ARRIVAL_NAMES[a])
+            act.setCheckable(True)
+            act.setChecked(a in cur)
+            act.toggled.connect(lambda c, a=a: self._toggle_arrival(a, c))
+        rid = self.room_id
+        if rid not in self.s.doc.hub_room_ids():
+            m.addSeparator()
+            m.addAction('(this room is not a hub — set one in the World tab)').setEnabled(False)
+        m.exec(self.arr_btn.mapToGlobal(QPoint(0, self.arr_btn.height())))
+
+    def _toggle_arrival(self, a, on):
+        tr = dict(self.scene.get('trigger') or {})
+        lst = [x for x in tr.get('arrival') or [] if x != a]
+        if on:
+            lst.append(a)
+        lst = [x for x in CB.ARRIVALS if x in lst]
+        if lst:
+            tr['arrival'] = lst
+        else:
+            tr.pop('arrival', None)
+        self.scene['trigger'] = tr
+        self._trigger_widgets()
+        self.commit('Cutscene: arrival home')
 
     def _toggle_flag(self, key, name, on):
         tr = dict(self.scene.get('trigger') or {})

@@ -98,6 +98,23 @@
 ;     rooms $50/$51/$53-$5C, rooms marked $FF); a boss fight ($DA09 == 3,
 ;     opcodes $5A/$5B) = the boss setting; else the normal setting (only where
 ;     vanilla plays $27). 0 everywhere = the vanilla pick.
+;
+; Entry 9 (HL=$7109) HubWarp (S125, ROADMAP P3.14d — the hub):
+;     E = why the player is sent home (HUB_LOST 1 a lost battle, HUB_WIPED 2 the
+;     party killed by damage floors, HUB_WARPWING 3 the WarpWing item,
+;     HUB_FINAL_LOST 4 a lost Starry Night final). Called by the same-size
+;     rewrites of the four engine Castle warps (bank $50 BattleExitHandler
+;     $6559 / $64AF, bank $06 $6A39 (in jr_006_6a25), bank $07 $5030 (in
+;     jr_007_5012) — each was `$D92B := code`
+;     + the warp mailbox to map 0 pixel ($E8, $58)). Walks HubTable (generated
+;     from project.json custom.hub, in rule order): the first rule whose flag
+;     terms all hold is the hub. A project room: the warp mailbox := that
+;     room / pixel (gate flag 0) and wHubReason := E, read by the room's
+;     arrival scenes (cutscene trigger `arrival`). Map 0 (the "castle" rule),
+;     or no rule matching / no table: exactly the vanilla writes — wHubReason
+;     := 0, `$D92B` := 8 (6 for the WarpWing) and map 0 at ($E8, $58), so the
+;     Castle's own arrival script heals / speaks as before. Preserves nothing
+;     the callers rely on (every site reloads A / HL right after).
 ; =============================================================================
 
 SECTION "ROM Bank $071", ROMX[$4000], BANK[$71]
@@ -114,6 +131,7 @@ SECTION "ROM Bank $071", ROMX[$4000], BANK[$71]
     dw CustomBGMStart                   ; entry 6  (HL=$7106, S116 P3.13b)
     dw BattleBGMResolve                 ; entry 7  (HL=$7107, S116 P3.13b)
     dw TextSpriteMode                   ; entry 8  (HL=$7108, S121)
+    dw HubWarp                          ; entry 9  (HL=$7109, S125 P3.14d)
 
 ; -----------------------------------------------------------------------------
 ; Entry 0: CopyCustomRoomRecord — 8-byte $26DD record for wMapID → wRoomRecScratch
@@ -635,4 +653,98 @@ BattleBGMResolve:
     ret z
 .use:
     ld e, a
+    ret
+
+; -----------------------------------------------------------------------------
+; Entry 9: HubWarp (S125, ROADMAP P3.14d) — E = the reason (1-4, header above).
+; HubTable records: [n_terms] + n_terms x dw flag (bit 15 = must be CLEAR) +
+; [mapID, px lo, px hi, py lo, py hi]; $FF ends. mapID 0 = the Castle.
+; -----------------------------------------------------------------------------
+HubWarp:
+    ld a, e
+    ld [wHubReason], a                  ; the reason, for the hub's arrival scenes
+    ld hl, HubTable
+.rec:
+    ld a, [hl+]                         ; n_terms ($FF = end of the table)
+    cp $FF
+    jr z, .castle
+    ld d, a                             ; D = terms left
+    push hl
+    add a                               ; next record = HL + 2*n + 5
+    add 5
+    add l
+    ld l, a
+    adc h
+    sub l
+    ld h, a
+    ld b, h
+    ld c, l
+    pop hl
+    push bc                             ; [sp] = the next record
+    ld a, d
+    or a
+    jr z, .match                        ; no terms: always (the default rule)
+.term:
+    ld c, [hl]
+    inc hl
+    ld b, [hl]
+    inc hl
+    push hl
+    ld a, b
+    and $80
+    ld e, a                             ; E bit 7 = the term wants the flag CLEAR
+    res 7, b
+    call TestEventFlag                  ; Z = clear, NZ = set (keeps DE)
+    pop hl
+    jr z, .isClear
+    bit 7, e
+    jr nz, .fail                        ; set, but must be clear
+    jr .termNext
+.isClear:
+    bit 7, e
+    jr z, .fail                         ; clear, but must be set
+.termNext:
+    dec d
+    jr nz, .term
+.match:
+    pop bc                              ; drop the next-record pointer
+    ld a, [hl+]                         ; the hub's mapID
+    or a
+    jr z, .castle                       ; the "castle" rule: the vanilla arrival
+    ld [wWarpGateId], a
+    xor a
+    ld [wWarpFlag], a
+    ld a, [hl+]
+    ld [wWarpSpawnXLo], a
+    ld a, [hl+]
+    ld [wWarpSpawnXHi], a
+    ld a, [hl+]
+    ld [wWarpSpawnYLo], a
+    ld a, [hl]
+    ld [wWarpSpawnYHi], a
+    ret
+.fail:
+    pop hl                              ; the next record
+    jr .rec
+.castle:                                ; the vanilla Castle warp, byte for byte
+    ld a, [wHubReason]
+    ld e, a
+    xor a
+    ld [wHubReason], a                  ; the Castle has its own arrival code
+    ld a, e
+    cp HUB_WARPWING
+    ld a, $06                           ; $D92B = 6: the priest's blessing + heal
+    jr z, .code
+    ld a, $08                           ; $D92B = 8: after a lost battle
+.code:
+    ld [$d92b], a
+    xor a
+    ld [wWarpGateId], a
+    ld [wWarpFlag], a
+    ld [wWarpSpawnXHi], a
+    ld [wWarpSpawnYHi], a
+    ld a, $e8
+    ld [wWarpSpawnXLo], a
+    ld a, $58
+    ld [wWarpSpawnYLo], a
     ret

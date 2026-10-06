@@ -818,14 +818,19 @@ compiler computes from the player's tile at run time (PROJECT_COMPILER §2.18).
 
 **The Castle arrival** (S101 r3, PyBoy-measured on the user's save, all 33
 codes): Castle_Script00 on screen 1 dispatches on **`$D92B`**: 0 / 4 → the
-new-game intro / story cascade; **6** (bank $07, the gate return) and **8**
-(bank $50 after a lost battle, bank $06) → `$0C:$490A` = the priest's
+new-game intro / story cascade; **6** (bank $07, the gate return — S125: this
+is the **WarpWing item**'s use path; the vanilla boss exits do not write 6) and **8**
+(bank $50 after a lost battle: `$6559` an ordinary loss, `$64AF` the lost Starry
+Night / arena final; bank $06 `$6A39` the party wiped by damage floors) → `$0C:$490A` = the priest's
 GreatTree blessing + heal (HP measured 1 → 999), `$D9E3 := $FF`; **7** (the
 vanilla boss win tails) → `$0C:$47E0` = the King's speech chain on
 **`$D9E3`** — one speech per gate boss ($30 Healer, $31 Dragon, … $4E
 DeathMore, $C7 Sidoh, $10 Copycat; `conversation.KING_SPEECHES`); every
 speech ends with `$D92B := 3` (5 for post-game codes); an unknown code falls to
-the priest path; 1-3 / 5 = no event. **S124 correction** (ROM bytes `$0C:$49F2`
+the priest path; 1-3 / 5 = no event. **S125 — the hub:** those four engine sends now
+call bank $71 entry 9 `HubWarp` (same size); a project's `custom.hub` can send the
+player to one of its rooms instead, the Castle path above stays byte for byte when the
+hub is the Castle or unset (PROJECT_COMPILER §2.38). **S124 correction** (ROM bytes `$0C:$49F2`
 `FF03 0009`; the editor's flag index, game scripts): speech **`$30`** (the
 Beginning boss — "Oh, [HERO]! Did you bring back Hale…") DOES set a saved flag,
 **`$0009`** ("go to the arena"), and writes `$D92C` / `$D92D` / `$D92F` / `$D93C` (the

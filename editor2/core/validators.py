@@ -25,7 +25,7 @@ TEMPLATE_SIZE = {
                  # (283 S53 -> 348 S70 -> 358 S70v3 (+2x5B wCustomY7Cmp arming): entry-7 dw + VanillaExitResolve +
                  # factored CopyExitListToBuffer in the template head; 383 S94: VanillaExitResolve rows keyed
                  # by (mapID, screen) — `db mapID, screen` with $FF = any screen)
-    0x71: 727,    # addr(Custom26DDTable)-$4000, S121 (+ entry 8 dw + TextSpriteMode, 39 B; measured from the S121 example game.sym $42D7). Prev 688 S116 (444 S102 + entries 6/7 dw + CustomRoomBGMResolve gate songs + CustomBGMStart + BattleBGMResolve; measured from the S116 example game.sym). Prev 444 S102 (440 S101 + CustomAnimSource's far call to bank $6C entry 0, 4 B; measured from the S102 reference game.sym). Prev 440 S101 (395 S100 + CustomRoomBGMResolve .gatePath: the custom boss song on the floor before the boss). Prev 395 S100 (164 S99 + entries 4/5 dw + CustomGateInsert + CustomRoomFlags + entry-1 follow-gate test; measured from the S100 reference game.sym). Prev 164 S99 (142 S64 + entry-3 dw + CustomAnimSource 20 B; measured from the S99 reference game.sym). Prev 142 S64 (S55 116 + entry-2 dw + CustomRoomBGMResolve; measured from the S64 reference game.sym)
+    0x71: 865,    # addr(Custom26DDTable)-$4000, S125 (+ entry 9 dw + HubWarp, 138 B; measured from the S125 example game.sym $4361). Prev 727 S121 (+ entry 8 dw + TextSpriteMode, 39 B; measured from the S121 example game.sym $42D7). Prev 688 S116 (444 S102 + entries 6/7 dw + CustomRoomBGMResolve gate songs + CustomBGMStart + BattleBGMResolve; measured from the S116 example game.sym). Prev 444 S102 (440 S101 + CustomAnimSource's far call to bank $6C entry 0, 4 B; measured from the S102 reference game.sym). Prev 440 S101 (395 S100 + CustomRoomBGMResolve .gatePath: the custom boss song on the floor before the boss). Prev 395 S100 (164 S99 + entries 4/5 dw + CustomGateInsert + CustomRoomFlags + entry-1 follow-gate test; measured from the S100 reference game.sym). Prev 164 S99 (142 S64 + entry-3 dw + CustomAnimSource 20 B; measured from the S99 reference game.sym). Prev 142 S64 (S55 116 + entry-2 dw + CustomRoomBGMResolve; measured from the S64 reference game.sym)
     0x6C: 285,    # addr(TileAnimRoomTable)-$4000, S102 (bank self-ID + entry table + CustomTileAnimate / TileAnimRestart / TileAnimCopy; measured from the S102 reference game.sym)
     0x6F: 391,    # addr(CustomAnimFrameTable)-$4000, S112 (bank self-ID + 4-entry table + CustomAnimTick / Init / Load / Step + CustomAnimNone; measured from the S112 game.sym)
     0x76: 460,    # addr(EncRoomTable)-$4000, S122 (GateBossWin row x6 + the WinTail jump, +RunWinTail; measured from the S122 game.sym $41CC). Prev 358 S117 (+2 entry-2 dw, +60 GateBossWin; measured from the S117 game.sym). Prev 296 S115 (+2 entry-1 dw, +17 EncVanillaNumber new-gate source, +36 NewGateRowCopy; measured from the S115 game.sym). Prev 241 S114 (bank self-ID + entry table + EncResolve / EncPickVariant / EncFloorRun / EncVanillaNumber)
@@ -87,6 +87,37 @@ def validate(prj, generated=None):
     errors += [e for e in _e if e != getattr(prj, 'cutscene_error', None)]
     warnings += _w
     rooms = [r for r in prj.rooms if not r.get('placeholder')]
+    # S125 (ROADMAP P3.14d): the hub — arrival scenes that can never play, and a
+    # loss arrival that does not heal (the party would stand there at 0 HP)
+    try:
+        hub_rules = prj.hub_rules()
+    except Exception:                                  # noqa: BLE001 (reported by lowering)
+        hub_rules = []
+    hub_screens = {}
+    for ru in hub_rules:
+        if not ru['castle']:
+            hub_screens.setdefault(ru['room_id'], set()).add(ru['screen'])
+    from . import cutscene_build as _CB
+    for r in rooms:
+        for sc in r.get('cutscenes') or []:
+            arr = (sc.get('trigger') or {}).get('arrival')
+            if not arr or sc.get('disabled'):
+                continue
+            nm = f"room {r.get('id')} cutscene {sc.get('name') or sc.get('id')!r}"
+            if r.get('id') not in hub_screens:
+                warnings.append(f"{nm}: an arrival scene, but no hub rule sends the player "
+                                "to this room (custom.hub) — it never plays")
+                continue
+            if int(sc.get('screen', 0)) not in hub_screens[r.get('id')]:
+                warnings.append(f"{nm}: on screen {sc.get('screen', 0)}, but the hub rules "
+                                f"land on screen(s) {sorted(hub_screens[r.get('id')])} — it "
+                                "never plays")
+            loss = [a for a in arr if a in ('lost', 'wiped', 'final_lost')]
+            if loss and not any(_CB.step_kind(st) == 'heal'
+                                for _p, st in _CB.walk_steps(sc.get('steps') or [])):
+                warnings.append(f"{nm}: plays after {', '.join(loss)} but has no Heal step — "
+                                "the party arrives with no HP (the Castle's priest heals; "
+                                "add a Heal step)")
     # S118c: a screen that follows the game's own room state names one of the
     # ORIGINAL rooms' step counters ($D92A-$D99A, ROOM_DATA_FORMAT)
     for r in rooms:
@@ -601,7 +632,9 @@ def validate(prj, generated=None):
                 warnings.append(f"{ctx}: the {part} reply opens another YES/NO box "
                                 "that nothing reads")
             mv = b.get('move')
-            if mv:
+            if mv and mv.get('dest') == 'hub':
+                pass                            # S125: the hub ladder (hub_rules checks)
+            elif mv:
                 try:
                     dmid = prj.resolve_dest(mv.get('dest'))
                     dr = prj.room_by_mid(dmid) if str(mv.get('dest', '')).startswith('room:') else None
@@ -651,9 +684,12 @@ def validate(prj, generated=None):
                     errors.append(f"{c}: helper 'castle' is none / heal / king")
                 elif ev != 'none':
                     from editor2.core.conversation import KING_SPEECHES
-                    if str(h.get('dest')) != 'vanilla:$00' or int(h.get('screen', 0)) != 1:
+                    if h.get('dest') == 'hub':
+                        pass                    # S125: runs when the hub is the Castle
+                    elif str(h.get('dest')) != 'vanilla:$00' or int(h.get('screen', 0)) != 1:
                         errors.append(f"{c}: a castle event ({ev}) needs the destination "
-                                      "Castle throne room (vanilla:$00, screen 1)")
+                                      "Castle throne room (vanilla:$00, screen 1) or "
+                                      "the hub")
                     code = int(F.val(h.get('king_speech', 0x31)))
                     if ev == 'king' and code not in {k for k, _n in KING_SPEECHES}:
                         errors.append(f"{c}: king_speech {h.get('king_speech')} is not one of "

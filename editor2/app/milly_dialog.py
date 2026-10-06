@@ -183,7 +183,8 @@ class MillyHookDialog(QDialog):
         self.dest.blockSignals(True)
         self.dest.clear()
         for text, data in room_items(self.s):
-            self.dest.addItem(text, data)
+            if data != 'hub':                # S125: the roots scene leads to a fixed room
+                self.dest.addItem(text, data)
         self.dest.blockSignals(False)
 
     def _room_changed(self, *_a):

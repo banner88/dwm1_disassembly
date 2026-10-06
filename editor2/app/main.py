@@ -302,7 +302,8 @@ class MainWindow(QMainWindow):
         """S124: open the place of a flag use / trigger (Progression & Flags tab):
         {'tab': 'rooms', room, screen, state, x, y} · {'tab': 'cutscene', room, scene}
         · {'tab': 'encounters', room | gate} · {'tab': 'gates', gate}
-        · {'tab': 'game', map, screen, state, x, y} · {'tab': 'cutscenes'}."""
+        · {'tab': 'game', map, screen, state, x, y} · {'tab': 'cutscenes'}
+        · {'tab': 'worlds', hub} (S125)."""
         tab = (nav or {}).get('tab')
         if tab == 'rooms' and self.rooms_tab is not None:
             self.tabs.setCurrentWidget(self.rooms_tab)
@@ -343,6 +344,13 @@ class MainWindow(QMainWindow):
             row = next((i for i, g in enumerate(gt.gates) if g['id'] == gid), None)
             if row is not None:
                 gt.list.setCurrentRow(row)
+        elif tab == 'worlds' and getattr(self, 'world_tab', None) is not None:
+            # S125: a hub rule's flags (Progression & Flags tab) -> the World tab's Hub box
+            self.tabs.setCurrentWidget(self.world_tab)
+            hb = self.world_tab.worlds.hub
+            hb.refresh()
+            if nav.get('hub') is not None:
+                hb.list.setCurrentRow(int(nav['hub']))
 
     def _open_world_node(self, key):
         """World graph double-click -> the room in the Rooms tab (S98)."""

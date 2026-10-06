@@ -2196,7 +2196,40 @@ recipes are pure authoring.
         in conditions, conversations and cutscenes able to do the same things (give item
         / monster, music…). The example's medal-vault quest becomes a NEW mini medal quest
         (user) — the regression pin moves that session.
-  - [ ] **P3.14d — The hub + world rules**: FIRST an audit of everything the engine sends to
+  - [ ] **P3.14d — The hub + world rules** — **re-cut S125 with the user** (after the audit
+        below, done S125: every engine Castle send = bank $50 `$6559` an ordinary loss + `$64AF`
+        the lost Starry / arena final, bank $06 `$6A39` the party wiped by damage floors, bank
+        $07 `$5030` the WarpWing item — "code 6, the gate return" IS the WarpWing; the `$04`
+        service menus are room-independent (code-read) and their state is global; the arena
+        and breeding are hard-wired to their rooms (`$5D` checks, the `$08` ceremony)). User
+        decisions S125: ONE hub room at a time, transferable by flag (e.g. to the vanilla
+        Castle for the post-game); the original penalties stay (half the gold, the items); the
+        main game lives in the project's own world ("GreatLog": custom hub, arena, breeding
+        shrine, library …), the post-game in vanilla GreatTree — "one or the other, NEVER
+        both", so **the active hub decides the realm**; every service exists ONCE (its state
+        is global) and is reached from either realm; breeding reuses the vanilla `$08`
+        ceremony ("nothing further is necessary"); an arena class won in the main game → the
+        hub with a "class won" arrival scene; the ending (E5) → CONTINUE → the post-game hub
+        in front of the King. Boxes, one per session:
+    - [x] **P3.14d1 — The hub** — **built S125, test ROM USER-CONFIRMED 2026-10-06 12:48.** `custom.hub.rules`
+          (flag-ordered; room or "castle"), bank $71 entry 9 `HubWarp` + `HubTable`, the four
+          engine sends rewritten same-size, `wHubReason`; "home" for scripts (move / helper /
+          cutscene move / the Anchor skill), arrival scenes (`trigger.arrival`), the hub
+          room's default heal, the Heal step (op `$27`, measured); the World tab Hub box
+          (PROJECT_COMPILER §2.38, EDITOR_DESIGN §5.8 "Hub (S125)", help `66_hub.md`).
+          PyBoy on the user's save: loss / WarpWing / "home" → the demo hub with its scenes;
+          the flag moves the hub to the Castle (priest heal). Not staged: the floor wipe and
+          the Starry final (same call, MiniSM83-tested). *User half:* the test ROM.
+    - [ ] **P3.14e1 — Services in your rooms**: the farm (Pulio), the library, the vault, the
+          medal man, the egg evaluator, the gate guide, the namer as **service NPCs** (like
+          the Shopkeeper…), one instance each, usable from rooms of either realm.
+    - [ ] **P3.14e2 — Breeding in your room**: the breeding NPC + the vanilla `$08` ceremony
+          (a return to the room it came from).
+    - [ ] **P3.14e3 — Your arena**: a copy of the arena battle room with role aliasing for the
+          `$5D` checks, lobby ↔ battle warps, a loss → the lobby, a class won → the hub
+          (arrival reason `arena_won`, reserved in `wHubReason`); the Arena tab edits it.
+    - [ ] (then) exits that open by flag, room music / shop stock by flag — below.
+        The S124 text: FIRST an audit of everything the engine sends to
         or needs from a VANILLA room, since the real project has none (user S124): a lost battle
         → the Castle (bank $50 `$64AF`, measured hard-wired); a gate return → the Castle's
         arrival code 6 (bank $07, GATE_GENERATION §7.7); the conversation helper's "at the
@@ -2523,7 +2556,15 @@ is campaign-BLOCKING** — the POV flip cannot ship without it; E8/E9
 
 - [ ] **E5 — Title screen + ending / credits sequences.**
       The opening cutscene is script-traced, but the title screen and the ending/credits
-      sequences are not covered. A complete new campaign needs its own bookends; these are
+      sequences are not covered. **S125 notes (user + PyBoy):** after the Starry Night win the
+      game goes to a special NIGHT Farm (NPCs everywhere, the King and Queen; the dark starry
+      sky) — not normal play: talk to everyone, then cutscenes, then Milly & Terry's house,
+      the credits, a reset; CONTINUE then lands in front of the King with the old party for
+      the post-game. The night sky is **game mode 3** (bank $02: the starry sky pan and the
+      night palettes; reached in PyBoy with flag `$00E4` + `$D940` = 2) — the room data is
+      the ordinary blue-sky Farm, which is why the editor draws it blue (ARCHITECTURE
+      "Game modes"). For the romhack (user): the ending → its own cutscenes → CONTINUE →
+      the post-game hub (P3.14d1 rule: the Castle once a post-game flag is ON). A complete new campaign needs its own bookends; these are
       likely special-cased rendering paths that must be located. *Confidence: MEDIUM. Lower
       priority (cosmetic bookends). Owning doc: a new subsection of CUSTOM_CUTSCENES /
       DATA_STRUCTURES once found.*

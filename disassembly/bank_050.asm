@@ -6433,6 +6433,11 @@ jr_050_64a0:
     ret nz
 
 jr_050_64af:
+    ; S125: the LOST Starry Night / arena FINAL sends the player to the Castle
+    ; (wBattlePostFlag == 1 above). The 38 bytes from here to `ld a, $01` are
+    ; `$D92B := 8` + the warp mailbox (map 0, pixel $E8/$58) — the patched build
+    ; replaces them, same size, with bank $71 entry 9 HubWarp (HUB_FINAL_LOST)
+    ; so a project's hub can take the player (ROADMAP P3.14d, PROJECT_COMPILER §2.38).
     ld a, $08                ; S101 r3: $D92B = 8 -> castle arrival = priest heal path ($0C:$490A)
     ld [$d92b], a
     ld hl, $0000
@@ -6534,6 +6539,10 @@ jr_050_6546:
 
 
 jr_050_6559:
+    ; S125: an ordinary LOST battle: to the Castle, then the penalties below
+    ; (half the gold, Div24x8To16; every item not flagged keep-on-loss, $DA6D
+    ; bit 2, is dropped). The 38 bytes up to `ld a, $01` are the Castle writes;
+    ; the patched build calls bank $71 entry 9 HubWarp (HUB_LOST) in their place.
     ld a, $08                ; S101 r3: $D92B = 8 -> castle arrival = priest heal path ($0C:$490A)
     ld [$d92b], a
     ld hl, $0000

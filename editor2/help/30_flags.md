@@ -95,7 +95,8 @@ flag…* there.
 place: *When bell_rung is ON → Harbour shows state 1*, *When you enter the
 Roots room and milly_roots_seen is OFF → the cutscene plays (once)*, *When
 talking to the NPC at (5, 2) and game flag $0037 “arena class S won” is ON →
-says «…»*. Pick a kind or type words to filter; untick *Show copied game
+says «…»*, *When post_game is ON → the hub is the Castle (rule 1)* (World
+tab → Hub). Pick a kind or type words to filter; untick *Show copied game
 scripts* to hide the branches of copied game rooms. Double-click a line to
 show its place in the panel on the right. A room checks its flags each time it loads; a conversation or
 a cutscene checks them when it runs.
