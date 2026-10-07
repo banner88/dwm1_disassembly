@@ -400,7 +400,12 @@ BREED_SLOTS EQU 4
 wBreedVals:: ds 4 ;d503-d506 — level, arena, seen, story (scaled 0-~120)
 wBreedMask:: db ;d507 — bit 0 level, 1 arena, 2 seen, 3 story
 wBreedStep:: db ;d508 — the story scale: 100 / milestones
-wCustomPool:: ds $5A4 - 132 - 5 - 2 * TILEANIM_MAX_GROUPS - 2 - 18 - 26 - 8 - 256 - 1 - 2 - 160 - 12 - 1 - 514 - 23 ;d509-d5e4 — transient reserve (was $664; FX1 carved 64+128; S97 132; S102 69; S105 2; S111 18; S114 26; S115 8; S117 256 wExtFlags + 1 wShopID; S117b 2 push scratch; S121 160 wMillyLayout; S123 12 NPC colours; S125 1 wHubReason; S126 514: the service tile save + wServiceLines; S127 23: wBreedLast + wBreedSlots + the roll scratch)
+; S129 (ROADMAP P3.14b, story checks): the answer of the last story check read
+; (bank $77 entry 11 StoryCheck: $FF holds / $00 not) — bank $73 FlagAddr hands
+; this byte to ComputeFlagAddress for a virtual flag $1800-$18FF, whose caller
+; tests it at once. Transient by design.
+wStoryFlag:: db ;d509 — the last story check's answer
+wCustomPool:: ds $5A4 - 132 - 5 - 2 * TILEANIM_MAX_GROUPS - 2 - 18 - 26 - 8 - 256 - 1 - 2 - 160 - 12 - 1 - 514 - 23 - 1 ;d50a-d5e4 — transient reserve (was $664; FX1 carved 64+128; S97 132; S102 69; S105 2; S111 18; S114 26; S115 8; S117 256 wExtFlags + 1 wShopID; S117b 2 push scratch; S121 160 wMillyLayout; S123 12 NPC colours; S125 1 wHubReason; S126 514: the service tile save + wServiceLines; S127 23: wBreedLast + wBreedSlots + the roll scratch; S129 1: wStoryFlag)
 ; FX1 (S71): wPoolBounce — 128-byte staging for sleep-pool bank-2 record
 ; swaps (per-byte scratch in CF3PoolSwapRecord). Transient. (The v1 drain's
 ; halved-pending scratch use was removed with the S71v2 exp-scale veto.)

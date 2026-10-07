@@ -1194,7 +1194,7 @@ SkillScrNoop:
 
 SkillScr02:
     dw $FF07  ; init_dialog
-    dw $0A20  ; [S73] Anchor gate-side confirm [Y/N]
+    dw $0A26  ; [S73] Anchor gate-side confirm [Y/N]
     dw $FF15  ; check_and_branch
     dw $C83C
     dw $0001
@@ -1215,7 +1215,7 @@ SkillScr02_no:
 
 SkillScr03:
     dw $FF07  ; init_dialog
-    dw $0A21  ; [S73] Anchor return confirm [Y/N] — charge lands on arrival
+    dw $0A27  ; [S73] Anchor return confirm [Y/N] — charge lands on arrival
     dw $FF15  ; check_and_branch
     dw $C83C
     dw $0001
@@ -1233,12 +1233,12 @@ SkillScr03_no:
 
 SkillScr04:
     dw $FF07  ; init_dialog
-    dw $0A22  ; [S73] cast in a special/boss/custom gate room
+    dw $0A28  ; [S73] cast in a special/boss/custom gate room
     dw $FFFF
 
 SkillScr05:
     dw $FF07  ; init_dialog
-    dw $0A23  ; [S73] cast in town with no stored anchor
+    dw $0A29  ; [S73] cast in town with no stored anchor
     dw $FFFF
 
 ; --- $6B (gate_island) scripts ---
@@ -1404,6 +1404,7 @@ CustomRoom5_ScriptPtrTable:
 CustomRoom6_ScriptPtrTable:
     dw CustomRoom6_Scr00   ; [0] entry:medal_vault
     dw CustomRoom6_Scr01   ; [1] quest:medal_vault
+    dw CustomRoom6_Scr02   ; [2] medal_vault_quest
 
 CustomRoom6_Scr00:
     dw $FF01  ; if_flag_set
@@ -1441,8 +1442,10 @@ CustomRoom6_Scr00:
 CustomRoom6_Scr00_eseen:
     dw $FFFF
 CustomRoom6_Scr00_edone:
-    dw $FF48  ; npc_hide
+    dw $FF0D  ; npc_write
     dw $0001
+    dw $0000
+    dw $0040
     dw $FFFF
 
 CustomRoom6_Scr01:
@@ -1468,14 +1471,63 @@ CustomRoom6_Scr01_req0:
     dw $015A
     dw $FF07  ; init_dialog
     dw $0A1E  ; win tail; GoldSlime joins engine-side (phase $0D)
-    dw $FF48  ; npc_hide
+    dw $FF0D  ; npc_write
     dw $0001
+    dw $0000
+    dw $0040
     dw $FFFF
 CustomRoom6_Scr01_declined:
     dw $0A1C  ; vault_decline
     dw $FFFF
 CustomRoom6_Scr01_qdone:
     dw $0A1F  ; vault_done
+    dw $FFFF
+
+CustomRoom6_Scr02:
+    dw $FF00  ; if_flag_clear
+    dw $015C
+    dw CustomRoom6_Scr02_else1
+    dw $0A25  ; quest mini_medal_quest: done
+    dw $FF14  ; goto
+    dw CustomRoom6_Scr02_fi1
+CustomRoom6_Scr02_else1:
+    dw $FF00  ; if_flag_clear
+    dw $015B
+    dw CustomRoom6_Scr02_else2
+    dw $FF00  ; if_flag_clear
+    dw $1800
+    dw CustomRoom6_Scr02_else3
+    dw $FF24  ; opcode $24
+    dw $FF01
+    dw $FF07  ; init_dialog
+    dw $0A20  ; quest mini_medal_quest: complete
+    dw $FF24  ; opcode $24
+    dw $FF02
+    dw $FF03  ; set_flag
+    dw $015C
+    dw $FF14  ; goto
+    dw CustomRoom6_Scr02_fi3
+CustomRoom6_Scr02_else3:
+    dw $0A21  ; quest mini_medal_quest: progress
+CustomRoom6_Scr02_fi3:
+    dw $FF14  ; goto
+    dw CustomRoom6_Scr02_fi2
+CustomRoom6_Scr02_else2:
+    dw $0A22  ; quest mini_medal_quest: offer
+    dw $FF15  ; check_and_branch
+    dw $C83C
+    dw $0001
+    dw CustomRoom6_Scr02_no4
+    dw $FF03  ; set_flag
+    dw $015B
+    dw $0A23  ; quest mini_medal_quest: accept
+    dw $FF14  ; goto
+    dw CustomRoom6_Scr02_join4
+CustomRoom6_Scr02_no4:
+    dw $0A24  ; quest mini_medal_quest: decline
+CustomRoom6_Scr02_join4:
+CustomRoom6_Scr02_fi2:
+CustomRoom6_Scr02_fi1:
     dw $FFFF
 
 ; --- $72 (arena_clone) scripts ---
@@ -3437,10 +3489,16 @@ CustomTextSection0:
     dw CustomText_1D   ; $0A1D: 
     dw CustomText_1E   ; $0A1E: win tail; GoldSlime joins engine-side (phase $0D)
     dw CustomText_1F   ; $0A1F: 
-    dw CustomText_20   ; $0A20: [S73] Anchor gate-side confirm [Y/N]
-    dw CustomText_21   ; $0A21: [S73] Anchor return confirm [Y/N] — charge lands on arrival
-    dw CustomText_22   ; $0A22: [S73] cast in a special/boss/custom gate room
-    dw CustomText_23   ; $0A23: [S73] cast in town with no stored anchor
+    dw CustomText_20   ; $0A20: quest mini_medal_quest: complete
+    dw CustomText_21   ; $0A21: quest mini_medal_quest: progress
+    dw CustomText_22   ; $0A22: quest mini_medal_quest: offer
+    dw CustomText_23   ; $0A23: quest mini_medal_quest: accept
+    dw CustomText_24   ; $0A24: quest mini_medal_quest: decline
+    dw CustomText_25   ; $0A25: quest mini_medal_quest: done
+    dw CustomText_26   ; $0A26: [S73] Anchor gate-side confirm [Y/N]
+    dw CustomText_27   ; $0A27: [S73] Anchor return confirm [Y/N] — charge lands on arrival
+    dw CustomText_28   ; $0A28: [S73] cast in a special/boss/custom gate room
+    dw CustomText_29   ; $0A29: [S73] cast in town with no stored anchor
 
 ; $0A00 — item offer [Y/N]
 CustomText_00:
@@ -3641,28 +3699,64 @@ CustomText_1F:
     db "quiet. The", $EF, $EE
     db "shinies sleep.", $F7, $F0
 
-; $0A20 — [S73] Anchor gate-side confirm [Y/N]
+; $0A20 — quest mini_medal_quest: complete
 CustomText_20:
+    db $EA, $9F, $A3
+    db "Two TinyMedals!", $EF, $EE
+    db "Here are 500 gold.", $F7, $F0
+
+; $0A21 — quest mini_medal_quest: progress
+CustomText_21:
+    db $EA, $9F, $A3
+    db "Two TinyMedals,", $EF, $EE
+    db "please.", $F7, $F0
+
+; $0A22 — quest mini_medal_quest: offer
+CustomText_22:
+    db $EA, $9F, $A3
+    db "I keep the", $EF, $EE
+    db "vault. Bring me", $FA, $F7, $EF, $EE
+    db "two TinyMedals?", $E7, $F0
+
+; $0A23 — quest mini_medal_quest: accept
+CustomText_23:
+    db $EA, $9F, $A3
+    db "Splendid. Two", $EF, $EE
+    db "TinyMedals, then!", $F7, $F0
+
+; $0A24 — quest mini_medal_quest: decline
+CustomText_24:
+    db $EA, $9F, $A3
+    db "Another time.", $F7, $F0
+
+; $0A25 — quest mini_medal_quest: done
+CustomText_25:
+    db $EA, $9F, $A3
+    db "The vault thanks", $EF, $EE
+    db "you.", $F7, $F0
+
+; $0A26 — [S73] Anchor gate-side confirm [Y/N]
+CustomText_26:
     db $EA, $9F, $A3
     db "Set an anchor", $EF, $EE
     db "here and warp", $EF, $EE
     db "to GreatTree?", $EF, $EE, $E7, $F0
 
-; $0A21 — [S73] Anchor return confirm [Y/N] — charge lands on arrival
-CustomText_21:
+; $0A27 — [S73] Anchor return confirm [Y/N] — charge lands on arrival
+CustomText_27:
     db $EA, $9F, $A3
     db "Spend most MP", $EF, $EE
     db "to return to the", $EF, $EE
     db "anchored floor?", $EF, $EE, $E7, $F0
 
-; $0A22 — [S73] cast in a special/boss/custom gate room
-CustomText_22:
+; $0A28 — [S73] cast in a special/boss/custom gate room
+CustomText_28:
     db $EA, $9F, $A3
     db "The anchor", $EF, $EE
     db "fails here!", $F7, $F0
 
-; $0A23 — [S73] cast in town with no stored anchor
-CustomText_23:
+; $0A29 — [S73] cast in town with no stored anchor
+CustomText_29:
     db $EA, $9F, $A3
     db "No anchor", $EF, $EE
     db "is set!", $F7, $F0
@@ -3875,6 +3969,7 @@ CustomRoom6_Screen0:
 CustomRoom6_S0_NPCs:
     db $8F, $FF, $07, $06, $00  ; spawn (7,6)
     db $00, $23, $04, $03, $01  ; NPC (4,3) script quest:medal_vault
+    db $00, $1D, $02, $05, $02  ; NPC (2,5) script medal_vault_quest
     db $FF
 
 CustomRoom6_S0_Exits:

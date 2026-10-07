@@ -28,7 +28,7 @@ WELL_KNOWN = [   # vanilla story flags worth offering by name (EVENT_FLAGS.md)
 ]
 
 
-def well_known(doc=None):
+def well_known(doc=None, tests=True):
     """WELL_KNOWN + S117 (NG2): one "gate N cleared" entry per gate (vanilla
     gates with a cleared flag and the project's new gates) — the reference
     `gate:N` resolves to the gate's own flag when it has one (a new gate, a
@@ -50,6 +50,15 @@ def well_known(doc=None):
         out += list((doc.milly_flag_names() if doc is not None else {}).items())
     except Exception:
         pass
+    # S129 (ROADMAP P3.14b): the project's story checks — only where a flag is CHECKED
+    # (a check cannot be turned ON / OFF): name, "story check — what it asks"
+    if tests and doc is not None and hasattr(doc, 'checks'):
+        for c in doc.checks():
+            try:
+                what = doc.describe_check(c)
+            except Exception:                                    # noqa: BLE001
+                what = c.get('kind')
+            out.insert(0, (c.get('name'), f'story check — {what}'))
     return out
 
 

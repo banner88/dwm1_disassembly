@@ -18,6 +18,10 @@ Everything about flags is in one place: the **Progression & Flags** tab.
 - *The original game's flags your rooms check* — usually from rooms you
   copied from the game (*Make editable*): their people still talk about the
   original story (arena ranks, Durran, the post-game).
+- *Story checks* (S129) — questions the game answers (an item carried, gold,
+  monsters owned, the story reached…): read-only, usable wherever a flag is
+  checked. **New story check…** makes one; **Edit…**, **Rename…**, **Delete**.
+  See *Story checks, quests and the story spine*.
 - Pick **Every flag of the original game too** in the box above the list to
   see all 332 of the game's own flags (read-only).
 
@@ -104,9 +108,14 @@ scripts* to hide the branches of copied game rooms. Double-click a line to
 show its place in the panel on the right. A room checks its flags each time it loads; a conversation or
 a cutscene checks them when it runs.
 
+**Story page** (S129): the story spine (your chapters in order — *Says by
+progress* and *story reached* checks follow it) and every quest (Edit…, Show
+giver, Delete). See *Story checks, quests and the story spine*.
+
 **Problems page.** What will not work as written:
 
 - ✖ a flag name that does not exist (renamed or deleted by hand) — the build stops;
+- ✖ a story check turned ON / OFF (a check is only read) — the build stops;
 - ⚠ checks that are never true because nothing turns their flag ON;
 - ⚠ checks waiting for the **original game's** progress (a copied game room
   whose people only change once the player has, say, won arena class S) —

@@ -28,14 +28,19 @@ import json
 import os
 
 STEP_KINDS = ('say', 'ask', 'if', 'set', 'clear', 'battle', 'helper', 'move', 'vanish', 'heal',
-              'end')
+              'end',
+              # S129 (ROADMAP P3.14b / c)
+              'give_item', 'give_monster', 'take_item', 'gold', 'refresh', 'by_progress')
 STEP_NAMES = {
     'say': 'Say', 'ask': 'Ask YES / NO', 'if': 'If flags…', 'set': 'Turn flags ON',
     'clear': 'Turn flags OFF', 'battle': 'Battle', 'helper': 'Helper takes the player away',
     'move': 'Move the player',
     'vanish': 'Vanish (this NPC leaves)',      # S123: every NPC running this conversation
     'heal': 'Heal the party',                  # S125: op $27 (HP / MP full, ailments cured)
-    'end': 'Stop here'}
+    'end': 'Stop here',
+    'give_item': 'Give an item', 'give_monster': 'Give a monster',      # S129
+    'take_item': 'Take an item', 'gold': 'Give / take gold',
+    'refresh': 'Refresh the room', 'by_progress': 'Says by progress'}
 HELPER_SPRITE = 0x39            # Warubou, the darker Watabou (user S101 r2); vanilla uses $21 Watabou
 WATABOU_SPRITE = 0x21
 CASTLE_THRONE = {'dest': 'vanilla:$00', 'screen': 1, 'x': 4, 'y': 5}   # vanilla boss exits
@@ -226,6 +231,17 @@ class ConversationMixin:
                     h = st['helper'] or {}
                     h['say'] = self._dlg_spec(h.get('say'))
                     st['helper'] = h
+                elif 'give_item' in st or 'give_monster' in st:      # S129
+                    k = 'give_item' if 'give_item' in st else 'give_monster'
+                    g = dict(st[k] or {})
+                    for part in ('got', 'full'):
+                        if isinstance(g.get(part), str):
+                            g[part] = self._dlg_spec(g[part])
+                    st[k] = g
+                elif 'by_progress' in st:                            # S129
+                    st['by_progress'] = [dict(e, steps=conv(e.get('steps')))
+                                         for e in st['by_progress'] or []]
+                    st['else'] = conv(st.get('else'))
                 out.append(st)
             return out
         spec = {'steps': conv(t['steps'])}
@@ -270,6 +286,21 @@ class ConversationMixin:
                     else:
                         h.pop('say', None)
                     st['helper'] = h
+                elif 'give_item' in st or 'give_monster' in st:      # S129
+                    k = 'give_item' if 'give_item' in st else 'give_monster'
+                    g = dict(st[k] or {})
+                    for part in ('got', 'full'):
+                        b = (g.get(part) or {}).get('boxes') if isinstance(g.get(part), dict) \
+                            else None
+                        if b:
+                            g[part] = dlg(part, b, meta=g[part])
+                        elif not isinstance(g.get(part), str):
+                            g.pop(part, None)
+                    st[k] = g
+                elif 'by_progress' in st:                            # S129
+                    st['by_progress'] = [dict(e, steps=conv(e.get('steps')))
+                                         for e in st['by_progress'] or []]
+                    st['else'] = conv(st.get('else'))
                 out.append(st)
             return out
         t = {'steps': conv(spec.get('steps'))}
@@ -325,6 +356,13 @@ class ConversationMixin:
                 h = st.get('helper') or {}
                 if isinstance(h.get('say'), str):
                     out.append(h['say'])
+                for gk in ('give_item', 'give_monster'):          # S129
+                    g = st.get(gk) or {}
+                    for part in ('got', 'full'):
+                        if isinstance(g.get(part), str):
+                            out.append(g[part])
+                for e in st.get('by_progress') or []:             # S129
+                    walk(e.get('steps'))
                 for k in ('yes', 'no', 'then', 'else'):
                     walk(st.get(k))
         walk((t or {}).get('steps'))
@@ -378,6 +416,24 @@ class ConversationMixin:
             return 'Heal the party (HP / MP full, ailments cured)'
         if k == 'end':
             return 'Stop here'
+        if k in ('give_item', 'take_item'):
+            g = st[k] or {}
+            n = int(g.get('count', 1) or 1)
+            return (f"{'Give' if k == 'give_item' else 'Take'} item {g.get('item')}"
+                    + (f' × {n}' if n > 1 else '')
+                    + ('' if k == 'give_item' else ' from the bag'))
+        if k == 'give_monster':
+            g = st[k] or {}
+            e = g.get('enemy')
+            return f"Give a monster: {enemy_name(e) if enemy_name else e}"
+        if k == 'gold':
+            g = st[k] or {}
+            return (f"Give {g.get('give')} gold" if 'give' in g else f"Take {g.get('take')} gold")
+        if k == 'refresh':
+            return 'Refresh the room (its room states pick again — a door unlocked now opens)'
+        if k == 'by_progress':
+            lad = st[k] or []
+            return 'Says by progress: ' + ', '.join(str(e.get('milestone')) for e in lad)
         return '?'
 
     def describe_conversation(self, spec):

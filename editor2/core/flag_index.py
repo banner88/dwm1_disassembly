@@ -58,7 +58,11 @@ KINDS = {
     'breeder': 'breeder',               # scripts[].service (kind breeder) when / flag / once (S127)
     'breed_pool': 'breeding pool',      # custom.breeding_pools[].milestones (S127)
     'arena': 'arena',                   # custom.arena classes / Starry Night (S128)
-    'quest': 'quest',                   # progression.quests[] flags / actions
+    'quest': 'quest',                   # progression.quests[] flags / actions; custom.quests[] (S129)
+    'check': 'story check',             # custom.checks[] all / any terms (S129)
+    'milestone': 'story',               # custom.story.milestones / says-by-progress (S129)
+    'music': 'music',                   # rooms[].music_rules / music.gates.N.rules (S129)
+    'shop_set': 'shop items',           # custom.shop_sets[].when (S129)
     'gate_win': 'boss win',             # engine: bank $76 GateBossWin
     'hook': 'Milly hook',               # the Milly hook's own flags
     'game': 'game script',              # the original game's scripts (read-only)
@@ -80,6 +84,14 @@ for _n in range(8):
                                    'code, bank $12)')
 GATE_LIST_UNLOCK = (0x09, 0x609E)
 GATE_LIST_CLEARED = (0x09, 0x607E)
+
+
+def _family(f):
+    try:
+        from .gamedata import FAMILY_NAMES
+        return FAMILY_NAMES[int(f)]
+    except Exception:                                            # noqa: BLE001
+        return f'family {f}'
 
 
 def _cell(x, y):
@@ -249,6 +261,7 @@ class FlagIndex:
         self._walk_breed_pools()                    # S127
         self._walk_arena()                          # S128
         self._walk_quests()
+        self._walk_story()                          # S129
         self._walk_preludes()
         self._engine()
         self._hook()
@@ -269,6 +282,14 @@ class FlagIndex:
             nums = [None] * (len(decl) + len(implicit))
         self.named = {}
         self.entries = {}
+        # S129: the story checks — virtual flags $1800 + n (list order)
+        from . import story as _ST
+        self.checks = {}
+        self.check_defs = {}
+        for i, c in enumerate(self.custom.get('checks') or []):
+            if isinstance(c, dict) and c.get('name'):
+                self.checks[c['name']] = _ST.STORY_FLAG_BASE + i
+                self.check_defs[c['name']] = c
         for i, (fl, n) in enumerate(zip(decl + implicit, nums)):
             nm = fl.get('name')
             if nm is None:
@@ -282,6 +303,8 @@ class FlagIndex:
         if isinstance(ref, str):
             if ref in self.named:
                 return self.named[ref]
+            if ref in self.checks:                       # S129: a story check
+                return self.checks[ref]
             if ref.startswith('hook:'):
                 from . import milly as MH
                 return MH.FLAG_REFS.get(ref)
@@ -304,6 +327,8 @@ class FlagIndex:
         """How a reference reads in a sentence."""
         if isinstance(ref, str) and ref in self.named:
             return ref
+        if isinstance(ref, str) and ref in self.checks:
+            return f'“{ref}” (story check: {self.check_text(ref)})'
         if isinstance(ref, str) and ref.startswith('gate:'):
             gid = G.parse_gate_ref(ref)
             return self.gate_label(gid) if gid is not None else str(ref)
@@ -326,6 +351,18 @@ class FlagIndex:
                     return f'“{d}” ({flag_number(i)})'
             return f'game flag {flag_number(i)}'
         return f'“{ref}” (no such flag)'
+
+    def check_text(self, name):
+        """S129: what a story check asks, in words."""
+        from . import story as _ST
+        c = self.check_defs.get(name) or {}
+        try:
+            from .shops import item_names
+            items = item_names(self.repo)
+        except Exception:                                        # noqa: BLE001
+            items = {}
+        return _ST.describe_check(c, item_name=lambda i: items.get(i, f'item {i}'),
+                                  family_name=lambda f: _family(f))
 
     def gate_label(self, gid):
         try:
@@ -662,6 +699,22 @@ class FlagIndex:
                                  event, where, nav, runs)
                 self._walk_steps(st.get('no'), p + ('no',), ctx + ['answer NO'], kind,
                                  event, where, nav, runs)
+            if 'by_progress' in st and isinstance(st['by_progress'], list):
+                # S129 (P3.14c): the words by the story's progress — each rung tests
+                # its milestone (reached = its flag or a later milestone's is ON)
+                for j, e in enumerate(st['by_progress']):
+                    if not isinstance(e, dict) or not e.get('milestone'):
+                        continue
+                    m = e['milestone']
+                    self._trigger('milestone', [(m, 'set')],
+                                  event + (' — ' + ', '.join(ctx) if ctx else ''),
+                                  f"says by progress: {self.brief(e.get('steps'))}",
+                                  where, nav, [p + ('by_progress', j, 'milestone')], runs=runs)
+                    self._walk_steps(e.get('steps'), p + ('by_progress', j, 'steps'),
+                                     ctx + [f'once the story reached {self.name_of(m)}'], kind,
+                                     event, where, nav, runs)
+                self._walk_steps(st.get('else'), p + ('else',), ctx + ['before the story'],
+                                 kind, event, where, nav, runs)
             if 'battle' in st and 'after winning the battle' not in ctx:
                 ctx.append('after winning the battle')
 
@@ -939,6 +992,103 @@ class FlagIndex:
                                 'after winning the quest battle' if part == 'on_win'
                                 else 'once the quest is done', base + (part, j, key),
                                 bool(places))
+
+    # ------------------------------------------------------------- story (S129)
+    def _walk_story(self):
+        """S129 (ROADMAP P3.14b / c / d): story checks (their all / any terms read
+        flags), the story spine's milestones, the quests (custom.quests), music by
+        flag (room / gate rules) and the shops' item sets."""
+        for ci, c in enumerate(self.custom.get('checks') or []):
+            if not isinstance(c, dict) or c.get('kind') not in ('all', 'any'):
+                continue
+            nm = c.get('name')
+            terms = [(t.get('flag'), t.get('is', 'set')) for t in c.get('terms') or []
+                     if isinstance(t, dict)]
+            if terms:
+                self._trigger('check', terms, '',
+                              f"the story check “{nm}” holds" + (' (any one of these)'
+                                                                if c['kind'] == 'any' else ''),
+                              f'story check “{nm}”', {'tab': 'flags', 'check': nm},
+                              [('custom', 'checks', ci, 'terms', j, 'flag')
+                               for j in range(len(terms))])
+        from . import story as _ST
+        ms = (self.custom.get('story') or {}).get('milestones') or []
+        for j, m in enumerate(ms):
+            f = m.get('flag') if isinstance(m, dict) else m
+            if f:
+                self._use(f, TEST, 'milestone', 'the story spine',
+                          f"milestone {j + 1}: {(m.get('name') if isinstance(m, dict) else f) or f}"
+                          " (the story has reached it while it — or a later one — is ON)",
+                          {'tab': 'flags', 'story': j},
+                          ('custom', 'story', 'milestones', j) + (('flag',) if isinstance(m, dict)
+                                                                  else ()), want='set')
+        for qi, q in enumerate(self.custom.get('quests') or []):
+            if not isinstance(q, dict):
+                continue
+            qid = q.get('id')
+            places = self.binds.get(q.get('giver'), [])
+            where = _places_where(places) or f'quest “{qid}”'
+            nav = places[0].nav() if places else {'tab': 'flags', 'quest': qid}
+            who = (places[0].event() if places else 'talking to the quest giver') + \
+                f' (quest “{q.get("name") or qid}”)'
+            base = ('custom', 'quests', qi)
+            started, done = _ST.quest_flags(q)
+            fl = q.get('flags') or {}
+            sp = base + ('flags', 'started') if fl.get('started') else None
+            dp = base + ('flags', 'done') if fl.get('done') else None
+            self._trigger('quest', [(done, 'set')], who, 'the “done” words', where, nav, [dp],
+                          runs=bool(places))
+            self._trigger('quest', [(started, 'set')], who,
+                          'the quest is under way (it checks the objective)', where, nav, [sp],
+                          runs=bool(places))
+            u = self._use(started, ON, 'quest', where, who + ' — answer YES to the offer', nav,
+                          sp, runs=bool(places))
+            u = self._use(done, ON, 'quest', where, who + ' — the objective is met', nav, dp,
+                          runs=bool(places))
+            for key, then in (('requires', 'the quest is offered'),
+                              ('objective', 'the quest can be finished')):
+                terms = [(t.get('flag'), t.get('is', 'set')) for t in q.get(key) or []
+                         if isinstance(t, dict)]
+                if terms:
+                    self._trigger('quest', terms, who, then, where, nav,
+                                  [base + (key, j, 'flag') for j in range(len(terms))],
+                                  runs=bool(places))
+            rw = q.get('reward') or {}
+            for key, role in (('set', ON), ('clear', OFF)):
+                for j, f in enumerate(rw.get(key) or []):
+                    self._use(f, role, 'quest', where, who + ' — the quest is finished', nav,
+                              base + ('reward', key, j), runs=bool(places))
+        for ri, r in enumerate(self.rooms):
+            rname = r.get('name') or r.get('id')
+            for j, ru in enumerate(r.get('music_rules') or []):
+                terms = [(t.get('flag'), t.get('is', 'set')) for t in ru.get('when') or []
+                         if isinstance(t, dict)]
+                if terms:
+                    self._trigger('music', terms, '',
+                                  f"{rname} plays song {ru.get('song')} (music rule {j + 1})",
+                                  f'{rname} · music', {'tab': 'music', 'room': r.get('id')},
+                                  [('custom', 'rooms', ri, 'music_rules', j, 'when', t, 'flag')
+                                   for t in range(len(terms))])
+        for gk, g in ((self.custom.get('music') or {}).get('gates') or {}).items():
+            for j, ru in enumerate((g or {}).get('rules') or []):
+                terms = [(t.get('flag'), t.get('is', 'set')) for t in ru.get('when') or []
+                         if isinstance(t, dict)]
+                if terms:
+                    self._trigger('music', terms, '',
+                                  f"the floors of gate {gk} play song {ru.get('song')} "
+                                  f"(music rule {j + 1})", f'gate {gk} · music',
+                                  {'tab': 'music', 'gate': gk},
+                                  [('custom', 'music', 'gates', gk, 'rules', j, 'when', t, 'flag')
+                                   for t in range(len(terms))])
+        for j, st in enumerate(self.custom.get('shop_sets') or []):
+            terms = [(t.get('flag'), t.get('is', 'set')) for t in (st or {}).get('when') or []
+                     if isinstance(t, dict)]
+            if terms:
+                self._trigger('shop_set', terms, '',
+                              f"the shop {st.get('shop')} sells “{st.get('name') or 'its set'}”",
+                              f"shop {st.get('shop')}", {'tab': 'shops', 'shop': st.get('shop')},
+                              [('custom', 'shop_sets', j, 'when', t, 'flag')
+                               for t in range(len(terms))])
 
     def _walk_preludes(self):
         for sid, ops in (self.custom.get('script_preludes') or {}).items():
@@ -1240,6 +1390,10 @@ class FlagIndex:
             if ons:
                 f.label = 'set by ' + self._short(ons[0][0], len(ons[0][1])) + \
                     (f' (+{len(ons) - 1} more)' if len(ons) > 1 else '')
+        # S129: every story check is listed, used or not
+        for nm, n in self.checks.items():
+            if n not in self.flags:
+                self.flags[n] = self._info(n, nm)
         # every gate with its own flag is listed (a world's portal needs one)
         for g in self.custom.get('gates') or []:
             try:
@@ -1252,6 +1406,12 @@ class FlagIndex:
 
     def _info(self, idx, ref):
         from . import milly as MH
+        from . import story as _ST
+        if _ST.STORY_FLAG_BASE <= idx < _ST.STORY_FLAG_BASE + _ST.STORY_CHECK_MAX:
+            nm = next((k for k, v in self.checks.items() if v == idx), None)
+            if nm is not None:
+                return FlagInfo(idx, 'check', nm, self.check_text(nm),
+                                (self.check_defs.get(nm) or {}).get('comment', ''))
         if GATE_FLAG_BASE <= idx <= GATE_FLAG_BASE + 95:
             gid = idx - GATE_FLAG_BASE
             return FlagInfo(idx, 'gate', self.gate_label(gid), 'cleared when its boss is beaten')
@@ -1357,6 +1517,19 @@ class FlagIndex:
             tests = [u for u in f.uses if u.role == TEST and u.source == 'project']
             want_on = [u for u in tests if u.want == 'set']
             nm = self.label(f)
+            if f.kind == 'check':
+                # S129: a story check is worked out from the game (the bag, gold, the
+                # monsters…), never turned ON — no never_on / not_saved problems
+                if not [u for u in f.uses if u.role == TEST]:
+                    out.append(Problem('info', 'unused', f.idx,
+                                       f'{nm}: not used anywhere — it can be deleted.'))
+                for u in f.uses:
+                    if u.role in (ON, OFF):
+                        out.append(Problem('error', 'check_written', f.idx,
+                                           f'{nm} is a story check — it cannot be turned '
+                                           f'{"ON" if u.role == ON else "OFF"} ({u.where}).',
+                                           [u]))
+                continue
             if want_on and not live_ons:
                 if game_ons:
                     out.append(Problem(
@@ -1400,6 +1573,8 @@ class FlagIndex:
     def label(self, f):
         if f.kind in ('project', 'quest'):
             return f'“{f.name}”'
+        if f.kind == 'check':
+            return f'story check “{f.name}”'
         if f.kind == 'game':
             return f'game flag {flag_number(f.idx)}' + (f' ({f.label})' if f.label else '')
         return f.name
@@ -1423,7 +1598,8 @@ def compiler_coverage(project_path, repo=REPO):
 
     def rec_r(self, ref, ctx=''):
         idx = orig_r(self, ref, ctx)
-        log.append((idx, str(ctx)))
+        if not (isinstance(ref, str) and ref.startswith('story:')):
+            log.append((idx, str(ctx)))   # S129: the compiler's own internal checks
         return idx
 
     def rec_i(self, name, ctx):
@@ -1442,6 +1618,10 @@ def compiler_coverage(project_path, repo=REPO):
     roles = {(u.idx, u.role) for u in fi.uses if u.source in ('project', 'engine')}
     missed = [(i, 'resolved', c) for i, c in log
               if i not in have and not c.startswith('world')]
+    # S129: the compiler's internal story checks (a says-by-progress ladder's "reached
+    # m", a quest's bag room) — the index lists what they read (the milestones' flags)
+    internal = {v for k, v in getattr(prj, '_checks', {}).items()
+                if isinstance(k, str) and k.startswith('story:')}
     for sid, sc in prj._scripts.items():
         if str(sid).startswith('skill:'):
             continue                  # the custom skills' built-in scripts (not the project's)
@@ -1463,6 +1643,8 @@ def compiler_coverage(project_path, repo=REPO):
             if not isinstance(idx, int):
                 idx = fi.resolve(op[2])
             role = FLAG_OPS[code][0]
+            if idx in internal:
+                continue
             if (idx, role) not in roles:
                 missed.append((idx, role, f'script {sid}'))
     return missed, fi

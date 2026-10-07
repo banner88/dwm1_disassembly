@@ -399,6 +399,16 @@ behaviour, no tile save) — **CP_UNSIGNED** (`("bank_077.asm", "ServiceOpenTile
 `tools/audit_mapid_range.py`; `extracted/mapid_range_audit.json` regenerated: clean 58,
 patched 86). `PushAttrActive` (S117b) is unchanged. No table is indexed by mapID.
 
+**S129 site (music by flag, PROJECT_COMPILER §2.42).** Bank $71 `CustomRoomBGMResolve`'s
+room path now asks `MusicRulePick` first: the first `ld a, [wMapID]` (#0, BOUNDED — `cp $80
+/ ret nc`) goes to `ld c, a` for the rule scan (full-byte EQUALITY against the
+`MusicRuleTable` rows' id byte — never an index), then `.noRule` reloads `wMapID` for
+`.lookup` (**#1, BOUNDED**: the same value, still under that `cp $80`); the S101 `cp $61`
+read moved to **#2 (CP_UNSIGNED)**. `MusicRulePick` itself reads no map id (B / C come in;
+the gate rows compare `wGateID`). Keys updated in `tools/audit_mapid_range.py`;
+`extracted/mapid_range_audit.json` regenerated: clean 58, patched 85. No table is indexed
+by mapID.
+
 **S128 sites (your arena, PROJECT_COMPILER §2.41).** The arena was keyed on the vanilla
 ids `$06` (MAP_BATTLE1) / `$5D` (MAP_BTLDEMO) at nine `ld a, [wMapID]` /
 `ld a, [wScriptMapType]` sites; each now goes through ROM0 `ArenaAlias` (the project's

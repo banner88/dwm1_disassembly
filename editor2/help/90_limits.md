@@ -108,6 +108,15 @@
   a scene keeps everyone where the scene put them (measured S119). **Copied
   rooms:** game steps that draw a tile patch (opcode $24 /
   $61 — Castle and Bazaar doors, chests) work in copies since S119.
+- Story (S129): up to 256 story checks in all (yours plus the editor's own:
+  one per milestone a *Says by progress* uses, one per quest whose reward needs
+  bag room) — the New story check button stops at 224 of yours; up to 255
+  different story steps (take / give items, gold); up to 8 conditions a music
+  rule or a shop item set. A *random chance* check is rolled each time it is
+  read (an *If* and a room state may see different rolls). A room picks its
+  state and music when it loads: *Refresh the room* to change them at once. A
+  lock needs a screen with one room state. See *Story checks, quests and the
+  story spine*.
 - Your arena (S128): one per project; the classes won ($CAB4) are one count
   shared with the game's own arena. Monster Grandpa's match stays in the game's
   arena. Up to 8 flag conditions per class. The walk-in, the announcer and

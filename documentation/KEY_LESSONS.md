@@ -5727,3 +5727,27 @@ The arena copy worked, but nothing led into it: a copied room keeps the game's e
 plain rows, and only door objects could be connected — the user had to delete and
 re-add cells per state. **Rule**: whatever the editor copies must be editable through the
 same gesture as what the user makes (double-click → connect both ends).
+
+### The in-place builder is one at a time (S129)
+
+`build_project` / the test suites stage the generated banks INTO the repo's `patches/`
+and `disassembly/` and restore them afterwards. A `test_compiler` run started while
+another run (or an edit-and-build) was in flight read the other run's staged template
+and failed a pin check that was fine on its own. **Rule**: never run two builds in the
+repo at once; run long suites in a copy (`tar` the tree — not `.git` — into scratch) or a
+`git worktree` for a baseline, and keep the repo for the one build you are watching.
+
+### A model of the RAM must be the game's model (S129)
+
+The SM83 test of "owns 4 monsters" counted 2: the test put farm monsters at `$CAC1 +
+slot × $95`, but the patched ROM0 `GetMonsterDataPtr` rebases every farm slot into SRAM
+(S60 CF3). The code was right (PyBoy on the real save agreed); the fixture was wrong.
+**Rule**: in a stub-call test, place data where the game's OWN accessor says (call it to
+get the address), never where an old doc's formula says.
+
+### Defaults are game text too (S129)
+
+Two step defaults ("Your bag is full!", "A monster joined!") and a quest's built-in
+bag-full words were 17 cells — one past the box. The S127r3 rule covered fields the user
+types, not the words the editor writes for them. **Rule**: every default text goes
+through `textenc.flow_boxes`; the app test runs `spec_problems` on freshly added steps.

@@ -579,10 +579,11 @@ class FlagList(QWidget):
     any number, plus 'New flag…' (auto-allocated project flag)."""
     changed = Signal()
 
-    def __init__(self, doc, title, flags=None, parent=None):
+    def __init__(self, doc, title, flags=None, parent=None, writes=False):
         super().__init__(parent)
         from PySide6.QtWidgets import QListWidget
         self.doc = doc
+        self.writes = writes            # S129: flags to turn ON / OFF — no story checks
         self.new_flags = []
         v = QVBoxLayout(self)
         v.setContentsMargins(0, 0, 0, 0)
@@ -621,10 +622,13 @@ class FlagList(QWidget):
                 self.pick.addItem(f"{fl['name']}  (project flag)", fl['name'])
         for nm in self.new_flags:
             self.pick.addItem(f'{nm}  (new project flag)', nm)
-        for idx, name in well_known(self.doc):
+        for idx, name in well_known(self.doc, tests=not getattr(self, 'writes', False)):
             self.pick.addItem(f'{idx}  {name}', idx)
         self.pick.setToolTip('A project flag, or any event flag number (e.g. 0x0030). '
-                             'EVENT_FLAGS.md lists the vanilla story flags.')
+                             'EVENT_FLAGS.md lists the vanilla story flags.'
+                             + ('' if getattr(self, 'writes', False) else
+                                ' A story check (S129) is checked like a flag: ON = '
+                                'it holds.'))
 
     def _value(self):
         d = self.pick.currentData()
@@ -692,8 +696,8 @@ class BlockEditor(QWidget):
         self.reply.changed.connect(self.changed.emit)
         v.addWidget(self.reply, 1)
         row = QHBoxLayout()
-        self.set_list = FlagList(doc, 'Turn these flags ON:', b.get('set'))
-        self.clear_list = FlagList(doc, 'Turn these flags OFF:', b.get('clear'))
+        self.set_list = FlagList(doc, 'Turn these flags ON:', b.get('set'), writes=True)
+        self.clear_list = FlagList(doc, 'Turn these flags OFF:', b.get('clear'), writes=True)
         for fl in (self.set_list, self.clear_list):
             fl.changed.connect(self.changed.emit)
             row.addWidget(fl)

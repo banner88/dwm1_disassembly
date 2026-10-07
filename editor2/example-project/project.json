@@ -481,7 +481,8 @@
     },
     "scripts": {
      "0": "entry:medal_vault",
-     "1": "quest:medal_vault"
+     "1": "quest:medal_vault",
+     "2": "medal_vault_quest"
     },
     "screens": {
      "0": {
@@ -503,6 +504,14 @@
         "script": "quest:medal_vault",
         "comment": "Vault guardian: GoldSlime follower sprite = species 19 + $10 (SpritePtrTable_4974 is a follower gfx-ID copy)",
         "_sprite_note": "S70: sprite $23 renders a draconic guard (not GoldSlime). $11 hard-crashes the room render (black screen, PyBoy). NPC-sprite-id catalog = future session; species+$10 mapping is DISPROVEN."
+       },
+       {
+        "kind": "npc",
+        "x": 2,
+        "y": 5,
+        "sprite": "0x1D",
+        "facing": "down",
+        "script": "medal_vault_quest"
        }
       ],
       "exits": [
@@ -5887,6 +5896,14 @@
       "end"
      ]
     ]
+   },
+   {
+    "id": "medal_vault_quest",
+    "ops": [
+     [
+      "end"
+     ]
+    ]
    }
   ],
   "palettes": [
@@ -9872,8 +9889,115 @@
     "name": "vault_cutscene_seen",
     "index": "0x0159",
     "comment": "progression.quests[medal_vault] cutscene_seen"
+   },
+   {
+    "name": "mini_medal_quest_started",
+    "index": "0x015B",
+    "comment": "quest mini_medal_quest: under way"
+   },
+   {
+    "name": "mini_medal_quest_done",
+    "index": "0x015C",
+    "comment": "quest mini_medal_quest: finished"
    }
-  ]
+  ],
+  "checks": [
+   {
+    "name": "has_2_medals",
+    "kind": "item",
+    "item": 30,
+    "count": 2,
+    "comment": "S129: the mini medal quest objective"
+   },
+   {
+    "name": "vault_rich",
+    "kind": "gold",
+    "amount": 1000
+   }
+  ],
+  "quests": [
+   {
+    "name": "Mini medal quest",
+    "offer": {
+     "boxes": [
+      [
+       "I keep the",
+       "vault. Bring me"
+      ],
+      [
+       "two TinyMedals?"
+      ]
+     ]
+    },
+    "accept": {
+     "boxes": [
+      [
+       "Splendid. Two",
+       "TinyMedals, then!"
+      ]
+     ]
+    },
+    "decline": {
+     "boxes": [
+      [
+       "Another time."
+      ]
+     ]
+    },
+    "progress": {
+     "boxes": [
+      [
+       "Two TinyMedals,",
+       "please."
+      ]
+     ]
+    },
+    "objective": [
+     {
+      "flag": "has_2_medals"
+     }
+    ],
+    "take": [
+     {
+      "item": 30,
+      "count": 2
+     }
+    ],
+    "complete": {
+     "boxes": [
+      [
+       "Two TinyMedals!",
+       "Here are 500 gold."
+      ]
+     ]
+    },
+    "reward": {
+     "gold": 500
+    },
+    "done": {
+     "boxes": [
+      [
+       "The vault thanks",
+       "you."
+      ]
+     ]
+    },
+    "id": "mini_medal_quest",
+    "giver": "medal_vault_quest",
+    "flags": {
+     "started": "mini_medal_quest_started",
+     "done": "mini_medal_quest_done"
+    }
+   }
+  ],
+  "story": {
+   "milestones": [
+    {
+     "flag": "mini_medal_quest_done",
+     "name": "The vault keeper is happy"
+    }
+   ]
+  }
  },
  "build": {
   "bank_map": {

@@ -218,6 +218,7 @@ class NpcPanel(QGroupBox):
     newConversationRequested = Signal()  # S101
     shopRequested = Signal()             # S117 (P3.13c): make this NPC a shopkeeper
     serviceRequested = Signal()          # S126 (P3.14e1): make this NPC a service NPC
+    questRequested = Signal()            # S129 (P3.14c): this NPC gives a quest
     shownWhenRequested = Signal()        # S120: flag conditions (NG2 residual b)
     colourEdited = Signal(object)        # S123: OBJ palette 0-7 or None (own colours)
     bossRequested = Signal()             # S123: Make boss…
@@ -315,10 +316,16 @@ class NpcPanel(QGroupBox):
                                     'the Medal Man, the egg appraiser or the gate guide '
                                     '(their menus work in any room)')
         self.btn_service.clicked.connect(self.serviceRequested.emit)
+        self.btn_quest = QPushButton('Quest…')
+        self.btn_quest.setToolTip('S129: this NPC gives a quest — the offer (YES / NO), what '
+                                  'it asks for (flags or story checks), items handed over, '
+                                  'the reward; its own "under way" / "finished" flags')
+        self.btn_quest.clicked.connect(self.questRequested.emit)
         brow.addWidget(self.btn_new_talk)
         brow.addWidget(self.btn_new_conv)
         brow.addWidget(self.btn_shop)
         brow.addWidget(self.btn_service)
+        brow.addWidget(self.btn_quest)
         brow.addWidget(self.btn_edit_talk)
         f.addRow('', brow)
         self.talk_preview = QLabel('')

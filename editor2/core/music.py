@@ -66,7 +66,9 @@ MAX_FIGHTS = 255
 FOLLOW_GATE = 0xFF                               # room tables: "the gate's song"
 MUSIC_KEYS = ('libraries', 'songs', 'room_defaults', 'names', 'gates', 'battle')
 BATTLE_KEYS = ('normal', 'boss', 'arena', 'starry', 'rooms', 'fights')
-GATE_MUSIC_KEYS = ('floors', 'battles')
+GATE_MUSIC_KEYS = ('floors', 'battles', 'rules')
+MUSIC_RULE_ROOM, MUSIC_RULE_GATE = 0, 1         # S129: MusicRuleTable kinds (bank $71)
+MUSIC_RULE_MAX_TERMS = 8
 # vanilla battle songs (bank $51 LoadBattle)
 VANILLA_BATTLE = 0x27
 VANILLA_STARRY_FINAL = 0x2B
@@ -165,6 +167,7 @@ class Plan:
         self.room_battle = [0] * 128
         self.battle = {'normal': 0, 'boss': 0, 'arena': 0, 'starry': 0}
         self.fights = []              # [(eid, sound id)]
+        self.rules = []               # S129: [(kind, id, [(flag, must_be_off)], sound id, what)]
         self.warnings = []
         self.stream_bytes = {}        # bank -> bytes used
 
@@ -304,6 +307,19 @@ def plan(prj):
             raise MusicError(f"music.gates {key}: unknown key(s) {bad}")
         P.gate_bgm[gid] = val(g.get('floors'), f"music.gates {key} floors")
         P.gate_battle[gid] = val(g.get('battles'), f"music.gates {key} battles")
+        for i, ru in enumerate(g.get('rules') or []):
+            P.rules.append(_rule(prj, ru, MUSIC_RULE_GATE, gid, val,
+                                 f"music.gates {key} rules[{i}]"))
+
+    # ---- S129: music by flag — a room's rules (custom.rooms[].music_rules) ----
+    for r in prj.rooms:
+        for i, ru in enumerate(r.get('music_rules') or []):
+            mid = F.val(r['mapID'])
+            ctx = f"room {r.get('id')} music_rules[{i}]"
+            if mid >= 128:
+                raise MusicError(f"{ctx}: rooms from $80 up have no music (the room-song "
+                                 "table has 128 rows)")
+            P.rules.append(_rule(prj, ru, MUSIC_RULE_ROOM, mid, val, ctx))
 
     # gate rooms with no song of their own follow the gate (only matters when a
     # gate has a song: otherwise the vanilla path is byte-for-byte what it was)
@@ -359,6 +375,34 @@ def plan(prj):
     if len(P.fights) > MAX_FIGHTS:
         raise MusicError(f"music.battle.fights: {len(P.fights)} fights (at most {MAX_FIGHTS})")
     return P
+
+
+def _rule(prj, ru, kind, ident, val, ctx):
+    """S129 (ROADMAP P3.14d — music by flag): {"when": [terms], "song": <song>,
+    "comment": …} -> (kind, id, [(flag, must_be_off)], sound id, ctx). First rule
+    whose terms all hold wins (bank $71 MusicRulePick); a rule with no terms
+    always holds (rules after it never play)."""
+    if not isinstance(ru, dict):
+        raise MusicError(f"{ctx}: a rule is an object {{when, song}}")
+    bad = [k for k in ru if k not in ('when', 'song', 'comment') and not k.startswith('_')]
+    if bad:
+        raise MusicError(f"{ctx}: unknown key(s) {bad} (when, song)")
+    sid = val(ru.get('song'), ctx + '.song')
+    if not sid:
+        raise MusicError(f"{ctx}: a rule needs a song")
+    terms = []
+    for t in ru.get('when') or []:
+        is_ = t.get('is', 'set')
+        if is_ not in ('set', 'clear'):
+            raise MusicError(f"{ctx}: term 'is' must be set/clear")
+        try:
+            idx = prj.resolve_flag_ref(t.get('flag'), ctx)
+        except Exception as ex:
+            raise MusicError(str(ex))
+        terms.append((idx, is_ == 'clear'))
+    if len(terms) > MUSIC_RULE_MAX_TERMS:
+        raise MusicError(f"{ctx}: {len(terms)} terms (max {MUSIC_RULE_MAX_TERMS})")
+    return (kind, ident, terms, sid, ctx)
 
 
 def resolve(prj):
@@ -489,7 +533,31 @@ def emit_bank_071_tables(prj, warnings):
         lines.append(F.db_line([eid & 0xFF, eid >> 8, sid], comment=f"EID {eid} -> {tag(sid)}"))
     lines.append("    db $FF, $FF")
     lines.append("")
+    lines += ["; " + "-" * 77,
+              "; MusicRuleTable (S129, ROADMAP P3.14d — music by flag): rows [kind (0 a",
+              "; room by wMapID / 1 a gate by wGateID), id, n, n x dw flag (bit 15 = must",
+              "; be OFF), song]; the FIRST row of the room / gate whose terms all hold",
+              "; plays. Read by MusicRulePick (entry 2). (generated)",
+              "; " + "-" * 77,
+              f"MUSIC_RULE_ROOM EQU {MUSIC_RULE_ROOM}",
+              f"MUSIC_RULE_GATE EQU {MUSIC_RULE_GATE}",
+              "MusicRuleTable:"]
+    for kind, ident, terms, sid, what in P.rules:
+        b = [kind, ident, len(terms)]
+        for idx, off in terms:
+            w = idx | (0x8000 if off else 0)
+            b += [w & 0xFF, w >> 8]
+        b.append(sid)
+        lines.append(F.db_line(b, comment=f"{what} -> {tag(sid)}"))
+    lines.append("    db $FF")
+    lines.append("")
     return lines
+
+
+def rule_holds(terms, flags_on):
+    """A rule's terms against a set of flags ON (the models; a story check
+    counts as its own flag number)."""
+    return all((idx in flags_on) != off for idx, off in terms)
 
 
 # ---------------------------------------------------------------- models
@@ -503,7 +571,13 @@ def model_room_bgm(P, ctx):
     room = P.room_bgm
 
     def floor_song(d):
-        if not d or ctx['gate'] >= GATE_TABLE_LEN:
+        if not d:
+            return 0
+        for k, i, terms, sid, _w in P.rules:        # S129: the gate's rules first
+            if k == MUSIC_RULE_GATE and i == ctx['gate'] and \
+                    rule_holds(terms, ctx.get('flags') or set()):
+                return sid
+        if ctx['gate'] >= GATE_TABLE_LEN:
             return 0
         return P.gate_bgm[ctx['gate']]
 
@@ -520,11 +594,22 @@ def model_room_bgm(P, ctx):
         e = floor_song(d)
         return e if e else 0x34
 
+    flags_on = ctx.get('flags') or set()
+
+    def rule(kind, ident):
+        for k, i, terms, sid, _w in P.rules:
+            if k == kind and i == ident and rule_holds(terms, flags_on):
+                return sid
+        return 0
+
     if ctx['in_gate']:
         return dive(True)
     m = ctx['map']
     if m >= 0x80:
         return 0
+    e = rule(MUSIC_RULE_ROOM, m)
+    if e:
+        return e
     e = room[m]
     if e == FOLLOW_GATE:
         return dive(True)

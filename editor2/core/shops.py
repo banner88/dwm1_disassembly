@@ -59,6 +59,7 @@ VANILLA_SHOPS = [               # (key, label, table, rule)
 ]
 SHOP_TEXT_BASE = 0x0680         # the vanilla shop's texts (+0 hello, +2 bye)
 STAFFS = {0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x25, 0x27}
+SET_MAX_TERMS = 8               # S129: conditions per item set (ShopSetTable row)
 
 
 class ShopError(ValueError):
@@ -196,7 +197,39 @@ def resolve(prj_or_data, repo_root=None):
                       False))
     if len(lists) > 250:
         raise ShopError(f"{len(lists)} shop lists — at most 250 (wShopID is one byte)")
-    return {'prices': prices, 'lists': lists, 'index': index, 'edited_prices': edited}
+    # S129 (ROADMAP P3.14d — shop stock by flag): item SETS. Each set = another
+    # list for one shop, sold while its terms hold (the first set of the shop
+    # whose terms all hold wins — bank $77 ShopSetPick); its list follows the
+    # shops' lists in ShopPtrTable (wShopID still counts shops only).
+    sets = []
+    for i, st in enumerate((d.get('custom') or {}).get('shop_sets') or []):
+        what = f"custom.shop_sets[{i}]"
+        if not isinstance(st, dict):
+            raise ShopError(f"{what}: an object {{shop, when, items, name}}")
+        extra = {x for x in st if not str(x).startswith('_')} - {'shop', 'when', 'items',
+                                                                   'name', 'comment'}
+        if extra:
+            raise ShopError(f"{what}: unknown field(s) {sorted(extra)} (shop, when, items, name)")
+        key = st.get('shop')
+        if key not in index:
+            raise ShopError(f"{what}: unknown shop {key!r} — " + ', '.join(index))
+        when = st.get('when') or []
+        if not isinstance(when, list):
+            raise ShopError(f"{what}.when: a list of flag terms")
+        if len(when) > SET_MAX_TERMS:
+            raise ShopError(f"{what}: {len(when)} conditions (max {SET_MAX_TERMS})")
+        for j, t in enumerate(when):
+            if not isinstance(t, dict) or 'flag' not in t or \
+                    t.get('is', 'set') not in ('set', 'clear'):
+                raise ShopError(f"{what}.when[{j}]: {{\"flag\": name, \"is\": set|clear}}")
+        lst = _check_list(st.get('items'), what + '.items')
+        sets.append({'shop': key, 'shop_index': index[key], 'when': when, 'items': lst,
+                     'name': st.get('name') or f"{key} set {i + 1}",
+                     'list_index': len(lists) + len(sets)})
+    if len(lists) + len(sets) > 255:
+        raise ShopError(f"{len(lists)} shop lists + {len(sets)} item sets — at most 255")
+    return {'prices': prices, 'lists': lists, 'index': index, 'edited_prices': edited,
+            'sets': sets}
 
 
 def shop_id_byte(prj, key, ctx=''):
@@ -246,9 +279,33 @@ def emit_bank_077(prj, warnings, head):
     for n, (key, label, lst, is_v) in enumerate(r['lists']):
         out.append(f"    dw ShopList_{n}   ; {n}: {label}" + ("" if is_v else f" (custom.shops '{key}')"))
     out.append("")
+    for st in r['sets']:
+        out.append(f"    dw ShopList_{st['list_index']}   ; {st['list_index']}: item set "
+                   f"'{st['name']}' of {st['shop']} (custom.shop_sets)")
+    out.append("")
     for n, (key, label, lst, is_v) in enumerate(r['lists']):
         out.append(f"ShopList_{n}:  ; {label} — " + ", ".join(names.get(i, str(i)) for i in lst))
         out.append("    db " + ", ".join(f"${i:02x}" for i in lst) + ", $ff")
+    for st in r['sets']:
+        lst = st['items']
+        out.append(f"ShopList_{st['list_index']}:  ; item set '{st['name']}' — "
+                   + ", ".join(names.get(i, str(i)) for i in lst))
+        out.append("    db " + ", ".join(f"${i:02x}" for i in lst) + ", $ff")
+    out.append("")
+    # S129: ShopSetTable — [shop list, n, n x dw flag (bit 15 = must be OFF), set list]
+    out.append("; ShopSetTable (S129, custom.shop_sets): [shop, n, n x dw flag (bit 15 = "
+               "must be OFF), the set's list], $FF ends — bank $77 ShopSetPick")
+    out.append("ShopSetTable:")
+    for st in r['sets']:
+        b = [st['shop_index'], len(st['when'])]
+        for j, t in enumerate(st['when']):
+            idx = prj.resolve_flag_ref(t['flag'], f"custom.shop_sets '{st['name']}' when[{j}]")
+            w = idx | (0x8000 if t.get('is', 'set') == 'clear' else 0)
+            b += [w & 0xFF, w >> 8]
+        b.append(st['list_index'])
+        out.append("    db " + ", ".join(f"${x:02x}" for x in b)
+                   + f"   ; {st['shop']} sells '{st['name']}' while its conditions hold")
+    out.append("    db $ff")
     out.append("")
     # S126 (P3.14e1): the say helpers' remap rows (bank $77 entry 3 SayText)
     from . import services as SV
@@ -258,6 +315,9 @@ def emit_bank_077(prj, warnings, head):
     from . import breeders as BR
     out.extend(BR.emit_pool_lines(prj))
     out.append("")
+    # S129 (P3.14b): the story checks and story commands (entries 10 / 11)
+    from . import story as ST
+    out.extend(ST.emit_lines(prj))
     if nv != 5:
         raise ShopError('internal: the template assumes five vanilla shops')
     return "\n".join(out) + "\n"

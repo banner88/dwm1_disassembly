@@ -1779,6 +1779,35 @@ exits"):** the real project has only its own rooms, all connected to its hub. In
 picks a game flag by mistake — they are a guard, not a workflow; every P3.14 part is
 designed and tested on such a project (no copied rooms, no vanilla destinations).
 
+**Story (S129, ROADMAP P3.14b / c / d; built S129, NOT yet user-tested)** — user S129: locks
+"make a new room state and switch to that", music by flag for "custom rooms and gates", shop
+"flag should lead to new item sets which are settable in editor", "finish off all P3.14".
+Model: `core/story.py` (kinds, records, quest lowering, descriptions), `core/story_doc.py`
+(`StoryMixin` on `Document`: checks add / update / rename-everywhere / delete-refused-while-
+used, milestones, quests add / `quest_for_npc` / update / delete, room and gate music rules,
+shop sets, `lock_exit`); widgets `app/story_widgets.py` (`CheckDialog` — the kind's fields
+and a "True when: …" sentence; `QuestDialog` — tabs What it asks / Reward / Words, every
+word field a `GameTextField`; `LockDialog`; `MusicRulesDialog`; `ItemSetsDialog`; all
+condition lists = the S127 `FlagTerms` with checks listed as "(story check)"). Where:
+* **Progression & Flags** — Flags page: group *Story checks* (New story check…, Edit…,
+  Rename…, Delete; Renumber hidden; the note = the check's comment; the details say "Asks:
+  …"); Triggers page: kinds story checks / story spine / music by flag / shop item sets;
+  Problems: `check_written`; a 4th page **Story** — the milestones (Add after the selected,
+  Rename, Earlier / Later, Remove, Show flag) and the quests (Edit…, Show giver in the place
+  panel, Delete).
+* **Rooms** — NPC panel **Quest…** (replaces the NPC's words after a question; *Edit
+  talk…* on a giver re-opens the quest); door / teleport panels **Lock until…** (the shut
+  state is selected after).
+* **Conversation window** — steps Give an item (× n) / Give a monster (got / full words),
+  Take an item, Give / take gold, Refresh the room, **Says by progress** (branches "From
+  “m” on" + "Before the story"); If / flag pickers list the checks; Turn ON / OFF lists do
+  not (`FlagList(writes=True)`).
+* **Cutscene editor** — Take an item, Give / take gold, Refresh the room; Give an item ×
+  n; the If and trigger flag menus list the checks.
+* **Music tab** — Rooms (your rooms) and Gates: **Music by flag… (n)**; **Shops tab** —
+  **Item sets by flag… (n)** with the sets summed up under the list.
+Help `71_story_quests.md` (+ 00 / 11 / 20 / 30 / 40 / 61 / 62 / 63 / 90).
+
 ### 5.8 World tab
 
 **v0 as built S98 (`app/world_tab.py`, `core/world.py`; read-only):** nodes

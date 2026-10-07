@@ -606,7 +606,17 @@ Three parts, so breeding can be put in any room:
 - **Op `$24` and yields (S127):** op `$24` yields; a yield ENDS the talk's dialog, so a
   later text needs `init_dialog` first (the text was otherwise never shown). The project
   engine reads op `$24` params `$FFxx` as commands (bank $60 → bank $77 entry 10;
-  `$FF00` = the mate's name into insert slot 0).
+  `$FF00` = the mate's name into insert slot 0). **S129:** `$FF01`-`$FFFF` = the project's
+  STORY COMMANDS (`StoryCmdPtrs[n − 1]`, generated, deduped): take items (the last ones
+  first, the bag stays packed), give gold (ROM0 `CompareGold` — it ADDS, capped at 99,999),
+  take gold (ROM0 `AddGold` — it SUBTRACTS, floor 0; both names are historical), give *n*
+  of an item (all or none — the answer in `$D8E1`, tested with `$15`). Each yields like any
+  op `$24` (the compiler re-opens the box before the next text).
+- **Op `$26` reload_room (S129, PyBoy on the user's save):** `$C88F++` = the map loop
+  reloads the room IN PLACE — bank $0B room entry 0 again (custom rooms: the state rules
+  pick the state again, the room's music again), the player keeps his cell and facing.
+  The editor ends the script at it (whether later ops would still run was not measured).
+  The editor's "Refresh the room" step (a door a flag has just unlocked opens at once).
 
 ## The bedroom's dresser and `$3B` (S121, the Milly hook)
 

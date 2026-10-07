@@ -341,7 +341,10 @@
                  / wBreedVals $D503-$D506 (the last roll's level, arena x12,
                  seen/2, story points) / wBreedMask $D507 / wBreedStep $D508
                  (BreedRoll scratch) /
-                 wCustomPool $D509-$D5E4 (transient reserve; $D4F2 before S127,
+                 wStoryFlag $D509 (S129: bank $77 StoryCheck's answer, $FF / $00 —
+                 the byte bank $73 FlagAddr returns for a virtual flag $18xx;
+                 EVENT_FLAGS "Story checks") /
+                 wCustomPool $D50A-$D5E4 (transient reserve; $D509 before S129, $D4F2 before S127,
                  $D2F0 before S126, $D2EF before S125, $D2E3 before S123, $D243
                  before S121) /
                  wPoolBounce $D5E5-$D664 (128 B, FX1: sleep-pool swap

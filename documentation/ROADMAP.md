@@ -2131,7 +2131,13 @@ recipes are pure authoring.
         Not built (not asked): branching random dives inside a world, a Gates-tab graph view
         (the World tab's *only this world* graph serves), an engine "world cleared" on a won
         battle without a conversation.
-- [ ] **P3.14 — Progression & Flags tab**: flag manager (named flags,
+- [x] **P3.14 — Progression & Flags tab** — **every box built S124-S129** (b / c / d's last box
+      S129, test ROM USER-CONFIRMED 2026-10-07 13:59; the user S129: "Do everything in one session. Finish off all
+      P3.14 if doable"). *Accept, as met:* the demo quest is the NEW mini medal quest, authored
+      in forms (Rooms tab → NPC → Quest…; user S124 "yes make new mini medal quest"); the S70
+      battle quest stays as the legacy form (not form-editable, kept for old projects and its
+      tests — its `npc_hide` / `npc_show` bug fixed S129); the report = the Problems page.
+      Original text: flag manager (named flags,
       cross-ref), quest editor forms over progression.quests, orphaned-
       trigger report, **Triggers-as-sentences authoring** (EDITOR_DESIGN
       §5.1c; compiles to flag branches / state advances / show-hide /
@@ -2177,7 +2183,16 @@ recipes are pure authoring.
         "Looks like it just randomly turns on by a million things"):** uses say WHO / WHERE /
         WHEN, one entry per script / place with its branches folded, an "In short" line
         (EDITOR_DESIGN §5.7 r2) — built, NOT yet user-tested.
-  - [ ] **P3.14b — Story checks (engine)**: new CONDITIONS — has item X (× n), gold ≥ N,
+  - [x] **P3.14b — Story checks (engine)** — **built S129, test ROM USER-CONFIRMED 2026-10-07 13:59.** A story
+        check (`custom.checks`) = the virtual flag `$1800 + n` (bank $73 `FlagAddr` → bank $77
+        entry 11 `StoryCheck` → `wStoryFlag`), so EVERY flag reader tests it with no change:
+        item × n, gold, species / family (anywhere / party), monsters owned, party level (any
+        / average / all), Library seen, random %, arena classes, bag room, story reached,
+        AND / OR (NOT = must be OFF). Effects = story commands, op `$24 $FF01+` (bank $77
+        `StoryCommand`): take items, give / take gold, give items × n (all or none); refresh =
+        op `$26` (measured); heal existed (S125). PROJECT_COMPILER §2.42, EVENT_FLAGS "Story
+        checks", help `71_story_quests.md`. PyBoy on the user's save: a census of 32 checks of
+        every kind, the commands, the demo below. Original text: new CONDITIONS — has item X (× n), gold ≥ N,
         has monster species / family (party or farm), number of monsters owned, party
         monster level ≥ N, library seen ≥ N, random % — and EFFECTS — take item X (× n),
         give / take gold (`$33` already gives), heal the party — usable in conversations
@@ -2187,7 +2202,16 @@ recipes are pure authoring.
         own word — a reserved word range → a story-command table (compiler-owned), the
         result tested by the existing `$15` (byte == value). Measure every command in
         PyBoy. Flags stay the story's "defeated X / triggered Y" (user).
-  - [ ] **P3.14c — Story + Quests**: milestones (the ordered story spine, a chapter = the
+  - [x] **P3.14c — Story + Quests** — **built S129, test ROM USER-CONFIRMED 2026-10-07 13:59.** The story spine
+        (`custom.story.milestones`, Progression & Flags → Story), "Says by progress"
+        (conversations; the latest milestone first), quests (`custom.quests`, Rooms tab → NPC
+        → Quest…: offered when, objective = any condition incl. story checks, items handed
+        over, reward items / gold / monster / flags / refresh, the words of every stage, its
+        `<id>_started` / `<id>_done` flags) lowered into the giver's conversation;
+        conversations got Give item × n / Give monster / Take item / Gold / Refresh, cutscenes
+        Take item / Gold / Refresh. The example's NEW mini medal quest (pin moved); the legacy
+        `progression.quests` KEPT (old projects, tests) with its hide / show fixed. Original
+        text: milestones (the ordered story spine, a chapter = the
         latest milestone reached), quests as first-class objects (giver, offer, objective =
         any condition incl. P3.14b's, reward, consequences) compiled to conversations /
         flags (the legacy `progression.quests` lowering retired; its `npc_hide` /
@@ -2196,7 +2220,7 @@ recipes are pure authoring.
         in conditions, conversations and cutscenes able to do the same things (give item
         / monster, music…). The example's medal-vault quest becomes a NEW mini medal quest
         (user) — the regression pin moves that session.
-  - [ ] **P3.14d — The hub + world rules** — **re-cut S125 with the user** (after the audit
+  - [x] **P3.14d — The hub + world rules** (all boxes built S125-S129) — **re-cut S125 with the user** (after the audit
         below, done S125: every engine Castle send = bank $50 `$6559` an ordinary loss + `$64AF`
         the lost Starry / arena final, bank $06 `$6A39` the party wiped by damage floors, bank
         $07 `$5030` the WarpWing item — "code 6, the gate return" IS the WarpWing; the `$04`
@@ -2275,7 +2299,14 @@ recipes are pure authoring.
           monsters; the fixed 8-class menu. r2: no flag lands on the game's `$0158` by
           default; group 9 named Monster Grandpa's match (not the King); copies share one
           layout per vanilla layout (paint the night arena once).
-    - [ ] (then) exits that open by flag, room music / shop stock by flag — below.
+    - [x] (then) exits that open by flag, room music / shop stock by flag — **built S129, test
+          ROM USER-CONFIRMED 2026-10-07 13:59.** User S129: "make a new room state and switch to that" → door /
+          exit → **Lock until…** (`Document.lock_exit`: a shut state with the cell a wall and
+          an examine spot saying the words, rules open-while / else shut; a Refresh step opens
+          at once); music by flag for "custom rooms and gates also" (`MusicRuleTable`, bank
+          $71 `MusicRulePick`); shops: "flag should lead to new item sets which are settable
+          in editor" (`custom.shop_sets`, bank $77 `ShopSetPick`). PROJECT_COMPILER §2.42.
+          Below: the S124 text.
         The S124 text: FIRST an audit of everything the engine sends to
         or needs from a VANILLA room, since the real project has none (user S124): a lost battle
         → the Castle (bank $50 `$64AF`, measured hard-wired); a gate return → the Castle's

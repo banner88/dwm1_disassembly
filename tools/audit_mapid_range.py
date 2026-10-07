@@ -165,7 +165,12 @@ V = {
     ("bank_060.asm", "CustomMonsterCast", 0): "IDX8_SUB6B",      # S101: sub $6B / ret c / add a
     ("bank_06c.asm", "CustomTileAnimate", 0): "BOUNDED",         # S102: cp TILEANIM_ROOMS, 16-bit index
     ("bank_06c.asm", "CustomTileAnimate", 1): "CP_UNSIGNED",     # S102: == wTileAnimRoom (restart test)
-    ("bank_071.asm", "CustomRoomBGMResolve", 1): "CP_UNSIGNED",  # S101: cp $61
+    # S129: the room's music rules come first — `ld c, a` (wMapID) for MusicRulePick
+    # (full-byte equality against MusicRuleTable rows), then .noRule reloads wMapID
+    # for .lookup (occurrence 1, still under the cp $80 / ret nc above); the S101
+    # cp $61 load moved to occurrence 2. Reasoning in CROSSBANK_ROOMS "S129 site".
+    ("bank_071.asm", "CustomRoomBGMResolve", 1): "BOUNDED",      # S129: .noRule reload, bounded by cp $80 above
+    ("bank_071.asm", "CustomRoomBGMResolve", 2): "CP_UNSIGNED",  # S101: cp $61
     ("bank_071.asm", "CustomRoomFlags", 0): "BOUNDED",           # S100: cp ROOMFLAGS_TABLE_LEN
     ("bank_073.asm", "GateLeaveFreePal", 0): "CP_UNSIGNED",      # S100 r3: cp CUSTOM_ROOM_START
     ("bank_076.asm", "EncResolve", 0): "BOUNDED",                # S114: cp ENC_ROOM_LEN, 16-bit index *3

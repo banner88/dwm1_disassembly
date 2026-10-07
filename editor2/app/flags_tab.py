@@ -15,6 +15,11 @@ Three pages over editor2/core/flag_index.py (headless):
   states, NPCs shown / coloured by flags, battles, gate-floor rooms, cutscene
   starts, the If steps of conversations and cutscenes, the branches of copied
   game scripts.
+* **Story** (S129, ROADMAP P3.14b/c) — the story spine (milestones in story
+  order: "says by progress" branches and "reached" checks follow it) and the
+  quests (each given by an NPC — make one on the Rooms tab: an NPC → Quest…).
+  Story checks (questions the game answers: an item carried, gold, monsters
+  owned…) are listed with the flags (their own group) — New story check….
 * **Problems** — checks waiting for a flag nothing turns ON, flags only the
   original game turns ON, unknown flag names, unused flags, numbers the game
   also uses ($0158), flags that are not saved.
@@ -27,7 +32,7 @@ import os
 
 from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QHBoxLayout, QInputDialog, QLabel,
-                               QLineEdit, QMessageBox, QPushButton, QSplitter, QTabWidget,
+                               QLineEdit, QListWidget, QListWidgetItem, QMessageBox, QPushButton, QSplitter, QTabWidget,
                                QTextBrowser, QTreeWidget, QTreeWidgetItem, QVBoxLayout,
                                QWidget)
 
@@ -36,7 +41,9 @@ from editor2.core import flag_index as FI
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-GROUPS = [('project', 'Your flags'), ('gate', 'Gates and worlds cleared'),
+GROUPS = [('project', 'Your flags'),
+          ('check', 'Story checks — questions the game answers (read-only)'),
+          ('gate', 'Gates and worlds cleared'),
           ('hook', 'The Milly hook'), ('game_used', "The original game's flags your rooms check"),
           ('game', "Every other flag of the original game (read-only)")]
 
@@ -46,7 +53,9 @@ TRIGGER_KINDS = [('', 'Every kind'), ('state_rule', 'Room states'),
                  ('npc', 'NPCs shown / coloured, portal swirls'),
                  ('cutscene', 'Cutscenes'), ('talk', 'Conversations and talks'),
                  ('battles', 'Battles'), ('gate_room', 'Rooms on gate floors'),
-                 ('script', 'Copied game scripts'), ('quest', 'Quests (legacy)')]
+                 ('script', 'Copied game scripts'), ('quest', 'Quests (legacy)'),
+                 ('check', 'Story checks'), ('milestone', 'Story spine (says by progress)'),
+                 ('music', 'Music by flag'), ('shop_set', 'Shop item sets')]
 TRIGGER_KIND_OF = {'npc_shown': 'npc', 'npc_colour': 'npc', 'swirl': 'npc',
                    'cutscene_start': 'cutscene', 'cutscene': 'cutscene',
                    'conversation': 'talk', 'talk': 'talk', 'room_battles': 'battles',
@@ -80,6 +89,7 @@ class ProgressionTab(QWidget):
         self.pages.addTab(self._flags_page(), 'Flags')
         self.pages.addTab(self._triggers_page(), 'Triggers')
         self.pages.addTab(self._problems_page(), 'Problems')
+        self.pages.addTab(self._story_page(), 'Story')
         # S124 r3: "show" opens the place HERE, in a panel on the right (user: "rather
         # than moving to a totally different tab"); its Open… button still goes there
         from editor2.app.place_panel import PlacePanel
@@ -104,6 +114,12 @@ class ProgressionTab(QWidget):
         self.b_new = QPushButton('New flag…')
         self.b_new.clicked.connect(self._new_flag)
         row.addWidget(self.b_new)
+        self.b_new_check = QPushButton('New story check…')
+        self.b_new_check.setToolTip('A question the game answers — an item carried, gold, '
+                                    'monsters owned, a level… — usable wherever a flag is '
+                                    'checked (S129)')
+        self.b_new_check.clicked.connect(self._new_check)
+        row.addWidget(self.b_new_check)
         self.show_box = QComboBox()
         self.show_box.addItem("Your game's flags", SHOW_MINE)
         self.show_box.addItem('Only flags with a problem', SHOW_PROBLEMS)
@@ -145,6 +161,11 @@ class ProgressionTab(QWidget):
         nrow.addWidget(self.note, 1)
         rv.addLayout(nrow)
         brow = QHBoxLayout()
+        self.b_edit = QPushButton('Edit…')
+        self.b_edit.setToolTip('Change what the story check asks')
+        self.b_edit.clicked.connect(self._edit_check)
+        self.b_edit.setVisible(False)
+        brow.addWidget(self.b_edit)
         self.b_rename = QPushButton('Rename…')
         self.b_rename.clicked.connect(self._rename)
         self.b_renumber = QPushButton('Renumber…')
@@ -247,6 +268,7 @@ class ProgressionTab(QWidget):
         self._fill_flags()
         self._fill_triggers()
         self._fill_problems()
+        self._fill_story()
         self.place_panel.refresh()           # names may have changed
         used, cap = self.s.doc.flag_pool()
         self.pool.setText(f'{used} of {cap} named flags used · numbers are fixed (a '
@@ -256,7 +278,7 @@ class ProgressionTab(QWidget):
     def _group_of(self, f):
         if f.kind in ('project', 'quest'):
             return 'project'
-        if f.kind in ('gate', 'hook'):
+        if f.kind in ('gate', 'hook', 'check'):
             return f.kind
         return 'game_used' if self.fi.project_relevant(f) else 'game'
 
@@ -420,11 +442,17 @@ class ProgressionTab(QWidget):
         self._navs = {}
         f = self.fi.flags.get(idx) if (self.fi and idx is not None) else None
         own = f is not None and f.kind in ('project', 'quest')
-        for b in (self.b_rename, self.b_renumber, self.b_delete):
-            b.setEnabled(own)
-        self.note.setEnabled(own)
+        chk = f is not None and f.kind == 'check'
+        for b in (self.b_rename, self.b_delete):
+            b.setEnabled(own or chk)
+        self.b_renumber.setEnabled(own)
+        self.b_renumber.setVisible(not chk)
+        self.b_edit.setVisible(chk)
+        self.note.setEnabled(own or chk)
         self.note.blockSignals(True)
-        self.note.setText(f.comment if own else '')
+        cm = ((self.s.doc.check(f.name) or {}).get('comment') or '') if chk else \
+            (f.comment if own else '')
+        self.note.setText(cm)
         self.note.blockSignals(False)
         if f is None:
             self.title.setText('<h2>No flag</h2>')
@@ -433,15 +461,22 @@ class ProgressionTab(QWidget):
         kind = {'project': 'your flag', 'quest': 'your flag (made for a legacy quest)',
                 'gate': 'a gate\'s / world\'s cleared flag',
                 'hook': 'the Milly hook\'s own flag',
+                'check': 'a story check',
                 'game': "the original game's flag — read-only"}[f.kind]
         from editor2.core.project import flag_persistent
         saved = 'saved with the game' if flag_persistent(f.idx) else \
             '<b>not saved</b> — it resets when the game is loaded'
+        if f.kind == 'check':
+            saved = ('worked out each time something checks it — ON while the answer is yes '
+                     '(nothing turns it ON or OFF)')
         head = _esc(f.name if own or f.kind != 'game' else f'game flag {FI.flag_number(f.idx)}')
         self.title.setText(f'<h2>{head}</h2><p>{FI.flag_number(f.idx)} · {kind} · {saved}'
                            + (f'<br><i>{_esc(f.label)}</i>' if f.label and not own else '')
                            + '</p>')
         html = []
+        if f.kind == 'check':
+            html.append('<p style="background:palette(alternate-base); padding:6px">'
+                        '<b>Asks:</b> ' + _esc(self.s.doc.describe_check(f.name)) + '</p>')
         short = self.fi.summary(f)
         if short:
             html.append('<p style="background:palette(alternate-base); padding:6px">'
@@ -457,7 +492,8 @@ class ProgressionTab(QWidget):
         html.append(self._uses_html([u for u in mine if u.role == FI.TEST],
                                     'Checked by — and what it changes'))
         if not mine:
-            html.append('<p>Nothing in your game uses this flag yet.</p>')
+            html.append('<p>Nothing in your game uses this %s yet.</p>'
+                        % ('story check' if f.kind == 'check' else 'flag'))
         if game:
             html.append('<h3>In the original game</h3>')
             html.append(self._uses_html([u for u in game if u.role == FI.ON], 'Turned ON by'))
@@ -508,6 +544,40 @@ class ProgressionTab(QWidget):
         f = self.fi.flags.get(self.cur) if self.fi else None
         return f if f is not None and f.kind in ('project', 'quest') else None
 
+    def _own_check(self):
+        f = self.fi.flags.get(self.cur) if self.fi else None
+        return f if f is not None and f.kind == 'check' else None
+
+    # S129: story checks
+    def _new_check(self):
+        from editor2.app.story_widgets import new_check
+        nm = new_check(self, self.s)
+        if nm:
+            self.refresh()
+            n = self.fi.resolve(nm)
+            if n is not None:
+                self.select_flag(n)
+
+    def _edit_check(self):
+        f = self._own_check()
+        if f is None:
+            return
+        from PySide6.QtWidgets import QDialog
+        from editor2.app.story_widgets import CheckDialog
+        c = self.s.doc.check(f.name) or {}
+        spec = {k: v for k, v in c.items() if k != 'name'}
+        dlg = CheckDialog(self.s.doc, f.name, spec, parent=self)
+        if dlg.exec() != QDialog.Accepted:
+            return
+        name, spec = dlg.result()
+        if c.get('comment') and 'comment' not in spec:
+            spec['comment'] = c['comment']
+        idx = f.idx
+        if self._push(f'Story check {f.name}',
+                      lambda doc: doc.update_check(f.name, spec, new_name=name)):
+            self.refresh()
+            self.select_flag(idx)
+
     def _new_flag(self):
         name, ok = QInputDialog.getText(self, 'New flag',
                                         'Name of the flag (e.g. bridge_repaired):')
@@ -522,6 +592,21 @@ class ProgressionTab(QWidget):
             self.select_flag(self.s.doc.flag_numbers()[out['n']])
 
     def _note_done(self):
+        c = self._own_check()
+        if c is not None:
+            spec = dict(self.s.doc.check(c.name) or {})
+            spec.pop('name', None)
+            text = self.note.text().strip()
+            if text == (spec.get('comment') or ''):
+                return
+            if text:
+                spec['comment'] = text
+            else:
+                spec.pop('comment', None)
+            name = c.name
+            QTimer.singleShot(0, lambda: self._push(
+                f'Note of {name}', lambda doc: doc.update_check(name, spec)))
+            return
         f = self._own()
         if f is None or self.note.text().strip() == (f.comment or ''):
             return
@@ -532,6 +617,18 @@ class ProgressionTab(QWidget):
                                                 lambda doc: doc.set_flag_comment(name, text)))
 
     def _rename(self):
+        c = self._own_check()
+        if c is not None:
+            new, ok = QInputDialog.getText(self, 'Rename story check',
+                                           f'New name for “{c.name}” (every use follows):',
+                                           text=c.name)
+            if ok and new.strip() and new.strip() != c.name:
+                idx = c.idx
+                if self._push(f'Rename story check {c.name}',
+                              lambda doc: doc.rename_check(c.name, new)):
+                    self.refresh()
+                    self.select_flag(idx)
+            return
         f = self._own()
         if f is None:
             return
@@ -565,6 +662,22 @@ class ProgressionTab(QWidget):
             self.select_flag(out['n'])
 
     def _delete(self):
+        c = self._own_check()
+        if c is not None:
+            n = len(self.s.doc.check_uses(c.name))
+            if n:
+                QMessageBox.information(self, 'Delete story check',
+                                        f'“{c.name}” is still used in {n} place'
+                                        f'{"s" if n != 1 else ""} (listed here). Remove those '
+                                        'uses first.')
+                return
+            if QMessageBox.question(self, 'Delete story check',
+                                    f'Delete “{c.name}”?') != QMessageBox.Yes:
+                return
+            if self._push(f'Delete story check {c.name}', lambda doc: doc.delete_check(c.name)):
+                self.cur = None
+                self.refresh()
+            return
         f = self._own()
         if f is None:
             return
@@ -641,6 +754,7 @@ class ProgressionTab(QWidget):
                       'rooms) — never true unless the player also plays those game rooms'),
         ('game_shares', 'Your flags on a number the original game also uses'),
         ('not_saved', 'Flags that are not saved'),
+        ('check_written', 'Story checks turned ON / OFF — a story check is only read'),
         ('never_read', 'Turned ON, but nothing checks them'),
         ('unused', 'Not used anywhere — can be deleted')]
 
@@ -673,3 +787,188 @@ class ProgressionTab(QWidget):
             nav = it.data(1, Qt.UserRole)
             if nav:
                 self.show_places([dict(nav)], it.text(1))
+
+    # ------------------------------------------------------------ Story page (S129)
+    def _story_page(self):
+        w = QWidget()
+        v = QVBoxLayout(w)
+        intro = QLabel('<b>The story spine</b> — the milestones of your story in order. Each is '
+                       'a flag your game turns ON when the story gets there. A conversation\'s '
+                       '<i>Says by progress</i> step picks its words by the latest milestone '
+                       'reached, and a story check of the kind <i>reached a milestone</i> is ON '
+                       'from that milestone on.')
+        intro.setWordWrap(True)
+        v.addWidget(intro)
+        self.ms_list = QListWidget()
+        self.ms_list.itemDoubleClicked.connect(lambda _i: self._ms_rename())
+        v.addWidget(self.ms_list, 1)
+        row = QHBoxLayout()
+        for label, fn in (('Add milestone…', self._ms_add), ('Rename…', self._ms_rename),
+                          ('Earlier', lambda: self._ms_move(-1)),
+                          ('Later', lambda: self._ms_move(1)), ('Remove', self._ms_remove),
+                          ('Show flag', self._ms_show)):
+            b = QPushButton(label)
+            b.clicked.connect(fn)
+            row.addWidget(b)
+        row.addStretch(1)
+        v.addLayout(row)
+        qi = QLabel('<b>Quests</b> — each given by an NPC (make one on the Rooms tab: pick the '
+                    'NPC → <i>Quest…</i>). The quest is that NPC\'s conversation: the offer, '
+                    'then progress, the reward and the words afterwards.')
+        qi.setWordWrap(True)
+        v.addWidget(qi)
+        self.q_list = QListWidget()
+        self.q_list.itemDoubleClicked.connect(lambda _i: self._quest_edit())
+        v.addWidget(self.q_list, 1)
+        row = QHBoxLayout()
+        for label, fn in (('Edit…', self._quest_edit), ('Show giver', self._quest_show),
+                          ('Delete', self._quest_delete)):
+            b = QPushButton(label)
+            b.clicked.connect(fn)
+            row.addWidget(b)
+        row.addStretch(1)
+        v.addLayout(row)
+        return w
+
+    def _fill_story(self):
+        doc = self.s.doc
+        r = self.ms_list.currentRow()
+        self.ms_list.clear()
+        for i, (flag, name) in enumerate(doc.milestones()):
+            it = QListWidgetItem(f'{i + 1}. {name}   — flag {flag}')
+            it.setData(Qt.UserRole, flag)
+            self.ms_list.addItem(it)
+        if 0 <= r < self.ms_list.count():
+            self.ms_list.setCurrentRow(r)
+        rq = self.q_list.currentRow()
+        self.q_list.clear()
+        from editor2.core import story as ST
+        for q in doc.quests():
+            places = (self.fi.binds.get(q.get('giver')) or []) if self.fi else []
+            where = (f'{places[0].thing()}, {places[0].room_text()}' if places
+                     else 'no NPC gives it yet')
+            started, done = ST.quest_flags(q)
+            about = f'flags {started} / {done}'
+            it = QListWidgetItem(f"{q.get('name') or q.get('id')}   — {where}"
+                                 + (f'   · {about}' if about else ''))
+            it.setData(Qt.UserRole, q.get('id'))
+            self.q_list.addItem(it)
+        if 0 <= rq < self.q_list.count():
+            self.q_list.setCurrentRow(rq)
+        n = len(doc.quests())
+        self.pages.setTabText(3, f'Story ({len(doc.milestones())} · {n} quest'
+                                 f'{"s" if n != 1 else ""})')
+
+    def _ms_items(self):
+        return [list(x) for x in self.s.doc.milestones()]
+
+    def _ms_set(self, label, items, row=None):
+        if self._push(label, lambda doc: doc.set_milestones(items)):
+            self.refresh()
+            if row is not None:
+                self.ms_list.setCurrentRow(row)
+
+    def _ms_add(self):
+        doc = self.s.doc
+        have = {f for f, _n in doc.milestones()}
+        names = [f.get('name') for f in doc.flags() if f.get('name') not in have]
+        if not names:
+            QMessageBox.information(self, 'Add milestone', 'Every flag is a milestone already — '
+                                    'make a new flag first (Flags → New flag…).')
+            return
+        flag, ok = QInputDialog.getItem(self, 'Add milestone',
+                                        'The flag your game turns ON when the story gets here:',
+                                        names, 0, False)
+        if not ok:
+            return
+        name, ok = QInputDialog.getText(self, 'Add milestone', 'Its name in the story:',
+                                        text=flag.replace('_', ' '))
+        if not ok:
+            return
+        items = self._ms_items()
+        r = self.ms_list.currentRow()
+        at = r + 1 if r >= 0 else len(items)
+        items.insert(at, [flag, name.strip() or flag])
+        self._ms_set('Add milestone', items, at)
+
+    def _ms_rename(self):
+        r = self.ms_list.currentRow()
+        items = self._ms_items()
+        if not 0 <= r < len(items):
+            return
+        name, ok = QInputDialog.getText(self, 'Milestone', 'Its name in the story:',
+                                        text=items[r][1])
+        if ok and name.strip():
+            items[r][1] = name.strip()
+            self._ms_set('Rename milestone', items, r)
+
+    def _ms_move(self, d):
+        r = self.ms_list.currentRow()
+        items = self._ms_items()
+        if not 0 <= r < len(items) or not 0 <= r + d < len(items):
+            return
+        items[r], items[r + d] = items[r + d], items[r]
+        self._ms_set('Move milestone', items, r + d)
+
+    def _ms_remove(self):
+        r = self.ms_list.currentRow()
+        items = self._ms_items()
+        if not 0 <= r < len(items):
+            return
+        if QMessageBox.question(self, 'Remove milestone',
+                                f'Remove “{items[r][1]}” from the story spine? (The flag '
+                                'stays; "says by progress" branches for it stop working.)'
+                                ) != QMessageBox.Yes:
+            return
+        del items[r]
+        self._ms_set('Remove milestone', items, min(r, len(items) - 1))
+
+    def _ms_show(self):
+        it = self.ms_list.currentItem()
+        if it is not None and self.fi is not None:
+            n = self.fi.resolve(it.data(Qt.UserRole))
+            if n is not None:
+                self.select_flag(n)
+
+    def _quest_id(self):
+        it = self.q_list.currentItem()
+        return it.data(Qt.UserRole) if it is not None else None
+
+    def _quest_edit(self):
+        qid = self._quest_id()
+        q = self.s.doc.quest(qid) if qid else None
+        if q is None:
+            return
+        from PySide6.QtWidgets import QDialog
+        from editor2.app.story_widgets import QuestDialog
+        rom = getattr(getattr(self.s, 'renderer', None), 'rom', None)
+        dlg = QuestDialog(self.s.doc, rom, q, parent=self)
+        if dlg.exec() != QDialog.Accepted:
+            return
+        spec, new_flags = dlg.spec(), dlg.new_flags()
+
+        def op(doc):
+            for nm in new_flags:
+                if not any(f.get('name') == nm for f in doc.flags()):
+                    doc.add_flag(nm)
+            doc.update_quest(qid, spec)
+        if self._push(f'Quest {qid}', op):
+            self.refresh()
+
+    def _quest_show(self):
+        qid = self._quest_id()
+        q = self.s.doc.quest(qid) if qid else None
+        places = (self.fi.binds.get(q.get('giver')) or []) if q and self.fi else []
+        if places:
+            self.show_places([p.nav() for p in places], f"{q.get('name') or qid} — the giver")
+
+    def _quest_delete(self):
+        qid = self._quest_id()
+        if not qid:
+            return
+        if QMessageBox.question(self, 'Delete quest',
+                                f'Delete the quest “{qid}”? Its NPC stops talking (give it a '
+                                'new talk on the Rooms tab); its flags stay.') != QMessageBox.Yes:
+            return
+        if self._push(f'Delete quest {qid}', lambda doc: doc.delete_quest(qid)):
+            self.refresh()

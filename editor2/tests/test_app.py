@@ -1508,6 +1508,320 @@ def s128_arena(app, w):
           "to the original")
 
 
+def s129_story(app, w):
+    """S129 (ROADMAP P3.14b/c/d): the story tools in the app — Progression & Flags: the
+    story checks' group (New story check…, Edit…, Rename… everywhere, Delete), the Story
+    page (milestones added / moved / renamed / removed, the quests listed and edited); the
+    Music tab's "Music by flag…" for one of your rooms and for a gate; the Shops tab's
+    "Item sets by flag…"; the project compiles with the MusicRuleTable / ShopSetTable rows
+    and the StoryCheckTable; every edit undoes to the original."""
+    import shutil as _sh
+    import tempfile
+    import PySide6.QtWidgets as QWm
+    import editor2.app.flags_tab as FTm
+    import editor2.app.story_widgets as SWm
+    from editor2.core import compiler as Cc
+    s = w.session
+    doc = s.doc
+    before = doc.dumps()
+    n0 = s.undo.index()
+    pt = w.progression_tab
+    w.tabs.setCurrentWidget(pt)
+    pt.refresh()
+    app.processEvents()
+    tops = [pt.tree.topLevelItem(i).text(0) for i in range(pt.tree.topLevelItemCount())]
+    grp = next(pt.tree.topLevelItem(i) for i in range(pt.tree.topLevelItemCount())
+               if pt.tree.topLevelItem(i).text(0).startswith('Story checks'))
+    names = sorted(grp.child(i).text(0).lstrip('ℹ⚠✖ ') for i in range(grp.childCount()))
+    assert names == ['has_2_medals', 'vault_rich'], (tops, names)
+    # New story check… (the dialog filled in: the party's average level 12)
+    k_exec = SWm.CheckDialog.exec
+
+    def _fill(dlg):
+        dlg.name.setText('party lv 12')
+        dlg.kind.setCurrentIndex(dlg.kind.findData('level'))
+        dlg._fields['mode'].setCurrentIndex(dlg._fields['mode'].findData('average'))
+        dlg._fields['level'].setValue(12)
+        assert 'average' in dlg.said.text(), dlg.said.text()
+        dlg.accept()
+        return QWm.QDialog.Accepted
+    SWm.CheckDialog.exec = _fill
+    try:
+        pt._new_check()
+    finally:
+        SWm.CheckDialog.exec = k_exec
+    app.processEvents()
+    c = doc.check('party_lv_12')
+    assert c == {'name': 'party_lv_12', 'kind': 'level', 'mode': 'average', 'level': 12}, c
+    f = pt.fi.flags.get(pt.cur)
+    assert f is not None and f.kind == 'check' and f.idx == 0x1802, (f and (f.kind, f.idx))
+    assert pt.b_edit.isVisible() or not pt.isVisible()
+    assert not pt.b_renumber.isEnabled() and 'average' in pt.detail.toPlainText()
+    # used by a music rule below, then Rename… follows it everywhere
+    rid = 'medal_vault'
+    mt = w.music_tab
+    k_m = SWm.MusicRulesDialog.exec
+
+    def _rules(dlg):
+        dlg._add()
+        dlg.song.setCurrentIndex(1)
+        dlg.terms._add({'flag': 'party_lv_12'})
+        dlg.accept()
+        return QWm.QDialog.Accepted
+    SWm.MusicRulesDialog.exec = _rules
+    try:
+        mt._room_rules(rid, 'Medal Vault')
+        gid = doc.all_gates()[0]['id']
+        mt._gate_rules(gid, '')
+    finally:
+        SWm.MusicRulesDialog.exec = k_m
+    app.processEvents()
+    rr = doc.room_music_rules(doc.room(rid))
+    gr = doc.gate_music_rules(gid)
+    assert len(rr) == 1 and rr[0]['when'] == [{'flag': 'party_lv_12'}] and rr[0]['song'], rr
+    assert len(gr) == 1 and gr[0]['when'] == [{'flag': 'party_lv_12'}], gr
+    k_t = QWm.QInputDialog.getText
+    QWm.QInputDialog.getText = staticmethod(lambda *a, **k: ('strong party', True))
+    try:
+        pt._rename()
+    finally:
+        QWm.QInputDialog.getText = k_t
+    app.processEvents()
+    assert doc.check('strong_party') and not doc.check('party_lv_12')
+    assert doc.room_music_rules(doc.room(rid))[0]['when'] == [{'flag': 'strong_party'}]
+    assert doc.gate_music_rules(gid)[0]['when'] == [{'flag': 'strong_party'}]
+    # Edit… (now level 20, every monster)
+    def _edit(dlg):
+        assert dlg.kind.currentData() == 'level' and dlg._fields['level'].value() == 12
+        dlg._fields['mode'].setCurrentIndex(dlg._fields['mode'].findData('all'))
+        dlg._fields['level'].setValue(20)
+        dlg.accept()
+        return QWm.QDialog.Accepted
+    SWm.CheckDialog.exec = _edit
+    try:
+        pt._edit_check()
+    finally:
+        SWm.CheckDialog.exec = k_exec
+    assert doc.check('strong_party') == {'name': 'strong_party', 'kind': 'level',
+                                         'mode': 'all', 'level': 20}, doc.check('strong_party')
+    # Delete is refused while used
+    seen = {}
+    k_i = FTm.QMessageBox.information
+    FTm.QMessageBox.information = staticmethod(lambda *a, **k: seen.setdefault('i', a[2]))
+    try:
+        pt._delete()
+    finally:
+        FTm.QMessageBox.information = k_i
+    assert 'still used in 2 places' in seen.get('i', ''), seen
+    # the Shops tab: an item set sold while the check holds
+    st = w.shops_tab
+    w.tabs.setCurrentWidget(st)
+    st.refresh()
+    st.list.setCurrentRow(0)
+    app.processEvents()
+    key = st.current()['key']
+    k_s = SWm.ItemSetsDialog.exec
+
+    def _sets(dlg):
+        dlg._add()
+        dlg.name.setText('Strong party goods')
+        dlg.terms._add({'flag': 'strong_party'})
+        dlg.items._add({'item': 0x05, 'count': 1}) if hasattr(dlg.items, '_add') else None
+        dlg.accept()
+        return QWm.QDialog.Accepted
+    SWm.ItemSetsDialog.exec = _sets
+    try:
+        st._item_sets()
+    finally:
+        SWm.ItemSetsDialog.exec = k_s
+    app.processEvents()
+    sets = doc.shop_sets(key)
+    assert len(sets) == 1 and sets[0]['name'] == 'Strong party goods' and \
+        sets[0]['when'] == [{'flag': 'strong_party'}] and sets[0]['items'][0] == 0x01, sets
+    assert '(1)' in st.btn_sets.text(), st.btn_sets.text()
+    # the Story page: milestones and quests
+    w.tabs.setCurrentWidget(pt)
+    pt.refresh()
+    pt.pages.setCurrentIndex(3)
+    app.processEvents()
+    assert pt.ms_list.count() == 1 and pt.q_list.count() == 1 and \
+        'medal' in pt.q_list.item(0).text().lower(), pt.q_list.item(0).text()
+    k_gi = QWm.QInputDialog.getItem
+    QWm.QInputDialog.getItem = staticmethod(lambda *a, **k: ('mini_medal_quest_started', True))
+    QWm.QInputDialog.getText = staticmethod(lambda *a, **k: ('The keeper asked', True))
+    try:
+        pt.ms_list.setCurrentRow(-1)
+        pt._ms_add()
+        pt.ms_list.setCurrentRow(1)
+        pt._ms_move(-1)
+    finally:
+        QWm.QInputDialog.getItem = k_gi
+        QWm.QInputDialog.getText = k_t
+    assert [f for f, _n in doc.milestones()] == ['mini_medal_quest_started',
+                                                 'mini_medal_quest_done'], doc.milestones()
+    assert pt.ms_list.item(0).text().startswith('1. The keeper asked')
+    k_qd = SWm.QuestDialog.exec
+
+    def _quest(dlg):
+        dlg.name.setText('Two medals for the keeper')
+        dlg.r_gold.setValue(600)
+        dlg.accept()
+        return QWm.QDialog.Accepted
+    SWm.QuestDialog.exec = _quest
+    try:
+        pt.q_list.setCurrentRow(0)
+        pt._quest_edit()
+    finally:
+        SWm.QuestDialog.exec = k_qd
+    q = doc.quest('mini_medal_quest')
+    assert q['name'] == 'Two medals for the keeper' and q['reward']['gold'] == 600 and \
+        q['flags'] == {'started': 'mini_medal_quest_started', 'done': 'mini_medal_quest_done'}, q
+    assert 'Two medals' in pt.q_list.item(0).text()
+    # the Rooms tab: Lock until… on an exit (a second room state, the shut look), and an
+    # NPC's Quest… (its script becomes the quest's conversation)
+    import editor2.app.rooms.tab as RTm
+    rt = w.rooms_tab
+    w.navigate_to({'tab': 'rooms', 'room': 'ember_keystone', 'screen': 0, 'state': 0,
+                   'x': 3, 'y': 1})
+    app.processEvents()
+    room = doc.room('ember_keystone')
+    rows = doc.exits_of(room, 0, 0)
+    i = next(j for j, e in enumerate(rows) if (e['x'], e['y']) == (3, 1))
+    rt._show_exit_panel(i, rows[i])
+    k_l = SWm.LockDialog.exec
+
+    def _lock(dlg):
+        dlg.terms._add({'flag': 'has_2_medals'})
+        dlg.accept()
+        return QWm.QDialog.Accepted
+    SWm.LockDialog.exec = _lock
+    try:
+        rt._lock_exit()
+    finally:
+        SWm.LockDialog.exec = k_l
+    app.processEvents()
+    room = doc.room('ember_keystone')
+    sts = room['screens']['0']['states']
+    assert len(sts) == 2 and not [e for e in sts[1].get('exits') or []
+                                  if (e['x'], e['y']) == (3, 1)], sts[1].get('exits')
+    assert any(e.get('kind') == 'examine' and (e.get('x'), e.get('y')) == (3, 1)
+               for e in sts[1].get('npcs') or []), sts[1].get('npcs')
+    rules = doc.state_rules(room)
+    assert rules[-2]['state'] == 0 and rules[-2]['when'] == [{'flag': 'has_2_medals'}] and \
+        rules[-1]['state'] == 1 and rt.state_idx == 1, (rules, rt.state_idx)
+    w.navigate_to({'tab': 'rooms', 'room': 'dusk_mirror', 'screen': 0, 'state': 0,
+                   'x': 5, 'y': 6})
+    app.processEvents()
+    rt._show_npc_panel(2)
+    assert rt._sel_npc == 2
+    k_qd = SWm.QuestDialog.exec
+    k_q = RTm.QMessageBox.question
+
+    def _new_quest(dlg):
+        dlg.name.setText('Bard song')
+        dlg.objective._add({'flag': 'vault_rich'})
+        dlg.r_gold.setValue(50)
+        dlg.accept()
+        return QWm.QDialog.Accepted
+    SWm.QuestDialog.exec = _new_quest
+    RTm.QMessageBox.question = staticmethod(lambda *a, **k: RTm.QMessageBox.Yes)
+    try:
+        rt._npc_quest()
+    finally:
+        SWm.QuestDialog.exec = k_qd
+        RTm.QMessageBox.question = k_q
+    q = doc.quest('bard_song')
+    assert q and q['giver'] == 'bgm07_change' and q['objective'] == [{'flag': 'vault_rich'}] \
+        and q['flags'] == {'started': 'bard_song_started', 'done': 'bard_song_done'}, q
+    assert doc.script('bgm07_change')['ops'] == [['end']]
+    # the conversation window's new steps (each step's editor opens)
+    from PySide6.QtWidgets import QTreeWidgetItemIterator
+    from editor2.app.rooms import conversation_dialog as CVm
+    dlg = CVm.ConversationDialog(doc, rom=s.renderer.rom, room=doc.room('gate_island'), key=0,
+                                 spec={'steps': [{'say': {'boxes': [['Hello!']]}}]}, parent=rt)
+    for k in ('by_progress', 'give_item', 'give_monster', 'take_item', 'gold', 'refresh'):
+        dlg.tree.setCurrentItem(dlg.tree.topLevelItem(dlg.tree.topLevelItemCount() - 1))
+        dlg.add_step(k)
+        app.processEvents()
+    it = QTreeWidgetItemIterator(dlg.tree)
+    n_items = 0
+    while it.value():
+        dlg.tree.setCurrentItem(it.value())
+        app.processEvents()
+        n_items += 1
+        it += 1
+    sp = dlg.spec()
+    kinds = [CVm.step_kind(x) for x in sp['steps']]
+    assert kinds == ['say', 'by_progress', 'give_item', 'give_monster', 'take_item', 'gold',
+                     'refresh'], kinds
+    assert sp['steps'][1]['by_progress'][0]['milestone'] == 'mini_medal_quest_started', sp
+    assert CVm.spec_problems(sp, doc) == [], CVm.spec_problems(sp, doc)
+    assert n_items >= 9, n_items
+    dlg.reject()
+    # the cutscene editor's new steps: several of an item, take items, gold, refresh
+    from editor2.app.rooms import commands as C
+    from editor2.app.cutscene_editor import STEP_HELP
+    from editor2.core import cutscene_doc as CD
+    ct = w.cutscenes_tab
+    w.tabs.setCurrentWidget(ct)
+    app.processEvents()
+    if ct.cat is None:
+        ct.load()
+    cmd = C.SnapshotCommand(s, 'new', lambda d: CD.new_cutscene(d, 'gate_island', 'Pay', 0,
+                                                              'entry'))
+    s.undo.push(cmd)
+    sid = cmd.result
+    app.processEvents()
+    ct.refresh()
+    app.processEvents()
+    mine = ct.tree.topLevelItem(0)
+    pick = None
+    for i in range(mine.childCount()):
+        for j in range(mine.child(i).childCount()):
+            if 'Pay' in mine.child(i).child(j).text(0):
+                pick = mine.child(i).child(j)
+    ct.tree.setCurrentItem(pick)
+    app.processEvents()
+    ed = ct.editor
+    assert ed.scene_id == sid, ([mine.child(i).text(0) for i in range(mine.childCount())],
+                                pick and pick.text(0), sid, ed.scene_id)
+    ed.add_step('give_item', {'give_item': {'item': 0x1E, 'count': 3}})
+    ed.add_step('take_item', {'take_item': {'item': 0x1E, 'count': 2}})
+    ed.add_step('gold', {'gold': {'give': 250}})
+    ed.add_step('refresh', {'refresh': True})
+    app.processEvents()
+    assert 'no problems' in ed.problems.text(), ed.problems.text()
+    for n, k in enumerate(('give_item', 'take_item', 'gold', 'refresh')):
+        ed.path = (n,)
+        ed.refresh()
+        assert ed.form.about.text() == STEP_HELP[k], (k, ed.form.about.text())
+    # compiles: the tables carry the rows
+    td = tempfile.mkdtemp()
+    _sh.copytree(doc.project_dir, os.path.join(td, 'p'), ignore=_sh.ignore_patterns('build'))
+    open(os.path.join(td, 'p', 'project.json'), 'w').write(doc.dumps())
+    outs, _pp, _ww = Cc.compile_project(os.path.join(td, 'p'), REPO)
+    b71, b77 = outs['patches/bank_071.asm'], outs['patches/bank_077.asm']
+    mrt = b71[b71.find('MusicRuleTable:'):].split('db $FF')[0]
+    assert 'db $00' in mrt and 'db $01' in mrt, mrt
+    assert 'ShopSetTable:' in b77 and "sells 'Strong party goods'" in b77
+    assert '= strong_party' in b77, b77[b77.find('StoryCheck_'):][:300]
+    cmds = b77[b77.find('StoryCmdPtrs:'):][:900]
+    assert 'give_item' in cmds and 'take_item' in cmds and 'give_gold' in cmds, cmds
+    _sh.rmtree(td, ignore_errors=True)
+    while s.undo.index() > n0:
+        s.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'S129 story edits did not undo to the original'
+    print('OK: S129 story — the conversation window\'s new steps (says by progress, give '
+          'items / a monster, take, gold, refresh); the cutscene editor\'s new steps (3 of an item, take, gold, '
+          'refresh); Rooms tab Lock until… (a shut state + its rules), an NPC\'s '
+          'Quest…; Progression & Flags: the story checks group (New story check…, '
+          'Rename… follows into the music rules, Edit…, Delete refused while used), the Story '
+          'page (milestones added / moved, the quest edited); Music by flag for a room and a '
+          'gate; a shop\'s item set; compiles with MusicRuleTable / ShopSetTable / '
+          'StoryCheckTable; undoes to the original')
+
+
 def main():
     do_rom = '--rom' in sys.argv
     app = QApplication.instance() or QApplication(sys.argv)
@@ -1562,6 +1876,7 @@ def main():
     s127_breeding(app, w)
     s127r3_game_text_rule(app, w)
     s128_arena(app, w)
+    s129_story(app, w)
 
     # S101 r3: World tab zoom (wheel, around the mouse) + pan (drag empty canvas)
     from PySide6.QtCore import QPoint, QPointF, Qt

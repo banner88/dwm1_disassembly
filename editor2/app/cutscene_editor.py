@@ -44,14 +44,16 @@ KIND_COLOUR = {
     'music': '#a0e6a0', 'sound': '#a0e6a0', 'shake': '#ffc878', 'fade': '#ffc878',
     'flash': '#ffc878', 'followers': '#ffc878', 'give_item': '#ffdc96',
     'give_monster': '#ffb4dc', 'tiles': '#ffc878', 'battle': '#ff7878', 'move': '#ffaa78',
-    'end': '#cccccc', 'name_hero': '#f0e6a0', 'heal': '#9fe0c0'}
+    'end': '#cccccc', 'name_hero': '#f0e6a0', 'heal': '#9fe0c0',
+    'take_item': '#ffdc96', 'gold': '#ffdc96', 'refresh': '#ffaa78'}      # S129
 ADD_GROUPS = [
     ('Actors', ['walk', 'face', 'show', 'hide', 'anim', 'fly']),
     ('Text and choices', ['say', 'ask', 'if', 'name_hero']),
     ('Time', ['wait', 'wait_walks']),
     ('Screen', ['shake', 'fade', 'flash', 'tiles', 'followers']),
     ('Sound', ['music', 'sound']),
-    ('Story', ['set', 'clear', 'give_item', 'give_monster', 'heal', 'battle', 'move', 'end']),
+    ('Story', ['set', 'clear', 'give_item', 'give_monster', 'take_item', 'gold', 'heal',
+               'battle', 'move', 'refresh', 'end']),
 ]
 # S119b (user: "Can you not hover or explain what is e.g. 'wait until everyone
 # stops'?"): what each step does — under the form's title, on the Add step menu and
@@ -106,6 +108,11 @@ STEP_HELP = {
     'heal': 'Every monster gets its HP and MP back and its ailments cured (the game\'s own '
             'heal, the one the Castle priest uses). Silent: say it in a text.',
     'end': 'The scene stops here.',
+    'take_item': 'Takes items out of the bag (the last ones first; fewer if the bag holds '
+                 'fewer). Check first with an If on a story check "the bag holds …".',
+    'gold': 'Gives or takes gold (never below 0 or above 99,999).',
+    'refresh': 'The room loads again where the player stands: its room states pick again '
+               '(a door unlocked by a flag this scene turned ON opens now). The scene ends.',
     'name_hero': 'Opens the game\'s naming screen (the King\'s "What is your name?" one): the player types the hero\'s name, confirms it, and the '
                  'scene goes on. It offers the current name — MILLY with the Milly hook, '
                  'else TERRY. Text after it can use the name ({hero}).',
@@ -676,12 +683,14 @@ class StepForm(QWidget):
         self._stores = getattr(self, '_stores', []) + [store]
         return bl
 
-    def _flags_list(self, label, cur, on):
+    def _flags_list(self, label, cur, on, tests=False):
         lw = QListWidget()
         lw.setMaximumHeight(110)
         cur = list(cur or [])
         names = [f.get('name') for f in self.ed.s.doc.flags()]
         names += list(self.ed.s.doc.milly_flag_names())          # S121: hook:milly …
+        if tests:                                                 # S129: story checks (an If)
+            names += [c.get('name') for c in self.ed.s.doc.checks()]
         for n in names + [c for c in cur if c not in names]:
             it = QListWidgetItem(str(n))
             it.setFlags(it.flags() | Qt.ItemIsUserCheckable)
@@ -722,9 +731,9 @@ class StepForm(QWidget):
         def upd(a, b):
             self._emit('if', [{'flag': f, 'is': 'set'} for f in a] +
                        [{'flag': f, 'is': 'clear'} for f in b])
-        self._flags_list('All ON', on_, lambda a: upd(a, [t['flag'] for t in (self.step['if'] or [])
+        self._flags_list('All ON', on_, tests=True, on=lambda a: upd(a, [t['flag'] for t in (self.step['if'] or [])
                                                           if t.get('is') == 'clear']))
-        self._flags_list('All OFF', off, lambda b: upd([t['flag'] for t in (self.step['if'] or [])
+        self._flags_list('All OFF', off, tests=True, on=lambda b: upd([t['flag'] for t in (self.step['if'] or [])
                                                         if t.get('is', 'set') == 'set'], b))
 
     def f_set(self, v):
@@ -882,6 +891,8 @@ class StepForm(QWidget):
     def f_give_item(self, v, k='give_item'):
         if k == 'give_item':
             self._combo('Item', self.ed.item_items(), v.get('item'), lambda i: self._upd(k, 'item', i))
+            self._spin('How many', 1, 20, v.get('count', 1),           # S129: all or none
+                       lambda n: self._upd(k, 'count', n))
         else:
             self._combo('Monster', self.ed.enemy_items(), v.get('enemy'), lambda e: self._upd(k, 'enemy', e))
         self._text('Then say', v.get('got') or {'boxes': [['']]},
@@ -957,6 +968,26 @@ class StepForm(QWidget):
             self._spin('Screen', 0, 15, cur, lambda n: self._upd('move', 'screen', n))
         self._spin('x', 0, 9, v.get('x', 4), lambda n: self._upd('move', 'x', n))
         self._spin('y', 0, 7, v.get('y', 4), lambda n: self._upd('move', 'y', n))
+
+    def f_take_item(self, v):
+        self._combo('Item', self.ed.item_items(), v.get('item'),
+                    lambda i: self._upd('take_item', 'item', i))
+        self._spin('How many', 1, 20, v.get('count', 1), lambda n: self._upd('take_item', 'count', n))
+
+    def f_gold(self, v):
+        mode = 'take' if 'take' in (v or {}) else 'give'
+        amt = (v or {}).get(mode, 100)
+        self._combo('Gold', [('give', 'give'), ('take', 'take')], mode,
+                    lambda m: self._emit('gold', {m: int((self.step['gold'] or {}).get(
+                        'give', (self.step['gold'] or {}).get('take', 100)))}))
+        self._spin('Amount', 1, 99999, amt,
+                   lambda n: self._emit('gold', {('take' if 'take' in (self.step['gold'] or {})
+                                                  else 'give'): n}), ' G')
+
+    def f_refresh(self, v):
+        lab = QLabel(STEP_HELP['refresh'])
+        lab.setWordWrap(True)
+        self.form.addRow(lab)
 
     def f_heal(self, v):
         lab = QLabel('Every monster (party and farm) gets its HP and MP back and its ailments '
@@ -1084,6 +1115,9 @@ def default_step(kind, ed):
         'end': {'end': True},
         'name_hero': {'name_hero': True},
         'heal': {'heal': {}},
+        'take_item': {'take_item': {'item': 1, 'count': 1}},      # S129
+        'gold': {'gold': {'give': 100}},
+        'refresh': {'refresh': True},
     }[kind]
 
 
@@ -2081,15 +2115,15 @@ class CutsceneEditor(QWidget):
         tr = self.scene.get('trigger') or {}
         m = QMenu(self)
         m.addSection('Only when these flags are ON')
-        for f in self.s.doc.flags():
-            n = f.get('name')
+        names = [f.get('name') for f in self.s.doc.flags()]
+        names += [c.get('name') for c in self.s.doc.checks()]    # S129: story checks
+        for n in names:
             a = m.addAction(n)
             a.setCheckable(True)
             a.setChecked(n in (tr.get('when_on') or []))
             a.toggled.connect(lambda c, n=n: self._toggle_flag('when_on', n, c))
         m.addSection('… and these OFF')
-        for f in self.s.doc.flags():
-            n = f.get('name')
+        for n in names:
             a = m.addAction(n)
             a.setCheckable(True)
             a.setChecked(n in (tr.get('when_off') or []))

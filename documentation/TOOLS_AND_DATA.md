@@ -1318,3 +1318,20 @@ Data changed: `extracted/service_lines.json` regenerated (+ kind `arena`: bank $
 | editor2/core/doors.py (`plain_exits`, `plain_exit_end`, `exit_to_door`, `connect_ends`, `twin_of` in link / unlink / move / remove), project.py (`_unlinked_door`) | plain exits → doors | test_compiler `test_connect_ends_s128r3` |
 | editor2/app/rooms/door_dialog.py, tab.py, canvas.py | double-click a plain exit → *Exit — connect both ends*; "Your rooms' exits" in the list; the second cell drawn / dragged as the door | test_app `s128_arena` |
 | editor2/help/11_doors.md, 64_milly_hook.md, _revision.md; `EDITOR_REVISION` = 'S128r3' | help | test_app |
+
+## S129 rows (ROADMAP P3.14b / c / d: story checks, commands, the story spine, quests, music by flag, shop item sets, locked exits)
+Data changed: `extracted/mapid_range_audit.json` regenerated (clean 58, patched 85; tool + data together).
+
+| File | What | Verified by |
+|------|------|-------------|
+| tools/audit_mapid_range.py → extracted/mapid_range_audit.json | `CustomRoomBGMResolve` re-keyed: #1 BOUNDED (the `.noRule` reload), #2 CP_UNSIGNED (the S101 `cp $61`) | its selftest (clean 58 / patched 85) |
+| patches/bank_073.asm, patches/wram.asm | `FlagAddr`: `D == $18` → bank $77 entry 11 `StoryCheck`, `wStoryFlag` (`.story`, `.mask`, `STORY_FLAG_HI`); `wStoryFlag` `$D509`, `wCustomPool` from `$D50A` | test_story_rom; PyBoy (the user's save) |
+| editor2/core/templates/bank_077_head.asm (+ patches/bank_077.asm) | entry 11 `StoryCheck` + 12 kinds, `StoryCommand` (op `$24 $FF01+`), `ShopSetPick`; re-pinned `eb0f0997…`, TEMPLATE_SIZE 1788 | test_story_rom; test_compiler pins |
+| editor2/core/templates/bank_071_head.asm (+ patches/bank_071.asm) | `MusicRulePick` + `TermsHold71`, the room / gate rule calls; re-pinned `cbd0cdec…`, TEMPLATE_SIZE 1070 | test_story_rom; PyBoy |
+| editor2/core/story.py (NEW), story_doc.py (NEW), project.py (checks as virtual flags, `story_command`, `resolve_flag_write`, the new steps, quests lowering, legacy `npc_hide` / `npc_show` fix), conversation.py, cutscene_build.py, music.py, shops.py, validators.py, flag_index.py, document.py | the compiler + model (PROJECT_COMPILER §2.42) | test_compiler `test_story_s129`, `test_quests_s129`, `test_story_rom` |
+| editor2/app/story_widgets.py (NEW), flags_tab.py (story checks group, Story page), music_tab.py, shops_tab.py, cutscene_editor.py, encounters_tab.py (`FlagTerms` New story check…), rooms/conversation_dialog.py, rooms/tab.py, rooms/npc_panel.py, rooms/object_panels.py, rooms/rules_panel.py, rooms/talk_editor.py | the editor (EDITOR_DESIGN §5.7 "Story (S129)") | test_app `s129_story` |
+| editor2/example-project/project.json | checks `has_2_medals` / `vault_rich`, the mini medal quest (NPC (2, 5) in the medal vault, flags `$015B` / `$015C`), milestone | test_compiler, verify_integrity check 2 |
+| patches/bank_060.asm (regenerated, `build_project.py --apply`) | the example's quest talk + the legacy guardian's `npc_write` hide / show; the overlay builds the pin `7d136455…` (patched) | verify_integrity check 2 |
+| disassembly/bank_000.asm, bank_004.asm | comments: `ComputeFlagAddress` (the patched route, virtual flags), `ScriptCmd26_ReloadRoom` (measured) | clean rebuild `1ca6579…` |
+| editor2/help/71_story_quests.md (NEW) + 00 / 11 / 20 / 30 / 40 / 61 / 62 / 63 / 90, _revision.md; `EDITOR_REVISION` = 'S129' | help | test_app |
+| examples/s129_story_demo/ (NEW: project.json + assets/ + build_demo.py) | the S129 test ROM's project in editor format (user S129: "commit current custom quest stuff in editor format … for cross-referencing"): the user's my-dwm-hack_21 + STORY HALL / VAULT ANNEX / the Cities_FOUNT DEMO NPC; `build_demo.py <base project.json> <out project.json>` = the Document-API calls that made it (checks, spine, quest, by progress, lock, music rules, item set, gold) | both build `ca502753…` (patched) = the test ROM; opens in the editor with no migration (round-trips) |

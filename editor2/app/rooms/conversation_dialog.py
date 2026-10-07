@@ -52,7 +52,33 @@ KIND_TIPS = {
               'and its corridor opens at once. For good: also turn a flag ON and show the NPC '
               'only while that flag is OFF (NPC → shown when; Make boss… does all of it).',
     'end': 'Ends the conversation here.',
+    # S129 (ROADMAP P3.14b / c)
+    'give_item': 'Gives an item (several at once: all of them or none). The bag full → '
+                 'the "full" words instead.',
+    'give_monster': 'A monster joins (built from an enemy row). The farm full → the "full" '
+                    'words instead.',
+    'take_item': 'Takes items out of the bag (the last ones first). Check first — an If '
+                 'with a story check "the bag holds …".',
+    'gold': 'Gives or takes gold (gold never goes below 0 or above 99,999).',
+    'refresh': 'The room loads again where the player stands, so its room states pick '
+               'again — a door unlocked this moment opens. Nothing after it runs.',
+    'by_progress': 'Says different things by how far the story has come (the story spine: '
+                   'Progression & Flags → Story): the latest milestone reached wins; '
+                   '"Before the story" when none is reached.',
 }
+
+
+def branches_of(st):
+    """S129: [(list, label)] of a step's branches (Ask / If / Says by progress)."""
+    k = step_kind(st)
+    if k == 'by_progress':
+        out = []
+        for e in st.get('by_progress') or []:
+            out.append((e.setdefault('steps', []),
+                        f"From “{e.get('milestone')}” on"))
+        out.append((st.setdefault('else', []), 'Before the story'))
+        return out
+    return [(st.setdefault(key, []), lab) for key, lab in BRANCHES.get(k, ())]
 
 
 def step_kind(st):
@@ -80,6 +106,25 @@ def new_step(kind, doc, room, key):
         return {'vanish': {'how': 'flicker'}}
     if kind == 'heal':                              # S125
         return {'heal': {}}
+    if kind == 'give_item':                         # S129
+        return {'give_item': {'item': 0x01, 'count': 1,
+                              'got': {'boxes': [['You got an item!']]},
+                              'full': {'boxes': [['Your bag', 'is full!']]}}}
+    if kind == 'give_monster':
+        ens = doc.project_enemies() if doc is not None else []
+        return {'give_monster': {'enemy': ens[0]['id'] if ens else 1,
+                                 'got': {'boxes': [['A monster', 'joined!']]},
+                                 'full': {'boxes': [['There is no room', 'for it.']]}}}
+    if kind == 'take_item':
+        return {'take_item': {'item': 0x01, 'count': 1}}
+    if kind == 'gold':
+        return {'gold': {'give': 100}}
+    if kind == 'refresh':
+        return {'refresh': True}
+    if kind == 'by_progress':
+        ms = doc.milestones() if doc is not None and hasattr(doc, 'milestones') else []
+        return {'by_progress': [{'milestone': f, 'steps': []} for f, _n in ms[:1]],
+                'else': []}
     return {'end': True}
 
 
@@ -115,10 +160,17 @@ def spec_problems(spec, doc=None):
                 if isinstance(h.get('say'), dict):
                     boxes_bad(h['say'].get('boxes'), where + ' (helper text)',
                               h['say'].get('speaker'))
-            if k in ('helper', 'move', 'end') and i != len(steps) - 1:
+            elif k in ('give_item', 'give_monster'):          # S129
+                g = st[k] or {}
+                for part in ('got', 'full'):
+                    if isinstance(g.get(part), dict):
+                        boxes_bad(g[part].get('boxes'), f'{where} ({part} words)')
+            elif k == 'by_progress' and not st['by_progress']:
+                out.append(f'{where}: tick at least one milestone')
+            if k in ('helper', 'move', 'end', 'refresh') and i != len(steps) - 1:
                 out.append(f'{where}: the steps after it never run')
-            for key, lab in BRANCHES.get(k, ()):
-                walk(st.get(key), f'{path}{i + 1}.{lab}: ')
+            for lst, lab in branches_of(st):
+                walk(lst, f'{path}{i + 1}.{lab}: ')
     walk(spec.get('steps'), '')
     if not spec.get('steps'):
         out.append('no steps')
@@ -314,8 +366,7 @@ class ConversationDialog(QDialog):
                 (parent.addChild(it) if parent is not None else self.tree.addTopLevelItem(it))
                 if st is select:
                     found[0] = it
-                for key, lab in BRANCHES.get(step_kind(st), ()):
-                    lst = st.setdefault(key, [])
+                for lst, lab in branches_of(st):
                     b = QTreeWidgetItem([lab])
                     b.setData(0, Qt.UserRole, self._key(('branch', lst)))
                     f = b.font(0)
@@ -426,8 +477,8 @@ class ConversationDialog(QDialog):
         self.rv.addWidget(head)
         getattr(self, f'_ed_{k}')(st)
 
-    def _flaglist(self, title, flags):
-        fl = FlagList(self.doc, title, flags)
+    def _flaglist(self, title, flags, writes=False):
+        fl = FlagList(self.doc, title, flags, writes=writes)
         fl.new_flags = list(self._new_flags)
         fl._fill_pick()
 
@@ -473,7 +524,8 @@ class ConversationDialog(QDialog):
         self.rv.addStretch(1)
 
     def _ed_flags(self, st, k):
-        fl = self._flaglist('Flags:', st[k] if isinstance(st[k], list) else [st[k]])
+        fl = self._flaglist('Flags:', st[k] if isinstance(st[k], list) else [st[k]],
+                            writes=True)
 
         def ch():
             st[k] = fl.flags()
@@ -579,8 +631,8 @@ class ConversationDialog(QDialog):
                 if 'battle' in s:
                     s['battle']['enemies'] = [e for e in s['battle'].get('enemies') or []
                                               if not isinstance(e, str) or e in ids]
-                for k in ('yes', 'no', 'then', 'else'):
-                    walk(s.get(k))
+                for lst, _lab in branches_of(s):
+                    walk(lst)
         walk(self._spec.get('steps'))
 
     def _ed_helper(self, st):
@@ -768,6 +820,146 @@ class ConversationDialog(QDialog):
         self.rv.addStretch(1)
 
     def _ed_end(self, st):
+        self.rv.addStretch(1)
+
+    # ---- S129 (ROADMAP P3.14b / c)
+    def _item_form(self, g, count=True):
+        from editor2.app.story_widgets import _combo, _spin, item_choices
+        f = QFormLayout()
+        item = _combo(item_choices(), g.get('item', 0x01))
+        f.addRow('item', item)
+        cnt = _spin(1, 20, g.get('count', 1))
+        if count:
+            f.addRow('how many', cnt)
+
+        def ch(*_a):
+            g['item'] = item.currentData()
+            if count:
+                g['count'] = cnt.value()
+            self._refresh_label()
+        item.activated.connect(ch)
+        cnt.valueChanged.connect(ch)
+        w = QWidget()
+        w.setLayout(f)
+        self.rv.addWidget(w)
+
+    def _got_full(self, g, got_default, full_default):
+        from PySide6.QtWidgets import QGroupBox
+        for part, label, default in (('got', 'When it is given', got_default),
+                                     ('full', 'When there is no room', full_default)):
+            box = QGroupBox(label + ' (tick to say something)')
+            box.setCheckable(True)
+            box.setChecked(isinstance(g.get(part), dict))
+            bv = QVBoxLayout(box)
+            if not isinstance(g.get(part), dict):
+                from editor2.core import textenc as T
+                try:
+                    flowed = T.flow_boxes(default, first_box=True)    # fits the box
+                except Exception:                                    # noqa: BLE001
+                    flowed = [[default]]
+            holder = {'t': g.get(part) if isinstance(g.get(part), dict)
+                      else {'boxes': flowed}}
+            bl = self._boxes(holder, 't', default)
+            bl.setMinimumHeight(120)
+            bv.addWidget(bl)
+
+            def sync(_x=None, box=box, holder=holder, part=part, bl=bl):
+                if box.isChecked():
+                    g[part] = holder['t']
+                else:
+                    g.pop(part, None)
+                bl.setVisible(box.isChecked())
+                self._refresh_label()
+            bl.changed.connect(sync)
+            box.toggled.connect(sync)
+            bl.setVisible(box.isChecked())
+            self.rv.addWidget(box, 1)
+
+    def _ed_give_item(self, st):
+        g = st['give_item'] = st.get('give_item') or {}
+        self._item_form(g)
+        self._got_full(g, 'You got an item!', 'Your bag is full!')
+
+    def _ed_give_monster(self, st):
+        from editor2.app.story_widgets import _combo
+        g = st['give_monster'] = st.get('give_monster') or {}
+        f = QFormLayout()
+        c = _combo(self._enemy_choices(), g.get('enemy'), 30)
+        f.addRow('monster (an enemy row)', c)
+
+        def ch(_i=None):
+            g['enemy'] = c.currentData()
+            self._refresh_label()
+        c.activated.connect(ch)
+        w = QWidget()
+        w.setLayout(f)
+        self.rv.addWidget(w)
+        self._got_full(g, 'A monster joined!', 'There is no room for it.')
+
+    def _ed_take_item(self, st):
+        g = st['take_item'] = st.get('take_item') or {}
+        self._item_form(g)
+        lab = QLabel('Takes up to this many (fewer if the bag holds fewer). To refuse when '
+                     'the player does not have them: an If with a story check "the bag holds '
+                     '…" first.')
+        lab.setWordWrap(True)
+        lab.setStyleSheet('color:#aaa;')
+        self.rv.addWidget(lab)
+        self.rv.addStretch(1)
+
+    def _ed_gold(self, st):
+        from editor2.app.story_widgets import _combo, _spin
+        g = st['gold'] = st.get('gold') or {'give': 100}
+        f = QFormLayout()
+        mode = _combo([('give', 'give'), ('take', 'take')], 'take' if 'take' in g else 'give')
+        amt = _spin(1, 99999, g.get('give', g.get('take', 100)), ' G')
+        f.addRow('', mode)
+        f.addRow('amount', amt)
+
+        def ch(*_a):
+            g.clear()
+            g[mode.currentData()] = amt.value()
+            self._refresh_label()
+        mode.activated.connect(ch)
+        amt.valueChanged.connect(ch)
+        w = QWidget()
+        w.setLayout(f)
+        self.rv.addWidget(w)
+        self.rv.addStretch(1)
+
+    def _ed_refresh(self, st):
+        lab = QLabel(KIND_TIPS['refresh'] + '\n\nUse it right after the step that turns '
+                     'ON a flag a room state (a lock) checks.')
+        lab.setWordWrap(True)
+        self.rv.addWidget(lab)
+        self.rv.addStretch(1)
+
+    def _ed_by_progress(self, st):
+        ms = self.doc.milestones() if self.doc is not None else []
+        if not ms:
+            lab = QLabel('The story spine has no milestones yet — Progression & Flags → '
+                         'Story → Add milestone.')
+            lab.setWordWrap(True)
+            self.rv.addWidget(lab)
+            self.rv.addStretch(1)
+            return
+        self.rv.addWidget(QLabel('Words for these chapters (tick a milestone; its steps go '
+                                 'under “From … on” in the list):'))
+        have = {e.get('milestone'): e for e in st['by_progress']}
+        boxes = []
+        for f, n in ms:
+            cb = QCheckBox(f'{n}  ({f})')
+            cb.setChecked(f in have)
+            boxes.append((f, cb))
+            self.rv.addWidget(cb)
+
+        def ch(_on=None):
+            cur = {e.get('milestone'): e for e in st['by_progress']}
+            st['by_progress'] = [cur.get(f) or {'milestone': f, 'steps': []}
+                                 for f, cb in boxes if cb.isChecked()]
+            self._rebuild(select=st)
+        for _f, cb in boxes:
+            cb.toggled.connect(ch)
         self.rv.addStretch(1)
 
     def accept(self):

@@ -2242,6 +2242,7 @@ GateLeaveFreePal:
 ; =============================================================================
 EXT_FLAG_FIRST_HI EQU $10           ; first extended index = $1000
 EXT_FLAG_PAGES    EQU $08           ; $1000-$17FF (8 x 256 indices = 256 bytes)
+STORY_FLAG_HI     EQU $18           ; S129: $1800-$18FF = story checks (bank $77 entry 11)
 
 ; Entry 21 — FlagAddr. In: DE = flag index. Out: HL = byte address,
 ; C = bit mask ($80 >> (index & 7)) — the vanilla mask order (MSB first).
@@ -2249,6 +2250,8 @@ EXT_FLAG_PAGES    EQU $08           ; $1000-$17FF (8 x 256 indices = 256 bytes)
 ; BC/DE around the rst and returns the mask in A.)
 FlagAddr:
     ld a, d
+    cp STORY_FLAG_HI
+    jr z, .story                    ; S129: $1800-$18FF = the project's story checks
     sub EXT_FLAG_FIRST_HI
     jr c, .vanilla
     cp EXT_FLAG_PAGES
@@ -2269,6 +2272,7 @@ FlagAddr:
     srl h
     rr l                            ; HL = index / 8
     add hl, bc                      ; + base (16-bit wrap as vanilla's add hl,bc)
+.mask:
     ld a, e
     and $07
     ld c, $80
@@ -2278,6 +2282,22 @@ FlagAddr:
     dec a
     jr nz, .shift
     ret
+; S129 (ROADMAP P3.14b — story checks): flag $1800 + n is no stored bit but
+; check n of the project (bank $77 entry 11 StoryCheck: the bag, the gold,
+; the monsters owned, the party's levels, the Library, a chance, the arena,
+; AND / OR of other flags). It writes wStoryFlag ($FF holds / $00 not); the
+; answer is that byte with the usual mask, so a TEST reads the check and a
+; set / clear (ops $02 / $03) only writes the scratch byte. Every flag reader
+; of the game and of the project goes through here (the S117 census), so a
+; check works wherever a flag does. rst $10 clobbers BC and A; DE = the index
+; is kept by the dispatcher and pushed anyway (StoryCheck clobbers all).
+.story:
+    push de
+    ld hl, $770b                    ; bank $77 entry 11 StoryCheck, E = n
+    rst $10
+    pop de
+    ld hl, wStoryFlag
+    jr .mask
 
 ; ExtFlagsCommit — wExtFlags -> SRAM bank 3 $A010 (256 B) + magic. SRAM is
 ; enabled by the calling entry. Clobbers A, BC, DE, HL. RAMB = 0 on exit.

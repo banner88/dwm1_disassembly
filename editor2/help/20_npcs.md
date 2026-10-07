@@ -33,6 +33,14 @@ player somewhere. It writes an ordinary conversation (Say → Battle → Turn fl
 ON → Vanish → …) you can edit afterwards, and makes the NPC *shown when* its
 beaten flag is OFF, so it stays gone. See *Worlds*.
 
+**Quest…** (S129): the selected NPC gives a quest — the offer (YES / NO), an
+objective (flags or story checks, e.g. "the bag holds 3 TinyMedals"), items
+handed over, a reward (items, gold, a monster, flags, refresh the room) and the
+words for every stage. It replaces what the NPC said (it asks first); **Edit
+talk…** on a quest giver opens the quest again. The quest's own flags
+`<quest>_started` / `<quest>_done` can be used anywhere. See *Story checks,
+quests and the story spine*.
+
 **Shown when…** (S120): the *shown when* row → **Flags…** — the NPC is there only
 while the listed flags are ON / OFF (all of them). The game checks when the
 screen loads: a flag a talk sets shows / hides the NPC the next time you enter

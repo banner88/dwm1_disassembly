@@ -577,6 +577,7 @@ class RoomsTab(QWidget):
         npc.newConversationRequested.connect(self._npc_new_conversation)     # S101
         npc.shopRequested.connect(self._npc_shop)                            # S117
         npc.serviceRequested.connect(self._npc_service)                      # S126
+        npc.questRequested.connect(self._npc_quest)                          # S129
         npc.shownWhenRequested.connect(self._npc_shown_when)                 # S120
         npc.colourEdited.connect(self._npc_colour)                           # S123
         npc.bossRequested.connect(self._npc_make_boss)                       # S123
@@ -596,7 +597,9 @@ class RoomsTab(QWidget):
         dp.reaimRequested.connect(self._door_reaim)
         dp.editRequested.connect(lambda: self._edit_door(getattr(self, '_sel_door', None)))
         dp.disconnectRequested.connect(self._door_disconnect)
+        dp.lockRequested.connect(self._lock_exit)                              # S129
         tp = self.tele_panel
+        tp.lockRequested.connect(self._lock_exit)                              # S129
         tp.statesToggled.connect(self._exit_states)
         tp.deleteRequested.connect(self._exit_delete)
         tp.goRequested.connect(self._go_end)
@@ -1709,6 +1712,56 @@ class RoomsTab(QWidget):
             self.canvas.viewport().update()
 
     # ------------------------------------------ one-way exits / teleports
+    def _lock_exit(self):
+        """S129 (ROADMAP P3.14d, user: "UNWALKABLE and interactable THEN walk-upon-able
+        when flag set … make a new room state and switch to that"): the selected door /
+        exit stays shut until conditions hold (Document.lock_exit)."""
+        room = self.current_room()
+        if room is None:
+            return
+        cell = None
+        did = getattr(self, '_sel_door', None)
+        if did is not None and self.door_panel.isVisible():
+            try:
+                end = self.s.doc.door_end(did)
+                if end and end.get('room') == self.room_id:
+                    cell = (int(end['x']), int(end['y']))
+            except Exception:                                    # noqa: BLE001
+                cell = None
+        if cell is None and self._sel_exit is not None:
+            try:
+                row = self.s.doc.exits_of(room, self.key, self.state_idx)[self._sel_exit]
+                cell = (int(row['x']), int(row['y']))
+            except Exception:                                    # noqa: BLE001
+                cell = None
+        if cell is None:
+            QMessageBox.information(self, 'Lock', 'Select a door or an exit of this room first.')
+            return
+        from editor2.app.story_widgets import LockDialog
+        dlg = LockDialog(self.s.doc, self.s.renderer.rom,
+                         title=f'Lock the exit at ({cell[0]}, {cell[1]})', parent=self)
+        if dlg.exec() != QDialog.Accepted:
+            return
+        terms, boxes = dlg.result()
+        rid, key = self.room_id, self.key
+        out = {}
+
+        def op(doc):
+            out['state'] = doc.lock_exit(rid, key, cell[0], cell[1], terms, boxes)
+        cmd = C.SnapshotCommand(self.s, f'Lock the exit at ({cell[0]}, {cell[1]})', op)
+        self.s.undo.push(cmd)
+        if cmd.error is not None:
+            QMessageBox.warning(self, 'Lock', str(cmd.error))
+            return
+        self._show()
+        try:
+            self.select_state(out['state'])
+        except Exception:                                        # noqa: BLE001
+            pass
+        self.status_line.setText(f"Locked: state {out.get('state')} is the shut look (paint "
+                                 'the closed door there); the room shows state 0 while the '
+                                 'conditions hold. A "Refresh the room" step opens it at once.')
+
     def _exit_states(self, target, present):
         room = self.current_room()
         if room is None or self._sel_exit is None:
@@ -1925,6 +1978,20 @@ class RoomsTab(QWidget):
         self._show_object(panel)                # selecting an NPC opens its section
 
     def _service_text(self, room, index):
+        """S129: a quest giver says which quest; else the service / shop line."""
+        try:
+            v = self.s.doc.npc_view(room, self.s.doc.npc_entries(room, self.key,
+                                                                 self.state_idx)[index])
+            q = next((q for q in self.s.doc.quests() if q.get('giver') == v.get('script')),
+                     None)
+        except Exception:                                        # noqa: BLE001
+            q = None
+        if q is not None:
+            return (f"Gives the quest “{q.get('name') or q.get('id')}” (Quest… or Edit talk… "
+                    'to change it)')
+        return self._service_text0(room, index)
+
+    def _service_text0(self, room, index):
         """S126: "Farm keeper — lines: Mira's lines — first visit: flag mira_met"
         for a service NPC, else None."""
         from editor2.core import services as SV
@@ -2433,6 +2500,9 @@ class RoomsTab(QWidget):
         spot = self._sel_is_spot()
         v = self.s.doc.npc_view(room, self.s.doc.npc_entries(room, self.key, self.state_idx)[idx])
         sid = v.get('script')
+        if isinstance(sid, str) and any(q.get('giver') == sid for q in self.s.doc.quests()):
+            self._npc_quest()                                # S129: the quest's own dialog
+            return
         if isinstance(sid, str) and self.s.doc.conversation(sid) is not None:
             self._edit_conversation(sid, idx, spot)          # S101
             return
@@ -2453,6 +2523,49 @@ class RoomsTab(QWidget):
             doc.set_talk(sid, new)
         if self._npc_op(f'Edit talk {sid}', op) is not None:
             (self._after_spot_edit if spot else self._after_npc_edit)(idx)
+
+    def _npc_quest(self):
+        """S129 (ROADMAP P3.14c): the selected NPC gives a quest (QuestDialog). Its
+        script becomes the quest's conversation (a talk it had is replaced — asked)."""
+        idx = self._sel_npc
+        room = self.current_room()
+        if idx is None or room is None or self._sel_is_spot():
+            return
+        doc = self.s.doc
+        v = doc.npc_view(room, doc.npc_entries(room, self.key, self.state_idx)[idx])
+        sid = v.get('script') if isinstance(v.get('script'), str) else None
+        q = next((q for q in doc.quests() if q.get('giver') == sid), None) if sid else None
+        if q is None and sid and sid != 'none':
+            try:
+                sc = doc.script(sid)
+            except KeyError:
+                sc = None
+            if sc is not None and (sc.get('talk') or sc.get('shop') or sc.get('service') or
+                                   any(isinstance(o, list) and o and o[0] == 'text'
+                                       for o in sc.get('ops') or [])):
+                if QMessageBox.question(
+                        self, 'Quest', 'This NPC already talks (or sells / serves). A quest '
+                        'replaces what it does now. Go on?') != QMessageBox.Yes:
+                    return
+        from editor2.app.story_widgets import QuestDialog
+        base = q or {'id': 'new_quest', 'name': 'New quest', 'giver': sid}
+        dlg = QuestDialog(doc, self.s.renderer.rom, base, parent=self)
+        if dlg.exec() != QDialog.Accepted:
+            return
+        spec, new_flags = dlg.spec(), dlg.new_flags()
+        qid0 = q.get('id') if q else None
+
+        def op(d, r, k, st):
+            for nm in new_flags:
+                if not any(f.get('name') == nm for f in d.flags()):
+                    d.add_flag(nm)
+            qid = qid0 or d.quest_for_npc(r, k, st, idx, spec.get('name') or 'quest')
+            d.update_quest(qid, spec)
+            return qid
+        if self._npc_op('Quest' if q else 'New quest', op) is not None:
+            self._after_npc_edit(idx)
+            self.status_line.setText('This NPC gives the quest. Its flags and the story spine: '
+                                     'the Progression & Flags tab → Story.')
 
     # ------------------------------------------- conversations (S101, P3.7b)
     def _conversation_dialog(self, room, spec=None, title='Conversation', entry=False):

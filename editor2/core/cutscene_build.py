@@ -103,7 +103,8 @@ SHADE_REGS = (0xC89B, 0xC89C, 0xC89D)
 STEP_KINDS = ('say', 'ask', 'if', 'set', 'clear', 'walk', 'face', 'show', 'hide', 'anim',
               'fly', 'wait', 'wait_walks', 'music', 'sound', 'shake', 'fade', 'flash',
               'followers', 'give_item', 'give_monster', 'tiles', 'battle', 'move', 'end',
-              'name_hero', 'heal')
+              'name_hero', 'heal',
+              'take_item', 'gold', 'refresh')     # S129 (ROADMAP P3.14b): story commands
 STEP_NAMES = {
     'say': 'Say', 'ask': 'Ask YES / NO', 'if': 'If flags…', 'set': 'Turn flags ON',
     'clear': 'Turn flags OFF', 'walk': 'Walk to a tile', 'face': 'Turn to face',
@@ -113,7 +114,8 @@ STEP_NAMES = {
     'fade': 'Fade to black / back', 'flash': 'Flash', 'followers': 'Hide / show the monsters',
     'give_item': 'Give an item', 'give_monster': 'Give a monster',
     'tiles': 'Change tiles of the room', 'battle': 'Battle', 'move': 'Warp the player',
-    'end': 'Stop here', 'name_hero': 'Name the hero', 'heal': 'Heal the party'}
+    'end': 'Stop here', 'name_hero': 'Name the hero', 'heal': 'Heal the party',
+    'take_item': 'Take an item', 'gold': 'Give / take gold', 'refresh': 'Refresh the room'}
 TRIGGERS = ('entry', 'talk', 'examine', 'stepon')
 # S125 (ROADMAP P3.14d): why the player was sent to the hub — an entry scene with
 # trigger.arrival [reasons] plays only for those (wHubReason, patches/wram.asm;
@@ -293,6 +295,23 @@ class Env:
         except (TypeError, ValueError):
             pass
         raise CutsceneError(f'{ctx}: flag {ref!r} is not defined')
+
+    def flag_write(self, ref, ctx):
+        """S129: a flag a step turns ON / OFF — never a story check."""
+        if self.prj is not None:
+            return self.prj.resolve_flag_write(ref, ctx)
+        return self.flag(ref, ctx)
+
+    def story_command(self, kind, params, ctx):
+        """S129: a story command -> its op $24 word ($FF00 + n)."""
+        if self.prj is not None:
+            return self.prj.story_command(kind, params, ctx)
+        from . import story as _ST
+        try:
+            _ST.cmd_record(kind, params, ctx)
+        except _ST.StoryError as ex:
+            raise CutsceneError(str(ex))
+        return 0xFF01
 
     def enemy(self, ref, ctx):
         if self.prj is not None:
@@ -608,7 +627,7 @@ class Lowerer:
         fl = st.get('set' if name == 'set_flag' else 'clear')
         for f in (fl if isinstance(fl, list) else [fl]):
             try:
-                self.op(name, self.env.flag(f, ctx))
+                self.op(name, self.env.flag_write(f, ctx))
             except Exception as ex:                   # noqa: BLE001
                 self.err(ctx, str(ex))
 
@@ -1016,8 +1035,20 @@ class Lowerer:
         if not isinstance(what, int):
             self.err(ctx, 'pick an item' if not monster else 'pick a monster')
             return
-        self.op('check_storage_full' if monster else 'check_inv_full', '@' + full)
-        self.op('add_monster' if monster else 'give_item', what)
+        cnt = 1 if monster else int(g.get('count', 1) or 1)
+        if cnt > 1:
+            # S129: several of an item — story command 3 (all of them or none;
+            # $D8E1 = 1 given / 0 no room); op $24 yields, the box reopens
+            try:
+                w = self.env.story_command('give_item', {'item': what, 'count': cnt}, ctx)
+            except Exception as ex:                   # noqa: BLE001
+                self.err(ctx, str(ex))
+                return
+            self.op('0x24', f'0x{w:04X}')
+            self.op('check_and_branch', '0xD8E1', '0x0000', '@' + full)
+        else:
+            self.op('check_storage_full' if monster else 'check_inv_full', '@' + full)
+            self.op('add_monster' if monster else 'give_item', what)
         if g.get('got'):
             self.text(g['got'], ctx, self.label('got'))
             self.close()
@@ -1032,6 +1063,46 @@ class Lowerer:
 
     def s_give_monster(self, st, ctx, rec, pth):
         self.s_give_item(st, ctx, rec, pth, monster=True)
+
+    # ---- S129 (ROADMAP P3.14b): story commands — op $24 $FF00 + n (bank $77
+    # StoryCommand); op $24 yields, so the next text re-opens the box (close())
+    def _story_op(self, kind, params, ctx, rec, note):
+        self.close()
+        if self.busy:
+            self.wait_all()
+        try:
+            w = self.env.story_command(kind, params, ctx)
+        except Exception as ex:                       # noqa: BLE001
+            self.err(ctx, str(ex))
+            return
+        self.op('0x24', f'0x{w:04X}')
+        rec['note'].append(note)
+
+    def s_take_item(self, st, ctx, rec, pth):
+        g = st['take_item'] or {}
+        self._story_op('take_item', {'item': g.get('item'), 'count': g.get('count', 1)}, ctx,
+                       rec, f"takes up to {g.get('count', 1)} of item {g.get('item')} from the bag")
+
+    def s_gold(self, st, ctx, rec, pth):
+        g = st['gold'] or {}
+        if ('give' in g) == ('take' in g):
+            self.err(ctx, 'give OR take an amount of gold')
+            return
+        kind = 'give_gold' if 'give' in g else 'take_gold'
+        amt = g.get('give', g.get('take'))
+        self._story_op(kind, {'amount': amt}, ctx, rec,
+                       f"{'gives' if kind == 'give_gold' else 'takes'} {amt} gold")
+
+    def s_refresh(self, st, ctx, rec, pth):
+        """S129: op $26 — the room loads again where the player stands (its state
+        rules pick the room state again: a door unlocked now opens). The scene
+        does not go on after it."""
+        self.close()
+        if self.busy:
+            self.wait_all()
+        self.op('0x26')
+        rec['note'].append('the room loads again (state rules re-picked)')
+        self.ended = True
 
     def s_tiles(self, st, ctx, rec, pth):
         t = st['tiles'] or {}
@@ -1574,7 +1645,16 @@ def describe(st, names=None):
     if k == 'followers':
         return f'{"Hide" if v == "hide" else "Show"} the monsters following the player'
     if k == 'give_item':
-        return f'Give item {v.get("item")}'
+        n = int(v.get('count', 1) or 1)
+        return f'Give item {v.get("item")}' + (f' × {n}' if n > 1 else '')
+    if k == 'take_item':
+        n = int(v.get('count', 1) or 1)
+        return f'Take item {v.get("item")}' + (f' × {n}' if n > 1 else '') + ' from the bag'
+    if k == 'gold':
+        return (f'Give {v.get("give")} gold' if 'give' in (v or {})
+                else f'Take {v.get("take")} gold')
+    if k == 'refresh':
+        return 'Refresh the room (its state rules pick again)'
     if k == 'give_monster':
         return f'Give monster {v.get("enemy")}'
     if k == 'tiles':

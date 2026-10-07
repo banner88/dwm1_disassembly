@@ -29,5 +29,10 @@ shop back the way it was.
 gives when the player sells: 3/4 of the price for most items, 1/10 for the
 staffs, the full price in the gate-floor shop (the game's rule).
 
+**Item sets by flag…** (S129): other lists a shop sells while flags / story
+checks hold — e.g. "after chapter 2 the Bazaar sells the Shields". The first
+set whose conditions all hold is sold; none = the shop's own list. Read each
+time BUY opens. A set holds 1-20 items and up to 8 conditions.
+
 Deleting a shop makes its shopkeepers stop selling (they no longer talk);
 Undo brings it all back.

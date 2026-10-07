@@ -31,7 +31,8 @@ All other flag setting goes through script opcode $03.
 `CustomStateRules`, PROJECT_COMPILER §2.13) call `TestEventFlag` at every
 custom (re)load — a rule may test ANY flag (vanilla story flags included);
 named project flags come from the safe pool below (16 flags) — S117: plus the
-2,048 extended flags `$1000`-`$17FF` ("Extended flags (S117)").
+2,048 extended flags `$1000`-`$17FF` ("Extended flags (S117)"); S129: the virtual
+flags `$1800`-`$18FF` are the project's story checks (read-only, "Story checks" below).
 
 ### Script Opcodes
 | Opcode | Name | Purpose |
@@ -191,6 +192,23 @@ wCustomPool — known_RAM_map), saved with the game.
   treats the whole extended range as persistent.
 - **New SetEventFlag caller (patched builds):** bank $76 entry 2 `GateBossWin` (the
   cleared mark of re-bossed / new gates, GATE_GENERATION §7.9).
+
+## Story checks — virtual flags `$1800`-`$18FF` (S129, built S129, NOT yet user-tested)
+
+Patched builds answer **flag `$1800 + n` = the project's story check n** (`custom.checks`,
+PROJECT_COMPILER §2.42): bank $73 `FlagAddr` sees `D == $18` (`STORY_FLAG_HI`) and
+far-calls **bank $77 entry 11 `StoryCheck`** (E = n), which works the answer out from the
+game's state (the bag `wInventory`, the gold `$CA4B-$CA4D`, the monsters through ROM0
+`GetMonsterDataPtr` — the S60 CF3 fork rebases the farm's slots into SRAM — the party list
+`$CA8E`, the Library bits `$CA94`, arena classes `$CAB4`, the RNG, other flags / checks)
+and writes `$FF` / `$00` to **`wStoryFlag` (`$D509`)**; `FlagAddr` returns that byte's
+address with the usual mask. So every flag READER (ops `$00` / `$01`, state rules, NPC
+conditions, hub / music / shop-set / gate / arena / breeding terms) reads a check with no
+change of its own. A WRITE (op `$02` / `$03`, `SetEventFlag`) only touches the scratch byte
+— the compiler refuses one. Not saved (worked out at each read). Measured S129: an SM83
+run of `TestEventFlag` on every kind against prepared RAM (test_compiler `test_story_rom`)
+and PyBoy on the user's save (32 checks of every kind against the save's real bag / gold /
+farm / party, a chance check 300 rolls).
 
 ## Engine-side flag setters and readers (S124, code-read)
 

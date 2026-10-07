@@ -140,6 +140,7 @@ SECTION "ROM Bank $077", ROMX[$4000], BANK[$77]
     dw BreedSlotEID                     ; entry 8 (HL=$7708, S127)
     dw PartyAvgLevel                    ; entry 9 (HL=$7709, S127)
     dw ScriptCommand                    ; entry 10 (HL=$770A, S127)
+    dw StoryCheck                       ; entry 11 (HL=$770B, S129)
 
 ShopFill:
     ld a, [wShopID]
@@ -166,6 +167,7 @@ ShopFill:
 .scr:
     ld a, b
 .list:
+    call ShopSetPick                    ; S129: the shop's item set by flags
     add a
     ld l, a
     ld h, $00
@@ -929,7 +931,7 @@ BreedRoll:
 ScriptCommand:
     ld a, e
     or a
-    ret nz                              ; only command 0 so far
+    jp nz, StoryCommand                 ; S129: 1-255 = the project's story commands
     ld a, [$c8f7]
     ld [wTempEnemyStatsId], a
     ld a, [$c8f8]
@@ -941,3 +943,589 @@ ScriptCommand:
     ld h, $05                           ; text mode 5: a species name
     ld de, $c180                        ; insert slot 0
     jp SetupVRAMParams
+
+; =============================================================================
+; S129 (ROADMAP P3.14b) — STORY CHECKS, STORY COMMANDS, SHOP ITEM SETS
+; =============================================================================
+; STORY CHECKS are "virtual event flags": flag $1800 + n IS check n of the
+; project (STORY_CHECK_COUNT of them, StoryCheckPtrs, generated). ROM0
+; ComputeFlagAddress -> bank $73 entry 21 FlagAddr routes a flag $18xx here
+; (entry 11, E = n), then answers the address of wStoryFlag — so every reader
+; of event flags (script ops $00 / $01 if_flag_*, room state rules, NPC
+; shown_when, the hub / music / shop-set / gate-room / arena-lock rules, the
+; breeding pools' milestones) tests a check exactly like a flag, with no change
+; of its own. Writing one (ops $02 / $03) only writes the scratch byte.
+; Entry 11 StoryCheck (E = n): wStoryFlag := $FF when check n holds, else $00.
+;   Clobbers all. A record = [kind, params…]:
+;     0 item     [item, count]   the bag holds >= count of that item
+;     1 gold     [lo, mid, hi]   gold >= the amount (24-bit, wCurrGold LE)
+;     2 species  [species, where] a monster of that species is owned
+;     3 family   [family, where]  a monster of that family is owned
+;     4 monsters [count, where]  >= count monsters are owned
+;        where: 0 = every monster you own (array slots 0-39: in-use +$00 != 0,
+;        not an egg +$63 == 0 — the party, the farm; the sleep pool not) /
+;        1 = the party (list $CA8E)
+;     5 level    [level, mode]   mode 0 = a party monster is at that level or
+;        higher, 1 = the party's average level (PartyAvgLevel) is, 2 = every
+;        party monster is (and the party is not empty)
+;     6 seen     [count]         >= count species seen in the Library (bits
+;        $CA94, ids 0-$EF — what op $31 counts)
+;     7 chance   [percent]       RNG16 mod 100 < percent (rolled at each read)
+;     8 arena    [classes]       arena classes won ($CAB4) >= classes
+;     9 all      [n, n x dw flag] every term holds (bit 15 = must be OFF)
+;    10 any      [n, n x dw flag] at least one term holds
+;    11 bag_room [count]         >= count free bag slots ($00 / $FF)
+;   A term of 9 / 10 may be another check (its own flag $18xx): the compiler
+;   orders them without cycles; the nested read overwrites wStoryFlag only
+;   after the outer test has consumed it.
+; STORY COMMANDS: a project script's op $24 $FF00 + n (bank $60 CustomDrawTiles
+; -> entry 10 ScriptCommand, E = n; n = 0 is the S127 mate's name) runs
+; command n of StoryCmdPtrs (n - 1, generated) — [kind, params…]:
+;     0 take_item [item, count]  remove up to count of that item from the bag
+;        (the last ones first; the bag closes up, $FF fills the end);
+;        $D8E1 := how many were taken
+;     1 give_gold [lo, mid, hi]  ROM0 CompareGold (adds; capped at 99,999)
+;     2 take_gold [lo, mid, hi]  ROM0 AddGold (subtracts; floor 0)
+;     3 give_item [item, count]  room for all of them ($00 / $FF slots) ->
+;        put them in, $D8E1 := 1; else nothing, $D8E1 := 0
+;   Op $24 yields (BANK04_SCRIPT_ENGINE "Breeding"): a later text needs
+;   init_dialog — the compiler adds it.
+; SHOP ITEM SETS: ShopFill picks list a, then ShopSetPick walks ShopSetTable
+;   ([shop list, n, n x dw flag, the set's list] ..., $FF): the FIRST row of
+;   that shop whose terms all hold replaces the list — the shop sells another
+;   set once flags (or checks) say so. No row = the shop's own list.
+; =============================================================================
+
+StoryCheck:
+    ld a, e
+    cp STORY_CHECK_COUNT
+    jr nc, StoryFalse
+    ld l, a
+    ld h, $00
+    add hl, hl
+    ld de, StoryCheckPtrs
+    add hl, de
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a                             ; HL = the record
+    ld a, [hl+]                         ; the kind
+    cp STORY_KINDS
+    jr nc, StoryFalse
+    push hl                             ; [sp] = the params (each kind pops it)
+    add a
+    ld l, a
+    ld h, $00
+    ld de, StoryKindTable
+    add hl, de
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a
+    jp hl
+
+StoryFalse:
+    xor a
+    ld [wStoryFlag], a
+    ret
+
+StoryTrue:
+    ld a, $ff
+    ld [wStoryFlag], a
+    ret
+
+STORY_KINDS EQU 12
+StoryKindTable:
+    dw StoryItem                        ; 0
+    dw StoryGold                        ; 1
+    dw StorySpecies                     ; 2
+    dw StoryFamily                      ; 3
+    dw StoryMonsters                    ; 4
+    dw StoryLevel                       ; 5
+    dw StorySeen                        ; 6
+    dw StoryChance                      ; 7
+    dw StoryArena                       ; 8
+    dw StoryAll                         ; 9
+    dw StoryAny                         ; 10
+    dw StoryBagRoom                     ; 11
+
+; A >= the param -> true. (shared tail: C = the count, [HL] = the minimum)
+StoryAtLeast:
+    ld a, c
+    cp [hl]
+    jr nc, StoryTrue
+    jr StoryFalse
+
+StoryItem:
+    pop hl
+    ld a, [hl+]
+    ld d, a                             ; D = the item
+    push hl
+    call BagCount                       ; C = how many
+    pop hl
+    jr StoryAtLeast
+
+StoryGold:
+    pop hl
+    ld de, wCurrGoldLo
+    ld a, [de]
+    sub [hl]
+    inc hl
+    inc de
+    ld a, [de]
+    sbc [hl]
+    inc hl
+    inc de
+    ld a, [de]
+    sbc [hl]
+    jr nc, StoryTrue
+    jr StoryFalse
+
+StorySpecies:
+    ld d, $09                           ; record +$09 = the species
+    jr StoryOwnsOne
+
+StoryFamily:
+    ld d, $0a                           ; record +$0A = the family
+
+StoryOwnsOne:
+    pop hl
+    ld a, [hl+]
+    ld e, a                             ; E = the value
+    ld a, [hl]                          ; where
+    call MonCount
+    ld a, c
+    or a
+    jr nz, StoryTrue
+    jr StoryFalse
+
+StoryMonsters:
+    pop hl
+    inc hl
+    ld a, [hl-]                         ; where
+    push hl
+    ld d, $ff                           ; every monster
+    call MonCount
+    pop hl
+    jr StoryAtLeast
+
+StoryLevel:
+    pop hl
+    ld a, [hl+]
+    ld e, a                             ; E = the level
+    ld a, [hl]                          ; the mode
+    cp 1
+    jr z, .avg
+    ld d, a                             ; D = 0 any / 2 all
+    ld hl, $ca8e                        ; the party list
+    ld b, 3
+    ld c, $00                           ; C = members at / above the level
+    push de
+    ld d, $00                           ; D = members
+.m:
+    ld a, [hl+]
+    cp $ff
+    jr z, .mn
+    inc d
+    push hl
+    push bc
+    push de
+    ld hl, $cac1 + $4b                  ; record +$4B = the level
+    call GetMonsterDataPtr              ; keeps BC / DE
+    pop de
+    pop bc
+    ld a, [hl]
+    pop hl
+    cp e
+    jr c, .mn
+    inc c
+.mn:
+    dec b
+    jr nz, .m
+    ld a, d                             ; members
+    pop de                              ; D = the mode
+    ld b, a
+    ld a, d
+    or a
+    ld a, c
+    jr nz, .all
+    or a                                ; any: one is
+    jp nz, StoryTrue
+    jp StoryFalse
+.all:
+    ld a, b
+    or a
+    jp z, StoryFalse                    ; no party
+    cp c
+    jp z, StoryTrue
+    jp StoryFalse
+.avg:
+    push de
+    call PartyAvgLevel                  ; A = the average (in-bank call)
+    pop de
+    cp e
+    jp nc, StoryTrue
+    jp StoryFalse
+
+StorySeen:
+    ld bc, $0000                        ; B = Library bit, C = seen
+.s:
+    push bc
+    ld hl, $ca94
+    ld a, b
+    call TestBitInArray                 ; Z = not seen
+    pop bc
+    jr z, .u
+    inc c
+.u:
+    inc b
+    ld a, b
+    cp $f0
+    jr nz, .s
+    pop hl
+    jp StoryAtLeast
+
+StoryChance:
+    call GenerateRNG
+    ld a, [wRNG1]
+    ld l, a
+    ld a, [wRNG2]
+    ld h, a
+    ld a, 100
+    call Div16x8To16                    ; A = RNG16 mod 100
+    ld c, a
+    pop hl
+    ld a, c
+    cp [hl]
+    jp c, StoryTrue
+    jp StoryFalse
+
+StoryArena:
+    pop hl
+    ld a, [$cab4]                       ; arena classes won
+    ld c, a
+    jp StoryAtLeast
+
+StoryAll:
+    pop hl
+    call TermsHold                      ; CF = 0: every term holds
+    jp nc, StoryTrue
+    jp StoryFalse
+
+StoryAny:
+    pop hl
+    ld a, [hl+]
+    or a
+    jp z, StoryFalse
+    ld d, a                             ; D = terms left
+.t:
+    push de
+    call TermOne                        ; CF = 0: this term holds; HL past it
+    pop de
+    jp nc, StoryTrue
+    dec d
+    jr nz, .t
+    jp StoryFalse
+
+StoryBagRoom:
+    ld hl, wInventory
+    ld bc, $1400                        ; B = 20 slots, C = free
+.f:
+    ld a, [hl+]
+    or a
+    jr z, .free
+    cp $ff
+    jr nz, .used
+.free:
+    inc c
+.used:
+    dec b
+    jr nz, .f
+    pop hl
+    jp StoryAtLeast
+
+; HL -> [n] [n x dw flag (bit 15 = must be OFF)]. Out: CF = 0 every term holds,
+; CF = 1 one fails; HL past the terms either way. Clobbers A, BC, DE.
+TermsHold:
+    ld a, [hl+]
+    or a
+    ret z                               ; no terms (CF = 0)
+    ld d, a
+.t:
+    push de
+    call TermOne
+    pop de
+    jr c, .fail
+    dec d
+    jr nz, .t
+    and a
+    ret
+.fail:
+    dec d                               ; skip the terms left
+    ld a, d
+    add a
+    add l
+    ld l, a
+    adc h
+    sub l
+    ld h, a
+    scf
+    ret
+
+; HL -> dw flag (bit 15 = must be OFF). Out: CF = 0 it holds; HL += 2.
+; Clobbers A, BC, E.
+TermOne:
+    ld c, [hl]
+    inc hl
+    ld b, [hl]
+    inc hl
+    push hl
+    ld a, b
+    and $80
+    ld e, a                             ; E bit 7 = the term wants OFF
+    res 7, b
+    call TestEventFlag                  ; Z = OFF, NZ = ON (keeps DE)
+    pop hl
+    jr z, .off
+    bit 7, e
+    jr nz, .no                          ; ON, but must be OFF
+    and a
+    ret
+.off:
+    bit 7, e
+    jr z, .no                           ; OFF, but must be ON
+    and a
+    ret
+.no:
+    scf
+    ret
+
+; D = item -> C = how many of it the bag holds. Clobbers A, B, HL.
+BagCount:
+    ld hl, wInventory
+    ld bc, $1400                        ; B = 20 slots, C = 0
+.l:
+    ld a, [hl+]
+    cp d
+    jr nz, .n
+    inc c
+.n:
+    dec b
+    jr nz, .l
+    ret
+
+; A = where (0 every monster you own, 1 the party), D = the record field to
+; match ($FF = none: every monster counts), E = the value -> C = how many.
+; Eggs (+$63 != 0) never count. Keeps DE. Clobbers A, B, HL.
+MonCount:
+    ld c, $00
+    or a
+    jr nz, .party
+    ld b, $00                           ; B = slot 0-39
+.slot:
+    ld a, b
+    ld hl, $cac1                        ; +$00 in use
+    call GetMonsterDataPtr              ; keeps BC / DE
+    ld a, [hl]
+    or a
+    jr z, .next
+    ld a, b
+    ld hl, $cac1 + $63                  ; +$63 the egg flag
+    call GetMonsterDataPtr
+    ld a, [hl]
+    or a
+    jr nz, .next
+    call MonMatch
+    jr nz, .next
+    inc c
+.next:
+    inc b
+    ld a, b
+    cp 40
+    jr nz, .slot
+    ret
+.party:
+    ld hl, $ca8e
+    ld a, 3
+.p:
+    push af
+    ld a, [hl+]
+    cp $ff
+    jr z, .pn
+    push hl
+    ld b, a
+    call MonMatch
+    pop hl
+    jr nz, .pn
+    inc c
+.pn:
+    pop af
+    dec a
+    jr nz, .p
+    ret
+
+; B = slot -> Z = the monster matches (D = the field, E = the value; D = $FF:
+; always). Keeps BC / DE. Clobbers A, HL.
+MonMatch:
+    ld a, d
+    cp $ff
+    ret z
+    add LOW($cac1)
+    ld l, a
+    ld a, HIGH($cac1)
+    adc $00
+    ld h, a
+    ld a, b
+    call GetMonsterDataPtr
+    ld a, [hl]
+    cp e
+    ret
+
+; E = command n (1-255) -> run StoryCmdPtrs[n - 1]. Clobbers all.
+StoryCommand:
+    dec a
+    cp STORY_CMD_COUNT
+    ret nc
+    ld l, a
+    ld h, $00
+    add hl, hl
+    ld de, StoryCmdPtrs
+    add hl, de
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a
+    ld a, [hl+]                         ; the kind
+    or a
+    jr z, .take
+    dec a
+    jr z, .giveGold
+    dec a
+    jr z, .takeGold
+    dec a
+    ret nz
+    ; 3 give_item [item, count]: room for all, or nothing
+    ld a, [hl+]
+    ld d, a                             ; D = the item
+    ld e, [hl]                          ; E = how many
+    ld hl, wInventory
+    ld bc, $1400                        ; C = free slots
+.free:
+    ld a, [hl+]
+    or a
+    jr z, .isFree
+    cp $ff
+    jr nz, .notFree
+.isFree:
+    inc c
+.notFree:
+    dec b
+    jr nz, .free
+    ld a, c
+    cp e
+    ld a, $00
+    jr c, .result                       ; no room for them all
+    ld hl, wInventory
+.put:
+    ld a, [hl]
+    or a
+    jr z, .putHere
+    cp $ff
+    jr nz, .putNext
+.putHere:
+    ld [hl], d
+    dec e
+    jr z, .putDone
+.putNext:
+    inc hl
+    jr .put
+.putDone:
+    ld a, $01
+.result:
+    ld [$d8e1], a
+    ret
+.giveGold:
+    call .amount
+    jp CompareGold                      ; ROM0: adds E:H:L, capped at 99,999
+.takeGold:
+    call .amount
+    jp AddGold                          ; ROM0: subtracts E:H:L, floor 0
+.amount:                                ; HL -> [lo, mid, hi] -> E:H:L
+    ld a, [hl+]
+    ld c, a
+    ld a, [hl+]
+    ld e, [hl]
+    ld h, a
+    ld l, c
+    ret
+.take:                                  ; 0 take_item [item, count]
+    ld a, [hl+]
+    ld d, a                             ; D = the item
+    ld e, [hl]                          ; E = at most this many
+    ld c, $00                           ; C = taken
+.again:
+    ld a, e
+    or a
+    jr z, .taken
+    ld hl, wInventory + 19              ; the last one first
+    ld b, 20
+.find:
+    ld a, [hl]
+    cp d
+    jr z, .found
+    dec hl
+    dec b
+    jr nz, .find
+    jr .taken                           ; none left
+.found:
+    ld a, b                             ; B = slot + 1: close the bag up
+.shift:
+    cp 20
+    jr z, .last
+    inc hl
+    ld a, [hl-]
+    ld [hl+], a
+    inc b
+    ld a, b
+    jr .shift
+.last:
+    ld a, $ff
+    ld [wInventory + 19], a
+    inc c
+    dec e
+    jr .again
+.taken:
+    ld a, c
+    ld [$d8e1], a
+    ret
+
+; A = the shop list ShopFill picked -> A = the list to sell (ShopSetTable).
+; Keeps nothing but A's meaning; clobbers BC, DE, HL.
+ShopSetPick:
+    ld c, a                             ; C = the shop
+    ld hl, ShopSetTable
+.row:
+    ld a, [hl+]
+    cp $ff
+    jr z, .none
+    cp c
+    jr nz, .skip
+    push bc
+    call TermsHold                      ; CF = 0: the set applies; HL past the terms
+    pop bc
+    jr c, .noTerms
+    ld a, [hl]                          ; the set's list
+    ret
+.noTerms:
+    inc hl                              ; past the list byte
+    jr .row
+.skip:
+    ld a, [hl+]                         ; n
+    add a
+    inc a                               ; terms + the list byte
+    add l
+    ld l, a
+    adc h
+    sub l
+    ld h, a
+    jr .row
+.none:
+    ld a, c
+    ret

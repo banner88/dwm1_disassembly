@@ -1,5 +1,133 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-06 (Session 127 — **ROADMAP P3.14e2 BUILT: BREEDING IN THE PROJECT'S
+> ROOMS — MONSTER GRANDPA (BREED / HATCH, THE GAME'S FEE) AND BREEDERS OFFERING THEIR OWN
+> MONSTER AS NPC ROLES; THE VANILLA CEREMONY COMES BACK TO THE ROOM; A BREEDER'S MATE FIXED OR
+> ROLLED FROM A BREEDING POOL (BANDS ON LEVEL / ARENA / MONSTERS SEEN / STORY, THE NEAREST WINS)
+> EACH TIME THE ROOM APPEARS; OFFERS BY FLAG, ONCE ONLY; GATE ROOMS FOR EVERY GATE WITH THE
+> CHANCE BY THE PARTY'S LEVEL** (user: "Proceed with progression flags" → "I want monster
+> grandpa (NOT PRIEST …) + breeding options … a new custom randomly appearing room will offer
+> randomized breeding … ability to randomize to a band (e.g. based on player level or monsters
+> unlocked) is crucial"; "average level/story flags/arena class won/monsters see should ALL be
+> options … The band snaps to the closest hit", "Mate's level should be fixed", "every time
+> room appears. Room should also not appear more than once a gate. Appearance rate should
+> scale with level or have the option to do so", "Once off only", "I will place breeding NPCs
+> in custom rooms, breed once, then new dialogue. Or … offer breeding only when flags set",
+> "This session try to finish off everything"). **Built S127, NOT yet user-tested.**
+> **Audit (code-read + PyBoy):** breeding = room-independent bank $0A menus (op `$04` 6
+> Grandpa `$06F0`, 5 a master's own monster `$0600`, 11 "Take…", 15 naming), the ceremony
+> always map $08 (stage machine `$D951`: 0→1→`$F0`, 2→`$F1`, 4→5→`$F2`), and the follow-up in
+> the ROOM's entry script. Op `$42`'s first param is the MATE's enemy row (`$C8F7/8`), not a
+> text (DOC_AUDIT S127); ops `$50` / `$44` turn a fixed slot / `$C902`; a yield ends a talk's
+> dialog; `rst $10` returns the caller's bank in A. Wandering gate NPCs are not level-based
+> (GATE_GENERATION §4.3, answered).
+> **Engine:** bank $77 template entries 7 `BreedClose` (the three bank $0A close tails, same
+> size: room sheet + `$FFD4` back in custom rooms), 8 `BreedSlotEID` + `BreedRoll`, 9
+> `PartyAvgLevel`, 10 `ScriptCommand` (op `$24 $FF00` = the mate's name; bank $60
+> `CustomDrawTiles` routes `$FFxx`), pool data; bank $71 `CustomGateInsert` `GATE_ANY` +
+> `ScaledChance`; bank $14 `LoadEnemyStatsExt` slot rows `$0F00+k`; bank $73 entry 0 clears
+> the slots at every committed map change; WRAM `wBreedLast` / `wBreedSlots` / `wBreedVals`
+> (from `wCustomPool`, now `$D509`). Re-pinned `56a5321a…` / `7c371e82…` / `b70c1cd6…`,
+> TEMPLATE_SIZE 1306 / 951 / 1107.
+> **Compiler (PROJECT_COMPILER §2.40):** kinds `grandpa` / `breeder` (`breeders.py`: lowering +
+> a return script in front of the room's entry script), `custom.breeding_pools`,
+> `gate: "any"`, `chance_by_level`; validators; flag index kinds `breeder` / `breed_pool`;
+> `extract_service_lines.py` + 2 blocks (9 / 181 lines). **Editor:** Service… → Grandpa /
+> Breeder (one monster or a pool, first words, offers only when, done flag, only once,
+> afterwards); Services tab → **Breeding pools** (scales, milestones, bands, Try it); Gates
+> tab → every gate + the chance by level; model `core/breeders_doc.py`; help
+> `68_breeding_npcs.md` + 00 / 20 / 30 / 60 / 67 / 90; `EDITOR_REVISION` 'S127'.
+> **Annotation (Iron Rule 6, both trees):** bank $04 `ScriptCmd42/43/44/4E/4F/50`, bank $0A
+> `label442d`, `label4ad3`, `LoadFldA_4ba2`, `label4bc3`, `label573e`, `label6966`; script_ops
+> op `$42` param = enemy. Clean `1ca6579…` byte-perfect.
+> **Checks:** verifier PASS (audit_mapid_range: 2 new sites adjudicated CP_UNSIGNED, patched 88);
+> patched pin **`a7dc3e71…` (patched)**, was `0b12d0df…` (patched, historical); test_compiler
+> --rom 1270/1270 (incl. `test_breeders_s127` 22 checks, `test_breeders_rom`: BreedRoll == the
+> model on 120 random players, PartyAvgLevel, ScaledChance, BreedSlotEID; the `s127` flag-index
+> fixture); test_app PASS (`s127_breeding`).
+> **Measured (PyBoy, the user's save, the final ROM below — walked from each arrival):**
+> Grandpa's first visit + the menu; Rosa "Why not breed with my Rayburn?" → ceremony → back
+> in the lodge, "I hope a strong monster will be born! I'll send the egg to the farm!" →
+> `rosa_bred` ON → her new words; Grandpa HATCH (the egg "Darkdrium?", 30 G, ceremony,
+> naming, "Take DD with you now?", "Take good care of it.", "Anything else?"), `$D951` 0,
+> `$FFD4` `$80`; Bram "ring the bell first!" → the Bell YES → "Why not breed with my
+> FangSlime?"; Wren rolled per visit — before the bell (story 1 of 2) band "seasoned"
+> (CatFly), after it (2 of 2) "veteran" (Swordgon / Yeti / Swordgon / MetalDrak; the save:
+> party level 14, all 8 arena classes, 8 seen), stable within a visit; bred → "WREN: done
+> for this visit." → slot state 0 again after leaving; the WANDERING NEST on gate 0 floor 2
+> in 50 of 84 RNG samples at party level 10 (row value 57 %), never again in that dive
+> (floors 3-6); bred in it (MetalDrak) → back in the nest, "Done for this dive.", its well
+> → floor 3, the slot cleared. Not walked: the game's own shrine (the harness warp into map
+> $09 / GreatTree screen 7 hangs PyBoy — identical on a pre-S127 build; the vanilla path =
+> the same bank $01 call + `ret`, MiniSM83-tested) — the user's test.
+> **Test ROM `DWM-S127-breeding-test.gbc` (`04febac5…`, patched; NOT yet user-tested):** the
+> user's project (my-dwm-hack_17) + three BRAND-NEW rooms (New room in a gate theme's look,
+> the editor's own operations): **NURSERY LODGE** ($74, Grassland look): Lodge Guide (2, 2),
+> Grandpa (4, 2), Rosa (8, 2; mate Rayburn L30, once, then new words); **PAIRING PORCH** ($75,
+> Sand look): Bram (2, 2; FangSlime L30, only after the bell), the Bell (4, 2; YES = flag
+> `porch_bell` ON, NO = OFF), Porch Guide (6, 2), Wren (8, 2; pool "S127 demo mates");
+> **WANDERING NEST** ($76, Purple-brick theme — green on screen): a random breeder (5, 3), its
+> well (8, 6) = Stairs down — served in EVERY gate from floor 2, once per dive, 50 % at party
+> level 5 → 100 % at 40. Pool: all 4 scales, milestones `porch_bell` + `rosa_bred`, bands
+> fledgling (DragonKid ×2, SpotSlime) / seasoned (CatFly, Eyeder ×2, LizardMan) / veteran
+> (Yeti, Swordgon, MetalDrak). Way in: the **S127 DEMO** NPC in Cities_FOUNT at (3, 4) (YES →
+> the lodge); the guides: YES = the other room, NO = Cities_FOUNT. The arrival is (4, 5);
+> NPCs stand on row 2 (ten sprites per line — ROOM_DATA_FORMAT).
+> **r2 (user 21:04, my-dwm-hack_18: "BUILD FAILED … text $0A07 (…breeder_after_text): box 1
+> line 1 is 28 cells (max 16): 'THanks for breeding with me!'" + "can I not make a monster
+> with a specific level, why is it a random selection?"):** the breeder's word boxes (and a
+> service NPC's first-visit text) were saved as typed — now wrapped into the game's boxes
+> (`breeders_doc.fit_boxes`; the dialog no longer drops a box's 3rd line), and projects saved
+> by S127 are wrapped on open (a MIGRATED note; the user's _18 then builds). The mate list was
+> the enemy rows (each species at the level the game gave it); Service… → Breeder now offers
+> **a monster at a level you choose** first: species + level → a project enemy noted "a
+> breeding mate" (`mate_for` / `mate_stats`: the species' non-boss row nearest that level,
+> stats moved by its growth curves — the baby takes a share of both parents' stats, bank $16
+> `SaveBrd_41b8`), re-used for the same pair. No engine change (pin unchanged). PyBoy on the
+> r2 ROM: Rosa "My CatFly is level 33" (wrapped into 2 boxes) → "Why not breed with my
+> CatFly?" → ceremony with the mate staged as species 47 level 33 (slot 21) → back, her
+> wrapped new words; Wren re-rolls with varied timing (MetalDrak / Yeti / MetalDrak / Yeti /
+> Swordgon / MetalDrak). test_compiler --rom 1280/1280 (`test_breeders_s127_r2`), test_app
+> PASS, verifier PASS; `EDITOR_REVISION` 'S127r2'. **Test ROM `DWM-S127r2-breeding-test.gbc`
+> (`18e82392…`, patched; NOT yet user-tested):** the same demo rooms on the user's
+> my-dwm-hack_18, Rosa's mate = CatFly at level 33.
+> **r3 (user 21:55: "Use game text box previews. FOr the love of god make that default for all
+> text entries in editor this is like the fifth time this comes up" + "If you say no to breeding
+> npc in $6b, 1) text box jumps around, and 2) text box BIFURCATES?"):** reproduced in PyBoy on
+> the user's _18 (the breeder at (4, 6), the player above it in the lower half): the intro opened
+> at the TOP (the default rule — `$3C` after `init_dialog` does not reach that box), the question
+> at the bottom (`$3C`), and after NO the farewell started at the bottom and its scroll continued
+> in a box at the top. **Fix:** every text / init_dialog of a breeding script follows op `$3C`
+> (`breeders._bottom`: Grandpa, breeders, the room's return script), and bank $77 `BreedClose`
+> calls `ShopBoxBottom` in custom rooms (the box re-seated at the bottom, as after a shop;
+> TEMPLATE_SIZE 1110, re-pinned; pin **`5d350ba9…` (patched)**, was `a7dc3e71…` (patched,
+> historical)). PyBoy after the fix: intro, question, NO → the whole farewell at the bottom, no
+> second box; YES → list → B → the question again; the "afterwards" words; a Grandpa talked to
+> from the lower half (menu, EXIT, farewell) — all at the bottom; the demo walk-through re-run
+> (Rosa's breeding + return, the hatch, Wren, the nest). **Game text rule (EDITOR_DESIGN §5.0):**
+> every field that becomes text-box words is edited box by box beside the game's picture of the
+> box — `talk_editor.GameTextField` (the BoxList without the speaker row, optional, Fit / Fit
+> all, OK refused while a box does not fit) for Service… first visit + the breeder's three texts
+> (tabs) and the Shopkeeper greeting; the Medal Man reward line and a skill's own battle message
+> got game-box previews; test_app `s127r3_game_text_rule` fails on any new `QPlainTextEdit` that
+> is not a log / view / the box editor / the line editor; shop greetings fitted in the model and
+> on open too. test_compiler --rom 1282/1282 (`test_breeders_s127_r3`), test_app PASS, verifier
+> PASS; `EDITOR_REVISION` 'S127r3'. **Test ROM `DWM-S127r3-breeding-test.gbc` (`584998ce…`,
+> patched; NOT yet user-tested):** the user's my-dwm-hack_18 (their $6B breeder) + the demo rooms.
+> **r4 (user 22:44: "Why is first visit greyed out? Also why is box1 duplicated weirdly
+> glitchily?"):** the first-visit field was disabled for a breeder (no first visit then) and
+> greyed for the others until ticked; the duplicate = the box editor `set_value` left the old
+> box drawn under the new one (`deleteLater` only — two BoxEditors per field, measured
+> offscreen). Now: a breeder has a first visit (`first_time`: its words instead of the first
+> words once, the flag remembers it — `breeder_ops`), the first-visit editor is shown only while
+> ticked (not greyed), removed boxes are hidden and unparented at once, the service list is
+> shorter. PyBoy (scratch build of the user's _18): the first talk says the first-visit words,
+> the second the first words, both at the bottom. test_compiler --rom 1284/1284
+> (`test_breeders_s127_r4`), test_app PASS (one box editor per field, first visit enabled for
+> a breeder), verifier PASS; `EDITOR_REVISION` 'S127r4'. No engine change (pin unchanged), no
+> new test ROM.
+> **Next:** the user's test of the ROM; then P3.14e3 (your arena) or the user's pick.
+
 > Last verified: 2026-10-06 (Session 126 — **ROADMAP P3.14e1 BUILT: SERVICE NPCs — THE VAULT, A
 > FARM KEEPER, THE LIBRARIAN, THE MONSTER NAMER, THE MEDAL MAN, THE EGG APPRAISER AND THE GATE
 > GUIDE AS ROLES OF ANY NPC IN ANY ROOM (THE GAME'S OWN MENUS, THEIR STATE THE GAME'S ONE VAULT /

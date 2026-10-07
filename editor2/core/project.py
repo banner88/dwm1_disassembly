@@ -150,7 +150,8 @@ def number_flags(flags, check=None, ranges=None):
 
 def quest_flag_entries(custom, progression):
     """The custom.flags entries the compiler adds for quest flag NAMES not
-    declared (Project._register_progression_flags), in its order."""
+    declared (Project._register_progression_flags), in its order: the legacy
+    progression.quests (S70), then the S129 custom.quests (started / done)."""
     have = {f.get('name') for f in (custom or {}).get('flags', [])}
     out = []
     for q in (progression or {}).get('quests', []):
@@ -160,6 +161,12 @@ def quest_flag_entries(custom, progression):
                 out.append({'name': name,
                             'comment': f"progression.quests[{q.get('id')}] {role}"})
                 have.add(name)
+    from . import story as _ST
+    for e in _ST.quest_flag_entries(dict(custom or {}, flags=list((custom or {}).get('flags', []))
+                                         + out)):
+        if e['name'] not in have:
+            out.append(e)
+            have.add(e['name'])
     return out
 STATE_RULE_MAX_TERMS = 8
 # S65 migration: step counters live in the CF3-freed window (WRAM $CC80-$D664,
@@ -243,8 +250,19 @@ class Project:
         self._flags = {}
         self._register_progression_flags()
         self._allocate_flags()
+        # S129 (ROADMAP P3.14b / c): the story checks (virtual flags $1800+) are
+        # named like flags; the quests become their givers' conversations
+        self._allocate_checks()
+        self._story_cmds = []
         self.quest_enemies = self._resolve_quest_enemies()
         self._lower_quests()
+        self.story_error = None
+        from . import story as _ST
+        try:
+            self.quest_scripts = _ST.lower_quests(self.custom)
+        except _ST.StoryError as ex:
+            self.story_error = str(ex)
+            self.quest_scripts = []
         self._lower_talk_scripts()
         self._lower_shop_scripts()
         # S126 (ROADMAP P3.14e1): service NPCs (+ shop line sets) — the vanilla
@@ -587,9 +605,13 @@ class Project:
             elif 'clear_flag' in a:
                 ops.append(['op', 'clear_flag', self._flag_index(a['clear_flag'], ctx)])
             elif 'npc_hide' in a:
-                ops.append(['op', 'npc_hide', int(a['npc_hide'])])
+                # S129 (ROADMAP P3.14c; DOC_AUDIT S124): the S70 names lowered to
+                # ops $48 / $49 = face down / left (S101) — the NPC only turned.
+                # Now the instant hide / show of the Vanish step (npc_write n, 0
+                # type byte := $40 hidden / $00 shown; measured S123)
+                ops.append(['op', 'npc_write', int(a['npc_hide']), 0, '0x0040'])
             elif 'npc_show' in a:
-                ops.append(['op', 'npc_show', int(a['npc_show'])])
+                ops.append(['op', 'npc_write', int(a['npc_show']), 0, 0])
             elif 'give_item' in a:
                 ops.append(['op', 'give_item', a['give_item']])
             elif 'write_ram' in a:
@@ -626,9 +648,9 @@ class Project:
         if b.get('text'):
             ops.append(['text', b['text']])
         for f in b.get('set') or []:
-            ops.append(['op', 'set_flag', self.resolve_flag_ref(f, ctx)])
+            ops.append(['op', 'set_flag', self.resolve_flag_write(f, ctx)])
         for f in b.get('clear') or []:
-            ops.append(['op', 'clear_flag', self.resolve_flag_ref(f, ctx)])
+            ops.append(['op', 'clear_flag', self.resolve_flag_write(f, ctx)])
         mv = b.get('move')
         if mv and mv.get('dest') == 'hub':
             # S125: home — the project's hub (custom.hub), or the Castle
@@ -669,7 +691,9 @@ class Project:
     # Text in FIELD context (a room-arrival script, or anything after a battle
     # or the helper's flight) gets its own init_dialog (the S70 protocol).
     STEP_KINDS = ('say', 'ask', 'if', 'set', 'clear', 'battle', 'move', 'helper', 'vanish',
-                  'heal', 'end')
+                  'heal', 'end',
+                  # S129 (ROADMAP P3.14b / c): story commands + the story spine
+                  'give_item', 'give_monster', 'take_item', 'gold', 'refresh', 'by_progress')
     HELPER_SPRITE = 0x39                # Warubou — the darker Watabou (user S101 r2: the
                                         # romhack's helper; vanilla boss exits use $21 Watabou)
     HELPER_FLY = 0x16                   # $1C anim: fly to ($D8E3, $D8E4)
@@ -773,7 +797,89 @@ class Project:
                 fl = st[kind] if isinstance(st[kind], list) else [st[kind]]
                 for f in fl:
                     ops.append(['op', 'set_flag' if kind == 'set' else 'clear_flag',
-                                self.resolve_flag_ref(f, c)])
+                                self.resolve_flag_write(f, c)])
+            elif kind in ('give_item', 'give_monster'):
+                # S129: the cutscene's Give step in conversations — the bag / farm
+                # full test first; `got` / `full` = dialogue ids (optional). An
+                # item x n (n > 1) = story command 3 (all of them or none, the
+                # answer in $D8E1 — op $24 yields: texts after it open the box)
+                g = st[kind] or {}
+                lab[0] += 1
+                n = lab[0]
+                cnt = int(g.get('count', 1) or 1)
+                if kind == 'give_monster':
+                    ops.append(['op', 'check_storage_full', f'@gfull{n}'])
+                    ops.append(['op', 'add_monster', self.enemy_ref(g.get('enemy'), c)])
+                elif cnt == 1:
+                    item = F.val(g.get('item'))
+                    if not isinstance(item, int) or not 1 <= item <= 43:
+                        raise ProjectError(f"{c}: give_item needs an item 1-43")
+                    ops.append(['op', 'check_inv_full', f'@gfull{n}'])
+                    ops.append(['op', 'give_item', item])
+                else:
+                    w = self.story_command('give_item', {'item': g.get('item'), 'count': cnt}, c)
+                    ops.append(['op', '0x24', f'0x{w:04X}'])
+                    ops.append(['op', 'check_and_branch', '0xD8E1', '0x0000', f'@gfull{n}'])
+                    field = True
+                if g.get('got'):
+                    if field:
+                        ops.append(['op', 'init_dialog'])
+                    ops.append(['text', g['got']])
+                ops += [['op', 'goto', f'@gdone{n}'], f'label:gfull{n}']
+                if g.get('full'):
+                    if field:
+                        ops.append(['op', 'init_dialog'])
+                    ops.append(['text', g['full']])
+                ops.append(f'label:gdone{n}')
+            elif kind == 'take_item':
+                g = st['take_item'] or {}
+                w = self.story_command('take_item', {'item': g.get('item'),
+                                                     'count': g.get('count', 1)}, c)
+                ops.append(['op', '0x24', f'0x{w:04X}'])
+                field = True                       # op $24 yields (BANK04 "Breeding")
+            elif kind == 'gold':
+                g = st['gold'] or {}
+                if ('give' in g) == ('take' in g):
+                    raise ProjectError(f"{c}: gold needs give OR take (an amount)")
+                w = self.story_command('give_gold' if 'give' in g else 'take_gold',
+                                       {'amount': g.get('give', g.get('take'))}, c)
+                ops.append(['op', '0x24', f'0x{w:04X}'])
+                field = True
+            elif kind == 'refresh':
+                # S129: op $26 reload_room — the room loads again where the player
+                # stands (state rules re-picked: a door unlocked this moment opens);
+                # PyBoy S129: $C88F++ = bank $0B room entry 0 + the state rules
+                ops.append(['op', '0x26'])
+                field = True
+            elif kind == 'by_progress':
+                # S129 (P3.14c): the words by the story's progress — the LATEST
+                # milestone reached first (the vanilla highest-milestone-first
+                # ladder); `else` = before the first one
+                from . import story as _ST
+                lad = st['by_progress'] or []
+                if not isinstance(lad, list):
+                    raise ProjectError(f"{c}: by_progress is a list of "
+                                       "{milestone, steps}")
+                order = [f for f, _n in _ST.milestones(self.custom)]
+                try:
+                    lad = sorted(lad, key=lambda e: -order.index(e.get('milestone')))
+                except ValueError:
+                    bad = [e.get('milestone') for e in lad if e.get('milestone') not in order]
+                    raise ProjectError(f"{c}: {bad} not milestones of custom.story")
+                lab[0] += 1
+                n = lab[0]
+                f_any = False
+                for j, e in enumerate(lad):
+                    ref = self.check_flag(f"story:reached:{e.get('milestone')}", c)
+                    ops.append(['op', 'if_flag_clear', ref, f'@bp{n}_{j}'])
+                    e_ops, fe = self._lower_steps(e.get('steps') or [], f"{c}[{j}]", lab,
+                                                  field, helper_idx)
+                    ops += e_ops + [['op', 'goto', f'@bpd{n}'], f'label:bp{n}_{j}']
+                    f_any = f_any or fe
+                e_ops, fe = self._lower_steps(st.get('else') or [], f"{c}.else", lab, field,
+                                              helper_idx)
+                ops += e_ops + [f'label:bpd{n}']
+                field = field or f_any or fe
             elif kind == 'battle':
                 b = st['battle'] or {}
                 ens = b.get('enemies') or []
@@ -896,6 +1002,9 @@ class Project:
                 if 'vanish' in st:
                     return True
                 if any(walk(st.get(k)) for k in ('yes', 'no', 'then', 'else')):
+                    return True
+                if any(walk(e.get('steps')) for e in st.get('by_progress') or []
+                       if isinstance(e, dict)):                       # S129
                     return True
             return False
         for sc in self.custom.get('scripts', []):
@@ -1038,6 +1147,10 @@ class Project:
                     return (st['helper'] or {}).get('sprite', self.HELPER_SPRITE)
                 for key in ('yes', 'no', 'then', 'else'):
                     got = walk(st.get(key))
+                    if got is not None:
+                        return got
+                for e in st.get('by_progress') or []:                 # S129
+                    got = walk(e.get('steps')) if isinstance(e, dict) else None
                     if got is not None:
                         return got
             return None
@@ -2333,6 +2446,103 @@ class Project:
     def flag_map(self):
         return dict(self._flags)
 
+    # ------------------------------------------- story checks (S129, P3.14b)
+    def _allocate_checks(self):
+        """custom.checks -> the virtual flags $1800 + n (list order); internal
+        checks (story:… refs: a quest's bag room, a milestone reached) follow
+        on demand (check_flag). A bad check is reported by validators.validate
+        (story_error) — the editor still opens."""
+        from . import story as _ST
+        self._checks = {}
+        self._check_records = []        # [(name, record bytes, ctx)]
+        self._check_defs = {}
+        self.check_error = None
+        try:
+            lst = _ST.expand_story_checks(self.custom, _ST.check_list(self.custom))
+            clash = [c['name'] for c in lst if c['name'] in self._flags]
+            if clash:
+                raise _ST.StoryError(f"custom.checks: {clash} — a check and a flag share "
+                                     "a name (rename one)")
+            _ST.check_order(lst)
+        except _ST.StoryError as ex:
+            self.check_error = str(ex)
+            lst = []
+        for i, c in enumerate(lst):
+            self._checks[c['name']] = _ST.STORY_FLAG_BASE + i
+            self._check_defs[c['name']] = c
+            self._check_records.append(None)       # resolved lazily (terms name flags)
+
+    def is_check(self, ref):
+        return isinstance(ref, str) and (ref in self._checks or ref.startswith('story:'))
+
+    def check_flag(self, ref, ctx=""):
+        """A check name / an internal story:… ref -> its virtual flag number."""
+        from . import story as _ST
+        if ref in self._checks:
+            return self._checks[ref]
+        parts = ref.split(':')
+        if len(parts) >= 3 and parts[1] == 'bag_room':
+            chk = {'name': ref, 'kind': 'bag_room', 'count': int(parts[2])}
+        elif len(parts) >= 3 and parts[1] == 'reached':
+            chk = {'name': ref, 'kind': 'story', 'milestone': ':'.join(parts[2:])}
+            try:
+                chk = _ST.expand_story_checks(self.custom, [chk])[0]
+            except _ST.StoryError as ex:
+                raise ProjectError(f"{ctx}: {ex}")
+        else:
+            raise ProjectError(f"{ctx}: {ref!r} is no story check")
+        n = len(self._check_records)
+        if n >= _ST.STORY_CHECK_MAX:
+            raise ProjectError(f"{ctx}: more than {_ST.STORY_CHECK_MAX} story checks")
+        self._checks[ref] = _ST.STORY_FLAG_BASE + n
+        self._check_defs[ref] = chk
+        self._check_records.append(None)
+        return self._checks[ref]
+
+    def story_check_records(self):
+        """[(name, record bytes)] in check order (bank $77 StoryCheckPtrs)."""
+        from . import story as _ST
+        out = []
+        i = 0
+        while i < len(self._check_records):        # resolving may add internal checks
+            name = next(n for n, v in self._checks.items()
+                        if v == _ST.STORY_FLAG_BASE + i)
+            if self._check_records[i] is None:
+                try:
+                    self._check_records[i] = _ST.check_record(
+                        self, self._check_defs[name], f"check {name}")
+                except _ST.StoryError as ex:
+                    raise ProjectError(str(ex))
+            out.append((name, self._check_records[i]))
+            i += 1
+        if len(out) > _ST.STORY_CHECK_MAX:
+            raise ProjectError(f"{len(out)} story checks — at most {_ST.STORY_CHECK_MAX}")
+        return out
+
+    def story_command(self, kind, params, ctx=""):
+        """A story command step -> the op $24 word $FF00 + n (deduped; n >= 1)."""
+        from . import story as _ST
+        try:
+            rec = _ST.cmd_record(kind, params, ctx)
+        except _ST.StoryError as ex:
+            raise ProjectError(str(ex))
+        if rec not in self._story_cmds:
+            if len(self._story_cmds) >= _ST.STORY_CMD_MAX:
+                raise ProjectError(f"{ctx}: more than {_ST.STORY_CMD_MAX} different story "
+                                   "commands")
+            self._story_cmds.append(rec)
+        return 0xFF00 + self._story_cmds.index(rec) + 1
+
+    def story_commands(self):
+        return list(self._story_cmds)
+
+    def resolve_flag_write(self, ref, ctx=""):
+        """A flag a step turns ON / OFF — never a story check (S129)."""
+        if self.is_check(ref):
+            raise ProjectError(f"{ctx}: {ref!r} is a story check — it is worked out from "
+                               "the game, it cannot be turned ON or OFF")
+        return self.resolve_flag_ref(ref, ctx)
+
     # ------------------------------------------------------ state rules (S97)
     def resolve_flag_ref(self, ref, ctx=""):
         """A flag reference in authored data -> event flag index. Names are
@@ -2341,6 +2551,9 @@ class Project:
         (EVENT_FLAGS.md). Indices >= $0278 are readable but not saved."""
         if isinstance(ref, str) and ref in self._flags:
             return self._flags[ref]
+        if isinstance(ref, str) and (ref in self._checks or ref.startswith('story:')):
+            # S129: a story check = the virtual flag $1800 + n (bank $73 FlagAddr)
+            return self.check_flag(ref, ctx)
         if isinstance(ref, str) and ref.startswith('hook:'):
             # S121: the Milly hook's own flags ("hook:milly" = the player is
             # Milly, "hook:milly_arrived" = her arrival scene has played)
@@ -2367,6 +2580,9 @@ class Project:
         except Exception:
             idx = None
         if not isinstance(idx, int):
+            if getattr(self, 'check_error', None):
+                # S129: the story checks did not load — say why (not "no such flag")
+                raise ProjectError(f"{self.check_error} (so {ref!r} is unknown — {ctx})")
             raise ProjectError(f"{ctx}: flag {ref!r} is neither a named flag "
                                "(custom.flags) nor a flag number")
         if not flag_index_ok(idx):

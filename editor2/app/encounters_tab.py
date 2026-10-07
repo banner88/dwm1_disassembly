@@ -75,7 +75,8 @@ class FlagTerms(QWidget):
         v.addWidget(self.table, 1)
         row = QHBoxLayout()
         for txt, fn in (('+ condition', lambda: self._add({})), ('− condition', self._del),
-                        ('New named flag…', self._new_flag)):
+                        ('New named flag…', self._new_flag),
+                        ('New story check…', self._new_check)):     # S129
             b = QPushButton(txt)
             b.clicked.connect(fn)
             row.addWidget(b)
@@ -127,6 +128,32 @@ class FlagTerms(QWidget):
             self.new_flags.append(nm)
             for r in range(self.table.rowCount()):
                 self.table.cellWidget(r, 0).addItem(f'{nm}  (new project flag)', nm)
+        r = self.table.currentRow()
+        if r < 0:
+            self._add({'flag': nm})
+            r = self.table.rowCount() - 1
+        c = self.table.cellWidget(r, 0)
+        c.setCurrentIndex(c.findData(nm))
+
+    def _new_check(self):
+        """S129: a story check made here (it lands in the project at once — one
+        undo step of its own when the dialog has a session; else straight into the
+        document) and picked in the current row."""
+        from editor2.app.story_widgets import CheckDialog
+        from PySide6.QtWidgets import QDialog, QMessageBox
+        dlg = CheckDialog(self.doc, parent=self)
+        if dlg.exec() != QDialog.Accepted:
+            return
+        name, spec = dlg.result()
+        try:
+            nm = self.doc.add_check(name, spec)
+        except ValueError as ex:
+            QMessageBox.warning(self, 'Story check', str(ex))
+            return
+        for r in range(self.table.rowCount()):
+            c = self.table.cellWidget(r, 0)
+            if c.findData(nm) < 0:
+                c.insertItem(0, f'{nm}  (story check)', nm)
         r = self.table.currentRow()
         if r < 0:
             self._add({'flag': nm})

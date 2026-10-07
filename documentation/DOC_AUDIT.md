@@ -679,3 +679,13 @@ gate you assumed".
 | `tools/decompile_script.py` op name `npc_show` (the lobby's party hide) | WRONG name (S128, seen) | the handler faces an actor left (`face_left`); the S118 names in `script_ops.py` are right. |
 | help `64_milly_hook.md` / PROJECT_COMPILER §2.34: with the hook "the player is MILLY: her own sprite in every room" | INCOMPLETE (S128 r3, PyBoy) | the arena's player figure (NPC sprite `$E0`) kept Terry's frames over her tiles until `MillyE0Type`. |
 | EVENT_FLAGS "`FLAG_SAFE_RANGES` still admits $0158 … Renumber move them" | SUPERSEDED (S128 r2) | the compiler moves an "auto" flag off `$0158` and opening a project moves a pinned one (no manual Renumber). |
+
+## S129 addendum (2026-10-07; story checks, quests, music by flag, shop item sets — ROADMAP P3.14b / c / d)
+
+| Claim (where) | Verdict | Correct |
+|---|---|---|
+| PROJECT_COMPILER §progression "Known defect (S124): `npc_hide` / `npc_show` emit `$48` / `$49`" | FIXED (S129, PyBoy) | they emit `npc_write n, 0, $0040` / `npc_write n, 0, 0` (the slot's type byte); the example's vault guardian's slot reads type `$40` on entry once beaten. |
+| BANK04_SCRIPT_ENGINE op table `$26` "reload_room() — Reload the room." | IMPRECISE (S129, PyBoy) | `$C88F++`: the room reloads IN PLACE — bank $0B room entry 0 again (custom rooms: the state rules and the room's music pick again), the player keeps his cell and facing. |
+| known_RAM_map `wCustomPool $D509-$D5E4` (S127) | SUPERSEDED (S129) | `$D509` = `wStoryFlag` (the story checks' answer byte); `wCustomPool` starts at `$D50A`. |
+| ROADMAP P3.14b "the result tested by the existing `$15` (byte == value)" | IMPRECISE (S129) | conditions are virtual FLAGS (`$1800 + n`, bank $73 `FlagAddr` → bank $77 `StoryCheck`), so every flag reader tests them; only "give n items" leaves a byte (`$D8E1`) for `$15`. |
+| ROADMAP P3.14c "the legacy `progression.quests` lowering retired" | NOT DONE, by choice (S129) | kept for old projects (the example's S70 battle quest and many tests use it); its `npc_hide` / `npc_show` bug fixed; new quests are `custom.quests` (PROJECT_COMPILER §2.42). |

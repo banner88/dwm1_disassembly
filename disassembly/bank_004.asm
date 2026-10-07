@@ -3991,6 +3991,10 @@ ScriptCmd25_RemoveMonster:
     call GetBGMapAddress
     jp Jump_004_55f5
 
+; S129 (PyBoy-measured on the user's save): $C88F++ makes the map loop reload the
+; room IN PLACE — bank $0B room entry 0 runs again (the editor's room state rules
+; with it), the player keeps his cell and facing; the script does not go on.
+; The editor's "Refresh the room" step (a door a flag just unlocked opens at once).
 ScriptCmd26_ReloadRoom:
     ld a, $03
     call SetGBCPalette

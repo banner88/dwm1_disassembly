@@ -7950,6 +7950,9 @@ TestFlagDirect:
 ; ---------------------------------------------------------------------------
 ; Input:  BC = flag index
 ; Output: A = bit mask, HL = byte address in event bitfield
+; Patched tree: rst $10 to bank $73 FlagAddr first (S117 extended flags $1000+
+; in wExtFlags; S129 "story checks" $1800-$18FF answered by bank $77 StoryCheck
+; into wStoryFlag — reads only, a write lands in that scratch byte).
 ; ---------------------------------------------------------------------------
 ComputeFlagAddress:
     push bc

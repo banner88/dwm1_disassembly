@@ -583,6 +583,10 @@ user-confirmed hand-authored code:
 * `editor2/core/templates/bank_079_head.asm` (S121) — bank byte, 2-entry table, entry 0
   `MillyShapeTable` / entry 1 `MillyPlayerSheet` (§2.34); only emitted with the hook on;
   pinned `3d7cbdbe…ef95`; no TEMPLATE_SIZE (the bank holds a few hundred bytes).
+* S129 re-pins (§2.42): `bank_071_head.asm` `cbd0cdec…d11c` (`MusicRulePick` + `TermsHold71`,
+  the rule calls in `CustomRoomBGMResolve`; TEMPLATE_SIZE 1070 B; the S128 value `bb4151d2…`
+  is historical); `bank_077_head.asm` `eb0f0997…7d88` (entry 11 `StoryCheck`, `StoryCommand`,
+  `ShopSetPick`; TEMPLATE_SIZE 1788 B; the S127 r3 value `34f612a6…` is historical).
 * S128 re-pin: `bank_071_head.asm` `bb4151d2…1868` (`BattleBGMResolve`'s two `ld a, [wMapID]` →
   `call ArenaMapID`, §2.41; TEMPLATE_SIZE unchanged; the S126 value `b3588b7a…` is historical).
 * S126 re-pins: `bank_071_head.asm` `b3588b7a…28a2` (`CustomAnimSource` pauses during
@@ -3319,6 +3323,119 @@ project ships moved (`vault_guardian_beaten` `$015A`, `vault_cutscene_seen` `$01
 REFERENCE_MD5 `3a9c38fb…` (patched; prev `00221d54…`, the S128 engine, historical).
 
 
+## §2.42 S129 — STORY CHECKS, STORY COMMANDS, THE STORY SPINE, QUESTS, MUSIC BY FLAG, SHOP ITEM SETS, LOCKED EXITS (ROADMAP P3.14b / c / d)
+
+```json
+"checks": [
+  {"name": "has_3_medals", "kind": "item", "item": 30, "count": 3, "comment": "…"},
+  {"name": "rich", "kind": "gold", "amount": 5000},
+  {"name": "has_dragon", "kind": "family", "family": 1, "where": "party"},
+  {"name": "strong", "kind": "level", "level": 20, "mode": "average"},
+  {"name": "ch2", "kind": "story", "milestone": "met_king"},
+  {"name": "ready", "kind": "all", "terms": [{"flag": "rich"}, {"flag": "ch2", "is": "clear"}]}],
+"story": {"milestones": [{"flag": "hall_visited", "name": "Chapter 1"}, {"flag": "met_king", "name": "Chapter 2"}]},
+"quests": [{"id": "medal_quest", "name": "Three TinyMedals", "giver": "<script id>",
+            "requires": [{"flag": "hall_visited"}], "objective": [{"flag": "has_3_medals"}],
+            "take": [{"item": 30, "count": 3}],
+            "reward": {"gold": 300, "items": [{"item": 1, "count": 2}], "monster": "<enemy>",
+                       "set": ["…"], "clear": ["…"], "refresh": true},
+            "offer": {"boxes": […]}, "accept": …, "decline": …, "progress": …, "complete": …,
+            "done": …, "not_yet": …, "bag_full": …,
+            "flags": {"started": "medal_quest_started", "done": "medal_quest_done"}}],
+"shop_sets": [{"shop": "bazaar", "name": "After the medals", "when": [{"flag": "medal_quest_done"}],
+               "items": [5, 6, 3, 29]}],
+"music": {"gates": {"0": {"rules": [{"when": [{"flag": "bard_tune"}], "song": "0x2E"}]}}},
+"rooms": [{"id": "hall", "music_rules": [{"when": [{"flag": "medal_quest_done"}], "song": "0x1E"}], …}]
+```
+
+**Story checks (`editor2/core/story.py`).** A check is a named question that stands in
+ANY flag term (`{"flag": name, "is": "set" | "clear"}`): conversation / cutscene If, state
+rules, NPC `shown_when`, hub / gate / music / shop-set / arena / breeding terms, quests.
+Check n (list order, then the compiler's internal ones) = **virtual flag `$1800 + n`**
+(`Project._allocate_checks`, `resolve_flag_ref`): bank $73 `FlagAddr` sends `D == $18` to
+bank $77 entry 11 `StoryCheck` → `wStoryFlag` `$D509` (EVENT_FLAGS "Story checks"). Kinds
+(engine byte, record): `item` 0 [item 1-43, count 1-20]; `gold` 1 [lo, mid, hi] (≤
+99,999); `species` 2 / `family` 3 [value, where 0 anywhere / 1 party] (species 215-220
+refused — Iron Rule 8); `monsters` 4 [count 1-40, where]; `level` 5 [level, mode 0 any /
+1 average / 2 all]; `seen` 6 [count 1-240] (Library bits `$CA94`, ids 0-`$EF`); `chance`
+7 [percent 1-100] (`GenerateRNG`, RNG16 mod 100, rolled at each read); `arena` 8
+[classes 1-8] (`$CAB4`); `all` 9 / `any` 10 [n, n × dw flag, bit 15 = must be OFF];
+`bag_room` 11 [count 1-20]; `story` (compiler only) = an internal `any` over the
+milestone's flag and every LATER milestone's. A check may read another (a cycle is
+refused). Eggs (+`$63`) never count; monsters are scanned through ROM0
+`GetMonsterDataPtr` slots 0-39 (+`$00` in use, +`$09` species, +`$0A` family, +`$4B`
+level), the party list `$CA8E`. Internal refs: `story:bag_room:N`, `story:reached:<flag>`
+(`Project.check_flag`). A Turn ON / OFF of a check is refused (`resolve_flag_write`,
+every set / clear of talks, conversations, cutscenes, quests).
+
+**Story commands.** Conversation / cutscene steps that change the game: `take_item`
+`{item, count}` (up to count, the last ones first), `gold` `{give: n}` / `{take: n}`,
+`give_item` with `count` > 1 (all or none — the answer in `$D8E1`, the `full` branch
+when 0). Each → a record of `StoryCmdPtrs` (kinds 0 take / 1 give gold / 2 take gold / 3
+give items; `Project.story_command` dedups) run by **op `$24 $FF00 + n`** (bank $60
+`CustomDrawTiles` → bank $77 entry 10 `ScriptCommand`, E ≥ 1 → `StoryCommand`). Op `$24`
+yields, so the next text gets `init_dialog`. `refresh` = op `$26` (the room reloads in
+place, BANK04 "Op `$26`"; nothing after it — the step is terminal). Also new in
+conversations (the cutscene steps since S119): `give_item` / `give_monster` (`got` /
+`full` dialogue ids, the inventory / storage full tests) and **`by_progress`** —
+`[{milestone, steps}]` + `else`: the latest milestone reached first (an
+`if_flag_clear story:reached:<m>` ladder, the vanilla highest-milestone-first order).
+
+**The story spine** — `custom.story.milestones[]` (strings or `{flag, name}`), in story
+order; `by_progress` and `story` checks follow it.
+
+**Quests** (`story.lower_quests`, before the talk lowering): each quest's texts (inline
+`{"boxes"}` or a dialogue id) become dialogue entries `quest_<id>_<key>`; the GIVER script
+(`giver` = a script id; the editor binds it to an NPC) gets `talk.steps` and `_quest`:
+`done` → the done words (default: the complete words) / `started` → objective holds →
+[a bag-room term `story:bag_room:N` when the reward items exceed the items taken] → take,
+complete words, the reward items (silent), gold, monster, `done` + `reward.set` ON,
+`reward.clear` OFF, refresh / else the bag-full words / else progress (default: the
+offer) / not started → `requires` holds → the offer (YES: `started` ON + accept / NO:
+decline) / else `not_yet`. Flags default to `<id>_started` / `<id>_done` (registered with
+fixed numbers — `quest_flag_entries`). The legacy `progression.quests` (S70) stays
+(§progression); its `npc_hide` / `npc_show` now emit `npc_write n, 0, $0040 / 0` (were the
+face ops `$48` / `$49` — DOC_AUDIT S124; PyBoy S129: the example's vault guardian's slot
+type `$40` on entry once beaten).
+
+**Music by flag** — `rooms[].music_rules` (custom rooms) and `music.gates.N.rules`:
+`[{when, song}]`, ≤ 8 terms each, the first rule that holds plays (none = the room's /
+gate's song). → bank $71 `MusicRuleTable` (`editor2/core/music.py`; SOUND_SYSTEM §10).
+
+**Shop item sets** — `custom.shop_sets[]` `{shop, name, when (≥ 1 term, ≤ 8), items
+(1-20)}` → the set's list after the shop lists in `ShopPtrTable` + `ShopSetTable` (bank
+$77 `ShopSetPick` from `ShopFill`; DATA_STRUCTURES "Shops").
+
+**Locked exits** (editor only, `Document.lock_exit`; user S129: "make a new room state and
+switch to that"): the screen (ONE state) gets a second state with its own layout — the
+exit rows at the cell (and a door's `twin_of` cells) removed, the cell made a wall, an
+examine spot with the locked words — and two state rules: state 0 while the terms hold,
+else the new state. No engine part.
+
+**Engine (templates re-pinned):** bank $77 head 1788 B (`TEMPLATE_SIZE[0x77]`, sha
+`eb0f0997…`): entry 11 `StoryCheck` + `StoryKindTable` (12 kinds) and helpers, `StoryCommand`,
+`ShopSetPick`; bank $71 head 1070 B (sha `cbd0cdec…`): `MusicRulePick` + `TermsHold71`, the
+two calls in `CustomRoomBGMResolve`; hand patches `patches/bank_073.asm` `FlagAddr` (`cp
+STORY_FLAG_HI`, `.story`) and `patches/wram.asm` (`wStoryFlag`, `wCustomPool` from
+`$D50A`). Generated: `StoryCheckPtrs` / `StoryCheck_n`, `StoryCmdPtrs` / `StoryCmd_n`,
+`ShopSetTable` (bank $77), `MusicRuleTable` (bank $71).
+
+**Checks (`validators.validate`):** a check's shape / range (`check_error`, reported
+first — a failed check list explains a "no such flag" later), a cycle, a name shared with a
+flag, a story check written, `by_progress` milestones in the spine, ≤ 256 checks (authored
++ internal), ≤ 255 commands, quest keys / texts / reward keys. The flag index
+(`flag_index.py`) lists checks (kind `check`), milestones, music rules and shop sets as
+uses / triggers; problem `check_written` (✖).
+
+**Proof:** test_compiler `test_story_s129` (records, numbering, dedup, lowering, errors,
+the index), `test_quests_s129` (quest lowering, quest_for_npc, lock_exit, shop sets),
+`test_story_rom` (an SM83 RUN of `TestEventFlag` on every check kind against prepared
+RAM — the farm's slots where the game keeps them —, every command, `ShopSetPick`,
+`MusicRulePick`); PyBoy on the user's save (PROJECT_STATE S129). REFERENCE_MD5
+`7d136455…` (patched; prev `fe5fa80a…`, S128 r3, historical): the engine + the example's 2
+checks and its mini medal quest (`$015B` / `$015C`; the legacy quest kept).
+
+
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 
 The user's "fastest way to test": hook a custom room onto a door the player
@@ -3389,7 +3506,9 @@ ops; seen-flag-gated entry_cutscene; sets seen). `flags.done`/`flags.cutscene_se
 (the code's key — this said `flags.seen` until S124) auto-register from the safe pool
 ($0158+; `quest_flag_entries`). **Known defect (S124, code-read, not run):** the
 actions `npc_hide` / `npc_show` emit opcodes `$48` / `$49` = face_down / face_left
-(S101) — they only turn the NPC; the legacy quest form is replaced in ROADMAP P3.14c. **Every text action lowered into
+(S101) — they only turn the NPC; **fixed S129**: `npc_write n, 0, $0040` (hide) / `npc_write
+n, 0, 0` (show) — the slot's type byte (BANK04 `$0D`; PyBoy S129). The legacy form stays
+for old projects; new quests are `custom.quests` (§2.42). **Every text action lowered into
 a non-interaction context gets its own preceding `init_dialog`**
 (`_lower_actions(dialog_prefix=True)`) — field mode never services the text
 queue (KEY_LESSONS S70). emit_script hard-errors unless the item stream ends
@@ -3438,6 +3557,9 @@ head change; the validator compares the emitted head against it.
 $77 entry 10), bank $71 head 951 B (`GATE_ANY`, `ScaledChance`), bank $77 head 1107 B
 (entries 7-10 + `BreedRoll`); sha256s in PINNED_SHA256 (`56a5321a…`, `7c371e82…`,
 `b70c1cd6…`), `TEMPLATE_SIZE` in `editor2/core/validators.py`. S127 r3: bank $77 head 1110 B (`BreedClose` → `ShopBoxBottom`), re-pinned.
+
+**S129 re-pin (§2.42):** bank $77 head 1788 B (`StoryCheck`, `StoryCommand`, `ShopSetPick`;
+sha `eb0f0997…`), bank $71 head 1070 B (`MusicRulePick`; sha `cbd0cdec…`).
 
 ## New verified opcodes (S70, handler-byte-verified)
 

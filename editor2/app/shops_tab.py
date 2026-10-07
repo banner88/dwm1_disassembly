@@ -84,6 +84,17 @@ class ShopsTab(QWidget):
         self.btn_orig.clicked.connect(self._original)
         irow.addWidget(self.btn_orig)
         gv.addLayout(irow)
+        # S129 (ROADMAP P3.14d): other item lists sold while flags / story checks hold
+        srow = QHBoxLayout()
+        self.btn_sets = QPushButton('Item sets by flag…')
+        self.btn_sets.setToolTip('Sell another list while flags / story checks hold (the first '
+                                 'set whose conditions all hold; none = the list above)')
+        self.btn_sets.clicked.connect(self._item_sets)
+        srow.addWidget(self.btn_sets)
+        self.sets_lbl = QLabel('')
+        self.sets_lbl.setWordWrap(True)
+        srow.addWidget(self.sets_lbl, 1)
+        gv.addLayout(srow)
         self.where = QLabel('')
         self.where.setWordWrap(True)
         self.where.setStyleSheet('color: #9fd0ff;')
@@ -186,6 +197,23 @@ class ShopsTab(QWidget):
         self.btn_rename.setEnabled(not sh['vanilla'])
         self.btn_delete.setEnabled(not sh['vanilla'])
         self.btn_orig.setEnabled(sh['vanilla'] and sh['edited'])
+        sets = self.s.doc.shop_sets(sh['key'])
+        self.btn_sets.setText(f'Item sets by flag… ({len(sets)})' if sets else
+                              'Item sets by flag…')
+        self.sets_lbl.setText(' · '.join(f"“{st.get('name')}”: {len(st.get('items') or [])} "
+                                         'items' for st in sets) if sets else
+                              'none — always the list above')
+
+    def _item_sets(self):
+        sh = self.current()
+        if sh is None:
+            return
+        from PySide6.QtWidgets import QDialog
+        from editor2.app.story_widgets import ItemSetsDialog
+        dlg = ItemSetsDialog(self.s.doc, sh['key'], sh['name'], parent=self)
+        if dlg.exec() == QDialog.Accepted:
+            sets, key = dlg.result(), sh['key']
+            self._push(f"Item sets of {sh['name']}", lambda doc: doc.set_shop_sets(key, sets))
 
     # ------------------------------------------------------------ edits
     def _push(self, text, fn):

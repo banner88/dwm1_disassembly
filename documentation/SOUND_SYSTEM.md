@@ -399,6 +399,16 @@ the vanilla boss song; before a custom boss room with no song: the gate's song,
 else $34. Unmarked custom rooms (0) are exactly the S101 behaviour (no gate
 song: wGateID may be stale outside a dive).
 
+**Music by flag (S129, PROJECT_COMPILER §2.42):** before all of the above, bank $71
+`MusicRulePick` scans `MusicRuleTable` rows `[kind (0 room by wMapID / 1 gate by
+wGateID), id, n, n × dw flag (bit 15 = must be OFF), song]` (`$FF` ends): the room path
+(custom rooms, after the `cp $80` bound) takes the first matching room row whose terms all
+hold, the gate path (`.floorSong`) the first gate row; none = the rules above. Terms may be
+story checks (flag `$18xx`). Picked when the room / floor loads; op `$26` reloads it. PyBoy
+S129 on the user's save: the STORY HALL `$31` → `$1E` after the quest's done flag (with
+the refresh), gate 0's floors `$2E` while the Bard's flag is ON, `$34` when OFF; SM83 run
+in test_compiler `test_story_rom`.
+
 **Battles (bank $51 `LoadBattle`, a SAME-SIZE rewrite of the 28-byte pick
 $4073-$408E -> bank $71 entry 7 `BattleBGMResolve`, E = the song):** vanilla
 pick first ($27; $2B in map $5D when wArenaStarryBattle == 2), then: link

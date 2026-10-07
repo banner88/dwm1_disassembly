@@ -307,6 +307,12 @@ the opcode (`write_ram wShopID, n`) and lasts the visit; the shop's close tail (
 patch is unchanged (test_compiler's address-map check). Prices = compiler region
 `gd_item_info` over `ItemInfoTable`. A census of `ShopFill` (stub calls, maps $00-$6A
 × screens 0-15 + custom ids) == the original's choice; schema PROJECT_COMPILER §2.32.
+**S129 item sets:** `ShopFill`'s list step calls `ShopSetPick` (A = the list it picked):
+`ShopSetTable` rows `[shop list, n, n × dw flag (bit 15 = must be OFF), set list]`, `$FF`
+ends — the FIRST row of that list whose terms all hold (a term may be a story check, flag
+`$18xx`) replaces it; the set lists follow the shop lists in `ShopPtrTable`. Read at every
+BUY (PyBoy S129: the Annex stall `[$01 $07 $0D]` before the quest, `[$05 $06 $03 $1D]`
+after; SM83 run in test_compiler `test_story_rom`). PROJECT_COMPILER §2.42.
 
 **The shop screens (S117b, user: "menu glitches with background colours from custom
 tiles").** Every bank $09 screen (shops, the arena class menu, the other screen effects)

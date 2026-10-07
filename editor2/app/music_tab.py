@@ -444,9 +444,11 @@ class MusicTab(QWidget):
         v = QVBoxLayout(w)
         v.addWidget(QLabel('A room\'s song plays when you enter it (and after a reload). '
                            '"Battles here" is the song of battles that start in the room.'))
-        self.rooms_t = QTableWidget(0, 4)
+        self.rooms_t = QTableWidget(0, 5)
         self.rooms_t.setHorizontalHeaderLabels(['room', "the game's song", 'your song',
-                                                'battles here'])
+                                                'battles here', 'by flag (S129)'])
+        self.rooms_t.horizontalHeaderItem(4).setToolTip(
+            'Your rooms: another song while flags / story checks hold (Music by flag…)')
         self.rooms_t.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
         self.rooms_t.setEditTriggers(QAbstractItemView.NoEditTriggers)
         v.addWidget(self.rooms_t, 1)
@@ -459,8 +461,10 @@ class MusicTab(QWidget):
                            'your rooms served in it that have no song of their own (the floor '
                            'before a VANILLA boss room keeps that boss song). Its battle song '
                            'plays in the battles there (a boss fight uses the Battles page).'))
-        self.gates_t = QTableWidget(0, 3)
-        self.gates_t.setHorizontalHeaderLabels(['gate', 'floors', 'battles'])
+        self.gates_t = QTableWidget(0, 4)
+        self.gates_t.setHorizontalHeaderLabels(['gate', 'floors', 'battles', 'by flag (S129)'])
+        self.gates_t.horizontalHeaderItem(3).setToolTip(
+            'Another floor song while flags / story checks hold (Music by flag…)')
         self.gates_t.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
         self.gates_t.setEditTriggers(QAbstractItemView.NoEditTriggers)
         v.addWidget(self.gates_t, 1)
@@ -815,7 +819,7 @@ class MusicTab(QWidget):
                 continue
             mid = int(str(r['mapID']), 0)
             rows.append((mid, f"{doc.room_name(r)}  (your room ${mid:02X})", 'the gate theme '
-                         '$34 / in a gate: the gate\'s'))
+                         '$34 / in a gate: the gate\'s', r.get('id')))
         for mid in range(0x70):
             nm = get_name(mid)
             if nm.startswith('Map') and len(nm) <= 5:
@@ -824,9 +828,9 @@ class MusicTab(QWidget):
             gl = 'the gate theme $34' if mid in (0x50, 0x51) or 0x53 <= mid <= 0x5C or \
                 mid >= 0x61 else (f'${game:02X} ' + self.song_label(f'0x{game:02X}', '')
                                   if game is not None else '?')
-            rows.append((mid, f'${mid:02X} {nm}', gl))
+            rows.append((mid, f'${mid:02X} {nm}', gl, None))
         self.rooms_t.setRowCount(len(rows))
-        for i, (mid, label, game) in enumerate(rows):
+        for i, (mid, label, game, rid) in enumerate(rows):
             self.rooms_t.setItem(i, 0, QTableWidgetItem(label))
             self.rooms_t.setItem(i, 1, QTableWidgetItem(game))
             c = SongCombo(self, doc.room_music(mid))
@@ -837,6 +841,11 @@ class MusicTab(QWidget):
             b.picked.connect(lambda v, m=mid: self.push(
                 f'Room ${m:02X} battle song', lambda d: d.set_room_battle_music(m, v)))
             self.rooms_t.setCellWidget(i, 3, b)
+            if rid:
+                n = len(doc.room_music_rules(doc.room(rid)))
+                mb = QPushButton(f'Music by flag… ({n})' if n else 'Music by flag…')
+                mb.clicked.connect(lambda _c=False, r=rid, lb=label: self._room_rules(r, lb))
+                self.rooms_t.setCellWidget(i, 4, mb)
 
     # ---------------------------------------------------------------- gates
     def _fill_gates(self):
@@ -859,6 +868,31 @@ class MusicTab(QWidget):
             b.picked.connect(lambda v, n=gid: self.push(
                 f'Gate {n} battle song', lambda d: d.set_gate_music(n, battles=v)))
             self.gates_t.setCellWidget(i, 2, b)
+            n = len(doc.gate_music_rules(gid))
+            mb = QPushButton(f'Music by flag… ({n})' if n else 'Music by flag…')
+            mb.clicked.connect(lambda _c=False, n=gid, lb=g.get('name', ''): self._gate_rules(n, lb))
+            self.gates_t.setCellWidget(i, 3, mb)
+
+    # S129 (ROADMAP P3.14d): songs by flag
+    def _room_rules(self, rid, label):
+        from PySide6.QtWidgets import QDialog
+        from editor2.app.story_widgets import MusicRulesDialog
+        doc = self.s.doc
+        dlg = MusicRulesDialog(doc, doc.room_music_rules(doc.room(rid)), label.split('  (')[0],
+                               parent=self)
+        if dlg.exec() == QDialog.Accepted:
+            rules = dlg.result()
+            self.push('Music by flag', lambda d: d.set_room_music_rules(rid, rules))
+
+    def _gate_rules(self, gid, label):
+        from PySide6.QtWidgets import QDialog
+        from editor2.app.story_widgets import MusicRulesDialog
+        doc = self.s.doc
+        dlg = MusicRulesDialog(doc, doc.gate_music_rules(gid), f'Gate {gid} {label}'.strip(),
+                               parent=self)
+        if dlg.exec() == QDialog.Accepted:
+            rules = dlg.result()
+            self.push('Music by flag', lambda d: d.set_gate_music_rules(gid, rules))
 
     # ---------------------------------------------------------------- battles
     def _fill_battles(self):

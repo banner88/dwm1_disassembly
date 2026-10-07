@@ -25,11 +25,11 @@ TEMPLATE_SIZE = {
                  # (283 S53 -> 348 S70 -> 358 S70v3 (+2x5B wCustomY7Cmp arming): entry-7 dw + VanillaExitResolve +
                  # factored CopyExitListToBuffer in the template head; 383 S94: VanillaExitResolve rows keyed
                  # by (mapID, screen) — `db mapID, screen` with $FF = any screen)
-    0x71: 951,    # addr(Custom26DDTable)-$4000 = $43B7, S127 (+ GATE_ANY in CustomGateInsert + ScaledChance reading E, 43 B). Prev 908 S126 (+ CustomAnimSource's screen-effect pause + AnimPauseTypes, 43 B; measured $438C). Prev 865 S125 (+ entry 9 dw + HubWarp, 138 B; measured from the S125 example game.sym $4361). Prev 727 S121 (+ entry 8 dw + TextSpriteMode, 39 B; measured from the S121 example game.sym $42D7). Prev 688 S116 (444 S102 + entries 6/7 dw + CustomRoomBGMResolve gate songs + CustomBGMStart + BattleBGMResolve; measured from the S116 example game.sym). Prev 444 S102 (440 S101 + CustomAnimSource's far call to bank $6C entry 0, 4 B; measured from the S102 reference game.sym). Prev 440 S101 (395 S100 + CustomRoomBGMResolve .gatePath: the custom boss song on the floor before the boss). Prev 395 S100 (164 S99 + entries 4/5 dw + CustomGateInsert + CustomRoomFlags + entry-1 follow-gate test; measured from the S100 reference game.sym). Prev 164 S99 (142 S64 + entry-3 dw + CustomAnimSource 20 B; measured from the S99 reference game.sym). Prev 142 S64 (S55 116 + entry-2 dw + CustomRoomBGMResolve; measured from the S64 reference game.sym)
+    0x71: 1070,   # addr(Custom26DDTable)-$4000 = $442E, S129 (+ MusicRulePick / TermsHold71 and the room / gate rule calls in CustomRoomBGMResolve, 119 B; measured from the S129 example game.sym). Prev 951 = $43B7, S127 (+ GATE_ANY in CustomGateInsert + ScaledChance reading E, 43 B). Prev 908 S126 (+ CustomAnimSource's screen-effect pause + AnimPauseTypes, 43 B; measured $438C). Prev 865 S125 (+ entry 9 dw + HubWarp, 138 B; measured from the S125 example game.sym $4361). Prev 727 S121 (+ entry 8 dw + TextSpriteMode, 39 B; measured from the S121 example game.sym $42D7). Prev 688 S116 (444 S102 + entries 6/7 dw + CustomRoomBGMResolve gate songs + CustomBGMStart + BattleBGMResolve; measured from the S116 example game.sym). Prev 444 S102 (440 S101 + CustomAnimSource's far call to bank $6C entry 0, 4 B; measured from the S102 reference game.sym). Prev 440 S101 (395 S100 + CustomRoomBGMResolve .gatePath: the custom boss song on the floor before the boss). Prev 395 S100 (164 S99 + entries 4/5 dw + CustomGateInsert + CustomRoomFlags + entry-1 follow-gate test; measured from the S100 reference game.sym). Prev 164 S99 (142 S64 + entry-3 dw + CustomAnimSource 20 B; measured from the S99 reference game.sym). Prev 142 S64 (S55 116 + entry-2 dw + CustomRoomBGMResolve; measured from the S64 reference game.sym)
     0x6C: 285,    # addr(TileAnimRoomTable)-$4000, S102 (bank self-ID + entry table + CustomTileAnimate / TileAnimRestart / TileAnimCopy; measured from the S102 reference game.sym)
     0x6F: 391,    # addr(CustomAnimFrameTable)-$4000, S112 (bank self-ID + 4-entry table + CustomAnimTick / Init / Load / Step + CustomAnimNone; measured from the S112 game.sym)
     0x76: 460,    # addr(EncRoomTable)-$4000, S122 (GateBossWin row x6 + the WinTail jump, +RunWinTail; measured from the S122 game.sym $41CC). Prev 358 S117 (+2 entry-2 dw, +60 GateBossWin; measured from the S117 game.sym). Prev 296 S115 (+2 entry-1 dw, +17 EncVanillaNumber new-gate source, +36 NewGateRowCopy; measured from the S115 game.sym). Prev 241 S114 (bank self-ID + entry table + EncResolve / EncPickVariant / EncFloorRun / EncVanillaNumber)
-    0x77: 1110,   # addr(ShopPtrTable)-$4000 = $4456: S127 r3 (+3: BreedClose calls ShopBoxBottom). S127 = 1107 ($4453) (+ entries 7-10 BreedClose / BreedSlotEID / PartyAvgLevel / ScriptCommand + BreedRoll, 419 B). Prev 688 = $42B0: S126 r2 (+4: $FFD4 := $80 at the service close); S126 = 684 (+ entries 3-6 SayText / SetPairs / ScanPairs, ServiceClose*, ServiceOpenTiles, ScreenPush full-screen + room-tile rules, 246 B). Prev 438 = $41B6: S117b (+ entry 2 ScreenPush / PushRowAttrs, ShopClose -> ShopBoxBottom; was 93 S117; measured from the S117b game.sym)
+    0x77: 1788,   # addr(ShopPtrTable)-$4000 = $46FC: S129 (+ entry 11 StoryCheck + the 12 kinds, TermsHold / TermOne / BagCount / MonCount / MonMatch, StoryCommand, ShopSetPick, 678 B; measured from the S129 example game.sym). Prev 1110 = $4456: S127 r3 (+3: BreedClose calls ShopBoxBottom). S127 = 1107 ($4453) (+ entries 7-10 BreedClose / BreedSlotEID / PartyAvgLevel / ScriptCommand + BreedRoll, 419 B). Prev 688 = $42B0: S126 r2 (+4: $FFD4 := $80 at the service close); S126 = 684 (+ entries 3-6 SayText / SetPairs / ScanPairs, ServiceClose*, ServiceOpenTiles, ScreenPush full-screen + room-tile rules, 246 B). Prev 438 = $41B6: S117b (+ entry 2 ScreenPush / PushRowAttrs, ShopClose -> ShopBoxBottom; was 93 S117; measured from the S117b game.sym)
     0x6B: 53,     # addr(ProjectEnemyRows)-$4000, S101 (bank self-ID + entry table + CopyEnemyRowExt; measured from the S101 reference game.sym)
 }
 BANK_SIZE = 0x4000
@@ -94,6 +94,22 @@ def validate(prj, generated=None):
     _e, _w = _BR.validate(prj)
     errors += _e
     warnings += _w
+    # S129 (ROADMAP P3.14b / c): story checks, quests
+    for _attr in ('check_error', 'story_error'):
+        if getattr(prj, _attr, None):
+            errors.append(prj.__dict__[_attr])
+    try:
+        _recs = prj.story_check_records()
+    except Exception as ex:                             # noqa: BLE001
+        errors.append(str(ex))
+        _recs = []
+    from . import story as _ST
+    try:
+        _ms = _ST.milestones(prj.custom)
+        for _f, _n in _ms:
+            prj.resolve_flag_write(_f, f"custom.story milestone {_n!r}")
+    except Exception as ex:                             # noqa: BLE001
+        errors.append(str(ex))
     from . import your_arena as _YA                     # S128: your arena (custom.arena)
     if getattr(prj, 'arena_error', None):
         errors.append(prj.arena_error)

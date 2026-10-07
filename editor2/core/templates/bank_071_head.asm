@@ -255,6 +255,17 @@ CustomRoomBGMResolve:
     ld a, [wMapID]
     cp $80
     ret nc                              ; out of table range
+    ld c, a                             ; S129: the room's music rules first
+    ld b, MUSIC_RULE_ROOM
+    push de                             ; D = 1 / E = 0, kept for the paths below
+    call MusicRulePick                  ; A = the song, 0 = no rule holds
+    pop de
+    or a
+    jr z, .noRule
+    ld e, a
+    ret
+.noRule:
+    ld a, [wMapID]
     call .lookup                        ; E = CustomRoomBGMTable[wMapID]
     ld a, e
     cp $FF
@@ -304,6 +315,17 @@ CustomRoomBGMResolve:
     ld a, d
     or a
     ret z
+    ld a, [wGateID]                     ; S129: the gate's music rules first
+    ld c, a
+    ld b, MUSIC_RULE_GATE
+    push de
+    call MusicRulePick
+    pop de
+    or a
+    jr z, .gateTable
+    ld e, a
+    ret
+.gateTable:
     ld a, [wGateID]
     cp GATE_BGM_LEN
     ret nc
@@ -323,6 +345,92 @@ CustomRoomBGMResolve:
     sub l
     ld h, a
     ld e, [hl]
+    ret
+
+; S129 (ROADMAP P3.14d — music by flag): B = MUSIC_RULE_ROOM (C = wMapID) or
+; MUSIC_RULE_GATE (C = wGateID) -> A = the song of the FIRST row of
+; MusicRuleTable for that room / gate whose terms all hold, 0 = none
+; (generated from custom.rooms[].music_rules / custom.music.gate_rules; rows
+; [kind, id, n, n x dw flag (bit 15 = must be OFF), song], $FF ends). A term
+; may be a story check (flag $18xx, bank $73 FlagAddr). Clobbers all but nothing
+; the resolver keeps across it (it reloads what it needs).
+MusicRulePick:
+    ld hl, MusicRuleTable
+.row:
+    ld a, [hl+]
+    cp $ff
+    jr z, .none
+    cp b
+    jr nz, .skip
+    ld a, [hl]
+    cp c
+    jr nz, .skip
+    inc hl
+    push bc
+    call TermsHold71                    ; CF = 0: every term holds; HL past them
+    pop bc
+    jr c, .noMatch
+    ld a, [hl]                          ; the song
+    ret
+.noMatch:
+    inc hl                              ; past the song
+    jr .row
+.skip:
+    inc hl                              ; past the id
+    ld a, [hl+]                         ; n
+    add a
+    inc a                               ; the terms + the song byte
+    add l
+    ld l, a
+    adc h
+    sub l
+    ld h, a
+    jr .row
+.none:
+    xor a
+    ret
+
+; HL -> [n] [n x dw flag (bit 15 = must be OFF)] -> CF = 0 when every term
+; holds, CF = 1 when one fails; HL past the terms either way. Clobbers A, BC, DE.
+TermsHold71:
+    ld a, [hl+]
+    or a
+    ret z
+    ld d, a
+.t:
+    ld c, [hl]
+    inc hl
+    ld b, [hl]
+    inc hl
+    push hl
+    ld a, b
+    and $80
+    ld e, a                             ; E bit 7 = the term wants OFF
+    res 7, b
+    call TestEventFlag                  ; Z = OFF, NZ = ON (keeps DE)
+    pop hl
+    jr z, .off
+    bit 7, e
+    jr nz, .fail
+    jr .ok
+.off:
+    bit 7, e
+    jr z, .fail
+.ok:
+    dec d
+    jr nz, .t
+    and a
+    ret
+.fail:
+    dec d
+    ld a, d
+    add a
+    add l
+    ld l, a
+    adc h
+    sub l
+    ld h, a
+    scf
     ret
 
 ; -----------------------------------------------------------------------------

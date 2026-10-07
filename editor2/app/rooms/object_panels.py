@@ -76,6 +76,7 @@ class DoorPanel(QGroupBox):
     disconnectRequested = Signal()
     deleteRequested = Signal()
     reaimRequested = Signal()
+    lockRequested = Signal()                # S129: shut until conditions hold
 
     def __init__(self, parent=None):
         super().__init__('Door', parent)
@@ -118,6 +119,12 @@ class DoorPanel(QGroupBox):
         self.btn_del.clicked.connect(self.deleteRequested.emit)
         row2.addWidget(self.btn_del)
         f.addRow('', row2)
+        self.btn_lock = QPushButton('Lock until…')
+        self.btn_lock.setToolTip('S129: the door stays shut (a wall you can examine — your '
+                                 'words) until flags or story checks hold: a second room '
+                                 'state of this screen, picked by a state rule')
+        self.btn_lock.clicked.connect(self.lockRequested.emit)
+        f.addRow('', self.btn_lock)
         self.note = _lbl()
         self.note.setStyleSheet('color:#e0b040;')
         f.addRow(self.note)
@@ -154,6 +161,7 @@ class TeleportPanel(QGroupBox):
     statesToggled = Signal(int, bool)
     deleteRequested = Signal()
     goRequested = Signal(object)
+    lockRequested = Signal()                # S129
 
     def __init__(self, parent=None):
         super().__init__('One-way exit / teleport', parent)
@@ -177,6 +185,11 @@ class TeleportPanel(QGroupBox):
         self.btn_del = QPushButton('Delete')
         self.btn_del.clicked.connect(self.deleteRequested.emit)
         row.addWidget(self.btn_del)
+        self.btn_lock = QPushButton('Lock until…')
+        self.btn_lock.setToolTip('S129: shut until flags or story checks hold (a second room '
+                                 'state of this screen)')
+        self.btn_lock.clicked.connect(self.lockRequested.emit)
+        row.addWidget(self.btn_lock)
         f.addRow('', row)
         self._dest = None
 

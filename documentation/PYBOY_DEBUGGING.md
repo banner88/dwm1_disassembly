@@ -465,3 +465,25 @@ edge and the battle waits for input forever.
   20 s apart.
 - **Trap — an NPC driver that presses A after the last box re-talks the NPC:** press A only
   while the script flag (`$D8D7` bit 0) is set and a box (`$C8EB` bit 0) is up.
+
+## S129 techniques — story checks, quests, music by flag
+
+- **Read any flag the way the game does (a stub call):** write a tiny routine into free
+  WRAM (`$DD40`: push all / `ld bc, flag` / `call TestEventFlag` / A := Z ? 0 : 1 / `ld
+  [$DD60], a` / pop all / `jp <the old PC>`), point PC at it, tick 2 frames, read `$DD60`.
+  Works for the virtual flags `$18xx` (the story checks) on the user's real save — a census
+  of every check against the save's bag / gold / farm / party in one boot.
+- **YES / NO answering:** watch `$C83C` (the answer byte the box writes) — set it to 0
+  before A; when the box sets it to 1, wait 20 frames, press UP for YES, then A.
+- **Song checks:** `wCurrPlayingBGM` `$C8B5` = the song that is playing (`$C8B7` = the
+  request queue, `$FF` once consumed). A room's song by flag: warp in (or the quest's
+  refresh) and read `$C8B5` after ~60 frames.
+- **Gate floors without the gate menu:** from a room, `$C96D` 0 / `$C96E` 1 / `$C96C` 1 /
+  `$C88F` 1 (gate 0 floor 1) and keep the party's step guard (`$CA39/$CA3A` = `$7FFF`) while
+  ticking ~1,400 frames; then `$C8B5` = the floors' song.
+- **Trap — a step right after a warp / a refresh:** the first walk input after the room
+  loads can be eaten (the stairs "did not work"); wait ~120 frames or step twice before
+  calling an exit broken.
+- **Trap — the user's own arrival cutscenes:** warping into the user's rooms plays their
+  scenes (Cities_FOUNT: "I am a shopkeep!"); close the boxes with B until the script flag
+  clears before driving an NPC.

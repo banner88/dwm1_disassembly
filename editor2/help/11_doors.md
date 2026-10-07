@@ -59,6 +59,18 @@ From a game room it works the other way round: open the game's room, double-clic
 its door, and pick one of your rooms' exits (for example GreatTree's arena door ↔
 your Arena Lobby's bottom door).
 
+## Locked doors (S129)
+
+Select a door (or an exit) → **Lock until…** in its panel: the door stays shut
+until conditions hold — flags or story checks ("the quest is done", "the bag
+holds the Key"). Write the words the player reads pressing A in front of it.
+The screen gets a second **room state, the shut look**: the exit is gone there,
+its cell a wall, an examine spot says the words; the room shows the open state
+while the conditions hold. Paint the closed door in the shut state (it is
+selected for you). The room picks its state when it loads — a *Refresh the
+room* step right after the flag turns ON opens the door at once. See *Story
+checks, quests and the story spine*.
+
 ## One-way teleports, step-on triggers, stairs
 
 Select a cell → **More ▾**:

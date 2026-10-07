@@ -52,6 +52,11 @@ Every room — yours first, then the game's — with the game's song, **your
 song** (plays when you enter, and after loading a save there) and
 **battles here** (the song of battles that start in that room).
 
+**Music by flag…** (your rooms, S129): another song while flags / story checks
+hold — rules *song while conditions*, the first rule whose conditions all hold
+plays (none = the room's song). Read when the room loads (a *Refresh the room*
+step changes it at once).
+
 ## Gates
 
 Every gate: the song of its **floors** — the maze floors, its special rooms
@@ -59,6 +64,9 @@ Every gate: the song of its **floors** — the maze floors, its special rooms
 of their own — and of its **battles**. Empty = the gate theme and the battle
 theme. The floor before a VANILLA boss room keeps that boss's own song; before
 your own boss room with no song, the gate's song plays (and in that room too).
+
+**Music by flag…** (S129): the floors' song by flags / story checks, the same
+rules as a room's (first rule that holds; none = the floors' song).
 
 ## Battles
 
