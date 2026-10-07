@@ -383,10 +383,12 @@ def end_place(doc, end):
     """'Door Lab — screen 0 (4,7)' / 'GreatTree — screen 8 door (5,3)'."""
     if end is None:
         return '—'
-    if end['kind'] == 'room':
+    if end['kind'] in ('room', 'exit'):
         try:
             r = doc.room(end['room'])
-            return f"{doc.room_name(r)} — screen {end['screen']} ({end['x']},{end['y']})"
+            cells = f"({end['x']},{end['y']})" + (
+                f" + ({end['twin_x']},{end['y']})" if end.get('twin_x') is not None else '')
+            return f"{doc.room_name(r)} — screen {end['screen']} {cells}"
         except KeyError:
             return f"missing room {end['room']}"
     return doc.vanilla_door_name(end['mapID'], end['screen'], end['x'], end['y'])
@@ -394,7 +396,12 @@ def end_place(doc, end):
 
 class DoorPropsDialog(QDialog):
     """Name + connection (+ states) of one door object. result() ->
-    {'name', 'link' (door id or None), 'states' (list or None)}."""
+    {'name', 'link' (door id or None), 'states' (list or None)}.
+    S128 r3 (user: "When I double click on an exit or entry, it should bring up a
+    window that can set both ends"): `door_id` may also be a PLAIN exit of one of your
+    rooms (`exit:<room>:<screen>:<x>:<y>`, Document.plain_exit_end — a copied room's
+    game exit, a one-way teleport), and the list offers your rooms' plain exits too;
+    the caller connects with Document.connect_ends (a plain exit becomes a door)."""
 
     def __init__(self, session, door_id, parent=None):
         from PySide6.QtWidgets import (QLineEdit, QTreeWidget, QTreeWidgetItem,
@@ -402,10 +409,16 @@ class DoorPropsDialog(QDialog):
         super().__init__(parent)
         self.s, self.doc, self.rend = session, session.doc, session.renderer
         self.did = door_id
-        self.me = self.doc.door_end(door_id)
+        self.me = self.doc.door_end(door_id) or self.doc.plain_exit_end(door_id)
         me = self.me
         self.vanilla = me['kind'] == 'vanilla'
-        self.setWindowTitle(f"Door — {me['name']}")
+        self.is_exit = me['kind'] == 'exit'
+        if self.is_exit:
+            me = dict(me, name=f"{self.doc.room_name(self.doc.room(me['room']))} screen "
+                               f"{me['screen']} ({me['x']},{me['y']})")
+            self.me = me
+        self.setWindowTitle(f"Door — {me['name']}" if not self.is_exit else
+                            'Exit — connect both ends')
         self.resize(900, 560)
         lay = QVBoxLayout(self)
         form = QFormLayout()
@@ -415,9 +428,12 @@ class DoorPropsDialog(QDialog):
             self.name.setToolTip('Vanilla doors are named after their room')
         form.addRow('Name', self.name)
         form.addRow('This door', QLabel(end_place(self.doc, me)
-                                        + ('' if self.vanilla else '   (drag it on the canvas to move it)')))
+                                        + ('' if self.vanilla else
+                                           f"   (now goes to {me['dest']} — connecting it makes it "
+                                           'a door)' if self.is_exit else
+                                           '   (drag it on the canvas to move it)')))
         self.state_boxes = []
-        if not self.vanilla:
+        if not self.vanilla and not self.is_exit:
             room = self.doc.room(me['room'])
             n_st = len(self.doc.states(room, me['screen']))
             if n_st > 1:
@@ -497,6 +513,23 @@ class DoorPropsDialog(QDialog):
             ph.setFlags(Qt.NoItemFlags)
             mine.addChild(ph)
         mine.setExpanded(True)
+        # S128 r3: your rooms' plain exits (a copied room's game exits, teleports)
+        def _itself(e):                              # this exit (either cell)
+            if not self.is_exit or (e['room'], e['screen'], e['y']) != \
+                    (me['room'], me['screen'], me['y']):
+                return False
+            return bool(({me['x'], me.get('twin_x')} & {e['x'], e.get('twin_x')}) - {None})
+        plain = [e for e in self.doc.plain_exits() if e['id'] != door_id and not _itself(e)]
+        if plain:
+            ex = QTreeWidgetItem(["Your rooms' exits (a copied room's game exits, teleports — "
+                                  'connecting one makes it a door)'])
+            ex.setFlags(ex.flags() & ~Qt.ItemIsSelectable)
+            self.tree.addTopLevelItem(ex)
+            for end in plain:
+                it = QTreeWidgetItem([f"{end_place(self.doc, end)}   [now → {end['dest']}]"])
+                it.setData(0, Qt.UserRole, ('door', end['id']))
+                ex.addChild(it)
+            ex.setExpanded(True)
         if not self.vanilla:
             van = QTreeWidgetItem(['Vanilla doors (the vanilla door will lead here instead)'])
             van.setFlags(van.flags() & ~Qt.ItemIsSelectable)
@@ -550,10 +583,12 @@ class DoorPropsDialog(QDialog):
             self.info.setText('Not connected: the door does nothing in game until you connect '
                               'it to another door.')
         else:
-            t = self.doc.door_end(tid)
+            t = self.doc.door_end(tid) or self.doc.plain_exit_end(tid)
             img, boxes = None, [(t['x'], t['y'], QColor(0, 220, 255), 'D')]
+            if t.get('twin_x') is not None:
+                boxes.append((t['twin_x'], t['y'], QColor(0, 220, 255), 'D'))
             try:
-                if t['kind'] == 'room':
+                if t['kind'] in ('room', 'exit'):
                     room = self.doc.room(t['room'])
                     img = self.rend.render_screen(room, t['screen'],
                                                   (t.get('states') or [0])[0], 1)
@@ -578,7 +613,7 @@ class DoorPropsDialog(QDialog):
             old = self.doc.door_partner(self.did)
             if old is not None and old['id'] != tid:
                 warn.append(f"'{old['name']}' (connected now) becomes unconnected.")
-            if t['kind'] == 'room':
+            if t['kind'] in ('room', 'exit'):
                 c = self.doc.edge_conflict(self.doc.room(t['room']), t['screen'], t['x'], t['y'])
                 if c and c[0] != 'bottom':
                     warn.append(f"'{t['name']}' sits on a {c[0]} edge that scrolls into screen "
@@ -593,7 +628,7 @@ class DoorPropsDialog(QDialog):
         ok = True
         if self.state_boxes and not any(cb.isChecked() for cb in self.state_boxes):
             ok = False
-        if self.vanilla and tid is not None and self.doc.door_end(tid)['kind'] == 'vanilla':
+        if self.vanilla and tid is not None and (self.doc.door_end(tid) or {}).get('kind') == 'vanilla':
             ok = False
         self.bb.button(QDialogButtonBox.Ok).setEnabled(ok)
 

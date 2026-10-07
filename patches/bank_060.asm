@@ -1407,7 +1407,7 @@ CustomRoom6_ScriptPtrTable:
 
 CustomRoom6_Scr00:
     dw $FF01  ; if_flag_set
-    dw $0158
+    dw $015A
     dw CustomRoom6_Scr00_edone
     dw $FF01  ; if_flag_set
     dw $0159
@@ -1447,7 +1447,7 @@ CustomRoom6_Scr00_edone:
 
 CustomRoom6_Scr01:
     dw $FF01  ; if_flag_set
-    dw $0158
+    dw $015A
     dw CustomRoom6_Scr01_qdone
     dw $FF15  ; check_and_branch
     dw $CA8D
@@ -1465,7 +1465,7 @@ CustomRoom6_Scr01_req0:
     dw $FF5A  ; trigger_battle3
     dw $0207
     dw $FF03  ; set_flag
-    dw $0158
+    dw $015A
     dw $FF07  ; init_dialog
     dw $0A1E  ; win tail; GoldSlime joins engine-side (phase $0D)
     dw $FF48  ; npc_hide

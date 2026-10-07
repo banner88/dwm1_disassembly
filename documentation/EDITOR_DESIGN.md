@@ -491,6 +491,15 @@ spots in game NOT yet user-tested):**
   to one of your doors). Rect / Fill are off the tool bar (R / F keys still
   work). The S98 r1 "Door tool" and pick-the-other-end-by-coordinates dialog
   are gone; `DoorDialog` remains only for one-way teleports.
+- **S128 r3 — double-click ANY exit sets both ends** (user: "When I double click on an
+  exit or entry, it should bring up a window that can set both ends"): a plain exit of
+  your room (a copied game room's own exits, a one-way teleport) opens DoorPropsDialog
+  as *Exit — connect both ends* (`exit:<room>:<screen>:<x>:<y>`,
+  `Document.plain_exit_end`); its list adds **Your rooms' exits** (also when connecting a
+  game door from a game-room view). OK → `Document.connect_ends`: a plain exit becomes a
+  door object (`exit_to_door`), a double exit's second cell carries `twin_of` and follows
+  link / unlink / move / delete; the canvas draws it as a door ("second cell of door …").
+  test_app `s128_arena` (the lobby copy's bottom exit ↔ GreatTree's arena door).
 - **S98 r2 — Walk button = walkability mode** (user: "Why can I no longer
   change walkability by clicking walk button and click on a tile?"): the
   tool-bar **Walk** toggle was only the overlay; it now switches to the
@@ -1339,7 +1348,7 @@ icons.
 
 Rosters are FORMULA-addressed enemy-stats rows (E1 decoded,
 HW-verified: `EID = $E0 + 9*group + 3*match + slot`, rows 224-304 +
-King 481-483) — so the editor surface is a **tiers × matches × slots
+Monster Grandpa's match 481-483) — so the editor surface is a **tiers × matches × slots
 grid** editing those rows directly (stats, skills, `ai_weights` per
 enemy) through Layer A-lite [G-D], plus the victory cascade / `$CAB4`
 tier flags surfaced read-only from the decoded Arena Lobby scr0.
@@ -1351,10 +1360,10 @@ authoring schema.]
 (user S109: "Its own tab"), after Dialogue — `editor2/app/arena_tab.py`, model
 `editor2/core/arena_doc.py` (`ArenaMixin` on `Document`), compiler
 `editor2/core/arena.py` (PROJECT_COMPILER §2.25). Left: the ten groups (G-S with
-their fee, Starry Night, the King; bold = edited, team sizes ≠ 3 listed after the
+their fee, Starry Night, Monster Grandpa's match; bold = edited, team sizes ≠ 3 listed after the
 name). Right: **Entry fee** (classes; spin box 0-65535 + Original fee), **Winning it**
 (the per-class victory cascade, read-only — `arena_doc.VICTORY`; flags are P3.14's)
-and one card per match (three; the King one): **Master** (button with the sprite →
+and one card per match (three; Monster Grandpa's match one): **Master** (button with the sprite →
 the room-NPC sprite picker: catalog persons + every monster; Original master),
 **Monsters 1 / 2 / 3** (team size), the **team table** — one row per slot = its enemy
 row (EID shown): species combo + level / HP / MP / ATK / DEF / AGL / INT / exp / AI
@@ -1366,6 +1375,18 @@ Every edit = one SnapshotCommand; the model validates with the compiler's own co
 tab). Not in scope (user S109): bracket shape (fixed), prizes (none — "Only flags
 progression"), the arena text (read-only on the Dialogue tab), the victory flags.
 Help page `editor2/help/53_arena.md`.
+
+**Your arena (S128, ROADMAP P3.14e3; test ROM USER-CONFIRMED 2026-10-07).** The list's
+first row **★ Your arena**: Make your arena (copies of the Arena Lobby + the Arena Battle
+room, every state — `your_arena_doc.make_your_arena`); then the two rooms (combos + Open +
+Use these rooms), **Back in the lobby** (a CellPicker on the lobby, default screen 1 (4, 4)),
+the receptionist's words for a lost match / backing out / a class not open yet (game text
+box fields), Remove your arena. Each class page (and Starry Night; not Monster Grandpa's
+match) gets the box **In your arena**: opens when (FlagTerms), the won flag (combo + New
+flag…), the won words, after a win: lobby / a room (combo + CellPicker) / the hub (Starry:
++ the game's ending; offered or not; offer / YES / NO words). Apply / Clear = one
+SnapshotCommand each, validated by the compiler's `resolve`. The Progression & Flags tab
+links a lock / won flag to the class page. Help `69_your_arena.md`.
 
 ### 5.2c AI ban-list (v2.1 — OPTIONAL, user-flagged S90)
 

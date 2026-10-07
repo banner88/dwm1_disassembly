@@ -668,3 +668,14 @@ gate you assumed".
 | known_RAM_map `$C8EF`: "5 = arena-lobby party list … 11 = shrine entry" | WRONG for bank $0A (S127, code + PyBoy) | 5 = a breeding master's own monster (base `$0600`), 6 = Grandpa's BREED / HATCH, 11 = "Take … with you now?"; noted there. |
 | `tools/decompile_script.py` / `compile_script.py` / `dump_all_scripts.py` param tables (`0x42:0`, …) | STALE (S127, seen) | the handler-derived counts are BANK04 "Parameter counts" (S96) and `editor2/core/script_ops.py`; these legacy tools are not used by the editor. Not changed. |
 
+## S128 addendum (2026-10-07; your arena — ROADMAP P3.14e3)
+
+| Claim (where) | Verdict | Correct |
+|---|---|---|
+| SIDEQUEST_MAP / QUEST_OPCODES / known_RAM_map / EDITOR_DESIGN / ROADMAP / the bank $04 / $50 comments: arena group 9 = "the King battle" | WRONG (S128 r2, user correction: "ITS NOT KING MATCH ITS MONSTER GRANDPA MATCH") | group 9 (EIDs 481-483, GoldSlime / Divinegon / Rosevine L70) = **Monster Grandpa's match**; fixed in those docs, the Arena tab and help (data key `King` kept). SESSION_HISTORY left verbatim. |
+| `render_project.vanilla_steps`: a step whose exit pointer is `$FFFF` is invalid | WRONG (S128, PyBoy) | `$FFFF` = "no exits" (the `$5D` room's 5 steps, `$08`'s 9, `$5E`'s 4); the copy of `$5D` had 1 state and Starry Night crashed in it. |
+| known_RAM_map `$D999` only "wArenaStarryBattle" | INCOMPLETE (S128) | it is ALSO the `$5D` room's step counter: 0 the classes (layout `$2314`), 1-3 Starry Night, 4 Monster Grandpa's match (layout `$2315` for 1-4). |
+| The Arena Lobby's receptionist = an NPC with script 6 | IMPRECISE (S128, seen) | an `$8F` examine spot at (3, 4) on screen 1 carries script 6 — the player talks across the counter. |
+| `tools/decompile_script.py` op name `npc_show` (the lobby's party hide) | WRONG name (S128, seen) | the handler faces an actor left (`face_left`); the S118 names in `script_ops.py` are right. |
+| help `64_milly_hook.md` / PROJECT_COMPILER §2.34: with the hook "the player is MILLY: her own sprite in every room" | INCOMPLETE (S128 r3, PyBoy) | the arena's player figure (NPC sprite `$E0`) kept Terry's frames over her tiles until `MillyE0Type`. |
+| EVENT_FLAGS "`FLAG_SAFE_RANGES` still admits $0158 … Renumber move them" | SUPERSEDED (S128 r2) | the compiler moves an "auto" flag off `$0158` and opening a project moves a pinned one (no manual Renumber). |

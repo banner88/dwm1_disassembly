@@ -380,6 +380,135 @@ class DoorsMixin:
             e['name'] = name
         self.touch()
 
+    # ------------------------------------------- S128 r3: plain exits -> doors
+    # User S128 r3: "When I double click on an exit or entry, it should bring up a
+    # window that can set both ends." A PLAIN exit (a copied game room's own exits,
+    # a one-way teleport) has a destination but no door object, so it could not be
+    # connected two-way. The connect window offers them next to the doors; on OK the
+    # plain exit becomes a door object (exit_to_door) and both ends are written. A
+    # double exit (two side-by-side cells, same destination, same states — the
+    # Arena Lobby's bottom door) becomes ONE door: the second cell's rows carry
+    # `twin_of` = the door id and follow every link / unlink / delete.
+
+    def _twin_rows(self, did):
+        return [(r, k, n, e) for r, k, n, _i, e in self._iter_exit_rows()
+                if did and e.get('twin_of') == did]
+
+    @staticmethod
+    def exit_ref_id(rid, key, x, y):
+        return f'exit:{rid}:{int(key)}:{int(x)}:{int(y)}'
+
+    @staticmethod
+    def parse_exit_ref(ref):
+        if not isinstance(ref, str) or not ref.startswith('exit:'):
+            return None
+        _t, rid, k, x, y = ref.split(':')
+        return rid, int(k), int(x), int(y)
+
+    @staticmethod
+    def _is_plain_exit(e):
+        if e.get('door') or e.get('twin_of') or 'dest' not in e:
+            return False
+        try:
+            return _v(e.get('gate_flag', 0)) == 0     # not stairs / a gate or world entrance
+        except (TypeError, ValueError):
+            return False
+
+    def _plain_rows_at(self, room, key, x, y):
+        out = []
+        for n, st in enumerate(self.states(room, key)):
+            for e in st.get('exits') or []:
+                if (_v(e['x']), _v(e['y'])) == (int(x), int(y)) and self._is_plain_exit(e):
+                    out.append((n, e))
+        return out
+
+    def _plain_twin(self, room, key, x, y):
+        """The second cell of a double exit at (x, y): (x+1, y) — or (x-1, y) — with
+        plain rows in the same states and the same destination. -> x or None."""
+        mine = self._plain_rows_at(room, key, x, y)
+        if not mine:
+            return None
+        sig = sorted((n, str(e.get('dest'))) for n, e in mine)
+        for tx in (x + 1, x - 1):
+            other = self._plain_rows_at(room, key, tx, y)
+            if other and sorted((n, str(e.get('dest'))) for n, e in other) == sig:
+                return tx
+        return None
+
+    def plain_exit_end(self, ref):
+        """A plain exit as a door-like end (for the connect window), or None."""
+        p = self.parse_exit_ref(ref)
+        if p is None:
+            return None
+        rid, k, x, y = p
+        try:
+            room = self.room(rid)
+        except KeyError:
+            return None
+        rows = self._plain_rows_at(room, k, x, y)
+        if not rows:
+            return None
+        d = str(rows[0][1].get('dest'))
+        tx = self._plain_twin(room, k, x, y)
+        cells = f'({x},{y})' + (f' + ({tx},{y})' if tx is not None else '')
+        return {'id': ref, 'kind': 'exit', 'room': rid, 'screen': k, 'x': x, 'y': y,
+                'states': sorted(n for n, _e in rows), 'twin_x': tx, 'dest': d,
+                'name': f"exit {cells} → {d}", 'link': None}
+
+    def plain_exits(self):
+        """Every plain exit of your rooms, one per door (a double exit is listed
+        once, by its left cell)."""
+        out, seen = [], set()
+        for r in self.rooms:
+            if r.get('placeholder'):
+                continue
+            for k in self.screen_keys(r):
+                cells = sorted({(_v(e['x']), _v(e['y']))
+                                for st in self.states(r, k) for e in st.get('exits') or []
+                                if self._is_plain_exit(e)})
+                for x, y in cells:
+                    if (r['id'], k, x, y) in seen:
+                        continue
+                    end = self.plain_exit_end(self.exit_ref_id(r['id'], k, x, y))
+                    if end is None:
+                        continue
+                    seen.add((r['id'], k, x, y))
+                    if end['twin_x'] is not None:
+                        seen.add((r['id'], k, end['twin_x'], y))
+                    out.append(end)
+        return out
+
+    def exit_to_door(self, ref, name=None):
+        """Make the plain exit `ref` a door object (its rows keep their destination
+        until linked). The double exit's second cell follows (twin_of). -> door id."""
+        end = self.plain_exit_end(ref)
+        if end is None:
+            raise ValueError(f'no plain exit at {ref}')
+        room = self.room(end['room'])
+        did = self._new_door_id()
+        label = name or f"{self.room_name(room) if hasattr(self, 'room_name') else room['id']} " \
+                        f"screen {end['screen']} ({end['x']},{end['y']})"
+        for _n, e in self._plain_rows_at(room, end['screen'], end['x'], end['y']):
+            e['door'] = did
+            e['name'] = label
+        if end['twin_x'] is not None:
+            for _n, e in self._plain_rows_at(room, end['screen'], end['twin_x'], end['y']):
+                e['twin_of'] = did
+        self.touch()
+        return did
+
+    def connect_ends(self, a, b):
+        """S128 r3: connect two ends two-way — door ids, vanilla door ids or plain
+        exit refs (a plain exit becomes a door first). -> (door id a, door id b)."""
+        if a == b:
+            raise ValueError('an exit cannot lead to itself')
+        if self.parse_exit_ref(a) is not None:
+            a = self.exit_to_door(a)
+        if self.parse_exit_ref(b) is not None:
+            b = self.exit_to_door(b)
+        self.link_doors(a, b)
+        return a, b
+
     # -------------------------------------------------------------- links
     LINK_KEYS = ('dest', 'gate_flag', 'screen_byte', 'spawn_x', 'spawn_y', 'link')
 
@@ -387,7 +516,7 @@ class DoorsMixin:
         if end is None:
             return
         if end['kind'] == 'room':
-            for *_x, e in self._door_rows(end['id']):
+            for *_x, e in self._door_rows(end['id']) + self._twin_rows(end['id']):
                 for k in self.LINK_KEYS:
                     e.pop(k, None)
         else:
@@ -406,6 +535,9 @@ class DoorsMixin:
             for *_x, e in self._door_rows(end['id']):
                 e.update({'dest': dest, 'gate_flag': 0, 'screen_byte': f'0x{sb:02X}',
                           'spawn_x': sx, 'spawn_y': sy, 'link': other['id']})
+            for *_x, e in self._twin_rows(end['id']):       # S128 r3: a double exit's 2nd cell
+                e.update({'dest': dest, 'gate_flag': 0, 'screen_byte': f'0x{sb:02X}',
+                          'spawn_x': sx, 'spawn_y': sy})
             return
         if not dest.startswith('room:'):
             raise ValueError('a vanilla door can only be connected to one of your doors')
@@ -470,9 +602,9 @@ class DoorsMixin:
         """Delete a door object; its partner stays, unconnected. (A vanilla
         door just goes back to its vanilla destination.)"""
         self.unlink_door(did)
-        for r, k, n, _e in self._door_rows(did):
+        for r, k, n, _e in self._door_rows(did) + self._twin_rows(did):
             rows = self.exits_of(r, k, n)
-            rows[:] = [e for e in rows if e.get('door') != did]
+            rows[:] = [e for e in rows if e.get('door') != did and e.get('twin_of') != did]
         self.touch()
 
     def refresh_door(self, did):
@@ -492,12 +624,22 @@ class DoorsMixin:
             raise ValueError('only your own doors move (a vanilla door is fixed)')
         room = self.room(end['room'])
         x, y = int(x), int(y)
+        dx, dy = x - end['x'], y - end['y']
+        twins = self._twin_rows(did)                 # S128 r3: the 2nd cell moves along
+        moving = {(_v(e['x']), _v(e['y'])) for *_r, e in twins} | {(end['x'], end['y'])}
+        cells = [(x, y)] + [(_v(e['x']) + dx, _v(e['y']) + dy) for *_r, e in twins]
+        for cx, cy in cells[1:]:
+            if not (0 <= cx <= 9 and 0 <= cy <= 7):
+                raise ValueError(f"the door's second cell would leave the screen ({cx},{cy})")
         for n in end['states']:
             for e in self.exits_of(room, end['screen'], n):
-                if (_v(e['x']), _v(e['y'])) == (x, y) and e.get('door') != did:
-                    raise ValueError(f'cell ({x},{y}) already holds an exit or door (state {n})')
+                c = (_v(e['x']), _v(e['y']))
+                if c in cells and c not in moving and e.get('door') != did:
+                    raise ValueError(f'cell {c} already holds an exit or door (state {n})')
         for *_x, e in self._door_rows(did):
             e['x'], e['y'] = x, y
+        for *_x, e in twins:
+            e['x'], e['y'] = _v(e['x']) + dx, _v(e['y']) + dy
         p = self.door_partner(did)
         if p is not None:
             self._write_link(p, self.door_end(did))

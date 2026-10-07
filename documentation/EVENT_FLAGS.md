@@ -146,7 +146,9 @@ above; S73: $01E0–$01EF retired to `wAnchorGate`/`wAnchorFloor`) (not "~200").
 `editor2/core/project.py FLAG_AUTO_RANGES` (where the editor numbers new flags) matches
 this; `FLAG_SAFE_RANGES` still admits $0158 for named flags numbered before S124 (old
 saves keep their meaning; a build warning and the Progression & Flags tab's Renumber
-move them — PROJECT_COMPILER §2.7). Note the audit verdicts are conservative:
+move them — PROJECT_COMPILER §2.7). **S128 r2:** no flag lands on $0158 by default any more —
+the compiler's "auto" numbering moves one that would (the others keep their numbers), and
+opening a project moves a pinned one with a note (PROJECT_COMPILER §2.41 "Flags"). Note the audit verdicts are conservative:
 an "engine literal" byte might in principle be a benign read, but nothing is
 allocated onto a byte that any code names directly.
 

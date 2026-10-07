@@ -627,7 +627,7 @@ CustomBGMStart:
 ; -----------------------------------------------------------------------------
 BattleBGMResolve:
     ld e, $27                           ; vanilla: the battle theme
-    ld a, [wMapID]
+    call ArenaMapID                     ; S128: the project's arena copy counts as $5D
     cp $5d
     jr nz, .vanillaDone
     ld a, [wArenaStarryBattle]
@@ -659,7 +659,7 @@ BattleBGMResolve:
     inc hl
     jr .fight
 .arena:                                 ; 2. the arena battle room
-    ld a, [wMapID]
+    call ArenaMapID                     ; S128: (+ the project's arena, custom.arena)
     cp $5d
     jr nz, .room
     ld a, e

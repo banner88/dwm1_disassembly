@@ -4755,24 +4755,38 @@ ArenaClassMenu_State0:
 ; ArenaMenuMarkWon: $C0D8[0..7] := $90 (selectable), then the first [$CAB4]
 ; classes := $AC (the star glyph = already won). $CAB4 = classes won.
 ArenaMenuMarkWon:
-    ld hl, $c0d8
-    ld bc, $0008
-    ld a, $90
-    call FillNBytesWithRegA
-    ld a, [$cab4]
-    or a
-    ret z
-
-    ld b, a
-    ld hl, $c0d8
-
-jr_009_5c3c:
-    ld [hl], $ac
-    inc hl
-    dec b
-    jr nz, jr_009_5c3c
-
+    ; S128 (ROADMAP P3.14e3): same size (27 B) — the marking moved to bank $6E
+    ; entry 1 ArenaMarkClasses (identical marks; + the per-class locks in the
+    ; project's lobby, custom.arena). rst $10 clobbers A / BC / HL: State0 reloads HL.
+    ld hl, $6e01
+    rst $10
     ret
+; S128: ArenaRefuse09 — State2's refusal (A = the chosen class's mark, never $90;
+; HL = menu line 6, "fighting weaker ones" — a WON class): the lock mark
+; (ARENA_LOCK_GLYPH, bank $6E) says the project's "not open yet" text instead —
+; HL := ARENA_LOCKED_OFS = its text id - $0710 (the menu's base, ScreenEffectSay adds
+; [$C8F0]), an id >= $0A00 that bank $77 SayText speaks as the project's own text
+; (custom.arena.words.locked, editor2/core/your_arena.py; compiler EQU, region
+; arena_rooms in patches/bank_06e.asm; 6 = the won line when there is no arena).
+; In the freed bytes above.
+ArenaRefuse09:
+    cp ARENA_LOCK_GLYPH
+    jr nz, .say
+    ld hl, ARENA_LOCKED_OFS             ; the project's locked words
+.say:
+    jp ScreenEffectSay
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
 
 
 ; inner state 1 (after text): draw letters, fees, gold, cursor; next
@@ -4979,7 +4993,7 @@ jr_009_5d51:
     jp z, Jump_009_5d81
 
     ld hl, $0006
-    call ScreenEffectSay
+    call ArenaRefuse09                  ; S128: was call ScreenEffectSay (a locked class says line 7)
     ld a, $08
     ld [$c906], a
     jr jr_009_5da1

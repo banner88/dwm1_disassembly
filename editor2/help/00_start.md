@@ -28,8 +28,10 @@ built from it (the original ROM is never changed).
   natural skills …), every battle row it appears in (stats, AI, joining), new
   monsters cut from a sprite sheet, and new art for the original monsters.
 - **Dialogue** — every text of the game, searchable (read-only for now).
-- **Arena** — the classes, Starry Night and the King: entry fees, each
-  match's master, 1-3 monster teams and the teams' monsters and stats.
+- **Arena** — the classes, Starry Night and Monster Grandpa's match: entry fees, each
+  match's master, 1-3 monster teams and the teams' monsters and stats; and
+  **your own arena** (copies of the arena's rooms, per class when it opens and
+  where a win sends you).
 - **Skills** — every original skill: name and SKIL text, MP, when monsters
   learn it, power, targets, how the monster AI treats it, its battle rules and
   which skill's animation and sounds it plays — or which animation, screen

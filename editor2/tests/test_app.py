@@ -818,11 +818,11 @@ def s124_progression(app, w):
     pt.refresh()
     tops = [pt.tree.topLevelItem(i).text(0) for i in range(pt.tree.topLevelItemCount())]
     assert tops[0].startswith('Your flags') and any(t.startswith('The original game') for t in tops), tops
-    # the example's quest flag sits on $0158 — the game's (Arena Battle): a problem
+    # S128 r2: the example's quest flag is no longer on $0158 (the game's) — no problem
     vg = doc.flag_numbers()['vault_guardian_beaten']
-    assert vg == 0x0158 and any(p.code == 'game_shares' for p in pt.problems)
+    assert vg == 0x015A and not any(p.code == 'game_shares' for p in pt.problems)
     pt.select_flag(vg)
-    assert 'vault_guardian_beaten' in pt.title.text() and 'Arena Battle' in pt.detail.toPlainText()
+    assert 'vault_guardian_beaten' in pt.title.text()
     assert 'Turned ON by' in pt.detail.toPlainText() and pt.b_renumber.isEnabled()
     keep_t, keep_q = QInputDialog.getText, QMessageBox.question
     QInputDialog.getText = staticmethod(lambda *a, **k: ('Bridge repaired', True))
@@ -842,9 +842,9 @@ def s124_progression(app, w):
         pt._rename()
         q = doc.data['progression']['quests'][0]
         assert q['flags']['done'] == 'vault_guard_beaten', q['flags']
-        assert doc.flag_numbers()['vault_guard_beaten'] == 0x0158
+        assert doc.flag_numbers()['vault_guard_beaten'] == 0x015A
         pt._renumber()
-        assert doc.flag_numbers()['vault_guard_beaten'] not in (0x0158, n)
+        assert doc.flag_numbers()['vault_guard_beaten'] not in (0x0158, 0x015A, n)
         assert not any(p.code == 'game_shares' and p.idx == 0x0158 for p in pt.problems)
         # delete: refused while used, allowed when unused
         keep_i = QMessageBox.information
@@ -1346,6 +1346,168 @@ def s127_breeding(app, w):
           'gate + chance by level, compiles, undoes to the original')
 
 
+def s128_arena(app, w):
+    """S128 (ROADMAP P3.14e3): the Arena tab → ★ Your arena (Make your arena = copies of the
+    Arena Lobby + the Arena Battle room, the night arena ONE layout for states 1-4 — S128 r2),
+    the receptionist's words (game text boxes), a class page's "In your arena" box (a new won
+    flag, won words, a win goes to the hub), Starry Night offered with the game's ending; the
+    labels say Monster Grandpa's match (S128 r2, not "King"); the project compiles with the
+    arena's room ids in bank $6E; every edit undoes to the original."""
+    import json
+    import PySide6.QtWidgets as QWm
+    import editor2.app.arena_tab as ATm
+    from editor2.core import arena as AR
+    s = w.session
+    doc = s.doc
+    before = doc.dumps()
+    n0 = s.undo.index()
+    at = w.arena_tab
+    w.tabs.setCurrentWidget(at)
+    at.refresh()
+    app.processEvents()
+    labels = [at.list.item(i).text() for i in range(at.list.count())]
+    assert labels[0].startswith('★') and any("Monster Grandpa's match" in t for t in labels) \
+        and not any('King' in t for t in labels), labels
+    at.list.setCurrentRow(0)
+    app.processEvents()
+    yp = at.your_page
+    assert yp.isVisibleTo(at) and yp.make_btn.isVisibleTo(yp)
+    def _no_warning(*a, **k):
+        raise AssertionError(f'unexpected warning: {a[2] if len(a) > 2 else a}')
+    k_w = ATm.QMessageBox.warning
+    ATm.QMessageBox.warning = staticmethod(_no_warning)
+    k_q = ATm.QMessageBox.question
+    ATm.QMessageBox.question = staticmethod(lambda *a, **k: ATm.QMessageBox.Yes)
+    try:
+        yp._make()
+    finally:
+        ATm.QMessageBox.question = k_q
+    app.processEvents()
+    a = doc.your_arena()
+    assert a and doc.room(a['lobby'])['source_mapID'] in ('0x06', '0x6') and \
+        int(str(doc.room(a['battle'])['source_mapID']), 0) == 0x5D, a
+    sts = doc.room(a['battle'])['screens']['0']['states']
+    night = {json.dumps(st.get('layout')) for st in sts[1:]}
+    assert len(sts) == 5 and len(night) == 1, (len(sts), night)    # S128 r2: one night look
+    at.list.setCurrentRow(0)
+    app.processEvents()
+    yp.refresh()
+    assert yp.body.isVisibleTo(yp) and not yp.make_btn.isVisibleTo(yp)
+    yp.words['lost'].set_value([['Too bad!', 'Train more.']])
+    yp.words['locked'].set_value([['Not open yet.']])
+    yp._words()
+    app.processEvents()
+    wd = doc.your_arena()['words']
+    assert wd['lost'] == {'boxes': [['Too bad!', 'Train more.']]} and \
+        wd['locked'] == 'Not open yet.', wd
+    # a class page: a new won flag, won words, a win goes to the hub
+    at.show_your_arena('F')
+    app.processEvents()
+    cb = at.class_box
+    assert cb.isVisibleTo(at) and cb.name == 'F'
+    k_t = QWm.QInputDialog.getText
+    QWm.QInputDialog.getText = staticmethod(lambda *a, **k: ('F class won', True))
+    try:
+        cb._new_flag()
+    finally:
+        QWm.QInputDialog.getText = k_t
+    cb.words.set_value([['F class is', 'yours!']])
+    cb.then.setCurrentIndex(cb.then.findData('hub'))
+    cb._apply()
+    app.processEvents()
+    sp = doc.your_arena_class('F')
+    assert sp['won_flag'] == 'f_class_won' and sp['then'] == {'to': 'hub'} and \
+        sp['won_words'] == {'boxes': [['F class is', 'yours!']]}, sp
+    assert any(f.get('name') == 'f_class_won' for f in doc.flags())
+    # Starry Night: offered, the game's ending after the final
+    at.show_your_arena('StarryNight')
+    app.processEvents()
+    assert cb.name == 'StarryNight' and cb.offer_box.isVisibleTo(cb)
+    cb.offered.setChecked(True)
+    cb.then.setCurrentIndex(cb.then.findData('ending'))
+    cb._apply()
+    app.processEvents()
+    assert doc.your_arena()['starry']['then'] == {'to': 'ending'}, doc.your_arena()
+    # the Monster Grandpa page has no "In your arena" box
+    at.list.setCurrentRow(AR.GROUPS.index('King') + 1)
+    app.processEvents()
+    assert "Monster Grandpa" in at.title.text() and not cb.isVisibleTo(at), at.title.text()
+    # S128 r3 (user: "When I double click on an exit or entry, it should bring up a window
+    # that can set both ends"): double-click the lobby copy's bottom exit (a plain game
+    # exit) on the Rooms tab -> the connect window lists your rooms' exits + the game's
+    # doors; pick GreatTree's arena door -> both ends written (the lobby exit becomes a
+    # door, its second cell follows; the game's double door leads into the lobby)
+    import editor2.app.rooms.door_dialog as DDm
+    from PySide6.QtCore import Qt as _Qt
+    rt = w.rooms_tab
+    w.navigate_to({'tab': 'rooms', 'room': a['lobby'], 'screen': 1, 'state': 0, 'x': 4, 'y': 7})
+    app.processEvents()
+    row = next(e for e in doc.exits_of(doc.room(a['lobby']), 1, 0)
+               if (e['x'], e['y']) == (4, 7))
+    seen = {}
+    vid = doc.vanilla_door_id(0x01, 4, 4, 3)
+    k_exec = DDm.DoorPropsDialog.exec
+
+    def _pick(dlg):
+        groups = [dlg.tree.topLevelItem(i).text(0) for i in range(dlg.tree.topLevelItemCount())]
+        seen['groups'] = groups
+        seen['title'] = dlg.windowTitle()
+
+        def find(item):
+            for i in range(item.childCount()):
+                c = item.child(i)
+                d = c.data(0, _Qt.UserRole)
+                if d and d[1] == vid:
+                    return c
+                hit = find(c)
+                if hit:
+                    return hit
+            return None
+        for i in range(dlg.tree.topLevelItemCount()):
+            hit = find(dlg.tree.topLevelItem(i))
+            if hit:
+                dlg.tree.setCurrentItem(hit)
+                break
+        return QWm.QDialog.Accepted
+    DDm.DoorPropsDialog.exec = _pick
+    try:
+        rt._marker_activated({'kind': 'exit', 'ref': ('exit', 0, row)})
+    finally:
+        DDm.DoorPropsDialog.exec = k_exec
+    app.processEvents()
+    assert seen.get('title') == 'Exit — connect both ends' and \
+        any(g.startswith("Your rooms' exits") for g in seen['groups']), seen
+    rows = doc.exits_of(doc.room(a['lobby']), 1, 0)
+    d_main = [e for e in rows if e.get('door') and (e['x'], e['y']) == (4, 7)]
+    d_twin = [e for e in rows if e.get('twin_of') and (e['x'], e['y']) == (5, 7)]
+    rds = [r for r in doc.custom.get('entrance_redirects') or [] if r.get('mapID') == '0x01'
+           and r.get('screen') == 4 and r.get('y') == 3]
+    assert d_main and d_main[0].get('link') == vid and d_twin and \
+        sorted(r['x'] for r in rds) == [4, 5], (d_main, d_twin, rds)
+    import shutil as _sh
+    import tempfile
+    from editor2.core import compiler as Cc
+    td = tempfile.mkdtemp()
+    _sh.copytree(doc.project_dir, os.path.join(td, 'p'), ignore=_sh.ignore_patterns('build'))
+    open(os.path.join(td, 'p', 'project.json'), 'w').write(doc.dumps())
+    outs, _pp, _ww = Cc.compile_project(os.path.join(td, 'p'), REPO)
+    b6e = outs['patches/bank_06e.asm']
+    lmid = int(str(doc.room(a['lobby'])['mapID']), 0)
+    assert f'ARENA_LOBBY_MID EQU ${lmid:02X}' in b6e, b6e[b6e.find('arena_rooms'):][:400]
+    assert 'arena:desk' in outs['patches/bank_060.asm']
+    _sh.rmtree(td, ignore_errors=True)
+    ATm.QMessageBox.warning = k_w
+    while s.undo.index() > n0:
+        s.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'S128 arena edits did not undo to the original'
+    print("OK: S128 Your arena — Arena tab Make your arena (one night layout), the desk's "
+          "words, F class (new won flag, words, then the hub), Starry Night (the game's "
+          "ending), Monster Grandpa's match page; r3: double-click the lobby's game exit -> "
+          "connect window -> GreatTree's arena door (both ends, both cells); compiles, undoes "
+          "to the original")
+
+
 def main():
     do_rom = '--rom' in sys.argv
     app = QApplication.instance() or QApplication(sys.argv)
@@ -1399,6 +1561,7 @@ def main():
     s126_services(app, w)
     s127_breeding(app, w)
     s127r3_game_text_rule(app, w)
+    s128_arena(app, w)
 
     # S101 r3: World tab zoom (wheel, around the mouse) + pan (drag empty canvas)
     from PySide6.QtCore import QPoint, QPointF, Qt
@@ -1747,9 +1910,9 @@ def main():
     at = w.arena_tab
     w.tabs.setCurrentWidget(at)
     app.processEvents()
-    assert at.list.count() == 10, at.list.count()
-    assert at.list.item(0).text().startswith('G class') and 'fee 0' in at.list.item(0).text()
-    at.list.setCurrentRow(8)
+    assert at.list.count() == 11, at.list.count()     # S128: row 0 = ★ Your arena
+    assert at.list.item(1).text().startswith('G class') and 'fee 0' in at.list.item(1).text()
+    at.list.setCurrentRow(9)
     app.processEvents()
     assert 'Starry Night' in at.title.text() and not at.fee.isVisible()
     c1 = at.cards[0]
@@ -1770,13 +1933,13 @@ def main():
     at.set_master(2, {'monster': 40})
     assert doc.data['gamedata']['arena']['StarryNight']['matches']['2'] == {'master': {'monster': 40}}
     assert 'Coatol' in at.cards[2].master_btn.text()
-    at.list.setCurrentRow(0)
+    at.list.setCurrentRow(1)
     app.processEvents()
     assert at.fee.isVisible()
     at.fee.setValue(20)
     app.processEvents()
     assert doc.data['gamedata']['arena']['G'] == {'fee': 20}
-    assert 'fee 20' in at.list.item(0).text()
+    assert 'fee 20' in at.list.item(1).text()
     n_undo = w.session.undo.index()
     try:
         doc.set_enemy_fields(224, {'species': 217})

@@ -3976,6 +3976,8 @@ RefreshBattleGraphics:
     cp $01
     jr z, jr_050_576c
 
+    ; S128 (ROADMAP P3.14e3, your arena): battle-end type test (wScriptMapType $5D = an
+    ; arena battle); patches/ -> call ArenaScriptType50 (ROM0 ArenaAlias).
     ld a, [wScriptMapType]
     cp $5d
     jr nz, jr_050_576c
@@ -6364,6 +6366,8 @@ BattleExitHandler:
     ld [$c88d], a
     ld hl, $c88e
     inc [hl]
+    ; S128 (ROADMAP P3.14e3, your arena): BattleExitHandler's arena branch ($5D: next match
+    ; / loss / Starry phases); patches/ -> call ArenaMapID.
     ld a, [wMapID]
     cp $5d
     jp nz, Jump_050_64e0
@@ -6386,6 +6390,10 @@ BattleExitHandler:
 
     ld a, $ff
     ld [wColiseumBattle], a
+    ; S128 (ROADMAP P3.14e3, your arena): the lost-match warp mailbox -> the Arena Lobby $06 at
+    ; pixel ($E8, $48), no penalty. patches/ replaces these 33 bytes (same size)
+    ; with call ArenaLossWarp50 (the project's lobby + its return cell when the
+    ; match was fought in the project's arena, else these exact values).
     ld hl, $0006
     ld a, l
     ld [wWarpGateId], a
@@ -6874,7 +6882,7 @@ SetTempEnemyStatsId:
 ; ArenaMasterSpriteTable50 ($50:$6778) — 27-entry duplicate of the
 ; bank $04 ArenaMasterSpriteTable ($04:$5E22): per-arena-match master
 ; lobby sprite [gfx_id, is_monster], groups G..S + Starry Night only
-; (no King rows — the King battle never re-enters via bank $50's
+; (no Monster Grandpa rows — Monster Grandpa's match never re-enters via bank $50's
 ; LoadArenaEnemyStats, which is the between-matches regenerator).
 ; ---------------------------------------------------------------
 ArenaMasterSpriteTable50:

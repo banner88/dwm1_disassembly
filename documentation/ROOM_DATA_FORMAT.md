@@ -677,7 +677,7 @@ NPCs one row above / below the cells the player stands on, the arrival first.
 ## Monster NPCs — any species drawn as its follower (S101, PyBoy-measured)
 
 The bank $0B NPC sheet resolver (`Call_00b_4839`, annotated S101) maps an NPC
-entry's sprite id: $FF none; $E0 the player shape; **$E1-$E3 = the party
+entry's sprite id: $FF none; $E0 the player shape (frame id $5E = Terry's NPC frames over the player's VRAM sheet; S128 r3: $14 = Milayou's with the Milly hook on, patches/ `MillyE0Type`); **$E1-$E3 = the party
 monster in party slot 0-2** (the follower sheets already in VRAM);
 **$F0-$F3 = display-list entry n**: the pair at `$D7CA + 2n` = [draw id,
 is_monster]; with is_monster ≠ 0 the draw id is `species + $10` and the NPC

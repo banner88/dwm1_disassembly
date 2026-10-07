@@ -1381,6 +1381,8 @@ class RoomsTab(QWidget):
         e = ref[2] if isinstance(ref[2], dict) else {}
         if ref[0] == 'exit' and e.get('door'):
             return e['door']
+        if ref[0] == 'exit' and e.get('twin_of'):        # S128 r3: a double door's 2nd cell
+            return e['twin_of']
         if ref[0] == 'redirect':
             d = e.get('door')
             if d and self.s.doc.parse_vanilla_door_id(d):
@@ -1424,6 +1426,15 @@ class RoomsTab(QWidget):
             did = self._door_id_of_ref(ref)
             if did:
                 self._edit_door(did)
+            return
+        # S128 r3 (user: "When I double click on an exit or entry, it should bring up a
+        # window that can set both ends"): a plain exit of your room (a copied room's
+        # game exit, a one-way teleport) opens the same connect window
+        room = self.current_room()
+        if room is not None and sel['kind'] == 'exit' and ref and ref[0] == 'exit' and \
+                isinstance(ref[2], dict) and self.s.doc._is_plain_exit(ref[2]):
+            self._edit_door(self.s.doc.exit_ref_id(room['id'], self.key,
+                                                    val(ref[2]['x']), val(ref[2]['y'])))
             return
         self._marker_selected(sel)
         if sel['kind'] in ('npc', 'examine', 'step', 'spawn') and self.current_room() is not None \
@@ -1510,12 +1521,25 @@ class RoomsTab(QWidget):
         if not did:
             return
         from editor2.app.rooms.door_dialog import DoorPropsDialog
-        if self.s.doc.door_end(did) is None:
+        doc0 = self.s.doc
+        if doc0.door_end(did) is None and doc0.plain_exit_end(did) is None:
             return
         dlg = DoorPropsDialog(self.s, did, self)
         if dlg.exec() != QDialog.Accepted:
             return
         v = dlg.result_values()
+        if doc0.door_end(did) is None:                   # S128 r3: a plain exit
+            me = doc0.plain_exit_end(did)
+            if v['link'] is None:
+                return
+
+            def apply_exit(doc):
+                a, _b = doc.connect_ends(did, v['link'])
+                doc.rename_door(a, v['name'])
+            if self._door_op(f"Connect exit ({me['x']},{me['y']})", apply_exit) is not None:
+                self._show()
+                self._select_exit_at((me['x'], me['y']))
+            return
         me = self.s.doc.door_end(did)
         cur = me.get('link')
 
@@ -1529,7 +1553,7 @@ class RoomsTab(QWidget):
                 if v['link'] is None:
                     doc.unlink_door(did)
                 else:
-                    doc.link_doors(did, v['link'])
+                    doc.connect_ends(did, v['link'])     # S128 r3: a plain exit becomes a door
         if v['name'] == me['name'] and v['link'] == cur and \
                 (v['states'] is None or sorted(v['states']) == me.get('states')):
             return
@@ -2050,10 +2074,14 @@ class RoomsTab(QWidget):
                 QMessageBox.warning(self, 'Cannot move it there', dead)
                 self._show()
                 return
-            if e.get('door'):
-                did = e['door']
-                if self._door_op(f'Move door to ({cx},{cy})',
-                                 lambda doc: doc.move_door(did, cx, cy)) is not None:
+            if e.get('door') or e.get('twin_of'):
+                did = e.get('door') or e['twin_of']
+                mx, my = cx, cy
+                if not e.get('door'):                    # S128 r3: dragged by its 2nd cell
+                    main = self.s.doc.door_end(did)
+                    mx, my = cx - (val(e['x']) - main['x']), cy - (val(e['y']) - main['y'])
+                if self._door_op(f'Move door to ({mx},{my})',
+                                 lambda doc: doc.move_door(did, mx, my)) is not None:
                     self._show()
                     self._select_exit_at((cx, cy))
                 return

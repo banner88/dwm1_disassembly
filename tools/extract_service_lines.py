@@ -73,6 +73,13 @@ KINDS = {
     # (op $44 = base + 9). +$0A.. belong to the Teto / CatFly blocks.
     'breeder': dict(screen=5, bank=0x0A, base=0x0600, count=0x0A, rng=(0x442D, 0x4BC3),
                     vanilla='Teto (Arena Lobby, map $06 scripts 10 / 11)'),
+    # S128 (ROADMAP P3.14e3): the arena's class menu (screen 4, ArenaClassMenu
+    # $09:$5B64-$5ECA): +0 the receptionist's question, +1 asked again, +3 "Better
+    # luck next time." (the desk script after B), +4 "… in [INS 00] class?", +5 the
+    # gold is short, +6 a WON class chosen. +7 is the Medal Man's block — the
+    # project's lock line is its own text (bank $09 ArenaRefuse09, your_arena.py).
+    'arena':   dict(screen=4, bank=0x09, base=0x0710, count=0x07, rng=(0x5B64, 0x5ECA),
+                    vanilla='Arena receptionist (Arena Lobby, map $06 script 6)'),
 }
 HELPER = {0x09: 0x45E5, 0x0A: 0x441F, 0x12: 0x441F}
 MEDAL_TABLE = 0x6D29          # $12: [dw medals, dw EID] per egg; $FFFF ends

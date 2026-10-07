@@ -1720,7 +1720,7 @@ recipes are pure authoring.
       (d) the King fights one match, so only its match 1 is offered (its
       size-table rows 2-3 are unused).
       Original box text: tiers×matches×slots grid over enemy-stats rows 224-304 +
-      King 481-483 (stats/skills/ai_weights per enemy via Layer A-lite);
+      Monster Grandpa's match 481-483 (stats/skills/ai_weights per enemy via Layer A-lite);
       victory cascade shown read-only. Bracket-shape constants = expert
       knob only. *Accept:* one arena match's team re-authored in GUI and
       fought as-authored in PyBoy.
@@ -2258,9 +2258,23 @@ recipes are pure authoring.
           words wrapped into boxes; a mate = a species at a level you choose. r3: every text
           box at the bottom (NO no longer splits the box); every text entry is a game box editor. *User half:*
           the test ROM.
-    - [ ] **P3.14e3 — Your arena**: a copy of the arena battle room with role aliasing for the
-          `$5D` checks, lobby ↔ battle warps, a loss → the lobby, a class won → the hub
-          (arrival reason `arena_won`, reserved in `wHubReason`); the Arena tab edits it.
+    - [x] **P3.14e3 — Your arena** (S128, USER-CONFIRMED 2026-10-07 09:51): copies of the
+          Arena Lobby AND the Arena Battle room (Arena tab → ★ Your arena → Make your arena)
+          the engine treats as `$06` / `$5D` (ROM0 `ArenaMapID` / `ArenaAlias`, 9 sites +
+          the bank $71 template); the walk-in, the matches, the crowd, the arena's battle type
+          and music lifted wholesale; paint both rooms, give the lobby any doors. Per class:
+          opens when (flags; a locked class shows "-", the project's words), a won flag (+
+          the lower classes'), the receptionist's words, where a win goes (lobby / a room's
+          cell / the hub, reason `arena_won`); a loss → the lobby (no penalty, as vanilla);
+          Starry Night offered by flag (YES / NO words), after the final → lobby / room / hub /
+          the game's ending. PROJECT_COMPILER §2.41, EDITOR_DESIGN §5.2b, help
+          `69_your_arena.md`. User answers S128: one central arena, lifted wholesale, edit
+          battles + tiles in both rooms + redirect outwards; per class; the GreatLog arena
+          ends on Starry Night, the post-game uses the game's own arena (Monster Grandpa's
+          match — group 9 — stays there); higher class first allowed; keep the lobby's
+          monsters; the fixed 8-class menu. r2: no flag lands on the game's `$0158` by
+          default; group 9 named Monster Grandpa's match (not the King); copies share one
+          layout per vanilla layout (paint the night arena once).
     - [ ] (then) exits that open by flag, room music / shop stock by flag — below.
         The S124 text: FIRST an audit of everything the engine sends to
         or needs from a VANILLA room, since the real project has none (user S124): a lost battle

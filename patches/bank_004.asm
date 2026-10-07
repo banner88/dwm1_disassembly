@@ -3687,7 +3687,7 @@ ScriptCmd1E_UnlockFacing:
 ;   slots    = base, base+1, base+2 -> $DA03/04, $DA05/06, $DA07/08 (16-bit)
 ;   $DA02    = 2 (enemy count - 1, i.e. 3 enemies)
 ; wArenaGroup: 0-7 = classes G F E D C B A S (menu: 4*[$C8E3]+([$C8E2]&$7F)),
-; 8 = Starry Night (EIDs 296-304), 9 = King battle -> the formula result is
+; 8 = Starry Night (EIDs 296-304), 9 = Monster Grandpa's match -> the formula result is
 ; OVERRIDDEN with EIDs $01E1-$01E3 (GoldSlime/Divinegon/Rosevine L70).
 ; Formula rows for group 9 (EIDs 305-313, rival-species teams) are therefore
 ; unreachable here (cut data). Then reads ArenaMasterSpriteTable and writes
@@ -3820,7 +3820,7 @@ LoadScr_5e10:
 ; sprite id ($0B warrior / $0A woman / etc, $08 = the King).
 ; is_monster=1: monster follower gfx (gfx_id = species+$10; F match2
 ; $DA = species $CA Hargon). Bank $50 carries a 27-entry duplicate
-; (LoadArenaEnemyStats @ $50:$6778, no King rows). The three enemy
+; (LoadArenaEnemyStats @ $50:$6778, no Monster Grandpa rows). The three enemy
 ; monsters' sprites are computed at runtime (species+$10 → $D7CC-$D7D1).
 ; ---------------------------------------------------------------
 ; @BUILD_PROJECT BEGIN gd_arena_masters_04
@@ -3835,7 +3835,7 @@ ArenaMasterSpriteTable:
     db $0b, $00, $0a, $00, $0c, $00  ; A  class
     db $0b, $00, $0a, $00, $13, $00  ; S  class
     db $0b, $00, $0a, $00, $14, $00  ; Starry Night Tournament
-    db $08, $00, $08, $00, $08, $00  ; King (group 9; sprite $08 = King)
+    db $08, $00, $08, $00, $08, $00  ; Monster Grandpa's match (group 9; master sprite $08)
 ; @BUILD_PROJECT END gd_arena_masters_04
 
 

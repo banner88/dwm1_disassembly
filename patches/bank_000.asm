@@ -8076,22 +8076,28 @@ ComputeFlagAddress:
     pop bc
     pop de
     ret
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
+; S128 (ROADMAP P3.14e3 — your arena): the 22 dead bytes after ComputeFlagAddress's
+; `ret` (S117) hold ArenaMapID / ArenaAlias (16 B + 6 pad; the mask table at $26D5
+; stays put). The engine's arena checks were keyed on the vanilla map ids — the
+; Arena Lobby $06 (MAP_BATTLE1) and the Arena Battle room $5D (MAP_BTLDEMO); a
+; project's COPIES of those two rooms (custom.arena.lobby / .battle, editor2/core/
+; your_arena.py) read as $06 / $5D at every such check (each `ld a, [wMapID]` there
+; became `call ArenaMapID`, same 3 bytes). ARENA_LOBBY_MID / ARENA_BATTLE_MID are
+; compiler EQUs (patches/bank_06e.asm region arena_rooms; $FF = no arena = every
+; map id unchanged). Out: A = the role's map id; F undefined (callers `cp` next);
+; nothing else touched. ArenaAlias: the same for a map id already in A.
+ArenaMapID::
+    ld a, [wMapID]
+ArenaAlias::
+    cp ARENA_BATTLE_MID
+    jr z, .battle
+    cp ARENA_LOBBY_MID
+    ret nz
+    ld a, MAP_BATTLE1                   ; your lobby reads as the Arena Lobby
+    ret
+.battle:
+    ld a, MAP_BTLDEMO                   ; your arena reads as the Arena Battle room
+    ret
     nop
     nop
     nop

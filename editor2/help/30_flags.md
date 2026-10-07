@@ -130,9 +130,10 @@ save file) and cleared by a new game, exactly like the game's own.
 
 `$0158` used to be handed out too, but the original game uses it (the Arena
 Battle room: Milayou's rematch — her first words, or "Are you challenging me
-again?"). A flag of yours on `$0158` is listed under Problems; **Renumber…**
-gives it a free number (a save made before keeps the old number, so in that
-save the flag reads OFF).
+again?"). The editor never gives it out, and **opening a project moves a flag
+of yours that sits on `$0158` to a free number by itself** — the open notes
+say which one (a save made before keeps the old number, so in that save the
+flag reads OFF once).
 
 `$0000`-`$02FF` are the game's (most are story flags), `$1000`-`$17FF` the
 editor's extra ones (`$179E`/`$179F` are the Milly hook's, `$17A0`-`$17FF` the

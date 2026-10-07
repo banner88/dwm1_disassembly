@@ -2067,6 +2067,95 @@
      "text": "I hope a strong\nmonster will be\n\nborn!\n\n\n*:I'll send the\negg to the farm!"
     }
    ]
+  },
+  "arena": {
+   "screen": 4,
+   "bank": "$09",
+   "base": "$0710",
+   "count": 7,
+   "handler": [
+    "$5B64",
+    "$5ECA"
+   ],
+   "vanilla_npc": "Arena receptionist (Arena Lobby, map $06 script 6)",
+   "engine_offsets": [
+    1,
+    4,
+    5,
+    6
+   ],
+   "lines": [
+    {
+     "off": 0,
+     "id": "$0710",
+     "raw": "ea9fa33a4249404c4a4263623a45464045efee40493e5050623e4f4262564c52faf7efee4f4244465051424f464b4462434c4f64efeef0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "efeef0",
+     "text": "Welcome! Which\nclass are you\n\nregistering for?"
+    },
+    {
+     "off": 1,
+     "id": "$0711",
+     "raw": "ea9fa33a454640456240493e5050623e4f42efee564c52624f4244465051424f464b44faf7efee434c4f64efeef0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "efeef0",
+     "text": "Which class are\nyou registering\n\nfor?"
+    },
+    {
+     "off": 2,
+     "id": "$0712",
+     "raw": "ea9fa3374c4c623f3e415fefee374f56623e443e464b64f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "f0",
+     "text": "Too bad.\nTry again?"
+    },
+    {
+     "off": 3,
+     "id": "$0713",
+     "raw": "ea9fa325425151424f6249524048efee4b4255516251464a425ff7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "f7f0",
+     "text": "Better luck\nnext time."
+    },
+    {
+     "off": 4,
+     "id": "$0714",
+     "raw": "ea9fa3244f4262564c52624c483e56efee54465145624f4244465051424f464b44faf7efee464b62f9006240493e505064efeef0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "efeef0",
+     "text": "Are you okay\nwith registering\n\nin {ins0} class?"
+    },
+    {
+     "off": 5,
+     "id": "$0715",
+     "raw": "ea9fa3364c4f4f56623f5251624651efee5042424a5062564c5262414c4b67faf7efee453e534262424b4c524445efee4a4c4b42565ffaf7f0",
+     "voice": "low",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "faf7f0",
+     "text": "Sorry but it\nseems you don't\n\nhave enough\nmoney."
+    },
+    {
+     "off": 6,
+     "id": "$0716",
+     "raw": "eb9fa33a453e516362244f4262564c52efee444c464b4462514c624346444551faf7efee544651456254423e48424f624c4b4250efee51453e4b62564c526364faf7f0",
+     "voice": "high",
+     "speaker": "*",
+     "speaker_raw": "9fa3",
+     "tail": "faf7f0",
+     "text": "What! Are you\ngoing to fight\n\nwith weaker ones\nthan you!?"
+    }
+   ]
   }
  },
  "medal_rewards": {

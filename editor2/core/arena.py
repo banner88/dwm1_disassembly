@@ -6,13 +6,15 @@ What the game stores (ROM-verified S67 + S109, PyBoy-measured on the user's save
     EID = $E0 + 9*g + 3*m + slot (slot 0-2) — ArenaBattleSetup (script opcode
     $1F, bank $04) at the lobby, LoadArenaEnemyStats (bank $50) between
     matches. Groups 0-7 = classes G F E D C B A S, 8 = Starry Night; group 9 =
-    the King, whose EIDs the code overrides with $01E1-$01E3 (one match). So a
+    Monster Grandpa's match (GoldSlime / Divinegon / Rosevine L70 — data key
+    "King", kept so projects still load; S128 r2 user correction: it is NOT a
+    King match), whose EIDs the code overrides with $01E1-$01E3 (one match). So a
     team member is edited as its enemy row (`gamedata.enemies.<eid>`, the
     existing section — species, level, stats, skills, AI weights …).
   * the MASTER standing for each match in the Arena Battle room:
     ArenaMasterSpriteTable ($04:$5E22, 30 x [draw id, is_monster]) and the
     bank-$50 copy for matches 2-3 (ArenaMasterSpriteTable50 $50:$6778, 27 rows,
-    no King). is_monster 0 = an NPC sprite id (the room's sheet resolver, ROM0
+    no Monster Grandpa). is_monster 0 = an NPC sprite id (the room's sheet resolver, ROM0
     $2ADF), 1 = a monster drawn like its follower (draw id = species + $10).
   * the ENTRY FEE of each class: ArenaClassFeeTable ($09:$5D23, 8 words G..S),
     shown, checked and paid in the bank $09 class menu (ArenaClassMenu).
@@ -20,8 +22,8 @@ What the game stores (ROM-verified S67 + S109, PyBoy-measured on the user's save
     match (ArenaTeamSizeTable, 30 bytes; 3 = vanilla). Size n fights slots
     0..n-1; the others are not loaded and not drawn.
 
-Schema (sparse; group keys G F E D C B A S StarryNight King; match keys "0"-"2",
-King "0" only; every field optional):
+Schema (sparse; group keys G F E D C B A S StarryNight King — "King" = Monster
+Grandpa's match; match keys "0"-"2", King "0" only; every field optional):
 
   "arena": {
     "G": {"fee": 20, "matches": {"0": {"size": 1, "master": {"person": "0x0B"}},
@@ -36,7 +38,7 @@ Regions (no `arena` = the original bytes in every one):
   gd_arena_team_sizes  bank $6E ArenaTeamSizeTable       30 B (hand patch bank_06e)
 
 Checks (ERROR): unknown groups / matches / fields, a fee outside 0-65535 or on
-Starry Night / the King, a size outside 1-3, a master that is not one person id
+Starry Night / Monster Grandpa's match, a size outside 1-3, a master that is not one person id
 of the NPC sprite catalog (normal) / vanilla master id or one monster (0-214, a
 declared new species), species 215-220 (Iron Rule 8: not monsters; 217-220 hang
 the room — ROOM_DATA_FORMAT "Monster NPCs"), a team member (a used slot) of
@@ -48,12 +50,12 @@ import json
 import os
 
 GROUPS = ['G', 'F', 'E', 'D', 'C', 'B', 'A', 'S', 'StarryNight', 'King']
-GROUP_LABEL = {'StarryNight': 'Starry Night', 'King': 'King (Master Monster Tamer)'}
+GROUP_LABEL = {'StarryNight': 'Starry Night', 'King': "Monster Grandpa's match"}
 CLASSES = GROUPS[:8]
 KING = 9
 STARRY = 8
 ROWS = 30                      # 10 groups x 3 matches (ArenaTeamSizeTable / masters)
-ROWS_50 = 27                   # the bank-$50 copy has no King rows
+ROWS_50 = 27                   # the bank-$50 copy has no Monster Grandpa rows
 PROTECTED = range(215, 221)    # PROJECT_STATE Iron Rule 8
 NO_DRAW_SPECIES = 239          # species + $10 = $FF = the resolver's "no sprite"
 
@@ -72,7 +74,7 @@ def group_label(gi):
 
 
 def matches(gi):
-    """How many matches group gi fights (the King: one)."""
+    """How many matches group gi fights (Monster Grandpa's match: one)."""
     return 1 if gi == KING else 3
 
 

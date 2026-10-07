@@ -94,6 +94,14 @@ def validate(prj, generated=None):
     _e, _w = _BR.validate(prj)
     errors += _e
     warnings += _w
+    from . import your_arena as _YA                     # S128: your arena (custom.arena)
+    if getattr(prj, 'arena_error', None):
+        errors.append(prj.arena_error)
+    else:
+        try:
+            warnings += _YA.validate(prj)
+        except _YA.ArenaRoomError as ex:
+            errors.append(str(ex))
     rooms = [r for r in prj.rooms if not r.get('placeholder')]
     # S125 (ROADMAP P3.14d): the hub — arrival scenes that can never play, and a
     # loss arrival that does not heal (the party would stand there at 0 HP)

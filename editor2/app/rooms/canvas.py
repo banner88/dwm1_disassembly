@@ -620,6 +620,15 @@ class RoomCanvas(QGraphicsView):
                     label = (f"door '{name}' — NEVER FIRES: the {c[0]} edge scrolls into "
                              f"screen {c[1]}; drag it one cell in")
                 self.markers.append((kind, int(e['x']), int(e['y']), None, label, ('exit', i, e)))
+            elif e.get('twin_of'):                  # S128 r3: a double door's 2nd cell
+                try:
+                    nm = self.s.doc.door_name(e['twin_of'])
+                except Exception:                                # noqa: BLE001
+                    nm = e['twin_of']
+                self.markers.append(('door' if e.get('dest') else 'door_open', int(e['x']),
+                                     int(e['y']), None,
+                                     f"second cell of door '{nm}' — double-click to edit",
+                                     ('exit', i, e)))
             elif G.is_stairs_down(e):
                 self.markers.append(('stairs', int(e['x']), int(e['y']), None,
                                      'Stairs down — the next floor of the gate dive '
@@ -649,7 +658,8 @@ class RoomCanvas(QGraphicsView):
                 self.markers.append(('exit', int(e['x']), int(e['y']), None,
                                      f"one-way exit → {e.get('dest')} screen "
                                      f"{val(e.get('screen_byte', 0)) & 0x0F} "
-                                     f"({e.get('spawn_x')},{e.get('spawn_y')})",
+                                     f"({e.get('spawn_x')},{e.get('spawn_y')}) — "
+                                     'double-click to connect both ends',
                                      ('exit', i, e)))
 
     def _mark_gate_arrival(self, room):

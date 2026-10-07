@@ -1,5 +1,81 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-06 (Session 126 — **ROADMAP P3.14e1 BUILT: SERVICE NPCs — THE VAULT, A
+> FARM KEEPER, THE LIBRARIAN, THE MONSTER NAMER, THE MEDAL MAN, THE EGG APPRAISER AND THE GATE
+> GUIDE AS ROLES OF ANY NPC IN ANY ROOM (THE GAME'S OWN MENUS, THEIR STATE THE GAME'S ONE VAULT /
+> FARM / MEDAL COUNT); THEIR MENU LINES EDITABLE (LINE SETS, ALSO FOR SHOPKEEPERS); A FIRST VISIT
+> BY FLAG; THE MEDAL MAN'S REWARDS EDITABLE; FREE-COLOUR AND ANIMATED ROOMS HANDLED** (user:
+> "Proceed with progression flags. Let's discuss what you do first before deep dive" → the
+> P3.14e1 plan → "1 - editable / 2 - what gate guide?? / 3 - editable!! / 4 - multiple of same
+> instance is fine. keep in mind ill have multiple different shops with differentr inventories
+> / 5 - sure. romhack postgame lines will be totally different anyways"). **Built S126, NOT yet
+> user-tested.** Open question to the user: "what gate guide??" — answered in chat (the Gate
+> Hub guide's Travelers' Gates list, screen type 13); no reply yet, the kind is kept.
+> **Audit (code-read + PyBoy):** op `$04 <type> <text base>` — the menus never read the room;
+> every menu line = base + offset through a per-bank say helper (bank $09 `ScreenEffectSay`, $0A
+> `ScreenEffectSay0A`, $12 `ScreenEffectSay12` — the last two mis-named `LoadFldA_441f` /
+> `AddCursorOffset`); banks $0A / $12 carry their own copies of the S117b window push
+> (`ScreenPush0A` / `ScreenPush12`, mis-named `GetScreenPos`) → the farm / Library / namer /
+> Medal Man / egg windows were still garbled in free-colour rooms; the farm writes icons into the
+> room's tile slots `$60-$6F`, the egg appraiser `$70-$78`, neither restores them; the Vault and
+> the farm leave the lower box; the medal table `$12:$6D29` (4 × medals / EID, count `cp $04` ×3).
+> **Engine:** bank $77 template entries 3 `SayText` (custom ids, the active line set
+> `wServiceLines`, then set 0, else `TextBankDispatch`), 4 `ServiceCloseBox`, 5
+> `ServiceCloseTiles`, 6 `ServiceOpenTiles` (`wServiceTileSave` $D2F0, 512 B, custom rooms);
+> `ScreenPush` palette 7 for menu cells / the gate list + naming screen (re-pinned `4c9f5998…`,
+> TEMPLATE_SIZE 684; r2 `cfe0dba0…`, 688); bank $71 `CustomAnimSource` pauses during `AnimPauseTypes` (re-pinned
+> `b3588b7a…`, 908); banks $09 / $0A / $12 same-size: the say helpers → `SayAny09/0A/12`, the
+> push copies → bank $77, the close tails (10 B), `FarmScreenOpen` / `EggScreenOpen`, two farm
+> ids base-relative, the medal readers on `MedalRewardTable` / `MEDAL_REWARD_COUNT` (region
+> `gd_medal_rewards`); `wCustomPool` −514 ($D4F2-$D5E4).
+> **Compiler (PROJECT_COMPILER §2.39):** `custom.scripts[].service` (kind, lines, first_time) →
+> the vanilla NPC's script shape; `custom.service_lines` (kind, speaker, voice, everywhere,
+> lines) → generated dialogue + `ServiceSetTable`; shop `lines`; `gamedata.medals.rewards`
+> (1-8, rising, ≤ 999, any EID incl. project enemies; the game's wording with the egg's name by
+> default); line-format errors (speaker re-flow for untouched lines; a line ending in `$EF $EE`
+> keeps its last box's second line free — PyBoy found the scroll); flag index kind `service`;
+> `tools/extract_service_lines.py` → `extracted/service_lines.json` (selftest in the verifier).
+> **Editor:** Rooms tab NPC → **Service…**; Shopkeeper… → shop menu lines; the **Services** tab
+> (service NPCs + Go to, line sets with the box preview, Medal Man rewards); model
+> `core/services_doc.py`; help `67_services.md` + 00 / 20 / 62 / 90; `EDITOR_REVISION` 'S126'.
+> **Annotation (Iron Rule 6, both trees):** `VaultScreen`, `GateListScreen`, `FarmScreen`,
+> `LibraryScreen`, `NamerScreen`, `MedalScreen`, `EggAppraiserScreen`, `ScreenPush0A/12`,
+> `ScreenEffectSay0A/12`, `MedalRewardTable` re-sectioned, the tile-slot writes and close tails
+> commented (DOC_AUDIT S126). Clean `1ca6579…` byte-perfect.
+> **Checks:** verifier PASS; patched pin **`0b12d0df…` (patched, r2)**, was `288d29e2…` (patched, the
+> first S126 delivery) and `c326fc96…` (patched, historical); test_compiler --rom 1235/1235 (incl. `test_services_s126`, `test_services_rom`, the
+> `s126` flag-index fixture); test_app PASS (`s126_services`); test_canvas --rom PASS.
+> **Measured (PyBoy, the user's save):** all seven in a free-colour room and an animated room —
+> cream windows, gate list / naming screen palette 7, the room's visible map and tile slots
+> `$60-$7F` back after every close (only the rooms' own animation slots differ); custom lines
+> through `CustomTextDisplay`; medal rewards 3 / 5 / 8 → ZapBird, Klamutra (project EID 520),
+> Slime; the game's Medal Man (map $16) speaks the edited line; the shared Vault (map $0F).
+> **Test ROM `DWM-S126r2-services-test.gbc` (`a477b8bc…`, patched; NOT yet user-tested; the first
+> `DWM-S126-services-test.gbc` `2624cc54…` is superseded):** the
+> user's project (my-dwm-hack_16) + three NEW rooms made with the editor's own operations, one
+> NPC per row: **SERVICE HALL** ($74, a copy of Cities_FOUNT — free colours — on one screen,
+> orange floor): Vault keeper (Clerk's lines), Farm keeper (Mira's lines, high voice, `{hero}`),
+> Buk the shopkeeper (S126 demo shop: Herb / Lovewater / SageStone / WarpWing, own lines), the
+> Guide; **SERVICE YARD** ($75, a copy of new_rooms — its tile animations — grass framed by the
+> animated water): Librarian, Monster Namer, Egg appraiser, the Guide; **SERVICE GALLERY** ($76,
+> a copy of GateRoom1): Medal Man (rewards 3 / 5 / 8 medals), Gate guide, the Guide. Every service
+> NPC's first visit says what it is ("I am a new VAULT KEEPER (S126)…"); the Guides chain HALL →
+> YARD → GALLERY → HALL (NO = back). Way in: the **S126 DEMO** NPC in Cities_FOUNT at (3, 4), left
+> of the arrival from the GreatTree screen 8 door. PyBoy walk-through on the user's save: walked
+> (not warped) from the arrival to every NPC; both visits of each; the visible map restored.
+> **r2 (user 16:23: "When I talk to e.g. service yard teleporter NPC, all NPCs vanish from screen.
+> Is that normal behaviour? Doesnt seem to be universal behaviour"):** reproduced in PyBoy — a talk
+> showed 32 sprites before a farm visit, 0 after it, in the SERVICE HALL: the farm menu leaves
+> `$FFD4` (the text-box sprite threshold) at `$60` until the next map load, and the hall's floor
+> is tile `$7B`; the yard (grass `$44`) and every other service were unaffected (all eight
+> measured). Fix: bank $77 `ServiceTilesBack` sets `$80` at the service close in custom rooms
+> (vanilla rooms unchanged); after the fix 22 sprites with the box open (the rest under the box,
+> as always). `$FFD4` writers annotated (bank $12 `$44A7`, bank $0A `$4481` / `$4C33` / `$69C3`,
+> both trees); ROOM_DATA_FORMAT, KEY_LESSONS, DOC_AUDIT S126 r2. `EDITOR_REVISION` 'S126r2'.
+> test_compiler --rom 1236/1236 (+ the `$FFD4` check in `test_services_rom`); the PyBoy walk-through
+> re-run on the r2 ROM: all 20 visits / talks end idle, the visible map restored.
+> **Next:** the user's test of the ROM; then P3.14e2 (breeding in your room) or the user's pick.
+
 > Last verified: 2026-10-06 (Session 125 — **ROADMAP P3.14d RE-CUT WITH THE USER; P3.14d1 BUILT:
 > THE HUB — WHERE THE GAME SENDS THE PLAYER HOME (A LOST BATTLE, THE PARTY FALLEN ON DAMAGE
 > FLOORS, THE WARPWING / ANCHOR, A LOST STARRY FINAL, A SCRIPT'S "HOME") IS A ROOM OF THE

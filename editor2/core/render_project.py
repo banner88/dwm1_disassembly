@@ -505,8 +505,12 @@ class ProjectRenderer:
         for st in sr['steps']:
             b = int(st['bytes_0_1'], 16) >> 8
             ip, ep = int(st['interact_ptr'], 16), int(st['exit_ptr'], 16)
+            # S128: $FFFF = "this step has no exits" (maps $08 / $5D / $5E — the game's
+            # own sentinel, KEY_LESSONS S121); it was read as invalid, so their copies
+            # kept state 0 only — the Starry Night arena ($D999 1-3) loaded past the
+            # copy's list and crashed (PyBoy S128)
             ok = (b in self.VALID_TILESET_BANKS and 0x4000 <= ip < 0x8000
-                  and 0x4000 <= ep < 0x8000
+                  and (0x4000 <= ep < 0x8000 or ep == 0xFFFF)
                   and all(it['x'] < 16 and it['y'] < 16
                           for it in st.get('interact_data', [])))
             if not ok:

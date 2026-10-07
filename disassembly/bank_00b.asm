@@ -90,6 +90,8 @@ jr_00b_4027:
     ; Select tileset table based on gate flag
     ; Normal rooms: $26DD (bank 0), Gate rooms: $2A5D (bank 0)
     ; Each entry is 8 bytes: [gfx_ptr:2][spawn_data:6]
+    ; S128 r3 note: since the S40 table-driven fetch these 12 bytes (+ the 3 nops
+    ; after the fetch in patches/) are dead — patches/ keeps MillyE0Type here.
     ld de, $26dd                    ; tileset_table (normal rooms)
     ld a, [wInGateworld]
     or a
@@ -1990,6 +1992,10 @@ jr_00b_48b1:
     ret
 
 
+; S128 r3 (the Milly hook): $E0 = the PLAYER drawn as an NPC (the arena's stand-in
+; beside the party). Frame id $5E (Terry's NPC frames) over the player's VRAM
+; sheet; with the hook on that sheet is Milayou's, so patches/ routes this tail to
+; MillyE0Type (frame id $14 = Milayou's NPC frames when flag $179F is set).
 jr_00b_48ba:
     ld a, $5e
     ld [de], a

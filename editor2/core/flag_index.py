@@ -57,6 +57,7 @@ KINDS = {
     'service': 'service NPC',           # scripts[].service.first_time.flag (S126)
     'breeder': 'breeder',               # scripts[].service (kind breeder) when / flag / once (S127)
     'breed_pool': 'breeding pool',      # custom.breeding_pools[].milestones (S127)
+    'arena': 'arena',                   # custom.arena classes / Starry Night (S128)
     'quest': 'quest',                   # progression.quests[] flags / actions
     'gate_win': 'boss win',             # engine: bank $76 GateBossWin
     'hook': 'Milly hook',               # the Milly hook's own flags
@@ -246,6 +247,7 @@ class FlagIndex:
         self._walk_gate_rooms()
         self._walk_hub()
         self._walk_breed_pools()                    # S127
+        self._walk_arena()                          # S128
         self._walk_quests()
         self._walk_preludes()
         self._engine()
@@ -835,6 +837,47 @@ class FlagIndex:
                           f'story milestone {k + 1} of the pool (counts when ON — the band '
                           'nearest the story so far)', {'tab': 'services', 'pool': p.get('id')},
                           ('custom', 'breeding_pools', j, 'milestones', k), want='set')
+
+    def _walk_arena(self):
+        """S128 (ROADMAP P3.14e3): your arena — a class opens when its terms hold (the
+        class menu, bank $6E ArenaMarkClasses), winning it turns its flag ON (and the
+        lower classes' flags — the game's catch-up), Starry Night is offered when its
+        terms hold and stops once its flag is ON."""
+        a = self.custom.get('arena')
+        if not isinstance(a, dict):
+            return
+        from .your_arena import CLASSES
+        for name in CLASSES:
+            c = (a.get('classes') or {}).get(name) or {}
+            nav = {'tab': 'arena', 'class': name}
+            terms = [(t.get('flag'), t.get('is', 'set')) for t in c.get('opens_when') or []
+                     if isinstance(t, dict)]
+            if terms:
+                self._trigger('arena', terms, '', f"the arena's {name} class opens",
+                              f'arena · {name} class', nav,
+                              [('custom', 'arena', 'classes', name, 'opens_when', t, 'flag')
+                               for t in range(len(terms))])
+            if c.get('won_flag') is not None:
+                self._use(c['won_flag'], ON, 'arena', f'arena · {name} class',
+                          f"winning the {name} class (or a higher one)", nav,
+                          ('custom', 'arena', 'classes', name, 'won_flag'))
+        st = a.get('starry')
+        if isinstance(st, dict):
+            nav = {'tab': 'arena', 'class': 'StarryNight'}
+            terms = [(t.get('flag'), t.get('is', 'set')) for t in st.get('opens_when') or []
+                     if isinstance(t, dict)]
+            if terms:
+                self._trigger('arena', terms, '', 'the desk offers Starry Night',
+                              'arena · Starry Night', nav,
+                              [('custom', 'arena', 'starry', 'opens_when', t, 'flag')
+                               for t in range(len(terms))])
+            if st.get('won_flag') is not None:
+                self._use(st['won_flag'], ON, 'arena', 'arena · Starry Night',
+                          "winning Starry Night's final", nav,
+                          ('custom', 'arena', 'starry', 'won_flag'))
+                self._use(st['won_flag'], TEST, 'arena', 'arena · Starry Night',
+                          'the desk stops offering Starry Night once it is ON', nav,
+                          ('custom', 'arena', 'starry', 'won_flag'), want='clear')
 
     def _walk_hub(self):
         """S125 (ROADMAP P3.14d): custom.hub.rules[].when — where the game sends the

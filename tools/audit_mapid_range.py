@@ -173,11 +173,12 @@ V = {
     # re-adjudication"); reasoning in CROSSBANK_ROOMS "S120 burn-down".
     ("bank_060.asm", "CustomReadInteract", 0): "CP_UNSIGNED",    # S117: cp CUSTOM_ROOM_START, then == scan of VanillaNPCExtTable
     ("bank_060.asm", "CutPatchRoute", 0): "CP_UNSIGNED",         # S119: cp CUSTOM_ROOM_START (GateAwareDispatch rule)
-    ("bank_071.asm", "BattleBGMResolve", 0): "CP_UNSIGNED",      # S116: cp $5d (the arena battle room)
-    ("bank_071.asm", "BattleBGMResolve", 1): "CP_UNSIGNED",      # S116: cp $5d
-    ("bank_071.asm", "BattleBGMResolve", 2): "BOUNDED",          # S116: cp $80 / jr nc, 16-bit index (FEATURE cap $7F,
+    # S128: BattleBGMResolve's two `cp $5d` loads became `call ArenaMapID` (the
+    # project's arena counts as $5D; ROM0 ArenaMapID's own key above) — the
+    # remaining loads moved up to occurrences 0 / 1
+    ("bank_071.asm", "BattleBGMResolve", 0): "BOUNDED",          # S116: cp $80 / jr nc, 16-bit index (FEATURE cap $7F,
                                                                  # music.py refuses battle.rooms >= $80)
-    ("bank_071.asm", "BattleBGMResolve", 3): "CP_UNSIGNED",      # S116: cp $50 / $52 / $5d special-room tests
+    ("bank_071.asm", "BattleBGMResolve", 1): "CP_UNSIGNED",      # S116: cp $50 / $52 / $5d special-room tests
     ("bank_076.asm", "GateBossWin", 0): "CP_UNSIGNED",           # S117: == wBossMapType (full byte)
     ("bank_077.asm", "ShopFill", 0): "CP_UNSIGNED",              # S117: cp $50
     ("bank_077.asm", "PushAttrActive", 0): "CP_UNSIGNED",        # S117b: cp CUSTOM_ROOM_START
@@ -192,6 +193,12 @@ V = {
     # S127: reasoning in CROSSBANK_ROOMS "S127 sites" (breeding NPCs).
     ("bank_073.asm", "CF2WarpCommitDrain", 0): "CP_UNSIGNED",    # S127: cp $08 (the ceremony map keeps the random-breeder slots; equality)
     ("bank_077.asm", "BreedClose", 0): "CP_UNSIGNED",            # S127: cp CUSTOM_ROOM_START / jr c (reload the room sheet in custom rooms only)
+    # S128: reasoning in CROSSBANK_ROOMS "S128 sites" (your arena). The arena-keyed
+    # call sites (`call ArenaMapID` in place of `ld a, [wMapID]`) keep their callers'
+    # cp chains = the clean tree's verdicts under the same labels.
+    ("bank_000.asm", "ArenaMapID", 0): "CP_UNSIGNED",            # S128: cp ARENA_BATTLE_MID / cp ARENA_LOBBY_MID (equality), A -> $5D / $06 / itself
+    ("bank_050.asm", "ArenaLossWarp50", 0): "CP_UNSIGNED",       # S128: cp ARENA_BATTLE_MID (equality: the project's arena -> its lobby)
+    ("bank_06e.asm", "ArenaMarkClasses", 0): "CP_UNSIGNED",      # S128: cp ARENA_LOBBY_MID / ret nz (the locks apply in the project's lobby only)
 }
 
 # Site-count pins (S66). A mismatch = the tree changed; re-adjudicate.

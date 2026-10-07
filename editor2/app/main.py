@@ -350,6 +350,11 @@ class MainWindow(QMainWindow):
             row = next((i for i, g in enumerate(gt.gates) if g['id'] == gid), None)
             if row is not None:
                 gt.list.setCurrentRow(row)
+        elif tab == 'arena' and getattr(self, 'arena_tab', None) is not None:
+            # S128: your arena's class locks / won flags -> the Arena tab's Your arena box
+            self.tabs.setCurrentWidget(self.arena_tab)
+            if hasattr(self.arena_tab, 'show_your_arena'):
+                self.arena_tab.show_your_arena(nav.get('class'))
         elif tab == 'worlds' and getattr(self, 'world_tab', None) is not None:
             # S125: a hub rule's flags (Progression & Flags tab) -> the World tab's Hub box
             self.tabs.setCurrentWidget(self.world_tab)

@@ -583,6 +583,8 @@ user-confirmed hand-authored code:
 * `editor2/core/templates/bank_079_head.asm` (S121) — bank byte, 2-entry table, entry 0
   `MillyShapeTable` / entry 1 `MillyPlayerSheet` (§2.34); only emitted with the hook on;
   pinned `3d7cbdbe…ef95`; no TEMPLATE_SIZE (the bank holds a few hundred bytes).
+* S128 re-pin: `bank_071_head.asm` `bb4151d2…1868` (`BattleBGMResolve`'s two `ld a, [wMapID]` →
+  `call ArenaMapID`, §2.41; TEMPLATE_SIZE unchanged; the S126 value `b3588b7a…` is historical).
 * S126 re-pins: `bank_071_head.asm` `b3588b7a…28a2` (`CustomAnimSource` pauses during
   `AnimPauseTypes`, §2.39; TEMPLATE_SIZE 908 B; the S125 value `28d988db…` is historical);
   `bank_077_head.asm` `cfe0dba0…bb53` (S126 r2: + `$FFD4` := `$80` in `ServiceTilesBack`;
@@ -2655,6 +2657,15 @@ empty bank):**
 | `patches/bank_04f.asm#milly_name_tiles` | `INCBIN …4d40.2bpp ;TERRY` (tiles `$D3-$D6`) | the S120b MILLY drawing (§2.3) |
 | `patches/bank_079.asm` (`hooks79`) | `ds $4000, $00` | template `bank_079_head.asm` + `MillyPlayerAttr` (`$03`) + `MillyPlayerGfx` (`$3114`) + the frame-table image |
 
+**S128 r3 — the player drawn as an NPC** (hand patch `patches/bank_00b.asm`, every
+project): sprite id `$E0` (the arena's stand-in beside the party) is drawn by
+`CmpRoom_4839` with frame id `$5E` (Terry's NPC frames) over the player's VRAM sheet —
+with the hook on that sheet is Milayou's, and the figure came out cut up (PyBoy, the
+user's save, both arenas). `jr_00b_48ba` = `call MillyE0Type / ld a,b / ret` (same 5 B);
+`MillyE0Type` (in room entry 0's 12 dead tileset-select bytes + 3 nops, S40) writes `$14`
+(Milayou's NPC frames) when `$179F` is set, else `$5E`. No VRAM cost; hook off = the
+vanilla behaviour. REFERENCE_MD5 `fe5fa80a…` (patched).
+
 Bank $79 (template, pinned): entry 0 `MillyShapeTable` — flag `$179F` clear, type ≠ 0 or
 the WRAM tables not built → exactly the replaced code (palette `$02`, DE = `data_4137`);
 else palette `MillyPlayerAttr` and DE = `wMillyLayout`. Entry 1 `MillyPlayerSheet` — flag
@@ -3226,6 +3237,87 @@ Swordgon, stable within a visit), done → "done for this visit", re-rolls after
 the every-gate room on floor 2 in 50 of 84 RNG samples at party level 10 (row value 57 %), never twice
 in one dive; breeding inside it returns to the gate room, the stairs still lead on and the
 slot is cleared. `BreedRoll` == the Python model on 120 random players (test_compiler).
+
+## §2.41 S128 — YOUR ARENA: copies of the arena rooms the engine treats as the arena (ROADMAP P3.14e3)
+
+```json
+"arena": {
+  "lobby": "arena_lobby", "battle": "arena_battle",
+  "return": {"screen": 1, "x": 5, "y": 4},
+  "words": {"lost": {"boxes": [["Too bad!"]]}, "no": {"boxes": [["Bye!"]]},
+            "locked": "That class is\nnot open yet."},
+  "lines": "desk_lines",
+  "classes": {
+    "G": {"won_flag": "g_won", "won_words": {"boxes": [["G class is yours!"]]}},
+    "F": {"opens_when": [{"flag": "f_key"}],
+          "then": {"to": "room", "room": "gatehouse", "screen": 0, "x": 4, "y": 5}},
+    "E": {"then": {"to": "hub"}}},
+  "starry": {"opens_when": [{"flag": "s_won"}], "won_flag": "starry_won",
+             "offer": {"boxes": [["Starry Night?"]]}, "then": {"to": "ending"}}
+}
+```
+
+**The rooms** — `lobby` / `battle` = rooms of the project that are COPIES of the Arena
+Lobby (`$06`) and the Arena Battle room (`$5D`) (`source_mapID`; the Arena tab's Make
+your arena clones both with every state — `vanilla_steps` accepts exit pointer `$FFFF`
+since S128, so the `$5D` copy has its 5 states; `$D999` is that room's step counter:
+0 the classes, 1-3 Starry Night, 4 Monster Grandpa's match). A copy made before S128 has
+1 state → `resolve` refuses Starry Night ("made before S128"), the state index would
+run past the copy's list (CustomPtrChase has no clamp → crash). S128 r2: `clone_vanilla`
+gives steps that draw the same vanilla layout ONE layout item (the night arena `$2315`,
+steps 1-4) — paint once.
+
+**Engine (all hand patches; the region `arena_rooms` in bank $6E carries the EQUs):**
+* ROM0 `ArenaMapID` (`ld a,[wMapID]` + `ArenaAlias`) / `ArenaAlias` (A = `ARENA_BATTLE_MID`
+  → `$5D`, `ARENA_LOBBY_MID` → `$06`, else A) in the 22 bytes after `ComputeFlagAddress`
+  (dead since S117; the mask table `$26D5` stays). `$FF` = no arena (the original).
+* `call ArenaMapID` replaces `ld a,[wMapID]` at: bank $01 `CheckScriptBeforeAction`, $03 the
+  escape skill, $07 the lobby monster refresh, $50 `BattleExitHandler`, $51 the arena music;
+  bank $01 `SaveMapStateToHRAM`'s class block same-size through `ArenaAlias`; banks $50
+  `$5730` / $51 `LoadBtlS_43c9` `ld a,[wScriptMapType]` → `ArenaScriptType50/51`; the
+  bank $71 template `BattleBGMResolve` (both reads; re-pinned, TEMPLATE_SIZE unchanged).
+* Bank $50 the lost-match mailbox (33 B) → `call ArenaLossWarp50` (the project's lobby +
+  `ARENA_RET_X/Y` when the match was in `ARENA_BATTLE_MID`, else the old `$06` ($E8,$48)).
+* Bank $09 `ArenaMenuMarkWon` → bank $6E entry 1 `ArenaMarkClasses` (the original marks, then
+  in `ARENA_LOBBY_MID` only the locks: `ArenaLockTable` 8 × [n] + n × dw flag, bit 15 = must
+  be clear; a locked class = `$9C` "-"); State2's refusal → `ArenaRefuse09` (a `$9C` mark
+  says `ARENA_LOCKED_OFS` = the project's locked words − `$0710`).
+* NOT aliased (by design): `CheckGateWorldMapType` (copies stay gate-like, S70) and the bank
+  $06 text-sprite rule (the copies set `text_keeps_sprites`).
+
+**Lowering (`editor2/core/your_arena.py`):** the lobby's script 6 (the desk: an `$8F`
+examine spot across the counter) → `arena:desk` (the Starry offer + YES / NO when its terms
+hold and its won flag is OFF → `$D9CE` = 8, `$D999` = 1; else the class menu `op $04 4
+$0710` with the line set `lines` (kind `arena`, base `$0710`, 7 lines) on around it;
+`$D9CD` = `$FF` → the no words; else the original walk-in). The lobby's entry script gets
+`arena:<lobby>:entry` prefixed: `$D9CD` `$FE` (won: `$CAB4` := class + 1, the won flags of
+the class and every lower class with one, the words, then lobby / room / hub `arena_won`) /
+`$FF` (lost: the words, back at the desk) — then the copied original. The arena's entry
+script: Starry won (`$D9CE` 8, `$D9CD` 3) → the won flag; `ending` → the copied original
+(the Milayou scene → the night Farm → credits); else the words and a warp (8 frames' delay
+first — a warp at the first entry tick left a white screen). Both rooms' copied
+`map_transition $0006 / $005D` are retargeted to the copies.
+
+**Checks:** the rooms exist and are copies of `$06` / `$5D`, the return cell is a floor cell
+of the lobby, ≤ 8 terms per class, `then` rooms / cells exist, a `hub` with no hub rules
+warns (→ the Castle), nothing in the lobby carrying script 6 warns.
+
+**Limits:** one arena per project; `$CAB4` (classes won) is shared with the game's own arena;
+Monster Grandpa's match (group 9) is not offered (it stays in the game's arena); the
+walk-in / announcer / crowd are the copied scripts.
+
+**Exits (S128 r3):** a door object may span a double exit: the second cell's rows carry
+`twin_of` = the door id (no `door` key) — they get the same destination when linked and
+lose it when unlinked; `_unlinked_door` skips a `twin_of` row without `dest` like an
+unconnected door (no error). `Document.connect_ends` turns plain exits into doors first.
+
+**Flags (S128 r2):** `number_flags` (the compiler) moves an "auto" flag that lands on a
+`GAME_SHARED_FLAGS` number (`$0158`) to the lowest free `FLAG_AUTO_RANGES` number — the
+others keep theirs; `Document._migrate_shared_flags` does the same for a pinned flag on open
+(the quest flags written in first), so the editor's numbers == the compiler's. The example
+project ships moved (`vault_guardian_beaten` `$015A`, `vault_cutscene_seen` `$0159`);
+REFERENCE_MD5 `3a9c38fb…` (patched; prev `00221d54…`, the S128 engine, historical).
+
 
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 

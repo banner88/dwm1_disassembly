@@ -81,7 +81,10 @@ KINDS = {
                          "rolled from a breeding pool each time the room appears"),
 }
 LINE_KINDS = ('shop', 'vault', 'farm', 'library', 'namer', 'medals', 'eggs', 'grandpa',
-              'breeder')
+              'breeder', 'arena')
+# S128 (ROADMAP P3.14e3): 'arena' = the class menu of the project's arena desk
+# (custom.arena.lines, editor2/core/your_arena.py) — a line kind, not a service NPC
+LINE_KIND_NAMES = {'arena': 'Arena desk'}
 # S127: lines of a block no line set can change — the breeding ceremony (map $08
 # script 0, a vanilla script) speaks them by their ids, not through SayText
 FIXED_LINES = {'grandpa': {0x0D: 'the ceremony says it ("… & … disappeared.")',
@@ -440,6 +443,10 @@ def resolve(prj):
         for ref in (sv.get('lines'), sp.get('lines') if isinstance(sp, dict) else None):
             if ref and ref in sets and ref not in used and not sets[ref].get('everywhere'):
                 used.append(ref)
+    ar = (prj.custom.get('arena') or {}) if isinstance(prj.custom.get('arena'), dict) else {}
+    ref = ar.get('lines')                 # S128: your arena's desk (custom.arena.lines)
+    if ref and ref in sets and ref not in used and not sets[ref].get('everywhere'):
+        used.append(ref)
     if len(used) > MAX_SETS:
         raise ServiceError(f"{len(used)} line sets used by scripts (max {MAX_SETS})")
     numbers = {sid: i + 1 for i, sid in enumerate(used)}

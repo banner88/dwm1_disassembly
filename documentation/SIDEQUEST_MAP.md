@@ -369,17 +369,17 @@ scripted preset [$05/$20/$36], 2 = party-scaled random [$52], 3 = boss
 So the arena rosters are **90 consecutive enemy-stats rows from EID 224**:
 groups 0-7 = classes G F E D C B A S (3 matches × 3 monsters each), group 8 =
 Starry Night (EIDs 296-304; final = MetalKing/Coatol/RainHawk L50), group 9 =
-**King battle** — the formula result is overridden in code with EIDs
+**Monster Grandpa's match** (S128 r2 user correction — not a King battle) — the formula result is overridden in code with EIDs
 `$01E1-$01E3` (GoldSlime/Divinegon/Rosevine L70); group 9's formula rows
 (EIDs 305-313, rival-species teams incl. Rayburn/Eyeder/DeadNite) are
 unreachable cut data. `wArenaGroup` (`$D9CE`) is set by the bank `$09` lobby
 class menu (`4*[$C8E3] + ([$C8E2]&$7F)`, availability bytes at `$C0D8`, entry
 gold word table `$09:$5D23` = 0/10/50/100/500/1000/5000/10000 for G→S) — or
 directly by Arena Lobby **scr6** (`write_ram $D9CE=8` + `$D999=1` for Starry
-Night; `$D9CE=9` + `$D999=4` for the King), which then runs opcode `$1F` and
+Night; `$D9CE=9` + `$D999=4` for Monster Grandpa's match), which then runs opcode `$1F` and
 teleports to map `$5D` (Arena Battle). Map `$5D` scr0 stages the pre-fight
 scene (master sprite from `ArenaMasterSpriteTable` `$04:$5E22`, 30×2
-`[gfx_id, is_monster]`; dup `$50:$6778` without King rows) and launches with
+`[gfx_id, is_monster]`; dup `$50:$6778` without Monster Grandpa rows) and launches with
 opcode `$20`. Bank `$50` post-battle (`Jump_050_640a`, map `$5D` branch)
 regenerates the next match's EIDs, handles loss (`wColiseumBattle=$FF`, warp
 to lobby) and the Starry phase machine (`$D999` 0→1→2→3).
@@ -467,7 +467,7 @@ EID 296) played the project's arena song.
 **The editor surface** (Arena tab; PROJECT_COMPILER §2.25 `gamedata.arena`;
 EDITOR_DESIGN §5.2b): per class the entry fee, per match the master and the
 team size (1-3), and the team members as their enemy rows (`gamedata.enemies`,
-EID = the formula above; the King 481-483). Bracket shape (classes / matches)
+EID = the formula above; Monster Grandpa's match 481-483). Bracket shape (classes / matches)
 stays fixed.
 
 **Who reads what (verified S109):**
@@ -477,7 +477,7 @@ stays fixed.
   counts `wColiseumBattle` up BEFORE its `cmd_20` (so match 0 fights with
   `$D9CD` = 1), and `BattleExitHandler` (`$50:$640A`, map `$5D` branch) calls
   `LoadArenaEnemyStats` after every win, which builds match `wColiseumBattle`
-  = the NEXT one (returns at 3). The King (group 9, lobby scr6 `$D9CE` = 9,
+  = the NEXT one (returns at 3). Monster Grandpa's match (group 9, lobby scr6 `$D9CE` = 9,
   `$D999` = 4) is ONE match: the room sets `$D9CD` = 3 before the fight.
 - The display list `$D7CA-$D7D1` ([draw id, is_monster] × 4) feeds the room's
   NPCs `$F0-$F3` (bank `$0B` `Call_00b_4839`): entry 0 = the master
@@ -514,6 +514,25 @@ stays fixed.
   took 20.
 - **Prizes:** none — winning a class only advances flags / `$CAB4` / world
   steps (the victory cascade above; user S109: "Only flags progression").
+
+### Your arena (S128, ROADMAP P3.14e3) ✅ [built S128; test ROM USER-CONFIRMED 2026-10-07]
+
+The project's own arena = COPIES of the Arena Lobby (`$06`) and the Arena Battle room
+(`$5D`), treated by the engine as those rooms (ROM0 `ArenaAlias`; CROSSBANK_ROOMS "S128
+sites"; PROJECT_COMPILER §2.41). The game's flow, measured on the user's save:
+- the desk = lobby script 6 on an `$8F` examine spot at (3, 4), screen 1 → menu `op $04 4
+  $0710` → the walk-in (`$C8ED` masks 1 / 3 / 7 / `$F`) → op `$1F` ArenaBattleSetup →
+  `map_transition $5D` at px (`$78`, `$58`);
+- the Arena Battle room's script 0 runs again after every match (`BattleExitHandler`
+  `res 7,[$C8EA]`), counting `$D9CD`; after match 3 "Congratulations" (`$0126`), `$D9CD` =
+  `$FE`, back to `$06` at (`$E8`, `$48`); the lobby's script 0 then runs the class's
+  victory cascade (flags `$0030-$0037`, `$CAB4` = class + 1, the world steps);
+- a lost match: `BattleExitHandler` sets `$D9CD` = `$FF` and warps to the lobby — no penalty;
+- Starry Night: `$D9CE` = 8, `$D999` 1 → 2 → 3; after the final the Milayou / Warubou scene →
+  game mode 3 (the night Farm) → credits → the post-game; a lost Starry match → the hub.
+Your arena adds per class a lock (bank $6E `ArenaMarkClasses`, "-"), a won flag, words and
+where a win goes; Starry Night offered by flag. Monster Grandpa's match (group 9) stays in
+the game's arena (user S128: the post-game uses it).
 
 ### Story progression ENGINE + AUTHORING SPEC — DECODED S68 (ROADMAP E2 RE half)
 

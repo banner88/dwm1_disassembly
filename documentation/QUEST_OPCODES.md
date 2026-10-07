@@ -21,7 +21,7 @@ Calculates the 3-monster enemy team for arena battles based on current arena sta
 - `enemy_base = wArenaGroup * 3 + wColiseumBattle`
 - Each of the 3 enemy IDs = `$00E0 + enemy_base * 3 + offset` (offset 0-2)
 - Writes enemy IDs to $DA03-$DA08 (3 × 16-bit LE); $DA02 = 2 (= count−1)
-- Special case: `wArenaGroup == 9` → King battle party ($01E1-$01E3 =
+- Special case: `wArenaGroup == 9` → Monster Grandpa's match party (S128 r2 user correction: not a King battle) ($01E1-$01E3 =
   GoldSlime/Divinegon/Rosevine L70); group-9 formula rows 305-313 unreachable
 - Loads the pre-fight display list to $D7CA-$D7D1: master sprite from
   `ArenaMasterSpriteTable` $04:$5E22 (30 × [gfx_id, is_monster]; 27-entry dup

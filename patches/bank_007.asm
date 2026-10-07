@@ -4857,7 +4857,7 @@ jr_007_6004:
     or a
     jr nz, jr_007_6039
 
-    ld a, [wMapID]
+    call ArenaMapID          ; S128: was ld a, [wMapID] — your arena lobby counts as $06
     cp $06
     jr nz, jr_007_6039
 

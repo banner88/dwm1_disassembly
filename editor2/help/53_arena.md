@@ -1,21 +1,26 @@
 # Arena
 
 The **Arena** tab edits the arena: the eight classes **G F E D C B A S**,
-the **Starry Night** tournament and the **King** (the Master Monster Tamer).
+the **Starry Night** tournament and **Monster Grandpa's match** (GoldSlime,
+Divinegon, Rosevine).
 Pick one on the left; bold = changed from the original game, and the numbers
 after a name are its team sizes when they are not 3.
 
 **Entry fee** (classes only) — the gold the class menu at the lobby shows
 and takes when you register (0-65535). **Original fee** puts it back.
 
-**Winning it** — what the game does when the class is won (the rank flag,
-the arena progress that also makes chest Mimics stronger, the world
-changes). It is shown for reference; event flags are edited on the
-Progression & Flags tab (not built yet).
+**Winning it** — what the game does when the class is won in the game's own
+arena (the rank flag, the arena progress that also makes chest Mimics
+stronger, the world changes). It is shown for reference.
+
+**★ Your arena** (the list's first row) — your project's own arena: copies of
+the Arena Lobby and the Arena Battle room you can paint and connect anywhere,
+and per class *when it opens*, *the flag a win turns ON* and *where a win sends
+you* (the box "In your arena" on each class page). See *Your arena*.
 
 ## A match
 
-Each class and Starry Night fight three matches, the King one.
+Each class and Starry Night fight three matches, Monster Grandpa's match one.
 
 - **Master** — who stands for the match in the Arena Battle room before the
   fight. Click it to pick a person (the same sprites as room NPCs) or any
@@ -34,7 +39,7 @@ Each class and Starry Night fight three matches, the King one.
 ## What the game does
 
 The arena has no team list: match *m* of class *c* always fights the enemy
-rows $E0 + 9·c + 3·m + 1, 2, 3 (the King: rows 481-483). The editor keeps
+rows $E0 + 9·c + 3·m + 1, 2, 3 (Monster Grandpa's match: rows 481-483). The editor keeps
 them where the game looks for them. Your project also gets a small new part
 of the game (bank $6E) that tells the arena how many of the three rows to
 use — with every team at 3 it does exactly what the original did.

@@ -557,6 +557,11 @@ jr_001_43fd:
     ret
 
 
+; S128 (ROADMAP P3.14e3, your arena): SaveMapStateToHRAM's destination class (H$D5 = the map:
+; $5D -> 1, $5E -> [$C81B], $2F -> 2, < $30 -> 3, else 0; it picks the SGB
+; border / colour mode). patches/ rewrites this block same size so the
+; project's arena copies (ARENA_LOBBY_MID / ARENA_BATTLE_MID) class as $06 / $5D
+; through ROM0 ArenaAlias.
 jr_001_4405:
     ldh a, [$d5]
     cp $5e
@@ -3765,6 +3770,9 @@ CheckScriptBeforeAction:
     or a
     jr nz, jr_001_568c
 
+    ; S128 (ROADMAP P3.14e3, your arena): CheckScriptBeforeAction keeps the follower monsters
+    ; hidden ($C8ED) in the arena rooms $06 / $5D; patches/ -> call ArenaMapID
+    ; (the project's arena copies count as those ids).
     ld a, [wMapID]
     cp MAP_BATTLE1 ;arena entrance
     jr z, jr_001_5690

@@ -1413,6 +1413,18 @@ def _arena_regions():
 REGISTRY += _arena_regions()
 
 
+def _your_arena_regions():
+    # S128 (P3.14e3): your arena — the copies' map ids, the return pixel, the locked
+    # words' offset and the classes' locks (editor2/core/your_arena.py, PROJECT_COMPILER
+    # §2.41). No custom.arena == $FF ids / no locks (the game's arena unchanged).
+    from . import your_arena as YA
+    return [(name, "custom.arena", f"region:{path}#{name}", fn, [bank])
+            for name, path, fn, bank in YA.REGIONS]
+
+
+REGISTRY += _your_arena_regions()
+
+
 def _shop_regions():
     from . import shops as SH
     return [(name, "gamedata.items", f"region:{path}#{name}", fn, [bank])

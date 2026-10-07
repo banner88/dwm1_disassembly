@@ -68,6 +68,8 @@ LoadBattle:
 ; Every other battle (wild, boss, arena class, scripted) starts $27 here.
 jr_051_4073:
     ld b, $27
+    ; S128 (ROADMAP P3.14e3, your arena): the arena battle music / $C8EA test ($5D);
+    ; patches/ -> call ArenaMapID.
     ld a, [wMapID]
     cp $5d
     jp nz, Jump_051_408b
@@ -553,6 +555,9 @@ LoadBtlS_43c9:
     or a
     jr z, jr_051_43e0
 
+    ; S128 (ROADMAP P3.14e3, your arena): LoadBtlS_43c9 — battle type $DB73 = 2 (arena: boss
+    ; protection off) when the script map is $5D; patches/ -> call
+    ; ArenaScriptType51.
     ld a, [wScriptMapType]
     cp $5d
     jr nz, jr_051_43e4

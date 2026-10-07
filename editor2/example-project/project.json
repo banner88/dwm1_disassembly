@@ -9861,6 +9861,18 @@
      "comment": "blue-dragon walking art (G1); walks like Armorpion (layout 0, $11:$4184); OBJ palette 2 = blue"
     }
    }
+  ],
+  "flags": [
+   {
+    "name": "vault_guardian_beaten",
+    "index": "0x015A",
+    "comment": "progression.quests[medal_vault] done"
+   },
+   {
+    "name": "vault_cutscene_seen",
+    "index": "0x0159",
+    "comment": "progression.quests[medal_vault] cutscene_seen"
+   }
   ]
  },
  "build": {

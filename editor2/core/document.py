@@ -47,6 +47,7 @@ from editor2.core.worlds import WorldsMixin
 from editor2.core.hub_doc import HubMixin
 from editor2.core.services_doc import ServicesMixin
 from editor2.core.breeders_doc import BreedersMixin
+from editor2.core.your_arena_doc import YourArenaMixin   # S128 (P3.14e3)
 from editor2.core.formats import anim_source as F_anim
 
 SCREEN_W, SCREEN_H = 20, 16
@@ -122,7 +123,7 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
                ConversationMixin, EnemiesMixin, FamiliesMixin, MonstersMixin,
                ArenaMixin, SkillsMixin, AnimsMixin, BreedingMixin, EncountersMixin,
                MusicMixin, ShopsMixin, MillyMixin, WorldsMixin, HubMixin, ServicesMixin,
-               BreedersMixin):
+               BreedersMixin, YourArenaMixin):
     def __init__(self, path):
         self.path = path if path.endswith('.json') else \
             os.path.join(path, 'project.json')
@@ -736,6 +737,12 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
                 states = [st0]
                 base_item = self.layout_by_id_in(layouts, base_lid)
                 pal0 = renderer.vanilla_step_palette_words(source_mid, int(k), 0)
+                # S128 r2: steps that draw the SAME vanilla layout share ONE
+                # layout item (the Arena Battle room: steps 1-4 all draw $2315,
+                # the night arena) — painting it once shows in every state that
+                # showed that picture in the original (before: one item per step,
+                # so a Starry Night edit vanished from match 2 on — PyBoy S128 r2)
+                shared = {}
                 for n, st in enumerate(steps[1:], 1):
                     b01 = int(st['bytes_0_1'], 16)
                     grid = renderer.vanilla_layout_grid(b01 >> 8, b01 & 0xFF)
@@ -747,7 +754,13 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
                         own['tiles'] = [list(r) for r in grid]
                     if attr_n and attr_n != base_item.get('attr'):
                         own['attr'] = [list(r) for r in attr_n]
-                    if own:
+                    key = (b01, json.dumps(own.get('attr')))
+                    if own and key in shared:
+                        entry['layout'] = {'id': shared[key]}
+                        if 'attr' in own:
+                            entry['attr'] = {'id': shared[key]}
+                    elif own:
+                        shared[key] = lid
                         item = {'id': lid}
                         item.update(own)
                         if 'tiles' not in item:
@@ -2794,21 +2807,66 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         now on a rename / delete moves nothing. (The legacy quests' flags the
         compiler adds at build time stay implicit: they come LAST in its list,
         and a new flag never takes their numbers — _free_flag_number.)"""
+        from editor2.core.project import (FLAG_SAFE_RANGES, number_flags,
+                                          quest_flag_entries)
         flags = self.custom.get('flags') or []
-        if all(str(f.get('index', 'auto')) != 'auto' for f in flags):
-            return
-        nums = self.flag_numbers()
-        if not nums:
+        implicit = quest_flag_entries(self.custom, self.data.get('progression'))
+        # the numbers the project had (pre-S128 numbering: "auto" from $0158)
+        try:
+            legacy = number_flags(list(flags) + implicit, ranges=FLAG_SAFE_RANGES)
+        except (ValueError, TypeError):
             return
         n = 0
-        for f in flags:
-            if str(f.get('index', 'auto')) == 'auto' and f.get('name') in nums:
-                f['index'] = f"0x{nums[f['name']]:04X}"
+        for f, idx in zip(flags, legacy):
+            if str(f.get('index', 'auto')) == 'auto':
+                f['index'] = f"0x{idx:04X}"
                 n += 1
         if n:
             notes.append(f'flags: {n} flag number{"s" if n != 1 else ""} written in (S124) — '
                          'renaming or deleting a flag never renumbers the others, so old '
                          'saves keep their meaning')
+        self._migrate_shared_flags(notes, legacy[len(flags):], implicit)
+
+    def _migrate_shared_flags(self, notes, implicit_nums=(), implicit=()):
+        """S128 r2 (user: "This should NOT be happening by default, not requiring
+        manual curation"): a project flag on a number the original game also uses
+        (GAME_SHARED_FLAGS: $0158, the Arena Battle room's Milayou rematch) gets
+        the lowest free number of FLAG_AUTO_RANGES on open — automatically, no
+        Renumber needed. A legacy quest's implicit flag on it: the quest flags are
+        written in at their numbers first, so only the clashing one moves."""
+        from editor2.core.project import FLAG_AUTO_RANGES, GAME_SHARED_FLAGS
+        flags = self.custom.setdefault('flags', [])
+        moving = any(idx in GAME_SHARED_FLAGS for idx in implicit_nums) or any(
+            str(f.get('index', 'auto')) != 'auto' and val(f['index']) in GAME_SHARED_FLAGS
+            for f in flags)
+        if moving:
+            # the quest flags are written in at their numbers first — else the
+            # freed $0158 would renumber them (they are numbered after the others)
+            for ent, idx in zip(implicit, implicit_nums):
+                flags.append({'name': ent['name'], 'index': f'0x{idx:04X}',
+                              'comment': ent.get('comment') or 'quest flag'})
+        used = set(implicit_nums)
+        for f in flags:
+            if str(f.get('index', 'auto')) != 'auto':
+                used.add(val(f['index']))
+        free = (i for lo, hi in FLAG_AUTO_RANGES for i in range(lo, hi + 1) if i not in used)
+        for f in flags:
+            if str(f.get('index', 'auto')) == 'auto':
+                continue
+            idx = val(f['index'])
+            if idx not in GAME_SHARED_FLAGS:
+                continue
+            new = next(free, None)
+            if new is None:
+                notes.append(f"flag {f.get('name')!r} is ${idx:04X} (the game's) and the "
+                             'flag pool is full — it stays there')
+                continue
+            f['index'] = f'0x{new:04X}'
+            notes.append(f"flag {f.get('name')!r}: ${idx:04X} -> ${new:04X} (S128 r2) — "
+                         f"${idx:04X} belongs to {GAME_SHARED_FLAGS[idx]}; a save made "
+                         'before reads this flag OFF once')
+        if not flags:
+            self.custom.pop('flags', None)
 
     def flag_pool(self):
         """(used, capacity) of the named-flag pool (S117: the vanilla-safe flags

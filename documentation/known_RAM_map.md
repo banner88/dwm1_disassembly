@@ -474,8 +474,11 @@
    1:D999   1    wArenaStarryBattle — step counter of map $5D (Arena Battle
                  room; zero literal code refs, accessed via the step system).
                  Written by Arena Lobby scr6: 0 = normal arena, 1 = Starry
-                 Night, 4 = King battle. Bank $50 post-battle advances the
+                 Night, 4 = Monster Grandpa's match. Bank $50 post-battle advances the
                  Starry phase 1→2→3 ($50:Jump_050_640a). [S67]
+                 S128: as the $5D room's step counter it picks the state: 0 = the
+                 classes (layout $2314, day), 1-4 = the night arena ($2315) — a
+                 copy of $5D needs all 5 states (PROJECT_COMPILER §2.41).
                  S116 (code-read, bank $50 ~$6470): 1 for the Starry Night's three
                  matches (wColiseumBattle 0-2); winning the third sets 2 = the FINAL
                  battle — the one bank $51 LoadBattle gives battle song $2B (vanilla;

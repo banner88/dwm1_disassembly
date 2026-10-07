@@ -399,6 +399,21 @@ behaviour, no tile save) — **CP_UNSIGNED** (`("bank_077.asm", "ServiceOpenTile
 `tools/audit_mapid_range.py`; `extracted/mapid_range_audit.json` regenerated: clean 58,
 patched 86). `PushAttrActive` (S117b) is unchanged. No table is indexed by mapID.
 
+**S128 sites (your arena, PROJECT_COMPILER §2.41).** The arena was keyed on the vanilla
+ids `$06` (MAP_BATTLE1) / `$5D` (MAP_BTLDEMO) at nine `ld a, [wMapID]` /
+`ld a, [wScriptMapType]` sites; each now goes through ROM0 `ArenaAlias` (the project's
+`ARENA_LOBBY_MID` / `ARENA_BATTLE_MID` → `$06` / `$5D`, `$FF` = no arena): banks $01
+`CheckScriptBeforeAction` + `SaveMapStateToHRAM`'s class (same size), $03 the escape skill,
+$07 the lobby monsters, $50 `BattleExitHandler` + `$5730` (`ArenaScriptType50`) + the loss
+mailbox (`ArenaLossWarp50`, an equality `cp ARENA_BATTLE_MID`), $51 the music +
+`LoadBtlS_43c9` (`ArenaScriptType51`), the bank $71 template `BattleBGMResolve` (two reads),
+bank $6E `ArenaMarkClasses` (`cp ARENA_LOBBY_MID`). New audit keys `ArenaMapID#0`,
+`ArenaLossWarp50#0`, `ArenaMarkClasses#0` = **CP_UNSIGNED** (equality tests);
+`BattleBGMResolve` re-keyed (0 BOUNDED, 1 CP_UNSIGNED). `extracted/mapid_range_audit.json`
+regenerated: clean 58, patched 84. Deliberately NOT aliased: `CheckGateWorldMapType` (the
+copies must stay gate-like, S70) and the bank $06 text-sprite rule (the copies carry
+`text_keeps_sprites`).
+
 **S127 sites (breeding NPCs, PROJECT_COMPILER §2.40).** Two reads, both **CP_UNSIGNED**:
 bank $73 entry 0 `CF2WarpCommitDrain` — `cp $08` (equality: the ceremony map $08 keeps
 the random-breeder slots, every other committed transition clears them); bank $77

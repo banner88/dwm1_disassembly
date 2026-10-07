@@ -448,3 +448,20 @@ edge and the battle waits for input forever.
   `$C919/$C91A` (bottom = `[$C909] + $01A0`) after each box opens; drive the talk from a cell in
   the lower half too (the default flips at player y − scroll ≥ `$50`).
 
+## S128 techniques — the arena
+
+- **Arena desk walk:** from the lobby's screen 1 (14, 7) up 3 to (14, 4), face left, A (the
+  desk is an examine spot across the counter). The class menu's selection state =
+  `$C8EF` 4, `$C905` 3, `$C906` 2; the cursor = `$C8E3` (column) / `$C8E2 & $7F` (row); the
+  marks `$C0D8`-`$C0DF` (`$90` open, `$AC` won, `$9C` locked).
+- **Win / lose a match:** poke the enemy HP words `$DBAB` / `$DBAD` / `$DBAF` to 1 (win), or
+  each party monster's HP (`$CAC1 + idx × $95 + $50`) to 1 (lose). `$D9CD` after the return:
+  `$FE` won the class, `$FF` lost.
+- **Text ids:** hook `TextBankDispatch` (`$00:$0AD9`, HL = id) and `CustomTextDisplay` (bank
+  $60; id = `$0A00 + [$C822] × 256 + [$C823]`) — the run's whole dialogue in order.
+- **Paint checks:** snapshot the arena room ~200 frames after each battle (mode 2 → 1) to see
+  that the room's tiles survive the post-battle redraw.
+- **Trap — four PyBoys reading one .sav at once:** one boot failed (a read race); start runs
+  20 s apart.
+- **Trap — an NPC driver that presses A after the last box re-talks the NPC:** press A only
+  while the script flag (`$D8D7` bit 0) is set and a box (`$C8EB` bit 0) is up.

@@ -78,26 +78,42 @@ jr_00b_4027:
 
 
 
-    ; Select tileset table based on gate flag
-    ; Normal rooms: $26DD (bank 0), Gate rooms: $2A5D (bank 0)
-    ; Each entry is 8 bytes: [gfx_ptr:2][spawn_data:6]
-    ld de, $26dd                    ; tileset_table (normal rooms)
-    ld a, [wInGateworld]
-    or a
-    jr z, jr_00b_4037
+    ; Vanilla selected the tileset table here (ld de,$26dd / $2a5d by
+    ; wInGateworld, 12 bytes) — dead since S40: bank $71 entry 0 below picks the
+    ; table itself and never reads DE. S128 r3 (user: "player sprite fucked in
+    ; arena … Its the milly thing"): those 12 bytes + the 3 nops after the fetch
+    ; now hold MillyE0Type (jumped over here; same total size, every later
+    ; address unchanged).
+    jr jr_00b_4037
 
-    ld de, $2a5d                    ; tileset_table (gate rooms)
+; MillyE0Type (S128 r3): the NPC sprite id $E0 = the PLAYER drawn as an NPC (the
+; arena's stand-in, cutscene casts). CmpRoom_4839 draws it with the player's VRAM
+; sheet (tile base 0) and NPC frame id $5E (Terry's frames, into the slot's +$11).
+; With the Milly hook on (flag $179F) the player's sheet is Milayou's ($3114,
+; bank $79 MillyPlayerSheet), so Terry's frames cut her tiles up (PyBoy S128 r3, the
+; user's save: the arena stand-in garbled — in the game's arena and the project's).
+; Flag set -> frame id $14 = Milayou's own NPC frames over that same sheet: drawn
+; exactly like the hook's cast NPC (sprite $14), no extra VRAM. Flag clear -> $5E,
+; the vanilla byte. Called from jr_00b_48ba (`call MillyE0Type / ld a,b / ret`);
+; DE = the slot's +$11.
+MILLY_E0_FLAG EQU $179F                 ; = bank $79 MILLY_FLAG (that bank is empty with the hook off)
+MillyE0Type:
+    ld a, [wExtFlags + (MILLY_E0_FLAG - $1000) / 8]
+    and $80 >> (MILLY_E0_FLAG & 7)
+    ld a, $5e                           ; Terry's NPC frames (vanilla)
+    jr z, .store
+    ld a, $14                           ; Milayou's NPC frames (the Milly hook)
+.store:
+    ld [de], a
+    ret
 
 jr_00b_4037:
     ; Table-driven record fetch (all mapIDs, incl $70+ past the old ceiling):
     ; bank $71 entry 0 far-copies the 8-byte $26DD record for wMapID into
-    ; wRoomRecScratch; HL → scratch. (DE base set above is now unused but kept.)
+    ; wRoomRecScratch; HL → scratch.
     ld hl, $7100
     rst $10
     ld hl, wRoomRecScratch
-    nop
-    nop
-    nop
     ld e, [hl]
     inc hl
     ld d, [hl]
@@ -1941,8 +1957,7 @@ jr_00b_48b1:
 
 
 jr_00b_48ba:
-    ld a, $5e
-    ld [de], a
+    call MillyE0Type                    ; S128 r3: was ld a,$5e / ld [de],a (the Milly hook)
     ld a, b
     ret
 

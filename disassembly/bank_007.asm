@@ -4863,6 +4863,8 @@ jr_007_6004:
     or a
     jr nz, jr_007_6039
 
+    ; S128 (ROADMAP P3.14e3, your arena): the Arena Lobby ($06, screen 0) refreshes the party
+    ; monsters sitting at its table; patches/ -> call ArenaMapID.
     ld a, [wMapID]
     cp $06
     jr nz, jr_007_6039

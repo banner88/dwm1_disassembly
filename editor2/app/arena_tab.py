@@ -2,20 +2,28 @@
 model: editor2/core/arena_doc.py, compiler: editor2/core/arena.py).
 
 Left: the ten arena groups — the classes G F E D C B A S (with their entry
-fee), Starry Night and the King. Right: the group's entry fee, what winning it
+fee), Starry Night and Monster Grandpa's match. Right: the group's entry fee, what winning it
 does (read-only — flags belong to the Progression & Flags tab) and one card
-per match (three; the King fights one):
+per match (three; Monster Grandpa's match is one):
 
   Master       who stands for the match in the Arena Battle room — a person
                (NPC sprite) or any monster, picked like an NPC sprite.
   Monsters     1, 2 or 3: a smaller team fights only its first monsters.
   the team     one row per monster = its enemy row (EID = $E0 + 9*group +
-               3*match + slot; the King $01E1-$01E3): the monster, level,
+               3*match + slot; Monster Grandpa $01E1-$01E3): the monster, level,
                stats, exp, AI weights, battle skills. Rows the team does not
                use are grey ("not fought").
 
 Every edit is one undo step (SnapshotCommand); the model validates with the
 compiler's own code (no summon / TERRY? in a fighting team — Iron Rule 8).
+
+S128 (ROADMAP P3.14e3) — YOUR ARENA: the list's first row "Your arena" = the
+project's own arena (custom.arena, editor2/core/your_arena.py): copies of the
+game's Arena Lobby and Arena Battle room (Make your arena), where a lost match /
+a win puts you in the lobby, the desk's words. Each class page (and Starry Night)
+then shows "In your arena": when the class opens (flags), the flag a win turns ON,
+the won words, where a win sends you (the lobby / a room / the hub; Starry Night
+also the game's ending).
 """
 
 from PySide6.QtCore import QSize, Qt
@@ -33,6 +41,8 @@ from editor2.app.rooms import commands as C
 from editor2.core import arena as AR
 from editor2.core import arena_doc as AD
 from editor2.core import monsters as M
+from editor2.core import your_arena as YA
+from editor2.core import your_arena_doc as YD
 
 HELP = ('The arena\'s teams are ordinary enemy rows: each match fights three rows in a '
         'fixed place (the same rows the Monsters tab lists as "arena class …"). Change a '
@@ -208,6 +218,387 @@ class MatchCard(QGroupBox):
         self.tab.set_field(self.info['slots'][r]['eid'], key, val)
 
 
+def _boxes_text(boxes):
+    """GameTextField boxes -> the menu-line text form ('\n' a line, '\n\n' a box)."""
+    return '\n\n'.join('\n'.join(b) for b in boxes) if boxes else None
+
+
+def _text_boxes(text):
+    if not text:
+        return None
+    return [b.split('\n') for b in str(text).split('\n\n')]
+
+
+def _inline(v):
+    """A custom.arena TEXT -> boxes for a GameTextField (a dialogue id shows empty)."""
+    return [list(b) for b in v['boxes']] if isinstance(v, dict) and v.get('boxes') else None
+
+
+class YourArenaPage(QWidget):
+    """S128: the project's own arena — rooms, return cell, the desk's words."""
+
+    def __init__(self, tab):
+        super().__init__()
+        from editor2.app.rooms.cell_picker import CellPicker
+        from editor2.app.rooms.talk_editor import GameTextField
+        self.tab, self.s = tab, tab.s
+        rom = getattr(self.s.renderer, 'rom', None)
+        v = QVBoxLayout(self)
+        lab = QLabel('<b>Your arena</b> — the game\'s Arena Lobby and Arena Battle room copied '
+                     'into your project: edit their tiles, NPCs and doors on the Rooms tab '
+                     '(a door from any of your rooms leads in; the lobby\'s doors can lead '
+                     'anywhere). The receptionist (the lobby\'s script 6) opens the class menu; '
+                     'the walk into the arena, the announcer and the crowd are the game\'s. '
+                     'The teams, masters and fees are the class pages below; on each class page '
+                     '"In your arena" sets when the class opens, the flag a win turns ON and '
+                     'where a win sends you. Monster Grandpa\'s match stays in the original game\'s '
+                     'arena (your post-game).')
+        lab.setWordWrap(True)
+        v.addWidget(lab)
+        self.make_btn = QPushButton('Make your arena (copy the Arena Lobby and the Arena '
+                                    'Battle room)')
+        self.make_btn.clicked.connect(self._make)
+        v.addWidget(self.make_btn)
+        self.body = QWidget()
+        bv = QVBoxLayout(self.body)
+        bv.setContentsMargins(0, 0, 0, 0)
+        row = QHBoxLayout()
+        row.addWidget(QLabel('Lobby:'))
+        self.lobby = QComboBox()
+        row.addWidget(self.lobby, 1)
+        b = QPushButton('Open')
+        b.clicked.connect(lambda: self._open(self.lobby.currentData()))
+        row.addWidget(b)
+        row.addSpacing(16)
+        row.addWidget(QLabel('Arena:'))
+        self.battle = QComboBox()
+        row.addWidget(self.battle, 1)
+        b = QPushButton('Open')
+        b.clicked.connect(lambda: self._open(self.battle.currentData()))
+        row.addWidget(b)
+        b = QPushButton('Use these rooms')
+        b.clicked.connect(self._rooms)
+        row.addWidget(b)
+        bv.addLayout(row)
+        bv.addWidget(QLabel('<b>Back in the lobby</b> — where a lost match and a won class '
+                            'put you (click a cell):'))
+        rrow = QHBoxLayout()
+        self.picker = CellPicker(self.s, 'BACK')
+        rrow.addWidget(self.picker)
+        b = QPushButton('Set')
+        b.clicked.connect(self._return)
+        rrow.addWidget(b, 0, Qt.AlignTop)
+        rrow.addStretch(1)
+        bv.addLayout(rrow)
+        self.words = {}
+        for key, title, note in (
+                ('lost', 'Lost a match', 'the game\'s "Too bad. You need more training…"'),
+                ('no', 'Backed out of the menu', 'the game\'s "Better luck next time."'),
+                ('locked', 'A class that is not open yet',
+                 f'"{YA.LOCKED_DEFAULT.replace(chr(10), " ")}"')):
+            bv.addWidget(QLabel(f'<b>{title}</b> — the receptionist says (empty = {note}):'))
+            ed = GameTextField(rom, None, empty_note=note)
+            self.words[key] = ed
+            bv.addWidget(ed)
+        wrow = QHBoxLayout()
+        b = QPushButton('Apply the words')
+        b.clicked.connect(self._words)
+        wrow.addWidget(b)
+        wrow.addStretch(1)
+        b = QPushButton('Remove your arena')
+        b.setToolTip('custom.arena goes — the two rooms stay as ordinary copies')
+        b.clicked.connect(self._remove)
+        wrow.addWidget(b)
+        bv.addLayout(wrow)
+        v.addWidget(self.body)
+        self.problems = QLabel('')
+        self.problems.setWordWrap(True)
+        self.problems.setStyleSheet('color:#f88;')
+        v.addWidget(self.problems)
+        v.addStretch(1)
+
+    def refresh(self):
+        doc = self.s.doc
+        a = doc.your_arena()
+        self.make_btn.setVisible(a is None)
+        self.body.setVisible(a is not None)
+        probs = doc.your_arena_problems() if a is not None else []
+        self.problems.setText('<br>'.join('⚠ ' + p for p in probs))
+        if a is None:
+            return
+        for combo, src, cur in ((self.lobby, YA.LOBBY_SOURCE, a.get('lobby')),
+                                (self.battle, YA.BATTLE_SOURCE, a.get('battle'))):
+            combo.blockSignals(True)
+            combo.clear()
+            for rid, name in doc.arena_room_choices(src):
+                combo.addItem(name, rid)
+            combo.setCurrentIndex(max(0, combo.findData(cur)))
+            combo.blockSignals(False)
+        try:
+            self.picker.set_room(a.get('lobby'))
+            r = dict(YA.RETURN_DEFAULT, **(a.get('return') or {}))
+            self.picker.set_cell(int(r['screen']), int(r['x']), int(r['y']))
+        except Exception:                                        # noqa: BLE001
+            pass
+        w = a.get('words') or {}
+        self.words['lost'].set_value(_inline(w.get('lost')))
+        self.words['no'].set_value(_inline(w.get('no')))
+        self.words['locked'].set_value(_text_boxes(w.get('locked')))
+
+    def _open(self, rid):
+        win = self.window()
+        if rid and hasattr(win, 'navigate_to'):
+            win.navigate_to({'tab': 'rooms', 'room': rid})
+
+    def _make(self):
+        from editor2.app.session import REPO
+        rend = self.s.renderer
+        if QMessageBox.question(self, 'Your arena', 'Copy the Arena Lobby ($06) and the Arena '
+                                'Battle room ($5D, every state — Starry Night is at night) into '
+                                'your project as your arena?') != QMessageBox.Yes:
+            return
+        self.tab._push('Make your arena', lambda doc: doc.make_your_arena(REPO, rend))
+
+    def _rooms(self):
+        lo, ba = self.lobby.currentData(), self.battle.currentData()
+        self.tab._push('Your arena: rooms', lambda doc: doc.set_your_arena_rooms(lo, ba))
+
+    def _return(self):
+        k, x, y = self.picker.cell()
+        if self.picker.is_wall(x, y):
+            QMessageBox.warning(self, 'Your arena', f'({x},{y}) is a wall — click a floor cell.')
+            return
+        self.tab._push(f'Your arena: back in the lobby at screen {k} ({x},{y})',
+                       lambda doc: doc.set_your_arena_return(k, x, y))
+
+    def _words(self):
+        for key, ed in self.words.items():
+            p = ed.problem()
+            if p:
+                QMessageBox.warning(self, 'Your arena', f'{key}: {p}')
+                return
+        vals = {k: ed.value() for k, ed in self.words.items()}
+
+        def op(doc):
+            doc.set_your_arena_words('lost', vals['lost'])
+            doc.set_your_arena_words('no', vals['no'])
+            doc.set_your_arena_words('locked', _boxes_text(vals['locked']))
+        self.tab._push('Your arena: the desk\'s words', op)
+
+    def _remove(self):
+        if QMessageBox.question(self, 'Your arena', 'Remove your arena? The two rooms stay as '
+                                'ordinary copies.') != QMessageBox.Yes:
+            return
+        self.tab._push('Remove your arena', lambda doc: doc.remove_your_arena())
+
+
+class ClassArenaBox(QGroupBox):
+    """S128: one class (or Starry Night) in YOUR arena."""
+
+    def __init__(self, tab):
+        super().__init__('In your arena')
+        from editor2.app.encounters_tab import FlagTerms
+        from editor2.app.rooms.cell_picker import CellPicker
+        from editor2.app.rooms.talk_editor import GameTextField
+        self.tab, self.s = tab, tab.s
+        self.FlagTerms = FlagTerms
+        rom = getattr(self.s.renderer, 'rom', None)
+        self.name = None
+        v = QVBoxLayout(self)
+        self.offered = QRadioButton('The receptionist offers Starry Night')
+        self.not_offered = QRadioButton('No Starry Night in your arena')
+        orow = QHBoxLayout()
+        orow.addWidget(self.offered)
+        orow.addWidget(self.not_offered)
+        orow.addStretch(1)
+        self.offer_row = QWidget()
+        self.offer_row.setLayout(orow)
+        v.addWidget(self.offer_row)
+        self.when_label = QLabel()
+        v.addWidget(self.when_label)
+        self.terms_holder = QVBoxLayout()
+        v.addLayout(self.terms_holder)
+        self.terms = None
+        frow = QHBoxLayout()
+        frow.addWidget(QLabel('A win turns this flag ON:'))
+        self.flag = QComboBox()
+        self.flag.setEditable(True)
+        frow.addWidget(self.flag, 1)
+        b = QPushButton('New flag…')
+        b.clicked.connect(self._new_flag)
+        frow.addWidget(b)
+        v.addLayout(frow)
+        self.flag_note = QLabel('')
+        self.flag_note.setWordWrap(True)
+        self.flag_note.setStyleSheet('color:#aaa;')
+        v.addWidget(self.flag_note)
+        self.words_label = QLabel()
+        v.addWidget(self.words_label)
+        self.words = GameTextField(rom, None, empty_note="the game's words")
+        v.addWidget(self.words)
+        trow = QHBoxLayout()
+        trow.addWidget(QLabel('After a win:'))
+        self.then = QComboBox()
+        self.then.currentIndexChanged.connect(self._then_changed)
+        trow.addWidget(self.then, 1)
+        self.room = QComboBox()
+        self.room.currentIndexChanged.connect(self._room_changed)
+        trow.addWidget(self.room, 1)
+        v.addLayout(trow)
+        self.picker = CellPicker(self.s, 'LAND')
+        v.addWidget(self.picker)
+        self.offer_words = {}
+        self.offer_box = QWidget()
+        ob = QVBoxLayout(self.offer_box)
+        ob.setContentsMargins(0, 0, 0, 0)
+        for key, title, note in (('offer', 'The offer (ends with YES / NO)',
+                                  "the game's \"You made it! … ready?\""),
+                                 ('yes', 'YES', "the game's announcement"),
+                                 ('no', 'NO', "the game's \"Let me know when you're ready.\"")):
+            ob.addWidget(QLabel(f'<b>{title}</b> (empty = {note}):'))
+            ed = GameTextField(rom, None, empty_note=note)
+            self.offer_words[key] = ed
+            ob.addWidget(ed)
+        v.addWidget(self.offer_box)
+        brow = QHBoxLayout()
+        b = QPushButton('Apply')
+        b.clicked.connect(self._apply)
+        brow.addWidget(b)
+        b = QPushButton('Clear (the game\'s rules)')
+        b.clicked.connect(self._clear)
+        brow.addWidget(b)
+        brow.addStretch(1)
+        v.addLayout(brow)
+
+    def _fill_flags(self, cur):
+        self.flag.blockSignals(True)
+        self.flag.clear()
+        self.flag.addItem('(no flag)', None)
+        for fl in self.s.doc.flags():
+            self.flag.addItem(fl['name'], fl['name'])
+        if cur is not None and self.flag.findData(cur) < 0:
+            self.flag.addItem(str(cur), cur)
+        self.flag.setCurrentIndex(max(0, self.flag.findData(cur)))
+        self.flag.blockSignals(False)
+
+    def _new_flag(self):
+        from PySide6.QtWidgets import QInputDialog
+        name, ok = QInputDialog.getText(self, 'New flag', 'Flag name (letters, digits, _):')
+        if ok and name.strip():
+            nm = self.s.doc._slug(name.strip())
+            self.flag.addItem(f'{nm}  (new)', nm)
+            self.flag.setCurrentIndex(self.flag.count() - 1)
+            self._new.append(nm)
+
+    def show_class(self, name):
+        doc = self.s.doc
+        self.name = name
+        self._new = []
+        starry = name == 'StarryNight'
+        sp = doc.your_arena_class(name)
+        self.offer_row.setVisible(starry)
+        self.offer_box.setVisible(starry)
+        if starry:
+            (self.offered if sp is not None else self.not_offered).setChecked(True)
+        sp = sp or {}
+        self.when_label.setText('<b>Offered when</b> (every condition; none = always — and '
+                                'never again once its won flag is ON):' if starry else
+                                f'<b>{name} class opens when</b> (every condition; none = always '
+                                'open — a closed class shows "-" in the class menu):')
+        if self.terms is not None:
+            self.terms_holder.removeWidget(self.terms)
+            self.terms.setParent(None)
+        self.terms = self.FlagTerms(doc, sp.get('opens_when') or [])
+        self.terms.setMinimumHeight(100)
+        self.terms_holder.addWidget(self.terms)
+        self._fill_flags(sp.get('won_flag'))
+        self.flag_note.setText('Winning a class also turns ON the flags of the classes below it '
+                               'that have one (the game\'s catch-up) and marks them won in the '
+                               'menu.' if not starry else 'The receptionist stops offering Starry '
+                               'Night once this flag is ON.')
+        self.words_label.setText('<b>What the receptionist says after the win</b>' if not starry
+                                 else '<b>Said in the arena after the final</b> (not for the '
+                                 'ending — the game\'s own scene plays)')
+        self.words.set_value(_inline(sp.get('won_words')))
+        for k, ed in self.offer_words.items():
+            ed.set_value(_inline(sp.get(k)))
+        self.then.blockSignals(True)
+        self.then.clear()
+        for k in (('lobby', 'room', 'hub', 'ending') if starry else ('lobby', 'room', 'hub')):
+            self.then.addItem(YD.THEN_LABELS[k], k)
+        th = sp.get('then') or {'to': 'ending' if starry else 'lobby'}
+        self.then.setCurrentIndex(max(0, self.then.findData(th.get('to'))))
+        self.then.blockSignals(False)
+        self.room.blockSignals(True)
+        self.room.clear()
+        for r in doc.rooms:
+            if not r.get('placeholder'):
+                self.room.addItem(f"${int(str(r['mapID']), 0):02X} {doc.room_name(r)}", r['id'])
+        if th.get('room'):
+            self.room.setCurrentIndex(max(0, self.room.findData(th['room'])))
+        self.room.blockSignals(False)
+        self._then_changed()
+        if th.get('to') == 'room':
+            self.picker.set_cell(int(th.get('screen', 0)), int(th.get('x', 4)),
+                                 int(th.get('y', 4)))
+
+    def _then_changed(self, _i=None):
+        room = self.then.currentData() == 'room'
+        self.room.setVisible(room)
+        self.picker.setVisible(room)
+        if room:
+            self._room_changed()
+
+    def _room_changed(self, _i=None):
+        rid = self.room.currentData()
+        if rid:
+            self.picker.set_room(rid)
+
+    def spec(self):
+        th = {'to': self.then.currentData()}
+        if th['to'] == 'room':
+            k, x, y = self.picker.cell()
+            th.update(room=self.room.currentData(), screen=k, x=x, y=y)
+        d, txt = self.flag.currentData(), self.flag.currentText().strip()
+        fl = d if d is not None else (txt.split()[0] if txt and txt != '(no flag)' else None)
+        out = {'opens_when': self.terms.terms(), 'won_flag': fl,
+               'won_words': self.words.value(), 'then': th}
+        if self.name == 'StarryNight':
+            for k, ed in self.offer_words.items():
+                out[k] = ed.value()
+        return out
+
+    def _apply(self):
+        name = self.name
+        eds = [self.words] + (list(self.offer_words.values()) if name == 'StarryNight' else [])
+        for ed in eds:
+            p = ed.problem()
+            if p:
+                QMessageBox.warning(self, 'Your arena', p)
+                return
+        if self.then.currentData() == 'room':
+            _k, x, y = self.picker.cell()
+            if self.picker.is_wall(x, y):
+                QMessageBox.warning(self, 'Your arena', f'({x},{y}) is a wall — click a floor '
+                                    'cell.')
+                return
+        spec = None if (name == 'StarryNight' and self.not_offered.isChecked()) else self.spec()
+        new = list(self._new) + list(self.terms.new_flags)
+
+        def op(doc):
+            for nm in new:
+                if not any(f.get('name') == doc._slug(nm) for f in doc.flags()):
+                    doc.add_flag(nm)
+            doc.set_your_arena_class(name, spec)
+        self.tab._push(f'Your arena: {AR.group_label(AR.GROUPS.index(name))}', op)
+
+    def _clear(self):
+        name = self.name
+        self.tab._push(f'Your arena: {name} — the game\'s rules',
+                       lambda doc: doc.set_your_arena_class(name, None if name == 'StarryNight'
+                                                            else {}))
+
+
 class ArenaTab(QWidget):
     def __init__(self, session, parent=None):
         super().__init__(parent)
@@ -258,6 +649,10 @@ class ArenaTab(QWidget):
         scroll.setWidgetResizable(True)
         inner = QWidget()
         self.cards_v = QVBoxLayout(inner)
+        self.your_page = YourArenaPage(self)          # S128: your arena (list row 0)
+        self.cards_v.addWidget(self.your_page)
+        self.class_box = ClassArenaBox(self)          # S128: a class in your arena
+        self.cards_v.addWidget(self.class_box)
         self.cards = [MatchCard(self, m) for m in range(3)]
         for c in self.cards:
             self.cards_v.addWidget(c)
@@ -317,6 +712,12 @@ class ArenaTab(QWidget):
         self._busy = True
         cur = self.gi
         self.list.clear()
+        ya = doc.your_arena()                         # S128: row 0 = your arena
+        it = QListWidgetItem('★ Your arena' + ('' if ya is not None else '  (none yet)'))
+        fo = it.font()
+        fo.setBold(ya is not None)
+        it.setFont(fo)
+        self.list.addItem(it)
         for g in groups:
             txt = g['label'] + (f"   · fee {g['fee']}" if g['fee'] is not None else '')
             sizes = [doc.arena_match(g['gi'], m, model)['size'] for m in range(g['matches'])]
@@ -333,18 +734,47 @@ class ArenaTab(QWidget):
                 it.setFont(fo)
             self.list.addItem(it)
         self._busy = False
-        self.list.setCurrentRow(cur)
-        self._show(groups[cur], model)
+        self.list.setCurrentRow(cur + 1)
+        if cur < 0:
+            self._show_your()
+        else:
+            self._show(groups[cur], model)
 
     def _picked(self, row):
         if self._busy or row < 0:
             return
-        self.gi = row
-        self._show(self.s.doc.arena_groups()[row], self.s.doc.monsters_model())
+        self.gi = row - 1
+        if self.gi < 0:
+            self._show_your()
+            return
+        self._show(self.s.doc.arena_groups()[self.gi], self.s.doc.monsters_model())
+
+    def _show_your(self):
+        """S128: list row 0 — your arena's page."""
+        self.title.setText('Your arena')
+        for w in (self.fee_label, self.fee, self.fee_reset, self.victory, self.class_box):
+            w.setVisible(False)
+        for c in self.cards:
+            c.setVisible(False)
+        self.your_page.setVisible(True)
+        self.your_page.refresh()
+
+    def show_your_arena(self, cls=None):
+        """S128: the Progression & Flags tab's link — a class page (or your arena)."""
+        if cls in AR.GROUPS:
+            self.list.setCurrentRow(AR.GROUPS.index(cls) + 1)
+        else:
+            self.list.setCurrentRow(0)
 
     def _show(self, g, model):
         doc = self.s.doc
         gi = g['gi']
+        self.your_page.setVisible(False)
+        self.victory.setVisible(True)
+        ya = doc.your_arena() is not None and gi != AR.KING
+        self.class_box.setVisible(ya)
+        if ya:
+            self.class_box.show_class(AR.GROUPS[gi])
         self.title.setText(g['label'] + ('  — one match' if gi == AR.KING else '  — three matches'))
         has_fee = g['fee'] is not None
         for w in (self.fee_label, self.fee, self.fee_reset):

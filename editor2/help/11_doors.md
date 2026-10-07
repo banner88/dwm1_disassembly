@@ -43,6 +43,22 @@ of the same room never fires: walking into that edge scrolls to the next
 screen. The editor refuses to put one there, and a door dragged there is
 marked D! — move it one cell in.
 
+## Exits that came with a copied room — connect both ends
+
+A copy of a game room keeps the game's exits (and a one-way teleport is an exit
+too): they lead somewhere, but they are not doors yet. **Double-click one** —
+the same window opens as for a door: *Exit — connect both ends*. Pick the other
+end: one of **Your doors**, another of **Your rooms' exits**, or a door of the
+game. **OK** makes the exit a door and writes both ends: walking through it takes
+the player there, walking back brings him here. A double exit (two cells side by
+side, like the Arena Lobby's bottom door) becomes one door — its second cell
+follows it (moving, disconnecting, deleting), and a double door of the game is
+re-pointed as a whole.
+
+From a game room it works the other way round: open the game's room, double-click
+its door, and pick one of your rooms' exits (for example GreatTree's arena door ↔
+your Arena Lobby's bottom door).
+
 ## One-way teleports, step-on triggers, stairs
 
 Select a cell → **More ▾**:

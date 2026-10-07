@@ -571,36 +571,35 @@ jr_001_43fd:
 
 
 jr_001_4405:
+    ; S128 (ROADMAP P3.14e3): same-size rewrite of the destination class
+    ; (36 B, $4405-$4428): the destination map id goes through ROM0 ArenaAlias
+    ; ONCE (a project's arena copies read as $06 / $5D) instead of being
+    ; re-read from $FFD5 three times. Class: $5E -> the current one, $5D (the
+    ; Arena Battle room) 1, $2F (the intro bedroom) 2, < $30 (towns) 3, else 0
+    ; (gates, special rooms, custom rooms). The class picks the Super Game Boy
+    ; border / colour mode (SetColorMode, $C81B); a change of class takes the
+    ; full re-init path (Jump_001_4139). F on return: undefined (callers read A).
     ldh a, [$d5]
+    call ArenaAlias
     cp $5e
     jr z, jr_001_4425
-
     cp $5d
-    jr nz, jr_001_4412
-
+    jr nz, .notArena
     ld a, $01
     ret
-
-
-jr_001_4412:
-    ldh a, [$d5]
+.notArena:
     cp $2f
-    jr nz, jr_001_441b
-
+    jr nz, .notBedroom
     ld a, $02
     ret
-
-
-jr_001_441b:
-    ldh a, [$d5]
+.notBedroom:
     cp $30
     ld a, $03
     ret c
-
-    ld a, $00
+    xor a
     ret
-
-
+    nop
+    nop
 jr_001_4425:
     ld a, [$c81b]
     ret
@@ -3974,7 +3973,7 @@ CheckScriptBeforeAction:
     or a
     jr nz, jr_001_568c
 
-    ld a, [wMapID]
+    call ArenaMapID          ; S128: was ld a, [wMapID] — your arena copies count as $06 / $5D
     cp MAP_BATTLE1 ;arena entrance
     jr z, jr_001_5690
 

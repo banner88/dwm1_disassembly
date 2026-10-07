@@ -42,6 +42,9 @@ Use them in your scenes or NPC conditions.
 
 - The arrival room must be one of your rooms (copy a game room first if you want her in
   one). The build stops with a message when the room, screen or tile is gone.
+- Where the game shows the PLAYER as a figure (in the arena you stand beside your
+  monsters while the matches are announced) it is Milly — her own frames, like her
+  arrival scene (S128 r3; before, Terry's frames cut her picture into pieces).
 - Terry still appears where the game shows him as an NPC (they never meet in the
   romhack anyway).
 - Starting monsters are up to your project (a *Give a monster* step in a scene).

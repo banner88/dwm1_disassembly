@@ -4499,6 +4499,8 @@ jr_003_6dd9:
     or a
     ret nz
 
+    ; S128 (ROADMAP P3.14e3, your arena): the escape skill fizzles in the arena (this map test);
+    ; patches/ -> call ArenaMapID (the project's arena counts as $06 / $5D).
     ld a, [wMapID]
     cp $53
     jr c, jr_003_6e0b

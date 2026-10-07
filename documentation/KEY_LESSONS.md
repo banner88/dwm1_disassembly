@@ -5680,3 +5680,50 @@ event loop got to it (the user: "box1 duplicated weirdly glitchily"; offscreen: 
 children, one in the list). **Rule**: a widget taken out of a layout is `hide()`n and
 unparented before `deleteLater`; a test counts the children against the list.
 
+### A copy must keep every state the original can reach (S128)
+
+The first copy of the Arena Battle room had ONE state: the step reader rejected an exit
+pointer of `$FFFF` (= no exits), so steps 1-4 were dropped. Starry Night writes `$D999` =
+1-3 and the copy's state list has no clamp — the game read past it and crashed. **Rule**:
+when copying a room whose counter scripts write, check the copy's state count against the
+highest value they write; a sentinel in the source data is data, not an error.
+
+### Shared pictures stay shared (S128 r2)
+
+The copy gave each of the night arena's four steps its own layout because each step was
+processed alone — the original draws the same layout (`$2315`) for all four. A user's paint
+showed in Starry Night's first match only. **Rule**: when copying, de-duplicate by the
+original's pointer, so one edit means what it meant in the original.
+
+### A warp in the first entry tick leaves a white screen (S128)
+
+The arena copy's entry script warped out at once after the Starry final — the screen stayed
+white (the room had not finished its fade-in). Eight frames' delay first fixes it.
+
+### "Auto" must never mean "the first number" (S128 r2)
+
+Every project's first "auto" flag — the compiler's own quest flags included — got `$0158`,
+which the original game also uses. The editor had stopped handing it out (S124), but the
+compiler's numbering still did, and a manual Renumber was the only cure. User: "This should
+NOT be happening by default, not requiring manual curation." **Rule**: a reserved number is
+excluded at EVERY allocator (compiler and editor), and existing data is moved automatically
+on open with a note — never left to the user.
+
+### The player is drawn in more than one way (S128 r3)
+
+The Milly hook replaced the player's art and the FIELD player's frame table — but the
+arena shows the player as an NPC (sprite `$E0`), which takes a different frame id
+(`$5E`, Terry's NPC frames) over the same VRAM sheet: her tiles cut up by his frames,
+in the game's arena too. Two first fixes failed in PyBoy: giving the NPC the field
+player's type 0 (right tiles, wrong frame semantics for an NPC), and resolving it as a
+plain NPC `$14` (the sheet allocator then broke the whole group). The fix that works
+keeps the player's sheet and swaps only the frame id to Milayou's NPC frames. **Rule**:
+when replacing a sprite, list every id that draws from its sheet (`$E0` the stand-in,
+the naming icon, the field player) and test each on screen.
+
+### A copied room's exits must be connectable (S128 r3)
+
+The arena copy worked, but nothing led into it: a copied room keeps the game's exits as
+plain rows, and only door objects could be connected — the user had to delete and
+re-add cells per state. **Rule**: whatever the editor copies must be editable through the
+same gesture as what the user makes (double-click → connect both ends).

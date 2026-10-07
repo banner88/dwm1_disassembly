@@ -67,7 +67,10 @@ FLAG_SAFE_RANGES = [(0x0158, 0x0167), (EXT_FLAG_FIRST, MILLY_FLAGS_FIRST - 1)]
 # first words, then "Are you challenging me again?"); the S8 audit's decoder never
 # reached that branch (EVENT_FLAGS "Safe pool"). A NAMED flag may still carry it
 # (projects numbered before S124 keep their numbers — old saves), but numbers are
-# handed out from FLAG_AUTO_RANGES only, and the Flags tab offers Renumber.
+# handed out from FLAG_AUTO_RANGES only. S128 r2 (user: "This should NOT be happening
+# by default, not requiring manual curation"): the compiler's "auto" numbering uses
+# FLAG_AUTO_RANGES too (number_flags), and opening a project moves a flag that sits
+# on a GAME_SHARED number to a free one (Document._migrate_shared_flags).
 GAME_SHARED_FLAGS = {0x0158: "the original game's Arena Battle room (Milayou's rematch: "
                              "her first words, or \"Are you challenging me again?\")"}
 FLAG_AUTO_RANGES = [(0x0159, 0x0167), (EXT_FLAG_FIRST, MILLY_FLAGS_FIRST - 1)]
@@ -104,11 +107,15 @@ def number_flags(flags, check=None, ranges=None):
     entry takes the lowest free number of FLAG_SAFE_RANGES, in list order.
     Positional: deleting or moving an auto entry renumbers the later ones —
     which is why the editor pins every number once (old saves keep their
-    meaning). `ranges` = where "auto" numbers come from: FLAG_SAFE_RANGES
-    (default — the compiler's numbering since S53, unchanged so every existing
-    project builds the same bytes) or FLAG_AUTO_RANGES (S124: the editor's
-    new flags never get $0158, GAME_SHARED_FLAGS). Raises ValueError when the
-    pool is exhausted."""
+    meaning).
+    S128 r2 (user: "This should NOT be happening by default, not requiring manual
+    curation"): an "auto" entry that lands on a GAME_SHARED number ($0158 — the
+    first auto flag of every project, the example's quest flag too) then moves to
+    the lowest number of FLAG_AUTO_RANGES nobody has; every other number stays
+    what it was (old saves keep their meaning). Document._migrate_shared_flags
+    does the same on open, so the editor's pinned numbers == the compiler's.
+    `ranges` given = plain numbering from those ranges, no move. Raises ValueError
+    when the pool is exhausted."""
     out = [None] * len(flags)
     used = set()
     for i, fl in enumerate(flags):
@@ -118,10 +125,9 @@ def number_flags(flags, check=None, ranges=None):
                 check(idx)
             out[i] = idx
             used.add(idx)
+    auto = [i for i in range(len(flags)) if out[i] is None]
     cursor = iter(i for lo, hi in (ranges or FLAG_SAFE_RANGES) for i in range(lo, hi + 1))
-    for i in range(len(flags)):
-        if out[i] is not None:
-            continue
+    for i in auto:
         for idx in cursor:
             if idx not in used:
                 out[i] = idx
@@ -129,6 +135,16 @@ def number_flags(flags, check=None, ranges=None):
                 break
         else:
             raise ValueError("flag pool exhausted (EVENT_FLAGS.md safe ranges)")
+    if ranges is None:
+        free = (i for lo, hi in FLAG_AUTO_RANGES for i in range(lo, hi + 1) if i not in used)
+        for i in auto:
+            if out[i] in GAME_SHARED_FLAGS:
+                new = next(free, None)
+                if new is None:
+                    raise ValueError("flag pool exhausted (EVENT_FLAGS.md safe ranges)")
+                used.discard(out[i])
+                out[i] = new
+                used.add(new)
     return out
 
 
@@ -176,7 +192,7 @@ QUEST_EID_CAP = PROJECT_EID_CAP
 def _unlinked_door(e):
     """S98 r2: a door object placed but not connected yet — no destination,
     nothing to emit (validators warn)."""
-    return bool(e.get('door')) and 'dest' not in e
+    return bool(e.get('door') or e.get('twin_of')) and 'dest' not in e   # S128 r3: + a double door's 2nd cell
 
 def _pv(v):
     """A script text param as an int when it is one (dialogue ids resolved)."""
@@ -267,6 +283,14 @@ class Project:
             for _s in self.custom.get('scripts', []):
                 if isinstance(_s.get('service'), dict) and 'ops' not in _s:
                     _s['ops'] = [['end']]
+        # S128 (ROADMAP P3.14e3): your arena — the receptionist's desk (the lobby
+        # copy's script 6) is generated now, so a cutscene may still wrap its talk
+        from . import your_arena as _YA
+        self.arena_error = None
+        try:
+            _YA.lower_desk(self)
+        except (_YA.ArenaRoomError, ProjectError, _SV.ServiceError) as ex:
+            self.arena_error = str(ex)
         # S119 (ROADMAP P3.8 part B): the rooms' own cutscenes become ordinary
         # scripts wired to their triggers (entry / talk / examine / step-on) —
         # after the helpers, so every script they wrap is already ops
@@ -293,6 +317,11 @@ class Project:
             _BR.lower_entries(self)
         except (_BR.BreedError, ProjectError, _SV.ServiceError) as ex:
             self.breed_error = self.breed_error or str(ex)
+        if self.arena_error is None:          # S128: back from the arena (entry scripts)
+            try:
+                _YA.lower_entries(self)
+            except (_YA.ArenaRoomError, ProjectError, _SV.ServiceError) as ex:
+                self.arena_error = str(ex)
         self._gate_rows = None
         self.palettes = self.custom.get('palettes', [])
         self._pal_by_id = {p['id']: p for p in self.palettes}
@@ -328,6 +357,10 @@ class Project:
             self._dialogue += [dict(e) for e in _SV.resolve(self)['dialogue']]
         except _SV.ServiceError as ex:
             self.service_error = self.service_error or str(ex)
+        try:                                  # S128: your arena's "not open yet" words
+            self._dialogue += _YA.locked_dialogue(self)
+        except (_YA.ArenaRoomError, _SV.ServiceError) as ex:
+            self.arena_error = self.arena_error or str(ex)
         self._text_by_id = {}
         self._assign_text_ids()
         self._scripts = {s['id']: s for s in

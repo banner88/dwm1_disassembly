@@ -5,7 +5,7 @@ EDITOR_DESIGN §5.2b; compiler side: editor2/core/arena.py, PROJECT_COMPILER
 Reads and writes `gamedata.arena` (class fees, the master of each match, team
 sizes) and, for the team members, the existing `gamedata.enemies` rows (the
 arena teams ARE enemy-stats rows: EID = $E0 + 9*group + 3*match + slot; the
-King $01E1-$01E3) through MonstersMixin.set_enemy_fields. The project stores
+Monster Grandpa's match $01E1-$01E3) through MonstersMixin.set_enemy_fields. The project stores
 only differences from the original game: a value set back to the original
 removes its key (and any object it leaves empty). Every setter validates with
 the compiler's own models before it is kept.
@@ -39,7 +39,7 @@ VICTORY = {
         'world steps $D92B=0 $D936-$D938=2 $D939=2 $D93B=3 $D93D=3 $D945/6=1 $D947=2 $D963/4=1'],
     8: ['Starry Night: the phase counter $D999 runs 1 -> 2 -> 3 over the three matches; '
         'flag $00F1 (Starry Night won) is set later at the Castle (Castle script 0)'],
-    9: ['flag $0110 when the match starts, $0111 when the King is beaten '
+    9: ['flag $0110 when the match starts, $0111 when Monster Grandpa is beaten '
         '(the Arena Battle room script)'],
 }
 # $CAB4 also scales the chest Mimics (opcode $36: EIDs 317-324 by tier).
@@ -51,7 +51,7 @@ class ArenaMixin:
         return AR.resolve(self.data, getattr(self, 'repo_root', None))
 
     def arena_groups(self):
-        """[{gi, key, label, fee (None for Starry / King), fee_edited, matches}]"""
+        """[{gi, key, label, fee (None for Starry / Monster Grandpa), fee_edited, matches}]"""
         r = self.arena_resolved()
         out = []
         for gi, key in enumerate(AR.GROUPS):

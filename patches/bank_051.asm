@@ -70,7 +70,7 @@ LoadBattle:
 ; $C8EA write is kept here, arena-only as before. rst $10 clobbers BC/DE/HL:
 ; the code after SetBGM reads none of them (it reloads every register).
 jr_051_4073:
-    ld a, [wMapID]
+    call ArenaMapID                 ; S128: was ld a, [wMapID] — your arena counts as $5D
     cp $5d
     jr nz, .pickSong
 
@@ -558,7 +558,7 @@ LoadBtlS_43c9:
     or a
     jr z, jr_051_43e0
 
-    ld a, [wScriptMapType]
+    call ArenaScriptType51   ; S128: was ld a, [wScriptMapType] — a battle your arena's script started counts as $5D
     cp $5d
     jr nz, jr_051_43e4
 
@@ -10411,12 +10411,14 @@ jr_051_7b11:
     rst $38
     jr c, @+$01
 
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
+; S128 (ROADMAP P3.14e3): ArenaScriptType51 — A := wScriptMapType through ROM0
+; ArenaAlias (a project's arena copies read as $06 / $5D). Called by LoadBtlS_43c9
+; (the battle type $DB73: a battle the arena room's script started = 2, "arena" —
+; BossProtectionGate stays off, as in the original arena). 6 B from the nop fill.
+ArenaScriptType51:
+    ld a, [wScriptMapType]
+    jp ArenaAlias
+
     nop
     nop
     nop

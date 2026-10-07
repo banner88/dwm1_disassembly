@@ -2271,7 +2271,7 @@ jr_003_6dd9:
     or a
     ret nz
 
-    ld a, [wMapID]
+    call ArenaMapID          ; S128: was ld a, [wMapID] — your arena copies count as $06 / $5D (the skill fizzles there too)
     cp $53
     jr c, jr_003_6e0b
 

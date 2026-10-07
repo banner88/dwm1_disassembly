@@ -44,7 +44,8 @@ HELP = ('The game\'s services work in any room: make an NPC the Vault keeper, a 
         'Here: who they are, what their menus say, the Medal Man\'s rewards and the breeding '
         'pools random breeders roll from.')
 EDITED = QColor(255, 200, 80)
-KIND_NAMES = dict({k: v['name'] for k, v in SV.KINDS.items()}, shop='Shopkeeper')
+KIND_NAMES = dict({k: v['name'] for k, v in SV.KINDS.items()}, shop='Shopkeeper',
+                  **SV.LINE_KIND_NAMES)
 INS_PREVIEW = 'xxxx'               # {ins0}..{ins3}: what the menu fills in (a name, a count);
                                    # 4 cells, as services.TOKEN_CELLS counts them
 

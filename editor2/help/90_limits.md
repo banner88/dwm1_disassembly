@@ -73,7 +73,7 @@
   or lead a team; the announcer and the masters' words are text (not editable
   yet).
 - Flags (S117, S124): 1,965 named flags of your own (15 left over from the game +
-  1,950 new ones; `$0158` is the game's own — Renumber moves a flag off it);
+  1,950 new ones; `$0158` is the game's own — a flag on it is moved off when the project opens);
   8 conditions per state rule / variant / NPC; conditions are flags ON / OFF
   joined by AND (no OR yet), and a YES / NO answer. Defeating a
   custom boss of a game's gate does not move that portal room's own step
@@ -108,3 +108,9 @@
   a scene keeps everyone where the scene put them (measured S119). **Copied
   rooms:** game steps that draw a tile patch (opcode $24 /
   $61 — Castle and Bazaar doors, chests) work in copies since S119.
+- Your arena (S128): one per project; the classes won ($CAB4) are one count
+  shared with the game's own arena. Monster Grandpa's match stays in the game's
+  arena. Up to 8 flag conditions per class. The walk-in, the announcer and
+  the choreography are the game's scripts in your copies. A copy of the Arena
+  Battle room made before S128 has no night states — make a new one for Starry
+  Night. See *Your arena*.

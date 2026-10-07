@@ -3967,7 +3967,7 @@ RefreshBattleGraphics:
     cp $01
     jr z, jr_050_576c
 
-    ld a, [wScriptMapType]
+    call ArenaScriptType50   ; S128: was ld a, [wScriptMapType] — a battle your arena's script started counts as $5D
     cp $5d
     jr nz, jr_050_576c
 
@@ -6354,7 +6354,7 @@ BattleExitHandler:
     ld [$c88d], a
     ld hl, $c88e
     inc [hl]
-    ld a, [wMapID]
+    call ArenaMapID          ; S128: was ld a, [wMapID] — your arena counts as $5D (next match / loss / Starry phases)
     cp $5d
     jp nz, Jump_050_64e0
 
@@ -6376,21 +6376,15 @@ BattleExitHandler:
 
     ld a, $ff
     ld [wColiseumBattle], a
-    ld hl, $0006
-    ld a, l
-    ld [wWarpGateId], a
-    ld a, h
-    ld [wWarpFlag], a
-    ld hl, $00e8
-    ld a, l
-    ld [wWarpSpawnXLo], a
-    ld a, h
-    ld [wWarpSpawnXHi], a
-    ld hl, $0048
-    ld a, l
-    ld [wWarpSpawnYLo], a
-    ld a, h
-    ld [wWarpSpawnYHi], a
+    ; S128 (ROADMAP P3.14e3): a lost CLASS match goes back to the lobby, no
+    ; penalty. The 33 bytes here were the warp mailbox to the Arena Lobby ($06)
+    ; at pixel ($E8, $48); same size, ArenaLossWarp50 (this bank's tail) writes it
+    ; — the project's lobby at its return cell when the match was fought in the
+    ; project's arena (custom.arena), else exactly the old bytes.
+    call ArenaLossWarp50
+    jr .lossWarped
+    ds 28, $00                          ; same size: the rest of the old writes
+.lossWarped:
     ld a, $01
     ld [wIsPlayerChangingMaps], a
     ret
@@ -6842,7 +6836,7 @@ SetTempEnemyStatsId:
 ; ArenaMasterSpriteTable50 ($50:$6778) — 27-entry duplicate of the
 ; bank $04 ArenaMasterSpriteTable ($04:$5E22): per-arena-match master
 ; lobby sprite [gfx_id, is_monster], groups G..S + Starry Night only
-; (no King rows — the King battle never re-enters via bank $50's
+; (no Monster Grandpa rows — Monster Grandpa's match never re-enters via bank $50's
 ; LoadArenaEnemyStats, which is the between-matches regenerator).
 ; ---------------------------------------------------------------
 ; @BUILD_PROJECT BEGIN gd_arena_masters_50
@@ -11568,49 +11562,44 @@ SetBtl_7e1e:
     nop
     nop
     nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
+; =============================================================================
+; [S128] ROADMAP P3.14e3 — your arena (editor2/core/your_arena.py, PROJECT_COMPILER
+; §2.41). 43 bytes carved from this nop fill (net bank size unchanged).
+; ArenaScriptType50: A := wScriptMapType through ROM0 ArenaAlias (a project's arena
+;   copies read as $06 / $5D) — the battle-end branch above ($DB73 = 2 and the
+;   arena room's script: BattleGfx_5772 + $C1D5 = 1, as in the original arena).
+; ArenaLossWarp50: the warp mailbox (wWarpGateId .. wWarpSpawnYHi, 6 bytes) for a
+;   lost class match — the project's lobby (ARENA_LOBBY_MID) at its return cell
+;   (ARENA_RET_X / _Y, pixels) when the match was fought in the project's arena
+;   (wMapID = ARENA_BATTLE_MID), else the Arena Lobby $06 at ($E8, $48) as before.
+;   The EQUs: patches/bank_06e.asm region arena_rooms. Clobbers A, B, DE, HL.
+; =============================================================================
+ArenaScriptType50:
+    ld a, [wScriptMapType]
+    jp ArenaAlias
+
+ArenaLossWarp50:
+    ld hl, ArenaLossVanilla
+    ld a, [wMapID]
+    cp ARENA_BATTLE_MID
+    jr nz, .copy
+    ld hl, ArenaLossProject
+.copy:
+    ld de, wWarpGateId
+    ld b, 6
+.byte:
+    ld a, [hl+]
+    ld [de], a
+    inc de
+    dec b
+    jr nz, .byte
+    ret
+
+ArenaLossVanilla:   ; map, gate flag, x lo / hi, y lo / hi
+    db $06, $00, $e8, $00, $48, $00
+ArenaLossProject:
+    db ARENA_LOBBY_MID, $00, LOW(ARENA_RET_X), HIGH(ARENA_RET_X), LOW(ARENA_RET_Y), HIGH(ARENA_RET_Y)
+
 ; [S112] AnimLoadFork50 — the tiles + palette load of a starting battle
 ; animation (A = [$da81]): numbers < $2D = the vanilla code that stood in the
 ; window (bank $17 entries 13 + 8, AnimGfxTable); $2D+ (the project's new

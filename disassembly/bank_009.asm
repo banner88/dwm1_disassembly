@@ -4706,6 +4706,10 @@ ArenaClassMenu_State0:
 
 ; ArenaMenuMarkWon: $C0D8[0..7] := $90 (selectable), then the first [$CAB4]
 ; classes := $AC (the star glyph = already won). $CAB4 = classes won.
+; S128 (ROADMAP P3.14e3, your arena): ArenaMenuMarkWon fills the class menu marks $C0D8[0..7]
+; ($90 open, $AC star = the first [$CAB4] won). patches/ moves the body to bank
+; $6E ArenaMarkClasses (same bytes, + per-class locks in the project's lobby:
+; $9C "-") and adds ArenaRefuse09 for the refusal below.
 ArenaMenuMarkWon:
     ld hl, $c0d8
     ld bc, $0008
@@ -4929,6 +4933,9 @@ jr_009_5d51:
     jp z, Jump_009_5d81
 
     ld hl, $0006
+    ; S128 (ROADMAP P3.14e3, your arena): State2 accepts only $90; any other mark says line +6
+    ; ($0716). patches/ -> call ArenaRefuse09 (a locked class: the project's
+    ; words, ARENA_LOCKED_OFS).
     call ScreenEffectSay
     ld a, $08
     ld [$c906], a

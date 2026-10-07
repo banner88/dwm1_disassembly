@@ -216,7 +216,7 @@
   {
    "tree": "clean",
    "file": "bank_004.asm",
-   "line": 5127,
+   "line": 5134,
    "label": "ScriptCmd42_SaveReturnPoint",
    "occ": 0,
    "pattern": [],
@@ -225,7 +225,7 @@
   {
    "tree": "clean",
    "file": "bank_004.asm",
-   "line": 5408,
+   "line": 5423,
    "label": "ScriptCmd4E_SavePosition",
    "occ": 0,
    "pattern": [],
@@ -644,7 +644,18 @@
   {
    "tree": "patched",
    "file": "bank_000.asm",
-   "line": 13091,
+   "line": 8090,
+   "label": "ArenaMapID",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_000.asm",
+   "line": 13097,
    "label": "MapIDClampForPalette",
    "occ": 0,
    "pattern": [
@@ -710,7 +721,7 @@
   {
    "tree": "patched",
    "file": "bank_001.asm",
-   "line": 2189,
+   "line": 2188,
    "label": "CheckBattleModeFlag",
    "occ": 0,
    "pattern": [
@@ -721,7 +732,7 @@
   {
    "tree": "patched",
    "file": "bank_001.asm",
-   "line": 3175,
+   "line": 3174,
    "label": "RetIfInGateworld",
    "occ": 0,
    "pattern": [
@@ -732,7 +743,7 @@
   {
    "tree": "patched",
    "file": "bank_001.asm",
-   "line": 3673,
+   "line": 3672,
    "label": "CheckSpecialMapExits",
    "occ": 0,
    "pattern": [
@@ -743,7 +754,7 @@
   {
    "tree": "patched",
    "file": "bank_001.asm",
-   "line": 3903,
+   "line": 3902,
    "label": "CopyPlayerCoordsAndGetNextRoom",
    "occ": 0,
    "pattern": [
@@ -754,18 +765,7 @@
   {
    "tree": "patched",
    "file": "bank_001.asm",
-   "line": 3977,
-   "label": "CheckScriptBeforeAction",
-   "occ": 0,
-   "pattern": [
-    "cp"
-   ],
-   "verdict": "CP_UNSIGNED"
-  },
-  {
-   "tree": "patched",
-   "file": "bank_001.asm",
-   "line": 5976,
+   "line": 5975,
    "label": "PerRoomDispatchEntry",
    "occ": 0,
    "pattern": [
@@ -776,19 +776,8 @@
   {
    "tree": "patched",
    "file": "bank_001.asm",
-   "line": 7067,
+   "line": 7066,
    "label": "CheckPaletteAnimActive",
-   "occ": 0,
-   "pattern": [
-    "cp"
-   ],
-   "verdict": "CP_UNSIGNED"
-  },
-  {
-   "tree": "patched",
-   "file": "bank_003.asm",
-   "line": 2274,
-   "label": "jr_003_6dd9",
    "occ": 0,
    "pattern": [
     "cp"
@@ -809,7 +798,7 @@
   {
    "tree": "patched",
    "file": "bank_004.asm",
-   "line": 5138,
+   "line": 5145,
    "label": "ScriptCmd42_SaveReturnPoint",
    "occ": 0,
    "pattern": [],
@@ -818,7 +807,7 @@
   {
    "tree": "patched",
    "file": "bank_004.asm",
-   "line": 5419,
+   "line": 5434,
    "label": "ScriptCmd4E_SavePosition",
    "occ": 0,
    "pattern": [],
@@ -877,17 +866,6 @@
    "pattern": [
     "cp",
     "store"
-   ],
-   "verdict": "CP_UNSIGNED"
-  },
-  {
-   "tree": "patched",
-   "file": "bank_007.asm",
-   "line": 4860,
-   "label": "jr_007_6004",
-   "occ": 0,
-   "pattern": [
-    "cp"
    ],
    "verdict": "CP_UNSIGNED"
   },
@@ -1117,18 +1095,7 @@
   {
    "tree": "patched",
    "file": "bank_050.asm",
-   "line": 6357,
-   "label": "BattleExitHandler",
-   "occ": 0,
-   "pattern": [
-    "cp"
-   ],
-   "verdict": "CP_UNSIGNED"
-  },
-  {
-   "tree": "patched",
-   "file": "bank_050.asm",
-   "line": 6443,
+   "line": 6437,
    "label": "Jump_050_64e0",
    "occ": 0,
    "pattern": [
@@ -1139,9 +1106,9 @@
   },
   {
    "tree": "patched",
-   "file": "bank_051.asm",
-   "line": 73,
-   "label": "jr_051_4073",
+   "file": "bank_050.asm",
+   "line": 11583,
+   "label": "ArenaLossWarp50",
    "occ": 0,
    "pattern": [
     "cp"
@@ -1314,6 +1281,17 @@
   },
   {
    "tree": "patched",
+   "file": "bank_06e.asm",
+   "line": 142,
+   "label": "ArenaMarkClasses",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "patched",
    "file": "bank_071.asm",
    "line": 154,
    "label": "CopyCustomRoomRecord",
@@ -1417,31 +1395,9 @@
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 630,
-   "label": "BattleBGMResolve",
-   "occ": 0,
-   "pattern": [
-    "cp"
-   ],
-   "verdict": "CP_UNSIGNED"
-  },
-  {
-   "tree": "patched",
-   "file": "bank_071.asm",
-   "line": 662,
-   "label": "BattleBGMResolve",
-   "occ": 1,
-   "pattern": [
-    "cp"
-   ],
-   "verdict": "CP_UNSIGNED"
-  },
-  {
-   "tree": "patched",
-   "file": "bank_071.asm",
    "line": 679,
    "label": "BattleBGMResolve",
-   "occ": 2,
+   "occ": 0,
    "pattern": [
     "cp",
     "sub"
@@ -1453,7 +1409,7 @@
    "file": "bank_071.asm",
    "line": 693,
    "label": "BattleBGMResolve",
-   "occ": 3,
+   "occ": 1,
    "pattern": [
     "cp"
    ],
@@ -1540,7 +1496,7 @@
   {
    "tree": "patched",
    "file": "bank_077.asm",
-   "line": 151,
+   "line": 152,
    "label": "ShopFill",
    "occ": 0,
    "pattern": [
@@ -1551,7 +1507,7 @@
   {
    "tree": "patched",
    "file": "bank_077.asm",
-   "line": 388,
+   "line": 389,
    "label": "PushAttrActive",
    "occ": 0,
    "pattern": [
@@ -1562,7 +1518,7 @@
   {
    "tree": "patched",
    "file": "bank_077.asm",
-   "line": 560,
+   "line": 561,
    "label": "ServiceOpenTiles",
    "occ": 0,
    "pattern": [
@@ -1573,7 +1529,7 @@
   {
    "tree": "patched",
    "file": "bank_077.asm",
-   "line": 640,
+   "line": 641,
    "label": "BreedClose",
    "occ": 0,
    "pattern": [
