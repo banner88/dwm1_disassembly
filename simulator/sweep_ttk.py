@@ -7,7 +7,9 @@ Reads any ROM build (vanilla / romhack / randomized) through
 randomizer.romdata.Rom, so the same sweep serves both profiles the user
 named for acceptance. Per pool: every live encounter row is fought 1-vs-1
 by a reference party monster `--trials` times; the pool metric is the
-weight-averaged median rounds-to-outcome. Both party policies are
+chance-weighted median rounds-to-outcome (S131: each row weighs the real
+chance it is drawn, the +5..+9 codes — before S131 the +20 max count,
+which is not a chance; DOC_AUDIT S114). Both party policies are
 reported ('attack' = pessimistic floor; 'tactics' = the commit machine
 under Charge with the party movepool).
 
@@ -97,9 +99,12 @@ def sweep_pool(rom, species, pool, party, skills, policies, trials, seed,
     res = {}
     for pol in policies:
         rows = []
+        chances = pool.slot_chances()
         for i in pool.live_slots():
             eid = pool.eids[i]
-            w = pool.weights[i]
+            # S131: weigh a slot by the chance it is drawn (+5..+9 codes),
+            # not by +20 (its max count — DOC_AUDIT S114)
+            w = chances[i]
             er_rec = rom_enemy_rec(rom, eid)
             enemies = [er_rec] * ecount
             er = {4 + j: er_rec for j in range(ecount)}

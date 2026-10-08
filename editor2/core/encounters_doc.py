@@ -225,7 +225,8 @@ class EncountersMixin:
         """The rows a fight-length estimate needs (ROADMAP P3.15, the Balance
         service): [{eid, species, level, chance (real %), max}] for the slots a
         battle can draw. The encounter list's chance is the +5..+9 code (NOT the
-        +20 max count — randomizer/romdata.Pool.weights reads +20; DOC_AUDIT S114)."""
+        +20 max count; DOC_AUDIT S114 — randomizer/romdata.Pool.slot_chances() and
+        simulator/sweep_ttk.py read the codes too since S131)."""
         d = self.enc_list_detail(n, M)
         return [{'eid': s['eid'], 'species': s['species'], 'level': s['level'],
                  'chance': s['real'], 'max': s['max']} for s in d['slots']

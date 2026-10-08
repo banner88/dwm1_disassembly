@@ -143,7 +143,7 @@ def main():
 
         header = list(raw[0:10])
         eids = [raw[10 + j * 2] | (raw[10 + j * 2 + 1] << 8) for j in range(5)]
-        weights = list(raw[20:25])
+        max_counts = list(raw[20:25])   # +20..+24: max count per slot, NOT a weight (S103/S131)
         extra = raw[25]
 
         gate_id, gname = pool_gate(i)
@@ -174,9 +174,9 @@ def main():
             eid_vals = ", ".join(str(e) for e in eids)
             eid_names = ", ".join(eid_strs)
             lines.append(f"    dw {eid_vals}  ; EIDs: {eid_names}")
-            w_str = ", ".join(str(w) for w in weights)
-            lines.append(f"    db {w_str}  ; Weights")
-            lines.append(f"    db {extra}  ; Extra")
+            w_str = ", ".join(str(w) for w in max_counts)
+            lines.append(f"    db {w_str}  ; Max counts (+20)")
+            lines.append(f"    db {extra}  ; Maze size")
         else:
             # Need to handle embedded labels within this entry
             # Output byte by byte for the affected regions
@@ -221,7 +221,7 @@ def main():
 
             # Weights + extra
             if any(20 <= b < 26 for b in byte_labels):
-                lines.append("    ; Weights + extra")
+                lines.append("    ; Max counts (+20) + maze size (+25)")
                 pos = 20
                 while pos < 26:
                     if pos in byte_labels:
@@ -235,9 +235,9 @@ def main():
                     lines.append(f"    db {vals}")
                     pos = next_break
             else:
-                w_str = ", ".join(str(w) for w in weights)
-                lines.append(f"    db {w_str}  ; Weights")
-                lines.append(f"    db {extra}  ; Extra")
+                w_str = ", ".join(str(w) for w in max_counts)
+                lines.append(f"    db {w_str}  ; Max counts (+20)")
+                lines.append(f"    db {extra}  ; Maze size")
 
         lines.append("")
 

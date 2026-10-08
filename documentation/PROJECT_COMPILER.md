@@ -3436,7 +3436,7 @@ RAM — the farm's slots where the game keeps them —, every command, `ShopSetP
 checks and its mini medal quest (`$015B` / `$015C`; the legacy quest kept).
 
 
-## §2.43 S130 — THE BALANCE SERVICE: how hard each key fight is, original game vs project (ROADMAP P3.15a) — built S130, NOT yet user-tested
+## §2.43 S130 — THE BALANCE SERVICE: how hard each key fight is, original game vs project (ROADMAP P3.15a) — built S130 (user: "balance tab looks good" 2026-10-08); S131 follow-ups (P3.15b) built, NOT yet user-tested
 
 No ROM bytes: the service only READS the project (and one editor setting, below). The
 number for every key fight is **the team level at which a team a player of that point in
@@ -3478,14 +3478,16 @@ raising model, == the game: `tools/census_raising.py`, MONSTER_DATA "Raising a m
   battles get a number of their own, compared with the nearest original fights
   (`nearest_vanilla`). Roster per step = joinable rows of every list met so far + boss join
   rows of cleared gates + the starter; offspring once breeding is open.
-- **Teams** (`roll_team`, `team_for` memo per step/level/profile/index) — every member has
-  the same EXP (battle exp is split evenly), the team level = the level that exp gives on
-  the most common curve (11). Members are created, bred (+ birth), levelled and taught by
+- **Teams** (`roll_team`, `team_for` memo per step/level/profile/index) — every slot has
+  the same EXP budget (battle exp is split evenly), the team level = the level that exp
+  gives on the most common curve (11); S131: a bred member's slot pays its lineage's
+  grind out of it ("Breeding costs grinding" below). Members are created, bred (+ birth), levelled and taught by
   raising.py. **casual**: what was at hand, the first skills kept, one-generation breeding
   35 %; **strong**: the best of 6 rolls by `member_power` (bulk + offence: ATK or the best
   damaging skills + at most one heal), 70 % bred, picks the best of 3 crosses, two
   generations (three postgame), the best 8 skills kept. A member capped below 85 % of the
-  team level is swapped (players replace monsters that stop growing). Heals are valued at
+  level its exp gives (S131 `is_capped`; S130 compared with the team level) is swapped
+  (players replace monsters that stop growing). Heals are valued at
   most 30 (S130.3: uncapped heals made all-Healer "strong" teams that never attack).
 - **player** (S130 r2, the MAIN number — user: "Always command unless arena (Arena forces you
   to use tactics)"; "Usually one general kit … I run into a wall … start experimenting with
@@ -3498,9 +3500,9 @@ raising model, == the game: `tools/census_raising.py`, MONSTER_DATA "Raising a m
   evaluations × 2 teams × 6 battles, ×4 for arena steps), optimised at the level where a
   commanded strong roll wins ≥ 50 % of every boss / arena match, then re-optimised at the
   kit's own 50 % level (≤ 2 times). The pool at level L: join rows up to L + 2 (a monster must
-  be beaten to join; it brings its row's 4 skills); bred forms once breeding is open and
-  L ≥ 10 (both parents level 10+), a resolver closure over 2 generations (3 postgame), plus
-  from the parents' level sum; skills = obtainable species' natural + join skills through
+  be beaten to join; it brings its row's 4 skills); bred forms once breeding is open
+  (S131: every route the slot can afford — "Breeding costs grinding"; S130 wanted L ≥ 10
+  and 2 generations, 3 postgame); skills = obtainable species' natural + join skills through
   `UnevolvedSkillMap`, each checked link by link against the member as raised by raising.py
   (level + stat thresholds; combination skills only beside their prerequisites).
   Outside the arena the party fights on the player's **orders** (`simulator/planner.py`:
@@ -3516,15 +3518,20 @@ raising model, == the game: `tools/census_raising.py`, MONSTER_DATA "Raising a m
   (`get_kit` / `set_kit` / `kit_fingerprint`; FightCache `kit:<fp>`; the anchor's
   `steps[i]['kit']`); `fight_fingerprint('player')` includes the kit's.
 - **evaluate** — N teams × M battles (default 12 × 8; lists draw a real group per battle by
-  its odds) → win, rounds, HP left, `team_level` (levels actually reached — caps),
-  `enemy_hp_left` (how far a lost fight got), `unmodelled` (share of actions logged
-  `no-effect`). **fight_levels** searches the level FROM BELOW (1, 2, 4, … then bisect —
+  its odds) → win, rounds, HP left, `team_level` (levels actually reached — caps, and
+  since S131 bred members' grind), `enemy_hp_left` (how far a lost fight got),
+  `unmodelled` (share of actions with no model — `count_actions`; S131: a heal on a
+  full-HP target, the game's own "no effect", is not counted). **fight_levels** searches the level FROM BELOW (1, 2, 4, … then bisect —
   `first_level`), one memo for both thresholds; None = not even at 99 (the tab shows
   "99+ (win % at 99)").
 - **Dives** (`dive`, `dive_level_needed`, `gate_dive_result`) — a gate's maze floors in a row
   without healing (HP/MP carry), then its boss fight(s): integer battles per floor sampled
   from the expected value at two walk bounds — **direct** (shortest walk to the stairs,
-  the lower bound) and **sweep** (every reachable cell, the upper bound).
+  the lower bound) and **sweep** (every reachable cell, the upper bound). S131: floors
+  3 / 6 / 9 mix in the special rooms' own measured walks (forest / mazes / conveyors,
+  GATE_GENERATION §4.4 "Special rooms (S131)"; `floor_battle_means` takes each part's
+  sweep); the Coliseum's fights stay out (user S131: "irrelevant for difficulty
+  scaling").
 - **Cache** — `FightCache(<project>/build/balance_cache.json)`, keyed by
   `fight_fingerprint` (the fight's enemy rows + skill records + what-if overrides, the
   roster at its step, `raising_digest` = species rows, curves, learn rows, breeding
@@ -3541,6 +3548,39 @@ raising model, == the game: `tools/census_raising.py`, MONSTER_DATA "Raising a m
   progress. The build is resumable (`balance_vanilla.json.partial`, one JSON line per finished
   unit) and uses every core; the tab's **Build original-game numbers** runs it locally.
 
+**Breeding costs grinding (S131, user 2026-10-08: option B — "I need to capture the
+total time investment needed. Keep in mind breeding chains get deeper and deeper further
+into the game … I need the best objective assessment of corresponding vanilla level").**
+The level axis is TIME: team level L = each of the 3 party slots has had exp(L) (the
+reference curve) of grinding in it. Per slot:
+- a **joined** member arrives with its row level's exp for free (`Monster.free_exp`) and is
+  raised to exp(L);
+- a **bred** member's ancestors were ground to breeding level (both parents level 10+ on
+  their OWN curves — FULL_FAQ "only breed Monsters at Level 10 or above", bank $0A
+  checks record +$4B ≥ 10 at all three breeding menus) and left the party at the cross;
+  that exp is the kid's `grind` (`balance.lineage_cost` per parent: exp ground beyond its
+  arrival + its own grind) and is charged to the slot — the kid hatches at level 1 and is
+  raised with exp(L) − grind; a lineage dearer than exp(L) is not available (`kits.
+  Unaffordable`). A recruit that joins at level ≥ 10 is breedable for free
+  (`join_ancestor_cost` 0); a bred parent costs its lineage + levels 1-10.
+- the player's pool (`kits.StepPool`) is a cost-aware resolver closure: per species a
+  Pareto set of routes (lineage cost, plus; the parents' plus kept so a route builds the
+  parents it was costed with), generations as deep as the budget allows (≤
+  `MAX_GENERATIONS` 6; S131 r4: each cross's plus uses the parents' REAL levels for the
+  level-sum bonus — a recruit breeds at its own row level (≥ 10), a bred ancestor at 10 —
+  so late-gate recruits at 40+ give +2..+4 per cross for free, as in the game; r3 assumed
+  level 10 everywhere and saw no high-plus routes, so capped members never re-bred); the
+  kit search can swap a member's route (deeper / dearer for
+  more plus — growth and cap — or cheaper for more of the slot's exp); a capped bred
+  member is bred again through a route with the plus it needs, its grind charged
+  (`kits.team_member`). The rolled profiles (casual / strong) pay their crosses the same
+  way. The kit view names each bred member's grind.
+- measured at four formerly flat steps (S130 "no bred kit below 10" put most mid-game
+  fights at exactly 10): Gate of Bravery floors 4 · 4 · 4, boss 10; D class 4 · 4 · 11;
+  C class 10 · 12 · 12 — the curve now moves by fight around where breeding pays for
+  itself (an "option A" that charged nothing read 3-8 there and was rejected: it hid the
+  parents' grinding).
+
 **The tab** (`editor2/app/balance_tab.py`, EDITOR_DESIGN §5.9 as built): Story curve
 (original casual l90/l50 + strong l90 read-only, project columns computed on demand,
 coloured change, dives, extra fights with "lands like", a chart), Team (roll / reroll /
@@ -3552,9 +3592,10 @@ threads with progress and Cancel (`balance.set_cancel_check`).
 **Limits** (stated in the tab's help): casual / strong act on their AI (tactics); player
 orders look one action ahead (no two-turn skills, summons or dive-long MP plans) and the
 kit search is small (a better kit may exist; the skill pool ignores the 25-entry learn
-queue and special recipes' minimum plus); status locks (Sleep, LegSweep) are used on bosses
-whenever their resistances allow, as the simulator models the game; postgame "99+" for
-casual / strong = beyond a rolled team; special maze rooms walk as normal floors.
+queue); status locks (Sleep, LegSweep) are used on bosses whenever their resistances
+allow, as the simulator models the game; postgame "99+" for casual / strong = beyond a
+rolled team; recruiting is free (no meat / failed tries); items are not used (user S131:
+"very early-mid game thing" — banked, ROADMAP P3.15b).
 
 **Proof:** test_compiler `test_balance_s130` (savefile party, custom_member,
 team_summary, FightCache round trip + version drop, room_battles script lookup,

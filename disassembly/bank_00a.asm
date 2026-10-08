@@ -1579,11 +1579,12 @@ jr_00a_48ad:
     jr jr_00a_4913
 
 jr_00a_48cf:
-    ld a, [$cac0]
-    ld hl, $cb0c
+    ld a, [$cac0]                ; the monster picked for breeding
+    ld hl, $cb0c                 ; record +$4B = its level
     call GetMonsterDataPtr
     ld a, [hl]
-    cp $0a
+    cp $0a                       ; breeding needs level 10+ (S131; FULL_FAQ "only breed Monsters
+    ;                              at Level 10 or above"): below -> a ScreenEffectSay0A refusal line, back
     jr nc, jr_00a_48ea
 
     ld hl, $0003
@@ -2695,11 +2696,12 @@ jr_00a_5033:
     jr jr_00a_5099
 
 jr_00a_5055:
-    ld a, [$cac0]
-    ld hl, $cb0c
+    ld a, [$cac0]                ; the monster picked for breeding
+    ld hl, $cb0c                 ; record +$4B = its level
     call GetMonsterDataPtr
     ld a, [hl]
-    cp $0a
+    cp $0a                       ; breeding needs level 10+ (S131; FULL_FAQ "only breed Monsters
+    ;                              at Level 10 or above"): below -> a ScreenEffectSay0A refusal line, back
     jr nc, jr_00a_5070
 
     ld hl, $0007
@@ -3191,11 +3193,12 @@ jr_00a_5369:
 
 
 jr_00a_538c:
-    ld a, [$cac0]
-    ld hl, $cb0c
+    ld a, [$cac0]                ; the monster picked for breeding
+    ld hl, $cb0c                 ; record +$4B = its level
     call GetMonsterDataPtr
     ld a, [hl]
-    cp $0a
+    cp $0a                       ; breeding needs level 10+ (S131; FULL_FAQ "only breed Monsters
+    ;                              at Level 10 or above"): below -> a ScreenEffectSay0A refusal line, back
     jr nc, jr_00a_53a7
 
     ld hl, $0007

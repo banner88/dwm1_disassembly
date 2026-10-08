@@ -2357,7 +2357,48 @@ recipes are pure authoring.
         profile = an optimised kit per step (`kits.py`) under the planner's orders
         (`planner.py`), best tactic in the arena — the main number (S class 32 / 28 / 38);
         level colours in the tab.
-  - [ ] **P3.15b — Balance follow-ups** (open, from S130): (1) ~~calibrate against real
+  - [ ] **P3.15b — Balance follow-ups** — **S131: (1) / (2) / (3) built, NOT yet
+        user-tested; (4) / the planner / kit-search items still open; (5) items BANKED by
+        the user.** S131 (user: "Yes P3.15b"):
+        - [x] (1) **breeding costs grinding** — user option B (2026-10-08: "I need to
+          capture the total time investment needed. Keep in mind breeding chains get
+          deeper and deeper further into the game … the best objective assessment of
+          corresponding vanilla level"): the level axis = exp per party slot; a bred
+          member's slot pays its ancestors' grind to level 10 on their own curves (the
+          bank $0A level gate, MONSTER_DATA "The breeding level gate (S131)"); the
+          player's pool = a cost-aware closure, generations as deep as the budget affords
+          (≤ 6), Pareto routes (cost, plus), a route-swap search move; casual / strong pay
+          the same. PROJECT_COMPILER §2.43 "Breeding costs grinding". An intermediate
+          "option A" (kids at any level, parents free) read 3-8 mid-game and was rejected.
+          Sample (S131 code): Bravery 4 · 4 · 4 · 10, D class 4 · 4 · 11, Strength 9 · 9 ·
+          9 · 10 · 10, C class 10 · 12 · 12. The anchor was REBUILT by the user for 'S131.2'
+          (selftest OK; PROJECT_STATE S131 block has the read of the curve).
+        - [x] (2) special maze rooms walked as their own rooms (forest / mazes / conveyors,
+          PyBoy 7 / 7 == the model; GATE_GENERATION §4.4 "Special rooms (S131)"). The
+          Coliseum stays out (user: "irrelevant for difficulty scaling").
+        - [x] (3) +20 = a max count: randomizer `Pool.slot_chances` / `live_slots` by chance,
+          `sweep_ttk` weighs by chance (randomizer output byte-identical).
+        - [x] "unmodelled" no longer counts full-HP heals (`balance.count_actions`).
+        - [ ] (4) obedience curves (WLD × tactic → obey %, the S87 model) and TTK sweeps per
+          list as panels.
+        - [ ] the planner looks one action ahead (two-turn skills, summons, dive-long MP
+          plans unvalued); the kit search is small and its skill pool ignores the 25-entry
+          learn queue; tactics 0-2 left in place during a PLAN round (+45 bias + drift)
+          decoded, not modelled; one kit per step is tuned to the step's wall, so a step's
+          floors can read high (Strength floors 9 with the boss 10); S131.2 anchor: Gate of Sleep
+          floors 21-29 — the kit tuned to Esterk (24) tops out at ~75 % wins against the undead
+          groups at any level (strong reads 39): a kit per FIGHT GROUP (or a second kit for
+          the floors) would fix it.
+        - [!] (5) items — BANKED by the user (S131: "Honestly Im not sure the items are that
+          important anymore. They are very early-mid game thing an not at all late-game
+          thing"; herbs are picked up "constantly" in gates). What is known: no enemy row
+          carries an item / unmodelled skill (0 rows), so items change no number unless the
+          player uses them; the user: "When fed items, commands CANNOT be issued in that
+          round"; the battle items are records $B0-$D4 (BATTLE_SKILL_SYSTEM §8). Reopen =
+          measure the ITEM menu round (who acts, when) in PyBoy, a stock per story step,
+          the planner's item-vs-orders choice.
+        S130 text kept below.
+        (open, from S130): (1) ~~calibrate against real
         play~~ — the player profile (S130 r2) lands the S class at 32 / 28 / 38 (user's
         30-40); the early-gate numbers that rest on status locks (Sleep / LegSweep on
         StoneMan, SleepAll on FunkyBird — allowed by their resistances) ACCEPTED by the

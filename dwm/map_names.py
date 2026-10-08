@@ -78,6 +78,8 @@ MAP_TYPE_NAMES = {
     0x5D: "Arena Battle",
     0x5E: "Arena Setup Room (white, 2 Terrys)",
     0x60: "Labyrinth Final",
+    # $61-$64 are the forest maze's other four rooms (one screen each, joined to $53 by
+    # edge exits; S131 — not gate floors; the names stay: generated JSON carries them)
     0x61: "Forest Maze Gate Floor 1",  0x62: "Forest Maze Gate Floor 2",
     0x63: "Forest Maze Gate Floor 3",  0x64: "Forest Maze Gate Floor 4",
 }

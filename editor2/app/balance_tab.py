@@ -53,6 +53,7 @@ from editor2.core import balance as BL
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 PROFILES = ('player', 'casual', 'strong')     # player = the main number (S130 P3.15b)
+ANCHOR_LOG = os.path.join(REPO, 'extracted', 'balance_vanilla.build.log')   # S131
 SECONDARY = ('casual', 'strong')
 TACTICS = ('Charge', 'Mixed', 'Cautious', 'NO SP SK')   # evaluate()'s arena 'tactic' 0-3
 VANILLA, PROJECT = 'vanilla', 'project'
@@ -312,6 +313,8 @@ def kit_html(kit, names=None, skill_names=None, title='', fight_key=None, result
             how = f'joins (EID {src[1]})' if len(src) > 1 else 'joins'
         elif src and src[0] == 'bred':
             how = 'bred ' + ' x '.join(names.get(x, f'#{x}') for x in src[1:3])
+            if m.get('grind'):              # S131: the time axis — the parents' grind
+                how += f" (parents ground: {m['grind']:,} exp)"
         else:
             how = ''
         sk = m.get('skill_names') or [skill_names.get(x, f'#{x}') for x in m.get('skills') or []]
@@ -627,8 +630,19 @@ class StoryPage(QWidget):
         self.b_anchor_stop.clicked.connect(self.stop_anchor)
         self.b_anchor_stop.setVisible(False)
         self.anchor_status = QLabel()
+        self.anchor_status.setWordWrap(True)
+        self.anchor_status.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        # S131: the build's log (every line, each failed part's traceback)
+        self.b_anchor_log = QPushButton('Show log')
+        self.b_anchor_log.setToolTip('Opens extracted/balance_vanilla.build.log — what the last '
+                                     'builds printed, with the full error of anything that failed. '
+                                     'Send it along when a build stops.')
+        self.b_anchor_log.clicked.connect(self.show_anchor_log)
+        self.b_anchor_log.setVisible(os.path.exists(ANCHOR_LOG))
+        self.anchor_lines = []
         abar.addWidget(self.b_anchor)
         abar.addWidget(self.b_anchor_stop)
+        abar.addWidget(self.b_anchor_log)
         abar.addWidget(self.anchor_status, 1)
         v.addLayout(abar)
         self.proc = None
@@ -814,11 +828,14 @@ class StoryPage(QWidget):
         self.proc.start(_sys.executable, ['-u', os.path.join(REPO, 'tools', 'build_balance_anchor.py')])
         self.b_anchor.setEnabled(False)
         self.b_anchor_stop.setVisible(True)
+        self.anchor_lines = []
         self.anchor_status.setText(f'starting… ({self.anchor_parts_done()} parts already saved)')
 
     def _anchor_output(self):
         txt = bytes(self.proc.readAllStandardOutput()).decode('utf-8', 'replace')
         for line in txt.splitlines():
+            self.anchor_lines.append(line)
+            del self.anchor_lines[:-400]
             line = line.strip()
             if line.startswith('[') and '/' in line.split(']')[0]:
                 self.anchor_status.setText('building: ' + line[:120])
@@ -835,8 +852,21 @@ class StoryPage(QWidget):
             self.tab.anchor = BL.load_anchor(REPO)
             self.populate()
         else:
-            self.anchor_status.setText(f'Stopped ({self.anchor_parts_done()} parts saved; '
-                                       'press the button again to continue).')
+            # S131: say WHY (the last error line the build printed) and where the log is
+            err = next((ln.strip() for ln in reversed(self.anchor_lines)
+                        if ln.strip() and (ln.strip().startswith(('FAILED', 'CRASHED', 'NOT FINISHED'))
+                                           or 'Error' in ln or 'Exception' in ln)), '')
+            self.anchor_status.setText(
+                f'Stopped (exit {code}; {self.anchor_parts_done()} parts saved; press the button '
+                f'again to continue).' + (f' Last error: {err[:200]}' if err else '') +
+                ' — Show log for details (extracted/balance_vanilla.build.log).')
+        self.b_anchor_log.setVisible(os.path.exists(ANCHOR_LOG))
+
+    def show_anchor_log(self):
+        from PySide6.QtCore import QUrl
+        from PySide6.QtGui import QDesktopServices
+        if os.path.exists(ANCHOR_LOG):
+            QDesktopServices.openUrl(QUrl.fromLocalFile(ANCHOR_LOG))
 
     def stop_anchor(self):
         if self.proc is not None:

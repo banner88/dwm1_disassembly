@@ -1,14 +1,17 @@
 {
- "_generator": "tools/census_dive.py (S130) from data/DWM-original.gbc 1ca6579359f21d8e27b446f865bf6b83: editor2/core/maze.py MazeRom.generate x 1000 floors per maze size 3-15 (random.Random(131*100 + size): RNG state, contents row, $CAB4, $C92D), dive.walk_path (shortest walk arrival -> stairs, cells with BR tile >= $30), dive.expected_battles over EncounterRateData $16:$6FAB x EncounterRateModifierTable $16:$702B x RandomEncounterCounterTable $16:$6E3D. Read by editor2/core/dive.py; --selftest re-derives a sample.",
+ "_generator": "tools/census_dive.py (S130) from data/DWM-original.gbc 1ca6579359f21d8e27b446f865bf6b83: editor2/core/maze.py MazeRom.generate x 1000 floors per maze size 3-15 (random.Random(131*100 + size): RNG state, contents row, $CAB4, $C92D), dive.walk_path (shortest walk arrival -> stairs, cells with BR tile >= $30), dive.expected_battles over EncounterRateData $16:$6FAB x EncounterRateModifierTable $16:$702B x RandomEncounterCounterTable $16:$6E3D. S131: specials = the forest maze / mazes / conveyor mazes walked in their own rooms (dive.special_variants: room data from the ROM, belts, edge exits, the outside-gate flat drain, a re-seed per room change). Read by editor2/core/dive.py; --selftest re-derives a sample.",
  "floors_per_size": 1000,
  "path_chars": {
-  "format": "sizes[n].paths = every walk of the sample, comma-joined, sorted",
+  "format": "sizes[n].paths = every walk of the sample, comma-joined, sorted; specials[pick].variants[k].path = that room's shortest walk",
   "a": "drained step onto class $0C ($30-$33)",
   "b": "drained step onto class $0D ($34-$37)",
   "c": "drained step onto class $0E ($38-$3B)",
   "-": "screen-edge step (no drain: wGameState bit 2)",
   "i": "step onto a floor item that is picked up (no drain: EncounterStep not reached)",
-  "note": "the final step onto the stairs ($0F, no check) is in steps, not in the path"
+  "x": "specials: the step onto a walk-on exit (EncounterStep runs, no drain)",
+  "p": "specials: a push into an edge exit (EncounterStep runs, no drain)",
+  "|": "specials: a room change (the room loads, the counter is re-seeded)",
+  "note": "maze floors: the final step onto the stairs ($0F, no check) is in steps, not in the path"
  },
  "tables": {
   "rate_data": [
@@ -2786,6 +2789,185 @@
    12.42
   ]
  ],
+ "specials": {
+  "2": {
+   "name": "forest maze",
+   "variants": [
+    {
+     "map": 83,
+     "p": 1.0,
+     "spawn": [
+      4,
+      6
+     ],
+     "steps": 24,
+     "path": "aaaaaaaaaap|aaaaaaaaaaap|aax",
+     "reachable": 93,
+     "rooms": [
+      83,
+      97,
+      98,
+      99,
+      100
+     ]
+    }
+   ],
+   "battles": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.1188,
+    0.2178,
+    0.3366,
+    0.4158
+   ],
+   "sweep": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.4604,
+    0.8441,
+    1.3045,
+    1.6114
+   ]
+  },
+  "6": {
+   "name": "maze",
+   "variants": [
+    {
+     "map": 87,
+     "p": 0.3359375,
+     "spawn": [
+      15,
+      11
+     ],
+     "steps": 63,
+     "path": "aaaaa-aaaa-aaaaaaaa-aaaaaaaaa-aaaaaaaaaaaaaa-aaaaaaaaa-aaaaaaax",
+     "reachable": 274,
+     "rooms": [
+      87
+     ]
+    },
+    {
+     "map": 88,
+     "p": 0.33203125,
+     "spawn": [
+      1,
+      2
+     ],
+     "steps": 46,
+     "path": "aaaaaaaaaaaa-aaaaaaaaaaaa-aaaaaaaa-aaaaaaaaaax",
+     "reachable": 264,
+     "rooms": [
+      88
+     ]
+    },
+    {
+     "map": 89,
+     "p": 0.33203125,
+     "spawn": [
+      1,
+      2
+     ],
+     "steps": 49,
+     "path": "aaaaaaaaaa-aaaaaaa-aaaaaaaaaaa-aaaaaaaa-aaaaaaaax",
+     "reachable": 254,
+     "rooms": [
+      89
+     ]
+    }
+   ],
+   "battles": [
+    0.0233,
+    0.1025,
+    0.2647,
+    0.875,
+    1.2438,
+    1.5798,
+    1.889,
+    2.1798
+   ],
+   "sweep": [
+    0.1013,
+    0.5024,
+    1.3101,
+    4.3434,
+    6.2065,
+    7.9082,
+    9.4474,
+    10.9016
+   ]
+  },
+  "7": {
+   "name": "conveyor maze",
+   "variants": [
+    {
+     "map": 84,
+     "p": 0.3359375,
+     "spawn": [
+      13,
+      13
+     ],
+     "steps": 108,
+     "path": "aaa-aaaaaaaaaa-aaa-aaaaa-aaaaaaaa-aaaa-aaaaaa-aaaaaaaaa-aaaaaa-aaaaaaaaa-aaaaaaaaaaa-aaaaaaaaaa-aaaaaaaaaaax",
+     "reachable": 416,
+     "rooms": [
+      84
+     ]
+    },
+    {
+     "map": 85,
+     "p": 0.33203125,
+     "spawn": [
+      4,
+      22
+     ],
+     "steps": 92,
+     "path": "aaaaaaaaa-aaaaaaa-aaaaaaaaaaaaa-aaaaaaaaa-aaaaaaaaaaaaa-aaaaaaaaaaa-aaaaaaa-aaaaaaaaaaa-aaax",
+     "reachable": 370,
+     "rooms": [
+      85
+     ]
+    },
+    {
+     "map": 86,
+     "p": 0.33203125,
+     "spawn": [
+      14,
+      11
+     ],
+     "steps": 77,
+     "path": "aaaaa-aaaaaaaaaaa-aaaaaaaaaaaaaa-aaaaaaaaa-aaaaaaaaaaaaaa-aaaaaaa-aaaaaaaaaax",
+     "reachable": 338,
+     "rooms": [
+      86
+     ]
+    }
+   ],
+   "battles": [
+    0.1223,
+    0.2292,
+    0.4863,
+    1.4536,
+    1.8733,
+    2.3557,
+    2.8142,
+    3.2672
+   ],
+   "sweep": [
+    0.4907,
+    0.9256,
+    1.965,
+    5.8905,
+    7.5952,
+    9.5509,
+    11.4132,
+    13.2532
+   ]
+  }
+ },
  "measured": {
   "how": "PyBoy, original ROM, new game -> gate 0; on each maze floor wCurrentFloor := 0 (no special / boss next), wGateID := 0 / 22 / 5 (lists of rate code 3 / 2 / 4) and the next floor type forced at $16:$5BD2; the shortest walk walked with the joypad, counter pinned high; EncounterStep $16:$6F05 / the store $16:$6FA2 (DE = drain) / SetRandomEncounterCounter $16:$6E14 hooked",
   "floors": [
@@ -2794,12 +2976,12 @@
     "type": 13,
     "rate_code": 3,
     "size": 8,
-    "shortest": 36,
-    "walked_steps": 36,
-    "path": "caaa-bbaabbcccia-acccccbbbbbbbb-baa",
+    "shortest": 29,
+    "walked_steps": 29,
+    "path": "babb-babbbaaaaaa-bcbbaaaa-aa",
     "walked": true,
     "reached_stairs": true,
-    "retries": 2,
+    "retries": 0,
     "drains_equal_model": true,
     "seeds_to_next_floor": 1
    },
@@ -2808,12 +2990,12 @@
     "type": 15,
     "rate_code": 2,
     "size": 8,
-    "shortest": 38,
-    "walked_steps": 38,
-    "path": "aaa-cbaaaa-bbccb-aaaaaa-aaaaa-acabbaa",
+    "shortest": 27,
+    "walked_steps": 27,
+    "path": "bbbaacacca-aaaaaaaaaa-aaai",
     "walked": true,
     "reached_stairs": true,
-    "retries": 0,
+    "retries": 2,
     "drains_equal_model": true,
     "seeds_to_next_floor": 1
    },
@@ -2822,12 +3004,12 @@
     "type": 2,
     "rate_code": 4,
     "size": 15,
-    "shortest": 15,
-    "walked_steps": 15,
-    "path": "aaaaaaaa-ccbaa",
+    "shortest": 48,
+    "walked_steps": 48,
+    "path": "a-aaaaabaa-abbbbbiccccaaaaaa-aaccccaabaab-aaaaa",
     "walked": true,
     "reached_stairs": true,
-    "retries": 0,
+    "retries": 1,
     "drains_equal_model": true,
     "seeds_to_next_floor": 1
    },
@@ -2836,9 +3018,9 @@
     "type": 11,
     "rate_code": 3,
     "size": 3,
-    "shortest": 30,
-    "walked_steps": 30,
-    "path": "cbaa-aabccbaaa-aaaaaaaaa-aaaa",
+    "shortest": 1,
+    "walked_steps": 1,
+    "path": "",
     "walked": true,
     "reached_stairs": true,
     "retries": 0,
@@ -2850,12 +3032,12 @@
     "type": 3,
     "rate_code": 2,
     "size": 8,
-    "shortest": 22,
-    "walked_steps": 22,
-    "path": "aa-abbbbbiccccaca-aai",
+    "shortest": 16,
+    "walked_steps": 16,
+    "path": "aa-ccbaaaa-bcac",
     "walked": true,
     "reached_stairs": true,
-    "retries": 5,
+    "retries": 2,
     "drains_equal_model": true,
     "seeds_to_next_floor": 1
    },
@@ -2864,9 +3046,9 @@
     "type": 9,
     "rate_code": 4,
     "size": 15,
-    "shortest": 22,
-    "walked_steps": 22,
-    "path": "aa-baaabbbabbccaa-abb",
+    "shortest": 31,
+    "walked_steps": 31,
+    "path": "a-aaaaaaa-aaaaaaa-aaaaaaa-aaaa",
     "walked": true,
     "reached_stairs": true,
     "retries": 0,
@@ -2878,9 +3060,9 @@
     "type": 13,
     "rate_code": 3,
     "size": 3,
-    "shortest": 9,
-    "walked_steps": 9,
-    "path": "aa-aaaaa",
+    "shortest": 19,
+    "walked_steps": 19,
+    "path": "aaaa-aaaaaaa-aaaaa",
     "walked": true,
     "reached_stairs": true,
     "retries": 0,
@@ -2892,12 +3074,12 @@
     "type": 12,
     "rate_code": 2,
     "size": 8,
-    "shortest": 54,
-    "walked_steps": 54,
-    "path": "aabcb-bbbbbbbbba-baaa-aaaaaaaaaa-abcccaa-abcccaa-cccc",
+    "shortest": 50,
+    "walked_steps": 50,
+    "path": "acaaaa-bbaaababb-caaaaaabaaa-aaaaaaa-acbbb-ccaaaa",
     "walked": true,
     "reached_stairs": true,
-    "retries": 5,
+    "retries": 2,
     "drains_equal_model": true,
     "seeds_to_next_floor": 1
    },
@@ -2906,9 +3088,9 @@
     "type": 0,
     "rate_code": 4,
     "size": 15,
-    "shortest": 24,
-    "walked_steps": 24,
-    "path": "bb-bbbbbccaa-bcccca-aaa",
+    "shortest": 4,
+    "walked_steps": 4,
+    "path": "a-c",
     "walked": true,
     "reached_stairs": true,
     "retries": 0,
@@ -2920,9 +3102,9 @@
     "type": 6,
     "rate_code": 3,
     "size": 3,
-    "shortest": 19,
-    "walked_steps": 19,
-    "path": "aaa-aaaaaaa-aaaaaa",
+    "shortest": 1,
+    "walked_steps": 1,
+    "path": "",
     "walked": true,
     "reached_stairs": true,
     "retries": 0,
@@ -2934,9 +3116,9 @@
     "type": 14,
     "rate_code": 2,
     "size": 8,
-    "shortest": 56,
-    "walked_steps": 56,
-    "path": "aaaaaaaa-bbaabbcccaa-aaaaaaaaa-aabbbaa-aaaaaaaaaa-aabbb",
+    "shortest": 18,
+    "walked_steps": 18,
+    "path": "aaaaaa-aaaaaaaa-c",
     "walked": true,
     "reached_stairs": true,
     "retries": 1,
@@ -2948,13 +3130,124 @@
     "type": 11,
     "rate_code": 4,
     "size": 15,
-    "shortest": 14,
-    "walked_steps": 16,
-    "path": "aaaaaa-aaaaaa",
+    "shortest": 24,
+    "walked_steps": 24,
+    "path": "aaacccaaabbbaaa-aaaaaaa",
     "walked": true,
     "reached_stairs": true,
     "retries": 0,
     "drains_equal_model": true
+   }
+  ],
+  "all_ok": true
+ },
+ "measured_specials": {
+  "how": "PyBoy, original ROM, new game -> gate 1 floor 1; the next floor forced to the special path (hook $16:$5BBF -> PC $5C1C), the pick at $16:$5C2E, the variant by wRNG1 at SpecialRoom6_Maze / 7_Conveyor; dive.special_walk walked with the joypad (re-planned after every step, the counter pinned high), every EncounterStep / drain store / counter seed compared with the path",
+  "rooms": [
+   {
+    "pick": 2,
+    "variant": 0,
+    "map": 83,
+    "spawn": [
+     4,
+     6
+    ],
+    "rate_code": 3,
+    "model_steps": 24,
+    "walked": true,
+    "reached_stairs": true,
+    "game": "aaaaaaaaaa-|aaaaaaaaaaa-|aa-",
+    "equal_model": true
+   },
+   {
+    "pick": 6,
+    "variant": 0,
+    "map": 87,
+    "spawn": [
+     15,
+     11
+    ],
+    "rate_code": 3,
+    "model_steps": 63,
+    "walked": true,
+    "reached_stairs": true,
+    "game": "aaaaa-aaaa-aaaaaaaa-aaaaaaaaa-aaaaaaaaaaaaaa-aaaaaaaaa-aaaaaaa-",
+    "equal_model": true
+   },
+   {
+    "pick": 6,
+    "variant": 1,
+    "map": 88,
+    "spawn": [
+     1,
+     2
+    ],
+    "rate_code": 3,
+    "model_steps": 46,
+    "walked": true,
+    "reached_stairs": true,
+    "game": "aaaaaaaaaaaa-aaaaaaaaaaaa-aaaaaaaa-aaaaaaaaaa-",
+    "equal_model": true
+   },
+   {
+    "pick": 6,
+    "variant": 2,
+    "map": 89,
+    "spawn": [
+     1,
+     2
+    ],
+    "rate_code": 3,
+    "model_steps": 49,
+    "walked": true,
+    "reached_stairs": true,
+    "game": "aaaaaaaaaa-aaaaaaa-aaaaaaaaaaa-aaaaaaaa-aaaaaaaa-",
+    "equal_model": true
+   },
+   {
+    "pick": 7,
+    "variant": 0,
+    "map": 84,
+    "spawn": [
+     13,
+     13
+    ],
+    "rate_code": 3,
+    "model_steps": 108,
+    "walked": true,
+    "reached_stairs": true,
+    "game": "aaa-aaaaaaaaaa-aaa-aaaaa-aaaaaaaa-aaaa-aaaaaa-aaaaaaaaa-aaaaaa-aaaaaaaaa-aaaaaaaaaaa-aaaaaaaaaa-aaaaaaaaaaa-",
+    "equal_model": true
+   },
+   {
+    "pick": 7,
+    "variant": 1,
+    "map": 85,
+    "spawn": [
+     4,
+     22
+    ],
+    "rate_code": 3,
+    "model_steps": 92,
+    "walked": true,
+    "reached_stairs": true,
+    "game": "aaaaaaaaa-aaaaaaa-aaaaaaaaaaaaa-aaaaaaaaa-aaaaaaaaaaaaa-aaaaaaaaaaa-aaaaaaa-aaaaaaaaaaa-aaa-",
+    "equal_model": true
+   },
+   {
+    "pick": 7,
+    "variant": 2,
+    "map": 86,
+    "spawn": [
+     14,
+     11
+    ],
+    "rate_code": 3,
+    "model_steps": 77,
+    "walked": true,
+    "reached_stairs": true,
+    "game": "aaaaa-aaaaaaaaaaa-aaaaaaaaaaaaaa-aaaaaaaaa-aaaaaaaaaaaaaa-aaaaaaa-aaaaaaaaaa-",
+    "equal_model": true
    }
   ],
   "all_ok": true

@@ -72,10 +72,12 @@ WIN_TARGET = 0.90
 WIN_HALF = 0.50
 HEAL_VALUE_CAP = 30         # 'strong' picks: a heal never outscores a real attack
 CAP_SWAP = 0.85             # members capped below 85 % of the team level are swapped
+BREED_MIN_LEVEL = 10        # both parents (FULL_FAQ: "only breed Monsters at Level 10 or above")
 ANCHOR_JSON = os.path.join('extracted', 'balance_vanilla.json')
 ANCHOR_VERSION = 1
 PROFILES = ('casual', 'strong', 'player')
-SIM_VERSION = 'S130.7'       # bump when the simulator / raising model changes
+SIM_VERSION = 'S131.2'       # bump when the simulator / raising model changes (S131: bred kits at
+                             # any level, parents to 10 on their own curves, special-room dives)
                              # (invalidates project caches + the anchor)
 
 
@@ -524,33 +526,94 @@ def _member_joined(data, eid, exp, rng, tier, policy, score):
     return raise_to(data.T, m, exp, rng, policy, score)
 
 
-def _member_bred(data, br, joins, exp, rng, tier, policy, score, picks=1, gens=1):
-    """Two parents from the roster raised to max(10, exp-level), crossed by the
-    resolver; the offspring is born and raised to `exp`. picks > 1: keep the
-    offspring with the best score (strong players choose their crosses).
-    gens > 1: each parent is itself bred (gens-1) half the time — plus, and
-    with it the level cap (+2 per plus), builds up over generations."""
+# ---------------------------------------------------------------------------
+# S131 — breeding costs grinding (ROADMAP P3.15b (1), user: "I need to capture the
+# total time investment needed"; PROJECT_COMPILER §2.43 "Breeding costs grinding")
+# ---------------------------------------------------------------------------
+# The level axis is TIME: team level L = each of the 3 party slots has had exp(L)
+# (the reference curve) of grinding in it. A joined member arrives with its row's
+# exp for free and is raised to exp(L). A bred member's ANCESTORS were ground to
+# breeding level (both parents level 10+, the game's rule; a higher grind gives a
+# level-sum plus bonus) and left the party at the cross: that exp is charged to the
+# slot — the kid hatches at level 1 and is raised with exp(L) minus its lineage's
+# grind. A lineage the slot cannot afford is not available at that level, so deep
+# chains appear as the budget grows.
+MAX_GENERATIONS = 6
+
+
+def join_ancestor_cost(T, eid, grind=BREED_MIN_LEVEL):
+    """Exp to grind the monster that joins from enemy row `eid` to level
+    `grind` on its own curve (its arrival exp is free)."""
+    row = T.enemy(eid)
+    sp, lv = row[0], row[4]
+    return max(0, T.exp_to_reach(sp, grind) - (T.exp_to_reach(sp, lv) if lv else 0))
+
+
+def lineage_cost(m):
+    """Exp a monster represents as an ANCESTOR: the exp it was ground (beyond
+    what it arrived with) + its own ancestors' grind."""
+    return max(0, m.exp - m.free_exp) + m.grind
+
+
+def is_capped(T, m, frac=None):
+    """m stuck at its level cap: below `frac` (CAP_SWAP) of the level its exp
+    gives on its own curve without a cap (S131: S130 compared with the team
+    level, which a bred member under the time axis is below by design)."""
+    frac = CAP_SWAP if frac is None else frac
+    return m.level < frac * T.level_for_exp(m.species, m.exp, cap=99)
+
+
+def ensure_breedable(T, m, rng, policy, score):
+    """Raise m to level BREED_MIN_LEVEL on its own curve if it is below (the
+    game breeds only monsters of level 10+; S131). Returns m."""
+    if m.level < BREED_MIN_LEVEL:
+        raise_to(T, m, T.exp_to_reach(m.species, BREED_MIN_LEVEL), rng, policy, score)
+    return m
+
+
+def _member_bred(data, br, joins, exp, rng, tier, policy, score, picks=1, gens=1,
+                 ancestor=False):
+    """A bred member on the time axis (S131): two parents from the roster
+    ground to level 10 on their own curves (a joined parent's arrival exp is
+    free; gens > 1: a parent is itself bred (gens-1) half the time — plus,
+    and with it the level cap (+2 per plus), builds up over generations),
+    crossed by the resolver; the kid is born and raised with `exp` minus its
+    lineage's grind (`grind`); None when the slot cannot afford the lineage.
+    ancestor=True: the kid is itself a parent — raised to level 10, not
+    charged. picks > 1: keep the offspring with the best score (strong
+    players choose their crosses)."""
     best = None
-    pexp = max(exp, exp_for_level(data.T, 10))
+    T = data.T
     for _ in range(picks):
         ps = []
         for _k in range(2):
             p = None
             if gens > 1 and rng.random() < 0.5:
-                p = _member_bred(data, br, joins, pexp, rng, tier, policy, score, 1, gens - 1)
-            ps.append(p or _member_joined(data, rng.choice(joins), pexp, rng, tier, policy, score))
+                p = _member_bred(data, br, joins, exp, rng, tier, policy, score, 1, gens - 1,
+                                 ancestor=True)
+            if p is None:
+                eid = rng.choice(joins)
+                p = R.create(data.T, eid, rng, arena_tier=tier)
+            ps.append(ensure_breedable(T, p, rng, policy, score))
         p1, p2 = ps
-        if p1.level < 10 or p2.level < 10:
-            continue
+        if p1.level < BREED_MIN_LEVEL or p2.level < BREED_MIN_LEVEL:
+            continue                    # capped below 10 (none in the original game)
         try:
             c = br.resolve(p1.species, p2.species, p1.plus, p2.plus, p1.level, p2.level)
         except Exception:                                   # noqa: BLE001
             continue
         if c.species in range(215, 221):
             continue
+        grind = lineage_cost(p1) + lineage_cost(p2)
+        if not ancestor and grind > exp:
+            continue                    # the slot cannot afford this lineage yet
         kid = R.breed_and_birth(data.T, p1, p2, c.species, c.plus, rng)
+        kid.grind = grind
         kid.origin = f'bred: {data.names.get(p1.species)} x {data.names.get(p2.species)}'
-        raise_to(data.T, kid, exp, rng, policy, score)
+        if ancestor:
+            ensure_breedable(T, kid, rng, policy, score)
+        else:
+            raise_to(data.T, kid, exp - grind, rng, policy, score)
         if best is None or member_power(data, kid) > member_power(data, best):
             best = kid
     return best
@@ -601,13 +664,13 @@ def roll_team(data, tl, step_index, level, rng, profile='casual', breeding=None)
             # a monster stuck at its level cap well below the team gets
             # swapped: players replace members that stop growing
             swaps = 0
-            while m.level < CAP_SWAP * level and swaps < 3:
+            while is_capped(data.T, m) and swaps < 3:
                 swaps += 1
                 if can_breed and br is not None and rng.random() < 0.5:
                     m2 = _member_bred(data, br, joins, exp, rng, tier, policy, score)
                 else:
                     m2 = _member_joined(data, rng.choice(joins), exp, rng, tier, policy, score)
-                if m2 is not None and m2.level > m.level:
+                if m2 is not None and (not is_capped(data.T, m2) or m2.level > m.level):
                     m = m2
             cands.append(m)
         team.append(max(cands, key=lambda m: member_power(data, m)) if profile == 'strong'
@@ -752,6 +815,26 @@ def NO_ORDER(b, s):                     # noqa: N802 — the arena's "NO SP SK" 
     return (B.ATTACK, None)
 
 
+ACTION_TAGS = ('hit', 'no-effect', 'heal', 'status', 'miss', 'dodge', 'fly-dodge')
+
+
+def count_actions(log):
+    """(unmodelled, actions) over a battle log (pacing.simulate_battle's
+    'log': rounds of entries (actor, tag, payload)). An action the model has
+    no core for is logged 'no-effect' with the skill id; S131: a heal on a
+    full-HP / fallen target is the GAME's own "no effect" (f5_heal logs it
+    'no-effect' with a (target, amount) payload) and is not counted as
+    unmodelled (S130 counted it: up to 13 % on heal-heavy teams)."""
+    noeff = acts = 0
+    for rl in log:
+        for e in rl:
+            if len(e) >= 2 and e[1] in ACTION_TAGS:
+                acts += 1
+                if e[1] == 'no-effect' and not isinstance(e[2] if len(e) > 2 else None, tuple):
+                    noeff += 1
+    return noeff, acts
+
+
 def battle_once(data, party, eids, db73, rnd, idle, carry=None, out=None, planner=None):
     """One battle. party = [party dicts]; carry = [(hp, mp)] to start from
     (dives). Returns (winner, rounds, [(hp, mp)] after, no_effect actions,
@@ -782,14 +865,7 @@ def battle_once(data, party, eids, db73, rnd, idle, carry=None, out=None, planne
         b.ext['planner'] = planner
     r = P.simulate_battle(b, data.records, data.dup, idle, rnd, party_policy=pol,
                           enemy_recs=er, max_rounds=60)
-    noeff = acts = 0
-    for rl in r['log']:
-        for e in rl:
-            if len(e) >= 2 and e[1] in ('hit', 'no-effect', 'heal', 'status', 'miss',
-                                        'dodge', 'fly-dodge'):
-                acts += 1
-                if e[1] == 'no-effect':
-                    noeff += 1
+    noeff, acts = count_actions(r['log'])
     after = [(max(0, b.hp[i]), b.mp[i]) for i in range(len(party))]
     if out is not None:
         full = sum(e['hp'] for e in enemies) or 1
@@ -921,8 +997,14 @@ def floor_battle_means(data, tl, gid):
             try:
                 d = DV.battles_per_floor(data.repo, gid, fl, lb, maze_row=maze_row,
                                          special_row=special_row, floors=floors, detail=True)
-                steps = DV.floor_steps(data.repo, d['size'])
-                sweep = d['battles'] * (steps['reachable'] / max(1.0, steps['steps']))
+                if d.get('boss_floor'):
+                    sweep = 0.0
+                elif 'battles_sweep' in d:
+                    # S131: maze part and special rooms (their own walks) scaled each
+                    sweep = d['battles_sweep']
+                else:
+                    steps = DV.floor_steps(data.repo, d['size'])
+                    sweep = d['battles'] * (steps['reachable'] / max(1.0, steps['steps']))
                 out.append((f, d['battles'], sweep))
             except Exception:                           # noqa: BLE001
                 out.append((f, 0.5, 5.0))

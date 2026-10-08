@@ -40,7 +40,10 @@ import tempfile
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, REPO)
-from tools.pyboy_harness import boot, adv                     # noqa: E402
+try:                                                          # S131: the selftest SKIPs
+    from tools.pyboy_harness import boot, adv                 # noqa: E402  without PyBoy
+except ImportError:                                           # (the module import used
+    boot = adv = None                                         # to crash the verifier)
 from simulator import raising as R                            # noqa: E402
 
 STUB = 0xDD40

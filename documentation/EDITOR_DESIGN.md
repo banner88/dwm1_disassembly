@@ -1916,6 +1916,12 @@ hand or import it from a .sav. The service is PROJECT_COMPILER §2.43. The tab
   separate copy of the data → As is / What-if / Change (win, rounds, HP left, enemy HP
   left); Reset this enemy / Reset what-if. Never writes the project.
 
+**S131 (ROADMAP P3.15b; built, NOT yet user-tested)** — the level axis is grinding TIME
+(user option B): a bred member's place pays its family's grinding to level 10, the kit
+view names it ("parents ground: N exp"); gate dives walk the forest / maze / conveyor
+special rooms as their own rooms (measured); "Unmodelled" no longer counts full-HP heals.
+PROJECT_COMPILER §2.43, help `72_balance.md`.
+
 ### 5.10 Build & Play
 
 Build (deterministic, budget bars, validator gate), Play in SameBoy

@@ -8,6 +8,7 @@ runtime):
   python3 tools/census_dive.py              # census (+ the PyBoy measure when PyBoy is there)
   python3 tools/census_dive.py --floors N   # N floors per maze size (default 1000)
   python3 tools/census_dive.py --measure    # only the PyBoy walk check, print it
+  python3 tools/census_dive.py --measure-specials   # only the special rooms' PyBoy walk (S131)
   python3 tools/census_dive.py --selftest   # JSON == a re-derived sample (verifier check 5)
 
 CENSUS: for maze sizes 3-15, N floors each from random RNG states / contents
@@ -33,6 +34,15 @@ cells actually entered, each drained step's class and drain == the model
 (EncounterRateData[type][class] x RateMod[code] // 64), screen-edge steps
 and the stairs step store nothing, a picked-up item cell runs no
 EncounterStep; one counter seed per floor load and none while walking.
+
+SPECIALS (S131, ROADMAP P3.15b (2)): the walkable special rooms — the forest
+maze ($53 + $61-$64, five rooms joined by edge exits), Maze 1-3 ($57-$59),
+Conveyor maze 1-3 ($54-$56) — walked in their own rooms: dive.special_room
+reads each room's cells / exits from the ROM (editor2/core/render_project),
+dive.special_walk is the shortest walk spawn -> stairs (belts ride, edge
+exits push, a room change re-seeds), the drain is EncounterStep's flat
+outside-gate base (100, conveyors 80) x RateMod // 64 on every cell. The
+PyBoy check (--measure-specials, part of the full run) walks all 7 variants.
 """
 import hashlib
 import json
@@ -353,6 +363,156 @@ def measure(n_floors=6):
 
 
 # ---------------------------------------------------------------------------
+# S131: the walkable special rooms (forest maze, mazes, conveyor mazes)
+# ---------------------------------------------------------------------------
+SPECIAL_ENTRY = (0x16, 0x5BBF)   # the maze path (jr_016_5bbf) -> PC := the special path
+SPECIAL_PATH = 0x5C1C            # jr_016_5c1c
+SPECIAL_PICK = (0x16, 0x5C2E)    # right after the special path's SelectFloorType (A = pick)
+SPECIAL_VARIANT = ((0x16, 0x5ED8), (0x16, 0x5F4C))   # SpecialRoom6_Maze / 7_Conveyor: wRNG1 mod 3
+MEASURE_SPECIALS = [(2, 0), (6, 0), (6, 1), (6, 2), (7, 0), (7, 1), (7, 2)]
+
+
+def special_census(rom, tables):
+    """{pick: {'variants', 'battles' [8 codes], 'sweep' [8 codes]}} from the
+    ROM's room data (dive.special_variants) and the counter tables."""
+    from editor2.core import dive as DV
+    from editor2.core.render_project import ProjectRenderer
+    R = ProjectRenderer(REPO, None, {'custom': {}})
+    F = DV._cdf_fn(cdf_of(tables))
+    out = {}
+    for pick, vs in DV.special_variants(R).items():
+        bat, swp = [], []
+        for code in range(8):
+            b = s = 0.0
+            for v in vs:
+                base = DV.CONVEYOR_BASE if v['map'] in DV.CONVEYOR_MAPS else DV.SPECIAL_BASE
+                d = base * tables['rate_mod'][code] // 64
+                e = DV.expected_battles(v['path'], (d, d, d), F)
+                b += v['p'] * e
+                s += v['p'] * e * v['reachable'] / max(1.0, v['steps'])
+            bat.append(round(b, 4))
+            swp.append(round(s, 4))
+        out[str(pick)] = {'name': DV.SPECIAL_NAMES[pick], 'variants': vs, 'battles': bat, 'sweep': swp}
+    return out
+
+
+def measure_specials(cases=MEASURE_SPECIALS):
+    """PyBoy, original ROM: new game -> gate 1 floor 1; the next floor is forced
+    to special room `pick` (variant by wRNG1) and walked with the joypad along
+    dive.special_walk (re-planned from the real cell after every step; the
+    counter pinned high); every EncounterStep / drain / counter seed logged and
+    compared with the model's path ('a' = drained by the room's flat drain,
+    '-' / 'x' / 'p' = an EncounterStep that stores nothing, '|' = a seed)."""
+    from tools.pyboy_harness import boot, to_bedroom, adv
+    from editor2.core import dive as DV
+    from editor2.core.render_project import ProjectRenderer
+    R = ProjectRenderer(REPO, None, {'custom': {}})
+    rooms = {}
+
+    def load(m):
+        if m not in rooms:
+            rooms[m] = DV.special_room(R, m)
+        return rooms[m]
+    tab = rom_tables(open(ROM_PATH, 'rb').read())
+    results = []
+    for pick, var in cases:
+        p = boot(ROM_PATH)
+        if not to_bedroom(p):
+            raise SystemExit('the new game did not reach the bedroom')
+        adv(p, 200)
+        mem = p.memory
+        force = [False]
+
+        def to_special(_):
+            if force[0]:
+                p.register_file.PC = SPECIAL_PATH
+
+        def set_pick(_, k=pick):
+            if force[0]:
+                p.register_file.A = k
+
+        def set_var(_, v=var):
+            if force[0]:
+                mem[0xC899] = v
+        p.hook_register(*SPECIAL_ENTRY, to_special, None)
+        p.hook_register(*SPECIAL_PICK, set_pick, None)
+        for h in SPECIAL_VARIANT:
+            p.hook_register(*h, set_var, None)
+        ev = []
+        p.hook_register(*STEP_ENTRY, lambda _: ev.append(('E', mem[0xC968])), None)
+        p.hook_register(*STEP_STORE, lambda _: ev.append(('D', p.register_file.D << 8 | p.register_file.E)),
+                        None)
+        p.hook_register(*SEED_ENTRY, lambda _: ev.append(('S',)), None)
+
+        def tick(k=1):
+            for _ in range(k):
+                mem[0xCA39], mem[0xCA3A] = 0x00, 0x70
+                p.tick()
+        mem[0xD8D7] = 0
+        mem[0xC96D], mem[0xC96E], mem[0xC96C], mem[0xC88F] = 1, 1, 1, 1    # gate 1, floor 1
+        tick(1400)
+        force[0] = True
+        mem[0xC96D], mem[0xC96E], mem[0xC96C] = 0, 0x80, 1                # the stairs kick
+        mem[0xC88F] = (mem[0xC88F] + 1) & 0xFF
+        tick(1400)
+        force[0] = False
+
+        def st():
+            return (mem[0xC968], (mem[0xFF97], mem[0xFF98]))
+        s0, floor0, code = st(), mem[0xC939], mem[0xC8A9]
+        model = DV.special_walk(load, *s0)
+        ev.clear()
+        ok = True
+        for _it in range(500):
+            s = st()
+            if mem[0xC939] != floor0:
+                break
+            try:
+                d = DV.special_walk(load, *s)['first']
+            except ValueError:
+                ok = False
+                break
+            if d:
+                p.button_press(d)
+                tick(2)
+                p.button_release(d)
+            for _ in range(80):
+                tick()
+                if st() != s or mem[0xC939] != floor0:
+                    break
+            if st()[0] != s[0] and mem[0xC939] == floor0:
+                tick(420)                     # a room change: the fade, then the new cell
+            for _ in range(90):
+                tick()
+                if not (mem[0xC8EB] & 0x04):
+                    break
+            tick(2)
+        for _ in range(900):
+            if mem[0xC939] != floor0:
+                break
+            tick()
+        reached = mem[0xC939] != floor0
+        got = []
+        for e in ev:
+            if e[0] == 'E':
+                got.append([e[1], None])
+            elif e[0] == 'D' and got:
+                got[-1][1] = e[1]
+            elif e[0] == 'S':
+                got.append(None)
+        if got and got[-1] is None and reached:
+            got.pop()                         # the next floor's own seed
+        g = ''.join('|' if x is None else ('-' if x[1] is None else
+                    ('a' if x[1] == DV.special_drain(x[0], code) else '?')) for x in got)
+        want = model['path'].replace('x', '-').replace('p', '-')
+        results.append({'pick': pick, 'variant': var, 'map': s0[0], 'spawn': list(s0[1]),
+                        'rate_code': code, 'model_steps': model['steps'], 'walked': ok,
+                        'reached_stairs': reached, 'game': g, 'equal_model': g == want,
+                        **({} if g == want else {'model': want})})
+        p.stop()
+    del tab
+    return results
+
 
 def build(n):
     from editor2.core import maze as MZ
@@ -375,19 +535,28 @@ def build(n):
                        'dive.walk_path (shortest walk arrival -> stairs, cells with BR tile >= $30), '
                        'dive.expected_battles over EncounterRateData $16:$6FAB x '
                        'EncounterRateModifierTable $16:$702B x RandomEncounterCounterTable $16:$6E3D. '
+                       'S131: specials = the forest maze / mazes / conveyor mazes walked in their own '
+                       'rooms (dive.special_variants: room data from the ROM, belts, edge exits, the '
+                       'outside-gate flat drain, a re-seed per room change). '
                        'Read by editor2/core/dive.py; --selftest re-derives a sample.'),
         'floors_per_size': n,
-        'path_chars': {'format': 'sizes[n].paths = every walk of the sample, comma-joined, sorted',
+        'path_chars': {'format': 'sizes[n].paths = every walk of the sample, comma-joined, sorted; '
+                                 'specials[pick].variants[k].path = that room\'s shortest walk',
                        'a': 'drained step onto class $0C ($30-$33)',
                        'b': 'drained step onto class $0D ($34-$37)',
                        'c': 'drained step onto class $0E ($38-$3B)',
                        '-': 'screen-edge step (no drain: wGameState bit 2)',
                        'i': 'step onto a floor item that is picked up (no drain: EncounterStep not reached)',
-                       'note': 'the final step onto the stairs ($0F, no check) is in steps, not in the path'},
+                       'x': 'specials: the step onto a walk-on exit (EncounterStep runs, no drain)',
+                       'p': 'specials: a push into an edge exit (EncounterStep runs, no drain)',
+                       '|': 'specials: a room change (the room loads, the counter is re-seeded)',
+                       'note': 'maze floors: the final step onto the stairs ($0F, no check) is in steps, '
+                               'not in the path'},
         'tables': tables,
         'sizes': sizes,
         'battles': battle_table(sizes, tables),
         'steps_between': steps_between_table(tables),
+        'specials': special_census(rom, tables),
     }
 
 
@@ -437,18 +606,25 @@ def selftest():
             bad.append(f'battles size {size} type {t} code {code}: {v} != stored')
     if d['steps_between'] != steps_between_table(tables):
         bad.append('steps_between != ROM tables')
+    if d.get('specials') != json.loads(json.dumps(special_census(rom, tables))):
+        bad.append('specials != re-derived (room data / walks / battles)')
     if bad:
         for b in bad[:10]:
             print('FAIL:', b)
         return 1
     print(f'OK: dive_census.json == ROM tables; {SELFTEST_FLOORS} floors x 13 maze sizes '
-          f're-derived (walks in the census, summaries consistent); {SELFTEST_CELLS} battle cells recomputed')
+          f're-derived (walks in the census, summaries consistent); {SELFTEST_CELLS} battle cells recomputed; '
+          f'{len(d["specials"])} special rooms re-derived')
     return 0
 
 
 def main():
     if '--selftest' in sys.argv:
         sys.exit(selftest())
+    if '--measure-specials' in sys.argv:
+        for r in measure_specials():
+            print(r)
+        return
     if '--measure' in sys.argv:
         for r in measure(int(sys.argv[sys.argv.index('--measure') + 1])
                          if len(sys.argv) > sys.argv.index('--measure') + 1 else 6):
@@ -474,6 +650,18 @@ def main():
         print('measured:', out['measured']['all_ok'])
         for m in ms:
             print('  ', m)
+        sp = measure_specials()
+        out['measured_specials'] = {
+            'how': ('PyBoy, original ROM, new game -> gate 1 floor 1; the next floor forced to the '
+                    'special path (hook $16:$5BBF -> PC $5C1C), the pick at $16:$5C2E, the variant '
+                    'by wRNG1 at SpecialRoom6_Maze / 7_Conveyor; dive.special_walk walked with the '
+                    'joypad (re-planned after every step, the counter pinned high), every '
+                    'EncounterStep / drain store / counter seed compared with the path'),
+            'rooms': sp,
+            'all_ok': all(r['walked'] and r['reached_stairs'] and r['equal_model'] for r in sp)}
+        print('measured specials:', out['measured_specials']['all_ok'])
+        for r in sp:
+            print('  ', r)
     except ImportError:
         print('PyBoy not installed: no measurement')
     with open(OUT, 'w') as f:

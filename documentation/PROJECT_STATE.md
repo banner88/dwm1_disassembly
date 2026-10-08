@@ -10,6 +10,63 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
+> Last verified: 2026-10-08 (Session 131 — **ROADMAP P3.15b (1) / (2) / (3) BUILT: THE BALANCE LEVEL
+> IS GRINDING TIME (A BRED MONSTER'S PLACE PAYS ITS FAMILY'S GRIND TO LEVEL 10), GATE DIVES WALK THE
+> FOREST / MAZE / CONVEYOR SPECIAL ROOMS AS THEIR OWN ROOMS (MEASURED), +20 = A MAX COUNT EVERYWHERE,
+> FULL-HP HEALS NOT "UNMODELLED"; ITEMS BANKED** (user: "Yeah balance tab looks good" → "Yes P3.15b";
+> "Always make me do it" (the anchor); breeding: "Great let's go with B. I need to capture the total
+> time investment needed. Keep in mind breeding chains get deeper and deeper further into the game …
+> the best objective assessment of corresponding vanilla level"; Coliseum: "irrelevant for difficulty
+> scaling ignore it"; items: "Honestly Im not sure the items are that important anymore. They are
+> very early-mid game thing"). **Built S131, NOT yet user-tested; byte-neutral (no ROM bytes — no test
+> ROM). The anchor `extracted/balance_vanilla.json` was REBUILT by the user for SIM_VERSION 'S131.2'
+> (selftest OK — see below).**
+> **(1) The time axis** (PROJECT_COMPILER §2.43 "Breeding costs grinding"): team level L = exp(L) per
+> party slot; a joined member's arrival exp is free; a bred member's slot pays its ancestors' grind to
+> level 10 on their own curves (`balance.lineage_cost`, `Monster.grind` / `.free_exp`), the kid hatches
+> at 1 and gets exp(L) − grind; unaffordable families are not used; the player's pool = a cost-aware
+> resolver closure (Pareto routes cost / plus, ≤ 6 generations as the budget affords, a route-swap
+> move); casual / strong pay the same; capped = below 85 % of the level its exp gives (`is_capped`).
+> The bank $0A level gate (record +$4B ≥ 10, three menus) read + commented both trees (MONSTER_DATA
+> "The breeding level gate (S131)"). Option A (kids any level, parents free) built first, measured
+> (Strength 2-6, StoneMan 3) and rejected by the user. B sample: Bravery 4 · 4 · 4 · 10, D class 4 ·
+> 4 · 11, Strength 9 · 9 · 9 · 10 · 10, C class 10 · 12 · 12 (S130: … 10 · … 10 · 8-10 · 10 flat).
+> **(2) Special rooms** (GATE_GENERATION §4.4 "Special rooms (S131)"): the forest maze ($53 +
+> $61-$64 — five one-screen rooms joined by edge exits; "Forest Maze Gate Floor 1-4" was a misnomer),
+> Maze 1-3, Conveyor maze 1-3 walked as their own rooms (`dive.special_room` / `special_walk`):
+> every cell drains a flat 100 (conveyors 80) × RateMod // 64, belts (bank $01 `ConveyorBeltPush`,
+> was `CheckGateworldForNPC`: classes $0F-$12 → right / left / down / up) ride and every cell ridden
+> is a step, edge exits push, walk-on exits / pushes run EncounterStep with no drain, each room change
+> re-seeds; PyBoy 7 / 7 rooms == the model; at code 3: maze 0.88, conveyor 1.45, forest 0 battles vs
+> 0.43 for a size-8 floor. `census_dive.py` → `dive_census.json` `specials` + `measured_specials`.
+> **(3)** randomizer `Pool.max_counts` / `slot_chances` / `live_slots` by chance, `sweep_ttk` by
+> chance — randomizer output byte-identical (seed 4242 `183904fb…`). **Unmodelled**: `count_actions`
+> (S130's up-to-13 % were full-HP heals).
+> **Annotation (both trees, zero bytes):** bank $01 `ConveyorBeltPush` + `BeltRight/Left/Down/Up`,
+> `CheckSpecialMapExits` comment; bank $0A level gates; bank $0B special-room comments. Clean
+> `1ca6579…` byte-perfect; REFERENCE_MD5 unchanged `7d136455…` (patched).
+> **Checks:** test_compiler --rom (`test_balance_s131`); test_app; verifier — final results in the
+> r4 wrap-up below; `census_dive.py --selftest` OK.
+> **r2-r4 (user 18:14-20:22):** the tab's build "stopped (0 parts saved)" with no log → r2: a build log
+> (`extracted/balance_vanilla.build.log`, tracebacks, a failed unit no longer stops the others, **Show
+> log**); the log: `no parent form for species 200` → r3: routes keep the parents they were costed from
+> (`build_member` follows them); the user's S131.1 anchor (selftest OK here) read: kit members at +20-22
+> for ~3,000 exp, a Gate of Sleep floor unwinnable at 99 (members capped at 42-44), a Judgement spike →
+> r4: the closure's plus uses the parents' REAL levels (late recruits give +2..+4 per cross), a capped
+> member re-breeds for its uncapped level's plus (Sleep kit at L60/99: levels 75-82); SIM_VERSION
+> 'S131.2' — the anchor rebuilt again by the user (below).
+> **The anchor, rebuilt by the user for 'S131.2' (2026-10-08 22:36, M3 Max): `--selftest` OK here
+> (3 fights + 1 dive + 2 player fights re-derived == the Mac's).** Player l90 read: early game as S130;
+> mid-game moves by fight (Peace 8, Bravery 10, D class 11, Anger 13, C class 12, Wisdom 25, B class
+> 12-16, Happiness 18, Temptation 25, Labyrinth 23); **Gate of Judgement a step up in all three
+> profiles** (floors 22-29, Akubar 43 — S130 12-17 / 31; strong floors 22, Akubar 99+) — asked the
+> user whether it matches play; S class 25 / 25 / 46, Reflection (Durran) 37, Starry Night 28 / 28 /
+> 43; postgame bosses 31-69, Old Man's Gate 69 and Monster Grandpa 82 now winnable (S130: 99+);
+> Gate of Sleep floors 21-29 = the one-kit-per-step limit (the kit tuned to Esterk 24 tops out at ~75 %;
+> strong 39).
+> **Next:** the user's read of the curve (Judgement) and test of the Balance tab;
+> the user's test of the Balance tab; then P3.15b (4) / the planner items, or the user's pick.
+
 > Last verified: 2026-10-08 (Session 130 — **ROADMAP P3.15 SPLIT; P3.15a BUILT: THE SIMULATOR LEARNS
 > EVERY BATTLE SKILL, THE RAISING MODEL (== THE GAME), BATTLES PER GATE FLOOR, AND THE BALANCE TAB —
 > HOW HARD EVERY KEY FIGHT IS, THE ORIGINAL GAME (READ-ONLY ANCHOR) VS THE PROJECT** (user: "Next
@@ -112,79 +169,11 @@
 > plain-English line, hover sentences, "Compute your project", "Show the team"; **Show details**
 > (saved, `balance/details`) restores everything; help "Reading the numbers" first.
 > **Next:** the user's test of the Balance tab (original curve, a project's fights, a boss what-if,
-> a .sav party); then P3.15b or the user's pick.
-
-> Last verified: 2026-10-07 (Session 129 — **ROADMAP P3.14b / c / d FINISHED (P3.14 DONE): STORY
-> CHECKS — QUESTIONS THE GAME ANSWERS (ITEMS, GOLD, MONSTERS, LEVELS, SEEN, CHANCE, ARENA, BAG
-> ROOM, THE STORY REACHED, AND / OR) USABLE WHEREVER A FLAG IS CHECKED; STORY STEPS (TAKE ITEMS,
-> GOLD, GIVE ITEMS × N, GIVE A MONSTER, REFRESH THE ROOM, SAYS BY PROGRESS); THE STORY SPINE;
-> QUESTS AS NPC ROLES; LOCKED EXITS AS A SHUT ROOM STATE; MUSIC BY FLAG FOR ROOMS AND GATES; SHOP
-> ITEM SETS BY FLAG** (user: "Next unchecked item in ROADMAP" → the plan → "1) … actually it is
-> easier to just make a new room state and switch to that? Honestly might be easier. 2) Custom
-> rooms and gates also please. 3) Flag should lead to new item sets which are settable in editor.
-> 4) Do everything in one session. Finish off all P3.14 if doable"). **Built S129; test ROM
-> USER-CONFIRMED 2026-10-07 13:59 ("This is great"); the editor side not yet reported.**
-> **Engine:** a story check n IS event flag `$1800 + n` — bank $73 `FlagAddr` sends `D == $18` to
-> bank $77 entry 11 `StoryCheck` (12 kinds; the monsters through ROM0 `GetMonsterDataPtr`, the
-> CF3 SRAM farm included) → `wStoryFlag` `$D509` (`wCustomPool` now from `$D50A`), so every flag
-> reader (ops `$00/$01`, state rules, NPC conditions, hub / gate / arena / breeding / music /
-> shop terms) reads checks unchanged (EVENT_FLAGS "Story checks"). Story commands = op `$24
-> $FF01+` → bank $77 `StoryCommand` (take items, ROM0 `CompareGold` adds / `AddGold` subtracts,
-> give items × n all-or-none → `$D8E1`). Refresh = op `$26` (measured: the room reloads in place,
-> state rules + music re-picked, the player keeps his cell). Bank $71 `MusicRulePick` +
-> `MusicRuleTable` (rooms by `wMapID`, gates by `wGateID`); bank $77 `ShopSetPick` + `ShopSetTable`
-> from `ShopFill`. Templates re-pinned: $77 `eb0f0997…` (1788 B), $71 `cbd0cdec…` (1070 B).
-> **Compiler / model (PROJECT_COMPILER §2.42):** `custom.checks`, `custom.story.milestones`,
-> `custom.quests` (lowered into the giver NPC's conversation: offer YES / NO, progress, take,
-> reward items / gold / monster / flags / refresh, done; `<id>_started` / `<id>_done` flags; a
-> bag-room check when the reward needs room), `custom.shop_sets`, `rooms[].music_rules`,
-> `music.gates.N.rules`; conversation steps `give_item` × n / `give_monster` / `take_item` /
-> `gold` / `refresh` / `by_progress`, cutscene steps `take_item` / `gold` / `refresh`; a Turn ON
-> of a check refused; the flag index lists checks / milestones / music rules / shop sets. The
-> legacy `progression.quests` KEPT (old projects, the example's S70 battle quest, its tests) and
-> its `npc_hide` / `npc_show` fixed (`npc_write n,0,$40/0`; PyBoy: the guardian's slot type `$40`).
-> **Editor (EDITOR_DESIGN §5.7 "Story (S129)"):** Progression & Flags → the Story checks group
-> (New / Edit / Rename everywhere / Delete) + a **Story** page (milestones, quests); Rooms tab →
-> NPC **Quest…**, door **Lock until…** (`Document.lock_exit`: the shut state — the exit gone,
-> the cell a wall, an examine spot with the words — and its rules); Music tab **Music by flag…**
-> (your rooms, gates); Shops tab **Item sets by flag…**; the conversation window / cutscene
-> editor's new steps; story checks in every condition picker (not in Turn ON / OFF). Help
-> `71_story_quests.md` + 00 / 11 / 20 / 30 / 40 / 61 / 62 / 63 / 90; `EDITOR_REVISION` 'S129'.
-> The example project: checks `has_2_medals` / `vault_rich`, the NEW mini medal quest (NPC
-> (2, 5) in the medal vault, flags `$015B` / `$015C`) — user S124 "yes make new mini medal quest".
-> **Annotation (Iron Rule 6):** clean tree `ComputeFlagAddress` (the patched route, the virtual
-> flags) and `ScriptCmd26_ReloadRoom` (measured); clean `1ca6579…` byte-perfect.
-> **Checks:** verifier PASS (audit_mapid_range: `CustomRoomBGMResolve` re-keyed, patched 85);
-> REFERENCE_MD5 **`7d136455…` (patched)**, was `fe5fa80a…` (patched, historical); test_compiler
-> --rom 1354/1354 (`test_story_s129`, `test_quests_s129`, `test_story_rom` — an SM83 RUN of
-> `TestEventFlag` on every check kind, every command, `ShopSetPick`, `MusicRulePick`; the S117 /
-> S73 / S97 / S124 expectations re-stated for the example's two new flags and six new texts; the
-> flag-index coverage covers the S129 fixture; the `$0`-`$1FFF` sweep expects `wStoryFlag` for
-> `$18xx`); test_app
-> PASS (`s129_story`: every dialog driven, compiled, undone; GUI build == the pin).
-> **Measured (PyBoy, the user's save, the final ROM below):** a census of 32 checks of every kind
-> against the save (chance 50 %: 300 rolls); the DEMO NPC → the hall; the Guide (hall_visited);
-> the Chronicler by progress (before / chapter 1 / chapter 2); the Sage's four checks (strong
-> party yes, rich no → yes after the Banker, big farm no, a medal yes); the quest (offer YES,
-> progress with 2 medals); the sealed stairs unwalkable + their words; the Fairy's medal, then
-> "bag full"; the quest's end (3 medals taken, 2 Herbs, 3,800 → 4,100 G, done, the refresh opens
-> the stairs, the hall's song `$31` → `$1E`); the stairs → the annex; the Banker +1,000 / −500;
-> the stall `[$01 $07 $0D]` before, `[$05 $06 $03 $1D]` after; the Bard → gate 0's floors `$2E`
-> (OFF: `$34`). Seen: the user's own arrival scene in Cities_FOUNT ("I am a shopkeep!") plays
-> first.
-> **Test ROM `DWM-S129-story-test.gbc` (`ca502753…`, patched; USER-CONFIRMED, below):** the user's
-> my-dwm-hack_21 + two BRAND-NEW rooms: **STORY HALL** ($76, teal crystal look): Hall Guide (2,
-> 2), Sage of Checks (6, 3), Medal Fairy (2, 4), Medal Collector (7, 5; the quest: 3 TinyMedals
-> → 300 G + 2 Herbs, opens the stairs), Chronicler (3, 6; says by progress), the sealed stairs
-> (8, 1); **VAULT ANNEX** ($77, crimson look): Annex Guide (2, 2), Banker (7, 3; YES +1,000 G /
-> NO then YES −500 G), Annex stall (2, 5; better goods after the quest), Bard (7, 6; YES = gate 0
-> plays his song). Way in: the **S129 DEMO** NPC in Cities_FOUNT at (3, 4). **USER-CONFIRMED
-> 2026-10-07 13:59 ("This is great").** Its project in editor format: `examples/s129_story_demo/`
-> (+ `build_demo.py`, the Document-API calls that made it; both rebuild `ca502753…`, patched).
-> **Next:** the user's test of the ROM and the editor; then the user's pick (P3.14 is done —
-> P3.15 Balance tab, or a banked item).
+> a .sav party); then P3.15b or the user's pick. **User at the S131 start (2026-10-08 16:30): "Yeah
+> balance tab looks good".**
 
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S131** (2026-10-08): P3.15b (1) / (2) / (3) built (byte-neutral) — the Balance level = grinding time (a bred monster's slot pays its family's grind to level 10; cost-aware breeding pool, ≤ 6 generations; user option B), gate dives walk the forest / maze / conveyor special rooms as their own rooms (PyBoy 7 / 7; `census_dive.py` `specials`), +20 = a max count (randomizer Pool, sweep_ttk), full-HP heals not unmodelled; items banked; anchor rebuilt by the user ('S131.2', selftest OK). Owning: PROJECT_COMPILER §2.43, GATE_GENERATION §4.4, MONSTER_DATA "The breeding level gate (S131)", KEY_LESSONS S131, DOC_AUDIT S131, TOOLS_AND_DATA S131.
 - **S130** (2026-10-08): P3.15 split; P3.15a built (byte-neutral) — every battle skill family in the simulator via registries (`simulator/skillfx/`, 146 handlers, F1-F10 validated 0 on the user's save), the raising model `simulator/raising.py` (== the game, `census_raising.py`), battles per gate floor (`census_dive.py`, GATE_GENERATION §4.4; `encounters.steps_between` +1 fix), the Balance service `editor2/core/balance.py` + anchor `extracted/balance_vanilla.json` (`build_balance_anchor.py`), `.sav` reader, the Balance tab (PROJECT_COMPILER §2.43, EDITOR_DESIGN §5.9).
 - **S129** (2026-10-07): P3.14b / c / d finished (P3.14 done) — story checks (`custom.checks`: virtual flags `$1800+n`, bank $73 `FlagAddr` → bank $77 entry 11 `StoryCheck`, `wStoryFlag` $D509; item / gold / species / family / monsters / level / seen / chance / arena / bag room / story / all / any), story commands (op `$24 $FF01+`: take items, gold, give × n), refresh = op `$26` (measured), the story spine + says by progress, quests (`custom.quests`, NPC → Quest…), locked exits (`lock_exit`: a shut room state), music by flag (bank $71 `MusicRulePick`), shop item sets (bank $77 `ShopSetPick`); the legacy quest's hide / show fixed; the example's mini medal quest; pin `7d136455…` (patched). PROJECT_COMPILER §2.42. Test ROM `DWM-S129-story-test.gbc` (STORY HALL / VAULT ANNEX) USER-CONFIRMED 2026-10-07; its project: `examples/s129_story_demo/`.
 - **S128** (2026-10-07): P3.14e3 built — your arena (`custom.arena`, `your_arena.py`): copies of the Arena Lobby + the Arena Battle room the engine treats as `$06` / `$5D` (ROM0 `ArenaMapID` / `ArenaAlias` at 9 map-id sites, banks $01/$03/$07/$50/$51 + $71 template), per-class locks (bank $6E `ArenaMarkClasses`, glyph `$9C`) / won flags / words / where a win goes, Starry Night offered by flag (lobby / room / hub / the game's ending); r2: "auto" flags never land on the game's `$0158` (compiler + on open), arena group 9 = **Monster Grandpa's match** (not the King), copies share one layout per vanilla layout (the night arena). User-confirmed.
@@ -470,7 +459,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Breeding NPCs (Grandpa: BREED / HATCH; breeders offering one fixed monster or a mate rolled per appearance from a breeding pool — bands on level / arena / seen / story, nearest wins; offers by flag, done flag, once only) + gate rooms for every gate with the chance by the party's level | 🟢 built S127 (ROADMAP P3.14e2), PyBoy-walked on the user's save (the game's own shrine not walked — harness), test ROM `DWM-S127-breeding-test.gbc` NOT yet user-tested | PROJECT_COMPILER §2.40; EDITOR_DESIGN §5.6c (S127); help `68_breeding_npcs.md` |
 | Your arena (copies of the Arena Lobby + the Arena Battle room, paintable, any doors; per class: opens when (flags), a won flag, the receptionist's words, where a win sends you; Starry Night offered by flag → lobby / room / hub / the game's ending) | 🟢 built S128 (ROADMAP P3.14e3), test ROM `DWM-S128r2-your-arena-test.gbc` USER-CONFIRMED 2026-10-07 09:51 (PyBoy on the user's save: G / F / E / D, a lock, a loss, Starry Night; the painted lobby + arena floor survive every match). Monster Grandpa's match (group 9) and the King's story stay the game's | PROJECT_COMPILER §2.41; SIDEQUEST_MAP "Your arena (S128)"; CROSSBANK_ROOMS "S128 sites"; help `69_your_arena.md` |
 | Story checks (questions the game answers — an item × n, gold, a species / family, monsters owned, party level, monsters seen, a random %, arena classes, bag room, the story reached, AND / OR — usable wherever a flag is checked), story steps (take items, give / take gold, give items × n, give a monster, refresh the room, says by progress), the story spine, quests, locked exits (a shut room state), music by flag (your rooms, gates), shop item sets by flag | 🟢 built S129 (ROADMAP P3.14b / c / d), PyBoy-walked on the user's save, test ROM `DWM-S129-story-test.gbc` USER-CONFIRMED 2026-10-07 13:59 | `custom.checks` / `story` / `quests` / `shop_sets`, `rooms[].music_rules`, `music.gates.N.rules` → `story.py`; virtual flags `$1800+n` (bank $73 `FlagAddr` → bank $77 entry 11); PROJECT_COMPILER §2.42; EVENT_FLAGS "Story checks"; EDITOR_DESIGN §5.7 "Story (S129)" |
-| Balance tab: how hard every key fight is (gate lists, bosses, arena, Starry Night, Grandpa) as the team level a rolled team of that story point needs to win 90 % / 50 % (casual / strong), the original game read-only vs the project (cached per fight), gate dives at two walk bounds, rolled / picked / .sav teams, boss what-ifs | 🟢 built S130 (ROADMAP P3.15a), NOT yet user-tested; byte-neutral | `editor2/core/balance.py` + `app/balance_tab.py`; `extracted/balance_vanilla.json`; PROJECT_COMPILER §2.43; EDITOR_DESIGN §5.9 "As built S130"; help `72_balance.md` |
+| Balance tab: how hard every key fight is (gate lists, bosses, arena, Starry Night, Grandpa) as the team level a rolled team of that story point needs to win 90 % / 50 % (casual / strong), the original game read-only vs the project (cached per fight), gate dives at two walk bounds, rolled / picked / .sav teams, boss what-ifs | 🟢 built S130 (ROADMAP P3.15a), user: "balance tab looks good" (2026-10-08); S131 (P3.15b): the level = grinding time (breeding paid by its family), special rooms in dives — built, NOT yet user-tested; anchor rebuilt ('S131.2', selftest OK) | `editor2/core/balance.py` + `app/balance_tab.py`; `extracted/balance_vanilla.json`; PROJECT_COMPILER §2.43; EDITOR_DESIGN §5.9 "As built S130"; help `72_balance.md` |
 | NPC show/hide by step | ✅ working | step system; counters at $CD80+ (S65; transient); opcode $12 advances (v25) |
 | Flag-driven room states (persistent) | ✅ built S97, USER-CONFIRMED 2026-09-26 | `custom.rooms[].state_rules` → bank $60 entry 8 (+ bank $17 hook); PROJECT_COMPILER §2.13 |
 | NPC behaviours (movement types) | ✅ decoded + authorable S97, USER-CONFIRMED 2026-09-26 | type byte low nibble, bank $06 NPCBehaviourTable; ROOM_DATA_FORMAT "NPC behaviour types" |

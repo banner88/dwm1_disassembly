@@ -33,6 +33,15 @@ drain borrows (counter < drain); the counter is re-seeded
 and the reload after each battle. So a floor is a renewal process over its
 drain sequence; `expected_battles` sums P(a battle on step k) exactly.
 
+SPECIAL ROOMS (S131): floors 3 / 6 / 9 of gates other than 0 are a special
+room half the time; the forest maze ($53 + $61-$64), Maze 1-3 ($57-$59) and
+Conveyor maze 1-3 ($54-$56) are walked as their own rooms (special_room /
+special_walk / special_battles; the walks in dive_census.json 'specials'):
+every cell entered drains a flat 100 (conveyors 80) x RateMod // 64, belts ride
+(every cell ridden is a step), edge exits fire on a push, walk-on exits and
+pushes drain nothing, a room change re-seeds the counter — PyBoy 7 / 7 rooms ==
+the model (GATE_GENERATION §4.4 "Special rooms (S131)").
+
 Path strings (JSON, comma-joined per maze size): one char per step after the arrival — 'a' / 'b' / 'c' =
 a drained step onto class $0C / $0D / $0E, '-' = a screen-edge step (no
 drain), 'i' = a step onto a picked-up floor item (no drain); the final step onto the stairs is not written (no check) but is in
@@ -50,13 +59,36 @@ STAIRS_TILE = 0x3F              # bottom-right tile of the stamped stairs
 CLASS_CHAR = {0x0C: 'a', 0x0D: 'b', 0x0E: 'c'}
 CROSS = '-'
 ITEM = 'i'
-NO_DRAIN = (CROSS, ITEM)
+NO_DRAIN = (CROSS, ITEM, 'x', 'p')   # S131: 'x' = onto a walk-on exit, 'p' = a push into an edge exit
 GRID_W, GRID_H = 40, 32
 SPECIAL_EVERY = 3               # specials only on floors 3, 6, 9 … (wCurrentFloor mod 3 == 2)
 SPECIAL_CHANCE = 0.5            # … when wRNG1 bit 4 is set (GATE_GENERATION §3)
 SPECIAL_RANDOM_BATTLES = (2, 6, 7)   # forest maze $53, mazes $57-$59, conveyors $54-$56
 SPECIAL_NAMES = ['treasure', 'one rare chest', 'forest maze', 'priest', 'item shop',
                  'coliseum', 'maze', 'conveyor maze']
+# S131 (ROADMAP P3.15b (2)): the walkable specials as their own rooms. The bank $16
+# handlers (SpecialRoom2_ForestMaze / 6_Maze / 7_Conveyor) set wMapID + the spawn
+# pixel; mazes / conveyors pick the variant by wRNG1 mod 3 (0 / 1 / 2 = 86 / 85 / 85
+# of 256). Spawn cells = (pixel - 8) // 16.
+SPECIAL_ROOMS = {
+    2: [(0x53, (4, 6), 1.0)],
+    6: [(0x57, (15, 11), 86 / 256), (0x58, (1, 2), 85 / 256), (0x59, (1, 2), 85 / 256)],
+    7: [(0x54, (13, 13), 86 / 256), (0x55, (4, 22), 85 / 256), (0x56, (14, 11), 85 / 256)],
+}
+# EncounterStep outside gates (wInGateworld 0): a flat base for every cell —
+# $50 on the conveyor maps $54-$56, else $64 (bank $16 `EncounterStep`)
+SPECIAL_BASE = 100
+CONVEYOR_BASE = 80
+CONVEYOR_MAPS = (0x54, 0x55, 0x56)
+# belts (bank $01 `ConveyorBeltPush`, CheckGateworldField): the standing cell's class
+# $AA >> 2 sets a forced velocity — $0F right, $10 left, $11 down, $12 up (PyBoy S131:
+# the player rides until a non-belt cell; every cell ridden is an ordinary step)
+BELT_DIR = {0x0F: (1, 0), 0x10: (-1, 0), 0x11: (0, 1), 0x12: (0, -1)}
+ROOM_LOAD = '|'                 # a room change: the room loads, the counter is re-seeded
+EXIT_STEP = 'x'                 # the step onto a walk-on exit cell: EncounterStep runs with
+#                                 wGameState bit 5 set (the transition) -> no drain (PyBoy S131)
+PUSH_STEP = 'p'                 # a push into an edge exit (rows 0 / 7): EncounterStep runs, no
+#                                 drain, then the room loads (PyBoy S131)
 
 _CACHE = {}
 
@@ -137,6 +169,137 @@ def walk_path(mz, floor, cells=None):
 
 
 # ---------------------------------------------------------------------------
+# the walkable special rooms (S131; used by tools/census_dive.py)
+# ---------------------------------------------------------------------------
+
+def special_room(renderer, mid):
+    """A vanilla room as a walk grid: {'map', 'w', 'h' (cells), 'cells' (rows of
+    the bottom-right tile id of every cell), 'thr' (the $26DD collision
+    threshold: tile < thr = wall), 'exits': {(col, row): (dest, spawn col,
+    spawn row, kind)}} — kind 'walk' (Entry 6: rows 1-6 of a screen, fires on
+    entering the cell) or 'up' / 'down' (Entry 9: row 0 / 7 at the ROOM's
+    edge, fires on pushing into the edge from the cell). `renderer` =
+    editor2/core/render_project.ProjectRenderer (the original ROM)."""
+    rec = renderer.vanilla_record(mid)
+    W, H = rec['width_px'] // 160, rec['height_px'] // 128
+    T = [[0] * (10 * W) for _ in range(8 * H)]
+    exits = {}
+    for sy in range(H):
+        for sx in range(W):
+            k = sy * 4 + sx
+            g = renderer.vanilla_screen_grid(mid, k)
+            for j in range(8):
+                for i in range(10):
+                    T[sy * 8 + j][sx * 10 + i] = g[2 * j + 1][2 * i + 1]
+            _n, ex = renderer.vanilla_markers(mid, k)
+            for e in ex:
+                c = (sx * 10 + e['x'], sy * 8 + e['y'])
+                dest = int(e['dest'].split('$')[1], 16)
+                if e['y'] == 0:
+                    kind = 'up' if sy == 0 else None          # inside the room: scrolls
+                elif e['y'] == 7:
+                    kind = 'down' if sy == H - 1 else None
+                else:
+                    kind = 'walk'
+                if kind:
+                    exits[c] = (dest, e['spawn_x'], e['spawn_y'], kind)
+    return {'map': mid, 'w': 10 * W, 'h': 8 * H, 'cells': T,
+            'thr': int(rec['collision_threshold'], 16), 'exits': exits}
+
+
+def special_walk(load, start_map, start_cell):
+    """The shortest walk from the spawn of a special room to its stairs (an
+    exit to map $00), through the room's other rooms (the forest maze's
+    edge exits): BFS over (map, cell), one step = one cell entered, a belt
+    cell of a conveyor map moves only its own way. `load(mid)` ->
+    special_room(...). Returns {'steps' (cells entered), 'path' (one char per
+    cell entered: 'a' = drained, '-' = a screen-edge step, EXIT_STEP = onto a
+    walk-on exit cell; ROOM_LOAD after a room change), 'reachable' (walkable
+    cells reachable, over every room seen), 'rooms', 'cells': [(map, (col,
+    row)) ...]}."""
+    rooms = {}
+
+    def room(mid):
+        if mid not in rooms:
+            rooms[mid] = load(mid)
+        return rooms[mid]
+
+    def walkable(r, c):
+        return 0 <= c[0] < r['w'] and 0 <= c[1] < r['h'] and r['cells'][c[1]][c[0]] >= r['thr']
+
+    start = (start_map, tuple(start_cell))
+    prev = {start: None}
+    how = {}
+    q = deque([start])
+    goal = None
+    while q and goal is None:
+        st = q.popleft()
+        mid, c = st
+        r = room(mid)
+        belt = BELT_DIR.get(r['cells'][c[1]][c[0]] >> 2) if mid in CONVEYOR_MAPS else None
+        dirs = [belt] if belt else [(1, 0), (-1, 0), (0, 1), (0, -1)]
+        for d in dirs:
+            n = (c[0] + d[0], c[1] + d[1])
+            ex = r['exits'].get(c)
+            if ex and ex[3] in ('up', 'down') and d == ((0, -1) if ex[3] == 'up' else (0, 1)):
+                nxt, kind = (ex[0], (ex[1], ex[2])), 'push'     # push into the room's edge
+            elif walkable(r, n):
+                e2 = r['exits'].get(n)
+                if e2 and e2[3] == 'walk':
+                    nxt, kind = (e2[0], (e2[1], e2[2])), 'walk'
+                else:
+                    nxt, kind = (mid, n), 'move'
+            else:
+                continue
+            if nxt[0] == 0x00:
+                if goal is None:
+                    goal = ('stairs', st, kind, n)
+                continue
+            if nxt in prev:
+                continue
+            prev[nxt] = st
+            how[nxt] = (kind, n)
+            q.append(nxt)
+    if goal is None:
+        raise ValueError(f'no stairs reachable from map ${start_map:02X} {start_cell}')
+    # unwind
+    seq = []                                    # (kind, from state, to map, cell entered)
+    _s, st, kind, n = goal
+    seq.append((kind, st, 0x00, n))
+    while prev[st] is not None:
+        k2, n2 = how[st]
+        seq.append((k2, prev[st], st[0], n2))
+        st = prev[st]
+    seq.reverse()
+    out, cells = [], []
+    for kind, (m0, c0), m1, n in seq:
+        if kind == 'move':
+            cross = c0[0] // 10 != n[0] // 10 or c0[1] // 8 != n[1] // 8
+            out.append(CROSS if cross else 'a')
+            cells.append((m0, n))
+        elif kind == 'walk':
+            out.append(EXIT_STEP)
+            cells.append((m0, n))
+            if m1 != 0x00:
+                out.append(ROOM_LOAD)
+        else:                                   # push into the edge: no cell entered
+            out.append(PUSH_STEP)
+            if m1 != 0x00:
+                out.append(ROOM_LOAD)
+    reach = len(prev)                           # (map, cell) states the BFS reached
+    # the first input (a joypad direction; None = on a belt, the ride goes on)
+    kind0, (m0, c0), _m1, n0 = seq[0]
+    on_belt = m0 in CONVEYOR_MAPS and (room(m0)['cells'][c0[1]][c0[0]] >> 2) in BELT_DIR
+    d0 = (n0[0] - c0[0], n0[1] - c0[1])
+    first = None if on_belt else {(1, 0): 'right', (-1, 0): 'left', (0, 1): 'down',
+                                  (0, -1): 'up'}.get(d0)
+    if kind0 == 'push' and not on_belt:
+        first = 'up' if room(m0)['exits'][c0][3] == 'up' else 'down'
+    return {'steps': sum(1 for ch in out if ch not in (ROOM_LOAD, PUSH_STEP)), 'path': ''.join(out),
+            'reachable': reach, 'rooms': sorted(rooms), 'cells': cells, 'first': first}
+
+
+# ---------------------------------------------------------------------------
 # the drain and the counter (vanilla tables, extracted/gamedata_vanilla.json)
 # ---------------------------------------------------------------------------
 
@@ -198,6 +361,10 @@ def expected_battles(path, drain3, cdf):
     every battle; a battle at step k after a renewal at j when
     D(j, k-1) <= seed < D(j, k) (D = the drains of steps j+1..k)."""
     F = _cdf_fn(cdf) if not callable(cdf) else cdf
+    if ROOM_LOAD in path:
+        # S131: a room change re-seeds the counter (SetRandomEncounterCounter at
+        # every room load) — a renewal, so the walk's rooms are independent
+        return sum(expected_battles(seg, drain3, F) for seg in path.split(ROOM_LOAD) if seg)
     d = [0 if ch in NO_DRAIN else drain3[ord(ch) - 97] for ch in path]
     n = len(d)
     r = [0.0] * (n + 1)
@@ -382,10 +549,15 @@ def battles_per_floor(repo, gate_id, floor, list_bytes, rom=None, maze_row=None,
 
     The floor's outcome mix: the boss floor (floor == floors) -> 0; floors
     3, 6, 9 … of gates other than 0 are a special room half the time —
-    treasure / priest / shop / coliseum rooms have no random battles (0),
-    the forest maze / mazes / conveyor mazes do: they count as a maze floor
-    of the same list (an approximation: their own walks are not modelled —
-    `detail` reports their share as 'special_walk_approx')."""
+    treasure / priest / shop / coliseum rooms have no random battles (0);
+    the forest maze / mazes / conveyor mazes walk their OWN rooms (S131,
+    `special_battles`: their measured shortest walks, the flat outside-gate
+    drain, the forest's room changes re-seeding the counter) with the
+    floor's list (its rate code).
+
+    detail=True also gives 'battles_sweep' (the whole-floor upper bound:
+    each part's battles x its reachable cells / its walk steps — mazes per
+    maze size, specials per room) and 'special_battles' {name: battles}."""
     if maze_row is None or special_row is None or floors is None:
         if 0 <= gate_id < 32:
             mr, sr, fl = vanilla_rows(repo, gate_id)
@@ -404,15 +576,79 @@ def battles_per_floor(repo, gate_id, floor, list_bytes, rom=None, maze_row=None,
     mb = sum(p * maze_battles(repo, size, t, code, rom) for t, p in types.items())
     p_special = SPECIAL_CHANCE if (gate_id != 0 and floor % SPECIAL_EVERY == 0) else 0.0
     sp = special_odds(repo, special_row) if p_special else {}
-    p_walk_special = p_special * sum(p for i, p in sp.items() if i in SPECIAL_RANDOM_BATTLES)
-    battles = mb * (1.0 - p_special) + mb * p_walk_special
+    sb = {i: special_battles(repo, i, code, 'direct', rom) for i in sp if i in SPECIAL_RANDOM_BATTLES}
+    battles = mb * (1.0 - p_special) + p_special * sum(p * sb.get(i, 0.0) for i, p in sp.items())
     if not detail:
         return battles
     st = floor_steps(repo, size, rom)
-    return {'battles': battles, 'maze_battles': mb, 'boss_floor': False,
+    reach = st.get('reachable')
+    mb_sweep = mb * (reach / max(1.0, st['steps'])) if reach else mb
+    sbs = {i: special_battles(repo, i, code, 'sweep', rom) for i in sb}
+    sweep = mb_sweep * (1.0 - p_special) + p_special * sum(p * sbs.get(i, 0.0) for i, p in sp.items())
+    return {'battles': battles, 'battles_sweep': sweep, 'maze_battles': mb, 'boss_floor': False,
             'size': size, 'rate_code': code, 'types': types,
             'steps': st['steps'], 'drained_steps': st['drained'],
             'p_special': p_special,
             'specials': {SPECIAL_NAMES[i]: p_special * p for i, p in sp.items()},
-            'special_walk_approx': p_walk_special,
+            'special_battles': {SPECIAL_NAMES[i]: v for i, v in sb.items()},
             'steps_between': {t: steps_between(repo, t, code) for t in types}}
+
+
+def special_drain(mid, rate_code, repo=None):
+    """Counter drain per step in special room `mid` (EncounterStep outside
+    gates: a flat base x RateMod[code] // 64; measured S131)."""
+    from . import encounters as EN
+    base = CONVEYOR_BASE if mid in CONVEYOR_MAPS else SPECIAL_BASE
+    return base * EN.rate_modifiers(_root(repo))[rate_code & 7] // 64
+
+
+def special_battles(repo, pick, rate_code, walk='direct', rom=None):
+    """Expected random battles walking special room `pick` (2 forest / 6 maze
+    / 7 conveyor; the variants weighted by their odds) arrival -> stairs
+    with a list of rate code `rate_code`. 'direct' = the shortest walk;
+    'sweep' = that x reachable cells / walk steps (the whole-room bound).
+    From extracted/dive_census.json 'specials' (tools/census_dive.py)."""
+    c = census(repo)
+    row = (c or {}).get('specials', {}).get(str(pick))
+    if row is not None and 'battles' in row:
+        return row['battles' if walk == 'direct' else 'sweep'][rate_code & 7]
+    key = ('sp', _root(repo), pick, rate_code & 7, walk)
+    if key not in _CACHE:
+        variants = row['variants'] if row is not None else _live_specials(repo, rom)[pick]
+        F = _cdf_fn(seed_cdf(repo))
+        tot = 0.0
+        for v in variants:
+            d = special_drain(v['map'], rate_code, repo)
+            e = expected_battles(v['path'], (d, d, d), F)
+            if walk != 'direct':
+                e *= v['reachable'] / max(1.0, v['steps'])
+            tot += v['p'] * e
+        _CACHE[key] = tot
+    return _CACHE[key]
+
+
+def special_variants(renderer):
+    """{pick: [{'map', 'p', 'spawn', 'steps', 'path', 'reachable', 'rooms'}]}
+    — every walkable special's measured walk (special_walk) from the ROM."""
+    rooms = {}
+
+    def load(m):
+        if m not in rooms:
+            rooms[m] = special_room(renderer, m)
+        return rooms[m]
+    out = {}
+    for pick, vs in SPECIAL_ROOMS.items():
+        out[pick] = []
+        for mid, spawn, p in vs:
+            w = special_walk(load, mid, spawn)
+            out[pick].append({'map': mid, 'p': p, 'spawn': list(spawn), 'steps': w['steps'],
+                              'path': w['path'], 'reachable': w['reachable'], 'rooms': w['rooms']})
+    return out
+
+
+def _live_specials(repo, rom=None):
+    key = ('livesp', _root(repo))
+    if key not in _CACHE:
+        from .render_project import ProjectRenderer
+        _CACHE[key] = special_variants(ProjectRenderer(_root(repo), None, {'custom': {}}))
+    return _CACHE[key]

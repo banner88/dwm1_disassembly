@@ -132,12 +132,15 @@ class Monster:
     bred: int = 0          # 1 = has a pedigree (+$15/+$16 set): its two parent
                            # NICKNAME slots (+$83 / +$8C) count in a child's k
     nickname: str = ''     # +$01 (a save's monster; editor display only)
+    # S131 (the Balance service's time axis, editor2/core/balance.py — not game state):
+    free_exp: int = 0      # the exp it arrived with (a joined monster: its row level's)
+    grind: int = 0         # exp spent raising its ancestors to breeding level (bred)
 
     def copy(self):
         return Monster(self.species, self.level, self.cap, self.exp, list(self.stats),
                        list(self.skills), list(self.queue), list(self.res), list(self.ai),
                        self.plus, self.wld, self.female, self.origin, self.name,
-                       self.foreign, self.bred, self.nickname)
+                       self.foreign, self.bred, self.nickname, self.free_exp, self.grind)
 
     def as_dict(self):
         d = dict(species=self.species, level=self.level, cap=self.cap, exp=self.exp,
@@ -350,7 +353,7 @@ def create(T, eid, rng, arena_tier=0, origin=None):
                    female=female,
                    plus=0, wld=wld, origin=origin or f'eid {eid}',
                    name=T.names.get(sp, f'#{sp}'),
-                   foreign=int(eid in FOREIGN_MASTER_EIDS))
+                   foreign=int(eid in FOREIGN_MASTER_EIDS), free_exp=exp)
 
 
 # ---------------------------------------------------------------------------

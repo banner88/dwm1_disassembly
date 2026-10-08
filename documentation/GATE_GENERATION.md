@@ -296,15 +296,57 @@ Beginning 1.72, Villager 1.50, Talisman 1.93, Peace 3.57, Strength 5.31,
 Wisdom 7.41, Ambition 13.9). This is a LOWER bound: a player who explores
 walks more — `floor_steps(...)['reachable']` (278–454 reachable cells) is the
 whole-floor UPPER bound the Balance service's "sweep" dive uses (PROJECT_COMPILER
-§2.43). Special maze rooms (forest / maze / conveyor) count as a normal maze
-floor (their own walks are not modelled; `special_walk_approx` in detail mode);
-treasure, priest, shop and coliseum rooms count 0 random battles; specials sit on
-floors 3/6/9 with 50 % chance. Read from code, not measured: the battle-fires
-test (counter < drain), the post-battle re-seed (S114), opened chests skipped by
-the collision test (bank `$01`).
+§2.43). Treasure, priest, shop and coliseum rooms count 0 random battles;
+specials sit on floors 3/6/9 with 50 % chance. Read from code, not measured: the
+battle-fires test (counter < drain), the post-battle re-seed (S114), opened
+chests skipped by the collision test (bank `$01`).
 `editor2/core/dive.py` reads the result from `extracted/dive_census.json`
 (`battles_per_floor(repo, gate, floor, list_bytes, maze_row=, special_row=,
 floors=)`); `--selftest` re-derives a sample (verifier check 5).
+
+**Special rooms (S131, ROADMAP P3.15b (2); PyBoy-measured, 7 / 7 rooms == the
+model).** The walkable specials are fixed bank `$0B` rooms walked as such (S130
+counted them as a maze floor):
+
+| Pick | Rooms | Spawn cell (handler) | Shortest walk |
+|---|---|---|---|
+| 2 forest maze | `$53` + `$61`-`$64` (one screen each; `dwm/map_names`' "Forest Maze Gate Floor 1-4" for `$61`-`$64` is a misnomer — they are the forest's other rooms, joined by edge exits, some wrapping onto the same room) | (4, 6) | 24 cells, 2 room changes (`$53` → `$63` → `$64`, stairs at `$64` (4, 4)) |
+| 6 maze (wRNG1 mod 3) | Maze 1-3 `$57`-`$59` (3 × 3 screens) | (15, 11) / (1, 2) / (1, 2) | 63 / 46 / 49 |
+| 7 conveyor (wRNG1 mod 3) | Conveyor maze 1-3 `$54`-`$56` (3 × 3) | (13, 13) / (4, 22) / (14, 11) | 108 / 92 / 77 |
+
+What a step does there (bank `$0B` `Jump_00b_4674` runs bank $16 `EncounterStep`
+in exactly these rooms; bank $01 `CheckSpecialMapExits` = Z for them):
+- **Every cell entered drains the same** — `EncounterStep` with wInGateworld 0
+  uses a flat base, 100 (`$64`) or 80 (`$50`) on `$54`-`$56`, × RateMod[code] // 64;
+  the cell's class does not matter. A cell entered across a screen edge drains
+  nothing (as on maze floors).
+- **Belts** (bank $01 `ConveyorBeltPush`, was the misnomer `CheckGateworldForNPC`):
+  the standing cell's class `$AA >> 2` = `$0F` right / `$10` left / `$11` down /
+  `$12` up (tiles `$3C-$4B`; `$4F` = class `$13` = the exit hole) sets a forced
+  velocity (`$A1/$A2` X, `$A3/$A4` Y, ±`$0100`) and `$FF90` bits 1:0; the player
+  rides until a cell of another class, and **every cell ridden is an ordinary
+  step** (measured: one tap, 17 cells ridden, 17 drains of 80 at code 3).
+- **Exits**: rows 0 / 7 at the room's edge fire on a PUSH into the edge
+  (Entry 9) — `EncounterStep` runs, no drain, then the room loads; other rows
+  fire on entering the cell (Entry 6, walk-on), `EncounterStep` runs with
+  wGameState bit 5 set — no drain. **Each room change re-seeds the counter**
+  (`SetRandomEncounterCounter`), so the forest's rooms are independent walks of
+  ≤ 11 cells — at code 3 never a battle (11 × 100 < the smallest seed 1,100).
+- Expected battles per walk (shortest, by rate code 0-7): forest 0 / 0 / 0 / 0 /
+  0.12 / 0.22 / 0.34 / 0.42; mazes 0.02 / 0.10 / 0.26 / 0.88 / 1.24 / 1.58 /
+  1.89 / 2.18; conveyors 0.12 / 0.23 / 0.49 / 1.45 / 1.87 / 2.36 / 2.81 / 3.27 —
+  against 0.43 for a size-8 maze floor at code 3. The sweep bound scales each
+  room by its reachable cells / walk steps.
+
+Model: `dive.special_room` (cells / exits from the ROM through
+`render_project.ProjectRenderer`), `dive.special_walk` (BFS over (map, cell):
+belts ride, edge exits push, walk-on exits; path chars `a` drained, `-` screen
+edge, `x` onto a walk-on exit, `p` a push, `|` a room load — `expected_battles`
+treats `|` as a renewal), `dive.special_battles(repo, pick, code, walk)`;
+`tools/census_dive.py` writes `specials` (+ `measured_specials`: the 7 rooms
+walked with the joypad on the original ROM, every EncounterStep / drain / seed
+== the path; `--measure-specials`). The handlers' spawn pixels and the variant
+pick are in bank $16 `SpecialRoom2_ForestMaze` / `6_Maze` / `7_Conveyor`.
 
 ## 5. Contents: items, gold, masters ✅ (placement traced + modelled S122)
 
@@ -1154,7 +1196,7 @@ holds each sprite id's own palette).
   increments `wCurrentFloor`.
 - **Per-step special handling**: `$0B:Jump_00b_4674` lists the map types that get
   per-step processing inside a maze (`$53` ForestMaze, `$54-$56` Conveyors,
-  `$57-$59` Mazes, `$61-$64` sub-rooms) and routes to `$16` entry 8 (`$1608`).
+  `$57-$59` Mazes, `$61-$64` the forest maze's other rooms — S131) and routes to `$16` entry 8 (`$1608`).
 - `Call_00b_46DA` scans the grid (`$C940`/`$C950`) counting occupied screens — used
   for floor-clear / special completion bookkeeping (count 16 → `$C92D=5`,
   count 2 → `$C92D=6`).

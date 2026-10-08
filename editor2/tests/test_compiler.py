@@ -6614,8 +6614,113 @@ def test_balance_player_s130():
        BL.fight_fingerprint(data, tl, f, 'player') != BL.fight_fingerprint(data, tl, f, 'strong')
        and BL.kit_fingerprint(data, tl, 0) == BL.kit_fingerprint(data, tl, 0)
        and BL.kit_fingerprint(data, tl, 0).startswith('kit:')
-       and BL.PROFILES == ('casual', 'strong', 'player') and BL.SIM_VERSION == 'S130.7')
+       and BL.PROFILES == ('casual', 'strong', 'player') and BL.SIM_VERSION == 'S131.2')
     BL._KITS.clear()
+
+
+def test_balance_s131():
+    """S131 (ROADMAP P3.15b): breeding on the time axis (a bred member's slot pays its
+    lineage's grind; parents to level 10 on their own curves); the +20 max count is not a
+    weight (randomizer Pool, sweep_ttk); the walkable special rooms walked in
+    their own rooms (dive.special_*); full-HP heals are not 'unmodelled'."""
+    import random
+    from editor2.core import balance as BL
+    from editor2.core import kits as KT
+    from editor2.core import dive as DV
+    from editor2.core import encounters as EN
+    from simulator import raising as R
+    data = BL.BattleData(None)
+    tl = BL.Timeline(data)
+    # (1) breeding on the time axis (option B, user 2026-10-08: "I need to capture the
+    #     total time investment needed")
+    T = data.T
+    hi = next(e for e in sorted(T.enemies) if T.enemy(e)[4] >= 12 and T.enemy(e)[0] <= 214)
+    lo = next(e for e in sorted(T.enemies) if 1 <= T.enemy(e)[4] <= 3 and T.enemy(e)[0] <= 214)
+    ok("S131: a recruit that joins at level >= 10 is breedable for free; a level-1-3 "
+       "recruit costs its grind to 10 on its own curve",
+       BL.join_ancestor_cost(T, hi) == 0 and BL.join_ancestor_cost(T, lo) ==
+       T.exp_to_reach(T.enemy(lo)[0], 10) - T.exp_to_reach(T.enemy(lo)[0], T.enemy(lo)[4]),
+       (BL.join_ancestor_cost(T, hi), BL.join_ancestor_cost(T, lo)))
+    p5, p10 = KT.step_pool(data, tl, 14, 5), KT.step_pool(data, tl, 14, 10)
+    ok("S131: the pool offers only routes the slot can afford (charge <= exp(level)); "
+       "deeper chains as the budget grows",
+       all(v[4] <= p10.budget for v in p10.bred.values()) and len(p10.bred) >= len(p5.bred)
+       and max(v[3] for v in KT.step_pool(data, tl, 14, 18).bred.values()) >
+       max(v[3] for v in p10.bred.values()), (len(p5.bred), len(p10.bred)))
+    pre = KT.step_pool(data, tl, 2, 10)
+    ok("S131: before breeding opens no bred form", not pre.bred_ok and not pre.bred)
+    E = p10.budget
+    dear = next(sp for sp, v in sorted(p10.bred.items(), key=lambda kv: -kv[1][4]) if v[4] > 0)
+    spec = p10.spec(dear, prefer_bred=True)
+    kid = KT.build_member(data, p10, spec, E, 7)
+    ok("S131: a bred member's slot pays its lineage: kid.grind = the parents' grind, the kid "
+       "raised with exp(level) - grind",
+       kid.grind > 0 and kid.exp == E - kid.grind or BL.is_capped(T, kid),
+       (data.names.get(dear), kid.grind, kid.exp, E))
+    try:
+        KT.build_member(data, p10, spec, kid.grind - 1, 7)
+        unaff = False
+    except KT.Unaffordable:
+        unaff = True
+    ok("S131: a lineage dearer than the budget is Unaffordable", unaff)
+    team = BL.roll_team(data, tl, 14, 14, random.Random(5), 'strong')
+    ok("S131: rolled teams on the time axis — a bred member's own exp + its grind fits "
+       "the slot's exp(level)",
+       all(m.exp + m.grind <= BL.exp_for_level(T, 14) or m.exp <= m.free_exp or
+           m.origin.startswith('eid') for m in team) and
+       any(m.origin.startswith('bred') for m in
+           [x for t in range(4) for x in BL.roll_team(data, tl, 14, 14, random.Random(t), 'strong')]),
+       [(m.origin, m.exp, m.grind) for m in team])
+    slow = max((s for s in T.info if s <= 214), key=lambda s: T.exp_to_reach(s, 10))
+    eid = next(e for e in sorted(T.enemies) if T.enemy(e)[0] == slow)
+    m = R.create(T, eid, random.Random(3))
+    BL.ensure_breedable(T, m, random.Random(5), 'casual', data.skill_value)
+    ok("S131: ensure_breedable raises a slow-curve parent to level 10 on its own curve",
+       m.level >= BL.BREED_MIN_LEVEL and m.exp >= T.exp_to_reach(slow, 10), (slow, m.level))
+    # (3) +20 = a max count; the chance codes weigh
+    from randomizer.romdata import Pool, real_chances
+    row = bytes([3, 1, 7, 0, 0, 3, 5, 2, 0, 0, 1, 0, 2, 0, 3, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 8])
+    pl = Pool.parse(row, 0)
+    pct = EN.rate_modifiers  # noqa: F841 (import check)
+    ok("S131: Pool — +20 are max counts, the slot chance is the +5..+9 code (31/50/19), "
+       "live slots by chance, pack round trip",
+       pl.max_counts == [1, 1, 1, 0, 0] and pl.weights == pl.max_counts and
+       pl.slot_chances() == [31, 50, 19, 0, 0] == real_chances([3, 5, 2, 0, 0]) and
+       pl.live_slots() == [0, 1, 2] and pl.pack() == row, (pl.slot_chances(), pl.live_slots()))
+    # (2) special rooms
+    c = DV.census(REPO)
+    sp2 = (c or {}).get('specials', {})
+    ok("S131: dive_census.json carries the three walkable specials, every variant walked",
+       sorted(sp2) == ['2', '6', '7'] and all(len(sp2[k]['variants']) == len(DV.SPECIAL_ROOMS[int(k)])
+                                              for k in sp2), sorted(sp2))
+    forest = sp2['2']['variants'][0]
+    ok("S131: the forest maze walk = 3 rooms, re-seeded twice (pushes into edge exits), "
+       "24 cells, ends on the walk-on stairs",
+       forest['steps'] == 24 and forest['path'].count(DV.ROOM_LOAD) == 2 and
+       forest['path'].endswith(DV.EXIT_STEP), forest['path'])
+    F = DV._cdf_fn(DV.seed_cdf(REPO))
+    a = DV.expected_battles('a' * 30 + DV.ROOM_LOAD + 'a' * 30, (100, 100, 100), F)
+    b = 2 * DV.expected_battles('a' * 30, (100, 100, 100), F)
+    ok("S131: a room load is a renewal (the walk's rooms add up)", abs(a - b) < 1e-12, (a, b))
+    ok("S131: no battle in a forest room walk at rate code 3 (<= 11 cells x 100 < the "
+       "smallest seed 1,100); mazes / conveyors more than a size-8 maze floor",
+       DV.special_battles(REPO, 2, 3) == 0.0 and
+       DV.special_battles(REPO, 6, 3) > DV.maze_battles(REPO, 8, 0, 3) and
+       DV.special_battles(REPO, 7, 3) > DV.special_battles(REPO, 6, 3),
+       [DV.special_battles(REPO, k, 3) for k in (2, 6, 7)])
+    lb = tl.enc.list_bytes(tl.enc.gate_list(21, 3))
+    d = DV.battles_per_floor(REPO, 21, 3, lb, detail=True)
+    mb = d['maze_battles']
+    want = mb * 0.5 + 0.5 * sum(p * DV.special_battles(REPO, i, d['rate_code'])
+                                for i, p in DV.special_odds(REPO, DV.vanilla_rows(REPO, 21)[1]).items()
+                                if i in DV.SPECIAL_RANDOM_BATTLES)
+    ok("S131: a floor-3 mix = the maze half + each special's own walk; a sweep bound",
+       abs(d['battles'] - want) < 1e-9 and d['battles_sweep'] > d['battles'] and
+       'maze' in d['special_battles'], d)
+    # (5) unmodelled counting
+    log = [[(0, 'hit', 4), (1, 'no-effect', (0, 0)), (2, 'no-effect', 0x99), (4, 'miss', 0)]]
+    ok("S131: count_actions — a full-HP heal is not unmodelled, a coreless action is",
+       BL.count_actions(log) == (1, 4), BL.count_actions(log))
 
 
 def test_quests_s129():
@@ -7706,6 +7811,7 @@ def main():
     test_quests_s129()
     test_balance_s130()
     test_balance_player_s130()
+    test_balance_s131()
 
     if '--rom' in sys.argv:
         from editor2.core import builder as B

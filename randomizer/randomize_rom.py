@@ -335,9 +335,11 @@ def write_logs(rom, vanilla, rep, label, groups, seed, path: Path) -> None:
         if not live:
             continue
         entries = []
+        ch = p.slot_chances()
         for i in live:
             e = rom.enemies[p.eids[i]]
-            entries.append(f"{sp[e.species]} L{e.level} (w{p.weights[i]})")
+            # S131: the real draw chance (+5..+9) and the max count (+20)
+            entries.append(f"{sp[e.species]} L{e.level} ({ch[i]}%, max {p.max_counts[i]})")
         lines.append(f"  pool {p.id:3d}: " + ", ".join(entries))
 
     lines += ["", "=" * 72, "SPECIES", "=" * 72]
@@ -382,7 +384,8 @@ def write_logs(rom, vanilla, rep, label, groups, seed, path: Path) -> None:
             {"eid": e.id, "species": e.species, "name": sp[e.species],
              "level": e.level, "join": e.join, "skills": e.skills}
             for e in rom.enemies],
-        "pools": [{"pool": p.id, "eids": p.eids, "weights": p.weights}
+        "pools": [{"pool": p.id, "eids": p.eids, "chance_pct": p.slot_chances(),
+                   "max_counts": p.max_counts}
                   for p in rom.pools],
         "family_recipes": rom.family_recipes,
         "special_recipes": rom.special_recipes,

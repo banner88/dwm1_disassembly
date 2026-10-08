@@ -28,6 +28,8 @@ Everything comes from editor2/core/balance.py on the ORIGINAL game data
   python3 tools/build_balance_anchor.py --jobs N
   python3 tools/build_balance_anchor.py --only casual
   python3 tools/build_balance_anchor.py --only player   # just the kits + 'player'
+  (every run appends to extracted/balance_vanilla.build.log: platform, progress, each
+   failed unit's traceback — a failed unit no longer stops the others, S131)
   python3 tools/build_balance_anchor.py --selftest   # JSON well-formed, every
           # story fight present, the simulator version + raising digest match,
           # every step has its kit, three cheap fights + one dive re-derived
@@ -44,6 +46,8 @@ REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, REPO)
 OUT = os.path.join(REPO, 'extracted', 'balance_vanilla.json')
 PARTIAL = OUT + '.partial'      # finished units of an interrupted build (removed when done)
+LOG = os.path.join(REPO, 'extracted', 'balance_vanilla.build.log')   # S131: every build's log
+#   (appended: platform, every line printed, every failed unit's traceback, worker crashes)
 ORIGINAL_MD5 = '1ca6579359f21d8e27b446f865bf6b83'
 PROFILES = ('casual', 'strong', 'player')
 SELFTEST_PLAYER = ('gate0.boss0', 'arena0.m0')     # cheap steps: the kit from the JSON
@@ -64,6 +68,41 @@ def _ctx():
 
 def _slim(ev):
     return {k: (round(v, 4) if isinstance(v, float) else v) for k, v in ev.items()}
+
+
+def log(msg):
+    """Print and append to LOG (S131: the Balance tab's button showed only
+    "Stopped" — the log keeps what happened)."""
+    print(msg, flush=True)
+    try:
+        with open(LOG, 'a') as f:
+            f.write(time.strftime('%H:%M:%S ') + msg + '\n')
+    except OSError:
+        pass
+
+
+def _worker_init():
+    """Each worker: a hard crash (segfault, abort) dumps its Python stack into LOG."""
+    import faulthandler
+    try:
+        f = open(LOG, 'a')
+        f.write(f'{time.strftime("%H:%M:%S")} worker {os.getpid()} started\n')
+        f.flush()
+        faulthandler.enable(file=f, all_threads=True)
+        globals()['_FH'] = f                     # keep the file open
+    except OSError:
+        pass
+
+
+def safe_work(unit):
+    """work(unit), with an exception returned as text instead of killing the
+    pool (S131): the other units keep building; the failure is logged."""
+    import traceback
+    t = time.time()
+    try:
+        return work(unit) + (None,)
+    except Exception:                                       # noqa: BLE001
+        return unit[0], unit[1], None, time.time() - t, traceback.format_exc()
 
 
 def work(unit):
@@ -158,20 +197,31 @@ def build(jobs=2, only=None):
                 done.add((r['si'], r['prof']))
     todo = [u for u in units if u not in done]
     if done:
-        print(f'resuming: {len(done)} units from {PARTIAL}', flush=True)
+        log(f'resuming: {len(done)} units from {PARTIAL}')
     t0 = time.time()
-    with Pool(jobs) as pool, open(PARTIAL, 'a') as part:
-        for n, (si, prof, out, dt) in enumerate(pool.imap_unordered(work, todo), 1):
+    failed = []
+    with Pool(jobs, initializer=_worker_init) as pool, open(PARTIAL, 'a') as part:
+        for n, (si, prof, out, dt, err) in enumerate(pool.imap_unordered(safe_work, todo), 1):
+            if err is not None:
+                failed.append((si, prof))
+                log(f'[{n + len(done)}/{len(units)}] FAILED {TL.steps[si]["label"]} {prof} '
+                    f'after {dt:.0f}s:\n{err}')
+                continue
             apply(si, prof, out)
             part.write(json.dumps({'tag': tag, 'si': si, 'prof': prof, 'out': out}) + '\n')
             part.flush()
-            print(f'[{n + len(done)}/{len(units)}] {TL.steps[si]["label"]} {prof} {dt:.0f}s '
-                  f'(total {time.time() - t0:.0f}s)', flush=True)
+            log(f'[{n + len(done)}/{len(units)}] {TL.steps[si]["label"]} {prof} {dt:.0f}s '
+                f'(total {time.time() - t0:.0f}s)')
+    if failed:
+        log(f'NOT FINISHED: {len(failed)} unit(s) failed (tracebacks above, in {LOG}); the '
+            f'{len(units) - len(failed)} finished units are kept in {PARTIAL} — send the log')
+        return 2
     tmp = OUT + '.tmp'
     json.dump(doc, open(tmp, 'w'), indent=1)
     os.replace(tmp, OUT)
     os.remove(PARTIAL)
-    print('wrote', OUT)
+    log(f'wrote {OUT}')
+    return 0
 
 
 def selftest():
@@ -253,10 +303,20 @@ def main(argv):
     # workers too; finished units are already in PARTIAL (resumable)
     import signal
     signal.signal(signal.SIGTERM, lambda *_a: sys.exit(1))
-    print(f'building with {jobs} processes', flush=True)
+    import platform
+    log(f'=== build {time.strftime("%Y-%m-%d")} — python {platform.python_version()} '
+        f'({sys.executable}), {platform.platform()}, {os.cpu_count()} cores')
+    log(f'building with {jobs} processes')
     only = argv[argv.index('--only') + 1] if '--only' in argv else None
-    build(jobs, only)
-    return 0
+    try:
+        return build(jobs, only)
+    except SystemExit:
+        log('stopped (a stop request)')
+        raise
+    except BaseException:                                   # noqa: BLE001
+        import traceback
+        log('CRASHED:\n' + traceback.format_exc())
+        return 3
 
 
 if __name__ == '__main__':

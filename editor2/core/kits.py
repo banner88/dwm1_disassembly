@@ -9,9 +9,9 @@ tactic. Headless (never imports Qt).
   step_pool(data, tl, step, level)  what the player can have at the step:
         the species (the step's roster: wild joins, boss joins of the cleared
         gates, the starter; once breeding is open (tl.roster(step)['breeding'])
-        also every species bred from obtainable parents over 2 generations —
-        3 postgame — with the resolver (editor2/core/breeding.py) and the plus
-        that crossing parents of that level gives), and the skill pool: the
+        also every species a route of affordable crosses reaches — the resolver
+        (editor2/core/breeding.py), each route's lineage cost and plus (S131)),
+        and the skill pool: the
         natural skills of every obtainable species + the skills of every join
         row, as the bases a bred monster's learn queue can hold
         (UnevolvedSkillMap; bases $FF never pass on).
@@ -56,11 +56,16 @@ tactic. Headless (never imports Qt).
         optimise again at L1 from that kit (a third of the budget), at most
         twice. The kit records the level it was last optimised at ('level').
   Recruitment realism: a join form is only offered when its row level is at
-        most the team level + 2 (it has to be beaten to join); a bred form
-        only from team level 10 (both parents need level 10+) — below that the
-        kit's bred members fall back to their join form or the strongest join
-        form left; a bred member stuck at its level cap is bred again with
-        the plus it needs (max level = cap + 2 x plus).
+        most the team level + 2 (it has to be beaten to join). Breeding is on
+        the TIME axis (S131, user option B; PROJECT_COMPILER §2.43 "Breeding
+        costs grinding"): a bred form's slot pays its ancestors' grind to level
+        10 (on their own curves) out of exp(level) and the kid gets the rest;
+        StepPool keeps per species the Pareto routes (lineage cost, plus) the
+        budget affords, generations as deep as it allows (<= 6); before breeding
+        opens, or when the form's family is unaffordable, the member falls back
+        to its join form or the strongest join form left; a bred member stuck at
+        its level cap is bred again through a route with the plus it needs (max
+        level = cap + 2 x plus), its grind charged too.
 
 A kit (JSON):
   {"step", "level", "members": [{"species", "name", "src": ["join", eid] |
@@ -98,6 +103,29 @@ def _bonus(level_sum):
     return 0
 
 
+def _pareto_add(rows, r, cap=4):
+    """Keep `rows` a Pareto set over (cost low, plus high) of at most `cap`
+    entries (r = (cost, plus, ...)); True when r was added."""
+    for x in rows:
+        if x[0] <= r[0] and x[1] >= r[1]:
+            return False
+    rows[:] = [x for x in rows if not (r[0] <= x[0] and r[1] >= x[1])]
+    rows.append(r)
+    rows.sort(key=_rk)
+    if len(rows) > cap:
+        # keep the cheapest and the highest-plus ends
+        top = max(rows, key=lambda x: (x[1], -x[0]))
+        rows[:] = [x for x in rows[:cap - 1] if x is not top] + [top]
+        rows.sort(key=_rk)
+    return any(x is r for x in rows)
+
+
+def _rk(r):
+    """Sort key of an ancestor entry / a route: its plain fields only (a route
+    carries its parents' entries as refs — never compared)."""
+    return tuple(x for x in r[:7] if isinstance(x, int))
+
+
 class StepPool:
     """Obtainable species (+ how) and skill bases at a step for a team level."""
 
@@ -121,36 +149,74 @@ class StepPool:
             sp = T.enemy(e)[0]
             if sp not in self.join or T.enemy(e)[4] > T.enemy(self.join[sp])[4]:
                 self.join[sp] = e
-        # bred forms: {sp: (pedigree sp, mate sp, plus, gen)}
+        # bred forms (S131, the time axis — PROJECT_COMPILER §2.43 "Breeding costs grinding"):
+        # {sp: (pedigree sp, mate sp, plus, gen, charge)} — the cheapest route
+        # to each species: charge = the exp spent grinding its ancestors to
+        # breeding level (BL.lineage), which the member's slot pays out of
+        # its exp(level) budget; generations go as deep as the budget allows
+        # (<= BL.MAX_GENERATIONS). `routes[sp]` keeps the Pareto routes
+        # (cheaper or more plus), `plus_route(sp, p)` the cheapest with plus >= p.
         self.bred = {}
+        self.routes = {}
         br = BL._breeder(data)
-        # a bred member needs two parents of level 10+: below team level 10 the
-        # player's team is what joined (the parents would outclass the kids)
-        self.bred_ok = self.breeding and level >= 10
+        self.bred_ok = self.breeding
+        self.budget = BL.exp_for_level(T, level)
         if self.bred_ok and br is not None:
             fr = FastResolver(br)
-            pl = max(level, 10)
-            bon = _bonus(2 * pl)
-            gens = 3 if step >= BL.POSTGAME_FROM_INDEX(tl) else 2
-            plus = {sp: 0 for sp in self.join}
-            for _g in range(gens):
+            G = BL.BREED_MIN_LEVEL
+            # anc[sp] = [(cost to have sp ready to breed, plus, route ref, its level)]
+            # (Pareto; ref None = the join form — at its row level, at least G —,
+            # else the route it is bred by, raised to G)
+            anc = {}
+            for sp, e in self.join.items():
+                anc[sp] = [(BL.join_ancestor_cost(T, e, G), 0, None, max(G, T.enemy(e)[4]))]
+            front = dict(anc)
+            for g in range(BL.MAX_GENERATIONS):
                 new = {}
-                parents = sorted(plus)
+                parents = sorted(anc)
                 for a in parents:
                     for b2 in parents:
-                        p = min(99, max(plus[a], plus[b2]) + 1 + bon)
-                        sp, how, idx = fr.resolve(a, b2, p)
-                        if how == 'special':
-                            p = min(99, p + br.special[idx][4])
-                        if sp in range(215, 221) or sp not in T.info or sp in self.bred:
-                            continue
-                        if sp in (a, b2) and sp not in self.join:
-                            continue
-                        if sp not in new or p > new[sp][2]:
-                            new[sp] = (a, b2, p, _g + 1)
-                for sp, v in new.items():
-                    self.bred[sp] = v
-                    plus[sp] = max(plus.get(sp, 0), v[2])
+                        if a not in front and b2 not in front:
+                            continue                       # nothing new to cross
+                        for ca, pa, ra, la in anc[a]:
+                            for cb, pb, rb, lb in anc[b2]:
+                                charge = ca + cb
+                                if charge > self.budget:
+                                    continue
+                                # S131 r4: the level-sum bonus of the parents' REAL levels
+                                # (a recruit breeds at its own level: late-gate recruits
+                                # at 40+ give +2..+4 per cross for free, as in the game)
+                                p = min(99, max(pa, pb) + 1 + _bonus(la + lb))
+                                sp, how, idx = fr.resolve(a, b2, p)
+                                if how == 'special':
+                                    p = min(99, p + br.special[idx][4])
+                                if sp in range(215, 221) or sp not in T.info:
+                                    continue
+                                if sp in (a, b2) and sp not in self.join:
+                                    continue
+                                # S131 r3: the route keeps the parents' entries it was
+                                # costed with (build_member follows them: depth = gen,
+                                # cost = charge — user's M3 build hit a 7-deep re-pick)
+                                if _pareto_add(self.routes.setdefault(sp, []),
+                                               (charge, p, a, b2, g + 1, pa, pb, ra, rb)):
+                                    new[sp] = True
+                front = {}
+                for sp in new:
+                    # as an ancestor: its route + its own grind from level 1 to G
+                    rows = [(r[0] + T.exp_to_reach(sp, G), r[1], r, G) for r in self.routes[sp]]
+                    cur = anc.get(sp, [])
+                    changed = False
+                    for r in rows:
+                        if _pareto_add(cur, r):
+                            changed = True
+                    if changed:
+                        anc[sp] = cur
+                        front[sp] = True
+                if not front:
+                    break
+            for sp, rts in self.routes.items():
+                c, p, a, b2, gen, pa, pb = min(rts, key=_rk)[:7]
+                self.bred[sp] = (a, b2, p, gen, c, pa, pb)
         self.species = sorted(set(self.join) | set(self.bred))
         # the skill bases a bred monster's queue can hold
         bases = set()
@@ -169,14 +235,40 @@ class StepPool:
         """The member spec of species sp: its bred form once breeding is open
         (plus, WLD 0, inherits the pool), else its join row."""
         if prefer_bred and sp in self.bred:
-            a, b2, p, _g = self.bred[sp]
-            return {'species': sp, 'src': ['bred', a, b2], 'plus': p}
+            return self._route_spec(sp, min(self.routes[sp], key=_rk))
         if sp in self.join:
             return {'species': sp, 'src': ['join', self.join[sp]], 'plus': 0}
         if sp in self.bred:
-            a, b2, p, _g = self.bred[sp]
-            return {'species': sp, 'src': ['bred', a, b2], 'plus': p}
+            return self._route_spec(sp, min(self.routes[sp], key=_rk))
         return None
+
+    @staticmethod
+    def _route_spec(sp, r):
+        c, p, a, b2, _g, pa, pb = r[:7]
+        # '_route' (in memory only — never in a saved kit): the exact tree to build
+        return {'species': sp, 'src': ['bred', a, b2], 'plus': p, 'charge': c,
+                'parent_plus': [pa, pb], '_route': r}
+
+    def plus_route(self, sp, plus):
+        """The cheapest route to sp whose offspring has plus >= `plus` (a
+        capped member bred again), or None."""
+        ok = [r for r in self.routes.get(sp, ()) if r[1] >= plus]
+        if not ok:
+            return None
+        return self._route_spec(sp, min(ok, key=_rk))
+
+    def route_for(self, spec):
+        """The pool's route matching a bred spec's parents (and at least its
+        parents' plus), else None — the spec is not affordable / obtainable
+        at this level as it stands."""
+        sp, src = spec['species'], spec['src']
+        pp = spec.get('parent_plus') or [0, 0]
+        ok = [r for r in self.routes.get(sp, ())
+              if r[2] == src[1] and r[3] == src[2] and r[5] >= pp[0] and r[6] >= pp[1]]
+        if not ok:
+            return None
+        exact = [r for r in ok if r[5] == pp[0] and r[6] == pp[1]]
+        return self._route_spec(sp, min(exact or ok, key=_rk))
 
 
 _POOLS = {}
@@ -200,30 +292,56 @@ def _seed(*parts):
     return BL._seed(*parts)
 
 
-def build_member(data, pool, spec, exp, seed, depth=0):
-    """The Monster of `spec` raised to `exp` (the reference exp axis): a join
-    row created + raised, or two parents (their own forms, raised to the same
-    exp, at least level 10) crossed + born + raised. Deterministic per seed."""
+class Unaffordable(ValueError):
+    """A bred spec whose lineage costs more grinding than the slot's budget."""
+
+
+def build_member(data, pool, spec, exp, seed, depth=0, ancestor=False):
+    """The Monster of `spec` on the time axis (S131): a join row created and
+    raised to `exp` (the slot's budget; its arrival exp is free), or a bred
+    member — its two parents (their own pool forms; bred ones recursively)
+    ground to level 10 on their own curves, crossed + born, the kid raised
+    with `exp` minus its lineage's grind (m.grind); raises Unaffordable when
+    the lineage costs more than `exp`. ancestor=True: the monster is itself a
+    parent — raised to level 10, never charged. Deterministic per seed."""
     from . import balance as BL
     T = data.T
-    rng = random.Random(_seed('kitm', seed, spec['species'], tuple(spec['src']), exp))
+    rng = random.Random(_seed('kitm', seed, spec['species'], tuple(spec['src']), exp, ancestor))
     src = spec['src']
     if src[0] == 'join':
         m = R.create(T, src[1], rng, arena_tier=pool.tier)
-        BL.raise_to(T, m, exp, rng, 'strong', data.skill_value)
+        if ancestor:
+            BL.ensure_breedable(T, m, rng, 'strong', data.skill_value)
+        else:
+            BL.raise_to(T, m, exp, rng, 'strong', data.skill_value)
         m.origin = f'eid {src[1]}'
         return m
-    pexp = max(exp, BL.exp_for_level(T, 10))
+    # S131 r3: follow the route tree the pool costed (each parent = the exact
+    # ancestor entry: its join form, or its own route) — depth = the route's
+    # generations (<= MAX_GENERATIONS), grind = its charge
+    route = spec.get('_route') or (pool.route_for(spec) or {}).get('_route')
     ps = []
     for k, sp in enumerate(src[1:3]):
-        if sp in pool.join:
+        ps2 = None
+        if route is not None:
+            ref = route[7 + k]
+            if ref is None:
+                ps2 = pool.spec(sp, prefer_bred=False) if sp in pool.join else None
+            else:
+                ps2 = StepPool._route_spec(sp, ref)
+        if ps2 is None and sp in pool.join:
             ps2 = pool.spec(sp, prefer_bred=False)
-        elif sp in pool.bred and depth < 4:
+        if ps2 is None and sp in pool.bred:
             ps2 = pool.spec(sp, prefer_bred=True)
-        else:
+        if ps2 is None or depth > BL.MAX_GENERATIONS:
             raise ValueError(f'no parent form for species {sp}')
-        ps.append(build_member(data, pool, ps2, pexp, seed * 3 + k + 1, depth + 1))
+        p = build_member(data, pool, ps2, 0, seed * 3 + k + 1, depth + 1, ancestor=True)
+        BL.ensure_breedable(T, p, rng, 'strong', data.skill_value)
+        ps.append(p)
     p1, p2 = ps
+    grind = BL.lineage_cost(p1) + BL.lineage_cost(p2)
+    if not ancestor and grind > exp:
+        raise Unaffordable(f'{data.names.get(spec["species"])}: lineage {grind} > budget {exp}')
     br = BL._breeder(data)
     plus = spec.get('plus', 0)
     if br is not None:
@@ -231,10 +349,13 @@ def build_member(data, pool, spec, exp, seed, depth=0):
             plus = br.resolve(p1.species, p2.species, p1.plus, p2.plus, p1.level, p2.level).plus
         except Exception:                                   # noqa: BLE001
             pass
-    plus = max(plus, spec.get('plus_min', 0))
     kid = R.breed_and_birth(T, p1, p2, spec['species'], plus, rng)
+    kid.grind = grind
     kid.origin = f'bred: {data.names.get(p1.species)} x {data.names.get(p2.species)}'
-    BL.raise_to(T, kid, exp, rng, 'strong', data.skill_value)
+    if ancestor:
+        BL.ensure_breedable(T, kid, rng, 'strong', data.skill_value)
+    else:
+        BL.raise_to(T, kid, exp - grind, rng, 'strong', data.skill_value)
     return kid
 
 
@@ -328,7 +449,8 @@ _MEMBERS = {}
 def kit_member(data, pool, mspec, exp, seed):
     """(Monster raised, allowed, combos) memoised."""
     from . import balance as BL
-    k = (pool.key, mspec['species'], tuple(mspec['src']), exp, seed, mspec.get('plus_min', 0))
+    k = (pool.key, mspec['species'], tuple(mspec['src']), exp, seed, mspec.get('plus_min', 0),
+         tuple(mspec.get('parent_plus') or ()), mspec.get('charge'))
     v = _MEMBERS.get(k)
     if v is None:
         if len(_MEMBERS) > 4000:
@@ -368,27 +490,29 @@ def default_skills(data, allowed, have=(), n=MAX_SKILLS):
 def available_spec(data, pool, ms, level, used=(), seed=130):
     """The member spec as the player can have it at this level: a join row
     above the team level + 2 -> the species' row that is recruitable, else
-    the strongest join form left; a bred form below level 10 (or before
-    breeding) -> its join form, else the strongest join form left. Keeps the
-    kit's skills (kit_valid_skills drops what the new form cannot carry)."""
+    the strongest join form left; a bred form before breeding opens -> its
+    join form; a bred form whose route the slot cannot afford at this level
+    (S131, the time axis) -> the same species' cheapest affordable route,
+    else its join form, else the strongest join form left. Keeps the kit's
+    skills (kit_valid_skills drops what the new form cannot carry)."""
     sub = None
     if ms['src'][0] == 'join' and ms['src'][1] not in pool.joins:
         sub = ms['species'] if ms['species'] in pool.join else None
     elif ms['src'][0] == 'bred' and not pool.bred_ok:
         sub = ms['species'] if ms['species'] in pool.join else None
-    elif ms['src'][0] == 'bred' and not all(x in pool.join or x in pool.bred
-                                            for x in ms['src'][1:3]):
-        # a parent the kit was bred from is not obtainable at this (lower)
-        # level: the same species through this level's own recipe, else its
-        # join form, else the strongest join form left
+    elif ms['src'][0] == 'bred':
+        r = pool.route_for(ms)
+        if r is not None:
+            return dict(ms, charge=r['charge'])
         if ms['species'] in pool.bred:
-            out = dict(pool.spec(ms['species'], prefer_bred=True), skills=list(ms['skills']))
-            if ms.get('plus_min'):
-                out['plus_min'] = ms['plus_min']
-            return out
+            return dict(pool.spec(ms['species'], prefer_bred=True), skills=list(ms['skills']))
         sub = ms['species'] if ms['species'] in pool.join else None
     else:
         return ms
+    return _join_fallback(data, pool, ms, level, used, seed, sub)
+
+
+def _join_fallback(data, pool, ms, level, used, seed, sub=None):
     if sub is None:
         sub = next((x for _p, x in rank_species(data, pool, level, seed)
                     if x not in used and x in pool.join),
@@ -396,24 +520,54 @@ def available_spec(data, pool, ms, level, used=(), seed=130):
     return dict(pool.spec(sub, prefer_bred=False), skills=list(ms['skills']))
 
 
-def kit_team(data, tl, step, kit, level, t=0, seed=130):
-    """[Monster x3] — the kit raised to the team level's exp, carrying the
-    kit skills learnable there (slots left filled with what it knows)."""
+def team_member(data, pool, ms, level, used, seed, mseed):
+    """(spec, Monster, allowed, combos) of kit member `ms` at `level`: the
+    affordable form (available_spec), built on the time axis; a lineage that
+    turns out dearer than the budget -> the join fallback; a bred member stuck
+    at its level cap is bred again through a route with the plus it needs (max
+    level = cap + 2 x plus) when the slot can afford it (S131: that route's
+    grind is charged too)."""
     from . import balance as BL
     exp = BL.exp_for_level(data.T, level)
+    ms = available_spec(data, pool, ms, level, used, seed)
+    try:
+        m0, al, co = kit_member(data, pool, ms, exp, mseed)
+    except Unaffordable:
+        ms = _join_fallback(data, pool, ms, level, used, seed,
+                            ms['species'] if ms['species'] in pool.join else None)
+        m0, al, co = kit_member(data, pool, ms, exp, mseed)
+    if ms['src'][0] == 'bred' and BL.is_capped(data.T, m0):
+        # the plus its exp needs: max level = cap + 2 x plus (S131 r4: from the level
+        # its exp reaches uncapped — r3 used the capped level and asked for +1 or +2),
+        # else the highest-plus route there is
+        target = data.T.level_for_exp(ms['species'], m0.exp, cap=99)
+        need = max(ms.get('plus', 0) + 1, (target - data.T.info[ms['species']][1]) // 2 + 1)
+        r = pool.plus_route(ms['species'], need)
+        if r is None and pool.routes.get(ms['species']):
+            top = max(pool.routes[ms['species']], key=lambda x: (x[1], -x[0]))
+            r = StepPool._route_spec(ms['species'], top) if top[1] > m0.plus else None
+        if r is not None:
+            try:
+                ms2 = dict(r, skills=list(ms['skills']))
+                m2, al2, co2 = kit_member(data, pool, ms2, exp, mseed)
+                if m2.level > m0.level:
+                    ms, m0, al, co = ms2, m2, al2, co2
+            except Unaffordable:
+                pass
+    return ms, m0, al, co
+
+
+def kit_team(data, tl, step, kit, level, t=0, seed=130):
+    """[Monster x3] — the kit on the time axis at the team level (joined
+    members raised to its exp, bred ones to its exp minus their lineage's
+    grind), carrying the kit skills learnable there (slots left filled with
+    what it knows)."""
     pool = step_pool(data, tl, step, level)
     team = []
     used = set()
     for i, ms in enumerate(kit['members']):
-        ms = available_spec(data, pool, ms, level, used, seed)
+        ms, m0, al, co = team_member(data, pool, ms, level, used, seed, _seed(seed, t, i))
         used.add(ms['species'])
-        m0, al, co = kit_member(data, pool, ms, exp, _seed(seed, t, i))
-        if m0.level < BL.CAP_SWAP * level and ms['src'][0] == 'bred':
-            # stuck at its level cap: the player breeds it again with more
-            # plus (max level = cap + 2 x plus), as the rolled profiles swap
-            need = (level - data.T.info[ms['species']][1]) // 2 + 2
-            ms2 = dict(ms, plus_min=min(99, max(need, ms.get('plus', 0))))
-            m0, al, co = kit_member(data, pool, ms2, exp, _seed(seed, t, i))
         m = m0.copy()
         sk = kit_valid_skills(list(ms['skills']), al, co)
         for s in m0.skills:
@@ -530,16 +684,14 @@ def kit_from_team(data, pool, team):
 
 
 def _norm(data, tl, step, kit, level, seed):
-    """Drop skills a member cannot carry at `level`; fill free slots."""
-    from . import balance as BL
-    exp = BL.exp_for_level(data.T, level)
+    """Drop skills a member cannot carry at `level`; fill free slots (each
+    member in the form the slot can afford there, S131)."""
     pool = step_pool(data, tl, step, level)
     used = set()
     for i, ms0 in enumerate(list(kit['members'])):
-        ms = available_spec(data, pool, ms0, level, used, seed)
+        ms, m, al, co = team_member(data, pool, ms0, level, used, seed, _seed(seed, 0, i))
         used.add(ms['species'])
         kit['members'][i] = ms
-        m, al, co = kit_member(data, pool, ms, exp, _seed(seed, 0, i))
         sk = kit_valid_skills(ms['skills'], al, co)
         if len(sk) < MAX_SKILLS:
             sk = default_skills(data, al, sk)
@@ -647,14 +799,34 @@ def _mutate(data, tl, step, kit, level, rng, pool, arena, seed, rank_fights=()):
         spec = pool.spec(sp)
         if spec is None:
             return None, 'none'
-        m, al, co = kit_member(data, pool, spec, exp, _seed(seed, 0, i))
-        if m.level < 0.85 * level and rng.random() < 0.8:
+        try:
+            m, al, co = kit_member(data, pool, spec, exp, _seed(seed, 0, i))
+        except Unaffordable:
+            return None, 'unaffordable'
+        if BL.is_capped(data.T, m) and rng.random() < 0.8:
             return None, 'capped'
         spec['skills'] = default_skills(data, al, ms['skills'])
         spec['plus'] = m.plus
         k2['members'][i] = spec
         return k2, f'member {i} -> {data.names.get(sp)}'
-    m, al, co = kit_member(data, pool, ms, exp, _seed(seed, 0, i))
+    if ms['src'][0] == 'bred' and r < 0.30 and len(pool.routes.get(ms['species'], ())) > 1:
+        # S131: another route to the same monster — a deeper / harder-ground
+        # lineage for more plus (better growth, higher cap) at more grind, or
+        # a cheaper one that leaves the kid more of the slot's exp
+        rt = rng.choice(pool.routes[ms['species']])
+        spec = dict(StepPool._route_spec(ms['species'], rt), skills=list(ms['skills']))
+        if spec['src'] == ms['src'] and spec.get('parent_plus') == ms.get('parent_plus'):
+            return None, 'none'
+        try:
+            kit_member(data, pool, spec, exp, _seed(seed, 0, i))
+        except (Unaffordable, ValueError):
+            return None, 'unaffordable'
+        k2['members'][i] = spec
+        return k2, f"member {i} route +{spec['plus']} ({spec['charge']} exp ground)"
+    try:
+        m, al, co = kit_member(data, pool, ms, exp, _seed(seed, 0, i))
+    except (Unaffordable, ValueError):
+        return None, 'unaffordable'
     if arena and r < 0.4 and len(ms['skills']) > 4:
         a = rng.randrange(4)
         b2 = rng.randrange(4, len(ms['skills']))
@@ -808,11 +980,13 @@ def describe(data, tl, step, kit, level, results, usage):
         tot = sum(n for n, _s in used) or 1
         src = ms['src']
         how = (f"joins (EID {src[1]})" if src[0] == 'join' else
-               f"bred {data.names.get(src[1])} x {data.names.get(src[2])} (+{ms.get('plus', 0)})")
+               f"bred {data.names.get(src[1])} x {data.names.get(src[2])} (+{m.plus}; "
+               f"{m.grind} exp grinding the parents)")
         mem.append({'species': ms['species'], 'name': data.names.get(ms['species'], f"#{ms['species']}"),
-                    'src': list(src), 'plus': ms.get('plus', 0), 'skills': list(ms['skills']),
+                    'src': list(src), 'plus': m.plus, 'skills': list(ms['skills']),
                     'skill_names': [data.skill_names.get(s, f'#{s}') for s in ms['skills']],
-                    'level': m.level, 'wld': m.wld})
+                    'level': m.level, 'wld': m.wld, 'grind': m.grind,
+                    **({'parent_plus': list(ms['parent_plus'])} if ms.get('parent_plus') else {})})
         top = ', '.join(f"{data.skill_names.get(s, s)} {100 * n // tot}%" for n, s in used[:4])
         tacs = sorted({v['tactic'] for v in results.values() if v.get('tactic') is not None})
         why.append(f"{mem[-1]['name']} L{m.level} ({how}): " +

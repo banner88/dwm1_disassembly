@@ -1805,6 +1805,16 @@ a **DEAD "keep this skill by plus" roll** that only steps the RNG 25 times; the
 | $14 | `Jump_014_4413` → `CreateForeignMasterNames`, `SetEnem_47ad` → `DropKnownSkillBases`, `CmpEnem_47c7` → `DropSkillBase`; new `CreateGenderThreshold` ($459E); `EnemyGroupTable` / `UnknownData_491F` names kept (tools find them by name) |
 | $16 | `SaveBrd_41b8` → `BreedStatInherit`, `FuncBrd_4313` → `PedigreeForeignCount`, `SetBrd_434f` → `PedigreeNameDiffers`, `SaveBrd_41ff` → `BreedAIAverage`, `LoadBrd_4238` → `BreedPedigreeNames`, `ClrBrd_4360` → `BreedResistInherit`, `LoadBrd_4373` → `BreedResistOne`, `SaveBrd_4444` → `BreedPlusRoll`, `LoadBrd_446c` → `ResistUpTo3`, `LoadBrd_4481` → `ResistUpTo2`, `label16_474a` → `BreedBirthFinalize`, `SaveBrd_4805` → `BirthQueueRebuild`, `CmpBrd_4838` → `BirthQueueAdd`, `LoadBrd_47f8` → `BirthQueueAddList`; new `BreedResistLowTable` / `BreedResistMidTable` + their 8 targets (`dw`) |
 
+### The breeding level gate (S131)
+
+Both parents must be **level 10+**: the three breeding menus of bank $0A (`jr_00a_48cf`,
+`jr_00a_5055`, `jr_00a_538c`, commented both trees) read the picked monster's record
++$4B (`$CB0C` = slot 0's level) and refuse below `$0A` with a `ScreenEffectSay0A` line
+(FULL_FAQ: "You can only breed Monsters that are at Level 10 or above"). The offspring
+hatches at level 1 (`breed` / `birth` above). The Balance service builds on it: a bred
+member's slot pays its ancestors' grind to level 10 (`Monster.free_exp` / `.grind`,
+Balance bookkeeping only — PROJECT_COMPILER §2.43 "Breeding costs grinding").
+
 ---
 
 ## Growth randomization needs a per-species envelope — S77

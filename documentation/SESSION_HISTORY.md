@@ -1,5 +1,75 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-07 (Session 129 — **ROADMAP P3.14b / c / d FINISHED (P3.14 DONE): STORY
+> CHECKS — QUESTIONS THE GAME ANSWERS (ITEMS, GOLD, MONSTERS, LEVELS, SEEN, CHANCE, ARENA, BAG
+> ROOM, THE STORY REACHED, AND / OR) USABLE WHEREVER A FLAG IS CHECKED; STORY STEPS (TAKE ITEMS,
+> GOLD, GIVE ITEMS × N, GIVE A MONSTER, REFRESH THE ROOM, SAYS BY PROGRESS); THE STORY SPINE;
+> QUESTS AS NPC ROLES; LOCKED EXITS AS A SHUT ROOM STATE; MUSIC BY FLAG FOR ROOMS AND GATES; SHOP
+> ITEM SETS BY FLAG** (user: "Next unchecked item in ROADMAP" → the plan → "1) … actually it is
+> easier to just make a new room state and switch to that? Honestly might be easier. 2) Custom
+> rooms and gates also please. 3) Flag should lead to new item sets which are settable in editor.
+> 4) Do everything in one session. Finish off all P3.14 if doable"). **Built S129; test ROM
+> USER-CONFIRMED 2026-10-07 13:59 ("This is great"); the editor side not yet reported.**
+> **Engine:** a story check n IS event flag `$1800 + n` — bank $73 `FlagAddr` sends `D == $18` to
+> bank $77 entry 11 `StoryCheck` (12 kinds; the monsters through ROM0 `GetMonsterDataPtr`, the
+> CF3 SRAM farm included) → `wStoryFlag` `$D509` (`wCustomPool` now from `$D50A`), so every flag
+> reader (ops `$00/$01`, state rules, NPC conditions, hub / gate / arena / breeding / music /
+> shop terms) reads checks unchanged (EVENT_FLAGS "Story checks"). Story commands = op `$24
+> $FF01+` → bank $77 `StoryCommand` (take items, ROM0 `CompareGold` adds / `AddGold` subtracts,
+> give items × n all-or-none → `$D8E1`). Refresh = op `$26` (measured: the room reloads in place,
+> state rules + music re-picked, the player keeps his cell). Bank $71 `MusicRulePick` +
+> `MusicRuleTable` (rooms by `wMapID`, gates by `wGateID`); bank $77 `ShopSetPick` + `ShopSetTable`
+> from `ShopFill`. Templates re-pinned: $77 `eb0f0997…` (1788 B), $71 `cbd0cdec…` (1070 B).
+> **Compiler / model (PROJECT_COMPILER §2.42):** `custom.checks`, `custom.story.milestones`,
+> `custom.quests` (lowered into the giver NPC's conversation: offer YES / NO, progress, take,
+> reward items / gold / monster / flags / refresh, done; `<id>_started` / `<id>_done` flags; a
+> bag-room check when the reward needs room), `custom.shop_sets`, `rooms[].music_rules`,
+> `music.gates.N.rules`; conversation steps `give_item` × n / `give_monster` / `take_item` /
+> `gold` / `refresh` / `by_progress`, cutscene steps `take_item` / `gold` / `refresh`; a Turn ON
+> of a check refused; the flag index lists checks / milestones / music rules / shop sets. The
+> legacy `progression.quests` KEPT (old projects, the example's S70 battle quest, its tests) and
+> its `npc_hide` / `npc_show` fixed (`npc_write n,0,$40/0`; PyBoy: the guardian's slot type `$40`).
+> **Editor (EDITOR_DESIGN §5.7 "Story (S129)"):** Progression & Flags → the Story checks group
+> (New / Edit / Rename everywhere / Delete) + a **Story** page (milestones, quests); Rooms tab →
+> NPC **Quest…**, door **Lock until…** (`Document.lock_exit`: the shut state — the exit gone,
+> the cell a wall, an examine spot with the words — and its rules); Music tab **Music by flag…**
+> (your rooms, gates); Shops tab **Item sets by flag…**; the conversation window / cutscene
+> editor's new steps; story checks in every condition picker (not in Turn ON / OFF). Help
+> `71_story_quests.md` + 00 / 11 / 20 / 30 / 40 / 61 / 62 / 63 / 90; `EDITOR_REVISION` 'S129'.
+> The example project: checks `has_2_medals` / `vault_rich`, the NEW mini medal quest (NPC
+> (2, 5) in the medal vault, flags `$015B` / `$015C`) — user S124 "yes make new mini medal quest".
+> **Annotation (Iron Rule 6):** clean tree `ComputeFlagAddress` (the patched route, the virtual
+> flags) and `ScriptCmd26_ReloadRoom` (measured); clean `1ca6579…` byte-perfect.
+> **Checks:** verifier PASS (audit_mapid_range: `CustomRoomBGMResolve` re-keyed, patched 85);
+> REFERENCE_MD5 **`7d136455…` (patched)**, was `fe5fa80a…` (patched, historical); test_compiler
+> --rom 1354/1354 (`test_story_s129`, `test_quests_s129`, `test_story_rom` — an SM83 RUN of
+> `TestEventFlag` on every check kind, every command, `ShopSetPick`, `MusicRulePick`; the S117 /
+> S73 / S97 / S124 expectations re-stated for the example's two new flags and six new texts; the
+> flag-index coverage covers the S129 fixture; the `$0`-`$1FFF` sweep expects `wStoryFlag` for
+> `$18xx`); test_app
+> PASS (`s129_story`: every dialog driven, compiled, undone; GUI build == the pin).
+> **Measured (PyBoy, the user's save, the final ROM below):** a census of 32 checks of every kind
+> against the save (chance 50 %: 300 rolls); the DEMO NPC → the hall; the Guide (hall_visited);
+> the Chronicler by progress (before / chapter 1 / chapter 2); the Sage's four checks (strong
+> party yes, rich no → yes after the Banker, big farm no, a medal yes); the quest (offer YES,
+> progress with 2 medals); the sealed stairs unwalkable + their words; the Fairy's medal, then
+> "bag full"; the quest's end (3 medals taken, 2 Herbs, 3,800 → 4,100 G, done, the refresh opens
+> the stairs, the hall's song `$31` → `$1E`); the stairs → the annex; the Banker +1,000 / −500;
+> the stall `[$01 $07 $0D]` before, `[$05 $06 $03 $1D]` after; the Bard → gate 0's floors `$2E`
+> (OFF: `$34`). Seen: the user's own arrival scene in Cities_FOUNT ("I am a shopkeep!") plays
+> first.
+> **Test ROM `DWM-S129-story-test.gbc` (`ca502753…`, patched; USER-CONFIRMED, below):** the user's
+> my-dwm-hack_21 + two BRAND-NEW rooms: **STORY HALL** ($76, teal crystal look): Hall Guide (2,
+> 2), Sage of Checks (6, 3), Medal Fairy (2, 4), Medal Collector (7, 5; the quest: 3 TinyMedals
+> → 300 G + 2 Herbs, opens the stairs), Chronicler (3, 6; says by progress), the sealed stairs
+> (8, 1); **VAULT ANNEX** ($77, crimson look): Annex Guide (2, 2), Banker (7, 3; YES +1,000 G /
+> NO then YES −500 G), Annex stall (2, 5; better goods after the quest), Bard (7, 6; YES = gate 0
+> plays his song). Way in: the **S129 DEMO** NPC in Cities_FOUNT at (3, 4). **USER-CONFIRMED
+> 2026-10-07 13:59 ("This is great").** Its project in editor format: `examples/s129_story_demo/`
+> (+ `build_demo.py`, the Document-API calls that made it; both rebuild `ca502753…`, patched).
+> **Next:** the user's test of the ROM and the editor; then the user's pick (P3.14 is done —
+> P3.15 Balance tab, or a banked item).
+
 > Last verified: 2026-10-07 (Session 128 — **ROADMAP P3.14e3 BUILT: YOUR ARENA — COPIES OF THE
 > ARENA LOBBY AND THE ARENA BATTLE ROOM THE ENGINE TREATS AS THE ARENA (THE WALK-IN, THE MATCHES,
 > THE CROWD, THE BATTLE TYPE / MUSIC, STARRY NIGHT), PAINTABLE AND CONNECTED ANYWHERE; PER CLASS A

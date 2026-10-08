@@ -6033,3 +6033,56 @@ reclaimed while idle ("up 0 min") and the build vanished — twice, once after a
 nobody saw for 30 minutes. Long builds now append each finished unit to a `.partial` file
 (tagged with the simulator version) and resume from it; and the session stays in the turn,
 polling, until the job is done.
+
+## S131 — Balance follow-ups (P3.15b)
+
+### A room change is not over when wMapID changes (S131, PyBoy)
+**Symptom**: the special-room walker re-planned from map `$63` cell (8, 0) — a wall in that
+room — and gave up; a 20-frame "nothing changes" settle did not help. **Root cause**: wMapID
+flips at the start of the transition; the screen is white and `$FF97/$FF98` still hold the OLD
+room's cell for the whole fade (`$C88A` = 1, wGameState 0 — every quiet-looking test passes).
+**Fix**: after a map change, wait ~420 frames before reading the cell (`census_dive.py
+measure_specials`). **Rule**: a transition's end is the new cell / a drawn screen, not a quiet
+RAM byte; read the position only after it.
+
+### One log tag with two meanings skews a metric (S131)
+**Symptom**: the S130 anchor reported up to 13 % "unmodelled" actions in G class matches for
+heal-heavy teams, yet no unmodelled skill was in those fights. **Root cause**: the round core logs
+`'no-effect'` both for a skill with no core (a real gap) and — through f5_heal — for a heal on a
+full-HP target (the game's own "no effect"); the Balance service counted both. **Fix**:
+`balance.count_actions` counts only the skill-id payload. **Rule**: before turning a log tag into
+a metric, list every site that writes it.
+
+### A name in a table is a claim — check it against the exits (S131)
+`dwm/map_names` called `$61-$64` "Forest Maze Gate Floor 1-4" and bank $0B called them
+"sub-rooms"; their exit tables show the forest maze's other rooms (one screen each, edge exits
+back and forth, two wrapping onto themselves). Modelled as gate floors they would have been wrong
+twice (no boss floor, no random battles of their own floor). **Rule**: identify a room by where its
+exits lead, not by a label someone typed.
+
+### Build exactly what you priced (S131 r3)
+**Symptom**: the user's anchor build stopped at once ("stopped (0 parts saved)"); its new log showed
+`no parent form for species 200` seven calls deep in `kits.build_member`, at Starry Night / S class /
+Judgement. **Root cause**: the breeding closure priced each route from specific parent entries, but
+the builder re-picked every bred parent as "the cheapest route with at least this plus" — a
+different, deeper route; high-plus late-game routes (+14, +16) recursed past the generation guard.
+**Fix**: a route keeps the parent entries it was costed from (`kits.StepPool` refs, `_route`), and
+`build_member` follows that tree (depth = its generations, grind = its charge). **Rule**: a cost
+model and its builder must walk the same structure — store the choice, do not re-derive it.
+
+### A long parallel job needs a log of its own (S131 r2)
+The Balance tab's build ran 16 workers and showed only "Stopped" — a worker's exception killed the
+pool and the traceback scrolled away. `build_balance_anchor.py` now appends to
+`extracted/balance_vanilla.build.log` (platform, progress, each failed unit's traceback;
+`faulthandler` for hard crashes) and a failed unit no longer stops the others. **Rule**: anything the
+user runs unattended writes a log file they can send back.
+
+### A model that prices with one rule and builds with another drifts (S131 r4)
+The first S131 anchor showed kit members at +20-22 for ~3,000 exp of grinding, a Gate of Sleep floor
+"unwinnable at 99" (members stuck at level 42-44) and a Judgement spike. The breeding closure
+computed plus with the level-sum bonus of level-10 parents (+0) while the builder used the game's
+rule with the parents' real levels (late recruits at 40+ → +4 per cross): the closure believed no
+high-plus route existed, so capped members never re-bred; the re-breed also asked for the plus of
+the CAPPED level, not of the level its exp reaches. **Rule**: the search and the builder must use
+the same game rule with the same inputs; read the anchor's kits (plus, grind, levels reached), not
+only its level numbers, before accepting a rebuild.

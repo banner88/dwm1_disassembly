@@ -196,14 +196,45 @@ class Enemy:
         return bytes(out)
 
 
+# EncounterChancePercent ($01:$69C0): chance codes 0-7 -> percent (DATA_STRUCTURES
+# "Encounter pool entry"; the same 8 bytes in the English and German builds)
+CHANCE_PCT = (0, 10, 20, 30, 40, 50, 70, 100)
+
+
+def real_chances(codes) -> list[int]:
+    """Exact percent of each entry for the game's uniform draw 0-99
+    (CalcEncounterPoolIdx: the first entry whose 8-bit running sum is 100 or
+    >= the draw, leading 0 sums skipped — so the first entry with a chance
+    takes draw 0 too and the one ending at 100 loses one; Slime / Dracky /
+    Anteater 30 / 50 / 20 are really 31 / 50 / 19). == editor2/core/
+    encounters.real_chances (census_encounters.py, S114)."""
+    sums, run = [], 0
+    for c in codes:
+        run = (run + CHANCE_PCT[c & 7]) & 0xFF
+        sums.append(run)
+    hits = [0] * len(codes)
+    for d in range(100):
+        for i, s in enumerate(sums):
+            if s == 0:
+                continue
+            if s == 100 or s >= d:
+                hits[i] += 1
+                break
+    return hits
+
+
 @dataclass
 class Pool:
-    """One 26-byte EncounterPoolData row ($01:$6AAE)."""
+    """One 26-byte EncounterPoolData row ($01:$6AAE; DATA_STRUCTURES "Encounter
+    pool entry"). +0 rate code, +2..+4 the 1/2/3-monster chance codes, +5..+9
+    each slot's chance code, +10 five EIDs, +20..+24 each slot's MAX COUNT,
+    +25 maze size."""
     id: int
-    header: list[int]      # +0..9 (bytes +2 and +5 feed slot selection)
+    header: list[int]      # +0..9 (+0 rate, +2..+4 group codes, +5..+9 slot codes)
     eids: list[int]        # 5 x u16 LE
-    weights: list[int]     # 5 x u8 (0 = slot unusable)
-    extra: int
+    max_counts: list[int]  # +20..+24: NOT a weight (S131) — 1 = only ever alone,
+    #                        else how many copies a group may hold; 0 = first draw only
+    extra: int             # +25 maze size
 
     @classmethod
     def parse(cls, b: bytes, idx: int) -> "Pool":
@@ -214,13 +245,33 @@ class Pool:
         out = bytearray(self.header)
         for e in self.eids:
             out += e.to_bytes(2, "little")
-        out += bytes(self.weights)
+        out += bytes(self.max_counts)
         out.append(self.extra)
         assert len(out) == 26
         return bytes(out)
 
+    @property
+    def weights(self) -> list[int]:
+        """Deprecated name of max_counts (S76-S130 called +20..+24 'weights';
+        they are max counts — DOC_AUDIT S114). Kept for old callers."""
+        return self.max_counts
+
+    @property
+    def slot_codes(self) -> list[int]:
+        return list(self.header[5:10])
+
+    def slot_chances(self) -> list[int]:
+        """The real percent each slot is drawn (per monster drawn)."""
+        return real_chances(self.slot_codes)
+
+    def group_chances(self) -> list[int]:
+        """The real percent of a 1 / 2 / 3-monster battle."""
+        return real_chances(self.header[2:5])
+
     def live_slots(self) -> list[int]:
-        return [i for i in range(5) if self.weights[i] != 0]
+        """Slots a battle can draw: chance code != 0 (S131 — was max count !=
+        0; on every vanilla list the two agree, 0 differences over 128)."""
+        return [i for i in range(5) if self.header[5 + i] & 7 != 0]
 
 
 @dataclass

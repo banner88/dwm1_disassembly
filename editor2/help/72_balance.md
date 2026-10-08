@@ -5,7 +5,9 @@ The **Balance** tab answers one question for every key fight of the story:
 game and for your project, side by side, so you can see whether your gates,
 bosses and arena teams land "in the same general area" as the original.
 
-*Built in S130, not yet tested by a user: tell us what reads wrong.*
+*Built in S130 (user-checked); S131 changes — the level as grinding time with
+breeding paid by its family, special rooms in dives — not yet tested by a user:
+tell us what reads wrong.*
 
 ## Reading the numbers
 
@@ -56,9 +58,10 @@ not the same: one won 80 % of the time at 99 is nearly there, one won 0 %
 with the enemies at 90 % HP is far beyond.
 
 **Postgame "99+"** mostly means *beyond a rolled team*, not impossible: the
-postgame wants monsters bred over many generations, deeper than the model
-rolls (strong teams breed up to 2 generations, 3 in the postgame; casual
-teams breed once). Compare such fights by their reading at 99.
+postgame wants monsters bred over many generations, deeper than the casual
+and strong rolls go (strong teams breed up to 2 generations, 3 in the
+postgame; casual teams breed once; the player's kit up to 6). Compare such
+fights by their reading at 99.
 
 ## Three kinds of player (profiles)
 
@@ -80,9 +83,10 @@ teams breed once). Compare such fights by their reading at 99.
 - **casual** — a team made of what was at hand: monsters that could join on
   the way, kept as they come (their first skills).
 - **strong** — the best of several tries per member, bred for skills once
-  breeding is open (up to 2 generations of crosses, 3 in the postgame), the
-  best 8 skills kept; members are rated by their offence and at most one
-  heal, so a strong team is not three healers.
+  breeding is open (up to 2 generations of crosses, 3 in the postgame — each
+  family's grinding paid like the player's), the best 8 skills kept; members
+  are rated by their offence and at most one heal, so a strong team is not
+  three healers.
 
 Casual and strong fight on their own AI tactics. A fight that needs much
 more for casual than for strong (or player) is one that rewards preparation.
@@ -98,19 +102,34 @@ game):
 
 - **Who can be in a team** at a story step: the starter, every monster that
   can join from the wild lists met so far, the bosses of the gates already
-  cleared that join, and — once breeding is open — their offspring.
+  cleared that join, and — once breeding is open — their offspring, over as
+  many generations as the grinding allows (up to 6).
 - **The same exp for every member.** Battle exp is shared evenly, so every
   member has the same exp; the *team level* is the level that exp gives on
   the exp curve most monsters use. Monsters on a slower curve are a few
   levels behind, faster ones ahead.
-- **Members stuck at their level cap** below 85 % of the team level are
-  swapped for another, as a player replaces a monster that stopped growing.
-  The *Notes* column says when members still reach clearly less than the
-  team level (caps).
+- **Members stuck at their level cap** (below 85 % of the level their exp
+  would give) are swapped for another, as a player replaces a monster that
+  stopped growing; a bred kit member is bred again through a family with more
+  plus, its grinding charged too. Bred members sit below the team level by
+  design (their family's grinding); the *Notes* column says when members
+  reach clearly less than the team level.
 - **Breeding** opens after the F class in the original game. For your
   project choose **Breeding opens after** above the table (a story step);
   it is saved in the project (one undo step, meta.balance) and only this tab
   reads it — the game is not changed.
+- **The level is time spent grinding.** "Lv 14" means each of the three
+  party places has had the exp a monster needs to reach level 14 put into
+  it. A monster that joins brings its own level for free and is raised the
+  rest of the way. A **bred** monster pays for its family: both parents must
+  be level 10 (the game's rule), so the exp it took to raise them (and *their*
+  parents, for deeper chains) comes out of that place's exp, and the baby —
+  hatched at level 1 — gets what is left. A recruit that joined at level 10
+  or more costs nothing to breed; a parent bred itself costs its own family
+  plus levels 1-10. A family the place cannot afford yet is not used, so
+  deeper chains (more plus: better growth, a higher level cap) appear as the
+  story goes on, as in the game. The kit view shows each bred monster's
+  grinding ("parents ground: 1,320 exp").
 
 ## Story curve
 
@@ -143,6 +162,15 @@ other.
 which 90 % of dives get through. **direct** walks straight to the stairs (the
 fewest battles: a lower bound), **sweep** walks every floor whole (the most
 battles: an upper bound). A real player lands between.
+
+Floors 3, 6, 9 … are a special room half the time (not in the Gate of
+Beginning). The forest maze, the three mazes and the three conveyor mazes are
+walked as the rooms they are — their own shortest way to the stairs, measured
+in the game: the mazes are long (about 50-60 steps) and a conveyor ride counts
+every square it carries you, so those floors cost more battles than an ordinary
+floor; the forest's rooms are short and each room change resets the battle
+counter, so it costs almost none. Treasure rooms, the priest and the shop have
+no battles.
 
 **Outside the story** (your project only): new gates (32 and up) and rooms
 with their own battles have no place in the original story, so they get a
@@ -233,7 +261,8 @@ To keep a change, make it on the Monsters or Arena tab.
 A few skills do things the simulator does not model (some special effects);
 in the simulation they simply do nothing. **Unmodelled** is the share of all
 actions at l90 that were such skills (the column shows the highest of the
-profiles; hover it for each). Up to a few percent changes little;
+profiles; hover it for each). A heal on a monster that is already at full HP
+does nothing in the game too — it is not counted. Up to a few percent changes little;
 20 % or more (orange) means the number leans on skills the simulator cannot
 judge — try that fight in the game.
 
@@ -251,6 +280,16 @@ profile makes it long — an hour or more, depending on your cores. Every
 finished part is saved as it finishes (balance_vanilla.json.partial), so
 **Stop**, closing the editor or a crash loses nothing: press the button again
 and it continues from there. When it finishes, the original columns fill in.
+If a build stops by itself, the status line says the last error and **Show log**
+opens extracted/balance_vanilla.build.log — every line the builds printed, your
+Python / system versions and the full error of any part that failed (a failed
+part no longer stops the others: they finish and are kept). Send that file
+along.
+If a build stops by itself, the status line says the last error and **Show log**
+opens extracted/balance_vanilla.build.log — every line the builds printed, your
+Python / system versions and the full error of any part that failed (a failed
+part no longer stops the others: they finish and are kept). Send that file
+along.
 
 ## Limits
 
@@ -260,6 +299,10 @@ and it continues from there. When it finishes, the original columns fill in.
 - Every member of a rolled team has the same exp; real players level a
   favourite faster.
 - Items, healing between battles of a floor and running away are not used.
+- The Coliseum special room (three fights in a row on some floors 3 / 6 / 9)
+  is not counted in the dives.
+- Recruiting is free in the model (no meat, no failed tries): a monster the
+  lists offer at or below the team level + 2 is assumed to have joined.
 - **player**: the planner looks one action ahead (a real player plans
   further); the kit search is small (a few dozen tries per step), so a better
   kit may exist — a project fight that looks easy for the found kit is not

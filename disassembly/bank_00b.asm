@@ -1496,7 +1496,11 @@ jr_00b_466b:
 
 ; --- Post-transition or no-exit: special room handling ---
 ; Checks if current room is a special type (mazes, conveyors, etc.)
-; that need per-step processing beyond normal exit checking.
+; that need per-step processing beyond normal exit checking: in these rooms
+; bank $16 EncounterStep runs on every step (PyBoy S131: every cell entered,
+; walked or ridden on a belt, drains the flat outside-gate base; a push into an
+; edge exit and the step onto a walk-on exit run it with no drain — wGameState
+; bit 5 / the exit; each room change re-seeds the counter).
 Jump_00b_4674:
 jr_00b_4674:
     ld a, [wMapID]
@@ -1505,16 +1509,16 @@ jr_00b_4674:
     cp $53                          ; Forest Maze
     jr z, jr_00b_46d5
 
-    cp $61                          ; sub-room 1
+    cp $61                          ; forest maze room 2 (S131)
     jr z, jr_00b_46d5
 
-    cp $62                          ; sub-room 2
+    cp $62                          ; forest maze room 3 (S131)
     jr z, jr_00b_46d5
 
-    cp $63                          ; sub-room 3
+    cp $63                          ; forest maze room 4 (S131)
     jr z, jr_00b_46d5
 
-    cp $64                          ; sub-room 4
+    cp $64                          ; forest maze room 5 (S131)
     jr z, jr_00b_46d5
 
     cp $54                          ; Conveyor Belt Maze 1

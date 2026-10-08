@@ -3465,6 +3465,11 @@ GetScrollPosition2:
     ret
 
 
+; CheckSpecialMapExits: Z when wMapID is a walkable special room of a gate floor —
+; the forest maze MAP_MAZEWOD $53 and its other rooms $61-$64 (one screen each, joined
+; by edge exits; dwm/map_names' old "Forest Maze Gate Floor 1-4" was a misnomer), the
+; conveyor mazes MAP_SLDFLR1-3 $54-$56 and Maze 1-3 $57-$59 (S131; bank $0B runs
+; EncounterStep per step in the same rooms, Jump_00b_4674).
 CheckSpecialMapExits:
     ld a, [wMapID]
     cp MAP_MAZEWOD
@@ -5025,7 +5030,7 @@ CheckNPCInteraction:
 
     ld hl, $ff90
     res 1, [hl]
-    call CheckGateworldForNPC
+    call ConveyorBeltPush
     ldh a, [$90]
     bit 1, a
     ret nz
@@ -5045,7 +5050,15 @@ CheckNPCInteraction:
     ret
 
 
-CheckGateworldForNPC:
+; ConveyorBeltPush (S131, was the misnomer CheckGateworldForNPC; PyBoy-measured):
+; in the walkable special rooms only (wInGateworld 0 and CheckSpecialMapExits Z —
+; in practice the conveyor mazes $54-$56, the only rooms with these tiles) the
+; class of the standing cell ($AA >> 2) sets a forced velocity and $FF90 bits 1:0:
+; $0F right (X $0100), $10 left (X $FF00), $11 down (Y $0100), $12 up (Y $FF00).
+; The player rides until a cell of another class; every cell ridden is an ordinary
+; step (bank $0B -> bank $16 EncounterStep, the conveyor drain $50 x RateMod / 64).
+; GATE_GENERATION §4.4 "Special rooms (S131)"; editor2/core/dive.py BELT_DIR.
+ConveyorBeltPush:
 jr_001_5d9c:
     ld a, [wInGateworld]
     or a
@@ -5078,21 +5091,21 @@ jr_001_5d9c:
     srl a
     srl a
     cp $0f
-    jr z, jr_001_5dd5
+    jr z, BeltRight_5dd5
 
     cp $10
-    jr z, jr_001_5de6
+    jr z, BeltLeft_5de6
 
     cp $11
-    jr z, jr_001_5df7
+    jr z, BeltDown_5df7
 
     cp $12
-    jr z, jr_001_5e08
+    jr z, BeltUp_5e08
 
     ret
 
 
-jr_001_5dd5:
+BeltRight_5dd5:
     ld hl, Boot
     ld a, l
     ldh [$a1], a
@@ -5104,7 +5117,7 @@ jr_001_5dd5:
     ret
 
 
-jr_001_5de6:
+BeltLeft_5de6:
     ld hl, $ff00
     ld a, l
     ldh [$a1], a
@@ -5116,7 +5129,7 @@ jr_001_5de6:
     ret
 
 
-jr_001_5df7:
+BeltDown_5df7:
     ld hl, Boot
     ld a, l
     ldh [$a3], a
@@ -5128,13 +5141,13 @@ jr_001_5df7:
     ret
 
 
-jr_001_5e08:
+BeltUp_5e08:
     ld hl, $ff00
     ld a, l
     ldh [$a3], a
     ld a, h
     ldh [$a4], a
-    ld hl, $ff90
+    ld hl, $ff90                ; $FF90 bits 1:0 = a forced move is running
     set 1, [hl]
     set 0, [hl]
     ret
