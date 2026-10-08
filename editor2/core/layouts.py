@@ -39,8 +39,22 @@ def _tool(repo_root, name):
     return _TOOL_CACHE[key]
 
 
+_LZ_MEMO = {}            # S132: raw bytes -> compressed bytes (the compressor is deterministic)
+_LZ_MEMO_MAX = 4096
+
+
 def compress(repo_root, raw):
-    return bytes(_tool(repo_root, 'compress_tiles').compress_lz(bytes(raw)))
+    """LZSS-compress `raw` (memoized, S132: the bank space meter re-emits every
+    layout and tileset after each edit — 2 s of recompression on the UI thread
+    for a user project; the same bytes always compress to the same stream)."""
+    raw = bytes(raw)
+    out = _LZ_MEMO.get(raw)
+    if out is None:
+        out = bytes(_tool(repo_root, 'compress_tiles').compress_lz(raw))
+        if len(_LZ_MEMO) >= _LZ_MEMO_MAX:
+            _LZ_MEMO.clear()
+        _LZ_MEMO[raw] = out
+    return out
 
 
 def decompress_raw(repo_root, stream):

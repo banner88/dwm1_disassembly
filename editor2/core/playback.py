@@ -39,6 +39,7 @@ GAME_STATE = 0xC8EB
 SCRIPT_TYPE, SCRIPT_ID, SCRIPT_CTR, SCRIPT_FLAGS, SCRIPT_FLAGS2 = 0xD8D3, 0xD8D4, 0xD8D5, 0xD8D7, 0xD8D8
 TEXT_PTR = 0xC82D
 FLAG_BASE = 0xD99B
+EXT_FLAG_BASE = 0xD140          # S117 wExtFlags ($1000-$17FF), patched builds
 W_CHANGING, W_DEST, W_FLAG = 0xC96C, 0xC96D, 0xC96E
 W_X, W_Y, W_KICK = 0xC96F, 0xC971, 0xC88F
 YESNO_CURSOR = 0xC83C
@@ -169,11 +170,23 @@ class Engine:
         a = self.p.sound.ndarray
         return (a.astype(np.int16) * 256) if len(a) else np.zeros((0, 2), np.int16)
 
+    @staticmethod
+    def flag_addr(idx):
+        """(address, mask) of event flag idx: $0000-$0FFF the game's bitfield
+        ($D99B, MSB first), S132: $1000-$17FF the patched builds' extended
+        flags (wExtFlags $D140 — EVENT_FLAGS "Extended flags (S117)")."""
+        if 0x1000 <= idx < 0x1800:
+            return EXT_FLAG_BASE + ((idx - 0x1000) >> 3), 1 << (7 - (idx & 7))
+        return FLAG_BASE + (idx >> 3), 1 << (7 - (idx & 7))
+
     def flag(self, idx):
-        return (self.m[FLAG_BASE + (idx >> 3)] >> (7 - (idx & 7))) & 1
+        a, bit = self.flag_addr(idx)
+        return 1 if self.m[a] & bit else 0
 
     def set_flag(self, idx, on=True):
-        a, bit = FLAG_BASE + (idx >> 3), 1 << (7 - (idx & 7))
+        if idx >= 0x1800:                     # story checks are worked out, not stored
+            return
+        a, bit = self.flag_addr(idx)
         self.m[a] = (self.m[a] | bit) if on else (self.m[a] & ~bit & 0xFF)
 
     # ------------------------------------------------------------ base state
@@ -271,6 +284,20 @@ class Engine:
         '5ec6b15b000000000000020202020202020202020000000000'
         '00000000006464' '64f0f0f0f0f000646464f0f0f0f0f000')
 
+    def put_party(self, records):
+        """S132: party slots 0-2 = these records (149 B each), the party list
+        and count set — the roster's other slots are left alone (a new game has
+        none). Call after the last warp."""
+        m = self.m
+        recs = [bytes(r) for r in records][:3]
+        for k, rec in enumerate(recs):
+            base = 0xCAC1 + k * 0x95
+            for i, b in enumerate(rec[:0x95]):
+                m[base + i] = b
+        m[0xCA8D] = len(recs)
+        for k in range(3):
+            m[0xCA8E + k] = k if k < len(recs) else 0xFF
+
     def give_party(self):
         """A battle-valid party monster in slot 0 when the party is empty (a
         new game has none; scenes with battles need one). After the warp — the
@@ -284,9 +311,15 @@ class Engine:
         m[0xCA8E], m[0xCA8F], m[0xCA90] = 0, 0xFF, 0xFF
         return True
 
-    def start(self, recipe, scene_entry=None, wait=900, settle=True, party=False):
+    def start(self, recipe, scene_entry=None, wait=900, settle=True, party=False,
+              repoke=True, records=None):
         """Set the game up for a recipe (cutscenes.Recipe) and leave it
-        running at the start of the scene's script."""
+        running at the start of the scene's script.
+        S132: repoke=False keeps what the room's entry script writes on arrival
+        (a story state: the RAM is poked BEFORE the warp only); records = party
+        monster records (149 B each, play_setup.party_record) put in after the
+        room loaded (the canonicalizer erases a party made before — PYBOY_DEBUGGING
+        trap 2)."""
         m = self.m
         self.base_state()
         self.frames = 0
@@ -328,8 +361,12 @@ class Engine:
                 break
         if not arrived:
             self.log.append('the room did not finish loading')
-        for a, v in recipe.ram.items():          # the load may reset counters
-            m[a] = v & 0xFF
+        if repoke:
+            for a, v in recipe.ram.items():      # the load may reset counters
+                m[a] = v & 0xFF
+        if records:
+            self.put_party(records)
+            self.log.append(f'the party: {len(records)} monster(s) put in')
         if party and self.give_party():
             self.log.append('gave the party a monster (a new game has none)')
         self._hero_name()

@@ -786,3 +786,18 @@ code reads of bank $01 / $0A / $0B / $16. ✏️ = fixed in place this session.
 | ROADMAP P3.15b (3) / DOC_AUDIT S114 row "randomizer Pool.weights (+20) … Not changed (the randomizer is shipped)" | ✏️ fixed S131 | `Pool.max_counts` (+20, `weights` kept as an alias), `slot_chances()` = the real draw % from +5..+9 (== editor2 encounters.real_chances on 128 / 128 lists), `live_slots()` by chance code (== the old set on every vanilla list: 0 differences); `sweep_ttk` weighs by chance; the randomizer output is byte-identical (seed 4242: `183904fb…` before and after) | ROM + run |
 | Balance "unmodelled = the share of actions logged no-effect" (PROJECT_COMPILER §2.43, help) | ✏️ | a heal on a full-HP / fallen target is the game's own "no effect" (f5_heal) — no longer counted (`balance.count_actions`); S130's anchor showed up to 13 % on heal-heavy teams from it | code read |
 | `extracted/encounters.json` readers, `gen_encounter_db.py` comments "Weights" | ✏️ | max counts (+20) and maze size (+25) | DATA_STRUCTURES "Encounter pool entry" |
+
+## S132 addendum (2026-10-09; the Rooms tab made usable — paint lag, side rail, Borrow palette, Draw, Play here)
+
+Sources: cProfile of the editor offscreen on the user's project (`my-dwm-hack_24`); the story
+census (`tools/census_story_state.py`, PyBoy on the original ROM: 39 / 39 playable story steps,
+the game's own win tails / arena cascades == `editor2/core/story_state.py`); script decodes
+(`cutscenes.decode_vanilla`). ✏️ = fixed in place this session.
+
+| File / claim | Verdict | What is true | Evidence |
+|---|---|---|---|
+| SIDEQUEST_MAP "Per-class VICTORY cascade" (code-read, S67) | ✅ confirmed + measured | the Arena Lobby script 0 branch per class writes exactly the table's flags / `$CAB4` / step counters (catch-up flags included); the lobby script then warps to the Castle, whose cascade ($D92B = 0) plays next — the table is the LOBBY's half only | interpreter == table for G-S; PyBoy census steps 1/5/8/12/18/21/24/28 |
+| GATE_GENERATION §7.7 "the vanilla boss win tails … `$D92B = 7`" | ✏️ completed | the boss room's ENTRY script writes `$D92B := 6` on arrival (Gate of Beginning: script 0 pos 0); the win branch writes `$D9E3` then `$D92B := 7` right before the tail (script 1 pos 69 / 74) — so a WarpWing out of an unbeaten gate gets the priest's heal | decode + PyBoy (a tail armed after a warp went to the priest until `$D92B` was set to 7) |
+| EVENT_FLAGS: `$00F1` "set by Castle script 0 … once `$00EE` is set" (S124 read, not measured) | ✅ reproduced by the interpreter | Castle script 0 on screen 1 with `$D92B` = 0 and `$00EE` set, `$00F1` clear sets `$00F1` and `$D92B` 5, `$D92C` 4, `$D92D` 3, `$D933` 2, `$D934` 2 (the documented post-game states) | `story_state.state_at(31)`; not PyBoy-played (the ending is not run by the census) |
+| `editor2/core/playback.py` `Engine.STARTER` / `tools/pyboy_harness.py give_party_monster` default record "the starter as the engine builds it" | ⚠ open (documented) | the hex is 148 B, ONE byte short somewhere in the resistance block (+$68-$82): bytes from there on sit one early (the parents' nickname block starts at +$82). Everything before +$68 is aligned (species, level, HP / MP, AI, skills, queue). `play_setup.party_record` pads it to 149 and rewrites +$68 onward | byte read of the template vs MONSTER_DATA "Party Monster Structure" |
+| `editor2/app/space_meter.py` "re-measures the unsaved document shortly after each edit" (cost not stated) | ✏️ | it re-emitted every bank and recompressed every layout / tileset on the UI thread — 2 s on the user's project, 0.7 s after every paint stroke; now four banks + memoised compression, 0.14 s | cProfile |

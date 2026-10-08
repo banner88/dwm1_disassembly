@@ -8,7 +8,7 @@ sparkles — drawn by you, at the speed you choose.
 1. Rooms tab → open the room → **Select tool (V)**.
 2. Click a cell, or **drag** over several (Shift+click extends). Or just
    **double-click** a cell.
-3. Metatiles section → **Animate** tab → **Use the selected cells**.
+3. Tiles page → **Animate** tab → **Use the selected cells**.
 4. **How it moves**:
    - **Flip through frames** — all frames are shown **side by side**; paint
      straight on any of them (frame 1 is the map as drawn and stays fixed).

@@ -120,7 +120,20 @@ class ShopsTab(QWidget):
 
     # ------------------------------------------------------------ fill
     def _undo_changed(self, _i):
-        self.refresh()
+        # S132: refresh when shown (not on every edit in another tab)
+        from shiboken6 import isValid
+        if not isValid(self):
+            return
+        if self.isVisibleTo(self.window()):   # the current tab
+            self.refresh()
+        else:
+            self._stale = True
+
+    def showEvent(self, ev):
+        if getattr(self, '_stale', False):
+            self._stale = False
+            self.refresh()
+        super().showEvent(ev)
 
     def refresh(self):
         keep = self.current_key()

@@ -7,10 +7,9 @@ only goes there. Both work between your rooms and the game's rooms.
 ## Add and connect a door
 
 1. Rooms tab → **Select (V)** → click a cell.
-2. **+ Door (D)** on the toolbar, or **Add door here** in *Room / screen /
-   selection*. The door appears at once, marked D? (not connected yet).
-3. Double-click it (or **Name / connect…** in the *Object (NPC / door /
-   spot)* section). Give it a **Name** and pick the other end under
+2. **+ Door (D)** on the toolbar, or **Add door here** on the *Object* page.
+   The door appears at once, marked D? (not connected yet).
+3. Double-click it (or **Name / connect…** on the *Object* page). Give it a **Name** and pick the other end under
    *Connected to (two-way)*: one of **Your doors**, or a door of the game
    (*Vanilla doors (the vanilla door will lead here instead)*). Type in the
    search box to find a room or door. The preview shows the other end and the

@@ -71,6 +71,7 @@ SELFTEST_TOOLS = [
     "census_raising.py",         # S130: raising_census.json clean + a quick PyBoy re-run: creation / level-up / learning / breeding / birth model == the game's routines
     "census_dive.py",            # S130: dive_census.json == a re-derived sample (shortest walks, steps between battles; GATE_GENERATION §4.4)
     "build_balance_anchor.py",   # S130: balance_vanilla.json covers every story fight x profile + every gate dive, matches SIM_VERSION / the raising digest, 3 fights + 1 dive re-derived
+    "census_story_state.py",     # S132: story_state_census.json clean (the game's own win tails / arena cascades in PyBoy == editor2/core/story_state.py) + every story point re-derived equal
 ]
 
 PATCH_FILES = [

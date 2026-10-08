@@ -76,17 +76,31 @@ class Inspector(QWidget):
         super().__init__(parent)
         self._building = False
         self._vanilla_view = None
-        outer = QVBoxLayout(self)
-        outer.setContentsMargins(0, 0, 0, 0)
-        scroll = QScrollArea()
-        self.scroll = scroll
-        scroll.setWidgetResizable(True)
-        scroll.setFrameShape(QScrollArea.NoFrame)
-        body = QWidget()
-        self.lay = QVBoxLayout(body)
+        # S132 (user: the right panel "is annoying as fuck to scroll through"):
+        # the inspector no longer stacks everything in one scroll area — it
+        # builds PAGES the Rooms tab puts behind its side rail:
+        #   room_page   — the room, its doors in, state rules, Technical (folded)
+        #   screen_page — the screen & state on the canvas, Technical (folded)
+        #   object_page — the selected cell / marker (the tab adds the NPC, door
+        #                 and spot forms under it)
+        #   palette_row — the room / this-screen palette combos (Palettes page)
+        from editor2.app.collapsible import Section
+        self.scroll = None
+        self.reveal_hook = None            # set by the tab: (widget) -> show its page
+        self.room_page = QWidget()
+        self.lay = QVBoxLayout(self.room_page)
         self.lay.setContentsMargins(6, 6, 6, 6)
-        scroll.setWidget(body)
-        outer.addWidget(scroll)
+        self.screen_page = QWidget()
+        slay = QVBoxLayout(self.screen_page)
+        slay.setContentsMargins(6, 6, 6, 6)
+        self.object_page = QWidget()
+        olay = QVBoxLayout(self.object_page)
+        olay.setContentsMargins(6, 6, 6, 6)
+        self.object_lay = olay
+        self.palette_row = QWidget()
+        pform = QFormLayout(self.palette_row)
+        pform.setContentsMargins(0, 0, 0, 0)
+        pform.setLabelAlignment(Qt.AlignRight)
 
         # ---- Room
         g = QGroupBox('Room')
@@ -126,9 +140,6 @@ class Inspector(QWidget):
         self.r_anim_note = _lbl()
         self.r_anim_note.setStyleSheet('color: #6ad8e6;')
         f.addRow('name', self.r_name)
-        f.addRow('id', self.r_id)
-        f.addRow('mapID', self.r_map)
-        f.addRow('source map', self.r_src)
         trow = QHBoxLayout()
         trow.addWidget(self.r_gfx, 1)
         self.r_gfx_btn = QPushButton('Change…')
@@ -138,9 +149,6 @@ class Inspector(QWidget):
         trow.addWidget(self.r_gfx_btn)
         f.addRow('tileset', trow)
         f.addRow('size', self.r_dims)
-        f.addRow('collision ≥', self.r_thr)
-        f.addRow('palette', self.r_pal)
-        f.addRow('attr base', self.r_attr)
         f.addRow('encounters', self.r_enc)
         f.addRow('music', self.r_music)
         # S102 (user: "I have NO understanding why you built in a drop down list
@@ -150,12 +158,26 @@ class Inspector(QWidget):
         self.r_anim_sum = _lbl()
         self.r_anim_sum.setToolTip('Make tiles move: Metatiles → Animate tab')
         f.addRow('animated tiles', self.r_anim_sum)
-        f.addRow('scripts', self.r_scripts)
         f.addRow(self.r_note)
         self.lay.addWidget(g)
+        # S132: the room palette lives on the Palettes page
+        pform.addRow('room palette', self.r_pal)
+        # S132: engine numbers in a folded box (they are not what you edit)
+        tech = QWidget()
+        tf = QFormLayout(tech)
+        tf.setLabelAlignment(Qt.AlignRight)
+        tf.setContentsMargins(4, 0, 4, 0)
+        tf.addRow('id', self.r_id)
+        tf.addRow('mapID', self.r_map)
+        tf.addRow('source map', self.r_src)
+        tf.addRow('collision ≥', self.r_thr)
+        tf.addRow('attr base', self.r_attr)
+        tf.addRow('scripts', self.r_scripts)
+        self._room_tech = tech
+        self._room_tech_form = tf
 
         # ---- Doors & entrances (S94b redirects, S98 doors)
-        g = QGroupBox('Doors & entrances — how the player gets here')
+        g = QGroupBox('Doors && entrances — how the player gets here')
         v = QVBoxLayout(g)
         self.redirect_list = QListWidget()
         self.redirect_list.setMaximumHeight(110)
@@ -198,9 +220,12 @@ class Inspector(QWidget):
         from editor2.app.rooms.rules_panel import RulesGroup
         self.rules = RulesGroup()
         self.lay.addWidget(self.rules)
+        self.lay.addWidget(Section('Technical (engine numbers)', self._room_tech,
+                                   'rooms_room_tech', expanded=False))
+        self.lay.addStretch(1)
 
         # ---- Screen & state
-        g = QGroupBox('Screen & state')
+        g = QGroupBox('Screen && state')
         f = QFormLayout(g)
         f.setLabelAlignment(Qt.AlignRight)
         self.s_key = _lbl()
@@ -218,14 +243,19 @@ class Inspector(QWidget):
                               'setting; a vanilla entry copies that room\'s palette into '
                               'your project as an editable item.')
         f.addRow('screen', self.s_key)
-        f.addRow('layout', self.s_layout)
-        f.addRow('', self.s_localize)
-        f.addRow('palette here', self.s_pal)
-        f.addRow('attr grid', self.s_attr)
-        f.addRow('step counter', self.s_counter)
         f.addRow('states', self.s_states)
         f.addRow('NPC slots', self.s_npcs)
-        self.lay.addWidget(g)
+        f.addRow('layout', self.s_layout)
+        f.addRow('', self.s_localize)
+        slay.addWidget(g)
+        pform.addRow('this screen / state', self.s_pal)
+        stech = QWidget()
+        sf = QFormLayout(stech)
+        sf.setLabelAlignment(Qt.AlignRight)
+        sf.setContentsMargins(4, 0, 4, 0)
+        sf.addRow('attr grid', self.s_attr)
+        sf.addRow('step counter', self.s_counter)
+        self._screen_tech_form = sf
 
         # ---- Selection
         g = QGroupBox('Selection')
@@ -236,6 +266,7 @@ class Inspector(QWidget):
         self.sel_tree.setHeaderLabels(['field', 'value'])
         self.sel_tree.setRootIsDecorated(False)
         self.sel_tree.setMaximumHeight(170)
+        self.sel_tree.setVisible(False)
         self.sel_note = _lbl('Exit fields become editable in P3.7 (doors).')
         self.sel_note.setStyleSheet('color: #888;')
         self.sel_route = QPushButton('Route this door into a custom room…')
@@ -296,7 +327,7 @@ class Inspector(QWidget):
         v.addWidget(self.sel_add_row)
         v.addWidget(self.sel_del_exit)
         v.addWidget(self.sel_note)
-        self.lay.addWidget(g)
+        olay.addWidget(g)
 
         # ---- NPC (S97, P3.5): the form lives in the tab's own "NPC" section
         # (S97 r2 user request); the tab sets self.npc so a new selection
@@ -304,22 +335,22 @@ class Inspector(QWidget):
         self.npc = None
 
         # ---- Layout
-        g = QGroupBox('Layout')
-        f = QFormLayout(g)
-        f.setLabelAlignment(Qt.AlignRight)
         self.l_id = _lbl()
         self.l_users = _lbl()
-        f.addRow('id', self.l_id)
-        f.addRow('used by', self.l_users)
-        self.lay.addWidget(g)
-        self.lay.addStretch(1)
+        sf.addRow('layout id', self.l_id)
+        sf.addRow('layout used by', self.l_users)
+        slay.addWidget(Section('Technical (engine numbers)', stech, 'rooms_screen_tech',
+                               expanded=False))
+        slay.addStretch(1)
         # S100 r3 (user: "'room/screen/selection' is enormous and needs to be
         # scrolled both down and to the right"): a combo is as wide as its
         # LONGEST item (the animation list reached ~1,400 px) — every combo
         # here gets a short minimum; its open list still shows full texts
-        for c in body.findChildren(QComboBox) + self.gate_group.findChildren(QComboBox):
+        for page in (self.room_page, self.screen_page, self.object_page, self.palette_row):
+            for c in page.findChildren(QComboBox):
+                narrow_combo(c)
+        for c in self.gate_group.findChildren(QComboBox):
             narrow_combo(c)
-        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
     # ------------------------------------------------------------ updates
     def show_vanilla(self, renderer, mid, key):
@@ -526,8 +557,20 @@ class Inspector(QWidget):
         """Project palettes, then every vanilla room's palette as a
         'copy into project' entry (user S95: "use a pre-existing room's
         palette")."""
+        from editor2.core.palette_borrow import palette_users
         for p in doc.palettes:
-            combo.addItem(p['id'], p['id'])
+            # S132: say whose palette it is (a bare id told the user nothing)
+            rooms = []
+            for rid, _k, _s in palette_users(doc, p['id']):
+                try:
+                    nm = doc.room_name(doc.room(rid))
+                except KeyError:
+                    continue
+                if nm not in rooms:
+                    rooms.append(nm)
+            label = p['id'] + (f"  — {', '.join(rooms[:3])}{'…' if len(rooms) > 3 else ''}"
+                               if rooms else '  — not used')
+            combo.addItem(label, p['id'])
         combo.insertSeparator(combo.count())
         for mid, name, _scr in renderer.vanilla_rooms():
             combo.addItem(f'copy from vanilla ${mid:02X} {name}', ('vanilla', mid))
@@ -644,6 +687,7 @@ class Inspector(QWidget):
             return
         cx, cy = cell
         self._sel_cell = cell
+        self.sel_tree.setVisible(True)
         self.sel_add_row.setVisible(bool(editable))
         self.sel_title.setText(f'Cell ({cx},{cy})')
         for name, t in zip(('top-left', 'top-right', 'bottom-left', 'bottom-right'),
@@ -672,7 +716,9 @@ class Inspector(QWidget):
             self.sel_title.setText('Nothing selected — click a cell, an NPC, a door or a '
                                    'spot with the Select tool (V).')
             self.sel_note.setText('')
+            self.sel_tree.setVisible(False)          # S132: no empty table
             return
+        self.sel_tree.setVisible(True)
         if sel['kind'] in ('exit', 'redirect') and self._vanilla_view:
             mid, key = self._vanilla_view
             self._sel_door = {'mapID': mid, 'screen': key,
@@ -716,10 +762,9 @@ class Inspector(QWidget):
             self.portalGateRequested.emit(dict(self._sel_door))
 
     def reveal(self, widget):
-        """Scroll the inspector so `widget` is in view (S97: the NPC form
-        sits below the room groups; selecting an NPC brings it up)."""
-        from PySide6.QtCore import QTimer
-        QTimer.singleShot(0, lambda: self.scroll.ensureWidgetVisible(widget, 0, 0))
+        """Bring `widget` into view (S97; S132: the tab shows its rail page)."""
+        if self.reveal_hook is not None:
+            self.reveal_hook(widget)
 
     def _add_npc_here(self):
         if self._sel_cell is not None:

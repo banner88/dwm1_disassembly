@@ -33,10 +33,14 @@ class CompileError(RuntimeError):
     pass
 
 
-def _emit_all(prj):
+def _emit_all(prj, only_banks=None):
+    """Run the emitters (all, or S132: only those owning a bank in
+    `only_banks` — the space meter needs four banks, not the whole ROM)."""
     warnings = []
     out = {}
     for name, section, target, fn, banks in emitters.REGISTRY:
+        if only_banks is not None and not set(banks) & set(only_banks):
+            continue
         out[target] = fn(prj, warnings)
     return out, warnings
 
@@ -106,7 +110,7 @@ def compile_project(project_path, repo_root):
     return outputs, prj, warnings
 
 
-def measure_banks(data, project_dir, repo_root):
+def measure_banks(data, project_dir, repo_root, banks=None):
     """S96 space meters: {bank: (used, capacity)} for the in-memory project
     `data` (the editor's unsaved document) without writing or assembling
     anything. Returns (usage, errors) — errors = the validation failures
@@ -117,7 +121,7 @@ def measure_banks(data, project_dir, repo_root):
     errors, _w = validators.validate(prj)
     if errors:
         return {}, errors
-    gen, _w = _emit_all(prj)
+    gen, _w = _emit_all(prj, only_banks=banks)
     return validators.bank_usage(gen), []
 
 

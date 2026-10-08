@@ -950,7 +950,16 @@ recipes are pure authoring.
       loader for bank 1, attr bit 3 through the attr emitters and the editor
       (renderer, slot map, import). *Accept:* a custom room drawing 200+
       distinct tiles, PyBoy + SameBoy, battles and menus from it intact.
-- [ ] **P3.4 — Embedded PyBoy preview panel** [G-E] (EDITOR_DESIGN §7
+- [x] **P3.4 — Embedded PyBoy preview panel** [G-E] — **S132: ▶ Play here built, NOT yet
+      user-tested** (user: "Really need a 'play this room' with either flags + monsters
+      imported from a save OR set manually or generated according to thresholds … Then you
+      immediately enter room from editor"): the Rooms tab's ▶ Play here (F5) builds when
+      needed and plays the room from the selected cell with a game state — new game, .sav,
+      a story point of the game / of the project (sliders over the Balance timeline; the
+      story state run by the game's own scripts, `editor2/core/story_state.py`, 39 / 39
+      steps == PyBoy), or by hand — EDITOR_DESIGN §5.1 "As built S132". *Accept:* one
+      click plays the room, ~5 s from the click to walking once the build's start state is
+      cached (the user's project, this workspace; the Mac timing unmeasured). (EDITOR_DESIGN §7
       Tier 2): Build → cached post-boot savestate → warp to the room under
       edit → frames in a Qt widget with input. *Accept:* one click plays
       the room being edited, < 10 s from Build-done to walkable. **S118:** the
@@ -2325,7 +2334,8 @@ recipes are pure authoring.
         doors); room music and shop stock by flag. Banked (own investigation): a battle
         you may lose without going to the hub; using a key item in the field (E9); the
         ending / credits (E5).
-- [ ] **P3.15 — Balance tab** (simulator-as-a-service) — **split S130** (user: "Split sounds
+- [x] **P3.15 — Balance tab** (simulator-as-a-service) — **S132: both parts done (P3.15a /
+      P3.15b built; P3.15b's remaining items banked by the user).** **split S130** (user: "Split sounds
       fine its a big job"). User spec S130: a read-only anchor of the original game's
       difficulty curve for every key fight (all gate encounters, all bosses, all arena
       battles, Starry Night, Monster Grandpa) as a clear UI-visible list to compare custom
@@ -2357,9 +2367,9 @@ recipes are pure authoring.
         profile = an optimised kit per step (`kits.py`) under the planner's orders
         (`planner.py`), best tactic in the arena — the main number (S class 32 / 28 / 38);
         level colours in the tab.
-  - [ ] **P3.15b — Balance follow-ups** — **S131: (1) / (2) / (3) built, NOT yet
-        user-tested; (4) / the planner / kit-search items still open; (5) items BANKED by
-        the user.** S131 (user: "Yes P3.15b"):
+  - [x] **P3.15b — Balance follow-ups** — **S131: (1) / (2) / (3) built, NOT yet
+        user-tested; (4) / the planner / kit-search items BANKED by the user S132 ("so minor
+        I dont care … Move on to next big item"); (5) items BANKED by the user.** S131 (user: "Yes P3.15b"):
         - [x] (1) **breeding costs grinding** — user option B (2026-10-08: "I need to
           capture the total time investment needed. Keep in mind breeding chains get
           deeper and deeper further into the game … the best objective assessment of
@@ -2379,9 +2389,11 @@ recipes are pure authoring.
         - [x] (3) +20 = a max count: randomizer `Pool.slot_chances` / `live_slots` by chance,
           `sweep_ttk` weighs by chance (randomizer output byte-identical).
         - [x] "unmodelled" no longer counts full-HP heals (`balance.count_actions`).
-        - [ ] (4) obedience curves (WLD × tactic → obey %, the S87 model) and TTK sweeps per
-          list as panels.
-        - [ ] the planner looks one action ahead (two-turn skills, summons, dive-long MP
+        - [!] (4) obedience curves (WLD × tactic → obey %, the S87 model) and TTK sweeps per
+          list as panels — **BANKED by the user S132** ("Honestly this seems so minor I dont
+          care. I dont care about a single gate. Move on to next big item"), with the planner
+          items below.
+        - [!] the planner looks one action ahead (two-turn skills, summons, dive-long MP
           plans unvalued); the kit search is small and its skill pool ignores the 25-entry
           learn queue; tactics 0-2 left in place during a PLAN round (+45 bias + drift)
           decoded, not modelled; one kit per step is tuned to the step's wall, so a step's
@@ -2452,6 +2464,15 @@ recipes are pure authoring.
       audit. Open ONLY if the 176 KB free + spill ever runs out. NO
       prior session built or promised this (the expanded thing is SRAM,
       S69).
+- [x] **P3.18 — Rooms tab usability (user S132)** — **built S132, NOT yet user-tested;
+      byte-neutral** (user's list: "Need to be able to borrow palette from any other room
+      without having to recreate it / Why is placing tiles so incredibly laggy / Allow
+      editing tiles by pixel / Really need a 'play this room' … / right panel is annoying
+      as fuck to scroll through" → "sideways tabs going up/down", Draw "both"): the paint
+      lag measured and removed (per cell 14 → 0.9 ms, stroke end 350 → 46 ms, the bank
+      meter 2 s → 0.14 s), the side rail (one page at a time), Borrow palette…, the Draw
+      tab (everywhere / as a new metatile), ▶ Play here (P3.4 above). EDITOR_DESIGN §5.1
+      "As built S132"; help `10_rooms.md`, `16_play_here.md`.
 - [ ] **P3.17 — Packaging**: per-OS bundles with RGBDS v0.6.1 bundled,
       signed macOS `.app`. *Accept:* a fresh Mac with no dev tools opens
       the example project, builds, plays.

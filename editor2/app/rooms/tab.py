@@ -14,6 +14,7 @@ Every edit goes through rooms/commands.py so ⌘Z always works.
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QAction, QActionGroup, QKeySequence, QPixmap
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFormLayout,
+                               QGroupBox,
                                QHBoxLayout, QInputDialog, QLabel, QListWidget,
                                QListWidgetItem, QMenu, QMessageBox, QPushButton,
                                QScrollArea, QSizePolicy, QSplitter, QTabWidget,
@@ -224,6 +225,14 @@ class RoomsTab(QWidget):
                 self.act_add_examine.triggered.connect(
                     lambda: self._add_on_selected(lambda c: self._add_spot(c, 'examine')))
                 self.tools.addAction(self.act_add_examine)
+                # S132: + NPC on the bar too (the "Add NPC here…" button now
+                # sits on the Object page, one click away)
+                self.act_add_npc = QAction('+ NPC (N)', self)
+                self.act_add_npc.setShortcut(QKeySequence('N'))
+                self.act_add_npc.setShortcutContext(Qt.WidgetWithChildrenShortcut)
+                self.act_add_npc.setToolTip('Add an NPC on the selected cell')
+                self.act_add_npc.triggered.connect(lambda: self._add_on_selected(self._add_npc))
+                self.tools.addAction(self.act_add_npc)
         self.tool_actions['select'].setChecked(True)
         for seq, fn in ((',', lambda: self.select_state(self.state_idx - 1)),
                         ('.', lambda: self.select_state(self.state_idx + 1)),
@@ -326,6 +335,29 @@ class RoomsTab(QWidget):
         self.maze_btn.clicked.connect(self._maze_screen)
         sb.addWidget(self.maze_btn)
         sb.addStretch(1)
+        # S132 (user: "Really need a 'play this room' … Then you immediately enter
+        # room from editor"): ▶ Play here = build if needed, then the game from the
+        # selected cell with the game state of the Play dialog (▾)
+        self.play_here_btn = QToolButton()
+        self.play_here_btn.setText('▶ Play here')
+        self.play_here_btn.setPopupMode(QToolButton.MenuButtonPopup)
+        self.play_here_btn.setStyleSheet('QToolButton { font-weight: bold; color: #7fe07f; }')
+        self.play_here_btn.setToolTip(
+            'Play the game in this room from the selected cell (F5) — with the game state '
+            'set in ▾ Game state… (a story point with a team, your save, or by hand). Builds '
+            'first when the project changed.')
+        pm = QMenu(self.play_here_btn)
+        pm.addAction('▶ Play here now (F5)', self._play_here_now)
+        pm.addAction('Game state…', self._play_setup)
+        self.play_here_btn.setMenu(pm)
+        self.play_here_btn.clicked.connect(self._play_here_now)
+        a = QAction(self)
+        a.setShortcut(QKeySequence('F5'))
+        a.setShortcutContext(Qt.WidgetWithChildrenShortcut)
+        a.triggered.connect(self._play_here_now)
+        self.addAction(a)
+        sb.addWidget(self.play_here_btn)
+        sb.addSpacing(6)
         # S99: the animation preview sits on the screen/state row (always
         # visible; the tool bar overflows on narrow windows)
         sb.addWidget(self.play_btn)
@@ -372,15 +404,17 @@ class RoomsTab(QWidget):
         self.status_line.setMinimumWidth(0)
         cv.addWidget(self.status_line)
 
-        # ---------- right: three foldable, resizable sections (S96 user QOL)
+        # ---------- right: ONE page at a time behind sideways tabs (S132; user:
+        # "right panel is annoying as fuck to scroll through" → "sideways tabs
+        # going up/down"). Was: five foldable sections in a splitter (S96-S100).
+        from editor2.app.side_rail import SideRail
         right = QWidget()
-        right.setMinimumWidth(380)
-        right.setMaximumWidth(620)
+        right.setMinimumWidth(400)
+        right.setMaximumWidth(680)
         rv = QVBoxLayout(right)
-        rv.setContentsMargins(4, 4, 4, 4)
-        self.right_split = QSplitter(Qt.Vertical)
-        self.right_split.setChildrenCollapsible(False)
-        rv.addWidget(self.right_split)
+        rv.setContentsMargins(2, 2, 2, 2)
+        self.rail = SideRail('rooms')
+        rv.addWidget(self.rail)
         self._vocab_cache = {}
         self.picker_tabs = QTabWidget()
         # tab 1 — this room's tiles + my metatiles
@@ -444,14 +478,34 @@ class RoomsTab(QWidget):
         ascroll.setWidget(self.animate_tab)
         self.picker_tabs.addTab(ascroll, 'Animate')
         self._anim_scroll = ascroll
+        # tab 5 — Draw (S132, user: "Allow editing tiles by pixel - maybe past the
+        # animate button"): paint a metatile; redraw it everywhere or save it new
+        from editor2.app.rooms.draw_tab import DrawTab
+        self.draw_tab = DrawTab()
+        self.draw_tab.loadCellRequested.connect(self._draw_load_cell)
+        self.draw_tab.loadBrushRequested.connect(self._draw_load_brush)
+        self.draw_tab.blankRequested.connect(self._draw_blank)
+        self.draw_tab.everywhereRequested.connect(self._draw_everywhere)
+        self.draw_tab.newRequested.connect(self._draw_new)
+        self.draw_tab.status.connect(self.status_line.setText)
+        dscroll = QScrollArea()
+        dscroll.setWidgetResizable(True)
+        dscroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        dscroll.setWidget(self.draw_tab)
+        self.picker_tabs.addTab(dscroll, 'Draw')
+        self._draw_scroll = dscroll
         self.picker_tabs.setMinimumHeight(120)
-        self.sec_tiles = Section('Metatiles', self.picker_tabs, 'rooms_metatiles',
-                                 expanded=True, remember=False)
-        self.sec_tiles.setToolTip('click = brush · corner dot: red wall / green walkable')
-        self.right_split.addWidget(self.sec_tiles)
+        self.sec_tiles = self.rail.add_page(
+            'tiles', 'Tiles', self.picker_tabs, scroll=False,
+            tip='Metatiles to paint with (click = brush · corner dot: red wall / green '
+                'walkable), Borrow from other rooms, the Tileset, Animate, Draw')
         palbox = QWidget()
         pl = QVBoxLayout(palbox)
-        pl.setContentsMargins(0, 0, 0, 0)
+        pl.setContentsMargins(6, 6, 6, 6)
+        _pl_head = QLabel('<b>BG palettes</b> — double-click a colour to edit; click a row '
+                          'to paint palette slots (Palettes layer)')
+        _pl_head.setWordWrap(True)
+        pl.addWidget(_pl_head)
         self.palettes = PalettePanel()
         self.palettes.colorEdited.connect(self._color_edited)
         self.palettes.hoverInfo.connect(self._hover)
@@ -472,11 +526,19 @@ class RoomsTab(QWidget):
         prow.addWidget(self.pal_free1)
         prow.addStretch(1)
         pl.addLayout(prow)
-        pl.addStretch(1)
-        self.sec_pal = Section('BG palettes', palbox, 'rooms_palettes',
-                               expanded=False, remember=False)
-        self.sec_pal.setToolTip('double-click a colour to edit')
-        self.right_split.addWidget(self.sec_pal)
+        # S132 (user: "borrow palette from any other room without having to
+        # recreate it"): any room / screen / step / gate theme, whole or by rows
+        self.btn_borrow_pal = QPushButton('Borrow palette from another room…')
+        self.btn_borrow_pal.setToolTip('Take the colours of any room — yours, a game room (any '
+                                       'screen and step), or a gate theme — for this room, this '
+                                       'screen only, or just some rows. Preview first.')
+        self.btn_borrow_pal.clicked.connect(self._borrow_palette)
+        pl.addWidget(self.btn_borrow_pal)
+        self._palbox_layout = pl              # the inspector's palette combos go here
+        self.sec_pal = self.rail.add_page(
+            'palettes', 'Palettes', palbox,
+            tip='The room\'s BG palettes: edit colours, borrow another room\'s, pick the '
+                'palette of the room or of this screen / state')
         self.inspector = Inspector()
         self.inspector.thresholdEdited.connect(self._threshold_edited)
         self.inspector.paletteChosen.connect(self._palette_chosen)
@@ -521,22 +583,12 @@ class RoomsTab(QWidget):
         self.inspector.addGateEntranceRequested.connect(self._add_gate_entrance)   # S115
         self.inspector.addWorldEntranceRequested.connect(self._add_world_entrance)  # S123
         self.inspector.playHereRequested.connect(self._play_here)                  # S120
-        self.sec_insp = Section('Room / screen / selection', self.inspector, 'rooms_inspector',
-                                expanded=False, remember=False)
-        self.right_split.addWidget(self.sec_insp)
-        # S100 r3 (user: "separate the gate stuff from 'room/screen/selection'
-        # with its own arrow button"): the inspector's "Inside gates" group in
-        # its own foldable section, vertical scroll only
-        gscroll = QScrollArea()
-        gscroll.setWidgetResizable(True)
-        gscroll.setFrameShape(QScrollArea.NoFrame)
-        gscroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        gscroll.setWidget(gg)
-        self.sec_gate = Section('Inside gates and worlds', gscroll, 'rooms_gate',
-                                expanded=False)
-        self.right_split.addWidget(self.sec_gate)
-        gg.shownChanged.connect(self.sec_gate.setVisible)
-        self.sec_gate.setVisible(False)
+        # S132: the palette combos (room / this screen) sit on the Palettes page
+        g_pal = QGroupBox('Which palette')
+        gpl = QVBoxLayout(g_pal)
+        gpl.addWidget(self.inspector.palette_row)
+        self._palbox_layout.addWidget(g_pal)
+        self._palbox_layout.addStretch(1)
         # S97 r2: the NPC form is its own foldable section (user request);
         # S98: the section holds whichever OBJECT is selected — NPC, door,
         # one-way exit, examine spot / step trigger
@@ -545,10 +597,10 @@ class RoomsTab(QWidget):
         npcbox = QWidget()
         nl = QVBoxLayout(npcbox)
         nl.setContentsMargins(0, 0, 0, 0)
-        self.npc_hint = QLabel('Nothing selected. Click an NPC, a door (D), an examine spot (X) '
-                               'or a step trigger (T) with the Select tool (V) — or click an '
-                               'empty cell and use the "Add … here" buttons in Room / screen / '
-                               'selection.')
+        nl.addWidget(self.inspector.object_page)
+        self.npc_hint = QLabel('Click an NPC, a door (D), an examine spot (X) or a step trigger '
+                               '(T) with the Select tool (V) to edit it here — or click an '
+                               'empty cell and use the "Add … here" buttons above.')
         self.npc_hint.setWordWrap(True)
         self.npc_hint.setStyleSheet('color: #aaa;')
         nl.addWidget(self.npc_hint)
@@ -566,10 +618,6 @@ class RoomsTab(QWidget):
         self.spot_panel.setVisible(False)
         nl.addWidget(self.spot_panel)
         nl.addStretch(1)
-        nscroll = QScrollArea()
-        nscroll.setWidgetResizable(True)
-        nscroll.setWidget(npcbox)
-        self.npc_scroll = nscroll
         self.inspector.npc = _ObjectPanels(self)
         npc.fieldsEdited.connect(self._npc_fields)
         npc.spriteRequested.connect(self._npc_sprite)
@@ -609,29 +657,27 @@ class RoomsTab(QWidget):
         sp.editTalkRequested.connect(self._npc_edit_talk)
         sp.presenceToggled.connect(self._npc_presence)
         sp.deleteRequested.connect(self._npc_delete)
-        self.sec_npc = Section('Object (NPC / door / spot)', nscroll, 'rooms_npc',
-                               expanded=False, remember=False)
-        self.right_split.addWidget(self.sec_npc)
+        self.sec_npc = self.rail.add_page(
+            'object', 'Object', npcbox,
+            tip='The selected cell, NPC, door, exit or spot — opens by itself when you '
+                'click one on the canvas')
+        self.npc_scroll = self.rail.scroll_area('object')
+        self.sec_insp = self.rail.add_page(
+            'room', 'Room', self.inspector.room_page,
+            tip='The room: name, tileset, size, music, doors that lead here, state rules')
+        self.sec_screen = self.rail.add_page(
+            'screen', 'Screen', self.inspector.screen_page,
+            tip='The screen and state shown on the canvas: its states, NPC slots, layout')
+        # S100 r3: the "Inside gates and worlds" group has its own page; shown
+        # only for rooms it applies to (the group says when)
+        self.sec_gate = self.rail.add_page(
+            'gates', 'Gates', gg,
+            tip='Inside gates and worlds: arrival, stairs, saving, battles, music')
+        gg.shownChanged.connect(self.sec_gate.setVisible)
+        self.sec_gate.setVisible(False)
+        self.inspector.reveal_hook = self._reveal
         self._sel_exit = None           # S98: index of the selected exit row
-        self.right_split.setStretchFactor(0, 3)
-        self.right_split.setStretchFactor(1, 0)
-        self.right_split.setStretchFactor(2, 4)
-        self.right_split.setStretchFactor(3, 3)      # S100 r3: Inside gates
-        self.right_split.setStretchFactor(4, 4)
-        from PySide6.QtCore import QSettings
-        # S100 r3: 5 sections now — a new key, so an old 4-pane state is not
-        # applied to the wrong panes
-        st = QSettings('dwm1_disassembly', 'DWM1Editor').value('ui/rooms_right_split5')
-        if st:
-            self.right_split.restoreState(st)
-        self.right_split.splitterMoved.connect(lambda *_a: QSettings(
-            'dwm1_disassembly', 'DWM1Editor').setValue('ui/rooms_right_split5',
-                                                      self.right_split.saveState()))
-        for sec in (self.sec_tiles, self.sec_pal, self.sec_insp, self.sec_gate, self.sec_npc):
-            sec.toggled.connect(lambda _on: self._relayout_right())
-        self.inspector.gate_group.shownChanged.connect(lambda _on: self._relayout_right())
-        self.pal_sys.toggled.connect(lambda _on: self._relayout_right())
-        self._relayout_right()          # S97 r2: start folded (only Metatiles open)
+        self.rail.restore('tiles')
 
         split = QSplitter()
         split.addWidget(left)
@@ -1171,37 +1217,17 @@ class RoomsTab(QWidget):
         self._show()
 
     def _relayout_right(self):
-        """Folded sections shrink to their header; the palette section takes
-        its natural height; Metatiles and the inspector share the rest in
-        their current ratio (S96 QOL)."""
-        from PySide6.QtCore import QTimer
-        QTimer.singleShot(0, self._do_relayout_right)
+        """S96-S131 sized the right-hand splitter's sections; S132 replaced
+        them with the side rail (one page at a time) — nothing to lay out."""
 
-    def _do_relayout_right(self):
-        sp = self.right_split
-        secs = [self.sec_tiles, self.sec_pal, self.sec_insp, self.sec_gate, self.sec_npc]
-        sizes = sp.sizes()
-        total = sum(sizes) or sp.height()
-        head = self.sec_tiles.button.sizeHint().height() + 6
-        pal_h = (self.palettes.sizeHint().height() + self.pal_sys.sizeHint().height()
-                 + head + 12) if self.sec_pal.is_expanded() else head
-        self.sec_pal.setMinimumHeight(pal_h if self.sec_pal.is_expanded() else 0)
-        # S100 r3: the Inside-gates section (3) is hidden for vanilla rooms
-        shown = [not s_.isHidden() for s_ in secs]
-        hd = [head if shown[i] else 0 for i in range(len(secs))]
-        flexible = (0, 2, 3, 4)
-        flex = [i for i in flexible if shown[i] and secs[i].is_expanded()]
-        rest = max(0, total - pal_h - sum(hd[i] for i in flexible if i not in flex))
-        new = [hd[0], pal_h, hd[2], hd[3], hd[4]]
-        if flex:
-            # a section that was folded (header-sized) opens with an equal
-            # share instead of its old header height (S97 r2)
-            share = rest // len(flex)
-            want = {i: (sizes[i] if sizes[i] > 150 else share) for i in flex}
-            base = sum(max(want[i], 1) for i in flex)
-            for i in flex:
-                new[i] = int(rest * max(want[i], 1) / base)
-        sp.setSizes(new)
+    def _reveal(self, widget):
+        """Show the rail page holding `widget` and scroll it into view."""
+        for key in self.rail.order:
+            page = self.rail.page_widget(key)
+            if page is widget or page.isAncestorOf(widget):
+                self.rail.show_page(key)
+                self.rail.ensure_visible(key, widget)
+                return
 
     def _free1_toggled(self, on):
         room = self.current_room()
@@ -1224,15 +1250,27 @@ class RoomsTab(QWidget):
             self.s, ('Release' if on else 'Protect') + ' tileset vocabulary',
             lambda doc: doc.set_released(tid, on)))
 
-    def _refresh_minimap(self):
+    def _refresh_minimap(self, only=None):
+        """The 4x4 screen thumbnails. S132: `only` = the screen keys to redraw
+        (a paint stroke changes one screen; the others come from the cache)."""
         room = self.current_room()
-        imgs = {}
-        for k in self.s.doc.screen_keys(room):
+        cache = getattr(self, '_mini_cache', None)
+        if only is None or cache is None or cache[0] != room.get('id'):
+            cache = self._mini_cache = (room.get('id'), {})
+            only = None
+        imgs = cache[1]
+        keys = self.s.doc.screen_keys(room)
+        for k in list(imgs):
+            if k not in keys:
+                del imgs[k]
+        for k in keys:
+            if only is not None and k not in only and k in imgs:
+                continue
             try:
                 imgs[k] = self.s.renderer.render_screen(room, k, 0, 1)
             except Exception:
-                pass
-        self.minimap.set_screens(imgs, self.key)
+                imgs.pop(k, None)
+        self.minimap.set_screens(dict(imgs), self.key)
 
     # ------------------------------------------------------------ events
     def _on_structure(self):
@@ -1248,9 +1286,33 @@ class RoomsTab(QWidget):
             self._show()
 
     def _on_layout(self, lid):
+        """A layout grid changed (a paint stroke emits it for the tiles and the
+        attr grid). S132: coalesced into ONE side-panel refresh after the canvas
+        has repainted, and only the screens drawing that layout are re-rendered."""
+        if not self.room_id:
+            return
+        self._pending_lids = getattr(self, '_pending_lids', set()) | {lid}
+        if not getattr(self, '_layout_timer', None):
+            from PySide6.QtCore import QTimer
+            self._layout_timer = QTimer(self)
+            self._layout_timer.setSingleShot(True)
+            self._layout_timer.setInterval(0)
+            self._layout_timer.timeout.connect(self._layout_settled)
+        self._layout_timer.start()
+
+    def _layout_settled(self):
+        lids, self._pending_lids = getattr(self, '_pending_lids', set()), set()
         if self.room_id:
-            self._refresh_minimap()
             room = self.current_room()
+            if room is None:
+                return
+            keys = set()
+            for k in self.s.doc.screen_keys(room):
+                for n in range(len(self.s.doc.states(room, k))):
+                    ref = self.s.doc.state_layout_ref(room, k, n) or {}
+                    if ref.get('id') in lids:
+                        keys.add(k)
+            self._refresh_minimap(only=keys | {self.key})
             self.picker.set_lists(self._harvest(), self.s.doc.metatiles(self.s.doc.tileset_key(room)))
             self._refresh_slots(room)
             if self.canvas.brush:
@@ -1294,6 +1356,9 @@ class RoomsTab(QWidget):
 
     def _tool_changed(self, name):
         self.tool_actions[name].setChecked(True)
+        if name in ('paint', 'rect', 'fill', 'pick'):
+            # S132: painting needs the brushes — open the Tiles page
+            self.rail.show_page('tiles')
         b = self.layer_buttons.get('walk')
         if b is not None and b.isChecked() != (name == 'walk'):
             b.blockSignals(True)
@@ -2246,42 +2311,161 @@ class RoomsTab(QWidget):
             (self._after_spot_edit if spot else self._after_npc_edit)(idx)
 
     def _play_here(self, cell):
-        """S120 (ROADMAP P3.4): the game from the selected cell of this room, in the
-        Playback window (the last build; a new game, or the save picked on the Cutscenes
-        tab)."""
-        import os
-        from editor2.core import cutscenes as CS
-        from editor2.core import playback as PB
+        """Inspector More ▾ → Play the game here: the S132 flow from that cell."""
+        self._play_here_now(cell=cell)
+
+    # ------------------------------------------- Play here (S132, P3.4)
+    def _play_room(self):
         room = self.current_room()
         mid = val(room['mapID']) if room is not None else self.vanilla_mid
+        name = (self.s.doc.room_name(room) if room is not None else
+                self.s.renderer.vanilla_name(mid) if mid is not None else '')
+        return room, mid, f'${mid:02X} {name}' if mid is not None else ''
+
+    def _play_cell(self, cell=None):
+        """The selected cell when it is walkable, else the walkable cell nearest
+        the screen's middle."""
+        cv = self.canvas
+        if cv.tiles is None:
+            return (5, 4)
+        cand = cell or cv.selected_cell
+        if cand is not None and cv.cell_walkable(*cand):
+            return tuple(cand)
+        best = None
+        for cy in range(8):
+            for cx in range(10):
+                if cv.cell_walkable(cx, cy):
+                    d = abs(cx - 4.5) + abs(cy - 3.5)
+                    if best is None or d < best[0]:
+                        best = (d, (cx, cy))
+        return best[1] if best else (cand or (5, 4))
+
+    def _play_setup(self):
+        """▾ Game state…: the Play dialog; OK plays."""
+        from editor2.app.rooms.play_dialog import PlayDialog, load_setup, save_setup
+        room, mid, label = self._play_room()
         if mid is None:
             return
-        rom = getattr(self.s, 'last_rom', None)
-        if not (rom and os.path.exists(rom)):
-            QMessageBox.information(self, 'Play', 'Build the project first (⌘B / Ctrl+B) — '
-                                    'the room plays from your build.')
+        cell = self._play_cell()
+        dlg = PlayDialog(self.s, label, f'screen {self.key}, cell ({cell[0]},{cell[1]})',
+                         load_setup(self.s.project_dir), REPO, self)
+        self._play_dlg = dlg                         # tests drive it
+        if dlg.exec() != QDialog.Accepted:
             return
+        save_setup(self.s.project_dir, dlg.result_setup)
+        self._play_go(dlg.result_setup, cell)
+
+    def _play_here_now(self, _checked=False, cell=None):
+        from editor2.app.rooms.play_dialog import load_setup
+        setup = load_setup(self.s.project_dir)
+        if setup is None:                            # the first time: ask
+            self._play_setup()
+            return
+        self._play_go(setup, self._play_cell(cell))
+
+    def _needs_build(self):
+        import os
+        rom = getattr(self.s, 'last_rom', None)
+        if not rom or not os.path.exists(rom) or self.s.dirty:
+            return True
+        pj = os.path.join(self.s.project_dir, 'project.json')
+        try:
+            return os.path.getmtime(pj) > os.path.getmtime(rom)
+        except OSError:
+            return True
+
+    def _play_go(self, setup, cell):
+        """Build when needed, work out the game state (a background thread),
+        then the Playback window in this room."""
+        from editor2.core import playback as PB
         ok, why = PB.available()
         if not ok:
             QMessageBox.information(self, 'Play', why)
             return
-        if self.s.dirty:
-            self._say_status('Playing the LAST build — build again to see your newest edits.')
+        room, mid, _label = self._play_room()
+        if mid is None:
+            return
+        self._play_pending = (dict(setup), tuple(cell), self.key)
+        if self._needs_build():
+            win = self.window()
+            if not hasattr(win, 'build'):
+                QMessageBox.information(self, 'Play', 'Build the project first (⌘B / Ctrl+B).')
+                return
+            self._say_status('Play here: building the project first…')
+            win.build()
+            w = getattr(win, 'worker', None)
+            if w is None or not w.isRunning():
+                return                               # save refused / no build started
+            w.finished_build.connect(self._play_built)
+            return
+        self._play_resolve()
+
+    def _play_built(self, res):
+        if not getattr(res, 'ok', False):
+            self._say_status('Play here: the build failed — see the Build log')
+            return
+        self._play_resolve()
+
+    def _play_resolve(self):
+        from editor2.app.rooms.play_dialog import Resolver
+        from editor2.core.project import Project
+        from editor2.core import balance as B
+        setup, _cell, _key = self._play_pending
+        cache = None
+        import copy
+        # a COPY (Project() lowers quests / cutscenes into the dict it is given);
+        # also read for the Milly hook
+        prj = Project(copy.deepcopy(self.s.doc.data), self.s.project_dir)
+        prj.repo_root = REPO
+        if setup.get('source') in ('project', 'manual'):
+            try:
+                cache = B.FightCache(B.project_cache_path(prj))
+            except Exception:                                    # noqa: BLE001
+                cache = None
+        self._say_status('Play here: setting up the game state…')
+        self._play_token = getattr(self, '_play_token', 0) + 1
+        th = Resolver(self._play_token, setup, prj, REPO, cache=cache, parent=self)
+        th.done.connect(self._play_resolved)
+        self._play_thread = th
+        th.start()
+
+    def _play_resolved(self, token, res):
+        import os
+        from editor2.core import cutscenes as CS
         from editor2.app.cutscenes_tab import PlaybackWindow
-        sav = self.s.settings.value('cutscenes/sav') or None
-        sav = sav if sav and os.path.exists(sav) else None
-        cache = os.path.join(self.s.project_dir, 'build', 'playback')
+        if token != getattr(self, '_play_token', None):
+            return
+        if isinstance(res, Exception):
+            QMessageBox.warning(self, 'Play here', f'Could not set up the game state:\n{res}')
+            return
+        setup, cell, key = self._play_pending
+        room, mid, label = self._play_room()
+        rom = getattr(self.s, 'last_rom', None)
+        if not (rom and os.path.exists(rom)):
+            QMessageBox.information(self, 'Play', 'There is no build to play.')
+            return
+        rom = os.path.abspath(rom)                   # the game runs in its own process
+        cache = os.path.abspath(os.path.join(self.s.project_dir, 'build', 'playback'))
         os.makedirs(cache, exist_ok=True)
-        rec = CS.room_recipe(mid, int(self.key), int(cell[0]), int(cell[1]))
-        title = f"${mid:02X} {self.s.doc.room_name(room) if room is not None else ''}".strip()
+        sav = os.path.abspath(res['base_sav']) if res['base_sav'] else None
+        rec = CS.room_recipe(mid, int(key), int(cell[0]), int(cell[1]), facing=0)
+        rec = rec._replace(flags_set=tuple(res['flags_set']), flags_clear=tuple(res['flags_clear']),
+                           ram=dict(res['ram']),
+                           notes=tuple(rec.notes) + (res['label'],) + tuple(res['notes']))
+        extra = {'repoke': False}
+        if res['records']:
+            extra['records'] = [r.hex() for r in res['records']]
         old = getattr(self, 'playback', None)
         if old is not None:
             try:
                 old.close()
             except RuntimeError:
                 pass
-        self.playback = PlaybackWindow(self, rom, sav, cache, [(rec, CS.RoomOnly, title)], title)
+        title = f'{label} — {res["label"]}'
+        self.playback = PlaybackWindow(self, rom, sav, cache,
+                                       [(rec, CS.RoomOnly, title)], title, start_extra=extra)
         self.playback.show()
+        self._say_status(f'Play here: {res["label"]}')
 
     def _say_status(self, msg):
         try:
@@ -3307,6 +3491,165 @@ class RoomsTab(QWidget):
         else:
             self.s.undo.push(C.SetRoomField(self.s, self.room_id, ('render', 'palette'), pid,
                                             'Set room palette'))
+        self._show()
+
+    # ------------------------------------------------ Draw tab (S132)
+    def _draw_context(self):
+        """(room, problem) — the Draw tab works on your rooms."""
+        room = self.current_room()
+        if room is None:
+            return None, ('This is a game room (read-only) — Make editable to draw on its '
+                          'tiles.')
+        if self.canvas.gfx is None or self.canvas.tiles is None:
+            return None, 'Nothing on the canvas.'
+        return room, None
+
+    def _draw_show(self):
+        self.rail.show_page('tiles')
+        self.picker_tabs.setCurrentWidget(self._draw_scroll)
+
+    def _draw_open(self, mt, desc, walkable, selection_ok=False):
+        from editor2.core import tile_draw as TD
+        room, why = self._draw_context()
+        self._draw_show()
+        if room is None:
+            self.status_line.setText('Draw: ' + why)
+            return
+        cv = self.canvas
+        if mt.get('blank'):
+            px = [[0] * 64 for _ in range(4)]
+        else:
+            px = TD.metatile_pixels(cv.gfx.sheet, mt, self.s.renderer.common_blocks())
+        pals = [cv.pals[p] for p in TD.quarter_pals(mt)]
+        rid, thr, own = room['id'], cv.gfx.threshold, bytes(cv.gfx.sheet[:2048])
+        old = [list(q) for q in px]
+
+        def reporter(new, walk, mt=dict(mt)):
+            return TD.report(self.s.doc, self.s.doc.room(rid), mt, old, new, thr, walk,
+                             own_sheet=own)
+        self.draw_tab.reporter = reporter
+        # the cells selected when the drawing was loaded ("put it on the selected
+        # cells" still works after an apply re-drew the canvas)
+        sel = cv.selection()
+        if sel is not None and cv.lid is not None:
+            self._draw_cells = (self.room_id, self.key, self.state_idx, cv.lid, sel)
+        self.draw_tab.load(mt, px, pals, desc, walkable=walkable, selection_ok=selection_ok)
+        self.draw_tab.place.model().item(2).setEnabled(not mt.get('blank'))
+
+    def _draw_load_cell(self):
+        cell = self.canvas.selected_cell
+        if cell is None or self.canvas.tiles is None:
+            self.status_line.setText('Draw: select a cell first (Select tool, click a cell).')
+            return
+        mt = self.canvas.cell_metatile(*cell)
+        self._draw_open(mt, f'cell ({cell[0]},{cell[1]}) of screen {self.key}',
+                        self.canvas.cell_walkable(*cell),
+                        selection_ok=self.canvas.is_editable())
+
+    def _draw_load_brush(self):
+        mt = self.canvas.brush
+        if mt is None:
+            self.status_line.setText('Draw: pick a brush first (click a metatile).')
+            return
+        thr = self.canvas.gfx.threshold if self.canvas.gfx else 0
+        self._draw_open(mt, f"the brush ({mt.get('name') or 'metatile'})",
+                        mt['tiles'][3] >= thr, selection_ok=self.canvas.is_editable())
+
+    def _draw_blank(self, pal):
+        thr = self.canvas.gfx.threshold if self.canvas.gfx else 0
+        self._draw_open({'tiles': [0, 0, 0, 0], 'pal': int(pal), 'blank': True,
+                         'name': 'blank'}, f'a blank tile in colours {pal}', True,
+                        selection_ok=self.canvas.is_editable())
+
+    def _draw_everywhere(self, req):
+        from editor2.core import tile_draw as TD
+        room, why = self._draw_context()
+        if room is None:
+            QMessageBox.information(self, 'Draw', why)
+            return
+        rid, thr = room['id'], self.canvas.gfx.threshold
+        own = bytes(self.canvas.gfx.sheet[:2048])
+        cmd = C.SnapshotCommand(
+            self.s, 'Draw: redraw tiles everywhere',
+            lambda doc: TD.apply_everywhere(doc, rid, req['mt'], req['old'], req['new'], thr,
+                                            own_sheet=own))
+        self.s.undo.push(cmd)
+        if cmd.error is not None:
+            QMessageBox.warning(self, 'Draw', str(cmd.error))
+            return
+        self.status_line.setText('Draw: ' + str(cmd.result))
+        self._show()
+        mt = dict(req['mt'])
+        self._draw_open(mt, 'redrawn tile', mt['tiles'][3] >= thr,
+                        selection_ok=self.canvas.is_editable())
+
+    def _draw_new(self, req):
+        from editor2.core import tile_draw as TD
+        room, why = self._draw_context()
+        if room is None:
+            QMessageBox.information(self, 'Draw', why)
+            return
+        place = req['place']
+        if place == 'room' and req['mt'].get('blank'):
+            place = None
+        if place == 'selection':
+            rect = self.canvas.selection()
+            lid = self.canvas.lid
+            kept = getattr(self, '_draw_cells', None)
+            if (rect is None or lid is None) and kept and kept[:3] == (
+                    self.room_id, self.key, self.state_idx):
+                lid, rect = kept[3], kept[4]
+            if rect is None or lid is None:
+                QMessageBox.information(self, 'Draw', 'Select the cells to put it on first '
+                                        '(Select tool: click a cell or drag over several).')
+                return
+            c0, r0, c1, r1 = rect
+            place = [(lid, cx, cy) for cy in range(r0, r1 + 1) for cx in range(c0, c1 + 1)]
+        rid, thr = room['id'], self.canvas.gfx.threshold
+        own = bytes(self.canvas.gfx.sheet[:2048])
+        mt = {k: v for k, v in req['mt'].items() if k != 'blank'}
+        cmd = C.SnapshotCommand(
+            self.s, f"Draw: new metatile '{req['name']}'",
+            lambda doc: TD.apply_new(doc, rid, mt, req['new'], thr, req['walkable'],
+                                     own_sheet=own, pal=req['pal'], name=req['name'],
+                                     place=place))
+        self.s.undo.push(cmd)
+        if cmd.error is not None:
+            QMessageBox.warning(self, 'Draw', str(cmd.error))
+            return
+        new, msg = cmd.result
+        self.status_line.setText('Draw: ' + msg)
+        self._show()
+        self._brush_selected(new)
+        self._draw_open(new, f"new metatile '{new['name']}'", req['walkable'],
+                        selection_ok=self.canvas.is_editable())
+
+    def _borrow_palette(self, _checked=False, preset=None):
+        """S132: Palettes page → Borrow palette… (palette_borrow_dialog)."""
+        from editor2.app.rooms.palette_borrow_dialog import BorrowPaletteDialog
+        from editor2.core import palette_borrow as PB
+        room = self.current_room()
+        if room is None:
+            if self.vanilla_mid is not None:
+                self._edit_requested()
+            return
+        if self.canvas.tiles is None or self.canvas.gfx is None:
+            return
+        dlg = BorrowPaletteDialog(self.s, room, self.key, self.state_idx, self.canvas, self)
+        self._borrow_dlg = dlg                    # tests drive it
+        if preset:
+            dlg.select_source(*preset)
+        if dlg.exec() != QDialog.Accepted:
+            return
+        v = dlg.values()
+        rid, key, st = room['id'], self.key, self.state_idx
+        cmd = C.SnapshotCommand(self.s, 'Borrow palette',
+                                lambda doc: PB.apply_borrow(doc, rid, key, st, **v))
+        self.s.undo.push(cmd)
+        if cmd.error is not None:
+            QMessageBox.warning(self, 'Borrow palette', str(cmd.error))
+        else:
+            self.status_line.setText('Borrowed: ' + (cmd.result[1] if cmd.result else ''))
         self._show()
 
     def _state_palette_chosen(self, pid):

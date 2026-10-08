@@ -1091,6 +1091,15 @@ class RoomCanvas(QGraphicsView):
         cx, cy = cell
         r0, c0 = cy * 2, cx * 2
         tl, tr, bl, br = mt['tiles']
+        # S132: a mouse move inside a cell that already shows the brush changes
+        # nothing — skip the re-render (it ran on every mouse event: the lag)
+        pals = metatile_pals(mt)
+        if (self.tiles[r0][c0] == tl and self.tiles[r0][c0 + 1] == tr
+                and self.tiles[r0 + 1][c0] == bl and self.tiles[r0 + 1][c0 + 1] == br
+                and (pals is None or self.attr is None or not self.attr_lid
+                     or [self.attr[r0][c0], self.attr[r0][c0 + 1], self.attr[r0 + 1][c0],
+                         self.attr[r0 + 1][c0 + 1]] == list(pals))):
+            return
         for (r, c), v in (((r0, c0), tl), ((r0, c0 + 1), tr),
                           ((r0 + 1, c0), bl), ((r0 + 1, c0 + 1), br)):
             self._stroke['ot'].setdefault((r, c), self.tiles[r][c])

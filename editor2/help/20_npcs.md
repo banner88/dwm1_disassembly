@@ -1,6 +1,6 @@
 # NPCs, monsters, spots and doors
 
-Select a cell (Select tool, V), then in *Room / screen / selection*:
+Select a cell (Select tool, V), then on the **Object** page (or **+ NPC (N)** on the toolbar):
 
 - **Add NPC here…** — pick a sprite. The **People & objects** tab lists the
   vanilla NPC sprites; the **Monsters** tab lists every monster, drawn like
@@ -48,7 +48,8 @@ or scroll back. To make an NPC leave **at once** (a beaten boss, a guard that
 steps aside), end its conversation with a **Vanish** step (see
 *Conversations*).
 
-**Play the game here** (S120): select a cell, More ▾ → **▶ Play the game here**
+**Play the game here** (S120; S132: **▶ Play here** on the screen / state row — see
+*Play here*): select a cell, More ▾ → **▶ Play the game here**
 — your last build starts in this room on that cell, in the Playback window (a
 new game, or the save picked on the Cutscenes tab). Build first.
 

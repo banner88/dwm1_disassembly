@@ -86,7 +86,18 @@ class DialogueTab(QWidget):
         # session's undo stack after Qt deleted its widgets (S107 lesson)
         from shiboken6 import isValid
         if isValid(self) and isValid(self.monster):
+            # S132: a hidden tab refreshes when it is shown (painting in the
+            # Rooms tab refreshed this list on every stroke)
+            if self.isVisibleTo(self.window()):   # the current tab
+                self.fill_monsters()
+            else:
+                self._stale = True
+
+    def showEvent(self, ev):
+        if getattr(self, '_stale', False):
+            self._stale = False
             self.fill_monsters()
+        super().showEvent(ev)
 
     # ------------------------------------------------------------ monsters
     def _names(self):

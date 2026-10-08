@@ -285,8 +285,10 @@ class PlaybackWindow(QDialog):
             Qt.Key_Return: 'start', Qt.Key_Enter: 'start', Qt.Key_Backspace: 'select'}
 
     def __init__(self, parent, rom_path, sav, cache_dir, items, title, sound=True,
-                 skip_to=None):
+                 skip_to=None, start_extra=None):
         super().__init__(parent)
+        # S132 (Play here): extra 'start' fields — party records (hex), repoke
+        self.start_extra = dict(start_extra or {})
         self.skip_to = skip_to                 # play fast up to this step of the 1st scene
         self.skipping = False
         self.setWindowTitle(f'Playback — {title}')
@@ -426,10 +428,11 @@ class PlaybackWindow(QDialog):
         recipe, scene, label = self.items[i]
         self._say(f'— {label}')
         try:
-            head, _p = self.eng.call({'cmd': 'start', 'recipe': recipe_dict(recipe),
-                                      'party': any(st.code in (0x05, 0x5A, 0x5B, 0x20)
-                                                   for st in scene.steps),
-                                      'questions': questions_of(recipe, scene)}, timeout=60)
+            head, _p = self.eng.call(dict({'cmd': 'start', 'recipe': recipe_dict(recipe),
+                                           'party': any(st.code in (0x05, 0x5A, 0x5B, 0x20)
+                                                        for st in scene.steps),
+                                           'questions': questions_of(recipe, scene)},
+                                          **self.start_extra), timeout=60)
             for line in head.get('log', []):
                 self._say(line)
         except GameHung as ex:

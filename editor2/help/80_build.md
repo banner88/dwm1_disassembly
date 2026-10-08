@@ -19,5 +19,7 @@ portal (the World tab's *Still needs* list and the build warnings say what a
 world lacks: a portal, a way out, something that clears it, a room no door
 reaches, a room with battles but no list).
 
-More ▾ → **▶ Play the game here** (any selected cell) starts your last build
+**▶ Play here** (Rooms tab, F5 — the topic *Play here*) builds when needed and starts the
+game in the room with a game state of your choice; More ▾ → **▶ Play the game here** (any
+selected cell) does the same from that cell — it starts your build
 right there — see *NPCs*.

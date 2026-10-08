@@ -74,6 +74,6 @@ A room still on a game room's tileset gets its own copy first. If the slots
 run out, nothing changes. Every import, and every grid, mask, wall or key
 colour edit, can be undone.
 
-**Import into this tileset** is a different thing: Metatiles → **Borrow**
+**Import into this tileset** is a different thing: Tiles page → **Borrow**
 tab, a room on another tileset → click a metatile (or right-click → *Import
 into this tileset*) copies that game tile into your room's tileset.

@@ -14,7 +14,7 @@ How a room is drawn:
   the wall side; the other three do not count. (Select a cell: *Walkability
   is decided by the bottom-right subtile*.)
 
-## The Metatiles section
+## The Tiles page
 
 **This room** tab — click a metatile to make it the brush (the canvas
 switches to Paint):
@@ -89,7 +89,7 @@ project and blank tilesets. Your screens keep their tile numbers: they draw
 with the new sheet until repainted. Undo restores the old one. **New** room
 offers **start with a BLANK tileset (for imported PNG art)** too.
 
-## BG palettes
+## BG palettes (the Palettes page)
 
 Rows 0-3, four colours each, are the room's palettes; **show system 4-7**
 also shows the shared menu / monster palettes (read-only). A cell uses the

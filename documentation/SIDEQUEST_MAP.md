@@ -437,6 +437,13 @@ $D939=2 $D93B=3 $D93D=3 $D945/6=1 $D947=2 $D963/4=1. Registration/announce
 flags $0059/$005A/$007D/$00FD are set by scr0/scr6 (part of the "arena
 internal state" 27-flag group in §6, still only partially characterized).
 
+**S132 — measured:** this table is the LOBBY script's half: executed by
+`editor2/core/story_state.py` (Arena Lobby script 0 on screen 1, `$D9CD` = $FE, `$D9CE` =
+the class) it gives exactly these writes, and PyBoy agrees for every class
+(`tools/census_story_state.py`); the lobby script then warps to the Castle, whose own
+cascade (`$D92B` = 0 → Castle script 0) plays next and writes more (e.g. after G: `$003E`,
+`$D92B` 3).
+
 **AUTHORING SPEC (for project.json later):** an arena bracket = 90+3
 enemy-stats rows (224-304 + 481-483): edit species/level/stats/skills
 per row — position in the block IS the (class, match, slot) address; changing

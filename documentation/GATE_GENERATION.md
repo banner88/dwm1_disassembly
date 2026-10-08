@@ -927,7 +927,12 @@ vanilla boss win tails) → `$0C:$47E0` = the King's speech chain on
 **`$D9E3`** — one speech per gate boss ($30 Healer, $31 Dragon, … $4E
 DeathMore, $C7 Sidoh, $10 Copycat; `conversation.KING_SPEECHES`); every
 speech ends with `$D92B := 3` (5 for post-game codes); an unknown code falls to
-the priest path; 1-3 / 5 = no event. **S125 — the hub:** those four engine sends now
+the priest path; 1-3 / 5 = no event. **S132 (decode + PyBoy):** the boss room's ENTRY
+script writes `$D92B := 6` on arrival (Gate of Beginning: script 0 pos 0 — so a WarpWing
+out of an unbeaten gate gets the priest's heal); the WIN branch writes `$D9E3` (the
+speech) and then `$D92B := 7` right before the win tail (script 1 pos 69 / 74 → the tail
+at `$0E:$4EF6`). `editor2/core/story_state.py` runs these tails + the Castle's speech
+(`tools/census_story_state.py`: every gate == PyBoy). **S125 — the hub:** those four engine sends now
 call bank $71 entry 9 `HubWarp` (same size); a project's `custom.hub` can send the
 player to one of its rooms instead, the Castle path above stays byte for byte when the
 hub is the Castle or unset (PROJECT_COMPILER §2.38). **S124 correction** (ROM bytes `$0C:$49F2`

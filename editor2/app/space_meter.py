@@ -40,7 +40,7 @@ class SpaceMeter(QWidget):
             self.bars[bank] = (b, what)
         self.timer = QTimer(self)
         self.timer.setSingleShot(True)
-        self.timer.setInterval(700)
+        self.timer.setInterval(900)    # S132: after the edits settle (0.14 s now, was 2 s)
         self.timer.timeout.connect(self.measure)
         # bound methods (not lambdas): Qt drops the connections when this
         # widget is deleted (a new project replaces the meter)
@@ -55,7 +55,8 @@ class SpaceMeter(QWidget):
 
     def measure(self):
         try:
-            usage, errors = measure_banks(self.s.doc.data, self.s.project_dir, self.repo)
+            usage, errors = measure_banks(self.s.doc.data, self.s.project_dir, self.repo,
+                                          banks=tuple(self.bars))   # S132: only these
         except Exception as e:                       # never break the editor
             usage, errors = {}, [str(e)]
         if errors:

@@ -1,5 +1,110 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-08 (Session 130 — **ROADMAP P3.15 SPLIT; P3.15a BUILT: THE SIMULATOR LEARNS
+> EVERY BATTLE SKILL, THE RAISING MODEL (== THE GAME), BATTLES PER GATE FLOOR, AND THE BALANCE TAB —
+> HOW HARD EVERY KEY FIGHT IS, THE ORIGINAL GAME (READ-ONLY ANCHOR) VS THE PROJECT** (user: "Next
+> unchecked item in ROADMAP" → "inference from vanilla game in terms of battle curves … a clear
+> UI-visible list so I can compare … The vanilla game stuff should be read-only … how much changing a
+> boss skillset affects difficulty … Bonus points if I can vary the team or 'roll' a team … Double
+> bonus if you can do that for vanilla … view the team … import from a .sav"; "Levelling monsters in
+> this game is very different if you have e.g. 3 random crap skills vs 8 carefully curated skills";
+> "I personally plan on unlocking breeding ONE ARENA STEP/GATE PAIR EARLIER"; "gate dive measure is
+> excellent"; "gates and gate order and their bosses + arena + starry night tournament + monster
+> grandpa fight"; "Split sounds fine its a big job"; "Can you do it this session?"). **Built S130,
+> NOT yet user-tested; byte-neutral (no ROM bytes changed — no test ROM).**
+> **Simulator (BATTLE_SKILL_SYSTEM §15.11):** `battle.py` registries (ACTION_HANDLERS, CORE_OVERRIDES,
+> POST_CALC, ACTOR / PHASE9 / VICTIM / INTERCEPT / POST_HIT / POST_VICTIM / POST_SWEEP / KO / DISPEL
+> hooks, COMMIT_TARGETS / ROLL, TARGET_RESOLVERS, CRIT_STAGE …) + ten family modules
+> `simulator/skillfx/` built in parallel (frozen base, 3-way merge); 146 handlers; each family
+> measured in PyBoy on the user's save (u22 + `field.state`) and validated: F1 52,970 · F2/F3
+> 10,049 · F4 100,051 · F5 9,573 · F6 19,542 · F7 7,667 · F8 19,817 · F9 9,139 · F10 1,335 + rules
+> 332 — all 0 mismatches; every older validator still 0 (s85 6,614, s86 802, s89 426, s88 2,824 /
+> 3,083 / 3,422, damage 13, order 143, AI 26/26, rules 240, obedience 889, pacing KS 0.042 / 0.038).
+> Findings: per-species crit tables (`$53:$4025` party / link, `$4102` enemy); the `$DB42` setter =
+> the bank $58 command-phase tension roll (party only); Massacre hits allies; Kamikaze not
+> boss-gated; RESTOREMP byte-compare bug; the patched build's `$DB86` = enemy 2's joinability (KEY_
+> LESSONS); the driver now spends MP, applies the spell ladder, heals heal, Cover / Guardian wired.
+> **Raising (MONSTER_DATA "Raising a monster (S130)"):** `simulator/raising.py` — creation, level-up
+> gains / learning / apply (+ past max level, bonus HP/ATK), breeding (stats, AI with the vanilla
+> carry bug, resistances, learn-queue inheritance), the birth finalizer (bank $16 entry 4 =
+> `BreedBirthFinalize`, ROADMAP P3.12 residual (a) closed), pedigree k; `tools/census_raising.py`
+> stub-calls the real routines: creation 962, level-ups 5,073, breeds 400 + 400, births 400 — 0
+> mismatches on the original ROM, the u22 build and the example. ROADMAP P3.10 residual (e)
+> corrected: a joining monster brings its enemy row's 4 skills.
+> **Dives (GATE_GENERATION §4.4):** `tools/census_dive.py` → `extracted/dive_census.json`,
+> `editor2/core/dive.py`: 1,000 floors per maze size, the shortest walk (14.7-29.3 steps), 0.2-0.7
+> battles per floor (lower bound) / every reachable cell (upper bound); PyBoy joypad walk 12/12
+> floors. `encounters.steps_between` was one step short — fixed (the Encounters tab's estimate +1).
+> **Balance service (PROJECT_COMPILER §2.43):** `editor2/core/balance.py` — the story timeline (41
+> steps in the original order, a project fills the positions; new gates / rooms as extra fights),
+> rosters, rolled teams (same exp, curve 11; casual / strong; breeding after a step — project
+> setting `meta.balance.breeding_opens_after`), `evaluate` (+ team level reached, enemy HP left,
+> unmodelled share), l90 / l50 searched from below, dives at two walk bounds, a per-fight cache
+> (`<project>/build/balance_cache.json`, fingerprints incl. `raising_digest`, `SIM_VERSION`
+> 'S130.6'), what-if enemy overrides, `savefile.py` (.sav party, == PyBoy WRAM). **The anchor**
+> `tools/build_balance_anchor.py` → `extracted/balance_vanilla.json` (180 fights × 2 profiles + 31
+> gate dives, 38 min on 2 cores). Strong l90 reads e.g.: Beginning boss 2, Strength (StoneMan) 16,
+> Joy 30, Labyrinth 30, Library 46, Reflection 49, Ambition 81; casual is higher (Strength 24, Joy
+> 81) and from Temptation on often "99+"; from the S class on most fights are "99+" for
+> both (shown with the win % at 99 and the enemies' HP left) — rolled teams are bred shallower than
+> real endgame teams (ROADMAP P3.15b (1)). An agent's read of the first anchor caught all-Healer
+> "strong" teams (heals over-valued) — fixed before the final build (KEY_LESSONS).
+> **Editor:** the Balance tab (`editor2/app/balance_tab.py`; EDITOR_DESIGN §5.9 "As built S130";
+> help `72_balance.md`; `EDITOR_REVISION` 'S130'): Story curve (original vs project, change colours,
+> dives, extra fights "lands like", chart), Team (roll / reroll / .sav import / pick member), Fight
+> (groups, evaluate the team, level needed, what-if per enemy, As is / What-if / Change); all in
+> background threads with Cancel. `room_battles` also reads the scripts a room names (the user's
+> u22 `sboss` → `sboss_conv` Ogre). PySide6-Essentials installed in the workspace for test_app.
+> **Annotation (Iron Rule 6, both trees, zero bytes):** banks $06 / $13 / $14 / $16 / $51 / $52 /
+> $53 / $57 / $58 — `LevelUpGains`, `SkillLearnScan`, `ApplyLevelUp`, `BreedAIAverage`,
+> `BreedBirthFinalize`, `CritChanceTablePartyLink_4025`, `DispelMachine_60b3`, the LifeSong `dw`
+> table … Clean `1ca6579…` byte-perfect; REFERENCE_MD5 unchanged `7d136455…` (patched).
+> **Docs:** BATTLE_SKILL_SYSTEM §15.11 + ~30 corrections, MONSTER_DATA raising, BREEDING_SYSTEM,
+> known_RAM_map, PYBOY_DEBUGGING, DOC_AUDIT S130 (71 rows), KEY_LESSONS S130, TOOLS_AND_DATA S130
+> rows, GATE_GENERATION §4.4, PROJECT_COMPILER §2.43, EDITOR_DESIGN §5.9, ROADMAP (P3.15 split,
+> ARC NG parent ticked, P3.10 (e) / P3.12 (a) corrected). `damage.vacuum`'s enemy branch noted wrong
+> (the driver uses `f23_phys.vacuum_base`).
+> **Checks:** verify_integrity PASS (selftests + `census_raising`, `census_dive`,
+> `build_balance_anchor`); test_compiler --rom 1365/1365 (`test_balance_s130`); test_app PASS
+> (`s130_balance`); every validator above 0.
+> **r2 (user 09:21-11:35: "What does levels of '81' actually mean? … no way I have ever played the
+> game with a level of 81 for my monsters by S class … Which 8 skills you can bring together on 3
+> monsters is almost the sole determiner of success"; "can we colour code levels"; "1) Always
+> command unless arena (Arena forces you to use tactics) 2) Usually one general kit … I run into a
+> wall … start experimenting with skills and monsters … 3) … maybe around 30-40 level on average per
+> mon"; 11:35 on the early bosses' sleep locks: "it seems like the new average is a good reflection
+> of difficulty which is what we want"):** "81" was the casual exp level with members capped at
+> ~51, on their AI. **Orders measured + modelled exact** (BATTLE_SKILL_SYSTEM §15.10.7b): the menu
+> is FIGHT / ITEM / PLAN / RUN, COMMAND = the 4th tactic inside PLAN, orders written straight to
+> `$DCEC/$DCED` (`LoadBtl_4f86/4f95`); the obedience gate with tactic 3 every round (orders refused
+> more than tactics); obeyed orders drift w3 (`PersonalityCommandTable`, permanent); disobedience =
+> Daze `$98` / Attack / Defence (`SetBtlAI_7f5f`); a dead single target of an order fizzles; MP
+> checked by the menu; the arena shows "NO SP SK" instead of COMMAND; the PARTY attack target pick
+> `$58:$41E9` (lowest HP − estimate) replaces the front-weighted stand-in. `measure_command.py` 56
+> battles, `validate_command.py` 6,411 / 0; every older validator still 0. **The 'player'
+> profile** (`simulator/planner.py` orders + `editor2/core/kits.py` one optimised kit per step,
+> best tactic in the arena; PROJECT_COMPILER §2.43) is the tab's main number: S class 32 / 28 / 38,
+> Durran 32, Starry Night final 35, DracoLord 40, StoneMan 10, FunkyBird 13 (status locks the
+> bosses' resistances allow — user-accepted). Level cells coloured by band. `SIM_VERSION`
+> 'S130.7'. **The anchor** (three profiles + a kit per step) took ~5 h on the workspace's 2 cores
+> and the workspace was reclaimed mid-build three times (KEY_LESSONS) — the build was made
+> resumable (`balance_vanilla.json.partial`) and the Balance tab got **Build original-game numbers**
+> (user 15:10: "can I not run this locally in editor using a button push?"); the user built it on
+> their M3 Max ("~30 s per gate") and uploaded it: `--selftest` OK (180 fights × 3, 31 dives, 41
+> kits, fights + dive + player re-derived here equal — same numbers on macOS and Linux). Player
+> l90 curve: Beginning 2, Villager 4, Bazaar 13, Strength 10, Joy 13, Wisdom 20, Temptation 19,
+> Judgement 31, Library 23, S class 38 (matches 32 / 28 / 38), Reflection 34 (Durran 32), Starry
+> Night 35, Ambition 40, Demolition / Control 45, Bazaar Edge 48, Right Gate 47 (Mudou), Old
+> Man's Gate and Grandpa's match "can't win" (37 % / 89 % at 99). Mid-game steps flatten at 10 —
+> the "no bred kit below level 10" rule (ROADMAP P3.15b). **r3 (user 15:47: "Its also really
+> crowded and I dont really understand all the numbers"):** the tab opens in a SIMPLE view —
+> Fight | Original game | Your project | Change ("Lv 32", "can't win (38 %)", "harder (+5)"), a
+> plain-English line, hover sentences, "Compute your project", "Show the team"; **Show details**
+> (saved, `balance/details`) restores everything; help "Reading the numbers" first.
+> **Next:** the user's test of the Balance tab (original curve, a project's fights, a boss what-if,
+> a .sav party); then P3.15b or the user's pick. **User at the S131 start (2026-10-08 16:30): "Yeah
+> balance tab looks good".**
+
 > Last verified: 2026-10-07 (Session 129 — **ROADMAP P3.14b / c / d FINISHED (P3.14 DONE): STORY
 > CHECKS — QUESTIONS THE GAME ANSWERS (ITEMS, GOLD, MONSTERS, LEVELS, SEEN, CHANCE, ARENA, BAG
 > ROOM, THE STORY REACHED, AND / OR) USABLE WHEREVER A FLAG IS CHECKED; STORY STEPS (TAKE ITEMS,

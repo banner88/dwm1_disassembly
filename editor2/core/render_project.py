@@ -77,6 +77,10 @@ COMMON_SHEET = (0x29, 0x1D)
 COMMON_FIRST, COMMON_END = 0x80, 0xB0
 
 
+_PAL_TABLES = [bytes([(p * 4 + (i if i < 4 else 0)) & 0xFF for i in range(256)])
+               for p in range(8)]
+
+
 def decode_tiles(sheet2048):
     """2bpp sheet -> 128 x 64-byte colour-index blocks (row-major 8x8)."""
     out = []
@@ -117,6 +121,7 @@ class ProjectRenderer:
                           if build_rom_path and os.path.exists(build_rom_path)
                           else None)
         self._tile_cache = {}       # sheet bytes -> decoded blocks
+        self._strip_cache = {}      # S132: sheet bytes -> {(tile, pal): row strips}
         self._sheet_cache = {}      # (bank, id) / tileset id -> bytes
         self._vanilla_pal_cache = {}
         self.invalidate()
@@ -213,6 +218,8 @@ class ProjectRenderer:
 
     def tiles_of(self, sheet):
         if sheet not in self._tile_cache:
+            if len(self._tile_cache) >= 64:      # S132: ▶ Play makes a sheet per frame
+                self._tile_cache.clear()
             self._tile_cache[sheet] = decode_tiles(sheet)
         return self._tile_cache[sheet]
 
@@ -343,11 +350,52 @@ class ProjectRenderer:
         flat.extend([0] * (768 - len(flat)))
         return flat
 
+    def _row_strips(self, sheet):
+        """S132: {tile * 8 + palette: 8 row strips of 8 palette-index bytes}
+        for one sheet, filled on demand (the canvas recomposes the screen on
+        every painted cell — 320 PIL images per frame made painting lag)."""
+        sc = self._strip_cache.get(sheet)
+        if sc is None:
+            if len(self._strip_cache) >= 64:      # animation frames are new sheets
+                self._strip_cache.clear()
+            sc = self._strip_cache[sheet] = {}
+        return sc
+
     def compose(self, sheet, tiles_grid, attr_grid, pals):
         """Compose a 160x128 RGB image (scale 1) from grids."""
         blocks = self.tiles_of(sheet)
-        tables = [bytes([(p * 4 + (i if i < 4 else 0)) & 0xFF
-                         for i in range(256)]) for p in range(8)]
+        sc = self._row_strips(sheet)
+        tables = _PAL_TABLES
+        w = SCREEN_W * 8
+        buf = bytearray(w * SCREEN_H * 8)
+        for ty in range(SCREEN_H):
+            row = tiles_grid[ty]
+            arow = attr_grid[ty] if attr_grid else None
+            for tx in range(SCREEN_W):
+                t = row[tx]
+                p = (arow[tx] & 7) if arow else 0
+                key = t * 8 + p
+                strips = sc.get(key)
+                if strips is None:
+                    if COMMON_FIRST <= t < COMMON_END:      # S123 r3: $29:$1D at $8800
+                        src = self.common_blocks()[t - COMMON_FIRST]
+                    else:
+                        src = blocks[t if 0 <= t < 128 else 0]
+                    blk = src.translate(tables[p])
+                    strips = sc[key] = [blk[i:i + 8] for i in range(0, 64, 8)]
+                o = ty * 8 * w + tx * 8
+                for y in range(8):
+                    buf[o:o + 8] = strips[y]
+                    o += w
+        img = Image.frombytes('P', (w, SCREEN_H * 8), bytes(buf))
+        img.putpalette(self._p_palette(pals))
+        return img.convert('RGB')
+
+    def compose_slow(self, sheet, tiles_grid, attr_grid, pals):
+        """The pre-S132 compose, kept as the reference the fast one is tested
+        against (test_canvas / test_app s132)."""
+        blocks = self.tiles_of(sheet)
+        tables = _PAL_TABLES
         img = Image.new('P', (SCREEN_W * 8, SCREEN_H * 8), 0)
         for ty in range(SCREEN_H):
             row = tiles_grid[ty]
@@ -355,7 +403,7 @@ class ProjectRenderer:
             for tx in range(SCREEN_W):
                 t = row[tx]
                 p = (arow[tx] & 7) if arow else 0
-                if COMMON_FIRST <= t < COMMON_END:          # S123 r3: $29:$1D at $8800
+                if COMMON_FIRST <= t < COMMON_END:
                     src = self.common_blocks()[t - COMMON_FIRST]
                 else:
                     src = blocks[t if 0 <= t < 128 else 0]

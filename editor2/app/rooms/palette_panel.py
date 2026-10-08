@@ -17,7 +17,7 @@ from PySide6.QtWidgets import QColorDialog, QWidget
 
 from editor2.core.render_project import rgb555, FORCED_IDX1, FORCED_IDX3
 
-SW = 22       # swatch size
+SW = 30       # swatch size (S132: the Palettes page has room)
 GAP = 3
 LABEL_W = 26
 

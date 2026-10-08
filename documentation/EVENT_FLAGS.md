@@ -226,6 +226,23 @@ PROJECT_COMPILER §2.13 / §2.32 (state rules, NPC conditions, encounter variant
 rules) and bank $76 `GateBossWin` (a setter). The editor's flag index lists all of them
 (`editor2/core/flag_index.py`, the Progression & Flags tab).
 
+## Story state at a story point (S132 — measured)
+
+`editor2/core/story_state.py` `state_at(step)` = the flags + step counters ($D92A-$D99A) +
+`$CAB4` / `$D9E3` of a game about to do step `step` of the Balance timeline
+(`balance.VANILLA_STEPS`: the 31 gates, classes G-S, Starry Night, Monster Grandpa in the
+game's order). It is not a walkthrough transcription: a small interpreter runs the GAME'S
+scripts (`cutscenes.decode_words`; ops `$02/$03/$12/$13` applied, `$00/$01/$0E/$14/$15`
+followed, a closing room change → the destination's entry script): per gate its boss win
+tail(s) (`extracted/gate_names.json` `win_tails`, the speech code written before each) and the
+King's speech at the Castle; per class the Arena Lobby victory cascade and the Castle's cascade
+after it; Starry Night = `$00EE` + the Castle's post-game cascade (`$00F1`). PyBoy census
+(`tools/census_story_state.py` → `extracted/story_state_census.json`): 39 / 39 playable
+steps — the game's own scripts from the interpreter's pre-state leave exactly the
+interpreter's post-state. Compare only the real flags ($0000-$017F, $0248-$0257 — the other
+bytes of the bitfield are engine variables, "Free Flag Slots" above). Used by the Rooms tab's
+▶ Play here (EDITOR_DESIGN §5.1 "As built S132").
+
 ## Reserved for the Milly hook (S121)
 
 `$179F` = the player is Milly (set by the hook's bedroom script at the dresser; bank $79

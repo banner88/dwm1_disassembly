@@ -139,7 +139,7 @@ class GateRoomGroup(QGroupBox):
             self.stairs.setText('not needed in a world (its doors lead on)')
         else:
             self.stairs.setText(f"{rep['stairs']} Stairs down" if rep['stairs'] else
-                                'none — select a cell, then Room / screen / selection → More ▾ → '
+                                'none — select a cell, then Object page → More ▾ → '
                                 '"Stairs down here" (paints the next-floor well)')
         boss_of = doc.boss_gates_of(room.get('id'))
         self.can_save.setChecked(doc.room_can_save(room))

@@ -886,6 +886,75 @@ PROJECT_COMPILER §2.36, engine GATE_GENERATION §7.11.
   (a world portal; tooltip = where it lands) and **W↓** (the landing; drag = move).
 Not built: random floors inside a world, a Gates-tab graph, clearing by a battle alone.
 
+**As built S132 — the Rooms tab made usable (user S132: "Why is placing tiles so
+incredibly laggy"; "Need to be able to borrow palette from any other room without having
+to recreate it"; "Allow editing tiles by pixel - maybe past the animate button on right
+panel?"; "Really need a 'play this room' with either flags + monsters imported from a save
+OR set manually or generated according to thresholds … Then you immediately enter room
+from editor"; "UI was built from scratch and especially right panel is annoying as fuck to
+scroll through" → "sideways tabs going up/down"; both ways of applying a drawing; the
+romhack slider "follow gates naturally. Just like balance tab"; built S132, NOT yet
+user-tested):**
+- **Paint lag — measured, then removed** (cProfile, offscreen, the user's project): every
+  mouse move recomposed the whole screen in PIL (320 small images, ~14 ms per cell, even
+  when the cell did not change); the stroke's end refreshed hidden tabs (Dialogue,
+  Services, Shops), re-rendered every picker picture, every minimap thumbnail and the
+  tileset map (~350 ms); 0.7 s later the bank space meter re-emitted and RECOMPRESSED every
+  layout and tileset on the UI thread (**2 s**). Now: the canvas skips cells that already
+  show the brush; `ProjectRenderer.compose` builds one byte buffer from cached row strips
+  (pixel-identical on 595 screens, 5× faster); layout changes are coalesced into one side
+  refresh after the canvas repainted, with only the edited screens' thumbnails; the picker
+  keeps its pictures while the sheet and colours are the same; hidden tabs refresh when
+  shown; LZ compression is memoised and the meter measures only its four banks (0.14 s).
+  Per cell 14 → 0.9 ms, stroke end 350 → 46 ms.
+- **The side rail** (`editor2/app/side_rail.py`): the right side is ONE page at a time
+  behind vertical tabs on the outer edge, painted by hand (the text reads top to bottom;
+  QTabWidget's East tabs draw unrotated in the macOS style) — **Tiles** (This room /
+  Borrow / Tileset / Animate / **Draw**), **Palettes** (the palette panel, Borrow
+  palette…, the room / this-screen palette combos), **Object** (the selected cell and its
+  Add … buttons, the NPC / door / teleport / spot forms), **Room** (name, tileset, size,
+  encounters, music, animated tiles, doors in, state rules, *Technical* folded), **Screen**
+  (screen, states, NPC slots, layout, *Technical* folded) and **Gates** (shown only when
+  the room is a gate / world room). Paint / Rect / Fill / Eyedrop open Tiles; a marker
+  opens Object; the last page is remembered. The inspector builds the pages
+  (`room_page`, `screen_page`, `object_page`, `palette_row`); `PageHandle` keeps the old
+  Section calls working. **+ NPC (N)** joined + Door / + Examine on the toolbar.
+- **Borrow palette…** (`rooms/palette_borrow_dialog.py`, `core/palette_borrow.py`): any
+  source — your rooms, the game's rooms per screen AND step (the step's attr-row palette,
+  so the Servant room on fire), the 16 gate themes — its screen in its own colours beside
+  YOUR screen re-coloured live; take the whole palette (the room / only this screen-state;
+  a palette of your own can be shared) or rows into chosen slots ("only here" copies a
+  shared palette first). One SnapshotCommand. The palette combos now name the rooms using
+  each palette.
+- **Draw tab** (`rooms/draw_tab.py`, `core/tile_draw.py`): load the selected cell / the
+  brush / a blank tile in a palette slot; a 2×2 `FramePad` (each quarter in its own
+  palette), tools on the whole tile or a quarter (flip, shift, copy / paste, clear,
+  undo, revert), a 3×3 tiling preview; **Redraw it everywhere it is drawn** (the slots'
+  graphics; the line counts cells per room; refused for common tiles $80-$AF, animated
+  slots, a slot drawn twice differently) or **Save as a new metatile** (identical graphics
+  reused, else free slots, the bottom-right quarter on the walkable / wall side chosen;
+  onto the selected cells, every cell of the room drawing the original, or only My
+  metatiles). A room still on a game tileset gets its own copy first.
+- **▶ Play here** (screen / state row, F5; ▾ Game state…; `rooms/play_dialog.py`,
+  `core/play_setup.py`, `core/story_state.py`): saves + builds when the project changed
+  since the last build, works out the game state in a background thread and opens the
+  Playback window in the room at the selected cell (or the walkable cell nearest the
+  middle). Sources: a new game; a .sav (CONTINUE); **a story point of the original game**
+  — a slider over the Balance timeline's 41 steps; the flags + room states are what the
+  game's own scripts write for every step before it (`story_state.state_at`, measured
+  equal to PyBoy for all 39 playable steps — `tools/census_story_state.py`), the party
+  the Balance tab's player kit at the level the step's hardest fight needs (l90) or a
+  strong / casual roll, Reroll, a level by hand; **a story point of my project** — the
+  same positions with the project's gates, new gates / worlds after the gate they copy,
+  their own cleared flags, the project's data; **by hand** — up to 3 monsters (species,
+  level, plus, skills as raised or picked). Flags ON / OFF on top of any source; the Milly
+  hook's flags when it is on. Party records = `play_setup.party_record` (the engine's
+  starter record with the species + every raising field), put in after the room loaded
+  (`Engine.start(records=…, repoke=False)`). End to end on the user's project: click →
+  walking in the room in ~5 s once the build's start state is cached.
+Not built: items / gold for a story point (the new game's); side quests the game leaves to
+the player (farm, library, medals) are not in the story state — flags ON covers them.
+
 ### 5.1b Gates tab (v2.1 — user spec S90)
 
 The gate system as an authorable object; every element decoded

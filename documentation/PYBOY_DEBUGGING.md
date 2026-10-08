@@ -549,3 +549,34 @@ edge and the battle waits for input forever.
 - **Corpus hygiene**: write one JSON per rig battle and merge once (append-and-rewrite went
   quadratic past ~25 MB); drop unvalidated tags and gzip (`f4_events.json.gz` 198k events in
   3.6 MB).
+
+## S132 techniques — measuring a story step, a party by records, the editor under a profiler
+
+- **A story step played by the game's own scripts** (`tools/census_story_state.py`): start
+  from the state your model says holds BEFORE the step (`Engine.start(recipe, repoke=False)`:
+  flags / RAM poked before the warp only), then let the real scripts play it — an arena class:
+  `$D9CD` = $FE, `$D9CE` = class, warp into the lobby's screen 1 (its entry script runs the
+  victory cascade, then warps to the Castle); a gate: warp into the boss room, write what the
+  boss script writes before its tail (`$D9E3`, `$D92B` = 7, the tail's cleared flag), arm the
+  script AT the tail (the counter = the word offset from the script's start — also for tails
+  the decode from pos 0 never reaches, the Medal Gate) and repeat for each tail (Demolition:
+  warp back in between). Run until the field is idle for 240 frames, then compare.
+- **Trap — the re-poke.** `Engine.start` re-poked the recipe's RAM after the load (right for
+  a cutscene); it overwrote what the arriving room's entry script had just written (a whole
+  arena cascade). `repoke=False` for any "what does the room do on arrival" measurement.
+- **Trap — flags that are RAM.** Bits of `$D99B + n` past `$D9CA` are engine variables:
+  `$D9CD` (`wColiseumBattle`) shows as "flags" $0190-$0197, `$D9E3` (the speech) as
+  $0240-$0247. Diff flags in $0000-$017F (+ $0248-$0257) only.
+- **A party from records** (`Engine.start(records=…)` / `put_party`): 149-byte records into
+  slots 0-2 + count + list after the room loaded. Checked: walk to another room, enter a gate
+  (`$C96D` 0 / `$C96E` 1 / `$C96C` 1 / `$C88F` 1, keep `$CA39/$CA3A` high), start a battle
+  (`$CA39` 1 then walk), win with the enemy HP words `$DBAB/$DBAD/$DBAF` = 1 and A every 50
+  frames: `$C88A` back to 1, the party unchanged, exp up.
+- **The editor under cProfile, offscreen.** `QT_QPA_PLATFORM=offscreen`, open the user's
+  project in `MainWindow`, find the live `RoomsTab` (the LAST one — `findChildren` also returns
+  the start-up tab of the previous project), then time `canvas._begin_stroke` /
+  `_stroke_cell` / `_end_stroke` + `app.processEvents()` and the space meter's
+  `measure_banks` separately. Modal boxes block an offscreen run forever: replace
+  `QMessageBox.warning / information / question` with a printer in such scripts.
+- **Trap — relative project paths.** A project opened as a relative path gives a relative
+  `last_rom`; the playback process runs elsewhere ("No such file"). Play here absolutizes.

@@ -6086,3 +6086,50 @@ high-plus route existed, so capped members never re-bred; the re-breed also aske
 the CAPPED level, not of the level its exp reaches. **Rule**: the search and the builder must use
 the same game rule with the same inputs; read the anchor's kits (plus, grind, levels reached), not
 only its level numbers, before accepting a rebuild.
+
+## S132 — the Rooms tab made usable (paint lag, side rail, Borrow palette, Draw, Play here)
+
+### Profile the slow path on the USER'S project before touching it (S132)
+**Symptom:** "Why is placing tiles so incredibly laggy". **Root cause** (cProfile, the user's
+project, offscreen): three separate costs — every mouse move recomposed the whole screen in
+PIL (320 8×8 images, ~14 ms, even inside the same cell); the stroke's end refreshed hidden
+tabs, every picker picture, every minimap thumbnail and the tileset map (~350 ms); and 0.7 s
+later the bank space meter re-emitted the WHOLE project and LZ-recompressed every layout and
+tileset on the UI thread (2 s — the biggest, and invisible from the canvas code). **Fix:**
+skip unchanged cells, a buffer compose from cached row strips (pixel-identical, 5×),
+coalesced side refresh with only the edited screens' thumbnails, lazy hidden tabs, memoised
+compression, the meter measuring only its four banks. **Rule:** measure the user's real
+project end to end (mouse event → stroke end → the next idle second) — the cost that hurts
+may be in a timer far from the code the complaint names.
+
+### A harness that re-pokes after the load hides what the room's script wrote (S132, PyBoy)
+**Symptom:** the story census said an arena class win changed nothing — the cascade's
+counters were back at their old values. **Root cause:** `Engine.start` re-pokes the
+recipe's RAM after the room loads (right for a cutscene's set-up), so the Arena Lobby's
+entry script — which runs the whole victory cascade in the arrival frames — had its writes
+overwritten by the pre-state. **Fix:** `start(repoke=False)` (a story state: poke before the
+warp only). **Rule:** when measuring what a room's own scripts do on arrival, never write
+the same RAM after the arrival.
+
+### The event-flag bitfield is not all flags (S132)
+**Symptom:** the census reported "flags" $0190-$0196 and $0240-$0247 set by the game and not
+by the model. **Root cause:** bytes $D9CB-$D9E9 of the $D99B bitfield are engine variables
+(EVENT_FLAGS "Free Flag Slots" audit): $D9CD = `wColiseumBattle` ($FE → "flags" $0190-$0196),
+$D9E3 = the King's speech code. **Fix:** compare flags only in $0000-$017F (+ the
+script-referenced $0248-$0257), the rest as RAM. **Rule:** before diffing flags, take the
+audited flag range, not "every bit from $D99B".
+
+### Project() changes the dict you give it (S132)
+**Symptom:** test_app `s132_rooms_ui`: "script id 'quest:medal_vault' already exists" on the
+second Play. **Root cause:** `Project(data)` lowers quests / cutscenes INTO `data`; Play here
+passed the live document. **Fix:** `Project(copy.deepcopy(doc.data), …)` as every other
+caller does. **Rule:** never hand the Document's dict to `Project()`; the test's "document
+unchanged" check is what caught it.
+
+### A boss room's arrival is not the win (S132, PyBoy + decode)
+**Symptom:** a win tail armed after a warp into the Gate of Beginning's boss room ended at
+the Castle with the priest's heal, not the King's speech. **Root cause:** the boss room's
+ENTRY script writes `$D92B := 6` on arrival (script 0 pos 0 — a WarpWing out of the gate gets
+the priest); the WIN branch writes `$D9E3` (the speech) and `$D92B := 7` right before the
+tail (script 1 pos 69 / 74). **Fix:** the census writes both as the boss script does before
+arming the tail. **Rule:** arming a script mid-way = also doing what it did just before.

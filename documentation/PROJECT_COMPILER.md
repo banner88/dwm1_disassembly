@@ -933,7 +933,10 @@ Import-art tab's per-image settings; the PNG is copied to
 came from — blank sheets have none); `released_vocab: [tid]` (P3.3c).
 **Validator change S96:** screens outside the record's scroll area are a
 WARNING (vanilla sub-room screens: Labyrinth, Forest Mazes), not an error.
-**`compiler.measure_banks(data, dir, repo)`** returns `{bank: (used, cap)}`
+**`compiler.measure_banks(data, dir, repo, banks=None)`** (S132: `banks` = only the
+emitters owning those banks run — the meter passes its four, 0.14 s instead of 2 s on a user
+project; `layouts.compress` is memoised by input bytes, the compressor being deterministic)
+returns `{bank: (used, cap)}`
 for $60/$64/$67/$71 from an in-memory project (the editor's space meters;
 `validators.bank_usage` is shared with the pre-build overflow check).
 **Script arity:** scriptgen warns when a hex op's param count disagrees with

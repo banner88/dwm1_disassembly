@@ -18,6 +18,7 @@ The canvas acceptance (paint / states / PyBoy) lives in test_canvas.py.
 import os
 import re
 import sys
+import time
 
 REPO = os.path.dirname(os.path.dirname(
     os.path.dirname(os.path.abspath(__file__))))
@@ -1036,6 +1037,10 @@ def s126_services(app, w):
     vt.npcs.setCurrentCell(0, 0)
     vt._goto()
     assert got and got[-1]['room'] == 'dusk_mirror' and (got[-1]['x'], got[-1]['y']) == (6, 4), got
+    # S132: hidden tabs refresh when shown — come back to the Services tab
+    # after Go to (it switched to the Rooms tab), as the user would
+    w.tabs.setCurrentWidget(vt)
+    app.processEvents()
     vt.pages.setCurrentIndex(1)
     assert vt.current_set_id() == 'mira_s_lines' and vt.lines.rowCount() == 39
     vt.set_speaker.setText('Mira')
@@ -1137,7 +1142,8 @@ def s127r3_game_text_rule(app, w):
     allowed = {('app/main.py', 'self.log'), ('app/cutscenes_tab.py', 'self.log'),
                ('app/cutscenes_tab.py', 'self.textbox'), ('app/dialogue_tab.py', 'self.detail'),
                ('app/services_tab.py', 'self.line_edit'),
-               ('app/rooms/talk_editor.py', 'self.edit')}
+               ('app/rooms/talk_editor.py', 'self.edit'),
+               ('app/rooms/play_dialog.py', 'self.preview')}     # S132: read-only party preview
     found = []
     base = os.path.join(REPO, 'editor2')
     for sub in ('app', 'app/rooms'):
@@ -1822,6 +1828,183 @@ def s129_story(app, w):
           'StoryCheckTable; undoes to the original')
 
 
+def s132_rooms_ui(app, w):
+    """S132 (user: "Why is placing tiles so incredibly laggy", "borrow palette from any
+    other room", "editing tiles by pixel", "a 'play this room'", "right panel is
+    annoying as fuck to scroll through"): the side rail (one page at a time, pages
+    open themselves), a paint stroke that skips repeated cells, Borrow palette (whole /
+    rows, one undo step), the Draw tab (everywhere / as a new metatile on the selected
+    cell, undone), the Play dialog's setup round trip and Play here up to the Playback
+    window (stubbed: no emulator). Every edit is undone."""
+    import json as _json
+    import tempfile
+    from PySide6.QtCore import Qt
+    from editor2.app.rooms import commands as C
+    from editor2.core import palette_borrow as PBor
+    rt = w.rooms_tab
+    w.tabs.setCurrentWidget(rt)
+    app.processEvents()
+    doc = w.session.doc
+    room = next(r for r in doc.rooms if not r.get('placeholder') and r.get('record')
+                and any('id' in (doc.state_layout_ref(r, k, 0) or {}) for k in doc.screen_keys(r)))
+    for i in range(rt.room_list.count()):
+        if rt.room_list.item(i).data(Qt.UserRole) == room['id']:
+            rt.room_list.setCurrentRow(i)
+    app.processEvents()
+    assert rt.room_id == room['id'], rt.room_id
+    before = _json.dumps(doc.data, sort_keys=True)
+    start = w.session.undo.index()
+    # --- the rail
+    assert rt.rail.order == ['tiles', 'palettes', 'object', 'room', 'screen', 'gates'], rt.rail.order
+    rt.rail.show_page('room')
+    assert rt.rail.current_key() == 'room' and rt.sec_insp.is_expanded()
+    rt._set_tool('paint')
+    app.processEvents()
+    assert rt.rail.current_key() == 'tiles', 'Paint opens the Tiles page'
+    rt._set_tool('select')
+    for i, mk in enumerate(rt.canvas.markers):
+        if mk[0] == 'npc' and mk[5] and mk[5][0] == 'npc':
+            rt.canvas.markerSelected.emit({'kind': mk[0], 'x': mk[1], 'y': mk[2],
+                                           'sprite': mk[3], 'label': mk[4], 'ref': mk[5]})
+            app.processEvents()
+            assert rt.rail.current_key() == 'object' and not rt.npc_panel.isHidden()
+            break
+    # --- a paint stroke: a repeated cell is not re-rendered
+    cv = rt.canvas
+    cv.set_tool('paint')
+    cv.brush = cv.cell_metatile(0, 0)
+    n_render = [0]
+    orig = cv._render
+
+    def counting():
+        n_render[0] += 1
+        orig()
+    cv._render = counting
+    cv._begin_stroke()
+    for _ in range(20):
+        cv._stroke_cell((1, 1))
+    cv._end_stroke()
+    cv._render = orig
+    # 1 for the cell + the commit's reload(s); before S132 every move re-rendered (20+)
+    assert n_render[0] <= 3, f'20 moves on one cell rendered {n_render[0]} times'
+    app.processEvents()
+    while w.session.undo.index() > start:
+        w.session.undo.undo()
+    app.processEvents()
+    cv.set_tool('select')
+    print('OK: S132 the side rail (6 pages; Paint -> Tiles, an NPC -> Object), a paint '
+          f'stroke re-renders a repeated cell {n_render[0]} time(s) for 20 moves')
+    # --- Borrow palette
+    from editor2.app.rooms.palette_borrow_dialog import BorrowPaletteDialog
+    dlg = BorrowPaletteDialog(w.session, rt.current_room(), rt.key, rt.state_idx, rt.canvas, rt)
+    dlg.select_source(('theme', 3))
+    app.processEvents()
+    assert dlg.src == ('theme', 3) and dlg.ok.isEnabled()
+    dlg.slot_boxes[2].setCurrentIndex(1 + 1)
+    app.processEvents()
+    v = dlg.values()
+    assert v['mode'] == 'rows' and v['mapping'][2] == 1, v
+    rid, key, st = rt.room_id, rt.key, rt.state_idx
+    cmd = C.SnapshotCommand(w.session, 'Borrow', lambda d: PBor.apply_borrow(d, rid, key, st, **v))
+    w.session.undo.push(cmd)
+    assert cmd.error is None, cmd.error
+    pid = cmd.result[0]
+    assert [int(str(c), 0) for c in doc.palette(pid)['colors_rgb555'][2]] == v['src_rows'][1]
+    w.session.undo.undo()
+    dlg.close()
+    assert _json.dumps(doc.data, sort_keys=True) == before
+    print('OK: S132 Borrow palette — a gate theme\'s row 1 into slot 2, one undo step, undone')
+    # --- Draw
+    rt._show()
+    app.processEvents()
+    cell = next((cx, cy) for cy in range(8) for cx in range(10)
+                if rt.canvas.cell_metatile(cx, cy)['tiles'][0] < 0x80)
+    rt.canvas.selected_cell = cell
+    rt.canvas.selected_marker = None
+    rt._draw_load_cell()
+    app.processEvents()
+    dt = rt.draw_tab
+    assert dt.loaded() and rt.picker_tabs.currentWidget() is rt._draw_scroll
+    px = dt.current()
+    px[1] = [3 - x for x in px[1]]
+    dt.pad.px = px
+    dt._changed()
+    dt._update_report()
+    rep = dt.last_report
+    if rep['everywhere']['ok']:
+        dt._everywhere()
+        app.processEvents()
+        assert 'redrew' in rt.status_line.text(), rt.status_line.text()
+        w.session.undo.undo()
+        app.processEvents()
+    dt.place.setCurrentIndex(1)                  # the selected cell(s)
+    rt.canvas.selected_cell = cell
+    dt._update_report()
+    if dt.last_report['new']['ok']:
+        dt._new()
+        app.processEvents()
+        assert 'new metatile' in rt.status_line.text(), rt.status_line.text()
+        w.session.undo.undo()
+        app.processEvents()
+    assert _json.dumps(doc.data, sort_keys=True) == before
+    print('OK: S132 Draw — a quarter redrawn everywhere ('
+          f"{rep['everywhere']['cells']} cells) and as a new metatile on the cell, both undone")
+    # --- Play: the dialog's setup, and Play here up to the Playback window
+    from editor2.app.rooms import play_dialog as PD
+    from editor2.app import cutscenes_tab as CTm
+    dlg = PD.PlayDialog(w.session, 'room', 'here', {'source': 'story', 'step': 3,
+                                                    'flags_on': [0x30]}, REPO, rt)
+    app.processEvents()
+    v = dlg.value()
+    assert v['source'] == 'story' and v['step'] == 3 and v['flags_on'] == [0x30], v
+    dlg.radios['manual'].setChecked(True)
+    dlg.members[0].sp.setCurrentIndex(1)
+    dlg.members[0].lv.setValue(7)
+    v2 = dlg.value()
+    assert v2['source'] == 'manual' and v2['party'][0]['level'] == 7, v2
+    dlg._timer.stop()
+    dlg.close()
+    opened = []
+
+    class FakePlayback:
+        def __init__(self, parent, rom, sav, cache, items, title, start_extra=None, **k):
+            opened.append((rom, sav, items, title, start_extra))
+
+        def show(self):
+            pass
+
+        def close(self):
+            pass
+    real = CTm.PlaybackWindow
+    CTm.PlaybackWindow = FakePlayback
+    tmp = tempfile.mkdtemp()
+    fake_rom = os.path.join(tmp, 'rom.gbc')
+    open(fake_rom, 'wb').write(b'\0' * 16)
+    old_rom = w.session.last_rom
+    w.session.last_rom = fake_rom
+    try:
+        rt._needs_build = lambda: False
+        rt._play_go(dict(PD.PS.default_setup(), source='manual', party=v2['party'],
+                         flags_on=[0x30]), (4, 4))
+        t0 = time.time()
+        while not opened and time.time() - t0 < 120:
+            app.processEvents()
+            time.sleep(0.05)
+    finally:
+        CTm.PlaybackWindow = real
+        w.session.last_rom = old_rom
+        del rt._needs_build
+    assert opened, 'Play here opened no Playback window'
+    rom, sav, items, title, extra = opened[0]
+    rec = items[0][0]
+    assert os.path.isabs(rom) and sav is None and 0x30 in rec.flags_set and \
+        extra['repoke'] is False and len(extra['records']) == 1 and \
+        len(bytes.fromhex(extra['records'][0])) == 0x95, (rec, extra)
+    assert _json.dumps(doc.data, sort_keys=True) == before
+    print('OK: S132 Play here — the dialog\'s setup round trip; a hand-set party (1 record of '
+          '149 B) + flag $0030 handed to the Playback window, no re-poke')
+
+
 def s130_balance(app, w):
     """S130 (ROADMAP P3.15a): the Balance tab — offscreen without a project (the
     original game only: rows from a small anchor, project columns hidden) and with
@@ -2147,6 +2330,7 @@ def main():
     s128_arena(app, w)
     s129_story(app, w)
     s130_balance(app, w)
+    s132_rooms_ui(app, w)
 
     # S101 r3: World tab zoom (wheel, around the mouse) + pan (drag empty canvas)
     from PySide6.QtCore import QPoint, QPointF, Qt

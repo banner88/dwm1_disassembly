@@ -13,7 +13,10 @@ each command with ONE message on stdout: 4-byte big-endian length + JSON header
 line (utf-8, ends with \\n) + optional binary payload (the header says its size).
 Commands:
   open   {rom, cache_dir, sav, sound}      -> {ok}
-  start  {recipe: {...}, party}            -> {ok, log}
+  start  {recipe: {...}, party, records, repoke}
+                                           -> {ok, log}   (S132: records = party
+                                              records as hex, repoke false = a story
+                                              state the room's scripts may change)
   run    {frames, buttons, opts}           -> {status} + payload: RGBA frame
                                               (160*144*4) + int16 stereo audio
   step   {script_type, script_idx, opts, back, reset, max_frames}
@@ -75,7 +78,9 @@ def serve():
             elif c == 'start':
                 r = _recipe(cmd['recipe'])
                 eng.questions = frozenset(tuple(q) for q in cmd.get('questions') or [])
-                eng.start(r, party=bool(cmd.get('party')))
+                recs = [bytes.fromhex(h) for h in cmd.get('records') or []]   # S132
+                eng.start(r, party=bool(cmd.get('party')) and not recs,
+                          repoke=bool(cmd.get('repoke', True)), records=recs or None)
                 eng._step_stack, eng._step_last = [], set()
                 _send({'ok': True, 'log': list(eng.log)})
             elif c == 'run':

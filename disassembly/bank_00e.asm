@@ -2839,10 +2839,14 @@ BossBeginning_ScriptPtrTable:
 ; ---------------------------------------------------------------------------
 ; BossBeginning_Script00
 ; ---------------------------------------------------------------------------
+; S132 (decode + PyBoy, tools/census_story_state.py): the room's ENTRY script —
+; on every arrival $D92B := 6, the Castle's "gate return" code (a WarpWing out of
+; the unbeaten gate gets the priest's heal; the win below writes 7). Every vanilla
+; gate boss room does the same (GATE_GENERATION §7.7).
 BossBeginning_Script00:
-    dw $FF12  ; WriteRAM
-    dw $D92B  ; RAM $D92B
-    dw $0006  ; Text $0006: "$42:$4431 [SOUND 60]Terry looked in the dresser. /"
+    dw $FF12  ; WriteRAM (op $12)
+    dw $D92B  ; RAM $D92B (the Castle arrival event)
+    dw $0006  ; value 6 = the priest path (was mis-commented as text $0006)
     dw $FF0D  ; WriteNPCByte
     dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
     dw $FF90  ; Cmd$90
@@ -2922,25 +2926,31 @@ BossBeginning_Script01:
     dw $FF49  ; Cmd49
     dw $0002  ; Text $0002: "$42:$4259 Terry looked at a stuffed animal. // Som"
     dw $FF08  ; NOP
-    dw $FF12  ; WriteRAM
-    dw $D9E3  ; RAM $D9E3
-    dw $0030  ; Text $0030: "$42:$5B00 *:Pulio from the farm is goofy but // a "
+; S132: THE WIN (script 1 pos 69 on): the King's speech code, the gate's
+; cleared flag, the Castle event 7 (= the King's speech chain on $D9E3), then
+; the WIN TAIL $0E:$4EF6 (extracted/gate_names.json win_tails[0]): the boss
+; room's state 1 (beaten) and the "Room of" counter, close, the wavy warp to
+; the Castle (map $00, pixel $E8,$58 = screen 1 cell (4,5)). Run by
+; editor2/core/story_state.py; == PyBoy (tools/census_story_state.py).
+    dw $FF12  ; WriteRAM (op $12)
+    dw $D9E3  ; RAM $D9E3 (the King's speech code)
+    dw $0030  ; value $30 = speech $30 (Healer; sets $0009 "go to the arena")
     dw $FF03  ; SetEventFlag
-    dw $0010  ; Text $0010: "$42:$49CF *:This kingdom is created inside // a bi"
+    dw $0010  ; flag $0010 = Gate of Beginning cleared
+    dw $FF12  ; WriteRAM (op $12)
+    dw $D92B  ; RAM $D92B (the Castle arrival event)
+    dw $0007  ; value 7 = the King's speech chain
+    dw $FF12  ; WriteRAM — the win tail starts here ($0E:$4EF6)
+    dw $D968  ; RAM $D968 (the "Room of Beginning" step counter)
+    dw $0001  ; value 1
     dw $FF12  ; WriteRAM
-    dw $D92B  ; RAM $D92B
-    dw $0007  ; Text $0007: "$42:$4473 [SOUND 60]Terry looked in the dresser. /"
-    dw $FF12  ; WriteRAM
-    dw $D968  ; RAM $D968
-    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
-    dw $FF12  ; WriteRAM
-    dw $D976  ; RAM $D976
-    dw $0001  ; Text $0001: "$42:$4244 Milayou:... zzz."
-    dw $FF06  ; IncrementCounter
-    dw $FF3B  ; Cmd3B
-    dw $0000  ; Text $0000: "$42:$4142 Milayou:Terry! Wait! It's time // for be"
-    dw $00E8  ; Text $00E8: "$43:$46B7 *:The last battle in G class is with // "
-    dw $0058  ; Text $0058: "$42:$6FFE *:How do you do. I'm Hale. // *:I know y"
+    dw $D976  ; RAM $D976 (this boss room's step counter)
+    dw $0001  ; value 1 = state 1, the boss beaten
+    dw $FF06  ; close_text (op $06)
+    dw $FF3B  ; warp_fade (op $3B: the wavy fade)
+    dw $0000  ; map $00 (the Castle; high byte 0 = a room, not a gate)
+    dw $00E8  ; pixel X $E8 (screen 1, cell 4)
+    dw $0058  ; pixel Y $58 (cell 5)
     dw $FFFF  ; END
 
 Bank0E_ScriptAddr_4F0E:

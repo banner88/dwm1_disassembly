@@ -218,6 +218,16 @@ Index function: `Call_000_223b` — `HL = field_base + index × $95`
 | $83 / $8C | 8 + 8 | The parents' **nicknames** (their +$01), read by `PedigreeForeignCount` as 9-byte names *(S130)* |
 | $8B / $94 | 1 + 1 | The parents' plus values (their +$62) — the 9th byte of the +$83 / +$8C names *(S130, code-read)* |
 
+**Writing a party record (S132, `editor2/core/play_setup.party_record`):** the engine's
+starter record (playback `Engine.STARTER`; +$00 in-use and the master name +$0C-$14 kept)
+with +$09 species, +$0A family (info row byte 0), +$0B gender, +$01 a 1-4 letter nickname,
++$15/+$16 = $FF (not bred), +$29 skills, +$31 queue, +$4B-$4F level / cap / exp, HP = max HP,
+MP = max MP, the stats, +$60 WLD, +$62 plus, +$63 0, +$64 AI, +$68 resistances, the parents'
+blocks zeroed — every raising field from a simulator `Monster` (== the game,
+`census_raising.py`). Put into party slots 0-2 + `$CA8D` / `$CA8E-$CA90` AFTER the last warp
+(`Engine.put_party`). PyBoy on a user build: the party survives room changes and a gate entry,
+the battle screen shows their names / HP / MP, they win and gain exp.
+
 NOTE [S87]: the pre-S87 rows $4B..$5A ("Level/cap/HP/MP/ATK/DEF/AGL/INT")
 were off by the missing MaxHP/MaxMP words from $52; the stat block above is
 the corrected map, pinned by the bank $51 battle-init walk + live reads on

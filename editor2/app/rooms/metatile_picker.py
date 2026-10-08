@@ -66,8 +66,10 @@ class MetatilePicker(QWidget):
 
     # --------------------------------------------------------------- data
     def set_context(self, renderer, sheet, pals, threshold):
+        # S132: keep the cached pictures while the sheet and colours are the same
+        if (renderer is not self.renderer or sheet != self.sheet or pals != self.pals):
+            self._pix = {}
         self.renderer, self.sheet, self.pals, self.threshold = renderer, sheet, pals, threshold
-        self._pix = {}
 
     def set_flags(self, flags, free_text=''):
         """P3.3c: vocabulary tiles whose slot is RELEASED (graphic may change
@@ -88,8 +90,12 @@ class MetatilePicker(QWidget):
         return 'changed' if 'changed' in f else 'released' if 'released' in f else None
 
     def set_lists(self, found, custom):
-        self.found, self.custom = list(found), list(custom)
-        self._pix = {}
+        # S132: painting re-sends the same lists after every stroke — nothing to
+        # redraw then; pictures are cached by metatile (sheet + colours unchanged)
+        found, custom = list(found), list(custom)
+        if found == self.found and custom == self.custom:
+            return
+        self.found, self.custom = found, custom
         self._relayout()
 
     def set_foreign(self, title, mts, sheet, threshold, same_tileset):
