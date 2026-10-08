@@ -2,7 +2,10 @@
 ; BANK $13 — LEVEL-UP PROCESSING, STAT GROWTH, EXPERIENCE TABLES
 ; =============================================================================
 ; Contains:
-;   - Level-up stat calculation (entry 0 at $4009)
+;   - Level-up routines (S130 names, measured by tools/census_raising.py):
+;     entry 0 LevelUpExpThreshold ($4009), entry 1 SnapExpToLevel ($4050),
+;     entry 2 LevelUpGains ($40AE) -> GrowthCurveGain / PlusGrowthBonus /
+;     PlusGrowthRoll. Full model: MONSTER_DATA "Raising a monster (S130)".
 ;   - Experience curve tables at $41E6 (32 tables × 99 levels × 3 bytes)
 ;   - Stat growth tables at $6706 (32 tables × 99 levels × 1 byte)
 ;
@@ -29,13 +32,17 @@ SECTION "ROM Bank $013", ROMX[$4000], BANK[$13]
 
     db $13 ;ROM BANK
 
-    dw label13_4009
-    dw label13_4050
-    dw label13_40ae
+    dw LevelUpExpThreshold
+    dw SnapExpToLevel
+    dw LevelUpGains
     dw label13_7366
 
 
-label13_4009:
+; [S130] LevelUpExpThreshold — bank $13 entry 0 (`ld hl,$1300 / rst $10`;
+; callers bank $07, bank $50 exp walker). HRAM $D5-$D7 := the 24-bit exp
+; needed to reach level+1 = ExpCurveTables[info +$02 ($DA35)][level +$4B]
+; (curve stride $129 = 99 x 3; entry L = the exp to reach level L+1).
+LevelUpExpThreshold:
     ld a, [$cac0]
     ld hl, $caca
     call GetMonsterDataPtr
@@ -81,7 +88,10 @@ Jump_013_4044:
     ldh [$d7], a
     ret
 
-label13_4050:
+; [S130] SnapExpToLevel — bank $13 entry 1 (`ld hl,$1301`; caller: creation,
+; bank $14 label14_40b4). Level 0 -> no-op; else exp +$4D ($CB0E, 24-bit) :=
+; ExpCurveTables[info +$02][level - 1] = the exp a monster AT this level has.
+SnapExpToLevel:
     ld a, [$cac0]
     ld hl, $cb0c
     call GetMonsterDataPtr
@@ -140,7 +150,18 @@ label13_4050:
     ld [hl], a
     ret
 
-label13_40ae:
+; [S130] LevelUpGains — bank $13 entry 2 (`ld hl,$1302 / rst $10`): the six
+; per-level gains of slot [$CAC0] into $C8CA-$C8CF (HP, MP, ATK, DEF, AGL,
+; INT) from the growth curves info +$09..+$0E ($DA3C-$DA41), indexed at the
+; OLD level +$4B. Callers: bank $51 level-up state 01 (LevelUpS01_Gains,
+; which shows level+1) and the farm all-20 scan (bank $50 jr_050_6337:
+; gains + $510D only — farm monsters never learn). bank $51 ApplyLevelUp
+; adds them AFTER the learn states, so bank $06 SkillLearnScan sees the
+; PRE-gain stats. $C8D0 = at-cap flag := 1 when (max level +$4C) - 1 <
+; level, i.e. level >= max level; then every gain is raw*level/100 + 1 and
+; ApplyLevelUp SUBTRACTS it (one big exp chunk can carry a monster past its
+; max level: census S130 484 such level-ups, all exact).
+LevelUpGains:
     ld a, [$cac0]
     ld hl, $caca
     call GetMonsterDataPtr
@@ -166,31 +187,36 @@ label13_40ae:
     ld a, $01
     ld [$c8d0], a
 
+; [S130] (max level - 1) >= level -> not at cap; else $C8D0 = 1 (above).
 jr_013_40e1:
     ld a, [$da3c]
-    call FuncExp_411e
-    call FuncExp_4163
+    call GrowthCurveGain
+    call PlusGrowthBonus
     ld [$c8ca], a
     ld a, [$da3d]
-    call FuncExp_411e
+    call GrowthCurveGain
     ld [$c8cb], a
     ld a, [$da3e]
-    call FuncExp_411e
-    call FuncExp_4163
+    call GrowthCurveGain
+    call PlusGrowthBonus
     ld [$c8cc], a
     ld a, [$da3f]
-    call FuncExp_411e
+    call GrowthCurveGain
     ld [$c8cd], a
     ld a, [$da40]
-    call FuncExp_411e
+    call GrowthCurveGain
     ld [$c8ce], a
     ld a, [$da41]
-    call FuncExp_411e
+    call GrowthCurveGain
     ld [$c8cf], a
     ret
 
 
-FuncExp_411e:
+; [S130] GrowthCurveGain — A = growth curve index (0-31) -> A = raw gain =
+; StatGrowthTables[A*99 + level] (the step from level to level+1). At cap
+; ($C8D0 != 0): A = raw*level/100 + 1 (the amount ApplyLevelUp subtracts).
+; Uses $C8CF as scratch (INT's slot is written last by the caller).
+GrowthCurveGain:
     ld c, $63
     call Mul8x8To16
     ld a, l
@@ -234,7 +260,11 @@ jr_013_414b:
     ret
 
 
-FuncExp_4163:
+; [S130] PlusGrowthBonus — HP and ATK only (called after GrowthCurveGain for
+; those two). Skipped at cap or below level 14 (cp $0e). Four plus-gated
+; rolls PlusGrowthRoll (b, c, d) = (1,19,6) (10,20,8) (20,30,6) (50,100,5);
+; accumulator $C8CF, raw gain kept in $C8D1. Returns A = the gain.
+PlusGrowthBonus:
     ld [$c8cf], a
     ld [$c8d1], a
     ld a, [$c8d0]
@@ -251,26 +281,29 @@ FuncExp_4163:
     ld b, $01
     ld c, $13
     ld d, $06
-    call SaveExp_41a5
+    call PlusGrowthRoll
     ld b, $0a
     ld c, $14
     ld d, $08
-    call SaveExp_41a5
+    call PlusGrowthRoll
     ld b, $14
     ld c, $1e
     ld d, $06
-    call SaveExp_41a5
+    call PlusGrowthRoll
     ld b, $32
     ld c, $64
     ld d, $05
-    call SaveExp_41a5
+    call PlusGrowthRoll
 
 jr_013_41a1:
     ld a, [$c8cf]
     ret
 
 
-SaveExp_41a5:
+; [S130] PlusGrowthRoll — GenerateRNG, RNG16 = wRNG2:wRNG1; threshold =
+; (RNG16 mod c) + b; plus +$62 ($CB23) >= threshold -> gain += max(1,
+; raw/d) (Div8x8), clamped at 255. Measured S130 (census, 0 mismatches).
+PlusGrowthRoll:
     push de
     push bc
     call GenerateRNG

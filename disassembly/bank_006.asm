@@ -12,7 +12,7 @@ SECTION "ROM Bank $006", ROMX[$4000], BANK[$6]
     dw label6_400f
     dw jr_006_4028
     dw label6_4d5a
-    dw label6_4f9a
+    dw SkillLearnScan                    ; entry 5 ($0605): the level-up skill-learn scan (S130)
     dw FieldStateDispatch             ; entry 6 ($0606): per-frame field state router (S100)
 
 label6_400f:
@@ -2888,7 +2888,33 @@ MapNPCPosDataTable:   ; (mgbdis name, kept: referenced by the readers / patches)
     dw $3a35   ; [229] species 213 DeathMore
     dw $3a36   ; [230] species 214 Darkdrium
 ; NOTE: unreferenced fake-decode labels removed with this block: jr_006_4e13, jr_006_4e19, jr_006_4e1f, jr_006_4e25, jr_006_4e2b, jr_006_4e31, jr_006_4e37, jr_006_4e3d, jr_006_4e43, jr_006_4e49, jr_006_4e4f, jr_006_4e55, jr_006_4e5b, jr_006_4e61, jr_006_4e67, jr_006_4e6d, jr_006_4e73, jr_006_4e79, jr_006_4e7f, jr_006_4e85, jr_006_4e8b, jr_006_4e91, jr_006_4e97, jr_006_4e9d, jr_006_4ea3, jr_006_4ea6, jr_006_4eac, jr_006_4eaf, jr_006_4eb2, jr_006_4eb5, jr_006_4eb8, jr_006_4ebb, jr_006_4ebe, jr_006_4ec1, jr_006_4ec4, jr_006_4ec7, jr_006_4eca, jr_006_4ed0, jr_006_4ed3, jr_006_4ed6, jr_006_4edc, jr_006_4ee2, jr_006_4f07, jr_006_4f17, jr_006_4f27, jr_006_4f37, jr_006_4f47, jr_006_4f98
-label6_4f9a:
+; =============================================================================
+; [S130] SkillLearnScan — bank $06 entry 5 (`ld hl,$0605 / rst $10`; S52's
+; "the scanner"). Caller: bank $51 level-up state 04 (LevelUpS04_LearnScan),
+; once per state tick until it returns $FFD8 = $FF. In: [$CAC0] = the slot;
+; $C0D8 = the 40-byte work list (state 03: $FF x 40 + the 8 known skills;
+; the caller places every result there). For c = 0..$D9 over
+; SkillLearnReqTable (18-byte rows; patched builds go on with the custom ids
+; through LearnLoopFork):
+;   skip if c is already in $C0D8 (LearnWorkListHas);
+;   skip if level+1 < row level (level +$4B + 1 = the level being reached);
+;   skip unless MaxHP +$52, MaxMP +$56, ATK +$58, DEF +$5A, AGL +$5C, INT +$5E
+;     (u16) >= the row's six words — the PRE-gain stats (ApplyLevelUp adds
+;     the gains after the learn states);
+;   (a) c in the learn queue +$31 (25 B) -> LearnFoundInQueue: code 0, that
+;       queue byte := $FF;
+;   (b) else the prereqs (row +13..+17): first $FF -> skip (a no-prereq skill
+;       is learned ONLY from the queue); every listed prereq must be among
+;       the 8 KNOWN skills +$29 (LearnPrereqKnown — not $C0D8): exactly one
+;       -> LearnFoundUpgrade: code 1, $FFDA = the old id; 2-5, all known ->
+;       LearnFoundAllPrereqs: code 2 (patched: LearnCode2Guard06 bars ids
+;       >= $DA from this path).
+; Out: $FFD8 = skill id ($FF = done), $FFD9 = code 0/1/2, $FFDA = old id.
+; Caller jr_051_5799: code 0/2 -> first $FF slot of $C0D8, code 1 -> over
+; the old id. Measured S130 (tools/census_raising.py: 675 learned in 5,073
+; level-ups, 0 mismatches; learning on POST-gain stats would differ at 921).
+; =============================================================================
+SkillLearnScan:
     ld a, [$cac0]
     ld hl, $cb0c
     call GetMonsterDataPtr
@@ -2904,7 +2930,7 @@ Jump_006_4faa:
     push hl
     push bc
     push de
-    call SetMapS_50d2
+    call LearnWorkListHas
     pop de
     jp z, Jump_006_507c
 
@@ -3007,6 +3033,7 @@ jr_006_4fc8:
     sbc [hl]
     jr c, jr_006_507c
 
+    ; [S130] DE = +$5F (past INT) - $2E -> +$31, the 25-byte learn queue
     ld a, e
     add $d2
     ld e, a
@@ -3021,13 +3048,14 @@ jr_006_4fc8:
 jr_006_5031:
     ld a, [de]
     cp c
-    jr z, jr_006_5097
+    jr z, LearnFoundInQueue
 
     inc de
     dec b
     jr nz, jr_006_5031
 
     pop de
+    ; [S130] not queued: DE = +$31 - 8 -> +$29, the 8 known skills; HL -> row +13 (prereqs)
     ld a, e
     add $f8
     ld e, a
@@ -3039,38 +3067,38 @@ jr_006_5031:
     cp $ff
     jr z, jr_006_507c
 
-    call SaveMapS_50c0
+    call LearnPrereqKnown
     jr nz, jr_006_507c
 
     ld a, [hl]
     cp $ff
-    jp z, Jump_006_50a6
+    jp z, LearnFoundUpgrade
 
-    call SaveMapS_50c0
+    call LearnPrereqKnown
     jr nz, jr_006_507c
 
     ld a, [hl]
     cp $ff
-    jp z, Jump_006_50b5
+    jp z, LearnFoundAllPrereqs
 
-    call SaveMapS_50c0
+    call LearnPrereqKnown
     jr nz, jr_006_507c
 
     ld a, [hl]
     cp $ff
-    jp z, Jump_006_50b5
+    jp z, LearnFoundAllPrereqs
 
-    call SaveMapS_50c0
+    call LearnPrereqKnown
     jr nz, jr_006_507c
 
     ld a, [hl]
     cp $ff
-    jp z, Jump_006_50b5
+    jp z, LearnFoundAllPrereqs
 
-    call SaveMapS_50c0
+    call LearnPrereqKnown
     jr nz, jr_006_507c
 
-    jp Jump_006_50b5
+    jp LearnFoundAllPrereqs
 
 
 Jump_006_507c:
@@ -3096,7 +3124,9 @@ jr_006_507c:
     ret
 
 
-jr_006_5097:
+; [S130] LearnFoundInQueue — code 0: c was in the learn queue; the queue
+; byte := $FF (consumed), $FFD8 = c, $FFD9 = 0.
+LearnFoundInQueue:
     ld a, $ff
     ld [de], a
     pop de
@@ -3110,7 +3140,9 @@ jr_006_5097:
     ret
 
 
-Jump_006_50a6:
+; [S130] LearnFoundUpgrade — code 1: the row's ONLY prereq is known; $FFDA =
+; that prereq (the skill being replaced), $FFD8 = c, $FFD9 = 1.
+LearnFoundUpgrade:
     dec hl
     ld a, [hl]
     ldh [$da], a
@@ -3124,7 +3156,9 @@ Jump_006_50a6:
     ret
 
 
-Jump_006_50b5:
+; [S130] LearnFoundAllPrereqs — code 2: 2-5 prereqs, all known; $FFD8 = c,
+; $FFD9 = 2 (added beside them, nothing replaced).
+LearnFoundAllPrereqs:
     pop bc
     pop hl
     pop de
@@ -3135,15 +3169,18 @@ Jump_006_50b5:
     ret
 
 
-SaveMapS_50c0:
+; [S130] LearnPrereqKnown — Z when the prereq at [HL] is one of the 8 known
+; skills at DE (+$29; LearnKnownScan); HL += 1, DE kept. Flags survive inc hl.
+LearnPrereqKnown:
     push de
-    call FuncMapS_50c7
+    call LearnKnownScan
     pop de
     inc hl
     ret
 
 
-FuncMapS_50c7:
+; [S130] LearnKnownScan — Z when [HL] matches one of the 8 bytes at DE.
+LearnKnownScan:
     ld b, $08
 
 jr_006_50c9:
@@ -3159,7 +3196,8 @@ jr_006_50c9:
     ret
 
 
-SetMapS_50d2:
+; [S130] LearnWorkListHas — Z when C is in the 40-byte work list $C0D8.
+LearnWorkListHas:
     ld de, $c0d8
     ld b, $28
 

@@ -21,8 +21,8 @@ SECTION "ROM Bank $051", ROMX[$4000], BANK[$51]
     dw $524A                          ; Entry 9
     dw LoadBtlS_46aa                  ; Entry 10
     dw LoadBtlS_44a9                  ; Entry 11
-    dw $5578                          ; Entry 12
-    dw LoadBtlS_5b31                  ; Entry 13
+    dw LevelUpStateMachine            ; Entry 12 (S130: post-battle level-up states)
+    dw ApplyLevelUp                  ; Entry 13 (S130: apply one level-up)
     dw $5C33                          ; Entry 14
     dw $537A                          ; Entry 15
     dw $6959                          ; Entry 16
@@ -714,6 +714,9 @@ jr_051_4498:
     ret
 
 
+; [S130 F9] the KO / flee slot RELOAD (wBattlePostFlag = 1): party -> the record's
+; MaxHP/MaxMP/ATK/DEF/AGL/INT/level/res/skills (HP, MP skipped); enemy -> its
+; row incl. MP, but only the 4 skill bytes of $DC64 (tags kept). Measured.
 LoadBtlS_44a9:
     ld a, [$db4c]
     ld c, a
@@ -1905,6 +1908,8 @@ jr_051_4aa2:
     ret
 
 
+; [S130 P3.15b] post-battle: record +$0B high nibble := ($C876&3)<<2 | ($DD03&3)
+; — a commanded monster keeps tactic 3 (Command) into the next battle.
 LoadBtlS_4ac0:
     ld a, c
     ld hl, $cacc
@@ -2098,6 +2103,8 @@ LoadBtlS_4b83:
     ret
 
 
+; [S130 P3.15b] post-battle: a LIVE party monster's battle bases $DC44/$DC54/
+; $DC5C/$DC4C (incl. the plan-$81 personality drift) go back to the record.
 LoadBtlS_4b96:
     ld a, c
     ld de, $dd1b
@@ -2166,6 +2173,10 @@ jr_051_4be7:
     ret
 
 
+; [S130 F9] FleeSlot_4be8 (entry 3, from FleeBookkeeping_7242): helper slot
+; (&3 == 3) -> $DD1B := $FF and its side's summon bit2 CLEARED; else the slot
+; reload LoadBtlS_44a9; then KOStatusWipe_4c26.
+FleeSlot_4be8:
     ld a, $01
     ld [$d9f0], a
     ld a, [$db4c]
@@ -2204,6 +2215,10 @@ jr_051_4c00:
     ret
 
 
+; [S130 F1] KO state (bank $51 entry 15): HP := 0 and $DB02+8t..$DB09+8t := 0 (+3 via
+; BitBtlS_4ca0, which reverts a transform first) — measured beat_ko.
+; [S130 F9] also: MP := min(MP, MaxMP) (the CmpHLvsBC block below), measured.
+KOStatusWipe_4c26:
 LoadBtlS_4c26:
     ld a, [$dd72]
     ld hl, wBattleHP
@@ -2409,6 +2424,9 @@ jr_051_4d10:
     ret
 
 
+; [S130 F9] HelperTatsu_4d16 (entry 5): Tatsu: L30 HP/MaxHP 200 MP 100 ATK 180 DEF 150 AGL 80 INT 150, $DD0B 1;
+; WLD $00FF, AI bases $FA x4, 3 options, res; slot := attacker side | 3.
+HelperTatsu_4d16:
     ld b, $00
     ld a, [wBattleAttackerIdx]
     and $04
@@ -2625,6 +2643,9 @@ jr_051_4d10:
     ret
 
 
+; [S130 F9] HelperDiago_4e5e (entry 6): Diago: L40 300/300 MP 200 ATK 210 DEF 160 AGL 120 INT 100, $DD0B 1;
+; WLD $00FF, AI bases $FA x4, 3 options, res; slot := attacker side | 3.
+HelperDiago_4e5e:
     ld b, $00
     ld a, [wBattleAttackerIdx]
     and $04
@@ -2843,6 +2864,9 @@ jr_051_4d10:
     ret
 
 
+; [S130 F9] HelperSamsi_4faa (entry 7): Samsi: L50 450/450 MP 200 ATK 250 DEF 190 AGL 150 INT 200, $DD0B 2;
+; WLD $00FF, AI bases $FA x4, 3 options, res; slot := attacker side | 3.
+HelperSamsi_4faa:
     ld b, $00
     ld a, [wBattleAttackerIdx]
     and $04
@@ -3061,6 +3085,9 @@ jr_051_4d10:
     ret
 
 
+; [S130 F9] HelperBazoo_50f6 (entry 8): Bazoo: L60 HP 700 / MaxHP 444 (!) MP 400 ATK 350 DEF 300 AGL 100 INT 250, $DD0B 2;
+; WLD $00FF, AI bases $FA x4, 3 options, res; slot := attacker side | 3.
+HelperBazoo_50f6:
     ld b, $00
     ld a, [wBattleAttackerIdx]
     and $04
@@ -3283,6 +3310,8 @@ jr_051_4d10:
     ret
 
 
+; [S130 F9] DragonForm_524a (entry 9): see DragonFormLoad_6684.
+DragonForm_524a:
     ld a, [wBattleAttackerIdx]
     ld hl, $db9b
     add l
@@ -3814,42 +3843,41 @@ jr_051_5559:
     ret
 
 
+; =============================================================================
+; [S130] LevelUpStateMachine — bank $51 ENTRY 12 ($5578): the post-battle
+; LEVEL-UP flow for party slot [$CAC0], one state per frame
+; (wEventStateMachineIndex). Order: S01 computes the gains (bank $13
+; LevelUpGains, OLD level) -> S03/S04 the learn scan on the PRE-gain stats,
+; comparing level+1 -> S0A-S0F the forget menu when 9+ skills -> S11
+; LearnCopyBack ($C0D8[0..7] -> +$29) then ApplyLevelUp (entry 13: level
+; += 1, gains added). Measured S130 (tools/census_raising.py, 5,073
+; level-ups, 0 mismatches; 4 real battles on a save == the model).
+; =============================================================================
+LevelUpStateMachine:
     ld a, [wEventStateMachineIndex]
     rst $00
-    and b
-    ld d, l
-    ld [bc], a
-    ld d, [hl]
-    jr c, @+$58
-
-    ld [hl], $57
-    ld e, a
-    ld d, a
-    cp d
-    ld d, a
-    call nz, $ce57
-    ld d, a
-    ret c
-
-    ld d, a
-    ld [c], a
-    ld d, a
-    rst $20
-    ld d, a
-    ccf
-    ld e, b
-    add a
-    ld e, c
-    db $e3
-    ld e, c
-    ld a, [de]
-    ld e, d
-    ld d, e
-    ld e, d
-    cp h
-    ld e, d
-    push hl
-    ld e, d
+; [S130] the 18 states (was misassembled as code; byte-identical dw list).
+    dw LevelUpS00_Begin         ; $00
+    dw LevelUpS01_Gains         ; $01
+    dw LevelUpS02_ShowGains     ; $02
+    dw LevelUpS03_LearnInit     ; $03
+    dw LevelUpS04_LearnScan     ; $04
+    dw LevelUpS05_Wait          ; $05
+    dw LevelUpS06_Wait          ; $06
+    dw LevelUpS07_Wait          ; $07
+    dw LevelUpS08_Wait          ; $08
+    dw LevelUpS09_Next          ; $09
+    dw LevelUpS0A_LearnCount    ; $0A
+    dw LevelUpS0B_ForgetMenu    ; $0B
+    dw LevelUpS0C_ForgetPick    ; $0C
+    dw LevelUpS0D_ForgetAsk     ; $0D
+    dw LevelUpS0E_ForgetYesNo   ; $0E
+    dw LevelUpS0F_ForgetAnswer  ; $0F
+    dw LevelUpS10_MaxLevelLine  ; $10
+    dw LevelUpS11_Apply         ; $11
+; [S130] level-up state $00 ($55A0): level >= 99 -> nothing to do ($D9EC += 1, stay in state 0);
+;   else open the level-up window.
+LevelUpS00_Begin:
     ld a, [$cac0]
     ld hl, $cb0c
     call GetMonsterDataPtr
@@ -3897,6 +3925,10 @@ jr_051_55b7:
     ret
 
 
+; [S130] level-up state $01 ($5602): name + level+1 into the text buffers, BGM $47, then
+;   `ld hl,$1302 / rst $10` = bank $13 LevelUpGains: the six gains
+;   into $C8CA-$C8CF at the OLD level (the window shows level+1).
+LevelUpS01_Gains:
     ld a, [$cac0]
     ld hl, $cac2
     call GetMonsterDataPtr
@@ -3922,6 +3954,10 @@ jr_051_55b7:
     ret
 
 
+; [S130] level-up state $02 ($5638): a stat already at its cap (MaxHP/MaxMP/ATK/DEF 999, AGL 511,
+;   INT 255) gets gain 0 unless at-cap ($C8D0); digits; text $0B1E
+;   (gains) or $0B1F (at-cap: the stats go DOWN, see ApplyLevelUp).
+LevelUpS02_ShowGains:
     ld a, [$c825]
     or a
     ret nz
@@ -4083,6 +4119,8 @@ jr_051_572e:
     ret
 
 
+; [S130] level-up state $03 ($5736): $C0D8 := $FF x 40, then the 8 known skills +$29 copied in.
+LevelUpS03_LearnInit:
     ld a, [$c825]
     or a
     ret nz
@@ -4109,6 +4147,11 @@ jr_051_5754:
     ret
 
 
+; [S130] level-up state $04 ($575F): one bank $06 SkillLearnScan ($0605) per tick until $FFD8 = $FF;
+;   jr_051_5799 places the result: code 0/2 (C = $FF) -> the first
+;   $FF slot of $C0D8, code 1 (C = old id $FFDA) -> over the old id.
+;   Done -> bank $01 entry 6 ($0106), next state.
+LevelUpS04_LearnScan:
     ld a, [$c825]
     or a
     ret nz
@@ -4142,6 +4185,8 @@ jr_051_5754:
     ldh a, [$da]
     ld c, a
 
+; [S130] place the scan result: C = $FF (code 0/2) -> the first $FF slot of
+; $C0D8; C = the old id (code 1) -> replaced in place by $FFD8.
 jr_051_5799:
     push bc
     call SetupTilemapTransfer
@@ -4175,6 +4220,8 @@ jr_051_57b1:
     ret
 
 
+; [S130] level-up state $05 ($57BA): wait for the text ($C825), next.
+LevelUpS05_Wait:
     ld a, [$c825]
     or a
     ret nz
@@ -4184,6 +4231,8 @@ jr_051_57b1:
     ret
 
 
+; [S130] level-up state $06 ($57C4): wait, next.
+LevelUpS06_Wait:
     ld a, [$c825]
     or a
     ret nz
@@ -4193,6 +4242,8 @@ jr_051_57b1:
     ret
 
 
+; [S130] level-up state $07 ($57CE): wait, next.
+LevelUpS07_Wait:
     ld a, [$c825]
     or a
     ret nz
@@ -4202,6 +4253,8 @@ jr_051_57b1:
     ret
 
 
+; [S130] level-up state $08 ($57D8): wait, next.
+LevelUpS08_Wait:
     ld a, [$c825]
     or a
     ret nz
@@ -4211,16 +4264,21 @@ jr_051_57b1:
     ret
 
 
+; [S130] level-up state $09 ($57E2): next.
+LevelUpS09_Next:
     ld hl, wEventStateMachineIndex
     inc [hl]
     ret
 
 
+; [S130] level-up state $0A ($57E7): LearnCompactCount: <= 8 skills -> state $10; 9+ -> text $0B04
+;   and the forget menu (state $0B).
+LevelUpS0A_LearnCount:
     ld a, [$c825]
     or a
     ret nz
 
-    call SetBtlS_580d
+    call LearnCompactCount
     cp $09
     jr nc, jr_051_57f9
 
@@ -4240,7 +4298,10 @@ jr_051_57f9:
     ret
 
 
-SetBtlS_580d:
+; [S130] LearnCompactCount — compacts the 40-byte work list $C0D8 (the $FF
+; holes squeezed out through wDebug_main_menu_option) and returns A = the
+; number of skills (9+ -> the forget menu).
+LearnCompactCount:
     ld hl, wDebug_main_menu_option
     ld bc, $0028
     ld a, $ff
@@ -4280,6 +4341,8 @@ jr_051_5837:
     ret
 
 
+; [S130] level-up state $0B ($583F): forget menu: draw the $C0D8 list (count -> $D9F6).
+LevelUpS0B_ForgetMenu:
     ld a, [$c825]
     or a
     ret nz
@@ -4287,7 +4350,7 @@ jr_051_5837:
     ld hl, $89c0
     ld de, $5112
     call WaitDMATransfer
-    call SetBtlS_580d
+    call LearnCompactCount
     ld [$d9f6], a
     ld hl, wEventStateMachineIndex
     inc [hl]
@@ -4466,6 +4529,8 @@ SetBtlS_592a:
     ret
 
 
+; [S130] level-up state $0C ($5987): forget menu cursor; A -> next.
+LevelUpS0C_ForgetPick:
     ld de, $59d7
     ld hl, wOPTN_and_Item_selection
     ld a, [$d9f6]
@@ -4524,6 +4589,8 @@ jr_051_59d6:
     nop
     add hl, hl
     ld bc, $ffff
+; [S130] level-up state $0D ($59E3): "forget <skill>?" (text $0B05).
+LevelUpS0D_ForgetAsk:
     ld a, [$c825]
     or a
     ret nz
@@ -4555,6 +4622,8 @@ jr_051_59d6:
     ret
 
 
+; [S130] level-up state $0E ($5A1A): yes/no box.
+LevelUpS0E_ForgetYesNo:
     ld a, [$c825]
     or a
     ret nz
@@ -4580,6 +4649,8 @@ jr_051_59d6:
     ret
 
 
+; [S130] level-up state $0F ($5A53): B / no -> state $0B; yes -> that $C0D8 byte := $FF, text $0B06.
+LevelUpS0F_ForgetAnswer:
     ld de, $5ab6
     ld hl, $c8dd
     ld b, $02
@@ -4640,6 +4711,9 @@ jr_051_5ab5:
     ld bc, $016f
     rst $38
     rst $38
+; [S130] level-up state $10 ($5ABC): text $0B20 when level + 1 == max level +$4C (this level-up
+;   reaches the cap).
+LevelUpS10_MaxLevelLine:
     ld a, [$c825]
     or a
     ret nz
@@ -4666,11 +4740,15 @@ jr_051_5ae0:
     ret
 
 
+; [S130] level-up state $11 ($5AE5): LearnCompactCount >= 9 -> back to the forget menu (state $0B);
+;   else jr_051_5b04: LearnCopyBack + ApplyLevelUp, state 0,
+;   $D9EC -= 1.
+LevelUpS11_Apply:
     ld a, [$c825]
     or a
     ret nz
 
-    call SetBtlS_580d
+    call LearnCompactCount
     cp $09
     jr c, jr_051_5b04
 
@@ -4685,8 +4763,8 @@ jr_051_5ae0:
 
 
 jr_051_5b04:
-    call LoadBtlS_5b1c
-    call LoadBtlS_5b31
+    call LearnCopyBack
+    call ApplyLevelUp
     call SetBtlS_742a
     call SetBtlS_768a
     call ProcessBattleTurn
@@ -4697,7 +4775,9 @@ jr_051_5b04:
     ret
 
 
-LoadBtlS_5b1c:
+; [S130] LearnCopyBack — the first 8 bytes of the compacted work list $C0D8
+; -> the known skills +$29 ($CAEA).
+LearnCopyBack:
     ld a, [$cac0]
     ld hl, $caea
     call GetMonsterDataPtr
@@ -4714,7 +4794,14 @@ jr_051_5b2a:
     ret
 
 
-LoadBtlS_5b31:
+; [S130] ApplyLevelUp — bank $51 entry 13 (also called by LevelUpS11_Apply).
+; level >= 99 -> nothing. Else level +$4B += 1, then the gains $C8CA-$C8CF:
+; normal: AddMonsterHP -> MaxHP +$52 only (cap 999), MP -> MaxMP +$56 (999),
+; ATK 999, DEF 999, AGL 511, INT 255 — current HP/MP are NOT raised;
+; at-cap ($C8D0, level >= max level +$4C): SubMonster* (floor 1) and HP / MP
+; clamped to the new maxima. Measured S130 (census: 484 past-max level-ups,
+; every subtraction exact).
+ApplyLevelUp:
     ld a, [$cac0]
     ld hl, $cb0c
     call GetMonsterDataPtr

@@ -290,6 +290,15 @@ BtlSkillTargetDispatch_401d:
     cp $04
     jp nc, Jump_058_441b
 
+; [S130 P3.15b] PLAIN-ATTACK TARGET SERVICE, PARTY side ($DD0B != 0, non-link;
+; $DD0B == 0 took LoadBtlFX_642c uniform above). Values in $DB58+2c, argmin
+; (LoadBtlFX_433e). No live non-airborne target -> HP+DEF; no 'clean' one
+; (SetBtlFX_43ea: +6 bit2, shifted $DB08+8c bit5, $DB09+8c & 7 = defending) ->
+; HP+DEF (DEF/2 if $DB08+8c bit2); else (mode 2: also not incapacitated)
+; max(HP - estimate, 0), metal x50, estimate = bank $52 entry 3 =
+; CalcSkillDefense with wBattleTargetIdx still = the SIDE BASE: every estimate
+; uses the first slot's DEF (vanilla quirk). battle.party_attack_pick,
+; measured on disobedient Attacks (validate_command.py).
 Jump_058_4206:
     ld a, [wBattleAttackerIdx]
     and $04
@@ -514,6 +523,8 @@ jr_058_4337:
     dec b
     jr nz, jr_058_4337
 
+; [S130 P3.15b] argmin of the three words; a tie with the running best takes
+; one RNG step (LoadBtlFX_5c3e) and the challenger wins iff RNG1 bit1 == 0.
 LoadBtlFX_433e:
     ld a, $00
     ld [$db61], a
@@ -647,6 +658,8 @@ jr_058_43d7:
     ret
 
 
+; [S130 P3.15b] Z = 'clean' target: +6 bit2 clear, $DB08+8c bit5 clear, $DB09+8c
+; & 7 == 0 (the slot-shifted guard/defence bytes, S89 layout).
 SetBtlFX_43ea:
     ld hl, $db06
     call HL_AddA_x8
@@ -860,6 +873,11 @@ jr_058_44f3:
     ret
 
 
+; [S130 F5] Target row for Heal/HealMore/HealAll ($2B-$2D): $DD0B 0 ->
+; uniform own pick (CallBtlFX_6556); 2 -> HealNeedMode2_4591; else the
+; (MaxHP // HP, MaxHP % HP) scan HealNeedScan_4515 + LoadBtlFX_665a.
+; Validated 267 calls (commit + act), simulator/skillfx/f5_heal.py.
+TargetRowHeal_44f7:
     call CallBtlFX_6556
     ret z
 
@@ -878,6 +896,9 @@ jr_058_44f3:
     cp $02
     jp z, Jump_058_4591
 
+; [S130 F5] Per own slot: dead (0,0), full (0,1), else (q, r) = divmod(MaxHP,
+; HP) into $DB58/$DB61; LoadBtlFX_665a keeps the lexicographic max.
+HealNeedScan_4515:
 Jump_058_4515:
 jr_058_4515:
     ld a, e
@@ -965,6 +986,10 @@ jr_058_454d:
     ret
 
 
+; [S130 F5] Mode 2: T = (sum live MaxHP) / n / n (a METAL slot adds BC*30 with
+; BC = the loop registers); each live wounded slot with HP < T is taken
+; (T := HP), HP == T rolls (RNG1 >= $80 takes); none -> the mode-1 scan.
+HealNeedMode2_4591:
 Jump_058_4591:
     xor a
     ld [$db4c], a
@@ -1133,6 +1158,9 @@ jr_058_4693:
     jp Jump_058_4515
 
 
+; [S130 F5] Target row for Vivify/Revive ($30/$31): own base+2 DOWN to base,
+; the first dead slot; none -> the attacker itself. Validated 29 calls.
+TargetRowVivify_469e:
     ld a, [wBattleAttackerIdx]
     and $04
     or $02
@@ -1167,6 +1195,10 @@ jr_058_46b8:
     ret
 
 
+; [S130 F5] Target row for Antidote: mode 0 uniform own; else base+2..base
+; with +2 bit1 (heavy DoT), then base+2, base+1 (2 slots only) with bit0,
+; else the base. No life check. Validated 16 calls.
+TargetRowAntidote_46c7:
     call CallBtlFX_6556
     ret z
 
@@ -1846,6 +1878,10 @@ jr_058_4a9c:
     ret
 
 
+; [S130 F6] Cover $88 target row (BtlSkillTargetDispatch_401d): $DD0B == 0 -> the uniform
+; [S130 F6] own-side pick $6479 (one RNG step); else the lowest HP (+$200 metal) OTHER live
+; [S130 F6] own slot, ties to the later slot (LoadBtlFX_6224); none -> self.
+CoverTargetRow_4aba:
     call CallBtlFX_6556
     ret z
 
@@ -2222,6 +2258,10 @@ jr_058_4cc5:
     ret
 
 
+; [S130 F5] Target row for OddDance/RobDance ($75/$76): mode 0 uniform
+; opposing; else word ((3 - MP-res level) << 12) | 1 per live slot with MP
+; (0 otherwise), SetBtlFX_619a keeps the highest (ties: RNG1 >= $80 moves).
+TargetRowOddDance_4cd1:
     call CallBtlFX_654d
     ret z
 
@@ -2576,6 +2616,10 @@ jr_058_4ecc:
     ret
 
 
+; [S130 F9] TargetRowTransform_4ed8 (Transform $29): $DD0B == 0 -> uniform
+; opposing; else argmax MaxHP+MaxMP over the opposing base..base+2, a later slot
+; wins ties. Measured (act-time re-resolve).
+TargetRowTransform_4ed8:
     call CallBtlFX_654d
     ret z
 
@@ -3240,6 +3284,10 @@ jr_058_528d:
     ret
 
 
+; [S130 F5] Target row for RobMagic $1A: mode 0 uniform opposing; else score
+; $FF (non-live / MP 0), $FE (+4 & $22), else 4 x MP-res level; LoadBtlFX_5f0c
+; keeps the LOWEST (the base ties with itself first; ties roll RNG1 >= $80).
+TargetRowRobMagic_52a9:
     call CallBtlFX_654d
     ret z
 
@@ -3532,6 +3580,10 @@ jr_058_541d:
     ld [hl], a
     jr jr_058_5478
 
+; [S130 P3.15b] commit sub-state, target byte $FF: an incapacitated actor
+; (GetMonsterSlotInfo carry, code above) gets ($3A, own slot); else skill $FF
+; -> $3A (arena 'NO SP SK') and the per-skill target service. A concrete
+; target (an obeyed order) skips straight to the $DB42 tension rolls.
 jr_058_545b:
     ld a, [$c88b]
     or a
@@ -4762,6 +4814,13 @@ jr_058_5a2e:
     ret
 
 
+; [S130 F4] $DB42 TENSION ROLL A (command phase, jr_058_5478, every actor;
+; only party slots 0-2 of a non-link battle roll): incapacitated -> ret; one
+; GenerateRNG step; +6&$0C -> ret; +7&$0C -> bit7 via w3 ladder B; else by
+; the queued skill: cat1 $DC44 bit0 (SURE CRIT; attacks) / bit1 ladder B
+; ($8D/$8E/$90), cat2 $DC4C bit2 (status spells), cat3 $DC54 bit4 (heals) /
+; bit5 ladder B ($8C). Modelled: f4_charge.roll_5a40, measured 13528/13528 (A+B).
+TensionRollA_5a40:
 LoadBtlFX_5a40:
     ld a, [wBattleAttackerIdx]
     call GetMonsterSlotInfo
@@ -4926,6 +4985,7 @@ jr_058_5b10:
     ld d, $20
     jr jr_058_5b63
 
+; [S130 F4] $DB42 bit6 (x1.5 at $53:$59C3) from w3 $DC5C ladder A.
 SetBtlFX_5b17:
     ld hl, $dc5c
     ld d, $40
@@ -4937,6 +4997,8 @@ jr_058_5b1e:
     ld d, $80
     jr jr_058_5b63
 
+; [S130 F4] ladder A: base < $81 -> no; < $A2 / $C3 / $E4 / else -> RNG1 < 1/2/4/8.
+TensionLadderA_5b25:
 jr_058_5b25:
     ld a, [wBattleAttackerIdx]
     add l
@@ -4992,6 +5054,9 @@ jr_058_5b4e:
     ret
 
 
+; [S130 F4] ladder B: base >= $80 -> no; >= $60 / $3F / $1E / else -> RNG1 <
+; 2/4/8/$10.
+TensionLadderB_5b63:
 jr_058_5b63:
     ld a, [wBattleAttackerIdx]
     add l
@@ -5047,6 +5112,11 @@ jr_058_5b8c:
     ret
 
 
+; [S130 F4] $DB42 TENSION ROLL B: one step; +6/+7 & $0C -> ret; $90 -> cat2
+; bit3 ladder B; attacks and spells (<$12, $3A, $44-$51, $55-$69, $D6-$D9)
+; -> SetBtlFX_5b17 = the $DB42 bit6 x1.5 damage boost (the S89 'unlocated
+; setter'). Modelled: f4_charge.roll_5ba1.
+TensionRollB_5ba1:
 LoadBtlFX_5ba1:
     ld a, [wBattleAttackerIdx]
     call GetMonsterSlotInfo
@@ -5683,6 +5753,8 @@ LoadBtlFX_5f01:
     ret
 
 
+; [S130 F5] Min-score pick over $DB50[0..2] from $DB4C/$DB4D (ties: 1 step,
+; RNG1 >= $80 moves); writes wBattleTargetIdx + the queue target byte.
 LoadBtlFX_5f0c:
 jr_058_5f0c:
     ld a, c
@@ -6165,6 +6237,8 @@ LoadBtlFX_6188:
     ret
 
 
+; [S130 F5] Max-word pick over $DB56/58/5A (slots 1, 2 vs the best; ties: 1
+; step, RNG1 >= $80 moves); target := opposing base + index.
 SetBtlFX_619a:
     ld hl, $db58
     ld a, l
@@ -6340,6 +6414,9 @@ LoadBtlFX_6292:
     ret
 
 
+; [S130 F10] row of $80 DeMagic (and the spells listed): the first live slot of the
+; [S130 F10] caster's opposite side, none -> its base (LoadBtlFX_62d9). Measured: every
+; [S130 F10] re-resolving DeMagic caster acted on it (simulator/validate_f10.py).
 Jump_058_62bf:
     ld a, [wBattleAttackerIdx]
     and $04
@@ -6349,6 +6426,9 @@ Jump_058_62bf:
     ret
 
 
+; [S130 F5] Target row $62CD (HealUs/HealUsAll/Hustle/NumbOff/DeChaos/CurseOff/
+; RESTOREMP): the first live OWN slot from the base (none -> base).
+TargetRowFirstLiveOwn_62cd:
     ld a, [wBattleAttackerIdx]
     and $04
     ld [$db4c], a
@@ -6387,6 +6467,13 @@ jr_058_62ed:
     ret
 
 
+; [S130 F9] TargetRowCallHoror_62fd ($A2 CALLHOROR / $A5 FILTHZONE): $DD69 == 0 ->
+; the first live slot from the opposing base up to base|3 (a helper counts).
+TargetRowCallHoror_62fd:
+; [S130 F10] row of $83 ThickFog / $A5 FILTHZONE: $DD69 == 0 -> the first live slot of
+; [S130 F10] the opposite side scanning base..base+3 (helper included); else the
+; [S130 F10] group-walk continuation from $DCED (jr_058_632a). Measured (re-resolve).
+TargetRowFieldOppFirstLive_62fd:
     ld a, [$dd69]
     or a
     jr nz, jr_058_632a
@@ -6467,6 +6554,8 @@ jr_058_6350:
     inc c
     jr jr_058_6350
 
+; [S130 F5] Target row $635F (Farewell/LifeSong/LifeDance/ALLREVIVE): own base.
+TargetRowOwnBase_635f:
     ld a, [wBattleAttackerIdx]
     and $04
     ld c, a
@@ -6499,6 +6588,11 @@ TargetSelfWrite_6367:
 ; probe outstanding. BREADCRUMB (byte-verified S83): $50:$4C87 far-calls
 ; bank $58 entry 4 directly (ld hl,$5804/rst $10) — candidate for the
 ; OPEN post-commit target write site; NOT yet measured.
+; [S130 F4] MASSACRE's target row ($58:$401D [$3F]): side-blind slot fishing,
+; RNG as found (no step): RNG1&7, RNG2&7, ((RNG2&7)|RNG1)&7, (that|RNG2)&7,
+; (RNG2+that)&7, then RNG2-1... until CheckMonsterSlot is live. Runs at the
+; commit AND at the act-time re-resolve; Massacre hits allies (47 of 82 picks
+; measured S130; simulator/skillfx/f4_charge.massacre_pick, 82/82).
 TargetSlotResolver_6379:
     ld a, [wRNG1]
     ld c, a
@@ -6572,6 +6666,9 @@ jr_058_63c0:
     ret
 
 
+; [S130 F9] TargetRowSelfQueue_63d6 (Chance, TatsuCall..BazooCall): queue target
+; := the attacker.
+TargetRowSelfQueue_63d6:
     ld a, [wBattleAttackerIdx]
     ld hl, $dcec
     add a
@@ -6656,6 +6753,10 @@ jr_058_6415:
     ret
 
 
+; [S130 F8] = bank $58 entry 5 ($5805): the multi-hit re-pick (QuadHits every
+; later pass, BiAttack after a dead target, CallHelp/YellHelp every later
+; helper) and the act-time re-resolve of $51/$52/$53; same frame as the
+; continuation (k=0, measured 488/488).
 LoadBtlFX_642c:
     ld a, [wBattleAttackerIdx]
     and $04
@@ -6877,6 +6978,7 @@ LoadBtlFX_6533:
     ret
 
 
+; [S130 F5] Z = handled: $DD0B == 0 -> LoadBtlFX_642c (uniform OPPOSING pick).
 CallBtlFX_654d:
     call LoadBtlFX_655f
     ret nz
@@ -6886,6 +6988,7 @@ CallBtlFX_654d:
     ret
 
 
+; [S130 F5] Z = handled: $DD0B == 0 -> LoadBtlFX_6479 (uniform OWN pick).
 CallBtlFX_6556:
     call LoadBtlFX_655f
     ret nz
@@ -7110,6 +7213,8 @@ jr_058_6656:
     ret
 
 
+; [S130 F5] Heal-need pick: the max (q, r) of $DB58/$DB61 over own slots 0-2,
+; ties keep the lower slot; target := own base + it (queue byte too).
 LoadBtlFX_665a:
     ld a, $00
     ld [$db5e], a

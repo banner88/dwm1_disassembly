@@ -1565,9 +1565,11 @@ recipes are pure authoring.
         shrunk (crop by tightening the box); (c) the sheets are not committed
         (ripped art; the user keeps them, projects copy what they use);
         (d) AI weights are plain numbers — the explainer + simulator preview is
-        P3.15 (user OK'd); (e) a species' natural skills are learned on level-up
-        (a joining monster brings none — measured), so the in-game check of a
-        natural-skill edit needs a level-up.
+        P3.15 (user OK'd; S130: the Balance tab's what-if — EDITOR_DESIGN §5.9); (e) a
+        species' natural skills are learned on level-up, so the in-game check of a
+        natural-skill edit needs a level-up — S130 CORRECTION: a joining monster DOES
+        bring skills: its enemy row's 4 (measured 962/962, `tools/census_raising.py`,
+        MONSTER_DATA "Raising a monster (S130)"); the natural queue is what level-ups add.
   - [x] **P3.10 part 2 — art of the ORIGINAL species** — **split S107; 2a + 2b + 2c
         USER-CONFIRMED 2026-10-01** (user
         2026-10-01 15:52: "lets start with 2a and see how we go"; "I probably WONT
@@ -2036,7 +2038,7 @@ recipes are pure authoring.
       glitches with background colours from custom tiles"):** every bank $09 screen push →
       bank $77 `ScreenPush` (palette 7 for menu tiles in free-colour rooms) + `ShopBoxBottom`
       (a top dialog box re-seated at the bottom after a shop); built, NOT yet user-tested.
-- [ ] **ARC NG — NEW GATES (user S114: "I WANT TO MAKE NEW GATES. This includes a) random
+- [x] **ARC NG — NEW GATES** (parent box ticked S130: NG1-NG3 all done) **(user S114: "I WANT TO MAKE NEW GATES. This includes a) random
       gates just like vanilla - maybe copy a vanilla gate and edit encounters & link to new
       boss room, and b) FULLY CUSTOM GATES - ie series of rooms with branching structures,
       with per-room encounters settable").** Builds on P3.13a (lists are keyed by gate number
@@ -2323,15 +2325,61 @@ recipes are pure authoring.
         doors); room music and shop stock by flag. Banked (own investigation): a battle
         you may lose without going to the hub; using a key item in the field (E9); the
         ending / credits (E5).
-- [ ] **P3.15 — Balance tab** (simulator-as-a-service) — S114 note: per-list fight length
-      should start from `encounters_doc.enc_list_threat_rows(n)` (the real slot chances, the
-      levels, the max counts) and the measured draw (`encounters.simulate_battle` /
-      `group_odds`); `randomizer/romdata.Pool.weights` and `simulator/sweep_ttk.py` still
-      weigh slots by +20 (the max count, not a chance — DOC_AUDIT S114): fix there or wrap.
-      TTK/pacing sweeps,
-      what-if deltas on gamedata edits, obedience curves; unvalidated
-      subsystems greyed. *Accept:* a stat edit shows its TTK delta for an
-      affected pool before Build; numbers match a CLI sweep_ttk run.
+- [ ] **P3.15 — Balance tab** (simulator-as-a-service) — **split S130** (user: "Split sounds
+      fine its a big job"). User spec S130: a read-only anchor of the original game's
+      difficulty curve for every key fight (all gate encounters, all bosses, all arena
+      battles, Starry Night, Monster Grandpa) as a clear UI-visible list to compare custom
+      content against, recomputed from the project as skills / stat growth / exp curves /
+      boss & arena difficulty / breeding tables / breeding availability change; how much a
+      boss skillset change moves difficulty without trial runs; rolled teams a player might
+      have organically assembled (skills and growth count — "3 random crap skills vs 8
+      carefully curated"), for the original game too; view a team; set one / import it from
+      a .sav; progression pinned to the story order (gates + order + bosses + arena +
+      Starry Night + Grandpa, not the project's flags), fully custom gates "just need a
+      number"; breeding opens per story step (user plans one step earlier); real draws;
+      the gate dive measure ("excellent").
+  - [x] **P3.15a — the simulator learns every battle skill + the raising model + the Balance
+        tab** — **built S130, NOT yet user-tested** (no ROM bytes; byte-neutral). Every
+        battle skill family wired into the simulator through registries (BATTLE_SKILL_SYSTEM
+        §15.11; 10 families, each measured on the user's save and validated 0 mismatches);
+        the raising model `simulator/raising.py` == the game (`census_raising.py`: creation
+        962, level-ups 5,073, breeding 400 + 400, births 400, 0 mismatches); battles per maze
+        floor (`census_dive.py`, GATE_GENERATION §4.4); the service `editor2/core/balance.py`
+        + the anchor `extracted/balance_vanilla.json` (PROJECT_COMPILER §2.43); the tab
+        (EDITOR_DESIGN §5.9 as built). *Accept:* the tab shows the original curve; a
+        project's fights compute and compare; a boss what-if shows a delta; a .sav party
+        imports. **S130 r2 (user: "no way I have ever played the game with a level of 81 …
+        by S class"; "Which 8 skills you can bring together on 3 monsters is almost the
+        sole determiner of success"; "Always command unless arena"; "one general kit";
+        "30-40 level on average per mon"):** the player's orders measured and modelled
+        exact (`measure_command.py`, 56 battles, `validate_command.py` 6,411 / 0 —
+        BATTLE_SKILL_SYSTEM §15.10.7b; the party attack pick `$58:$41E9`); the 'player'
+        profile = an optimised kit per step (`kits.py`) under the planner's orders
+        (`planner.py`), best tactic in the arena — the main number (S class 32 / 28 / 38);
+        level colours in the tab.
+  - [ ] **P3.15b — Balance follow-ups** (open, from S130): (1) ~~calibrate against real
+        play~~ — the player profile (S130 r2) lands the S class at 32 / 28 / 38 (user's
+        30-40); the early-gate numbers that rest on status locks (Sleep / LegSweep on
+        StoneMan, SleepAll on FunkyBird — allowed by their resistances) ACCEPTED by the
+        user 2026-10-08 11:35 ("stoneman and funkybird are some of the easiest fights
+        overall … it seems like the new average is a good reflection of difficulty which is
+        what we want. If some monsters are more susceptible than others thats totally fine");
+        noted: a step kit is searched against that step's fights, so it can lean on a
+        boss's weakness more than a real run would (players keep skills that are useful on
+        average); still open: "no bred kit below level 10" is a FLOOR — the original curve
+        flattens at 10 over steps 10-21 (Bravery, Well, D class, Strength, Left Gate, C, B):
+        a bred kid can be raised from level 1 once its parents reached 10, so the rule
+        should apply to the parents, not the kit (needs an anchor rebuild); the planner
+        looks one action ahead (two-turn skills, summons, dive-long MP plans unvalued); the
+        kit search is small and its skill pool ignores the 25-entry learn queue and special
+        recipes' minimum plus; tactics 0-2 left in place during a PLAN round (+45 bias +
+        drift) decoded, not modelled; (2) special
+        maze rooms (forest / maze / conveyor) walked as normal floors; (3) the old S114
+        notes — per-list fight length from `encounters_doc.enc_list_threat_rows(n)` and
+        `randomizer/romdata.Pool.weights` / `simulator/sweep_ttk.py` still weighing slots by
+        +20 (the max count, not a chance — DOC_AUDIT S114): fix there or wrap; (4) obedience
+        curves (WLD × tactic → obey %, the S87 model) and TTK sweeps per list as panels;
+        (5) items / confusion metas / message ids are the only unregistered battle actions.
 - [x] **P3.16 — M2R bifurcation** (one of the only remaining in-place
       vanilla edits under clone-to-custom, EDITOR_DESIGN §6.3): the
       dresser repoint + Terry-intro strip, authored via the World tab. *Accept:* new game →
@@ -2381,7 +2429,10 @@ Driven by what the editor must EDIT, not completionism:
       annotated in both trees (`BreedPlusAndSpecial`, `BreedFamilySearch` /
       `BreedFamilyScan`, `BreedSpecialEntryCheck`, `BreedCreateOffspring`, the gender
       table, the unreferenced mutation) and measured (BREEDING_SYSTEM "The resolver as
-      measured (S113)"). Entry 4 (inheritance) internals stay raw (P3.12 residual a).
+      measured (S113)"). Entry 4 (inheritance) internals stay raw (P3.12 residual a) — **CLOSED S130:**
+      entry 4 is the BIRTH FINALIZER (`BreedBirthFinalize`: WLD 0, master = player, learn
+      queue rebuilt father-first, a dead 25-step roll), annotated and modelled
+      (MONSTER_DATA "Raising a monster (S130)", census 400/400 births).
       → MONSTER_DATA "Species ID geography"; archive: SESSION_HISTORY Part 3.
 - [x] Bank $03 monster table → `db` ✅ VERIFIED S51: `MonsterInfoTable` +
       per-monster `MonsterInfo_NNN_Name:` labeled `db` blocks (stale box; the

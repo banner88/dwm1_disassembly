@@ -68,6 +68,9 @@ SELFTEST_TOOLS = [
     "audit_mapid_range.py",      # S120: every `ld a, [wMapID]` site in both trees has a verdict (no NEEDS_REVIEW, no stale key); was failing unseen S73-S99 and S116-S119
     "census_maze.py",            # S122: maze_pieces.json (maze tables, the 254 maze screens, 16 themes, metatiles) == ROM banks $16/$17/ROM0
     "extract_service_lines.py",  # S126: service_lines.json (the service screens' lines in frame + words, the medal rewards) == ROM; every line rebuilds
+    "census_raising.py",         # S130: raising_census.json clean + a quick PyBoy re-run: creation / level-up / learning / breeding / birth model == the game's routines
+    "census_dive.py",            # S130: dive_census.json == a re-derived sample (shortest walks, steps between battles; GATE_GENERATION §4.4)
+    "build_balance_anchor.py",   # S130: balance_vanilla.json covers every story fight x profile + every gate dive, matches SIM_VERSION / the raising digest, 3 fights + 1 dive re-derived
 ]
 
 PATCH_FILES = [

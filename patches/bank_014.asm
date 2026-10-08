@@ -124,7 +124,8 @@ label14_401d:
 
 ; [S87] MONSTER RECORD CONSTRUCTOR (entry 2; script opcode $29 path):
 ; builds the 149-byte instance record for slot [$da14] from the loaded
-; enemy-stats row staged at $DA18+. Stats AND the four AI-weight /
+; enemy-stats row staged at $DA18+. MaxHP/MaxMP/ATK/DEF/INT (NOT AGL —
+; S130 correction) AND the four AI-weight /
 ; personality bytes get a ONE-TIME per-value CREATION ROLL (SaveEnem_47fd
 ; byte / SaveEnem_4821 word): factor = ($CD + RNG mod $34)/256, i.e.
 ; uniform ~0.801..0.996x, with the $100 overflow case = exactly 1.0x.
@@ -133,6 +134,21 @@ label14_401d:
 ; (slot+$4C, $CB0D) = species base +-2 (RNG mod 5 - 2). WLD (slot+$60,
 ; $CB21) = 5*level - 10*arenaTier[$CAB4], clamped 0..$FF. See
 ; MONSTER_DATA "instance record" (S87).
+; [S130] full decode (simulator/raising.py create; tools/census_raising.py:
+; 962 creations, 0 mismatches). Record zero-filled; +$15/+$16 (pedigree
+; species) := $FF; +$29 (8 known skills) := $FF; +$31 (25-byte learn queue)
+; := $FF; the parents' name fields +$17/+$20/+$83/+$8C := the placeholder at
+; $477A; +$0C master name (8 B, 9th byte +$14 = $CAD5) := the player's name
+; $CA42 (CreateForeignMasterNames overrides it for the rival rows). Stats:
+; MaxHP/HP, MaxMP/MP, ATK, DEF, INT rolled (SaveEnem_4821); AGL copied
+; UNROLLED (see $CB1D). AI bytes +$64..+$67 <- row +17, +18, +20, +19, each
+; rolled. Known skills +$29 <- the row's 4 skills, then DropKnownSkillBases.
+; Learn queue +$31 <- info +$06..+$08 (the natural 3). Max level +$4C :=
+; info +$01 + (RNG1 mod 5) - 2. Gender +$0B := EnemyGroupTable[EID] unless
+; $FF, then RNG1 < CreateGenderThreshold[info +$03] -> 1 (female). Exp
+; snapped to the level ($1301 = bank $13 SnapExpToLevel).
+; RNG order: HP, MP, ATK, DEF, INT, the four AI rolls (+$64, +$65, +$66,
+; +$67), the cap roll, the gender roll (only when the table gives $FF).
 label14_40b4:
     ld hl, $cac1
     ld a, [$da14]
@@ -256,9 +272,9 @@ jr_014_4158:
     call FuncEnem_479e
     ld hl, $cb1b
     call SaveEnem_4821
-    ld hl, $cb1d
-    ld de, $da25
-    call FuncEnem_479e
+    ld hl, $cb1d                ; [S130] AGL +$5C: copied from row +13 with NO
+    ld de, $da25                ;   SaveEnem_4821 roll — the one unrolled stat
+    call FuncEnem_479e          ;   (MONSTER_DATA "every stat word" was wrong)
     ld hl, $cb1f
     ld de, $da27
     call FuncEnem_479e
@@ -345,11 +361,11 @@ jr_014_4264:
     ld de, $da42
     ld b, $1b
     call $4782
-    ld hl, $caf2
+    ld hl, $caf2                ; [S130] learn queue +$31 <- info +$06..+$08
     ld de, $da39
     ld b, $03
     call $4782
-    call SetEnem_47ad
+    call DropKnownSkillBases           ; [S130] known skills' bases leave the queue
     ld hl, $cacc
     ld a, [$da14]
     call GetMonsterDataPtr
@@ -370,7 +386,7 @@ jr_014_4264:
 
     ld [hl], $00
     call GenerateRNG
-    ld hl, $459e
+    ld hl, $459e                ; [S130] = CreateGenderThreshold (by info +$03 female ratio)
     ld a, [$da36]
     add l
     ld l, a
@@ -395,7 +411,7 @@ jr_014_42fe:
     rst $10
     ld a, [$da13]
     or a
-    jp nz, Jump_014_4413
+    jp nz, CreateForeignMasterNames
 
     ld a, [wTempEnemyStatsId]
     cp $01
@@ -529,7 +545,13 @@ jr_014_42fe:
     ret
 
 
-Jump_014_4413:
+; [S130] CreateForeignMasterNames — EIDs $131-$13C (high byte $01, low
+; $31-$3C, the rival tamers' teams): ANOTHER master's name -> +$0C ($CACD,
+; 8 B) and a nickname -> +$01 ($CAC2). $15E sets the EGG flag +$63
+; (Jump_014_4586); $15F / $1E4 / $1E5 a nickname only. EIDs < $100 listed
+; above ($01, $0C, $34, ...: the `$da13 == 0` cases) get a nickname only
+; (jr_014_4469). Every other row keeps the player's name as master.
+CreateForeignMasterNames:
     ld a, [wTempEnemyStatsId]
     cp $31
     jr z, jr_014_4472
@@ -752,6 +774,11 @@ Jump_014_4592:
     ret
 
 
+; [S130] CreateGenderThreshold ($14:$459E, 4 B by info +$03 female ratio
+; 0-3): db $00, $1a, $80, $d6 — P(female) = byte/256 (0 / 10 / 50 / 84 %),
+; the same bytes as bank $16 BreedGenderThreshold. The rival nicknames and
+; master names (8 B each, from $45A2) follow; all misassembled as code here.
+CreateGenderThreshold:
     nop
     ld a, [de]
     add b
@@ -1124,7 +1151,10 @@ FuncEnem_47a8:
     jp $4782
 
 
-SetEnem_47ad:
+; [S130] DropKnownSkillBases — for each of the 8 known skills +$29:
+; DropSkillBase (a known $DB is erased; else its base, through the 256-byte
+; UnevolvedSkillMap copy at $491D, leaves the learn queue +$31, first match).
+DropKnownSkillBases:
     ld hl, $caea
     ld a, [$da14]
     call GetMonsterDataPtr
@@ -1136,7 +1166,7 @@ jr_014_47ba:
     ld a, [de]
     push bc
     push de
-    call CmpEnem_47c7
+    call DropSkillBase
     pop de
     pop bc
     inc de
@@ -1146,7 +1176,10 @@ jr_014_47ba:
     ret
 
 
-CmpEnem_47c7:
+; [S130] DropSkillBase — A = known skill at [DE]: $FF -> nothing; $DB -> the
+; known slot := $FF; else base = [$491D + A] ($FF -> nothing) and the first
+; queue byte (+$31, 25) equal to it := $FF.
+DropSkillBase:
     cp $ff
     ret z
 
@@ -1397,6 +1430,12 @@ BossRedirectTable:
 ; encounter-related mapping. Sequential single-byte values.
 ; ---------------------------------------------------------------
 
+; [S130] NOT unknown: the 256-byte UnevolvedSkillMap copy read by
+; DropSkillBase (`ld hl, $491d`) starts at $491D, 2 bytes before this label
+; (overlapping the BossRedirect terminator's $0000); its bytes equal bank $16
+; UnevolvedSkillMap ($16:$4874, checked S130). Entries $F2-$FF ($4A0F-$4A1C)
+; are the first 14 bytes of EnemyGroupTable. Label kept (tools/
+; gen_enemy_stats_db.py emits it).
 UnknownData_491F:
     db $00, $03, $03, $03, $06, $06, $06, $09, $09, $09, $0C, $0C, $0C, $0F, $0F, $0F  ; $491F
     db $12, $12, $14, $15, $15, $17, $18, $19, $1A, $1A, $1C, $1C, $1E, $1E, $20, $20  ; $492F
@@ -1414,6 +1453,10 @@ UnknownData_491F:
     db $FF, $FF, $FF, $D5, $D6, $D7, $D8, $D9, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF  ; $49EF
     db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF  ; $49FF
     db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
+; [S130] EnemyGroupTable = the CREATION GENDER table ($14:$4A0F, 526 B,
+; index = EID 0-525; name kept — simulator/raising.py finds it by name):
+; $00 male / $01 female fixed for that enemy row, $FF = rolled (RNG1 <
+; CreateGenderThreshold[info +$03] -> female). Read by label14_40b4 -> +$0B.
 EnemyGroupTable:
     db $FF, $00  ;  $4A0F
     db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $00, $00, $FF, $FF, $FF, $FF, $FF  ; $4A1F

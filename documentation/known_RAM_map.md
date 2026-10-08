@@ -595,6 +595,9 @@
    1:DB9B   8    Per-combatant LEVEL array (MegaMagic/WindBeast/Vacuum
                  damage read it) [S78]
    1:DB85   1    Joinability: $07=non-joinable, other=recruitable via RNG
+                 [S130: a PER-ENEMY table $DB85+c, c = 0-2 (SaveBtlS_47e0;
+                 read by bank $54 JoinDecision with $DD61&3) — $DB86/$DB87
+                 are enemies 2/3's bytes]
    1:DD62   1    Battle-running latch (S68): nonzero -> bank $50 entry 1 runs
                  bank $02 entry 0 per-frame; ==0 -> the $D9EC phase machine
                  dispatches. Cleared by BattleInit.
@@ -626,6 +629,12 @@
    1:DB86   1    *** OUR custom-skill stash (real id, single). Was an unused ds
                  gap between $DB85 and wBattleAttackerIdx $DB88. VERIFIED free
                  by in-game test. Only writer = AliasCommit (patches/bank_050).
+                 *** CORRECTED S130: NOT free — it is wJoinability+1 (enemy 2's
+                 joinability, = 3 from battle init in 2-3 enemy battles), so the
+                 FarSkillFork alias path ($DB8A==0 -> [$DB86]) runs the handler
+                 of skill [$DB86] for every Blaze cast there (patch defect, not
+                 fixed; BATTLE_SKILL_SYSTEM §3, KEY_LESSONS S130). The S45 test
+                 was a 1-enemy battle.
    1:DB61  16    Turn-order KEY array (8 x u16, AGL-derived; S79) — filled
                  by TurnOrderBuild $58:$54D1, destructively sorted at $55C2
                  (the sort's first pass touches $DB71/$DB72 out of range).
@@ -678,13 +687,27 @@
                  3 rounds, phase-9 tick; forced $11 + full incoming
                  immunity) / bits3:2 SideStep dodge / bits1:0 surround
                  ctr / bits5:4 attacker-evade leg $53:$4BD3 (setter
-                 open) [S89]; +0/+1 = the GUARD/DEFENSIVE pair read ONE
+                 open) [S89]; [S130 corrections, BATTLE_SKILL_SYSTEM §15.11:
+                 +7 bits1:0 = the SandStorm/Radiant attacker-side 37.5 % miss
+                 MARK (|= 3, never decremented); +7 bit5 = LifeSong's charge
+                 (phase 9 moves it to bit4; the command loop skips an actor
+                 with +7 bit4); +3 bit5 = Transform, bit4 = dragon form (the
+                 "4,5" above is that pair); ANY forced action clears all +5
+                 bits 0-5; +4 = bit0 TakeMagic, bit1 Bounce, bit2 Barrier,
+                 bit5 MagicBack, bit6 TailWind, bit7 crit pending; +6 = $03
+                 ChargeUP, $0C HighJump airborne, $30 SuckAir, bit7 Focus ->
+                 bit6 follow-up; a KO zeroes +2..+9]; +0/+1 = the GUARD/DEFENSIVE pair read ONE
                  SLOT SHIFTED (slot t's record at $DB08/09+8t = slot
                  t+1's +0/+1): +8 bit4 protected + $DB09 hi-nibble
                  protector (Cover $88/Guardian $89, one round, act-time
                  redirect); +8 also Imitate $7F($08)/Dodge $8C($20)/
                  SuckAll $8F($02)/Defence $1D($80); +9 LOW nibble =
                  defense level $8D/$8E/$90 -> 1/2/4 [S89 measured].
+                 [S130: +8 bit7 = stat LOWERED marker, bit6 = RAISED marker
+                 (F7; "Defence $1D($80)" above is that marker), bit2 =
+                 Beserker's own mark (consumer $53:$5A44), bit0 = CALLEVIL /
+                 CallHelp flag; +9 bit2 = BladeD (the counter gate); slot 7's
+                 shifted pair is $DB40/$DB41; all ONE round (phase 9).]
    1:DB88   1    wBattleAttackerIdx — attacker combatant index (re-derived;
                  NOTE: repurposed during target processing, unreliable at
                  effect-dispatch time)
@@ -875,7 +898,7 @@
 
 | Addr | Role |
 |------|------|
-| $DB42+slot | Per-combatant battle flags. **bit6 = ×1.5 DAMAGE BOOST on this slot's outgoing hits** [S89, measured 8/8]: consumer `$53:$59CD` recomputes the already-stored damage as `dmg + (dmg>>1)` (half truncated; 16-bit `srl h / rr l / add hl,bc`), AFTER CalcSkillDefense and AFTER DamageSlot2AdjustFloor_61ec, so it stacks on the slot-2 ×0.8 and the zero floor. Gated ONLY on the attacker's bit — no skill/element condition. Lifecycle: set in the command/order phase ($D9EC==5), cleared in phase 9 = a ONE-ROUND actor mark. Model: `battle.db42_boost()`. **Setter not yet located** — not a plain `set 6,[hl]` / `or $40` / `ld [hl],$40` on a $DB42 pointer in banks $50-$5F. This was the cause of BOTH long-standing "low-stat calcdef" anomalies (s89_fresh + S88 rider). Confusion also zeroes `$DB42+slot` (bank $53 ~$969). |
+| $DB42+slot | Per-combatant battle flags. **bit6 = ×1.5 DAMAGE BOOST on this slot's outgoing hits** [S89, measured 8/8]: consumer `$53:$59CD` recomputes the already-stored damage as `dmg + (dmg>>1)` (half truncated; 16-bit `srl h / rr l / add hl,bc`), AFTER CalcSkillDefense and AFTER DamageSlot2AdjustFloor_61ec, so it stacks on the slot-2 ×0.8 and the zero floor. Gated ONLY on the attacker's bit — no skill/element condition. Lifecycle: set in the command/order phase ($D9EC==5), cleared in phase 9 = a ONE-ROUND actor mark. Model: `battle.db42_boost()`. **Setter not yet located** — not a plain `set 6,[hl]` / `or $40` / `ld [hl],$40` on a $DB42 pointer in banks $50-$5F. **CLOSED S130 (F4)**: the setter is the bank $58 command-phase "tension" roll — `TensionRollA_5a40` / `TensionRollB_5ba1` → `SetBtlFX_5b17` (`ld a,[hl] / or d / ld [hl],a`), after each PARTY actor's commit in a non-link battle, one GenerateRNG step each, ladders on the actor's AI bases. **All eight bits** (BATTLE_SKILL_SYSTEM §15.11.F4): bit0 sure CRIT (msg $67), bit1 defence class (msg $68; a second halving in the defence-level stage), bit2 status/drain SURE HIT (`SureHitCheck_6adc`), bit3 BladeD counter forced (RNG1 &= $FE), bit4 NO MP SPEND, bit5 shield grab / the dodge machine (no consumer exercised), bit6 ×1.5 (above), bit7 target "easily dodges" (`$53:$563C`, before the MISS machine). Phase 9 clears `$DB42..$DB49`. This was the cause of BOTH long-standing "low-stat calcdef" anomalies (s89_fresh + S88 rider). Confusion also zeroes `$DB42+slot` (bank $53 ~$969). |
 | $DC23+2i (wBattleLVL) | MISNOMER: per-combatant **WLD** word (record slot+$60), NOT level; enemies forced $00FF at init; the obedience gate input (bank $57 $7a03/$7a5d). Display level = $db9b. |
 | $DB4C | obedience seed: tactic-category base /10 (CmpBtlAI_78d4; tactic 3 → 0) — state-0 scope; reused elsewhere |
 | $DB4D | obedience: w3 ($DC5C weight) /10 (AIPreambleW3_7905) |
@@ -884,3 +907,25 @@
 | $DB53 | ObedienceThreshTable_7997 value (AIPreambleLadder_791a) — direct addend in the 7a5d inequality |
 | $CB25/26/27/28 (slot+$64..$67) | party record AI-weight/personality bytes cat1/cat3/w3/cat2 → battle $DC44/$DC54/$DC5C/$DC4C (party fill jr_051_45f8; swap re-sync $53:$6236) |
 | $CB21 (slot+$60) | record WLD; INFO-screen stat; init 5×level−10×$CAB4; breeding zeroes; Add/SubMonsterWLD item adjusters |
+
+## [S130] Battle skill families — RAM facts (BATTLE_SKILL_SYSTEM §15.11)
+
+| Addr | Role |
+|------|------|
+| $DB00 / $DB01 (side bytes, party / enemy) | bit2 = TatsuCall-family summon used (survives phase 9; cleared when the helper is KO'd, flees, or a dispel's s7 masks the side byte `&= $10`); bit3 = SPELL SEAL (DeMagic/ThickFog/FILTHZONE s7: ThickFog/FILTHZONE set it on both sides, a later dispel clears it; survives phase 9; a flags7-bit6 spell from a sealed side is vetoed with $1F and still PAYS its MP); bit5 = StormWind (only the message picker `WindMsgCheck_7d7c` reads it; survives phase 9); bit6 = SuckAll active (phase 9 clears bits 4/6) [F6, F9, F10] |
+| $DB18-$DB1F / $DB38-$DB3F (blocks of slots 3 / 7) | a live summoned HELPER (TatsuCall $84 … BazooCall $87): status `$DB02+8s..+9` zeroed at the summon, `$DD1B := 0`, `$DD13` stays $FF until the next command phase; `$DC3C[s]` = id + $54 (species 216-219); its base / Transform source = enemy_stats row `$0100 | $DC3C` (472-475). Every single-target picker and the side-wipe test scan only 3 slots; the group loop and the quake sweep include the helper. A dismissed / KO'd helper: `$DD1B := $FF` (not revivable) [F9, F10] |
+| $DB40 / $DB41 | slot 7's shifted +8 / +9 pair (`$DB08+8·7`), cleared by phase 9 like the others [F6, F7] |
+| $DB4A / $DB4B (per side) | SuckAll: `\|= (user slot & 3) << 2` — the absorbing user; phase 9 `&= 3`; bits 1:0 are read by `LoadBtlC_5ea0` (TailWind reflect) but no writer was found [F6] |
+| $DB56 / $DB5A | damage word / TwinSlash recoil (max(dmg>>2, 1)) [F23] |
+| $DB89 | at every act-state-0 fetch `$DB89 := $DCED + 2a` (the remembered queue target) [F8] |
+| $DCED + 2a (queue target byte) | the multi-hit continuations step it (RainSlash `+= 1` to a live slot; the `$714C` walk; re-picks write it); `$32/$96/$95/$AD` keep it even when dead [F5, F8] |
+| $DD69 | multi-hit PASS counter (`+= 1` per fetch; > 1 skips act states 1-6); the `$714C` walk counts visited + skipped slots and jumps sides at 4, ends at 8; CallHelp/YellHelp: `$FF` = failed summon, `$0F` (+1 non-link enemy caster, +1 more YellHelp) on success, then counting helper passes up to $13 / $17; an iron target at pass 1 sets `$10` (msg $C2, the summon fails); Chance resolves its outcome's target with `$DD69 = 0` [F1, F8, F9] |
+| $DD6C | reflect / re-cast code at act state 7: 0 normal, 1 TailWind reflection, 2 SuckAll absorb, 4 MagicBack/Bounce reflection, 8 Imitate re-cast, $40 SuckAll breath-back [F6] |
+| $DD6E | redirect code: 0 none, 2 Dodge machine, 4 Cover/Guardian — non-zero blocks the BladeD counter and Imitate [F6] |
+| $DD72 / $DD73 | (also) the bank $57 entries 4-8 base-stat result `GetBase*` [F7] — overloaded with the AI plan byte (§15.10) |
+| $DD74 | the TARGET slot `StatCapMul_6af5` keys the ×4 / ×2 stat cap on [F7] |
+| $DD13 (values) | 3 = the slot's turn this round is LOST (sleep snap-out, NumbOff / DeChaos cure, Surge on a sleeper, DeMagic on an iron / transformed target); a revived slot keeps $FF until the next command phase [F1, F5, F7, F10] |
+| $D9F2 | TakeMagic's MP gain for the current target, cleared only in phase 9 (a later MISS route on the same target can re-run `TakeMagicApply_5ffa` — open) [F6] |
+| $C1C8 | Sacrifice's per-target guard redirect: the original target is restored from here after a protector took the hit [F23] |
+| $C1CA[a & 3] / $C1CD[t] | Transform bookkeeping: a non-link enemy caster stores its Transform target in `$C1CA`; a DeMagic revert sets `$C1CA[t&3] := $FF` and `$C1CD[t] &= $80` [F9, F10] |
+| $DB8B (battle start) | bits 0/4 = monsters_full `is_metal` / `can_fly` (512/512); summoned helpers get 0 [F23, F9] |

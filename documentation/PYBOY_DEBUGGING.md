@@ -487,3 +487,65 @@ edge and the battle waits for input forever.
 - **Trap — the user's own arrival cutscenes:** warping into the user's rooms plays their
   scenes (Cities_FOUNT: "I am a shopkeep!"); close the boxes with B until the script flag
   clears before driving an NPC.
+
+## S130 techniques — the stub-call census, ten family rigs, hook traps
+
+- **Stub-call census with the RNG pinned** (`tools/census_raising.py`). Boot to the title,
+  write a tiny stub into free RAM — `di / ld hl,<entry> / rst $10 / ld a,$A5 / ld [MARK],a /
+  jr $` — set `wRNG1/wRNG2` to a known state, point PC at the stub and tick until the
+  MARKER byte reads $A5 (≤ 200 frames, else fail loudly with the PC and the record's key
+  bytes). The model replays the same draws from the pinned state, so every call is one exact
+  comparison (create / level-up / learn / breed / birth). A longer caller loop (the bank $51
+  learn caller around `ld hl,$0605 / rst $10` and its `$FFD8-$FFDA` protocol) is hand-
+  assembled the same way, ending in the same marker write. Two rules that made it work:
+  - **Completion = the marker, never the PC**: at frame end the PC can be inside an
+    interrupt handler.
+  - **Leaving a routine mid-call restores SP**: the past-max-level apply path ends in a
+    bank $51 battle-screen redraw that waits forever at the title; `TAIL_HOOK` (hook on
+    `$51:$5C23`) sets SP back to the value saved when the stub started and jumps PC to the
+    marker write. Without the SP restore the stack drifted into WRAM and `tick()` hung after
+    hundreds of calls.
+  - A **control** belongs in every census: the census also evaluates learning on the
+    POST-gain stats and counts how often that would differ (921 level-ups) — proof the run
+    can tell the two orders apart.
+- **The family rigs** (`simulator/measure_f*.py`, all copies of the S85 loop rig): every event
+  carries the full 8-slot board; new flags per rig are listed in TOOLS_AND_DATA "S130 rows".
+  The reusable ones: per-round SCHEDULES (`--sched SLOT:skill@target,…` in F6/F7/F10;
+  `--sched/--esched R:SK:T[:SLOT]` in F9), forced queues for any slot (`--q`, F5),
+  init / round / per-frame pokes (`--set`, `--poke`, `--rpoke`, `--stp`, `--side`, `--ram`,
+  `--db42`, `--aib`), RNG injection at a site (`--db42rng`, `--critrng`), species-row swaps
+  (`--dc3c`), and `--db73 0` for the wild condition inside a rig battle.
+- **Waypoints that carry the S130 decodes**: the crit stage `$53:$586A`, the post-calc stage
+  `$53:$58FB`, the tension rolls `$58:$5A40/$5BA1`; act state 7 interception `$53:$5411`
+  (SuckAll `$5458`, Cover `$54D6`, Dodge `$557A`, TailWind `$5594`, MagicBack `$55CA`); the
+  BladeD counter at `$52:$7C47`; the multi-hit continuation dispatch `$52:$7041` and the bank
+  $58 re-pick `$642C`; the dispel handler `$52:$4BA1`, its return `$52:$6CDD` and the bank
+  $53 entry-11 sub-states `$60C9…$6252`; the apply `$52:$6D56`. Take a sweep VICTIM at
+  `miss_in` / `miss_rng`, not at `target_fetch` (`$53:$520C` fires before the fetch loads it),
+  and take an effect's post state at the end of its own machine (`UltraDownEnd_66bd`,
+  `$52:$6D37`), not at the handler return.
+- **Determinism**: a rig run with the same recipe, ROM and state reproduces the identical
+  event stream (`measure_f4.py`: 158,794 events, same RNG trajectory) — a changed count means
+  a changed rig or ROM.
+- **Trap — a hook on `$52:$7C18` stalls PyBoy.** It is the instruction right after
+  `call BattleRNG` in `BladeDCounter_7bec`; with it registered the battle crawled (~35
+  frames/s), no hook fired repeatedly, `faulthandler` showed the time inside `p.tick`. Use
+  `$7C47`. When a capture crawls, bisect the HOOK LIST first (`F6_NOHOOK=tag,…`,
+  `F6_TRACE=1` in `measure_f6.py`); avoid hooking the return address of a call.
+- **Trap — party slot 0 may not do what you forced.** Its obedience roll (Darkdrium on the
+  user's save) replaces the commanded action, and a `$DD0B == 2` actor that is not first in
+  the round re-decides at act. Cast the skill under test from slots 1/2 (e.g. SideStep from
+  slot 1), or from more than one slot, and count the handler waypoints per skill and side.
+- **Trap — polled hooks**: `$52:$6D56` re-enters every frame while the apply animation
+  waits; keep the first hit per run inside the callback.
+- **Trap — the queue is read at act time**: a forced queue must stop changing between the
+  order build and the act phase (latch the round index at `$D9EC == 4`, count `round_start`
+  waypoints, not `round_end`); and forced runs can never validate commit-time decisions.
+- **Trap — pokes**: `$DB42` is rewritten after init (re-poke each command frame); board pokes
+  only at `$D9EC` 4/5 (the engine passes `$D9EC = 6` between actors); re-arm pokes inside the
+  round_start hook before its snapshot; a KO reloads the slot from its source, undoing pokes.
+- **Trap — `pkill -f <pattern>` from the tool shell kills the shell itself** (its command line
+  contains the pattern): kill by PID, or use a `[c]haracter-class` pattern.
+- **Corpus hygiene**: write one JSON per rig battle and merge once (append-and-rewrite went
+  quadratic past ~25 MB); drop unvalidated tags and gzip (`f4_events.json.gz` 198k events in
+  3.6 MB).

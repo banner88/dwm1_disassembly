@@ -459,7 +459,7 @@ is deliberately not committed.
 | File | Role |
 |------|------|
 | `randomizer/breeding.py` | Depth-targeted tree generation. Assigns target depths by level cap, builds tiers in ascending order against measured depth, best-of-N retry. Keeps species met at L<=6 free of specific x specific recipes. |
-| `randomizer/plusgrowth.py` | The ONE code change: extends vanilla's plus-value growth bonus (`FuncExp_4163`) to MP and INT. Byte-neutral trampoline in bank `$13`'s free tail, four guard checks before writing. |
+| `randomizer/plusgrowth.py` | The ONE code change: extends vanilla's plus-value growth bonus (`PlusGrowthBonus`, `FuncExp_4163` before the S130 rename) to MP and INT. Byte-neutral trampoline in bank `$13`'s free tail, four guard checks before writing. |
 | `randomizer/profile_check.py` | **Per-entity envelope checker.** Six invariants against vanilla, non-zero exit. Runs on any edited ROM, not just randomized ones — see PROJECT_COMPILER "Validation the editor must run". |
 
 `randomizer/profile_check.py --ttk` (S86, opt-in): simulated pool-TTK parity gate driven by the pacing layer — per-pool weighted median rounds-to-outcome (level-scaled party, attack policy) capped at 2.0x vanilla; identically-seeded per ROM (vanilla-vs-vanilla exactly 1.00x). Default run unchanged.
@@ -468,7 +468,7 @@ is deliberately not committed.
 
 | File | Purpose |
 |------|---------|
-| `simulator/damage.py` | The exact DWM1 damage model: LCG RNG, physical roll (`CalcSkillDefense` all 3 regimes + slot-2 rule + zero floor), record power rolls with side selection, packed-resistance decode ($DD28), every multiplier/hit ladder, the $DB73 boss-protection gate, and the handler-computed specials (MegaMagic, WindBeast, Vacuum, Kamikaze both paths, Ramming, slashes/cuts, multipliers). Every function names its bank-$52/$53 routine. Owning prose: BATTLE_SKILL_SYSTEM §15. |
+| `simulator/damage.py` | The exact DWM1 damage model: LCG RNG, physical roll (`CalcSkillDefense` all 3 regimes + slot-2 rule + zero floor), record power rolls with side selection, packed-resistance decode ($DD28), every multiplier/hit ladder, the $DB73 boss-protection gate, and the handler-computed specials (MegaMagic, WindBeast, Vacuum, Kamikaze both paths, Ramming, slashes/cuts, multipliers). Every function names its bank-$52/$53 routine. Owning prose: BATTLE_SKILL_SYSTEM §15. S130: holds `SPELL_LADDER` (moved from validate_damage.py); its `vacuum(enemy_side=True)` 1.5L branch is wrong (§15.5, use `skillfx/f23_phys.vacuum_base`). |
 | `simulator/validate_damage.py` | Differential validator: replays a measure_rig event corpus through damage.py and diffs against the engine's own values at matching waypoints. S78 corpus: **698 comparisons, 0 mismatches** across 13 categories. Exit 1 on any mismatch. |
 | `simulator/measure_rig.py` | PyBoy capture rig: S75 TriggerBattle-mimic battle + per-frame skill/stat forcing + hooks at the damage waypoints ($52:$60D7/$61EC/$679C/$67BA/$54E7/$54EA, special entries, Beat outcome branches). `--db73 0` reproduces the wild-battle condition inside rig battles (the rig's $DA09=1 makes them "boss" type). Needs a patched ROM + CONTINUE-able .sav + post-boot savestate. |
 | `simulator/s78_master_events.json` | The S78 validation corpus (1,140 events; the 698 checks). Regenerable with measure_rig.py; kept so `validate_damage.py` runs without an emulator session. |
@@ -476,7 +476,7 @@ is deliberately not committed.
 | `simulator/measure_order.py` | Turn-order capture rig (S79): 4 hooks ($58:$54D1 build entry, $5662 per-combatant pre-RNG key roll, $55C2 unsorted keys+ids, $5707 final $DB79); `--agl` per-slot forcing, `--party3` (real slot-0 record duplicated into party 1/2 pre-battle). |
 | `simulator/validate_order.py` | Differential validator: replays key_roll pre-states through turn_order.py, diffs keys+ids at the sort entry AND the final order. S79 corpus: **143 comparisons, 0 mismatches over 47 rounds** (incl. a 4-actor round). Exit 1 on mismatch. |
 | `simulator/s79_order_events.json` | The S79 turn-order corpus (validate_order.py's default input). |
-| `simulator/s79_damage_events.json` | S79 damage-side captures: slot-2 ×0.8 (party3), RainSlash 1-4 hits, Sacrifice kill/survivor (HP≠MaxHP), Kamikaze/WindBeast/Vacuum under db73=0/2 incl. enemy-cast. Spot-validated in-session (not yet folded into validate_damage's category runner). |
+| `simulator/s79_damage_events.json` | S79 damage-side captures: slot-2 ×0.8 (party3), RainSlash 1-4 hits, Sacrifice kill/survivor (HP≠MaxHP), Kamikaze/WindBeast/Vacuum under db73=0/2 incl. enemy-cast (corrected S130: its 2 Vacuum events are both PARTY-cast; enemy Vacuum is measured in `f23_phys_events.json.gz`). Spot-validated in-session (not yet folded into validate_damage's category runner). |
 | `simulator/status.py` | Status model (S79): $DB00-block byte/bit map (measured per-skill), exact sleep-wake port of $53:$4AEB, curse/confusion gates, phase-9 DoT formulas. Owning prose: §15.8. |
 | `simulator/battle.py` | Round-loop core, **differentially validated S85** (6614/6614 via `validate_battle.py`): Board snapshot type, turn order, per-actor status gates (sleep/paralysis/stun/one-shots), curse self-hit (4 branches), enemy duplicate-group-cast conversion (literal `$4E63` scan + tables), act-time re-resolve + MP/seal veto, unreachable-target pre-gate, per-victim MISS/dodge machine, damage-core classification (calcdef/record/quake/heal/status), Quake/side victim lists, apply/KO, phase-9 status decay + DoT (via status.py). `simulate_round()` = offline driver over the same functions with a caller-supplied RNG idle policy (NOT validated as a whole — stand-ins marked). |
 | `simulator/measure_battle.py` | S85 LOOP-LEVEL capture rig: one complete rig battle on the real save (boot.state from the hacked .sav), 31 waypoint hooks (round start $58:$54D1, actor fetch/gates/forced/curse/dup-conv/skill load in bank $53, target fetch/re-resolve/dead-redirect, MISS machine entry/RNG/miss/dodge/block/pass, damage-core entries $52:$60D7/$679C/$54E7, status ladders $5C8F/$5CBC/$5CDA + $65B5/$65C9, apply $6D56, KO $7EE3, phase-9 $50:$6B25/$6C14/$6C59, side wipe, round end), FULL 8-slot board per event. Options: `--ecount`, `--pskills` (rewrite the save's slot-0 movepool), `--php/--phpcur/--pmp/--ehp/--emp`, `--pst/--est` (status pokes), `--skill/--eskill` (forced queues, phases 4-6 only), `--skip`, `--maxev`. Unforced mode = the engine's own tactics/enemy AI. |
@@ -1335,3 +1335,203 @@ Data changed: `extracted/mapid_range_audit.json` regenerated (clean 58, patched 
 | disassembly/bank_000.asm, bank_004.asm | comments: `ComputeFlagAddress` (the patched route, virtual flags), `ScriptCmd26_ReloadRoom` (measured) | clean rebuild `1ca6579…` |
 | editor2/help/71_story_quests.md (NEW) + 00 / 11 / 20 / 30 / 40 / 61 / 62 / 63 / 90, _revision.md; `EDITOR_REVISION` = 'S129' | help | test_app |
 | examples/s129_story_demo/ (NEW: project.json + assets/ + build_demo.py) | the S129 test ROM's project in editor format (user S129: "commit current custom quest stuff in editor format … for cross-referencing"): the user's my-dwm-hack_21 + STORY HALL / VAULT ANNEX / the Cities_FOUNT DEMO NPC; `build_demo.py <base project.json> <out project.json>` = the Document-API calls that made it (checks, spine, quest, by progress, lock, music rules, item set, gold) | both build `ca502753…` (patched) = the test ROM; opens in the editor with no migration (round-trips) |
+
+## S130 rows (every battle skill — the ten skill families; the raising model)
+Owning prose: BATTLE_SKILL_SYSTEM §15.11 (families, registry), MONSTER_DATA "Raising a monster
+(S130)" (raising). Every family rig is a copy of the S85 loop rig (`measure_battle.py`, or the F7
+schedule rig) with its own waypoints; all corpora were captured on the user's real save (u22
+build + `field.state`). Validator totals are the merged tree's (all 0 mismatches).
+
+| File | What | Verified by |
+|------|------|-------------|
+| `simulator/battle.py` (S130 registry) | the skill-effect registries the families plug into: ACTION_HANDLERS, CORE_OVERRIDES, POST_CALC, ACTOR_HOOKS, PHASE9_HOOKS, VICTIM_HOOKS, BOSS_GATE_IN_HANDLER, SELF_GATED, COMMIT_TARGETS, TARGET_RESOLVERS, OWN_TARGET_GATES, RERESOLVE_PICKERS, CRIT_STAGE, POST_ACTION_HOOKS, COMMIT_ROLL, INTERCEPT_HOOKS, POST_HIT_HOOKS, POST_VICTIM_HOOKS, POST_SWEEP_HOOKS, KO_HOOKS (table: BATTLE_SKILL_SYSTEM §15.11); `act_mp_spend` / `mp_veto_exempt` (the driver now spends MP), `actor_walk()` (the dragon re-run), helper slots 3/7 in `side_victims` / `quake_victims`; `miss_gate` SideStep fall-through and `guard_redirect` capability fixed | every validator below + the pre-existing ones (s85 6614, s86 802, s89 426, s88 2824 / 3083 / 3422, damage 13 categories, order 143, ai 26/26, rules 240, obedience 889, pacing KS 0.042 / 0.038) — all 0 |
+| `simulator/skillfx/__init__.py` | imports every family module on `import simulator.battle` (sorted) | — |
+| `simulator/skillfx/f1_status.py` | F1 status appliers + one-shot compulsions (32 handlers, the hit helpers + ladders, `BOSS_GATE_IN_HANDLER`) | `validate_f1.py` 52970 / 0 |
+| `simulator/skillfx/f23_phys.py` | F2/F3 single-hit physical variants, Ramming/Kamikaze/TwinSlash tails, Sacrifice sweep + caster roll, Vacuum (`vacuum_base`), MegaMagic, breath extras (37 handlers, `SELF_GATED`, POST_CALC 70 Beserker) | `validate_f23_phys.py` 10049 / 0 |
+| `simulator/skillfx/f4_charge.py` | F4 crit stage (per-species tables), post-calc stage (POST_CALC 10), ChargeUP/SuckAir/Focus/TwinHits/ALLCHANGE/Massacre/EvilSlash/HighJump, the `$DB42` tension roll (`COMMIT_ROLL`) | `validate_f4.py` 100051 / 0 |
+| `simulator/skillfx/f5_heal.py` | F5 heals, revives, cures, MP drain / MP0 / RESTOREMP, LifeChain, LifeSong, the bank $58 target rows (`COMMIT_TARGETS` / `TARGET_RESOLVERS`) | `validate_f5.py` 9573 / 0 |
+| `simulator/skillfx/f6_defence.py` | F6 defence levels (POST_CALC 80), BladeD counter, SuckAll / Cover / Dodge / TailWind / MagicBack interception + reflection, TakeMagic, Imitate (INTERCEPT / POST_HIT / POST_VICTIM / POST_SWEEP hooks) | `validate_f6.py` 19542 / 0 |
+| `simulator/skillfx/f7_stats.py` | F7 DEF/AGL movers + caps, Surge, UltraDown machine, Transform's stat copy (`transform_stats`), SickLick's DEF part | `validate_f7.py` 7667 / 0 |
+| `simulator/skillfx/f8_multihit.py` | F8 multi-hit loop: BiAttack, QuadHits, CallHelp, YellHelp, RainSlash, the `$714C` 8-slot walk (METEOR), continuation + re-pick, `OWN_TARGET_GATES`, `RERESOLVE_PICKERS` | `validate_f8_multihit.py` 19817 / 0 |
+| `simulator/skillfx/f9_meta.py` | F9 summons (helpers in slots 3/7), Chance, CALLHOROR/Smashed, RUN, BeDragon/CHGDRAGON, Transform's res/skill copy, the KO reload (`KO_HOOKS`); `pacing.py` helper / option-list commit, `ai_rules.py` summon veto | `validate_f9.py` 9139 / 0 |
+| `simulator/skillfx/f10_dispel.py` + `simulator/ai_rules.py` `f10_rules()` | F10 DeMagic / ThickFog / FILTHZONE machine, the seal, `DISPEL_HOOKS`; the DeMagic/ThickFog cat-2 pass conditions (used when `BattleView` has `skills` / `dd0b`, supplied by pacing via `b.ext['f10_optlists']`) | `validate_f10.py` 1335 / 0; `validate_f10_rules.py` 332 / 0 (validate_rules unchanged 240 / 0) |
+| `simulator/damage.py` `SPELL_LADDER` | skill id → (rtype, ladder) for the record cores, MOVED here from `validate_damage.py` so the round driver applies it (validators import it) | validate_damage 13 categories 0 |
+| `simulator/measure_f1.py` + `simulator/measure_f1_campaign.py` → `simulator/f1_status_events.json.gz` | F1 rig (new: `--eres/--pres` res pokes, `--rpoke` round pokes inside the round_start hook, `--force SLOT:SKILL:TARGET`, `--php3/--pmp3`; compact corpus = full board only on round_start) + its recipe (115 battles, 718 rounds, 65,213 events, ~40 MB uncompressed) | `simulator/validate_f1.py` (also 0 on the six legacy corpora) |
+| `simulator/measure_f23_phys.py` + `simulator/measure_f23_phys_plan.py` → `simulator/f23_phys_events.json.gz` | F2/F3 rig (`--q` queues, `--hp/--mp/--st/--res/--lvl/--db8b/--atk/--dfn/--agl` per-slot pokes, `--keep`, `--rounds`) + plan (86 battles, 17,376 events) | `simulator/validate_f23_phys.py` |
+| `simulator/measure_f4.py` + `simulator/measure_f4_plan.py` → `simulator/f4_events.json.gz` | F4 rig (adds `--db42` / `--db42rng v` (post-step RNG1 at the tension rolls), `--aib` (AI bases each command phase), `--critrng` / `--dc3c` (forced crit RNG, species rows), `--stinit`, `--lean`) + plan (162 battles, 198,455 events, 3.6 MB packed) | `simulator/validate_f4.py` |
+| `simulator/measure_f5.py` + `simulator/f5_corpus_recipe.py` → `simulator/f5_events.json` | F5 rig (`--set SLOT:FIELD=VAL` init pokes incl. `dead=1`, `--q SLOT=SKILL[:TARGET]` any-slot forcing, `--qrounds N`) + recipe (201 scenarios, 12,223 events) | `simulator/validate_f5.py` |
+| `simulator/measure_f6.py` → `simulator/f6_events.json.gz` | F6 rig = the F7 schedule rig + interception waypoints (`--ram ADDR=val`; `F6_TRACE=1`, `F6_NOHOOK=tag,…` to bisect a stall; runaway-hook guard). Recipe in the rig's header (54 battles, 37,774 events incl. 13 natural-AI) | `simulator/validate_f6.py` |
+| `simulator/measure_f7.py` → `simulator/f7_events.json` | F7 schedule rig: `--sched SLOT:skill@target,…` per round (`-` = engine), `--keep`, `--poke SLOT:field=val`, `--res`, `--st`, `--db42 SLOT=val` (each command frame), `--rounds`. Recipe in the header (37 battles, 7,829 events) | `simulator/validate_f7.py` |
+| `simulator/measure_f8_multihit.py` → `simulator/f8_events.json` + `simulator/f8_idle_pools.json` | F8 rig (adds `--eskills/--etargets/--ehps/--elvl`, `--pdd0b`, `--eres6/--pres6`, `--f8trim`; waypoints `$52:$7041` continuation, `$642C` re-pick, the multi-hit handlers, helper damage) — 61 battles, 446 actions, 1,289 passes; idle pools `mh_post_hit` / `mh_refetch` / `mh_call_msg` / `mh_pre_snap`. Recipe below (the rig's header points at the session notes, which are not in the tree) | `simulator/validate_f8_multihit.py` |
+| `simulator/measure_f9.py` → `simulator/f9_events.json.gz` | F9 rig (the F8 rig + `--force-rounds`, `--pslot`, `--hskill/--htarget` / `--ehskill/--ehtarget` (helper slots 3/7), `--pmpall`, `--estat/--pstat atk=,dfn=,…`, `--poke`, `--pskill1/--ptarget1/--force1-rounds`, `--sched/--esched R:SK:T[:SLOT]`, `--prefill/--erefill`) — 76 battles, 94,131 events. Recipe below (same note as F8) | `simulator/validate_f9.py` |
+| `simulator/measure_f10.py` + `simulator/f10_corpus_recipe.md` → `simulator/f10_events.json.gz` | F10 rig = the F7 rig + the dispel-machine waypoints (`--stp ROUND:SLOT:off=val`, `--side ROUND:SIDE=val`, applied at `$D9EC` 4/5 only) + recipe (30 battles) | `simulator/validate_f10.py` |
+| `simulator/measure_f10_rules.py` + `simulator/f10_rules_recipe.py` → `simulator/f10_rules_events.json.gz` | AI-chain rig (`--elist` option lists, `--poke`, `--sched`) + a seeded recipe generator (`random.Random(130)`, 28 battles) | `simulator/validate_f10_rules.py` |
+| `simulator/measure_command.py` → `simulator/command_events.json.gz` | S130 P3.15b player-ORDER rig: gives the party its orders through the REAL battle menu (joypad: PLAN → tactic list → COMMAND → ATK/SKIL/DEF → skill page/row → target cursor; `--order R:spec` with `atk@T` / `def` / `sk:ID@T` and `X\|Y` alternatives, `FIGHT` rounds), natural enemy AI; pokes into the RECORD before the battle (`--wld`, `--bases`, `--tactic`, `--pskills`) and at init (`--php/--pmp/--ehp/--emp/--st/--db73`); waypoints = the S85 round loop + the menu writes (`m_skill/m_target/m_mark/m_msg`), the bank $57 commit (`ai_s0/band_in/decide_in/carry/nocarry/pers/cmd_keep/direct/ai_post`), `qfetch` ($58:$5498), `tension_in`, `daze`, `battle_end`. 56 battles / 29,794 events; recipe in the rig's header | `simulator/validate_command.py` |
+| `simulator/validate_command.py` | replays the corpus with the recorded orders as the planner: menu normalisation + refusals (`pacing.menu_order`), the gate under tactic 3, personality drift, the disobedient pick + its target service, the incapacitated commits, the $DB42 tension rolls, FIGHT-round tactic-3 commits, and every round end-to-end through `battle.simulate_round` (oracle idle; enemy scoring-row picks taken from the engine) — 6411 checks, 0 mismatches (`-c` coverage) | BATTLE_SKILL_SYSTEM §15.10.7b |
+| `simulator/skillfx/cmd_orders.py` | Daze $98 (the disobedient loaf: MISS step + message, self row at commit and act) | `validate_command.py` |
+| `simulator/raising.py` | the raising model: `create` / gains / `learn_scan` / `apply_gains` / `level_up` / `grow_*` / `breed` / `pedigree_k` / `birth` / `GameRNG` (MONSTER_DATA "Raising a monster (S130)") | `tools/census_raising.py` |
+| `tools/census_raising.py` → `extracted/raising_census.json` | boots a ROM to the title in PyBoy and stub-calls the real routines with wRNG1/2 pinned before every call (create `$1402`, gains `$1302`, the learn loop around `$0605`, `ApplyLevelUp` `$510D`, breed `$1600`, birth), comparing every record byte the model predicts; `--rom`, `--project`, `--quick`, `--out`. Original ROM: create 962, level-ups 5,073 (675 learned, 484 past max level), breed 400 + 400 + 400 births, order control 921 — 0 mismatches (also 0 on the user's my-dwm-hack_22 build and the example project). **Verifier check 5** runs `--selftest` (the saved census is clean + a quick re-run) | its selftest |
+| `editor2/core/balance.py` | the Balance service (ROADMAP P3.15a): how hard each key fight is, as the level a typical team of that point in the story needs to win 90 % / 50 % of the time (casual / strong rolled teams), gate dives at two walk bounds, the per-fight cache, what-if enemy overrides, the anchor reader — PROJECT_COMPILER §2.43 | test_compiler `test_balance_s130`; the anchor selftest re-derives fights |
+| `simulator/planner.py` (S130 r2) | the player's orders: `make_planner(records, …)` → `planner(b, s)` (greedy expected value, every option tried on a board copy through `battle.simulate_round`, 3 common RNG draws; `.values`, `.threat`) — PROJECT_COMPILER §2.43 "player" | test_compiler `test_balance_player_s130` (MetalCut vs metal, heals a dying ally, deterministic, board untouched) |
+| `editor2/core/kits.py` (S130 r2) | the player profile's skill KIT per story step: `step_pool`, `allowed_skills` (learn rows checked against the raised member), `kit_team`, `evaluate_kit`, `optimize_kit` (local search, `KIT_BUDGET`), `step_kit`, `describe` | test_compiler `test_balance_player_s130` |
+| `editor2/core/dive.py` | battles per maze floor from `extracted/dive_census.json` (`battles_per_floor`, `floor_steps`, `steps_between`, …; the ROM only as a fallback) — GATE_GENERATION §4.4 | `tools/census_dive.py --selftest` |
+| `tools/census_dive.py` → `extracted/dive_census.json` | 1,000 generated floors per maze size 3-15 (maze.MazeRom == the game) → shortest walk arrival → stairs, reachable cells, expected battles per (size, floor type, rate code); `--measure` = the PyBoy joypad walk of 12 floors / 11 types / codes 2-4 on the original ROM (every drain == the model). **Verifier check 5** runs `--selftest` (40 floors × 13 sizes + 24 battle cells re-derived) | its selftest; PyBoy 12/12 floors |
+| `editor2/core/savefile.py` | a battery save's roster and party (SRAM offsets `$01C7` count, `$01C8` list, slots `$01FB + s*$95`, FX1 slots 20-39 at `$3124`) → `simulator.raising.Monster` | PyBoy WRAM after CONTINUE on the user's save (u22): every field equal; test_compiler `test_balance_s130` |
+| `tools/build_balance_anchor.py` → `extracted/balance_vanilla.json` | the original game's difficulty curve, read-only: every story fight × {casual, strong} (l90, l50, the evaluation at l90 or 99) + every gate's dives × {direct, sweep}, from `balance.py` on BattleData(None), stable seeds, every CPU core by default (`--jobs N`); with the player profile ~5 h on 2 cores; RESUMABLE (S130 r2): each finished unit is appended to `balance_vanilla.json.partial` (tagged with SIM_VERSION + the raising digest) and a re-run continues; the Balance tab's **Build original-game numbers** button runs it locally (QProcess, Stop = SIGTERM ends the pool); `--only casual|strong|player`. `--selftest` SKIPs (exit 0) while a current-version `.partial` exists and the JSON is older. The S130.7 JSON in the tree was built on the user's M3 Max (~30 s per gate) and re-checked here (selftest OK). **Verifier check 5** runs `--selftest` (coverage, SIM_VERSION + raising digest, 3 fights + 1 dive re-derived == the JSON) | its selftest |
+| `editor2/app/balance_tab.py` + `editor2/help/72_balance.md` | the Balance tab (Story curve / Team / Fight; EDITOR_DESIGN §5.9 as built S130) | test_app `s130_balance` |
+| `editor2/core/encounters.py` `steps_between` (S130 fix) | the mean of counter // drain + 1 over the counter table (was counter / drain — one step short; GATE_GENERATION §4.4) | test_compiler S114/S130 check |
+
+**F8 corpus recipe** (each line is `measure_f8_multihit.py NAME EID --frames 12000 <flags> --f8trim
+--out simulator/f8_events.json --maxev 5000`, in this order; ROM u22.gbc, state `field.state`):
+
+```
+bi_p1 7 --skill 0x50 --php 400 --pmp 250 --ehp 900 --skip 0
+bi_p3 7 --ecount 3 --skill 0x50 --php 400 --pmp 250 --ehps 300,900,900 --skip 3
+bi_p3b 7 --ecount 3 --skill 0x50 --target 5 --php 400 --pmp 250 --ehps 900,300,700 --skip 7
+bi_p3c 7 --ecount 3 --skill 0x50 --php 400 --pmp 250 --ehps 350,350,350 --skip 11
+quad_p1 7 --skill 0x51 --php 400 --pmp 250 --ehp 1800 --skip 0
+quad_p3 7 --ecount 3 --skill 0x51 --php 400 --pmp 250 --ehps 300,300,1500 --skip 5
+quad_p3b 7 --ecount 3 --skill 0x51 --php 400 --pmp 250 --ehps 600,900,900 --skip 13 --pdd0b 0
+quad_p2 7 --ecount 2 --skill 0x51 --php 400 --pmp 250 --ehps 250,1200 --skip 17
+ch_p1 7 --skill 0x52 --php 400 --pmp 250 --ehp 900 --skip 0
+ch_p1b 7 --skill 0x52 --php 400 --pmp 250 --ehp 900 --skip 21
+ch_p3 7 --ecount 3 --skill 0x52 --php 400 --pmp 250 --ehps 600,100,600 --skip 5
+ch_p3b 7 --ecount 3 --skill 0x52 --php 400 --pmp 250 --ehps 90,90,90 --skip 9
+yh_p1 7 --skill 0x53 --php 400 --pmp 250 --ehp 900 --skip 0
+yh_p1b 7 --skill 0x53 --php 400 --pmp 250 --ehp 900 --skip 31
+yh_p3 7 --ecount 3 --skill 0x53 --php 400 --pmp 250 --ehps 120,600,200 --skip 3
+rain_p1 7 --skill 0x57 --php 400 --pmp 250 --ehp 900 --skip 0
+rain_p3 7 --ecount 3 --skill 0x57 --php 400 --pmp 250 --ehps 200,900,900 --skip 3
+rain_p3b 7 --ecount 3 --skill 0x57 --target 5 --php 400 --pmp 250 --ehps 900,250,900 --skip 7
+rain_p3c 7 --ecount 3 --skill 0x57 --php 400 --pmp 250 --ehps 900,250,600 --skip 15
+meteor_p 7 --ecount 3 --skill 0xaf --php 400 --pmp 250 --ehps 300,300,300 --skip 0
+meteor_p5 7 --ecount 3 --skill 0xaf --target 5 --php 400 --pmp 250 --ehps 300,300,300 --skip 4
+bigsleep_p 7 --ecount 2 --skill 0xa7 --php 400 --pmp 250 --ehps 300,300 --skip 0
+mp0_p 7 --ecount 3 --skill 0xa8 --php 400 --pmp 250 --ehps 300,300,300 --skip 0
+bi_e1 55 --eskill 0x50 --ehps 999 --emp 200 --skill 0x2b --target 0 --php 400 --pmp 250 --skip 0 --frames 9000
+bi_e3 101 --ecount 3 --eskills 0x50,0x50,0x50 --etargets 2,2,1 --ehps 999,999,999 --emp 200 --skill 0x2b --target 0 --php 400 --pmp 250 --skip 3 --frames 9000
+quad_e1 55 --eskill 0x51 --ehps 999 --emp 200 --skill 0x2b --target 0 --php 400 --pmp 250 --skip 0 --frames 9000
+quad_e3 101 --ecount 3 --eskills 0x51,0x51,0x51 --ehps 999,999,999 --emp 200 --skill 0x2b --target 0 --php 400 --pmp 250 --skip 5 --frames 9000
+ch_e1 55 --eskill 0x52 --ehps 999 --emp 200 --skill 0x2b --target 0 --php 400 --pmp 250 --skip 0 --frames 9000
+ch_e3 55 --ecount 3 --eskills 0x52,0x52,0x52 --ehps 999,999,999 --emp 200 --skill 0x2b --target 0 --php 400 --pmp 250 --skip 7 --frames 9000
+yh_e1 55 --eskill 0x53 --ehps 999 --emp 200 --skill 0x2b --target 0 --php 400 --pmp 250 --skip 0 --frames 9000
+yh_e3 101 --ecount 3 --eskills 0x53,0x53,0x53 --ehps 999,999,999 --emp 200 --skill 0x2b --target 0 --php 400 --pmp 250 --skip 9 --frames 9000
+rain_e1 101 --eskill 0x57 --ehps 999 --emp 200 --skill 0x2b --target 0 --php 400 --pmp 250 --skip 0 --frames 9000
+rain_e3 55 --ecount 3 --eskills 0x57,0x57,0x57 --etargets 1,0,2 --ehps 999,999,999 --emp 200 --skill 0x2b --target 0 --php 400 --pmp 250 --skip 11 --frames 9000
+meteor_e 55 --ecount 2 --eskill 0xaf --ehps 999,999 --emp 200 --skill 0x2b --target 0 --php 400 --pmp 250 --skip 0 --frames 9000
+bi_dodge 55 --skill 0x50 --php 400 --pmp 250 --ehps 999 --est 7=0x04 --skip 0
+quad_dodge 55 --ecount 2 --skill 0x51 --php 400 --pmp 250 --ehps 999,999 --est 7=0x04 --skip 2
+rain_dodge 55 --ecount 3 --skill 0x57 --php 400 --pmp 250 --ehps 999,999,999 --est 7=0x04 --skip 4
+bi_surr 55 --skill 0x50 --php 400 --pmp 250 --ehps 999 --pst 3=0x02 --skip 6
+quad_surr 55 --ecount 2 --skill 0x51 --php 400 --pmp 250 --ehps 999,999 --pst 3=0x02 --skip 8
+bi_iron 55 --skill 0x50 --php 400 --pmp 250 --ehps 999 --est 7=0x80 --skip 0
+ch_iron 55 --skill 0x52 --php 400 --pmp 250 --ehps 999 --est 7=0xc0 --skip 0
+yh_iron 55 --skill 0x53 --php 400 --pmp 250 --ehps 999 --est 7=0xc0 --skip 13
+ch_p1c 7 --skill 0x52 --php 400 --pmp 250 --ehp 900 --skip 41
+ch_p1d 7 --skill 0x52 --php 400 --pmp 250 --ehp 900 --skip 57
+ch_p3c 7 --ecount 3 --skill 0x52 --php 400 --pmp 250 --ehps 300,300,300 --skip 63
+yh_p3b 7 --ecount 3 --skill 0x53 --php 400 --pmp 250 --ehps 300,300,300 --skip 71
+bi_sleep 55 --skill 0x50 --php 400 --pmp 250 --ehps 999 --est 2=0x8c --skip 0
+quad_sleep 55 --ecount 2 --skill 0x51 --php 400 --pmp 250 --ehps 999,999 --est 2=0x8c --skip 3
+rain_sleep 55 --ecount 3 --skill 0x57 --php 400 --pmp 250 --ehps 999,999,999 --est 2=0x8c --skip 5
+ch_sleep 55 --skill 0x52 --php 400 --pmp 250 --ehps 999 --est 2=0x8c --skip 7
+yh_sleep 55 --skill 0x53 --php 400 --pmp 250 --ehps 999 --est 2=0x8c --skip 9
+quad_sleep_e 101 --eskill 0x51 --emp 200 --ehps 999 --skill 0x2b --target 0 --php 400 --pmp 250 --pst 2=0x8c --skip 11
+bi_block 55 --skill 0x50 --php 400 --pmp 250 --ehps 999 --est 6=0x04 --skip 13
+ch_res1 55 --skill 0x52 --php 400 --pmp 250 --ehps 999 --eres6 0x10 --skip 15
+ch_res2 55 --skill 0x53 --php 400 --pmp 250 --ehps 999 --eres6 0x20 --skip 17
+ch_res3 55 --skill 0x53 --php 400 --pmp 250 --ehps 999 --eres6 0x30 --skip 19
+ch_res1g 55 --skill 0x53 --php 400 --pmp 250 --ehps 999 --eres6 0x10 --est 5=0x40 --skip 21
+ch_res2a 55 --skill 0x53 --php 400 --pmp 250 --ehps 999 --eres6 0x20 --est 5=0x80 --skip 23
+yh_eres 101 --eskill 0x53 --emp 200 --ehps 999 --skill 0x2b --target 0 --php 400 --pmp 250 --pres6 0x20 --skip 25
+meteor_e3 55 --ecount 3 --eskills 0xaf,0x50,0x50 --etargets 1,0,0 --emp 200 --ehps 999,999,999 --skill 0x2b --target 0 --php 400 --pmp 250 --skip 27
+meteor_p6 55 --ecount 3 --skill 0xaf --target 6 --php 400 --pmp 250 --ehps 300,300,300 --skip 29
+quad_sleep2 55 --skill 0x51 --php 400 --pmp 250 --ehps 999 --est 2=0x8c --skip 31
+yh_sleep2 55 --skill 0x53 --php 400 --pmp 250 --ehps 999 --est 2=0x8c --skip 33
+quad_sleep_e2 101 --eskill 0x51 --emp 200 --ehps 999 --skill 0x2b --target 0 --php 400 --pmp 250 --pst 2=0x8c --skip 35 --frames 6000
+```
+
+**F9 corpus recipe** (`python3 simulator/measure_f9.py NAME EID FLAGS --out <file>` on u22.gbc +
+field.state, one JSON per battle, merged in this order; the tags `calcdef_in roll_in final_54e7
+status_in status_roll statchance_in hit_path miss_path curse_stage miss_pass helper_dmg h_biattack
+h_callhelp h_rainslash h_meteor h_bigsleep h_mp0 dm_tail h_demagic tf_copy dragon_form h_bedragon
+h_transform guard_redir` are dropped before gzip):
+
+```
+p_tatsu_a 7 --ecount 3 --skill 0x84 --target 0 --force-rounds 2 --php 999 --ehp 999 --pmpall 300 --pstat atk=40 --estat dfn=300,atk=150 --maxev 3000 --frames 60000
+p_tatsu_b 7 --ecount 3 --skill 0x84 --target 0 --force-rounds 3 --php 999 --ehp 999 --pmpall 300 --pstat atk=40 --estat dfn=300,atk=150 --maxev 3000 --frames 60000 --skip 23
+p_diago_a 7 --ecount 3 --skill 0x85 --target 0 --force-rounds 2 --php 999 --ehp 999 --pmpall 300 --pstat atk=40 --estat dfn=300,atk=150 --maxev 3000 --frames 60000 --skip 7
+p_diago_b 7 --ecount 3 --skill 0x85 --target 0 --force-rounds 3 --php 999 --ehp 999 --pmpall 300 --pstat atk=40 --estat dfn=300,atk=150 --maxev 3000 --frames 60000 --skip 31
+p_samsi_a 7 --ecount 3 --skill 0x86 --target 0 --force-rounds 2 --php 999 --ehp 999 --pmpall 300 --pstat atk=40 --estat dfn=300,atk=150 --maxev 3000 --frames 60000 --skip 13
+p_samsi_b 7 --ecount 3 --skill 0x86 --target 0 --force-rounds 3 --php 999 --ehp 999 --pmpall 300 --pstat atk=40 --estat dfn=300,atk=150 --maxev 3000 --frames 60000 --skip 37
+p_bazoo_a 7 --ecount 3 --skill 0x87 --target 0 --force-rounds 2 --php 999 --ehp 999 --pmpall 300 --pstat atk=40 --estat dfn=300,atk=150 --maxev 3000 --frames 60000 --skip 19
+p_bazoo_b 7 --ecount 3 --skill 0x87 --target 0 --force-rounds 3 --php 999 --ehp 999 --pmpall 300 --pstat atk=40 --estat dfn=300,atk=150 --maxev 3000 --frames 60000 --skip 41
+p_call1 7 --ecount 2 --skill 0x84 --target 0 --force-rounds 2 --pskill1 0x87 --force1-rounds 3 --php 999 --ehp 999 --pmpall 300 --pstat atk=40 --estat dfn=300,atk=150 --maxev 3000 --frames 60000 --skip 43
+e_tatsu_a 7 --ecount 3 --eskill 0x84 --etarget 4 --force-rounds 2 --emp 200 --php 999 --ehp 999 --pmpall 300 --pstat atk=40,dfn=300 --estat dfn=300 --maxev 3000 --frames 60000 --skip 3
+e_tatsu_b 7 --ecount 3 --eskill 0x84 --etarget 4 --force-rounds 3 --emp 200 --php 999 --ehp 999 --pmpall 300 --pstat atk=40,dfn=300 --estat dfn=300 --maxev 3000 --frames 60000 --skip 29
+e_diago_a 7 --ecount 3 --eskill 0x85 --etarget 4 --force-rounds 2 --emp 200 --php 999 --ehp 999 --pmpall 300 --pstat atk=40,dfn=300 --estat dfn=300 --maxev 3000 --frames 60000 --skip 5
+e_diago_b 7 --ecount 3 --eskill 0x85 --etarget 4 --force-rounds 3 --emp 200 --php 999 --ehp 999 --pmpall 300 --pstat atk=40,dfn=300 --estat dfn=300 --maxev 3000 --frames 60000 --skip 33
+e_samsi_a 7 --ecount 3 --eskill 0x86 --etarget 4 --force-rounds 2 --emp 200 --php 999 --ehp 999 --pmpall 300 --pstat atk=40,dfn=300 --estat dfn=300 --maxev 3000 --frames 60000 --skip 9
+e_samsi_b 7 --ecount 3 --eskill 0x86 --etarget 4 --force-rounds 3 --emp 200 --php 999 --ehp 999 --pmpall 300 --pstat atk=40,dfn=300 --estat dfn=300 --maxev 3000 --frames 60000 --skip 47
+e_bazoo_a 7 --ecount 3 --eskill 0x87 --etarget 4 --force-rounds 2 --emp 200 --php 999 --ehp 999 --pmpall 300 --pstat atk=40,dfn=300 --estat dfn=300 --maxev 3000 --frames 60000 --skip 11
+e_bazoo_b 7 --ecount 3 --eskill 0x87 --etarget 4 --force-rounds 3 --emp 200 --php 999 --ehp 999 --pmpall 300 --pstat atk=40,dfn=300 --estat dfn=300 --maxev 3000 --frames 60000 --skip 51
+e_call1 7 --ecount 1 --eskill 0x85 --etarget 4 --force-rounds 3 --emp 200 --php 999 --ehp 999 --pmpall 300 --pstat atk=40,dfn=300 --estat dfn=300 --maxev 3000 --frames 60000 --skip 53
+p_quake 7 --ecount 3 --skill 0x84 --target 0 --force-rounds 1 --pskill1 0xe6 --ptarget1 4 --php 999 --ehp 999 --pmpall 300 --pstat atk=40 --estat dfn=300,atk=150 --maxev 2500 --frames 60000 --skip 2
+p_wipe 7 --ecount 3 --skill 0x87 --target 0 --force-rounds 3 --php 300 --ehp 999 --pmpall 300 --pstat atk=40,hp=120 --estat dfn=300,atk=400 --maxev 3000 --frames 60000 --skip 57
+p_ch_b1 7 --ecount 3 --skill 0x39 --target 4 --pskill1 0x39 --prefill 999 --php 999 --ehp 999 --pmpall 999 --pstat atk=40 --estat dfn=300,atk=100 --maxev 4000 --frames 90000
+p_ch_b2 7 --ecount 3 --skill 0x39 --target 4 --pskill1 0x39 --prefill 999 --php 999 --ehp 999 --pmpall 999 --pstat atk=40 --estat dfn=300,atk=100 --maxev 4000 --frames 90000 --skip 61
+p_ch_w1 7 --ecount 3 --skill 0x39 --target 4 --pskill1 0x39 --prefill 999 --php 999 --ehp 999 --pmpall 999 --pstat atk=40 --estat dfn=300,atk=100 --maxev 4000 --frames 90000 --db73 0 --skip 5
+p_ch_w2 7 --ecount 3 --skill 0x39 --target 4 --pskill1 0x39 --prefill 999 --php 999 --ehp 999 --pmpall 999 --pstat atk=40 --estat dfn=300,atk=100 --maxev 4000 --frames 90000 --db73 0 --skip 67
+p_ch_w3 7 --ecount 3 --skill 0x39 --target 4 --pskill1 0x39 --prefill 999 --php 999 --ehp 999 --pmpall 999 --pstat atk=40 --estat dfn=300,atk=100 --maxev 4000 --frames 90000 --db73 0 --skip 71
+p_ch_w4 7 --ecount 3 --skill 0x39 --target 4 --pskill1 0x39 --prefill 999 --php 999 --ehp 999 --pmpall 999 --pstat atk=40 --estat dfn=300,atk=100 --maxev 4000 --frames 90000 --db73 0 --skip 73
+p_ch_w5 7 --ecount 3 --skill 0x39 --target 4 --pskill1 0x39 --prefill 999 --php 999 --ehp 999 --pmpall 999 --pstat atk=40 --estat dfn=300,atk=100 --maxev 4000 --frames 90000 --db73 0 --skip 79
+p_ch_w6 7 --ecount 3 --skill 0x39 --target 4 --pskill1 0x39 --prefill 999 --php 999 --ehp 999 --pmpall 999 --pstat atk=40 --estat dfn=300,atk=100 --maxev 4000 --frames 90000 --db73 0 --skip 83
+e_ch_b1 7 --ecount 3 --eskills 0x39,0x39,0x39 --etargets 0,0,0 --erefill 999 --emp 999 --php 999 --ehp 999 --pmpall 300 --pstat atk=40,dfn=300 --estat dfn=300 --maxev 4000 --frames 90000 --skip 3
+e_ch_w1 7 --ecount 3 --eskills 0x39,0x39,0x39 --etargets 0,0,0 --erefill 999 --emp 999 --php 999 --ehp 999 --pmpall 300 --pstat atk=40,dfn=300 --estat dfn=300 --maxev 4000 --frames 90000 --db73 0 --skip 9
+e_ch_w2 7 --ecount 3 --eskills 0x39,0x39,0x39 --etargets 0,0,0 --erefill 999 --emp 999 --php 999 --ehp 999 --pmpall 300 --pstat atk=40,dfn=300 --estat dfn=300 --maxev 4000 --frames 90000 --db73 0 --skip 89
+p_dragon_a 7 --ecount 3 --sched 1:0xd5:0,3:0xd5:0 --php 999 --ehp 999 --pmpall 300 --pstat atk=40 --estat dfn=300,atk=100 --maxev 3000 --frames 60000
+p_dragon_b 7 --ecount 3 --sched 1:0xd5:0,2:0x80:0 --php 999 --ehp 999 --pmpall 300 --pstat atk=40 --estat dfn=300,atk=100 --maxev 3000 --frames 60000 --skip 17
+p_dragon_c 7 --ecount 2 --sched 1:0xd5:0,2:0xd5:0,3:0xd5:0,4:0xd5:0 --php 999 --ehp 999 --pmpall 300 --pstat atk=40 --estat dfn=300,atk=100 --maxev 3000 --frames 60000 --skip 29
+e_dragon_a 7 --ecount 3 --esched 1:0xd5:4 --emp 200 --php 999 --ehp 999 --pmpall 300 --pstat atk=40,dfn=300 --estat dfn=300 --maxev 3000 --frames 60000 --skip 4
+e_dragon_b 7 --ecount 3 --esched 1:0xd5:4,3:0xd5:4,5:0xd5:4 --emp 200 --php 999 --ehp 999 --pmpall 300 --pstat atk=40,dfn=300 --estat dfn=300 --maxev 3000 --frames 60000 --skip 21
+e_dragon_c 7 --ecount 1 --esched 1:0xd5:4,2:0xd5:4,3:0xd5:4 --emp 200 --php 999 --ehp 999 --pmpall 300 --pstat atk=40,dfn=300 --estat dfn=300 --poke 0xDD0F=0 --maxev 3000 --frames 60000 --skip 27
+p_tf_a 7 --ecount 3 --sched 1:0x29:4 --php 999 --ehp 999 --pmpall 300 --pstat atk=40 --estat dfn=300,atk=100 --maxev 3000 --frames 60000
+p_tf_b 7 --ecount 3 --sched 1:0x29:5,2:0x81:0,3:0x81:0 --php 999 --ehp 999 --pmpall 300 --pstat atk=40 --estat dfn=300,atk=60 --maxev 3000 --frames 60000 --skip 13
+p_tf_h 7 --ecount 2 --esched 1:0x87:4 --sched 2:0x29:7 --emp 200 --php 999 --ehp 999 --pmpall 300 --pstat atk=40 --estat dfn=300,atk=60 --maxev 3000 --frames 60000 --skip 15
+e_tf_a 7 --ecount 3 --esched 1:0x29:0 --emp 200 --php 999 --ehp 999 --pmpall 300 --pstat atk=40,dfn=300 --estat dfn=300 --maxev 3000 --frames 60000 --skip 6
+e_tf_b 7 --ecount 3 --esched 1:0x29:2,2:0x29:1:5 --emp 200 --php 999 --ehp 999 --pmpall 300 --pstat atk=40,dfn=300 --estat dfn=300 --maxev 3000 --frames 60000 --skip 25
+e_tf_c 7 --ecount 2 --esched 1:0x29:1 --emp 200 --php 999 --ehp 999 --pmpall 300 --pstat atk=40,dfn=300 --estat dfn=300 --poke 0xDD0F=0 --maxev 3000 --frames 60000 --skip 35
+p_run_a 7 --ecount 3 --sched 1:0xdb:0 --php 999 --ehp 999 --pmpall 300 --pstat atk=40 --estat dfn=300,atk=100 --maxev 1500 --frames 40000
+p_run_b 7 --ecount 3 --sched 2:0xdb:0 --pskill1 0xdb --force1-rounds 1 --php 999 --ehp 999 --pmpall 300 --pstat atk=40 --estat dfn=300,atk=100 --maxev 1500 --frames 40000 --skip 9
+e_run_a 7 --ecount 3 --esched 1:0xdb:4 --emp 200 --php 999 --ehp 999 --pmpall 300 --pstat atk=40,dfn=300 --estat dfn=300 --maxev 1500 --frames 40000 --skip 2
+e_run_b 7 --ecount 3 --eskills 0xdb,0xdb,0xdb --etargets 4,5,6 --force-rounds 1 --emp 200 --php 999 --ehp 999 --pmpall 300 --pstat atk=40,dfn=300 --estat dfn=300 --maxev 1500 --frames 40000 --skip 8
+e_run_w 7 --ecount 3 --esched 1:0xdb:4 --emp 200 --php 999 --ehp 999 --pmpall 300 --pstat atk=40,dfn=300 --estat dfn=300 --maxev 1500 --frames 40000 --db73 0 --skip 12
+p_smash_b 7 --ecount 3 --skill 0xa4 --target 5 --force-rounds 2 --php 999 --ehp 999 --pmpall 300 --pstat atk=40 --estat dfn=300,atk=100 --maxev 1500 --frames 40000
+p_smash_w 7 --ecount 3 --skill 0xa4 --target 4 --force-rounds 2 --php 999 --ehp 999 --pmpall 300 --pstat atk=40 --estat dfn=300,atk=100 --maxev 1500 --frames 40000 --db73 0 --skip 3
+p_smash_h 7 --ecount 2 --esched 1:0x86:4 --sched 2:0xa4:4,3:0xa2:4 --emp 200 --php 999 --ehp 999 --pmpall 300 --pstat atk=40 --estat dfn=300,atk=60 --maxev 2500 --frames 50000 --skip 15
+p_horror_w 7 --ecount 3 --skill 0xa2 --target 4 --force-rounds 2 --php 999 --ehp 999 --pmpall 300 --pstat atk=40 --estat dfn=300,atk=100 --maxev 1500 --frames 40000 --db73 0
+p_horror_g 7 --ecount 3 --skill 0xa2 --target 5 --force-rounds 2 --php 999 --ehp 999 --pmpall 300 --pstat atk=40 --estat dfn=300,atk=100 --poke 0xDD20=0xFF --maxev 1500 --frames 40000 --skip 7
+e_smash_w 7 --ecount 3 --eskill 0xa4 --etarget 1 --force-rounds 2 --emp 200 --php 999 --ehp 999 --pmpall 300 --pstat atk=40,dfn=300 --estat dfn=300 --maxev 1500 --frames 40000 --db73 0
+e_horror_w 7 --ecount 3 --eskill 0xa2 --etarget 0 --force-rounds 2 --emp 200 --php 999 --ehp 999 --pmpall 300 --pstat atk=40,dfn=300 --estat dfn=300 --maxev 1500 --frames 40000 --db73 0 --skip 5
+p_ch_w7 7 --ecount 3 --skill 0x39 --target 4 --pskill1 0x39 --prefill 999 --php 999 --ehp 999 --pmpall 999 --pstat atk=40 --estat dfn=300,atk=100 --maxev 4000 --frames 90000 --db73 0 --skip 97
+p_ch_w8 7 --ecount 3 --skill 0x39 --target 4 --pskill1 0x39 --prefill 999 --php 999 --ehp 999 --pmpall 999 --pstat atk=40 --estat dfn=300,atk=100 --maxev 4000 --frames 90000 --db73 0 --skip 101
+p_ch_w9 7 --ecount 3 --skill 0x39 --target 4 --pskill1 0x39 --prefill 999 --php 999 --ehp 999 --pmpall 999 --pstat atk=40 --estat dfn=300,atk=100 --maxev 4000 --frames 90000 --db73 0 --skip 107
+p_ch_w10 7 --ecount 3 --skill 0x39 --target 4 --pskill1 0x39 --prefill 999 --php 999 --ehp 999 --pmpall 999 --pstat atk=40 --estat dfn=300,atk=100 --maxev 4000 --frames 90000 --db73 0 --skip 109
+p_ch_w11 7 --ecount 3 --skill 0x39 --target 4 --pskill1 0x39 --prefill 999 --php 999 --ehp 999 --pmpall 999 --pstat atk=40 --estat dfn=300,atk=100 --maxev 4000 --frames 90000 --db73 0 --skip 113
+p_ch_w12 7 --ecount 3 --skill 0x39 --target 4 --pskill1 0x39 --prefill 999 --php 999 --ehp 999 --pmpall 999 --pstat atk=40 --estat dfn=300,atk=100 --maxev 4000 --frames 90000 --db73 0 --skip 127
+p_ch_h1 7 --ecount 2 --esched 1:0x84:4 --skill 0x39 --target 4 --pskill1 0x39 --prefill 999 --php 999 --ehp 999 --pmpall 999 --emp 200 --pstat atk=40 --estat dfn=300,atk=100 --maxev 4000 --frames 90000 --db73 0 --skip 131
+p_ch_h2 7 --ecount 2 --esched 1:0x86:4 --skill 0x39 --target 4 --pskill1 0x39 --prefill 999 --php 999 --ehp 999 --pmpall 999 --emp 200 --pstat atk=40 --estat dfn=300,atk=100 --maxev 4000 --frames 90000 --db73 0 --skip 137
+e_ch_h1 7 --ecount 3 --sched 1:0x85:0 --eskills 0x39,0x39,0x39 --etargets 0,0,0 --erefill 999 --emp 999 --php 999 --ehp 999 --pmpall 300 --pstat atk=40,dfn=300 --estat dfn=300 --maxev 4000 --frames 90000 --db73 0 --skip 139
+p_tf_k 7 --ecount 3 --sched 1:0x29:4,2:0x29:5 --php 999 --ehp 999 --pmpall 300 --pstat atk=40 --estat dfn=300,atk=200 --maxev 3000 --frames 60000 --skip 149
+p_helper_tf 7 --ecount 2 --sched 1:0x86:0,2:0x29:4:3 --php 999 --ehp 999 --pmpall 300 --pstat atk=40 --estat dfn=300,atk=60 --maxev 3000 --frames 60000 --skip 151
+p_chh0 7 --ecount 3 --esched 1:0x84:4 --sched 2:0x39:4,3:0x39:4,4:0x39:4,5:0x39:4,6:0x39:4,7:0x39:4,8:0x39:4,9:0x39:4,10:0x39:4,11:0x39:4,12:0x39:4,13:0x39:4,14:0x39:4,15:0x39:4,16:0x39:4,17:0x39:4,18:0x39:4,19:0x39:4,20:0x39:4,21:0x39:4,22:0x39:4,23:0x39:4,24:0x39:4,25:0x39:4,26:0x39:4,27:0x39:4,28:0x39:4,29:0x39:4,30:0x39:4,31:0x39:4,32:0x39:4,33:0x39:4,34:0x39:4,35:0x39:4,36:0x39:4,37:0x39:4,38:0x39:4,39:0x39:4,40:0x39:4,41:0x39:4,42:0x39:4,43:0x39:4,44:0x39:4 --pskill1 0x39 --force1-rounds 45 --prefill 999 --php 999 --ehp 999 --pmpall 999 --emp 200 --pstat atk=40 --estat dfn=300,atk=100 --maxev 4000 --frames 90000 --db73 1 --skip 157
+p_chh1 7 --ecount 3 --esched 1:0x86:4 --sched 2:0x39:4,3:0x39:4,4:0x39:4,5:0x39:4,6:0x39:4,7:0x39:4,8:0x39:4,9:0x39:4,10:0x39:4,11:0x39:4,12:0x39:4,13:0x39:4,14:0x39:4,15:0x39:4,16:0x39:4,17:0x39:4,18:0x39:4,19:0x39:4,20:0x39:4,21:0x39:4,22:0x39:4,23:0x39:4,24:0x39:4,25:0x39:4,26:0x39:4,27:0x39:4,28:0x39:4,29:0x39:4,30:0x39:4,31:0x39:4,32:0x39:4,33:0x39:4,34:0x39:4,35:0x39:4,36:0x39:4,37:0x39:4,38:0x39:4,39:0x39:4,40:0x39:4,41:0x39:4,42:0x39:4,43:0x39:4,44:0x39:4 --pskill1 0x39 --force1-rounds 45 --prefill 999 --php 999 --ehp 999 --pmpall 999 --emp 200 --pstat atk=40 --estat dfn=300,atk=100 --maxev 4000 --frames 90000 --db73 1 --skip 163
+p_chh2 7 --ecount 3 --esched 1:0x87:4 --sched 2:0x39:4,3:0x39:4,4:0x39:4,5:0x39:4,6:0x39:4,7:0x39:4,8:0x39:4,9:0x39:4,10:0x39:4,11:0x39:4,12:0x39:4,13:0x39:4,14:0x39:4,15:0x39:4,16:0x39:4,17:0x39:4,18:0x39:4,19:0x39:4,20:0x39:4,21:0x39:4,22:0x39:4,23:0x39:4,24:0x39:4,25:0x39:4,26:0x39:4,27:0x39:4,28:0x39:4,29:0x39:4,30:0x39:4,31:0x39:4,32:0x39:4,33:0x39:4,34:0x39:4,35:0x39:4,36:0x39:4,37:0x39:4,38:0x39:4,39:0x39:4,40:0x39:4,41:0x39:4,42:0x39:4,43:0x39:4,44:0x39:4 --pskill1 0x39 --force1-rounds 45 --prefill 999 --php 999 --ehp 999 --pmpall 999 --emp 200 --pstat atk=40 --estat dfn=300,atk=100 --maxev 4000 --frames 90000 --db73 1 --skip 167
+p_chh3 7 --ecount 3 --esched 1:0x85:4 --sched 2:0x39:4,3:0x39:4,4:0x39:4,5:0x39:4,6:0x39:4,7:0x39:4,8:0x39:4,9:0x39:4,10:0x39:4,11:0x39:4,12:0x39:4,13:0x39:4,14:0x39:4,15:0x39:4,16:0x39:4,17:0x39:4,18:0x39:4,19:0x39:4,20:0x39:4,21:0x39:4,22:0x39:4,23:0x39:4,24:0x39:4,25:0x39:4,26:0x39:4,27:0x39:4,28:0x39:4,29:0x39:4,30:0x39:4,31:0x39:4,32:0x39:4,33:0x39:4,34:0x39:4,35:0x39:4,36:0x39:4,37:0x39:4,38:0x39:4,39:0x39:4,40:0x39:4,41:0x39:4,42:0x39:4,43:0x39:4,44:0x39:4 --pskill1 0x39 --force1-rounds 45 --prefill 999 --php 999 --ehp 999 --pmpall 999 --emp 200 --pstat atk=40 --estat dfn=300,atk=100 --maxev 4000 --frames 90000 --db73 1 --skip 173
+e_chh0 7 --ecount 3 --sched 1:0x84:0 --eskills 0x39,0x39,0x39 --etargets 0,0,0 --erefill 999 --emp 999 --php 999 --ehp 999 --pmpall 300 --pstat atk=40,dfn=300 --estat dfn=300 --maxev 4000 --frames 90000 --db73 0 --skip 179
+e_chh1 7 --ecount 3 --sched 1:0x86:0 --eskills 0x39,0x39,0x39 --etargets 0,0,0 --erefill 999 --emp 999 --php 999 --ehp 999 --pmpall 300 --pstat atk=40,dfn=300 --estat dfn=300 --maxev 4000 --frames 90000 --db73 1 --skip 181
+e_chh2 7 --ecount 3 --sched 1:0x87:0 --eskills 0x39,0x39,0x39 --etargets 0,0,0 --erefill 999 --emp 999 --php 999 --ehp 999 --pmpall 300 --pstat atk=40,dfn=300 --estat dfn=300 --maxev 4000 --frames 90000 --db73 0 --skip 191
+e_chh3 7 --ecount 3 --sched 1:0x85:0 --eskills 0x39,0x39,0x39 --etargets 0,0,0 --erefill 999 --emp 999 --php 999 --ehp 999 --pmpall 300 --pstat atk=40,dfn=300 --estat dfn=300 --maxev 4000 --frames 90000 --db73 1 --skip 193
+n_hargon 203 --ecount 1 --php 999 --ehp 999 --pmpall 300 --pstat atk=40,dfn=400,hp=999 --estat dfn=300 --maxev 4000 --frames 90000
+p_tf_surge 7 --ecount 3 --sched 1:0x29:1,2:0x81:0,3:0x81:0,4:0x2b:0 --php 999 --ehp 999 --pmpall 300 --pstat atk=40 --estat dfn=300,atk=60 --maxev 2500 --frames 50000
+```

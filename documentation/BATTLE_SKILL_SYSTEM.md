@@ -152,6 +152,14 @@ Three hooks, all byte-neutral, plus one new bank:
 
 **The one new RAM byte:** `$db86` (a documented unused `ds` gap between
 `wJoinability $db85` and `wBattleAttackerIdx $db88`). Verified safe by testing.
+**(corrected S130 — NOT free):** `wJoinability` is a per-ENEMY table `$DB85+c`
+(`SaveBtlS_47e0`, c = 0-2; read by bank $54's JoinDecision with `$DD61&3`), so `$DB86` /
+`$DB87` = enemies 2/3's joinability. In a 2-3 enemy battle `$DB86` ≠ 0 from battle init
+(3 on the user's save), and `FarSkillFork`'s `$db8a == 0 → [$db86]` branch dispatches every
+Blaze ($00) cast to the handler of skill id `[$db86]` with Blaze's record power (measured
+6/6 on u22: Blaze used the Firebal resistance; a 1-enemy battle used type 0). The S45 test
+was a 1-enemy battle. Fix (patch owner, not applied): move the stash, or gate the alias path
+on a real custom id. §15.11.F3, KEY_LESSONS S130.
 
 ## 4. Verified addresses (quick reference)
 
@@ -270,12 +278,12 @@ The editor shows every field with this meaning (editor2/core/skills.py `FLAG_BIT
 | +1 | `category` | hi nibble = the **AI option-list tag** (banks $51/$52 build `$DC64` lists: 1 attack, 2 status / weaken, 3 heal / support; 8 = item); lo nibble **NOT READ** | PROVEN |
 | +2 | `target_mode` | bit0 single, bit1 group; bit4 foes, bit5 allies, bit6 self ($11 / $12 / $21 / $22 / $41). Drives the battle menu ($50, ask for a target), the group loop ($52), the dead-target redirect ($53), Imitate's side test; the ACTUAL pick is per-skill code (bank $58 `BtlSkillTargetDispatch_401d`) | PROVEN |
 | +3 | `ai_weight` | AI only (bank $57 sums it per category) | PROVEN |
-| +4 | `mp_byte` | **the BATTLE MP cost, 8-bit**: menu afford check ($50 `SaveBtl_4ba4`), act-time afford + the "not enough MP" verb ($53 `SetupSub_480e`), deduct (two sites in $53; Farewell then zeroes MP), AI veto ($57), what a TakeMagic target soaks. The FIELD SKIL menu shows / charges the `$07` `SkillMPCostTable` u16 instead. Vanilla differs only for Farewell / MegaMagic (999 "All MP" vs 1) and StepGuard / MapMagic (field-only, 0) | PROVEN |
+| +4 | `mp_byte` | **the BATTLE MP cost, 8-bit**: menu afford check ($50 `SaveBtl_4ba4`), act-time afford + the "not enough MP" verb ($53 `SetupSub_480e`), deduct (two sites in $53; Farewell then zeroes MP), AI veto ($57), what a TakeMagic target GAINS (corrected S130: min(cost, MaxMP − MP); the skill still lands — nothing is soaked, §15.11.F6). The FIELD SKIL menu shows / charges the `$07` `SkillMPCostTable` u16 instead. Vanilla differs only for Farewell / MegaMagic (999 "All MP" vs 1) and StepGuard / MapMagic (field-only, 0) | PROVEN |
 | +5 | `status_id` | **AI element**: a resistance slot 1-27 (1-based index into `gamedata.RESIST_NAMES`) the AI assumes; damage takes the element from the handler (§15.3). Was "status_id" (wrong) | PROVEN |
 | +6 | `damage_class` | AI only: 0 none / 4 spell damage / 5 breath damage — nonzero = "deals damage" | PROVEN |
-| +7 | flags7 | b0 cut by Defence (½) / StrongD (1/10); b1 physical — Surround's miss rolls; b2 **NOT READ**; b3 keeps its committed target (no act-time re-resolve); b4 BREATH (MouthShut seal, TailWind reflect, SuckAll absorb, SuckAir ×2-2.5 for ids $5C-$63, the "spits" verb); b5 DANCE (DanceShut, "dances"); b6 SPELL (StopSpell, side +0 bit3 "spell was broken", "casts"); b7 physical CONTACT (airborne miss, BladeD halves, the shield grab, ×2 vs target +8 bit2). The AI copies it to `$dd6b` | PROVEN |
-| +8 | flags8 | b0 reflected by MagicBack / Bounce; b1 redirected by Cover / Guardian; b2 fails on an IRON target (Ironize); b3 **NOT READ**; b4 may land a critical hit (+ ChargeUP's "attacks with full force!"); b5 doubled by TwinHits (attacker +3 bit2); b6 ChargeUP ×2-2.5; b7 dodge-able (Dodge 50 %, else the AGL ladder) | PROVEN |
-| +9 | flags9 | b0 a TakeMagic target gains its MP; b1 (meta-actions $A0-$A9 only) allowed in a boss battle; b2 Imitate turns it back ("gets even!"); b3 a hit may snap confusion (§15.8c); b4 may be a FOLLOW-UP action (actor +6 bit6 — writer not found, never seen in ~11k measured events); b5 cannot reach an airborne target; b6 / b7 **NOT READ** | PROVEN (b4 writer open) |
+| +7 | flags7 | b0 cut by Defence (½) / StrongD (1/10); b1 physical — Surround's miss rolls; b2 **NOT READ**; b3 keeps its committed target (no act-time re-resolve); b4 BREATH (MouthShut seal, TailWind reflect, SuckAll absorb, SuckAir ×2-2.5 for ids $5C-$63, the "spits" verb); b5 DANCE (DanceShut, "dances"); b6 SPELL (StopSpell, side +0 bit3 "spell was broken", "casts"); b7 physical CONTACT (airborne miss, BladeD halves, the shield grab, ×2 vs target +8 bit2; S130: also the Dodge-skill machine `$53:$5091` and the BladeD COUNTER — the attacker takes dmg>>1 about half the time, §15.11.F6). The AI copies it to `$dd6b` | PROVEN |
+| +8 | flags8 | b0 reflected by MagicBack / Bounce; b1 redirected by Cover / Guardian; b2 fails on an IRON target (Ironize); b3 **NOT READ**; b4 may land a critical hit (corrected S130: the "attacks with full force!" $67 message announces the `$DB42` bit0 SURE crit of the tension roll, not ChargeUP — ChargeUP lives in own +6 bits 0-1; §15.11.F4); b5 doubled by TwinHits (attacker +3 bit2); b6 ChargeUP ×2-2.5; b7 dodge-able (corrected S130: the 50 % is the SideStep +7 & $0C STATUS — RNG1 even dodges, odd falls to the AGL ladder; the Dodge SKILL $8C is a separate act-state-7 machine on flags7 b7, §15.11.F6) | PROVEN |
+| +9 | flags9 | b0 a TakeMagic target gains its MP; b1 (meta-actions $A0-$A9 only) allowed in a boss battle; b2 Imitate turns it back ("gets even!"); b3 a hit may snap confusion (§15.8c); b4 may be a FOLLOW-UP action (actor +6 bit6 — CLOSED S130: the writer is SkillFocus $54, own +6 bit7 rotated to bit6 by phase 9; 14 follow-ups measured, §15.11.F4); b5 cannot reach an airborne target; b6 / b7 **NOT READ** | PROVEN |
 | +10 | `field10` | ITEMS only (entry 5 `$535F`, the battle item menu): 1 = not usable in battle | PROVEN |
 | +11 | `party_min` | damage / heal minimum, party caster | PROVEN |
 | +13 | `party_range` | range; **max = min + range** | PROVEN |
@@ -1697,8 +1705,10 @@ $da82:=0 + entry-6 call at .mournArmSlashes instead of relying on the
 stale done-flag.
 
 **S75 fences (crash-investigation hardening).** (1) `LearnCode2Guard06`
-(bank `$06` `$7F1F`, jp-trampoline from `Jump_006_50b5`): the scanner's
-code-2 exit — vanilla blanket stat-qualification, no species latch — is
+(bank `$06` `$7F1F`, jp-trampoline from `LearnFoundAllPrereqs` — `Jump_006_50b5` before
+the S130 rename; the scanner is `SkillLearnScan`, ex-`label6_4f9a`): the scanner's
+code-2 exit — vanilla blanket stat-qualification, no species latch (S130 decode: a skill not
+in the learn queue whose 2-5 prereqs are ALL known; MONSTER_DATA "Raising a monster") — is
 closed for custom ids `$E1+` (divert to the skip-record path, scan
 continues); customs learn ONLY via code 0 (natural species slots) or code 1
 (prereq evolve). (2) `SlotProbeGuard50` (bank `$50`, `CmpBtl_6383` head):
@@ -2004,10 +2014,16 @@ the slot-2 adjust; a hook at $61EC sees the pre-floor value).
 
 The plain attack command IS skill id 58 through this core. Physical
 multiplier handlers (validated): TwinSlash/PsycheUp ×1.5, Beserker ×2 (+
-sets $db08 bit2), SquallHit ×0.8, Ahhh ×0.5, RainSlash per-hit ×0.8/0.6/0.4/0.4
+sets $db08 bit2 — corrected S130: that is the user's OWN guard record `$DB08+8a`, and its
+consumer `$53:$5A44` doubles physical hits ON the Beserker user (not $3C/$3E, only with
+defence nibble 0), §15.11.F2), SquallHit ×0.8, Ahhh ×0.5, RainSlash per-hit ×0.8/0.6/0.4/0.4
 ($DD69 = hit counter, **4-hit cap MEASURED S79**: handler `$52:$48B4`
 stops at $DD69==5; hit1 = ×8/10 `$69B7`, hit2 = ×6/10 `$69D2`, hits 3-4 =
-(×8/10)>>1 `$69E1`; dead targets skipped by walking $DB89 within the side), BiAttack rolls with ATK×0.75 (2 hits), QuadHits
+(×8/10)>>1 `$69E1`; dead targets skipped by walking $DB89 within the side —
+**corrected S130**: the cap is the state-6 continuation `$52:$6FD4` (ends at `$DD69 >= 4`,
+and its `$DCED` walk ends at a slot with `&3 == 3`), the dead-slot walk lives there and does
+not consume `$DD69`, the handler's own `$DB89` walk is never reached (act state 9 diverts dead
+targets first), and a normal 3-slot side gives at most **3** hits — §15.11.F8), BiAttack rolls with ATK×0.75 (2 hits), QuadHits
 ATK×0.625 (4 hits, measured 100→75 / 100→62), CALLEVIL rolls with ATK=400,
 MetalCut ×1.5+1 iff target metal flag ($DB8B+slot bit0), family cuts
 (DrakSlash class) ×1.5 iff target family matches (Slime 0/Dragon 1/Beast 2/
@@ -2085,7 +2101,12 @@ Defeat, $14 Sacrifice, $3E Kamikaze, $69 Paralyze, $6B, $71 K.O.Dance}
 AUTO-FAIL vs ENEMY targets when db73==1 — instant death and paralysis
 never work on bosses, and DO work on wild monsters (validated both ways;
 the rig sets $DA09=1 so rig battles are "boss" battles — poke db73=0 to
-reproduce the wild condition).
+reproduce the wild condition). **(corrected S130)** The list names $3E, but
+nothing on the Kamikaze path calls the gate (its callers are `$5C51`, `$65B5`,
+`SacrificeResolve_67a9`): **Kamikaze lands in boss battles** (7 party→enemy hits at
+db73 = 1; the S85 "blocked" Kamikaze was res 14 level 3 = immune). The gate runs per
+VICTIM after that victim's MISS step (F1 helpers; Sacrifice per sweep target), not once
+per action — §15.11.F1/F3.
 
 ### 15.5 Handler-computed specials (all validated unless noted)
 
@@ -2106,14 +2127,25 @@ reproduce the wild condition).
   else HP − max(HP/100,1) (~1% survivor, msg $82). `$2FE8` returns current
   HP, not max — **MEASURED S79** with HP 180 / MaxHP 250: kill 180,
   survivor 179, 4/4 branches exact; consumes NO RNG steps (all rolls read
-  the ambient state). Caster dies in the state chain.
+  the ambient state). Caster dies in the state chain. **(corrected S130,
+  §15.11.F3)**: one `LoadBtlC_4e33` step precedes each target's res/kill reads
+  (S79's hook at $67DB sat after it); it SWEEPS from the queued target to the end
+  of its side; and the caster ROLLS (one more step): RNG1 < $7F dies, else
+  survives at max(HP/100, 1).
 - **WindBeast** 3L+10 party / 1.5L enemy, cap 180; **Vacuum** 2L+30 /
   1.5L, cap 150; ±half the (mod-)remainder, sign from the shifted-out bit
-  (see damage.py for exact polarity per skill).
+  (see damage.py for exact polarity per skill). **(corrected S130)**: Vacuum is
+  **2L+30 for enemy casters too** — its side test `cp $04` compares the LINK byte
+  (0), not the attacker (90/90 incl. enemy casts at L 3-150); `damage.vacuum(enemy_side=True)`
+  is wrong, `skillfx/f23_phys.vacuum_base` is the measured formula.
 - **Ramming**: target current HP × 0.8 + 1, Sacrifice-res via ladder A.
 - **Beat/Defeat**: pure hit ladder (15.3) then HP=0, presence $DD1B=1.
-- **CallHelp/YellHelp**: 50% (RNG1&1) to summon. **Massacre**: random
-  target with a $A0/256 gate. **Smashlime/Sheldodge/Branching**: family-
+- **CallHelp/YellHelp**: 50% (RNG1&1) to summon (S130: then 3/4 resp. 7/8 per
+  further helper, §15.11.F8). **Massacre**: random
+  target with a $A0/256 gate. **(corrected S130)**: Massacre ALWAYS crits (own +4
+  bit7, ATK-based damage); the RNG1 ≥ $A0 gate is EvilSlash's, and only for an awake,
+  unafflicted target; the "random target" is the side-blind `TargetSlotResolver_6379`
+  (allies included) — §15.11.F4. **Smashlime/Sheldodge/Branching**: family-
   conditional (traced).
 
 ### 15.6 TURN ORDER — traced and differentially validated (S79)
@@ -2203,6 +2235,12 @@ during its second tick the slot shows a TRANSIENT full-HP value (the
 source MaxHP — seen on both sides) before settling at 0; a battle-ending
 KO leaves the transient in place. Boss-gated Sacrifice ($14 vs enemy at
 $DB73==1) leaves the CASTER at 1 HP (1/1).
+**(corrected S130)**: the "transient" is the KO state's slot RELOAD (bank $51 entry 15 →
+`LoadBtlS_44a9` writes the source stats before `KOStatusWipe_4c26` zeroes HP); the reload is
+permanent for MaxHP/MaxMP/ATK/DEF/AGL/INT (it undoes buffs and transforms, §15.11.F9), and
+the KO also zeroes the status bytes `$DB02+8t..$DB09+8t` (F1). The 1-HP Sacrifice caster
+was the survivor branch of the caster's own roll (max(HP/100,1) = 1 for HP < 200); about
+half the time the caster dies (§15.11.F3).
 
 ### 15.8 STATUS system (S79 — byte map measured per-skill)
 
@@ -2212,7 +2250,7 @@ Per-combatant 8-byte block at **$DB00+slot*8**. Model:
 | byte | bit(s) | status | set by (measured) |
 |------|--------|--------|-------------------|
 | +2 | 0 | poison (DoT /16) | PoisonHit $67, PoisonGas $6C |
-| +2 | 1 | heavy DoT (/6) | PoisonAir $6D (measured S85, 25 casts; hit-chance via BattleCall_65b5, chance not modelled) |
+| +2 | 1 | heavy DoT (/6) | PoisonAir $6D (measured S85, 25 casts; hit-chance via BattleCall_65b5, chance not modelled — corrected S130: it rolls `HitPoison_65c9`, res 18, ladder `$6749`; modelled, §15.11.F1) |
 | +2 | 3:2 | sleep counter | applied value $8C = flag+count 3 |
 | +2 | 4 | confusion | PanicAll $19 |
 | +2 | 5 | curse | Curse $6F |
@@ -2220,11 +2258,11 @@ Per-combatant 8-byte block at **$DB00+slot*8**. Model:
 | +2 | 7 | asleep flag | Sleep $15 / SleepAll $16 / SleepAir $6A |
 | +3 | 0 | StopSpell | $17 |
 | +3 | 1 | Surround | $18 |
-| +3 | 4/5 | transformed | Transform $29 / CHGDRAGON $AA + BeDragon $D5 |
+| +3 | 4/5 | transformed | Transform $29 / CHGDRAGON $AA + BeDragon $D5 (corrected S130: the other way round — Transform sets **bit5**, the dragon form bit4; measured, §15.11.F9/F10) |
 | +3 | 6 | DanceShut | $91 |
 | +3 | 7 | MouthShut | $92 |
 | +5 | 6/7 | guard / amplify ladder rows (§15.3) | guard cmd / ChargeUp class |
-| +5 | 0-5 | ONE-SHOT compulsions (cleared at victim's turn) | LureDance $78 -> bit1, etc. |
+| +5 | 0-5 | ONE-SHOT compulsions (cleared at victim's turn — corrected S130: ANY forced action (iron, paralysis, sleep, a one-shot) clears ALL of bits 0-5 via `ClearOneShots_4b39`, §15.11.F1) | LureDance $78 -> bit1, etc. |
 | +7 | $C0 | packed turn counters -> forced action $11; a TARGET with it running + flags8 bit2 makes the attacker's action FAIL ($BA, act state 9 pre-gate — S85) | phase-9 sub 2 decrements by $40/round (S85) |
 | +2 | 5 (curse) | at the cursed actor's turn, RNG1<$40 after the gate step fires CurseSelfHit_4c50; RNG2 of the same step picks: <$40 turn lost / <$80 HP -= MaxHP/6 then acts / <$C0 MP -= MaxMP/6 then acts / else CONFUSION set + immediate $99 HitAlly on itself (S85, 3/3) | Curse $6F |
 
@@ -2237,7 +2275,11 @@ $DD2A bits 1:0 / $DD29 bits 1:0; `$DB42[attacker]` bit2 = sure hit).
 Already-afflicted targets get the "already" message with NO roll.
 Measured 20/20 rolls + 72/72 "already" cases. Application values: Sleep
 +2 |= $8C, StopSpell +3 |= 1, Surround +3 |= 2. (Beat-class rolls stay on
-`$5C51`/`$6749`, §15.3.)
+`$5C51`/`$6749`, §15.3.) **(S130 precision, §15.11.F1)**: true for these three ids, but the
+helpers are shared and pick the ladder per id — SleepAll/SleepAir roll `$6749` through
+`$5C8F`, SandStorm `$6749` and Radiant B through `$5CDA`; and the `$DB42` bit2 sure hit
+exists only in the five `$5Cxx/$5Dxx` helpers (`SureHitCheck_6adc`), not in `$5C51` or the
+`$65xx/$66xx` helpers.
 
 **Sleep wake (`$53:$4AEB`, exact):** at the sleeper's own turn, wake iff
 RNG1 <= threshold by counter {3: $60 = 37.9%, 2: $A0 = 62.9%, 1: $E0 =
@@ -2389,8 +2431,15 @@ bits1:0 (rtype 18), $65B5 res+5 bits7:6 (19), $65D5 bits5:4 (20, Curse's
 own hit roll), $65E3 bits3:2 (21, the dance/compulsion family: Ahhh,
 OddDance, SideStep, LureDance, LushLicks/SickLick, LegSweep/BigTrip,
 WarCry). $DCFD/FE/FF = the acting skill's flags7/8/9 cached at act.
+*(S130 F1 byte-read: `HitCompel_65e3`'s users are Ahhh $70, LureDance $78, LushLicks $79,
+LegSweep $7B, BigTrip $7C (via the flyer gate `$65FF`) and WarCry $7D; SickLick rolls
+`HitDefDown_5dcc` (res 12), SideStep has no hit roll, OddDance is the MP-drain roll
+`SetHLBattle_5d25` (res 9) — §15.11.F1/F5.)*
 
 ### 15.9 What is NOT yet modelled (S88 sweep; remaining residuals)
+
+*(S130: every battle skill is now modelled — §15.11. The residuals below that S130 closed are
+marked CLOSED S130 in place; what is still open after S130 is listed in §15.11.x.)*
 
 Loop-level differential validation of `simulator/battle.py` — **DONE S85
 (§15.8b, 6614/6614)**. **CLOSED S88** (byte-read + measured + validated;
@@ -2411,11 +2460,13 @@ poison DoT cap >=10 (15/15 exact at MaxHP 300); sleep application
 counter = CONSTANT $8C (SleepApply_4262); PsycheUp carry-over = NO SUCH
 MECHANISM ($56 shares the x1.5 TwinSlash handler $462F); $DB06 map
 (bit7 Focus, $30 SuckAir, $0C HighJump AIRBORNE — bit2 is the
-flags7-bit7 block-route bit — $03 ChargeUP); $DB07 surround counter
-writer (target |= $03 after a $5CDA roll) and dodge-status writer
+flags7-bit7 block-route bit — $03 ChargeUP; S130: bit6 = the Focus follow-up (bit7 → bit6 at
+phase 9), §15.11.F4); $DB07 surround counter
+writer (target |= $03 after a $5CDA roll — corrected S130: bits 1:0 are the SandStorm/Radiant
+attacker-side 37.5 % miss MARK, set |= 3 and never decremented, §15.11.F1) and dodge-status writer
 (SideStep coin: |= (RNG1&4)+4); the incapacitated-target dodge
 exemption (GetMonsterSlotInfo guard, §15.10.9); one-shot +5 bits clear
-at the consumed turn; TailWind wind-guard (+4 bit6, tested by
+at the consumed turn (corrected S130: ALL of them, at any forced action, §15.11.F1); TailWind wind-guard (+4 bit6, tested by
 flags7-bit4 breaths except $43/$8F).
 
 **CLOSED S89** (measured on the real save + byte-read; simulator/status.py
@@ -2442,7 +2493,9 @@ $8D/$8E/$90 defense-level field 1/2/4); marks cleared at the round
 boundary (which is WHY the class gets the §15.6 +$0600 order boost).
 Consumers: main-path redirect sites (~$552x/$567x, gated on cached
 flags8 bit1 in $DCFE) rewrite wBattleTargetIdx AND the attacker's
-queue target to the protector (msg $80) — differentially proven by HP
+queue target to the protector (msg $80) — **(corrected S130)** only when the
+protector is CAPABLE (GetMonsterSlotInfo: not asleep / paralysed / confused / iron / a
+one-shot pending; `$53:$54FA`; `battle.guard_redirect` had tested HP only), §15.11.F6 — differentially proven by HP
 flow (every attack aimed at the protected slot landed on the
 protector, 250→12 while the target never moved). The $670E rst-table is
 byte-decoded: 7 states $6720/$67A9/$6866/$68B4/$6971/$6A04/$6A89,
@@ -2471,7 +2524,7 @@ d-pad) to commit Flee/Item/Shift and capture the commit writes, on the
 CLEAN ROM for the vanilla id space (NB the S89 attempt found the
 hacked .sav is REJECTED by the clean build — S75 build-specificity —
 so use a franken-state there); the guard/defensive +8/+9 flags beyond
-their setters (Imitate/Dodge/SuckAll/defense-level consumers; the
+their setters (Imitate/Dodge/SuckAll/defense-level consumers — **CLOSED S130**, §15.11.F6; the
 attacker-side +7 & $30 checker at $53:$4BD3 pairs with these); the
 LOW-STAT CALCDEF EDGE — **SOLVED S89 (PyBoy). It was never a calcdef
 bug: it is an UNMODELLED ×1.5 DAMAGE BOOST, `$DB42` bit 6.** Found by
@@ -2502,6 +2555,11 @@ SETTER is not yet located** — it is not a plain `set 6,[hl]`, `or $40`
 or `ld [hl],$40` against a `$DB42` pointer anywhere in banks $50-$5F, so
 it is written by some other addressing form (ROADMAP item). The consumer
 and its arithmetic are exact, which is what the damage model needs.
+**CLOSED S130** (§15.11.F4): the setter is the bank $58 command-phase "tension" roll —
+`TensionRollB_5ba1` → `SetBtlFX_5b17` (`ld a,[hl] / or d / ld [hl],a`, d = $40), after each
+PARTY actor's commit in a non-link battle, one GenerateRNG step, ladder A on the actor's w3
+base `$DC5C`; `TensionRollA_5a40` sets the other bits (0 sure crit, 1, 2 status sure-hit,
+4 no MP spend, 5 shield grab, 7 easy dodge; B also bit3). 13528/13528 roll pairs.
 
 Model: `battle.db42_boost()`, applied in BOTH the physical and
 record-roll damage predictions; `Board` now carries `db42` from the
@@ -2523,7 +2581,9 @@ partially decoded S84); the multi-candidate target RNG pick in the
 VALIDATOR (the driver uses §15.10.10 front-weighted for plain attack
 and uniform_side_pick for the $642C family, S88);
 two flagged presumptions: rider-before-snap RNG order (no overlapping
-sample) and consumed-bit-only one-shot clearing (no multi-bit sample).
+sample) and consumed-bit-only one-shot clearing (no multi-bit sample) — the latter
+**CLOSED S130, and it was wrong**: every forced action clears all +5 bits 0-5 (83 multi-bit
+samples, §15.11.F1).
 
 **CLOSED S87** (measured + byte-read +
 differentially validated; §15.10.1/.7a, MONSTER_DATA): the party-side
@@ -2554,7 +2614,8 @@ attacker +6&3 exemption. AI rule chains are DONE
 except small residuals: $4DF9's condition (+5, fired for FloraMan only —
 omitted from model with note); DanceShut/MouthShut/DeMagic/ThickFog
 pass-conditions (veto branches measured, pass branches untraced —
-modelled as conservative veto); SuckAir $4ACC own-MP-full semantics
+modelled as conservative veto; **DeMagic/ThickFog CLOSED S130**, `ai_rules.f10_rules`
+332/332, §15.11.F10 — DanceShut/MouthShut remain); SuckAir $4ACC own-MP-full semantics
 static-presumed; Surge +15 presumed.
 
 CLOSED by S84 (measured + byte-verified, details in §15.10.6/8/9/10):
@@ -2698,7 +2759,8 @@ bonus/veto pair is correct as shipped.
 
 **15.10.6 Pick** (AIState5Pick_75a2). Status overrides first (attacker
 block): +2 bit4 (confusion) → force $3A; +6 bit2 → force $42; +7 bit4 →
-force $95. $dd0b==0 → the LIGHTWEIGHT picker Jump_057_76DF (no per-skill
+force $95 (S130: +6 bit2 = the HighJump airborne pair, +7 bit4 = LifeSong's second-turn
+charge — §15.11.F4/F5). $dd0b==0 → the LIGHTWEIGHT picker Jump_057_76DF (no per-skill
 RNG; observed choosing by top-category tag match — EID 37; tail
 untraced). Else argmax over $DCE4[0..6], first-nonzero seeds, tie →
 one RNG step, RNG1 bit0: 0 keep incumbent / 1 take challenger. All-zero
@@ -2714,7 +2776,9 @@ target-resolution note below). Winner skill $FF → $3A.
 *Target resolution (S81, PARTIAL — ~2/3 traced):* the queue's target
 byte is a TWO-STAGE value. Player-command commits (bank $50 $4B6B) write
 the target SIDE BASE only (0 or 4, from record-field bit4 vs the actor's
-side) — not a slot. At act time, bank $53's own 16-state act-phase
+side) — not a slot. **(corrected S130)**: only for GROUP skills (target-mode bit0 clear);
+a single-target order writes the slot the player picked with the cursor, self skills the
+own slot, and $4BD1 has per-skill exceptions — §15.10.7b. At act time, bank $53's own 16-state act-phase
 dispatcher ($51E8; sub-state 0 = $520C) copies the byte to
 wBattleTargetIdx and, iff it is $FF, far-calls **bank $58 entry 8**
 (`BtlQueueFetchService_5498`, `ld hl,$5808` — **CORRECTED S83**, the S81
@@ -2744,7 +2808,11 @@ bank-$50 pattern) is unconfirmed — **BREADCRUMB (byte-verified S83):
 direct entry-4 caller in the ROM; strong candidate for this write site,
 NOT yet measured (S70 rule).** Dead-target redirect at act time also
 exists as a first-valid-on-side scan at $53:$47E8→$47FB (path
-conditional; not exercised in the S81 probes).
+conditional; not exercised in the S81 probes). **(measured S130, §15.11.F1/F5)**: a
+single-target skill with `$DD0B == 0` keeps the dead target and the action FIZZLES
+(`$53:$47B2`); group modes take the first-valid scan (`DeadTargetRedirectScan_47e8`);
+`$DD0B != 0` single targets re-pick through the skill's bank $58 row; $32/$96/$95/$AD keep
+the queue byte.
 
 **15.10.7 State-0 preamble** (pre-$7129, ~$6EC1): plan read
 (wMenu_selection / link $C1D5-6) → $DD72; w[3]-derived $db4d
@@ -2752,7 +2820,8 @@ conditional; not exercised in the S81 probes).
 b=0/9/18 rows — the personality-table row group offsets) feed
 AIPreambleDecide_7a5d: carry → clear $DCEC pair to $FFFF, set bit6 of
 $DD03[idx], run the machine (plan $81 "Command" diverts to the direct
-path via $DD03[idx]==3 at $714E); no-carry → alternate outcome at
+path via $DD03[idx]==3 at $714E **(corrected S130: $81 is the top-menu PLAN; the $714E
+divert jumps to the POST with the menu's order untouched — §15.10.7b)**); no-carry → alternate outcome at
 $6F8C (flee/loaf class, untraced).
 
 **15.10.7a S84 corrections + full decode of the preamble path.** The
@@ -2820,9 +2889,136 @@ $6F8C "flee/loaf" reading was wrong — decoded + measured S84:
   else $3A (Attack) iff cat1≥$3F AND cat1≥cat2 AND cat1≥cat3; else $8D
   (Defence)** — bypassing the category machine (d9ee=6). All three
   codes reproduced live by forcing wMenu_selection=$81 + WLD≥$F0 +
-  base sets. (The $6f1f d9ed==1 branch adds status-clear checks and a
+  base sets. **(corrected S130: the carry divert serves ANY tactic in a PLAN round, and
+  the $6f1f d9ed==1 checks are not status clears: +2&$DC / +5&$1F / +6 bit2 / +7&$D0 send
+  the actor to the category machine instead of the pick; §15.10.7b.)** (The $6f1f d9ed==1 branch adds status-clear checks and a
   $c823=$B4 presentation call before the same queue.) The S84 "writer
   path byte-read; runtime sighting pending" item is CLOSED.
+
+**15.10.7b The player's orders (Command), measured S130.** Rig
+`simulator/measure_command.py` drives the REAL battle menu with joypad input on the user's
+save (u22.gbc + field.state; party Slib L22 WLD 0, Wrex L23 WLD 48, Hale L19 WLD 17;
+WLD/bases/skills/status poked into the records before battle), natural enemy AI; corpus
+`simulator/command_events.json.gz` (56 battles, 254 command phases, 735 party commits);
+`simulator/validate_command.py` replays it through `pacing.give_orders` /
+`pacing.command_commit` / `battle.simulate_round` → **6411 checks, 0 mismatches**.
+
+*1. Where the order lives — Command is a TACTIC, the order is given in PLAN.* The battle
+menu is FIGHT / ITEM / PLAN / RUN (wMenu_selection low bits 0 / 2 / 1 / 3, bit7 = chosen).
+**FIGHT ($80) gives no orders.** **PLAN ($81)** opens, for each monster the menu can plan
+(`SaveBtl_5b07`: alive, GetMonsterSlotInfo passes — not asleep / paralysed / confused, no
+pending one-shot, not stunned — and not in a two-turn skill), its tactic list CHARGE /
+MIXED / CAUTIOUS / COMMAND (cursor wPLAN_selection $C8DC). A tactic 0-2 is written to
+$DD03[slot] (and remembered in $C876[slot]). COMMAND (`Jump_050_471f`) sets
+wMenu_selection := 4 and runs the order sub-machine $D9F7 (`LoadBtl_47be`, table at
+$4794): ATK / SKIL / DEF (cursor $C8DE), the skill list (4 rows a page: up/down wrap
+inside a page and left/right flip pages; cursor $C8DF + page $C8E0), then a target cursor
+($DD72 & 3; it **skips dead slots**, except for Vivify/Revive $30/$31/$BB). **The menu
+writes the order straight into the queue** $DCEC[2s] / $DCED[2s] (`LoadBtl_4f86` /
+`LoadBtl_4f95`) and marks the monster with `GetBattleModeData` ($50:$4F45): $DD13 := 1,
+$DD03 := 3. Target bytes: ATK → the picked enemy (automatically the only live one);
+DEF → ($8D, own slot); group skills (target-mode bit0 clear) → the side BASE (the player
+is not asked); single enemy (bit4) / single ally / self (bit6) → the cursor slot / own
+slot; `LoadBtl_4bd1` exceptions: $14/$80/$83 opposing base; $24/$26/$2A/$8B/$8F own base;
+$32/$89/$95/$96 own base (refused, msg $FB00, when the caster is alone); $39/$84-$87 own
+slot; **Massacre $3F and $51-$53 pick their target DURING THE MENU** (bank $58 entry 4 /
+5, menu-time RNG; $6379 is side-blind — measured picking an ally). So "Command" is both:
+the per-monster tactic 3 AND the round plan $81. The plan byte goes to $DD72 at each
+commit (§15.10.7). Every command phase rewrites $DD03 (bit6 clear, measured in FIGHT
+and PLAN rounds). After the battle `LoadBtlS_4ac0` writes $DD03&3 (+ $C876&3 << 2)
+back to the record's +$0B high nibble: **a commanded monster starts its next battle with
+tactic 3**. Under FIGHT a tactic-3 monster that obeys queues plain Attack
+(`AIState0AltOutcome_6f8c`; target = the party attack pick below); one that disobeys runs
+the category machine unbiased (27 FIGHT commits measured, all match). A monster with
+tactic 0-2 given COMMAND in PLAN simply becomes tactic 3 for the battle. Leaving it on
+0-2 in a PLAN round gives the +$2D bias (§15.10.7a) and that tactic's personality drift
+(below). That path is decoded but NOT modelled: `party_policy='command'` orders every
+monster.
+
+*2. The obedience gate under an order.* Every round, at the commit, each ordered monster
+runs the S87 gate with tactic 3 ($db4c = 0; one RNG step at $57:$7A16): WLD 0 or < $15
+always obeys, WLD ≥ $F0 always disobeys; between, carry iff WLD/4 + band-roll >
+w3/10 + `ObedienceThreshTable_7997`[81 + rows]. Because $db4c = 0, **an order is obeyed
+LESS often than a tactic** (Wrex, WLD 48: tactic 0 never carries, an order always does).
+- *No carry*: the plan-$81 **personality drift** ($57:$6FE0; phase 5, not link) adds the
+  tactic's row of `PersonalityCommandTable` to the bases: w3 −1 (level < 10 or ≥ 30) or
+  −2 (10-29) per obeyed order. This is measured on every obeyed commit (464 drifts), and the
+  bases saturate at 0 / $FF. **w3 feeds $db4d, so each obeyed order makes the next one
+  likelier to be refused.** `LoadBtlS_4b96` writes the bases back to the record after
+  the battle (live monsters only), so the drift is permanent. Then `$714E` jumps to the
+  post: the menu's queue stands, with no target service and no RNG.
+- *Carry*: $DD03 |= $40, the queue pair := $FFFF. With no status, message $B4 ("ignores
+  the order") and `SetBtlAI_7f5f` picks from the raw bases: **$98 Daze** if all three are
+  < $3F, **$3A Attack** iff cat1 ≥ $3F and ≥ cat2 and ≥ cat3, else **$8D Defence**.
+  Measured: $3A 193×, $8D 43×, $98 14×. An actor carrying +2&$DC / +5&$1F / +6 bit2 /
+  +7&$D0 runs the category machine instead (byte-read, not reached by a plannable
+  monster). The target byte stays $FF until the commit sub-state ($58:$545B) runs
+  the skill's target service: Attack → the party attack pick; Defence / Daze →
+  own slot. Act time: the actor's $DD03 ≠ 3, so the usual re-resolve runs (§15.10.6).
+  A $DD0B = 2 actor that is not the first to act is **re-decided** ($53:$46A8 →
+  state 0 at d9ed $18 → the same pick, no message; measured once).
+- **Daze $98** (`SkillDaze` $52:$4E0A, row TargetSelfWrite): the usual MISS step (one RNG
+  step; flags7 0 / flags8 4, nothing can miss or block it), then only the animation
+  flag and the message. The turn is lost: no other RNG, no MP, no board change
+  (`skillfx/cmd_orders.py`, 11 acts replayed).
+- *Monsters the menu skipped* (asleep, paralysed, confused, stunned, one-shot) get
+  $DD13 := 1 at the end of the menu (`SetBtl_46c6` / `LoadBtl_4764`). Their commit goes
+  straight to the category machine with NO gate and NO drift (GetMonsterSlotInfo carry
+  or +2 bit4 test at the top of state 0; a stale $DD03 == 3 skips even that). The commit
+  sub-state then sees target $FF on an incapacitated actor and queues ($3A, own slot)
+  ($58:$5450). The actor acts its status (sleep roll etc.) as usual (16 measured).
+- The bank $58 **$DB42 tension rolls** (`COMMIT_ROLL`) follow every commit, orders
+  included (735/735).
+
+*3. Ordered targets at act time.* An obeyed order has $DD03 == 3, so a valid target is
+KEPT (no re-resolve, `battle.reresolves`). **A single-target order whose target died
+earlier in the round FIZZLES**, plain Attack included (measured 11×). $53:$47B2 →
+`LoadBtlC_4e01` returns Z because $DD72 is 0 during the act phase, $DD03 is 3 and the
+plan is $81: no MISS step, no re-pick (`battle.keeps_dead_target`). An AI actor or a
+FIGHT round re-picks instead. For an Attack-row skill that re-pick is bank $58 entry 8
+→ $41E9 (now `battle.attack_pick`, no longer first-valid). Group orders sweep from the
+side base; a dead base redirects to the first live slot (`DeadTargetRedirectScan_47e8`).
+A dead slot cannot be ordered at all: the cursor skips it, and a dead ally for a
+non-revive skill gets msg $FA00.
+
+*Party attack pick* (`$58:$41E9` party path, decoded + measured on disobedient Attacks):
+$DD0B == 0 → `LoadBtlFX_642c` uniform. Otherwise there is an argmin over the three
+opposing slots (ties: one RNG step, the challenger wins iff RNG1 bit1 == 0):
+- If no live slot is free of +6&$0C, the value is HP + DEF.
+- If no slot is "clean" (`SetBtlFX_43ea`: +6 bit2, shifted $DB08+8c bit5, $DB09+8c & 7,
+  i.e. not defending), the value is HP + DEF (DEF/2 if $DB08+8c bit2).
+- Otherwise it is max(HP − estimate, 0), metal ×50. Mode 2 also skips incapacitated
+  slots. The estimate is one CalcSkillDefense roll per slot with wBattleTargetIdx
+  still = the side base: **every estimate uses the first slot's DEF** (vanilla quirk).
+`battle.party_attack_pick` / `attack_pick` serve the commit, the act-time re-resolve
+and the dead-target re-pick of party Attack-row skills ($37/$38/$3A/$3B/$3D/$40;
+other $41E9-row skills keep the front-weighted stand-in).
+
+*4. MP.* The menu refuses an order whose record MP (+4) exceeds the CURRENT MP
+(`SaveBtl_4ba4`, msg $0402); field-only skills give $0302. The player must pick again
+(8 refusals measured). If MP drops between the menu and the act, the usual act-time veto
+applies (§15.8b; not exercised).
+
+*5. Arena.* With db73 = 2 in a non-link battle `LoadBtl_4550` replaces COMMAND with
+**"NO SP SK"** (screen-verified). `LoadBtl_5c2f` turns that entry into tactic 3 with NO
+order: $DD03 := 3, the queue stays $FFFF, and the commit (gate, drift) leaves a $FF skill
+that the commit sub-state turns into plain Attack + the party attack pick. A carry gives
+the direct pick (3 arena battles measured). Link battles (C86C ≠ 0) keep COMMAND.
+
+*Model.* `pacing.commit_round(..., party_policy='command')` with
+`b.ext['planner'](b, s) -> (skill, target slot | None)`. The planner may also return a
+list of such pairs (alternatives, used when the menu refuses one); None = the cursor
+default, the first live slot. `give_orders` is the menu phase: all orders first, so slot
+s's planner sees the earlier orders in b.queue. `menu_order` normalises / refuses;
+refused-everything falls back to ATK at the first live enemy (`b.ext['command_refused']`).
+`command_commit` is the gate, drift and pick; `b.party_bases` carries the drift and
+`b.ext['plan']` = $81 drives `keeps_dead_target`. Open: the +2 bit2/3 carry-machine
+corner, a party $DD0B = 0 actor (uniform pick, byte-read only), the tactic-0-2-in-PLAN
+path (decoded, not modelled), and enemy act-time picks for scoring rows (e.g. Slow
+$48AB, still front-weighted stand-ins; the validator takes the engine's target there).
+The round core also gained two measured idle classes: 'pre_conf' (the frames between the
+curse/confusion stage and the confused action pick) and 'pre_snap' (the hit animation
+before an on-hit snap-out roll).
 
 **15.10.8 Commit-time target write + dispatch bounds (S84).** The S81
 open "AI post-commit target write site" is CLOSED: it is **bank $58
@@ -2831,7 +3027,11 @@ entry 8 (BtlQueueFetchService_5498) itself, called at commit time
 f+1, target written f+2, through the SAME per-skill table
 BtlSkillTargetDispatch_401d that serves act-time resolution. Normal
 skills get the opposite side base; self-class rows (TargetSelfWrite_6367)
-get own index. $50:$4C87 is unrelated: LoadBtl_4bd1 is the per-skill
+get own index. **(corrected S130)**: many rows differ — own base, first live own slot,
+HP-need and MP-resistance scores, the `$469E` revive scan, side-blind `$6379`; the decoded
+rows are in §15.11.F5 (heal/revive/cure/MP), F6 (defence), F9 (Chance, Transform) and F10
+(dispel); natural enemy tm 33/34 buffs commit the OWN side base and Slow commits a concrete
+party slot (F7). $50:$4C87 is unrelated: LoadBtl_4bd1 is the per-skill
 PLAYER-commit dispatcher and $4C87 is its Massacre ($3F) branch
 (swap-in actor → call TargetSlotResolver_6379 directly → restore).
 **$6379 is side-blind BY DESIGN** — it is the Massacre-class resolver;
@@ -2853,13 +3053,19 @@ are the skill record's flags7/flags8 cached at act. One RNG step
 (LoadBtlC_4e33; link mode loads RNG from $C1ED/EE), then ALL gates read
 that same RNG1/RNG2 (correlated rolls):
 1. flags7 bit7 + target $db06 bit2 → block route (msg $C1); semantics
-   of the status bit unpinned.
+   of the status bit unpinned. **(pinned S130)**: +6 bit2 is half of the HighJump AIRBORNE
+   pair +6 & $0C — every flags7-bit7 hit on a jumper is blocked here with no further roll
+   (12/12, §15.11.F4).
 2. flags7 bit1 (physical class): attacker $db03 bit1 (Surround, set by
    SkillSurround) → RNG1 < $A0 = 62.5% miss; then attacker $db07 & $03
    → RNG2 < $60 = 37.5% miss.
 3. flags8 bit7 (dodge-able): target $db07 & $0C (Dodge-status class) →
    RNG1 & 1 == 0 = 50% dodge; else the **AGI dodge ladder** on target
    wBattleAGL: < $20 → 2/256, < $1C0 → 8/256, ≥ $1C0 → 43/256 (16.8%).
+   *(S130: this text was right and `battle.miss_gate` was wrong — it returned 'pass' on odd
+   RNG1; fixed and measured (14 odd-RNG dodges). The +7 & $0C status is SideStep's; the Dodge
+   SKILL $8C is a different machine at act state 7, §15.11.F6. The target's `$DB42` bit7
+   "easily dodges" gate `$53:$563C` runs before this machine.)*
 Record semantics verified across classes: all physicals (Attack $3A,
 Beserker, Massacre, HighJump, FireSlash…) carry f7b1+f7b7+f8b7; all
 spells (Blaze, Firebane, Beat, Surround…) carry none → spells cannot
@@ -2876,7 +3082,9 @@ modes 0/1 → enumerate live opposing slots via $5E5B/$5E75 into the
 $DB4C map, then front-weighted pick: 3 live → RNG1≥$80 step, then
 RNG1≥$AA step (P ≈ 50%/33%/17%); 2 live → single $AA roll (66%/34%);
 result written CONCRETE to $DCED+idx*2. Player path: opposite side
-base + 3-slot CheckMonsterSlot scan + $660D accept test. **$dd0b is
+base + 3-slot CheckMonsterSlot scan + $660D accept test. **(decoded +
+measured S130, §15.10.7b "party attack pick")**: the player path is an argmin over the
+opposing slots of HP − a CalcSkillDefense estimate — not a front-weighted roll. **$dd0b is
 PER-SLOT, assigned at init from INT**: party side (SaveBtlS_47a5)
 16-bit compare, <$14→0, <$B3→1, else 2; enemy side (~$48B6) LOW BYTE
 ONLY, <$15→0, <$B5→1, else 2 (off-by-one asymmetry; boundary-measured:
@@ -2891,3 +3099,779 @@ option list. Empty biased category (e==0, d==2) → $dd02++ and re-read
 the next rank cell — SELF-HEALING (measured: dd02 3→4 → cat1 → clean
 commit). The S84 "tactics stall" scare was the E9 dispatch crash, not
 this loop.
+
+### 15.11 Every battle skill (S130) — the skill families
+
+S130 made `simulator/battle.py` model every battle skill. The work was split into ten
+**families**; each was byte-read, then measured in PyBoy against the real game on the
+user's save (u22 build + `field.state`, rig battles with forced casts on both sides plus
+natural-AI battles), with its own capture rig, corpus and differential validator. Every
+validator below is **0 mismatches** on the merged tree. This section supersedes the older
+§15 text wherever they differ; each superseded claim is marked "(corrected S130)" or
+"CLOSED S130" in place, and every wrong claim is listed in DOC_AUDIT "S130 addendum".
+
+**The registry.** The round core (`simulate_round`, `default_victims`, `ko_wipe`, the
+pacing commit) stays one loop; a family plugs in by adding entries to registries declared
+at the top of `simulator/battle.py`. `simulator/skillfx/__init__.py` imports every module
+in `skillfx/` (sorted by name) and `battle.py` imports that package last, so a family adds
+a module instead of editing a shared function. Empty registries = the pre-S130 behaviour
+(every older validator stays green).
+
+| Registry | Shape | What it is in the engine |
+|---|---|---|
+| `ACTION_HANDLERS[id](ctx) -> state` | dict | the whole action of skill `id` after the act-time gates (veto, target, guard, unreachable, boss gate). `ctx` = `ActionCtx` (b, a, sk, rec, f, core, t, qt, state, records, log, idle, real_sk); `default_victims(ctx, damage_fn)` gives the usual per-victim MISS machine + apply |
+| `CORE_OVERRIDES[id] = name` | dict | what `damage_core` reports for planning, the AI commit and coverage ('none' = unmodelled) |
+| `POST_CALC: [(order, fn)]` | list | the bank $53 post-calc stage (`$53:$5880-$5A6F`) in engine order: F4 crit / TwinHits / ChargeUP / SuckAir = 10, `$DB42` ×1.5 = 60, Beserker = 70, defence levels = 80 |
+| `ACTOR_HOOKS` | list | before an actor's gates (airborne landings, follow-ups) |
+| `PHASE9_HOOKS` | list | after the phase-9 decay (`$DB42` clear, `$DB4A/4B`, revive re-arm …) |
+| `VICTIM_HOOKS` | list | re-targeting at a victim |
+| `BOSS_GATE_IN_HANDLER` (F1) | set | skills whose $52 hit helper runs `BossProtectionGate_51aa` per victim after that victim's MISS step — the driver's whole-action boss pre-block is skipped |
+| `SELF_GATED` (F23) | set | {$14 Sacrifice, $3E Kamikaze}: the engine's own per-target gate (Sacrifice) or none at all (Kamikaze) |
+| `COMMIT_TARGETS[id]` / `TARGET_RESOLVERS[id]` (F5) | dict | the bank $58 row `BtlSkillTargetDispatch_401d` at commit (`pacing._commit_target`) / at act time (queue byte, re-resolve, dead redirect) |
+| `OWN_TARGET_GATES` (F8) | set | handlers that run the act-state-9 iron gate per hit themselves (multi-hit loops) |
+| `RERESOLVE_PICKERS[id]` (F8) | dict | the skill's own bank $58 row for the act-time re-resolve / `$FF`-target branches instead of the plain-attack front-weighted pick |
+| `CRIT_STAGE` (F4) | callable | act state $A (`CritStage_586a`) between the MISS machine and the $52 handler |
+| `POST_ACTION_HOOKS` (F4) | list | end of an action (`$52:$70A4`); a hook may set `b.ext['f4_again']` to make the same actor act again (Focus) |
+| `COMMIT_ROLL` (F4) | callable | the bank $58 command-phase `$DB42` "tension" roll after a party actor's commit (`pacing.commit_round`) |
+| `INTERCEPT_HOOKS` (F6) | list | act state 7 (`$53:$5411`) per victim, before the iron gate and the MISS step; verdict None / 'skip' (a reflection resolved the victim) / 'last' (act on v, then end the sweep — SuckAll absorb) |
+| `POST_HIT_HOOKS` (F6) | list | after an applied non-KO hit and its rider, before the snap-out (BladeD counter) |
+| `POST_VICTIM_HOOKS` (F6) | list | after a resolved victim ('dmg'/'done') or a MISS-machine fail ('miss'/'dodge'/'block') — TakeMagic, Imitate |
+| `POST_SWEEP_HOOKS` (F6) | list | after the victim loop (SuckAll breath-back). F6 called it `POST_ACTION_HOOKS`; renamed at the merge because F4 owns that name |
+| `KO_HOOKS` (F9) | list | at a KO before the status wipe: the KO state's slot reload (bank $51 entry 15 → `LoadBtlS_44a9`) and the helper-slot branch (`f9_meta.ko_revert`) |
+| `f10_dispel.DISPEL_HOOKS` (F10) | list | events 'strip' / 'revert' / 'base' / 'dismiss' / 'side' from the DeMagic machine, for families that keep state outside `b.st` |
+
+`D.SPELL_LADDER` (skill id → (rtype, ladder) for the record-driven cores) moved from
+`validate_damage.py` to `simulator/damage.py` so the round driver applies it too (the
+validators import it from there).
+
+**Coverage** (merged tree; "ids" = the `ACTION_HANDLERS` a module registers — core-only
+skills such as Attack, PsycheUp, the record spells and the riders are listed in the text):
+
+| Family | Skill ids (handlers) | Module | Corpus | Validator → total |
+|---|---|---|---|---|
+| F1 status appliers, one-shots | $12 $13 $15-$19 $2A $6A-$74 $77-$7D $91 $92 $A7 $AC $DA $DC (32) | `skillfx/f1_status.py` | `f1_status_events.json.gz` (115 battles) | `validate_f1.py` → 52970 / 0 |
+| F2/F3 physical variants, formula specials | $14 $37 $38 $3B-$3E $44-$4F $55 $58 $59 $5C-$63 $66 $7E $AB $D6-$D8 $DD (37) | `skillfx/f23_phys.py` | `f23_phys_events.json.gz` (86 battles) | `validate_f23_phys.py` → 10049 / 0 |
+| F4 crit, charge, post-calc | $25 $3F $40-$43 $54 $A6 (8) + the crit stage of 27 flags8-bit4 skills + the `$DB42` roll | `skillfx/f4_charge.py` | `f4_events.json.gz` (162 battles) | `validate_f4.py` → 100051 / 0 |
+| F5 heal, revive, cures, MP | $1A $2B-$36 $75 $76 $93-$96 $A3 $A8 $AD $AE (23) | `skillfx/f5_heal.py` | `f5_events.json` (201 scenarios) | `validate_f5.py` → 9573 / 0 |
+| F6 defence, interception, reflect | $1B $24 $26-$28 $7F $88-$90 (15) | `skillfx/f6_defence.py` | `f6_events.json.gz` (54 battles) | `validate_f6.py` → 19542 / 0 |
+| F7 stat buffs/debuffs | $1C-$23 $81 $82 (10) + `transform_stats`, which F9's $29 handler calls | `skillfx/f7_stats.py` | `f7_events.json` (37 battles) | `validate_f7.py` → 7667 / 0 |
+| F8 multi-hit loop | $50-$53 $57 $AF (6) | `skillfx/f8_multihit.py` | `f8_events.json` (61 battles) + `f8_idle_pools.json` | `validate_f8_multihit.py` → 19817 / 0 |
+| F9 combatant-changing, meta | $29 $39 $84-$87 $A2 $A4 $A9 $AA $D5 $DB (12) | `skillfx/f9_meta.py` | `f9_events.json.gz` (76 battles) | `validate_f9.py` → 9139 / 0 |
+| F10 dispel, field | $80 $83 $A5 (3) + the DeMagic/ThickFog AI pass conditions | `skillfx/f10_dispel.py`, `ai_rules.f10_rules` | `f10_events.json.gz` (30) + `f10_rules_events.json.gz` (28) | `validate_f10.py` → 1335 / 0; `validate_f10_rules.py` → 332 / 0 |
+
+Pre-existing validators, re-run on the merged tree: s85 `validate_battle` 6614/0, s86
+802/0, s89 426/0, s88 confusion 2824/0, curse 3083/0, rider 3422/0, `validate_damage` 13
+categories 0, `validate_order` 143/0, `validate_ai` 26/26, `validate_rules` 240/0,
+`validate_obedience` 889/0, `validate_pacing` KS 0.042 / 0.038 < 0.097. *(The family notes
+quoted pre-merge totals — F1 52 595, F9 9133; the merged tree's are the ones above.)*
+
+#### 15.11.F1 Status appliers and one-shot compulsions (S130, measured 52970/0)
+
+Every F1 handler runs **once per victim, after that victim's MISS machine** (`$53:$5747`,
+one BattleRNG step). The hit helper reads the RNG in the same frame (helper waypoint RNG ==
+MISS post-step RNG on every sample), so a model injects the MISS state. Shape: (1) an
+"already" test on the victim's byte → no roll, no step; (2) the hit helper; (3) set the bit(s).
+
+| Helper ($52) | res type (packed byte, bits) | `SureHitCheck_6adc` | ladder | users |
+|---|---|---|---|---|
+| `HitDeath_5c51` | 8 ($DD2A 5:4) | no | BossProtectionGate first; id < $72 `$6749`, $82 `$6733`, else B `$6710` | Beat $12, Defeat $13, K.O.Dance $71, EerieLite $74 (B) |
+| `$5C8F` | 7 ($DD2A 7:6) | yes | $15 → B; $16/$6A → `$6749` | Sleep, SleepAll, SleepAir |
+| `$5CBC` | 10 ($DD2A 1:0) | yes | B | StopSpell $17 |
+| `$5CDA` | 6 ($DD29 1:0) | yes | $72 → `$6749`, else B | Surround $18, SandStorm $72, Radiant $73 |
+| `HitConfuse_5d05` | 11 ($DD2B 7:6) | yes | `$6749` | PanicAll $19, PaniDance $6E, LIFE $DA |
+| `HitDefDown_5dcc` (= `SapHitRoll_5dcc`) | 12 ($DD2B 5:4) | yes | $7A → `$6749`, else B | SickLick $7A (and Sap/Defence, F7) |
+| `HitParalyze_65b5` | 19 ($DD2D 7:6) | **no** | BossProtectionGate, `$6749` | PalsyAir $6B |
+| `HitPoison_65c9` | 18 ($DD2C 1:0) | **no** | `$6749` | PoisonGas $6C, PoisonAir $6D |
+| `HitCurse_65d5` | 20 ($DD2D 5:4) | **no** | `$6749` | Curse $6F |
+| `HitCompel_65e3` | 21 ($DD2D 3:2) | **no** | id ≥ $7C `$6749`, else B | Ahhh $70, LureDance $78, LushLicks $79, LegSweep $7B, BigTrip $7C, WarCry $7D |
+| `HitTripFlyerGate_65ff` | — | — | flyer ($DB8B bit4) → fail, msg $C1, no roll; else `$65E3` | LegSweep, BigTrip |
+| `HitDanceShut_6692` | 22 ($DD2D 1:0) | **no** | B | DanceShut $91 |
+| `HitMouthShut_669e` | 23 ($DD2E 7:6) | **no** | B | MouthShut $92 |
+
+Ladders (RNG1 < T after one step; — = always, 0 = never): B `$6710`: plain [—, $D8, $7F, 0],
+bit6 [—, $BF, $66, 0], bit7 [—, —, $BF, 0] (bit6 tested first). Status `$6749`: bit7
+[—, $D8, $7F, 0] else [$BF, $7F, $3F, 0] — **bit6 is never tested**, so a victim with BOTH
++5 bit6 and bit7 rolls the amplify row (measured rows $40/$80/$C0 at L1/L2).
+`SureHitCheck_6adc`: level 3 → the ladder (never); else `$DB42[attacker]` bit2 → sure hit,
+no step. Only the five `$5Cxx/$5Dxx` helpers call it — measured: with bit2 set the
+`$65xx/$66xx` users still miss.
+
+Appliers (victim block unless noted; "already" = no roll):
+
+| Skill | already test | on hit |
+|---|---|---|
+| Beat / Defeat / K.O.Dance | — | `$DD1B := 1`, HP := 0; the KO state wipes `$DB02+8t..+9` |
+| Sleep / SleepAll / SleepAir | +2 & $8C | +2 \|= $8C |
+| PanicAll / PaniDance / LIFE | +2 bit4 | +2 \|= $10 |
+| PalsyAir | +2 bit6 | +2 \|= $40 (boss-gated per victim) |
+| PoisonGas / PoisonAir | +2 & 3 / +2 bit1 | bit0 set bit1 clear / bit1 set bit0 clear |
+| Curse | +2 bit5 | +2 \|= $20 |
+| Ahhh / Lure / Licks / trips / WarCry | +5 bit5/1/3/2/4 | same bit (forced $18/$14/$15/$16/$17) |
+| SickLick | +5 bit3 | +5 \|= 8, DEF := 1, `$DB08+8t` bit7 (`MarkDefLowered_5377`) |
+| SandStorm / Radiant | +7 & 3 | +7 \|= 3 |
+| EerieLite | +5 bit7 | +5 \|= $80 (amplify row) |
+| DanceShut / MouthShut | +3 bit6 / bit7 | same bit |
+| FREEZY $AC | +5 bit0 | +5 \|= 1, no roll |
+| BIGSLEEP $A7 | dead → nothing; +2 bit7 | +2 = (+2 & $73) \| $8C, no roll |
+| SideStep $77 | step FIRST, then caster +7 & $0C | caster +7 = (+7 & $F3) \| ((RNG1 & 4) + 4) |
+| Ironize $2A / IRONIZE $DC | — | $DC: target := caster; a non-link enemy target → that slot only, else the target side's 4-slot loop (live) +7 \|= $C0 |
+
+`GetAttackerBattleSlot` ($52:$5422, alias `GetTargetStatus5_5422`) returns `$DB05+8*TARGET` —
+every +5 one-shot lands on the VICTIM (measured).
+
+Victims: target_mode 18 sweeps from the queued target forward (S89), each victim through the
+Cover/Guardian table; BIGSLEEP (tm 1) runs the `$52:$714C` 8-step walk (F8) — `$DD69` counts
+visited + skipped slots, at 4 it jumps to the other side's base: queued 4 → 4,5,6,0,1,2
+(caster included). The BossProtectionGate is per victim and AFTER the victim's MISS step
+(party victims are never gated).
+
+Round-core consumers fixed / confirmed (all measured in this corpus):
+- **One-shots**: every forced code ($11/$13/$0F/$DB/$12-$18) goes through `Jump_053_462c` →
+  `ClearOneShots_4b39` (+5 &= $C0): ALL pending one-shots drop at once — a
+  sleeping/paralysed/iron victim loses them unperformed (83 multi-bit + 1 sleep sample).
+- **SideStep dodge**: +7 & $0C target, RNG1 odd → falls through to the AGL ladder
+  ($53:$57C1), not a pass (14 odd-RNG dodges, AGL 500) — §15.10.9 gate 3 was right, the
+  code (`battle.miss_gate`) was fixed (F8 found the same).
+- **Iron in a sweep**: the iron pre-gate is per victim; a sweep skips the iron slot (no MISS
+  step) and goes on.
+- **KO wipe** (`KOStatusWipe_4c26`, bank $51 entry 15): a KO zeroes `$DB02+8t..$DB09+8t`.
+- **All-paralysed party = defeat**: `BattleFunc_76c8` after every action (and `$50:$6CD3` in
+  phase 9): the party (or any link side) with every live member +2 bit6 → battle over (3
+  battles ended mid-round).
+- **Sleep snap-out**: a victim snapped out of SLEEP gets `$DD13 := 3` — its turn this round is
+  lost (`SnapWakeTurnLost_5fa7`).
+- **Curse hp/mp then act**: `CurseSelfHit_4c50` sets `$D9EE := 5` → sub-state 1: the
+  confusion branch and the dup conversion are skipped (a confused + cursed actor acts its
+  queued skill). The curse roll comes BEFORE the confusion check.
+- **Dead single target**: tm bit0 + `$DD0B == 0` → no redirect, the action fizzles
+  (`$53:$47B2`); `$DD0B != 0` → the bank $58 re-pick; group skills → the first-valid scan.
+- SandStorm +7 bits 1:0 and SideStep +7 bits 3:2 never decay (no writer clears them but the
+  KO wipe / DeMagic); EerieLite's +5 bit7 likewise. +7 bits 1:0 is the SandStorm/Radiant
+  attacker-side 37.5 % miss mark, not a "surround counter".
+
+`validate_f1.py` is also 0 on all six legacy battle corpora (it re-checks S85's
+Sleep/StopSpell/Surround/PoisonAir/Beat casts through the F1 model: 110 victims).
+
+#### 15.11.F2 Single-hit physical variants (S130, measured with F3: 10049/0)
+
+All of these are `CalcSkillDefense` ($52:$60D7, §15.1) followed by one multiplier, run from
+the bank $52 handler after the MISS machine passes. flags8-bit4 skills can CRIT instead: the
+crit decision (F4) sets attacker +4 bit7 and the $52 handler is **skipped entirely** —
+`$53:$5941` builds the damage from ATK.
+
+| Id | Skill | Routine | Rule |
+|---|---|---|---|
+| $44/$45/$46/$47 | Fire/Bolt/Vacu/IceSlash | `FireSlashDamage_6298` … `IceSlashDamage_62cb` | res 0 / 4 / 3 / 5 through `ResLadderElemSlash_6782`: target +5 bit6 → plain row, otherwise the AMPLIFY row (×1.3125 at res 0). 183/183 |
+| $48 | MetalCut | `MetalCutDamage_62dc` | ×1.5 + 1 iff `$DB8B+t` bit0. 28/28. `$DB8B` bits 0/4 at battle start = monsters_full `is_metal` / `can_fly` (512/512) |
+| $49-$4E, $D6-$D8 | DrakSlash, BeastCut, BirdBlow, DevilCut, ZombieCut, CleanCut, Smashlime, Sheldodge, Branching | `CheckIs*` ($6305-$637F) → `LookupTargetSpecies` | ×1.5 iff family = 1, 2, 3, 6, 7, 8, 0, 5, 4. `LookupTargetSpecies` = `$DC3C[t]` → bank $03 entry 1 → `$DA33` = monsters_full `family_id` (200/200 incl. party slots). 152/152 |
+| $55 / $DD | SquallHit / Ahhh (internal) | `DamageMul8Tenths_69b7` / `HLsrl1` | ×8/10 / ×1/2 |
+| $37/$38/$7E | StepGuard / MapMagic / Whistle | the Attack handler $4625 | ×1 — a queued field-only skill executes as a plain Attack (forced queues, 50/50) |
+| $3D | Beserker | `SkillBeserker` | sets ITS OWN guard record `$DB08+8a` bit2 (= slot a+1's +0; only when the handler runs), then ×2 |
+| $AB | CALLEVIL | `CallEvilAtk400_66ba` | ATK forced to $0190 for the roll, own `$DB08+8a` bit0 set (F9: clear again at the next actor fetch); tm 18 → a side sweep from the queued target. 45/45 |
+
+**Beserker consumer** (`BeserkerTakenX2_5a44`, bank $53 post-calc): when the TARGET's defence
+nibble `$DB09+8t & 7` is 0, `dec hl` reads the target's `$DB08+8t`; bit2 set + acting skill
+flags7 bit7 (physical) + skill ≠ $3C/$3E → `$DB56 <<= 1`. After the `$DB42` ×1.5 (order 60)
+→ POST_CALC order 70. Measured: Attack, BoltSlash, TwinSlash doubled on a Beserker user later
+in the round; Ramming, Kamikaze and FireAir/BlazeAir (non-physical) not. Phase 9 clears
++0 & $3F → one round. The mark is also read by the AI target score `$58:LoadBtlFX_43aa`
+(halves the marked slot's DEF in the HP+DEF sum — not modelled).
+
+#### 15.11.F3 Formula / HP-based specials + record-spell extras (S130)
+
+- **Ramming $3C** (`RammingDamage_6214`): target current HP ×8/10 + 1, ladder A res 14.
+  **Tail** `RammingRecoil_79b5`: caster HP −= HP×8/10 + 1; a borrow or 0 → HP 0 + KO (a caster
+  at HP ≤ 5 dies).
+- **Kamikaze $3E** (`KamikazeDamage_6232`, §15.5: hit ladder $6733 res 14; LINK or db73 0 →
+  target HP − 1; boss/arena → (caster HP − 1)/2; caster HP 1 → 1). 62/62. **NOT boss-gated**:
+  `BossProtectionGate_51aa` lists $3E, but nothing on the Kamikaze path calls it (callers:
+  `$5C51`, `$65B5`, `SacrificeResolve_67a9`) — 7 party→enemy hits landed at db73 = 1. A miss
+  stores 0 (no apply, no tail). **Tail** `KamikazeSelfTail_78a3`: HP − 1 ≠ 0 → caster HP := 1;
+  HP was 1 → 0 + KO.
+- **TwinSlash $3B** (×1.5) **tail** `TwinSlashRecoil_77e2`: recoil = max(dmg>>2, 1) into
+  `$DB5A`; caster HP ≤ recoil → 0 + KO, else HP −= recoil. **PsycheUp $56** shares the ×1.5
+  handler and has no tail.
+- **When tails run** (`Jump_052_6e89` state-4 dispatcher, now `dw` tables): only after an
+  APPLIED hit the target SURVIVED — a KO sends the act machine to state $1A; a dodge / miss /
+  zero roll never reaches the apply ($6D56). 159/159 run-or-not.
+- **Sacrifice $14** (bank $53 entry 13, `SacrificeEntry_670e`): the main MISS machine once,
+  then a SWEEP over every slot from the queued target to the end of its side
+  (`SacrificeNextTarget_68b4`). Per target: InterceptGate (dead → skip, iron +7&$C0 → msg $BA
+  skip, guard mark → protector, restored afterwards via `$C1C8`), `BossProtectionGate_51aa`
+  (db73 1 vs enemy → fail, no RNG), then **one RNG step** (`LoadBtlC_4e33`), res 14 (3 immune;
+  2 fails when RNG1 ≥ $C0), RNG2 < $7F → dmg = current HP (kill), else HP − max(HP/100,1) —
+  when that is 0, the kill branch. Apply (`SacrificeApply_6866`). Then the **caster's own
+  roll** (`SacrificeSelfRoll_6971`, shared with $32/$96): one RNG step; RNG1 < $7F → dies,
+  else **survives at max(HP/100,1)** (`SacrificeSelfApply_6a04`). 19 sweeps, 50 target gates,
+  38 damages, 19 caster rolls (both outcomes).
+- **MultiCut $4F** (`MultiCutDamage_6381`): record roll (party +$0B / enemy +$0F), ×1.3125
+  (`SetupBattle_6980`) vs family 7, then the BREATH ladder res 3. 48/48.
+- **WindBeast $58** (`LoadBattle_641a`, §15.5) + ladder A res 3; **Vacuum $59**
+  (`VacuumDamage_6491`): **2L+30 for BOTH sides** (cap 150) — the side test is
+  `ld a,[$c86c] / or a / jr nz / cp $04 / jr c` and the `cp` compares the LINK byte (0), not
+  the attacker. Then ladder A res 3. 36 + 90, levels 1-150.
+- **FireAir $5C-$5F / FrigidAir $60-$63**: record roll + breath ladder res 16 / 17, then
+  `BarrierHalveBreath_5539`: target +4 bit2 → `$DB56 >>= 1` (after the ladder). 168/168.
+- **MegaMagic $66** (`MegaMagicDamage_653e`) reads the MP left AFTER the act-time spend
+  (record +4 = 1); the caster's MP := 0 after the sweep (12/12). 36/36.
+- **RockThrow $5B, BigBang $65, GigaSlash $D9**: the record core + `D.SPELL_LADDER` (breath 24,
+  breath 0, ladder A 25).
+- **Record spells**: `battle.core_damage` (record core + `SPELL_LADDER`, row by target +5 bit6
+  first then bit7) matches the game for every attack spell id 0-17, $5A, $64 (307/307) and the
+  breath ids above.
+- **UltraDown $82**: no HP damage part (hit ladder `$5C51`, no apply) — its effect is F7's.
+- **The patched build's `$DB86`** (DOC_AUDIT S130): `wJoinability` is a per-enemy table
+  `$DB85+c` (`SaveBtlS_47e0`, c = 0-2), so in a 2-3 enemy battle `$DB86` holds enemy 2's
+  joinability and the S45 alias path (`FarSkillFork`: `$DB8A == 0 → [$DB86]`) dispatches every
+  Blaze cast to the handler of skill `[$DB86]` (6/6 on u22: Blaze used the Firebal resistance).
+  A patch defect, not modelled (the simulator follows the vanilla handler); see §3.
+
+Registry: ACTION_HANDLERS for 37 ids; CORE_OVERRIDES 'calcdef' for the multiplier ids,
+'ramming' / 'kamikaze' / 'sacrifice' / 'windbeast' / 'vacuum' / 'megamagic'; POST_CALC 70;
+`SELF_GATED` = {$14, $3E}. The handlers replayed end to end from the MISS machine's entry RNG
+("driver" check, 1331/1331, tails included; the failed crit roll's step injected).
+
+#### 15.11.F4 Charge, critical hits and the post-calc stage (S130, measured 100051/0)
+
+**The critical hit.** 27 skills have flags8 bit4: Attack and the field-only aliases
+$37/$38/$7E, the slashes and family cuts $44-$4E/$D6-$D8, MetalCut, SquallHit,
+PoisonHit/NapAttack/Paralyze, BiAttack/QuadHits/RainSlash, HitEnemy $9A and Ahhh $DD. The
+crit stage is act state $A (`CritStage_586a`):
+
+| Condition | Result |
+|---|---|
+| flags8 & $70 == 0 | nothing (+4 bit7 untouched) |
+| flags8 bit5 and the attacker's +3 bit2 (TwinHits armed) | no roll, **no RNG step** |
+| flags8 bit4 clear | +4 bit7 := 0, no roll |
+| `$DB42[a]` bit0 or the attacker's +3 bit3 (ALLCHANGE) | **sure crit**, no step |
+| otherwise | one `LoadBtlC_4e33` step, crit iff RNG1 < the attacker's threshold |
+
+The threshold is a per-SPECIES byte (`CritChanceRoll_5ed9`): `CritChanceTablePartyLink_4025
++ $DC3C[a]` for party slots or any link battle, `CritChanceTableEnemy_4102 + $DC3C[a]` for
+non-link enemies (221 bytes each — the 442 bytes were misassembled as code under
+"DispatchEntry_53_0", now `db` rows). Values 0/1/2 are kept and anything else (3) becomes 4:
+a crit is 0-4 in **256**. Party table 0×20, 1×98, 2×90, 3×13; enemy table 0×122, 1×96, 3×3
+(StoneMan, BombCrag, Watabou).
+
+A crit sets +4 bit7, prints $79/$7A and **skips the $52 handler**; the post-calc stage waits
+for the message (the RNG does not move: k = 0 in 507/507) and builds the damage from ATK,
+ignoring DEF (`CritDamageFromATK_5d73`, no step): `q = ATK/10`; `q == 0` → ATK; else
+`r = ((RNG2&3)<<8 | RNG1)`, `r -= q` while `r > q`; r even → `ATK + r/2`, r odd → `ATK − r/2`
+(a borrow keeps ATK). QuadHits uses ATK>>1 (`cp $51` at $53:$5961). The defence levels (F6),
+the `$DB42` ×1.5 and Beserker still apply afterwards. Measured: 10747 rolls (9818 natural:
+62 crits vs 60.7 expected), 507 crit damages over ATK 3-999, 110 sure crits, 58 TwinHits
+no-roll paths.
+
+**The post-calc stage** (`PostCalcStage_58fb`, act state $C; POST_CALC order 10), first
+match wins:
+1. attacker +3 bit2 (TwinHits) and flags8 bit5 → `$DB56 ×2`, straight to `$59C3` (58/58);
+2. attacker +4 bit7 → cleared, damage := the crit damage above (507/507);
+3. attacker +6 bit0 (ChargeUP) and flags8 bit6 → `ChargeMult_5db1` (20/20);
+4. attacker +6 bit4 (SuckAir), flags7 bit4 and id $5C-$63 → `ChargeMult_5db1` (32/32).
+
+`ChargeMult_5db1`: one step, `dmg×2 + ((RNG2<<8|RNG1) mod max(dmg>>1, 1))` = ×2 to ×2.5.
+The whole stage end to end: 13114/13114.
+
+**Setters** (normal MISS machine, one step; no flags8 bits 4-6):
+
+| Skill | Effect | Duration |
+|---|---|---|
+| ChargeUP $41 | own +6 \|= $03 | phase 9: $03 → $01 → 0 = **the next round**, every flags8-bit6 hit (not consumed) |
+| SuckAir $43 | own +6 \|= $30 | $30 → $10 → 0 = the next round, breaths $5C-$63 |
+| Focus $54 | own +6 bit7 | $80 → $40: next round's bit6 = the follow-up |
+| TwinHits $25 | TARGET +3 bit2 (already set → fail anim) | persistent (phase 9 leaves +3) |
+| ALLCHANGE $A6 | every live slot of the caster's side +3 bit3 | persistent |
+
+**Focus follow-up** (closes the flags9-bit4 "writer not found", §7): at the end of every
+action (`$52:$70A4`) an actor with +6 bit6 goes to `FocusFollowUp_6f5b`: bit6 is cleared; if
+the action's skill has flags9 bit4 and the opposing side has a live slot
+(`NoLiveOpponent_7fd8`), d9ed := $12 = the per-actor setup again: the SAME actor acts its
+queued action a second time (gates, MISS, crit all re-run; `$DD13` back to 2). A non-bit4
+skill just spends the bit. 20/20.
+
+**Massacre $3F / EvilSlash $40** (`SkillMassacre`): dead target → fail; Massacre → own +4
+bit7, i.e. a **forced crit** built from ATK at `$5941`; EvilSlash → the same when the target
+is incapacitated (`GetMonsterSlotInfo`: +2&$D0, +5&$3F, +7&$C0) or RNG1 ≥ $A0 (the MISS step's
+state, no step), else msg $78 and no apply. 90/90 outcomes. Massacre's target row is
+`TargetSlotResolver_6379`, **side-blind** slot fishing (§15.10.8) at the commit and at the
+act-time re-resolve: Massacre hits allies (47 of 82 picks; 82/82 exact).
+
+**HighJump $42.** Take-off (own +6 & $0C == 0): act state 3's shortcut
+(`HighJumpTakeoffShortcut_52f4`) jumps straight to the handler — no state-7, MISS or crit
+step — which sets +6 |= $0C and ends the turn (43/43). The next round it lands: normal MISS
+machine, then +6 &= $F3 and CalcSkillDefense ×1.5 (18/18). While airborne (+6 & $0C, $0C →
+$04 at phase 9) every hit on the jumper fails with **no RNG step**: flags9-bit5 skills at act
+state 7 ("doesn't reach", 15/15) and flags7-bit7 skills at the MISS machine's gate 1 (block,
+12/12 — this is the §15.10.9 gate-1 "$DB06 bit2" status).
+
+**The `$DB42` "tension" roll — the S89 unlocated ×1.5 setter.** After each actor's commit
+(`$58:jr_058_5478`) two routines run for **party slots 0-2 of a non-link battle only**:
+`TensionRollA_5a40` and `TensionRollB_5ba1`, each one GenerateRNG step (skipped when the
+actor is incapacitated), then a ladder on one AI base byte of the actor (`$DC44` cat1,
+`$DC4C` cat2, `$DC54` cat3, `$DC5C` w3) against RNG1:
+- ladder A (base ≥ $81): < $A2 → 1, < $C3 → 2, < $E4 → 4, else 8 (out of 256);
+- ladder B (base < $80): ≥ $60 → 2, ≥ $3F → 4, ≥ $1E → 8, else $10.
+
+| Routine | Queued skill | Base, ladder | `$DB42` bit |
+|---|---|---|---|
+| A | +6&$0C airborne | — | nothing |
+| A | +7&$0C (dodge status) | w3, B | bit7 (target "easily dodges") |
+| A | $3A, $44-$51 (not $4F), $55, $67-$69, $D6-$D8 | cat1, A | **bit0 = sure crit** (msg $67) |
+| A | $8D/$8E/$90 | cat1, B | bit1 (msg $68) |
+| A | $12-$1D (not $14/$1B), $20/$21, $6A-$7D (not $77), $82, $91/$92 | cat2, A | bit2 (status sure-hit) |
+| A | $2B-$36 (not $32), $81, $93-$95 | cat3, A | bit4 (no MP spend) |
+| A | $8C | cat3, B | bit5 (shield grab) |
+| A | $77 | w3, B | bit7 |
+| B | < $12, $3A, $44-$51, $55-$69, $D6-$D9 (not airborne / +7&$0C) | w3, A | **bit6 = ×1.5 damage** |
+| B | $90 | cat2, B | bit3 |
+
+The writer is the shared tail `ld a,[hl] / or d / ld [hl],a` (`SetBtlFX_5b17`) with the mask in
+`d`, loaded by eight small entry stubs — why the S89 literal-mask search missed it. Phase 9
+clears `$DB42..49` (2237/2237). 13528/13528 roll pairs; all eight bits seen set.
+
+Registry: ACTION_HANDLERS $41/$43/$54/$25/$A6/$3F/$40/$42; CORE_OVERRIDES ('charge',
+'suckair', 'focus', 'twinhits', 'allchange', 'crit', 'calcdef'); RERESOLVE_PICKERS $42
+(uniform `$642C`) and $3F (`massacre_pick`); COMMIT_TARGETS $3F; `CRIT_STAGE`
+(default_victims, confused_turn, F8's multi-hit loop); POST_CALC 10; `POST_ACTION_HOOKS`
+(Focus) with `battle._actor_seq`; `COMMIT_ROLL` (pacing.commit_round, the tension roll);
+PHASE9_HOOKS (`$DB42` clear). Driver check: 10418/10418.
+
+#### 15.11.F5 Healing, revive, cures and the MP economy (S130, measured 9573/0)
+
+All 23 ids go through the registry (ACTION_HANDLERS, CORE_OVERRIDES, PHASE9_HOOKS,
+COMMIT_TARGETS / TARGET_RESOLVERS). Each action is replayed from the engine's pre-action
+board with the engine's RNG at each waypoint; the post-action board (HP, MP, `$DD1B`,
+`$DD13`, the 64-byte status area) is compared at the next actor fetch (652/652), and the same
+actions re-run through the DRIVER handlers with a scripted idle (643/643).
+
+*Targets: the bank $58 rows (`BtlSkillTargetDispatch_401d`).* The same row runs at commit
+(entry 8) and when the target is re-resolved at act (row calls 359/359; natural enemy
+commits 41/41):
+
+| Row | Skills | Rule |
+|---|---|---|
+| `$44F7` TargetRowHeal | Heal, HealMore, HealAll | `$DD0B` 0: uniform own pick (`$6479`, one step). 1: per own slot `(q, r) = divmod(MaxHP, HP)`, a full slot `(0,1)`, a non-live `(0,0)`; keep the lexicographic max, ties keep the lower slot (`LoadBtlFX_665a`). 2: `T = sum(live MaxHP) // n // n`; each live wounded slot with HP < T is taken (T := HP), HP == T rolls (RNG1 ≥ $80 takes); none → the mode-1 scan |
+| `$62CD` | HealUs, HealUsAll, Hustle, $A3, NumbOff, DeChaos, CurseOff, RESTOREMP | first live own slot (none → base) |
+| `$635F` | Farewell, LifeSong, LifeDance, ALLREVIVE | own base |
+| `$469E` | Vivify, Revive | own base+2 DOWN to base, the first dead slot; none → the attacker |
+| `$46C7` | Antidote | mode 0 uniform own; else +2 bit1 from base+2 down; else bit0 on base+2, base+1 only; else base. No life check |
+| `$52A9` | RobMagic | mode 0 uniform opposing; else score $FF (non-live / MP 0), $FE (+4 & $22), else 4 × MP-res level; keep the LOWEST, ties move on RNG1 ≥ $80 |
+| `$4CD1` | OddDance, RobDance | mode 0 uniform opposing; else word `((3 − MP-res) << 12) \| 1` (0 for non-live / MP 0); keep the HIGHEST (ties roll) |
+| `$6367` / `$62BF` | Meditate / MP0 | self / first live opposing |
+
+*Act-time target.* `$32/$96/$95/$AD` keep the queue byte (even a dead slot). A dead queued
+target: group modes (tm & 1 == 0) → `DeadTargetRedirectScan_47e8`; single target: `call
+LoadBtlC_49dc / or a / ret z` **keeps** it for `$DD0B == 0` (a mode-0 Heal on a dead slot
+fails), tactic 3 keeps it, else the row. A live target is re-resolved through the row.
+**`$DD0B == 2` actors that are not first in the round RE-DECIDE at act** (`SetupSub_4692` →
+state $18; 22 seen) — the driver does not model that re-decide (open).
+
+*Victims.* The group loop (`GroupVictimLoopA_71b5`) continues from **wBattleTargetIdx after
+the handler**: stop at slot 3/7, next slot visited when live — or ANY slot for $95/$96/$AD
+(ALLREVIVE visits slot 3). The MISS machine runs (one step) for every visit. MP0 uses the
+`$52:$714C` 8-slot walk (a slot-2 caster hits 4,5,6,0,1,2 — itself included).
+
+*Effects.*
+- SkillHeal `$44C4` + `LoadBattle_607d`: a non-live target or HP == MaxHP → msg $BB, no roll.
+  $2D/$2F/$32/$96 heal MaxHP; the rest roll the record (no step) with the ENEMY fields only for
+  a non-link enemy caster: HealUs is 90-120 party / 70-100 enemy. HP := min(HP + amount,
+  MaxHP). $A3 sets `$DB8A := $2F`. 286 amounts + 475 outcomes.
+- Meditate `$4D38`: own HP == MaxHP → $BB, else min(HP + 500, MaxHP).
+- SkillVivify `$44F8`: invalid target → nothing; LIVE: Vivify fails, Revive/ALLREVIVE re-target
+  to the first dead own slot from the base; dead: Vivify rolls one step, RNG1 ≥ $80 fails (msg
+  $C0). HP := MaxHP (MaxHP/2 for $30), then `SaveBattle_51dd` (ReviveSlot): `$DD1B := 0`,
+  `$DB02+8t..$DB09+8t := 0`. **`$DD13` is not written**: the slot keeps $FF, sits out the
+  current round, and the next command phase re-arms it (54/54). Driver: a PHASE9 re-arm hook.
+- Farewell / LifeDance → act state 4 → bank $53 entry 14 (`LifeChain_6a9b`, a 7-entry table
+  misassembled as code, now `dw`): from wBattleTargetIdx (own base) to slot 2, skip the caster
+  and $FF slots, revive dead ones, set live ones to MaxHP; then the caster's price (one step):
+  RNG1 < $7F → pays ALL its HP and dies, else keeps max(HP/100, 1); then MP := 0. LifeDance
+  enters only on its own roll (one step, RNG1 < $7F). 27 chains, 9 caster deaths.
+- LifeSong is **not** the entry-14 chain. Turn 1: own +7 := (+7 & $CF) | $20 ("charge"; phase
+  9 moves bit5 → bit4). The command loop (`$50:$47BE/$4EF3`) skips an actor with +7 bit4 (or
+  +6 bit2), so the queued LifeSong stands; the act-time afford check is waived
+  (`LoadBtlC_493d`) and no MP is paid. Turn 2: clear bits 5:4, one step, RNG1 ≥ $80 and a dead
+  own slot → its own tails `$52:$6F42` → `LifeSongRevive_7a69`: each dead own slot revived with
+  `$DB8A = $95` (FULL MaxHP); no caster price. Else msg $CB.
+- Cures (`LoadBattle_519e`, no life check): Antidote &3 → &$FC; NumbOff &$CC → &$33 and
+  `$DD13[t] := 3`; DeChaos bit4 → clear and `$DD13[t] := 3` (the cured slot's turn is spent);
+  CurseOff bit5.
+- MP drain: target MP 0 → $BB, no roll. `SetHLBattle_5d25`: res type 9, level 3 → never (no
+  step), `$DB42` bit2 → sure; else ladder B on +5 (one step). Amount `BattleTarget_5d7a`:
+  min(MP, level/4 + 5). RobMagic/RobDance add it to the caster capped at MaxMP; **OddDance's
+  drained MP is lost**.
+- MP0: live target, MP ≠ 0 → 0. RESTOREMP: `ld a,[hl+] / cp [hl]` compares MP's low byte with
+  its high byte — equal (MP 0, 257 …) → no effect; else MP := MaxMP.
+
+*MP economy (driver).* The driver never spent MP before S130. `battle.act_mp_spend` =
+`LoadBtlC_4a04`: after the veto passes (and on the StopSpell/DanceShut/MouthShut veto paths),
+MP −= record +4, skipped when `$DB42` bit4 (the F4 tension roll), for HighJump with +6&$0C,
+LifeSong with +7&$30, or a spell under its side seal; Farewell then MP := 0. 652/652 spends.
+`battle.mp_veto_exempt` = `LoadBtlC_493d`. (F10: a seal-vetoed spell `$1F` also pays, below.)
+
+#### 15.11.F6 Defence levels, interception, reflect and absorb (S130, measured 19542/0)
+
+**Setters** (bank $52 handlers, after the act-time MISS step; *setter* 693/693):
+
+| Skill | Handler | Writes |
+|---|---|---|
+| Defence $8D / StrongD $8E / BladeD $90 | `SkillBladeD_Defense $4C81` | own `$DB09+8a` := (hi nibble) \| level, level = id − $8C (1, 2) or 4 for $90 — a REPLACE |
+| Dodge $8C | `SkillDodge $4C72` | own `$DB08+8a` \|= $20 |
+| Cover $88 / Guardian $89 | `SkillCover $4C31` → act state 3, $53 entry 4 | `battle.set_guard_mark` (S89): Cover the targeted ally, Guardian both other allies |
+| Barrier $24 | `SkillBarrier $43C0` | the 4 slots of the TARGET's side (incl. 3/7): live → +4 \|= 4, dead → bit2 cleared; nothing new → no-effect animation |
+| MagicWall $26 | `SkillMagicWall $4415` | the CASTER side's live slots +5 \|= $40 (the guard row of every resistance ladder) |
+| MagicBack $27 / Bounce $28 | `SkillMagicBack $4434` | +4 := (+4 & $DD) \| $20 / $02 — each REPLACES the other; fails (msg $BB) when its own bit is set |
+| TailWind $8A / StormWind $8B | `SkillTailWind $4C3B` | +4 \|= $40 on the target; StormWind walks target..(slot&3 == 2) with NO life check and sets the side byte `$DB00/01` bit5 (only read by the message picker `WindMsgCheck_7d7c`) |
+| SuckAll $8F | `SkillSuckAll $4CA5` | side byte bit6 set → nothing; else set it, `$DB4A+side` \|= (slot&3)<<2, own `$DB08+8a` \|= 2 |
+| TakeMagic $1B | `SkillTakeMagic $4330` | own +4 bit0 (already → no effect) |
+| Imitate $7F | `SkillImitate $4B92` | own `$DB08+8a` \|= 8 |
+
+Lifetimes (phase 9 `$50:$6ABC`, 316/316): `$DB08+8t`/`$DB09+8t` are block t+1's +0/+1
+(slot 7's are `$DB40/$DB41`, also cleared), so guard marks, defence levels, Dodge, SuckAll's
++8 bit1 and Imitate are ONE round; the side byte loses bits 6/4 but keeps bit5 (StormWind);
+`$DB4A/4B` &= 3. +4 bits 0/1/2/5/6 (TakeMagic, Bounce, Barrier, MagicBack, TailWind) and +5
+bit6 (MagicWall) persist until consumed or DeMagic.
+
+**Act-time targets** (675/675): self `TargetSelfWrite_6367` for TakeMagic / MagicBack /
+Bounce / Imitate / TailWind / Dodge / Defence / StrongD / BladeD; first live own slot `$62CD`
+for Barrier / MagicWall / Guardian / StormWind / SuckAll; Cover `CoverTargetRow_4aba`:
+`$DD0B == 0` → the uniform own pick `$6479` (one step; NOT measured), else the other live own
+slot with the lowest HP (+$200 when metal), ties to the later slot, none → self.
+
+**Defence levels — the post-calc `$53:$59EC`** (`DefenceLevelDivide_59ec`, after the `$DB42`
+×1.5; 782 + 1321 checks). n = target `$DB09+8t` & 7. n = 0 → the Beserker stage `$5A44`.
+n & 3 = 0 (BladeD): flags7 bit7 (physical) → `>> 1`, anything else unchanged. Otherwise
+flags7 bit0 → n odd (Defence) `>> 1`, else (StrongD) `// 10`; then target `$DB42` bit1 →
+`>> 1` again (only on these two paths). POST_CALC order 80 (Beserker 70 and this stage are
+mutually exclusive).
+
+**BladeD counter** (`BladeDCounterGate_6ecf` → `BladeDCounter_7bec`, act state 4 after an
+APPLIED hit the target survived). Gate (1225/1225): `$DD6E` = 0 (the victim was not Cover-,
+dodge- or reflect-redirected), `$DD6C` & 8 = 0 (not an Imitate re-cast), target +9 bit2,
+flags7 bit7. Target incapacitated → nothing, no RNG. Else ONE step; target `$DB42` bit3 →
+RNG1 &= $FE; dmg>>1 = 0 → RNG1 := 1 — both WRITE the RNG state; RNG1 even → act state $13:
+the ATTACKER loses dmg>>1 HP (floor 0 → KO). About 50 %. 48/48.
+
+**Act state 7 interception** (`$53:$5411`, per victim fetch, before the iron gate and the
+MISS step; `$DD6C` = reflect / re-cast code), in engine order:
+1. **SuckAll** (`SuckAllAbsorbCheck_5458`, 2160/2160): a breath (flags7 bit4) at a side with
+   bit6. `$DD6C` set or the skill is $8F → skip EVERY check below. Else the SuckAll user, if
+   capable, takes this victim's place (`SuckAllAbsorbSave_5ece`, `$DD6C` := 2): it takes the
+   breath normally and the sweep ENDS (14/14). Then (`$52:$71F8`, group skills only) the user,
+   if still capable, breathes the same skill back (`$DD6C` = $40): a full sweep of the other
+   side from its first live slot (13/13).
+2. **Cover / Guardian** (`CoverCheck_54d6`, 2199/2199): flags8 bit1, `$DD6E` = 0, mark set,
+   and the protector CAPABLE (GetMonsterSlotInfo — a paralysed protector does not intercept)
+   → `CoverRedirect_5504`, `$DD6E` := 4: the checks below are SKIPPED (a Covered spell is
+   never reflected, a Covered hit never dodged or countered).
+3. **Dodge** (`DodgeEnter_557a` → `DodgeMachine_5091`, 2169 + 45 + 45): flags7 bit7 vs a
+   capable target whose `$DB42` bit5 or `$DB08+8t` bit5 (Dodge) is set. Each pass steps the
+   RNG once: RNG1 < $33 → the hit stays on the dodger (msg $7F); $33-$65 / $66-$98 /
+   $99-$CB / ≥ $CC → a slot of the dodger's side or of the OTHER side — frequently the
+   ATTACKER itself or its ally (msg $7E); picking the dodger again re-runs the routine.
+   `$DD6E` := 2 → the Cover check runs again on the result (`$5678`).
+4. **TailWind** (`TailWindReflect_5594`, 1976/1976): flags7 bit4 (not $43/$8F) vs target +4
+   bit6 → the bit is CONSUMED and the breath reflected (code 1). StormWind's bits are per
+   slot, so a group breath at a StormWind side is reflected once per covered victim.
+5. **MagicBack / Bounce** (`MagicBackReflect_55ca`, 1952/1952): flags8 bit0 vs +4 & $22 →
+   Bounce (bit1) persists, else MagicBack bit5 is consumed; reflected (code 4). (A second copy
+   `MagicBackReflect2_690e` serves the state-3 target loop.)
+
+**A reflection** (`ReflectSave_5de7` + `ReflectRecast_5e38`, then `ReflectRestore_7ef1`):
+the skill is re-run with the REFLECTOR as attacker on the ORIGINAL CASTER only — one victim
+even for a group spell (45/45) — through its own target fetch (Cover applies, steps 1/3/4/5
+do not), its own MISS step, power from the REFLECTOR's side (15/15), no MP; the reflecting
+victim takes nothing; then the original sweep continues (45/45).
+
+**TakeMagic** (`TakeMagicGain_5cbc`, `TakeMagicApply_5ffa` in act state 5; 22 + 27): a LANDED
+effect (damage > 0, or a status that took) of a flags9-bit0 skill (NOT plain Attack) on a live
++4 bit0 target with `$DD6C` = `$DD6E` = 0 → MP += min(record MP cost, MaxMP − MP). The damage
+still lands — TakeMagic soaks nothing.
+
+**Imitate** (`ImitateCheck_7dd7`, after EVERY victim — also a missed / dodged / blocked one;
+2170 + 58): not $7F, `$DD6E` = 0, `$DD6C` = 0, attacker not airborne, target-mode bit4,
+victim `$DB08+8t` bit3 and capable → flags9 bit2 ? msg $D3 and the victim re-casts the skill
+(`$DD6C` = 8) : msg $D4. The re-cast goes through setup sub-state 2: the imitator PAYS the
+MP, a shortfall cancels it, a seal cancels it after paying (3 + 55). Target: single → the
+original attacker; group → the first live slot of the other side, full sweep (55/55); then
+the original sweep resumes.
+
+Registry: 15 handlers (ACTION_HANDLERS, CORE_OVERRIDES 'f6-setter', TARGET_RESOLVERS),
+POST_CALC 80, a PHASE9 hook (`$DB4A/4B`, `$DB40/41`), INTERCEPT_HOOKS, POST_HIT_HOOKS,
+POST_VICTIM_HOOKS, POST_SWEEP_HOOKS.
+
+#### 15.11.F7 Stat buffs and debuffs (S130, measured 7667/0)
+
+Sap $1C / Defence $1D (DEF down, tm 17 / 18), Upper $1E / Increase $1F (DEF up, tm 33 / 34),
+Slow $20 / SlowAll $21 (AGL down), Speed $22 / SpeedUp $23 (AGL up), Surge $81 (tm 34, cure +
+restore), UltraDown $82, and the stat parts of Transform $29 and SickLick $7A.
+
+**Base stat.** Every routine reads the target's BASE through bank $57 entries 4-8
+(`GetBaseMaxHP_5270` / `GetBaseMaxMP_528d` / `GetBaseATK_529f` / `GetBaseDEF_52b1` /
+`GetBaseAGL_52c6`, result in `$DD72/73`): party 0-2 (and every slot in a link battle) the
+party RECORD (+$52 MaxHP, +$56 MaxMP, +$58 ATK, +$5A DEF, +$5C AGL); enemy 4-6 the enemy_stats
+ROW of `wTempEnemyId[slot-4]`; helper 3/7 the enemy_stats row `$0100 | $DC3C[slot]` (F9: rows
+472-475, not the helpers' own rows 344-347). MaxHP caps at 999. 248/248 base reads + 833/833
+battle-start values: `Board.base` (`pacing.make_board → snapshot_base`) is the right source.
+
+**The movers** (bank $52; markers `$DB08+8t` bit7 "lowered" `SetStatLoweredMark_5377`, bit6
+"raised" `SetStatRaisedMark_536c`):
+
+| Routine | Rule (exact 16-bit) |
+|---|---|
+| `StatDefDown_5dfc` (Sap/Defence) | fails (msg $BB) when DEF ≤ 1; else DEF −= baseDEF>>1, borrow → 0; `$DB56` = baseDEF>>1 |
+| `StatDefUp_5e3e` + `UpperStatCapCheck_6a13` (Upper/Increase) | fails when DEF ≥ 999 or DEF ≥ cap (cap = baseDEF ×4 for a target slot < 4 or any link battle, ×2 for an enemy target); else DEF += baseDEF>>1, and a sum ABOVE 999 or ABOVE the cap → DEF := the bound that failed — 999 is tested first, so a sum over 999 clamps to 999 **even when the ×2 cap is lower** (base 420, cap 840, DEF 830 → 999, then fails) |
+| `StatAglDown_5eb4` (Slow/SlowAll) | fails when AGL < 2; amt = baseAGL>>1, minus 1 when AGL == amt; AGL −= amt, borrow → AGL := 1. Net floor 1 |
+| `StatAglUp_5f08` + `AglUpStatCapCheck_6a49` / `StatCapMul_6af5` (Speed/SpeedUp) | fails when AGL ≥ 511 or AGL ≥ cap (×4 / ×2 as for DEF, keyed on the TARGET slot `[$DD74]`); else AGL += baseAGL>>1; at or over 511 → 511 (also above a ×2 cap), else over the cap → cap |
+
+**Rolls.** Sap/Defence: `SapHitRoll_5dcc` — res type 12; level 3 never (no RNG);
+`$DB42[attacker]` bit2 = sure hit (no RNG); otherwise ladder B, one step. Slow/SlowAll:
+`SlowHitRoll_5e94`, res type 13, same ladder. Upper/Increase/Speed/SpeedUp/Surge: no roll.
+UltraDown: `BattleCall_5c51` — BossProtectionGate passes $82, res type 8, `$6733`, **no
+`$DB42` sure-hit**. SickLick: `SapHitRoll_5dcc` with `$6749`, res 12. The per-victim MISS
+machine runs first and its stepped RNG reaches the handler in the same frame (305/305).
+
+**UltraDown** ($82): after the roll, `UltraDownFloorCheck_6612` fails only when DEF == 1 and
+AGL == 1 and +3 bit1 all hold (msg $B8). Then bank $53 entry 12 `UltraDownMachine_65ac` (a
+`dw` table, previously misassembled): sub 0 `UltraDownDEF_65ba`: amt = max(baseDEF>>1, 1), if
+DEF − amt ≤ 0 then amt = DEF − 1 (floor **1**, unlike Sap's 0); amt ≠ 0 → bit7. Sub 1 the same
+on AGL. Sub 2 `UltraDownSurround_667c` SETS target +3 bit1 (Surround, msg $98) when clear.
+Sub 3 a live target gets bit7 unconditionally. Sub 4 ends.
+
+**Surge** ($81): bank $53 entry 10 `SurgeCureTarget_601c` per victim: +2 & $90 → `$DD13[t] :=
+3` (`SurgeSkipTurn_60a2`: that victim loses its action); +2 := 0; +3 &= $3C; +5 bit7 off; +7 &=
+$FC; then, iff `$DB08+8t` bit7: clear it and raise AGL, then DEF, back to BASE when below base.
+
+**Transform** ($29, stat part): the handler sets both markers on the caster
+(`SetStatBothMarks_5382`); act state 5 runs `TransformCopyStats_5f5e`: caster MaxHP := target
+BASE MaxHP (≤ 999), HP clamped; MaxMP likewise; ATK/DEF/AGL := the target's BASE (not its
+buffed values); INT not copied. The caster's own bank $57 base is unchanged, so after a
+Transform a Sap subtracts half of the caster's ORIGINAL DEF and Surge restores the ORIGINAL
+DEF/AGL. Transform sets +3 **bit5** (F7/F10 measured; §15.8's table had bit4/bit5 swapped).
+
+**No ATK buff exists**: Upper/Increase write `wBattleDEF` ($DBF3), Speed/SpeedUp `wBattleAGL`
+($DC03); ATK never moved except by Transform's copy (2135/2135).
+
+**Sweeps.** tm 18 and tm 34 visit the resolved target's side FORWARD from the resolved target
+(queued 5 → [5, 6]; 58/58). Enemy AI commit (natural runs): tm 33/34 buffs commit the OWN
+side base; Slow (tm 17) commits a concrete party slot (rule not decoded).
+
+**Persistence.** Nothing decays: phase 9 masks `$DB08+8t` with $C0 and never touches
+DEF/AGL/ATK (1379/1379). Only Surge (lowered side), DeMagic (F10) and the KO reload (F9) undo
+them. The turn order uses the CURRENT `$DC03` at each round start (116/116), and the MISS
+machine's dodge ladder reads the target's CURRENT AGL (319/319).
+
+#### 15.11.F8 The multi-hit loop (S130, measured 19817/0)
+
+BiAttack $50, QuadHits $51, CallHelp $52, YellHelp $53, RainSlash $57, and the 8-slot walk
+`$714C` (METEOR $AF; also BIGSLEEP $A7 / MP0 $A8) run their handler once per **pass**: the bank
+$53 act machine performs every pass, and the bank $52 driver (state 6) decides whether another
+follows.
+
+**One pass.** (1) Act state 0 (`$53:$520C`): `$DD69 += 1`, `$DB89 := $DCED+2a`. (2) When
+`$DD69 != 1` the fetch jumps straight to act state 7 — no announce, no ChargeUP message, no
+re-resolve. (3) Act state 7: one `LoadBtlC_4e33` step on every pass, then the airborne
+"doesn't reach" ($C1) gate (flags9 bit5 vs +6&$0C), then Cover/Guardian (`$54D6`). (4) Act
+state 9: a dead target goes straight to the continuation (no MISS roll); vs an iron target
+(+7&$C0 with flags8 bit2) the pass fails with $BA — CallHelp/YellHelp at pass 1: `$DD69 :=
+$10`, msg $C2. (5) The MISS machine (one step). (6) The crit stage (one more step for
+BiAttack/QuadHits/RainSlash). (7) Handler, post-calc. (8) Apply (`$52:$6D56`) — a 0-damage hit
+never enters it (234 hits). (9) Snap-out (`$53:$5F15`), one animation after the apply. (10)
+Driver state 6: the `$DA33` wait, the battle-over check, then the dispatch at **`$52:$7041`**
+on $DB8A. A miss, dodge, iron fail, airborne fail or dead target **does not end the loop**.
+
+| Skill | Continuation | Rule |
+|---|---|---|
+| BiAttack | `$6F83` | ends at `$DD69 == 2`; a live target is hit again, a dead one re-picked (bank $58 entry 5) |
+| QuadHits | `$6F71` | ends at `$DD69 == 4`; re-picks before **every** later pass (171 picks) |
+| CallHelp | `$6F9C` | ends at `$DD69 == $13`; stops early when RNG2&3 == `$DD69&3` (no step) or own +8 bit0 is clear; else re-picks |
+| YellHelp | `$6FA8` | the same, ending at `$DD69 == $17` with mask 7 |
+| RainSlash | `$6FD4` | ends at `$DD69 >= 4`; else `$DCED += 1` until a live slot; a slot with `&3 == 3` ends the sweep |
+| $A7 / $A8 / $AF | `$714C` | ends at `$DD69 >= 8`; at `$DD69 == 4`: `$DCED := ($DCED&4)^4`, no live check; else `$DCED += 1`, each dead slot costs `$DD69 += 1` |
+
+The re-pick is bank $58 entry 5 `LoadBtlFX_642c`, uniform over the attacker's **opposing**
+side (`battle.uniform_side_pick`), same frame as the continuation (k=0, 515/515); the act-time
+re-resolve of $51/$52/$53 enters the same `$642C` row (146/146), not the front-weighted pick.
+
+- **BiAttack / QuadHits**: one CalcSkillDefense per pass with ATK = ATK/2+ATK/4 / ATK/2+ATK/8
+  (`damage.BIATTACK_ATK` / `QUADHITS_ATK`).
+- **RainSlash**: sweeps forward from the **queued** target (queued 5 → 5, 6, never 4); damage
+  ×8/10, ×6/10, then (×8/10)>>1 by `$DD69`; `$DD69` counts real fetches only, so a dead middle
+  slot does **not** shift the ladder. A 3-slot side allows at most **3** hits; the 4th needs a
+  live slot 3/7.
+- **CallHelp / YellHelp**: pass 1 is one BattleRNG step on RNG1 bit0. Fail: `$DD69 := $FF`,
+  msg $C2, no apply. Success: msg $A1, own +8 bit0 set, `$DD69 := $0F` (+1 for a non-link enemy
+  caster, +1 more for YellHelp), then straight back to the target fetch (helper 1 hits the
+  queued target). Helper damage `LoadBattle_63dc`: party / link level×2, enemy level +
+  level>>1, then ladder A rtype 24. Helper hits per cast: CallHelp party ≤ 4 / enemy ≤ 3,
+  YellHelp party ≤ 8 / enemy ≤ 6; each later helper continues with p 3/4 (CallHelp) / 7/8
+  (YellHelp).
+- **METEOR**: HP − 1 (at HP 1 it does 1, lethal), no ladder; the walk includes the caster's
+  own side and the caster: from t=4 → 4,5,6,0,1,2; from t=5 → 5,6, wraps through slot 8 → 4,
+  then 4,5,6 again (the same side twice).
+- **BIGSLEEP**: each live non-sleeping target +2 := (+2&$73)|$8C, no roll; **MP0**: MP := 0.
+
+RNG idle sites (pools in `simulator/f8_idle_pools.json`): `mh_post_hit` (a pass's end → the
+continuation, median ~9.8k), `mh_refetch` (continuation → next fetch, one frame, ~46),
+`mh_call_msg` (CallHelp success → helper 1, ~6.3k), `mh_pre_snap` (apply → snap roll, ~3.2k);
+`pre_miss` (S86) on hit 1 only. The validator compares 23 quantities on every pass.
+
+#### 15.11.F9 Combatant-changing and meta skills (S130, measured 9139/0)
+
+**Summons** (`SkillTatsuCall $52:$4BD0`, row `$58:$63D6` = self). The record never misses; the
+MISS machine (one step) runs on the caster. The handler steps BattleRNG FIRST, then: side
+byte `$DB00` (party) / `$DB01` (enemy) bit2 set → msg $BB; RNG1 ≥ $C0 → msg $CB (25 % fail);
+else bit2 := 1 and `HelperLoad_6648` → bank $51 entry 5/6/7/8 loads a FIXED helper into slot
+`side|3` (3 or 7), status `$DB02+8s..$DB09+8s := 0`, `$DD1B := 0`, `$DC3C := id+$54` (species
+216-219). `$DD13` stays $FF: the helper first acts NEXT round (30/30). Bit2 survives phase 9.
+
+| | Lvl | HP / MaxHP | MP | ATK | DEF | AGL | INT | `$DD0B` | options (`$DC64`) |
+|---|---|---|---|---|---|---|---|---|---|
+| Tatsu $84 | 30 | 200 / 200 | 100 | 180 | 150 | 80 | 150 | 1 | HealMore, Lightning, Cover |
+| Diago $85 | 40 | 300 / 300 | 200 | 210 | 160 | 120 | 100 | 1 | TwinHits, Scorching, SickLick |
+| Samsi $86 | 50 | 450 / 450 | 200 | 250 | 190 | 150 | 200 | 2 | EvilSlash, SquallHit, RainSlash |
+| Bazoo $87 | 60 | **700 / 444** | 400 | 350 | 300 | 100 | 250 | 2 | IceStorm, Hellblast, DeMagic |
+
+All: WLD $00FF, AI bases $FA ×4, `$DB8B := 0`, res from the bank $51 literals. Bazoo's HP >
+MaxHP is a ROM typo (HP $02BC, MaxHP $01BC). The helper's SOURCE for every bank $57 base read
+and for a Transform into it is the enemy_stats row `$0100 | $DC3C` = 472 Orochi / 473
+Trumpeter / 474 Snapper / 475 HornBeet.
+
+**Live slots 3 / 7.** A helper has a turn (303/303 orders) and an AI decision through the
+ordinary bank $57 machine with its `$DC64` list and bases 250 — the slot ≥ 3 test makes it an
+"enemy" for the category modulus and skips the party plan adjust (443 decisions). The group
+victim loop (`$52:$719C`, stops AT slot 3/7) and the quake sweep include a live helper
+(`battle.side_victims` / `quake_victims`: [0,1,2,3], [4,5,6,7]); every single-target picker
+(front-weighted `$441B`, uniform `$63EC`, dead redirect `$47E8`, rows `$62BF/$62CD`) and the
+side-wipe test `BattleFunc_76c8` scan 3 slots — a helper is never single-targeted (1398 picks)
+and does not keep its side alive. `AIRuleVetoSummonActive_6757` vetoes $84-$87 while the side
+bit2 is set and the helper is live. A helper KO (`jr_051_53d6`): no reload, `$DD1B := $FF`, the
+side's bit2 CLEARED — the side may summon again.
+
+**Chance** (`SkillChance $4616` → `ChancePick_4d7e`). Row `$63D6`; MP 20; the MISS machine on
+its target. Per roll one `LoadBtlC_4e33` step, RNG1&$0F: 0 → $A9, 1 → $A3, n → $A0+n ($A3/$A9
+doubled, $A0/$A1 unreachable). Re-roll when `$DB73 != 0` and the id's record +9 bit1 is clear
+(boss set: $A3 $A7 $A9 $AA $AB $AC $AD $AE), and when a non-link caster at slot ≥ 3 drew
+$A2/$A4. The queue := id, bank $58 entry 8 resolves the NEW id's target with `$DD69 = 0`, and
+the act machine restarts at state 1: target fetch, Cover/iron gates, MISS, the outcome's own
+handler (no MP, veto or re-resolve). 640 picks, 640 targets.
+
+**CALLHOROR $A2 / Smashed $A4** (`SkillSmashed $4EF9`). No boss gate. Target HP := 0, then
+SkillRUN with the target as the attacker. Bank $53 entry 15 `SmashedWalk_6be2` re-enters the
+handler for each next live slot: t == 3 ends; t == 6 ends Smashed, CALLHOROR wraps to 0. A
+party caster removes the target and every live enemy after it up to slot 6; an enemy caster
+(forced only — Chance re-rolls them) removes ONE party monster. 10/10.
+
+**RUN** (`SkillRUN $4E3A`). `$DD1B[attacker] := $FF`. A slot ≥ 4 then runs
+`FleeBookkeeping_7242` → bank $51 `FleeSlot_4be8`: a helper slot clears its side's bit2; any
+other slot is reloaded from its source (`LoadBtlS_44a9`); then `KOStatusWipe_4c26`. A fled
+enemy shows HP 0 and its row's stats; a fled party monster keeps its HP.
+
+**BeDragon $D5 / CHGDRAGON $AA.** Row `$6367` self; act state 4 (`DragonFormState4_6d0a`):
+`DragonFormLoad_6684` = bank $51 entry 9: level 50, MaxHP 999, MaxMP 300, ATK 300,
+DEF/AGL/INT 200 (HP and MP NOT touched), res `2A AA A9 69 4F AA 5A`, options {Scorching $5E,
+IceStorm $62, DeMagic $80}; own +3 **bit4**. Then `TransformActionRewrite_7ab5` (no step): queue
+:= `{$3A,$5E,$62,$80}[RNG1&3]`; `$3A` targets opposing base + (RNG1&3), a dead candidate
+walking `(c&3)-1` in ABSOLUTE slots; `$D9ED := 0` re-runs the whole per-actor pipeline for the
+same actor in the same turn (`battle.actor_walk`; 59 rewrites, 56 walks). Later turns are NOT
+rewritten: the dragon commits from its new option list.
+
+**Transform $29 (non-stat part).** After F7's stat copy, `TransformCopyStats_5f5e` copies the
+target's SOURCE res and SOURCE skill list (party record 8 / enemy row 4 / helper row 472-475);
+a non-link enemy caster stores the target in `$C1CA[a&3]`. Row `$58:$4ED8`
+(`TargetRowTransform`): `$DD0B == 0` uniform opposing, else argmax MaxHP+MaxMP over the
+opposing base..base+2 (ties → later slot). No action rewrite for transformed monsters.
+
+**KO reload (all slots).** The KO state (bank $51 entry 15) reloads every non-helper slot from
+its source before `KOStatusWipe_4c26`: party = record stats/level/res/skills (HP, MP skipped,
+then MP := min(MP, MaxMP)); enemy = row incl. MP, but only the 4 skill bytes of `$DC64`. This
+is the transform / dragon revert (8/8) and also undoes F7 buffs on the KO'd slot — and it is
+what §15.7's "TRANSIENT full-HP value" was. `battle.KO_HOOKS` (`f9_meta.ko_revert`).
+
+#### 15.11.F10 Dispel and field (S130, measured 1335/0 + AI rules 332/0)
+
+DeMagic $80 (tm 17), ThickFog $83 (tm 1), FILTHZONE $A5 (tm 2, a Chance outcome) share
+`SkillDeMagic_ThickFog` ($52:$4BA1), which only sets `$D9ED := 3`, `$D9EE := 0`. It runs after
+the ordinary MISS machine on the ONE resolved target (one step; flags7 = flags8 = 0: never
+misses, never dodged or blocked, passes the iron pre-gate). Re-resolve rows: $80
+`Jump_058_62bf` first live slot of the opposite side; $83/$A5 `TargetRowFieldOppFirstLive_62fd`
+the same including the helper slot (16/16).
+
+**The machine.** Act state 3 sends $80/$83/$A5 to bank $53 entry 11 `DispelMachine_60b3` (a
+`dw` table on `$D9EE`, previously misassembled), one sub-state per frame, no RNG. From the
+resolved target t it walks t, t+1, … until `t & 3 == 2` — **forward to the end of the
+target's side only** (a DeMagic queued on slot 5 left slot 4 untouched) — then the side's
+helper slot `(t & 4) | 3`, then the side bytes.
+
+| Sub | Routine | Effect |
+|---|---|---|
+| s0 | `DispelSlotCheck_60c9` | `$DD1B != 0` → skip to s5 |
+| s1 | `DispelStrip_60dd` | +3 &= $30, +4 &= $C8, +5 &= $3F; +7: if & $C0 (iron) `$DD13[t] := 3` and **+7 := $11**, else +7 &= $33; shifted +8 &= $3D, +9 bit2 off. Msg $AC |
+| s2 | `DispelClearP4_6132` | +4 := 0 (msg $D9 when it was non-zero) |
+| s3 | `DispelRevertTest_6152` | +3 ≠ 0 (only bits 4/5 remain: transformed) → +3 := 0, `DispelRevertStats_626b` (msg $AD), s4; else `DispelBaseDefAgl_647c` |
+| s4 | `DispelRevertTail_617e` | sprite reload; `$C1CD[t] &= $80`; `$DD13[t] := 3`; `$C1CA[t&3] := $FF` |
+| s5 | `DispelNextTarget_61c2` | `t&3 == 2` → `t := (t&4)\|3`, s6; else t += 1, s0 |
+| s6 | `DispelHelper_61e3` | a live helper → `DispelDismissHelper_650c`: `$DD1B := $FF`, `$DD13 := $FF`, +2..+9 := 0 (msg $D8) |
+| s7 | `DispelSideBytes_620b` | `$DB00/$DB01` bit3 off; the target side's byte &= $10 (clears the summon bit2 too). $83/$A5: bit3 ON in both bytes; if the caster's side differs, t := the caster's side base and the machine runs **again** on the caster's own side |
+| s8 | `DispelEnd_6252` | `$D9ED += 3` |
+
+- **The iron quirk**: in the iron branch A is reused for the `$DD13` pointer, so the
+  `and $33` runs on $DD: +7 goes $FF → $11 (then $01 after phase 9) — a dispelled iron target
+  keeps the SandStorm accuracy bit0. Iron and a revert both set `$DD13 := 3`: a victim that had
+  not acted loses its turn (5/5).
+- **DEF/AGL reset** (`DispelBaseDefAgl_647c`, no revert): DEF and AGL return to the source
+  (party / link: record +$5A/+$5C; enemy: the row, `DispelBaseFromRow_64ba`), raised or
+  lowered. ATK, INT, HP, MaxHP untouched.
+- **Revert** (`DispelRevertStats_626b`): skills `$DC64` restored first (bank $51 entry 10),
+  then the source reloaded (enemy row `DispelRevertFromRow_63c7` / record
+  `DispelRevertFromRecord_62f1`: level, MaxHP, MaxMP, ATK, DEF, AGL, INT, the four AI
+  weights), HP/MP clamped. The resistances `$DD28` are **not** restored. **Engine bug**
+  (measured, 3 battles): the record path writes the level and the AI weights through
+  `ByteArrayWriteX2_6546` (the word-array index 2t): reverting party slot 1 gives slot **2**
+  slot 1's level and AI bases; reverting party slot 2 writes **enemy slot 4**'s level and
+  `$DC44/$DC4C/$DC54/$DC5C`.
+- **The seal**: `$DB00/$DB01` bit3 survives phase 9 (605/605); lifted only by a later dispel's
+  s7. A flags7-bit6 spell from a sealed side is vetoed with $1F and the caster **pays** the
+  cost (`SaveBtlC_4b4f`, floor 0; 8/8) — unless a `$DD0B == 2` actor re-decides first
+  (`LoadBtlC_490a`: `$DD13 := 1`, `$D9ED := $16`; 4/4, the new choice not modelled).
+  `AIRuleVetoUsability_45f2` vetoes ThickFog and any flags7-bit6 spell while the caster's own
+  side is sealed.
+
+**AI pass conditions** (cat-2 chain; closes the §15.9 "pass branches untraced" residual;
+332/332 on randomized boards, `$DD0B` 1 and 2). DeMagic: vetoes `AIRule_4785` (every valid
+opponent paralysed), `AIRule_5f91` (every opponent invalid or incapacitated),
+`AIRuleDeMagicVetoNoBuff_6bcb` (veto **unless** the opponents' side byte & $2C, or the opposing
+side's **first slot** has +3&$3C | +4&$6F | +5&$40 | +7&$CC | +8&$40 — a loop bug tests only that
+slot, three times); −20 `AIRuleDeMagicDebuffMalus_69cb` once when any valid opponent has
++3&$C2, +4&$10, +7&$03 or +8 bit7; +20 `AIRuleDeMagicBuffCount_5842` (`$DD0B == 2` only) once a
+running buff count reaches 3. ThickFog: vetoes `$45F2` (own side sealed),
+`AIRuleThickFogVetoNoBigSpell_6af5` (veto unless a valid opponent's option list holds a tag-1
+skill $02/$05/$08/$0B/$0E/$11-$13; its own-side second loop compares the TAG with $2B — dead
+code); +20 `AIRuleThickFogBonus_593d` (`$DD0B == 2` only) when the own valid-slot count ≥ the
+count of own big-spell skills and the opponents hold ≥ 2. Model `ai_rules.f10_rules`, used when
+`BattleView` carries `skills` / `dd0b` (pacing supplies them via `b.ext['f10_optlists']`);
+without them the old conservative veto is kept (`validate_rules` stays 240/0).
+
+#### 15.11.x Open items after S130 (from the family notes)
+
+- **Link battles** (`$C86C != 0`, private RNG `$C1ED/EE`): Ironize side-wide for an enemy
+  caster, the link paralysis wipe, Kamikaze/WindBeast/MultiCut link forks, the crit table
+  choice, the tension roll's private-RNG path, helper/flee/Smashed paths, the DeMagic record
+  path for t ≥ 4 — code-read only; a link-mode rig is the next step.
+- **The `$DD0B == 2` act-time re-decide** (`SetupSub_4692` → state $18; also on the
+  seal/shut veto paths, `$D9ED = $16`): not in `simulate_round` (F1, F5, F10).
+- **F8 loop × F6 hooks**: `multihit_action` calls only VICTIM_HOOKS — Dodge, the BladeD counter
+  and Imitate are not applied to BiAttack/QuadHits/RainSlash/CallHelp passes; RobMagic's own
+  MISS step skips the MagicBack reflection. Multi-hit crits are measured component-wise only.
+- **`$DB42` bit consumers outside the model**: bit7 easy-dodge (`$53:$563C`, validator-only),
+  bit5 shield grab (`$53:$5112` / the dodge machine) — modelled literally, never exercised.
+  *(F1 and F5 called the `$DB42` writer unknown; F4 located it — the tension roll above.)*
+- **Commit targets in pacing**: Slow's concrete-slot enemy commit (not decoded),
+  `$80`/`$83` commit on the side base (only differs when the base is dead).
+- **Smaller**: BIGSLEEP walk with a dead slot at the jump; Sacrifice + guard marks; the 4th
+  RainSlash hit (needs a live helper); Cover on later multi-hit passes; snap-out after a
+  0-damage hit; stale `$D9F2` (TakeMagic gain cleared only in phase 9); Imitate after an iron
+  fail; absorb vs a first-victim Cover; `LoadBtlC_5ea0` (`$DB4A` bits 1:0, no writer found);
+  the end-of-action clear of own `$DB08+8a` bit0 (CALLEVIL, applied only on the Chance path);
+  Guardian with a live helper; `AIRule_4c13` (all-res-3 veto) missing from `ai_rules`; the
+  party lightweight picker vs sealed spells; Beserker in the AI target score.

@@ -2543,10 +2543,16 @@ def test_encounters_s114():
     ok("S114: real chances — the first slot with a chance takes draw 0 (+1), the slot ending "
        "at 100 loses one (Slime / Dracky / Anteater 30/50/20 -> 31/50/19)",
        EN.real_chances([3, 5, 2, 0, 0], pct) == [31, 50, 19, 0, 0])
-    ok("S114: steps between battles outside gates — code 3 = the counter mean / 100 "
-       "(measured drain 100 per step), code 7 = half of it",
-       abs(EN.steps_between(REPO, 3) - EN.mean_counter(REPO) / 100) < 1e-9 and
-       abs(EN.steps_between(REPO, 7) * 2 - EN.steps_between(REPO, 3)) < 1e-9)
+    _seeds = EN.counter_seeds(REPO)
+    _exact = lambda d: sum(max(0, min(t, 100) - (min(_seeds[i - 1][0], 100) if i else -1))  # noqa: E731
+                           * (v // d + 1) for i, (t, v) in enumerate(_seeds)
+                           if i == 0 or _seeds[i - 1][0] < 100) / 101.0
+    ok("S114/S130: steps between battles outside gates — code 3 = the mean of "
+       "counter // 100 + 1 (measured drain 100 per step; the battle step counts), "
+       "code 7 = drain 200, about half",
+       abs(EN.steps_between(REPO, 3) - _exact(100)) < 1e-9 and
+       abs(EN.steps_between(REPO, 3) - EN.mean_counter(REPO) / 100 - 1) < 1.0 and
+       abs(EN.steps_between(REPO, 7) - _exact(200)) < 1e-9)
     EN_FIX = _en_fixture()
     o, prj, w = compile_data(EN_FIX)
     b = o['patches/bank_076.asm']
@@ -6421,6 +6427,197 @@ def test_story_s129():
     return outs
 
 
+def fake_sav_s130(party=((8, 10, 'Goo'), (53, 12, 'Ant'), (4, 9, 'Bat'))):
+    """A synthetic battery save: roster slots 0.. hold `party` (species, level,
+    nickname), the party list names them in order (savefile.py offsets)."""
+    from editor2.core import savefile as SF
+    from editor2.core import monster_text as MT
+    sav = bytearray(0x8000)
+    for i, (sp, lv, nick) in enumerate(party):
+        o = SF.record_offset(i)
+        r = bytearray(SF.REC)
+        r[0] = 2
+        r[1:9] = (MT.encode_name(nick, 'nick') + bytes([0xF0] * 8))[:8]
+        r[9] = sp
+        r[0x29:0x31] = bytes([3, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF])
+        r[0x31:0x4A] = bytes([0xFF] * 25)
+        r[0x4B], r[0x4C] = lv, 40
+        for k, off in enumerate((0x52, 0x56, 0x58, 0x5A, 0x5C, 0x5E)):
+            r[off] = 20 + 10 * k + i
+        r[0x15] = 0xFF
+        sav[o:o + SF.REC] = r
+    sav[SF.PARTY_COUNT_OFF] = len(party)
+    sav[SF.PARTY_LIST_OFF:SF.PARTY_LIST_OFF + 3] = bytes(list(range(len(party))) + [0xFF] * (3 - len(party)))
+    return bytes(sav)
+
+
+def test_balance_s130():
+    """S130 (ROADMAP P3.15a) the Balance tab's core pieces: a save's party
+    (savefile), a hand-picked member, the per-fight cache (round trip, peek
+    without computing, simulator version), the cancel hook, a room's battle
+    found through the script its NPC names."""
+    import tempfile
+    from editor2.core import balance as BL
+    from editor2.core import savefile as SF
+    data = BL.BattleData(None)
+    team = SF.party_team(fake_sav_s130(), data.names)
+    ok("S130: a save's party -> 3 members in party order (species, level, nickname, skills, "
+       "stats)", [(m.species, m.level, m.nickname, m.skills) for m in team] ==
+       [(8, 10, 'Goo', [3]), (53, 12, 'Ant', [3]), (4, 9, 'Bat', [3])] and
+       team[1].stats == [21, 31, 41, 51, 61, 71] and team[0].origin == 'save slot 0',
+       [(m.species, m.level, m.nickname, m.skills, m.stats) for m in team])
+    m = BL.custom_member(data, 8, 10, [3, 14], plus=2)
+    ok("S130: custom_member — the species at the level, the skills given, the plus",
+       (m.species, m.level, m.skills, m.plus, m.origin) == (8, 10, [3, 14], 2, 'picked'),
+       (m.species, m.level, m.skills, m.plus))
+    m2 = BL.custom_member(data, 8, 10)
+    ok("S130: custom_member without skills keeps what the game teaches",
+       m2.level == 10 and all(isinstance(x, int) for x in m2.skills))
+    summ = BL.team_summary(data, [m])
+    ok("S130: team_summary names the skills",
+       summ[0]['skills'][0] == (3, data.skill_names.get(3)) and summ[0]['stats']['hp'] == m.stats[0])
+    tmp = tempfile.mkdtemp()
+    path = os.path.join(tmp, 'build', 'balance_cache.json')
+    c = BL.FightCache(path)
+    ok("S130: a missing cache file = empty cache", c.get('x') is None)
+    c.put('fp1', {'l90': 12, 'l50': 8})
+    c.save()
+    c2 = BL.FightCache(path)
+    ok("S130: FightCache round trip", c2.get('fp1') == {'l90': 12, 'l50': 8})
+    d = json.load(open(path))
+    d['_sim'] = 'old'
+    json.dump(d, open(path, 'w'))
+    ok("S130: a cache of another simulator version is dropped", BL.FightCache(path).get('fp1') is None)
+    ok("S130: a cache without a path works in memory", BL.FightCache('').get('fp1') is None)
+
+    class Stub:
+        custom = {'scripts': [{'id': 'boss_talk', 'talk': {'steps': [
+            {'say': 'x'}, {'battle': {'enemies': [11, 31]}}]}}]}
+
+        def room_by_id(self, rid):
+            return {'id': rid, 'screens': {'0': {'npcs': [{'script': 'boss_talk'}]}},
+                    'scripts': {'0': 'boss_talk'}}
+
+        def enemy_ref(self, ref, ctx):
+            return int(ref)
+    ok("S130: room_battles finds a battle in the script a room's NPC names",
+       BL.room_battles(Stub(), 'r') == [[11, 31]], BL.room_battles(Stub(), 'r'))
+    rec = data.enemy_rec(11)
+    data.override_enemy(11, level=50, skills=[3])
+    r2 = data.enemy_rec(11)
+    data.override_enemy(11)
+    ok("S130: override_enemy (what-if) applies and clears",
+       (r2['level'], r2['skills']) == (50, [3]) and data.enemy_rec(11) == rec)
+    BL.set_cancel_check(lambda: True)
+    try:
+        from simulator import pacing as P
+        import random
+        BL.battle_once(data, [BL.party_dict(m)], [11], 1, random.Random(1),
+                       P.IdlePolicy('empirical', seed=1))
+        stopped = False
+    except BL.Cancelled:
+        stopped = True
+    finally:
+        BL.set_cancel_check(None)
+    ok("S130: the cancel check stops a computation at its next battle", stopped)
+
+
+def test_balance_player_s130():
+    """S130 (ROADMAP P3.15b) the Balance service's 'player' profile: the battle planner
+    (the player's orders: a damaging skill over a useless one vs metal, a heal for a
+    dying ally, never touching the real board, deterministic), the kit optimizer (learn
+    requirements against the raised monster, a tiny-budget search -> 3 members x <= 8
+    learnable skills), the profile through evaluate (orders / the arena's best tactic)."""
+    from editor2.core import balance as BL
+    from editor2.core import kits as KT
+    from simulator import pacing as P
+    from simulator import planner as PL
+    data = BL.BattleData(None)
+    nm = {v: k for k, v in data.names.items()}
+    sk = {v: k for k, v in data.skill_names.items() if k < 0xDA}
+
+    def eid_of(name):
+        return next(e for e in sorted(data.T.enemies) if data.T.enemy(e)[0] == nm[name])
+
+    def board(party, eid, db73):
+        en = [data.enemy_rec(eid)]
+        b = BL._board(data, [BL.party_dict(x) for x in party], en, db73)
+        b.ext['f10_optlists'] = P._f10_optlists(b, data.records, {4: en[0]})
+        return b
+    m = BL.custom_member(data, nm['Slime'], 20, [sk['MetalCut'], sk['Infermost'], sk['HealMore']])
+    b = board([m], eid_of('Metabble'), 0)
+    before = (list(b.hp), list(b.mp), list(b.st), list(b.queue), list(b.dd13))
+    pl = PL.make_planner(data.records)
+    pick = pl(b, 0)
+    vals = {}
+    for (s_, _t), v in pl.values(b, 0).items():
+        vals[s_] = max(v, vals.get(s_, v))
+    ok("S130 planner: vs a metal (Metabble) MetalCut is ordered, Infermost (no effect) is "
+       "worth less than nothing", pick[0] == sk['MetalCut'] and
+       vals[sk['Infermost']] < 0 < vals[sk['MetalCut']],
+       (data.skill_names.get(pick[0]), vals))
+    ok("S130 planner: the real board is untouched by the trials",
+       before == (list(b.hp), list(b.mp), list(b.st), list(b.queue), list(b.dd13)))
+    ok("S130 planner: deterministic (a fresh planner, the same order)",
+       PL.make_planner(data.records)(b, 0) == pick)
+    m2 = BL.custom_member(data, nm['Slime'], 20, [sk['HealMore']])
+    b = board([m, m2], 99, 1)                                   # StoneMan, a boss fight
+    b.hp[1] = 5
+    p_dying = PL.make_planner(data.records)(b, 0)[0]
+    b.hp[1] = b.maxhp[1]
+    p_fine = PL.make_planner(data.records)(b, 0)[0]
+    ok("S130 planner: heals an ally about to die, attacks when nobody needs it",
+       p_dying == sk['HealMore'] and p_fine != sk['HealMore'],
+       (data.skill_names.get(p_dying), data.skill_names.get(p_fine)))
+    # the kit: learn requirements against the monster as raised
+    tl = BL.Timeline(data)
+    step = next(s['index'] for s in tl.steps if (s['kind'], s['id']) == ('gate', 9))
+    pool = KT.step_pool(data, tl, step, 10)
+    sp = next(s for s in pool.species if s in pool.bred)
+    spec = pool.spec(sp)
+    mm, al, co = KT.kit_member(data, pool, spec, BL.exp_for_level(data.T, 10), 1)
+
+    def req(c):
+        r = data.T.learn[c]
+        return r[0] <= mm.level and all(mm.stats[i] >= (r[1 + 2 * i] | r[2 + 2 * i] << 8)
+                                        for i in range(6))
+    ok("S130 kits: a bred member (breeding open) may carry pool skills, every one meeting "
+       "its learn row at the member's level and stats (Blazemost, row level 28, not at ~10)",
+       spec['src'][0] == 'bred' and al and all(req(c) for c in al) and sk['Blazemost'] not in al
+       and all(data.T.unevolved[c] in pool.bases or data.T.unevolved[c] == c for c in al),
+       (spec, mm.level, sorted(al)[:12]))
+    p0 = KT.step_pool(data, tl, 0, 3)
+    ok("S130 kits: before breeding opens only join forms (the step's roster)",
+       not p0.breeding and not p0.bred and set(p0.species) == {data.T.enemy(e)[0] for e in p0.joins})
+    kit = KT.optimize_kit(data, tl, 0, 3, evals=3, teams=1, battles=2)
+    exp3 = BL.exp_for_level(data.T, 3)
+    legal = True
+    for i, ms in enumerate(kit['members']):
+        _m, a2, c2 = KT.kit_member(data, KT.step_pool(data, tl, 0, 3), ms, exp3, BL._seed(130, 0, i))
+        legal &= len(ms['skills']) <= 8 and KT.kit_valid_skills(ms['skills'], a2, c2) == ms['skills']
+    ok("S130 kits: a tiny-budget search returns 3 members x <= 8 learnable skills, the level, "
+       "a why per member", len(kit['members']) == 3 and legal and kit['level'] == 3 and
+       len(kit['why']) == 3 and kit['evals'] >= 3, kit)
+    BL.set_kit(data, tl, 0, kit)
+    ev = BL.evaluate(data, tl, tl.fights['gate0.boss0'], 3, 'player', teams=1, battles=2)
+    team = BL.team_for(data, tl, 0, 3, 'player', 0)
+    ok("S130 'player' profile: the kit raised to the level, commanded through evaluate",
+       0.0 <= ev['win'] <= 1.0 and ev['battles'] == 2 and
+       [x.species for x in team] == [ms['species'] for ms in kit['members']], ev)
+    ast = tl.fights['arena0.m0']['step']
+    BL.set_kit(data, tl, ast, KT.optimize_kit(data, tl, ast, 4, evals=1, teams=1, battles=1))
+    ev2 = BL.evaluate(data, tl, tl.fights['arena0.m0'], 4, 'player', teams=1, battles=2)
+    ok("S130 'player' profile: an arena match is fought on the best of the four tactics",
+       ev2.get('tactic') in (0, 1, 2, 3), ev2)
+    f = tl.fights['gate0.boss0']
+    ok("S130 'player' fingerprint carries the step's kit fingerprint; the profiles; version",
+       BL.fight_fingerprint(data, tl, f, 'player') != BL.fight_fingerprint(data, tl, f, 'strong')
+       and BL.kit_fingerprint(data, tl, 0) == BL.kit_fingerprint(data, tl, 0)
+       and BL.kit_fingerprint(data, tl, 0).startswith('kit:')
+       and BL.PROFILES == ('casual', 'strong', 'player') and BL.SIM_VERSION == 'S130.7')
+    BL._KITS.clear()
+
+
 def test_quests_s129():
     """The example's quest lowered into its giver's conversation; the document side:
     quest_for_npc / update / delete, lock_exit (a shut state + rules), shop item sets."""
@@ -7507,6 +7704,8 @@ def main():
     test_connect_ends_s128r3()
     test_story_s129()
     test_quests_s129()
+    test_balance_s130()
+    test_balance_player_s130()
 
     if '--rom' in sys.argv:
         from editor2.core import builder as B

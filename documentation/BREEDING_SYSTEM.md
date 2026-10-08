@@ -761,6 +761,24 @@ with parents at plus 10 / levels 50: before Slime +1, after KingSlime +15; the r
 shrine menus on the user's save (MadCat × BattleRex, a +2 row, levels 23 + 23): before
 Yeti +1, after GoldSlime +2.
 
+### What the egg inherits, and the birth (S130)
+
+Decoded and measured S130 (`simulator/raising.py` `breed` / `birth`, `tools/census_raising.py`:
+400 breeds + 400 second-generation breeds + 400 births, 0 mismatches); the full rules are in
+MONSTER_DATA "Raising a monster (S130)". In short, entry 0 `BreedCreateOffspring` writes: level 1,
+the plus above, max level = clamp(info cap + 2·plus, 2, 99); each stat (`BreedStatInherit`) =
+s + s·k/50 with s = (pedigree + mate) >> 2 and k = `PedigreeForeignCount` (how many pedigree
+names differ from the player's — about +4..8 % for second-generation offspring); the AI bytes
+(`BreedAIAverage`) = ((pedigree + mate) **& $FF**) >> 1 — a **vanilla bug**, the carry of the add
+is dropped; resistances per type (`BreedResistInherit` / `BreedResistOne`, plus-gated rolls
+`BreedPlusRoll`; the two jump tables were misassembled as code, now `dw`); the learn queue
+(`InheritSkillList`, first 25 distinct; it knows nothing); gender (`BreedGenderThreshold`); egg flag
++$63 := 1. **Bank $16 entry 4 is the BIRTH finalizer** (`BreedBirthFinalize`, ex-`label16_474a`;
+called by `ScriptCmd3A_ToBreedingScene` and bank $0A): WLD := 0, master := the player, the learn
+queue rebuilt (`BirthQueueRebuild`), egg flag := 0 — not "skill/stat inheritance" (ROADMAP P3.12
+residual (a), DOC_AUDIT S130). Its per-entry "keep by plus" roll is dead code (`jr $482B` skips the
+compare; 25 RNG steps only).
+
 ## Auto-ordered special table (S113, PROJECT_COMPILER §2.29)
 
 With ANY special-table edit (`overrides`, `removes`, `appends` or a whole `table`) the

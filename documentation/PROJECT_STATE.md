@@ -10,6 +10,110 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
+> Last verified: 2026-10-08 (Session 130 — **ROADMAP P3.15 SPLIT; P3.15a BUILT: THE SIMULATOR LEARNS
+> EVERY BATTLE SKILL, THE RAISING MODEL (== THE GAME), BATTLES PER GATE FLOOR, AND THE BALANCE TAB —
+> HOW HARD EVERY KEY FIGHT IS, THE ORIGINAL GAME (READ-ONLY ANCHOR) VS THE PROJECT** (user: "Next
+> unchecked item in ROADMAP" → "inference from vanilla game in terms of battle curves … a clear
+> UI-visible list so I can compare … The vanilla game stuff should be read-only … how much changing a
+> boss skillset affects difficulty … Bonus points if I can vary the team or 'roll' a team … Double
+> bonus if you can do that for vanilla … view the team … import from a .sav"; "Levelling monsters in
+> this game is very different if you have e.g. 3 random crap skills vs 8 carefully curated skills";
+> "I personally plan on unlocking breeding ONE ARENA STEP/GATE PAIR EARLIER"; "gate dive measure is
+> excellent"; "gates and gate order and their bosses + arena + starry night tournament + monster
+> grandpa fight"; "Split sounds fine its a big job"; "Can you do it this session?"). **Built S130,
+> NOT yet user-tested; byte-neutral (no ROM bytes changed — no test ROM).**
+> **Simulator (BATTLE_SKILL_SYSTEM §15.11):** `battle.py` registries (ACTION_HANDLERS, CORE_OVERRIDES,
+> POST_CALC, ACTOR / PHASE9 / VICTIM / INTERCEPT / POST_HIT / POST_VICTIM / POST_SWEEP / KO / DISPEL
+> hooks, COMMIT_TARGETS / ROLL, TARGET_RESOLVERS, CRIT_STAGE …) + ten family modules
+> `simulator/skillfx/` built in parallel (frozen base, 3-way merge); 146 handlers; each family
+> measured in PyBoy on the user's save (u22 + `field.state`) and validated: F1 52,970 · F2/F3
+> 10,049 · F4 100,051 · F5 9,573 · F6 19,542 · F7 7,667 · F8 19,817 · F9 9,139 · F10 1,335 + rules
+> 332 — all 0 mismatches; every older validator still 0 (s85 6,614, s86 802, s89 426, s88 2,824 /
+> 3,083 / 3,422, damage 13, order 143, AI 26/26, rules 240, obedience 889, pacing KS 0.042 / 0.038).
+> Findings: per-species crit tables (`$53:$4025` party / link, `$4102` enemy); the `$DB42` setter =
+> the bank $58 command-phase tension roll (party only); Massacre hits allies; Kamikaze not
+> boss-gated; RESTOREMP byte-compare bug; the patched build's `$DB86` = enemy 2's joinability (KEY_
+> LESSONS); the driver now spends MP, applies the spell ladder, heals heal, Cover / Guardian wired.
+> **Raising (MONSTER_DATA "Raising a monster (S130)"):** `simulator/raising.py` — creation, level-up
+> gains / learning / apply (+ past max level, bonus HP/ATK), breeding (stats, AI with the vanilla
+> carry bug, resistances, learn-queue inheritance), the birth finalizer (bank $16 entry 4 =
+> `BreedBirthFinalize`, ROADMAP P3.12 residual (a) closed), pedigree k; `tools/census_raising.py`
+> stub-calls the real routines: creation 962, level-ups 5,073, breeds 400 + 400, births 400 — 0
+> mismatches on the original ROM, the u22 build and the example. ROADMAP P3.10 residual (e)
+> corrected: a joining monster brings its enemy row's 4 skills.
+> **Dives (GATE_GENERATION §4.4):** `tools/census_dive.py` → `extracted/dive_census.json`,
+> `editor2/core/dive.py`: 1,000 floors per maze size, the shortest walk (14.7-29.3 steps), 0.2-0.7
+> battles per floor (lower bound) / every reachable cell (upper bound); PyBoy joypad walk 12/12
+> floors. `encounters.steps_between` was one step short — fixed (the Encounters tab's estimate +1).
+> **Balance service (PROJECT_COMPILER §2.43):** `editor2/core/balance.py` — the story timeline (41
+> steps in the original order, a project fills the positions; new gates / rooms as extra fights),
+> rosters, rolled teams (same exp, curve 11; casual / strong; breeding after a step — project
+> setting `meta.balance.breeding_opens_after`), `evaluate` (+ team level reached, enemy HP left,
+> unmodelled share), l90 / l50 searched from below, dives at two walk bounds, a per-fight cache
+> (`<project>/build/balance_cache.json`, fingerprints incl. `raising_digest`, `SIM_VERSION`
+> 'S130.6'), what-if enemy overrides, `savefile.py` (.sav party, == PyBoy WRAM). **The anchor**
+> `tools/build_balance_anchor.py` → `extracted/balance_vanilla.json` (180 fights × 2 profiles + 31
+> gate dives, 38 min on 2 cores). Strong l90 reads e.g.: Beginning boss 2, Strength (StoneMan) 16,
+> Joy 30, Labyrinth 30, Library 46, Reflection 49, Ambition 81; casual is higher (Strength 24, Joy
+> 81) and from Temptation on often "99+"; from the S class on most fights are "99+" for
+> both (shown with the win % at 99 and the enemies' HP left) — rolled teams are bred shallower than
+> real endgame teams (ROADMAP P3.15b (1)). An agent's read of the first anchor caught all-Healer
+> "strong" teams (heals over-valued) — fixed before the final build (KEY_LESSONS).
+> **Editor:** the Balance tab (`editor2/app/balance_tab.py`; EDITOR_DESIGN §5.9 "As built S130";
+> help `72_balance.md`; `EDITOR_REVISION` 'S130'): Story curve (original vs project, change colours,
+> dives, extra fights "lands like", chart), Team (roll / reroll / .sav import / pick member), Fight
+> (groups, evaluate the team, level needed, what-if per enemy, As is / What-if / Change); all in
+> background threads with Cancel. `room_battles` also reads the scripts a room names (the user's
+> u22 `sboss` → `sboss_conv` Ogre). PySide6-Essentials installed in the workspace for test_app.
+> **Annotation (Iron Rule 6, both trees, zero bytes):** banks $06 / $13 / $14 / $16 / $51 / $52 /
+> $53 / $57 / $58 — `LevelUpGains`, `SkillLearnScan`, `ApplyLevelUp`, `BreedAIAverage`,
+> `BreedBirthFinalize`, `CritChanceTablePartyLink_4025`, `DispelMachine_60b3`, the LifeSong `dw`
+> table … Clean `1ca6579…` byte-perfect; REFERENCE_MD5 unchanged `7d136455…` (patched).
+> **Docs:** BATTLE_SKILL_SYSTEM §15.11 + ~30 corrections, MONSTER_DATA raising, BREEDING_SYSTEM,
+> known_RAM_map, PYBOY_DEBUGGING, DOC_AUDIT S130 (71 rows), KEY_LESSONS S130, TOOLS_AND_DATA S130
+> rows, GATE_GENERATION §4.4, PROJECT_COMPILER §2.43, EDITOR_DESIGN §5.9, ROADMAP (P3.15 split,
+> ARC NG parent ticked, P3.10 (e) / P3.12 (a) corrected). `damage.vacuum`'s enemy branch noted wrong
+> (the driver uses `f23_phys.vacuum_base`).
+> **Checks:** verify_integrity PASS (selftests + `census_raising`, `census_dive`,
+> `build_balance_anchor`); test_compiler --rom 1365/1365 (`test_balance_s130`); test_app PASS
+> (`s130_balance`); every validator above 0.
+> **r2 (user 09:21-11:35: "What does levels of '81' actually mean? … no way I have ever played the
+> game with a level of 81 for my monsters by S class … Which 8 skills you can bring together on 3
+> monsters is almost the sole determiner of success"; "can we colour code levels"; "1) Always
+> command unless arena (Arena forces you to use tactics) 2) Usually one general kit … I run into a
+> wall … start experimenting with skills and monsters … 3) … maybe around 30-40 level on average per
+> mon"; 11:35 on the early bosses' sleep locks: "it seems like the new average is a good reflection
+> of difficulty which is what we want"):** "81" was the casual exp level with members capped at
+> ~51, on their AI. **Orders measured + modelled exact** (BATTLE_SKILL_SYSTEM §15.10.7b): the menu
+> is FIGHT / ITEM / PLAN / RUN, COMMAND = the 4th tactic inside PLAN, orders written straight to
+> `$DCEC/$DCED` (`LoadBtl_4f86/4f95`); the obedience gate with tactic 3 every round (orders refused
+> more than tactics); obeyed orders drift w3 (`PersonalityCommandTable`, permanent); disobedience =
+> Daze `$98` / Attack / Defence (`SetBtlAI_7f5f`); a dead single target of an order fizzles; MP
+> checked by the menu; the arena shows "NO SP SK" instead of COMMAND; the PARTY attack target pick
+> `$58:$41E9` (lowest HP − estimate) replaces the front-weighted stand-in. `measure_command.py` 56
+> battles, `validate_command.py` 6,411 / 0; every older validator still 0. **The 'player'
+> profile** (`simulator/planner.py` orders + `editor2/core/kits.py` one optimised kit per step,
+> best tactic in the arena; PROJECT_COMPILER §2.43) is the tab's main number: S class 32 / 28 / 38,
+> Durran 32, Starry Night final 35, DracoLord 40, StoneMan 10, FunkyBird 13 (status locks the
+> bosses' resistances allow — user-accepted). Level cells coloured by band. `SIM_VERSION`
+> 'S130.7'. **The anchor** (three profiles + a kit per step) took ~5 h on the workspace's 2 cores
+> and the workspace was reclaimed mid-build three times (KEY_LESSONS) — the build was made
+> resumable (`balance_vanilla.json.partial`) and the Balance tab got **Build original-game numbers**
+> (user 15:10: "can I not run this locally in editor using a button push?"); the user built it on
+> their M3 Max ("~30 s per gate") and uploaded it: `--selftest` OK (180 fights × 3, 31 dives, 41
+> kits, fights + dive + player re-derived here equal — same numbers on macOS and Linux). Player
+> l90 curve: Beginning 2, Villager 4, Bazaar 13, Strength 10, Joy 13, Wisdom 20, Temptation 19,
+> Judgement 31, Library 23, S class 38 (matches 32 / 28 / 38), Reflection 34 (Durran 32), Starry
+> Night 35, Ambition 40, Demolition / Control 45, Bazaar Edge 48, Right Gate 47 (Mudou), Old
+> Man's Gate and Grandpa's match "can't win" (37 % / 89 % at 99). Mid-game steps flatten at 10 —
+> the "no bred kit below level 10" rule (ROADMAP P3.15b). **r3 (user 15:47: "Its also really
+> crowded and I dont really understand all the numbers"):** the tab opens in a SIMPLE view —
+> Fight | Original game | Your project | Change ("Lv 32", "can't win (38 %)", "harder (+5)"), a
+> plain-English line, hover sentences, "Compute your project", "Show the team"; **Show details**
+> (saved, `balance/details`) restores everything; help "Reading the numbers" first.
+> **Next:** the user's test of the Balance tab (original curve, a project's fights, a boss what-if,
+> a .sav party); then P3.15b or the user's pick.
+
 > Last verified: 2026-10-07 (Session 129 — **ROADMAP P3.14b / c / d FINISHED (P3.14 DONE): STORY
 > CHECKS — QUESTIONS THE GAME ANSWERS (ITEMS, GOLD, MONSTERS, LEVELS, SEEN, CHANCE, ARENA, BAG
 > ROOM, THE STORY REACHED, AND / OR) USABLE WHEREVER A FLAG IS CHECKED; STORY STEPS (TAKE ITEMS,
@@ -80,79 +184,8 @@
 > **Next:** the user's test of the ROM and the editor; then the user's pick (P3.14 is done —
 > P3.15 Balance tab, or a banked item).
 
-> Last verified: 2026-10-07 (Session 128 — **ROADMAP P3.14e3 BUILT: YOUR ARENA — COPIES OF THE
-> ARENA LOBBY AND THE ARENA BATTLE ROOM THE ENGINE TREATS AS THE ARENA (THE WALK-IN, THE MATCHES,
-> THE CROWD, THE BATTLE TYPE / MUSIC, STARRY NIGHT), PAINTABLE AND CONNECTED ANYWHERE; PER CLASS A
-> LOCK, A WON FLAG, THE RECEPTIONIST'S WORDS AND WHERE A WIN SENDS YOU; STARRY NIGHT OFFERED BY
-> FLAG, ENDING IN THE LOBBY / A ROOM / THE HUB / THE GAME'S ENDING** (user: "there's a central
-> arena and I want it accessible from a custom room … fine to lift it wholesale I just want to be
-> able to edit battles (already can) as well as tiles in arena proper AND in arena entry, and
-> redirect outwards"; "4) Chosen per class", "end greatlog arena on starry night tournament …
-> post game in back in vanilla greattree with a few arena battles accessible", "6) Per class",
-> "8) Yes keep"). **Built S128; test ROM USER-CONFIRMED 2026-10-07 09:51 ("Yep all good").**
-> **Engine (code-read + PyBoy):** the arena was keyed on map ids `$06` / `$5D` at 9 sites; ROM0
-> `ArenaMapID` / `ArenaAlias` (the S117-freed bytes after `ComputeFlagAddress`) map the project's
-> copies (`ARENA_LOBBY_MID` / `ARENA_BATTLE_MID`, bank $6E region `arena_rooms`) to them —
-> banks $01 (`CheckScriptBeforeAction`, `SaveMapStateToHRAM`'s class same-size), $03 (escape
-> skill), $07 (the lobby's monsters), $50 (`BattleExitHandler`, the `$5730` battle-end type,
-> the lost-match mailbox → `ArenaLossWarp50`), $51 (music, `LoadBtlS_43c9` battle type), $71
-> template `BattleBGMResolve` (re-pinned). Bank $09 `ArenaMenuMarkWon` → bank $6E entry 1
-> `ArenaMarkClasses` (the original marks + per-class locks, glyph `$9C` "-", only in the
-> project's lobby) + `ArenaRefuse09` (the locked words). Not aliased: `CheckGateWorldMapType`
-> (copies stay gate-like, S70) and the bank $06 text-sprite rule (copies set
-> `text_keeps_sprites`). `$D999` is ALSO the `$5D` room's step counter (5 states).
-> **Compiler / editor:** `custom.arena` (`editor2/core/your_arena.py`, `your_arena_doc.py`;
-> PROJECT_COMPILER §2.41): the desk script (lobby script 6 — an `$8F` examine spot across the
-> counter), the lobby / arena entry scripts prefixed with the return logic, line kind `arena`
-> (Services); Arena tab → ★ Your arena + "In your arena" per class (GameTextFields); flag
-> index walks the locks / won flags; help `69_your_arena.md`. `vanilla_steps` accepts exit
-> pointer `$FFFF` (the `$5D` copy had 1 state → Starry Night crashed in the copy).
-> **r2 (user 08:38): (1) "Flag clash … Does this affect new romhack?? This should NOT be
-> happening by default":** yes — every "auto" flag (the compiler's quest flags too; the example's
-> `vault_guardian_beaten`) was numbered from `$0158`, the game's (Milayou's rematch). Now
-> `number_flags` moves an auto flag off `$0158` to the lowest free number (the others keep
-> theirs), and opening a project does the same for a pinned one (`_migrate_shared_flags`, a
-> note; the quest flags are written in first) — the user's `milly_roots_seen` → `$015A`; the
-> example project ships moved (`$015A` / `$0159`). **(2) "ITS NOT KING MATCH ITS MONSTER GRANDPA
-> MATCH FIX THE DOCS" / "ONLY THIS MONSTER BATTLE":** arena group 9 (GoldSlime / Divinegon /
-> Rosevine, EIDs 481-483) is labelled **Monster Grandpa's match** in the Arena tab, help, docs and
-> its disassembly comments (data key `King` kept); nothing about the real King changed. **(3)
-> "No idea if new arena is tile editable":** PyBoy on the painted demo: the lobby block and the
-> arena floor row show and survive every match; the copy had split the night arena (vanilla
-> steps 1-4 all draw layout `$2315`) into four items, so a Starry Night paint vanished from
-> match 2 — `clone_vanilla` now shares one item per vanilla layout (new copies).
-> **Annotation (Iron Rule 6, both trees):** the clean tree has S128 comments at every arena site
-> (banks $01 `jr_001_4405` + `CheckScriptBeforeAction`, $03, $07, $09 `ArenaMenuMarkWon` + State2,
-> $50 `$5730` / `BattleExitHandler` / the loss mailbox, $51 music + `LoadBtlS_43c9`); the group-9
-> comments in banks $04 / $50 say Monster Grandpa's match. Clean rebuild `1ca6579…`.
-> **Verification:** test_compiler --rom 1317/1317 (`test_your_arena_s128`, `_rom`; the S124 /
-> S117 / rule-term flag tests re-stated), test_app PASS (`s128_arena`), verify_integrity PASS,
-> clean `1ca6579…`; REFERENCE_MD5 `3a9c38fb…` (patched; the example's quest flag `$015A`).
-> **Test ROM `DWM-S128r2-your-arena-test.gbc` (`a0cb333e…`, patched; USER-CONFIRMED):** the
-> user's my-dwm-hack_19 + the S128 DEMO NPC in Cities_FOUNT (3, 4) → the ARENA GATEHOUSE (guide,
-> doorman → the lobby, F-class key keeper, clerk = `$CAB4` := 0, way back); the lobby's bottom door
-> → the gatehouse; G won flag + words, F locked by the key and a win → the gatehouse, E → the
-> hub, custom lost / locked words, Starry Night offered after S → the gatehouse. Every path
-> walked in PyBoy on the user's save.
-> **r3 (user 11:18–11:31, their _20 + save: "made a fancy new arena … not showing up";
-> "Why is player sprite fucked in arena? … Its the milly thing"; "When I double click on an
-> exit or entry, it should bring up a window that can set both ends"):** (a) nothing led
-> into the copies — the user's save stands at GREATTREE's (the game's) arena door; routing
-> it into the lobby copy = the fix (their painted arena then played, PyBoy). (b) The arena
-> shows the player as NPC sprite `$E0` with frame id `$5E` (Terry's NPC frames) over the
-> player's sheet — Milayou's with the hook: cut up, in both arenas. Bank $0B
-> `MillyE0Type` (room entry 0's dead bytes; same size): `$14` (Milayou's NPC frames) when
-> `$179F` is set (two other attempts failed in PyBoy — KEY_LESSONS). (c) double-click a
-> plain exit (a copied room's game exits, teleports) → *Exit — connect both ends*;
-> `Document.connect_ends` makes plain exits doors, a double exit's second cell follows
-> (`twin_of`). test_compiler --rom 1325/1325 (`test_connect_ends_s128r3`, the `$E0` run in
-> `test_your_arena_rom`), test_app PASS (`s128_arena` + the connect window), verifier PASS;
-> REFERENCE_MD5 `fe5fa80a…` (patched); `EDITOR_REVISION` 'S128r3'. **Test ROM
-> `DWM-S128r3-milly-arena-fix-_20.gbc` (`a7021221…`, patched; NOT yet user-tested):** the
-> user's _20 + GreatTree's arena door → their lobby copy + the fix.
-> **Next:** the user's test of r3; then P3.14 continues (the user's pick).
-
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S130** (2026-10-08): P3.15 split; P3.15a built (byte-neutral) — every battle skill family in the simulator via registries (`simulator/skillfx/`, 146 handlers, F1-F10 validated 0 on the user's save), the raising model `simulator/raising.py` (== the game, `census_raising.py`), battles per gate floor (`census_dive.py`, GATE_GENERATION §4.4; `encounters.steps_between` +1 fix), the Balance service `editor2/core/balance.py` + anchor `extracted/balance_vanilla.json` (`build_balance_anchor.py`), `.sav` reader, the Balance tab (PROJECT_COMPILER §2.43, EDITOR_DESIGN §5.9).
 - **S129** (2026-10-07): P3.14b / c / d finished (P3.14 done) — story checks (`custom.checks`: virtual flags `$1800+n`, bank $73 `FlagAddr` → bank $77 entry 11 `StoryCheck`, `wStoryFlag` $D509; item / gold / species / family / monsters / level / seen / chance / arena / bag room / story / all / any), story commands (op `$24 $FF01+`: take items, gold, give × n), refresh = op `$26` (measured), the story spine + says by progress, quests (`custom.quests`, NPC → Quest…), locked exits (`lock_exit`: a shut room state), music by flag (bank $71 `MusicRulePick`), shop item sets (bank $77 `ShopSetPick`); the legacy quest's hide / show fixed; the example's mini medal quest; pin `7d136455…` (patched). PROJECT_COMPILER §2.42. Test ROM `DWM-S129-story-test.gbc` (STORY HALL / VAULT ANNEX) USER-CONFIRMED 2026-10-07; its project: `examples/s129_story_demo/`.
 - **S128** (2026-10-07): P3.14e3 built — your arena (`custom.arena`, `your_arena.py`): copies of the Arena Lobby + the Arena Battle room the engine treats as `$06` / `$5D` (ROM0 `ArenaMapID` / `ArenaAlias` at 9 map-id sites, banks $01/$03/$07/$50/$51 + $71 template), per-class locks (bank $6E `ArenaMarkClasses`, glyph `$9C`) / won flags / words / where a win goes, Starry Night offered by flag (lobby / room / hub / the game's ending); r2: "auto" flags never land on the game's `$0158` (compiler + on open), arena group 9 = **Monster Grandpa's match** (not the King), copies share one layout per vanilla layout (the night arena). User-confirmed.
 - **S127** (2026-10-06): P3.14e2 built — breeding in the project's rooms: Grandpa (BREED / HATCH) and breeders (`custom.scripts[].service` kinds `grandpa` / `breeder`; a fixed enemy row or a mate rolled per appearance from `custom.breeding_pools` — bands on level / arena / seen / story, nearest wins; when-flags, done flag, once); the vanilla `$08` ceremony returns to the room (a return script before the entry script); gate rules `gate: "any"` + `chance_by_level`; bank $77 entries 7-10 + `BreedRoll`, bank $71 `ScaledChance`, bank $60 op `$24 $FFxx`, bank $14 slot rows, bank $73 slot clear, bank $0A close tails; op `$42` = the mate (DOC_AUDIT); Services tab Breeding pools, Service… Grandpa / Breeder, Gates every gate; pin `a7dc3e71…` (patched); test ROM `DWM-S127-breeding-test.gbc` (`04febac5…`, patched; three demo rooms); r2 (user: words too long for the box broke the build; a mate at a chosen level): words wrapped (+ on open), Service… → a species at a level → a project enemy, test ROM `DWM-S127r2-breeding-test.gbc` (`18e82392…`, patched); r3 (user: game text box previews everywhere; NO to a breeder in $6B → the box jumped and split): `$3C` before every breeding text / init_dialog + `BreedClose` → `ShopBoxBottom`, `GameTextField` for every text entry (+ a test), pin `5d350ba9…` (patched), test ROM `DWM-S127r3-breeding-test.gbc` (`584998ce…`, patched), NOT yet user-tested. Verbose block in this file. Owning: PROJECT_COMPILER §2.40, BANK04_SCRIPT_ENGINE "Breeding", DATA_STRUCTURES "Service screens", GATE_GENERATION §7.6, known_RAM_map (`wBreed*`, `$C8F7`, `$D951`), ROOM_DATA_FORMAT (ten sprites per line; breeding menus), CROSSBANK_ROOMS "S127 sites", EDITOR_DESIGN §5.6c (S127), KEY_LESSONS S127, PYBOY_DEBUGGING S127, DOC_AUDIT S127, TOOLS_AND_DATA S127.
@@ -437,6 +470,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Breeding NPCs (Grandpa: BREED / HATCH; breeders offering one fixed monster or a mate rolled per appearance from a breeding pool — bands on level / arena / seen / story, nearest wins; offers by flag, done flag, once only) + gate rooms for every gate with the chance by the party's level | 🟢 built S127 (ROADMAP P3.14e2), PyBoy-walked on the user's save (the game's own shrine not walked — harness), test ROM `DWM-S127-breeding-test.gbc` NOT yet user-tested | PROJECT_COMPILER §2.40; EDITOR_DESIGN §5.6c (S127); help `68_breeding_npcs.md` |
 | Your arena (copies of the Arena Lobby + the Arena Battle room, paintable, any doors; per class: opens when (flags), a won flag, the receptionist's words, where a win sends you; Starry Night offered by flag → lobby / room / hub / the game's ending) | 🟢 built S128 (ROADMAP P3.14e3), test ROM `DWM-S128r2-your-arena-test.gbc` USER-CONFIRMED 2026-10-07 09:51 (PyBoy on the user's save: G / F / E / D, a lock, a loss, Starry Night; the painted lobby + arena floor survive every match). Monster Grandpa's match (group 9) and the King's story stay the game's | PROJECT_COMPILER §2.41; SIDEQUEST_MAP "Your arena (S128)"; CROSSBANK_ROOMS "S128 sites"; help `69_your_arena.md` |
 | Story checks (questions the game answers — an item × n, gold, a species / family, monsters owned, party level, monsters seen, a random %, arena classes, bag room, the story reached, AND / OR — usable wherever a flag is checked), story steps (take items, give / take gold, give items × n, give a monster, refresh the room, says by progress), the story spine, quests, locked exits (a shut room state), music by flag (your rooms, gates), shop item sets by flag | 🟢 built S129 (ROADMAP P3.14b / c / d), PyBoy-walked on the user's save, test ROM `DWM-S129-story-test.gbc` USER-CONFIRMED 2026-10-07 13:59 | `custom.checks` / `story` / `quests` / `shop_sets`, `rooms[].music_rules`, `music.gates.N.rules` → `story.py`; virtual flags `$1800+n` (bank $73 `FlagAddr` → bank $77 entry 11); PROJECT_COMPILER §2.42; EVENT_FLAGS "Story checks"; EDITOR_DESIGN §5.7 "Story (S129)" |
+| Balance tab: how hard every key fight is (gate lists, bosses, arena, Starry Night, Grandpa) as the team level a rolled team of that story point needs to win 90 % / 50 % (casual / strong), the original game read-only vs the project (cached per fight), gate dives at two walk bounds, rolled / picked / .sav teams, boss what-ifs | 🟢 built S130 (ROADMAP P3.15a), NOT yet user-tested; byte-neutral | `editor2/core/balance.py` + `app/balance_tab.py`; `extracted/balance_vanilla.json`; PROJECT_COMPILER §2.43; EDITOR_DESIGN §5.9 "As built S130"; help `72_balance.md` |
 | NPC show/hide by step | ✅ working | step system; counters at $CD80+ (S65; transient); opcode $12 advances (v25) |
 | Flag-driven room states (persistent) | ✅ built S97, USER-CONFIRMED 2026-09-26 | `custom.rooms[].state_rules` → bank $60 entry 8 (+ bank $17 hook); PROJECT_COMPILER §2.13 |
 | NPC behaviours (movement types) | ✅ decoded + authorable S97, USER-CONFIRMED 2026-09-26 | type byte low nibble, bank $06 NPCBehaviourTable; ROOM_DATA_FORMAT "NPC behaviour types" |
@@ -465,7 +499,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Custom monster pools (Encounters #2) | 🟢 **BUILT S114 (P3.13a), test ROM `DWM_S114_encounters_test.gbc` USER-CONFIRMED 2026-10-03 09:52 ("Looks good. Give editor files")** — bank $76 + the same-size bank $01 fork; the Encounters tab. PROJECT_COMPILER §2.30 |
 | Custom music | 🟢 **M1-M3c COMPLETE (S61-S64, all user-confirmed)**: engine map, round-trip codec, general slots (bank $74), room-default assignment for any mapID, `custom.music` schema, 31-song DWM2 catalog, MIDI import. **S116 (P3.13b; test ROM `DWM_S116_music_test.gbc` USER-REPORTED 2026-10-03 18:29 "rom seems to work fine"; the editor's preview player rewritten S116b, NOT yet user-tested): the Music tab — preview on the game's own engine (no emulator), names, automatic MIDI import; a song's own 1-6 channels (InitBGM ext), a second song bank $75, gate songs, battle songs (fight / arena / Starry final / room / gate / boss / normal).** Open boxes: event jingles (victory / level-up) not editable, CI compiler-test |
 | Arena/boss roster AUTHORING (E1→E2 wiring) | RE ✅ DECODED S67; **ARENA half built S109 (P3.10b, test ROM USER-CONFIRMED 2026-10-01 22:57)** — `gamedata.arena` + the enemy rows, Arena tab (the "Arena authoring" primitive row). Gate-boss rosters: their enemy rows are editable on the Monsters tab (S106); a boss editor is not built |
-| Combat simulator (arc S78-S88) | 🟢 **COMPLETE through the pacing layer (S86) + commit-model close-out (S87: party bases from the instance record, obedience EXACT 889/889 on the WLD stat, $7997 + TRUE-loaf closed)**: `simulator/damage.py` 698/698 (S78) + specials (S79); `turn_order.py` 143/143 (S79); AI `ai.py` 26/26 + rule chains `ai_rules.py` 240/240 (S80/S81); `battle.py` loop glue 6614/6614 (S85) + 802/802 on fresh S86 captures; **S86: measured RNG idle model (`measure_idle.py` → `s86_idle_model.json`), full-battle driver `pacing.py` (commit + rounds + TTK), aggregate-validated (`validate_pacing.py`: round-level PIT uniform over 197 rounds; 5 fresh real-save battles inside sim envelopes), `sweep_ttk.py` gate-pool sweeps, `profile_check --ttk` gating**. **S88 (built, NOT yet user-tested): confusion end-to-end + snap-out (2824/0), riders 40/40 ($69 boss veto = application-only), curse MP MaxMP//6, poison cap 15/15, PsycheUp closed empty, $DB06/$DB07 writer map, dodge incapacity exemption; 3 new corpora; the S79 $7AB5 confusion attribution corrected to Transform (DOC_AUDIT S88).** Residuals (§15.9 + ROADMAP S89): the low-stat calcdef edge (2 deterministic SameBoy repros), meta-actions (hero-slot MENU verbs — PARTIAL, named box), and +8/+9 defensive-flag consumers. **S89 (built, NOT yet user-tested): Group-B residuals CLOSED — $DB07 = IRONIZE counter (not stun); interception = Cover/Guardian guard table (`guard_redirect`, 14/14); WLD level-up writer = none; `board_from_event` consumes real ai_bases/WLD; defensive-set sweep folded into status.py. New corpora s89_fresh (426/1 flagged) + s89_guard (14/14). Annotation: $670E re-sectioned, guard/iron handlers commented.** **S90: arc adjudicated DONE FOR PURPOSE (user-conferred); residuals banked as non-blocking boxes ($DB42 setter, +8/+9 consumers, meta-actions menu drive, guard-validator polish).** | BATTLE_SKILL_SYSTEM §15, §15.6, §15.9; TOOLS_AND_DATA §2.10 + S89 rows; ROADMAP S89/S90 |
+| Combat simulator (arc S78-S88) | 🟢 **COMPLETE through the pacing layer (S86) + commit-model close-out (S87: party bases from the instance record, obedience EXACT 889/889 on the WLD stat, $7997 + TRUE-loaf closed)**: `simulator/damage.py` 698/698 (S78) + specials (S79); `turn_order.py` 143/143 (S79); AI `ai.py` 26/26 + rule chains `ai_rules.py` 240/240 (S80/S81); `battle.py` loop glue 6614/6614 (S85) + 802/802 on fresh S86 captures; **S86: measured RNG idle model (`measure_idle.py` → `s86_idle_model.json`), full-battle driver `pacing.py` (commit + rounds + TTK), aggregate-validated (`validate_pacing.py`: round-level PIT uniform over 197 rounds; 5 fresh real-save battles inside sim envelopes), `sweep_ttk.py` gate-pool sweeps, `profile_check --ttk` gating**. **S88 (built, NOT yet user-tested): confusion end-to-end + snap-out (2824/0), riders 40/40 ($69 boss veto = application-only), curse MP MaxMP//6, poison cap 15/15, PsycheUp closed empty, $DB06/$DB07 writer map, dodge incapacity exemption; 3 new corpora; the S79 $7AB5 confusion attribution corrected to Transform (DOC_AUDIT S88).** Residuals (§15.9 + ROADMAP S89): the low-stat calcdef edge (2 deterministic SameBoy repros), meta-actions (hero-slot MENU verbs — PARTIAL, named box), and +8/+9 defensive-flag consumers. **S89 (built, NOT yet user-tested): Group-B residuals CLOSED — $DB07 = IRONIZE counter (not stun); interception = Cover/Guardian guard table (`guard_redirect`, 14/14); WLD level-up writer = none; `board_from_event` consumes real ai_bases/WLD; defensive-set sweep folded into status.py. New corpora s89_fresh (426/1 flagged) + s89_guard (14/14). Annotation: $670E re-sectioned, guard/iron handlers commented.** **S90: arc adjudicated DONE FOR PURPOSE (user-conferred); residuals banked as non-blocking boxes ($DB42 setter, +8/+9 consumers, meta-actions menu drive, guard-validator polish).** **S130 (built, NOT yet user-tested): EVERY battle skill family wired through registries (146 handlers; only items / confusion metas / message ids unregistered), each measured on the user's save and validated 0 mismatches (F1 52,970 · F2/F3 10,049 · F4 100,051 · F5 9,573 · F6 19,542 · F7 7,667 · F8 19,817 · F9 9,139 · F10 1,335 + rules 332; every older validator still 0); per-species crit tables ($53:$4025 / $4102), the $DB42 setter = the bank $58 tension roll (party only), MP now spent, heals / spell ladder / Cover / recoil fixed; the raising model `simulator/raising.py` == the game (`census_raising.py` 0 mismatches).** | BATTLE_SKILL_SYSTEM §15, §15.6, §15.9, §15.11; MONSTER_DATA "Raising a monster (S130)"; TOOLS_AND_DATA §2.10 + S89 + S130 rows; ROADMAP S89/S90, P3.15a |
 | Randomizer (standalone; English + German builds) | ✅ **SHIPPED, USER-TESTED, part 2 S77** — `randomizer/`, data tables only plus ONE code change (`plusgrowth.py`, opt-out). Breeding tree regenerated to a target depth profile (3-6) with deeper = better; bosses/arena/wild stratified against vanilla's measured correlations; skills dealt from vanilla's usage bag and never below vanilla's minimum placement level; growth shuffled within vanilla-ordering bands; paralysis + full heals banned on boss/arena rows; pools de-duplicated. Gate: `randomizer/profile_check.py` (per-entity envelopes) + `randomizer/audit_threat.py` (per-row damage parity). | randomizer/README.md; BATTLE_SKILL_SYSTEM §record power field is BLIND; BREEDING_SYSTEM §Depth is a function of matcher SPECIFICITY; MONSTER_DATA §Growth randomization needs a per-species envelope; PROJECT_COMPILER §Validation the editor must run |
 | Editor app (Phase 3) | 🟢 Skeleton S72 → design v2 S90 → P3.0-P3.2b S91/S92 → **P3.3 canvas v1 + shell S93** → **S94 canvas v2 + real room model + S94b entrance redirects & per-state rooms (built, NOT yet user-tested):** vanilla/custom room columns (every vanilla state browsable), clone-with-confirm carrying ALL vanilla states (paintable at once), New/Copy/Rename/Delete, File→New project (blank template), metatiles (4 subtiles + palette) as the editing unit, Select-first with real selection, Walkability mode (BR-subtile twin swap, tileset copied into the project), 4×4 grid, vanilla-format per-(screen,state) attr+palette tables (engine), records for every room (ROM0 region), **"Route a vanilla door here" = `custom.entrance_redirects` → per-(map,screen) exit overrides (Entry 6 + Entry 9)** — the in-game test route for any custom room; **S95:** picker = the room's whole vocabulary (never shrinks) + borrow tiles from any vanilla room under this room's palettes (import across tilesets, PyBoy-verified) + on-open migration of pre-S94 projects. Acceptance PyBoy-verified incl. walking and the door walk-through. **S96 (USER-CONFIRMED 2026-09-25 ("Everything works")): P3.3c Tileset tab (slot map + release) + P3.3d (change tileset / blank sheets, Import art tab for PNG rips, per-subtile metatile palettes, bank space meters) + Make editable works on all 98 vanilla rooms (opcode arity from the handlers).** **S97 (USER-CONFIRMED 2026-09-26): rooms group B — P3.5a flag state rules (engine entry 8 + bank $17 hook; persistent custom-room versions) + P3.5 NPC inspector (13 measured behaviours, hidden bit, talk text, presence, drag; **r2**: per-box talk editor with ROM-font preview, cream dialog/YES-NO boxes in free-colour rooms, NPC section, sections start folded).** **S98 (doors USER-CONFIRMED 2026-09-26; the rest built, NOT yet user-tested): rooms group C = P3.7 — named door objects linked two-way (+ Door, double-click to connect, arrive ON the door), one-way teleports, examine / step-on spots (the "$8F spawn" misnomer retired), talk scripts with YES/NO + set/clear flags + move, edge-vs-scroll guards, World tab v0; tileset tools (own copies, split move, purge).** **S99 (built; signed off 2026-09-27, r7 not yet re-tested in-game): P3.3e animated tiles — measured census, per-room animation source (engine), canvas outline + ▶ Play preview, inspector choice, clones = source, migration; Make animated tab (r3-r7: paint pads + part tools, still quarters, take-over, split move, count) + stray repair / Make still (r4).** **S100 (built, NOT yet user-tested): P3.7b part 1 — Gates tab v1 (32 gates, rules per gate, floor plan, rule dialog) + Rooms-tab "Inside gates" (arrival, Stairs down, saving, battles, music) → custom rooms served on gate floors.** Later rows: S101-S105 (boss floors, own animated tiles, gamedata, Spirit / Families tab, new species as project data — dashboard rows above). **S106 (USER-CONFIRMED 2026-10-01): P3.10 part 1 — the Monsters tab (species data, enemy rows + where met, new species from sprite sheets).** **S107: P3.10 part 2a — new art for the original monsters (USER-CONFIRMED 2026-10-01); part 2b — walk styles (any of the 155 layouts; USER-CONFIRMED 2026-10-01); part 2c — family icon editor (Families tab; USER-CONFIRMED 2026-10-01).** **S108 (test ROM USER-CONFIRMED 2026-10-01): P3.10 part 3 — renames / default nicknames / descriptions (Monsters tab) + the read-only Dialogue tab.** **S109 (test ROM USER-CONFIRMED 2026-10-01 22:57): P3.10b — the Arena tab (fees, masters, teams of 1-3, the team rows).** **S110 (test ROM USER-CONFIRMED 2026-10-02): P3.11 — the Skills tab (the 222 original skills).** S111-S112: custom skills, animations (rows above). **S113 (test ROM USER-CONFIRMED 2026-10-03 00:19 ("Tested, works")): P3.12 — the Breeding tab.** **S114 (test ROM USER-CONFIRMED 2026-10-03 09:52 ("Looks good. Give editor files")): P3.13a — the Encounters tab.** **S115 (USER-CONFIRMED 2026-10-03 12:39): NG1 new gates.** **S116 (test ROM USER-REPORTED 2026-10-03 18:29 "rom seems to work fine"; editor preview fixed S116b, USER-REPORTED working at the S117 start): P3.13b — the Music tab.** **S117 (built, NOT yet user-tested): NG2 swirls / cleared + the Shops tab (P3.13c).** **S118 (built, NOT yet user-tested): P3.8 part A — the Cutscenes tab (every scene read, shown, played in the game: EDITOR_DESIGN §5.1d).** Earlier note: Next: P3.11c (custom skills as project data) or the user's choice (P3.7b part 2, P3.4 PyBoy preview deferred by the user, P3.6 dialogue, P3.8 storyboard). | EDITOR_DESIGN §5.1 as built S94; ROADMAP P3.3b |
 

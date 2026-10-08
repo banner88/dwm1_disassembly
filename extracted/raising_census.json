@@ -1,0 +1,27 @@
+{
+ "_generator": "tools/census_raising.py <- DWM-original.gbc (vanilla tables)",
+ "counts": {
+  "create": 962,
+  "level": 5073,
+  "breed": 400,
+  "learned": 675,
+  "upgrades": 1655,
+  "subtract": 484,
+  "plus_rolls": 2280,
+  "resist_rolls": 400,
+  "all_prereq": 90,
+  "breed2": 400,
+  "birth": 400,
+  "order_control": 921
+ },
+ "mismatches": {
+  "create": 0,
+  "level": 0,
+  "breed": 0
+ },
+ "examples": {
+  "create": [],
+  "level": [],
+  "breed": []
+ }
+}

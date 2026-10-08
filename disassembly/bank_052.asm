@@ -313,6 +313,10 @@ SkillBolt:
     call $54E7
     ret
 
+; [S130 F1] Beat $12 / Defeat $13 / K.O.Dance $71: no "already" test; HitDeath_5c51
+; (BossProtectionGate per victim, then res type 8 on HitLadderBeat_6749 for
+; ids < $72); hit -> $DD1B:=1, HP:=0 and the KO state wipes $DB02+8t..+9
+; (KOStatusWipe_4c26). Measured S130 (simulator/f1_status_events.json.gz).
 SkillBeat:  ; $41F7
     xor a
     ld [$d9f0], a
@@ -355,6 +359,9 @@ SkillSacrifice:
     ld [$d9ee], a
     ret
 
+; [S130 F1] Sleep $15 / SleepAll $16 / SleepAir $6A: victim +2 & $8C -> msg $BD,
+; no roll; else SetHLBattle_5c8f (res 7; $DB42 bit2 sure hit; only $15 rolls
+; ladder B $6710, $16/$6A roll the status ladder $6749) -> +2 |= $8C.
 SkillSleep:
 
 
@@ -404,6 +411,7 @@ jr_052_4276:
     call BattleFunc_5475
     ret
 
+; [S130 F1] +3 bit0 already -> no roll; SetHLBattle_5cbc (res 10, ladder B).
 SkillStopSpell:
 
 
@@ -435,6 +443,7 @@ jr_052_42a4:
     call ApplySkillDamage
     ret
 
+; [S130 F1] +3 bit1 already -> no roll; SetHLBattle_5cda (res 6, ladder B).
 SkillSurround:
 
 
@@ -466,6 +475,8 @@ jr_052_42d2:
     call ApplySkillDamage
     ret
 
+; [S130 F1] PanicAll $19 / PaniDance $6E / LIFE $DA: +2 bit4 already -> msg $BE;
+; HitConfuse_5d05 (res 11, $DB42 bit2 sure hit, status ladder $6749) -> +2 |= $10.
 SkillPanicAll:
 
 
@@ -498,6 +509,9 @@ jr_052_4302:
     call ApplySkillDamage
     ret
 
+; [S130 F5] RobMagic $1A / RobDance $76: target MP 0 -> msg $BB (no roll);
+; SetHLBattle_5d25 hit roll; BattleCall_5d48 drains min(MP, lvl/4+5) and
+; gives it to the caster capped at MaxMP (validate_f5.py, 30 casts).
 SkillRobMagic:
 
 
@@ -528,6 +542,10 @@ jr_052_432a:
     call ApplySkillDamage
     ret
 
+; [S130 F6] TakeMagic $1B: own +4 bit0 (already -> no-effect anim). Consumer: $53 TakeMagicGain_5cbc
+; [S130 F6] (effect player, landed flags9-bit0 skill) + TakeMagicApply_5ffa (act state 5): the
+; [S130 F6] target gains MP = min(record MP cost, MaxMP-MP). Damage is NOT soaked. Persists (phase 9
+; [S130 F6] keeps +4 bits 6:0). Measured S130 (simulator/validate_f6.py takemagic/tm_occur).
 SkillTakeMagic:
 
 
@@ -547,17 +565,19 @@ jr_052_4346:
     call SetSkillAnimFlag
     ret
 
+; [S130 F7] Sap $1C / Defence $1D: SapHitRoll_5dcc (res 12) then StatDefDown_5dfc;
+; [S130 F7] hit -> target $DB08+8t bit7 (lowered); msg $BB = DEF<=1, $B8 = roll missed.
 SkillSap:
 
 
-    call SetHLBattle_5dcc
+    call SapHitRoll_5dcc
     jr nc, jr_052_4367
 
-    call BattleTarget_5dfc
+    call StatDefDown_5dfc
     jr nc, jr_052_4361
 
     ld a, [wBattleTargetIdx]
-    call SaveBattle_5377
+    call SetStatLoweredMark_5377
     ld hl, $b886
     call LoadBattle_54af
     ret
@@ -574,16 +594,18 @@ jr_052_4367:
     call ApplySkillDamage
     ret
 
+; [S130 F7] Upper $1E / Increase $1F (tm 33/34): StatDefUp_5e3e, NO roll; target
+; [S130 F7] $DB08+8t bit6 (raised); msg $BB = at 999 / at the cap. (No ATK buff exists.)
 SkillUpper:
 
 
-    call BattleTarget_5e3e
+    call StatDefUp_5e3e
     jr nc, jr_052_437f
 
     ld hl, $9292
     call SetSkillAnimB
     ld a, [wBattleTargetIdx]
-    call SaveBattle_536c
+    call SetStatRaisedMark_536c
     ret
 
 
@@ -592,17 +614,18 @@ jr_052_437f:
     call BattleFunc_5475
     ret
 
+; [S130 F7] Slow $20 / SlowAll $21: SlowHitRoll_5e94 (res 13) then StatAglDown_5eb4; bit7.
 SkillSlow:
 
 
-    call SetHLBattle_5e94
+    call SlowHitRoll_5e94
     jr nc, jr_052_43a2
 
-    call BattleTarget_5eb4
+    call StatAglDown_5eb4
     jr nc, jr_052_439c
 
     ld a, [wBattleTargetIdx]
-    call SaveBattle_5377
+    call SetStatLoweredMark_5377
     ld hl, $b895
     call LoadBattle_54af
     ret
@@ -619,16 +642,17 @@ jr_052_43a2:
     call ApplySkillDamage
     ret
 
+; [S130 F7] Speed $22 / SpeedUp $23: StatAglUp_5f08, NO roll; bit6; msg $BB at 511 / cap.
 SkillSpeed:
 
 
-    call BattleTarget_5f08
+    call StatAglUp_5f08
     jr nc, jr_052_43ba
 
     ld hl, $9797
     call SetSkillAnimB
     ld a, [wBattleTargetIdx]
-    call SaveBattle_536c
+    call SetStatRaisedMark_536c
     ret
 
 
@@ -637,6 +661,9 @@ jr_052_43ba:
     call BattleFunc_5475
     ret
 
+; [S130 F6] Barrier $24: the 4 slots of the TARGET side (incl. 3/7): live -> +4 |= 4 (counted when
+; [S130 F6] new), dead -> +4 bit2 cleared; none new -> no-effect anim. Consumer: BarrierHalveBreath_5539
+; [S130 F6] (FireAir/FrigidAir >> 1, F23). Persists. Measured S130 (setter).
 SkillBarrier:
 
 
@@ -685,6 +712,9 @@ jr_052_43f7:
     call SetSkillAnimFlag
     ret
 
+; [S130 F4] TwinHits $25: TARGET +3 bit2 (fail anim when already set); the
+; flags8-bit5 hits of that monster skip the crit roll and do x2 at $53:$5912.
+; Persistent (phase 9 does not clear +3). Measured 14 sets, 58 doublings.
 SkillTwinHits:
 
 
@@ -704,6 +734,8 @@ jr_052_4411:
     call SetSkillAnimFlag
     ret
 
+; [S130 F6] MagicWall $26: the CASTER side live slots +5 |= $40 = the guard row of every resistance
+; [S130 F6] ladder (spell damage and status hit). Persists (+5 bits 7:6 survive phase 9).
 SkillMagicWall:
 
 
@@ -730,6 +762,10 @@ jr_052_442c:
     call SetSkillAnimFlag
     ret
 
+; [S130 F6] MagicBack $27 / Bounce $28: +4 := (+4 & $DD) | $20 / $02 (each replaces the other; fails
+; [S130 F6] msg $BB when its own bit is set). Consumers MagicBackReflect_55ca / MagicBackReflect2_690e:
+; [S130 F6] a flags8-bit0 skill aimed at the holder is re-run by the HOLDER on the caster
+; [S130 F6] (ReflectRecast_5e38 code 4); Bounce persists, MagicBack bit5 is consumed. Measured S130.
 SkillMagicBack:
 
 
@@ -770,11 +806,13 @@ jr_052_4466:
     call BattleFunc_5475
     ret
 
+; [S130 F7] Transform $29: own $DB08+8t |= $C0 (both markers); act state 5
+; [S130 F7] (jr_052_6d20) then runs TransformCopyStats_5f5e + own +3 bit5.
 SkillTransform:
 
 
     ld a, [wBattleAttackerIdx]
-    call SaveBattle_5382
+    call SetStatBothMarks_5382
     ld hl, $a0a0
     call SetSkillAnimA
     ret
@@ -843,6 +881,11 @@ jr_052_44b4:
     ret
 
 
+; [S130 F5] SkillHeal (Heal/HealMore/HealAll/HealUs/HealUsAll/Hustle; $A3
+; via SkillHealUsAll): non-live target or HP == MaxHP -> msg $BB; else
+; LoadBattle_607d heals (record roll, side fields by StoreDamageResult; FULL
+; MaxHP for $2D/$2F/$32/$96). Apply skips the subtract (id < $3A / $94).
+; Measured S130: 475 per-victim outcomes, simulator/validate_f5.py.
 SkillHeal:
     ld a, [wBattleTargetIdx]
     call CheckMonsterSlot
@@ -879,6 +922,11 @@ jr_052_44d2:
     ret
 
 
+; [S130 F5] Vivify $30 / Revive $31 / ALLREVIVE $AD. Target invalid ->
+; no effect; LIVE -> Vivify fails ($BB), Revive/ALLREVIVE re-target to the
+; FIRST dead own slot from the base (queue byte + wBattleTargetIdx — the
+; group loop then continues from it); dead -> Vivify 1 BattleRNG step,
+; RNG1 >= $80 fails (msg $C0). HP := MaxHP (/2 for $30), SaveBattle_51dd.
 SkillVivify:
     ld a, [wBattleTargetIdx]
     call CheckMonsterSlot
@@ -976,6 +1024,9 @@ jr_052_457a:
     call SetSkillAnimFlag
     ret
 
+; [S130 F5] Farewell $32: act state 4 with $DD72 = 0 -> the bank $53
+; entry-14 chain ($53:$6A9B, LifeChain*): revive + full-heal every other own
+; slot, caster pays all HP (RNG1 < $7F) or keeps HP/100, then MP := 0.
 SkillFarewell:
 
 
@@ -988,6 +1039,7 @@ SkillFarewell:
     ld [$d9ef], a
     ret
 
+; [S130 F5] Antidote $33: target +2 & 3 -> cleared (poison + heavy DoT), else $BB.
 SkillAntidote:
 
 
@@ -1008,6 +1060,8 @@ jr_052_45a1:
     call ApplySkillDamage
     ret
 
+; [S130 F5] NumbOff $34 (all allies): +2 & $CC -> +2 &= $33 (paralysis + sleep
+; flag/counter) and $DD13[target] := 3 (the cured slot has used its turn).
 SkillNumbOff:
 
 
@@ -1047,6 +1101,7 @@ jr_052_45d2:
     call ApplySkillDamage
     ret
 
+; [S130 F5] DeChaos $35 (all allies): +2 bit4 -> cleared, $DD13[target] := 3.
 SkillDeChaos:
 
 
@@ -1075,6 +1130,7 @@ jr_052_45f8:
     call ApplySkillDamage
     ret
 
+; [S130 F5] CurseOff $36 (all allies): +2 bit5 -> cleared, else $BB.
 SkillCurseOff:
 
 
@@ -1095,6 +1151,9 @@ jr_052_4610:
     call ApplySkillDamage
     ret
 
+; [S130 F9] Chance $39 (row $63D6 self; the MISS machine ran on its target):
+; ChancePick_4d7e ($53 entry 3) rewrites the queue to $A0+n and restarts the act
+; machine at state 1 with the new id (target fetch, iron gate, MISS, handler).
 SkillChance:
 
 
@@ -1148,6 +1207,10 @@ SkillRamming:
     call SetHLBattle_54e7
     ret
 
+; [S130 F23] Beserker: sets its OWN guard record $DB08+8a bit2, then x2. The
+; mark makes physical hits ON the user x2 for the rest of the round (bank $53
+; BeserkerTakenX2_5a44, not $3C/$3E; cleared in phase 9) and halves its DEF in
+; the AI HP+DEF target score ($58:LoadBtlFX_43aa). Measured S130.
 SkillBeserker:
 
 
@@ -1177,6 +1240,11 @@ SkillKamikaze:
     call SetHLBattle_54e7
     ret
 
+; [S130 F4] Massacre $3F / EvilSlash $40: dead target -> fail; Massacre -> own
+; +4 bit7 = a forced crit built at $53:$5941 from ATK (RNG as found, no step);
+; EvilSlash: incapacitated target (GetMonsterSlotInfo) or RNG1 >= $A0 (the
+; MISS step's state, no step) -> the same crit, else msg $78 and no apply.
+; Measured 90/90 outcomes.
 SkillMassacre:
 
 
@@ -1197,6 +1265,7 @@ SkillMassacre:
     cp b
     jr c, jr_052_46b8
 
+MassacreCritSet_46a2:
 jr_052_46a2:
     ld a, [wBattleAttackerIdx]
     ld hl, $db04
@@ -1212,6 +1281,7 @@ jr_052_46b4:
     ret
 
 
+EvilSlashFail_46b8:
 jr_052_46b8:
     ld a, $78
     call ApplySkillDamage
@@ -1257,6 +1327,10 @@ SkillHighJump:
     ret
 
 
+; [S130 F4] HighJump landing: +6 &= $F3 (after the MISS machine passed),
+; CalcSkillDefense x1.5 (SetupBattle_6979). A missed/dodged landing leaves the
+; bits to the phase-9 rotate ($04 -> 0). Measured 18 landings, 43 take-offs.
+HighJumpLanding_46ee:
 jr_052_46ee:
     ld a, [hl]
     and $f3
@@ -1384,6 +1458,10 @@ SkillMultiCut:
     call CheckSkillResistance
     ret
 
+; [S130 F8] BiAttack $50 / QuadHits $51: ATK temporarily := ATK/2+ATK/4
+; (SaveBattle_69c6) / ATK/2+ATK/8 (QuadHits, target re-read from $DCED) for
+; ONE CalcSkillDefense, then restored. Runs once per pass of the multi-hit
+; loop (continuations $6F83 / $6F71). Measured S130 (validate_f8_multihit).
 SkillBiAttack:
 
 
@@ -1457,11 +1535,20 @@ jr_052_47e2:
     ret
 
 
+; [S130 F8] SkillBiAttack's own dead-target fallback = bank $58 entry 10
+; ($41E9, the plain-attack resolver). Unreachable in practice: act state 9
+; ($53:$56A8) sends a dead target to the continuation before the handler.
 SetHLBattle_4807:
     ld hl, $580a
     rst $10
     ret
 
+; [S130 F8] CallHelp $52 / YellHelp $53. Pass 1 ($DD69==1): one BattleRNG
+; step, RNG1 bit0 clear -> fail ($DD69:=$FF, msg $C2, no apply); set -> msg
+; $A1, own +8 bit0, $DD69:=$0F (+1 non-link enemy caster, +1 more YellHelp),
+; d9ef:=3/d9ee:=0 = straight back to the target fetch (NO continuation, no
+; re-pick: helper 1 hits the queued target). Later passes: target $DCED,
+; damage LoadBattle_63dc. Measured S130 (223 rolls, both sides).
 SkillCallHelp:
 
 
@@ -1533,6 +1620,9 @@ jr_052_486b:
     ret
 
 ; Focus: own $DB06 bit7 set.
+; [S130 F4] Focus $54: the phase-9 rotate turns bit7 into bit6 for the NEXT
+; round, consumed at the end of that round's action by FocusFollowUp_6f5b:
+; a flags9-bit4 skill acts AGAIN (measured 20/20; the old 'writer not found').
 SkillFocus:
 
 
@@ -1563,6 +1653,10 @@ SkillSquallHit:
 ; RainSlash $57 (§15.1): $DD69 = hit counter, 4-HIT CAP MEASURED S79
 ; (handler stops at $DD69==5); per-hit x.8/.6/.4/.4 via the DamageMul
 ; helpers; dead targets skipped by walking $DB89 within the side.
+; [S130 F8] $DD69 counts real target fetches only: the continuation $6FD4
+; walks past dead slots without touching it, so a dead slot does not shift
+; the x.8/.6/.4 ladder (measured); with 3 slots per side the 4th hit needs
+; a live helper slot 3/7.
 SkillRainSlash:
 
 
@@ -1681,6 +1775,8 @@ SkillMegaMagic:
     call SetHLBattle_54e7
     ret
 
+; [S130 F1] PalsyAir $6B: +2 bit6 already -> nothing; HitParalyze_65b5 (boss gate
+; per victim, res 19, $6749; NO sure-hit) -> +2 |= $40; fail msg $C3.
 SkillPalsyAir:
 
 
@@ -1711,6 +1807,8 @@ jr_052_4977:
     call SetSkillAnimFlag
     ret
 
+; [S130 F1] PoisonGas $6C: +2&3 already; PoisonAir $6D: +2 bit1 already. HitPoison_65c9
+; (res 18, $6749) -> $6C sets bit0/clears bit1, $6D sets bit1 (heavy DoT)/clears bit0.
 SkillPoisonGas:
 
 
@@ -1772,6 +1870,7 @@ jr_052_49ce:
     call SetSkillAnimFlag
     ret
 
+; [S130 F1] Curse $6F: +2 bit5 already; HitCurse_65d5 (res 20, $6749) -> +2 |= $20.
 SkillCurse:
 
 
@@ -1803,6 +1902,8 @@ jr_052_49fc:
     call SetSkillAnimFlag
     ret
 
+; [S130 F1] Ahhh $70: the VICTIM's +5 (GetTargetStatus5_5422) bit5 one-shot -> forced
+; $18 at its turn; HitCompel_65e3 (res 21, id < $7C -> ladder B).
 SkillAhhh:
 
 
@@ -1830,6 +1931,10 @@ jr_052_4a1c:
     call BattleFunc_5469
     ret
 
+; [S130 F1] SandStorm $72 / Radiant $73: victim +7&3 already; SetHLBattle_5cda (res 6;
+; $72 -> $6749, $73 -> ladder B) -> +7 |= 3 = the attacker-side 37.5% miss of
+; flags7-bit1 skills ($53:$5785). Never decays (no writer clears +7 bits1:0 but
+; the KO wipe / DeMagic).
 SkillSandStorm:
 
 
@@ -1866,6 +1971,8 @@ jr_052_4a53:
     call SetSkillAnimFlag
     ret
 
+; [S130 F1] EerieLite $74: victim +5 bit7 already -> msg $BB; HitDeath_5c51 ($74 is
+; not boss-listed; id >= $72 -> ladder B, res 8) -> +5 |= $80 = the AMPLIFY row.
 SkillEerieLite:
 
 
@@ -1894,6 +2001,8 @@ jr_052_4a75:
     call BattleFunc_5469
     ret
 
+; [S130 F5] OddDance $75: as RobMagic but BattleTarget_5d7a only — the drained
+; MP is lost (measured: caster MP unchanged).
 SkillOddDance:
 
 
@@ -1927,6 +2036,8 @@ jr_052_4a9d:
 ; SideStep $77 (S88): $DB07 dodge-status WRITER — one BattleRNG, then
 ; own +7 |= (RNG1 & 4) + 4, i.e. bit2 OR bit3 chosen by coin. The MISS
 ; machine treats &$0C as one flag (50% dodge coin, §15.10.9).
+; [S130 F1] measured: one step, then +7 bit2 or bit3; the dodge consumer falls
+; through to the AGL ladder when RNG1 is odd ($53:$57C1). Permanent (no decay).
 SkillSideStep:
 
 
@@ -1951,6 +2062,7 @@ jr_052_4ac1:
     call SetSkillAnimFlag
     ret
 
+; [S130 F1] LureDance $78: victim +5 bit1 one-shot (forced $14); HitCompel_65e3 (ladder B).
 SkillLureDance:
 
 
@@ -1978,6 +2090,11 @@ jr_052_4ae3:
     call SetSkillAnimFlag
     ret
 
+; [S130 F1] LushLicks $79 (HitCompel_65e3, ladder B) / SickLick $7A (HitDefDown_5dcc,
+; res 12, $6749, $DB42 sure hit): victim +5 bit3 one-shot (forced $15); $7A also
+; DEF := 1 and MarkDefLowered_5377 ($DB08+8t bit7).
+; [S130 F7] LushLicks $79 / SickLick $7A: +5 bit3 one-shot; $7A also sets the
+; [S130 F7] target DEF := 1 and $DB08+8t bit7 (measured S130).
 SkillLushLicks:
 
 
@@ -1993,7 +2110,7 @@ SkillLushLicks:
     jr jr_052_4afd
 
 jr_052_4afa:
-    call SetHLBattle_5dcc
+    call SapHitRoll_5dcc
 
 jr_052_4afd:
     jr nc, jr_052_4b2a
@@ -2011,7 +2128,7 @@ jr_052_4afd:
     ld [hl+], a
     ld [hl], $00
     ld a, [wBattleTargetIdx]
-    call SaveBattle_5377
+    call SetStatLoweredMark_5377
 
 jr_052_4b1f:
     ld a, [$db8a]
@@ -2032,6 +2149,9 @@ jr_052_4b30:
     call SetSkillAnimFlag
     ret
 
+; [S130 F1] LegSweep $7B / BigTrip $7C: victim +5 bit2 already; HitTripFlyerGate_65ff:
+; a flyer ($DB8B bit4) fails with msg $C1, no roll; else HitCompel_65e3 ($7B ladder B,
+; $7C $6749) -> +5 |= 4 (forced $16).
 SkillLegSweep:
 
 
@@ -2072,6 +2192,7 @@ jr_052_4b64:
     call ApplySkillDamage
     ret
 
+; [S130 F1] WarCry $7D: dead victim skipped; +5 bit4 already; HitCompel_65e3 ($6749) -> forced $17.
 SkillWarCry:
 
 
@@ -2103,6 +2224,8 @@ jr_052_4b8c:
     call BattleFunc_5469
     ret
 
+; [S130 F6] Imitate $7F: own $DB08+8a bit3 (one round: block a+1 +0 &= $C0 in phase 9). Consumer
+; [S130 F6] ImitateCheck_7dd7 after every victim (also a missed one).
 SkillImitate:
 
 
@@ -2113,6 +2236,9 @@ SkillImitate:
     call SetSkillAnimFlag
     ret
 
+; [S130 F10] DeMagic $80 / ThickFog $83 / FILTHZONE $A5 (after the one-step MISS
+; [S130 F10] machine on the one resolved target): d9ed := 3 -> act state 3 runs the
+; [S130 F10] bank $53 entry-11 DispelMachine_60b3 (BtlActState_6e2b). Measured S130.
 SkillDeMagic_ThickFog:
 
 
@@ -2122,6 +2248,8 @@ SkillDeMagic_ThickFog:
     ld [$d9ee], a
     ret
 
+; [S130 F7] Surge $81 (tm 34, sweep from the queued slot): $53 entry 10
+; [S130 F7] (SurgeCureTarget_601c) per victim: cures + restores lowered DEF/AGL.
 SkillSurge:
 
 
@@ -2131,13 +2259,15 @@ SkillSurge:
     call SetSkillAnimB
     ret
 
+; [S130 F7] UltraDown $82: BattleCall_5c51 roll (res 8, HitLadderKamikaze, NO $DB42
+; [S130 F7] sure-hit) + UltraDownFloorCheck_6612, then d9ed=3 -> $53 UltraDownMachine_65ac.
 SkillUltraDown:
 
 
     call BattleCall_5c51
     jr nc, jr_052_4bca
 
-    call BattleTarget_6612
+    call UltraDownFloorCheck_6612
     jr nc, jr_052_4bca
 
     xor a
@@ -2152,6 +2282,12 @@ jr_052_4bca:
     call ApplySkillDamage
     ret
 
+; [S130 F9] TatsuCall/DiagoCall/SamsiCall/BazooCall $84-$87 (row $58:$63D6 =
+; self): one BattleRNG step FIRST, then the side byte $DB00/$DB01 bit2 set ->
+; msg $BB (once per side; survives phase 9), RNG1 >= $C0 -> msg $CB, else set
+; bit2 and HelperLoad_6648 (bank $51 entry 5-8) fills slot (side|3); $DD1B := 0,
+; $DC3C := id+$54 (216-219). $DD13 stays $FF: the helper acts NEXT round.
+; Measured both sides, every species (simulator/validate_f9.py).
 SkillTatsuCall:
 
 
@@ -2230,6 +2366,9 @@ SkillCover:
     ret
 
 
+; [S130 F6] TailWind $8A: target +4 bit6. StormWind $8B: target..(slot&3 == 2) +4 bit6 (no life check)
+; [S130 F6] + side byte $DB00/01 bit5 (message-only, WindMsgCheck_7d7c). Consumer TailWindReflect_5594:
+; [S130 F6] a flags7-bit4 breath (not $43/$8F) is reflected (code 1) and the bit CONSUMED. Measured S130.
 SkillTailWind:
     ld a, [wBattleTargetIdx]
     ld hl, $db04
@@ -2266,7 +2405,7 @@ jr_052_4c6e:
     ret
 
 ; [S89] Dodge $8C: own defensive flag $DB08+8*self bit5 (one round).
-; Consumer beyond the setter not yet traced (§15.9 residual).
+; [S130 F6] Consumer: $53 DodgeEnter_557a -> DodgeMachine_5091 (physical hits).
 SkillDodge:
 
 
@@ -2309,6 +2448,10 @@ jr_052_4ca1:
     call SetSkillAnimFlag
     ret
 
+; [S130 F6] SuckAll $8F: side byte bit6 (set -> nothing), $DB4A+side |= (slot&3)<<2, own $DB08+8a bit1.
+; [S130 F6] Consumer SuckAllAbsorbCheck_5458: the side's next breath victim becomes the SuckAll user
+; [S130 F6] (it takes the breath), the sweep ends, and SuckAllBreathBack_71f8 breathes it back at the
+; [S130 F6] other side ($DD6C = $40). One round (phase 9: side &= ~$50, $DB4A/4B &= 3). Measured S130.
 SkillSuckAll:
 
 
@@ -2350,6 +2493,7 @@ jr_052_4cd8:
     call SetSkillAnimFlag
     ret
 
+; [S130 F1] DanceShut $91: +3 bit6 already; HitDanceShut_6692 (res 22, ladder B) -> +3 |= $40.
 SkillDanceShut:
 
 
@@ -2381,6 +2525,7 @@ jr_052_4d06:
     call SetSkillAnimFlag
     ret
 
+; [S130 F1] MouthShut $92: +3 bit7 already; HitMouthShut_669e (res 23, ladder B) -> +3 |= $80.
 SkillMouthShut:
 
 
@@ -2412,6 +2557,7 @@ jr_052_4d32:
     call BattleFunc_5469
     ret
 
+; [S130 F5] Meditate $93: own HP == MaxHP -> $BB; else HP := min(HP+500, MaxHP).
 SkillMeditate:
 
 
@@ -2470,6 +2616,12 @@ jr_052_4d8c:
     call ApplySkillDamage
     ret
 
+; [S130 F5] LifeSong $95, two turns: own +7 bit4 clear -> +7 = (+7&$CF)|$20
+; (phase 9 moves it to bit4; the command loop then skips the actor so the
+; queued LifeSong stands, and the 2nd turn pays no MP); bit4 set -> clear
+; bits 5:4, 1 BattleRNG step, RNG1 >= $80 AND a dead own slot -> act state
+; 4 / $DD72 = 4 = the LifeSong tails ($6F42: LifeSongRevive_7a69 ...), else
+; msg $CB.
 SkillLifeSong:
 
 
@@ -2533,6 +2685,8 @@ jr_052_4de3:
     call ApplySkillDamage
     ret
 
+; [S130 F5] LifeDance $96: 1 BattleRNG step; RNG1 < $7F -> the bank $53
+; entry-14 chain (as Farewell), else msg $BB.
 SkillLifeDance:
 
 
@@ -2556,12 +2710,17 @@ jr_052_4df9:
     ld [$d9ef], a
     ret
 
+; [S130 P3.15b] Daze $98 = the disobedient 'loaf' (SetBtlAI_7f5f, all bases <
+; $3F): after the usual MISS step (one RNG step, nothing can block it) only the
+; animation flag + message — the turn is lost (skillfx/cmd_orders.py).
 SkillDaze:
 
 
     call SetSkillAnimFlag
     ret
 
+; [S130 F9] BeDragon $D5 / CHGDRAGON $AA (row $6367 self): message only here;
+; act state 4 (DragonFormState4_6d0a) does the form change and the rewrite.
 SkillBeDragon:
 
 
@@ -2604,6 +2763,9 @@ SkillGigaSlash:
 ; $A1 RUN (S88, measured live): the confused actor FLEES —
 ; $dd1b[self] := $FF (+ enemy record bookkeeping for slots 4-6). The
 ; entry-1 generator re-rolls $A1 away while $DB73 != 0.
+; [S130 F9] As the $DB RUN skill and inside SkillSmashed: a slot >= 4 also runs
+; FleeBookkeeping_7242 -> bank $51 FleeSlot_4be8 (helper: side bit2 cleared;
+; else the slot reload) + KOStatusWipe (HP 0, MP clamp, status). Party: $DD1B only.
 SkillRUN:
     ld a, [wBattleAttackerIdx]
     ld hl, $dd1b
@@ -2742,6 +2904,9 @@ SkillParalyze:
     call LoadBattle_54a1
     ret
 
+; [S130 F9] CALLHOROR $A2 / Smashed $A4 (Chance outcomes; boss-ungated): target
+; HP := 0 + SkillRUN on it; the apply state is skipped and $53 SmashedWalk_6be2
+; re-enters this handler for each next live slot up to 6 (no MISS machine).
 SkillSmashed:
 
 
@@ -2771,6 +2936,7 @@ jr_052_4f28:
     call SetSkillAnimA
     ret
 
+; [S130 F5] HealUsAll $A3 (Chance outcome): $DB8A := $2F, then SkillHeal (full).
 SkillHealUsAll:
 
 
@@ -2779,6 +2945,8 @@ SkillHealUsAll:
     call SkillHeal
     ret
 
+; [S130 F4] ALLCHANGE $A6 (Chance): every live slot of the caster's side +3
+; bit3 = SURE CRIT, no roll, for flags8-bit4 skills ($53:$58A8). Persistent.
 SkillALLCHANGE:
 
 
@@ -2805,6 +2973,11 @@ jr_052_4f4c:
     call SetSkillAnimFlag
     ret
 
+; [S130 F1] BIGSLEEP $A7 (Chance): no roll; per victim of the $714C 8-step walk
+; (both sides, caster included): dead -> nothing, +2 bit7 -> msg $BD, else
+; +2 = (+2 & $73) | $8C.
+; [S130 F8] Chance outcome $A7, one $714C walk pass: a live target not
+; asleep gets +2 := (+2 & $73) | $8C, no roll (caster included; measured).
 SkillBIGSLEEP:
 
 
@@ -2838,6 +3011,9 @@ jr_052_4f7b:
     call SetSkillAnimFlag
     ret
 
+; [S130 F5] MP0 $A8 (Chance): live target with MP != 0 -> MP := 0; the $714C
+; 8-slot walk visits every live combatant, the caster included.
+; [S130 F8] Chance outcome $A8, one $714C walk pass: target MP := 0 (measured).
 SkillMP0:
 
 
@@ -2890,6 +3066,7 @@ jr_052_4fc8:
     call SetSkillAnimFlag
     ret
 
+; [S130 F1] FREEZY $AC (Chance): victim +5 bit0 one-shot (forced $12), no roll.
 SkillFREEZY:
 
 
@@ -2928,6 +3105,8 @@ jr_052_4ff8:
     call SetSkillAnimFlag
     ret
 
+; [S130 F5] RESTOREMP $AE (Chance): `ld a,[hl+] / cp [hl]` compares MP LOW with
+; MP HIGH (bug): equal (MP 0, 257 ...) -> no effect, else MP := MaxMP.
 SkillRESTOREMP:
 
 
@@ -2954,6 +3133,9 @@ jr_052_501b:
     call SetSkillAnimFlag
     ret
 
+; [S130 F8] $AF (Chance outcome), one $714C walk pass ($DD69 1..8): damage
+; = HP-1, or 1 when HP == 1 (lethal); no ladder. Hits both sides incl. the
+; caster (measured).
 SkillMETEOR:
 
 
@@ -3237,6 +3419,10 @@ LoadBattle_519e:
     ret
 
 
+; [S130 F5] Revive a slot: $DD1B[A] := 0 and $DB02+8A..$DB09+8A := 0 (+2..+7
+; and the shifted guard pair), sprite reload. $DD13 is NOT written: the
+; slot stays $FF this round and the next command phase re-arms it (measured).
+ReviveSlot_51dd:
 SaveBattle_51dd:
     push hl
     push bc
@@ -3351,7 +3537,9 @@ LoadBattle_5257:
     ret
 
 
-SaveBattle_5270:
+; [S130 F7] BC = bank $57 entry 4 base MaxHP of slot A, capped 999. Base source:
+; [S130 F7] party/helper/link slot = record (+$52..+$5C), enemy = enemy_stats row.
+GetBaseMaxHP_5270:
     push hl
     ld [$dd72], a
     ld hl, $5704
@@ -3371,7 +3559,8 @@ jr_052_528b:
     ret
 
 
-SaveBattle_528d:
+; [S130 F7] BC = bank $57 entry 5 base MaxMP of slot A (record +$56 / row).
+GetBaseMaxMP_528d:
     push hl
     ld [$dd72], a
     ld hl, $5705
@@ -3384,7 +3573,8 @@ SaveBattle_528d:
     ret
 
 
-SaveBattle_529f:
+; [S130 F7] BC = bank $57 entry 6 base ATK of slot A (record +$58 / row).
+GetBaseATK_529f:
     push hl
     ld [$dd72], a
     ld hl, $5706
@@ -3397,7 +3587,8 @@ SaveBattle_529f:
     ret
 
 
-SaveBattle_52b1:
+; [S130 F7] BC = bank $57 entry 7 base DEF of slot A (record +$5A / row).
+GetBaseDEF_52b1:
     push hl
     ld [$dd72], a
     ld hl, $5707
@@ -3412,7 +3603,8 @@ SaveBattle_52b1:
 
     ld a, [$dd72]
 
-SaveBattle_52c6:
+; [S130 F7] BC = bank $57 entry 8 base AGL of slot A (record +$5C / row).
+GetBaseAGL_52c6:
     push hl
     ld [$dd72], a
     ld hl, $5708
@@ -3529,7 +3721,8 @@ jr_052_536b:
     ret
 
 
-SaveBattle_536c:
+; [S130 F7] $DB08+8*A |= bit6: "stat raised" marker (survives phase 9).
+SetStatRaisedMark_536c:
     push hl
     ld hl, $db08
     call HL_AddA_x8
@@ -3538,7 +3731,11 @@ SaveBattle_536c:
     ret
 
 
+; [S130 F1] $DB08+8*A bit7 = slot A's "DEF lowered" marker (shifted record; survives phase 9).
+MarkDefLowered_5377:
 SaveBattle_5377:
+; [S130 F7] $DB08+8*A |= bit7: "stat lowered" marker (Surge restores on it).
+SetStatLoweredMark_5377:
     push hl
     ld hl, $db08
     call HL_AddA_x8
@@ -3547,7 +3744,8 @@ SaveBattle_5377:
     ret
 
 
-SaveBattle_5382:
+; [S130 F7] $DB08+8*A |= $C0: Transform caster marker.
+SetStatBothMarks_5382:
     push hl
     ld hl, $db08
     call HL_AddA_x8
@@ -3691,6 +3889,10 @@ jr_052_53de:
     ret
 
 
+; [S130 F1] MISNOMER: loads wBattleTargetIdx and returns hl = $DB05 + 8*TARGET —
+; the one-shot appliers (Ahhh/Lure/Licks/trips/WarCry/FREEZY/EerieLite) write the
+; VICTIM's +5 (measured S130).
+GetTargetStatus5_5422:
 GetAttackerBattleSlot:
     ld a, [wBattleTargetIdx]
     ld hl, $db05
@@ -3906,6 +4108,9 @@ jr_052_5535:
     ret
 
 
+; [S130 F23] Barrier consumer (FireAir/FrigidAir groups only): target +4
+; bit2 -> $DB56 >>= 1, after the breath ladder (measured S130).
+BarrierHalveBreath_5539:
 BattleTarget_5539:
     ld a, [wBattleTargetIdx]
     ld hl, $db04
@@ -5114,6 +5319,9 @@ BattleCall_5c43:
     ret
 
 
+; [S130 F1] Death-class hit helper (res type 8, $DD2A bits5:4): BossProtectionGate
+; first (no step on veto), NO Compare_6adc; id < $72 -> $6749, $82 -> $6733, else B.
+HitDeath_5c51:
 BattleCall_5c51:
     call SetHLBattle_6b21
     jp z, Jump_052_6b1e
@@ -5241,6 +5449,8 @@ jr_052_5d01:
     ret
 
 
+; [S130 F1] Confusion hit helper: res 11 ($DD2B bits7:6), Compare_6adc, $6749.
+HitConfuse_5d05:
 SetHLBattle_5d05:
     ld hl, $0000
     ld a, l
@@ -5264,6 +5474,10 @@ jr_052_5d21:
     ret
 
 
+; [S130 F5] MP-drain hit roll: level = res type 9 ($DD2A+7t bits 3:2);
+; Compare_6adc: level 3 -> ladder B "never", $DB42[att] bit2 -> sure hit;
+; else CheckTargetGuardB (ladder B on target +5, 1 BattleRNG step). CF=hit.
+MPDrainHitRoll_5d25:
 SetHLBattle_5d25:
     ld hl, $0000
     ld a, l
@@ -5288,6 +5502,8 @@ jr_052_5d44:
     ret
 
 
+; [S130 F5] RobMagic tail: drain (BattleTarget_5d7a), caster MP += it,
+; capped at MaxMP (SaveBattle_6a01).
 BattleCall_5d48:
     call BattleTarget_5d7a
     ld a, [wBattleAttackerIdx]
@@ -5326,6 +5542,9 @@ jr_052_5d79:
     ret
 
 
+; [S130 F5] Drain: $DB56 := min(target MP, (attacker level >> 2) + 5);
+; target MP -= it (MP 0 -> 0).
+MPDrainAmount_5d7a:
 BattleTarget_5d7a:
     ld a, [wBattleTargetIdx]
     ld hl, wBattleMP
@@ -5385,7 +5604,12 @@ jr_052_5dc4:
     ret
 
 
+; [S130 F1] DEF-down hit helper: res 12 ($DD2B bits5:4), Compare_6adc; $7A -> $6749, else B.
+HitDefDown_5dcc:
 SetHLBattle_5dcc:
+; [S130 F7] carry = DEF-down lands: res 12 ($DD2B bits 5:4) L3 never, $DB42[att]
+; [S130 F7] bit2 sure, else CheckTargetGuardB (SickLick $7A: HitLadderBeat_6749).
+SapHitRoll_5dcc:
     ld hl, $0000
     ld a, l
     ld [$db5a], a
@@ -5419,7 +5643,8 @@ jr_052_5df8:
     ret
 
 
-BattleTarget_5dfc:
+; [S130 F7] DEF > 1 required; DEF -= baseDEF>>1 (floor 0); $DB56 = amount; nc = fail.
+StatDefDown_5dfc:
     ld a, [wBattleTargetIdx]
     call GetCombatantDEF
     ld b, h
@@ -5434,7 +5659,7 @@ BattleTarget_5dfc:
 
 jr_052_5e0e:
     ld a, [wBattleTargetIdx]
-    call SaveBattle_52b1
+    call GetBaseDEF_52b1
     call BCsrl1
     ld a, [wBattleTargetIdx]
     ld hl, wBattleDEF
@@ -5472,7 +5697,9 @@ jr_052_5e3c:
     ret
 
 
-BattleTarget_5e3e:
+; [S130 F7] DEF += baseDEF>>1 when strictly under 999 and the cap; over -> clamp to
+; [S130 F7] the check's BC (999 even above a x2 cap, else the cap); $DB56 = added.
+StatDefUp_5e3e:
     ld a, [wBattleTargetIdx]
     call UpperStatCapCheck_6a13
     jr nc, jr_052_5e92
@@ -5480,7 +5707,7 @@ BattleTarget_5e3e:
     jr z, jr_052_5e92
 
     ld a, [wBattleTargetIdx]
-    call SaveBattle_52b1
+    call GetBaseDEF_52b1
     call BCsrl1
     ld a, c
     ld [$db56], a
@@ -5534,7 +5761,8 @@ jr_052_5e92:
     ret
 
 
-SetHLBattle_5e94:
+; [S130 F7] carry = AGL-down lands: res 13 ($DD2B bits 3:2), same ladder as Sap.
+SlowHitRoll_5e94:
     ld hl, $0000
     ld a, l
     ld [$db5a], a
@@ -5557,9 +5785,10 @@ jr_052_5eb0:
     ret
 
 
-BattleTarget_5eb4:
+; [S130 F7] AGL >= 2 required; AGL -= baseAGL>>1 (minus 1 if AGL == it); borrow -> 1.
+StatAglDown_5eb4:
     ld a, [wBattleTargetIdx]
-    call SaveBattle_52c6
+    call GetBaseAGL_52c6
     call BCsrl1
     ld a, [wBattleTargetIdx]
     ld hl, wBattleAGL
@@ -5621,13 +5850,14 @@ jr_052_5f06:
     ret
 
 
-BattleTarget_5f08:
+; [S130 F7] AGL += baseAGL>>1 when under 511 and the cap; over -> clamp (511 or cap).
+StatAglUp_5f08:
     ld a, [wBattleTargetIdx]
     call AglUpStatCapCheck_6a49
     jr nc, jr_052_5f5c
 
     ld a, [wBattleTargetIdx]
-    call SaveBattle_52c6
+    call GetBaseAGL_52c6
     call BCsrl1
     ld a, c
     ld [$db56], a
@@ -5683,7 +5913,12 @@ jr_052_5f5c:
     ret
 
 
-LoadBattle_5f5e:
+; [S130 F7] caster := TARGET base MaxHP(<=999)/MaxMP (HP/MP clamped), ATK/DEF/AGL
+; [S130 F7] (not INT), then res ($DD28) + skills ($DC64); target==caster reverts.
+; [S130 F9] the res/skill tail: SetupBattle_52d8/_5325 read the target's SOURCE
+; (party record / enemy row / for a helper slot the enemy_stats row $0100|$DC3C
+; = 472-475, NOT its own row); $DB in the skill list ends it ($FF). Measured.
+TransformCopyStats_5f5e:
     ld a, [wBattleAttackerIdx]
     ld hl, $c1cd
     add l
@@ -5695,7 +5930,7 @@ LoadBattle_5f5e:
     and $80
     ld [hl], a
     ld a, [wBattleTargetIdx]
-    call SaveBattle_5270
+    call GetBaseMaxHP_5270
     ld a, [wBattleAttackerIdx]
     ld hl, wBattleHP
     call HL_AddA_x2
@@ -5719,7 +5954,7 @@ jr_052_5f8a:
     ld [hl+], a
     ld [hl], b
     ld a, [wBattleTargetIdx]
-    call SaveBattle_528d
+    call GetBaseMaxMP_528d
     ld a, [wBattleAttackerIdx]
     ld hl, wBattleMP
     call HL_AddA_x2
@@ -5746,7 +5981,7 @@ jr_052_5fb2:
     ld hl, wBattleATK
     call HL_AddA_x2
     ld a, [wBattleTargetIdx]
-    call SaveBattle_529f
+    call GetBaseATK_529f
     ld a, c
     ld [hl+], a
     ld [hl], b
@@ -5754,7 +5989,7 @@ jr_052_5fb2:
     ld hl, wBattleDEF
     call HL_AddA_x2
     ld a, [wBattleTargetIdx]
-    call SaveBattle_52b1
+    call GetBaseDEF_52b1
     ld a, c
     ld [hl+], a
     ld [hl], b
@@ -5762,7 +5997,7 @@ jr_052_5fb2:
     ld hl, wBattleAGL
     call HL_AddA_x2
     ld a, [wBattleTargetIdx]
-    call SaveBattle_52c6
+    call GetBaseAGL_52c6
     ld a, c
     ld [hl+], a
     ld [hl], b
@@ -5860,6 +6095,9 @@ LoadBattle_6077:
     ret
 
 
+; [S130 F5] Heal amount: ids $2D/$2F/$32/$96 -> MaxHP, else the record roll
+; (StoreDamageResult); HP := min(HP + amount, MaxHP); $DB56 = amount.
+HealAmountApply_607d:
 LoadBattle_607d:
     ld a, [$db8a]
     cp $2d
@@ -6172,6 +6410,8 @@ jr_052_6205:
     ret
 
 
+; [S130 F23] Ramming damage: target HP*8/10+1, ladder A res 14.
+RammingDamage_6214:
 BattleTarget_6214:
     ld a, [wBattleTargetIdx]
     call GetCombatantHP
@@ -6194,6 +6434,8 @@ BattleTarget_6214:
 ; arena db73==2) -> (caster HP - 1)/2. Measured: HP200 -> 249 wild,
 ; 99 boss (S78), 99 arena (S79). "Arena" in damage-layer forks means
 ; the LINK flag throughout — same finding in WindBeastDamage_642b.
+; [S130 F23] NOT boss-gated: $3E is listed in BossProtectionGate_51aa ($53)
+; but nothing on this path calls it (measured: db73=1 hits land).
 KamikazeDamage_6232:
     call GetTargetBattleSlot
     call BattleFunc_67ca
@@ -6267,6 +6509,7 @@ jr_052_628b:
     ret
 
 
+FireSlashDamage_6298:            ; [S130 F23] calcdef + slash ladder, res 0
 BattleCall_6298:
     call CalcSkillDefense
     call GetTargetBattleSlot
@@ -6277,6 +6520,7 @@ BattleCall_6298:
     ret
 
 
+BoltSlashDamage_62a9:            ; [S130 F23] calcdef + slash ladder, res 4
 BattleCall_62a9:
     call CalcSkillDefense
     call GetTargetBattleSlot
@@ -6287,6 +6531,7 @@ BattleCall_62a9:
     ret
 
 
+VacuSlashDamage_62ba:            ; [S130 F23] calcdef + slash ladder, res 3
 BattleCall_62ba:
     call CalcSkillDefense
     call GetTargetBattleSlot
@@ -6298,6 +6543,7 @@ BattleCall_62ba:
     ret
 
 
+IceSlashDamage_62cb:             ; [S130 F23] calcdef + slash ladder, res 5
 BattleCall_62cb:
     call CalcSkillDefense
     call GetTargetBattleSlot
@@ -6309,6 +6555,7 @@ BattleCall_62cb:
     ret
 
 
+MetalCutDamage_62dc:             ; [S130 F23] calcdef; $DB8B+t bit0 -> x1.5+1
 BattleCall_62dc:
     call CalcSkillDefense
     ld a, [wBattleTargetIdx]
@@ -6444,6 +6691,9 @@ jr_052_6380:
     ret
 
 
+; [S130 F23] MultiCut: record roll by side, x1.3125 vs family 7 (Zombie),
+; then the BREATH ladder res 3 (measured S130).
+MultiCutDamage_6381:
 LoadBattle_6381:
     ld a, [$db8a]
     ld [$db4c], a
@@ -6497,7 +6747,11 @@ jr_052_63ce:
     ret
 
 
+; [S130 F8] CallHelp/YellHelp helper damage: level*2 (party or link caster)
+; or level + level>>1 (enemy), then CheckTargetGuardA with the rtype-24
+; level ($DD2E+7t bits 5:4). Measured S130: res 0-3, rows 0/$40/$80.
 LoadBattle_63dc:
+CallHelpDamage_63dc:
     ld a, [wBattleAttackerIdx]
     ld hl, $db9b
     add l
@@ -6626,6 +6880,11 @@ jr_052_6482:
     ret
 
 
+; [S130 F23] Vacuum: the side test `ld a,[$c86c] / or a / jr nz / cp $04`
+; compares the LINK byte (0), not the attacker index -> ENEMY casters
+; also take the party formula 2L+30 (measured S130; WindBeast does test
+; the attacker). Then ladder A res 3 (BattleCall_5c2a).
+VacuumDamage_6491:
 LoadBattle_6491:
     ld a, [wBattleAttackerIdx]
     ld hl, $db9b
@@ -6707,6 +6966,7 @@ jr_052_64ff:
     ret
 
 
+RockThrowDamage_6506:            ; [S130 F23] record roll + breath ladder res 24
 BattleCall_6506:
     call StoreDamageResult
     call BattleFunc_67d9
@@ -6716,6 +6976,7 @@ BattleCall_6506:
     ret
 
 
+FireAirDamage_6514:              ; [S130 F23] record roll + breath ladder res 16
 BattleCall_6514:
     call StoreDamageResult
     call BattleFunc_67cf
@@ -6725,6 +6986,7 @@ BattleCall_6514:
     ret
 
 
+FrigidAirDamage_6522:            ; [S130 F23] record roll + breath ladder res 17
 BattleCall_6522:
     call StoreDamageResult
     call BattleFunc_67cf
@@ -6735,6 +6997,7 @@ BattleCall_6522:
     ret
 
 
+BigBangDamage_6530:              ; [S130 F23] record roll + breath ladder res 0
 BattleCall_6530:
     call StoreDamageResult
     call BattleFunc_67bb
@@ -6825,6 +7088,8 @@ jr_052_65a7:
     ret
 
 
+; [S130 F1] Paralysis hit helper: BossProtectionGate, res 19 ($DD2D bits7:6), $6749; no Compare_6adc.
+HitParalyze_65b5:
 BattleCall_65b5:
     call SetHLBattle_6b21
     jp z, Jump_052_6b1e
@@ -6838,6 +7103,8 @@ BattleCall_65b5:
     ret
 
 
+; [S130 F1] Poison hit helper: res 18 ($DD2C bits1:0), $6749; no Compare_6adc.
+HitPoison_65c9:
 BattleCall_65c9:
     call GetTargetBattleSlot
     call BattleFunc_67cf
@@ -6846,6 +7113,8 @@ BattleCall_65c9:
     ret
 
 
+; [S130 F1] Curse hit helper: res 20 ($DD2D bits5:4), $6749; no Compare_6adc.
+HitCurse_65d5:
 BattleCall_65d5:
     call GetTargetBattleSlot
     call BattleFunc_67d4
@@ -6855,6 +7124,8 @@ BattleCall_65d5:
     ret
 
 
+; [S130 F1] One-shot compulsion helper: res 21 ($DD2D bits3:2); id >= $7C -> $6749, else B.
+HitCompel_65e3:
 BattleCall_65e3:
     call GetTargetBattleSlot
     call BattleFunc_67d4
@@ -6877,6 +7148,8 @@ jr_052_65fe:
     ret
 
 
+; [S130 F1] LegSweep/BigTrip gate: flying target ($DB8B bit4) -> fail (nc), else HitCompel_65e3.
+HitTripFlyerGate_65ff:
 BattleTarget_65ff:
     ld a, [wBattleTargetIdx]
     ld hl, $db8b
@@ -6892,7 +7165,8 @@ BattleTarget_65ff:
     ret
 
 
-BattleTarget_6612:
+; [S130 F7] nc (fail) only when target DEF == 1 and AGL == 1 and +3 bit1 (Surround).
+UltraDownFloorCheck_6612:
     ld a, [wBattleTargetIdx]
     ld hl, wBattleDEF
     add a
@@ -6938,6 +7212,9 @@ jr_052_6646:
     ret
 
 
+; [S130 F9] HelperLoad_6648: $84/$85/$86 -> bank $51 entry 5/6/7, else entry 8;
+; then the helper slot's 8 status bytes $DB02+8s.. := 0.
+HelperLoad_6648:
 LoadBattle_6648:
     ld a, [$db8a]
     cp $84
@@ -6985,6 +7262,10 @@ jr_052_666d:
     ret
 
 
+; [S130 F9] DragonFormLoad_6684: bank $51 entry 9 = the FIXED dragon form
+; (level 50, MaxHP 999, MaxMP 300, ATK 300, DEF/AGL/INT 200; HP/MP untouched;
+; res; options {$5E,$62,$80}) + its message ($C9). Measured both sides.
+DragonFormLoad_6684:
 SetHLBattle_6684:
     ld hl, $5109
     rst $10
@@ -6995,6 +7276,8 @@ SetHLBattle_6684:
     ret
 
 
+; [S130 F1] DanceShut hit helper: res 22 ($DD2D bits1:0), ladder B.
+HitDanceShut_6692:
 BattleCall_6692:
     call GetTargetBattleSlot
     call BattleFunc_67d4
@@ -7003,6 +7286,8 @@ BattleCall_6692:
     ret
 
 
+; [S130 F1] MouthShut hit helper: res 23 ($DD2E bits7:6), ladder B.
+HitMouthShut_669e:
 BattleCall_669e:
     call GetTargetBattleSlot
     call BattleFunc_67d9
@@ -7013,6 +7298,7 @@ BattleCall_669e:
     ret
 
 
+GigaSlashDamage_66ac:            ; [S130 F23] record roll + ladder A res 25
 BattleCall_66ac:
     call StoreDamageResult
     call BattleFunc_67d9
@@ -7023,6 +7309,7 @@ BattleCall_66ac:
     ret
 
 
+CallEvilAtk400_66ba:             ; [S130 F23] CALLEVIL: calcdef with caster ATK forced $0190
 LoadBattle_66ba:
     ld a, [wBattleAttackerIdx]
     ld hl, wBattleATK
@@ -7807,6 +8094,8 @@ SaveBattle_6a01:
 ; Upper stat-CAP helper (S79): compares target DEF x2-or-x4 — the cap
 ; check for the Upper class. (The old ROADMAP breadcrumb calling
 ; BattleFunc_6a13/6a49 "likely flee/order checks" was FALSIFIED S79.)
+; [S130 F7] carry = DEF < min-check: DEF >= 999 -> BC=999; else BC = baseDEF x4
+; [S130 F7] (target<4 or link) / x2 (enemy); Z+carry = exactly at it.
 UpperStatCapCheck_6a13:
     ld [$db4c], a
     call GetCombatantDEF
@@ -7816,7 +8105,7 @@ UpperStatCapCheck_6a13:
 
     push hl
     ld a, [$db4c]
-    call SaveBattle_52b1
+    call GetBaseDEF_52b1
     ld a, [$c86c]
     or a
     jr nz, jr_052_6a35
@@ -7850,6 +8139,7 @@ jr_052_6a45:
 
 ; AglUp stat-CAP helper (S79): compares wBattleAGL x4 capped $01FF.
 ; See UpperStatCapCheck_6a13 note (falsified flee/order breadcrumb).
+; [S130 F7] carry = AGL < 511 and < baseAGL x4/x2 (BC = the bound that failed).
 AglUpStatCapCheck_6a49:
     ld [$db4c], a
     ld hl, wBattleAGL
@@ -7862,10 +8152,10 @@ AglUpStatCapCheck_6a49:
 
     push hl
     ld a, [$db4c]
-    call SaveBattle_52c6
+    call GetBaseAGL_52c6
     ld a, [$db4c]
     ld [$dd74], a
-    call LoadBattle_6af5
+    call StatCapMul_6af5
     pop hl
     call CmpHLvsBC
     jr nc, jr_052_6a73
@@ -7942,6 +8232,8 @@ HL_AddA_x2:
     ret
 
 
+; [S130 F23] $DC3C[t] -> bank $03 entry 1 -> $DA33 = family 0 Slime .. 8
+; Material, 9 Boss (= monsters_full family_id; 200/200 measured S130).
 LookupTargetSpecies:
     call BattleTarget_6acf
     ld a, [hl]
@@ -7963,6 +8255,9 @@ BattleTarget_6acf:
     ret
 
 
+; [S130 F1] Z = roll the ladder: level 3 (never) or $DB42[attacker] bit2 clear;
+; NZ = SURE HIT (caller sets carry, no RNG step). Measured S130 (sure battles).
+SureHitCheck_6adc:
 Compare_6adc:
     cp $03
     ret z
@@ -7985,7 +8280,8 @@ Compare_6adc:
     ret
 
 
-LoadBattle_6af5:
+; [S130 F7] BC *= 4 for slot [$DD74] < 4 or a link battle, else *= 2.
+StatCapMul_6af5:
     ld a, [$c86c]
     or a
     jr nz, jr_052_6b02
@@ -8420,6 +8716,10 @@ jr_052_6cf2:
     cp $d5
     jp nz, BtlActState2Apply_6d56
 
+; [S130 F9] DragonFormState4_6d0a ($AA/$D5): form change, own +3 bit4, then the
+; state-4 tail TransformActionRewrite_7ab5 (an extra pass of the whole per-actor
+; pipeline this turn).
+DragonFormState4_6d0a:
 jr_052_6d0a:
     ld a, $04
     ld [$d9ed], a
@@ -8431,10 +8731,11 @@ jr_052_6d0a:
     jp Jump_052_6e74
 
 
+; [S130 F7] Transform act state 5: TransformCopyStats_5f5e, own +3 bit5.
 jr_052_6d20:
     ld a, $05
     ld [$d9ed], a
-    call LoadBattle_5f5e
+    call TransformCopyStats_5f5e
     ld hl, $d9ed
     inc [hl]
     ld a, [wBattleAttackerIdx]
@@ -8701,6 +9002,9 @@ Jump_052_6e74:
     ret
 
 
+; [S130 F23] State-4 tail dispatcher: skill-specific post-apply chains
+; ($32/$96 -> $530E, $3B/$3E/$3C caster tails, $67/$68/$69 status riders,
+; $80 BiAttack, $95 LifeSong, $AA/$D5 transform); others -> next state.
 Jump_052_6e89:
 jr_052_6e89:
     ld a, [$db8a]
@@ -8751,6 +9055,10 @@ jr_052_6e89:
     ret
 
 
+; [S130 F6] BladeD counter gate (act state 4, after an applied hit the target survived): NZ iff
+; [S130 F6] $DD6E == 0 (no Cover/dodge/reflect redirect), $DD6C & 8 == 0, target $DB09+8t bit2 (level 4)
+; [S130 F6] and flags7 bit7 (physical). Measured S130 (counter_gate 1081/1081, dd6e).
+BladeDCounterGate_6ecf:
 LoadBattle_6ecf:
     ld a, [$dd6e]
     or a
@@ -8784,92 +9092,55 @@ jr_052_6ef1:
     ret
 
 
-jr_052_6ef6:
+; [S130 F23] STATE-4 TAIL DISPATCH: Jump_052_6e89 branches on $DB8A; each row is
+; `ld a,[$d9ee] / rst $00` + a dw table of the skill's sub-states (misassembled as
+; code before S130; re-sectioned byte-identically). Sub 0 = caster-alive check +
+; anim, sub 1 = the effect, $7920 = commit the saved $D9EF/$D9F0 + redraw,
+; $797C = next state (or the BladeD counter). Only reached after an APPLIED hit
+; that the target survived (a KO goes to act state $1A) — measured S130.
+jr_052_6ef6:                        ; $3B TwinSlash
     ld a, [$d9ee]
     rst $00
-    ret z
+    dw TwinSlashTail0_77c8, TwinSlashRecoil_77e2, TailCommitState_7920, Jump_052_797c
 
-    ld [hl], a
-    ld [c], a
-    ld [hl], a
-    jr nz, jr_052_6f79
-
-    ld a, h
-    ld a, c
-
-jr_052_6f02:
+jr_052_6f02:                        ; $3E Kamikaze
     ld a, [$d9ee]
     rst $00
-    sub d
-    ld a, b
-    and e
-    ld a, b
-    jr nz, @+$7b
+    dw KamikazeTail0_7892, KamikazeSelfTail_78a3, TailCommitState_7920, Jump_052_797c
 
-    ld a, h
-    ld a, c
-
-jr_052_6f0e:
+jr_052_6f0e:                        ; $3C Ramming
     ld a, [$d9ee]
     rst $00
-    and h
-    ld a, c
-    or l
-    ld a, c
-    jr nz, @+$7b
+    dw RammingTail0_79a4, RammingRecoil_79b5, TailCommitState_7920, Jump_052_797c
 
-    ld a, h
-    ld a, c
-
-jr_052_6f1a:
+jr_052_6f1a:                        ; $67 PoisonHit (rider)
     ld a, [$d9ee]
     rst $00
-    ld sp, $8e7b
-    ld a, c
-    ld a, h
-    ld a, c
+    dw $7b31, $798e, Jump_052_797c
 
-jr_052_6f24:
+jr_052_6f24:                        ; $68 SleepHit (rider)
     ld a, [$d9ee]
     rst $00
-    ld [hl], l
-    ld a, e
-    adc [hl]
-    ld a, c
-    ld a, h
-    ld a, c
+    dw $7b75, $798e, Jump_052_797c
 
-Jump_052_6f2e:
+Jump_052_6f2e:                      ; $69 Paralyze (rider)
     ld a, [$d9ee]
     rst $00
-    or a
-    ld a, e
-    adc [hl]
-    ld a, c
-    ld a, h
-    ld a, c
+    dw $7bb7, $798e, Jump_052_797c
 
-Jump_052_6f38:
+; [S130 F10] state-4 row of $DB8A == $80: never reached by DeMagic (its machine ends
+; [S130 F10] d9ed 3 -> 6; hooked $7A49 in 41 dispel actions: 0 hits). Reachability open.
+Jump_052_6f38:                      ; $80 DeMagic (S130 F9: dragon self-revert tail, unreached; was "BiAttack")
     ld a, [$d9ee]
     rst $00
-    ld c, c
-    ld a, d
-    ld e, a
-    ld a, d
-    ld a, h
-    ld a, c
+    dw $7a49, $7a5f, Jump_052_797c
 
-Jump_052_6f42:
+Jump_052_6f42:                      ; $95 LifeSong
+    ; [S130 F5] LifeSong's act-state-4 tails (dw table after rst $00, was
+    ; misassembled as code; byte-identical)
     ld a, [$d9ee]
     rst $00
-    ld l, c
-    ld a, d
-    add b
-    ld a, d
-    sub l
-    ld a, d
-    ld a, h
-    ld a, c
+    dw LifeSongRevive_7a69, LifeSongMsg_7a80, LifeSongNext_7a95, Jump_052_797c
 
 Jump_052_6f4e:
     call TransformActionRewrite_7ab5
@@ -8887,9 +9158,14 @@ Jump_052_6f56:
     ret
 
 
+; [S130 F4] FOCUS FOLLOW-UP: reached from $70A4 at the end of an action when
+; own +6 bit6 (Focus, rotated) is set: bit6 cleared; flags9-bit4 skill and a
+; live opposing slot (NoLiveOpponent_7fd8) -> d9ed := $12 = the per-actor
+; setup again: the same actor acts its queued action a second time.
+FocusFollowUp_6f5b:
 Jump_052_6f5b:
     res 6, [hl]
-    ; [S110 rec] flags9 bit4: may be a FOLLOW-UP action when the actor's +6 bit6 is set (writer not found; never seen in 11k measured events)
+    ; [S110 rec] flags9 bit4: a FOLLOW-UP action when the actor's +6 bit6 is set ([S130 F4] writer = SkillFocus bit7 + the phase-9 rotate)
     ld a, [$dcff]
     bit 4, a
     jp z, Jump_052_706c
@@ -8902,7 +9178,10 @@ Jump_052_6f5b:
     ret
 
 
+; [S130 F8] multi-hit continuation, QuadHits: $DD69 == 4 -> end, else
+; re-pick ($58 entry 5 = LoadBtlFX_642c, uniform) before EVERY later hit.
 Jump_052_6f71:
+MultiHitContQuadHits_6f71:
     ld a, [$dd69]
     cp $04
     jp z, Jump_052_706c
@@ -8915,7 +9194,10 @@ jr_052_6f79:
     ret
 
 
+; [S130 F8] multi-hit continuation, BiAttack: $DD69 == 2 -> end; a live
+; target is hit again, a dead one re-picked via $58 entry 5 (measured).
 Jump_052_6f83:
+MultiHitContBiAttack_6f83:
     ld a, [$dd69]
     cp $02
     jp z, Jump_052_706c
@@ -8931,7 +9213,10 @@ Jump_052_6f83:
     ret
 
 
+; [S130 F8] multi-hit continuation, CallHelp: end at $DD69 == $13 (party
+; helpers $10-$13, enemy $11-$13), early stop below, else re-pick.
 Jump_052_6f9c:
+MultiHitContCallHelp_6f9c:
     ld a, [$dd69]
     cp $13
     jp z, Jump_052_706c
@@ -8939,14 +9224,20 @@ Jump_052_6f9c:
     ld b, $03
     jr jr_052_6fb2
 
+; [S130 F8] multi-hit continuation, YellHelp: end at $DD69 == $17 (party
+; helpers $10-$17, enemy $12-$17).
 Jump_052_6fa8:
+MultiHitContYellHelp_6fa8:
     ld a, [$dd69]
     cp $17
     jp z, Jump_052_706c
 
     ld b, $07
 
+; [S130 F8] early stop: RNG2 AS FOUND (no step) & 3 (& 7) == $DD69 & 3 (& 7),
+; or own +8 bit0 clear (failed pass 1) -> end; else re-pick + next fetch.
 jr_052_6fb2:
+MultiHitHelpEarlyStop_6fb2:
     and b
     ld c, a
     ld a, [wRNG2]
@@ -8967,7 +9258,11 @@ jr_052_6fb2:
     ret
 
 
+; [S130 F8] multi-hit continuation, RainSlash: $DD69 >= 4 -> end; $DCED += 1
+; until a live slot, a slot with &3 == 3 ends the sweep (forward from the
+; queued target; measured).
 Jump_052_6fd4:
+MultiHitContRainSlash_6fd4:
 jr_052_6fd4:
     ld a, [$dd69]
     cp $04
@@ -8992,7 +9287,11 @@ jr_052_6fd4:
     ret
 
 
+; [S130 F8] driver state 6: counts $DA33 frames down (the RNG idles), then
+; the battle-over check (BattleFunc_7782) and the multi-hit continuation
+; dispatch at MultiHitContDispatch_7041.
 Jump_052_6ffa:
+ActDriverState6_6ffa:
     ld a, [$da33]
     or a
     jr z, jr_052_7005
@@ -9036,6 +9335,9 @@ jr_052_702c:
 
     xor a
     ld [$dd6b], a
+; [S130 F8] $52:$7041 multi-hit continuation dispatch on $DB8A (hook point
+; of simulator/measure_f8_multihit.py 'mh_cont')
+MultiHitContDispatch_7041:
     ld a, [$db8a]
     cp $50
     jp z, Jump_052_6f83
@@ -9214,7 +9516,19 @@ SaveBattle_7139:
     ret
 
 
+; [S130 F1] the 8-step target walk (target_mode 1, BIGSLEEP): $DD69 counts
+; visited+skipped slots; at 4 jump to the other side's base unchecked; else
+; target+1 with CheckMonsterSlot; 8 ends. Measured: queued 4 -> 4,5,6,0,1,2.
+; [S130 F5] The 8-slot walk ($A7/$A8/$AF): $DD69 counts fetches + skipped
+; slots; at 4 the queue byte jumps to the OTHER side base (no life check);
+; else +1, non-live slots only bump $DD69; done at 8. Measured (MP0):
+; victims 4,5,6,0,1,2 for a slot-2 caster.
+Walk8Victims_714c:
+; [S130 F8] 8-slot walk ($A7/$A8/$AF): $DD69 >= 8 -> end; $DD69 == 4 ->
+; $DCED := ($DCED & 4) ^ 4 (no live check: a start > base wraps to the SAME
+; side's base via slot 8); else $DCED += 1, a dead slot costs $DD69 += 1.
 Jump_052_714c:
+MultiHitContWalk8_714c:
 jr_052_714c:
     ld a, [wBattleAttackerIdx]
     ld hl, $dced
@@ -9303,6 +9617,10 @@ GroupVictimLoopA_71b5:
     pop af
     ld [hl], a
     ld [wBattleTargetIdx], a
+    ; [S130 F5] $95/$96/$AD visit the next slot without the life check
+    ; (measured: ALLREVIVE visits slot 3); every other group skill skips
+    ; non-live slots. The loop always continues from wBattleTargetIdx,
+    ; which Revive re-targets to the slot it revived.
     ld a, [$db8a]
     cp $95
     jr z, jr_052_71d7
@@ -9338,6 +9656,10 @@ GroupVictimLoopB_71ed:
     ret
 
 
+; [S130 F6] Group loop with $DD6C == 2 (SuckAll absorbed): the user, if capable, breathes the same
+; [S130 F6] skill back ($53 entry 9, $DB4C = $40): a full sweep of the other side from its first live
+; [S130 F6] slot (bank $58 entry 8). Measured S130 (suckback, absorb_end).
+SuckAllBreathBack_71f8:
 Jump_052_71f8:
     ld a, [wBattleTargetIdx]
     call GetMonsterSlotInfo
@@ -9384,6 +9706,9 @@ BtlActState_7227:
     ret
 
 
+; [S130 F9] FleeBookkeeping_7242: bank $51 entry 3 (FleeSlot_4be8) on the
+; fleeing slot (wBattleTargetIdx).
+FleeBookkeeping_7242:
 BattleTarget_7242:
     ld a, [wBattleTargetIdx]
     ld [$db4c], a
@@ -10364,6 +10689,8 @@ jr_052_77b7:
     ret
 
 
+; [S130 F23] TwinSlash state-4 sub 0: caster alive? (else skip) + anim.
+TwinSlashTail0_77c8:
     call LoadBattle_7997
     ret c
 
@@ -10380,6 +10707,9 @@ jr_052_77b7:
     ret
 
 
+; [S130 F23] TwinSlash RECOIL ($3B only; PsycheUp $56 has no tail): $DB5A =
+; max(dmg>>2, 1); caster HP <= recoil -> HP 0 + KO chain, else HP -= recoil.
+TwinSlashRecoil_77e2:
     ld hl, $d9ee
     inc [hl]
     ld hl, $d9ee
@@ -10501,6 +10831,8 @@ jr_052_788e:
     ret
 
 
+; [S130 F23] Kamikaze state-4 sub 0: caster alive? (else skip) + anim.
+KamikazeTail0_7892:
     call LoadBattle_7997
     ret c
 
@@ -10513,6 +10845,9 @@ jr_052_788e:
     ret
 
 
+; [S130 F23] Kamikaze caster tail: HP-1 != 0 -> caster HP := 1 (msg $85);
+; HP was 1 -> HP := 0 and the KO chain (msg $E7/$EA). Measured S130.
+KamikazeSelfTail_78a3:
     ld a, [wBattleAttackerIdx]
     ld hl, wBattleHP
     call HL_AddA_x2
@@ -10584,6 +10919,9 @@ SetHLBattle_78f4:
     ret
 
 
+; [S130 F23] Tail sub 2: commit the saved next state ($D9EF/$D9F0 unless $FF),
+; redraw the caster, pick the KO/normal message pair.
+TailCommitState_7920:
     ld hl, $d9ee
     inc [hl]
     ld a, [$d9ef]
@@ -10665,6 +11003,8 @@ LoadBattle_7997:
     ret
 
 
+; [S130 F23] Ramming state-4 sub 0: caster alive? (else skip) + anim.
+RammingTail0_79a4:
     call LoadBattle_7997
     ret c
 
@@ -10677,6 +11017,9 @@ LoadBattle_7997:
     ret
 
 
+; [S130 F23] Ramming RECOIL: x = caster HP*8/10 + 1 ($DB5A); HP - x, a borrow
+; or zero -> HP 0 + KO chain (d9ef=4). Measured S130 (incl. HP<=5 -> KO).
+RammingRecoil_79b5:
     ld hl, $d9ee
     inc [hl]
     ld hl, $d9ee
@@ -10779,6 +11122,10 @@ jr_052_7a48:
     ret
 
 
+; [S130 F9] DeMagicTailDragon_7a49: DeMagic $80's state-4 tail (+3 bit4 caster ->
+; DeMagicTailSelfRevert_7a5f). Never reached in measurement: DeMagic ends inside
+; its own bank $53 entry-11 machine (3 dragon casts, 0 hits).
+DeMagicTailDragon_7a49:
     ld a, [wBattleAttackerIdx]
     ld hl, $db03
     call HL_AddA_x8
@@ -10794,12 +11141,17 @@ jr_052_7a5a:
     ret
 
 
+DeMagicTailSelfRevert_7a5f:
     ld a, [wBattleAttackerIdx]
     ld [wBattleTargetIdx], a
-    call LoadBattle_5f5e
+    call TransformCopyStats_5f5e
     ret
 
 
+; [S130 F5] LifeSong 2nd turn, per own slot from the base: a DEAD slot ->
+; SkillVivify with $DB8A = $95 (Revive path: full MaxHP + SaveBattle_51dd);
+; live / invalid -> nothing. No caster cost. Measured 45 casts.
+LifeSongRevive_7a69:
     ld hl, $d9ee
     inc [hl]
     ld a, [wBattleTargetIdx]
@@ -10818,6 +11170,8 @@ jr_052_7a7b:
     ret
 
 
+; [S130 F5] LifeSong: the revive message ($9E).
+LifeSongMsg_7a80:
     ld hl, $d9ee
     inc [hl]
     call SetHLBattle_6c23
@@ -10830,6 +11184,8 @@ jr_052_7a7b:
     ret
 
 
+; [S130 F5] LifeSong: next own slot (skip $DD1B==$FF), stop at side slot 3.
+LifeSongNext_7a95:
 jr_052_7a95:
     ld hl, $5004
     rst $10
@@ -10858,7 +11214,7 @@ jr_052_7ab0:
 
 ; TRANSFORM action rewrite (S88 CORRECTION — the S79 confusion attribution
 ; was WRONG; see DOC_AUDIT). Reached ONLY from the act-time id switch at
-; $6E89 for skills $AA Transform / $D5 BeDragon (Jump_052_6f4e): a
+; $6E89 for skills $AA CHGDRAGON / $D5 BeDragon (Jump_052_6f4e): a
 ; transformed monster's queued action is overwritten from
 ; TransformActionTable_7aff {$3A Attack, $5E Scorching, $62 IceStorm,
 ; $80 DeMagic}, index RNG1&3 with NO RNG step (reads the current value).
@@ -10922,7 +11278,7 @@ jr_052_7af6:
     ret
 
 
-; Confusion action table (§15.7): RNG1&3 -> {Attack $3A, $5E, $62, $80}.
+; [S130 F9] the DRAGON rewrite table (not confusion): RNG1&3 -> {Attack $3A, $5E, $62, $80}.
 TransformActionTable_7aff:
     db $3a, $5e, $62, $80
     rst $38
@@ -11075,6 +11431,11 @@ jr_052_7be7:
     ret
 
 
+; [S130 F6] BladeD counter: target incapacitated (GetMonsterSlotInfo) -> none, no RNG. Else ONE
+; [S130 F6] BattleRNG step; $DB42[t] bit3 -> RNG1 &= $FE; (dmg>>1) == 0 -> RNG1 := 1 (both write the
+; [S130 F6] RNG state); RNG1 even -> act state $13: the attacker loses dmg>>1 HP (0 -> KO).
+; [S130 F6] Measured S130 (counter, counter_rng, counter_hp; KO 2).
+BladeDCounter_7bec:
 LoadBattle_7bec:
 Jump_052_7bec:
     ld a, [$dd6e]
@@ -11172,6 +11533,8 @@ LoadBattle_7c92:
     ret
 
 
+; [S130 F6] wBattleAttackerIdx <-> wBattleTargetIdx (the counter hits the attacker).
+SwapAttackerTarget_7c98:
 LoadBattle_7c98:
 jr_052_7c98:
     ld a, [wBattleAttackerIdx]
@@ -11315,6 +11678,9 @@ SetHLBattle_7d77:
     ret
 
 
+; [S130 F6] After a TailWind reflection ($DD6D == 2) with the side byte bit5 (StormWind) set: a
+; [S130 F6] message choice only (no state change modelled).
+WindMsgCheck_7d7c:
 LoadBattle_7d7c:
     ld a, [$dd6d]
     cp $02
@@ -11393,6 +11759,11 @@ LoadBattle_7dcd:
     ret
 
 
+; [S130 F6] Imitate check after every victim (hit or fail route): not $7F, $DD6E == 0, $DD6C == 0
+; [S130 F6] ($20 -> restore), attacker not airborne, target-mode bit4, victim $DB08+8t bit3 and capable
+; [S130 F6] -> flags9 bit2 ? msg $D3 + re-cast by the victim ($DD6C = 8, setup sub-state 2: the
+; [S130 F6] imitator PAYS the MP / can be vetoed) : msg $D4. Measured S130 (imitate*, imitate_veto).
+ImitateCheck_7dd7:
 LoadBattle_7dd7:
     ld a, [$db8a]
     cp $7f
@@ -11602,6 +11973,9 @@ BtlActState_7ee8:
     ret
 
 
+; [S130 F6] Restore after a reflect / re-cast ($DD6C != 0): attacker, target, $DD69, both queue pairs
+; [S130 F6] and $DD13 from $C1C0; the original sweep then continues with its next victim.
+ReflectRestore_7ef1:
 LoadBattle_7ef1:
     ld a, [$dd6c]
     or a
@@ -11755,6 +12129,8 @@ LoadBattle_7fcb:
     ret
 
 
+; [S130 F4] CF set = no live slot on the attacker's opposing side.
+NoLiveOpponent_7fd8:
 LoadBattle_7fd8:
     ld a, [wBattleAttackerIdx]
     and $04

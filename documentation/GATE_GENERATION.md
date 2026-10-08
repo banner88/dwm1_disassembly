@@ -262,6 +262,50 @@ NPC list `GatePtrTable_42c8` is indexed by `$C92B`.) Then `$C92D` := 0.
 
 The item pass follows (§5).
 
+### 4.4 Walking a floor — battles per floor ✅ (S130, PyBoy-measured)
+
+A maze floor is one 40×32 grid of 16-px cells; a cell is walkable when its
+bottom-right tile is ≥ `$30`. `EncounterStep` (`$16:$6F05`) runs once per step
+and drains `EncounterRateData[wMapID][class−$0C] × EncounterRateModifierTable[rate code] // 64`,
+where class = tile id of the ENTERED cell >> 2 (`$0C`/`$0D`/`$0E`; the stairs
+`$0F` are not checked). A step that crosses a screen edge never drains (the
+scroll sets wGameState bit 2), and a step onto a floor item that is picked up
+runs no check. A battle fires on the step whose drain borrows — so from a
+counter c it takes c // drain + 1 steps (S130: `editor2/core/encounters.py`
+`steps_between` used c / drain, one step short; corrected).
+`SetRandomEncounterCounter` re-seeds at every room load (floor entry and after
+each battle). Measured with `tools/census_dive.py`: 12 floors (11 types, codes
+2/3/4) walked with the joypad on the original ROM, every drain equal to the
+model.
+
+On 1,000 generated floors per maze size, the shortest walk from arrival to
+stairs averages 14.7 steps (size 3), 23.9 (size 8) and 29.3 (size 15); about
+86 % of those steps drain (the rest: screen edges 1.4–2.9, item pickups ~0.2,
+the stairs step). Steps between battles on gate floors (exact mean of
+floor(seed / drain) + 1):
+
+| Floor types | code 2 | code 3 | code 4 |
+|---|---|---|---|
+| base 138: types 0–8, 10 | 51.6 | 26.0 | 21.0 |
+| base 150: types 9, 15 | 47.7 | 24.2 | 19.4 |
+| types 11–14 (floor cells 100; other cells 180 / 250) | 71.5 | 36.3 | 28.8 |
+
+With seeds of 1,100–6,000 (mean 3,547) that is 0.2–0.7 battles per floor on
+the shortest walk (Gate of Beginning 0.43 per floor; whole non-boss dives:
+Beginning 1.72, Villager 1.50, Talisman 1.93, Peace 3.57, Strength 5.31,
+Wisdom 7.41, Ambition 13.9). This is a LOWER bound: a player who explores
+walks more — `floor_steps(...)['reachable']` (278–454 reachable cells) is the
+whole-floor UPPER bound the Balance service's "sweep" dive uses (PROJECT_COMPILER
+§2.43). Special maze rooms (forest / maze / conveyor) count as a normal maze
+floor (their own walks are not modelled; `special_walk_approx` in detail mode);
+treasure, priest, shop and coliseum rooms count 0 random battles; specials sit on
+floors 3/6/9 with 50 % chance. Read from code, not measured: the battle-fires
+test (counter < drain), the post-battle re-seed (S114), opened chests skipped by
+the collision test (bank `$01`).
+`editor2/core/dive.py` reads the result from `extracted/dive_census.json`
+(`battles_per_floor(repo, gate, floor, list_bytes, maze_row=, special_row=,
+floors=)`); `--selftest` re-derives a sample (verifier check 5).
+
 ## 5. Contents: items, gold, masters ✅ (placement traced + modelled S122)
 
 **How many** (end of `MazePlacements`): count = row[9] + (wRNG1 mod (row[10] +

@@ -1008,6 +1008,8 @@ jr_050_453c:
     ret
 
 
+; [S130 P3.15b] arena (db73 == 2, non-link): overwrite the 4th tactic text
+; (COMMAND) with the 8 tiles at $4567 = 'NO SP SK' (screen-verified).
 LoadBtl_4550:
     ld a, [$c86c]
     or a
@@ -1255,6 +1257,10 @@ jr_050_46c2:
     dec b
     jr nz, jr_050_467c
 
+; [S130 P3.15b] end of the PLAN menu: party slots the menu skipped but that are
+; confused / one-shot / airborne / stunned / LifeSong get $DD13 := 1; LoadBtl_4764
+; (next state) marks every other live one (asleep, paralysed) too. A skipped
+; monster commits from its STALE $DD03 (validate_command.py 'incap').
 SetBtl_46c6:
 jr_050_46c6:
     ld hl, $d9f5
@@ -1328,6 +1334,12 @@ jr_050_4714:
     rst $38
     rst $38
 
+; [S130 P3.15b] PLAN tactic list -> entry 3 chosen. LoadBtl_5c2f: in the ARENA
+; (db73 == 2, not link) the entry reads 'NO SP SK' (LoadBtl_4550) and is just
+; tactic 3 with NO order (-> Jump_050_4620: $DD03 := 3, queue stays $FFFF -> the
+; commit turns it into plain Attack). Elsewhere it is COMMAND: wMenu_selection
+; := 4 (the order sub-machine is up), $D9F7 := 0, LoadBtl_47be. Measured:
+; simulator/measure_command.py, BATTLE_SKILL_SYSTEM §15.10.7b.
 Jump_050_471f:
     call LoadBtl_5c2f
     jp z, Jump_050_4620
@@ -1346,6 +1358,9 @@ Jump_050_471f:
     ret
 
 
+; [S130 P3.15b] remembers a tactic 0-2 in $C876[slot] (Command 3 is not kept
+; here); bank $51 LoadBtlS_4ac0 writes $DD03&3 | ($C876&3)<<2 back to the
+; record's +$0B high nibble after the battle.
 CmpBtl_473d:
     cp $03
     jr z, jr_050_4750
@@ -1419,6 +1434,12 @@ jr_050_478f:
     ret
 
 
+; [S130 P3.15b] ORDER SUB-MACHINE ($D9F7, rst $00 table desynced below; byte-
+; read): 0 $47BE next orderable monster / 1 $4816 draw ATK-SKIL-DEF / 2 $485E
+; its input / 3 $49AC draw the skill list (4 rows a page) / 4 $4A2C its input /
+; 5 $4CD6 + 6 $4D23 ally cursor / 7 $4DCD + 8 $4E18 enemy cursor / 9 $4E8A +
+; 10 $4E98 message waits / 11 $4EAB order done -> next monster (wOPTN != $80:
+; back to the next tactic list via LoadBtl_4620).
     ld a, [$d9f7]
     rst $00
     cp [hl]
@@ -1450,6 +1471,11 @@ jr_050_47b0:
     cp $03
     jp z, Jump_050_4f36
 
+; [S130 P3.15b] order state 0: skip a monster that GetMonsterSlotInfo refuses
+; (dead, +2&$D0 asleep/paralysed/confused, +5&$3F, +7&$C0) or that is mid
+; two-turn skill (+6 bit2, +7 bit4); $C8DE/$C8DF/$C8E0 = the cursors
+; remembered in $C1CD[slot]. $DD72 is the TARGET CURSOR here (the round's
+; commit later reuses $DD72 for the plan byte).
 LoadBtl_47be:
     ld a, [$c8dd]
     call GetMonsterSlotInfo
@@ -1605,6 +1631,10 @@ jr_050_48b7:
     ret
 
 
+; [S130 P3.15b] ATK/SKIL/DEF chosen ($C8DE $80/$81/$82). DEF: queue ($8D, own
+; slot). ATK: $3A + the enemy cursor, or the only live enemy directly
+; (SaveBtl_4fa4 count == 1). SKIL: LoadBtl_4975 counts the castable entries;
+; none -> message $0202.
 jr_050_48d5:
     ld a, [wJoypad_current_frame]
     bit 0, a
@@ -1861,6 +1891,11 @@ jr_050_4a5e:
     ret
 
 
+; [S130 P3.15b] skill chosen: LoadBtl_4b98 field-only -> msg $0302; SaveBtl_4ba4
+; MP (current < record +4) -> msg $0402 — the order is REFUSED in the menu
+; (no turn spent, the player picks again). Else LoadBtl_4f86 queues the skill
+; and the record target mode decides the target (LoadBtl_4bd1 specials, then
+; bit0 0 = group -> side base, bit4 enemy cursor, bit6 self, else ally cursor).
 jr_050_4a65:
     ld a, [wJoypad_current_frame]
     bit 0, a
@@ -2041,6 +2076,8 @@ jr_050_4b54:
     ret
 
 
+; [S130 P3.15b] group skill (target mode bit0 clear): the target byte is the
+; side BASE (own, or opposing when bit4) — the player is not asked.
 Jump_050_4b6b:
     call GetBattleModeData
     ld a, $0b
@@ -2072,6 +2109,8 @@ Jump_050_4b97:
     ret
 
 
+; [S130 P3.15b] Z = field-only skill (StepGuard/MapMagic/$7E; patched build
+; +$E4 via FieldOnlySkillA): the menu refuses the order.
 LoadBtl_4b98:
     ld a, b
     cp $37
@@ -2086,6 +2125,8 @@ jr_050_4ba3:
     ret
 
 
+; [S130 P3.15b] the order's MP check: carry iff current MP < record +4 cost ->
+; msg $0402 'not enough MP', order refused (measured 8 refusals).
 SaveBtl_4ba4:
     push bc
     ld a, b
@@ -2116,6 +2157,11 @@ SaveBtl_4ba4:
     ret
 
 
+; [S130 P3.15b] per-skill menu targets (carry = handled): $14/$80/$83 opposing
+; base; $24/$26/$2A/$8B/$8F own base; $32/$89/$95/$96 own base, refused $FB00
+; when the caster is alone; $39/$84-$87 own slot; $3F Massacre -> bank $58
+; entry 4 TargetSlotResolver_6379 and $51-$53 -> entry 5: an RNG pick DURING
+; THE MENU ($6379 is side-blind: measured picking an ally).
 LoadBtl_4bd1:
     ld a, [$db4f]
     cp $14
@@ -2408,6 +2454,8 @@ jr_050_4d9b:
     ret
 
 
+; [S130 P3.15b] target refused: message $FA00 (a dead ally for a non-revive
+; skill), back to the order menu.
 Jump_050_4d9c:
 jr_050_4d9c:
     ld a, c
@@ -2663,6 +2711,10 @@ jr_050_4f36:
     call SetBtl_46c6
     jr jr_050_4f61
 
+; [S130 P3.15b] the ORDER mark: $DD13[slot] := 1 (commit me) and $DD03[slot] :=
+; 3 (tactic Command, bit6 clear). The round's commit (bank $57 state 0) sees
+; tactic 3 + plan $81: the obedience gate with $db4c = 0, then the $714E divert
+; keeps this queue untouched (no target service, no RNG).
 GetBattleModeData:
     ld a, [$c8dd]
     ld hl, $dd13
@@ -2723,6 +2775,7 @@ CallBtl_4f80:
 ; [S45] Action-queue WRITER: stores b -> $dcec[$c8dd*2]. The S2 skill-alias
 ; framework hooks the player-commit caller (line ~1864) with AliasCommit to
 ; templatize a custom id ($DE/$DF) to Blaze here. See BATTLE_SKILL_SYSTEM.md.
+; [S130 P3.15b] also the ORDER's skill writer ($C8DD = the monster being ordered).
 LoadBtl_4f86:
     ld a, [$c8dd]
     ld hl, $dcec
@@ -4661,6 +4714,9 @@ SaveBtl_5ae5:
     ret
 
 
+; [S130 P3.15b] 'can this monster be planned': carry for dead/incapacitated
+; (GetMonsterSlotInfo) and for a two-turn skill in progress (+6&$0C, +7&$F0:
+; those also get $DD03 |= $E0, $DD13 := 1 — the AI re-forces the 2nd turn).
 SaveBtl_5b07:
     push bc
     ld [$dd72], a
@@ -4743,6 +4799,9 @@ jr_050_5b56:
     ret
 
 
+; [S130 P3.15b] target cursor up/down: skips slots CheckMonsterSlot refuses
+; (dead) unless the queued skill is $30/$31/$BB — a dead enemy can never be
+; ordered as a target.
 BtlFunc_5b7a:
     res 7, [hl]
     ld a, [wJoypad_Current]
@@ -4903,6 +4962,8 @@ jr_050_5c2d:
     ret
 
 
+; [S130 P3.15b] Z = the 4th tactic is NOT an order: PLAN sel $83 in the arena
+; (db73 == 2) of a non-link battle. NZ (everywhere else, link included) = COMMAND.
 LoadBtl_5c2f:
     ld a, [wPLAN_selection]
     cp $83

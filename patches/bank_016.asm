@@ -5,8 +5,10 @@
 ;   - Breeding initialization (entry 0 → BreedingInit at $4015)
 ;   - Offspring determination (entry 2 → BreedingResolve at $456E)
 ;   - Offspring determination alt (entry 3 → $45A3, same logic minus $44D0 call)
-;   - Offspring skill inheritance (entry 4 → $474A)
-;   - Resistance inheritance (Call_016_4360/$4373)
+;   - BIRTH finalizer (entry 4 → BreedBirthFinalize $474A; S130 — not
+;     "skill/stat inheritance": it runs at the birth, egg flag +$63 -> 0)
+;   - Offspring stats / AI / resistances / learn queue (S130 names):
+;     BreedStatInherit, BreedAIAverage, BreedResistInherit/BreedResistOne
 ;
 ; BREEDING ALGORITHM (Call_016_456e):
 ;   1. BreedPlusAndSpecial — Compute offspring "plus" value from parents
@@ -63,7 +65,7 @@ SECTION "ROM Bank $016", ROMX[$4000], BANK[$16]
     dw label16_485c          ; Entry 1: Unknown
     dw BreedResolveOffspring  ; Entry 2: offspring species + plus (no far caller: BreedCreateOffspring calls it)
     dw BreedResolvePreview    ; Entry 3: same result, no $44D0 call — the shrine's pair evaluator (bank $0A $5470)
-    dw label16_474a          ; Entry 4: Skill/stat inheritance
+    dw BreedBirthFinalize          ; Entry 4: BIRTH finalizer (S130; callers $04 ScriptCmd3A_ToBreedingScene, $0A label5c5b)
     dw label16_5b4e          ; Entry 5
     dw EncounterSeedOnRoomLoad ; Entry 6 (was label16_5fe4; S114 name)
     dw SetBrd_6db0          ; Entry 7
@@ -80,6 +82,14 @@ SECTION "ROM Bank $016", ROMX[$4000], BANK[$16]
 ;   level +$4B = 1; max level +$4C ($CB0D) = clamp(info level cap +
 ;   2*plus, 2..99); female +$0B ($CACC) = 1 when wRNG1 <
 ;   BreedGenderThreshold[ratio] (the info row's female ratio, $DA36).
+; [S130] offspring fields (simulator/raising.py breed; census 400 + 400
+; second-generation + 400 births, 0 mismatches): stats BreedStatInherit
+; (MaxHP/HP, MaxMP/MP, ATK, DEF, AGL, INT); AI +$64..+$67 BreedAIAverage
+; (carry-drop bug); resistances +$68 = the species' then BreedResistInherit;
+; gender; egg flag +$63 := 1; BreedPedigreeNames (+$15/+$16, names, plus);
+; learn queue +$31 = own natural 3, pedigree species' 3, mate species' 3,
+; pedigree's 8 known, mate's 8 known, each through UnevolvedSkillMap ($FF =
+; never), first 25 distinct (InheritSkillList); known skills +$29 stay $FF.
 BreedCreateOffspring:
     ld de, $cac1
     ld b, $28  ; FX1: 40 slots
@@ -199,7 +209,7 @@ jr_016_40d9:
     call LoadBrd_41b1
     ld [hl], $01
     ld hl, $cb13
-    call SaveBrd_41b8
+    call BreedStatInherit
     push bc
     ld hl, $cb11
     call LoadBrd_41b1
@@ -208,7 +218,7 @@ jr_016_40d9:
     ld [hl+], a
     ld [hl], b
     ld hl, $cb17
-    call SaveBrd_41b8
+    call BreedStatInherit
     push bc
     ld hl, $cb15
     call LoadBrd_41b1
@@ -217,26 +227,26 @@ jr_016_40d9:
     ld [hl+], a
     ld [hl], b
     ld hl, $cb19
-    call SaveBrd_41b8
+    call BreedStatInherit
     ld hl, $cb1b
-    call SaveBrd_41b8
+    call BreedStatInherit
     ld hl, $cb1d
-    call SaveBrd_41b8
+    call BreedStatInherit
     ld hl, $cb1f
-    call SaveBrd_41b8
+    call BreedStatInherit
     ld hl, $cb25
-    call SaveBrd_41ff
+    call BreedAIAverage
     ld hl, $cb26
-    call SaveBrd_41ff
+    call BreedAIAverage
     ld hl, $cb28
-    call SaveBrd_41ff
+    call BreedAIAverage
     ld hl, $cb27
-    call SaveBrd_41ff
+    call BreedAIAverage
     ld hl, $cb29
     ld de, $da42
     ld b, $1b
     call SaveBrd_4227
-    call ClrBrd_4360
+    call BreedResistInherit
     call GenerateRNG
     ld hl, BreedGenderThreshold        ; [female ratio] (S113 label; = $14:$459E bytes)
     ld a, [$da36]
@@ -256,10 +266,10 @@ jr_016_40d9:
     ld [hl], $01
 
 jr_016_4169:
-    ld hl, $cb24
+    ld hl, $cb24             ; [S130] egg flag +$63 := 1 (cleared at birth)
     call LoadBrd_41b1
     ld [hl], $01
-    call LoadBrd_4238
+    call BreedPedigreeNames
     ld de, $da39
     ld b, $03
     call InheritSkillList
@@ -292,7 +302,12 @@ LoadBrd_41b1:
     ret
 
 
-SaveBrd_41b8:
+; [S130] BreedStatInherit — HL = $CAC1 + stat field (u16). s = (pedigree +
+; mate) >> 2 (16-bit sum, two srl/rr; parents = staging slots at +$0BA4 and
+; +$0BA4+$95); k = PedigreeForeignCount; stat = s + s*k/50 (Mul16x8To24,
+; Div16x8To16 by $32); 0 -> 1. Returns BC = the stat (caller copies MaxHP /
+; MaxMP into HP / MP). Measured S130, 0 mismatches.
+BreedStatInherit:
     push hl
     ld a, l
     add $a4
@@ -326,7 +341,7 @@ SaveBrd_41b8:
     push hl
     push bc
     push bc
-    call FuncBrd_4313
+    call PedigreeForeignCount
     pop bc
     call Mul16x8To24
     ld a, $32
@@ -349,7 +364,10 @@ jr_016_41fa:
     ret
 
 
-SaveBrd_41ff:
+; [S130] BreedAIAverage — VANILLA BUG: `add c / ld c,a / ld a,$00 / add b`
+; drops the carry (should be `adc b`), so value = ((pedigree + mate) & $FF)
+; >> 1 instead of the average (two 200s give 72). Measured 400/400.
+BreedAIAverage:
     push hl
     ld a, l
     add $a4
@@ -400,7 +418,11 @@ jr_016_4231:
     ret
 
 
-LoadBrd_4238:
+; [S130] BreedPedigreeNames — father first: pedigree +$0B female -> the mate
+; is written as +$15 (swap, Jump_016_42aa). For parent 1 / 2: species ->
+; +$15 / +$16; master name (+$0C, 8 B) -> +$17 / +$20 (9th byte := $CA4A);
+; NICKNAME (+$01, 8 B) -> +$83 / +$8C; plus (+$62) -> +$8B / +$94.
+BreedPedigreeNames:
     ld a, [$d670]
     and $01
     or a
@@ -493,33 +515,41 @@ Jump_016_42aa:
     ret
 
 
-FuncBrd_4313:
+; [S130] PedigreeForeignCount — A = k = how many pedigree names differ from
+; the player's name $CA42 (9 B, PedigreeNameDiffers): each parent's master
+; +$0C, and for a parent with a pedigree (+$15 / +$16 != $FF) its +$83 /
+; +$8C (the grandparents' nicknames, 9 B each, so the 9th = their plus
+; byte). A bred parent counts 2 unless a nickname equals the player's name:
+; second-generation offspring get about +4..8 % (measured 400/400).
+PedigreeForeignCount:
     ld c, $00
     ld hl, $d671
-    call SetBrd_434f
+    call PedigreeNameDiffers
     ld a, [$d67a]
     cp $ff
     ld hl, $d6e8
-    call nz, SetBrd_434f
+    call nz, PedigreeNameDiffers
     ld a, [$d67b]
     cp $ff
     ld hl, $d6f1
-    call nz, SetBrd_434f
+    call nz, PedigreeNameDiffers
     ld hl, $d706
-    call SetBrd_434f
+    call PedigreeNameDiffers
     ld a, [$d70f]
     cp $ff
     ld hl, $d77d
-    call nz, SetBrd_434f
+    call nz, PedigreeNameDiffers
     ld a, [$d710]
     cp $ff
     ld hl, $d786
-    call nz, SetBrd_434f
+    call nz, PedigreeNameDiffers
     ld a, c
     ret
 
 
-SetBrd_434f:
+; [S130] PedigreeNameDiffers — C += 1 when the 9 bytes at HL differ from
+; the player's name $CA42.
+PedigreeNameDiffers:
     ld de, $ca42
     ld b, $09
 
@@ -541,14 +571,16 @@ jr_016_435a:
     ret
 
 
-ClrBrd_4360:
+; [S130] BreedResistInherit — the 27 resistances +$68 ($DA72 = index), each
+; through BreedResistOne.
+BreedResistInherit:
     xor a
     ld [$da72], a
     ld b, $1b
 
 jr_016_4366:
     push bc
-    call LoadBrd_4373
+    call BreedResistOne
     ld hl, $da72
     inc [hl]
     pop bc
@@ -558,7 +590,10 @@ jr_016_4366:
     ret
 
 
-LoadBrd_4373:
+; [S130] BreedResistOne — own (species) level 3 keeps; own 2 -> table
+; BreedResistMidTable, own 0/1 -> BreedResistLowTable, each on (pedigree
+; + mate resistance) & 7 (parents' +$68 at $D6CD / $D762; 7 never occurs).
+BreedResistOne:
     ld a, [$da72]
     ld hl, $cb29
     add l
@@ -594,57 +629,61 @@ LoadBrd_4373:
     add [hl]
     and $07
     rst $00
-    cp b
-    ld b, e
-    cp b
-    ld b, e
-    cp b
-    ld b, e
-    cp c
-    ld b, e
-    add $43
-    db $d3
-    ld b, e
-    db $ec
-    ld b, e
+; [S130] BreedResistLowTable ($43AA) — own resistance 0/1, by (p1 + p2) & 7.
+; Was misassembled as code (b8 43 b8 43 b8 43 b9 43 c6 43 d3 43 ec 43);
+; byte-identical dw list. "mod N < plus" = BreedPlusRoll (RNG16 mod N vs
+; the offspring's plus $DA77); a success = ResistUpTo2 (+1, cap 2).
+BreedResistLowTable:
+    dw BreedResistNone       ; sum 0: nothing
+    dw BreedResistNone       ; sum 1: nothing
+    dw BreedResistNone       ; sum 2: nothing
+    dw BreedResistLow3       ; sum 3: mod 100 < plus -> +1
+    dw BreedResistLow4       ; sum 4: mod 30 < plus -> +1
+    dw BreedResistLow5       ; sum 5: mod 10, then mod 30 (two chances)
+    dw BreedResistLow6       ; sum 6: +1 always, then mod 20 -> +1
+BreedResistNone:
     ret
 
 
+BreedResistLow3:
     ld a, [$da77]
     ld b, a
     ld a, $64
-    call SaveBrd_4444
-    call c, LoadBrd_4481
+    call BreedPlusRoll
+    call c, ResistUpTo2
     ret
 
 
+BreedResistLow4:
     ld a, [$da77]
     ld b, a
     ld a, $1e
-    call SaveBrd_4444
-    call c, LoadBrd_4481
+    call BreedPlusRoll
+    call c, ResistUpTo2
     ret
 
 
+BreedResistLow5:
     ld a, [$da77]
     ld b, a
     ld a, $0a
-    call SaveBrd_4444
-    call c, LoadBrd_4481
+    call BreedPlusRoll
+    call c, ResistUpTo2
     ld a, [$da77]
     ld b, a
     ld a, $1e
-    call SaveBrd_4444
-    call c, LoadBrd_4481
+    call BreedPlusRoll
+    call c, ResistUpTo2
     ret
 
 
-    call LoadBrd_4481
+BreedResistLow6:
+    call ResistUpTo2
     ld a, [$da77]
     ld b, a
     ld a, $14
-    call SaveBrd_4444
-    call c, LoadBrd_4481
+    call BreedPlusRoll
+    call c, ResistUpTo2
     ret
 
 
@@ -671,40 +710,42 @@ CalcBrd_4410:
     add [hl]
     and $07
     rst $00
-    add hl, hl
-    ld b, h
-    add hl, hl
-    ld b, h
-    add hl, hl
-    ld b, h
-    add hl, hl
-    ld b, h
-    add hl, hl
-    ld b, h
-    ld a, [hl+]
-    ld b, h
-    scf
-    ld b, h
+; [S130] BreedResistMidTable ($441B) — own resistance 2, by (p1 + p2) & 7.
+; Was misassembled as code (29 44 x5, 2a 44, 37 44); byte-identical dw list.
+; A success = ResistUpTo3 (+1, cap 3).
+BreedResistMidTable:
+    dw BreedResistMidNone    ; sum 0: nothing
+    dw BreedResistMidNone    ; sum 1: nothing
+    dw BreedResistMidNone    ; sum 2: nothing
+    dw BreedResistMidNone    ; sum 3: nothing
+    dw BreedResistMidNone    ; sum 4: nothing
+    dw BreedResistMid5       ; sum 5: mod 200 < plus -> +1
+    dw BreedResistMid6       ; sum 6: mod 40 < plus -> +1
+BreedResistMidNone:
     ret
 
 
+BreedResistMid5:
     ld a, [$da77]
     ld b, a
     ld a, $c8
-    call SaveBrd_4444
-    call c, LoadBrd_446c
+    call BreedPlusRoll
+    call c, ResistUpTo3
     ret
 
 
+BreedResistMid6:
     ld a, [$da77]
     ld b, a
     ld a, $28
-    call SaveBrd_4444
-    call c, LoadBrd_446c
+    call BreedPlusRoll
+    call c, ResistUpTo3
     ret
 
 
-SaveBrd_4444:
+; [S130] BreedPlusRoll — A = N, B = plus: GenerateRNG, HL = wRNG2:wRNG1, A =
+; HL mod N (Div16x8To16 remainder); `cp b` -> carry = remainder < plus.
+BreedPlusRoll:
     push bc
     push af
     call GenerateRNG
@@ -719,6 +760,8 @@ SaveBrd_4444:
     ret
 
 
+; [S130] resistance -1 (floor 0): no reference found (no label from mgbdis,
+; not in either jump table) — dead in vanilla.
     ld a, [$da72]
     ld hl, $cb29
     add l
@@ -735,7 +778,8 @@ SaveBrd_4444:
     ret
 
 
-LoadBrd_446c:
+; [S130] ResistUpTo3 — offspring resistance [$DA72] += 1 unless already 3.
+ResistUpTo3:
     ld a, [$da72]
     ld hl, $cb29
     add l
@@ -752,7 +796,8 @@ LoadBrd_446c:
     ret
 
 
-LoadBrd_4481:
+; [S130] ResistUpTo2 — offspring resistance [$DA72] += 1 unless already 2.
+ResistUpTo2:
     ld a, [$da72]
     ld hl, $cb29
     add l
@@ -1313,7 +1358,18 @@ jr_016_4749:
     ret
 
 
-label16_474a:
+; =============================================================================
+; [S130] BreedBirthFinalize — bank $16 entry 4 (`ld hl,$1604 / rst $10`;
+; callers bank $04 ScriptCmd3A_ToBreedingScene, bank $0A label5c5b). Runs
+; when the egg is born (ROADMAP P3.12 called it "skill/stat inheritance").
+; Slot [$CAC0]: WLD +$60/+$61 := 0; master +$0C := the player's name ($CA42,
+; 9th byte $CA4A); the learn queue is rebuilt in $C0D8 (25 x $FF first):
+; own species' natural 3, then +$15's species natural 3 and +$16's (only
+; when +$15 != $FF; +$15 = the father), then the OLD queue (BirthQueueRebuild),
+; each through BirthQueueAdd (UnevolvedSkillMap, first 25 distinct); copied
+; back to +$31; egg flag +$63 := 0. Measured S130 (400 births, 0 mismatches).
+; =============================================================================
+BreedBirthFinalize:
     ld hl, $cb21
     call LoadBrd_47e0
     xor a
@@ -1339,7 +1395,7 @@ label16_474a:
     rst $10
     ld de, $da39
     ld b, $03
-    call LoadBrd_47f8
+    call BirthQueueAddList
     ld hl, $cad6
     call LoadBrd_47e0
     ld a, [hl]
@@ -1351,7 +1407,7 @@ label16_474a:
     rst $10
     ld de, $da39
     ld b, $03
-    call LoadBrd_47f8
+    call BirthQueueAddList
     ld hl, $cad7
     call LoadBrd_47e0
     ld a, [hl]
@@ -1360,7 +1416,7 @@ label16_474a:
     rst $10
     ld de, $da39
     ld b, $03
-    call LoadBrd_47f8
+    call BirthQueueAddList
 
 jr_016_47b9:
     ld hl, $caf2
@@ -1368,7 +1424,7 @@ jr_016_47b9:
     ld e, l
     ld d, h
     ld b, $19
-    call SaveBrd_4805
+    call BirthQueueRebuild
     ld hl, $caf2
     call LoadBrd_47e0
     ld de, $c0d8
@@ -1411,13 +1467,14 @@ jr_016_47f1:
     ret
 
 
-LoadBrd_47f8:
+; [S130] BirthQueueAddList — B skill ids at DE -> BirthQueueAdd each.
+BirthQueueAddList:
 jr_016_47f8:
     ld a, [de]
     inc de
     push bc
     push de
-    call CmpBrd_4838
+    call BirthQueueAdd
     pop de
     pop bc
     dec b
@@ -1426,7 +1483,13 @@ jr_016_47f8:
     ret
 
 
-SaveBrd_4805:
+; [S130] BirthQueueRebuild — the old queue (B = 25 at DE = +$31). Per entry it
+; rolls GenerateRNG, RNG16 mod 100 and compares with the plus +$62 — but the
+; `jr jr_016_482b` below is UNCONDITIONAL (18 05), so the compare is never
+; used: a DEAD "keep this skill by plus" roll that only steps the RNG 25
+; times; every entry goes to BirthQueueAdd. The 5 bytes after the jr (the
+; skip path) are unreachable.
+BirthQueueRebuild:
 jr_016_4805:
     push bc
     push de
@@ -1446,9 +1509,9 @@ jr_016_4805:
     cp b
     pop de
     pop bc
-    jr jr_016_482b
+    jr jr_016_482b           ; [S130] unconditional: the roll above is dead
 
-    inc de
+    inc de                   ; [S130] unreachable (the skip-this-entry path)
     dec b
     jr nz, jr_016_4805
 
@@ -1460,7 +1523,7 @@ jr_016_482b:
     inc de
     push bc
     push de
-    call CmpBrd_4838
+    call BirthQueueAdd
     pop de
     pop bc
     dec b
@@ -1469,7 +1532,10 @@ jr_016_482b:
     ret
 
 
-CmpBrd_4838:
+; [S130] BirthQueueAdd — A = skill id ($FF = none) -> base =
+; UnevolvedSkillMap[A] ($FF = never) -> into the 25-byte work list $C0D8
+; unless present (first $FF hole). The $C0D8 twin of InheritOneSkill.
+BirthQueueAdd:
     cp $ff
     ret z
 

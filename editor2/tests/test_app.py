@@ -1822,6 +1822,275 @@ def s129_story(app, w):
           'StoryCheckTable; undoes to the original')
 
 
+def s130_balance(app, w):
+    """S130 (ROADMAP P3.15a): the Balance tab — offscreen without a project (the
+    original game only: rows from a small anchor, project columns hidden) and with
+    the example project (its timeline, the anchor's numbers on the same rows, one
+    fight computed with tiny sizes into a scratch cache, the breeding setting as
+    one undo step); the Team page (a tiny roll, a save's party, a picked member);
+    the Fight page (the team evaluated, a what-if applied — the story data
+    untouched — and reset). Nothing is saved; every edit is undone."""
+    import tempfile
+    from editor2.app import balance_tab as BT
+    from editor2.core import balance as BL
+    sys.path.insert(0, os.path.join(REPO, 'editor2', 'tests'))
+    from test_compiler import fake_sav_s130
+
+    def ev(l90, l50, unm=0.05, tl=None, win=0.92, ehp=0.0, tactic=None):
+        r = {'l90': l90, 'l50': l50, 'at90': {'win': win, 'rounds': 3.0, 'hp_left': 0.5,
+                                             'battles': 96, 'unmodelled': unm,
+                                             'enemy_hp_left': ehp,
+                                             'team_level': tl or (l90 or 99)}}
+        if tactic is not None:
+            r['at90']['tactic'] = tactic
+        return r
+
+    def kit(step, fights):                     # a kit as kits.step_kit writes it
+        mem = [{'species': 78, 'name': 'Dracky', 'src': ['join', 4], 'plus': 0,
+                'skills': [51, 21], 'skill_names': ['Sleep', 'Antidote'], 'level': 6},
+               {'species': 53, 'name': 'Anteater', 'src': ['join', 3], 'plus': 0,
+                'skills': [], 'skill_names': [], 'level': 6},
+               {'species': 8, 'name': 'Slime', 'src': ['join', 1], 'plus': 0,
+                'skills': [3], 'skill_names': ['Blaze'], 'level': 7}]
+        return {'step': step, 'level': 6, 'members': mem, 'score': 0.9, 'version': 1,
+                'why': ['Dracky L6 (joins (EID 4)): ordered Attack 70%'], 'fights': fights}
+    anchor = {
+        'sim_version': BL.SIM_VERSION, 'breeding_opens': BL.BREEDING_OPENS_AFTER,
+        'steps': [{'index': 0, 'kind': 'gate', 'id': 0, 'label': 'Gate of Beginning',
+                   'postgame': False, 'breeding': False, 'fights': ['gate0.f1', 'gate0.boss0'],
+                   'kit': kit(0, {'gate0.boss0': {'win': 1.0, 'tactic': None}})},
+                  {'index': 1, 'kind': 'class', 'id': 0, 'label': 'G class', 'postgame': False,
+                   'breeding': False, 'fights': ['arena0.m0'],
+                   'kit': kit(1, {'arena0.m0': {'win': 0.8, 'tactic': 1}})}],
+        'fights': {'gate0.f1': {'step': 0, 'kind': 'list', 'label': 'Gate of Beginning — floors 1-4',
+                                'step_label': 'Gate of Beginning', 'casual': ev(3, 1), 'strong': ev(2, 1),
+                                'player': ev(2, 1)},
+                   'gate0.boss0': {'step': 0, 'kind': 'boss', 'label': 'Gate of Beginning — boss: Healer',
+                                   'step_label': 'Gate of Beginning', 'casual': ev(9, 6, 0.3, 7.0),
+                                   'strong': ev(7, 5), 'player': ev(5, 4)},
+                   'arena0.m0': {'step': 1, 'kind': 'arena', 'label': 'G class — match 1',
+                                 'step_label': 'G class', 'casual': ev(None, 40, win=0.17, ehp=0.4),
+                                 'strong': ev(30, 20), 'player': ev(8, 5, tactic=1)}},
+        'dives': {'0': {'casual': {'direct': {'level': 6, 'eval': {'clear': 0.9, 'battles': 4.2}},
+                                   'sweep': {'level': 10, 'eval': {'clear': 0.9, 'battles': 12.0}}}}}}
+    # --- pure pieces
+    assert BT.delta_class(10, 20) == ('+10', 'much harder') and BT.delta_class(10, 13)[1] == 'harder'
+    assert BT.delta_class(10, 11)[1] == 'similar' and BT.delta_class(10, 6)[1] == 'easier'
+    assert BT.delta_class(100, 100)[1] == 'similar' and BT.lv_text({'l90': None}) == '99+'
+    r99 = ev(None, None, win=0.17, ehp=0.4)                 # not even at 99: graded
+    assert BT.lv_text(r99) == '99+ (17 %)' and abs(BT.chart_value(r99) - 112.3) < 0.01
+    assert BT.delta_beyond(ev(None, None, win=0.6), r99) == ('-43 % at 99', 'much harder')
+    assert BT.lv_text({'l90': None, 'dive': True, 'at90': {'clear': 0.5}}) == '99+ (50 %)'
+    assert BT.anchor_problem(None) and BT.anchor_problem(anchor) is None
+    # --- no project: the original game only
+    from PySide6.QtCore import QSettings
+    QSettings('dwm1_disassembly', 'DWM1Editor').remove('balance/details')
+    t = BT.BalanceTab(None, anchor=anchor)
+    t.resize(1200, 700)
+    t.show()
+    app.processEvents()
+    st = t.story
+    # the simple view is the default (user: "really crowded"): Fight | Level needed
+    assert not t.details and not t.cb_details.isChecked()
+    shown = [c for c in range(len(BT.HEADERS)) if not st.tree.isColumnHidden(c)]
+    assert shown == [BT.C_FIGHT, BT.C_VP90], shown
+    assert st.tree.headerItem().text(BT.C_VP90) == 'Level needed'
+    b = st.items['gate0.boss0']
+    assert b.text(BT.C_VP90) == 'Lv 5' and 'wins 9 of 10' in b.toolTip(BT.C_VP90), b.toolTip(BT.C_VP90)
+    assert st.items['dive0.direct'].isHidden() and st.simple_line.isVisibleTo(t)
+    assert not st.kit_panel.isVisibleTo(t) and not st.chart_prof.isVisibleTo(t)
+    st.b_show_team.setChecked(True)
+    assert st.kit_panel.isVisibleTo(t)
+    assert st.tree.topLevelItem(0).text(BT.C_VP90) == 'Lv 5'
+    assert BT.simple_change(ev(20, 10), ev(32, 20)) == ('much harder (+12)', 'much harder')
+    assert BT.simple_change(ev(20, 10), ev(25, 20)) == ('harder (+5)', 'harder')
+    assert BT.simple_change(ev(20, 10), ev(21, 20))[0] == 'about the same'
+    assert BT.simple_change(ev(20, 10), ev(16, 10))[0] == 'easier (−4)'
+    assert BT.simple_change(ev(40, 10), ev(28, 10))[0] == 'much easier (−12)'
+    assert BT.simple_text(ev(None, None, win=0.38)) == "can't win (38 %)"
+    assert not t.team.prof.isVisibleTo(t) and t.team.prof.currentText() == 'player'
+    assert not t.fight.prof.isVisibleTo(t) and not t.fight.orders.isVisibleTo(t)
+    t.cb_details.setChecked(True)                   # the full view, as before
+    assert t.details and not st.tree.isColumnHidden(BT.C_V90) and not st.items['dive0.direct'].isHidden()
+    assert st.tree.headerItem().text(BT.C_VP90) == BT.HEADERS[BT.C_VP90]
+    assert st.tree.isColumnHidden(BT.C_P90) and st.tree.isColumnHidden(BT.C_PP90) and \
+        not st.b_casual.isVisibleTo(t) and not st.b_player.isVisibleTo(t)
+    # the player profile is the main number: first, bold, the chart's and Change's default
+    assert not st.tree.isColumnHidden(BT.C_VP90) and BT.C_VP90 < BT.C_V90
+    assert st.tree.headerItem().font(BT.C_VP90).bold() and not st.tree.headerItem().font(BT.C_V90).bold()
+    assert st.chart_prof.currentText() == 'player' == st.delta_prof.currentText()
+    assert st.items['gate0.boss0'].text(BT.C_VP90) == '5' and st.items['gate0.boss0'].text(BT.C_VP50) == '4'
+    assert st.chart.van == {0: 5, 1: 8}, st.chart.van
+    assert "best tactic: Mixed" in st.items['arena0.m0'].text(BT.C_NOTE), st.items['arena0.m0'].text(BT.C_NOTE)
+    st.show_sec.setChecked(False)
+    assert st.tree.isColumnHidden(BT.C_V90) and not st.tree.isColumnHidden(BT.C_VP90)
+    st.show_sec.setChecked(True)
+    st.chart_prof.setCurrentText('casual')
+    tops = [st.tree.topLevelItem(i).text(0) for i in range(st.tree.topLevelItemCount())]
+    assert tops == ['1. Gate of Beginning', '2. G class'], tops
+    b = st.items['gate0.boss0']
+    assert [b.text(c) for c in (BT.C_V90, BT.C_V50, BT.C_VS90, BT.C_UNM)] == ['9', '6', '7', '30 %']
+    assert 'level caps' in b.text(BT.C_NOTE), b.text(BT.C_NOTE)
+    # level colours by band (S130 user: "colour code levels")
+    bg = lambda it, c: it.background(c).color()                          # noqa: E731
+    c7 = bg(b, BT.C_VS90)
+    a0 = st.items['arena0.m0']
+    c40, c99 = bg(a0, BT.C_V50), bg(a0, BT.C_V90)
+    assert c7 == BT.level_colour(7) == BT.level_colour(1) and c40 == BT.level_colour(31)
+    assert c99 == BT.level_colour(100, 0.83) and len({c7.rgba(), c40.rgba(), c99.rgba()}) == 3
+    assert BT.level_colour(45) != BT.level_colour(40) and BT.level_colour(45) == BT.level_colour(50)
+    assert BT.level_colour(100, 1.0).alpha() > BT.level_colour(100, 0.1).alpha()
+    assert 'Levels:' in st.level_legend.text() and '76-98' in st.level_legend.text()
+    assert a0.text(BT.C_V90) == '99+ (17 %)' and 'enemies left with 40 % HP' in a0.toolTip(BT.C_V90)
+    assert st.items['dive0.direct'].text(BT.C_V90) == '6' and st.items['dive0.sweep'].text(BT.C_V90) == '10'
+    assert st.tree.topLevelItem(0).text(BT.C_V90) == '9'            # the step's hardest fight
+    assert st.chart.van[0] == 9 and abs(st.chart.van[1] - 112.3) < 0.01, st.chart.van
+    # the kit view: the step's kit (3 members), the arena fight's tactic, "use this kit"
+    st.tree.setCurrentItem(st.items['arena0.m0'])
+    kv = st.kit_view.toPlainText()
+    assert 'Original game' in kv and all(n in kv for n in ('Dracky', 'Anteater', 'Slime')) \
+        and 'joins (EID 3)' in kv and 'Mixed' in kv, kv
+    assert st.b_use_kit.isEnabled() and '(L8)' in st.b_use_kit.text(), st.b_use_kit.text()
+    st.use_kit()
+    assert t.wait_idle(60) and t.team.table.rowCount() == 3 and 'player kit' in \
+        t.team.summary.text(), t.team.summary.text()
+    assert [m.species for m in t.team.team] == [78, 53, 8]
+    # Team page: a tiny roll on the original game; the player profile = the step kit
+    t.pages.setCurrentWidget(t.team)
+    assert t.wait_idle(60) and t.team.step.count() >= 40, t.team.step.count()
+    t.team.level.setValue(5)
+    t.team.prof.setCurrentText('casual')
+    t.team.roll()
+    assert t.wait_idle(60) and t.team.table.rowCount() == 3 and 'Rolled casual team #0' in \
+        t.team.summary.text(), t.team.summary.text()
+    t.team.prof.setCurrentText('player')
+    t.team.roll()
+    assert t.wait_idle(60) and t.team.table.rowCount() == 3 and 'player kit of 1.' in \
+        t.team.summary.text(), t.team.summary.text()
+    t.shutdown()
+    t.deleteLater()
+    print('OK: S130 Balance tab without a project — rows from the anchor (99+, dives, the step\'s '
+          'hardest fight, the chart), player columns first, the kit view (3 members, the arena '
+          'tactic), project columns hidden, teams rolled (casual, the player kit)')
+    # --- with the example project
+    s = w.session
+    before = s.doc.dumps()
+    n0 = s.undo.index()
+    assert w.tabs.indexOf(w.balance_tab) >= 0, 'no Balance tab'
+    t = BT.BalanceTab(s, anchor=anchor)
+    t.teams, t.battles = 2, 2
+    t.resize(1200, 700)
+    t.show()
+    assert t.wait_idle(120), 'project data not read'
+    st = t.story
+    t.cb_details.setChecked(False)
+    shown = [c for c in range(len(BT.HEADERS)) if not st.tree.isColumnHidden(c)]
+    assert shown == [BT.C_FIGHT, BT.C_VP90, BT.C_PP90, BT.C_DELTA], shown
+    assert [st.tree.headerItem().text(c) for c in shown[1:]] == ['Original game', 'Your project',
+                                                                 'Change']
+    assert st.b_simple.isVisibleTo(t) and not st.b_casual.isVisibleTo(t) and not st.b_player.isVisibleTo(t)
+    t.cb_details.setChecked(True)
+    pc = t.ctx['project']
+    tmp = tempfile.mkdtemp()
+    pc.cache = BL.FightCache(os.path.join(tmp, 'balance_cache.json'))   # never the example's build/
+    for cp in list(t._caches):
+        t._caches[cp] = pc.cache                                         # (re-reads too)
+    t.kit_budget = {'evals': 2, 'teams': 1, 'battles': 2}                # a tiny kit search
+    assert not st.tree.isColumnHidden(BT.C_P90)
+    assert len(pc.tl.steps) == len(BL.VANILLA_STEPS) and st.tree.topLevelItemCount() >= 41
+    k = pc.tl.steps[0]['fights'][0]
+    assert st.items[k].text(BT.C_V90) == ('3' if k == 'gate0.f1' else '—')
+    assert st.breed.currentData() == BL.BREEDING_OPENS_AFTER
+    st.dives.setChecked(False)
+    st.tree.clearSelection()
+    st.items[k].setSelected(True)
+    assert st.selected_keys() == [k]
+    st.compute_selected()
+    assert t.wait_idle(300), 'compute did not finish'
+    assert st.items[k].text(BT.C_P90) not in ('—', '') and st.items[k].text(BT.C_PS90) != '—', \
+        [st.items[k].text(c) for c in range(15)]
+    assert st.items[k].text(BT.C_PP90) not in ('—', ''), [st.items[k].text(c) for c in range(15)]
+    assert len(st.kits_prj[0]['members']) == 3
+    st.tree.setCurrentItem(st.items[k])
+    assert 'Your project' in st.kit_view.toPlainText() and st.b_use_kit.isEnabled()
+    assert os.path.exists(os.path.join(tmp, 'balance_cache.json')) and \
+        not os.path.exists(os.path.join(s.project_dir, 'build', 'balance_cache.json'))
+    # the breeding setting: one undo step in meta.balance, the timeline re-read
+    st.breed.setCurrentIndex(st.breed.findData(BL.BREEDING_OPENS_AFTER - 1))
+    st._breed_changed(st.breed.currentIndex())
+    assert s.doc.data['meta'].get('balance') == {'breeding_opens_after': BL.BREEDING_OPENS_AFTER - 1}
+    assert t.wait_idle(120) and t.ctx['project'].tl.breeding_opens == BL.BREEDING_OPENS_AFTER - 1
+    s.undo.setIndex(n0)
+    assert 'balance' not in s.doc.data['meta']
+    # Team page: a save's party, a picked member
+    tm = t.team
+    path = os.path.join(tmp, 'party.sav')
+    open(path, 'wb').write(fake_sav_s130())
+    assert tm.import_sav(path) is None and tm.table.rowCount() == 3
+    assert [tm.table.item(r, 0).text() for r in range(3)] == ['Goo', 'Ant', 'Bat']
+    assert tm.import_sav(os.path.join(tmp, 'nope.sav'))          # a problem, not a crash
+    ctx = t.ctx.get('project')
+    if ctx is None:
+        t.with_ctx('project', lambda _c: None)
+        assert t.wait_idle(120)
+        ctx = t.ctx['project']
+    tm.table.selectRow(2)
+    tm.add_member(BL.custom_member(ctx.data, 8, 12, [3]))
+    assert tm.table.rowCount() == 3 and tm.team[2].species == 8 and tm.team[2].skills == [3]
+    # Fight page: evaluate the team, a what-if (the story data untouched), reset
+    fp = t.fight
+    t.pages.setCurrentWidget(fp)
+    assert t.wait_idle(60) and fp.fights.count() >= 100, fp.fights.count()
+    key = next(k for k in ctx.tl.fights if '.boss' in k)
+    fp.show_fight('project', key)
+    assert t.wait_idle(60) and fp.fights.currentData() == key and fp.enemies.rowCount() >= 1
+    fp.n_battles.setValue(4)
+    fp.eval_team()
+    assert t.wait_idle(60) and fp.results.item(0, 0).text().endswith('%'), fp.status.text()
+    how_row = [k for k, _l in BT.RES_ROWS].index('how')
+    assert fp.results.item(how_row, 0).text() == 'your orders (Command)'
+    ehp_row = [k for k, _l in BT.RES_ROWS].index('enemy_hp_left')
+    assert fp.results.item(ehp_row, 0).text().endswith('%'), fp.results.item(ehp_row, 0).text()
+    eid = fp.w_enemy.currentData()
+    ctx = fp.ctx()
+    fp.apply_whatif(eid, level=99, atk=999, skills=[3])
+    assert ctx.whatif.enemy_overrides.get(eid) and not ctx.data.enemy_overrides
+    assert ctx.whatif.enemy_rec(eid)['atk'] == 999 and ctx.data.enemy_rec(eid)['atk'] != 999
+    assert 'What-if on' in fp.w_note.text()
+    fp.eval_team()
+    assert t.wait_idle(60) and fp.results.item(0, 1).text().endswith('%'), fp.status.text()
+    fp.prof.setCurrentText('player')                # the player level, as is and what-if
+    fp.level_needed()
+    assert t.wait_idle(300), fp.status.text()
+    l90_row = [k for k, _l in BT.RES_ROWS].index('l90')
+    assert fp.results.item(l90_row, 0).text() and fp.results.item(l90_row, 1).text() not in ('', '—'), \
+        (fp.results.item(l90_row, 0).text(), fp.results.item(l90_row, 1).text(), fp.status.text())
+    assert not ctx.data.enemy_overrides
+    t.project_changed(now=True)                   # a project edit: re-read, the what-if kept
+    assert t.wait_idle(120) and t.ctx['project'] is not ctx
+    ctx = fp.ctx()
+    assert ctx.whatif.enemy_overrides.get(eid) and fp.fights.currentData() == key
+    fp.reset_whatif()
+    assert not ctx.whatif.enemy_overrides and fp.w_note.text() == 'No what-if.'
+    # the simple view's Change words on a computed row
+    t.cb_details.setChecked(False)
+    for kk in ('gate0.f1',):
+        if ('prj', 'player', kk) in st.res and ('van', 'player', kk) in st.res:
+            txt = st.items[kk].text(BT.C_DELTA)
+            assert any(wd in txt for wd in ('harder', 'easier', 'about the same')), txt
+    fp.apply_mode()
+    win_row = [k for k, _l in BT.RES_ROWS].index('win')
+    assert fp.results.verticalHeaderItem(win_row).text() == 'Wins'
+    t.shutdown()
+    t.deleteLater()
+    app.processEvents()
+    assert s.undo.index() == n0 and s.doc.dumps() == before
+    print(f'OK: S130 Balance tab with the example project — {len(st.items)} rows, {k} computed '
+          '(tiny sizes, scratch cache), breeding setting undone, a .sav party + a picked member, '
+          'the team evaluated (orders) with and without a what-if, the player level with a '
+          'tiny kit search')
+
+
 def main():
     do_rom = '--rom' in sys.argv
     app = QApplication.instance() or QApplication(sys.argv)
@@ -1877,6 +2146,7 @@ def main():
     s127r3_game_text_rule(app, w)
     s128_arena(app, w)
     s129_story(app, w)
+    s130_balance(app, w)
 
     # S101 r3: World tab zoom (wheel, around the mouse) + pan (drag empty canvas)
     from PySide6.QtCore import QPoint, QPointF, Qt

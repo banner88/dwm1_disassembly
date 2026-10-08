@@ -27,17 +27,8 @@ def load_records():
                        'skill_records.json')))['records']
     SKILL_INFO = {r['id']: r for r in d}
 
-# skill id -> (rtype, ladder) for record-driven damage cores
-SPELL_LADDER = {}
-for ids, rt in [((0, 1, 2), 0), ((3, 4, 5), 1), ((6, 7, 8), 2),
-                ((9, 10, 11), 3), ((15, 16, 17, 90, 100), 4),
-                ((12, 13, 14), 5), ((217,), 25)]:
-    for i in ids:
-        SPELL_LADDER[i] = (rt, 'A')
-for ids, rt in [((92, 93, 94, 95), 16), ((96, 97, 98, 99), 17),
-                ((101,), 0), ((91,), 24)]:
-    for i in ids:
-        SPELL_LADDER[i] = (rt, 'BREATH')
+# skill id -> (rtype, ladder): simulator/damage.py SPELL_LADDER (moved S130)
+SPELL_LADDER = D.SPELL_LADDER
 
 
 def run(events):

@@ -357,7 +357,13 @@ def vacuum(level, state, enemy_side, link=False, arena=None):
     level + level//2; cap 150 ($96); variance unit = base//5; rem =
     RNG16d % unit; shift-out bit of rem>>1: carry -> subtract, else add.
     Side fork = the $C86C link flag, same as windbeast (arena db73=2 uses
-    the normal side split)."""
+    the normal side split).
+
+    S130 CORRECTION: the enemy branch (1.5*level) is WRONG for real battles —
+    the bytes' `cp $04` compares the link byte, not the attacker, so every
+    caster takes 2L+30 (skillfx/f23_phys.vacuum_base, measured, is what the
+    battle driver uses). Kept unchanged here only because the S85 damage
+    corpus (s78_master_events.json, 5 Vacuum events) has party casters only."""
     if arena is not None:
         link = arena
     if enemy_side and not link:
@@ -460,6 +466,23 @@ BOSS_PROTECTED_SKILLS = {0x12, 0x13, 0x14, 0x3E, 0x6B, 0x71}
 def boss_gate_blocks(skill_id, target_is_enemy, db73, arena=False):
     return (not arena and target_is_enemy and db73 == 1
             and skill_id in BOSS_PROTECTED_SKILLS)
+
+
+# skill id -> (rtype, ladder) for the record-driven damage cores (moved here
+# from validate_damage.py S130 so the round driver applies it too; the
+# validators import it from here). 'A' = CheckTargetGuardA, 'BREATH' =
+# ResLadderBreath_676c. A project's per-skill element override (S111,
+# bank $72 ElemLevel72) replaces the rtype — Board.elem_override.
+SPELL_LADDER = {}
+for _ids, _rt in [((0, 1, 2), 0), ((3, 4, 5), 1), ((6, 7, 8), 2),
+                  ((9, 10, 11), 3), ((15, 16, 17, 90, 100), 4),
+                  ((12, 13, 14), 5), ((217,), 25)]:
+    for _i in _ids:
+        SPELL_LADDER[_i] = (_rt, 'A')
+for _ids, _rt in [((92, 93, 94, 95), 16), ((96, 97, 98, 99), 17),
+                  ((101,), 0), ((91,), 24)]:
+    for _i in _ids:
+        SPELL_LADDER[_i] = (_rt, 'BREATH')
 
 
 # element -> resistance type for the record-driven cores

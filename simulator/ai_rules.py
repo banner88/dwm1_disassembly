@@ -63,15 +63,21 @@ SHUT_RULES = {145: 0x40, 146: 0x80} # DanceShut/MouthShut: presumed
                                       # pass condition is NOT yet traced.
 UTIL_VETO_UNTRACED = {128, 131}     # DeMagic/ThickFog: veto measured
                                       # clean; pass condition untraced.
+                                      # S130 F10: traced — f10_rules() below
+                                      # when the view carries skills/dd0b.
 
 
 class BattleView:
     def __init__(self, hp, maxhp, mp, maxmp, status, dd1b, traits,
-                 families, resist_score):
+                 families, resist_score, skills=None, dd0b=None, db40=(0, 0)):
         self.hp, self.maxhp, self.mp, self.maxmp = hp, maxhp, mp, maxmp
         self.status, self.dd1b = status, dd1b
         self.traits, self.families = traits, families
         self.resist_score = resist_score
+        # S130 F10: optional — the $DC64 option lists (8 (tag, skill) pairs
+        # per slot), $DD0B and $DB40/41 (the slot-7 shifted pair). Rules
+        # that need them fall back to the old conservative veto when absent.
+        self.skills, self.dd0b, self.db40 = skills, dd0b, db40
 
     def opposing(self, actor):
         base = 0 if actor >= 4 else 4
@@ -111,6 +117,19 @@ def evaluate_chain(category, skill, actor, view, mp_cost, element,  # element = 
         return 0, True
     if (rec_flags7 & 0x10) and (st3 & 0x80):
         return 0, True
+    # S130 F10 ($45F2 tail, byte-read + measured): ThickFog $83, or any
+    # flags7-bit6 spell, while the caster's OWN side byte has bit3 (sealed)
+    if (skill == 131 or (rec_flags7 & 0x40)) and (view.status[0][(actor >> 2) & 1] & 0x08):
+        return 0, True
+
+    # S130 F9: AIRule_6757 (cat-2 chain): TatsuCall..BazooCall $84-$87 are
+    # vetoed while the caster side's summon bit2 ($DB00/$DB01) is set AND
+    # its helper slot (side|3) is live [byte-read; natural Hargon battle:
+    # 2/4 rounds before the summon, 0/7 while the helper lived]
+    if 0x84 <= skill <= 0x87:
+        side = (actor >> 2) & 1
+        if (view.status[0][side] & 0x04) and view.dd1b[(actor & 4) | 3] == 0:
+            return 0, True
 
     # status-already-present vetoes [measured]
     if skill in HEAVY_TRIO and _all_live_opposing_have(view, actor, 2, 0x02):
@@ -158,7 +177,12 @@ def evaluate_chain(category, skill, actor, view, mp_cost, element,  # element = 
     # Shut/util rules: pass conditions untraced -> conservative veto
     # matching every measured board; loop validation will flag if a real
     # battle exercises the pass branch.
-    if skill in SHUT_RULES or skill in UTIL_VETO_UNTRACED:
+    if skill in UTIL_VETO_UNTRACED and view.skills is not None and view.dd0b is not None:
+        v, b_, p_ = f10_rules(skill, actor, view)        # S130 F10
+        if v:
+            return 0, True
+        bonus += b_; penalty += p_
+    elif skill in SHUT_RULES or skill in UTIL_VETO_UNTRACED:
         return 0, True
 
     # family cuts [measured Smashlime bonus + all veto branches]
@@ -231,3 +255,138 @@ def evaluate_chain(category, skill, actor, view, mp_cost, element,  # element = 
     if bonus < penalty:
         return 0, True
     return bonus - penalty, False
+
+
+# --------------------------------------------------------------------------
+# S130 F10: the cat-2 rules that select DeMagic $80 / ThickFog $83 (byte-read
+# bank $57, measured with simulator/measure_f10_rules.py, validator
+# simulator/validate_f10_rules.py). In chain order; every other cat-2 rule
+# returns on these ids (static scan of the chain's id compares).
+# --------------------------------------------------------------------------
+BIG_SPELLS = {0x02, 0x05, 0x08, 0x0B, 0x0E, 0x11, 0x12, 0x13}   # $6B19 / $59BE sets
+
+
+def _flat_st(view):
+    """$DB00..$DB41 as one byte list (status blocks + the slot-7 pair)."""
+    out = [x for blk in view.status[:8] for x in blk[:8]]
+    out += [0] * (64 - len(out))
+    return out + list(view.db40)
+
+
+def _incapacitated(view, s):
+    """GetMonsterSlotInfo ($00): carry for an invalid slot or +2&$D0 /
+    +5&$3F / +7&$C0."""
+    if view.dd1b[s] != 0:
+        return True
+    st = view.status[s]
+    return bool(st[2] & 0xD0 or st[5] & 0x3F or st[7] & 0xC0)
+
+
+def f10_rules(skill, actor, view):
+    """(veto, bonus, penalty) of the DeMagic/ThickFog rules.
+
+    DeMagic $80:
+      AIRule_4785  veto when no VALID opponent has +2 bit6 clear (all paralysed).
+      AIRule_5f91  veto when every opponent is invalid or incapacitated.
+      AIRuleDeMagicVetoNoBuff_6bcb  veto unless the opponents' side byte & $2C, or the opposing
+                   side's FIRST slot (the loop never advances c: that slot is
+                   tested three times, valid or not) has +3&$3C, +4&$6F,
+                   +5&$40, +7&$CC or shifted +8&$40 (the 'raised' marker).
+      AIRuleDeMagicDebuffMalus_69cb  penalty 20 when a valid opponent has +3&$C2, +4&$10,
+                   +7&$03 or shifted +8&$80 (debuffs DeMagic would lift).
+      AIRuleDeMagicBuffCount_5842  ($DD0B==2 only) +20 once a running count reaches 3,
+                   checked after each valid opponent: its +3&$3F bits, +4&$7F
+                   bits, +5 bits 6/7, +7&$C0 (1), +7&$0C (1), shifted +8 bit6,
+                   plus the CASTER's own side byte bits 2/3/5 (re-counted for
+                   every valid opponent).
+    ThickFog $83:
+      AIRuleVetoUsability_45f2  own side sealed -> veto (in evaluate_chain).
+      AIRuleThickFogVetoNoBigSpell_6af5  veto unless a valid opponent's option list has a tag-1
+                   entry whose skill is in BIG_SPELLS (its second loop compares
+                   the TAG with $2B — dead code, never vetoes).
+      AIRuleThickFogBonus_593d  ($DD0B==2 only) own side: n = valid slots, k = option-list
+                   skills < $3A or in {$D5,$DA,$DC} (to the first $FF); if
+                   n >= k: +20 when the valid opponents' lists hold >= 2
+                   BIG_SPELLS entries (all 8 entries scanned, tags ignored).
+    """
+    opp = 0 if actor >= 4 else 4
+    own = actor & 4
+    dd0b2 = view.dd0b[actor] == 2
+    bonus = penalty = 0
+    if skill == 128:
+        if all(view.dd1b[s] != 0 or (view.status[s][2] & 0x40) for s in range(opp, opp + 3)):
+            return True, 0, 0                                   # 4785
+        if all(_incapacitated(view, s) for s in range(opp, opp + 3)):
+            return True, 0, 0                                   # 5f91
+        flat = _flat_st(view)
+        o = 8 * opp
+        if not (flat[opp >> 2] & 0x2C or flat[o + 3] & 0x3C or flat[o + 4] & 0x6F
+                or flat[o + 5] & 0x40 or flat[o + 7] & 0xCC or flat[o + 8] & 0x40):
+            return True, 0, 0                                   # 6bcb
+        for s in range(opp, opp + 3):                           # 69cb
+            if view.dd1b[s] != 0:
+                continue
+            b = 8 * s
+            if flat[b + 3] & 0xC2 or flat[b + 4] & 0x10 or flat[b + 7] & 0x03 or flat[b + 8] & 0x80:
+                penalty += 20
+                break
+        if dd0b2:                                               # 5842
+            cnt = 0
+            side = (actor >> 2) & 1
+            for s in range(opp, opp + 3):
+                if view.dd1b[s] != 0:
+                    continue
+                p = 8 * s + 3
+                cnt += bin(flat[p] & 0x3F).count('1')
+                cnt += bin(flat[p + 1] & 0x7F).count('1')
+                cnt += bin(flat[p + 2] & 0xC0).count('1')
+                cnt += (1 if flat[p + 4] & 0xC0 else 0) + (1 if flat[p + 4] & 0x0C else 0)
+                cnt += 1 if flat[p + 5] & 0x40 else 0
+                cnt += bin(flat[side] & 0x2C).count('1')
+                if cnt >= 3:
+                    bonus += 20
+                    break
+        return False, bonus, penalty
+    if skill == 131:
+        def entries(s):
+            lst = view.skills[s] or []
+            return [tuple(x) for x in lst[:8]] + [(0, 0xFF)] * (8 - len(lst[:8]))
+        hit = False
+        for s in range(opp, opp + 3):                           # 6af5
+            if view.dd1b[s] != 0:
+                continue
+            for tg, sk in entries(s):
+                if tg == 0:
+                    break
+                if tg == 1 and sk in BIG_SPELLS:
+                    hit = True
+                    break
+            if hit:
+                break
+        if not hit:
+            return True, 0, 0
+        if dd0b2:                                               # 593d
+            n = k = 0
+            for s in range(own, own + 3):
+                if view.dd1b[s] != 0:
+                    continue
+                n += 1
+                for tg, sk in entries(s):
+                    if sk == 0xFF:
+                        break
+                    if sk < 0x3A or sk in (0xD5, 0xDA, 0xDC):
+                        k += 1
+            if n >= k:
+                d = 0
+                for s in range(opp, opp + 3):
+                    if view.dd1b[s] != 0:
+                        continue
+                    for tg, sk in entries(s):
+                        if sk in BIG_SPELLS:
+                            d += 1
+                    if d >= 2:
+                        break
+                if d >= 2:
+                    bonus += 20
+        return False, bonus, penalty
+    return False, 0, 0

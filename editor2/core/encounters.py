@@ -125,13 +125,23 @@ def mean_counter(repo):
 
 
 def steps_between(repo, rate_code, base=NON_GATE_BASE):
-    """Average steps between battles: counter / (base * modifier / 64) per
-    step (bank $16 entry 8, measured S70: 100 per step at base 100, code 3).
+    """Average steps between battles: the battle fires on the step whose
+    drain (base * modifier / 64; bank $16 entry 8, measured S70: 100 per step
+    at base 100, code 3) borrows, so from a counter c it takes c // drain + 1
+    steps — the mean over RandomEncounterCounterTable's seeds (S130: was
+    counter / drain, one step short; editor2/core/dive.py, PyBoy-measured).
     Outside gates base = 100; on gate floors base = EncounterRateData (100-250
     by floor type and the tile row the player stands on)."""
     mod = rate_modifiers(repo)[rate_code & 7]
     drain = max(1, base * mod // 64)
-    return mean_counter(repo) / drain
+    prev, tot = -1, 0.0
+    for thr, val in counter_seeds(repo):
+        hi = min(thr, 100)
+        tot += max(0, hi - prev) * (val // drain + 1)
+        prev = hi
+        if hi >= 100:
+            break
+    return tot / 101.0
 
 
 # ---------------------------------------------------------------------------

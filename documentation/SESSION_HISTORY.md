@@ -1,5 +1,77 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-07 (Session 128 — **ROADMAP P3.14e3 BUILT: YOUR ARENA — COPIES OF THE
+> ARENA LOBBY AND THE ARENA BATTLE ROOM THE ENGINE TREATS AS THE ARENA (THE WALK-IN, THE MATCHES,
+> THE CROWD, THE BATTLE TYPE / MUSIC, STARRY NIGHT), PAINTABLE AND CONNECTED ANYWHERE; PER CLASS A
+> LOCK, A WON FLAG, THE RECEPTIONIST'S WORDS AND WHERE A WIN SENDS YOU; STARRY NIGHT OFFERED BY
+> FLAG, ENDING IN THE LOBBY / A ROOM / THE HUB / THE GAME'S ENDING** (user: "there's a central
+> arena and I want it accessible from a custom room … fine to lift it wholesale I just want to be
+> able to edit battles (already can) as well as tiles in arena proper AND in arena entry, and
+> redirect outwards"; "4) Chosen per class", "end greatlog arena on starry night tournament …
+> post game in back in vanilla greattree with a few arena battles accessible", "6) Per class",
+> "8) Yes keep"). **Built S128; test ROM USER-CONFIRMED 2026-10-07 09:51 ("Yep all good").**
+> **Engine (code-read + PyBoy):** the arena was keyed on map ids `$06` / `$5D` at 9 sites; ROM0
+> `ArenaMapID` / `ArenaAlias` (the S117-freed bytes after `ComputeFlagAddress`) map the project's
+> copies (`ARENA_LOBBY_MID` / `ARENA_BATTLE_MID`, bank $6E region `arena_rooms`) to them —
+> banks $01 (`CheckScriptBeforeAction`, `SaveMapStateToHRAM`'s class same-size), $03 (escape
+> skill), $07 (the lobby's monsters), $50 (`BattleExitHandler`, the `$5730` battle-end type,
+> the lost-match mailbox → `ArenaLossWarp50`), $51 (music, `LoadBtlS_43c9` battle type), $71
+> template `BattleBGMResolve` (re-pinned). Bank $09 `ArenaMenuMarkWon` → bank $6E entry 1
+> `ArenaMarkClasses` (the original marks + per-class locks, glyph `$9C` "-", only in the
+> project's lobby) + `ArenaRefuse09` (the locked words). Not aliased: `CheckGateWorldMapType`
+> (copies stay gate-like, S70) and the bank $06 text-sprite rule (copies set
+> `text_keeps_sprites`). `$D999` is ALSO the `$5D` room's step counter (5 states).
+> **Compiler / editor:** `custom.arena` (`editor2/core/your_arena.py`, `your_arena_doc.py`;
+> PROJECT_COMPILER §2.41): the desk script (lobby script 6 — an `$8F` examine spot across the
+> counter), the lobby / arena entry scripts prefixed with the return logic, line kind `arena`
+> (Services); Arena tab → ★ Your arena + "In your arena" per class (GameTextFields); flag
+> index walks the locks / won flags; help `69_your_arena.md`. `vanilla_steps` accepts exit
+> pointer `$FFFF` (the `$5D` copy had 1 state → Starry Night crashed in the copy).
+> **r2 (user 08:38): (1) "Flag clash … Does this affect new romhack?? This should NOT be
+> happening by default":** yes — every "auto" flag (the compiler's quest flags too; the example's
+> `vault_guardian_beaten`) was numbered from `$0158`, the game's (Milayou's rematch). Now
+> `number_flags` moves an auto flag off `$0158` to the lowest free number (the others keep
+> theirs), and opening a project does the same for a pinned one (`_migrate_shared_flags`, a
+> note; the quest flags are written in first) — the user's `milly_roots_seen` → `$015A`; the
+> example project ships moved (`$015A` / `$0159`). **(2) "ITS NOT KING MATCH ITS MONSTER GRANDPA
+> MATCH FIX THE DOCS" / "ONLY THIS MONSTER BATTLE":** arena group 9 (GoldSlime / Divinegon /
+> Rosevine, EIDs 481-483) is labelled **Monster Grandpa's match** in the Arena tab, help, docs and
+> its disassembly comments (data key `King` kept); nothing about the real King changed. **(3)
+> "No idea if new arena is tile editable":** PyBoy on the painted demo: the lobby block and the
+> arena floor row show and survive every match; the copy had split the night arena (vanilla
+> steps 1-4 all draw layout `$2315`) into four items, so a Starry Night paint vanished from
+> match 2 — `clone_vanilla` now shares one item per vanilla layout (new copies).
+> **Annotation (Iron Rule 6, both trees):** the clean tree has S128 comments at every arena site
+> (banks $01 `jr_001_4405` + `CheckScriptBeforeAction`, $03, $07, $09 `ArenaMenuMarkWon` + State2,
+> $50 `$5730` / `BattleExitHandler` / the loss mailbox, $51 music + `LoadBtlS_43c9`); the group-9
+> comments in banks $04 / $50 say Monster Grandpa's match. Clean rebuild `1ca6579…`.
+> **Verification:** test_compiler --rom 1317/1317 (`test_your_arena_s128`, `_rom`; the S124 /
+> S117 / rule-term flag tests re-stated), test_app PASS (`s128_arena`), verify_integrity PASS,
+> clean `1ca6579…`; REFERENCE_MD5 `3a9c38fb…` (patched; the example's quest flag `$015A`).
+> **Test ROM `DWM-S128r2-your-arena-test.gbc` (`a0cb333e…`, patched; USER-CONFIRMED):** the
+> user's my-dwm-hack_19 + the S128 DEMO NPC in Cities_FOUNT (3, 4) → the ARENA GATEHOUSE (guide,
+> doorman → the lobby, F-class key keeper, clerk = `$CAB4` := 0, way back); the lobby's bottom door
+> → the gatehouse; G won flag + words, F locked by the key and a win → the gatehouse, E → the
+> hub, custom lost / locked words, Starry Night offered after S → the gatehouse. Every path
+> walked in PyBoy on the user's save.
+> **r3 (user 11:18–11:31, their _20 + save: "made a fancy new arena … not showing up";
+> "Why is player sprite fucked in arena? … Its the milly thing"; "When I double click on an
+> exit or entry, it should bring up a window that can set both ends"):** (a) nothing led
+> into the copies — the user's save stands at GREATTREE's (the game's) arena door; routing
+> it into the lobby copy = the fix (their painted arena then played, PyBoy). (b) The arena
+> shows the player as NPC sprite `$E0` with frame id `$5E` (Terry's NPC frames) over the
+> player's sheet — Milayou's with the hook: cut up, in both arenas. Bank $0B
+> `MillyE0Type` (room entry 0's dead bytes; same size): `$14` (Milayou's NPC frames) when
+> `$179F` is set (two other attempts failed in PyBoy — KEY_LESSONS). (c) double-click a
+> plain exit (a copied room's game exits, teleports) → *Exit — connect both ends*;
+> `Document.connect_ends` makes plain exits doors, a double exit's second cell follows
+> (`twin_of`). test_compiler --rom 1325/1325 (`test_connect_ends_s128r3`, the `$E0` run in
+> `test_your_arena_rom`), test_app PASS (`s128_arena` + the connect window), verifier PASS;
+> REFERENCE_MD5 `fe5fa80a…` (patched); `EDITOR_REVISION` 'S128r3'. **Test ROM
+> `DWM-S128r3-milly-arena-fix-_20.gbc` (`a7021221…`, patched; NOT yet user-tested):** the
+> user's _20 + GreatTree's arena door → their lobby copy + the fix.
+> **Next:** the user's test of r3; then P3.14 continues (the user's pick).
+
 > Last verified: 2026-10-06 (Session 127 — **ROADMAP P3.14e2 BUILT: BREEDING IN THE PROJECT'S
 > ROOMS — MONSTER GRANDPA (BREED / HATCH, THE GAME'S FEE) AND BREEDERS OFFERING THEIR OWN
 > MONSTER AS NPC ROLES; THE VANILLA CEREMONY COMES BACK TO THE ROOM; A BREEDER'S MATE FIXED OR

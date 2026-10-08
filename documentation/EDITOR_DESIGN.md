@@ -1565,7 +1565,8 @@ exposes `enc_list_threat_rows` for it; the 'unused gate' does not matter; the ne
   Lv a-b · monsters", bold = edited, grey = nothing uses it; "hide lists nothing uses";
   **New list (copy)** (a byte copy of the selected, named) / **Delete** (refused while
   used). Editor: name (own lists), battle rate (codes 0-7 named very rare … relentless,
-  with "≈ N steps between battles outside gates" = the counter-table mean / the drain),
+  with "≈ N steps between battles outside gates" = the mean over the counter table of
+  counter // drain + 1 — S130: was counter / drain, one step short; GATE_GENERATION §4.4),
   monsters per battle (1/2/3 codes + real %), maze size, five slots (Monster… picker over
   your enemies + the game's 486 rows, chance, real chance, most in one battle) — slot and
   size edits are STAGED and written by **Apply** as one undo step only when they add up
@@ -1864,6 +1865,56 @@ PIT-uniform). Surface it:
 - **Guardrail**: every panel states its validation corpus; anything
   unvalidated (the §15.9 residuals) is greyed out, not guessed — the §7
   differential-validation rule applies to the UI too.
+
+**As built S130 (ROADMAP P3.15a; built S130, NOT yet user-tested)** — the user's spec
+(S130): a read-only anchor of the original game's difficulty curve for every key fight
+(gate lists, bosses, arena matches, Starry Night, Grandpa) to compare custom content
+against; recomputed from the project as skills / growth / exp curves / breeding change;
+how a boss skillset change moves difficulty without trial runs; rolled teams "a player
+might have organically assembled", for the original game too; view a team; set one by
+hand or import it from a .sav. The service is PROJECT_COMPILER §2.43. The tab
+(`editor2/app/balance_tab.py`, help `72_balance.md`), three pages:
+- **Story curve** — a tree in story order (step rows show their hardest fight; postgame
+  marked; a green row where breeding opens, original and project): columns — **S130 r2:
+  the player profile first (bold, the main number: the step's optimised kit under the
+  player's orders, best tactic in the arena), casual / strong secondary ("show casual /
+  strong", on by default)** —, then original casual l90 / l50, original strong l90, project
+  the same (Compute player optimises each step's kit first, "optimising kit for <step>…");
+  every level cell coloured by band (1-10 green … 76-98 red, 99+ purple darkening with the
+  share lost at 99; a legend strip); a kit panel (the step's 3 members: how obtained, plus,
+  level, skills; the level it was optimised at; the arena tactic) with "Use this kit as the
+  current team"; Change compares a chosen profile (player by default); the old columns:
+  Change (much harder / harder / similar / easier, a band that widens with the level;
+  beyond 99 on both sides it compares the win % at 99), Unmodelled, Notes (members short of
+  the team level because of caps). "99+ (17 %)" = not won 90 % even at 99, with the win %
+  at 99; the tooltip adds win / rounds / HP left / level reached / enemies' HP left. Two
+  dive rows per gate (direct = lower bound, sweep = upper). Project fights outside the
+  story get their own section with "lands like" (nearest original fights). Buttons
+  Compute casual / Compute strong / Compute selected (+ "with gate dives"), progress +
+  Cancel, results stream in, the cache saves after each fight. "Breeding opens after"
+  combo (project setting, one undo step). A QPainter chart: each step's hardest l90,
+  original vs project, with a band above 99 for unwon fights (higher = further).
+  Missing / stale anchor → a banner, the rest works; S130 r2: **Build original-game numbers**
+  runs `tools/build_balance_anchor.py` on the user's computer (every core, QProcess, progress
+  from its output, Stop; resumable from `balance_vanilla.json.partial`).
+  **S130 r3 — SIMPLE view by default** (user: "really crowded and I dont really understand all
+  the numbers"): Fight | Original game | Your project | Change — the player l90 as "Lv 32" /
+  "can't win (38 %)", Change in words ("much harder (+12)" … "much easier (−10)"), one
+  plain-English line above the table, a sentence on hover, step rows = their hardest fight,
+  "Compute your project", the chart (player curve), "Show the team" (kit panel collapsed);
+  Team / Fight pages fixed to player with results in words ("wins 9 of 10", "about 6
+  rounds"); **Show details** (saved setting `balance/details`) restores the full view.
+- **Team** — data source (Original game / Your project), profile (player = the step's kit), step, level, team #
+  (0-11 = the teams the numbers use), Roll / Reroll; each member: nickname, monster,
+  level / cap, six stats, plus, skills, origin ("bred: X x Y"). Import party from .sav…,
+  Pick member… (monster, level, plus, 8 skills pre-filled with what the game teaches),
+  Remove member.
+- **Fight** — any story or extra fight of either source, its battles (chance, each
+  enemy's level / stats / skills); Evaluate current team (at its own levels; "under your
+  orders (player)" or "on its own AI tactics", a "How it fought" row); Level
+  needed (anchor / cache first); What-if: level, six stats, 4 skills per enemy on a
+  separate copy of the data → As is / What-if / Change (win, rounds, HP left, enemy HP
+  left); Reset this enemy / Reset what-if. Never writes the project.
 
 ### 5.10 Build & Play
 

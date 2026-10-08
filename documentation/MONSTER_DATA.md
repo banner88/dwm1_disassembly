@@ -21,9 +21,9 @@
 | $06 | 1 | Skill 1 ID | See bank $41:$628E for skill names |
 | $07 | 1 | Skill 2 ID | |
 | $08 | 1 | Skill 3 ID | |
-| $09 | 1 | HP growth | Curve index for growth table at bank $13:$6706 |
+| $09 | 1 | HP growth | Curve index for growth table at bank $13:$6706. Gets the plus bonus `PlusGrowthBonus` (was `Call_013_4163`) like ATK *(S130: HP AND ATK, not ATK only)* |
 | $0A | 1 | MP growth | |
-| $0B | 1 | ATK growth | Gets bonus scaling via `Call_013_4163` |
+| $0B | 1 | ATK growth | Gets the plus bonus `PlusGrowthBonus` (`$13:$4163`, was `Call_013_4163`) |
 | $0C | 1 | DEF growth | |
 | $0D | 1 | AGL growth | |
 | $0E | 1 | INT growth | |
@@ -68,13 +68,31 @@ Values (S106 corrected): 0 = no resistance (full effect), 1 = some, 2 = strong, 
 
 ## Stat Growth System (Bank $13)
 
-**Entry 0** (`label13_4009`): Level-up stat calculation
+*(S130) Corrected — the old stub called entry 0 "level-up stat calculation";
+entry 0 is the exp-threshold fetch and the gains are entry 2. Full decode,
+order and census: "Raising a monster (S130)" below.*
 
-1. Reads species from party struct offset `$CACA` → `$DA31`
-2. Loads monster info via bank $03 entry 1
-3. Each of 6 growth bytes (HP/MP/ATK/DEF/AGL/INT) indexes into growth table at `$13:$6706`
-4. Growth table: 99 entries per curve, each giving the stat increment for that level
-5. HP and ATK get additional bonus scaling via `Call_013_4163`
+| Entry | Label (S130) | Does |
+|---|---|---|
+| 0 (`$1300`) | `LevelUpExpThreshold` ($4009) | HRAM `$D5-$D7` := `ExpCurveTables[info +$02][level]` = exp to reach level+1 |
+| 1 (`$1301`) | `SnapExpToLevel` ($4050) | exp +$4D := `ExpCurveTables[info +$02][level − 1]` (creation) |
+| 2 (`$1302`) | `LevelUpGains` ($40AE) | the six gains → `$C8CA-$C8CF` (HP, MP, ATK, DEF, AGL, INT); `$C8D0` = at-cap flag |
+
+**The exact per-level gain (S130, measured 5,073 level-ups, 0 mismatches).**
+L = the level BEFORE the level-up (+$4B), raw = `StatGrowthTables[info
++$09..+$0E][L]` (`GrowthCurveGain`, 99 bytes per curve):
+
+- **L < max level (+$4C)**: gain = raw; for **HP and ATK only**, when L ≥ 14,
+  `PlusGrowthBonus` adds max(1, raw div d) for each (b, c, d) in (1, 19, 6),
+  (10, 20, 8), (20, 30, 6), (50, 100, 5) whose roll passes: plus +$62 ≥
+  (RNG16 mod c) + b, RNG16 = wRNG2:wRNG1 after `GenerateRNG`
+  (`PlusGrowthRoll`); clamped to 255. MP/DEF/AGL/INT get the raw curve only.
+- **L ≥ max level**: gain = raw·L div 100 + 1 and it is **subtracted** (no plus
+  rolls).
+- Applied by bank $51 entry 13 `ApplyLevelUp` AFTER the skill-learn scan:
+  level += 1 (nothing at all at 99); MaxHP / MaxMP / ATK / DEF cap 999, AGL
+  511, INT 255; current HP / MP are not raised; the at-cap subtraction floors
+  at 1 and clamps HP / MP to the new maxima.
 
 ## Enemy Stats Table (Bank $14:$4C1D)
 
@@ -121,9 +139,11 @@ The grant block is annotated in `disassembly/bank_00c.asm` at
 `Bank0C_ScriptAddr_4270:` (labels/comments only; byte-perfect).
 
 **Editing the starter**: change enemy-stats entry 1. Species and level transfer
-*exactly*. The six stats (HP/MP/ATK/DEF/AGL/INT) transfer as the **base**, then
-receive the standard creation roll (see Party Monster Structure) — each displayed
-stat is 80–100% of the field value, re-rolled per new game. Confirmed in-game by
+*exactly*. The six stats (HP/MP/ATK/DEF/AGL/INT) transfer as the **base**; HP,
+MP, ATK, DEF and INT then receive the standard creation roll (see Party Monster
+Structure) — each displayed stat is 80–100% of the field value, re-rolled per new
+game. *(S130 correction: **AGL is not rolled** — it arrives exactly as the field;
+measured 962/962 creations.)* Confirmed in-game by
 swapping EID 1 → SkyDragon, Lv25, HP-field 599: the starter appeared as a
 SkyDragon Lv25 with HP 566 (∈ 479–599) and Slime-tier ATK 8 / DEF 5 straight from
 entry 1's fields — proving the stats derive from the entry, not the species
@@ -169,9 +189,15 @@ Index function: `Call_000_223b` — `HL = field_base + index × $95`
 | Offset | Size | Field |
 |--------|------|-------|
 | $00 | 1 | In-use flag |
+| $01 | 8 | Nickname — creation writes it only for named enemy rows (bank $14 `jr_014_4469` / `CreateForeignMasterNames`) *(S130)* |
 | $09 | 1 | Species ID |
 | $0A | 1 | Family |
-| $29 | 8 | Skill list ($FF empty) — measure_battle `--pskills` target [S87] |
+| $0B | 1 | Gender, $01 = female — creation: `EnemyGroupTable[EID]` ($14:$4A0F) unless $FF, then rolled; breeding: rolled *(S130)* |
+| $0C | 8+1 | **Master name** (9th byte +$14 = `$CAD5`) := the player's name `$CA42` at creation (rival rows: another master) and again at birth *(S130)* |
+| $15 / $16 | 1 + 1 | **Pedigree species**: father / mother of a bred monster ($FF = not bred); `BreedPedigreeNames` writes the father first (swap when the pedigree +$0B is female) *(S130)* |
+| $17 / $20 | 9 + 9 | The parents' master names (their +$0C, 9th byte := `$CA4A`) *(S130, code-read)* |
+| $29 | 8 | Known skills ($FF empty) — measure_battle `--pskills` target [S87] |
+| $31 | 25 | **Learn queue** ($FF empty): creation = the species' natural 3; breeding = up to 25 inherited bases; birth rebuilds it; `SkillLearnScan` consumes entries (code 0) *(S130)* |
 | $4A | 1 | Status (bit7 KO; bit0/bit2 poison/curse persistents → battle init) [S87] |
 | $4B | 1 | Level (display; → battle `$db9b`) |
 | $4C | 1 | Individual MAX level = species base ±2, rolled at creation [S87 corrects S36] |
@@ -184,10 +210,13 @@ Index function: `Call_000_223b` — `HL = field_base + index × $95`
 | $5A | 2 | DEF |
 | $5C | 2 | AGL |
 | $5E | 2 | INT |
-| $60 | 2 | **WLD (wildness)** — shown on the INFO screen; → battle `wBattleLVL` (misnomer); the obedience gate's input. Init = **5×level − 10×arenaTier ($CAB4)**, clamped 0..255; breeding ZEROES it (bank $16 `label16_474a` — hatchlings fully tactic-compliant); item effects adjust via ROM0 `Add/SubMonsterWLD` [S87, screen-verified]. **[S89] Level-up does NOT write it** — measured L1→L13 in one post-battle scan (stats applied normally), +$60 frame-sampled unchanged; static writer set is CLOSED (creation / breeding / items). So the 5×level formula describes a monster CREATED at that level; a hand-raised monster keeps its creation WLD |
+| $60 | 2 | **WLD (wildness)** — shown on the INFO screen; → battle `wBattleLVL` (misnomer); the obedience gate's input. Init = **5×level − 10×arenaTier ($CAB4)**, clamped 0..255; breeding ZEROES it (bank $16 `BreedBirthFinalize`, was `label16_474a` — the birth finalizer, S130 — hatchlings fully tactic-compliant); item effects adjust via ROM0 `Add/SubMonsterWLD` [S87, screen-verified]. **[S89] Level-up does NOT write it** — measured L1→L13 in one post-battle scan (stats applied normally), +$60 frame-sampled unchanged; static writer set is CLOSED (creation / breeding / items). So the 5×level formula describes a monster CREATED at that level; a hand-raised monster keeps its creation WLD |
 | $62 | 1 | Plus value |
+| $63 | 1 | **Egg flag** ($01 = egg; breeding sets it, the birth finalizer clears it) *(S130 row; see also "Record fields established")* |
 | $64 | 4 | **AI weights / personality** in order cat1/cat3/w3/cat2 ($CB25/26/27/28 views) — source of the battle category-base arrays $DC44/$DC54/$DC5C/$DC4C (bank $51 `LoadBtlS_44cb` → `jr_051_45f8`); adjusted by field item effects only (`Add/SubMonsterAIWeight*`), never mid-battle [S87, hook-verified] |
 | $68 | 27 | Resistances |
+| $83 / $8C | 8 + 8 | The parents' **nicknames** (their +$01), read by `PedigreeForeignCount` as 9-byte names *(S130)* |
+| $8B / $94 | 1 + 1 | The parents' plus values (their +$62) — the 9th byte of the +$83 / +$8C names *(S130, code-read)* |
 
 NOTE [S87]: the pre-S87 rows $4B..$5A ("Level/cap/HP/MP/ATK/DEF/AGL/INT")
 were off by the missing MaxHP/MaxMP words from $52; the stat block above is
@@ -196,7 +225,9 @@ the real save (Slib: level 1 at $4B, cap 38 at $4C, WLD 5 at $60 matching
 the INFO screen, AI bytes 80/186/189/85 at $64).
 
 **Creation (bank $14 entry 2 `label14_40b4`, script opcode $29 path) [S36,
-completed S87]**: every stat word is scaled by `SaveEnem_4821` and every AI
+completed S87]**: ~~every stat word is scaled~~ *(S130 correction: MaxHP, MaxMP,
+ATK, DEF and INT are scaled by `SaveEnem_4821` — **AGL is NOT rolled**, `$CB1D ←
+$DA25` has no roll call; measured 962/962)* and every AI
 weight byte by `SaveEnem_47fd` — the same one-time roll: factor
 `m256 = $CD + (RNG mod $34)`, applied as `value*m256 >> 8`, with the
 `m256==$100` overflow case keeping the original (**exactly** 1.0×); so
@@ -953,9 +984,9 @@ give/creation parameter block (EID lo/hi, target slot).
 | Offset | Size | Field | Evidence |
 |--------|------|-------|----------|
 | +$00 | 1 | In-use/side flag: $00 empty / $01 farm / $02 party | exp walker fork; canonicalizer writes; drop/pick flips |
-| +$0C | 9 | Nickname (the old "+$14 Name data 1 B" row was the LAST byte of this field) | status render reads `$CACD`; farm detail copies 9 B to `$CA42` scratch |
-| +$29 | 8 | $FF-terminated ID list A (semantics UNVERIFIED — sanitized by `ScanPartySlotTable`) | `$01:$46A5` walks it |
-| +$31 | 25 | $FF-terminated ID list B (semantics UNVERIFIED — same sanitizer, compacted in place) | `$01:$46BE` |
+| +$0C | 9 | ~~Nickname~~ **Master name** *(S130: creation writes the player's name `$CA42` here; the nickname is +$01)* (the old "+$14 Name data 1 B" row was the LAST byte of this field) | status render reads `$CACD`; farm detail copies 9 B to `$CA42` scratch |
+| +$29 | 8 | $FF-terminated ID list A = the **known skills** *(S130)* — sanitized by `ScanPartySlotTable` | `$01:$46A5` walks it |
+| +$31 | 25 | $FF-terminated ID list B = the **learn queue** *(S130)* — same sanitizer, compacted in place | `$01:$46BE` |
 | +$4A | 1 | Battle status byte; **bit7 = KO/incapacitated** (excluded from exp + eligible-count; bulk-cleared post-battle/heal) | exp walker; `CmpBtl_62dd`; `IteratePartySlots20` clears |
 | +$63 | 1 | **Egg flag** ($01 = egg) | set by egg-receive `$12:jr_012_6c0a` + builder sub-cmd $5E (`$14:Jump_014_4586`); exp walker skips ≠0; egg/non-egg menu filters test it |
 
@@ -990,7 +1021,7 @@ They are inside the `$C8EA-$D9E9` save image. Uses found:
 
 - **Breeding**: both parents are copied to slots 20/21 and DELETED from the
   array before bank $16 runs; breeding math indexes parents as `field+$0BA4`
-  and `+$0BA4+$95` (`$16:SaveBrd_41ff`). Two-parent flow at `$0A:~$5877`;
+  and `+$0BA4+$95` (`$16:BreedAIAverage`, was `SaveBrd_41ff`). Two-parent flow at `$0A:~$5877`;
   NPC-mate flow at `$0A:~$4F00` (mate synthesized from EID `$C8F7/8`
   directly into slot 21). Offspring is inserted later at first-empty by
   `$16:jr_016_402d`, which persists the chosen slot in **`$CA40`** for the
@@ -1129,7 +1160,7 @@ then returns unless the destination is non-gate (wWarpFlag = 0) AND pending
   24-bit exp−threshold on HRAM $D5-$D7) and applies each level with the
   IDENTICAL silent vanilla pair the post-battle farm scan uses
   (`jr_050_6337`: `$1302` gains → $C8CA-$C8CF/$C8D0, then `$510d` = bank $51
-  `LoadBtlS_5b31`, which increments +$4B and applies the stat adds — or the
+  `ApplyLevelUp` (was `LoadBtlS_5b31`), which increments +$4B and applies the stat adds — or the
   past-cap SUB variant when $C8D0 is set, exactly as vanilla). **Vanilla farm
   level-ups are SILENT** (code-verified S57: only the party-list pass routes
   to the display state; the all-20 scan is the $1302+$510d pair with no
@@ -1574,7 +1605,10 @@ BATTLE_SKILL_SYSTEM "Resistances are an ENEMY stat too").
 
 A skill is learnable only when level AND all six stat thresholds in
 `SkillLearnReqTable` (`$06:$50E0`, 218×18 — S100: ids $DA-$DD have no row, their lookups read
-code = never learnable) are met. So a growth curve that is
+code = never learnable) are met. *(S130: necessary, not sufficient — the skill
+must also be in the monster's learn queue +$31, or have its prerequisites known;
+the level compared is level+1 and the stats are the PRE-gain ones. See "Raising
+a monster (S130)".)* So a growth curve that is
 too flat can make a skill permanently unreachable even though it sits in the
 species' natural slots. Worked example (S76, guaranteeing a starter can heal):
 
@@ -1587,7 +1621,189 @@ The S76 randomizer swaps the starter's MP/INT curve indices with another
 species' (preserving the column multiset) until
 `base + Σ curve[1..4] ≥ threshold + 3`. The +3 margin exists because the
 creation roll can shave the base by up to 20% and the level-up routine applies
-its own per-stat scaling on top of the raw curve.
+its own per-stat scaling on top of the raw curve. *(S130: for MP and INT it does
+not — vanilla adds the raw curve; only HP and ATK get the plus bonus, and the
+learn scan runs on the stats BEFORE the level's gains. The margin covers the
+roll and that one-level lag.)*
+
+---
+
+## Raising a monster (S130) — creation, level-up, learning, breeding, birth
+
+How the game creates, levels, teaches, breeds and births a monster — decoded from
+the routines and **measured against the game**. Model: `simulator/raising.py`
+(`create` / gains / `learn_scan` / `apply_gains` / `level_up` / `grow_*` /
+`breed` / `pedigree_k` / `birth` / `GameRNG`). Census: `tools/census_raising.py`
+→ `extracted/raising_census.json` stub-calls the REAL routines in PyBoy with
+wRNG1/2 pinned and compares every record byte the model predicts (the verifier's
+check 5 runs its selftest). Disassembly labels below are the S130 names (both
+trees; old names in the label map at the end).
+
+| Run (original ROM, `raising_census.json`) | Count | Mismatches |
+|---|---|---|
+| Creations | 962 | **0** |
+| Level-ups (675 skills learned, 484 past the max level) | 5,073 | **0** |
+| Breeds + second generation + births | 400 + 400 + 400 | **0** |
+
+The same full run on the user's my-dwm-hack_22 build and on the example project
+build is also 0 mismatches (the example: 682 learned, incl. the custom
+Tremor→Quake chain via the patched `LearnLoopFork`). Other census counts
+(original ROM): 2,280 plus-bonus rolls, 400 resistance rolls, 90 all-prereq
+(code 2) learns. **Control**: learning evaluated on the POST-gain stats would
+differ at 921 level-ups — the census tells the two orders apart.
+**End-to-end**: 4 real won battles on the user's save (u22 build, rigged battle
+vs a Slime): BattleRex 23→27 and 23→32, Healer 19→25 (the 44→45 upgrade) and
+19→31 (learns 46 from its queue) — stats, skills and queue == the model.
+
+### Creation — bank $14 entry 2 `label14_40b4` (script opcode $29, joins)
+
+Source: the 25-byte enemy-stats row at `$DA18` (EID `$DA12/$DA13`, slot `$DA14`)
+and the species info row at `$DA33`.
+
+- Record zero-filled; +$15/+$16 := $FF; +$29 (8 known) := $FF; +$31 (25-byte
+  learn queue) := $FF; the parents' name fields +$17/+$20/+$83/+$8C := the
+  placeholder name at `$14:$477A`.
+- **Master name** +$0C (8 B, 9th byte `$CAD5`) := the player's name `$CA42` —
+  except EIDs $131-$13C (`CreateForeignMasterNames`, the rival tamers' teams):
+  another master's name (+$0C) and a nickname (+$01). EIDs $01, $0C, $34, …
+  (the `$DA13 == 0` cases) and $15F/$1E4/$1E5 get a nickname only; $15E sets
+  the egg flag +$63 (`Jump_014_4586`).
+- **Stats**: MaxHP/HP, MaxMP/MP, ATK, DEF, INT each get the creation roll
+  `SaveEnem_4821` (v·m >> 8, m = $CD + (RNG1 mod $34), m = $100 keeps v).
+  **AGL is NOT rolled** (`$CB1D ← $DA25`, no roll call) — measured 962/962.
+- **AI bytes** +$64..+$67 ← row +17, +18, +20, +19, each rolled (`SaveEnem_47fd`).
+- **Known skills** +$29 ← the row's 4 skills; then `DropKnownSkillBases`: a known
+  $DB is erased, and for each known skill its base (the 256-byte
+  UnevolvedSkillMap copy at `$14:$491D`, byte-identical to `$16:$4874`) leaves
+  the learn queue (first match). *A created (joining) monster DOES know its
+  enemy row's skills — ROADMAP P3.10 residual (e) "a joining monster brings
+  none" is wrong (measured 962/962).*
+- **Learn queue** +$31 ← info +$06..+$08 (the species' natural 3).
+- **Max level** +$4C = info +$01 + (RNG1 mod 5) − 2.
+- **Gender** +$0B = `EnemyGroupTable[EID]` (`$14:$4A0F`, 526 B: $00/$01 fixed)
+  else RNG1 < `CreateGenderThreshold[info +$03]` (`$14:$459E` = 00 1A 80 D6) → 1.
+- **WLD** +$60 = 5·level − 10·[`$CAB4`] clamped 0..255. Exp snapped to the
+  level (`$1301` = `SnapExpToLevel`).
+- **RNG order**: HP, MP, ATK, DEF, INT rolls, the 4 AI rolls (+$64, +$65, +$66,
+  +$67), the cap roll, the gender roll (only when the table gives $FF).
+
+### Level-up — banks $50 / $51 / $13 / $06, in this order
+
+The post-battle flow for a party monster is bank $51 **entry 12
+`LevelUpStateMachine`** ($5578; its 18-state jump table was misassembled as code
+and is now a byte-identical `dw` list of `LevelUpS00_Begin` … `LevelUpS11_Apply`):
+
+1. **S01 `LevelUpS01_Gains`** (`ld hl,$1302 / rst $10`): bank $13
+   `LevelUpGains` computes the six gains into `$C8CA-$C8CF` at the **OLD**
+   level (the window shows level+1). S02 shows them (a stat already at its cap
+   shows 0).
+2. **S03 / S04**: `$C0D8` := $FF × 40, the 8 known skills copied in; then per
+   tick `ld hl,$0605 / rst $10` = bank $06 entry 5 **`SkillLearnScan`** until
+   `$FFD8` = $FF; the caller (`jr_051_5799`) places each result — code 0/2 →
+   the first $FF slot, code 1 → over the old id `$FFDA`; then `$0106`.
+3. **S0A** `LearnCompactCount` compacts `$C0D8` and counts; ≥ 9 → the forget
+   menu (states $0B-$0F).
+4. **S11** (`jr_051_5b04`): `LearnCopyBack` copies `$C0D8[0..7]` → +$29, then
+   **`ApplyLevelUp`** (bank $51 entry 13): level += 1 (if < 99), then the gains
+   (`AddMonsterHP` → MaxHP +$52 only, cap 999; MP → MaxMP +$56, 999; ATK 999;
+   DEF 999; AGL 511; INT 255 — current HP/MP not raised).
+
+So **the learn scan sees the PRE-gain stats and compares `level + 1`** (the new
+level). The farm all-20 scan (bank $50 `jr_050_6337`) runs `$1302` + `$510D`
+only — **farm monsters never learn**.
+
+Bank $13: entry 0 `LevelUpExpThreshold` (exp curve[info +$02][level] → HRAM
+`$D5-$D7`), entry 1 `SnapExpToLevel`, entry 2 `LevelUpGains`:
+
+- at-cap flag `$C8D0` := 1 when (max level − 1) < level, i.e. level ≥ max level.
+- `GrowthCurveGain` = growth curve[index][level] (`StatGrowthTables`, 99 per
+  curve); at cap: raw·level/100 + 1, and `ApplyLevelUp` then **subtracts**
+  (`SubMonster*`, floor 1) and clamps HP/MP to the new maxima. The exp walker
+  stops paying at level ≥ max level, but one big exp chunk can carry a monster
+  past it (measured: 484 past-max level-ups, every subtraction exact).
+- `PlusGrowthBonus` (HP and ATK only; skipped at cap or below level 14) = four
+  plus-gated rolls `PlusGrowthRoll` (b, c, d) = (1,19,6) (10,20,8) (20,30,6)
+  (50,100,5): threshold = (RNG16 mod c) + b, RNG16 = RNG2:RNG1 (`GenerateRNG`
+  then `ld l,[wRNG1] / ld h,[wRNG2]`); plus +$62 ≥ threshold → gain +=
+  max(1, raw/d), clamp 255.
+
+### Learning — bank $06 entry 5 `SkillLearnScan`
+
+For c = 0..$D9 over `SkillLearnReqTable` (patched builds continue with the
+custom ids through `LearnLoopFork`):
+
+- skip if c is already in `$C0D8` (`LearnWorkListHas`);
+- skip if level+1 < the row's level;
+- skip unless MaxHP +$52, MaxMP +$56, ATK, DEF, AGL, INT ≥ the row's six words;
+- then **(a)** c in the learn queue +$31 (25 B) → **code 0**, the queue entry
+  := $FF (`LearnFoundInQueue`); **(b)** else the prereqs (row +13..+17): first
+  $FF → skip (a no-prereq skill is learned ONLY from the queue); exactly one
+  prereq, known → **code 1** upgrade, `$FFDA` = the old id
+  (`LearnFoundUpgrade`); 2-5 prereqs all known → **code 2**
+  (`LearnFoundAllPrereqs`; patched builds: `LearnCode2Guard06` bars custom ids).
+  `LearnPrereqKnown` / `LearnKnownScan` scan the 8 KNOWN skills +$29, not
+  `$C0D8`.
+
+### Breeding — bank $16 entry 0 `BreedCreateOffspring` ($4015)
+
+- Level 1; plus `$DA77` (≤ 99); max level = clamp(info cap + 2·plus, 2, 99).
+- **Stats** (`BreedStatInherit`: MaxHP/HP, MaxMP/MP, ATK, DEF, AGL, INT):
+  s = (pedigree + mate) >> 2 (16-bit sum, two `srl/rr`); stat = s + s·k/50
+  (`Mul16x8To24` / `Div16x8To16` by $32), 0 → 1. **k** = `PedigreeForeignCount`
+  = how many of the pedigree names differ from the player's name `$CA42` (9 B,
+  `PedigreeNameDiffers`): each parent's master +$0C, and for a parent with a
+  pedigree (+$15 / +$16 ≠ $FF) its +$83 / +$8C. `BreedPedigreeNames` fills
+  +$83/+$8C with the parents' NICKNAMES (+$01), so a bred parent counts 2
+  unless a nickname equals the player's name: second-generation offspring get
+  about +4..8 % (measured: generation 2, 400/400).
+- **AI bytes** (`BreedAIAverage`): `add c / ld c,a / ld a,$00 / add b` — the
+  carry is DROPPED (should be `adc`): value = ((pedigree + mate) & $FF) >> 1.
+  **VANILLA BUG** (measured 400/400; two 200s give 72, not 200).
+- **Resistances** (`BreedResistInherit` → `BreedResistOne` per type, on
+  (p1 + p2) & 7 of the parents' +$68): own (info) level 3 keeps; own 2 →
+  `BreedResistMidTable` (`$16:$441B`) [5: RNG16 mod 200 < plus → +1
+  (`ResistUpTo3`, cap 3); 6: mod 40]; own 0/1 → `BreedResistLowTable`
+  (`$16:$43AA`) [0-2 nothing; 3: mod 100 < plus → +1 (`ResistUpTo2`, cap 2);
+  4: mod 30; 5: mod 10 then mod 30; 6: +1 unconditionally then mod 20]. Both
+  jump tables follow `rst $00` and were misassembled as code; S130 converted
+  them to byte-identical `dw` lists. `BreedPlusRoll` = `GenerateRNG`, HL =
+  RNG2:RNG1 mod A (remainder), `cp b` (carry = rem < plus). An unlabeled
+  "resistance −1" routine after it has no reference (dead).
+- **Learn queue** (`InheritSkillList` / `InheritOneSkill`): own natural 3,
+  pedigree species' natural 3, mate species' natural 3, pedigree's known 8,
+  mate's known 8, each through UnevolvedSkillMap ($FF = never), first 25
+  distinct; **knows nothing** (+$29 stays $FF).
+- **Gender**: RNG1 < `BreedGenderThreshold[ratio]` → female (rolled after the
+  27 resistance entries).
+- **Pedigree** (`BreedPedigreeNames`): +$15/+$16 species, +$17/+$20 master
+  names, +$83/+$8C nicknames, +$8B/+$94 plus — the father first (swapped when
+  the pedigree +$0B is female).
+- **Egg flag** +$63 := 1 (the offspring is an egg until birth).
+
+### Birth — bank $16 entry 4 `BreedBirthFinalize` ($474A)
+
+ROADMAP P3.12 residual (a) called it "skill/stat inheritance" — it is the
+**BIRTH FINALIZER**. Called by `ScriptCmd3A_ToBreedingScene` (bank $04) and bank
+$0A `label5c5b`. WLD +$60 := 0; master +$0C := the player's name; the learn
+queue is rebuilt in `$C0D8`: own natural 3, then +$15's species natural 3, then
++$16's (only when +$15 ≠ $FF; +$15 = the father), then the old queue
+(`BirthQueueRebuild`), each through `BirthQueueAdd` (= `InheritOneSkill` into
+`$C0D8`, the map at `$4874`); copied back to +$31; egg flag +$63 := 0.
+
+`BirthQueueRebuild` rolls `GenerateRNG` + RNG16 mod 100 vs plus per queue
+entry, but `jr jr_016_482b` (an unconditional `18 05`) skips the compare's use —
+a **DEAD "keep this skill by plus" roll** that only steps the RNG 25 times; the
+5 bytes after it are unreachable.
+
+### S130 label map (labels/comments only; both trees; clean build `1ca657…`)
+
+| Bank | Old → new |
+|---|---|
+| $13 | `label13_4009` → `LevelUpExpThreshold`, `label13_4050` → `SnapExpToLevel`, `label13_40ae` → `LevelUpGains`, `FuncExp_411e` → `GrowthCurveGain`, `FuncExp_4163` → `PlusGrowthBonus`, `SaveExp_41a5` → `PlusGrowthRoll` |
+| $06 | `label6_4f9a` → `SkillLearnScan`, `SetMapS_50d2` → `LearnWorkListHas`, `SaveMapS_50c0` → `LearnPrereqKnown`, `FuncMapS_50c7` → `LearnKnownScan`, `jr_006_5097` → `LearnFoundInQueue`, `Jump_006_50a6` → `LearnFoundUpgrade`, `Jump_006_50b5` → `LearnFoundAllPrereqs` |
+| $51 | `LoadBtlS_5b31` → `ApplyLevelUp`, `LoadBtlS_5b1c` → `LearnCopyBack`, `SetBtlS_580d` → `LearnCompactCount`; new `LevelUpStateMachine` + `LevelUpS00_Begin` … `LevelUpS11_Apply` (entry 12's table → `dw`) |
+| $14 | `Jump_014_4413` → `CreateForeignMasterNames`, `SetEnem_47ad` → `DropKnownSkillBases`, `CmpEnem_47c7` → `DropSkillBase`; new `CreateGenderThreshold` ($459E); `EnemyGroupTable` / `UnknownData_491F` names kept (tools find them by name) |
+| $16 | `SaveBrd_41b8` → `BreedStatInherit`, `FuncBrd_4313` → `PedigreeForeignCount`, `SetBrd_434f` → `PedigreeNameDiffers`, `SaveBrd_41ff` → `BreedAIAverage`, `LoadBrd_4238` → `BreedPedigreeNames`, `ClrBrd_4360` → `BreedResistInherit`, `LoadBrd_4373` → `BreedResistOne`, `SaveBrd_4444` → `BreedPlusRoll`, `LoadBrd_446c` → `ResistUpTo3`, `LoadBrd_4481` → `ResistUpTo2`, `label16_474a` → `BreedBirthFinalize`, `SaveBrd_4805` → `BirthQueueRebuild`, `CmpBrd_4838` → `BirthQueueAdd`, `LoadBrd_47f8` → `BirthQueueAddList`; new `BreedResistLowTable` / `BreedResistMidTable` + their 8 targets (`dw`) |
 
 ---
 

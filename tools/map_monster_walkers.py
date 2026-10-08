@@ -400,7 +400,7 @@ REGISTER_WALKERS = {
     ("bank_016.asm", "jr_016_401c"): {
         "class": "farm-write",
         "role": "breeding offspring first-empty scan (feeds jr_016_402d)"},
-    ("bank_016.asm", "SaveBrd_41ff"): {
+    ("bank_016.asm", "BreedAIAverage"): {
         "class": "staging",
         "role": "breeding parent field sum: reads field at +$0BA4 (staging "
                 "slot $14) and +$0BA4+$95 (slot $15) — parents addressed as "

@@ -20,7 +20,7 @@ SECTION "ROM Bank $053", ROMX[$4000], BANK[$53]
     dw $5D22                          ; Entry 8
     dw $5E35                          ; Entry 9
     dw $601C                          ; Entry 10
-    dw $60B3                          ; Entry 11
+    dw DispelMachine_60b3             ; Entry 11 — [S130 F10] DeMagic/ThickFog/FILTHZONE machine
     dw $65AC                          ; Entry 12
     dw $670E                          ; Entry 13
     dw $6A9B                          ; Entry 14
@@ -28,264 +28,46 @@ SECTION "ROM Bank $053", ROMX[$4000], BANK[$53]
     dw BossProtectionGate_51aa                  ; Entry 16
     dw $5F15                          ; Entry 17
 
-; --- Dispatch entry 0 ($44CA) ---
-DispatchEntry_53_0:
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0102
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
-    ld bc, $0101
-    ld bc, $0102
-    ld bc, $0202
-    ld bc, $0101
-    ld bc, Boot
-    ld [bc], a
-    ld bc, $0202
-    ld bc, $0102
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, Boot
-    ld bc, $0201
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0102
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    inc bc
-    ld bc, $0301
-    ld [bc], a
-    ld bc, $0202
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0201
-    inc bc
-    ld [bc], a
-    ld bc, $0201
-    ld [bc], a
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0001
-    ld bc, $0000
-    ld bc, $0000
-    ld [bc], a
-    ld bc, $0202
-    ld [bc], a
-    ld bc, $0201
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0101
-    ld bc, $0201
-    ld bc, $0200
-    ld [bc], a
-    ld bc, $0202
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0202
-    ld bc, $0201
-    ld [bc], a
-    ld bc, $0202
-    ld bc, $0201
-    ld [bc], a
-    ld bc, $0201
-    nop
-    ld bc, Boot
-    nop
-    ld bc, $0000
-    nop
-    ld bc, Boot
-    ld bc, $0000
-    nop
-    nop
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0201
-    nop
-    nop
-    ld bc, $0000
-    nop
-    ld bc, $0000
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0101
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0101
-    nop
-    ld bc, Boot
-    nop
-    nop
-    nop
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, Boot
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0000
-    nop
-    nop
-    ld bc, Boot
-    nop
-    ld bc, $0001
-    ld bc, $0101
-    ld bc, Boot
-    ld bc, $0101
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0000
-    ld bc, Boot
-    ld bc, $0000
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0001
-    nop
-    ld bc, $0001
-    nop
-    ld bc, $0001
-    ld bc, Boot
-    nop
-    nop
-    nop
-    ld bc, $0000
-    ld bc, $0101
-    inc bc
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0000
-    nop
-    nop
-    nop
-    ld bc, Boot
-    ld bc, $0001
-    ld bc, $0101
-    nop
-    nop
-    ld bc, $0001
-    ld bc, Boot
-    ld bc, $0000
-    nop
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0000
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0000
-    ld bc, $0001
-    ld bc, $0101
-    nop
-    ld bc, $0000
-    ld bc, $0001
-    nop
-    nop
-    nop
-    ld bc, $0000
-    ld bc, Boot
-    nop
-    ld bc, Boot
-    ld bc, $0101
-    nop
-    nop
-    nop
-    inc bc
-    inc bc
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
+; --- $53:$4025-$41DE: the CRITICAL-HIT CHANCE TABLES (S130 F4) ---------------
+; Data, not code: mgbdis had rendered these 442 bytes as instructions under the
+; label "DispatchEntry_53_0" (it is NOT dispatch entry 0 — that is $44CA above).
+; CritChanceRoll_5ed9 reads [table + $DC3C[attacker]] (the species id, 0-220):
+; CritChanceTablePartyLink_4025 for party slots 0-3 or any link battle,
+; CritChanceTableEnemy_4102 for non-link enemies. A byte 0/1/2 is kept, any
+; other value (only 3 occurs) becomes 4; the hit is a CRIT iff RNG1 < it (out
+; of 256, after one LoadBtlC_4e33 step). Measured S130 (simulator/validate_f4.py):
+; 9818 natural rolls exact (62 crits vs 60.7 expected) and every value at its
+; boundary with RNG1 injected; species rows swapped through $DC3C.
+CritChanceTablePartyLink_4025:
+    db $02, $02, $02, $02, $02, $03, $02, $02, $03, $02, $03, $02, $03, $02, $02, $02  ; species 0-15
+    db $02, $02, $01, $01, $01, $01, $01, $01, $01, $02, $01, $02, $02, $02, $00, $01  ; species 16-31
+    db $01, $01, $01, $02, $01, $01, $02, $02, $01, $01, $01, $01, $00, $01, $02, $01  ; species 32-47
+    db $02, $02, $01, $02, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01  ; species 48-63
+    db $01, $01, $00, $01, $01, $01, $02, $02, $03, $02, $02, $02, $02, $02, $03, $02  ; species 64-79
+    db $02, $02, $02, $02, $02, $02, $02, $01, $02, $01, $02, $02, $02, $02, $03, $03  ; species 80-95
+    db $02, $02, $02, $02, $03, $02, $02, $02, $03, $02, $03, $01, $01, $03, $02, $01  ; species 96-111
+    db $02, $02, $02, $02, $01, $01, $02, $03, $02, $01, $01, $02, $02, $01, $01, $01  ; species 112-127
+    db $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01  ; species 128-143
+    db $01, $01, $01, $01, $00, $01, $00, $00, $01, $00, $00, $02, $01, $02, $02, $02  ; species 144-159
+    db $01, $01, $02, $02, $02, $02, $01, $01, $01, $01, $01, $02, $01, $00, $02, $02  ; species 160-175
+    db $01, $02, $02, $02, $02, $02, $01, $02, $02, $01, $01, $02, $02, $01, $02, $02  ; species 176-191
+    db $01, $01, $02, $02, $01, $01, $02, $00, $01, $00, $01, $00, $01, $00, $00, $00  ; species 192-207
+    db $01, $00, $01, $01, $00, $00, $00, $00, $02, $02, $01, $01, $02  ; species 208-220
+CritChanceTableEnemy_4102:
+    db $00, $00, $01, $00, $00, $00, $01, $00, $00, $00, $00, $00, $00, $01, $01, $01  ; species 0-15
+    db $00, $00, $00, $00, $00, $01, $01, $01, $00, $01, $00, $01, $00, $00, $00, $01  ; species 16-31
+    db $01, $01, $01, $01, $01, $01, $00, $01, $00, $00, $00, $00, $00, $01, $00, $00  ; species 32-47
+    db $00, $00, $01, $00, $01, $00, $01, $01, $00, $01, $01, $01, $01, $00, $01, $01  ; species 48-63
+    db $01, $01, $00, $00, $00, $00, $00, $01, $00, $00, $01, $00, $01, $01, $00, $00  ; species 64-79
+    db $01, $01, $01, $01, $01, $01, $01, $01, $00, $00, $01, $01, $00, $00, $01, $01  ; species 80-95
+    db $00, $01, $00, $01, $00, $00, $00, $01, $00, $00, $01, $01, $01, $03, $00, $00  ; species 96-111
+    db $00, $00, $01, $00, $00, $00, $00, $00, $01, $00, $01, $01, $01, $00, $01, $01  ; species 112-127
+    db $01, $00, $00, $01, $01, $00, $01, $00, $01, $01, $00, $00, $00, $01, $01, $01  ; species 128-143
+    db $01, $01, $01, $01, $00, $00, $00, $00, $00, $00, $00, $00, $01, $01, $01, $01  ; species 144-159
+    db $01, $01, $01, $00, $00, $01, $01, $00, $01, $01, $01, $00, $01, $00, $00, $01  ; species 160-175
+    db $01, $00, $00, $00, $00, $01, $00, $00, $01, $00, $01, $00, $01, $00, $01, $01  ; species 176-191
+    db $01, $01, $00, $00, $00, $03, $03, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; species 192-207
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; species 208-220
 ; EnemyDupConvFlagTable_41df — ONE BYTE PER ENEMY-STATS ID (487 rows, 0/1),
 ; read by EnemyDupCastConversion_4e63 with the actor's 16-bit EID
 ; ($DA03/05/07): only flagged EIDs (181 of 487) are subject to the
@@ -1109,6 +891,8 @@ jr_053_4621:
     inc [hl]
     jr jr_053_467c
 
+; [S130 F1] EVERY forced code (iron $11, paralysis $13, sleep $0F/$DB, one-shots)
+; lands here -> SaveBtlC_4b39 drops ALL pending one-shot bits (+5 &= $C0).
 Jump_053_462c:
 jr_053_462c:
     ld [$db4c], a
@@ -1194,6 +978,10 @@ jr_053_467c:
     jp Jump_053_47d5
 
 
+; [S130 P3.15b] act-time RE-DECIDE ($DD0B == 2, not the first actor, $DB42 == 0,
+; skill flags7 bit3 clear, not confused/airborne/LifeSong): measured on a
+; disobedient Slib (bit6 set) -> state 0 at d9ed $18 -> the direct pick again,
+; target re-fetched (simulated as the re-resolve).
 jr_053_46a8:
     ld a, [$dd72]
     or a
@@ -1361,6 +1149,8 @@ jr_053_4799:
     ret
 
 
+; [S130 F1] dead queued target: single-target (tm bit0) + $DD0B==0 -> `ret z` below:
+; NO redirect, the action fizzles on the dead slot (measured beat_e_L2).
 jr_053_47b2:
     ld a, [$db8a]
     cp $51
@@ -1522,6 +1312,9 @@ jr_053_4871:
     bit 3, [hl]
     jr z, jr_053_4899
 
+    ; [S130 F10] side sealed (ThickFog): a $DD0B==2 actor re-decides (LoadBtlC_490a,
+    ; [S130 F10] no MP paid, measured); else SaveBtlC_4b4f PAYS the cost (floor 0,
+    ; [S130 F10] measured 200 -> 198) and msg $1F wastes the turn.
     call LoadBtlC_49dc
     call z, LoadBtlC_490a
     call SaveBtlC_4b4f
@@ -1635,6 +1428,8 @@ LoadBtlC_490a:
     ret
 
 
+; [S130 F5] MP-veto waiver: own +6 bit2 -> only HighJump $42; else own +7
+; bit4 -> only LifeSong $95 (their 2nd turns). CF = waived.
 LoadBtlC_493d:
     ld a, [wBattleAttackerIdx]
     ld hl, $db06
@@ -1778,6 +1573,10 @@ jr_053_49fc:
     xor a
     ld [$d9ee], a
 
+; [S130 F5] The act-time MP SPEND: skipped when $DB42[att] bit4 or
+; CmpBtlC_4b92 says so; MP -= record +4; Farewell $32 then MP := 0.
+; Also reached from the StopSpell/DanceShut/MouthShut veto paths.
+ActMPSpend_4a04:
 LoadBtlC_4a04:
     ld a, [wBattleAttackerIdx]
     ld hl, $db42
@@ -2007,6 +1806,8 @@ jr_053_4b28:
     ret
 
 
+; [S130 F1] actor +5 &= $C0 (measured: multi-bit +5 cleared at one forced turn).
+ClearOneShots_4b39:
 SaveBtlC_4b39:
     push af
     push bc
@@ -2076,6 +1877,9 @@ jr_053_4b87:
     ret
 
 
+; [S130 F5] CF = do not pay: HighJump $42 with own +6&$0C, LifeSong $95
+; with own +7&$30, a flags7-bit6 spell while its side seal bit3 is up;
+; $32/$66/$96 always pay.
 CmpBtlC_4b92:
     cp $32
     jr z, jr_053_4bd1
@@ -2218,6 +2022,8 @@ jr_053_4c32:
     ret
 
 
+; [S130 F1] hp/mp effects set $D9EE:=5 -> SetupSub_4a55 -> sub-state 1: the rest of
+; sub-state 0 (confusion branch, dup conversion) is skipped (measured g1_keep).
 CurseSelfHit_4c50:
     ld a, [wBattleTargetIdx]
     push af
@@ -2422,6 +2228,11 @@ jr_053_4d75:
     ret
 
 
+; [S130 F9] ChancePick_4d7e (entry 3): per roll one LoadBtlC_4e33 step, RNG1&$0F
+; 0 -> $A9, 1 -> $A3, n -> $A0+n; boss battle: re-roll ids with record +9 bit1
+; clear; non-link caster >= 3 (party helper too): re-roll $A2/$A4. Then queue :=
+; id, $58 entry 8 with $DD69 = 0, act machine reset. Measured 289 picks.
+ChancePick_4d7e:
 jr_053_4d7e:
     call LoadBtlC_4e33
     ld a, [wRNG1]
@@ -2506,6 +2317,11 @@ jr_053_4dcf:
     ret
 
 
+; [S130 P3.15b] Z = keep the queued target: $DD72 == 0 (it is, during the act
+; phase), $DD03 == 3 (an obeyed order) and the round plan $81 (PLAN). Used by
+; the dead-target path $47B2: an obeyed single-target order whose target died
+; first FIZZLES (measured 11x, plain Attack included); and by the $46A8
+; re-decide (orders are never re-decided).
 LoadBtlC_4e01:
     ld a, [$dd72]
     or a
@@ -2971,6 +2787,12 @@ jr_053_506b:
     jp Jump_053_5140
 
 
+; [S130 F6] DODGE machine (Dodge $8C: target $DB08+8t bit5; also $DB42 bit5): one LoadBtlC_4e33 step,
+; [S130 F6] RNG1 < $33 -> stays (msg $7F); < $66 / < $99 / < $CC / else -> a slot of the target side or
+; [S130 F6] of the OTHER side (often the attacker itself) via DodgeSlotOk_5192; picking the target
+; [S130 F6] again re-runs the routine (another step). simulator f6_defence.dodge_machine is a literal
+; [S130 F6] transcription; measured S130 (dodge 45, dodge_rng, all five branches).
+DodgeMachine_5091:
 ClrBtlC_5091:
 Jump_053_5091:
     xor a
@@ -3071,6 +2893,8 @@ jr_053_5102:
     call CallBtlC_5192
     jr nc, jr_053_5140
 
+; [S130 F6] dodge fails: target unchanged, msg $7F ($DB42 bit5 -> the $5021 pick)
+DodgeStays_5112:
 jr_053_5112:
     ld a, [wBattleTargetIdx]
     ld hl, $db42
@@ -3099,6 +2923,8 @@ jr_053_5130:
     jp Jump_053_506b
 
 
+; [S130 F6] dodge result e: invalid -> $5112; == target -> re-run; else target := e, msg $7E
+DodgeResult_5140:
 Jump_053_5140:
 jr_053_5140:
     ld a, e
@@ -3149,6 +2975,8 @@ jr_053_516e:
     ret
 
 
+; [S130 F6] NC iff slot e is live and not airborne (+6 & $0C)
+DodgeSlotOk_5192:
 CallBtlC_5192:
     call CheckMonsterSlot
     jr c, jr_053_51a8
@@ -3172,6 +3000,10 @@ jr_053_51a8:
     ret
 
 
+; [S130 F23] Callers: $52:BattleCall_5c51 (Beat class, UltraDown), $52:BattleCall_65b5
+; (paralysis riders) and SacrificeResolve_67a9. $3E Kamikaze is in the list but
+; its path (KamikazeDamage_6232) never calls the gate: Kamikaze lands in boss
+; battles (measured S130, db73=1).
 BossProtectionGate_51aa:
     ld a, [$c86c]
     or a
@@ -3277,6 +3109,8 @@ jr_053_5214:
     rst $10
     jr jr_053_5214
 
+; [S130 F8] $DD69 != 1 (a multi-hit loop's later pass): skip act states 1-6
+; (announce, ChargeUP msg, re-resolve) straight to state 7, same frame.
 jr_053_5233:
     ld a, [$dd69]
     cp $01
@@ -3417,6 +3251,10 @@ jr_053_52c8:
     ret
 
 
+; [S130 F4] HighJump TAKE-OFF shortcut: skill $42 with own +6 & $0C == 0 jumps
+; d9ee := $0B straight to the handler — no state-7, MISS or crit RNG step
+; (measured: target fetch -> SkillHighJump with no MISS waypoint).
+HighJumpTakeoffShortcut_52f4:
 jr_053_52f4:
     ld hl, $5402
     rst $10
@@ -3471,7 +3309,7 @@ jr_053_5313:
     jr jr_053_5352
 
 jr_053_5349:
-    ; [S110 rec] flags8 bit4: an attacker with $db42 &3 (ChargeUP armed) "attacks with full force!" ($67)
+    ; [S110 rec] flags8 bit4: an attacker with $db42 bit0 ([S130 F4] NOT ChargeUP: the tension roll's SURE-CRIT bit, TensionRollA_5a40) announces msg $67 (bit1: $68)
     ld a, [$dcfe]
     bit 4, a
     jr z, jr_053_535e
@@ -3592,7 +3430,11 @@ jr_053_53a9:
     ret
 
 
+; [S130 F8] act state 7: ONE LoadBtlC_4e33 RNG step per target fetch
+; (measured k=1 fetch->MISS entry on every later multi-hit pass), then the
+; airborne 'doesn't reach' check (flags9 bit5) ahead of Cover/MISS.
 Jump_053_5411:
+ActPhaseState7_5411:
 jr_053_5411:
     ld hl, $d9ee
     inc [hl]
@@ -3631,6 +3473,9 @@ jr_053_5411:
     ret
 
 
+; [S130 F6] act state 7, per victim fetch: (1) breath at a SuckAll side -> $DD6C or $8F: skip every
+; [S130 F6] check; capable user ((side)|$DB4A>>2&3): it takes this victim, $DD6C := 2, sweep ends.
+SuckAllAbsorbCheck_5458:
 jr_053_5458:
     ; [S110 rec] flags7 bit4 (breath): a side with +0 bit6 (SuckAll) "absorbs the attack!" ($81)
     ld a, [$dcfd]
@@ -3709,6 +3554,9 @@ jr_053_5458:
     ret
 
 
+; [S130 F6] (2) Cover/Guardian: flags8 bit1, $DD6E == 0, mark set, protector CAPABLE
+; [S130 F6] (GetMonsterSlotInfo: an asleep/paralysed protector does not intercept, measured S130).
+CoverCheck_54d6:
 Jump_053_54d6:
     ; [S110 rec] flags8 bit1: Cover / Guardian redirect to the protector ($80)
     ld a, [$dcfe]
@@ -3735,6 +3583,8 @@ Jump_053_54d6:
     call GetMonsterSlotInfo
     jr c, jr_053_5544
 
+; [S130 F6] redirect to the protector, $DD6E := 4 (skips dodge/reflect)
+CoverRedirect_5504:
 LoadBtlC_5504:
     ld a, b
     ld hl, $c180
@@ -3803,6 +3653,9 @@ jr_053_554d:
     bit 5, [hl]
     jr z, jr_053_5594
 
+; [S130 F6] (3) flags7 bit7 vs a capable target with $DB42 bit5 or (+8 / +6 by flags8 bit1) bit5:
+; [S130 F6] the dodge machine, then $DD6E := 2 (Cover re-check at $5678).
+DodgeEnter_557a:
 jr_053_557a:
     xor a
     ld [$dd72], a
@@ -3818,6 +3671,8 @@ jr_053_557a:
     ret
 
 
+; [S130 F6] (4) breath vs TailWind +4 bit6: consumed, reflected (code 1)
+TailWindReflect_5594:
 jr_053_5594:
     ; [S110 rec] flags7 bit4 (breath): TailWind (+4 bit6) "the wind reflects the attack!" ($7D) — not SuckAir $43 / SuckAll $8F
     ld a, [$dcfd]
@@ -3848,6 +3703,8 @@ jr_053_5594:
     ret
 
 
+; [S130 F6] (5) flags8 bit0 vs +4 & $22: MagicBack consumed / Bounce kept; reflected (code 4)
+MagicBackReflect_55ca:
 Jump_053_55ca:
 jr_053_55ca:
     ; [S110 rec] flags8 bit0: MagicBack / Bounce (+4 & $22) "wall of light reflects the spell" ($7B/$7C)
@@ -4058,6 +3915,8 @@ jr_053_570e:
     ld a, $ba
     jr jr_053_5731
 
+; [S130 F8] CallHelp/YellHelp pass 1 vs an iron target: $DD69 := $10, msg
+; $C2, straight to the continuation (which then ends: bit0 never set).
 jr_053_5715:
     ld a, [$dd69]
     cp $02
@@ -4167,6 +4026,9 @@ jr_053_579e:
     and $01
     jp z, Jump_053_57f1
 
+; [S130 F1] also reached by a SideStep target with RNG1 odd (fall-through, measured).
+; [S130 F8] a Dodge-status target with ODD RNG1 falls through to this AGL
+; ladder (measured bi_dodge: RNG1 $03 vs AGL 40 dodged).
 jr_053_57c8:
     ld a, [wBattleTargetIdx]
     ld hl, wBattleAGL
@@ -4245,6 +4107,8 @@ jr_053_582a:
     ld a, $6f
     call PlaySoundEffect
 
+; [S130 F8] fail route (miss/dodge/iron/airborne): d9ed := 5; a multi-hit
+; loop still reaches its continuation afterwards (measured).
 LoadBtlC_583a:
     ld a, $05
     ld [$d9ed], a
@@ -4253,6 +4117,9 @@ LoadBtlC_583a:
     ret
 
 
+; [S130 F4] Z/NZ = skill $42 with the attacker airborne (+6 & $0C): the
+; landing turn of HighJump is exempt from the act-state-9 iron gate.
+HighJumpLandingCheck_5844:
 LoadBtlC_5844:
     ld a, [$db8a]
     cp $42
@@ -4279,6 +4146,15 @@ LoadBtlC_5857:
     ret
 
 
+; [S130 F8] crit stage: one LoadBtlC_4e33 step when flags8 bit4 rolls (BiAttack
+; QuadHits RainSlash, every pass; measured k=1 MISS pass -> handler).
+; [S130 F4] CRIT STAGE = act state $A (modelled: simulator/skillfx/f4_charge.py
+; crit_stage, measured 13318 paths / 10747 rolls). flags8 & $70 == 0 -> ret
+; (+4 bit7 untouched); bit5 + attacker +3 bit2 (TwinHits armed) -> ret, NO
+; roll; bit4 clear -> +4 bit7 := 0; $DB42[a] bit0 or +3 bit3 (ALLCHANGE) ->
+; sure crit with no step; else LoadBtlC_4e33 + CritChanceRoll_5ed9. A crit
+; sets +4 bit7, prints $79/$7A and skips the $52 handler (d9ee B -> C).
+CritStage_586a:
 jr_053_586a:
     ld hl, $5402
     rst $10
@@ -4325,6 +4201,7 @@ jr_053_588b:
     call LoadBtlC_5ed9
     jr nc, jr_053_58ea
 
+CritLanded_58b4:
 jr_053_58b4:
     ld a, [wBattleAttackerIdx]
     ld hl, $db04
@@ -4358,6 +4235,7 @@ jr_053_58d1:
     ret
 
 
+CritNone_58ea:
 jr_053_58ea:
     ld a, [wBattleAttackerIdx]
     ld hl, $db04
@@ -4371,6 +4249,11 @@ jr_053_58ea:
     ret
 
 
+; [S130 F4] POST-CALC STAGE = act state $C (simulator/skillfx/f4_charge.py
+; postcalc_f4 = POST_CALC order 10, then $DB42 x1.5 = 60, Beserker = 70).
+; With +4 bit7 set it first waits for the crit message ($DD80 & $DD9A)
+; — the RNG does not move meanwhile (measured k = 0, 507/507).
+PostCalcStage_58fb:
 jr_053_58fb:
     ld a, [wBattleAttackerIdx]
     ld hl, $db04
@@ -4384,6 +4267,9 @@ jr_053_58fb:
     cp $ff
     ret nz
 
+; [S130 F4] attacker +3 bit2 (TwinHits) + flags8 bit5 -> $DB56 x2 and straight
+; to $59C3 (no crit damage, no ChargeUP/SuckAir); measured 58/58.
+PostCalcTwinHits_5912:
 jr_053_5912:
     ld hl, $d9ee
     inc [hl]
@@ -4411,6 +4297,10 @@ jr_053_5912:
     jp Jump_053_59c3
 
 
+; [S130 F4] attacker +4 bit7 (a crit, or Massacre/EvilSlash) -> cleared; the
+; damage is rebuilt from ATK (QuadHits $51: ATK>>1) by CritDamageFromATK_5d73,
+; the handler's value discarded. Measured 507/507 (ATK 3-999).
+PostCalcCritDamage_5941:
 jr_053_5941:
     inc hl
     bit 7, [hl]
@@ -4442,6 +4332,10 @@ FuncBtlC_5973:
     ret
 
 
+; [S130 F4] own +6 bit0 (ChargeUP, armed for the round after the cast by the
+; phase-9 rotate $03 -> $01) + flags8 bit6 -> x2..2.5 (ChargeMult_5db1); NOT
+; consumed (every flags8-bit6 hit of that round). Measured 20/20.
+PostCalcChargeUP_5978:
 jr_053_5978:
     inc hl
     inc hl
@@ -4464,6 +4358,9 @@ jr_053_5978:
     ld [$db57], a
     jr jr_053_59c3
 
+; [S130 F4] own +6 bit4 (SuckAir, $30 -> $10 next round) + a flags7-bit4
+; breath with id $5C-$63 (FireAir/FrigidAir groups) -> x2..2.5. Measured 32/32.
+PostCalcSuckAir_599a:
 jr_053_599a:
     bit 4, [hl]
     jr z, jr_053_59c3
@@ -4517,6 +4414,10 @@ jr_053_59c3:
     ld [$db57], a
     jr jr_053_59ec
 
+; [S130 F6] DEFENCE LEVELS (post-calc, after the $DB42 x1.5): n = $DB09+8t & 7; 0 -> Beserker stage;
+; [S130 F6] n&3 == 0 (BladeD) -> physical >> 1; else flags7 bit0 -> n odd (Defence) >> 1, StrongD //10;
+; [S130 F6] then target $DB42 bit1 >> 1. Measured S130 (postcalc_def 762/762, both sides).
+DefenceLevelDivide_59ec:
 jr_053_59ec:
     ld a, [wBattleTargetIdx]
     ld hl, $db09
@@ -4577,6 +4478,12 @@ jr_053_5a3a:
     ld [$db57], a
     jr jr_053_5a6f
 
+; [S130 F23] BESERKER CONSUMER: reached when the target's defence nibble
+; ($DB09+8t & 7) is 0: `dec hl` -> $DB08+8t = the target's guard record; bit2
+; (set by SkillBeserker on its user) doubles a flags7-bit7 (physical) skill
+; except $3C Ramming / $3E Kamikaze. Measured S130 (Attack, slashes, SquallHit,
+; TwinSlash x2; Ramming/Kamikaze and breaths unchanged).
+BeserkerTakenX2_5a44:
 jr_053_5a44:
     dec hl
     bit 2, [hl]
@@ -5031,6 +4938,8 @@ jr_053_5c9a:
     ret
 
 
+; [S130 F6] NZ: breath (not $43/$8F) and target +4 bit6
+TailWindCheck_5ca1:
 LoadBtlC_5ca1:
     ; [S110 rec] flags7 bit4 (breath) vs TailWind (+4 bit6): reflected unless SuckAir $43 / SuckAll $8F
     ld a, [$dcfd]
@@ -5051,6 +4960,9 @@ LoadBtlC_5ca1:
     ret
 
 
+; [S130 F6] TakeMagic gain: target +4 bit0 and flags9 bit0 -> $D9F2 = min(record MP cost, MaxMP-MP)
+; [S130 F6] (floor 0); $D9F2 is cleared only in phase 9.
+TakeMagicGain_5cbc:
 LoadBtlC_5cbc:
     ld a, [wBattleTargetIdx]
     ld hl, $db04
@@ -5171,6 +5083,10 @@ CalcBtlC_5d68:
     ret
 
 
+; [S130 F4] CRIT DAMAGE (no RNG step): HL = ATK; q = ATK/10; q == 0 -> ATK;
+; r = ((RNG2&3)<<8 | RNG1), r -= q while r > q; r even -> ATK + r/2, r odd ->
+; ATK - r/2 (a borrow keeps ATK). Ignores DEF. Measured 507/507.
+CritDamageFromATK_5d73:
 SaveBtlC_5d73:
     push hl
     ld a, $0a
@@ -5231,6 +5147,9 @@ jr_053_5db0:
     ret
 
 
+; [S130 F4] CHARGE MULTIPLIER (ChargeUP / SuckAir): one LoadBtlC_4e33 step,
+; HL*2 + ((RNG2<<8|RNG1) mod max(HL>>1, 1)) = x2 .. x2.5. Measured 52/52.
+ChargeMult_5db1:
 SaveBtlC_5db1:
     push af
     push bc
@@ -5280,6 +5199,9 @@ jr_053_5dde:
     ret
 
 
+; [S130 F6] save attacker/target/$DD69/queue pairs/$DD13 to $C1C0, $DD6C := A (1 wind, 2 absorb,
+; [S130 F6] 4 MagicBack, 8 Imitate, $40 SuckAll breath-back); target queue := attacker queue.
+ReflectSave_5de7:
 FuncBtlC_5de7:
     ld [$dd6c], a
     ld hl, $c1c0
@@ -5337,6 +5259,10 @@ FuncBtlC_5de7:
 
     ld a, [$db4c]
 
+; [S130 F6] re-run the skill with the reflector/absorber/imitator as attacker: single or code 4/1 ->
+; [S130 F6] target = the original attacker; else the bank $58 entry 8 resolver. No MP (Imitate pays
+; [S130 F6] in setup sub-state 2). Power by the NEW attacker's side (measured reflect_dmg).
+ReflectRecast_5e38:
 CallBtlC_5e38:
     call FuncBtlC_5de7
     ld a, [wBattleTargetIdx]
@@ -5437,6 +5363,8 @@ jr_053_5ec0:
     ret
 
 
+; [S130 F6] ReflectSave_5de7(2) and target := the SuckAll user
+SuckAllAbsorbSave_5ece:
 SaveBtlC_5ece:
     push bc
     ld a, b
@@ -5447,7 +5375,11 @@ SaveBtlC_5ece:
     ret
 
 
+; [S130 F8] crit chance: threshold = byte $53:$4025+species (party/link) or
+; $53:$4102+species (enemy); 0/1/2 kept, anything else -> 4; crit iff
+; RNG1 < threshold (carry).
 LoadBtlC_5ed9:
+CritChanceRoll_5ed9:
     ld a, [$c86c]
     or a
     jr nz, jr_053_5eeb
@@ -5456,11 +5388,11 @@ LoadBtlC_5ed9:
     cp $04
     jr c, jr_053_5eeb
 
-    ld de, $4102
+    ld de, CritChanceTableEnemy_4102
     jr jr_053_5eee
 
 jr_053_5eeb:
-    ld de, DispatchEntry_53_0
+    ld de, CritChanceTablePartyLink_4025
 
 jr_053_5eee:
     ld a, [wBattleAttackerIdx]
@@ -5583,6 +5515,8 @@ jr_053_5f6e:
     ld hl, $4c00
     rst $10
 
+; [S130 F1] a victim snapped out of SLEEP loses its turn: $DD13 := 3 (measured g2_keep).
+SnapWakeTurnLost_5fa7:
 LoadBtlC_5fa7:
     ld a, [wBattleTargetIdx]
     ld hl, $dd13
@@ -5633,6 +5567,8 @@ jr_053_5ff0:
     ret
 
 
+; [S130 F6] act state 5: $DD6C/$DD6E == 0, live +4 bit0 target -> MP += $D9F2
+TakeMagicApply_5ffa:
 LoadBtlC_5ffa:
     ld a, [$dd6c]
     or a
@@ -5657,12 +5593,16 @@ LoadBtlC_5ffa:
     ret
 
 
+; [S130 F7] $53 entry 10 ($601C), one Surge victim: +2 := 0 (sleep/confusion -> skip
+; [S130 F7] turn), +3 &= $3C, +5 bit7 off, +7 &= $FC; iff $DB08+8t bit7: clear it and
+; [S130 F7] raise AGL then DEF back to base (bank $57 e8/e7) when below base.
+SurgeCureTarget_601c:
     ld a, [wBattleTargetIdx]
     ld hl, $db02
     call HL_AddA_x8
     ld a, [hl]
     and $90
-    call nz, SaveBtlC_60a2
+    call nz, SurgeSkipTurn_60a2
     xor a
     ld [hl+], a
     ld a, [hl]
@@ -5741,7 +5681,8 @@ jr_053_6071:
     ret
 
 
-SaveBtlC_60a2:
+; [S130 F7] $DD13[target] := 3: a slept/confused Surge victim loses its turn.
+SurgeSkipTurn_60a2:
     push hl
     ld a, [wBattleTargetIdx]
     ld hl, $dd13
@@ -5755,39 +5696,35 @@ SaveBtlC_60a2:
     ret
 
 
+; [S130 F10] $53 entry 11: the DeMagic $80 / ThickFog $83 / FILTHZONE $A5 machine
+; [S130 F10] (act state 3), one sub-state per frame on $D9EE (dw table, was
+; [S130 F10] misassembled as code; byte-identical). Walks wBattleTargetIdx FORWARD
+; [S130 F10] to the end of the target's side, then that side's helper slot, then
+; [S130 F10] the side bytes. No RNG. Measured S130 (simulator/validate_f10.py).
+DispelMachine_60b3:
     ld a, [$d9ee]
     rst $00
-    ret
+    dw DispelSlotCheck_60c9, DispelStrip_60dd, DispelClearP4_6132, DispelRevertTest_6152
+    dw DispelRevertTail_617e, DispelNextTarget_61c2, DispelHelper_61e3, DispelSideBytes_620b
+    dw DispelEnd_6252
 
-
-    ld h, b
-    db $dd
-    ld h, b
-    ld [hl-], a
-    ld h, c
-    ld d, d
-    ld h, c
-    ld a, [hl]
-    ld h, c
-    jp nz, $e361
-
-    ld h, c
-    dec bc
-    ld h, d
-    ld d, d
-    ld h, d
+; [S130 F10] s0: a dead/absent target ($DD1B != 0) skips to s5; else falls into s1.
+DispelSlotCheck_60c9:
     ld hl, $d9ee
     inc [hl]
     ld a, [wBattleTargetIdx]
     call CheckMonsterSlot
-    jr nc, jr_053_60dd
+    jr nc, DispelStrip_60dd
 
     ld a, $05
     ld [$d9ee], a
-    jp Jump_053_61c2
+    jp DispelNextTarget_61c2
 
 
-jr_053_60dd:
+; [S130 F10] s1: +3 &= $30, +4 &= $C8, +5 &= $3F; +7: iron (+7&$C0) -> $DD13 := 3
+; [S130 F10] and +7 := $11 (A is clobbered by the $DD13 pointer: $DD & $33 —
+; [S130 F10] measured), else +7 &= $33; shifted +8 &= $3D, +9 bit2 off; msg $AC.
+DispelStrip_60dd:
     ld hl, $d9ee
     inc [hl]
     ld a, [wBattleTargetIdx]
@@ -5841,6 +5778,8 @@ jr_053_610f:
     ret
 
 
+; [S130 F10] s2: +4 := 0 (msg $D9 when it was non-zero).
+DispelClearP4_6132:
     ld hl, $d9ee
     inc [hl]
     ld a, [wBattleTargetIdx]
@@ -5860,6 +5799,10 @@ jr_053_610f:
     ret
 
 
+; [S130 F10] s3: +3 (now only bits 4/5 = transformed) non-zero -> +3 := 0, full
+; [S130 F10] revert (DispelRevertStats_626b, msg $AD), s4; else DEF/AGL := source
+; [S130 F10] (DispelBaseDefAgl_647c) and skip s4.
+DispelRevertTest_6152:
     ld hl, $d9ee
     inc [hl]
     ld a, [wBattleTargetIdx]
@@ -5869,7 +5812,7 @@ jr_053_610f:
     or a
     jr nz, jr_053_616b
 
-    call LoadBtlC_647c
+    call DispelBaseDefAgl_647c
     ld hl, $d9ee
     inc [hl]
     ret
@@ -5877,7 +5820,7 @@ jr_053_610f:
 
 jr_053_616b:
     ld [hl], $00
-    call LoadBtlC_626b
+    call DispelRevertStats_626b
     ld a, $ad
     ld [$c823], a
     xor a
@@ -5887,6 +5830,10 @@ jr_053_616b:
     ret
 
 
+; [S130 F10] s4 (after a revert): sprite reload (CallBtlC_654f), $C1CD[t] &= $80,
+; [S130 F10] $DD13[t] := 3 (the reverted monster loses this round's turn),
+; [S130 F10] $C1CA[t&3] := $FF.
+DispelRevertTail_617e:
     ld hl, $d9ee
     inc [hl]
     ld a, [wBattleTargetIdx]
@@ -5929,7 +5876,8 @@ jr_053_616b:
     ret
 
 
-Jump_053_61c2:
+; [S130 F10] s5: t & 3 == 2 -> t := (t & 4) | 3 (the helper slot), s6; else t += 1, s0.
+DispelNextTarget_61c2:
     ld a, [wBattleTargetIdx]
     and $03
     cp $02
@@ -5952,13 +5900,15 @@ jr_053_61d4:
     ret
 
 
+; [S130 F10] s6: a live helper (slot 3/7) is dismissed (DispelDismissHelper_650c, msg $D8).
+DispelHelper_61e3:
     ld hl, $d9ee
     inc [hl]
     ld a, [wBattleTargetIdx]
     call CheckMonsterSlot
     ret c
 
-    call LoadBtlC_650c
+    call DispelDismissHelper_650c
     ld a, [wBattleTargetIdx]
     ld hl, $c180
     ld [$db50], a
@@ -5972,6 +5922,10 @@ jr_053_61d4:
     ret
 
 
+; [S130 F10] s7: $DB00/$DB01 bit3 (the spell seal) off; the target side's byte &= $10.
+; [S130 F10] ThickFog $83 / FILTHZONE $A5: both seals ON, and when the caster's side
+; [S130 F10] differs, t := caster side base and the machine reruns from s0 (own side).
+DispelSideBytes_620b:
     ld hl, $d9ee
     inc [hl]
     ld hl, $db00
@@ -6019,6 +5973,8 @@ jr_053_6234:
     ret
 
 
+; [S130 F10] s8: $D9ED += 3 (act state 6), $D9EE/$DD72/$DD73 := 0.
+DispelEnd_6252:
     ld hl, $d9ed
     inc [hl]
     ld hl, $d9ed
@@ -6034,7 +5990,10 @@ jr_053_6234:
     ret
 
 
-LoadBtlC_626b:
+; [S130 F10] Transform revert: skills $DC64 (bank $51 entry 10), then the source
+; [S130 F10] stats — enemy row (non-link t >= 4) or party record — and HP/MP clamped
+; [S130 F10] to the new MaxHP/MaxMP. The resistances $DD28 are NOT restored (measured).
+DispelRevertStats_626b:
     ld a, [wBattleTargetIdx]
     ld [$db4c], a
     ld hl, $510a
@@ -6047,11 +6006,11 @@ LoadBtlC_626b:
     cp $04
     jr c, jr_053_6287
 
-    call CalcBtlC_63c7
+    call DispelRevertFromRow_63c7
     jr jr_053_628a
 
 jr_053_6287:
-    call LoadBtlC_62f1
+    call DispelRevertFromRecord_62f1
 
 jr_053_628a:
     ld a, [wBattleTargetIdx]
@@ -6125,11 +6084,14 @@ CalcBtlC_62da:
     ret
 
 
-LoadBtlC_62f1:
+; [S130 F10] party/link path: MaxHP/MaxMP/ATK/DEF/AGL/INT := record words; level and
+; [S130 F10] the 4 AI weights through ByteArrayWriteX2_6546 = index 2t (ENGINE BUG,
+; [S130 F10] measured: reverting party slot 1 rewrites slot 2's, slot 2 -> enemy slot 4's).
+DispelRevertFromRecord_62f1:
     ld a, [wBattleTargetIdx]
     and $03
     cp $03
-    jp z, Jump_053_63c7
+    jp z, DispelRevertFromRow_63c7_jp
 
     ld a, [wBattleTargetIdx]
     ld hl, $cb13
@@ -6173,40 +6135,42 @@ LoadBtlC_62f1:
     ld b, a
     ld a, [wBattleTargetIdx]
     ld hl, $db9b
-    call CalcBtlC_6546
+    call ByteArrayWriteX2_6546
     ld a, [wBattleTargetIdx]
     ld hl, $cb25
     call ReadMonsterByte
     ld b, a
     ld a, [wBattleTargetIdx]
     ld hl, $dc44
-    call CalcBtlC_6546
+    call ByteArrayWriteX2_6546
     ld a, [wBattleTargetIdx]
     ld hl, $cb26
     call ReadMonsterByte
     ld b, a
     ld a, [wBattleTargetIdx]
     ld hl, $dc54
-    call CalcBtlC_6546
+    call ByteArrayWriteX2_6546
     ld a, [wBattleTargetIdx]
     ld hl, $cb28
     call ReadMonsterByte
     ld b, a
     ld a, [wBattleTargetIdx]
     ld hl, $dc4c
-    call CalcBtlC_6546
+    call ByteArrayWriteX2_6546
     ld a, [wBattleTargetIdx]
     ld hl, $cb27
     call ReadMonsterByte
     ld b, a
     ld a, [wBattleTargetIdx]
     ld hl, $dc5c
-    call CalcBtlC_6546
+    call ByteArrayWriteX2_6546
     ret
 
 
-CalcBtlC_63c7:
-Jump_053_63c7:
+; [S130 F10] enemy path: the enemy_stats row (bank $14 entry 1 -> $DA1C..): level,
+; [S130 F10] MaxHP..INT, AI weights, all at index t (correct).
+DispelRevertFromRow_63c7:
+DispelRevertFromRow_63c7_jp:
     sub $04
     ld hl, wTempEnemyId1
     call CalcBtlC_5d68
@@ -6340,7 +6304,9 @@ Jump_053_63c7:
     ret
 
 
-LoadBtlC_647c:
+; [S130 F10] no revert: DEF and AGL := source (record, or the row via
+; [S130 F10] DispelBaseFromRow_64ba) — raised or lowered alike; slot 3/7 untouched.
+DispelBaseDefAgl_647c:
     ld a, [$c86c]
     or a
     jr nz, jr_053_648d
@@ -6349,7 +6315,7 @@ LoadBtlC_647c:
     cp $03
     jr c, jr_053_648d
 
-    call LoadBtlC_64ba
+    call DispelBaseFromRow_64ba
     ret
 
 
@@ -6374,7 +6340,7 @@ jr_053_648d:
     ret
 
 
-LoadBtlC_64ba:
+DispelBaseFromRow_64ba:
     ld a, [wBattleTargetIdx]
     and $03
     cp $03
@@ -6425,7 +6391,9 @@ LoadBtlC_64ba:
     ret
 
 
-LoadBtlC_650c:
+; [S130 F10] helper removal (NOT a stat restore): $DD1B := $FF, $DD13 := $FF and
+; [S130 F10] +2..+9 of the slot zeroed (measured on a TatsuCall helper).
+DispelDismissHelper_650c:
     ld a, [wBattleTargetIdx]
     ld hl, $dd1b
     add l
@@ -6470,7 +6438,9 @@ CalcBtlC_653b:
     ret
 
 
-CalcBtlC_6546:
+; [S130 F10] [hl + 2a] := b — the WORD-array index on byte arrays ($DB9B, $DC44..):
+; [S130 F10] callers pass the slot, so the write lands on slot 2a.
+ByteArrayWriteX2_6546:
     add a
     add l
     ld l, a
@@ -6553,18 +6523,19 @@ LoadBtlC_6593:
     ret
 
 
+; [S130 F7] $53 entry 12 ($65AC): UltraDown state-3 machine on $D9EE (byte-identical
+; [S130 F7] dw table; the five subs measured by hook S130).
+UltraDownMachine_65ac:
     ld a, [$d9ee]
     rst $00
-    cp d
-    ld h, l
-    dec de
-    ld h, [hl]
-    ld a, h
-    ld h, [hl]
-    and [hl]
-    ld h, [hl]
-    cp l
-    ld h, [hl]
+    dw UltraDownDEF_65ba
+    dw UltraDownAGL_661b
+    dw UltraDownSurround_667c
+    dw UltraDownMark_66a6
+    dw UltraDownEnd_66bd
+
+; [S130 F7] sub 0: DEF -= max(baseDEF>>1,1), floor 1; amount != 0 -> $DB08+8t bit7.
+UltraDownDEF_65ba:
     ld hl, $d9ee
     inc [hl]
     ld a, [wBattleTargetIdx]
@@ -6577,7 +6548,7 @@ LoadBtlC_6593:
     ld b, a
     srl b
     rr c
-    call LoadBtlC_66e1
+    call UltraDownMinOne_66e1
     ld a, [wBattleTargetIdx]
     ld hl, wBattleDEF
     add a
@@ -6586,12 +6557,12 @@ LoadBtlC_6593:
     ld a, $00
     adc h
     ld h, a
-    call ReadBtlC_66e8
+    call UltraDownClampAmt_66e8
     ld a, c
     ld [$db56], a
     ld a, b
     ld [$db57], a
-    call ReadBtlC_66d6
+    call UltraDownSubFloor0_66d6
     ld a, [$db56]
     ld l, a
     ld a, [$db57]
@@ -6617,6 +6588,8 @@ jr_053_661a:
     ret
 
 
+; [S130 F7] sub 1: AGL -= max(baseAGL>>1,1), floor 1; amount != 0 -> bit7.
+UltraDownAGL_661b:
     ld hl, $d9ee
     inc [hl]
     ld a, [wBattleTargetIdx]
@@ -6629,7 +6602,7 @@ jr_053_661a:
     ld b, a
     srl b
     rr c
-    call LoadBtlC_66e1
+    call UltraDownMinOne_66e1
     ld a, [wBattleTargetIdx]
     ld hl, wBattleAGL
     add a
@@ -6638,12 +6611,12 @@ jr_053_661a:
     ld a, $00
     adc h
     ld h, a
-    call ReadBtlC_66e8
+    call UltraDownClampAmt_66e8
     ld a, c
     ld [$db56], a
     ld a, b
     ld [$db57], a
-    call ReadBtlC_66d6
+    call UltraDownSubFloor0_66d6
     ld a, [$db56]
     ld l, a
     ld a, [$db57]
@@ -6669,6 +6642,8 @@ jr_053_667b:
     ret
 
 
+; [S130 F7] sub 2: target +3 bit1 (Surround) set if clear, msg $98.
+UltraDownSurround_667c:
     ld hl, $d9ee
     inc [hl]
     ld a, [wBattleTargetIdx]
@@ -6694,6 +6669,8 @@ jr_053_66a5:
     ret
 
 
+; [S130 F7] sub 3: live target -> $DB08+8t bit7 (unconditional marker).
+UltraDownMark_66a6:
     ld hl, $d9ee
     inc [hl]
     ld a, [wBattleTargetIdx]
@@ -6707,6 +6684,8 @@ jr_053_66a5:
     ret
 
 
+; [S130 F7] sub 4: d9ed += 3, end of the machine.
+UltraDownEnd_66bd:
     ld hl, $d9ed
     inc [hl]
     ld hl, $d9ed
@@ -6722,7 +6701,8 @@ jr_053_66a5:
     ret
 
 
-ReadBtlC_66d6:
+; [S130 F7] [hl] -= BC, borrow -> 0.
+UltraDownSubFloor0_66d6:
     ld a, [hl]
     sub c
     ld [hl+], a
@@ -6737,7 +6717,8 @@ ReadBtlC_66d6:
     ret
 
 
-LoadBtlC_66e1:
+; [S130 F7] BC := max(BC, 1).
+UltraDownMinOne_66e1:
     ld a, b
     or c
     ret nz
@@ -6746,7 +6727,8 @@ LoadBtlC_66e1:
     ret
 
 
-ReadBtlC_66e8:
+; [S130 F7] if [hl] - BC <= 0 then BC := [hl] - 1 (the stat floors at 1).
+UltraDownClampAmt_66e8:
     ld a, [hl+]
     sub c
     ld e, a
@@ -6879,6 +6861,8 @@ jr_053_67a8:
     ret
 
 
+; [S130 F23] Sacrifice resolution for one target (see the clean tree).
+SacrificeResolve_67a9:
     ld hl, $d9ee
     inc [hl]
     call BossProtectionGate_51aa
@@ -6995,6 +6979,8 @@ jr_053_6858:
     ld [$c823], a
     jr jr_053_6846
 
+; [S130 F23] Sacrifice state 2: target HP -= $DB56; 0 -> the KO chain.
+SacrificeApply_6866:
     ld hl, $d9ee
     inc [hl]
     ld a, [wBattleTargetIdx]
@@ -7046,6 +7032,11 @@ jr_053_68af:
     ret
 
 
+; [S130 F23] Sacrifice state 3: undo a guard redirect ($C1C8 = the original
+; target, $DD6E := 0), then NEXT TARGET: while (target & 3) != 2 -> target+1,
+; back to state 0 (InterceptGate). The sweep runs from the queued target to
+; the end of its side; then state 4 (measured S130, 19/19 sweeps).
+SacrificeNextTarget_68b4:
     ld a, [$c1c8]
     cp $ff
     jr z, jr_053_68df
@@ -7105,6 +7096,8 @@ jr_053_68fd:
     ret
 
 
+; [S130 F6] the same reflect test on the state-3 (DeMagic/Sacrifice machine) target loop
+MagicBackReflect2_690e:
 LoadBtlC_690e:
     ; [S110 rec] flags8 bit0: MagicBack / Bounce reflection (second site)
     ld a, [$dcfe]
@@ -7161,8 +7154,16 @@ jr_053_6944:
     ret
 
 
+; [S130 F5] Chain sub 4: the caster's price. 1 step (LoadBtlC_4e33); RNG1 <
+; $7F -> pays ALL its HP (dies); else keeps max(HP / 100, 1). Measured 22.
+LifeChainCasterRoll_696b:
     ld a, [wBattleAttackerIdx]
     ld [wBattleTargetIdx], a
+; [S130 F23] Sacrifice state 4 = the CASTER's own roll (shared with $32/$96):
+; one RNG step; RNG1 < $7F -> $DB56 = HP (dies), else HP - max(HP/100,1)
+; (survives at max(HP/100,1); 0 -> dies). The caster does NOT always die
+; (measured S130: 19/19 rolls, both outcomes).
+SacrificeSelfRoll_6971:
     ld hl, $d9ee
     inc [hl]
     ld a, [wBattleAttackerIdx]
@@ -7249,6 +7250,10 @@ jr_053_69f2:
     ret
 
 
+; [S130 F23] Sacrifice state 5: caster HP -= $DB56; 0 -> the KO chain.
+SacrificeSelfApply_6a04:
+; [S130 F5] Chain sub 5: caster HP -= $DB56; 0 -> $DD1B := 1.
+LifeChainCasterPay_6a04:
     ld hl, $d9ee
     inc [hl]
     ld a, [wBattleAttackerIdx]
@@ -7323,6 +7328,8 @@ jr_053_6a74:
     ret
 
 
+; [S130 F5] Chain sub 6: caster MP := 0, end of the action (d9ed := 6).
+LifeChainCasterMP0_6a79:
     ld a, [wBattleAttackerIdx]
     ld hl, wBattleMP
     add a
@@ -7345,22 +7352,19 @@ jr_053_6a74:
     ret
 
 
+; [S130 F5] Bank $53 entry 14: the Farewell / LifeDance chain (act state 4;
+; jump table after rst $00 was misassembled as code — byte-identical dw).
+; Sub 0-3 walk own slots from wBattleTargetIdx (own base, row $635F) to slot
+; 2: the caster and $DD1B==$FF slots are skipped, dead -> revive + MaxHP,
+; live -> MaxHP. Sub 4-6: the caster's price, then MP := 0. Measured 28.
+LifeChain_6a9b:
     ld a, [$d9ee]
     rst $00
-    xor l
-    ld l, d
-    db $dd
-    ld l, d
-    ld d, e
-    ld l, e
-    ld a, [hl]
-    ld l, e
-    ld l, e
-    ld l, c
-    inc b
-    ld l, d
-    ld a, c
-    ld l, d
+    dw LifeChainWalk_6aad, LifeChainRevive_6add, LifeChainHeal_6b53
+    dw LifeChainNext_6b7e, LifeChainCasterRoll_696b, LifeChainCasterPay_6a04
+    dw LifeChainCasterMP0_6a79
+
+LifeChainWalk_6aad:
     ld hl, $d9ee
     inc [hl]
     xor a
@@ -7396,6 +7400,8 @@ jr_053_6ad4:
     ret
 
 
+; [S130 F5] Chain sub 1: revive (HP := MaxHP, $DD1B := 0, +2..+9 := 0).
+LifeChainRevive_6add:
     ld hl, $d9ee
     inc [hl]
     ld hl, $d9ee
@@ -7469,12 +7475,12 @@ jr_053_6b42:
     ret
 
 
-    dec h
-    dec hl
-    ld sp, $ee21
-    reti
+    db $25, $2B, $31                  ; [S130 F5] 3 unreferenced bytes
 
-
+; [S130 F5] Chain sub 2: a live own slot is healed to MaxHP (was misassembled
+; across the 3 bytes above; byte-identical).
+LifeChainHeal_6b53:
+    ld hl, $d9ee
     inc [hl]
     call LoadBtlC_6bc1
     ld hl, $5f06
@@ -7502,6 +7508,8 @@ jr_053_6b78:
     ret
 
 
+; [S130 F5] Chain sub 3: message, then the next own slot (stop after slot 2).
+LifeChainNext_6b7e:
     ld hl, $d9ee
     inc [hl]
     ld a, [$dd73]
@@ -7543,6 +7551,7 @@ jr_053_6bb0:
     ret
 
 
+; [S130 F5] HP[wBattleTargetIdx] := MaxHP (the entry-14 chain heal/revive).
 LoadBtlC_6bc1:
     ld a, [wBattleTargetIdx]
     ld hl, wBattleMaxHP
@@ -7569,6 +7578,10 @@ LoadBtlC_6bc1:
     ret
 
 
+; [S130 F9] SmashedWalk_6be2 (entry 15, after each $A2/$A4 victim): t == 3 ends;
+; t == 6 ends Smashed, CALLHOROR wraps to 0; t < 3 only prints msg $AA (live);
+; else the next live slot gets the handler at $D9EE = $0B. Measured both sides.
+SmashedWalk_6be2:
 jr_053_6be2:
     ld a, [wBattleTargetIdx]
     cp $03

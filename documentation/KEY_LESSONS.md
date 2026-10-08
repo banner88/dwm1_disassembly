@@ -1533,6 +1533,10 @@ via a base pointer, so the scan never saw them. Each corrupted live enemy
 stats / status / damage. **A scalar `ds` gap between two NAMED vars** (we used
 $db86, between $db85 and $db88) is far safer, and you MUST confirm freeness by
 in-game test, not by grep. Updated `known_RAM_map.md` accordingly.
+**(corrected S130 — the same trap again):** `$db86` is NOT free — `wJoinability $db85` is
+the base of a per-enemy table (`$DB85 + c`), so `$db86` holds enemy 2's joinability in 2-3
+enemy battles and the alias path misroutes Blaze there. The in-game test was a 1-enemy
+battle. See "A 'free' scalar gap can be element 2 of a base+offset table (S130)".
 
 ### The `$db8a == 0` dispatch guard avoids needing the (unreliable) attacker index
 `wBattleAttackerIdx` is repurposed during target processing, so it's wrong at
@@ -2754,8 +2758,11 @@ other banks' coincidental data/comments.
   (SlotProbeGuard50: index >= $28 rejects with carry). Rule: any RAM-array
   index that a walker leaves at its terminal value is a loaded gun for every
   later reader; bound at the consumer chokepoint, not at each caller.
-- **The learn scanner has a THIRD exit (code 2, Jump_006_50b5): blanket
-  stat-qualification with no species latch** — vanilla DWM's stat-learning.
+- **The learn scanner has a THIRD exit (code 2, Jump_006_50b5 — `LearnFoundAllPrereqs`
+  since the S130 rename): blanket
+  stat-qualification with no species latch** — vanilla DWM's stat-learning. *(S130 decode:
+  code 2 = a skill NOT in the learn queue whose 2-5 prereqs are all known; MONSTER_DATA
+  "Raising a monster".)*
   Custom ids had never traversed its display path; LearnCode2Guard06 diverts
   ids $E1+ to the skip-record path (scan continues) so customs learn only
   via code 0/1. The jr-reach trick: `jp nc, jr_006_507c` from the $7F1F
@@ -2947,7 +2954,10 @@ traced them correctly but NAMED the c86c branch "arena"; real Coliseum
 battles are db73=2 with c86c=0 and take the other branch.
 **Fix**: measured both skills under db73=0/2 (party- and enemy-cast);
 damage.py params renamed link= with arena= kept as deprecated alias;
-§15.5 corrected.
+§15.5 corrected. *(corrected S130: the S79 corpus holds only 2 Vacuum events, both
+PARTY-cast; measured enemy casts (90 Vacuum events, L 3-150) show Vacuum is 2L+30 for both
+sides — the `cp $04` after the `$C86C` test compares the link byte, not the attacker.
+§15.11.F3.)*
 **Rule**: $C86C = LINK, $DB73 = battle TYPE (0 wild / 1 boss / 2 arena)
 — never label a c86c test "arena". When a traced-only note names a
 condition, re-verify the actual RAM address before building on the name.
@@ -2956,6 +2966,9 @@ condition, re-verify the actual RAM address before building on the name.
 **Symptom**: S78 left "BattleFunc_6a13/6a49 ... likely the flee/order
 checks" as the S79 starting point; both are actually the stat-CAP helpers
 inside the Upper (DEF x2/x4) and AglUp (AGL x4 cap $01FF) skill handlers.
+*(corrected S130: AGL is ×4 for a TARGET slot < 4 or a link battle and ×2 for an enemy
+target, like DEF, and a sum ≥ 511 / > 999 clamps to 511 / 999 even above a lower ×2 cap —
+§15.11.F7.)*
 The real turn order lives in bank $58 ($54D1), found by tracing the live
 state machine instead.
 **Fix/Rule**: treat "candidate/glimpsed/likely" breadcrumbs as leads to
@@ -5751,3 +5764,272 @@ Two step defaults ("Your bag is full!", "A monster joined!") and a quest's built
 bag-full words were 17 cells — one past the box. The S127r3 rule covered fields the user
 types, not the words the editor writes for them. **Rule**: every default text goes
 through `textenc.flow_boxes`; the app test runs `spec_problems` on freshly added steps.
+
+## S130 — every battle skill (ten families in parallel) + the raising census
+
+### Read the common exit of a dispatch, not only your branch (S130 F1)
+**Symptom**: the status validator was fine on single statuses and failed "decay" / "round_st"
+as soon as two one-shot compulsions stacked. **Root cause**: every forced action code
+($11/$13/$0F/$DB/$12-$18) leaves through `Jump_053_462c`, which calls `ClearOneShots_4b39`
+(+5 &= $C0) — all pending one-shots drop at once. **Fix**: clear all bits in
+`status_forced_action`. **Rule**: when modelling one branch of a dispatch, read the shared
+exit it jumps to.
+
+### A waypoint chain that stops early: check the pre-MISS gates (S130 F1)
+**Symptom**: an enemy's whole action vanished (only `target_fetch`), no status reason.
+**Root cause**: a target with `$DB42` bit7 "easily dodges" every flags8-bit7 action BEFORE the
+MISS machine (`$53:$563C`). **Rule**: snapshot `$DB42`; when a chain stops early, check the
+pre-MISS gates (`$5678` guard, `$563C` easy dodge, `$56E1` iron) before suspecting the model.
+
+### A forced cast on a party slot may not be what acts (S130 F1, F5, F6)
+**Symptom**: a forced `--skill` on party slot 0 ran Attack (or another skill), MP was not
+spent, the handler waypoint never fired. **Root cause**: two engine paths replace a
+commanded action at act time — a `$DD0B == 2` actor that is not first in the round
+RE-DECIDES (`$53:SetupSub_4692` → state $18 / `$46A8`; its CalcSkillDefense evaluations
+appear before `target_fetch`), and the obedience roll replaces a disobedient monster's command
+(Darkdrium). **Fix**: take the skill from the queue at the target fetch. **Rule**: force rig
+casts on mode-0/1 actors or slots 1/2 (or poke `$DD0B`), cast the skill under test from more
+than one slot, and count the handler waypoints per skill and side before trusting coverage.
+
+### Party paralysis is a loss condition (S130 F1)
+**Symptom**: a rig battle ended mid-round with everyone alive. **Root cause**:
+`BattleFunc_76c8` ends the battle when every live party member is paralysed. **Rule**: keep at
+least one party member immune in long captures.
+
+### Where a rig's pokes go (S130 F1, F7, F10)
+**Symptoms**: (a) next-round board comparisons broke after re-arming a status; (b) a `$DB42`
+poke made at battle init never showed up at the cast; (c) a per-round status poke "restored"
+the bytes a dispel had just stripped. **Root causes**: (a) the re-arm happened after the
+round_start snapshot; (b) `$DB42` is rewritten after battle init (and cleared every phase 9);
+(c) between actors the engine passes through `$D9EC = 6`, so a poke loop over `4 ≤ $D9EC ≤ 6`
+re-applies mid-round. **Fix / Rule**: re-arm pokes INSIDE the round_start hook (before its
+snapshot) and record them in the event; per-combatant flag pokes go in the per-frame
+command-phase block, not the init block; board pokes only at `$D9EC` 4/5.
+
+### One file per rig battle, then merge (S130 F1)
+**Symptom**: corpus capture slowed to a crawl past ~25 MB. **Root cause**: the
+append-and-rewrite JSON loop is quadratic. **Rule**: write one JSON per rig battle and merge
+once at the end (gzip the result; drop the tags nobody validates).
+
+### A "free" scalar gap can be element 2 of a base+offset table (S130 F23)
+**Symptom**: on the patched build, Blaze in 2-3 enemy battles did 0 damage to Blaze-res-0
+targets and full damage to Blaze-immune ones. **Root cause**: `$DB86` (the S45 alias stash, a
+"free `ds` gap" after `wJoinability $DB85`) is `wJoinability+1`: `SaveBtlS_47e0` writes the
+per-enemy array `$DB85 + c`. With ≥ 2 enemies it holds enemy 2's joinability (3), so
+`FarSkillFork`'s `$DB8A == 0 → [$DB86]` alias ran the Firebal handler for Blaze. **Fix**: none
+applied (patch owner): move the stash or gate the alias path on a real custom id. **Rule**: a
+named scalar in `wram.asm` may be the base of an indexed table — grep for `ld hl, <name>`
+followed by `add l`, not only for absolute references; test with 1, 2 and 3 enemies.
+
+### A crit skips the damage handler (S130 F23, F4)
+**Symptom**: two flags8-bit4 hits had a post-calc value and an apply but no `calcdef_in`.
+**Root cause**: the crit roll ($53:$586A) runs before the $52 handler; on a crit the handler
+is skipped and `$53:$5941` builds the damage from ATK, then clears +4 bit7 — the flag is gone
+by the end of post-calc. **Rule**: detect a crit by the missing core entry after the crit
+gate, not by +4 bit7 at the apply.
+
+### Caster tails need a surviving target (S130 F23)
+**Symptom**: TwinSlash/Kamikaze killed the target and the caster took no recoil. **Root
+cause**: after a KO the act machine goes to state $1A and never reaches the state-4 tail
+dispatcher; a dodge / miss / zero damage skips the apply and the tail too. **Rule**: model
+caster tails as "after an applied, non-lethal hit".
+
+### Filter core waypoints by act state (S130 F23)
+**Symptom**: `calcdef_in` events at act state $19 for party actors with `$DD0B ≠ 0`, before
+`target_fetch` (278 in the corpus) — each steps the RNG. **Root cause**: the act-time AI
+re-decide evaluates CalcSkillDefense. **Rule**: inside a victim group take core waypoints only
+at `$D9ED == 1`.
+
+### A table addressed with `ld de, Label` was rendered as code (S130 F4)
+**Symptom**: two families quoted the crit table as "$53:$4000/$4001 + species"; the asm had
+`ld de, DispatchEntry_53_0` and 442 bytes of `ld [bc],a` / `inc bc` "code". **Root cause**:
+mgbdis named the first label after a dispatch `dw` list "Dispatch entry 0" and disassembled
+the data. **Fix**: `db` rows `CritChanceTablePartyLink_4025` / `CritChanceTableEnemy_4102`,
+byte-identical. **Rule**: when code does `ld de, X / add <index>`, X is a table — resolve the
+label in `game.sym` and look at the bytes; never trust a generated name.
+
+### A setter search by literal mask misses `or d` (S130 F4)
+**Symptom**: S89 searched banks $50-$5F for `set 6,[hl]` / `or $40` / `ld [hl],$40` against
+`$DB42` and concluded the ×1.5 setter was "elsewhere". **Root cause**: the writer is a shared
+tail (`ld a,[hl] / or d / ld [hl],a`) whose mask is loaded by eight small stubs (`ld hl,$dcXX /
+ld d,$40 / jr ladder`). **Rule**: to find a writer, list every `ld hl, <base>` (and `ld de,
+<base>`) site and read the NEXT store through it, whatever the operand.
+
+### Measure the RNG idle count at every new waypoint pair (S130 F4, F8)
+**Symptom**: none — two traps avoided. The crit message wait polls `$DD80 & $DD9A` for
+several frames, which looked like an idle-step site (measured k = 0, 507/507); in the multi-hit
+loop the snap-out roll sits one animation after the apply, the continuation → re-pick is the
+same frame and the continuation → next fetch is one frame (~46 steps). **Rule**: measure k on
+every new pair of waypoints before placing an idle; assuming the S86 classes would have put
+the CallHelp early-stop read and the re-pick on the wrong RNG.
+
+### Rig runs are deterministic (S130 F4)
+Re-running the same `measure_f4.py` battle produced the identical event stream (158,794
+events, same RNG trajectory). **Rule**: a recipe + the rig reproduce a corpus exactly; a
+changed count means a changed rig or ROM.
+
+### A hook sees the memory BEFORE its instruction runs (S130 F5, F9)
+**Symptoms**: group-sweep victims "lagged by one" (MP0 victims 4,4,5,6,0,1); Chance outcome
+targets all looked like "self"; the rewritten dragon target read 0/255. **Root causes**: the
+`$53:$520C` target-fetch hook fires before the fetch loads `wBattleTargetIdx` / `$DB89` (the
+walk stages the next slot in the queue byte); the hook at `$52:$7AF6` fires before `ld [hl],a`
+writes the target. **Fix**: read the victim at `miss_in` / `miss_rng`, the queue at the
+re-run's actor fetch. **Rule**: never take a value from a hook at the routine (or store) that
+produces it — hook the next waypoint.
+
+### Dedupe polled hooks in the callback (S130 F5)
+**Symptom**: `apply_in` events exploded (hundreds per action). **Root cause**: `$52:$6D56` is
+re-entered every frame while the apply animation waits. **Rule**: keep the first hit of each
+run inside the callback, not afterwards.
+
+### Commit-time decisions need unforced runs (S130 F5)
+**Symptom**: commit-time row outputs never reached the queue in forced runs. **Root cause**:
+the rig rewrites the queue every frame of phases 4-6. **Rule**: validate commit-time
+decisions only in unforced (AI) scenarios.
+
+### A hook right after a `call` can stall PyBoy (S130 F6)
+**Symptom**: a rig battle with BladeD counters ran at ~35 frames/s and never finished; no hook
+fired repeatedly; a faulthandler dump showed the time inside `p.tick`. **Root cause**: the hook
+at `$52:$7C18`, the instruction after `call BattleRNG` in `BladeDCounter_7bec`; every other
+address in the routine was fine. **Fix**: hook `$7C47` (after the RNG1 writes) and model the
+step in between. **Rule**: when a capture crawls, bisect the HOOK LIST first (`F6_NOHOOK=tag,…`
+in `measure_f6.py`), not the scenario; avoid hooking the return address of a call.
+
+### `pkill -f <pattern>` from the tool shell kills the shell (S130 F6, integrator)
+**Symptom**: the Bash tool call died with the background job it meant to stop. **Root cause**:
+the tool's own shell command line contains the pattern. **Rule**: kill by PID (`pgrep` first)
+or use a pattern that cannot match itself (`pkill -f '[m]easure_f6'`).
+
+### For clamp code, model the check's return registers (S130 F7)
+**Symptom**: a "min(999, cap)" model of Upper/Speed predicted DEF 840 for an enemy the engine
+left at 999. **Root cause**: the clamp writes the BC of the cap check that FAILED, and the
+999 / 511 test runs before the per-slot cap. **Fix**: model the check routine literally
+(carry, zero and BC). **Rule**: for clamp code, model the returned registers, not the intent.
+
+### Never force a queue with a counter that moves mid-round (S130 F7)
+**Symptom**: a schedule keyed on the `round_end` waypoint (`$53:$4640`) never advanced.
+**Fix**: count `round_start` waypoints and latch the round index in the command phase
+(`$D9EC == 4`). **Rule**: the queue is also read at act time — a counter that increments
+between the order build and the act phase changes the CURRENT action.
+
+### Take the post state at the end of the effect's own machine (S130 F7)
+**Symptom**: a "post" snapshot of UltraDown / Transform showed no change. **Root cause**: they
+apply in later act states (`$53:$65AC` machine, act state 5) after the handler returned.
+**Rule**: snapshot at the end of the effect's state machine (`UltraDownEnd_66bd`, `$52:$6D37`),
+not at the dispatch return `$52:$6CDD`.
+
+### A 0-mismatch validator proves only the branches it saw (S130 F8)
+**Symptom**: a SideStep-status target "dodged" 50 % in the sim, more often in the engine.
+**Root cause**: `battle.miss_gate` returned 'pass' after a failed 50 % roll, while the ROM
+falls through to the AGL ladder — exactly as §15.10.9 already said. The code drifted from a
+correct decode and no corpus had exercised the branch. **Fix**: fall through (S130 F8).
+**Rule**: re-read the code against the decode for every branch the corpus never hit.
+
+### A waypoint that does not fire is data (S130 F8)
+**Symptom**: "damage mismatch, engine None". **Root cause**: a 0-damage hit never enters the
+`$52:$6D56` apply (the "no damage" route). **Rule**: treat the absence of an apply as the
+engine's 0; never read a stale `$DB56`.
+
+### Measure a slot's "source" by transforming into it (S130 F9)
+**Symptom**: a Transform into a summoned helper copied a stranger's stats. **Root cause**: the
+engine's source for slot 3/7 is the enemy_stats row `$0100 | $DC3C` (472-475), not the
+helper's own row. **Rule**: measure what the engine reads, not what the summon code suggests.
+
+### Rig pokes do not survive a KO (S130 F9)
+**Symptom**: a KO'd, rig-poked monster came back with different stats. **Root cause**: every KO
+reloads the slot from its source (bank $51 entry 15). **Rule**: the model must know the
+source (`Board.base`); a poke is not the monster's stat.
+
+### Check that A survived a re-pointed store (S130 F10)
+**Symptom**: the model predicted +7 & $33 after DeMagic on an iron target; the engine wrote $11.
+**Root cause**: the iron branch `push hl / ld hl,$dd13 / … / pop hl` leaves A = $DD and the
+following `and $33` uses it. **Rule**: when a branch re-points HL around a store, check
+whether A survived before the next ALU op.
+
+### Check the index scale of every array helper (S130 F10)
+**Symptom**: reverting party slot 1 changed slot 2's level; slot 2 changed enemy slot 4's.
+**Root cause**: `ByteArrayWriteX2_6546` is the word-array index helper (`add a`) used on byte
+arrays — a vanilla bug. **Rule**: check each array helper's index scale against the element
+size of the array it is used on.
+
+### The AI chain category comes from the option-list tag (S130 F10)
+**Symptom**: DeMagic chain runs showed cat-1 rules. **Root cause**: the chain is picked by the
+`$DC64` TAG, not by the record; the rig's random tags ran other chains. **Rule**: derive the
+category from the actor's `$DC64` pair when validating.
+
+### A stub that leaves a routine mid-call must restore SP (S130 raising)
+**Symptom**: the raising census hung inside `tick()` after hundreds of stub calls. **Root
+cause**: the past-the-max-level apply path ends in bank $51's battle-screen redraw, which waits
+forever at the title; the hook that jumps out to the stub's park left that routine's stack
+frames behind, and SP drifted down into WRAM. **Fix**: `tools/census_raising.py` `TAIL_HOOK`
+saves SP when the stub starts and restores it before setting PC to the marker write. **Rule**:
+any hook that abandons a routine must also abandon its stack.
+
+### Detect a stub's completion by a marker byte, not by the PC (S130 raising)
+**Symptom / root cause**: a driver that ticks frames until the PC sits at the stub's park
+loop can miss the end of the call — at the end of a frame the PC can be inside an interrupt
+handler, not at the park loop. **Fix**:
+the stub writes $A5 to a marker byte after the call; the driver ticks until the marker is set
+(`stub_rst`, `run_learn`). **Rule**: poll a byte the stub writes, never the PC.
+
+### Parallel family work: a frozen base, a 3-way merge, a registry (S130)
+The ten skill families were built in parallel working copies (`wt/F1` … `wt/F10`) from one
+frozen base copy and merged back by 3-way merge against that base. What made it merge cleanly:
+a registry in the shared round loop (`battle.py` ACTION_HANDLERS, POST_CALC, … — BATTLE_SKILL_SYSTEM
+§15.11) so each family ADDED a module (`skillfx/*.py`) instead of editing one function, and
+every shared-file edit marked `# S130 Fn`. The one collision was a name: F4 and F6 both created
+`POST_ACTION_HOOKS` with different call sites — F6's was renamed `POST_SWEEP_HOOKS` at the merge.
+**Rule**: for parallel work on one loop, land the extension points first, freeze a base, give
+each worker its own registry names (prefix new ones), and merge against the base, not each
+other.
+
+### Never seed a reproducible roll from Python's hash() of a string (S130 Balance)
+`hash((seed, 'dive', gid))` differs per process (PYTHONHASHSEED salts str hashes), so the
+same "rolled team" changed between runs and a gate-9 dive read 78 % then 94 % clear.
+Seeds that must reproduce (an anchor JSON re-derived by a selftest, a per-fight cache)
+come from `hashlib` (`balance._seed`).
+
+### A "strong player" heuristic must not let support outscore offence (S130 Balance)
+`skill_value` scored a heal by its raw power (HealAll ≈ full HP), so "best of six rolls"
+picked three Healers that never attack: strong teams lost to Gate of Villager floors the
+casual teams won at level 1-2 (battles ran to the 60-round cap). Fixed by capping heals at
+30 and rating members on bulk + offence + at most one heal — caught by an agent reading
+the anchor's rows, not by any validator: sanity-read the curve before shipping numbers.
+
+### Search a noisy, capped win curve from below (S130 Balance)
+Bisecting 1..99 assumes the win rate rises with level. It doesn't at the top: rosters
+reach their level caps, the cap-swap pulls in odd members, and a team "at 99" can do worse
+than at 30 — so "test 99 first" reported "99+" for fights won at level 24.
+`balance.first_level` probes 1, 2, 4, 8 … up to the first success and bisects below it.
+
+### A whole-round replay finds the idle gaps a per-waypoint validator never sees (S130 P3.15b)
+**Symptom**: the Command corpus replayed every round through `battle.simulate_round` with
+an oracle idle (the engine RNG at each waypoint). It failed on confused actors, on snap-outs
+after a hit, on act-time re-resolves and on party Attacks, although every per-step validator
+was green. **Root cause**: four places where the engine spends frames, or picks, at a point
+the round core did not mark. (a) The confused action pick comes ~40 frames after the curse
+stage ("is confused" text). (b) The on-hit snap-out roll comes after the damage animation.
+(c) A re-resolve / dead-target re-pick runs at the bank $58 fetch (`qfetch`, d9ed $19 / 0),
+frames BEFORE `target_fetch`. (d) The party side of the plain-attack target service is an
+estimate argmin (`$41E9`), not the enemy's front-weighted roll. The per-step validators had
+taken the engine's state or target at each of these points, so they never tested them.
+**Fix**: idle classes `pre_conf` / `pre_snap`, the oracle maps `pre_target` to the earlier
+of `qfetch` / `target_fetch`, and `battle.party_attack_pick`. **Rule**: when a model is
+validated waypoint by waypoint, also replay whole rounds from one injected state per
+waypoint class. Anywhere the replay drifts is an idle class or a decision nobody modelled.
+
+### "Plan $81" was the top-menu PLAN, not a Command switch (S130 P3.15b)
+Earlier sessions forced wMenu_selection = $81 and called it "Command". Driving the real menu
+showed that $81 is the PLAN entry of FIGHT / ITEM / PLAN / RUN. COMMAND is the 4th TACTIC
+in PLAN's per-monster list, and its order goes straight into the action queue. Two things
+followed that the poked runs could not show. A FIGHT round never asks for orders: a
+tactic-3 monster just attacks. An obeyed order is never re-targeted, and it fizzles on a
+dead target. **Rule**: before naming a RAM value after a menu entry, drive the menu once
+with the joypad and watch which byte each press writes.
+
+### A long background job dies with the turn in a cloud workspace — make it resumable (S130 Balance)
+The anchor rebuild (~3 h) was started with `nohup … &` and the turn ended; the workspace was
+reclaimed while idle ("up 0 min") and the build vanished — twice, once after a real crash
+nobody saw for 30 minutes. Long builds now append each finished unit to a `.partial` file
+(tagged with the simulator version) and resume from it; and the session stays in the turn,
+polling, until the job is done.

@@ -200,6 +200,10 @@ jr_057_40fb:
     ret
 
 
+; [S130 F7] entry 4: [$DD72] = slot in, $DD72/73 = its base MaxHP out. Link or slot<3:
+; [S130 F7] record $CB13 (+$52) via ReadMonsterWord; slot 3/7: species row ($DC3C+$100);
+; [S130 F7] enemy 4-6: enemy_stats row (wTempEnemyId[slot-4], bank $14 e1 -> $DA1D).
+BaseStatMaxHP_4136:
     ld a, [$dd72]
     ld b, a
     ld a, [$c86c]
@@ -264,6 +268,10 @@ jr_057_4189:
     ret
 
 
+; [S130 F7] entry 5: [$DD72] = slot in, $DD72/73 = its base MaxMP out. Link or slot<3:
+; [S130 F7] record $CB17 (+$56) via ReadMonsterWord; slot 3/7: species row ($DC3C+$100);
+; [S130 F7] enemy 4-6: enemy_stats row (wTempEnemyId[slot-4], bank $14 e1 -> $DA1F).
+BaseStatMaxMP_4192:
     ld a, [$dd72]
     ld b, a
     ld a, [$c86c]
@@ -327,6 +335,10 @@ jr_057_41e5:
     ret
 
 
+; [S130 F7] entry 6: [$DD72] = slot in, $DD72/73 = its base ATK out. Link or slot<3:
+; [S130 F7] record $CB19 (+$58) via ReadMonsterWord; slot 3/7: species row ($DC3C+$100);
+; [S130 F7] enemy 4-6: enemy_stats row (wTempEnemyId[slot-4], bank $14 e1 -> $DA21).
+BaseStatATK_41ee:
     ld a, [$dd72]
     ld b, a
     ld a, [$c86c]
@@ -390,6 +402,10 @@ jr_057_4241:
     ret
 
 
+; [S130 F7] entry 7: [$DD72] = slot in, $DD72/73 = its base DEF out. Link or slot<3:
+; [S130 F7] record $CB1B (+$5A) via ReadMonsterWord; slot 3/7: species row ($DC3C+$100);
+; [S130 F7] enemy 4-6: enemy_stats row (wTempEnemyId[slot-4], bank $14 e1 -> $DA23).
+BaseStatDEF_424a:
     ld a, [$dd72]
     ld b, a
     ld a, [$c86c]
@@ -453,6 +469,10 @@ jr_057_429d:
     ret
 
 
+; [S130 F7] entry 8: [$DD72] = slot in, $DD72/73 = its base AGL out. Link or slot<3:
+; [S130 F7] record $CB1D (+$5C) via ReadMonsterWord; slot 3/7: species row ($DC3C+$100);
+; [S130 F7] enemy 4-6: enemy_stats row (wTempEnemyId[slot-4], bank $14 e1 -> $DA25).
+BaseStatAGL_42a6:
     ld a, [$dd72]
     ld b, a
     ld a, [$c86c]
@@ -627,8 +647,8 @@ AIRuleChainCat2_4358:
     dw AIRule_6975
     dw AIRule_6a0d
     dw AIRuleVetoRobMpFull_6ab4
-    dw AIRule_6af5
-    dw AIRule_6bcb
+    dw AIRuleThickFogVetoNoBigSpell_6af5
+    dw AIRuleDeMagicVetoNoBuff_6bcb
     dw AIRule_6c0f
     dw AIRule_55c4
     dw AIRule_55d6
@@ -636,7 +656,7 @@ AIRuleChainCat2_4358:
     dw AIRule_6cc0
     dw AIRule_6596
     dw AIRule_6619
-    dw AIRule_69cb
+    dw AIRuleDeMagicDebuffMalus_69cb
     dw AIRuleElementBonus_4bcc
     dw AIRule_54be
     dw AIRule_54e4
@@ -645,8 +665,8 @@ AIRuleChainCat2_4358:
     dw AIRule_5660
     dw AIRule_5739
     dw AIRule_57fc
-    dw AIRule_5842
-    dw AIRule_593d
+    dw AIRuleDeMagicBuffCount_5842
+    dw AIRuleThickFogBonus_593d
     dw AIRule_59f7
     dw AIRuleIncapBonus_5ffd
     dw AIRule_604a
@@ -1138,6 +1158,8 @@ jr_057_464b:
     call ClearBattleAction
 
 jr_057_4662:
+    ; [S130 F10] ThickFog $83, or flags7 bit6 ($DD6B), with the caster's OWN side
+    ; [S130 F10] sealed ($DB00/$DB01 bit3) -> veto (measured 23 ThickFog runs).
     ld a, [$db8a]
     cp $83
     jr z, jr_057_466f
@@ -2202,6 +2224,9 @@ jr_057_4bfe:
     ret
 
 
+; [S130 F10] every cat-1/2 skill: veto when EVERY live opponent has res level 3 at
+; [S130 F10] the record's +5 element position (code-read; not in ai_rules.py — element
+; [S130 F10] 0 = $80/$83, never vetoes, asserted over the F10 rules corpus).
 AIRule_4c13:
     call LoadBtlAI_4532
 
@@ -4385,7 +4410,10 @@ jr_057_580d:
     ret
 
 
-AIRule_5842:
+; [S130 F10] DeMagic $80, $DD0B==2 only: +20 once a count reaches 3 — per valid
+; [S130 F10] opponent its +3&$3F bits, +4&$7F bits, +5 bits 6/7, +7&$C0, +7&$0C, +8 bit6,
+; [S130 F10] plus the caster's OWN side byte bits 2/3/5 (recounted per opponent).
+AIRuleDeMagicBuffCount_5842:
     ld a, [$db8a]
     cp $80
     ret nz
@@ -4540,7 +4568,10 @@ jr_057_5934:
     ret
 
 
-AIRule_593d:
+; [S130 F10] ThickFog $83, $DD0B==2 only: n = own valid slots, k = own list skills
+; [S130 F10] < $3A or $D5/$DA/$DC; if n >= k: +20 when the valid opponents' lists hold
+; [S130 F10] >= 2 of the $6AF5 big spells (tags ignored). Measured.
+AIRuleThickFogBonus_593d:
     ld a, [$db8a]
     cp $83
     ret nz
@@ -5835,6 +5866,8 @@ jr_057_5f89:
     ret
 
 
+; [S130 F10] (also DeMagic $80): veto when every opponent is invalid or incapacitated
+; [S130 F10] (GetMonsterSlotInfo carry: +2&$D0, +5&$3F, +7&$C0). Measured for $80.
 AIRule_5f91:
     ld a, [$db8a]
     cp $15
@@ -7431,6 +7464,9 @@ jr_057_674e:
     ret
 
 
+; [S130 F9] AIRuleVetoSummonActive_6757 (cat-2 chain): $84-$87 vetoed while the
+; side's summon bit2 is set and its helper slot is live (simulator/ai_rules.py).
+AIRuleVetoSummonActive_6757:
 AIRule_6757:
     ld a, [$db8a]
     cp $84
@@ -7896,7 +7932,9 @@ jr_057_69c3:
     ret
 
 
-AIRule_69cb:
+; [S130 F10] DeMagic $80: -20 once when a valid opponent has +3&$C2, +4&$10, +7&$03
+; [S130 F10] or shifted +8 bit7 (debuffs/seals the dispel would lift).
+AIRuleDeMagicDebuffMalus_69cb:
     ld a, [$db8a]
     cp $80
     ret nz
@@ -8133,7 +8171,10 @@ jr_057_6ac2:
     ret
 
 
-AIRule_6af5:
+; [S130 F10] ThickFog $83: veto unless a valid opponent's $DC64 list has a tag-1 entry
+; [S130 F10] with skill $02/$05/$08/$0B/$0E/$11-$13. The own-side 2nd loop compares
+; [S130 F10] the TAG (1) with $2B: dead code, it never vetoes. Measured.
+AIRuleThickFogVetoNoBigSpell_6af5:
     ld a, [$db8a]
     cp $83
     ret nz
@@ -8308,7 +8349,10 @@ jr_057_6b93:
     ret
 
 
-AIRule_6bcb:
+; [S130 F10] DeMagic $80: veto unless the opponents' side byte & $2C, or the opposing
+; [S130 F10] side's FIRST slot (c is never advanced: that slot is tested 3 times, valid
+; [S130 F10] or not) has +3&$3C/+4&$6F/+5&$40/+7&$CC/shifted +8&$40. Measured 332 runs.
+AIRuleDeMagicVetoNoBuff_6bcb:
     ld a, [$db8a]
     cp $80
     ret nz
@@ -8821,6 +8865,11 @@ jr_057_6e22:
 ; threshold ladders (AIPreambleW3_7905 / AIPreambleLadder_791a /
 ; AIPreambleDecide_7a5d); carry -> clear $DCEC pair + run the machine,
 ; no-carry -> AIState0AltOutcome_6f8c (flee/loaf, untraced). §15.10.7.
+; [S130 P3.15b] order of tests (measured): $DD13 != 1 -> post; GetMonsterSlotInfo
+; carry or +2 bit4 (confused) -> state 1 directly (NO gate, no drift); $DD03
+; bit6 set -> party $6F1F direct path (no gate); else the plan byte -> $DD72
+; and the gate (one RNG step in LoadBtlAI_7a16). Carry with plan $81 (PLAN
+; round) -> the direct pick for ANY tactic (orders included). §15.10.7b.
 AIState0Preamble_6e2a:
     ld a, [$d9ed]
     cp $16
@@ -8976,6 +9025,12 @@ jr_057_6edb:
     ld hl, $d9ee
     inc [hl]
 
+; [S130 P3.15b] phase-5 commit (d9ed == 1): an actor with +2&$DC, +5&$1F, +6
+; bit2 or +7&$D0 runs the category machine instead (unbiased); else message $B4
+; ('<name> ignores the order', SetBtlAI_7e82 copies the name) and the pick.
+; The act-time re-decide ($53:$46A8, d9ed $18) re-enters here without the
+; message. The queue target stays $FF: the commit sub-state ($58:$545B) runs
+; the target service for it (party Attack: the $41E9 estimate pick).
 jr_057_6f1f:
     ld a, [$d9ed]
     cp $01
@@ -9108,6 +9163,13 @@ jr_057_6fd2:
     jp AIState1CategoryScores_7129
 
 
+; [S130 P3.15b] PERSONALITY DRIFT (measured 464/464): in a PLAN round ($DD72 ==
+; $81, phase 5, not link) every NO-CARRY commit adds its tactic's row of the
+; Personality tables (row = w3 >= $97 ? 4 : 0 + level band <10/<20/<30/else) to
+; the four battle bases $DC44/$DC4C/$DC54/$DC5C (saturating 0..$FF). Command
+; = w3 -1/-2 per obeyed order: a lower w3 lowers $db4d = w3/10 in the gate, so
+; orders make a monster LESS obedient over time; bank $51 LoadBtlS_4b96 writes
+; the bases back to the record after the battle (live monsters only).
 jr_057_6fe0:
     ld a, [$c86c]
     or a
@@ -9364,6 +9426,10 @@ jr_057_7143:
 
 ; Plan $81 "Command": $DD03[idx]==3 diverts to the direct-command path
 ; (S81 behavior anchor: post-command GO = physical only).
+; [S130 P3.15b] 'plan $81' = the top-menu PLAN (wMenu_selection; FIGHT = $80),
+; not a separate Command menu. With $DD03 == 3 (the menu's order mark,
+; GetBattleModeData) this jumps to jr_057_718c = post: the ORDER the menu
+; queued stands untouched (measured 469 obeyed orders, validate_command.py).
 AIPlanCommandDivert_714e:
     cp $07
     jr z, jr_057_7160
@@ -12153,6 +12219,8 @@ jr_057_7f5d:
 ; (loaf) if all three < $3F; else $3A (Attack) iff cat1 >= $3F AND
 ; cat1 >= cat2 AND cat1 >= cat3; else $8D (Defence). Byte-read + runtime-
 ; sighted S87 (all three codes). §15.10.7a.
+; [S130 P3.15b] measured on real orders: $3A 193x, $8D 43x, $98 Daze 14x;
+; ties (all three bases equal and >= $3F) -> Attack.
 SetBtlAI_7f5f:
     ld hl, $db4c
     xor a

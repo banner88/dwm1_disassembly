@@ -41,7 +41,7 @@ STUB_TABS = [
     ('Encounters', 'P3.13a', 'Every wild-monster list, gate floor plans, room battles, flag variants (open a project).'),
     ('Music', 'P3.13b', 'Song library with preview, MIDI import, room / gate / battle music (open a project).'),
     ('Progression && Flags', 'P3.14', 'Flag manager, quest forms, triggers-as-sentences.'),
-    ('Balance', 'P3.15', 'TTK sweeps, what-if deltas, obedience curves (validated only).'),
+    ('Balance', 'P3.15a', 'The difficulty curve of every key fight, teams, what-if.'),
 ]
 
 
@@ -160,6 +160,13 @@ class MainWindow(QMainWindow):
             except RuntimeError:
                 pass
             self.cutscenes_tab = None
+        old = getattr(self, 'balance_tab', None)
+        if old is not None:                      # S130: stop its background computations
+            try:
+                old.shutdown()
+            except RuntimeError:
+                pass
+            self.balance_tab = None
         self.tabs.clear()
         if self.session:
             self.rooms_tab = RoomsTab(self.session)
@@ -273,6 +280,12 @@ class MainWindow(QMainWindow):
                 else:
                     self.tabs.addTab(_stub('World', 'P3.7', 'Room / warp graph (open a project).'),
                                      'World')
+                # S130 (P3.15a): the difficulty curve — the original game's
+                # (read-only, precomputed) against the project's; teams; what-if
+                from editor2.app.balance_tab import BalanceTab
+                self.balance_tab = BalanceTab(self.session)
+                self.tabs.addTab(self.balance_tab, 'Balance')
+                continue
             self.tabs.addTab(_stub(title, box, blurb), title)
         self.build_tab = BuildPlayTab(self)
         self.tabs.addTab(self.build_tab, 'Build && Play')
@@ -699,6 +712,12 @@ class MainWindow(QMainWindow):
             if ct is not None:
                 try:
                     ct.shutdown()
+                except RuntimeError:
+                    pass
+            bt = getattr(self, 'balance_tab', None)
+            if bt is not None:                   # S130
+                try:
+                    bt.shutdown()
                 except RuntimeError:
                     pass
             ev.accept()

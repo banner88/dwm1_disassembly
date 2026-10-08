@@ -31,6 +31,12 @@ Party policies for sweeps:
   'attack'   always plain Attack (pessimistic TTK floor)
   'tactics'  the real commit machine under a tactic (0 Charge / 1 Mixed /
              2 Cautious), obedience-gated by level like the engine
+  'command'  the player's ORDERS (top menu PLAN -> COMMAND, every round;
+             S130, measured: measure_command.py / validate_command.py,
+             BATTLE_SKILL_SYSTEM §15.10.7b): b.ext['planner'](b, s) ->
+             (skill, target slot | None) or a list of such alternatives;
+             give_orders (the menu) + command_commit (the gate under
+             tactic 3, the personality drift, the disobedient pick)
 API: simulate_battle(), ttk(), make_board(), board_from_event().
 """
 import json, os, random, sys
@@ -141,6 +147,13 @@ def dd0b_mode(int_stat, enemy):
     return 0 if v < 0x14 else (1 if v < 0xB3 else 2)
 
 
+def _family_id(sp):
+    """Family index from a species entry (monsters_full 'family_id', or an
+    int 'family' as editor2/core/balance.py writes it); $FF unknown."""
+    f = sp.get('family_id', sp.get('family', 0xFF))
+    return f if isinstance(f, int) else 0xFF
+
+
 def make_board(party, enemies, species=None, db73=0):
     """party: list (<=3) of dicts with hp/mp/atk/dfn/agl/int/level,
     'skills' (movepool ids), optional 'species' (for resistances/flying),
@@ -172,6 +185,17 @@ def make_board(party, enemies, species=None, db73=0):
             b.res[i * 7:(i + 1) * 7] = pack_res(sp['resistances'])
             if sp.get('can_fly'):
                 b.db8b[i] |= 0x10
+            if sp.get('metal') or sp.get('is_metal'):
+                b.db8b[i] |= 0x01
+            b.family[i] = _family_id(sp)
+        if m.get('species') is not None:
+            b.species[i] = m['species']
+        if m.get('res'):                        # S130: an instance's own levels (bred)
+            b.res[i * 7:(i + 1) * 7] = pack_res(m['res'])
+        if m.get('maxmp') is not None:
+            b.maxmp[i] = m['maxmp']
+        else:
+            b.maxmp[i] = b.mp[i]
     for j, e in enumerate(enemies):
         s = 4 + j
         b.hp[s] = b.maxhp[s] = e['hp']; b.mp[s] = e['mp']
@@ -182,10 +206,16 @@ def make_board(party, enemies, species=None, db73=0):
         b.dd03[s] = 0xFF
         b.eid[j] = e['enemy_stats_id']
         sp = species.get(e['species_id'])
+        b.maxmp[s] = e['mp']
+        b.species[s] = e['species_id']
         if sp:
             b.res[s * 7:(s + 1) * 7] = pack_res(sp['resistances'])
             if sp.get('can_fly'):
                 b.db8b[s] |= 0x10
+            if sp.get('metal') or sp.get('is_metal'):
+                b.db8b[s] |= 0x01
+            b.family[s] = _family_id(sp)
+    b.snapshot_base()                           # S130: buffs need the source stats
     return b
 
 
@@ -238,10 +268,12 @@ class ChainRules:
         # resist_score PINNED S88: element = record status_id = res pos;
         # level from the Board's live res bytes (loaded per battle).
         _res = b.res
-        self.view = R.BattleView(b.hp, b.maxhp, b.mp, b.mp, st, b.dd1b,
+        _ol = b.ext.get('f10_optlists')     # S130 F10: $DC64 lists + $DD0B for the
+        self.view = R.BattleView(b.hp, b.maxhp, b.mp, b.mp, st, b.dd1b,   # DeMagic/ThickFog rules
                                  [0] * 8, [None] * 8,
                                  lambda s, e: (_res[s*7 + (e >> 2)]
-                                               >> ((3 - (e & 3)) * 2)) & 3)
+                                               >> ((3 - (e & 3)) * 2)) & 3,
+                                 skills=_ol, dd0b=list(b.dd0b) if _ol else None)
         self.actor = actor
         self.records = records
 
@@ -295,6 +327,9 @@ def commit_actor(b, s, movepool, bases, records, rnd, state_ref,
                  is_enemy, plan_adj=(0, 0, 0)):
     """One actor's commit: returns (skill, target_byte)."""
     opts = option_list(movepool, records)
+    _f9 = getattr(b, 'ext', {}).get('f9_opts', {}).get(s)
+    if _f9 is not None:                 # S130 F9: $DC64 rewritten (helper /
+        opts = list(_f9)                # Transform / dragon form)
     if b.dd0b[s] == 0:
         act = lightweight_pick(opts, bases, list(plan_adj), is_enemy,
                                rnd, state_ref)
@@ -316,10 +351,21 @@ def _commit_target(b, s, act, records, state_ref):
         opp = b.live_side((s & 4) ^ 4)
         if not opp:
             return 0xFF
+        if s < 4 and not b.link:                # S130 P3.15b: the party side
+            t, state_ref[0] = B.party_attack_pick(b, s, act, state_ref[0])   # of $41E9
+            return 0xFF if t is None else t
         t, state_ref[0] = B.pick_front_weighted(opp, state_ref[0])
+        return t
+    if act in B.COMMIT_TARGETS:         # S130 F5: the skill's bank $58 row
+        t, state_ref[0] = B.COMMIT_TARGETS[act](b, s, state_ref[0])
         return t
     rec = records.get(act)
     if rec and B.damage_core(act, rec) == 'heal':
+        return s & 4
+    # S130 F7: ally-target buffs (target_mode 33/34: Upper/Increase/Speed/
+    # SpeedUp/Surge) commit the OWN side base (measured: enemy slots 4/5/6
+    # queued 4 for $1E/$1F/$23, simulator/measure_f7.py natural runs)
+    if rec and rec['battle_record']['fields'].get('target_mode') in (33, 34):
         return s & 4
     if act == A.DEFENCE:
         return s
@@ -462,16 +508,62 @@ PARTY_FALLBACK_BASES = (150, 100, 100, 100)  # documented REFERENCE
 # tuple is a modelling choice.
 
 
+def _f10_optlists(b, records, enemy_recs):
+    """[S130 F10] Every slot's $DC64 option list as (tag, skill) pairs (party:
+    up to 8 movepool skills; enemies: the row's 4) — the ThickFog rules read
+    the OPPONENTS' lists (AIRuleThickFogVetoNoBigSpell_6af5 / AIRuleThickFogBonus_593d)."""
+    def ol(skills, n):
+        res = []
+        for sk in list(skills)[:n]:
+            if sk is None or sk == 0xFF:
+                break
+            rec = records.get(sk)
+            res.append(((_tag(rec) if rec else 1), sk))
+        return res
+    out = [[] for _ in range(8)]
+    for s in range(3):
+        out[s] = ol(getattr(b, 'party_skills', [None] * 3)[s] or [], 8)
+    for s in range(4, 7):
+        er = enemy_recs.get(s) if enemy_recs else None
+        if er:
+            out[s] = ol(er['skills'], 4)
+    return out
+
+
 def commit_round(b, records, rnd, state, party_policy='attack',
                  enemy_recs=None, idle=None):
     """Fill b.queue for one round. enemy_recs: slot->enemy_stats record."""
     idle = idle or (lambda st, cls: st)
     state_ref = [state]
+    b.ext['f10_optlists'] = _f10_optlists(b, records, enemy_recs)   # S130 F10
+    command = (party_policy == 'command'
+               and getattr(b, 'ext', {}).get('planner') is not None)
+    b.ext.pop('command_ordered', None)
+    if command:                                     # the menu phase: orders first
+        give_orders(b, records, state_ref)
+    else:
+        b.ext['plan'] = 0x80                        # FIGHT
     for s in range(8):
         if not b.valid(s) or b.dd13[s] != 2:
             continue
         state_ref[0] = idle(state_ref[0], 'actor_skip')
-        if s < 4:                                   # party
+        if b.stb(s, 6) & 0x04 or b.stb(s, 7) & 0x10:
+            continue        # S130 F5: the command loop ($50:$47BE/$4EF3) skips an
+            #                 actor mid two-turn skill (HighJump +6 b2 / LifeSong
+            #                 +7 b4): its queued action stands (LifeSong turn 2)
+        f9 = getattr(b, 'ext', {}).get('f9_ai_bases', {}).get(s)
+        if f9 is not None:                          # S130 F9: a summoned helper
+            act, tgt = commit_actor(b, s, [], list(f9[:3]),   # (slot 3/7): its
+                                    records, rnd, state_ref,  # $DC64 list +
+                                    is_enemy=True)            # bases $FA, AI
+            b.queue[s * 2] = act                    # as an enemy (slot >= 3:
+            b.queue[s * 2 + 1] = tgt                # $57:$71C1 / $72EA)
+            continue
+        if s < 3 and command:
+            # S130 (P3.15b): the player's ORDERS (plan $81 PLAN/Command,
+            # measured: measure_command.py / validate_command.py, §15.10.7b)
+            act, tgt = command_commit(b, s, records, state_ref, idle, rnd)
+        elif s < 4:                                 # party
             if party_policy == 'attack' or not getattr(
                     b, 'party_skills', [None] * 3)[s]:
                 act = A.PLAIN_ATTACK
@@ -504,12 +596,285 @@ def commit_round(b, records, rnd, state, party_policy='attack',
             else:
                 w = er['ai_weights']
                 bases = [w[0], w[2], w[1]]          # +17 cat1 +19 cat2 +18 cat3
+                _ov = b.ext.get('f10_enemy_bases', {}).get(s)   # S130 F10: a party revert's
+                if _ov:                             # doubled-index write ($DC44+2t) landed here
+                    bases = list(_ov[:3])
                 act, tgt = commit_actor(b, s, er['skills'], bases,
                                         records, rnd, state_ref,
                                         is_enemy=True)
         b.queue[s * 2] = act
         b.queue[s * 2 + 1] = tgt
+        if s < 3 and B.COMMIT_ROLL is not None:     # S130 F4: $58 LoadBtlFX_5a40/_5ba1
+            pb = (getattr(b, 'party_bases', None) or [None] * 3)[s] or PARTY_FALLBACK_BASES
+            state_ref[0] = B.COMMIT_ROLL(b, s, pb, state_ref[0])   # $DB42 tension roll
     return state_ref[0]
+
+
+LOAF = 0x98          # Daze: the disobedient "loaf" action (SetBtlAI_7f5f)
+PLAN_COMMAND = 0x81  # wMenu_selection after the top-menu PLAN ($80 = FIGHT)
+
+# --------------------------------------------------------------------------
+# The player's ORDERS — measured S130 (simulator/measure_command.py corpus
+# simulator/command_events.json.gz, validate_command.py; BATTLE_SKILL_SYSTEM
+# §15.10.7b). The order is given in the battle menu: top menu PLAN ->
+# per-monster tactic list -> COMMAND -> ATK / SKIL / DEF (+ target). The
+# menu writes the queue $DCEC[2s] / target $DCED[2s] itself and marks
+# $DD13[s] := 1, $DD03[s] := 3 (GetBattleModeData $50:$4F45); the round's
+# plan byte wMenu_selection = $81. The commit (bank $57 state 0) then runs
+# the obedience gate with tactic 3 ($db4c = 0):
+#   no carry -> personality drift (PersonalityCommandTable, w3 -1/-2) and
+#               the $714E divert keeps the menu's queue untouched (no target
+#               service, no RNG);
+#   carry    -> $DD03 bit6, the queue pair := $FFFF, SetBtlAI_7f5f picks
+#               $98 Daze / $3A Attack / $8D Defence from the raw bases (msg
+#               $B4), then the commit sub-state's target service (bank $58
+#               entry 8) writes the target for the $FF byte.
+# Either way the bank $58 $DB42 tension rolls follow (battle.COMMIT_ROLL).
+# --------------------------------------------------------------------------
+# PersonalityChargeTable .. PersonalityCommandTable ($57:$70A9 + 32*t), 8 rows
+# x [cat1, cat2, cat3, w3] signed adds; row = (w3 >= $97 ? 4 : 0) + level band
+# (<10 / <20 / <30 / else) — applied at the plan-$81 no-carry commit
+# ($57:$6FE0, phase 5 only, never in a link battle).
+PERSONALITY = (
+    ((7, -1, 0, 3), (5, -1, 0, 2), (3, -1, 0, 1), (2, -1, 0, 1),
+     (10, -1, 0, 4), (7, -1, 0, 3), (5, -1, 0, 2), (5, 0, 0, 1)),        # 0 Charge
+    ((0, 7, -2, 3), (0, 5, -2, 2), (0, 4, -1, 1), (0, 3, -1, 1),
+     (0, 10, -3, 4), (0, 7, -2, 3), (0, 5, -1, 2), (0, 5, 0, 1)),        # 1 Mixed
+    ((-2, 0, 7, 3), (-2, 0, 5, 2), (-1, 0, 4, 1), (-1, 0, 3, 1),
+     (-2, 0, 10, 4), (-2, 0, 7, 3), (-1, 0, 5, 2), (0, 0, 5, 1)),        # 2 Cautious
+    ((0, 0, 0, -1), (0, 0, 0, -2), (0, 0, 0, -2), (0, 0, 0, -1),
+     (0, 0, 0, -1), (0, 0, 0, -2), (0, 0, 0, -2), (0, 0, 0, -1)))        # 3 Command
+
+
+def personality_drift(bases, tactic, level):
+    """$57:$6FE0..$7092: the plan-$81 no-carry adjustment of the four battle
+    bases (c1, c2, c3, w3) for `tactic`; BitBtlAI_7092 saturates at $FF /
+    floors at 0. The arrays are written back to the monster record at the
+    end of the battle (bank $51 ~$4BA0), so the drift is permanent."""
+    lv = level & 0xFF
+    row = (4 if bases[3] >= 0x97 else 0) + (0 if lv < 10 else 1 if lv < 20 else 2 if lv < 30 else 3)
+    adj = PERSONALITY[tactic & 3][row]
+    return tuple(max(0, min(0xFF, v + d)) for v, d in zip(bases[:4], adj))
+
+
+def direct_pick(bases):
+    """SetBtlAI_7f5f — the disobedient pick on the RAW bases: $98 Daze if all
+    three < $3F; else Attack iff cat1 >= $3F and cat1 >= cat2 and cat1 >=
+    cat3; else Defence $8D."""
+    c1, c2, c3 = bases[0], bases[1], bases[2]
+    if c1 < 0x3F and c2 < 0x3F and c3 < 0x3F:
+        return LOAF
+    if c1 >= 0x3F and c1 >= c2 and c1 >= c3:
+        return A.PLAIN_ATTACK
+    return A.DEFENCE
+
+
+def plannable(b, s):
+    """SaveBtl_5b07 / LoadBtl_47be: the menu offers a monster its tactic list
+    (and so an order) only if it is alive and GetMonsterSlotInfo passes (+2 &
+    $D0 sleep/paralysis/confusion, +5 & $3F one-shots, +7 & $C0 stun all
+    block) and it is not mid two-turn skill (+6 & $0C, +7 & $F0)."""
+    if not b.valid(s):
+        return False
+    if (b.stb(s, 2) & 0xD0) or (b.stb(s, 5) & 0x3F) or (b.stb(s, 7) & 0xC0):
+        return False
+    return not ((b.stb(s, 6) & 0x0C) or (b.stb(s, 7) & 0xF0))
+
+
+def _gmsi_carry(b, s):
+    """GetMonsterSlotInfo carry: dead / +2&$D0 / +5&$3F / +7&$C0."""
+    return (not b.valid(s) or (b.stb(s, 2) & 0xD0) or (b.stb(s, 5) & 0x3F)
+            or (b.stb(s, 7) & 0xC0))
+
+
+# LoadBtl_4bd1 ($50:$4BD1): per-skill menu targets that bypass the cursor
+MENU_OPP_BASE = frozenset([0x14, 0x80, 0x83])
+MENU_OWN_BASE = frozenset([0x24, 0x26, 0x2A, 0x8B, 0x8F])
+MENU_OWN_BASE_PAIR = frozenset([0x32, 0x89, 0x95, 0x96])  # refused ($FB00) when solo
+MENU_OWN_SLOT = frozenset([0x39, 0x84, 0x85, 0x86, 0x87])
+MENU_FIELD_ONLY = frozenset([0x37, 0x38, 0x7E, 0xE4])     # $0302 (FieldOnlySkillA, S73)
+MENU_REVIVE = frozenset([0x30, 0x31])                     # may target a dead ally
+
+
+def _party_count(b, s):
+    """LoadBtl_4b26: own-side slots that exist (alive or dead; empty $FF
+    slots do not count)."""
+    base = s & 4
+    return sum(1 for t in range(base, base + 3) if b.dd1b[t] != 0xFF)
+
+
+def menu_order(b, s, skill, want, records, state_ref=None):
+    """What the battle menu writes for the order (skill, player's target
+    choice `want` or None = the cursor's default, the first live slot).
+    Returns ((skill, target_byte), None) or (None, reason) when the menu
+    refuses the order: 'mp' ($0402: record MP > current MP), 'field'
+    ($0302), 'solo' ($FB00), 'target' ($FA00: a dead / invalid slot picked),
+    'skill' (not in the monster's list)."""
+    opp, own = (s & 4) ^ 4, s & 4
+    if skill == A.DEFENCE:                       # DEF ($4918 else-branch)
+        return (A.DEFENCE, s), None
+    if skill == A.PLAIN_ATTACK:                  # ATK ($4918)
+        return _menu_pick(b, opp, want, A.PLAIN_ATTACK, s)
+    if skill in MENU_FIELD_ONLY:
+        return None, 'field'
+    rec = records.get(skill)
+    f = rec['battle_record']['fields'] if rec else {}
+    if f.get('mp_cost_byte', 0) > b.mp[s]:       # SaveBtl_4ba4: MP < cost
+        return None, 'mp'
+    if skill in MENU_OPP_BASE:
+        return (skill, opp), None
+    if skill in MENU_OWN_BASE:
+        return (skill, own), None
+    if skill in MENU_OWN_BASE_PAIR:
+        return ((skill, own), None) if _party_count(b, s) != 1 else (None, 'solo')
+    if skill in MENU_OWN_SLOT:
+        return (skill, s), None
+    if skill == 0x3F or skill in (0x51, 0x52, 0x53):
+        # bank $58 entry 4 (TargetSlotResolver_6379, Massacre) / entry 5
+        # (LoadBtlFX_642c): an RNG pick DURING THE MENU (menu-time RNG)
+        if state_ref is not None and skill in B.COMMIT_TARGETS:
+            t, state_ref[0] = B.COMMIT_TARGETS[skill](b, s, state_ref[0])
+            return (skill, t), None
+        if state_ref is not None and skill in B.RERESOLVE_PICKERS:
+            t, state_ref[0] = B.RERESOLVE_PICKERS[skill](b, s, state_ref[0])
+            return (skill, t), None
+        return (skill, want if want is not None else opp), None
+    tm = f.get('target_mode', 0)
+    if not tm & 1:                               # group: the side base
+        return (skill, opp if tm & 0x10 else own), None
+    if tm & 0x10:                                # single enemy: cursor
+        return _menu_pick(b, opp, want, skill, s)
+    if tm & 0x40:                                # self
+        return (skill, s), None
+    return _menu_pick(b, own, want, skill, s)    # single ally: cursor
+
+
+def _menu_pick(b, base, want, skill, s):
+    """SaveBtl_4fa4 + the target cursor (states 5-8): exactly one live slot
+    on the side -> automatic (Vivify/Revive/Cover: shown the cursor unless
+    the caster is alone, then $FB00); else the player's slot, which must be
+    alive (a dead ally only for Vivify $30 / Revive $31)."""
+    live = b.live_side(base)
+    if len(live) == 1 and not (skill in (0x30, 0x31, 0x88) and base == (s & 4)):
+        return (skill, live[0]), None
+    if len(live) == 1 and _party_count(b, s) == 1:
+        return None, 'solo'
+    if want is None:
+        if not live:
+            return None, 'target'
+        return (skill, live[0]), None
+    if b.valid(want) and (want & 4) == base:
+        return (skill, want), None
+    if skill in MENU_REVIVE and (want & 4) == base and b.dd1b[want] != 0xFF:
+        return (skill, want), None
+    return None, 'target'
+
+
+def give_orders(b, records, state_ref=None):
+    """The menu phase of a plan-$81 round: every plannable party monster gets
+    its order from b.ext['planner'](b, s) — written to b.queue at once, so
+    the planner of slot s sees the orders of the slots before it (as the
+    real menu does). planner -> (skill, target or None) or a LIST of such
+    pairs in preference order (the first the menu accepts is used). An order
+    the menu refuses for every alternative falls back to plain Attack at the
+    first live enemy (logged in b.ext['command_refused']).
+    In the arena (db73 == 2, not link) the tactic list offers "NO SP SK"
+    instead of COMMAND ($50:$4550 / LoadBtl_5c2f): tactic 3 with NO order —
+    the planner is not called, the queue stays $FF and the commit turns it
+    into plain Attack."""
+    planner = b.ext['planner']
+    b.ext['plan'] = PLAN_COMMAND
+    arena = b.db73 == 2 and not b.link
+    for s in range(3):
+        if b.valid(s) and not ((b.stb(s, 6) & 0x04) or (b.stb(s, 7) & 0x10)):
+            b.queue[2 * s] = b.queue[2 * s + 1] = 0xFF    # the round's queue reset
+        if not plannable(b, s) or b.dd13[s] != 2:
+            if b.valid(s) and ((b.stb(s, 6) & 0x0C) or (b.stb(s, 7) & 0xF0)):
+                b.dd03[s] = (b.dd03[s] | 0xE0) & 0xFF   # SaveBtl_5b07 two-turn mark
+            continue
+        b.dd03[s] = 3                                   # GetBattleModeData / $4620
+        b.ext.setdefault('command_ordered', set()).add(s)
+        if arena:
+            continue
+        got = planner(b, s)
+        alts = got if isinstance(got, list) else [got]
+        res = None
+        for sk, want in alts:
+            res, why = menu_order(b, s, sk, want, records, state_ref)
+            if res is not None:
+                break
+            b.ext.setdefault('command_refused', []).append((s, sk, why))
+        if res is None:
+            res, _ = _menu_pick(b, 4 if s < 4 else 0, None, A.PLAIN_ATTACK, s)
+            res = res or (A.PLAIN_ATTACK, 0xFF)
+        b.queue[2 * s], b.queue[2 * s + 1] = res
+
+
+def command_commit(b, s, records, state_ref, idle=None, rnd=None):
+    """The phase-5 commit of party slot s in a plan-$81 (PLAN / Command)
+    round, after give_orders. Returns (skill, target byte).
+      ordered ($DD03 = 3): the obedience gate with tactic 3 (one RNG step);
+        no carry -> personality drift (Command row: w3 -1/-2) and the
+        $714E divert keeps the menu's queue (no target service, no RNG);
+        carry -> $DD03 bit6, queue := $FFFF, SetBtlAI_7f5f ($98 / $3A /
+        $8D) — unless the actor carries a status (+2&$DC, +5&$1F, +6 bit2,
+        +7&$D0): the category machine runs instead, unbiased — then the $B4
+        message and the commit sub-state's target service for the $FF byte
+        ($58:$545B; idle class 'cmd_target' before it).
+      not ordered (the menu skipped it: asleep, paralysed, confused,
+        stunned, a pending one-shot): state 0 sends a GetMonsterSlotInfo-
+        carry / confused actor straight to the category machine — no gate,
+        no drift; with its stale $DD03 == 3 the $714E divert skips even
+        that. The commit sub-state then finds target $FF on an
+        incapacitated actor and queues ($3A, own slot) ($58:$5450).
+    A queue skill $FF (arena "NO SP SK") becomes plain Attack ($58:$5470)."""
+    idle = idle or (lambda st, cls: st)
+    pb = tuple((getattr(b, 'party_bases', None) or [None] * 3)[s] or PARTY_FALLBACK_BASES)
+    wld = getattr(b, 'wld', None)
+    wld = wld[s] if wld else default_wld(b.level[s])
+    ordered = s in b.ext.get('command_ordered', ())
+    if not b.valid(s):
+        return b.queue[2 * s], b.queue[2 * s + 1]
+    skills = getattr(b, 'party_skills', [None] * 3)[s] or []
+
+    def machine():
+        return commit_actor(b, s, skills, list(pb[:3]), records, rnd, state_ref,
+                            is_enemy=False, plan_adj=[0, 0, 0])
+
+    def sub_state2(act, tgt):
+        """$58:$542F: a concrete target stands; $FF -> incapacitated:
+        ($3A, own slot); else skill $FF -> $3A, then the target service."""
+        if tgt != 0xFF:
+            return act, tgt
+        if _gmsi_carry(b, s):
+            return A.PLAIN_ATTACK, s
+        if act == 0xFF:
+            act = A.PLAIN_ATTACK
+        state_ref[0] = idle(state_ref[0], 'cmd_target')    # the target service
+        return act, _commit_target(b, s, act, records, state_ref)
+
+    if not ordered:
+        if _gmsi_carry(b, s) or (b.stb(s, 2) & 0x10):
+            if b.dd03[s] != 3:
+                machine()
+            return sub_state2(b.queue[2 * s], 0xFF)
+        b.dd03[s] = (b.dd03[s] | 0x40) & 0xFF        # (two-turn: bit6 already set)
+        carries = True
+    else:
+        carries = obedience_carries(wld, pb, 3, state_ref)
+    if not carries:
+        nb = personality_drift(pb, 3, b.level[s])
+        if getattr(b, 'party_bases', None) is not None:
+            b.party_bases[s] = nb
+        return sub_state2(b.queue[2 * s], b.queue[2 * s + 1])
+    b.dd03[s] = (b.dd03[s] | 0x40) & 0xFF
+    status = ((b.stb(s, 2) & 0xDC) or (b.stb(s, 5) & 0x1F) or (b.stb(s, 6) & 0x04)
+              or (b.stb(s, 7) & 0xD0))
+    if status:
+        act, _ = machine()
+    else:
+        act = direct_pick(pb)                # + the $B4 "ignores the order"
+    return sub_state2(act, 0xFF)             # message before the target service
 
 
 # --------------------------------------------------------------------------

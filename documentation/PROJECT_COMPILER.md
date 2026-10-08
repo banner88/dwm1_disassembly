@@ -3436,6 +3436,132 @@ RAM — the farm's slots where the game keeps them —, every command, `ShopSetP
 checks and its mini medal quest (`$015B` / `$015C`; the legacy quest kept).
 
 
+## §2.43 S130 — THE BALANCE SERVICE: how hard each key fight is, original game vs project (ROADMAP P3.15a) — built S130, NOT yet user-tested
+
+No ROM bytes: the service only READS the project (and one editor setting, below). The
+number for every key fight is **the team level at which a team a player of that point in
+the story might have assembled wins ≥ 90 % (l90) / ≥ 50 % (l50)** of the time, for three
+team profiles (player — the main one —, casual, strong); the original game's numbers are precomputed and read-only
+(`extracted/balance_vanilla.json`), the project's are computed from the project's own
+effective data and cached per fight. User decisions (S130): progression is pinned to the
+story order (gates, arena classes, Starry Night, Monster Grandpa — not the project's
+flags); fully custom gates only need a number; real draws for lists; skills and stat
+growth must count (a team is raised the way the game raises it); breeding opens after a
+story step (the user plans one step earlier than the original game's).
+
+```json
+"meta": {"balance": {"breeding_opens_after": 4}}
+```
+`meta.balance.breeding_opens_after` = the story step index (0-40) after which rolled teams
+may contain offspring; absent = the original game's (after the F class, step 5). Written
+by the Balance tab as one undo step, dropped when equal to the default; read only by the
+tab (the compiler ignores `meta`).
+
+**Modules** (no Qt): `editor2/core/balance.py` (the service), `simulator/raising.py` (the
+raising model, == the game: `tools/census_raising.py`, MONSTER_DATA "Raising a monster"),
+`editor2/core/dive.py` (battles per maze floor, GATE_GENERATION §4.4),
+`editor2/core/savefile.py` (a .sav's roster/party), the battle simulator
+(`simulator/pacing.py` + `battle.py` + `skillfx/`, BATTLE_SKILL_SYSTEM §15.11).
+
+- **BattleData(project | None)** — the simulator's inputs: the effective gamedata
+  (records, enemy rows incl. project enemies, species rows, exp/growth curves, learn rows
+  incl. custom skills, breeding tables), custom skills' records + the base skill each runs
+  (`core_alias`), Earthquake power overrides, enemy redirects. `override_enemy(eid,
+  skills=, level=, hp=, …)` = a what-if edit seen by the simulator only (never saved).
+- **Timeline(data, breeding_opens)** — the story in the original game's order
+  (`VANILLA_STEPS`, FULL_FAQ chapters: 31 gates, classes G-S, Starry Night, Grandpa; 41
+  steps, postgame from Gate 22). A project keeps the positions and fills them with ITS
+  content: a gate's floor lists by the game's rule in runs (encounters model), its boss
+  fight(s) (the gate's boss room's battles — talk steps, cutscenes, quests and the scripts
+  a room names — else the original boss rows), the project's arena matches.
+  `extra_fights`: new gates (32+), worlds and rooms with their own
+  battles get a number of their own, compared with the nearest original fights
+  (`nearest_vanilla`). Roster per step = joinable rows of every list met so far + boss join
+  rows of cleared gates + the starter; offspring once breeding is open.
+- **Teams** (`roll_team`, `team_for` memo per step/level/profile/index) — every member has
+  the same EXP (battle exp is split evenly), the team level = the level that exp gives on
+  the most common curve (11). Members are created, bred (+ birth), levelled and taught by
+  raising.py. **casual**: what was at hand, the first skills kept, one-generation breeding
+  35 %; **strong**: the best of 6 rolls by `member_power` (bulk + offence: ATK or the best
+  damaging skills + at most one heal), 70 % bred, picks the best of 3 crosses, two
+  generations (three postgame), the best 8 skills kept. A member capped below 85 % of the
+  team level is swapped (players replace monsters that stop growing). Heals are valued at
+  most 30 (S130.3: uncapped heals made all-Healer "strong" teams that never attack).
+- **player** (S130 r2, the MAIN number — user: "Always command unless arena (Arena forces you
+  to use tactics)"; "Usually one general kit … I run into a wall … start experimenting with
+  skills and monsters and I train them until I overcome wall"; "maybe around 30-40 level on
+  average per mon" at the S class) — the step's optimised **kit** (`editor2/core/kits.py`):
+  3 monsters × ≤ 8 skills a skilled player would assemble, ONE general kit per step, found by
+  a local search (start = best of 3 strong rolls; mutate one member's species or one skill;
+  score = 0.6 × the hardest fight ("the wall") + 0.4 × the mean, win % + 0.15 × enemy HP
+  removed; an improvement must hold on a second battle set; budget `KIT_BUDGET` = 50
+  evaluations × 2 teams × 6 battles, ×4 for arena steps), optimised at the level where a
+  commanded strong roll wins ≥ 50 % of every boss / arena match, then re-optimised at the
+  kit's own 50 % level (≤ 2 times). The pool at level L: join rows up to L + 2 (a monster must
+  be beaten to join; it brings its row's 4 skills); bred forms once breeding is open and
+  L ≥ 10 (both parents level 10+), a resolver closure over 2 generations (3 postgame), plus
+  from the parents' level sum; skills = obtainable species' natural + join skills through
+  `UnevolvedSkillMap`, each checked link by link against the member as raised by raising.py
+  (level + stat thresholds; combination skills only beside their prerequisites).
+  Outside the arena the party fights on the player's **orders** (`simulator/planner.py`:
+  greedy expected value — every option tried on a copy of the board through the
+  simulator's own round, 3 common RNG draws, valued in "log race" units: damage / kills by
+  threat share, heals and revives when they matter, status / buffs by the re-measured enemy
+  damage × duration, stances only in danger, MP reserve for heals; 0.3-9 ms per decision);
+  orders go through the measured menu + obedience model (`pacing.give_orders` /
+  `command_commit`, BATTLE_SKILL_SYSTEM §15.10.7b: bred monsters WLD 0 always obey, joined
+  ones may refuse and Daze / Attack / Defend; every obeyed order drifts w3). In the arena
+  (`db73 == 2`) the menu has no Command ("NO SP SK"): `evaluate` tries Charge / Mixed /
+  Cautious / NO SP SK and keeps the best (`ev['tactic']`). Kits are cached per step
+  (`get_kit` / `set_kit` / `kit_fingerprint`; FightCache `kit:<fp>`; the anchor's
+  `steps[i]['kit']`); `fight_fingerprint('player')` includes the kit's.
+- **evaluate** — N teams × M battles (default 12 × 8; lists draw a real group per battle by
+  its odds) → win, rounds, HP left, `team_level` (levels actually reached — caps),
+  `enemy_hp_left` (how far a lost fight got), `unmodelled` (share of actions logged
+  `no-effect`). **fight_levels** searches the level FROM BELOW (1, 2, 4, … then bisect —
+  `first_level`), one memo for both thresholds; None = not even at 99 (the tab shows
+  "99+ (win % at 99)").
+- **Dives** (`dive`, `dive_level_needed`, `gate_dive_result`) — a gate's maze floors in a row
+  without healing (HP/MP carry), then its boss fight(s): integer battles per floor sampled
+  from the expected value at two walk bounds — **direct** (shortest walk to the stairs,
+  the lower bound) and **sweep** (every reachable cell, the upper bound).
+- **Cache** — `FightCache(<project>/build/balance_cache.json)`, keyed by
+  `fight_fingerprint` (the fight's enemy rows + skill records + what-if overrides, the
+  roster at its step, `raising_digest` = species rows, curves, learn rows, breeding
+  tables, records, aliases, `SIM_VERSION`). Only fights whose inputs changed recompute; a
+  new `SIM_VERSION` drops the cache. Timings: casual ~2-8 s per fight, strong ~40-200 s,
+  player: a step's kit 10 s-2 min + 25-70 s per fight (one core).
+- **The anchor** — `tools/build_balance_anchor.py` writes `extracted/balance_vanilla.json`
+  (`_generator`, `sim_version`, `raising_digest`, steps (+ each step's player `kit`), every
+  fight's groups/enemies and per profile (casual / strong / player) l90/l50 + the evaluation
+  at l90 (or 99; player arena results carry the tactic), every gate's dives per profile and
+  walk). `--selftest` (verifier check 5): every story fight × profile, every step's kit and
+  every gate dive present, version + digest match, 3 casual fights + 1 dive + 2 player
+  fights (from the stored kits) re-derived equal; SKIP while a current-version rebuild is in
+  progress. The build is resumable (`balance_vanilla.json.partial`, one JSON line per finished
+  unit) and uses every core; the tab's **Build original-game numbers** runs it locally.
+
+**The tab** (`editor2/app/balance_tab.py`, EDITOR_DESIGN §5.9 as built): Story curve
+(original casual l90/l50 + strong l90 read-only, project columns computed on demand,
+coloured change, dives, extra fights with "lands like", a chart), Team (roll / reroll /
+import the party from a .sav / pick a member by species, level, plus, skills; original or
+project data), Fight (any fight's groups; evaluate the current team; level needed; what-if
+per enemy with As is / What-if / Change incl. enemy HP left). Work runs in background
+threads with progress and Cancel (`balance.set_cancel_check`).
+
+**Limits** (stated in the tab's help): casual / strong act on their AI (tactics); player
+orders look one action ahead (no two-turn skills, summons or dive-long MP plans) and the
+kit search is small (a better kit may exist; the skill pool ignores the 25-entry learn
+queue and special recipes' minimum plus); status locks (Sleep, LegSweep) are used on bosses
+whenever their resistances allow, as the simulator models the game; postgame "99+" for
+casual / strong = beyond a rolled team; special maze rooms walk as normal floors.
+
+**Proof:** test_compiler `test_balance_s130` (savefile party, custom_member,
+team_summary, FightCache round trip + version drop, room_battles script lookup,
+override_enemy, cancel hook); test_app `s130_balance`; `census_raising.py`,
+`census_dive.py`, `build_balance_anchor.py` selftests. REFERENCE_MD5 unchanged
+(`7d136455…`, patched).
+
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 
 The user's "fastest way to test": hook a custom room onto a door the player
