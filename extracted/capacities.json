@@ -1,5 +1,5 @@
 {
- "_comment": "CAPACITIES reference (ROADMAP P3.0, gap G-M) — every known authoring ceiling with its evidence. Hand-compiled S91; no generator by design (measured entries cite their S91 emulator experiment; documented entries cite the owning doc/session and were compiled, not re-derived, this session). The editor's capacity meters (EDITOR_DESIGN §5.C) read this file. status values: measured_s91 = empirically measured in PyBoy this session; structural_s91 = derived from disassembly/ROM bytes this session; documented = compiled from the owning doc. S133 (ROADMAP ARC CAP audit): stale 'documented' rows refreshed to the current owning docs; new rows campaign_place_cost / rom_size / wram_custom_pool_free; status measured_s133 = measured on the user's project build + .sav / the S133 4 MB scratch build, structural_s133 = read from the patched tree this session. S135: + stream_banks (structural_s135 = traced in both trees; measured_s135 = tools/census_stream_banks.py + the S135 test ROM).",
+ "_comment": "CAPACITIES reference (ROADMAP P3.0, gap G-M) — every known authoring ceiling with its evidence. Hand-compiled S91; no generator by design (measured entries cite their S91 emulator experiment; documented entries cite the owning doc/session and were compiled, not re-derived, this session). The editor's capacity meters (EDITOR_DESIGN §5.C) read this file. status values: measured_s91 = empirically measured in PyBoy this session; structural_s91 = derived from disassembly/ROM bytes this session; documented = compiled from the owning doc. S133 (ROADMAP ARC CAP audit): stale 'documented' rows refreshed to the current owning docs; new rows campaign_place_cost / rom_size / wram_custom_pool_free; status measured_s133 = measured on the user's project build + .sav / the S133 4 MB scratch build, structural_s133 = read from the patched tree this session. S135: + stream_banks (structural_s135 = traced in both trees; measured_s135 = tools/census_stream_banks.py + the S135 test ROM). S136: + place_banks (structural_s136 = read in the patched tree; measured_s136 = tools/census_place_banks.py + the S136 test ROM); custom_mapids detail / wram_custom_pool_free refreshed.",
  "npc_slots_per_screen_state": {
   "value": 8,
   "status": "measured_s91",
@@ -24,7 +24,7 @@
   "value": 128,
   "range": "$6B-$EA",
   "status": "structural_s133 (enforced by the compiler since S133)",
-  "detail": "wMapID is one byte. bank $60 CustomPtrChase / CustomStateRules / CustomMonsterCast and bank $17 CustomAttrCheck (+ its two callers label17_401d / label17_409e) index per-room tables with `sub $6B / add a / add l` — an 8-bit doubling that drops the carry, so $EB+ silently reads another room's data. editor2/core/project.py CUSTOM_MID_MAX = $EA (ProjectError past it, test_compiler test_s133). Room-default / battle music tables stop at $7F (cp $80 guards; music.py errors). Hard id max $FE ($FF = list terminator / skill script type). Lifting it = ROADMAP ARC CAP (regions: the id range per region).",
+  "detail": "wMapID is one byte. bank $17 CustomAttrCheck (bank $60's readers index [wPlaceIdx] since S136, but PlaceDirectory is filled for $6B-$EA only) (+ its two callers label17_401d / label17_409e) index per-room tables with `sub $6B / add a / add l` — an 8-bit doubling that drops the carry, so $EB+ silently reads another room's data. editor2/core/project.py CUSTOM_MID_MAX = $EA (ProjectError past it, test_compiler test_s133). Room-default / battle music tables stop at $7F (cp $80 guards; music.py errors). Hard id max $FE ($FF = list terminator / skill script type). Lifting it = ROADMAP ARC CAP (regions: the id range per region).",
   "evidence": "CROSSBANK_ROOMS 'Custom-side arithmetic ceilings' + 'S133 capacity audit'; EDITOR_DESIGN §6.4"
  },
  "free_rom_banks": {
@@ -94,7 +94,7 @@
   "evidence": "EDITOR_DESIGN §6.4 'Measured cost of a place (S133)'"
  },
  "wram_custom_pool_free": {
-  "value": "≈219 B ($D50A-$D5E4, transient)",
+  "value": "≈218 B ($D50B-$D5E4, transient; S136 carved wPlaceIdx $D50A)",
   "status": "structural_s133",
   "detail": "The CF3-window reserve left after S97-S129 carves; the 640-B step-counter region $CD80-$CFFF is separate.",
   "evidence": "patches/wram.asm wCustomPool"
@@ -104,5 +104,11 @@
   "status": "structural_s135 + measured_s135",
   "detail": "One reader for all three: ROM0 DecompressTileLayout ($1627) — D = bank (8 bits), pointer at $4001 + 2E of that bank; every reference carries its bank (room step, bank $17 render row, $26DD record). The compiler's first fit (Project.stream_plan, PROJECT_COMPILER §2.44). Measured: tools/census_stream_banks.py — 48 generated rooms, 346 streams over $64 / $67 / $80-$86 decode from the built ROM; PyBoy screens == the editor preview; the S135 test ROM's 16 halls x 3 screens on the user's save.",
   "evidence": "ARCHITECTURE 'LZ stream banks (S135)'; ROADMAP ARC CAP2a"
+ },
+ "place_banks": {
+  "value": "custom rooms' scripts / tile patches / screens / NPC + exit lists / state rules / casts (one block per room, never split) and text sections (256 ids, auto ids broken at 12,288 B): bank $60 first, then place banks $80-$FF (shared with the stream banks; 128 banks); a block or section must fit one place bank (16,384 - 945 B)",
+  "status": "structural_s136 + measured_s136",
+  "detail": "Bank $60 entries 0/1/2/4/5/8/9/10 forward on every call through PlaceDirectory (2 B a place) / TextSectionBanks (1 B a section) -> wPlaceIdx -> the home bank's pinned reader block (templates/place_readers.asm, 944 B). Fixed parts: bank $60 head + readers 1,515 B (validators.TEMPLATE_SIZE), a place bank 945 B (PLACE_TEMPLATE_SIZE). Compiler: editor2/core/places.py plan (PROJECT_COMPILER §2.45). Measured: tools/census_place_banks.py — the user's project 4,831 forwarded reads, the S136 demo 8,944 over $60 / $81-$84, a 40-room spill 21,017 over $60 / $80-$86, 0 mismatched; PyBoy on the user's save (talks, YES / NO, scenes + tile patches, battles, stairs both ways, save + reload in a place-bank room).",
+  "evidence": "ARCHITECTURE 'Place banks (S136)'; ROADMAP ARC CAP2b"
  }
 }

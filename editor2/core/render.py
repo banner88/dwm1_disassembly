@@ -10,9 +10,11 @@ ROM + its game.sym. Design rules honored:
     30/30 vs SameBoy dumps) for vanilla-borrow palettes.
   * Reads CUSTOM rooms through the same tables the GAME reads, located by
     game.sym symbols (drift-proof — addresses move, symbols don't):
-      screens : CustomRoomPtrTable (bank $60) — vanilla bank-$0B sub-table
-                format (ROOM_DATA_FORMAT); screen record +2/+3 = layout
-                entry + layout bank ($64).
+      screens : S136 — PlaceDirectory (bank $60: per place its home bank +
+                index there) -> that bank's PlaceRoomTable[index] — the
+                vanilla bank-$0B sub-table format (ROOM_DATA_FORMAT); screen
+                record +2/+3 = layout entry + layout bank (the stream plan's).
+                (S135 and earlier: CustomRoomPtrTable [mapID - $6B] in $60.)
       tileset : mapID < $70 → ROM0 $26DD + mapID*8 (patched ROM carries the
                 $6B-$6F rows); mapID ≥ $70 → Custom26DDTable (bank $71,
                 (mapID-$70)*8) — mirrors CopyCustomRoomRecord (S42).
@@ -68,7 +70,7 @@ class RoomRenderer:
         self.rom_path = rom_path
         self.rom = open(rom_path, 'rb').read()
         self.syms = parse_sym(sym_path)
-        missing = [s for s in ('CustomRoomPtrTable', 'Custom26DDTable',
+        missing = [s for s in ('PlaceDirectory', 'Custom26DDTable',
                                'CustomAttrPtrTable')
                    if s not in self.syms]
         if missing:
@@ -151,10 +153,13 @@ class RoomRenderer:
         return res[0] if res else None
 
     def _layout(self, mapid, screen_index):
-        sub = self._u16(self._sym_off('CustomRoomPtrTable')
-                        + (mapid - 0x6B) * 2)
-        rd = self._u16(self._off(0x60, sub) + screen_index * 2)
-        ro = self._off(0x60, rd)
+        # S136: the place's home bank + index (PlaceDirectory), then its table
+        d = self._sym_off('PlaceDirectory') + (mapid - 0x6B) * 2
+        home, idx = self.rom[d], self.rom[d + 1]
+        tbl = 'PlaceRoomTable' + ('' if home == 0x60 else f'_P{home:02X}')
+        sub = self._u16(self._sym_off(tbl) + idx * 2)
+        rd = self._u16(self._off(home, sub) + screen_index * 2)
+        ro = self._off(home, rd)
         entry, lbank = self.rom[ro + 2], self.rom[ro + 3]
         res = decompress_lz(self.rom, lbank, entry)
         if not res:

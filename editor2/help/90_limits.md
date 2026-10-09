@@ -3,10 +3,14 @@
 - Rooms (S133): at most **128** rooms of your own (map ids $6B-$EA) — the build
   stops with an error past that (before S133 a room past it read another room's
   data). Layouts, colour grids and tilesets overflow into the 4 MB ROM's new
-  banks when $64 / $67 are full (S135), but scripts, texts and NPC / door lists
-  of ALL your rooms still share bank $60 (the $60 bar of the space meter) —
-  that is the next limit to go (ROADMAP ARC CAP2b). Hundreds of rooms follow
-  after it (the ROM is 4 MB since S134 to make room for them).
+  banks when $64 / $67 are full (S135), and so do whole rooms (scripts, NPC /
+  door lists, states) and texts when $60 is full (S136). The 128-room limit is
+  the next to go (ROADMAP ARC CAP3, regions); the room palettes ($17, the
+  palette and colour rows of every room state) are the next space to move
+  (ARC CAP2c), then a room's own animated tiles ($6C, CAP2d).
+- One room's scripts and lists must fit one bank (~15 KB) — the build names a
+  room that is bigger. Automatically numbered texts start a new 256-line group
+  before one group would pass ~12 KB.
 - 8 NPCs per screen (engine cap); up to 4 different monster NPCs per screen.
 - Sprite limits (hardware, S117b): one NPC per row stays visible while you
   and 3 monsters walk along that row (10 sprite pieces per line, your party

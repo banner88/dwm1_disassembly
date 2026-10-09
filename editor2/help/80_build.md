@@ -13,8 +13,15 @@ first fill their own banks ($64 for layouts and colour grids, $67 for tilesets);
 whatever does not fit goes on into the new half of the 4 MB ROM (banks $80 and
 up) by itself — nothing to set. The space meter under the window shows it: the
 $64 / $67 bars turn amber when full (not an error any more), and the **new** bar
-counts the new banks in use (of 128; hover it for each bank's bytes). Scripts,
-texts and NPC lists ($60) do not move yet — that is the next step.
+counts the new banks in use (of 128; hover it for each bank's bytes).
+
+**Space for rooms and words (S136):** each room's scripts, NPC and door lists,
+room states, monster NPCs and tile pieces stay together and first fill bank $60;
+a room that does not fit — and your texts, 256 lines at a time — goes on into a
+new bank by itself, like the art. Nothing to set: the $60 bar turns amber when
+full and the **new** bar counts these banks too. A single room is limited to one
+bank (about 15 KB of scripts and lists — far more than any room needs); the build
+names a room that is bigger.
 
 Messages in the **Build log**:
 

@@ -1620,3 +1620,25 @@ p_tf_surge 7 --ecount 3 --sched 1:0x29:1,2:0x81:0,3:0x81:0,4:0x2b:0 --php 999 --
 | review (subagent, read-only) | the CAP2a diff: one defect (stream build errors swallowed → fixed + test), two minor (allocator retry, "nearly full" noise → fixed), the census docstring / integer mapID → fixed | — |
 | measurement scripts (scratch, not committed) | the 16-hall walk on the user's `.sav` (`walk_halls.py`), the hole probe (`hole.py` / `hole2.py`), the text-box capture | results in PROJECT_STATE S135, KEY_LESSONS S135; method PYBOY_DEBUGGING S135 |
 
+## S136 rows (ROADMAP ARC CAP2b — place banks)
+
+| Tool / data | What changed | Check |
+|---|---|---|
+| `editor2/core/places.py` (NEW) | the place planner (`plan`: blocks then text sections, first fit $60 → $80+ after the stream banks; exact sizes; rollback of its banks on failure) + `emit_bank_060` / `emit_place_banks`, `readers(bank)`, `TEXT_SECTION_BUDGET`, `text_entry_size` | test_compiler `test_s136` |
+| `editor2/core/templates/bank_060_head.asm` (rewritten, re-pinned) + `place_readers.asm` (NEW, pinned) | the forwarding head (PlaceOf / PlaceGo, 8 forwarders, the vanilla branches, `SkillScriptRead`) and the reader block pasted into every home bank | `PINNED_SHA256`; verify check 2; the census |
+| `editor2/core/emitters.py` | `emit_bank_060` → places; NEW registry `places_ext` (`multi:place_banks`); `ext_bank_files` = stream + place banks; `_monster_cast_lines` / `_state_rule_lines` per room (the table emitters retired) | `test_s136` |
+| `editor2/core/project.py` | `place_plan()`, `_place_plan` cache (reset with the stream plan), `ext_bank_owners` incl. places; `_assign_text_ids`: the section budget, never onto an explicit id | `test_s136` (incl. the explicit-id mix) |
+| `editor2/core/validators.py` | `TEMPLATE_SIZE[$60]` 1,515, NEW `PLACE_TEMPLATE_SIZE` 945, `bank_usage` for place banks, `_string_bytes` (charmap-exact strings), no "nearly full" for $60 | `test_s136` (plan == ROM bytes) |
+| `editor2/core/builder.py` | manifest symbols / texts / scripts / bank_usage include the place banks | — (read) |
+| `editor2/core/render.py` | custom screens via `PlaceDirectory` → `PlaceRoomTable[_Pxx]` | test_canvas `--rom`; 33 / 33 user screens == the S135 renderer |
+| `editor2/app/space_meter.py` | the $60 bar amber when full; "new" bar text includes rooms / text | test_app |
+| `patches/bank_060.asm`, `patches/wram.asm` | regenerated (the example fits $60); `wPlaceIdx` $D50A from `wCustomPool` | verify check 2 == pin `05b8973d…` (patched) |
+| `tools/census_place_banks.py` (NEW) | ARC CAP2b census: stub calls of bank $60 entries 0/1/2/7/8/4/6/9/5 + out-of-range ids vs the ROM bytes at each label (`--project`, `--rom/--sym` or build, `--words N`, `--negative`, `--make-spill N` = the example + N script/text-heavy rooms) | S136: example 2,149 / the user's project 4,831 / the demo 8,944 / spill-40 21,017 checks, 0 mismatched; `--negative` fails as it must |
+| `tools/audit_mapid_range.py` + `extracted/mapid_range_audit.json` (regenerated) | the four retired reader keys out, the forwarders in | selftest PASS (clean 58 / patched 84) |
+| `extracted/capacities.json` | NEW `place_banks`; `custom_mapids` / `wram_custom_pool_free` refreshed | `json.load` |
+| `examples/s136_echo_demo/` (NEW: `build_demo.py` + `project.json` + `assets/`) | the S136 test ROM's project: the user's my-dwm-hack_27 + ECHO ROOM 1-16 + the S136 DEMO NPC in Cities_FOUNT | builds `75971283…` (patched) = the test ROM |
+| `editor2/tests/test_compiler.py` | `test_s136` (21 checks + 3 with `--rom`, incl. the PyBoy census); S117 NPC test calls `PlaceFwdInteract`; `REFERENCE_MD5` `05b8973d…` | ALL PASSED |
+| `editor2/__init__.py` `EDITOR_REVISION` S136 + help `80_build.md`, `90_limits.md`, `_revision.md` | space for rooms and words; limits | test_app (revision stamp) |
+| review (subagent, read-only) | the CAP2b diff: one regression (text-section jump onto an explicit id → fixed + test), out-of-range exits empty (→ DummyExits), manifest banks, $60 "nearly full" noise, plan rollback, census gaps (patches, out-of-range exits → added), a test that could flake (first fit → replayed) | — |
+| measurement scripts (scratch, not committed) | the ECHO walk (`t2.py`), save / reload (`t5.py`), YES warps + a battle (`t12.py`), the warp A/B (`t11.py`) | results in PROJECT_STATE S136; method PYBOY_DEBUGGING S136 |
+

@@ -1,152 +1,265 @@
 ; =============================================================================
-; BANK $60 — CUSTOM ROOM OVERFLOW BANK
+; BANK $60 — CUSTOM ROOM BANK: the engine's one address for custom-room data
 ; =============================================================================
-; Entry points (called via rst $10):
-;   Entry 0: CustomReadStep     — returns DE = [step_id, tileset_bank]
-;   Entry 1: CustomReadInteract — copies NPC data to wCustomNPCBuffer (S117:
-;            every non-gate room; flag-conditioned NPCs; vanilla NPC overrides)
-;   Entry 2: CustomExitCheck    — copies exit data to wCustomExitBuffer
-;   Entry 3: CustomTilesetInfo  — returns source mapID from wCustomRoomFlag
-;   Entry 4: CustomScriptRead   — triple-index script data reader
-;   Entry 5: CustomTextDisplay  — custom text renderer via ROM0 CallTextEngine
+; Entry points (called via rst $10 from banks $04/$06/$0B/$17/$77):
+;   Entry 0: step entry         — DE = [step_id, tileset_bank]   (forwarded)
+;   Entry 1: NPC / interact list — HL = wCustomNPCBuffer or 0 (S117: every
+;            non-gate room; vanilla rooms read VanillaNPCExtTable here;
+;            custom rooms forwarded)
+;   Entry 2: exit list          — HL = wCustomExitBuffer          (forwarded)
+;   Entry 3: CustomTilesetInfo  — returns wCustomRoomFlag (no caller)
+;   Entry 4: script word        — BC = the running script's next word
+;            (type $FF = the custom skills' scripts, here; rooms forwarded)
+;   Entry 5: custom text        — [$C822] section / [$C823] entry (forwarded
+;            by section)
 ;   Entry 6: GateAwareDispatch  — B-fix: bank-$0F script dispatch routed by wMapID
 ;   Entry 7: VanillaExitResolve — S70: unified exit resolve (custom rooms AND
 ;            compiler-authored vanilla-room exit EXTENSIONS; HL=list or 0)
-;   Entry 8: CustomStateRules   — S97: flag-driven room states (P3.5a); writes
-;            the current screen's step counter from CustomStateRulePtrTable
-;   Entry 9: CustomDrawTiles    — S119: script op $24 (tile patch) in a custom room
-;   Entry 10: CustomDrawAttrs   — S119: script op $61 (the patch's colours)
+;   Entry 8: state rules        — S97: flag-driven room states   (forwarded)
+;   Entry 9: tile patch         — S119: script op $24              (forwarded)
+;   Entry 10: tile patch colours — S119: script op $61             (forwarded)
 ;   Entry 11: NpcColourDraw     — S123: the field NPC draw (bank $06) with the
 ;            NPC colours of the room's $A2 prefixes (any of the 8 OBJ palettes)
 ;   Entry 12: CustomDescentFeel — S123 r2: bank $0B CustomDescentInGate's body —
 ;            only a STAIRS-DOWN exit of a custom room is an in-gate floor change
+;
+; S136 (ROADMAP ARC CAP2b) — PLACE BANKS. A place (custom room) keeps its
+; scripts, tile patches, screens, NPC / exit lists, state rules and monster
+; cast in its HOME BANK: bank $60 itself first, then banks $80+ for the places
+; that do not fit (editor2/core/project.py place_plan, first fit); text
+; sections are placed the same way. Every home bank carries the same reader
+; block (templates/place_readers.asm — pasted below this head with no suffix,
+; and at $4001 of every place bank). Entries 0/1/2/4/5/8/9/10 are FORWARDERS:
+; on EVERY call they look the place up in PlaceDirectory (map id or script
+; type) / TextSectionBanks (text section) — nothing is cached, so the map-id
+; writes outside the room commit (gate insert, boss floor, save load, new
+; game, Play here) need no refresh — and call that bank's entry of the same
+; number (PlaceGo: a local jump when the home is bank $60). Bank $60 keeps the
+; global things: the custom skills' scripts, VanillaExitExtTable /
+; VanillaNPCExtTable, entries 3 / 6 / 7 / 11 / 12.
 ; =============================================================================
 
 SECTION "ROM Bank $060", ROMX[$4000], BANK[$60]
     db $60 ; bank number
 
-    dw CustomReadStep       ; Entry 0
-    dw CustomReadInteract   ; Entry 1
-    dw CustomExitCheck      ; Entry 2
+    dw PlaceFwdStep         ; Entry 0
+    dw PlaceFwdInteract     ; Entry 1
+    dw PlaceFwdExit         ; Entry 2
     dw CustomTilesetInfo    ; Entry 3
-    dw CustomScriptRead     ; Entry 4
-    dw CustomTextDisplay    ; Entry 5
+    dw PlaceFwdScript       ; Entry 4
+    dw PlaceFwdText         ; Entry 5
     dw GateAwareDispatch    ; Entry 6 — gate-entry regression fix (B-fix): route by wMapID
     dw VanillaExitResolve   ; Entry 7 — S70 unified exit resolve (bank $0B Entry 6 calls this for EVERY non-gate room)
-    dw CustomStateRules     ; Entry 8 — S97 state rules (bank $17 CustomAttrCheck + CustomReadStep call it)
-    dw CustomDrawTiles      ; Entry 9 — S119 op $24 in custom rooms (bank $04 ScriptCmd24 same-size redirect)
-    dw CustomDrawAttrs      ; Entry 10 — S119 op $61 in custom rooms (bank $04 ScriptCmd61 same-size redirect)
+    dw PlaceFwdRules        ; Entry 8 — S97 state rules (bank $17 CustomAttrCheck calls it)
+    dw PlaceFwdTiles        ; Entry 9 — S119 op $24 in custom rooms (bank $04 ScriptCmd24 same-size redirect)
+    dw PlaceFwdAttrs        ; Entry 10 — S119 op $61 in custom rooms (bank $04 ScriptCmd61 same-size redirect)
     dw NpcColourDraw        ; Entry 11 — S123 NPC colours (bank $06 NPCDrawSlot same-size redirect)
     dw CustomDescentFeel    ; Entry 12 — S123 r2 gate-flag exit feel (bank $0B CustomDescentInGate far-calls it)
 
 ; =============================================================================
-; CustomPtrChase
+; S136 — the place lookup
 ; =============================================================================
-CustomPtrChase:
-    ld hl, CustomSourceMapTable
-    ld a, [wMapID]
+; PlaceOf: A = a map id or script type. CF clear: H = the place's home bank,
+; [wPlaceIdx] = its index inside that bank. CF set: no place — a vanilla id
+; ($00-$6A), or past the last place (PLACE_COUNT; e.g. a transient script
+; type $70 with fewer than 6 places, which read past the old tables).
+; PlaceDirectory (generated) = per place, in map id order: db bank, db index.
+; Clobbers A/DE/HL; keeps BC.
+PlaceOf:
     sub CUSTOM_ROOM_START
-    add l
+    ret c
+    cp PLACE_COUNT
+    ccf
+    ret c
     ld l, a
-    ld a, $00
-    adc h
-    ld h, a
+    ld h, $00
+    add hl, hl
+    ld de, PlaceDirectory
+    add hl, de
+    ld a, [hl+]
+    ld e, a                     ; E = home bank
     ld a, [hl]
-    ld [wCustomRoomFlag], a
-    ld hl, CustomRoomPtrTable
-    ld a, [wMapID]
-    sub CUSTOM_ROOM_START
-    add a
-    add l
-    ld l, a
-    ld a, $00
-    adc h
-    ld h, a
-    ld a, [hl+]
-    ld h, [hl]
-    ld l, a
-    ld a, [wScreenIndex]
-    add a
-    add l
-    ld l, a
-    ld a, $00
-    adc h
-    ld h, a
-    ld a, [hl+]
-    ld h, [hl]
-    ld l, a
+    ld [wPlaceIdx], a
+    ld h, e
+    and a                       ; CF clear
+    ret
+
+; PlaceGo: H = home bank, L = entry -> that bank's reader entry L (its rst $10
+; table = PlaceEntries at $4001); bank $60's own readers by a local jump
+; (PlaceEntries below the head). Returns whatever the reader returns (rst $10
+; keeps BC / DE / HL on the way back, clobbers A).
+PlaceGo:
     ld a, h
-    and l
-    cp $FF
-    jr nz, .validScreen
-    ld hl, DummyStepEntry
+    cp $60
+    jr z, .here
+    rst $10
     ret
-.validScreen:
-    ; Read RAM step counter and index into step entries
-    ; (matches original ReadStepBlock logic in bank $0B)
-    ld e, [hl]
-    inc hl
-    ld d, [hl]           ; DE = RAM counter address
-    inc hl                ; HL = first step entry
-    ld a, [de]            ; A = current step counter value
-    ; step_value × 6 (each step entry is 6 bytes)
-    ld e, a
-    add a                 ; ×2
-    add e                 ; ×3
-    add a                 ; ×6
+.here:
+    ld a, l
+    add a
+    ld hl, PlaceEntries
     add l
     ld l, a
     ld a, $00
     adc h
-    ld h, a               ; HL = &step_entries[step_value]
+    ld h, a
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a
+    jp hl
+
+; Entry 0 — the current screen's step entry (bank $0B RoomEntry0's custom
+; branch). No place: bank $60's dummy step [1, $2A] (DummyStepEntry).
+PlaceFwdStep:
+    ld a, [wMapID]
+    call PlaceOf
+    jr c, .none
+    ld l, $00
+    jp PlaceGo
+.none:
+    ld de, $2A01
     ret
 
-DummyStepEntry:
-    db 1, $2A
-    dw DummyNPCs
-    dw DummyExits
-DummyNPCs:
-    db $FF
-DummyExits:
-    db $03, $07, $01, $00, $80, $04, $04
-    db $05, $07, $01, $00, $80, $04, $04
-    db $07, $07, $01, $00, $80, $04, $04
-    db $03, $00, $01, $00, $80, $04, $04
-    db $05, $00, $01, $00, $80, $04, $04
-    db $FF
-
-; =============================================================================
-; Entry 0-3: Room data readers (proven, unchanged)
-; =============================================================================
-CustomReadStep:
-    call CustomStateRules        ; S97: flag rules pick the state BEFORE the counter read
-    call CustomPtrChase
-    ld e, [hl]
-    inc hl
-    ld d, [hl]
-    ret
-
-CustomReadInteract:
-    ; S117 (NG2): reached for EVERY non-gate room (bank $0B GetRoomDataPtr,
-    ; same-size rewrite — the exits' entry-7 pattern). Returns HL = the NPC /
-    ; interact list to parse (wCustomNPCBuffer) or HL = 0 = "no override —
-    ; run the vanilla SharedPtrChase path". rst $10 keeps HL, clobbers A.
+; Entry 1 — the NPC / interact list (bank $0B GetRoomDataPtr, every non-gate
+; room). Returns HL = the list to parse (wCustomNPCBuffer) or HL = 0 = "no
+; override — run the vanilla SharedPtrChase path". rst $10 keeps HL.
+PlaceFwdInteract:
     ld a, [wMapID]
     cp CUSTOM_ROOM_START
-    jr c, .vanilla
-    call CustomPtrChase
-    inc hl
-    inc hl
-    ld a, [hl+]
-    ld h, [hl]
+    jp c, VanillaInteract
+    call PlaceOf
+    jr c, .none
+    ld l, $01
+    jp PlaceGo
+.none:
+    ld hl, wCustomNPCBuffer
+    ld [hl], $FF
+    ret
+
+; Entry 2 — the exit list (entry 7's custom branch). No place: the dummy
+; step's exits (DummyExits — the player must always have a way out,
+; KEY_LESSONS v14-v17), as for an undefined screen.
+PlaceFwdExit:
+    ld a, [wMapID]
+    call PlaceOf
+    jr c, .none
+    ld l, $02
+    jp PlaceGo
+.none:
+    ld a, $FE
+    ld [wCustomY7Cmp], a
+    ld hl, DummyExits
+    jp CopyExitListToBuffer
+
+; Entry 4 (and GateAwareDispatch's custom branch) — BC = the running script's
+; next word, HL = its address. The place = the script TYPE wScriptMapType
+; (what the reader always indexed: a script that warps out keeps reading its
+; own room); type $FF = a custom skill's script (here). No place: BC = $FFFF
+; (end). HL matters: bank $04's branch tail ScriptReturnProcess computes
+; counter += (target - HL) / 2 with the target an ABSOLUTE address in the
+; script's own bank — rst $10 hands BC / DE / HL back unchanged (only A is
+; the caller's bank), so both survive the two nested far calls.
+PlaceFwdScript:
+    ld a, [wScriptMapType]
+    cp SKILL_SCRIPT_TYPE
+    jp z, SkillScriptRead
+    call PlaceOf
+    jr c, .none
+    ld l, $04
+    jp PlaceGo
+.none:
+    ld bc, $FFFF
+    ret
+
+; Entry 5 — the custom text [$C822] section / [$C823] entry (bank $04
+; TextQueueCheck_Ext, bank $77 SayText): the section's home bank shows it.
+PlaceFwdText:
+    ld a, [$c822]
+    cp TEXT_SECTIONS
+    ret nc                      ; no such section: no text (defensive)
     ld l, a
-    jr CopyNPCListToBuffer
-.vanilla:
-    ; VanillaNPCExtTable (compiler-generated, bank $60): the vanilla rooms
-    ; whose gate-swirl objects follow a project gate's "cleared" flag (a
-    ; portal re-bossed or re-routed). Row format = VanillaExitExtTable's:
-    ; db mapID, screen / dw step_counter / db n_steps / dw list0..listN-1;
-    ; db $FF ends the table. Variant = min([counter], n-1).
+    ld h, $00
+    ld de, TextSectionBanks
+    add hl, de
+    ld h, [hl]
+    ld l, $05
+    jp PlaceGo
+
+; Entry 8 — state rules + monster cast of the current screen (bank $17
+; CustomAttrCheck via StateRulesHook17). Vanilla rooms / no place: nothing.
+PlaceFwdRules:
+    ld a, [wMapID]
+    call PlaceOf
+    ret c
+    ld l, $08
+    jp PlaceGo
+
+; Entries 9 / 10 — script ops $24 / $61: a custom script's tile patch lives with
+; its script (the place = the script type); anything else goes on to bank $0F
+; exactly as before. No place: the op's one word is stepped over so the script
+; stays in step. The custom skills' scripts (type $FF) use neither op — the
+; compiler refuses one there (places.py _skill_lines) — so type $FF lands in
+; that case too.
+PlaceFwdTiles:
+    call CutPatchRoute
+    jr c, .custom
+    ld hl, $0f01
+    rst $10
+    ret
+.custom:
+    ld a, [wScriptMapType]
+    call PlaceOf
+    jr c, PlaceSkipParam
+    ld l, $09
+    jp PlaceGo
+
+PlaceFwdAttrs:
+    call CutPatchRoute
+    jr c, .custom
+    ld hl, $0f02
+    rst $10
+    ret
+.custom:
+    ld a, [wScriptMapType]
+    call PlaceOf
+    jr c, PlaceSkipParam
+    ld l, $0A
+    jp PlaceGo
+
+PlaceSkipParam:
+    ld a, [wScriptCounter]
+    add $01
+    ld [wScriptCounter], a
+    ld a, [$d8d6]
+    adc $00
+    ld [$d8d6], a
+    ret
+
+; CF set = the running script is a custom one (GateAwareDispatch's rule)
+CutPatchRoute:
+    ld a, [wScriptMapType]
+    cp $70
+    jr z, .byRoom
+    cp CUSTOM_ROOM_START
+    jr nc, .custom
+.byRoom:
+    ld a, [wMapID]
+    cp CUSTOM_ROOM_START
+    jr nc, .custom
+    and a
+    ret
+.custom:
+    scf
+    ret
+
+; =============================================================================
+; Entry 1's vanilla branch: VanillaNPCExtTable (compiler-generated, bank $60):
+; the vanilla rooms whose gate-swirl objects follow a project gate's "cleared"
+; flag (a portal re-bossed or re-routed). Row format = VanillaExitExtTable's:
+; db mapID, screen / dw step_counter / db n_steps / dw list0..listN-1;
+; db $FF ends the table. Variant = min([counter], n-1). A = wMapID.
+; =============================================================================
+VanillaInteract:
     ld c, a
     ld hl, VanillaNPCExtTable
 .scan:
@@ -198,162 +311,7 @@ CustomReadInteract:
     ld a, [hl+]
     ld h, [hl]
     ld l, a                     ; HL = the variant's list (ROM, bank $60)
-    ; fall through
-
-; -----------------------------------------------------------------------------
-; CopyNPCListToBuffer (S117) — HL = a 5-byte interact list ($FF-terminated)
-; -> wCustomNPCBuffer, returns HL = the buffer. CONDITION PREFIXES: an entry
-; whose byte 0 is $A0 / $A1 is not copied; it says "the NEXT NPC is shown only
-; while flag [byte1 | byte2 << 8] is SET ($A0) / CLEAR ($A1)". Several
-; prefixes AND together. A failed condition sets the NPC's HIDDEN bit (type
-; bit 6 — measured S97: not drawn, not solid, no behaviour, no talk), so the
-; slot numbers of every later NPC are unchanged. Examine / step spots (bit 7)
-; are copied verbatim. The engine never sees a prefix (bit 7 set + $A_ is no
-; vanilla interact kind; both bank $0B scans stop at the first NPC anyway).
-; S123 — COLOUR PREFIX: `$A2, palette, flag lo, flag hi, $FF` = the NEXT NPC is
-; drawn in OBJ palette 0-7 instead of its sprite's own (flag $FFFF = always,
-; else only while that flag is SET). The colours go to wNpcColour[slot] (slot =
-; the NPC's place among the list's NPC entries — spots take no slot, hidden
-; NPCs keep theirs: bank $0B Call_00b_477e) tagged with wMapID / wScreenIndex;
-; entry 11 NpcColourDraw applies them at draw time.
-; Clobbers A/BC/DE.
-; -----------------------------------------------------------------------------
-CopyNPCListToBuffer:
-    push hl
-    ld hl, wNpcColour
-    xor a
-    ld c, 8
-.clearColour:
-    ld [hl+], a
-    dec c
-    jr nz, .clearColour
-    ld [wNpcColourNext], a
-    ld [wNpcColourK], a
-    ld a, [wMapID]
-    ld [wNpcColourMap], a
-    ld a, [wScreenIndex]
-    ld [wNpcColourScr], a
-    pop hl
-    ld de, wCustomNPCBuffer
-    ld b, $00                   ; B = $40 when the next NPC must be hidden
-.copyNPC:
-    ld a, [hl]
-    cp $FF
-    jr z, .npcDone
-    cp $A2
-    jp z, .colour
-    and $FE
-    cp $A0
-    jr z, .cond
-    ld a, [hl+]
-    bit 7, a
-    jr nz, .verbatim            ; a spot: never hidden, takes no NPC slot
-    or b
-    ld b, $00
-    call NpcColourRecord        ; S123: this NPC's colour -> wNpcColour[slot]
-.verbatim:
-    ld [de], a
-    inc de
-    ld a, [hl+]
-    ld [de], a
-    inc de
-    ld a, [hl+]
-    ld [de], a
-    inc de
-    ld a, [hl+]
-    ld [de], a
-    inc de
-    ld a, [hl+]
-    ld [de], a
-    inc de
-    jr .copyNPC
-.cond:
-    ld a, [hl+]                 ; $A0 = must be SET, $A1 = must be CLEAR
-    push de
-    and $01
-    ld d, a                     ; D = 1: the flag must be clear
-    ld e, b                     ; E = hide so far
-    ld c, [hl]
-    inc hl
-    ld b, [hl]                  ; BC = flag index
-    inc hl
-    inc hl                      ; bytes 3-4 are padding
-    inc hl
-    push hl
-    call TestEventFlag          ; Z = clear, NZ = set (A/HL clobbered; BC/DE kept)
-    pop hl
-    ld a, d
-    jr z, .isClear
-    or a
-    jr nz, .fail                ; set, but must be clear
-    jr .condOk
-.isClear:
-    or a
-    jr z, .fail                 ; clear, but must be set
-    jr .condOk
-.fail:
-    ld e, $40
-.condOk:
-    ld b, e
-    pop de
-    jr .copyNPC
-.colour:
-    inc hl                      ; S123: $A2, palette, flag lo, flag hi, $FF
-    ld a, [hl+]
-    and $07
-    or $80
-    push de
-    ld d, a                     ; D = $80 | palette
-    ld a, [hl+]
-    ld c, a
-    ld a, [hl+]
-    inc hl                      ; byte 4 is padding
-    push hl
-    ld e, b                     ; E = hide so far
-    ld b, a                     ; BC = flag index ($FFFF = always)
-    and c
-    inc a
-    jr z, .colourOn
-    call TestEventFlag          ; Z = clear, NZ = set (A/HL clobbered; BC/DE kept)
-    jr z, .colourOff
-.colourOn:
-    ld a, d
-    ld [wNpcColourNext], a
-.colourOff:
-    ld b, e
-    pop hl
-    pop de
-    jp .copyNPC
-.npcDone:
-    ld a, $FF
-    ld [de], a
-    ld hl, wCustomNPCBuffer
-    ret
-
-; NpcColourRecord (S123) — CopyNPCListToBuffer met an NPC entry: its slot
-; (wNpcColourK, the NPC entries so far) takes the pending colour. Keeps A/BC/DE/HL.
-NpcColourRecord:
-    push af
-    push hl
-    ld a, [wNpcColourK]
-    cp 8
-    jr nc, .full
-    ld l, a
-    inc a
-    ld [wNpcColourK], a
-    ld h, $00
-    push de
-    ld de, wNpcColour
-    add hl, de
-    pop de
-    ld a, [wNpcColourNext]
-    ld [hl], a
-    xor a
-    ld [wNpcColourNext], a
-.full:
-    pop hl
-    pop af
-    ret
+    jp CopyNPCListToBuffer      ; bank $60's reader copy (place_readers.asm)
 
 ; -----------------------------------------------------------------------------
 ; Entry 12: CustomDescentFeel (S123 r2; user: "The entry into the custom gate …
@@ -456,212 +414,8 @@ NpcColourDraw:
     rst $10
     ret
 
-CustomExitCheck:
-    ; S70v3: custom branch of the y-skip arming (see VanillaExitResolve):
-    ; $FE never equals a real trigger_y, so Entry 6's scan no longer skips
-    ; y=7 rows here — custom-room boundary exits fire on WALK-ON arrival.
-    ; Entry 9 (push) reads the same list and still works as a fallback.
-    ld a, $FE
-    ld [wCustomY7Cmp], a
-    call CustomPtrChase
-    inc hl
-    inc hl
-    inc hl
-    inc hl
-    ld a, [hl+]
-    ld h, [hl]
-    ld l, a
-    ; fall through into the shared copy loop (S70 factoring; behavior
-    ; identical to the pre-S70 inline loop — 7-byte entries, first-byte-$FF
-    ; terminator only, KEY_LESSONS v3-v4)
-CopyExitListToBuffer:
-    ld de, wCustomExitBuffer
-.copyExit:
-    ld a, [hl]
-    cp $FF
-    jr z, .exitDone
-    ld b, $07
-.copyByte:
-    ld a, [hl+]
-    ld [de], a
-    inc de
-    dec b
-    jr nz, .copyByte
-    jr .copyExit
-.exitDone:
-    ld a, $FF
-    ld [de], a
-    ld hl, wCustomExitBuffer
-    ret
-
 CustomTilesetInfo:
     ld a, [wCustomRoomFlag]
-    ret
-
-; =============================================================================
-; Entry 8: CustomStateRules  (S97 — ROADMAP P3.5a, declarative room states)
-; =============================================================================
-; Custom-room step counters live in the transient $CD80 window (zeroed at every
-; save-restore, PROJECT_COMPILER §2.6), so a state reached by a script is lost
-; on reload. Event flags persist. This routine re-derives the CURRENT screen's
-; state from flags: the compiler emits, per custom room, a list of screens that
-; carry rules, each with an ordered rule list; the FIRST rule whose terms all
-; hold writes its state into that screen's step counter. No match = counter
-; untouched (scripts that write_ram the counter keep working until the next
-; load). Idempotent, so it runs from every custom (re)load path:
-;   * bank $17 CustomAttrCheck (the FIRST custom hook of a room load — the
-;     attr/palette walk reads the counter before bank $0B Entry 0 does,
-;     PyBoy-measured S97), via StateRulesHook17 + rst $10 entry 8;
-;   * CustomReadStep (Entry 0) itself, before CustomPtrChase.
-; Tables (generated, bank $60):
-;   CustomStateRulePtrTable: dw per custom room (mapID - $6B), $0000 = none
-;   room list:  { db screen / dw step_counter / dw rules } ... db $FF
-;   rules:      { db state / db n_terms / n_terms x dw flag } ... db $FF
-;               flag word: bits 0-14 = event flag index, bit 15 = must be CLEAR
-;               (n_terms 0 = always).
-; Clobbers A/BC/DE/HL (callers preserve what they need).
-; S101: first writes the screen's MONSTER CAST (CustomMonsterCast below) —
-; the same load hooks run before the bank $0B NPC parse reads it.
-CustomStateRules:
-    call CustomMonsterCast
-    ld a, [wMapID]
-    sub CUSTOM_ROOM_START
-    ret c                        ; not a custom room (defensive)
-    add a
-    ld hl, CustomStateRulePtrTable
-    add l
-    ld l, a
-    ld a, $00
-    adc h
-    ld h, a
-    ld a, [hl+]
-    ld h, [hl]
-    ld l, a
-    or h
-    ret z                        ; room has no rules
-.screen:
-    ld a, [hl+]
-    cp $FF
-    ret z                        ; this screen has no rules
-    ld b, a
-    ld a, [wScreenIndex]
-    cp b
-    jr z, .found
-    inc hl                       ; skip dw counter + dw rules
-    inc hl
-    inc hl
-    inc hl
-    jr .screen
-.found:
-    ld e, [hl]
-    inc hl
-    ld d, [hl]                   ; DE = step counter address
-    inc hl
-    ld a, [hl+]
-    ld h, [hl]
-    ld l, a                      ; HL = rule list
-.rule:
-    ld a, [hl+]                  ; target state
-    cp $FF
-    ret z                        ; no rule matched: counter untouched
-    push de                      ; [sp+2] counter
-    push af                      ; [sp]   A = state
-    ld a, [hl+]                  ; n_terms
-    or a
-    jr z, .match                 ; no terms = always
-.term:
-    push af                      ; terms left (incl. this one)
-    ld c, [hl]
-    inc hl
-    ld b, [hl]
-    inc hl
-    push hl
-    ld a, b
-    and $80
-    ld d, a                      ; D bit 7 = term wants the flag CLEAR
-    res 7, b
-    call TestEventFlag           ; Z = clear, NZ = set (clobbers A, HL)
-    pop hl
-    jr z, .isClear
-    bit 7, d
-    jr nz, .fail                 ; set, but must be clear
-    jr .next
-.isClear:
-    bit 7, d
-    jr z, .fail                  ; clear, but must be set
-.next:
-    pop af
-    dec a
-    jr nz, .term
-.match:
-    pop af                       ; A = state
-    pop de                       ; DE = counter
-    ld [de], a
-    ret
-.fail:
-    pop af                       ; terms left incl. the failed one
-    dec a
-    add a                        ; skip the remaining terms (2 B each)
-    add l
-    ld l, a
-    ld a, $00
-    adc h
-    ld h, a
-    pop af                       ; drop the state
-    pop de                       ; DE = counter again
-    jr .rule
-
-; -----------------------------------------------------------------------------
-; CustomMonsterCast (S101) — MONSTER NPCs (a species drawn with its follower
-; art). The bank $0B NPC sheet resolver maps sprite ids $F0-$F3 to the
-; display-list pairs at $D7CA + 2n ([draw id, is_monster]; is_monster != 0 ->
-; draw id = species+$10, follower sheet + layout + palette — the arena lobby's
-; own mechanism, ROOM_DATA_FORMAT "Monster NPCs"). Custom rooms carry a
-; generated per-screen cast: CustomMonsterCastPtrTable (dw per room, $0000 =
-; none) -> { db screen / 8 bytes = 4 pairs } ... db $FF. The pairs of the
-; current wScreenIndex are copied to $D7CA-$D7D1 at every custom load, before
-; the NPC parse; screens without a cast leave the list alone.
-; -----------------------------------------------------------------------------
-CustomMonsterCast:
-    ld a, [wMapID]
-    sub CUSTOM_ROOM_START
-    ret c
-    add a
-    ld hl, CustomMonsterCastPtrTable
-    add l
-    ld l, a
-    ld a, $00
-    adc h
-    ld h, a
-    ld a, [hl+]
-    ld h, [hl]
-    ld l, a
-    or h
-    ret z                        ; room has no monster NPCs
-.scr:
-    ld a, [hl+]
-    cp $FF
-    ret z                        ; this screen has no cast
-    ld b, a
-    ld a, [wScreenIndex]
-    cp b
-    jr z, .copy
-    ld a, l
-    add 8
-    ld l, a
-    ld a, $00
-    adc h
-    ld h, a
-    jr .scr
-.copy:
-    ld de, $d7ca
-    ld b, 8
-.byte:
-    ld a, [hl+]
-    ld [de], a
-    inc de
-    dec b
-    jr nz, .byte
     ret
 
 ; =============================================================================
@@ -674,7 +428,7 @@ CustomMonsterCast:
 ; rst $10 preserves HL/DE across the far call but clobbers A (bank byte) —
 ; the caller tests HL, never A (CROSSBANK_ROOMS "rst $10 Clobbers Register A").
 ;
-;   wMapID >= $6B  -> jp CustomExitCheck (identical to the pre-S70 behavior)
+;   wMapID >= $6B  -> jp PlaceFwdExit (the place's own exit list, S136)
 ;   wMapID <  $6B  -> scan VanillaExitExtTable (compiler-generated):
 ;       row: db mapID, screen ($FF = any) / dw step_counter_addr / db n_steps /
 ;            dw list0..listN-1; table terminated by db $FF.
@@ -694,7 +448,7 @@ VanillaExitResolve:
     ld a, [wMapID]
     cp CUSTOM_ROOM_START
     jr c, .vanillaScan
-    jp CustomExitCheck          ; custom room — exact old entry-2 behavior
+    jp PlaceFwdExit             ; custom room — the place's exit list
 .vanillaScan:
     ld c, a                     ; C = mapID
     ld hl, VanillaExitExtTable
@@ -753,7 +507,7 @@ VanillaExitResolve:
     ld a, [hl+]
     ld h, [hl]
     ld l, a                     ; HL = the variant's exit list
-    jp CopyExitListToBuffer     ; -> HL = wCustomExitBuffer
+    jp CopyExitListToBuffer     ; bank $60's reader copy -> HL = wCustomExitBuffer
 
 ; =============================================================================
 ; Entry 6: GateAwareDispatch  — gate-entry regression fix (B-fix)
@@ -782,10 +536,10 @@ GateAwareDispatch:
     rst $10
     ret
 .customRoom:
-    jp CustomScriptRead         ; bank $60 entry 4 logic (same bank); returns BC
+    jp PlaceFwdScript           ; entry 4 (S136: the script type's home bank); returns BC
 
 ; =============================================================================
-; Entry 4: CustomScriptRead
+; The custom skills' scripts (script type $FF)
 ; =============================================================================
 ; S105 (P3.9b): script TYPE $FF = a custom SKILL's own dialog script
 ; (SkillScriptPtrTable, emitted into every build from editor2/core/
@@ -793,367 +547,8 @@ GateAwareDispatch:
 ; custom room. Anchor (bank $72 AnchorField14Tail) arms $FF / ids 2-5; S73-S104
 ; armed $71 = the example project's medal_vault, which other projects lack.
 ; $FF routes exactly like $71 everywhere else: >= $40 -> bank $0F dispatch ->
-; GateAwareDispatch (>= $6B, != $70) -> here.
+; GateAwareDispatch (>= $6B, != $70) -> entry 4 -> here. They stay in bank $60.
 SKILL_SCRIPT_TYPE EQU $FF
-CustomScriptRead:
-    ld a, [wScriptMapType]
-    cp SKILL_SCRIPT_TYPE
-    jr nz, .room
+SkillScriptRead:
     ld de, SkillScriptPtrTable
-    jr .byScript
-.room:
-    sub CUSTOM_ROOM_START
-    ld l, a
-    ld h, $00
-    add hl, hl
-    ld de, CustomScriptMasterTable
-    add hl, de
-    ld e, [hl]
-    inc hl
-    ld d, [hl]
-
-.byScript:
-    ld a, [wScriptNPCId]
-    ld l, a
-    ld h, $00
-    add hl, hl
-    add hl, de
-    ld e, [hl]
-    inc hl
-    ld d, [hl]
-
-    ld a, [wScriptCounter]
-    ld l, a
-    ld a, [$d8d6]
-    ld h, a
-    add hl, hl
-    add hl, de
-    ld c, [hl]
-    inc hl
-    ld b, [hl]
-    dec hl
-    ret
-
-; =============================================================================
-; Entry 5: CustomTextDisplay
-; =============================================================================
-CustomTextDisplay:
-    ld de, CustomTextPtrTable
-    call CallTextEngine
-    ret
-
-; =============================================================================
-; Entries 9 / 10: CustomDrawTiles / CustomDrawAttrs (S119, ROADMAP P3.8 part d)
-; =============================================================================
-; Script ops $24 draw_tiles / $61 draw_attrs far-call entry 1 / 2 of the map's
-; SCRIPT bank, which reads ONE more script word (the patch address in that
-; bank) and draws the patch [offset word, bytes …, $D8 next row, $D9 end]
-; onto the visible BG map (bank $0C entries 1 / 2, BANK04_SCRIPT_ENGINE "Tile
-; patches"). Every map type >= $40 went to bank $0F, whose reader looks the
-; word up in bank $0F's tables — wrong for a custom room (bank $60 scripts).
-; Bank $04 now calls these two entries instead of $0F01 / $0F02 (same size):
-; a custom script (the GateAwareDispatch rule) reads its word through
-; CustomScriptRead and its patch from bank $60 (the compiler's patch_data);
-; anything else goes on to bank $0F exactly as before.
-; S127 (ROADMAP P3.14e2): a word $FF00-$FFFF is no patch (patches sit at
-; $4000-$7FFF) but a COMMAND of the compiler: bank $77 entry 10 ScriptCommand
-; with E = the low byte (0 = put the breeding mate's name in insert slot 0). The drawing below is a
-; copy of bank $0C's (ScriptBank0CDrawTiles / …DrawAttrs, byte for byte the
-; same algorithm): offset = row * 32 + column in 8-px tiles from the visible
-; top-left ($FFB7 / $FFBB scroll), tiles also staged at $C300 + offset, the
-; colour nibbles at $C200 + offset / 2.
-CustomDrawTiles:
-    call CutPatchRoute
-    jr c, .custom
-    ld hl, $0f01
-    rst $10
-    ret
-.custom:
-    call CutPatchParam
-    ld a, b
-    cp $ff
-    jr z, .command                      ; S127: op $24 $FFxx = a compiler command
-    push bc
-    call CutPatchCursor
-    pop bc
-    push bc
-    call CutPatchStage
-    pop bc
-    jp CutPatchDraw
-.command:                               ; (ROADMAP P3.14b's reserved word range)
-    ld e, c
-    ld hl, $770a                        ; bank $77 entry 10 ScriptCommand, E = xx
-    rst $10
-    ret
-
-CustomDrawAttrs:
-    call CutPatchRoute
-    jr c, .custom
-    ld hl, $0f02
-    rst $10
-    ret
-.custom:
-    call CutPatchCursor
-    call CutPatchParam
-    push bc
-    call CutPatchStageAttr
-    pop bc
-    ld a, [wIsGBC]
-    or a
-    ret z
-    di
-    call WaitVRAM
-    ld a, $01
-    ldh [rVBK], a
-    ei
-    call CutPatchDraw
-    di
-    call WaitVRAM
-    ld a, $00
-    ldh [rVBK], a
-    ei
-    ret
-
-; CF set = the running script is a bank $60 script (GateAwareDispatch's rule)
-CutPatchRoute:
-    ld a, [wScriptMapType]
-    cp $70
-    jr z, .byRoom
-    cp CUSTOM_ROOM_START
-    jr nc, .custom
-.byRoom:
-    ld a, [wMapID]
-    cp CUSTOM_ROOM_START
-    jr nc, .custom
-    and a
-    ret
-.custom:
-    scf
-    ret
-
-; BC = the next script word (the patch address), counter advanced
-CutPatchParam:
-    ld a, [wScriptCounter]
-    add $01
-    ld [wScriptCounter], a
-    ld a, [$d8d6]
-    adc $00
-    ld [$d8d6], a
-    jp CustomScriptRead
-
-; $D8E7/$D8E8 = the BG map address of the visible top-left tile
-CutPatchCursor:
-    ld hl, $ffb7
-    ld a, [hl]
-    and $f8
-    ld [hl], a
-    ld hl, $ffbb
-    ld a, [hl]
-    and $f8
-    ld [hl], a
-    ldh a, [$bb]
-    ld l, a
-    ld h, $00
-    add hl, hl
-    add hl, hl
-    ldh a, [$b7]
-    rrca
-    rrca
-    rrca
-    add l
-    ld l, a
-    ld a, h
-    adc $98
-    ld h, a
-    ld a, h
-    and $03
-    or $98
-    ld h, a
-    ld a, l
-    ld [$d8e7], a
-    ld a, h
-    ld [$d8e8], a
-    ret
-
-; draw the patch at BC onto the BG map (VRAM bank as selected)
-CutPatchDraw:
-    ld a, [bc]
-    ld l, a
-    inc bc
-    ld a, [bc]
-    ld h, a
-    inc bc
-    push bc
-    ld b, l
-    ld a, l
-    and $e0
-    ld l, a
-    ld a, [$d8e7]
-    add l
-    ld l, a
-    ld a, [$d8e8]
-    adc h
-    and $03
-    ld h, a
-    ld a, [$d8e8]
-    and $fc
-    or h
-    ld h, a
-    ld a, b
-    and $1f
-    jr z, .col0
-    ld b, a
-.cols:
-    call CutPatchNextCol
-    dec b
-    jr nz, .cols
-.col0:
-    ld a, l
-    ld [$d8e7], a
-    ld a, h
-    ld [$d8e8], a
-    pop bc
-.byte:
-    ld a, [bc]
-    inc bc
-    cp $d9
-    ret z
-    cp $d8
-    jr nz, .put
-    ld a, [$d8e7]
-    ld l, a
-    ld a, [$d8e8]
-    ld h, a
-    ld a, l
-    add $20
-    ld l, a
-    ld a, h
-    adc $00
-    ld h, a
-    ld a, h
-    and $03
-    or $98
-    ld h, a
-    ld a, l
-    ld [$d8e7], a
-    ld a, h
-    ld [$d8e8], a
-    jr .byte
-.put:
-    call Write_gfx_tile
-    call CutPatchNextCol
-    jr .byte
-
-CutPatchNextCol:
-    ld a, l
-    and $e0
-    push af
-    ld a, l
-    inc a
-    and $1f
-    ld l, a
-    pop af
-    or l
-    ld l, a
-    ret
-
-; the tiles also go to the $C300 screen buffer (rows of 32)
-CutPatchStage:
-    ld a, [bc]
-    ld l, a
-    inc bc
-    ld a, [bc]
-    ld h, a
-    inc bc
-    ld a, l
-    add $00
-    ld l, a
-    ld a, h
-    adc $c3
-    ld h, a
-.row:
-    push hl
-.byte:
-    ld a, [bc]
-    inc bc
-    cp $d9
-    jr z, .done
-    cp $d8
-    jr nz, .put
-    pop hl
-    ld a, l
-    add $20
-    ld l, a
-    ld a, h
-    adc $00
-    ld h, a
-    jr .row
-.put:
-    ld [hl+], a
-    jr .byte
-.done:
-    pop hl
-    ret
-
-; the colours also go to the $C200 nibble buffer (two tiles per byte)
-CutPatchStageAttr:
-    ld a, [bc]
-    ld l, a
-    inc bc
-    ld a, [bc]
-    ld h, a
-    inc bc
-.row:
-    push hl
-.byte:
-    ld a, [bc]
-    inc bc
-    cp $d9
-    jr z, .done
-    cp $d8
-    jr nz, .put
-    pop hl
-    ld a, l
-    add $20
-    ld l, a
-    ld a, h
-    adc $00
-    ld h, a
-    jr .row
-.put:
-    call CutPatchNibble
-    inc hl
-    jr .byte
-.done:
-    pop hl
-    ret
-
-CutPatchNibble:
-    push hl
-    srl h
-    rr l
-    push af
-    ld a, l
-    add $00
-    ld l, a
-    ld a, h
-    adc $c2
-    ld h, a
-    pop af
-    jr c, .low
-    swap a
-    and $f0
-    ld d, a
-    ld a, [hl]
-    and $0f
-    jr .put
-.low:
-    and $0f
-    ld d, a
-    ld a, [hl]
-    and $f0
-.put:
-    or d
-    ld [hl], a
-    pop hl
-    ret
+    jp ScriptWordAt             ; bank $60's reader copy; returns BC

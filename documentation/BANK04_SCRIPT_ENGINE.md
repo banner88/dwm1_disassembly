@@ -142,7 +142,10 @@ bank-$04 calls inlined) and stops at the three tails:
 
 * `jp ScriptExecContinue` (`$04:$55F5`) — counter+1, fetch the next op;
 * `jp ScriptReturnProcess` (`$04:$7212`) — BRANCH: counter += (BC−HL)/2,
-  BC = the last parameter read (an absolute script address);
+  BC = the last parameter read (an absolute script address); HL = that parameter's own address
+  as the script reader returned it (S136: so a custom room's script reader must hand back HL
+  too, and branch targets live in the script's own bank — the bank $60 forwarders keep both,
+  ARCHITECTURE "Place banks (S136)");
 * `ret` — the op yields; Entry 4 continues next frame (ScriptExecContinue).
 
 Every opcode has exactly ONE arity (no path-dependent counts). Handlers that

@@ -2226,7 +2226,13 @@ is read with interrupts on returns to the wrong bank otherwise. The work is buil
 not hard-coded, the bank meters, the tools that assume `< $80` banks (dump tools only).
 
 **B. Place banks — the spill (CAP2; split S135 into CAP2a streams — BUILT S135, USER-CONFIRMED —, CAP2b place
-banks, CAP2c bank $17; ROADMAP).** S135 changes to the plan below: (1) the place header /
+banks — BUILT S136, USER-CONFIRMED —, CAP2c bank $17, CAP2d bank $6C (split from CAP2b S136); ROADMAP).**
+**As built S136 (CAP2b; ARCHITECTURE "Place banks (S136)", PROJECT_COMPILER §2.45):** the place
+header / far copy is NOT part of it (CAP3); a home bank holds the place's blocks only (scripts,
+patches, screens, lists, rules, cast) — the records / flags / music stay in bank $71 tables; bank
+$60 is itself the first home bank (it keeps its own reader copy), the forwarders key on the map id,
+the script type or the text section and write `wPlaceIdx` per call; text sections are placed like
+places (one section = one bank; auto ids break sections at 12 KB). S135 changes to the plan below: (1) the place header /
 `wPlaceAttr` far copy moves to CAP3 — below 128 places the per-room tables of $71 / $76 / ROM0
 do not overflow ($71 ≈ 60 B a room); (2) CAP2b's forwarders look the home bank up in a bank $60
 directory `[mapID − $6B]` on EVERY call instead of caching `wPlaceBank` (no refresh needed at the

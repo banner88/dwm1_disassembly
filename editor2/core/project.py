@@ -468,6 +468,7 @@ class Project:
         self._step_alloc = None
         self.repo_root = None          # set by compiler.compile_project
         self._stream_plan = None       # S135 (ARC CAP2a): stream_plan(), lazy
+        self._place_plan = None        # S136 (ARC CAP2b): places.plan(), lazy (after streams)
         self._music = None
         self._gamedata = None
 
@@ -2363,6 +2364,7 @@ class Project:
         if self._stream_plan is not None:
             return self._stream_plan
         self._ext_taken = []           # a retry after an error starts at $80 again
+        self._place_plan = None        # S136: the places take their banks after these
         banks = {LAYOUT_HOME_BANK: [], TILESET_HOME_BANK: []}
         used = {LAYOUT_HOME_BANK: 1, TILESET_HOME_BANK: 1}      # the self-ID byte
         overflow = []
@@ -2412,9 +2414,18 @@ class Project:
         return b
 
     def ext_bank_owners(self):
-        """{bank: purpose} for every bank $80-$FF the build fills (S135)."""
+        """{bank: purpose} for every bank $80-$FF the build fills (S135 streams,
+        S136 places)."""
+        from . import places as _PL
         self.stream_plan()
+        _PL.plan(self)
         return dict(getattr(self, '_ext_taken', None) or [])
+
+    def place_plan(self):
+        """S136 (ROADMAP ARC CAP2b): where every place and text section lives
+        (editor2/core/places.py plan)."""
+        from . import places as _PL
+        return _PL.plan(self)
 
     def stream_ref(self, key, ctx=""):
         """(bank, entry) of one of the project's LZ streams (S135 plan)."""
@@ -2516,12 +2527,39 @@ class Project:
 
     # ------------------------------------------------------------------ text
     def _assign_text_ids(self):
+        # S136 (ROADMAP ARC CAP2b): a text SECTION (256 ids) is placed whole in
+        # one bank (places.py), so an auto-numbered text that would take its
+        # section past places.TEXT_SECTION_BUDGET bytes starts the next section
+        # instead (a project whose sections stay small keeps every id)
+        # (S136 review: never into ids an entry declares explicitly — a section
+        # holding an explicit id is never broken past it, and the jump goes to
+        # the first section no explicit id uses)
+        from . import places as _PL
         next_id = 0x0A00
+        sec_bytes = {}
+        explicit = set()
+        for e in self._dialogue:
+            if 'text_id' in e:
+                try:
+                    explicit.add(F.val(e['text_id']))
+                except Exception:                            # noqa: BLE001
+                    pass
+        exp_secs = {t >> 8 for t in explicit}
         for e in self._dialogue:
             if 'text_id' in e:
                 tid = F.val(e['text_id'])
             else:
                 tid = next_id
+                size = _PL.text_entry_size(self, tid, e) + 2
+                if (tid & 0xFF) and sec_bytes.get(tid >> 8, 0) + size \
+                        > _PL.TEXT_SECTION_BUDGET \
+                        and not any(t >> 8 == tid >> 8 and t >= tid for t in explicit):
+                    sec = (tid >> 8) + 1
+                    while sec in exp_secs:
+                        sec += 1
+                    tid = sec << 8
+            sec_bytes[tid >> 8] = sec_bytes.get(tid >> 8, 0) + \
+                _PL.text_entry_size(self, tid, e) + 2
             e['_tid'] = tid
             if tid in self._text_by_id:
                 raise ProjectError(f"duplicate text id {F.hexw(tid)}")

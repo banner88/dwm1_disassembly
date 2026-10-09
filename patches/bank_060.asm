@@ -1,51 +1,601 @@
 ; =============================================================================
-; BANK $60 — CUSTOM ROOM OVERFLOW BANK
+; BANK $60 — CUSTOM ROOM BANK: the engine's one address for custom-room data
 ; =============================================================================
-; Entry points (called via rst $10):
-;   Entry 0: CustomReadStep     — returns DE = [step_id, tileset_bank]
-;   Entry 1: CustomReadInteract — copies NPC data to wCustomNPCBuffer (S117:
-;            every non-gate room; flag-conditioned NPCs; vanilla NPC overrides)
-;   Entry 2: CustomExitCheck    — copies exit data to wCustomExitBuffer
-;   Entry 3: CustomTilesetInfo  — returns source mapID from wCustomRoomFlag
-;   Entry 4: CustomScriptRead   — triple-index script data reader
-;   Entry 5: CustomTextDisplay  — custom text renderer via ROM0 CallTextEngine
+; Entry points (called via rst $10 from banks $04/$06/$0B/$17/$77):
+;   Entry 0: step entry         — DE = [step_id, tileset_bank]   (forwarded)
+;   Entry 1: NPC / interact list — HL = wCustomNPCBuffer or 0 (S117: every
+;            non-gate room; vanilla rooms read VanillaNPCExtTable here;
+;            custom rooms forwarded)
+;   Entry 2: exit list          — HL = wCustomExitBuffer          (forwarded)
+;   Entry 3: CustomTilesetInfo  — returns wCustomRoomFlag (no caller)
+;   Entry 4: script word        — BC = the running script's next word
+;            (type $FF = the custom skills' scripts, here; rooms forwarded)
+;   Entry 5: custom text        — [$C822] section / [$C823] entry (forwarded
+;            by section)
 ;   Entry 6: GateAwareDispatch  — B-fix: bank-$0F script dispatch routed by wMapID
 ;   Entry 7: VanillaExitResolve — S70: unified exit resolve (custom rooms AND
 ;            compiler-authored vanilla-room exit EXTENSIONS; HL=list or 0)
-;   Entry 8: CustomStateRules   — S97: flag-driven room states (P3.5a); writes
-;            the current screen's step counter from CustomStateRulePtrTable
-;   Entry 9: CustomDrawTiles    — S119: script op $24 (tile patch) in a custom room
-;   Entry 10: CustomDrawAttrs   — S119: script op $61 (the patch's colours)
+;   Entry 8: state rules        — S97: flag-driven room states   (forwarded)
+;   Entry 9: tile patch         — S119: script op $24              (forwarded)
+;   Entry 10: tile patch colours — S119: script op $61             (forwarded)
 ;   Entry 11: NpcColourDraw     — S123: the field NPC draw (bank $06) with the
 ;            NPC colours of the room's $A2 prefixes (any of the 8 OBJ palettes)
 ;   Entry 12: CustomDescentFeel — S123 r2: bank $0B CustomDescentInGate's body —
 ;            only a STAIRS-DOWN exit of a custom room is an in-gate floor change
+;
+; S136 (ROADMAP ARC CAP2b) — PLACE BANKS. A place (custom room) keeps its
+; scripts, tile patches, screens, NPC / exit lists, state rules and monster
+; cast in its HOME BANK: bank $60 itself first, then banks $80+ for the places
+; that do not fit (editor2/core/project.py place_plan, first fit); text
+; sections are placed the same way. Every home bank carries the same reader
+; block (templates/place_readers.asm — pasted below this head with no suffix,
+; and at $4001 of every place bank). Entries 0/1/2/4/5/8/9/10 are FORWARDERS:
+; on EVERY call they look the place up in PlaceDirectory (map id or script
+; type) / TextSectionBanks (text section) — nothing is cached, so the map-id
+; writes outside the room commit (gate insert, boss floor, save load, new
+; game, Play here) need no refresh — and call that bank's entry of the same
+; number (PlaceGo: a local jump when the home is bank $60). Bank $60 keeps the
+; global things: the custom skills' scripts, VanillaExitExtTable /
+; VanillaNPCExtTable, entries 3 / 6 / 7 / 11 / 12.
 ; =============================================================================
 
 SECTION "ROM Bank $060", ROMX[$4000], BANK[$60]
     db $60 ; bank number
 
-    dw CustomReadStep       ; Entry 0
-    dw CustomReadInteract   ; Entry 1
-    dw CustomExitCheck      ; Entry 2
+    dw PlaceFwdStep         ; Entry 0
+    dw PlaceFwdInteract     ; Entry 1
+    dw PlaceFwdExit         ; Entry 2
     dw CustomTilesetInfo    ; Entry 3
-    dw CustomScriptRead     ; Entry 4
-    dw CustomTextDisplay    ; Entry 5
+    dw PlaceFwdScript       ; Entry 4
+    dw PlaceFwdText         ; Entry 5
     dw GateAwareDispatch    ; Entry 6 — gate-entry regression fix (B-fix): route by wMapID
     dw VanillaExitResolve   ; Entry 7 — S70 unified exit resolve (bank $0B Entry 6 calls this for EVERY non-gate room)
-    dw CustomStateRules     ; Entry 8 — S97 state rules (bank $17 CustomAttrCheck + CustomReadStep call it)
-    dw CustomDrawTiles      ; Entry 9 — S119 op $24 in custom rooms (bank $04 ScriptCmd24 same-size redirect)
-    dw CustomDrawAttrs      ; Entry 10 — S119 op $61 in custom rooms (bank $04 ScriptCmd61 same-size redirect)
+    dw PlaceFwdRules        ; Entry 8 — S97 state rules (bank $17 CustomAttrCheck calls it)
+    dw PlaceFwdTiles        ; Entry 9 — S119 op $24 in custom rooms (bank $04 ScriptCmd24 same-size redirect)
+    dw PlaceFwdAttrs        ; Entry 10 — S119 op $61 in custom rooms (bank $04 ScriptCmd61 same-size redirect)
     dw NpcColourDraw        ; Entry 11 — S123 NPC colours (bank $06 NPCDrawSlot same-size redirect)
     dw CustomDescentFeel    ; Entry 12 — S123 r2 gate-flag exit feel (bank $0B CustomDescentInGate far-calls it)
 
 ; =============================================================================
-; CustomPtrChase
+; S136 — the place lookup
+; =============================================================================
+; PlaceOf: A = a map id or script type. CF clear: H = the place's home bank,
+; [wPlaceIdx] = its index inside that bank. CF set: no place — a vanilla id
+; ($00-$6A), or past the last place (PLACE_COUNT; e.g. a transient script
+; type $70 with fewer than 6 places, which read past the old tables).
+; PlaceDirectory (generated) = per place, in map id order: db bank, db index.
+; Clobbers A/DE/HL; keeps BC.
+PlaceOf:
+    sub CUSTOM_ROOM_START
+    ret c
+    cp PLACE_COUNT
+    ccf
+    ret c
+    ld l, a
+    ld h, $00
+    add hl, hl
+    ld de, PlaceDirectory
+    add hl, de
+    ld a, [hl+]
+    ld e, a                     ; E = home bank
+    ld a, [hl]
+    ld [wPlaceIdx], a
+    ld h, e
+    and a                       ; CF clear
+    ret
+
+; PlaceGo: H = home bank, L = entry -> that bank's reader entry L (its rst $10
+; table = PlaceEntries at $4001); bank $60's own readers by a local jump
+; (PlaceEntries below the head). Returns whatever the reader returns (rst $10
+; keeps BC / DE / HL on the way back, clobbers A).
+PlaceGo:
+    ld a, h
+    cp $60
+    jr z, .here
+    rst $10
+    ret
+.here:
+    ld a, l
+    add a
+    ld hl, PlaceEntries
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a
+    jp hl
+
+; Entry 0 — the current screen's step entry (bank $0B RoomEntry0's custom
+; branch). No place: bank $60's dummy step [1, $2A] (DummyStepEntry).
+PlaceFwdStep:
+    ld a, [wMapID]
+    call PlaceOf
+    jr c, .none
+    ld l, $00
+    jp PlaceGo
+.none:
+    ld de, $2A01
+    ret
+
+; Entry 1 — the NPC / interact list (bank $0B GetRoomDataPtr, every non-gate
+; room). Returns HL = the list to parse (wCustomNPCBuffer) or HL = 0 = "no
+; override — run the vanilla SharedPtrChase path". rst $10 keeps HL.
+PlaceFwdInteract:
+    ld a, [wMapID]
+    cp CUSTOM_ROOM_START
+    jp c, VanillaInteract
+    call PlaceOf
+    jr c, .none
+    ld l, $01
+    jp PlaceGo
+.none:
+    ld hl, wCustomNPCBuffer
+    ld [hl], $FF
+    ret
+
+; Entry 2 — the exit list (entry 7's custom branch). No place: the dummy
+; step's exits (DummyExits — the player must always have a way out,
+; KEY_LESSONS v14-v17), as for an undefined screen.
+PlaceFwdExit:
+    ld a, [wMapID]
+    call PlaceOf
+    jr c, .none
+    ld l, $02
+    jp PlaceGo
+.none:
+    ld a, $FE
+    ld [wCustomY7Cmp], a
+    ld hl, DummyExits
+    jp CopyExitListToBuffer
+
+; Entry 4 (and GateAwareDispatch's custom branch) — BC = the running script's
+; next word, HL = its address. The place = the script TYPE wScriptMapType
+; (what the reader always indexed: a script that warps out keeps reading its
+; own room); type $FF = a custom skill's script (here). No place: BC = $FFFF
+; (end). HL matters: bank $04's branch tail ScriptReturnProcess computes
+; counter += (target - HL) / 2 with the target an ABSOLUTE address in the
+; script's own bank — rst $10 hands BC / DE / HL back unchanged (only A is
+; the caller's bank), so both survive the two nested far calls.
+PlaceFwdScript:
+    ld a, [wScriptMapType]
+    cp SKILL_SCRIPT_TYPE
+    jp z, SkillScriptRead
+    call PlaceOf
+    jr c, .none
+    ld l, $04
+    jp PlaceGo
+.none:
+    ld bc, $FFFF
+    ret
+
+; Entry 5 — the custom text [$C822] section / [$C823] entry (bank $04
+; TextQueueCheck_Ext, bank $77 SayText): the section's home bank shows it.
+PlaceFwdText:
+    ld a, [$c822]
+    cp TEXT_SECTIONS
+    ret nc                      ; no such section: no text (defensive)
+    ld l, a
+    ld h, $00
+    ld de, TextSectionBanks
+    add hl, de
+    ld h, [hl]
+    ld l, $05
+    jp PlaceGo
+
+; Entry 8 — state rules + monster cast of the current screen (bank $17
+; CustomAttrCheck via StateRulesHook17). Vanilla rooms / no place: nothing.
+PlaceFwdRules:
+    ld a, [wMapID]
+    call PlaceOf
+    ret c
+    ld l, $08
+    jp PlaceGo
+
+; Entries 9 / 10 — script ops $24 / $61: a custom script's tile patch lives with
+; its script (the place = the script type); anything else goes on to bank $0F
+; exactly as before. No place: the op's one word is stepped over so the script
+; stays in step. The custom skills' scripts (type $FF) use neither op — the
+; compiler refuses one there (places.py _skill_lines) — so type $FF lands in
+; that case too.
+PlaceFwdTiles:
+    call CutPatchRoute
+    jr c, .custom
+    ld hl, $0f01
+    rst $10
+    ret
+.custom:
+    ld a, [wScriptMapType]
+    call PlaceOf
+    jr c, PlaceSkipParam
+    ld l, $09
+    jp PlaceGo
+
+PlaceFwdAttrs:
+    call CutPatchRoute
+    jr c, .custom
+    ld hl, $0f02
+    rst $10
+    ret
+.custom:
+    ld a, [wScriptMapType]
+    call PlaceOf
+    jr c, PlaceSkipParam
+    ld l, $0A
+    jp PlaceGo
+
+PlaceSkipParam:
+    ld a, [wScriptCounter]
+    add $01
+    ld [wScriptCounter], a
+    ld a, [$d8d6]
+    adc $00
+    ld [$d8d6], a
+    ret
+
+; CF set = the running script is a custom one (GateAwareDispatch's rule)
+CutPatchRoute:
+    ld a, [wScriptMapType]
+    cp $70
+    jr z, .byRoom
+    cp CUSTOM_ROOM_START
+    jr nc, .custom
+.byRoom:
+    ld a, [wMapID]
+    cp CUSTOM_ROOM_START
+    jr nc, .custom
+    and a
+    ret
+.custom:
+    scf
+    ret
+
+; =============================================================================
+; Entry 1's vanilla branch: VanillaNPCExtTable (compiler-generated, bank $60):
+; the vanilla rooms whose gate-swirl objects follow a project gate's "cleared"
+; flag (a portal re-bossed or re-routed). Row format = VanillaExitExtTable's:
+; db mapID, screen / dw step_counter / db n_steps / dw list0..listN-1;
+; db $FF ends the table. Variant = min([counter], n-1). A = wMapID.
+; =============================================================================
+VanillaInteract:
+    ld c, a
+    ld hl, VanillaNPCExtTable
+.scan:
+    ld a, [hl+]
+    cp $FF
+    jr z, .none
+    cp c
+    jr nz, .skipRow
+    ld a, [hl]
+    ld b, a
+    ld a, [wScreenIndex]
+    cp b
+    jr z, .match
+.skipRow:
+    inc hl                      ; screen
+    inc hl                      ; step counter (2)
+    inc hl
+    ld a, [hl+]                 ; n_steps
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    jr .scan
+.none:
+    ld hl, $0000
+    ret
+.match:
+    inc hl
+    ld a, [hl+]
+    ld e, a
+    ld a, [hl+]
+    ld d, a                     ; DE = the screen's vanilla step counter
+    ld a, [hl+]
+    ld b, a                     ; B = n_steps
+    ld a, [de]
+    cp b
+    jr c, .stepOk
+    ld a, b
+    dec a
+.stepOk:
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a                     ; HL = the variant's list (ROM, bank $60)
+    jp CopyNPCListToBuffer      ; bank $60's reader copy (place_readers.asm)
+
+; -----------------------------------------------------------------------------
+; Entry 12: CustomDescentFeel (S123 r2; user: "The entry into the custom gate …
+; should be a full start-of-gate effect (screen whirling around and slowly
+; vanishing) instead of go-down-a-floor effect (screen closing with a whoosh
+; sound)"). Called by bank $0B CustomDescentInGate at the gate-flag exit
+; transition (jr_00b_466b). Since S41 that routine set wInGateworld = $01 for
+; EVERY gate-flag exit of a custom room, so the transition reads "already in a
+; gate" -> the floor-change ladder ($C905 states $10-$17, sound $55). That is
+; right for a STAIRS-DOWN cell (gate flag $80) but wrong for a GATE ENTRANCE
+; (gate flag 1, dest = the gate): there the vanilla portal flow must run as from
+; a vanilla portal room ($C905 states 1-6, the whirl) — wInGateworld stays 0.
+; Measured (PyBoy): vanilla room $24 portal = states 1..6; a custom-room portal
+; before this fix = $10..$17. Clobbers A only.
+; -----------------------------------------------------------------------------
+CustomDescentFeel:
+    ld a, [wMapID]
+    cp CUSTOM_ROOM_START
+    ret c                       ; vanilla source rooms: untouched (as since S41)
+    ld a, [wWarpFlag]
+    bit 7, a                    ; $80 = Stairs down (an in-gate floor change)
+    ret z                       ; 1 = a gate entrance: the game's own gate entry
+    ld a, $01
+    ld [wInGateworld], a        ; transient: the in-gate floor change feel
+    ret
+
+; -----------------------------------------------------------------------------
+; Entry 11: NpcColourDraw (S123) — bank $06 NPCDrawSlot (was SaveMapS_4d0a), the field draw of one
+; NPC slot (non-monster), far-calls this instead of bank $05 entry 0 (same-size:
+; `ld hl, $0500` -> `ld hl, $600B`). DE = the slot + $0F. The NPC is drawn by
+; bank $05 entry 0 exactly as before; then, if the last CopyNPCListToBuffer was
+; for THIS map and screen (never on gate floors) and gave this slot a colour,
+; the palette bits (attr bits 0-2) of the OAM buffer entries the draw added
+; ($C000 + 4 * index, index from the $FFCB counter before to after) become it.
+; Clobbers A/BC/HL (as the bank $05 call did); keeps DE.
+; -----------------------------------------------------------------------------
+NpcColourDraw:
+    ld a, [wInGateworld]
+    or a
+    jr nz, .plain
+    ld a, [wNpcColourMap]
+    ld b, a
+    ld a, [wMapID]
+    cp b
+    jr nz, .plain
+    ld a, [wNpcColourScr]
+    ld b, a
+    ld a, [wScreenIndex]
+    cp b
+    jr nz, .plain
+    ld a, e
+    sub LOW($D7D2 + $0F)        ; slot k: DE = $D7D2 + 32k + $0F
+    and $E0
+    swap a
+    srl a                       ; A = slot 0-7
+    ld hl, wNpcColour
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl]
+    bit 7, a
+    jr z, .plain
+    and $07
+    ld c, a                     ; C = palette
+    ldh a, [$CB]
+    ld b, a                     ; B = first OAM index of this draw
+    push de
+    push bc
+    ld hl, $0500
+    rst $10                     ; bank $05 entry 0 (keeps DE; A/BC clobbered)
+    pop bc
+    ldh a, [$CB]
+    sub b
+    jr z, .done
+    jr c, .done
+    ld e, a                     ; E = pieces drawn
+    ld a, b
+    add a
+    add a
+    add $03
+    ld l, a
+    ld h, $C0                   ; HL = attr byte of the first piece
+.recolour:
+    ld a, [hl]
+    and $F8
+    or c
+    ld [hl+], a
+    inc hl
+    inc hl
+    inc hl
+    dec e
+    jr nz, .recolour
+.done:
+    pop de
+    ret
+.plain:
+    ld hl, $0500
+    rst $10
+    ret
+
+CustomTilesetInfo:
+    ld a, [wCustomRoomFlag]
+    ret
+
+; =============================================================================
+; Entry 7: VanillaExitResolve  (S70 — vanilla-room exit extensions)
+; =============================================================================
+; Called by bank $0B RoomEntry6_ExitChecker (patches/bank_00b.asm) for EVERY
+; non-gate room step in place of the old ">= $6B -> entry 2" divert.
+; Contract: returns HL = exit list to scan (a WRAM buffer copy), or HL = 0
+; meaning "no override — caller runs the vanilla SharedPtrChase path".
+; rst $10 preserves HL/DE across the far call but clobbers A (bank byte) —
+; the caller tests HL, never A (CROSSBANK_ROOMS "rst $10 Clobbers Register A").
+;
+;   wMapID >= $6B  -> jp PlaceFwdExit (the place's own exit list, S136)
+;   wMapID <  $6B  -> scan VanillaExitExtTable (compiler-generated):
+;       row: db mapID, screen ($FF = any) / dw step_counter_addr / db n_steps /
+;            dw list0..listN-1; table terminated by db $FF.
+;       Match (mapID AND wScreenIndex): variant = min([counter], n-1),
+;       copy that 7-byte exit list to wCustomExitBuffer, return HL=buffer.
+;       No match: HL=0.
+; S94b: bank $0B Entry 9 (boundary y=0/7 push exits) calls this entry too, so
+; extension rows with trigger_y 0/7 are LIVE (they were inert before S94b).
+VanillaExitResolve:
+    ; S70v3: arm the Entry 6 scan's y-skip compare for the VANILLA branch —
+    ; $07 = skip y=7 rows (original engine semantics; y=7 stays Entry-9/push
+    ; territory in vanilla rooms). CustomExitCheck writes $FE instead, which
+    ; matches no real trigger_y, making custom-room y=7 rows WALK-ON exits.
+    ; Entry 6 calls this entry before every scan, so the byte is always fresh.
+    ld a, $07
+    ld [wCustomY7Cmp], a
+    ld a, [wMapID]
+    cp CUSTOM_ROOM_START
+    jr c, .vanillaScan
+    jp PlaceFwdExit             ; custom room — the place's exit list
+.vanillaScan:
+    ld c, a                     ; C = mapID
+    ld hl, VanillaExitExtTable
+.scan:
+    ld a, [hl+]
+    cp $FF
+    jr z, .none                 ; table end — no extension for this room
+    cp c
+    jr nz, .skipRow
+    ; S94b: rows are keyed per SCREEN too — db mapID, screen ($FF = any
+    ; screen, the S70 semantics). Multi-screen vanilla rooms (GreatTree)
+    ; can now have one door redirected without cross-firing on the other
+    ; floors (the S92 wholesale-replacement trap, KEY_LESSONS S92).
+    ld a, [hl]                  ; screen byte
+    cp $FF
+    jr z, .match
+    ld b, a
+    ld a, [wScreenIndex]
+    cp b
+    jr z, .match
+.skipRow:
+    inc hl                      ; skip screen (1)
+    inc hl                      ; skip step_counter addr (2)
+    inc hl
+    ld a, [hl+]                 ; n_steps
+    add a                       ; 2 bytes per variant ptr
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    jr .scan
+.none:
+    ld hl, $0000
+    ret
+.match:
+    inc hl                      ; past the screen byte
+    ld a, [hl+]
+    ld e, a
+    ld a, [hl+]
+    ld d, a                     ; DE = step counter address (WRAM)
+    ld a, [hl+]                 ; A = n_steps
+    ld b, a
+    ld a, [de]                  ; current step value
+    cp b
+    jr c, .stepOk
+    ld a, b                     ; clamp out-of-range step to the last variant
+    dec a
+.stepOk:
+    add a                       ; x2 (dw index)
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a                     ; HL = the variant's exit list
+    jp CopyExitListToBuffer     ; bank $60's reader copy -> HL = wCustomExitBuffer
+
+; =============================================================================
+; Entry 6: GateAwareDispatch  — gate-entry regression fix (B-fix)
+; =============================================================================
+; Reached from bank $04 DispatchBank0F (script bank dispatch, wScriptMapType >= $40).
+; The original bank-$04 hook tested the SCRIPT map-type against $6B to decide a
+; custom-room divert, but wScriptMapType >= $6B is legitimate bank-$0F territory
+; (gate world hardcodes $70; labyrinth/arena/post-game use $40-$6A). That froze
+; gate entry (gate script wrongly read from bank $60) and looped for $40-$6A.
+;
+; The correct test is the ROOM map-type wMapID ($C968): custom rooms are the ONLY
+; things with wMapID >= CUSTOM_ROOM_START ($6B). Everything else (gates, labyrinth,
+; all vanilla rooms) dispatches to the real bank $0F entry 0, exactly like vanilla.
+; Returns next script command in BC (both paths preserve the vanilla contract).
+GateAwareDispatch:
+    ld a, [wScriptMapType]      ; [ANCHOR S73] script TYPE targets the custom bank?
+    cp $70                      ;   $70 = the gate-world script type — the B-bug
+    jr z, .byRoom               ;   poison value; MUST stay on the wMapID route.
+    cp CUSTOM_ROOM_START        ;   Any other type >= $6B (e.g. $FF armed by the
+    jr nc, .customRoom          ;   Anchor field-skill, S105) reads bank $60 scripts
+.byRoom:                        ;   regardless of the physical room (maze/town).
+    ld a, [wMapID]              ; $C968 — the actual room map-type
+    cp CUSTOM_ROOM_START        ; $6B
+    jr nc, .customRoom          ; wMapID >= $6B → genuine custom room
+    ld hl, $0f00                ; else: bank $0F entry 0 — vanilla gate/script dispatch
+    rst $10
+    ret
+.customRoom:
+    jp PlaceFwdScript           ; entry 4 (S136: the script type's home bank); returns BC
+
+; =============================================================================
+; The custom skills' scripts (script type $FF)
+; =============================================================================
+; S105 (P3.9b): script TYPE $FF = a custom SKILL's own dialog script
+; (SkillScriptPtrTable, emitted into every build from editor2/core/
+; skill_scripts.json, id = [wScriptNPCId]) — so a field-cast skill needs no
+; custom room. Anchor (bank $72 AnchorField14Tail) arms $FF / ids 2-5; S73-S104
+; armed $71 = the example project's medal_vault, which other projects lack.
+; $FF routes exactly like $71 everywhere else: >= $40 -> bank $0F dispatch ->
+; GateAwareDispatch (>= $6B, != $70) -> entry 4 -> here. They stay in bank $60.
+SKILL_SCRIPT_TYPE EQU $FF
+SkillScriptRead:
+    ld de, SkillScriptPtrTable
+    jp ScriptWordAt             ; bank $60's reader copy; returns BC
+
+; =============================================================================
+; PLACE READERS — the custom-room data readers of ONE place bank
+; (S136, ROADMAP ARC CAP2b; template editor2/core/templates/place_readers.asm)
+; =============================================================================
+; A place (a custom room) keeps ALL its bank $60-class data in its HOME BANK:
+; its script table + scripts, tile patches, screen sub-table, step entries,
+; NPC / exit lists, state rules and monster cast; text sections are placed the
+; same way. Bank $60 is the first home bank; places that do not fit go to banks
+; $80+ (editor2/core/project.py place_plan, first fit). Every home bank carries
+; this reader block (the compiler pastes it with  = "" in bank $60 and
+;  = "_P<bank>" in a place bank, where it starts at $4001 so that
+; PlaceEntries IS the bank's rst $10 entry table).
+;
+; The engine never calls a place bank: it calls bank $60's fixed entries, whose
+; forwarders (bank_060_head.asm PlaceOf / PlaceGo) look the place up in
+; PlaceDirectory on EVERY call — no cached bank — write its index inside the
+; home bank to wPlaceIdx and call the matching entry here. So every reader
+; indexes its tables with [wPlaceIdx], never with wMapID - $6B.
+; Entry numbers equal bank $60's: 0 step, 1 NPC list, 2 exit list, 4 script
+; word, 5 text, 8 state rules, 9 / 10 tile patches (3 / 6 / 7 = no-ops).
+; =============================================================================
+PlaceEntries:
+    dw CustomReadStep        ; 0
+    dw CustomReadInteract    ; 1 (custom rooms only — bank $60 keeps the vanilla branch)
+    dw CustomExitCheck       ; 2
+    dw PlaceNoop             ; 3
+    dw CustomScriptRead      ; 4
+    dw CustomTextDisplay     ; 5
+    dw PlaceNoop             ; 6
+    dw PlaceNoop             ; 7
+    dw CustomStateRules      ; 8
+    dw CustomDrawTiles       ; 9
+    dw CustomDrawAttrs       ; 10
+
+PlaceNoop:
+    ret
+
+; =============================================================================
+; CustomPtrChase — HL = the current step entry of the place's current screen
 ; =============================================================================
 CustomPtrChase:
-    ld hl, CustomSourceMapTable
-    ld a, [wMapID]
-    sub CUSTOM_ROOM_START
+    ld hl, PlaceSourceTable
+    ld a, [wPlaceIdx]
     add l
     ld l, a
     ld a, $00
@@ -53,9 +603,8 @@ CustomPtrChase:
     ld h, a
     ld a, [hl]
     ld [wCustomRoomFlag], a
-    ld hl, CustomRoomPtrTable
-    ld a, [wMapID]
-    sub CUSTOM_ROOM_START
+    ld hl, PlaceRoomTable
+    ld a, [wPlaceIdx]
     add a
     add l
     ld l, a
@@ -116,88 +665,24 @@ DummyExits:
     db $FF
 
 ; =============================================================================
-; Entry 0-3: Room data readers (proven, unchanged)
+; Entries 0-2: room data readers
 ; =============================================================================
 CustomReadStep:
-    call CustomStateRules        ; S97: flag rules pick the state BEFORE the counter read
+    call CustomStateRules     ; S97: flag rules pick the state BEFORE the counter read
     call CustomPtrChase
     ld e, [hl]
     inc hl
     ld d, [hl]
     ret
 
+; Entry 1 (custom rooms): HL = wCustomNPCBuffer, the place's current NPC list.
 CustomReadInteract:
-    ; S117 (NG2): reached for EVERY non-gate room (bank $0B GetRoomDataPtr,
-    ; same-size rewrite — the exits' entry-7 pattern). Returns HL = the NPC /
-    ; interact list to parse (wCustomNPCBuffer) or HL = 0 = "no override —
-    ; run the vanilla SharedPtrChase path". rst $10 keeps HL, clobbers A.
-    ld a, [wMapID]
-    cp CUSTOM_ROOM_START
-    jr c, .vanilla
     call CustomPtrChase
     inc hl
     inc hl
     ld a, [hl+]
     ld h, [hl]
     ld l, a
-    jr CopyNPCListToBuffer
-.vanilla:
-    ; VanillaNPCExtTable (compiler-generated, bank $60): the vanilla rooms
-    ; whose gate-swirl objects follow a project gate's "cleared" flag (a
-    ; portal re-bossed or re-routed). Row format = VanillaExitExtTable's:
-    ; db mapID, screen / dw step_counter / db n_steps / dw list0..listN-1;
-    ; db $FF ends the table. Variant = min([counter], n-1).
-    ld c, a
-    ld hl, VanillaNPCExtTable
-.scan:
-    ld a, [hl+]
-    cp $FF
-    jr z, .none
-    cp c
-    jr nz, .skipRow
-    ld a, [hl]
-    ld b, a
-    ld a, [wScreenIndex]
-    cp b
-    jr z, .match
-.skipRow:
-    inc hl                      ; screen
-    inc hl                      ; step counter (2)
-    inc hl
-    ld a, [hl+]                 ; n_steps
-    add a
-    add l
-    ld l, a
-    ld a, $00
-    adc h
-    ld h, a
-    jr .scan
-.none:
-    ld hl, $0000
-    ret
-.match:
-    inc hl
-    ld a, [hl+]
-    ld e, a
-    ld a, [hl+]
-    ld d, a                     ; DE = the screen's vanilla step counter
-    ld a, [hl+]
-    ld b, a                     ; B = n_steps
-    ld a, [de]
-    cp b
-    jr c, .stepOk
-    ld a, b
-    dec a
-.stepOk:
-    add a
-    add l
-    ld l, a
-    ld a, $00
-    adc h
-    ld h, a
-    ld a, [hl+]
-    ld h, [hl]
-    ld l, a                     ; HL = the variant's list (ROM, bank $60)
     ; fall through
 
 ; -----------------------------------------------------------------------------
@@ -250,7 +735,7 @@ CopyNPCListToBuffer:
     jr nz, .verbatim            ; a spot: never hidden, takes no NPC slot
     or b
     ld b, $00
-    call NpcColourRecord        ; S123: this NPC's colour -> wNpcColour[slot]
+    call NpcColourRecord     ; S123: this NPC's colour -> wNpcColour[slot]
 .verbatim:
     ld [de], a
     inc de
@@ -355,109 +840,8 @@ NpcColourRecord:
     pop af
     ret
 
-; -----------------------------------------------------------------------------
-; Entry 12: CustomDescentFeel (S123 r2; user: "The entry into the custom gate …
-; should be a full start-of-gate effect (screen whirling around and slowly
-; vanishing) instead of go-down-a-floor effect (screen closing with a whoosh
-; sound)"). Called by bank $0B CustomDescentInGate at the gate-flag exit
-; transition (jr_00b_466b). Since S41 that routine set wInGateworld = $01 for
-; EVERY gate-flag exit of a custom room, so the transition reads "already in a
-; gate" -> the floor-change ladder ($C905 states $10-$17, sound $55). That is
-; right for a STAIRS-DOWN cell (gate flag $80) but wrong for a GATE ENTRANCE
-; (gate flag 1, dest = the gate): there the vanilla portal flow must run as from
-; a vanilla portal room ($C905 states 1-6, the whirl) — wInGateworld stays 0.
-; Measured (PyBoy): vanilla room $24 portal = states 1..6; a custom-room portal
-; before this fix = $10..$17. Clobbers A only.
-; -----------------------------------------------------------------------------
-CustomDescentFeel:
-    ld a, [wMapID]
-    cp CUSTOM_ROOM_START
-    ret c                       ; vanilla source rooms: untouched (as since S41)
-    ld a, [wWarpFlag]
-    bit 7, a                    ; $80 = Stairs down (an in-gate floor change)
-    ret z                       ; 1 = a gate entrance: the game's own gate entry
-    ld a, $01
-    ld [wInGateworld], a        ; transient: the in-gate floor change feel
-    ret
-
-; -----------------------------------------------------------------------------
-; Entry 11: NpcColourDraw (S123) — bank $06 NPCDrawSlot (was SaveMapS_4d0a), the field draw of one
-; NPC slot (non-monster), far-calls this instead of bank $05 entry 0 (same-size:
-; `ld hl, $0500` -> `ld hl, $600B`). DE = the slot + $0F. The NPC is drawn by
-; bank $05 entry 0 exactly as before; then, if the last CopyNPCListToBuffer was
-; for THIS map and screen (never on gate floors) and gave this slot a colour,
-; the palette bits (attr bits 0-2) of the OAM buffer entries the draw added
-; ($C000 + 4 * index, index from the $FFCB counter before to after) become it.
-; Clobbers A/BC/HL (as the bank $05 call did); keeps DE.
-; -----------------------------------------------------------------------------
-NpcColourDraw:
-    ld a, [wInGateworld]
-    or a
-    jr nz, .plain
-    ld a, [wNpcColourMap]
-    ld b, a
-    ld a, [wMapID]
-    cp b
-    jr nz, .plain
-    ld a, [wNpcColourScr]
-    ld b, a
-    ld a, [wScreenIndex]
-    cp b
-    jr nz, .plain
-    ld a, e
-    sub LOW($D7D2 + $0F)        ; slot k: DE = $D7D2 + 32k + $0F
-    and $E0
-    swap a
-    srl a                       ; A = slot 0-7
-    ld hl, wNpcColour
-    add l
-    ld l, a
-    ld a, $00
-    adc h
-    ld h, a
-    ld a, [hl]
-    bit 7, a
-    jr z, .plain
-    and $07
-    ld c, a                     ; C = palette
-    ldh a, [$CB]
-    ld b, a                     ; B = first OAM index of this draw
-    push de
-    push bc
-    ld hl, $0500
-    rst $10                     ; bank $05 entry 0 (keeps DE; A/BC clobbered)
-    pop bc
-    ldh a, [$CB]
-    sub b
-    jr z, .done
-    jr c, .done
-    ld e, a                     ; E = pieces drawn
-    ld a, b
-    add a
-    add a
-    add $03
-    ld l, a
-    ld h, $C0                   ; HL = attr byte of the first piece
-.recolour:
-    ld a, [hl]
-    and $F8
-    or c
-    ld [hl+], a
-    inc hl
-    inc hl
-    inc hl
-    dec e
-    jr nz, .recolour
-.done:
-    pop de
-    ret
-.plain:
-    ld hl, $0500
-    rst $10
-    ret
-
 CustomExitCheck:
-    ; S70v3: custom branch of the y-skip arming (see VanillaExitResolve):
+    ; S70v3: custom branch of the y-skip arming (see bank $60 VanillaExitResolve):
     ; $FE never equals a real trigger_y, so Entry 6's scan no longer skips
     ; y=7 rows here — custom-room boundary exits fire on WALK-ON arrival.
     ; Entry 9 (push) reads the same list and still works as a fallback.
@@ -471,9 +855,8 @@ CustomExitCheck:
     ld a, [hl+]
     ld h, [hl]
     ld l, a
-    ; fall through into the shared copy loop (S70 factoring; behavior
-    ; identical to the pre-S70 inline loop — 7-byte entries, first-byte-$FF
-    ; terminator only, KEY_LESSONS v3-v4)
+    ; fall through into the shared copy loop (S70 factoring; 7-byte entries,
+    ; first-byte-$FF terminator only, KEY_LESSONS v3-v4)
 CopyExitListToBuffer:
     ld de, wCustomExitBuffer
 .copyExit:
@@ -494,27 +877,23 @@ CopyExitListToBuffer:
     ld hl, wCustomExitBuffer
     ret
 
-CustomTilesetInfo:
-    ld a, [wCustomRoomFlag]
-    ret
-
 ; =============================================================================
 ; Entry 8: CustomStateRules  (S97 — ROADMAP P3.5a, declarative room states)
 ; =============================================================================
 ; Custom-room step counters live in the transient $CD80 window (zeroed at every
 ; save-restore, PROJECT_COMPILER §2.6), so a state reached by a script is lost
 ; on reload. Event flags persist. This routine re-derives the CURRENT screen's
-; state from flags: the compiler emits, per custom room, a list of screens that
+; state from flags: the compiler emits, per place, a list of screens that
 ; carry rules, each with an ordered rule list; the FIRST rule whose terms all
 ; hold writes its state into that screen's step counter. No match = counter
 ; untouched (scripts that write_ram the counter keep working until the next
 ; load). Idempotent, so it runs from every custom (re)load path:
 ;   * bank $17 CustomAttrCheck (the FIRST custom hook of a room load — the
 ;     attr/palette walk reads the counter before bank $0B Entry 0 does,
-;     PyBoy-measured S97), via StateRulesHook17 + rst $10 entry 8;
+;     PyBoy-measured S97), via StateRulesHook17 + rst $10 bank $60 entry 8;
 ;   * CustomReadStep (Entry 0) itself, before CustomPtrChase.
-; Tables (generated, bank $60):
-;   CustomStateRulePtrTable: dw per custom room (mapID - $6B), $0000 = none
+; Tables (generated, in the place's home bank):
+;   PlaceRuleTable: dw per place (index wPlaceIdx), $0000 = none
 ;   room list:  { db screen / dw step_counter / dw rules } ... db $FF
 ;   rules:      { db state / db n_terms / n_terms x dw flag } ... db $FF
 ;               flag word: bits 0-14 = event flag index, bit 15 = must be CLEAR
@@ -524,11 +903,9 @@ CustomTilesetInfo:
 ; the same load hooks run before the bank $0B NPC parse reads it.
 CustomStateRules:
     call CustomMonsterCast
-    ld a, [wMapID]
-    sub CUSTOM_ROOM_START
-    ret c                        ; not a custom room (defensive)
+    ld a, [wPlaceIdx]
     add a
-    ld hl, CustomStateRulePtrTable
+    ld hl, PlaceRuleTable
     add l
     ld l, a
     ld a, $00
@@ -616,18 +993,16 @@ CustomStateRules:
 ; art). The bank $0B NPC sheet resolver maps sprite ids $F0-$F3 to the
 ; display-list pairs at $D7CA + 2n ([draw id, is_monster]; is_monster != 0 ->
 ; draw id = species+$10, follower sheet + layout + palette — the arena lobby's
-; own mechanism, ROOM_DATA_FORMAT "Monster NPCs"). Custom rooms carry a
-; generated per-screen cast: CustomMonsterCastPtrTable (dw per room, $0000 =
-; none) -> { db screen / 8 bytes = 4 pairs } ... db $FF. The pairs of the
-; current wScreenIndex are copied to $D7CA-$D7D1 at every custom load, before
-; the NPC parse; screens without a cast leave the list alone.
+; own mechanism, ROOM_DATA_FORMAT "Monster NPCs"). Places carry a generated
+; per-screen cast: PlaceCastTable (dw per place, $0000 = none) ->
+; { db screen / 8 bytes = 4 pairs } ... db $FF. The pairs of the current
+; wScreenIndex are copied to $D7CA-$D7D1 at every custom load, before the NPC
+; parse; screens without a cast leave the list alone.
 ; -----------------------------------------------------------------------------
 CustomMonsterCast:
-    ld a, [wMapID]
-    sub CUSTOM_ROOM_START
-    ret c
+    ld a, [wPlaceIdx]
     add a
-    ld hl, CustomMonsterCastPtrTable
+    ld hl, PlaceCastTable
     add l
     ld l, a
     ld a, $00
@@ -665,154 +1040,23 @@ CustomMonsterCast:
     ret
 
 ; =============================================================================
-; Entry 7: VanillaExitResolve  (S70 — vanilla-room exit extensions)
+; Entry 4: CustomScriptRead — BC = the running script's next word
 ; =============================================================================
-; Called by bank $0B RoomEntry6_ExitChecker (patches/bank_00b.asm) for EVERY
-; non-gate room step in place of the old ">= $6B -> entry 2" divert.
-; Contract: returns HL = exit list to scan (a WRAM buffer copy), or HL = 0
-; meaning "no override — caller runs the vanilla SharedPtrChase path".
-; rst $10 preserves HL/DE across the far call but clobbers A (bank byte) —
-; the caller tests HL, never A (CROSSBANK_ROOMS "rst $10 Clobbers Register A").
-;
-;   wMapID >= $6B  -> jp CustomExitCheck (identical to the pre-S70 behavior)
-;   wMapID <  $6B  -> scan VanillaExitExtTable (compiler-generated):
-;       row: db mapID, screen ($FF = any) / dw step_counter_addr / db n_steps /
-;            dw list0..listN-1; table terminated by db $FF.
-;       Match (mapID AND wScreenIndex): variant = min([counter], n-1),
-;       copy that 7-byte exit list to wCustomExitBuffer, return HL=buffer.
-;       No match: HL=0.
-; S94b: bank $0B Entry 9 (boundary y=0/7 push exits) calls this entry too, so
-; extension rows with trigger_y 0/7 are LIVE (they were inert before S94b).
-VanillaExitResolve:
-    ; S70v3: arm the Entry 6 scan's y-skip compare for the VANILLA branch —
-    ; $07 = skip y=7 rows (original engine semantics; y=7 stays Entry-9/push
-    ; territory in vanilla rooms). CustomExitCheck writes $FE instead, which
-    ; matches no real trigger_y, making custom-room y=7 rows WALK-ON exits.
-    ; Entry 6 calls this entry before every scan, so the byte is always fresh.
-    ld a, $07
-    ld [wCustomY7Cmp], a
-    ld a, [wMapID]
-    cp CUSTOM_ROOM_START
-    jr c, .vanillaScan
-    jp CustomExitCheck          ; custom room — exact old entry-2 behavior
-.vanillaScan:
-    ld c, a                     ; C = mapID
-    ld hl, VanillaExitExtTable
-.scan:
-    ld a, [hl+]
-    cp $FF
-    jr z, .none                 ; table end — no extension for this room
-    cp c
-    jr nz, .skipRow
-    ; S94b: rows are keyed per SCREEN too — db mapID, screen ($FF = any
-    ; screen, the S70 semantics). Multi-screen vanilla rooms (GreatTree)
-    ; can now have one door redirected without cross-firing on the other
-    ; floors (the S92 wholesale-replacement trap, KEY_LESSONS S92).
-    ld a, [hl]                  ; screen byte
-    cp $FF
-    jr z, .match
-    ld b, a
-    ld a, [wScreenIndex]
-    cp b
-    jr z, .match
-.skipRow:
-    inc hl                      ; skip screen (1)
-    inc hl                      ; skip step_counter addr (2)
-    inc hl
-    ld a, [hl+]                 ; n_steps
-    add a                       ; 2 bytes per variant ptr
-    add l
-    ld l, a
-    ld a, $00
-    adc h
-    ld h, a
-    jr .scan
-.none:
-    ld hl, $0000
-    ret
-.match:
-    inc hl                      ; past the screen byte
-    ld a, [hl+]
-    ld e, a
-    ld a, [hl+]
-    ld d, a                     ; DE = step counter address (WRAM)
-    ld a, [hl+]                 ; A = n_steps
-    ld b, a
-    ld a, [de]                  ; current step value
-    cp b
-    jr c, .stepOk
-    ld a, b                     ; clamp out-of-range step to the last variant
-    dec a
-.stepOk:
-    add a                       ; x2 (dw index)
-    add l
-    ld l, a
-    ld a, $00
-    adc h
-    ld h, a
-    ld a, [hl+]
-    ld h, [hl]
-    ld l, a                     ; HL = the variant's exit list
-    jp CopyExitListToBuffer     ; -> HL = wCustomExitBuffer
-
-; =============================================================================
-; Entry 6: GateAwareDispatch  — gate-entry regression fix (B-fix)
-; =============================================================================
-; Reached from bank $04 DispatchBank0F (script bank dispatch, wScriptMapType >= $40).
-; The original bank-$04 hook tested the SCRIPT map-type against $6B to decide a
-; custom-room divert, but wScriptMapType >= $6B is legitimate bank-$0F territory
-; (gate world hardcodes $70; labyrinth/arena/post-game use $40-$6A). That froze
-; gate entry (gate script wrongly read from bank $60) and looped for $40-$6A.
-;
-; The correct test is the ROOM map-type wMapID ($C968): custom rooms are the ONLY
-; things with wMapID >= CUSTOM_ROOM_START ($6B). Everything else (gates, labyrinth,
-; all vanilla rooms) dispatches to the real bank $0F entry 0, exactly like vanilla.
-; Returns next script command in BC (both paths preserve the vanilla contract).
-GateAwareDispatch:
-    ld a, [wScriptMapType]      ; [ANCHOR S73] script TYPE targets the custom bank?
-    cp $70                      ;   $70 = the gate-world script type — the B-bug
-    jr z, .byRoom               ;   poison value; MUST stay on the wMapID route.
-    cp CUSTOM_ROOM_START        ;   Any other type >= $6B (e.g. $FF armed by the
-    jr nc, .customRoom          ;   Anchor field-skill, S105) reads bank $60 scripts
-.byRoom:                        ;   regardless of the physical room (maze/town).
-    ld a, [wMapID]              ; $C968 — the actual room map-type
-    cp CUSTOM_ROOM_START        ; $6B
-    jr nc, .customRoom          ; wMapID >= $6B → genuine custom room
-    ld hl, $0f00                ; else: bank $0F entry 0 — vanilla gate/script dispatch
-    rst $10
-    ret
-.customRoom:
-    jp CustomScriptRead         ; bank $60 entry 4 logic (same bank); returns BC
-
-; =============================================================================
-; Entry 4: CustomScriptRead
-; =============================================================================
-; S105 (P3.9b): script TYPE $FF = a custom SKILL's own dialog script
-; (SkillScriptPtrTable, emitted into every build from editor2/core/
-; skill_scripts.json, id = [wScriptNPCId]) — so a field-cast skill needs no
-; custom room. Anchor (bank $72 AnchorField14Tail) arms $FF / ids 2-5; S73-S104
-; armed $71 = the example project's medal_vault, which other projects lack.
-; $FF routes exactly like $71 everywhere else: >= $40 -> bank $0F dispatch ->
-; GateAwareDispatch (>= $6B, != $70) -> here.
-SKILL_SCRIPT_TYPE EQU $FF
+; The place = the running script's TYPE (wScriptMapType, the bank $60
+; forwarder's key — a script that warps out keeps reading its own room);
+; script table [wPlaceIdx] -> [wScriptNPCId] -> word [wScriptCounter].
+; ScriptWordAt: DE = a script pointer table (bank $60's skill scripts use it).
 CustomScriptRead:
-    ld a, [wScriptMapType]
-    cp SKILL_SCRIPT_TYPE
-    jr nz, .room
-    ld de, SkillScriptPtrTable
-    jr .byScript
-.room:
-    sub CUSTOM_ROOM_START
+    ld a, [wPlaceIdx]
     ld l, a
     ld h, $00
     add hl, hl
-    ld de, CustomScriptMasterTable
+    ld de, PlaceScriptTable
     add hl, de
     ld e, [hl]
     inc hl
     ld d, [hl]
-
-.byScript:
+ScriptWordAt:
     ld a, [wScriptNPCId]
     ld l, a
     ld h, $00
@@ -835,40 +1079,34 @@ CustomScriptRead:
     ret
 
 ; =============================================================================
-; Entry 5: CustomTextDisplay
+; Entry 5: CustomTextDisplay — the custom text id [$C822] section / [$C823]
+; entry through ROM0 CallTextEngine (SaveBankAndSwitch reads table[$C822 * 2]
+; -> section[$C823 * 2]; the text engine keeps THIS bank in $C824 —
+; [$4000] — and reads every byte from it, TEXT_SYSTEM). The table holds this
+; bank's sections only: its base is biased by the first one it holds.
 ; =============================================================================
 CustomTextDisplay:
-    ld de, CustomTextPtrTable
+    ld de, PlaceTextRows - 2 * PLACE_TEXT_FIRST
     call CallTextEngine
     ret
 
 ; =============================================================================
 ; Entries 9 / 10: CustomDrawTiles / CustomDrawAttrs (S119, ROADMAP P3.8 part d)
 ; =============================================================================
-; Script ops $24 draw_tiles / $61 draw_attrs far-call entry 1 / 2 of the map's
-; SCRIPT bank, which reads ONE more script word (the patch address in that
-; bank) and draws the patch [offset word, bytes …, $D8 next row, $D9 end]
-; onto the visible BG map (bank $0C entries 1 / 2, BANK04_SCRIPT_ENGINE "Tile
-; patches"). Every map type >= $40 went to bank $0F, whose reader looks the
-; word up in bank $0F's tables — wrong for a custom room (bank $60 scripts).
-; Bank $04 now calls these two entries instead of $0F01 / $0F02 (same size):
-; a custom script (the GateAwareDispatch rule) reads its word through
-; CustomScriptRead and its patch from bank $60 (the compiler's patch_data);
-; anything else goes on to bank $0F exactly as before.
+; Script ops $24 draw_tiles / $61 draw_attrs far-call bank $60 entry 9 / 10
+; (bank $04 ScriptCmd24 / ScriptCmd61 same-size redirect); bank $60 decides
+; "a custom script" (CutPatchRoute — GateAwareDispatch's rule) and forwards
+; here. One more script word is read (the patch address in this bank) and the
+; patch [offset word, bytes …, $D8 next row, $D9 end] is drawn onto the
+; visible BG map (BANK04_SCRIPT_ENGINE "Tile patches").
 ; S127 (ROADMAP P3.14e2): a word $FF00-$FFFF is no patch (patches sit at
 ; $4000-$7FFF) but a COMMAND of the compiler: bank $77 entry 10 ScriptCommand
-; with E = the low byte (0 = put the breeding mate's name in insert slot 0). The drawing below is a
-; copy of bank $0C's (ScriptBank0CDrawTiles / …DrawAttrs, byte for byte the
-; same algorithm): offset = row * 32 + column in 8-px tiles from the visible
-; top-left ($FFB7 / $FFBB scroll), tiles also staged at $C300 + offset, the
-; colour nibbles at $C200 + offset / 2.
+; with E = the low byte. The drawing below is a copy of bank $0C's
+; (ScriptBank0CDrawTiles / …DrawAttrs, byte for byte the same algorithm):
+; offset = row * 32 + column in 8-px tiles from the visible top-left ($FFB7 /
+; $FFBB scroll), tiles also staged at $C300 + offset, the colour nibbles at
+; $C200 + offset / 2.
 CustomDrawTiles:
-    call CutPatchRoute
-    jr c, .custom
-    ld hl, $0f01
-    rst $10
-    ret
-.custom:
     call CutPatchParam
     ld a, b
     cp $ff
@@ -887,12 +1125,6 @@ CustomDrawTiles:
     ret
 
 CustomDrawAttrs:
-    call CutPatchRoute
-    jr c, .custom
-    ld hl, $0f02
-    rst $10
-    ret
-.custom:
     call CutPatchCursor
     call CutPatchParam
     push bc
@@ -912,23 +1144,6 @@ CustomDrawAttrs:
     ld a, $00
     ldh [rVBK], a
     ei
-    ret
-
-; CF set = the running script is a bank $60 script (GateAwareDispatch's rule)
-CutPatchRoute:
-    ld a, [wScriptMapType]
-    cp $70
-    jr z, .byRoom
-    cp CUSTOM_ROOM_START
-    jr nc, .custom
-.byRoom:
-    ld a, [wMapID]
-    cp CUSTOM_ROOM_START
-    jr nc, .custom
-    and a
-    ret
-.custom:
-    scf
     ret
 
 ; BC = the next script word (the patch address), counter advanced
@@ -1159,30 +1374,13 @@ CutPatchNibble:
     ret
 
 ; =============================================================================
-; SCRIPT DATA (generated by build_project.py)
-; CRITICAL: Index 0 = room entry script (runs on scroll/reload).
-;           NPC scripts start at index 1+ (KEY_LESSONS Session 2).
-; Master table width == compat list (legacy) or ALL rooms (default;
-; fixes the S53 master-table overshoot for scroll in rooms >= index
-; len(master)).  See PROJECT_COMPILER.md §scripts.
+; PLACE DATA (generated) — bank $60: SCRIPT DATA (generated) + places
+; Bank $60's own data: the custom skills' scripts, the place directory,
+; the text section banks, its places' tables and blocks, its text
+; sections, the vanilla-room exit / NPC overrides (editor2/core/places.py).
+; Index 0 of a place's script table = its room entry script.
 ; =============================================================================
-CustomScriptMasterTable:
-    dw CustomRoom0_ScriptPtrTable   ; mapID $6B
-    dw CustomRoom1_ScriptPtrTable   ; mapID $6C
-    dw CustomRoom2_ScriptPtrTable   ; mapID $6D
-    dw CustomScriptNoop_PtrTable  ; scriptless/placeholder room — safe no-op
-    dw CustomScriptNoop_PtrTable  ; scriptless/placeholder room — safe no-op
-    dw CustomScriptNoop_PtrTable  ; scriptless/placeholder room — safe no-op
-    dw CustomRoom6_ScriptPtrTable   ; mapID $71
-    dw CustomRoom7_ScriptPtrTable   ; mapID $72
-    dw CustomRoom8_ScriptPtrTable   ; mapID $73
-
-CustomScriptNoop_PtrTable:
-    dw CustomScriptNoop_Entry   ; [0] room entry (no-op)
-CustomScriptNoop_Entry:
-    dw $FFFF
-
-SkillScriptPtrTable:   ; script type $FF — custom skills' dialogs
+SkillScriptPtrTable:   ; script type $FF — custom skills' dialogs (bank $60 only)
     dw SkillScrNoop   ; [0] never armed
     dw SkillScrNoop   ; [1] never armed
     dw SkillScr02   ; [2] skill:anchor_gate_confirm
@@ -1240,6 +1438,73 @@ SkillScr05:
     dw $FF07  ; init_dialog
     dw $0A29  ; [S73] cast in town with no stored anchor
     dw $FFFF
+
+PlaceDirectory:   ; per place (map id $6B + n): home bank, index there
+    db $60, 0   ; $6B gate_island
+    db $60, 1   ; $6C dusk_mirror
+    db $60, 2   ; $6D gate_rotation
+    db $60, 3   ; $6E reserved_6e
+    db $60, 4   ; $6F reserved_6f
+    db $60, 5   ; $70 ember_keystone
+    db $60, 6   ; $71 medal_vault
+    db $60, 7   ; $72 arena_clone
+    db $60, 8   ; $73 island_copy
+TextSectionBanks:   ; per text section ($0A00 + 256 n): its home bank
+    db $60   ; section 0
+
+; place tables of bank $60 — index = wPlaceIdx (PlaceDirectory, bank $60)
+PlaceRoomTable:
+    dw CustomRoom0_SubTable   ; $6B = place 0 here
+    dw CustomRoom1_SubTable   ; $6C = place 1 here
+    dw CustomRoom2_SubTable   ; $6D = place 2 here
+    dw CustomRoom3_SubTable   ; $6E = place 3 here
+    dw CustomRoom4_SubTable   ; $6F = place 4 here
+    dw CustomRoom5_SubTable   ; $70 = place 5 here
+    dw CustomRoom6_SubTable   ; $71 = place 6 here
+    dw CustomRoom7_SubTable   ; $72 = place 7 here
+    dw CustomRoom8_SubTable   ; $73 = place 8 here
+PlaceScriptTable:
+    dw CustomRoom0_ScriptPtrTable   ; mapID $6B
+    dw CustomRoom1_ScriptPtrTable   ; mapID $6C
+    dw CustomRoom2_ScriptPtrTable   ; mapID $6D
+    dw CustomRoom3_ScriptPtrTable   ; mapID $6E
+    dw CustomRoom4_ScriptPtrTable   ; mapID $6F
+    dw CustomRoom5_ScriptPtrTable   ; mapID $70
+    dw CustomRoom6_ScriptPtrTable   ; mapID $71
+    dw CustomRoom7_ScriptPtrTable   ; mapID $72
+    dw CustomRoom8_ScriptPtrTable   ; mapID $73
+PlaceRuleTable:
+    dw $0000   ; $6B (no rules)
+    dw $0000   ; $6C (no rules)
+    dw $0000   ; $6D (no rules)
+    dw $0000   ; $6E (no rules)
+    dw $0000   ; $6F (no rules)
+    dw $0000   ; $70 (no rules)
+    dw $0000   ; $71 (no rules)
+    dw CustomRoom7_StateRules   ; $72 arena_clone
+    dw $0000   ; $73 (no rules)
+PlaceCastTable:
+    dw $0000   ; $6B (no monster NPCs)
+    dw $0000   ; $6C (no monster NPCs)
+    dw $0000   ; $6D (no monster NPCs)
+    dw $0000   ; $6E (no monster NPCs)
+    dw $0000   ; $6F (no monster NPCs)
+    dw $0000   ; $70 (no monster NPCs)
+    dw $0000   ; $71 (no monster NPCs)
+    dw $0000   ; $72 (no monster NPCs)
+    dw $0000   ; $73 (no monster NPCs)
+PlaceSourceTable:
+    db $04   ; $6B — gate_island
+    db $04   ; $6C — dusk_mirror
+    db $04   ; $6D — gate_rotation
+    db $04   ; $6E — reserved_6e
+    db $04   ; $6F — reserved_6f
+    db $04   ; $70 — ember_keystone
+    db $04   ; $71 — medal_vault
+    db $06   ; $72 — arena_clone
+    db $04   ; $73 — island_copy
+PlaceTextRows:   ; text sections 0-0
+    dw CustomTextSection0
 
 ; --- $6B (gate_island) scripts ---
 CustomRoom0_ScriptPtrTable:
@@ -1305,6 +1570,44 @@ CustomRoom0_Scr03:
 CustomRoom0_Scr03_declined:
     dw $0A0F  ; BGM declined
     dw $FFFF
+
+; --- $6B (gate_island) room data ---
+CustomRoom0_SubTable:
+    dw CustomRoom0_Screen0
+    dw $FFFF, $FFFF, $FFFF
+    dw CustomRoom0_Screen4
+    dw $FFFF, $FFFF, $FFFF
+
+CustomRoom0_Screen0:
+    dw wCustomStep_Room6B_S0    ; step counter
+    db 0, $64   ; step_id, tileset_bank
+    dw CustomRoom0_S0_NPCs
+    dw CustomRoom0_S0_Exits
+
+CustomRoom0_S0_NPCs:
+    db $8F, $FF, $07, $06, $00  ; spawn (7,6)
+    db $00, $0B, $02, $07, $01  ; NPC (2,7) script give_jerky
+    db $00, $0B, $05, $06, $03  ; NPC (5,6) script bgm_change
+    db $FF
+
+CustomRoom0_S0_Exits:
+    db $03, $01, $6C, $00, $00, $07, $06  ; exit (3,1) -> Room $6C screen 0 spawn (7,6); screen_byte $00 = in-room ($2DE7[0]); $01 stranded the player off-map (KEY_LESSONS S40)
+    db $FF
+
+CustomRoom0_Screen4:
+    dw wCustomStep_Room6B_S4    ; step counter
+    db 2, $64   ; step_id, tileset_bank
+    dw CustomRoom0_S4_NPCs
+    dw CustomRoom0_S4_Exits
+
+CustomRoom0_S4_NPCs:
+    db $8F, $FF, $05, $03, $00  ; spawn (5,3)
+    db $00, $09, $05, $04, $02  ; NPC (5,4) script give_egg
+    db $FF
+
+CustomRoom0_S4_Exits:
+    db $03, $07, $01, $00, $08, $04, $05  ; south edge exit (3,7) -> GreatTree screen 8 (screen_byte $08 copied from WellStairway per KEY_LESSONS v14-v18)
+    db $FF
 
 ; --- $6C (dusk_mirror) scripts ---
 CustomRoom1_ScriptPtrTable:
@@ -1397,8 +1700,108 @@ CustomRoom1_Scr06_declined:
     dw $0A17  ; v5 BGM #07 declined
     dw $FFFF
 
-; --- $70 (ember_keystone) scripts ---
+; --- $6C (dusk_mirror) room data ---
+CustomRoom1_SubTable:
+    dw CustomRoom1_Screen0
+    dw $FFFF, $FFFF, $FFFF
+    dw CustomRoom1_Screen4
+    dw $FFFF, $FFFF, $FFFF
+
+CustomRoom1_Screen0:
+    dw wCustomStep_Room6C_S0    ; step counter
+    db 0, $64   ; step_id, tileset_bank
+    dw CustomRoom1_S0_NPCs
+    dw CustomRoom1_S0_Exits
+
+CustomRoom1_S0_NPCs:
+    db $8F, $FF, $07, $06, $00  ; spawn (7,6)
+    db $00, $09, $05, $04, $03  ; NPC (5,4) script teleport_6b
+    db $00, $09, $05, $06, $06  ; NPC (5,6) script bgm07_change
+    db $FF
+
+CustomRoom1_S0_Exits:
+    db $03, $01, $70, $00, $00, $07, $06  ; edge exit (3,1) -> Room $70 spawn (7,6) (NPC script still offers a return to $6B)
+    db $FF
+
+CustomRoom1_Screen4:
+    dw wCustomStep_Room6C_S4    ; step counter
+    db 2, $64   ; step_id, tileset_bank
+    dw CustomRoom1_S4_NPCs
+    dw CustomRoom1_S4_Exits
+
+CustomRoom1_S4_NPCs:
+    db $8F, $FF, $05, $03, $00  ; spawn (5,3)
+    db $FF
+
+CustomRoom1_S4_Exits:
+    db $FF
+
+; --- $6D (gate_rotation) scripts ---
+CustomRoom2_ScriptPtrTable:
+    dw CustomRoom2_Scr00   ; [0] noop_entry
+
+CustomRoom2_Scr00:
+    dw $FFFF
+
+; --- $6D (gate_rotation) room data ---
+CustomRoom2_SubTable:
+    dw CustomRoom2_Screen0
+    dw $FFFF, $FFFF, $FFFF
+
+CustomRoom2_Screen0:
+    dw wCustomStep_Room6D_S0    ; step counter
+    db 0, $64   ; step_id, tileset_bank
+    dw CustomRoom2_S0_NPCs
+    dw CustomRoom2_S0_Exits
+
+CustomRoom2_S0_NPCs:
+    db $8F, $FF, $04, $06, $00  ; spawn (4,6) — matches wWarpSpawn $0048/$0068 (central sand)
+    db $FF
+
+CustomRoom2_S0_Exits:
+    db $05, $03, $00, $80, $00, $00, $00  ; descent: PIT walk (col5,row3), gate_flag=$80 -> next gate floor (Pillar B; byte-identical to special rooms $50/$51)
+    db $FF
+
+; --- $6E (reserved_6e) placeholder (never entered; all screens invalid) ---
+CustomRoom3_SubTable:
+    dw $FFFF, $FFFF, $FFFF, $FFFF, $FFFF, $FFFF, $FFFF, $FFFF
+CustomRoom3_ScriptPtrTable:
+    dw CustomRoom3_Scr00   ; [0] room entry (no-op)
+CustomRoom3_Scr00:
+    dw $FFFF
+
+; --- $6F (reserved_6f) placeholder (never entered; all screens invalid) ---
+CustomRoom4_SubTable:
+    dw $FFFF, $FFFF, $FFFF, $FFFF, $FFFF, $FFFF, $FFFF, $FFFF
+CustomRoom4_ScriptPtrTable:
+    dw CustomRoom4_Scr00   ; [0] room entry (no-op)
+CustomRoom4_Scr00:
+    dw $FFFF
+
+; --- $70 (ember_keystone) no scripts ---
 CustomRoom5_ScriptPtrTable:
+    dw CustomRoom5_Scr00   ; [0] room entry (no-op)
+CustomRoom5_Scr00:
+    dw $FFFF
+
+; --- $70 (ember_keystone) room data ---
+CustomRoom5_SubTable:
+    dw CustomRoom5_Screen0
+    dw $FFFF, $FFFF, $FFFF
+
+CustomRoom5_Screen0:
+    dw wCustomStep_Room70_S0    ; step counter
+    db 0, $64   ; step_id, tileset_bank
+    dw CustomRoom5_S0_NPCs
+    dw CustomRoom5_S0_Exits
+
+CustomRoom5_S0_NPCs:
+    db $8F, $FF, $07, $06, $00  ; spawn (7,6)
+    db $FF
+
+CustomRoom5_S0_Exits:
+    db $03, $01, $6B, $00, $00, $07, $06  ; edge exit (3,1) -> Room $6B spawn (7,6) — close the loop
+    db $FF
 
 ; --- $71 (medal_vault) scripts ---
 CustomRoom6_ScriptPtrTable:
@@ -1529,6 +1932,28 @@ CustomRoom6_Scr02_join4:
 CustomRoom6_Scr02_fi2:
 CustomRoom6_Scr02_fi1:
     dw $FFFF
+
+; --- $71 (medal_vault) room data ---
+CustomRoom6_SubTable:
+    dw CustomRoom6_Screen0
+    dw $FFFF, $FFFF, $FFFF
+
+CustomRoom6_Screen0:
+    dw wCustomStep_Room71_S0    ; step counter
+    db 7, $64   ; step_id, tileset_bank
+    dw CustomRoom6_S0_NPCs
+    dw CustomRoom6_S0_Exits
+
+CustomRoom6_S0_NPCs:
+    db $8F, $FF, $07, $06, $00  ; spawn (7,6)
+    db $00, $23, $04, $03, $01  ; NPC (4,3) script quest:medal_vault
+    db $00, $1D, $02, $05, $02  ; NPC (2,5) script medal_vault_quest
+    db $FF
+
+CustomRoom6_S0_Exits:
+    db $07, $06, $16, $00, $00, $01, $02  ; back to MedalMan (1,2) vault-door tile; spawn-on-exit-tile is vanilla-precedented (SecretPassage->MedalMan lands on the north exit)
+    db $08, $03, $72, $00, $01, $04, $07  ; S92 staircase (visible, metatile 8,3) -> arena_clone; sb/spawn copied from the vanilla GreatTree->Lobby exit
+    db $FF
 
 ; --- $72 (arena_clone) scripts ---
 CustomRoom7_ScriptPtrTable:
@@ -3381,6 +3806,96 @@ CustomRoom7_Scr11_L4D1E:
     dw $0858
     dw $FFFF
 
+CustomRoom7_StateRules:
+    db 1
+    dw wCustomStep_ArenaClone_S1
+    dw CustomRoom7_S1_Rules
+    db $FF
+CustomRoom7_S1_Rules:
+    db 1, 1   ; state 1 when $0030
+    dw $0030
+    db $FF
+
+; --- $72 (arena_clone) room data ---
+CustomRoom7_SubTable:
+    dw CustomRoom7_Screen0
+    dw CustomRoom7_Screen1
+    dw CustomRoom7_Screen2
+    dw $FFFF
+
+CustomRoom7_Screen0:
+    dw wCustomStep_Room72_S0    ; step counter
+    db 15, $29   ; step_id, tileset_bank
+    dw CustomRoom7_S0_NPCs
+    dw CustomRoom7_S0_Exits
+
+CustomRoom7_S0_NPCs:
+    db $90, $FF, $05, $04, $01  ; walkon_exit (5,4) [vanilla verbatim]
+    db $50, $E0, $05, $04, $FF  ; npc (5,4) [vanilla verbatim]
+    db $70, $E1, $03, $05, $02  ; npc (3,5) [vanilla verbatim]
+    db $40, $E2, $02, $04, $03  ; npc (2,4) [vanilla verbatim]
+    db $50, $E3, $03, $03, $04  ; npc (3,3) [vanilla verbatim]
+    db $FF
+
+CustomRoom7_S0_Exits:
+    db $05, $00, $07, $00, $04, $05, $07  ; vanilla exit -> map $07 [verbatim]
+    db $FF
+
+CustomRoom7_Screen1:
+    dw wCustomStep_ArenaClone_S1    ; step counter
+    db 16, $29   ; state 0: step_id, tileset_bank — rank 0 (vanilla clone content)
+    dw CustomRoom7_S1_V0_NPCs
+    dw CustomRoom7_S1_V0_Exits
+    db 16, $29   ; state 1: step_id, tileset_bank — rank G+ (flag $0030): the right-hand attendant ($12 at 7,6) LEAVES — visible-by-removal (S92v5: the previous swap target $54 renders empty in field contexts, S91 catalog)
+    dw CustomRoom7_S1_V1_NPCs
+    dw CustomRoom7_S1_V1_Exits
+
+CustomRoom7_S1_V0_NPCs:
+    db $8F, $FF, $04, $02, $05  ; spawn_point (4,2) [vanilla verbatim]
+    db $8F, $FF, $05, $02, $05  ; spawn_point (5,2) [vanilla verbatim]
+    db $8F, $FF, $03, $04, $06  ; spawn_point (3,4) [vanilla verbatim]
+    db $8F, $FF, $06, $06, $07  ; spawn_point (6,6) [vanilla verbatim]
+    db $37, $12, $02, $04, $08  ; npc (2,4) [vanilla verbatim]
+    db $17, $12, $07, $06, $09  ; npc (7,6) [vanilla verbatim]
+    db $60, $11, $04, $08, $0E  ; npc (4,8) [vanilla verbatim]
+    db $40, $54, $06, $05, $FF  ; npc (6,5) [vanilla verbatim]
+    db $FF
+
+CustomRoom7_S1_V0_Exits:
+    db $04, $07, $01, $00, $84, $04, $03  ; vanilla exit -> map $01 [verbatim]
+    db $05, $07, $01, $00, $84, $05, $03  ; vanilla exit -> map $01 [verbatim]
+    db $FF
+
+CustomRoom7_S1_V1_NPCs:
+    db $8F, $FF, $04, $02, $05  ; spawn_point (4,2) [vanilla verbatim]
+    db $8F, $FF, $05, $02, $05  ; spawn_point (5,2) [vanilla verbatim]
+    db $8F, $FF, $03, $04, $06  ; spawn_point (3,4) [vanilla verbatim]
+    db $8F, $FF, $06, $06, $07  ; spawn_point (6,6) [vanilla verbatim]
+    db $37, $12, $02, $04, $08  ; npc (2,4) [vanilla verbatim]
+    db $60, $11, $04, $08, $0E  ; npc (4,8) [vanilla verbatim]
+    db $40, $54, $06, $05, $FF  ; npc (6,5) [vanilla verbatim]
+    db $FF
+
+CustomRoom7_S1_V1_Exits:
+    db $04, $07, $01, $00, $84, $04, $03  ; vanilla exit -> map $01 [verbatim]
+    db $05, $07, $01, $00, $84, $05, $03  ; vanilla exit -> map $01 [verbatim]
+    db $FF
+
+CustomRoom7_Screen2:
+    dw wCustomStep_Room72_S2    ; step counter
+    db 17, $29   ; step_id, tileset_bank
+    dw CustomRoom7_S2_NPCs
+    dw CustomRoom7_S2_Exits
+
+CustomRoom7_S2_NPCs:
+    db $82, $FF, $06, $05, $0A  ; marker_82 (6,5) [vanilla verbatim]
+    db $00, $0B, $06, $04, $0B  ; npc (6,4) [vanilla verbatim]
+    db $FF
+
+CustomRoom7_S2_Exits:
+    db $04, $00, $07, $00, $06, $04, $07  ; vanilla exit -> map $07 [verbatim]
+    db $FF
+
 ; --- $73 (island_copy) scripts ---
 CustomRoom8_ScriptPtrTable:
     dw CustomRoom8_Scr00   ; [0] arm_encounters
@@ -3446,15 +3961,43 @@ CustomRoom8_Scr03_declined:
     dw $0A0F  ; BGM declined
     dw $FFFF
 
-; =============================================================================
-; TEXT DATA — two-level pointer table (generated)
-; SaveBankAndSwitch ($00:$0940) indexes table[$C822*2] -> section,
-; section[$C823*2] -> string (TEXT_SYSTEM.md). Flat tables crash.
-; Custom ids $0A00+: section = hi-$0A, entry = lo
-; (bank $04 TextQueueCheck_Ext).
-; =============================================================================
-CustomTextPtrTable:
-    dw CustomTextSection0
+; --- $73 (island_copy) room data ---
+CustomRoom8_SubTable:
+    dw CustomRoom8_Screen0
+    dw $FFFF, $FFFF, $FFFF
+    dw CustomRoom8_Screen4
+    dw $FFFF, $FFFF, $FFFF
+
+CustomRoom8_Screen0:
+    dw wCustomStep_Room73_S0    ; step counter
+    db 0, $64   ; step_id, tileset_bank
+    dw CustomRoom8_S0_NPCs
+    dw CustomRoom8_S0_Exits
+
+CustomRoom8_S0_NPCs:
+    db $8F, $FF, $07, $06, $00  ; spawn (7,6)
+    db $00, $0B, $02, $07, $01  ; NPC (2,7) script give_jerky
+    db $00, $0B, $05, $06, $03  ; NPC (5,6) script bgm_change
+    db $FF
+
+CustomRoom8_S0_Exits:
+    db $03, $01, $6C, $00, $00, $07, $06  ; exit (3,1) -> Room $6C screen 0 spawn (7,6); screen_byte $00 = in-room ($2DE7[0]); $01 stranded the player off-map (KEY_LESSONS S40)
+    db $FF
+
+CustomRoom8_Screen4:
+    dw wCustomStep_Room73_S4    ; step counter
+    db 2, $64   ; step_id, tileset_bank
+    dw CustomRoom8_S4_NPCs
+    dw CustomRoom8_S4_Exits
+
+CustomRoom8_S4_NPCs:
+    db $8F, $FF, $05, $03, $00  ; spawn (5,3)
+    db $00, $09, $05, $04, $02  ; NPC (5,4) script give_egg
+    db $FF
+
+CustomRoom8_S4_Exits:
+    db $03, $07, $01, $00, $08, $04, $05  ; south edge exit (3,7) -> GreatTree screen 8 (screen_byte $08 copied from WellStairway per KEY_LESSONS v14-v18)
+    db $FF
 
 CustomTextSection0:
     dw CustomText_00   ; $0A00: item offer [Y/N]
@@ -3761,339 +4304,7 @@ CustomText_29:
     db "No anchor", $EF, $EE
     db "is set!", $F7, $F0
 
-; =============================================================================
-; ROOM DATA (generated)
-; =============================================================================
-CustomSourceMapTable:
-    db $04   ; $6B — gate_island
-    db $04   ; $6C — dusk_mirror
-    db $04   ; $6D — gate_rotation
-    db $04   ; $6E — reserved_6e
-    db $04   ; $6F — reserved_6f
-    db $04   ; $70 — ember_keystone
-    db $04   ; $71 — medal_vault
-    db $06   ; $72 — arena_clone
-    db $04   ; $73 — island_copy
-
-CustomRoomPtrTable:
-    dw CustomRoom0_SubTable   ; $6B
-    dw CustomRoom1_SubTable   ; $6C
-    dw CustomRoom2_SubTable   ; $6D
-    dw CustomRoomDummy_SubTable   ; $6E
-    dw CustomRoomDummy_SubTable   ; $6F
-    dw CustomRoom5_SubTable   ; $70
-    dw CustomRoom6_SubTable   ; $71
-    dw CustomRoom7_SubTable   ; $72
-    dw CustomRoom8_SubTable   ; $73
-
-; =============================================================================
-; ROOM STATE RULES (S97, generated)
-; Read by bank $60 entry 8 CustomStateRules (template head) at every
-; custom room/screen (re)load: first rule whose flag terms all hold
-; writes its state into the screen's step counter; none = untouched.
-; =============================================================================
-CustomStateRulePtrTable:
-    dw $0000   ; $6B (no rules)
-    dw $0000   ; $6C (no rules)
-    dw $0000   ; $6D (no rules)
-    dw $0000   ; $6E (no rules)
-    dw $0000   ; $6F (no rules)
-    dw $0000   ; $70 (no rules)
-    dw $0000   ; $71 (no rules)
-    dw CustomRoom7_StateRules   ; $72 arena_clone
-    dw $0000   ; $73 (no rules)
-
-CustomRoom7_StateRules:
-    db 1
-    dw wCustomStep_ArenaClone_S1
-    dw CustomRoom7_S1_Rules
-    db $FF
-CustomRoom7_S1_Rules:
-    db 1, 1   ; state 1 when $0030
-    dw $0030
-    db $FF
-
-; =============================================================================
-; MONSTER NPC CASTS (S101, generated)
-; Read by bank $60 CustomMonsterCast (entry 8 head) at every custom
-; room/screen load: the screen's pairs -> $D7CA-$D7D1, which the bank
-; $0B NPC sheet resolver reads for sprite ids $F0-$F3.
-; =============================================================================
-CustomMonsterCastPtrTable:
-    dw $0000   ; $6B (no monster NPCs)
-    dw $0000   ; $6C (no monster NPCs)
-    dw $0000   ; $6D (no monster NPCs)
-    dw $0000   ; $6E (no monster NPCs)
-    dw $0000   ; $6F (no monster NPCs)
-    dw $0000   ; $70 (no monster NPCs)
-    dw $0000   ; $71 (no monster NPCs)
-    dw $0000   ; $72 (no monster NPCs)
-    dw $0000   ; $73 (no monster NPCs)
-
-; --- $6B (gate_island) room data ---
-CustomRoom0_SubTable:
-    dw CustomRoom0_Screen0
-    dw $FFFF, $FFFF, $FFFF
-    dw CustomRoom0_Screen4
-    dw $FFFF, $FFFF, $FFFF
-
-CustomRoom0_Screen0:
-    dw wCustomStep_Room6B_S0    ; step counter
-    db 0, $64   ; step_id, tileset_bank
-    dw CustomRoom0_S0_NPCs
-    dw CustomRoom0_S0_Exits
-
-CustomRoom0_S0_NPCs:
-    db $8F, $FF, $07, $06, $00  ; spawn (7,6)
-    db $00, $0B, $02, $07, $01  ; NPC (2,7) script give_jerky
-    db $00, $0B, $05, $06, $03  ; NPC (5,6) script bgm_change
-    db $FF
-
-CustomRoom0_S0_Exits:
-    db $03, $01, $6C, $00, $00, $07, $06  ; exit (3,1) -> Room $6C screen 0 spawn (7,6); screen_byte $00 = in-room ($2DE7[0]); $01 stranded the player off-map (KEY_LESSONS S40)
-    db $FF
-
-CustomRoom0_Screen4:
-    dw wCustomStep_Room6B_S4    ; step counter
-    db 2, $64   ; step_id, tileset_bank
-    dw CustomRoom0_S4_NPCs
-    dw CustomRoom0_S4_Exits
-
-CustomRoom0_S4_NPCs:
-    db $8F, $FF, $05, $03, $00  ; spawn (5,3)
-    db $00, $09, $05, $04, $02  ; NPC (5,4) script give_egg
-    db $FF
-
-CustomRoom0_S4_Exits:
-    db $03, $07, $01, $00, $08, $04, $05  ; south edge exit (3,7) -> GreatTree screen 8 (screen_byte $08 copied from WellStairway per KEY_LESSONS v14-v18)
-    db $FF
-
-; --- $6C (dusk_mirror) room data ---
-CustomRoom1_SubTable:
-    dw CustomRoom1_Screen0
-    dw $FFFF, $FFFF, $FFFF
-    dw CustomRoom1_Screen4
-    dw $FFFF, $FFFF, $FFFF
-
-CustomRoom1_Screen0:
-    dw wCustomStep_Room6C_S0    ; step counter
-    db 0, $64   ; step_id, tileset_bank
-    dw CustomRoom1_S0_NPCs
-    dw CustomRoom1_S0_Exits
-
-CustomRoom1_S0_NPCs:
-    db $8F, $FF, $07, $06, $00  ; spawn (7,6)
-    db $00, $09, $05, $04, $03  ; NPC (5,4) script teleport_6b
-    db $00, $09, $05, $06, $06  ; NPC (5,6) script bgm07_change
-    db $FF
-
-CustomRoom1_S0_Exits:
-    db $03, $01, $70, $00, $00, $07, $06  ; edge exit (3,1) -> Room $70 spawn (7,6) (NPC script still offers a return to $6B)
-    db $FF
-
-CustomRoom1_Screen4:
-    dw wCustomStep_Room6C_S4    ; step counter
-    db 2, $64   ; step_id, tileset_bank
-    dw CustomRoom1_S4_NPCs
-    dw CustomRoom1_S4_Exits
-
-CustomRoom1_S4_NPCs:
-    db $8F, $FF, $05, $03, $00  ; spawn (5,3)
-    db $FF
-
-CustomRoom1_S4_Exits:
-    db $FF
-
-; --- $6D (gate_rotation) scripts ---
-CustomRoom2_ScriptPtrTable:
-    dw CustomRoom2_Scr00   ; [0] noop_entry
-
-CustomRoom2_Scr00:
-    dw $FFFF
-
-; --- $6D (gate_rotation) room data ---
-CustomRoom2_SubTable:
-    dw CustomRoom2_Screen0
-    dw $FFFF, $FFFF, $FFFF
-
-CustomRoom2_Screen0:
-    dw wCustomStep_Room6D_S0    ; step counter
-    db 0, $64   ; step_id, tileset_bank
-    dw CustomRoom2_S0_NPCs
-    dw CustomRoom2_S0_Exits
-
-CustomRoom2_S0_NPCs:
-    db $8F, $FF, $04, $06, $00  ; spawn (4,6) — matches wWarpSpawn $0048/$0068 (central sand)
-    db $FF
-
-CustomRoom2_S0_Exits:
-    db $05, $03, $00, $80, $00, $00, $00  ; descent: PIT walk (col5,row3), gate_flag=$80 -> next gate floor (Pillar B; byte-identical to special rooms $50/$51)
-    db $FF
-
-; =============================================================================
-; Dummy subtable — placeholder mapIDs (never entered; all screens invalid)
-; =============================================================================
-CustomRoomDummy_SubTable:
-    dw $FFFF, $FFFF, $FFFF, $FFFF, $FFFF, $FFFF, $FFFF, $FFFF
-
-; --- $70 (ember_keystone) room data ---
-CustomRoom5_SubTable:
-    dw CustomRoom5_Screen0
-    dw $FFFF, $FFFF, $FFFF
-
-CustomRoom5_Screen0:
-    dw wCustomStep_Room70_S0    ; step counter
-    db 0, $64   ; step_id, tileset_bank
-    dw CustomRoom5_S0_NPCs
-    dw CustomRoom5_S0_Exits
-
-CustomRoom5_S0_NPCs:
-    db $8F, $FF, $07, $06, $00  ; spawn (7,6)
-    db $FF
-
-CustomRoom5_S0_Exits:
-    db $03, $01, $6B, $00, $00, $07, $06  ; edge exit (3,1) -> Room $6B spawn (7,6) — close the loop
-    db $FF
-
-; --- $71 (medal_vault) room data ---
-CustomRoom6_SubTable:
-    dw CustomRoom6_Screen0
-    dw $FFFF, $FFFF, $FFFF
-
-CustomRoom6_Screen0:
-    dw wCustomStep_Room71_S0    ; step counter
-    db 7, $64   ; step_id, tileset_bank
-    dw CustomRoom6_S0_NPCs
-    dw CustomRoom6_S0_Exits
-
-CustomRoom6_S0_NPCs:
-    db $8F, $FF, $07, $06, $00  ; spawn (7,6)
-    db $00, $23, $04, $03, $01  ; NPC (4,3) script quest:medal_vault
-    db $00, $1D, $02, $05, $02  ; NPC (2,5) script medal_vault_quest
-    db $FF
-
-CustomRoom6_S0_Exits:
-    db $07, $06, $16, $00, $00, $01, $02  ; back to MedalMan (1,2) vault-door tile; spawn-on-exit-tile is vanilla-precedented (SecretPassage->MedalMan lands on the north exit)
-    db $08, $03, $72, $00, $01, $04, $07  ; S92 staircase (visible, metatile 8,3) -> arena_clone; sb/spawn copied from the vanilla GreatTree->Lobby exit
-    db $FF
-
-; --- $72 (arena_clone) room data ---
-CustomRoom7_SubTable:
-    dw CustomRoom7_Screen0
-    dw CustomRoom7_Screen1
-    dw CustomRoom7_Screen2
-    dw $FFFF
-
-CustomRoom7_Screen0:
-    dw wCustomStep_Room72_S0    ; step counter
-    db 15, $29   ; step_id, tileset_bank
-    dw CustomRoom7_S0_NPCs
-    dw CustomRoom7_S0_Exits
-
-CustomRoom7_S0_NPCs:
-    db $90, $FF, $05, $04, $01  ; walkon_exit (5,4) [vanilla verbatim]
-    db $50, $E0, $05, $04, $FF  ; npc (5,4) [vanilla verbatim]
-    db $70, $E1, $03, $05, $02  ; npc (3,5) [vanilla verbatim]
-    db $40, $E2, $02, $04, $03  ; npc (2,4) [vanilla verbatim]
-    db $50, $E3, $03, $03, $04  ; npc (3,3) [vanilla verbatim]
-    db $FF
-
-CustomRoom7_S0_Exits:
-    db $05, $00, $07, $00, $04, $05, $07  ; vanilla exit -> map $07 [verbatim]
-    db $FF
-
-CustomRoom7_Screen1:
-    dw wCustomStep_ArenaClone_S1    ; step counter
-    db 16, $29   ; state 0: step_id, tileset_bank — rank 0 (vanilla clone content)
-    dw CustomRoom7_S1_V0_NPCs
-    dw CustomRoom7_S1_V0_Exits
-    db 16, $29   ; state 1: step_id, tileset_bank — rank G+ (flag $0030): the right-hand attendant ($12 at 7,6) LEAVES — visible-by-removal (S92v5: the previous swap target $54 renders empty in field contexts, S91 catalog)
-    dw CustomRoom7_S1_V1_NPCs
-    dw CustomRoom7_S1_V1_Exits
-
-CustomRoom7_S1_V0_NPCs:
-    db $8F, $FF, $04, $02, $05  ; spawn_point (4,2) [vanilla verbatim]
-    db $8F, $FF, $05, $02, $05  ; spawn_point (5,2) [vanilla verbatim]
-    db $8F, $FF, $03, $04, $06  ; spawn_point (3,4) [vanilla verbatim]
-    db $8F, $FF, $06, $06, $07  ; spawn_point (6,6) [vanilla verbatim]
-    db $37, $12, $02, $04, $08  ; npc (2,4) [vanilla verbatim]
-    db $17, $12, $07, $06, $09  ; npc (7,6) [vanilla verbatim]
-    db $60, $11, $04, $08, $0E  ; npc (4,8) [vanilla verbatim]
-    db $40, $54, $06, $05, $FF  ; npc (6,5) [vanilla verbatim]
-    db $FF
-
-CustomRoom7_S1_V0_Exits:
-    db $04, $07, $01, $00, $84, $04, $03  ; vanilla exit -> map $01 [verbatim]
-    db $05, $07, $01, $00, $84, $05, $03  ; vanilla exit -> map $01 [verbatim]
-    db $FF
-
-CustomRoom7_S1_V1_NPCs:
-    db $8F, $FF, $04, $02, $05  ; spawn_point (4,2) [vanilla verbatim]
-    db $8F, $FF, $05, $02, $05  ; spawn_point (5,2) [vanilla verbatim]
-    db $8F, $FF, $03, $04, $06  ; spawn_point (3,4) [vanilla verbatim]
-    db $8F, $FF, $06, $06, $07  ; spawn_point (6,6) [vanilla verbatim]
-    db $37, $12, $02, $04, $08  ; npc (2,4) [vanilla verbatim]
-    db $60, $11, $04, $08, $0E  ; npc (4,8) [vanilla verbatim]
-    db $40, $54, $06, $05, $FF  ; npc (6,5) [vanilla verbatim]
-    db $FF
-
-CustomRoom7_S1_V1_Exits:
-    db $04, $07, $01, $00, $84, $04, $03  ; vanilla exit -> map $01 [verbatim]
-    db $05, $07, $01, $00, $84, $05, $03  ; vanilla exit -> map $01 [verbatim]
-    db $FF
-
-CustomRoom7_Screen2:
-    dw wCustomStep_Room72_S2    ; step counter
-    db 17, $29   ; step_id, tileset_bank
-    dw CustomRoom7_S2_NPCs
-    dw CustomRoom7_S2_Exits
-
-CustomRoom7_S2_NPCs:
-    db $82, $FF, $06, $05, $0A  ; marker_82 (6,5) [vanilla verbatim]
-    db $00, $0B, $06, $04, $0B  ; npc (6,4) [vanilla verbatim]
-    db $FF
-
-CustomRoom7_S2_Exits:
-    db $04, $00, $07, $00, $06, $04, $07  ; vanilla exit -> map $07 [verbatim]
-    db $FF
-
-; --- $73 (island_copy) room data ---
-CustomRoom8_SubTable:
-    dw CustomRoom8_Screen0
-    dw $FFFF, $FFFF, $FFFF
-    dw CustomRoom8_Screen4
-    dw $FFFF, $FFFF, $FFFF
-
-CustomRoom8_Screen0:
-    dw wCustomStep_Room73_S0    ; step counter
-    db 0, $64   ; step_id, tileset_bank
-    dw CustomRoom8_S0_NPCs
-    dw CustomRoom8_S0_Exits
-
-CustomRoom8_S0_NPCs:
-    db $8F, $FF, $07, $06, $00  ; spawn (7,6)
-    db $00, $0B, $02, $07, $01  ; NPC (2,7) script give_jerky
-    db $00, $0B, $05, $06, $03  ; NPC (5,6) script bgm_change
-    db $FF
-
-CustomRoom8_S0_Exits:
-    db $03, $01, $6C, $00, $00, $07, $06  ; exit (3,1) -> Room $6C screen 0 spawn (7,6); screen_byte $00 = in-room ($2DE7[0]); $01 stranded the player off-map (KEY_LESSONS S40)
-    db $FF
-
-CustomRoom8_Screen4:
-    dw wCustomStep_Room73_S4    ; step counter
-    db 2, $64   ; step_id, tileset_bank
-    dw CustomRoom8_S4_NPCs
-    dw CustomRoom8_S4_Exits
-
-CustomRoom8_S4_NPCs:
-    db $8F, $FF, $05, $03, $00  ; spawn (5,3)
-    db $00, $09, $05, $04, $02  ; NPC (5,4) script give_egg
-    db $FF
-
-CustomRoom8_S4_Exits:
-    db $03, $07, $01, $00, $08, $04, $05  ; south edge exit (3,7) -> GreatTree screen 8 (screen_byte $08 copied from WellStairway per KEY_LESSONS v14-v18)
-    db $FF
+PLACE_TEXT_FIRST EQU 0
 
 ; =============================================================================
 ; VANILLA-ROOM EXIT EXTENSIONS (S70, generated)
@@ -4144,3 +4355,5 @@ VExt01_V0:
 VanillaNPCExtTable:
     db $FF   ; table terminator
 
+PLACE_COUNT EQU 9
+TEXT_SECTIONS EQU 1

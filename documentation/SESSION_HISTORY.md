@@ -1,5 +1,35 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-09 (Session 134 — **ROADMAP ARC CAP1 BUILT: EVERY BUILD IS A 4 MB ROM —
+> BANKS $80-$FF SELF-ID'D, THE BANK RULE CHECKED ON EVERY BUILD; THE GAME NEVER SELECTS A BANK ≥ $80
+> ON ITS OWN (MEASURED)** (user: "ARE THERE ANY DOWNSIDES TO MOVING TO A 4 mb rom" → the list →
+> "Ok that sounds fine. Proceed"; **S132's Rooms tab USER-CONFIRMED 09:47: "Rooms tab is fine"**).
+> **Built S134; USER-CONFIRMED 2026-10-09 (S135 start: "yes").** Test ROM `DWM-S134-4mb-test.gbc` (the user's own project
+> built 4 MB; `aae43261…`, patched).
+> **The build:** `patches/game.asm` INCLUDEs the compiler-generated `patches/bank_ext.asm`
+> (emitter `ext_banks`: a section + self-ID byte per bank $80-$FF; `emitters.ext_bank_files` =
+> the hook ARC CAP2's place banks fill), `HeaderROMSize` `$07`. Staging: new bank files found by
+> rule (`verify_integrity._NEW_FILE_RE`, `builder._patch_lists`); `builder.build_rom` removes
+> every generated file it created (a latent leak into the clean tree — KEY_LESSONS S133/S134).
+> **The rule, enforced:** `tools/validate_custom_data.py check_banks` (verify check 6 + every
+> editor build): 4 MB, `$0148` = `$07`, every bank $80-$FF and every bank the build changed +
+> filled starts with its own number. **Pin `807d9668…` (patched)**; S129's `7d136455…` is
+> historical — the two differ ONLY at `$0148` / `$014D` / `$014E-F`; the user's project built
+> 2 MB vs 4 MB from the same code: the same four bytes.
+> **Measured (PyBoy, the user's project 4 MB + `.sav`):** CONTINUE, `$6E`'s entry scene + its
+> door to `$6B`, the GreatTree redirect into `$6E`, the field menu, a real gate entry (Gate of
+> Beginning) + a battle fought out, a JOURNAL save inside `$6E` and a reload into the same
+> tile. Every bank switch logged at the 23 ROM0 `ld [$2100], a` sites (`p.register_file.A`):
+> 201,868 switches over 63 banks, highest `$7E`, none ≥ `$80` — the same set as the 2 MB build,
+> so nothing relied on 2 MB bank mirroring.
+> **Editor:** `EDITOR_REVISION` S134; help `80_build.md` (the ROM is 4 MB: emulators, flash
+> carts, `.sav` unaffected), `90_limits.md` (128 rooms today).
+> **Checks:** verify_integrity PASS (clean `1ca6579…` byte-perfect; patched == pin; check 6 with
+> `check_banks`); test_compiler `--rom` ALL 1415 PASSED (`test_s134`); test_app PASS; test_canvas
+> `--rom` PASS (this sandbox: `QT_AUDIO_BACKEND=none` — PYBOY_DEBUGGING S134). Built S134, NOT
+> yet user-tested.
+> **Next:** the user's SameBoy test of the 4 MB ROM; then ARC CAP2 (place banks — the spill).
+
 > Last verified: 2026-10-09 (Session 133 — **THE CAMPAIGN-SCALE CAPACITY AUDIT (ROADMAP ARC CAP0):
 > HUNDREDS OF PLACES NEED PLACE BANKS, REGIONS AND A 4 MB ROM — ALL THREE MEASURED FEASIBLE;
 > THE $EA MAP-ID CEILING NOW ENFORCED** (user: "What are big ticket items that are left?" → on the

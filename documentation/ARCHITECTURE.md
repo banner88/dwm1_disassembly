@@ -163,6 +163,47 @@ caller's bank by reading `[$4000]` and take the `$DA78` lock.
   ROM0 `$0000` — a custom room's undefined screen inside its size crashed that way (game mode `$FE`
   + hang, PyBoy S135); the compiler never emits `$0000` for such a screen now.
 
+## Place banks (S136 — ROADMAP ARC CAP2b; built S136, USER-CONFIRMED)
+
+Everything bank $60 held per custom room — the script table + scripts, tile patches (ops `$24` /
+`$61`), the screen sub-table, step entries, NPC / exit lists, state rules, monster cast — is that
+PLACE's block, and a block lives in one HOME BANK; the project's text lives in 256-id SECTIONS
+(section = text id >> 8 − `$0A`), each in one bank. Bank $60 is the first home; the rest are
+PLACE BANKS $80+ (compiler `editor2/core/places.py`, first fit after the stream banks).
+
+- **The engine still calls only bank $60** (`ld hl, $60xx / rst $10` in banks $04 / $06 / $0B /
+  $17 / $77 untouched). Its entries 0 (step), 1 (NPC list, custom rooms), 2 (exit list), 4 (script
+  word), 5 (text), 8 (state rules + cast), 9 / 10 (tile patches) are FORWARDERS
+  (`editor2/core/templates/bank_060_head.asm`): `PlaceOf` looks the place up in `PlaceDirectory`
+  (per place: home bank, index there) on EVERY call — no cached bank, so the map-id writes outside
+  the room commit (gate insert, boss floor, save load, new game, Play here) need nothing — writes the
+  index to **`wPlaceIdx` ($D50A)** and `PlaceGo` calls the home bank's entry of the same number
+  (`rst $10`, or a local jump through `PlaceEntries` when the home is $60). Text: `TextSectionBanks`
+  [`$C822`] → that bank's entry 5. Keys: entries 0/1/2/8 = `wMapID`; entries 4/9/10 = the running
+  script's TYPE `wScriptMapType` (what the old reader indexed — a script that warps out keeps reading
+  its own room); type `$FF` = the custom skills' scripts, which stay in bank $60. Out of range (a
+  vanilla id, a type past the last place, the transient `$70` with < 6 places): BC = `$FFFF`, the
+  dummy step `$2A01`, an empty list, the patch op's word stepped over.
+- **Every home bank carries the same reader block** (`templates/place_readers.asm`, 944 B, pinned):
+  in bank $60 with no label suffix, in place bank `$xx` at `$4001` with suffix `_Pxx` — so its
+  `PlaceEntries_Pxx` IS the bank's `rst $10` table. The readers index their bank's tables
+  (`PlaceRoomTable`, `PlaceScriptTable`, `PlaceRuleTable`, `PlaceCastTable`, `PlaceSourceTable`,
+  `PlaceTextRows` biased by `PLACE_TEXT_FIRST`) with `[wPlaceIdx]`, never `wMapID − $6B`.
+- **Why it is sound (read + measured):** the far-call return keeps BC / DE / HL (RST Dispatch
+  above), so the script word (BC) and its address (HL — the branch tail computes counter +=
+  (target − HL) / 2, BANK04_SCRIPT_ENGINE "Parameter counts") come back through two nested calls;
+  branch targets are absolute addresses in the script's own bank, so a place's scripts must sit in
+  one bank (they do — a block is never split). Text: `CallTextEngine` runs in the home bank, which
+  `SaveBankAndSwitch` stores in `$C824`; every later byte read switches to `$C824` (8 bits). The
+  per-call cost: one directory read + one extra far call per script word / list copy.
+- **Measured:** `tools/census_place_banks.py` (stub calls: every step, list, cast, script word and
+  text of a project vs the ROM bytes at its labels — the user's project 4,829 checks, the S136
+  demo 8,926 over 5 banks, a generated spill 20,975 over 8 banks: 0 mismatched); PyBoy on the
+  user's save: talks, YES / NO, an entry scene with a tile patch, a talk battle, doors both ways, a
+  save + reload — in rooms of bank $60 and of place bank $81, texts from $82-$84; an A/B by warps of
+  every screen of the user's 11 rooms (S135 vs S136 build): every script word, text and list
+  identical (branch words compared by label — their addresses moved).
+
 ## Key RAM Regions
 
 | Range | Purpose |

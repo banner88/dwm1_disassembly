@@ -6182,3 +6182,42 @@ one lazy, cached pass (`Project.stream_plan()`) that every resolver reads — ne
 references and the emitter; a project that fits must reproduce the old layout byte for byte (the
 regression pin proves it).
 
+## S136 — place banks (ROADMAP ARC CAP2b)
+
+**An "exact byte count" over asm text must use the assembler's charmap.**
+**Symptom (S136, the ROM half of test_s136):** the place planner said a text-only place bank held
+14,126 B; the assembled bank held 14,124. **Root cause:** `validators._payload_bytes` counted a quoted
+string as one byte per character, but the global charmap maps `".."` to ONE byte (`$61`) — "medals..."
+is 8 bytes, not 9. Harmless while the count only fed a "nearly full" check; wrong once it decides where
+every room lives. **Fix:** `_string_bytes` matches `disassembly/charmap.asm` longest-first (plan == ROM
+for bank $60 and every place bank since). **Rule:** a byte count that drives placement is checked
+against the assembled ROM in a test, not only against itself (the non-ROM "meter == plan" check was
+tautological — both sides used the same counter).
+
+**A far-call forwarder must hand back every register the old callee returned — including the
+"useless" ones.** The script reader returns BC (the word) AND HL (the word's address, in bank $60 —
+meaningless to the caller in bank $04, or so it looks). Bank $04's branch tail computes counter +=
+(target − HL) / 2 with an absolute target address, so HL is load-bearing. `rst $10` keeps BC / DE /
+HL on the way back, so two nested far calls (bank $60 forwarder → place bank) are transparent; a
+forwarder that did `push hl / … / pop hl` around its call would have broken every branch in a
+spilled room. **Rule:** before wrapping an entry, list what its callers READ after the call (the
+whole tail, not the obvious result register) — BANK04_SCRIPT_ENGINE "Parameter counts" had it.
+
+**Script words that are addresses move when the layout moves — compare them by label.** The S136 A/B
+(S135 vs S136 build, every screen of the user's rooms) differed at the 5th word: `$4678` vs `$47AB`.
+Both were the same branch label (`CustomRoom2_Scr00_L5799`). **Rule:** in an A/B of two builds whose
+data moved, map every word in `$4000-$7FFF` to the label at that address in its bank before comparing
+— raw equality reports a layout change as a behaviour change.
+
+**A planner's "fit" decision must not collide with what the author pinned.** The first text-section
+budget jumped an auto id to the next section start without looking for explicit `text_id`s: a project
+with an explicit `$0B00` later in the list stopped loading (duplicate id) — found by the independent
+review, not by a test. **Rule:** an allocator that skips ahead first collects every explicitly claimed
+number and never lands on (or leaves a gap before) one; a test pins the mix.
+
+**Every "not found" fallback of a room reader must leave the player a way out.** The first out-of-range
+exit forwarder returned an empty exit list while the step forwarder returned the dummy step — a stale
+save in a deleted room would load into a screen with no exits (KEY_LESSONS v14-v17 says why
+DummyExits has five). **Rule:** a new fallback copies the existing fallback's whole set (step AND
+exits), not just the part that prevents the crash.
+

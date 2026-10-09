@@ -41,6 +41,7 @@ to the proven overlay:
 | `patches/bank_076.asm` | whole file = template head (`EncResolve`, S115 + `NewGateRowCopy`) + the project's encounter lists, rooms' lists / variants / rates, gates' plans (S114 P3.13a, §2.30) + the new gates' rows / sources (S115 NG1, §2.31) + `GateClearTable` (S117 NG2, §2.32) |
 | `patches/bank_ext.asm` | S134 (ROADMAP ARC CAP1): banks $80-$FF of the 4 MB ROM — a section + self-ID byte per bank (`emit_bank_ext`); a bank whose whole content another emitter writes (ARC CAP2 place banks, `emitters.ext_bank_files`) is INCLUDEd instead. `patches/game.asm` INCLUDEs it |
 | `patches/bank_080.asm` … (only when needed) | S135 (ROADMAP ARC CAP2a): the LZ stream overflow banks — layouts / attr maps / tilesets that did not fit $64 / $67 (`emit_stream_banks`, §2.44). Whole files, INCLUDEd by `bank_ext.asm`; `--apply` deletes one an earlier apply left that this project no longer generates |
+| `patches/bank_0xx.asm` place banks (only when needed) | S136 (ROADMAP ARC CAP2b): the places (custom rooms' scripts, lists, states, casts, tile patches) and text sections that did not fit bank $60 (`places.emit_place_banks`, §2.45). Whole files, INCLUDEd by `bank_ext.asm`; numbered after the stream banks |
 | `patches/bank_077.asm` + region `gd_item_info` in `patches/bank_003.asm` | S117: the shop lists (`ShopFill` / `ShopClose` template head) and the item buy prices, from `gamedata.shops` / `custom.shops` / `gamedata.items` (§2.32) |
 
 **S120 — the committed overlay IS the compiler's example build.** `patches/*` must
@@ -535,7 +536,8 @@ registering an emitter; nothing existing changes.
 
 | Emitter | Consumes | Target | Banks |
 |---|---|---|---|
-| `rooms60` | `custom.rooms/scripts/dialogue` | `file:patches/bank_060.asm` | `$60` |
+| `rooms60` | `custom.rooms/scripts/dialogue` | `file:patches/bank_060.asm` (S136: head + readers + the places / text sections the plan keeps in $60, §2.45) | `$60` |
+| `places_ext` (S136) | the places / text sections that did not fit $60 (§2.45) | **`multi:place_banks`** — one whole file `patches/bank_0xx.asm` per place bank (none when everything fits) | `$80-$FF` |
 | `ext_banks` (S134) | — (always; `ext_bank_files(prj)` names the banks a compiler file fills — S135: the LZ stream overflow banks; CAP2b: place banks) | `file:patches/bank_ext.asm` | `$80-$FF` |
 | `layouts64` / `tilesets67` | `custom.layouts` / `custom.tilesets` — the streams `Project.stream_plan()` put in the home bank (§2.44) | `file:patches/bank_064.asm` / `bank_067.asm` | `$64` / `$67` |
 | `streams_ext` (S135) | the streams that did not fit $64 / $67 (§2.44) | **`multi:stream_banks`** — one emitter, a variable set of whole files `patches/bank_0xx.asm` (one per overflow bank; none when everything fits). `compiler._emit_all` merges the `{target: text}` it returns | `$80-$FF` |
@@ -558,6 +560,8 @@ registering an emitter; nothing existing changes.
 | `enc76` (S114) | `custom.encounter_lists` + `custom.rooms[].encounters` + `custom.gates[].encounters` (§2.30; editor2/core/encounters.py) | `file:patches/bank_076.asm` | `$76` |
 | `lay_copies_10` `lay_copies_11` (S107 2b) + `ns_follower_layout` (in the species list) | `gamedata.art` + `custom.species` (§2.23 "Walking layouts"; editor2/core/walk_layouts.py) | `region:` in banks $10 / $11 | those banks |
 
+**S136: superseded by §2.45** (head, readers, skill scripts, `PlaceDirectory`, `TextSectionBanks`,
+the bank's place tables, then each place's block and text section). Before S136 —
 `bank_060` generated layout order (fixed, deterministic): script master
 table → shared no-op (if needed) → per-room script tables+bodies (script
 area) → two-level text tables → text bodies → `CustomSourceMapTable` →
@@ -603,6 +607,12 @@ user-confirmed hand-authored code:
 * `editor2/core/templates/bank_079_head.asm` (S121) — bank byte, 2-entry table, entry 0
   `MillyShapeTable` / entry 1 `MillyPlayerSheet` (§2.34); only emitted with the hook on;
   pinned `3d7cbdbe…ef95`; no TEMPLATE_SIZE (the bank holds a few hundred bytes).
+* S136 re-pins (§2.45, ROADMAP ARC CAP2b): `bank_060_head.asm` (the forwarding head: entries
+  0/1/2/4/5/8/9/10 → `PlaceOf` / `PlaceGo`, `SkillScriptRead`, the vanilla branches; the readers
+  moved out) — current value in `templates/PINNED_SHA256`; NEW `place_readers.asm` (the reader block
+  pasted into bank $60 and every place bank, `{P}` = the label suffix). `TEMPLATE_SIZE[$60]` 1,515
+  (= addr(`SkillScriptPtrTable`) − $4000 in the S136 example game.sym; was 1,306), new
+  `validators.PLACE_TEMPLATE_SIZE` 945 (1 + the reader block $423B-$45EA).
 * S129 re-pins (§2.42): `bank_071_head.asm` `cbd0cdec…d11c` (`MusicRulePick` + `TermsHold71`,
   the rule calls in `CustomRoomBGMResolve`; TEMPLATE_SIZE 1070 B; the S128 value `bb4151d2…`
   is historical); `bank_077_head.asm` `eb0f0997…7d88` (entry 11 `StoryCheck`, `StoryCommand`,
@@ -3671,6 +3681,54 @@ what they were; WHERE their streams live is decided by the compiler.
   `DummyStepEntry` layout.
 - **Measured:** `tools/census_stream_banks.py` (TOOLS_AND_DATA S135); the S135 test ROM
   (`examples/s135_overflow_demo/`). Tests: `test_compiler.test_s135`.
+
+## §2.45 S136 — PLACE BANKS: rooms' scripts, lists and text past bank $60 (ROADMAP ARC CAP2b)
+
+**Built S136; USER-CONFIRMED 2026-10-09 15:14 ("Confirm everything seems to work").** No schema change: what a room is stays what it was; WHERE its
+bank $60-class data lives is decided by the compiler (`editor2/core/places.py`; engine: ARCHITECTURE
+"Place banks (S136)").
+
+- **A place's BLOCK** (`places.room_block`) = its script table + bodies + tile patches
+  (`_room_scripts`), its state rules (`_state_rule_lines`) and monster cast (`_monster_cast_lines`),
+  its sub-table + screens + step entries + NPC / exit lists (`_room_data`). A scriptless or
+  placeholder room gets a one-word no-op table (`{tag}_Scr00: dw $FFFF`; placeholders an all-`$FFFF`
+  sub-table) — the S53 shared `CustomScriptNoop_PtrTable` and `build.compat.master_table_rooms`
+  (retired S70) are gone; `scripts_placement: inline` no longer means anything (a block is always
+  contiguous).
+- **`places.plan(prj)`** (= `Project.place_plan()`, lazy, cached, run after `stream_plan()` so the
+  stream banks take their $80+ numbers first): blocks in map id order, then text sections in order,
+  each placed **first fit** — bank $60, then the place banks already opened, else
+  `Project._take_ext_bank('places')`. Sizes are exact: a block = the db / dw payload of its text
+  (`validators._payload_bytes`, charmap-aware since S136) + 9 B of table rows; a section = its
+  payload + its `PlaceTextRows` row(s) (the row span of a bank grows to cover the sections it holds;
+  gaps are `dw $0000`). Capacity: bank $60 = 16,384 − `TEMPLATE_SIZE[$60]` (1,515: head + readers)
+  − the skill scripts − the vanilla exit / NPC overrides − `PlaceDirectory` (2 B a place) −
+  `TextSectionBanks` (1 B a section); a place bank = 16,384 − `PLACE_TEMPLATE_SIZE` (945: self-ID +
+  readers). A block or section bigger than a place bank is a build ERROR naming it. Returns `home
+  {mapID: (bank, index)}`, `text_home [bank per section]`, `banks`, `overflow`, `used {bank:
+  bytes}` (== the built ROM's bytes, test_s136).
+- **Text section budget:** `Project._assign_text_ids` starts a new section for an auto-numbered text
+  that would take its section past `places.TEXT_SECTION_BUDGET` (12,288 B) — a full 256-text section
+  at ~80 B a text is ~20 KB, more than a bank. Explicit `text_id`s are kept; a project whose
+  sections stay small keeps every id.
+- **Emitters:** `rooms60` → `places.emit_bank_060`: the template head, the reader block with no
+  suffix, then (banner `PLACE DATA (generated) — bank $60: SCRIPT DATA (generated) + places` — the
+  accounting split) `SkillScriptPtrTable` + skill scripts, `PlaceDirectory`, `TextSectionBanks`, the
+  bank's place tables + blocks + sections, `VanillaExitExtTable` / `VanillaNPCExtTable`, `PLACE_COUNT`
+  / `TEXT_SECTIONS` EQUs. `places_ext` (`multi:place_banks`) → one `patches/bank_0xx.asm` per place
+  bank: `SECTION`, `db $xx`, the reader block with suffix `_Pxx` (at `$4001`), `PLACE DATA
+  (generated)`, the tables + blocks + sections, `PLACE_TEXT_FIRST_Pxx`. `ext_bank_files` names the
+  stream AND place banks for `bank_ext.asm`.
+- **Accounting / meters:** `validators.bank_usage` — bank $60 = `TEMPLATE_SIZE` + the payload after
+  `SCRIPT DATA (generated`; a `bank_0xx.asm` with `PLACE DATA (generated` = `PLACE_TEMPLATE_SIZE` +
+  its payload after the marker. The space meter's $60 bar is amber (not red) when full; the "new"
+  bar counts place banks too.
+- **The example and the user's project fit bank $60** (no place bank) but the template changed: pin
+  `05b8973d…` (patched; S134's `807d9668…` is historical); the user's project `341a5188…` (patched;
+  `aae43261…` historical).
+- **Measured:** `tools/census_place_banks.py` (+ `--make-spill N`); the S136 demo
+  (`examples/s136_echo_demo/`). Tests: `test_compiler.test_s136` (+ the ROM half and the PyBoy
+  census with `--rom`).
 
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 

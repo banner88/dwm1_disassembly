@@ -147,13 +147,10 @@ V = {
     ("bank_071.asm", "CustomAnimSource", 0): "IDX8_SUB6B",   # S99: sub $6B + cp ANIM_TABLE_LEN bound
     ("bank_017.asm", "FreeColor1Hook", 0): "CP_UNSIGNED",    # S96
     ("bank_017.asm", "StateRulesHook17", 0): "COPY",         # S97: reloads A for CustomAttrCheck (IDX8_SUB6B)
-    ("bank_060.asm", "CustomStateRules", 0): "IDX8_SUB6B",   # S97: sub $6B, ret c
     ("bank_060.asm", "VanillaExitResolve", 0): "CP_UNSIGNED",  # S70/S94b
     ("bank_072.asm", "AnchorField14Tail", 0): "CP_UNSIGNED", # S73 (cp $30)
     ("bank_073.asm", "MenuOpenFreePal", 0): "CP_UNSIGNED",   # S96 r4
     ("bank_073.asm", "BoxAttrActive", 0): "CP_UNSIGNED",     # S97 r2
-    ("bank_060.asm", "CustomPtrChase", 0): "IDX8_SUB6B",
-    ("bank_060.asm", "CustomPtrChase", 1): "IDX8_SUB6B",
     ("bank_060.asm", "GateAwareDispatch", 0): "CP_UNSIGNED",
     ("bank_071.asm", "CopyCustomRoomRecord", 0): "CP_UNSIGNED",  # derives wCustomRoomFlag
     ("bank_071.asm", "CopyCustomRoomRecord", 1): "CP_UNSIGNED",  # $70 table split
@@ -162,7 +159,6 @@ V = {
     ("bank_071.asm", "CustomRoomBGMResolve", 0): "BOUNDED",      # cp $80 (FEATURE cap $7F; ROADMAP follow-up)
     # S114 burn-down: the sites added S100-S114 that were left NEEDS_REVIEW
     ("bank_007.asm", "SaveAllowCheck", 0): "CP_UNSIGNED",        # S100 (clean: cp $60..$64 chain)
-    ("bank_060.asm", "CustomMonsterCast", 0): "IDX8_SUB6B",      # S101: sub $6B / ret c / add a
     ("bank_06c.asm", "CustomTileAnimate", 0): "BOUNDED",         # S102: cp TILEANIM_ROOMS, 16-bit index
     ("bank_06c.asm", "CustomTileAnimate", 1): "CP_UNSIGNED",     # S102: == wTileAnimRoom (restart test)
     # S129: the room's music rules come first — `ld c, a` (wMapID) for MusicRulePick
@@ -176,7 +172,6 @@ V = {
     ("bank_076.asm", "EncResolve", 0): "BOUNDED",                # S114: cp ENC_ROOM_LEN, 16-bit index *3
     # S120 burn-down: the sites added S116-S119 (ROADMAP "audit_mapid_range
     # re-adjudication"); reasoning in CROSSBANK_ROOMS "S120 burn-down".
-    ("bank_060.asm", "CustomReadInteract", 0): "CP_UNSIGNED",    # S117: cp CUSTOM_ROOM_START, then == scan of VanillaNPCExtTable
     ("bank_060.asm", "CutPatchRoute", 0): "CP_UNSIGNED",         # S119: cp CUSTOM_ROOM_START (GateAwareDispatch rule)
     # S128: BattleBGMResolve's two `cp $5d` loads became `call ArenaMapID` (the
     # project's arena counts as $5D; ROM0 ArenaMapID's own key above) — the
@@ -204,6 +199,15 @@ V = {
     ("bank_000.asm", "ArenaMapID", 0): "CP_UNSIGNED",            # S128: cp ARENA_BATTLE_MID / cp ARENA_LOBBY_MID (equality), A -> $5D / $06 / itself
     ("bank_050.asm", "ArenaLossWarp50", 0): "CP_UNSIGNED",       # S128: cp ARENA_BATTLE_MID (equality: the project's arena -> its lobby)
     ("bank_06e.asm", "ArenaMarkClasses", 0): "CP_UNSIGNED",      # S128: cp ARENA_LOBBY_MID / ret nz (the locks apply in the project's lobby only)
+    # S136 (ARC CAP2b, place banks): the readers index [wPlaceIdx], not wMapID - $6B
+    # (CustomPtrChase / CustomStateRules / CustomMonsterCast / CustomReadInteract keys
+    # retired — they no longer load wMapID); the forwarders' wMapID loads go through
+    # PlaceOf (sub CUSTOM_ROOM_START / ret c / cp PLACE_COUNT / ccf / ret c, then a
+    # 16-bit index into PlaceDirectory). Reasoning: CROSSBANK_ROOMS "S136 sites".
+    ("bank_060.asm", "PlaceFwdStep", 0): "BOUNDED",              # S136: -> PlaceOf (sub $6B, cp PLACE_COUNT)
+    ("bank_060.asm", "PlaceFwdInteract", 0): "CP_UNSIGNED",      # S136: cp CUSTOM_ROOM_START (vanilla scan), then PlaceOf
+    ("bank_060.asm", "PlaceFwdExit", 0): "BOUNDED",              # S136: -> PlaceOf
+    ("bank_060.asm", "PlaceFwdRules", 0): "BOUNDED",             # S136: -> PlaceOf / ret c
 }
 
 # Site-count pins (S66). A mismatch = the tree changed; re-adjudicate.

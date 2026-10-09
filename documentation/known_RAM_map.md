@@ -352,7 +352,10 @@
                  wStoryFlag $D509 (S129: bank $77 StoryCheck's answer, $FF / $00 —
                  the byte bank $73 FlagAddr returns for a virtual flag $18xx;
                  EVENT_FLAGS "Story checks") /
-                 wCustomPool $D50A-$D5E4 (transient reserve; $D509 before S129, $D4F2 before S127,
+                 wPlaceIdx $D50A (S136, ARC CAP2b: the place's index inside its home bank —
+                 bank $60 PlaceOf writes it before EVERY forwarded call, the home bank's
+                 reader block indexes its tables with it; one call's scratch, never a cache) /
+                 wCustomPool $D50B-$D5E4 (transient reserve; $D50A before S136, $D509 before S129, $D4F2 before S127,
                  $D2F0 before S126, $D2EF before S125, $D2E3 before S123, $D243
                  before S121) /
                  wPoolBounce $D5E5-$D664 (128 B, FX1: sleep-pool swap

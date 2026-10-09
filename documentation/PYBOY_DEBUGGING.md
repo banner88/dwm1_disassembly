@@ -643,3 +643,30 @@ edge and the battle waits for input forever.
   table word in the generated `.asm` and walking again (S135: the render row — KEY_LESSONS S135).
   Run such probes with `timeout` and a log file (a hung probe holds the tool call until its limit).
 
+
+## S136 techniques — a stub census of far-call forwarders, an A/B by warps, D-pad timing on a real save
+
+- **Stub census of every forwarded read** (`tools/census_place_banks.py`): the S130 marker stub
+  (`di / ld hl,$60xx / rst $10 / store C B E D L H / ld a,$A5 / ld [MARK],a / jr $` at `$DD40`) per
+  input; the EXPECTED value comes from the same ROM through game.sym (a script's word = the word at
+  its label + 2n in whatever bank the plan put it), so the census proves the routing, not the
+  compiler's arithmetic. A talk script's length = up to the next label that is not one of its own
+  branch labels (`<label>_…`). Entry 9 (op `$24`) runs from the stub too: point the counter at the
+  `$FF24` word, then read the staged tiles at `$C300 + offset`. 20,000 calls ≈ 10 s.
+- **A/B of two builds without driving input:** warp into every screen of every room (tile x = 10 k +
+  5 within the room's screen grid) and log (a) every script word the engine reads — a hook on bank
+  $04 `DispatchBank0F_Ext` + 4 (the `ret` after `rst $10`; BC = `register_file.B / .C`, PyBoy 2 has no
+  `.BC` / `.H`, use `HL >> 8`), (b) every text id, (c) `wCustomNPCBuffer` / `wCustomExitBuffer` after
+  the load; then compare with addresses mapped to labels (KEY_LESSONS S136). Robust where walking
+  scripts are not: the user's rooms' NPCs wander, scenes reposition the player.
+- **D-pad on the user's save: hold 8 frames.** A 4-frame tap was missed about half the time (the
+  S123 `move1` used 4; the walk then "stuck" against nothing); a 2-frame `face` never turned the
+  player. 8 frames moves exactly one tile; 6 frames turns in place against an NPC. Walk around an NPC
+  that blocks the target's row by a sidestep (the S136 driver's `walk_to`).
+- **NPC positions live:** slot n = `$D7D2 + 32n` (+0 type, +1 sprite, +2 x, +3 y, +4 script) — walk
+  to (x, y + 1) and face up; an arrival scene may have moved the NPC from its list cell.
+- **Was there a battle?** Sample `GAME_MODE` from a hook on the VBlank vector (`$00:$0040`) during the
+  talk: `{1, 2}` = a battle ran.
+- **Trap — a 10-frame "the box rests" rule fires mid-print on slow text** (the user's text speed):
+  harmless when A is only pressed while the script flag (`$D8D7` bit 0) is set — pressing A after the
+  script ended re-opens the talk (the S128 trap again).

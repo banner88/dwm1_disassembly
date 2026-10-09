@@ -22,7 +22,7 @@ from . import scriptgen as S
 # --pin-templates after a successful regression build; None = check skipped
 # with a warning.
 TEMPLATE_SIZE = {
-    0x60: 1306,  # addr(CustomScriptMasterTable)-$4000 = $451A — S127 (CustomDrawTiles: op $24 $FFxx = a compiler command -> bank $77 entry 10, 13 B). Prev 1293 S123 r2 ($450D: + entry 12 CustomDescentFeel, 20 B). Prev 1273 S123 ($44F9 in the S123 example game.sym: + entry 11 NpcColourDraw, NpcColourRecord, the $A2 colour prefix — 203 B over S122's real $42E = 1070; the 678 below was never re-measured after S119's entries 9/10 + patch readers, so the pre-build check under-counted bank $60 by 392 B — DOC_AUDIT S123). Prev 678 S117 (558 + CustomReadInteract's vanilla VanillaNPCExtTable branch + CopyNPCListToBuffer with the $A0/$A1 condition prefixes; measured from the S117 game.sym). Prev 558 S105 reference game.sym (549 + CustomScriptRead's SKILL_SCRIPT_TYPE branch, 9 B). Prev 549 S101 reference game.sym (492 S97 + CustomMonsterCast + its call at the head of CustomStateRules). Prev: S97 reference game.sym (383 S94b -> 492 S97: entry-8 dw + CustomStateRules + the CustomReadStep call)
+    0x60: 1515,  # addr(SkillScriptPtrTable)-$4000 = $45EB — S136 (ARC CAP2b: the forwarding head 571 B = self-ID + 13 entries + PlaceOf / PlaceGo / the 8 forwarders + the globals, then bank $60's place reader block 944 B; measured from the S136 example game.sym). Prev 1306 = addr(CustomScriptMasterTable) $451A — S127 (CustomDrawTiles: op $24 $FFxx = a compiler command -> bank $77 entry 10, 13 B). Prev 1293 S123 r2 ($450D: + entry 12 CustomDescentFeel, 20 B). Prev 1273 S123 ($44F9 in the S123 example game.sym: + entry 11 NpcColourDraw, NpcColourRecord, the $A2 colour prefix — 203 B over S122's real $42E = 1070; the 678 below was never re-measured after S119's entries 9/10 + patch readers, so the pre-build check under-counted bank $60 by 392 B — DOC_AUDIT S123). Prev 678 S117 (558 + CustomReadInteract's vanilla VanillaNPCExtTable branch + CopyNPCListToBuffer with the $A0/$A1 condition prefixes; measured from the S117 game.sym). Prev 558 S105 reference game.sym (549 + CustomScriptRead's SKILL_SCRIPT_TYPE branch, 9 B). Prev 549 S101 reference game.sym (492 S97 + CustomMonsterCast + its call at the head of CustomStateRules). Prev: S97 reference game.sym (383 S94b -> 492 S97: entry-8 dw + CustomStateRules + the CustomReadStep call)
                  # (283 S53 -> 348 S70 -> 358 S70v3 (+2x5B wCustomY7Cmp arming): entry-7 dw + VanillaExitResolve +
                  # factored CopyExitListToBuffer in the template head; 383 S94: VanillaExitResolve rows keyed
                  # by (mapID, screen) — `db mapID, screen` with $FF = any screen)
@@ -33,7 +33,42 @@ TEMPLATE_SIZE = {
     0x77: 1788,   # addr(ShopPtrTable)-$4000 = $46FC: S129 (+ entry 11 StoryCheck + the 12 kinds, TermsHold / TermOne / BagCount / MonCount / MonMatch, StoryCommand, ShopSetPick, 678 B; measured from the S129 example game.sym). Prev 1110 = $4456: S127 r3 (+3: BreedClose calls ShopBoxBottom). S127 = 1107 ($4453) (+ entries 7-10 BreedClose / BreedSlotEID / PartyAvgLevel / ScriptCommand + BreedRoll, 419 B). Prev 688 = $42B0: S126 r2 (+4: $FFD4 := $80 at the service close); S126 = 684 (+ entries 3-6 SayText / SetPairs / ScanPairs, ServiceClose*, ServiceOpenTiles, ScreenPush full-screen + room-tile rules, 246 B). Prev 438 = $41B6: S117b (+ entry 2 ScreenPush / PushRowAttrs, ShopClose -> ShopBoxBottom; was 93 S117; measured from the S117b game.sym)
     0x6B: 53,     # addr(ProjectEnemyRows)-$4000, S101 (bank self-ID + entry table + CopyEnemyRowExt; measured from the S101 reference game.sym)
 }
+# S136 (ROADMAP ARC CAP2b): a PLACE BANK's fixed part = self-ID byte + the reader
+# block (templates/place_readers.asm) = addr(PlaceRoomTable_P<bank>) - $4000.
+PLACE_TEMPLATE_SIZE = 945    # S136: 1 + the reader block $423B-$45EA of bank $60 (944 B; the same bytes in every bank)
 BANK_SIZE = 0x4000
+
+
+_CHARMAP_KEYS = None
+
+
+def _string_bytes(text):
+    """Bytes rgbasm emits for a quoted string: the global charmap
+    (disassembly/charmap.asm) matched longest-first — ".." is ONE byte ($61),
+    so "medals..." is 8 bytes, not 9 (S136: the place planner's count was 2 B
+    over a bank holding two such texts); a character the charmap lacks = 1 byte."""
+    global _CHARMAP_KEYS
+    if _CHARMAP_KEYS is None:
+        keys = set()
+        path = os.path.join(os.path.dirname(__file__), '..', '..', 'disassembly', 'charmap.asm')
+        try:
+            for line in open(path):
+                m = re.match(r'\s*charmap\s+"((?:[^"\\]|\\.)*)"', line)
+                if m and len(m.group(1)) > 1:
+                    keys.add(m.group(1))
+        except OSError:
+            pass
+        _CHARMAP_KEYS = sorted(keys, key=len, reverse=True)
+    n, i = 0, 0
+    while i < len(text):
+        for k in _CHARMAP_KEYS:
+            if text.startswith(k, i):
+                i += len(k)
+                break
+        else:
+            i += 1
+        n += 1
+    return n
 
 
 def _payload_bytes(asm_text):
@@ -63,7 +98,7 @@ def _payload_bytes(asm_text):
                 if not t:
                     continue
                 if t.startswith('"') and t.endswith('"'):
-                    total += len(t) - 2          # charmap: 1 byte per char
+                    total += _string_bytes(t[1:-1])
                 else:
                     total += 1 if kind == 'db' else 2
         elif line.startswith('ds '):
@@ -1150,11 +1185,17 @@ def bank_usage(generated):
     text = generated.get("file:patches/bank_070.asm")
     if text is not None:
         out[0x70] = (_payload_bytes(text), BANK_SIZE)
-    # S135 (ARC CAP2a): the LZ stream overflow banks $80+ (pure payload)
+    # S135 (ARC CAP2a): the LZ stream overflow banks $80+ (pure payload);
+    # S136 (ARC CAP2b): a place bank = its reader block + its data
     for target, text in generated.items():
         m = re.fullmatch(r'file:patches/bank_0([89a-f][0-9a-f])\.asm', target)
         if m:
-            out[int(m.group(1), 16)] = (_payload_bytes(text), BANK_SIZE)
+            if 'PLACE DATA (generated' in text:
+                used = PLACE_TEMPLATE_SIZE + _payload_bytes(
+                    text.split('PLACE DATA (generated', 1)[1])
+            else:
+                used = _payload_bytes(text)
+            out[int(m.group(1), 16)] = (used, BANK_SIZE)
     return out
 
 
@@ -1202,7 +1243,9 @@ def _validate_accounting(prj, generated, errors, warnings):
                     f"generated {gen_bytes} = {total} > {BANK_SIZE} "
                     "bytes — trim content (rgbasm would only report the "
                     "first excess byte; KEY_LESSONS S52)")
-            elif total > BANK_SIZE - 256:
+            elif total > BANK_SIZE - 256 and bank != 0x60:
+                # S136: bank $60 is filled first-fit and spills into place banks
+                # by design (as $64 / $67 since S135) — nearly full is normal
                 warnings.append(
                     f"bank ${bank:02X}: {BANK_SIZE - total} bytes free "
                     "(under 256) — nearly full")

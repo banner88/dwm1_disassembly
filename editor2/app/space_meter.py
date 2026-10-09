@@ -12,6 +12,10 @@ S135 (ROADMAP ARC CAP2a): layouts, palette grids and tilesets no longer stop
 at a full $64 / $67 — what does not fit goes to the 4 MB ROM's new banks
 ($80-$FF, shared). So a full $64 / $67 is amber, not red, and a fifth bar
 ("new banks") counts the banks $80-$FF in use out of 128.
+
+S136 (ROADMAP ARC CAP2b): rooms' scripts, NPC / exit lists and the text no
+longer stop at a full $60 either — the places (and text sections) that do not
+fit go to place banks in the same new banks. A full $60 is amber, not red.
 """
 
 from PySide6.QtCore import QTimer
@@ -21,8 +25,8 @@ from editor2.core.compiler import measure_banks
 
 BANKS = ((0x60, 'rooms/scripts/text'), (0x64, 'screen layouts'),
          (0x67, 'tilesets'), (0x71, 'room tables'),
-         (0x80, 'new banks $80-$FF of the 4 MB ROM (layouts / tilesets that do not '
-                'fit $64 / $67)'))
+         (0x80, 'new banks $80-$FF of the 4 MB ROM (rooms / text that do not fit $60, '
+                'layouts / tilesets that do not fit $64 / $67)'))
 EXT = 0x80         # S135: the "new banks" bar (measures every bank $80-$FF)
 
 
@@ -93,9 +97,9 @@ class SpaceMeter(QWidget):
             b.setValue(int(frac * 1000))
             b.setFormat(f'${bank:02X} {frac * 100:.0f}%')
             col = '#d04040' if frac > 0.95 else '#d0a030' if frac > 0.80 else '#3c9a50'
-            spills = bank in (0x64, 0x67)
+            spills = bank in (0x60, 0x64, 0x67)
             if spills and frac > 0.80:
-                col = '#d0a030'          # S135: full is fine — the rest goes to the new banks
+                col = '#d0a030'          # S135 / S136: full is fine — the rest goes to the new banks
             b.setStyleSheet(f'QProgressBar::chunk {{ background: {col}; }}')
             more = (' When it is full, further ones go to the new banks $80+ '
                     '(the "new" bar).' if spills else '')

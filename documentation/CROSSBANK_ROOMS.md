@@ -43,6 +43,13 @@ Custom room overflow bank. Contains:
 - **CustomSourceMapTable** — maps custom room index → source mapID
 - **Room data** — sub-tables, step entries, NPC data, exit data for each custom room
 
+**S136 (ROADMAP ARC CAP2b): bank $60 is now the FORWARDING bank + the first home bank.** The readers
+above (CustomPtrChase, entries 0-2, the script / text readers, state rules, casts, tile patches) are
+one pinned block (`editor2/core/templates/place_readers.asm`) that indexes its bank's tables with
+`[wPlaceIdx]`; bank $60's entries 0/1/2/4/5/8/9/10 look the place up in `PlaceDirectory` on every
+call and call its home bank — $60 itself or a place bank $80+ carrying its own copy of the block.
+ARCHITECTURE "Place banks (S136)"; sites below ("S136 sites").
+
 ### Bank $00 — `bank_000.asm` (ROM0)
 Two helper functions in 24 bytes of free space at $3FE8-$3FFF:
 
@@ -619,6 +626,19 @@ temporary wInGateworld).
 true for every custom id); bank $06 → `or a` (Castle). An id in `$F0-$FE` therefore
 behaves as the custom room it stands for; the arena's ids must stay real ids (global ids,
 never link slots).
+
+### S136 sites (place banks, ROADMAP ARC CAP2b)
+
+The bank $60 readers no longer load `wMapID` to index a table: `CustomPtrChase`, `CustomStateRules`,
+`CustomMonsterCast` and the custom branch of entry 1 index `[wPlaceIdx]` (their four
+`audit_mapid_range` keys were retired). The new loads are the forwarders' — `PlaceFwdStep`,
+`PlaceFwdExit`, `PlaceFwdRules` (→ `PlaceOf`: `sub CUSTOM_ROOM_START / ret c / cp PLACE_COUNT / ccf
+/ ret c`, then a 16-bit index into `PlaceDirectory` — BOUNDED) and `PlaceFwdInteract` (`cp
+CUSTOM_ROOM_START` to the vanilla scan, then `PlaceOf` — CP_UNSIGNED). The ceilings are unchanged:
+`PLACE_COUNT` ≤ 128 (the compiler's `$EA`), and the directory index is 16-bit. `wScriptMapType`
+(the key of entries 4 / 9 / 10) goes through the same `PlaceOf`: a type past the last place (the
+transient `$70` with fewer than 6 places, a sentinel `$54`) now ends the script (BC = `$FFFF`)
+instead of reading past the old master table. Selftest PASS (clean 58 / patched 84).
 
 ### Re-running the audit
 

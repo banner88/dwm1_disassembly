@@ -410,7 +410,12 @@ wBreedStep:: db ;d508 — the story scale: 100 / milestones
 ; this byte to ComputeFlagAddress for a virtual flag $1800-$18FF, whose caller
 ; tests it at once. Transient by design.
 wStoryFlag:: db ;d509 — the last story check's answer
-wCustomPool:: ds $5A4 - 132 - 5 - 2 * TILEANIM_MAX_GROUPS - 2 - 18 - 26 - 8 - 256 - 1 - 2 - 160 - 12 - 1 - 514 - 23 - 1 ;d50a-d5e4 — transient reserve (was $664; FX1 carved 64+128; S97 132; S102 69; S105 2; S111 18; S114 26; S115 8; S117 256 wExtFlags + 1 wShopID; S117b 2 push scratch; S121 160 wMillyLayout; S123 12 NPC colours; S125 1 wHubReason; S126 514: the service tile save + wServiceLines; S127 23: wBreedLast + wBreedSlots + the roll scratch; S129 1: wStoryFlag)
+; S136 (ROADMAP ARC CAP2b, place banks): the current call's place index inside
+; its home bank — bank $60 PlaceOf writes it right before EVERY forwarded call
+; (entries 0/1/2/4/5/8/9/10) and the home bank's readers (place_readers.asm)
+; index their tables with it. Not a cache: nothing reads it outside one call.
+wPlaceIdx:: db ;d50a — the place's index in its home bank (one call's scratch)
+wCustomPool:: ds $5A4 - 132 - 5 - 2 * TILEANIM_MAX_GROUPS - 2 - 18 - 26 - 8 - 256 - 1 - 2 - 160 - 12 - 1 - 514 - 23 - 1 - 1 ;d50b-d5e4 — transient reserve (was $664; FX1 carved 64+128; S97 132; S102 69; S105 2; S111 18; S114 26; S115 8; S117 256 wExtFlags + 1 wShopID; S117b 2 push scratch; S121 160 wMillyLayout; S123 12 NPC colours; S125 1 wHubReason; S126 514: the service tile save + wServiceLines; S127 23: wBreedLast + wBreedSlots + the roll scratch; S129 1: wStoryFlag; S136 1: wPlaceIdx)
 ; FX1 (S71): wPoolBounce — 128-byte staging for sleep-pool bank-2 record
 ; swaps (per-byte scratch in CF3PoolSwapRecord). Transient. (The v1 drain's
 ; halved-pending scratch use was removed with the S71v2 exp-scale veto.)

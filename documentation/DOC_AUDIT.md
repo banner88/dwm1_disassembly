@@ -843,3 +843,17 @@ mapping, a `rst $10` executing in bank $80). ✏️ = fixed in place this sessio
 | The S134 4 MB ROM "NOT yet user-tested" (PROJECT_STATE, ROADMAP CAP1) | ✏️ updated | USER-CONFIRMED at the S135 start ("1) yes") | user S135 |
 | (note) the example project's `combined_room6b` tileset (bank $67 entry 0) | ℹ️ | no example room points at it (every record uses $28 / $29 sheets) — it is carried for the S92 byte identity | S135 subagent read of bank_000 / bank_071 records |
 
+## S136 addendum (2026-10-09; place banks — ROADMAP ARC CAP2b)
+
+| File / claim | Verdict | What is true | Evidence |
+|---|---|---|---|
+| ROADMAP CAP2b "Bank $60 entries 0/1/5/6/7/8/9/10 become forwarders" | ✏️ corrected | the FORWARDERS are entries 0 / 1 / 2 / 4 / 5 / 8 / 9 / 10 (2 and 4 are reached only internally — through 7 and 6 — but are forwarded too); 6 / 7 stay global routing in $60 (their custom branches jump to the forwarders) | the S136 caller census: `ld hl, $60xx` sites in banks $04 / $06 / $0B / $17 / $77 |
+| `editor2/core/validators.py` `_payload_bytes` "Exact byte size of generated db/dw/ds lines" | ⚠ was not exact | a quoted string counted 1 byte per character; the charmap's `".."` is one byte — fixed (`_string_bytes`, longest-first over `disassembly/charmap.asm`) | test_s136 ROM half (plan == assembled bank) |
+| "a text section fits in bank $60" (implicit since S53: one `CustomTextPtrTable`) | ⚠ not at scale | a full 256-id section at ~80 B a text is ~20 KB — more than any bank; auto ids now break sections at 12,288 B | PROJECT_COMPILER §2.45 |
+| PROJECT_COMPILER §4 "`bank_060` generated layout order" | ✏️ superseded | S136 layout (§2.45) | — |
+| PROJECT_COMPILER §7 / ARCHITECTURE "RST Dispatch" — CustomScriptRead returns BC | ✏️ completed | it returns BC (the word) AND HL (the word's address), and the bank $04 branch tail uses HL; the S136 forwarders keep both | BANK04_SCRIPT_ENGINE "Parameter counts"; ARCHITECTURE "Place banks (S136)" |
+| `editor2/core/render.py` "screens : CustomRoomPtrTable (bank $60)" | ✏️ updated | `PlaceDirectory` → the home bank's `PlaceRoomTable` | test_canvas `--rom`; the S136 renderer check (33 / 33 screens == S135) |
+| `editor2/core/builder.py` manifest "owned" = banks $60 / $71 | ✏️ updated | + the place banks (texts / scripts in them had `addr` None) | review S136 |
+| `tools/audit_mapid_range.py` keys `CustomPtrChase` ×2, `CustomStateRules`, `CustomMonsterCast`, `CustomReadInteract` | ✏️ retired | those readers index `[wPlaceIdx]`; the forwarders' loads keyed instead | selftest PASS clean 58 / patched 84 |
+| (note) bank $60 out-of-range reads (a script type past the last place — the transient `$70` with < 6 places, a sentinel `$54` with a custom `wMapID`) | ℹ️ behaviour change, deliberate | before S136 the reader indexed past `CustomScriptMasterTable` (garbage); now BC = `$FFFF` (end), steps / lists the dummy ones (with `DummyExits`), an op `$24` / `$61` word stepped over | CROSSBANK_ROOMS "S136 sites" |
+

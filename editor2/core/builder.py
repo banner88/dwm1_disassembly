@@ -165,8 +165,12 @@ def write_manifest(out_dir, prj, project_path, rom_path, sym_path, rom_md5,
     from . import compiler as C
     syms = parse_sym(sym_path)
     owned = {}
+    try:                                     # S136: the place banks hold rooms + text too
+        place_banks = tuple(prj.place_plan()['overflow'])
+    except Exception:                        # noqa: BLE001
+        place_banks = ()
     for name, (bank, addr) in syms.items():
-        if bank in (0x60, 0x71) or name.startswith('wCustomStep_') or \
+        if bank in (0x60, 0x71) + place_banks or name.startswith('wCustomStep_') or \
                 name.startswith('CustomRoomPal') or \
                 name.startswith('CustomRoomAttr') or \
                 name.startswith('CustomAttrPtrTable') or \
@@ -187,7 +191,7 @@ def write_manifest(out_dir, prj, project_path, rom_path, sym_path, rom_md5,
         "project_sha256": C.content_hash(project_path),
         "rom_md5": rom_md5,
         "bank_usage": {f"${b:02X}": bank_usage(rom_path, b)
-                       for b in (0x60, 0x71, 0x74)},
+                       for b in (0x60, 0x71, 0x74) + place_banks},
         "music": {sid: f"${fid:02X}"
                   for sid, fid in (prj.music_song_ids().items()
                                    if prj.custom.get('music') else [])},

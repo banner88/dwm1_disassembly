@@ -186,6 +186,16 @@ Routed to bank $60 entry 5. Two-level pointer table required (see below).
 `table[$C822*2]` → section, `section[$C823*2]` → text address.
 Flat tables crash.
 
+**S136 (ROADMAP ARC CAP2b): a section (256 ids) lives in any bank.** Bank $60 entry 5 reads
+`TextSectionBanks[$C822]` and calls entry 5 of that bank — bank $60 itself or a place bank $80+ —
+whose reader does `ld de, PlaceTextRows - 2 * PLACE_TEXT_FIRST / call CallTextEngine` (the bank's
+own sections only, the base biased by the first one). `CallTextEngine` → `SaveBankAndSwitch` stores
+`[$4000]` = the home bank in `$C824`, and every later byte read (`ReadNextTextByte`,
+`SaveBankForTextDisplay`) switches to `$C824` with all 8 bits, so the text displays from there.
+The compiler keeps a section within one bank: auto-numbered texts start a new section before one
+passes 12,288 B (PROJECT_COMPILER §2.45). Measured: PyBoy S136 — the user's own rooms in bank $60
+showing texts from banks $82-$84.
+
 ## NPC → Dialogue Pipeline
 
 ```
