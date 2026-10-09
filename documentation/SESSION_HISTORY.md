@@ -1,5 +1,56 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-09 (Session 133 — **THE CAMPAIGN-SCALE CAPACITY AUDIT (ROADMAP ARC CAP0):
+> HUNDREDS OF PLACES NEED PLACE BANKS, REGIONS AND A 4 MB ROM — ALL THREE MEASURED FEASIBLE;
+> THE $EA MAP-ID CEILING NOW ENFORCED** (user: "What are big ticket items that are left?" → on the
+> POC's bank $60 / $64 at 79 %: "Romhack proper will have HUNDREDS OF CUSTOM ROOMS"; "Distinct
+> places. Reusing tileset is NOT ideal at all"; vanilla "Staying as postgame with EDITED NPCs and
+> scripts and flags … only keeping 1 version of the map"; "ARENA is needed … all 'services' +
+> farm etc - all of those are ESSENTIAL … build outwards+ On top of rather than replace"; "Current
+> project is purely POC … Just make capabilities identical"; 4 MB: "I assume most people will use
+> emulators"; the plan audit → spill → 4 MB → regions engine → regions editor: "Sounds good").
+> **Byte-neutral (labels / comments + a compiler validator; clean `1ca6579…` byte-perfect; the
+> regression pin unchanged) — no test ROM.**
+> **The walls (EDITOR_DESIGN §6.4):** (1) the map id is one byte — 128 custom rooms `$6B-$EA`
+> (bank $60 `CustomPtrChase` / `CustomStateRules` / `CustomMonsterCast` + bank $17
+> `CustomAttrCheck` double `mid − $6B` in 8 bits; a room at `$EB` BUILT and read room `$6B`'s
+> tables — now `project.CUSTOM_MID_MAX`, ProjectError, `test_s133`); (2) every custom data class
+> sits in ONE bank whose code reads it in place ($60 scripts / text / lists, $64 layouts, $67
+> tilesets, $17 palettes + render walk, $71 / $6C / $76 per-room tables); (3) no whole bank is
+> free (≈315 KB inside the custom banks; ROM0 8 B, $0B 1 B, $17 3,937 B).
+> **Measured cost of a place** (the user's 11-room / 33-screen POC): ≈3-4 KB new; the copies of
+> Arena Lobby / Arena Battle / GreatTree = 7,916 of its 9,130 B of scripts. 4 MB ≈ 2.3 MB for
+> places ≈ 575-750 places.
+> **Measured (PyBoy, the user's build + .sav):** the exit list is not re-copied between an exit
+> firing and the commit (custom door $6E → $6B: frames 81 → 100; GreatTree redirect → $6E: 89 →
+> 108; buffer identical) — link slots noted at copy time survive; a custom script never runs
+> across a commit (the roots scene's last words at 1090, the commit at 1109, then `$70`'s own
+> script). **4 MB:** scratch builds with banks $80 / $FF link (`$0148` := `$07` by rgbfix), boot
+> to the bedroom in PyBoy, map through `$2100`, and a `rst $10` into bank $80 RAN on every commit
+> (3 / 3). Rule: every new bank starts with its own number (`rst $10`, `AudioSaveBankState`, the
+> text engine read `[$4000]`).
+> **The design (ROADMAP ARC CAP1-5):** CAP1 4 MB; CAP2 place banks (bank $60 forwards to the
+> place's home bank; place header + `wPlaceAttr` far copy; bank $17 staging in WRAM; text
+> sections; more layout / tileset / animation banks); CAP3 regions (`wMapRegion` saved with X1;
+> the bank $73 commit hook resolves link slots `$F0-$FE` from `CopyExitListToBuffer`'s `$FD
+> <region>` prefixes / global ids / a pending `wWarpRegion` / unchanged; compiler-assigned and
+> invisible); CAP4 the editor (names not ids, one-stage copies of vanilla rooms, meters); CAP5
+> secondary ceilings (story checks 256 / commands 255, flags 1,965, …).
+> **Census (CROSSBANK_ROOMS "S133 capacity audit"):** every RAM byte holding a map id (saved:
+> wMapID, wWarpGateId, `$C8FB`, wBossMapType, wScriptMapType, the dead `$C96A/B`), the wMapID
+> writers, the places that set wMapID without the mailbox (bank $71 gate insert, bank $16 boss
+> floor — 8 nop bytes free there), wWarpFlag's four pre-commit `or a` readers (no room for a
+> region in it).
+> **Doc corrections (DOC_AUDIT S133):** the "engine step validation `tileset_bank < $80`" is a
+> Python-dumper check; §6.4's "11 unallocated banks" stale since S121; capacities.json refreshed;
+> SOUND_SYSTEM's RAMB formula; the ceiling row missing two readers; `rst $10` returns BC / DE /
+> HL (only A clobbered).
+> **Annotation (both trees, zero bytes):** `wMapIDMirror` / `wInGateworldMirror` ($C96A / $C96B,
+> write-only), the bank $00 `RST_28` mgbdis artifact (= the far-call return `pop af`).
+> **Checks:** see the S133 wrap-up — verify_integrity, test_compiler `--rom`, clean rebuild.
+> **Next:** the user's pick of CAP1 (4 MB, suggested first: small, and CAP2's allocator should
+> know banks $80-$FF) or CAP2 (the spill); the S132 Rooms-tab test still pending.
+
 > Last verified: 2026-10-09 (Session 132 — **THE ROOMS TAB MADE USABLE (ROADMAP P3.18 + P3.4): PAINT
 > LAG MEASURED AND REMOVED, THE RIGHT SIDE AS ONE PAGE AT A TIME BEHIND SIDEWAYS TABS, BORROW PALETTE
 > FROM ANY ROOM / SCREEN / STEP / GATE THEME, THE DRAW TAB (PIXELS: EVERYWHERE OR AS A NEW METATILE),

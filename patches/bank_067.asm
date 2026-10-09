@@ -6,7 +6,8 @@
 ; raw2bpp sheets, or a multi-tileset editor-export spec resolved via
 ; tools/build_combined_tileset.py's cherry-pick core. Loaded by
 ; DecompressTileLayout via a room record's gfx_bank/gfx_id
-; (ROOM_DATA_FORMAT 'Tileset Graphics System').
+; (ROOM_DATA_FORMAT 'Tileset Graphics System'). S135 (ARC CAP2a):
+; first fit — what does not fit here goes to an overflow bank $80+.
 ; =============================================================================
 SECTION "ROM Bank $067", ROMX[$4000], BANK[$67]
     db $67  ; bank self-ID

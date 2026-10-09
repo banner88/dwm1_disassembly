@@ -129,6 +129,40 @@ The ROM is MBC5, 2 MB (`$0148` = `$06`). A 4 MB ROM (256 banks) needs no engine 
   `bank_usage`, `app/space_meter.py`); `randomizer/romdata.py` refuses a non-2 MB ROM (fine
   for vanilla input). 8 MB would need 9-bit bank numbers through every far call — not planned.
 
+## LZ stream banks (S135 — ROADMAP ARC CAP2a)
+
+Room layouts, attribute (colour) maps and BG tilesets are all LZ streams read by ONE ROM0
+routine, `DecompressTileLayout` ($1627; annotated both trees S135), through two front ends:
+`WaitLCDTransfer` → `LoadSpriteFrame` (layouts → `$C300`/`$C500`, attr maps → `$C200`, plain
+writes) and `WaitDMATransfer` → `TextScrollWindow` (tilesets → VRAM `$9000`). Both save the
+caller's bank by reading `[$4000]` and take the `$DA78` lock.
+
+- **In:** D = bank (written to `$2100`, 8 bits — any bank $01-$FF), E = entry, HL = destination.
+  **Stream pointer = the word at `$4001 + 2E` of bank D** → ≤ 256 streams a bank. Header 3 bytes
+  `[declen lo, declen hi, marker]`, then literals / `[marker, lo, hi4:len4]` copies (PROJECT_STATE
+  "LZ graphics streams"). The body is read with `inc de`: **a stream never crosses `$7FFF`.**
+- **Interrupts stay on** during a decode; the frame driver's audio swap (`SaveBankAndAudioState`)
+  saves "the current bank" by reading `[$4000]` — the DATA bank at that moment — so a stream bank
+  must start with its own number (the ROM banks $80-$FF rule above).
+- **Every reference carries its bank:** a room step entry `[step_id, bank]` (bank $0B
+  `ReadStepBlock`, bank $60 `CustomReadStep`, gate floors bank $16 `MazeScreenTable` rows), a bank
+  $17 render row `[attr_entry, attr_bank, pal_ptr]` (vanilla attr bank $3C, gates $3D), a `$26DD`
+  record `[gfx_id, gfx_bank, …]` (ROM0 for map ids < $70, bank $71 `Custom26DDTable` above). Readers
+  traced S135: bank $0B room entries 0-3, bank $07 / $16 via `rst $10` $0B08, bank $17 entries 0/1
+  (callers in banks $0B / $07 / $15), the tileset reloads after menus / screen effects (banks $07 /
+  $09 / $12 / $15) and bank $77 `BreedClose`. None caches or compares a bank number.
+- **What is pinned is the TABLES, not the data:** vanilla step tables in bank $0B, custom ones in
+  bank $60, gate rows in bank $16, attr / palette tables in bank $17 (`pal_ptr` is read while bank
+  $17 is mapped — palettes cannot move without code: ROADMAP CAP2c).
+- **Patched builds (S135):** the compiler's `Project.stream_plan()` places the project's streams
+  first fit — layouts / attr maps in bank $64, tilesets in $67, then overflow banks $80, $81, …
+  (any kind mixed; `patches/bank_0xx.asm`). Measured: `tools/census_stream_banks.py` (346 streams
+  decoded from the built ROM; PyBoy screens == the editor preview) and the S135 test ROM's 16 halls
+  on the user's save.
+- **The bank $17 walk checks nothing** (`label17_409e`): a `dw $0000` screen word is followed into
+  ROM0 `$0000` — a custom room's undefined screen inside its size crashed that way (game mode `$FE`
+  + hang, PyBoy S135); the compiler never emits `$0000` for such a screen now.
+
 ## Key RAM Regions
 
 | Range | Purpose |

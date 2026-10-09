@@ -425,7 +425,7 @@ class Inspector(QWidget):
         try:
             gfx = renderer.room_gfx(room)
             if 'tileset' in rec:
-                self.r_gfx.setText(f"custom tileset {rec['tileset']!r} (bank $67)")
+                self.r_gfx.setText(f"custom tileset {rec['tileset']!r}")   # S135: $67 or an overflow bank
             else:
                 self.r_gfx.setText(f'bank ${gfx.gfx_bank:02X} id ${gfx.gfx_id:02X}')
             note = gfx.note

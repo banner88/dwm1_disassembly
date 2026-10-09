@@ -44,7 +44,7 @@ sequentially across all rooms regardless of screen index.
 | Offset | Field | Description |
 |--------|-------|-------------|
 | +0 | step_id | Index into tile layout pointer table at $4001 in the tileset bank |
-| +1 | tileset_bank | ROM bank number containing compressed tile layout data |
+| +1 | tileset_bank | ROM bank number containing compressed tile layout data (S135: despite the name, the LAYOUT stream's bank — any bank $01-$FF; patched builds put project layouts in $64 or an overflow bank $80+) |
 | +2,+3 | interact_ptr | Pointer to mixed NPC + spawn block (5-byte entries, $FF terminated) |
 | +4,+5 | exit_ptr | Pointer to exit checker block (read by entry 6 every step) |
 
@@ -222,6 +222,11 @@ $4001: pointer table — dw entries (step_id indexes these)
 **Bank $64** is the first custom layout bank. Room $6B uses entry 0
 (user-designed room with Farm tileset). Additional layouts add more `dw`
 entries to the pointer table and more compressed data blocks.
+**S135 (ROADMAP ARC CAP2a):** when $64 is full the compiler continues in the 4 MB ROM's overflow
+banks ($80, $81, …; shared with attr maps and tilesets past $67) — `Project.stream_plan()`,
+PROJECT_COMPILER §2.44; the reader rule (`$4001 + 2E` of the step's bank, ≤ 256 streams a bank, a
+stream never crosses `$7FFF`, the bank's `$4000` byte = its number): ARCHITECTURE "LZ stream banks
+(S135)".
 
 **Tileset selection:** `MapIDClampForPalette` in ROM0 (patches/bank_000.asm)
 returns the source mapID for GFX/palette loading. Change `ld a, $XX` to
@@ -435,6 +440,8 @@ Loaded by Call_000_1577 (Entry 0) from the graphics table:
 
 The gfx_id and gfx_bank work identically to step_id and tileset_bank:
 gfx_bank selects the ROM bank, gfx_id indexes the pointer table at $4001.
+(S135: the same routine, `DecompressTileLayout`, via `WaitDMATransfer`; a project tileset's
+gfx_bank is $67 or an overflow bank $80+.)
 Result: 2048 bytes = 128 tiles (8×8 pixels, 2bpp GBC format) → VRAM $9000.
 
 All tilesets decompress to exactly 128 tiles. The same 9 tileset banks are used.

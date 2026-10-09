@@ -169,6 +169,13 @@ Discovered incrementally across 19 ROM iterations. Missing even ONE table causes
 ### 4. $FFFF Screen Guard Required for Multi-Screen Rooms
 When scrolling to an unused screen slot ($FFFF in the sub-table), CustomPtrChase must detect this and return a safe DummyStepEntry instead of dereferencing $FFFF. The DummyStepEntry MUST reference valid tileset data (not bank $00 which contains RST handlers, not tile data).
 
+**S135: the guard was only half of it.** The bank $17 render walk (`label17_409e`, the attr map +
+palette of the screen) has NO such guard: the compiler's `RoomAttr_<mid>` row had `dw $0000` for an
+undefined screen, the walk followed it into ROM0, and walking into such a screen inside the room's
+size crashed (game mode `$FE`, PyBoy hang — measured with screens 0 + 5 of a 2 × 2 room). The
+compiler now gives every screen inside the room's size a real row (the first screen's) and warns
+(`emitters.room_holes`, PROJECT_COMPILER §2.44); the screen still draws `DummyStepEntry`.
+
 ### 5. Screen Byte Format in Exit Data
 ```
 Bits 0-3: $2DE7 table index (0-15, maps to 4×4 screen grid offsets)

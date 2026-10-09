@@ -2501,7 +2501,7 @@ the user picks.
       (PyBoy), 4 MB (built, booted, a far call ran in bank $80). The `$EA` ceiling is now
       enforced (`project.CUSTOM_MID_MAX`). Annotation: `wMapIDMirror` / `wInGateworldMirror`,
       the RST_28 artifact.
-- [x] **CAP1 — 4 MB ROM.** **Built S134, NOT yet user-tested** (user: "Ok that sounds fine.
+- [x] **CAP1 — 4 MB ROM.** **Built S134; USER-CONFIRMED 2026-10-09 (S135 start)** (user: "Ok that sounds fine.
       Proceed" after the downsides list). Every patched build is 4 MB: `patches/game.asm`
       INCLUDEs the compiler-generated `patches/bank_ext.asm` (emitter `ext_banks`: a section +
       self-ID byte per bank $80-$FF; `emitters.ext_bank_files` = CAP2's hook for place
@@ -2521,17 +2521,41 @@ the user picks.
       was measured S133 (scratch probe); the first REAL tenant is CAP2's place banks (the
       original acceptance's "compiler-emitted bank $80 entry from a real call site" moves
       there). *User half:* the test ROM in SameBoy.
-- [ ] **CAP2 — place banks (the spill).** Bank $60 entries become forwarders to the current
-      place's home bank (`wPlaceBank`); a pinned reader template per home bank; the place
-      header + `wPlaceAttr` far copy (bank $71 / $6C / $76 readers read WRAM); bank $17
-      `CustomAttrCheck` stages the current screen-state's render row + palette in WRAM;
-      text sections → banks; more layout / tileset / animation banks; the compiler's
-      allocator + per-class meters. Still ≤ 128 places (regions are CAP3). *Accept:* a
-      generated project of 120 places × 3 screens with scripts, text, own tilesets and
-      palettes spread over ≥ 20 banks builds; PyBoy walks a sample of 20 places (render ==
-      the editor preview, NPC talk, a cutscene, a door both ways, a battle, save / reload in
-      a place); the example project's behaviour unchanged (the pin moves once, by design).
-- [ ] **CAP3 — regions (places beyond 128).** `wMapRegion` (saved with X1, new game 0), the
+- **CAP2 — the spill (split S135, user: "whatever works").** The S133 box bundled four
+      independent changes; measured on the user's 11 rooms: $60 79 % / $64 79 % / $67 55 % / $17
+      3,259 B free — the class banks bind at ~14-15 such rooms. Three boxes, each its own test ROM:
+  - [x] **CAP2a — LZ streams: layouts, attr maps, tilesets past $64 / $67.** **Built S135;
+        USER-CONFIRMED 2026-10-09 12:59 ("Yep all good can confirm").** Compiler-only (`DecompressTileLayout` takes the bank from every
+        reference — ARCHITECTURE "LZ stream banks (S135)"): `Project.stream_plan()` first fit
+        (home bank, then the open overflow banks, else the next bank $80+), `emit_stream_banks`
+        → `patches/bank_0xx.asm`, meters. A project that fits is byte-identical (pins
+        unchanged). *Accept (machine half) MET:* `tools/census_stream_banks.py` (48 generated
+        rooms, 346 streams over $64 / $67 / $80-$86: all decode from the ROM; PyBoy 12 screens
+        == the preview); the test ROM's 16 OVERFLOW HALLS × 3 screens == the preview on the
+        user's save. *User half:* MET — `DWM-S135-overflow-test.gbc` in SameBoy. Also fixed: a room's
+        undefined screen inside its size crashed (PROJECT_STATE Open defects S135).
+  - [ ] **CAP2b — place banks: scripts, text, NPC / exit / step lists, state rules, casts,
+        tile patches (+ own tile animations, bank $6C).** Bank $60 entries 0/1/5/6/7/8/9/10
+        become forwarders to the place's home bank (a pinned reader template per bank); global
+        things stay in $60 (skill scripts type `$FF`, `VanillaExitExtTable`,
+        `VanillaNPCExtTable`, entries 11 / 12). **S135 design change: no cached
+        `wPlaceBank`** — the forwarder reads a bank $60 directory `[mapID − $6B]` on every
+        call (the five wMapID writers outside the commit — gate insert, boss floor, save load,
+        new game, Play here — would each need a cache refresh); entries 4 / 6 key on
+        `wScriptMapType` as today. Text sections (`$C822` = section → bank). Allocator:
+        `Project._take_ext_bank`. *Accept:* a generated project whose scripts / text exceed
+        bank $60 builds; PyBoy: NPC talk, a cutscene, a YES / NO, doors both ways, a battle,
+        save / reload in a spilled place; the example's behaviour unchanged (the pin moves
+        once, by design).
+  - [ ] **CAP2c — palettes + render tables out of bank $17.** `CustomAttrCheck` copies the
+        current screen-state's row + its palette into WRAM (the walk and `LoadPal_46a1` read
+        WRAM); rows carry a palette bank. *Accept:* a project whose palettes / render rows
+        exceed bank $17's free space builds; PyBoy: every state's colours == the preview,
+        menus / battles / service screens restore them.
+  - (moved to CAP3, S135) the place header / `wPlaceAttr` far copy: below 128 places the
+        per-room tables of banks $71 / $76 / ROM0 `$26DD` do not overflow ($71 ≈ 60 B a
+        room); they break only when ids repeat across regions.
+- [ ] **CAP3 — regions (places beyond 128).** (S135: + the place header / `wPlaceAttr` far copy from CAP2.) `wMapRegion` (saved with X1, new game 0), the
       commit resolves link slots `$F0-$FE` (`wExitLinks`, filled by `CopyExitListToBuffer`
       from `$FD <region>` prefixes) / global ids / `wWarpRegion` / unchanged; the place cache;
       counters per region (zeroed on a change); `wNpcColourMap` / `wTileAnimRoom` dropped on

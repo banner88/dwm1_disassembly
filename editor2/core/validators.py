@@ -10,6 +10,7 @@ Returns (errors, warnings): lists of strings. Errors abort the emit.
 """
 
 import os
+import re
 
 from . import formats as F
 from . import textenc as T
@@ -1034,6 +1035,15 @@ def _validate_layouts_tilesets(prj, errors, warnings):
         if t is not None and not r.get('placeholder'):
             anim_by_tid.setdefault(t, set()).update(A.room_slots(r))
     """S92 [G-A]: content checks for custom.layouts / custom.tilesets."""
+    # S135: a stream the compiler could not build (a spec row it cannot resolve,
+    # a grid cell that is not a number …) is an ERROR — stream_plan() keeps an
+    # empty placeholder only so references resolve while validation runs
+    try:
+        prj.stream_plan()
+        for msg in getattr(prj, '_stream_errors', None) or []:
+            errors.append(f"cannot build {msg}")
+    except Exception as ex:                          # e.g. "the ROM is full"
+        errors.append(str(ex))
     for lay in prj.layouts:
         lid = lay.get('id', '?')
         if 'tiles' not in lay and 'attr' not in lay:
@@ -1140,6 +1150,11 @@ def bank_usage(generated):
     text = generated.get("file:patches/bank_070.asm")
     if text is not None:
         out[0x70] = (_payload_bytes(text), BANK_SIZE)
+    # S135 (ARC CAP2a): the LZ stream overflow banks $80+ (pure payload)
+    for target, text in generated.items():
+        m = re.fullmatch(r'file:patches/bank_0([89a-f][0-9a-f])\.asm', target)
+        if m:
+            out[int(m.group(1), 16)] = (_payload_bytes(text), BANK_SIZE)
     return out
 
 
@@ -1147,7 +1162,7 @@ def _validate_accounting(prj, generated, errors, warnings):
     # EDITOR_DESIGN §6: bank overflow must fail BEFORE rgbasm runs (rgbasm
     # reports only the first excess byte — KEY_LESSONS S52 #3).
     usage = bank_usage(generated)
-    for bank in (0x64, 0x67, 0x70):
+    for bank in (0x64, 0x67, 0x70) + tuple(b for b in sorted(usage) if b >= 0x80):
         # S92: banks $64/$67 have no engine template head — the db/dw payload
         # (self-ID + pointer table + streams) IS the whole bank.
         if bank not in usage:
@@ -1159,7 +1174,9 @@ def _validate_accounting(prj, generated, errors, warnings):
                 "bytes of layout/tileset data — trim content "
                 "(KEY_LESSONS S52: rgbasm reports only the first excess "
                 "byte)")
-        elif gen_bytes > BANK_SIZE - 256:
+        elif gen_bytes > BANK_SIZE - 256 and bank in (0x70,):
+            # S135: $64 / $67 / $80+ are filled first-fit and spill on by design —
+            # "nearly full" is their normal state, not a warning
             warnings.append(
                 f"bank ${bank:02X}: {BANK_SIZE - gen_bytes} bytes free "
                 "(under 256) — nearly full")

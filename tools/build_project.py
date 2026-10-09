@@ -71,6 +71,15 @@ def main():
 
     if args.apply:
         gen_patches = os.path.join(out, 'patches')
+        # S135 (ARC CAP2a): banks $80-$FF are whole compiler files that exist
+        # only while a project needs them (bank_080.asm …) — one an EARLIER
+        # --apply left in patches/ that this project no longer generates goes
+        import re as _re
+        generated = set(os.listdir(gen_patches))
+        for f in sorted(os.listdir(os.path.join(REPO, 'patches'))):
+            if _re.fullmatch(r'bank_0[89a-f][0-9a-f]\.asm', f) and f not in generated:
+                os.remove(os.path.join(REPO, 'patches', f))
+                print(f"removed stale → patches/{f}")
         for f in sorted(os.listdir(gen_patches)):
             dst = os.path.join(REPO, 'patches', f)
             shutil.copy(os.path.join(gen_patches, f), dst)

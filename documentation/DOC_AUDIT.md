@@ -830,3 +830,16 @@ mapping, a `rst $10` executing in bank $80). ✏️ = fixed in place this sessio
 | `editor2/core/builder.py` docstring "always restoring the tree" | ✏️ was not always true | `build_rom` copied every generated file into `disassembly/` but removed only `PATCH_NEW_FILES`; a generated file the list did not name stayed in the clean tree. Fixed: it removes every file it created; both stagers find new bank files by rule | code read (never fired: every generated file was listed) |
 | PYBOY_DEBUGGING S100 save recipe "Menu OPTN → JOURNAL: `A (80) / down / right / A (60) / down ×3 / A (90)`" | ⚠ incomplete (kept; S134 section supersedes) | works only when the player faces nothing — facing an NPC, the first A talks; START shows the party levels, not the menu | PyBoy S134 on the user's 4 MB build |
 | ROADMAP CAP1 acceptance "a compiler-emitted bank $80 entry far-called from a real call site" | ✏️ moved to CAP2 | CAP1 puts no code in $80+ (nothing would call it); the far call into bank $80 was measured S133 with a scratch probe; the first real tenant is CAP2's place banks | — |
+
+## S135 addendum (2026-10-09; the LZ stream spill — ROADMAP ARC CAP2a)
+
+| File / claim | Verdict | What is true | Evidence |
+|---|---|---|---|
+| `patches/bank_064.asm` header (generated) "tiles entry then attr entry per item (the L,A interleave CustomAttrCheck's screen-0->base / other->base+2 stride expects — bank_017.asm)" + the same in `project.py` | ✏️ stale since S94b | no stride exists — S94b's per-state render rows name each attr entry; S135 rewrote both comments (the order is kept for byte identity only) | `CustomAttrCheck` read (bank_017) |
+| ROOM_DATA_FORMAT step entry "+1 tileset_bank — bank containing compressed tile layout data" | ✏️ clarified | the byte is the LAYOUT stream's bank (the tileset comes from the `$26DD` record); any bank $01-$FF | S135 trace (`ReadStepBlock` → `DecompressTileLayout`) |
+| CROSSBANK_ROOMS lesson 4 "$FFFF screen guard" as THE unused-screen protection | ⚠ incomplete | the bank $17 render walk has no guard; the compiler's `$0000` rows crashed the game (PyBoy S135) — fixed in the compiler, lesson extended | PyBoy S135 |
+| `editor2/app/rooms/inspector.py` "custom tileset … (bank $67)" | ✏️ fixed | a project tileset may sit in an overflow bank $80+ (S135) | — |
+| `editor2/core/emitters.py` `ext_bank_files` docstring "Empty until ARC CAP2" | ✏️ updated | S135: the stream overflow banks | — |
+| The S134 4 MB ROM "NOT yet user-tested" (PROJECT_STATE, ROADMAP CAP1) | ✏️ updated | USER-CONFIRMED at the S135 start ("1) yes") | user S135 |
+| (note) the example project's `combined_room6b` tileset (bank $67 entry 0) | ℹ️ | no example room points at it (every record uses $28 / $29 sheets) — it is carried for the S92 byte identity | S135 subagent read of bank_000 / bank_071 records |
+

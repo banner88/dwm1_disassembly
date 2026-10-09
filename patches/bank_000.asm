@@ -4560,6 +4560,22 @@ WriteBankReg4100:
     ret
 
 
+; ---------------------------------------------------------------------------
+; DecompressTileLayout (S135 annotation, ROADMAP ARC CAP2a) — the ONE reader of
+; every LZ stream the field draws: room layouts (bank $0B ReadStepBlock /
+; bank $60 CustomReadStep -> DE = [step_id, bank]), attribute maps (bank $17
+; entry 0/1 walk -> DE = [attr_entry, attr_bank]) and BG tilesets (the $26DD
+; record [gfx_id, gfx_bank] -> WaitDMATransfer). In: D = bank, E = entry,
+; HL = destination. Maps bank D (8 bits; the $4100 write is MBC5-ignored),
+; stream pointer = the word at $4001 + 2*E OF THAT BANK (so <= 256 streams a
+; bank), then the 3-byte header [declen lo, declen hi, marker] -> BC / $FFAB
+; and the destination window $FFAC-$FFB4. The body is read with plain `inc de`:
+; a stream never crosses $7FFF. Interrupts stay on while the front ends
+; (WaitLCDTransfer -> LoadSpriteFrame, WaitDMATransfer -> TextScrollWindow)
+; decode, and the frame's audio swap saves the bank by READING [$4000] — so a
+; stream bank must start with its own number. Any bank $01-$FF works (the
+; patched build's overflow banks $80+ are measured: tools/census_stream_banks.py).
+; ---------------------------------------------------------------------------
 DecompressTileLayout:
     ld a, d
 

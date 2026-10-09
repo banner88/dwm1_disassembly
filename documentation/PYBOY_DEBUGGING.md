@@ -625,3 +625,21 @@ edge and the battle waits for input forever.
   client.conf) — run `test_app.py` / `test_canvas.py` with `QT_AUDIO_BACKEND=none
   QT_QPA_PLATFORM=offscreen`. test_app may still segfault AFTER printing `PASS` (Qt teardown);
   the result is the `PASS` line.
+
+## S135 techniques — the game's picture vs the editor's over many rooms, a hang that is the game
+
+- **Whole-demo picture check:** for every room × screen, warp to tile x = 10 k + 5 (screen k of
+  a 3-wide room; `SCREEN_IDX` read back == k in all 12 census warps) or walk there, wait 30 frames, `p.screen.image` vs `ProjectRenderer.render_screen`,
+  compared per 8×8 tile over rows 0-15 (the HUD is rows 16-17), skipping tiles any OAM entry
+  touches (`tools/census_stream_banks.py` `bg_tiles` / `sprite_tiles`). Screens of one room: walk
+  along a row the room keeps walkable (the demo paints a floor corridor) — `PLAYER_TX` 10 k + 2 is
+  screen k.
+- **A guide's YES on a ONE-box question:** S126's "`up` before every A" answered NO here (the
+  choice opened between taps); S125's rule worked every time: poke `$C83C` = 0, A only while it is
+  0, on 1 wait 20 frames, `up`, A.
+- **PyBoy stops returning from `tick()` = maybe the game, not the harness.** A warp into a room's
+  undefined screen hung (like the S127 trap), and so did WALKING into it — game mode `$FE` on the
+  last frame seen. Walking reproduces = a game defect; then confirm the cause by patching the one
+  table word in the generated `.asm` and walking again (S135: the render row — KEY_LESSONS S135).
+  Run such probes with `timeout` and a log file (a hung probe holds the tool call until its limit).
+

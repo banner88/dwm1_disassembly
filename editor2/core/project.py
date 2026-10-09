@@ -185,6 +185,20 @@ WRAM_REGION_SIZE_DEFAULT = 0x280    # 640 counters — campaign-scale default
 # CustomAttrCheck double `mapID - $6B` in 8 bits (CROSSBANK_ROOMS "Custom-side
 # arithmetic ceilings"). 128 rooms $6B-$EA; ROADMAP ARC CAP lifts it.
 CUSTOM_MID_MAX = 0xEA
+
+# S135 (ROADMAP ARC CAP2a): the LZ STREAM banks. Layouts + attr maps (home bank
+# $64), tilesets (home bank $67) and — when a home bank is full — the overflow
+# banks of the 4 MB ROM ($80-$FF) are all read by ROM0 DecompressTileLayout
+# ($1627): D = bank, E = entry, stream pointer = the word at $4001 + 2E of that
+# bank (so <= 256 entries a bank), and a stream never crosses $7FFF. Any bank
+# serves any of the three kinds (S135 trace: room step [step_id, bank], the
+# bank $17 attr walk [attr_entry, attr_bank], the $26DD record [gfx_id,
+# gfx_bank] all carry the bank). ARCHITECTURE "LZ stream banks (S135)".
+LAYOUT_HOME_BANK = 0x64
+TILESET_HOME_BANK = 0x67
+STREAM_BANK_SIZE = 0x4000
+STREAM_BANK_MAX_ENTRIES = 256
+EXT_BANK_FIRST, EXT_BANK_LAST = 0x80, 0xFF
 # Project enemy rows (S101; MONSTER_DATA "Project enemy rows"). EID 518 was
 # the S30 Gorbunok row (retired S105: a new species' rows are project enemies
 # like any other; bank $14 $7EB3 is free space again). EVERY EID >= 519 is a
@@ -408,15 +422,18 @@ class Project:
             tgt['ops'] = list(pre) + list(tgt['ops'])
             tgt['_prelude'] = f"{len(pre)} prelude ops (S92)"
         # P3.2 [G-A] (S92): banks $64/$67 fold behind project.json.
-        # custom.layouts[] items each own 1-2 consecutive bank $64 entries in
-        # DECLARATION order (tiles entry, then attr entry if present) — the
-        # interleave the proven bank_064.asm uses (L0,A0,L1,A1) and the layout
-        # CustomAttrCheck's hardwired stride expects (screen 0 -> base_entry,
-        # any other screen -> base_entry+2; patches/bank_017.asm).
+        # custom.layouts[] items each own 1-2 stream ORDINALS in DECLARATION
+        # order (tiles, then attr if present) — the S92 bank $64 entry order.
+        # S135 (ARC CAP2a): where a stream really lives (bank $64 / $67 or an
+        # overflow bank $80+, and its entry there) is stream_plan(); these
+        # ordinals only give an authored {bank: $64, entry: N} its old meaning
+        # (_explicit_stream_ref). (The "screen 0 -> base, other -> base+2"
+        # stride this comment once cited was replaced by explicit per-state
+        # render rows in S94b.)
         self.layouts = self.custom.get('layouts', [])
         self._layout_by_id = {}
-        self._layout_entry = {}       # id -> tiles entry index in bank $64
-        self._attr_entry = {}         # id -> attr entry index in bank $64
+        self._layout_entry = {}       # id -> tiles stream ordinal (S92 $64 entry)
+        self._attr_entry = {}         # id -> attr stream ordinal (S92 $64 entry)
         n64 = 0
         for lay in self.layouts:
             lid = lay.get('id')
@@ -429,9 +446,10 @@ class Project:
             if 'attr' in lay:
                 self._attr_entry[lid] = n64
                 n64 += 1
-        # custom.tilesets[] items each own one bank $67 entry in declaration
-        # order (128-tile 2bpp sheets: raw2bpp committed file, or the S6-S10
-        # multi-tileset editor-export spec — see layouts.tileset_bytes).
+        # custom.tilesets[] items: declaration index (= the S92 bank $67 entry;
+        # S135: the real place is stream_plan()) (128-tile 2bpp sheets:
+        # raw2bpp committed file, or the S6-S10 multi-tileset editor-export
+        # spec — see layouts.tileset_bytes).
         self.tilesets = self.custom.get('tilesets', [])
         self._tileset_entry = {}
         for i, ts in enumerate(self.tilesets):
@@ -449,6 +467,7 @@ class Project:
                 "deliberate engine change (PROJECT_COMPILER.md §2.6)")
         self._step_alloc = None
         self.repo_root = None          # set by compiler.compile_project
+        self._stream_plan = None       # S135 (ARC CAP2a): stream_plan(), lazy
         self._music = None
         self._gamedata = None
 
@@ -2302,17 +2321,135 @@ class Project:
             out.append(merged)
         return out
 
+    # ------------------------------------------------- LZ stream banks (S135)
+    def stream_items(self):
+        """Every LZ stream the project owns, in allocation order: the
+        custom.layouts[] items (tiles, then attr, declaration order — the
+        S92 bank $64 order), then custom.tilesets[]. Returns a list of
+        (key, home_bank, label, raw_bytes_fn, comment) with key =
+        ('tiles'|'attr', layout id) or ('tileset', tileset id)."""
+        from . import layouts as L
+        repo = self.repo_root or REPO_ROOT
+        out = []
+        for lay in self.layouts:
+            lid = lay['id']
+            if 'tiles' in lay:
+                out.append((('tiles', lid), LAYOUT_HOME_BANK, f"Layout_{lid}",
+                            (lambda lay=lay: L.compile_tiles(repo, lay['tiles'])),
+                            lay.get('comment', f"layout {lid} (LZSS)")))
+            if 'attr' in lay:
+                out.append((('attr', lid), LAYOUT_HOME_BANK, f"Attr_{lid}",
+                            (lambda lay=lay: L.compile_attr(repo, lay['attr'])),
+                            f"attr map {lid} (LZSS)"))
+        for ts in self.tilesets:
+            tid = ts['id']
+
+            def tsdata(ts=ts):
+                return L.compress(repo, L.tileset_bytes(repo, ts, self.root))
+            out.append((('tileset', tid), TILESET_HOME_BANK, f"TilesetGFX_{tid}",
+                        tsdata, ts.get('comment')))
+        return out
+
+    def stream_plan(self):
+        """S135 (ROADMAP ARC CAP2a): where every LZ stream lives. First fit in
+        allocation order: a layout / attr map tries bank $64 first, a tileset
+        bank $67, then the overflow banks already opened ($80, $81, … — any
+        kind may share them), and opens the next free bank $80-$FF when none
+        fits. A bank holds 1 self-ID byte + a 2-byte pointer per entry (<= 256)
+        + the streams. A project that fits in $64 / $67 gets exactly the S92
+        layout (same entries, same order) — the overflow banks only exist once
+        a home bank is full. Returns {'where': {key: (bank, entry)},
+        'banks': {bank: [(key, label, data, comment), …]}, 'overflow': [bank, …]}."""
+        if self._stream_plan is not None:
+            return self._stream_plan
+        self._ext_taken = []           # a retry after an error starts at $80 again
+        banks = {LAYOUT_HOME_BANK: [], TILESET_HOME_BANK: []}
+        used = {LAYOUT_HOME_BANK: 1, TILESET_HOME_BANK: 1}      # the self-ID byte
+        overflow = []
+        where = {}
+        self._stream_errors = []
+        for key, home, label, datafn, comment in self.stream_items():
+            try:
+                data = bytes(datafn())
+            except (ValueError, OSError, KeyError, TypeError) as e:
+                # reported as build ERRORS by validators._validate_layouts_tilesets
+                # (stream_errors); an empty placeholder keeps every reference
+                # resolvable meanwhile — never shipped (the build stops)
+                self._stream_errors.append(f"{key[0]} {key[1]!r}: {e}")
+                data = b''
+            need = 2 + len(data)
+            if 1 + need > STREAM_BANK_SIZE:
+                raise ProjectError(f"{key[0]} {key[1]!r}: compressed stream of "
+                                   f"{len(data)} bytes cannot fit any bank")
+            for b in [home] + overflow:
+                if (used[b] + need <= STREAM_BANK_SIZE
+                        and len(banks[b]) < STREAM_BANK_MAX_ENTRIES):
+                    break
+            else:
+                b = self._take_ext_bank('streams')
+                overflow.append(b)
+                banks[b], used[b] = [], 1
+            where[key] = (b, len(banks[b]))
+            banks[b].append((key, label, data, comment))
+            used[b] += need
+        self._stream_plan = {'where': where, 'banks': banks, 'overflow': overflow,
+                             'used': used}
+        return self._stream_plan
+
+    def _take_ext_bank(self, purpose):
+        """The next free bank of the 4 MB ROM's upper half ($80-$FF), in order.
+        S135: the stream banks are the only tenant; ARC CAP2b's place banks take
+        theirs from the same allocator."""
+        taken = getattr(self, '_ext_taken', None)
+        if taken is None:
+            taken = self._ext_taken = []
+        b = EXT_BANK_FIRST + len(taken)
+        if b > EXT_BANK_LAST:
+            raise ProjectError(
+                "the ROM is full: all 128 banks $80-$FF of the 4 MB ROM are in use "
+                f"(needed one more for {purpose})")
+        taken.append((b, purpose))
+        return b
+
+    def ext_bank_owners(self):
+        """{bank: purpose} for every bank $80-$FF the build fills (S135)."""
+        self.stream_plan()
+        return dict(getattr(self, '_ext_taken', None) or [])
+
+    def stream_ref(self, key, ctx=""):
+        """(bank, entry) of one of the project's LZ streams (S135 plan)."""
+        w = self.stream_plan()['where']
+        if key not in w:
+            raise ProjectError(f"{ctx}: no {key[0]} stream {key[1]!r}")
+        return w[key]
+
+    def _explicit_stream_ref(self, bank, entry):
+        """S135: an authored {bank: $64 | $67, entry: N} reference means what it
+        meant before the spill — the N-th declared layout-class stream ($64) /
+        the N-th declared tileset ($67) — wherever the plan put it now."""
+        if bank == LAYOUT_HOME_BANK:
+            for lid, n in self._layout_entry.items():
+                if n == entry:
+                    return self.stream_ref(('tiles', lid))
+            for lid, n in self._attr_entry.items():
+                if n == entry:
+                    return self.stream_ref(('attr', lid))
+        elif bank == TILESET_HOME_BANK and 0 <= entry < len(self.tilesets):
+            return self.stream_ref(('tileset', self.tilesets[entry]['id']))
+        return bank, entry
+
     def resolve_layout(self, ref, ctx=""):
         """Screen layout ref -> (bank, entry). Forms: {bank, entry} (any
-        bank — vanilla tileset banks included) or {id} -> allocated $64."""
+        bank — vanilla tileset banks included) or {id} -> the stream plan
+        (bank $64 or an overflow bank, S135)."""
         if 'id' in ref:
             lid = ref['id']
             if lid not in self._layout_entry:
                 raise ProjectError(
                     f"{ctx}: layout id {lid!r} not in custom.layouts "
                     "(or it has no 'tiles')")
-            return 0x64, self._layout_entry[lid]
-        return F.val(ref['bank']), F.val(ref['entry'])
+            return self.stream_ref(('tiles', lid), ctx)
+        return self._explicit_stream_ref(F.val(ref['bank']), F.val(ref['entry']))
 
     def screen_attr_entry(self, r, k, ctx=""):
         """(bank, entry) of the attr grid the engine loads for screen k, or
@@ -2324,10 +2461,10 @@ class Project:
         if at:
             if 'id' in at:
                 return self.resolve_attr(at, ctx)
-            return F.val(at['bank']), F.val(at['entry'])
+            return self._explicit_stream_ref(F.val(at['bank']), F.val(at['entry']))
         lay = scr.get('layout') or {}
         if 'id' in lay and lay['id'] in self._attr_entry:
-            return 0x64, self._attr_entry[lay['id']]
+            return self.stream_ref(('attr', lay['id']), ctx)
         rat = (r.get('render') or {}).get('attr')
         if rat:
             return self.resolve_attr(rat, ctx)
@@ -2342,19 +2479,20 @@ class Project:
                 raise ProjectError(
                     f"{ctx}: attr id {lid!r} not in custom.layouts "
                     "(or it has no 'attr' grid)")
-            return 0x64, self._attr_entry[lid]
-        return F.val(at['bank']), F.val(at['base_entry'])
+            return self.stream_ref(('attr', lid), ctx)
+        return self._explicit_stream_ref(F.val(at['bank']), F.val(at['base_entry']))
 
     def resolve_gfx(self, rec, ctx=""):
         """record gfx ref -> (gfx_bank, gfx_id). Forms: gfx_bank+gfx_id
-        (vanilla tileset), or {"tileset": id} -> bank $67 allocated entry."""
+        (vanilla tileset), or {"tileset": id} -> the stream plan (bank $67 or
+        an overflow bank, S135)."""
         if 'tileset' in rec:
             tid = rec['tileset']
             if tid not in self._tileset_entry:
                 raise ProjectError(
                     f"{ctx}: tileset id {tid!r} not in custom.tilesets")
-            return 0x67, self._tileset_entry[tid]
-        return F.val(rec['gfx_bank']), F.val(rec['gfx_id'])
+            return self.stream_ref(('tileset', tid), ctx)
+        return self._explicit_stream_ref(F.val(rec['gfx_bank']), F.val(rec['gfx_id']))
 
     # --------------------------------------------------------------- scripts
     def room_script_table(self, r):
@@ -2770,10 +2908,10 @@ class Project:
             if at:
                 if 'id' in at:
                     return self.resolve_attr(at, ctx)
-                return F.val(at['bank']), F.val(at['entry'])
+                return self._explicit_stream_ref(F.val(at['bank']), F.val(at['entry']))
             lay = st.get('layout') or {}
             if 'id' in lay and lay['id'] in self._attr_entry:
-                return 0x64, self._attr_entry[lay['id']]
+                return self.stream_ref(('attr', lay['id']), ctx)
         return self.screen_attr_entry(r, k, ctx)
 
     def state_palette_ref(self, r, k, n):

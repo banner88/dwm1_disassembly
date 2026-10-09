@@ -1598,3 +1598,25 @@ p_tf_surge 7 --ecount 3 --sched 1:0x29:1,2:0x81:0,3:0x81:0,4:0x2b:0 --php 999 --
 | `editor2/tests/test_compiler.py` | `REFERENCE_MD5` re-pinned `807d9668…` (patched); `test_s134` (the emitter's 128 sections, the staging lists, the bank rule on the built ROM); the expected-targets list += `bank_ext.asm` | `ALL … TESTS PASSED` |
 | `editor2/__init__.py` `EDITOR_REVISION` S134 + `editor2/help/80_build.md`, `90_limits.md`, `_revision.md` | the ROM is 4 MB (emulators / flash carts), the 128-room limit | test_app (revision stamp) |
 | `extracted/capacities.json` | `rom_size`: 4 MB BUILT (S134) | `json.load` |
+
+## S135 rows (ROADMAP ARC CAP2a — the LZ stream spill)
+
+| Tool / data | What changed | Check |
+|---|---|---|
+| `editor2/core/project.py` | `LAYOUT_HOME_BANK` / `TILESET_HOME_BANK` / `STREAM_BANK_*` / `EXT_BANK_*`; `stream_items()`, `stream_plan()` (first fit $64 / $67 → $80+), `_take_ext_bank`, `ext_bank_owners`, `stream_ref`, `_explicit_stream_ref`; every layout / attr / tileset resolver returns the plan's (bank, entry) | test_compiler `test_s135`; pins unchanged |
+| `editor2/core/emitters.py` | `emit_bank_064` / `emit_bank_067` from the plan (`_stream_bank_body`), NEW `emit_stream_banks` (registry `streams_ext`, target `multi:stream_banks` → `patches/bank_0xx.asm`), `stream_bank_file`, `ext_bank_files` = the overflow banks; NEW `room_holes` + the render-table hole row + warning | `test_s135` |
+| `editor2/core/compiler.py` | `_emit_all` merges a `multi:` emitter's `{target: text}` | `test_s135` |
+| `editor2/core/validators.py` | `bank_usage` + the overflow check cover every `bank_0xx.asm` ≥ $80; a stream the compiler cannot build is an ERROR (`_stream_errors`); no "nearly full" warning for the first-fit banks | `test_s135` (== the plan; the bad-stream case) |
+| `tools/build_project.py` | `--apply` deletes a `patches/bank_08x-0ff.asm` an earlier apply left that this project does not generate | — (read) |
+| `editor2/app/space_meter.py` | $64 / $67 amber (not red) when full; a fifth bar "new" = banks $80-$FF in use of 128 (tooltip: bytes per bank) | `test_s135` (meter banks alone == full measure); test_canvas `--rom`; offscreen smoke on the demo |
+| `editor2/app/rooms/inspector.py` | "custom tileset 'x'" (no "(bank $67)") | test_app |
+| `patches/bank_064.asm`, `patches/bank_067.asm` | regenerated: header comments only (bytes unchanged) | verify check 2 (== the pin) |
+| `disassembly/bank_000.asm` + `patches/bank_000.asm`, `disassembly/bank_017.asm` + `patches/bank_017.asm` | comments only: `DecompressTileLayout` (the stream rule), `label17_409e` (the unchecked walk) | verify check 1 (byte-perfect), check 2 |
+| `tools/census_stream_banks.py` (NEW) | ARC CAP2a census: generates a stress project (example + N rooms, own tileset + 3 screens each), builds, decodes every stream from the ROM at its (bank, entry), PyBoy-compares a sample of screens with the editor preview (`--no-pyboy`, `--rooms`, `--sample`, `--out`) | S135 run: 346 streams OK, 12 / 12 screens 0 tiles differing, `RESULT: PASS`; `test_s135` uses `make_stress` / `static_check` |
+| `examples/s135_overflow_demo/` (NEW: `build_demo.py` + `project.json` + `assets/`) | the S135 test ROM's project: the user's my-dwm-hack_26 + OVERFLOW HALL 1-16 + the Cities_FOUNT S135 DEMO NPC; `build_demo.py <base project.json> <out project.json>` = the Document-API calls that made it | builds `ce0b4ef8…` (patched) = the test ROM |
+| `editor2/tests/test_compiler.py` | `test_s135` (16 checks; `--rom`: the stress ROM's 346 streams) | ALL 1431 PASSED |
+| `editor2/__init__.py` `EDITOR_REVISION` S135 + `editor2/help/80_build.md`, `90_limits.md`, `_revision.md` | space for art: home banks then the new banks; the meter's "new" bar; $60 is the next limit | test_app (revision stamp) |
+| `extracted/capacities.json` | NEW `stream_banks`; `rom_size` USER-CONFIRMED | `json.load` |
+| review (subagent, read-only) | the CAP2a diff: one defect (stream build errors swallowed → fixed + test), two minor (allocator retry, "nearly full" noise → fixed), the census docstring / integer mapID → fixed | — |
+| measurement scripts (scratch, not committed) | the 16-hall walk on the user's `.sav` (`walk_halls.py`), the hole probe (`hole.py` / `hole2.py`), the text-box capture | results in PROJECT_STATE S135, KEY_LESSONS S135; method PYBOY_DEBUGGING S135 |
+

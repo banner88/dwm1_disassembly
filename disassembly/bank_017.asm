@@ -120,6 +120,13 @@ jr_017_4071:
     jr jr_017_4102
 
 
+; S135 annotation: entry 1 = the attribute-map load (entry 0 above walks the
+; same table for the palette pointer). Walk: table[room] dw -> [screen] dw ->
+; [step counter:2] -> + state*4 -> [attr_entry, attr_bank, pal_ptr:2]; the
+; attr map is then DecompressTileLayout(D = attr_bank, E = attr_entry) ->
+; $C200. NO word is checked for $0000: a missing screen word is followed into
+; ROM0 $0000 (patched builds: a custom room's undefined screen inside its size
+; crashed the game this way — PyBoy S135; the compiler now emits a real row).
 label17_409e:
     ld a, [wInGateworld]
     or a

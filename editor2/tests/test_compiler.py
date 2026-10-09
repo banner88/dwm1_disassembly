@@ -6677,6 +6677,129 @@ def test_s134(rom_bytes=None):
                all(not any(rom_bytes[b * 0x4000 + 1:(b + 1) * 0x4000]) for b in range(0x80, 0x100)))
 
 
+def test_s135(with_rom=False):
+    """S135 (ROADMAP ARC CAP2a): layouts / attr maps / tilesets past banks $64 / $67
+    go to the 4 MB ROM's overflow banks $80+ (first fit, project.stream_plan). A
+    project that fits keeps the S92 layout exactly (entry = declaration ordinal);
+    a stress project (tools/census_stream_banks.py: the example + 48 rooms, each its
+    own tileset and three screens) spills into several banks, every reference
+    carries the plan's bank, bank_ext.asm INCLUDEs the overflow files, the meters
+    see them; with --rom the stress ROM decodes every stream at its (bank, entry)."""
+    import re as _re
+    import tempfile
+    sys.path.insert(0, os.path.join(REPO, 'tools'))
+    import census_stream_banks as CSB
+    from editor2.core import compiler as C
+    from editor2.core import emitters as E
+    from editor2.core.project import Project, LAYOUT_HOME_BANK, TILESET_HOME_BANK
+    from editor2.core.compiler import measure_banks
+    prj = Project.load(os.path.dirname(EXAMPLE))
+    prj.repo_root = REPO
+    plan = prj.stream_plan()
+    s92 = all(plan['where'][('tiles', l)] == (LAYOUT_HOME_BANK, n)
+              for l, n in prj._layout_entry.items()) and \
+        all(plan['where'][('attr', l)] == (LAYOUT_HOME_BANK, n)
+            for l, n in prj._attr_entry.items()) and \
+        all(plan['where'][('tileset', t)] == (TILESET_HOME_BANK, n)
+            for t, n in prj._tileset_entry.items())
+    ok("S135: the example fits $64 / $67 — no overflow bank, entries == the S92 "
+       "declaration order", plan['overflow'] == [] and s92 and E.ext_bank_files(prj) == {},
+       plan['overflow'])
+    tmp = tempfile.mkdtemp(prefix='t135_')
+    proj = os.path.join(tmp, 'stress')
+    data, rooms = CSB.make_stress(proj, 48)
+    outs, sp, _w = C.compile_project(proj, REPO)
+    spl = sp.stream_plan()
+    ov = spl['overflow']
+    ok("S135: the stress project spills into consecutive banks from $80 (>= 3)",
+       len(ov) >= 3 and ov == list(range(0x80, 0x80 + len(ov))), ov)
+    ok("S135: every bank of the plan fits (<= 16,384 B incl. self-ID + pointers, <= 256 "
+       "entries)", all(spl['used'][b] <= 0x4000 and len(spl['banks'][b]) <= 256
+                       for b in spl['banks']), {hex(b): spl['used'][b] for b in spl['banks']})
+    ok("S135: $64 / $67 are filled first (each within 1 KB of full before any spill)",
+       spl['used'][0x64] > 0x4000 - 1024 and spl['used'][0x67] > 0x4000 - 2200,
+       (spl['used'][0x64], spl['used'][0x67]))
+    files = {f'patches/bank_{b:03x}.asm' for b in ov}
+    ok("S135: one generated file per overflow bank, starting with its section + own "
+       "number", files <= set(outs) and all(
+           f'SECTION "ROM Bank ${b:03X}", ROMX[$4000], BANK[${b:02X}]\n    db ${b:02X}'
+           in outs[f'patches/bank_{b:03x}.asm'] for b in ov), sorted(files - set(outs)))
+    ext = outs['patches/bank_ext.asm']
+    ok("S135: bank_ext.asm INCLUDEs the overflow banks and stubs the rest (128 banks)",
+       all(f'INCLUDE "bank_{b:03x}.asm"' in ext for b in ov)
+       and len(_re.findall(r'^SECTION ', ext, _re.M)) == 128 - len(ov))
+    b60 = outs['patches/bank_060.asm']
+    r = rooms[-1]
+    lid = r['screens']['0']['layout']['id']
+    lb, le = spl['where'][('tiles', lid)]
+    ok("S135: a stress room's step entry carries the plan's (entry, bank)",
+       f'db {le}, ${lb:02X}   ; step_id, tileset_bank' in b60 and lb >= 0x80, (lb, le))
+    tb, te = spl['where'][('tileset', r['record']['tileset'])]
+    ok("S135: the stress room's tileset is resolved to the plan's place",
+       sp.resolve_gfx(r['record']) == (tb, te) and tb >= 0x80, (tb, te))
+    # an authored {bank: $64, entry: N} keeps its S92 meaning wherever the stream went
+    lid_last = sp.layouts[-1]['id']
+    n = sp._layout_entry[lid_last]
+    ok("S135: an explicit {bank: $64, entry: N} = the N-th declared stream, now at the "
+       "plan's place", sp.resolve_layout({'bank': '0x64', 'entry': n}) ==
+       spl['where'][('tiles', lid_last)] and spl['where'][('tiles', lid_last)][0] >= 0x80)
+    ok("S135: an explicit {bank: $67, entry: N} = the N-th declared tileset",
+       sp.resolve_gfx({'gfx_bank': '0x67', 'gfx_id': len(sp.tilesets) - 1}) ==
+       spl['where'][('tileset', sp.tilesets[-1]['id'])])
+    from editor2.core import validators as V
+    gen = {f'file:{k}': v for k, v in outs.items()}
+    use = V.bank_usage(gen)
+    ok("S135: bank_usage measures every overflow bank == the plan",
+       all(use.get(b, (None,))[0] == spl['used'][b] for b in ov),
+       {hex(b): (use.get(b), spl['used'][b]) for b in ov})
+    full, _e = measure_banks(data, proj, REPO)
+    part, _e = measure_banks(data, proj, REPO, banks=(0x60, 0x64, 0x67, 0x71, 0x80))
+    ok("S135: the space meter's banks (+ the new-banks bar) measured alone == the full "
+       "measure", all(part[b] == full[b] for b in [0x60, 0x64, 0x67, 0x71] + ov)
+       and sorted(b for b in part if b >= 0x80) == ov, (sorted(part), ov))
+    # a room with screens 0 and 5 in a 2 x 2 size: screens 1 and 4 are holes the
+    # player can walk into — their render rows were $0000 (the bank $17 walk read ROM0
+    # $0000 as a table: game mode $FE, then a hang — PyBoy S135); now a real row + a warning
+    hp = os.path.join(tmp, 'holes')
+    hd, hr = CSB.make_stress(hp, 1)
+    room = hd['custom']['rooms'][-1]
+    room['screens'] = {'0': room['screens']['0'], '5': room['screens']['1']}
+    room['record']['width_px'], room['record']['height_px'] = 320, 256
+    json.dump(hd, open(os.path.join(hp, 'project.json'), 'w'))
+    hout, _hp, hw = C.compile_project(hp, REPO)
+    m = int(room['mapID'], 16)
+    b17 = hout['patches/bank_017.asm']
+    ok("S135: holes inside a room's size get a real render row (never $0000) + a warning",
+       E.room_holes(room) == [1, 4]
+       and f"RoomAttr_{m:02X}:    ; {room['id']}: screen 0-15\n    dw ScrAttr_{m:02X}_0, "
+           f"ScrAttr_{m:02X}_0, $0000, $0000\n    dw ScrAttr_{m:02X}_0, ScrAttr_{m:02X}_5" in b17
+       and any('never made' in w and room['id'] in w for w in hw),
+       [w for w in hw if 'never made' in w])
+    # a stream the compiler cannot build is a build ERROR (never an empty stream)
+    bp = os.path.join(tmp, 'badstream')
+    bd, _br = CSB.make_stress(bp, 1)
+    bd['custom']['layouts'][-1]['tiles'][0][0] = 1.5          # not a tile number
+    json.dump(bd, open(os.path.join(bp, 'project.json'), 'w'))
+    try:
+        C.compile_project(bp, REPO)
+        why = ''
+    except C.CompileError as e:
+        why = str(e)
+    ok("S135: a layout the compiler cannot build stops the build (reviewed: was an empty "
+       "stream)", 'cannot build tiles' in why, why[-300:])
+    ok("S135: the example has no holes (its rows unchanged)",
+       all(E.room_holes(r) == [] for r in prj.rooms))
+    if with_rom and os.path.exists(ROM):
+        from editor2.core import builder as B
+        C.write_outputs(outs, proj)
+        romp, symp, _md5 = B.build_rom(REPO, proj, os.path.join(proj, 'build'))
+        rb = open(romp, 'rb').read()
+        errs, nst = CSB.static_check(sp, rb, symp)
+        ok(f"S135 ROM: all {nst} streams of the stress project decode from the built ROM at "
+           "their (bank, entry) to the project's bytes; every overflow bank self-IDs",
+           not errs, errs[:3])
+
+
 def test_s132():
     """S132 (Rooms tab usability, ROADMAP P3.4): the story state at a story point is
     what the game's own scripts write (the arena cascade == SIDEQUEST_MAP's table;
@@ -8004,6 +8127,7 @@ def main():
     test_s132()
     test_s133()
     test_s134()
+    test_s135('--rom' in sys.argv)
 
     if '--rom' in sys.argv:
         from editor2.core import builder as B

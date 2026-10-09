@@ -10,11 +10,59 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
+> Last verified: 2026-10-09 (Session 135 — **ROADMAP ARC CAP2a BUILT: LAYOUTS, ATTR MAPS AND
+> TILESETS SPILL INTO THE 4 MB ROM'S NEW BANKS — FIRST FIT FROM $64 / $67 INTO $80, $81, …; THE GAME
+> DRAWS THEM == THE EDITOR (PYBOY, 48 + 12 SCREENS); A CUSTOM ROOM'S UNDEFINED SCREEN NO LONGER
+> CRASHES** (user: "Continue on the 4 mb expansion" → the CAP2 audit + split proposal → "1) yes [the
+> S134 4 MB ROM tested] 2) I suppose whatever works. Also feel free to use subagents" — the allocation
+> questions were internal, decided: home banks first, the place header moves to CAP3).
+> **Built S135; USER-CONFIRMED 2026-10-09 12:59 ("Yep all good can confirm").** Test ROM `DWM-S135-overflow-test.gbc` (`ce0b4ef8…`, patched):
+> the user's project + 16 BRAND-NEW rooms OVERFLOW HALL 1-16 (one per gate theme, own tileset copy,
+> 3 maze screens each); halls 1-3 in $64 / $67, then $80, tilesets of halls 15-16 in $81; way in: the
+> S135 DEMO NPC in Cities_FOUNT (3, 4); each guide names its banks; its project:
+> `examples/s135_overflow_demo/` (`build_demo.py`).
+> **The audit (user-measured need):** the user's 11 rooms fill $60 79 % / $64 79 % / $67 55 % / $17
+> 3,259 B free — the class banks bind at ~14-15 such rooms, long before 128 ids. CAP2 split
+> (ROADMAP): **CAP2a** streams (this session), **CAP2b** place banks for scripts / text / lists (bank
+> $60 forwarders; a STATELESS bank $60 directory lookup instead of a cached `wPlaceBank` — the five
+> wMapID writers outside the commit would each need a refresh), **CAP2c** palettes + render tables
+> out of bank $17; the place header / `wPlaceAttr` → CAP3 (per-room tables of $71 / $76 do not
+> overflow below 128 places: $71 ≈ 60 B a room).
+> **The engine (traced, subagent + read; annotated both trees):** ROM0 `DecompressTileLayout`
+> ($1627) is the ONE reader of layouts, attr maps and BG tilesets: D = bank (8 bits), stream = the
+> word at $4001 + 2E of that bank (≤ 256 a bank), never crosses $7FFF, decodes with interrupts on
+> (the audio swap reads [$4000] → self-ID load-bearing). Every reference carries its bank (room
+> step [id, bank], bank $17 render row [attr_entry, attr_bank], $26DD [gfx_id, gfx_bank]) → **no
+> engine change**: CAP2a is compiler-only.
+> **The compiler:** `Project.stream_plan()` — layouts (tiles, attr), then tilesets, declaration
+> order; first fit: home bank ($64 / $67), then the overflow banks already open, else the next bank
+> $80+ (`_take_ext_bank`, CAP2b's allocator too); any kind shares an overflow bank. Resolvers return
+> the plan's (bank, entry); an authored `{bank: $64|$67, entry: N}` keeps its S92 meaning (the N-th
+> declared stream). `emit_stream_banks` ('multi:' registry target) → `patches/bank_0xx.asm` per
+> overflow bank, INCLUDEd by `bank_ext.asm`; `--apply` removes stale ones. Meters: `bank_usage` +
+> the overflow check see them; the status bar's $64 / $67 go amber (not red) when full, a "new"
+> bar counts banks $80-$FF of 128. A project that fits is byte-identical: **the pin `807d9668…`
+> (patched) and the user's `aae43261…` (patched) unchanged.**
+> **Measured:** `tools/census_stream_banks.py` (example + 48 generated rooms, 346 streams, banks
+> $80-$86, $83 filled to 16,383 B): every stream decodes from the ROM at its (bank, entry); PyBoy 12
+> screens == the editor preview (0 tiles differing). The test ROM on the user's `.sav`: CONTINUE →
+> Cities_FOUNT → the DEMO NPC YES → all 16 halls × 3 screens == the preview (0 differing; screen
+> changes inside overflow rooms), every guide's YES to the next hall, the last NO home.
+> **Found + fixed (PyBoy):** a custom room's screen inside its size but not defined (a hole, e.g.
+> screens 0 + 5 of a 2 × 2 room) had render row `$0000`; the bank $17 walk follows it into ROM0 →
+> game mode `$FE` and a hang when the player walked in. Now the row is the room's first screen's +
+> a build warning (`emitters.room_holes`); no project the user has contains a hole.
+> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 1431 PASSED (`test_s135`); test_app
+> PASS; test_canvas `--rom` PASS. An independent read-only review of the diff found one defect (a stream
+> the compiler could not build shipped EMPTY instead of stopping the build) — fixed + tested. `EDITOR_REVISION` S135 (help 80_build, 90_limits).
+> **Next:** ARC CAP2b (the user's SameBoy test of the overflow halls passed) (place banks — scripts,
+> text, NPC / exit lists; the demo itself shows why: 16 short guides took the user's $60 to 97 %).
+
 > Last verified: 2026-10-09 (Session 134 — **ROADMAP ARC CAP1 BUILT: EVERY BUILD IS A 4 MB ROM —
 > BANKS $80-$FF SELF-ID'D, THE BANK RULE CHECKED ON EVERY BUILD; THE GAME NEVER SELECTS A BANK ≥ $80
 > ON ITS OWN (MEASURED)** (user: "ARE THERE ANY DOWNSIDES TO MOVING TO A 4 mb rom" → the list →
 > "Ok that sounds fine. Proceed"; **S132's Rooms tab USER-CONFIRMED 09:47: "Rooms tab is fine"**).
-> **Built S134, NOT yet user-tested.** Test ROM `DWM-S134-4mb-test.gbc` (the user's own project
+> **Built S134; USER-CONFIRMED 2026-10-09 (S135 start: "yes").** Test ROM `DWM-S134-4mb-test.gbc` (the user's own project
 > built 4 MB; `aae43261…`, patched).
 > **The build:** `patches/game.asm` INCLUDEs the compiler-generated `patches/bank_ext.asm`
 > (emitter `ext_banks`: a section + self-ID byte per bank $80-$FF; `emitters.ext_bank_files` =
@@ -40,59 +88,9 @@
 > yet user-tested.
 > **Next:** the user's SameBoy test of the 4 MB ROM; then ARC CAP2 (place banks — the spill).
 
-> Last verified: 2026-10-09 (Session 133 — **THE CAMPAIGN-SCALE CAPACITY AUDIT (ROADMAP ARC CAP0):
-> HUNDREDS OF PLACES NEED PLACE BANKS, REGIONS AND A 4 MB ROM — ALL THREE MEASURED FEASIBLE;
-> THE $EA MAP-ID CEILING NOW ENFORCED** (user: "What are big ticket items that are left?" → on the
-> POC's bank $60 / $64 at 79 %: "Romhack proper will have HUNDREDS OF CUSTOM ROOMS"; "Distinct
-> places. Reusing tileset is NOT ideal at all"; vanilla "Staying as postgame with EDITED NPCs and
-> scripts and flags … only keeping 1 version of the map"; "ARENA is needed … all 'services' +
-> farm etc - all of those are ESSENTIAL … build outwards+ On top of rather than replace"; "Current
-> project is purely POC … Just make capabilities identical"; 4 MB: "I assume most people will use
-> emulators"; the plan audit → spill → 4 MB → regions engine → regions editor: "Sounds good").
-> **Byte-neutral (labels / comments + a compiler validator; clean `1ca6579…` byte-perfect; the
-> regression pin unchanged) — no test ROM.**
-> **The walls (EDITOR_DESIGN §6.4):** (1) the map id is one byte — 128 custom rooms `$6B-$EA`
-> (bank $60 `CustomPtrChase` / `CustomStateRules` / `CustomMonsterCast` + bank $17
-> `CustomAttrCheck` double `mid − $6B` in 8 bits; a room at `$EB` BUILT and read room `$6B`'s
-> tables — now `project.CUSTOM_MID_MAX`, ProjectError, `test_s133`); (2) every custom data class
-> sits in ONE bank whose code reads it in place ($60 scripts / text / lists, $64 layouts, $67
-> tilesets, $17 palettes + render walk, $71 / $6C / $76 per-room tables); (3) no whole bank is
-> free (≈315 KB inside the custom banks; ROM0 8 B, $0B 1 B, $17 3,937 B).
-> **Measured cost of a place** (the user's 11-room / 33-screen POC): ≈3-4 KB new; the copies of
-> Arena Lobby / Arena Battle / GreatTree = 7,916 of its 9,130 B of scripts. 4 MB ≈ 2.3 MB for
-> places ≈ 575-750 places.
-> **Measured (PyBoy, the user's build + .sav):** the exit list is not re-copied between an exit
-> firing and the commit (custom door $6E → $6B: frames 81 → 100; GreatTree redirect → $6E: 89 →
-> 108; buffer identical) — link slots noted at copy time survive; a custom script never runs
-> across a commit (the roots scene's last words at 1090, the commit at 1109, then `$70`'s own
-> script). **4 MB:** scratch builds with banks $80 / $FF link (`$0148` := `$07` by rgbfix), boot
-> to the bedroom in PyBoy, map through `$2100`, and a `rst $10` into bank $80 RAN on every commit
-> (3 / 3). Rule: every new bank starts with its own number (`rst $10`, `AudioSaveBankState`, the
-> text engine read `[$4000]`).
-> **The design (ROADMAP ARC CAP1-5):** CAP1 4 MB; CAP2 place banks (bank $60 forwards to the
-> place's home bank; place header + `wPlaceAttr` far copy; bank $17 staging in WRAM; text
-> sections; more layout / tileset / animation banks); CAP3 regions (`wMapRegion` saved with X1;
-> the bank $73 commit hook resolves link slots `$F0-$FE` from `CopyExitListToBuffer`'s `$FD
-> <region>` prefixes / global ids / a pending `wWarpRegion` / unchanged; compiler-assigned and
-> invisible); CAP4 the editor (names not ids, one-stage copies of vanilla rooms, meters); CAP5
-> secondary ceilings (story checks 256 / commands 255, flags 1,965, …).
-> **Census (CROSSBANK_ROOMS "S133 capacity audit"):** every RAM byte holding a map id (saved:
-> wMapID, wWarpGateId, `$C8FB`, wBossMapType, wScriptMapType, the dead `$C96A/B`), the wMapID
-> writers, the places that set wMapID without the mailbox (bank $71 gate insert, bank $16 boss
-> floor — 8 nop bytes free there), wWarpFlag's four pre-commit `or a` readers (no room for a
-> region in it).
-> **Doc corrections (DOC_AUDIT S133):** the "engine step validation `tileset_bank < $80`" is a
-> Python-dumper check; §6.4's "11 unallocated banks" stale since S121; capacities.json refreshed;
-> SOUND_SYSTEM's RAMB formula; the ceiling row missing two readers; `rst $10` returns BC / DE /
-> HL (only A clobbered).
-> **Annotation (both trees, zero bytes):** `wMapIDMirror` / `wInGateworldMirror` ($C96A / $C96B,
-> write-only), the bank $00 `RST_28` mgbdis artifact (= the far-call return `pop af`).
-> **Checks:** see the S133 wrap-up — verify_integrity, test_compiler `--rom`, clean rebuild.
-> **Next:** the user's pick of CAP1 (4 MB, suggested first: small, and CAP2's allocator should
-> know banks $80-$FF) or CAP2 (the spill); the S132 Rooms-tab test still pending.
-
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
-- **S134** (2026-10-09): ROADMAP ARC CAP1 built — every build is 4 MB (`patches/bank_ext.asm`, banks $80-$FF self-ID'd; `HeaderROMSize` $07; staging finds new bank files by rule; the builder removes what it created); `validate_custom_data.check_banks` on every build; pin `807d9668…` (patched; vs S129 only the header bytes differ); PyBoy on the user's project + save: rooms, doors, a redirect, a gate, a battle, a save + reload, 201,868 bank switches none ≥ $80; S132 Rooms tab USER-CONFIRMED. Owning: ARCHITECTURE "ROM banks $80-$FF", PROJECT_COMPILER §1 / §4 / §2.2, ROADMAP CAP1, KEY_LESSONS S133/S134, PYBOY_DEBUGGING S134, DOC_AUDIT S134, TOOLS_AND_DATA S134.
+- **S135** (2026-10-09): ROADMAP ARC CAP2 split (a streams / b place banks / c bank $17 out; the place header → CAP3) and **CAP2a built** — layouts, attr maps and tilesets first-fit from $64 / $67 into overflow banks $80+ (`Project.stream_plan`, `emit_stream_banks` → `patches/bank_0xx.asm`, INCLUDEd by bank_ext.asm; compiler-only: `DecompressTileLayout` takes the bank from every reference — traced + annotated both trees); meters ($64 / $67 amber, a "new banks" bar); `tools/census_stream_banks.py` (346 streams decoded from the ROM; PyBoy 12 screens == the preview); the test ROM's 16 OVERFLOW HALLS × 3 screens == the preview on the user's save; FIXED a custom room's undefined screen inside its size (render row `$0000` → game mode `$FE` + hang, PyBoy) — `emitters.room_holes` + a warning; pins unchanged (`807d9668…`, the user's `aae43261…`, patched); S134 USER-CONFIRMED. Test ROM USER-CONFIRMED 2026-10-09 12:59. Owning: ARCHITECTURE "LZ stream banks (S135)", PROJECT_COMPILER §2.44, EDITOR_DESIGN §6.4, ROADMAP CAP2a, ROOM_DATA_FORMAT, CROSSBANK_ROOMS lesson 4, KEY_LESSONS S135, PYBOY_DEBUGGING S135, DOC_AUDIT S135, TOOLS_AND_DATA S135, extracted/capacities.json.
+- **S134** (2026-10-09; USER-CONFIRMED at the S135 start): ROADMAP ARC CAP1 built — every build is 4 MB (`patches/bank_ext.asm`, banks $80-$FF self-ID'd; `HeaderROMSize` $07; staging finds new bank files by rule; the builder removes what it created); `validate_custom_data.check_banks` on every build; pin `807d9668…` (patched; vs S129 only the header bytes differ); PyBoy on the user's project + save: rooms, doors, a redirect, a gate, a battle, a save + reload, 201,868 bank switches none ≥ $80; S132 Rooms tab USER-CONFIRMED. Owning: ARCHITECTURE "ROM banks $80-$FF", PROJECT_COMPILER §1 / §4 / §2.2, ROADMAP CAP1, KEY_LESSONS S133/S134, PYBOY_DEBUGGING S134, DOC_AUDIT S134, TOOLS_AND_DATA S134.
 - **S133** (2026-10-09): the campaign-scale capacity audit (ROADMAP ARC CAP0; byte-neutral) — hundreds of places need place banks (CAP2), regions (CAP3) and a 4 MB ROM (CAP1): walls measured (128 ids / one bank per class / no free bank), ≈3-4 KB per place, exit buffer fire → commit intact + scripts never cross a commit (PyBoy), 4 MB built / booted / a far call ran in bank $80; `CUSTOM_MID_MAX` = $EA enforced; `$C96A/B` labelled write-only; RST_28 artifact commented. Owning: EDITOR_DESIGN §6.4 + G-Q, CROSSBANK_ROOMS "S133 capacity audit", ARCHITECTURE "ROM banks $80-$FF (S133)", ROADMAP ARC CAP, PROJECT_COMPILER §2.2, extracted/capacities.json, known_RAM_map, PYBOY_DEBUGGING S133, DOC_AUDIT S133, TOOLS_AND_DATA S133.
 - **S132** (2026-10-09): the Rooms tab made usable (ROADMAP P3.18 + P3.4; byte-neutral; USER-CONFIRMED 2026-10-09 09:47 "Rooms tab is fine") — paint lag removed (per cell 14 → 0.9 ms, stroke end 350 → 46 ms, the bank meter 2 s → 0.14 s), the side rail (one page at a time), Borrow palette (any room / screen / step / gate theme; whole or rows), the Draw tab (everywhere / a new metatile), ▶ Play here (new game / .sav / a story point of the game or the project / by hand; flags ON / OFF); the story state = the game's own scripts (`story_state.py`, census 39 / 39 == PyBoy). Owning: EDITOR_DESIGN §5.1 "As built S132", EVENT_FLAGS "Story state at a story point (S132)", GATE_GENERATION §7.7, SIDEQUEST_MAP, MONSTER_DATA (writing a party record), PROJECT_COMPILER (measure_banks), KEY_LESSONS S132, PYBOY_DEBUGGING S132, DOC_AUDIT S132, TOOLS_AND_DATA S132.
 - **S131** (2026-10-08): P3.15b (1) / (2) / (3) built (byte-neutral) — the Balance level = grinding time (a bred monster's slot pays its family's grind to level 10; cost-aware breeding pool, ≤ 6 generations; user option B), gate dives walk the forest / maze / conveyor special rooms as their own rooms (PyBoy 7 / 7; `census_dive.py` `specials`), +20 = a max count (randomizer Pool, sweep_ttk), full-HP heals not unmodelled; items banked; anchor rebuilt by the user ('S131.2', selftest OK). Owning: PROJECT_COMPILER §2.43, GATE_GENERATION §4.4, MONSTER_DATA "The breeding level gate (S131)", KEY_LESSONS S131, DOC_AUDIT S131, TOOLS_AND_DATA S131.
@@ -232,7 +230,7 @@
 | Follower layout library | **155 distinct layouts** (complete; regenerated by `tools/extract_monster_follower_layouts.py` from the real `$10/$11:$407f` tables — the old 118-count brute-force scan dropped 3-entry small/blob layouts). Layout is per-species. Reassignment = same-size 2-byte repoint of the species' `$407f` level-1 entry (same-bank only), NOT a `[$caca]` edit; S107 2b: a layout of the other bank is COPIED into this bank's zero tail (editor2/core/walk_layouts.py), new species have their own level-1 row (`NewFollowerL1Table`). `extracted/follower_layouts.json` (S107: + stored bytes, per-bank instances, bank frames, Y-flip; 155 as entry SETS — 175 by entry order, 188 by raw bytes). |
 | Custom layout bank | $64 (layout ptr table + LZSS layout + attr data, 309 bytes used) |
 | Vanilla-empty banks | 23 = 368 KB: $60,$64,$67,$69–$77,$79–$7A,$7C,$7E–$7F (full-ROM scan, DOC_AUDIT B). Current allocation: see Bank Allocation table below — **all owned since S121**. |
-| ROM size / growth (S133, S134) | **4 MB since S134** (every patched build; banks $80-$FF self-ID stubs until ARC CAP2; `check_banks` enforces 4 MB / `$07` / self-IDs). S133 measured it feasible: links, boots in PyBoy, a `rst $10` ran in bank $80; every new bank must start with its own number (`[$4000]` is how `rst $10` / the audio swap / the text engine save the current bank). ARCHITECTURE "ROM banks $80-$FF (S133)"; ROADMAP ARC CAP1. |
+| ROM size / growth (S133, S134, S135) | **4 MB since S134** (every patched build, USER-CONFIRMED; banks $80-$FF self-ID stubs unless the compiler fills them — S135: the LZ stream overflow banks, first fit after $64 / $67, `Project.stream_plan`; `check_banks` enforces 4 MB / `$07` / self-IDs). S133 measured it feasible: links, boots in PyBoy, a `rst $10` ran in bank $80; every new bank must start with its own number (`[$4000]` is how `rst $10` / the audio swap / the text engine save the current bank). ARCHITECTURE "ROM banks $80-$FF (S133)"; ROADMAP ARC CAP1. |
 | Custom map ids (S133) | `$6B-$EA` = 128 places, enforced by the compiler (`CUSTOM_MID_MAX`; 8-bit doubling in bank $60 / $17 readers). Hundreds of places = ROADMAP ARC CAP (place banks + regions); design EDITOR_DESIGN §6.4. |
 | Gate floor generation | Standard floors are procedurally generated (4×4 screen grid `$C940`, `(piece<<4)\|variant`); special/boss rooms are fixed templates substituted in. Per-gate config `GateFloorDataTable` `$16:$70A6` (32×8; byte 3 = floor count incl. the boss = FAQ "Levels"); weighting via `SelectFloorType` `$16:$5FC0` + `FloorTypeSelectionTable`1/2/3. Special rooms: only floors 3, 6, 9 … (wRNG1 bit 4 AND `wCurrentFloor` mod 3 == 2 — S100 correction), `rst $00` dispatch at `$16:$5C1C` (sets `wMapID` + `wInGateworld=0`). Custom rooms: `GateDecisionFork` → bank $71 entry 4 (S100). New gates 32-95 (S115): the two row readers go through `GateRowPtr` → bank $76 `NewGateRows` / `wGateRowBuf` (GATE_GENERATION §7.8). Gate names: `extracted/gate_names.json` (ROM-derived S100). **Full pipeline: GATE_GENERATION.md.** |
 | Gate damage tiles | Standing-tile id → HRAM `$AA` (`$00:$1E96`); behavior class `$AA>>2`: `$0E` (ids `$38–$3B`) = damage, `$0F` (`$3C–$3F`) = staircase. Amount = `FloorDamageTable` `$01:$5E7D` (16 B by floor type): type 3→5, type 6→10, types $0C/$0E→2, else 0. Applier `ApplyFloorDamage` `$01:$5E23`. (GATE_GENERATION.md §5.1.) |
@@ -273,8 +271,8 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Bank | Owner | Emitted by |
 |------|-------|-----------|
 | $60 | Custom rooms / NPCs / scripts / text (+ `CustomMonsterCast` monster-NPC cast tables, S101; S117: entry 1 serves EVERY non-gate room — `$A0`/`$A1` NPC flag conditions, `VanillaNPCExtTable`; S119: entries 9 / 10 `CustomDrawTiles` / `CustomDrawAttrs` — the `$24`/`$61` tile patches of custom rooms + copies, from `patch_data`; S123: entry 11 `NpcColourDraw` + the `$A2` colour prefix; r2: entry 12 `CustomDescentFeel` (bank $0B `CustomDescentInGate`'s body); template 1,293 B) | hand-authored `patches/bank_060.asm` (→ `build_project.py` later) |
-| $64 | Custom tile layouts + attr data (`custom.layouts[]`, S92; per-screen attr maps S94) | compiler-generated `patches/bank_064.asm` (`layouts64`) |
-| $67 | Custom tileset sheets (`custom.tilesets[]`: raw2bpp incl. editor-copied vanilla sheets, or mashup spec) | compiler-generated `patches/bank_067.asm` (`tilesets67`) |
+| $64 | Custom tile layouts + attr data (`custom.layouts[]`, S92; per-screen attr maps S94); S135: first fit — the rest goes to the overflow banks $80+ | compiler-generated `patches/bank_064.asm` (`layouts64`) |
+| $67 | Custom tileset sheets (`custom.tilesets[]`: raw2bpp incl. editor-copied vanilla sheets, or mashup spec); S135: first fit — the rest goes to the overflow banks $80+ | compiler-generated `patches/bank_067.asm` (`tilesets67`) |
 | $69 | Breeding special scanner (B2) + the live special table | hand-kept `patches/bank_069.asm` (scanner) + compiler region `gd_special_recipes` (`gamedata.breeding.special`, S103; `build_breeding.py --emit-special` retired) |
 | $6A | New-species info high table (ids 221-239; S105 G3, was 224+): hand `NewSpeciesInfoCopy` (`sub $dd`) + slots 0-18 = compiler region `ns_info` (S105) | hand-kept `patches/bank_06a.asm` + `custom.species` (editor2/core/species.py; `build_new_species.py` emit retired S105) |
 | $6B | Project enemy rows (`progression.enemies[]`, EID 519 + index, 25 B each, ≤640; entry 0 `CopyEnemyRowExt` called by bank $14 `LoadEnemyStatsExt`; S101) | compiler-generated `patches/bank_06b.asm` (template `bank_06b_head.asm` + rows) |
@@ -294,7 +292,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | $7E | The project's NEW-SPECIES art streams (38-word pointer table: index (id-221)*2 follower, +1 battle; S105: compiler-owned, all zero without `custom.species`) | compiler-generated `patches/bank_07e.asm` (`species7e`, editor2/core/species.py; streams from `bake_follower_overflow.py --stream-dir`) |
 | $7F | RESERVED next sprite-overflow bank (then $7C, $7A) | `dwm/sprite_bank.py` order |
 | **Unallocated** | **none** (S121: $79 = story hooks; S117: $77 = shops; S116: $75 = the second song bank; S114: $76 taken; S107: $7A / $7C are art banks) + reserved $7F. | — |
-| $80-$FF | **S134 (ARC CAP1): the 4 MB ROM — a self-ID stub per bank** (`patches/bank_ext.asm`, compiler-generated). ARC CAP2: place banks (scripts / text / lists / place headers), more layout / tileset / animation banks. | compiler `ext_banks` (`emit_bank_ext`) |
+| $80-$FF | **S134 (ARC CAP1): the 4 MB ROM — a self-ID stub per bank** (`patches/bank_ext.asm`, compiler-generated). **S135 (ARC CAP2a): the LZ stream overflow banks, allocated from $80 up as needed** (layouts / attr maps / tilesets that do not fit $64 / $67, any kind mixed; `patches/bank_0xx.asm`, INCLUDEd by bank_ext.asm). ARC CAP2b: place banks (scripts / text / lists) from the same allocator (`Project._take_ext_bank`). | compiler `ext_banks` (`emit_bank_ext`) + `streams_ext` (`emit_stream_banks`) |
 
 ## Iron Rules
 
@@ -468,6 +466,13 @@ re-section items).
   measured `extracted/dialogue.json` when Phase F T2… resumes (ROADMAP Arc 1 note).
   The tool `gen_script_banks.py` / `decompile_script.py` read `text_id_map.json`,
   which is correct again (derived from dialogue.json).
+- ~~(S135) A custom room's screen INSIDE its size but never defined (a "hole": screens 0 + 5 of a
+  2 × 2 room) crashed the game when the player walked in~~ **FIXED S135 (measured in PyBoy; the
+  user's S135 test ROM passed, but holes were not part of it):** its render row was `$0000`; the bank $17 walk (`label17_409e`) follows every
+  word unchecked into ROM0 → game mode `$FE`, PyBoy hang. The compiler now points a hole at the
+  room's first screen's row and WARNS (`emitters.room_holes`); the hole still SHOWS bank $60's
+  `DummyStepEntry` layout (stray tiles) — the editor should not let a room have holes (CAP4 /
+  Rooms tab). No project the user has contains one.
 - `dump_monsters.py` WRITES the legacy `monsters.json` schema (43-byte parse) — don't
   re-run it casually (it recreates the deleted legacy file). (S120: `monsters_full.json`
   has NO generator — first import, == the ROM, frozen; `npc_catalog.json` rebuilt

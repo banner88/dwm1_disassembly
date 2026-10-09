@@ -8,6 +8,14 @@ for a large romhack. Every modern Game Boy Color emulator plays it; on a real
 Game Boy it needs a flash cartridge that takes 4 MB ROMs. Your battery save
 (`.sav`) is not affected by the size.
 
+**Space for art (S135):** screen layouts, their colour grids and your tilesets
+first fill their own banks ($64 for layouts and colour grids, $67 for tilesets);
+whatever does not fit goes on into the new half of the 4 MB ROM (banks $80 and
+up) by itself — nothing to set. The space meter under the window shows it: the
+$64 / $67 bars turn amber when full (not an error any more), and the **new** bar
+counts the new banks in use (of 128; hover it for each bank's bytes). Scripts,
+texts and NPC lists ($60) do not move yet — that is the next step.
+
 Messages in the **Build log**:
 
 - **ERROR** — the build stops; the message names the room / script / field. A

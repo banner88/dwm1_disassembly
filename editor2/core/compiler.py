@@ -41,6 +41,11 @@ def _emit_all(prj, only_banks=None):
     for name, section, target, fn, banks in emitters.REGISTRY:
         if only_banks is not None and not set(banks) & set(only_banks):
             continue
+        if target.startswith('multi:'):
+            # S135: one emitter, a variable set of whole files (the LZ stream
+            # overflow banks bank_080.asm …) — {target: text}
+            out.update(fn(prj, warnings))
+            continue
         out[target] = fn(prj, warnings)
     return out, warnings
 

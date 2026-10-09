@@ -2225,7 +2225,13 @@ is read with interrupts on returns to the wrong bank otherwise. The work is buil
 `game.asm` includes for the new banks, `verify_integrity` / `builder` patch lists that are
 not hard-coded, the bank meters, the tools that assume `< $80` banks (dump tools only).
 
-**B. Place banks — the spill (CAP2).** A *place* is what the editor calls a room. Each place
+**B. Place banks — the spill (CAP2; split S135 into CAP2a streams — BUILT S135, USER-CONFIRMED —, CAP2b place
+banks, CAP2c bank $17; ROADMAP).** S135 changes to the plan below: (1) the place header /
+`wPlaceAttr` far copy moves to CAP3 — below 128 places the per-room tables of $71 / $76 / ROM0
+do not overflow ($71 ≈ 60 B a room); (2) CAP2b's forwarders look the home bank up in a bank $60
+directory `[mapID − $6B]` on EVERY call instead of caching `wPlaceBank` (no refresh needed at the
+five wMapID writers outside the commit); (3) layouts / attr maps / tilesets were compiler-only —
+see the bullet below. A *place* is what the editor calls a room. Each place
 has a **home bank** holding its own scripts, NPC / exit lists, screen tables, state rules,
 monster casts, patch data and a **place header** (fixed-size attributes: the `$26DD`-style
 record, encounter row, animation source / own-animation pointer + bank, save / sprite flags,
@@ -2254,7 +2260,10 @@ commit to `$70` came at 1109, the next read was `$70`'s own entry script).
   places' text share the scheme.
 - **Layouts / attr maps / tilesets** are already addressed by data fields (`{bank, entry}`,
   `gfx_bank`): spill = the compiler allocating more layout / tileset banks, each with its own
-  pointer table. Own tile animations: anim banks with the engine copy, chosen per place.
+  pointer table. **BUILT S135 (CAP2a):** `Project.stream_plan()` — first fit from $64 / $67 into
+  overflow banks $80+ shared by all three kinds (PROJECT_COMPILER §2.44; the one reader
+  `DecompressTileLayout`: ARCHITECTURE "LZ stream banks (S135)"). Own tile animations: anim banks
+  with the engine copy, chosen per place (CAP2b).
 - **Step counters:** only screens with more than one state get one (a one-state screen reads
   a shared zero byte); allocated per region (C) and zeroed on a region change — the same
   "transient" contract the window has had since S65.

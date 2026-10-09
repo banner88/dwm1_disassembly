@@ -40,6 +40,7 @@ to the proven overlay:
 | `patches/bank_075.asm` + region `rom0_audio_master` in `patches/bank_000.asm` | S116: the second song bank and the `AudioMasterTableExt` rows (§2.9) |
 | `patches/bank_076.asm` | whole file = template head (`EncResolve`, S115 + `NewGateRowCopy`) + the project's encounter lists, rooms' lists / variants / rates, gates' plans (S114 P3.13a, §2.30) + the new gates' rows / sources (S115 NG1, §2.31) + `GateClearTable` (S117 NG2, §2.32) |
 | `patches/bank_ext.asm` | S134 (ROADMAP ARC CAP1): banks $80-$FF of the 4 MB ROM — a section + self-ID byte per bank (`emit_bank_ext`); a bank whose whole content another emitter writes (ARC CAP2 place banks, `emitters.ext_bank_files`) is INCLUDEd instead. `patches/game.asm` INCLUDEs it |
+| `patches/bank_080.asm` … (only when needed) | S135 (ROADMAP ARC CAP2a): the LZ stream overflow banks — layouts / attr maps / tilesets that did not fit $64 / $67 (`emit_stream_banks`, §2.44). Whole files, INCLUDEd by `bank_ext.asm`; `--apply` deletes one an earlier apply left that this project no longer generates |
 | `patches/bank_077.asm` + region `gd_item_info` in `patches/bank_003.asm` | S117: the shop lists (`ShopFill` / `ShopClose` template head) and the item buy prices, from `gamedata.shops` / `custom.shops` / `gamedata.items` (§2.32) |
 
 **S120 — the committed overlay IS the compiler's example build.** `patches/*` must
@@ -535,7 +536,9 @@ registering an emitter; nothing existing changes.
 | Emitter | Consumes | Target | Banks |
 |---|---|---|---|
 | `rooms60` | `custom.rooms/scripts/dialogue` | `file:patches/bank_060.asm` | `$60` |
-| `ext_banks` (S134) | — (always; `ext_bank_files(prj)` names compiler place banks, none before ARC CAP2) | `file:patches/bank_ext.asm` | `$80-$FF` |
+| `ext_banks` (S134) | — (always; `ext_bank_files(prj)` names the banks a compiler file fills — S135: the LZ stream overflow banks; CAP2b: place banks) | `file:patches/bank_ext.asm` | `$80-$FF` |
+| `layouts64` / `tilesets67` | `custom.layouts` / `custom.tilesets` — the streams `Project.stream_plan()` put in the home bank (§2.44) | `file:patches/bank_064.asm` / `bank_067.asm` | `$64` / `$67` |
+| `streams_ext` (S135) | the streams that did not fit $64 / $67 (§2.44) | **`multi:stream_banks`** — one emitter, a variable set of whole files `patches/bank_0xx.asm` (one per overflow bank; none when everything fits). `compiler._emit_all` merges the `{target: text}` it returns | `$80-$FF` |
 | `dispatch71` | `custom.rooms` (records, encounters, animation S99) + `custom.music` (room BGM table, S64) | `file:patches/bank_071.asm` | `$71` |
 | `palettes_a` | `custom.palettes` (placement a) | `region:…#room_palettes_a` | `$17` |
 | `render17` | `custom.rooms` (+ placement-b palettes) | `region:…#room_render_tables` | `$17` |
@@ -3622,6 +3625,52 @@ team_summary, FightCache round trip + version drop, room_battles script lookup,
 override_enemy, cancel hook); test_app `s130_balance`; `census_raising.py`,
 `census_dive.py`, `build_balance_anchor.py` selftests. REFERENCE_MD5 unchanged
 (`7d136455…`, patched).
+
+## §2.44 S135 — LZ STREAM BANKS: layouts, attr maps and tilesets past $64 / $67 (ROADMAP ARC CAP2a)
+
+**Built S135; USER-CONFIRMED 2026-10-09 (the overflow-halls test ROM).** No schema change: `custom.layouts[]` / `custom.tilesets[]` are
+what they were; WHERE their streams live is decided by the compiler.
+
+- **`Project.stream_plan()`** (lazy, cached per Project): the streams in allocation order — every
+  `custom.layouts[]` item's tiles, then its attr grid (declaration order), then every
+  `custom.tilesets[]` sheet — each compressed (`layouts.compress`, memoised) and placed **first
+  fit**: its home bank ($64 layouts / attr, $67 tilesets), then the overflow banks already opened
+  (any kind may share them), else the next free bank $80-$FF (`Project._take_ext_bank` — CAP2b's
+  place banks take theirs from the same allocator; "the ROM is full" past $FF). A bank holds the
+  self-ID byte + a 2-byte pointer per stream (≤ 256 — the decompressor's `$4001 + 2E`) + the streams
+  (≤ 16,384 B). Returns `where {key: (bank, entry)}`, `banks {bank: [(key, label, data, comment)]}`,
+  `overflow [banks]`, `used {bank: bytes}`; keys `('tiles' | 'attr', layout id)` /
+  `('tileset', tileset id)`. A stream that cannot be built (a bad grid cell, a spec row it cannot
+  resolve) becomes an empty placeholder so references still resolve, and
+  `validators._validate_layouts_tilesets` turns `_stream_errors` into build ERRORS ("cannot build
+  …") — an empty stream is never shipped (a S135 review finding: the first cut swallowed them).
+  `_ext_taken` restarts with every plan. $64 / $67 / $80+ never get the "nearly full" warning
+  (first fit leaves them nearly full by design).
+- **A project that fits is byte-identical to S134:** same entries, same order (entry = declaration
+  ordinal) — the example pin `807d9668…` and the user's `aae43261…` (patched) did not move.
+- **Resolvers:** `resolve_layout` / `resolve_attr` / `screen_attr_entry` / `state_attr_entry` /
+  `resolve_gfx` return the plan's (bank, entry) for `{id}` / `{tileset}` references. An authored
+  `{bank: "0x64", entry: N}` (or `base_entry`) / `gfx_bank "0x67" + gfx_id N` keeps its S92
+  meaning — the N-th declared layout-class stream / tileset — wherever it lives now
+  (`_explicit_stream_ref`). Other banks pass through (vanilla sheets / layouts).
+  `_layout_entry` / `_attr_entry` / `_tileset_entry` are the declaration ordinals (the renderer and
+  `room_sheet` index lists with them).
+- **Emitters:** `emit_bank_064` / `emit_bank_067` write the plan's home-bank part;
+  `emit_stream_banks` (`multi:` target) one `patches/bank_0xx.asm` per overflow bank — `SECTION
+  "ROM Bank $0xx"`, `db $xx`, the pointer table, the streams; `ext_bank_files(prj)` names them so
+  `emit_bank_ext` INCLUDEs them instead of the stub. Labels keep their names in any bank
+  (`Layout_<id>`, `Attr_<id>`, `TilesetGFX_<id>`).
+- **Accounting:** `validators.bank_usage` measures every `bank_0xx.asm` ≥ $80 (pure payload) and
+  the pre-build overflow check covers them; the editor's status bar shows $64 / $67 amber (not red)
+  when full and a **new** bar = banks $80-$FF in use of 128 (`app/space_meter.py`;
+  `measure_banks(banks=(…, 0x80))` runs the overflow emitter).
+- **Room holes (S135 fix, `emitters.room_holes`):** a screen number inside the room's size
+  (`record.width_px / 160` × `height_px / 128` on the 4-wide grid) that the room does not define
+  gets the room's first screen's render row instead of `$0000` (the bank $17 walk followed `$0000`
+  into ROM0 and crashed — PyBoy S135) and a build WARNING; the hole still shows bank $60's
+  `DummyStepEntry` layout.
+- **Measured:** `tools/census_stream_banks.py` (TOOLS_AND_DATA S135); the S135 test ROM
+  (`examples/s135_overflow_demo/`). Tests: `test_compiler.test_s135`.
 
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 

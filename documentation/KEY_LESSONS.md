@@ -6158,3 +6158,27 @@ remember "the current bank" by READING `[$4000]` and switch back to it — so a 
 text bank that does not start with its own number returns the game to the wrong bank. It was
 called "convention, ignored" in `dwm/sprite_bank.py`. **Rule:** every bank the build writes
 starts with `db <bank>`; `validate_custom_data.check_banks` enforces it on every build (S134).
+
+## S135 — the LZ stream spill (ROADMAP ARC CAP2a)
+
+**A `$0000` in a table the engine walks is a crash, not "none".**
+**Symptom (S135, PyBoy, found while tracing every reader of the moved data):** a custom room with
+screens 0 and 5 in a 2 × 2 size — walking east from screen 0 into screen 1 set game mode `$FE`
+and PyBoy never returned from `tick()`. **Root cause:** the compiler wrote `dw $0000` for the
+undefined screens of `RoomAttr_<mid>` ("$0000 = absent", per its own comment), but the bank $17
+walk (`label17_409e`) dereferences every word unchecked — it read ROM0 `$0000` as the screen's
+row, then a junk attr bank / entry for `DecompressTileLayout`. Bank $60's step tables had the
+`$FFFF` guard (CROSSBANK_ROOMS lesson 4) — the render table, emitted by another emitter, did not.
+**Fix:** a screen inside the room's size always gets a real row (+ a build warning).
+**Rule:** a sentinel is only "none" if the READER tests it — before emitting `$0000` / `$FFFF` into
+a table, find the engine line that compares it; when two tables are indexed by the same thing (a
+screen), check every reader, not the one you remember.
+
+**When the placement depends on the compiled size, plan before you resolve.** S92 allocated bank
+$64 entries by declaration order at load time, which works only while everything fits one bank. A
+spill needs every stream's COMPRESSED size before the first reference is resolved, so the plan is
+one lazy, cached pass (`Project.stream_plan()`) that every resolver reads — never two allocators
+(one for references, one for emission) that could disagree. **Rule:** one plan, read by both the
+references and the emitter; a project that fits must reproduce the old layout byte for byte (the
+regression pin proves it).
+
