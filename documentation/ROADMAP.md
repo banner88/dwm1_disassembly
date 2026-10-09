@@ -436,7 +436,7 @@ pipeline — never retrofit the overlay.
       recipe in that section): extend CustomRoomBGMTable 128→256 + bank $71
       `cp $80` guard + music.py validator + template re-pin (S120: the same for
       bank $71 entry 7's `CustomRoomBattleBGMTable`, CROSSBANK_ROOMS "S120
-      burn-down"); the two exit validators (custom-dest exits gate_flag=0;
+      burn-down") — **DONE S138 (ARC CAP2e: 256-row tables, no `cp $80`)**; the two exit validators (custom-dest exits gate_flag=0;
       trigger_x≠$FF) exist (`validators.py`, S120 re-check).
 - [ ] **A′2 — bank $0B in-place room emitter** (Layer A of project.json).
 - [ ] **A′3 — bank $60 multi-bank spill** (bank_map; 16 KB won't hold 75
@@ -2523,7 +2523,7 @@ the user picks.
       there). *User half:* the test ROM in SameBoy.
 - **CAP2 — the spill (split S135, user: "whatever works").** The S133 box bundled four
       independent changes; measured on the user's 11 rooms: $60 79 % / $64 79 % / $67 55 % / $17
-      3,259 B free — the class banks bind at ~14-15 such rooms. Three boxes (S136: + CAP2d, bank $6C split off CAP2b; S137: + CAP2e, stale saves), each its own test ROM:
+      3,259 B free — the class banks bind at ~14-15 such rooms. Three boxes (S136: + CAP2d, bank $6C split off CAP2b; S137: + CAP2e, stale saves — built S138 with the room songs past $7F), each its own test ROM:
   - [x] **CAP2a — LZ streams: layouts, attr maps, tilesets past $64 / $67.** **Built S135;
         USER-CONFIRMED 2026-10-09 12:59 ("Yep all good can confirm").** Compiler-only (`DecompressTileLayout` takes the bank from every
         reference — ARCHITECTURE "LZ stream banks (S135)"): `Project.stream_plan()` first fit
@@ -2585,16 +2585,28 @@ the user picks.
         than $60 (the user's project: $6C 1,344 B of 16,384). *Accept:* a project whose own
         animations exceed bank $6C builds; PyBoy: every animated slot of rooms in a second bank
         steps through its authored frames (the S102 check), menus / battles heal.
-  - [ ] **CAP2e — stale saves: bound bank $71's per-room reads (found S137).** A save made
-        in a room the build lacks (map id past the last room — the user's own save stands in
-        S136 demo room `$78`) HANGS at CONTINUE: bank $71 entry 0 `CopyCustomRoomRecord` copies
-        `Custom26DDTable[mapID − $70]` unchecked → junk tileset bank → `DecompressTileLayout`
-        overwrites WRAM (`wMapID` → `$FF`) — PyBoy, S136 and S137 builds alike (KEY_LESSONS
-        S137). Next: compare against the table's length (an EQU like `ENC_TABLE_LEN`) and fall
-        back to a safe record (the Castle's, matching bank $60's dummy step + bank $17's Castle
-        colours); then census every bank $71 / $76 / $6C per-room reader with a map id past the
-        end (the S136 census's `step_past` idea). *Accept:* the user's `.sav` CONTINUEs in a
-        build of the user's project (11 rooms) into a screen with exits; PyBoy.
+  - [x] **CAP2e — stale saves: bound bank $71's per-room reads (found S137) + room songs past
+        $7F.** **Built S138, NOT yet user-tested** (user: "Continue on the 4 mb expansion" → the
+        audit (CAP2d binds late; the stale-save hang; the S64 music cap at `$7F` = a project's
+        22nd room) → "1) Sure sounds good [CAP2e + the music lift now, CAP2d next] 2) Whatever is
+        the most robust for a NEW romhack … 3) Sure [the SONG GROTTOS + plain-project ROMs]").
+        A custom map id with no place (past the last room, or a PLACEHOLDER = a deleted room's
+        id, `CustomRoomFlagsTable` bit 7) — bank $71 `StalePlace`: entry 0 reads the Castle's
+        record, entry 5 returns `$81`; the CONTINUE loader (bank $15, same size, over a DEAD
+        vanilla gate-save relocation) far-calls NEW entry 10 `ContinueCheck` → `HubWarp`
+        `HUB_CONTINUE` 7: the save starts at home (the hub's room + its arrival scene, else the
+        Castle throne room healed, `$D92B` untouched) — the stale room is never loaded. Room /
+        battle song tables 256 rows, no `cp $80` (the S66 A′1 follow-up). ARCHITECTURE "Stale
+        places at CONTINUE (S138)", PROJECT_COMPILER §2.47, CROSSBANK_ROOMS "S138 sites".
+        *Accept (machine half) MET:* `tools/census_stale_places.py` — every per-room reader for
+        vanilla ids / places / placeholders / ids past the end: 0 mismatched (user's project
+        2,791, + a deleted room 2,802, S138 demo 2,619; the S137 build: 274 mismatched); PyBoy:
+        the user's save JOURNALed in demo room `$85` CONTINUEs in a build of the user's 11-room
+        project in the Castle throne room (14, 5), healed, then saves and reloads normally; with
+        a hub → the hub cell + "Your saved place is gone now."; a save in a then-deleted room
+        (`$72`) → the Castle; the same save in the build that has the room → that room; the 16
+        SONG GROTTOS' room songs + 4 battle songs (`$78`, `$80`, `$82`, `$85`) == the project.
+        *User half:* `DWM-S138-song-test.gbc` + `DWM-S138-plain-test.gbc` in SameBoy.
   - [ ] **Tool drift: `tools/audit_wram.py` (found S137).** Broken since S102 (a `ds` with an
         `EQU`) — S137 taught it EQUs; its selftest now FAILS: the `$DE74` scratch block classifies
         A′ "rammap-span" (a `known_RAM_map` span over `wRoomRecScratch` … `wCustomRoomFlag`).

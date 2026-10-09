@@ -120,11 +120,13 @@ TRIGGERS = ('entry', 'talk', 'examine', 'stepon')
 # S125 (ROADMAP P3.14d): why the player was sent to the hub — an entry scene with
 # trigger.arrival [reasons] plays only for those (wHubReason, patches/wram.asm;
 # the numbers are Project.HUB_REASONS = the HUB_* EQUs)
-ARRIVALS = ('lost', 'wiped', 'warpwing', 'final_lost', 'home', 'arena_won')
+ARRIVALS = ('lost', 'wiped', 'warpwing', 'final_lost', 'home', 'arena_won',
+            'continue')          # S138: CONTINUE of a save in a place the build lacks
 ARRIVAL_NUM = {k: i + 1 for i, k in enumerate(ARRIVALS)}
 ARRIVAL_NAMES = {'lost': 'lost a battle', 'wiped': 'the party fell (floor damage)',
                  'warpwing': 'WarpWing / Anchor', 'final_lost': 'lost the Starry / arena final',
-                 'home': 'sent home by a script', 'arena_won': 'won an arena class'}
+                 'home': 'sent home by a script', 'arena_won': 'won an arena class',
+                 'continue': 'continued a save whose place is gone'}
 W_HUB_REASON = 0xD2EF
 
 

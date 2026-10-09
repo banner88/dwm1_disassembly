@@ -8,7 +8,10 @@ instead:
 - the party **falling on damage floors**;
 - the **WarpWing** item (and the custom **Anchor** skill's gate exit);
 - a lost **Starry Night / arena final**;
-- a scene or conversation that moves the player **home** (see below).
+- a scene or conversation that moves the player **home** (see below);
+- **CONTINUE of a save made in a room your game no longer has** (S138): a room
+  you deleted, or one past your last room — e.g. a save from an older build of
+  your game. The game does not load the missing room: it starts at home.
 
 The penalties stay as in the game: after a loss or a fall the player keeps
 **half the gold** and loses the items that are not kept on a loss.
@@ -24,9 +27,10 @@ The penalties stay as in the game: after a loss or a fall the player keeps
    and the first that holds wins; a rule with conditions is put before the one
    without. ▲ / ▼ change the order. With no rule that holds, home is the
    Castle.
-3. **Add the arrival scenes** — three entry scenes in the hub room
+3. **Add the arrival scenes** — four entry scenes in the hub room
    (Cutscenes tab): after a loss (a line + **Heal**), after the WarpWing (a
-   line + **Heal**), sent home by a script (a line). Edit them like any scene.
+   line + **Heal**), sent home by a script (a line), back from an old save
+   (two lines + **Heal**). Edit them like any scene.
 4. **Build** and lose a battle on purpose: you wake up in your hub.
 
 The Rooms tab marks the arrival cell with a gold **H**.
@@ -36,8 +40,8 @@ The Rooms tab marks the arrival cell with a gold **H**.
 A scene that plays **on entry** can be limited to arrivals home: in the
 cutscene editor, **Arrival home… ▾** and tick the reasons (*lost a battle*,
 *the party fell*, *WarpWing / Anchor*, *lost the Starry / arena final*, *sent
-home by a script*). Such a scene plays once per arrival, before the room's
-other entry scenes. A reason that no scene takes still **heals the party**
+home by a script*, *continued a save whose place is gone*). Such a scene plays
+once per arrival, before the room's other entry scenes. A reason that no scene takes still **heals the party**
 (the Castle's priest heals too) — so if you write a scene for a loss, give it a
 **Heal** step: the build warns when one is missing. An arrival scene must be on
 the screen the hub rule lands on, in a hub room (the build warns otherwise).
@@ -65,3 +69,10 @@ own heal. It shows nothing; say it in a text.
   castle instantly" — the game's own text (item descriptions are read-only
   for now, Dialogue tab).
 - Only your own rooms (or the Castle) can be the hub.
+- An old save sent to **the Castle** arrives in the throne room with the
+  party healed, and the Castle's story state untouched (no priest scene).
+- Rooms are numbered inside the game: a new room takes the first free number,
+  so the next room you make after deleting one takes the deleted room's number
+  — an old save made in the deleted room then starts in the NEW room, wherever
+  it stood (only an empty number sends it home). Once players have your game,
+  keep the rooms you shipped.

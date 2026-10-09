@@ -9,10 +9,12 @@
   rooms). The next space to move is a room's own animated tiles ($6C, ARC
   CAP2d); the 128-room limit goes after that (ARC CAP3, regions).
 - A saved game that stands in a room you have since DELETED (or in a room id
-  past your last room) cannot be continued — the game freezes while loading it
-  (found S137; the room's tileset record is read without a range check — fix
-  planned). Continue such a save in a build that still has the room, and save
-  somewhere else first.
+  past your last room) starts at **home** — your hub, or the Castle — when it
+  is continued (S138; before S138 the game froze while loading it). A NEW room
+  takes the first free room number, so after a delete + new room an old save
+  made in the deleted room starts in the new room instead (see *The hub*).
+- Room music (S138): every room of yours can have its own song and battle song
+  (before S138 only the first 21 rooms, map ids up to $7F, could).
 - One room's scripts and lists must fit one bank (~15 KB) — the build names a
   room that is bigger. Automatically numbered texts start a new 256-line group
   before one group would pass ~12 KB.

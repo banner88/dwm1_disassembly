@@ -248,6 +248,32 @@ user's project and the S136 demo — and no meter watched it).
   + reload in a painted place-bank hall; the user's 33 screens S136 vs S137 build: palette buffer and
   picture identical.
 
+### Stale places at CONTINUE (S138 — ROADMAP ARC CAP2e; built S138, NOT yet user-tested)
+
+A save records the map id it was made in (`wMapID` $C968 in the `$C8EA-$D9E9` image); a later
+build of the project may have NO place there — the room was deleted (the compiler fills the gap
+with a PLACEHOLDER; the next new room takes the number back) or the id is past the last room.
+Bank $60 (S136) and bank $17 (S137) already fell back to the dummy step / the Castle colours;
+bank $71 entry 0 did not, and CONTINUE hung (KEY_LESSONS S137). Since S138:
+- **The CONTINUE loader** (bank $15 `ContinueLoadSave`, the CONTINUE screen's step 0:
+  `SRAMAccess_21B2` + bank $17 entry 0) far-calls **bank $71 entry 10 `ContinueCheck`** in the
+  bytes where the original game jumped over a DEAD block (`ContinueGateSaveRelocate`: a gate save
+  continued a second time was warped to the Castle and healed — unreachable in the shipped game).
+  For a stale id outside a gate it arms the same warp the engine's other "send home" paths use:
+  bank $71 `HubWarp`, reason `HUB_CONTINUE` 7 (the project's hub room + `wHubReason`, else the
+  Castle at ($E8, $58) with no `$D92B` arrival code), `wIsPlayerChangingMaps` 1, `$C8EA` 1 (not the
+  loader's `$80` — no script resumes), `wScriptStateFlags` 0, the party healed at the Castle. The
+  field's first transition then goes home: the stale room is never loaded (PyBoy: no room record
+  read for it).
+- **Every per-room reader is bounded** (defence in depth — a stale id can still be reached by a
+  poke or a future path): `StalePlace` (a custom id ≥ `ROOMFLAGS_TABLE_LEN` or with
+  `CustomRoomFlagsTable` bit 7, a placeholder) → entry 0 reads the Castle's record (map 0), entry
+  5 returns `$81` (no saving there); entries 1 / 3 and banks $60 / $17 / $6C / $76 already fell
+  back. `tools/census_stale_places.py` measures all of them.
+- **Not caught (by design):** a save in a room whose NUMBER now belongs to another room (delete +
+  new room) loads into the new room — the id is a real place. Places by name / regions = ARC
+  CAP3 / CAP4.
+
 ## Key RAM Regions
 
 | Range | Purpose |

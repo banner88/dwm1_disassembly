@@ -537,18 +537,22 @@ def emit_bank_071(prj, warnings):
               "; saving NOT allowed (custom.rooms[].can_save false). Read by entry",
               "; 5 CustomRoomFlags for the bank $07 save ladder (S100). Bit 1 =",
               "; sprites stay drawn while a text box is open (text_keeps_sprites,",
-              "; entry 8 TextSpriteMode, S121). (generated)",
+              "; entry 8 TextSpriteMode, S121). Bit 7 = NO SUCH PLACE (a placeholder;",
+              "; S138 StalePlace: CONTINUE sends a save there home, entry 0 reads the",
+              "; Castle's record). (generated)",
               "; " + "-" * 77,
               f"ROOMFLAGS_TABLE_LEN EQU {len(prj.rooms)}",
               "CustomRoomFlagsTable:"]
     for r in prj.rooms:
         fl = prj.room_flags(r)
         lines.append(F.db_line([fl], comment=f"{F.hexb(F.val(r['mapID']))} — "
-                     + ("no saving" if fl & 1 else "saving allowed")
-                     + (", sprites over text" if fl & 2 else "")))
+                     + ("NO SUCH PLACE (placeholder)" if fl & 0x80 else
+                        ("no saving" if fl & 1 else "saving allowed")
+                        + (", sprites over text" if fl & 2 else ""))))
     lines.append("")
     lines += ["; " + "-" * 77,
-              "; CustomRoomBGMTable — 128 entries indexed by wMapID (S64, M3b).",
+              "; CustomRoomBGMTable — 256 entries indexed by wMapID (S64, M3b; 128",
+              "; until S137 — S138 ARC CAP2e: every map id, no `cp $80` cap).",
               "; Read by entry 2 (CustomRoomBGMResolve, template head) for the",
               "; rewritten LoadNewBGMIdIntoA (patches/bank_001.asm). 0 = no",
               "; assignment -> vanilla derivation; nonzero = the room's default",
@@ -561,7 +565,7 @@ def emit_bank_071(prj, warnings):
     room_bgm = prj.music_room_bgm(warnings)
     names = prj.music_song_ids()
     by_id = {v: k for k, v in names.items()}
-    for i in range(0, 128, 16):
+    for i in range(0, 256, 16):
         row = room_bgm[i:i + 16]
         tags = [f"${i+j:02X}=" + ('follow the gate' if v == M.FOLLOW_GATE
                                   else by_id.get(v, F.hexb(v)))

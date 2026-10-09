@@ -467,6 +467,7 @@ S118 ROADMAP note named. Read site by site:
   battle song. `editor2/core/music.py` refuses `music.battle.rooms` keys ≥ $80 (loud),
   but the automatic "follow the gate" fill for served rooms skips them silently. The
   ≥ $80 extension recipe below covers both tables (widen to 256, drop both `cp $80`).
+  **DONE S138** ("S138 sites" below): both tables 256 rows, no `cp $80`.
 - **Four verdict keys had gone STALE** (labels renamed after they were keyed: `CmpFld_604d`
   → `SaveAllowCheck` S100, `Jump_050_640a` → `BattleExitHandler`, `jr_009_46de` →
   `ShopBuyStockFill` and `SetFld9_4bc8` → `ShopSellPrice` S117). A stale key hides
@@ -527,9 +528,9 @@ spot, $90 = step-on trigger — S98 names; ROOM_DATA_FORMAT), not a mapID.
 | Path | Idiom | Safe through |
 |---|---|---|
 | bank $60 CustomPtrChase, **CustomStateRules, CustomMonsterCast** (S133: missing from this row before), $17 CustomAttrCheck (+ its callers `label17_401d` / `label17_409e`, which double the returned index again) / CustomPalCheck — **S136: the bank $60 readers index `[wPlaceIdx]`; S137: `CustomAttrCheck` returns index 0 of a WRAM table (no doubling of `mapID − $6B` left in bank $17)** | `sub $6B` then 8-bit `add a` | index $7F → **mapID $EA** — **enforced by the compiler since S133** (`project.CUSTOM_MID_MAX`, ProjectError past it; before S133 a room at $EB+ built and read another room's tables) |
-| bank $71 entry 0 (CopyCustomRoomRecord) | 16-bit `sla/rl` ×8; $70+ → Custom26DDTable[mapID−$70] | mapID $FE |
+| bank $71 entry 0 (CopyCustomRoomRecord) | 16-bit `sla/rl` ×8; $70+ → Custom26DDTable[mapID−$70]; **S138: `StalePlace` first — a custom id with no place reads the Castle's record** (unbounded S100-S137) | mapID $FE |
 | bank $71 entry 1 (CustomEncResolve) | `cp ENC_TABLE_LEN` bounds check | table length (compiler-emitted) |
-| bank $71 entry 2 (CustomRoomBGMResolve) | `cp $80 / ret nc` bounds check | see BGM cap below |
+| bank $71 entry 2 (CustomRoomBGMResolve) | `cp $80 / ret nc` bounds check (S64-S137); **S138: 256-row table, 16-bit index, no check** | every id (see below) |
 | bank $71 entry 3 (CustomAnimSource, S99) | `sub $6B` + `cp ANIM_TABLE_LEN` bounds check; 16-bit `add l/adc h/sub l` | table length (compiler-emitted); the returned byte is validator-bounded to <$6B or $6B, so the bank-$01 `rst $00` (≤$7F cap) is always in range |
 | bank $60 CustomScriptRead / script master table | 16-bit ×2, dense from $6B (validated) | mapID $FE |
 
@@ -537,7 +538,12 @@ spot, $90 = step-on trigger — S98 names; ROOM_DATA_FORMAT), not a mapID.
 max **$EA** (8-bit sub-$6B idiom). The 75-room plan tops out at $B5 — 53 IDs
 of margin.
 
-### Room-default music is capped at $7F (feature gap, not crash)
+### Room-default music is capped at $7F (feature gap, not crash) — LIFTED S138
+
+**S138 (ROADMAP ARC CAP2e, PROJECT_COMPILER §2.47):** done as the recipe below says — both
+`CustomRoomBGMTable` and `CustomRoomBattleBGMTable` have 256 rows, the three `cp $80` guards of
+entries 2 / 7 are gone, `music.py` accepts every custom id up to `$EA`; PyBoy: the S138 demo's
+rooms `$80-$85` play their own room and battle songs. The text below is the S66-S120 state.
 
 `CustomRoomBGMTable` is 128 entries; the resolver's `cp $80 / ret nc` returns
 "no assignment" for mapID ≥$80 (room then gets the vanilla ≥$61 fallback, same
@@ -654,7 +660,25 @@ CUSTOM_ROOM_START / jr nc`) — the custom path far-calls bank $60 entry 13 and 
 `Custom26DDTable[mapID − $70]` with no upper bound, so a map id past the last room (a save made
 in a room the project has since lost) copies junk as the room record — PyBoy: a junk tileset bank
 (`$E1`), `DecompressTileLayout` overwrites WRAM, `wMapID` → `$FF`, hang — in the S136 and the
-S137 build alike. The bank $60 / bank $17 paths are bounded since S136 / S137.
+S137 build alike. The bank $60 / bank $17 paths are bounded since S136 / S137. **Fixed S138**
+(next section).
+
+### S138 sites (stale saves + room songs past $7F, ROADMAP ARC CAP2e)
+
+New load: bank $71 `StalePlace` (`sub CUSTOM_ROOM_START / jr c`, `cp ROOMFLAGS_TABLE_LEN / jr nc`,
+16-bit add into `CustomRoomFlagsTable`, `bit 7` = a placeholder) — **BOUNDED**; called by entry 0
+`CopyCustomRoomRecord` (before its `$70` split: a stale id reads map 0's record) and entry 10
+`ContinueCheck`. Re-keyed: `CustomRoomBGMResolve#0` = **COPY** (`ld c, a` for `MusicRulePick`'s
+equality scan; the `cp $80` that followed is gone), `#1` = **IDX16** (`.lookup` into the 256-row
+table), `BattleBGMResolve#0` = **IDX16** (the same, battle songs). `CustomPalCheck#0` re-read:
+`cp CUSTOM_ROOM_START / jr c` and a slot-7 test only — no table index since S94b moved the render
+tables out of it → **CP_UNSIGNED** (the IDX8_SUB6B key had been stale; DOC_AUDIT S138).
+Everything a stale id reaches is measured by `tools/census_stale_places.py` (TOOLS_AND_DATA
+S138): bank $71 entries 0 / 1 / 2 / 3 / 5 / 7 / 10, bank $60 entries 0 / 1 / 2 / 13, bank $17
+entries 0 / 1 (== map 0's colours and attr map), bank $76 entry 0 and bank $6C entry 0 (they
+return) — for every id past the last room AND a placeholder. Selftest PASS (clean 58 / patched
+85); `extracted/mapid_range_audit.json` regenerated (`ceilings.bgm_room_default_max` = `$EA`,
+`stale_ids`).
 
 ### Re-running the audit
 

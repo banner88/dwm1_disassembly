@@ -562,19 +562,37 @@ jr_015_4422:
 
     ld a, $f4
     call SerialTransfer
-    ld a, [$c8d3]
+    ld a, [$c8d3]                       ; the CONTINUE screen's step (S138 annotation)
     rst $00
-    ld d, d
-    ld b, h
-    db $fc
-    ld b, l
+    dw ContinueLoadSave                 ; 0: load the save, then draw the summary
+    dw $45fc                            ; 1: the next step
+; ContinueLoadSave (S138 annotation): CONTINUE was chosen — SRAMAccess_21B2 copies the
+; save (HRAM $FF8A, WRAM $C8EA-$D9E9, the tile / attr buffers $C300 / $C200) back,
+; bank $17 entry 0 loads the saved room's palette, then jr_015_44d7: $C8EA := $80
+; (the field resumes the saved script state) unless [$D974] (the intro bedroom $2F's
+; screen-4 step counter) == 6, then $D9E7 := 0 (jr_015_44ee), and the summary
+; screen (gold, party) is drawn. Whether the room exists is never asked — a save
+; made in a custom room the ROM lacks hung here in S137 builds (patched builds since
+; S138 call bank $71 entry 10 ContinueCheck in place of the `jr` below).
+ContinueLoadSave:
     di
     call SRAMAccess_21B2
     ei
     ld hl, $1700
     rst $10
-    jr jr_015_44d7
+    jr jr_015_44d7                      ; always: the block below is never run
 
+; ContinueGateSaveRelocate (S138 annotation) — DEAD in the original game: nothing
+; jumps here (the `jr` above skips it; no reference to $445D anywhere). It handled a
+; save made inside a gate (wInGateworld != 0): the first CONTINUE set $D9E7 := 1 and
+; saved again (ContinueGateSaveFirst); a second one sent the player to the Castle —
+; $C8EA := 1, the warp mailbox (map 0, pixel ($E8, $58), wIsPlayerChangingMaps 1),
+; the player facing down (HRAM $8D-$8F, the $D7B4 animation block, bank $02 entry 0),
+; the party healed (bank $01 entry 9) — and skipped the $C8EA := $80 below. Patched
+; builds (S138, ROADMAP ARC CAP2e) reuse its first 9 bytes for the far call to bank
+; $71 entry 10 ContinueCheck, which sends a save standing in a custom room the ROM
+; lacks home the same way (PROJECT_COMPILER §2.47).
+ContinueGateSaveRelocate:
     ld a, [wInGateworld]
     or a
     jr z, jr_015_44d7
@@ -629,6 +647,7 @@ jr_015_4422:
     jr jr_015_44e3
 
 jr_015_44cd:
+ContinueGateSaveFirst:                  ; (dead, S138 annotation) the first continue of a gate save
     ld a, $01
     ld [$d9e7], a
     di

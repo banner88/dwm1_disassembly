@@ -562,24 +562,40 @@ jr_015_4422:
 
     ld a, $f4
     call SerialTransfer
-    ld a, [$c8d3]
+    ld a, [$c8d3]                       ; the CONTINUE screen's step
     rst $00
-    ld d, d
-    ld b, h
-    db $fc
-    ld b, l
+    dw ContinueLoadSave                 ; 0: load the save, then draw the summary
+    dw $45fc                            ; 1: the next step
+; ContinueLoadSave: CONTINUE was chosen — SRAMAccess_21B2 copies the
+; save (HRAM $FF8A, WRAM $C8EA-$D9E9, the tile / attr buffers $C300 / $C200) back,
+; bank $17 entry 0 loads the saved room's palette, then jr_015_44d7: $C8EA := $80
+; (the field resumes the saved script state) unless [$D974] == 6, and the summary
+; screen (gold, party) is drawn. S138: bank $71 entry 10 ContinueCheck first (below).
+ContinueLoadSave:
     di
-    call SRAMAccess_21B2
+    call SRAMAccess_21B2                ; CONTINUE: the save -> WRAM / HRAM
     ei
     ld hl, $1700
+    rst $10                             ; bank $17 entry 0: the room's palette
+    ; S138 (ROADMAP ARC CAP2e; same size — was `jr jr_015_44d7` (2) + the dead
+    ; block's `ld a, [wInGateworld] / or a / jr z, jr_015_44d7 / ld a, [$d9e7]`
+    ; (9)): bank $71 entry 10 ContinueCheck — a save standing in a custom map ID
+    ; this build has no place for (a deleted room, past the last room) is sent
+    ; home (the hub / the Castle): E = 1 -> skip the `$C8EA := $80` below
+    ; (keep 1, no script resume) as the dead relocation did; E = 0 -> as before.
+    ld hl, $710a
     rst $10
+    dec e
+    jp z, jr_015_44e3
     jr jr_015_44d7
+    nop
 
-    ld a, [wInGateworld]
-    or a
-    jr z, jr_015_44d7
-
-    ld a, [$d9e7]
+    ; ---- DEAD in the original game (nothing reaches it: the `jr` above it
+    ; always jumped over): a gate save continued a second time ($D9E7 != 0) was
+    ; sent to the Castle ($C8EA := 1, the warp mailbox to map 0 ($E8, $58),
+    ; the player facing down, the party healed by bank $01 entry 9); a first
+    ; continue set $D9E7 := 1 and re-saved (jr_015_44cd). Kept byte for byte
+    ; (its first 9 bytes are the S138 call above).
     or a
     jr z, jr_015_44cd
 

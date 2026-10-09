@@ -1068,7 +1068,7 @@
    "pattern": [
     "cp"
    ],
-   "verdict": "IDX8_SUB6B"
+   "verdict": "CP_UNSIGNED"
   },
   {
    "tree": "patched",
@@ -1274,7 +1274,7 @@
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 154,
+   "line": 183,
    "label": "CopyCustomRoomRecord",
    "occ": 0,
    "pattern": [
@@ -1285,7 +1285,7 @@
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 161,
+   "line": 196,
    "label": "CopyCustomRoomRecord",
    "occ": 1,
    "pattern": [
@@ -1296,7 +1296,7 @@
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 171,
+   "line": 206,
    "label": "CopyCustomRoomRecord",
    "occ": 2,
    "pattern": [
@@ -1307,7 +1307,7 @@
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 203,
+   "line": 238,
    "label": "CustomEncResolve",
    "occ": 0,
    "pattern": [
@@ -1319,27 +1319,25 @@
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 255,
+   "line": 290,
    "label": "CustomRoomBGMResolve",
    "occ": 0,
-   "pattern": [
-    "cp"
-   ],
-   "verdict": "BOUNDED"
+   "pattern": [],
+   "verdict": "COPY"
   },
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 268,
+   "line": 301,
    "label": "CustomRoomBGMResolve",
    "occ": 1,
    "pattern": [],
-   "verdict": "BOUNDED"
+   "verdict": "IDX16"
   },
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 275,
+   "line": 308,
    "label": "CustomRoomBGMResolve",
    "occ": 2,
    "pattern": [
@@ -1350,7 +1348,7 @@
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 468,
+   "line": 499,
    "label": "CustomAnimSource",
    "occ": 0,
    "pattern": [
@@ -1362,7 +1360,7 @@
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 666,
+   "line": 697,
    "label": "CustomRoomFlags",
    "occ": 0,
    "pattern": [
@@ -1373,7 +1371,7 @@
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 687,
+   "line": 719,
    "label": "TextSpriteMode",
    "occ": 0,
    "pattern": [
@@ -1385,25 +1383,37 @@
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 787,
+   "line": 819,
    "label": "BattleBGMResolve",
    "occ": 0,
    "pattern": [
-    "cp",
     "sub"
    ],
-   "verdict": "BOUNDED"
+   "verdict": "IDX16"
   },
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 801,
+   "line": 831,
    "label": "BattleBGMResolve",
    "occ": 1,
    "pattern": [
     "cp"
    ],
    "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_071.asm",
+   "line": 999,
+   "label": "StalePlace",
+   "occ": 0,
+   "pattern": [
+    "bit7",
+    "cp",
+    "sub"
+   ],
+   "verdict": "BOUNDED"
   },
   {
    "tree": "patched",
@@ -1531,6 +1541,7 @@
  "ceilings": {
   "hard_max_mapid": "0xFE ($FF = exit-list terminator byte)",
   "idx8_sub6b_max_mapid": "0xEA (custom-side sub $6B then 8-bit add a idiom)",
-  "bgm_room_default_max": "0x7F (bank $71 cp $80 guard + 128-entry table + music.py validator \u2014 compiler-owned extension, see ROADMAP A'1 follow-up)"
+  "bgm_room_default_max": "0xEA (S138: 256-row room / battle song tables, no cp $80 \u2014 every custom id; 0x7F S64-S137)",
+  "stale_ids": "S138: a custom id with no place (past ROOMFLAGS_TABLE_LEN or a placeholder, bit 7) reads the Castle record (bank $71 entry 0) and is sent home at CONTINUE (entry 10)"
  }
 }

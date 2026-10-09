@@ -6273,3 +6273,44 @@ horizontal scroll was a red herring — screen 0 vs 1 differed only in where the
 **Rule:** when a vanilla menu / screen effect runs outside its room, list what the room
 guaranteed (player position, box side, scroll, tile slots) and pin each one in the lowering —
 and test it from every side of the NPC.
+
+## S138 — stale saves + room songs past $7F (ROADMAP ARC CAP2e)
+
+**Dead vanilla code next to a hook site can be the developers' own version of the feature — and
+its bytes pay for the hook.** The CONTINUE loader (bank $15 `ContinueLoadSave`) ends in a `jr`
+over 122 bytes nothing reaches (`ContinueGateSaveRelocate`): a gate save continued twice was sent
+to the Castle by writing the warp mailbox, `$C8EA := 1` (not the loader's `$80`) and healing the
+party. That is exactly "a save that cannot be continued where it stands goes home", designed by
+the developers if never run by the shipped game; its first 9 bytes + the `jr` became the
+same-size far call to bank $71 entry 10. **Rule:** before designing a hook, read the dead code
+around the call site — it may be the recipe, and it is free space no live path depends on (prove
+"dead": no reference to its address anywhere, the jumps around it unconditional).
+
+**Try the mechanism with a hook before writing the code.** Before any patch, a PyBoy hook on the
+loader's `jr` (`$15:$445B`) poked the warp mailbox like the dead block — on the build that HUNG
+on that save; the game started in the Castle and the room record was read only for map 0. That
+one run decided the design (a warp armed at CONTINUE needs no "first load the room safely"), and
+the same hook-and-poke pattern then measured every variant (hub room, placeholder, valid save).
+**Rule:** when the question is "does the engine do X if state Y is set at moment Z", set Y at Z
+from a hook and watch — it costs minutes and needs no build.
+
+**A model that another feature changed under it stays green only on projects that don't use that
+feature.** `music.model_battle_bgm` compared the raw map id with `$5D`; since S128 bank $71 entry 7
+asks ROM0 `ArenaMapID`, which turns the project's arena copy into `$5D`. The census passed on the
+example (no arena copy) and on every demo; on the user's project it had 15 / 3,000 mismatches —
+since S128, unnoticed. **Rule:** when a feature aliases an input (a copy that "counts as" the
+original), grep every model and census reading that input; and run each census on the user's
+real project, not only the example and demos.
+
+**A number outlives the thing it named.** Map ids are numbers the editor reassigns: deleting a room
+leaves a placeholder, the next new room takes the number. "Is this save stale?" can only see the
+first case (no place, or a placeholder); a save in a deleted room whose number was reused loads into
+the NEW room. **Rule:** say which half a numeric-identity check covers (help `66_hub.md`) and put
+the other half where identity becomes a name (ARC CAP3 / CAP4), instead of pretending the check is
+complete.
+
+**A "feature cap" note waits for a trigger nobody watches.** The S64 / S66 / S120 docs all said
+"lift the `cp $80` music cap when the first room ≥ $80 ships". The first such room is a project's
+22nd; the S136 and S137 demos had rooms up to `$85` without music, so nothing tripped. **Rule:** a
+deferred cap gets a meter or a test that fails when content crosses it — or it gets lifted when a
+session works in the same code (S138 did, with the bank $71 bounds).

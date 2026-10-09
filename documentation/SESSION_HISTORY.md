@@ -1,5 +1,47 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-09 (Session 136 — **ROADMAP ARC CAP2b BUILT: PLACE BANKS — A ROOM'S
+> SCRIPTS, TILE PATCHES, SCREENS, NPC / EXIT LISTS, STATES AND CAST (+ THE TEXT, 256 LINES AT A TIME)
+> SPILL FROM BANK $60 INTO BANKS $80+; BANK $60 FORWARDS EVERY CALL THROUGH A DIRECTORY (NO CACHE)**
+> (user: "Continue on the 4 mb expansion" → the CAP2b audit + plan → "1) Yes ok [bank $6C split off as
+> the new CAP2d] 2) Sure [the ECHO ROOMS test ROM]"; S135's test ROM USER-CONFIRMED at the start).
+> **Built S136; USER-CONFIRMED 2026-10-09 15:14 ("Confirm everything seems to work").** Test ROM `DWM-S136-echo-test.gbc` (`75971283…`, patched): the
+> user's project + 16 BRAND-NEW rooms ECHO ROOM 1-16 (one gate theme each, 3 screens: guide /
+> monster + singer / a choir of 3; an entry scene with a tile patch; stairs both ways); rooms 1-8 in
+> bank $60, 9-16 in place bank $81, the text in $81-$84; way in: the S136 DEMO NPC in Cities_FOUNT
+> (3, 4); each guide names its script's and its words' banks; its project: `examples/s136_echo_demo/`.
+> **The engine (bank $60 template, compiler-owned):** entries 0/1/2/4/5/8/9/10 are forwarders —
+> `PlaceOf` reads `PlaceDirectory` (home bank, index) by map id (steps / lists / rules), by script
+> TYPE (script words / tile patches; type `$FF` = the skills' scripts stay in $60) or
+> `TextSectionBanks[$C822]` (text) on EVERY call → `wPlaceIdx` ($D50A) → `PlaceGo` (`rst $10`, or a
+> local jump for $60). Every home bank carries the pinned reader block (`templates/place_readers.asm`,
+> 944 B; at `$4001` of a place bank, suffix `_Pxx`). Out of range now ends safely (BC `$FFFF`, the
+> dummy step + DummyExits, a patch word stepped over). Sound because `rst $10` returns BC / DE / HL
+> (the branch tail needs the word's address HL; targets are absolute in the script's bank — a room's
+> block is never split) and the text engine reads from `$C824` = the home bank.
+> **The compiler:** `editor2/core/places.py` `plan` — blocks (map id order), then text sections,
+> first fit: $60, then the place banks after the stream banks (`_take_ext_bank`); exact sizes (plan
+> == assembled bytes; `_payload_bytes` made charmap-exact: `".."` is one byte); auto text ids break a
+> section at 12,288 B (never onto an explicit id). Meters: $60 amber when full, the "new" bar counts
+> place banks. **Pins move once by design:** example `05b8973d…` (patched; S134's `807d9668…`
+> historical), the user's project `341a5188…` (patched; `aae43261…` historical) — both still fit $60.
+> **Measured:** `tools/census_place_banks.py` (stub calls vs the ROM bytes at every label): example
+> 2,149, user 4,831, demo 8,944 over $60 / $81-$84, a generated 40-room spill 21,017 over 8 banks —
+> 0 mismatched. PyBoy on the user's `.sav` (demo ROM): the demo NPC → room 1; entry scene + pillar
+> patch, guide (texts from $82), singer before / after, monster YES → battle won → flag, choir YES /
+> NO, stairs up + back, in room 1 ($60) AND room 9 ($81: far calls to $81 entries 0/1/2/4/5/8/9/10,
+> texts from $82-$84); room 9 / 16 YES warps (→ room 10, → Cities_FOUNT); a battle in room 16; a
+> JOURNAL save in room 9 + reload → room 9, flags kept. A/B (S135 vs S136 build of the user's
+> project, warps into all 33 screens): 1,274 script words, texts, NPC + exit lists identical (branch
+> words compared by label). The ROM renderer: 33 / 33 user screens == S135.
+> **Found + fixed (independent review):** the section jump could land on an explicit `text_id`
+> (a project stopped loading) → skips explicit ids + test; out-of-range exits empty → DummyExits;
+> the manifest ignored place banks; "$60 nearly full" noise; a failed plan kept its banks.
+> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL PASSED (`test_s136`, incl. the PyBoy
+> census); test_app PASS; test_canvas `--rom` PASS. `EDITOR_REVISION` S136 (help 80_build, 90_limits).
+> **Next:** ARC CAP2c (palettes + render rows out of
+> bank $17) or CAP2d (own tile animations past $6C).
+
 > Last verified: 2026-10-09 (Session 135 — **ROADMAP ARC CAP2a BUILT: LAYOUTS, ATTR MAPS AND
 > TILESETS SPILL INTO THE 4 MB ROM'S NEW BANKS — FIRST FIT FROM $64 / $67 INTO $80, $81, …; THE GAME
 > DRAWS THEM == THE EDITOR (PYBOY, 48 + 12 SCREENS); A CUSTOM ROOM'S UNDEFINED SCREEN NO LONGER

@@ -307,9 +307,11 @@ drivers; user ear-test clean).
   SAME-SIZE (70 B; funded −9 B by dropping the vestigial `cp $09/ret nz/
   ret` tail, the redundant second `ld a,[wMapID]`, and the `adc h/sub l`
   idiom) to call **bank $71 entry 2 `CustomRoomBGMResolve` FIRST**: E :=
-  `CustomRoomBGMTable[wMapID]` (128-entry generated table; 0 = vanilla
+  `CustomRoomBGMTable[wMapID]` (128-entry generated table S64-S137, **256 rows
+  since S138** — PROJECT_COMPILER §2.47; 0 = vanilla
   fallback; gate floors excluded by the resolver since wMapID is not
-  room-meaningful there). Nonzero E wins for ANY mapID $00–$7F — vanilla
+  room-meaningful there). Nonzero E wins for ANY mapID $00–$7F (S138: any id
+  $00–$EA, no `cp $80`) — vanilla
   and custom rooms alike — and **survives save/reload by construction**
   (the load path re-runs this same derivation; user-confirmed S64 v6:
   Library $12 → MIDI song, gate_island $6B → DWM2 BGM #07 incl. reload).
@@ -404,7 +406,7 @@ song: wGateID may be stale outside a dive).
 **Music by flag (S129, PROJECT_COMPILER §2.42):** before all of the above, bank $71
 `MusicRulePick` scans `MusicRuleTable` rows `[kind (0 room by wMapID / 1 gate by
 wGateID), id, n, n × dw flag (bit 15 = must be OFF), song]` (`$FF` ends): the room path
-(custom rooms, after the `cp $80` bound) takes the first matching room row whose terms all
+(custom rooms; the `cp $80` bound is gone since S138) takes the first matching room row whose terms all
 hold, the gate path (`.floorSong`) the first gate row; none = the rules above. Terms may be
 story checks (flag `$18xx`). Picked when the room / floor loads; op `$26` reloads it. PyBoy
 S129 on the user's save: the STORY HALL `$31` → `$1E` after the quest's done flag (with
@@ -425,7 +427,7 @@ normal setting. 0 = not set everywhere.
 
 **Proof:** `tools/census_music_resolve.py` stub-calls entries 2 and 7 of a built
 ROM over random game states (every map class, gates with / without songs, the
-floor before vanilla / custom / $80+ boss maps, fights, link, Starry 0-2,
+floor before vanilla / custom / $80+ boss maps (S138: every custom id $61-$EA as the room and as the boss map; the model aliases the project's arena copy like ROM0 `ArenaMapID`), fights, link, Starry 0-2,
 modes 0-3) against `music.model_room_bgm` / `model_battle_bgm`: 4,000 / 4,000
 on a fixture with every setting; negative control 86/600 mismatched. In-game on
 the user's save (S116 demo, PyBoy): a 4-channel room song (noise alive), a

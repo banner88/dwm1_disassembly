@@ -361,13 +361,14 @@ wNpcColourK:: db ;d2ee — copy scratch: NPC entries seen so far
 ; clears it, so it lives for one arrival. 0 = no hub arrival (also after a
 ; warp to the vanilla Castle, which keeps its own $D92B code). Transient:
 ; the window-clear chain zeroes it at power-on / new game / CONTINUE.
-wHubReason:: db ;d2ef — 0 none, HUB_LOST .. HUB_ARENA_WON (below)
+wHubReason:: db ;d2ef — 0 none, HUB_LOST .. HUB_CONTINUE (below)
 HUB_LOST EQU 1          ; a battle was lost (bank $50 BattleExitHandler)
 HUB_WIPED EQU 2         ; the party fell on damage floors (bank $06, message $021A)
 HUB_WARPWING EQU 3      ; the WarpWing item (bank $07 item menu)
 HUB_FINAL_LOST EQU 4    ; the Starry Night final was lost (bank $50)
 HUB_HOME EQU 5          ; a script sent the player home (helper / move "hub")
 HUB_ARENA_WON EQU 6     ; a script after an arena class was won
+HUB_CONTINUE EQU 7      ; S138: CONTINUE of a save in a place the build lacks (bank $71 entry 10)
 ; S126 (ROADMAP P3.14e1, service NPCs): the room's tile slots $60-$7F ($9600-
 ; $97FF, VRAM bank 0) while the farm (screen effect 3) or the egg appraiser (7)
 ; draws its icons over them in a CUSTOM room: bank $77 entry 6 ServiceOpenTiles

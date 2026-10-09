@@ -136,7 +136,7 @@ V = {
     ("bank_00b.asm", "SharedPtrChase", 0): "TBL_GUARDED",    # reached only for mapID <$6B (custom diverted upstream)
     # S123 r2: CustomDescentInGate is now a far call; its wMapID test moved to bank $60
     ("bank_017.asm", "CustomAttrCheck", 0): "CP_UNSIGNED",   # S137: cp $6B / jr nc -> bank $60 entry 13 (no table index here; was IDX8_SUB6B)
-    ("bank_017.asm", "CustomPalCheck", 0): "IDX8_SUB6B",
+    ("bank_017.asm", "CustomPalCheck", 0): "CP_UNSIGNED",    # S138 re-read: cp $6B / jr c only (slot 7 skip) — no table since S94b (was IDX8_SUB6B, stale)
     # ---- S99 adjudication sweep: sites added S73-S97 without keys (the
     # selftest had been failing since; tool not in verify check 5) + the S99
     # dispatch rewrite. Reasoning: CROSSBANK_ROOMS "mapID >=$80 readiness".
@@ -154,10 +154,10 @@ V = {
     ("bank_073.asm", "BoxAttrActive", 0): "CP_UNSIGNED",     # S97 r2
     ("bank_060.asm", "GateAwareDispatch", 0): "CP_UNSIGNED",
     ("bank_071.asm", "CopyCustomRoomRecord", 0): "CP_UNSIGNED",  # derives wCustomRoomFlag
-    ("bank_071.asm", "CopyCustomRoomRecord", 1): "CP_UNSIGNED",  # $70 table split
-    ("bank_071.asm", "CopyCustomRoomRecord", 2): "IDX16",        # sla/rl x8
+    ("bank_071.asm", "CopyCustomRoomRecord", 1): "CP_UNSIGNED",  # $70 table split (S138: .place, after StalePlace)
+    ("bank_071.asm", "CopyCustomRoomRecord", 2): "IDX16",        # sla/rl x8 (S138: reached for vanilla ids / places only)
     ("bank_071.asm", "CustomEncResolve", 0): "BOUNDED",          # cp ENC_TABLE_LEN
-    ("bank_071.asm", "CustomRoomBGMResolve", 0): "BOUNDED",      # cp $80 (FEATURE cap $7F; ROADMAP follow-up)
+    ("bank_071.asm", "CustomRoomBGMResolve", 0): "COPY",         # S138: `ld c, a` for MusicRulePick (equality scan); the `cp $80` cap is gone
     # S114 burn-down: the sites added S100-S114 that were left NEEDS_REVIEW
     ("bank_007.asm", "SaveAllowCheck", 0): "CP_UNSIGNED",        # S100 (clean: cp $60..$64 chain)
     ("bank_06c.asm", "CustomTileAnimate", 0): "BOUNDED",         # S102: cp TILEANIM_ROOMS, 16-bit index
@@ -166,7 +166,7 @@ V = {
     # (full-byte equality against MusicRuleTable rows), then .noRule reloads wMapID
     # for .lookup (occurrence 1, still under the cp $80 / ret nc above); the S101
     # cp $61 load moved to occurrence 2. Reasoning in CROSSBANK_ROOMS "S129 site".
-    ("bank_071.asm", "CustomRoomBGMResolve", 1): "BOUNDED",      # S129: .noRule reload, bounded by cp $80 above
+    ("bank_071.asm", "CustomRoomBGMResolve", 1): "IDX16",        # S138: .noRule reload -> .lookup, 16-bit add into the 256-row table (every id)
     ("bank_071.asm", "CustomRoomBGMResolve", 2): "CP_UNSIGNED",  # S101: cp $61
     ("bank_071.asm", "CustomRoomFlags", 0): "BOUNDED",           # S100: cp ROOMFLAGS_TABLE_LEN
     ("bank_073.asm", "GateLeaveFreePal", 0): "CP_UNSIGNED",      # S100 r3: cp CUSTOM_ROOM_START
@@ -177,8 +177,8 @@ V = {
     # S128: BattleBGMResolve's two `cp $5d` loads became `call ArenaMapID` (the
     # project's arena counts as $5D; ROM0 ArenaMapID's own key above) — the
     # remaining loads moved up to occurrences 0 / 1
-    ("bank_071.asm", "BattleBGMResolve", 0): "BOUNDED",          # S116: cp $80 / jr nc, 16-bit index (FEATURE cap $7F,
-                                                                 # music.py refuses battle.rooms >= $80)
+    ("bank_071.asm", "BattleBGMResolve", 0): "IDX16",            # S138: 16-bit index into the 256-row table (every id; was
+                                                                 # BOUNDED by cp $80, the S116-S137 FEATURE cap $7F)
     ("bank_071.asm", "BattleBGMResolve", 1): "CP_UNSIGNED",      # S116: cp $50 / $52 / $5d special-room tests
     ("bank_076.asm", "GateBossWin", 0): "CP_UNSIGNED",           # S117: == wBossMapType (full byte)
     ("bank_077.asm", "ShopFill", 0): "CP_UNSIGNED",              # S117: cp $50
@@ -187,6 +187,8 @@ V = {
     # S121: reasoning in CROSSBANK_ROOMS "S121 site".
     ("bank_071.asm", "TextSpriteMode", 0): "BOUNDED",            # S121: cp $08 / $5d, sub CUSTOM_ROOM_START
                                                                  # + ret c, cp ROOMFLAGS_TABLE_LEN + ret nc, 16-bit add
+    # S138 (ARC CAP2e — stale saves): reasoning in CROSSBANK_ROOMS "S138 sites".
+    ("bank_071.asm", "StalePlace", 0): "BOUNDED",                # S138: sub $6B / ret c, cp ROOMFLAGS_TABLE_LEN, 16-bit add, bit 7
     # S123: reasoning in CROSSBANK_ROOMS "S123 sites" (NPC colours).
     ("bank_060.asm", "CopyNPCListToBuffer", 0): "COPY",          # S123: wMapID -> wNpcColourMap (the tag; never an index)
     ("bank_060.asm", "NpcColourDraw", 0): "CP_UNSIGNED",         # S123: cp b against wNpcColourMap (full-byte equality)
@@ -317,10 +319,14 @@ def main():
                                "terminator byte)",
                            "idx8_sub6b_max_mapid": "0xEA (custom-side sub "
                                "$6B then 8-bit add a idiom)",
-                           "bgm_room_default_max": "0x7F (bank $71 cp $80 "
-                               "guard + 128-entry table + music.py "
-                               "validator — compiler-owned extension, see "
-                               "ROADMAP A'1 follow-up)"}},
+                           "bgm_room_default_max": "0xEA (S138: 256-row "
+                               "room / battle song tables, no cp $80 — "
+                               "every custom id; 0x7F S64-S137)",
+                           "stale_ids": "S138: a custom id with no place "
+                               "(past ROOMFLAGS_TABLE_LEN or a placeholder, "
+                               "bit 7) reads the Castle record (bank $71 "
+                               "entry 0) and is sent home at CONTINUE "
+                               "(entry 10)"}},
                       f, indent=1)
         print(f"wrote {out}")
     sys.exit(0 if ok else 1)

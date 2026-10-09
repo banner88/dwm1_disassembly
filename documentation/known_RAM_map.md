@@ -326,7 +326,8 @@
                  rebuilt at every list copy /
                  [S125] wHubReason $D2EF (why the player was just sent to the
                  project's hub: 1 lost / 2 wiped / 3 WarpWing / 4 final lost / 5 a
-                 script / 6 arena won — HUB_* EQUs; written by bank $71 entry 9
+                 script / 6 arena won / 7 a CONTINUE of a save whose place the build
+                 lacks [S138, bank $71 entry 10 ContinueCheck] — HUB_* EQUs; written by bank $71 entry 9
                  HubWarp and the "home" script ladders, read and cleared by the
                  hub room's arrival script; 0 after a Castle warp) /
                  [S126] wServiceTileSave $D2F0-$D4EF (512 B: the room's tile
@@ -544,6 +545,12 @@
    1:D9E4   1    The Well boss's tile event seen (script) [S118f]
    1:D9E5   1    The party is falling through a hole (script; the next room's
                  entry scene shows the fall and clears it) [S118f]
+   1:D9E7   1    Gate-save CONTINUE count (S138, code-read): cleared by every CONTINUE
+                 (bank $15 jr_015_44ee); set to 1 + re-saved by the DEAD block
+                 ContinueGateSaveFirst — its twin ContinueGateSaveRelocate (a gate save
+                 continued twice -> the Castle) is unreachable in the original game
+                 (bank $15 `jr` over it). Patched builds reuse those bytes for the bank
+                 $71 entry 10 call (stale saves, ARCHITECTURE "Stale places at CONTINUE")
    1:D9E8   1    Player input locked during a scripted scroll (non-zero skips free
                  walking, bank_006:3697; cleared by the scroll handler) [S118f]
    1:D9E6   1    Breeding "rare breed" flag — only the UNREFERENCED mutation $16:$44DA sets it; never set (S113)

@@ -1696,11 +1696,13 @@ class Project:
     # the vanilla Castle. Engine side: bank $71 entry 9 HubWarp + HubTable
     # (template head), wHubReason (patches/wram.asm). PROJECT_COMPILER §2.38.
     HUB_REASONS = {'lost': 1, 'wiped': 2, 'warpwing': 3, 'final_lost': 4,
-                   'home': 5, 'arena_won': 6}          # = HUB_* in patches/wram.asm
+                   'home': 5, 'arena_won': 6,          # = HUB_* in patches/wram.asm
+                   'continue': 7}                      # S138: bank $71 ContinueCheck
     HUB_REASON_NAMES = {
         'lost': 'lost a battle', 'wiped': 'the party fell (floor damage)',
         'warpwing': 'WarpWing / Anchor', 'final_lost': 'lost the Starry / arena final',
-        'home': 'sent home by a script', 'arena_won': 'won an arena class'}
+        'home': 'sent home by a script', 'arena_won': 'won an arena class',
+        'continue': 'continued a save whose place is gone'}
     W_HUB_REASON = 0xD2EF                  # wHubReason (game.sym; test_compiler checks)
     HUB_MAX_RULES = 16
     HUB_MAX_TERMS = 8
@@ -2127,7 +2129,12 @@ class Project:
         """CustomRoomFlagsTable byte (bank $71 entry 5): bit 0 = saving
         NOT allowed (custom.rooms[].can_save false; default allowed — but a
         gate's BOSS room defaults to no saving, like vanilla boss rooms $30-$4F:
-        user rule S100, S101)."""
+        user rule S100, S101). S138 (ARC CAP2e): bit 7 = NO SUCH PLACE (a
+        placeholder: a deleted room's map id) — bank $71 StalePlace sends a save
+        standing there home at CONTINUE and reads the Castle's record for it;
+        saving is off there too."""
+        if r.get('placeholder'):
+            return 0x81
         default = r.get('id') not in self.boss_room_ids()
         # S123: a world's rooms follow its saving rule (calm = rooms without
         # battles; explicit can_save wins)
@@ -3039,7 +3046,7 @@ class Project:
         return self._music
 
     def music_resolved(self):
-        """(bank74_library, room_bgm[128], song_ids, warnings) — the S64 view."""
+        """(bank74_library, room_bgm[256], song_ids, warnings) — the S64 view (256 rows since S138)."""
         return self.music_plan().legacy()
 
     def music_room_bgm(self, warnings=None):

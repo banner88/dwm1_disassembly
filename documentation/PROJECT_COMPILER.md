@@ -462,7 +462,7 @@ module `editor2/core/music.py` `plan()`; engine: SOUND_SYSTEM §2 / §10):
   has a battle song, served rooms get $FF in `CustomRoomBattleBGMTable`.
 * **Emitted tables (bank $71, after `CustomRoomBGMTable`):** `CustomBGMChanTable`,
   `GATE_BGM_LEN EQU 96`, `CustomGateBGMTable`, `CustomGateBattleBGMTable`,
-  `CustomRoomBattleBGMTable` (128), `BattleBGMSettings` [normal, boss, arena,
+  `CustomRoomBattleBGMTable` (128; 256 since S138, §2.47), `BattleBGMSettings` [normal, boss, arena,
   Starry final], `BattleFightBGMTable` ([EID lo, EID hi, song]…, `$FF $FF`).
 * **Validators:** unknown keys in music / gates / battle; a gate outside 0-95 or
   not defined (vanilla 0-31 or a project new gate); a song value that is neither
@@ -470,7 +470,7 @@ module `editor2/core/music.py` `plan()`; engine: SOUND_SYSTEM §2 / §10):
   a song file missing from the project; > 255 fights.
 * **Models:** `music.model_room_bgm(plan, ctx)` / `model_battle_bgm(plan, ctx)`
   are the Python twins of entries 2 / 7 (`tools/census_music_resolve.py` proves
-  them against a built ROM by stub calls — SOUND_SYSTEM §10). Output: the 128-entry `CustomRoomBGMTable` in bank $71 (read
+  them against a built ROM by stub calls — SOUND_SYSTEM §10). Output: the 128-entry (256 since S138, §2.47) `CustomRoomBGMTable` in bank $71 (read
 by template entry 2 `CustomRoomBGMResolve` for the rewritten
 `LoadNewBGMIdIntoA`, patches/bank_001.asm — SOUND_SYSTEM §8) + the whole
 generated `patches/bank_074.asm` via `song_codec.song_bank_asm` (fixed
@@ -620,6 +620,10 @@ user-confirmed hand-authored code:
   `CustomRenderCopy`) — current values in `templates/PINNED_SHA256`. `TEMPLATE_SIZE[$60]` 1,691
   (`SkillScriptPtrTable` at `$469B` in the S137 example game.sym: head 590 B + readers 1,101 B),
   `PLACE_TEMPLATE_SIZE` 1,102 (1 + the reader block `$424E-$469A`).
+* S138 re-pin (§2.47, ROADMAP ARC CAP2e): `bank_071_head.asm` (entry 0 `StalePlace` bound, entry
+  5 `$81` past the last room, entry 10 `ContinueCheck` + `StalePlace`, `HubWarp`'s `HUB_CONTINUE`
+  branch, no `cp $80`) — current value in `templates/PINNED_SHA256`; TEMPLATE_SIZE 1150 B
+  (`Custom26DDTable` `$447E`; the S129 1070 B / `cbd0cdec…` are historical).
 * S129 re-pins (§2.42): `bank_071_head.asm` `cbd0cdec…d11c` (`MusicRulePick` + `TermsHold71`,
   the rule calls in `CustomRoomBGMResolve`; TEMPLATE_SIZE 1070 B; the S128 value `bb4151d2…`
   is historical); `bank_077_head.asm` `eb0f0997…7d88` (entry 11 `StoryCheck`, `StoryCommand`,
@@ -2972,7 +2976,8 @@ py lo/hi]`, `$FF` ends). A custom room: the mailbox := that room / pixel, gate f
 `wHubReason` kept. Map 0 / no match: exactly the vanilla writes (`$D92B` := 6 for the
 WarpWing, else 8; map 0 at `$E8/$58`) and `wHubReason` := 0. Reasons (`HUB_*` EQUs,
 `Project.HUB_REASONS`, `cutscene_build.ARRIVALS`): 1 `lost`, 2 `wiped`, 3 `warpwing`,
-4 `final_lost`, 5 `home` (a script), 6 `arena_won` (reserved for the P3.14e arena).
+4 `final_lost`, 5 `home` (a script), 6 `arena_won` (reserved for the P3.14e arena), 7
+`continue` (S138: CONTINUE of a save in a place the build lacks — entry 10 `ContinueCheck`, §2.47).
 `TEMPLATE_SIZE[0x71]` 865 (`Custom26DDTable` `$4361` in the S125 example game.sym).
 
 **Scripts going home (`dest: "hub"`):** a talk block's `move`, a conversation's `move`
@@ -3778,6 +3783,61 @@ palette; attr as in §2.11) mean what they meant; WHERE the bytes live changed (
   $17), the S135 holes test (the rows found in any generated file), the S136 fixed sizes (1,691 /
   1,102), the ROM byte count (a bank may now end in a palette's zero bytes), the PyBoy census;
   `test_canvas` (a screen's palette reached its row).
+
+## §2.47 S138 — STALE SAVES + ROOM SONGS PAST $7F (ROADMAP ARC CAP2e)
+
+**Built S138, NOT yet user-tested.** No schema change except one new hub arrival reason.
+User (S138): "Whatever is the most robust for a NEW romhack since CURRENT project is POC".
+
+- **A stale id** = a custom map id ($6B-$FE) the build has no place for: past the last room
+  (`ROOMFLAGS_TABLE_LEN`) or a PLACEHOLDER (a deleted room's id inside the dense range —
+  `Project._dense_rooms`; `Document.delete_room` leaves the gap; `next_free_mapid` refills it
+  with the next new room). `Project.room_flags` returns **`$81`** for a placeholder:
+  `CustomRoomFlagsTable` **bit 7 = no such place** (+ bit 0, no saving); the emitter's comment
+  says "NO SUCH PLACE (placeholder)".
+- **Engine (bank $71 template, re-pinned):** `StalePlace` (Z = a vanilla id or a place; NZ =
+  stale) — entry 0 `CopyCustomRoomRecord` reads the Castle's record (map 0, ROM0 `$26DD`) for
+  a stale id instead of `Custom26DDTable[mapID − $70]` (unbounded until S137 → junk tileset bank
+  → WRAM overwritten → hang at CONTINUE, KEY_LESSONS S137); entry 5 `CustomRoomFlags` returns
+  `$81` past the last room (was 0: saving allowed); **entry 10 `ContinueCheck`** (HL = `$710A`):
+  not in a gate and stale → `HubWarp` with **`HUB_CONTINUE` 7** (patches/wram.asm), then
+  `wIsPlayerChangingMaps` := 1, `$C8EA` := 1 (not `$80`: no script resume), `wScriptStateFlags`
+  := 0; at the Castle the party is healed (bank $01 entry 9) and `HubWarp` writes NO `$D92B`
+  code for this reason (the Castle's story state stays); E = 1. Else E = 0, nothing written.
+- **Bank $15 (hand patch, same size):** the CONTINUE screen's step 0 (`ContinueLoadSave`:
+  `SRAMAccess_21B2` + bank $17 entry 0) ended in `jr jr_015_44d7` over a DEAD vanilla block that
+  relocated a twice-continued gate save to the Castle (`ContinueGateSaveRelocate`, annotated in
+  the clean tree). Its 11 bytes `jr` + the dead block's first 9 are now `ld hl, $710a / rst $10 /
+  dec e / jp z, jr_015_44e3 / jr jr_015_44d7 / nop` — E = 1 skips the loader's `$C8EA := $80`
+  exactly as the dead block did. The field then starts with the warp: the stale room is never
+  loaded (PyBoy: the first room record read after CONTINUE is the hub's).
+- **Arrival reason `continue`** (`Project.HUB_REASONS`, `cutscene_build.ARRIVALS`, 7th = 7):
+  a hub room's arrival scene can greet it; **Add the arrival scenes** adds a fourth default,
+  *Back from an old save* (two boxes + Heal). A reason no scene takes heals (the S125 default).
+- **Room songs for every room:** `CustomRoomBGMTable` and `CustomRoomBattleBGMTable` have **256
+  rows** (`music.Plan.room_bgm` / `room_battle`); the three `cp $80` guards of entries 2 / 7 are
+  gone (`.lookup` indexes 16-bit); `music.py` accepts `room_defaults` / `rooms[].music` /
+  `music.battle.rooms` keys up to **`$EA`** (`ROOM_MID_MAX`, error "outside $00-$EA"),
+  `music_rules` on any room, and fills "follow the gate" for served / boss rooms of any id (the
+  S120 "rooms from $80 up cannot…" warnings are gone). The S64 "do it when the first room ≥ $80
+  ships" follow-up (CROSSBANK_ROOMS) is closed: a project's 22nd room ($80) was the first one
+  that could not have a song.
+- **Model fix (S128 gap):** `music.model_battle_bgm` aliases the project's arena copies like ROM0
+  `ArenaMapID` (`Plan.arena_alias` from `your_arena.resolve`) — `census_music_resolve.py` had
+  15 / 3,000 mismatches on the user's project (S137 build too) in the arena copy with
+  `wArenaStarryBattle` = 2; 0 now.
+- **Sizes / pins:** `TEMPLATE_SIZE[$71]` **1150** (`Custom26DDTable` `$447E` in the S138
+  example game.sym; 1070 S129); bank $71 grows 256 B of table rows in every project. Example pin
+  `ae463e7c…` (patched; S137's `c31750e9…` historical).
+- **Measured:** `tools/census_stale_places.py` (TOOLS_AND_DATA S138): the user's project 2,791
+  checks, + a deleted room 2,802, the S138 demo 2,619 — 0 mismatched; against the S137 build of
+  the user's project 274 mismatched (`rec_stale` 137 / 137, `flags` 137) — the census sees the
+  defect. PyBoy on the user's save: CONTINUE of a save made in demo room `$85` (and in `$72`,
+  then deleted) in a build without it → the Castle throne room (14, 5), party healed once,
+  `$D92B` untouched; with a hub → the hub cell + its "old save" scene, `wHubReason` 7 → 0; the
+  same save in the build that has the room → that room (ContinueCheck E = 0). The S138 demo
+  (`examples/s138_song_demo/`): 16 SONG GROTTOS `$76-$85`, every room song + 4 battle songs
+  (`$78`, `$80`, `$82`, `$85`) == the project (`SetBGM` hook). Tests: `test_compiler.test_s138`.
 
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 

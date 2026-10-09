@@ -11,9 +11,9 @@ $DD40), and register E is read after two frames.
   * entry 7 BattleBGMResolve reads $C86C (link), wMapID, wArenaStarryBattle,
     $DA03/$DA04 (the first enemy's EID), wInGateworld, wGateID, $DA09 (mode).
 The samples cover every map id class (vanilla < $50, the special rooms, the
-coliseum, $5D-$60, custom rooms with / without / "follow the gate" bytes, ids
->= $80), every gate with a song + some without, the floor before the boss
-floor (vanilla / custom / $80+ boss maps), every project fight + other EIDs,
+coliseum, $5D-$60, custom rooms with / without / "follow the gate" bytes — S138:
+every custom id $61-$EA, the 256-row tables having no `cp $80` cap), every gate with a song + some without, the floor before the boss
+floor (vanilla / custom boss maps below and above $80), every project fight + other EIDs,
 link, Starry 0/1/2, modes 0-3.
 
   python3 tools/census_music_resolve.py --project PROJECT_DIR   # builds it
@@ -46,13 +46,14 @@ def sym_table(path):
 
 
 def contexts(P, rnd, n):
-    rooms_custom = [m for m in range(0x61, 0x80)]
+    rooms_custom = [m for m in range(0x61, 0xEB)]          # S138: every custom id (256 rows)
     maps = (list(range(0x00, 0x50, 7)) + [0x50, 0x51, 0x52, 0x53, 0x58, 0x5C, 0x5D, 0x5E, 0x60]
-            + rooms_custom + [0x80, 0x9A])
+            + rooms_custom + [0xEB, 0xF0, 0xFE])
     gates = sorted(set([g for g in range(M.GATE_TABLE_LEN) if P.gate_bgm[g] or P.gate_battle[g]]
                        + [0, 1, 2, 5, 31, 32, 33, 95, 96, 200]))
     eids = [e for e, _ in P.fights] + [0, 1, 11, 251, 519, 700]
-    boss = [0x30, 0x4F, 0x6B, 0x6C] + [m for m in rooms_custom if P.room_bgm[m]] + [0x7F, 0x85]
+    boss = ([0x30, 0x4F, 0x6B, 0x6C] + [m for m in rooms_custom if P.room_bgm[m]]
+            + [0x7F, 0x80, 0x85, 0xEA])
     for _ in range(n):
         last = rnd.choice([3, 4, 5, 10])
         floor = rnd.choice([last - 2, last - 1, 0, 1]) & 0xFF

@@ -703,3 +703,26 @@ edge and the battle waits for input forever.
   elsewhere. Compare a contact sheet (a frame every 20) of the same line on the ORIGINAL ROM
   (new game: every library family is empty) — `lib3.py` method: boot, `to_bedroom`, warp map
   `$12` (4, 12), face up, A.
+
+## S138 techniques — making a stale save, "was the room loaded?", songs by hook, the menu by timing
+
+- **A save in a room another build lacks:** build a demo with the room, CONTINUE the user's
+  `.sav`, `warp()` into the room, JOURNAL (below), `p.stop()` → `<rom>.ram` = the stale save; boot
+  the OTHER build with it (`boot_with_sav`). The map id it stands in = byte `$24 + ($C968 − $C8EA)`
+  of the file (SRAM `$A0A2`).
+- **The JOURNAL by timing (the S134 recipe, made reliable):** A facing nothing, then wait **90
+  frames** before the first D-pad press (the menu ignores input while it opens — at 40 frames
+  `down` was lost and `right` opened ITEM); every D-pad press **hold 8, wait 30**; `down / right / A`
+  = OPTN, `down ×3 / A` = JOURNAL, A on YES. Hook `SaveGameState` to know it ran.
+- **"Was the room ever loaded?"** Hook bank $71 `CopyCustomRoomRecord` and log `wMapID` per call:
+  after a CONTINUE that goes home, every call reads the hub's id — never the saved one.
+- **Test a design by poking from a hook first:** a hook on the instruction where the patch will go
+  (here bank $15 `$445B`, the `jr` after the CONTINUE load) can write the RAM the patch would write
+  (the warp mailbox, `$C8EA`) — the answer before any code exists (KEY_LESSONS S138).
+- **Which song plays:** hook ROM0 `SetBGM` and log `register_file.A` with `wMapID` and `GAME_MODE`
+  (1 = the room's song, 2 = the battle's; the battle's end request is the room song again).
+- **Talking without walking:** `warp(p, room, x, y)` onto the cell next to the NPC, wait for the
+  script flag to stay clear, face it, talk — robust where NPCs wander and arrival cells differ.
+- **Trap — mashing A after CONTINUE eats an arrival scene:** to SEE a hub room's arrival lines,
+  stop pressing A once `GAME_MODE` is 1 in the hub and take a frame every ~25 (A only while a box
+  is open).

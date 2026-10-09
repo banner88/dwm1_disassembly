@@ -749,7 +749,8 @@ def s125_hub(app, w):
     finally:
         QMessageBox.information = keep_i
     arr = doc.hub_arrival_scenes('gate_island')
-    assert [a[2] for a in arr] == [['lost', 'wiped', 'final_lost'], ['warpwing'], ['home']], arr
+    assert [a[2] for a in arr] == [['lost', 'wiped', 'final_lost'], ['warpwing'], ['home'],
+                                   ['continue']], arr      # S138: + an old save
     # the Rooms canvas marks the hub cell
     rt = w.rooms_tab
     w.tabs.setCurrentWidget(rt)

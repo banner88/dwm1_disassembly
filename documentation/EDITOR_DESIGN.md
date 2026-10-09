@@ -1896,7 +1896,8 @@ left panel (`world_tab.HubBox`): the rules as sentences ("while post_game is ON 
 Castle …", "otherwise → HUB HALL ($74), screen 0 (4,5)", a grey last line "otherwise →
 the Castle" when nothing is unconditional), **Add rule… / Edit… / Remove / ▲ ▼**, **Open
 room**, **Add the arrival scenes** (three entry scenes on the rule's screen: loss + heal,
-WarpWing + heal, home), the problems in red (`Document.hub_problems`). `HubRuleDialog`:
+WarpWing + heal, home; S138: + a fourth, *Back from an old save* + heal — reason `continue`,
+a CONTINUE of a save whose place the build lacks, PROJECT_COMPILER §2.47), the problems in red (`Document.hub_problems`). `HubRuleDialog`:
 the conditions (`encounters_tab.FlagTerms`, + New named flag…), the room (the Castle
 first) and the arrival cell clicked on the room picture (`CellPicker`; walls refused).
 A new conditional rule is inserted before a final unconditional one. Elsewhere: the
@@ -2226,7 +2227,7 @@ is read with interrupts on returns to the wrong bank otherwise. The work is buil
 not hard-coded, the bank meters, the tools that assume `< $80` banks (dump tools only).
 
 **B. Place banks — the spill (CAP2; split S135 into CAP2a streams — BUILT S135, USER-CONFIRMED —, CAP2b place
-banks — BUILT S136, USER-CONFIRMED —, CAP2c bank $17 — BUILT S137, USER-CONFIRMED —, CAP2d bank $6C (split from CAP2b S136); ROADMAP).**
+banks — BUILT S136, USER-CONFIRMED —, CAP2c bank $17 — BUILT S137, USER-CONFIRMED —, CAP2d bank $6C (split from CAP2b S136), CAP2e stale saves + room songs past $7F — BUILT S138, NOT yet user-tested (ARCHITECTURE "Stale places at CONTINUE"); ROADMAP).**
 **As built S136 (CAP2b; ARCHITECTURE "Place banks (S136)", PROJECT_COMPILER §2.45):** the place
 header / far copy is NOT part of it (CAP3); a home bank holds the place's blocks only (scripts,
 patches, screens, lists, rules, cast) — the records / flags / music stay in bank $71 tables; bank
@@ -2334,7 +2335,9 @@ named flags **1,965** (`wExtFlags` 256 B; more flags = more WRAM, ≈219 B left 
 `wCustomPool`), the project's encounter lists **128** (numbers 128-255), project enemy rows
 **640**, breeding pools **100**, new gates **64** (32-95), own-animation groups **32**,
 custom songs 95 slots + bank $75, boss-join redirect rows **34**, custom species 19 (engine),
-screens per room 8 in the schema (16 in the engine). None is hit by the POC; each is a
+screens per room 8 in the schema (16 in the engine). (S138: the room-song / battle-song tables
+stopped at map id `$7F` — a project's 22nd room had no song of its own; lifted to every id with
+ARC CAP2e, PROJECT_COMPILER §2.47.) None is hit by the POC; each is a
 table width or a WRAM block and gets lifted when a real project nears it — the editor's
 meters show all of them (CAP4).
 

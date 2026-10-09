@@ -64,6 +64,7 @@ BANK_STREAM_CAP = 0x8000 - STREAMS_AT            # 16,000 B per song bank
 GATE_TABLE_LEN = 96                              # gates 0-95 (S115 NG1)
 MAX_FIGHTS = 255
 FOLLOW_GATE = 0xFF                               # room tables: "the gate's song"
+ROOM_MID_MAX = 0xEA                              # S138: the last custom map id (project.CUSTOM_MID_MAX)
 MUSIC_KEYS = ('libraries', 'songs', 'room_defaults', 'names', 'gates', 'battle')
 BATTLE_KEYS = ('normal', 'boss', 'arena', 'starry', 'rooms', 'fights')
 GATE_MUSIC_KEYS = ('floors', 'battles', 'rules')
@@ -160,16 +161,17 @@ class Plan:
         self.song_ids = {}            # project song id -> first sound id
         self.banks = {}               # bank -> [songs]
         self.split = None             # first id resolved from bank $75 (None: one bank)
-        self.room_bgm = [0] * 128
+        self.room_bgm = [0] * 256          # S138: every map id (128 until S137)
         self.chan_table = [0] * (LAST_ID - FIRST_ID + 1)
         self.gate_bgm = [0] * GATE_TABLE_LEN
         self.gate_battle = [0] * GATE_TABLE_LEN
-        self.room_battle = [0] * 128
+        self.room_battle = [0] * 256       # S138: every map id
         self.battle = {'normal': 0, 'boss': 0, 'arena': 0, 'starry': 0}
         self.fights = []              # [(eid, sound id)]
         self.rules = []               # S129: [(kind, id, [(flag, must_be_off)], sound id, what)]
         self.warnings = []
         self.stream_bytes = {}        # bank -> bytes used
+        self.arena_alias = {}         # S138: {project arena copy mid: $5D / $06}
 
     def legacy(self):
         """(bank74_library, room_bgm, song_ids, warnings) — the S64 tuple."""
@@ -287,9 +289,9 @@ def plan(prj):
                                  f"music.room_defaults disagree for {F.hexb(mid)}")
             defaults[mid] = m
     for mid, v in defaults.items():
-        if not (0 <= mid < 128):
-            raise MusicError(f"room_defaults mapID {F.hexb(mid)} outside $00-$7F "
-                             "(CustomRoomBGMTable range)")
+        if not (0 <= mid <= ROOM_MID_MAX):
+            raise MusicError(f"room_defaults mapID {F.hexb(mid)} outside $00-"
+                             f"{F.hexb(ROOM_MID_MAX)} (the last custom map id)")
         if v in (0, '0', '0x00', '$00'):
             raise MusicError(f"room_defaults {F.hexb(mid)}: id 0 is the no-assignment "
                              "sentinel — it cannot be assigned")
@@ -316,9 +318,6 @@ def plan(prj):
         for i, ru in enumerate(r.get('music_rules') or []):
             mid = F.val(r['mapID'])
             ctx = f"room {r.get('id')} music_rules[{i}]"
-            if mid >= 128:
-                raise MusicError(f"{ctx}: rooms from $80 up have no music (the room-song "
-                                 "table has 128 rows)")
             P.rules.append(_rule(prj, ru, MUSIC_RULE_ROOM, mid, val, ctx))
 
     # gate rooms with no song of their own follow the gate (only matters when a
@@ -334,14 +333,9 @@ def plan(prj):
     if any(P.gate_bgm):
         for r in prj.rooms:
             mid = F.val(r['mapID'])
-            if mid < 128 and P.room_bgm[mid] == 0 and (r.get('id') in served
-                                                       or r.get('id') in bosses):
+            if P.room_bgm[mid] == 0 and (r.get('id') in served
+                                         or r.get('id') in bosses):
                 P.room_bgm[mid] = FOLLOW_GATE
-            elif mid >= 128 and (r.get('id') in served or r.get('id') in bosses):
-                # S120 (CROSSBANK_ROOMS "S120 burn-down"): the tables stop at $7F
-                P.warnings.append(f"room {r.get('id')} (${mid:02X}): rooms from $80 up cannot "
-                                  "follow the gate's song (the room-song table has 128 rows) — "
-                                  "the gate theme plays")
 
     # ---- battle -----------------------------------------------------------
     b = music.get('battle') or {}
@@ -352,18 +346,15 @@ def plan(prj):
         P.battle[k] = val(b.get(k), f"music.battle.{k}")
     for key, v in (b.get('rooms') or {}).items():
         mid = F.val(key)
-        if not 0 <= mid < 128:
-            raise MusicError(f"music.battle.rooms: mapID {key!r} outside $00-$7F")
+        if not 0 <= mid <= ROOM_MID_MAX:
+            raise MusicError(f"music.battle.rooms: mapID {key!r} outside $00-"
+                             f"{F.hexb(ROOM_MID_MAX)}")
         P.room_battle[mid] = val(v, f"music.battle.rooms {F.hexb(mid)}")
     if any(P.gate_battle):
         for r in prj.rooms:
             mid = F.val(r['mapID'])
-            if mid < 128 and P.room_battle[mid] == 0 and r.get('id') in served:
+            if P.room_battle[mid] == 0 and r.get('id') in served:
                 P.room_battle[mid] = FOLLOW_GATE
-            elif mid >= 128 and r.get('id') in served:
-                P.warnings.append(f"room {r.get('id')} (${mid:02X}): rooms from $80 up cannot "
-                                  "follow the gate's battle song (bank $71 entry 7 tests "
-                                  "cp $80) — battles there use the normal / boss song")
     for key, v in (b.get('fights') or {}).items():
         eid = F.val(key)
         if not 0 <= eid < 0xFFFF:
@@ -374,6 +365,15 @@ def plan(prj):
     P.fights.sort()
     if len(P.fights) > MAX_FIGHTS:
         raise MusicError(f"music.battle.fights: {len(P.fights)} fights (at most {MAX_FIGHTS})")
+    # S138: the project's arena copies (ROM0 ArenaAlias, S128) for model_battle_bgm
+    P.arena_alias = {}
+    try:
+        from editor2.core import your_arena as YA
+        ar = YA.resolve(prj)
+        if ar is not None:
+            P.arena_alias = {ar['battle_mid']: 0x5D, ar['lobby_mid']: 0x06}
+    except Exception:
+        pass
     return P
 
 
@@ -406,7 +406,7 @@ def _rule(prj, ru, kind, ident, val, ctx):
 
 
 def resolve(prj):
-    """S64 interface: (bank74_library, room_bgm[128], song_ids, warnings)."""
+    """S64 interface: (bank74_library, room_bgm[256], song_ids, warnings)."""
     return prj.music_plan().legacy()
 
 
@@ -508,7 +508,8 @@ def emit_bank_071_tables(prj, warnings):
                                  if any(row) else ""))
     lines.append("")
     lines += ["; " + "-" * 77,
-              "; CustomRoomBattleBGMTable — 128 entries by wMapID: the song of battles",
+              "; CustomRoomBattleBGMTable — 256 entries by wMapID (S138; 128 until",
+              "; S137 — every map id now, no `cp $80`): the song of battles",
               "; in that room (0 = not set, $FF = follow the gate being dived). Read by",
               "; entry 7 BattleBGMResolve (S116). (generated)",
               "; " + "-" * 77]
@@ -587,10 +588,9 @@ def model_room_bgm(P, ctx):
         bm = ctx['boss_map']
         if bm < 0x6B:
             return 0
-        if bm < 0x80:
-            e = room[bm]
-            if e not in (0, FOLLOW_GATE):
-                return e
+        e = room[bm]                       # S138: every id (was < $80 only)
+        if e not in (0, FOLLOW_GATE):
+            return e
         e = floor_song(d)
         return e if e else 0x34
 
@@ -604,9 +604,7 @@ def model_room_bgm(P, ctx):
 
     if ctx['in_gate']:
         return dive(True)
-    m = ctx['map']
-    if m >= 0x80:
-        return 0
+    m = ctx['map']                         # S138: no `cp $80` — 256 rows
     e = rule(MUSIC_RULE_ROOM, m)
     if e:
         return e
@@ -625,8 +623,12 @@ def model_room_bgm(P, ctx):
 def model_battle_bgm(P, ctx):
     """BattleBGMResolve: ctx = {link, map, starry, eid, in_gate, gate, mode}
     -> E (the song the battle starts with)."""
+    # S138 (census fix): bank $71 reads the arena tests through ROM0 ArenaMapID
+    # (S128): the project's arena copy counts as $5D, its lobby as $06 — the room
+    # table and the special-room tests below read the raw map id
+    amap = getattr(P, 'arena_alias', {}).get(ctx['map'], ctx['map'])
     e = 0x27
-    if ctx['map'] == 0x5D and ctx['starry'] == 2:
+    if amap == 0x5D and ctx['starry'] == 2:
         e = 0x2B
     if ctx['link']:
         return e
@@ -634,7 +636,7 @@ def model_battle_bgm(P, ctx):
         if eid == ctx['eid']:
             return sid
     b = P.battle
-    if ctx['map'] == 0x5D:
+    if amap == 0x5D:
         if e == 0x2B and b['starry']:
             return b['starry']
         if b['arena']:
@@ -654,9 +656,7 @@ def model_battle_bgm(P, ctx):
 
     if ctx['in_gate']:
         return gate() or typ()
-    m = ctx['map']
-    if m >= 0x80:
-        return typ()
+    m = ctx['map']                         # S138: no `cp $80` — 256 rows
     v = P.room_battle[m]
     if v == FOLLOW_GATE:
         return gate() or typ()

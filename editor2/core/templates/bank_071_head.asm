@@ -14,6 +14,12 @@
 ;     identical to the original in-ROM0 table read (replaces CustomGFXMapID +
 ;     index at all three consumer sites). For mapIDs $70+: source =
 ;     Custom26DDTable + (mapID-$70)*8 — this is what lifts the old $6F ceiling.
+;     S138 (ROADMAP ARC CAP2e): a custom map ID this build has NO place for
+;     (past the last room, or a placeholder — StalePlace) reads the Castle's
+;     record (map 0 of the normal table) instead: the unbounded read of S137
+;     turned a save made in a deleted room into junk tileset bank $E1 ->
+;     DecompressTileLayout overwrote WRAM -> hang at CONTINUE. Matches bank
+;     $60's dummy step and bank $17's Castle colours for the same ids.
 ;
 ; Entry 1 (HL=$7101) CustomEncResolve:
 ;     Look up RoomEncTable[mapID-$6B]. If enabled, write wGateID + wCurrentFloor
@@ -21,8 +27,9 @@
 ;     Seed6BEncounterPool whitelist in bank $0B.
 ;
 ; Entry 2 (HL=$7102) CustomRoomBGMResolve (S64, M3b):
-;     E := CustomRoomBGMTable[wMapID] (128-entry table, generated), or 0 when
-;     wInGateworld!=0 / wMapID>=$80 / no assignment. Called by the rewritten
+;     E := CustomRoomBGMTable[wMapID] (256-entry table since S138 — every map
+;     ID, no `cp $80` cap; 128 S64-S137), or 0 when wInGateworld!=0 / no
+;     assignment. Called by the rewritten
 ;     LoadNewBGMIdIntoA head (patches/bank_001.asm) BEFORE the vanilla
 ;     derivation, so an assigned id overrides both the vanilla RoomBGMTable
 ;     and the gate path, for vanilla AND custom rooms alike — and survives
@@ -69,8 +76,10 @@
 ;     saved/loaded through SRAM $BFCA/$BFCB by bank $73 entries 5/6.
 ;
 ; Entry 5 (HL=$7105) CustomRoomFlags (S100):
-;     E := CustomRoomFlagsTable[wMapID-$6B] (0 for out-of-range ids). Bit 0 =
-;     saving is NOT allowed in this room. Read by the bank $07 save-permission
+;     E := CustomRoomFlagsTable[wMapID-$6B] (0 for vanilla ids; S138: $81 for
+;     ids past the last room, as a placeholder's row). Bit 0 = saving is NOT
+;     allowed in this room; bit 1 = sprites over text (entry 8); bit 7 (S138)
+;     = no such place (StalePlace). Read by the bank $07 save-permission
 ;     ladder (same-size rewrite, patches/bank_007.asm SaveAllowCheck).
 ;
 ; Entry 8 (HL=$7108) TextSpriteMode (S121):
@@ -100,7 +109,8 @@
 ;     Starry Night final). Project order: link battle ($C86C) = vanilla; this
 ;     fight (BattleFightBGMTable, the first enemy's EID $DA03/$DA04); the arena
 ;     (BattleBGMSettings Starry final / arena); the room
-;     (CustomRoomBattleBGMTable[wMapID], $FF = follow the gate); the gate being
+;     (CustomRoomBattleBGMTable[wMapID] — 256 entries since S138, every map
+;     ID; $FF = follow the gate); the gate being
 ;     dived (CustomGateBattleBGMTable[wGateID] — maze floors, the special
 ;     rooms $50/$51/$53-$5C, rooms marked $FF); a boss fight ($DA09 == 3,
 ;     opcodes $5A/$5B) = the boss setting; else the normal setting (only where
@@ -122,6 +132,24 @@
 ;     := 0, `$D92B` := 8 (6 for the WarpWing) and map 0 at ($E8, $58), so the
 ;     Castle's own arrival script heals / speaks as before. Preserves nothing
 ;     the callers rely on (every site reloads A / HL right after).
+;     S138: reason HUB_CONTINUE 7 (entry 10) — a Castle landing then writes NO
+;     `$D92B` code (the dead vanilla relocation in bank $15 wrote none).
+;
+; Entry 10 (HL=$710A) ContinueCheck (S138, ROADMAP ARC CAP2e — stale saves):
+;     Called by the CONTINUE loader in bank $15 (state 0 of the CONTINUE
+;     screen, right after SRAMAccess_21B2 + bank $17 entry 0; patches/
+;     bank_015.asm, same size — it was `jr jr_015_44d7` jumping over a dead
+;     vanilla block that relocated a gate save to the Castle). When the save
+;     stands in a custom map ID this build has no place for (StalePlace: a
+;     room since deleted -> a placeholder, or past the last room) and not in
+;     a gate: arms the warp home exactly like the engine's other sends —
+;     HubWarp with HUB_CONTINUE (the hub rules: a project room + wHubReason,
+;     else the Castle at ($E8, $58) with no arrival code), wIsPlayerChangingMaps
+;     := 1, $C8EA := 1 (field live, NOT $80 — no script resume); at the Castle
+;     the party is healed (bank $01 entry 9, as the dead block did; a hub room
+;     heals through its arrival default). Returns E = 1 (the loader then skips
+;     its `$C8EA := $80`), else E = 0 and nothing written. Measured S138: the
+;     stale room is never loaded — the first room record read is the hub's.
 ; =============================================================================
 
 SECTION "ROM Bank $071", ROMX[$4000], BANK[$71]
@@ -139,6 +167,7 @@ SECTION "ROM Bank $071", ROMX[$4000], BANK[$71]
     dw BattleBGMResolve                 ; entry 7  (HL=$7107, S116 P3.13b)
     dw TextSpriteMode                   ; entry 8  (HL=$7108, S121)
     dw HubWarp                          ; entry 9  (HL=$7109, S125 P3.14d)
+    dw ContinueCheck                    ; entry 10 (HL=$710A, S138 ARC CAP2e)
 
 ; -----------------------------------------------------------------------------
 ; Entry 0: CopyCustomRoomRecord — 8-byte $26DD record for wMapID → wRoomRecScratch
@@ -158,6 +187,12 @@ CopyCustomRoomRecord:
     inc a
 .setFlag:
     ld [wCustomRoomFlag], a
+    call StalePlace                     ; S138: Z = vanilla id or a place of this build
+    jr z, .place
+    xor a                               ; no such place: map 0's row (the Castle)
+    ld hl, $26dd
+    jr .index
+.place:
     ld a, [wMapID]
     cp $70
     jr nc, .custom
@@ -252,9 +287,7 @@ CustomRoomBGMResolve:
     ld a, [wInGateworld]
     or a
     jr nz, .dive                        ; maze floors
-    ld a, [wMapID]
-    cp $80
-    ret nc                              ; out of table range
+    ld a, [wMapID]                      ; S138: every id has a row (256) — no `cp $80`
     ld c, a                             ; S129: the room's music rules first
     ld b, MUSIC_RULE_ROOM
     push de                             ; D = 1 / E = 0, kept for the paths below
@@ -295,9 +328,7 @@ CustomRoomBGMResolve:
     ld a, [wBossMapType]
     cp CUSTOM_ROOM_START
     ret c                               ; vanilla boss map: vanilla (its boss song)
-    cp $80
-    jr nc, .bossNoSong
-    call .lookup                        ; the custom boss room's own song
+    call .lookup                        ; S138: any custom boss room (no `cp $80`)                        ; the custom boss room's own song
     ld a, e
     or a
     jr z, .bossNoSong
@@ -337,7 +368,7 @@ CustomRoomBGMResolve:
     ld h, a
     ld e, [hl]
     ret
-.lookup:                                ; A = mapID -> E = table byte
+.lookup:                                ; A = mapID -> E = table byte (256 rows)
     ld hl, CustomRoomBGMTable
     add l
     ld l, a
@@ -666,8 +697,9 @@ CustomRoomFlags:
     ld a, [wMapID]
     sub CUSTOM_ROOM_START
     ret c                               ; vanilla room: no flags
-    cp ROOMFLAGS_TABLE_LEN
-    ret nc                              ; out of table range: no flags
+    ld e, $81                           ; S138: past the last room = no such place
+    cp ROOMFLAGS_TABLE_LEN              ; (bit 7), no saving (bit 0) — like a
+    ret nc                              ; placeholder's row (was 0: saving allowed)
     ld hl, CustomRoomFlagsTable
     add l
     ld l, a
@@ -784,9 +816,7 @@ BattleBGMResolve:
     ld a, [wInGateworld]
     or a
     jr nz, .gate                        ; maze floor
-    ld a, [wMapID]
-    cp $80
-    jr nc, .type
+    ld a, [wMapID]                      ; S138: 256 rows — every id (no `cp $80`)
     ld hl, CustomRoomBattleBGMTable
     add l
     ld l, a
@@ -913,12 +943,15 @@ HubWarp:
     xor a
     ld [wHubReason], a                  ; the Castle has its own arrival code
     ld a, e
+    cp HUB_CONTINUE
+    jr z, .mailbox                      ; S138: a stale save — no arrival code
     cp HUB_WARPWING
     ld a, $06                           ; $D92B = 6: the priest's blessing + heal
     jr z, .code
     ld a, $08                           ; $D92B = 8: after a lost battle
 .code:
     ld [$d92b], a
+.mailbox:
     xor a
     ld [wWarpGateId], a
     ld [wWarpFlag], a
@@ -928,4 +961,58 @@ HubWarp:
     ld [wWarpSpawnXLo], a
     ld a, $58
     ld [wWarpSpawnYLo], a
+    ret
+
+; -----------------------------------------------------------------------------
+; Entry 10: ContinueCheck (S138, ROADMAP ARC CAP2e) — a save in a place this
+; build does not have goes home at CONTINUE (header above). Out: E = 1 armed.
+; -----------------------------------------------------------------------------
+ContinueCheck:
+    ld a, [wInGateworld]
+    or a
+    jr nz, .keep                        ; a gate floor: wMapID is a floor type
+    call StalePlace
+    jr z, .keep                         ; a vanilla room or a place of this build
+    ld e, HUB_CONTINUE
+    call HubWarp                        ; the mailbox: the hub's room, else the Castle
+    ld a, $01
+    ld [wIsPlayerChangingMaps], a       ; the field starts with the warp
+    ld [$c8ea], a                       ; field live (1, not $80: no script resume)
+    xor a
+    ld [wScriptStateFlags], a           ; no script of the missing room runs on
+    ld a, [wWarpGateId]
+    or a
+    jr nz, .armed                       ; a project room: its arrival default heals
+    ld hl, $0109                        ; the Castle: bank $01 entry 9 — the party
+    rst $10                             ; healed, as the dead vanilla relocation did
+.armed:
+    ld e, $01
+    ret
+.keep:
+    ld e, $00
+    ret
+
+; StalePlace (S138): Z = wMapID is a vanilla id or one of this build's places;
+; NZ = a custom id the build has no place for — past the last room
+; (ROOMFLAGS_TABLE_LEN) or a placeholder (CustomRoomFlagsTable bit 7). A, HL.
+StalePlace:
+    ld a, [wMapID]
+    sub CUSTOM_ROOM_START
+    jr c, .vanilla
+    cp ROOMFLAGS_TABLE_LEN
+    jr nc, .none
+    ld hl, CustomRoomFlagsTable
+    add l
+    ld l, a
+    adc h
+    sub l
+    ld h, a
+    bit 7, [hl]                         ; Z = a real place
+    ret
+.vanilla:
+    xor a
+    ret
+.none:
+    ld a, $01
+    or a
     ret

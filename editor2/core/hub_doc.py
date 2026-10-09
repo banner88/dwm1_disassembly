@@ -25,6 +25,9 @@ DEFAULT_ARRIVALS = (
     ('Back by WarpWing', ['warpwing'],
      [['The WarpWing has', 'flown you home.']], True),
     ('Sent home', ['home'], [['Welcome home!']], False),
+    # S138 (ARC CAP2e): CONTINUE of a save made in a room this build no longer has
+    ('Back from an old save', ['continue'],
+     [['Your saved place', 'is gone now.'], ['You are home.', 'Rest a while.']], True),
 )
 
 
