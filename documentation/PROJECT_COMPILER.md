@@ -39,6 +39,7 @@ to the proven overlay:
 | `gd_arena_masters_04` / `gd_arena_masters_50` / `gd_arena_fees` / `gd_arena_team_sizes` in `patches/bank_004/050/009/06e.asm` | the arena: each match's master, the class entry fees, the team sizes, from `gamedata.arena` (S109 P3.10b, §2.25; the team members are `gamedata.enemies` rows) |
 | `patches/bank_075.asm` + region `rom0_audio_master` in `patches/bank_000.asm` | S116: the second song bank and the `AudioMasterTableExt` rows (§2.9) |
 | `patches/bank_076.asm` | whole file = template head (`EncResolve`, S115 + `NewGateRowCopy`) + the project's encounter lists, rooms' lists / variants / rates, gates' plans (S114 P3.13a, §2.30) + the new gates' rows / sources (S115 NG1, §2.31) + `GateClearTable` (S117 NG2, §2.32) |
+| `patches/bank_ext.asm` | S134 (ROADMAP ARC CAP1): banks $80-$FF of the 4 MB ROM — a section + self-ID byte per bank (`emit_bank_ext`); a bank whose whole content another emitter writes (ARC CAP2 place banks, `emitters.ext_bank_files`) is INCLUDEd instead. `patches/game.asm` INCLUDEs it |
 | `patches/bank_077.asm` + region `gd_item_info` in `patches/bank_003.asm` | S117: the shop lists (`ShopFill` / `ShopClose` template head) and the item buy prices, from `gamedata.shops` / `custom.shops` / `gamedata.items` (§2.32) |
 
 **S120 — the committed overlay IS the compiler's example build.** `patches/*` must
@@ -190,6 +191,21 @@ Emission formats: NPC 5-byte / exit 7-byte entries, `$FF` first-byte
 terminators, screen sub-tables (width 4 or 8 by top screen index, override
 `subtable_width`) — all per ROOM_DATA_FORMAT / CROSSBANK_ROOMS, encoded
 once in `editor2/core/formats.py` with doc citations.
+
+**S134 — every build is 4 MB (ROADMAP ARC CAP1).** The `ext_banks` emitter writes
+`patches/bank_ext.asm` (§1 table); the staging lists find it — and any later
+`bank_0xx.asm` with no clean counterpart — by rule (`tools/verify_integrity.py`
+`_NEW_FILE_RE`, the same rule in `builder._patch_lists`), and `builder.build_rom` now removes
+every generated file it copied into `disassembly/` (before S134 a generated file absent from
+`PATCH_NEW_FILES` would have stayed behind in the clean tree). Pin `807d9668…` (patched;
+S129's `7d136455…` is historical: the two differ only in the header size byte + checksums).
+
+**S133 — the map-id ceiling is enforced.** `Project._dense_rooms` raises `ProjectError`
+for a custom mapID past `CUSTOM_MID_MAX` = `$EA` (128 rooms): bank $60 `CustomPtrChase` /
+`CustomStateRules` / `CustomMonsterCast` and bank $17 `CustomAttrCheck` double `mapID −
+$6B` in 8 bits, so `$EB` would read `$6B`'s tables — it built silently before S133
+(test_compiler `test_s133`). More places = ROADMAP ARC CAP (EDITOR_DESIGN §6.4: place
+banks, regions, 4 MB).
 
 ### 2.3 `custom.dialogue[]`
 
@@ -519,6 +535,7 @@ registering an emitter; nothing existing changes.
 | Emitter | Consumes | Target | Banks |
 |---|---|---|---|
 | `rooms60` | `custom.rooms/scripts/dialogue` | `file:patches/bank_060.asm` | `$60` |
+| `ext_banks` (S134) | — (always; `ext_bank_files(prj)` names compiler place banks, none before ARC CAP2) | `file:patches/bank_ext.asm` | `$80-$FF` |
 | `dispatch71` | `custom.rooms` (records, encounters, animation S99) + `custom.music` (room BGM table, S64) | `file:patches/bank_071.asm` | `$71` |
 | `palettes_a` | `custom.palettes` (placement a) | `region:…#room_palettes_a` | `$17` |
 | `render17` | `custom.rooms` (+ placement-b palettes) | `region:…#room_render_tables` | `$17` |

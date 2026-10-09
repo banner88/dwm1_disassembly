@@ -145,6 +145,10 @@
                  before interacting after a warp [S118, PyBoy]
    C968     1    [[Dragon_Warrior_Monsters/Notes#Map_Type_IDs|Map type]] (wMapID)
    C969     1    flag_in_gate (wInGateworld)
+   C96A     1    wMapIDMirror — WRITE-ONLY copy of wMapID (bank $01 InitFieldState, bank $15
+                 new game / link seed); never read by literal or pointer in either tree (S133
+                 census). Saved ($A0A4) but dead. Labelled S133.
+   C96B     1    wInGateworldMirror — the same for wInGateworld (S133). Saved ($A0A5), dead.
                  00 - Not in a Gate (or fixed special-room template)
                  01 - In a Gate (procedural maze mode)
    C8EA     1    Field-live/battle-resume flag (S68): field init sets 1;
@@ -214,6 +218,10 @@
                  per class written to $C0D8.. ($90 open / $AC star) while the
                  menu is up [S109]
    C96D     1    Gate to warp to
+                 S133: = wWarpGateId, the transition mailbox's DESTINATION MAP (or a gate
+                 number when wWarpFlag = 1); committed to wMapID by bank $0B entry 0, then bank
+                 $73 entry 0 (the single commit hook). Every writer + reader: CROSSBANK_ROOMS
+                 "S133 capacity audit".
    CA38     1    Encounter pool index (gate + floor → pool via $01:Call_69e1)
 ;  Gate floor generation pipeline (these vars): see GATE_GENERATION.md
    CA39     2    Counter before random encounter

@@ -149,9 +149,9 @@ InitFieldState:
     ldh [$a8], a
     call TileAtPixel
     ld a, [wMapID]
-    ld [$c96a], a
+    ld [wMapIDMirror], a
     ld a, [wInGateworld]
-    ld [$c96b], a
+    ld [wInGateworldMirror], a
     ld a, [wInGateworld]
     or a
     jr nz, jr_001_4105

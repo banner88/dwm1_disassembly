@@ -149,7 +149,12 @@ wMapID:: db	;c968
 ;Set when in a gateworld, reset when in GreatTree.
 wInGateworld:: db ;c969
 
-    ds $2
+; S133 census: written at field init (bank $01 InitFieldState) and by the two
+; new-game / link map seeds (bank $15), saved with the image ($A0A4/$A0A5) —
+; and NEVER READ, by literal or by pointer, in either tree. Dead mirrors of
+; wMapID / wInGateworld (not a "previous map" anyone consults).
+wMapIDMirror:: db ;c96a — write-only copy of wMapID (S133)
+wInGateworldMirror:: db ;c96b — write-only copy of wInGateworld (S133)
 
 wIsPlayerChangingMaps:: db ;c96c
 

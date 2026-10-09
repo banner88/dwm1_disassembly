@@ -580,3 +580,48 @@ edge and the battle waits for input forever.
   `QMessageBox.warning / information / question` with a printer in such scripts.
 - **Trap — relative project paths.** A project opened as a relative path gives a relative
   `last_rom`; the playback process runs elsewhere ("No such file"). Play here absolutizes.
+
+## S133 techniques — "does anything happen between A and B?", a 4 MB ROM, three traps
+
+- **Hook pairs bracket a window.** To prove a buffer survives from an event to a later one,
+  hook both ends AND every writer of the buffer, log `(name, frame)` with a frame counter
+  you advance yourself, and compare snapshots taken at both ends. S133: bank $0B
+  `jr_00b_45a8` (exit fire), bank $60 `CopyExitListToBuffer` (the only writer of
+  `wCustomExitBuffer`), bank $73 `CF2WarpCommitDrain` (the commit) — zero copies between
+  fire and commit, the 28 bytes identical (a custom door and a GreatTree redirect).
+- **Script reads across a warp.** Hook bank $60 `CustomScriptRead` and log
+  `(wScriptMapType $D8D3, wMapID, word counter $D8D5)`; with the commit hook in the same log,
+  "which room's script was read after the commit" is a list filter.
+- **A 4 MB ROM in PyBoy.** `p.memory[0x2100] = 0x80` then `p.memory[0x4000]` reads bank $80's
+  first byte (restore the bank you found at `[$4000]` afterwards). A runtime far call needs a
+  call site: S133 put `push hl / ld hl, $8000 / rst $10 / pop hl` at the top of bank $73
+  `CF2WarpCommitDrain` in a SCRATCH tree and counted calls in a WRAM byte — never in the repo.
+- **Trap: CONTINUE by A-mash leaves the field menu open** on a real `.sav` (the party HP/MP
+  window is drawn over the room). Tap B a few times before warping.
+- **Trap: an entry cutscene owns the room after a warp** (a custom room's `cutscenes` with
+  the entry trigger): tap A until `$C8EB` bit 0 and `$D8D7` bit 0 are both clear before
+  driving the player.
+- **Trap: the first move after `warp()` can report two tiles** (GreatTree screen 8: warped
+  to y 22; an `up` press — 20-frame hold, or two 4-frame taps — reported y 20, and the
+  walk-on exit at y 21 never fired: `VanillaExitResolve` ran once, at 20. From y 20 one
+  `down` step landed on 21 and fired at once). Log the position after each move and approach
+  a walk-on exit from a tile you have SEEN the player stand on. Not investigated further
+  (the warp's pixel spawn vs the tile grid is the suspect).
+
+## S134 techniques — every bank switch, a JOURNAL save that works, Qt in this sandbox
+
+- **Log every bank the game selects.** PyBoy 2 has `p.register_file` (A, F, B, C, …): hook
+  every ROM0 `ld [$2100], a` (scan `$0000-$3FFF` for `EA 00 21` — 23 sites in both trees) and
+  read `p.register_file.A` in the callback (the hook fires before the instruction). S134: a
+  play-through on the user's save (rooms, doors, a redirect, the menu, a gate, a battle) =
+  ~200,000 switches over 63 banks, highest `$7E` — on the 2 MB and the 4 MB build alike.
+- **The save, corrected (supersedes S100's recipe where they differ):** stand on a tile
+  FACING NOTHING (facing an NPC, A talks); A opens the field menu (INFO / ITEM / SKIL / OPTN;
+  START only shows the party's levels); `down / right / A` = OPTN (TEXT SPD / CH ORDER / CH
+  PLAN / JOURNAL); `down ×3 / A` = JOURNAL, "Record to the Journal?" with the cursor on YES →
+  A → "Recorded in the Journal." Hook `SaveGameState` (`$00:$2128` in the user's S134 build)
+  to know it ran; `p.stop()` writes `<rom>.ram` → boot it as the next `.sav`.
+- **Qt tests in this sandbox:** PySide6 6.12's audio backend segfaults here (PipeWire, no
+  client.conf) — run `test_app.py` / `test_canvas.py` with `QT_AUDIO_BACKEND=none
+  QT_QPA_PLATFORM=offscreen`. test_app may still segfault AFTER printing `PASS` (Qt teardown);
+  the result is the `PASS` line.

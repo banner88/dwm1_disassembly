@@ -1,5 +1,5 @@
 {
- "_comment": "CAPACITIES reference (ROADMAP P3.0, gap G-M) — every known authoring ceiling with its evidence. Hand-compiled S91; no generator by design (measured entries cite their S91 emulator experiment; documented entries cite the owning doc/session and were compiled, not re-derived, this session). The editor's capacity meters (EDITOR_DESIGN §5.C) read this file. status values: measured_s91 = empirically measured in PyBoy this session; structural_s91 = derived from disassembly/ROM bytes this session; documented = compiled from the owning doc.",
+ "_comment": "CAPACITIES reference (ROADMAP P3.0, gap G-M) — every known authoring ceiling with its evidence. Hand-compiled S91; no generator by design (measured entries cite their S91 emulator experiment; documented entries cite the owning doc/session and were compiled, not re-derived, this session). The editor's capacity meters (EDITOR_DESIGN §5.C) read this file. status values: measured_s91 = empirically measured in PyBoy this session; structural_s91 = derived from disassembly/ROM bytes this session; documented = compiled from the owning doc. S133 (ROADMAP ARC CAP audit): stale 'documented' rows refreshed to the current owning docs; new rows campaign_place_cost / rom_size / wram_custom_pool_free; status measured_s133 = measured on the user's project build + .sav / the S133 4 MB scratch build, structural_s133 = read from the patched tree this session.",
  "npc_slots_per_screen_state": {
   "value": 8,
   "status": "measured_s91",
@@ -23,32 +23,36 @@
  "custom_mapids": {
   "value": 128,
   "range": "$6B-$EA",
-  "status": "documented",
-  "evidence": "extracted/mapid_range_audit.json; PROJECT_STATE S90 headroom audit"
+  "status": "structural_s133 (enforced by the compiler since S133)",
+  "detail": "wMapID is one byte. bank $60 CustomPtrChase / CustomStateRules / CustomMonsterCast and bank $17 CustomAttrCheck (+ its two callers label17_401d / label17_409e) index per-room tables with `sub $6B / add a / add l` — an 8-bit doubling that drops the carry, so $EB+ silently reads another room's data. editor2/core/project.py CUSTOM_MID_MAX = $EA (ProjectError past it, test_compiler test_s133). Room-default / battle music tables stop at $7F (cp $80 guards; music.py errors). Hard id max $FE ($FF = list terminator / skill script type). Lifting it = ROADMAP ARC CAP (regions: the id range per region).",
+  "evidence": "CROSSBANK_ROOMS 'Custom-side arithmetic ceilings' + 'S133 capacity audit'; EDITOR_DESIGN §6.4"
  },
  "free_rom_banks": {
-  "value": 11,
-  "banks": ["$6B", "$6C", "$6D", "$6E", "$6F", "$70", "$75", "$76", "$77", "$79", "$7A", "$7C"],
-  "note": "list per PROJECT_STATE bank table ('$6B-$70, $75-$77, $79-$7A, $7C' = 11 banks, 176 KB) + $7F reserved next sprite-overflow bank",
-  "status": "documented",
-  "evidence": "PROJECT_STATE 'Bank allocation' table"
+  "value": 0,
+  "whole_banks_unallocated": 0,
+  "free_bytes_in_custom_banks": "≈315 KB (end-of-bank fill, 23 custom banks, user's 11-room project build, S133); bank $60 3.5 KB and $64 3.5 KB left there",
+  "status": "measured_s133",
+  "detail": "Every vanilla-empty bank has an owner since S121 (PROJECT_STATE bank table). Banks $0B and ROM0 have 1 / 8 free bytes; bank $17 3,937 B (room palettes + render tables live there); bank $16 732 B. A 4 MB ROM adds banks $80-$FF (2 MB) — see rom_size.",
+  "evidence": "PROJECT_STATE 'Bank allocation'; S133 measurement (scratch); EDITOR_DESIGN §6.4"
  },
  "event_flags_safe_pool": {
-  "value": 32,
+  "value": 1965,
+  "ranges": "$0159-$0167 + $1000-$179D",
   "status": "documented",
-  "detail": "Truly-safe custom flag pool = 32 flags (S57 per-byte audit); auto-allocation from $0158+.",
-  "evidence": "EVENT_FLAGS (FLAG_SAFE_RANGES); DOC_AUDIT S65 row"
+  "detail": "Extended flags $1000-$17FF (S117, wExtFlags 256 B, saved in SRAM bank 3 'X1'); $0158 is the game's (S124); $179E/$179F the Milly hook; $17A0+gate the gates' cleared flags. More flags = more WRAM (wCustomPool has ~219 B free) — ROADMAP ARC CAP note.",
+  "evidence": "EVENT_FLAGS 'Extended flags (S117)'; PROJECT_COMPILER §2.7"
  },
  "custom_species_slots": {
-  "value": 32,
-  "range": "ids 224-255",
+  "value": 19,
+  "range": "ids 221-239",
   "status": "documented",
-  "evidence": "MONSTER_DATA 'Species ID geography'; ROADMAP Phase N"
+  "detail": "S105 G3: 240+ are impossible (MONSTER_DATA overshoot registry).",
+  "evidence": "MONSTER_DATA 'Species ID geography'; PROJECT_COMPILER §2.21"
  },
  "quest_eids": {
-  "value": "12-row tail at EID 519+, extendable by table move",
+  "value": "project enemy rows EID 519+, cap 640 (bank $6B)",
   "status": "documented",
-  "evidence": "EDITOR_DESIGN §8-successor capacity list (v2 §5.C area); bank $14 tail rows (S70 E2 wiring)"
+  "evidence": "PROJECT_COMPILER §2.18; editor2/core/project.py PROJECT_EID_CAP"
  },
  "song_slots": {
   "value": 95,
@@ -57,9 +61,9 @@
   "evidence": "SOUND_SYSTEM §8"
  },
  "sram": {
-  "value": "56 B unbanked tail (reserved) + 24 KB banked (banks 1-3, S69-built, NOT yet user-tested, uninitialized until a schema exists)",
+  "value": "32 KB: bank 0 = the vanilla image; bank 1 roster snapshot; bank 3 'X1' extended flags; free SRAM tail $BFC8-$BFFF reserved (wGateDiveGate at $BFCA)",
   "status": "documented",
-  "evidence": "PROJECT_STATE 'SRAM save layout' row; ARCHITECTURE 'SRAM banking as built S69'"
+  "evidence": "ARCHITECTURE 'SRAM banking as built S69'; EVENT_FLAGS 'Extended flags (S117)'"
  },
  "bg_palettes_per_room": {
   "value": "4 BG palette groups; idx1 forced $6BFF, idx3 forced $0000",
@@ -72,9 +76,27 @@
   "evidence": "tools/dump_npc_sprite_catalog.py; extracted/npc_sprite_catalog.json"
  },
  "_deferred_measurement_boxes": [
-  "E6 per-bank text/script budget numbers (own pass, per P3.0 box text)",
-  "gate-slot extension beyond 32 (own pass, per P3.0 box text)",
+  "E6 per-bank text/script budget numbers — superseded by ARC CAP2 (text sections per bank)",
+  "gate-slot extension beyond 32 — DONE S115 (gates 32-95)",
   "per-sheet VRAM tile counts for the sprite-sheet budget meter (exact meter math)",
   "custom-schema 4x4 screens extension + its in-game crash/degradation probe (engine says 16; schema says 8)"
- ]
+ ],
+ "rom_size": {
+  "value": "4 MB (256 banks, MBC5 8-bit ROMB0) — BUILT S134: every patched build; banks $80-$FF self-ID stubs until ARC CAP2 fills them",
+  "status": "measured_s133 + built_s134",
+  "detail": "Scratch build with SECTIONs in banks $80 / $FF: rgblink links, rgbfix -p pads to 4 MB and sets $0148 = $07; PyBoy boots it to the bedroom and maps banks $80 / $FF through $2100. No engine code tests bit 7 of a bank number; the 23 ROMB0 writes are all ROM0, full 8 bits; nothing writes ROMB1. Requirement: every new bank starts with its own number (db <bank> at $4000) — AudioSaveBankState / rst $10 / the text engine save the current bank by reading [$4000]. A real rst $10 into bank $80 RAN in PyBoy (scratch probe: bank $73 CF2WarpCommitDrain far-called a bank $80 entry on every commit — 3 warps, 3 calls, the callee read $80 at [$4000], every room loaded and walked). 8 MB (ROMB1) would need 9-bit bank numbers through every far call — not planned.",
+  "evidence": "ARCHITECTURE 'ROM banks $80-$FF (S133)'; EDITOR_DESIGN §6.4"
+ },
+ "campaign_place_cost": {
+  "value": "≈3-4 KB per new place (3 screens, 1-2 states, own or shared tileset); a copy of a busy vanilla room 2-3.4 KB of scripts alone",
+  "status": "measured_s133",
+  "detail": "User's 11-room / 33-screen project: bank $60 12,882 B (scripts 9,130 — of which the copies of Arena Lobby 3,352 / Arena Battle 2,482 / GreatTree 2,082; text 741; NPC lists 606, exit lists 345, step entries 372); bank $64 12,892 B for 42 layout + 37 attr entries (≈300 B each); bank $67 9,024 B for 7 tilesets (≈1.3 KB each); bank $17 palettes 64 B each + render tables ≈20 B per screen-state. With 4 MB (≈2.3 MB for places) that is ≈575-750 places.",
+  "evidence": "EDITOR_DESIGN §6.4 'Measured cost of a place (S133)'"
+ },
+ "wram_custom_pool_free": {
+  "value": "≈219 B ($D50A-$D5E4, transient)",
+  "status": "structural_s133",
+  "detail": "The CF3-window reserve left after S97-S129 carves; the 640-B step-counter region $CD80-$CFFF is separate.",
+  "evidence": "patches/wram.asm wCustomPool"
+ }
 }

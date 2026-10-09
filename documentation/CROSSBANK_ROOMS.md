@@ -509,7 +509,7 @@ spot, $90 = step-on trigger — S98 names; ROOM_DATA_FORMAT), not a mapID.
 
 | Path | Idiom | Safe through |
 |---|---|---|
-| bank $60 CustomPtrChase, $17 CustomAttrCheck / CustomPalCheck | `sub $6B` then 8-bit `add a` | index $7F → **mapID $EA** |
+| bank $60 CustomPtrChase, **CustomStateRules, CustomMonsterCast** (S133: missing from this row before), $17 CustomAttrCheck (+ its callers `label17_401d` / `label17_409e`, which double the returned index again) / CustomPalCheck | `sub $6B` then 8-bit `add a` | index $7F → **mapID $EA** — **enforced by the compiler since S133** (`project.CUSTOM_MID_MAX`, ProjectError past it; before S133 a room at $EB+ built and read another room's tables) |
 | bank $71 entry 0 (CopyCustomRoomRecord) | 16-bit `sla/rl` ×8; $70+ → Custom26DDTable[mapID−$70] | mapID $FE |
 | bank $71 entry 1 (CustomEncResolve) | `cp ENC_TABLE_LEN` bounds check | table length (compiler-emitted) |
 | bank $71 entry 2 (CustomRoomBGMResolve) | `cp $80 / ret nc` bounds check | see BGM cap below |
@@ -548,6 +548,70 @@ and the template hashes (`editor2/core/validators.py:23`).
 4. **Compiler validators** for rules 1 and 2 — both exist (`editor2/core/validators.py`:
    custom-destination exit with gate_flag ≠ 0 = error; exit `trigger_x` $FF = error;
    S120 re-check — this line said "not yet implemented" long after they landed).
+
+### S133 capacity audit — every stored map id, the commit, and what a region needs
+
+Context: ROADMAP ARC CAP / EDITOR_DESIGN §6.4 (hundreds of places → a region per
+128-id range). Census by grep of BOTH trees (S133, three parallel read-only passes),
+spot-verified by hand where marked ✓; runtime claims measured in PyBoy on the user's
+11-room project build + `.sav`.
+
+**RAM that holds a map id** (C = clean tree, P = patched only; "saved" = inside the
+`$C8EA-$D9E9` image copied by `SaveGameState`, SRAM = WRAM − `$28C6`):
+
+| Address | What | Writers | Readers | Custom id? | Saved |
+|---|---|---|---|---|---|
+| `$C968` wMapID | the current map | 21 C / 22 P sites (below) + load restore + new game | 58 C / 85 P (`mapid_range_audit.json`) | yes | `$A0A2` |
+| `$C96A` / `$C96B` ✓ | **write-only mirrors** of wMapID / wInGateworld — labelled `wMapIDMirror` / `wInGateworldMirror` S133 | bank $01 `InitFieldState` (field init), bank $15 new game (`$2F`) and the link seed (`$08`) | **none** (no literal, no pointer form) | yes | `$A0A4/5` |
+| `$C96D` wWarpGateId (+ `$C96E` wWarpFlag, `$C96F-$C972` spawn) | the transition mailbox | an exit row (bank $0B `jr_00b_45a8`), ops `$0F` / `$3B` / `$43` / `$4F` / `$58` / `$3A`, bank $0A breeding warps, HubWarp (P), ArenaLossWarp50 (P, a 6-byte pointer copy a grep for `ld [wWarpGateId]` misses) | the commit (bank $0B entry 0), bank $01 `SaveMapStateToHRAM`, bank $0B `jr_00b_462c`, bank $06 Castle test | yes | `$A0A7` (meaningful only mid-transition) |
+| `$C8FB`-`$C902` | op `$42` / `$4E` return point (map, flag, X, Y, facing, actor) | ops `$42` / `$4E` from wMapID | ops `$43` / `$4F` → the mailbox | yes (breeders in custom rooms) | `$A035` |
+| `$C93B` wBossMapType | the boss room of the dive | bank $16 from the gate row byte 4 (P: `GateRowPtr`) | bank $01 RoomBGMTable, bank $71 BGM resolve, bank $76 `GateBossWin` (`cp` wMapID) | yes | `$A075` |
+| `$D8D3` wScriptMapType | the running script's map type | from wMapID at script start (4 sites); sentinels `$70` (gate world), `$54`, `$FF` (P: skill scripts) | the script bank dispatch; P bank $60 `CustomScriptRead` (index `type − $6B`) | yes | `$B00D` |
+| HRAM `$FFD5` | transition class scratch | `SaveMapStateToHRAM` (source or destination) | the same routine | yes (transient) | no |
+| `$C0A1` | debug-menu map | debug pages | debug warp | any | no |
+| `$CD00` wCustomExitBuffer (row +2) | P | `CopyExitListToBuffer` | bank $0B exit scan → the mailbox | yes | no (CF3 window) |
+| `$D138` wGateRowBuf (+4) | P | bank $76 `NewGateRowCopy` | bank $16 → wMapID / wBossMapType | yes | no |
+| `$D2EB` wNpcColourMap ✓ | P, a cache tag | `CopyNPCListToBuffer` | `NpcColourDraw` (`cp` wMapID) | yes | no |
+| `$D0C5` wTileAnimRoom | P, a cache tag | bank $6C `TileAnimRestart` | bank $6C (`cp`) | yes | no |
+| `$DE88` wCustomRoomFlag | P; holds a VANILLA source id for an instant, then 0/1 (bank $71 re-derives it per frame) | `CustomPtrChase` | entry 3 `CustomTilesetInfo` — **no caller** | no | no |
+| `$C935` wGateID / `$C936` wFloorType1 | gate namespace (gate number / floor type), not map ids | bank $16 gate entry | gate tables | no | yes |
+
+Not map-id stores (checked): wHubReason, wAnchorGate / Floor, wGateDiveGate, `$D92B`,
+wStoryFlag, wBreedSlots, wShopID, wRoomRecScratch, wCustomNPCBuffer rows, `$D9E3` (the
+King's speech codes mirror vanilla boss ids but are constants). SRAM banks 1-3 hold none.
+
+**Where wMapID is set without the mailbox** (a region must be set there too): bank $71
+entry 4 `CustomGateInsert` `.hit` (`ld [wMapID], a` from the GateInsertTable row +5 ✓); bank
+$16 `jr_016_5be1` (the boss floor: wMapID := gate row +4 ✓ — **8 nop bytes** follow `call
+GateRowPtr`, room for a 3-byte call); bank $16 special rooms (constants `$50-$5C`, vanilla);
+bank $15 new game / link (constants); bank $55 debug; the save restore.
+
+**The commit ✓.** Bank $0B `RoomEntry0_TilesetLoader`: `ld a, [wWarpGateId] / ld [wMapID], a`
+then `ld hl, $7300 / rst $10` = bank $73 entry 0 `CF2WarpCommitDrain`, whose first act is the
+displaced `wInGateworld := wWarpFlag`. So the hook already sees the destination in wMapID and
+can rewrite it — the place for region resolution. **wWarpFlag cannot carry a region ✓**:
+besides that copy, four readers test it BEFORE the commit (bank $01 `SaveMapStateToHRAM` →
+`$FFD6` `or a`; bank $06 `or a / ret nz`; bank $0B `.4601` `or a` and `jr_00b_462c` → the
+temporary wInGateworld).
+
+**Measured S133 (PyBoy, the user's build + `.sav`):**
+- *The exit buffer survives from fire to commit.* Hooks on bank $0B `jr_00b_45a8` (fire),
+  bank $60 `CopyExitListToBuffer`, bank $73 `CF2WarpCommitDrain`: a custom door ($6E (6,6) →
+  $6B) fired at frame 81 and committed at 100; the GreatTree screen 8 redirect ((3,5) → $6E,
+  `VanillaExitResolve`'s copy) fired at 89 and committed at 108; in both, **zero** list copies
+  in between and `wCustomExitBuffer` byte-identical at the two hooks. A row's link slot noted
+  at copy time is therefore still valid at the commit.
+- *A custom script never runs across a commit.* `CustomScriptRead` hooked through the roots
+  room's entry scene (`$0F` to `$70`, then `goto` / `end`): the words after the warp were
+  read at frame 1090, the commit came at 1109, and the next read was `$70`'s own entry
+  script with wScriptMapType = `$70` — so "the running custom script belongs to the current
+  place" holds; `CustomScriptRead` can use the place cache.
+
+**Pre-commit readers of the destination** classify only: `SaveMapStateToHRAM` →
+`ArenaAlias` + class compares; `jr_00b_462c` → `CheckGateWorldMapType` (≥ `$30` = gate-like,
+true for every custom id); bank $06 → `or a` (Castle). An id in `$F0-$FE` therefore
+behaves as the custom room it stands for; the arena's ids must stay real ids (global ids,
+never link slots).
 
 ### Re-running the audit
 

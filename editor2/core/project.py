@@ -180,6 +180,11 @@ STATE_RULE_MAX_TERMS = 8
 STEP_COUNTER_BASE = 0xCD80
 WRAM_REGION_MAX = 0x280             # $CD80+$280 = $D000 = the wram0 section end
 WRAM_REGION_SIZE_DEFAULT = 0x280    # 640 counters — campaign-scale default
+# S133: the last custom map id the engine can tell apart — bank $60
+# CustomPtrChase / CustomStateRules / CustomMonsterCast and bank $17
+# CustomAttrCheck double `mapID - $6B` in 8 bits (CROSSBANK_ROOMS "Custom-side
+# arithmetic ceilings"). 128 rooms $6B-$EA; ROADMAP ARC CAP lifts it.
+CUSTOM_MID_MAX = 0xEA
 # Project enemy rows (S101; MONSTER_DATA "Project enemy rows"). EID 518 was
 # the S30 Gorbunok row (retired S105: a new species' rows are project enemies
 # like any other; bank $14 $7EB3 is free space again). EVERY EID >= 519 is a
@@ -1473,6 +1478,19 @@ class Project:
         if lo != 0x6B:
             raise ProjectError("first custom mapID must be $6B "
                                "(tables are indexed mapID-$6B)")
+        if hi > CUSTOM_MID_MAX:
+            # S133 capacity audit: bank $60 CustomPtrChase / CustomStateRules /
+            # CustomMonsterCast and bank $17 CustomAttrCheck (+ its two callers)
+            # index their per-room tables with `sub $6B / add a / add l` — an
+            # 8-bit doubling that drops the carry, so a room past $EA reads
+            # ANOTHER room's data (silently; nothing failed before S133).
+            # Places beyond 128 = ROADMAP ARC CAP (regions + place banks).
+            raise ProjectError(
+                f"custom mapID {F.hexb(hi)} is past {F.hexb(CUSTOM_MID_MAX)}: "
+                "the engine's per-room lookups double the index in 8 bits, so "
+                f"at most {CUSTOM_MID_MAX - 0x6B + 1} custom rooms ($6B-$EA) "
+                "work today (CROSSBANK_ROOMS 'Custom-side arithmetic "
+                "ceilings'; more places = ROADMAP ARC CAP)")
         dense = []
         for mid in range(lo, hi + 1):
             r = by_mid.get(mid)

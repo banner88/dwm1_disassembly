@@ -1,5 +1,113 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-09 (Session 132 — **THE ROOMS TAB MADE USABLE (ROADMAP P3.18 + P3.4): PAINT
+> LAG MEASURED AND REMOVED, THE RIGHT SIDE AS ONE PAGE AT A TIME BEHIND SIDEWAYS TABS, BORROW PALETTE
+> FROM ANY ROOM / SCREEN / STEP / GATE THEME, THE DRAW TAB (PIXELS: EVERYWHERE OR AS A NEW METATILE),
+> ▶ PLAY HERE WITH A GAME STATE (NEW GAME / .SAV / A STORY POINT OF THE GAME OR OF THE PROJECT / BY
+> HAND); THE STORY STATE = THE GAME'S OWN SCRIPTS, 39 / 39 STEPS == PYBOY** (user: P3.15b "so minor I
+> dont care … Move on to next big item" → his list: "borrow palette from any other room without
+> having to recreate it / Why is placing tiles so incredibly laggy / Allow editing tiles by pixel -
+> maybe past the animate button on right panel? / Really need a 'play this room' with either flags +
+> monsters imported from a save OR set manually or generated according to thresholds (ie have a
+> vanilla slide scale you can put yourself on, and ideally make a separate slide scale for romhack).
+> Then you immediately enter room from editor / … right panel is annoying as fuck to scroll
+> through"; then "sideways tabs going up/down", Draw "both", the romhack scale "follow gates
+> naturally. Just like balance tab", "try and get as much done this session as possible").
+> **Built S132, NOT yet user-tested; byte-neutral (no ROM bytes — no test ROM; the regression pin
+> unchanged).**
+> **Lag (cProfile on the user's project):** per mouse move a whole-screen PIL recompose (~14 ms, also
+> inside one cell); the stroke's end refreshed hidden tabs + every picker picture + minimap + tileset
+> map (~350 ms); 0.7 s later the bank meter re-emitted the project and LZ-recompressed every layout /
+> tileset on the UI thread (2 s). Now: unchanged cells skipped, `compose` from cached row strips
+> (pixel-identical on 595 screens, 5×), one coalesced side refresh, lazy hidden tabs, memoised
+> compression, the meter on its four banks (0.14 s): per cell 14 → 0.9 ms, stroke end 350 → 46 ms.
+> **The side rail** (`app/side_rail.py`): Tiles / Palettes / Object / Room / Screen / Gates, one page
+> at full height, painted vertical tabs; Paint opens Tiles, a marker opens Object; + NPC (N).
+> **Borrow palette…** (`core/palette_borrow.py`): your rooms, game rooms per screen AND step, gate
+> themes; whole (room / this screen-state; shared or copied) or rows → slots; live preview.
+> **Draw tab** (`core/tile_draw.py`): a 2×2 pixel pad per quarter palette; everywhere (cells per room
+> counted; common / animated / twice-drawn slots refused) or a new metatile (reused graphics + free
+> slots, the walkable side chosen; onto the selection / every cell drawing the original).
+> **▶ Play here** (F5, ▾ Game state…; `core/play_setup.py`): saves + builds when needed, then the
+> Playback window in the room at the selected cell — new game, .sav, a story point of the game /
+> of the project (sliders over the Balance timeline; project gates at the game's places, new gates /
+> worlds after their `copy_of`, their own cleared flags), by hand (3 monsters), flags ON / OFF, the
+> Milly hook's flags. Teams: the Balance player kit at the step's l90 (anchor / project cache),
+> else a strong roll. Party records (`party_record`: the engine's starter record + every raising
+> field) after the room loaded (`Engine.start(records=…, repoke=False)`); PyBoy on the user's build:
+> the party survives rooms + a gate entry, fights, wins, gains exp. End to end ~5 s to walking.
+> **The story state** (`core/story_state.py`, EVENT_FLAGS "Story state at a story point"): the
+> game's scripts run by an interpreter — win tails + the King's speech, the arena victory cascade +
+> the Castle's, the ending's post-game; `tools/census_story_state.py` → `extracted/
+> story_state_census.json`: 39 / 39 playable steps, the real scripts from the interpreter's
+> pre-state leave exactly its post-state. Findings: a boss room's entry script writes `$D92B := 6`
+> on arrival, the win branch `$D9E3` + `$D92B := 7` before the tail (GATE_GENERATION §7.7); the
+> SIDEQUEST_MAP class table is the lobby's half (the Castle's cascade follows); `$00F1` reproduced;
+> `Engine.STARTER` is one byte short in its resistance block (DOC_AUDIT S132, not fixed).
+> **Bug caught before delivery:** `Project()` lowers quests into the dict it is given — Play here
+> passed the live document (KEY_LESSONS S132; deep copy).
+> **Checks:** verify_integrity PASS (check 5 incl. `census_story_state.py --selftest`); test_compiler --rom ALL 1404 PASSED (`test_s132`); test_app PASS (`s132_rooms_ui`); test_canvas --rom PASS; census 39/39 playable steps equal; clean rebuild `1ca6579…` byte-perfect (comments only in bank_00e); REFERENCE_MD5 unchanged `7d136455…` (patched). Built S132, NOT yet user-tested.
+> **Next:** the user's test of the Rooms tab (paint feel on the Mac, the rail, Borrow palette, Draw,
+> Play here); then the next big item (E9 items, E5 ending / credits, T-author, P3.17 packaging) or
+> the user's pick.
+
+> Last verified: 2026-10-08 (Session 131 — **ROADMAP P3.15b (1) / (2) / (3) BUILT: THE BALANCE LEVEL
+> IS GRINDING TIME (A BRED MONSTER'S PLACE PAYS ITS FAMILY'S GRIND TO LEVEL 10), GATE DIVES WALK THE
+> FOREST / MAZE / CONVEYOR SPECIAL ROOMS AS THEIR OWN ROOMS (MEASURED), +20 = A MAX COUNT EVERYWHERE,
+> FULL-HP HEALS NOT "UNMODELLED"; ITEMS BANKED** (user: "Yeah balance tab looks good" → "Yes P3.15b";
+> "Always make me do it" (the anchor); breeding: "Great let's go with B. I need to capture the total
+> time investment needed. Keep in mind breeding chains get deeper and deeper further into the game …
+> the best objective assessment of corresponding vanilla level"; Coliseum: "irrelevant for difficulty
+> scaling ignore it"; items: "Honestly Im not sure the items are that important anymore. They are
+> very early-mid game thing"). **Built S131, NOT yet user-tested; byte-neutral (no ROM bytes — no test
+> ROM). The anchor `extracted/balance_vanilla.json` was REBUILT by the user for SIM_VERSION 'S131.2'
+> (selftest OK — see below).**
+> **(1) The time axis** (PROJECT_COMPILER §2.43 "Breeding costs grinding"): team level L = exp(L) per
+> party slot; a joined member's arrival exp is free; a bred member's slot pays its ancestors' grind to
+> level 10 on their own curves (`balance.lineage_cost`, `Monster.grind` / `.free_exp`), the kid hatches
+> at 1 and gets exp(L) − grind; unaffordable families are not used; the player's pool = a cost-aware
+> resolver closure (Pareto routes cost / plus, ≤ 6 generations as the budget affords, a route-swap
+> move); casual / strong pay the same; capped = below 85 % of the level its exp gives (`is_capped`).
+> The bank $0A level gate (record +$4B ≥ 10, three menus) read + commented both trees (MONSTER_DATA
+> "The breeding level gate (S131)"). Option A (kids any level, parents free) built first, measured
+> (Strength 2-6, StoneMan 3) and rejected by the user. B sample: Bravery 4 · 4 · 4 · 10, D class 4 ·
+> 4 · 11, Strength 9 · 9 · 9 · 10 · 10, C class 10 · 12 · 12 (S130: … 10 · … 10 · 8-10 · 10 flat).
+> **(2) Special rooms** (GATE_GENERATION §4.4 "Special rooms (S131)"): the forest maze ($53 +
+> $61-$64 — five one-screen rooms joined by edge exits; "Forest Maze Gate Floor 1-4" was a misnomer),
+> Maze 1-3, Conveyor maze 1-3 walked as their own rooms (`dive.special_room` / `special_walk`):
+> every cell drains a flat 100 (conveyors 80) × RateMod // 64, belts (bank $01 `ConveyorBeltPush`,
+> was `CheckGateworldForNPC`: classes $0F-$12 → right / left / down / up) ride and every cell ridden
+> is a step, edge exits push, walk-on exits / pushes run EncounterStep with no drain, each room change
+> re-seeds; PyBoy 7 / 7 rooms == the model; at code 3: maze 0.88, conveyor 1.45, forest 0 battles vs
+> 0.43 for a size-8 floor. `census_dive.py` → `dive_census.json` `specials` + `measured_specials`.
+> **(3)** randomizer `Pool.max_counts` / `slot_chances` / `live_slots` by chance, `sweep_ttk` by
+> chance — randomizer output byte-identical (seed 4242 `183904fb…`). **Unmodelled**: `count_actions`
+> (S130's up-to-13 % were full-HP heals).
+> **Annotation (both trees, zero bytes):** bank $01 `ConveyorBeltPush` + `BeltRight/Left/Down/Up`,
+> `CheckSpecialMapExits` comment; bank $0A level gates; bank $0B special-room comments. Clean
+> `1ca6579…` byte-perfect; REFERENCE_MD5 unchanged `7d136455…` (patched).
+> **Checks:** test_compiler --rom (`test_balance_s131`); test_app; verifier — final results in the
+> r4 wrap-up below; `census_dive.py --selftest` OK.
+> **r2-r4 (user 18:14-20:22):** the tab's build "stopped (0 parts saved)" with no log → r2: a build log
+> (`extracted/balance_vanilla.build.log`, tracebacks, a failed unit no longer stops the others, **Show
+> log**); the log: `no parent form for species 200` → r3: routes keep the parents they were costed from
+> (`build_member` follows them); the user's S131.1 anchor (selftest OK here) read: kit members at +20-22
+> for ~3,000 exp, a Gate of Sleep floor unwinnable at 99 (members capped at 42-44), a Judgement spike →
+> r4: the closure's plus uses the parents' REAL levels (late recruits give +2..+4 per cross), a capped
+> member re-breeds for its uncapped level's plus (Sleep kit at L60/99: levels 75-82); SIM_VERSION
+> 'S131.2' — the anchor rebuilt again by the user (below).
+> **The anchor, rebuilt by the user for 'S131.2' (2026-10-08 22:36, M3 Max): `--selftest` OK here
+> (3 fights + 1 dive + 2 player fights re-derived == the Mac's).** Player l90 read: early game as S130;
+> mid-game moves by fight (Peace 8, Bravery 10, D class 11, Anger 13, C class 12, Wisdom 25, B class
+> 12-16, Happiness 18, Temptation 25, Labyrinth 23); **Gate of Judgement a step up in all three
+> profiles** (floors 22-29, Akubar 43 — S130 12-17 / 31; strong floors 22, Akubar 99+) — asked the
+> user whether it matches play; S class 25 / 25 / 46, Reflection (Durran) 37, Starry Night 28 / 28 /
+> 43; postgame bosses 31-69, Old Man's Gate 69 and Monster Grandpa 82 now winnable (S130: 99+);
+> Gate of Sleep floors 21-29 = the one-kit-per-step limit (the kit tuned to Esterk 24 tops out at ~75 %;
+> strong 39).
+> **Next:** the user's read of the curve (Judgement) and test of the Balance tab;
+> the user's test of the Balance tab; then P3.15b (4) / the planner items, or the user's pick.
+
 > Last verified: 2026-10-08 (Session 130 — **ROADMAP P3.15 SPLIT; P3.15a BUILT: THE SIMULATOR LEARNS
 > EVERY BATTLE SKILL, THE RAISING MODEL (== THE GAME), BATTLES PER GATE FLOOR, AND THE BALANCE TAB —
 > HOW HARD EVERY KEY FIGHT IS, THE ORIGINAL GAME (READ-ONLY ANCHOR) VS THE PROJECT** (user: "Next

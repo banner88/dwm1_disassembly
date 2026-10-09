@@ -26,6 +26,10 @@ data can produce a crashy patched ROM while assembling cleanly:
      today every entry equals the original and the check is a guard for
      future redirects.
 
+3. BANK SELF-ID + 4 MB (S134, ROADMAP ARC CAP1) — check_banks: the ROM is 4 MB
+   ($0148 = $07); every bank $80-$FF and every bank the build changed starts
+   with its own number at $4000 (the far call / audio / text engine read it).
+
 Usage:
   python3 tools/validate_custom_data.py --rom <patched.gbc>   # full check
   python3 tools/validate_custom_data.py --records-only        # source-only
@@ -164,6 +168,40 @@ def check_rom(rom_path, universal, errors):
                           "— loader over/under-read in some consumer context")
 
 
+ROM_SIZE_4MB = 0x400000      # S134 (ROADMAP ARC CAP1): every patched build is 4 MB
+
+
+def check_banks(rom, orig, errors):
+    """S134 (ROADMAP ARC CAP1). The far call (rst $10), the audio bank swap
+    (AudioSaveBankState) and the text engine save "the current bank" by READING
+    the mapped bank's byte $4000 and switch back to that value (ARCHITECTURE
+    "ROM banks $80-$FF (S133)"), so a bank whose first byte is not its own
+    number returns the game to the WRONG bank once code runs from it, music
+    plays while it is mapped, or text is read from it. Rules:
+      - the ROM is 4 MB and the header says so ($0148 = $07);
+      - every bank $80-$FF starts with its own number (bank_ext.asm stubs or a
+        compiler place bank);
+      - every bank $01-$7F the BUILD CHANGED from the original that holds any
+        non-zero byte starts with its own number (vanilla banks that never did
+        — $20 $40 $61-$63 $65 $66 $68 $78 $7B $7D — are untouched, so exempt;
+        an all-zero unused compiler bank is never switched to)."""
+    if len(rom) != ROM_SIZE_4MB:
+        errors.append(f"the ROM is {len(rom):,} bytes, not 4 MB ({ROM_SIZE_4MB:,}) — "
+                      "patches/game.asm must INCLUDE bank_ext.asm (ARC CAP1)")
+    if len(rom) > 0x148 and rom[0x148] != 0x07:
+        errors.append(f"header $0148 = ${rom[0x148]:02X}, not $07 (4 MB)")
+    nbanks = len(rom) // 0x4000
+    for b in range(1, nbanks):
+        chunk = rom[b * 0x4000:(b + 1) * 0x4000]
+        if chunk[0] == b:
+            continue
+        if b >= 0x80:
+            errors.append(f"bank ${b:02X} starts with ${chunk[0]:02X}, not its own number")
+        elif orig is not None and chunk != orig[b * 0x4000:(b + 1) * 0x4000] and any(chunk):
+            errors.append(f"bank ${b:02X} (changed by the build) starts with ${chunk[0]:02X}, "
+                          "not its own number — add `db ${b:02X}` at $4000")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--rom", help="patched ROM to verify fences + streams against")
@@ -174,6 +212,9 @@ def main():
     if args.rom and not args.records_only:
         universal = check_records(errors, Path(args.rom).read_bytes())
         check_rom(args.rom, universal, errors)
+        orig_path = REPO / "data" / "DWM-original.gbc"
+        check_banks(Path(args.rom).read_bytes(),
+                    orig_path.read_bytes() if orig_path.exists() else None, errors)
     else:
         universal = check_records(errors)
     if universal and not args.rom:

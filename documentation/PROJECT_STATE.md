@@ -10,116 +10,91 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
-> Last verified: 2026-10-09 (Session 132 — **THE ROOMS TAB MADE USABLE (ROADMAP P3.18 + P3.4): PAINT
-> LAG MEASURED AND REMOVED, THE RIGHT SIDE AS ONE PAGE AT A TIME BEHIND SIDEWAYS TABS, BORROW PALETTE
-> FROM ANY ROOM / SCREEN / STEP / GATE THEME, THE DRAW TAB (PIXELS: EVERYWHERE OR AS A NEW METATILE),
-> ▶ PLAY HERE WITH A GAME STATE (NEW GAME / .SAV / A STORY POINT OF THE GAME OR OF THE PROJECT / BY
-> HAND); THE STORY STATE = THE GAME'S OWN SCRIPTS, 39 / 39 STEPS == PYBOY** (user: P3.15b "so minor I
-> dont care … Move on to next big item" → his list: "borrow palette from any other room without
-> having to recreate it / Why is placing tiles so incredibly laggy / Allow editing tiles by pixel -
-> maybe past the animate button on right panel? / Really need a 'play this room' with either flags +
-> monsters imported from a save OR set manually or generated according to thresholds (ie have a
-> vanilla slide scale you can put yourself on, and ideally make a separate slide scale for romhack).
-> Then you immediately enter room from editor / … right panel is annoying as fuck to scroll
-> through"; then "sideways tabs going up/down", Draw "both", the romhack scale "follow gates
-> naturally. Just like balance tab", "try and get as much done this session as possible").
-> **Built S132, NOT yet user-tested; byte-neutral (no ROM bytes — no test ROM; the regression pin
-> unchanged).**
-> **Lag (cProfile on the user's project):** per mouse move a whole-screen PIL recompose (~14 ms, also
-> inside one cell); the stroke's end refreshed hidden tabs + every picker picture + minimap + tileset
-> map (~350 ms); 0.7 s later the bank meter re-emitted the project and LZ-recompressed every layout /
-> tileset on the UI thread (2 s). Now: unchanged cells skipped, `compose` from cached row strips
-> (pixel-identical on 595 screens, 5×), one coalesced side refresh, lazy hidden tabs, memoised
-> compression, the meter on its four banks (0.14 s): per cell 14 → 0.9 ms, stroke end 350 → 46 ms.
-> **The side rail** (`app/side_rail.py`): Tiles / Palettes / Object / Room / Screen / Gates, one page
-> at full height, painted vertical tabs; Paint opens Tiles, a marker opens Object; + NPC (N).
-> **Borrow palette…** (`core/palette_borrow.py`): your rooms, game rooms per screen AND step, gate
-> themes; whole (room / this screen-state; shared or copied) or rows → slots; live preview.
-> **Draw tab** (`core/tile_draw.py`): a 2×2 pixel pad per quarter palette; everywhere (cells per room
-> counted; common / animated / twice-drawn slots refused) or a new metatile (reused graphics + free
-> slots, the walkable side chosen; onto the selection / every cell drawing the original).
-> **▶ Play here** (F5, ▾ Game state…; `core/play_setup.py`): saves + builds when needed, then the
-> Playback window in the room at the selected cell — new game, .sav, a story point of the game /
-> of the project (sliders over the Balance timeline; project gates at the game's places, new gates /
-> worlds after their `copy_of`, their own cleared flags), by hand (3 monsters), flags ON / OFF, the
-> Milly hook's flags. Teams: the Balance player kit at the step's l90 (anchor / project cache),
-> else a strong roll. Party records (`party_record`: the engine's starter record + every raising
-> field) after the room loaded (`Engine.start(records=…, repoke=False)`); PyBoy on the user's build:
-> the party survives rooms + a gate entry, fights, wins, gains exp. End to end ~5 s to walking.
-> **The story state** (`core/story_state.py`, EVENT_FLAGS "Story state at a story point"): the
-> game's scripts run by an interpreter — win tails + the King's speech, the arena victory cascade +
-> the Castle's, the ending's post-game; `tools/census_story_state.py` → `extracted/
-> story_state_census.json`: 39 / 39 playable steps, the real scripts from the interpreter's
-> pre-state leave exactly its post-state. Findings: a boss room's entry script writes `$D92B := 6`
-> on arrival, the win branch `$D9E3` + `$D92B := 7` before the tail (GATE_GENERATION §7.7); the
-> SIDEQUEST_MAP class table is the lobby's half (the Castle's cascade follows); `$00F1` reproduced;
-> `Engine.STARTER` is one byte short in its resistance block (DOC_AUDIT S132, not fixed).
-> **Bug caught before delivery:** `Project()` lowers quests into the dict it is given — Play here
-> passed the live document (KEY_LESSONS S132; deep copy).
-> **Checks:** verify_integrity PASS (check 5 incl. `census_story_state.py --selftest`); test_compiler --rom ALL 1404 PASSED (`test_s132`); test_app PASS (`s132_rooms_ui`); test_canvas --rom PASS; census 39/39 playable steps equal; clean rebuild `1ca6579…` byte-perfect (comments only in bank_00e); REFERENCE_MD5 unchanged `7d136455…` (patched). Built S132, NOT yet user-tested.
-> **Next:** the user's test of the Rooms tab (paint feel on the Mac, the rail, Borrow palette, Draw,
-> Play here); then the next big item (E9 items, E5 ending / credits, T-author, P3.17 packaging) or
-> the user's pick.
+> Last verified: 2026-10-09 (Session 134 — **ROADMAP ARC CAP1 BUILT: EVERY BUILD IS A 4 MB ROM —
+> BANKS $80-$FF SELF-ID'D, THE BANK RULE CHECKED ON EVERY BUILD; THE GAME NEVER SELECTS A BANK ≥ $80
+> ON ITS OWN (MEASURED)** (user: "ARE THERE ANY DOWNSIDES TO MOVING TO A 4 mb rom" → the list →
+> "Ok that sounds fine. Proceed"; **S132's Rooms tab USER-CONFIRMED 09:47: "Rooms tab is fine"**).
+> **Built S134, NOT yet user-tested.** Test ROM `DWM-S134-4mb-test.gbc` (the user's own project
+> built 4 MB; `aae43261…`, patched).
+> **The build:** `patches/game.asm` INCLUDEs the compiler-generated `patches/bank_ext.asm`
+> (emitter `ext_banks`: a section + self-ID byte per bank $80-$FF; `emitters.ext_bank_files` =
+> the hook ARC CAP2's place banks fill), `HeaderROMSize` `$07`. Staging: new bank files found by
+> rule (`verify_integrity._NEW_FILE_RE`, `builder._patch_lists`); `builder.build_rom` removes
+> every generated file it created (a latent leak into the clean tree — KEY_LESSONS S133/S134).
+> **The rule, enforced:** `tools/validate_custom_data.py check_banks` (verify check 6 + every
+> editor build): 4 MB, `$0148` = `$07`, every bank $80-$FF and every bank the build changed +
+> filled starts with its own number. **Pin `807d9668…` (patched)**; S129's `7d136455…` is
+> historical — the two differ ONLY at `$0148` / `$014D` / `$014E-F`; the user's project built
+> 2 MB vs 4 MB from the same code: the same four bytes.
+> **Measured (PyBoy, the user's project 4 MB + `.sav`):** CONTINUE, `$6E`'s entry scene + its
+> door to `$6B`, the GreatTree redirect into `$6E`, the field menu, a real gate entry (Gate of
+> Beginning) + a battle fought out, a JOURNAL save inside `$6E` and a reload into the same
+> tile. Every bank switch logged at the 23 ROM0 `ld [$2100], a` sites (`p.register_file.A`):
+> 201,868 switches over 63 banks, highest `$7E`, none ≥ `$80` — the same set as the 2 MB build,
+> so nothing relied on 2 MB bank mirroring.
+> **Editor:** `EDITOR_REVISION` S134; help `80_build.md` (the ROM is 4 MB: emulators, flash
+> carts, `.sav` unaffected), `90_limits.md` (128 rooms today).
+> **Checks:** verify_integrity PASS (clean `1ca6579…` byte-perfect; patched == pin; check 6 with
+> `check_banks`); test_compiler `--rom` ALL 1415 PASSED (`test_s134`); test_app PASS; test_canvas
+> `--rom` PASS (this sandbox: `QT_AUDIO_BACKEND=none` — PYBOY_DEBUGGING S134). Built S134, NOT
+> yet user-tested.
+> **Next:** the user's SameBoy test of the 4 MB ROM; then ARC CAP2 (place banks — the spill).
 
-> Last verified: 2026-10-08 (Session 131 — **ROADMAP P3.15b (1) / (2) / (3) BUILT: THE BALANCE LEVEL
-> IS GRINDING TIME (A BRED MONSTER'S PLACE PAYS ITS FAMILY'S GRIND TO LEVEL 10), GATE DIVES WALK THE
-> FOREST / MAZE / CONVEYOR SPECIAL ROOMS AS THEIR OWN ROOMS (MEASURED), +20 = A MAX COUNT EVERYWHERE,
-> FULL-HP HEALS NOT "UNMODELLED"; ITEMS BANKED** (user: "Yeah balance tab looks good" → "Yes P3.15b";
-> "Always make me do it" (the anchor); breeding: "Great let's go with B. I need to capture the total
-> time investment needed. Keep in mind breeding chains get deeper and deeper further into the game …
-> the best objective assessment of corresponding vanilla level"; Coliseum: "irrelevant for difficulty
-> scaling ignore it"; items: "Honestly Im not sure the items are that important anymore. They are
-> very early-mid game thing"). **Built S131, NOT yet user-tested; byte-neutral (no ROM bytes — no test
-> ROM). The anchor `extracted/balance_vanilla.json` was REBUILT by the user for SIM_VERSION 'S131.2'
-> (selftest OK — see below).**
-> **(1) The time axis** (PROJECT_COMPILER §2.43 "Breeding costs grinding"): team level L = exp(L) per
-> party slot; a joined member's arrival exp is free; a bred member's slot pays its ancestors' grind to
-> level 10 on their own curves (`balance.lineage_cost`, `Monster.grind` / `.free_exp`), the kid hatches
-> at 1 and gets exp(L) − grind; unaffordable families are not used; the player's pool = a cost-aware
-> resolver closure (Pareto routes cost / plus, ≤ 6 generations as the budget affords, a route-swap
-> move); casual / strong pay the same; capped = below 85 % of the level its exp gives (`is_capped`).
-> The bank $0A level gate (record +$4B ≥ 10, three menus) read + commented both trees (MONSTER_DATA
-> "The breeding level gate (S131)"). Option A (kids any level, parents free) built first, measured
-> (Strength 2-6, StoneMan 3) and rejected by the user. B sample: Bravery 4 · 4 · 4 · 10, D class 4 ·
-> 4 · 11, Strength 9 · 9 · 9 · 10 · 10, C class 10 · 12 · 12 (S130: … 10 · … 10 · 8-10 · 10 flat).
-> **(2) Special rooms** (GATE_GENERATION §4.4 "Special rooms (S131)"): the forest maze ($53 +
-> $61-$64 — five one-screen rooms joined by edge exits; "Forest Maze Gate Floor 1-4" was a misnomer),
-> Maze 1-3, Conveyor maze 1-3 walked as their own rooms (`dive.special_room` / `special_walk`):
-> every cell drains a flat 100 (conveyors 80) × RateMod // 64, belts (bank $01 `ConveyorBeltPush`,
-> was `CheckGateworldForNPC`: classes $0F-$12 → right / left / down / up) ride and every cell ridden
-> is a step, edge exits push, walk-on exits / pushes run EncounterStep with no drain, each room change
-> re-seeds; PyBoy 7 / 7 rooms == the model; at code 3: maze 0.88, conveyor 1.45, forest 0 battles vs
-> 0.43 for a size-8 floor. `census_dive.py` → `dive_census.json` `specials` + `measured_specials`.
-> **(3)** randomizer `Pool.max_counts` / `slot_chances` / `live_slots` by chance, `sweep_ttk` by
-> chance — randomizer output byte-identical (seed 4242 `183904fb…`). **Unmodelled**: `count_actions`
-> (S130's up-to-13 % were full-HP heals).
-> **Annotation (both trees, zero bytes):** bank $01 `ConveyorBeltPush` + `BeltRight/Left/Down/Up`,
-> `CheckSpecialMapExits` comment; bank $0A level gates; bank $0B special-room comments. Clean
-> `1ca6579…` byte-perfect; REFERENCE_MD5 unchanged `7d136455…` (patched).
-> **Checks:** test_compiler --rom (`test_balance_s131`); test_app; verifier — final results in the
-> r4 wrap-up below; `census_dive.py --selftest` OK.
-> **r2-r4 (user 18:14-20:22):** the tab's build "stopped (0 parts saved)" with no log → r2: a build log
-> (`extracted/balance_vanilla.build.log`, tracebacks, a failed unit no longer stops the others, **Show
-> log**); the log: `no parent form for species 200` → r3: routes keep the parents they were costed from
-> (`build_member` follows them); the user's S131.1 anchor (selftest OK here) read: kit members at +20-22
-> for ~3,000 exp, a Gate of Sleep floor unwinnable at 99 (members capped at 42-44), a Judgement spike →
-> r4: the closure's plus uses the parents' REAL levels (late recruits give +2..+4 per cross), a capped
-> member re-breeds for its uncapped level's plus (Sleep kit at L60/99: levels 75-82); SIM_VERSION
-> 'S131.2' — the anchor rebuilt again by the user (below).
-> **The anchor, rebuilt by the user for 'S131.2' (2026-10-08 22:36, M3 Max): `--selftest` OK here
-> (3 fights + 1 dive + 2 player fights re-derived == the Mac's).** Player l90 read: early game as S130;
-> mid-game moves by fight (Peace 8, Bravery 10, D class 11, Anger 13, C class 12, Wisdom 25, B class
-> 12-16, Happiness 18, Temptation 25, Labyrinth 23); **Gate of Judgement a step up in all three
-> profiles** (floors 22-29, Akubar 43 — S130 12-17 / 31; strong floors 22, Akubar 99+) — asked the
-> user whether it matches play; S class 25 / 25 / 46, Reflection (Durran) 37, Starry Night 28 / 28 /
-> 43; postgame bosses 31-69, Old Man's Gate 69 and Monster Grandpa 82 now winnable (S130: 99+);
-> Gate of Sleep floors 21-29 = the one-kit-per-step limit (the kit tuned to Esterk 24 tops out at ~75 %;
-> strong 39).
-> **Next:** the user's read of the curve (Judgement) and test of the Balance tab;
-> the user's test of the Balance tab; then P3.15b (4) / the planner items, or the user's pick.
+> Last verified: 2026-10-09 (Session 133 — **THE CAMPAIGN-SCALE CAPACITY AUDIT (ROADMAP ARC CAP0):
+> HUNDREDS OF PLACES NEED PLACE BANKS, REGIONS AND A 4 MB ROM — ALL THREE MEASURED FEASIBLE;
+> THE $EA MAP-ID CEILING NOW ENFORCED** (user: "What are big ticket items that are left?" → on the
+> POC's bank $60 / $64 at 79 %: "Romhack proper will have HUNDREDS OF CUSTOM ROOMS"; "Distinct
+> places. Reusing tileset is NOT ideal at all"; vanilla "Staying as postgame with EDITED NPCs and
+> scripts and flags … only keeping 1 version of the map"; "ARENA is needed … all 'services' +
+> farm etc - all of those are ESSENTIAL … build outwards+ On top of rather than replace"; "Current
+> project is purely POC … Just make capabilities identical"; 4 MB: "I assume most people will use
+> emulators"; the plan audit → spill → 4 MB → regions engine → regions editor: "Sounds good").
+> **Byte-neutral (labels / comments + a compiler validator; clean `1ca6579…` byte-perfect; the
+> regression pin unchanged) — no test ROM.**
+> **The walls (EDITOR_DESIGN §6.4):** (1) the map id is one byte — 128 custom rooms `$6B-$EA`
+> (bank $60 `CustomPtrChase` / `CustomStateRules` / `CustomMonsterCast` + bank $17
+> `CustomAttrCheck` double `mid − $6B` in 8 bits; a room at `$EB` BUILT and read room `$6B`'s
+> tables — now `project.CUSTOM_MID_MAX`, ProjectError, `test_s133`); (2) every custom data class
+> sits in ONE bank whose code reads it in place ($60 scripts / text / lists, $64 layouts, $67
+> tilesets, $17 palettes + render walk, $71 / $6C / $76 per-room tables); (3) no whole bank is
+> free (≈315 KB inside the custom banks; ROM0 8 B, $0B 1 B, $17 3,937 B).
+> **Measured cost of a place** (the user's 11-room / 33-screen POC): ≈3-4 KB new; the copies of
+> Arena Lobby / Arena Battle / GreatTree = 7,916 of its 9,130 B of scripts. 4 MB ≈ 2.3 MB for
+> places ≈ 575-750 places.
+> **Measured (PyBoy, the user's build + .sav):** the exit list is not re-copied between an exit
+> firing and the commit (custom door $6E → $6B: frames 81 → 100; GreatTree redirect → $6E: 89 →
+> 108; buffer identical) — link slots noted at copy time survive; a custom script never runs
+> across a commit (the roots scene's last words at 1090, the commit at 1109, then `$70`'s own
+> script). **4 MB:** scratch builds with banks $80 / $FF link (`$0148` := `$07` by rgbfix), boot
+> to the bedroom in PyBoy, map through `$2100`, and a `rst $10` into bank $80 RAN on every commit
+> (3 / 3). Rule: every new bank starts with its own number (`rst $10`, `AudioSaveBankState`, the
+> text engine read `[$4000]`).
+> **The design (ROADMAP ARC CAP1-5):** CAP1 4 MB; CAP2 place banks (bank $60 forwards to the
+> place's home bank; place header + `wPlaceAttr` far copy; bank $17 staging in WRAM; text
+> sections; more layout / tileset / animation banks); CAP3 regions (`wMapRegion` saved with X1;
+> the bank $73 commit hook resolves link slots `$F0-$FE` from `CopyExitListToBuffer`'s `$FD
+> <region>` prefixes / global ids / a pending `wWarpRegion` / unchanged; compiler-assigned and
+> invisible); CAP4 the editor (names not ids, one-stage copies of vanilla rooms, meters); CAP5
+> secondary ceilings (story checks 256 / commands 255, flags 1,965, …).
+> **Census (CROSSBANK_ROOMS "S133 capacity audit"):** every RAM byte holding a map id (saved:
+> wMapID, wWarpGateId, `$C8FB`, wBossMapType, wScriptMapType, the dead `$C96A/B`), the wMapID
+> writers, the places that set wMapID without the mailbox (bank $71 gate insert, bank $16 boss
+> floor — 8 nop bytes free there), wWarpFlag's four pre-commit `or a` readers (no room for a
+> region in it).
+> **Doc corrections (DOC_AUDIT S133):** the "engine step validation `tileset_bank < $80`" is a
+> Python-dumper check; §6.4's "11 unallocated banks" stale since S121; capacities.json refreshed;
+> SOUND_SYSTEM's RAMB formula; the ceiling row missing two readers; `rst $10` returns BC / DE /
+> HL (only A clobbered).
+> **Annotation (both trees, zero bytes):** `wMapIDMirror` / `wInGateworldMirror` ($C96A / $C96B,
+> write-only), the bank $00 `RST_28` mgbdis artifact (= the far-call return `pop af`).
+> **Checks:** see the S133 wrap-up — verify_integrity, test_compiler `--rom`, clean rebuild.
+> **Next:** the user's pick of CAP1 (4 MB, suggested first: small, and CAP2's allocator should
+> know banks $80-$FF) or CAP2 (the spill); the S132 Rooms-tab test still pending.
 
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
-- **S132** (2026-10-09): the Rooms tab made usable (ROADMAP P3.18 + P3.4; byte-neutral) — paint lag removed (per cell 14 → 0.9 ms, stroke end 350 → 46 ms, the bank meter 2 s → 0.14 s), the side rail (one page at a time), Borrow palette (any room / screen / step / gate theme; whole or rows), the Draw tab (everywhere / a new metatile), ▶ Play here (new game / .sav / a story point of the game or the project / by hand; flags ON / OFF); the story state = the game's own scripts (`story_state.py`, census 39 / 39 == PyBoy). Owning: EDITOR_DESIGN §5.1 "As built S132", EVENT_FLAGS "Story state at a story point (S132)", GATE_GENERATION §7.7, SIDEQUEST_MAP, MONSTER_DATA (writing a party record), PROJECT_COMPILER (measure_banks), KEY_LESSONS S132, PYBOY_DEBUGGING S132, DOC_AUDIT S132, TOOLS_AND_DATA S132.
+- **S134** (2026-10-09): ROADMAP ARC CAP1 built — every build is 4 MB (`patches/bank_ext.asm`, banks $80-$FF self-ID'd; `HeaderROMSize` $07; staging finds new bank files by rule; the builder removes what it created); `validate_custom_data.check_banks` on every build; pin `807d9668…` (patched; vs S129 only the header bytes differ); PyBoy on the user's project + save: rooms, doors, a redirect, a gate, a battle, a save + reload, 201,868 bank switches none ≥ $80; S132 Rooms tab USER-CONFIRMED. Owning: ARCHITECTURE "ROM banks $80-$FF", PROJECT_COMPILER §1 / §4 / §2.2, ROADMAP CAP1, KEY_LESSONS S133/S134, PYBOY_DEBUGGING S134, DOC_AUDIT S134, TOOLS_AND_DATA S134.
+- **S133** (2026-10-09): the campaign-scale capacity audit (ROADMAP ARC CAP0; byte-neutral) — hundreds of places need place banks (CAP2), regions (CAP3) and a 4 MB ROM (CAP1): walls measured (128 ids / one bank per class / no free bank), ≈3-4 KB per place, exit buffer fire → commit intact + scripts never cross a commit (PyBoy), 4 MB built / booted / a far call ran in bank $80; `CUSTOM_MID_MAX` = $EA enforced; `$C96A/B` labelled write-only; RST_28 artifact commented. Owning: EDITOR_DESIGN §6.4 + G-Q, CROSSBANK_ROOMS "S133 capacity audit", ARCHITECTURE "ROM banks $80-$FF (S133)", ROADMAP ARC CAP, PROJECT_COMPILER §2.2, extracted/capacities.json, known_RAM_map, PYBOY_DEBUGGING S133, DOC_AUDIT S133, TOOLS_AND_DATA S133.
+- **S132** (2026-10-09): the Rooms tab made usable (ROADMAP P3.18 + P3.4; byte-neutral; USER-CONFIRMED 2026-10-09 09:47 "Rooms tab is fine") — paint lag removed (per cell 14 → 0.9 ms, stroke end 350 → 46 ms, the bank meter 2 s → 0.14 s), the side rail (one page at a time), Borrow palette (any room / screen / step / gate theme; whole or rows), the Draw tab (everywhere / a new metatile), ▶ Play here (new game / .sav / a story point of the game or the project / by hand; flags ON / OFF); the story state = the game's own scripts (`story_state.py`, census 39 / 39 == PyBoy). Owning: EDITOR_DESIGN §5.1 "As built S132", EVENT_FLAGS "Story state at a story point (S132)", GATE_GENERATION §7.7, SIDEQUEST_MAP, MONSTER_DATA (writing a party record), PROJECT_COMPILER (measure_banks), KEY_LESSONS S132, PYBOY_DEBUGGING S132, DOC_AUDIT S132, TOOLS_AND_DATA S132.
 - **S131** (2026-10-08): P3.15b (1) / (2) / (3) built (byte-neutral) — the Balance level = grinding time (a bred monster's slot pays its family's grind to level 10; cost-aware breeding pool, ≤ 6 generations; user option B), gate dives walk the forest / maze / conveyor special rooms as their own rooms (PyBoy 7 / 7; `census_dive.py` `specials`), +20 = a max count (randomizer Pool, sweep_ttk), full-HP heals not unmodelled; items banked; anchor rebuilt by the user ('S131.2', selftest OK). Owning: PROJECT_COMPILER §2.43, GATE_GENERATION §4.4, MONSTER_DATA "The breeding level gate (S131)", KEY_LESSONS S131, DOC_AUDIT S131, TOOLS_AND_DATA S131.
 - **S130** (2026-10-08): P3.15 split; P3.15a built (byte-neutral) — every battle skill family in the simulator via registries (`simulator/skillfx/`, 146 handlers, F1-F10 validated 0 on the user's save), the raising model `simulator/raising.py` (== the game, `census_raising.py`), battles per gate floor (`census_dive.py`, GATE_GENERATION §4.4; `encounters.steps_between` +1 fix), the Balance service `editor2/core/balance.py` + anchor `extracted/balance_vanilla.json` (`build_balance_anchor.py`), `.sav` reader, the Balance tab (PROJECT_COMPILER §2.43, EDITOR_DESIGN §5.9).
 - **S129** (2026-10-07): P3.14b / c / d finished (P3.14 done) — story checks (`custom.checks`: virtual flags `$1800+n`, bank $73 `FlagAddr` → bank $77 entry 11 `StoryCheck`, `wStoryFlag` $D509; item / gold / species / family / monsters / level / seen / chance / arena / bag room / story / all / any), story commands (op `$24 $FF01+`: take items, gold, give × n), refresh = op `$26` (measured), the story spine + says by progress, quests (`custom.quests`, NPC → Quest…), locked exits (`lock_exit`: a shut room state), music by flag (bank $71 `MusicRulePick`), shop item sets (bank $77 `ShopSetPick`); the legacy quest's hide / show fixed; the example's mini medal quest; pin `7d136455…` (patched). PROJECT_COMPILER §2.42. Test ROM `DWM-S129-story-test.gbc` (STORY HALL / VAULT ANNEX) USER-CONFIRMED 2026-10-07; its project: `examples/s129_story_demo/`.
@@ -256,7 +231,9 @@
 | Follower render engine | `SaveScr_40cd` @ `$04:$40cd` (GBC variant of ROM0 `$0d91`). Metasprite list = 4-byte entries **(dy, dx, tile_offset, attr)**, `$80`-terminated; OAM tile = `tile_offset + [$ffc9]` (base `$20/$30/$40`); OAM attr = `[$ffca] XOR attr` (X-flip bit5). 2-level table: sprite-type `$ffc7`(=`[$ca91]`) → frame/dir `$ffc8`. **OBJ idx0 = hardware-transparent** (battle BG used idx1). 8 OBJ palettes @ `$17:$5615`. |
 | Follower layout library | **155 distinct layouts** (complete; regenerated by `tools/extract_monster_follower_layouts.py` from the real `$10/$11:$407f` tables — the old 118-count brute-force scan dropped 3-entry small/blob layouts). Layout is per-species. Reassignment = same-size 2-byte repoint of the species' `$407f` level-1 entry (same-bank only), NOT a `[$caca]` edit; S107 2b: a layout of the other bank is COPIED into this bank's zero tail (editor2/core/walk_layouts.py), new species have their own level-1 row (`NewFollowerL1Table`). `extracted/follower_layouts.json` (S107: + stored bytes, per-bank instances, bank frames, Y-flip; 155 as entry SETS — 175 by entry order, 188 by raw bytes). |
 | Custom layout bank | $64 (layout ptr table + LZSS layout + attr data, 309 bytes used) |
-| Vanilla-empty banks | 23 = 368 KB: $60,$64,$67,$69–$77,$79–$7A,$7C,$7E–$7F (full-ROM scan, DOC_AUDIT B). Current allocation: see Bank Allocation table below. |
+| Vanilla-empty banks | 23 = 368 KB: $60,$64,$67,$69–$77,$79–$7A,$7C,$7E–$7F (full-ROM scan, DOC_AUDIT B). Current allocation: see Bank Allocation table below — **all owned since S121**. |
+| ROM size / growth (S133, S134) | **4 MB since S134** (every patched build; banks $80-$FF self-ID stubs until ARC CAP2; `check_banks` enforces 4 MB / `$07` / self-IDs). S133 measured it feasible: links, boots in PyBoy, a `rst $10` ran in bank $80; every new bank must start with its own number (`[$4000]` is how `rst $10` / the audio swap / the text engine save the current bank). ARCHITECTURE "ROM banks $80-$FF (S133)"; ROADMAP ARC CAP1. |
+| Custom map ids (S133) | `$6B-$EA` = 128 places, enforced by the compiler (`CUSTOM_MID_MAX`; 8-bit doubling in bank $60 / $17 readers). Hundreds of places = ROADMAP ARC CAP (place banks + regions); design EDITOR_DESIGN §6.4. |
 | Gate floor generation | Standard floors are procedurally generated (4×4 screen grid `$C940`, `(piece<<4)\|variant`); special/boss rooms are fixed templates substituted in. Per-gate config `GateFloorDataTable` `$16:$70A6` (32×8; byte 3 = floor count incl. the boss = FAQ "Levels"); weighting via `SelectFloorType` `$16:$5FC0` + `FloorTypeSelectionTable`1/2/3. Special rooms: only floors 3, 6, 9 … (wRNG1 bit 4 AND `wCurrentFloor` mod 3 == 2 — S100 correction), `rst $00` dispatch at `$16:$5C1C` (sets `wMapID` + `wInGateworld=0`). Custom rooms: `GateDecisionFork` → bank $71 entry 4 (S100). New gates 32-95 (S115): the two row readers go through `GateRowPtr` → bank $76 `NewGateRows` / `wGateRowBuf` (GATE_GENERATION §7.8). Gate names: `extracted/gate_names.json` (ROM-derived S100). **Full pipeline: GATE_GENERATION.md.** |
 | Gate damage tiles | Standing-tile id → HRAM `$AA` (`$00:$1E96`); behavior class `$AA>>2`: `$0E` (ids `$38–$3B`) = damage, `$0F` (`$3C–$3F`) = staircase. Amount = `FloorDamageTable` `$01:$5E7D` (16 B by floor type): type 3→5, type 6→10, types $0C/$0E→2, else 0. Applier `ApplyFloorDamage` `$01:$5E23`. (GATE_GENERATION.md §5.1.) |
 | Room palette derivation | A room's runtime BG palette is ROM-derivable: real colours are only indices 0 & 2 of slots 0–3 (`$17:$476F`[mapID] normal / `$17:$51F5`[floortype] gate, scanning past empty screens); engine FORCES idx1=`$6bff`, idx3=`$0000` in every BG palette; slots 4–7 shared system; object palettes global at `$17:$5615`. `tools/derive_room_palette.py`, validated 30/30 dumps + gate. (GATE_GENERATION.md §7.1.) |
@@ -317,6 +294,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | $7E | The project's NEW-SPECIES art streams (38-word pointer table: index (id-221)*2 follower, +1 battle; S105: compiler-owned, all zero without `custom.species`) | compiler-generated `patches/bank_07e.asm` (`species7e`, editor2/core/species.py; streams from `bake_follower_overflow.py --stream-dir`) |
 | $7F | RESERVED next sprite-overflow bank (then $7C, $7A) | `dwm/sprite_bank.py` order |
 | **Unallocated** | **none** (S121: $79 = story hooks; S117: $77 = shops; S116: $75 = the second song bank; S114: $76 taken; S107: $7A / $7C are art banks) + reserved $7F. | — |
+| $80-$FF | **S134 (ARC CAP1): the 4 MB ROM — a self-ID stub per bank** (`patches/bank_ext.asm`, compiler-generated). ARC CAP2: place banks (scripts / text / lists / place headers), more layout / tileset / animation banks. | compiler `ext_banks` (`emit_bank_ext`) |
 
 ## Iron Rules
 
@@ -378,7 +356,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Arena authoring (class fees, the master of each match, teams of 1-3 monsters, the teams' enemy rows) | 🟢 built S109 (P3.10b), test ROM USER-CONFIRMED 2026-10-01 22:57 (PyBoy on the user's save: Starry Night 1 / 2 / 3, the King with 2, a monster master, fee 20 charged): `gamedata.arena` → `gd_arena_masters_04/_50`, `gd_arena_fees`, `gd_arena_team_sizes` + bank $6E `ArenaTeamFixup`; Arena tab | PROJECT_COMPILER §2.25; SIDEQUEST_MAP "Arena authoring as built — S109"; EDITOR_DESIGN §5.2b |
 | Editing the ORIGINAL skills (0-221: name, SKIL text, MP — both copies, learning, power, targets, AI fields, behaviour bits, looks + sounds of another skill) | 🟢 built S110 (P3.11), test ROM `DWM_S110_skills_test.gbc` USER-CONFIRMED 2026-10-02 09:09 ("Excellent work. Give me editor files") (PyBoy on the user's save: a renamed Zap with its own text, 1 MP and Bang's look hitting 3 foes; MetalCut at all foes; HealMore → Cure 200 HP): `gamedata.skills` name / description / looks_like → `gd_skill_names`, `gd_skill_desc*`, `gd_present_proxy_5f/_55` (+ bank $55 `SfxPresentId`); Skills tab. Battle items read-only (Items tab later); custom skills = P3.11c (built S111, next row). **S111:** `element` for every skill (the resistance its damage tests, bank $52 ladder hooks) | PROJECT_COMPILER §2.26; BATTLE_SKILL_SYSTEM §7 / §11.8; EDITOR_DESIGN §5.3 |
 | Skill ANIMATIONS (new battle animations $2D-$4C made from the 45 stock animations' frames + tiles, with sounds; per skill an animation + motion / a screen effect / nothing) | 🟢 built S112 (P3.11e), test ROM `DWM_S112_animations_test.gbc` USER-CONFIRMED 2026-10-02 18:29 ("Fantastic, everything checks out") (PyBoy on the user's save: Zap → Spark storm on each foe, MetalCut → Frost slash, Scorching → blink, EvilSlash → GigaSlash's; the developers' viewer census = the editor's model frame by frame): `custom.animations` → banks $6F / $70; `gamedata.skills.<id>.presentation` → `gd_anim_routine` / `gd_anim_cmd`; Animations tab + Skills → Animation (preview with the game's sounds). New tile art = later (user) | PROJECT_COMPILER §2.28; BATTLE_SKILL_SYSTEM §11.9; EDITOR_DESIGN §5.3 |
-| Custom rooms (mapID ≥ $6B) | ✅ table-driven to editor scale: render/palette/attr/$26DD records + per-room encounters via bank $71 tables (S40/S42); multi-screen scroll (v28); gate-rotation insertion + descent (S41; data-driven S100 — next row). | EDITOR_DESIGN §2; GATE_GENERATION §7; CROSSBANK_ROOMS |
+| Custom rooms (mapID ≥ $6B) | ✅ (S133: **at most 128, `$6B-$EA`, now enforced**; beyond = ROADMAP ARC CAP) table-driven to editor scale: render/palette/attr/$26DD records + per-room encounters via bank $71 tables (S40/S42); multi-screen scroll (v28); gate-rotation insertion + descent (S41; data-driven S100 — next row). | EDITOR_DESIGN §2; GATE_GENERATION §7; CROSSBANK_ROOMS |
 | Custom NPCs with scripts | ✅ working | bank $60 entry 4 dispatch |
 | Custom text, multi-page, line breaks | ✅ working | IDs $0A00+, two-level ptr table |
 | Text speakers (hero / a name / nobody), voices (low / high / silent), `{hero}` / `{lead}` names, the game's contractions + extra glyphs, in every box editor | 🟢 built S120 (ROADMAP P3.6), preview == game pixel-exact (PyBoy), test ROM `DWM_S120_dialogue_gates_test.gbc` NOT yet user-tested | TEXT_SYSTEM "Glyphs, speakers and voices (S120)"; PROJECT_COMPILER §2.3 |
@@ -407,7 +385,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Your arena (copies of the Arena Lobby + the Arena Battle room, paintable, any doors; per class: opens when (flags), a won flag, the receptionist's words, where a win sends you; Starry Night offered by flag → lobby / room / hub / the game's ending) | 🟢 built S128 (ROADMAP P3.14e3), test ROM `DWM-S128r2-your-arena-test.gbc` USER-CONFIRMED 2026-10-07 09:51 (PyBoy on the user's save: G / F / E / D, a lock, a loss, Starry Night; the painted lobby + arena floor survive every match). Monster Grandpa's match (group 9) and the King's story stay the game's | PROJECT_COMPILER §2.41; SIDEQUEST_MAP "Your arena (S128)"; CROSSBANK_ROOMS "S128 sites"; help `69_your_arena.md` |
 | Story checks (questions the game answers — an item × n, gold, a species / family, monsters owned, party level, monsters seen, a random %, arena classes, bag room, the story reached, AND / OR — usable wherever a flag is checked), story steps (take items, give / take gold, give items × n, give a monster, refresh the room, says by progress), the story spine, quests, locked exits (a shut room state), music by flag (your rooms, gates), shop item sets by flag | 🟢 built S129 (ROADMAP P3.14b / c / d), PyBoy-walked on the user's save, test ROM `DWM-S129-story-test.gbc` USER-CONFIRMED 2026-10-07 13:59 | `custom.checks` / `story` / `quests` / `shop_sets`, `rooms[].music_rules`, `music.gates.N.rules` → `story.py`; virtual flags `$1800+n` (bank $73 `FlagAddr` → bank $77 entry 11); PROJECT_COMPILER §2.42; EVENT_FLAGS "Story checks"; EDITOR_DESIGN §5.7 "Story (S129)" |
 | Balance tab: how hard every key fight is (gate lists, bosses, arena, Starry Night, Grandpa) as the team level a rolled team of that story point needs to win 90 % / 50 % (casual / strong), the original game read-only vs the project (cached per fight), gate dives at two walk bounds, rolled / picked / .sav teams, boss what-ifs | 🟢 built S130 (ROADMAP P3.15a), user: "balance tab looks good" (2026-10-08); S131 (P3.15b): the level = grinding time (breeding paid by its family), special rooms in dives — built, NOT yet user-tested; anchor rebuilt ('S131.2', selftest OK) | `editor2/core/balance.py` + `app/balance_tab.py`; `extracted/balance_vanilla.json`; PROJECT_COMPILER §2.43; EDITOR_DESIGN §5.9 "As built S130"; help `72_balance.md` |
-| Rooms tab usability: painting without lag, the right side as one page at a time (sideways tabs), Borrow palette (any room / screen / step / gate theme; whole or rows), the Draw tab (pixels: everywhere or a new metatile), ▶ Play here (build + play the room with a game state: new game, .sav, a story point of the game / project, by hand; flags ON / OFF) | 🟢 built S132 (ROADMAP P3.18 + P3.4), NOT yet user-tested; byte-neutral. Story state measured: 39 / 39 steps == PyBoy | EDITOR_DESIGN §5.1 "As built S132"; `editor2/core/story_state.py` / `play_setup.py` / `tile_draw.py` / `palette_borrow.py`, `app/side_rail.py`; help `10_rooms.md`, `16_play_here.md` |
+| Rooms tab usability (USER-CONFIRMED 2026-10-09 "Rooms tab is fine"): painting without lag, the right side as one page at a time (sideways tabs), Borrow palette (any room / screen / step / gate theme; whole or rows), the Draw tab (pixels: everywhere or a new metatile), ▶ Play here (build + play the room with a game state: new game, .sav, a story point of the game / project, by hand; flags ON / OFF) | 🟢 built S132 (ROADMAP P3.18 + P3.4), USER-CONFIRMED 2026-10-09 09:47 ("Rooms tab is fine"); byte-neutral. Story state measured: 39 / 39 steps == PyBoy | EDITOR_DESIGN §5.1 "As built S132"; `editor2/core/story_state.py` / `play_setup.py` / `tile_draw.py` / `palette_borrow.py`, `app/side_rail.py`; help `10_rooms.md`, `16_play_here.md` |
 | NPC show/hide by step | ✅ working | step system; counters at $CD80+ (S65; transient); opcode $12 advances (v25) |
 | Flag-driven room states (persistent) | ✅ built S97, USER-CONFIRMED 2026-09-26 | `custom.rooms[].state_rules` → bank $60 entry 8 (+ bank $17 hook); PROJECT_COMPILER §2.13 |
 | NPC behaviours (movement types) | ✅ decoded + authorable S97, USER-CONFIRMED 2026-09-26 | type byte low nibble, bank $06 NPCBehaviourTable; ROOM_DATA_FORMAT "NPC behaviour types" |
@@ -433,6 +411,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 
 | System | State |
 |--------|-------|
+| Campaign-scale capacity — hundreds of places (ROADMAP ARC CAP) | 🔵 **AUDITED + DESIGNED S133 (byte-neutral); CAP1 4 MB BUILT S134 (NOT yet user-tested)**: place banks (CAP2), regions (CAP3), 4 MB (CAP1), the editor (CAP4), secondary ceilings (CAP5). EDITOR_DESIGN §6.4; CROSSBANK_ROOMS "S133 capacity audit" |
 | Custom monster pools (Encounters #2) | 🟢 **BUILT S114 (P3.13a), test ROM `DWM_S114_encounters_test.gbc` USER-CONFIRMED 2026-10-03 09:52 ("Looks good. Give editor files")** — bank $76 + the same-size bank $01 fork; the Encounters tab. PROJECT_COMPILER §2.30 |
 | Custom music | 🟢 **M1-M3c COMPLETE (S61-S64, all user-confirmed)**: engine map, round-trip codec, general slots (bank $74), room-default assignment for any mapID, `custom.music` schema, 31-song DWM2 catalog, MIDI import. **S116 (P3.13b; test ROM `DWM_S116_music_test.gbc` USER-REPORTED 2026-10-03 18:29 "rom seems to work fine"; the editor's preview player rewritten S116b, NOT yet user-tested): the Music tab — preview on the game's own engine (no emulator), names, automatic MIDI import; a song's own 1-6 channels (InitBGM ext), a second song bank $75, gate songs, battle songs (fight / arena / Starry final / room / gate / boss / normal).** Open boxes: event jingles (victory / level-up) not editable, CI compiler-test |
 | Arena/boss roster AUTHORING (E1→E2 wiring) | RE ✅ DECODED S67; **ARENA half built S109 (P3.10b, test ROM USER-CONFIRMED 2026-10-01 22:57)** — `gamedata.arena` + the enemy rows, Arena tab (the "Arena authoring" primitive row). Gate-boss rosters: their enemy rows are editable on the Monsters tab (S106); a boss editor is not built |

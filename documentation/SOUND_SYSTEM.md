@@ -90,9 +90,11 @@ PREVIOUS row; record = `bank:ptr + (id-base)*4`. The table must stay in
 ROM0: it's read before the bank switch. Ids $FD–$FE stay unused by
 decision; $FF = queue-empty sentinel, $9D = skip sentinel.
 
-Bank-switch convention: bank low byte -> `[$2100]`, `(bank>>5)&3` ->
-`[$4100]`; current bank read back from `[$4000]` (every bank stores its own
-number at $4000).
+Bank-switch convention: bank low byte -> `[$2100]`, ~~`(bank>>5)&3` ->
+`[$4100]`~~ (S69: that quadrant write goes to the MBC5-ignored `$6100` — S133 correction);
+current bank read back from `[$4000]` (every CODE / music / text bank stores its own number
+at $4000 — 15 vanilla or empty banks do not, and nothing far-calls them; ARCHITECTURE "ROM
+banks $80-$FF (S133)").
 
 ## 3. Per-id channel record (4 bytes @ bank:$4001 + (id-base)*4)
 

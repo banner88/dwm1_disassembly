@@ -531,7 +531,7 @@ return a failing ROM).
 | extracted/npc_sprite_catalog.json | Per-id record: renders, category (from npc_names.json sprite_classes), diff_px_vs_empty, name, alias_of; `_meta` documents method + valid range | 137 ids: 72 normal, 17 boss fragments, 6 aliases of $00, 37 empty, 5 glitch; ZERO crashes |
 | extracted/npc_field_sprites/ | 137 per-id 16×16 crops (throne-room background; the editor knocks the floor out at load, S94b) — the sprite picker / canvas thumbnail source | id_XX.png |
 | extracted/npc_sprite_catalog_sheet.png | Labeled contact sheet (user-classified S91) | |
-| extracted/capacities.json | P3.0 CAPACITIES reference: every known authoring ceiling + evidence + status (measured_s91 / structural_s91 / documented); `_deferred_measurement_boxes` names the residuals | Hand-compiled, no generator by design; EDITOR_DESIGN §5.C meters read it |
+| extracted/capacities.json | P3.0 CAPACITIES reference: every known authoring ceiling + evidence + status (measured_s91 / structural_s91 / measured_s133 / structural_s133 / documented); `_deferred_measurement_boxes` names the residuals; refreshed S133 (campaign scale) | Hand-compiled, no generator by design; EDITOR_DESIGN §5.C meters read it |
 
 ### S88 additions
 
@@ -1576,3 +1576,25 @@ p_tf_surge 7 --ecount 3 --sched 1:0x29:1,2:0x81:0,3:0x81:0,4:0x2b:0 --php 999 --
 | `editor2/app/dialogue_tab.py`, `shops_tab.py`, `services_tab.py`, `space_meter.py` | hidden tabs refresh when shown (they refreshed on every edit in another tab); the meter measures 0.9 s after edits settle, four banks only | test_app (the Services test now returns to its tab after Go to) |
 | `editor2/app/cutscenes_tab.py` | `PlaybackWindow(start_extra=)`: extra `start` fields (party records, `repoke`) for Play here; Restart replays them | test_app `s132_rooms_ui` |
 | `tools/verify_integrity.py` | check 5 += `census_story_state.py` | verifier PASS |
+
+## S133 rows (the campaign-scale capacity audit — ROADMAP ARC CAP0; byte-neutral)
+
+| Tool / data | What changed | Check |
+|---|---|---|
+| `extracted/capacities.json` (hand-compiled, no generator by design) | refreshed: `custom_mapids` (128, `$6B-$EA`, the 8-bit doubling — enforced since S133), `free_rom_banks` (0 whole banks; ≈315 KB inside the custom banks), `event_flags_safe_pool` (1,965), `custom_species_slots` (19, 221-239), `quest_eids`, `sram`; NEW `rom_size` (4 MB measured: links, boots, a far call ran in bank $80), `campaign_place_cost` (≈3-4 KB per place, the POC's per-class bytes), `wram_custom_pool_free` (≈219 B); `_deferred_measurement_boxes` updated | `json.load`; values cite EDITOR_DESIGN §6.4 / ARCHITECTURE "ROM banks $80-$FF (S133)" |
+| `editor2/core/project.py` | `CUSTOM_MID_MAX` = `$EA`; `_dense_rooms` raises `ProjectError` past it (the bank $60 / $17 per-room readers double `mid − $6B` in 8 bits) | test_compiler `test_s133` ($EA compiles, $EB refused) |
+| `dwm/sprite_bank.py` | docstring only: the `$4000` self-ID byte is load-bearing (not "ignored") | — |
+| measurement scripts (scratch, not committed) | PyBoy hook pairs on the user's build: exit fire / `CopyExitListToBuffer` / the commit; `CustomScriptRead` across the roots scene's warp; a 4 MB probe (bank $73 `CF2WarpCommitDrain` → a bank $80 entry) | results in CROSSBANK_ROOMS "S133 capacity audit", ARCHITECTURE "ROM banks $80-$FF (S133)"; method in PYBOY_DEBUGGING S133 |
+
+## S134 rows (ROADMAP ARC CAP1 — the 4 MB ROM)
+
+| Tool / data | What changed | Check |
+|---|---|---|
+| `editor2/core/emitters.py` | `EXT_BANK_FIRST` / `EXT_BANK_LAST`, `ext_bank_files(prj)` (ARC CAP2 hook; empty), `emit_bank_ext` → `patches/bank_ext.asm` (a section + self-ID byte per bank $80-$FF), registry entry `ext_banks` | test_compiler `test_s134`; the regression pin `807d9668…` (patched) |
+| `patches/bank_ext.asm` (NEW, compiler-generated) + `patches/game.asm` (INCLUDE) + `patches/bank_000.asm` (`HeaderROMSize` `$07`) | the 4 MB layout | verify check 2 (== the pin), check 6 (`check_banks`) |
+| `tools/verify_integrity.py` | `PATCH_NEW_FILES` += `bank_ext.asm` + every `bank_0xx.asm` in `patches/` without a clean counterpart (`_NEW_FILE_RE`, discovered) | verifier PASS; check 3 (tree restored) |
+| `editor2/core/builder.py` | `_patch_lists` uses the same discovery rule; `build_rom` removes every generated file it created in `disassembly/` | test_compiler `--rom`; test_app |
+| `tools/validate_custom_data.py` | NEW `check_banks`: the ROM is 4 MB, `$0148` = `$07`, banks $80-$FF and every bank $01-$7F the build changed + filled start with their own number (verify check 6 and every editor build run it) | refuses the 2 MB S133 build and a 4 MB build with unlabelled banks (tested S134); passes the S134 build |
+| `editor2/tests/test_compiler.py` | `REFERENCE_MD5` re-pinned `807d9668…` (patched); `test_s134` (the emitter's 128 sections, the staging lists, the bank rule on the built ROM); the expected-targets list += `bank_ext.asm` | `ALL … TESTS PASSED` |
+| `editor2/__init__.py` `EDITOR_REVISION` S134 + `editor2/help/80_build.md`, `90_limits.md`, `_revision.md` | the ROM is 4 MB (emulators / flash carts), the 128-room limit | test_app (revision stamp) |
+| `extracted/capacities.json` | `rom_size`: 4 MB BUILT (S134) | `json.load` |

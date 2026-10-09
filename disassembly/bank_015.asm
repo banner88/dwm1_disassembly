@@ -853,10 +853,10 @@ jr_015_461d:
     ld [wScriptStateFlags], a
     ld a, $2f
     ld [wMapID], a
-    ld [$c96a], a
+    ld [wMapIDMirror], a
     ld a, $00
     ld [wInGateworld], a
-    ld [$c96b], a
+    ld [wInGateworldMirror], a
     ld a, $00
     ld [$ca8d], a
     ld a, $ff
@@ -4189,10 +4189,10 @@ jr_015_5b93:
     ld [wGameState], a
     ld a, $08
     ld [wMapID], a
-    ld [$c96a], a
+    ld [wMapIDMirror], a
     ld a, $00
     ld [wInGateworld], a
-    ld [$c96b], a
+    ld [wInGateworldMirror], a
     ld a, $00
     ld [$ca8d], a
     ld a, $ff

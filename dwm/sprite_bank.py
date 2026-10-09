@@ -17,7 +17,9 @@ additive (never resizes the species tables, so it does NOT block new-species
 addition), and never touches breeding ($69) / custom-room ($6A-$6E) / text banks.
 
 Bank layout (per overflow bank):
-    $4000        db <bank>            ; self-ID (resolver ignores it; convention)
+    $4000        db <bank>            ; self-ID — the resolver ignores it, but it is LOAD-BEARING
+                                      ; (S133): rst $10 / the audio bank swap / the text engine save
+                                      ; "the current bank" by reading [$4000] (ARCHITECTURE "ROM banks $80-$FF")
     $4001..      dw entry0, entry1..  ; pointer table, index*2 (resolver reads here)
     <streams>    contiguous LZ streams the pointers target
     ds ...       zero pad to $8000

@@ -50,6 +50,12 @@ RST_20::
     db $cd		;call 0008
 
 RST_28::
+    ; S133: mgbdis artifact — these three bytes ($0028-$002A = $08 $00 $F1) are the
+    ; operand of RST_20's `db $cd` (= call $0008, the jump through the entry table)
+    ; followed by `pop af` (A = the caller's bank, saved from [$4000] by RST_10).
+    ; The far-call RETURN path is therefore: pop af / ld [$2100],a (ROMB0 back) /
+    ; RAMB quadrant (retired) / ret — only A/F clobbered, the callee's BC/DE/HL kept
+    ; (ARCHITECTURE "RST Dispatch Mechanisms").
     ld [$f100], sp
     ld [$2100], a
     swap a
@@ -262,7 +268,7 @@ HeaderCartridgeType::
     db $1b
 
 HeaderROMSize::
-    db $06
+    db $07     ; S134 (ROADMAP ARC CAP1): 4 MB = 256 banks (vanilla $06 = 2 MB); rgbfix -p writes the same
 
 HeaderRAMSize::
     db $03    ; E3 (S69): 32 KB SRAM, 4 banks — RAMB pinned 0; banks 1-3 via CF3SRAMBankedCopy only

@@ -3,6 +3,11 @@
 **Build & Play** → *Build ROM* (Ctrl+B; saves first) or *Validate project*
 (checks without building). *Play in emulator* (Ctrl+R) runs the last build.
 
+The ROM you get is **4 MB** (S134) — twice the original game, so there is room
+for a large romhack. Every modern Game Boy Color emulator plays it; on a real
+Game Boy it needs a flash cartridge that takes 4 MB ROMs. Your battery save
+(`.sav`) is not affected by the size.
+
 Messages in the **Build log**:
 
 - **ERROR** — the build stops; the message names the room / script / field. A

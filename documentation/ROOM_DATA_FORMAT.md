@@ -56,8 +56,12 @@ and bytes 4-5 "npc_ptr"). The extracted/map_table.json inherits this error.
 
 Step entries are NOT $FF-terminated. The number of valid steps per screen
 is implicit — the step value from RAM indexes directly (step × 6).
-Invalid step values read garbage. Step validation uses the tileset_bank byte
-(must be > 0 and < $80).
+Invalid step values read garbage. ~~Step validation uses the tileset_bank byte
+(must be > 0 and < $80).~~ **S133 correction: the engine validates nothing** — bank $0B
+`ReadStepBlock` / bank $60 `CustomReadStep` hand the bank byte straight to
+`DecompressTileLayout`; the `(0, $80)` test exists only in the Python dumpers
+(`tools/dump_room_data.py` etc.). Layout / tileset banks $80-$FF are fine (ARCHITECTURE
+"ROM banks $80-$FF (S133)").
 
 ## Room State System (Step Counters)
 
@@ -575,8 +579,9 @@ currently accepts 4×2 = 8 (`screens` keys "0".."7", PROJECT_COMPILER);
 extending to 4×4 is a schema residual, not an engine limit. Room dims in
 the $26DD record must match the screen count (KEY_LESSONS S10).
 
-**Phantom-step hazard when scanning room data.** Step validation in the
-engine only checks `tileset_bank ∈ (0,$80)`, so tools that walk step
+**Phantom-step hazard when scanning room data.** ~~Step validation in the
+engine only checks `tileset_bank ∈ (0,$80)`~~ (S133: the engine checks nothing; the
+`(0,$80)` test is the dumpers' own), so tools that walk step
 entries past a screen's real list decode garbage that can pass shallow
 checks — `extracted/npc_catalog.json` contains such phantom rows (e.g.
 "Castle screen 0 step 6, 28 NPCs" decodes to junk coordinates). Filter on

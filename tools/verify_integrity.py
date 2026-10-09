@@ -88,7 +88,17 @@ PATCH_FILES = [
     "bank_00e.asm",  # S121 the Milly hook: region milly_bedroom_script (the bedroom's dresser scene)
     "wram.asm", "game.asm",
 ]
-PATCH_NEW_FILES = ["bank_060.asm", "bank_064.asm", "bank_067.asm", "bank_069.asm", "bank_06a.asm", "bank_06b.asm", "bank_06c.asm", "bank_06d.asm", "bank_06e.asm", "bank_06f.asm", "bank_070.asm", "bank_071.asm", "bank_072.asm", "bank_073.asm", "bank_074.asm", "bank_075.asm", "bank_076.asm", "bank_077.asm", "bank_079.asm", "bank_07a.asm", "bank_07c.asm", "bank_07e.asm", "bank_07f.asm"]  # S107: art banks $7A/$7C/$7F (gamedata.art); S112: $6F/$70 new battle animations; S114: $76 encounter lists; S116: $75 second song bank; S117: $77 shops; S121: $79 story hooks  # don't exist in clean disassembly/
+PATCH_NEW_FILES = ["bank_ext.asm", "bank_060.asm", "bank_064.asm", "bank_067.asm", "bank_069.asm", "bank_06a.asm", "bank_06b.asm", "bank_06c.asm", "bank_06d.asm", "bank_06e.asm", "bank_06f.asm", "bank_070.asm", "bank_071.asm", "bank_072.asm", "bank_073.asm", "bank_074.asm", "bank_075.asm", "bank_076.asm", "bank_077.asm", "bank_079.asm", "bank_07a.asm", "bank_07c.asm", "bank_07e.asm", "bank_07f.asm"]  # S107: art banks $7A/$7C/$7F (gamedata.art); S112: $6F/$70 new battle animations; S114: $76 encounter lists; S116: $75 second song bank; S117: $77 shops; S121: $79 story hooks  # don't exist in clean disassembly/
+
+# S134 (ROADMAP ARC CAP1): bank_ext.asm = banks $80-$FF of the 4 MB ROM (compiler-
+# generated). Any OTHER bank file in patches/ without a clean counterpart (ARC CAP2's
+# place banks bank_080.asm …) is a new file too — discovered, so the list cannot go
+# stale. editor2/core/builder.py applies the same rule (keep the two in step).
+_NEW_FILE_RE = re.compile(r"bank_(?:[0-9a-f]{3}|ext)\.asm")
+PATCH_NEW_FILES = PATCH_NEW_FILES + sorted(
+    f for f in (os.listdir(PATCHES) if os.path.isdir(PATCHES) else [])
+    if _NEW_FILE_RE.fullmatch(f) and f not in PATCH_NEW_FILES and f not in PATCH_FILES
+    and not os.path.exists(os.path.join(DIS, f)))
 
 BUILD_ARTIFACTS = ["game.o", "game.gbc", "game.sym", "game.map"]
 

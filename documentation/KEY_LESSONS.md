@@ -3388,7 +3388,8 @@ corroborates it firing repeatedly, not once.
 its explicit ones.** Symptom: npc_catalog.json reported a 28-NPC castle
 step; the block decoded to sprite $FA at y=200. Root cause: step lists have
 NO terminator — count is implicit in which step values RAM can reach — and
-the engine's only explicit check (tileset_bank in (0,$80)) passes garbage,
+the dumpers' only explicit check (tileset_bank in (0,$80) — S133: a TOOL check, the engine
+checks nothing) passes garbage,
 so a scanner walking "all steps" reads past the list into neighboring data.
 Fix: validity = tileset bank in the real tileset-bank set + pointer range +
 coordinate sanity, dedup by (mt, ptr). Rule: when a structure's bound is
@@ -6133,3 +6134,27 @@ ENTRY script writes `$D92B := 6` on arrival (script 0 pos 0 — a WarpWing out o
 the priest); the WIN branch writes `$D9E3` (the speech) and `$D92B := 7` right before the
 tail (script 1 pos 69 / 74). **Fix:** the census writes both as the boss script does before
 arming the tail. **Rule:** arming a script mid-way = also doing what it did just before.
+
+## S133 / S134 — campaign-scale capacity (the audit; the 4 MB ROM)
+
+**A file list that enumerates "what the build adds" rots; discover by rule instead.**
+**Symptom (S134, found by reading, never fired):** `editor2/core/builder.build_rom` copied
+EVERY generated file into `disassembly/` but deleted only `PATCH_NEW_FILES` (a literal list
+in `tools/verify_integrity.py`) afterwards — a compiler file the list did not name would
+have stayed in the clean tree, and the next clean build would have included it silently or
+failed check 1. The first ARC CAP2 place bank (`bank_080.asm`) would have been that file.
+**Fix:** both stagers add, by one rule, every `bank_0xx.asm` / `bank_ext.asm` in `patches/`
+with no clean counterpart; `build_rom` also removes every file it CREATED. **Rule:** when a
+pipeline adds files, the cleanup is "what I created", never "what a list says I create".
+
+**"The engine checks X" needs the engine line.** The "step validation checks tileset_bank <
+$80" (ROOM_DATA_FORMAT, KEY_LESSONS S91, DOC_AUDIT S91) came from a dumper's own filter and
+was repeated as an engine fact for 40 sessions; it would have argued against banks $80-$FF.
+`ReadStepBlock` passes the byte straight through. **Rule:** a claimed engine limit cites the
+routine and line that enforces it, or it is a tool's limit (S133).
+
+**A bank's first byte is load-bearing.** `rst $10`, `AudioSaveBankState` and the text engine
+remember "the current bank" by READING `[$4000]` and switch back to it — so a code / music /
+text bank that does not start with its own number returns the game to the wrong bank. It was
+called "convention, ignored" in `dwm/sprite_bank.py`. **Rule:** every bank the build writes
+starts with `db <bank>`; `validate_custom_data.check_banks` enforces it on every build (S134).

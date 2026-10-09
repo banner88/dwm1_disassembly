@@ -893,7 +893,7 @@ panel?"; "Really need a 'play this room' with either flags + monsters imported f
 OR set manually or generated according to thresholds … Then you immediately enter room
 from editor"; "UI was built from scratch and especially right panel is annoying as fuck to
 scroll through" → "sideways tabs going up/down"; both ways of applying a drawing; the
-romhack slider "follow gates naturally. Just like balance tab"; built S132, NOT yet
+romhack slider "follow gates naturally. Just like balance tab"; built S132, USER-CONFIRMED 2026-10-09 ("Rooms tab is fine") — was NOT yet
 user-tested):**
 - **Paint lag — measured, then removed** (cProfile, offscreen, the user's project): every
   mouse move recomposed the whole screen in PIL (320 small images, ~14 ms per cell, even
@@ -2155,28 +2155,173 @@ Skills, P3.12 Breeding, P3.13 Encounters) sit on `Project.gamedata()` /
   editable vanilla content without it. Revisit only if a use case ever
   needs the whole vanilla world simultaneously editable in place.
 
-### 6.4 Capacity headroom + the ROM-expansion contingency (S90 audit)
+### 6.4 Capacity at campaign scale — places, place banks, regions, 4 MB (S133; replaces the S90 note)
 
-Current headroom vs the ~30-80-room campaign (all figures from
-PROJECT_STATE/owning docs): **11 unallocated banks = 176 KB** (+
-reserved sprite-overflow order + bank-$60 multi-bank spill A′3 when
-needed); **~128 practical free mapIDs** (`$6B..$EA`, S66 audit) — clones
-included, not a constraint; **flags** = 32 truly-safe vanilla-range +
-**24 KB persistent SRAM banks 1-3** (S69 expansion, USER-TESTED; needs
-the E3 b2 schema before first use); **19 custom species slots**
-(221-239; S105 G3 — 240+ are impossible); **quest EIDs** 519+ (12-row tail, extendable by table move);
-**95 song slots**. Verdict: fork-first is affordable for the whole
-campaign at current scope.
+**The goal (user S133):** a romhack with **hundreds of distinct custom places** — each its
+own look (tileset), music, encounters ("Reusing tileset is NOT ideal at all") — built
+**outward, on top of** the game: every vanilla room stays as post-game content (edited NPCs /
+scripts / flags; one stage per room is enough), and the arena, every service (Vault, farm,
+library, shrine, shops, namer, Medal Man) and the farm are ESSENTIAL gameplay that must keep
+working. The current project is proof of concept and will be thrown away: what must survive
+is every capability (any place to any place, places served in gates, new + edited gates,
+worlds, the hub, the arena copies, cutscenes, Play here), not any room's bytes.
 
-**ROM expansion 2→4 MB — ASSESSED, NOT BUILT, and no prior session
-claimed it** (S90 grep; the expanded thing is SRAM). Feasibility read:
-MBC5 addresses 256+ banks through the same 8-bit ROMB0 register the ROM
-already uses, so banks `$80-$FF` need the header size byte, link layout,
-and an audit for any code that stores/compares bank numbers assuming
-<`$80` (the S69 RAMB quadrant convention — the one known bank-derived
-computation — is already pinned dead). One audit+flip session IF ever
-needed; nothing in the current campaign scope forces it. Banked as a
-contingency box (ROADMAP).
+The S90 note above this section said "fork-first is affordable"; it was written for ~30-80
+rooms and its "11 unallocated banks" had been stale since S121 (every vanilla-empty bank has
+an owner). Three walls stand between the editor and that goal; the S133 audit measured each.
+
+**Wall 1 — the map id is one byte.** Custom rooms are `$6B-$EA` = **128** (hard max `$FE`):
+four per-room readers double `mapID − $6B` in 8 bits (bank $60 `CustomPtrChase`,
+`CustomStateRules`, `CustomMonsterCast`; bank $17 `CustomAttrCheck` + its two callers), so
+`$EB` silently read room `$6B`'s data — the compiler did not refuse it until S133
+(`CUSTOM_MID_MAX`). Packing several places into one map's 16 screens is how vanilla does it
+(the Castle, GreatTree floors), but every screen of a map shares one tileset, song and
+encounter table — ruled out by the user.
+
+**Wall 2 — every custom data class lives in ONE bank.** Room scripts, text, NPC / exit lists,
+screen tables, state rules, casts and patch data in **$60** (the readers RUN in bank $60 and
+read the data in place — one script word per far call); layouts + attr maps in **$64**;
+tilesets in **$67**; palettes and the per-(screen, state) render tables in **$17** (walked by
+bank $17 code; `LoadPal_46a1` reads the palette from bank $17); per-room records / flags /
+music in **$71**; own tile animations in **$6C**. The user's 11-room POC already filled $60
+and $64 to 79 % each.
+
+**Wall 3 — the ROM is full.** Every whole bank has an owner; ≈315 KB free remains inside the
+custom banks (end-of-bank fill, user's build), ROM0 has 8 free bytes, bank $0B 1, bank $17
+3,937, bank $16 732.
+
+#### Measured cost of a place (S133, the user's 11-room / 33-screen project)
+
+| Class | Measured | Per new place (estimate: 3 screens, 1-2 states) |
+|---|---|---|
+| Scripts | 9,130 B — **7,916 of it three copies of vanilla rooms** (Arena Lobby 3,352, Arena Battle 2,482, GreatTree 2,082); the rooms the user built 0-500 B each | 0.3-1 KB (more for story hubs) |
+| Text | 741 B for 9 entries | 0.2-0.5 KB |
+| NPC / exit / step / sub-tables | 606 + 345 + 372 + ≈150 B | ≈50 B per screen |
+| Layouts + attr maps (bank $64) | 12,892 B for 42 + 37 entries | ≈300 B per entry → ≈1-1.5 KB |
+| Tileset (bank $67) | 9,024 B for 7 | ≈1.3 KB (own) / ≈0.4 KB (shared by 3) |
+| Palettes + render tables (bank $17) | 768 + 644 B | 64 B per palette + ≈20 B per screen-state |
+
+≈ **3-4 KB per new place**. Copying a busy vanilla room costs 2-3.4 KB of scripts alone,
+because "Make editable" copies every story stage — the user wants ONE stage of each vanilla
+room, which the copy should offer (ARC CAP4).
+
+**Budget with a 4 MB ROM:** banks $80-$FF = 2 MB + the ≈315 KB already free ≈ 2.3 MB → about
+**575-750 places** at 3-4 KB. "Hundreds" fits; a thousand would need tileset sharing to be
+the norm. 8 MB (MBC5 ROMB1) would need 9-bit bank numbers through every far call — not planned.
+
+#### The design (ROADMAP ARC CAP; every rule below is backed by a S133 measurement or a
+read of the patched tree — CROSSBANK_ROOMS "S133 capacity audit", ARCHITECTURE "ROM banks
+$80-$FF (S133)")
+
+**A. 4 MB (CAP1) — BUILT S134 (NOT yet user-tested): every build is 4 MB, banks $80-$FF are
+self-ID stubs from `patches/bank_ext.asm`, the bank rule is checked on every build
+(ARCHITECTURE "ROM banks $80-$FF").** rgblink / rgbfix already handle `BANK[$80]`…`[$FF]` (`$0148` := `$07`
+automatically); PyBoy boots the 4 MB ROM and RAN a `rst $10` into a bank $80 routine on every
+room commit. No engine code tests bit 7 of a bank number (the 23 ROMB0 writes are all ROM0,
+all 8 bits; nothing writes ROMB1). **One hard rule: every new bank starts with its own
+number** (`db <bank>` at `$4000`) — `rst $10`, `AudioSaveBankState` and the text engine
+(`$C824`) save the current bank by READING `[$4000]`, so a bank that runs code, holds text, or
+is read with interrupts on returns to the wrong bank otherwise. The work is build plumbing:
+`game.asm` includes for the new banks, `verify_integrity` / `builder` patch lists that are
+not hard-coded, the bank meters, the tools that assume `< $80` banks (dump tools only).
+
+**B. Place banks — the spill (CAP2).** A *place* is what the editor calls a room. Each place
+has a **home bank** holding its own scripts, NPC / exit lists, screen tables, state rules,
+monster casts, patch data and a **place header** (fixed-size attributes: the `$26DD`-style
+record, encounter row, animation source / own-animation pointer + bank, save / sprite flags,
+room + battle music, music-rule list, palette + render-table pointers). Home banks carry a
+copy of the reader code (today's bank $60 entries 0/1/2/4/8/9/10 + helpers, ≈1.2 KB, one
+pinned template). **Bank $60 stays the only address the engine calls** (`ld hl, $60xx / rst
+$10` sites in banks $04/$06/$0B/$17/$01 are untouched): its entries become forwarders —
+`ld a, [wPlaceBank] / ld h, a / ld l, k / rst $10` — and it keeps the global things (skill
+scripts type `$FF`, `VanillaExitExtTable`, `VanillaNPCExtTable`, entry 11 `NpcColourDraw`,
+entry 12). Forwarding is sound: every entry returns values (DE step / tileset, BC script
+word) or fills a WRAM buffer, `rst $10` nests (the template already calls banks $77 / $05 /
+$0F from bank $60), and **a running custom script is always the current place's** (measured:
+the roots scene's last words — `goto` / `end` after its `$0F` — were read at frame 1090, the
+commit to `$70` came at 1109, the next read was `$70`'s own entry script).
+- **Place attributes by far copy:** at every place change the header's attributes are copied
+  to a WRAM block (`wPlaceAttr`, the S42 "far-COPY contract"); bank $71 / $6C / $76 readers
+  read WRAM instead of `mapID − $6B` tables, so they no longer care how many places exist.
+- **Palettes + render walk (bank $17):** `CustomAttrCheck` (already the first custom hook of
+  a load, after the state rules) far-copies the current screen-state's render row and its
+  palette into WRAM and returns a WRAM pointer, so the unchanged bank $17 walk and
+  `LoadPal_46a1` read WRAM (≈110 B; `wCustomPool` has ≈219 B free). Palettes leave bank $17.
+- **Text sections:** custom text ids `$0A00-$FFFF` (246 sections of 256) — section → bank
+  table in bank $60; entry 5 forwards to that bank's copy of `ld de, LocalTextPtrTable / call
+  CallTextEngine`. The text engine stores `[$4000]` in `$C824` and `ReadNextTextByte` reads
+  from it (ROM0), so text may sit in any bank. Global text (skills, services, story) and
+  places' text share the scheme.
+- **Layouts / attr maps / tilesets** are already addressed by data fields (`{bank, entry}`,
+  `gfx_bank`): spill = the compiler allocating more layout / tileset banks, each with its own
+  pointer table. Own tile animations: anim banks with the engine copy, chosen per place.
+- **Step counters:** only screens with more than one state get one (a one-state screen reads
+  a shared zero byte); allocated per region (C) and zeroed on a region change — the same
+  "transient" contract the window has had since S65.
+
+**C. Regions — place identity beyond 128 (CAP3).** A place = (`wMapRegion`, `wMapID`) for
+`wMapID ≥ $6B`; vanilla ids ignore the region. The compiler assigns both **automatically**
+(the user never sees a region or a map id — places are names); per region: ids `$6B-$EF` are
+places (133), **`$F0-$FE` are link slots** (15), and a few **global ids** are reserved in
+every region for places the engine recognises by id (the arena lobby / battle copies —
+`ArenaAlias` — and anything a vanilla script warps to, e.g. the Milly hook's arrival room).
+The cache `wPlaceIdx` / `wPlaceBank` / `wPlaceHdr` is computed from a place directory
+(region → per-id [bank, header]) at every place change.
+- **The commit decides the region.** Bank $0B entry 0 writes `wMapID := wWarpGateId` and
+  far-calls bank $73 entry 0 — the single commit hook (CF2, S57). There: a link id
+  (`$F0-$FE`) → (region, real id) from `wExitLinks`; else a global id → its home; else a
+  pending `wWarpRegion` (set by a source) → that region; else the region is UNCHANGED. Then
+  `wWarpRegion := none`, refresh the cache, zero the counters if the region changed, drop the
+  `wNpcColourMap` / `wTileAnimRoom` caches (they compare `wMapID` alone).
+- **Exits carry their region through link slots.** The copy into `wCustomExitBuffer` is the
+  editor's own code (`CopyExitListToBuffer`, both custom lists and `VanillaExitResolve`'s
+  extension rows): a list row prefixed `$FD <region>` is copied with its destination replaced
+  by the next free link id and (region, id) noted in `wExitLinks`. Measured S133: between an
+  exit firing and the commit nothing re-copies the list and the buffer is byte-identical (a
+  custom door $6E → $6B: fire frame 81, commit 100; a GreatTree redirect into $6E: 89 → 108).
+  The pre-commit readers of the destination (bank $01 `SaveMapStateToHRAM`'s class, bank $0B
+  `jr_00b_462c`'s `CheckGateWorldMapType` swap, bank $06's `or a` Castle test) only classify
+  it — a link id classifies as a custom room, which it is; global ids are never links, so
+  `ArenaAlias` still sees the arena's real id. Exit rows keep 7 bytes; `wWarpFlag` cannot
+  carry a region (the commit copies it into `wInGateworld`, and four readers test it with
+  `or a` before the commit).
+- **Every other source sets `wWarpRegion` or the region directly:** script warps (`$0F` /
+  `$3B`) are preceded by a compiler command (op `$24 $FFxx`, the S127 command path — whose
+  one-byte command number is shared with the project's story commands, `STORY_CMD_MAX` 255:
+  CAP3 widens it first, e.g. `$FFFF` + one more word);
+  `HubTable` rows, `GateInsertTable` rows (entry 4 writes `wMapID` itself — and now the
+  region + cache), the gate boss (bank $16 `jr_016_5be1` has 8 nop bytes after `call
+  GateRowPtr`; a per-gate boss-region table), Play here (a poke). The breeding return point
+  (`$C8FB`, ops `$42` / `$43`) needs nothing: the ceremony room `$08` is vanilla, so the region
+  is unchanged on the way back. `GateBossWin` must compare the region too (a served room
+  with the boss room's id in another region would count as the boss).
+- **Saved:** `wMapRegion` joins the X1 image (SRAM bank 3, bank $73 entries 5 / 6, like
+  `wExtFlags`); new game = region 0; the cache is recomputed after a load. The other saved
+  map-id bytes (`wWarpGateId` — only meaningful mid-transition; `$C8FB`; `wBossMapType`;
+  `wScriptMapType` — reassigned at every script start) need no companion under these rules
+  except the boss region. `$C96A` / `$C96B` are write-only mirrors (S133, now labelled).
+
+**D. The editor (CAP4).** Places by name everywhere (no map ids in the UI or in authored
+destinations — `room:<name>`); "Make editable" copies ONE stage of a vanilla room (the
+user's post-Starry Night GreatTree, Farm…) by default; capacity meters per class and for the
+whole ROM; help. The S133 POC project is not migrated by hand — the example project is
+re-expressed once for the regression.
+
+**E. Secondary ceilings at campaign scale (CAP5 — measure the need, lift what binds).** From
+the compiler's own limits (S133 grep of `editor2/core/*_MAX` / `_CAP`): story checks **256**
+(virtual flags `$1800-$18FF`, `story.STORY_CHECK_MAX`), story commands **255** (deduped),
+named flags **1,965** (`wExtFlags` 256 B; more flags = more WRAM, ≈219 B left in
+`wCustomPool`), the project's encounter lists **128** (numbers 128-255), project enemy rows
+**640**, breeding pools **100**, new gates **64** (32-95), own-animation groups **32**,
+custom songs 95 slots + bank $75, boss-join redirect rows **34**, custom species 19 (engine),
+screens per room 8 in the schema (16 in the engine). None is hit by the POC; each is a
+table width or a WRAM block and gets lifted when a real project nears it — the editor's
+meters show all of them (CAP4).
+
+**What stays exactly as it is:** vanilla rooms and their data; the arena (the lobby / battle
+copies keep working through global ids — `ArenaAlias` unchanged); every service NPC kind
+(they are scripts + bank $77 code, place-independent); gates 0-95, served rooms, worlds, the
+hub (their tables gain a region column); the Milly hook.
 
 ## 7. In-editor preview — simulate vs emulate (carried; still binding)
 
@@ -2228,6 +2373,7 @@ row is click-navigable (§5.0).
 | G-N | AI ban-list mechanism (knows-it-never-casts-it option-list filter) — OPTIONAL | ROADMAP P3.11b (v2.1, optional) |
 | G-O | Flag-keyed encounter-pool variants (bank-$71 RoomEncTable resolver extension) | ✅ CLOSED S114 (test ROM USER-CONFIRMED 2026-10-03 09:52 ("Looks good. Give editor files")) — in bank $76 rather than $71: rooms' and gates' variants (flag terms, first match wins) |
 | G-P | Family-icon editor slot pipeline (+ the custom-sprite background white-vs-cream defect — RESOLVED, user S106 r2 "background colour is perfect") — **built S107** (§5.2a) | ROADMAP P3.10 part 2c |
+| G-Q | Campaign-scale capacity: more than 128 places (one-byte map id), room data beyond banks $60 / $64 / $67 / $17, ROM beyond 2 MB (S133 audit, user: "Actual romhack will have HUNDREDS OF CUSTOM ROOMS") | ROADMAP ARC CAP (CAP1 4 MB · CAP2 place banks · CAP3 regions · CAP4 editor · CAP5 secondary ceilings); design §6.4 |
 
 ## 10. Milestones v2 (→ ROADMAP Phase 3, re-sequenced S90)
 

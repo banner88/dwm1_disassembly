@@ -147,5 +147,6 @@ INCLUDE "bank_07c.asm"
 INCLUDE "bank_07d.asm"
 INCLUDE "bank_07e.asm"
 INCLUDE "bank_07f.asm"
+INCLUDE "bank_ext.asm"          ; S134 (ROADMAP ARC CAP1): banks $80-$FF — the 4 MB ROM (compiler-generated: self-ID stubs + place banks)
 INCLUDE "wram.asm"
 INCLUDE "hram.asm"

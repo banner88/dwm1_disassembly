@@ -49,11 +49,22 @@ def check_toolchain(rgbds_dir=None):
     return env
 
 
+_NEW_FILE_RE = re.compile(r'bank_(?:[0-9a-f]{3}|ext)\.asm')
+
+
 def _patch_lists(repo):
     src = open(os.path.join(repo, 'tools/verify_integrity.py')).read()
     pf = re.search(r'PATCH_FILES\s*=\s*\[(.*?)\]', src, re.S).group(1)
     pnf = re.search(r'PATCH_NEW_FILES\s*=\s*\[(.*?)\]', src, re.S).group(1)
-    return (re.findall(r'"([^"]+)"', pf), re.findall(r'"([^"]+)"', pnf))
+    files, new = re.findall(r'"([^"]+)"', pf), re.findall(r'"([^"]+)"', pnf)
+    # S134 (ARC CAP1): the same discovery rule as verify_integrity — a bank file
+    # in patches/ with no clean counterpart is a new file (place banks bank_08x…)
+    dis, patches = os.path.join(repo, 'disassembly'), os.path.join(repo, 'patches')
+    if os.path.isdir(patches):
+        new += sorted(f for f in os.listdir(patches)
+                      if _NEW_FILE_RE.fullmatch(f) and f not in new and f not in files
+                      and not os.path.exists(os.path.join(dis, f)))
+    return files, new
 
 
 def md5(path_or_bytes):
@@ -76,6 +87,7 @@ def build_rom(repo, generated_dir, out_dir, rgbds_dir=None):
     for f in patch_files:
         p = os.path.join(dis, f)
         backups[f] = open(p, 'rb').read() if os.path.exists(p) else None
+    created = set()
     try:
         # 1. the proven hand-authored overlay
         for f in patch_files + patch_new:
@@ -86,8 +98,10 @@ def build_rom(repo, generated_dir, out_dir, rgbds_dir=None):
         gen_patches = os.path.join(generated_dir, 'patches')
         if os.path.isdir(gen_patches):
             for f in sorted(os.listdir(gen_patches)):
-                shutil.copy(os.path.join(gen_patches, f),
-                            os.path.join(dis, f))
+                dst = os.path.join(dis, f)
+                if f not in backups and not os.path.exists(dst):
+                    created.add(f)       # S134: removed again below (bank_08x …)
+                shutil.copy(os.path.join(gen_patches, f), dst)
         r = subprocess.run(['make'], cwd=dis, capture_output=True,
                            text=True, env=env)
         if r.returncode != 0:
@@ -119,7 +133,7 @@ def build_rom(repo, generated_dir, out_dir, rgbds_dir=None):
         for f, data in backups.items():
             if data is not None:
                 open(os.path.join(dis, f), 'wb').write(data)
-        for f in patch_new:
+        for f in set(patch_new) | created:
             p = os.path.join(dis, f)
             if os.path.exists(p):
                 os.remove(p)

@@ -440,7 +440,9 @@ pipeline — never retrofit the overlay.
       trigger_x≠$FF) exist (`validators.py`, S120 re-check).
 - [ ] **A′2 — bank $0B in-place room emitter** (Layer A of project.json).
 - [ ] **A′3 — bank $60 multi-bank spill** (bank_map; 16 KB won't hold 75
-      rooms of scripts+dialogue; 13 banks / 208 KB free).
+      rooms of scripts+dialogue; 13 banks / 208 KB free). **S133: superseded by ARC CAP
+      CAP2 (place banks — every custom data class, not only $60; the "13 banks free" was
+      stale: every bank is owned since S121).**
 
 ### Phase 2 — Content format & compiler (the editor backend)
 - [x] **Architectural keystone — table-driven custom-room dispatch (DONE S42, user-confirmed).**
@@ -950,7 +952,7 @@ recipes are pure authoring.
       loader for bank 1, attr bit 3 through the attr emitters and the editor
       (renderer, slot map, import). *Accept:* a custom room drawing 200+
       distinct tiles, PyBoy + SameBoy, battles and menus from it intact.
-- [x] **P3.4 — Embedded PyBoy preview panel** [G-E] — **S132: ▶ Play here built, NOT yet
+- [x] **P3.4 — Embedded PyBoy preview panel** [G-E] — **S132: ▶ Play here built, USER-CONFIRMED 2026-10-09 ("Rooms tab is fine") — was: NOT yet
       user-tested** (user: "Really need a 'play this room' with either flags + monsters
       imported from a save OR set manually or generated according to thresholds … Then you
       immediately enter room from editor"): the Rooms tab's ▶ Play here (F5) builds when
@@ -2458,13 +2460,16 @@ recipes are pure authoring.
       it BEFORE the dresser with the hook on, would draw her sheet with Terry's frames (the
       icon's sheet is a table entry; vanilla names after the dresser); other users of
       `FollowerGfxTable`s' entry 0 not swept.
-- [ ] **CONTINGENCY (banked, not scheduled) — ROM expansion 2→4 MB**:
+- [ ] **CONTINGENCY (banked, not scheduled) — ROM expansion 2→4 MB** — **S133: PROMOTED to
+      ARC CAP CAP1 (needed for hundreds of places; audited + measured buildable / bootable,
+      a far call RAN in bank $80):**
       assessed S90 (EDITOR_DESIGN §6.4) — MBC5 8-bit ROMB0 covers 256
       banks; needs header size byte + link layout + a stored-bank-number
       audit. Open ONLY if the 176 KB free + spill ever runs out. NO
       prior session built or promised this (the expanded thing is SRAM,
       S69).
-- [x] **P3.18 — Rooms tab usability (user S132)** — **built S132, NOT yet user-tested;
+- [x] **P3.18 — Rooms tab usability (user S132)** — **built S132, USER-CONFIRMED 2026-10-09 09:47
+      ("Rooms tab is fine");
       byte-neutral** (user's list: "Need to be able to borrow palette from any other room
       without having to recreate it / Why is placing tiles so incredibly laggy / Allow
       editing tiles by pixel / Really need a 'play this room' … / right panel is annoying
@@ -2476,6 +2481,77 @@ recipes are pure authoring.
 - [ ] **P3.17 — Packaging**: per-OS bundles with RGBDS v0.6.1 bundled,
       signed macOS `.app`. *Accept:* a fresh Mac with no dev tools opens
       the example project, builds, plays.
+
+### ARC CAP — campaign-scale capacity (S133; user: "Actual romhack will have HUNDREDS OF CUSTOM ROOMS")
+User direction (S133): distinct places, each its own tileset ("Reusing tileset is NOT ideal
+at all"); vanilla stays as post-game with edited NPCs / scripts / flags (one stage per room is
+enough); the arena, every service and the farm are ESSENTIAL — "build outwards + on top of
+rather than replace"; the current project is POC and will be thrown away — "make
+capabilities identical" (any place to any place, places in gates, new + edited gates…); a 4 MB
+ROM is fine ("most people will use emulators"). The design + every measurement:
+EDITOR_DESIGN §6.4; the engine facts: CROSSBANK_ROOMS "S133 capacity audit", ARCHITECTURE
+"ROM banks $80-$FF (S133)"; the numbers: `extracted/capacities.json`. Order agreed S133: the
+audit (done) → spill → 4 MB → regions engine → regions editor; S133 suggests CAP1 before
+CAP2 (it is small, and the spill allocator should be written knowing banks $80-$FF exist) —
+the user picks.
+- [x] **CAP0 — the audit (S133, byte-neutral).** Walls measured (one-byte map id: 128 places,
+      `$EA`; one bank per data class: the POC filled $60 / $64 to 79 %; no whole bank free),
+      the cost of a place (≈3-4 KB; vanilla copies 2-3.4 KB of scripts), every stored map id,
+      the commit, the exit buffer fire → commit (PyBoy), script reads across a commit
+      (PyBoy), 4 MB (built, booted, a far call ran in bank $80). The `$EA` ceiling is now
+      enforced (`project.CUSTOM_MID_MAX`). Annotation: `wMapIDMirror` / `wInGateworldMirror`,
+      the RST_28 artifact.
+- [x] **CAP1 — 4 MB ROM.** **Built S134, NOT yet user-tested** (user: "Ok that sounds fine.
+      Proceed" after the downsides list). Every patched build is 4 MB: `patches/game.asm`
+      INCLUDEs the compiler-generated `patches/bank_ext.asm` (emitter `ext_banks`: a section +
+      self-ID byte per bank $80-$FF; `emitters.ext_bank_files` = CAP2's hook for place
+      banks), `HeaderROMSize` `$07`; the staging lists find new bank files by rule
+      (`verify_integrity._NEW_FILE_RE`, `builder._patch_lists`) and `build_rom` removes every
+      generated file it created (a latent leak — KEY_LESSONS S133/S134);
+      `validate_custom_data.check_banks` (verify check 6 + every editor build): 4 MB,
+      `$0148` = `$07`, every bank $80-$FF and every changed bank starts with its number. Pin
+      `807d9668…` (patched) — the example differs from the S129 pin only at `$0148` /
+      `$014D` / `$014E-F`; the user's project built 2 MB vs 4 MB from the same code: the same
+      four bytes. *Accept (machine half) MET:* PyBoy on the user's project + `.sav` (4 MB):
+      CONTINUE, a custom room's entry scene + its door, the GreatTree redirect, the field
+      menu, a real gate entry + a battle fought out, a JOURNAL save in a custom room + a
+      reload into the same tile; every bank switch logged at the 23 ROM0 `ld [$2100], a`
+      sites — 201,868 switches, 63 banks, highest `$7E`, **none ≥ $80** (the 2 MB build: the
+      same set) — so no code relied on 2 MB bank mirroring. A far call executing in bank $80
+      was measured S133 (scratch probe); the first REAL tenant is CAP2's place banks (the
+      original acceptance's "compiler-emitted bank $80 entry from a real call site" moves
+      there). *User half:* the test ROM in SameBoy.
+- [ ] **CAP2 — place banks (the spill).** Bank $60 entries become forwarders to the current
+      place's home bank (`wPlaceBank`); a pinned reader template per home bank; the place
+      header + `wPlaceAttr` far copy (bank $71 / $6C / $76 readers read WRAM); bank $17
+      `CustomAttrCheck` stages the current screen-state's render row + palette in WRAM;
+      text sections → banks; more layout / tileset / animation banks; the compiler's
+      allocator + per-class meters. Still ≤ 128 places (regions are CAP3). *Accept:* a
+      generated project of 120 places × 3 screens with scripts, text, own tilesets and
+      palettes spread over ≥ 20 banks builds; PyBoy walks a sample of 20 places (render ==
+      the editor preview, NPC talk, a cutscene, a door both ways, a battle, save / reload in
+      a place); the example project's behaviour unchanged (the pin moves once, by design).
+- [ ] **CAP3 — regions (places beyond 128).** `wMapRegion` (saved with X1, new game 0), the
+      commit resolves link slots `$F0-$FE` (`wExitLinks`, filled by `CopyExitListToBuffer`
+      from `$FD <region>` prefixes) / global ids / `wWarpRegion` / unchanged; the place cache;
+      counters per region (zeroed on a change); `wNpcColourMap` / `wTileAnimRoom` dropped on
+      a change; region-carrying `HubTable` / `GateInsertTable` rows, the gate boss region
+      (bank $16 `jr_016_5be1` nops), `GateBossWin` compares the region, the script command
+      for `$0F` / `$3B` (widen the 255-entry command space first), Play here's poke; the
+      compiler assigns regions automatically. *Accept:* a generated project of ≥ 300 places
+      in ≥ 3 regions; PyBoy: doors within and across regions both ways, a vanilla redirect
+      into each region, the hub from each region, a place served in a gate from another
+      region, a world, the arena copies from two regions, the breeding ceremony return,
+      save / reload in region 2, a WarpWing home.
+- [ ] **CAP4 — the editor for hundreds of places.** Places by name (no map ids shown or
+      authored; `room:<name>` destinations), "Make editable" copies ONE stage of a vanilla
+      room by default (the user's post-Starry Night rooms), meters per data class + the
+      whole ROM, the World tab at that scale (search / filter), help. *Accept:* the user
+      builds a fresh project in the editor past 150 places.
+- [ ] **CAP5 — secondary ceilings (as they bind).** Story checks 256 / commands 255, named
+      flags 1,965 (WRAM-bound), project encounter lists 128, breeding pools 100, own-
+      animation groups 32, screens per room 8 in the schema (16 in the engine) — EDITOR_DESIGN
+      §6.4 E. Measure a real project's need first; lift each in its own box.
 
 ### Phase D — Disassembly deepening (parallel; pick when blocked elsewhere)
 Driven by what the editor must EDIT, not completionism:
@@ -2760,7 +2836,8 @@ is campaign-BLOCKING** — the POV flip cannot ship without it; E8/E9
       priority (cosmetic bookends). Owning doc: a new subsection of CUSTOM_CUTSCENES /
       DATA_STRUCTURES once found.*
 
-- [ ] **E6 — Text / script capacity at full-campaign scale.**
+- [ ] **E6 — Text / script capacity at full-campaign scale.** **S133: answered by ARC CAP
+      — text sections per bank (CAP2) + the measured per-place cost (EDITOR_DESIGN §6.4).**
       The dialogue compiler is specced (Phase 2: auto-wrap 18 ch, auto-DTE, page-split,
       two-level table emission, multi-bank spill). What is NOT validated is total capacity for
       a full new script across the four script banks (`$0C-$0F`) and the text banks — i.e. an

@@ -54,8 +54,9 @@ names beyond banks 01/50/13 are best-effort; entries are ROM-verified.
 
 `$60, $64, $67, $69-$77, $79-$7A, $7C, $7E-$7F`
 
-> 8 of these are now patch-owned ($60,$64,$67,$69,$6A,$71,$72,$7E). The
-> canonical current-allocation table lives in PROJECT_STATE.md "Bank allocation".
+> **All 23 are patch-owned since S121** (S133: this note said 8). The canonical
+> current-allocation table lives in PROJECT_STATE.md "Bank allocation"; new space
+> = banks $80-$FF (below, ROADMAP ARC CAP1).
 
 ## Free Space in Used Banks
 
@@ -67,11 +68,66 @@ names beyond banks 01/50/13 are best-effort; entries are ROM-verified.
 | $51 | $7B34 | 1,228 | 00 fill — large, investigate safety |
 | $54 | $7FC0 | 64 | 00 fill (24B used by join patch) |
 
+**Patched build, S133 (end-of-bank fill, the example overlay `7d136455…`, patched):** ROM0 8 B,
+$01 1, $04 1, $06 1, **$0B 1**, $50 1, **$16 732**, **$17 3,937** (the custom rooms' palettes +
+render tables grow here), $60 8,756 (example project; the user's 11-room POC left 3,502).
+
 ## RST Dispatch Mechanisms
 
 - `rst $00` — Jump table dispatch: A indexes into table immediately after RST
 - `rst $08` — ROM0 call dispatch: calls function in bank $00
-- `rst $10` — Cross-bank call: H=bank, L=entry index → switches bank and calls entry
+- `rst $10` — Cross-bank call: H=bank, L=entry index → switches bank and calls entry.
+  It saves the CALLER's bank by reading `[$4000]` (each bank's own-number byte), writes H to
+  `$2100` (MBC5 ROMB0, 8 bits), and on return pops that byte back into `$2100` (bytes
+  `$0020-$0037`: `add hl,hl / ld h,0 / ld bc,$4001 / add hl,bc / call $0008 / pop af / ld
+  [$2100],a / … / ld [$6100],a / ret`, read S133). Only A (and F) is clobbered on the way
+  back: BC / DE / HL return as the CALLEE left them (the caller's BC is lost — it is $4001 on
+  the way in; bank $60 `CustomScriptRead` returns its word in BC this way). The entry index
+  wraps at 128.
+
+## ROM banks $80-$FF (S133 — the 4 MB audit, ROADMAP ARC CAP1)
+
+The ROM is MBC5, 2 MB (`$0148` = `$06`). A 4 MB ROM (256 banks) needs no engine change:
+
+- **Measured (scratch builds, PyBoy):** `SECTION "…", ROMX[$4000], BANK[$80]`…`[$FF]` link with
+  RGBDS 0.6.1; `rgbfix -p 255` pads to 4,194,304 B and rewrites `$0148` := `$07` and both
+  checksums by itself (`patches/bank_000.asm` `HeaderROMSize db $06` only draws a warning).
+  PyBoy boots the 4 MB ROM to the bedroom; `$2100` := `$80` / `$FF` maps those banks; a
+  `rst $10` into a bank $80 routine, placed on bank $73 `CF2WarpCommitDrain` (every room
+  commit), ran 3 times in 3 warps, read `$80` at `[$4000]`, returned, and every room loaded
+  and walked.
+- **Read (both trees):** the only bank-switch writes are 23 ROM0 `ld [$2100], a` sites, each
+  writing a full 8-bit value from H (`rst $10`), the stacked `[$4000]`, `$C824` (text),
+  HRAM `$FFE8` / the audio table's bank column, or D (the gfx-ID high byte); **no code tests
+  bit 7 of a bank number**, nothing writes ROMB1 (`$3000-$3FFF`), and since S69 no RAMB write
+  is derived from a ROM bank number (the 19 quadrant writers go to the MBC5-ignored `$6100`;
+  even the old `swap / rra / and $03` kept only 2 bits).
+- **The rule for every new bank: byte `$4000` = its own number.** `rst $10`,
+  `AudioSaveBankState` (the frame driver's music bank swap) and the text engine (`$C824`,
+  `ReadNextTextByte`) save "the current bank" by READING `[$4000]` and switch back to that
+  value — a bank whose first byte is not its number returns to the wrong bank as soon as code
+  runs from it or music plays while it is mapped. (15 vanilla / empty banks do not follow
+  the convention — `$20` `$40` `$61-$63` `$65` `$66` `$68` `$78` `$7B` `$7D` and the
+  empty `$79` / `$7A` / `$7C` / `$7F`; nothing far-calls them.)
+- **The "step validation checks tileset_bank < $80" is NOT engine code** — bank $0B
+  `ReadStepBlock` and bank $60 `CustomReadStep` pass the bank straight to
+  `DecompressTileLayout`; the `< $80` tests live only in Python dump tools
+  (`tools/dump_room_data.py`, `decompress_tiles.py`, `render_rooms.py`, `analyze_bank17.py`)
+  — DOC_AUDIT S133.
+- **As built S134 (ARC CAP1; built, NOT yet user-tested): every patched build is 4 MB.**
+  `patches/game.asm` INCLUDEs `bank_ext.asm` (compiler-generated, `emitters.emit_bank_ext`):
+  one `SECTION "ROM Bank $0xx", ROMX[$4000], BANK[$xx]` + `db $xx` per bank $80-$FF (a
+  compiler place bank is INCLUDEd in its place — ARC CAP2); `HeaderROMSize` `$07`. The
+  example build differs from the 2 MB S129 pin ONLY at `$0148` / `$014D` / `$014E-F`; banks
+  $80-$FF are the self-ID byte over zero fill. `tools/validate_custom_data.py check_banks`
+  (verify check 6 and every editor build) refuses a ROM that is not 4 MB, whose header is
+  not `$07`, or where a bank $80-$FF — or a bank $01-$7F the build CHANGED and filled — does
+  not start with its own number.
+- **Plumbing that did need changing (S134):** `patches/game.asm` INCLUDE lines for the new banks;
+  `tools/verify_integrity.py` `PATCH_NEW_FILES` and `editor2/core/builder.py` (they stage /
+  clean a hard-coded list); the compiler's bank meters (`validators.TEMPLATE_SIZE` /
+  `bank_usage`, `app/space_meter.py`); `randomizer/romdata.py` refuses a non-2 MB ROM (fine
+  for vanilla input). 8 MB would need 9-bit bank numbers through every far call — not planned.
 
 ## Key RAM Regions
 
