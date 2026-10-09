@@ -455,7 +455,9 @@ GBC-only. Contains tile palette/attribute data for the background map.
   pal_ptr:2]` — so a room state can change its attr grid AND its BG palette
   (Servant room $3F: burning vs cleared differ in 221 attr cells and the
   palette). Custom rooms use the same shape via `CustomAttrPtrTable`
-  (S94b, PROJECT_COMPILER §2.11; GATE_GENERATION §7.4).
+  (S94b, PROJECT_COMPILER §2.11; GATE_GENERATION §7.4) — S137: in each
+  room's home bank (`PlaceRenderTable`), handed to the bank $17 walk through
+  WRAM (PROJECT_COMPILER §2.46).
 - 256 bytes total, 16 bytes per row (10 used + 6 padding)
 - Each byte = 2 nibbles = 2 palette indices (0-15, 4 bits each); vanilla
   uses only 0-3 (S96 census over every vanilla screen/step: values {0,1,2,3}).

@@ -2953,9 +2953,10 @@ class Project:
         return self.screen_attr_entry(r, k, ctx)
 
     def state_palette_ref(self, r, k, n):
-        """Palette for screen k, state n: ('label', asm label) for a project
+        """Palette for screen k, state n: ('palette', palette id) for a project
         palette (states[n].palette > render.palette) or ('addr', ptr) = the
-        vanilla source room's own palette block in bank $17 (borrow)."""
+        vanilla source room's own palette block in bank $17 (borrow). S137: the
+        palette's bytes go into the room's home bank (emitters.render_lines)."""
         scr = (r.get('screens') or {}).get(str(k)) or {}
         sts = scr.get('states') or []
         pid = None
@@ -2967,7 +2968,7 @@ class Project:
             if pid not in self._pal_by_id:
                 raise ProjectError(f"room {r.get('id')} references palette "
                                    f"{pid!r} which is not defined")
-            return 'label', self._pal_by_id[pid]['label']
+            return 'palette', pid
         src = F.val(r.get('source_mapID', 0))
         return 'addr', self.vanilla_palette_ptr(src)
 

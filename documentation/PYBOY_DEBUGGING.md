@@ -670,3 +670,36 @@ edge and the battle waits for input forever.
 - **Trap — a 10-frame "the box rests" rule fires mid-print on slow text** (the user's text speed):
   harmless when A is only pressed while the script flag (`$D8D7` bit 0) is set — pressing A after the
   script ended re-opens the talk (the S128 trap again).
+
+## S137 techniques — a bank $17 walk by stub, real palette RAM, "did the colours come back?", two traps
+
+- **Call bank $17 entries 0 / 1 from the S130 stub** (`ld hl, $1700` / `$1701`, `rst $10`): poke
+  `wMapID`, `wScreenIndex`, the screen's counter and `wInGateworld` = 0, fill `$C200…` / `$C797…`
+  with `$EE`, call, read back: entry 1 leaves the attr map at `$C200`, entry 0 the palette slots 0-3
+  at `$C797` (after the forcing: colour 1 := slot 7's unless the colour-3 bit-15 marker is set). Do
+  NOT poison slot 7 (`$C7CF-$C7D6`) — the forcing copies it. `tools/census_place_banks.py` S137.
+- **Reach a ruled state by its flags, not its counter** (the rules run first and overwrite the
+  counter): event flag `idx` = `$D99B + idx / 8` (< `$1000`) or `wExtFlags + (idx − $1000) / 8`, mask
+  `$80 >> (idx & 7)`.
+- **The real CGB BG palette RAM:** write `p.memory[0xFF68] = i` (BCPS, no auto-increment needed) and
+  read `p.memory[0xFF69]` for i = 0-63 — compare it with `$C797` before / after a menu.
+- **"Did the colours come back?"** Before / after the field menu (A facing nothing, B ×8), a talk
+  battle (A, `up` when `$C83C` = 1, A until `GAME_MODE` went 2 and back to 1 with the script done) and
+  a service screen (the librarian: A until `GAME_MODE` ≠ 1, B until idle): `$C797` slots 0-3, BCPD
+  and the visible BG tiles not under a sprite must be identical (S137: 24 / 24 in halls of $60 / $81).
+- **Trap — `<rom>.ram` is loaded by every boot of that ROM path.** `boot_with_sav` copies the save
+  next to the ROM; a later `boot()` + `to_bedroom()` of the SAME path then CONTINUES that save. Delete
+  `<rom>.ram` (or use another path) before a new-game run.
+- **Trap — a save made in a room the build lacks hangs at CONTINUE** (bank $71's room record,
+  KEY_LESSONS S137): for an A/B of the user's project, start a new game instead.
+- **Trap (again, S130) — `pkill -f` / `pgrep -f` + `kill` from the tool shell match the shell's own
+  command line** and kill it (exit 144). Find the PID with `ps aux | grep '[s]cript'` and kill that.
+- **A room's own entry scene replays on every warp in** (the user's Cities_FOUNT shopkeeper): after
+  a warp, wait until the script flag stays clear ~90 frames (pressing A every 20 frames while it
+  runs), then face the NPC and talk.
+- **Where is the text box? (S137 r2)** `$C83E/$C83F` = the open box's tile-map base (bottom box
+  ≈ `$99C1` at scroll 0, top `$9821` + the scroll), `$FFD3` = 1 top / 2 bottom. A menu that "prints
+  twice" is often the text engine scrolling a box at `$C83E` while the screen draws its own box
+  elsewhere. Compare a contact sheet (a frame every 20) of the same line on the ORIGINAL ROM
+  (new game: every library family is empty) — `lib3.py` method: boot, `to_bedroom`, warp map
+  `$12` (4, 12), face up, A.

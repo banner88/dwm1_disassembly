@@ -25,7 +25,7 @@ to the proven overlay:
 |---|---|
 | `patches/bank_060.asm` | whole file = verbatim engine template head + generated data |
 | `patches/bank_071.asm` | whole file = verbatim engine template head + generated tables |
-| `patches/bank_017.asm` | two marked regions (`room_palettes_a`, `room_render_tables`) |
+| `patches/bank_017.asm` | two marked regions (`room_palettes_a`, `room_render_tables`) — both EMPTY since S137 (the rooms' colours moved into their place blocks, §2.46) |
 | `patches/wram.asm` | one marked region (`wram_step_counters`) |
 | `patches/bank_000.asm` | one marked region (`rom0_room_records` — the `$26DD` rows `$6B-$6F`, S94) |
 | `patches/bank_064.asm`, `bank_067.asm`, `bank_074.asm`, `bank_014.asm` region | layouts / tilesets / songs / quest enemies (S64, S70, S92) |
@@ -301,10 +301,12 @@ per-opcode reference block in `patches/bank_004.asm`** — NOT against
 ### 2.5 `custom.palettes[]`
 
 `{id, label, placement: "a"|"b", colors_rgb555: 8×[4 words], comment[],
-row_comments[]}`. `placement` pins the block to region A (between the
+row_comments[]}`. `placement` pinned the block to region A (between the
 `ds 12` reserve and `HighBattlePal` — where the proven `_6B/_6C` blocks
-live) or region B (after the tables — `_6D/_70`); it exists purely for
-layout stability of the as-built file; new palettes default to `b`.
+lived) or region B (after the tables — `_6D/_70`); it existed purely for
+layout stability of the as-built file. **S137: ignored** — a palette is
+emitted (slots 0-3, 32 B) into the block of every room that uses it, in that
+room's home bank (§2.46); `label` names nothing in the ROM any more.
 Validators: exactly 8×4 (the S6 dropped-8th-line bug corrupted dialog
 rendering); **warn** when idx1≠`$6BFF` / idx3≠`$0000` (engine forces both
 at runtime — KEY_LESSONS S7/S39). Loader code (`CustomPalCheck`) only ever
@@ -519,8 +521,8 @@ added S53 — integrity PASS proves neutrality):
 | Region | File | Content |
 |---|---|---|
 | `wram_step_counters` | `patches/wram.asm` | step-counter labels `$DE74+` (S55 relocation), `ds`-padded to `region_size` |
-| `room_palettes_a` | `patches/bank_017.asm` | placement-`a` palette blocks (`_6B`,`_6C`) |
-| `room_render_tables` | `patches/bank_017.asm` | `CustomRoomPalPtr` + `CustomRoomAttr` (one row/room) + placement-`b` palettes |
+| `room_palettes_a` | `patches/bank_017.asm` | S137: a one-line comment (was: placement-`a` palette blocks `_6B`, `_6C`) |
+| `room_render_tables` | `patches/bank_017.asm` | S137: a comment (was: `CustomAttrPtrTable` → `RoomAttr_` → `ScrAttr_` + placement-`b` palettes — now in the place blocks, §2.46) |
 
 The splicer keeps the markers (idempotent re-runs) and errors on a missing
 or duplicated pair. If a marker is ever lost, restore it around the same
@@ -542,8 +544,8 @@ registering an emitter; nothing existing changes.
 | `layouts64` / `tilesets67` | `custom.layouts` / `custom.tilesets` — the streams `Project.stream_plan()` put in the home bank (§2.44) | `file:patches/bank_064.asm` / `bank_067.asm` | `$64` / `$67` |
 | `streams_ext` (S135) | the streams that did not fit $64 / $67 (§2.44) | **`multi:stream_banks`** — one emitter, a variable set of whole files `patches/bank_0xx.asm` (one per overflow bank; none when everything fits). `compiler._emit_all` merges the `{target: text}` it returns | `$80-$FF` |
 | `dispatch71` | `custom.rooms` (records, encounters, animation S99) + `custom.music` (room BGM table, S64) | `file:patches/bank_071.asm` | `$71` |
-| `palettes_a` | `custom.palettes` (placement a) | `region:…#room_palettes_a` | `$17` |
-| `render17` | `custom.rooms` (+ placement-b palettes) | `region:…#room_render_tables` | `$17` |
+| `palettes_a` | — (S137: emits a comment; the palettes go with the rooms, §2.46) | `region:…#room_palettes_a` | `$17` |
+| `render17` | — (S137: emits a comment; `emitters.render_lines` puts each room's rows + palettes into its place block, §2.46) | `region:…#room_render_tables` | `$17` |
 | `wram_steps` | `custom.rooms` + `custom.wram` | `region:…#wram_step_counters` | — |
 | `music74` | `custom.music` (+ `rooms[].music`) | `file:patches/bank_074.asm` | `$74` |
 | `music75` (S116) | `custom.music` (songs past bank $74's 16,000 B) | `file:patches/bank_075.asm` | `$75` |
@@ -613,6 +615,11 @@ user-confirmed hand-authored code:
   pasted into bank $60 and every place bank, `{P}` = the label suffix). `TEMPLATE_SIZE[$60]` 1,515
   (= addr(`SkillScriptPtrTable`) − $4000 in the S136 example game.sym; was 1,306), new
   `validators.PLACE_TEMPLATE_SIZE` 945 (1 + the reader block $423B-$45EA).
+* S137 re-pins (§2.46, ROADMAP ARC CAP2c): `bank_060_head.asm` (+ entry 13 `PlaceFwdRender`;
+  entry 8's comment) and `place_readers.asm` (+ entries 11 / 12 no-ops, entry 13
+  `CustomRenderCopy`) — current values in `templates/PINNED_SHA256`. `TEMPLATE_SIZE[$60]` 1,691
+  (`SkillScriptPtrTable` at `$469B` in the S137 example game.sym: head 590 B + readers 1,101 B),
+  `PLACE_TEMPLATE_SIZE` 1,102 (1 + the reader block `$424E-$469A`).
 * S129 re-pins (§2.42): `bank_071_head.asm` `cbd0cdec…d11c` (`MusicRulePick` + `TermsHold71`,
   the rule calls in `CustomRoomBGMResolve`; TEMPLATE_SIZE 1070 B; the S128 value `bb4151d2…`
   is historical); `bank_077_head.asm` `eb0f0997…7d88` (entry 11 `StoryCheck`, `StoryCommand`,
@@ -891,7 +898,9 @@ engine's scroll grid — capacities.json); the sub-table width is
 columns/rows (validator) and may not exceed 4×4.
 
 **Per-(screen, STATE) attr + palette tables in the VANILLA format** (S94b;
-engine change, template-free — patches/bank_017.asm `CustomAttrCheck` +
+**S137: the same tables, + `db n_states`, now sit in each room's place block
+and reach bank $17 through WRAM — §2.46; the bank $17 location below is
+history**; engine change, template-free — patches/bank_017.asm `CustomAttrCheck` +
 `CustomPalCheck`; supersedes the S94 interim 17-byte per-screen map). Bank
 $17's `room_render_tables` region emits `CustomAttrPtrTable` (one `dw` per
 custom room; `$0000` = no custom attr → the vanilla `AttrPtrTable` walk) →
@@ -3054,7 +3063,12 @@ menu is global (one Vault, one farm, one medal count) — any number of NPCs of 
 a `service` script → the vanilla NPC's own shape (`service_ops`): greeting (or, with
 `first_time`, `if_flag_set flag @known` / the intro / `set_flag` instead of it), op `$04
 <screen> <base>`, the farewell; the library adds `nop` + `init_dialog`; the egg appraiser
-and the namer open their bottom box with op `$3C`; the namer = YES / NO →
+and the namer open their bottom box with op `$3C`; **S137: the librarian too** (op `$3C`
+before the greeting — the library speaks into the box the greeting opened; talked to from
+the lower half, that was the TOP box and every two-box line was scrolled over the family
+list while the library drew its own bottom box: the text showed twice — user S137, PyBoy;
+the vanilla Library's counter always puts the player in the upper half; no `$3C` before
+the farewell, which `init_dialog` opens itself); the namer = YES / NO →
 `label:list` op `$04 9` → `check_and_branch $C8F4, 255, @bye` → `close_text` → op `$04
 15 0` (naming screen) → `goto @list`; the gate guide = its ask, `check_and_branch $C83C,
 1, @no`, op `$04 13 0`, `nop`, `init_dialog`, its bye. A script whose set is used (not
@@ -3729,6 +3743,41 @@ bank $60-class data lives is decided by the compiler (`editor2/core/places.py`; 
 - **Measured:** `tools/census_place_banks.py` (+ `--make-spill N`); the S136 demo
   (`examples/s136_echo_demo/`). Tests: `test_compiler.test_s136` (+ the ROM half and the PyBoy
   census with `--rom`).
+
+## §2.46 S137 — ROOM COLOURS IN THE PLACE BANKS: render rows + palettes out of bank $17 (ROADMAP ARC CAP2c)
+
+**Built S137; USER-CONFIRMED 2026-10-09 20:39 ("great please hand off files", after r2).** No schema change: palettes and the per-(screen, state) palette /
+attr choice (`states[n].palette` › `screens[k].palette` › `render.palette` › the vanilla source's
+palette; attr as in §2.11) mean what they meant; WHERE the bytes live changed (engine: ARCHITECTURE
+"Room colours in the place banks (S137)").
+
+- **`emitters.render_lines(prj, r, warnings)`** → part of `places.room_block` (after `_room_data`):
+  `RoomAttr_<mid>` (16 `dw`; a hole inside the room's size → the first screen's row + the S135
+  warning; outside → `$0000`), `ScrAttr_<mid>_<k>` = `dw <counter label>`, **`db n_states`** (new:
+  the reader clamps the counter to the last state), then per state `db attr_entry, attr_bank` / `dw
+  pal_ptr`; then `RPal_<mid>_<n>` = **32 B** (slots 0-3) per distinct project palette the room uses
+  (`emitters.palette_slots_asm`; the S96 `free_color1` marker as before). A palette several rooms
+  use is copied into each room's block (user decision S137: "Copies fine") — sizes stay exact.
+  A BORROWED vanilla palette (`Project.state_palette_ref` → `('addr', ptr)`) is emitted as `dw ptr |
+  $8000` — the reader leaves it in bank $17 (user S137: "the most robust thing": no copy that
+  could go stale). `state_palette_ref` returns `('palette', id)` for a project palette now (was
+  `('label', asm label)`). Placeholder / screenless rooms: no lines, `PlaceRenderTable` `$0000`.
+- **Tables:** `PlaceRenderTable{P}` (per place `dw RoomAttr_<mid>` / `$0000`) after
+  `PlaceCastTable{P}`; `places.ROOM_ROW_BYTES` 9 → 11.
+- **Bank $17:** regions `room_palettes_a` / `room_render_tables` emit comments only, so bank $17 no
+  longer grows with the project (its free space is a constant 4,651 B in every S137 build; it had no
+  space meter — DOC_AUDIT S137). `custom.palettes[].placement` is accepted and ignored.
+- **Cost:** a room's render rows + palettes now count against its home bank: the user's 11-room
+  project's bank $60 13,126 → 14,331 B (bank $17's 1,378 B of rows + 64 B palettes became 1,205 B
+  in $60 with 32 B palettes).
+- **Readers outside the game:** `editor2/core/render.py` (the ROM renderer) follows `PlaceDirectory`
+  → `PlaceRenderTable{P}` (bit 15 = a bank $17 palette); `builder.write_manifest` keeps the
+  `RoomAttr_` / `ScrAttr_` names (they sit in banks $60 / $80+ now).
+- **Measured:** `tools/census_place_banks.py` render checks (TOOLS_AND_DATA S137); the S137 demo
+  (`examples/s137_tint_demo/`). Tests: `test_compiler` 4e (rows in the place block, none in bank
+  $17), the S135 holes test (the rows found in any generated file), the S136 fixed sizes (1,691 /
+  1,102), the ROM byte count (a bank may now end in a palette's zero bytes), the PyBoy census;
+  `test_canvas` (a screen's palette reached its row).
 
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 

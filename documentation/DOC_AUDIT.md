@@ -857,3 +857,17 @@ mapping, a `rst $10` executing in bank $80). ✏️ = fixed in place this sessio
 | `tools/audit_mapid_range.py` keys `CustomPtrChase` ×2, `CustomStateRules`, `CustomMonsterCast`, `CustomReadInteract` | ✏️ retired | those readers index `[wPlaceIdx]`; the forwarders' loads keyed instead | selftest PASS clean 58 / patched 84 |
 | (note) bank $60 out-of-range reads (a script type past the last place — the transient `$70` with < 6 places, a sentinel `$54` with a custom `wMapID`) | ℹ️ behaviour change, deliberate | before S136 the reader indexed past `CustomScriptMasterTable` (garbage); now BC = `$FFFF` (end), steps / lists the dummy ones (with `DummyExits`), an op `$24` / `$61` word stepped over | CROSSBANK_ROOMS "S136 sites" |
 
+## S137 addendum (2026-10-09; room colours in the place banks — ROADMAP ARC CAP2c)
+
+| File / claim | Verdict | What is true | Evidence |
+|---|---|---|---|
+| ARCHITECTURE "LZ stream banks" — palettes "cannot move without code: ROADMAP CAP2c" | ✏️ completed | S137 added that code for custom rooms (bank $60 entry 13 → WRAM) | ARCHITECTURE "Room colours in the place banks (S137)" |
+| PROJECT_COMPILER §2.5 `placement` "pins the block to region A / B" | ✏️ superseded | ignored since S137: a palette is emitted (32 B) into each room's block | PROJECT_COMPILER §2.46 |
+| PROJECT_COMPILER §3 / §4 — regions `room_palettes_a` / `room_render_tables` hold the palettes / tables | ✏️ updated | both emit a comment since S137 | test_compiler 4e |
+| GATE_GENERATION §7.4, ROOM_DATA_FORMAT, CROSSBANK_ROOMS ceilings — custom tables in bank $17 | ✏️ updated | the rows + palettes live in the home bank; `CustomAttrCheck` no longer doubles `mapID − $6B` | CROSSBANK_ROOMS "S137 sites" |
+| `extracted/capacities.json` `free_rom_banks` "bank $17 3,937 B (room palettes + render tables live there)" | ✏️ updated | constant 4,651 B free since S137 (measured: four S137 builds) | the S137 builds |
+| (note) the space meter / `bank_usage` never measured bank $17 | ℹ️ gap, moot | the per-room data left bank $17 instead of gaining a meter | KEY_LESSONS S137 |
+| `tools/build_combined_tileset.py` "bank_017.asm palette wiring" (TOOLS_AND_DATA) | ⚠ dead path | it rewrites `CustomPaletteColors_6B:` in bank_017.asm, a label the compiler no longer emits (the compiler owns room palettes since S53 anyway) | grep |
+| `tools/audit_wram.py` "rerun after ANY wram.asm change" | ⚠ broken since S102 | stopped at `ds 2 * TILEANIM_MAX_GROUPS` ("unsupported ds expression"); S137 taught it `EQU` constants — its selftest now runs and FAILS: the `$DE74` scratch block (`wRoomRecScratch` … `wCustomRoomFlag`) classifies A′ (a `known_RAM_map` span over it), so `extracted/wram_usage.json` (last regenerated ~S100) was NOT regenerated | ROADMAP S137 backlog note |
+| (note) bank $17 / bank $60 out-of-range render reads | ℹ️ behaviour change, deliberate | before S137 a map id past the last room read past `CustomAttrPtrTable`; now HL = 0 → the Castle's colours; a screen word `$0000` → the Castle's (was a ROM0 walk) | ARCHITECTURE S137 |
+| (S137 r2) PROJECT_COMPILER §2.39 "a `service` script → the vanilla NPC's own shape" (the librarian) | ⚠ incomplete since S126 | the shape assumed the vanilla Library's geometry (the player in the upper half → the bottom box); from the lower half the library's two-box lines showed twice — op `$3C` added (§2.39, KEY_LESSONS S137) | PyBoy: lib2 (the hall librarian) == the original ROM's Library |

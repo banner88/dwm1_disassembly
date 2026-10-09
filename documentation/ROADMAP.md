@@ -2523,7 +2523,7 @@ the user picks.
       there). *User half:* the test ROM in SameBoy.
 - **CAP2 — the spill (split S135, user: "whatever works").** The S133 box bundled four
       independent changes; measured on the user's 11 rooms: $60 79 % / $64 79 % / $67 55 % / $17
-      3,259 B free — the class banks bind at ~14-15 such rooms. Three boxes (S136: + CAP2d, bank $6C split off CAP2b), each its own test ROM:
+      3,259 B free — the class banks bind at ~14-15 such rooms. Three boxes (S136: + CAP2d, bank $6C split off CAP2b; S137: + CAP2e, stale saves), each its own test ROM:
   - [x] **CAP2a — LZ streams: layouts, attr maps, tilesets past $64 / $67.** **Built S135;
         USER-CONFIRMED 2026-10-09 12:59 ("Yep all good can confirm").** Compiler-only (`DecompressTileLayout` takes the bank from every
         reference — ARCHITECTURE "LZ stream banks (S135)"): `Project.stream_plan()` first fit
@@ -2557,11 +2557,26 @@ the user picks.
         `05b8973d…`, user `341a5188…`, patched; warp A/B of every screen of the user's 11 rooms:
         script words / texts / lists identical). *User half:* MET — `DWM-S136-echo-test.gbc` in
         SameBoy.
-  - [ ] **CAP2c — palettes + render tables out of bank $17.** `CustomAttrCheck` copies the
-        current screen-state's row + its palette into WRAM (the walk and `LoadPal_46a1` read
-        WRAM); rows carry a palette bank. *Accept:* a project whose palettes / render rows
-        exceed bank $17's free space builds; PyBoy: every state's colours == the preview,
-        menus / battles / service screens restore them.
+  - [x] **CAP2c — palettes + render tables out of bank $17.** **Built S137; USER-CONFIRMED 2026-10-09 20:39 ("great please hand off files", after r2)** (user: "Continue on the 4 mb expansion" → the audit (bank $17 binds at
+        ≈35-40 rooms: the user's 11 rooms used 1,378 B of its 3,259 B free, the S136 demo left
+        1,371 B) → "1) Sure [CAP2c first] 2) Copies fine [a palette copied per room] 3) … just do
+        the most robust thing [borrowed vanilla palettes stay in bank $17] 4) Sounds good [the
+        TINTED HALLS test ROM]"). The rows + 32 B palettes are part of each PLACE BLOCK (not a
+        palette bank): bank $17 `CustomAttrCheck` far-calls bank $60 entry 13 `PlaceFwdRender` →
+        the home bank's `CustomRenderCopy` (state rules first, counter clamped to the last state)
+        → a one-room WRAM table (`wRenderTable` … `wRenderPal`, 43 B) the unchanged walk reads;
+        a borrow = pointer bit 15 (read in bank $17). ARCHITECTURE "Room colours in the place
+        banks (S137)", PROJECT_COMPILER §2.46. *Accept (machine half) MET:* bank $17 no longer
+        grows with the project (4,651 B free in every build); `census_place_banks.py` render
+        checks through bank $17 entries 0 / 1 (S137 demo: 147 screen-states over $60 / $81, every
+        state reached, 0 mismatched); PyBoy on the user's save: the demo's 64 screen-states ==
+        the editor preview, the painter's YES → state 1 colours and back (halls in $60 and $81),
+        colours restored after the field menu / a talk battle / the library (24 / 24), stairs
+        $60 → $81, a JOURNAL save + reload in a painted place-bank hall; the user's 33 screens
+        S136 vs S137: palette buffer + picture identical; pins move once (example `c31750e9…`,
+        patched). *User half:* `DWM-S137-tint-test.gbc` in SameBoy — all good except the
+        library (a project librarian talked to from below showed its two-box lines twice — a
+        S126 lowering gap, fixed r2: op `$3C`); r2 `DWM-S137r2-tint-test.gbc` USER-CONFIRMED 2026-10-09 20:39 ("great please hand off files", after r2).
   - [ ] **CAP2d — a room's own animated tiles past bank $6C (split from CAP2b, user S136: "Yes
         ok").** Bank $71 entry 3 `CustomAnimSource` far-calls bank $6C `CustomTileAnimate`, which
         reads `TileAnimRoomTable[mapID − $6B]` and GDMA-copies frames FROM ITS OWN BANK every field
@@ -2570,6 +2585,21 @@ the user picks.
         than $60 (the user's project: $6C 1,344 B of 16,384). *Accept:* a project whose own
         animations exceed bank $6C builds; PyBoy: every animated slot of rooms in a second bank
         steps through its authored frames (the S102 check), menus / battles heal.
+  - [ ] **CAP2e — stale saves: bound bank $71's per-room reads (found S137).** A save made
+        in a room the build lacks (map id past the last room — the user's own save stands in
+        S136 demo room `$78`) HANGS at CONTINUE: bank $71 entry 0 `CopyCustomRoomRecord` copies
+        `Custom26DDTable[mapID − $70]` unchecked → junk tileset bank → `DecompressTileLayout`
+        overwrites WRAM (`wMapID` → `$FF`) — PyBoy, S136 and S137 builds alike (KEY_LESSONS
+        S137). Next: compare against the table's length (an EQU like `ENC_TABLE_LEN`) and fall
+        back to a safe record (the Castle's, matching bank $60's dummy step + bank $17's Castle
+        colours); then census every bank $71 / $76 / $6C per-room reader with a map id past the
+        end (the S136 census's `step_past` idea). *Accept:* the user's `.sav` CONTINUEs in a
+        build of the user's project (11 rooms) into a screen with exits; PyBoy.
+  - [ ] **Tool drift: `tools/audit_wram.py` (found S137).** Broken since S102 (a `ds` with an
+        `EQU`) — S137 taught it EQUs; its selftest now FAILS: the `$DE74` scratch block classifies
+        A′ "rammap-span" (a `known_RAM_map` span over `wRoomRecScratch` … `wCustomRoomFlag`).
+        Find the span, fix the doc or the classifier, then regenerate `extracted/wram_usage.json`
+        (stale since ~S100: it lacks every WRAM carve S102-S137).
   - (moved to CAP3, S135) the place header / `wPlaceAttr` far copy: below 128 places the
         per-room tables of banks $71 / $76 / ROM0 `$26DD` do not overflow ($71 ≈ 60 B a
         room); they break only when ids repeat across regions.

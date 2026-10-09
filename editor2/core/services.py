@@ -579,7 +579,8 @@ def service_ops(prj, kind, sid, sv, ctx):
     """The script for one service NPC — the vanilla NPC's own shape: (the
     first visit's intro + its flag, else) the greeting, the opcode, the
     farewell; the namer's YES / NO + list / naming-screen loop; the library's
-    dialog re-open; the egg appraiser's / namer's bottom box (op $3C)."""
+    dialog re-open; the egg appraiser's / namer's / (S137) the librarian's bottom box
+    (op $3C)."""
     r = resolve(prj)
     repo = getattr(prj, 'repo_root', None)
     n = r['numbers'].get(sid) if sid else None
@@ -592,7 +593,14 @@ def service_ops(prj, kind, sid, sv, ctx):
             raise ServiceError(f"{ctx}.first_time: {{\"text\": <dialogue id>, \"flag\": <flag>}}")
         fl = prj._flag_index(ft['flag'], f"{ctx}.first_time")
         intro = ft['text']
-    box = [['op', '0x3C']] if kind in ('eggs', 'namer') else []
+    box = [['op', '0x3C']] if kind in ('eggs', 'namer', 'library') else []
+    # S137: the library too — its screen keeps speaking into the box the greeting opened
+    # (the text engine's box base $C83E); the vanilla Library's counter always puts the
+    # player in the upper half, so that box is the BOTTOM one. A librarian talked to from
+    # the lower half got the TOP box: every two-box line (the empty family's "You haven't
+    # caught any from / that family yet.") was scrolled at the top, over the family list,
+    # while the library drew its own box at the bottom — the text showed twice (user S137,
+    # PyBoy). The farewell box keeps the default rule (init_dialog opens it itself).
     if kind == 'gates':
         head = []
         if fl is not None:
@@ -628,7 +636,9 @@ def service_ops(prj, kind, sid, sv, ctx):
         seq += [['op', 'nop'], ['op', 'init_dialog']]
     seq += off
     if KINDS[kind]['bye'] is not None:
-        seq += box + [['text', _text_ref(prj, sid, kind, 2)]]
+        # after the library's init_dialog an op $3C would only arm the NEXT box (another
+        # talk's) — the library's farewell goes without it
+        seq += (box if kind != 'library' else []) + [['text', _text_ref(prj, sid, kind, 2)]]
     return seq + [['end']]
 
 

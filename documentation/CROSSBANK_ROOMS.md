@@ -49,6 +49,9 @@ one pinned block (`editor2/core/templates/place_readers.asm`) that indexes its b
 `[wPlaceIdx]`; bank $60's entries 0/1/2/4/5/8/9/10 look the place up in `PlaceDirectory` on every
 call and call its home bank — $60 itself or a place bank $80+ carrying its own copy of the block.
 ARCHITECTURE "Place banks (S136)"; sites below ("S136 sites").
+**S137 (ARC CAP2c):** + entry 13 (render row + palette → WRAM for bank $17 `CustomAttrCheck`); a
+room's render rows and palettes are part of its block. ARCHITECTURE "Room colours in the place
+banks (S137)"; sites below ("S137 sites").
 
 ### Bank $00 — `bank_000.asm` (ROM0)
 Two helper functions in 24 bytes of free space at $3FE8-$3FFF:
@@ -523,7 +526,7 @@ spot, $90 = step-on trigger — S98 names; ROOM_DATA_FORMAT), not a mapID.
 
 | Path | Idiom | Safe through |
 |---|---|---|
-| bank $60 CustomPtrChase, **CustomStateRules, CustomMonsterCast** (S133: missing from this row before), $17 CustomAttrCheck (+ its callers `label17_401d` / `label17_409e`, which double the returned index again) / CustomPalCheck | `sub $6B` then 8-bit `add a` | index $7F → **mapID $EA** — **enforced by the compiler since S133** (`project.CUSTOM_MID_MAX`, ProjectError past it; before S133 a room at $EB+ built and read another room's tables) |
+| bank $60 CustomPtrChase, **CustomStateRules, CustomMonsterCast** (S133: missing from this row before), $17 CustomAttrCheck (+ its callers `label17_401d` / `label17_409e`, which double the returned index again) / CustomPalCheck — **S136: the bank $60 readers index `[wPlaceIdx]`; S137: `CustomAttrCheck` returns index 0 of a WRAM table (no doubling of `mapID − $6B` left in bank $17)** | `sub $6B` then 8-bit `add a` | index $7F → **mapID $EA** — **enforced by the compiler since S133** (`project.CUSTOM_MID_MAX`, ProjectError past it; before S133 a room at $EB+ built and read another room's tables) |
 | bank $71 entry 0 (CopyCustomRoomRecord) | 16-bit `sla/rl` ×8; $70+ → Custom26DDTable[mapID−$70] | mapID $FE |
 | bank $71 entry 1 (CustomEncResolve) | `cp ENC_TABLE_LEN` bounds check | table length (compiler-emitted) |
 | bank $71 entry 2 (CustomRoomBGMResolve) | `cp $80 / ret nc` bounds check | see BGM cap below |
@@ -639,6 +642,19 @@ CUSTOM_ROOM_START` to the vanilla scan, then `PlaceOf` — CP_UNSIGNED). The cei
 (the key of entries 4 / 9 / 10) goes through the same `PlaceOf`: a type past the last place (the
 transient `$70` with fewer than 6 places, a sentinel `$54`) now ends the script (BC = `$FFFF`)
 instead of reading past the old master table. Selftest PASS (clean 58 / patched 84).
+
+### S137 sites (room colours, ROADMAP ARC CAP2c)
+
+Bank $17 `CustomAttrCheck` keeps its one `ld a, [wMapID]` but only compares it (`cp
+CUSTOM_ROOM_START / jr nc`) — the custom path far-calls bank $60 entry 13 and indexes nothing
+(verdict IDX8_SUB6B → CP_UNSIGNED). `StateRulesHook17` (its COPY load) is gone. The new load is
+`PlaceFwdRender` (→ `PlaceOf`: BOUNDED; no place → HL = 0 → the Castle fallback). Selftest PASS
+(clean 58 / patched 84); `extracted/mapid_range_audit.json` regenerated. **Found, NOT fixed
+(PROJECT_STATE Open defects S137):** bank $71 entry 0 `CopyCustomRoomRecord` indexes
+`Custom26DDTable[mapID − $70]` with no upper bound, so a map id past the last room (a save made
+in a room the project has since lost) copies junk as the room record — PyBoy: a junk tileset bank
+(`$E1`), `DecompressTileLayout` overwrites WRAM, `wMapID` → `$FF`, hang — in the S136 and the
+S137 build alike. The bank $60 / bank $17 paths are bounded since S136 / S137.
 
 ### Re-running the audit
 

@@ -22,6 +22,8 @@
 ;            NPC colours of the room's $A2 prefixes (any of the 8 OBJ palettes)
 ;   Entry 12: CustomDescentFeel — S123 r2: bank $0B CustomDescentInGate's body —
 ;            only a STAIRS-DOWN exit of a custom room is an in-gate floor change
+;   Entry 13: render row        — S137: bank $17 CustomAttrCheck: the current
+;            screen + state's attr row and palette -> WRAM (forwarded)
 ;
 ; S136 (ROADMAP ARC CAP2b) — PLACE BANKS. A place (custom room) keeps its
 ; scripts, tile patches, screens, NPC / exit lists, state rules and monster
@@ -29,7 +31,7 @@
 ; that do not fit (editor2/core/project.py place_plan, first fit); text
 ; sections are placed the same way. Every home bank carries the same reader
 ; block (templates/place_readers.asm — pasted below this head with no suffix,
-; and at $4001 of every place bank). Entries 0/1/2/4/5/8/9/10 are FORWARDERS:
+; and at $4001 of every place bank). Entries 0/1/2/4/5/8/9/10/13 are FORWARDERS:
 ; on EVERY call they look the place up in PlaceDirectory (map id or script
 ; type) / TextSectionBanks (text section) — nothing is cached, so the map-id
 ; writes outside the room commit (gate insert, boss floor, save load, new
@@ -55,6 +57,7 @@ SECTION "ROM Bank $060", ROMX[$4000], BANK[$60]
     dw PlaceFwdAttrs        ; Entry 10 — S119 op $61 in custom rooms (bank $04 ScriptCmd61 same-size redirect)
     dw NpcColourDraw        ; Entry 11 — S123 NPC colours (bank $06 NPCDrawSlot same-size redirect)
     dw CustomDescentFeel    ; Entry 12 — S123 r2 gate-flag exit feel (bank $0B CustomDescentInGate far-calls it)
+    dw PlaceFwdRender       ; Entry 13 — S137 render row + palette -> WRAM (bank $17 CustomAttrCheck)
 
 ; =============================================================================
 ; S136 — the place lookup
@@ -185,14 +188,32 @@ PlaceFwdText:
     ld l, $05
     jp PlaceGo
 
-; Entry 8 — state rules + monster cast of the current screen (bank $17
-; CustomAttrCheck via StateRulesHook17). Vanilla rooms / no place: nothing.
+; Entry 8 — state rules + monster cast of the current screen. Vanilla rooms /
+; no place: nothing. (S97-S136: bank $17 CustomAttrCheck called it through
+; StateRulesHook17; S137: the render reader, entry 13, runs the rules itself —
+; no caller left; kept so the entry numbers stay.)
 PlaceFwdRules:
     ld a, [wMapID]
     call PlaceOf
     ret c
     ld l, $08
     jp PlaceGo
+
+; Entry 13 (S137, ROADMAP ARC CAP2c) — bank $17 CustomAttrCheck, at the start
+; of BOTH bank $17 table walks (entry 0 the palette, entry 1 the attr map): the
+; place's reader runs the state rules, then copies the current screen + state's
+; render row (+ its palette, 32 B) into the WRAM walk block and returns
+; HL = wRenderTable. No place (stale save, past PLACE_COUNT): HL = 0 -> bank
+; $17 takes the Castle fallback, as a placeholder room always has.
+PlaceFwdRender:
+    ld a, [wMapID]
+    call PlaceOf
+    jr c, .none
+    ld l, $0D
+    jp PlaceGo
+.none:
+    ld hl, $0000
+    ret
 
 ; Entries 9 / 10 — script ops $24 / $61: a custom script's tile patch lives with
 ; its script (the place = the script type); anything else goes on to bank $0F
@@ -572,7 +593,8 @@ SkillScriptRead:
 ; home bank to wPlaceIdx and call the matching entry here. So every reader
 ; indexes its tables with [wPlaceIdx], never with wMapID - $6B.
 ; Entry numbers equal bank $60's: 0 step, 1 NPC list, 2 exit list, 4 script
-; word, 5 text, 8 state rules, 9 / 10 tile patches (3 / 6 / 7 = no-ops).
+; word, 5 text, 8 state rules, 9 / 10 tile patches, 13 render row (S137)
+; (3 / 6 / 7 / 11 / 12 = no-ops).
 ; =============================================================================
 PlaceEntries:
     dw CustomReadStep        ; 0
@@ -586,6 +608,9 @@ PlaceEntries:
     dw CustomStateRules      ; 8
     dw CustomDrawTiles       ; 9
     dw CustomDrawAttrs       ; 10
+    dw PlaceNoop             ; 11
+    dw PlaceNoop             ; 12
+    dw CustomRenderCopy      ; 13 (S137)
 
 PlaceNoop:
     ret
@@ -890,7 +915,8 @@ CopyExitListToBuffer:
 ; load). Idempotent, so it runs from every custom (re)load path:
 ;   * bank $17 CustomAttrCheck (the FIRST custom hook of a room load — the
 ;     attr/palette walk reads the counter before bank $0B Entry 0 does,
-;     PyBoy-measured S97), via StateRulesHook17 + rst $10 bank $60 entry 8;
+;     PyBoy-measured S97), via bank $60 entry 13 -> CustomRenderCopy below
+;     (S97-S136: StateRulesHook17 + rst $10 bank $60 entry 8);
 ;   * CustomReadStep (Entry 0) itself, before CustomPtrChase.
 ; Tables (generated, in the place's home bank):
 ;   PlaceRuleTable: dw per place (index wPlaceIdx), $0000 = none
@@ -1374,6 +1400,130 @@ CutPatchNibble:
     ret
 
 ; =============================================================================
+; Entry 13: CustomRenderCopy (S137, ROADMAP ARC CAP2c) — the RENDER ROW
+; =============================================================================
+; Bank $17 entries 0 (palette) and 1 (attr map) walk a VANILLA-format table:
+; table[A] dw -> [wScreenIndex] dw -> [counter ptr:2] -> + [counter] * 4 ->
+; [attr_entry, attr_bank, pal_ptr:2]; LoadPal_46a1 then copies slots 0-3
+; (32 B) from pal_ptr IN BANK $17. A place's table lives here instead (with its
+; palettes), so bank $17 CustomAttrCheck far-calls this through bank $60 entry
+; 13 and the walk reads the WRAM block built below (wram.asm wRenderTable…).
+; Runs the state rules first (this is the earliest custom hook of a room load,
+; PyBoy S97 — it used to be StateRulesHook17's job).
+; Tables (generated, this bank):
+;   PlaceRenderTable: dw per place (wPlaceIdx), $0000 = no table (placeholder)
+;   RoomAttr_<mid>:   16 x dw (screen 0-15) -> ScrAttr ($0000 = no screen)
+;   ScrAttr_<mid>_<k>: dw step counter, db n_states, n x [db attr_entry,
+;                     attr_bank / dw pal_ptr]
+;   pal_ptr bit 15 SET = a vanilla palette in BANK $17 (a borrow; the walk reads
+;   it there: bit 15 cleared), else a palette block of THIS bank (32 B copied
+;   to wRenderPal). Bit 15 is free: every ROMX address is $4000-$7FFF.
+; The counter is clamped to the last state (the old bank $17 table had no
+; count: a counter past the states read the next screen's bytes).
+; Returns HL = wRenderTable (the walk's base; bank $17 uses index 0) or
+; HL = 0 = no table here (no place table / screen word $0000 — the Castle
+; fallback; the old walk followed a $0000 screen word into ROM0, S135).
+; Clobbers A/BC/DE.
+; -----------------------------------------------------------------------------
+CustomRenderCopy:
+    call CustomStateRules     ; the state (and the monster cast) first
+    ld a, [wPlaceIdx]
+    add a
+    ld hl, PlaceRenderTable
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a
+    or h
+    jr z, .none                  ; no render table (placeholder room)
+    ld a, [wScreenIndex]
+    and $0F
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a
+    or h
+    jr z, .none                  ; a screen the room does not have
+    ld e, [hl]
+    inc hl
+    ld d, [hl]                   ; DE = the screen's step counter
+    inc hl
+    ld a, [hl+]
+    ld b, a                      ; B = n_states (>= 1)
+    ld a, [de]
+    cp b
+    jr c, .stateOk
+    ld a, b
+    dec a                        ; past the last state: the last state
+.stateOk:
+    add a
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a                      ; HL = this state's row
+    ld a, [hl+]
+    ld [wRenderRow + 2], a       ; attr entry
+    ld a, [hl+]
+    ld [wRenderRow + 3], a       ; attr bank
+    ld a, [hl+]
+    ld e, a
+    ld d, [hl]                   ; DE = pal_ptr
+    bit 7, d
+    jr z, .own
+    res 7, d                     ; a vanilla palette: read in bank $17 itself
+    jr .row
+.own:
+    ld hl, wRenderPal
+    ld b, 32                     ; slots 0-3
+.copy:
+    ld a, [de]
+    ld [hl+], a
+    inc de
+    dec b
+    jr nz, .copy
+    ld de, wRenderPal
+.row:
+    ld a, e
+    ld [wRenderRow + 4], a
+    ld a, d
+    ld [wRenderRow + 5], a
+    ld a, LOW(wRenderZero)       ; the walk's "step counter" = a zero byte
+    ld [wRenderRow], a
+    ld a, HIGH(wRenderZero)
+    ld [wRenderRow + 1], a
+    xor a
+    ld [wRenderZero], a
+    ld a, LOW(wRenderRow)
+    ld [wRenderScr], a
+    ld a, HIGH(wRenderRow)
+    ld [wRenderScr + 1], a
+    ld a, [wScreenIndex]         ; the walk adds wScreenIndex * 2 to this word
+    add a
+    ld b, a
+    ld a, LOW(wRenderScr)
+    sub b
+    ld [wRenderTable], a
+    ld a, HIGH(wRenderScr)
+    sbc $00
+    ld [wRenderTable + 1], a
+    ld hl, wRenderTable
+    ret
+.none:
+    ld hl, $0000
+    ret
+
+; =============================================================================
 ; PLACE DATA (generated) — bank $60: SCRIPT DATA (generated) + places
 ; Bank $60's own data: the custom skills' scripts, the place directory,
 ; the text section banks, its places' tables and blocks, its text
@@ -1493,6 +1643,16 @@ PlaceCastTable:
     dw $0000   ; $71 (no monster NPCs)
     dw $0000   ; $72 (no monster NPCs)
     dw $0000   ; $73 (no monster NPCs)
+PlaceRenderTable:   ; S137: render rows + palettes (bank $17 via entry 13)
+    dw RoomAttr_6B   ; $6B gate_island
+    dw RoomAttr_6C   ; $6C dusk_mirror
+    dw RoomAttr_6D   ; $6D gate_rotation
+    dw $0000   ; $6E (no render table: the Castle's)
+    dw $0000   ; $6F (no render table: the Castle's)
+    dw RoomAttr_70   ; $70 ember_keystone
+    dw RoomAttr_71   ; $71 medal_vault
+    dw RoomAttr_72   ; $72 arena_clone
+    dw RoomAttr_73   ; $73 island_copy
 PlaceSourceTable:
     db $04   ; $6B — gate_island
     db $04   ; $6C — dusk_mirror
@@ -1608,6 +1768,27 @@ CustomRoom0_S4_NPCs:
 CustomRoom0_S4_Exits:
     db $03, $07, $01, $00, $08, $04, $05  ; south edge exit (3,7) -> GreatTree screen 8 (screen_byte $08 copied from WellStairway per KEY_LESSONS v14-v18)
     db $FF
+
+RoomAttr_6B:    ; gate_island: render rows, screen 0-15 (S137, CAP2c)
+    dw ScrAttr_6B_0, $0000, $0000, $0000
+    dw ScrAttr_6B_4, $0000, $0000, $0000
+    dw $0000, $0000, $0000, $0000
+    dw $0000, $0000, $0000, $0000
+ScrAttr_6B_0:
+    dw wCustomStep_Room6B_S0    ; step counter
+    db 1    ; states
+    db $01, $64    ; state 0: attr entry, bank
+    dw RPal_6B_0    ; state 0: palette pal_6b
+ScrAttr_6B_4:
+    dw wCustomStep_Room6B_S4    ; step counter
+    db 1    ; states
+    db $03, $64    ; state 0: attr entry, bank
+    dw RPal_6B_0    ; state 0: palette pal_6b
+RPal_6B_0:   ; palette pal_6b (slots 0-3)
+    db $EE, $04, $FF, $6B, $7A, $02, $00, $00  ; palette 0  04ee 6bff 027a 0000
+    db $40, $7D, $FF, $6B, $81, $7F, $00, $00  ; palette 1  7d40 6bff 7f81 0000
+    db $F0, $00, $FF, $6B, $1A, $02, $00, $00  ; palette 2  00f0 6bff 021a 0000
+    db $A1, $01, $FF, $6B, $AA, $03, $00, $00  ; palette 3  01a1 6bff 03aa 0000
 
 ; --- $6C (dusk_mirror) scripts ---
 CustomRoom1_ScriptPtrTable:
@@ -1736,6 +1917,27 @@ CustomRoom1_S4_NPCs:
 CustomRoom1_S4_Exits:
     db $FF
 
+RoomAttr_6C:    ; dusk_mirror: render rows, screen 0-15 (S137, CAP2c)
+    dw ScrAttr_6C_0, $0000, $0000, $0000
+    dw ScrAttr_6C_4, $0000, $0000, $0000
+    dw $0000, $0000, $0000, $0000
+    dw $0000, $0000, $0000, $0000
+ScrAttr_6C_0:
+    dw wCustomStep_Room6C_S0    ; step counter
+    db 1    ; states
+    db $01, $64    ; state 0: attr entry, bank
+    dw RPal_6C_0    ; state 0: palette pal_6c
+ScrAttr_6C_4:
+    dw wCustomStep_Room6C_S4    ; step counter
+    db 1    ; states
+    db $03, $64    ; state 0: attr entry, bank
+    dw RPal_6C_0    ; state 0: palette pal_6c
+RPal_6C_0:   ; palette pal_6c (slots 0-3)
+    db $CC, $51, $16, $7B, $07, $39, $21, $10  ; pal0 ground(slate)
+    db $C4, $48, $16, $7B, $88, $61, $21, $10  ; pal1 water(navy)
+    db $D0, $59, $16, $7B, $C8, $30, $21, $10  ; pal2 accent(violet)
+    db $C6, $31, $16, $7B, $E2, $18, $21, $10  ; pal3 tree(teal)
+
 ; --- $6D (gate_rotation) scripts ---
 CustomRoom2_ScriptPtrTable:
     dw CustomRoom2_Scr00   ; [0] noop_entry
@@ -1761,6 +1963,22 @@ CustomRoom2_S0_NPCs:
 CustomRoom2_S0_Exits:
     db $05, $03, $00, $80, $00, $00, $00  ; descent: PIT walk (col5,row3), gate_flag=$80 -> next gate floor (Pillar B; byte-identical to special rooms $50/$51)
     db $FF
+
+RoomAttr_6D:    ; gate_rotation: render rows, screen 0-15 (S137, CAP2c)
+    dw ScrAttr_6D_0, $0000, $0000, $0000
+    dw $0000, $0000, $0000, $0000
+    dw $0000, $0000, $0000, $0000
+    dw $0000, $0000, $0000, $0000
+ScrAttr_6D_0:
+    dw wCustomStep_Room6D_S0    ; step counter
+    db 1    ; states
+    db $01, $64    ; state 0: attr entry, bank
+    dw RPal_6D_0    ; state 0: palette pal_6d
+RPal_6D_0:   ; palette pal_6d (slots 0-3)
+    db $C4, $11, $E9, $2B, $48, $23, $00, $00  ; sub-pal 0
+    db $E9, $2B, $E9, $2B, $E9, $2B, $00, $00  ; sub-pal 1
+    db $05, $16, $E9, $2B, $48, $23, $00, $00  ; sub-pal 2
+    db $A4, $11, $E9, $2B, $A9, $27, $00, $00  ; sub-pal 3
 
 ; --- $6E (reserved_6e) placeholder (never entered; all screens invalid) ---
 CustomRoom3_SubTable:
@@ -1802,6 +2020,22 @@ CustomRoom5_S0_NPCs:
 CustomRoom5_S0_Exits:
     db $03, $01, $6B, $00, $00, $07, $06  ; edge exit (3,1) -> Room $6B spawn (7,6) — close the loop
     db $FF
+
+RoomAttr_70:    ; ember_keystone: render rows, screen 0-15 (S137, CAP2c)
+    dw ScrAttr_70_0, $0000, $0000, $0000
+    dw $0000, $0000, $0000, $0000
+    dw $0000, $0000, $0000, $0000
+    dw $0000, $0000, $0000, $0000
+ScrAttr_70_0:
+    dw wCustomStep_Room70_S0    ; step counter
+    db 1    ; states
+    db $01, $64    ; state 0: attr entry, bank
+    dw RPal_70_0    ; state 0: palette pal_70
+RPal_70_0:   ; palette pal_70 (slots 0-3)
+    db $2E, $09, $7F, $12, $1A, $0E, $00, $00  ; sub-pal 0
+    db $7F, $12, $7F, $12, $7F, $12, $00, $00  ; sub-pal 1
+    db $50, $09, $7F, $12, $1A, $0E, $00, $00  ; sub-pal 2
+    db $0D, $09, $7F, $12, $5D, $0E, $00, $00  ; sub-pal 3
 
 ; --- $71 (medal_vault) scripts ---
 CustomRoom6_ScriptPtrTable:
@@ -1954,6 +2188,22 @@ CustomRoom6_S0_Exits:
     db $07, $06, $16, $00, $00, $01, $02  ; back to MedalMan (1,2) vault-door tile; spawn-on-exit-tile is vanilla-precedented (SecretPassage->MedalMan lands on the north exit)
     db $08, $03, $72, $00, $01, $04, $07  ; S92 staircase (visible, metatile 8,3) -> arena_clone; sb/spawn copied from the vanilla GreatTree->Lobby exit
     db $FF
+
+RoomAttr_71:    ; medal_vault: render rows, screen 0-15 (S137, CAP2c)
+    dw ScrAttr_71_0, $0000, $0000, $0000
+    dw $0000, $0000, $0000, $0000
+    dw $0000, $0000, $0000, $0000
+    dw $0000, $0000, $0000, $0000
+ScrAttr_71_0:
+    dw wCustomStep_Room71_S0    ; step counter
+    db 1    ; states
+    db $08, $64    ; state 0: attr entry, bank
+    dw RPal_71_0    ; state 0: palette pal_71
+RPal_71_0:   ; palette pal_71 (slots 0-3)
+    db $90, $09, $FF, $6B, $FF, $16, $00, $00
+    db $D3, $0D, $FF, $6B, $3F, $17, $00, $00
+    db $91, $09, $FF, $6B, $DD, $16, $00, $00
+    db $4E, $09, $FF, $6B, $FF, $16, $00, $00
 
 ; --- $72 (arena_clone) scripts ---
 CustomRoom7_ScriptPtrTable:
@@ -3896,6 +4146,34 @@ CustomRoom7_S2_Exits:
     db $04, $00, $07, $00, $06, $04, $07  ; vanilla exit -> map $07 [verbatim]
     db $FF
 
+RoomAttr_72:    ; arena_clone: render rows, screen 0-15 (S137, CAP2c)
+    dw ScrAttr_72_0, ScrAttr_72_1, ScrAttr_72_2, $0000
+    dw $0000, $0000, $0000, $0000
+    dw $0000, $0000, $0000, $0000
+    dw $0000, $0000, $0000, $0000
+ScrAttr_72_0:
+    dw wCustomStep_Room72_S0    ; step counter
+    db 1    ; states
+    db $04, $64    ; state 0: attr entry, bank
+    dw RPal_72_0    ; state 0: palette pal_arena_clone
+ScrAttr_72_1:
+    dw wCustomStep_ArenaClone_S1    ; step counter
+    db 2    ; states
+    db $05, $64    ; state 0: attr entry, bank
+    dw RPal_72_0    ; state 0: palette pal_arena_clone
+    db $05, $64    ; state 1: attr entry, bank
+    dw RPal_72_0    ; state 1: palette pal_arena_clone
+ScrAttr_72_2:
+    dw wCustomStep_Room72_S2    ; step counter
+    db 1    ; states
+    db $06, $64    ; state 0: attr entry, bank
+    dw RPal_72_0    ; state 0: palette pal_arena_clone
+RPal_72_0:   ; palette pal_arena_clone (slots 0-3)
+    db $D0, $19, $FF, $6B, $3D, $43, $00, $00
+    db $32, $05, $FF, $6B, $9F, $02, $00, $00
+    db $32, $05, $FF, $6B, $99, $2E, $00, $00
+    db $32, $05, $FF, $6B, $99, $2E, $00, $00
+
 ; --- $73 (island_copy) scripts ---
 CustomRoom8_ScriptPtrTable:
     dw CustomRoom8_Scr00   ; [0] arm_encounters
@@ -3998,6 +4276,27 @@ CustomRoom8_S4_NPCs:
 CustomRoom8_S4_Exits:
     db $03, $07, $01, $00, $08, $04, $05  ; south edge exit (3,7) -> GreatTree screen 8 (screen_byte $08 copied from WellStairway per KEY_LESSONS v14-v18)
     db $FF
+
+RoomAttr_73:    ; island_copy: render rows, screen 0-15 (S137, CAP2c)
+    dw ScrAttr_73_0, $0000, $0000, $0000
+    dw ScrAttr_73_4, $0000, $0000, $0000
+    dw $0000, $0000, $0000, $0000
+    dw $0000, $0000, $0000, $0000
+ScrAttr_73_0:
+    dw wCustomStep_Room73_S0    ; step counter
+    db 1    ; states
+    db $01, $64    ; state 0: attr entry, bank
+    dw RPal_73_0    ; state 0: palette pal_6b
+ScrAttr_73_4:
+    dw wCustomStep_Room73_S4    ; step counter
+    db 1    ; states
+    db $03, $64    ; state 0: attr entry, bank
+    dw RPal_73_0    ; state 0: palette pal_6b
+RPal_73_0:   ; palette pal_6b (slots 0-3)
+    db $EE, $04, $FF, $6B, $7A, $02, $00, $00  ; palette 0  04ee 6bff 027a 0000
+    db $40, $7D, $FF, $6B, $81, $7F, $00, $00  ; palette 1  7d40 6bff 7f81 0000
+    db $F0, $00, $FF, $6B, $1A, $02, $00, $00  ; palette 2  00f0 6bff 021a 0000
+    db $A1, $01, $FF, $6B, $AA, $03, $00, $00  ; palette 3  01a1 6bff 03aa 0000
 
 CustomTextSection0:
     dw CustomText_00   ; $0A00: item offer [Y/N]

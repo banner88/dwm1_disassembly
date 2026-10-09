@@ -6,7 +6,9 @@ select an NPC → **Service…** → pick one:
 - **Vault keeper** — stores items and gold.
 - **Farm keeper** — drop off / pick up / check / separate / let monsters
   sleep (Pulio's menu).
-- **Librarian** — looks up the monsters met so far, family by family.
+- **Librarian** — looks up the monsters met so far, family by family. (S137: the
+  librarian's words always open in the bottom box, as in the game's Library — talked to
+  from below, a top box used to show the library's longer lines twice.)
 - **Monster Namer** — renames a monster (not one another master named). Its
   question is a YES / NO; the naming screen follows the list.
 - **Medal Man** — counts the TinyMedals the player brings and gives an egg

@@ -6221,3 +6221,55 @@ save in a deleted room would load into a screen with no exits (KEY_LESSONS v14-v
 DummyExits has five). **Rule:** a new fallback copies the existing fallback's whole set (step AND
 exits), not just the part that prevents the crash.
 
+## S137 — room colours in the place banks (ROADMAP ARC CAP2c)
+
+**A size measured by trimming trailing zeros is not a size.**
+**Symptom (S137, the ROM half of test_s136):** "the bank's bytes == the plan's count" failed for two
+place banks by 2 B each after the rooms' palettes joined their blocks. **Root cause:** the test
+measured a bank as `len(bank.rstrip(b'\0'))`; a bank whose last item is a palette ends in colour 3 =
+`$0000`, so the measure dropped real bytes. The plan was right. **Fix:** the test now allows the
+plan to exceed the trimmed length only by zero bytes and requires nothing after the plan's end.
+**Rule:** when data may legitimately end in zeros, measure the end from the layout (a label, the
+plan), not from the bytes.
+
+**A census that pokes a state counter never sees a ruled state.** The first S137 render census
+poked each state into the screen's counter and read the result — all green, but on a screen with a
+"state 0 when nothing else holds" rule the reader's rules ran first and wrote 0 back: state 1 was
+never reached. **Fix:** a scenario per rule with its flags made true, and a `render_states` check
+that every state was actually reached. **Rule:** when the code under test may overwrite the input
+you poke, record what was actually exercised and assert the coverage, not just the equality.
+
+**A data class in a bank nobody meters fills silently.** The rooms' render rows + palettes grew
+bank $17 by ~120 B a room since S94b; the space meter never had a bank $17 bar and the pre-build
+overflow check never looked at it — the first sign would have been rgblink refusing the build at
+≈35-40 rooms. **Rule:** every bank the compiler writes per-room data into is metered or the data
+moves to a bank that is (S137 moved it).
+
+**Flags are numbered per project; a save carries the numbers of the build it was made in.** The
+user's S136 save had the S136 demo's flags set (`$0159`-`$015F`); the S137 demo's new flags took the
+same numbers from the safe pool, so five TINTED HALLs loaded "already painted" (PyBoy). **Fix:** the
+demo's entrance NPC clears the demo's flags; the walk-through reads a flag before judging a toggle.
+**Rule:** a test ROM continued from an older save must not assume its own flags start clear.
+
+**A per-room table indexed by map id without a bound turns a stale save into a hang.** Found S137
+(PyBoy, the user's save stands in map `$78` — an S136 demo room — loaded into a build of the
+user's project with 11 rooms): bank $71 `CopyCustomRoomRecord` copies `Custom26DDTable[mapID −
+$70]` unchecked → a junk tileset bank `$E1` → `DecompressTileLayout` overwrites WRAM → `wMapID` =
+`$FF` → hang; the S136 build hangs the same way. Bank $60 (S136) and bank $17 (S137) are bounded.
+**Rule:** the S136 rule ("every 'not found' fallback must leave a way out") applies to EVERY
+per-room table — the next one to bound is bank $71's (PROJECT_STATE Open defects S137).
+
+**A vanilla screen effect inherits the vanilla room's geometry.** (S137 r2, user: "For families
+with NO monsters caught, the text box DUPLICATES.") **Symptom:** a project librarian, talked to
+from the lower half of the screen: the empty family's two-box line ("You haven't caught any
+from / that family yet.") was printed at the bottom AND scrolled at the top, over the family
+list (PyBoy). The vanilla Library and the same librarian talked to from the upper half: once.
+**Root cause:** the library speaks through the text engine into the box the greeting opened —
+base `$C83E`, chosen by bank $06's placer opposite the player (`$FFD3` 1 = top, 2 = bottom). The
+vanilla Library's counter keeps the player in the upper half, so the game only ever met the
+bottom box; the S126 lowering copied the vanilla SCRIPT, not the geometry it relies on. (The
+horizontal scroll was a red herring — screen 0 vs 1 differed only in where the player stood.)
+**Fix:** op `$3C` (bottom box) before the librarian's greeting (`services.service_ops`).
+**Rule:** when a vanilla menu / screen effect runs outside its room, list what the room
+guaranteed (player position, box side, scroll, tile slots) and pin each one in the lowering —
+and test it from every side of the NPC.

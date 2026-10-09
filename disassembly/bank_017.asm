@@ -23,6 +23,15 @@ SECTION "ROM Bank $017", ROMX[$4000], BANK[$17]
     dw label17_4751
 
 
+; S137 annotation: entry 0 = the ROOM PALETTE load (slots 0-3 from the room's
+; table row, then entry 9's forcing). The same walk as entry 1 below: table
+; [room] dw -> [wScreenIndex] dw -> [step counter:2] -> + [counter]*4 ->
+; [attr_entry, attr_bank, pal_ptr:2]; HL = pal_ptr goes to LoadPal_46a1 with
+; B = 4 slots, C = slot 0 — read IN THIS BANK (the palette must be in bank $17
+; or in WRAM). The counter is not range-checked: a counter past the states reads
+; the next row's bytes. (Patched builds: custom rooms' rows + palettes live in
+; their home bank and reach this walk through WRAM — bank $17 CustomAttrCheck,
+; ROADMAP ARC CAP2c, S137.)
 label17_401d:
     ld a, [wIsGBC]
     or a
@@ -1114,6 +1123,11 @@ jr_017_4671:
     ret
 
 
+; S137 annotation: LoadPal_46a1 — copy B palettes (B*8 bytes) from HL (in the
+; CURRENT bank, $17, or WRAM) into the WRAM BG palette buffer $C797 + C*8 (slot
+; C). Callers: entry 0 (the room, B = 4 / C = 0), the gate floor path
+; ($51F5[type]), entry 9's slot-7 system load. GBC only. The buffer is pushed to
+; BCPD later (label17_46dd / the fades).
 LoadPal_46a1:
     ld a, [wIsGBC]
     or a

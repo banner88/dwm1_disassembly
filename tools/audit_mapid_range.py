@@ -135,7 +135,7 @@ V = {
     ("bank_000.asm", "MapIDClampForPalette", 0): "CLAMPED",  # the merged clamp body itself (unsigned cp/ret c)
     ("bank_00b.asm", "SharedPtrChase", 0): "TBL_GUARDED",    # reached only for mapID <$6B (custom diverted upstream)
     # S123 r2: CustomDescentInGate is now a far call; its wMapID test moved to bank $60
-    ("bank_017.asm", "CustomAttrCheck", 0): "IDX8_SUB6B",
+    ("bank_017.asm", "CustomAttrCheck", 0): "CP_UNSIGNED",   # S137: cp $6B / jr nc -> bank $60 entry 13 (no table index here; was IDX8_SUB6B)
     ("bank_017.asm", "CustomPalCheck", 0): "IDX8_SUB6B",
     # ---- S99 adjudication sweep: sites added S73-S97 without keys (the
     # selftest had been failing since; tool not in verify check 5) + the S99
@@ -146,7 +146,8 @@ V = {
                                                              # table bytes are validator-bounded to <$6B (+ $6B none)
     ("bank_071.asm", "CustomAnimSource", 0): "IDX8_SUB6B",   # S99: sub $6B + cp ANIM_TABLE_LEN bound
     ("bank_017.asm", "FreeColor1Hook", 0): "CP_UNSIGNED",    # S96
-    ("bank_017.asm", "StateRulesHook17", 0): "COPY",         # S97: reloads A for CustomAttrCheck (IDX8_SUB6B)
+    # ("bank_017.asm", "StateRulesHook17", 0) retired S137: the hook is gone (the render
+    # reader, bank $60 entry 13, runs the state rules — CROSSBANK_ROOMS "S137 sites")
     ("bank_060.asm", "VanillaExitResolve", 0): "CP_UNSIGNED",  # S70/S94b
     ("bank_072.asm", "AnchorField14Tail", 0): "CP_UNSIGNED", # S73 (cp $30)
     ("bank_073.asm", "MenuOpenFreePal", 0): "CP_UNSIGNED",   # S96 r4
@@ -208,6 +209,10 @@ V = {
     ("bank_060.asm", "PlaceFwdInteract", 0): "CP_UNSIGNED",      # S136: cp CUSTOM_ROOM_START (vanilla scan), then PlaceOf
     ("bank_060.asm", "PlaceFwdExit", 0): "BOUNDED",              # S136: -> PlaceOf
     ("bank_060.asm", "PlaceFwdRules", 0): "BOUNDED",             # S136: -> PlaceOf / ret c
+    # S137 (ARC CAP2c): bank $17 CustomAttrCheck no longer indexes a table with
+    # mapID - $6B (its custom path far-calls bank $60 entry 13); the new load is the
+    # entry-13 forwarder's, through PlaceOf. Reasoning: CROSSBANK_ROOMS "S137 sites".
+    ("bank_060.asm", "PlaceFwdRender", 0): "BOUNDED",            # S137: -> PlaceOf; no place -> HL = 0
 }
 
 # Site-count pins (S66). A mismatch = the tree changed; re-adjudicate.

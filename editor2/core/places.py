@@ -3,14 +3,15 @@
 A *place* is what the editor calls a room. Everything bank $60 used to hold
 for a room — its script table + scripts, its tile patches (ops $24 / $61), its
 screen sub-table, step entries, NPC / exit lists, state rules and monster
-cast — is the place's BLOCK, and a block lives in one HOME BANK: bank $60
+cast; S137 (ROADMAP ARC CAP2c): + its render rows and palettes, which bank $17
+used to hold — is the place's BLOCK, and a block lives in one HOME BANK: bank $60
 first, then the place banks $80+ (first fit, in map id order; the banks come
 from Project._take_ext_bank after the LZ stream banks, S135). The project's
 text is placed the same way, one 256-id SECTION at a time (section = text id
 >> 8 - $0A; TextQueueCheck_Ext / SayText put it in $C822).
 
 Engine (editor2/core/templates/bank_060_head.asm + place_readers.asm): bank
-$60's entries 0/1/2/4/5/8/9/10 look the place up in `PlaceDirectory` (per
+$60's entries 0/1/2/4/5/8/9/10/13 look the place up in `PlaceDirectory` (per
 place: home bank, index in that bank) / `TextSectionBanks` on EVERY call,
 write the index to wPlaceIdx and call that bank's reader entry; every home
 bank carries the same reader block, whose tables are indexed by wPlaceIdx.
@@ -28,7 +29,7 @@ from . import formats as F
 
 HOME_BANK = 0x60
 BANK_SIZE = 0x4000
-ROOM_ROW_BYTES = 9           # PlaceRoomTable / Script / Rule / Cast (dw) + Source (db)
+ROOM_ROW_BYTES = 11          # PlaceRoomTable / Script / Rule / Cast / Render (dw) + Source (db)
 # auto-numbered text ids start a new section before a section's texts pass
 # this many bytes, so one section always fits a place bank (a full section of
 # 256 texts at ~80 B is ~20 KB — more than a bank)
@@ -62,7 +63,7 @@ def _payload(lines):
 
 def room_block(prj, r, warnings):
     """(lines, row) of one place: row = (subtable, script table, rules|None,
-    cast|None, source map id)."""
+    cast|None, source map id, render table|None)."""
     from . import emitters as E
     tag = E.room_tag(r)
     src = F.val(r.get('source_mapID', 0))
@@ -75,7 +76,7 @@ def room_block(prj, r, warnings):
                  f"    dw {tag}_Scr00   ; [0] room entry (no-op)",
                  f"{tag}_Scr00:",
                  "    dw $FFFF", ""]
-        return lines, (f"{tag}_SubTable", f"{tag}_ScriptPtrTable", None, None, src)
+        return lines, (f"{tag}_SubTable", f"{tag}_ScriptPtrTable", None, None, src, None)
     text_names = prj.text_comments()
     if r.get('scripts'):
         lines = E._room_scripts(prj, r, text_names, warnings)
@@ -97,7 +98,10 @@ def room_block(prj, r, warnings):
         cast_lbl = f"{tag}_MonsterCast"
         lines += E._monster_cast_lines(cast_lbl, casts)
     lines += E._room_data(prj, r)
-    return lines, (f"{tag}_SubTable", f"{tag}_ScriptPtrTable", rules_lbl, cast_lbl, src)
+    rlines, render_lbl = E.render_lines(prj, r, warnings)     # S137 (CAP2c)
+    lines += rlines
+    return lines, (f"{tag}_SubTable", f"{tag}_ScriptPtrTable", rules_lbl, cast_lbl, src,
+                   render_lbl)
 
 
 def text_block(prj, si, sec):
@@ -233,7 +237,7 @@ def _fill(prj, warnings, place, banks, home, text_home, sections):
     for r in prj.rooms:
         lines, row = room_block(prj, r, warnings)
         size = _payload(lines) + ROOM_ROW_BYTES
-        b = place(size, f"room {r.get('id')!r} (its scripts + screens + lists)")
+        b = place(size, f"room {r.get('id')!r} (its scripts + screens + lists + colours)")
         home[F.val(r['mapID'])] = (b, len(banks[b]['rooms']))
         banks[b]['rooms'].append((r, lines, row))
     for si, sec in enumerate(sections):
@@ -260,6 +264,10 @@ def _bank_tables(plan_, bank):
     out.append(f"PlaceCastTable{P}:")
     out += [f"    dw {row[3]}   ; {F.hexb(mid)} {n}" if row[3]
             else f"    dw $0000   ; {F.hexb(mid)} (no monster NPCs)" for mid, n, row in rows]
+    out.append(f"PlaceRenderTable{P}:   ; S137: render rows + palettes (bank $17 via entry 13)")
+    out += [f"    dw {row[5]}   ; {F.hexb(mid)} {n}" if row[5]
+            else f"    dw $0000   ; {F.hexb(mid)} (no render table: the Castle's)"
+            for mid, n, row in rows]
     out.append(f"PlaceSourceTable{P}:")
     out += [f"    db {F.hexb(row[4])}   ; {F.hexb(mid)} — {n}" for mid, n, row in rows]
     lo_hi = plan_['span'].get(bank)

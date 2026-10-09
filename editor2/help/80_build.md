@@ -23,6 +23,14 @@ full and the **new** bar counts these banks too. A single room is limited to one
 bank (about 15 KB of scripts and lists — far more than any room needs); the build
 names a room that is bigger.
 
+**Room colours travel with the room (S137):** the palettes a room uses and its
+colour rows (which palette and colour grid each screen and state shows) are part
+of the room's space too — they sit in the same bank as its scripts. Before S137
+they all shared one small bank of the game ($17), which ran out at roughly 35-40
+rooms. A palette that several rooms use is stored once per room (32 bytes: the
+four colour sets the game loads). Colours borrowed from an original room are
+not copied — the game still reads them where they always were.
+
 Messages in the **Build log**:
 
 - **ERROR** — the build stops; the message names the room / script / field. A

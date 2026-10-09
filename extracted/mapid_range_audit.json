@@ -531,7 +531,7 @@
   {
    "tree": "clean",
    "file": "bank_017.asm",
-   "line": 36,
+   "line": 45,
    "label": "label17_401d",
    "occ": 0,
    "pattern": [
@@ -542,7 +542,7 @@
   {
    "tree": "clean",
    "file": "bank_017.asm",
-   "line": 107,
+   "line": 116,
    "label": "jr_017_4071",
    "occ": 0,
    "pattern": [
@@ -553,7 +553,7 @@
   {
    "tree": "clean",
    "file": "bank_017.asm",
-   "line": 136,
+   "line": 145,
    "label": "label17_409e",
    "occ": 0,
    "pattern": [
@@ -1040,7 +1040,7 @@
   {
    "tree": "patched",
    "file": "bank_017.asm",
-   "line": 107,
+   "line": 116,
    "label": "jr_017_4071",
    "occ": 0,
    "pattern": [
@@ -1051,20 +1051,18 @@
   {
    "tree": "patched",
    "file": "bank_017.asm",
-   "line": 2742,
+   "line": 2767,
    "label": "CustomAttrCheck",
    "occ": 0,
    "pattern": [
-    "add_a",
-    "cp",
-    "sub"
+    "cp"
    ],
-   "verdict": "IDX8_SUB6B"
+   "verdict": "CP_UNSIGNED"
   },
   {
    "tree": "patched",
    "file": "bank_017.asm",
-   "line": 2777,
+   "line": 2793,
    "label": "CustomPalCheck",
    "occ": 0,
    "pattern": [
@@ -1075,22 +1073,13 @@
   {
    "tree": "patched",
    "file": "bank_017.asm",
-   "line": 2917,
+   "line": 2910,
    "label": "FreeColor1Hook",
    "occ": 0,
    "pattern": [
     "cp"
    ],
    "verdict": "CP_UNSIGNED"
-  },
-  {
-   "tree": "patched",
-   "file": "bank_017.asm",
-   "line": 3002,
-   "label": "StateRulesHook17",
-   "occ": 0,
-   "pattern": [],
-   "verdict": "COPY"
   },
   {
    "tree": "patched",
@@ -1140,7 +1129,7 @@
   {
    "tree": "patched",
    "file": "bank_060.asm",
-   "line": 114,
+   "line": 117,
    "label": "PlaceFwdStep",
    "occ": 0,
    "pattern": [],
@@ -1149,7 +1138,7 @@
   {
    "tree": "patched",
    "file": "bank_060.asm",
-   "line": 127,
+   "line": 130,
    "label": "PlaceFwdInteract",
    "occ": 0,
    "pattern": [
@@ -1161,7 +1150,7 @@
   {
    "tree": "patched",
    "file": "bank_060.asm",
-   "line": 141,
+   "line": 146,
    "label": "PlaceFwdExit",
    "occ": 0,
    "pattern": [],
@@ -1170,7 +1159,7 @@
   {
    "tree": "patched",
    "file": "bank_060.asm",
-   "line": 186,
+   "line": 196,
    "label": "PlaceFwdRules",
    "occ": 0,
    "pattern": [],
@@ -1179,7 +1168,16 @@
   {
    "tree": "patched",
    "file": "bank_060.asm",
-   "line": 239,
+   "line": 209,
+   "label": "PlaceFwdRender",
+   "occ": 0,
+   "pattern": [],
+   "verdict": "BOUNDED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_060.asm",
+   "line": 267,
    "label": "CutPatchRoute",
    "occ": 0,
    "pattern": [
@@ -1190,7 +1188,7 @@
   {
    "tree": "patched",
    "file": "bank_060.asm",
-   "line": 324,
+   "line": 352,
    "label": "CustomDescentFeel",
    "occ": 0,
    "pattern": [
@@ -1201,7 +1199,7 @@
   {
    "tree": "patched",
    "file": "bank_060.asm",
-   "line": 350,
+   "line": 378,
    "label": "NpcColourDraw",
    "occ": 0,
    "pattern": [
@@ -1212,7 +1210,7 @@
   {
    "tree": "patched",
    "file": "bank_060.asm",
-   "line": 441,
+   "line": 469,
    "label": "VanillaExitResolve",
    "occ": 0,
    "pattern": [
@@ -1223,7 +1221,7 @@
   {
    "tree": "patched",
    "file": "bank_060.asm",
-   "line": 525,
+   "line": 553,
    "label": "GateAwareDispatch",
    "occ": 0,
    "pattern": [
@@ -1234,7 +1232,7 @@
   {
    "tree": "patched",
    "file": "bank_060.asm",
-   "line": 710,
+   "line": 742,
    "label": "CopyNPCListToBuffer",
    "occ": 0,
    "pattern": [

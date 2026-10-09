@@ -22,6 +22,8 @@
 ;            NPC colours of the room's $A2 prefixes (any of the 8 OBJ palettes)
 ;   Entry 12: CustomDescentFeel — S123 r2: bank $0B CustomDescentInGate's body —
 ;            only a STAIRS-DOWN exit of a custom room is an in-gate floor change
+;   Entry 13: render row        — S137: bank $17 CustomAttrCheck: the current
+;            screen + state's attr row and palette -> WRAM (forwarded)
 ;
 ; S136 (ROADMAP ARC CAP2b) — PLACE BANKS. A place (custom room) keeps its
 ; scripts, tile patches, screens, NPC / exit lists, state rules and monster
@@ -29,7 +31,7 @@
 ; that do not fit (editor2/core/project.py place_plan, first fit); text
 ; sections are placed the same way. Every home bank carries the same reader
 ; block (templates/place_readers.asm — pasted below this head with no suffix,
-; and at $4001 of every place bank). Entries 0/1/2/4/5/8/9/10 are FORWARDERS:
+; and at $4001 of every place bank). Entries 0/1/2/4/5/8/9/10/13 are FORWARDERS:
 ; on EVERY call they look the place up in PlaceDirectory (map id or script
 ; type) / TextSectionBanks (text section) — nothing is cached, so the map-id
 ; writes outside the room commit (gate insert, boss floor, save load, new
@@ -55,6 +57,7 @@ SECTION "ROM Bank $060", ROMX[$4000], BANK[$60]
     dw PlaceFwdAttrs        ; Entry 10 — S119 op $61 in custom rooms (bank $04 ScriptCmd61 same-size redirect)
     dw NpcColourDraw        ; Entry 11 — S123 NPC colours (bank $06 NPCDrawSlot same-size redirect)
     dw CustomDescentFeel    ; Entry 12 — S123 r2 gate-flag exit feel (bank $0B CustomDescentInGate far-calls it)
+    dw PlaceFwdRender       ; Entry 13 — S137 render row + palette -> WRAM (bank $17 CustomAttrCheck)
 
 ; =============================================================================
 ; S136 — the place lookup
@@ -185,14 +188,32 @@ PlaceFwdText:
     ld l, $05
     jp PlaceGo
 
-; Entry 8 — state rules + monster cast of the current screen (bank $17
-; CustomAttrCheck via StateRulesHook17). Vanilla rooms / no place: nothing.
+; Entry 8 — state rules + monster cast of the current screen. Vanilla rooms /
+; no place: nothing. (S97-S136: bank $17 CustomAttrCheck called it through
+; StateRulesHook17; S137: the render reader, entry 13, runs the rules itself —
+; no caller left; kept so the entry numbers stay.)
 PlaceFwdRules:
     ld a, [wMapID]
     call PlaceOf
     ret c
     ld l, $08
     jp PlaceGo
+
+; Entry 13 (S137, ROADMAP ARC CAP2c) — bank $17 CustomAttrCheck, at the start
+; of BOTH bank $17 table walks (entry 0 the palette, entry 1 the attr map): the
+; place's reader runs the state rules, then copies the current screen + state's
+; render row (+ its palette, 32 B) into the WRAM walk block and returns
+; HL = wRenderTable. No place (stale save, past PLACE_COUNT): HL = 0 -> bank
+; $17 takes the Castle fallback, as a placeholder room always has.
+PlaceFwdRender:
+    ld a, [wMapID]
+    call PlaceOf
+    jr c, .none
+    ld l, $0D
+    jp PlaceGo
+.none:
+    ld hl, $0000
+    ret
 
 ; Entries 9 / 10 — script ops $24 / $61: a custom script's tile patch lives with
 ; its script (the place = the script type); anything else goes on to bank $0F

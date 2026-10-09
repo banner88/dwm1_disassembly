@@ -415,7 +415,20 @@ wStoryFlag:: db ;d509 — the last story check's answer
 ; (entries 0/1/2/4/5/8/9/10) and the home bank's readers (place_readers.asm)
 ; index their tables with it. Not a cache: nothing reads it outside one call.
 wPlaceIdx:: db ;d50a — the place's index in its home bank (one call's scratch)
-wCustomPool:: ds $5A4 - 132 - 5 - 2 * TILEANIM_MAX_GROUPS - 2 - 18 - 26 - 8 - 256 - 1 - 2 - 160 - 12 - 1 - 514 - 23 - 1 - 1 ;d50b-d5e4 — transient reserve (was $664; FX1 carved 64+128; S97 132; S102 69; S105 2; S111 18; S114 26; S115 8; S117 256 wExtFlags + 1 wShopID; S117b 2 push scratch; S121 160 wMillyLayout; S123 12 NPC colours; S125 1 wHubReason; S126 514: the service tile save + wServiceLines; S127 23: wBreedLast + wBreedSlots + the roll scratch; S129 1: wStoryFlag; S136 1: wPlaceIdx)
+; S137 (ROADMAP ARC CAP2c) — the RENDER WALK block. Bank $17 entries 0 / 1 walk
+; table[A] dw -> [wScreenIndex] dw -> [counter ptr:2] -> + [counter]*4 ->
+; [attr_entry, attr_bank, pal_ptr:2]; a custom room's rows and palettes now
+; live in its HOME BANK, so CustomAttrCheck far-calls bank $60 entry 13, whose
+; reader (place_readers.asm CustomRenderCopy) rebuilds this block for the
+; current screen + state on EVERY call and returns HL = wRenderTable, A = 0:
+; the unchanged bank $17 walk then reads WRAM. Not a cache — written right
+; before each walk. Transient.
+wRenderTable:: dw ;d50b — wRenderScr - 2 * wScreenIndex (the walk adds it back)
+wRenderScr:: dw ;d50d — = wRenderRow
+wRenderRow:: ds 6 ;d50f — dw wRenderZero, db attr entry, attr bank, dw palette
+wRenderZero:: db ;d515 — always 0 (the "step counter" the walk reads)
+wRenderPal:: ds 32 ;d516-d535 — slots 0-3 of a place palette (bank $17 LoadPal_46a1 copies from here)
+wCustomPool:: ds $5A4 - 132 - 5 - 2 * TILEANIM_MAX_GROUPS - 2 - 18 - 26 - 8 - 256 - 1 - 2 - 160 - 12 - 1 - 514 - 23 - 1 - 1 - 43 ;d536-d5e4 — transient reserve (was $664; FX1 carved 64+128; S97 132; S102 69; S105 2; S111 18; S114 26; S115 8; S117 256 wExtFlags + 1 wShopID; S117b 2 push scratch; S121 160 wMillyLayout; S123 12 NPC colours; S125 1 wHubReason; S126 514: the service tile save + wServiceLines; S127 23: wBreedLast + wBreedSlots + the roll scratch; S129 1: wStoryFlag; S136 1: wPlaceIdx; S137 43: the render walk block)
 ; FX1 (S71): wPoolBounce — 128-byte staging for sleep-pool bank-2 record
 ; swaps (per-byte scratch in CF3PoolSwapRecord). Transient. (The v1 drain's
 ; halved-pending scratch use was removed with the S71v2 exp-scale veto.)

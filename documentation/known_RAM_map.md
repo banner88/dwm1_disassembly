@@ -355,7 +355,15 @@
                  wPlaceIdx $D50A (S136, ARC CAP2b: the place's index inside its home bank —
                  bank $60 PlaceOf writes it before EVERY forwarded call, the home bank's
                  reader block indexes its tables with it; one call's scratch, never a cache) /
-                 wCustomPool $D50B-$D5E4 (transient reserve; $D50A before S136, $D509 before S129, $D4F2 before S127,
+                 the RENDER WALK block $D50B-$D535 (S137, ARC CAP2c; 43 B, rebuilt by the
+                 home bank's CustomRenderCopy (bank $60 entry 13) at the start of EVERY bank
+                 $17 entry 0 / 1 walk of a custom room — never a cache): wRenderTable $D50B
+                 (= wRenderScr - 2 * wScreenIndex; the walk adds it back), wRenderScr $D50D
+                 (= wRenderRow), wRenderRow $D50F-$D514 (dw wRenderZero, db attr entry, attr
+                 bank, dw palette pointer), wRenderZero $D515 (always 0: the "step counter"
+                 the walk reads), wRenderPal $D516-$D535 (slots 0-3 of the state's project
+                 palette; a borrowed vanilla palette is read in bank $17 instead) /
+                 wCustomPool $D536-$D5E4 (transient reserve; $D50B before S137, $D50A before S136, $D509 before S129, $D4F2 before S127,
                  $D2F0 before S126, $D2EF before S125, $D2E3 before S123, $D243
                  before S121) /
                  wPoolBounce $D5E5-$D664 (128 B, FX1: sleep-pool swap

@@ -153,7 +153,8 @@ caller's bank by reading `[$4000]` and take the `$DA78` lock.
   $09 / $12 / $15) and bank $77 `BreedClose`. None caches or compares a bank number.
 - **What is pinned is the TABLES, not the data:** vanilla step tables in bank $0B, custom ones in
   bank $60, gate rows in bank $16, attr / palette tables in bank $17 (`pal_ptr` is read while bank
-  $17 is mapped — palettes cannot move without code: ROADMAP CAP2c).
+  $17 is mapped — palettes cannot move without code; S137 (CAP2c) added that code for custom rooms:
+  "Room colours in the place banks" below).
 - **Patched builds (S135):** the compiler's `Project.stream_plan()` places the project's streams
   first fit — layouts / attr maps in bank $64, tilesets in $67, then overflow banks $80, $81, …
   (any kind mixed; `patches/bank_0xx.asm`). Measured: `tools/census_stream_banks.py` (346 streams
@@ -203,6 +204,49 @@ PLACE BANKS $80+ (compiler `editor2/core/places.py`, first fit after the stream 
   save + reload — in rooms of bank $60 and of place bank $81, texts from $82-$84; an A/B by warps of
   every screen of the user's 11 rooms (S135 vs S136 build): every script word, text and list
   identical (branch words compared by label — their addresses moved).
+
+### Room colours in the place banks (S137 — ROADMAP ARC CAP2c; built S137, USER-CONFIRMED)
+
+Until S136 a custom room's RENDER ROWS (per screen and state: attr map entry + bank, palette
+pointer) and its PALETTES lived in bank $17 (`CustomAttrPtrTable` → `RoomAttr_<mid>` →
+`ScrAttr_<mid>_<k>`, compiler regions `room_render_tables` / `room_palettes_a`), because the two
+bank $17 walks that read them (entry 0 `label17_401d`, the palette; entry 1 `label17_409e`, the
+attr map) read every word — and `LoadPal_46a1` the palette's bytes — with bank $17 mapped. Bank
+$17 had ≈3.3 KB free for them: ~118-125 B a room, full at ≈35-40 rooms (measured S137 on the
+user's project and the S136 demo — and no meter watched it).
+- **Now part of the place's block** (`emitters.render_lines`, `places.room_block`): `RoomAttr_<mid>`
+  (16 dw), `ScrAttr_<mid>_<k>` = `dw step counter, db n_states`, then per state `db attr_entry,
+  attr_bank / dw pal_ptr`, and `RPal_<mid>_<n>` = the 32 B (slots 0-3 — the only slots the game
+  loads for a custom room) of each project palette the room uses (a copy per room; the S96
+  free-colour-1 marker in colour 3 bit 15 kept). A BORROWED vanilla palette is not copied: its
+  `pal_ptr` is the bank $17 address with **bit 15 set** (free: ROMX addresses are `$4000-$7FFF`).
+  Per bank, `PlaceRenderTable[wPlaceIdx]` (`$0000` = a placeholder room).
+- **The walk reads WRAM.** Bank $17 `CustomAttrCheck` (entered by both walks with HL = the vanilla
+  `AttrPtrTable`; it returns the table base in HL and the index in A) now, for a map id ≥ `$6B`,
+  far-calls **bank $60 entry 13 `PlaceFwdRender`** → `PlaceOf` → the home bank's reader **entry 13
+  `CustomRenderCopy`** (place_readers.asm), which runs the state rules first (the job of
+  StateRulesHook17, S97-S136 — gone), walks the place's table, clamps the counter to the last state,
+  and builds a fake one-room table in WRAM: `wRenderTable` ($D50B) = `wRenderScr` − 2·wScreenIndex,
+  `wRenderScr` = `wRenderRow`, `wRenderRow` = `dw wRenderZero` + the row (pal_ptr = `wRenderPal`
+  after a 32 B copy, or the borrowed bank $17 address), `wRenderZero` = 0, `wRenderPal`
+  ($D516-$D535). It returns HL = `wRenderTable`; `CustomAttrCheck` returns A = 0 — the UNCHANGED
+  vanilla walk then lands on the row, and `LoadPal_46a1` copies the palette from WRAM (or from bank
+  $17 for a borrow). HL = 0 (no place — a stale save past the last place; a placeholder; a screen
+  word `$0000`) → the Castle fallback a placeholder room has always had, instead of S135's ROM0
+  `$0000` walk.
+- **Stateless, like CAP2b:** rebuilt on every call (both walks call it; menus, battles, service
+  screens and the fades reload through entry 0 again), so nothing needs refreshing when the map id
+  changes outside the commit. `rst $10` clobbers BC on the way in and A/F on the way back — the
+  walk sets B/C/D/E itself after `CustomAttrCheck`, so only HL / A matter (KEY_LESSONS S136).
+- **Measured:** `tools/census_place_banks.py` render checks END TO END through bank $17 (stub calls of
+  bank $17 entries 1 and 0: the attr map at `$C200` == the project's stream, palette slots 0-3 of
+  `$C797` == the project palette / the original ROM's borrowed bytes under the engine's forcing;
+  every state reached by its counter or by its rule's flags) — example 13 + the S137 demo 147
+  screen-states over banks $60 / $81, 0 mismatched; PyBoy: the S137 demo's 64 screen-states == the
+  editor preview, painter talk → state 1 colours and back, colours restored after the field menu, a
+  talk battle and the library screen in halls of bank $60 and $81, stairs $60 → $81, a JOURNAL save
+  + reload in a painted place-bank hall; the user's 33 screens S136 vs S137 build: palette buffer and
+  picture identical.
 
 ## Key RAM Regions
 

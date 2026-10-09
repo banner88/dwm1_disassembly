@@ -1,5 +1,53 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-09 (Session 135 — **ROADMAP ARC CAP2a BUILT: LAYOUTS, ATTR MAPS AND
+> TILESETS SPILL INTO THE 4 MB ROM'S NEW BANKS — FIRST FIT FROM $64 / $67 INTO $80, $81, …; THE GAME
+> DRAWS THEM == THE EDITOR (PYBOY, 48 + 12 SCREENS); A CUSTOM ROOM'S UNDEFINED SCREEN NO LONGER
+> CRASHES** (user: "Continue on the 4 mb expansion" → the CAP2 audit + split proposal → "1) yes [the
+> S134 4 MB ROM tested] 2) I suppose whatever works. Also feel free to use subagents" — the allocation
+> questions were internal, decided: home banks first, the place header moves to CAP3).
+> **Built S135; USER-CONFIRMED 2026-10-09 12:59 ("Yep all good can confirm").** Test ROM `DWM-S135-overflow-test.gbc` (`ce0b4ef8…`, patched):
+> the user's project + 16 BRAND-NEW rooms OVERFLOW HALL 1-16 (one per gate theme, own tileset copy,
+> 3 maze screens each); halls 1-3 in $64 / $67, then $80, tilesets of halls 15-16 in $81; way in: the
+> S135 DEMO NPC in Cities_FOUNT (3, 4); each guide names its banks; its project:
+> `examples/s135_overflow_demo/` (`build_demo.py`).
+> **The audit (user-measured need):** the user's 11 rooms fill $60 79 % / $64 79 % / $67 55 % / $17
+> 3,259 B free — the class banks bind at ~14-15 such rooms, long before 128 ids. CAP2 split
+> (ROADMAP): **CAP2a** streams (this session), **CAP2b** place banks for scripts / text / lists (bank
+> $60 forwarders; a STATELESS bank $60 directory lookup instead of a cached `wPlaceBank` — the five
+> wMapID writers outside the commit would each need a refresh), **CAP2c** palettes + render tables
+> out of bank $17; the place header / `wPlaceAttr` → CAP3 (per-room tables of $71 / $76 do not
+> overflow below 128 places: $71 ≈ 60 B a room).
+> **The engine (traced, subagent + read; annotated both trees):** ROM0 `DecompressTileLayout`
+> ($1627) is the ONE reader of layouts, attr maps and BG tilesets: D = bank (8 bits), stream = the
+> word at $4001 + 2E of that bank (≤ 256 a bank), never crosses $7FFF, decodes with interrupts on
+> (the audio swap reads [$4000] → self-ID load-bearing). Every reference carries its bank (room
+> step [id, bank], bank $17 render row [attr_entry, attr_bank], $26DD [gfx_id, gfx_bank]) → **no
+> engine change**: CAP2a is compiler-only.
+> **The compiler:** `Project.stream_plan()` — layouts (tiles, attr), then tilesets, declaration
+> order; first fit: home bank ($64 / $67), then the overflow banks already open, else the next bank
+> $80+ (`_take_ext_bank`, CAP2b's allocator too); any kind shares an overflow bank. Resolvers return
+> the plan's (bank, entry); an authored `{bank: $64|$67, entry: N}` keeps its S92 meaning (the N-th
+> declared stream). `emit_stream_banks` ('multi:' registry target) → `patches/bank_0xx.asm` per
+> overflow bank, INCLUDEd by `bank_ext.asm`; `--apply` removes stale ones. Meters: `bank_usage` +
+> the overflow check see them; the status bar's $64 / $67 go amber (not red) when full, a "new"
+> bar counts banks $80-$FF of 128. A project that fits is byte-identical: **the pin `807d9668…`
+> (patched) and the user's `aae43261…` (patched) unchanged.**
+> **Measured:** `tools/census_stream_banks.py` (example + 48 generated rooms, 346 streams, banks
+> $80-$86, $83 filled to 16,383 B): every stream decodes from the ROM at its (bank, entry); PyBoy 12
+> screens == the editor preview (0 tiles differing). The test ROM on the user's `.sav`: CONTINUE →
+> Cities_FOUNT → the DEMO NPC YES → all 16 halls × 3 screens == the preview (0 differing; screen
+> changes inside overflow rooms), every guide's YES to the next hall, the last NO home.
+> **Found + fixed (PyBoy):** a custom room's screen inside its size but not defined (a hole, e.g.
+> screens 0 + 5 of a 2 × 2 room) had render row `$0000`; the bank $17 walk follows it into ROM0 →
+> game mode `$FE` and a hang when the player walked in. Now the row is the room's first screen's +
+> a build warning (`emitters.room_holes`); no project the user has contains a hole.
+> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 1431 PASSED (`test_s135`); test_app
+> PASS; test_canvas `--rom` PASS. An independent read-only review of the diff found one defect (a stream
+> the compiler could not build shipped EMPTY instead of stopping the build) — fixed + tested. `EDITOR_REVISION` S135 (help 80_build, 90_limits).
+> **Next:** ARC CAP2b (the user's SameBoy test of the overflow halls passed) (place banks — scripts,
+> text, NPC / exit lists; the demo itself shows why: 16 short guides took the user's $60 to 97 %).
+
 > Last verified: 2026-10-09 (Session 134 — **ROADMAP ARC CAP1 BUILT: EVERY BUILD IS A 4 MB ROM —
 > BANKS $80-$FF SELF-ID'D, THE BANK RULE CHECKED ON EVERY BUILD; THE GAME NEVER SELECTS A BANK ≥ $80
 > ON ITS OWN (MEASURED)** (user: "ARE THERE ANY DOWNSIDES TO MOVING TO A 4 mb rom" → the list →

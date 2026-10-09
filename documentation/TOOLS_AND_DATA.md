@@ -1642,3 +1642,24 @@ p_tf_surge 7 --ecount 3 --sched 1:0x29:1,2:0x81:0,3:0x81:0,4:0x2b:0 --php 999 --
 | review (subagent, read-only) | the CAP2b diff: one regression (text-section jump onto an explicit id → fixed + test), out-of-range exits empty (→ DummyExits), manifest banks, $60 "nearly full" noise, plan rollback, census gaps (patches, out-of-range exits → added), a test that could flake (first fit → replayed) | — |
 | measurement scripts (scratch, not committed) | the ECHO walk (`t2.py`), save / reload (`t5.py`), YES warps + a battle (`t12.py`), the warp A/B (`t11.py`) | results in PROJECT_STATE S136; method PYBOY_DEBUGGING S136 |
 
+## S137 rows (ROADMAP ARC CAP2c — room colours in the place banks)
+
+| Tool / data | What changed | Check |
+|---|---|---|
+| `editor2/core/emitters.py` | NEW `render_lines` (a room's `RoomAttr_` / `ScrAttr_` (+ `db n_states`) / `RPal_<mid>_<n>` 32 B palettes; borrowed vanilla palettes `ptr \| $8000`), NEW `palette_slots_asm`; `emit_region_render_tables` / `emit_region_palettes_a` emit comments only | test_compiler 4e + S135 holes |
+| `editor2/core/places.py` | `room_block` appends the render lines; `PlaceRenderTable{P}`; `ROOM_ROW_BYTES` 11 | test_s136 (plan == ROM) |
+| `editor2/core/project.py` | `state_palette_ref` → `('palette', id)` | — |
+| `editor2/core/services.py` (S137 r2) | the librarian's script opens with op `$3C` (the bottom box; the library's two-box lines showed twice from a top box — user) | test_compiler S126 librarian; PyBoy `lib2.py` == the original ROM's Library |
+| `editor2/core/templates/bank_060_head.asm` + `place_readers.asm` (re-pinned) | entry 13 `PlaceFwdRender`; reader entry 13 `CustomRenderCopy` (+ 11 / 12 no-ops) | PINNED_SHA256 |
+| `editor2/core/validators.py` | `TEMPLATE_SIZE[$60]` 1,691, `PLACE_TEMPLATE_SIZE` 1,102 | test_s136 sizes |
+| `editor2/core/render.py` | attrs + palettes via `PlaceDirectory` → `PlaceRenderTable[_Pxx]`; bit 15 = a bank $17 palette | 33 / 33 user screens == the S136 renderer on the S136 ROM; test_canvas `--rom` |
+| `patches/bank_017.asm` (hand) | `CustomAttrCheck` → bank $60 entry 13; `StateRulesHook17` removed; annotations at `label17_401d` / `LoadPal_46a1` (also `disassembly/bank_017.asm`, labels + comments only) | verify check 1 (clean MD5) |
+| `patches/bank_060.asm`, `patches/wram.asm` (regenerated) | the example's place blocks with render rows; the render walk block `$D50B-$D535` | verify check 2 == pin `c31750e9…` (patched) |
+| `tools/census_place_banks.py` | S137 render checks end to end through bank $17 entries 1 / 0 (+ entry 13's HL, every state reached by counter or rule flags, placeholders / past-the-end → HL 0); `--negative` corrupts a render check too | example 2,191 / S137 demo 7,419 checks (render 147 over $60 / $81), 0 mismatched; `--negative` fails |
+| `tools/audit_mapid_range.py` + `extracted/mapid_range_audit.json` (regenerated) | `StateRulesHook17` key retired, `CustomAttrCheck` → CP_UNSIGNED, `PlaceFwdRender` BOUNDED | selftest PASS (clean 58 / patched 84) |
+| `tools/audit_wram.py` | `EQU` constants in `ds` sizes (broken since S102); selftest still FAILS (A′ on the `$DE74` block — DOC_AUDIT S137); `wram_usage.json` NOT regenerated | ROADMAP note |
+| `extracted/capacities.json` | NEW `room_colours`; `free_rom_banks`, `campaign_place_cost`, `custom_mapids`, `place_banks`, `wram_custom_pool_free` refreshed | `json.load` |
+| `examples/s137_tint_demo/` (NEW: `build_demo.py` + `project.json` + `assets/`) | the S137 test ROM's project: the user's my-dwm-hack_28 + TINTED HALL 1-16 + the S137 DEMO NPC in Cities_FOUNT (3, 4) | builds; census + PyBoy (PROJECT_STATE S137) |
+| `editor2/tests/test_compiler.py`, `test_canvas.py` | 4e / holes / fixed sizes / ROM byte count updated; `REFERENCE_MD5` `c31750e9…` (patched) | ALL 1452 PASSED (`--rom`); test_canvas `--rom` PASS |
+| `editor2/__init__.py` `EDITOR_REVISION` S137 + help `80_build.md`, `90_limits.md`, `67_services.md` (r2), `_revision.md` | room colours travel with the room; the stale-save limit; the librarian's bottom box | test_app PASS |
+| measurement scripts (scratch, not committed) | the demo pictures vs the preview (`pics.py demo`), the user's A/B (`pics.py ab`), colour restore (`restore.py`), the walk-through (`walk.py`), the demo entrance (`entry.py`), the library's empty family frame by frame (`lib2.py` / `lib3.py` on the original ROM), service NPCs talked to from above (`svc.py`) | results in PROJECT_STATE S137; method PYBOY_DEBUGGING S137 |

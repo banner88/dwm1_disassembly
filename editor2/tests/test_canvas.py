@@ -552,9 +552,12 @@ def test_rom_v2(w, s, rid, keep_dir=None):
     assert pos() == (V2_STAND_B[0], V2_STAND_B[1] + 8), f'exit spawn: {pos()}'
     print('OK: GUI-authored exit in the servant clone walks the player into the Farm clone')
     # the per-screen palette reached the ROM: screen 1 of $6C points at pal_from_04
-    b17 = open(os.path.join(s.project_dir, 'build', 'patches', 'bank_017.asm')).read()
+    # S137 (ARC CAP2c): the rows + palettes live in the room's home bank
+    gdir = os.path.join(s.project_dir, 'build', 'patches')
+    b17 = "\n".join(open(os.path.join(gdir, f)).read() for f in sorted(os.listdir(gdir))
+                     if f.endswith('.asm'))
     seg = b17.split('ScrAttr_6C_1:', 1)[1].split('ScrAttr_6C_2:')[0]
-    assert 'CustomPaletteColors_pal_from_04' in seg, seg
+    assert 'palette pal_from_04' in seg, seg
     print('OK: screens[1].palette of the servant clone emitted into its ScrAttr row')
     if keep_dir:
         p.screen.image.save(os.path.join(keep_dir, 'pyboy_farm_s4.png'))

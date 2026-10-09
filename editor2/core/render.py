@@ -18,13 +18,14 @@ ROM + its game.sym. Design rules honored:
       tileset : mapID < $70 → ROM0 $26DD + mapID*8 (patched ROM carries the
                 $6B-$6F rows); mapID ≥ $70 → Custom26DDTable (bank $71,
                 (mapID-$70)*8) — mirrors CopyCustomRoomRecord (S42).
-      attrs + palette : CustomAttrPtrTable[mapID-$6B] → RoomAttr (16 dw) →
-                ScrAttr ([counter:2] + per state [attr_entry, attr_bank,
-                pal_ptr:2]) — the VANILLA table format (S94b), walked by
-                the engine itself after CustomAttrCheck swaps the base.
-                The pal_ptr → 8×4 RGB555 rows in bank $17 with the FORCED
-                idx1=$6BFF / idx3=$0000 rule (KEY_LESSONS S7/S39); a vanilla
-                pal_ptr (borrowed source palette) is read the same way.
+      attrs + palette : S137 (ARC CAP2c) — PlaceDirectory -> the home bank's
+                PlaceRenderTable[index] → RoomAttr (16 dw) → ScrAttr
+                ([counter:2], n_states, per state [attr_entry, attr_bank,
+                pal_ptr:2]) — what the home bank's CustomRenderCopy reads for
+                bank $17 CustomAttrCheck. pal_ptr: a 4-slot palette in the
+                home bank, or (bit 15 set) a vanilla palette in bank $17
+                (borrow); FORCED idx1=$6BFF / idx3=$0000 (KEY_LESSONS S7/S39).
+                (S94b-S136: CustomAttrPtrTable[mapID-$6B] in bank $17.)
   * Screens are bounded by project.json's `screens` keys (the source of
     truth) — never by walking the sub-table blind.
 
@@ -71,7 +72,7 @@ class RoomRenderer:
         self.rom = open(rom_path, 'rb').read()
         self.syms = parse_sym(sym_path)
         missing = [s for s in ('PlaceDirectory', 'Custom26DDTable',
-                               'CustomAttrPtrTable')
+                               'PlaceRenderTable')
                    if s not in self.syms]
         if missing:
             raise RuntimeError(
@@ -103,26 +104,35 @@ class RoomRenderer:
                 f"for mapID ${mapid:02X}")
         return res[0]
 
+    def _home(self, mapid):
+        """S136: (home bank, index there, label suffix) from PlaceDirectory."""
+        d = self._sym_off('PlaceDirectory') + (mapid - 0x6B) * 2
+        home, idx = self.rom[d], self.rom[d + 1]
+        return home, idx, ('' if home == 0x60 else f'_P{home:02X}')
+
     def _state_row(self, mapid, screen_index, state=0):
-        """S94b: walk the vanilla-format custom table exactly like the engine:
-        CustomAttrPtrTable[mid-$6B] -> RoomAttr (16 dw) -> ScrAttr
-        ([counter:2] + 4 B per state) -> (attr_entry, attr_bank, pal_ptr)."""
-        po = self._sym_off('CustomAttrPtrTable') + (mapid - 0x6B) * 2
-        room_ptr = self._u16(po)
+        """S137: the row the home bank's CustomRenderCopy copies for bank $17:
+        PlaceRenderTable[index] -> RoomAttr (16 dw) -> ScrAttr ([counter:2],
+        n_states, 4 B per state) -> (attr_entry, attr_bank, (pal bank, ptr))."""
+        home, idx, P = self._home(mapid)
+        room_ptr = self._u16(self._sym_off('PlaceRenderTable' + P) + idx * 2)
         if room_ptr == 0:
             return None
-        scr_ptr = self._u16(self._off(0x17, room_ptr) + screen_index * 2)
+        scr_ptr = self._u16(self._off(home, room_ptr) + screen_index * 2)
         if scr_ptr == 0:
             return None
-        row = self._off(0x17, scr_ptr) + 2 + state * 4
-        return (self.rom[row], self.rom[row + 1],
-                self._u16(row + 2))
+        n = self.rom[self._off(home, scr_ptr) + 2]
+        state = min(state, max(n, 1) - 1)          # the reader clamps the same way
+        row = self._off(home, scr_ptr) + 3 + state * 4
+        pal = self._u16(row + 2)
+        pal = (0x17, pal & 0x7FFF) if pal & 0x8000 else (home, pal)
+        return (self.rom[row], self.rom[row + 1], pal)
 
     def _palettes(self, mapid, source_mapid, screen_index=0, state=0):
         row = self._state_row(mapid, screen_index, state)
-        ptr = row[2] if row else 0
+        pbank, ptr = row[2] if row else (0, 0)
         if ptr:
-            base = self._off(0x17, ptr)
+            base = self._off(pbank, ptr)
             pals = []
             # the engine loads slots 0-3 only for custom rooms (b=$04):
             # 4 palettes from the block (custom 8x4 block or a 4-row
@@ -154,9 +164,8 @@ class RoomRenderer:
 
     def _layout(self, mapid, screen_index):
         # S136: the place's home bank + index (PlaceDirectory), then its table
-        d = self._sym_off('PlaceDirectory') + (mapid - 0x6B) * 2
-        home, idx = self.rom[d], self.rom[d + 1]
-        tbl = 'PlaceRoomTable' + ('' if home == 0x60 else f'_P{home:02X}')
+        home, idx, P = self._home(mapid)
+        tbl = 'PlaceRoomTable' + P
         sub = self._u16(self._sym_off(tbl) + idx * 2)
         rd = self._u16(self._off(home, sub) + screen_index * 2)
         ro = self._off(home, rd)

@@ -23,6 +23,15 @@ SECTION "ROM Bank $017", ROMX[$4000], BANK[$17]
     dw label17_4751
 
 
+; S137 annotation: entry 0 = the ROOM PALETTE load (slots 0-3 from the room's
+; table row, then entry 9's forcing). The same walk as entry 1 below: table
+; [room] dw -> [wScreenIndex] dw -> [step counter:2] -> + [counter]*4 ->
+; [attr_entry, attr_bank, pal_ptr:2]; HL = pal_ptr goes to LoadPal_46a1 with
+; B = 4 slots, C = slot 0 — read IN THIS BANK (the palette must be in bank $17
+; or in WRAM). The counter is not range-checked: a counter past the states reads
+; the next row's bytes. (Patched builds: custom rooms' rows + palettes live in
+; their home bank and reach this walk through WRAM — bank $17 CustomAttrCheck,
+; ROADMAP ARC CAP2c, S137.)
 label17_401d:
     ld a, [wIsGBC]
     or a
@@ -1110,6 +1119,11 @@ jr_017_4671:
     ret
 
 
+; S137 annotation: LoadPal_46a1 — copy B palettes (B*8 bytes) from HL (in the
+; CURRENT bank, $17, or WRAM) into the WRAM BG palette buffer $C797 + C*8 (slot
+; C). Callers: entry 0 (the room, B = 4 / C = 0), the gate floor path
+; ($51F5[type]), entry 9's slot-7 system load. GBC only. The buffer is pushed to
+; BCPD later (label17_46dd / the fades).
 LoadPal_46a1:
     ld a, [wIsGBC]
     or a
@@ -2730,39 +2744,40 @@ AttrMapDataB:   ; fake-decode label kept at its exact offset $6b0d (referenced b
 ; follows (room dw -> screen dw -> [counter:2] -> step*4 -> [attr_entry,
 ; attr_bank, pal_ptr:2]).
 ; ---------------------------------------------------------------------------
-; S94b (editor canvas v2): custom rooms get a table in the VANILLA FORMAT —
-; CustomAttrPtrTable (one dw per custom mapID, index mapID-$6B) -> RoomAttr_
-; (16 screen dw) -> ScrAttr_ ([step counter:2] + 4 bytes per STATE) — emitted
-; by build_project.py. So attrs AND palettes are per (screen, state), exactly
-; like vanilla (the servant boss room's burning/cleared states). dw $0000 in
-; CustomAttrPtrTable = no table (placeholder rooms) -> the old Castle path.
+; S94b (editor canvas v2): custom rooms get a table in the VANILLA FORMAT
+; (room dw -> 16 screen dw -> [step counter:2] + 4 bytes per STATE), so attrs
+; AND palettes are per (screen, state), exactly like vanilla (the servant boss
+; room's burning/cleared states).
+; S137 (ROADMAP ARC CAP2c): those tables and the palettes left this bank — a
+; room's render rows + palettes live in its HOME BANK with its scripts (bank
+; $60 or a place bank $80+, editor2/core/places.py). The custom path far-calls
+; bank $60 entry 13 (PlaceFwdRender -> the home bank's CustomRenderCopy, which
+; runs the state rules first — the job StateRulesHook17 had, S97-S136 — then
+; builds the walk in WRAM: wRenderTable / wRenderScr / wRenderRow /
+; wRenderZero / wRenderPal) and hands the caller HL = wRenderTable, A = 0: the
+; vanilla walk below each call site then reads WRAM, and LoadPal_46a1 copies
+; the palette from wRenderPal (or from a vanilla palette in this bank — the
+; row's pointer for a borrow). Rebuilt on EVERY call (nothing cached).
+; HL = 0 back (no place / no table / a screen the room lacks) -> the Castle
+; fallback, as a placeholder room has always had. rst $10 trashes BC on the way
+; in and A/F on the way back — the walk sets B/C/D/E itself afterwards.
 ; History: S42 {bank, base_entry} + base_entry+2 stride -> S94 per-screen
-; 17-byte maps -> S94b vanilla-format per-state tables.
+; 17-byte maps -> S94b vanilla-format per-state tables here -> S137 WRAM walk.
 CustomAttrCheck:
     ld a, [wMapID]             ; actual room
     cp CUSTOM_ROOM_START       ; $6B
-    jr nc, .custom             ; >= $6B → consult the per-room table
+    jr nc, .custom             ; >= $6B → the place's render row
     jp MapIDClampForPalette    ; vanilla room: normal path (A = mapID, HL intact)
 .custom:
-    call StateRulesHook17        ; S97: flag-driven state rules run FIRST (this is
-                                 ; the earliest custom hook of a room load — the
-                                 ; walk below reads the step counter); A = mapID
-    sub CUSTOM_ROOM_START       ; index = mapID - $6B
-    push af
-    add a                        ; ×2 (dw per room)
-    ld e, a
-    ld d, $00
-    ld hl, CustomAttrPtrTable
-    add hl, de
-    ld a, [hl+]
-    or [hl]                      ; dw $0000?
+    ld hl, $600D                 ; bank $60 entry 13: PlaceFwdRender
+    rst $10                      ; HL = wRenderTable, or 0 = no table
+    ld a, h
+    or l
     jr z, .noTable
-    pop af                       ; A = index
-    ld hl, CustomAttrPtrTable    ; HL = table base — the caller walks it
+    xor a                        ; index 0 of the WRAM table
     ret
 .noTable:
-    pop af
-    ld hl, AttrPtrTable          ; restore the vanilla base
+    ld hl, AttrPtrTable          ; the vanilla base
     jp MapIDClampForPalette      ; A = $00 (Castle) as before for table-less rooms
 
 ; CustomPalCheck: intercept for entry 0 (palette color loading)
@@ -2771,7 +2786,8 @@ CustomAttrCheck:
 ; the source mapID's palette data. Overwriting them breaks the menu.
 ; S94b: the palette pointer arrives in HL from the same vanilla-format table
 ; walk as the attr map (CustomAttrCheck), so it is already per (screen,
-; state). This routine only fixes b/c to slots 0-3 for custom rooms and skips
+; state). S137: HL = wRenderPal (the place's palette, copied to WRAM) or a
+; vanilla palette of this bank (a borrow). This routine only fixes b/c to slots 0-3 for custom rooms and skips
 ; the slot-7 system overwrite call (c=$07) in custom rooms, as the S42 code did.
 CustomPalCheck:
     ld a, [wMapID]
@@ -2800,35 +2816,12 @@ CustomPalCheck:
 ; RoomAttr_* / ScrAttr_* in the compiler-owned room_render_tables region, S94b) so
 ; they can grow without shifting the palette data that follows. These bytes are
 ; reserved padding to keep that data in place (12 -> 9 S97: the 3-byte
-; `call StateRulesHook17` in CustomAttrCheck came out of it).
-    ds 9, $00
+; `call StateRulesHook17` in CustomAttrCheck came out of it; 9 -> 23 S137: the
+; far call is 14 bytes shorter than the old table lookup).
+    ds 23, $00
 
 ; @BUILD_PROJECT BEGIN room_palettes_a
-; CustomPaletteColors_6B: 64 bytes (8 palettes x 4 colors x 2 bytes).
-; The REAL in-game Gate of Beginning BG palette, dumped from SameBoy
-; by the user (all 8 slots). Format: RGB15 LE pairs [lo,hi].
-CustomPaletteColors_6B:
-    db $EE, $04, $FF, $6B, $7A, $02, $00, $00  ; palette 0  04ee 6bff 027a 0000
-    db $40, $7D, $FF, $6B, $81, $7F, $00, $00  ; palette 1  7d40 6bff 7f81 0000
-    db $F0, $00, $FF, $6B, $1A, $02, $00, $00  ; palette 2  00f0 6bff 021a 0000
-    db $A1, $01, $FF, $6B, $AA, $03, $00, $00  ; palette 3  01a1 6bff 03aa 0000
-    db $67, $4D, $FF, $6B, $FF, $7F, $00, $00  ; palette 4  4d67 6bff 7fff 0000
-    db $12, $00, $FF, $6B, $DE, $01, $00, $00  ; palette 5  0012 6bff 01de 0000
-    db $15, $00, $FF, $6B, $1F, $02, $00, $00  ; palette 6  0015 6bff 021f 0000
-    db $39, $01, $FF, $6B, $3F, $03, $00, $00  ; palette 7  0139 6bff 033f 0000
-
-; CustomPaletteColors_6C: Pillar A proof palette — twilight recolor of
-; the gate palette (rose sand, indigo water, dusk teal trees).
-; (Throwaway proof palette; overwritten per-room by real projects.)
-CustomPaletteColors_6C:
-    db $CC, $51, $16, $7B, $07, $39, $21, $10  ; pal0 ground(slate)
-    db $C4, $48, $16, $7B, $88, $61, $21, $10  ; pal1 water(navy)
-    db $D0, $59, $16, $7B, $C8, $30, $21, $10  ; pal2 accent(violet)
-    db $C6, $31, $16, $7B, $E2, $18, $21, $10  ; pal3 tree(teal)
-    db $CC, $51, $16, $7B, $07, $39, $21, $10  ; pal4 mirror
-    db $C4, $48, $16, $7B, $88, $61, $21, $10  ; pal5 mirror
-    db $D0, $59, $16, $7B, $C8, $30, $21, $10  ; pal6 mirror
-    db $C6, $31, $16, $7B, $E2, $18, $21, $10  ; pal7 mirror
+; (S137: the project's palettes live in the rooms' home banks — places.py)
 ; @BUILD_PROJECT END room_palettes_a
 
 
@@ -2980,175 +2973,12 @@ FreeColor1Hook:
     ld a, [$c7d1]                ; the replaced instruction
     jp LoadPal4102_Color1Store
 
-; ---------------------------------------------------------------------------
-; StateRulesHook17 (S97, ROADMAP P3.5a): CustomAttrCheck's custom path calls
-; this before walking the per-(screen, state) attr/palette table, so the step
-; counter already holds the state chosen by the room's flag rules (bank $60
-; entry 8 CustomStateRules) when the attr, the palette and — later in the same
-; load — bank $0B Entry 0/7 read it. PyBoy-measured S97: at a room load the
-; attr/palette walk runs BEFORE Entry 0, so a rule evaluated only in Entry 0
-; would load the previous state's palette. Preserves BC/DE/HL; returns
-; A = wMapID (what CustomAttrCheck's .custom path expects).
-; ---------------------------------------------------------------------------
-StateRulesHook17:
-    push bc
-    push de
-    push hl
-    ld hl, $6008                 ; bank $60 entry 8: CustomStateRules
-    rst $10
-    pop hl
-    pop de
-    pop bc
-    ld a, [wMapID]
-    ret
+; (S97-S136: StateRulesHook17 lived here — the far call to bank $60 entry 8
+; before the walk. S137: the render reader, bank $60 entry 13, runs the rules
+; itself; the hook is gone.)
 
 ; @BUILD_PROJECT BEGIN room_render_tables
-; Per-custom-room render tables (generated by build_project.py).
-; S94b: vanilla-format attr/palette table walked by the engine's own
-; entry-0/entry-1 code after CustomAttrCheck swaps in this base:
-;   room dw -> screen dw -> [step counter:2] -> per STATE
-;   [attr_entry, attr_bank, pal_ptr:2]. dw $0000 = none.
-CustomAttrPtrTable:
-    dw RoomAttr_6B    ; $6B gate_island
-    dw RoomAttr_6C    ; $6C dusk_mirror
-    dw RoomAttr_6D    ; $6D gate_rotation
-    dw $0000    ; $6E reserved_6e — no table
-    dw $0000    ; $6F reserved_6f — no table
-    dw RoomAttr_70    ; $70 ember_keystone
-    dw RoomAttr_71    ; $71 medal_vault
-    dw RoomAttr_72    ; $72 arena_clone
-    dw RoomAttr_73    ; $73 island_copy
-
-RoomAttr_6B:    ; gate_island: screen 0-15
-    dw ScrAttr_6B_0, $0000, $0000, $0000
-    dw ScrAttr_6B_4, $0000, $0000, $0000
-    dw $0000, $0000, $0000, $0000
-    dw $0000, $0000, $0000, $0000
-RoomAttr_6C:    ; dusk_mirror: screen 0-15
-    dw ScrAttr_6C_0, $0000, $0000, $0000
-    dw ScrAttr_6C_4, $0000, $0000, $0000
-    dw $0000, $0000, $0000, $0000
-    dw $0000, $0000, $0000, $0000
-RoomAttr_6D:    ; gate_rotation: screen 0-15
-    dw ScrAttr_6D_0, $0000, $0000, $0000
-    dw $0000, $0000, $0000, $0000
-    dw $0000, $0000, $0000, $0000
-    dw $0000, $0000, $0000, $0000
-RoomAttr_70:    ; ember_keystone: screen 0-15
-    dw ScrAttr_70_0, $0000, $0000, $0000
-    dw $0000, $0000, $0000, $0000
-    dw $0000, $0000, $0000, $0000
-    dw $0000, $0000, $0000, $0000
-RoomAttr_71:    ; medal_vault: screen 0-15
-    dw ScrAttr_71_0, $0000, $0000, $0000
-    dw $0000, $0000, $0000, $0000
-    dw $0000, $0000, $0000, $0000
-    dw $0000, $0000, $0000, $0000
-RoomAttr_72:    ; arena_clone: screen 0-15
-    dw ScrAttr_72_0, ScrAttr_72_1, ScrAttr_72_2, $0000
-    dw $0000, $0000, $0000, $0000
-    dw $0000, $0000, $0000, $0000
-    dw $0000, $0000, $0000, $0000
-RoomAttr_73:    ; island_copy: screen 0-15
-    dw ScrAttr_73_0, $0000, $0000, $0000
-    dw ScrAttr_73_4, $0000, $0000, $0000
-    dw $0000, $0000, $0000, $0000
-    dw $0000, $0000, $0000, $0000
-
-ScrAttr_6B_0:
-    dw wCustomStep_Room6B_S0    ; step counter
-    db $01, $64    ; state 0: attr entry, bank
-    dw CustomPaletteColors_6B    ; state 0: project palette
-ScrAttr_6B_4:
-    dw wCustomStep_Room6B_S4    ; step counter
-    db $03, $64    ; state 0: attr entry, bank
-    dw CustomPaletteColors_6B    ; state 0: project palette
-ScrAttr_6C_0:
-    dw wCustomStep_Room6C_S0    ; step counter
-    db $01, $64    ; state 0: attr entry, bank
-    dw CustomPaletteColors_6C    ; state 0: project palette
-ScrAttr_6C_4:
-    dw wCustomStep_Room6C_S4    ; step counter
-    db $03, $64    ; state 0: attr entry, bank
-    dw CustomPaletteColors_6C    ; state 0: project palette
-ScrAttr_6D_0:
-    dw wCustomStep_Room6D_S0    ; step counter
-    db $01, $64    ; state 0: attr entry, bank
-    dw CustomPaletteColors_6D    ; state 0: project palette
-ScrAttr_70_0:
-    dw wCustomStep_Room70_S0    ; step counter
-    db $01, $64    ; state 0: attr entry, bank
-    dw CustomPaletteColors_70    ; state 0: project palette
-ScrAttr_71_0:
-    dw wCustomStep_Room71_S0    ; step counter
-    db $08, $64    ; state 0: attr entry, bank
-    dw CustomRoomPalette_71    ; state 0: project palette
-ScrAttr_72_0:
-    dw wCustomStep_Room72_S0    ; step counter
-    db $04, $64    ; state 0: attr entry, bank
-    dw CustomPaletteColors_arena_clone    ; state 0: project palette
-ScrAttr_72_1:
-    dw wCustomStep_ArenaClone_S1    ; step counter
-    db $05, $64    ; state 0: attr entry, bank
-    dw CustomPaletteColors_arena_clone    ; state 0: project palette
-    db $05, $64    ; state 1: attr entry, bank
-    dw CustomPaletteColors_arena_clone    ; state 1: project palette
-ScrAttr_72_2:
-    dw wCustomStep_Room72_S2    ; step counter
-    db $06, $64    ; state 0: attr entry, bank
-    dw CustomPaletteColors_arena_clone    ; state 0: project palette
-ScrAttr_73_0:
-    dw wCustomStep_Room73_S0    ; step counter
-    db $01, $64    ; state 0: attr entry, bank
-    dw CustomPaletteColors_6B    ; state 0: project palette
-ScrAttr_73_4:
-    dw wCustomStep_Room73_S4    ; step counter
-    db $03, $64    ; state 0: attr entry, bank
-    dw CustomPaletteColors_6B    ; state 0: project palette
-
-; $6D = VERDANT green (gate-rotation proof, reached via Gate of Villager).
-; Luminance-themed recolour of the gate palette: structure preserved, hue fixed.
-CustomPaletteColors_6D:
-    db $C4, $11, $E9, $2B, $48, $23, $00, $00  ; sub-pal 0
-    db $E9, $2B, $E9, $2B, $E9, $2B, $00, $00  ; sub-pal 1
-    db $05, $16, $E9, $2B, $48, $23, $00, $00  ; sub-pal 2
-    db $A4, $11, $E9, $2B, $A9, $27, $00, $00  ; sub-pal 3
-    db $66, $1A, $E9, $2B, $E9, $2B, $00, $00  ; sub-pal 4
-    db $45, $1A, $E9, $2B, $C9, $2B, $00, $00  ; sub-pal 5
-    db $A6, $1E, $E9, $2B, $E9, $2B, $00, $00  ; sub-pal 6
-    db $28, $23, $E9, $2B, $E9, $2B, $00, $00  ; sub-pal 7
-
-; $70 = EMBER amber (past-the-$6F-ceiling proof room).
-CustomPaletteColors_70:
-    db $2E, $09, $7F, $12, $1A, $0E, $00, $00  ; sub-pal 0
-    db $7F, $12, $7F, $12, $7F, $12, $00, $00  ; sub-pal 1
-    db $50, $09, $7F, $12, $1A, $0E, $00, $00  ; sub-pal 2
-    db $0D, $09, $7F, $12, $5D, $0E, $00, $00  ; sub-pal 3
-    db $93, $09, $7F, $12, $7F, $12, $00, $00  ; sub-pal 4
-    db $72, $09, $7F, $12, $7E, $12, $00, $00  ; sub-pal 5
-    db $B5, $0D, $7F, $12, $7F, $12, $00, $00  ; sub-pal 6
-    db $19, $0E, $7F, $12, $7F, $12, $00, $00  ; sub-pal 7
-
-; Medal Vault (room $71) — gold-tinted derivation of pal_6b
-; (same layout bank $64 entry 0 / attrs base_entry 1; S70)
-CustomRoomPalette_71:
-    db $90, $09, $FF, $6B, $FF, $16, $00, $00
-    db $D3, $0D, $FF, $6B, $3F, $17, $00, $00
-    db $91, $09, $FF, $6B, $DD, $16, $00, $00
-    db $4E, $09, $FF, $6B, $FF, $16, $00, $00
-    db $F5, $0D, $FF, $6B, $FF, $27, $00, $00
-    db $2D, $05, $FF, $6B, $DE, $16, $00, $00
-    db $4E, $09, $FF, $6B, $1F, $17, $00, $00
-    db $37, $0E, $FF, $6B, $BF, $1B, $00, $00
-
-; derived from vanilla $06 (derive_room_palette logic; idx1/idx3 forced)
-CustomPaletteColors_arena_clone:
-    db $D0, $19, $FF, $6B, $3D, $43, $00, $00
-    db $32, $05, $FF, $6B, $9F, $02, $00, $00
-    db $32, $05, $FF, $6B, $99, $2E, $00, $00
-    db $32, $05, $FF, $6B, $99, $2E, $00, $00
-    db $67, $4D, $FF, $6B, $FF, $7F, $00, $00
-    db $12, $00, $FF, $6B, $DE, $01, $00, $00
-    db $15, $00, $FF, $6B, $1F, $02, $00, $00
-    db $39, $01, $FF, $6B, $3F, $03, $00, $00
+; S137 (ROADMAP ARC CAP2c): the rooms' render rows + palettes live in
+; their home banks (places.py); bank $17 CustomAttrCheck far-calls bank
+; $60 entry 13 for them. Nothing is generated here any more.
 ; @BUILD_PROJECT END room_render_tables

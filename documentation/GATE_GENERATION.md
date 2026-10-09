@@ -644,6 +644,12 @@ render code per room. Proven by adding a real second room, `$6C`.
    screens 2-6) → S94 17-byte per-screen map → S94b per-state rows, because vanilla varies
    attr AND palette per step (Servant room `$3F` burning → cleared). Every renderer and the
    compiler follow PROJECT_COMPILER §2.11.
+   **S137 (ROADMAP ARC CAP2c): the tables above left bank $17.** The same rows (+ `db n_states`)
+   and the rooms' palettes (32 B, slots 0-3) are part of each room's place block in its home
+   bank; `CustomAttrCheck` far-calls bank $60 entry 13, whose reader builds the walk in WRAM
+   and returns `HL = wRenderTable, A = 0` — the vanilla walk is unchanged; a borrowed vanilla
+   `pal_ptr` keeps pointing into bank $17 (bit 15 marks it). ARCHITECTURE "Room colours in the
+   place banks (S137)", PROJECT_COMPILER §2.46.
 
 Both intercepts now do `index = mapID-$6B; …` table reads instead of `cp $6B`. The vanilla
 path is untouched for `mapID < $6B`, so the `$6B` regression is byte-identical (verified).
@@ -664,7 +670,7 @@ scratch. (KEY_LESSONS S40.)
 
 **Files:** `patches/bank_017.asm` (`CustomPalCheck`/`CustomAttrCheck` generalised; tables
 `CustomAttrPtrTable`/`RoomAttr_*`/`ScrAttr_*`/`CustomPaletteColors_*` are compiler-emitted
-into the `room_render_tables` region since S94b), `patches/bank_000.asm`
+into the `room_render_tables` region S94b-S136; S137: the place blocks, PROJECT_COMPILER §2.46), `patches/bank_000.asm`
 (`CustomGFXMapID` widen + `$26DD[$6C]` record), `patches/bank_060.asm` (`$6C` room data,
 2-screen mirror of `$6B`; the `$6B→$6C` warp **byte-4 must be `$00`**, see KEY_LESSONS S40),
 `patches/bank_064.asm` (shared layout/attr, unchanged from §7.3).

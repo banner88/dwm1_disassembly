@@ -17,7 +17,8 @@
 ; home bank to wPlaceIdx and call the matching entry here. So every reader
 ; indexes its tables with [wPlaceIdx], never with wMapID - $6B.
 ; Entry numbers equal bank $60's: 0 step, 1 NPC list, 2 exit list, 4 script
-; word, 5 text, 8 state rules, 9 / 10 tile patches (3 / 6 / 7 = no-ops).
+; word, 5 text, 8 state rules, 9 / 10 tile patches, 13 render row (S137)
+; (3 / 6 / 7 / 11 / 12 = no-ops).
 ; =============================================================================
 PlaceEntries{P}:
     dw CustomReadStep{P}        ; 0
@@ -31,6 +32,9 @@ PlaceEntries{P}:
     dw CustomStateRules{P}      ; 8
     dw CustomDrawTiles{P}       ; 9
     dw CustomDrawAttrs{P}       ; 10
+    dw PlaceNoop{P}             ; 11
+    dw PlaceNoop{P}             ; 12
+    dw CustomRenderCopy{P}      ; 13 (S137)
 
 PlaceNoop{P}:
     ret
@@ -335,7 +339,8 @@ CopyExitListToBuffer{P}:
 ; load). Idempotent, so it runs from every custom (re)load path:
 ;   * bank $17 CustomAttrCheck (the FIRST custom hook of a room load — the
 ;     attr/palette walk reads the counter before bank $0B Entry 0 does,
-;     PyBoy-measured S97), via StateRulesHook17 + rst $10 bank $60 entry 8;
+;     PyBoy-measured S97), via bank $60 entry 13 -> CustomRenderCopy below
+;     (S97-S136: StateRulesHook17 + rst $10 bank $60 entry 8);
 ;   * CustomReadStep (Entry 0) itself, before CustomPtrChase.
 ; Tables (generated, in the place's home bank):
 ;   PlaceRuleTable: dw per place (index wPlaceIdx), $0000 = none
@@ -816,4 +821,128 @@ CutPatchNibble{P}:
     or d
     ld [hl], a
     pop hl
+    ret
+
+; =============================================================================
+; Entry 13: CustomRenderCopy (S137, ROADMAP ARC CAP2c) — the RENDER ROW
+; =============================================================================
+; Bank $17 entries 0 (palette) and 1 (attr map) walk a VANILLA-format table:
+; table[A] dw -> [wScreenIndex] dw -> [counter ptr:2] -> + [counter] * 4 ->
+; [attr_entry, attr_bank, pal_ptr:2]; LoadPal_46a1 then copies slots 0-3
+; (32 B) from pal_ptr IN BANK $17. A place's table lives here instead (with its
+; palettes), so bank $17 CustomAttrCheck far-calls this through bank $60 entry
+; 13 and the walk reads the WRAM block built below (wram.asm wRenderTable…).
+; Runs the state rules first (this is the earliest custom hook of a room load,
+; PyBoy S97 — it used to be StateRulesHook17's job).
+; Tables (generated, this bank):
+;   PlaceRenderTable: dw per place (wPlaceIdx), $0000 = no table (placeholder)
+;   RoomAttr_<mid>:   16 x dw (screen 0-15) -> ScrAttr ($0000 = no screen)
+;   ScrAttr_<mid>_<k>: dw step counter, db n_states, n x [db attr_entry,
+;                     attr_bank / dw pal_ptr]
+;   pal_ptr bit 15 SET = a vanilla palette in BANK $17 (a borrow; the walk reads
+;   it there: bit 15 cleared), else a palette block of THIS bank (32 B copied
+;   to wRenderPal). Bit 15 is free: every ROMX address is $4000-$7FFF.
+; The counter is clamped to the last state (the old bank $17 table had no
+; count: a counter past the states read the next screen's bytes).
+; Returns HL = wRenderTable (the walk's base; bank $17 uses index 0) or
+; HL = 0 = no table here (no place table / screen word $0000 — the Castle
+; fallback; the old walk followed a $0000 screen word into ROM0, S135).
+; Clobbers A/BC/DE.
+; -----------------------------------------------------------------------------
+CustomRenderCopy{P}:
+    call CustomStateRules{P}     ; the state (and the monster cast) first
+    ld a, [wPlaceIdx]
+    add a
+    ld hl, PlaceRenderTable{P}
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a
+    or h
+    jr z, .none                  ; no render table (placeholder room)
+    ld a, [wScreenIndex]
+    and $0F
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a
+    or h
+    jr z, .none                  ; a screen the room does not have
+    ld e, [hl]
+    inc hl
+    ld d, [hl]                   ; DE = the screen's step counter
+    inc hl
+    ld a, [hl+]
+    ld b, a                      ; B = n_states (>= 1)
+    ld a, [de]
+    cp b
+    jr c, .stateOk
+    ld a, b
+    dec a                        ; past the last state: the last state
+.stateOk:
+    add a
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a                      ; HL = this state's row
+    ld a, [hl+]
+    ld [wRenderRow + 2], a       ; attr entry
+    ld a, [hl+]
+    ld [wRenderRow + 3], a       ; attr bank
+    ld a, [hl+]
+    ld e, a
+    ld d, [hl]                   ; DE = pal_ptr
+    bit 7, d
+    jr z, .own
+    res 7, d                     ; a vanilla palette: read in bank $17 itself
+    jr .row
+.own:
+    ld hl, wRenderPal
+    ld b, 32                     ; slots 0-3
+.copy:
+    ld a, [de]
+    ld [hl+], a
+    inc de
+    dec b
+    jr nz, .copy
+    ld de, wRenderPal
+.row:
+    ld a, e
+    ld [wRenderRow + 4], a
+    ld a, d
+    ld [wRenderRow + 5], a
+    ld a, LOW(wRenderZero)       ; the walk's "step counter" = a zero byte
+    ld [wRenderRow], a
+    ld a, HIGH(wRenderZero)
+    ld [wRenderRow + 1], a
+    xor a
+    ld [wRenderZero], a
+    ld a, LOW(wRenderRow)
+    ld [wRenderScr], a
+    ld a, HIGH(wRenderRow)
+    ld [wRenderScr + 1], a
+    ld a, [wScreenIndex]         ; the walk adds wScreenIndex * 2 to this word
+    add a
+    ld b, a
+    ld a, LOW(wRenderScr)
+    sub b
+    ld [wRenderTable], a
+    ld a, HIGH(wRenderScr)
+    sbc $00
+    ld [wRenderTable + 1], a
+    ld hl, wRenderTable
+    ret
+.none:
+    ld hl, $0000
     ret

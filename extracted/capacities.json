@@ -1,5 +1,5 @@
 {
- "_comment": "CAPACITIES reference (ROADMAP P3.0, gap G-M) — every known authoring ceiling with its evidence. Hand-compiled S91; no generator by design (measured entries cite their S91 emulator experiment; documented entries cite the owning doc/session and were compiled, not re-derived, this session). The editor's capacity meters (EDITOR_DESIGN §5.C) read this file. status values: measured_s91 = empirically measured in PyBoy this session; structural_s91 = derived from disassembly/ROM bytes this session; documented = compiled from the owning doc. S133 (ROADMAP ARC CAP audit): stale 'documented' rows refreshed to the current owning docs; new rows campaign_place_cost / rom_size / wram_custom_pool_free; status measured_s133 = measured on the user's project build + .sav / the S133 4 MB scratch build, structural_s133 = read from the patched tree this session. S135: + stream_banks (structural_s135 = traced in both trees; measured_s135 = tools/census_stream_banks.py + the S135 test ROM). S136: + place_banks (structural_s136 = read in the patched tree; measured_s136 = tools/census_place_banks.py + the S136 test ROM); custom_mapids detail / wram_custom_pool_free refreshed.",
+ "_comment": "CAPACITIES reference (ROADMAP P3.0, gap G-M) — every known authoring ceiling with its evidence. Hand-compiled S91; no generator by design (measured entries cite their S91 emulator experiment; documented entries cite the owning doc/session and were compiled, not re-derived, this session). The editor's capacity meters (EDITOR_DESIGN §5.C) read this file. status values: measured_s91 = empirically measured in PyBoy this session; structural_s91 = derived from disassembly/ROM bytes this session; documented = compiled from the owning doc. S133 (ROADMAP ARC CAP audit): stale 'documented' rows refreshed to the current owning docs; new rows campaign_place_cost / rom_size / wram_custom_pool_free; status measured_s133 = measured on the user's project build + .sav / the S133 4 MB scratch build, structural_s133 = read from the patched tree this session. S135: + stream_banks (structural_s135 = traced in both trees; measured_s135 = tools/census_stream_banks.py + the S135 test ROM). S136: + place_banks (structural_s136 = read in the patched tree; measured_s136 = tools/census_place_banks.py + the S136 test ROM); custom_mapids detail / wram_custom_pool_free refreshed. S137: + room_colours (structural_s137 = read in the patched tree; measured_s137 = tools/census_place_banks.py render checks + the S137 test ROM); free_rom_banks / campaign_place_cost / custom_mapids / place_banks / wram_custom_pool_free refreshed.",
  "npc_slots_per_screen_state": {
   "value": 8,
   "status": "measured_s91",
@@ -24,7 +24,7 @@
   "value": 128,
   "range": "$6B-$EA",
   "status": "structural_s133 (enforced by the compiler since S133)",
-  "detail": "wMapID is one byte. bank $17 CustomAttrCheck (bank $60's readers index [wPlaceIdx] since S136, but PlaceDirectory is filled for $6B-$EA only) (+ its two callers label17_401d / label17_409e) index per-room tables with `sub $6B / add a / add l` — an 8-bit doubling that drops the carry, so $EB+ silently reads another room's data. editor2/core/project.py CUSTOM_MID_MAX = $EA (ProjectError past it, test_compiler test_s133). Room-default / battle music tables stop at $7F (cp $80 guards; music.py errors). Hard id max $FE ($FF = list terminator / skill script type). Lifting it = ROADMAP ARC CAP (regions: the id range per region).",
+  "detail": "wMapID is one byte. Until S137 bank $17 CustomAttrCheck (+ its two callers label17_401d / label17_409e) indexed per-room tables with `sub $6B / add a / add l` — an 8-bit doubling that drops the carry, so $EB+ silently read another room's data; bank $60's readers index [wPlaceIdx] since S136 and bank $17 reads a one-room WRAM table since S137, but PlaceDirectory is filled for $6B-$EA only and bank $71's per-room tables are sized for the project's rooms (entry 0 unbounded: PROJECT_STATE Open defects S137). editor2/core/project.py CUSTOM_MID_MAX = $EA (ProjectError past it, test_compiler test_s133). Room-default / battle music tables stop at $7F (cp $80 guards; music.py errors). Hard id max $FE ($FF = list terminator / skill script type). Lifting it = ROADMAP ARC CAP (regions: the id range per region).",
   "evidence": "CROSSBANK_ROOMS 'Custom-side arithmetic ceilings' + 'S133 capacity audit'; EDITOR_DESIGN §6.4"
  },
  "free_rom_banks": {
@@ -32,7 +32,7 @@
   "whole_banks_unallocated": 0,
   "free_bytes_in_custom_banks": "≈315 KB (end-of-bank fill, 23 custom banks, user's 11-room project build, S133); bank $60 3.5 KB and $64 3.5 KB left there",
   "status": "measured_s133",
-  "detail": "Every vanilla-empty bank has an owner since S121 (PROJECT_STATE bank table). Banks $0B and ROM0 have 1 / 8 free bytes; bank $17 3,937 B (room palettes + render tables live there); bank $16 732 B. A 4 MB ROM adds banks $80-$FF (2 MB) — see rom_size.",
+  "detail": "Every vanilla-empty bank has an owner since S121 (PROJECT_STATE bank table). Banks $0B and ROM0 have 1 / 8 free bytes; bank $17 3,937 B at S133 (room palettes + render tables lived there; S137: they moved into the place blocks — bank $17 now has a constant 4,651 B free in every build); bank $16 732 B. A 4 MB ROM adds banks $80-$FF (2 MB) — see rom_size.",
   "evidence": "PROJECT_STATE 'Bank allocation'; S133 measurement (scratch); EDITOR_DESIGN §6.4"
  },
  "event_flags_safe_pool": {
@@ -90,11 +90,11 @@
  "campaign_place_cost": {
   "value": "≈3-4 KB per new place (3 screens, 1-2 states, own or shared tileset); a copy of a busy vanilla room 2-3.4 KB of scripts alone",
   "status": "measured_s133",
-  "detail": "User's 11-room / 33-screen project: bank $60 12,882 B (scripts 9,130 — of which the copies of Arena Lobby 3,352 / Arena Battle 2,482 / GreatTree 2,082; text 741; NPC lists 606, exit lists 345, step entries 372); bank $64 12,892 B for 42 layout + 37 attr entries (≈300 B each); bank $67 9,024 B for 7 tilesets (≈1.3 KB each); bank $17 palettes 64 B each + render tables ≈20 B per screen-state. With 4 MB (≈2.3 MB for places) that is ≈575-750 places.",
+  "detail": "User's 11-room / 33-screen project: bank $60 12,882 B (scripts 9,130 — of which the copies of Arena Lobby 3,352 / Arena Battle 2,482 / GreatTree 2,082; text 741; NPC lists 606, exit lists 345, step entries 372); bank $64 12,892 B for 42 layout + 37 attr entries (≈300 B each); bank $67 9,024 B for 7 tilesets (≈1.3 KB each); bank $17 palettes 64 B each + render tables ≈20 B per screen-state (S137: in the room's home bank — 32 B per palette per room + ≈36 B of screen table + 4 B per screen-state; the user's 11 rooms: 1,205 B). With 4 MB (≈2.3 MB for places) that is ≈575-750 places.",
   "evidence": "EDITOR_DESIGN §6.4 'Measured cost of a place (S133)'"
  },
  "wram_custom_pool_free": {
-  "value": "≈218 B ($D50B-$D5E4, transient; S136 carved wPlaceIdx $D50A)",
+  "value": "≈175 B ($D536-$D5E4, transient; S137 carved the render walk block $D50B-$D535, S136 wPlaceIdx $D50A)",
   "status": "structural_s133",
   "detail": "The CF3-window reserve left after S97-S129 carves; the 640-B step-counter region $CD80-$CFFF is separate.",
   "evidence": "patches/wram.asm wCustomPool"
@@ -106,9 +106,15 @@
   "evidence": "ARCHITECTURE 'LZ stream banks (S135)'; ROADMAP ARC CAP2a"
  },
  "place_banks": {
-  "value": "custom rooms' scripts / tile patches / screens / NPC + exit lists / state rules / casts (one block per room, never split) and text sections (256 ids, auto ids broken at 12,288 B): bank $60 first, then place banks $80-$FF (shared with the stream banks; 128 banks); a block or section must fit one place bank (16,384 - 945 B)",
+  "value": "custom rooms' scripts / tile patches / screens / NPC + exit lists / state rules / casts / (S137) render rows + palettes (one block per room, never split) and text sections (256 ids, auto ids broken at 12,288 B): bank $60 first, then place banks $80-$FF (shared with the stream banks; 128 banks); a block or section must fit one place bank (16,384 - 1,102 B since S137)",
   "status": "structural_s136 + measured_s136",
-  "detail": "Bank $60 entries 0/1/2/4/5/8/9/10 forward on every call through PlaceDirectory (2 B a place) / TextSectionBanks (1 B a section) -> wPlaceIdx -> the home bank's pinned reader block (templates/place_readers.asm, 944 B). Fixed parts: bank $60 head + readers 1,515 B (validators.TEMPLATE_SIZE), a place bank 945 B (PLACE_TEMPLATE_SIZE). Compiler: editor2/core/places.py plan (PROJECT_COMPILER §2.45). Measured: tools/census_place_banks.py — the user's project 4,831 forwarded reads, the S136 demo 8,944 over $60 / $81-$84, a 40-room spill 21,017 over $60 / $80-$86, 0 mismatched; PyBoy on the user's save (talks, YES / NO, scenes + tile patches, battles, stairs both ways, save + reload in a place-bank room).",
+  "detail": "Bank $60 entries 0/1/2/4/5/8/9/10 (S137: + 13) forward on every call through PlaceDirectory (2 B a place) / TextSectionBanks (1 B a section) -> wPlaceIdx -> the home bank's pinned reader block (templates/place_readers.asm, 944 B; S137 1,101 B). Fixed parts: bank $60 head + readers 1,515 B (validators.TEMPLATE_SIZE), a place bank 945 B (PLACE_TEMPLATE_SIZE); S137: 1,691 B / 1,102 B. Compiler: editor2/core/places.py plan (PROJECT_COMPILER §2.45). Measured: tools/census_place_banks.py — the user's project 4,831 forwarded reads, the S136 demo 8,944 over $60 / $81-$84, a 40-room spill 21,017 over $60 / $80-$86, 0 mismatched; PyBoy on the user's save (talks, YES / NO, scenes + tile patches, battles, stairs both ways, save + reload in a place-bank room).",
   "evidence": "ARCHITECTURE 'Place banks (S136)'; ROADMAP ARC CAP2b"
+ },
+ "room_colours": {
+  "value": "a custom room's render rows (per screen + state: attr entry + bank, palette pointer) and its palettes (32 B per project palette it uses, slots 0-3) are part of its place block — no bank-$17 ceiling; borrowed vanilla palettes stay in bank $17 (pointer bit 15)",
+  "status": "structural_s137 + measured_s137",
+  "detail": "Until S136 they filled bank $17's free tail (≈3.3 KB for the user's project: ~118-125 B a room → full at ≈35-40 rooms; no space meter watched bank $17). S137: bank $17 CustomAttrCheck far-calls bank $60 entry 13 → the home bank's CustomRenderCopy, which runs the state rules, clamps the counter to the last state and builds a one-room table in WRAM (43 B, $D50B-$D535); the vanilla walk reads it. Measured: tools/census_place_banks.py render checks through bank $17 entries 0 / 1 (example 13, S137 demo 147 screen-states over $60 / $81, 0 mismatched); PyBoy: S137 demo 64 / 64 screen-states == the preview; colours restored after the field menu / a battle / the library; the user's 33 screens identical S136 vs S137.",
+  "evidence": "ARCHITECTURE 'Room colours in the place banks (S137)'; PROJECT_COMPILER §2.46; ROADMAP ARC CAP2c"
  }
 }

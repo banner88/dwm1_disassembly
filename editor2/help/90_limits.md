@@ -4,10 +4,15 @@
   stops with an error past that (before S133 a room past it read another room's
   data). Layouts, colour grids and tilesets overflow into the 4 MB ROM's new
   banks when $64 / $67 are full (S135), and so do whole rooms (scripts, NPC /
-  door lists, states) and texts when $60 is full (S136). The 128-room limit is
-  the next to go (ROADMAP ARC CAP3, regions); the room palettes ($17, the
-  palette and colour rows of every room state) are the next space to move
-  (ARC CAP2c), then a room's own animated tiles ($6C, CAP2d).
+  door lists, states) and texts when $60 is full (S136). Since S137 a room's
+  palettes and colour rows go with it (they used to fill bank $17 at ~35-40
+  rooms). The next space to move is a room's own animated tiles ($6C, ARC
+  CAP2d); the 128-room limit goes after that (ARC CAP3, regions).
+- A saved game that stands in a room you have since DELETED (or in a room id
+  past your last room) cannot be continued — the game freezes while loading it
+  (found S137; the room's tileset record is read without a range check — fix
+  planned). Continue such a save in a build that still has the room, and save
+  somewhere else first.
 - One room's scripts and lists must fit one bank (~15 KB) — the build names a
   room that is bigger. Automatically numbered texts start a new 256-line group
   before one group would pass ~12 KB.

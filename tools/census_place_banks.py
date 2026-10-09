@@ -28,6 +28,16 @@ bank's tables), not a copy of the compiler's arithmetic:
   * out of range: script types $6B + PLACE_COUNT … and $70 when there are
     fewer places -> BC = $FFFF, an op $24's word stepped over; map ids past the
     last place -> the dummy step $2A01, an empty NPC list, the dummy exits.
+  * S137 (ARC CAP2c) — the render row, END TO END through bank $17: for every
+    place, screen and state, bank $17 entry 1 (the attr walk) must leave at
+    $C200 the attr grid the PROJECT names for that state (decoded from the
+    ROM at the plan's (bank, entry)), and bank $17 entry 0 (the palette walk)
+    must leave slots 0-3 of the palette buffer $C797 = the project palette's
+    slots 0-3 (or the borrowed vanilla palette, read from the ORIGINAL ROM)
+    under the engine's forcing (colour 1 := slot 7's unless the slot carries
+    the free-colour-1 marker, colour 3 := slot 7's | the marker); bank $60
+    entry 13 must hand back wRenderTable. Placeholders / map ids past the last
+    place: entry 13 -> HL = 0 (the Castle fallback).
 
   python3 tools/census_place_banks.py --project DIR            # builds it
   python3 tools/census_place_banks.py --project OUT --make-spill 40
@@ -244,6 +254,8 @@ def main():
     def check(kind, got, want, ctx):
         if a.negative and kind == 'script' and n.get(kind, 0) == 3:
             want = want ^ 1
+        if a.negative and kind == 'render_pal' and n.get(kind, 0) == 0:
+            want = [want[0] ^ 1] + list(want[1:])        # S137: the render check can fail
         n[kind] = n.get(kind, 0) + 1
         if got != want:
             bad[kind] = bad.get(kind, 0) + 1
@@ -318,6 +330,97 @@ def main():
         db, da = sym['DummyExits']
         want = list(rom.at(db, da, 36))
         check('exit_past', [m[w['wCustomExitBuffer'] + i] for i in range(36)], want, past)
+
+    # ---- S137: render rows (bank $60 entry 13; bank $17 entries 0 / 1) ------------
+    from tools.decompress_tiles import decompress_lz
+    orig = open(os.path.join(REPO, 'data', 'DWM-original.gbc'), 'rb').read()
+    wren = sym.get('wRenderTable', (0, 0))[1]
+
+    def want_palette(r, k, st):
+        kind, ref = prj.state_palette_ref(r, k, st)
+        if kind == 'palette':
+            pal = prj._pal_by_id[ref]
+            rows = [list(x) for x in pal['colors_rgb555'][:4]]
+            free = bool(pal.get('free_color1'))
+            cols = [[F.val(c) for c in row] for row in rows]
+        else:
+            o = 0x17 * 0x4000 + (ref - 0x4000)
+            raw = orig[o:o + 32]
+            cols = [[raw[8 * sl + 2 * c] | raw[8 * sl + 2 * c + 1] << 8 for c in range(4)]
+                    for sl in range(4)]
+            free = False
+        return cols, free
+
+    for r in prj.rooms:
+        mid = F.val(r['mapID'])
+        if r.get('placeholder') or not prj.room_screens(r):
+            S.reload()
+            got = S.call(0x0D, [(w['wMapID'], mid), (SCR, 0)])
+            check('render_none', got['HL'], 0, (r['id'], 'placeholder'))
+            continue
+        hb, _i = plan['home'][mid]
+        for k, scr in sorted(prj.room_screens(r).items()):
+            sb, sa = sym[f"{E.room_tag(r)}_Screen{k}"]
+            ctr = rom.u16(sb, sa)                    # the screen's step counter (as entry 0)
+            nstates = len(prj.screen_states(scr))
+            # scenarios: every state by its counter, and — on a screen with state
+            # rules — every rule's flags made true (the rules run first and may
+            # overwrite the counter, so this is how a ruled state is reached)
+            scen = [(st, []) for st in range(nstates)]
+            for scr_k, rules in prj.state_rules(r):
+                if scr_k != k:
+                    continue
+                for rst, terms in rules:
+                    scen.append((rst, [(fi, not clr) for fi, clr in terms]))
+            reached = set()
+            for st, flags in scen:
+                S.reload()
+                base = [(w['wMapID'], mid), (SCR, k), (ctr, st), (sym['wInGateworld'][1], 0)]
+                for fi, on in flags:
+                    if fi >= 0x1000:
+                        fa = sym['wExtFlags'][1] + ((fi - 0x1000) >> 3)
+                    else:
+                        fa = 0xD99B + (fi >> 3)
+                    mask = 0x80 >> (fi & 7)
+                    v = (m[fa] | mask) if on else (m[fa] & ~mask & 0xFF)
+                    base.append((fa, v))
+                got = S.call(0x0D, base)
+                check('render_hl', got['HL'], wren, (r['id'], k, st))
+                cur = m[ctr]                         # after the state rules
+                ab_e = prj.state_attr_entry(r, k, cur)
+                want_attr = list(decompress_lz(rom.b, ab_e[0], ab_e[1])[0])
+                na = len(want_attr)
+                S.reload()
+                for i in range(na):
+                    m[0xC200 + i] = 0xEE
+                S.call(0x01, base, bank=0x17)
+                check('render_attr', [m[0xC200 + i] for i in range(na)], want_attr,
+                      (r['id'], k, st, cur))
+                S.reload()
+                for i in range(32):                  # slots 0-3 (slot 7 = the forcing source)
+                    m[0xC797 + i] = 0xEE
+                S.call(0x00, base, bank=0x17)
+                cols, free = want_palette(r, k, cur)
+                c1 = m[0xC7D1] | m[0xC7D2] << 8
+                c3 = m[0xC7D5] | m[0xC7D6] << 8
+                want, gotp = [], []
+                for sl in range(4):
+                    row = list(cols[sl])
+                    mark = free and True
+                    row[1] = row[1] if mark else c1
+                    row[3] = c3 | (0x8000 if mark else 0)
+                    want += row
+                    gotp += [m[0xC797 + 8 * sl + 2 * c] | m[0xC797 + 8 * sl + 2 * c + 1] << 8
+                             for c in range(4)]
+                check('render_pal', gotp, want, (r['id'], k, st, cur))
+                reached.add(cur)
+                banks_seen.add(hb)
+            check('render_states', sorted(reached), list(range(nstates)), (r['id'], k))
+    S.reload()
+    past = 0x6B + len(prj.rooms)
+    if past <= 0xFF:
+        got = S.call(0x0D, [(w['wMapID'], past), (SCR, 0)])
+        check('render_past', got['HL'], 0, past)
 
     # ---- scripts (entries 4 / 6) -------------------------------------------------
     S.reload()

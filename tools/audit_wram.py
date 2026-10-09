@@ -234,6 +234,15 @@ def parse_wram_labels(path: Path):
     sizes = []  # (label, addr, size) in file order for span reconstruction
     pending = []  # labels waiting for the next data directive
     ds_expr_re = re.compile(r"^\s*ds\s+(.+?)\s*$")
+    # S137: `NAME EQU value` constants used in ds sizes (TILEANIM_MAX_GROUPS since
+    # S102 — the tool stopped with "unsupported ds expression" from S102 to S136)
+    equs = {}
+    for raw in path.read_text().splitlines():
+        me = re.match(r"^\s*([A-Za-z_][A-Za-z0-9_]*)\s+EQU\s+(\$?[0-9A-Fa-f]+)\s*(;.*)?$",
+                      raw)
+        if me:
+            v = me.group(2)
+            equs[me.group(1)] = int(v[1:], 16) if v.startswith('$') else int(v)
     for raw in path.read_text().splitlines():
         line = strip_comment(raw).rstrip()
         low = line.strip().lower()
@@ -271,6 +280,9 @@ def parse_wram_labels(path: Path):
             if mds:
                 expr = mds.group(1)
                 expr = re.sub(r"\$([0-9a-fA-F]+)", lambda m: str(int(m.group(1), 16)), expr)
+                expr = re.sub(r"[A-Za-z_][A-Za-z0-9_]*",
+                              lambda m: str(equs[m.group(0)]) if m.group(0) in equs
+                              else m.group(0), expr)
                 if not re.fullmatch(r"[0-9+\-*/() ]+", expr):
                     raise SystemExit(f"unsupported ds expression: {mds.group(1)}")
                 size = eval(expr)  # arithmetic only, sanitized above
