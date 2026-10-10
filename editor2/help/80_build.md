@@ -23,6 +23,13 @@ full and the **new** bar counts these banks too. A single room is limited to one
 bank (about 15 KB of scripts and lists — far more than any room needs); the build
 names a room that is bigger.
 
+**Space for animated tiles (S139):** the frames of each room's own animated tiles
+(the Animate tab) first fill bank $6C; a room whose animations do not fit goes
+on into a new bank by itself, like the rooms and the art. The **$6C**
+bar turns amber when full and the **new** bar counts these banks too. One room's
+animations are limited to one bank (about 15.8 KB — some seven rows of drifting
+4-tile strips); the build names a room that is bigger.
+
 **Room colours travel with the room (S137):** the palettes a room uses and its
 colour rows (which palette and colour grid each screen and state shows) are part
 of the room's space too — they sit in the same bank as its scripts. Before S137

@@ -469,6 +469,7 @@ class Project:
         self.repo_root = None          # set by compiler.compile_project
         self._stream_plan = None       # S135 (ARC CAP2a): stream_plan(), lazy
         self._place_plan = None        # S136 (ARC CAP2b): places.plan(), lazy (after streams)
+        self._anim_plan = None         # S139 (ARC CAP2d): tileanim.plan(), lazy (after places)
         self._music = None
         self._gamedata = None
 
@@ -2372,6 +2373,7 @@ class Project:
             return self._stream_plan
         self._ext_taken = []           # a retry after an error starts at $80 again
         self._place_plan = None        # S136: the places take their banks after these
+        self._anim_plan = None         # S139: the animation banks after the places
         banks = {LAYOUT_HOME_BANK: [], TILESET_HOME_BANK: []}
         used = {LAYOUT_HOME_BANK: 1, TILESET_HOME_BANK: 1}      # the self-ID byte
         overflow = []
@@ -2422,10 +2424,12 @@ class Project:
 
     def ext_bank_owners(self):
         """{bank: purpose} for every bank $80-$FF the build fills (S135 streams,
-        S136 places)."""
+        S136 places, S139 animations)."""
         from . import places as _PL
+        from . import tileanim as _TA
         self.stream_plan()
         _PL.plan(self)
+        _TA.plan(self)                     # S139 (ARC CAP2d): the animation banks
         return dict(getattr(self, '_ext_taken', None) or [])
 
     def place_plan(self):

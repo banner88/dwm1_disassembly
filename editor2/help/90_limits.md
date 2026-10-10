@@ -6,8 +6,9 @@
   banks when $64 / $67 are full (S135), and so do whole rooms (scripts, NPC /
   door lists, states) and texts when $60 is full (S136). Since S137 a room's
   palettes and colour rows go with it (they used to fill bank $17 at ~35-40
-  rooms). The next space to move is a room's own animated tiles ($6C, ARC
-  CAP2d); the 128-room limit goes after that (ARC CAP3, regions).
+  rooms). Since S139 a room's own animated tiles overflow too: bank $6C first,
+  then new banks (one room's animations must fit one bank, ~15.8 KB). The
+  128-room limit goes next (ARC CAP3, regions).
 - A saved game that stands in a room you have since DELETED (or in a room id
   past your last room) starts at **home** — your hub, or the Castle — when it
   is continued (S138; before S138 the game froze while loading it). A NEW room

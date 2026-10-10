@@ -248,7 +248,7 @@ user's project and the S136 demo — and no meter watched it).
   + reload in a painted place-bank hall; the user's 33 screens S136 vs S137 build: palette buffer and
   picture identical.
 
-### Stale places at CONTINUE (S138 — ROADMAP ARC CAP2e; built S138, NOT yet user-tested)
+### Stale places at CONTINUE (S138 — ROADMAP ARC CAP2e; built S138, USER-CONFIRMED 2026-10-10)
 
 A save records the map id it was made in (`wMapID` $C968 in the `$C8EA-$D9E9` image); a later
 build of the project may have NO place there — the room was deleted (the compiler fills the gap
@@ -273,6 +273,40 @@ bank $71 entry 0 did not, and CONTINUE hung (KEY_LESSONS S137). Since S138:
 - **Not caught (by design):** a save in a room whose NUMBER now belongs to another room (delete +
   new room) loads into the new room — the id is a real place. Places by name / regions = ARC
   CAP3 / CAP4.
+
+### Animation banks (S139 — ROADMAP ARC CAP2d; built S139, USER-CONFIRMED)
+
+A custom room's OWN animated tiles (S102, `custom.rooms[].tile_anims`) are played by bank $6C:
+bank $71 entry 3 `CustomAnimSource` (called by the rewritten bank $01 `PerRoomVRAMDispatch`
+every field frame, custom rooms only, after the vanilla guards) far-calls bank $6C entry 0. The
+player copies each due step's frame with a General-Purpose DMA whose SOURCE is read from the
+address space as mapped at that moment — so the frames must sit in the bank the player runs in.
+Until S139 that was bank $6C alone: every room's frames in one 16 KB bank (a drifting 4-tile
+strip is 2 KB per row; the bank filled at ~15-80 animated rooms, by style).
+- **Bank $6C entry 0 `CustomTileAnimate` is a forwarder** (`templates/bank_06c_head.asm`):
+  `wMapID − $6B` < `TILEANIM_ROOMS` → `TileAnimDirectory` row = (bank, index); bank 0 = no own
+  animations (return); bank $6C → a local `jp` to `TileAnimPlay` with E = index; else `ld h, bank
+  / ld l, 0 / rst $10` → that bank's entry 0 `TileAnimPlay_A<bank>`. E reaches it unchanged:
+  `RST_10` / `RST_08` touch A, BC, HL only on the way in (RST Dispatch above). Looked up on every
+  call, nothing cached (like the place banks); a vanilla id or an id past the directory returns
+  at once (the S138 stale bound holds).
+- **Every animation bank = self-ID + `dw TileAnimPlay_A<bank>` at `$4001` + the pinned player**
+  (`templates/tileanim_player.asm`, 273 B: `TileAnimPlay{A}` / `TileAnimRestart{A}` /
+  `TileAnimCopy{A}` — the S102 code, unchanged except that the group list comes from
+  `TileAnimRoomTable{A}[E]` instead of `TileAnimRoomTable[wMapID − $6B]`) + its rooms' records,
+  sequences and a 16-aligned frame section. The player's state (`wTileAnimRoom`,
+  `wTileAnimState`, …) is shared by every bank — one room is on screen; a room change restarts
+  the timers by map id as before.
+- **Compiler:** `editor2/core/tileanim.py` plan (PROJECT_COMPILER §2.48): first fit in map id
+  order, $6C then banks $80+ after the stream and place banks; a room's animations are never
+  split; a room bigger than one bank is a build error.
+- **Measured:** `tools/census_tile_anims.py` — the ROM tables through the directory == the model;
+  stub calls of bank $6C entry 0 for every map id reach exactly the room's bank with its index;
+  in the game every animated slot shows only its authored frames (S139 demo: 14 rooms over $6C
+  and $82-$86). Negative control: the HBlank wait removed in the animation banks' copies only →
+  6,387 bad tile-frames, all in rooms of $82+, the $6C rooms clean (so the census sees which
+  copy of the player ran). No frame dropped (600 field-loop passes / 600 frames in every cave);
+  the user's rooms in bank $6C play the same step sequence as the S138 build.
 
 ## Key RAM Regions
 

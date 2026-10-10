@@ -621,7 +621,9 @@ class AnimateTab(QWidget):
             f"<b>Load:</b> <span style='color:{load_col}'>{b['load_words']}</span><br>"
             f"<b>Free tiles on this tileset:</b> {b['free_tiles']} (only \"only the selected "
             f"cells\" uses them; frames never do)<br>"
-            f"<b>Frame storage (whole project):</b> {kb(b['rom_used'])} of {kb(b['rom_cap'])}"
+            f"<b>Frame storage:</b> this room {kb(b['rom_room'])} of {kb(b['rom_cap'])} "
+            f"(one bank per room) · whole project {kb(b['rom_used'])} (new banks "
+            f"are added as needed)"
             f" · animation groups here: {b['groups']} of {b['groups_cap']}" + extra)
 
     # ------------------------------------------------------------ selection

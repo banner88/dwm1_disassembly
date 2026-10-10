@@ -15,24 +15,86 @@
 ; exactly the vanilla conditions). Clobbers A/BC/DE/HL (the caller computes
 ; its own E afterwards).
 ;
-; Data (generated below the template):
-;   TileAnimRoomTable: dw per room, index wMapID - CUSTOM_ROOM_START
-;     (TILEANIM_ROOMS entries), $0000 = the room has no own animations.
-;   Group list of a room = records, then db 0:
-;     +0 period   frames per step (1-255; 0 = end of list)
-;     +1 phase    the first step's timer after entering the room (1-period:
-;                 the compiler staggers groups so few steps share a frame)
-;     +2 seqlen   steps per loop (1-127)
-;     +3 nslots   tiles this group changes per step (1-TILEANIM_CAP)
-;     +4 dw seq   seqlen x dw: the 16-aligned frame block of each step
-;                 (nslots x 16 bytes, in the order of the dest list)
-;     +6 nslots x dw  VRAM destination ($9000 + slot*16, VRAM bank 0)
-;   Step 0 of every sequence is the art the sheet already holds (the room
-;   loads it), so entering a room needs no copy.
+; S139 (ROADMAP ARC CAP2d): bank $6C is the FIRST animation bank, not the
+; only one. CustomTileAnimate is a FORWARDER: TileAnimDirectory[wMapID - $6B]
+; = (bank, index) of the room's animations — bank $6C itself (a local jump to
+; TileAnimPlay with E = index) or an ANIMATION BANK $80+ (rst $10 to that
+; bank's entry 0 = TileAnimPlay_A<bank>, E = index). Bank 0 = the room has no
+; own animations; an id past the directory (a vanilla id, a stale save past
+; the last animated room) returns at once. The player itself is the pinned
+; block templates/tileanim_player.asm, pasted below (and into every
+; animation bank) — the GDMA must read its frames from the bank it runs in.
+; Looked up on EVERY call (nothing cached), like the place banks (S136).
+;
+; Data (generated below the player):
+;   TileAnimDirectory: 2 B per room (bank, index), TILEANIM_ROOMS rows.
+;   TileAnimRoomTable: dw per room of THIS bank (the directory's index).
+;   Group lists / sequences / 16-aligned frame blocks: tileanim_player.asm.
+; =============================================================================
+
+SECTION "ROM Bank $06C", ROMX[$4000], BANK[$6C]
+
+    db $6C                              ; bank self-ID at $4000
+
+; rst-$10 entry table at $4001
+    dw CustomTileAnimate                ; entry 0  (HL=$6C00)
+
+TILEANIM_CAP EQU 8                      ; tiles copied per field frame, at most
+
+CustomTileAnimate:
+    ld a, [wMapID]
+    sub CUSTOM_ROOM_START
+    ret c                               ; vanilla room (never called for one)
+    cp TILEANIM_ROOMS
+    ret nc                              ; past the directory: no own animations
+    ld l, a
+    ld h, $00
+    add hl, hl
+    ld de, TileAnimDirectory
+    add hl, de
+    ld a, [hl+]                         ; the room's animation bank (0 = none)
+    or a
+    ret z
+    ld e, [hl]                          ; E = its index in that bank's table
+    cp $6C
+    jp z, TileAnimPlay                  ; bank $6C's own rooms
+    ld h, a
+    ld l, $00
+    rst $10                             ; that bank's entry 0, TileAnimPlay_A<bank>
+    ret
+
+; =============================================================================
+; TILE ANIMATION PLAYER — plays the own tile animations of the rooms whose
+; groups + frames live in THIS bank (S139, ROADMAP ARC CAP2d; template
+; editor2/core/templates/tileanim_player.asm; the S102 bank $6C code, moved)
+; =============================================================================
+; The compiler pastes this block into bank $6C with  = "" and into every
+; ANIMATION BANK ($80+, editor2/core/tileanim.py plan) with  = "_A<bank>",
+; where TileAnimPlay_A<bank> is the bank's rst $10 entry 0. The code must run
+; in the bank that holds the frames: the General-Purpose DMA reads its source
+; from the address space as mapped at the moment of the copy.
+;
+; TileAnimPlay (E = the room's index in TileAnimRoomTable) — reached from
+; bank $6C CustomTileAnimate (the forwarder: TileAnimDirectory[wMapID - $6B] =
+; bank, index) by a local jump (bank $6C) or `rst $10` (E survives the far
+; call's way in: RST_10 / RST_08 touch A, BC, HL only). Clobbers A/BC/DE/HL.
+;
+; Group list of a room = records, then db 0:
+;   +0 period   frames per step (1-255; 0 = end of list)
+;   +1 phase    the first step's timer after entering the room (1-period:
+;               the compiler staggers groups so few steps share a frame)
+;   +2 seqlen   steps per loop (1-127)
+;   +3 nslots   tiles this group changes per step (1-TILEANIM_CAP)
+;   +4 dw seq   seqlen x dw: the 16-aligned frame block of each step
+;               (nslots x 16 bytes, in the order of the dest list), in THIS bank
+;   +6 nslots x dw  VRAM destination ($9000 + slot*16, VRAM bank 0)
+; Step 0 of every sequence is the art the sheet already holds (the room
+; loads it), so entering a room needs no copy.
 ;
 ; State (WRAM, patches/wram.asm, carved from wCustomPool): wTileAnimRoom =
 ; the map ID whose timers are live (a different custom room restarts them:
 ; timer := phase, step := 0); wTileAnimState = 2 bytes per group (timer, step).
+; The state is shared by every animation bank — only one room is on screen.
 ; A copy writes a WHOLE frame (never a relative roll or swap), so anything
 ; that reloads the sheet mid-loop (a menu, a battle, a save/load) heals at the
 ; next step instead of drifting out of phase.
@@ -50,22 +112,8 @@
 ; rHDMAx operand in the disassembly is data decoded as code).
 ; =============================================================================
 
-SECTION "ROM Bank $06C", ROMX[$4000], BANK[$6C]
-
-    db $6C                              ; bank self-ID at $4000
-
-; rst-$10 entry table at $4001
-    dw CustomTileAnimate                ; entry 0  (HL=$6C00)
-
-TILEANIM_CAP EQU 8                      ; tiles copied per field frame, at most
-
-CustomTileAnimate:
-    ld a, [wMapID]
-    sub CUSTOM_ROOM_START
-    ret c                               ; vanilla room (never called for one)
-    cp TILEANIM_ROOMS
-    ret nc                              ; past the table: no own animations
-    ld l, a
+TileAnimPlay:
+    ld l, e
     ld h, $00
     add hl, hl
     ld de, TileAnimRoomTable
@@ -74,12 +122,12 @@ CustomTileAnimate:
     ld h, [hl]
     ld l, a                             ; HL = this room's group list
     or h
-    ret z                               ; $0000: nothing of its own
+    ret z                               ; $0000: nothing here (never emitted)
     ld a, [wMapID]
     ld b, a
     ld a, [wTileAnimRoom]
     cp b
-    call nz, TileAnimRestart            ; another room's timers: restart (HL kept)
+    call nz, TileAnimRestart         ; another room's timers: restart (HL kept)
     ld a, TILEANIM_CAP
     ld [wTileAnimLeft], a
     ldh a, [rVBK]
@@ -271,7 +319,8 @@ TileAnimCopy:
 
 ; -----------------------------------------------------------------------------
 ; TILEANIM DATA (generated by build_project.py from
-; custom.rooms[].tile_anims — PROJECT_COMPILER §2.19)
+; custom.rooms[].tile_anims — PROJECT_COMPILER §2.19 / §2.48)
 ; -----------------------------------------------------------------------------
 TILEANIM_ROOMS EQU 0
-TileAnimRoomTable:
+TileAnimDirectory:   ; per room (map id $6B + n): animation bank (0 = none), index
+TileAnimRoomTable:   ; index = TileAnimDirectory's (bank $6C)

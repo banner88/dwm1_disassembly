@@ -160,8 +160,8 @@ V = {
     ("bank_071.asm", "CustomRoomBGMResolve", 0): "COPY",         # S138: `ld c, a` for MusicRulePick (equality scan); the `cp $80` cap is gone
     # S114 burn-down: the sites added S100-S114 that were left NEEDS_REVIEW
     ("bank_007.asm", "SaveAllowCheck", 0): "CP_UNSIGNED",        # S100 (clean: cp $60..$64 chain)
-    ("bank_06c.asm", "CustomTileAnimate", 0): "BOUNDED",         # S102: cp TILEANIM_ROOMS, 16-bit index
-    ("bank_06c.asm", "CustomTileAnimate", 1): "CP_UNSIGNED",     # S102: == wTileAnimRoom (restart test)
+    ("bank_06c.asm", "CustomTileAnimate", 0): "BOUNDED",         # S102: cp TILEANIM_ROOMS, 16-bit index (S139: the TileAnimDirectory row)
+    ("bank_06c.asm", "TileAnimPlay", 0): "CP_UNSIGNED",          # S102: == wTileAnimRoom (restart test); S139: moved into the player block (tileanim_player.asm, pasted in $6C and every animation bank)
     # S129: the room's music rules come first — `ld c, a` (wMapID) for MusicRulePick
     # (full-byte equality against MusicRuleTable rows), then .noRule reloads wMapID
     # for .lookup (occurrence 1, still under the cp $80 / ret nc above); the S101

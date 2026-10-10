@@ -50,9 +50,12 @@ tiles show their first frame again). Everything is one undo step.
   the speed you set. Over 100 %: the busiest steps wait a frame or two.
 - **Free tiles on this tileset** — only *only the selected cells* uses them.
   Frames never use tileset space.
-- **Frame storage** — your frames live in their own ROM bank (about 15.7 KB
-  for the whole project). A 2-frame flip of 4 tiles is 0.1 KB; a drifting
-  strip 4 tiles wide is 2 KB (it needs 32 one-pixel frames).
+- **Frame storage** — your frames live in ROM banks of their own, not on the
+  tileset. One room's animations must fit one bank (about 15.8 KB); the whole
+  project has no limit of its own — when bank $6C is full, the next rooms'
+  animations go to new banks of the 4 MB ROM (S139; the **$6C** and **new**
+  bars at the bottom show it). A 2-frame flip of 4 tiles is 0.1 KB; a drifting
+  strip 4 tiles wide is 2 KB per row (it needs 32 one-pixel frames).
 - **Animation groups** — up to 32 per room (every 8 tiles of one animation
   is one group).
 

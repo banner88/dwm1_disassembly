@@ -1,5 +1,64 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-09 (Session 137 — **ROADMAP ARC CAP2c BUILT: ROOM COLOURS IN THE PLACE
+> BANKS — A ROOM'S RENDER ROWS (ATTR MAP + PALETTE PER SCREEN AND STATE) AND ITS PALETTES LEAVE BANK $17
+> AND TRAVEL IN ITS PLACE BLOCK; BANK $17 READS THEM THROUGH A ONE-ROOM WRAM TABLE (BANK $60 ENTRY 13)**
+> (user: "Continue on the 4 mb expansion" → the CAP2c audit + plan → "1) Sure. 2) Copies fine. 3) I
+> guess so, dont really get the implications, just do the most robust thing for the romhack. 4) Sounds
+> good"; S136's test ROM USER-CONFIRMED 15:14 before the session).
+> **Built S137; user-tested 2026-10-09 19:31 ("Everything is good apart from 1 thing: Library. For
+> families with NO monsters caught, the text box DUPLICATES") → r2 USER-CONFIRMED 2026-10-09 20:39 ("great please hand off files", after r2).**
+> **r2 (the librarian):** a project librarian talked to from the lower half of the screen opened its
+> greeting in the TOP box; the library keeps speaking into that box (`$C83E`), so the empty family's
+> two-box line was scrolled at the top over the family list while the library drew its own bottom
+> box (PyBoy; the original ROM's Library and the same NPC talked to from above: once). Since S126 —
+> the vanilla Library's counter always puts the player in the upper half. Fix: op `$3C` (bottom
+> box) before the librarian's greeting (`services.service_ops`; PROJECT_COMPILER §2.39, KEY_LESSONS
+> S137); the vault / farm / Medal Man talked to from above are unaffected (PyBoy contact sheets).
+> No pin moves (neither the example nor the user's project has a librarian). Test ROM
+> `DWM-S137r2-tint-test.gbc` (`04e9bc97…`, patched); every S137 PyBoy check re-run on it (below).
+> First test ROM `DWM-S137-tint-test.gbc` (`ec4e8880…`, patched; historical): the
+> user's project + 16 BRAND-NEW rooms TINTED HALL 1-16 (one gate theme each, 3 screens): screen 0 in
+> two states — the gate colours / PAINTED in its own tint (a PAINTER: YES paints = flag ON + the hall
+> reloads in state 1; YES again washes), halls 3/4/11/12 paint with a free colour 1; screen 1 an own
+> DUSK palette (even halls) or a BORROWED original room's colours (odd), a monster to fight + a
+> LIBRARIAN; screen 2 the GALLERY, the other way round; stairs both ways; halls 1-5 in bank $60, 6-16 in
+> place bank $81 (texts $82). Way in: the S137 DEMO NPC in Cities_FOUNT (3, 4) (it clears the halls'
+> flags — the user's S136 save has the same numbers set). The user's `.sav` CONTINUEs in TINTED HALL 3's
+> gallery (it stands in map `$78` screen 2). Its project: `examples/s137_tint_demo/`.
+> **The engine:** bank $17 `CustomAttrCheck` (both walks: entry 0 palette, entry 1 attr map) far-calls
+> **bank $60 entry 13 `PlaceFwdRender`** → `PlaceOf` → the home bank's reader **entry 13
+> `CustomRenderCopy`**: state rules first (StateRulesHook17 is gone), `PlaceRenderTable[wPlaceIdx]` →
+> `RoomAttr_<mid>` → `ScrAttr_<mid>_<k>` (`dw counter, db n_states` — counter clamped), the row → a
+> fake one-room table in WRAM (`wRenderTable` $D50B, `wRenderScr`, `wRenderRow`, `wRenderZero`,
+> `wRenderPal` $D516-$D535 = the palette's 32 B; 43 B from `wCustomPool`); `CustomAttrCheck` returns
+> HL = `wRenderTable`, A = 0 and the UNCHANGED vanilla walk + `LoadPal_46a1` read WRAM. A borrowed
+> vanilla palette = pointer bit 15 → read in bank $17. No place / placeholder / a `$0000` screen word →
+> HL = 0 → the Castle fallback. Rebuilt on every call (nothing cached).
+> **The compiler:** `emitters.render_lines` → part of `places.room_block` (rows + `RPal_<mid>_<n>`, 32 B
+> per palette per room — "Copies fine"); bank $17 regions `room_palettes_a` / `room_render_tables`
+> emit comments only → bank $17 has a constant 4,651 B free (was 3,259 for the user's project, 1,371
+> for the S136 demo — it would have filled at ≈35-40 rooms, unmetered). Templates re-pinned;
+> `TEMPLATE_SIZE[$60]` 1,691, `PLACE_TEMPLATE_SIZE` 1,102; the user's bank $60 13,126 → 14,331 B. Pin
+> `c31750e9…` (patched; S136's `05b8973d…` historical).
+> **Measured:** `tools/census_place_banks.py` render checks END TO END through bank $17 entries 1 / 0
+> (attr map at `$C200` == the project's stream, palette slots 0-3 == the project's / the original
+> ROM's borrowed bytes under the forcing; every state reached by counter or by its rule's flags): the
+> example 2,191 checks, the demo 7,451 (render 147 over $60 / $81), 0 mismatched; `--negative` fails.
+> PyBoy on the user's save (demo ROM): 64 / 64 screen-states == the editor preview; the painter by
+> TALK in halls of $60 and $81 (flag toggles, colours == paint / gate); colours restored after the
+> field menu, a talk battle and the library screen (24 / 24: `$C797`, BCPD and the BG identical);
+> stairs hall 5 ($60) → hall 6 ($81); a JOURNAL save in painted hall 9 ($81) + reload → painted; the
+> demo NPC clears the flags and sends you to hall 1. The user's 33 screens, S136 vs S137 build (new
+> game + warps): palette buffer + picture identical; the ROM renderer 33 / 33 == the S136 renderer.
+> **Found, NOT fixed:** a save made in a room the build lacks hangs at CONTINUE (bank $71
+> `CopyCustomRoomRecord` unbounded — S136 builds too; PyBoy) → ROADMAP CAP2e, Open defects;
+> `tools/audit_wram.py` broken since S102 (EQUs taught; selftest still fails) → ROADMAP note.
+> **Checks (r2):** verify_integrity PASS; test_compiler `--rom` ALL 1452 PASSED; test_canvas `--rom` PASS;
+> test_app PASS; audit_mapid_range selftest PASS. `EDITOR_REVISION` S137 (help 80_build, 90_limits).
+> **Next:** CAP2d (own tile animations past $6C) or CAP2e (stale saves: bound bank $71's per-room
+> reads) — the user picks.
+
 > Last verified: 2026-10-09 (Session 136 — **ROADMAP ARC CAP2b BUILT: PLACE BANKS — A ROOM'S
 > SCRIPTS, TILE PATCHES, SCREENS, NPC / EXIT LISTS, STATES AND CAST (+ THE TEXT, 256 LINES AT A TIME)
 > SPILL FROM BANK $60 INTO BANKS $80+; BANK $60 FORWARDS EVERY CALL THROUGH A DIRECTORY (NO CACHE)**

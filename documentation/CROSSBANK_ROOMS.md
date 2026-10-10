@@ -595,7 +595,7 @@ spot-verified by hand where marked ✓; runtime claims measured in PyBoy on the 
 | `$CD00` wCustomExitBuffer (row +2) | P | `CopyExitListToBuffer` | bank $0B exit scan → the mailbox | yes | no (CF3 window) |
 | `$D138` wGateRowBuf (+4) | P | bank $76 `NewGateRowCopy` | bank $16 → wMapID / wBossMapType | yes | no |
 | `$D2EB` wNpcColourMap ✓ | P, a cache tag | `CopyNPCListToBuffer` | `NpcColourDraw` (`cp` wMapID) | yes | no |
-| `$D0C5` wTileAnimRoom | P, a cache tag | bank $6C `TileAnimRestart` | bank $6C (`cp`) | yes | no |
+| `$D0C5` wTileAnimRoom | P, a cache tag | bank $6C `TileAnimRestart` (S139: `TileAnimRestart{A}` of the room's animation bank, $6C or $80+) | the same bank's `TileAnimPlay{A}` (`cp`) | yes | no |
 | `$DE88` wCustomRoomFlag | P; holds a VANILLA source id for an instant, then 0/1 (bank $71 re-derives it per frame) | `CustomPtrChase` | entry 3 `CustomTilesetInfo` — **no caller** | no | no |
 | `$C935` wGateID / `$C936` wFloorType1 | gate namespace (gate number / floor type), not map ids | bank $16 gate entry | gate tables | no | yes |
 

@@ -116,5 +116,11 @@
   "status": "structural_s137 + measured_s137",
   "detail": "Until S136 they filled bank $17's free tail (≈3.3 KB for the user's project: ~118-125 B a room → full at ≈35-40 rooms; no space meter watched bank $17). S137: bank $17 CustomAttrCheck far-calls bank $60 entry 13 → the home bank's CustomRenderCopy, which runs the state rules, clamps the counter to the last state and builds a one-room table in WRAM (43 B, $D50B-$D535); the vanilla walk reads it. Measured: tools/census_place_banks.py render checks through bank $17 entries 0 / 1 (example 13, S137 demo 147 screen-states over $60 / $81, 0 mismatched); PyBoy: S137 demo 64 / 64 screen-states == the preview; colours restored after the field menu / a battle / the library; the user's 33 screens identical S136 vs S137.",
   "evidence": "ARCHITECTURE 'Room colours in the place banks (S137)'; PROJECT_COMPILER §2.46; ROADMAP ARC CAP2c"
+ },
+ "anim_banks": {
+  "value": "a custom room's own animated tiles (records + sequences + frames) live in bank $6C or an animation bank $80+ — no project-wide frame-storage ceiling; ONE room's animations must fit one bank (16,384 - 276 player - 15 alignment - 2 table row = 16,091 B)",
+  "status": "structural_s139 + measured_s139",
+  "detail": "Until S138 every room's frames shared bank $6C (16,384 - 285 code - 2 B a room); a drifting 4-tile strip is 2 KB per row, a sway of 4 tiles ~214 B, a 2-frame flip of 4 tiles ~0.1 KB — the bank filled at ~15-80 animated rooms by style (the user's project: 2 rooms, 1,348 B). S139: bank $6C entry 0 CustomTileAnimate forwards through TileAnimDirectory (bank, index per room) to TileAnimPlay of the room's animation bank (each carries the 273 B player — the GDMA source must be mapped). Measured: tools/census_tile_anims.py (S139 demo: 14 rooms over $6C / $82-$86, 0 mismatched; negative control 6,387 bad tile-frames only in the $82+ rooms); no frame dropped in any demo cave.",
+  "evidence": "ARCHITECTURE 'Animation banks (S139)'; PROJECT_COMPILER §2.48; ROADMAP ARC CAP2d"
  }
 }

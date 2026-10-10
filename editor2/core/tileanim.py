@@ -382,3 +382,219 @@ class Player:
                     self.sheet[s * 16:s * 16 + 16] = blk[k * 16:k * 16 + 16]
                 changed = True
         return changed
+
+
+# ------------------------------------------------------------- animation banks (S139)
+# ROADMAP ARC CAP2d (PROJECT_COMPILER §2.48; ARCHITECTURE "Animation banks"):
+# a room's own animations (its group records, sequences and 16-aligned frame
+# blocks — never split) live in ONE ANIMATION BANK: bank $6C first, then
+# banks $80+ (Project._take_ext_bank('anims'), after the stream and place
+# banks), first fit in map id order. Bank $6C holds the forwarder + the
+# directory (TileAnimDirectory: per room bank, index); every animation bank
+# carries the pinned player (templates/tileanim_player.asm) because the GDMA
+# reads its frames from the bank it runs in.
+ANIM_HOME = 0x6C
+ALIGN_PAD = 15                         # the 16-aligned frame section: <= 15 pad bytes
+DIR_ROW_BYTES = 2                      # TileAnimDirectory: db bank, index
+TABLE_ROW_BYTES = 2                    # TileAnimRoomTable{A}: dw group list
+DATA_MARKER = "TILEANIM DATA (generated"
+
+
+def suffix(bank):
+    """The player block's label suffix in `bank` ("" in bank $6C)."""
+    return '' if bank == ANIM_HOME else f"_A{bank:02X}"
+
+
+def anim_bank_file(bank):
+    return f"bank_{bank:03x}.asm"
+
+
+def player(bank):
+    """The pinned player block (templates/tileanim_player.asm) for `bank`."""
+    from .emitters import template
+    text = template('tileanim_player.asm').replace('{A}', suffix(bank))
+    if '{A}' in text:
+        raise RuntimeError("tileanim_player.asm: an unreplaced {…} placeholder")
+    return text.rstrip('\n')
+
+
+def room_lines(prj, r):
+    """(lines, frames) of one room's animations: lines = its group records +
+    sequences (label TileAnimRoom_<idx>), frames = [(label, 16n bytes)] for the
+    bank's aligned frame section. Labels are global (the room index is unique)."""
+    from . import formats as F
+    ri = F.val(r['mapID']) - 0x6B
+    items = prj.tile_anims(r)
+    sheet = prj.room_sheet(r) or bytes(2048)
+    phases = schedule(items)
+    lines = [f"TileAnimRoom_{ri}:   ; {r['id']} — {load_words(items)}"]
+    seqs, frames = [], []
+    for i, it in enumerate(items):
+        for g, (part, blocks, seq) in enumerate(groups(it, sheet)):
+            tag = f"{ri}_{i}_{g}"
+            speed = _val(it['speed'])
+            lines.append(f"    db {speed}, {phases[i]}, {len(seq)}, {len(part)}"
+                         f"   ; {it.get('name') or it.get('id')}: "
+                         f"{MOTION_LABEL[it['motion']].lower()}, {speed_words(speed)}")
+            lines.append(f"    dw TileAnimSeq_{tag}")
+            lines.append("    dw " + ", ".join(f"${0x9000 + s * 16:04X}" for s in part)
+                         + "   ; slots " + ", ".join(str(s) for s in part))
+            seqs.append((tag, seq))
+            for k, b in enumerate(blocks):
+                frames.append((f"TileAnimFrame_{tag}_{k}", bytes(b)))
+    lines.append("    db 0   ; end")
+    for tag, seq in seqs:
+        lines.append(f"TileAnimSeq_{tag}:")
+        lines.append("    dw " + ", ".join(f"TileAnimFrame_{tag}_{k}" for k in seq))
+    return lines, frames
+
+
+def anim_rooms(prj):
+    """The rooms with own animations, in map id order (placeholders never)."""
+    from . import formats as F
+    rooms = [r for r in prj.rooms if not r.get('placeholder') and prj.tile_anims(r)]
+    return sorted(rooms, key=lambda r: F.val(r['mapID']))
+
+
+def plan(prj):
+    """Where every room's animations live (cached on the Project).
+    {'home': {mapID: (bank, index)}, 'banks': {bank: [(room, lines, frames)]},
+     'overflow': [bank, …], 'used': {bank: bytes}, 'dir_rows': n,
+     'room_bytes': {mapID: bytes}}"""
+    cached = getattr(prj, '_anim_plan', None)
+    if cached is not None:
+        return cached
+    from . import formats as F
+    from . import validators as V
+    from . import places as PL
+    from .project import ProjectError
+    PL.plan(prj)                      # stream + place banks take their $80+ numbers first
+    rooms = anim_rooms(prj)
+    dir_rows = (max(F.val(r['mapID']) for r in rooms) - 0x6B + 1) if rooms else 0
+    fixed_home = (V.TEMPLATE_SIZE.get(ANIM_HOME) or 0) + DIR_ROW_BYTES * dir_rows + ALIGN_PAD
+    cap = {ANIM_HOME: BANK_BYTES - fixed_home}
+    bank_cap = BANK_BYTES - V.ANIM_TEMPLATE_SIZE - ALIGN_PAD
+    used = {ANIM_HOME: 0}
+    banks = {ANIM_HOME: []}
+    order = [ANIM_HOME]
+    home, room_bytes = {}, {}
+    taken0 = list(getattr(prj, '_ext_taken', None) or [])
+    try:
+        for r in rooms:
+            lines, frames = room_lines(prj, r)
+            size = (V._payload_bytes("\n".join(lines)) + sum(len(b) for _l, b in frames)
+                    + TABLE_ROW_BYTES)
+            mid = F.val(r['mapID'])
+            room_bytes[mid] = size
+            for b in order:
+                if used[b] + size <= cap[b]:
+                    break
+            else:
+                if size > bank_cap:
+                    raise ProjectError(
+                        f"room {r.get('id')!r}: its animated tiles need {size} bytes — more "
+                        f"than one bank holds ({bank_cap}); make strips narrower, use fewer "
+                        "frames or split the animations over two rooms (ARC CAP2d, "
+                        "PROJECT_COMPILER §2.48)")
+                b = prj._take_ext_bank('anims')
+                order.append(b)
+                cap[b] = bank_cap
+                used[b] = 0
+                banks[b] = []
+            home[mid] = (b, len(banks[b]))
+            banks[b].append((r, lines, frames))
+            used[b] += size
+    except Exception:
+        prj._ext_taken = taken0          # a failed plan gives its banks back
+        raise
+    out = {'home': home, 'banks': banks, 'overflow': [b for b in order if b != ANIM_HOME],
+           'used': {b: (fixed_home if b == ANIM_HOME else V.ANIM_TEMPLATE_SIZE + ALIGN_PAD)
+                    + used[b] for b in order},
+           'dir_rows': dir_rows, 'room_bytes': room_bytes, 'room_cap': bank_cap}
+    prj._anim_plan = out
+    return out
+
+
+def _bank_data(p, bank):
+    """The generated data of one animation bank (after the marker)."""
+    A = suffix(bank)
+    ent = p['banks'][bank]
+    out = [f"TileAnimRoomTable{A}:   ; index = TileAnimDirectory's (bank ${bank:02X})"]
+    for r, _l, _f in ent:
+        out.append(f"    dw TileAnimRoom_{_room_idx(r)}   ; {_hexb(r['mapID'])} {r.get('id', '')}")
+    for r, lines, _f in ent:
+        out.append("")
+        out += lines
+    frames = [fr for _r, _l, fs in ent for fr in fs]
+    if frames:
+        from . import formats as F
+        out += ["",
+                f'SECTION "Bank ${bank:02X} tile animation frames", ROMX, BANK[${bank:02X}], ALIGN[4]',
+                "; frame blocks (nslots x 16 B 2bpp, 16-aligned for the GDMA source)"]
+        for label, b in frames:
+            out.append(f"{label}:")
+            for a in range(0, len(b), 16):
+                out.append(F.db_line(list(b[a:a + 16])))
+    return out
+
+
+def _room_idx(r):
+    from . import formats as F
+    return F.val(r['mapID']) - 0x6B
+
+
+def _hexb(v):
+    from . import formats as F
+    return F.hexb(F.val(v))
+
+
+def emit_bank_06c(prj, warnings):
+    """Bank $6C: the template head (CustomTileAnimate, the forwarder), the
+    player, then TILEANIM_ROOMS + TileAnimDirectory + bank $6C's own rooms."""
+    from . import emitters as E
+    p = plan(prj)
+    lines = [E.template('bank_06c_head.asm').rstrip('\n'), "", player(ANIM_HOME), ""]
+    lines += ["; " + "-" * 77,
+              "; " + DATA_MARKER + " by build_project.py from",
+              "; custom.rooms[].tile_anims — PROJECT_COMPILER §2.19 / §2.48)",
+              "; " + "-" * 77,
+              f"TILEANIM_ROOMS EQU {p['dir_rows']}",
+              "TileAnimDirectory:   ; per room (map id $6B + n): animation bank (0 = none), index"]
+    by_idx = {_room_idx(r): r for r in prj.rooms}
+    for i in range(p['dir_rows']):
+        r = by_idx.get(i)
+        mid = 0x6B + i
+        name = r.get('id', '') if r else '(no room)'
+        if mid in p['home']:
+            b, k = p['home'][mid]
+            lines.append(f"    db ${b:02X}, {k}   ; ${mid:02X} {name}")
+        else:
+            lines.append(f"    db 0, 0   ; ${mid:02X} {name} (none)")
+    lines += _bank_data(p, ANIM_HOME)
+    return "\n".join(lines) + "\n"
+
+
+def emit_anim_banks(prj, warnings):
+    """{target: text} — one whole file per animation bank $80+ (none when every
+    room's animations fit bank $6C). INCLUDEd by bank_ext.asm."""
+    from . import emitters as E
+    p = plan(prj)
+    out = {}
+    for b in p['overflow']:
+        lines = E.banner(f"BANK ${b:02X} — ANIMATION BANK (generated, S139)", [
+            "Rooms' own animated tiles that did not fit bank $6C (ROADMAP ARC",
+            "CAP2d; editor2/core/tileanim.py plan, first fit). Bank $6C's",
+            "CustomTileAnimate looks the room up in TileAnimDirectory and calls",
+            "this bank's entry 0 (TileAnimPlay at $4001) with E = its index here.",
+            "The self-ID byte is load-bearing (rst $10 reads [$4000]).",
+            "Generated by build_project.py — do not hand-edit."])
+        A = suffix(b)
+        lines.append(f'SECTION "ROM Bank ${b:03X}", ROMX[$4000], BANK[${b:02X}]')
+        lines.append(f"    db ${b:02X}  ; bank self-ID")
+        lines.append(f"    dw TileAnimPlay{A}   ; entry 0 (HL=${b:02X}00), E = the room's index")
+        lines.append(player(b))
+        lines.append("")
+        lines += E.banner(DATA_MARKER + f") — bank ${b:02X}")
+        lines += _bank_data(p, b)
+        out[f"file:patches/{anim_bank_file(b)}"] = "\n".join(lines).rstrip("\n") + "\n"
+    return out

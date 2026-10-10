@@ -186,21 +186,25 @@ class TileAnimMixin:
         tid = self.tileset_key(room)
         free = self._free_anim_tiles(tid)
         rom = 0
-        n_rooms = 0
+        room_rom = 0
         for r in self.rooms:
-            its = r.get('tile_anims') or []
-            if its:
-                n_rooms += 1
-            for it in its:
+            for it in r.get('tile_anims') or []:
                 try:
-                    rom += TA.rom_bytes(it)
+                    b = TA.rom_bytes(it)
                 except Exception:
-                    pass
-        cap = TA.BANK_BYTES - 285 - 2 * max(1, len(self.rooms)) - 16
+                    continue
+                rom += b
+                if r.get('id') == room.get('id'):
+                    room_rom += b
+        # S139 (ARC CAP2d): bank $6C first, then animation banks $80+ — the
+        # project has no frame-storage ceiling short of the ROM; ONE room's
+        # animations must fit one animation bank
+        from . import validators as V
+        cap = TA.BANK_BYTES - V.ANIM_TEMPLATE_SIZE - TA.ALIGN_PAD - TA.TABLE_ROW_BYTES
         groups = sum(-(-len(TA.slots_of(it)) // TA.CAP) for it in items)
         L = TA.load(items) if items else {'pct': 0.0, 'per_frame': 0, 'peak': 0, 'changes_s': 0}
         return {'items': len(items), 'tiles': sum(len(TA.slots_of(it)) for it in items),
-                'free_tiles': free, 'rom_used': rom, 'rom_cap': cap,
+                'free_tiles': free, 'rom_used': rom, 'rom_cap': cap, 'rom_room': room_rom,
                 'groups': groups, 'groups_cap': TA.MAX_GROUPS,
                 'load_pct': L['pct'], 'load_words': TA.load_words(items),
                 'peak': L['peak']}

@@ -1243,7 +1243,7 @@
   {
    "tree": "patched",
    "file": "bank_06c.asm",
-   "line": 63,
+   "line": 45,
    "label": "CustomTileAnimate",
    "occ": 0,
    "pattern": [
@@ -1254,9 +1254,9 @@
   {
    "tree": "patched",
    "file": "bank_06c.asm",
-   "line": 78,
-   "label": "CustomTileAnimate",
-   "occ": 1,
+   "line": 126,
+   "label": "TileAnimPlay",
+   "occ": 0,
    "pattern": [],
    "verdict": "CP_UNSIGNED"
   },

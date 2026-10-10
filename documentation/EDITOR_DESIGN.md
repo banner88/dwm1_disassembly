@@ -2227,7 +2227,7 @@ is read with interrupts on returns to the wrong bank otherwise. The work is buil
 not hard-coded, the bank meters, the tools that assume `< $80` banks (dump tools only).
 
 **B. Place banks — the spill (CAP2; split S135 into CAP2a streams — BUILT S135, USER-CONFIRMED —, CAP2b place
-banks — BUILT S136, USER-CONFIRMED —, CAP2c bank $17 — BUILT S137, USER-CONFIRMED —, CAP2d bank $6C (split from CAP2b S136), CAP2e stale saves + room songs past $7F — BUILT S138, NOT yet user-tested (ARCHITECTURE "Stale places at CONTINUE"); ROADMAP).**
+banks — BUILT S136, USER-CONFIRMED —, CAP2c bank $17 — BUILT S137, USER-CONFIRMED —, CAP2d bank $6C (split from CAP2b S136) — BUILT S139, USER-CONFIRMED: animation banks (ARCHITECTURE "Animation banks (S139)", PROJECT_COMPILER §2.48) —, CAP2e stale saves + room songs past $7F — BUILT S138, USER-CONFIRMED (ARCHITECTURE "Stale places at CONTINUE"); ROADMAP).**
 **As built S136 (CAP2b; ARCHITECTURE "Place banks (S136)", PROJECT_COMPILER §2.45):** the place
 header / far copy is NOT part of it (CAP3); a home bank holds the place's blocks only (scripts,
 patches, screens, lists, rules, cast) — the records / flags / music stay in bank $71 tables; bank

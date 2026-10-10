@@ -29,7 +29,8 @@ to the proven overlay:
 | `patches/wram.asm` | one marked region (`wram_step_counters`) |
 | `patches/bank_000.asm` | one marked region (`rom0_room_records` — the `$26DD` rows `$6B-$6F`, S94) |
 | `patches/bank_064.asm`, `bank_067.asm`, `bank_074.asm`, `bank_014.asm` region | layouts / tilesets / songs / quest enemies (S64, S70, S92) |
-| `patches/bank_06c.asm` | whole file = template head (`CustomTileAnimate`) + the rooms' own tile animations (S102, §2.19) |
+| `patches/bank_06c.asm` | whole file = template head (`CustomTileAnimate`; S139: the forwarder) + the player block + `TileAnimDirectory` + the rooms' own tile animations that fit (S102, §2.19; S139 §2.48) |
+| `patches/bank_0xx.asm` animation banks (only when needed) | S139 (ROADMAP ARC CAP2d): the rooms' own animations that did not fit bank $6C (`tileanim.emit_anim_banks`, §2.48). Whole files, INCLUDEd by `bank_ext.asm`; numbered after the stream and place banks |
 | `gd_*` regions in `patches/bank_001/003/006/007/012/013/014/016/04d/054/069.asm` | the vanilla data tables, from `gamedata` (S103, §2.20) |
 | `gd_family_icons` / `gd_family_icon_streams` / `gd_spirit_icon_stream` in `patches/bank_04f/02e/06d.asm` | the 11 family icons, from `gamedata.families.<f>.icon` (S107 P3.10 part 2c, §2.20) |
 | `patches/bank_07e.asm` + the `ns_*` regions in `patches/bank_000/011/016/017/041/04d/06a.asm` | the project's NEW species (ids 221-239), from `custom.species` (S105, §2.21) |
@@ -550,7 +551,8 @@ registering an emitter; nothing existing changes.
 | `music74` | `custom.music` (+ `rooms[].music`) | `file:patches/bank_074.asm` | `$74` |
 | `music75` (S116) | `custom.music` (songs past bank $74's 16,000 B) | `file:patches/bank_075.asm` | `$75` |
 | `audio_master` (S116) | `custom.music` (the bank $75 row) | `region:patches/bank_000.asm#rom0_audio_master` | `$00` |
-| `tileanim6c` (S102) | `custom.rooms[].tile_anims` | `file:patches/bank_06c.asm` | `$6C` |
+| `tileanim6c` (S102) | `custom.rooms[].tile_anims` (S139: the rooms `tileanim.plan` keeps in $6C + the directory) | `file:patches/bank_06c.asm` | `$6C` |
+| `anims_ext` (S139) | the rooms' animations that did not fit $6C (§2.48) | **`multi:anim_banks`** — one whole file `patches/bank_0xx.asm` per animation bank (none when everything fits) | `$80-$FF` |
 | `gd_monsters` `gd_enemies` `gd_encounters` `gd_family` `gd_special` `gd_exp_curves` `gd_growth_curves` `gd_skill_learn` `gd_skill_mp` `gd_skill_records` `gd_library` `gd_library_text` (S103) | `gamedata` (§2.20) | `region:` in banks $03 / $14 / $01 / $16 / $69 / $13 / $13 / $06 / $07 / $54 / $12 / $4D | those banks |
 | `species7e` + `ns_battle_gfx` `ns_follower_attr` `ns_battle_pal` `ns_recipe_pair` `ns_name_ptr` `ns_short_ptr` `ns_text_a`…`ns_text_g` `ns_detail_text` `ns_info` (S105; G3 layout) | `custom.species` (§2.21; editor2/core/species.py) | `file:patches/bank_07e.asm` + `region:` in banks $00 / $11 / $17 / $16 / $41 ×9 / $4D / $6A | those banks |
 | `art7f` `art7c` `art7a` + `art_battle_gfx` `art_battle_pal` `art_walk_01/06/07/09/0b/12/18/59` `art_layout_10/11` `art_attr_10/11` (S107) | `gamedata.art` (§2.23; editor2/core/art.py) | `file:patches/bank_07f/07c/07a.asm` + `region:` in banks $00 / $17 / $01 $06 $07 $09 $0B $12 $18 $59 / $10 / $11 | those banks |
@@ -585,7 +587,13 @@ user-confirmed hand-authored code:
   table, `CopyEnemyRowExt` (project enemy rows, §2.18).
 * `editor2/core/templates/bank_06c_head.asm` (S102) — bank byte, 1-entry
   table, `CustomTileAnimate` / `TileAnimRestart` / `TileAnimCopy` (the rooms'
-  own tile animations, §2.19).
+  own tile animations, §2.19). **S139 re-pin (§2.48):** the head is only the
+  forwarder `CustomTileAnimate` (`TileAnimDirectory`); the player moved to the NEW
+  pinned block `templates/tileanim_player.asm` (`TileAnimPlay{A}` / `TileAnimRestart{A}` /
+  `TileAnimCopy{A}`, pasted into bank $6C with `{A}` = "" and into every animation bank
+  with `_A<bank>`) — current values in `templates/PINNED_SHA256`; `TEMPLATE_SIZE[$6C]` 307
+  (`TileAnimDirectory` `$4133` in the S139 example game.sym; 285 S102), new
+  `validators.ANIM_TEMPLATE_SIZE` 276 (1 + 2 + the player).
 * `editor2/core/templates/bank_06f_head.asm` (S112) — bank byte, 4-entry
   table, `CustomAnimTick` / `CustomAnimInit` / `CustomAnimLoad` /
   `CustomAnimStep` + `CustomAnimNone` (the project's new battle animations,
@@ -1509,6 +1517,10 @@ animation moves; flip 2-8 frames of the right size; strips equal rows ≤ 4
 tiles; ≤ 32 groups per room), `Player` (the editor preview = the engine's
 timers + cap). Load > 100 % is a warning. Bank accounting: `TEMPLATE_SIZE
 [$6C]` 285 + payload after the `TILEANIM DATA (generated` marker + 15 pad.
+
+**S139 (ROADMAP ARC CAP2d):** the engine half above is now split — the forwarder in bank $6C
+and the player in every animation bank — and a room's records + frames live in bank $6C OR an
+animation bank $80+ (§2.48). The record format, timing and validators are unchanged.
 
 **Pin (S102)**: reference **`0d60486e57edc2ad31fa28079d4fc9f8`** (patched;
 built S102, NOT yet user-tested) — the example has no `tile_anims`, so bank
@@ -3786,7 +3798,7 @@ palette; attr as in §2.11) mean what they meant; WHERE the bytes live changed (
 
 ## §2.47 S138 — STALE SAVES + ROOM SONGS PAST $7F (ROADMAP ARC CAP2e)
 
-**Built S138, NOT yet user-tested.** No schema change except one new hub arrival reason.
+**Built S138; USER-CONFIRMED 2026-10-10 ("I confirm s138 all worked on testing").** No schema change except one new hub arrival reason.
 User (S138): "Whatever is the most robust for a NEW romhack since CURRENT project is POC".
 
 - **A stale id** = a custom map id ($6B-$FE) the build has no place for: past the last room
@@ -3838,6 +3850,49 @@ User (S138): "Whatever is the most robust for a NEW romhack since CURRENT projec
   same save in the build that has the room → that room (ContinueCheck E = 0). The S138 demo
   (`examples/s138_song_demo/`): 16 SONG GROTTOS `$76-$85`, every room song + 4 battle songs
   (`$78`, `$80`, `$82`, `$85`) == the project (`SetBGM` hook). Tests: `test_compiler.test_s138`.
+
+## §2.48 S139 — ANIMATION BANKS: a room's own animated tiles past bank $6C (ROADMAP ARC CAP2d)
+
+**Built S139; USER-CONFIRMED 2026-10-10 14:40 ("Confirmed - everything works").** No schema change: `custom.rooms[].tile_anims` (§2.19) means
+what it meant; WHERE a room's records and frames live is decided by the compiler
+(`editor2/core/tileanim.py` plan; engine: ARCHITECTURE "Animation banks (S139)").
+
+- **A room's animation BLOCK** (`tileanim.room_lines`) = `TileAnimRoom_<n>` (its group records,
+  `db 0`), its `TileAnimSeq_` lists and its frame blocks (`TileAnimFrame_`, the bank's 16-aligned
+  frame section). Labels are global (n = map id − $6B), never suffixed. A block is never split:
+  the GDMA reads a group's frames from the bank the player runs in.
+- **`tileanim.plan(prj)`** (lazy, cached as `prj._anim_plan`, reset with the stream / place plans;
+  runs `places.plan` first so the stream and place banks keep their numbers): the rooms with
+  animations in map id order, each placed **first fit** — bank $6C, then the animation banks
+  already opened, else `Project._take_ext_bank('anims')`. Sizes are exact: a block = the db / dw
+  payload of its records + sequences (`validators._payload_bytes`) + its frames + 2 B (its
+  `TileAnimRoomTable{A}` row). Capacity: bank $6C = 16,384 − `TEMPLATE_SIZE[$6C]` (307: head +
+  player) − 2 B per directory row − 15 (the frame section's alignment); an animation bank =
+  16,384 − `ANIM_TEMPLATE_SIZE` (276) − 15. A block bigger than an animation bank is a
+  `ProjectError` ("… more than one bank holds …") that `validators` reports as a build error.
+  Returns `home {mapID: (bank, index)}`, `banks {bank: [(room, lines, frames)]}`, `overflow`,
+  `used {bank: bytes}` (== the assembled bytes + 15, `census_tile_anims.py` `plan_bytes`),
+  `dir_rows`, `room_bytes`, `room_cap`.
+- **Emitters:** `tileanim6c` → `tileanim.emit_bank_06c`: the head, the player with no suffix, the
+  banner `TILEANIM DATA (generated`, `TILEANIM_ROOMS EQU <rows>` (= the last animated room's
+  index + 1), `TileAnimDirectory` (`db bank, index` per map id; `db 0, 0` = none), then bank
+  $6C's `TileAnimRoomTable` + blocks + `SECTION "Bank $6C tile animation frames", …, ALIGN[4]`.
+  `anims_ext` (`multi:anim_banks`) → `tileanim.emit_anim_banks`: per animation bank `SECTION
+  "ROM Bank $0xx"`, `db $xx`, `dw TileAnimPlay_Axx` (entry 0), the player with suffix `_Axx`,
+  the banner, `TileAnimRoomTable_Axx` + blocks + its own aligned frame section.
+  `emitters.ext_bank_files` names them (after the stream and place banks) so `bank_ext.asm`
+  INCLUDEs them.
+- **Accounting / meters:** `validators.bank_usage` — bank $6C = `TEMPLATE_SIZE[$6C]` + the payload
+  after the marker + 15; a `bank_0xx.asm` with `TILEANIM DATA (generated` = `ANIM_TEMPLATE_SIZE`
+  + its payload + 15. Bank $6C never gets the "nearly full" warning (it spills by design); the
+  space meter has a **$6C** bar (amber, not red, when full) and the "new" bar counts animation
+  banks. The Animate tab's budget: "Frame storage: this room X of ~15.8 KB (one bank per room) ·
+  whole project Y" (`tile_anim_budget` `rom_room` / `rom_cap` / `rom_used`).
+- **A project whose animations fit bank $6C** gets no animation bank; its frames and records are
+  the S102 bytes, but bank $6C's code moved (head + player), so pins move once: example
+  `fc0f7e2c…` (patched; S138's `ae463e7c…` historical — the example has no `tile_anims`).
+- **Measured:** `tools/census_tile_anims.py` (TOOLS_AND_DATA S139); the S139 demo
+  (`examples/s139_twinkle_demo/`). Tests: `test_compiler.test_s139` (+ the census with `--rom`).
 
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 

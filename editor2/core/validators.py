@@ -27,7 +27,7 @@ TEMPLATE_SIZE = {
                  # factored CopyExitListToBuffer in the template head; 383 S94: VanillaExitResolve rows keyed
                  # by (mapID, screen) — `db mapID, screen` with $FF = any screen)
     0x71: 1150,   # addr(Custom26DDTable)-$4000 = $447E, S138 (ARC CAP2e: CopyCustomRoomRecord's StalePlace bound, entry 10 ContinueCheck + StalePlace, HubWarp's HUB_CONTINUE branch; the two `cp $80` music guards gone; measured from the S138 example game.sym). Prev 1070 = $442E, S129 (+ MusicRulePick / TermsHold71 and the room / gate rule calls in CustomRoomBGMResolve, 119 B; measured from the S129 example game.sym). Prev 951 = $43B7, S127 (+ GATE_ANY in CustomGateInsert + ScaledChance reading E, 43 B). Prev 908 S126 (+ CustomAnimSource's screen-effect pause + AnimPauseTypes, 43 B; measured $438C). Prev 865 S125 (+ entry 9 dw + HubWarp, 138 B; measured from the S125 example game.sym $4361). Prev 727 S121 (+ entry 8 dw + TextSpriteMode, 39 B; measured from the S121 example game.sym $42D7). Prev 688 S116 (444 S102 + entries 6/7 dw + CustomRoomBGMResolve gate songs + CustomBGMStart + BattleBGMResolve; measured from the S116 example game.sym). Prev 444 S102 (440 S101 + CustomAnimSource's far call to bank $6C entry 0, 4 B; measured from the S102 reference game.sym). Prev 440 S101 (395 S100 + CustomRoomBGMResolve .gatePath: the custom boss song on the floor before the boss). Prev 395 S100 (164 S99 + entries 4/5 dw + CustomGateInsert + CustomRoomFlags + entry-1 follow-gate test; measured from the S100 reference game.sym). Prev 164 S99 (142 S64 + entry-3 dw + CustomAnimSource 20 B; measured from the S99 reference game.sym). Prev 142 S64 (S55 116 + entry-2 dw + CustomRoomBGMResolve; measured from the S64 reference game.sym)
-    0x6C: 285,    # addr(TileAnimRoomTable)-$4000, S102 (bank self-ID + entry table + CustomTileAnimate / TileAnimRestart / TileAnimCopy; measured from the S102 reference game.sym)
+    0x6C: 307,    # addr(TileAnimDirectory)-$4000 = $4133, S139 (ARC CAP2d: the forwarder CustomTileAnimate 31 B — TileAnimDirectory lookup, local jump or rst $10 — then the player block templates/tileanim_player.asm 273 B; measured from the S139 example game.sym). Prev 285 = addr(TileAnimRoomTable)-$4000, S102 (bank self-ID + entry table + CustomTileAnimate / TileAnimRestart / TileAnimCopy; measured from the S102 reference game.sym)
     0x6F: 391,    # addr(CustomAnimFrameTable)-$4000, S112 (bank self-ID + 4-entry table + CustomAnimTick / Init / Load / Step + CustomAnimNone; measured from the S112 game.sym)
     0x76: 460,    # addr(EncRoomTable)-$4000, S122 (GateBossWin row x6 + the WinTail jump, +RunWinTail; measured from the S122 game.sym $41CC). Prev 358 S117 (+2 entry-2 dw, +60 GateBossWin; measured from the S117 game.sym). Prev 296 S115 (+2 entry-1 dw, +17 EncVanillaNumber new-gate source, +36 NewGateRowCopy; measured from the S115 game.sym). Prev 241 S114 (bank self-ID + entry table + EncResolve / EncPickVariant / EncFloorRun / EncVanillaNumber)
     0x77: 1788,   # addr(ShopPtrTable)-$4000 = $46FC: S129 (+ entry 11 StoryCheck + the 12 kinds, TermsHold / TermOne / BagCount / MonCount / MonMatch, StoryCommand, ShopSetPick, 678 B; measured from the S129 example game.sym). Prev 1110 = $4456: S127 r3 (+3: BreedClose calls ShopBoxBottom). S127 = 1107 ($4453) (+ entries 7-10 BreedClose / BreedSlotEID / PartyAvgLevel / ScriptCommand + BreedRoll, 419 B). Prev 688 = $42B0: S126 r2 (+4: $FFD4 := $80 at the service close); S126 = 684 (+ entries 3-6 SayText / SetPairs / ScanPairs, ServiceClose*, ServiceOpenTiles, ScreenPush full-screen + room-tile rules, 246 B). Prev 438 = $41B6: S117b (+ entry 2 ScreenPush / PushRowAttrs, ShopClose -> ShopBoxBottom; was 93 S117; measured from the S117b game.sym)
@@ -35,6 +35,10 @@ TEMPLATE_SIZE = {
 }
 # S136 (ROADMAP ARC CAP2b): a PLACE BANK's fixed part = self-ID byte + the reader
 # block (templates/place_readers.asm) = addr(PlaceRoomTable_P<bank>) - $4000.
+# S139 (ROADMAP ARC CAP2d): an ANIMATION BANK's fixed part = self-ID + the entry
+# word + the player block (templates/tileanim_player.asm) =
+# addr(TileAnimRoomTable_A<bank>) - $4000 (+ tileanim.ALIGN_PAD for the frames).
+ANIM_TEMPLATE_SIZE = 276   # S139: 1 + 2 + the player $4022-$4132 of bank $6C (273 B) in the S139 example game.sym
 PLACE_TEMPLATE_SIZE = 1102   # S137: 1 + the reader block $424E-$469A of bank $60 (1,101 B; + CustomRenderCopy, entries 11-13). Prev 945 S136 (944 B)
 BANK_SIZE = 0x4000
 
@@ -379,6 +383,13 @@ def validate(prj, generated=None):
         errors += [f"room {rid}: {e}" for e in errs]
         if not errs and TA.load(items)['pct'] > 100:
             warnings.append(f"room {rid}: animated tiles — {TA.load_words(items)}")
+    # S139 (ARC CAP2d): where every room's animations live — a room bigger than
+    # one bank, or the ROM full, is an error here (not an emitter crash)
+    if not errors and any(r.get('tile_anims') for r in rooms):
+        try:
+            TA.plan(prj)
+        except Exception as ex:                      # noqa: BLE001
+            errors.append(str(ex))
 
     # ------------------------------------------ gate insertion (S100, P3.7b)
     _validate_gates(prj, rooms, errors, warnings)
@@ -1193,6 +1204,9 @@ def bank_usage(generated):
             if 'PLACE DATA (generated' in text:
                 used = PLACE_TEMPLATE_SIZE + _payload_bytes(
                     text.split('PLACE DATA (generated', 1)[1])
+            elif 'TILEANIM DATA (generated' in text:       # S139 (ARC CAP2d)
+                used = ANIM_TEMPLATE_SIZE + _payload_bytes(
+                    text.split('TILEANIM DATA (generated', 1)[1]) + 15
             else:
                 used = _payload_bytes(text)
             out[int(m.group(1), 16)] = (used, BANK_SIZE)
@@ -1243,9 +1257,10 @@ def _validate_accounting(prj, generated, errors, warnings):
                     f"generated {gen_bytes} = {total} > {BANK_SIZE} "
                     "bytes — trim content (rgbasm would only report the "
                     "first excess byte; KEY_LESSONS S52)")
-            elif total > BANK_SIZE - 256 and bank != 0x60:
+            elif total > BANK_SIZE - 256 and bank not in (0x60, 0x6C):
                 # S136: bank $60 is filled first-fit and spills into place banks
-                # by design (as $64 / $67 since S135) — nearly full is normal
+                # by design (as $64 / $67 since S135; S139: $6C into animation
+                # banks) — nearly full is normal
                 warnings.append(
                     f"bank ${bank:02X}: {BANK_SIZE - total} bytes free "
                     "(under 256) — nearly full")

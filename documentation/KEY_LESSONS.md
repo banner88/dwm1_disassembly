@@ -6314,3 +6314,27 @@ complete.
 22nd; the S136 and S137 demos had rooms up to `$85` without music, so nothing tripped. **Rule:** a
 deferred cap gets a meter or a test that fails when content crosses it — or it gets lifted when a
 session works in the same code (S138 did, with the bank $71 bounds).
+
+## S139 — animation banks (ROADMAP ARC CAP2d)
+
+**When the same code is copied into several banks, prove WHICH copy ran.** Since S139 the tile
+animation player exists once per animation bank (bank $6C + every `$8x`); a check that "every
+animated slot shows its authored frames" would pass just as well if the forwarder sent every room
+to bank $6C's copy and that copy happened to read the right data. **Fix (the census's negative
+control):** patch the HBlank wait out of the copies in the NEW banks only (`jr nz` → `nop nop` at
+`TileAnimCopy_A<bank>.hblank`): 6,387 bad tile-frames, every one in a room the plan put in `$82+`,
+the rooms of bank $6C clean — so the copy that runs is the room's own bank's. **Rule:** when code
+is duplicated per bank (place readers S136, the player S139), break ONE copy and show that exactly
+its rooms fail; the stub census's hook on each copy's entry is the cheap twin of the same proof.
+
+**"Nothing else changes" must list what else is allowed to change.** The first in-game census run
+flagged the user's `New roomS` ($6C): slots 76 / 78 / 90 / 91 changed outside its own animations
+— the room's VANILLA animation (`animation` `$47`, bank $01) moves them, by design, next to the
+room's own. **Fix:** the census allows `animation.room_slots(room)`. **Rule:** before asserting
+"only X writes this range", list every writer the room has (S99: the vanilla handler; S102: the own
+animations; menus: S126) — then assert the complement.
+
+**A label in a comment satisfies a text split.** `t.split('TileAnimDirectory:')[1]` in the first
+test_s139 landed in the bank $6C head's banner (`;   TileAnimDirectory: 2 B per room …`), not on
+the table, and the directory check failed on correct output. **Rule:** when a test parses generated
+asm, anchor labels at a line start (`'\nLabel:'`) — the templates' banners name the same labels.

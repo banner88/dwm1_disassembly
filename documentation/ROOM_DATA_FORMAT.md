@@ -870,6 +870,12 @@ partner slots, no relative rolls, walkability untouched (the slot index
 never changes), and a reloaded sheet heals at the next step. Up to 8 tiles
 per field frame (groups that do not fit wait a frame). Measured (PyBoy, the
 user's save): ~1.5 scanlines per tile; SameBoy agrees frame for frame.
+**S139 (ROADMAP ARC CAP2d):** the frames are no longer all in bank $6C — a room's
+animations live in bank $6C or in an ANIMATION BANK $80+ that carries its own copy
+of the player; bank $6C `CustomTileAnimate` forwards through `TileAnimDirectory`
+(ARCHITECTURE "Animation banks (S139)", PROJECT_COMPILER §2.48). One room's
+animations must fit one bank (~15.8 KB); the project has no frame-storage limit
+of its own.
 
 **Per-frame budget of the old handlers (measured S102, PyBoy)**: the field
 loop tolerates ~35-45 scanlines of animation work per frame; GreatTree's

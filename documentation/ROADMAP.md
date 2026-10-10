@@ -2523,7 +2523,7 @@ the user picks.
       there). *User half:* the test ROM in SameBoy.
 - **CAP2 — the spill (split S135, user: "whatever works").** The S133 box bundled four
       independent changes; measured on the user's 11 rooms: $60 79 % / $64 79 % / $67 55 % / $17
-      3,259 B free — the class banks bind at ~14-15 such rooms. Three boxes (S136: + CAP2d, bank $6C split off CAP2b; S137: + CAP2e, stale saves — built S138 with the room songs past $7F), each its own test ROM:
+      3,259 B free — the class banks bind at ~14-15 such rooms. Three boxes (S136: + CAP2d, bank $6C split off CAP2b; S137: + CAP2e, stale saves — built S138 with the room songs past $7F), each its own test ROM. **S139: every box built (all user-confirmed; d S139) — no per-room data class is bound to one bank any more below 128 places; next = CAP3 (regions).**
   - [x] **CAP2a — LZ streams: layouts, attr maps, tilesets past $64 / $67.** **Built S135;
         USER-CONFIRMED 2026-10-09 12:59 ("Yep all good can confirm").** Compiler-only (`DecompressTileLayout` takes the bank from every
         reference — ARCHITECTURE "LZ stream banks (S135)"): `Project.stream_plan()` first fit
@@ -2577,16 +2577,36 @@ the user picks.
         patched). *User half:* `DWM-S137-tint-test.gbc` in SameBoy — all good except the
         library (a project librarian talked to from below showed its two-box lines twice — a
         S126 lowering gap, fixed r2: op `$3C`); r2 `DWM-S137r2-tint-test.gbc` USER-CONFIRMED 2026-10-09 20:39 ("great please hand off files", after r2).
-  - [ ] **CAP2d — a room's own animated tiles past bank $6C (split from CAP2b, user S136: "Yes
-        ok").** Bank $71 entry 3 `CustomAnimSource` far-calls bank $6C `CustomTileAnimate`, which
-        reads `TileAnimRoomTable[mapID − $6B]` and GDMA-copies frames FROM ITS OWN BANK every field
-        frame; the same scheme as CAP2b fits (a directory → the room's animation bank, each
-        animation bank a copy of the bank $6C code + its rooms' groups and frames). Binds far later
-        than $60 (the user's project: $6C 1,344 B of 16,384). *Accept:* a project whose own
-        animations exceed bank $6C builds; PyBoy: every animated slot of rooms in a second bank
-        steps through its authored frames (the S102 check), menus / battles heal.
+  - [x] **CAP2d — a room's own animated tiles past bank $6C (split from CAP2b, user S136: "Yes
+        ok").** **Built S139; USER-CONFIRMED 2026-10-10 14:40 ("Confirmed - everything works")** (user: "Continue on the 4 mb expansion. I confirm
+        s138 all worked on testing" → the audit (bank $6C holds every room's frames; it binds at
+        ~15-80 animated rooms by style: a 4-tile drifting strip is 2 KB per row) → option A, the
+        animation banks, + the TWINKLE CAVES test plan → "Sounds good. Proceed"). Bank $6C entry 0
+        `CustomTileAnimate` is a FORWARDER: `TileAnimDirectory[wMapID − $6B]` = (bank, index) →
+        a local jump to `TileAnimPlay` (bank $6C's own rooms) or `rst $10` to entry 0 of an
+        ANIMATION BANK $80+ (`TileAnimPlay_A<bank>`, E = the index); every animation bank carries
+        the pinned player (`templates/tileanim_player.asm`, 273 B) because the GDMA reads its
+        frames from the bank it runs in. Compiler `tileanim.plan`: a room's groups + sequences +
+        frames are never split, first fit in map id order — $6C, then banks from
+        `_take_ext_bank('anims')` after the stream and place banks; a room bigger than one bank
+        (~15.8 KB) is a build error naming it. ARCHITECTURE "Animation banks (S139)",
+        PROJECT_COMPILER §2.48. *Accept (machine half) MET:* `tools/census_tile_anims.py` — the
+        ROM tables through the directory == the model, the plan's bytes == the ROM, stub calls of
+        bank $6C entry 0 for every map id `$00-$FE` reach exactly the room's bank with its index
+        and restart its timers; in the game on the user's save every animated slot shows only its
+        authored frames and every frame (the S139 demo: 14 rooms over $6C / $82-$86, 0
+        mismatched; the negative control — the HBlank wait removed in the animation banks only —
+        6,387 bad tile-frames, all in rooms of $82+, while the $6C rooms stayed clean); PyBoy on the
+        user's save: the demo NPC → all 12 caves by the lamplighters (each names its real bank) and back,
+        the field menu, a talk battle, the stairs cave 3 → 4 and
+        back, a JOURNAL save in cave 11 (bank $85) + CONTINUE there — the frames step through
+        their authored art after each; no frame dropped in any cave (600 / 600 field-loop
+        passes); the user's two animated rooms play the same step sequence S138 vs S139 (run
+        lengths identical). *User half:* MET — `DWM-S139-twinkle-test.gbc` + `DWM-S139-plain-test.gbc`
+        in SameBoy.
   - [x] **CAP2e — stale saves: bound bank $71's per-room reads (found S137) + room songs past
-        $7F.** **Built S138, NOT yet user-tested** (user: "Continue on the 4 mb expansion" → the
+        $7F.** **Built S138; USER-CONFIRMED 2026-10-10 09:14 ("I confirm s138 all worked on
+        testing")** (user: "Continue on the 4 mb expansion" → the
         audit (CAP2d binds late; the stale-save hang; the S64 music cap at `$7F` = a project's
         22nd room) → "1) Sure sounds good [CAP2e + the music lift now, CAP2d next] 2) Whatever is
         the most robust for a NEW romhack … 3) Sure [the SONG GROTTOS + plain-project ROMs]").
@@ -2606,7 +2626,7 @@ the user picks.
         a hub → the hub cell + "Your saved place is gone now."; a save in a then-deleted room
         (`$72`) → the Castle; the same save in the build that has the room → that room; the 16
         SONG GROTTOS' room songs + 4 battle songs (`$78`, `$80`, `$82`, `$85`) == the project.
-        *User half:* `DWM-S138-song-test.gbc` + `DWM-S138-plain-test.gbc` in SameBoy.
+        *User half:* MET — `DWM-S138-song-test.gbc` + `DWM-S138-plain-test.gbc` in SameBoy.
   - [ ] **Tool drift: `tools/audit_wram.py` (found S137).** Broken since S102 (a `ds` with an
         `EQU`) — S137 taught it EQUs; its selftest now FAILS: the `$DE74` scratch block classifies
         A′ "rammap-span" (a `known_RAM_map` span over `wRoomRecScratch` … `wCustomRoomFlag`).
@@ -2619,7 +2639,8 @@ the user picks.
       commit resolves link slots `$F0-$FE` (`wExitLinks`, filled by `CopyExitListToBuffer`
       from `$FD <region>` prefixes) / global ids / `wWarpRegion` / unchanged; the place cache;
       counters per region (zeroed on a change); `wNpcColourMap` / `wTileAnimRoom` dropped on
-      a change; region-carrying `HubTable` / `GateInsertTable` rows, the gate boss region
+      a change; bank $6C `TileAnimDirectory` (S139, indexed `wMapID − $6B` like `PlaceDirectory`)
+      re-keyed with the place header; region-carrying `HubTable` / `GateInsertTable` rows, the gate boss region
       (bank $16 `jr_016_5be1` nops), `GateBossWin` compares the region, the script command
       for `$0F` / `$3B` (widen the 255-entry command space first), Play here's poke; the
       compiler assigns regions automatically. *Accept:* a generated project of ≥ 300 places

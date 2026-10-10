@@ -726,3 +726,25 @@ edge and the battle waits for input forever.
 - **Trap — mashing A after CONTINUE eats an arrival scene:** to SEE a hub room's arrival lines,
   stop pressing A once `GAME_MODE` is 1 in the hub and take a frame every ~25 (A only while a box
   is open).
+
+## S139 techniques — which bank's copy ran, a talk battle to the end, dropped frames, A/B as runs
+
+- **Prove which copy of duplicated code ran** (`tools/census_tile_anims.py`): part B hooks every
+  bank's `TileAnimPlay{A}` (`hook_register(bank, addr, …)`; read `register_file.E` = the room's
+  index) during a stub call of bank $6C entry 0 — the hit list must be exactly the room's (bank,
+  index). Part C's negative control patches `TileAnimCopy_A<bank>.hblank`'s `jr nz` (`20 FA` →
+  `00 00`, found through game.sym) in the animation banks only: bad frames appear only in their
+  rooms (KEY_LESSONS S139).
+- **A talk battle to the end:** the script flag (`$D8D7` bit 0) CLEARS while the battle runs, so a
+  talk driver that stops at "script done" leaves the game at FIGHT / ITEM. After the talk: A every
+  50 frames until `GAME_MODE` is 1 again, the script flag is clear and a VBlank hook (`$00:$0040`)
+  has seen mode 2 (poke `$DB85` = 7 there too — no join prompt).
+- **Arrival scenes in the user's rooms answer A:** a "wait until idle" loop must press A (every ~30
+  frames) while a box is open — Cities_FOUNT's shopkeeper scene otherwise holds its first box and
+  the next A talks to the wrong NPC.
+- **Dropped frames per room:** hook `MainFieldLoop` (bank $01, game.sym) and count passes over 600
+  frames standing still (600 = none dropped) — S139: every TWINKLE CAVE 600 / 600.
+- **A/B of an animation between two builds:** per frame, the authored-frame index each animated
+  slot shows → run-length encode the state sequence; drop the first and last run (entry / cut-off),
+  align the first five runs, compare states AND run lengths (S139: the user's rooms, S138 vs S139,
+  55 / 111 runs identical).
