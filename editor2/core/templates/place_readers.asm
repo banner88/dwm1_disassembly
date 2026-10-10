@@ -306,12 +306,24 @@ CustomExitCheck{P}:
     ld l, a
     ; fall through into the shared copy loop (S70 factoring; 7-byte entries,
     ; first-byte-$FF terminator only, KEY_LESSONS v3-v4)
+; S140 (ROADMAP ARC CAP3a — regions): a row prefixed `$FD <region>` leads to a
+; place of that region. Its 7 bytes are copied with the destination (+2)
+; replaced by the next LINK id (LINK_ID_FIRST $EB, $EC, ... — one per such row
+; of this list), and (region, real id) is noted in wExitLinks[link - $EB]; the
+; room commit (bank $73 entry 0 RegionCommit) turns the link id back into the
+; place and enters its region. Unprefixed rows stay in the current region, as
+; before. Measured S133: nothing re-copies the list between the exit firing
+; and the commit. Keeps BC (saved), clobbers A / DE.
 CopyExitListToBuffer{P}:
+    push bc
     ld de, wCustomExitBuffer
+    ld c, LINK_ID_FIRST                 ; C = the next link id
 .copyExit:
     ld a, [hl]
     cp $FF
     jr z, .exitDone
+    cp $FD
+    jr z, .link
     ld b, $07
 .copyByte:
     ld a, [hl+]
@@ -320,10 +332,52 @@ CopyExitListToBuffer{P}:
     dec b
     jr nz, .copyByte
     jr .copyExit
+.link:
+    inc hl
+    ld a, [hl+]                         ; the region; HL -> the row
+    push de
+    ld b, a
+    ld a, c
+    sub LINK_ID_FIRST
+    add a
+    add LOW(wExitLinks)
+    ld e, a
+    ld a, HIGH(wExitLinks)
+    adc $00
+    ld d, a                             ; DE -> wExitLinks[link - $EB]
+    ld a, b
+    ld [de], a                          ; the region
+    inc de
+    inc hl
+    inc hl
+    ld a, [hl-]                         ; the row's real destination id
+    ld [de], a
+    dec hl                              ; HL -> the row
+    pop de
+    ld a, [hl+]                         ; +0, +1 as they are
+    ld [de], a
+    inc de
+    ld a, [hl+]
+    ld [de], a
+    inc de
+    inc hl                              ; +2: the link id instead
+    ld a, c
+    ld [de], a
+    inc de
+    inc c
+    ld b, $04                           ; +3 .. +6 as they are
+.linkRest:
+    ld a, [hl+]
+    ld [de], a
+    inc de
+    dec b
+    jr nz, .linkRest
+    jr .copyExit
 .exitDone:
     ld a, $FF
     ld [de], a
     ld hl, wCustomExitBuffer
+    pop bc
     ret
 
 ; =============================================================================

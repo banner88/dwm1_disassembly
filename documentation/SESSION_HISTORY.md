@@ -1,5 +1,51 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-09 (Session 138 — **ROADMAP ARC CAP2e BUILT: A SAVE MADE IN A PLACE THE
+> BUILD NO LONGER HAS STARTS AT HOME (THE HUB / THE CASTLE) INSTEAD OF HANGING AT CONTINUE; EVERY
+> PER-ROOM READER BOUNDED; ROOM SONGS + BATTLE SONGS FOR EVERY ROOM (THE `$7F` CAP LIFTED)**
+> (user: "Continue on the 4 mb expansion" → the audit: CAP2d (bank $6C) binds late, CAP2e is a hang,
+> and the room-song tables stop at `$7F` = a project's 22nd room → "1) Sure sounds good [CAP2e + the
+> music lift now, CAP2d next] 2) Whatever is the most robust for a NEW romhack since CURRENT project
+> is POC and will be fully TRASHED 3) Sure [the test plan]"; S137 r2 USER-CONFIRMED before the
+> session). **Built S138; USER-CONFIRMED 2026-10-10 09:14 ("I confirm s138 all worked on testing").** Test ROMs: `DWM-S138-song-test.gbc` (`ae925421…`, patched; the user's
+> project + 16 BRAND-NEW rooms SONG GROTTO 1-16, map ids `$76-$85`, each in its own gate theme with
+> its OWN room song and battle song — grottos 11-16 sit at `$80-$85`; a BARD names the grotto, its
+> map id and both songs and sends you on (YES); a MONSTER to fight; stairs both ways; a SCRIBE in
+> grotto 16 explains the stale-save test; way in: the S138 DEMO NPC in Cities_FOUNT (3, 4)) and
+> `DWM-S138-plain-test.gbc` (`a3cf6509…`, patched; the user's 11-room project, no `$76+`): JOURNAL in grotto 16 with the
+> first, CONTINUE that save with the second → the Castle throne room, party healed. Its project:
+> `examples/s138_song_demo/`.
+> **The engine (bank $71 template, re-pinned; bank $15 hand patch, same size):** `StalePlace` (a
+> custom id ≥ `ROOMFLAGS_TABLE_LEN`, or a PLACEHOLDER — a deleted room's id — marked by
+> `CustomRoomFlagsTable` bit 7 (`$81`)): entry 0 `CopyCustomRoomRecord` reads the Castle's record
+> (the S137 hang: `Custom26DDTable[mapID − $70]` unbounded), entry 5 returns `$81` past the end;
+> NEW entry 10 `ContinueCheck`, far-called by the CONTINUE loader (`ContinueLoadSave`) in the bytes
+> of a DEAD vanilla block that relocated a twice-continued gate save to the Castle: stale + not in a
+> gate → `HubWarp` reason **`HUB_CONTINUE` 7** (hub rules → a project room + `wHubReason`, else the
+> Castle at ($E8, $58) with NO `$D92B` code), `wIsPlayerChangingMaps` 1, `$C8EA` 1 (not `$80`),
+> `wScriptStateFlags` 0, the party healed at the Castle (bank $01 entry 9). The stale room is never
+> loaded. Room / battle song tables 256 rows, the three `cp $80` gone; `music.py` accepts every id
+> to `$EA`. Arrival reason `continue` + default scene *Back from an old save*. `TEMPLATE_SIZE[$71]`
+> 1,150; pin `ae463e7c…` (patched; S137's `c31750e9…` historical).
+> **Measured:** NEW `tools/census_stale_places.py` (every per-room reader — bank $71 entries
+> 0/1/2/3/5/7/10, bank $60 0/1/2/13, bank $17 0/1, banks $76 / $6C — for vanilla ids, places,
+> placeholders, ids past the end): user's project 2,791, + a deleted room 2,802, the S138 demo
+> 2,619, the example + a deleted room 2,846 — 0 mismatched; the S137 build of the user's project:
+> 274 mismatched (the census sees the defect). `census_music_resolve.py` 3,000 / 3,000 on the demo
+> (it found a model gap since S128 — the arena copy's Starry final, 15 mismatches on the user's S137
+> build — fixed in `model_battle_bgm`). PyBoy on the user's save: the stale save (JOURNAL in demo
+> room `$85`) → CONTINUE in the user's build: no room record read for `$85`, the Castle throne
+> room (14, 5), heal once, `$D92B` 3 kept, a JOURNAL there + reload → normal; with a hub
+> (Cities_FOUNT) → the hub cell + "Your saved place / is gone now." (`wHubReason` 7 → 0); a save in
+> `$72` with `$72` deleted → the Castle; the stale save in the demo build → `$85` itself; the demo
+> NPC → grotto 1, the 16 bards' YES chain, every room song == the project (`$09 $34 $12 $1E $AA $31
+> $61 $9E $18 $2E $A1 $1E $31 $9E $61 $A7`), battles in `$78` / `$80` / `$82` / `$85` → `$1B` /
+> `$2B` / `$A4` / `$15`, the room song back after each.
+> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 1463 PASSED; test_app PASS;
+> test_canvas `--rom` PASS; audit_mapid_range selftest PASS (clean 58 / patched 85).
+> `EDITOR_REVISION` S138 (help 66_hub, 90_limits).
+> **Next:** CAP2d (own tile animations past bank $6C) — then CAP3 (regions).
+
 > Last verified: 2026-10-09 (Session 137 — **ROADMAP ARC CAP2c BUILT: ROOM COLOURS IN THE PLACE
 > BANKS — A ROOM'S RENDER ROWS (ATTR MAP + PALETTE PER SCREEN AND STATE) AND ITS PALETTES LEAVE BANK $17
 > AND TRAVEL IN ITS PLACE BLOCK; BANK $17 READS THEM THROUGH A ONE-ROOM WRAM TABLE (BANK $60 ENTRY 13)**

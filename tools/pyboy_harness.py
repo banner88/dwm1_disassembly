@@ -46,6 +46,10 @@ PLAYER_TY    = 0xFF98   # player TILE y (absolute; screen row 1 => +8)
 W_CHANGING, W_DEST, W_FLAG = 0xC96C, 0xC96D, 0xC96E
 W_XLO, W_XHI, W_YLO, W_YHI = 0xC96F, 0xC970, 0xC971, 0xC972
 W_KICK = 0xC88F
+# S140 (ROADMAP ARC CAP3a — regions): the region of the next room commit + 1
+# (0 = keep; patches/wram.asm wWarpRegion) and the current region
+W_REGION = 0xD537
+MAP_REGION = 0xD536
 
 
 def boot(rom):
@@ -96,9 +100,15 @@ def to_bedroom(p):
 def warp(p, dest, x, y, settle=300):
     """Teleport by writing the exit-match handler's own RAM (bank $0B
     Jump_00b_45a8 writes exactly these), after killing any running script.
-    x/y are ABSOLUTE tile coords (multi-screen rooms: screen row 1 = y+8)."""
+    x/y are ABSOLUTE tile coords (multi-screen rooms: screen row 1 = y+8).
+    S140: dest may be a project mapID with its region in the high byte ($276
+    = region 2's $76): the region goes to wWarpRegion (the room commit enters
+    it, bank $73 RegionCommit). A plain id keeps the current region."""
     m = p.memory
     m[SCRIPT_FLAGS] = 0
+    if dest > 0xFF:
+        m[W_REGION] = (dest >> 8) + 1
+        dest &= 0xFF
     m[W_DEST] = dest; m[W_FLAG] = 0
     px, py = x * 16 + 8, y * 16 + 8
     m[W_XLO], m[W_XHI] = px & 0xFF, px >> 8

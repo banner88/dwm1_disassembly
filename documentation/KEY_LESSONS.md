@@ -6338,3 +6338,43 @@ animations; menus: S126) — then assert the complement.
 test_s139 landed in the bank $6C head's banner (`;   TileAnimDirectory: 2 B per room …`), not on
 the table, and the directory check failed on correct output. **Rule:** when a test parses generated
 asm, anchor labels at a line start (`'\nLabel:'`) — the templates' banners name the same labels.
+
+## S140 — regions (ROADMAP ARC CAP3a)
+
+**Measure the cost before choosing the design.** S133 estimated bank $71 at "≈60 B a room" and
+planned a place header + far copy (CAP3) to keep the per-place tables small. Measured from the S140
+demo's game.sym (label distance ÷ place count): **15 B a place** (record 8, encounters 3, anim 1,
+flags 1, two songs). At 15 B, bank $71 holds ≈950 places, so the tables could stay where they were
+and be indexed by a 16-bit place number. That is a simpler engine than a cache that has to be
+refreshed. **Rule:** re-measure a carried-over estimate from the current build before it decides an
+architecture; label distances in game.sym are the cheapest exact measurement.
+
+**rgbasm only WARNS when a value is cut to fit.** A region's project mapID (`$176`) put into a `db`
+where the engine wants the real id assembles as `$76` with a `-Wtruncation` warning, and the build
+"passes". With regions, the high byte is real data, so every such cut is a compiler mistake.
+**Fix:** `builder.py` refuses a build whose output mentions a truncation. **Rule:** when a byte
+gains a meaningful high part, make the assembler's truncation warning fatal for that build path.
+
+**Placeholders that are never indexed still break a model.** In regions ≥ 1 the arena copies' ids
+are reserved (the engine finds them as region 0's places in every region), so those regions'
+dense tables have a hole there. The first census runs counted those rows as places and mismatched
+the ROM. **Fix:** mark them `global_alias` (`place_number` maps them to region 0's P); every census
+skips them. **Rule:** a table row the engine can never reach must be marked as such in the model,
+not just filled.
+
+**A test harness's convenience can test the wrong thing.** `pyboy_harness.warp(p, $6E, …)` keeps
+the CURRENT region for a plain id (a project mapID > `$FF` sets `wWarpRegion`). Carrying region 3,
+a "warp to Cities_FOUNT ($6E)" landed on region 3's empty `$6E` slot, not the user's region-0
+place, and the talk that followed "failed". **Rule:** with regions, name the region of every
+destination in a driver (for region 0, poke `W_REGION` = 1); check where the warp landed (map id
+AND region) before reading the result.
+
+**Read the allocator before describing it.** The first doc text said region 0's step counters
+were kept across a region change. The allocator (`step_counter_allocation`) puts region 0's
+counters in the shared area too; only the reserved / explicit / global places' counters sit below
+it. Caught before delivery by reading the code while writing ARCHITECTURE. **Rule:** a sentence
+about who shares memory is checked against the allocating code, not against the plan.
+
+**`open(p, 'w').write(open(p).read() …)` empties the file.** The write handle is opened (and the
+file truncated) before the read runs. This emptied `editor2/help/_revision.md` (restored from git).
+**Rule:** read into a variable first, then write.

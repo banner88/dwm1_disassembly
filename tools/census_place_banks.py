@@ -87,6 +87,63 @@ class Rom:
         return lo | hi << 8
 
 
+def rom_place_number(rom, sym, mid, sfx='60'):
+    """S140 (ROADMAP ARC CAP3a): the place number of a project mapID (region in
+    the high byte) as the engine's PlaceNum<sfx> computes it, from the ROM's own
+    RegionTable<sfx> / GlobalPlaceIds<sfx> — None = no place. A pre-S140 build
+    (no RegionTable): mapID - $6B for $6B-$FE."""
+    reg, real = mid >> 8, mid & 0xFF
+    if real < 0x6B:
+        return None
+    if 'RegionTable' + sfx not in sym:
+        return real - 0x6B if reg == 0 else None
+    k = real - 0x6B
+    if k >= 0x80:
+        return None
+    gb, ga = sym['GlobalPlaceIds' + sfx]
+    while rom.u8(gb, ga) != 0xFF:
+        if rom.u8(gb, ga) == k:
+            reg = 0
+            break
+        ga += 1
+    tb, ta = sym['RegionTable' + sfx]
+    if reg >= rom.u8(tb, ta):
+        return None
+    row = ta + 1 + 3 * reg
+    if k >= rom.u8(tb, row):
+        return None
+    return rom.u16(tb, row + 1) + k
+
+
+def exit_copy_model(raw):
+    """S140 (ROADMAP ARC CAP3a): what CopyExitListToBuffer (place_readers.asm)
+    writes for a list: 7-byte rows as they are; a `$FD <region>` row gets link id
+    $EB + n (n = its order among the prefixed rows) at +2 and (region, real id)
+    in wExitLinks[n]. -> (buffer bytes incl. the $FF, [(region, id)])."""
+    out, links, i = [], [], 0
+    while raw[i] != 0xFF:
+        if raw[i] == 0xFD:
+            reg = raw[i + 1]
+            row = list(raw[i + 2:i + 9])
+            links.append((reg, row[2]))
+            row[2] = 0xEB + len(links) - 1
+            out += row
+            i += 9
+        else:
+            out += list(raw[i:i + 7])
+            i += 7
+    return out + [0xFF], links
+
+
+def mid_pokes(sym, mid):
+    """S140: the pokes that make a project mapID current — wMapID (the real id)
+    and, in an S140+ build, wMapRegion (the region)."""
+    out = [(sym['wMapID'][1], mid & 0xFF)]
+    if 'wMapRegion' in sym:
+        out.append((sym['wMapRegion'][1], mid >> 8))
+    return out
+
+
 class Stub:
     def __init__(self, rom_path):
         from pyboy import PyBoy
@@ -266,11 +323,13 @@ def main():
     # ---- places: screens / states (entries 0 / 8 / 1 / 2 / 7) -------------------
     for r in prj.rooms:
         mid = F.val(r['mapID'])
+        if r.get('global_alias'):
+            continue                          # S140: an arena id in region 1+ = region 0's room
         hb, idx = plan['home'][mid]
         banks_seen.add(hb)
         tag = E.room_tag(r)
         if r.get('placeholder'):
-            got = S.call(0x00, [(w['wMapID'], mid), (SCR, 0)])
+            got = S.call(0x00, [*mid_pokes(sym, mid), (SCR, 0)])
             check('step', got['DE'], 0x2A01, (r['id'], 'placeholder'))
             continue
         for k, scr in sorted(prj.room_screens(r).items()):
@@ -281,7 +340,7 @@ def main():
             nstates = len(prj.screen_states(scr))
             for st in range(nstates):
                 S.reload()
-                pokes = [(w['wMapID'], mid), (SCR, k), (ctr, st)]
+                pokes = [*mid_pokes(sym, mid), (SCR, k), (ctr, st)]
                 for i in range(8):
                     pokes.append((0xD7CA + i, 0xEE))
                 got = S.call(0x00, pokes)
@@ -295,7 +354,7 @@ def main():
                         want += [0xFF, 0x00] if sp is None else [(sp + 0x10) & 0xFF, 1]
                     check('cast', [m[0xD7CA + i] for i in range(8)], want, (r['id'], k))
                 npc_ptr, exit_ptr = rom.u16(sb, ent + 2), rom.u16(sb, ent + 4)
-                got = S.call(0x01, [(w['wMapID'], mid), (SCR, k)])
+                got = S.call(0x01, [*mid_pokes(sym, mid), (SCR, k)])
                 check('npc_hl', got['HL'], w['wCustomNPCBuffer'], (r['id'], k))
                 raw = rom.at(sb, npc_ptr, 256)
                 buf = [m[w['wCustomNPCBuffer'] + i] for i in range(128)]
@@ -309,18 +368,19 @@ def main():
                 ok &= buf[5 * len(npc_copy_model(raw))] == 0xFF
                 check('npc', ok, True, (r['id'], k, cur))
                 for entry in (0x02, 0x07):
-                    got = S.call(entry, [(w['wMapID'], mid), (SCR, k)])
-                    raw = rom.at(sb, exit_ptr, 7 * 18 + 1)
-                    nex = 0
-                    while raw[7 * nex] != 0xFF:
-                        nex += 1
-                    want = list(raw[:7 * nex + 1])
-                    gotb = [m[w['wCustomExitBuffer'] + i] for i in range(7 * nex + 1)]
+                    got = S.call(entry, [*mid_pokes(sym, mid), (SCR, k)])
+                    raw = rom.at(sb, exit_ptr, 9 * 18 + 1)
+                    want, links = exit_copy_model(raw)
+                    gotb = [m[w['wCustomExitBuffer'] + i] for i in range(len(want))]
                     check('exit', (got['HL'], gotb),
                           (w['wCustomExitBuffer'], want), (r['id'], k, entry))
+                    if links:                        # S140: the link rows' (region, id)
+                        lb0 = sym['wExitLinks'][1]
+                        check('exit_links', [m[lb0 + i] for i in range(2 * len(links))],
+                              [x for pair in links for x in pair], (r['id'], k, entry))
     # past the last place
     S.reload()
-    past = 0x6B + len(prj.rooms)
+    past = 0x6B + prj.regions[0][0]          # S140: region 0's first id past its last place
     if past <= 0xFF:
         got = S.call(0x00, [(w['wMapID'], past), (SCR, 0)])
         check('step_past', got['DE'], 0x2A01, past)
@@ -353,9 +413,11 @@ def main():
 
     for r in prj.rooms:
         mid = F.val(r['mapID'])
+        if r.get('global_alias'):
+            continue
         if r.get('placeholder') or not prj.room_screens(r):
             S.reload()
-            got = S.call(0x0D, [(w['wMapID'], mid), (SCR, 0)])
+            got = S.call(0x0D, [*mid_pokes(sym, mid), (SCR, 0)])
             check('render_none', got['HL'], 0, (r['id'], 'placeholder'))
             continue
         hb, _i = plan['home'][mid]
@@ -375,7 +437,7 @@ def main():
             reached = set()
             for st, flags in scen:
                 S.reload()
-                base = [(w['wMapID'], mid), (SCR, k), (ctr, st), (sym['wInGateworld'][1], 0)]
+                base = [*mid_pokes(sym, mid), (SCR, k), (ctr, st), (sym['wInGateworld'][1], 0)]
                 for fi, on in flags:
                     if fi >= 0x1000:
                         fa = sym['wExtFlags'][1] + ((fi - 0x1000) >> 3)
@@ -417,7 +479,7 @@ def main():
                 banks_seen.add(hb)
             check('render_states', sorted(reached), list(range(nstates)), (r['id'], k))
     S.reload()
-    past = 0x6B + len(prj.rooms)
+    past = 0x6B + prj.regions[0][0]          # S140: region 0's first id past its last place
     if past <= 0xFF:
         got = S.call(0x0D, [(w['wMapID'], past), (SCR, 0)])
         check('render_past', got['HL'], 0, past)
@@ -432,7 +494,7 @@ def main():
         if a.words and length > a.words:
             idxs = sorted({0, length - 1} | set(rnd.sample(range(length), a.words)))
         for wi in idxs:
-            got = S.call(entry, [(w['wScriptMapType'], stype), (w['wScriptNPCId'], npc),
+            got = S.call(entry, [(w['wScriptMapType'], stype & 0xFF), (w['wScriptNPCId'], npc),
                                  (0xD8D5, wi & 0xFF), (0xD8D6, wi >> 8)])
             check('script', got['BC'], rom.u16(lb, la + 2 * wi), (label, wi))
         return lb
@@ -448,19 +510,24 @@ def main():
 
     for r in prj.rooms:
         mid = F.val(r['mapID'])
+        if r.get('global_alias'):
+            continue
         tag = E.room_tag(r)
         table = prj.room_script_table(r) if not r.get('placeholder') and r.get('scripts') \
             else [(0, None)]
         for idx, _sid in table:
             lb = f"{tag}_Scr{idx:02d}"
-            m[w['wMapID']] = mid
+            for _a, _v in mid_pokes(sym, mid):
+                m[_a] = _v
             banks_seen.add(run_script(mid, idx, lb, script_len(lb),
                                       entry=0x06 if idx % 2 else 0x04))
+    for _a, _v in mid_pokes(sym, 0x6B):          # S140: back to region 0
+        m[_a] = _v
     for i, sc in enumerate(prj.skill_scripts):
         lb = f"SkillScr{E.SKILL_SCRIPT_FIRST + i:02d}"
         run_script(0xFF, E.SKILL_SCRIPT_FIRST + i, lb, script_len(lb))
-    for stype in ([0x6B + len(prj.rooms)] if len(prj.rooms) < 0x94 else []) + \
-            ([0x70] if len(prj.rooms) <= 5 else []):
+    for stype in ([0x6B + prj.regions[0][0]] if prj.regions[0][0] < 0x94 else []) + \
+            ([0x70] if prj.regions[0][0] <= 5 else []):
         m[w['wMapID']] = 0x6B
         got = S.call(0x04, [(w['wScriptMapType'], stype), (w['wScriptNPCId'], 0),
                             (0xD8D5, 0), (0xD8D6, 0)])
@@ -490,17 +557,18 @@ def main():
                 S.reload()
                 for i in range(len(row)):
                     m[0xC300 + off + i] = 0xEE
-                m[w['wMapID']] = mid
-                S.call(0x09, [(w['wScriptMapType'], mid), (w['wScriptNPCId'], idx),
+                for _a, _v in mid_pokes(sym, mid):
+                    m[_a] = _v
+                S.call(0x09, [(w['wScriptMapType'], mid & 0xFF), (w['wScriptNPCId'], idx),
                               (0xD8D5, wi & 0xFF), (0xD8D6, wi >> 8)])
                 got = ([m[0xC300 + off + i] for i in range(len(row))],
                        m[0xD8D5] | m[0xD8D6] << 8)
                 check('patch', got, (row, wi + 1), (lb, wi))
                 banks_seen.add(sb)
-    if len(prj.rooms) < 0x94:                     # a type past the last place: the word skipped
+    if prj.regions[0][0] < 0x94:                  # a type past the last place: the word skipped
         S.reload()
         m[w['wMapID']] = 0x6B if prj.rooms else 0x01
-        stype = 0x6B + len(prj.rooms)
+        stype = 0x6B + prj.regions[0][0]
         S.call(0x09, [(w['wScriptMapType'], stype), (w['wScriptNPCId'], 0),
                       (0xD8D5, 7), (0xD8D6, 0)])
         check('patch_past', m[0xD8D5] | m[0xD8D6] << 8, 8, stype)

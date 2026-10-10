@@ -90,9 +90,33 @@ class RoomRenderer:
         bank, addr = self.syms[name]
         return self._off(bank, addr)
 
+    def place_number(self, mapid):
+        """S140 (ROADMAP ARC CAP3a): the place number of a project mapID (region
+        in the high byte) — the engine's PlaceNum60 on the ROM's own
+        RegionTable60 / GlobalPlaceIds60. A pre-S140 ROM: mapID - $6B."""
+        if 'RegionTable60' not in self.syms:
+            return mapid - 0x6B
+        reg, k = mapid >> 8, (mapid & 0xFF) - 0x6B
+        g = self._sym_off('GlobalPlaceIds60')
+        while self.rom[g] != 0xFF:
+            if self.rom[g] == k:
+                reg = 0
+                break
+            g += 1
+        t = self._sym_off('RegionTable60')
+        if not 0 <= k < 0x80 or reg >= self.rom[t]:
+            raise RuntimeError(f"mapID ${mapid:02X}: no such place in this build")
+        row = t + 1 + 3 * reg
+        if k >= self.rom[row]:
+            raise RuntimeError(f"mapID ${mapid:02X}: past its region's last place")
+        return self._u16(row + 1) + k
+
     # -- render pieces -----------------------------------------------------
     def _gfx(self, mapid):
-        if mapid < 0x70:
+        if 'RegionTable60' in self.syms and mapid >= 0x6B:
+            # S140: every place's record is Custom26DDTable[place number]
+            o = self._sym_off('Custom26DDTable') + self.place_number(mapid) * 8
+        elif mapid < 0x70:
             o = 0x26DD + mapid * 8
         else:
             o = self._sym_off('Custom26DDTable') + (mapid - 0x70) * 8
@@ -106,7 +130,7 @@ class RoomRenderer:
 
     def _home(self, mapid):
         """S136: (home bank, index there, label suffix) from PlaceDirectory."""
-        d = self._sym_off('PlaceDirectory') + (mapid - 0x6B) * 2
+        d = self._sym_off('PlaceDirectory') + self.place_number(mapid) * 2
         home, idx = self.rom[d], self.rom[d + 1]
         return home, idx, ('' if home == 0x60 else f'_P{home:02X}')
 

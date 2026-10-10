@@ -31,7 +31,9 @@
 ;
 ; Data (generated below the template):
 ;   EncRoomTable: ENC_ROOM_LEN x [dw variant list (0 = none), db rate ($FF)],
-;     index wMapID - CUSTOM_ROOM_START.
+;     index = the PLACE NUMBER of (wMapRegion, wMapID) — S140 (ROADMAP ARC
+;     CAP3a): PlaceNum76 (templates/place_number.asm, pasted below the head
+;     with RegionTable76 / GlobalPlaceIds76); one region: wMapID - $6B.
 ;   GatePlanPtrs: GATE_PLAN_LEN x dw (0 = vanilla), index wGateID (0-255).
 ;   Variant list: records [db n_terms][n_terms x dw flag (bit 15 = must be
 ;     CLEAR)][dw target]; the last record has n_terms 0 (always holds).
@@ -90,16 +92,17 @@ EncResolve:
     or a
     jr nz, .gate                        ; a gate maze floor
     ld a, [wMapID]
-    sub CUSTOM_ROOM_START
-    jr c, .gate                         ; a vanilla room: vanilla rule
-    cp ENC_ROOM_LEN
+    call PlaceNum76                     ; S140: HL = the place number (keeps BC)
+    jr c, .gate                         ; a vanilla room / no place: vanilla rule
+    ld a, l
+    sub LOW(ENC_ROOM_LEN)
+    ld a, h
+    sbc HIGH(ENC_ROOM_LEN)
     jr nc, .gate
-    ld l, a
-    ld h, $00
     ld e, l
     ld d, h
     add hl, hl
-    add hl, de                          ; HL = index * 3
+    add hl, de                          ; HL = place * 3
     ld de, EncRoomTable
     add hl, de
     ld a, [hl+]
@@ -332,6 +335,14 @@ GateBossWin:
     ld a, [wMapID]
     cp b
     ret nz                              ; not the boss room of the dive
+    cp CUSTOM_ROOM_START
+    jr c, .bossRegionOk
+    ld hl, $710c                        ; S140 (ROADMAP ARC CAP3a): a custom boss
+    rst $10                             ;   room counts only in ITS region (bank $71
+    ld a, [wMapRegion]                  ;   entry 12 BossRegionOf: E) — a served room
+    cp e                                ;   of another region with the boss room's
+    ret nz                              ;   map id is not the boss
+.bossRegionOk:
     ld a, [wCurrentFloor]
     inc a
     ld b, a

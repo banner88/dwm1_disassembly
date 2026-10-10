@@ -277,7 +277,9 @@
                  link/trade uses staging $D665/$D6FA, outside it. S65 /
                  DOC_AUDIT.) **S65 layout of the window**: wCustomNPCBuffer
                  $CC80 (128 B) / wCustomExitBuffer $CD00 (127 B) /
-                 step-counter region $CD80-$CFFF (compiler-owned, 640 B) /
+                 step-counter region $CD80-$CFFF (compiler-owned, 640 B; S140: with
+                 more than one region, wCustomStepRegional .. $CFFF is shared by every
+                 region's counters and zeroed by bank $73 RegionEnter on a region change) /
                  wMonList $D001-$D040 (64 B, FX1/S71: roster display
                  lists + canonicalizer compaction map, relocated from $C0D8
                  whose safe extent ~36 B overflows at 40 slots) /
@@ -302,7 +304,8 @@
                  written right before bank $16 entry 5 reads it) /
                  [S117] wExtFlags $D140-$D23F — the extended event flags
                  $1000-$17FF (ROM0 ComputeFlagAddress -> bank $73 entry 21
-                 FlagAddr). The ONE non-transient carve of this window: bank
+                 FlagAddr). A non-transient carve of this window (S140: with
+                 wMapRegion $D536, below): bank
                  $73 ExtFlagsCommit / ExtFlagsRestore carry it through the
                  explicit save via SRAM bank 3 "X1" (EVENT_FLAGS "Extended
                  flags (S117)", ARCHITECTURE "SRAM bank 3 (S117)") /
@@ -364,7 +367,19 @@
                  bank, dw palette pointer), wRenderZero $D515 (always 0: the "step counter"
                  the walk reads), wRenderPal $D516-$D535 (slots 0-3 of the state's project
                  palette; a borrowed vanilla palette is read in bank $17 instead) /
-                 wCustomPool $D536-$D5E4 (transient reserve; $D50B before S137, $D50A before S136, $D509 before S129, $D4F2 before S127,
+                 [S140, ARC CAP3a — regions] wMapRegion $D536 — the current custom
+                 place's REGION (a place = (wMapRegion, wMapID); 0 = the ids written
+                 $6B-$EA); SAVED: SRAM bank 3 magic "X2" + $A002 (bank $73 ExtFlagsCommit /
+                 ExtFlagsRestore; an "X1" save loads as region 0); changed only by bank $73
+                 RegionCommit / RegionEnterE and a load; zeroed by a new game (CF3NewGameClear)
+                 and by a stale CONTINUE (bank $71 ContinueCheck) /
+                 wWarpRegion $D537 — the next room commit's region + 1 (0 = keep): bank $71
+                 HubWarp, a script warp's compiler-inserted `write_ram`, Play here; cleared by
+                 RegionCommit /
+                 wExitLinks $D538-$D55F — 20 × [region, real map id], one per exit LINK id
+                 $EB + k in the current exit list (place_readers CopyExitListToBuffer; read by
+                 RegionCommit) (ARCHITECTURE "Regions (S140)") /
+                 wCustomPool $D560-$D5E4 (transient reserve; $D536 before S140, $D50B before S137, $D50A before S136, $D509 before S129, $D4F2 before S127,
                  $D2F0 before S126, $D2EF before S125, $D2E3 before S123, $D243
                  before S121) /
                  wPoolBounce $D5E5-$D664 (128 B, FX1: sleep-pool swap

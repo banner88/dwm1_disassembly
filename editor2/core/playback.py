@@ -41,6 +41,7 @@ TEXT_PTR = 0xC82D
 FLAG_BASE = 0xD99B
 EXT_FLAG_BASE = 0xD140          # S117 wExtFlags ($1000-$17FF), patched builds
 W_CHANGING, W_DEST, W_FLAG = 0xC96C, 0xC96D, 0xC96E
+W_REGION = 0xD537            # S140 (ARC CAP3a): wWarpRegion — the next room commit's region + 1
 W_X, W_Y, W_KICK = 0xC96F, 0xC971, 0xC88F
 YESNO_CURSOR = 0xC83C
 
@@ -346,6 +347,10 @@ class Engine:
             m[a] = v & 0xFF
         px, py = recipe.player
         m[W_DEST] = recipe.map & 0xFF
+        if recipe.map >= 0x6B:
+            # S140 (ROADMAP ARC CAP3a): a place's project mapID carries its region in
+            # the high byte — the room commit (bank $73 RegionCommit) enters it
+            m[W_REGION] = (recipe.map >> 8) + 1
         m[W_FLAG] = 0
         m[W_X], m[W_X + 1] = px & 0xFF, (px >> 8) & 0xFF
         m[W_Y], m[W_Y + 1] = py & 0xFF, (py >> 8) & 0xFF

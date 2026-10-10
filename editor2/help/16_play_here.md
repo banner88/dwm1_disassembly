@@ -2,7 +2,8 @@
 
 **▶ Play here** (Rooms tab, on the screen / state row — or **F5**) starts the game in
 the room you are looking at, from the selected cell (or the walkable cell nearest
-the middle of the screen), with a game state of your choice. When the project
+the middle of the screen), with a game state of your choice. It works for rooms in any region
+(S140). When the project
 changed since the last build it is saved and built first (a few seconds). The game
 runs in the Playback window: arrows, Z / Space = A, X = B, Enter = Start;
 **⟲ Restart** starts it again with the same state.

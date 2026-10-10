@@ -53,7 +53,7 @@ import sys
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, REPO)
-from tools.census_place_banks import Stub, Rom, sym_table     # noqa: E402
+from tools.census_place_banks import Stub, Rom, sym_table, rom_place_number, mid_pokes  # noqa: E402
 
 SCR = 0xC925
 
@@ -113,8 +113,19 @@ def main():
         'wCurrentFloor', 'wLastFloor', 'wBossMapType', 'wArenaStarryBattle')}
     places = {F.val(r['mapID']): r for r in prj.rooms}
     real = sorted(m for m, r in places.items() if not r.get('placeholder'))
-    holes = sorted(m for m, r in places.items() if r.get('placeholder'))
-    past = list(range(0x6B + len(prj.rooms), 0xFF))
+    holes = sorted(m for m, r in places.items() if r.get('placeholder')
+                   and not r.get('global_alias')
+                   and rom_place_number(rom, sym, m, '71') is not None)
+    # S140 (ROADMAP ARC CAP3a): past each region's last place (region 0 up to $FE:
+    # the link ids $EB-$FE are no place either), and a region the build lacks;
+    # a global place's id (the arena copies) in another region IS a place
+    regions = getattr(prj, 'regions', [(len(prj.rooms), 0)])
+    glob = set(getattr(prj, 'global_ids', []))
+    past = list(range(0x6B + regions[0][0], 0xFF))
+    for reg, (cnt, _b) in enumerate(regions[1:], 1):
+        past += [(reg << 8) | i for i in range(0x6B + cnt, 0xEB) if i not in glob][:6]
+    if len(regions) > 1:
+        past += [(len(regions) << 8) | i for i in (0x6B, 0x70, 0xEA)]
     stale = holes + past
     S = Stub(a.rom)
     m = S.m
@@ -133,7 +144,7 @@ def main():
         S.reload()
         for i in range(8):
             m[w['wRoomRecScratch'] + i] = 0xEE
-        S.call(0x00, [(w['wMapID'], mid), (w['wInGateworld'], gate)], bank=0x71)
+        S.call(0x00, [*mid_pokes(sym, mid), (w['wInGateworld'], gate)], bank=0x71)
         return [m[w['wRoomRecScratch'] + i] for i in range(8)]
 
     rom0 = lambda base, i: list(rom.b[base + 8 * i: base + 8 * i + 8])
@@ -145,7 +156,10 @@ def main():
         check('rec_gate', rec(mid, 1), rom0(0x2A5D, mid), F.hexb(mid))
     cb, ca = sym['Custom26DDTable']
     for mid in real:
-        want = rom0(0x26DD, mid) if mid < 0x70 else list(rom.at(cb, ca + 8 * (mid - 0x70), 8))
+        if 'RegionTable71' in sym:                 # S140: every place = Custom26DDTable[place]
+            want = list(rom.at(cb, ca + 8 * rom_place_number(rom, sym, mid, '71'), 8))
+        else:
+            want = rom0(0x26DD, mid) if mid < 0x70 else list(rom.at(cb, ca + 8 * (mid - 0x70), 8))
         check('rec_place', rec(mid), want, F.hexb(mid))
     for mid in stale:
         check('rec_stale', rec(mid), castle, F.hexb(mid))
@@ -154,38 +168,38 @@ def main():
     fb, fa = sym['CustomRoomFlagsTable']
     for mid in list(range(0x00, 0x6B, 9)) + real + stale:
         S.reload()
-        got = S.call(0x05, [(w['wMapID'], mid)], bank=0x71)
+        got = S.call(0x05, mid_pokes(sym, mid), bank=0x71)
         e = got['DE'] & 0xFF
         if mid < 0x6B:
             want = 0
         elif mid in stale:
             want = 0x81
         else:
-            want = rom.u8(fb, fa + mid - 0x6B)
+            want = rom.u8(fb, fa + rom_place_number(rom, sym, mid, '71'))
             check('flags_place_bit7', want & 0x80, 0, F.hexb(mid))
         check('flags', e, want, F.hexb(mid))
     for mid in stale:
         S.reload()
         m[w['wRoomEncFlag']] = 0xEE
-        S.call(0x01, [(w['wMapID'], mid), (w['wInGateworld'], 0)], bank=0x71)
+        S.call(0x01, [*mid_pokes(sym, mid), (w['wInGateworld'], 0)], bank=0x71)
         check('enc_stale', m[w['wRoomEncFlag']], 0, F.hexb(mid))
         S.reload()
-        got = S.call(0x03, [(w['wMapID'], mid), (w['wInGateworld'], 0)], bank=0x71)
+        got = S.call(0x03, [*mid_pokes(sym, mid), (w['wInGateworld'], 0)], bank=0x71)
         check('anim_stale', got['DE'] & 0xFF, 0x6B, F.hexb(mid))
         S.reload()
-        S.call(0x00, [(w['wMapID'], mid), (w['wInGateworld'], 0)], bank=0x6C)
+        S.call(0x00, [*mid_pokes(sym, mid), (w['wInGateworld'], 0)], bank=0x6C)
         check('tileanim_stale_returns', True, True, F.hexb(mid))
         S.reload()
-        S.call(0x00, [(w['wMapID'], mid), (w['wInGateworld'], 0)], bank=0x76)
+        S.call(0x00, [*mid_pokes(sym, mid), (w['wInGateworld'], 0)], bank=0x76)
         check('enc76_stale_returns', True, True, F.hexb(mid))
 
     # ---- entries 2 / 7: the 256-row music tables ----------------------------------
     P = prj.music_plan()
     rnd = random.Random(a.seed)
-    for mid in range(0x00, 0xFF):
+    for mid in list(range(0x00, 0xFF)) + [x for x in real if x > 0xFF]:
         ctx = {'in_gate': 0, 'map': mid, 'gate': rnd.choice([0, 1, 5, 40]), 'floor': 0,
                'last': 5, 'boss_map': 0x30, 'link': 0, 'starry': 0, 'eid': 1, 'mode': 0}
-        pokes = [(w['wInGateworld'], 0), (w['wMapID'], mid), (w['wGateID'], ctx['gate']),
+        pokes = [(w['wInGateworld'], 0), *mid_pokes(sym, mid), (w['wGateID'], ctx['gate']),
                  (w['wCurrentFloor'], 0), (w['wLastFloor'], 5), (w['wBossMapType'], 0x30),
                  (w['wArenaStarryBattle'], 0), (0xC86C, 0), (0xDA03, 1), (0xDA04, 0),
                  (0xDA09, 0)]
@@ -196,7 +210,7 @@ def main():
         got = S.call(0x07, pokes, bank=0x71)
         check('bgm_battle', got['DE'] & 0xFF, M.model_battle_bgm(P, ctx), F.hexb(mid))
     # a custom boss room past $7F on the floor before the boss floor
-    for bm in [x for x in real if x >= 0x80][:4]:
+    for bm in [x for x in real if 0x80 <= x <= 0xFF][:4]:   # region 0 (S140: the gate's boss region = 0)
         ctx = {'in_gate': 1, 'map': 3, 'gate': 1, 'floor': 3, 'last': 5, 'boss_map': bm}
         S.reload()
         got = S.call(0x02, [(w['wInGateworld'], 1), (w['wMapID'], 3), (w['wGateID'], 1),
@@ -214,7 +228,7 @@ def main():
         want_box = [0x00, 0x00, 0xE8, 0x00, 0x58, 0x00]
         want_reason = 0
     else:
-        want_box = [hub['mapID'], 0x00, hub['px'] & 0xFF, hub['px'] >> 8,
+        want_box = [hub['mapID'] & 0xFF, 0x00, hub['px'] & 0xFF, hub['px'] >> 8,
                     hub['py'] & 0xFF, hub['py'] >> 8]
         want_reason = 7
     BOX = [w['wWarpGateId'], w['wWarpFlag'], w['wWarpSpawnXLo'], w['wWarpSpawnXLo'] + 1,
@@ -222,7 +236,7 @@ def main():
 
     def cont(mid, gate=0):
         S.reload()
-        pokes = [(w['wMapID'], mid), (w['wInGateworld'], gate), (0xD92B, 0x5A),
+        pokes = [*mid_pokes(sym, mid), (w['wInGateworld'], gate), (0xD92B, 0x5A),
                  (w['wIsPlayerChangingMaps'], 0), (0xC8EA, 0x80), (w['wHubReason'], 0)]
         pokes += [(x, 0xEE) for x in BOX]
         # every flag clear: the vanilla flags ($D99B-$D9E9 in the save image) and the
@@ -257,24 +271,24 @@ def main():
         else:
             for i in range(32):
                 m[0xC797 + i] = 0xEE
-        S.call(entry, [(w['wMapID'], mid), (SCR, scr), (w['wInGateworld'], 0)], bank=0x17)
+        S.call(entry, [*mid_pokes(sym, mid), (SCR, scr), (w['wInGateworld'], 0)], bank=0x17)
         return [m[(0xC200 if entry == 1 else 0xC797) + i] for i in range(0x100 if entry == 1 else 32)]
     castle_attr = {k: b17(0x00, 1, k) for k in (0, 1)}
     castle_pal = {k: b17(0x00, 0, k) for k in (0, 1)}
     for mid in stale:
         S.reload()
-        got = S.call(0x00, [(w['wMapID'], mid), (SCR, 0)])
+        got = S.call(0x00, [*mid_pokes(sym, mid), (SCR, 0)])
         check('step_stale', got['DE'], 0x2A01, F.hexb(mid))
         S.reload()
         m[w['wCustomNPCBuffer']] = 0xEE
-        S.call(0x01, [(w['wMapID'], mid), (SCR, 0)])
+        S.call(0x01, [*mid_pokes(sym, mid), (SCR, 0)])
         check('npc_stale', m[w['wCustomNPCBuffer']], 0xFF, F.hexb(mid))
         S.reload()
-        S.call(0x02, [(w['wMapID'], mid), (SCR, 0)])
+        S.call(0x02, [*mid_pokes(sym, mid), (SCR, 0)])
         check('exit_stale', [m[w['wCustomExitBuffer'] + i] for i in range(36)],
               dummy_exits, F.hexb(mid))
         S.reload()
-        got = S.call(0x0D, [(w['wMapID'], mid), (SCR, 0)])
+        got = S.call(0x0D, [*mid_pokes(sym, mid), (SCR, 0)])
         check('render_stale', got['HL'], 0, F.hexb(mid))
         for k in (0, 1):
             check('b17_attr_stale', b17(mid, 1, k), castle_attr[k], (F.hexb(mid), k))

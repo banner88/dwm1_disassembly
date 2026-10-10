@@ -1,14 +1,24 @@
 # Limits and known issues
 
-- Rooms (S133): at most **128** rooms of your own (map ids $6B-$EA) — the build
-  stops with an error past that (before S133 a room past it read another room's
-  data). Layouts, colour grids and tilesets overflow into the 4 MB ROM's new
-  banks when $64 / $67 are full (S135), and so do whole rooms (scripts, NPC /
-  door lists, states) and texts when $60 is full (S136). Since S137 a room's
-  palettes and colour rows go with it (they used to fill bank $17 at ~35-40
-  rooms). Since S139 a room's own animated tiles overflow too: bank $6C first,
-  then new banks (one room's animations must fit one bank, ~15.8 KB). The
-  128-room limit goes next (ARC CAP3, regions).
+- Rooms (S140): up to **63 regions of 128 rooms** of your own. A map id is one
+  byte, so the game tells rooms apart by their REGION plus their map id: your first
+  128 rooms are region 0 (map ids $6B-$EA, as before), the next 128 are region 1
+  (shown as $16B-$1EA: the region is the high byte), and so on — the editor hands
+  them out by itself (**New room** takes the first free one). Doors, door links,
+  conversation moves, gate floors, the hub and gate bosses all reach any region;
+  the game keeps the region in its save. Your arena's Lobby and Battle rooms must
+  be region 0 rooms (the game finds them by their map id alone), and their map ids
+  are never handed out in another region. Before S140 the limit was 128 rooms
+  (S133: the build stops past it). Layouts, colour grids and tilesets overflow
+  into the 4 MB ROM's new banks when $64 / $67 are full (S135), and so do whole
+  rooms (scripts, NPC / door lists, states) and texts when $60 is full (S136).
+  Since S137 a room's palettes and colour rows go with it (they used to fill bank
+  $17 at ~35-40 rooms). Since S139 a room's own animated tiles overflow too: bank
+  $6C first, then new banks (one room's animations must fit one bank, ~15.8 KB).
+- Step counters ("steps walked in this room") with more than one region (S140):
+  every region's rooms share one area, so their counters start again from 0 when
+  you walk into another region (your arena rooms' counters are kept). A project
+  with one region keeps them as before.
 - A saved game that stands in a room you have since DELETED (or in a room id
   past your last room) starts at **home** — your hub, or the Castle — when it
   is continued (S138; before S138 the game froze while loading it). A NEW room

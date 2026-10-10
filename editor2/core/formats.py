@@ -30,6 +30,17 @@ def hexb(n):
     return f"${n:02X}"
 
 
+def mid_region(mid):
+    """S140 (ROADMAP ARC CAP3a): the region of a project mapID — $6B-$EA = 0,
+    $16B-$1EA = 1, ... (project.py "regions")."""
+    return int(mid) >> 8
+
+
+def mid_real(mid):
+    """S140: the map id the engine sees for a project mapID (its low byte)."""
+    return int(mid) & 0xFF
+
+
 def hexw(n):
     return f"${n:04X}"
 

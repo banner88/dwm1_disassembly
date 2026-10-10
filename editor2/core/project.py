@@ -185,6 +185,21 @@ WRAM_REGION_SIZE_DEFAULT = 0x280    # 640 counters — campaign-scale default
 # CustomAttrCheck double `mapID - $6B` in 8 bits (CROSSBANK_ROOMS "Custom-side
 # arithmetic ceilings"). 128 rooms $6B-$EA; ROADMAP ARC CAP lifts it.
 CUSTOM_MID_MAX = 0xEA
+# S140 (ROADMAP ARC CAP3a — regions): more than 128 places. A room's mapID
+# carries its REGION in the high byte: $6B-$EA = region 0 (every project before
+# S140, unchanged), $16B-$1EA = region 1, ... The engine sees (wMapRegion,
+# real id) — a place's real id is the low byte, always $6B-$EA (CUSTOM_MID_MAX);
+# $EB-$FE are exit-row LINK ids (CopyExitListToBuffer -> bank $73 RegionCommit),
+# $FF ends an exit list. Every per-place table is indexed by the PLACE NUMBER
+# (P order = region 0's ids $6B.., then region 1's, ...; holes = placeholders),
+# which the engine computes from (region, id) in PlaceNum<bank>
+# (templates/place_number.asm) with the RegionTable this build emits.
+REGION_MAX = 63                  # PlaceNum: region * 3 must fit a byte (< 86)
+LINK_ID_FIRST = 0xEB
+
+
+mid_region = F.mid_region        # S140 (formats.py): region of a project mapID
+mid_real = F.mid_real            # S140: the engine's map id (low byte)
 
 # S135 (ROADMAP ARC CAP2a): the LZ STREAM banks. Layouts + attr maps (home bank
 # $64), tilesets (home bank $67) and — when a home bank is full — the overflow
@@ -1480,6 +1495,12 @@ class Project:
 
     # ----------------------------------------------------------------- rooms
     def _dense_rooms(self):
+        """S140 (ROADMAP ARC CAP3a): the rooms in PLACE NUMBER order — region 0's
+        ids $6B .. its last, then region 1's, ...; a gap inside a region is a
+        placeholder (dense tables need every index). Sets self.regions =
+        [(count, base)] per region 0 .. the last used, self.global_ids (the
+        arena copies' real ids, region 0, kept free in every region) and the
+        mapID -> place number map. One region: exactly the pre-S140 list."""
         rooms = list(self.custom.get('rooms', []))
         if not rooms:
             # S94: a fresh editor project has no rooms yet — every table
@@ -1492,40 +1513,143 @@ class Project:
         by_mid = {}
         for r in rooms:
             mid = F.val(r['mapID'])
+            if not isinstance(mid, int):
+                raise ProjectError(f"room {r.get('id')!r}: mapID {r.get('mapID')!r} is not a number")
             if mid in by_mid:
                 raise ProjectError(f"duplicate mapID {F.hexb(mid)}")
+            real, reg = mid_real(mid), mid_region(mid)
+            if not 0x6B <= real <= CUSTOM_MID_MAX:
+                # S133 (one byte of map id: 128 places $6B-$EA) + S140 (regions:
+                # the high byte is the region; $EB-$FE are exit link ids)
+                raise ProjectError(
+                    f"room {r.get('id')!r}: mapID {F.hexb(mid)} — a place's map id is "
+                    f"$6B-{F.hexb(CUSTOM_MID_MAX)} in its region (region 0 $6B-$EA, "
+                    "region 1 $16B-$1EA, …): a map id is one byte, so a region holds "
+                    "at most 128 places (ROADMAP ARC CAP3, ARCHITECTURE \"Regions\")")
+            if reg > REGION_MAX:
+                raise ProjectError(f"room {r.get('id')!r}: mapID {F.hexb(mid)} is in region "
+                                   f"{reg} — at most {REGION_MAX + 1} regions")
             by_mid[mid] = r
-        lo, hi = min(by_mid), max(by_mid)
-        if lo != 0x6B:
-            raise ProjectError("first custom mapID must be $6B "
-                               "(tables are indexed mapID-$6B)")
-        if hi > CUSTOM_MID_MAX:
-            # S133 capacity audit: bank $60 CustomPtrChase / CustomStateRules /
-            # CustomMonsterCast and bank $17 CustomAttrCheck (+ its two callers)
-            # index their per-room tables with `sub $6B / add a / add l` — an
-            # 8-bit doubling that drops the carry, so a room past $EA reads
-            # ANOTHER room's data (silently; nothing failed before S133).
-            # Places beyond 128 = ROADMAP ARC CAP (regions + place banks).
-            raise ProjectError(
-                f"custom mapID {F.hexb(hi)} is past {F.hexb(CUSTOM_MID_MAX)}: "
-                "the engine's per-room lookups double the index in 8 bits, so "
-                f"at most {CUSTOM_MID_MAX - 0x6B + 1} custom rooms ($6B-$EA) "
-                "work today (CROSSBANK_ROOMS 'Custom-side arithmetic "
-                "ceilings'; more places = ROADMAP ARC CAP)")
-        dense = []
-        for mid in range(lo, hi + 1):
-            r = by_mid.get(mid)
-            if r is None:
-                r = {'mapID': mid, 'id': f'placeholder_{mid:02x}',
-                     'placeholder': True, 'source_mapID': 0x04}
-                self.warnings.append(
-                    f"mapID {F.hexb(mid)} not declared — auto placeholder "
-                    "(dense tables require every index)")
-            dense.append(r)
+        # S140: the GLOBAL places — the arena copies (ROM0 ArenaAlias compares
+        # bare map ids): region 0, their ids kept free in every other region
+        self.global_ids = []
+        ar = self.custom.get('arena')
+        if isinstance(ar, dict):
+            for key in ('lobby', 'battle'):
+                rr = next((x for x in rooms if x.get('id') == ar.get(key)), None)
+                if rr is None:
+                    continue
+                gm = F.val(rr['mapID'])
+                if mid_region(gm) != 0:
+                    raise ProjectError(
+                        f"custom.arena.{key}: {rr['id']!r} ({F.hexb(gm)}) must be among the "
+                        "first 128 places (region 0, map ids $6B-$EA): the game knows the "
+                        "arena rooms by their bare map id (ROM0 ArenaAlias)")
+                self.global_ids.append(mid_real(gm))
+        regions_used = sorted({mid_region(m) for m in by_mid})
+        last = regions_used[-1]
+        dense, self.regions, self._pnum = [], [], {}
+        base = 0
+        for reg in range(last + 1):
+            ids = sorted(m for m in by_mid if mid_region(m) == reg)
+            if not ids:
+                self.regions.append((0, base))
+                continue
+            hi = mid_real(ids[-1])
+            if reg == 0 and mid_real(ids[0]) != 0x6B and len(regions_used) == 1:
+                raise ProjectError("first custom mapID must be $6B "
+                                   "(tables are indexed mapID-$6B)")
+            for real in range(0x6B, hi + 1):
+                mid = (reg << 8) | real
+                r = by_mid.get(mid)
+                if r is not None and reg and real in self.global_ids:
+                    raise ProjectError(
+                        f"room {r.get('id')!r}: mapID {F.hexb(mid)} — map id {F.hexb(real)} is "
+                        "an arena room's (custom.arena), which the game knows in every "
+                        "region: no other place may use it")
+                if r is None:
+                    r = {'mapID': mid, 'id': f'placeholder_{mid:02x}',
+                         'placeholder': True, 'source_mapID': 0x04}
+                    if reg and real in self.global_ids:
+                        # S140: the engine's PlaceNum reads region 0's arena room
+                        # for this id in every region — the row is never indexed
+                        r['global_alias'] = True
+                    else:
+                        self.warnings.append(
+                            f"mapID {F.hexb(mid)} not declared — auto placeholder "
+                            "(dense tables require every index)")
+                self._pnum[mid] = base + real - 0x6B
+                dense.append(r)
+            self.regions.append((hi - 0x6B + 1, base))
+            base += hi - 0x6B + 1
+        self._room_by_mid = {F.val(r['mapID']): r for r in dense}
         return dense
 
+    # ---------------------------------------------- regions (S140, ARC CAP3a)
+    def place_number(self, mid):
+        """The place number of a project mapID (a global place's id in any
+        region: its region 0 number — the engine's PlaceNum resolves the arena
+        ids to region 0)."""
+        mid = int(mid)
+        if mid >> 8 and (mid & 0xFF) in getattr(self, 'global_ids', []):
+            return self._pnum[mid & 0xFF]
+        return self._pnum[mid]
+
+    def multi_region(self):
+        """More than one region: exits / warps into places then carry regions."""
+        return len(self.regions) > 1
+
+    def is_global(self, mid):
+        return mid_region(mid) == 0 and mid_real(mid) in getattr(self, 'global_ids', [])
+
+    def region_table_lines(self, sfx):
+        """RegionTable<sfx> + GlobalPlaceIds<sfx> — the data the pasted
+        PlaceNum<sfx> (templates/place_number.asm) reads."""
+        out = [f"; S140 (ROADMAP ARC CAP3a): regions — [count, base] per region (PlaceNum{sfx})",
+               f"RegionTable{sfx}:",
+               f"    db {len(self.regions)}   ; regions"]
+        for reg, (cnt, base) in enumerate(self.regions):
+            out.append(f"    db {cnt}")
+            out.append(f"    dw {base}   ; region {reg}: ids $6B-"
+                       f"{F.hexb(0x6A + cnt) if cnt else '(none)'}, places {base}-{base + cnt - 1}")
+        ids = ", ".join(f"${g - 0x6B:02X}" for g in self.global_ids)
+        out.append(f"GlobalPlaceIds{sfx}:   ; the arena copies (region 0 wherever you are)")
+        out.append(f"    db {ids + ', ' if ids else ''}$FF")
+        return out
+
+    def place_number_block(self, sfx):
+        """The pinned PlaceNum block for a bank (templates/place_number.asm)."""
+        from .emitters import template
+        text = template('place_number.asm').replace('{X}', sfx)
+        if '{' in text:
+            raise RuntimeError("place_number.asm: an unreplaced {…} placeholder")
+        return text.rstrip('\n').split('\n')
+
+    def dest_place(self, mid):
+        """A destination mapID -> (real id, region, is a place)."""
+        mid = int(mid)
+        if mid < 0x6B:
+            return mid, None, False
+        return mid_real(mid), mid_region(mid), True
+
+    def exit_prefix(self, src, dest_mid):
+        """S140: the `$FD <region>` prefix an exit row needs. src = the source
+        room (None = a vanilla room's extension row). A row into a place of
+        another region — or any row into a place from a vanilla or global room,
+        whose region is whatever the player brought — carries it when the
+        project has more than one region; a global place never needs one."""
+        if not self.multi_region() or dest_mid < 0x6B or self.is_global(dest_mid):
+            return []
+        if src is not None and not self.is_global(F.val(src['mapID'])) and \
+                mid_region(F.val(src['mapID'])) == mid_region(dest_mid):
+            return []
+        return [0xFD, mid_region(dest_mid)]
+
     def room_by_mid(self, mid):
-        return self.rooms[mid - 0x6B]
+        try:
+            return self._room_by_mid[int(mid)]
+        except KeyError:
+            raise ProjectError(f"no room with mapID {F.hexb(int(mid))}")
 
     def room_by_id(self, rid):
         for r in self.rooms:
@@ -2209,6 +2333,7 @@ class Project:
             row = list(bytes.fromhex(v['row']))
             c = f"custom.gates[gate {gid}]"
             boss_room = None
+            boss_mid = None
             if gs.get('floors') is not None:
                 n = int(F.val(gs['floors']))
                 if not G.FLOORS_MIN <= n <= G.FLOORS_MAX:
@@ -2233,10 +2358,8 @@ class Project:
                     if room is None or room.get('placeholder'):
                         raise ProjectError(f"{c}: boss room {b!r} is not a custom "
                                            "room of this project")
-                    mid = F.val(room['mapID'])
-                    if mid > 0xFE:
-                        raise ProjectError(f"{c}: boss room map id {F.hexb(mid)} > $FE")
-                    arr = room.get('gate_arrival')
+                    mid = F.val(room['mapID'])   # S140: the row holds the real id; the
+                    arr = room.get('gate_arrival')  # region -> GateBossRegionTable
                     if not arr:
                         raise ProjectError(
                             f"{c}: boss room {b!r} has no gate_arrival {{screen, x, "
@@ -2246,8 +2369,9 @@ class Project:
                         raise ProjectError(f"{c}: boss room {b!r} gate_arrival "
                                            f"screen {scr} does not exist")
                     tx, ty = G.arrival_tile(scr, arr['x'], arr['y'])
-                    row[4], row[5], row[6] = mid, tx, ty
+                    row[4], row[5], row[6] = mid_real(mid), tx, ty
                     boss_room = b
+                    boss_mid = mid
             # S120: the floor-type rows + depth tier (bytes 0-2, 7) — GATE_GENERATION §1
             for k, (lo, hi, at) in G.ROW_KEYS.items():
                 if gs.get(k) is None:
@@ -2273,7 +2397,10 @@ class Project:
                 if not 0 <= csn <= 7:
                     raise ProjectError(f"{c}: cleared_swirl must be \"stop\" or an "
                                        f"OBJ palette 0-7 (got {cs!r})")
-            out[gid] = {'floors': row[3], 'boss_map': row[4], 'spawn': (row[5], row[6]),
+            out[gid] = {'floors': row[3],
+                        'boss_map': row[4] if boss_mid is None else boss_mid,
+                        'boss_region': 0 if boss_mid is None else mid_region(boss_mid),
+                        'spawn': (row[5], row[6]),
                         'boss_room': boss_room,
                         'hand_made': bool(gs.get('hand_made')) or world, 'world': world,
                         'edited': bool(gs), 'row': row,
@@ -2906,6 +3033,24 @@ class Project:
                           sc.get('comment',
                                  self._def_step_comment(r, i)))
             s['_ctr_label'] = used[addr][0]
+        # S140 (ROADMAP ARC CAP3a — regions): with more than one region the
+        # region's counters SHARE one area: [reserved + explicit + the global
+        # places' counters] from $CD80, then wCustomStepRegional — region 0's
+        # counters as bytes here, every other region's at the same addresses
+        # (EQUs, step_counter_overlay). bank $73 RegionEnter zeroes the area
+        # from wCustomStepRegional up when the region changes (counters are
+        # transient, S65). One region: the S65 layout exactly.
+        multi = self.multi_region()
+        regional = {}
+        if multi:
+            first = []
+            for r, i, s in auto:
+                m = F.val(r['mapID'])
+                if self.is_global(m):
+                    first.append((r, i, s))
+                else:
+                    regional.setdefault(F.mid_region(m), []).append((r, i, s))
+            auto = first
         nxt = STEP_COUNTER_BASE
         for r, i, s in auto:
             while nxt in used:
@@ -2915,6 +3060,27 @@ class Project:
             used[nxt] = (lbl, self._def_step_comment(r, i))
             s['_ctr_label'] = used[nxt][0]
             nxt += 1
+        self._step_overlay = []
+        self._step_regional_base = STEP_COUNTER_BASE
+        top = (max(used) + 1) if used else STEP_COUNTER_BASE
+        if multi:
+            self._step_regional_base = top
+            for reg in sorted(regional):
+                a = top
+                for r, i, s in regional[reg]:
+                    lbl = s.pop('_ctr_name_override', None) or self._def_step_label(r, i)
+                    s['_ctr_label'] = lbl
+                    if reg == min(regional):
+                        used[a] = (lbl, self._def_step_comment(r, i))
+                    else:
+                        self._step_overlay.append((lbl, a, self._def_step_comment(r, i)
+                                                   + f" — region {reg}"))
+                    a += 1
+                    if a - STEP_COUNTER_BASE > self.wram_region_size:
+                        raise ProjectError(
+                            f"region {reg}: its step counters + the global places' do "
+                            f"not fit the {self.wram_region_size}-byte counter area "
+                            "(S140: every region shares it; PROJECT_COMPILER §2.6)")
         if used and (max(used) - STEP_COUNTER_BASE + 1) > self.wram_region_size:
             raise ProjectError(
                 "step counters exceed the fixed wram region size "
@@ -2924,6 +3090,12 @@ class Project:
         self._step_alloc = [(lbl, addr, cm)
                             for addr, (lbl, cm) in sorted(used.items())]
         return self._step_alloc
+
+    def step_counter_overlay(self):
+        """S140: [(label, addr, comment)] — the counters of regions after the
+        first one (EQUs at the shared addresses) and the regional base."""
+        self.step_counter_allocation()
+        return list(self._step_overlay), self._step_regional_base
 
     @staticmethod
     def _def_step_label(r, i):

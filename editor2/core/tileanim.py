@@ -453,7 +453,8 @@ def anim_rooms(prj):
     """The rooms with own animations, in map id order (placeholders never)."""
     from . import formats as F
     rooms = [r for r in prj.rooms if not r.get('placeholder') and prj.tile_anims(r)]
-    return sorted(rooms, key=lambda r: F.val(r['mapID']))
+    # S140 (ROADMAP ARC CAP3a): place-number order (= map id order in one region)
+    return sorted(rooms, key=lambda r: prj.place_number(F.val(r['mapID'])))
 
 
 def plan(prj):
@@ -470,8 +471,9 @@ def plan(prj):
     from .project import ProjectError
     PL.plan(prj)                      # stream + place banks take their $80+ numbers first
     rooms = anim_rooms(prj)
-    dir_rows = (max(F.val(r['mapID']) for r in rooms) - 0x6B + 1) if rooms else 0
-    fixed_home = (V.TEMPLATE_SIZE.get(ANIM_HOME) or 0) + DIR_ROW_BYTES * dir_rows + ALIGN_PAD
+    dir_rows = (max(prj.place_number(F.val(r['mapID'])) for r in rooms) + 1) if rooms else 0
+    fixed_home = ((V.TEMPLATE_SIZE.get(ANIM_HOME) or 0) + DIR_ROW_BYTES * dir_rows + ALIGN_PAD
+                  + V._payload_bytes("\n".join(prj.region_table_lines('6C'))))
     cap = {ANIM_HOME: BANK_BYTES - fixed_home}
     bank_cap = BANK_BYTES - V.ANIM_TEMPLATE_SIZE - ALIGN_PAD
     used = {ANIM_HOME: 0}
@@ -550,26 +552,29 @@ def _hexb(v):
 
 def emit_bank_06c(prj, warnings):
     """Bank $6C: the template head (CustomTileAnimate, the forwarder), the
-    player, then TILEANIM_ROOMS + TileAnimDirectory + bank $6C's own rooms."""
+    player, PlaceNum6C (S140), then TILEANIM_ROOMS + the region tables +
+    TileAnimDirectory + bank $6C's own rooms."""
     from . import emitters as E
+    from . import formats as F
     p = plan(prj)
     lines = [E.template('bank_06c_head.asm').rstrip('\n'), "", player(ANIM_HOME), ""]
+    lines += prj.place_number_block('6C') + [""]
     lines += ["; " + "-" * 77,
               "; " + DATA_MARKER + " by build_project.py from",
               "; custom.rooms[].tile_anims — PROJECT_COMPILER §2.19 / §2.48)",
               "; " + "-" * 77,
-              f"TILEANIM_ROOMS EQU {p['dir_rows']}",
-              "TileAnimDirectory:   ; per room (map id $6B + n): animation bank (0 = none), index"]
-    by_idx = {_room_idx(r): r for r in prj.rooms}
+              f"TILEANIM_ROOMS EQU {p['dir_rows']}"]
+    lines += prj.region_table_lines('6C')
+    lines.append("TileAnimDirectory:   ; per PLACE (place number, S140): animation bank (0 = none), index")
     for i in range(p['dir_rows']):
-        r = by_idx.get(i)
-        mid = 0x6B + i
-        name = r.get('id', '') if r else '(no room)'
+        r = prj.rooms[i]
+        mid = F.val(r['mapID'])
+        name = r.get('id', '')
         if mid in p['home']:
             b, k = p['home'][mid]
-            lines.append(f"    db ${b:02X}, {k}   ; ${mid:02X} {name}")
+            lines.append(f"    db ${b:02X}, {k}   ; {F.hexb(mid)} {name}")
         else:
-            lines.append(f"    db 0, 0   ; ${mid:02X} {name} (none)")
+            lines.append(f"    db 0, 0   ; {F.hexb(mid)} {name} (none)")
     lines += _bank_data(p, ANIM_HOME)
     return "\n".join(lines) + "\n"
 

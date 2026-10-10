@@ -107,6 +107,16 @@ def build_rom(repo, generated_dir, out_dir, rgbds_dir=None):
         if r.returncode != 0:
             tail = "\n".join((r.stdout + r.stderr).splitlines()[-25:])
             raise RuntimeError(f"build failed:\n{tail}")
+        # S140 (ROADMAP ARC CAP3a — regions): a value cut to fit a byte / word
+        # is always a compiler mistake — e.g. a region's mapID ($176) emitted
+        # where the engine wants its real map id ($76). rgbasm only WARNS
+        # (-Wtruncation); refuse the ROM instead.
+        lines = (r.stdout + r.stderr).splitlines()
+        trunc = [f"{lines[i - 1].strip()} {ln.strip()}" for i, ln in enumerate(lines)
+                 if 'truncat' in ln.lower() or '-Wtruncation' in ln]
+        if trunc:
+            raise RuntimeError("build refused — rgbasm truncated a value (a compiler "
+                               "mistake):\n" + "\n".join(trunc[:12]))
         os.makedirs(out_dir, exist_ok=True)
         rom_path = os.path.join(out_dir, 'rom.gbc')
         sym_path = os.path.join(out_dir, 'game.sym')

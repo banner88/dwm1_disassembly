@@ -39,6 +39,13 @@
 ; number (PlaceGo: a local jump when the home is bank $60). Bank $60 keeps the
 ; global things: the custom skills' scripts, VanillaExitExtTable /
 ; VanillaNPCExtTable, entries 3 / 6 / 7 / 11 / 12.
+;
+; S140 (ROADMAP ARC CAP3a) — REGIONS. A custom place is (wMapRegion, map id);
+; PlaceOf keys the directory by the PLACE NUMBER (PlaceNum60, pasted below the
+; head with this bank's RegionTable60 / GlobalPlaceIds60). Exit rows into
+; another region carry a `$FD <region>` prefix: the reader's
+; CopyExitListToBuffer gives such a row a LINK id ($EB+) and notes (region, id)
+; in wExitLinks; the room commit (bank $73 entry 0) turns it back.
 ; =============================================================================
 
 SECTION "ROM Bank $060", ROMX[$4000], BANK[$60]
@@ -64,18 +71,17 @@ SECTION "ROM Bank $060", ROMX[$4000], BANK[$60]
 ; =============================================================================
 ; PlaceOf: A = a map id or script type. CF clear: H = the place's home bank,
 ; [wPlaceIdx] = its index inside that bank. CF set: no place — a vanilla id
-; ($00-$6A), or past the last place (PLACE_COUNT; e.g. a transient script
-; type $70 with fewer than 6 places, which read past the old tables).
-; PlaceDirectory (generated) = per place, in map id order: db bank, db index.
+; ($00-$6A), or past the last place (e.g. a transient script type $70 with
+; fewer than 6 places, which read past the old tables).
+; PlaceDirectory (generated) = per place, in PLACE NUMBER order: db bank, db
+; index. S140 (ROADMAP ARC CAP3a): the place = (wMapRegion, A) through
+; PlaceNum60 (templates/place_number.asm, pasted below the head) — a script
+; type keys the current region too: a custom script never runs across a room
+; commit (measured S133), so the region of its start is still wMapRegion.
 ; Clobbers A/DE/HL; keeps BC.
 PlaceOf:
-    sub CUSTOM_ROOM_START
+    call PlaceNum60             ; HL = the place number, CF = none
     ret c
-    cp PLACE_COUNT
-    ccf
-    ret c
-    ld l, a
-    ld h, $00
     add hl, hl
     ld de, PlaceDirectory
     add hl, de

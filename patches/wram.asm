@@ -252,6 +252,7 @@ wCustomStep_Room73_S0:: db ;cd8a — Room $73 screen 0 step counter (island_copy
 wCustomStep_Room73_S4:: db ;cd8b — Room $73 screen 4 step counter (island_copy)
 wCustomStep_ArenaClone_S1:: db ;cd8c — Room $72 screen 1 step counter (arena_clone)
     ds 627 ; reserved (padded to region_size; region ends at $D000 — PROJECT_COMPILER.md §2.6)
+wCustomStepRegional EQU $CD80 ; S140: the regions' shared counters start here
 ; @BUILD_PROJECT END wram_step_counters
 
 
@@ -260,6 +261,9 @@ section "WRAM Bank1", wramx[$D000], bank[1]
 wram1Start:: db
 
 CUSTOM_ROOM_START EQU $6B ; first custom map type (107 = one past last original)
+REGION_IDS EQU $80 ; S140 (ARC CAP3a): place ids per region, $6B-$EA (PlaceNum<bank>)
+LINK_ID_FIRST EQU $EB ; S140: exit-row link ids $EB-$FE (CopyExitListToBuffer -> RegionCommit)
+LINK_IDS EQU 20 ; S140: $EB + 19 = $FE ($FF ends an exit list)
 
 ; CF3-freed window continues into WRAM bank 1 ($D001-$D664; banner at $CC80).
 ; wCustomPool: reserved TRANSIENT editor scratch pool (never saved/restored —
@@ -429,7 +433,20 @@ wRenderScr:: dw ;d50d — = wRenderRow
 wRenderRow:: ds 6 ;d50f — dw wRenderZero, db attr entry, attr bank, dw palette
 wRenderZero:: db ;d515 — always 0 (the "step counter" the walk reads)
 wRenderPal:: ds 32 ;d516-d535 — slots 0-3 of a place palette (bank $17 LoadPal_46a1 copies from here)
-wCustomPool:: ds $5A4 - 132 - 5 - 2 * TILEANIM_MAX_GROUPS - 2 - 18 - 26 - 8 - 256 - 1 - 2 - 160 - 12 - 1 - 514 - 23 - 1 - 1 - 43 ;d536-d5e4 — transient reserve (was $664; FX1 carved 64+128; S97 132; S102 69; S105 2; S111 18; S114 26; S115 8; S117 256 wExtFlags + 1 wShopID; S117b 2 push scratch; S121 160 wMillyLayout; S123 12 NPC colours; S125 1 wHubReason; S126 514: the service tile save + wServiceLines; S127 23: wBreedLast + wBreedSlots + the roll scratch; S129 1: wStoryFlag; S136 1: wPlaceIdx; S137 43: the render walk block)
+; S140 (ROADMAP ARC CAP3a) — REGIONS. A custom place is (wMapRegion, wMapID);
+; every per-place table is indexed by its PLACE NUMBER (PlaceNum<bank>,
+; editor2/core/templates/place_number.asm). wMapRegion is SAVED through SRAM bank
+; 3 (bank $73 ExtFlagsCommit / ExtFlagsRestore, magic "X2" + $A002 — this
+; window is outside the save image) and zeroed by a new game (CF3NewGameClear
+; covers $C8EA-$D9E9). It changes only at the room commit (bank $73 entry 0
+; RegionCommit), a gate insert / the boss floor (entry 22) and a load.
+; wWarpRegion = the next commit's region + 1 (0 = none; the hub). wExitLinks =
+; per LINK id $EB + k: [region, real map id] of the exit row the current exit
+; list gave that id (place_readers.asm CopyExitListToBuffer).
+wMapRegion:: db ;d536 — the current custom place's region (0 = map ids $6B-$EA as written)
+wWarpRegion:: db ;d537 — region + 1 for the next room commit (0 = keep the region)
+wExitLinks:: ds 2 * LINK_IDS ;d538-d55f — per link id: region, real map id
+wCustomPool:: ds $5A4 - 132 - 5 - 2 * TILEANIM_MAX_GROUPS - 2 - 18 - 26 - 8 - 256 - 1 - 2 - 160 - 12 - 1 - 514 - 23 - 1 - 1 - 43 - 2 - 2 * LINK_IDS ;d560-d5e4 — transient reserve (was $664; FX1 carved 64+128; S97 132; S102 69; S105 2; S111 18; S114 26; S115 8; S117 256 wExtFlags + 1 wShopID; S117b 2 push scratch; S121 160 wMillyLayout; S123 12 NPC colours; S125 1 wHubReason; S126 514: the service tile save + wServiceLines; S127 23: wBreedLast + wBreedSlots + the roll scratch; S129 1: wStoryFlag; S136 1: wPlaceIdx; S137 43: the render walk block; S140 42: wMapRegion + wWarpRegion + wExitLinks)
 ; FX1 (S71): wPoolBounce — 128-byte staging for sleep-pool bank-2 record
 ; swaps (per-byte scratch in CF3PoolSwapRecord). Transient. (The v1 drain's
 ; halved-pending scratch use was removed with the S71v2 exp-scale veto.)

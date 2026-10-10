@@ -655,7 +655,7 @@
   {
    "tree": "patched",
    "file": "bank_000.asm",
-   "line": 13119,
+   "line": 13120,
    "label": "MapIDClampForPalette",
    "occ": 0,
    "pattern": [
@@ -1018,7 +1018,7 @@
   {
    "tree": "patched",
    "file": "bank_016.asm",
-   "line": 5380,
+   "line": 5385,
    "label": "label16_6f05",
    "occ": 0,
    "pattern": [
@@ -1029,7 +1029,7 @@
   {
    "tree": "patched",
    "file": "bank_016.asm",
-   "line": 5395,
+   "line": 5400,
    "label": "jr_016_6f39",
    "occ": 0,
    "pattern": [
@@ -1129,7 +1129,7 @@
   {
    "tree": "patched",
    "file": "bank_060.asm",
-   "line": 117,
+   "line": 123,
    "label": "PlaceFwdStep",
    "occ": 0,
    "pattern": [],
@@ -1138,7 +1138,7 @@
   {
    "tree": "patched",
    "file": "bank_060.asm",
-   "line": 130,
+   "line": 136,
    "label": "PlaceFwdInteract",
    "occ": 0,
    "pattern": [
@@ -1150,7 +1150,7 @@
   {
    "tree": "patched",
    "file": "bank_060.asm",
-   "line": 146,
+   "line": 152,
    "label": "PlaceFwdExit",
    "occ": 0,
    "pattern": [],
@@ -1159,7 +1159,7 @@
   {
    "tree": "patched",
    "file": "bank_060.asm",
-   "line": 196,
+   "line": 202,
    "label": "PlaceFwdRules",
    "occ": 0,
    "pattern": [],
@@ -1168,7 +1168,7 @@
   {
    "tree": "patched",
    "file": "bank_060.asm",
-   "line": 209,
+   "line": 215,
    "label": "PlaceFwdRender",
    "occ": 0,
    "pattern": [],
@@ -1177,7 +1177,7 @@
   {
    "tree": "patched",
    "file": "bank_060.asm",
-   "line": 267,
+   "line": 273,
    "label": "CutPatchRoute",
    "occ": 0,
    "pattern": [
@@ -1188,7 +1188,7 @@
   {
    "tree": "patched",
    "file": "bank_060.asm",
-   "line": 352,
+   "line": 358,
    "label": "CustomDescentFeel",
    "occ": 0,
    "pattern": [
@@ -1199,7 +1199,7 @@
   {
    "tree": "patched",
    "file": "bank_060.asm",
-   "line": 378,
+   "line": 384,
    "label": "NpcColourDraw",
    "occ": 0,
    "pattern": [
@@ -1210,7 +1210,7 @@
   {
    "tree": "patched",
    "file": "bank_060.asm",
-   "line": 469,
+   "line": 475,
    "label": "VanillaExitResolve",
    "occ": 0,
    "pattern": [
@@ -1221,7 +1221,7 @@
   {
    "tree": "patched",
    "file": "bank_060.asm",
-   "line": 553,
+   "line": 559,
    "label": "GateAwareDispatch",
    "occ": 0,
    "pattern": [
@@ -1232,7 +1232,7 @@
   {
    "tree": "patched",
    "file": "bank_060.asm",
-   "line": 742,
+   "line": 820,
    "label": "CopyNPCListToBuffer",
    "occ": 0,
    "pattern": [
@@ -1243,18 +1243,16 @@
   {
    "tree": "patched",
    "file": "bank_06c.asm",
-   "line": 45,
+   "line": 52,
    "label": "CustomTileAnimate",
    "occ": 0,
-   "pattern": [
-    "sub"
-   ],
+   "pattern": [],
    "verdict": "BOUNDED"
   },
   {
    "tree": "patched",
    "file": "bank_06c.asm",
-   "line": 126,
+   "line": 134,
    "label": "TileAnimPlay",
    "occ": 0,
    "pattern": [],
@@ -1274,7 +1272,7 @@
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 183,
+   "line": 185,
    "label": "CopyCustomRoomRecord",
    "occ": 0,
    "pattern": [
@@ -1285,7 +1283,7 @@
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 196,
+   "line": 198,
    "label": "CopyCustomRoomRecord",
    "occ": 1,
    "pattern": [
@@ -1296,48 +1294,52 @@
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 206,
+   "line": 214,
    "label": "CopyCustomRoomRecord",
    "occ": 2,
-   "pattern": [
-    "sub"
-   ],
+   "pattern": [],
    "verdict": "IDX16"
   },
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 238,
-   "label": "CustomEncResolve",
-   "occ": 0,
-   "pattern": [
-    "cp",
-    "sub"
-   ],
+   "line": 220,
+   "label": "CopyCustomRoomRecord",
+   "occ": 3,
+   "pattern": [],
    "verdict": "BOUNDED"
   },
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 290,
+   "line": 255,
+   "label": "CustomEncResolve",
+   "occ": 0,
+   "pattern": [],
+   "verdict": "BOUNDED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_071.asm",
+   "line": 309,
    "label": "CustomRoomBGMResolve",
    "occ": 0,
    "pattern": [],
-   "verdict": "COPY"
+   "verdict": "BOUNDED"
   },
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 301,
+   "line": 318,
    "label": "CustomRoomBGMResolve",
    "occ": 1,
    "pattern": [],
-   "verdict": "IDX16"
+   "verdict": "BOUNDED"
   },
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 308,
+   "line": 330,
    "label": "CustomRoomBGMResolve",
    "occ": 2,
    "pattern": [
@@ -1348,53 +1350,47 @@
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 499,
+   "line": 590,
    "label": "CustomAnimSource",
    "occ": 0,
-   "pattern": [
-    "cp",
-    "sub"
-   ],
-   "verdict": "IDX8_SUB6B"
+   "pattern": [],
+   "verdict": "BOUNDED"
   },
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 697,
+   "line": 795,
    "label": "CustomRoomFlags",
    "occ": 0,
    "pattern": [
-    "sub"
+    "cp"
    ],
    "verdict": "BOUNDED"
   },
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 719,
+   "line": 827,
    "label": "TextSpriteMode",
    "occ": 0,
    "pattern": [
-    "cp",
-    "sub"
+    "cp"
    ],
    "verdict": "BOUNDED"
   },
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 819,
+   "line": 923,
    "label": "BattleBGMResolve",
    "occ": 0,
-   "pattern": [
-    "sub"
-   ],
-   "verdict": "IDX16"
+   "pattern": [],
+   "verdict": "BOUNDED"
   },
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 831,
+   "line": 935,
    "label": "BattleBGMResolve",
    "occ": 1,
    "pattern": [
@@ -1405,13 +1401,12 @@
   {
    "tree": "patched",
    "file": "bank_071.asm",
-   "line": 999,
+   "line": 1153,
    "label": "StalePlace",
    "occ": 0,
    "pattern": [
     "bit7",
-    "cp",
-    "sub"
+    "cp"
    ],
    "verdict": "BOUNDED"
   },
@@ -1429,7 +1424,7 @@
   {
    "tree": "patched",
    "file": "bank_073.asm",
-   "line": 104,
+   "line": 111,
    "label": "CF2WarpCommitDrain",
    "occ": 0,
    "pattern": [
@@ -1440,7 +1435,7 @@
   {
    "tree": "patched",
    "file": "bank_073.asm",
-   "line": 1664,
+   "line": 1671,
    "label": "MenuOpenFreePal",
    "occ": 0,
    "pattern": [
@@ -1451,7 +1446,7 @@
   {
    "tree": "patched",
    "file": "bank_073.asm",
-   "line": 1720,
+   "line": 1727,
    "label": "BoxAttrActive",
    "occ": 0,
    "pattern": [
@@ -1462,7 +1457,7 @@
   {
    "tree": "patched",
    "file": "bank_073.asm",
-   "line": 2192,
+   "line": 2199,
    "label": "GateLeaveFreePal",
    "occ": 0,
    "pattern": [
@@ -1472,11 +1467,12 @@
   },
   {
    "tree": "patched",
-   "file": "bank_076.asm",
-   "line": 92,
-   "label": "EncResolve",
+   "file": "bank_073.asm",
+   "line": 2336,
+   "label": "RegionCommit",
    "occ": 0,
    "pattern": [
+    "add_a",
     "cp",
     "sub"
    ],
@@ -1485,7 +1481,16 @@
   {
    "tree": "patched",
    "file": "bank_076.asm",
-   "line": 332,
+   "line": 94,
+   "label": "EncResolve",
+   "occ": 0,
+   "pattern": [],
+   "verdict": "BOUNDED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_076.asm",
+   "line": 335,
    "label": "GateBossWin",
    "occ": 0,
    "pattern": [
@@ -1540,8 +1545,10 @@
  ],
  "ceilings": {
   "hard_max_mapid": "0xFE ($FF = exit-list terminator byte)",
-  "idx8_sub6b_max_mapid": "0xEA (custom-side sub $6B then 8-bit add a idiom)",
-  "bgm_room_default_max": "0xEA (S138: 256-row room / battle song tables, no cp $80 \u2014 every custom id; 0x7F S64-S137)",
-  "stale_ids": "S138: a custom id with no place (past ROOMFLAGS_TABLE_LEN or a placeholder, bit 7) reads the Castle record (bank $71 entry 0) and is sent home at CONTINUE (entry 10)"
+  "idx8_sub6b_max_mapid": "0xEA (custom-side sub $6B then 8-bit add a idiom; S140: no such reader left \u2014 every per-place table is indexed by the 16-bit place number)",
+  "place_ids_per_region": "0x6B-0xEA = 128 (S140 REGION_IDS; 0xEB-0xFE = exit link ids, LINK_ID_FIRST / LINK_IDS)",
+  "regions": "S140 (ARC CAP3a): a place = (wMapRegion, wMapID); PlaceNum<bank> -> the place number (RegionTable / GlobalPlaceIds per bank $60 / $6C / $71 / $76); compiler REGION_MAX 63",
+  "bgm_room_default_max": "0xEA (S138: 256-row room / battle song tables, no cp $80 \u2014 every custom id; 0x7F S64-S137; S140: 107 vanilla rows + one row per place)",
+  "stale_ids": "S138: a custom id with no place (past ROOMFLAGS_TABLE_LEN or a placeholder, bit 7) reads the Castle record (bank $71 entry 0) and is sent home at CONTINUE (entry 10); S140: + a region the build lacks / past its region's last place"
  }
 }

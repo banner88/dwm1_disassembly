@@ -39,6 +39,13 @@
 ; number (PlaceGo: a local jump when the home is bank $60). Bank $60 keeps the
 ; global things: the custom skills' scripts, VanillaExitExtTable /
 ; VanillaNPCExtTable, entries 3 / 6 / 7 / 11 / 12.
+;
+; S140 (ROADMAP ARC CAP3a) — REGIONS. A custom place is (wMapRegion, map id);
+; PlaceOf keys the directory by the PLACE NUMBER (PlaceNum60, pasted below the
+; head with this bank's RegionTable60 / GlobalPlaceIds60). Exit rows into
+; another region carry a `$FD <region>` prefix: the reader's
+; CopyExitListToBuffer gives such a row a LINK id ($EB+) and notes (region, id)
+; in wExitLinks; the room commit (bank $73 entry 0) turns it back.
 ; =============================================================================
 
 SECTION "ROM Bank $060", ROMX[$4000], BANK[$60]
@@ -64,18 +71,17 @@ SECTION "ROM Bank $060", ROMX[$4000], BANK[$60]
 ; =============================================================================
 ; PlaceOf: A = a map id or script type. CF clear: H = the place's home bank,
 ; [wPlaceIdx] = its index inside that bank. CF set: no place — a vanilla id
-; ($00-$6A), or past the last place (PLACE_COUNT; e.g. a transient script
-; type $70 with fewer than 6 places, which read past the old tables).
-; PlaceDirectory (generated) = per place, in map id order: db bank, db index.
+; ($00-$6A), or past the last place (e.g. a transient script type $70 with
+; fewer than 6 places, which read past the old tables).
+; PlaceDirectory (generated) = per place, in PLACE NUMBER order: db bank, db
+; index. S140 (ROADMAP ARC CAP3a): the place = (wMapRegion, A) through
+; PlaceNum60 (templates/place_number.asm, pasted below the head) — a script
+; type keys the current region too: a custom script never runs across a room
+; commit (measured S133), so the region of its start is still wMapRegion.
 ; Clobbers A/DE/HL; keeps BC.
 PlaceOf:
-    sub CUSTOM_ROOM_START
+    call PlaceNum60             ; HL = the place number, CF = none
     ret c
-    cp PLACE_COUNT
-    ccf
-    ret c
-    ld l, a
-    ld h, $00
     add hl, hl
     ld de, PlaceDirectory
     add hl, de
@@ -574,6 +580,78 @@ SkillScriptRead:
     ld de, SkillScriptPtrTable
     jp ScriptWordAt             ; bank $60's reader copy; returns BC
 
+; -----------------------------------------------------------------------------
+; PlaceNum60 (S140, ROADMAP ARC CAP3a — regions) — the PLACE NUMBER of a custom
+; map id in the current region. A custom place is (wMapRegion, wMapID); its
+; place number indexes every per-place table the compiler emits (P order:
+; region 0's places, then region 1's, ... — each region from id $6B up). This
+; block is pasted into every bank whose code indexes such a table (banks $60,
+; $6C, $71, $76; suffix = the bank), each with its own copy of the two small
+; tables below (emitted by the compiler next to the bank's data):
+;   RegionTable60:    db n_regions, then per region: db count (ids $6B .. $6B
+;                      + count - 1 are its places, holes = placeholders), dw base
+;                      (the place number of its id $6B)
+;   GlobalPlaceIds60: db (id - $6B) ... db $FF — the GLOBAL places (the arena
+;                      copies, which ROM0 ArenaAlias knows by bare id): region 0's
+;                      places wherever the player stands; no other region uses
+;                      those ids.
+; One region (every project up to 128 places): count = the place count, base 0
+; — the place number is id - $6B, as the tables were indexed before S140.
+;
+; PlaceNum60: A = a map id / script type, region = wMapRegion.
+; PlaceNumIn60: E = a map id / script type, D = the region.
+; Out: CF clear = a place, HL = its place number; CF set = none — a vanilla id
+; ($00-$6A), a link id or anything >= $EB (REGION_IDS), a region the build
+; lacks (a stale save), an id past its region's last place. Keeps BC.
+; Clobbers A, DE.
+; -----------------------------------------------------------------------------
+PlaceNum60:
+    ld e, a
+    ld a, [wMapRegion]
+    ld d, a
+PlaceNumIn60:
+    ld a, e
+    sub CUSTOM_ROOM_START
+    ret c                               ; a vanilla id
+    cp REGION_IDS
+    ccf
+    ret c                               ; $EB+: a link id / not a place
+    ld e, a                             ; E = id - $6B
+    ld hl, GlobalPlaceIds60
+.global:
+    ld a, [hl+]
+    cp $FF
+    jr z, .region
+    cp e
+    jr nz, .global
+    ld d, $00                           ; a global place: region 0's
+.region:
+    ld hl, RegionTable60
+    ld a, d
+    cp [hl]
+    ccf
+    ret c                               ; a region this build does not have
+    inc hl
+    ld d, a
+    add a
+    add d                               ; region * 3
+    add l
+    ld l, a
+    adc h
+    sub l
+    ld h, a                             ; HL -> [count, base lo, base hi]
+    ld a, e
+    cp [hl]
+    ccf
+    ret c                               ; past the region's last place
+    inc hl
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a                             ; HL = the region's first place number
+    ld d, $00
+    add hl, de                          ; + (id - $6B); CF clear (no overflow)
+    ret
+
 ; =============================================================================
 ; PLACE READERS — the custom-room data readers of ONE place bank
 ; (S136, ROADMAP ARC CAP2b; template editor2/core/templates/place_readers.asm)
@@ -882,12 +960,24 @@ CustomExitCheck:
     ld l, a
     ; fall through into the shared copy loop (S70 factoring; 7-byte entries,
     ; first-byte-$FF terminator only, KEY_LESSONS v3-v4)
+; S140 (ROADMAP ARC CAP3a — regions): a row prefixed `$FD <region>` leads to a
+; place of that region. Its 7 bytes are copied with the destination (+2)
+; replaced by the next LINK id (LINK_ID_FIRST $EB, $EC, ... — one per such row
+; of this list), and (region, real id) is noted in wExitLinks[link - $EB]; the
+; room commit (bank $73 entry 0 RegionCommit) turns the link id back into the
+; place and enters its region. Unprefixed rows stay in the current region, as
+; before. Measured S133: nothing re-copies the list between the exit firing
+; and the commit. Keeps BC (saved), clobbers A / DE.
 CopyExitListToBuffer:
+    push bc
     ld de, wCustomExitBuffer
+    ld c, LINK_ID_FIRST                 ; C = the next link id
 .copyExit:
     ld a, [hl]
     cp $FF
     jr z, .exitDone
+    cp $FD
+    jr z, .link
     ld b, $07
 .copyByte:
     ld a, [hl+]
@@ -896,10 +986,52 @@ CopyExitListToBuffer:
     dec b
     jr nz, .copyByte
     jr .copyExit
+.link:
+    inc hl
+    ld a, [hl+]                         ; the region; HL -> the row
+    push de
+    ld b, a
+    ld a, c
+    sub LINK_ID_FIRST
+    add a
+    add LOW(wExitLinks)
+    ld e, a
+    ld a, HIGH(wExitLinks)
+    adc $00
+    ld d, a                             ; DE -> wExitLinks[link - $EB]
+    ld a, b
+    ld [de], a                          ; the region
+    inc de
+    inc hl
+    inc hl
+    ld a, [hl-]                         ; the row's real destination id
+    ld [de], a
+    dec hl                              ; HL -> the row
+    pop de
+    ld a, [hl+]                         ; +0, +1 as they are
+    ld [de], a
+    inc de
+    ld a, [hl+]
+    ld [de], a
+    inc de
+    inc hl                              ; +2: the link id instead
+    ld a, c
+    ld [de], a
+    inc de
+    inc c
+    ld b, $04                           ; +3 .. +6 as they are
+.linkRest:
+    ld a, [hl+]
+    ld [de], a
+    inc de
+    dec b
+    jr nz, .linkRest
+    jr .copyExit
 .exitDone:
     ld a, $FF
     ld [de], a
     ld hl, wCustomExitBuffer
+    pop bc
     ret
 
 ; =============================================================================
@@ -1589,7 +1721,14 @@ SkillScr05:
     dw $0A29  ; [S73] cast in town with no stored anchor
     dw $FFFF
 
-PlaceDirectory:   ; per place (map id $6B + n): home bank, index there
+; S140 (ROADMAP ARC CAP3a): regions — [count, base] per region (PlaceNum60)
+RegionTable60:
+    db 1   ; regions
+    db 9
+    dw 0   ; region 0: ids $6B-$73, places 0-8
+GlobalPlaceIds60:   ; the arena copies (region 0 wherever you are)
+    db $FF
+PlaceDirectory:   ; per place (place number, S140): home bank, index there
     db $60, 0   ; $6B gate_island
     db $60, 1   ; $6C dusk_mirror
     db $60, 2   ; $6D gate_rotation

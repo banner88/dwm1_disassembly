@@ -748,3 +748,25 @@ edge and the battle waits for input forever.
   slot shows → run-length encode the state sequence; drop the first and last run (entry / cut-off),
   align the first five runs, compare states AND run lengths (S139: the user's rooms, S138 vs S139,
   55 / 111 runs identical).
+
+## S140 techniques — regions in a driver, waiting for a calm field, the region of a save
+
+- **`warp(p, V, x, y)` with regions:** a project mapID `V > $FF` (`$276`) writes `wWarpRegion`
+  (`W_REGION` $D537) = region + 1 and the real id into the mailbox. The bank $73 room commit enters
+  that region. A PLAIN id keeps the CURRENT region, even a region-0 place's id, so for region 0
+  poke `W_REGION` = 1 too (KEY_LESSONS S140). Read `MAP_REGION` ($D536) with `MAP_ID` after
+  every warp.
+- **The post-warp status overlay:** after a mailbox warp the field shows the party status bar
+  until a B. Press B 3-4 times (20 frames apart) before a talk or a screenshot.
+- **"Idle" = a calm field for 40 frames:** `GAME_MODE` 1, script flag clear, no text box,
+  `$C96C` (changing maps) 0 and `$C905` (the transition ladder) 0, four 10-frame checks in a row.
+  Press A every ~30 frames while a box is open. A shorter test reads mid-transition state.
+- **YES in a choice box:** zero `$C83C` first; it turns 1 when the box opens with NO selected →
+  wait 20, up, A (the S125 technique).
+- **Which record was read at CONTINUE:** hook `CopyCustomRoomRecord` (bank $71, game.sym) and log
+  (`wMapID`, `wMapRegion`) at each call. The first call after CONTINUE must already be the saved
+  place's own region (S140: lodge 3-5, region 3). The save itself: the `.ram` file's SRAM bank 3
+  at offset `$6000` = "X2" (`58 32`) + `$6002` = the region.
+- **A door that does not fire walking up:** the GreatTree screen 8 door at (3, 5) did not fire from
+  below in PyBoy, on the plain build as well. The (4, 5) door (to SBOSS) does. Try the
+  neighbouring door before suspecting the build.

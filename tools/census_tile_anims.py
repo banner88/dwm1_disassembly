@@ -36,7 +36,7 @@ import sys
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, REPO)
-from tools.census_place_banks import Stub, Rom, sym_table     # noqa: E402
+from tools.census_place_banks import Stub, Rom, sym_table, mid_pokes  # noqa: E402
 
 
 def main():
@@ -96,7 +96,7 @@ def main():
     check('dir_bank_6C', db, 0x6C, 'TileAnimDirectory')
     rows = plan['dir_rows']
     for i in range(rows):
-        mid = 0x6B + i
+        mid = F.val(prj.rooms[i]['mapID'])          # S140: row i = place number i
         bank, idx = rom.u8(db, da + 2 * i), rom.u8(db, da + 2 * i + 1)
         if mid not in model:
             check('dir_none', (bank, idx), (0, 0), f'${mid:02X}')
@@ -177,17 +177,17 @@ def main():
     for bank, addr in play.items():
         S.p.hook_register(bank, addr, on_play, bank)
     S.p.save_state(S.st)                    # hooks are not part of the state
-    for mid in range(0x00, 0xFF):
+    for mid in list(range(0x00, 0xFF)) + sorted(x for x in model if x > 0xFF):
         S.reload()
         hits.clear()
         m[wroom] = 0xFF
         for k in range(64):
             m[wstate + k] = 0xEE
-        S.call(0x00, [(wmap, mid)], bank=0x6C)
+        S.call(0x00, mid_pokes(sym, mid), bank=0x6C)   # S140: + the region
         want = [plan['home'][mid]] if mid in model else []
         check('forward', hits, want, f'${mid:02X}')
         if mid in model:
-            check('restart_room', m[wroom], mid, f'${mid:02X}')
+            check('restart_room', m[wroom], mid & 0xFF, f'${mid:02X}')
             for gi, g in enumerate(model[mid]):
                 t = m[wstate + 2 * gi]
                 # the restart wrote phase; the same call then counted one frame
@@ -219,9 +219,9 @@ def main():
             nfr = a.frames or loop + 60
             for _ in range(4):
                 warp(p, mid, 5, 3, settle=200)
-                if p.memory[MAP_ID] == mid:
+                if p.memory[MAP_ID] == mid & 0xFF:
                     break
-            check('play_warp', p.memory[MAP_ID], mid, f'${mid:02X}')
+            check('play_warp', p.memory[MAP_ID], mid & 0xFF, f'${mid:02X}')
             prev = bytes(p.memory[0, 0x9000:0x9800])
             seen = {sl: set() for sl in want}
             moved = set()

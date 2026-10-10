@@ -586,9 +586,18 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
 
     # ------------------------------------------------------------- rooms
     def next_free_mapid(self):
+        """The next free place mapID: region 0's $6B-$EA first, then region 1's
+        $16B-$1EA, … (S140, ROADMAP ARC CAP3a — a map id is one byte, the high
+        byte of a project mapID is the region; $EB-$FE are exit link ids). An
+        arena room's map id (custom.arena) is never handed out again in another
+        region — the game knows those rooms by their bare map id."""
         used = {val(r['mapID']) for r in self.rooms}
+        ar = (self.data.get('custom') or {}).get('arena') or {}
+        glob = {val(r['mapID']) & 0xFF for r in self.rooms
+                if isinstance(ar, dict) and r.get('id') in (ar.get('lobby'), ar.get('battle'))}
         m = 0x6B
-        while m in used:
+        while m in used or not 0x6B <= (m & 0xFF) <= 0xEA or \
+                (m >> 8 and (m & 0xFF) in glob):
             m += 1
         return m
 

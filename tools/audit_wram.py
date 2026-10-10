@@ -199,6 +199,8 @@ EXTENDED_INDEX_CHECKS = [
 
 ADDR_RE = re.compile(r"\$([cdCD][0-9a-fA-F]{3})\b")
 LABEL_DEF_RE = re.compile(r"^(w[A-Za-z0-9_]+)::")
+CUSTOM_ROW_MARKERS = ("CUSTOM ROOM STATE", "CUSTOM SCRATCH BLOCK",
+                      "OUR CUSTOM")
 RAMMAP_ROW_RE = re.compile(r"^\s+(?:1:)?([C-F][0-9A-F]{3})\s+(~?\d+)\s+(\S.*)")
 
 
@@ -306,7 +308,11 @@ def parse_rammap(path: Path):
             # S55: rammap rows that DOCUMENT our own custom state are not
             # vanilla claims — treating them as such makes the custom labels
             # self-collide the moment the map is documented.
-            if "CUSTOM ROOM STATE" in desc.upper():
+            # S140: the S65 rewording of the $DE74 row ("CUSTOM SCRATCH
+            # BLOCK") dropped the S55 marker, so the block's own labels
+            # self-collided (selftest FAILED since S137) — accept every
+            # wording the map uses for rows that document OUR state.
+            if any(k in desc.upper() for k in CUSTOM_ROW_MARKERS):
                 continue
             size = int(m.group(2).lstrip("~"))
             spans.append({"addr": a, "size": size,

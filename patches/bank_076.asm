@@ -31,7 +31,9 @@
 ;
 ; Data (generated below the template):
 ;   EncRoomTable: ENC_ROOM_LEN x [dw variant list (0 = none), db rate ($FF)],
-;     index wMapID - CUSTOM_ROOM_START.
+;     index = the PLACE NUMBER of (wMapRegion, wMapID) — S140 (ROADMAP ARC
+;     CAP3a): PlaceNum76 (templates/place_number.asm, pasted below the head
+;     with RegionTable76 / GlobalPlaceIds76); one region: wMapID - $6B.
 ;   GatePlanPtrs: GATE_PLAN_LEN x dw (0 = vanilla), index wGateID (0-255).
 ;   Variant list: records [db n_terms][n_terms x dw flag (bit 15 = must be
 ;     CLEAR)][dw target]; the last record has n_terms 0 (always holds).
@@ -90,16 +92,17 @@ EncResolve:
     or a
     jr nz, .gate                        ; a gate maze floor
     ld a, [wMapID]
-    sub CUSTOM_ROOM_START
-    jr c, .gate                         ; a vanilla room: vanilla rule
-    cp ENC_ROOM_LEN
+    call PlaceNum76                     ; S140: HL = the place number (keeps BC)
+    jr c, .gate                         ; a vanilla room / no place: vanilla rule
+    ld a, l
+    sub LOW(ENC_ROOM_LEN)
+    ld a, h
+    sbc HIGH(ENC_ROOM_LEN)
     jr nc, .gate
-    ld l, a
-    ld h, $00
     ld e, l
     ld d, h
     add hl, hl
-    add hl, de                          ; HL = index * 3
+    add hl, de                          ; HL = place * 3
     ld de, EncRoomTable
     add hl, de
     ld a, [hl+]
@@ -332,6 +335,14 @@ GateBossWin:
     ld a, [wMapID]
     cp b
     ret nz                              ; not the boss room of the dive
+    cp CUSTOM_ROOM_START
+    jr c, .bossRegionOk
+    ld hl, $710c                        ; S140 (ROADMAP ARC CAP3a): a custom boss
+    rst $10                             ;   room counts only in ITS region (bank $71
+    ld a, [wMapRegion]                  ;   entry 12 BossRegionOf: E) — a served room
+    cp e                                ;   of another region with the boss room's
+    ret nz                              ;   map id is not the boss
+.bossRegionOk:
     ld a, [wCurrentFloor]
     inc a
     ld b, a
@@ -451,10 +462,90 @@ RunWinTail:
     pop hl
     jr RunWinTail
 
+; -----------------------------------------------------------------------------
+; PlaceNum76 (S140, ROADMAP ARC CAP3a — regions) — the PLACE NUMBER of a custom
+; map id in the current region. A custom place is (wMapRegion, wMapID); its
+; place number indexes every per-place table the compiler emits (P order:
+; region 0's places, then region 1's, ... — each region from id $6B up). This
+; block is pasted into every bank whose code indexes such a table (banks $60,
+; $6C, $71, $76; suffix = the bank), each with its own copy of the two small
+; tables below (emitted by the compiler next to the bank's data):
+;   RegionTable76:    db n_regions, then per region: db count (ids $6B .. $6B
+;                      + count - 1 are its places, holes = placeholders), dw base
+;                      (the place number of its id $6B)
+;   GlobalPlaceIds76: db (id - $6B) ... db $FF — the GLOBAL places (the arena
+;                      copies, which ROM0 ArenaAlias knows by bare id): region 0's
+;                      places wherever the player stands; no other region uses
+;                      those ids.
+; One region (every project up to 128 places): count = the place count, base 0
+; — the place number is id - $6B, as the tables were indexed before S140.
+;
+; PlaceNum76: A = a map id / script type, region = wMapRegion.
+; PlaceNumIn76: E = a map id / script type, D = the region.
+; Out: CF clear = a place, HL = its place number; CF set = none — a vanilla id
+; ($00-$6A), a link id or anything >= $EB (REGION_IDS), a region the build
+; lacks (a stale save), an id past its region's last place. Keeps BC.
+; Clobbers A, DE.
+; -----------------------------------------------------------------------------
+PlaceNum76:
+    ld e, a
+    ld a, [wMapRegion]
+    ld d, a
+PlaceNumIn76:
+    ld a, e
+    sub CUSTOM_ROOM_START
+    ret c                               ; a vanilla id
+    cp REGION_IDS
+    ccf
+    ret c                               ; $EB+: a link id / not a place
+    ld e, a                             ; E = id - $6B
+    ld hl, GlobalPlaceIds76
+.global:
+    ld a, [hl+]
+    cp $FF
+    jr z, .region
+    cp e
+    jr nz, .global
+    ld d, $00                           ; a global place: region 0's
+.region:
+    ld hl, RegionTable76
+    ld a, d
+    cp [hl]
+    ccf
+    ret c                               ; a region this build does not have
+    inc hl
+    ld d, a
+    add a
+    add d                               ; region * 3
+    add l
+    ld l, a
+    adc h
+    sub l
+    ld h, a                             ; HL -> [count, base lo, base hi]
+    ld a, e
+    cp [hl]
+    ccf
+    ret c                               ; past the region's last place
+    inc hl
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a                             ; HL = the region's first place number
+    ld d, $00
+    add hl, de                          ; + (id - $6B); CF clear (no overflow)
+    ret
+
 ; =============================================================================
 ; ENCOUNTER DATA (generated by editor2 `enc76` from custom.encounter_lists,
 ; custom.rooms[].encounters, custom.gates[].encounters — PROJECT_COMPILER §2.30)
 ; =============================================================================
+
+; S140 (ROADMAP ARC CAP3a): regions — [count, base] per region (PlaceNum76)
+RegionTable76:
+    db 1   ; regions
+    db 9
+    dw 0   ; region 0: ids $6B-$73, places 0-8
+GlobalPlaceIds76:   ; the arena copies (region 0 wherever you are)
+    db $FF
 
 ENC_ROOM_LEN EQU 9
 EncRoomTable:  ; [dw variant list (0 = none), db rate ($FF = the list's)]

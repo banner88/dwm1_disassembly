@@ -65,6 +65,31 @@ GATE_TABLE_LEN = 96                              # gates 0-95 (S115 NG1)
 MAX_FIGHTS = 255
 FOLLOW_GATE = 0xFF                               # room tables: "the gate's song"
 ROOM_MID_MAX = 0xEA                              # S138: the last custom map id (project.CUSTOM_MID_MAX)
+# S140 (ROADMAP ARC CAP3a — regions): room / battle songs are indexed by the
+# project mapID ($00-$6A vanilla, a place's mapID incl. its region byte — $176
+# = region 1's $76); the bank $71 tables split into the 107 vanilla rows (by
+# map id) and one row per PLACE (CustomPlaceBGMTable / CustomPlaceBattleBGMTable,
+# place-number order — templates/bank_071_head.asm RoomSongByte71).
+VANILLA_ROWS = 0x6B
+
+
+def _room_key_ok(prj, mid):
+    """A room / battle song key: a vanilla map id ($00-$6A) or a place's mapID
+    shape (real id $6B-$EA, region 0-63 in the high byte). A key with no room
+    of the project is accepted (S138: a song can be set before its room) and
+    simply has no row (S140: the place rows exist only for places)."""
+    if not isinstance(mid, int) or mid < 0:
+        return False
+    if mid < VANILLA_ROWS:
+        return True
+    return 0x6B <= (mid & 0xFF) <= ROOM_MID_MAX and (mid >> 8) <= 63
+
+
+def _range_msg(what, mid):
+    return (f"{what} {F.hexb(mid)} outside $00-$EA (a vanilla map, or a place's map id "
+            "in its region: region r = $r6B-$rEA)")
+
+
 MUSIC_KEYS = ('libraries', 'songs', 'room_defaults', 'names', 'gates', 'battle')
 BATTLE_KEYS = ('normal', 'boss', 'arena', 'starry', 'rooms', 'fights')
 GATE_MUSIC_KEYS = ('floors', 'battles', 'rules')
@@ -288,10 +313,15 @@ def plan(prj):
                 raise MusicError(f"room {r.get('id')}: rooms[].music and "
                                  f"music.room_defaults disagree for {F.hexb(mid)}")
             defaults[mid] = m
+    size = max([256] + [F.val(r['mapID']) + 1 for r in prj.rooms]
+               + [F.val(k) + 1 for k in defaults if isinstance(F.val(k), int)]
+               + [F.val(k) + 1 for k in ((music.get('battle') or {}).get('rooms') or {})
+                  if isinstance(F.val(k), int)])
+    P.room_bgm = [0] * size            # S140: index = the project mapID (regions: up to $3FEA)
+    P.room_battle = [0] * size
     for mid, v in defaults.items():
-        if not (0 <= mid <= ROOM_MID_MAX):
-            raise MusicError(f"room_defaults mapID {F.hexb(mid)} outside $00-"
-                             f"{F.hexb(ROOM_MID_MAX)} (the last custom map id)")
+        if not _room_key_ok(prj, mid):
+            raise MusicError(_range_msg("room_defaults mapID", mid))
         if v in (0, '0', '0x00', '$00'):
             raise MusicError(f"room_defaults {F.hexb(mid)}: id 0 is the no-assignment "
                              "sentinel — it cannot be assigned")
@@ -346,9 +376,8 @@ def plan(prj):
         P.battle[k] = val(b.get(k), f"music.battle.{k}")
     for key, v in (b.get('rooms') or {}).items():
         mid = F.val(key)
-        if not 0 <= mid <= ROOM_MID_MAX:
-            raise MusicError(f"music.battle.rooms: mapID {key!r} outside $00-"
-                             f"{F.hexb(ROOM_MID_MAX)}")
+        if not _room_key_ok(prj, mid):
+            raise MusicError(_range_msg("music.battle.rooms: mapID", mid))
         P.room_battle[mid] = val(v, f"music.battle.rooms {F.hexb(mid)}")
     if any(P.gate_battle):
         for r in prj.rooms:
@@ -508,16 +537,18 @@ def emit_bank_071_tables(prj, warnings):
                                  if any(row) else ""))
     lines.append("")
     lines += ["; " + "-" * 77,
-              "; CustomRoomBattleBGMTable — 256 entries by wMapID (S138; 128 until",
-              "; S137 — every map id now, no `cp $80`): the song of battles",
-              "; in that room (0 = not set, $FF = follow the gate being dived). Read by",
-              "; entry 7 BattleBGMResolve (S116). (generated)",
+              "; CustomRoomBattleBGMTable — the 107 vanilla map ids ($00-$6A) /",
+              "; CustomPlaceBattleBGMTable — one row per PLACE, place-number order (S140",
+              "; ARC CAP3a; S138-S139: 256 rows by wMapID): the song of battles in that",
+              "; room (0 = not set, $FF = follow the gate being dived). Read by entry 7",
+              "; BattleBGMResolve through RoomSongByte71 (S116). (generated)",
               "; " + "-" * 77]
-    lines += _table_lines("CustomRoomBattleBGMTable", P.room_battle,
-                          fmt=lambda i, row: f"mapIDs ${i:02X}-${i + 15:02X}"
+    lines += _table_lines("CustomRoomBattleBGMTable", P.room_battle[:VANILLA_ROWS],
+                          fmt=lambda i, row: f"mapIDs ${i:02X}-${i + len(row) - 1:02X}"
                           + (": " + ", ".join(f"${i + j:02X}={tag(v)}"
                                               for j, v in enumerate(row) if v)
                              if any(row) else ""))
+    lines += place_song_lines(prj, "CustomPlaceBattleBGMTable", P.room_battle, tag)
     lines.append("")
     lines += ["; " + "-" * 77,
               "; BattleBGMSettings — [normal, boss, arena, Starry final] (0 = vanilla:",
@@ -536,15 +567,17 @@ def emit_bank_071_tables(prj, warnings):
     lines.append("")
     lines += ["; " + "-" * 77,
               "; MusicRuleTable (S129, ROADMAP P3.14d — music by flag): rows [kind (0 a",
-              "; room by wMapID / 1 a gate by wGateID), id, n, n x dw flag (bit 15 = must",
-              "; be OFF), song]; the FIRST row of the room / gate whose terms all hold",
-              "; plays. Read by MusicRulePick (entry 2). (generated)",
+              "; room / 1 a gate by wGateID), key (dw; S140: a room's key = its vanilla",
+              "; map id, or $100 + its place number — bank $71 RoomKey71), n, n x dw flag",
+              "; (bit 15 = must be OFF), song]; the FIRST row of the room / gate whose",
+              "; terms all hold plays. Read by MusicRulePick (entry 2). (generated)",
               "; " + "-" * 77,
               f"MUSIC_RULE_ROOM EQU {MUSIC_RULE_ROOM}",
               f"MUSIC_RULE_GATE EQU {MUSIC_RULE_GATE}",
               "MusicRuleTable:"]
     for kind, ident, terms, sid, what in P.rules:
-        b = [kind, ident, len(terms)]
+        key = rule_key(prj, kind, ident)
+        b = [kind, key & 0xFF, key >> 8, len(terms)]
         for idx, off in terms:
             w = idx | (0x8000 if off else 0)
             b += [w & 0xFF, w >> 8]
@@ -553,6 +586,29 @@ def emit_bank_071_tables(prj, warnings):
     lines.append("    db $FF")
     lines.append("")
     return lines
+
+
+def rule_key(prj, kind, ident):
+    """S140: a MusicRuleTable row's 16-bit key (bank $71 RoomKey71): a gate =
+    its number; a room = its vanilla map id, or $100 + its place number."""
+    if kind == MUSIC_RULE_GATE or ident < VANILLA_ROWS:
+        return ident
+    return 0x100 + prj.place_number(ident)
+
+
+def place_song_lines(prj, label, table, tag):
+    """S140: one row per place (P order), PLACE_SONG_LEN rows (the bank $71
+    RoomSongByte71 bound) — `table` is indexed by the project mapID."""
+    out = ["", f"{label}:   ; per place (place-number order)"]
+    rows = prj.rooms
+    for i in range(0, len(rows), 16):
+        part = rows[i:i + 16]
+        vals = [table[F.val(r['mapID'])] if F.val(r['mapID']) < len(table) else 0
+                for r in part]
+        tags = [f"{F.hexb(F.val(r['mapID']))}={tag(v)}" for r, v in zip(part, vals) if v]
+        out.append(F.db_line(vals, comment=f"places {i}-{i + len(part) - 1}"
+                             + (": " + ", ".join(tags) if tags else "")))
+    return out
 
 
 def rule_holds(terms, flags_on):

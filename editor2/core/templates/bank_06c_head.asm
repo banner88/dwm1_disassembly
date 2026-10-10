@@ -26,8 +26,15 @@
 ; animation bank) — the GDMA must read its frames from the bank it runs in.
 ; Looked up on EVERY call (nothing cached), like the place banks (S136).
 ;
+; S140 (ROADMAP ARC CAP3a — regions): the directory is indexed by the PLACE
+; NUMBER of (wMapRegion, wMapID) — PlaceNum6C (templates/place_number.asm,
+; pasted below the head with RegionTable6C / GlobalPlaceIds6C). One region:
+; the place number is wMapID - $6B, as before. The player's restart tag
+; wTileAnimRoom is dropped ($FF) by the commit when the region changes, so two
+; places sharing a map id in different regions restart their timers.
+;
 ; Data (generated below the player):
-;   TileAnimDirectory: 2 B per room (bank, index), TILEANIM_ROOMS rows.
+;   TileAnimDirectory: 2 B per place (bank, index), TILEANIM_ROOMS rows.
 ;   TileAnimRoomTable: dw per room of THIS bank (the directory's index).
 ;   Group lists / sequences / 16-aligned frame blocks: tileanim_player.asm.
 ; =============================================================================
@@ -43,12 +50,13 @@ TILEANIM_CAP EQU 8                      ; tiles copied per field frame, at most
 
 CustomTileAnimate:
     ld a, [wMapID]
-    sub CUSTOM_ROOM_START
-    ret c                               ; vanilla room (never called for one)
-    cp TILEANIM_ROOMS
+    call PlaceNum6C                     ; S140: HL = the place number (region-aware)
+    ret c                               ; vanilla room (never called for one) / no place
+    ld a, l
+    sub LOW(TILEANIM_ROOMS)
+    ld a, h
+    sbc HIGH(TILEANIM_ROOMS)
     ret nc                              ; past the directory: no own animations
-    ld l, a
-    ld h, $00
     add hl, hl
     ld de, TileAnimDirectory
     add hl, de

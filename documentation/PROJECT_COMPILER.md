@@ -3894,6 +3894,65 @@ what it meant; WHERE a room's records and frames live is decided by the compiler
 - **Measured:** `tools/census_tile_anims.py` (TOOLS_AND_DATA S139); the S139 demo
   (`examples/s139_twinkle_demo/`). Tests: `test_compiler.test_s139` (+ the census with `--rom`).
 
+## §2.49 S140 — REGIONS: more than 128 places (ROADMAP ARC CAP3a)
+
+**Built S140; USER-CONFIRMED 2026-10-10 21:26 ("I confirm everything works").** Engine:
+ARCHITECTURE "Regions (S140)". Schema: no new key — `custom.rooms[].mapID` may now carry a
+REGION in its high byte (`"0x16B"` = region 1's `$6B`; real id `$6B-$EA`, region 0-63,
+`project.REGION_MAX`); every destination that names a place (`room:$16B` in doors, talk / scene
+moves, gate floors, the hub, arena "sends you", the Milly hook) uses the same project mapID.
+`formats.mid_region` / `mid_real` split it. A project whose rooms are all `$6B-$EA` builds the
+S139 layout exactly (one region; only the pinned template bytes moved).
+
+- **`Project._dense_rooms`** (prj.rooms in PLACE NUMBER order): each region dense from `$6B` to its
+  last id (placeholders fill gaps, warned; a region with no room is an empty row); the arena copies
+  (`custom.arena.lobby` / `battle`) are GLOBAL — they must be region 0 (else `ProjectError` "…
+  must be among the first 128 places …") and their ids may not be used in another region (error
+  "… an arena room's … no other place may use it"); in regions ≥ 1 those ids are `global_alias`
+  placeholders that the engine never indexes (`place_number` maps them to region 0's P, the
+  censuses skip them). Sets `regions` [(count, base)], `_pnum`, `_room_by_mid` (a dict: `room_by_mid`
+  is O(1)). `place_number(V)`, `multi_region()`, `is_global(V)`, `dest_place`.
+- **`region_table_lines(sfx)` / `place_number_block(sfx)`:** `RegionTable<sfx>` + `GlobalPlaceIds<sfx>`
+  and the pasted `templates/place_number.asm` (pinned; `PlaceNum{X}` / `PlaceNumIn{X}`) for banks
+  `60` (`places.py`, counted in the fixed bytes), `6C` (`tileanim.py`), `71` (`emit_bank_071`, at
+  the end) and `76` (`encounters.py`).
+- **Exits:** `Project.exit_prefix(src, dest)` → `[$FD, region]` for a row into a place of another
+  region, or into any non-global place from a vanilla room's extension row (`_vanilla_exit_exts`,
+  src None) or a global room (multi-region projects only); `emitters._exit_row` / `_exit_lines`
+  write it before the 7-byte row (the prefix is not copied into the buffer). An exit list holds
+  at most 17 rows (the `wCustomExitBuffer` budget, `validators`), so the 20 link ids `$EB-$FE`
+  (`LINK_IDS`) can never run out.
+- **Script warps:** `emitters._regionize_ops` (per room, in `_room_scripts`): op `$0F` / `$3B`
+  (`WARP_OPS`) whose word names a place → the word = the real id; when the warp leaves the room's
+  region or starts in a global room, `['op', 'write_ram', 'wWarpRegion', region + 1]` goes right
+  before it. The Milly hook's arrival does the same (`milly.py`). One region: untouched.
+- **Rows with a region:** `HubTable` rows `[id, region, px lo/hi, py lo/hi]`; `GateInsertTable`
+  rows region at +6 (record 12 + 2n B); `gate_configs` row[4] = the real id + `boss_region` →
+  `GateBossRegionTable` (96 B, by gate); ROM0 `$26DD` rows `$6B-$6F` = vanilla filler
+  (`emit_region_rom0_records`), `Custom26DDTable` = one record per place.
+- **Songs (`music.py`):** `CustomRoomBGMTable` / `CustomRoomBattleBGMTable` = 107 vanilla rows
+  (`VANILLA_ROWS`) + `CustomPlaceBGMTable` / `CustomPlaceBattleBGMTable` one row per place
+  (`place_song_lines`, `PLACE_SONG_LEN`); a song key = a vanilla id or a place's mapID shape
+  (`_room_key_ok`: "outside $00-$EA" otherwise); `MusicRuleTable` keys are WORDS (`rule_key`: a
+  gate = its number, a room = its vanilla id or `$100 + P`; bank $71 `MusicRulePick` B = kind,
+  DE = key).
+- **Step counters:** multi-region → [reserved + explicit + the global places'] from `$CD80`, then
+  `wCustomStepRegional`: region 0's counters as bytes, every other region's as EQUs at the same
+  addresses (`step_counter_overlay`, `emit_region_wram_steps`); one region = the S65 layout (the
+  EQU is still emitted, = the area's start).
+- **Editor:** `Document.next_free_mapid` fills region 0 to `$EA`, then `$16B`… (skips `$EB-$FE`
+  and the arena ids in regions ≥ 1); `render.place_number` reads the ROM's `RegionTable60`; Play
+  here / cutscene playback write `wWarpRegion` (`playback.py`).
+- **Builder:** `builder.py` refuses a build whose rgbasm output has a truncation warning (a region
+  byte or 16-bit place index silently cut to 8 bits would build and misbehave).
+- **Sizes / pins:** `TEMPLATE_SIZE` $60 1,794, $71 1,380, $6C 364, $76 530;
+  `PLACE_TEMPLATE_SIZE` 1,156; example pin `c4c99542…` (patched; S139's `fc0f7e2c…` historical).
+  Bank $71 holds 15 B a place (8 record + 3 encounters + 1 anim + 1 flags + 2 songs) → ≈950 places.
+- **Measured:** `tools/census_regions.py` (TOOLS_AND_DATA S140); the demo
+  `examples/s140_compass_demo/`. Tests: `test_compiler.test_s140` (one-region invariants, a
+  generated 4-region project's tables / prefixes / warps / counters / songs / hub / boss region,
+  `next_free_mapid`; with `--rom` the census + its negative control).
+
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 
 The user's "fastest way to test": hook a custom room onto a door the player

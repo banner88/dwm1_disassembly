@@ -177,7 +177,9 @@ def plan(prj):
     sections = prj.text_sections()
     n_rooms = len(prj.rooms)
     head = V.TEMPLATE_SIZE.get(HOME_BANK) or 0
-    fixed60 = head + _payload(skill) + _payload(glob) + 2 * n_rooms + len(sections)
+    # S140 (ARC CAP3a): + bank $60's RegionTable60 / GlobalPlaceIds60
+    fixed60 = (head + _payload(skill) + _payload(glob) + 2 * n_rooms + len(sections)
+               + _payload(prj.region_table_lines('60')))
     cap = {HOME_BANK: BANK_SIZE - fixed60}
     place_cap = BANK_SIZE - V.PLACE_TEMPLATE_SIZE
     used = {HOME_BANK: 0}
@@ -291,14 +293,16 @@ def emit_bank_060(prj, warnings, head_text):
     p = plan(prj)
     warnings.extend(w for w in p['warnings'] if w not in warnings)
     from . import emitters as E
-    lines = [head_text.rstrip('\n'), "", readers(HOME_BANK), ""]
+    lines = [head_text.rstrip('\n'), ""] + prj.place_number_block('60') + \
+        ["", readers(HOME_BANK), ""]
     lines += E.banner(DATA_MARKER + ") — bank $60: SCRIPT DATA (generated) + places", [
         "Bank $60's own data: the custom skills' scripts, the place directory,",
         "the text section banks, its places' tables and blocks, its text",
         "sections, the vanilla-room exit / NPC overrides (editor2/core/places.py).",
         "Index 0 of a place's script table = its room entry script."])
     lines += p['skill']
-    lines.append(f"PlaceDirectory:   ; per place (map id $6B + n): home bank, index there")
+    lines += prj.region_table_lines('60')
+    lines.append(f"PlaceDirectory:   ; per place (place number, S140): home bank, index there")
     for r in prj.rooms:
         mid = F.val(r['mapID'])
         b, i = p['home'][mid]

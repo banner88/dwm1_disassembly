@@ -308,6 +308,54 @@ strip is 2 KB per row; the bank filled at ~15-80 animated rooms, by style).
   copy of the player ran). No frame dropped (600 field-loop passes / 600 frames in every cave);
   the user's rooms in bank $6C play the same step sequence as the S138 build.
 
+### Regions (S140 — ROADMAP ARC CAP3a; built S140, USER-CONFIRMED 2026-10-10)
+
+`wMapID` is one byte and the custom place ids are `$6B-$EA` (`$EB-$FE` are free for the engine's
+own use below, `$FF` ends an exit list): 128 places. A project with more puts them in REGIONS —
+a custom place is (`wMapRegion`, `wMapID`). In project.json the region is the high byte of the
+mapID (`$16B` = region 1's `$6B`); region 0 = the ids written before S140, later regions are
+handed out by the editor (`Document.next_free_mapid`). Vanilla ids ignore the region.
+- **The place number** (NEW pinned `editor2/core/templates/place_number.asm`, pasted into banks
+  $60 / $6C / $71 / $76 as `PlaceNum<bank>` / `PlaceNumIn<bank>`: E = id, D = region → CF clear +
+  HL = P; keeps BC): `RegionTable<bank>` = `db n_regions`, per region `db count, dw base` (each
+  region's places dense from `$6B`); `GlobalPlaceIds<bank>` = the GLOBAL places (the arena
+  copies: the engine knows them by bare map id at nine ROM0-routed sites, S128) — found in any
+  region, as region 0's P. Every per-place table (bank $60 `PlaceDirectory`, bank $6C
+  `TileAnimDirectory`, bank $71 `Custom26DDTable` / `RoomEncTable` / `CustomAnimSrcTable` /
+  `CustomRoomFlagsTable` / the place song rows, bank $76 `EncRoomTable`) is indexed by P — the
+  tables stay where they were (S135 had planned a place header / far copy instead). One region:
+  P = `id − $6B`, the same as before. Bank $71 costs 15 B a place → ≈950 places before it binds.
+- **The region changes at three points only.** (1) The room commit, bank $73 entry 0
+  `RegionCommit`, right after `wInGateworld := wWarpFlag`: a LINK id `$EB + k` (an exit row
+  written `$FD <region> <row>` — `CopyExitListToBuffer`, `templates/place_readers.asm`, puts the
+  link id at row+2 and [region, real id] into `wExitLinks[k]`) becomes (region, real id); else a
+  pending `wWarpRegion` (= region + 1) is entered — set by bank $71 `HubWarp` (the hub row's
+  region byte) and by script warps (the compiler puts `write_ram wWarpRegion, region + 1` before
+  op `$0F` / `$3B` and writes the real id into the warp word); else the region stays (a plain
+  door inside a region, any vanilla room). Nothing re-copies the exit list between the exit
+  firing and the commit (S133), and the pre-commit readers only classify the destination — a
+  link id classifies as a custom room. (2) Bank $73 entry 22 `RegionEnterE` (E = region): the
+  gate insert (bank $71 entry 4, the row's region at +6) and the boss floor (the bank $16
+  `jr_016_5be1` S115 nops → bank $71 entry 11 `BossRegionEnter`, `GateBossRegionTable` by gate).
+  (3) A load: SRAM bank 3 magic "X2" + `$A002` = `wMapRegion` (an "X1" save = region 0; a stale
+  CONTINUE resets it to 0 before `HubWarp`).
+- **`RegionEnter` on a change:** zeroes `wCustomStepRegional..$CFFF` (every region's step
+  counters share one area, region 0's included; the reserved / explicit counters and the global
+  places' sit below it — the compiler's per-region overlay, `Project.step_counter_overlay`; one
+  region = the S65 layout) and drops the two caches that compare `wMapID` alone
+  (`wNpcColourMap`, `wTileAnimRoom` := `$FF`).
+- **Who must know the region:** an exit row into another region, or into any place from a vanilla
+  or global room (whose region is whatever the player brought), carries the prefix
+  (`Project.exit_prefix`); vanilla door redirects always do. `GateBossWin` (bank $76) counts a
+  custom boss room only in its own region (bank $71 entry 12 `BossRegionOf`). Room songs: 107
+  vanilla rows by id + one row per place; `MusicRuleTable` keys are words (a room = its vanilla id
+  or `$100 + P`). ROM0 `$26DD` rows `$6B-$6F` are vanilla filler again — every place reads
+  `Custom26DDTable[P]` (gate-world ids `$6B-$6F` still read the ROM0 gate table).
+- **Measured:** `tools/census_regions.py` (≥ 300 places in 4 regions, every table and the commit
+  by stub calls, 0 mismatched); PyBoy on the user's save (the COMPASS LODGES: map id `$76` in four
+  regions, doors / stairs / script warps across regions, a battle, a region-3 save + CONTINUE,
+  vanilla rooms entered from region 3). PROJECT_COMPILER §2.49; CROSSBANK_ROOMS "S140 sites".
+
 ## Key RAM Regions
 
 | Range | Purpose |
@@ -421,6 +469,9 @@ loads with every extended flag clear). Both write RAMB = 3 for a 256-byte loop a
 restore RAMB = 0, the same no-di chunk window as the entry 5/6 snapshot hooks (pin
 invariant above: the ISR graph neither reads SRAM nor writes RAMB). Outside the CF3
 checksum (bank 0 only), like banks 1-2. Free in bank 3: `$A002-$A00F`, `$A110-$BFFF`.
+**S140 (ARC CAP3a, USER-CONFIRMED 2026-10-10):** magic "X2" (`$58,$32`) = "X1" + `$A002` =
+`wMapRegion` (the region the save stands in; "Regions (S140)" above); `ExtFlagsRestore` accepts
+both ("X1" → region 0). Free in bank 3 now: `$A003-$A00F`, `$A110-$BFFF`.
 
 **What remains open in E3** (see ROADMAP): (a2) new-game INIT data as an
 authorable object; (b2) story-variable headroom schema on top of the new

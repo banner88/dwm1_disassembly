@@ -87,6 +87,7 @@ SECTION "ROM Bank $073", ROMX[$4000], BANK[$73]
     dw GateWipeAttr                 ; entry 19 — S100 r3: in-gate transition blank rows -> palette 7 (free-colour rooms)
     dw GateLeaveFreePal             ; entry 20 — S100 r3: in-gate transition, room squeezed: colour 1 := cream (buffer + HW)
     dw FlagAddr                     ; entry 21 — S117: event-flag address + mask (ROM0 ComputeFlagAddress; + extended flags $1000-$17FF)
+    dw RegionEnterE                 ; entry 22 — S140 (ARC CAP3a): enter region E (bank $71 gate insert, bank $16 boss floor)
 
 ; -----------------------------------------------------------------------------
 ; Entry 0 — map-change commit hook: displaced store + conditional drain.
@@ -95,6 +96,12 @@ CF2WarpCommitDrain:
     ; displaced work from bank $0B RoomEntry0_TilesetLoader ($4020-$4025)
     ld a, [wWarpFlag]
     ld [wInGateworld], a
+
+    ; [S140, ROADMAP ARC CAP3a] the destination's REGION, before anything
+    ; below reads wMapID: a link id ($EB+, an exit row with a `$FD <region>`
+    ; prefix) becomes (region, real id); else a pending wWarpRegion (the hub)
+    ; is entered; else the region stays.
+    call RegionCommit
 
     ; [S127, ROADMAP P3.14e2] a new appearance of a room: the random
     ; breeders' slots (wBreedSlots) roll again — every state := 0. Kept on
@@ -995,7 +1002,7 @@ CF3CopyToSRAM:
     ld [$bfca], a
     ld a, [wGateDiveMask]
     ld [$bfcb], a
-    call ExtFlagsCommit             ; S117: extended flags -> SRAM bank 3 (+ magic "X1")
+    call ExtFlagsCommit             ; S117: extended flags -> SRAM bank 3 (+ magic; S140 "X2" + the region)
     jp CF3SnapCommit
 
 ; -----------------------------------------------------------------------------
@@ -1080,7 +1087,7 @@ CF3CopyFromSRAM:
     ld [wGateDiveGate], a
     ld a, [$bfcb]
     ld [wGateDiveMask], a
-    call ExtFlagsRestore            ; S117: SRAM bank 3 -> wExtFlags (magic "X1"; else they stay zero)
+    call ExtFlagsRestore            ; S117: SRAM bank 3 -> wExtFlags (magic "X1" / S140 "X2" + the region; else zero)
     ; S69v2: bank-1 roster snapshot — restore over the eager image if the
     ; magic is present, else SEED it (one-time migration of pre-v3 saves).
     jp CF3SnapRestore
@@ -2229,10 +2236,12 @@ GateLeaveFreePal:
 ; That window is outside the save image (CF3 skips it both ways), so the
 ; flags ride the EXPLICIT save themselves, exactly like the gate dive state:
 ;   * entry 5's main-save detector -> ExtFlagsCommit: SRAM bank 3 $A000-$A001
-;     = magic "X1" ($58,$31), $A010-$A10F = the 256 bytes;
+;     = magic "X1" ($58,$31), $A010-$A10F = the 256 bytes; S140 (ARC CAP3a):
+;     magic "X2" ($58,$32) + $A002 = wMapRegion (the region the save stands in);
 ;   * entry 6's main-load detector (AFTER the window zero-fill) ->
-;     ExtFlagsRestore: magic present -> copy back; absent (a save made before
-;     S117, a fresh cart) -> the flags stay zero.
+;     ExtFlagsRestore: magic present -> copy back ("X1" = a S117-S139 save:
+;     region 0; "X2" = + the region); absent (a save made before S117, a fresh
+;     cart) -> the flags and the region stay zero.
 ;   * new game: CF3NewGameClear zeroes $C8EA-$D9E9, which covers wExtFlags.
 ; So they rewind on a reset without saving, like every vanilla flag. Bank 3
 ; is otherwise unclaimed (bank 1 = roster snapshot "R4", bank 2 = sleep pool
@@ -2299,6 +2308,92 @@ FlagAddr:
     ld hl, wStoryFlag
     jr .mask
 
+; =============================================================================
+; S140 (ROADMAP ARC CAP3a) — REGIONS. A custom place is (wMapRegion, wMapID):
+; one map id byte holds 128 places ($6B-$EA), so a project with more puts them
+; in regions (region 0 = map ids written $6B-$EA in project.json, region r =
+; $r6B-$rEA). Every per-place table is indexed by the PLACE NUMBER (banks
+; $60 / $6C / $71 / $76 PlaceNum<bank>, editor2/core/templates/place_number.asm).
+; The region changes only here (the room commit, entry 0), at a gate insert
+; (bank $71 entry 4) and the boss floor (bank $16) through entry 22, and at a
+; save load (ExtFlagsRestore). Vanilla ids ignore it.
+;   * an exit row into another region: CopyExitListToBuffer (place_readers.asm)
+;     wrote a LINK id LINK_ID_FIRST + k as the destination and (region, real
+;     id) into wExitLinks[k] — measured S133: nothing re-copies the list between
+;     the exit firing and this commit; the pre-commit readers of the destination
+;     (bank $01 SaveMapStateToHRAM's ArenaAlias + class compares, bank $0B
+;     CheckGateWorldMapType, bank $06's Castle `or a`) only classify it, and a
+;     link id classifies as the custom room it stands for;
+;   * wWarpRegion = region + 1 (0 = none): set by bank $71 HubWarp (the hub
+;     row's region byte) and by a script warp into another region (the
+;     compiler puts `write_ram wWarpRegion, region + 1` before ops $0F / $3B;
+;     the Milly hook's arrival likewise); cleared here.
+; RegionEnter, on a CHANGE: the step counters of the regional area
+; (wCustomStepRegional .. $CFFF — every region's counters share it; the global
+; places' counters sit below it) are zeroed (they are transient anyway, S65),
+; and the two caches that compare wMapID alone are dropped: wNpcColourMap
+; (bank $60 NpcColourDraw) and wTileAnimRoom (the tile animation player).
+; =============================================================================
+RegionCommit:
+    ld a, [wMapID]
+    sub LINK_ID_FIRST
+    jr c, .pending
+    cp LINK_IDS
+    jr nc, .pending
+    add a
+    add LOW(wExitLinks)
+    ld l, a
+    ld a, HIGH(wExitLinks)
+    adc $00
+    ld h, a
+    ld a, [hl+]                     ; the region
+    ld e, a
+    ld a, [hl]                      ; the real map id
+    ld [wMapID], a
+    ld a, e
+    jr .enter
+.pending:
+    ld a, [wWarpRegion]
+    or a
+    ret z                           ; nothing pending: the region stays
+    dec a
+.enter:
+    call RegionEnter
+    xor a
+    ld [wWarpRegion], a
+    ret
+
+; Entry 22 — RegionEnterE: E = the region (bank $71 CustomGateInsert, bank $16
+; boss floor). Keeps BC / DE / HL.
+RegionEnterE:
+    push bc
+    push de
+    push hl
+    ld a, e
+    call RegionEnter
+    pop hl
+    pop de
+    pop bc
+    ret
+
+; RegionEnter: A = the region. Same region: nothing. Clobbers A, BC, HL.
+RegionEnter:
+    ld hl, wMapRegion
+    cp [hl]
+    ret z
+    ld [hl], a
+    ld hl, wCustomStepRegional
+.zero:
+    xor a
+    ld [hl+], a
+    ld a, h
+    cp HIGH($D000)
+    jr nz, .zero                    ; up to $CFFF, the counter area's end
+    ld a, $FF
+    ld [wNpcColourMap], a
+    ld [wTileAnimRoom], a
+    ret
+
 ; ExtFlagsCommit — wExtFlags -> SRAM bank 3 $A010 (256 B) + magic. SRAM is
 ; enabled by the calling entry. Clobbers A, BC, DE, HL. RAMB = 0 on exit.
 ExtFlagsCommit:
@@ -2316,12 +2411,16 @@ ExtFlagsCommit:
     ld hl, $a000
     ld a, $58
     ld [hl+], a
-    ld [hl], $31                    ; magic "X1"
+    ld a, $32                       ; S140: magic "X2" = "X1" + the region at $A002
+    ld [hl+], a
+    ld a, [wMapRegion]
+    ld [hl], a
     xor a
     ld [$4100], a
     ret
 
-; ExtFlagsRestore — magic "X1" in bank 3 -> wExtFlags := $A010.. (256 B);
+; ExtFlagsRestore — magic "X1" / "X2" in bank 3 -> wExtFlags := $A010.. (256 B)
+; (+ "X2": wMapRegion := $A002);
 ; else leave them (the caller just zeroed the window). Clobbers A, BC, DE,
 ; HL. RAMB = 0 on exit.
 ExtFlagsRestore:
@@ -2333,9 +2432,14 @@ ExtFlagsRestore:
     ld a, [hl+]
     cp $58
     jr nz, .done
-    ld a, [hl]
+    ld a, [hl+]
     cp $31
+    jr z, .flags                    ; "X1" (S117-S139): flags, region 0
+    cp $32
     jr nz, .done
+    ld a, [hl]                      ; S140 "X2": + the region the save stands in
+    ld [wMapRegion], a
+.flags:
     ld hl, $a010
     ld de, wExtFlags
     ld b, 0

@@ -22,7 +22,9 @@ selected cell, NPC, door, exit or spot — opens by itself when you click one),
 **Room** (name, tileset, size, music, doors that lead here, state rules),
 **Screen** (the screen / state on the canvas) and **Gates** (only for rooms used
 inside gates and worlds). Engine numbers (map id, attr grids, layout ids) sit in a
-folded *Technical* box at the bottom of Room / Screen. Choosing Paint or Eyedrop
+folded *Technical* box at the bottom of Room / Screen. A map id past $FF names a
+room in a later REGION (S140): $16B is region 1's $6B — your 129th room and on get
+those by themselves (see *Limits*). Choosing Paint or Eyedrop
 opens Tiles. The editor remembers the page you used last.
 
 **Painting:** pick a metatile (Tiles page) and paint with the canvas tools; the

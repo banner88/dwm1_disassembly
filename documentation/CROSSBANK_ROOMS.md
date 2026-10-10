@@ -633,7 +633,8 @@ temporary wInGateworld).
 **Pre-commit readers of the destination** classify only: `SaveMapStateToHRAM` →
 `ArenaAlias` + class compares; `jr_00b_462c` → `CheckGateWorldMapType` (≥ `$30` = gate-like,
 true for every custom id); bank $06 → `or a` (Castle). An id in `$F0-$FE` therefore
-behaves as the custom room it stands for; the arena's ids must stay real ids (global ids,
+behaves as the custom room it stands for (S140 as built: the link ids are `$EB-$FE`, the same
+argument — "S140 sites" below); the arena's ids must stay real ids (global ids,
 never link slots).
 
 ### S136 sites (place banks, ROADMAP ARC CAP2b)
@@ -679,6 +680,40 @@ entries 0 / 1 (== map 0's colours and attr map), bank $76 entry 0 and bank $6C e
 return) — for every id past the last room AND a placeholder. Selftest PASS (clean 58 / patched
 85); `extracted/mapid_range_audit.json` regenerated (`ceilings.bgm_room_default_max` = `$EA`,
 `stale_ids`).
+
+### S140 sites (regions, ROADMAP ARC CAP3a)
+
+Every per-place table is now indexed by the 16-bit PLACE NUMBER (`PlaceNum<bank>`,
+`templates/place_number.asm`: the region's [count, base] row bounds the id; a global id is found
+in any region; CF set = no place) — ARCHITECTURE "Regions (S140)". Re-keyed (`audit_mapid_range`):
+`CustomAnimSource#0` IDX8_SUB6B → **BOUNDED**; `CopyCustomRoomRecord` #1 **CP_UNSIGNED** (`.place`:
+`cp CUSTOM_ROOM_START` / `cp $70` + `wInGateworld` pick ROM0 or the place table), #2 **IDX16**
+(vanilla ids; `$6B-$6F` only in a gate world), NEW #3 **BOUNDED** (`.custom` → `PlaceNum71` × 8);
+`CustomEncResolve#0`, `CustomRoomBGMResolve` #0 / #1, `BattleBGMResolve#0` → **BOUNDED**
+(`RoomKey71` / `RoomSongByte71`: vanilla rows by id, places by place number + `PLACE_SONG_LEN`);
+`CustomRoomFlags#0`, `TextSpriteMode#0`, `StalePlace#0` → `RoomFlagsPtr` (**BOUNDED**);
+`CustomTileAnimate#0` and `EncResolve#0` keep **BOUNDED** through `PlaceNum6C` / `PlaceNum76`;
+`PlaceFwdStep#0` (→ `PlaceOf` = `PlaceNum60`) **BOUNDED**. NEW load: bank $73 `RegionCommit#0`
+(`sub LINK_ID_FIRST / jr c`, `cp LINK_IDS / jr nc`, 16-bit add into `wExitLinks`) — **BOUNDED**.
+Selftest PASS (clean 58 / patched 87); `extracted/mapid_range_audit.json` regenerated (ceilings
+`place_ids_per_region`, `regions`).
+
+**What the S133 table above needed, as built:** the map-id stores keep one byte — the region is a
+separate byte (`wMapRegion` $D536, saved via SRAM bank 3 "X2"); the mailbox carries the real id
+plus `wWarpRegion` ($D537, region + 1) or a LINK id `$EB-$FE` (S133 planned `$F0-$FE`) that the
+commit turns into (region, id) from `wExitLinks` — measured S133, the exit buffer is unchanged
+between fire and commit, and the pre-commit classifiers treat a link id as a custom room. The
+two stores set without the mailbox call bank $73 entry 22 `RegionEnterE`: `CustomGateInsert`
+`.hit` (the row's region byte, +6) and bank $16 `jr_016_5be1` (its 8 nops → `push hl / ld hl,
+$710B / rst $10 / pop hl / nop / nop`: bank $71 entry 11 `BossRegionEnter` reads
+`GateBossRegionTable[wGateID]`). `wBossMapType` stays one byte; `GateBossWin` also compares
+`wMapRegion` with the boss's region (entry 12). The op `$42` / `$4E` return point
+(`$C8FB-$C902`) stores no region: a breeding ceremony started in a region ≥ 1 place returns by
+map id into the CURRENT region, which the ceremony does not change (vanilla rooms ignore it) —
+the in-game walk is ROADMAP CAP3b. The cache tags `wNpcColourMap` / `wTileAnimRoom` are dropped
+by `RegionEnter` on every region change. `wScriptMapType` keeps one byte: `CustomScriptRead`
+goes through `PlaceOf` in the current region (a custom script never runs across a commit,
+S133).
 
 ### Re-running the audit
 

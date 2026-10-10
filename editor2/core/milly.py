@@ -232,12 +232,19 @@ def bedroom_lines(prj):
     for i in range(0, 8, 2):
         seq.append(([0xFF13, HERO_NAME + i, HERO_DEFAULT[i] | HERO_DEFAULT[i + 1] << 8],
                     'the hero\'s name = the default MILLY tiles + $F0' if i == 0 else ''))
+    if F.mid_region(mid):
+        # S140 (ROADMAP ARC CAP3a): the new game stands in region 0 — an arrival
+        # room of another region needs the warp's region (op $12 write_ram
+        # wWarpRegion = region + 1; bank $73 RegionCommit enters it)
+        seq.append(([0xFF12, 'wWarpRegion', F.mid_region(mid) + 1],
+                    f'write_ram wWarpRegion: the whirl enters region {F.mid_region(mid)}'))
     seq.append(([0xFF3B, mid & 0xFF, px, py],
                 f'warp_fade: the whirl to room ${mid:02X} ({rid}) screen {k} cell ({x}, {y})'))
     seq.append(([0xFFFF], 'end'))
     words, out = [], ['; Milly hook ON (S121, editor2/core/milly.py; custom.milly_hook)']
     for ws, note in seq:
-        out.append('    dw ' + ', '.join(f'${w:04X}' for w in ws) + (f'   ; {note}' if note else ''))
+        out.append('    dw ' + ', '.join(w if isinstance(w, str) else f'${w:04X}' for w in ws)
+                   + (f'   ; {note}' if note else ''))
         words += ws
     if len(words) > len(BEDROOM_WORDS):
         raise HookError('internal: the hook script is longer than the bedroom tail')

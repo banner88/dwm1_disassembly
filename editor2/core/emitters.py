@@ -218,6 +218,33 @@ def _state_rule_lines(prj, r, lbl, rules):
     return out
 
 
+def _exit_row(prj, src, e):
+    """S140 (ROADMAP ARC CAP3a): an exit row's bytes — the 7 of the engine's
+    format with the destination's REAL map id, preceded by `$FD <region>` when
+    the row leads into a place of another region (Project.exit_prefix; src =
+    the source room, None = a vanilla room's extension row). The pinned reader
+    CopyExitListToBuffer turns a prefixed row into a link id."""
+    dest_s = e['dest']
+    dest = prj.resolve_dest(dest_s)
+    pre = []
+    if isinstance(dest_s, str) and dest_s.startswith('room:') and dest >= 0x6B:
+        pre = prj.exit_prefix(src, dest)
+        dest = F.mid_real(dest)
+    return pre, F.exit_entry(F.val(e['x']), F.val(e['y']), dest,
+                             F.val(e.get('gate_flag', 0)),
+                             F.val(e['screen_byte']),
+                             F.val(e['spawn_x']), F.val(e['spawn_y']))
+
+
+def _exit_lines(prj, src, e, comment):
+    pre, b = _exit_row(prj, src, e)
+    out = []
+    if pre:
+        out.append(F.db_line(pre, comment=f"S140: the next row leads into region {pre[1]}"))
+    out.append(F.db_line(b, comment=comment))
+    return out
+
+
 def _vanilla_exit_exts(prj):
     """S70 — custom.vanilla_exit_extensions -> VanillaExitExtTable, read by
     template entry 7 (VanillaExitResolve) for bank $0B RoomEntry6_ExitChecker.
@@ -249,12 +276,7 @@ def _vanilla_exit_exts(prj):
         out.append(f"    db {len(steps)}   ; n_steps (variant count)")
         labels = []
         for st in steps:
-            rows = tuple(tuple([F.val(e['x']), F.val(e['y']),
-                                prj.resolve_dest(e['dest']),
-                                F.val(e.get('gate_flag', 0)),
-                                F.val(e['screen_byte']),
-                                F.val(e['spawn_x']), F.val(e['spawn_y'])])
-                         for e in st['exits'])
+            rows = tuple(tuple(sum(_exit_row(prj, None, e), [])) for e in st['exits'])
             key = (mid, rows)
             if key not in by_key:
                 lbl = f"VExt{mid:02X}_V{len([v for v in variants if v[0].startswith(f'VExt{mid:02X}_')])}"
@@ -268,15 +290,43 @@ def _vanilla_exit_exts(prj):
     for lbl, st in variants:
         out.append(f"{lbl}:")
         for e in st['exits']:
-            b = F.exit_entry(F.val(e['x']), F.val(e['y']),
-                             prj.resolve_dest(e['dest']),
-                             F.val(e.get('gate_flag', 0)),
-                             F.val(e['screen_byte']),
-                             F.val(e['spawn_x']), F.val(e['spawn_y']))
-            out.append(F.db_line(b, comment=e.get('comment',
-                       f"exit ({F.val(e['x'])},{F.val(e['y'])}) -> {e['dest']}")))
+            out += _exit_lines(prj, None, e, e.get('comment',
+                               f"exit ({F.val(e['x'])},{F.val(e['y'])}) -> {e['dest']}"))
         out.append("    db $FF")
         out.append("")
+    return out
+
+
+WARP_OPS = ('map_transition', 'warp_fade', '0x0F', '0x0f', '0x3B', '0x3b')
+
+
+def _regionize_ops(prj, r, ops):
+    """S140 (ROADMAP ARC CAP3a — regions): a script warp ($0F map_transition /
+    $3B warp_fade) to a place carries the place's project mapID in its first
+    word (a region's places: $16B, $26B, … — the high byte would read as the
+    warp's GATE FLAG). Here, per room: the word becomes the real map id, and
+    when the warp leaves the room's region (or starts in a global room, whose
+    region is whatever the player brought) a `write_ram wWarpRegion, region + 1`
+    (op $12, not yielding) goes right before it — the room commit (bank $73
+    RegionCommit) enters that region. A word whose low byte is below $6B is a
+    vanilla map / a gate number (gate flag in the high byte): untouched. One
+    region: nothing changes."""
+    if not prj.multi_region():
+        return ops
+    src = F.val(r['mapID'])
+    src_global = prj.is_global(src)
+    out = []
+    for it in ops:
+        if (isinstance(it, list) and len(it) >= 3 and it[0] == 'op'
+                and str(it[1]) in WARP_OPS):
+            w = S._pval(it[2])
+            if isinstance(w, int) and (w & 0xFF) >= 0x6B:
+                prj.room_by_mid(w)                      # a place of this project
+                if not prj.is_global(w) and (src_global or
+                                             F.mid_region(w) != F.mid_region(src)):
+                    out.append(['op', 'write_ram', 'wWarpRegion', F.mid_region(w) + 1])
+                it = [it[0], it[1], f'0x{F.mid_real(w):04X}'] + list(it[3:])
+        out.append(it)
     return out
 
 
@@ -290,7 +340,8 @@ def _room_scripts(prj, r, text_names, warnings):
     out.append("")
     for idx, sid in table:
         script = prj.script(sid)
-        out += S.emit_script(f"{tag}_Scr{idx:02d}", _patch_params(r, script['ops']),
+        out += S.emit_script(f"{tag}_Scr{idx:02d}",
+                             _regionize_ops(prj, r, _patch_params(r, script['ops'])),
                              text_names=text_names, warnings=warnings)
         out.append("")
     out += _patch_data_lines(r)
@@ -446,16 +497,12 @@ def _room_data(prj, r):
             out.append(f"{tag}_S{i}{sfx}_Exits:")
             for e in st.get('exits', []):
                 dest = prj.resolve_dest(e['dest'])
-                b = F.exit_entry(e['x'], e['y'], dest,
-                                 F.val(e.get('gate_flag', 0)),
-                                 F.val(e['screen_byte']),
-                                 e['spawn_x'], e['spawn_y'])
                 what = (f"door '{e.get('name') or e['door']}'" if e.get('door')
                         else 'stairs down (next gate floor)' if e.get('stairs')
                         else f'gate entrance (gate {dest})'
                         if F.val(e.get('gate_flag', 0)) == 1 else 'exit')
-                out.append(F.db_line(b, comment=e.get('comment',
-                           f"{what} ({e['x']},{e['y']}) -> {e['dest']}")))
+                out += _exit_lines(prj, r, e, e.get('comment',
+                                   f"{what} ({e['x']},{e['y']}) -> {e['dest']}"))
             out.append("    db $FF")
             out.append("")
     return out
@@ -467,19 +514,19 @@ def _room_data(prj, r):
 
 def emit_bank_071(prj, warnings):
     lines = [template('bank_071_head.asm').rstrip('\n'), ""]
+    lines += prj.place_number_block('71') + [""]
     lines += ["; " + "-" * 77,
-              "; Custom26DDTable — 8-byte $26DD-style records for mapIDs $70+,",
-              "; indexed (mapID-$70): [step_id, gfx_bank, w_lo, w_hi, h_lo,",
+              "; Custom26DDTable — 8-byte $26DD-style records, one per PLACE in",
+              "; place-number order (S140, ARC CAP3a; S94-S139: $6B-$6F in ROM0 $2A35,",
+              "; this table from $70): [step_id, gfx_bank, w_lo, w_hi, h_lo,",
               ";  h_hi, threshold, pad] (generated by build_project.py).",
               "; " + "-" * 77,
               "Custom26DDTable:"]
     for r in prj.rooms:
         mid = F.val(r['mapID'])
-        if mid < 0x70:
-            continue
         if r.get('placeholder'):
             # S92: synthesized dense-sequence placeholder (a declared room
-            # above it exists). The row must occupy its (mapID-$70) slot;
+            # above it exists). The row must occupy its place-number slot;
             # all-zero = unused shape (gfx 0, 0x0, threshold 0) — the room
             # is unreachable (no exits target a placeholder).
             lines.append(F.db_line([0] * 8,
@@ -493,8 +540,8 @@ def emit_bank_071(prj, warnings):
         lines.append(F.db_line(b, comment=F.hexb(mid)))
     lines.append("")
     lines += ["; " + "-" * 77,
-              "; RoomEncTable — 3 bytes/room [enabled, gate_id, floor], indexed",
-              "; (mapID-$6B). enabled=0 -> room is encounter-silent. (generated)",
+              "; RoomEncTable — 3 bytes/place [enabled, gate_id, floor], indexed by",
+              "; the place number (S140). enabled=0 -> encounter-silent. (generated)",
               "; " + "-" * 77,
               f"ENC_TABLE_LEN EQU {len(prj.rooms)}",
               "RoomEncTable:"]
@@ -520,7 +567,7 @@ def emit_bank_071(prj, warnings):
         lines.append(F.db_line(b, comment=f"{F.hexb(F.val(r['mapID']))} — {state}"))
     lines.append("")
     lines += ["; " + "-" * 77,
-              "; CustomAnimSrcTable — 1 byte/room, indexed (mapID-$6B): the map ID",
+              "; CustomAnimSrcTable — 1 byte/place (place number, S140): the map ID",
               "; whose bank-$01 room-animation handler runs for this room ($6B =",
               "; none). Read by entry 3 CustomAnimSource (S99, P3.3e). (generated)",
               "; " + "-" * 77,
@@ -533,7 +580,7 @@ def emit_bank_071(prj, warnings):
     lines += _gate_insert_table(prj)
     lines += _hub_table(prj)
     lines += ["; " + "-" * 77,
-              "; CustomRoomFlagsTable — 1 byte/room, indexed (mapID-$6B): bit 0 =",
+              "; CustomRoomFlagsTable — 1 byte/place (place number, S140): bit 0 =",
               "; saving NOT allowed (custom.rooms[].can_save false). Read by entry",
               "; 5 CustomRoomFlags for the bank $07 save ladder (S100). Bit 1 =",
               "; sprites stay drawn while a text box is open (text_keeps_sprites,",
@@ -551,30 +598,54 @@ def emit_bank_071(prj, warnings):
                         + (", sprites over text" if fl & 2 else ""))))
     lines.append("")
     lines += ["; " + "-" * 77,
-              "; CustomRoomBGMTable — 256 entries indexed by wMapID (S64, M3b; 128",
-              "; until S137 — S138 ARC CAP2e: every map id, no `cp $80` cap).",
-              "; Read by entry 2 (CustomRoomBGMResolve, template head) for the",
-              "; rewritten LoadNewBGMIdIntoA (patches/bank_001.asm). 0 = no",
-              "; assignment -> vanilla derivation; nonzero = the room's default",
-              "; BGM id (survives save/reload: the load path re-derives here);",
-              "; $FF = a gate room with no song: the dive's gate song (S116).",
-              "; Covers VANILLA and custom rooms alike; gate floors",
-              "; (wInGateworld!=0) are excluded by the resolver. (generated)",
+              "; CustomRoomBGMTable — the 107 VANILLA map ids $00-$6A / CustomPlaceBGMTable",
+              "; — one row per PLACE, place-number order (S140, ARC CAP3a; S138-S139:",
+              "; 256 rows by wMapID; S64-S137: 128). Read by entry 2 (CustomRoomBGMResolve",
+              "; through RoomSongByte71) for the rewritten LoadNewBGMIdIntoA (patches/",
+              "; bank_001.asm). 0 = no assignment -> vanilla derivation; nonzero = the",
+              "; room's default BGM id (survives save/reload: the load path re-derives",
+              "; here); $FF = a gate room with no song: the dive's gate song (S116).",
+              "; Gate floors (wInGateworld!=0) are excluded by the resolver. (generated)",
               "; " + "-" * 77,
+              f"PLACE_SONG_LEN EQU {len(prj.rooms)}",
               "CustomRoomBGMTable:"]
     room_bgm = prj.music_room_bgm(warnings)
     names = prj.music_song_ids()
     by_id = {v: k for k, v in names.items()}
-    for i in range(0, 256, 16):
-        row = room_bgm[i:i + 16]
-        tags = [f"${i+j:02X}=" + ('follow the gate' if v == M.FOLLOW_GATE
-                                  else by_id.get(v, F.hexb(v)))
-                for j, v in enumerate(row) if v]
-        lines.append(F.db_line(row, comment=f"mapIDs ${i:02X}-${i+15:02X}"
+
+    def _tag(v):
+        return 'follow the gate' if v == M.FOLLOW_GATE else by_id.get(v, F.hexb(v))
+    for i in range(0, M.VANILLA_ROWS, 16):
+        row = room_bgm[i:min(i + 16, M.VANILLA_ROWS)]
+        tags = [f"${i+j:02X}=" + _tag(v) for j, v in enumerate(row) if v]
+        lines.append(F.db_line(row, comment=f"mapIDs ${i:02X}-${i + len(row) - 1:02X}"
                      + (": " + ", ".join(tags) if tags else "")))
+    lines += M.place_song_lines(prj, "CustomPlaceBGMTable", room_bgm, _tag)
     lines.append("")
+    lines += _gate_boss_region_lines(prj)
     lines += M.emit_bank_071_tables(prj, warnings)
+    lines += prj.region_table_lines('71')
     return "\n".join(lines) + "\n"
+
+
+def _gate_boss_region_lines(prj):
+    """S140 (ROADMAP ARC CAP3a): GateBossRegionTable — per gate 0-95, the region
+    of its boss room (0: vanilla boss rooms, region-0 places). Read by bank $71
+    BossRegion71 (entries 11 / 12: the bank $16 boss floor, bank $76
+    GateBossWin, the boss-room song)."""
+    regs = [0] * 96
+    try:
+        for gid, c in prj.gate_configs().items():
+            if 0 <= gid < 96:
+                regs[gid] = c.get('boss_region', 0)
+    except Exception:                                            # noqa: BLE001
+        pass
+    out = ["; S140 (ARC CAP3a): GateBossRegionTable — the region of each gate's boss room",
+           "GateBossRegionTable:"]
+    for i in range(0, 96, 16):
+        out.append(F.db_line(regs[i:i + 16], comment=f"gates {i}-{i + 15}"))
+    out.append("")
+    return out
 
 
 def _gate_insert_table(prj):
@@ -582,14 +653,14 @@ def _gate_insert_table(prj):
     (entry 4 CustomGateInsert); rules in custom.gate_inserts[] list order."""
     out = ["; " + "-" * 77,
            "; GateInsertTable — custom rooms served on gate floors (S100, P3.7b).",
-           "; [gate, floor_lo, floor_hi (0-based), chance, once_bit, mapID,",
-           ";  spawn_x lo/hi, spawn_y lo/hi, n_terms] + n_terms x dw flag",
+           "; [gate, floor_lo, floor_hi (0-based), chance, once_bit, mapID, region",
+           ";  (S140), spawn_x lo/hi, spawn_y lo/hi, n_terms] + n_terms x dw flag",
            "; (bit 15 = must be CLEAR); $FF ends. Read by entry 4. (generated)",
            "; " + "-" * 77,
            "GateInsertTable:"]
     for row in prj.gate_insert_rows():
         b = [row['gate'], row['first'] - 1, row['last'] - 1, row['chance_byte'],
-             row['once_bit'], row['mapID'],
+             row['once_bit'], F.mid_real(row['mapID']), F.mid_region(row['mapID']),
              row['px'] & 0xFF, row['px'] >> 8, row['py'] & 0xFF, row['py'] >> 8,
              len(row['terms'])]
         what = (("every gate" if row['gate'] == 0xFE else f"gate {row['gate']}")
@@ -616,7 +687,7 @@ def _hub_table(prj):
     out = ["; " + "-" * 77,
            "; HubTable — where the game sends the player home (S125, P3.14d).",
            "; [n_terms] + n_terms x dw flag (bit 15 = must be CLEAR) + [mapID,",
-           ";  spawn_x lo/hi, spawn_y lo/hi]; mapID 0 = the Castle (the vanilla",
+           ";  region (S140), spawn_x lo/hi, spawn_y lo/hi]; mapID 0 = the Castle (the vanilla",
            ";  arrival codes); $FF ends; no rule holds -> the Castle. Read by",
            ";  entry 9 HubWarp. (generated)",
            "; " + "-" * 77,
@@ -631,7 +702,8 @@ def _hub_table(prj):
                        f"{F.hexw(idx)} must be {'clear' if clr else 'set'}")
         what = ('the Castle (vanilla)' if ru['castle'] else
                 f"{ru['room_id']} screen {ru['screen']} ({ru['x']},{ru['y']})")
-        out.append(F.db_line([ru['mapID'], ru['px'] & 0xFF, ru['px'] >> 8,
+        out.append(F.db_line([F.mid_real(ru['mapID']), F.mid_region(ru['mapID']),
+                              ru['px'] & 0xFF, ru['px'] >> 8,
                               ru['py'] & 0xFF, ru['py'] >> 8],
                              comment=f"-> {F.hexb(ru['mapID'])} {what}"))
     out.append("    db $FF")
@@ -811,6 +883,13 @@ def emit_region_wram_steps(prj, warnings):
     # S118c: screens of cloned rooms that follow the game's own room state —
     # the label IS the original room's counter (no byte here; saved by the game)
     for label, addr, cm in prj.step_counter_game():
+        out.append(f"{label} EQU ${addr:04X} ; {cm}")
+    # S140 (ROADMAP ARC CAP3a): the regional area (bank $73 RegionEnter zeroes
+    # wCustomStepRegional .. $CFFF on a region change) + the other regions'
+    # counters at the same addresses
+    overlay, base = prj.step_counter_overlay()
+    out.append(f"wCustomStepRegional EQU ${base:04X} ; S140: the regions' shared counters start here")
+    for label, addr, cm in overlay:
         out.append(f"{label} EQU ${addr:04X} ; {cm}")
     return "\n".join(out) + "\n"
 
@@ -1068,26 +1147,19 @@ ROM0_BASE = 0x26DD
 
 
 def emit_region_rom0_records(prj, warnings):
-    by_mid = {F.val(r['mapID']): r for r in prj.rooms}
-    out = ["; $26DD records for mapIDs $6B-$6F ($2A35-$2A5C, 8 B each) — generated by",
-           "; build_project.py from custom.rooms[].record (S94). Vanilla bytes here were",
-           "; filler rows (12 24 A0 00 80 00 50 00); undeclared/placeholder mapIDs keep",
-           "; that filler. Labels inside the window are jr targets and stay put."]
+    """S140 (ROADMAP ARC CAP3a): the ORIGINAL bytes again. S94-S139 put the
+    records of map ids $6B-$6F here (bank $71 entry 0 read ROM0 below $70); with
+    regions a $6B is not always region 0's, so every place's record is in bank
+    $71 Custom26DDTable (place number) and these five rows are the vanilla
+    filler they were in the original game."""
+    out = ["; $26DD rows of map ids $6B-$6F ($2A35-$2A5C, 8 B each) — the original",
+           "; filler (12 24 A0 00 80 00 50 00). S94-S139 the compiler put the records",
+           "; of places $6B-$6F here; S140 (ROADMAP ARC CAP3a — regions): every place's",
+           "; record is in bank $71 Custom26DDTable, indexed by its place number.",
+           "; Labels inside the window are jr targets and stay put."]
     for mid in range(0x6B, 0x70):
-        r = by_mid.get(mid)
-        if r is None or r.get('placeholder'):
-            b = list(ROM0_FILLER)
-            why = f"{F.hexb(mid)} " + ("placeholder" if r else "undeclared") + \
-                  " (vanilla filler)"
-        else:
-            rec = r['record']
-            gb, gid = prj.resolve_gfx(rec, ctx=f"room {r.get('id')} record")
-            b = F.record_26dd(gid, gb, F.val(rec['width_px']),
-                              F.val(rec['height_px']),
-                              F.val(rec['collision_threshold']))
-            why = (f"{F.hexb(mid)} {r.get('id')}: gfx {F.hexb(gb)}:{F.hexb(gid)}, "
-                   f"{F.val(rec['width_px'])}x{F.val(rec['height_px'])}, "
-                   f"thr {F.hexb(F.val(rec['collision_threshold']))}")
+        b = list(ROM0_FILLER)
+        why = f"{F.hexb(mid)} (vanilla filler)"
         base = ROM0_BASE + mid * 8
         # split the row at label addresses so labels keep their bytes
         cuts = sorted({0} | {a - base for a in ROM0_LABELS if base < a < base + 8})

@@ -2322,6 +2322,22 @@ The cache `wPlaceIdx` / `wPlaceBank` / `wPlaceHdr` is computed from a place dire
   `wScriptMapType` — reassigned at every script start) need no companion under these rules
   except the boss region. `$C96A` / `$C96B` are write-only mirrors (S133, now labelled).
 
+**As built S140 (CAP3a; USER-CONFIRMED 2026-10-10 — ARCHITECTURE "Regions (S140)", PROJECT_COMPILER
+§2.49).** The S133 design above held, with these differences: per region the place ids stay
+**`$6B-$EA` (128)** and the link ids are **`$EB-$FE` (20)** — an exit list holds at most 17
+rows, so they never run out; there is **no place cache / header**: every per-place table stays
+in its bank and is indexed by a 16-bit **place number** computed on each call (`PlaceNum<bank>`
+from a per-bank `RegionTable` + `GlobalPlaceIds`; bank $71 pays 15 B a place); the **global ids
+are the arena copies only** — the Milly hook's arrival and every other script warp set
+`wWarpRegion` instead; script warps get an ordinary `write_ram wWarpRegion, region + 1` (op
+`$12`) before them, so the one-byte story-command space is **not** touched; the save is SRAM bank
+3 magic **"X2"** + `$A002`; a region change zeroes the shared step-counter area (every region's
+counters share it). The compiler assigns regions automatically (region 0 first, then
+`$16B`…); until CAP4 the editor still shows the project mapID (region in the high byte) in the
+folded Technical box. Open (CAP3b): Play here into regions 1+ played in game, the story-state
+model, and the in-game walks of the hub / gate insert / world / breeding return / WarpWing from
+regions ≥ 1.
+
 **D. The editor (CAP4).** Places by name everywhere (no map ids in the UI or in authored
 destinations — `room:<name>`); "Make editable" copies ONE stage of a vanilla room (the
 user's post-Starry Night GreatTree, Farm…) by default; capacity meters per class and for the

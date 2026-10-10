@@ -2211,7 +2211,12 @@ jr_016_5be1:
     inc hl
     inc hl
     inc hl
-    ds 8, $00                     ; nops (the rest of the original 15 bytes)
+    push hl                       ; S140 (ROADMAP ARC CAP3a): enter the region of
+    ld hl, $710b                  ;   this gate's boss room — bank $71 entry 11
+    rst $10                       ;   BossRegionEnter (GateBossRegionTable; in the
+    pop hl                        ;   8 nop bytes the S115 fork left; D / E are
+    nop                           ;   dead here)
+    nop
     ld a, [hl+]
     ld [wMapID], a
     ld a, $00

@@ -168,6 +168,8 @@ SECTION "ROM Bank $071", ROMX[$4000], BANK[$71]
     dw TextSpriteMode                   ; entry 8  (HL=$7108, S121)
     dw HubWarp                          ; entry 9  (HL=$7109, S125 P3.14d)
     dw ContinueCheck                    ; entry 10 (HL=$710A, S138 ARC CAP2e)
+    dw BossRegionEnter                  ; entry 11 (HL=$710B, S140 ARC CAP3a)
+    dw BossRegionOf                     ; entry 12 (HL=$710C, S140 ARC CAP3a)
 
 ; -----------------------------------------------------------------------------
 ; Entry 0: CopyCustomRoomRecord — 8-byte $26DD record for wMapID → wRoomRecScratch
@@ -194,9 +196,15 @@ CopyCustomRoomRecord:
     jr .index
 .place:
     ld a, [wMapID]
+    cp CUSTOM_ROOM_START
+    jr c, .rom0
     cp $70
     jr nc, .custom
-    ; --- mapIDs <$70: replicate the original $26DD/$2A5D base + raw-mapID index ---
+    ld a, [wInGateworld]                ; $6B-$6F inside a gate (the transient
+    or a                                ;   stairs-down flag, bank $60 entry 12):
+    jr z, .custom                       ;   the ROM0 gate table, as before S140
+.rom0:
+    ; --- vanilla ids: replicate the original $26DD/$2A5D base + raw-mapID index ---
     ld hl, $26dd                        ; normal-room tileset table base
     ld a, [wInGateworld]
     or a
@@ -206,9 +214,17 @@ CopyCustomRoomRecord:
     ld a, [wMapID]                      ; index = raw mapID (CustomGFXMapID contract)
     jr .index
 .custom:
-    ; --- mapIDs $70+: index Custom26DDTable by (mapID-$70) ---
-    sub $70
-    ld hl, Custom26DDTable
+    ; --- S140 (ROADMAP ARC CAP3a): every place's record (since S94 the rows of
+    ; --- $6B-$6F sat in ROM0 $2A35, before S140 Custom26DDTable began at $70)
+    ; --- is Custom26DDTable[place number] — a region's $6B is not region 0's.
+    ld a, [wMapID]
+    call PlaceNum71                     ; HL = the place number (StalePlace: a place)
+    add hl, hl
+    add hl, hl
+    add hl, hl
+    ld de, Custom26DDTable
+    add hl, de
+    jr .copyRec
 .index:
     ; HL = base + index*8   (16-bit; vanilla mapIDs up to $6A make index*8 > 255)
     ld e, a
@@ -220,6 +236,7 @@ CopyCustomRoomRecord:
     sla e
     rl d                                ; de = index*8
     add hl, de                          ; HL = &record
+.copyRec:
     ; copy 8 bytes HL -> wRoomRecScratch
     ld de, wRoomRecScratch
     ld b, $08
@@ -236,15 +253,19 @@ CopyCustomRoomRecord:
 ; -----------------------------------------------------------------------------
 CustomEncResolve:
     ld a, [wMapID]
-    sub CUSTOM_ROOM_START               ; index = mapID - $6B
-    cp ENC_TABLE_LEN
+    call PlaceNum71                     ; S140: index = the place number
+    jr c, .disabled                     ; not a place → no encounters
+    ld a, l
+    sub LOW(ENC_TABLE_LEN)
+    ld a, h
+    sbc HIGH(ENC_TABLE_LEN)
     jr nc, .disabled                    ; out of table range → no encounters
-    ld e, a
-    ld d, $00
-    ld hl, RoomEncTable
+    ld d, h
+    ld e, l
+    add hl, hl
     add hl, de
-    add hl, de
-    add hl, de                          ; HL = &RoomEncTable[index] (stride 3)
+    ld de, RoomEncTable
+    add hl, de                          ; HL = &RoomEncTable[place] (stride 3)
     ld a, [hl+]                         ; [0] enabled?
     or a
     jr z, .disabled
@@ -282,25 +303,26 @@ CustomEncResolve:
 ; outside a dive).
 ; -----------------------------------------------------------------------------
 CustomRoomBGMResolve:
-    ld e, $00                           ; default: no assignment
-    ld d, $01                           ; D = 1: the gate's own song may play
     ld a, [wInGateworld]
     or a
-    jr nz, .dive                        ; maze floors
-    ld a, [wMapID]                      ; S138: every id has a row (256) — no `cp $80`
-    ld c, a                             ; S129: the room's music rules first
+    jr nz, .diveFresh                   ; maze floors
+    ld a, [wMapID]                      ; S129: the room's music rules first
+    call RoomKey71                      ; S140: DE = the room's key (vanilla id / $100 + place)
     ld b, MUSIC_RULE_ROOM
-    push de                             ; D = 1 / E = 0, kept for the paths below
     call MusicRulePick                  ; A = the song, 0 = no rule holds
-    pop de
     or a
     jr z, .noRule
     ld e, a
     ret
 .noRule:
-    ld a, [wMapID]
-    call .lookup                        ; E = CustomRoomBGMTable[wMapID]
-    ld a, e
+    ld a, [wMapID]                      ; S140: vanilla ids by id, places by place number
+    ld e, a
+    ld a, [wMapRegion]
+    ld d, a
+    ld c, $00
+    call RoomSongByte71                 ; A = the room's song byte
+    ld e, a
+    ld d, $01                           ; D = 1: the gate's own song may play
     cp $FF
     jr z, .dive                         ; a gate room with no song of its own
     or a
@@ -315,6 +337,9 @@ CustomRoomBGMResolve:
     cp $5D
     ret nc                              ; $5D-$60: RoomBGMTable
     jr .dive                            ; a special room inside a dive
+.diveFresh:
+    ld d, $01
+    jr .dive
 .noGateSong:
     ld d, $00
 .dive:
@@ -328,8 +353,14 @@ CustomRoomBGMResolve:
     ld a, [wBossMapType]
     cp CUSTOM_ROOM_START
     ret c                               ; vanilla boss map: vanilla (its boss song)
-    call .lookup                        ; S138: any custom boss room (no `cp $80`)                        ; the custom boss room's own song
-    ld a, e
+    push de
+    ld e, a
+    call BossRegion71                   ; S140 (ARC CAP3a): the gate's boss region
+    ld d, a
+    ld c, $00
+    call RoomSongByte71                 ; the custom boss room's own song
+    pop de
+    ld e, a
     or a
     jr z, .bossNoSong
     inc a
@@ -346,10 +377,11 @@ CustomRoomBGMResolve:
     ld a, d
     or a
     ret z
-    ld a, [wGateID]                     ; S129: the gate's music rules first
-    ld c, a
-    ld b, MUSIC_RULE_GATE
     push de
+    ld a, [wGateID]                     ; S129: the gate's music rules first
+    ld e, a
+    ld d, $00
+    ld b, MUSIC_RULE_GATE
     call MusicRulePick
     pop de
     or a
@@ -368,23 +400,76 @@ CustomRoomBGMResolve:
     ld h, a
     ld e, [hl]
     ret
-.lookup:                                ; A = mapID -> E = table byte (256 rows)
+
+; S140 (ROADMAP ARC CAP3a): E = a map id, D = its region, C = 0 the room-song
+; tables / 1 the battle-song tables -> A = the room's byte (0 = none). Vanilla
+; ids ($00-$6A) read CustomRoomBGMTable / CustomRoomBattleBGMTable [id] (107
+; rows); a custom id reads CustomPlaceBGMTable / CustomPlaceBattleBGMTable
+; [place number] (PLACE_SONG_LEN rows) — no place = 0. Keeps BC.
+RoomSongByte71:
+    ld a, e
+    cp CUSTOM_ROOM_START
+    jr c, .vanilla
+    call PlaceNumIn71                   ; HL = the place number (keeps BC)
+    jr c, .zero
+    ld a, l
+    sub LOW(PLACE_SONG_LEN)
+    ld a, h
+    sbc HIGH(PLACE_SONG_LEN)
+    jr nc, .zero
+    ld de, CustomPlaceBGMTable
+    bit 0, c
+    jr z, .add
+    ld de, CustomPlaceBattleBGMTable
+.add:
+    add hl, de
+    ld a, [hl]
+    ret
+.vanilla:
     ld hl, CustomRoomBGMTable
+    bit 0, c
+    jr z, .row
+    ld hl, CustomRoomBattleBGMTable
+.row:
     add l
     ld l, a
     adc h
     sub l
     ld h, a
-    ld e, [hl]
+    ld a, [hl]
+    ret
+.zero:
+    xor a
     ret
 
-; S129 (ROADMAP P3.14d — music by flag): B = MUSIC_RULE_ROOM (C = wMapID) or
-; MUSIC_RULE_GATE (C = wGateID) -> A = the song of the FIRST row of
-; MusicRuleTable for that room / gate whose terms all hold, 0 = none
-; (generated from custom.rooms[].music_rules / custom.music.gate_rules; rows
-; [kind, id, n, n x dw flag (bit 15 = must be OFF), song], $FF ends). A term
-; may be a story check (flag $18xx, bank $73 FlagAddr). Clobbers all but nothing
-; the resolver keeps across it (it reloads what it needs).
+; S140 (ROADMAP ARC CAP3a): A = a map id (current region) -> DE = its music
+; rule key: a vanilla id = the id, a place = $100 + its place number, a custom
+; id with no place = $FFFF (no row has it). Keeps BC.
+RoomKey71:
+    cp CUSTOM_ROOM_START
+    jr c, .vanilla
+    call PlaceNum71
+    jr c, .none
+    inc h                               ; + $100
+    ld d, h
+    ld e, l
+    ret
+.vanilla:
+    ld e, a
+    ld d, $00
+    ret
+.none:
+    ld de, $FFFF
+    ret
+
+; S129 (ROADMAP P3.14d — music by flag): B = MUSIC_RULE_ROOM (DE = the room's
+; key, RoomKey71) or MUSIC_RULE_GATE (DE = wGateID) -> A = the song of the
+; FIRST row of MusicRuleTable for that room / gate whose terms all hold, 0 =
+; none (generated from custom.rooms[].music_rules / custom.music.gate_rules;
+; rows [kind, key lo, key hi, n, n x dw flag (bit 15 = must be OFF), song] —
+; S140: the key is a word (a place number needs 16 bits; S129-S139 a byte), $FF
+; ends). A term may be a story check (flag $18xx, bank $73 FlagAddr). Keeps
+; BC / DE; clobbers A, HL.
 MusicRulePick:
     ld hl, MusicRuleTable
 .row:
@@ -393,12 +478,16 @@ MusicRulePick:
     jr z, .none
     cp b
     jr nz, .skip
-    ld a, [hl]
-    cp c
-    jr nz, .skip
-    inc hl
+    ld a, [hl+]
+    cp e
+    jr nz, .skip1
+    ld a, [hl+]
+    cp d
+    jr nz, .skip2
     push bc
+    push de
     call TermsHold71                    ; CF = 0: every term holds; HL past them
+    pop de
     pop bc
     jr c, .noMatch
     ld a, [hl]                          ; the song
@@ -407,7 +496,10 @@ MusicRulePick:
     inc hl                              ; past the song
     jr .row
 .skip:
-    inc hl                              ; past the id
+    inc hl                              ; past the key's low byte
+.skip1:
+    inc hl                              ; past its high byte
+.skip2:
     ld a, [hl+]                         ; n
     add a
     inc a                               ; the terms + the song byte
@@ -495,17 +587,17 @@ CustomAnimSource:
 .anim:
     ld hl, $6c00                        ; S102: bank $6C entry 0 CustomTileAnimate —
     rst $10                             ; the room's OWN animated tiles (§2.19) first
-    ld e, $6b                           ; ANIM_NONE: the table's bare-`ret` row
     ld a, [wMapID]
-    sub CUSTOM_ROOM_START               ; index = mapID - $6B
-    cp ANIM_TABLE_LEN
+    call PlaceNum71                     ; S140: index = the place number
+    ld e, $6b                           ; ANIM_NONE: the table's bare-`ret` row
+    ret c                               ; not a place -> none
+    ld a, l
+    sub LOW(ANIM_TABLE_LEN)
+    ld a, h
+    sbc HIGH(ANIM_TABLE_LEN)
     ret nc                              ; out of table range -> none
-    ld hl, CustomAnimSrcTable
-    add l
-    ld l, a
-    adc h
-    sub l
-    ld h, a
+    ld de, CustomAnimSrcTable
+    add hl, de
     ld e, [hl]
     ret
 
@@ -521,8 +613,9 @@ AnimPauseTypes:
 ; GateInsertTable record (generated; $FF at +0 ends the table):
 ;   +0 gate  +1 floor_lo  +2 floor_hi (0-based wCurrentFloor, inclusive)
 ;   +3 chance (1-100; >=100 = always, no RNG)  +4 once-per-dive bit (0 = none)
-;   +5 mapID  +6/+7 spawn X px (lo, hi)  +8/+9 spawn Y px (lo, hi)
-;   +10 n_terms  +11.. n_terms x dw flag (bit 15 set = flag must be CLEAR)
+;   +5 mapID  +6 region (S140, ROADMAP ARC CAP3a)  +7/+8 spawn X px (lo, hi)
+;   +9/+10 spawn Y px (lo, hi)  +11 n_terms  +12.. n_terms x dw flag (bit 15
+;   set = flag must be CLEAR)
 ; Stack discipline: exactly one outstanding push (the record start) on every
 ; path into .next / .hit.
 CustomGateInsert:
@@ -569,8 +662,8 @@ CustomGateInsert:
     ld a, [wGateDiveMask]
     and [hl]
     jp nz, .next                        ; already served this dive
-    ld de, $0006
-    add hl, de                          ; +10 n_terms
+    ld de, $0007
+    add hl, de                          ; +11 n_terms
     ld a, [hl+]
     or a
     jr z, .termsOk
@@ -630,6 +723,8 @@ CustomGateInsert:
     inc hl                              ; +5 mapID
     ld a, [hl+]
     ld [wMapID], a
+    ld a, [hl+]                         ; +6 the region (S140)
+    ld c, a
     ld a, [hl+]
     ld [wWarpSpawnXLo], a
     ld a, [hl+]
@@ -640,17 +735,20 @@ CustomGateInsert:
     ld [wWarpSpawnYHi], a
     xor a
     ld [wInGateworld], a                ; render as a fixed room (the
-    ld e, $01                           ;   special-room contract, $16:$5D0D)
+    ld e, c                             ;   special-room contract, $16:$5D0D)
+    ld hl, $7316                        ; S140 (ARC CAP3a): enter the served room's
+    rst $10                             ;   region — bank $73 entry 22 RegionEnterE
+    ld e, $01
     ret
 .next:
     pop hl                              ; record start
     push hl
-    ld de, $000A
+    ld de, $000B
     add hl, de
     ld a, [hl]                          ; n_terms
     pop hl
     add a
-    add 11                              ; record size = 11 + 2*n_terms
+    add 12                              ; record size = 12 + 2*n_terms (S140: + region)
     ld e, a
     ld d, $00
     add hl, de
@@ -695,18 +793,28 @@ ScaledChance:
 CustomRoomFlags:
     ld e, $00
     ld a, [wMapID]
-    sub CUSTOM_ROOM_START
+    cp CUSTOM_ROOM_START
     ret c                               ; vanilla room: no flags
-    ld e, $81                           ; S138: past the last room = no such place
-    cp ROOMFLAGS_TABLE_LEN              ; (bit 7), no saving (bit 0) — like a
-    ret nc                              ; placeholder's row (was 0: saving allowed)
-    ld hl, CustomRoomFlagsTable
-    add l
-    ld l, a
-    adc h
-    sub l
-    ld h, a
+    call RoomFlagsPtr                   ; S140: HL -> the place's row, CF = none
+    ld e, $81                           ; S138: no such place (bit 7), no saving
+    ret c                               ; (bit 0) — like a placeholder's row
     ld e, [hl]
+    ret
+
+; S140 (ROADMAP ARC CAP3a): A = a custom map id (current region) -> HL ->
+; CustomRoomFlagsTable[its place number], CF clear; CF set = no place (a
+; region this build lacks, past the region's last place, past the table).
+RoomFlagsPtr:
+    call PlaceNum71
+    ret c
+    ld a, l
+    sub LOW(ROOMFLAGS_TABLE_LEN)
+    ld a, h
+    sbc HIGH(ROOMFLAGS_TABLE_LEN)
+    ccf
+    ret c
+    ld de, CustomRoomFlagsTable
+    add hl, de                          ; CF clear (no overflow)
     ret
 
 ; -----------------------------------------------------------------------------
@@ -721,16 +829,12 @@ TextSpriteMode:
     jr z, .keep                         ; the vanilla two
     cp $5d
     jr z, .keep
-    sub CUSTOM_ROOM_START
+    cp CUSTOM_ROOM_START
     ret c
-    cp ROOMFLAGS_TABLE_LEN
-    ret nc
-    ld hl, CustomRoomFlagsTable
-    add l
-    ld l, a
-    adc h
-    sub l
-    ld h, a
+    push de                             ; the caller's box offset
+    call RoomFlagsPtr                   ; S140: the place's row
+    pop de
+    ret c
     bit 1, [hl]
     ret z
 .keep:
@@ -816,14 +920,14 @@ BattleBGMResolve:
     ld a, [wInGateworld]
     or a
     jr nz, .gate                        ; maze floor
-    ld a, [wMapID]                      ; S138: 256 rows — every id (no `cp $80`)
-    ld hl, CustomRoomBattleBGMTable
-    add l
-    ld l, a
-    adc h
-    sub l
-    ld h, a
-    ld a, [hl]
+    ld a, [wMapID]                      ; S140: vanilla ids by id, places by place number
+    push de                             ; E = the vanilla pick
+    ld e, a
+    ld a, [wMapRegion]
+    ld d, a
+    ld c, $01
+    call RoomSongByte71                 ; A = the room's battle-song byte
+    pop de
     cp $ff
     jr z, .gate                         ; a gate room: the dive's gate
     or a
@@ -869,7 +973,8 @@ BattleBGMResolve:
 ; -----------------------------------------------------------------------------
 ; Entry 9: HubWarp (S125, ROADMAP P3.14d) — E = the reason (1-4, header above).
 ; HubTable records: [n_terms] + n_terms x dw flag (bit 15 = must be CLEAR) +
-; [mapID, px lo, px hi, py lo, py hi]; $FF ends. mapID 0 = the Castle.
+; [mapID, region (S140), px lo, px hi, py lo, py hi]; $FF ends. mapID 0 = the
+; Castle.
 ; -----------------------------------------------------------------------------
 HubWarp:
     ld a, e
@@ -881,8 +986,8 @@ HubWarp:
     jr z, .castle
     ld d, a                             ; D = terms left
     push hl
-    add a                               ; next record = HL + 2*n + 5
-    add 5
+    add a                               ; next record = HL + 2*n + 6
+    add 6
     add l
     ld l, a
     adc h
@@ -923,6 +1028,9 @@ HubWarp:
     or a
     jr z, .castle                       ; the "castle" rule: the vanilla arrival
     ld [wWarpGateId], a
+    ld a, [hl+]                         ; S140 (ARC CAP3a): the hub room's region ->
+    inc a                               ;   wWarpRegion (region + 1; the room commit,
+    ld [wWarpRegion], a                 ;   bank $73 RegionCommit, enters it)
     xor a
     ld [wWarpFlag], a
     ld a, [hl+]
@@ -973,7 +1081,9 @@ ContinueCheck:
     jr nz, .keep                        ; a gate floor: wMapID is a floor type
     call StalePlace
     jr z, .keep                         ; a vanilla room or a place of this build
-    ld e, HUB_CONTINUE
+    xor a                               ; S140 (ARC CAP3a): home is reached from
+    ld [wMapRegion], a                  ;   region 0 (a save of a region this build
+    ld e, HUB_CONTINUE                  ;   lacks); the hub's room brings its own
     call HubWarp                        ; the mailbox: the hub's room, else the Castle
     ld a, $01
     ld [wIsPlayerChangingMaps], a       ; the field starts with the warp
@@ -992,21 +1102,59 @@ ContinueCheck:
     ld e, $00
     ret
 
-; StalePlace (S138): Z = wMapID is a vanilla id or one of this build's places;
-; NZ = a custom id the build has no place for — past the last room
-; (ROOMFLAGS_TABLE_LEN) or a placeholder (CustomRoomFlagsTable bit 7). A, HL.
-StalePlace:
-    ld a, [wMapID]
-    sub CUSTOM_ROOM_START
-    jr c, .vanilla
-    cp ROOMFLAGS_TABLE_LEN
-    jr nc, .none
-    ld hl, CustomRoomFlagsTable
+; -----------------------------------------------------------------------------
+; Entries 11 / 12 (S140, ROADMAP ARC CAP3a — regions): the region of the boss
+; room of the gate being dived. GateBossRegionTable[wGateID] (generated, one
+; byte per gate 0-95; 0 = region 0, which every vanilla boss room and gates
+; without a row get). Entry 11 BossRegionEnter: called by the bank $16 boss
+; floor (in the 8 nop bytes S115 left after `call GateRowPtr`) — enters that
+; region (bank $73 entry 22). Entry 12 BossRegionOf: E = that region (bank
+; $76 GateBossWin compares it with wMapRegion). Keep BC / D / HL.
+; -----------------------------------------------------------------------------
+BossRegionEnter:
+    call BossRegion71
+    ld e, a
+    ld hl, $7316                        ; bank $73 entry 22 RegionEnterE
+    rst $10
+    ret
+
+BossRegionOf:
+    call BossRegion71
+    ld e, a
+    ret
+
+; A = GateBossRegionTable[wGateID] (0 past the table). Clobbers nothing else
+; but F (HL saved).
+BossRegion71:
+    push hl
+    ld a, [wGateID]
+    cp GATE_BGM_LEN
+    jr nc, .zero
+    ld hl, GateBossRegionTable
     add l
     ld l, a
     adc h
     sub l
     ld h, a
+    ld a, [hl]
+    pop hl
+    ret
+.zero:
+    xor a
+    pop hl
+    ret
+
+; StalePlace (S138): Z = wMapID is a vanilla id or one of this build's places;
+; NZ = a custom id the build has no place for — past the last room
+; (ROOMFLAGS_TABLE_LEN) or a placeholder (CustomRoomFlagsTable bit 7). S140:
+; the place = (wMapRegion, wMapID) — a save made in a region this build does
+; not have (or past its region's last place) is stale. Clobbers A, DE, HL.
+StalePlace:
+    ld a, [wMapID]
+    cp CUSTOM_ROOM_START
+    jr c, .vanilla
+    call RoomFlagsPtr                   ; S140: (wMapRegion, wMapID) — a save made
+    jr c, .none                         ;   in a region this build lacks is stale too
     bit 7, [hl]                         ; Z = a real place
     ret
 .vanilla:
@@ -1018,19 +1166,97 @@ StalePlace:
     ret
 
 ; -----------------------------------------------------------------------------
-; Custom26DDTable — 8-byte $26DD-style records for mapIDs $70+,
-; indexed (mapID-$70): [step_id, gfx_bank, w_lo, w_hi, h_lo,
+; PlaceNum71 (S140, ROADMAP ARC CAP3a — regions) — the PLACE NUMBER of a custom
+; map id in the current region. A custom place is (wMapRegion, wMapID); its
+; place number indexes every per-place table the compiler emits (P order:
+; region 0's places, then region 1's, ... — each region from id $6B up). This
+; block is pasted into every bank whose code indexes such a table (banks $60,
+; $6C, $71, $76; suffix = the bank), each with its own copy of the two small
+; tables below (emitted by the compiler next to the bank's data):
+;   RegionTable71:    db n_regions, then per region: db count (ids $6B .. $6B
+;                      + count - 1 are its places, holes = placeholders), dw base
+;                      (the place number of its id $6B)
+;   GlobalPlaceIds71: db (id - $6B) ... db $FF — the GLOBAL places (the arena
+;                      copies, which ROM0 ArenaAlias knows by bare id): region 0's
+;                      places wherever the player stands; no other region uses
+;                      those ids.
+; One region (every project up to 128 places): count = the place count, base 0
+; — the place number is id - $6B, as the tables were indexed before S140.
+;
+; PlaceNum71: A = a map id / script type, region = wMapRegion.
+; PlaceNumIn71: E = a map id / script type, D = the region.
+; Out: CF clear = a place, HL = its place number; CF set = none — a vanilla id
+; ($00-$6A), a link id or anything >= $EB (REGION_IDS), a region the build
+; lacks (a stale save), an id past its region's last place. Keeps BC.
+; Clobbers A, DE.
+; -----------------------------------------------------------------------------
+PlaceNum71:
+    ld e, a
+    ld a, [wMapRegion]
+    ld d, a
+PlaceNumIn71:
+    ld a, e
+    sub CUSTOM_ROOM_START
+    ret c                               ; a vanilla id
+    cp REGION_IDS
+    ccf
+    ret c                               ; $EB+: a link id / not a place
+    ld e, a                             ; E = id - $6B
+    ld hl, GlobalPlaceIds71
+.global:
+    ld a, [hl+]
+    cp $FF
+    jr z, .region
+    cp e
+    jr nz, .global
+    ld d, $00                           ; a global place: region 0's
+.region:
+    ld hl, RegionTable71
+    ld a, d
+    cp [hl]
+    ccf
+    ret c                               ; a region this build does not have
+    inc hl
+    ld d, a
+    add a
+    add d                               ; region * 3
+    add l
+    ld l, a
+    adc h
+    sub l
+    ld h, a                             ; HL -> [count, base lo, base hi]
+    ld a, e
+    cp [hl]
+    ccf
+    ret c                               ; past the region's last place
+    inc hl
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a                             ; HL = the region's first place number
+    ld d, $00
+    add hl, de                          ; + (id - $6B); CF clear (no overflow)
+    ret
+
+; -----------------------------------------------------------------------------
+; Custom26DDTable — 8-byte $26DD-style records, one per PLACE in
+; place-number order (S140, ARC CAP3a; S94-S139: $6B-$6F in ROM0 $2A35,
+; this table from $70): [step_id, gfx_bank, w_lo, w_hi, h_lo,
 ;  h_hi, threshold, pad] (generated by build_project.py).
 ; -----------------------------------------------------------------------------
 Custom26DDTable:
+    db $0D, $28, $A0, $00, $00, $01, $30, $00  ; $6B
+    db $0D, $28, $A0, $00, $00, $01, $30, $00  ; $6C
+    db $0D, $28, $A0, $00, $80, $00, $30, $00  ; $6D
+    db $00, $00, $00, $00, $00, $00, $00, $00  ; $6E placeholder (zero row)
+    db $00, $00, $00, $00, $00, $00, $00, $00  ; $6F placeholder (zero row)
     db $0D, $28, $A0, $00, $80, $00, $30, $00  ; $70
     db $0D, $28, $A0, $00, $80, $00, $30, $00  ; $71
     db $0E, $29, $E0, $01, $80, $00, $5A, $00  ; $72
     db $0D, $28, $A0, $00, $00, $01, $30, $00  ; $73
 
 ; -----------------------------------------------------------------------------
-; RoomEncTable — 3 bytes/room [enabled, gate_id, floor], indexed
-; (mapID-$6B). enabled=0 -> room is encounter-silent. (generated)
+; RoomEncTable — 3 bytes/place [enabled, gate_id, floor], indexed by
+; the place number (S140). enabled=0 -> encounter-silent. (generated)
 ; -----------------------------------------------------------------------------
 ENC_TABLE_LEN EQU 9
 RoomEncTable:
@@ -1045,7 +1271,7 @@ RoomEncTable:
     db $01, $00, $01  ; $73 — enabled, gate 0, floor 1
 
 ; -----------------------------------------------------------------------------
-; CustomAnimSrcTable — 1 byte/room, indexed (mapID-$6B): the map ID
+; CustomAnimSrcTable — 1 byte/place (place number, S140): the map ID
 ; whose bank-$01 room-animation handler runs for this room ($6B =
 ; none). Read by entry 3 CustomAnimSource (S99, P3.3e). (generated)
 ; -----------------------------------------------------------------------------
@@ -1063,12 +1289,12 @@ CustomAnimSrcTable:
 
 ; -----------------------------------------------------------------------------
 ; GateInsertTable — custom rooms served on gate floors (S100, P3.7b).
-; [gate, floor_lo, floor_hi (0-based), chance, once_bit, mapID,
-;  spawn_x lo/hi, spawn_y lo/hi, n_terms] + n_terms x dw flag
+; [gate, floor_lo, floor_hi (0-based), chance, once_bit, mapID, region
+;  (S140), spawn_x lo/hi, spawn_y lo/hi, n_terms] + n_terms x dw flag
 ; (bit 15 = must be CLEAR); $FF ends. Read by entry 4. (generated)
 ; -----------------------------------------------------------------------------
 GateInsertTable:
-    db $01, $01, $02, $32, $01, $6D, $48, $00, $68, $00, $00  ; gate 1 floors 2-3 50% -> gate_rotation ($6D) once/dive
+    db $01, $01, $02, $32, $01, $6D, $00, $48, $00, $68, $00, $00  ; gate 1 floors 2-3 50% -> gate_rotation ($6D) once/dive
     db $FF
 
 ; S127 (P3.14e2): GATE_ANY = a gate_inserts record for every gate; ScaledChanceTable
@@ -1081,7 +1307,7 @@ ScaledChanceTable:
 ; -----------------------------------------------------------------------------
 ; HubTable — where the game sends the player home (S125, P3.14d).
 ; [n_terms] + n_terms x dw flag (bit 15 = must be CLEAR) + [mapID,
-;  spawn_x lo/hi, spawn_y lo/hi]; mapID 0 = the Castle (the vanilla
+;  region (S140), spawn_x lo/hi, spawn_y lo/hi]; mapID 0 = the Castle (the vanilla
 ;  arrival codes); $FF ends; no rule holds -> the Castle. Read by
 ;  entry 9 HubWarp. (generated)
 ; -----------------------------------------------------------------------------
@@ -1089,7 +1315,7 @@ HubTable:
     db $FF
 
 ; -----------------------------------------------------------------------------
-; CustomRoomFlagsTable — 1 byte/room, indexed (mapID-$6B): bit 0 =
+; CustomRoomFlagsTable — 1 byte/place (place number, S140): bit 0 =
 ; saving NOT allowed (custom.rooms[].can_save false). Read by entry
 ; 5 CustomRoomFlags for the bank $07 save ladder (S100). Bit 1 =
 ; sprites stay drawn while a text box is open (text_keeps_sprites,
@@ -1110,16 +1336,16 @@ CustomRoomFlagsTable:
     db $00  ; $73 — saving allowed
 
 ; -----------------------------------------------------------------------------
-; CustomRoomBGMTable — 256 entries indexed by wMapID (S64, M3b; 128
-; until S137 — S138 ARC CAP2e: every map id, no `cp $80` cap).
-; Read by entry 2 (CustomRoomBGMResolve, template head) for the
-; rewritten LoadNewBGMIdIntoA (patches/bank_001.asm). 0 = no
-; assignment -> vanilla derivation; nonzero = the room's default
-; BGM id (survives save/reload: the load path re-derives here);
-; $FF = a gate room with no song: the dive's gate song (S116).
-; Covers VANILLA and custom rooms alike; gate floors
-; (wInGateworld!=0) are excluded by the resolver. (generated)
+; CustomRoomBGMTable — the 107 VANILLA map ids $00-$6A / CustomPlaceBGMTable
+; — one row per PLACE, place-number order (S140, ARC CAP3a; S138-S139:
+; 256 rows by wMapID; S64-S137: 128). Read by entry 2 (CustomRoomBGMResolve
+; through RoomSongByte71) for the rewritten LoadNewBGMIdIntoA (patches/
+; bank_001.asm). 0 = no assignment -> vanilla derivation; nonzero = the
+; room's default BGM id (survives save/reload: the load path re-derives
+; here); $FF = a gate room with no song: the dive's gate song (S116).
+; Gate floors (wInGateworld!=0) are excluded by the resolver. (generated)
 ; -----------------------------------------------------------------------------
+PLACE_SONG_LEN EQU 9
 CustomRoomBGMTable:
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; mapIDs $00-$0F
     db $00, $00, $A4, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; mapIDs $10-$1F: $12=dq6_town1
@@ -1127,16 +1353,19 @@ CustomRoomBGMTable:
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; mapIDs $30-$3F
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; mapIDs $40-$4F
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; mapIDs $50-$5F
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $A1, $00, $00, $00, $00  ; mapIDs $60-$6F: $6B=dwm2_bgm07
-    db $00, $A7, $1E, $A1, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; mapIDs $70-$7F: $71=dwm2_bgm10, $72=$1E, $73=dwm2_bgm07
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; mapIDs $80-$8F
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; mapIDs $90-$9F
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; mapIDs $A0-$AF
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; mapIDs $B0-$BF
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; mapIDs $C0-$CF
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; mapIDs $D0-$DF
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; mapIDs $E0-$EF
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; mapIDs $F0-$FF
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; mapIDs $60-$6A
+
+CustomPlaceBGMTable:   ; per place (place-number order)
+    db $A1, $00, $00, $00, $00, $00, $A7, $1E, $A1  ; places 0-8: $6B=dwm2_bgm07, $71=dwm2_bgm10, $72=$1E, $73=dwm2_bgm07
+
+; S140 (ARC CAP3a): GateBossRegionTable — the region of each gate's boss room
+GateBossRegionTable:
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; gates 0-15
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; gates 16-31
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; gates 32-47
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; gates 48-63
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; gates 64-79
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; gates 80-95
 
 ; -----------------------------------------------------------------------------
 ; CustomBGMChanTable — channel count of the project song starting at
@@ -1173,10 +1402,11 @@ CustomGateBattleBGMTable:
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; gates 80-95
 
 ; -----------------------------------------------------------------------------
-; CustomRoomBattleBGMTable — 256 entries by wMapID (S138; 128 until
-; S137 — every map id now, no `cp $80`): the song of battles
-; in that room (0 = not set, $FF = follow the gate being dived). Read by
-; entry 7 BattleBGMResolve (S116). (generated)
+; CustomRoomBattleBGMTable — the 107 vanilla map ids ($00-$6A) /
+; CustomPlaceBattleBGMTable — one row per PLACE, place-number order (S140
+; ARC CAP3a; S138-S139: 256 rows by wMapID): the song of battles in that
+; room (0 = not set, $FF = follow the gate being dived). Read by entry 7
+; BattleBGMResolve through RoomSongByte71 (S116). (generated)
 ; -----------------------------------------------------------------------------
 CustomRoomBattleBGMTable:
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; mapIDs $00-$0F
@@ -1185,16 +1415,10 @@ CustomRoomBattleBGMTable:
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; mapIDs $30-$3F
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; mapIDs $40-$4F
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; mapIDs $50-$5F
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; mapIDs $60-$6F
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; mapIDs $70-$7F
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; mapIDs $80-$8F
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; mapIDs $90-$9F
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; mapIDs $A0-$AF
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; mapIDs $B0-$BF
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; mapIDs $C0-$CF
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; mapIDs $D0-$DF
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; mapIDs $E0-$EF
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; mapIDs $F0-$FF
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; mapIDs $60-$6A
+
+CustomPlaceBattleBGMTable:   ; per place (place-number order)
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00  ; places 0-8
 
 ; -----------------------------------------------------------------------------
 ; BattleBGMSettings — [normal, boss, arena, Starry final] (0 = vanilla:
@@ -1208,12 +1432,20 @@ BattleFightBGMTable:
 
 ; -----------------------------------------------------------------------------
 ; MusicRuleTable (S129, ROADMAP P3.14d — music by flag): rows [kind (0 a
-; room by wMapID / 1 a gate by wGateID), id, n, n x dw flag (bit 15 = must
-; be OFF), song]; the FIRST row of the room / gate whose terms all hold
-; plays. Read by MusicRulePick (entry 2). (generated)
+; room / 1 a gate by wGateID), key (dw; S140: a room's key = its vanilla
+; map id, or $100 + its place number — bank $71 RoomKey71), n, n x dw flag
+; (bit 15 = must be OFF), song]; the FIRST row of the room / gate whose
+; terms all hold plays. Read by MusicRulePick (entry 2). (generated)
 ; -----------------------------------------------------------------------------
 MUSIC_RULE_ROOM EQU 0
 MUSIC_RULE_GATE EQU 1
 MusicRuleTable:
     db $FF
 
+; S140 (ROADMAP ARC CAP3a): regions — [count, base] per region (PlaceNum71)
+RegionTable71:
+    db 1   ; regions
+    db 9
+    dw 0   ; region 0: ids $6B-$73, places 0-8
+GlobalPlaceIds71:   ; the arena copies (region 0 wherever you are)
+    db $FF

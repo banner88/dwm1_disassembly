@@ -144,7 +144,7 @@ V = {
     ("bank_001.asm", "PerRoomDispatchEntry", 0): "RST00_CLAMPED",  # S99: cp $6B/jr c -> rst $00 on a
                                                              # vanilla mapID; custom -> bank $71 entry 3 whose
                                                              # table bytes are validator-bounded to <$6B (+ $6B none)
-    ("bank_071.asm", "CustomAnimSource", 0): "IDX8_SUB6B",   # S99: sub $6B + cp ANIM_TABLE_LEN bound
+    ("bank_071.asm", "CustomAnimSource", 0): "BOUNDED",      # S140: -> PlaceNum71 (16-bit place number) + ANIM_TABLE_LEN (was IDX8_SUB6B S99-S139)
     ("bank_017.asm", "FreeColor1Hook", 0): "CP_UNSIGNED",    # S96
     # ("bank_017.asm", "StateRulesHook17", 0) retired S137: the hook is gone (the render
     # reader, bank $60 entry 13, runs the state rules — CROSSBANK_ROOMS "S137 sites")
@@ -154,41 +154,44 @@ V = {
     ("bank_073.asm", "BoxAttrActive", 0): "CP_UNSIGNED",     # S97 r2
     ("bank_060.asm", "GateAwareDispatch", 0): "CP_UNSIGNED",
     ("bank_071.asm", "CopyCustomRoomRecord", 0): "CP_UNSIGNED",  # derives wCustomRoomFlag
-    ("bank_071.asm", "CopyCustomRoomRecord", 1): "CP_UNSIGNED",  # $70 table split (S138: .place, after StalePlace)
-    ("bank_071.asm", "CopyCustomRoomRecord", 2): "IDX16",        # sla/rl x8 (S138: reached for vanilla ids / places only)
-    ("bank_071.asm", "CustomEncResolve", 0): "BOUNDED",          # cp ENC_TABLE_LEN
-    ("bank_071.asm", "CustomRoomBGMResolve", 0): "COPY",         # S138: `ld c, a` for MusicRulePick (equality scan); the `cp $80` cap is gone
+    ("bank_071.asm", "CopyCustomRoomRecord", 1): "CP_UNSIGNED",  # S140: .place — cp CUSTOM_ROOM_START / cp $70 (+ wInGateworld) picks ROM0 or the place table
+    ("bank_071.asm", "CopyCustomRoomRecord", 2): "IDX16",        # S140: .haveBase raw index, sla/rl x8 (vanilla ids; $6B-$6F only with wInGateworld set)
+    ("bank_071.asm", "CopyCustomRoomRecord", 3): "BOUNDED",      # S140: .custom -> PlaceNum71 (StalePlace proved a place), place number x8
+    ("bank_071.asm", "CustomEncResolve", 0): "BOUNDED",          # S140: -> PlaceNum71, 16-bit ENC_TABLE_LEN (was cp ENC_TABLE_LEN)
+    ("bank_071.asm", "CustomRoomBGMResolve", 0): "BOUNDED",      # S140: -> RoomKey71 (vanilla id / $100 + PlaceNum71) for MusicRulePick's word keys (S138: COPY `ld c, a`)
     # S114 burn-down: the sites added S100-S114 that were left NEEDS_REVIEW
     ("bank_007.asm", "SaveAllowCheck", 0): "CP_UNSIGNED",        # S100 (clean: cp $60..$64 chain)
-    ("bank_06c.asm", "CustomTileAnimate", 0): "BOUNDED",         # S102: cp TILEANIM_ROOMS, 16-bit index (S139: the TileAnimDirectory row)
+    ("bank_06c.asm", "CustomTileAnimate", 0): "BOUNDED",         # S140: -> PlaceNum6C, 16-bit TILEANIM_ROOMS (the TileAnimDirectory row by place number)
     ("bank_06c.asm", "TileAnimPlay", 0): "CP_UNSIGNED",          # S102: == wTileAnimRoom (restart test); S139: moved into the player block (tileanim_player.asm, pasted in $6C and every animation bank)
     # S129: the room's music rules come first — `ld c, a` (wMapID) for MusicRulePick
     # (full-byte equality against MusicRuleTable rows), then .noRule reloads wMapID
     # for .lookup (occurrence 1, still under the cp $80 / ret nc above); the S101
     # cp $61 load moved to occurrence 2. Reasoning in CROSSBANK_ROOMS "S129 site".
-    ("bank_071.asm", "CustomRoomBGMResolve", 1): "IDX16",        # S138: .noRule reload -> .lookup, 16-bit add into the 256-row table (every id)
+    ("bank_071.asm", "CustomRoomBGMResolve", 1): "BOUNDED",      # S140: .noRule -> RoomSongByte71 (vanilla rows by id, places by PlaceNumIn71 + PLACE_SONG_LEN) (S138: IDX16 256 rows)
     ("bank_071.asm", "CustomRoomBGMResolve", 2): "CP_UNSIGNED",  # S101: cp $61
-    ("bank_071.asm", "CustomRoomFlags", 0): "BOUNDED",           # S100: cp ROOMFLAGS_TABLE_LEN
+    ("bank_071.asm", "CustomRoomFlags", 0): "BOUNDED",           # S140: cp CUSTOM_ROOM_START, RoomFlagsPtr (PlaceNum71 + 16-bit ROOMFLAGS_TABLE_LEN)
     ("bank_073.asm", "GateLeaveFreePal", 0): "CP_UNSIGNED",      # S100 r3: cp CUSTOM_ROOM_START
-    ("bank_076.asm", "EncResolve", 0): "BOUNDED",                # S114: cp ENC_ROOM_LEN, 16-bit index *3
+    ("bank_076.asm", "EncResolve", 0): "BOUNDED",                # S140: -> PlaceNum76, 16-bit ENC_ROOM_LEN, index *3
     # S120 burn-down: the sites added S116-S119 (ROADMAP "audit_mapid_range
     # re-adjudication"); reasoning in CROSSBANK_ROOMS "S120 burn-down".
     ("bank_060.asm", "CutPatchRoute", 0): "CP_UNSIGNED",         # S119: cp CUSTOM_ROOM_START (GateAwareDispatch rule)
     # S128: BattleBGMResolve's two `cp $5d` loads became `call ArenaMapID` (the
     # project's arena counts as $5D; ROM0 ArenaMapID's own key above) — the
     # remaining loads moved up to occurrences 0 / 1
-    ("bank_071.asm", "BattleBGMResolve", 0): "IDX16",            # S138: 16-bit index into the 256-row table (every id; was
-                                                                 # BOUNDED by cp $80, the S116-S137 FEATURE cap $7F)
+    ("bank_071.asm", "BattleBGMResolve", 0): "BOUNDED",          # S140: -> RoomSongByte71 (S138: IDX16 256 rows; S116-S137
+                                                                 # BOUNDED by cp $80, the FEATURE cap $7F)
     ("bank_071.asm", "BattleBGMResolve", 1): "CP_UNSIGNED",      # S116: cp $50 / $52 / $5d special-room tests
     ("bank_076.asm", "GateBossWin", 0): "CP_UNSIGNED",           # S117: == wBossMapType (full byte)
     ("bank_077.asm", "ShopFill", 0): "CP_UNSIGNED",              # S117: cp $50
     ("bank_077.asm", "PushAttrActive", 0): "CP_UNSIGNED",        # S117b: cp CUSTOM_ROOM_START
     ("bank_077.asm", "ServiceOpenTiles", 0): "CP_UNSIGNED",      # S126: cp CUSTOM_ROOM_START (save the room tiles in custom rooms only)
     # S121: reasoning in CROSSBANK_ROOMS "S121 site".
-    ("bank_071.asm", "TextSpriteMode", 0): "BOUNDED",            # S121: cp $08 / $5d, sub CUSTOM_ROOM_START
-                                                                 # + ret c, cp ROOMFLAGS_TABLE_LEN + ret nc, 16-bit add
+    ("bank_071.asm", "TextSpriteMode", 0): "BOUNDED",            # S121: cp $08 / $5d; S140: cp CUSTOM_ROOM_START + RoomFlagsPtr
     # S138 (ARC CAP2e — stale saves): reasoning in CROSSBANK_ROOMS "S138 sites".
-    ("bank_071.asm", "StalePlace", 0): "BOUNDED",                # S138: sub $6B / ret c, cp ROOMFLAGS_TABLE_LEN, 16-bit add, bit 7
+    ("bank_071.asm", "StalePlace", 0): "BOUNDED",                # S140: cp CUSTOM_ROOM_START + RoomFlagsPtr (PlaceNum71: region + id), bit 7
+    # S140 (ARC CAP3a — regions): the room commit's link-id test. Reasoning:
+    # CROSSBANK_ROOMS "S140 sites".
+    ("bank_073.asm", "RegionCommit", 0): "BOUNDED",              # S140: sub LINK_ID_FIRST / jr c, cp LINK_IDS / jr nc, 16-bit add into wExitLinks
     # S123: reasoning in CROSSBANK_ROOMS "S123 sites" (NPC colours).
     ("bank_060.asm", "CopyNPCListToBuffer", 0): "COPY",          # S123: wMapID -> wNpcColourMap (the tag; never an index)
     ("bank_060.asm", "NpcColourDraw", 0): "CP_UNSIGNED",         # S123: cp b against wNpcColourMap (full-byte equality)
@@ -207,7 +210,7 @@ V = {
     # retired — they no longer load wMapID); the forwarders' wMapID loads go through
     # PlaceOf (sub CUSTOM_ROOM_START / ret c / cp PLACE_COUNT / ccf / ret c, then a
     # 16-bit index into PlaceDirectory). Reasoning: CROSSBANK_ROOMS "S136 sites".
-    ("bank_060.asm", "PlaceFwdStep", 0): "BOUNDED",              # S136: -> PlaceOf (sub $6B, cp PLACE_COUNT)
+    ("bank_060.asm", "PlaceFwdStep", 0): "BOUNDED",              # S136: -> PlaceOf (S140: PlaceNum60 — region + id, RegionTable60 bounds)
     ("bank_060.asm", "PlaceFwdInteract", 0): "CP_UNSIGNED",      # S136: cp CUSTOM_ROOM_START (vanilla scan), then PlaceOf
     ("bank_060.asm", "PlaceFwdExit", 0): "BOUNDED",              # S136: -> PlaceOf
     ("bank_060.asm", "PlaceFwdRules", 0): "BOUNDED",             # S136: -> PlaceOf / ret c
@@ -318,15 +321,27 @@ def main():
                            "hard_max_mapid": "0xFE ($FF = exit-list "
                                "terminator byte)",
                            "idx8_sub6b_max_mapid": "0xEA (custom-side sub "
-                               "$6B then 8-bit add a idiom)",
+                               "$6B then 8-bit add a idiom; S140: no such "
+                               "reader left — every per-place table is "
+                               "indexed by the 16-bit place number)",
+                           "place_ids_per_region": "0x6B-0xEA = 128 (S140 "
+                               "REGION_IDS; 0xEB-0xFE = exit link ids, "
+                               "LINK_ID_FIRST / LINK_IDS)",
+                           "regions": "S140 (ARC CAP3a): a place = "
+                               "(wMapRegion, wMapID); PlaceNum<bank> -> the "
+                               "place number (RegionTable / GlobalPlaceIds per "
+                               "bank $60 / $6C / $71 / $76); compiler "
+                               "REGION_MAX 63",
                            "bgm_room_default_max": "0xEA (S138: 256-row "
                                "room / battle song tables, no cp $80 — "
-                               "every custom id; 0x7F S64-S137)",
+                               "every custom id; 0x7F S64-S137; S140: 107 "
+                               "vanilla rows + one row per place)",
                            "stale_ids": "S138: a custom id with no place "
                                "(past ROOMFLAGS_TABLE_LEN or a placeholder, "
                                "bit 7) reads the Castle record (bank $71 "
                                "entry 0) and is sent home at CONTINUE "
-                               "(entry 10)"}},
+                               "(entry 10); S140: + a region the build "
+                               "lacks / past its region's last place"}},
                       f, indent=1)
         print(f"wrote {out}")
     sys.exit(0 if ok else 1)

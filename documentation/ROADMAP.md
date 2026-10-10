@@ -2523,7 +2523,7 @@ the user picks.
       there). *User half:* the test ROM in SameBoy.
 - **CAP2 — the spill (split S135, user: "whatever works").** The S133 box bundled four
       independent changes; measured on the user's 11 rooms: $60 79 % / $64 79 % / $67 55 % / $17
-      3,259 B free — the class banks bind at ~14-15 such rooms. Three boxes (S136: + CAP2d, bank $6C split off CAP2b; S137: + CAP2e, stale saves — built S138 with the room songs past $7F), each its own test ROM. **S139: every box built (all user-confirmed; d S139) — no per-room data class is bound to one bank any more below 128 places; next = CAP3 (regions).**
+      3,259 B free — the class banks bind at ~14-15 such rooms. Three boxes (S136: + CAP2d, bank $6C split off CAP2b; S137: + CAP2e, stale saves — built S138 with the room songs past $7F), each its own test ROM. **S139: every box built (all user-confirmed; d S139) — no per-room data class is bound to one bank any more below 128 places; next = CAP3 (regions).** **S140: CAP3a built (regions; USER-CONFIRMED) — bank $71 binds next at ≈950 places (15 B a place, CAP5).**
   - [x] **CAP2a — LZ streams: layouts, attr maps, tilesets past $64 / $67.** **Built S135;
         USER-CONFIRMED 2026-10-09 12:59 ("Yep all good can confirm").** Compiler-only (`DecompressTileLayout` takes the bank from every
         reference — ARCHITECTURE "LZ stream banks (S135)"): `Project.stream_plan()` first fit
@@ -2627,33 +2627,61 @@ the user picks.
         (`$72`) → the Castle; the same save in the build that has the room → that room; the 16
         SONG GROTTOS' room songs + 4 battle songs (`$78`, `$80`, `$82`, `$85`) == the project.
         *User half:* MET — `DWM-S138-song-test.gbc` + `DWM-S138-plain-test.gbc` in SameBoy.
-  - [ ] **Tool drift: `tools/audit_wram.py` (found S137).** Broken since S102 (a `ds` with an
+  - [x] **Tool drift: `tools/audit_wram.py` (found S137).** Broken since S102 (a `ds` with an
         `EQU`) — S137 taught it EQUs; its selftest now FAILS: the `$DE74` scratch block classifies
         A′ "rammap-span" (a `known_RAM_map` span over `wRoomRecScratch` … `wCustomRoomFlag`).
         Find the span, fix the doc or the classifier, then regenerate `extracted/wram_usage.json`
         (stale since ~S100: it lacks every WRAM carve S102-S137).
+        **DONE S140:** the span was the classifier reading OUR OWN `known_RAM_map` rows (the
+        custom room state / scratch block) as vanilla evidence — `CUSTOM_ROW_MARKERS` excludes
+        them; selftest PASS; `extracted/wram_usage.json` regenerated (S140 carves included).
   - (moved to CAP3, S135) the place header / `wPlaceAttr` far copy: below 128 places the
         per-room tables of banks $71 / $76 / ROM0 `$26DD` do not overflow ($71 ≈ 60 B a
-        room); they break only when ids repeat across regions.
-- [ ] **CAP3 — regions (places beyond 128).** (S135: + the place header / `wPlaceAttr` far copy from CAP2.) `wMapRegion` (saved with X1, new game 0), the
-      commit resolves link slots `$F0-$FE` (`wExitLinks`, filled by `CopyExitListToBuffer`
-      from `$FD <region>` prefixes) / global ids / `wWarpRegion` / unchanged; the place cache;
-      counters per region (zeroed on a change); `wNpcColourMap` / `wTileAnimRoom` dropped on
-      a change; bank $6C `TileAnimDirectory` (S139, indexed `wMapID − $6B` like `PlaceDirectory`)
-      re-keyed with the place header; region-carrying `HubTable` / `GateInsertTable` rows, the gate boss region
-      (bank $16 `jr_016_5be1` nops), `GateBossWin` compares the region, the script command
-      for `$0F` / `$3B` (widen the 255-entry command space first), Play here's poke; the
-      compiler assigns regions automatically. *Accept:* a generated project of ≥ 300 places
-      in ≥ 3 regions; PyBoy: doors within and across regions both ways, a vanilla redirect
-      into each region, the hub from each region, a place served in a gate from another
-      region, a world, the arena copies from two regions, the breeding ceremony return,
-      save / reload in region 2, a WarpWing home.
+        room — measured S140: 15 B); they break only when ids repeat across regions. (S140:
+        no header / far copy — the tables are indexed by the place number, CAP3a.)
+- **CAP3 — regions (places beyond 128) (split S140, user: "Sounds good").** The S135 box: `wMapRegion`
+      (saved, new game 0), the commit resolving link slots (`wExitLinks`, from `$FD <region>`
+      prefixes) / global ids / `wWarpRegion` / unchanged, counters per region, the caches
+      dropped on a change, `TileAnimDirectory` re-keyed, region-carrying hub / gate-insert rows,
+      the gate boss region, `GateBossWin`, the script warps, Play here, automatic regions.
+      (S135 had planned a place header / `wPlaceAttr` far copy; S140 instead keeps every table
+      where it is, indexed by a 16-bit PLACE NUMBER — user: "Sounds good".)
+  - [x] **CAP3a — the regions engine + compiler.** **Built S140; USER-CONFIRMED 2026-10-10 21:26
+        ("I confirm everything works").** A place = (`wMapRegion`, `wMapID`); a project mapID
+        carries the region in its high byte (`$16B` = region 1's `$6B`); region 0 = the ids
+        written today, later regions automatic (`next_free_mapid`). NEW pinned
+        `templates/place_number.asm` (`PlaceNum<bank>` from `RegionTable<bank>` +
+        `GlobalPlaceIds<bank>`) in banks $60 / $6C / $71 / $76; link ids `$EB-$FE` (S135
+        planned `$F0-$FE`); bank $73 `RegionCommit` / `RegionEnter` (counters
+        `wCustomStepRegional..$CFFF` zeroed, `wNpcColourMap` / `wTileAnimRoom` dropped) + entry
+        22; hub rows / gate-insert rows carry the region; the gate boss region (bank $16 nops →
+        bank $71 entries 11 / 12, `GateBossRegionTable`); script warps get
+        `write_ram wWarpRegion, region + 1` (no new command — the 255-entry command space is
+        untouched); the arena copies = region-0 GLOBAL places; the save "X2" + region; per-place
+        song rows; Play here / playback set `wWarpRegion`. ARCHITECTURE "Regions (S140)",
+        PROJECT_COMPILER §2.49, CROSSBANK_ROOMS "S140 sites".
+        *Accept (machine half) MET:* `tools/census_regions.py` — the user's project in 4 regions
+        (337 places) 2,796 + place banks 12,587 + stale 3,670 checks, the example in 4 regions
+        (329) 2,717 + 9,775 + 3,714, the demo 614 + 7,076 + 3,574 — 0 mismatched; `--negative`
+        1; `census_tile_anims` demo + in game 1,374, 0. PyBoy on the user's `.sav`: doors within
+        and across regions both ways, a script warp into each region (the same map id `$76`
+        four times), a battle returns to its region, JOURNAL + CONTINUE in region 3 (the plain
+        build → the Castle), a vanilla room entered from region 3 keeps it, a vanilla door
+        redirect → region 0, the arena lobby (global) from region 3. *User half:* MET —
+        `DWM-S140-compass-test.gbc` + `DWM-S140-plain-test.gbc`.
+  - [ ] **CAP3b — the rest of the S135 acceptance, in game.** Play here into a region 1+ room
+        (the poke is in, S140 — play it in the editor), the story-state model
+        (`census_story_state` / the story-point game state) with regions, and the PyBoy
+        acceptance not yet walked: the hub from each region, a place served in a gate from
+        another region, a world, the arena copies from two regions, the breeding ceremony
+        return, a WarpWing home from regions 1+ (the census covers the tables of the first
+        three).
 - [ ] **CAP4 — the editor for hundreds of places.** Places by name (no map ids shown or
       authored; `room:<name>` destinations), "Make editable" copies ONE stage of a vanilla
       room by default (the user's post-Starry Night rooms), meters per data class + the
       whole ROM, the World tab at that scale (search / filter), help. *Accept:* the user
       builds a fresh project in the editor past 150 places.
-- [ ] **CAP5 — secondary ceilings (as they bind).** Story checks 256 / commands 255, named
+- [ ] **CAP5 — secondary ceilings (as they bind).** (S140: + bank $71's per-place tables, 15 B a place → ≈950 places; the regions' id space is 63 × 128.) Story checks 256 / commands 255, named
       flags 1,965 (WRAM-bound), project encounter lists 128, breeding pools 100, own-
       animation groups 32, screens per room 8 in the schema (16 in the engine) — EDITOR_DESIGN
       §6.4 E. Measure a real project's need first; lift each in its own box.
