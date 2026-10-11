@@ -774,7 +774,7 @@ def s125_hub(app, w):
     app.processEvents()
     steps = CD.find(doc, arr[1][0])[1]['steps']
     assert {'heal': {}} in steps and {'move': {'dest': 'hub'}} == steps[-1], steps
-    assert room_items(s)[0] == ('home — the hub (World tab)', 'hub')
+    assert room_items(s)[0][:2] == ('home — the hub (World tab)', 'hub')   # S143: a PlaceEntry
     errs, _warns, _lw = CD.problems(doc, doc.room('gate_island'), CD.find(doc, arr[1][0])[1])
     assert not errs, errs
     # the conversation dialog: Home as a destination
@@ -2422,6 +2422,317 @@ def s142_scale(app, w):
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+
+
+# --------------------------------------------------------------------------- S143
+
+
+def _leak_patterns(names):
+    """Regexes that catch a place shown by a technical id (S143, ROADMAP ARC CAP4b):
+    'room $6B', 'map $0B', 'vanilla:$01' / 'room:$16B', '(0x6B)', '$6B  Castle',
+    'Castle ($6B)'. Sprite / flag / bank / song numbers are allowed."""
+    import re
+    hx = r'\$[0-9A-Fa-f]{2,3}\b'
+    pats = [re.compile(r'\b(?:room|map|mapID|vanilla|Room|Map)\s*' + hx),
+            re.compile(r'\b(?:room|vanilla):\$'),
+            re.compile(r'\(0x[0-9A-Fa-f]{2,3}\)')]
+    alts = '|'.join(re.escape(n) for n in sorted(names, key=len, reverse=True) if len(n) >= 4)
+    if alts:
+        pats.append(re.compile(hx + r'\s{1,4}(?:' + alts + r')'))
+        pats.append(re.compile(r'(?:' + alts + r')\s*\(' + hx + r'\)'))
+    return pats
+
+
+def _texts(root):
+    """Every text a person can read in a widget tree (labels, buttons, items of
+    combos / lists / trees / tables, group titles, tool tips, scene items)."""
+    from PySide6.QtWidgets import (QAbstractButton, QComboBox, QGraphicsView,
+                                   QGroupBox, QLabel, QLineEdit, QListWidget,
+                                   QPlainTextEdit, QTableWidget, QTreeWidget, QWidget)
+    out = []
+    ws = [root] + root.findChildren(QWidget)
+    for wd in ws:                     # hidden pages too (a sub-tab not shown is still filled)
+        if wd.toolTip():
+            out.append(wd.toolTip())
+        if isinstance(wd, (QLabel, QAbstractButton)):
+            out.append(wd.text())
+        elif isinstance(wd, QGroupBox):
+            out.append(wd.title())
+        elif isinstance(wd, QComboBox):
+            out += [wd.itemText(i) for i in range(wd.count())]
+        elif isinstance(wd, QListWidget):
+            out += [wd.item(i).text() for i in range(wd.count())]
+        elif isinstance(wd, QTreeWidget):
+            stack = [wd.topLevelItem(i) for i in range(wd.topLevelItemCount())]
+            while stack:
+                it = stack.pop()
+                out += [it.text(c) for c in range(wd.columnCount())]
+                out += [it.toolTip(c) for c in range(wd.columnCount())]
+                stack += [it.child(k) for k in range(it.childCount())]
+        elif isinstance(wd, QTableWidget):
+            for r in range(wd.rowCount()):
+                for c in range(wd.columnCount()):
+                    it = wd.item(r, c)
+                    if it is not None:
+                        out.append(it.text())
+        elif isinstance(wd, QGraphicsView) and wd.scene() is not None:
+            for gi in wd.scene().items():
+                if gi.toolTip():
+                    out.append(gi.toolTip())
+                if hasattr(gi, 'text'):
+                    try:
+                        out.append(gi.text())
+                    except TypeError:
+                        pass
+        elif isinstance(wd, QPlainTextEdit):
+            out += wd.toPlainText().splitlines()[-300:]
+    return [t for t in out if t]
+
+
+def _leaks(root, pats):
+    bad = []
+    for t in _texts(root):
+        for p in pats:
+            if p.search(t):
+                bad.append(t[:140])
+                break
+    return bad
+
+
+def s143_names(app, w):
+    """S143 (ROADMAP ARC CAP4b; user S142/S143: places by name, map ids hidden — "view
+    show in case I want them", areas one level, duplicate names renamed on open, the
+    game's odd rooms kept "so I know wtf it is"): on a generated 300-place project in
+    three regions, every tab and the place dialogs show NO map id / region; the one
+    searchable place picker finds a place by typing; areas are folders (Rooms list) and
+    a World tab filter; names are unique (New / Copy / Rename / Make editable / on open);
+    View > Show technical ids brings the ids back; the arena copies' sprite warning."""
+    import json as _json
+    import shutil
+    import tempfile
+    import time as _t
+    from editor2.app.rooms import commands as C
+    from editor2.core.document import Document
+    from editor2.core import place_names as PN
+    from editor2.core import formats as F
+    tmp = tempfile.mkdtemp(prefix='s143_names_')
+    try:
+        pdir = os.path.join(tmp, 'p300')
+        shutil.copytree(os.path.join(REPO, 'editor2/example-project'), pdir,
+                        ignore=shutil.ignore_patterns('build'))
+        gen = Document(os.path.join(pdir, 'project.json'))
+        bases = [r['id'] for r in gen.rooms if not r.get('placeholder')
+                 and r['id'] not in ('medal_vault',)]
+        areas = ['Northlands', 'Sunken Port', 'Old Tower']
+        for i in range(300):
+            rid = gen.copy_room(bases[i % len(bases)], f'Place {i:03d}')
+            gen.set_room_area(rid, areas[i % 3])
+        # a duplicate name (an older project) is renamed on open
+        dup = gen.copy_room(bases[0], 'Twin hall')
+        gen.room(dup)['name'] = gen.room_name(gen.room(bases[0]))
+        gen.save()
+        nplaces = len([r for r in gen.rooms if not r.get('placeholder')])
+        regions = sorted({int(str(r['mapID']), 0) >> 8 for r in gen.rooms})
+        assert regions[-1] >= 2, regions
+        from editor2.app.main import MainWindow
+        PN.SHOW_IDS = False
+        w2 = MainWindow()
+        w2.resize(1400, 900)
+        w2.show()
+        app.processEvents()
+        t = _t.perf_counter()
+        w2.open_project(pdir)
+        t_open = _t.perf_counter() - t
+        app.processEvents()
+        s2, rt, doc = w2.session, w2.rooms_tab, w2.session.doc
+        names = [doc.room_name(r) for r in doc.rooms if not r.get('placeholder')]
+        assert len({n.casefold() for n in names}) == len(names), 'names not unique after open'
+        assert any('renamed' in n for n in doc.migrations), doc.migrations
+        vnames = [PN.vanilla_name(m) for m, _n, _s in s2.renderer.vanilla_rooms()]
+        assert len(set(vnames)) == len(vnames), 'two game rooms share a name'
+        assert 'Castle (unused copy 1)' in vnames and 'Unnamed game room' not in vnames
+        pats = _leak_patterns(names + vnames)
+        # ---- every tab, a region-2 room and a game room on the Rooms tab
+        bad = {}
+        far = next(r for r in reversed(doc.rooms) if int(str(r['mapID']), 0) >> 8 == 2)
+        rt.room_list.select_data(far['id'])
+        app.processEvents()
+        bad['Rooms (a region-2 room)'] = _leaks(w2, pats)
+        rt.vanilla_list.select_data(0x0B)
+        app.processEvents()
+        bad['Rooms (a game room)'] = _leaks(w2, pats)
+        rt.room_list.select_data(far['id'])
+        for i in range(w2.tabs.count()):
+            w2.tabs.setCurrentIndex(i)
+            app.processEvents()
+            bad[w2.tabs.tabText(i)] = _leaks(w2, pats)
+        w2.tabs.setCurrentWidget(rt)
+        app.processEvents()
+        # ---- the place dialogs (built, scanned, closed)
+        from editor2.app.rooms.door_dialog import DoorDialog
+        from editor2.app.rooms.redirect_dialog import RedirectDialog
+        from editor2.app.rooms.tab import NewRoomDialog
+        from editor2.app.rooms.tileset_dialog import TilesetDialog
+        from editor2.app.world_tab import NewWorldDialog, HubRuleDialog
+        from editor2.app.gates_tab import GateRuleDialog
+        from editor2.app.milly_dialog import MillyHookDialog
+        from editor2.app.rooms.palette_borrow_dialog import BorrowPaletteDialog
+        from editor2.app.rooms.conversation_dialog import ConversationDialog
+        dialogs = {'Add a door': lambda: DoorDialog(s2, far['id'], 0, 0, (4, 4), w2),
+                   'Route a vanilla door': lambda: RedirectDialog(s2, far['id'], w2),
+                   'New room': lambda: NewRoomDialog(s2.renderer, w2),
+                   'Change tileset': lambda: TilesetDialog(doc, s2.renderer, far,
+                                                           rt.canvas.pals, w2),
+                   'New world': lambda: NewWorldDialog(s2, w2),
+                   'Gate rule': lambda: GateRuleDialog(doc, doc.all_gates()[2], parent=w2),
+                   'Hub rule': lambda: HubRuleDialog(s2, parent=w2),
+                   'Milly hook': lambda: MillyHookDialog(s2, w2),
+                   'Borrow palette': lambda: BorrowPaletteDialog(s2, far, 0, 0, rt.canvas, w2),
+                   'Conversation': lambda: ConversationDialog(
+                       doc, s2.renderer.rom, room=far, spec={'steps': [
+                           {'move': {'dest': mv_dest, 'screen': 0, 'x': 4, 'y': 4}},
+                           {'move': {'dest': 'vanilla:$0B', 'screen': 0, 'x': 4, 'y': 4}}]},
+                       parent=w2)}
+        mv_dest = f"room:${int(str(far['mapID']), 0):02X}"
+        for nm, mk in dialogs.items():
+            dlg = mk()
+            dlg.show()
+            app.processEvents()
+            bad[nm] = _leaks(dlg, pats)
+            dlg.close()
+            dlg.deleteLater()
+        app.processEvents()
+        w2.validate()                               # the Build log: validation messages
+        app.processEvents()
+        log = w2.log.toPlainText()
+        assert 'Validation OK' in log, log[-800:]
+        bad['Build log (validation)'] = [ln[:140] for ln in log.splitlines()
+                                         if any(p.search(ln) for p in pats)]
+        n_warn = sum(1 for ln in log.splitlines() if ln.startswith('  '))
+        bad = {k: v for k, v in bad.items() if v}
+        assert not bad, 'map ids shown: ' + _json.dumps(bad, indent=1)[:3000]
+        print(f'OK: S143 names only — {nplaces} places in regions {regions} (+ the game\'s '
+              f'{len(vnames)} rooms) opened in {t_open:.1f} s; {w2.tabs.count()} tabs, a '
+              f'region-2 room, a game room, {len(dialogs)} place dialogs and the {n_warn} '
+              f'validation warnings show no map id')
+        # ---- the place picker: every place, search by typing
+        from editor2.app.place_picker import PlacePicker
+        pl = PN.Places.of(doc)
+        ents = (pl.special_entries() + pl.room_entries('dest')
+                + pl.vanilla_entries(s2.renderer.vanilla_rooms(), value='dest'))
+        t = _t.perf_counter()
+        pp = PlacePicker()
+        pp.set_entries(ents)
+        t_fill = _t.perf_counter() - t
+        assert pp.value() == 'hub', pp.value()
+        comp = pp.completer()
+        comp.setCompletionPrefix('place 29')
+        hits = [comp.completionModel().index(i, 0).data()
+                for i in range(comp.completionModel().rowCount())]
+        assert hits and all('Place 29' in h for h in hits), hits[:5]
+        pp._picked('Place 297')
+        r297 = next(r for r in doc.rooms if r.get('name') == 'Place 297')
+        assert pp.value() == f"room:${int(str(r297['mapID']), 0):02X}", pp.value()
+        comp.setCompletionPrefix('unused copy')
+        assert comp.completionModel().rowCount() == 9, comp.completionModel().rowCount()
+        pp.setCurrentIndex(0)                       # a header is never current
+        assert pp.value() is not None
+        print(f'OK: S143 place picker — {len(ents)} places filled in {t_fill * 1000:.0f} ms, '
+              f'"place 29" → {len(hits)} matches, a typed pick = the room\'s stored '
+              f'destination, "unused copy" → the 9 game rooms that are copies')
+        assert t_fill < 1.0, t_fill
+        # ---- areas: folders, search, a move, the World tab filter
+        folders = [rt.room_list.topLevelItem(i).text(0)
+                   for i in range(rt.room_list.topLevelItemCount())]
+        assert [f.split('   (')[0] for f in folders[:3]] == areas, folders
+        assert folders[-1].startswith(PN.NO_AREA), folders
+        rt.room_search.setText('Place 29')
+        app.processEvents()
+        vis = sum(1 for i in range(rt.room_list.count()) if not rt.room_list.item(i).isHidden())
+        assert vis == 10, vis
+        rt.room_search.setText('sunken')
+        app.processEvents()
+        vis = sum(1 for i in range(rt.room_list.count()) if not rt.room_list.item(i).isHidden())
+        assert vis == 100, vis
+        rt.room_search.setText('')
+        k0 = s2.undo.index()
+        rt._room_to_area(far['id'], 'Old Tower')
+        app.processEvents()
+        assert doc.room(far['id']).get('area') == 'Old Tower'
+        wt = w2.world_tab
+        w2.tabs.setCurrentWidget(wt)
+        app.processEvents()
+        wt.area.setCurrentIndex(wt.area.findData('Northlands'))
+        app.processEvents()
+        inside = [k for k, it in wt.nodes.items() if not it.info.get('outside')]
+        assert len(inside) == 100, len(inside)
+        wt.find.setText('Place 003')
+        app.processEvents()
+        assert wt._hits and wt.focus == wt._hits[0], wt._hits
+        wt.near.setChecked(True)
+        app.processEvents()
+        n_near = len(wt.nodes)
+        assert wt.focus in wt.nodes and 2 <= n_near <= 1 + 8, n_near
+        wt.near.setChecked(False)
+        wt.area.setCurrentIndex(0)
+        app.processEvents()
+        print(f'OK: S143 areas — {len(folders)} folders (3 areas + No area), search '
+              f'"Place 29" → 10 rooms, "sunken" → the area\'s 100; a room moved to another '
+              f'area (undo step); World tab: area filter (100 rooms + their neighbours '
+              f'faded), find, the room and its neighbours ({n_near} rooms)')
+        # ---- unique names everywhere
+        try:
+            doc.rename_room(far['id'], 'Place 001')
+            raise AssertionError('a rename to a taken name was accepted')
+        except ValueError as ex:
+            assert 'Place 001' in str(ex)
+        assert doc.unique_room_name('Place 001') == 'Place 002' or \
+            doc.unique_room_name('Place 001').startswith('Place ')
+        c = C.SnapshotCommand(s2, 'Copy', lambda d: d.copy_room(far['id'], 'Place 001'))
+        s2.undo.push(c)
+        assert doc.room_name(doc.room(c.result)) not in ('Place 001',), 'copy kept a taken name'
+        c2 = C.SnapshotCommand(s2, 'Make editable', lambda d: d.clone_vanilla(
+            0x01, PN.vanilla_name(0x01), REPO, s2.renderer))
+        s2.undo.push(c2)
+        c3 = C.SnapshotCommand(s2, 'Make editable', lambda d: d.clone_vanilla(
+            0x01, PN.vanilla_name(0x01), REPO, s2.renderer))
+        s2.undo.push(c3)
+        n1, n2 = doc.room_name(doc.room(c2.result)), doc.room_name(doc.room(c3.result))
+        assert n1 != n2 and n2.startswith(n1.split(' ')[0]), (n1, n2)
+        app.processEvents()
+        # ---- View > Show technical ids
+        w2.a_ids.setChecked(True)
+        app.processEvents()
+        w2.tabs.setCurrentWidget(rt)
+        app.processEvents()
+        txt = [rt.room_list.item(i).text() for i in range(rt.room_list.count())]
+        assert any('[region 2 $' in x for x in txt), txt[-3:]
+        vt = [rt.vanilla_list.item(i).text() for i in range(rt.vanilla_list.count())]
+        assert any('[game $0B]' in x for x in vt), vt[:5]
+        w2.a_ids.setChecked(False)
+        app.processEvents()
+        while s2.undo.index() > k0:
+            s2.undo.undo()
+        app.processEvents()
+        print(f'OK: S143 unique names — a taken name refused on Rename, Copy / Make editable '
+              f'pick "{n2}"; View > Show technical ids → "[region 2 $..]" / "[game $0B]" and back')
+        # ---- the Arena Battle copies (user S143: the sprite warning there)
+        arena = {'source_mapID': '0x5D'}
+        npcs = [{'kind': 'npc', 'x': x, 'y': 5} for x in (6, 7)] + \
+               [{'kind': 'npc', 'x': 3, 'y': y} for y in range(4, 10)]
+        assert F.sprite_budget(npcs) and not F.sprite_budget(npcs, F.party_walks(arena))
+        assert F.party_walks({'source_mapID': '0x01'}) and F.party_walks({})
+        print('OK: S143 a copy of the Arena Battle room (its NPCs are the party) gets no '
+              'walking-party sprite warning; other rooms keep it')
+        w2.session.undo.clear()
+        w2.close()
+        w2.deleteLater()
+        app.processEvents()
+    finally:
+        PN.SHOW_IDS = False
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
 def main():
     do_rom = '--rom' in sys.argv
     app = QApplication.instance() or QApplication(sys.argv)
@@ -3420,7 +3731,8 @@ def main():
     gl = [mt.gates_t.cellWidget(i, 1).currentData() for i in range(mt.gates_t.rowCount())]
     assert gl[2] == 'dwm2_bgm04' and mt.fights_t.rowCount() == 1, (gl[:4], mt.fights_t.rowCount())
     rows = [mt.rooms_t.item(i, 0).text() for i in range(mt.rooms_t.rowCount())]
-    i01 = next(i for i, t in enumerate(rows) if t.startswith('$01 '))
+    from editor2.core import place_names as _PN                # S143: rows by name
+    i01 = rows.index(_PN.Places.of(doc).vanilla_label(0x01))
     assert mt.rooms_t.cellWidget(i01, 2).currentData() == 'dwm2_bgm04'
     from editor2.core import compiler as Cc                # the edits compile
     td = tempfile.mkdtemp()
@@ -3839,6 +4151,7 @@ def main():
         s119_cutscene_editor(app, w, ct)
 
     s142_scale(app, w)
+    s143_names(app, w)
 
     if do_rom:
         from editor2.app.build_worker import BuildWorker  # noqa: E402

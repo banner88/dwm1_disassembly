@@ -492,14 +492,18 @@ class ProjectRenderer:
                                  if sr.get('steps'))
                 if not screens:
                     continue
-                name = MAP_NAMES.get(mid) or e.get('name') or f'map ${mid:02X}'
+                # S143 (ARC CAP4b): the editor's one name per place (place_names —
+                # the eight Castle-data ids get names that say so; never a hex id)
+                from editor2.core import place_names as PN
+                name = PN.vanilla_name(mid)
                 out.append((mid, name, screens))
             self._vanilla = out
             self._vanilla_mt = {e['map_type']: e for e in mt if 'map_type' in e}
         return self._vanilla
 
     def vanilla_name(self, mid):
-        return MAP_NAMES.get(mid, f'map ${mid:02X}')
+        from editor2.core import place_names as PN          # S143: names only
+        return PN.vanilla_name(mid)
 
     def vanilla_gfx(self, mid):
         o = 0x26DD + mid * 8

@@ -44,6 +44,8 @@ from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox,
 
 from editor2.core import gates as G
 from editor2.core import maze as MZ
+from editor2.core import place_names as PN
+from editor2.app.place_picker import PlacePicker, ask_place
 from editor2.core import world as W
 
 EDGE_COLORS = {'door': QColor(0, 230, 200), 'exit': QColor(255, 90, 90),
@@ -61,16 +63,24 @@ class _Node(QGraphicsRectItem):
         self.setFlag(QGraphicsItem.ItemSendsGeometryChanges, True)
         custom = info['custom']
         self.setBrush(QBrush(QColor(40, 60, 70) if custom else QColor(55, 55, 55)))
-        if info.get('world'):                       # S123: a room of the shown world
+        if info.get('hit'):                         # S143: a search match
+            self.setPen(QPen(QColor(255, 210, 60), 5))
+        elif info.get('world'):                     # S123: a room of the shown world
             self.setPen(QPen(QColor(120, 230, 120), 4))
+        elif info.get('outside'):                   # S143: shown for context (not in the filter)
+            self.setPen(QPen(QColor(90, 90, 90), 1, Qt.DotLine))
+            self.setOpacity(0.55)
         else:
             self.setPen(QPen(QColor(0, 200, 255) if custom else QColor(130, 130, 130), 2))
-        self.setToolTip(f"${info['mapID']:02X} {info['label']} "
-                        f"({'custom' if custom else 'vanilla'}) — double-click to open")
+        name = PN.with_id(info['label'], info['mapID'], not custom)      # S143: names only
+        area = info.get('area') or ''
+        self.setToolTip(f"{name} ({'your room' if custom else 'game room'}"
+                        + (f', area {area}' if custom and area else '') + ')'
+                        ' — click to select · double-click to open')
         if pixmap is not None:
             pm = QGraphicsPixmapItem(pixmap.scaled(80, 64), self)
             pm.setPos(8, 4)
-        t = QGraphicsSimpleTextItem(f"${info['mapID']:02X} {info['label']}"[:16], self)
+        t = QGraphicsSimpleTextItem(name[:18], self)
         t.setBrush(QBrush(QColor(230, 230, 230)))
         t.setFont(QFont('Helvetica', 7))
         t.setPos(4, 70)
@@ -84,6 +94,10 @@ class _Node(QGraphicsRectItem):
 
     def mouseDoubleClickEvent(self, ev):
         self.tab.openRequested.emit(self.info['key'])
+
+    def mousePressEvent(self, ev):
+        self.tab._node_clicked(self.info['key'])      # S143: the focus room
+        super().mousePressEvent(ev)
 
     def centre(self):
         return self.pos() + QPointF(NODE_W / 2, NODE_H / 2)
@@ -197,6 +211,38 @@ class WorldTab(QWidget):
         self.count = QLabel('')
         row.addWidget(self.count)
         v.addLayout(row)
+        # S143 (ROADMAP ARC CAP4b): find a room, show one area, or one room and its
+        # neighbours — at hundreds of rooms the whole graph is a hairball
+        row2 = QHBoxLayout()
+        self.find = QLineEdit()
+        self.find.setPlaceholderText('Find a room (name or area) — Enter = next match')
+        self.find.setClearButtonEnabled(True)
+        self.find.textChanged.connect(lambda _t: self._find(0))
+        self.find.returnPressed.connect(lambda: self._find(1))
+        row2.addWidget(self.find, 2)
+        row2.addWidget(QLabel('Area:'))
+        self.area = QComboBox()
+        self.area.setToolTip('Draw only the rooms of one area (rooms they connect to are '
+                             'drawn faded, for context)')
+        self.area.currentIndexChanged.connect(lambda _i: self.refresh())
+        row2.addWidget(self.area, 1)
+        self.near = QCheckBox('only the selected room and its neighbours:')
+        self.near.setToolTip('Click a room (or find one), then tick this: only rooms within '
+                             'that many connections are drawn')
+        self.near.toggled.connect(lambda _on: self.refresh())
+        row2.addWidget(self.near)
+        self.near_n = QSpinBox()
+        self.near_n.setRange(1, 6)
+        self.near_n.setValue(1)
+        self.near_n.setSuffix(' step(s)')
+        self.near_n.valueChanged.connect(lambda _v: self.near.isChecked() and self.refresh())
+        row2.addWidget(self.near_n)
+        self.focus_lbl = QLabel('')
+        row2.addWidget(self.focus_lbl)
+        v.addLayout(row2)
+        self.focus = None
+        self._hits = []
+        self._hit_i = 0
         self.scene = QGraphicsScene(self)
         self.view = QGraphicsView(self.scene)
         self.view.setRenderHints(QPainter.Antialiasing)
@@ -270,7 +316,89 @@ class WorldTab(QWidget):
                         keep.add(e['b'])
                 nodes = [n for n in nodes if n['key'] in keep]
                 edges = [e for e in edges if e['a'] in keep and e['b'] in keep]
+        # S143: one area (+ the rooms it connects to, faded)
+        area = self.area.currentData() if self.area.count() else None
+        if area is not None:
+            inside = {n['key'] for n in nodes if (n.get('area') or PN.NO_AREA) == area}
+            ctx = set()
+            for e in edges:
+                if e['a'] in inside:
+                    ctx.add(e['b'])
+                if e['b'] in inside:
+                    ctx.add(e['a'])
+            keep = inside | ctx
+            for n in nodes:
+                n['outside'] = n['key'] not in inside
+            nodes = [n for n in nodes if n['key'] in keep]
+            edges = [e for e in edges if e['a'] in keep and e['b'] in keep]
+        # S143: the selected room and its neighbours (n connections, either way)
+        if self.near.isChecked() and self.focus is not None:
+            keep, front = {self.focus}, {self.focus}
+            for _step in range(self.near_n.value()):
+                nxt = set()
+                for e in edges:
+                    if e['a'] in front and e['b'] not in keep:
+                        nxt.add(e['b'])
+                    if e['b'] in front and e['a'] not in keep:
+                        nxt.add(e['a'])
+                keep |= nxt
+                front = nxt
+            nodes = [n for n in nodes if n['key'] in keep]
+            edges = [e for e in edges if e['a'] in keep and e['b'] in keep]
         return nodes, edges
+
+    def _fill_areas(self):
+        cur = self.area.currentData() if self.area.count() else None
+        self.area.blockSignals(True)
+        self.area.clear()
+        self.area.addItem('All rooms', None)
+        for a in self.s.doc.areas():
+            self.area.addItem(a, a)
+        self.area.addItem(PN.NO_AREA, PN.NO_AREA)
+        self.area.addItem('Game rooms', PN.GAME)
+        i = self.area.findData(cur)
+        self.area.setCurrentIndex(max(0, i))
+        self.area.blockSignals(False)
+
+    def _node_clicked(self, key):
+        self.focus = key
+        it = self.nodes.get(key)
+        self.focus_lbl.setText(f"selected: {it.info['label']}" if it is not None else '')
+        if self.near.isChecked():
+            from PySide6.QtCore import QTimer
+            QTimer.singleShot(0, self.refresh)        # not inside the item's own press
+
+    def _node_pen(self, it):
+        if it.info.get('hit'):
+            return QPen(QColor(255, 210, 60), 5)
+        if it.info.get('world'):
+            return QPen(QColor(120, 230, 120), 4)
+        if it.info.get('outside'):
+            return QPen(QColor(90, 90, 90), 1, Qt.DotLine)
+        return QPen(QColor(0, 200, 255) if it.info['custom'] else QColor(130, 130, 130), 2)
+
+    def _find(self, step):
+        """Highlight every drawn room whose name / area holds the text and centre on
+        one (Enter = the next). A room outside the current filter is not drawn."""
+        t = self.find.text().strip().casefold()
+        hits = [k for k, it in self.nodes.items()
+                if t and (t in it.info['label'].casefold()
+                          or t in (it.info.get('area') or '').casefold())]
+        changed = hits != self._hits
+        self._hits = hits
+        self._hit_i = 0 if changed else (self._hit_i + step) % max(1, len(hits))
+        for k, it in self.nodes.items():
+            hit = k in hits
+            if bool(it.info.get('hit')) != hit:
+                it.info['hit'] = hit
+                it.setPen(self._node_pen(it))
+        if hits:
+            k = hits[self._hit_i]
+            self.view.centerOn(self.nodes[k])
+            self.focus = k
+            self.focus_lbl.setText(f"selected: {self.nodes[k].info['label']}"
+                                   + (f'  ({self._hit_i + 1} of {len(hits)})'
+                                      if len(hits) > 1 else ''))
 
     def relayout(self):
         self._pos = {}
@@ -288,6 +416,7 @@ class WorldTab(QWidget):
             pos_kept[k] = (item.pos().x(), item.pos().y())
         self.scene.clear()
         self.nodes, self.edges = {}, []
+        self._fill_areas()
         nodes, edges = self.graph()
         big = len(nodes) > 40
         import math as _m
@@ -327,6 +456,9 @@ class WorldTab(QWidget):
             self.scene.addItem(item)
             self.edges.append(item)
         self.count.setText(f'{len(nodes)} rooms, {len(edges)} connections')
+        if self.find.text().strip():
+            self._hits = None                         # re-highlight in the new drawing
+            self._find(0)
         self.scene.setSceneRect(self._pan_rect())
         vw, vh = self.view.viewport().width(), self.view.viewport().height()
         if vw > 50 and vh > 50:
@@ -376,12 +508,10 @@ class NewWorldDialog(QDialog):
         f.addRow(intro)
         self.name = QLineEdit('New world')
         f.addRow('name', self.name)
-        self.start = QComboBox()
+        self.start = PlacePicker()                  # S143: searchable, names only
         self.start.addItem('a NEW room in a gate look:', None)
-        free = [r for r in doc.rooms if not r.get('placeholder')
-                and doc.world_of_room(r['id']) is None]
-        for r in free:
-            self.start.addItem(f"${int(str(r['mapID']), 0):02X} {doc.room_name(r)}", r['id'])
+        self.start.add_entries(PN.Places.of(doc).room_entries(
+            'id', want=lambda r: doc.world_of_room(r['id']) is None))
         f.addRow('start room', self.start)
         self.theme = QComboBox()
         for t, nm in enumerate(MZ.THEME_NAMES):
@@ -440,13 +570,9 @@ class StartDialog(QDialog):
         v.addWidget(lab)
         row = QHBoxLayout()
         row.addWidget(QLabel('room'))
-        self.room = QComboBox()
-        for r in doc.rooms:
-            if r.get('placeholder'):
-                continue
-            o = doc.world_of_room(r['id'])
-            if o is None or o == gid:
-                self.room.addItem(f"${int(str(r['mapID']), 0):02X} {doc.room_name(r)}", r['id'])
+        self.room = PlacePicker()                   # S143: searchable, names only
+        self.room.add_entries(PN.Places.of(doc).room_entries(
+            'id', want=lambda r: doc.world_of_room(r['id']) in (None, gid)))
         self.room.setCurrentIndex(max(0, self.room.findData(st.get('room'))))
         row.addWidget(self.room, 1)
         v.addLayout(row)
@@ -494,11 +620,9 @@ class PortalDialog(QDialog):
         v.addWidget(lab)
         row = QHBoxLayout()
         row.addWidget(QLabel('room'))
-        self.room = QComboBox()
-        for r in doc.rooms:
-            if r.get('placeholder') or doc.world_of_room(r['id']) == gid:
-                continue
-            self.room.addItem(f"${int(str(r['mapID']), 0):02X} {doc.room_name(r)}", r['id'])
+        self.room = PlacePicker()                   # S143: searchable, names only
+        self.room.add_entries(PN.Places.of(doc).room_entries(
+            'id', want=lambda r: doc.world_of_room(r['id']) != gid))
         row.addWidget(self.room, 1)
         v.addLayout(row)
         self.picker = CellPicker(session, 'PORTAL')
@@ -549,11 +673,9 @@ class HubRuleDialog(QDialog):
         v.addWidget(self.terms)
         row = QHBoxLayout()
         row.addWidget(QLabel('<b>home is</b>'))
-        self.room = QComboBox()
+        self.room = PlacePicker()                   # S143: searchable, names only
         self.room.addItem('the Castle (the original game: the priest heals, the King…)', 'castle')
-        for r in doc.rooms:
-            if not r.get('placeholder'):
-                self.room.addItem(f"${int(str(r['mapID']), 0):02X} {doc.room_name(r)}", r['id'])
+        self.room.add_entries(PN.Places.of(doc).room_entries('id'))
         self.room.setCurrentIndex(max(0, self.room.findData(rule.get('room', 'castle'))))
         row.addWidget(self.room, 1)
         v.addLayout(row)
@@ -1290,10 +1412,10 @@ class WorldsPanel(QWidget):
             QMessageBox.information(self, 'Add room', 'Every room already belongs to a world — '
                                     'New room… makes one.')
             return
-        items = [f"${int(str(r['mapID']), 0):02X} {doc.room_name(r)}" for r in free]
-        it, okd = QInputDialog.getItem(self, 'Add room', 'Room:', items, 0, False)
-        if okd:
-            rid = free[items.index(it)]['id']
+        ok = {r['id'] for r in free}
+        rid = ask_place(self, 'Add room', 'Room to add to this world:',
+                        PN.Places.of(doc).room_entries('id', want=lambda r: r['id'] in ok))
+        if rid is not None:
             self._op('Add room to world', lambda d: d.add_world_room(gid, rid))
 
     def _new_room(self):

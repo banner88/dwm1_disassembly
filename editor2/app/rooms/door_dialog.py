@@ -23,6 +23,8 @@ from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox,
                                QFormLayout, QGroupBox, QHBoxLayout, QLabel,
                                QSpinBox, QVBoxLayout)
 
+from editor2.core import place_names as PN
+from editor2.app.place_picker import PlacePicker
 from editor2.core.document import val
 from editor2.core.doors import is_edge
 from editor2.app.rooms.redirect_dialog import _Preview
@@ -50,10 +52,7 @@ def vanilla_doors(rend, mid, scr):
             seen.add((x, y))
             ds = str(e['dest'])
             dmid = int(ds.split('$')[-1], 16) if '$' in ds else val(ds)
-            try:
-                dname = rend.vanilla_name(dmid)
-            except Exception:
-                dname = f'${dmid:02X}'
+            dname = PN.with_id(PN.vanilla_name(dmid), dmid, True)
             kind = 'edge exit' if is_edge(x, y) else 'door'
             out.append((x, y, f'({x},{y}) {kind} → {dname}'))
     return out
@@ -103,15 +102,14 @@ class DoorDialog(QDialog):
 
         g = QGroupBox('Destination' if teleport else 'Other end')
         f = QFormLayout(g)
-        self.dst_room = QComboBox()
-        for r in self.doc.rooms:
-            if r.get('placeholder'):
-                continue
-            self.dst_room.addItem(f"${val(r['mapID']):02X}  {self.doc.room_name(r)}  (custom)",
-                                  ('room', r['id']))
-        self.dst_room.insertSeparator(self.dst_room.count())
-        for mid, name, _scr in self.rend.vanilla_rooms():
-            self.dst_room.addItem(f'${mid:02X}  {name}  (vanilla)', ('vanilla', mid))
+        # S143 (ARC CAP4b): one searchable place picker — your rooms by area, then
+        # the game's rooms in groups, names only
+        self.dst_room = PlacePicker()
+        pl = PN.Places.of(self.doc)
+        self.dst_room.set_entries(
+            [e._replace(value=('room', e.value)) for e in pl.room_entries('id')]
+            + [e._replace(value=('vanilla', e.value), group=f'{PN.GAME}: {e.group}')
+               for e in pl.vanilla_entries(self.rend.vanilla_rooms())])
         self.dst_screen = QComboBox()
         self.dst_door = QComboBox()
         self.dst_x = QSpinBox(); self.dst_x.setRange(0, 9)
@@ -355,7 +353,7 @@ _VANILLA_DOOR_CACHE = {}
 def vanilla_door_list(rend):
     """[(mid, room name, [(screen, x, y, label)])] — every vanilla door
     (exit cell), the second cell of a double door folded into the first."""
-    key = id(rend)
+    key = (id(rend), PN.SHOW_IDS)
     if key in _VANILLA_DOOR_CACHE:
         return _VANILLA_DOOR_CACHE[key]
     out = []
@@ -429,7 +427,7 @@ class DoorPropsDialog(QDialog):
         form.addRow('Name', self.name)
         form.addRow('This door', QLabel(end_place(self.doc, me)
                                         + ('' if self.vanilla else
-                                           f"   (now goes to {me['dest']} — connecting it makes it "
+                                           f"   (now goes to {PN.Places.of(self.doc).label(me['dest'])} — connecting it makes it "
                                            'a door)' if self.is_exit else
                                            '   (drag it on the canvas to move it)')))
         self.state_boxes = []
@@ -526,7 +524,8 @@ class DoorPropsDialog(QDialog):
             ex.setFlags(ex.flags() & ~Qt.ItemIsSelectable)
             self.tree.addTopLevelItem(ex)
             for end in plain:
-                it = QTreeWidgetItem([f"{end_place(self.doc, end)}   [now → {end['dest']}]"])
+                it = QTreeWidgetItem([f"{end_place(self.doc, end)}   "
+                                      f"[now → {PN.Places.of(self.doc).label(end['dest'])}]"])
                 it.setData(0, Qt.UserRole, ('door', end['id']))
                 ex.addChild(it)
             ex.setExpanded(True)
@@ -535,7 +534,7 @@ class DoorPropsDialog(QDialog):
             van.setFlags(van.flags() & ~Qt.ItemIsSelectable)
             self.tree.addTopLevelItem(van)
             for mid, name, doors in vanilla_door_list(self.rend):
-                ri = QTreeWidgetItem([f'${mid:02X} {name}'])
+                ri = QTreeWidgetItem([PN.with_id(PN.vanilla_name(mid), mid, True)])
                 ri.setFlags(ri.flags() & ~Qt.ItemIsSelectable)
                 van.addChild(ri)
                 for k, x, y, lab in doors:

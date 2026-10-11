@@ -40,6 +40,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QCheckBox, QComboBox, QDialog,
 
 from editor2.app.rooms import commands as C
 from editor2.app.rooms.rules_panel import WELL_KNOWN, well_known
+from editor2.core import place_names as PN
 from editor2.core import gates as G
 from editor2.core.document import val
 
@@ -66,13 +67,12 @@ class GateRuleDialog(QDialog):
                              'once_per_dive': True})
         v = QVBoxLayout(self)
         f = QFormLayout()
-        self.room = QComboBox()
-        for r in doc.rooms:
-            if r.get('placeholder'):
-                continue
-            rep = doc.gate_room_report(r)
-            mark = '' if rep['ready'] else '   ⚠ not ready'
-            self.room.addItem(f"${val(r['mapID']):02X} {doc.room_name(r)}{mark}", r['id'])
+        # S143 (ARC CAP4b): the searchable place picker, names only
+        from editor2.app.place_picker import PlacePicker
+        from editor2.core import place_names as PN
+        self.room = PlacePicker()
+        self.room.set_entries(PN.Places.of(doc).room_entries(
+            'id', mark=lambda r: '' if doc.gate_room_report(r)['ready'] else '   ⚠ not ready'))
         i = self.room.findData(rule.get('room'))
         self.room.setCurrentIndex(max(i, 0))
         self.room.currentIndexChanged.connect(self._room_changed)
@@ -436,7 +436,8 @@ class GatesTab(QWidget):
         frow.addWidget(b)
         sf.addRow('floors', frow)
         brow = QHBoxLayout()
-        self.set_boss = QComboBox()
+        from editor2.app.place_picker import PlacePicker
+        self.set_boss = PlacePicker()   # S143: searchable, names only
         self.set_boss.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
         self.set_boss.setMinimumContentsLength(28)
         self.set_boss.activated.connect(self._set_boss)
@@ -666,7 +667,8 @@ class GatesTab(QWidget):
         ents = doc.gate_entrances(g['id'])
         places = [f"{doc.room_name(r)} screen {k} ({e['x']},{e['y']})" for r, k, _n, e in ents]
         for _i, rd in doc.portal_redirects(g['id']):      # S117: re-routed vanilla portals
-            places.append(f"vanilla {rd['mapID']} screen {rd['screen']} portal ({rd['x']},{rd['y']})")
+            places.append(f"{PN.Places.of(doc).vanilla_label(val(rd['mapID']))} screen "
+                          f"{rd['screen']} portal ({rd['x']},{rd['y']})")
         if places:
             where = ', '.join(places[:3]) + (' …' if len(places) > 3 else '')
             ent = f" · entrance: {where}"
@@ -764,16 +766,14 @@ class GatesTab(QWidget):
         self.set_boss.addItem(f"Vanilla — {van['boss_room']}"
                               + ('  (⚠ runs that gate\'s story scripts)' if g.get('new') else ''),
                               None)
+        self.set_boss.add_header('Boss rooms of other gates')
         for x in self.gates:
             if x['id'] != g['id'] and not x.get('new'):
                 self.set_boss.addItem(f"Vanilla room of {x['name']} — {x['boss_room']}",
                                       f"vanilla:${int(x['boss_map'], 16):02X}")
-        for r in doc.rooms:
-            if r.get('placeholder'):
-                continue
-            mark = '' if r.get('gate_arrival') else '   ⚠ no arrival cell'
-            self.set_boss.addItem(f"Custom room ${val(r['mapID']):02X} {doc.room_name(r)}{mark}",
-                                  r['id'])
+        self.set_boss.add_entries([e._replace(group=f'Your rooms: {e.group}') for e in
+                                   PN.Places.of(doc).room_entries(
+            'id', mark=lambda r: '' if r.get('gate_arrival') else '   ⚠ no arrival cell')])
         i = self.set_boss.findData(gs.get('boss'))
         self.set_boss.setCurrentIndex(max(i, 0))
         self.set_boss.blockSignals(False)

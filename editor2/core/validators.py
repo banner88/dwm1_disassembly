@@ -12,6 +12,7 @@ Returns (errors, warnings): lists of strings. Errors abort the emit.
 import os
 import re
 
+from editor2.core.place_names import room_ref as _rref, mid_ref as _mref
 from . import formats as F
 from . import textenc as T
 from . import scriptgen as S
@@ -182,7 +183,7 @@ def validate(prj, generated=None):
             arr = (sc.get('trigger') or {}).get('arrival')
             if not arr or sc.get('disabled'):
                 continue
-            nm = f"room {r.get('id')} cutscene {sc.get('name') or sc.get('id')!r}"
+            nm = f"room {_rref(r)} cutscene {sc.get('name') or sc.get('id')!r}"
             if r.get('id') not in hub_screens:
                 warnings.append(f"{nm}: an arrival scene, but no hub rule sends the player "
                                 "to this room (custom.hub) — it never plays")
@@ -208,11 +209,11 @@ def validate(prj, generated=None):
                 except Exception:                      # noqa: BLE001
                     a = -1
                 if not 0xD92A <= a <= 0xD99A:
-                    errors.append(f"room {r.get('id')} screen {k}: step_counter.vanilla "
+                    errors.append(f"room {_rref(r)} screen {k}: step_counter.vanilla "
                                   f"{sc['vanilla']} is not one of the game's room-state "
                                   "counters ($D92A-$D99A)")
                 elif r.get('state_rules'):
-                    warnings.append(f"room {r.get('id')} screen {k}: has state rules, so it "
+                    warnings.append(f"room {_rref(r)} screen {k}: has state rules, so it "
                                     "keeps its own room-state counter (it does not follow "
                                     "the game's)")
 
@@ -360,7 +361,7 @@ def validate(prj, generated=None):
     # custom.rooms[].animation -> CustomAnimSrcTable (bank $71 entry 3; the
     # bank-$01 PerRoomVRAMDispatch rewrite). ROOM_DATA_FORMAT "Animated tiles".
     for r in rooms:
-        rid = r.get('id', F.hexb(F.val(r['mapID'])))
+        rid = _rref(r)
         try:
             _v, kind, _why = F.anim_source(r)
         except ValueError as e:
@@ -380,7 +381,7 @@ def validate(prj, generated=None):
         items = r.get('tile_anims') or []
         if not items:
             continue
-        rid = r.get('id', F.hexb(F.val(r['mapID'])))
+        rid = _rref(r)
         try:
             sheet = prj.room_sheet(r)
         except Exception as e:
@@ -411,7 +412,7 @@ def validate(prj, generated=None):
 
     # ------------------------------------------------- per-room structure
     for r in rooms:
-        rid = r.get('id', F.hexb(F.val(r['mapID'])))
+        rid = _rref(r)
         mid = F.val(r['mapID'])
         screens = prj.room_screens(r)
         if not screens:
@@ -456,7 +457,7 @@ def validate(prj, generated=None):
         # $6B-$6F are the compiler-owned ROM0 region, $70+ the bank $71
         # Custom26DDTable; PROJECT_STATE keystone S42 + S94).
         if not r.get('record'):
-            errors.append(f"room {rid}: mapID {F.hexb(mid)} requires a "
+            errors.append(f"room {rid} requires a "
                           "'record' (tileset/dims/collision threshold — "
                           "ROM0 rows $6B-$6F or Custom26DDTable $70+)")
         rec = r.get('record')
@@ -599,7 +600,7 @@ def validate(prj, generated=None):
         for (pm, ps), psrc in seen_keys.items():
             if pm == mid and (ps == scr_k or 'any' in (ps, scr_k)):
                 errors.append(
-                    f"{src}: vanilla ${mid:02X} screen {scr_k} already has an "
+                    f"{src}: {_mref([], mid)} screen {scr_k} already has an "
                     f"exit override from {psrc} (screen {ps}) — one override "
                     "per (room, screen); merge them into one entry")
         seen_keys[(mid, scr_k)] = src
@@ -644,8 +645,8 @@ def validate(prj, generated=None):
                     continue
                 if dmid >= 0x6B and F.val(e.get('gate_flag', 0)) != 0:
                     errors.append(
-                        f"{ctx} step {si}: exit to custom room "
-                        f"{F.hexb(dmid)} must use gate_flag=0 (flag=1 takes "
+                        f"{ctx} step {si}: exit to "
+                        f"{_mref(prj.rooms, dmid)} must use gate_flag=0 (flag=1 takes "
                         "the gate-entry path and garbage-indexes "
                         "GateFloorDataTable — CROSSBANK_ROOMS mapID audit)")
 
@@ -837,7 +838,7 @@ def validate(prj, generated=None):
                     if e.get('link'):
                         links[did] = e['link']
                     if 'dest' not in e:
-                        unlinked.append((did, r.get('id'), k, F.val(e['x']), F.val(e['y'])))
+                        unlinked.append((did, _rref(r), k, F.val(e['x']), F.val(e['y'])))
     for rd in prj.custom.get('entrance_redirects') or []:
         did = rd.get('door')
         if did:
@@ -922,7 +923,7 @@ def _validate_state(prj, r, rid, i, v, st, n_states, errors, warnings):
             "BLANK, no crash) — verify in PyBoy")
     # S117b: the hardware sprite limits (10 per line, 40 on screen) with the
     # player + 3 monsters (formats.sprite_budget; user: "Just warning is fine")
-    for msg in F.sprite_budget(st.get('npcs', [])):
+    for msg in F.sprite_budget(st.get('npcs', []), party=F.party_walks(r)):   # S143
         warnings.append(f"{tag}: {msg}")
     try:
         prj.resolve_layout(st['layout'], ctx=tag)
@@ -1033,8 +1034,8 @@ def _validate_state(prj, r, rid, i, v, st, n_states, errors, warnings):
             dscreens = prj.room_screens(dr) if not dr.get('placeholder') else {}
             if dscreens and (sb & 0x0F) not in dscreens:
                 errors.append(
-                    f"{tag}: exit to {F.hexb(dmid)} arrives on screen "
-                    f"{sb & 0x0F} (screen_byte {F.hexb(sb)}), which that room "
+                    f"{tag}: exit to {_mref(prj.rooms, dmid)} arrives on screen "
+                    f"{sb & 0x0F}, which that room "
                     "does not have — the player would land off-map (KEY_LESSONS S40)")
         ex, ey = F.val(e.get('x')), F.val(e.get('y'))
         edge = _edge_neighbour(prj, r, i, ex, ey)
@@ -1280,10 +1281,10 @@ def _validate_gates(prj, rooms, errors, warnings):
     from .project import flag_persistent
     for r in rooms:
         if 'can_save' in r and not isinstance(r['can_save'], bool):
-            errors.append(f"room {r.get('id')}: can_save must be true/false")
+            errors.append(f"room {_rref(r)}: can_save must be true/false")
         enc = r.get('encounters') or {}
         if enc.get('follow_gate') and not enc.get('enabled'):
-            warnings.append(f"room {r.get('id')}: encounters.follow_gate set but "
+            warnings.append(f"room {_rref(r)}: encounters.follow_gate set but "
                             "encounters are not enabled — no battles")
     # ---- per-gate settings + boss floors (S101, P3.7b part 2)
     try:
@@ -1297,25 +1298,25 @@ def _validate_gates(prj, rooms, errors, warnings):
         r = prj.room_by_id(c['boss_room'])
         if r.get('can_save') is True:
             warnings.append(
-                f"room {r.get('id')}: boss room of gate {gid} but saving is allowed "
+                f"room {_rref(r)}: boss room of gate {gid} but saving is allowed "
                 "— vanilla refuses the JOURNAL in every boss room")
         if prj.gate_rooms().get(r.get('id')):
             warnings.append(
-                f"room {r.get('id')}: gate {gid}'s boss room is also served on "
+                f"room {_rref(r)}: gate {gid}'s boss room is also served on "
                 "ordinary floors (custom.gate_inserts)")
         enc = r.get('encounters') or {}
         if enc.get('enabled') and not enc.get('follow_gate') and 'list' not in enc:
             errors.append(
-                f"room {r.get('id')}: boss room of gate {gid} with a FIXED encounter "
+                f"room {_rref(r)}: boss room of gate {gid} with a FIXED encounter "
                 "pool — pinning rewrites the current gate/floor every step")
         if F.val(r['mapID']) > 0x7F and not r.get('music'):
             warnings.append(
-                f"room {r.get('id')}: boss room map id {F.hexb(F.val(r['mapID']))} is "
+                f"room {_rref(r)}: this boss room is "
                 "past the $7F room-music table — the floor before the boss plays "
                 "the gate theme")
         if not r.get('music'):
             warnings.append(
-                f"room {r.get('id')}: boss room of gate {gid} has no song — the "
+                f"room {_rref(r)}: boss room of gate {gid} has no song — the "
                 "gate's song (or the gate theme $34) keeps playing (vanilla boss "
                 "rooms have their own boss song, which starts on the floor before)")
     # ---- new gates (S115, ROADMAP NG1) + gate entrances
@@ -1329,7 +1330,7 @@ def _validate_gates(prj, rooms, errors, warnings):
                     if not G.is_gate_entrance(e):
                         continue
                     gid = G.entrance_gate(e)
-                    where = f"room {r.get('id')} screen {k} ({e.get('x')},{e.get('y')})"
+                    where = f"room {_rref(r)} screen {k} ({e.get('x')},{e.get('y')})"
                     if gid is None or not G.gate_exists(prj.custom, gid):
                         errors.append(
                             f"{where}: gate entrance to gate {e.get('dest')!r}, which is "
@@ -1341,9 +1342,9 @@ def _validate_gates(prj, rooms, errors, warnings):
         if G.is_gate_entrance(rd):
             gid = G.entrance_gate(rd)
             if gid is not None and G.gate_exists(prj.custom, gid):
-                entered.setdefault(gid, []).append(f"vanilla map {rd.get('mapID')}")
+                entered.setdefault(gid, []).append(_mref([], rd.get('mapID')))
             else:
-                errors.append(f"entrance_redirects ({rd.get('mapID')}): gate entrance "
+                errors.append(f"entrance_redirects ({_mref([], rd.get('mapID'))}): gate entrance "
                               f"to undefined gate {rd.get('dest')!r}")
     for gid, c in sorted(cfg.items()):
         if not c.get('new'):
@@ -1363,7 +1364,7 @@ def _validate_gates(prj, rooms, errors, warnings):
         if not c['boss_room']:
             warnings.append(
                 f"new gate {gid} ({c['name']}) ends in a VANILLA boss room "
-                f"({F.hexb(c['boss_map'])}): its vanilla scripts run unchanged — they "
+                f"({_mref([], c['boss_map'])}): its vanilla scripts run unchanged — they "
                 "also mark the ORIGINAL gate cleared and play its King speech (this "
                 "gate's own cleared flag, which stops its swirls, is still set by the "
                 "win). Give it a custom boss room for its own ending")
@@ -1447,7 +1448,7 @@ def _validate_gates(prj, rooms, errors, warnings):
         for rd in prj.custom.get('entrance_redirects') or []:
             try:
                 if prj.resolve_dest(rd.get('dest')) == mid:
-                    ways_in.append(f"vanilla map {rd.get('mapID')}")
+                    ways_in.append(_mref([], rd.get('mapID')))
             except Exception:
                 pass
         if ways_in:

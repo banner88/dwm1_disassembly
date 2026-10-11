@@ -6459,3 +6459,34 @@ copied scripts, but never a string that is also a flag / check / script / room n
 unconnected because a door link is two-way). **Rule:** when an editor op copies an object, list
 every ID it holds and decide for each kind — own it (scripts, texts, doors, layouts, tilesets) or
 share it on purpose (flags, quests) — and test the copy by EDITING it and reading the original.
+
+## S143 — places by name (ROADMAP ARC CAP4b)
+
+**Hiding an id means the NAME must become an id — and a scan with a negative control is the
+only way to know none is left.** **Symptom (S143 audit):** ~100 places printed map ids, in 28
+pickers re-implemented ~20 times, and room names were not unique (Make editable twice = two
+"GreatTree"), so hiding the id would have made two rooms indistinguishable; the game's own
+table had five rooms of one name. **Fix:** one module for words (`place_names`), one picker,
+unique names enforced at every creation path + renamed on open, the game's duplicates named by
+what they are (measured in the disassembly: the Castle's data under unused ids). **Rules:**
+(1) before hiding an identifier, make the visible name unique at EVERY place an object is
+created (new, copy, clone, import, migration) — a check at rename time alone is not enough;
+(2) prove "nothing shows an id" with a scan of every widget text (hidden pages too) on a
+generated project at scale AND run the same scan on the old code — S143's found 4,968 on the
+S142 code and 0 after; a scan that finds nothing on the old code is not testing anything.
+
+**A QComboBox with group-header rows: appending rows to an empty model makes row 0 current —
+the header.** **Symptom (S143, test_app):** a world dialog's room picker returned `None`
+(KeyError in `CellPicker.set_room`). **Root cause:** `QStandardItemModel.appendRow` on an empty
+combo sets the current index to 0 even when that row is a disabled header. **Fix:**
+`PlacePicker.add_entries` re-selects the first place, `setCurrentIndex` skips header rows.
+**Rule:** a combo whose rows are not all choices must own "what is current" — never rely on
+Qt's default row.
+
+**A warning that assumes the walking party — check rooms where the scene replaces it.**
+**Symptom (user S143):** the Arena Battle room copy warned "row 5 has 2 NPCs … shows only 1".
+**Root cause (PyBoy on the user's save):** in `$5D` the party is drawn as the room's own NPCs
+(`$E0` / `$E1-$E3`) and the match script holds the player; the warning added the walking party
+(8 objects a line) on top. **Fix:** `formats.party_walks` → `sprite_budget(party=False)`.
+**Rule:** a hardware-budget warning must model what the game really puts on screen in that
+room; when a vanilla room "breaks" the rule the editor warns about, measure that room first.

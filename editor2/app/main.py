@@ -30,6 +30,7 @@ from editor2.app.build_worker import BuildWorker
 from editor2.app.session import REPO, Session
 from editor2.app.rooms.tab import RoomsTab
 from editor2.core import emulator
+from editor2.core import place_names as PN
 
 ORIGINAL_MD5 = '1ca6579359f21d8e27b446f865bf6b83'   # PROJECT_STATE canonical
 
@@ -103,6 +104,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.settings = QSettings('dwm1_disassembly', 'DWM1Editor')
+        PN.SHOW_IDS = self.settings.value('view/show_ids', False) in (True, 'true', '1', 1)
         self.session = None
         self.worker = None
         self.last_result = None
@@ -454,6 +456,15 @@ class MainWindow(QMainWindow):
                                (True, 'true', '1', 1))
         self.a_mute.toggled.connect(self._mute_toggled)
         m_view.addAction(self.a_mute)
+        # S143 (ROADMAP ARC CAP4b; user: "view show in case I want them"): places are
+        # shown by name only; this puts each place's technical id (map id / region /
+        # game id) after its name everywhere — for debugging in SameBoy
+        m_view.addSeparator()
+        self.a_ids = QAction('Show technical ids (map ids, regions)', self)
+        self.a_ids.setCheckable(True)
+        self.a_ids.setChecked(PN.SHOW_IDS)
+        self.a_ids.toggled.connect(self._ids_toggled)
+        m_view.addAction(self.a_ids)
 
         m_help = self.menuBar().addMenu('&Help')
         a_help = QAction('Editor &help', self)
@@ -626,7 +637,7 @@ class MainWindow(QMainWindow):
             rep = []
         if not rep:
             return
-        lines = '\n'.join(f"• {name}: tiles in slots {rng(sl)} move with ${mid:02X}'s "
+        lines = '\n'.join(f"• {name}: tiles in slots {rng(sl)} move with {PN.vanilla_name(mid)}'s "
                           'animation' for _rid, name, sl, mid in rep)
         self.log.appendPlainText('ANIMATION: unintended moving tiles found —\n' + lines)
         if QMessageBox.question(
@@ -696,6 +707,13 @@ class MainWindow(QMainWindow):
         if r == QMessageBox.Save:
             return self.save()
         return r == QMessageBox.Discard
+
+    def _ids_toggled(self, on):
+        """S143: View > Show technical ids — every view re-fills its labels."""
+        PN.SHOW_IDS = bool(on)
+        self.settings.setValue('view/show_ids', bool(on))
+        if self.session is not None:
+            self.session.structureChanged.emit()
 
     def _mute_toggled(self, on):
         self.settings.setValue('playback/mute', bool(on))

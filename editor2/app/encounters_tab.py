@@ -784,7 +784,8 @@ class RoomEditor(QWidget):
         self.b = b
         self._busy = True
         r = doc.room(rid)
-        self.title.setText(f"Room {rid} ({r.get('mapID')})")
+        from editor2.core import place_names as PN           # S143: names only
+        self.title.setText(f"Room {PN.Places.of(doc).room_label(r)}")
         self.mode_btn[b['mode']].setChecked(True)
         i = self.gate.findData(int(b.get('gate_id') or 0))
         self.gate.setCurrentIndex(max(i, 0))
@@ -1041,13 +1042,16 @@ class EncountersTab(QWidget):
             self.gate_ids.append(g['id'])
         self.room_w.clear()
         self.room_ids = []
-        for r in doc.rooms:
-            if r.get('placeholder'):
-                continue
+        from editor2.core import place_names as PN           # S143: names only, by area
+        pl = PN.Places.of(doc)
+        for e in pl.room_entries('id'):
+            r = pl.by_id[e.value]
             b = doc.room_battles(r['id'])
             txt = {'off': 'no battles', 'gate': f"gate {b['gate_id']} floor {int(b['floor']) + 1}",
                    'follow': "the dive's list", 'own': f"own list {b['list']}"}[b['mode']]
-            it = QListWidgetItem(f"{r['id']} ({r.get('mapID')}) — {txt}"
+            it = QListWidgetItem(f"{e.label}"
+                                 + (f'   [{e.group}]' if e.group != PN.NO_AREA else '')
+                                 + f" — {txt}"
                                  + (f", rate {b['rate']}" if b['rate'] is not None else ''))
             if b['mode'] != 'off':
                 _bold(it)

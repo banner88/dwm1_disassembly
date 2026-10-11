@@ -34,6 +34,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QCheckBox, QComboBox, QFormLay
                                QTableWidget, QTableWidgetItem, QTabWidget, QVBoxLayout,
                                QWidget)
 
+from editor2.core import place_names as PN
 from editor2.app.rooms import commands as C
 from editor2.core import services as SV
 
@@ -338,7 +339,7 @@ class ServicesTab(QWidget):
             self.set_name.setText(st['name'])
             b = SV.block(st['kind'], self._repo())
             self.set_kind.setText(f"{KIND_NAMES.get(st['kind'])} — the game's "
-                                  f"{b.get('vanilla_npc') or 'lines'}")
+                                  f"{PN.strip_ids(b.get('vanilla_npc')) or 'lines'}")
             self.set_speaker.setText(st['speaker'] or '')
             self.set_voice.setCurrentIndex(max(0, self.set_voice.findData(st['voice'])))
             self.set_every.setChecked(st['everywhere'])

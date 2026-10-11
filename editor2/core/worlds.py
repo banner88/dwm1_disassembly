@@ -224,7 +224,9 @@ class WorldsMixin:
                  int(G._val(rd['y'])))
             if c not in seen:
                 seen.add(c)
-                out.append(c + (f"game room ${mid:02X}, screen {c[2]} ({c[3]},{c[4]})",))
+                from . import place_names as PN                # S143: names only
+                out.append(c + (f"game room {PN.with_id(PN.vanilla_name(mid), mid, True)}, "
+                                f"screen {c[2]} ({c[3]},{c[4]})",))
         return out
 
     def world_room_effective_save(self, gid, room):

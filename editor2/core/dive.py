@@ -261,7 +261,9 @@ def special_walk(load, start_map, start_cell):
             how[nxt] = (kind, n)
             q.append(nxt)
     if goal is None:
-        raise ValueError(f'no stairs reachable from map ${start_map:02X} {start_cell}')
+        from editor2.core import place_names as PN
+        raise ValueError(f'no stairs reachable from {PN.with_id(PN.vanilla_name(start_map), start_map, True)} '
+                         f'{start_cell}')
     # unwind
     seq = []                                    # (kind, from state, to map, cell entered)
     _s, st, kind, n = goal

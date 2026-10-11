@@ -128,6 +128,12 @@ class Snapshot:
         return len(self.rest) + sum(len(b) for v in self.lists.values() for b in v)
 
 
+def _vn(mid):
+    """S143 (ARC CAP4b): a game room in words (place_names), for notes and errors."""
+    from editor2.core import place_names as PN
+    return PN.with_id(PN.vanilla_name(int(mid)), int(mid), True)
+
+
 def val(v):
     if isinstance(v, int):
         return v
@@ -237,7 +243,7 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
                 g, b, w, h, thr = self.LEGACY_RECORDS[mid]
                 r['record'] = {'gfx_id': g, 'gfx_bank': b, 'width_px': w,
                                'height_px': h, 'collision_threshold': thr}
-                notes.append(f"room {r.get('id')} (${mid:02X}): added the legacy "
+                notes.append(f"room {r.get('name') or r.get('id')}: added the legacy "
                              "hand-patched $26DD record (S94 schema: record required)")
         # S96: scripts cloned before the handler-arity table (S92 extract_room
         # on decompile_script's counts) are regrouped — identical words, so the
@@ -263,9 +269,30 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         self._migrate_pin_flags(notes)
         # S127 r2: breeder / first-visit words typed past the box width are wrapped
         self._migrate_service_words(notes)
+        # S143 (ARC CAP4b): room names are unique (the editor shows places by name)
+        self._migrate_unique_names(notes)
         if notes:
             self.dirty = True
         return notes
+
+    def _migrate_unique_names(self, notes):
+        """S143 (user S143: "Yes"): a room whose name another room (earlier in the
+        list) already has is renamed "name 2", "name 3"… — the editor shows places
+        by name only, so two rooms of one name could not be told apart. Names are
+        editor-only (the compiler writes them into comments at most): no byte moves."""
+        from editor2.core.place_names import next_free_name
+        taken = set()
+        for r in self.custom.get('rooms', []):
+            if r.get('placeholder'):
+                continue
+            nm = (r.get('name') or r.get('id') or 'Room').strip() or 'Room'
+            if nm.casefold() in taken:
+                new = next_free_name(nm, taken)
+                notes.append(f'room "{nm}" renamed "{new}": another room already had '
+                             'that name (S143: names are unique)')
+                r['name'] = new
+                nm = new
+            taken.add(nm.casefold())
 
     @staticmethod
     def _detect_indent(src):
@@ -763,12 +790,115 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
     def room_name(self, room):
         return room.get('name') or room.get('id', '?')
 
+    # S143 (ROADMAP ARC CAP4b, user S142 "Yes all named"): a room is known by its
+    # NAME in the editor (place_names), so names are unique among the project's
+    # rooms (case-insensitive, placeholders ignored)
+    def taken_room_names(self, exclude=None):
+        return {(r.get('name') or r.get('id') or '').strip().casefold()
+                for r in self.rooms if not r.get('placeholder') and r.get('id') != exclude}
+
+    def unique_room_name(self, base, exclude=None):
+        """`base` if no other room has it, else "base 2", "base 3"…"""
+        from editor2.core.place_names import next_free_name
+        return next_free_name(base, self.taken_room_names(exclude))
+
+    def room_name_taken(self, name, exclude=None):
+        return (name or '').strip().casefold() in self.taken_room_names(exclude)
+
     def rename_room(self, room_id, name):
+        """Raises ValueError when another room already has the name (S143)."""
         r = self.room(room_id)
+        name = (name or '').strip()
+        if not name:
+            raise ValueError('a room needs a name')
+        if self.room_name_taken(name, exclude=room_id):
+            raise ValueError(f'another room is already called "{name}" — '
+                             f'try "{self.unique_room_name(name, exclude=room_id)}"')
         old = r.get('name')
         r['name'] = name
         self.touch()
         return old
+
+    # ------------------------------------------------ areas (S143, ARC CAP4b)
+    # One level of named folders for rooms (user S143: "One level"): a room's
+    # `area` (absent = no area); `custom._editor.areas` keeps the order and any
+    # area with no room yet. Editor-only — the compiler never reads either.
+    def areas(self):
+        """Area names in order: the stored order, then any a room names."""
+        ed = (self.custom.get('_editor') or {}).get('areas') or []
+        out, seen = [], set()
+        for a in list(ed) + [(r.get('area') or '').strip() for r in self.rooms
+                             if not r.get('placeholder')]:
+            a = (a or '').strip()
+            if a and a.casefold() not in seen:
+                seen.add(a.casefold())
+                out.append(a)
+        return out
+
+    def _store_areas(self, names):
+        ed = self.custom.setdefault('_editor', {})
+        if names:
+            ed['areas'] = list(names)
+        else:
+            ed.pop('areas', None)
+            if not ed:
+                self.custom.pop('_editor', None)
+
+    def add_area(self, name):
+        name = (name or '').strip()
+        if not name:
+            raise ValueError('an area needs a name')
+        cur = self.areas()
+        if name.casefold() in {a.casefold() for a in cur}:
+            raise ValueError(f'there is already an area called "{name}"')
+        self._store_areas(cur + [name])
+        self.touch()
+        return name
+
+    def set_room_area(self, room_id, area):
+        r = self.room(room_id)
+        old = r.get('area')
+        area = (area or '').strip()
+        cur = self.areas()
+        if area:
+            match = next((a for a in cur if a.casefold() == area.casefold()), None)
+            area = match or area
+            r['area'] = area
+            if match is None:
+                self._store_areas(cur + [area])
+        else:
+            r.pop('area', None)
+        self.touch()
+        return old
+
+    def rename_area(self, old, new):
+        new = (new or '').strip()
+        if not new:
+            raise ValueError('an area needs a name')
+        cur = self.areas()
+        if new.casefold() != old.casefold() and new.casefold() in {a.casefold() for a in cur}:
+            raise ValueError(f'there is already an area called "{new}"')
+        for r in self.rooms:
+            if (r.get('area') or '').strip().casefold() == old.casefold():
+                r['area'] = new
+        self._store_areas([new if a.casefold() == old.casefold() else a for a in cur])
+        self.touch()
+
+    def delete_area(self, name):
+        """The area goes; its rooms keep existing with no area."""
+        for r in self.rooms:
+            if (r.get('area') or '').strip().casefold() == name.casefold():
+                r.pop('area', None)
+        self._store_areas([a for a in self.areas() if a.casefold() != name.casefold()])
+        self.touch()
+
+    def move_area(self, name, delta):
+        cur = self.areas()
+        i = next(k for k, a in enumerate(cur) if a.casefold() == name.casefold())
+        j = max(0, min(len(cur) - 1, i + delta))
+        cur.insert(j, cur.pop(i))
+        self._store_areas(cur)
+        self.touch()
 
     def _slug(self, name):
         out = ''.join(ch.lower() if ch.isalnum() else '_' for ch in name).strip('_')
@@ -784,6 +914,7 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         spec = importlib.util.spec_from_file_location('_extract_room', path)
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)
+        name = self.unique_room_name(name)           # S143: names are unique
         rid = self.unique_room_id(self._slug(name))
         target = self.next_free_mapid()
         room, layouts, palette, scripts, music, _rep = mod.extract(
@@ -971,6 +1102,7 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         appended in the source's declaration order (keeps the base+2 attr
         stride when the source's items were consecutive)."""
         src = self.room(room_id)
+        name = self.unique_room_name(name)           # S143: names are unique
         rid = self.unique_room_id(self._slug(name))
         room = copy.deepcopy(src)
         room['id'] = rid
@@ -1203,6 +1335,7 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         sheet (bank $28, threshold $30) in its colours (a new project palette)
         and starts on the theme's plain floor; source_mid is then ignored
         ($00 — the byte is vestigial at run time, PROJECT_COMPILER §2.35)."""
+        name = self.unique_room_name(name)           # S143: names are unique
         if gate_theme is not None:
             return self._new_theme_room(name, int(gate_theme), renderer)
         rid = self.unique_room_id(self._slug(name))
@@ -1267,6 +1400,7 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         from editor2.core.maze import THEME_BANK, THEME_THRESHOLD, N_THEMES
         if not 0 <= t < N_THEMES:
             raise ValueError(f'gate theme {t}: 0-15')
+        name = self.unique_room_name(name)           # S143: names are unique
         rid = self.unique_room_id(self._slug(name))
         rec = {'gfx_id': hexs(t), 'gfx_bank': hexs(THEME_BANK), 'width_px': 160,
                'height_px': 128, 'collision_threshold': hexs(THEME_THRESHOLD)}
@@ -1834,7 +1968,7 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
                 scr['step_counter']['vanilla'] = f'0x{a:04X}'
                 done += 1
             if done:
-                notes.append(f"room {rid} (a copy of room ${src:02X}): its room states now "
+                notes.append(f"room {r.get('name') or rid} (a copy of {_vn(src)}): its room states now "
                              "follow the game's own (the story's changes reach the copy) — "
                              f"{done} screen(s)")
 
@@ -2109,8 +2243,8 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         cur = self.room_animation(room)
         if cur['map'] != src and cur['slots'] and not switch_ok:
             raise AnimationSwitchNeeded(
-                f"This room plays the animation of ${cur['map']:02X} "
-                f"({cur['text']}). Tiles from ${src:02X} only move with ${src:02X}'s "
+                f"This room plays the animation of {_vn(cur['map'])} "
+                f"({cur['text']}). Tiles from {_vn(src)} only move with {_vn(src)}'s "
                 f"animation — switching stops the current one.")
         rec = room['record']
         tid = rec.get('tileset')
@@ -2177,14 +2311,14 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
                'pal': mt.get('pal', 0), 'src': 'borrowed'}
         self.add_metatile(tid, new['name'], out, new['pal'], src='borrowed')
         br = mt['tiles'][3] & 0x7F
-        note = [f"animated like ${src:02X}: slots {A.rng(need)} hold its graphics"]
+        note = [f"animated like {_vn(src)}: slots {A.rng(need)} hold its graphics"]
         if cur['map'] != src:
-            note.append(f"this room's animation is now ${src:02X}'s")
+            note.append(f"this room's animation is now {_vn(src)}'s")
         if moved:
             note.append('moved ' + ', '.join(f'{a}->{b}' for a, b in moved))
         if br in src_slots and (br < thr) != (br < src_threshold):
             note.append(f"slot {br} is on the {'WALL' if br < thr else 'WALKABLE'} side here "
-                        f"({'wall' if br < src_threshold else 'walkable'} in ${src:02X}) — "
+                        f"({'wall' if br < src_threshold else 'walkable'} in {_vn(src)}) — "
                         'an animated slot cannot move, so walkability follows this room')
         self.last_import_note = '; '.join(note)
         self.touch()

@@ -1,5 +1,77 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-10 (Session 141 — **ROADMAP ARC CAP3b BUILT: REGIONS IN THE GAME'S OWN MOVES —
+> HOME AFTER A LOST BATTLE / A WARPWING, THE BREEDING CEREMONY'S RETURN, A ROOM SERVED ON A GATE FLOOR,
+> THE BOSS FLOOR — EACH LANDS IN THE RIGHT REGION (PYBOY ON THE USER'S SAVE); PLAY HERE FROM A SAVE IN A
+> PLACE THE BUILD LACKS FIXED**
+> (user: "Continue on the 4 mb expansion" → the CAP3b audit (no engine defect found by reading; the
+> remaining items are walks) → "I dont really understand the story state hub and arena stuff or why all
+> this is necessary" → the plain version + a SMALL test (lose, breed, gate, WarpWing in region 2; the
+> story-state item dropped: `story_state.py` has no map id or region in it) → "Sure go ahead, check
+> CAP3b."; S140 USER-CONFIRMED before the session). **Built S141; USER-CONFIRMED 2026-10-11 10:18 ("Everything works", r3)** — r1 tested by
+> the user 2026-10-10 23:51: "After breeding, an NPC disappears and the one in the lower right corner
+> glitches and becomes letters" → r2 (the sheets reloaded at the menu's close) → the user 2026-10-11 09:18:
+> "its still glitching WHILE menu is open" → **r3** (below: a custom room's NPC sheets 3-5 in VRAM bank 1).
+> Test ROMs: `DWM-S141-dial-test.gbc` (`864fb4fb…`, patched; r1), `DWM-S141r2-dial-test.gbc` (`acb77bba…`,
+> patched; r2) and **`DWM-S141r3-dial-test.gbc`** (`cff73778…`, patched; the same project on the r3 engine)
+> — the user's project + 8 BRAND-NEW rooms, the
+> DIAL HALLS: TEST rooms in REGION 2 — MOONDIAL HALL / MOON HEARTH / MOON CELLAR / MOON DAIS, project
+> mapIDs `$276-$279` — and region-0 DECOYS with the same map ids `$76-$79` — SUNDIAL HALL / SUN HEARTH /
+> SUN CELLAR / SUN DAIS, whose signs say "BUG" if the game sends you there; region 1 empty. MOONDIAL
+> HALL: a GRANDPA, a BRUISER that always wins, a WING KEEPER (a WarpWing), a guide to SUNDIAL HALL;
+> SUNDIAL HALL: the portal into the NEW gate 33 DIAL GATE (copy of Beginning, 4 floors: floor 2 =
+> MOON CELLAR always, floor 4 = the boss room MOON DAIS with the DIAL WARDEN, who clears the gate and
+> sends you home) + a BRUISER; MOON HEARTH = the HUB while flag `s141_hub` is ON (arrival lines for
+> lost / WarpWing / home; its KEEPER switches the hub off and on); way in: the S141 DEMO NPC in
+> Cities_FOUNT (3, 4), which turns the hub on). Its project: `examples/s141_dial_demo/` (rebuilds the
+> r3 md5 on the r3 engine).
+> **Measured — NEW `tools/walk_regions.py`** (PyBoy, the user's `.sav` — a stale region-3 save, so
+> CONTINUE goes home first): 47 checks, 0 failed: the demo NPC → MOONDIAL HALL (`$76`, region 2); a
+> loss there → MOON HEARTH (`$77`, 2), "lost" arrival line, gold 3800 → 1900; the guide (a script warp)
+> → SUNDIAL HALL (`$76`, 0) and a loss there → MOON HEARTH (`$77`, 2 — `HubWarp`'s region across
+> regions); Grandpa BREED → the ceremony room `$08` (region 2 kept) → back in MOONDIAL HALL (`$D951`
+> `$F0`), the HATCH → `$08` → back (`$F1`, the egg hatched); the portal in SUNDIAL HALL (region 0) →
+> gate 33 floor 1 (region 0) → floor 2 = MOON CELLAR (`$78`, 2 — the gate insert's region) → its hole
+> → floor 3 → the WarpWing → MOON HEARTH ("WarpWing" line, sprites shown); the WarpWing on floor 1
+> (region 0) → MOON HEARTH (2); floor 4 = MOON DAIS (`$79`, 2 — `BossRegionEnter`) → the warden won →
+> `$17C1` ON (`GateBossWin` with the region) → home by the conversation's move ("home" line) → the
+> portal swirl in SUNDIAL HALL hidden; the hub off → a loss in region 2 → the Castle (region 2 kept,
+> the priest); Play here (the editor's playback engine + `play_setup.resolve`) from a new game, the
+> save and story step 5 into `$276` / `$76` / `$279`: 9 / 9 in the right region with the story flags.
+> `--negative` (bank $71 `HubWarp`'s `ld [wWarpRegion], a` → nops in the ROM copy): 4 FAILED — the two
+> moves home that cross regions (lose0, warpwing0) land in SUN HEARTH, region 0; the rest pass.
+> **Found + fixed (editor, `editor2/core/playback.py`):** Play here with **My save file** when the save
+> stands in a place the build lacks (the user's current save) stayed in the Castle ("the room did not
+> finish loading"): the base state was saved while `ContinueCheck`'s warp home was still pending, and
+> every Play here warp raced it. `_continue_save` now waits for a calm field (no transition, script or
+> box); base states are cached as `base2_` (pre-S141 ones dropped); the arrival check also compares
+> `wMapRegion`. KEY_LESSONS S141.
+> **r2 / r3 — found by the user, fixed (engine):** a custom room with 4+ distinct NPC sprites showed its
+> 4th / 5th NPC as letters / nothing while a WINDOWED screen was open (Grandpa, a master, "Take…", the
+> shop, the Vault, the farm, the egg appraiser, the namer) and after it: the room's
+> NPC sheets sit at `$8500 + c·$100`, sheets 3-5 = `$8800-$8AFF` = the BG tiles those screens load their
+> window graphics into (VRAM bank 0); the game reloads the sheets only after its FULL screens (bank $06
+> entry 4, now `ReloadNPCSheets`). Pre-existing since S117 / S126 / S127 (their demo rooms had few NPCs);
+> not a region matter. r2 reloaded them at the close (fixed "after" only); **r3** keeps a custom room's
+> sheets 3-5 in VRAM BANK 1 (unused tile area in the field): the page blocks of bank $0B `CmpRoom_4839` /
+> bank $06 `ReloadNPCSheets` and `NPCDrawSlot`'s two builder calls → NEW bank $77 entries 12-15
+> (`NpcSheetLoad0B` / `NpcSheetLoad06`: the vanilla page rules + a page ≥ `$88` copied to VRAM bank 1;
+> `NpcDrawPlain` / `NpcDrawMonster`: OAM attr bit 3 for a tile base ≥ `$80`), same size; `wNpcSheetIdx`
+> `$D560`; r2's bank $06 step change reverted. Measured: each windowed service on one NPC of a 5-NPC
+> room — every NPC piece on screen DURING the menu and after reads its room-load bytes (old: the shop
+> and the Vault wrong open + after); the walk's breed step checks the menu open twice and after (PASS;
+> `--negative-sheets` FAIL 3); a won battle there clean. Template re-pinned (`TEMPLATE_SIZE[$77]` 1967);
+> clean tree: `label6_4d5a` → `ReloadNPCSheets` + comments (byte-perfect). Example pin `7cd31035…`
+> (patched; S140's `c4c99542…` historical). KEY_LESSONS S141 r2 / r3.
+> **Not walked (scope agreed with the user):** an arena match from two regions, a world whose rooms are
+> in regions ≥ 1, a JOURNAL save inside a gate dive in region ≥ 1 — their tables are in the S140
+> census (`census_regions.py`); the lobby from region 3 was walked S140.
+> **r3 walk:** `walk_regions.py` on the r3 build, the user's save: 51 checks, 0 failed (+ the NPC
+> picture checks); `--negative` 4 failed, `--negative-sheets` 3 failed.
+> **Checks (r3):** verify_integrity PASS; test_compiler `--rom` ALL 1500 PASSED (+ `test_s141`); test_app
+> PASS; test_canvas `--rom` PASS. `EDITOR_REVISION` S141 (help 16_play_here, 67_services).
+> **Next:** CAP4 — the editor for hundreds of places (places by name, no map ids).
+
 > Last verified: 2026-10-10 (Session 140 — **ROADMAP ARC CAP3a BUILT: REGIONS — MORE THAN 128 PLACES;
 > A PLACE IS (REGION, MAP ID), THE REGION IS THE HIGH BYTE OF A PROJECT MAPID ($16B = REGION 1'S $6B),
 > EVERY PER-PLACE TABLE IS INDEXED BY A 16-BIT PLACE NUMBER, THE REGION IS SAVED ("X2")**

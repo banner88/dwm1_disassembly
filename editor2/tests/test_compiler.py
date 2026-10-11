@@ -10,6 +10,7 @@ step-counter region size, palette shape), text encoder round-trip shape.
 --rom adds: regression byte-identity (compat project == S53 reference md5)
 and the fixed build (delta confined to bank $60 + header checksums).
 """
+
 import copy
 import json
 import os
@@ -23,6 +24,7 @@ sys.path.insert(0, REPO)
 from editor2.core import compiler as C
 from editor2.core import validators as V
 from editor2.core.project import Project, ProjectError
+from editor2.core.place_names import room_ref as _room_ref   # S143
 
 EXAMPLE = os.path.join(REPO, 'editor2/example-project/project.json')
 ROM = os.path.join(REPO, 'data', 'DWM-original.gbc')   # S132 tests that need the original ROM
@@ -3336,7 +3338,7 @@ def test_sprite_budget_s117b():
     _o, _p, warns = compile_data(d)
     ok("S117b sprite limits: the build warns for a room row with 3+ NPCs",
        sum('sprite pieces' in x for x in warns) > n0 and
-       any(f"room {r['id']} screen {k}" in x and 'row 7 has' in x for x in warns),
+       any(f"room {_room_ref(r)} screen {k}" in x and 'row 7 has' in x for x in warns),
        str([x for x in warns if 'sprite pieces' in x][:2]))
 
 
@@ -8010,6 +8012,105 @@ def test_s142():
     shutil.rmtree(tmp, ignore_errors=True)
 
 
+def test_s143():
+    """S143 (ROADMAP ARC CAP4b; user: places by name, map ids hidden — shown only with View >
+    Show technical ids, areas one level, duplicate names renamed on open, the game's odd
+    rooms kept): place_names says every stored reference in words (room:$XX / room:$16B /
+    vanilla:$XX / hub / gate:N / a room id / a map id), the game's rooms have unique names
+    (the eight Castle-data ids, $5F), names are unique (Document.unique_room_name, Rename
+    refuses a taken one, the migration), areas are editor-only (the compiler ignores them:
+    the example builds the same files with areas), and a copy of the Arena Battle room
+    gets no walking-party sprite warning (formats.party_walks)."""
+    import json as _json
+    import shutil
+    import tempfile
+    from editor2.core import place_names as PN
+    from editor2.core import formats as F
+    from editor2.core.document import Document
+    data = _json.load(open(EXAMPLE))
+    rooms = [r for r in data['custom']['rooms'] if not r.get('placeholder')]
+    pl = PN.Places.of(data)
+    r0 = rooms[0]
+    m0 = int(str(r0['mapID']), 0)
+    nm0 = r0.get('name') or r0['id']
+    PN.SHOW_IDS = False
+    try:
+        ok("S143 a room reference in words (room:$XX, a room id, a map id)",
+           pl.label(f'room:${m0:02X}') == nm0 and pl.label(r0['id']) == nm0
+           and pl.label(m0) == nm0 and pl.label(r0['mapID']) == nm0, pl.label(m0))
+        ok("S143 game rooms, home, gates, a deleted room",
+           pl.label('vanilla:$01') in ('GreatTree', 'GreatTree (game room)')
+           and pl.label('hub') == 'home (the hub)' and 'Beginning' in pl.label('gate:0')
+           and pl.label('room:$E9') == 'a deleted room', pl.label('gate:0'))
+        vn = [PN.vanilla_name(m) for m in range(0x6B)
+              if PN.vanilla_name(m) != 'Unnamed game room']
+        ok("S143 every named game room has its own name (Castle copies, $5F)",
+           len(set(vn)) == len(vn) and PN.vanilla_name(0x0B) == 'Castle (unused copy 1)'
+           and PN.vanilla_name(0x22) == 'Castle (unused copy 8)'
+           and 'Item Shop' in PN.vanilla_name(0x5F), len(vn))
+        ok("S143 no hex in a label while Show technical ids is off",
+           not any('$' in PN.Places.of(data).room_label(r) for r in rooms))
+        PN.SHOW_IDS = True
+        ok("S143 Show technical ids: the id after the name (region too)",
+           pl.label(f'room:${m0:02X}') == f'{nm0}  [${m0:02X}]'
+           and PN.tech_id(0x16B) == 'region 1 $6B' and PN.tech_id(0x0B) == 'game $0B'
+           and PN.room_ref(r0) == f'"{nm0}" [{r0["id"]}, ${m0:02X}]', pl.label(m0))
+    finally:
+        PN.SHOW_IDS = False
+    ok("S143 next free name",
+       PN.next_free_name('Cave', {'cave', 'cave 2'}) == 'Cave 3'
+       and PN.next_free_name('Cave 7', {'cave 7'}) == 'Cave 8'
+       and PN.next_free_name('Hall', set()) == 'Hall')
+    tmp = tempfile.mkdtemp(prefix='s143_')
+    try:
+        pdir = os.path.join(tmp, 'p')
+        shutil.copytree(os.path.dirname(EXAMPLE), pdir, ignore=shutil.ignore_patterns('build'))
+        d = _json.load(open(os.path.join(pdir, 'project.json')))
+        rs = [r for r in d['custom']['rooms'] if not r.get('placeholder')]
+        rs[1]['name'] = rs[0].get('name') or rs[0]['id']
+        _json.dump(d, open(os.path.join(pdir, 'project.json'), 'w'), indent=1)
+        doc = Document(pdir)
+        nms = [doc.room_name(r) for r in doc.rooms if not r.get('placeholder')]
+        ok("S143 duplicate names renamed on open (a note)",
+           len({n.casefold() for n in nms}) == len(nms)
+           and any('renamed' in n for n in doc.migrations), doc.migrations[-2:])
+        a, b = [r['id'] for r in doc.rooms if not r.get('placeholder')][:2]
+        try:
+            doc.rename_room(b, doc.room_name(doc.room(a)).upper())
+            refused = False
+        except ValueError:
+            refused = True
+        c = doc.copy_room(a, doc.room_name(doc.room(a)))
+        ok("S143 Rename refuses a taken name (any case); Copy picks a free one",
+           refused and doc.room_name(doc.room(c)) != doc.room_name(doc.room(a)))
+        doc.set_room_area(a, 'Northlands')
+        doc.set_room_area(b, 'northlands')
+        doc.add_area('Empty one')
+        doc.rename_area('Northlands', 'North')
+        ok("S143 areas: one spelling, renamed together, kept in order, empty areas listed",
+           doc.areas() == ['North', 'Empty one'] and doc.room(b)['area'] == 'North', doc.areas())
+        doc.delete_area('North')
+        ok("S143 deleting an area keeps its rooms (no area)",
+           'area' not in doc.room(a) and doc.areas() == ['Empty one'])
+        # the compiler ignores areas: the same output files
+        base = _json.load(open(EXAMPLE))
+        with_areas = copy.deepcopy(base)
+        for k, r in enumerate(with_areas['custom']['rooms']):
+            r['area'] = ['A', 'B'][k % 2]
+        with_areas['custom'].setdefault('_editor', {})['areas'] = ['A', 'B']
+        o1, _p1, _w1 = compile_data(base)
+        o2, _p2, _w2 = compile_data(with_areas)
+        ok("S143 areas are editor-only (the compiler writes the same files)", o1 == o2)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    arena = {'source_mapID': '0x5D'}
+    npcs = [{'kind': 'npc', 'x': x, 'y': 5} for x in (6, 7)] + \
+           [{'kind': 'npc', 'x': 3, 'y': y} for y in range(4, 10)]
+    ok("S143 a copy of the Arena Battle room: no walking-party sprite warning (measured: its "
+       "NPCs are the party)", F.sprite_budget(npcs) and not F.sprite_budget(npcs, F.party_walks(arena))
+       and F.party_walks({'source_mapID': '0x01'}) and F.party_walks({}))
+
+
 def main():
     # 1. determinism + example compiles clean
     out1, prj, warns = compile_data(base())
@@ -8887,6 +8988,7 @@ def main():
     test_s140('--rom' in sys.argv)
     test_s141('--rom' in sys.argv)
     test_s142()
+    test_s143()
 
     if '--rom' in sys.argv:
         from editor2.core import builder as B

@@ -34,6 +34,10 @@ from editor2.core import builder as B           # noqa: E402
 
 
 def main():
+    # S143 (ROADMAP ARC CAP4b): the editor shows places by name only; on the command
+    # line every message also carries the room's id and map id (place_names.SHOW_IDS)
+    from editor2.core import place_names as PN
+    PN.SHOW_IDS = True
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     ap.add_argument('--project', required=True)
     ap.add_argument('--out')

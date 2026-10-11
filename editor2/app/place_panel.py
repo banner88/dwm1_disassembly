@@ -285,8 +285,9 @@ class PlacePanel(QWidget):
         self.rows = self._build_rows(p, self.state) if k else []
         scr = self._screen(p) if k else None
         if k == 'game':
-            where = (f'{_esc(self.s.renderer.vanilla_name(int(p["map"])))} '
-                     f'<span style="color:gray">(game room ${int(p["map"]):02X})</span>')
+            from editor2.core import place_names as PN         # S143: names only
+            where = (f'{_esc(PN.with_id(PN.vanilla_name(int(p["map"])), int(p["map"]), True))} '
+                     f'<span style="color:gray">(game room)</span>')
         elif k == 'room':
             where = _esc(self.s.doc.room_name(self._room(p)))
         else:

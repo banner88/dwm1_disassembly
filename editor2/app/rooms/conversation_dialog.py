@@ -178,14 +178,14 @@ def spec_problems(spec, doc=None):
 
 
 def _dest_choices(doc):
-    out = [('Home — the hub (World tab; the Castle without one)', 'hub'),
-           ('Castle — throne room (where vanilla bosses send you)', 'vanilla:$00')]
+    """S143 (ARC CAP4b): place_names entries — home, the Castle, your rooms by area."""
+    from editor2.core import place_names as PN
+    out = [PN.PlaceEntry('Home — the hub (World tab; the Castle without one)', 'hub',
+                         PN.SPECIAL, 'special', 'home hub castle'),
+           PN.PlaceEntry('Castle — throne room (where vanilla bosses send you)', 'vanilla:$00',
+                         PN.SPECIAL, 'special', 'castle throne room')]
     if doc is not None:
-        for r in doc.rooms:
-            if r.get('placeholder'):
-                continue
-            mid = int(str(r['mapID']), 0)
-            out.append((f'${mid:02X} {doc.room_name(r)}', f'room:${mid:02X}'))
+        out += PN.Places.of(doc).room_entries('dest')
     return out
 
 
@@ -197,14 +197,15 @@ class DestEditor(QWidget):
         self.mv, self.on_change = mv, on_change
         h = QHBoxLayout(self)
         h.setContentsMargins(0, 0, 0, 0)
-        self.room = QComboBox()
+        from editor2.app.place_picker import PlacePicker
+        from editor2.core import place_names as PN
+        self.room = PlacePicker()
         self.room.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
         self.room.setMinimumContentsLength(18)
-        for lab, d in _dest_choices(doc):
-            self.room.addItem(lab, d)
+        self.room.set_entries(_dest_choices(doc))
         i = self.room.findData(mv.get('dest'))
         if i < 0:
-            self.room.addItem(str(mv.get('dest')), mv.get('dest'))
+            self.room.addItem(PN.Places.of(doc).label(mv.get('dest')), mv.get('dest'))
             i = self.room.count() - 1
         self.room.setCurrentIndex(i)
         self.room.activated.connect(self._changed)
@@ -350,7 +351,9 @@ class ConversationDialog(QDialog):
         return self._n
 
     def _label(self, st):
-        return ConversationMixin.describe_step(st, self.enemy_name)
+        from editor2.core import place_names as PN           # S143: places by name
+        return ConversationMixin.describe_step(
+            st, self.enemy_name, PN.Places.of(self.doc).label if self.doc is not None else None)
 
     def _rebuild(self, select=None):
         self.tree.blockSignals(True)

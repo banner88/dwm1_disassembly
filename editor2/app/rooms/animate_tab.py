@@ -559,7 +559,9 @@ class AnimateTab(QWidget):
                 self._set_form_enabled(False)
         info = doc.room_animation(room) if room else None
         if info and info['map'] is not None:
-            self.van_state.setText(f"Copied here now: <b>${info['map']:02X}</b> — {info['text']}.")
+            from editor2.core import place_names as PN
+            self.van_state.setText(f"Copied here now: <b>{PN.with_id(PN.vanilla_name(info['map']), info['map'], True)}</b>"
+                                   f" — {info['text']}.")
         else:
             self.van_state.setText('No vanilla animation copied here.')
         self._refresh_form()

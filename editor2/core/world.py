@@ -45,6 +45,8 @@ def dest_key(doc, dest):
 
 
 def world_graph(doc, renderer=None, include_vanilla=False):
+    from editor2.core import place_names as PN       # S143 (ARC CAP4b): names only
+    pl = PN.Places.of(doc)
     nodes, edges = {}, []
 
     def node(key):
@@ -54,14 +56,10 @@ def world_graph(doc, renderer=None, include_vanilla=False):
             if key[0] == 'room':
                 r = doc.room(key[1])
                 nodes[key] = {'key': key, 'mapID': _v(r['mapID']), 'label': doc.room_name(r),
-                              'custom': True}
+                              'custom': True, 'area': (r.get('area') or '').strip()}
             else:
-                try:
-                    name = renderer.vanilla_name(key[1]) if renderer else ''
-                except Exception:
-                    name = ''
-                nodes[key] = {'key': key, 'mapID': key[1], 'label': name or f'${key[1]:02X}',
-                              'custom': False}
+                nodes[key] = {'key': key, 'mapID': key[1], 'label': pl.vanilla_label(key[1], ids=False),
+                              'custom': False, 'area': PN.GAME}
         return key
 
     for r in doc.rooms:
@@ -99,7 +97,7 @@ def world_graph(doc, renderer=None, include_vanilla=False):
                     got.add(sig)
                     edges.append({'a': a, 'b': b, 'kind': 'exit', 'both': False,
                                   'label': f"one-way exit: screen {k} ({_v(e['x'])},{_v(e['y'])})"
-                                           f" -> {e.get('dest')}"})
+                                           f" -> {pl.label(e.get('dest'))}"})
     # one-way redirects
     for rd in doc.redirects():
         if rd.get('door') or rd.get('twin_of'):
@@ -110,7 +108,7 @@ def world_graph(doc, renderer=None, include_vanilla=False):
         a = node(('vanilla', _v(rd['mapID'])))
         edges.append({'a': a, 'b': b, 'kind': 'redirect', 'both': False,
                       'label': f"vanilla door screen {_v(rd['screen'])} ({_v(rd['x'])},"
-                               f"{_v(rd['y'])}) re-pointed one-way -> {rd.get('dest')}"})
+                               f"{_v(rd['y'])}) re-pointed one-way -> {pl.label(rd.get('dest'))}"})
     # script warps (ops map_transition / talk move) of each room's scripts
     for r in doc.rooms:
         if r.get('placeholder'):
@@ -126,7 +124,10 @@ def world_graph(doc, renderer=None, include_vanilla=False):
                 if isinstance(op, list) and len(op) >= 3 and op[0] == 'op' and \
                         op[1] in ('map_transition', '0x0F', '0x0f'):
                     try:
-                        targets.append(_v(op[2]) & 0xFF)
+                        w = _v(op[2])
+                        # S143: a place's word carries its region in the high byte
+                        # (PROJECT_COMPILER §2.49); a game room's high byte is a gate flag
+                        targets.append(w if (w & 0xFF) >= 0x6B else w & 0xFF)
                     except Exception:
                         pass
             t = sc.get('talk') or {}
@@ -137,12 +138,12 @@ def world_graph(doc, renderer=None, include_vanilla=False):
                     if k2:
                         b = node(k2)
                         edges.append({'a': a, 'b': b, 'kind': 'warp', 'both': False,
-                                      'label': f"script {sid} ({part}) moves the player"})
+                                      'label': f"a conversation ({part}) moves the player"})
             for mid in targets:
                 b = node(dest_key(doc, f'{"room" if mid >= 0x6B else "vanilla"}:${mid:02X}'))
                 if b:
                     edges.append({'a': a, 'b': b, 'kind': 'warp', 'both': False,
-                                  'label': f"script {sid} warps (map_transition ${mid:02X})"})
+                                  'label': f"a script warps the player to {pl.mid_label(mid)}"})
     # the vanilla world
     if include_vanilla and renderer is not None:
         pairs = set()
@@ -159,7 +160,7 @@ def world_graph(doc, renderer=None, include_vanilla=False):
                             pairs.add((mid, b))
                             edges.append({'a': node(('vanilla', mid)), 'b': node(b),
                                           'kind': 'vanilla', 'both': False,
-                                          'label': f"vanilla exit ${mid:02X} -> {e['dest']}"})
+                                          'label': f"game exit {pl.vanilla_label(mid)} -> {pl.label(e['dest'])}"})
     return list(nodes.values()), edges
 
 

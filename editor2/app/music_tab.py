@@ -675,7 +675,9 @@ class MusicTab(QWidget):
                          + (f"{s['length_frames'] / 59.73:.1f} s" if s['length_frames']
                             else 'loops'))
             if s['rooms']:
-                lines.append('rooms: ' + ', '.join(s['rooms']))
+                import re
+                lines.append('rooms: ' + ', '.join(re.sub(r'^\$[0-9A-Fa-f]{2} ', '', x)
+                                                    for x in s['rooms']))
             if s['scripts']:
                 lines.append('scenes: ' + ', '.join(s['scripts']))
             if s['code']:
@@ -816,32 +818,35 @@ class MusicTab(QWidget):
         except Exception:                             # noqa: BLE001
             pass
         rows = []
-        for r in doc.custom.get('rooms', []):
-            if r.get('placeholder'):
-                continue
+        from editor2.core import place_names as PN           # S143: names only
+        pl = PN.Places.of(doc)
+        for e in pl.room_entries('id'):
+            r = pl.by_id[e.value]
             mid = int(str(r['mapID']), 0)
-            rows.append((mid, f"{doc.room_name(r)}  (your room ${mid:02X})", 'the gate theme '
-                         '$34 / in a gate: the gate\'s', r.get('id')))
+            rows.append((mid, f"{e.label}  (your room"
+                         + (f', {e.group})' if e.group != PN.NO_AREA else ')'),
+                         'the gate theme $34 / in a gate: the gate\'s', r.get('id')))
         for mid in range(0x70):
             nm = get_name(mid)
             if nm.startswith('Map') and len(nm) <= 5:
                 continue
+            nm = pl.vanilla_label(mid)
             game = vanilla_tbl[mid] if vanilla_tbl else None
             gl = 'the gate theme $34' if mid in (0x50, 0x51) or 0x53 <= mid <= 0x5C or \
                 mid >= 0x61 else (f'${game:02X} ' + self.song_label(f'0x{game:02X}', '')
                                   if game is not None else '?')
-            rows.append((mid, f'${mid:02X} {nm}', gl, None))
+            rows.append((mid, nm, gl, None))
         self.rooms_t.setRowCount(len(rows))
         for i, (mid, label, game, rid) in enumerate(rows):
             self.rooms_t.setItem(i, 0, QTableWidgetItem(label))
             self.rooms_t.setItem(i, 1, QTableWidgetItem(game))
             c = SongCombo(self, doc.room_music(mid))
-            c.picked.connect(lambda v, m=mid: self.push(
-                f'Room ${m:02X} song', lambda d: d.set_room_music_id(m, v)))
+            c.picked.connect(lambda v, m=mid, lb=label: self.push(
+                f'{lb}: song', lambda d: d.set_room_music_id(m, v)))
             self.rooms_t.setCellWidget(i, 2, c)
             b = SongCombo(self, doc.room_battle_music(mid), default_label='— not set —')
-            b.picked.connect(lambda v, m=mid: self.push(
-                f'Room ${m:02X} battle song', lambda d: d.set_room_battle_music(m, v)))
+            b.picked.connect(lambda v, m=mid, lb=label: self.push(
+                f'{lb}: battle song', lambda d: d.set_room_battle_music(m, v)))
             self.rooms_t.setCellWidget(i, 3, b)
             if rid:
                 n = len(doc.room_music_rules(doc.room(rid)))

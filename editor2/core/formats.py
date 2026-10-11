@@ -301,11 +301,30 @@ PARTY_LINE_PIECES = 8       # player + 3 monsters lined up on one row, 2 each
 PARTY_PIECES = 16           # player + 3 monsters, 4 each
 
 
-def sprite_budget(npcs):
+# S143 (measured in PyBoy on the user's save, the user's arena): in the ARENA BATTLE
+# room ($5D) and its copies the walking party is not drawn — the room's own NPCs ARE
+# the party ($E0 the hero's shape, $E1-$E3 the party monsters, $F0-$F3 the foes) and
+# the match script holds the player; at most 8 NPCs = 32 pieces, never a full row
+PARTY_ABSENT_SOURCES = (0x5D,)
+
+
+def party_walks(room):
+    """False for a room whose screens never have the walking party on them (a copy of
+    the Arena Battle room — its NPCs are the party), else True."""
+    try:
+        src = val((room or {}).get('source_mapID'))
+    except (ValueError, TypeError):
+        return True
+    return not (isinstance(src, int) and src in PARTY_ABSENT_SOURCES)
+
+
+def sprite_budget(npcs, party=True):
     """[warning text] for one screen state's npcs[] entries: rows whose NPCs
     the hardware hides while the party walks along that row, and NPCs past
     what fits in the 40-object OAM. Hidden NPCs do not count; conditional
-    ones (shown_when / swirl_of) do — they may all be shown at once."""
+    ones (shown_when / swirl_of) do — they may all be shown at once.
+    party=False (S143): a room without the walking party (party_walks) — the
+    NPCs alone against the hardware limits."""
     rows, n = {}, 0
     for e in npcs or []:
         k = e.get('kind')
@@ -325,16 +344,23 @@ def sprite_budget(npcs):
         rows[y] = rows.get(y, 0) + 1
         n += 1
     out = []
-    room = (SPRITE_LINE_MAX - PARTY_LINE_PIECES) // 2          # NPCs a full row can still show
+    line_used = PARTY_LINE_PIECES if party else 0
+    all_used = PARTY_PIECES if party else 0
+    room = (SPRITE_LINE_MAX - line_used) // 2          # NPCs a full row can still show
     for y in sorted(rows):
         if rows[y] > room:
-            out.append(f"row {y} has {rows[y]} NPCs: when you and your 3 monsters walk along "
-                       f"that row, the Game Boy shows only {room} of them (at most "
-                       f"{SPRITE_LINE_MAX} sprite pieces per line; your party uses "
-                       f"{PARTY_LINE_PIECES}) — the later ones in the list vanish while you are on it")
-    fit = (SPRITE_OAM_MAX - PARTY_PIECES) // 4
+            out.append((f"row {y} has {rows[y]} NPCs: when you and your 3 monsters walk along "
+                        f"that row, the Game Boy shows only {room} of them (at most "
+                        f"{SPRITE_LINE_MAX} sprite pieces per line; your party uses "
+                        f"{PARTY_LINE_PIECES}) — the later ones in the list vanish while you are on it")
+                       if party else
+                       (f"row {y} has {rows[y]} NPCs: the Game Boy shows only {room} of them "
+                        f"(at most {SPRITE_LINE_MAX} sprite pieces per line)"))
+    fit = (SPRITE_OAM_MAX - all_used) // 4
     if n > fit:
-        out.append(f"{n} NPCs on screen: with you and 3 monsters only the first {fit} in the "
-                   f"list are drawn ({SPRITE_OAM_MAX} sprite pieces in all; your party uses "
-                   f"{PARTY_PIECES})")
+        out.append((f"{n} NPCs on screen: with you and 3 monsters only the first {fit} in the "
+                    f"list are drawn ({SPRITE_OAM_MAX} sprite pieces in all; your party uses "
+                    f"{PARTY_PIECES})") if party else
+                   (f"{n} NPCs on screen: only the first {fit} in the list are drawn "
+                    f"({SPRITE_OAM_MAX} sprite pieces in all)"))
     return out

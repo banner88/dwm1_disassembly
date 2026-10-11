@@ -14,7 +14,7 @@ Every edit goes through rooms/commands.py so ⌘Z always works.
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QAction, QActionGroup, QKeySequence, QPixmap
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFormLayout,
-                               QGroupBox,
+                               QGroupBox, QLineEdit,
                                QHBoxLayout, QInputDialog, QLabel, QListWidget,
                                QListWidgetItem, QMenu, QMessageBox, QPushButton,
                                QScrollArea, QSizePolicy, QSplitter, QTabWidget,
@@ -23,6 +23,8 @@ from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, 
 from editor2.core.animation import rng as ANIMR
 from editor2.core.animation import slots as ANIM_slots
 from editor2.core import tileanim as TA
+from editor2.core import place_names as PN
+from editor2.app.place_picker import PlacePicker, ask_place
 from editor2.core.document import val, GRID_COLS, metatile_key
 from editor2.app.session import REPO
 from editor2.app.rooms import commands as C
@@ -50,9 +52,9 @@ class NewRoomDialog(QDialog):
         self.name = QComboBox()
         self.name.setEditable(True)
         self.name.setCurrentText('New room')
-        self.src = QComboBox()
-        for mid, name, _scr in renderer.vanilla_rooms():
-            self.src.addItem(f'${mid:02X}  {name}', mid)
+        # S143: one searchable place picker, names only
+        self.src = PlacePicker()
+        self.src.set_entries(PN.Places([]).vanilla_entries(renderer.vanilla_rooms()))
         f.addRow('Name', self.name)
         f.addRow('Tileset / palette from', self.src)
         from PySide6.QtWidgets import QCheckBox
@@ -130,11 +132,19 @@ class RoomsTab(QWidget):
         lv.setContentsMargins(4, 4, 4, 4)
         lsplit = QSplitter(Qt.Vertical)
 
+        # S143 (ROADMAP ARC CAP4b): one search box over both lists; your rooms in
+        # their AREAS (folders), the game's rooms in groups — names only
+        from editor2.app.rooms.room_tree import PlaceTree
+        self.room_search = QLineEdit()
+        self.room_search.setPlaceholderText('Search rooms by name or area…')
+        self.room_search.setClearButtonEnabled(True)
+        self.room_search.textChanged.connect(self._filter_rooms)
+        lv.addWidget(self.room_search)
         vbox = QWidget()
         vl = QVBoxLayout(vbox)
         vl.setContentsMargins(0, 0, 0, 0)
-        self.vanilla_header = QLabel('Vanilla rooms (read-only)')
-        self.vanilla_list = QListWidget()
+        self.vanilla_header = QLabel('Game rooms (read-only)')
+        self.vanilla_list = PlaceTree()
         self.vanilla_list.currentItemChanged.connect(self._vanilla_picked)
         self.btn_clone = QPushButton('Make editable → clone into project')
         self.btn_clone.clicked.connect(self._clone_vanilla)
@@ -146,14 +156,19 @@ class RoomsTab(QWidget):
         cbox = QWidget()
         cl = QVBoxLayout(cbox)
         cl.setContentsMargins(0, 0, 0, 0)
-        self.rooms_header = QLabel('Custom rooms')
-        self.room_list = QListWidget()
+        self.rooms_header = QLabel('Your rooms')
+        self.room_list = PlaceTree(droppable=True)
         self.room_list.currentItemChanged.connect(self._room_picked)
-        self.room_list.itemDoubleClicked.connect(lambda _i: self._rename_room())
+        self.room_list.itemDoubleClicked.connect(
+            lambda it, _c=0: it.data(Qt.UserRole) is not None and self._rename_room())
+        self.room_list.roomDropped.connect(self._room_to_area)
+        self.room_list.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.room_list.customContextMenuRequested.connect(self._room_list_menu)
         row = QHBoxLayout()
-        for text, fn, tip in (('New', self._new_room, 'Blank room on a vanilla tileset'),
-                              ('Copy', self._copy_room, 'Copy the selected custom room (own layouts)'),
-                              ('Rename', self._rename_room, 'Rename the selected room'),
+        for text, fn, tip in (('New', self._new_room, 'Blank room on a game room\'s tileset'),
+                              ('Copy', self._copy_room, 'Copy the selected room (own layouts, scripts, texts)'),
+                              ('Rename', self._rename_room, 'Rename the selected room (names are unique)'),
+                              ('Area…', self._area_of_room, 'Put the selected room in an area (a folder)'),
                               ('Delete', self._delete_room, 'Delete the selected room')):
             b = QPushButton(text)
             b.setToolTip(tip)
@@ -547,6 +562,8 @@ class RoomsTab(QWidget):
                                                  self.inspector.r_anim_note)
         self.inspector.localizeRequested.connect(self._localize)
         self.inspector.nameEdited.connect(self._rename_to)
+        self.inspector.areaEdited.connect(
+            lambda a: self.room_id and self._room_to_area(self.room_id, a))
         self.inspector.addRedirectRequested.connect(self._add_redirect)
         self.inspector.removeRedirectRequested.connect(self._remove_redirect)
         self.inspector.routeDoorRequested.connect(self._route_door)
@@ -691,30 +708,42 @@ class RoomsTab(QWidget):
 
     # ------------------------------------------------------------ browser
     def _fill_rooms(self, keep=None):
+        from editor2.core import place_names as PN
         self.vanilla_list.blockSignals(True)
-        if self.vanilla_list.count() == 0:
-            for mid, name, scr in self.s.renderer.vanilla_rooms():
-                it = QListWidgetItem(f'${mid:02X}   {name}   ({len(scr)} scr)')
-                it.setData(Qt.UserRole, mid)
-                self.vanilla_list.addItem(it)
+        if self.vanilla_list.count() == 0 or getattr(self, '_vanilla_ids', None) != PN.SHOW_IDS:
+            self._vanilla_ids = PN.SHOW_IDS
+            cur = self.vanilla_mid
+            self.vanilla_list.clear()
+            places = PN.Places.of(self.s.doc)
+            scr_of = {m: s for m, _n, s in self.s.renderer.vanilla_rooms()}
+            for e in places.vanilla_entries(self.s.renderer.vanilla_rooms()):
+                n = len(scr_of.get(e.value, ()))
+                self.vanilla_list.add_row(e.group, e.group, PN.with_id(PN.vanilla_name(e.value), e.value, True)
+                                          + (f'   ({n} screens)' if n > 1 else ''), e.value)
+            self.vanilla_list.finish()
+            if cur is not None:
+                self.vanilla_list.select_data(cur)
         self.vanilla_list.blockSignals(False)
         self.room_list.blockSignals(True)
         self.room_list.clear()
-        rooms = self.s.doc.rooms
-        self.rooms_header.setText(f'Custom rooms ({len(rooms)})')
+        rooms = [r for r in self.s.doc.rooms if not r.get('placeholder')]
+        self.rooms_header.setText(f'Your rooms ({len(rooms)})')
+        places = PN.Places.of(self.s.doc)
+        for a in self.s.doc.areas():          # empty areas show as folders too
+            self.room_list.folder(a, a)
         sel = -1
-        for i, r in enumerate(rooms):
-            mid = val(r.get('mapID', 0))
-            if r.get('placeholder'):
-                continue
+        for e in places.room_entries('id'):
+            r = places.by_id[e.value]
             scr = r.get('screens') or {}
             nst = sum(max(1, len(v.get('states') or [])) for v in scr.values())
-            tag = f"   ({len(scr)} scr" + (f", {nst} states)" if nst > len(scr) else ')')
-            it = QListWidgetItem(f"${mid:02X}   {self.s.doc.room_name(r)}{tag}")
-            it.setData(Qt.UserRole, r.get('id'))
-            self.room_list.addItem(it)
-            if keep and r.get('id') == keep:
+            tag = (f"   ({len(scr)} screen{'s' if len(scr) != 1 else ''}"
+                   + (f", {nst} states)" if nst > len(scr) else ')')
+                   if len(scr) > 1 or nst > 1 else '')
+            self.room_list.add_row(e.group, e.group, e.label + tag, e.value)
+            if keep and e.value == keep:
                 sel = self.room_list.count() - 1
+        self.room_list.finish()
+        self._filter_rooms(self.room_search.text())
         # S142 (ARC CAP4a): the row is set with signals still blocked — the
         # signal AND the explicit call below each redrew the room (twice per edit)
         if sel >= 0:
@@ -731,8 +760,94 @@ class RoomsTab(QWidget):
                 self.vanilla_list.setCurrentRow(0)
                 self._vanilla_picked(self.vanilla_list.currentItem())
 
+    def _filter_rooms(self, text):
+        self.room_list.apply_filter(text)
+        self.vanilla_list.apply_filter(text)
+
+    # ---- areas (S143, ARC CAP4b)
+    def _room_to_area(self, rid, area):
+        from editor2.app.rooms.commands import SnapshotCommand
+        if (self.s.doc.room(rid).get('area') or '') == area:
+            return
+        self.s.undo.push(SnapshotCommand(
+            self.s, f'Move {self.s.doc.room_name(self.s.doc.room(rid))} to '
+                    f'{area or "no area"}', lambda d: d.set_room_area(rid, area)))
+
+    def _area_of_room(self, rid=None):
+        rid = rid or self.room_id
+        if not rid:
+            QMessageBox.information(self, 'Area', 'Select one of your rooms first.')
+            return
+        areas = self.s.doc.areas()
+        cur = self.s.doc.room(rid).get('area') or ''
+        items = ['(no area)'] + areas
+        txt, ok = QInputDialog.getItem(
+            self, 'Area', f'Put "{self.s.doc.room_name(self.s.doc.room(rid))}" in which area?\n'
+            '(type a new name to make a new area)', items,
+            items.index(cur) if cur in items else 0, True)
+        if not ok:
+            return
+        txt = txt.strip()
+        self._room_to_area(rid, '' if txt in ('', '(no area)') else txt)
+
+    def _room_list_menu(self, pos):
+        it = self.room_list.itemAt(pos)
+        from editor2.app.rooms.room_tree import FOLDER_ROLE
+        from editor2.app.rooms.commands import SnapshotCommand
+        doc = self.s.doc
+        m = QMenu(self)
+        rid = it.data(Qt.UserRole) if it is not None else None
+        folder = it.data(FOLDER_ROLE) if it is not None else None
+        if rid:
+            m.addAction('Put in area…', lambda: self._area_of_room(rid))
+            sub = m.addMenu('Move to')
+            for a in ['(no area)'] + doc.areas():
+                sub.addAction(a, lambda a=a: self._room_to_area(rid, '' if a == '(no area)' else a))
+            m.addSeparator()
+            m.addAction('Rename…', self._rename_room)
+            m.addAction('Copy', self._copy_room)
+        m.addAction('New area…', self._new_area)
+        if folder and folder != 'No area':
+            m.addSeparator()
+            m.addAction(f'Rename area "{folder}"…', lambda: self._rename_area(folder))
+            m.addAction(f'Move area "{folder}" up',
+                        lambda: self.s.undo.push(SnapshotCommand(
+                            self.s, 'Move area up', lambda d: d.move_area(folder, -1))))
+            m.addAction(f'Move area "{folder}" down',
+                        lambda: self.s.undo.push(SnapshotCommand(
+                            self.s, 'Move area down', lambda d: d.move_area(folder, 1))))
+            m.addAction(f'Delete area "{folder}" (its rooms stay, with no area)',
+                        lambda: self.s.undo.push(SnapshotCommand(
+                            self.s, f'Delete area {folder}', lambda d: d.delete_area(folder))))
+        m.exec(self.room_list.viewport().mapToGlobal(pos))
+
+    def _new_area(self):
+        from editor2.app.rooms.commands import SnapshotCommand
+        name, ok = QInputDialog.getText(self, 'New area', 'Name of the new area:')
+        if not ok or not name.strip():
+            return
+        try:
+            if name.strip().casefold() in {a.casefold() for a in self.s.doc.areas()}:
+                raise ValueError(f'there is already an area called "{name.strip()}"')
+            self.s.undo.push(SnapshotCommand(self.s, f'New area {name.strip()}',
+                                             lambda d: d.add_area(name)))
+        except ValueError as ex:
+            QMessageBox.warning(self, 'New area', str(ex))
+
+    def _rename_area(self, old):
+        from editor2.app.rooms.commands import SnapshotCommand
+        name, ok = QInputDialog.getText(self, 'Rename area', f'New name for "{old}":', text=old)
+        if not ok or not name.strip() or name.strip() == old:
+            return
+        if name.strip().casefold() != old.casefold() and \
+                name.strip().casefold() in {a.casefold() for a in self.s.doc.areas()}:
+            QMessageBox.warning(self, 'Rename area', f'There is already an area called "{name.strip()}".')
+            return
+        self.s.undo.push(SnapshotCommand(self.s, f'Rename area {old}',
+                                         lambda d: d.rename_area(old, name)))
+
     def _room_picked(self, item, _prev=None):
-        if not item:
+        if not item or item.data(Qt.UserRole) is None:
             return
         rid = item.data(Qt.UserRole)
         self.vanilla_list.blockSignals(True)
@@ -748,7 +863,7 @@ class RoomsTab(QWidget):
         self._show()
 
     def _vanilla_picked(self, item, _prev=None):
-        if not item:
+        if not item or item.data(Qt.UserRole) is None:
             return
         mid = item.data(Qt.UserRole)
         self.room_list.blockSignals(True)
@@ -815,7 +930,7 @@ class RoomsTab(QWidget):
         try:
             self.canvas.show_vanilla(mid, self.key, self.state_idx)
         except Exception as e:
-            self.banner.setText(f'Cannot render vanilla ${mid:02X}: {e}')
+            self.banner.setText(f'Cannot render the game room {PN.vanilla_name(mid)}: {e}')
             self.banner.setVisible(True)
             return
         self._set_state_widgets(False)
@@ -833,7 +948,7 @@ class RoomsTab(QWidget):
         self.cap_label.setText('')
         self.shown_when.setText('')
         self.shown_when.setVisible(False)
-        self.banner.setText(f'Vanilla room ${mid:02X} {self.s.renderer.vanilla_name(mid)} — '
+        self.banner.setText(f'Game room {PN.with_id(PN.vanilla_name(mid), mid, True)} — '
                             'read-only. "Make editable" clones it into your project; '
                             'the original stays untouched.')
         self.banner.setVisible(True)
@@ -943,8 +1058,8 @@ class RoomsTab(QWidget):
             return
         self.foreign_box.blockSignals(True)
         self.foreign_box.addItem('(none)', None)
-        for mid, name, _scr in self.s.renderer.vanilla_rooms():
-            self.foreign_box.addItem(f'${mid:02X}  {name}', int(mid))
+        for e in PN.Places.of(self.s.doc).vanilla_entries(self.s.renderer.vanilla_rooms()):
+            self.foreign_box.addItem(e.label, int(e.value))
         # S122: the 16 maze floor types (gate themes) — data THEME_KEY + type
         from editor2.core.maze import THEME_NAMES
         for t, nm in enumerate(THEME_NAMES):
@@ -1022,7 +1137,7 @@ class RoomsTab(QWidget):
                 box = QMessageBox(self)
                 box.setWindowTitle('Animated tile')
                 box.setText(str(cmd.error))
-                b_sw = box.addButton(f'Switch to ${mid:02X}\'s animation', QMessageBox.AcceptRole)
+                b_sw = box.addButton(f'Switch to {PN.vanilla_name(mid)}\'s animation', QMessageBox.AcceptRole)
                 b_st = box.addButton('Import it still (it will not move)', QMessageBox.RejectRole)
                 box.addButton(QMessageBox.Cancel)
                 box.exec()
@@ -1083,7 +1198,8 @@ class RoomsTab(QWidget):
             msgs.append(self.canvas.attr_note)
         # S117b: sprite limits — NPCs the Game Boy hides with your party around
         from editor2.core import formats as _F
-        for msg in _F.sprite_budget(self.s.doc._state_target(room, self.key, self.state_idx).get('npcs')):
+        for msg in _F.sprite_budget(self.s.doc._state_target(room, self.key, self.state_idx).get('npcs'),
+                                    party=_F.party_walks(room)):        # S143: arena copies
             msgs.append('Sprite limit: ' + msg + '.')
         self.banner.setText('\n'.join(msgs))
         self.banner.setVisible(bool(msgs))
@@ -1153,7 +1269,7 @@ class RoomsTab(QWidget):
             return
         rid, key, st = room['id'], self.key, self.state_idx
         rend = self.s.renderer
-        cmd = C.SnapshotCommand(self.s, f'Maze screen ${cell:02X} on screen {key}',
+        cmd = C.SnapshotCommand(self.s, f'Maze screen {cell} on screen {key}',
                                 lambda doc: doc.stamp_maze_screen(rid, key, st, cell, mode, rend))
         self.s.undo.push(cmd)
         if cmd.error is not None:
@@ -1396,11 +1512,11 @@ class RoomsTab(QWidget):
             info = self.s.doc.room_animation(room)
             if e.get('slots') and not e.get('inert_in_vanilla') and info['map'] != mid \
                     and any((t & 0x7F) in slots for t in mt['tiles']):
-                stop = (f" The current animation (${info['map']:02X}: {info['text']}) stops."
+                stop = (f" The current animation ({PN.vanilla_name(info['map'])}: {info['text']}) stops."
                         if info['slots'] else '')
                 if QMessageBox.question(
                         self, 'Animated tile',
-                        f"This tile moves in ${mid:02X} {self.s.renderer.vanilla_name(mid)} "
+                        f"This tile moves in the game room {PN.vanilla_name(mid)} "
                         f"({ANIM.describe_effects(mid)}). Make this room play that animation "
                         f"so it moves here too?{stop}") == QMessageBox.Yes:
                     self._animation_chosen(f'0x{mid:02X}')
@@ -2323,9 +2439,9 @@ class RoomsTab(QWidget):
     def _play_room(self):
         room = self.current_room()
         mid = val(room['mapID']) if room is not None else self.vanilla_mid
-        name = (self.s.doc.room_name(room) if room is not None else
-                self.s.renderer.vanilla_name(mid) if mid is not None else '')
-        return room, mid, f'${mid:02X} {name}' if mid is not None else ''
+        pl = PN.Places.of(self.s.doc)
+        return room, mid, ((pl.room_label(room) if room is not None else pl.vanilla_label(mid))
+                           if mid is not None else '')
 
     def _play_cell(self, cell=None):
         """The selected cell when it is walkable, else the walkable cell nearest
@@ -2913,7 +3029,7 @@ class RoomsTab(QWidget):
         if own:
             bits.append('yes — ' + ', '.join(own))
         if van:
-            bits.append(f"moves with the copied vanilla animation ${self.canvas.anim_mid:02X}")
+            bits.append(f"moves with the copied animation of {PN.vanilla_name(self.canvas.anim_mid)}")
         txt = '; '.join(bits) or 'no'
         self.inspector.add_cell_row('animated', txt + ' — double-click the cell to animate it')
 
@@ -3126,16 +3242,17 @@ class RoomsTab(QWidget):
             mid = it.data(Qt.UserRole)
         else:
             mid = self.vanilla_mid
-        name = self.s.renderer.vanilla_name(mid)
+        name = PN.vanilla_name(mid)
+        new_name = self.s.doc.unique_room_name(name)
         if QMessageBox.question(
                 self, 'Make editable',
-                f'Clone vanilla room ${mid:02X} "{name}" into your project as a custom '
-                f'room?\n\nThe original stays untouched; the copy gets its own layouts, '
-                'palette and scripts (mapID ${:02X}).'.format(self.s.doc.next_free_mapid())
+                f'Copy the game room "{name}" into your project as your room '
+                f'"{new_name}"?\n\nThe original stays untouched; the copy gets its own layouts, '
+                'palette and scripts.'
         ) != QMessageBox.Yes:
             return
         rend = self.s.renderer
-        cmd = C.SnapshotCommand(self.s, f'Clone vanilla ${mid:02X} {name}',
+        cmd = C.SnapshotCommand(self.s, f'Make editable: {name}',
                                 lambda doc: doc.clone_vanilla(mid, name, REPO, rend))
         self.s.undo.push(cmd)
         self.vanilla_mid = None
@@ -3166,8 +3283,13 @@ class RoomsTab(QWidget):
         if room is None:
             return
         name, ok = QInputDialog.getText(self, 'Copy room', 'Name for the copy:',
-                                        text=f'{self.s.doc.room_name(room)} copy')
+                                        text=self.s.doc.unique_room_name(
+                                            f'{self.s.doc.room_name(room)} 2'))
         if not ok or not name.strip():
+            return
+        if self.s.doc.room_name_taken(name):     # S143: names are unique
+            QMessageBox.warning(self, 'Copy room', f'Another room is already called '
+                                f'"{name.strip()}". Try "{self.s.doc.unique_room_name(name)}".')
             return
         rid = self.room_id
         cmd = C.SnapshotCommand(self.s, f'Copy room {name}',
@@ -3202,6 +3324,12 @@ class RoomsTab(QWidget):
         if room is None or name == self.s.doc.room_name(room):
             return
         rid = self.room_id
+        if self.s.doc.room_name_taken(name, exclude=rid):     # S143: names are unique
+            QMessageBox.warning(self, 'Rename room', f'Another room is already called '
+                                f'"{name.strip()}". Try '
+                                f'"{self.s.doc.unique_room_name(name, exclude=rid)}".')
+            self.inspector.r_name.setText(self.s.doc.room_name(room))
+            return
         self.s.undo.push(C.SnapshotCommand(self.s, f'Rename room to {name}',
                                            lambda doc: doc.rename_room(rid, name)))
 
@@ -3211,12 +3339,12 @@ class RoomsTab(QWidget):
             return
         if QMessageBox.question(
                 self, 'Delete room',
-                f'Delete "{self.s.doc.room_name(room)}" (${val(room["mapID"]):02X})? '
+                f'Delete "{PN.Places.of(self.s.doc).room_label(room)}"? '
                 'Layouts only it used are removed too. Undo restores everything.') != QMessageBox.Yes:
             return
         rid = self.room_id
         self.room_id = None
-        self.s.undo.push(C.SnapshotCommand(self.s, f'Delete room {rid}',
+        self.s.undo.push(C.SnapshotCommand(self.s, f'Delete room {self.s.doc.room_name(room)}',
                                            lambda doc: doc.delete_room(rid)))
 
     # ---------------------------------------------------------- metatiles
@@ -3234,16 +3362,16 @@ class RoomsTab(QWidget):
 
     def _add_redirect_entry(self, src_mid, screen, x, y, dest_screen, sx, sy):
         rid = self.room_id
-        name = self.s.renderer.vanilla_name(src_mid)
+        name = PN.vanilla_name(src_mid)
         self.s.undo.push(C.SnapshotCommand(
-            self.s, f'Route {name} door ({x},{y}) → {rid}',
+            self.s, f'Route {name} door ({x},{y}) → {self.s.doc.room_name(self.s.doc.room(rid))}',
             lambda doc: doc.add_redirect(src_mid, screen, x, y, rid, dest_screen, sx, sy,
                                          comment=f'{name} screen {screen} door ({x},{y}) -> {rid}')))
 
     def _remove_redirect(self, index):
         rd = self.s.doc.redirects()[index]
         self.s.undo.push(C.SnapshotCommand(
-            self.s, f"Remove entrance {rd['mapID']} ({rd['x']},{rd['y']})",
+            self.s, f"Remove entrance {PN.vanilla_name(val(rd['mapID']))} ({rd['x']},{rd['y']})",
             lambda doc: doc.remove_redirect(index)))
 
     def _portal_to_gate(self, preset):
@@ -3292,12 +3420,11 @@ class RoomsTab(QWidget):
             QMessageBox.information(self, 'No custom rooms',
                                     'Clone or create a custom room first, then route this door to it.')
             return
-        names = [f"${val(r['mapID']):02X}  {self.s.doc.room_name(r)}" for r in rooms]
-        pick, ok = QInputDialog.getItem(self, 'Route this door',
-                                        'Custom room the door should lead to:', names, 0, False)
-        if not ok:
+        rid = ask_place(self, 'Route this door', 'Your room the door should lead to:',
+                        PN.Places.of(self.s.doc).room_entries('id'))
+        if rid is None:
             return
-        room = rooms[names.index(pick)]
+        room = self.s.doc.room(rid)
         self.vanilla_mid = None
         self.room_id = room['id']
         self.key = self.s.doc.screen_keys(room)[0]
@@ -3500,7 +3627,7 @@ class RoomsTab(QWidget):
 
             def op(doc):
                 new = doc.add_palette_from_words(f'pal_from_{mid:02X}', words,
-                                                 f'copied from vanilla ${mid:02X} {name}')
+                                                 f'copied from the game room {name}')
                 doc.room(rid).setdefault('render', {})['palette'] = new
                 return new
             self.s.undo.push(C.SnapshotCommand(self.s, f'Room palette from {name}', op))
@@ -3680,7 +3807,7 @@ class RoomsTab(QWidget):
 
             def op(doc):
                 new = doc.add_palette_from_words(f'pal_from_{mid:02X}', words,
-                                                 f'copied from vanilla ${mid:02X} {name}')
+                                                 f'copied from the game room {name}')
                 doc.set_state_palette(doc.room(rid), key, st, new)
                 return new
             label = f'Screen {key} palette from {name}'

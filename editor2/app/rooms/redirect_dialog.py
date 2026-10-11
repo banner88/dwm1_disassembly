@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox,
                                QSpinBox, QVBoxLayout)
 from PIL import ImageQt
 
+from editor2.core import place_names as PN
 from editor2.core.document import val
 
 CELL = 16
@@ -84,9 +85,11 @@ class RedirectDialog(QDialog):
         # ---- source (vanilla door)
         g = QGroupBox('Vanilla door (source)')
         f = QFormLayout(g)
-        self.src_room = QComboBox()
-        for mid, name, _screens in self.rend.vanilla_rooms():
-            self.src_room.addItem(f'${mid:02X}  {name}', mid)
+        # S143 (ARC CAP4b): the searchable place picker, names only
+        from editor2.app.place_picker import PlacePicker
+        self.src_room = PlacePicker()
+        self.src_room.set_entries(PN.Places.of(self.s.doc)
+                                  .vanilla_entries(self.rend.vanilla_rooms()))
         self.src_screen = QComboBox()
         self.src_door = QComboBox()
         self.src_x = QSpinBox(); self.src_x.setRange(0, 9)
@@ -187,10 +190,7 @@ class RedirectDialog(QDialog):
                     continue
                 seen.add((x, y))
                 dmid = val(e['dest'].split(':')[1]) if ':' in str(e['dest']) else val(e['dest'])
-                try:
-                    dname = self.rend.vanilla_name(dmid)
-                except Exception:
-                    dname = f'${dmid:02X}'
+                dname = PN.with_id(PN.vanilla_name(dmid), dmid, True)
                 kind = 'edge exit' if y in (0, 7) or x in (0, 9) else 'door'
                 out.append((x, y, f'({x},{y}) {kind} → {dname}'))
         return out
@@ -307,15 +307,13 @@ class ExitDialog(QDialog):
         lay.addWidget(note)
         g = QGroupBox('Destination')
         f = QFormLayout(g)
-        self.dst_room = QComboBox()
-        for r in session.doc.rooms:
-            if r.get('placeholder'):
-                continue
-            self.dst_room.addItem(f"${val(r['mapID']):02X}  {session.doc.room_name(r)}  (custom)",
-                                  ('room', r['id']))
-        self.dst_room.insertSeparator(self.dst_room.count())
-        for mid, name, _scr in self.rend.vanilla_rooms():
-            self.dst_room.addItem(f'${mid:02X}  {name}  (vanilla)', ('vanilla', mid))
+        from editor2.app.place_picker import PlacePicker
+        self.dst_room = PlacePicker()
+        pl = PN.Places.of(session.doc)
+        self.dst_room.set_entries(
+            [e._replace(value=('room', e.value)) for e in pl.room_entries('id')]
+            + [e._replace(value=('vanilla', e.value), group=f'{PN.GAME}: {e.group}')
+               for e in pl.vanilla_entries(self.rend.vanilla_rooms())])
         self.dst_screen = QComboBox()
         self.dst_x = QSpinBox(); self.dst_x.setRange(0, 9)
         self.dst_y = QSpinBox(); self.dst_y.setRange(0, 7)

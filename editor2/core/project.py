@@ -10,6 +10,7 @@ commitment S53: reserved sections error, never silently ignore).
 import json
 import os
 
+from editor2.core.place_names import room_ref as _rref, mid_ref as _mref
 from . import formats as F
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
@@ -782,7 +783,7 @@ class Project:
             room = next((r for r in self.custom.get('rooms') or []
                          if r.get('mapID') is not None and F.val(r['mapID']) == mid), None)
             if room is None:
-                return f"move to room ${mid:02X}: no room of this project has that map id"
+                return f"move to {_mref([], mid)}: no room of this project has that map id"
             keys = sorted(int(x) for x in (room.get('screens') or {}))
             if k not in keys:
                 return (f"move to {room.get('name') or room['id']} screen {k}: that room has "
@@ -792,7 +793,7 @@ class Project:
         if kind == 'vanilla':
             screens = vanilla_screens().get(mid)
             if screens is not None and k not in screens:
-                return (f"move to game room ${mid:02X} screen {k}: the game has no screen {k} "
+                return (f"move to {_mref([], mid)} screen {k}: the game has no screen {k} "
                         f"there (its screens: {', '.join(map(str, screens))}) — the game "
                         "would crash there")
         return None
@@ -1090,7 +1091,7 @@ class Project:
                     if len(set(used)) > 1:
                         raise ProjectError(
                             f"script {sid}: its NPCs sit in different NPC slots in the "
-                            f"states of room {r.get('id')} screen {k} — Vanish would hide "
+                            f"states of room {_rref(r)} screen {k} — Vanish would hide "
                             "another NPC; keep them in the same list position in every state")
                     out.setdefault(sid, {})[int(k)] = list(used[0])
         return out
@@ -1649,7 +1650,7 @@ class Project:
         try:
             return self._room_by_mid[int(mid)]
         except KeyError:
-            raise ProjectError(f"no room with mapID {F.hexb(int(mid))}")
+            raise ProjectError(f"no room for {_mref([], int(mid))} (a deleted room?)")
 
     def room_by_id(self, rid):
         for r in self.rooms:
@@ -1670,14 +1671,14 @@ class Project:
                             continue
                         if e['stairs'] != 'down':
                             raise ProjectError(
-                                f"room {r.get('id')} screen {k}: stairs must be "
+                                f"room {_rref(r)} screen {k}: stairs must be "
                                 f"'down' (got {e['stairs']!r})")
                         for key, v in G.STAIRS_DOWN_FIELDS.items():
                             if key not in e:
                                 e[key] = v
                             elif F.val(e[key]) != F.val(v):
                                 raise ProjectError(
-                                    f"room {r.get('id')} screen {k}: stairs-down "
+                                    f"room {_rref(r)} screen {k}: stairs-down "
                                     f"exit ({e.get('x')},{e.get('y')}) has {key}="
                                     f"{e[key]!r}; a stairs-down row is always "
                                     f"{G.STAIRS_DOWN_FIELDS}")
@@ -2069,7 +2070,7 @@ class Project:
             if not 0 <= sp <= 255 or 217 <= sp <= 220 or \
                     (sp >= 221 and sp not in self.new_species_ids()):
                 raise ProjectError(
-                    f"room {r.get('id')} screen {k}: monster NPC species {sp} — species "
+                    f"room {_rref(r)} screen {k}: monster NPC species {sp} — species "
                     "217-220 hang or crash the game as monster NPCs (no real follower "
                     "tables; PyBoy S101), and 221-239 must be one of this project's "
                     "custom.species (S105; 240+ do not exist)")
@@ -2077,7 +2078,7 @@ class Project:
             idx = cast.index(sp)
             if idx >= self.MONSTER_CAST_MAX:
                 raise ProjectError(
-                    f"room {r.get('id')} screen {k}: more than "
+                    f"room {_rref(r)} screen {k}: more than "
                     f"{self.MONSTER_CAST_MAX} different monster NPCs (the engine's "
                     "display list has 4 slots, $F0-$F3)")
             return self.MONSTER_SPRITE_BASE + idx
@@ -2089,7 +2090,7 @@ class Project:
         `shown_when` terms (state-rule shape) + `swirl_of: N` (shown while
         gate N is not cleared). Lowered to the $A0/$A1 prefix entries that
         bank $60 CopyNPCListToBuffer turns into the hidden bit."""
-        c = f"room {r.get('id')} screen {k} NPC ({n.get('x')},{n.get('y')})"
+        c = f"room {_rref(r)} screen {k} NPC ({n.get('x')},{n.get('y')})"
         out = []
         if n.get('swirl_of') is not None:
             from . import gates as G
@@ -2113,7 +2114,7 @@ class Project:
         with cleared_swirl = a palette → that palette once the gate is cleared.
         Lowered to the $A2 prefix (bank $60 CopyNPCListToBuffer / entry 11)."""
         from . import gates as G
-        c = f"room {r.get('id')} screen {k} NPC ({n.get('x')},{n.get('y')})"
+        c = f"room {_rref(r)} screen {k} NPC ({n.get('x')},{n.get('y')})"
         col = n.get('colour')
         if col is not None:
             if n.get('monster') is not None:
@@ -2350,7 +2351,7 @@ class Project:
                     sp = G.vanilla_boss_spawn(mid, start)
                     if sp is None:
                         raise ProjectError(
-                            f"{c}: vanilla map {F.hexb(mid)} is no gate's boss room "
+                            f"{c}: {_mref([], mid)} is no gate's boss room "
                             "— its arrival cell is unknown (use a custom room)")
                     row[4], row[5], row[6] = mid, sp[0], sp[1]
                 else:
@@ -2659,7 +2660,7 @@ class Project:
             if s == sid:
                 return i
         raise ProjectError(
-            f"room {r.get('id')} NPC references script {sid!r} which is not "
+            f"room {_rref(r)} NPC references script {sid!r} which is not "
             "in the room's script table (KEY_LESSONS S2: NPC byte 4 must "
             "match a table index >= 1)")
 
@@ -2938,7 +2939,7 @@ class Project:
         rules = r.get('state_rules') or []
         if not rules:
             return []
-        ctx = f"room {r.get('id')} state_rules"
+        ctx = f"room {_rref(r)} state_rules"
         resolved = []
         for i, ru in enumerate(rules):
             c = f"{ctx}[{i}]"
@@ -3149,7 +3150,7 @@ class Project:
         pid = pid or scr.get('palette') or (r.get('render') or {}).get('palette')
         if pid:
             if pid not in self._pal_by_id:
-                raise ProjectError(f"room {r.get('id')} references palette "
+                raise ProjectError(f"room {_rref(r)} references palette "
                                    f"{pid!r} which is not defined")
             return 'palette', pid
         src = F.val(r.get('source_mapID', 0))
@@ -3175,7 +3176,7 @@ class Project:
             rom = open(rom_path, 'rb').read()
             ptr = drp.normal_room_pal_ptr(rom, mid)
             if ptr is None:
-                raise ProjectError(f"vanilla map ${mid:02X} has no attr palette to borrow")
+                raise ProjectError(f"{_mref([], mid)} has no attr palette to borrow")
             cache[mid] = ptr
         return cache[mid]
 
@@ -3184,7 +3185,7 @@ class Project:
         if not pid:
             return None
         if pid not in self._pal_by_id:
-            raise ProjectError(f"room {r.get('id')} references palette "
+            raise ProjectError(f"room {_rref(r)} references palette "
                                f"{pid!r} which is not defined")
         return self._pal_by_id[pid]
 

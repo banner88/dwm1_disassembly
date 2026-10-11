@@ -4020,6 +4020,26 @@ unchanged); what changed is how fast the backend answers and what Copy room writ
   validates with no new error and shares no id; a snapshot round trip; the model rebuilt only on
   a change; the payload fast path; the id lookups after list edits), `test_app.s142_scale`.
 
+## §2.51 S143 — PLACES BY NAME: areas, unique names, messages by name (ROADMAP ARC CAP4b; byte-neutral)
+
+**Built S143, NOT yet user-tested.** No emitted byte changes (example pin unchanged; the user's
+project and a 311-place 3-region copy with areas build the same ROMs on the S142 and S143 code).
+
+- **Schema (editor-only, never read by the compiler):** `custom.rooms[].area` — the room's area
+  (one level of folders, a string; absent = no area); `custom._editor.areas` — the areas' order
+  and any area with no room yet. Room `name`s are unique among the project's rooms (the editor
+  enforces it; the compiler does not care — names only reach comments and messages).
+- **Messages:** every validator / Project message that named a room by its id or a map id names
+  it by `place_names.room_ref(room)` — `"Cave 2"` — or `mid_ref(rooms, mid)` ("the game room
+  Castle", "room "Cave 2""); with `place_names.SHOW_IDS` (the command line: `tools/build_project.py`
+  sets it) the id and map id follow in brackets: `"Cave 2" [cave_2, region 1 $6B]`. Asm comments
+  in generated files are unchanged.
+- **Arena copies:** `formats.party_walks(room)` (False for a copy of `$5D`) → the S117b sprite
+  warning counts the NPCs alone there (ROOM_DATA_FORMAT "Sprite limits (S117b)", S143).
+- Tests: `test_compiler.test_s143` (labels of every reference form, the game's names unique, Show
+  technical ids, `next_free_name`, the on-open rename, Rename refused, areas, areas editor-only,
+  `party_walks`), `test_app.s143_names`.
+
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 
 The user's "fastest way to test": hook a custom room onto a door the player

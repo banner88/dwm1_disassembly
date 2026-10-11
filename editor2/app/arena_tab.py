@@ -353,8 +353,8 @@ class YourArenaPage(QWidget):
     def _make(self):
         from editor2.app.session import REPO
         rend = self.s.renderer
-        if QMessageBox.question(self, 'Your arena', 'Copy the Arena Lobby ($06) and the Arena '
-                                'Battle room ($5D, every state — Starry Night is at night) into '
+        if QMessageBox.question(self, 'Your arena', 'Copy the game\'s Arena Lobby and Arena '
+                                'Battle room (every state — Starry Night is at night) into '
                                 'your project as your arena?') != QMessageBox.Yes:
             return
         self.tab._push('Make your arena', lambda doc: doc.make_your_arena(REPO, rend))
@@ -441,7 +441,8 @@ class ClassArenaBox(QGroupBox):
         self.then = QComboBox()
         self.then.currentIndexChanged.connect(self._then_changed)
         trow.addWidget(self.then, 1)
-        self.room = QComboBox()
+        from editor2.app.place_picker import PlacePicker
+        self.room = PlacePicker()       # S143: searchable, names only
         self.room.currentIndexChanged.connect(self._room_changed)
         trow.addWidget(self.room, 1)
         v.addLayout(trow)
@@ -531,9 +532,8 @@ class ClassArenaBox(QGroupBox):
         self.then.blockSignals(False)
         self.room.blockSignals(True)
         self.room.clear()
-        for r in doc.rooms:
-            if not r.get('placeholder'):
-                self.room.addItem(f"${int(str(r['mapID']), 0):02X} {doc.room_name(r)}", r['id'])
+        from editor2.core import place_names as PN           # S143: names only
+        self.room.add_entries(PN.Places.of(doc).room_entries('id'))
         if th.get('room'):
             self.room.setCurrentIndex(max(0, self.room.findData(th['room'])))
         self.room.blockSignals(False)

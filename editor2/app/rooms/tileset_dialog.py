@@ -54,9 +54,11 @@ class TilesetDialog(QDialog):
         self.g_colours.setChecked(True)
         self.g_colours.setToolTip('The maze floors\' four colours. Screens with a palette of '
                                   'their own keep it.')
-        self.v_box = QComboBox()
-        for mid, name, _scr in renderer.vanilla_rooms():
-            self.v_box.addItem(f'${mid:02X}  {name}', mid)
+        # S143 (ARC CAP4b): the searchable place picker, names only
+        from editor2.app.place_picker import PlacePicker
+        from editor2.core import place_names as PN
+        self.v_box = PlacePicker()
+        self.v_box.set_entries(PN.Places.of(doc).vanilla_entries(renderer.vanilla_rooms()))
         self.p_box = QComboBox()
         for t in doc.custom.get('tilesets', []):
             users = [doc.room_name(r) for r in doc.rooms_using_tileset(t['id'])]

@@ -123,6 +123,13 @@ or script that moves the player), game exit. Hover a line to see what it is.
   editor is open (S142 — rooms keep their places when the map is redrawn
   after an edit, only new rooms are placed; not saved in the project).
   **Re-layout** lays every room out afresh.
+- **Find a room** (S143): type part of a name or an area — every match gets a yellow
+  frame and the map centres on one; Enter = the next match.
+- **Area:** draw only the rooms of one area (or "No area" / "Game rooms"); the rooms
+  they connect to are drawn faded, so you still see where the doors lead.
+- **only the selected room and its neighbours** (S143): click a room (or find one),
+  tick it — only the rooms within 1-6 connections of it are drawn. At hundreds of
+  rooms this is the way to read one place's doors.
 - **whole vanilla world** — also every game room and exit (big and slow).
 - **only this world** — with a world picked on the left: only its rooms
   (green frames) and the rooms around them.

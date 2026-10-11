@@ -406,7 +406,8 @@ class ImportTab(QWidget):
         row.addWidget(b)
         row.addWidget(rm)
         f.addRow('image', row)
-        self.room_box = QComboBox()
+        from editor2.app.place_picker import PlacePicker
+        self.room_box = PlacePicker()   # S143: searchable, names only
         self.room_box.currentIndexChanged.connect(lambda _i: self._room_changed())
         rrow = QHBoxLayout()
         rrow.addWidget(self.room_box, 1)
@@ -612,10 +613,9 @@ class ImportTab(QWidget):
         cur = self.room_box.currentData()
         self.room_box.blockSignals(True)
         self.room_box.clear()
-        for r in self.s.doc.rooms:
-            if r.get('placeholder') or not r.get('record'):
-                continue
-            self.room_box.addItem(f"${val(r['mapID']):02X}  {self.s.doc.room_name(r)}", r['id'])
+        from editor2.core import place_names as PN           # S143: names only
+        self.room_box.add_entries(PN.Places.of(self.s.doc).room_entries(
+            'id', want=lambda r: bool(r.get('record'))))
         i = self.room_box.findData(cur)
         self.room_box.setCurrentIndex(max(i, 0))
         self.room_box.blockSignals(False)

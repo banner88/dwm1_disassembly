@@ -32,6 +32,7 @@ from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox,
 
 from editor2.app.session import REPO
 from editor2.core import cutscenes as CS
+from editor2.core import place_names as PN
 from editor2.core import script_ops as SO
 
 KIND_COLOUR = {'actor': QColor(140, 200, 255), 'text': QColor(240, 230, 160),
@@ -576,13 +577,28 @@ class PlaybackWindow(QDialog):
             QTimer.singleShot(0, lambda: self.start_item(self.index + 1))
             self._ended_at = 1 << 30
 
+    def _live_room(self, m):
+        """S143 (ARC CAP4b): the room the game is in, by name (a custom map id
+        byte names the project room of that id when only one region has it)."""
+        try:
+            m = int(m)
+        except (TypeError, ValueError):
+            return 'room ?'
+        if m < 0x6B:
+            return PN.with_id(PN.vanilla_name(m), m, True)
+        doc = getattr(getattr(self.parent(), 's', None), 'doc', None)
+        rooms = [r for r in (doc.rooms if doc is not None else []) if not r.get('placeholder')
+                 and (int(str(r.get('mapID')), 0) & 0xFF) == m]
+        return PN.with_id(rooms[0].get('name') or rooms[0]['id'], int(str(rooms[0]['mapID']), 0)) \
+            if len(rooms) == 1 else PN.with_id('your room', m)
+
     def _show(self):
         if self.eng is None or self.img is None or not self.st:
             return
         self.screen.setPixmap(QPixmap.fromImage(self.img).scaled(480, 432))
         w = self.st
         recipe, scene, label = self.items[self.index]
-        line = f"{label} · room ${w['map']:02X} screen {w['screen']} · frame {w['frames']}"
+        line = f"{label} · {self._live_room(w['map'])} screen {w['screen']} · frame {w['frames']}"
         if w['active']:
             st = None
             if (w['type'], w['script']) == (recipe.script_type & 0xFF, recipe.script_idx):
@@ -1118,7 +1134,7 @@ class CutscenesTab(QWidget):
                         str(r.get('name', '')).lower()]
                 if not refs:
                     continue
-                node = QTreeWidgetItem([f"${mid:02X} {r.get('name') or r.get('id')}  ({len(refs)})"])
+                node = QTreeWidgetItem([f"{PN.with_id(r.get('name') or r.get('id'), mid)}  ({len(refs)})"])
                 for ref in refs:
                     c = QTreeWidgetItem([ref.title])
                     c.setData(0, ROLE, ref)
@@ -1129,14 +1145,14 @@ class CutscenesTab(QWidget):
         vtop = QTreeWidgetItem(['Game rooms'])
         self.tree.addTopLevelItem(vtop)
         for mid in self.cat.map_types():
-            name = self.cat.rooms.name(mid)
+            name = PN.vanilla_name(mid)                      # S143: names only
             scenes = [s for s in self.cat.scenes(mid) if self._scene_ok(s)]
             refs = [SceneRef('vanilla', mid, s, self.cat, self._title(self.cat, s, mid))
                     for s in scenes]
             refs = [x for x in refs if self._match(x, q) or q.lower() in name.lower()]
             if not refs:
                 continue
-            node = QTreeWidgetItem([f'${mid:02X} {name}  ({len(refs)})'])
+            node = QTreeWidgetItem([f'{PN.with_id(name, mid, True)}  ({len(refs)})'])
             for ref in refs:
                 c = QTreeWidgetItem([ref.title])
                 c.setData(0, ROLE, ref)
@@ -1243,9 +1259,10 @@ class CutscenesTab(QWidget):
         f = QFormLayout(dlg)
         name = QLineEdit('New scene')
         f.addRow('Name', name)
-        rb = QComboBox()
-        for r in rooms:
-            rb.addItem(f"{r.get('name') or r['id']} ({r['mapID']})", r['id'])
+        from editor2.app.place_picker import PlacePicker        # S143: searchable, names only
+        rb = PlacePicker()
+        ok_ids = {r['id'] for r in rooms}
+        rb.set_entries(PN.Places.of(self.s.doc).room_entries('id', want=lambda r: r['id'] in ok_ids))
         f.addRow('Room', rb)
         sb = QComboBox()
 
@@ -1466,13 +1483,13 @@ class CutscenesTab(QWidget):
         ref = self.cur
         sc = ref.scene
         r = self.recipe_of(ref)
-        room = (self.cat.rooms.name(ref.mid) if ref.kind != 'project'
-                else (self.pcat.room(ref.mid) or {}).get('name', f'${ref.mid:02X}'))
+        room = (PN.with_id(PN.vanilla_name(ref.mid), ref.mid, True) if ref.kind != 'project'
+                else PN.with_id((self.pcat.room(ref.mid) or {}).get('name', 'a room'), ref.mid))
         cond = []
         for lit in sc.path or []:
             cond.append(self._lit_text(lit))
         head = [f'<b>{ref.title}</b>',
-                f'Room ${ref.mid:02X} {room} · script {sc.script.key[2]} · starts by '
+                f'Room {room} · script {sc.script.key[2]} · starts by '
                 f'{TRIGGER_WORDS.get(r.action, r.action)} · screen {r.screen}'
                 + (f' · room state {r.room_step}' if r.room_step else ''),
                 'Plays when: ' + ('; '.join(cond) if cond else 'always (its script\'s first branch)')]
@@ -1485,7 +1502,8 @@ class CutscenesTab(QWidget):
         if r.notes:
             head.append('<span style="color:#e8b060">' + ' · '.join(r.notes) + '</span>')
         if ref.chain:
-            head.append('Chain: ' + ' → '.join(f'${m:02X} script {i}' for m, i, _e in ref.chain))
+            head.append('Chain: ' + ' → '.join(f'{PN.vanilla_name(m)} script {i}'
+                                               for m, i, _e in ref.chain))
         self.head.setText('<br>'.join(head))
         # the steps
         acts = self._actors(ref, r)
@@ -1739,7 +1757,7 @@ class CutscenesTab(QWidget):
                 s2 = self._vanilla_scene(m, i, e)
                 if s2 is not None:
                     items.append((self.cat.recipe(s2, m), s2,
-                                  f'${m:02X} script {i}: {self.cat.title(s2)[:40]}'))
+                                  f'{PN.vanilla_name(m)} script {i}: {self.cat.title(s2)[:40]}'))
         else:
             items.append((self._recipe, ref.scene, ref.title[:60]))
         if self.playback is not None:

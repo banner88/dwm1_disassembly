@@ -369,7 +369,10 @@ class ConversationMixin:
         return out
 
     @staticmethod
-    def describe_step(st, enemy_name=None):
+    def describe_step(st, enemy_name=None, place=None):
+        """`place` (S143): a function stored destination -> words (place_names);
+        without it the stored string is shown."""
+        place = place or str
         k = next((k for k in STEP_KINDS if k in st), None)
         if k in ('say', 'ask'):
             v = st[k]
@@ -392,7 +395,7 @@ class ConversationMixin:
             ev = h.get('castle') or 'none'
             where = ('the Castle' if str(h.get('dest')) == 'vanilla:$00' else
                      'home (the hub)' if h.get('dest') == 'hub' else
-                     f"{h.get('dest')} screen {h.get('screen', 0)} ({h.get('x')},{h.get('y')})")
+                     f"{place(h.get('dest'))} screen {h.get('screen', 0)} ({h.get('x')},{h.get('y')})")
             extra = {'heal': ' — priest heals', 'king': ' — King speech'}.get(ev, '')
             say = h.get('say')
             said = ''
@@ -406,7 +409,7 @@ class ConversationMixin:
             m = st['move'] or {}
             if m.get('dest') == 'hub':
                 return 'Send the player home (the hub)'
-            return f"Move the player to {m.get('dest')} screen {m.get('screen', 0)} " \
+            return f"Move the player to {place(m.get('dest'))} screen {m.get('screen', 0)} " \
                    f"({m.get('x')},{m.get('y')})"
         if k == 'vanish':
             how = (st['vanish'] or {}).get('how', 'flicker')
@@ -438,7 +441,9 @@ class ConversationMixin:
 
     def describe_conversation(self, spec):
         steps = (spec or {}).get('steps') or []
-        return ' ▸ '.join(self.describe_step(s, self.enemy_name) for s in steps[:4]) + \
+        from . import place_names as PN                      # S143: places by name
+        pl = PN.Places.of(self).label
+        return ' ▸ '.join(self.describe_step(s, self.enemy_name, pl) for s in steps[:4]) + \
             (' ▸ …' if len(steps) > 4 else '')
 
 

@@ -8,6 +8,10 @@ local MAP_NAMES / MAP_TYPE_NAMES dictionaries in individual tools.
 If a name is wrong, fix it HERE.
 """
 
+# S143 (DOC_AUDIT S143): the five "Castle: Chest Room (variant)" ids and $20-$22 are the
+# CASTLE's room data under unused map ids (bank $0B RoomSub_Castle_cont; exits that seem to
+# lead there are gate entrances), $5F the gate item shop's ($50). The names stay (generated
+# JSON carries them); the editor shows editor2/core/place_names.py VANILLA_OVERRIDES.
 MAP_TYPE_NAMES = {
     0x00: "Castle",             0x01: "GreatTree",          0x02: "Bazaar",
     0x03: "Gate Hub",           0x04: "Farm",               0x05: "Stable",

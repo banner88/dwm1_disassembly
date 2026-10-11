@@ -3,8 +3,9 @@
 - Rooms (S140): up to **63 regions of 128 rooms** of your own. A map id is one
   byte, so the game tells rooms apart by their REGION plus their map id: your first
   128 rooms are region 0 (map ids $6B-$EA, as before), the next 128 are region 1
-  (shown as $16B-$1EA: the region is the high byte), and so on — the editor hands
-  them out by itself (**New room** takes the first free one). Doors, door links,
+  ($16B-$1EA: the region is the high byte), and so on — the editor hands
+  them out by itself (**New room** takes the first free one) and never shows them
+  (S143: rooms are shown by name; View → Show technical ids shows them again). Doors, door links,
   conversation moves, gate floors, the hub and gate bosses all reach any region;
   the game keeps the region in its save. Your arena's Lobby and Battle rooms must
   be region 0 rooms (the game finds them by their map id alone), and their map ids
@@ -20,8 +21,14 @@
   room) and its undo take ~0.1-0.3 s, the World tab ~1-2 s the first time; the
   bank meter measures in the background. An undo step keeps only what its edit
   changed, so a long session no longer piles up copies of the whole project.
-  Room lists are still one long list (search, areas and room names instead of
-  map ids come next — ROADMAP CAP4b).
+  S143: rooms by name everywhere (names unique), areas (folders), one searchable
+  room picker (all ~400 rooms of such a project fill it in a few ms), a search box
+  over the room lists, and the World tab's find / area / neighbours filters.
+- A copy of the game's **Arena Battle room** gets no "sprite limit" warning about your
+  party (S143): in that room the game does not draw your walking party — its NPCs ARE
+  the party (the hero's shape and the party monsters) plus the opponents, at most 8,
+  and the match script holds you still (measured in the game on your save: 24 sprite
+  pieces at most, none hidden). Every other room keeps the warning.
 - Step counters ("steps walked in this room") with more than one region (S140):
   every region's rooms share one area, so their counters start again from 0 when
   you walk into another region (your arena rooms' counters are kept). A project

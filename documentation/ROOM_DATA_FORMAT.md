@@ -579,6 +579,15 @@ party on one row): the bell keeper and the slime vanished. PyBoy screenshots do 
 the per-line drop (count objects per line instead — KEY_LESSONS S117b). The editor warns
 (`formats.sprite_budget`: a row with > 1 NPC, > 6 NPCs on screen — the user chose
 warnings over an engine flicker).
+**S143 — the Arena Battle room (`$5D`) has no walking party** (measured in PyBoy: the
+user's project build + `.sav`, the user's arena lobby desk with `$CAB4` = 0, G class YES):
+its NPCs ARE the party — `$E0` the hero's shape at (7, 5), `$E1-$E3` the party monsters at
+(6, 4-6) — plus the four foes `$F0-$F3`, and the match script holds the player; at most
+24 objects were on screen (the save's party: 1 monster), on the hero's row 4 + the foe's.
+With 3 party monsters it is 8 NPCs = 32 objects and at most 3 characters (6 objects) on a
+row — nothing vanishes. `formats.party_walks(room)` is False for a copy of `$5D`
+(`PARTY_ABSENT_SOURCES`), and `sprite_budget(npcs, party=False)` then counts the NPCs alone
+(10 objects a line, 40 in all) — the user's own arena room no longer warns.
 
 **Screens per room.** Engine ceiling = **16** (4×4): `RoomEntry2` scroll
 math clamps row = Y/128 to 0-3 and col = X/160 to 0-3. Vanilla max = the

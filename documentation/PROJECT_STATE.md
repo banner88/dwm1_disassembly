@@ -10,6 +10,67 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
+> Last verified: 2026-10-11 (Session 143 — **ROADMAP ARC CAP4b BUILT: PLACES BY NAME — NO MAP ID OR
+> REGION SHOWN ANYWHERE IN THE EDITOR (VIEW → SHOW TECHNICAL IDS BRINGS THEM BACK), UNIQUE ROOM NAMES,
+> AREAS (ONE LEVEL OF FOLDERS), ONE SEARCHABLE PLACE PICKER FOR ALL 28 ROOM CHOICES, THE ROOMS LIST AS
+> FOLDERS + SEARCH, THE WORLD TAB'S FIND / AREA / NEIGHBOURS; THE ARENA BATTLE COPIES' SPRITE WARNING
+> MEASURED AND FIXED**
+> (user: "Continue on the 4 mb expansion" → the CAP4b audit (below) + 5 questions → "1) Yeah seems ok
+> [S142 tested] 2) view show in case I want them 3) One level 4) Yes [rename duplicates on open] 5) No
+> keep so I know wtf it is [the game's odd rooms stay listed]" + "editor complains about amount of NPCs
+> in ARENA battle room … vanilla has even more? Just want to flag it"; **S142 USER-CONFIRMED** 2026-10-11
+> 14:24 ("Yeah seems ok")). **Built S143, NOT yet user-tested.** Byte-neutral: no ROM change, no test
+> ROM (the example pin `7cd31035…`, patched, unchanged).
+> **The audit (an agent's inventory, spot-checked):** ~100 places printed a map id (`$6B`, `$16B` — the
+> region as a leading digit — or a raw `room:$6B` / `0x6B`): the Rooms lists, the inspector, the door /
+> teleport / redirect dialogs, conversation and cutscene moves, the Gates / Arena / Encounters / Music /
+> Cutscenes / Flags / World tabs, canvas tooltips, questions, undo labels, every build message; 28 room
+> pickers, ~20 of them the same inline loop, 3 searchable; no name uniqueness anywhere (Make editable
+> twice = two "GreatTree"); no areas. **Found:** dwm/map_names.py calls five map ids "Castle: Chest Room
+> (variant)" and `$20-$22` have no name — all eight are the CASTLE's room data under unused ids (bank
+> $0B `RoomSub_Castle_cont`; the exits that seem to lead there are gate entrances — the byte is a gate
+> number); `$5F` = the gate item shop's data (`$50`).
+> **Built (editor; `EDITOR_REVISION` S143):** NEW `editor2/core/place_names.py` — `vanilla_name` (the
+> overrides "Castle (unused copy 1-8)", "Gate Floor: Item Shop (unused copy)"; never a hex fallback),
+> `Places` (`label` of every stored form: `room:$XX` / `room:$16B` / `vanilla:$XX` / `hub` / `gate:N` /
+> a room id / a map id / tuples; `room_entries` by area, `vanilla_entries` in 5 groups,
+> `special_entries`; a game room gets " (game room)" when a project room has its name), `room_ref` /
+> `mid_ref` for messages, `strip_ids` for extracted labels, `next_free_name`, `SHOW_IDS` (+ the id as
+> "[$6B]" / "[region 1 $6B]" / "[game $0B]"; the command-line compiler sets it). NEW
+> `editor2/app/place_picker.py` — `PlacePicker` (a QComboBox you can type into: any part of a name or an
+> area, grouped headers, a header never current, a typed pick emits `activated`) + `ask_place` (the
+> dialog form); every room picker uses it. NEW `editor2/app/rooms/room_tree.py` — `PlaceTree` (folders,
+> the QListWidget calls on the place rows, search, drag a room onto an area). `Document`:
+> `unique_room_name` / `room_name_taken` (New / Copy / Make editable / New art room pick a free name,
+> `rename_room` refuses a taken one), `_migrate_unique_names` (a duplicate → "name 2", a MIGRATED note),
+> areas (`custom.rooms[].area`, `custom._editor.areas` order + empty areas; `areas` / `add_area` /
+> `set_room_area` / `rename_area` / `delete_area` / `move_area`; editor-only). The Rooms tab: one search
+> box over both lists, your rooms in area folders, **Area…**, right-click area menu, the inspector's
+> **area** box; the World tab: Find (Enter = next), Area filter (neighbours faded), "only the selected
+> room and its neighbours" (1-6 steps); script-warp edges keep the region (`world.py`: the high byte of
+> a place word is its region). View → **Show technical ids** (QSettings `view/show_ids`). Every
+> remaining display site (tabs, dialogs, canvas, core notes / errors: animation, cutscenes, doors,
+> gates, hub, worlds, encounters, palette borrow, flag index, script ops, story state, validators,
+> project) → names.
+> **The arena (user's flag), measured** (PyBoy, the user's project build + `.sav`: CONTINUE, the user's
+> arena lobby desk with `$CAB4` = 0 and gold poked, G class YES): in the Arena Battle room the walking
+> party is NOT drawn — its NPCs ARE the party (`$E0` the hero's shape, `$E1-$E3` the party monsters) plus
+> the 4 foes `$F0-$F3`, the match script holds the player; at most 24 sprite pieces were on screen, none
+> dropped. The S117b warning added the walking party (8 a line / 16 in all) on top → false. Fix:
+> `formats.party_walks(room)` (False for a copy of `$5D`) → `sprite_budget(npcs, party=False)` in the
+> validator and the Rooms banner; other rooms keep the warning.
+> **Measured (the scale project = the example + 300 Copies in 3 areas, regions 0-2, + a duplicate
+> name):** opens in 4.6-5.4 s; 20 tabs (hidden pages too), a region-2 room, a game room, 10 place
+> dialogs and the 627 validation warnings: **0** map-id texts — the same scan on the S142 code finds
+> 4,968 (the negative control); the user's project: 0; the picker fills 411 places in 5-8 ms, "place 29"
+> → its 10 rooms, a typed pick = the room's stored destination. **Byte-neutral:** the user's project
+> (`5b81760a…`, patched; with and without areas) and a 311-place 3-region copy of it with areas
+> (`2425d4b4…`, patched) build identical ROMs on the S142 and S143 code.
+> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 1519 PASSED (+ `test_s143`, 12); test_app
+> PASS (+ `s143_names`); test_canvas `--rom` PASS. Help: 10_rooms (rooms by name, areas, picking a room),
+> 11_doors (the World tab's find / area / neighbours), 90_limits.
+> **Next:** CAP4c — Make editable copies one stage (post-game by default).
+
 > Last verified: 2026-10-11 (Session 142 — **ROADMAP ARC CAP4 SPLIT (a scale + safety / b places by name /
 > c one-stage Make editable / d the Capacity page); CAP4a BUILT: THE EDITOR AT 300+ PLACES — A 311-PLACE
 > PROJECT OPENS IN 4-5 s (WAS 28), EDITS + UNDO 0.1-0.3 s (WAS 0.5-2), UNDO KEEPS ONLY WHAT CHANGED (WAS 14 MB A
@@ -18,7 +79,7 @@
 > sounds good. 2) Yes ok 3) Yes all named. 4) Hide 5) Whatever you think is best. 6) Not sure I understand
 > implications for romhack" → 6 explained (a copy that follows the original story's counters shows the
 > START-of-game look forever in a new romhack; one post-game stage + unused scripts dropped suggested — asked
-> again at CAP4c); S141 USER-CONFIRMED before the session). **Built S142, NOT yet user-tested.** Byte-neutral:
+> again at CAP4c); S141 USER-CONFIRMED before the session). **Built S142; USER-CONFIRMED 2026-10-11 14:24 ("Yeah seems ok", S143 start).** Byte-neutral:
 > no ROM change, no test ROM (the example pin `7cd31035…`, patched, unchanged).
 > **The audit (measured):** the user's project + 300 copies of its ordinary rooms made with the editor's own
 > Copy (own layouts, own tileset copies) = 311 places in 3 regions; it builds (4 MB, 43 of the 128 new banks).
@@ -65,80 +126,9 @@
 > 11_doors (the World tab keeps places), 90_limits (hundreds of rooms).
 > **Next:** CAP4b — places by name (one searchable picker, unique names, areas, no map ids shown).
 
-> Last verified: 2026-10-10 (Session 141 — **ROADMAP ARC CAP3b BUILT: REGIONS IN THE GAME'S OWN MOVES —
-> HOME AFTER A LOST BATTLE / A WARPWING, THE BREEDING CEREMONY'S RETURN, A ROOM SERVED ON A GATE FLOOR,
-> THE BOSS FLOOR — EACH LANDS IN THE RIGHT REGION (PYBOY ON THE USER'S SAVE); PLAY HERE FROM A SAVE IN A
-> PLACE THE BUILD LACKS FIXED**
-> (user: "Continue on the 4 mb expansion" → the CAP3b audit (no engine defect found by reading; the
-> remaining items are walks) → "I dont really understand the story state hub and arena stuff or why all
-> this is necessary" → the plain version + a SMALL test (lose, breed, gate, WarpWing in region 2; the
-> story-state item dropped: `story_state.py` has no map id or region in it) → "Sure go ahead, check
-> CAP3b."; S140 USER-CONFIRMED before the session). **Built S141; USER-CONFIRMED 2026-10-11 10:18 ("Everything works", r3)** — r1 tested by
-> the user 2026-10-10 23:51: "After breeding, an NPC disappears and the one in the lower right corner
-> glitches and becomes letters" → r2 (the sheets reloaded at the menu's close) → the user 2026-10-11 09:18:
-> "its still glitching WHILE menu is open" → **r3** (below: a custom room's NPC sheets 3-5 in VRAM bank 1).
-> Test ROMs: `DWM-S141-dial-test.gbc` (`864fb4fb…`, patched; r1), `DWM-S141r2-dial-test.gbc` (`acb77bba…`,
-> patched; r2) and **`DWM-S141r3-dial-test.gbc`** (`cff73778…`, patched; the same project on the r3 engine)
-> — the user's project + 8 BRAND-NEW rooms, the
-> DIAL HALLS: TEST rooms in REGION 2 — MOONDIAL HALL / MOON HEARTH / MOON CELLAR / MOON DAIS, project
-> mapIDs `$276-$279` — and region-0 DECOYS with the same map ids `$76-$79` — SUNDIAL HALL / SUN HEARTH /
-> SUN CELLAR / SUN DAIS, whose signs say "BUG" if the game sends you there; region 1 empty. MOONDIAL
-> HALL: a GRANDPA, a BRUISER that always wins, a WING KEEPER (a WarpWing), a guide to SUNDIAL HALL;
-> SUNDIAL HALL: the portal into the NEW gate 33 DIAL GATE (copy of Beginning, 4 floors: floor 2 =
-> MOON CELLAR always, floor 4 = the boss room MOON DAIS with the DIAL WARDEN, who clears the gate and
-> sends you home) + a BRUISER; MOON HEARTH = the HUB while flag `s141_hub` is ON (arrival lines for
-> lost / WarpWing / home; its KEEPER switches the hub off and on); way in: the S141 DEMO NPC in
-> Cities_FOUNT (3, 4), which turns the hub on). Its project: `examples/s141_dial_demo/` (rebuilds the
-> r3 md5 on the r3 engine).
-> **Measured — NEW `tools/walk_regions.py`** (PyBoy, the user's `.sav` — a stale region-3 save, so
-> CONTINUE goes home first): 47 checks, 0 failed: the demo NPC → MOONDIAL HALL (`$76`, region 2); a
-> loss there → MOON HEARTH (`$77`, 2), "lost" arrival line, gold 3800 → 1900; the guide (a script warp)
-> → SUNDIAL HALL (`$76`, 0) and a loss there → MOON HEARTH (`$77`, 2 — `HubWarp`'s region across
-> regions); Grandpa BREED → the ceremony room `$08` (region 2 kept) → back in MOONDIAL HALL (`$D951`
-> `$F0`), the HATCH → `$08` → back (`$F1`, the egg hatched); the portal in SUNDIAL HALL (region 0) →
-> gate 33 floor 1 (region 0) → floor 2 = MOON CELLAR (`$78`, 2 — the gate insert's region) → its hole
-> → floor 3 → the WarpWing → MOON HEARTH ("WarpWing" line, sprites shown); the WarpWing on floor 1
-> (region 0) → MOON HEARTH (2); floor 4 = MOON DAIS (`$79`, 2 — `BossRegionEnter`) → the warden won →
-> `$17C1` ON (`GateBossWin` with the region) → home by the conversation's move ("home" line) → the
-> portal swirl in SUNDIAL HALL hidden; the hub off → a loss in region 2 → the Castle (region 2 kept,
-> the priest); Play here (the editor's playback engine + `play_setup.resolve`) from a new game, the
-> save and story step 5 into `$276` / `$76` / `$279`: 9 / 9 in the right region with the story flags.
-> `--negative` (bank $71 `HubWarp`'s `ld [wWarpRegion], a` → nops in the ROM copy): 4 FAILED — the two
-> moves home that cross regions (lose0, warpwing0) land in SUN HEARTH, region 0; the rest pass.
-> **Found + fixed (editor, `editor2/core/playback.py`):** Play here with **My save file** when the save
-> stands in a place the build lacks (the user's current save) stayed in the Castle ("the room did not
-> finish loading"): the base state was saved while `ContinueCheck`'s warp home was still pending, and
-> every Play here warp raced it. `_continue_save` now waits for a calm field (no transition, script or
-> box); base states are cached as `base2_` (pre-S141 ones dropped); the arrival check also compares
-> `wMapRegion`. KEY_LESSONS S141.
-> **r2 / r3 — found by the user, fixed (engine):** a custom room with 4+ distinct NPC sprites showed its
-> 4th / 5th NPC as letters / nothing while a WINDOWED screen was open (Grandpa, a master, "Take…", the
-> shop, the Vault, the farm, the egg appraiser, the namer) and after it: the room's
-> NPC sheets sit at `$8500 + c·$100`, sheets 3-5 = `$8800-$8AFF` = the BG tiles those screens load their
-> window graphics into (VRAM bank 0); the game reloads the sheets only after its FULL screens (bank $06
-> entry 4, now `ReloadNPCSheets`). Pre-existing since S117 / S126 / S127 (their demo rooms had few NPCs);
-> not a region matter. r2 reloaded them at the close (fixed "after" only); **r3** keeps a custom room's
-> sheets 3-5 in VRAM BANK 1 (unused tile area in the field): the page blocks of bank $0B `CmpRoom_4839` /
-> bank $06 `ReloadNPCSheets` and `NPCDrawSlot`'s two builder calls → NEW bank $77 entries 12-15
-> (`NpcSheetLoad0B` / `NpcSheetLoad06`: the vanilla page rules + a page ≥ `$88` copied to VRAM bank 1;
-> `NpcDrawPlain` / `NpcDrawMonster`: OAM attr bit 3 for a tile base ≥ `$80`), same size; `wNpcSheetIdx`
-> `$D560`; r2's bank $06 step change reverted. Measured: each windowed service on one NPC of a 5-NPC
-> room — every NPC piece on screen DURING the menu and after reads its room-load bytes (old: the shop
-> and the Vault wrong open + after); the walk's breed step checks the menu open twice and after (PASS;
-> `--negative-sheets` FAIL 3); a won battle there clean. Template re-pinned (`TEMPLATE_SIZE[$77]` 1967);
-> clean tree: `label6_4d5a` → `ReloadNPCSheets` + comments (byte-perfect). Example pin `7cd31035…`
-> (patched; S140's `c4c99542…` historical). KEY_LESSONS S141 r2 / r3.
-> **Not walked (scope agreed with the user):** an arena match from two regions, a world whose rooms are
-> in regions ≥ 1, a JOURNAL save inside a gate dive in region ≥ 1 — their tables are in the S140
-> census (`census_regions.py`); the lobby from region 3 was walked S140.
-> **r3 walk:** `walk_regions.py` on the r3 build, the user's save: 51 checks, 0 failed (+ the NPC
-> picture checks); `--negative` 4 failed, `--negative-sheets` 3 failed.
-> **Checks (r3):** verify_integrity PASS; test_compiler `--rom` ALL 1500 PASSED (+ `test_s141`); test_app
-> PASS; test_canvas `--rom` PASS. `EDITOR_REVISION` S141 (help 16_play_here, 67_services).
-> **Next:** CAP4 — the editor for hundreds of places (places by name, no map ids).
-
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
-- **S142** (2026-10-11): ROADMAP ARC CAP4 split (a scale + safety / b places by name / c one-stage Make editable / d Capacity page); CAP4a built (byte-neutral): Copy room gives the copy its OWN scripts, texts and doors (shared since S94 — a copy's words edited the original's, a copied breeder stopped the build); a 311-place project opens in 4-5 s (was 28; one shared compiler model per document revision `Document.model_project`), edits + undo 0.1-0.3 s (was 0.5-2), undo snapshots = interned pickled pieces (`document.Snapshot`, was 14 MB a step), O(1) id lookups, text-size memo, `_payload_bytes` fast path, the bank meter in a background thread, hidden tabs refresh on show, the World tab's layout in numpy with rooms kept in place; `test_compiler.test_s142`, `test_app.s142_scale`. Built, NOT yet user-tested. Owning: ROADMAP CAP4a, EDITOR_DESIGN §6.4 D "As built S142", PROJECT_COMPILER §2.50, KEY_LESSONS S142, PYBOY_DEBUGGING S142 (Qt scale probes), TOOLS_AND_DATA S142.
+- **S143** (2026-10-11): ROADMAP ARC CAP4b built (byte-neutral) — places by name: NEW `editor2/core/place_names.py` (every stored place reference in words; the game's rooms named uniquely — the eight unused ids holding the Castle's data = "Castle (unused copy 1-8)", $5F = "Gate Floor: Item Shop (unused copy)"; `room_ref` in messages), NEW `app/place_picker.py` (one searchable place picker for all 28 room choices + `ask_place`), NEW `app/rooms/room_tree.py` (the Rooms lists as area folders + search), unique room names (`Document.unique_room_name`, Rename refuses, duplicates renamed on open), areas (`custom.rooms[].area`, `custom._editor.areas`; editor-only), View → Show technical ids, the World tab's find / area / neighbours; the Arena Battle copies' sprite warning measured (its NPCs are the party) → `formats.party_walks`; scan: 0 map-id texts (S142 code 4,968); `test_compiler.test_s143`, `test_app.s143_names`; S142 USER-CONFIRMED. Built, NOT yet user-tested. Owning: ROADMAP CAP4b, EDITOR_DESIGN §6.4 D "As built S143", PROJECT_COMPILER §2.51, ROOM_DATA_FORMAT "Sprite limits (S117b)", KEY_LESSONS S143, PYBOY_DEBUGGING S143, DOC_AUDIT S143, TOOLS_AND_DATA S143.
+- **S142** (2026-10-11): ROADMAP ARC CAP4 split (a scale + safety / b places by name / c one-stage Make editable / d Capacity page); CAP4a built (byte-neutral): Copy room gives the copy its OWN scripts, texts and doors (shared since S94 — a copy's words edited the original's, a copied breeder stopped the build); a 311-place project opens in 4-5 s (was 28; one shared compiler model per document revision `Document.model_project`), edits + undo 0.1-0.3 s (was 0.5-2), undo snapshots = interned pickled pieces (`document.Snapshot`, was 14 MB a step), O(1) id lookups, text-size memo, `_payload_bytes` fast path, the bank meter in a background thread, hidden tabs refresh on show, the World tab's layout in numpy with rooms kept in place; `test_compiler.test_s142`, `test_app.s142_scale`. USER-CONFIRMED 2026-10-11 14:24 ("Yeah seems ok"). Owning: ROADMAP CAP4a, EDITOR_DESIGN §6.4 D "As built S142", PROJECT_COMPILER §2.50, KEY_LESSONS S142, PYBOY_DEBUGGING S142 (Qt scale probes), TOOLS_AND_DATA S142.
 - **S141** (2026-10-10): ROADMAP ARC CAP3b built — the game's own moves keep the region (PyBoy on the user's save, NEW `tools/walk_regions.py`: a lost battle / the WarpWing → the hub in region 2 from regions 0 and 2, the breeding ceremony `$08` → back (`$F0` / `$F1`), a region-2 room served on a gate floor from a region-0 portal, the boss floor `BossRegionEnter` + `GateBossWin`, the Castle with the hub off, Play here into regions 0 / 2 — 47 checks, 0 failed; `--negative` 4 failed); Play here from a save in a place the build lacks FIXED (`playback._continue_save` waits for the warp home; `base2_`; arrival = map id + region); the story-state item dropped (no region in it); `test_s141`; demo `examples/s141_dial_demo/` (the DIAL HALLS). r1 user-tested 2026-10-10 23:51 (after breeding an NPC vanished / became letters) → r2 (reload at the close) → user 2026-10-11 "still glitching WHILE menu is open" → **r3**: a custom room's NPC sprite sheets 3-5 in VRAM bank 1 (bank $77 entries 12-15 from the bank $0B / $06 loaders and `NPCDrawSlot`, same size; `wNpcSheetIdx` $D560) — the windowed screens (shop, Vault, farm, eggs, namer, Grandpa, a master, "Take…") DMA to bank 0 `$8800+`; `label6_4d5a` → `ReloadNPCSheets`; pin `7cd31035…` (patched). Test ROM `DWM-S141r3-dial-test.gbc` (`cff73778…`, patched) USER-CONFIRMED 2026-10-11 10:18 ("Everything works", r3). Owning: PROJECT_COMPILER §2.40 "S141" + §5, ROOM_DATA_FORMAT "NPC sprite sheets (S141)", DATA_STRUCTURES "Service screens", ARCHITECTURE "Regions (S140)" (S141 walk), ROADMAP CAP3b, CROSSBANK_ROOMS "S140 sites", EDITOR_DESIGN §6.4 + §5.1 "As built S132", KEY_LESSONS S141, PYBOY_DEBUGGING S141, TOOLS_AND_DATA S141.
 - **S140** (2026-10-10): ROADMAP ARC CAP3a built — regions: a place = (`wMapRegion`, `wMapID`), the region = the high byte of a project mapID; NEW pinned `templates/place_number.asm` (`PlaceNum<bank>` from `RegionTable<bank>` + `GlobalPlaceIds<bank>`) in banks $60 / $6C / $71 / $76 — every per-place table indexed by the place number; exit rows into another region `$FD <region>` → link ids `$EB-$FE` + `wExitLinks`; bank $73 entry 0 `RegionCommit` / entry 22 `RegionEnterE`; `wWarpRegion` from the hub rows, script warps (`write_ram`) and the gate boss (`GateBossRegionTable`, bank $16 nops → bank $71 entries 11 / 12); the region saved (SRAM bank 3 "X2" + `$A002`); per-place song rows, word music-rule keys, ROM0 `$26DD` rows `$6B-$6F` back to filler; `audit_wram.py` fixed + `extracted/wram_usage.json` regenerated; NEW `tools/census_regions.py` (337 places in 4 regions: 0 mismatched); pin `c4c99542…` (patched); S139 USER-CONFIRMED. Test ROMs `DWM-S140-compass-test.gbc` + `DWM-S140-plain-test.gbc` USER-CONFIRMED 2026-10-10. Owning: ARCHITECTURE "Regions (S140)", PROJECT_COMPILER §2.49, ROADMAP CAP3a / CAP3b, CROSSBANK_ROOMS "S140 sites", EDITOR_DESIGN §6.4, known_RAM_map ($D536-$D55F, SRAM "X2"), KEY_LESSONS S140, PYBOY_DEBUGGING S140, TOOLS_AND_DATA S140, DOC_AUDIT S140, extracted/capacities.json, extracted/mapid_range_audit.json, extracted/wram_usage.json.
 - **S139** (2026-10-10): ROADMAP ARC CAP2d built — animation banks: bank $6C entry 0 `CustomTileAnimate` forwards through `TileAnimDirectory` (bank, index) to `TileAnimPlay{A}` of the room's animation bank ($6C or $80+, each with the pinned player `templates/tileanim_player.asm`); `tileanim.plan` first fit after the stream / place banks, a room > one bank = error; `anims_ext`, the $6C meter bar; NEW `tools/census_tile_anims.py` (S139 demo 3,258 checks 0 mismatched; the negative control fails only in the animation banks' rooms); pin `fc0f7e2c…` (patched); S138 USER-CONFIRMED. Test ROMs `DWM-S139-twinkle-test.gbc` + `DWM-S139-plain-test.gbc` USER-CONFIRMED 2026-10-10. Owning: ARCHITECTURE "Animation banks (S139)", PROJECT_COMPILER §2.48, ROADMAP CAP2d, ROOM_DATA_FORMAT "Own tile animations", KEY_LESSONS S139, PYBOY_DEBUGGING S139, TOOLS_AND_DATA S139, extracted/capacities.json, extracted/mapid_range_audit.json.
@@ -465,7 +455,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 
 | System | State |
 |--------|-------|
-| Campaign-scale capacity — hundreds of places (ROADMAP ARC CAP) | 🔵 **AUDITED + DESIGNED S133 (byte-neutral); CAP1 4 MB BUILT S134 + CAP2a streams S135 (both USER-CONFIRMED); CAP2b place banks BUILT S136 (USER-CONFIRMED); CAP2c room colours BUILT S137 (USER-CONFIRMED); CAP2e stale saves + room songs past $7F BUILT S138 (USER-CONFIRMED); CAP2d animation banks BUILT S139 (USER-CONFIRMED) — CAP2 complete; CAP3a regions BUILT S140 (USER-CONFIRMED 2026-10-10); CAP3b the in-game acceptance BUILT S141 (the game's own moves walked in PyBoy, Play here fixed, a custom room's NPC sheets 3-5 in VRAM bank 1; USER-CONFIRMED 2026-10-11 10:18 ("Everything works", r3)); CAP4 split S142 — CAP4a scale + safety BUILT S142 (NOT yet user-tested: a 311-place project opens in 4-5 s, edits 0.1-0.3 s, undo keeps only what changed; Copy room's own scripts / texts / doors); CAP4b-d / CAP5 open**: place banks (CAP2), regions (CAP3), 4 MB (CAP1), the editor (CAP4), secondary ceilings (CAP5). EDITOR_DESIGN §6.4; CROSSBANK_ROOMS "S133 capacity audit" |
+| Campaign-scale capacity — hundreds of places (ROADMAP ARC CAP) | 🔵 **AUDITED + DESIGNED S133 (byte-neutral); CAP1 4 MB BUILT S134 + CAP2a streams S135 (both USER-CONFIRMED); CAP2b place banks BUILT S136 (USER-CONFIRMED); CAP2c room colours BUILT S137 (USER-CONFIRMED); CAP2e stale saves + room songs past $7F BUILT S138 (USER-CONFIRMED); CAP2d animation banks BUILT S139 (USER-CONFIRMED) — CAP2 complete; CAP3a regions BUILT S140 (USER-CONFIRMED 2026-10-10); CAP3b the in-game acceptance BUILT S141 (the game's own moves walked in PyBoy, Play here fixed, a custom room's NPC sheets 3-5 in VRAM bank 1; USER-CONFIRMED 2026-10-11 10:18 ("Everything works", r3)); CAP4 split S142 — CAP4a scale + safety BUILT S142 (USER-CONFIRMED 2026-10-11 14:24: a 311-place project opens in 4-5 s, edits 0.1-0.3 s, undo keeps only what changed; Copy room's own scripts / texts / doors); CAP4b places by name BUILT S143 (NOT yet user-tested: no map id or region shown — View → Show technical ids; unique names; areas; one searchable place picker; the World tab's find / area / neighbours); CAP4c-d / CAP5 open**: place banks (CAP2), regions (CAP3), 4 MB (CAP1), the editor (CAP4), secondary ceilings (CAP5). EDITOR_DESIGN §6.4; CROSSBANK_ROOMS "S133 capacity audit" |
 | Custom monster pools (Encounters #2) | 🟢 **BUILT S114 (P3.13a), test ROM `DWM_S114_encounters_test.gbc` USER-CONFIRMED 2026-10-03 09:52 ("Looks good. Give editor files")** — bank $76 + the same-size bank $01 fork; the Encounters tab. PROJECT_COMPILER §2.30 |
 | Custom music | 🟢 **M1-M3c COMPLETE (S61-S64, all user-confirmed)**: engine map, round-trip codec, general slots (bank $74), room-default assignment for any mapID, `custom.music` schema, 31-song DWM2 catalog, MIDI import. **S116 (P3.13b; test ROM `DWM_S116_music_test.gbc` USER-REPORTED 2026-10-03 18:29 "rom seems to work fine"; the editor's preview player rewritten S116b, NOT yet user-tested): the Music tab — preview on the game's own engine (no emulator), names, automatic MIDI import; a song's own 1-6 channels (InitBGM ext), a second song bank $75, gate songs, battle songs (fight / arena / Starry final / room / gate / boss / normal).** Open boxes: event jingles (victory / level-up) not editable, CI compiler-test |
 | Arena/boss roster AUTHORING (E1→E2 wiring) | RE ✅ DECODED S67; **ARENA half built S109 (P3.10b, test ROM USER-CONFIRMED 2026-10-01 22:57)** — `gamedata.arena` + the enemy rows, Arena tab (the "Arena authoring" primitive row). Gate-boss rosters: their enemy rows are editable on the Monsters tab (S106); a boss editor is not built |

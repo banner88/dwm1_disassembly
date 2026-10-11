@@ -897,3 +897,13 @@ mapping, a `rst $10` executing in bank $80). ✏️ = fixed in place this sessio
 | `patches/bank_073.asm` S140 banner, as first written: "`wWarpRegion` set by bank $71 HubWarp (the hub's room is region 0's in ARC CAP3a)" | ✏️ corrected in session (comment only) | the hub rows carry a region byte, and script warps set `wWarpRegion` too | bank $71 `HubWarp`; `emitters._regionize_ops` |
 | (S140 draft, caught before delivery) "region 0's step counters sit below the shared area" | ✏️ corrected in session | every region's counters share `wCustomStepRegional..$CFFF`, region 0's included; only reserved / explicit / global places' counters sit below | `Project.step_counter_allocation`; KEY_LESSONS S140 |
 | (note) a save made in region ≥ 1, CONTINUEd in a build without that region | ℹ️ behaviour, by design | it is a stale place: home (hub / Castle), region reset to 0 | PyBoy: the lodge 3-5 save in the plain build → the Castle |
+
+## S143 addendum (2026-10-11; places by name — ROADMAP ARC CAP4b)
+
+| File / claim | Verdict | What is true | Evidence |
+|---|---|---|---|
+| `dwm/map_names.py`: `$0B $0E $11 $14 $15` = "Castle: Chest Room (variant)"; `$20-$22` unnamed | ⚠ wrong name (kept: generated JSON carries it) | all eight are the CASTLE's room data under unused map ids; the exits that seem to lead to them are gate entrances (gate flag 1 — the byte is a gate number); the editor shows "Castle (unused copy 1-8)" | `disassembly/bank_00b.asm` room table (`RoomSub_Castle_cont`, `$4C13`); `extracted/map_table.json` exits with `gate_flag` 1; `editor2/core/place_names.py` |
+| `dwm/map_names.py`: `$5F` unnamed | ✏️ named in the editor | the gate item shop's data (`$50`, `$77DD`) under an unused id: "Gate Floor: Item Shop (unused copy)" | bank $0B room table `$5F Room_5F (=mt$50)` |
+| ROOM_DATA_FORMAT "Sprite limits (S117b)": the party (8 objects a line) always adds to a room's NPCs | ⚠ incomplete | not in the Arena Battle room (`$5D`): its NPCs ARE the party (`$E0`, `$E1-$E3`) and the script holds the player | PyBoy S143 on the user's save (≤ 24 objects) |
+| PYBOY_DEBUGGING S109: "YES = up then A" | ⚠ prompt-specific | at the arena class confirmation the cursor starts on YES — UP wraps to NO | PyBoy S143 |
+| EDITOR_DESIGN §6.4 D (S133): destinations as `room:<name>` | ✏️ superseded (S142 decision, S143 build) | the stored `room:$XX` stays (the room's permanent number); the editor only SHOWS names | PROJECT_COMPILER §2.51 |

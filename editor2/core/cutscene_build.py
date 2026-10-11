@@ -1580,8 +1580,10 @@ def walk_steps(steps, path=()):
             yield from walk_steps(st.get('else'), p + ('else',))
 
 
-def describe(st, names=None):
-    """One readable line for a step."""
+def describe(st, names=None, place=None):
+    """One readable line for a step. `place` (S143): a function stored destination
+    -> words (place_names.Places.label)."""
+    place = place or str
     k = step_kind(st)
     if k is None:
         return '(empty step)'
@@ -1668,7 +1670,7 @@ def describe(st, names=None):
     if k == 'move':
         if v.get('dest') == 'hub':
             return 'Send the player home (the hub)'
-        return f'Warp the player to {v.get("dest")} screen {v.get("screen", 0)} ({v.get("x")}, {v.get("y")})'
+        return f'Warp the player to {place(v.get("dest"))} screen {v.get("screen", 0)} ({v.get("x")}, {v.get("y")})'
     if k == 'heal':
         return 'Heal the party (HP / MP full, status cleared)'
     if k == 'end':

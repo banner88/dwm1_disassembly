@@ -253,14 +253,9 @@ class DoorsMixin:
 
     # ---------------------------------------------------------------- views
     def vanilla_door_name(self, mid, key, x, y):
-        r = getattr(self, 'vanilla', None)
-        name = ''
-        if r is not None:
-            try:
-                name = r.vanilla_name(mid)
-            except Exception:
-                name = ''
-        return f"{name or f'${mid:02X}'} — screen {key} door ({x},{y})"
+        # S143 (ARC CAP4b): a place by its name (place_names)
+        from editor2.core import place_names as PN
+        return f"{PN.Places.of(self).vanilla_label(mid)} — screen {key} door ({x},{y})"
 
     def door_end(self, did):
         """The door OBJECT `did`:
@@ -453,7 +448,12 @@ class DoorsMixin:
         cells = f'({x},{y})' + (f' + ({tx},{y})' if tx is not None else '')
         return {'id': ref, 'kind': 'exit', 'room': rid, 'screen': k, 'x': x, 'y': y,
                 'states': sorted(n for n, _e in rows), 'twin_x': tx, 'dest': d,
-                'name': f"exit {cells} → {d}", 'link': None}
+                'name': f"exit {cells} → {self._dest_words(d)}", 'link': None}
+
+    def _dest_words(self, dest):
+        """S143: a stored destination in words (place_names)."""
+        from editor2.core import place_names as PN
+        return PN.Places.of(self).label(dest)
 
     def plain_exits(self):
         """Every plain exit of your rooms, one per door (a double exit is listed

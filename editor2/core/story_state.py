@@ -57,6 +57,12 @@ STATE_RAM = (0xD92A, 0xD99A)             # the step counters (saved)
 KEEP_RAM = {ARENA_TIER, KING_CODE}       # other saved bytes the scripts write
 
 
+def _vn(mid):
+    """S143 (ARC CAP4b): a game room in words (place_names)."""
+    from editor2.core import place_names as PN
+    return PN.with_id(PN.vanilla_name(mid), mid, True)
+
+
 class Machine:
     """Saved state the scripts change: flags (a set) and RAM bytes."""
 
@@ -167,7 +173,7 @@ def follow(mach, rom, hops=3):
             sc = CS.decode_vanilla(rom, mp, 0)
         except Exception:                                        # noqa: BLE001
             return
-        mach.run(sc, 0, screen=scr, what=f'  then room ${mp:02X} screen {scr}: its entry script')
+        mach.run(sc, 0, screen=scr, what=f'  then {_vn(mp)} screen {scr}: its entry script')
 
 
 def run_gate(mach, rom, gate):

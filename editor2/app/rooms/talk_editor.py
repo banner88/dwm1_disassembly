@@ -707,13 +707,12 @@ class BlockEditor(QWidget):
         mv = b.get('move')
         mg.setChecked(bool(mv))
         mf = QHBoxLayout(mg)
-        self.m_room = QComboBox()
+        # S143 (ARC CAP4b): the searchable place picker, names only
+        from editor2.app.place_picker import PlacePicker
+        from editor2.core import place_names as PN
+        self.m_room = PlacePicker()
         if doc is not None:
-            for r in doc.rooms:
-                if r.get('placeholder'):
-                    continue
-                self.m_room.addItem(f"${int(str(r['mapID']), 0):02X} {doc.room_name(r)}",
-                                    f"room:${int(str(r['mapID']), 0):02X}")
+            self.m_room.set_entries(PN.Places.of(doc).room_entries('dest'))
         self.m_screen = QSpinBox(); self.m_screen.setRange(0, 15)
         self.m_x = QSpinBox(); self.m_x.setRange(0, 9)
         self.m_y = QSpinBox(); self.m_y.setRange(0, 7)
@@ -725,7 +724,7 @@ class BlockEditor(QWidget):
         if mv:
             i = self.m_room.findData(mv.get('dest'))
             if i < 0:
-                self.m_room.addItem(str(mv.get('dest')), mv.get('dest'))
+                self.m_room.addItem(PN.Places.of(doc).label(mv.get('dest')), mv.get('dest'))
                 i = self.m_room.count() - 1
             self.m_room.setCurrentIndex(i)
             self.m_screen.setValue(int(mv.get('screen', 0)))

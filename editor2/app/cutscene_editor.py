@@ -623,9 +623,15 @@ class StepForm(QWidget):
         return c
 
     def _combo(self, label, items, cur, on):
-        cb = QComboBox()
-        for text, data in items:
-            cb.addItem(text, data)
+        from editor2.core.place_names import PlaceEntry
+        if items and isinstance(items[0], PlaceEntry):   # S143: a place list -> PlacePicker
+            from editor2.app.place_picker import PlacePicker
+            cb = PlacePicker()
+            cb.set_entries(items)
+        else:
+            cb = QComboBox()
+            for text, data in items:
+                cb.addItem(text, data)
         i = cb.findData(cur)
         cb.setCurrentIndex(max(0, i))
         cb.currentIndexChanged.connect(lambda _i: on(cb.currentData()))
@@ -1052,14 +1058,17 @@ def room_items(session):
     """[(label, dest)] for a `move` step: home (the hub, S125), the Castle throne room,
     the project's rooms, then every game room (S121: the roots room's scene leads to
     GreatTree)."""
-    out = [('home — the hub (World tab)', 'hub'), ('the Castle throne room', 'vanilla:$00')]
-    for r in session.doc.rooms:
-        if not r.get('placeholder'):
-            out.append((f"{r.get('name') or r['id']} (your room)", f"room:{r['mapID'].replace('0x', '$')}"))
+    # S143 (ARC CAP4b): place_names entries (names only, grouped) for a PlacePicker
+    from editor2.core import place_names as PN
+    pl = PN.Places.of(session.doc)
+    out = [PN.PlaceEntry('home — the hub (World tab)', 'hub', PN.SPECIAL, 'special', 'home hub'),
+           PN.PlaceEntry('the Castle throne room', 'vanilla:$00', PN.SPECIAL, 'special',
+                         'castle throne room')]
+    out += pl.room_entries('dest')
     try:
-        for mid, name, _scr in session.renderer.vanilla_rooms():
-            if mid != 0x00:
-                out.append((f'${mid:02X} {name} (game room)', f'vanilla:${mid:02X}'))
+        out += [e._replace(group=f'{PN.GAME}: {e.group}') for e in
+                pl.vanilla_entries(session.renderer.vanilla_rooms(), value='dest',
+                                   want=lambda m: m != 0x00)]
     except Exception:                                   # noqa: BLE001 (no ROM)
         pass
     return out
@@ -1525,13 +1534,16 @@ class CutsceneEditor(QWidget):
         info = {tuple(r['path']): r for r in (self.lw.info if self.lw else [])}
         sel_item = None
 
+        from editor2.core import place_names as PN           # S143: places by name
+        _pl = PN.Places.of(self.s.doc).label
+
         def add(parent, steps, path):
             nonlocal sel_item
             for i, st in enumerate(steps or []):
                 p = path + (i,)
                 k = CB.step_kind(st)
                 rec = info.get(p, {})
-                txt = CB.describe(st)
+                txt = CB.describe(st, place=_pl)
                 if rec.get('note'):
                     txt += '  — ' + '; '.join(rec['note'])
                 it = QTreeWidgetItem([txt])

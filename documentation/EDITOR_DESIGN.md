@@ -290,7 +290,9 @@ the editor must display that"):**
   cloned scripts rewired to the room's own `wCustomStep_<rid>_S<k>` counters.
   A vanilla room's variants are one mapID with N steps (flag → script →
   counter), NOT duplicate rooms; the only by-name duplicates in the table
-  are the five "Castle: Chest Room (variant)" ids.
+  are the five "Castle: Chest Room (variant)" ids. (S143: those five + `$20-$22` are the
+  CASTLE's room data under unused ids — bank $0B `RoomSub_Castle_cont`; the editor names
+  them "Castle (unused copy 1-8)", `core/place_names.py` VANILLA_OVERRIDES.)
 - **Entrances.** Inspector group "Entrances — how the player gets here"
   lists the vanilla doors routed into the room and offers **"Route a vanilla
   door here…"** (`rooms/redirect_dialog.py`: room → screen → door with a
@@ -2384,6 +2386,42 @@ stage = CAP4c. **As built S142 (CAP4a, NOT yet user-tested):**
 - **Views:** verified id → index maps (`_index_of`); hidden tabs (Cutscenes, Import art, Music)
   refresh on show; the bank meter measures off the UI thread; the World tab's spring layout is
   numpy and rooms keep their places between redraws (Re-layout resets).
+USER-CONFIRMED 2026-10-11 14:24 ("Yeah seems ok").
+
+**As built S143 (CAP4b — places by name; NOT yet user-tested; user: "view show in case I want
+them", areas "One level", duplicates renamed "Yes", the game's odd rooms "keep so I know wtf it
+is").**
+- **One source of words** — `editor2/core/place_names.py`: `vanilla_name(mid)` (dwm/map_names.py
+  except VANILLA_OVERRIDES: the eight unused ids holding the Castle's data = "Castle (unused copy
+  1-8)", `$5F` = "Gate Floor: Item Shop (unused copy)"; never a hex fallback — dwm/map_names.py
+  stays as it is, generated JSON carries its names); `Places(rooms).label(ref)` for every stored
+  form (`room:$XX` / `room:$16B` / `vanilla:$XX` / `hub` / `gate:N` / `castle` / a room id / a map
+  id / `('room', id)` / `('vanilla', mid)`); a game room shown as "X (game room)" when a project
+  room has its name; `room_ref` / `mid_ref` (messages), `strip_ids` (extracted labels such as the
+  service NPCs' "map $06"), `next_free_name`. `ProjectRenderer.vanilla_name` / `vanilla_rooms`
+  and `cutscenes.Rooms.name` read it, so every older call site follows.
+- **View → Show technical ids** (`place_names.SHOW_IDS`, QSettings `view/show_ids`): the id after
+  every name — "[$6B]", "[region 1 $6B]", "[game $0B]" — and the inspector's id / mapID rows;
+  `tools/build_project.py` turns it on (command-line messages carry ids).
+- **One picker** — `app/place_picker.py` `PlacePicker` (a QComboBox you can type into: any part
+  of a name or an area, a QCompleter in contains mode; grouped by header rows — Special, your
+  areas, the game's 5 groups; a header is never current; a typed pick emits `activated`) and
+  `ask_place` (the same list in a dialog with a search box). All 28 room choices use it.
+- **Names unique** (case-insensitive): `Document.unique_room_name` in New / Copy / Make editable
+  / New art room; `rename_room` raises on a taken name (the GUI says so and suggests one);
+  `_migrate_unique_names` renames a duplicate on open ("name 2", a MIGRATED note).
+- **Areas:** `custom.rooms[].area` (absent = no area) + `custom._editor.areas` (order, empty
+  areas); `Document.areas / add_area / set_room_area / rename_area / delete_area / move_area`.
+  Editor-only — the compiler never reads either (test: the same output files).
+- **The Rooms tab:** one search box over both lists; `app/rooms/room_tree.py` `PlaceTree` — your
+  rooms in area folders (counts; drag a room onto a folder), the game's in their groups; Area…,
+  a right-click menu (put in / move to an area, new / rename / move / delete an area), the
+  inspector's **area** box.
+- **The World tab:** Find (yellow frames, Enter = next), Area (one area + the rooms it connects to,
+  faded), "only the selected room and its neighbours" (1-6 connections). Script-warp edges keep
+  a place's region (the high byte of a place word is its region, PROJECT_COMPILER §2.49).
+- **Measured:** the 300-Copy scale project — 0 map-id texts in 20 tabs, 10 dialogs and 627
+  validation warnings (the S142 code: 4,968); the picker fills 411 places in ~6 ms.
 
 **E. Secondary ceilings at campaign scale (CAP5 — measure the need, lift what binds).** From
 the compiler's own limits (S133 grep of `editor2/core/*_MAX` / `_CAP`): story checks **256**

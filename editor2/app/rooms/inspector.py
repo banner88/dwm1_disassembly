@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (QComboBox, QFormLayout, QGroupBox, QLabel,
                                QTreeWidget, QTreeWidgetItem, QHBoxLayout)
 
 from editor2.core import animation as ANIM
+from editor2.core import place_names as PN
 from editor2.core import tileanim as TA
 from editor2.core.document import val
 
@@ -52,6 +53,7 @@ class Inspector(QWidget):
     paletteChosen = Signal(object)         # palette id or None
     localizeRequested = Signal()
     nameEdited = Signal(str)
+    areaEdited = Signal(str)                   # S143: the room's area ('' = none)
     hoverInfo = Signal(str)
     statePaletteChosen = Signal(object)        # pid | None | ('vanilla', mid)
     addExitRequested = Signal(object)          # (cx, cy)
@@ -140,6 +142,17 @@ class Inspector(QWidget):
         self.r_anim_note = _lbl()
         self.r_anim_note.setStyleSheet('color: #6ad8e6;')
         f.addRow('name', self.r_name)
+        # S143 (ROADMAP ARC CAP4b): the room's AREA (a folder in the Rooms list, a
+        # World tab filter); type a new name to make a new area
+        self.r_area = QComboBox()
+        self.r_area.setEditable(True)
+        self.r_area.setInsertPolicy(QComboBox.NoInsert)
+        self.r_area.setToolTip('The area (folder) this room is listed under. Pick one or '
+                               'type a new name; empty = no area.')
+        self.r_area.lineEdit().setPlaceholderText('(no area)')
+        self.r_area.activated.connect(lambda _i: self._area_done())
+        self.r_area.lineEdit().editingFinished.connect(self._area_done)
+        f.addRow('area', self.r_area)
         trow = QHBoxLayout()
         trow.addWidget(self.r_gfx, 1)
         self.r_gfx_btn = QPushButton('Change…')
@@ -169,7 +182,7 @@ class Inspector(QWidget):
         tf.setContentsMargins(4, 0, 4, 0)
         tf.addRow('id', self.r_id)
         tf.addRow('mapID', self.r_map)
-        tf.addRow('source map', self.r_src)
+        tf.addRow('tiles + engine from', self.r_src)
         tf.addRow('collision ≥', self.r_thr)
         tf.addRow('attr base', self.r_attr)
         tf.addRow('scripts', self.r_scripts)
@@ -352,15 +365,27 @@ class Inspector(QWidget):
         for c in self.gate_group.findChildren(QComboBox):
             narrow_combo(c)
 
+    def _tech_ids_visible(self):
+        """S143 (ARC CAP4b): the room's id + map id rows only with View > Show
+        technical ids (places are known by name)."""
+        for w in (self.r_id, self.r_map):
+            self._room_tech_form.setRowVisible(w, PN.SHOW_IDS)
+
     # ------------------------------------------------------------ updates
     def show_vanilla(self, renderer, mid, key):
         """Read-only view of a vanilla room."""
         self._building = True
-        self.r_name.setText(renderer.vanilla_name(mid))
+        self.r_name.setText(PN.vanilla_name(mid))
         self.r_name.setEnabled(False)
-        self.r_id.setText(f'vanilla ${mid:02X}')
-        self.r_map.setText(f'${mid:02X}  (vanilla — read-only)')
+        self.r_area.blockSignals(True)
+        self.r_area.clear()
+        self.r_area.setCurrentText(PN.vanilla_group(mid))
+        self.r_area.setEnabled(False)
+        self.r_area.blockSignals(False)
+        self.r_id.setText('a game room (read-only)')
+        self.r_map.setText(PN.tech_id(mid, True))
         self.r_src.setText('—')
+        self._tech_ids_visible()
         gfx = renderer.vanilla_gfx(mid)
         self.r_gfx.setText(f'bank ${gfx.gfx_bank:02X} id ${gfx.gfx_id:02X}')
         self.r_gfx_btn.setEnabled(False)
@@ -415,10 +440,14 @@ class Inspector(QWidget):
         mid = val(room['mapID'])
         self.r_name.setText(doc.room_name(room))
         self.r_name.setEnabled(not room.get('placeholder'))
+        self._fill_area(doc, room)
         self.r_pal.setEnabled(True)
         self.r_id.setText(room.get('id', '?'))
-        self.r_map.setText(f'${mid:02X}' + (' (placeholder)' if room.get('placeholder') else ''))
-        self.r_src.setText(f"${val(room.get('source_mapID', 0)):02X}")
+        self.r_map.setText(PN.tech_id(mid) + (' (placeholder)' if room.get('placeholder') else ''))
+        self.r_src.setText(PN.with_id(PN.vanilla_name(val(room.get('source_mapID', 0))),
+                                      val(room.get('source_mapID', 0)), True)
+                           if room.get('source_mapID') is not None else '—')
+        self._tech_ids_visible()
         rec = room.get('record') or {}
         self.r_gfx_btn.setEnabled(bool(rec) and not room.get('placeholder'))
         note = ''
@@ -481,11 +510,11 @@ class Inspector(QWidget):
         self.r_anim.clear()
         self.r_anim.setEnabled(not room.get('placeholder'))
         src = val(room.get('source_mapID', 0))
-        names = {m: n for m, n, _s in renderer.vanilla_rooms()}
-        src_name = names.get(src) or renderer.vanilla_name(src)
+        names = {m: PN.vanilla_name(m) for m, _n, _s in renderer.vanilla_rooms()}
+        src_name = PN.with_id(PN.vanilla_name(src), src, True)
         src_txt = ANIM.describe_effects(src) if src < 0x6B else ''
         self.r_anim.addItem('None — no tile animation', 'none')
-        self.r_anim.addItem(f'Same as source room (${src:02X} {src_name}'
+        self.r_anim.addItem(f'Same as source room ({src_name}'
                             + (f': {src_txt})' if src_txt else ': none)'), 'source')
         self.r_anim.insertSeparator(self.r_anim.count())
         for mid, label in ANIM.sources(names):
@@ -512,7 +541,7 @@ class Inspector(QWidget):
             n = sum(len(TA.slots_of(a)) for a in own)
             bits.append(f"{len(own)} animation{'s' if len(own) != 1 else ''} ({n} tiles)")
         if info.get('map') is not None:
-            bits.append(f"copied vanilla ${info['map']:02X}")
+            bits.append(f"copied from {PN.vanilla_name(info['map'])}")
         self.r_anim_sum.setText((', '.join(bits) or 'none') + ' — Animate tab')
 
     @staticmethod
@@ -542,7 +571,7 @@ class Inspector(QWidget):
         except Exception:
             same = False
         if not same:
-            txt += (f' This room\'s sheet is NOT ${mid:02X}\'s, so whatever graphic sits '
+            txt += (f' This room\'s sheet is NOT {PN.vanilla_name(mid)}\'s, so whatever graphic sits '
                     'in those slots here moves instead (dashed outline on the canvas; '
                     '▶ Play shows it). Imports and twins leave those slots alone.')
         return txt
@@ -572,8 +601,9 @@ class Inspector(QWidget):
                                if rooms else '  — not used')
             combo.addItem(label, p['id'])
         combo.insertSeparator(combo.count())
-        for mid, name, _scr in renderer.vanilla_rooms():
-            combo.addItem(f'copy from vanilla ${mid:02X} {name}', ('vanilla', mid))
+        for mid, _name, _scr in renderer.vanilla_rooms():
+            combo.addItem(f'copy from the game room {PN.with_id(PN.vanilla_name(mid), mid, True)}',
+                          ('vanilla', mid))
 
     def show_entrances(self, doc, renderer, room):
         from PySide6.QtWidgets import QListWidgetItem
@@ -597,10 +627,7 @@ class Inspector(QWidget):
         for i, rd in reds:
             if rd.get('door'):
                 continue
-            try:
-                name = renderer.vanilla_name(val(rd['mapID']))
-            except Exception:
-                name = f"${val(rd['mapID']):02X}"
+            name = PN.with_id(PN.vanilla_name(val(rd['mapID'])), val(rd['mapID']), True)
             it = QListWidgetItem(f"one-way: {name} screen {val(rd['screen'])} door "
                                  f"({val(rd['x'])},{val(rd['y'])})  →  screen "
                                  f"{val(rd['screen_byte']) & 0x0F} cell "
@@ -797,6 +824,26 @@ class Inspector(QWidget):
     def _pal_changed(self, _i):
         if not self._building:
             self.paletteChosen.emit(self.r_pal.currentData())
+
+    def _area_done(self):
+        if self._building or not self.r_area.isEnabled():
+            return
+        txt = self.r_area.currentText().strip()
+        if txt != getattr(self, '_area_shown', ''):
+            self._area_shown = txt
+            self.areaEdited.emit(txt)
+
+    def _fill_area(self, doc, room):
+        self.r_area.blockSignals(True)
+        self.r_area.clear()
+        self.r_area.addItem('', '')
+        for a in doc.areas():
+            self.r_area.addItem(a, a)
+        cur = (room.get('area') or '').strip() if room is not None else ''
+        self._area_shown = cur
+        self.r_area.setCurrentText(cur)
+        self.r_area.setEnabled(room is not None and not room.get('placeholder'))
+        self.r_area.blockSignals(False)
 
     def _name_done(self):
         if not self._building and self.r_name.isEnabled():

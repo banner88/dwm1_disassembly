@@ -663,8 +663,9 @@ def sentence(code, params, ctx=None, target=None):
     if code in (0x0F, 0x3B):
         m = a0 & 0xFF
         rn = ctx.room(m) if ctx and hasattr(ctx, 'room') else None
-        return (f'{"Warp (wavy fade)" if code == 0x3B else "Go"} to room ${m:02X}'
-                + (f' ({rn})' if rn else '')
+        from editor2.core import place_names as PN       # S143: places by name
+        return (f'{"Warp (wavy fade)" if code == 0x3B else "Go"} to '
+                + PN.with_id(rn or ('a game room' if m < 0x6B else 'your room'), m, m < 0x6B)
                 + (f' (gate flag ${a0 >> 8:02X})' if a0 >> 8 else '')
                 + f' at ({s16(p[1]) // 16}, {s16(p[2]) // 16})')
     if code == 0x21:

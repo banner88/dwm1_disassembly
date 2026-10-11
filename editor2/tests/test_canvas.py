@@ -1813,7 +1813,8 @@ def v6_round_trip(new_dir):
     box.setCurrentIndex(box.findData('0x3D'))
     app.processEvents()
     assert s.doc.room(a_id)['animation'] == '0x3D' and cv.anim_slots == {10, 11}
-    assert "NOT $3D's" in rt.inspector.r_anim_note.text()
+    assert "NOT Boss: Arena Left (Digster)'s" in rt.inspector.r_anim_note.text(), \
+        rt.inspector.r_anim_note.text()                     # S143: game rooms by name
     assert s.doc.tile_usage(tid)[10]['status'] == 'animated'
     # --- exact undo of everything, then redo
     n = s.undo.count()
@@ -1855,7 +1856,7 @@ def v6_round_trip(new_dir):
     app.processEvents()
     D = s.doc.room(d_id)
     assert D['animation'] == '0x00', D['animation']
-    assert 'animated like $00' in rt.status_line.text(), rt.status_line.text()
+    assert 'animated like Castle' in rt.status_line.text(), rt.status_line.text()   # S143
     assert rt.canvas.anim_slots == {77, 78}
     dsheet = s.doc.read_sheet(s.doc.tileset_key(D))
     csheet = s.renderer.vanilla_gfx(0x00).sheet
@@ -2631,7 +2632,7 @@ def v8_round_trip(new_dir):
     app.processEvents()
     assert s.doc.gate_setting(1) == {'gate': 1, 'floors': 3, 'boss': rid}, \
         s.doc.gate_setting(1)
-    assert gt.gate()['floors'] == 3 and 'custom room' in gt.sub.text(), gt.sub.text()
+    assert gt.gate()['floors'] == 3 and 'your room:' in gt.sub.text(), gt.sub.text()   # S143
     assert gt.plan.rowCount() == 3 and gt.plan.item(2, 1).text().startswith('boss'), \
         [gt.plan.item(r, 1).text() for r in range(gt.plan.rowCount())]
     assert '♛' in gt.list.item(1).text()

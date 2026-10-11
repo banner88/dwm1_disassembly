@@ -27,6 +27,7 @@ from PySide6.QtWidgets import QGraphicsPixmapItem, QGraphicsScene, QGraphicsView
 
 from editor2.core import animation as ANIM
 from editor2.core import gates as G
+from editor2.core import place_names as PN
 from editor2.core.document import val, metatile_pals, pal_value, metatile_key
 from editor2.core.render_project import SCREEN_H, SCREEN_W
 from editor2.app.session import REPO
@@ -532,9 +533,10 @@ class RoomCanvas(QGraphicsView):
             if rd.get('door') or rd.get('twin_of'):
                 did = rd.get('door') or rd.get('twin_of')
                 try:
-                    pn = self.s.doc.door_name(rd.get('link')) if rd.get('link') else rd['dest']
+                    pn = (self.s.doc.door_name(rd.get('link')) if rd.get('link')
+                          else PN.Places.of(self.s.doc).label(rd['dest']))
                 except Exception:
-                    pn = rd['dest']
+                    pn = PN.Places.of(self.s.doc).label(rd['dest'])
                 self.markers.append(('door', x, y, None,
                                      f"vanilla door ↔ '{pn}' (two-way)"
                                      + (' — second cell of the double door'
@@ -543,7 +545,7 @@ class RoomCanvas(QGraphicsView):
                                      ('redirect', i, dict(rd, door=did))))
                 continue
             self.markers.append(('redirect', x, y, None,
-                                 f"door ({x},{y}) REDIRECTED → {rd['dest']} "
+                                 f"door ({x},{y}) REDIRECTED → {PN.Places.of(self.s.doc).label(rd['dest'])} "
                                  f"screen {val(rd['screen_byte']) & 0x0F} "
                                  f"spawn ({rd['spawn_x']},{rd['spawn_y']})",
                                  ('redirect', i, rd)))
@@ -604,9 +606,10 @@ class RoomCanvas(QGraphicsView):
                 name = e.get('name') or e['door']
                 if e.get('dest'):
                     try:
-                        pn = self.s.doc.door_name(e.get('link')) if e.get('link') else e['dest']
+                        pn = (self.s.doc.door_name(e.get('link')) if e.get('link')
+                              else PN.Places.of(self.s.doc).label(e['dest']))
                     except Exception:
-                        pn = e.get('dest')
+                        pn = PN.Places.of(self.s.doc).label(e.get('dest'))
                     label = f"door '{name}' ↔ {pn} — double-click to edit"
                 else:
                     label = f"door '{name}' — not connected yet: double-click to connect it"
@@ -656,7 +659,7 @@ class RoomCanvas(QGraphicsView):
                                          ('exit', i, e)))
             else:
                 self.markers.append(('exit', int(e['x']), int(e['y']), None,
-                                     f"one-way exit → {e.get('dest')} screen "
+                                     f"one-way exit → {PN.Places.of(self.s.doc).label(e.get('dest'))} screen "
                                      f"{val(e.get('screen_byte', 0)) & 0x0F} "
                                      f"({e.get('spawn_x')},{e.get('spawn_y')}) — "
                                      'double-click to connect both ends',

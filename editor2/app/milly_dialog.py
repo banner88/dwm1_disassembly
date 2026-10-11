@@ -23,6 +23,7 @@ from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox,
                                QLabel, QMessageBox, QPushButton, QSpinBox,
                                QVBoxLayout)
 
+from editor2.app.place_picker import PlacePicker
 from editor2.app.rooms import commands as C
 from editor2.app.rooms.redirect_dialog import _Preview
 from editor2.app.session import REPO
@@ -58,7 +59,7 @@ class MillyHookDialog(QDialog):
         # ---- arrival
         g = QGroupBox('Where Milly arrives')
         f = QFormLayout(g)
-        self.room = QComboBox()
+        self.room = PlacePicker()   # S143: searchable
         self.screen = QComboBox()
         self.x = QSpinBox(); self.x.setRange(0, 9)
         self.y = QSpinBox(); self.y.setRange(0, 7)
@@ -91,7 +92,7 @@ class MillyHookDialog(QDialog):
         f.addRow(about)
         row = QHBoxLayout()
         self.b_create = QPushButton('Create the roots room')
-        self.b_create.setToolTip('Copies the game\'s room $08 into your project as "Roots '
+        self.b_create.setToolTip('Copies the game\'s tree-root chamber (Starry Shrine Breeding Cutscene) into your project as "Roots '
                                  'room (Milly)" with Warubou and his scene (one undo step). '
                                  'When no arrival is set yet, Milly arrives there.')
         self.b_create.clicked.connect(self._create_roots)
@@ -102,7 +103,7 @@ class MillyHookDialog(QDialog):
         self.b_edit.clicked.connect(self._edit_scene)
         row.addWidget(self.b_edit)
         f.addRow(row)
-        self.roots = QComboBox()
+        self.roots = PlacePicker()   # S143: searchable
         f.addRow('roots room', self.roots)
         self.naming = QCheckBox('Warubou asks her name (the naming screen between his lines)')
         self.naming.setToolTip('His text box(es), then the game\'s naming screen (it offers '
@@ -110,7 +111,7 @@ class MillyHookDialog(QDialog):
                                'scene…. Unticking removes the naming screen and the box '
                                'right after it.')
         f.addRow(self.naming)
-        self.dest = QComboBox()
+        self.dest = PlacePicker()   # S143: searchable
         self.d_screen = QComboBox()
         self.d_x = QSpinBox(); self.d_x.setRange(0, 9)
         self.d_y = QSpinBox(); self.d_y.setRange(0, 7)
@@ -150,8 +151,8 @@ class MillyHookDialog(QDialog):
         a = h.get('arrive') or {}
         self.room.blockSignals(True)
         self.room.clear()
-        for r in self._rooms():
-            self.room.addItem(self.s.doc.room_name(r), r['id'])
+        from editor2.core import place_names as PN
+        self.room.add_entries(PN.Places.of(self.s.doc).room_entries('id'))
         i = self.room.findData(a.get('room'))
         self.room.setCurrentIndex(max(0, i))
         self.room.blockSignals(False)
@@ -174,17 +175,18 @@ class MillyHookDialog(QDialog):
         keep = self.roots.currentData()
         self.roots.blockSignals(True)
         self.roots.clear()
-        for r in self._roots_rooms():
-            self.roots.addItem(self.s.doc.room_name(r), r['id'])
+        from editor2.core import place_names as PN
+        ok = {r['id'] for r in self._roots_rooms()}
+        self.roots.add_entries(PN.Places.of(self.s.doc).room_entries('id', want=lambda r: r['id'] in ok))
         i = self.roots.findData(keep)
         self.roots.setCurrentIndex(max(0, i))
         self.roots.blockSignals(False)
         from editor2.app.cutscene_editor import room_items
         self.dest.blockSignals(True)
         self.dest.clear()
-        for text, data in room_items(self.s):
-            if data != 'hub':                # S125: the roots scene leads to a fixed room
-                self.dest.addItem(text, data)
+        # S143: a searchable place picker (names only); the roots scene leads to a
+        # fixed room (S125: never the hub)
+        self.dest.add_entries([e for e in room_items(self.s) if e.value != 'hub'])
         self.dest.blockSignals(False)
 
     def _room_changed(self, *_a):

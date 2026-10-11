@@ -40,6 +40,15 @@ from collections import namedtuple
 
 from . import script_ops as SO
 
+
+def _place_words(mid):
+    """S143 (ARC CAP4b): a map id in words — a game room's name, else "your room"
+    (+ the id while View > Show technical ids is on)."""
+    from . import place_names as PN
+    mid = int(mid)
+    return PN.with_id(PN.vanilla_name(mid) if mid < 0x6B else 'your room', mid, mid < 0x6B)
+
+
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 SCRIPT_TBL = 0x41BA
 END, TEXT = 0x100, 0x101
@@ -376,8 +385,9 @@ class Rooms:
             self.sprite_names = {}
 
     def name(self, mid):
-        e = self.vt.entries.get(mid)
-        return e['name'].replace(', crashes', '') if e else f'map ${mid:02X}'
+        # S143 (ARC CAP4b): the editor's one name per place (place_names)
+        from . import place_names as PN
+        return PN.vanilla_name(mid) if int(mid) < 0x6B else 'your room'
 
     def screens(self, mid):
         e = self.vt.entries.get(mid)
@@ -702,7 +712,7 @@ def room_recipe(mid, screen, x, y, facing=2):
     col, row = screen % 4, screen // 4
     px, py = (col * 10 + x) * 16 + 8, (row * 8 + y) * 16 + 8
     return Recipe(mid, screen, None, (px, py), facing, (), 'entry', (), (), {}, mid, 0, 0,
-                  False, (f'the room ${mid:02X} from screen {screen} ({x},{y})',))
+                  False, (f'the room {_place_words(mid)} from screen {screen} ({x},{y})',))
 
 
 class RoomOnly:
@@ -1107,7 +1117,7 @@ class Catalogue:
         if best is None:
             return None
         _sc, val, (m, i, h), fl = best
-        return val, (f'as room ${m:02X} script {i} leaves it when it sets flag '
+        return val, (f'as {_place_words(m)} script {i} leaves it when it sets flag '
                      + ', '.join(f'${f:04X}' for f in fl))
 
     def entry_caller(self, mid, r):
@@ -1294,7 +1304,7 @@ class Catalogue:
                     ram[ctr] = r.room_step
                 r = r._replace(screen=scr, player=(x, y), ram=ram,
                                flags_set=sorted(set(r.flags_set) | (fls - set(r.flags_clear))),
-                               notes=r.notes + [f'set up as room ${cm:02X} script {ci} leaves the '
+                               notes=r.notes + [f'set up as {_place_words(cm)} script {ci} leaves the '
                                                 f'game when it sends you here (screen {scr})'])
             else:
                 arr = self.script_arrivals(mid, r.screen) or self.gate_arrivals(mid, r.screen)

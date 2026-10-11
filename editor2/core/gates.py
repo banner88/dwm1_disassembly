@@ -918,7 +918,8 @@ class GatesMixin:
             v = next((x for x in vanilla_gates(getattr(self, 'project_dir', None))
                       if int(x['boss_map'], 16) == mid), None)
             return f"vanilla room: {v['boss_room'] if v else b}"
-        return f'custom room: {b}'
+        from editor2.core import place_names as PN       # S143: names only
+        return f'your room: {PN.Places.of(self).room_id_label(b)}'
 
     def gate_rule_rows(self, gate_id):
         """Display rows for effective_chances (flag terms unresolved)."""

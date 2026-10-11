@@ -110,8 +110,10 @@ def sources(names=None):
             continue
         if m.get('inert_in_vanilla'):
             continue
-        name = (names or {}).get(mid) or m.get('name') or f'map ${mid:02X}'
-        out.append((mid, f'${mid:02X} {name} — {describe_effects(mid)}'))
+        # S143 (ARC CAP4b): a place by its name (the id only with Show technical ids)
+        from editor2.core import place_names as PN
+        name = (names or {}).get(mid) or PN.vanilla_name(mid)
+        out.append((mid, f'{PN.with_id(name, mid, True)} — {describe_effects(mid)}'))
     return out
 
 

@@ -43,14 +43,14 @@ def sources(doc, renderer):
     """[(source, label)] — your rooms, then the game's rooms, then the 16
     gate themes."""
     from .maze import THEME_NAMES
+    from . import place_names as PN            # S143 (ARC CAP4b): names only
     out = []
-    for room in doc.rooms:
-        if room.get('placeholder'):
-            continue
-        out.append((('room', room['id']),
-                    f"Your room ${val(room['mapID']):02X}  {doc.room_name(room)}"))
-    for mid, name, _scr in renderer.vanilla_rooms():
-        out.append((('vanilla', int(mid)), f'Game room ${mid:02X}  {name}'))
+    pl = PN.Places.of(doc)
+    for e in pl.room_entries('id'):
+        out.append((('room', e.value), f"Your room {e.label}"
+                    + (f'   ({e.group})' if e.group != PN.NO_AREA else '')))
+    for mid, _name, _scr in renderer.vanilla_rooms():
+        out.append((('vanilla', int(mid)), f'Game room {pl.vanilla_label(mid, mixed=False)}'))
     for t, nm in enumerate(THEME_NAMES):
         out.append((('theme', t), f'Gate theme {t}: {nm}'))
     return out
@@ -84,9 +84,9 @@ def source_rows(doc, renderer, src, screen=0, state=0):
         if not words:
             pals = renderer.vanilla_palettes(v)
             words = [[to555(c) for c in row] for row in pals[:4]]
-        name = renderer.vanilla_name(v)
+        from . import place_names as PN
         return ([list(r) for r in words[:4]], False,
-                f'game room ${v:02X} {name}, screen {screen} step {state}')
+                f'game room {PN.vanilla_name(v)}, screen {screen} step {state}')
     room = doc.room(v)
     pid, words = renderer.room_palettes_555(room, screen, state)
     if words:

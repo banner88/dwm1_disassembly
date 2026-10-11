@@ -1,10 +1,39 @@
 # Rooms, screens and states
 
-**New room:** Rooms tab → **New** under the room list → name + the vanilla
+**New room:** Rooms tab → **New** under the room list → name + the game
 room whose tileset it uses — or a **gate theme** (one of the 16 maze looks of
-the gates, in their colours: see *Gate themes*). **Copy / Rename / Delete** sit next to it. A
-vanilla room is read-only until you **Make editable** (it is copied into the
+the gates, in their colours: see *Gate themes*). **Copy / Rename / Area… / Delete** sit next to it. A
+game room is read-only until you **Make editable** (it is copied into the
 project).
+
+**Rooms by name (S143).** The editor shows every room — yours and the game's — by its
+NAME only, never a map id or a region: in the room lists, in every place you pick a
+room (doors, teleports, conversation and cutscene moves, gates, the hub, worlds, the
+arena, Borrow, Import art, music), in the World tab and in the Build log. So room names
+are **unique**: New / Copy / Make editable pick a free name ("Cave 2" when there is a
+"Cave"), and Rename refuses a name another room has. A project saved with two rooms of
+one name gets the second renamed ("GreatTree 2") when it opens (the Build log says so —
+Save to keep it). The game's own rooms keep the names you know; the eight unused map
+ids that only hold the Castle's room data are listed as **Castle (unused copy 1-8)**,
+and the copy of the gate item shop's data as *Gate Floor: Item Shop (unused copy)*.
+When one of your rooms has the same name as a game room (a copy keeps the game's name),
+the game's is shown as "GreatTree (game room)". **View → Show technical ids** puts each
+room's map id (and region, "region 1 $6B") after its name everywhere, for debugging in
+SameBoy — off by default; the stored destinations never change.
+
+**Areas (S143):** one level of named folders for your rooms. The room list shows each
+area as a folder with its room count ("No area" last); **Area…** (or right-click a room
+→ *Put in area… / Move to*), the **area** box on the Room page, or dragging a room onto
+a folder moves it; type a new name to make a new area. Right-click a folder to rename,
+move up / down or delete an area (its rooms stay, with no area). The **search box**
+above the lists filters your rooms and the game's by name or area. Every room picker
+lists your rooms by area, and the World tab can show one area. Areas are only for you
+— the game never sees them.
+
+**Picking a room (S143):** every room choice is one searchable list — click it and pick,
+or TYPE any part of a name or an area and choose from what matches (Enter / click). Your
+rooms come under their areas, the game's rooms under their groups (Castle & GreatTree,
+Arena & Starry Shrine, Travelers' gate rooms, Boss rooms, Gate floors & mazes).
 
 **Copy** (S142) makes a room of its own: its own screens, its own tileset copy,
 its own **scripts and texts** (change what a copied NPC says and the original
@@ -31,10 +60,10 @@ to paint with, Borrow, Tileset, Animate, **Draw**), **Palettes** (the room's col
 selected cell, NPC, door, exit or spot — opens by itself when you click one),
 **Room** (name, tileset, size, music, doors that lead here, state rules),
 **Screen** (the screen / state on the canvas) and **Gates** (only for rooms used
-inside gates and worlds). Engine numbers (map id, attr grids, layout ids) sit in a
-folded *Technical* box at the bottom of Room / Screen. A map id past $FF names a
-room in a later REGION (S140): $16B is region 1's $6B — your 129th room and on get
-those by themselves (see *Limits*). Choosing Paint or Eyedrop
+inside gates and worlds). Engine numbers (attr grids, layout ids — and, with View →
+Show technical ids, the room's id and map id) sit in a folded *Technical* box at the
+bottom of Room / Screen. Your 129th room and on go into a later REGION by themselves
+(see *Limits*); you never pick one. Choosing Paint or Eyedrop
 opens Tiles. The editor remembers the page you used last.
 
 **Painting:** pick a metatile (Tiles page) and paint with the canvas tools; the

@@ -2523,7 +2523,7 @@ the user picks.
       there). *User half:* the test ROM in SameBoy.
 - **CAP2 — the spill (split S135, user: "whatever works").** The S133 box bundled four
       independent changes; measured on the user's 11 rooms: $60 79 % / $64 79 % / $67 55 % / $17
-      3,259 B free — the class banks bind at ~14-15 such rooms. Three boxes (S136: + CAP2d, bank $6C split off CAP2b; S137: + CAP2e, stale saves — built S138 with the room songs past $7F), each its own test ROM. **S139: every box built (all user-confirmed; d S139) — no per-room data class is bound to one bank any more below 128 places; next = CAP3 (regions).** **S140: CAP3a built (regions; USER-CONFIRMED) — bank $71 binds next at ≈950 places (15 B a place, CAP5).** **S141: CAP3b built (the game's own moves walked in region 2; USER-CONFIRMED 2026-10-11 10:18 ("Everything works", r3)) — next = CAP4.** **S142: CAP4 split a-d; CAP4a built (scale + safety, NOT yet user-tested) — next = CAP4b.**
+      3,259 B free — the class banks bind at ~14-15 such rooms. Three boxes (S136: + CAP2d, bank $6C split off CAP2b; S137: + CAP2e, stale saves — built S138 with the room songs past $7F), each its own test ROM. **S139: every box built (all user-confirmed; d S139) — no per-room data class is bound to one bank any more below 128 places; next = CAP3 (regions).** **S140: CAP3a built (regions; USER-CONFIRMED) — bank $71 binds next at ≈950 places (15 B a place, CAP5).** **S141: CAP3b built (the game's own moves walked in region 2; USER-CONFIRMED 2026-10-11 10:18 ("Everything works", r3)) — next = CAP4.** **S142: CAP4 split a-d; CAP4a built (scale + safety; USER-CONFIRMED 2026-10-11 14:24 "Yeah seems ok") — next = CAP4b.** **S143: CAP4b built (places by name, NOT yet user-tested) — next = CAP4c.**
   - [x] **CAP2a — LZ streams: layouts, attr maps, tilesets past $64 / $67.** **Built S135;
         USER-CONFIRMED 2026-10-09 12:59 ("Yep all good can confirm").** Compiler-only (`DecompressTileLayout` takes the bank from every
         reference — ARCHITECTURE "LZ stream banks (S135)"): `Project.stream_plan()` first fit
@@ -2724,8 +2724,8 @@ the user picks.
       stage = CAP4c (explained to the user S142: a copy that follows the original story's
       counters shows the START-of-game look forever in a new romhack; one post-game stage +
       dropping scripts no NPC of that stage uses is the suggestion — answer at CAP4c).
-  - [x] **CAP4a — scale + safety (byte-neutral, no test ROM).** **Built S142, NOT yet
-        user-tested.** Copy room gives the copy its OWN scripts + texts (any form: talk,
+  - [x] **CAP4a — scale + safety (byte-neutral, no test ROM).** **Built S142; USER-CONFIRMED
+        2026-10-11 14:24 ("Yeah seems ok", S143 start).** Copy room gives the copy its OWN scripts + texts (any form: talk,
         conversations, shops, services; explicit `text_id`s dropped) and OWN doors (new ids,
         unconnected); generated quest scripts (`quest:` / `entry:`) and custom quests stay with
         the original; the room's attr refs are copied too (they were shared since S94). Speed:
@@ -2746,11 +2746,32 @@ the user picks.
         verify_integrity PASS; the S141 and S142 code build the 311-place project and the user's
         project to identical ROMs. *User half:* the editor on the user's project (Copy a room
         with talk, edit the copy's words; the World tab; a long editing session).
-  - [ ] **CAP4b — places by name.** One searchable place picker everywhere (doors, routes,
+  - [x] **CAP4b — places by name.** One searchable place picker everywhere (doors, routes,
         conversation moves, gates, arena, world, import, cutscenes), unique room names (New /
         Copy / Rename suggest "Cave 2"), no map ids or regions shown (vanilla rooms by name
         too), named AREAS (folders in the Rooms list, a World tab filter), the Rooms list with
         search, the World tab's search / filter / "this room and its neighbours".
+        **Built S143, NOT yet user-tested** (user: "1) Yeah seems ok 2) view show in case I want
+        them 3) One level 4) Yes 5) No keep so I know wtf it is"). Byte-neutral, no test ROM.
+        NEW `core/place_names.py` (every stored place reference in words; the game's rooms
+        named uniquely — the eight unused ids that hold the Castle's room data "Castle (unused
+        copy 1-8)", `$5F` "Gate Floor: Item Shop (unused copy)"; `room_ref` / `mid_ref` in
+        messages; `SHOW_IDS`), NEW `app/place_picker.py` (`PlacePicker` + `ask_place`: all 28
+        room choices), NEW `app/rooms/room_tree.py` (area folders + search); `Document`
+        unique names (+ the on-open rename), areas (`custom.rooms[].area`,
+        `custom._editor.areas`, editor-only); View → Show technical ids; the World tab's
+        Find / Area / neighbours; script-warp edges keep their region. Also (user's flag): the
+        Arena Battle copies' sprite warning — measured in PyBoy on the user's save (the room's
+        NPCs ARE the party; ≤ 24 pieces, none dropped) → `formats.party_walks`.
+        *Accept (machine half) MET:* `test_app.s143_names` — the example + 300 Copies in 3
+        areas, regions 0-2: every tab (hidden pages too), a region-2 room, a game room, 10
+        place dialogs and 627 validation warnings show 0 map-id texts (the same scan on the
+        S142 code: 4,968 — the negative control; the user's project: 0); the picker fills 411
+        places in ~6 ms and finds by typing; areas / search / World filters; unique names;
+        Show technical ids; `test_compiler.test_s143` (12); the user's project and a 311-place
+        3-region copy with areas build the same ROMs on the S142 and S143 code. *User half:*
+        the editor on the user's project (rooms by name, areas, the picker, the World tab
+        filters, View → Show technical ids).
   - [ ] **CAP4c — Make editable copies one stage** (post-game by default; "every stage,
         following the story" kept), scripts no NPC of that stage uses dropped (the S142
         measure: Castle 5.2 → 4.8 KB, GreatTree 2.1 → 1.9, Farm 2.3 → 1.2, Arena Lobby

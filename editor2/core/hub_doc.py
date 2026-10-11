@@ -117,7 +117,8 @@ class HubMixin:
         else:
             try:
                 r = self.room(rule.get('room'))
-                where = (f"{self.room_name(r)} (${val(r['mapID']):02X}), screen "
+                from . import place_names as PN                # S143: names only
+                where = (f"{PN.Places.of(self).room_label(r)}, screen "
                          f"{rule.get('screen', 0)} ({rule.get('x')},{rule.get('y')})")
             except KeyError:
                 where = f"room {rule.get('room')!r} (deleted)"

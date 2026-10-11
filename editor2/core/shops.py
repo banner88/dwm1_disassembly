@@ -55,7 +55,7 @@ VANILLA_SHOPS = [               # (key, label, table, rule)
     ('starry', 'Starry Night shop', 'shop_starry', 'any room, screen 2'),
     ('books', 'Bookstore', 'shop_books', 'any room, screen 4'),
     ('rare', 'Rare item shop', 'shop_rare', 'any room, screen 5 (and other screens)'),
-    ('gate', 'Gate-floor shop', 'shop_gate', 'map $50 (the shop room inside gates)'),
+    ('gate', 'Gate-floor shop', 'shop_gate', 'the game room Gate Floor: Item Shop (inside gates)'),
 ]
 SHOP_TEXT_BASE = 0x0680         # the vanilla shop's texts (+0 hello, +2 bye)
 STAFFS = {0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x25, 0x27}

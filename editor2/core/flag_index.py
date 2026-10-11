@@ -1166,7 +1166,7 @@ class FlagIndex:
         the path of flag tests that leads there); the uses of one script form one group."""
         from . import cutscenes as CS
         for m in cat.map_types():
-            rname = cat.rooms.name(m)
+            rname = cat.rooms.name(m)          # S143: place_names (via Rooms.name)
             for sc in cat.scripts(m):
                 if sc is None:
                     continue
@@ -1261,7 +1261,8 @@ class FlagIndex:
                      if cells.get(v) else '') for v in verbs]
         who = ' or '.join(whos[:2]) if whos else f'its script {idx} (run by another script)'
         scr = (' · screen ' + ', '.join(str(k) for k in screens)) if screens else ''
-        return who, f'{rname}{scr} (game room ${m:02X}, script {idx})', places
+        from . import place_names as PN                       # S143: names only
+        return who, f'{rname}{scr} ({PN.with_id("game room", m, True)}, script {idx})', places
 
     @staticmethod
     def _game_name(cat, sc):

@@ -131,22 +131,23 @@ class EncountersMixin:
             mid = G._int(r['mapID'], 'mapID')
             rm = M.rooms.get(mid)
             rid = r.get('id')
+            rlab = r.get('name') or rid                     # S143: rooms by name
             if rm and rm['default'] is not None:
                 out.setdefault(rm['default'], []).append(
                     {'kind': 'room', 'room': rid, 'variant': None, 'when': '',
-                     'label': f'room {rid}'})
+                     'label': f'room {rlab}'})
                 for k, (terms, num) in enumerate(rm['variants']):
                     w = when_text(terms, names)
                     out.setdefault(num, []).append(
                         {'kind': 'room', 'room': rid, 'variant': k, 'when': w,
-                         'label': f'room {rid} ({w})'})
+                         'label': f'room {rlab} ({w})'})
             elif not enc.get('follow_gate'):
                 gid = int(G._int(enc.get('gate_id', 0), 'gate'))
                 fl = int(G._int(enc.get('floor', 0), 'floor'))
                 num = M.gate_list(gid, fl + 1)
                 out.setdefault(num, []).append(
                     {'kind': 'room', 'room': rid, 'variant': None, 'when': '',
-                     'label': f"room {rid} (as {gates.get(gid, {}).get('name', gid)} "
+                     'label': f"room {rlab} (as {gates.get(gid, {}).get('name', gid)} "
                               f"floor {fl + 1})"})
         return out
 

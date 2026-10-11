@@ -93,7 +93,7 @@ class BorrowPaletteDialog(QDialog):
         left = QVBoxLayout()
         left.addWidget(QLabel('<b>Borrow from</b>'))
         self.filter = QLineEdit()
-        self.filter.setPlaceholderText('type to filter (room name, $id, theme)…')
+        self.filter.setPlaceholderText('type to filter (room name, area, theme)…')
         self.filter.textChanged.connect(self._filter)
         left.addWidget(self.filter)
         self.list = QListWidget()

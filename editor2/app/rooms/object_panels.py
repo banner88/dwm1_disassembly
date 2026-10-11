@@ -16,6 +16,7 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QFormLayout, QGroupBox,
                                QHBoxLayout, QLabel, QPushButton, QWidget)
 
+from editor2.core import place_names as PN
 from editor2.core.document import val
 
 
@@ -54,16 +55,11 @@ def describe_end(doc, rend, end):
     if end['kind'] == 'room':
         try:
             r = doc.room(end['room'])
-            name = doc.room_name(r)
-            mid = val(r['mapID'])
         except KeyError:
             return f"missing room {end['room']}"
-        return f"${mid:02X} {name} — screen {end['screen']} cell ({end['x']},{end['y']})"
-    try:
-        name = rend.vanilla_name(end['mapID'])
-    except Exception:
-        name = ''
-    return (f"vanilla ${end['mapID']:02X} {name} — screen {end['screen']} door "
+        return (f"{PN.Places.of(doc).room_label(r)} — screen {end['screen']} "
+                f"cell ({end['x']},{end['y']})")
+    return (f"{PN.Places.of(doc).vanilla_label(end['mapID'])} — screen {end['screen']} door "
             f"({end['x']},{end['y']})")
 
 
@@ -247,13 +243,13 @@ class TeleportPanel(QGroupBox):
             mid = int(dest.split('$')[-1], 16)
             if dest.startswith('room:'):
                 r = next(r for r in doc.rooms if val(r['mapID']) == mid)
-                name = f"${mid:02X} {doc.room_name(r)}"
+                name = PN.Places.of(doc).room_label(r)
                 self._dest = {'kind': 'room', 'room': r['id'], 'screen': k, 'x': x, 'y': y}
             else:
-                name = f"vanilla ${mid:02X} {rend.vanilla_name(mid)}"
+                name = PN.Places.of(doc).vanilla_label(mid)
                 self._dest = {'kind': 'vanilla', 'mapID': mid, 'screen': k, 'x': x, 'y': y}
         except Exception:
-            name = dest
+            name = PN.Places.of(doc).label(dest)
         nudge = ' (half a cell lower: screen byte bit 7)' if sb & 0x80 else ''
         self.info.setText(f'{name} — screen {k}, arrives at ({x},{y}){nudge}')
         self.what.setText('Stepping on this cell sends the player there. Nothing leads back '

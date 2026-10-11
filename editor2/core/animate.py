@@ -20,6 +20,12 @@ from editor2.core import animation as A
 EFFECTS = ('slide', 'flip')
 
 
+def _vn(mid, names=None):
+    """S143 (ARC CAP4b): a game room in words (place_names)."""
+    from editor2.core import place_names as PN
+    return PN.with_id((names or {}).get(mid) or PN.vanilla_name(mid), mid, True)
+
+
 def _val(v):
     if isinstance(v, int):
         return v
@@ -340,7 +346,7 @@ class AnimateMixin:
                 what = f'slide ({len(offer)} slot{"s" if len(offer) > 1 else ""})'
             else:
                 what = f'flip ({len(offer)} pair{"s" if len(offer) > 1 else ""})'
-            out.append({'map': mid, 'label': f'${mid:02X} {names.get(mid, A.map_entry(mid).get("name", ""))}'
+            out.append({'map': mid, 'label': f'{_vn(mid, names)}'
                                               f' — {what}',
                         'units': len(need), 'free': free, 'fits': fits, 'moves': moves,
                         'room_ok': room_ok, 'offer': len(offer),
@@ -483,7 +489,7 @@ class AnimateMixin:
             for sl in slots:
                 sheet[sl * 16:sl * 16 + 16] = ref[sl * 16:sl * 16 + 16]
             self.write_sheet(tid, sheet)
-            notes.append(f"{name}: tiles in ${mid:02X}'s animated slots moved to still slots ("
+            notes.append(f"{name}: tiles in {_vn(mid)}'s animated slots moved to still slots ("
                          + ', '.join(f'{a}->{b}' for a, b in moved) + ')')
         self.last_import_note = '; '.join(notes)
         return notes
@@ -558,7 +564,7 @@ class AnimateMixin:
         cand = next((c for c in self.animate_candidates(room, mt, effect, frames_a, frames_b)
                      if c['map'] == mid), None)
         if cand is None:
-            raise RuntimeError(f'${mid:02X} has no {effect} animation')
+            raise RuntimeError(f'{_vn(mid)} has no {effect} animation')
         split_note = None
         if cand['fits'] and not cand['room_ok'] and cand.get('shift'):
             old_anim = room.get('animation')
@@ -581,7 +587,7 @@ class AnimateMixin:
                         self._room_art(room, mt))
         if not cand['fits']:
             raise RuntimeError(
-                f"${mid:02X} offers {len(cand['free'])} "
+                f"{_vn(mid)} offers {len(cand['free'])} "
                 f"{'slot' if effect == 'slide' else 'pair'}(s); this tile needs "
                 f"{len(need)} (one per different 8x8 graphic)")
         cells = self._cells_of(room, mt)
@@ -647,10 +653,10 @@ class AnimateMixin:
             T = self.layout(lid)['tiles']
             r, c = cy * 2, cx * 2
             T[r][c], T[r][c + 1], T[r + 1][c], T[r + 1][c + 1] = new_tiles
-        nm = name or f"animated {effect} (${mid:02X})"
+        nm = name or f"animated {effect} ({_vn(mid)})"
         self.add_metatile(tid, nm, [t & 0x7F for t in new_tiles], mt.get('pal', 0))
         new = {'name': nm, 'tiles': [t & 0x7F for t in new_tiles], 'pal': mt.get('pal', 0)}
-        note = ([split_note] if split_note else []) + [f"{effect} with ${mid:02X}'s animation: slots "
+        note = ([split_note] if split_note else []) + [f"{effect} with {_vn(mid)}'s animation: slots "
                 + A.rng([first(x) for x in assign.values()])
                 + ('' if effect == 'slide' else
                    f" (second frames in {A.rng([x[1] for x in assign.values()])})")]

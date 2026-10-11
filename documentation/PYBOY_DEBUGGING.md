@@ -233,7 +233,8 @@ edge and the battle waits for input forever.
   Battle room ($5D) at an arbitrary pixel broke the room script; use the
   lobby transition's own arrival (px `0x78`, `0x58`) or walk in through the
   lobby (GreatTree (4,12), walk up → lobby sub-room 1; receptionist: up 3,
-  left 1, A; YES = up then A).
+  left 1, A; YES = up then A — S143: at the class confirmation the cursor starts on YES, so
+  A only; UP wraps to NO).
 - **Measure a team, not a screenshot.** After the room is built read the
   display list `$D7CA-$D7D1` ([draw id, is_monster] × 4) and `$DA02`; in
   battle the enemy slots (`$D7D2 + 32·i`); after each won match the next
@@ -823,3 +824,20 @@ edge and the battle waits for input forever.
   run 2-4× the real ones (deep copies especially) — quote unprofiled `perf_counter` numbers.
   Count compiler builds by wrapping `Project.__init__`; memory by `VmRSS` in `/proc/self/status`
   before / after N edits.
+
+## S143 techniques — an arena match on a finished save; a UI text scan
+
+- **An arena match on a save that has won every class:** the class menu marks won classes ★ and
+  answers "What! Are you going to fight with weaker ones…" — poke `$CAB4` (classes won) = 0
+  before talking to the desk and the G-F-E-D page opens; poke the gold (`$CA4B-$CA4D`, 24-bit LE)
+  for the fee. The YES / NO cursor starts on **YES**: press A only (an UP first wraps to NO — the
+  menu then comes back; the S109 note "YES = up then A" was for a different prompt). The
+  announcer's boxes wait for A (`$C8EB` bit 0). Probe: `/tmp` scratch `arena_probe.py`
+  (the user's lobby `$74` screen 1 (14, 7) → up 3, left, A).
+- **Who is on screen:** count OAM entries with 0 < y < 160 and 0 < x < 168 at `$FE00` every 60
+  frames, plus the rows (y) they sit on and `$C8EC` / `$C8ED` (all / party hidden) — the S143
+  Arena Battle reading: ≤ 24 objects, the hero and party drawn as the room's NPCs.
+- **A UI text scan (no emulator):** walk every child widget of the main window and each dialog
+  (labels, buttons, combo / list / tree / table items, tooltips, group titles, QGraphicsScene
+  items, the Build log) and match leak regexes — `test_app._texts` / `_leak_patterns`; always run
+  it on the previous code too (a negative control).
