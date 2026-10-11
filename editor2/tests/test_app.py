@@ -2275,6 +2275,153 @@ def s130_balance(app, w):
           'tiny kit search')
 
 
+def s142_scale(app, w):
+    """S142 (ROADMAP ARC CAP4a; user: copies never share talk — "Yes ok"): Copy
+    room gives the copy its OWN scripts, texts and doors (an edit of the copy's
+    words leaves the original's), one undo step restores the file; the undo
+    steps keep only what changed (interned snapshot pieces); then a generated
+    300-place project (300 copies of the example's rooms) opens in a second
+    window with few compiler builds, edits / undo / the World tab stay fast
+    and the space meter measures it. Timings are printed and only gross
+    regressions fail (the S141 code took 28 s to open such a project here, an
+    edit 0.5-2 s, the World tab 4-6 s)."""
+    import json as _json
+    import shutil
+    import tempfile
+    import time as _t
+    from editor2.app.rooms import commands as C
+    from editor2.core.document import Document, Snapshot
+    from editor2.core import project as P
+    s = w.session
+    doc = s.doc
+    before = doc.dumps()
+    n0 = s.undo.index()
+    src = doc.room('dusk_mirror')
+    cmd = C.SnapshotCommand(s, 'Copy room', lambda d: d.copy_room('dusk_mirror', 'Dusk copy'))
+    s.undo.push(cmd)
+    app.processEvents()
+    cp = doc.room(cmd.result)
+    s_src = set((src.get('scripts') or {}).values())
+    s_cp = set((cp.get('scripts') or {}).values())
+    assert s_cp and not (s_src & s_cp), (s_src, s_cp)
+    dids = {d['id'] for d in doc.custom.get('dialogue', [])}
+
+    def texts(room):
+        out = []
+        for sid in (room.get('scripts') or {}).values():
+            Document._strings_in(doc.script(sid), dids, out)
+        return set(out)
+    assert texts(cp) and not (texts(src) & texts(cp)), (texts(src), texts(cp))
+    talk = next(sid for sid in sorted(s_cp) if doc.talk_boxes(sid) is not None)
+    orig_sid = next(o for o in s_src if talk.endswith(o[len('dusk_mirror'):]))
+    was = doc.talk_boxes(orig_sid)
+    doc.set_talk_boxes(talk, [['ONLY THE', 'COPY SAYS THIS']])
+    assert doc.talk_boxes(orig_sid) == was, 'editing the copy changed the original'
+    # the snapshots share every piece the copy did not change
+    shared = sum(1 for k in cmd.before.lists for a, b in zip(cmd.before.lists[k],
+                                                             cmd.after.lists[k]) if a is b)
+    total = sum(len(v) for v in cmd.before.lists.values())
+    assert total - shared <= 3, (shared, total)
+    n_texts = len(texts(cp))
+    while s.undo.index() > n0:
+        s.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'undo did not restore the project'
+    print(f'OK: S142 Copy room — own scripts ({len(s_cp)}) and texts ({n_texts}), '
+          f'the original\'s words kept, the undo step shares {shared} of {total} pieces, undone')
+
+    # ---- a generated 300-place project
+    tmp = tempfile.mkdtemp(prefix='s142_scale_')
+    try:
+        pdir = os.path.join(tmp, 'p300')
+        shutil.copytree(os.path.join(REPO, 'editor2/example-project'), pdir,
+                        ignore=shutil.ignore_patterns('build'))
+        gen = Document(os.path.join(pdir, 'project.json'))
+        bases = [r['id'] for r in gen.rooms if not r.get('placeholder')
+                 and r['id'] not in ('medal_vault',)]
+        t = _t.perf_counter()
+        for i in range(300):
+            gen.copy_room(bases[i % len(bases)], f'Place {i:03d}')
+        t_gen = _t.perf_counter() - t
+        gen.save()
+        nplaces = len([r for r in gen.rooms if not r.get('placeholder')])
+        regions = sorted({int(str(r['mapID']), 0) >> 8 for r in gen.rooms})
+        from editor2.app.main import MainWindow
+        built = [0]
+        orig_init = P.Project.__init__
+
+        def counting(self, *a, **k):
+            built[0] += 1
+            return orig_init(self, *a, **k)
+        w2 = MainWindow()                  # (re-opens the last project, as at a start)
+        w2.resize(1300, 800)
+        w2.show()
+        app.processEvents()
+        P.Project.__init__ = counting
+        try:
+            t = _t.perf_counter()
+            w2.open_project(pdir)
+            t_open = _t.perf_counter() - t
+            n_open = built[0]
+        finally:
+            P.Project.__init__ = orig_init
+        app.processEvents()
+        s2, rt = w2.session, w2.rooms_tab
+        assert rt.room_list.count() == nplaces, (rt.room_list.count(), nplaces)
+        rt.room_list.setCurrentRow(nplaces - 1)
+        app.processEvents()
+        k0 = s2.undo.index()
+        sizes = []
+        t = _t.perf_counter()
+        for j in range(10):
+            rid = rt.room_id
+            pre = s2.doc.snapshot()
+            c = C.SnapshotCommand(s2, 'Rename', lambda d, j=j, rid=rid: d.rename_room(rid, f'Probe {j}'))
+            s2.undo.push(c)
+            app.processEvents()
+            new = sum(len(b) for k in c.after.lists for a, b in zip(pre.lists[k], c.after.lists[k])
+                      if a is not b) + (0 if c.after.rest is pre.rest else len(c.after.rest))
+            sizes.append(new)
+        t_edit = (_t.perf_counter() - t) / 10
+        t = _t.perf_counter()
+        s2.undo.undo()
+        app.processEvents()
+        t_undo = _t.perf_counter() - t
+        while s2.undo.index() > k0:
+            s2.undo.undo()
+        app.processEvents()
+        assert not s2.dirty or s2.doc.dumps() == open(s2.doc.path).read()
+        wt = w2.world_tab
+        t = _t.perf_counter()
+        w2.tabs.setCurrentWidget(wt)
+        app.processEvents()
+        t_world = _t.perf_counter() - t
+        moved = next(iter(wt.nodes))
+        wt.nodes[moved].setPos(-500, -500)          # a room moved by hand stays put
+        wt._mark()
+        app.processEvents()
+        assert wt.nodes[moved].pos().x() == -500, 'a hand-moved room jumped back'
+        w2.space_meter.measure()
+        usage = w2.space_meter.last
+        ext = [b for b in usage if b >= 0x80]
+        assert usage and ext, usage
+        print(f'OK: S142 scale — {nplaces} places in regions {regions} (300 copies '
+              f'{t_gen:.1f} s); opened in {t_open:.1f} s with {n_open} compiler builds; '
+              f'a rename step {t_edit:.2f} s keeping {max(sizes):,} B of new pieces, undo '
+              f'{t_undo:.2f} s; World tab {t_world:.1f} s (a moved room stays); the meter: '
+              f'{len(ext)} new banks')
+        assert n_open <= 5, f'{n_open} compiler builds while opening (S142: 3)'
+        assert max(sizes) < 64 * 1024, sizes
+        assert t_open < 25 and t_edit < 2.0 and t_undo < 2.0 and t_world < 8, \
+            (t_open, t_edit, t_undo, t_world)
+        w2.session.undo.clear()
+        w2.close()
+        w2.deleteLater()
+        app.processEvents()
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
 def main():
     do_rom = '--rom' in sys.argv
     app = QApplication.instance() or QApplication(sys.argv)
@@ -3690,6 +3837,8 @@ def main():
         else:
             print('OK: Cutscenes (S118) — storyboard (Playback SKIPPED: no PyBoy)')
         s119_cutscene_editor(app, w, ct)
+
+    s142_scale(app, w)
 
     if do_rom:
         from editor2.app.build_worker import BuildWorker  # noqa: E402

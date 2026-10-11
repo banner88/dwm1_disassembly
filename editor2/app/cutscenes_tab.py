@@ -980,6 +980,9 @@ class CutscenesTab(QWidget):
         if not self._loaded:
             self._loaded = True
             QTimer.singleShot(0, self.load)
+        elif getattr(self, '_hidden_stale', False):
+            self._hidden_stale = False
+            self._structure()
 
     def _orig_rom(self):
         p = self.s.settings.value('rom/path') or os.path.join(REPO, 'data', 'DWM-original.gbc')
@@ -1170,6 +1173,11 @@ class CutscenesTab(QWidget):
     def _structure(self):
         """A project change (undo / redo / an edit): re-read the project's scenes."""
         if not self._loaded or self.cat is None:
+            return
+        if not self.isVisible():
+            # S142 (ARC CAP4a): a hidden tab re-reads on its next show (the
+            # whole-project scene read was 1.2 s of every edit at 311 places)
+            self._hidden_stale = True
             return
         if self.pages.currentIndex() == 1:
             # S119b (typing was ~1 s per key): while the cutscene editor is open only

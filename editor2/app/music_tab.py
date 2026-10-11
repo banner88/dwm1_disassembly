@@ -343,7 +343,9 @@ class MusicTab(QWidget):
         h.setWordWrap(True)
         root.addWidget(h)
         self.s.undo.indexChanged.connect(self._undo_changed)
-        self.refresh()
+        # S142 (ARC CAP4a): filled when first shown (a song row per room —
+        # ~1 s of every project open at 300 places, for a tab not on screen)
+        self._stale = True
 
     @staticmethod
     def _bar(tip):

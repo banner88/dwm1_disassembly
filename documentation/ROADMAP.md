@@ -2523,7 +2523,7 @@ the user picks.
       there). *User half:* the test ROM in SameBoy.
 - **CAP2 — the spill (split S135, user: "whatever works").** The S133 box bundled four
       independent changes; measured on the user's 11 rooms: $60 79 % / $64 79 % / $67 55 % / $17
-      3,259 B free — the class banks bind at ~14-15 such rooms. Three boxes (S136: + CAP2d, bank $6C split off CAP2b; S137: + CAP2e, stale saves — built S138 with the room songs past $7F), each its own test ROM. **S139: every box built (all user-confirmed; d S139) — no per-room data class is bound to one bank any more below 128 places; next = CAP3 (regions).** **S140: CAP3a built (regions; USER-CONFIRMED) — bank $71 binds next at ≈950 places (15 B a place, CAP5).** **S141: CAP3b built (the game's own moves walked in region 2; USER-CONFIRMED 2026-10-11 10:18 ("Everything works", r3)) — next = CAP4.**
+      3,259 B free — the class banks bind at ~14-15 such rooms. Three boxes (S136: + CAP2d, bank $6C split off CAP2b; S137: + CAP2e, stale saves — built S138 with the room songs past $7F), each its own test ROM. **S139: every box built (all user-confirmed; d S139) — no per-room data class is bound to one bank any more below 128 places; next = CAP3 (regions).** **S140: CAP3a built (regions; USER-CONFIRMED) — bank $71 binds next at ≈950 places (15 B a place, CAP5).** **S141: CAP3b built (the game's own moves walked in region 2; USER-CONFIRMED 2026-10-11 10:18 ("Everything works", r3)) — next = CAP4.** **S142: CAP4 split a-d; CAP4a built (scale + safety, NOT yet user-tested) — next = CAP4b.**
   - [x] **CAP2a — LZ streams: layouts, attr maps, tilesets past $64 / $67.** **Built S135;
         USER-CONFIRMED 2026-10-09 12:59 ("Yep all good can confirm").** Compiler-only (`DecompressTileLayout` takes the bank from every
         reference — ARCHITECTURE "LZ stream banks (S135)"): `Project.stream_plan()` first fit
@@ -2704,11 +2704,62 @@ the user picks.
         sheets 3-5 at `$8800+` (VRAM bank 0) — a custom room's sheets 3-5 now live in VRAM bank 1
         (bank $77 entries 12-15; PROJECT_COMPILER §2.40 "S141"; measured: every NPC piece on screen
         during and after each menu == its room-load bytes; `--negative-sheets` FAIL). USER-CONFIRMED 2026-10-11 10:18 ("Everything works", r3).
-- [ ] **CAP4 — the editor for hundreds of places.** Places by name (no map ids shown or
-      authored; `room:<name>` destinations), "Make editable" copies ONE stage of a vanilla
-      room by default (the user's post-Starry Night rooms), meters per data class + the
-      whole ROM, the World tab at that scale (search / filter), help. *Accept:* the user
-      builds a fresh project in the editor past 150 places.
+- **CAP4 — the editor for hundreds of places (split S142, user: "Ye sounds good").** Places by
+      name (no map ids shown), "Make editable" copies ONE stage of a vanilla room by default
+      (the user's post-Starry Night rooms), meters per data class + the whole ROM, the World tab
+      at that scale (search / filter), help. *Accept (the whole arc):* the user builds a fresh
+      project in the editor past 150 places. The S142 audit (a 311-place project = the user's
+      project + 300 copies of its ordinary rooms made with the editor's own Copy — own layouts
+      and tileset copies; it builds, 4 MB, 43 of the 128 new banks, three regions — driven in
+      the real editor offscreen): opening 28 s (the user's 11 rooms 4.6 s; 29 compiler Project
+      builds, each a deep copy of the whole project), every structural edit 0.5-2 s, undo memory
+      14 MB per step with no limit, the World tab 4-6 s per show and a hairball; painting and
+      switching rooms fast; ~30 places in the app print map ids; every room picker is a plain
+      drop-down of every room; names are not unique (only the hidden id); Copy room SHARED its
+      scripts / texts / door ids with the original (a copied NPC's words edited the original's —
+      measured; a copied breeder made the project unbuildable). User answers S142: copies never
+      share talk ("Yes ok"); named AREAS for rooms ("Yes all named"); vanilla map ids hidden too
+      ("Hide"); destinations: "Whatever you think is best" → the stored `room:$XX` (the room's
+      permanent number, what a save holds) stays, the editor never shows it; Make editable's one
+      stage = CAP4c (explained to the user S142: a copy that follows the original story's
+      counters shows the START-of-game look forever in a new romhack; one post-game stage +
+      dropping scripts no NPC of that stage uses is the suggestion — answer at CAP4c).
+  - [x] **CAP4a — scale + safety (byte-neutral, no test ROM).** **Built S142, NOT yet
+        user-tested.** Copy room gives the copy its OWN scripts + texts (any form: talk,
+        conversations, shops, services; explicit `text_id`s dropped) and OWN doors (new ids,
+        unconnected); generated quest scripts (`quest:` / `entry:`) and custom quests stay with
+        the original; the room's attr refs are copied too (they were shared since S94). Speed:
+        one shared compiler model per document revision (`Document.model_project`; touch() /
+        the session bump the revision), pickled + interned undo snapshots
+        (`document.Snapshot`: a step keeps only the items it changed), O(1) verified id lookups
+        (`Document._index_of`), the text-size memo (`places.text_entry_size`), the
+        `_payload_bytes` fast path (byte counts identical), the bank meter measures in a
+        background thread, hidden tabs (Cutscenes, Import art, Music) refresh on show, the
+        World tab's spring layout in numpy with the rooms' places kept between redraws.
+        *Accept (machine half) MET:* the 311-place project opens in 4.3-5.4 s (3 Project builds; the user's
+        11 rooms 2.8 s, was 4.6),
+        add NPC / rename / new room / undo 0.1-0.25 s, 20 renames +0 MB, World tab first show
+        1.3 s then 0.4 s; `test_app` `s142_scale` (300 copies of the example's rooms: open,
+        10 rename steps' new bytes, undo, World tab, a moved room stays, the meter) +
+        Copy-room checks; every room of every example project + the user's copied and validated
+        (229 copies, 0 new errors); test_compiler `--rom` ALL 1507 PASSED, test_canvas `--rom` PASS,
+        verify_integrity PASS; the S141 and S142 code build the 311-place project and the user's
+        project to identical ROMs. *User half:* the editor on the user's project (Copy a room
+        with talk, edit the copy's words; the World tab; a long editing session).
+  - [ ] **CAP4b — places by name.** One searchable place picker everywhere (doors, routes,
+        conversation moves, gates, arena, world, import, cutscenes), unique room names (New /
+        Copy / Rename suggest "Cave 2"), no map ids or regions shown (vanilla rooms by name
+        too), named AREAS (folders in the Rooms list, a World tab filter), the Rooms list with
+        search, the World tab's search / filter / "this room and its neighbours".
+  - [ ] **CAP4c — Make editable copies one stage** (post-game by default; "every stage,
+        following the story" kept), scripts no NPC of that stage uses dropped (the S142
+        measure: Castle 5.2 → 4.8 KB, GreatTree 2.1 → 1.9, Farm 2.3 → 1.2, Arena Lobby
+        2.9 → 1.9 of scripts).
+  - [ ] **CAP4d — the Capacity page + help**, then the arc's acceptance (a fresh project past
+        150 places): the whole ROM (≈2.3 MB for content), bank $71 (≈950 places), the
+        secondary ceilings (story checks 256, commands 255, flags 1,965, encounter lists 128,
+        breeding pools 100, new gates / worlds 64, enemy rows 640, songs …); the always-full
+        spill-bank bars ($60 / $64 / $67 / $6C) replaced.
 - [ ] **CAP5 — secondary ceilings (as they bind).** (S140: + bank $71's per-place tables, 15 B a place → ≈950 places; the regions' id space is 63 × 128.) Story checks 256 / commands 255, named
       flags 1,965 (WRAM-bound), project encounter lists 128, breeding pools 100, own-
       animation groups 32, screens per room 8 in the schema (16 in the engine) — EDITOR_DESIGN

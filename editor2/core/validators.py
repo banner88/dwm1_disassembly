@@ -83,6 +83,13 @@ def _payload_bytes(asm_text):
         if line.startswith('db ') or line.startswith('dw '):
             kind = line[:2]
             body = line[3:]
+            if '"' not in body:
+                # S142 (ARC CAP4a): the fast path — no string, so the first ';'
+                # starts the comment (the same count as the loop below; the
+                # space meter measures ~1 MB of generated text at 300 places)
+                n = sum(1 for t in body.split(';', 1)[0].split(',') if t.strip())
+                total += n if kind == 'db' else 2 * n
+                continue
             # strip trailing comment outside quotes
             toks, cur, inq = [], '', False
             for ch in body:

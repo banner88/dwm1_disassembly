@@ -1,5 +1,70 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-10 (Session 140 — **ROADMAP ARC CAP3a BUILT: REGIONS — MORE THAN 128 PLACES;
+> A PLACE IS (REGION, MAP ID), THE REGION IS THE HIGH BYTE OF A PROJECT MAPID ($16B = REGION 1'S $6B),
+> EVERY PER-PLACE TABLE IS INDEXED BY A 16-BIT PLACE NUMBER, THE REGION IS SAVED ("X2")**
+> (user: "Continue on the 4 mb expansion" → the CAP3 audit + a 7-point plan (CAP3 split a / b; the
+> tables stay where they are, indexed by a place number — no place header / far copy; region 0 = the
+> ids written today, later regions automatic; step counters one shared area per region, zeroed on a
+> change; the arena copies region 0 with their ids kept free elsewhere; the COMPASS LODGES test plan +
+> a 300+ place census; the `audit_wram` drift first) → "1) Sounds good. 2) Sounds good. 3) sounds
+> good. 4) ok 5) Yes 6) Sure. 7) ok Proceed"; S139 USER-CONFIRMED before the session). Most of the
+> engine half first planned for CAP3b is in (script warps, hub + gate-insert rows, the gate boss's
+> region). **Built S140; USER-CONFIRMED 2026-10-10 21:26 ("I confirm everything works").**
+> Test ROMs: `DWM-S140-compass-test.gbc` (`4f34883c…`, patched; the user's project + 36 BRAND-NEW
+> rooms COMPASS LODGE 0-1 … 3-9 in FOUR regions — every region's lodges have map ids `$76-$7E`, so
+> each map id is used four times (project mapIDs `$76` / `$176` / `$276` / `$376` …); each lodge its
+> own gate theme, its REGION's song (`$09` / `$1E` / `$31` / `$61`), the odd lodges two flipping
+> LANTERNS; a GUIDE (top left) names lodge, region and map id and sends you to the same map id in the
+> next region (YES); a MONSTER (top right) to fight; stairs both ways, 0-9 ↔ 1-1 etc. cross regions,
+> 3-9's up stairs into the GreatTree (region 3 kept; the GreatTree's SBOSS door redirect → region 0;
+> the Arena Lobby door — a global place — works from region 3); a SCRIBE in lodge 3-5 (JOURNAL +
+> CONTINUE → lodge 3-5); way in: the S140 DEMO NPC in Cities_FOUNT (3, 4)) and
+> `DWM-S140-plain-test.gbc` (`6f7e2718…`, patched; the user's 11-room project, one region: plays as
+> before; a lodge 3-5 save CONTINUEs in the Castle). Its project: `examples/s140_compass_demo/`.
+> **The engine:** NEW pinned `templates/place_number.asm` — `PlaceNum<bank>` (E = id, D = region →
+> HL = P, CF set = no place) from `RegionTable<bank>` (`db n`, per region `db count, dw base`) +
+> `GlobalPlaceIds<bank>` (the arena copies, region-less), pasted into banks $60 (`PlaceOf`), $6C
+> (`CustomTileAnimate`), $71 (entries 0 / 1 / 2 / 3 / 5 / 7, `RoomFlagsPtr`), $76 (`EncResolve`);
+> one region = P is `id − $6B`. Exit rows into another region carry `$FD <region>`:
+> `CopyExitListToBuffer` writes a LINK id (`$EB`+) + `wExitLinks` [region, real id]; bank $73 entry
+> 0 `RegionCommit` (right after `wInGateworld := wWarpFlag`) turns a link id into (region, id), else
+> enters a pending `wWarpRegion` (= region + 1: the hub row's region byte, a script warp's inserted
+> `write_ram`), else keeps the region; `RegionEnter` on a change zeroes `wCustomStepRegional..$CFFF`
+> and drops `wNpcColourMap` / `wTileAnimRoom`. Entry 22 `RegionEnterE` for the gate insert (row
+> region at +6) and the boss floor (bank $16 nops → bank $71 entry 11 `BossRegionEnter`,
+> `GateBossRegionTable`; entry 12 `BossRegionOf` for bank $76 `GateBossWin`). Save: SRAM bank 3
+> magic "X2" + `$A002` = `wMapRegion` ("X1" = region 0); a stale CONTINUE resets it to 0. WRAM
+> `wMapRegion` $D536, `wWarpRegion` $D537, `wExitLinks` $D538-$D55F (`wCustomPool` −42). Room
+> songs: 107 vanilla rows + one row per place; `MusicRuleTable` keys are words. ROM0 `$26DD` rows
+> `$6B-$6F` back to filler (every place reads `Custom26DDTable[P]`). `TEMPLATE_SIZE` $60 1,794,
+> $71 1,380, $6C 364, $76 530; `PLACE_TEMPLATE_SIZE` 1,156. Example pin `c4c99542…` (patched;
+> S139's `fc0f7e2c…` historical).
+> **The compiler:** `_dense_rooms` places each region dense from `$6B` (placeholders fill gaps; the
+> arena copies' ids are `global_alias` placeholders in regions ≥ 1), `place_number`, `exit_prefix`,
+> `_regionize_ops`, the step-counter overlay per region, region tables per bank; `next_free_mapid`
+> hands out `$16B`+ after `$EA`; the builder refuses an rgbasm truncation warning; Play here /
+> playback set `wWarpRegion`. Bank $71 costs 15 B a place (S133 guessed ≈60) → ≈950 places before
+> bank $71 binds (CAP5).
+> **Measured:** NEW `tools/census_regions.py` (generates a ≥ 300-place multi-region project; region
+> tables, place numbers, globals, exit copies + links, the commit (link / same / pending / vanilla),
+> vanilla redirects, script-warp words, hub, gate insert, boss region + win; + the place-bank and
+> stale sub-censuses): the user's project in 4 regions (337 places) 2,796 + 12,587 + 3,670 checks,
+> 0 mismatched; the example in 4 regions (329) 2,717 + 9,775 + 3,714, 0; the demo 614 + 7,076 +
+> 3,574, 0; `--negative` 1; `census_tile_anims` on the demo + in game 1,374, 0. PyBoy on the user's
+> `.sav` (final build): the demo NPC → 0-1; the guides 0 → 1 → 2 → 3 → 0 on map id `$76` (records +
+> songs right); stairs 0-9 ↔ 1-1 and inside region 2; a battle in 2-4 returns to 2-4; JOURNAL in 3-5
+> (SRAM "X2" + 3) → CONTINUE in 3-5 (demo) / the Castle (plain); 3-9 → GreatTree (region 3) → the
+> arena lobby (global) / SBOSS (region 0); 600 / 600 field frames everywhere; the user's 33 screens
+> S139 vs S140 plain: record / NPC / exit / song / VRAM identical (one screen's picture differed in
+> the 33-screen run only — taken alone, identical).
+> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 1494 PASSED; test_app PASS;
+> test_canvas `--rom` PASS; audit_mapid_range selftest PASS (clean 58 / patched 87); audit_wram
+> selftest PASS (our own rows excluded; `extracted/wram_usage.json` regenerated). `EDITOR_REVISION`
+> S140 (help 10_rooms, 16_play_here, 90_limits).
+> **Next:** CAP3b — Play here into regions 1+ in game, the story-state model, the full in-game
+> acceptance (hub / gate insert / world / breeding return / WarpWing from regions 1+).
+
 > Last verified: 2026-10-10 (Session 139 — **ROADMAP ARC CAP2d BUILT: ANIMATION BANKS — A ROOM'S OWN
 > ANIMATED TILES NO LONGER SHARE ONE BANK; BANK $6C FORWARDS EVERY FRAME THROUGH A DIRECTORY TO THE ROOM'S
 > ANIMATION BANK ($6C OR $80+), EACH WITH ITS OWN COPY OF THE PLAYER — CAP2 COMPLETE**

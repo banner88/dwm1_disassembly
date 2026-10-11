@@ -21,7 +21,9 @@ S139 (ROADMAP ARC CAP2d): a $6C bar — the rooms' own animated tiles; what
 does not fit $6C goes to animation banks in the new banks (amber, not red).
 """
 
-from PySide6.QtCore import QTimer
+import threading
+
+from PySide6.QtCore import QTimer, Signal
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QProgressBar, QSizePolicy, QWidget
 
 from editor2.core.compiler import measure_banks
@@ -35,6 +37,9 @@ EXT = 0x80         # S135: the "new banks" bar (measures every bank $80-$FF)
 
 
 class SpaceMeter(QWidget):
+    # S142 (ARC CAP4a): a background measurement's result (usage, errors)
+    measured = Signal(object)
+
     def __init__(self, session, repo, parent=None):
         super().__init__(parent)
         self.s, self.repo = session, repo
@@ -57,24 +62,61 @@ class SpaceMeter(QWidget):
         self.timer = QTimer(self)
         self.timer.setSingleShot(True)
         self.timer.setInterval(900)    # S132: after the edits settle (0.14 s now, was 2 s)
-        self.timer.timeout.connect(self.measure)
+        self.timer.timeout.connect(self.measure_async)
+        self.measured.connect(self._measured)
+        self._running = False          # a background measurement is under way
+        self._again = False            # an edit came while it ran
         # bound methods (not lambdas): Qt drops the connections when this
         # widget is deleted (a new project replaces the meter)
         session.structureChanged.connect(self.poke)
         session.undo.indexChanged.connect(self.poke)
         session.layoutChanged.connect(self.poke)
         self.last = {}
-        self.measure()
+        self.measure_async()
 
     def poke(self, *_a):
         self.timer.start()
 
-    def measure(self):
+    def _compute(self, data):
         try:
-            usage, errors = measure_banks(self.s.doc.data, self.s.project_dir, self.repo,
-                                          banks=tuple(self.bars))   # S132: only these
+            return measure_banks(data, self.s.project_dir, self.repo,
+                                 banks=tuple(self.bars))      # S132: only these
         except Exception as e:                       # never break the editor
-            usage, errors = {}, [str(e)]
+            return {}, [str(e)]
+
+    def measure(self):
+        """Measure now (blocking) and show it."""
+        from editor2.core.document import fast_copy
+        self._apply(*self._compute(fast_copy(self.s.doc.data)))
+
+    def measure_async(self):
+        """S142 (ARC CAP4a): measure in a background thread — at 300 places a
+        measurement is ~0.6 s of compiler work, which froze the editor ~1 s
+        after every edit. The document is copied here (main thread); the
+        thread only reads its copy; the result comes back as a signal."""
+        if self._running:
+            self._again = True
+            return
+        from editor2.core.document import fast_copy
+        data = fast_copy(self.s.doc.data)
+        self._running = True
+
+        def run():
+            res = self._compute(data)
+            try:
+                self.measured.emit(res)
+            except RuntimeError:                     # the widget is gone
+                pass
+        threading.Thread(target=run, daemon=True).start()
+
+    def _measured(self, res):
+        self._running = False
+        self._apply(*res)
+        if self._again:
+            self._again = False
+            self.timer.start()
+
+    def _apply(self, usage, errors):
         if errors:
             for bank, (b, what) in self.bars.items():
                 b.setFormat(f'${bank:02X} ?')

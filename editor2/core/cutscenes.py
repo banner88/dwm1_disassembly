@@ -1355,9 +1355,9 @@ class ProjectCatalogue:
     labels in params, e.g. a room's step counter)."""
 
     def __init__(self, data, root, symbols=None, rooms=None, vanilla=None):
-        import copy
         from .project import Project
-        self.prj = Project(copy.deepcopy(data), root)
+        from .document import fast_copy          # S142 (ARC CAP4a): 5x a deep copy
+        self.prj = Project(fast_copy(data), root)
         self.symbols = dict(symbols or {})
         try:                       # the project's own room-state counters (S118c:
             for lbl, addr, _c in (self.prj.step_counter_allocation()   # an EQU is not

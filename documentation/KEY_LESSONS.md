@@ -6427,3 +6427,35 @@ it writes (BG slots and the shared tiles `$8000-$8FFF`) in the busiest room the 
 a sparse demo; and when two users of one resource overlap in TIME, separate them in SPACE — a
 restore at the end only fixes the end. Measure the state DURING the conflict (the menu open), not
 only after it.
+
+## S142 — the editor at 300+ places (ROADMAP ARC CAP4a)
+
+**A view that copies the whole project is O(views × project) — and it hides until the project is
+big.** **Symptom (S142 audit, a 311-place project in the real editor):** opening took 28 s (the
+user's 11 rooms: 4.6 s), every structural edit 0.5-2 s, undo 14 MB a step. **Root cause
+(cProfile):** each read-only view built its own compiler `Project` from a `copy.deepcopy` of the
+whole document (29 builds while the tabs filled), the breeding view keyed its cache on
+`json.dumps` of the whole project (223 calls, 63 ms each), every undo step held two deep copies,
+hidden tabs (Cutscenes, Import art) re-read the whole project after every edit, and id lookups /
+`tile_usage` were linear scans inside loops. None of it showed at 11 rooms. **Fix:** one shared
+model per document revision (`Document.model_project`, the revision bumped by `touch()` and by
+every undo-stack move), interned pickled snapshot pieces (`document.Snapshot`), verified id →
+index maps, hidden tabs refresh on show, the meter off the UI thread. **Rules:** (1) measure the
+editor on a GENERATED project at the scale the roadmap promises (the 300 Copies probe,
+`test_app.s142_scale`) before calling a feature scale-ready — a small POC project hides every
+O(n²); (2) a read-only view shares one model keyed by a revision counter, never a fresh copy and
+never a content hash of the whole document per call; (3) undo stores what changed (or shares
+what did not), never the whole document per step.
+
+**A copy must own every per-room object it points at — not only its tiles (S98) but its scripts,
+texts and doors.** **Symptom (S142 audit, measured):** a copied room's innkeeper sign given new
+words → the ORIGINAL sign showed them too; a copy of the user's breeder room → "one breeding NPC
+per script", the project no longer built; copied doors carried the original's door ids (two door
+objects, one id). **Root cause:** `copy_room` deep-copied the room dict, whose NPCs / spots /
+script table hold script IDS and whose exits hold door IDS — the objects behind the ids stayed
+shared (S98 r2 had fixed the same thing for tilesets only: "STOP sharing tilesets by default").
+**Fix:** `_own_scripts_for_copy` / `_own_doors_for_copy` (new ids; texts found anywhere in the
+copied scripts, but never a string that is also a flag / check / script / room name; doors
+unconnected because a door link is two-way). **Rule:** when an editor op copies an object, list
+every ID it holds and decide for each kind — own it (scripts, texts, doors, layouts, tilesets) or
+share it on purpose (flags, quests) — and test the copy by EDITING it and reading the original.

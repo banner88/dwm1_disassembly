@@ -15,6 +15,13 @@
   Since S137 a room's palettes and colour rows go with it (they used to fill bank
   $17 at ~35-40 rooms). Since S139 a room's own animated tiles overflow too: bank
   $6C first, then new banks (one room's animations must fit one bank, ~15.8 KB).
+- Hundreds of rooms in the editor (S142): measured with 311 rooms (three
+  regions) — the project opens in ~4 s, an edit (a new NPC, a rename, a new
+  room) and its undo take ~0.1-0.3 s, the World tab ~1-2 s the first time; the
+  bank meter measures in the background. An undo step keeps only what its edit
+  changed, so a long session no longer piles up copies of the whole project.
+  Room lists are still one long list (search, areas and room names instead of
+  map ids come next — ROADMAP CAP4b).
 - Step counters ("steps walked in this room") with more than one region (S140):
   every region's rooms share one area, so their counters start again from 0 when
   you walk into another region (your arena rooms' counters are kept). A project

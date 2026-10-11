@@ -176,7 +176,8 @@ class WorldTab(QWidget):
         self.all_vanilla.toggled.connect(lambda _on: self.refresh())
         row.addWidget(self.all_vanilla)
         b = QPushButton('Re-layout')
-        b.clicked.connect(self.refresh)
+        b.setToolTip('Lay every room out afresh (rooms you moved by hand move too)')
+        b.clicked.connect(self.relayout)
         row.addWidget(b)
         for txt, tip, fn in (('Fit', 'Show the whole graph', self.fit),
                              ('+', 'Zoom in (mouse wheel)', lambda: self.zoom(1.25)),
@@ -271,16 +272,30 @@ class WorldTab(QWidget):
                 edges = [e for e in edges if e['a'] in keep and e['b'] in keep]
         return nodes, edges
 
+    def relayout(self):
+        self._pos = {}
+        self.nodes = {}
+        self.refresh()
+
     def refresh(self):
         self._dirty = False
+        # S142 (ARC CAP4a): rooms keep where they stand (laid out before or moved
+        # by hand) — only new rooms are laid out; Re-layout starts afresh
+        pos_kept = getattr(self, '_pos', None)
+        if pos_kept is None:
+            pos_kept = self._pos = {}
+        for k, item in self.nodes.items():
+            pos_kept[k] = (item.pos().x(), item.pos().y())
         self.scene.clear()
         self.nodes, self.edges = {}, []
         nodes, edges = self.graph()
         big = len(nodes) > 40
         import math as _m
         scale = max(1.0, _m.sqrt(len(nodes) / 6.0))
+        fixed = {n['key']: pos_kept[n['key']] for n in nodes if n['key'] in pos_kept}
         pos = W.layout(nodes, edges, width=900.0 * scale, height=650.0 * scale,
-                       iterations=120 if big else 250)
+                       iterations=120 if big else 250, fixed=fixed)
+        pos_kept.update(pos)
         for n in nodes:
             pm = None
             try:

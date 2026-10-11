@@ -118,14 +118,36 @@ def text_block(prj, si, sec):
     return lines
 
 
+_TEXT_SIZE_MEMO = {}
+_TEXT_SIZE_MEMO_MAX = 65536
+
+
 def text_entry_size(prj, tid, entry):
     """Bytes one text entry assembles to (its row excluded); 0 if it cannot
-    render (validators report that text's problem)."""
+    render (validators report that text's problem).
+
+    S142 (ARC CAP4a): memoised on the entry's content — the size depends on
+    the entry alone (the label line carries no payload), and the editor builds
+    a Project for many views: at 311 places this was 7 of the 8 s that 29
+    Project builds took while a project opened."""
+    import json
+    try:
+        key = json.dumps({k: v for k, v in entry.items() if not str(k).startswith('_')},
+                         sort_keys=True)
+    except (TypeError, ValueError):
+        key = None
+    if key is not None and key in _TEXT_SIZE_MEMO:
+        return _TEXT_SIZE_MEMO[key]
     from . import textenc as T
     try:
-        return _payload(T.render_entry_asm(prj.text_label(tid), entry))
+        n = _payload(T.render_entry_asm(prj.text_label(tid), entry))
     except Exception:                                    # noqa: BLE001
-        return 0
+        n = 0
+    if key is not None:
+        if len(_TEXT_SIZE_MEMO) >= _TEXT_SIZE_MEMO_MAX:
+            _TEXT_SIZE_MEMO.clear()
+        _TEXT_SIZE_MEMO[key] = n
+    return n
 
 
 # ---------------------------------------------------------------- bank $60's fixed part

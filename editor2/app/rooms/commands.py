@@ -13,8 +13,11 @@ from PySide6.QtGui import QUndoCommand
 
 class SnapshotCommand(QUndoCommand):
     """Structural edit as a whole-document snapshot (S94): `op(doc)` runs
-    once; undo/redo swap the complete project dict (deep copies — ~ms for
-    a 130 KB project) plus any tileset asset files the op touched. Used for
+    once; undo/redo swap the complete project dict plus any tileset asset
+    files the op touched. S142 (ARC CAP4a): the snapshots are
+    `document.Snapshot`s — interned pickled pieces, so a step keeps only the
+    items (rooms, layouts, scripts, texts …) and asset files its op changed
+    (S94-S141: two whole deep copies per step, 14 MB at 311 places). Used for
     clone / copy / new / delete / rename / localize / walkability, so they
     need no hand-written inverse and can never drift from the document."""
 
@@ -68,6 +71,14 @@ class SnapshotCommand(QUndoCommand):
             self.assets = sorted(set(self.assets) | set(self._new_assets()))
             self.files_after = self._read_files()
             self.after = self.s.doc.snapshot()
+            # S142 (ARC CAP4a): keep only the asset files the op changed (it
+            # read every tileset sheet of the project twice per step — 300
+            # sheets at 300 places — and wrote them all back on each undo)
+            changed = [rel for rel in self.assets
+                       if self.files_before.get(rel) != self.files_after.get(rel)]
+            self.assets = changed
+            self.files_before = {rel: self.files_before.get(rel) for rel in changed}
+            self.files_after = {rel: self.files_after.get(rel) for rel in changed}
         else:
             self.s.doc.restore(self.after)
             self._write_files(self.files_after)

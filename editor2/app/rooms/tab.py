@@ -715,16 +715,21 @@ class RoomsTab(QWidget):
             self.room_list.addItem(it)
             if keep and r.get('id') == keep:
                 sel = self.room_list.count() - 1
-        self.room_list.blockSignals(False)
+        # S142 (ARC CAP4a): the row is set with signals still blocked — the
+        # signal AND the explicit call below each redrew the room (twice per edit)
         if sel >= 0:
             self.room_list.setCurrentRow(sel)
+            self.room_list.blockSignals(False)
             self._room_picked(self.room_list.currentItem())
         elif keep is None and self.room_list.count():
             self.room_list.setCurrentRow(0)
+            self.room_list.blockSignals(False)
             self._room_picked(self.room_list.currentItem())
-        elif self.room_list.count() == 0 and self.vanilla_list.count() and self.vanilla_mid is None:
-            self.vanilla_list.setCurrentRow(0)
-            self._vanilla_picked(self.vanilla_list.currentItem())
+        else:
+            self.room_list.blockSignals(False)
+            if self.room_list.count() == 0 and self.vanilla_list.count() and self.vanilla_mid is None:
+                self.vanilla_list.setCurrentRow(0)
+                self._vanilla_picked(self.vanilla_list.currentItem())
 
     def _room_picked(self, item, _prev=None):
         if not item:
@@ -3171,6 +3176,17 @@ class RoomsTab(QWidget):
         self.room_id = cmd.result
         self.key, self.state_idx = 0, 0
         self._fill_rooms(keep=cmd.result)
+        # S142 (ARC CAP4a): the copy has its own scripts / texts / doors; its
+        # doors start unconnected (a door link is two-way)
+        cp = self.s.doc.room(cmd.result) if cmd.result else None
+        if cp is not None:
+            loose = {e['door'] for s in (cp.get('screens') or {}).values()
+                     for st in (s.get('states') or [s]) for e in st.get('exits') or []
+                     if e.get('door') and 'dest' not in e}
+            self.status_line.setText(
+                f'Copied — the copy has its own scripts and texts (editing it never changes '
+                f'the original)' + (f'; its {len(loose)} door(s) are not connected yet.'
+                                    if loose else '.'))
 
     def _rename_room(self):
         room = self.current_room()

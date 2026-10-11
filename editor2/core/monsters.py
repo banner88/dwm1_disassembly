@@ -194,8 +194,13 @@ def _pool_places():
 class MonstersMixin:
     # ------------------------------------------------------------ models
     def _project(self, data=None):
+        """A compiler Project of `data` (a fresh one), or — data None — the
+        document's shared model (S142: Document.model_project, read only)."""
         from editor2.core.project import Project
-        return Project(copy.deepcopy(data if data is not None else self.data),
+        if data is None and hasattr(self, 'model_project'):
+            return self.model_project()
+        from editor2.core.document import fast_copy     # S142
+        return Project(fast_copy(data if data is not None else self.data),
                        self.project_dir)
 
     def monsters_model(self):

@@ -808,3 +808,18 @@ edge and the battle waits for input forever.
   that service (`Document.make_service_npc` / `make_shopkeeper`), talk, wait for `$C8EB` bit 4 / 1
   (a screen open), check, back out with B, check. The negative control: the fix's custom-room
   branches made unconditional in the ROM copy (`walk_regions.py --negative-sheets`).
+
+## S142 techniques — timing the editor itself at scale (Qt offscreen, no emulator)
+
+- **A scale project in seconds:** copy a project folder, then `Document.copy_room` N times over its
+  ordinary rooms and `save()` — real own layouts / tileset copies / scripts, regions assigned by
+  `next_free_mapid` (300 copies ≈ 1 s since S142). `test_app.s142_scale` does this on the example.
+- **Drive the real window:** `QT_AUDIO_BACKEND=none QT_QPA_PLATFORM=offscreen`, `MainWindow()`
+  (it RE-OPENS the last project from QSettings — count builds / time only around your own
+  `open_project`), then the tabs' own methods (`rooms_tab._rename_to`, `_npc_op`, a
+  `SnapshotCommand` push, `tabs.setCurrentWidget`) with `app.processEvents()` after each; replace
+  `QMessageBox.warning / question` with stubs or a refused op blocks the run on a modal box.
+- **Where the time goes:** `cProfile` around the call, sorted by cumulative time; profiled times
+  run 2-4× the real ones (deep copies especially) — quote unprofiled `perf_counter` numbers.
+  Count compiler builds by wrapping `Project.__init__`; memory by `VmRSS` in `/proc/self/status`
+  before / after N edits.

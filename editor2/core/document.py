@@ -21,8 +21,10 @@ Schema facts honoured (PROJECT_COMPILER §2.2 / §2.10):
 """
 
 import copy
+import hashlib
 import importlib.util
 import json
+import pickle
 import re
 import os
 
@@ -54,6 +56,76 @@ from editor2.core.formats import anim_source as F_anim
 SCREEN_W, SCREEN_H = 20, 16
 GRID_COLS, GRID_ROWS = 4, 4          # engine scroll grid (row*4+col), S94 schema
 NPC_HARD_CAP = 8
+
+
+def fast_copy(obj):
+    """S142 (ARC CAP4a): a deep copy of JSON-like data through pickle (≈5x
+    faster than copy.deepcopy on a project; shared references are kept the
+    same way). Falls back to copy.deepcopy for anything pickle refuses."""
+    try:
+        return pickle.loads(pickle.dumps(obj, pickle.HIGHEST_PROTOCOL))
+    except Exception:                                    # noqa: BLE001
+        return copy.deepcopy(obj)
+
+
+class Snapshot:
+    """S142 (ARC CAP4a): a whole-document snapshot made of interned pickled
+    pieces (Document.snapshot). `data()` rebuilds an independent copy."""
+
+    LISTS = ('rooms', 'layouts', 'scripts', 'dialogue', 'palettes', 'tilesets')
+    _pool = {}                  # sha1 -> bytes, shared by every snapshot
+    _POOL_MAX = 200000          # a ceiling on distinct pieces (cleared past it)
+
+    __slots__ = ('rest', 'lists', 'has', 'order')
+
+    @classmethod
+    def _intern(cls, b):
+        h = hashlib.sha1(b).digest()
+        got = cls._pool.get(h)
+        if got is None:
+            if len(cls._pool) >= cls._POOL_MAX:
+                cls._pool.clear()
+            cls._pool[h] = got = b
+        return got
+
+    @classmethod
+    def take(cls, data):
+        sn = cls()
+        custom = data.get('custom') if isinstance(data, dict) else None
+        lists, has = {}, {}
+        if isinstance(custom, dict):
+            for k in cls.LISTS:
+                v = custom.get(k)
+                if isinstance(v, list):
+                    has[k] = True
+                    lists[k] = tuple(cls._intern(pickle.dumps(x, pickle.HIGHEST_PROTOCOL))
+                                     for x in v)
+            shell = dict(data)
+            shell['custom'] = {k: v for k, v in custom.items() if k not in lists}
+            sn.order = tuple(custom)          # project.json keeps its key order
+        else:
+            shell = data
+            sn.order = ()
+        sn.rest = cls._intern(pickle.dumps(shell, pickle.HIGHEST_PROTOCOL))
+        sn.lists, sn.has = lists, has
+        return sn
+
+    def data(self):
+        d = pickle.loads(self.rest)
+        if self.lists:
+            rest = d.get('custom') or {}
+            custom = {}
+            for k in self.order:
+                if k in self.lists:
+                    custom[k] = [pickle.loads(b) for b in self.lists[k]]
+                elif k in rest:
+                    custom[k] = rest[k]
+            d['custom'] = custom
+        return d
+
+    def nbytes(self):
+        """Bytes this snapshot refers to (shared pieces counted in full)."""
+        return len(self.rest) + sum(len(b) for v in self.lists.values() for b in v)
 
 
 def val(v):
@@ -135,6 +207,7 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         self.indent = self._detect_indent(src)
         self.trailing_newline = src.endswith('\n')
         self.dirty = False
+        self.revision = 0             # S142: bumped by touch() / bump()
         self._saved_text = src
         self._protected = {}          # tileset id -> vocabulary indices (session)
         # S96: the live renderer (vanilla_gfx / vanilla_tiles_used / rom_sheet)
@@ -223,6 +296,38 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
 
     def touch(self):
         self.dirty = True
+        self.revision = getattr(self, 'revision', 0) + 1
+
+    def bump(self):
+        """S142 (ARC CAP4a): a change happened that may not have called
+        touch() (the editor bumps on every undo-stack move) — cached models
+        built from the document are rebuilt on their next use."""
+        self.revision = getattr(self, 'revision', 0) + 1
+
+    def model_project(self):
+        """S142 (ARC CAP4a): ONE compiler Project of the current document,
+        built from a deep copy (Project lowers quests / cutscenes into the dict
+        it is given) and kept until the document changes (`revision`, bumped by
+        touch() / bump()). The read-only views — monsters, families, breeding,
+        skills, music, the art / text meters — share it; before S142 each built
+        its own (29 builds while a 311-place project opened, every one a deep
+        copy of the whole project). Callers must not change it. Raises what
+        Project() raises (the error is cached the same way)."""
+        from editor2.core.project import Project
+        key = (getattr(self, 'revision', 0), id(self.data))
+        c = getattr(self, '_model_cache', None)
+        if c is not None and c[0] == key:
+            if c[2] is not None:
+                raise c[2]
+            return c[1]
+        try:
+            prj, err = Project(fast_copy(self.data), self.project_dir), None
+        except Exception as ex:                       # noqa: BLE001
+            prj, err = None, ex
+        self._model_cache = (key, prj, err)
+        if err is not None:
+            raise err
+        return prj
 
     # ------------------------------------------------------------ lookups
     @property
@@ -241,32 +346,55 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
     def palettes(self):
         return self.custom.setdefault('palettes', [])
 
+    def _index_of(self, name, lst, ident):
+        """S142 (ARC CAP4a): the position of the item `ident` in `lst` through a
+        cached id -> index map. A hit is VERIFIED (the item at that position
+        still carries the id), anything else rebuilds the map — so a lookup is
+        always what the old linear scan returned, whatever mutated the list
+        (the old scans made every lookup O(n) and many views O(n^2) at
+        hundreds of places). None = no such item."""
+        cache = self.__dict__.setdefault('_id_index', {})
+        ent = cache.get(name)
+        if ent is not None and ent[0] is lst:
+            i = ent[1].get(ident)
+            if i is not None and i < len(lst) and lst[i].get('id') == ident:
+                return i
+        m = {}
+        for j, x in enumerate(lst):
+            if isinstance(x, dict):
+                m.setdefault(x.get('id'), j)
+        cache[name] = (lst, m)
+        return m.get(ident)
+
     def room(self, room_id):
-        for r in self.rooms:
-            if r.get('id') == room_id:
-                return r
-        raise KeyError(room_id)
+        lst = self.rooms
+        i = self._index_of('rooms', lst, room_id)
+        if i is None:
+            raise KeyError(room_id)
+        return lst[i]
 
     def room_index(self, room_id):
-        for i, r in enumerate(self.rooms):
-            if r.get('id') == room_id:
-                return i
-        raise KeyError(room_id)
+        i = self._index_of('rooms', self.rooms, room_id)
+        if i is None:
+            raise KeyError(room_id)
+        return i
 
     def layout(self, lid):
-        for l in self.layouts:
-            if l.get('id') == lid:
-                return l
-        raise KeyError(lid)
+        lst = self.layouts
+        i = self._index_of('layouts', lst, lid)
+        if i is None:
+            raise KeyError(lid)
+        return lst[i]
 
     def has_layout(self, lid):
-        return any(l.get('id') == lid for l in self.layouts)
+        return self._index_of('layouts', self.layouts, lid) is not None
 
     def palette(self, pid):
-        for p in self.palettes:
-            if p.get('id') == pid:
-                return p
-        raise KeyError(pid)
+        lst = self.palettes
+        i = self._index_of('palettes', lst, pid)
+        if i is None:
+            raise KeyError(pid)
+        return lst[i]
 
     def screen(self, room, key):
         return room['screens'][str(key)]
@@ -617,11 +745,19 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
     # =====================================================================
 
     def snapshot(self):
-        return copy.deepcopy(self.data)
+        """The whole document as a Snapshot (S142, ARC CAP4a): every item of
+        the lists that grow with the places (custom.rooms / layouts / scripts /
+        dialogue / palettes / tilesets) pickled on its own, the rest as one
+        piece, each piece INTERNED — an unchanged item shares its bytes with
+        every other snapshot holding it. An undo step therefore costs only the
+        items its edit changed (S141 and before: two full deep copies per
+        step, 14 MB at 311 places, no limit), and taking one is a pickle pass
+        instead of a deep copy (5x faster)."""
+        return Snapshot.take(self.data)
 
     def restore(self, snap):
         self.data.clear()
-        self.data.update(copy.deepcopy(snap))
+        self.data.update(snap.data() if isinstance(snap, Snapshot) else fast_copy(snap))
         self.touch()
 
     def room_name(self, room):
@@ -840,6 +976,13 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         room['id'] = rid
         room['name'] = name
         room['mapID'] = hexs(self.next_free_mapid())
+        # S142 (ROADMAP ARC CAP4a; user: "Yes ok" to copies never sharing talk):
+        # the copy gets its OWN scripts + texts (before S142 its NPCs ran the
+        # original's scripts: editing a copy's words changed the original, and a
+        # copied breeder made the project unbuildable) and its OWN doors (new
+        # door ids, unconnected — the originals' partners stay the originals')
+        self._own_scripts_for_copy(src, room)
+        self._own_doors_for_copy(room)
         # S98 r2 (user: "when I make a custom room it should STOP sharing
         # tilesets by default"): a copy of a room with a project tileset
         # gets its OWN copy of that sheet (+ its metatiles), so imports and
@@ -850,12 +993,11 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         for k in list(room):
             if k.startswith('_'):
                 room.pop(k)
-        # collect layout ids used, in declaration order
-        used = []
-        for lid in [l['id'] for l in self.layouts]:
-            for rr, k, i, kind in self.layout_users(lid):
-                if rr == room_id and lid not in used:
-                    used.append(lid)
+        # collect layout ids used, in declaration order (S142: from the room's
+        # own references — layout AND attr refs; the old scan asked
+        # layout_users() for every layout of the project, O(layouts x rooms))
+        refs = self._room_layout_refs(src)
+        used = [l['id'] for l in self.layouts if l.get('id') in refs]
         remap = {}
         for lid in used:
             item = copy.deepcopy(self.layout(lid))
@@ -872,14 +1014,184 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         fix(at)
         for scr in (room.get('screens') or {}).values():
             fix(scr.get('layout'))
+            fix(scr.get('attr'))
             for st in scr.get('states') or []:
                 fix(st.get('layout'))
+                fix(st.get('attr'))
             # step counters are auto for the copy
             scr['step_counter'] = 'auto'
         # music sugar copies; room_defaults entry keyed by old mapID is not ours
         self.rooms.append(room)
         self.touch()
         return rid
+
+    @staticmethod
+    def _room_layout_refs(room):
+        """S142: every layout item id a room references (render.attr, each
+        screen's / state's layout and attr)."""
+        out = set()
+
+        def take(ref):
+            if isinstance(ref, dict) and ref.get('id'):
+                out.add(ref['id'])
+        take((room.get('render') or {}).get('attr'))
+        for scr in (room.get('screens') or {}).values():
+            take(scr.get('layout'))
+            take(scr.get('attr'))
+            for st in scr.get('states') or []:
+                take(st.get('layout'))
+                take(st.get('attr'))
+        return out
+
+    # keys whose string values are names, never script / text references
+    _COPY_NAME_KEYS = frozenset(('id', 'name', 'actor', 'comment', 'mapID', 'label',
+                                 'source_mapID', '_comment'))
+
+    @classmethod
+    def _rename_strings(cls, obj, mapping):
+        """Replace (in place) every string value of `obj` that is a key of
+        `mapping`, except under the name keys above. Returns the hits."""
+        hits = 0
+        if isinstance(obj, dict):
+            for k, v in list(obj.items()):
+                if k in cls._COPY_NAME_KEYS:
+                    continue
+                if isinstance(v, str):
+                    if v in mapping:
+                        obj[k] = mapping[v]
+                        hits += 1
+                else:
+                    hits += cls._rename_strings(v, mapping)
+        elif isinstance(obj, list):
+            for i, v in enumerate(obj):
+                if isinstance(v, str):
+                    if v in mapping:
+                        obj[i] = mapping[v]
+                        hits += 1
+                else:
+                    hits += cls._rename_strings(v, mapping)
+        return hits
+
+    @classmethod
+    def _strings_in(cls, obj, pool, out):
+        """Collect (in order) the string values of `obj` that are in `pool`."""
+        if isinstance(obj, dict):
+            for k, v in obj.items():
+                if k in cls._COPY_NAME_KEYS:
+                    continue
+                if isinstance(v, str):
+                    if v in pool and v not in out:
+                        out.append(v)
+                else:
+                    cls._strings_in(v, pool, out)
+        elif isinstance(obj, list):
+            for v in obj:
+                if isinstance(v, str):
+                    if v in pool and v not in out:
+                        out.append(v)
+                else:
+                    cls._strings_in(v, pool, out)
+        return out
+
+    def _own_scripts_for_copy(self, src, room):
+        """S142 (ARC CAP4a): give a room copy its own copies of every script
+        it uses (the room's script table + any script id its JSON names — NPCs,
+        spots, cutscenes) and of every text those scripts / the room show
+        (any form: plain text ops, talks, conversations, shops, services). A
+        string counts as a text reference only if it is a dialogue id and no
+        flag / story check / script / room bears the same name. Explicit
+        `text_id`s are not copied (the copy's texts are numbered by the build).
+        Quests stay with the original's giver."""
+        scripts = self.custom.setdefault('scripts', [])
+        by_id = {s.get('id'): s for s in scripts}
+        sids = []
+        for _i, sid in sorted(((int(i), s) for i, s in (room.get('scripts') or {}).items()),
+                              key=lambda t: t[0]):
+            if isinstance(sid, str) and sid in by_id and sid not in sids:
+                sids.append(sid)
+        for sid in self._strings_in(room, set(by_id), []):
+            if sid not in sids:
+                sids.append(sid)
+        if not sids:
+            return {}
+        old, new = src['id'], room['id']
+        taken = set(by_id)
+        smap = {}
+        for sid in sids:
+            base = new + sid[len(old):] if sid.startswith(old) else f'{new}_{sid}'
+            nid = base
+            n = 2
+            while nid in taken:
+                nid = f'{base}_{n}'
+                n += 1
+            taken.add(nid)
+            smap[sid] = nid
+        # texts: dialogue ids named by the copied scripts or by the room itself
+        dlg = self.custom.setdefault('dialogue', [])
+        dids = {d.get('id') for d in dlg}
+        names = {f.get('name') for f in self.custom.get('flags') or []} | \
+            {c.get('name') for c in self.custom.get('checks') or []} | \
+            set(by_id) | {r.get('id') for r in self.rooms}
+        pool = dids - names
+        texts = []
+        for sid in sids:
+            self._strings_in(by_id[sid], pool, texts)
+        self._strings_in(room, pool, texts)
+        dmap = {}
+        dtaken = set(dids)
+        for did in texts:
+            base = new + did[len(old):] if did.startswith(old) else f'{new}_{did}'
+            nid, n = base, 2
+            while nid in dtaken:
+                nid = f'{base}_{n}'
+                n += 1
+            dtaken.add(nid)
+            dmap[did] = nid
+        by_did = {d.get('id'): d for d in dlg}
+        for did in texts:
+            d = copy.deepcopy(by_did[did])
+            d['id'] = dmap[did]
+            d.pop('text_id', None)
+            dlg.append(d)
+        for sid in sids:
+            sc = copy.deepcopy(by_id[sid])
+            sc['id'] = smap[sid]
+            sc.pop('_source', None)
+            self._rename_strings(sc, dmap)
+            self._rename_strings(sc, {k: v for k, v in smap.items() if k != sid})
+            scripts.append(sc)
+        self._rename_strings(room, smap)
+        self._rename_strings(room, dmap)
+        return smap
+
+    def _own_doors_for_copy(self, room):
+        """S142 (ARC CAP4a): the copy's door objects get new ids and start
+        UNCONNECTED (a door link is two-way: the original's partner keeps
+        leading to the original). Plain exits / teleports stay as they are."""
+        taken = set(self.door_ids())
+        dmap = {}
+        rows = []
+        for scr in (room.get('screens') or {}).values():
+            for st in (scr.get('states') or [scr]):
+                for e in st.get('exits') or []:
+                    rows.append(e)
+                    did = e.get('door')
+                    if did and did not in dmap:
+                        n = 1
+                        while f'door_{n}' in taken:
+                            n += 1
+                        dmap[did] = f'door_{n}'
+                        taken.add(dmap[did])
+        for e in rows:
+            if e.get('door') in dmap:
+                e['door'] = dmap[e['door']]
+                for k in self.LINK_KEYS:
+                    e.pop(k, None)
+            elif e.get('twin_of') in dmap:
+                e['twin_of'] = dmap[e['twin_of']]
+                for k in self.LINK_KEYS:
+                    e.pop(k, None)
+        return dmap
 
     def new_room(self, name, source_mid, renderer, blank_tileset=False,
                  gate_theme=None):
@@ -1637,6 +1949,7 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         anim = self.animated_slots(tid)
         out = [{'placed': [], 'mine': [], 'vocab': False, 'animated': i in anim,
                 'changed': False} for i in range(128)]
+        seen = [set() for _ in range(128)]      # S142: `w not in list` was O(n^2) at scale
         for r in self.rooms_using_tileset(tid):
             for k, scr in (r.get('screens') or {}).items():
                 refs = [(None, scr.get('layout'))] + [
@@ -1647,12 +1960,11 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
                         continue
                     if i is None and scr.get('states'):
                         continue
-                    for row in self.layout(ref['id'])['tiles']:
-                        for t in row:
-                            u = out[t & 0x7F]['placed']
-                            w = (r['id'], int(k), i or 0)
-                            if w not in u:
-                                u.append(w)
+                    w = (r['id'], int(k), i or 0)
+                    for t in {t & 0x7F for row in self.layout(ref['id'])['tiles'] for t in row}:
+                        if w not in seen[t]:
+                            seen[t].add(w)
+                            out[t]['placed'].append(w)
             for t in self.room_sources_vocab(r):
                 out[t]['vocab'] = True
         for mt in self.metatiles(tid):
@@ -2561,16 +2873,18 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
                       key=lambda t: t[0])
 
     def script(self, sid):
-        for s in self.custom.get('scripts', []):
-            if s.get('id') == sid:
-                return s
-        raise KeyError(sid)
+        lst = self.custom.get('scripts', [])
+        i = self._index_of('scripts', lst, sid)
+        if i is None:
+            raise KeyError(sid)
+        return lst[i]
 
     def dialogue(self, did):
-        for d in self.custom.get('dialogue', []):
-            if d.get('id') == did:
-                return d
-        raise KeyError(did)
+        lst = self.custom.get('dialogue', [])
+        i = self._index_of('dialogue', lst, did)
+        if i is None:
+            raise KeyError(did)
+        return lst[i]
 
     def _unique_id(self, base, taken):
         base = self._slug(base) or 'x'

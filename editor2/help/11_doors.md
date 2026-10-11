@@ -119,7 +119,10 @@ lines: door (two-way), one-way exit, game door → here, script warp (a talk
 or script that moves the player), game exit. Hover a line to see what it is.
 
 - Mouse wheel = zoom, drag empty space = move around, **Fit** / **+** / **−**.
-- Drag a room to untangle the lines (not saved); **Re-layout** redraws.
+- Drag a room to untangle the lines; it stays where you put it while the
+  editor is open (S142 — rooms keep their places when the map is redrawn
+  after an edit, only new rooms are placed; not saved in the project).
+  **Re-layout** lays every room out afresh.
 - **whole vanilla world** — also every game room and exit (big and slow).
 - **only this world** — with a world picked on the left: only its rooms
   (green frames) and the rooms around them.

@@ -6,6 +6,16 @@ the gates, in their colours: see *Gate themes*). **Copy / Rename / Delete** sit 
 vanilla room is read-only until you **Make editable** (it is copied into the
 project).
 
+**Copy** (S142) makes a room of its own: its own screens, its own tileset copy,
+its own **scripts and texts** (change what a copied NPC says and the original
+still says its old words — before S142 a copy's NPCs ran the original's
+scripts, and a copied breeder stopped the build) and its own **doors**, which
+start **unconnected** (a door leads both ways, so the original's partner door
+keeps leading to the original): connect them where the copy should lead. The
+status line says how many. A quest stays with the original giver (the copy's
+NPC keeps the giver's own conversation, without the quest); flags are not
+copied — a copied conversation turns the same flags on as the original.
+
 **Screens:** a room is up to a 4×4 grid of screens (10×8 cells each). The
 mini-map shows them; click a **+** square to add a screen, click a screen
 to show it.

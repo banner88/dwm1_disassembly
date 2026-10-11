@@ -7907,6 +7907,109 @@ def test_story_rom():
                             song(rich, 1, 0)))
 
 
+def test_s142():
+    """S142 (ROADMAP ARC CAP4a; user: copies never share talk — "Yes ok"): Document.copy_room
+    gives the copy its OWN scripts, texts and doors for every room of the example, the S129
+    story demo (quests, shops, services) and the S141 demo (Grandpa, breeders) — the copy
+    validates with no new error, the original is unchanged, script / text / door ids are
+    disjoint (the compiler's generated quest:/entry: scripts excepted); the interned undo
+    snapshots round-trip a project and share every unchanged piece; the shared model is
+    rebuilt only when the document changes; the _payload_bytes fast path counts like the
+    S141 loop."""
+    import json as _json
+    import shutil
+    import tempfile
+    from editor2.core.document import Document, Snapshot, fast_copy
+    # a copy writes the copy's tileset sheet into <project>/assets — work on copies
+    tmp = tempfile.mkdtemp(prefix='s142_copy_')
+    files = []
+    for rel in ('editor2/example-project', 'examples/s129_story_demo', 'examples/s141_dial_demo'):
+        dst = os.path.join(tmp, os.path.basename(rel))
+        shutil.copytree(os.path.join(REPO, rel), dst, ignore=shutil.ignore_patterns('build'))
+        files.append(os.path.join(dst, 'project.json'))
+    n = bad = 0
+    for f in files:
+        base = Document(f)
+        p0 = Project(fast_copy(base.data), base.project_dir)
+        e0 = set(V.validate(p0)[0])
+        for r in [r for r in base.rooms if not r.get('placeholder')]:
+            doc = Document(f)
+            was = _json.dumps(doc.room(r['id']), sort_keys=True)
+            rid = doc.copy_room(r['id'], f"{doc.room_name(r)} copy")
+            n += 1
+            src, cp = doc.room(r['id']), doc.room(rid)
+            prj = Project(fast_copy(doc.data), doc.project_dir)
+            errs = set(V.validate(prj)[0]) - e0
+            sc_s = {x for x in (src.get('scripts') or {}).values() if ':' not in x}
+            sc_c = {x for x in (cp.get('scripts') or {}).values() if ':' not in x}
+            dids = {d['id'] for d in doc.custom.get('dialogue', [])}
+
+            def texts(room):
+                out = []
+                for sid in (room.get('scripts') or {}).values():
+                    if ':' not in sid:
+                        Document._strings_in(doc.script(sid), dids, out)
+                return set(out)
+
+            def doors(room):
+                return {e['door'] for scr in room['screens'].values()
+                        for st in (scr.get('states') or [scr]) for e in st.get('exits') or []
+                        if e.get('door')}
+            problems = []
+            if _json.dumps(src, sort_keys=True) != was:
+                problems.append('original changed')
+            if sc_s & sc_c or texts(src) & texts(cp) or doors(src) & doors(cp):
+                problems.append('shared ids')
+            if any('dest' in e for scr in cp['screens'].values()
+                   for st in (scr.get('states') or [scr]) for e in st.get('exits') or []
+                   if e.get('door')):
+                problems.append('a copied door is still connected')
+            if errs or problems:
+                bad += 1
+                print('   ', os.path.basename(os.path.dirname(f)), r['id'], sorted(errs)[:2], problems)
+    ok(f"S142: Copy room on {n} rooms (example, S129 + S141 demos): own scripts / texts / "
+       "doors, the copies validate with no new error, originals unchanged", n >= 20 and bad == 0,
+       f"{bad} bad")
+    doc = Document(files[0])
+    before = doc.dumps()
+    a = doc.snapshot()
+    doc.rename_room(doc.rooms[0]['id'], 'S142 probe')
+    b = doc.snapshot()
+    same = sum(1 for k in a.lists for x, y in zip(a.lists[k], b.lists[k]) if x is y)
+    total = sum(len(v) for v in a.lists.values())
+    doc.restore(a)
+    ok("S142: an interned snapshot round-trips the project byte for byte and two snapshots "
+       "share every piece the edit did not change",
+       doc.dumps() == before and same == total - 1 and isinstance(a, Snapshot),
+       f"{same}/{total}")
+    m1 = doc.model_project()
+    m2 = doc.model_project()
+    doc.touch()
+    m3 = doc.model_project()
+    doc.bump()
+    m4 = doc.model_project()
+    ok("S142: the shared model is reused while the document is unchanged and rebuilt after "
+       "touch() / bump()", m1 is m2 and m3 is not m2 and m4 is not m3)
+    lines = ['    db $01, $02, $03 ; three', '    dw Foo, $1234', '    db "AB", $FA ; "x;y"',
+             '    db $00 ; a, b, c', '    dw $0001']
+    ok("S142: _payload_bytes fast path (no string on the line) == the quote-aware count",
+       V._payload_bytes('\n'.join(lines)) == 3 + 4 + 3 + 1 + 2,
+       V._payload_bytes('\n'.join(lines)))
+    lst = doc.rooms
+    r0 = lst[0]
+    ok("S142: verified id lookups follow list edits", doc.room(r0['id']) is r0)
+    lst.insert(0, {'id': 'zz_probe'})
+    ok("S142: … an insert before it", doc.room(r0['id']) is r0 and doc.room('zz_probe') is lst[0])
+    lst.pop(0)
+    try:
+        doc.room('zz_probe')
+        gone = False
+    except KeyError:
+        gone = True
+    ok("S142: … and a removal", gone and doc.room(r0['id']) is r0)
+    shutil.rmtree(tmp, ignore_errors=True)
+
+
 def main():
     # 1. determinism + example compiles clean
     out1, prj, warns = compile_data(base())
@@ -8783,6 +8886,7 @@ def main():
     test_s139('--rom' in sys.argv)
     test_s140('--rom' in sys.argv)
     test_s141('--rom' in sys.argv)
+    test_s142()
 
     if '--rom' in sys.argv:
         from editor2.core import builder as B

@@ -38,6 +38,13 @@ class Session(QObject):
         self.doc = Document(project_path)
         self.project_dir = self.doc.project_dir
         self.undo = QUndoStack(self)
+        # S142 (ARC CAP4a): every undo-stack move invalidates the document's
+        # cached models (Document.model_project) — connected first, so views
+        # refreshing on indexChanged see the new revision
+        self.undo.indexChanged.connect(self._bump)
+        self.structureChanged.connect(self._bump)
+        self.layoutChanged.connect(self._bump)
+        self.paletteChanged.connect(self._bump)
         self.undo.cleanChanged.connect(self._clean_changed)
         self.last_rom = None
         self.renderer = self._make_renderer()
@@ -49,6 +56,9 @@ class Session(QObject):
         # edit / undo (the Milly hook dialog pushes SnapshotCommands)
         self._hero_glyphs()
         self.structureChanged.connect(self._hero_glyphs)
+
+    def _bump(self, *_a):
+        self.doc.bump()
 
     def _hero_glyphs(self):
         from editor2.core import milly as MH

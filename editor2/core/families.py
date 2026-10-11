@@ -26,13 +26,22 @@ class FamiliesMixin:
         """The compiler's own model of `gd` (default: the document's). Project
         enemy EIDs come from the same Project code the build uses."""
         from editor2.core.project import Project
-        data = copy.deepcopy(self.data)
-        if gd is not None:
-            data['gamedata'] = gd
-        try:
-            prj = Project(data, self.project_dir)
-        except Exception:
-            prj = None
+        if gd is None and hasattr(self, 'model_project'):
+            # S142 (ARC CAP4a): the document's shared model (no deep copy per call)
+            data = self.data
+            try:
+                prj = self.model_project()
+            except Exception:
+                prj = None
+        else:
+            from editor2.core.document import fast_copy     # S142
+            data = fast_copy(self.data)
+            if gd is not None:
+                data['gamedata'] = gd
+            try:
+                prj = Project(data, self.project_dir)
+            except Exception:
+                prj = None
         if prj is not None:
             # S105: the compiler's own construction (project enemies by EID and
             # by id, the project's custom.species) — one source of truth

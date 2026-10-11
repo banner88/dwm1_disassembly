@@ -34,11 +34,20 @@ class BreedingMixin:
     def breeding_analysis(self):
         """breeding.Analysis of the current document (cached per content)."""
         from editor2.core.project import Project
-        key = json.dumps(self.data, sort_keys=True, default=str)
+        if hasattr(self, 'model_project'):
+            # S142 (ARC CAP4a): keyed by the document revision (the old key was
+            # json.dumps of the WHOLE project — 63 ms a call at 311 places, 223
+            # calls while the Breeding tab filled) and built on the shared model
+            key = ('rev', getattr(self, 'revision', 0), id(self.data))
+        else:
+            key = json.dumps(self.data, sort_keys=True, default=str)
         cache = getattr(self, '_breed_cache', None)
         if cache and cache[0] == key:
             return cache[1]
-        an = B.Analysis(Project(copy.deepcopy(self.data), self.project_dir))
+        if hasattr(self, 'model_project'):
+            an = B.Analysis(self.model_project())
+        else:
+            an = B.Analysis(Project(copy.deepcopy(self.data), self.project_dir))
         self._breed_cache = (key, an)
         return an
 
@@ -52,7 +61,8 @@ class BreedingMixin:
             (self.data.get('custom') or {}).get('species'), sort_keys=True)
         if cache and cache[0] == key:
             return cache[1]
-        d = copy.deepcopy(self.data)
+        from editor2.core.document import fast_copy     # S142
+        d = fast_copy(self.data)
         d.setdefault('gamedata', {}).pop('breeding', None)
         an = B.Analysis(Project(d, self.project_dir))
         self._breed_van = (key, an)

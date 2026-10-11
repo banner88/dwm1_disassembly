@@ -2357,6 +2357,34 @@ user's post-Starry Night GreatTree, Farm…) by default; capacity meters per cla
 whole ROM; help. The S133 POC project is not migrated by hand — the example project is
 re-expressed once for the regression.
 
+**Split S142 (ROADMAP CAP4a-d; user: "Ye sounds good").** The S142 audit measured the editor on
+a 311-place project (the user's + 300 editor Copies): open 28 s, every structural edit 0.5-2 s,
+undo 14 MB a step, the World tab 4-6 s — and found Copy room sharing the original's scripts,
+texts and door ids. User decisions S142: copies never share talk; rooms get named **areas**
+(folders, a World filter — CAP4b); vanilla rooms lose their map ids in the UI too; the stored
+destinations stay `room:$XX` — the room's **permanent number** (what a save holds; never shown,
+never renumbered by a rename), the `room:<name>` idea of D above is dropped; Make editable's one
+stage = CAP4c. **As built S142 (CAP4a, NOT yet user-tested):**
+- **Copy room** (`Document.copy_room`): the copy owns its scripts (every script of the room's
+  table + every script id named in its JSON → `<new room>_…`), every text they or the room show
+  (dialogue ids found anywhere in them, but never a name a flag / check / script / room also
+  has; explicit `text_id`s dropped), its doors (new ids, unconnected — a link is two-way; twins
+  follow) and its layout + attr items (the attr refs were shared since S94). Flags stay shared
+  (a copied conversation sets the original's flags); the compiler's generated `quest:` /
+  `entry:` scripts and `custom.quests` stay with the original giver.
+- **One model per revision:** `Document.revision` (bumped by `touch()`, `bump()` and the GUI
+  session on every undo-stack move / structure / layout / palette signal);
+  `Document.model_project()` = one compiler Project of a `fast_copy` of the document, shared by
+  the read-only views (monsters, families, breeding, skills, music, the art / text meters); a
+  view that changes data builds its own.
+- **Undo** (`SnapshotCommand`): `document.Snapshot` — each item of `custom.rooms / layouts /
+  scripts / dialogue / palettes / tilesets` pickled alone, the rest as one piece, every piece
+  interned (sha1) — a step holds only what its op changed; restore keeps project.json's key
+  order; asset files kept only when the op changed them.
+- **Views:** verified id → index maps (`_index_of`); hidden tabs (Cutscenes, Import art, Music)
+  refresh on show; the bank meter measures off the UI thread; the World tab's spring layout is
+  numpy and rooms keep their places between redraws (Re-layout resets).
+
 **E. Secondary ceilings at campaign scale (CAP5 — measure the need, lift what binds).** From
 the compiler's own limits (S133 grep of `editor2/core/*_MAX` / `_CAP`): story checks **256**
 (virtual flags `$1800-$18FF`, `story.STORY_CHECK_MAX`), story commands **255** (deduped),

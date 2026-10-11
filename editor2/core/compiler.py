@@ -120,8 +120,8 @@ def measure_banks(data, project_dir, repo_root, banks=None):
     `data` (the editor's unsaved document) without writing or assembling
     anything. Returns (usage, errors) — errors = the validation failures
     that stopped the measurement (then usage is {})."""
-    import copy
-    prj = Project(copy.deepcopy(data), project_dir)
+    from editor2.core.document import fast_copy     # S142: 5x a deep copy
+    prj = Project(fast_copy(data), project_dir)
     prj.repo_root = repo_root
     errors, _w = validators.validate(prj)
     if errors:

@@ -3993,6 +3993,33 @@ S139 layout exactly (one region; only the pinned template bytes moved).
   generated 4-region project's tables / prefixes / warps / counters / songs / hub / boss region,
   `next_free_mapid`; with `--rom` the census + its negative control).
 
+## §2.50 S142 — THE EDITOR BACKEND AT 300+ PLACES (ROADMAP ARC CAP4a; byte-neutral)
+
+**Built S142, NOT yet user-tested.** No schema change, no emitted byte changes (example pin
+unchanged); what changed is how fast the backend answers and what Copy room writes.
+
+- **`Document.copy_room`** writes a copy that owns its scripts, texts, doors and layout / attr
+  items (EDITOR_DESIGN §6.4 D "As built S142"): new script ids `<new room>_…` (the room's script
+  table and every NPC / spot / cutscene reference follow), new dialogue entries without
+  `text_id`, new door ids with the link keys (`DoorsMixin.LINK_KEYS`) removed — the compiler
+  skips an unconnected door as before (`project.py` "no dest"). Generated `quest:` / `entry:`
+  scripts stay shared.
+- **`places.text_entry_size`** is memoised on the entry's content (the size does not depend on
+  the label line; 65,536 entries, then cleared) — `_assign_text_ids` sizes every auto text twice
+  per Project build.
+- **`validators._payload_bytes`**: a `db` / `dw` line without a `"` is counted by splitting the
+  body at the first `;` (identical to the quote-aware loop — 2,620 generated texts of the
+  example, the user's, the S141 demo and a 311-place project compared; `test_s142`); 3.7× faster
+  on the meter / validate / build accounting.
+- **`compiler.measure_banks`**, `cutscenes.ProjectCatalogue`, the monsters / families / breeding models copy
+  the project with `document.fast_copy` (a pickle round trip — 5× a `copy.deepcopy` on a
+  project; anything pickle refuses falls back to the deep copy).
+- **`Document.model_project()`** — the editor's shared read-only Project (built per document
+  revision); it is never handed to an emitter.
+- Tests: `test_compiler.test_s142` (Copy room on 39 rooms of the example + the S129 / S141 demos
+  validates with no new error and shares no id; a snapshot round trip; the model rebuilt only on
+  a change; the payload fast path; the id lookups after list edits), `test_app.s142_scale`.
+
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 
 The user's "fastest way to test": hook a custom room onto a door the player

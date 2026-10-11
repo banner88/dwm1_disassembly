@@ -327,8 +327,7 @@ class ImportTab(QWidget):
         self._fit_timer.setInterval(250)
         self._fit_timer.timeout.connect(self.refit)
         self._build()
-        self.s.structureChanged.connect(self._fill_rooms)
-        self.s.structureChanged.connect(self._sync_images)
+        self.s.structureChanged.connect(self._structure)
         self._fill_images()
         self._fill_rooms()
 
@@ -582,6 +581,23 @@ class ImportTab(QWidget):
             self._image_chosen(self.image_box.currentIndex())
         else:
             self.entry_index = -1
+
+    def _structure(self):
+        """S142 (ARC CAP4a): a project change — redone now when the tab is
+        shown, else on its next show (the palette refit was 0.6 s of every
+        edit at 311 places)."""
+        if not self.isVisible():
+            self._hidden_stale = True
+            return
+        self._fill_rooms()
+        self._sync_images()
+
+    def showEvent(self, ev):
+        super().showEvent(ev)
+        if getattr(self, '_hidden_stale', False):
+            self._hidden_stale = False
+            self._fill_rooms()
+            self._sync_images()
 
     def _sync_images(self):
         """After undo/redo of a whole-document command the image list may
