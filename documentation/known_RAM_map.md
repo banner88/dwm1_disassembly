@@ -379,7 +379,11 @@
                  wExitLinks $D538-$D55F — 20 × [region, real map id], one per exit LINK id
                  $EB + k in the current exit list (place_readers CopyExitListToBuffer; read by
                  RegionCommit) (ARCHITECTURE "Regions (S140)") /
-                 wCustomPool $D560-$D5E4 (transient reserve; $D536 before S140, $D50B before S137, $D50A before S136, $D509 before S129, $D4F2 before S127,
+                 [S141 r3] wNpcSheetIdx $D560 — the NPC sheet cache index c being DMA'd: bank
+                 $0B CmpRoom_4839 / bank $06 ReloadNPCSheets write it, bank $77 entries 12 / 13
+                 NpcSheetLoad read it (a custom room's sheets 3-5 also go to VRAM bank 1;
+                 PROJECT_COMPILER §2.40 "S141") /
+                 wCustomPool $D561-$D5E4 (transient reserve; $D560 before S141, $D536 before S140, $D50B before S137, $D50A before S136, $D509 before S129, $D4F2 before S127,
                  $D2F0 before S126, $D2EF before S125, $D2E3 before S123, $D243
                  before S121) /
                  wPoolBounce $D5E5-$D664 (128 B, FX1: sleep-pool swap

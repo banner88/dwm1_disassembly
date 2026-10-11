@@ -628,6 +628,11 @@ user-confirmed hand-authored code:
   `CustomRenderCopy`) — current values in `templates/PINNED_SHA256`. `TEMPLATE_SIZE[$60]` 1,691
   (`SkillScriptPtrTable` at `$469B` in the S137 example game.sym: head 590 B + readers 1,101 B),
   `PLACE_TEMPLATE_SIZE` 1,102 (1 + the reader block `$424E-$469A`).
+* S141 re-pin (§2.40 "S141", ROADMAP ARC CAP3b r3): `bank_077_head.asm` (+ entries 12-15
+  `NpcSheetLoad0B` / `NpcSheetLoad06` / `NpcDrawPlain` / `NpcDrawMonster` + `NpcSheetToBank1` — a
+  custom room's NPC sprite sheets 3-5 in VRAM bank 1) — current value in
+  `templates/PINNED_SHA256` (`380733c6…44b0`; the S129 `eb0f0997…` is historical); TEMPLATE_SIZE
+  1967 B (`ShopPtrTable` `$47AF` in the S141 demo game.sym). Example pin `7cd31035…` (patched).
 * S138 re-pin (§2.47, ROADMAP ARC CAP2e): `bank_071_head.asm` (entry 0 `StalePlace` bound, entry
   5 `$81` past the last room, entry 10 `ContinueCheck` + `StalePlace`, `HubWarp`'s `HUB_CONTINUE`
   branch, no `cp $80`) — current value in `templates/PINNED_SHA256`; TEMPLATE_SIZE 1150 B
@@ -3256,6 +3261,41 @@ cutscenes):
   `$D4F2`, `wBreedSlots` `$D4F3-$D502` (4 × state, pool, row lo, row hi; state 0 roll / 1
   rolled / 2 done), `wBreedVals` `$D503-$D506`, `wBreedMask` `$D507`, `wBreedStep` `$D508`.
 
+**S141 (ROADMAP ARC CAP3b — the user on the S141 test ROMs: "After breeding, an NPC disappears and
+the one in the lower right corner glitches and becomes letters", then on r2 "its still glitching
+WHILE menu is open"):** a room's NPC sprite sheets are DMA'd (bank $0B `CmpRoom_4839` at the room
+load, bank $06 entry 4 — named `ReloadNPCSheets` S141 — after a full screen) to page `$80 + c + 5`
+in towns: sheet c of the cache `$D7BE` (one per distinct sprite / monster, list order), tile base
+`$50 + 16c` — so sheets 3-5 sit at `$8800-$8AFF` = BG tiles `$80-$AF`. Every WINDOWED screen (the
+shop, the Vault, the farm, the egg appraiser, the namer, Grandpa, a master, "Take…") loads its window graphics there (the Vault: bank $09 `ld de, $2E0F / ld hl, $8800` at
+`$4F4B`; the shop `$2E0E`) in VRAM bank 0 — the 4th / 5th NPC of a custom room with 4+ distinct
+NPC sprites showed letters or nothing WHILE the menu was open and after it (the game reloads only
+after its full screens; no vanilla room hosting these menus shows a 4th sheet). r2 reloaded the
+sheets at the close (that fixed only "after"); **r3: a custom room's sheets 3-5 live in VRAM BANK
+1** — whose tile area is unused in the field (PyBoy: all zero; no menu writes it):
+- **Loaders (same size):** the page block of `CmpRoom_4839` (`jr_00b_4917`, 42 B) and of
+  `ReloadNPCSheets` (`jr_006_4d86`, 43 B) → `ld a, c / ld [wNpcSheetIdx], a / ld hl, $770C` (`$770D`)
+  `/ rst $10` + padding; bank $77 entries **12 `NpcSheetLoad0B`** / **13 `NpcSheetLoad06`** apply the
+  vanilla rules exactly ($80 + c; + 7 on a gate floor; map $08 + 0 — bank $06's copy page `$08`
+  itself, its quirk kept; map $45 + 2; else + 5) and, in a custom room (not a gate floor) for a page
+  ≥ `$88`, DMA to bank 0 as before (the stream reads back its own output) and then copy the page to
+  VRAM bank 1 (`NpcSheetToBank1`: per byte `di`, STAT wait, read bank 0, `VBK` 1, STAT wait, write,
+  `VBK` 0, `ei` — the VBlank handler's scroll copy leaves `VBK` 0 behind it).
+- **The draw (same size):** bank $06 `NPCDrawSlot`'s builder calls (`$600B` NpcColourDraw / `$0402`
+  monster art) → bank $77 entries **14 `NpcDrawPlain`** / **15 `NpcDrawMonster`**: the call as
+  before (BC / DE pass through), then for a tile base `$FFC9` ≥ `$80` in a custom room OAM attr bit 3
+  on every piece it wrote (shadow OAM `$C000 + 4n`, n from the old to the new `$FFCB`).
+- **WRAM:** `wNpcSheetIdx` `$D560` (carved from `wCustomPool`). Vanilla rooms and gate floors:
+  unchanged (their sheets stay in bank 0).
+**Measured (PyBoy, the user's save):** a 5-NPC room with each service on the same NPC — while the
+menu is OPEN and after it, every NPC piece on screen reads the bytes its (tile, VRAM bank) held at
+the room load: the shop, the Vault, the farm, the eggs, the namer, Grandpa, a master, the Library,
+the gate list, the Medal Man — all clean; with the r3 branches made unconditional (vanilla
+behaviour) the shop and the Vault fail open AND after (tiles `$80-$83`, `$94-$95` of bank 0); a won
+battle in the room → clean; the walk's breed step (menu open, "Anything else?" open, after) PASS,
+`walk_regions.py --negative-sheets` FAIL 3; the arena class menu in the user's lobby copy (a full
+screen) the same picture old / new. `TEMPLATE_SIZE[0x77]` 1967.
+
 **Gate rules (§2.31 rows):** `"gate": "any"` → every gate (the game's and new ones),
 floors 2 to the last (never the boss floor); `once_per_dive` bits allocated from bit 7
 down; `chance_by_level` {from: [level, %], to: [level, %]} (levels 1-99 rising, 0-100 %)
@@ -3946,7 +3986,7 @@ S139 layout exactly (one region; only the pinned template bytes moved).
 - **Builder:** `builder.py` refuses a build whose rgbasm output has a truncation warning (a region
   byte or 16-bit place index silently cut to 8 bits would build and misbehave).
 - **Sizes / pins:** `TEMPLATE_SIZE` $60 1,794, $71 1,380, $6C 364, $76 530;
-  `PLACE_TEMPLATE_SIZE` 1,156; example pin `c4c99542…` (patched; S139's `fc0f7e2c…` historical).
+  `PLACE_TEMPLATE_SIZE` 1,156; example pin `c4c99542…` (patched, historical since S141 — S141's `8aa2f940…`, patched, §2.40; S139's `fc0f7e2c…` historical).
   Bank $71 holds 15 B a place (8 record + 3 encounters + 1 anim + 1 flags + 2 songs) → ≈950 places.
 - **Measured:** `tools/census_regions.py` (TOOLS_AND_DATA S140); the demo
   `examples/s140_compass_demo/`. Tests: `test_compiler.test_s140` (one-region invariants, a

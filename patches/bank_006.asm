@@ -11,7 +11,7 @@ SECTION "ROM Bank $006", ROMX[$4000], BANK[$6]
     dw label6_4cbc
     dw label6_400f
     dw jr_006_4028
-    dw label6_4d5a
+    dw ReloadNPCSheets                ; entry 4 ($0604): every cached NPC sprite sheet back into VRAM (S141)
     dw SkillLearnScan                    ; entry 5 ($0605): the level-up skill-learn scan (S130)
     dw FieldStateDispatch             ; entry 6 ($0606): per-frame field state router (S100)
 
@@ -2471,7 +2471,9 @@ jr_006_4cff:
 ; $05:$4152[id]), else bank $04 entry 2 (monster followers). The pieces go to
 ; the OAM buffer $C000 + 4 * [$FFCB]. Patched builds (S123): the bank $05 call
 ; goes through bank $60 entry 11 NpcColourDraw (same size), which applies the
-; room list's $A2 NPC colour.
+; room list's $A2 NPC colour. S141 r3: both builder calls go through bank $77 entries
+; 14 / 15 (NpcDrawPlain / NpcDrawMonster): in a custom room an NPC whose tile base is
+; >= $80 (sheets 3-5, kept in VRAM bank 1 there) gets OAM attr bit 3.
 NPCDrawSlot:
     push bc
     push de
@@ -2530,19 +2532,28 @@ NPCDrawSlot:
     or a
     jr nz, jr_006_4d54
 
-    ld hl, $600b                 ; S123: bank $60 entry 11 NpcColourDraw (was $0500 =
-    rst $10                      ; bank $05 entry 0; it still draws through it, then
-    jr jr_006_4d58               ; applies the room's $A2 NPC colour — same size)
+    ld hl, $770e                 ; S141 r3: bank $77 entry 14 NpcDrawPlain — bank $60 entry 11
+    rst $10                      ; NpcColourDraw as before (S123: was $0500 = bank $05 entry 0,
+    jr jr_006_4d58               ; then the room's $A2 colour), then the VRAM-bank bit of a
+                                 ; custom room's sheets 3-5 (same size)
 
 jr_006_4d54:
-    ld hl, $0402
-    rst $10
+    ld hl, $770f                 ; S141 r3: bank $77 entry 15 NpcDrawMonster — bank $04 entry 2
+    rst $10                      ; (was `ld hl, $0402`), then the VRAM-bank bit (same size)
 
 jr_006_4d58:
     pop bc
     ret
 
-label6_4d5a:
+; ReloadNPCSheets (bank $06 entry 4, $0604; S141 name — was label6_4d5a): DMA every
+; sheet of the room's NPC sheet cache $D7BE ([id, is_monster] x 6, filled by bank $0B
+; Call_00b_4839 at the room load) back to VRAM: sheet c at $8000 + (c + 5) * $100 in
+; towns ($8500-$8A00; + 7 in gates, + 2 in map $45, + 0 in map $08) — a plain id from
+; ROM0 $2ADF[id], a monster (is_monster) from the follower gfx-ID copy ($4DCC). The
+; game calls it after its FULL-screen menus close (banks $07 / $09 / $12, with bank $0B
+; entries 1 / 2) and at RoomEntry7 with $C8EA bit 7. Windowed menus load their tiles to
+; $8800+ (sheets 3-5) and do not call it — PyBoy S141.
+ReloadNPCSheets:
     ld hl, $d7be
     ld b, $06
     ld c, $00
@@ -2585,40 +2596,17 @@ jr_006_4d86:
     ld e, [hl]
     inc hl
     ld d, [hl]
+    ; S141 (ROADMAP ARC CAP3b r3): the page choice + DMA (43 bytes, vanilla: $80 + c, + 7 in
+    ; gates, + 0 in map $08 — this copy then DMAs to page $08 —, + 2 in map $45, else + 5)
+    ; moved to bank $77 entry 13 NpcSheetLoad06 (the same rules; in a CUSTOM room sheets
+    ; 3-5 also go to VRAM bank 1, out of the windowed menus' way — the template's header)
     ld a, c
-    add $80
-    ld h, a
-    ld a, [wInGateworld]
-    or a
-    jr z, jr_006_4d99
-
-    ld a, h
-    add $07
-    ld h, a
-    jr jr_006_4dae
-
-jr_006_4d99:
-    ld a, [wMapID]
-    cp $08
-    jr z, jr_006_4dae
-
-    cp $45
-    jr nz, jr_006_4daa
-
-    ld a, h
-    add $02
-    ld h, a
-    jr jr_006_4dae
-
-jr_006_4daa:
-    ld a, h
-    add $05
-    ld h, a
-
-jr_006_4dae:
-    ld h, a
-    ld l, $00
-    call WaitDMATransfer
+    ld [wNpcSheetIdx], a
+    ld hl, $770d
+    rst $10
+    jr .loaded
+    ds 33, $00                      ; the rest of the old block (never executed)
+.loaded:
     pop bc
     pop hl
     ld a, [hl]

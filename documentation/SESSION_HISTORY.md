@@ -1,5 +1,53 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-10 (Session 139 — **ROADMAP ARC CAP2d BUILT: ANIMATION BANKS — A ROOM'S OWN
+> ANIMATED TILES NO LONGER SHARE ONE BANK; BANK $6C FORWARDS EVERY FRAME THROUGH A DIRECTORY TO THE ROOM'S
+> ANIMATION BANK ($6C OR $80+), EACH WITH ITS OWN COPY OF THE PLAYER — CAP2 COMPLETE**
+> (user: "Continue on the 4 mb expansion. I confirm s138 all worked on testing" → the audit (bank $6C
+> holds every room's frames; a 4-tile drifting strip is 2 KB per row; it binds at ~15-80 animated rooms
+> by style; nothing else per room binds below 128 places after CAP2d) → option A, animation banks (the
+> ROADMAP plan) vs B, frames in the place blocks + the TWINKLE CAVES test plan → "Sounds good. Proceed";
+> S138 USER-CONFIRMED 2026-10-10 09:14 before the session). **Built S139; USER-CONFIRMED 2026-10-10 14:40 ("Confirmed - everything works").**
+> Test ROMs: `DWM-S139-twinkle-test.gbc` (`8da82798…`, patched; the user's project + 12 BRAND-NEW rooms
+> TWINKLE CAVE 1-12, map ids `$76-$81`, each in its own gate theme with new art in the theme's empty
+> slots: a RIVER drifting right / left (a 2-cell strip, 4 KB of frames; caves 1, 4, 7, 10 have a second
+> river the other way), two LANTERNS flipping, a BANNER swaying; a LAMPLIGHTER (top left) names the
+> cave, its map id and THE BANK ITS TILES PLAY FROM and sends you on (YES); a MONSTER (top right) to
+> fight; stairs both ways; way in: the S139 DEMO NPC in Cities_FOUNT (3, 4). Caves 1-2 play from bank
+> $6C (with the user's two animated rooms), 3-4 `$82`, 5 / 6 / 8 `$83`, 7 / 9 `$84`, 10-11 `$85`, 12
+> `$86` (`$80` / `$81` = the demo's tileset streams)) and `DWM-S139-plain-test.gbc` (`e795bf15…`,
+> patched; the user's 11-room project: its own animations stay in bank $6C and play as before).
+> Its project: `examples/s139_twinkle_demo/`.
+> **The engine (bank $6C template re-pinned + NEW pinned `templates/tileanim_player.asm`):** bank $6C
+> entry 0 `CustomTileAnimate` = a FORWARDER — `TileAnimDirectory[wMapID − $6B]` = (bank, index) → a
+> local `jp TileAnimPlay` (bank $6C) or `ld h, bank / ld l, 0 / rst $10` → `TileAnimPlay_A<bank>`
+> (E = the index survives the far call's way in); bank 0 / an id past the directory = return. The
+> player (the S102 code, now indexed `TileAnimRoomTable{A}[E]`) is pasted into bank $6C and every
+> animation bank — the GDMA reads its source from the bank it runs in. `TEMPLATE_SIZE[$6C]` 307,
+> `ANIM_TEMPLATE_SIZE` 276. Nothing in WRAM changed (the state is shared — one room on screen).
+> **The compiler:** `tileanim.plan` (after the stream + place plans): a room's records + sequences +
+> frames are one block, first fit in map id order — $6C, then `_take_ext_bank('anims')`; a room
+> bigger than one bank (~15.8 KB) = a build error naming it; `anims_ext` (`multi:anim_banks`) emits
+> one whole file per animation bank, INCLUDEd by `bank_ext.asm`; meters: a **$6C** bar (amber when
+> full), the "new" bar counts animation banks; the Animate tab's frame storage is per room. Example
+> pin `fc0f7e2c…` (patched; S138's `ae463e7c…` historical — the example has no `tile_anims`).
+> **Measured:** NEW `tools/census_tile_anims.py` — the demo: 14 rooms over $6C / $82-$86, 3,258
+> checks (the ROM tables through the directory == the model, frames 16-aligned, the plan's bytes ==
+> the ROM; stub calls of bank $6C entry 0 for every map id `$00-$FE` hook exactly the room's bank's
+> `TileAnimPlay` with its index; in the game on the user's save every animated slot shows only its
+> authored frames, every frame seen) — 0 mismatched; `--negative` 1; the HBlank wait patched out of
+> the animation banks' copies only → 6,387 bad tile-frames, all in rooms of `$82+`, the `$6C` rooms
+> clean; the user's project 652 checks, 0. PyBoy on the user's `.sav` (it stands in S138 grotto `$85`,
+> which this build lacks → CONTINUE goes home to the Castle, the S138 path): the demo NPC → cave 1, the
+> lamplighters' YES through all 12 caves (each says its real bank) and back to the fountain; the field menu, a talk battle won (the river flows after each), the stairs
+> cave 3 → 4 → 3; a JOURNAL save in cave 11 (bank `$85`) + CONTINUE → in cave 11, the frames step
+> again; 600 / 600 field-loop passes in every cave (no frame dropped); the user's two animated rooms
+> S138 vs S139 build: the same step sequence and run lengths (55 / 111 runs).
+> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 1474 PASSED; test_app PASS; test_canvas
+> `--rom` PASS (v6: the own flip in bank $6C — authored frames only); audit_mapid_range selftest PASS (clean 58 / patched 85). `EDITOR_REVISION` S139 (help
+> 15_animated_tiles, 80_build, 90_limits).
+> **Next:** CAP3 (regions — places beyond 128).
+
 > Last verified: 2026-10-09 (Session 138 — **ROADMAP ARC CAP2e BUILT: A SAVE MADE IN A PLACE THE
 > BUILD NO LONGER HAS STARTS AT HOME (THE HUB / THE CASTLE) INSTEAD OF HANGING AT CONTINUE; EVERY
 > PER-ROOM READER BOUNDED; ROOM SONGS + BATTLE SONGS FOR EVERY ROOM (THE `$7F` CAP LIFTED)**

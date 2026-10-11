@@ -11,7 +11,7 @@ SECTION "ROM Bank $006", ROMX[$4000], BANK[$6]
     dw label6_4cbc
     dw label6_400f
     dw jr_006_4028
-    dw label6_4d5a
+    dw ReloadNPCSheets                ; entry 4 ($0604): every cached NPC sprite sheet back into VRAM (S141)
     dw SkillLearnScan                    ; entry 5 ($0605): the level-up skill-learn scan (S130)
     dw FieldStateDispatch             ; entry 6 ($0606): per-frame field state router (S100)
 
@@ -2471,7 +2471,9 @@ jr_006_4cff:
 ; $05:$4152[id]), else bank $04 entry 2 (monster followers). The pieces go to
 ; the OAM buffer $C000 + 4 * [$FFCB]. Patched builds (S123): the bank $05 call
 ; goes through bank $60 entry 11 NpcColourDraw (same size), which applies the
-; room list's $A2 NPC colour.
+; room list's $A2 NPC colour. S141 r3: both builder calls go through bank $77 entries
+; 14 / 15 (NpcDrawPlain / NpcDrawMonster): in a custom room an NPC whose tile base is
+; >= $80 (sheets 3-5, kept in VRAM bank 1 there) gets OAM attr bit 3.
 NPCDrawSlot:
     push bc
     push de
@@ -2542,7 +2544,15 @@ jr_006_4d58:
     pop bc
     ret
 
-label6_4d5a:
+; ReloadNPCSheets (bank $06 entry 4, $0604; S141 name — was label6_4d5a): DMA every
+; sheet of the room's NPC sheet cache $D7BE ([id, is_monster] x 6, filled by bank $0B
+; Call_00b_4839 at the room load) back to VRAM: sheet c at $8000 + (c + 5) * $100 in
+; towns ($8500-$8A00; + 7 in gates, + 2 in map $45, + 0 in map $08) — a plain id from
+; ROM0 $2ADF[id], a monster (is_monster) from the follower gfx-ID copy ($4DCC). The
+; game calls it after its FULL-screen menus close (banks $07 / $09 / $12, with bank $0B
+; entries 1 / 2) and at RoomEntry7 with $C8EA bit 7. Windowed menus load their tiles to
+; $8800+ (sheets 3-5) and do not call it — PyBoy S141.
+ReloadNPCSheets:
     ld hl, $d7be
     ld b, $06
     ld c, $00
@@ -2581,6 +2591,9 @@ jr_006_4d7a:
     adc HIGH(MapNPCPosDataTable)
     ld h, a
 
+; The sheet's VRAM page: $80 + c, + 7 on a gate floor, + 2 in map $45, else + 5 — and
+; in map $08 this copy DMAs to page $08 (`ld h, a` at jr_006_4dae with A = $08: a vanilla
+; quirk; bank $0B's copy uses + 0). S141 r3: patched builds hand c to bank $77 entry 13.
 jr_006_4d86:
     ld e, [hl]
     inc hl
@@ -4123,6 +4136,8 @@ jr_006_62a8:
     ret
 
 
+; wGameState bit 4 (an op $04 screen effect / the shop is open): its per-frame step,
+; bank $09 entry 0 (ScreenEffectTable09 by $C8EF).
 Jump_006_62b2:
     ld hl, $0900
     rst $10

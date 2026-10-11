@@ -2085,6 +2085,9 @@ jr_00b_490b:
     adc HIGH(SpritePtrTable_4974)
     ld h, a
 
+; The sheet's VRAM page: $80 + c, + 7 on a gate floor, + 0 in map $08, + 2 in map $45,
+; else + 5 (sheet c of the cache; tile base from Jump_00b_4945). S141 r3: patched builds
+; hand c to bank $77 entry 12 (a custom room's sheets 3-5 also go to VRAM bank 1).
 jr_00b_4917:
     ld e, [hl]
     inc hl

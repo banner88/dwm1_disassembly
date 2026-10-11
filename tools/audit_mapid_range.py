@@ -199,6 +199,10 @@ V = {
     # S127: reasoning in CROSSBANK_ROOMS "S127 sites" (breeding NPCs).
     ("bank_073.asm", "CF2WarpCommitDrain", 0): "CP_UNSIGNED",    # S127: cp $08 (the ceremony map keeps the random-breeder slots; equality)
     ("bank_077.asm", "BreedClose", 0): "CP_UNSIGNED",            # S127: cp CUSTOM_ROOM_START / jr c (reload the room sheet in custom rooms only)
+    ("bank_077.asm", "NpcSheetLoad06", 0): "CP_UNSIGNED",        # S141 r3: cp $08 (bank $06's map-$08 page, vanilla; was jr_006_4d99 in the patched tree)
+    ("bank_077.asm", "NpcSheetLoad0B", 0): "CP_UNSIGNED",        # S141 r3: cp $08 / cp $45 (the vanilla page rules; was jr_00b_492a in the patched tree)
+    ("bank_077.asm", "NpcSheetLoad0B", 1): "CP_UNSIGNED",        # S141 r3: cp CUSTOM_ROOM_START / jp c (sheets 3-5 to VRAM bank 1 in custom rooms only)
+    ("bank_077.asm", "NpcDrawBank", 0): "CP_UNSIGNED",           # S141 r3: cp CUSTOM_ROOM_START / ret c (OAM bank bit in custom rooms only)
     # S128: reasoning in CROSSBANK_ROOMS "S128 sites" (your arena). The arena-keyed
     # call sites (`call ArenaMapID` in place of `ld a, [wMapID]`) keep their callers'
     # cp chains = the clean tree's verdicts under the same labels.

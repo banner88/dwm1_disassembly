@@ -770,3 +770,41 @@ edge and the battle waits for input forever.
 - **A door that does not fire walking up:** the GreatTree screen 8 door at (3, 5) did not fire from
   below in PyBoy, on the plain build as well. The (4, 5) door (to SBOSS) does. Try the
   neighbouring door before suspecting the build.
+
+## S141 techniques — talks that answer YES every time, menus that are not text boxes, a walk that can fail
+
+- **Advance a talk only while the box waits:** the print pointer `$C82D/$C82E` stands still when
+  a box waits for A — press A (hold 2) after 12 still frames, never on a timer: a question's YES /
+  NO box opens BY ITSELF when its text ends and an A held across that frame answers NO (KEY_LESSONS
+  S141). `$C83C` turns 1 when the choice box opens and then FOLLOWS the cursor (0 YES / 1 NO):
+  press up / down until it shows the answer, then A. (`tools/walk_regions.py` `Walk.talk`.)
+- **Boxes that are not field text boxes:** the item menu's "… throws a WarpWing!" and Grandpa's
+  BREED / HATCH / EXIT menu keep `$C8EB` bit 0 as they please — a loop that presses A only while
+  bit 0 is set never gets past the WarpWing line (A every 30 frames until `$C96C` is set or the map
+  changes), and one that waits for bit 0 to clear never sees Grandpa's menu: watch `$C8EF` = 6 (op
+  `$04`'s screen type) instead and stop pressing A once it is 6.
+- **Breeding through Grandpa (the user's slow text):** menu open (`$C8EF` 6) + 150 frames, A (BREED,
+  wait 200), A (the first monster, wait 200), down + A (OK of INFO / OK, wait 250), A (the first
+  mate, wait 200), down + A (OK); then answer YES to "Can I record this joyful event?" (it SAVES)
+  and the HATCH offer, A while `$C82D` is still, until `$D951` = `$F0` / `$F1` with the map back.
+- **A hub arrival's scene starts late:** the hub room's entry cutscene runs a few field-script
+  ticks after the room is in (1 tick / 8 frames) — wait for `wHubReason` ($D2EF) to read 0 (the
+  scene took the reason) before reading what was said.
+- **Decoys make a walk falsifiable:** put the test rooms in region 2 and a decoy with the same map
+  id in region 0; check (map id, region) after every move, and run a negative control that removes
+  ONE region store (`walk_regions.py --negative`: `HubWarp`'s `ld [$D537], a` → nops) — exactly the
+  moves that cross regions must fail.
+- **Which code wrote this VRAM? (S141 r2)** Hook ROM0 `WaitDMATransfer` (`$00:$1577`): HL = the
+  destination, DE = the gfx id, `[$4000]` = the calling bank, the word at SP = the return address —
+  keep the calls whose `HL >> 8` is in the range that changed (PyBoy 2 has no `register_file.H`).
+  The Vault: DE `$2E0F` → `$8800` from bank $09 `$4F4E`; the shop: `$2E0E`.
+- **What the LCD shows of the NPCs, in both VRAM banks (S141 r3):** read the REAL OAM (`$FE00`),
+  keep the pieces with tile ≥ `$50` (the room's NPC sheets), take each piece's 16 bytes from VRAM
+  bank `(attr >> 3) & 1` (`p.memory[bank, $8000 + 16·tile]`) and compare with the same (tile,
+  bank) as the room load left them (`Walk.npc_sheets()` before the talk) — DURING the menu (open +
+  150 frames) and after it (`walk_regions.py` `check_npc_tiles`). A full screen (the field menu,
+  the Library) draws its own sprites with tiles ≥ `$50`: judge the windowed screens only.
+- **Every service on one NPC (a matrix):** build a variant per kind with the same NPC turned into
+  that service (`Document.make_service_npc` / `make_shopkeeper`), talk, wait for `$C8EB` bit 4 / 1
+  (a screen open), check, back out with B, check. The negative control: the fix's custom-room
+  branches made unconditional in the ROM copy (`walk_regions.py --negative-sheets`).

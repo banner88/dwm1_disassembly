@@ -2048,39 +2048,17 @@ jr_00b_4917:
     ld e, [hl]
     inc hl
     ld d, [hl]
+    ; S141 (ROADMAP ARC CAP3b r3): the page choice + DMA (42 bytes, vanilla: $80 + c, + 7 in
+    ; gates, + 0 in map $08, + 2 in map $45, else + 5) moved to bank $77 entry 12
+    ; NpcSheetLoad0B (the same rules; in a CUSTOM room sheets 3-5 also go to VRAM bank 1,
+    ; out of the windowed menus' way — the bank $077 template's header)
     ld a, c
-    add $80
-    ld h, a
-    ld a, [wInGateworld]
-    or a
-    jr z, jr_00b_492a
-
-    ld a, h
-    add $07
-    ld h, a
-    jr jr_00b_493f
-
-jr_00b_492a:
-    ld a, [wMapID]
-    cp $08
-    jr z, jr_00b_493f
-
-    cp $45
-    jr nz, jr_00b_493b
-
-    ld a, h
-    add $02
-    ld h, a
-    jr jr_00b_493f
-
-jr_00b_493b:
-    ld a, h
-    add $05
-    ld h, a
-
-jr_00b_493f:
-    ld l, $00
-    call WaitDMATransfer
+    ld [wNpcSheetIdx], a
+    ld hl, $770c
+    rst $10
+    jr .loaded
+    ds 32, $00                      ; the rest of the old block (never executed)
+.loaded:
     pop bc
 
 Jump_00b_4945:

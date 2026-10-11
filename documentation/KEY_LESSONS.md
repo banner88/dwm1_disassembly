@@ -6378,3 +6378,52 @@ about who shares memory is checked against the allocating code, not against the 
 **`open(p, 'w').write(open(p).read() …)` empties the file.** The write handle is opened (and the
 file truncated) before the read runs. This emptied `editor2/help/_revision.md` (restored from git).
 **Rule:** read into a variable first, then write.
+
+## S141 — regions in the game's own moves (ROADMAP ARC CAP3b)
+
+**A cached start state must be taken at rest — "the field is up" is not rest.**
+**Symptom (S141, PyBoy, the editor's Play here):** with **My save file** = the user's save (made in
+a S140 demo room this build does not have), Play here into any room stayed in the Castle and logged
+"the room did not finish loading"; a new game or a story point worked. **Root cause:** since S138 a
+save in a missing place CONTINUEs with the warp home ARMED (bank $71 `ContinueCheck` →
+`wIsPlayerChangingMaps` 1); the field runs it a moment later. `playback._continue_save` stopped as
+soon as `GAME_MODE` was 1 and no box was open — the cached base state held that pending warp, and
+every Play here warp written over it raced it and lost. **Fix:** wait for a calm field (no
+transition, no script, no box, four checks 10 frames apart — PYBOY_DEBUGGING S140 "Idle"); cache
+under a new name so old states are not reused; "arrived" also compares `wMapRegion`.
+**Rule:** a state that later runs are built on is saved only after everything the load set in
+motion has finished — test it with the inputs that set the most in motion (here: a stale save,
+which the user actually had), not only the clean case.
+
+**A "does X keep Y" walk needs a case where losing Y changes the outcome.** The S141 demo rooms were
+planned around region-2 TEST rooms with region-0 DECOYS of the same map ids; a move that loses its
+region lands in a room that says "BUG" (and the walk sees map id + region). The negative control —
+`HubWarp`'s region store removed — failed exactly the two cross-region moves home and passed the
+same-region ones: a region-2 loss with the region forgotten still lands right. **Rule:** for a
+"does X keep Y" walk, include a case where losing Y CHANGES the outcome (cross the boundary), or
+the walk cannot fail.
+
+**A choice box opens on its own — an A held at that moment answers it.** A talk driver that pressed
+A on a timer (every 30 frames, held 4) answered YES / NO questions NO about half the time: the
+question's last box opens the YES / NO box by itself when its text ends, and an A still held then
+confirms the default (NO). **Fix:** press A only while a box WAITS — the print pointer `$C82D` has
+stood still for 12 frames — and answer a choice by moving the cursor until `$C83C` shows the answer
+(0 YES / 1 NO), then A. **Rule:** advance text on the game's "waiting" signal, never on a timer.
+
+**A vanilla screen's VRAM habits assume a vanilla room's sprite count (S141 r2 / r3).**
+**Symptom (the user on the S141 test ROM):** "After breeding, an NPC disappears and the one in
+the lower right corner glitches and becomes letters." **Root cause (PyBoy):** the room's NPC
+sprite sheets sit at `$8500 + c·$100` (one per distinct sprite, cache `$D7BE`); every WINDOWED
+screen effect (Grandpa, a master, "Take…", the shop, the Vault, the farm, the egg appraiser, the
+namer) DMAs its window tiles to `$8800+` = sheets 3-5, in VRAM bank 0.
+Vanilla rooms that host these menus never show a 4th sheet; the S141 demo room had 5 distinct
+sprites. S126 / S127 checked the BG slots `$40-$7F` the menus borrow and missed the OBJ side;
+their demo rooms had few NPCs. **r2 fixed the symptom the user named — "after"** (reload the
+sheets at the close) — **and the user answered "its still glitching WHILE menu is open"**: two
+things that need the same VRAM at the same time cannot be fixed by restoring it afterwards.
+**r3:** a custom room's sheets 3-5 live in VRAM BANK 1 (unused tile area in the field), OAM attr
+bit 3 set for them. **Rules:** when a vanilla screen runs outside its room, check BOTH VRAM halves
+it writes (BG slots and the shared tiles `$8000-$8FFF`) in the busiest room the editor allows, not
+a sparse demo; and when two users of one resource overlap in TIME, separate them in SPACE — a
+restore at the end only fixes the end. Measure the state DURING the conflict (the menu open), not
+only after it.

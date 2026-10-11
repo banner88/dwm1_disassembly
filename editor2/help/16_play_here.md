@@ -3,7 +3,8 @@
 **▶ Play here** (Rooms tab, on the screen / state row — or **F5**) starts the game in
 the room you are looking at, from the selected cell (or the walkable cell nearest
 the middle of the screen), with a game state of your choice. It works for rooms in any region
-(S140). When the project
+(S140) — it lands in the room of THIS region, even where another region has a room with
+the same number (S141, checked in the emulator). When the project
 changed since the last build it is saved and built first (a few seconds). The game
 runs in the Playback window: arrows, Z / Space = A, X = B, Enter = Start;
 **⟲ Restart** starts it again with the same state.
@@ -14,7 +15,10 @@ the state you chose last (per project). Change it with the ▾ next to the butto
 
 - **A new game** — the hero, no monsters, no story flags.
 - **My save file** — CONTINUE from a battery save (.sav) of THIS project's build: its
-  flags, party and farm, then straight into this room.
+  flags, party and farm, then straight into this room. A save made in a room this build
+  no longer has (deleted, or from another build) first goes home, as in the game — Play
+  here waits for that, then takes you into this room (S141; before, it stayed in the
+  Castle).
 - **A story point of the original game** — a slider over the game's order (the 31
   gates, the arena classes G to S, Starry Night, Monster Grandpa — the same steps as
   the Balance tab): "about to do the Gate of Peace". The story flags and room states

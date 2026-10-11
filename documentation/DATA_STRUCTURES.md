@@ -1403,6 +1403,12 @@ ceremony map $08 with `$D951` = 4 / 0 (BANK04_SCRIPT_ENGINE "Breeding"). Patched
 the three close tails call bank $77 `BreedClose` (PROJECT_COMPILER §2.40). Line blocks in
 `extracted/service_lines.json` (kinds `grandpa`, `breeder`).
 
+**NPC sprite sheets and the windowed screens (S141):** the windowed screens (the shop, the Vault,
+the farm, the egg appraiser, the namer, Grandpa / a master / "Take…") load
+their window tiles to VRAM bank 0 `$8800+` — where a room's NPC sheets 3-5 sit — and only the full
+screens call bank $06 entry 4 `ReloadNPCSheets` at the close. Patched builds keep a custom room's
+sheets 3-5 in VRAM bank 1 (bank $77 entries 12-15; PROJECT_COMPILER §2.40 "S141").
+
 **Breeding pools (patched builds, bank $77 `BreedPoolPtrs`):** per pool `db mask (1 level,
 2 arena, 4 seen, 8 story), story step, milestones n` + `dw flag × n` + `db bands` + per
 band `db level, arena × 12, seen / 2, story × step, mates n, total weight` + per mate `dw

@@ -952,6 +952,14 @@ user-tested):**
   starter record with the species + every raising field), put in after the room loaded
   (`Engine.start(records=…, repoke=False)`). End to end on the user's project: click →
   walking in the room in ~5 s once the build's start state is cached.
+  **S141 (ROADMAP CAP3b):** a .sav made in a place the build lacks CONTINUEs with the warp
+  home still pending (bank $71 `ContinueCheck`); the Playback engine saved its cached start
+  state before that warp ran, so every Play here from such a save stayed in the Castle
+  ("the room did not finish loading"). `Engine._continue_save` now waits for a calm field (no
+  transition / script / box, an arrival scene's boxes answered), start states are cached as
+  `base2_…` (older ones are not reused), and "arrived" = the map id AND `wMapRegion` (a project
+  mapID's high byte; region 0 for a place below `$100`). Measured: `tools/walk_regions.py`
+  `playhere` — a new game / the user's save / a story point into `$276` / `$76` / `$279`, 9 / 9.
 Not built: items / gold for a story point (the new game's); side quests the game leaves to
 the player (farm, library, medals) are not in the story state — flags ON covers them.
 
@@ -2336,7 +2344,12 @@ counters share it). The compiler assigns regions automatically (region 0 first, 
 `$16B`…); until CAP4 the editor still shows the project mapID (region in the high byte) in the
 folded Technical box. Open (CAP3b): Play here into regions 1+ played in game, the story-state
 model, and the in-game walks of the hub / gate insert / world / breeding return / WarpWing from
-regions ≥ 1.
+regions ≥ 1. **S141 (CAP3b built; USER-CONFIRMED 2026-10-11 10:18 ("Everything works", r3)):** walked in PyBoy (`tools/walk_regions.py`,
+ARCHITECTURE "Regions (S140)" — the hub from regions 0 and 2, a gate's served room and boss floor,
+the breeding return, the WarpWing, Play here into regions 0 / 2); the story-state item dropped (the
+model holds no map id or region); not walked by agreement: an arena match from two regions, a world in
+regions ≥ 1. Found: Play here from a save in a place the build lacks — fixed in
+`playback._continue_save` (§5.1 "As built S132").
 
 **D. The editor (CAP4).** Places by name everywhere (no map ids in the UI or in authored
 destinations — `room:<name>`); "Make editable" copies ONE stage of a vanilla room (the

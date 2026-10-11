@@ -91,3 +91,13 @@ too:
 list).
 
 Every edit is one Undo step.
+
+## Rooms with many NPCs
+
+The game's small menus (a shop, the Vault, the farm, the egg appraiser, the
+Monster Namer, Grandpa, a breeder) draw into the picture memory
+the 4th to 6th different NPC looks of a room used. Since S141 your rooms keep
+those NPCs' pictures in the Game Boy Color's second picture bank, so up to six
+different NPC looks stay intact while such a menu is open and after it (before,
+one NPC could vanish and another show letters). The game's own rooms are as they
+were. Nothing to do on your side.

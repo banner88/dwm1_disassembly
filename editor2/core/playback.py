@@ -42,6 +42,7 @@ FLAG_BASE = 0xD99B
 EXT_FLAG_BASE = 0xD140          # S117 wExtFlags ($1000-$17FF), patched builds
 W_CHANGING, W_DEST, W_FLAG = 0xC96C, 0xC96D, 0xC96E
 W_REGION = 0xD537            # S140 (ARC CAP3a): wWarpRegion — the next room commit's region + 1
+MAP_REGION = 0xD536          # S140: wMapRegion — the region of the current place
 W_X, W_Y, W_KICK = 0xC96F, 0xC971, 0xC88F
 YESNO_CURSOR = 0xC83C
 
@@ -88,8 +89,10 @@ class Engine:
         self.sav = bool(sav_path)
         # a state saved without sound emulation plays back SILENT in an emulator
         # with sound (measured S118, PyBoy 2.x) — one start state per sound mode
+        # S141: 'base2' — base states of a .sav cached before S141 may hold a
+        # pending warp home (see _continue_save); the new name drops them
         self.state_path = os.path.join(self.cache_dir,
-                                       f'base_{tag}{"_snd" if sound else ""}.state')
+                                       f'base2_{tag}{"_snd" if sound else ""}.state')
         self.newgame_path = os.path.join(self.cache_dir,
                                          f'newgame_{tag}{"_snd" if sound else ""}.state')
         self.sound = sound
@@ -262,6 +265,28 @@ class Engine:
             if self.m[GAME_STATE] == 0:
                 break
             self.tap('b', wait=10)
+        # S141 (ROADMAP ARC CAP3b): a save made in a place this build does not have
+        # CONTINUEs with the warp home still PENDING (bank $71 ContinueCheck arms it,
+        # the field runs it after the load; ARCHITECTURE "Stale places at CONTINUE")
+        # — and the hub's arrival scene may follow. A base state saved before that
+        # warp has run made every Play here warp race it: the player stayed in the
+        # Castle ("the room did not finish loading"; PyBoy S141, the user's save
+        # made in a S140 demo room). Wait for a calm field: no transition, no
+        # script, no box — 4 checks 10 frames apart (PYBOY_DEBUGGING S140 "Idle").
+        m = self.m
+        calm = 0
+        for _ in range(600):
+            self.tick(10)
+            busy = (m[W_CHANGING] or m[0xC905] or m[GAME_MODE] != 1
+                    or m[SCRIPT_FLAGS] & 1 or m[GAME_STATE] & 1)
+            if not busy:
+                calm += 1
+                if calm >= 4:
+                    break
+                continue
+            calm = 0
+            if m[GAME_STATE] & 1:
+                self.tap('a', wait=10)               # an arrival scene's text box
         if self.m[GAME_MODE] != 1:
             raise RuntimeError('CONTINUE from the save did not reach the field')
 
@@ -358,10 +383,14 @@ class Engine:
         m[W_KICK] = 1
         # wait for the room (the entry script may start on its own)
         arrived = False
+        # S141 (ROADMAP ARC CAP3b): a place is (region, map id) — arrived = both
+        # (a project mapID > $FF names its region; a region-0 place's id is < $100)
+        want_region = (recipe.map >> 8) if recipe.map >= 0x6B else None
         for i in range(wait):
             self.tick()
             if (m[MAP_ID] == recipe.map & 0xFF and m[GAME_MODE] == 1
-                    and m[W_KICK] == 0 and m[W_CHANGING] == 0):
+                    and m[W_KICK] == 0 and m[W_CHANGING] == 0
+                    and (want_region is None or m[MAP_REGION] == want_region)):
                 arrived = True
                 break
         if not arrived:

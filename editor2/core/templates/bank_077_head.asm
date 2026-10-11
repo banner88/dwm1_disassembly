@@ -120,6 +120,32 @@
 ;     x 100 / their number — then the band with the smallest sum of distances
 ;     over the scales the pool checks (the first band wins a tie), then a mate:
 ;     RNG16 mod the band's total weight walked over its mates' weights.
+; Entries 12-15 (S141 r3, ROADMAP ARC CAP3b — the user on the S141 test ROMs: after breeding
+;   an NPC vanished and another turned into letters, and r2's reload at the close left them
+;   so WHILE the menu was open): a custom room's NPC sprite sheets 3-5 live in VRAM BANK 1.
+;   The room's NPC sheets are DMA'd (bank $0B CmpRoom_4839 at the room load, bank $06 entry
+;   4 ReloadNPCSheets after a full screen) to page $80 + c + 5 in towns (sheet c of the
+;   cache $D7BE, tile base $50 + 16c), so sheets 3-5 sit at $8800-$8AFF — the BG tiles
+;   $80-$AF every WINDOWED screen (the shop, the Vault, the farm, the egg appraiser, the
+;   namer, Grandpa, a master, "Take…") loads its window graphics
+;   into (bank $09 `ld de, $2E0F / ld hl, $8800`, …) — VRAM bank 0 only; VRAM bank 1's
+;   tile area is unused in the field (PyBoy S141: all zero, the menus never write it).
+;   Vanilla rooms that host these menus never show a 4th sheet.
+;   12 NpcSheetLoad0B / 13 NpcSheetLoad06: the two loaders' page choice + DMA, moved here
+;     (same size in banks $0B / $06; [wNpcSheetIdx] = c, DE = the gfx id): the vanilla
+;     rules exactly — $80 + c, + 7 on a gate floor, map $08 + 0 (bank $06's copy: page $08
+;     itself — its `ld h, a` after `cp $08`, a vanilla quirk kept), map $45 + 2, else + 5
+;     — and, in a CUSTOM room (wMapID >= CUSTOM_ROOM_START, not a gate floor) for a page
+;     >= $88: DMA to VRAM bank 0 as before (the LZ stream copies back from its own
+;     destination), then copy the 256 bytes to the same page of VRAM BANK 1
+;     (NpcSheetToBank1: per byte di / read bank 0 / VBK 1 / write / VBK 0 / ei — the
+;     VBlank handler's scroll copy sets VBK 0 behind itself, ProcessSpriteTransfer).
+;   14 NpcDrawPlain / 15 NpcDrawMonster: bank $06 NPCDrawSlot's two builder calls (bank
+;     $60 entry 11 NpcColourDraw for an NPC, bank $04 entry 2 for a monster; same size):
+;     the call as before, then — the tile base $FFC9 >= $80 in a custom room, not a gate
+;     floor (= exactly the sheets the loaders put in bank 1) — OAM attr bit 3 (VRAM bank 1)
+;     on every piece the call wrote (shadow OAM $C000 + 4n, n from the old to the new
+;     $FFCB).
 ; Data (generated below): SHOP_COUNT, ShopPtrTable (dw per list),
 ;   ShopList_n (item ids, $FF), SERVICE_SET_COUNT + ServiceSetTable +
 ;   ServicePairs_n (S126).
@@ -141,6 +167,10 @@ SECTION "ROM Bank $077", ROMX[$4000], BANK[$77]
     dw PartyAvgLevel                    ; entry 9 (HL=$7709, S127)
     dw ScriptCommand                    ; entry 10 (HL=$770A, S127)
     dw StoryCheck                       ; entry 11 (HL=$770B, S129)
+    dw NpcSheetLoad0B                   ; entry 12 (HL=$770C, S141 r3)
+    dw NpcSheetLoad06                   ; entry 13 (HL=$770D, S141 r3)
+    dw NpcDrawPlain                     ; entry 14 (HL=$770E, S141 r3)
+    dw NpcDrawMonster                   ; entry 15 (HL=$770F, S141 r3)
 
 ShopFill:
     ld a, [wShopID]
@@ -1528,4 +1558,119 @@ ShopSetPick:
     jr .row
 .none:
     ld a, c
+    ret
+
+; -----------------------------------------------------------------------------
+; Entries 12-15 (S141 r3): a custom room's NPC sheets 3-5 in VRAM bank 1 (see the header)
+; -----------------------------------------------------------------------------
+NpcSheetLoad06:
+    ld a, [wInGateworld]
+    or a
+    jr nz, NpcSheetLoad0B
+    ld a, [wMapID]
+    cp $08
+    jr nz, NpcSheetLoad0B
+    ld hl, $0800                        ; bank $06's own map-$08 page (vanilla, kept)
+    jp WaitDMATransfer
+
+NpcSheetLoad0B:
+    ld a, [wNpcSheetIdx]
+    add $80
+    ld h, a                             ; H = $80 + c
+    ld l, $00
+    ld a, [wInGateworld]
+    or a
+    jr z, .town
+    ld a, h
+    add $07
+    ld h, a
+    jp WaitDMATransfer                  ; a gate floor: + 7 (vanilla)
+.town:
+    ld a, [wMapID]
+    cp $08
+    jp z, WaitDMATransfer               ; map $08: + 0 (vanilla)
+    cp $45
+    jr nz, .five
+    ld a, h
+    add $02
+    ld h, a
+    jp WaitDMATransfer                  ; map $45: + 2 (vanilla)
+.five:
+    ld a, h
+    add $05
+    ld h, a                             ; + 5 (vanilla)
+    ld a, [wMapID]
+    cp CUSTOM_ROOM_START
+    jp c, WaitDMATransfer               ; a vanilla room: as before
+    ld a, h
+    cp $88
+    jp c, WaitDMATransfer               ; sheets 0-2 ($8500-$87FF): bank 0 as before
+    push hl
+    call WaitDMATransfer                ; bank 0 first (the stream reads back its output)
+    pop hl
+NpcSheetToBank1:                        ; HL = the page: 256 bytes bank 0 -> bank 1
+    ld b, $00
+.byte:
+    di
+.w0:
+    ldh a, [rSTAT]
+    bit 1, a
+    jr nz, .w0
+    ld c, [hl]                          ; VRAM bank 0 (VBK is 0 in the field)
+    ld a, $01
+    ldh [rVBK], a
+.w1:
+    ldh a, [rSTAT]
+    bit 1, a
+    jr nz, .w1
+    ld [hl], c
+    xor a
+    ldh [rVBK], a
+    ei
+    inc hl
+    dec b
+    jr nz, .byte
+    ret
+
+NpcDrawPlain:
+    ld hl, $600b                        ; bank $60 entry 11 NpcColourDraw (S123)
+    jr NpcDrawBank
+NpcDrawMonster:
+    ld hl, $0402                        ; bank $04 entry 2 (a monster's follower art)
+NpcDrawBank:                            ; (BC / DE pass through to the builder unchanged)
+    ldh a, [$cb]
+    push af                             ; the first OAM piece it will write
+    ldh a, [$c9]
+    push af                             ; the tile base
+    rst $10
+    pop af
+    ld d, a                             ; D = the tile base
+    pop af
+    ld e, a                             ; E = the first piece
+    ld a, d
+    cp $80
+    ret c                               ; sheets 0-2, the party, the player: bank 0
+    ld a, [wInGateworld]
+    or a
+    ret nz
+    ld a, [wMapID]
+    cp CUSTOM_ROOM_START
+    ret c                               ; vanilla rooms: bank 0 (as before)
+    ldh a, [$cb]
+    sub e
+    ret z
+    ret c
+    ld b, a                             ; B = the pieces written
+    ld l, e
+    ld h, $00
+    add hl, hl
+    add hl, hl
+    ld de, $c003                        ; shadow OAM + 3 = the attr byte
+    add hl, de
+    ld de, $0004
+.piece:
+    set 3, [hl]                         ; tiles from VRAM bank 1
+    add hl, de
+    dec b
+    jr nz, .piece
     ret

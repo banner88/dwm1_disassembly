@@ -355,6 +355,18 @@ handed out by the editor (`Document.next_free_mapid`). Vanilla ids ignore the re
   by stub calls, 0 mismatched); PyBoy on the user's save (the COMPASS LODGES: map id `$76` in four
   regions, doors / stairs / script warps across regions, a battle, a region-3 save + CONTINUE,
   vanilla rooms entered from region 3). PROJECT_COMPILER §2.49; CROSSBANK_ROOMS "S140 sites".
+- **The game's own moves (S141, ROADMAP CAP3b; walked; USER-CONFIRMED 2026-10-11 10:18 ("Everything works", r3)):** `tools/walk_regions.py`
+  on the DIAL HALLS (region-2 rooms with region-0 decoys of the same map ids, `examples/s141_dial_demo/`)
+  and the user's save: a lost battle in region 2 AND in region 0 → the hub room in region 2 (bank $71
+  `HubWarp`'s row region → `wWarpRegion`); the WarpWing on a gate floor in region 0 and in region 2 →
+  the hub; Grandpa's BREED and HATCH ceremonies — map `$08` is entered with the region unchanged and
+  op `$4E`'s bare map id brings the player back into the SAME region's room (`$D951` `$F0` / `$F1`);
+  a region-0 portal → floor 2 = a region-2 room (`GateInsertTable` region → `RegionEnterE`); the boss
+  floor in region 2 (`BossRegionEnter`) → the win marks the gate cleared (`GateBossWin` + entry 12);
+  the hub off → the Castle, the region kept (vanilla rooms ignore it). Negative control: `HubWarp`'s
+  `ld [wWarpRegion], a` removed → exactly the two cross-region moves home land in the region-0 decoy.
+  No engine byte changed for regions in S141 (r3 changed banks $77 / $06 / $0B for a menu defect
+  found on the way: a custom room's NPC sheets 3-5 in VRAM bank 1 — PROJECT_COMPILER §2.40 "S141").
 
 ## Key RAM Regions
 

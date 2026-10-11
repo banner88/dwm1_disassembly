@@ -2523,7 +2523,7 @@ the user picks.
       there). *User half:* the test ROM in SameBoy.
 - **CAP2 — the spill (split S135, user: "whatever works").** The S133 box bundled four
       independent changes; measured on the user's 11 rooms: $60 79 % / $64 79 % / $67 55 % / $17
-      3,259 B free — the class banks bind at ~14-15 such rooms. Three boxes (S136: + CAP2d, bank $6C split off CAP2b; S137: + CAP2e, stale saves — built S138 with the room songs past $7F), each its own test ROM. **S139: every box built (all user-confirmed; d S139) — no per-room data class is bound to one bank any more below 128 places; next = CAP3 (regions).** **S140: CAP3a built (regions; USER-CONFIRMED) — bank $71 binds next at ≈950 places (15 B a place, CAP5).**
+      3,259 B free — the class banks bind at ~14-15 such rooms. Three boxes (S136: + CAP2d, bank $6C split off CAP2b; S137: + CAP2e, stale saves — built S138 with the room songs past $7F), each its own test ROM. **S139: every box built (all user-confirmed; d S139) — no per-room data class is bound to one bank any more below 128 places; next = CAP3 (regions).** **S140: CAP3a built (regions; USER-CONFIRMED) — bank $71 binds next at ≈950 places (15 B a place, CAP5).** **S141: CAP3b built (the game's own moves walked in region 2; USER-CONFIRMED 2026-10-11 10:18 ("Everything works", r3)) — next = CAP4.**
   - [x] **CAP2a — LZ streams: layouts, attr maps, tilesets past $64 / $67.** **Built S135;
         USER-CONFIRMED 2026-10-09 12:59 ("Yep all good can confirm").** Compiler-only (`DecompressTileLayout` takes the bank from every
         reference — ARCHITECTURE "LZ stream banks (S135)"): `Project.stream_plan()` first fit
@@ -2669,13 +2669,41 @@ the user picks.
         build → the Castle), a vanilla room entered from region 3 keeps it, a vanilla door
         redirect → region 0, the arena lobby (global) from region 3. *User half:* MET —
         `DWM-S140-compass-test.gbc` + `DWM-S140-plain-test.gbc`.
-  - [ ] **CAP3b — the rest of the S135 acceptance, in game.** Play here into a region 1+ room
+  - [x] **CAP3b — the rest of the S135 acceptance, in game.** Play here into a region 1+ room
         (the poke is in, S140 — play it in the editor), the story-state model
         (`census_story_state` / the story-point game state) with regions, and the PyBoy
         acceptance not yet walked: the hub from each region, a place served in a gate from
         another region, a world, the arena copies from two regions, the breeding ceremony
         return, a WarpWing home from regions 1+ (the census covers the tables of the first
         three).
+        **Built S141; USER-CONFIRMED 2026-10-11 10:18 ("Everything works", r3)** (user: "I dont really understand the story state hub
+        and arena stuff or why all this is necessary" → the plain version: the game moves the
+        player by itself at a lost battle, a WarpWing, the breeding ceremony, a gate's served
+        room and boss floor — each must keep the region → a SMALL test → "Sure go ahead, check
+        CAP3b."). The story-state item is DROPPED: `story_state.py` is flags + the vanilla step
+        counters, with no map id or region in it. *Accept (machine half) MET:* NEW
+        `tools/walk_regions.py` on the S141 demo (`examples/s141_dial_demo/`, the DIAL HALLS:
+        region-2 rooms with region-0 decoys of the same map ids) and the user's save — 47 checks,
+        0 failed: a loss in region 2 and in region 0 → the hub in region 2 (gold halved, the
+        arrival line); Grandpa's BREED and HATCH ceremonies (`$08`) → back in the region-2 room;
+        a region-0 portal → a region-2 room served on floor 2 → the WarpWing on floor 3 → the
+        hub; the WarpWing on floor 1 (region 0) → the hub (region 2); the boss floor in region 2
+        → the gate cleared (`$17C1`, `GateBossWin` with the region) → home by a script; the hub
+        off → the Castle; Play here from a new game / the save / a story point into regions 0
+        and 2 — 9 / 9. Negative control (`--negative`: `HubWarp` loses the region) — the two
+        cross-region moves home FAIL (land in the region-0 decoy). **Found + fixed:** Play here
+        from a save standing in a place the build lacks stayed in the Castle (the playback base
+        state was saved before `ContinueCheck`'s warp home ran — `playback._continue_save` now
+        waits; KEY_LESSONS S141). **Not walked (scope agreed S141):** an arena match from two
+        regions, a world in regions ≥ 1, a JOURNAL save inside a dive in region ≥ 1 (their
+        tables: the S140 census). *User half:* `DWM-S141-dial-test.gbc` in SameBoy — r1: "After
+        breeding, an NPC disappears and the one in the lower right corner glitches and becomes
+        letters" → r2 (the sheets reloaded at the close) → "its still glitching WHILE menu is
+        open" → **r3** (`DWM-S141r3-dial-test.gbc`): every windowed screen (shop, Vault, farm, eggs,
+        namer, Grandpa, a master, "Take…") loads its window tiles over NPC sprite
+        sheets 3-5 at `$8800+` (VRAM bank 0) — a custom room's sheets 3-5 now live in VRAM bank 1
+        (bank $77 entries 12-15; PROJECT_COMPILER §2.40 "S141"; measured: every NPC piece on screen
+        during and after each menu == its room-load bytes; `--negative-sheets` FAIL). USER-CONFIRMED 2026-10-11 10:18 ("Everything works", r3).
 - [ ] **CAP4 — the editor for hundreds of places.** Places by name (no map ids shown or
       authored; `room:<name>` destinations), "Make editable" copies ONE stage of a vanilla
       room by default (the user's post-Starry Night rooms), meters per data class + the

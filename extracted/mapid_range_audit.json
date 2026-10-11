@@ -234,7 +234,7 @@
   {
    "tree": "clean",
    "file": "bank_006.asm",
-   "line": 2601,
+   "line": 2609,
    "label": "jr_006_4d99",
    "occ": 0,
    "pattern": [
@@ -245,7 +245,7 @@
   {
    "tree": "clean",
    "file": "bank_006.asm",
-   "line": 3801,
+   "line": 3809,
    "label": "jr_006_60b8",
    "occ": 0,
    "pattern": [
@@ -256,7 +256,7 @@
   {
    "tree": "clean",
    "file": "bank_006.asm",
-   "line": 3933,
+   "line": 3941,
    "label": "jr_006_618e",
    "occ": 0,
    "pattern": [
@@ -267,7 +267,7 @@
   {
    "tree": "clean",
    "file": "bank_006.asm",
-   "line": 4878,
+   "line": 4888,
    "label": "jr_006_66c2",
    "occ": 0,
    "pattern": [
@@ -278,7 +278,7 @@
   {
    "tree": "clean",
    "file": "bank_006.asm",
-   "line": 5221,
+   "line": 5231,
    "label": "jr_006_6893",
    "occ": 0,
    "pattern": [
@@ -290,7 +290,7 @@
   {
    "tree": "clean",
    "file": "bank_006.asm",
-   "line": 5704,
+   "line": 5714,
    "label": "Jump_006_6b87",
    "occ": 0,
    "pattern": [
@@ -816,18 +816,7 @@
   {
    "tree": "patched",
    "file": "bank_006.asm",
-   "line": 2601,
-   "label": "jr_006_4d99",
-   "occ": 0,
-   "pattern": [
-    "cp"
-   ],
-   "verdict": "CP_UNSIGNED"
-  },
-  {
-   "tree": "patched",
-   "file": "bank_006.asm",
-   "line": 3803,
+   "line": 3789,
    "label": "jr_006_60b8",
    "occ": 0,
    "pattern": [
@@ -838,7 +827,7 @@
   {
    "tree": "patched",
    "file": "bank_006.asm",
-   "line": 3935,
+   "line": 3921,
    "label": "jr_006_618e",
    "occ": 0,
    "pattern": [
@@ -849,7 +838,7 @@
   {
    "tree": "patched",
    "file": "bank_006.asm",
-   "line": 4890,
+   "line": 4876,
    "label": "jr_006_66c2",
    "occ": 0,
    "pattern": [
@@ -860,7 +849,7 @@
   {
    "tree": "patched",
    "file": "bank_006.asm",
-   "line": 5237,
+   "line": 5223,
    "label": "jr_006_6893",
    "occ": 0,
    "pattern": [
@@ -963,18 +952,7 @@
   {
    "tree": "patched",
    "file": "bank_00b.asm",
-   "line": 2064,
-   "label": "jr_00b_492a",
-   "occ": 0,
-   "pattern": [
-    "cp"
-   ],
-   "verdict": "CP_UNSIGNED"
-  },
-  {
-   "tree": "patched",
-   "file": "bank_00b.asm",
-   "line": 2091,
+   "line": 2069,
    "label": "Jump_00b_4945",
    "occ": 0,
    "pattern": [
@@ -985,7 +963,7 @@
   {
    "tree": "patched",
    "file": "bank_00b.asm",
-   "line": 2475,
+   "line": 2453,
    "label": "SharedPtrChase",
    "occ": 0,
    "pattern": [
@@ -1468,7 +1446,7 @@
   {
    "tree": "patched",
    "file": "bank_073.asm",
-   "line": 2336,
+   "line": 2338,
    "label": "RegionCommit",
    "occ": 0,
    "pattern": [
@@ -1501,7 +1479,7 @@
   {
    "tree": "patched",
    "file": "bank_077.asm",
-   "line": 153,
+   "line": 183,
    "label": "ShopFill",
    "occ": 0,
    "pattern": [
@@ -1512,7 +1490,7 @@
   {
    "tree": "patched",
    "file": "bank_077.asm",
-   "line": 391,
+   "line": 421,
    "label": "PushAttrActive",
    "occ": 0,
    "pattern": [
@@ -1523,7 +1501,7 @@
   {
    "tree": "patched",
    "file": "bank_077.asm",
-   "line": 563,
+   "line": 593,
    "label": "ServiceOpenTiles",
    "occ": 0,
    "pattern": [
@@ -1534,8 +1512,52 @@
   {
    "tree": "patched",
    "file": "bank_077.asm",
-   "line": 643,
+   "line": 673,
    "label": "BreedClose",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_077.asm",
+   "line": 1570,
+   "label": "NpcSheetLoad06",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_077.asm",
+   "line": 1589,
+   "label": "NpcSheetLoad0B",
+   "occ": 0,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_077.asm",
+   "line": 1602,
+   "label": "NpcSheetLoad0B",
+   "occ": 1,
+   "pattern": [
+    "cp"
+   ],
+   "verdict": "CP_UNSIGNED"
+  },
+  {
+   "tree": "patched",
+   "file": "bank_077.asm",
+   "line": 1656,
+   "label": "NpcDrawBank",
    "occ": 0,
    "pattern": [
     "cp"

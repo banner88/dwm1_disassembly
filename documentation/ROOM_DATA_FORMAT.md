@@ -929,6 +929,13 @@ slots (VRAM `$9000-$97FF`, ids `$00-$7F`) and the game puts back only some of th
 | naming screen (15) | the room sheet | yes (room reload) |
 | Grandpa (6) / a master (5) / "Take…" (11) — S127 | `$40-$7F` (the menu's icons); `$FFD4` := `$40` / `$78` / `$40` | no — S127: bank $77 `BreedClose` reloads the room sheet and sets `$80` in custom rooms |
 
+**NPC sprite sheets (S141):** the room's NPC sprite sheets live at `$8500 + c·$100` (one per
+distinct NPC sprite / monster in list order, cache `$D7BE`, tile base `$50 + 16c`) — sheets 3-5 at
+`$8800-$8AFF`, the BG tiles `$80-$AF` the WINDOWED screens above (and the shop) load their window graphics into (VRAM bank 0). With 4+ distinct NPC sprites the 4th / 5th
+NPC showed letters or nothing while such a menu was open and after it (PyBoy S141). Patched
+builds: in a custom room sheets 3-5 live in VRAM BANK 1 (bank $77 entries 12-15; PROJECT_COMPILER
+§2.40 "S141") — up to 6 distinct NPC sprites stay intact through every menu.
+
 No vanilla room shows slots `$60-$7F` where these menus open; a custom room may — before
 S126 a farm visit left monster icons in its floor. Now bank $77 entry 6
 `ServiceOpenTiles` saves `$9600-$97FF` (custom rooms, once per screen) and entries 4 / 5

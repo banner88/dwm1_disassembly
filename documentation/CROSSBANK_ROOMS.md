@@ -710,10 +710,21 @@ $710B / rst $10 / pop hl / nop / nop`: bank $71 entry 11 `BossRegionEnter` reads
 `wMapRegion` with the boss's region (entry 12). The op `$42` / `$4E` return point
 (`$C8FB-$C902`) stores no region: a breeding ceremony started in a region ≥ 1 place returns by
 map id into the CURRENT region, which the ceremony does not change (vanilla rooms ignore it) —
-the in-game walk is ROADMAP CAP3b. The cache tags `wNpcColourMap` / `wTileAnimRoom` are dropped
+the in-game walk is ROADMAP CAP3b — **walked S141** (`tools/walk_regions.py`, PyBoy on the user's
+save): Grandpa in a region-2 room whose map id is also a region-0 room's — BREED → `$08` (region 2
+kept) → back in the region-2 room (`$F0`), HATCH → `$08` → back (`$F1`). The cache tags `wNpcColourMap` / `wTileAnimRoom` are dropped
 by `RegionEnter` on every region change. `wScriptMapType` keeps one byte: `CustomScriptRead`
 goes through `PlaceOf` in the current region (a custom script never runs across a commit,
 S133).
+
+### S141 sites (ROADMAP ARC CAP3b r3 — a custom room's NPC sheets 3-5 in VRAM bank 1)
+
+Moved: the page choice of the two NPC-sheet loaders (patched bank $0B `jr_00b_492a#0`, bank $06
+`jr_006_4d99#0`, both CP_UNSIGNED `cp $08` / `cp $45`) → bank $77 `NpcSheetLoad0B#0` /
+`NpcSheetLoad06#0` (the same compares) → **CP_UNSIGNED**. NEW: `NpcSheetLoad0B#1` and
+`NpcDrawBank#0` — `cp CUSTOM_ROOM_START` / `jp c` / `ret c` (VRAM bank 1 for a custom room's sheets
+3-5) → **CP_UNSIGNED** (no table index; PROJECT_COMPILER §2.40 "S141"). Selftest PASS (clean 58 /
+patched 89); `extracted/mapid_range_audit.json` regenerated.
 
 ### Re-running the audit
 

@@ -515,7 +515,8 @@
     "bank_071.asm",
     "bank_072.asm",
     "bank_073.asm",
-    "bank_076.asm"
+    "bank_076.asm",
+    "bank_077.asm"
    ],
    "vanilla_alias": true
   },
@@ -1857,9 +1858,27 @@
    "vanilla_alias": false
   },
   {
-   "label": "wCustomPool",
+   "label": "wNpcSheetIdx",
    "addr": "$D560",
-   "size": 133,
+   "size": 1,
+   "end": "$D560",
+   "collision_classes": [
+    "F:cf3-freed"
+   ],
+   "collides_with_indexed": [
+    "party/storage monster array (freed shadow)"
+   ],
+   "referenced_by": [
+    "bank_006.asm",
+    "bank_00b.asm",
+    "bank_077.asm"
+   ],
+   "vanilla_alias": false
+  },
+  {
+   "label": "wCustomPool",
+   "addr": "$D561",
+   "size": 132,
    "end": "$D5E4",
    "collision_classes": [
     "F:cf3-freed",
@@ -2624,6 +2643,9 @@
   }
  ],
  "custom_literal_only_refs": {
+  "$C003": [
+   "bank_077.asm:1668"
+  ],
   "$C81D": [
    "bank_06f.asm:284"
   ],
@@ -2657,10 +2679,10 @@
    "bank_072.asm:336"
   ],
   "$DC23": [
-   "wram.asm:591"
+   "wram.asm:594"
   ],
   "$DE74": [
-   "wram.asm:591"
+   "wram.asm:594"
   ],
   "$DEB2": [
    "bank_060.asm:1683",
@@ -2910,22 +2932,22 @@
    "bank_005.asm:9620"
   ],
   "$C010": [
-   "bank_006.asm:6885",
+   "bank_006.asm:6895",
    "bank_036.asm:7733"
   ],
   "$CF47": [
-   "bank_006.asm:7052",
+   "bank_006.asm:7062",
    "bank_055.asm:10469"
   ],
   "$DFC8": [
-   "bank_006.asm:8008"
+   "bank_006.asm:8018"
   ],
   "$C77B": [
-   "bank_006.asm:8902",
+   "bank_006.asm:8912",
    "bank_015.asm:10801"
   ],
   "$C7C3": [
-   "bank_006.asm:8917",
+   "bank_006.asm:8927",
    "bank_055.asm:9210",
    "bank_063.asm:1287",
    "bank_063.asm:1588"
