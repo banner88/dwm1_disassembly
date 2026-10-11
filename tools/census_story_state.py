@@ -13,6 +13,15 @@ real scripts:
   a gate    — warp into the boss room, `$D9E3` / `$D92B` as the boss script writes
               them right before its win tail, the boss script armed AT the tail
               (`win_tails` start); it plays on to the Castle and the King's speech.
+  Starry Night (S144) — the game's own ENDING, every step played: the final's win
+              tail (Arena Battle script 0, `wArenaGroup` 8, `wColiseumBattle` 3 —
+              as the third match leaves it), the night Farm, the Farm NPC's talk
+              (script 19, YES), the Starry Shrine / ceremony / white room, the
+              bedroom (the dresser = script 10; the question, YES; the step-on
+              trigger = script 13; the credits), "TO BE CONTINUED" → A + YES = the
+              ending's only SAVE (hooked: ROM0 SaveGameState $2128) → the bedroom
+              again as CONTINUE puts you there (screen 4), its screen 5, the dresser
+              → the ceremony room → GreatTree → the Castle (the King's cascade).
 
 When the field is idle again the saved bytes are read — every event flag $0000-
 $02FF and the step counters $D92A-$D99A + `$CAB4` — and compared with the
@@ -46,8 +55,9 @@ EXTRA = (0xCAB4, 0xD9E3)
 # King's speech = $0240-$0247), compared as RAM where the story touches them
 REAL_FLAGS = set(range(0x0000, 0x0180)) | set(range(0x0248, 0x0258))
 # the default sample: the first steps (intro speech, G), a pair gate, a mid
-# class, the mandatory gates (Anger / Reflection), Starry is not playable here
-DEFAULT_STEPS = [0, 1, 2, 3, 5, 8, 12, 13, 18, 21, 24, 28, 29]
+# class, the mandatory gates (Anger / Reflection); S144: + Starry Night (30, the
+# ending played to the post-game) and the first post-game gate (31)
+DEFAULT_STEPS = [0, 1, 2, 3, 5, 8, 12, 13, 18, 21, 24, 28, 29, 30, 31]
 
 
 def game_state(m):
@@ -206,6 +216,129 @@ def run_step(eng, step, kind, n, gates, rom, log):
     return res
 
 
+def _warp(eng, mp, x, y):
+    from editor2.core import playback as PB
+    m = eng.m
+    eng._stop_scripts()
+    px, py = x * 16 + 8, y * 16 + 8
+    m[PB.W_DEST], m[PB.W_FLAG] = mp & 0xFF, 0
+    m[PB.W_X], m[PB.W_X + 1] = px & 0xFF, px >> 8
+    m[PB.W_Y], m[PB.W_Y + 1] = py & 0xFF, py >> 8
+    m[PB.W_CHANGING] = 1
+    m[PB.W_KICK] = 1
+    for _ in range(900):
+        eng.tick()
+        if m[PB.MAP_ID] == mp and m[PB.W_KICK] == 0 and m[PB.W_CHANGING] == 0:
+            break
+
+
+def _run_frames(eng, n):
+    for _ in range(n):
+        eng.frame()
+
+
+def run_starry(eng, step, log):
+    """S144: the ending, played (module doc). Returns the run record."""
+    from editor2.core import story_state as SS
+    from editor2.core import cutscenes as CS
+    pre_st, post_st = SS.state_at(step), SS.state_at(step + 1)
+    pre = model(pre_st)
+    ram = dict(pre_st['ram'])
+    ram.update({SS.ARENA_GROUP: 8, SS.COLISEUM: 3})
+    rec = CS.room_recipe(0x5D, 0, 4, 4)._replace(flags_set=tuple(pre_st['flags_on']),
+                                                 flags_clear=(), ram=ram)
+    eng.start(rec, repoke=False)
+    m = eng.m
+    base_flags = game_state(m)[0]
+    eng.auto_text, eng.text_pause, eng.answer = True, 12, 'yes'
+    saves = []
+    eng.p.hook_register(0, 0x2128, lambda _c: saves.append(m[0xD974]), None)
+    path = []
+
+    def at(what):
+        path.append(f'{what}: map ${m[0xC968]:02X} mode {m[0xC88A]}')
+    _run_frames(eng, 9000)                              # the win tail, the night Farm
+    at('night Farm')
+    eng._arm(0x04, 19, 0, dialog=True)                  # the Farm NPC's talk, YES
+    _run_frames(eng, 10000)
+    at('the bedroom')
+    eng._arm(0x2F, 10, 0, dialog=True)                  # the dresser
+    _run_frames(eng, 2000)
+    _warp(eng, 0x2F, 5, 12)                             # the bedroom again: the question
+    _run_frames(eng, 3000)
+    eng._arm(0x2F, 13, 0, dialog=True)                  # the step-on trigger: credits
+    _run_frames(eng, 60000)
+    at('TO BE CONTINUED')
+    p = eng.p
+    for i in range(400):                                # A + YES: the ending's save
+        if i % 10 == 0:
+            p.button_press('a')
+        for _ in range(3):
+            p.tick()
+        if i % 10 == 0:
+            p.button_release('a')
+        for _ in range(12):
+            p.tick()
+        if saves:
+            break
+    at(f'saved {len(saves)}x')
+    # a player resets here: the rest runs in a fresh game booted with that save
+    import shutil
+    from tools.pyboy_harness import boot_with_sav, adv, tap
+    tmp = tempfile.mkdtemp(prefix='story_starry_')
+    for _ in range(300):                                 # let the save finish
+        eng.p.tick()
+    sav = os.path.join(tmp, 'post.sav')
+    open(sav, 'wb').write(bytes(eng.p.memory[0, 0xA000 + i] for i in range(0x2000)))
+    rom2 = os.path.join(tmp, 'orig.gbc')
+    shutil.copy(ROM, rom2)
+    q = boot_with_sav(rom2, sav)
+    m = q.memory
+    adv(q, 400)
+    tap(q, 'start')
+    adv(q, 120)
+    for _ in range(40):                                  # CONTINUE, its info box
+        if m[0xC968] == 0x2F and m[0xC88A] == 1:
+            break
+        tap(q, 'a', hold=4, wait=60)
+    path.append(f'CONTINUE: map ${m[0xC968]:02X} mode {m[0xC88A]}')
+
+    def settle(n):
+        for i in range(n):
+            adv(q, 10)
+            if m[0xC8EB] & 1 and i % 3 == 0:
+                tap(q, 'a', hold=2, wait=2)
+    settle(400)
+    from tools.pyboy_harness import warp
+    warp(q, 0x2F, 15, 12, settle=60)                     # the bedroom's other screen
+    settle(400)
+    warp(q, 0x2F, 18, 9, settle=200)                     # on the dresser (screen 5, 8, 1)
+    for _ in range(3):
+        tap(q, 'b', wait=20)
+    tap(q, 'up', hold=6, wait=20)
+    tap(q, 'a', hold=3, wait=10)
+    settle(2500)
+    path.append(f'post-game: map ${m[0xC968]:02X} mode {m[0xC88A]}')
+    frames = 0
+    game = game_state(m)
+    extra = base_flags - pre[0]
+    post_m = model(post_st)
+    bad = compare(pre, (post_m[0] | extra, post_m[1]), game)
+    if not saves:
+        bad.append({'save': 'the ending did not save'})
+    res = {'step': step, 'kind': 'starry', 'id': 8, 'frames': frames, 'map': m[0xC968],
+           'path': path, 'mismatches': bad}
+    q.stop(save=False)
+    if os.environ.get('STORY_KEEP_SAV'):
+        shutil.copy(sav, os.environ['STORY_KEEP_SAV'])
+    shutil.rmtree(tmp, ignore_errors=True)
+    log(f"step {step:2d} starry 8: {' → '.join(path)}; "
+        f"{'OK' if not bad else f'{len(bad)} MISMATCH(ES)'}")
+    for b in bad:
+        log(f'    {b}')
+    return res
+
+
 def main(argv):
     ap = argparse.ArgumentParser()
     ap.add_argument('--steps', help='comma list of step indices (default: a sample)')
@@ -226,6 +359,9 @@ def main(argv):
     out = []
     for s in steps:
         kind, n = VANILLA_STEPS[s]
+        if kind == 'starry':
+            out.append(run_starry(eng, s, print))
+            continue
         if kind not in ('gate', 'class'):
             print(f'step {s}: {kind} — not played by this census (skipped)')
             continue
@@ -234,7 +370,7 @@ def main(argv):
     for v in states.values():
         v.pop('log', None)
         v['ram'] = {f'0x{a:04X}': b for a, b in sorted(v['ram'].items())}
-    doc = {'_generator': 'tools/census_story_state.py (S132) on data/DWM-original.gbc '
+    doc = {'_generator': 'tools/census_story_state.py (S132; S144: + the ending) on data/DWM-original.gbc '
                          '(md5 1ca6579359f21d8e27b446f865bf6b83)',
            'note': 'PyBoy runs of the game\'s own victory cascades / boss win tails vs '
                    'editor2/core/story_state.py; states = the interpreter per step',

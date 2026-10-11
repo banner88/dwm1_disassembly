@@ -341,6 +341,17 @@ class RoomsTab(QWidget):
         self.state_del.clicked.connect(self._remove_state)
         sb.addWidget(self.state_add)
         sb.addWidget(self.state_del)
+        # S144 (ROADMAP ARC CAP4c; user: "select states and play with states, vanilla and
+        # custom"): keep only some states of every screen, pick the one each starts in
+        self.state_keep = QToolButton()
+        self.state_keep.setText('Keep states…')
+        self.state_keep.setToolTip(
+            'Choose which states every screen of this room keeps and the one it starts in — '
+            'the room\'s scripts follow the new numbers; a state the room\'s own scripts '
+            'switch to is remembered by a flag (it stays after a save). A copy of a game '
+            'room can also answer its talk at a moment of the original story.')
+        self.state_keep.clicked.connect(self._keep_states)
+        sb.addWidget(self.state_keep)
         # S122: this screen/state starts from a real maze screen of the gates
         self.maze_btn = QToolButton()
         self.maze_btn.setText('Maze screen…')
@@ -974,7 +985,8 @@ class RoomsTab(QWidget):
         self.minimap.set_screens(imgs, self.key)
 
     def _set_state_widgets(self, on):
-        for w in (self.state_prev, self.state_next, self.state_add, self.state_del, self.state_box):
+        for w in (self.state_prev, self.state_next, self.state_add, self.state_del, self.state_box,
+                  self.state_keep):
             w.setEnabled(on)
 
     @staticmethod
@@ -2576,6 +2588,16 @@ class RoomsTab(QWidget):
         extra = {'repoke': False}
         if res['records']:
             extra['records'] = [r.hex() for r in res['records']]
+        # S144 (ROADMAP ARC CAP4c; user: "play with states, vanilla and custom"): the
+        # room starts in the state the canvas shows
+        st_ram, st_on, st_off, st_note = self._play_state(room, mid, key, rom)
+        if st_ram:
+            extra['state_ram'] = {str(a): v for a, v in st_ram.items()}
+        if st_on or st_off:
+            rec = rec._replace(flags_set=tuple(sorted(set(rec.flags_set) | st_on)),
+                               flags_clear=tuple(sorted((set(rec.flags_clear) | st_off) - st_on)))
+        if st_note:
+            rec = rec._replace(notes=tuple(rec.notes) + (st_note,))
         old = getattr(self, 'playback', None)
         if old is not None:
             try:
@@ -2587,6 +2609,70 @@ class RoomsTab(QWidget):
                                        [(rec, CS.RoomOnly, title)], title, start_extra=extra)
         self.playback.show()
         self._say_status(f'Play here: {res["label"]}')
+
+    def _play_state(self, room, mid, key, rom):
+        """S144: ({counter address: state}, flags to set, flags to clear, note) that make
+        screen `key` load in the state shown — a game room: its own counter; a project
+        room: its counter from the build's game.sym (or the game's counter a copy
+        follows) and its state rules' flags (rules run at every load)."""
+        import os
+        idx = int(self.state_idx or 0)
+        if mid is None:
+            return {}, set(), set(), ''
+        if room is None:                                     # a game room
+            try:
+                n = len(self.s.renderer.vanilla_steps(mid, int(key)))
+                a = self.s.renderer.vanilla_counter(mid, int(key))
+            except Exception:                                # noqa: BLE001
+                return {}, set(), set(), ''
+            if n <= 1:
+                return {}, set(), set(), ''
+            return {a: idx}, set(), set(), f'screen {key} in state {idx}'
+        scr = (room.get('screens') or {}).get(str(key)) or {}
+        if len(scr.get('states') or []) <= 1:
+            return {}, set(), set(), ''
+        sc = scr.get('step_counter')
+        addr = None
+        if isinstance(sc, dict) and sc.get('vanilla') is not None and not room.get('state_rules'):
+            addr = val(sc['vanilla'])
+        else:
+            from editor2.core.project import Project
+            from editor2.core.cutscenes import read_symbols
+            lab = sc.get('label') if isinstance(sc, dict) and sc.get('label') else \
+                Project._def_step_label(room, int(key))
+            sym = os.path.join(os.path.dirname(rom), 'game.sym')
+            try:
+                addr = read_symbols(sym).get(lab)
+            except OSError:
+                addr = None
+        on, off = set(), set()
+        nums = self.s.doc.flag_numbers() if hasattr(self.s.doc, 'flag_numbers') else {}
+        for ru in room.get('state_rules') or []:
+            scrs = ru.get('screens')
+            if scrs is not None and int(key) not in [int(x) for x in scrs]:
+                continue
+            terms = ru.get('when') or []
+            want = int(val(ru.get('state', 0))) == idx
+            for t in terms:
+                f = t.get('flag')
+                if isinstance(f, str) and f in nums:
+                    f = nums[f]
+                else:
+                    try:
+                        f = val(f)
+                    except Exception:                        # noqa: BLE001
+                        continue
+                if not isinstance(f, int):
+                    continue
+                is_set = t.get('is', 'set') != 'clear'
+                if want:
+                    (on if is_set else off).add(f)
+                elif is_set and len(terms) == 1:
+                    off.add(f)
+        if addr is None and not on:
+            return {}, set(), set(), f'state {idx}: no build symbol for its counter — build first'
+        return ({addr: idx} if addr is not None else {}), on, off - on, \
+            f'screen {key} in state {idx}'
 
     def _say_status(self, msg):
         try:
@@ -3243,22 +3329,52 @@ class RoomsTab(QWidget):
         else:
             mid = self.vanilla_mid
         name = PN.vanilla_name(mid)
-        new_name = self.s.doc.unique_room_name(name)
-        if QMessageBox.question(
-                self, 'Make editable',
-                f'Copy the game room "{name}" into your project as your room '
-                f'"{new_name}"?\n\nThe original stays untouched; the copy gets its own layouts, '
-                'palette and scripts.'
-        ) != QMessageBox.Yes:
+        # S144 (ROADMAP ARC CAP4c): which room states the copy keeps (a moment of the
+        # original story proposes them) — or every state, following the game (S118c)
+        from editor2.app.rooms.states_dialog import KeepStatesDialog
+        dlg = KeepStatesDialog(self.s, self, mid=mid, repo=REPO)
+        if dlg.exec() != QDialog.Accepted:
             return
+        spec = dlg.spec()
         rend = self.s.renderer
         cmd = C.SnapshotCommand(self.s, f'Make editable: {name}',
-                                lambda doc: doc.clone_vanilla(mid, name, REPO, rend))
+                                lambda doc: doc.clone_vanilla(mid, name, REPO, rend, keep=spec))
         self.s.undo.push(cmd)
         self.vanilla_mid = None
         self.room_id = cmd.result
         self.key, self.state_idx = 0, 0
         self._fill_rooms(keep=cmd.result)
+        rep = getattr(self.s.doc, 'last_states_report', None) if spec is not None else None
+        if rep is not None:
+            from editor2.core import room_states as RS
+            self._say_status('Made editable — ' + RS.describe(rep))
+            self.s.doc.last_states_report = None
+
+    def _keep_states(self):
+        """S144: Keep states… on the room shown."""
+        room = self.current_room()
+        if room is None:
+            return
+        from editor2.app.rooms.states_dialog import KeepStatesDialog
+        from editor2.core import room_states as RS
+        why = RS.locked_reason(self.s.doc, room)
+        if why:
+            QMessageBox.information(self, 'Keep states', why[0].upper() + why[1:] + '.')
+            return
+        dlg = KeepStatesDialog(self.s, self, room_id=self.room_id, repo=REPO)
+        if dlg.exec() != QDialog.Accepted:
+            return
+        spec = dlg.spec()
+        if spec is None:
+            return
+        rid = self.room_id
+        cmd = C.SnapshotCommand(self.s, f'Keep states: {self.s.doc.room_name(room)}',
+                                lambda doc: doc.keep_states(rid, spec))
+        self.s.undo.push(cmd)
+        self.state_idx = 0
+        self._show()
+        if cmd.result is not None:
+            self._say_status('Kept states — ' + RS.describe(cmd.result))
 
     def _new_room(self):
         dlg = NewRoomDialog(self.s.renderer, self)
@@ -3535,7 +3651,10 @@ class RoomsTab(QWidget):
             return
         if QMessageBox.question(self, 'Remove state',
                                 f'Remove state {self.state_idx} of screen {self.key}? '
-                                '(Undo restores it.)') != QMessageBox.Yes:
+                                '(Undo restores it.)\n\nThe later states move down one and '
+                                'scripts that switch to them are NOT renumbered — '
+                                '"Keep states…" drops states AND renumbers the scripts and '
+                                'state rules (S144).') != QMessageBox.Yes:
             return
         self.s.undo.push(C.RemoveState(self.s, self.room_id, self.key, self.state_idx))
         self.state_idx = max(0, self.state_idx - 1)

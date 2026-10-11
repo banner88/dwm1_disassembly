@@ -907,3 +907,18 @@ mapping, a `rst $10` executing in bank $80). ✏️ = fixed in place this sessio
 | ROOM_DATA_FORMAT "Sprite limits (S117b)": the party (8 objects a line) always adds to a room's NPCs | ⚠ incomplete | not in the Arena Battle room (`$5D`): its NPCs ARE the party (`$E0`, `$E1-$E3`) and the script holds the player | PyBoy S143 on the user's save (≤ 24 objects) |
 | PYBOY_DEBUGGING S109: "YES = up then A" | ⚠ prompt-specific | at the arena class confirmation the cursor starts on YES — UP wraps to NO | PyBoy S143 |
 | EDITOR_DESIGN §6.4 D (S133): destinations as `room:<name>` | ✏️ superseded (S142 decision, S143 build) | the stored `room:$XX` stays (the room's permanent number); the editor only SHOWS names | PROJECT_COMPILER §2.51 |
+
+## S144 addendum (2026-10-11; kept room states — ROADMAP ARC CAP4c)
+
+| File / claim | Verdict | What is true | Evidence |
+|---|---|---|---|
+| PROJECT_COMPILER §2.6 "S118c": "Make editable writes this form [`step_counter.vanilla`] for every screen" | ✏️ updated | only with "Every state, following the original game's story"; by default a copy keeps chosen states of its own (§2.52) | `Document.clone_vanilla(keep=)` |
+| `editor2/help/10_rooms.md`: "A copy of a game room follows the game's state … on for every copy" | ✏️ updated | only for a copy made with "Every state, following…"; a kept copy has no game counter | help S144 |
+| (S142 audit) "Make editable copies every story stage" — EDITOR_DESIGN §6.4 cost table | ✏️ superseded | S144 copies the chosen states; the 101 game rooms with the defaults: 51,412 → 30,140 B of scripts | `census_room_states.py` |
+| "Remove state" (Rooms tab) is a safe way to drop a state | ⚠ incomplete (S94 behaviour, kept) | later states move down one and nothing renumbers the scripts / rules that switch to them — a script can then index past the list (the S128 crash class); the confirm box now says so; Keep states… renumbers | `RemoveState` (app/rooms/commands.py), `room_states.apply` |
+| EVENT_FLAGS: 19 flags cleared somewhere (S124) | ✅ reproduced | 19 over 587 scripts; none of them is ON at any story point of `story_state` — so answering ON story flags is safe | `room_states.game_cleared_flags`, `test_compiler.test_s144` |
+| `editor2/core/story_state.py` (S132): "Starry Night = the ending flag `$00EE`, then the Castle's cascade" | ❌ incomplete (S144, measured) | the real ending sets `$00E4 $00E5 $00E9 $00EA $00EB $00ED $00EE $00EF $00F0` and 11 rooms' states the model lacked (Bazaar `$D93A` 4 not 2, Gate Hub `$D93D/E` 4 / 1, Farm `$D940` 1, Stable `$D947` 0, Arena Rooms `$D94E` 1, ceremony `$D951` 6, MedalMan `$D95E` 5, Queen `$D967` 2, bedroom `$D975` 1, white room `$D99A` 3); fixed: `run_ending` plays the measured chain | PyBoy (the ending played, CONTINUE in a fresh game); `census_story_state.py` step 30 |
+| ARCHITECTURE game modes: mode 4 = "map-script/cutscene engine" | ✏️ wrong name | the ending's credits + "TO BE CONTINUED" + its save prompt | PyBoy S144 |
+| EVENT_FLAGS: `$00E5` "set by no decoded script" | ✏️ found | the Farm's script 0 after its op `$3E` (word `$32`) | per-frame watch S144 |
+| `script_ops.TERMINAL` contains `$3E` | ❌ wrong (open box) | `$3E` yields and resumes; the decoder drops what follows it | `ScriptCmd3E_ChangeGameMode` (`ret`), PyBoy S144 |
+| bank $01 `CheckPaletteAnimActive`, bank $02 entry 3 (raw) | ✏️ annotated | the breeding ceremony's per-frame hook (map $08, `$D951` 7, no script) → its sky sequence; the last state `CeremonySkyDone` sets `$D951` := 8 + reloads the room; the `rst $00` table converted to `dw` (both trees, zero bytes) | build `1ca65793…` unchanged |

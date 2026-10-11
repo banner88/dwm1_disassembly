@@ -33,6 +33,19 @@ except ImportError:
     sys.exit(0)
 
 
+def _keep_states_follow(dlg):
+    """S144: Make editable opens the keep-states dialog; the checks written before it
+    expect the S118c copy (every state, following the game) — choose that, accept."""
+    if dlg.copy_:
+        dlg.moment.setCurrentIndex(0)
+    return 1
+
+
+def _patch_keep_states():
+    from editor2.app.rooms import states_dialog as _SD
+    _SD.KeepStatesDialog.exec = _keep_states_follow
+
+
 def pinned_md5():
     """Single source of truth: the compat pin inside test_compiler.py."""
     src = open(os.path.join(REPO, 'editor2/tests/test_compiler.py')).read()
@@ -2733,9 +2746,131 @@ def s143_names(app, w):
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+
+def s144_states(app, w):
+    """S144 (ROADMAP ARC CAP4c; user S144: "select states and play with states, vanilla and
+    custom"): Make editable opens the keep-states dialog — pictures of every state, the
+    moment (after Starry Night for a town room, "about to do its gate" for a boss floor),
+    ticks + "starts here"; accepting copies those states only (talk answered, the boss's
+    beaten state remembered); "Every state, following…" keeps the S118c copy; Keep states…
+    on a project room renumbers it; Play here resolves the shown state (a game room: its
+    counter; a project room: its label from game.sym + a state rule's flag)."""
+    import shutil
+    import tempfile
+    from PySide6.QtWidgets import QDialog
+    from editor2.app.rooms import states_dialog as SD
+    from editor2.core import room_states as RS
+    tmp = tempfile.mkdtemp(prefix='s144_states_')
+    keep_exec = SD.KeepStatesDialog.exec
+    seen = {}
+    try:
+        pdir = os.path.join(tmp, 'p')
+        shutil.copytree(os.path.join(REPO, 'editor2/example-project'), pdir,
+                        ignore=shutil.ignore_patterns('build'))
+        w.open_project(pdir)
+        app.processEvents()
+        rt, doc = w.rooms_tab, w.session.doc
+
+        def look(dlg):
+            seen['title'] = dlg.windowTitle()
+            seen['moment'] = dlg.moment.currentText()
+            seen['screens'] = len(dlg.checks)
+            seen['kept'] = {k: [i for i, cb in enumerate(c) if cb.isChecked()]
+                            for k, c in dlg.checks.items()}
+            seen['pics'] = sum(1 for k in dlg.checks for lab in
+                               dlg.area.widget().findChildren(SD.QLabel)
+                               if lab.pixmap() is not None and not lab.pixmap().isNull()) > 0
+            seen['summary'] = dlg.summary.text()
+            return QDialog.Accepted
+        SD.KeepStatesDialog.exec = look
+        n0 = len(doc.rooms)
+        rt.vanilla_list.select_data(0x01)
+        app.processEvents()
+        rt._clone_vanilla()
+        app.processEvents()
+        gt = doc.rooms[-1]
+        assert len(doc.rooms) == n0 + 1 and gt.get('states_kept'), 'GreatTree not kept'
+        assert seen['moment'].startswith('right after Starry Night'), seen['moment']
+        assert seen['screens'] == 8 and seen['kept']['0'] == [3], seen['kept']
+        assert seen['pics'] and 'Keeping' in seen['summary'], seen
+        assert 'states' not in gt['screens']['0'], 'screen 0 should keep one state'
+        print('OK: S144 Make editable → the keep-states dialog (8 screens, after Starry '
+              'Night), GreatTree screen 0 = its post-game state only')
+        # a boss floor: about to do its gate, both states, the beaten one remembered
+        rt.vanilla_list.select_data(0x31)
+        app.processEvents()
+        rt._clone_vanilla()
+        app.processEvents()
+        vb = doc.rooms[-1]
+        assert seen['moment'].startswith('about to do Gate of Villager'), seen['moment']
+        assert seen['kept']['0'] == [0, 1] and len(vb['screens']['0']['states']) == 2
+        assert (vb.get('state_rules') or [{}])[0].get('state') == 1, vb.get('state_rules')
+        print('OK: S144 Boss: Villager → both states, the beaten one kept by a flag + rule')
+        # every state, following the game: the S118c copy
+        def follow(dlg):
+            dlg.moment.setCurrentIndex(0)
+            seen['summary'] = dlg.summary.text()
+            return QDialog.Accepted
+        SD.KeepStatesDialog.exec = follow
+        rt.vanilla_list.select_data(0x04)
+        app.processEvents()
+        rt._clone_vanilla()
+        app.processEvents()
+        farm = doc.rooms[-1]
+        assert not farm.get('states_kept') and doc.follows_game(farm), 'Farm should follow'
+        assert 'start-of-game' in seen['summary'], seen['summary']
+        # Keep states… on it: screen 0 keeps 2 + 3, starts in 3
+        def pick(dlg):
+            assert dlg.copy_
+            for i, cb in enumerate(dlg.checks['0']):
+                cb.setChecked(i in (2, 3))
+            dlg.starts['0'].button(3).setChecked(True)
+            return QDialog.Accepted
+        SD.KeepStatesDialog.exec = pick
+        rt.room_list.select_data(farm['id'])
+        app.processEvents()
+        assert rt.state_keep.isEnabled()
+        rt._keep_states()
+        app.processEvents()
+        s0 = farm['screens']['0']
+        assert farm.get('states_kept') and len(s0['states']) == 2 and \
+            s0['states'][0]['comment'] == 'vanilla step 3', [x.get('comment') for x in s0['states']]
+        w.session.undo.undo()
+        app.processEvents()
+        farm = doc.room(farm['id'])
+        assert not farm.get('states_kept') and len(farm['screens']['0']['states']) == 4
+        print('OK: S144 Every state (follows the game) + Keep states… renumbers; undo restores')
+        # Play here in the shown state
+        rt.room_list.select_data(vb['id'])
+        app.processEvents()
+        rt.key, rt.state_idx = 0, 1
+        lab = vb['screens']['0']['step_counter']['label']
+        bdir = os.path.join(tmp, 'b')
+        os.makedirs(bdir)
+        open(os.path.join(bdir, 'game.sym'), 'w').write(f'00:CDA7 {lab}\n')
+        ram, on, off, note = rt._play_state(vb, int(str(vb['mapID']), 0), 0,
+                                            os.path.join(bdir, 'rom.gbc'))
+        fnum = doc.flag_numbers()[vb['state_rules'][0]['when'][0]['flag']]
+        assert ram == {0xCDA7: 1} and on == {fnum} and not off, (ram, on, off)
+        rt.state_idx = 0
+        ram0, on0, off0, _n = rt._play_state(vb, int(str(vb['mapID']), 0), 0,
+                                             os.path.join(bdir, 'rom.gbc'))
+        assert ram0 == {0xCDA7: 0} and not on0 and off0 == {fnum}, (ram0, on0, off0)
+        rt.state_idx = 2
+        ramv, *_r = rt._play_state(None, 0x01, 0, os.path.join(bdir, 'rom.gbc'))
+        assert ramv == {0xD92D: 2}, ramv
+        print('OK: S144 Play here starts the room in the state shown (game room: its '
+              'counter; your room: its label + the state rule\'s flag)')
+    finally:
+        SD.KeepStatesDialog.exec = keep_exec
+        w.open_project(os.path.join(REPO, 'editor2/example-project'))
+        app.processEvents()
+        shutil.rmtree(tmp, ignore_errors=True)
+
 def main():
     do_rom = '--rom' in sys.argv
     app = QApplication.instance() or QApplication(sys.argv)
+    _patch_keep_states()
     from editor2.app.main import MainWindow             # noqa: E402
     w = MainWindow()
     w.open_project(os.path.join(REPO, 'editor2/example-project'))
@@ -4152,6 +4287,7 @@ def main():
 
     s142_scale(app, w)
     s143_names(app, w)
+    s144_states(app, w)
 
     if do_rom:
         from editor2.app.build_worker import BuildWorker  # noqa: E402

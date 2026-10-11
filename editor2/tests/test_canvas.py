@@ -72,6 +72,18 @@ except ImportError:
 from PySide6.QtCore import Qt                                   # noqa: E402
 from editor2.core.document import val, metatile_key, metatile_pals          # noqa: E402
 
+
+def _keep_states_follow(dlg):
+    """S144: Make editable opens the keep-states dialog; these checks (written before
+    it) expect the S118c copy — every state, following the game."""
+    if dlg.copy_:
+        dlg.moment.setCurrentIndex(0)
+    return 1
+
+
+from editor2.app.rooms import states_dialog as _SD             # noqa: E402
+_SD.KeepStatesDialog.exec = _keep_states_follow
+
 EXAMPLE = os.path.join(REPO, 'editor2', 'example-project')
 ROOM = 'medal_vault'          # $71: own record, project-owned layout
 COUNTER_LABEL = 'wCustomStep_Room71_S0'

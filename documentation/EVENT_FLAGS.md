@@ -48,7 +48,10 @@ flags `$1800`-`$18FF` are the project's story checks (read-only, "Story checks" 
 map type's script table — `editor2/core/flag_index.py` uses it):** 587 scripts, **1,674
 flag operations, 332 distinct flags** ($0000-$02C1), **327 with a set**, 19 cleared
 somewhere; check-only: `$0007`, `$0050`, `$0053` (set by the game's code, below),
-`$00E5` and `$02C1` (set by no decoded script — not traced). The figures below are the
+`$00E5` and `$02C1` (set by no decoded script — not traced; **S144: `$00E5` is set by the Farm's
+script 0 right after its op `$3E` (word `$32`) — the decoder ends a script at `$3E`
+(`script_ops.TERMINAL`), but the game resumes it when the mode change returns: measured
+(a per-frame watch of `$D9B7`), ROADMAP box "decoder: `$3E` continues"**). The figures below are the
 pre-S96 decoder's (dump_all_scripts.py, the old arity table — DOC_AUDIT S96).
 
 - **1,675 total flag operations** across 732 scripts in banks $0C/$0D/$0E/$0F
@@ -236,9 +239,20 @@ scripts (`cutscenes.decode_words`; ops `$02/$03/$12/$13` applied, `$00/$01/$0E/$
 followed, a closing room change → the destination's entry script): per gate its boss win
 tail(s) (`extracted/gate_names.json` `win_tails`, the speech code written before each) and the
 King's speech at the Castle; per class the Arena Lobby victory cascade and the Castle's cascade
-after it; Starry Night = `$00EE` + the Castle's post-game cascade (`$00F1`). PyBoy census
-(`tools/census_story_state.py` → `extracted/story_state_census.json`): 39 / 39 playable
-steps — the game's own scripts from the interpreter's pre-state leave exactly the
+after it; Starry Night = **the game's own ending, played (S144 — before S144 only `$00EE` +
+the Castle's cascade, which left 8 flags and 11 rooms' states out)**: the final's win tail
+(Arena Battle script 0, `$D9CE` 8 / `$D9CD` 3: `$00E4`, the night Farm, game mode 3) → `$00E5`
+(the Farm's script 0 after its op `$3E`) → the night Farm's talk (Farm script 19, YES) → the
+Starry Shrine → the ceremony room (`$D951` := 7 by op `$5E`; its sky sequence → 8 + a reload,
+bank $02 `CeremonySkyDone`) → the white room (`$D99A` := 3) → the bedroom's flag ladder
+(`$00E9` entry, `$00EA` the dresser = script 10, `$00EB`/`$00EC` its YES / NO, `$00ED` the
+step-on trigger = script 13 → the credits, game mode 4; `$00EE` = the ending's states of 18
+rooms) → "TO BE CONTINUED" → **the ending's only save** (mode 4, bank $5F: a button + YES →
+SaveGameState) → CONTINUE: the bedroom (`$00EF`), its screen 5 (`$00F0`), the dresser → the
+ceremony room → GreatTree (`$D92D` := 3) → the Castle: the King's cascade (`$00F1`). PyBoy census
+(`tools/census_story_state.py` → `extracted/story_state_census.json`; S144: Starry Night played
+too — the ending, its save, a CONTINUE in a fresh game): 40 / 40 playable
+steps (every step but Monster Grandpa's match) — the game's own scripts from the interpreter's pre-state leave exactly the
 interpreter's post-state. Compare only the real flags ($0000-$017F, $0248-$0257 — the other
 bytes of the bitfield are engine variables, "Free Flag Slots" above). Used by the Rooms tab's
 ▶ Play here (EDITOR_DESIGN §5.1 "As built S132").

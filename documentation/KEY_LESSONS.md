@@ -6490,3 +6490,71 @@ Qt's default row.
 (8 objects a line) on top. **Fix:** `formats.party_walks` → `sprite_budget(party=False)`.
 **Rule:** a hardware-budget warning must model what the game really puts on screen in that
 room; when a vanilla room "breaks" the rule the editor warns about, measure that room first.
+
+## S144 — kept room states (ROADMAP ARC CAP4c)
+
+**A copy frozen at one moment must answer every test of what it froze — not only drop the other
+looks.** **Symptom (S144 audit, the GreatTree copy):** dropping the states other than the post-game
+one would have left the copy's ENTRY script testing its own counter (`check_and_branch` on the
+screen's counter, flag `$00EE` → the ending scene that writes the counter to 4): a one-state copy's
+counter is always 0, so the script would take the start-of-game branch and could write a state number
+the screen no longer has (the S128 past-the-list crash class). **Fix:** `room_states.fold_ops` — a
+one-state screen's tests become fixed answers against the kept state's ORIGINAL number, its writes go;
+a several-state screen's are renumbered; then unreachable steps are pruned. **Rule:** when an editor op
+removes alternatives (states, branches, entries), find every reader and writer of the thing that
+SELECTED between them — in the whole project, not only the object — and resolve or renumber each.
+
+**A positional table cannot lose a middle entry.** **Symptom (S144 design):** dropping the scripts no
+kept state uses — the room's `scripts` map is `{index: id}`, but `emitters._room_scripts` emits one
+`dw` per SORTED index, so a missing index 5 makes NPC byte 6 run script 7. **Fix:** a dropped middle
+index points at a one-word stub (`<room>_unused` = `end`); trailing ones are cut. **Rule:** before
+deleting from a dict that becomes a table, check how the emitter lays it out — a sparse dict over a
+dense table shifts every later index silently.
+
+**Flatten a state into its screen with the screen's OWN resolution order.** **Symptom
+(`census_room_states --negative`):** the Bazaar's and the Farm's one-state screens drew the wrong
+colours when the kept state's layout went up to the screen without its attr. **Root cause:** a
+state's attr = its own > its layout item's > the screen rule; a plain screen's = its own > its layout
+item's > render.attr — and the screen still carried the BASE attr, which outranks the layout item.
+**Fix:** `_flatten_into` writes the state's attr (or its layout item's) explicitly. **Rule:** moving
+data between two levels with different fallback chains = write the resolved value explicitly; prove
+it with a pixel compare of every moved item and a negative control.
+
+**A room's remembered state uses the project's ordinary flags first — a test must clear BOTH flag
+ranges.** **Symptom (walk_room_states, the Castle copy screen 5):** the kept state 0 loaded as state 1
+on the user's save. **Root cause:** `Document.add_flag` takes `$0159-$0167` before `$1000+`; the walk
+cleared only `wExtFlags`, and the user's save had `$015C` (a flag of the user's own project) ON — the
+copy's state rule fired. A test artifact, not a defect: in one project the numbers never collide.
+**Rule:** a driver that sets / clears project flags handles `< $1000` at `$D99B` and `$1000+` at
+`$D140` (`walk_room_states.ext_set`); a save from another project carries ITS flags in the shared pool.
+
+**States of one screen often share their tiles — a picker must show the people.** **Symptom (the
+first dialog screenshot):** GreatTree's five entrance states looked identical. **Root cause:** the
+states differ in their NPC lists and exits, the thumbnails drew only the tiles. **Fix:** the
+canvas's NPC sprites drawn on, exits outlined, "2 people, 1 exit" under each. **Rule:** a picker of
+alternatives draws what DIFFERS between them — measure that on real data before drawing.
+
+**A shortcut in a shared model hides until a feature leans on it — the "post-game" was missing
+the ending.** **Symptom (walk_room_states, the kept intro bedroom):** the copy hung the game
+(PyBoy's `tick()` never returned) where the every-state copy ran on. **Root cause:** the kept copy's
+talk was answered at the story model's "after Starry Night", which had `$00EE` but not `$00EF`, so
+its entry script took the ENDING's bedroom branch; the model's `run_ending` (S132) set `$00EE` and
+ran the King's cascade only — measured S144 against the real ending, it missed 8 flags and 11
+rooms' states (Bazaar, Gate Hub, Farm, Stable, Arena Rooms, MedalMan, Queen …). **Fix:**
+`story_state.run_ending` plays the measured chain; `census_story_state` plays Starry Night to the
+post-game (40 / 40 playable steps, all equal). **Rules:** (1) a model step that a census "cannot play" is a
+step nobody has measured — play it before a feature depends on it; (2) when the game seems to
+"know" something after a cutscene, find WHERE it saves: the ending saves only at "TO BE
+CONTINUED" after a button + YES.
+
+**A save hook fires before the bytes land.** **Symptom (census_story_state, the ending):** the
+CONTINUE booted a nearly new game. **Root cause:** the cartridge RAM was dumped the frame the
+`SaveGameState` hook fired. **Fix:** run 300 frames after the hook before dumping. **Rule:** a
+hook at a routine's ENTRY says it started; read its results after it returns.
+
+**A decoder that ends a script where the game only pauses it hides what comes after.**
+**Symptom:** `$00E5` "set by no decoded script" (S124) — yet the ending sets it. **Root cause
+(per-frame watch of `$D9B7` + the script registers):** the Farm's script 0 sets it right after op
+`$3E` (change game mode), whose handler yields (`ret`) and resumes when the mode returns;
+`script_ops.TERMINAL` treats `$3E` as the end. **Rule:** classify an op as terminal only from its
+handler (a `jp` to the script-end path / a room change), never from what it looks like it does.

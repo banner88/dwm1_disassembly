@@ -7060,6 +7060,10 @@ jr_001_6602:
 
 
 CheckPaletteAnimActive:
+    ; S144 (measured): the breeding ceremony's per-frame hook — no battle ($C850), no
+    ; warp ($C88F), not in a gate, NO SCRIPT running, map $08 and $D951 == 7 → bank $02
+    ; entry 3 (its sky sequence; at its end $D951 := 8 + a reload, bank $02
+    ; CeremonySkyDone). The name is historical (it is not a palette-animation test).
     ld a, [$c850]
     or a
     ret nz

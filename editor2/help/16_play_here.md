@@ -24,7 +24,10 @@ the state you chose last (per project). Change it with the ▾ next to the butto
   the Balance tab): "about to do the Gate of Peace". The story flags and room states
   are what the game's own scripts write for every step done before it (the bosses'
   win scenes, the King's speeches, the arena victories, the ending — the same as the
-  real game, checked step by step in the emulator). The party is the team the
+  real game, checked step by step in the emulator). S144: the points after Starry Night
+  include the game's whole ending (the night Farm, the bedroom, the credits, the save at "TO BE
+  CONTINUED", the walk back to the King) — before, they missed what the ending changes (the
+  Bazaar, the Gate Hub, the Farm, MedalMan … are in their real post-game states now). The party is the team the
   Balance tab expects there: a player's kit at the level the step's hardest fight
   needs (or a strong / casual roll; **Reroll** for another; untick *level: what this
   point needs* to set the level yourself).
@@ -35,6 +38,13 @@ the state you chose last (per project). Change it with the ▾ next to the butto
 - **Set by hand** — up to three monsters: species, level, plus, and the skills as the
   game raises them or picked (up to 8). A monster cannot start below the level its
   enemy row joins at.
+
+**The state you are looking at (S144):** the screen starts in the state shown on the
+canvas (the ◀ ▶ state row) — a game room's and yours alike. When the room has state rules,
+the flags of the rule that shows that state are turned on (and a remembered-state flag of
+another state off), because the rules decide the state every time the screen loads. A
+room of another region than where the game starts is entered twice (the first entry's
+region change resets a room's own state).
 
 For every choice you can also turn flags **ON** or **OFF** (your named flags, the
 gates' cleared flags, the arena classes, any number) — to try a room's other states.

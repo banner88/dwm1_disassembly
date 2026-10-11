@@ -338,14 +338,18 @@ class Engine:
         return True
 
     def start(self, recipe, scene_entry=None, wait=900, settle=True, party=False,
-              repoke=True, records=None):
+              repoke=True, records=None, state_ram=None):
         """Set the game up for a recipe (cutscenes.Recipe) and leave it
         running at the start of the scene's script.
         S132: repoke=False keeps what the room's entry script writes on arrival
         (a story state: the RAM is poked BEFORE the warp only); records = party
         monster records (149 B each, play_setup.party_record) put in after the
         room loaded (the canonicalizer erases a party made before — PYBOY_DEBUGGING
-        trap 2)."""
+        trap 2).
+        S144 (ROADMAP ARC CAP4c, Play here in the state shown): state_ram = {counter
+        address: state} poked with the RAM; a project room's counters are zeroed when
+        the warp changes region (bank $73 RegionEnter), so when one did not hold the
+        room is entered once more from where it is (same region: nothing zeroed)."""
         m = self.m
         self.base_state()
         self.frames = 0
@@ -370,6 +374,8 @@ class Engine:
             self.set_flag(f, False)
         for a, v in recipe.ram.items():
             m[a] = v & 0xFF
+        for a, v in (state_ram or {}).items():
+            m[int(a)] = int(v) & 0xFF
         px, py = recipe.player
         m[W_DEST] = recipe.map & 0xFF
         if recipe.map >= 0x6B:
@@ -395,6 +401,24 @@ class Engine:
                 break
         if not arrived:
             self.log.append('the room did not finish loading')
+        if arrived and state_ram and any(m[int(a)] != int(v) & 0xFF
+                                         for a, v in state_ram.items()):
+            for a, v in state_ram.items():
+                m[int(a)] = int(v) & 0xFF
+            self._stop_scripts()
+            m[W_DEST] = recipe.map & 0xFF
+            m[W_FLAG] = 0
+            m[W_X], m[W_X + 1] = px & 0xFF, (px >> 8) & 0xFF
+            m[W_Y], m[W_Y + 1] = py & 0xFF, (py >> 8) & 0xFF
+            m[W_CHANGING] = 1
+            m[W_KICK] = 1
+            for i in range(wait):
+                self.tick()
+                if (m[MAP_ID] == recipe.map & 0xFF and m[GAME_MODE] == 1
+                        and m[W_KICK] == 0 and m[W_CHANGING] == 0):
+                    break
+            self.log.append('entered again in the state shown (the region change had '
+                            'reset the room\'s state)')
         if repoke:
             for a, v in recipe.ram.items():      # the load may reset counters
                 m[a] = v & 0xFF

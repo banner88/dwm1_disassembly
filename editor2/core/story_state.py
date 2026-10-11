@@ -201,15 +201,61 @@ def run_class(mach, rom, lobby_scr0, cls):
     mach.ram[COLISEUM] = 0
 
 
-def run_ending(mach, castle_scr0):
-    """Starry Night won: the ending is seen ($00EE); CONTINUE after the credits
-    lands in front of the King, whose arrival cascade ($D92B = 0, Castle script 0
-    on screen 1, S124 read: plays once $00EE is set and $00F1 clear) opens the
-    post-game ($00F1, the Castle / GreatTree post-game states)."""
-    mach.flags.add(ENDING_SEEN)
-    mach.ram[CASTLE_EVENT] = 0
-    mach.run(castle_scr0, 0, screen=1, what='Starry Night won, the ending seen; the '
-                                             'King opens the post-game')
+ENDING_FARM_FLAG = 0x00E5               # the Farm's script 0, after its op $3E (S144, traced)
+BREED_STAGE = 0xD951                    # the ceremony room's counter (BANK04 "Breeding")
+
+
+def run_ending(mach, rom, castle_scr0=None):
+    """Starry Night won → the post-game — the game's own ending, MEASURED S144 (PyBoy on
+    the original ROM from this model's "about to do Starry Night", every step played:
+    PYBOY_DEBUGGING S144; before S144 this set $00EE and ran the King's cascade only,
+    which left 8 flags and 11 rooms' states out — the Bazaar's right half, the Gate Hub,
+    the Farm, the Stable, Arena Rooms, MedalMan, the Queen, the bedroom, the ceremony
+    room, the white room — KEY_LESSONS S144):
+
+      the final's win tail (Arena Battle script 0, wArenaGroup 8, the 3rd match won:
+      $00E4, the night Farm's states, game mode 3) → the engine sets $00E5 in the
+      night Farm → the Farm NPC's talk (script 19, YES) → the Starry Shrine → the
+      ceremony room ($08: $D951 := 7 by op $5E; its sky sequence, bank $02 entry 3
+      via bank $01 CheckPaletteAnimActive, ends with $D951 := 8 + a reload — bank $02
+      CeremonySkyDone) → the white room ($5E: $D99A) → the bedroom's screen
+      4 ($00E9) → the dresser (bedroom script 10: $00EA) → the bedroom's question, YES
+      ($00EB) → its step-on trigger (script 13: $00ED, the credits = game mode 4) →
+      the bedroom again ($00EE + the post-game states of 18 rooms) → "TO BE CONTINUED"
+      → the game SAVES there (bank $5F mode 4, a button + YES: SaveGameState — the
+      only save of the ending) → CONTINUE: the bedroom ($00EF), its screen 5 ($00F0),
+      the dresser → the ceremony room → GreatTree → the Castle: the King's cascade
+      ($00F1, the Castle / GreatTree post-game states)."""
+    from . import cutscenes as _CS
+    sc = lambda m, i: _CS.decode_vanilla(rom, m, i)
+    mach.ram[ARENA_GROUP] = 8
+    mach.ram[COLISEUM] = 3
+    mach.run(sc(0x5D, 0), 0, screen=0, what="Starry Night won: the final's win tail")
+    mach.ram[COLISEUM] = 0
+    mach.flags.add(ENDING_FARM_FLAG)
+    mach.run(sc(0x04, 19), 0, screen=2, what='  the night Farm: the talk, YES')
+    follow(mach, rom, hops=4)
+    if mach.ram.get(BREED_STAGE) == 7:
+        # the ceremony room's first scene ends (END at word $1B1 of its script 0); its
+        # sky sequence (bank $02 entry 3, CeremonySkyDone) then sets $D951 := 8 and
+        # reloads the room: script 0 again — $D99A := 3, the fade to the white room
+        mach.ram[BREED_STAGE] = 8
+        mach.run(sc(0x08, 0), 0, screen=0, what='  the ceremony room, its second scene')
+        follow(mach, rom, hops=2)
+    bed = sc(0x2F, 0)
+    mach.run(bed, 0, screen=4, what='  the bedroom')
+    mach.run(sc(0x2F, 10), 0, screen=5, what='  the dresser')
+    mach.ram[0xC83C] = 0
+    mach.run(bed, 0, screen=4, what='  the bedroom: the question, YES')
+    mach.run(sc(0x2F, 13), 0, screen=4, what='  the step-on trigger: the credits')
+    mach.run(bed, 0, screen=4, what='  the bedroom: the ending\'s states; TO BE CONTINUED (saved)')
+    mach.run(bed, 0, screen=4, what='  CONTINUE: the bedroom')
+    mach.run(bed, 0, screen=5, what='  the bedroom\'s other screen')
+    mach.run(sc(0x2F, 10), 0, screen=5, what='  the dresser')
+    follow(mach, rom, hops=6)
+    if not ({0x00F1} & mach.flags) and castle_scr0 is not None:
+        mach.ram[CASTLE_EVENT] = 0
+        mach.run(castle_scr0, 0, screen=1, what='  the King opens the post-game')
 
 
 def state_at(step, repo=REPO, steps=None):
@@ -227,8 +273,7 @@ def state_at(step, repo=REPO, steps=None):
         elif kind == 'class':
             run_class(mach, rom, lobby, n)
         elif kind == 'starry':
-            run_ending(mach, castle)
-            follow(mach, rom)
+            run_ending(mach, rom, castle)
         # Monster Grandpa's match is the last step: nothing after it
     out = mach.saved()
     out['log'] = mach.log

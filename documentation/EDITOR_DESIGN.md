@@ -2214,7 +2214,8 @@ custom banks (end-of-bank fill, user's build), ROM0 has 8 free bytes, bank $0B 1
 
 ≈ **3-4 KB per new place**. Copying a busy vanilla room costs 2-3.4 KB of scripts alone,
 because "Make editable" copies every story stage — the user wants ONE stage of each vanilla
-room, which the copy should offer (ARC CAP4).
+room, which the copy should offer (ARC CAP4; S144: built — the copy keeps the room states you
+choose, "As built S144").
 
 **Budget with a 4 MB ROM:** banks $80-$FF = 2 MB + the ≈315 KB already free ≈ 2.3 MB → about
 **575-750 places** at 3-4 KB. "Hundreds" fits; a thousand would need tileset sharing to be
@@ -2355,7 +2356,8 @@ regions ≥ 1. Found: Play here from a save in a place the build lacks — fixed
 
 **D. The editor (CAP4).** Places by name everywhere (no map ids in the UI or in authored
 destinations — `room:<name>`); "Make editable" copies ONE stage of a vanilla room (the
-user's post-Starry Night GreatTree, Farm…) by default; capacity meters per class and for the
+user's post-Starry Night GreatTree, Farm…) by default (S144: built as a choice of room states —
+"As built S144" below); capacity meters per class and for the
 whole ROM; help. The S133 POC project is not migrated by hand — the example project is
 re-expressed once for the regression.
 
@@ -2422,6 +2424,30 @@ is").**
   a place's region (the high byte of a place word is its region, PROJECT_COMPILER §2.49).
 - **Measured:** the 300-Copy scale project — 0 map-id texts in 20 tabs, 10 dialogs and 627
   validation warnings (the S142 code: 4,968); the picker fills 411 places in ~6 ms.
+
+**As built S144 (CAP4c — kept room states; NOT yet user-tested; user: "Uhm do you mean room
+states?", boss rooms "have boss beaten states", "I want to be able to select states and play with
+states, vanilla and custom", a beaten state after a save "yes of course is should stay", talk at the
+moment "Yes … MAYBE Ill even add 1 more new greattree state for postgame-postgame").** The S133 "one
+stage" became a choice of ROOM STATES:
+- **Make editable** opens `app/rooms/states_dialog.py` `KeepStatesDialog`: every screen's states as
+  pictures with their people (the canvas `SpriteCache`) and exits outlined + "2 people, 1 exit";
+  "keep state n" ticks and one "starts here" per screen; **Moment in the original story** (every
+  `balance.VANILLA_STEPS` point, "the end of the post-game", or **Every state, following the original
+  game's story** = the S118c copy) proposes them (`room_states.default_spec`: after Starry Night for a
+  town room, "about to do its gate" for a gate's boss floor; + the states the room's own scripts reach
+  from there; a screen whose counter the room uses as a variable keeps following the game);
+  **People talk as they did at that moment** (story flags ON then → fixed answers). The defaults come
+  from a scratch copy (`room_states.preview_copy`, 0.14 s; the project is untouched until OK).
+- **Keep states…** (the state row; any room with states — a copy made earlier, a room you built):
+  the same dialog; scripts and state rules renumbered; undo restores. A kept copy no longer offers
+  *Follow the game's room state* (`states_kept`).
+- **Remembered states:** a state the room's own scripts switch to → a project flag + a state rule
+  (PROJECT_COMPILER §2.52).
+- **▶ Play here** starts the screen in the state the canvas shows (a game room: its counter; your
+  room: its counter label from the build's `game.sym`, a state rule's flags on / off; a room in
+  another region is entered twice — `playback.Engine.start(state_ram=…)`).
+- **− Remove state** now warns that it does not renumber scripts (Keep states… does).
 
 **E. Secondary ceilings at campaign scale (CAP5 — measure the need, lift what binds).** From
 the compiler's own limits (S133 grep of `editor2/core/*_MAX` / `_CAP`): story checks **256**

@@ -181,6 +181,13 @@ step entries per screen, each with different NPC/exit data, and use
 opcode $12 in scripts to advance the step counter when quest conditions
 are met.
 
+**Copies of game rooms keep chosen states (S144, PROJECT_COMPILER §2.52).** The editor copies a game
+room with the states the author keeps (the start one first) and its OWN counter; the copy's scripts'
+tests / writes of its counters are answered or renumbered, and a state its own scripts switch to is
+remembered by a flag + a state rule (a custom counter is transient — the S55/S65 rule above). Only
+"Every state, following the original game's story" keeps the S118c form (the game's counter,
+`step_counter.vanilla`).
+
 ## Tile Layout System
 
 

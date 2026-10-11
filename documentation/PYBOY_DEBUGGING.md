@@ -841,3 +841,46 @@ edge and the battle waits for input forever.
   (labels, buttons, combo / list / tree / table items, tooltips, group titles, QGraphicsScene
   items, the Build log) and match leak regexes — `test_app._texts` / `_leak_patterns`; always run
   it on the previous code too (a negative control).
+
+## S144 techniques — an A/B of two builds by poked state, a boss beaten across a save
+
+- **"Does the kept copy load what the original loaded?" as an A/B of two builds**
+  (`tools/walk_room_states.py`): build A = every game room copied with every state (following the
+  game's counters), build B = the same rooms with the kept states. Per kept state: A — the room's
+  original counter poked to the ORIGINAL state number; B — every original counter `$D92A-$D99A`
+  zeroed (a new romhack), the copy's own counter (its label in B's `game.sym`) poked to the NEW
+  number, the remembered-state flag set when that state has one; warp into the screen (the mailbox,
+  region 1+0) and read bank $0B's copies `wCustomNPCBuffer` `$CC80` / `wCustomExitBuffer` `$CD00` +
+  `SCREEN_IDX` the moment the map id and screen are in and `$C96C` is 0 (4 frames later) — before the
+  entry script moves anyone. Then let B run (A on boxes, ≤ 2,500 frames): game mode never 0.
+- **NPC lists: walk 5-byte entries until a TYPE byte `$FF`** — an examine spot `$8F $FF x y s` has
+  `$FF` in byte 1, so "the first `$FF`" is not the end of the list.
+- **A boss beaten across a save:** the kept Villager copy — poke the conversation's last flag (`$00B6`)
+  instead of talking it through, warp onto an arrival spot `(4, 2)`, face up, A (the spot runs script
+  2 → the battle), `battle_won` (enemy HP poked to 1), follow until the map changes (the win tail warps
+  to the Castle); the copy's counter = 1 and its flag ON; JOURNAL (the S134 / S138 recipe) in the
+  Castle; `p.stop(save=True)` → `<rom>.ram` → a new `Walk` with that save; CONTINUE; the copy's counter
+  reads 0 (transient) and entering it loads the beaten list (the state rule). Negative control: the
+  same with every state rule removed → the dragon is back (`--negative`).
+- **Play here's state through the real playback engine** (no GUI): `playback.Engine(rom, cache, sav)`
+  → `base_state()` → `start(CS.room_recipe(mid, screen, x, y), repoke=False, state_ram={addr: n})`
+  with a state rule's flag in `flags_set` / `flags_clear`; read the NPC buffer after it returns.
+- **Trap — stdout of a long background run is block-buffered:** `grep` on its log lags by minutes;
+  judge progress by the process's CPU time, or run with `python3 -u`.
+- **Playing the game's ENDING (S144, `census_story_state.run_starry`):** poke the model's "about to
+  do Starry Night" + `$D9CE` 8 / `$D9CD` 3 and warp into the Arena Battle room (`$5D`): its script
+  0 runs the final's win tail → mode 3 (the night Farm). The player's parts are run as the scripts
+  they trigger (`Engine._arm(map, script, 0, dialog=True)` with `eng.answer = 'yes'`): Farm script
+  19 (the talk), bedroom script 10 (the dresser), a warp back into bedroom screen 4 (its question),
+  script 13 (the step-on trigger → the credits, mode 4, ≈ 9,500 frames). At "TO BE CONTINUED" press
+  A every 10 frames until the `SaveGameState` hook (`$00:$2128`) fires, run 300 more frames, dump
+  the cartridge RAM (`memory[0, $A000…]`, 8 KB in the original), boot a fresh PyBoy with it
+  (`boot_with_sav`), A every 60 frames until map `$2F` mode 1 (CONTINUE + its info box), then warp
+  to the bedroom's screen 5 and stand ON the dresser's examine spot (18, 9) facing up + A → the
+  ceremony room → GreatTree → the Castle.
+- **"Which code set this flag?"** — a per-frame watch of the flag's byte (`$D99B + n/8`), printing
+  the map, the game mode and the script registers (`$D8D3` type, `$D8D4` id, `$D8D5/6` counter)
+  on the frame it changes; then decode that script at that word. A hook on ROM0
+  `ComputeFlagAddress` (`$26B3`, BC = the flag) also catches tests (return `$26B1`) — a set
+  returns to `$26A3`. Harness savestates do not load into `playback.Engine` (sound config): keep
+  each experiment in one of them.

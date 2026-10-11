@@ -4939,34 +4939,31 @@ LoadScreenTilesDMA:
     ret
 
 label5fd6:
+; S144 (PyBoy-measured + code-read): bank $02 entry 3 = the BREEDING CEREMONY's sky
+; sequence (map $08). Called every field frame by bank $01 CheckPaletteAnimActive while
+; no script runs, map $08 and $D951 == 7 (the ceremony script's op $5E set 7 and
+; cleared $C0D8 x 40, then ended). A state machine on $C0FC (table below; $C0FD = the
+; frame count of a state, $C0D8 its sub-step); the last state (CeremonySkyDone) kicks
+; a room reload ($C88F++) and sets $D951 := 8, so the room's script 0 runs its next
+; scene ($D99A := 3, the fade to the white room $5E in the ending — story_state
+; run_ending, KEY_LESSONS S144).
     ld a, [$c0fc]
     rst $00
-    ld hl, sp+$5f
-    ld l, $60
-    ld c, l
-    ld h, b
-    xor c
-    ld h, b
-    dec b
-    ld h, c
-    ld l, d
-    ld h, c
-    dec sp
-    ld h, d
-    adc h
-    ld h, h
-    sbc a
-    ld h, h
-    db $cc, $64, $0d
-    ld h, l
-    xor e
-    ld h, [hl]
-    db $ec
-    ld h, a
-    rra
-    ld l, b
-    add [hl]
-    ld l, b
+    dw $5FF8    ; 0
+    dw $602E    ; 1
+    dw $604D    ; 2
+    dw $60A9    ; 3
+    dw $6105    ; 4
+    dw $616A    ; 5
+    dw $623B    ; 6
+    dw $648C    ; 7
+    dw $649F    ; 8
+    dw $64CC    ; 9
+    dw $650D    ; 10
+    dw $66AB    ; 11
+    dw $67EC    ; 12
+    dw $681F    ; 13
+    dw CeremonySkyDone    ; 14 ($6886)
     ld a, [$c0fd]
     ld b, a
     ld a, [$c0d8]
@@ -6032,6 +6029,9 @@ jr_002_67d9:
     ret
 
 
+CeremonySkyDone:
+    ; S144: the ceremony's sky sequence ends — the room is reloaded ($C88F) with
+    ; $D951 := 8: the ceremony room's script 0 runs its next scene (measured)
     xor a
     ld [$c0fc], a
     xor a

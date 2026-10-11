@@ -97,13 +97,52 @@ present" and "boss beaten". **+ Add state** (duplicate this state, with or
 without its own layout copy, or an empty state); **− Remove state**; ◀ ▶
 switch the state shown.
 
+**Make editable: which states the copy keeps (S144).** A game room's screens have their
+own states — the game picks one from how far its story is (GreatTree's entrance has 5:
+the start of the game, the cliff scene, … the post-game). Your romhack never plays the
+original story, so a copy that followed it would show its start-of-game state forever.
+**Make editable** therefore opens a window with every screen's states as pictures (the
+people drawn on, the exits outlined, "2 people, 1 exit" underneath): tick the states the
+copy keeps and the one each screen **starts here** in. **Moment in the original
+story** fills the ticks in for you:
+
+- a town room (GreatTree, the Farm, the Castle …): **right after Starry Night** — each
+  screen keeps the state the game has then, plus every state the room's own scripts can
+  switch it to from there;
+- a gate's boss room: **about to do its gate** — the boss here AND beaten;
+- any other moment (the same list as Play here's story points), or **Every state,
+  following the original game's story** (the copy as before S144: it follows the game's
+  counters, and shows the start-of-game states in a new romhack).
+
+**People talk as they did at that moment** (ticked): the copy's people check the
+original game's story flags ("has the post-game started?"); every such check of a flag
+the game has ON at that moment is answered when the copy is made, so the copy talks
+post-game in your romhack too — and its scripts get smaller (talk branches it can never
+reach are left out; the Castle's 4.3 KB → 0.5 KB). Flags the player sets (talked once,
+got an item, a later gate) stay real checks. Scripts no kept state's people or spots use
+are left out (their slot in the room's script list points at a one-word stub).
+
+**A state the room's own scripts switch to is remembered** — a boss beaten stays beaten
+after a save: the copy's script that switches the state also turns on a flag of its
+own (named after the room, "boss_villager_dragon_s0_state1"), and a state rule shows that
+state whenever the flag is on (flags are saved, a room's own state counter is not).
+
+**Keep states…** (on the state row) does the same for any room of yours with states —
+a copy you made earlier with every state (your GreatTree), or a room you built: tick,
+pick the start, OK; every script that names the screen's state uses the new numbers
+(a state you dropped: its checks are never true, its writes are left out). Undo restores.
+After it, a copy no longer follows the original game (the *Follow the game's room state*
+tick is gone): its states are your own. Your arena's two rooms keep every state (the game's match
+scripts switch them) — Keep states… says so. You can still **+ Add state** — e.g. a
+"post-post-game" GreatTree — and show it with a state rule.
+
 **State rules** (Room page → *State rules — which state shows when*): **Add…** a rule "show state N when these flags are ON / OFF".
 Rules are checked top-down every time a screen loads; the first that holds
 wins. Flags are saved with the game, so this is how a room remembers its
 version. See *Boss floors → the "beaten" version*.
 
-**A copy of a game room follows the game's state** (*Follow the game's room
-state*, in the State rules section — on for every copy): its states change
+**A copy made with "Every state, following the original game's story" follows the
+game's state** (*Follow the game's room state*, in the State rules section): its states change
 when the game's story changes the original's (the Castle moves GreatTree to
 "the man by the cliff"), and they are saved with the game, exactly like the
 original. Untick it for a copy that should keep its own state (a copied boss

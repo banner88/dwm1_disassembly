@@ -2523,7 +2523,7 @@ the user picks.
       there). *User half:* the test ROM in SameBoy.
 - **CAP2 — the spill (split S135, user: "whatever works").** The S133 box bundled four
       independent changes; measured on the user's 11 rooms: $60 79 % / $64 79 % / $67 55 % / $17
-      3,259 B free — the class banks bind at ~14-15 such rooms. Three boxes (S136: + CAP2d, bank $6C split off CAP2b; S137: + CAP2e, stale saves — built S138 with the room songs past $7F), each its own test ROM. **S139: every box built (all user-confirmed; d S139) — no per-room data class is bound to one bank any more below 128 places; next = CAP3 (regions).** **S140: CAP3a built (regions; USER-CONFIRMED) — bank $71 binds next at ≈950 places (15 B a place, CAP5).** **S141: CAP3b built (the game's own moves walked in region 2; USER-CONFIRMED 2026-10-11 10:18 ("Everything works", r3)) — next = CAP4.** **S142: CAP4 split a-d; CAP4a built (scale + safety; USER-CONFIRMED 2026-10-11 14:24 "Yeah seems ok") — next = CAP4b.** **S143: CAP4b built (places by name, NOT yet user-tested) — next = CAP4c.**
+      3,259 B free — the class banks bind at ~14-15 such rooms. Three boxes (S136: + CAP2d, bank $6C split off CAP2b; S137: + CAP2e, stale saves — built S138 with the room songs past $7F), each its own test ROM. **S139: every box built (all user-confirmed; d S139) — no per-room data class is bound to one bank any more below 128 places; next = CAP3 (regions).** **S140: CAP3a built (regions; USER-CONFIRMED) — bank $71 binds next at ≈950 places (15 B a place, CAP5).** **S141: CAP3b built (the game's own moves walked in region 2; USER-CONFIRMED 2026-10-11 10:18 ("Everything works", r3)) — next = CAP4.** **S142: CAP4 split a-d; CAP4a built (scale + safety; USER-CONFIRMED 2026-10-11 14:24 "Yeah seems ok") — next = CAP4b.** **S143: CAP4b built (places by name, NOT yet user-tested) — next = CAP4c.** **S144: CAP4c built (kept room states, NOT yet user-tested) — next = CAP4d.**
   - [x] **CAP2a — LZ streams: layouts, attr maps, tilesets past $64 / $67.** **Built S135;
         USER-CONFIRMED 2026-10-09 12:59 ("Yep all good can confirm").** Compiler-only (`DecompressTileLayout` takes the bank from every
         reference — ARCHITECTURE "LZ stream banks (S135)"): `Project.stream_plan()` first fit
@@ -2772,10 +2772,44 @@ the user picks.
         3-region copy with areas build the same ROMs on the S142 and S143 code. *User half:*
         the editor on the user's project (rooms by name, areas, the picker, the World tab
         filters, View → Show technical ids).
-  - [ ] **CAP4c — Make editable copies one stage** (post-game by default; "every stage,
+  - [x] **CAP4c — Make editable copies one stage** (post-game by default; "every stage,
         following the story" kept), scripts no NPC of that stage uses dropped (the S142
         measure: Castle 5.2 → 4.8 KB, GreatTree 2.1 → 1.9, Farm 2.3 → 1.2, Arena Lobby
         2.9 → 1.9 of scripts).
+        **Built S144, NOT yet user-tested** (user: "Uhm do you mean room states?" — yes, the
+        word is ROOM STATES; "I am also going to edit boss rooms potentially, those have boss
+        beaten states" → "1) Yes I want to be able to select states and play with states,
+        vanilla and custom 2) yes of course is should stay [a beaten state after a save] 3) Yes
+        [talk answered at the moment] … MAYBE Ill even add 1 more new greattree state for
+        postgame-postgame"). Grew from "one stage" to KEPT STATES: Make editable opens a dialog
+        (`app/rooms/states_dialog.py`) — every screen's states as pictures with their people,
+        ticks + "starts here", a moment of the original story proposing them (after Starry Night
+        for a town room, "about to do its gate" for a boss floor; + the states the room's own
+        scripts reach from there), "Every state, following the original game's story" kept;
+        Keep states… for any room with states; a state the room's own scripts switch to is
+        remembered by a project flag + a state rule; talk answered at the moment; unused scripts
+        dropped (positional table → a stub); ▶ Play here starts in the state shown.
+        NEW `core/room_states.py` (PROJECT_COMPILER §2.52); byte-neutral for existing projects.
+        *Accept (machine half) MET:* `tools/census_room_states.py` — the 101 game rooms copied
+        with every state and with the defaults: every kept state == the reference's picture and
+        entry bytes, 0 mismatched (`--negative` fails), scripts 51,412 → 30,140 B, the 101-copy
+        project builds; `tools/walk_room_states.py` on the user's save — every kept state of the
+        101 copies loads the same people / exits as the original state (780 checks, 0 failed;
+        the kept bedroom first hung the game — the story model's "post-game" lacked the
+        ending: `story_state.run_ending` now plays the measured ending, KEY_LESSONS S144) and the
+        Villager copy: boss fought and won, the
+        remembered flag on, a JOURNAL save, CONTINUE → the beaten state (9 checks; `--negative`
+        without the rules: the dragon is back, 1 FAIL); Play here's state through the playback
+        engine (the copy in state 0 / 1, GreatTree in state 2). *User half:* the editor on the
+        user's project — Make editable a town room and a boss room, Keep states… on the
+        GreatTree copy, ▶ Play here in a chosen state.
+  - [ ] **(found S144) the script decoder ends a script at op `$3E`** (`script_ops.TERMINAL`), but
+        the handler yields and the game RESUMES after it (measured: the Farm's script 0 sets
+        `$00E5` right after its `$3E`; `story_state.run_ending` adds it by hand). Fix: drop `$3E`
+        from TERMINAL (check every other TERMINAL op against its handler the same way), then
+        re-run `tools/census_cutscenes.py` (scenes / steps change), the flag index's
+        "check-only" list, and story_state (the hand-added `$00E5` must then come from the
+        decoded Farm script). Its own session: the saved cutscene census changes.
   - [ ] **CAP4d — the Capacity page + help**, then the arc's acceptance (a fresh project past
         150 places): the whole ROM (≈2.3 MB for content), bank $71 (≈950 places), the
         secondary ceilings (story checks 256, commands 255, flags 1,965, encounter lists 128,

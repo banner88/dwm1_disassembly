@@ -349,7 +349,8 @@ ORIGINAL room's own counter (`$D92A-$D99A`, validated): the region emits `<label
 $D92D` and allocates nothing, so the game's story scripts (the Castle's `$D92D := 2` with
 flag `$0009`) change the copy's NPCs / layout exactly as the original's, and the save keeps
 it (the vanilla counters are in the saved image). "Make editable" writes this form for
-every screen (`Document.clone_vanilla`); projects with copies made earlier are
+every screen (`Document.clone_vanilla`; S144: only with "Every state, following the original game's
+story" — by default a copy keeps chosen states of its own, §2.52); projects with copies made earlier are
 migrated on open (`_migrate_clone_state`: a room whose every screen carries the copy
 label, no `state_rules`); the Rooms tab's *Follow the game's room state* toggles it
 (`set_follow_game`). A room with `state_rules` keeps its own counter (the rules write it —
@@ -4039,6 +4040,74 @@ project and a 311-place 3-region copy with areas build the same ROMs on the S142
 - Tests: `test_compiler.test_s143` (labels of every reference form, the game's names unique, Show
   technical ids, `next_free_name`, the on-open rename, Rename refused, areas, areas editor-only,
   `party_walks`), `test_app.s143_names`.
+
+## §2.52 S144 — KEPT ROOM STATES: Make editable / Keep states… (ROADMAP ARC CAP4c; byte-neutral for every existing project)
+
+**Built S144, NOT yet user-tested.** The compiler is unchanged — the feature is an editor-side
+LOWERING into ordinary project.json (`states[]`, scripts, `custom.flags`, `state_rules`), owned by
+`editor2/core/room_states.py`. A project that does not use it builds the same bytes (the example pin
+`7cd31035…`, patched, unchanged; the user's project builds the same ROM on the S143 and S144 code).
+
+- **`custom.rooms[].states_kept`** (written by `room_states.apply`): `{point, fold_talk, comment}` —
+  the story point (`balance.VANILLA_STEPS` index, "about to do") the room's talk was answered at, or
+  `null`. Marks the room so `Document._migrate_clone_state` (S118c) and `follow_game_counters` leave
+  it alone: its states were chosen and renumbered, the game's counters no longer match them. The
+  compiler ignores the key.
+- **A keep spec** (`room_states.default_spec` / the dialog): `{"point", "fold_talk", "screens": {k:
+  {"keep": [old state numbers], "start": n} | {"follow": true}}}`.
+- **Lowering (`apply`):**
+  - states: the kept ones, the START first (a project room's counter is 0 after a CONTINUE — §2.6);
+    one kept state = a plain screen with the state's `layout` / `palette` and its attr carried up
+    explicitly (a state's attr = its own > its layout item's > the screen rule, a plain screen's =
+    its own > its layout item's > render.attr — §2.13 / `Project.state_attr_entry` vs
+    `screen_attr_entry`; without carrying it the picture changes: `census_room_states --negative`);
+  - the screen's `step_counter` loses `vanilla` (keeps its label, so a script naming it assembles);
+  - every project script naming one of the room's counter LABELS (never the vanilla address a copy
+    followed — a script writing that address writes the original room, still in the game):
+    `check_and_branch` on a one-state screen → `goto` when the value is the kept state's ORIGINAL
+    number, else removed; on a several-state screen → renumbered, a dropped state's test removed;
+    `write_ram` / `write_ram2` (low byte) on a one-state screen → removed; on a several-state screen →
+    renumbered, a dropped state's write removed;
+  - **remembered states:** each remaining write of a kept, non-start state → `write_ram` + `set_flag
+    <its flag>` + `clear_flag` of the screen's other remembered states (a start-state write clears
+    them all); the flags are new project flags (`Document.add_flag`: `$0159-$0167` first, then
+    `$1000+`; named `<room>_s<k>_state<n>`; raw ops carry the NUMBER — the compiler resolves flag
+    names only in authored forms); one state rule each `{"state": n, "when": [{"flag": name}],
+    "screens": [k]}` at the top of `state_rules` (§2.13: rules run at every screen load; flags are
+    saved, the counter is not);
+  - the room's existing `state_rules` renumbered (a rule for a dropped state removed);
+  - **talk** (`fold_talk`, the room's own scripts only): `if_flag_set` / `if_flag_clear` of a vanilla
+    flag ON at the point (`story_state.state_at`), not cleared by any script of the game
+    (`game_cleared_flags`: 19 flags over 587 scripts; measured S144: none is ON at any story point —
+    `test_compiler.test_s144`) and not cleared by any project script → `goto` / removed;
+  - `prune`: unreachable steps (only `end` / `goto` stop the fall-through — a room change is kept
+    conservatively), unused labels, a `goto` to the next label; ends on `end` / `goto` (S70);
+  - scripts of the room's table that no kept NPC / spot entry, no entry script (index 0) and nothing
+    else in the project names → dropped; a dropped MIDDLE index points at a one-word stub
+    `<room>_unused` (`[['end']]`) — the room's script pointer table is POSITIONAL
+    (`emitters._room_scripts` emits `dw` per sorted index: a gap would shift every later index);
+    trailing ones are cut; `patch_data` only dropped scripts drew is removed;
+  - layouts / palettes that only dropped states named are removed (as Delete room).
+  - refused for your arena's rooms (`custom.arena` lobby / battle — the game's match scripts switch
+    their states; `room_states.locked_reason`).
+- **Defaults (`default_spec`):** a copy of a game room: the point = `default_point(source)` — "about
+  to do <gate>" for a gate's boss floor (`extracted/gate_names.json` `boss_map`, first gate), else
+  `balance.POSTGAME_FROM` (right after Starry Night); per screen the state the game has there
+  (`state_at(point)['ram'][counter]`, clamped) + every state the room's own scripts, folded at that
+  point, can write — a fixed point (writes of a several-state screen keep both branches); a screen
+  whose own scripts write a value that is no state (the breeding ceremony `$08`'s `$D951` codes
+  `$F0-$FF` — before the ending; at the post-game the ending leaves `$D951` = 6, a state) →
+  `follow`. Any other room: every state, start 0, no point.
+- **`Document.clone_vanilla(…, keep=None|'default'|spec)`** (None = the S118c copy, every state,
+  following the game: the arena copies, the Milly roots room, "Every state, following the original
+  game's story"); **`Document.keep_states(room_id, spec)`** (Keep states…).
+- **Measured S144** (`tools/census_room_states.py`, the 101 game rooms copied twice): every kept state
+  renders the reference copy's original state pixel for pixel with the same entry bytes, 0 mismatched
+  (`--negative`: 2 of 4 rooms fail); scripts 51,412 → 30,140 B with the defaults; the 101-copy project
+  builds. In the game: `tools/walk_room_states.py` — 101 rooms, 780 checks, 0 failed (PYBOY_DEBUGGING S144). The
+  "post-game" defaults rest on `story_state` — S144 made it play the real ending (EVENT_FLAGS "Story state
+  at a story point").
+- Tests: `test_compiler.test_s144` (19), `test_app.s144_states`.
 
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 

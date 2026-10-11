@@ -1,5 +1,60 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-11 (Session 142 — **ROADMAP ARC CAP4 SPLIT (a scale + safety / b places by name /
+> c one-stage Make editable / d the Capacity page); CAP4a BUILT: THE EDITOR AT 300+ PLACES — A 311-PLACE
+> PROJECT OPENS IN 4-5 s (WAS 28), EDITS + UNDO 0.1-0.3 s (WAS 0.5-2), UNDO KEEPS ONLY WHAT CHANGED (WAS 14 MB A
+> STEP), THE WORLD TAB ~1 s (WAS 4-6); COPY ROOM GIVES THE COPY ITS OWN SCRIPTS, TEXTS AND DOORS**
+> (user: "Continue on the 4 mb expansion" → the CAP4 audit (below) + a 4-box split + 6 questions → "1) Ye
+> sounds good. 2) Yes ok 3) Yes all named. 4) Hide 5) Whatever you think is best. 6) Not sure I understand
+> implications for romhack" → 6 explained (a copy that follows the original story's counters shows the
+> START-of-game look forever in a new romhack; one post-game stage + unused scripts dropped suggested — asked
+> again at CAP4c); S141 USER-CONFIRMED before the session). **Built S142; USER-CONFIRMED 2026-10-11 14:24 ("Yeah seems ok", S143 start).** Byte-neutral:
+> no ROM change, no test ROM (the example pin `7cd31035…`, patched, unchanged).
+> **The audit (measured):** the user's project + 300 copies of its ordinary rooms made with the editor's own
+> Copy (own layouts, own tileset copies) = 311 places in 3 regions; it builds (4 MB, 43 of the 128 new banks).
+> Driven in the real editor offscreen: open 27.9 s (the user's 11 rooms 4.6 s: 29 compiler `Project` builds,
+> each a deep copy of the whole project, + a `json.dumps` of the whole project as the breeding cache key, 223
+> times), add NPC / rename / new room / undo 0.5-2 s, undo 14 MB a step (two deep copies, no limit), the
+> World tab 4-6 s per show (a pure-Python O(n²) spring layout, rooms pushed to the edges); painting and room
+> switching fast; ~30 places print map ids; every room picker a plain drop-down of every room; room names not
+> unique. **Found: Copy room SHARED the original's scripts, texts and door ids** (measured: a copied
+> innkeeper sign's new words showed on the original Cities_FOUNT sign; a copy of the user's breeder room =
+> "one breeding NPC per script", the project stops building; a copied door = two door objects with one id).
+> **Built (editor; `EDITOR_REVISION` S142):** `Document.copy_room` → `_own_scripts_for_copy` (every script of
+> the room's table + every script id its JSON names, each copied as `<new room>_…`; every text those scripts /
+> the room name — any form: talk, conversations, shops, services — copied, explicit `text_id`s dropped; a
+> string counts as a text only if no flag / check / script / room bears its name; the compiler's generated
+> `quest:` / `entry:` scripts and custom quests stay with the original) + `_own_doors_for_copy` (new door ids,
+> UNCONNECTED; double-door twins follow) + the room's attr refs copied (shared since S94) + O(1) layout refs
+> (was O(layouts × rooms)); the Rooms tab says how many doors wait. Speed: `Document.model_project` (ONE
+> compiler Project per document revision, shared by the monsters / families / breeding / skills / music
+> views; `touch()` and the session — every undo-stack move, structure / layout / palette signal — bump the
+> revision); `document.Snapshot` (undo snapshots = pickled, INTERNED pieces per room / layout / script / text
+> / palette / tileset — a step keeps only what it changed; the key order of project.json kept; snapshot
+> 22 ms vs a 280 ms deep copy) + `fast_copy` (pickle round trip, 5×) in the model / meter / cutscene builds;
+> `SnapshotCommand` keeps only the asset files its op changed; `Document._index_of` (verified id → index
+> maps for rooms / layouts / palettes / scripts / dialogue: a hit is re-checked, anything else rebuilds);
+> `tile_usage` sets; `places.text_entry_size` memo (content-keyed); `validators._payload_bytes` fast path for
+> lines without a string (identical counts on 2,620 generated texts of 4 projects; 3.7× faster); the space
+> meter measures in a background thread (`measure_async`; `measure()` stays synchronous); the Cutscenes /
+> Import art / Music tabs refresh on show when hidden; `_fill_rooms` draws the room once (was twice); the
+> World tab's spring layout in numpy (`world._layout_np`, pins via `fixed`) and rooms keep their places
+> between redraws (moved by hand too; Re-layout starts afresh).
+> **Measured (same machine, the 311-place project):** open 4.3-5.4 s (3 Project builds; the user's 11 rooms
+> 2.8 s, was 4.6); add NPC 0.14 s, rename
+> 0.15 s, new room 0.21 s, undo / redo 0.12 s; 20 renames +0 MB; measure_banks 0.7 s (off the UI thread);
+> World tab first show 1.3 s, after an edit 0.4 s. A scratch probe copied every room of the 8 `examples/`
+> projects, the example and the user's (229 copies): 0 new validation errors, no shared ids (`test_s142`
+> keeps 39 of them).
+> **Byte-neutral, measured:** the S141 code and the S142 code build the 311-place project (`758e3141…`, patched)
+> and the user's project (`c804b9c4…`, patched) to identical ROMs.
+> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 1507 PASSED (+ `test_s142`, 7); test_app PASS
+> (+ `s142_scale`: Copy room on the example; 300 copies of the example's rooms → 307 places in regions 0-2
+> opened in a second window with 3 Project builds, 10 rename steps ≤ 1,418 B of new pieces each, undo, the
+> World tab with a hand-moved room kept, the meter: 27 new banks); test_canvas `--rom` PASS. Help: 10_rooms (Copy),
+> 11_doors (the World tab keeps places), 90_limits (hundreds of rooms).
+> **Next:** CAP4b — places by name (one searchable picker, unique names, areas, no map ids shown).
+
 > Last verified: 2026-10-10 (Session 141 — **ROADMAP ARC CAP3b BUILT: REGIONS IN THE GAME'S OWN MOVES —
 > HOME AFTER A LOST BATTLE / A WARPWING, THE BREEDING CEREMONY'S RETURN, A ROOM SERVED ON A GATE FLOOR,
 > THE BOSS FLOOR — EACH LANDS IN THE RIGHT REGION (PYBOY ON THE USER'S SAVE); PLAY HERE FROM A SAVE IN A

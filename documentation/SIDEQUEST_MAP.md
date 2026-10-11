@@ -537,6 +537,11 @@ sites"; PROJECT_COMPILER §2.41). The game's flow, measured on the user's save:
 - a lost match: `BattleExitHandler` sets `$D9CD` = `$FF` and warps to the lobby — no penalty;
 - Starry Night: `$D9CE` = 8, `$D999` 1 → 2 → 3; after the final the Milayou / Warubou scene →
   game mode 3 (the night Farm) → credits → the post-game; a lost Starry match → the hub.
+  **S144, the whole ending played in PyBoy (EVENT_FLAGS "Story state at a story point"):**
+  the night Farm's talk (YES) → the Starry Shrine → the ceremony → the white room → the
+  bedroom (the dresser, a YES / NO, a step-on trigger → the credits = game mode 4) → "TO BE
+  CONTINUED": the game SAVES only here (a button + YES) → CONTINUE starts in the bedroom → the
+  dresser → GreatTree → the Castle, where the King opens the post-game (`$00F1`).
 Your arena adds per class a lock (bank $6E `ArenaMarkClasses`, "-"), a won flag, words and
 where a win goes; Starry Night offered by flag. Monster Grandpa's match (group 9) stays in
 the game's arena (user S128: the post-game uses it).

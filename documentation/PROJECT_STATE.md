@@ -10,6 +10,82 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
+> Last verified: 2026-10-11 (Session 144 — **ROADMAP ARC CAP4c BUILT: KEPT ROOM STATES — MAKE EDITABLE
+> SHOWS EVERY SCREEN'S STATES AS PICTURES AND COPIES THE ONES YOU TICK (A MOMENT OF THE ORIGINAL STORY
+> PROPOSES THEM); A STATE THE ROOM'S OWN SCRIPTS SWITCH TO STAYS AFTER A SAVE (A FLAG + A STATE RULE);
+> THE COPY TALKS AS AT THAT MOMENT; KEEP STATES… FOR ANY ROOM; ▶ PLAY HERE IN THE STATE SHOWN;
+> FOUND + FIXED: THE STORY MODEL'S "POST-GAME" NOW = THE GAME'S ENDING, PLAYED IN PYBOY TO THE SAVE AT
+> "TO BE CONTINUED" (8 FLAGS AND 11 ROOMS' STATES WERE MISSING)**
+> (user: "Continue on the 4 mb expansion" → the CAP4c audit (below) + 5 questions → "Uhm do you mean
+> room states? When you say post-game do you mean vanilla maps? I am also going to edit boss rooms
+> potentially, those have boss beaten states" → yes / yes (only Make editable on game rooms) / the
+> post-game default would have copied every early boss room BEATEN → 3 questions → "1) Yes I want to be
+> able to select states and play with states, vanilla and custom 2) yes of course is should stay 3) Yes.
+> I will honestly edit a bunch of the NPC talking points anyway. MAYBE Ill even add 1 more new greattree
+> state for postgame-postgame"; S143 not reported on — stays NOT yet user-tested). **Built S144, NOT yet
+> user-tested.** Byte-neutral for every existing project (no ROM change: the example pin `7cd31035…`,
+> patched, unchanged; the user's project builds `0edc817a…` (patched) on the S143 and the S144 code;
+> opening it migrates nothing); no test ROM — the feature is the editor's (the in-game behaviour is
+> measured below on scratch builds).
+> **The audit (measured):** 75 of the 101 game rooms have screens with several states; the story model
+> (`story_state.state_at`) gives each screen's state right after Starry Night (GreatTree entrance 3 of
+> 0-4, the Bazaar's right half 2 of 0-8 — the latter wrong, see "Found + fixed" below: 4); a copy that keeps one state must ANSWER its own counter tests
+> (the entry scripts pick their scene by them — KEY_LESSONS S144); 18 rooms still switch their own
+> state at the post-game (the 9 post-game boss rooms, the Castle, Bazaar, Stable, Arena Rooms, Starry
+> Shrine, Library, Well, intro bedroom, the ceremony room); at "after Starry Night" every early boss room
+> is in its BEATEN state (the user's catch); answering the story flags ON at the moment: 51.4 → 22.1 KB of
+> scripts over all rooms (the Castle 4.3 → 0.5); the 19 flags the game's scripts clear (587 scripts) are
+> ON at no story point; the room's script table is positional (a dropped middle script = a stub).
+> **Built (editor; `EDITOR_REVISION` S144):** NEW `editor2/core/room_states.py` — keep specs
+> (`default_spec`: the moment = after Starry Night, or "about to do its gate" for a gate's boss floor;
+> per screen the game's state there + every state the room's own scripts, folded at that moment, can
+> write — a fixed point; a counter used as a variable (`$08`'s `$D951` codes) keeps following the game),
+> `apply` (states kept, the start first, one state = a plain screen with its attr carried up; every
+> project script's tests / writes of the room's counter LABELS answered or renumbered; a kept non-start
+> state written by the room's own scripts → a project flag + a state rule (PROJECT_COMPILER §2.52);
+> story flags ON at the moment answered; `prune`; unused scripts → a stub `<room>_unused`; orphan
+> layouts / palettes removed; `states_kept`), `preview_copy` (the dialog's scratch copy, 0.14 s);
+> `Document.clone_vanilla(keep=)` / `keep_states`; `_migrate_clone_state` / `follow_game_counters` skip
+> kept rooms. NEW `editor2/app/rooms/states_dialog.py` `KeepStatesDialog` (states as pictures with
+> their people + exits, "2 people, 1 exit", keep ticks, "starts here", the moment incl. "Every state,
+> following the original game's story", "People talk as they did at that moment"); Rooms tab: Make
+> editable → the dialog, **Keep states…** on the state row, ▶ Play here starts in the state shown
+> (`_play_state`: a game room's counter; a project room's label from `game.sym` + its state rules'
+> flags; `playback.Engine.start(state_ram=)` re-enters once when a region change reset it), − Remove
+> state warns it does not renumber. The arena copies and the Milly roots room keep every state.
+> **Measured:** `tools/census_room_states.py` (NEW) — the 101 game rooms copied with every state and
+> with the defaults: every kept state renders the reference's original state pixel for pixel with the
+> same entry bytes, 0 mismatched (`--negative`, the attr not carried: 2 of 4 rooms fail); scripts
+> 51,412 → 30,140 B; the 101-copy project builds (4 MB). `tools/walk_room_states.py` (NEW, PyBoy, the
+> user's `.sav`, one process per room): every kept state of the 101 copies — the kept build with every
+> original counter zeroed (a new romhack) vs the every-state build with the original counter at the
+> original state — loads the same people / exits / screen, and runs on without a reset: **101 rooms,
+> 780 checks, 0 failed**; the kept Boss: Villager copy — the boss fought and won, the remembered flag ON
+> and the counter 1, a JOURNAL save, CONTINUE → its counter 0 and the beaten state loaded by the rule
+> (9 checks; `--negative`, rules dropped: the dragon is back, 1 FAIL). Play here's state through the
+> playback engine: the copy in state 0 / 1, GreatTree in state 2.
+> **Found + fixed — the story model's "post-game" lacked the game's ENDING** (the first walk: the kept
+> intro bedroom HUNG the game — its talk answered at a "post-game" with `$00EE` but not `$00EF` took
+> the ending's bedroom branch). `story_state.run_ending` (S132) set `$00EE` + ran the King's cascade;
+> the real ending — PLAYED in PyBoy from the model's "about to do Starry Night" (the final's win tail →
+> the night Farm → its talk → the Starry Shrine → the ceremony → the white room → the bedroom's dresser,
+> question, step-on trigger → the credits (game mode 4) → "TO BE CONTINUED", where the game SAVES (a
+> button + YES — its only save) → CONTINUE in a fresh game → the bedroom → the dresser → GreatTree → the
+> Castle) — sets 8 more flags and 11 rooms' states (Bazaar `$D93A` 4, Gate Hub, Farm, Stable, Arena
+> Rooms, MedalMan `$D95E` 5, Queen, the bedroom, the ceremony, the white room). `run_ending` now plays
+> that chain; `tools/census_story_state.py` plays Starry Night (`run_starry`) — 40 / 40 playable steps
+> equal, `extracted/story_state_census.json` regenerated (Play here's story points after Starry Night
+> change with it). Traced on the way: `$00E5` = the Farm's script 0 right after its op `$3E` (the
+> decoder ends scripts at `$3E`, the game resumes them — ROADMAP box); the ceremony's `$D951` 7 → 8 =
+> bank $01 `CheckPaletteAnimActive` → bank $02 entry 3, ending in NEW label `CeremonySkyDone`
+> ($02:$6886; the entry's `rst $00` table converted to `dw`, both trees, zero bytes); mode 4 = the
+> credits + "TO BE CONTINUED" (ARCHITECTURE).
+> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 1538 PASSED (+ `test_s144`, 19); test_app
+> PASS (+ `s144_states`); test_canvas `--rom` PASS. Help: 10_rooms (kept states, Keep
+> states…, remembered states, talk), 16_play_here (the state shown). Annotation (Iron Rule 6): bank $01
+> `CheckPaletteAnimActive`, bank $02 entry 3 + `CeremonySkyDone` (both trees; build `1ca65793…`).
+> **Next:** CAP4d — the Capacity page + help, then the arc's acceptance (a fresh project past 150 places).
+
 > Last verified: 2026-10-11 (Session 143 — **ROADMAP ARC CAP4b BUILT: PLACES BY NAME — NO MAP ID OR
 > REGION SHOWN ANYWHERE IN THE EDITOR (VIEW → SHOW TECHNICAL IDS BRINGS THEM BACK), UNIQUE ROOM NAMES,
 > AREAS (ONE LEVEL OF FOLDERS), ONE SEARCHABLE PLACE PICKER FOR ALL 28 ROOM CHOICES, THE ROOMS LIST AS
@@ -71,62 +147,8 @@
 > 11_doors (the World tab's find / area / neighbours), 90_limits.
 > **Next:** CAP4c — Make editable copies one stage (post-game by default).
 
-> Last verified: 2026-10-11 (Session 142 — **ROADMAP ARC CAP4 SPLIT (a scale + safety / b places by name /
-> c one-stage Make editable / d the Capacity page); CAP4a BUILT: THE EDITOR AT 300+ PLACES — A 311-PLACE
-> PROJECT OPENS IN 4-5 s (WAS 28), EDITS + UNDO 0.1-0.3 s (WAS 0.5-2), UNDO KEEPS ONLY WHAT CHANGED (WAS 14 MB A
-> STEP), THE WORLD TAB ~1 s (WAS 4-6); COPY ROOM GIVES THE COPY ITS OWN SCRIPTS, TEXTS AND DOORS**
-> (user: "Continue on the 4 mb expansion" → the CAP4 audit (below) + a 4-box split + 6 questions → "1) Ye
-> sounds good. 2) Yes ok 3) Yes all named. 4) Hide 5) Whatever you think is best. 6) Not sure I understand
-> implications for romhack" → 6 explained (a copy that follows the original story's counters shows the
-> START-of-game look forever in a new romhack; one post-game stage + unused scripts dropped suggested — asked
-> again at CAP4c); S141 USER-CONFIRMED before the session). **Built S142; USER-CONFIRMED 2026-10-11 14:24 ("Yeah seems ok", S143 start).** Byte-neutral:
-> no ROM change, no test ROM (the example pin `7cd31035…`, patched, unchanged).
-> **The audit (measured):** the user's project + 300 copies of its ordinary rooms made with the editor's own
-> Copy (own layouts, own tileset copies) = 311 places in 3 regions; it builds (4 MB, 43 of the 128 new banks).
-> Driven in the real editor offscreen: open 27.9 s (the user's 11 rooms 4.6 s: 29 compiler `Project` builds,
-> each a deep copy of the whole project, + a `json.dumps` of the whole project as the breeding cache key, 223
-> times), add NPC / rename / new room / undo 0.5-2 s, undo 14 MB a step (two deep copies, no limit), the
-> World tab 4-6 s per show (a pure-Python O(n²) spring layout, rooms pushed to the edges); painting and room
-> switching fast; ~30 places print map ids; every room picker a plain drop-down of every room; room names not
-> unique. **Found: Copy room SHARED the original's scripts, texts and door ids** (measured: a copied
-> innkeeper sign's new words showed on the original Cities_FOUNT sign; a copy of the user's breeder room =
-> "one breeding NPC per script", the project stops building; a copied door = two door objects with one id).
-> **Built (editor; `EDITOR_REVISION` S142):** `Document.copy_room` → `_own_scripts_for_copy` (every script of
-> the room's table + every script id its JSON names, each copied as `<new room>_…`; every text those scripts /
-> the room name — any form: talk, conversations, shops, services — copied, explicit `text_id`s dropped; a
-> string counts as a text only if no flag / check / script / room bears its name; the compiler's generated
-> `quest:` / `entry:` scripts and custom quests stay with the original) + `_own_doors_for_copy` (new door ids,
-> UNCONNECTED; double-door twins follow) + the room's attr refs copied (shared since S94) + O(1) layout refs
-> (was O(layouts × rooms)); the Rooms tab says how many doors wait. Speed: `Document.model_project` (ONE
-> compiler Project per document revision, shared by the monsters / families / breeding / skills / music
-> views; `touch()` and the session — every undo-stack move, structure / layout / palette signal — bump the
-> revision); `document.Snapshot` (undo snapshots = pickled, INTERNED pieces per room / layout / script / text
-> / palette / tileset — a step keeps only what it changed; the key order of project.json kept; snapshot
-> 22 ms vs a 280 ms deep copy) + `fast_copy` (pickle round trip, 5×) in the model / meter / cutscene builds;
-> `SnapshotCommand` keeps only the asset files its op changed; `Document._index_of` (verified id → index
-> maps for rooms / layouts / palettes / scripts / dialogue: a hit is re-checked, anything else rebuilds);
-> `tile_usage` sets; `places.text_entry_size` memo (content-keyed); `validators._payload_bytes` fast path for
-> lines without a string (identical counts on 2,620 generated texts of 4 projects; 3.7× faster); the space
-> meter measures in a background thread (`measure_async`; `measure()` stays synchronous); the Cutscenes /
-> Import art / Music tabs refresh on show when hidden; `_fill_rooms` draws the room once (was twice); the
-> World tab's spring layout in numpy (`world._layout_np`, pins via `fixed`) and rooms keep their places
-> between redraws (moved by hand too; Re-layout starts afresh).
-> **Measured (same machine, the 311-place project):** open 4.3-5.4 s (3 Project builds; the user's 11 rooms
-> 2.8 s, was 4.6); add NPC 0.14 s, rename
-> 0.15 s, new room 0.21 s, undo / redo 0.12 s; 20 renames +0 MB; measure_banks 0.7 s (off the UI thread);
-> World tab first show 1.3 s, after an edit 0.4 s. A scratch probe copied every room of the 8 `examples/`
-> projects, the example and the user's (229 copies): 0 new validation errors, no shared ids (`test_s142`
-> keeps 39 of them).
-> **Byte-neutral, measured:** the S141 code and the S142 code build the 311-place project (`758e3141…`, patched)
-> and the user's project (`c804b9c4…`, patched) to identical ROMs.
-> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 1507 PASSED (+ `test_s142`, 7); test_app PASS
-> (+ `s142_scale`: Copy room on the example; 300 copies of the example's rooms → 307 places in regions 0-2
-> opened in a second window with 3 Project builds, 10 rename steps ≤ 1,418 B of new pieces each, undo, the
-> World tab with a hand-moved room kept, the meter: 27 new banks); test_canvas `--rom` PASS. Help: 10_rooms (Copy),
-> 11_doors (the World tab keeps places), 90_limits (hundreds of rooms).
-> **Next:** CAP4b — places by name (one searchable picker, unique names, areas, no map ids shown).
-
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S144** (2026-10-11): ROADMAP ARC CAP4c built (byte-neutral for existing projects) — kept room states: Make editable shows every screen's states as pictures and copies the ticked ones (a moment of the original story proposes them: after Starry Night, or "about to do its gate" for a boss floor, + the states the room's own scripts reach), the start state first; the copy's counter tests / writes answered or renumbered, a state its own scripts switch to remembered by a flag + a state rule (stays after a save), story flags ON at the moment answered (scripts 51.4 → 30.1 KB over the 101 game rooms), unused scripts → a stub; Keep states… for any room; ▶ Play here in the state shown; NEW `core/room_states.py`, `app/rooms/states_dialog.py`, `tools/census_room_states.py`, `tools/walk_room_states.py`; `test_s144`, `s144_states`; FOUND + FIXED: the story model's post-game lacked the game's ending (`story_state.run_ending` now plays the measured ending; `census_story_state` plays Starry Night; `extracted/story_state_census.json` regenerated); traced `$00E5` (Farm script 0 after op `$3E` — the decoder's TERMINAL box) and the ceremony's `$D951` 7 → 8 (bank $02 `CeremonySkyDone`, annotated). Built, NOT yet user-tested. Owning: ROADMAP CAP4c, PROJECT_COMPILER §2.52, EDITOR_DESIGN §6.4 D "As built S144", ROOM_DATA_FORMAT "Room State System", EVENT_FLAGS "Story state at a story point", SIDEQUEST_MAP (the ending), ARCHITECTURE (mode 4), BANK04_SCRIPT_ENGINE ($3E), KEY_LESSONS S144, PYBOY_DEBUGGING S144, DOC_AUDIT S144, TOOLS_AND_DATA S144, extracted/story_state_census.json.
 - **S143** (2026-10-11): ROADMAP ARC CAP4b built (byte-neutral) — places by name: NEW `editor2/core/place_names.py` (every stored place reference in words; the game's rooms named uniquely — the eight unused ids holding the Castle's data = "Castle (unused copy 1-8)", $5F = "Gate Floor: Item Shop (unused copy)"; `room_ref` in messages), NEW `app/place_picker.py` (one searchable place picker for all 28 room choices + `ask_place`), NEW `app/rooms/room_tree.py` (the Rooms lists as area folders + search), unique room names (`Document.unique_room_name`, Rename refuses, duplicates renamed on open), areas (`custom.rooms[].area`, `custom._editor.areas`; editor-only), View → Show technical ids, the World tab's find / area / neighbours; the Arena Battle copies' sprite warning measured (its NPCs are the party) → `formats.party_walks`; scan: 0 map-id texts (S142 code 4,968); `test_compiler.test_s143`, `test_app.s143_names`; S142 USER-CONFIRMED. Built, NOT yet user-tested. Owning: ROADMAP CAP4b, EDITOR_DESIGN §6.4 D "As built S143", PROJECT_COMPILER §2.51, ROOM_DATA_FORMAT "Sprite limits (S117b)", KEY_LESSONS S143, PYBOY_DEBUGGING S143, DOC_AUDIT S143, TOOLS_AND_DATA S143.
 - **S142** (2026-10-11): ROADMAP ARC CAP4 split (a scale + safety / b places by name / c one-stage Make editable / d Capacity page); CAP4a built (byte-neutral): Copy room gives the copy its OWN scripts, texts and doors (shared since S94 — a copy's words edited the original's, a copied breeder stopped the build); a 311-place project opens in 4-5 s (was 28; one shared compiler model per document revision `Document.model_project`), edits + undo 0.1-0.3 s (was 0.5-2), undo snapshots = interned pickled pieces (`document.Snapshot`, was 14 MB a step), O(1) id lookups, text-size memo, `_payload_bytes` fast path, the bank meter in a background thread, hidden tabs refresh on show, the World tab's layout in numpy with rooms kept in place; `test_compiler.test_s142`, `test_app.s142_scale`. USER-CONFIRMED 2026-10-11 14:24 ("Yeah seems ok"). Owning: ROADMAP CAP4a, EDITOR_DESIGN §6.4 D "As built S142", PROJECT_COMPILER §2.50, KEY_LESSONS S142, PYBOY_DEBUGGING S142 (Qt scale probes), TOOLS_AND_DATA S142.
 - **S141** (2026-10-10): ROADMAP ARC CAP3b built — the game's own moves keep the region (PyBoy on the user's save, NEW `tools/walk_regions.py`: a lost battle / the WarpWing → the hub in region 2 from regions 0 and 2, the breeding ceremony `$08` → back (`$F0` / `$F1`), a region-2 room served on a gate floor from a region-0 portal, the boss floor `BossRegionEnter` + `GateBossWin`, the Castle with the hub off, Play here into regions 0 / 2 — 47 checks, 0 failed; `--negative` 4 failed); Play here from a save in a place the build lacks FIXED (`playback._continue_save` waits for the warp home; `base2_`; arrival = map id + region); the story-state item dropped (no region in it); `test_s141`; demo `examples/s141_dial_demo/` (the DIAL HALLS). r1 user-tested 2026-10-10 23:51 (after breeding an NPC vanished / became letters) → r2 (reload at the close) → user 2026-10-11 "still glitching WHILE menu is open" → **r3**: a custom room's NPC sprite sheets 3-5 in VRAM bank 1 (bank $77 entries 12-15 from the bank $0B / $06 loaders and `NPCDrawSlot`, same size; `wNpcSheetIdx` $D560) — the windowed screens (shop, Vault, farm, eggs, namer, Grandpa, a master, "Take…") DMA to bank 0 `$8800+`; `label6_4d5a` → `ReloadNPCSheets`; pin `7cd31035…` (patched). Test ROM `DWM-S141r3-dial-test.gbc` (`cff73778…`, patched) USER-CONFIRMED 2026-10-11 10:18 ("Everything works", r3). Owning: PROJECT_COMPILER §2.40 "S141" + §5, ROOM_DATA_FORMAT "NPC sprite sheets (S141)", DATA_STRUCTURES "Service screens", ARCHITECTURE "Regions (S140)" (S141 walk), ROADMAP CAP3b, CROSSBANK_ROOMS "S140 sites", EDITOR_DESIGN §6.4 + §5.1 "As built S132", KEY_LESSONS S141, PYBOY_DEBUGGING S141, TOOLS_AND_DATA S141.
@@ -302,6 +324,7 @@
 | The player's sprite (S121) | Sheet gfx-ID `$2F00` (20 tiles) → VRAM `$8000` by bank $01 `LoadFieldTilesDMA`; drawn as sprite type 0 (HRAM `$FF8A`-`$FF8D`: type / frame 0-5 / tile base / attr, X-flip = left) through bank $04 entries 2 / 3 (`data_4137[0]` = `$04:$7237`, palette `data_4157` = `$02`); the naming screen's hero icon = type 0 too (sheet `FollowerGfxTable09[0]` → `$8500`). NPC sprites: bank $05 `$407F[id]` (6 frames) / `$4152[id]` palette / ROM0 `$2ADF[id]` sheet. MONSTER_DATA "The player's sprite (S121)" |
 | Maze floors (S122) | Grid `$C940` 4 × 4, cell = piece·16 + variant (piece 15 = empty); `MazePieceTable` `$16:$7055` 4 B [openings 8↑ 4↓ 2← 1→, piece, weight class, 0]; `MazeShapeModes` `$16:$6056` (`0,0,0,1,2`: carved / plain / one of 21 `MazePatterns` `$7736`); screens `MazeScreenTable` `$7896` (modes 0/1) / `MazeScreenTableB` `$7A96` (mode 2) = 256 × [layout id, bank]; attributes `GateAttrTable_A` `$17:$5215` / `_B` `$5415`; theme = bank $28 sheet id = floor type (tiles `$00-$3B` maze, `$3C-$3F` stairs, `$40-$7F` blank), palettes `$17:$51F5`[type] slots 0-3. Maze size (battle list) must be **3-15** (1-2 can freeze, 0 / 16+ overrun). Model = `editor2/core/maze.py` (GATE_GENERATION §4). |
 | Worlds + NPC colours (S123) | A world = a new gate (32-95) with a `world` block: 2 floors, hand-made, the start room served on floor 1 at 100 % (bank $71 `GateInsertTable`); the portal = an ordinary gate entrance (the game's wave + fade); door rooms run with `wInGateworld` 0; losing = bank $50 `BattleExitHandler` (Castle, heal, half gold); `GateBossWin` never fires (floor 0+1 ≠ 2) — the cleared flag `$17A0+N` comes from a conversation. NPC colour: list prefix `$A2, pal, flag lo, flag hi, $FF` → `wNpcColour` $D2E3 (tag `wMapID`/`wScreenIndex`) → bank $06 `NPCDrawSlot` → bank $60 entry 11 `NpcColourDraw` rewrites OAM attr bits 0-2; OBJ palettes `$17:$5615` (1 = green, 2 = the swirl's blue). GATE_GENERATION §7.11, ROOM_DATA_FORMAT "Colour prefix $A2". |
+| The ending → the post-game (S144, PyBoy) | The Starry final's win tail (`$00E4`, mode 3 night Farm; the Farm's script 0 sets `$00E5` after its op `$3E`) → the Farm talk (script 19, YES) → Starry Shrine → ceremony (`$D951` 7 by op `$5E`, → 8 by bank $02 `CeremonySkyDone`) → white room (`$D99A` 3) → the bedroom (`$00E9`, the dresser `$00EA`, YES `$00EB`, step-on `$00ED` → credits = mode 4, `$00EE` + 18 rooms' post-game states) → "TO BE CONTINUED": **the only save** (bank $5F mode 4: a button + YES) → CONTINUE: bedroom (`$00EF`, `$00F0`) → the dresser → GreatTree → the Castle (`$00F1`). Model `story_state.run_ending`; census 40 / 40 steps. EVENT_FLAGS "Story state at a story point". |
 | Verifier | `python3 tools/verify_integrity.py` — run at session start AND end |
 
 **The MD5 `b90957482011c8083a068781033715b7` is WRONG.** It was a drifted
@@ -455,7 +478,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 
 | System | State |
 |--------|-------|
-| Campaign-scale capacity — hundreds of places (ROADMAP ARC CAP) | 🔵 **AUDITED + DESIGNED S133 (byte-neutral); CAP1 4 MB BUILT S134 + CAP2a streams S135 (both USER-CONFIRMED); CAP2b place banks BUILT S136 (USER-CONFIRMED); CAP2c room colours BUILT S137 (USER-CONFIRMED); CAP2e stale saves + room songs past $7F BUILT S138 (USER-CONFIRMED); CAP2d animation banks BUILT S139 (USER-CONFIRMED) — CAP2 complete; CAP3a regions BUILT S140 (USER-CONFIRMED 2026-10-10); CAP3b the in-game acceptance BUILT S141 (the game's own moves walked in PyBoy, Play here fixed, a custom room's NPC sheets 3-5 in VRAM bank 1; USER-CONFIRMED 2026-10-11 10:18 ("Everything works", r3)); CAP4 split S142 — CAP4a scale + safety BUILT S142 (USER-CONFIRMED 2026-10-11 14:24: a 311-place project opens in 4-5 s, edits 0.1-0.3 s, undo keeps only what changed; Copy room's own scripts / texts / doors); CAP4b places by name BUILT S143 (NOT yet user-tested: no map id or region shown — View → Show technical ids; unique names; areas; one searchable place picker; the World tab's find / area / neighbours); CAP4c-d / CAP5 open**: place banks (CAP2), regions (CAP3), 4 MB (CAP1), the editor (CAP4), secondary ceilings (CAP5). EDITOR_DESIGN §6.4; CROSSBANK_ROOMS "S133 capacity audit" |
+| Campaign-scale capacity — hundreds of places (ROADMAP ARC CAP) | 🔵 **AUDITED + DESIGNED S133 (byte-neutral); CAP1 4 MB BUILT S134 + CAP2a streams S135 (both USER-CONFIRMED); CAP2b place banks BUILT S136 (USER-CONFIRMED); CAP2c room colours BUILT S137 (USER-CONFIRMED); CAP2e stale saves + room songs past $7F BUILT S138 (USER-CONFIRMED); CAP2d animation banks BUILT S139 (USER-CONFIRMED) — CAP2 complete; CAP3a regions BUILT S140 (USER-CONFIRMED 2026-10-10); CAP3b the in-game acceptance BUILT S141 (the game's own moves walked in PyBoy, Play here fixed, a custom room's NPC sheets 3-5 in VRAM bank 1; USER-CONFIRMED 2026-10-11 10:18 ("Everything works", r3)); CAP4 split S142 — CAP4a scale + safety BUILT S142 (USER-CONFIRMED 2026-10-11 14:24: a 311-place project opens in 4-5 s, edits 0.1-0.3 s, undo keeps only what changed; Copy room's own scripts / texts / doors); CAP4b places by name BUILT S143 (NOT yet user-tested: no map id or region shown — View → Show technical ids; unique names; areas; one searchable place picker; the World tab's find / area / neighbours); CAP4c kept room states BUILT S144 (NOT yet user-tested: Make editable copies the room states you tick — a moment of the original story proposes them —, a state the room's own scripts switch to stays after a save, the copy talks as at that moment, Keep states…, ▶ Play here in the state shown); CAP4d / CAP5 open**: place banks (CAP2), regions (CAP3), 4 MB (CAP1), the editor (CAP4), secondary ceilings (CAP5). EDITOR_DESIGN §6.4; CROSSBANK_ROOMS "S133 capacity audit" |
 | Custom monster pools (Encounters #2) | 🟢 **BUILT S114 (P3.13a), test ROM `DWM_S114_encounters_test.gbc` USER-CONFIRMED 2026-10-03 09:52 ("Looks good. Give editor files")** — bank $76 + the same-size bank $01 fork; the Encounters tab. PROJECT_COMPILER §2.30 |
 | Custom music | 🟢 **M1-M3c COMPLETE (S61-S64, all user-confirmed)**: engine map, round-trip codec, general slots (bank $74), room-default assignment for any mapID, `custom.music` schema, 31-song DWM2 catalog, MIDI import. **S116 (P3.13b; test ROM `DWM_S116_music_test.gbc` USER-REPORTED 2026-10-03 18:29 "rom seems to work fine"; the editor's preview player rewritten S116b, NOT yet user-tested): the Music tab — preview on the game's own engine (no emulator), names, automatic MIDI import; a song's own 1-6 channels (InitBGM ext), a second song bank $75, gate songs, battle songs (fight / arena / Starry final / room / gate / boss / normal).** Open boxes: event jingles (victory / level-up) not editable, CI compiler-test |
 | Arena/boss roster AUTHORING (E1→E2 wiring) | RE ✅ DECODED S67; **ARENA half built S109 (P3.10b, test ROM USER-CONFIRMED 2026-10-01 22:57)** — `gamedata.arena` + the enemy rows, Arena tab (the "Arena authoring" primitive row). Gate-boss rosters: their enemy rows are editable on the Monsters tab (S106); a boss editor is not built |

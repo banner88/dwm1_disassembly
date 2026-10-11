@@ -350,7 +350,7 @@ disagrees, this one is the measured / handler-read truth (DOC_AUDIT S118).
 | $3B | `warp_fade`(map, x, y) | world | Change room with the wavy fade (the boss-win exit). |
 | $3C | `text_box_bottom`() | text | The next text box opens at the BOTTOM of the screen (one box; $D8D8 bit 0, read by bank $06). |
 | $3D | `text_box_top`() | text | The next text box opens at the TOP of the screen ($D8D8 bit 1). |
-| $3E | `change_game_mode`() | screen | Fade out and switch to the game mode in $C88B (e.g. a naming screen) — $C88E is the main loop's mode request. |
+| $3E | `change_game_mode`() | screen | Fade out and switch to the game mode in $C88B (e.g. a naming screen) — $C88E is the main loop's mode request. **S144 (measured): the handler YIELDS (`ret`, no advance) — when the mode returns the script RESUMES after it (the Farm's script 0 sets `$00E5` right after its `$3E`); `script_ops.TERMINAL` still lists it (ROADMAP box).** |
 | $3F | `load_lead_name`() | text | Put the first party monster's name in $C180 for the next text. |
 | $40 | `if_party_has_species`(species, target) | flow | Go to target when a monster of that species is in the party. |
 | $41 | `set_bgm`(song) | sound | Play a song (the current one is kept for restore_bgm). |

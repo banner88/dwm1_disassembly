@@ -906,10 +906,16 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
             out = out.replace('__', '_')
         return out or 'room'
 
-    def clone_vanilla(self, source_mid, name, repo_root, renderer=None):
+    def clone_vanilla(self, source_mid, name, repo_root, renderer=None, keep=None):
         """Vanilla room -> full custom clone via tools/extract_room.extract
         (P3.2b). Returns the new room id. Appends room/layouts/palette/
-        scripts/music exactly like extract_room --apply."""
+        scripts/music exactly like extract_room --apply.
+
+        S144 (ROADMAP ARC CAP4c): `keep` = a room_states keep spec (which room
+        states each screen keeps, the one it starts in, the story point its talk
+        is answered at) or 'default' (`room_states.default_spec`); None = every
+        state, following the game's own counters (S118c — the arena copies, the
+        Milly roots room, "Every state, following the original game")."""
         path = os.path.join(repo_root, 'tools', 'extract_room.py')
         spec = importlib.util.spec_from_file_location('_extract_room', path)
         mod = importlib.util.module_from_spec(spec)
@@ -1088,9 +1094,20 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         if music:
             self.custom.setdefault('music', {}).setdefault(
                 'room_defaults', {}).update(music)
+        if keep is not None and renderer is not None:
+            from editor2.core import room_states as RS
+            spec = RS.default_spec(self, room) if keep == 'default' else keep
+            self.last_states_report = RS.apply(self, room, spec)
         self._migrate_clone_patches([])
         self.touch()
         return rid
+
+    def keep_states(self, room_id, spec):
+        """S144: keep only some room states of a room (any room with states; a
+        copy of a game room also gets its talk answered at the spec's story point).
+        Returns room_states.apply's report."""
+        from editor2.core import room_states as RS
+        return RS.apply(self, self.room(room_id), spec)
 
     @staticmethod
     def layout_by_id_in(layouts, lid):
@@ -1938,7 +1955,7 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         from .vanilla import VanillaTable
         vt = None
         for r in self.custom.get('rooms', []):
-            if r.get('placeholder') or r.get('state_rules'):
+            if r.get('placeholder') or r.get('state_rules') or r.get('states_kept'):
                 continue
             try:
                 src = val(r.get('source_mapID'))
@@ -3347,6 +3364,10 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         except Exception:                                # noqa: BLE001
             return {}
         if src is None or not 0 <= src < 0x6B:
+            return {}
+        if room.get('states_kept'):
+            # S144: its states were chosen and renumbered — the game's counters
+            # no longer match them
             return {}
         # only a COPY of a game room ("Make editable": every screen carries the
         # counter label the copy step gave it) — a new room drawn from a game

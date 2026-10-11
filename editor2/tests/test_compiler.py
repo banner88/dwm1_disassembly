@@ -8111,6 +8111,132 @@ def test_s143():
        and F.party_walks({'source_mapID': '0x01'}) and F.party_walks({}))
 
 
+
+def test_s144():
+    """S144 (ROADMAP ARC CAP4c; user S144: "select states and play with states, vanilla and
+    custom", a beaten boss "should stay" after a save, a copy talks as at its moment):
+    room_states — the fold (a one-state counter test = a fixed answer, a several-state
+    one renumbered, a dropped state never true, writes dropped / renumbered, story flags
+    ON at the point answered) and the prune; Make editable with the default spec
+    (GreatTree: the state after Starry Night per screen + talk answered; Boss: Villager:
+    about to do its gate, both states, the beaten one remembered by a flag + a state
+    rule; the eight ceremony codes of $08 keep following the game); Keep states… on an
+    every-state copy renumbers its scripts; kept projects compile; a project that uses
+    none of it compiles to the same files (byte-neutral)."""
+    import shutil
+    import tempfile
+    from editor2.core import room_states as RS
+    from editor2.core.document import Document
+    from editor2.core.render_project import ProjectRenderer
+    # -- the fold, by hand
+    plans = {'L0': RS.Plan('0', single=3), 'L1': RS.Plan('1', remap={2: 0, 5: 1})}
+    items = [['op', 'check_and_branch', 'L0', '0x0003', '@A'],
+             ['op', 'check_and_branch', 'L0', '0x0001', '@B'],
+             ['op', 'check_and_branch', 'L1', '0x0005', '@B'],
+             ['op', 'check_and_branch', 'L1', '0x0004', '@B'], ['end'],
+             'label:A', ['op', 'write_ram', 'L0', '0x0001'], ['op', 'write_ram', 'L1', '0x0002'],
+             ['op', 'if_flag_set', '0x00F1', '@C'], ['text', '0x0001'], ['end'],
+             'label:B', ['text', '0x0002'], ['end'], 'label:C', ['text', '0x0003'], ['end']]
+    new, writes, rep = RS.fold_ops(items, plans, {0xF1})
+    ok("S144 fold: a one-state test answered (straight into A), the other dropped (B gone)",
+       new == [['__w', 'L1', 0, '1'], ['text', '0x0003'], ['end']], new)
+    ok("S144 fold: a kept state's write renumbered (marker), a one-state write dropped",
+       writes == [('L1', 0, '1')] and rep['writes_dropped'] == 1, (writes, rep))
+    ok("S144 fold: a story flag ON at the point answered (the else text gone)",
+       ['text', '0x0001'] not in new and ['text', '0x0003'] in new and rep['flags'] == 1, new)
+    ok("S144 prune: unreachable steps and unused labels go, ends on end/goto",
+       RS.prune([['op', 'goto', '@X'], ['text', '0x0009'], 'label:X', ['end']]) == [['end']])
+    from editor2.core.balance import VANILLA_STEPS
+    clr = RS.game_cleared_flags()
+    hit = {pt: sorted(set(RS.story_state(pt)['flags_on']) & clr)
+           for pt in range(len(VANILLA_STEPS) + 1)}
+    from editor2.core import story_state as _SS
+    from editor2.core.balance import POSTGAME_FROM as _PG
+    _pg = _SS.state_at(_PG)
+    ok("S144 the post-game = the game's played ending (EVENT_FLAGS: the 9 ending flags; Bazaar 4, "
+       "MedalMan 5, Gate Hub 4/1, the bedroom 0/1, the white room 3 — PyBoy)",
+       {0xE4, 0xE5, 0xE9, 0xEA, 0xEB, 0xED, 0xEE, 0xEF, 0xF0, 0xF1} <= set(_pg['flags_on'])
+       and [_pg['ram'].get(a, 0) for a in (0xD93A, 0xD95E, 0xD93D, 0xD93E, 0xD974, 0xD975,
+                                           0xD99A, 0xD92D, 0xD92B)] == [4, 5, 4, 1, 0, 1, 3, 3, 5],
+       [_pg['ram'].get(a, 0) for a in (0xD93A, 0xD95E, 0xD93D, 0xD93E, 0xD974, 0xD975, 0xD99A,
+                                      0xD92D, 0xD92B)])
+    ok("S144 measured: no story flag ON at any story point is cleared by the game's scripts",
+       len(clr) == 19 and not any(hit.values()), {k: v for k, v in hit.items() if v})
+    tmp = tempfile.mkdtemp(prefix='s144_')
+    try:
+        os.makedirs(os.path.join(tmp, 'assets'))
+        shutil.copy(os.path.join(REPO, 'editor2/templates/blank-project/project.json'), tmp)
+        d = Document(tmp)
+        r = ProjectRenderer(REPO, d.project_dir, d.data)
+        gt = d.room(d.clone_vanilla(0x01, 'GreatTree', REPO, r, keep='default'))
+        rep = d.last_states_report
+        scr0 = gt['screens']['0']
+        ok("S144 GreatTree: screen 0 keeps only its post-game state (3), no counter of the game",
+           'states' not in scr0 and 'vanilla' not in scr0['step_counter']
+           and gt['states_kept']['point'] == RS.default_point(0x01), scr0.get('step_counter'))
+        ok("S144 GreatTree: talk answered, scripts smaller",
+           rep['talk'] > 20 and rep['scripts_after'] < rep['scripts_before'] // 2,
+           (rep['talk'], rep['scripts_before'], rep['scripts_after']))
+        vb = d.room(d.clone_vanilla(0x31, 'Boss: Villager', REPO, r, keep='default'))
+        rb = d.last_states_report
+        rules = vb.get('state_rules') or []
+        ok("S144 Boss: Villager: about to do its gate, boss + beaten kept, beaten remembered",
+           len(vb['screens']['0']['states']) == 2 and len(rb['flags']) == 1 and len(rules) == 1
+           and rules[0]['state'] == 1 and RS.point_label(vb['states_kept']['point'])
+           .startswith('about to do Gate of Villager'), (rb['flags'], rules))
+        sc = {x['id']: x for x in d.custom['scripts']}
+        fnum = next(f['index'] for f in d.custom['flags'] if f['name'] == rb['flags'][0])
+        body = [it for sid in vb['scripts'].values() for it in sc[sid]['ops']]
+        ok("S144 Boss: Villager: the win writes state 1 AND sets its flag (a number)",
+           ['op', 'set_flag', fnum] in body and any(
+               it[:2] == ['op', 'write_ram'] and str(it[2]).startswith('wCustomStep_')
+               and int(it[3], 16) == 1 for it in body if isinstance(it, list)), fnum)
+        cer = d.room(d.clone_vanilla(0x08, 'Ceremony', REPO, r))
+        sp = RS.default_spec(d, cer, 6)                  # breeding open, no ceremony yet
+        ok("S144 the ceremony room's counter is a variable there ($F0 codes) → follows the game",
+           sp['screens']['0'].get('follow'), sp['screens']['0'])
+        sp2 = RS.default_spec(d, cer)                    # the post-game: $D951 = 6, a state
+        ok("S144 … and at the post-game it is in state 6 (the ending leaves $D951 = 6)",
+           sp2['screens']['0'] == {'keep': [6], 'start': 6}, sp2['screens']['0'])
+        # Keep states… on an every-state copy: screen 0 keeps 3 + 4, starts in 4
+        full = d.room(d.clone_vanilla(0x01, 'GreatTree', REPO, r))
+        lab = full['screens']['0']['step_counter']['label']
+        spec = RS.default_spec(d, full)
+        spec['screens']['0'] = {'keep': [3, 4], 'start': 4}
+        d.keep_states(full['id'], spec)
+        s0 = full['screens']['0']
+        ok("S144 Keep states: two states, the start first (old 4 → 0, old 3 → 1)",
+           len(s0['states']) == 2 and s0['states'][0]['comment'] == 'vanilla step 4'
+           and s0['states'][1]['comment'] == 'vanilla step 3', [x.get('comment') for x in s0['states']])
+        sc = {x['id']: x for x in d.custom['scripts']}
+        vals = [int(it[3], 16) for sid in full['scripts'].values() for it in sc[sid]['ops']
+                if isinstance(it, list) and it[:1] == ['op'] and len(it) > 3 and it[2] == lab
+                and it[1] in ('write_ram', 'check_and_branch')]
+        ok("S144 Keep states: every script naming the counter uses the new numbers (0-1)",
+           all(v in (0, 1) for v in vals), vals)
+        ok("S144 the kept room is not migrated back to following the game on open",
+           not d.follow_game_counters(full) and RS.is_copy(full), '')
+        d.custom['arena'] = {'lobby': full['id'], 'battle': None}
+        try:
+            d.keep_states(full['id'], spec)
+            refused = False
+        except ValueError:
+            refused = True
+        ok("S144 your arena's rooms keep every state (Keep states refused)", refused)
+        d.custom.pop('arena')
+        d.save()
+        out, _p, warns = C.compile_project(tmp, REPO)
+        ok("S144 a project of kept copies compiles", bool(out), warns[:3])
+        d2 = Document(tmp)
+        ok("S144 reopening keeps the kept rooms as they are (no migration)",
+           not d2.migrations or not any('follow' in m for m in d2.migrations), d2.migrations)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    # byte-neutral: the example's outputs do not depend on any of this
+    out_a, _pa, _wa = C.compile_project(os.path.dirname(EXAMPLE), REPO)
+    ok("S144 byte-neutral: the example compiles to the same generated files twice",
+       out_a == C.compile_project(os.path.dirname(EXAMPLE), REPO)[0])
+
 def main():
     # 1. determinism + example compiles clean
     out1, prj, warns = compile_data(base())
@@ -8989,6 +9115,7 @@ def main():
     test_s141('--rom' in sys.argv)
     test_s142()
     test_s143()
+    test_s144()
 
     if '--rom' in sys.argv:
         from editor2.core import builder as B
