@@ -599,10 +599,16 @@ row — nothing vanishes. `formats.party_walks(room)` is False for a copy of `$5
 **Screens per room.** Engine ceiling = **16** (4×4): `RoomEntry2` scroll
 math clamps row = Y/128 to 0-3 and col = X/160 to 0-3. Vanilla max = the
 mt $54-$59 conveyor/maze rooms (12 declared slots, 9 valid); screen_index 8
-(row 2) render + scroll verified in PyBoy S91. The custom pipeline's schema
+(row 2) render + scroll verified in PyBoy S91. ~~The custom pipeline's schema
 currently accepts 4×2 = 8 (`screens` keys "0".."7", PROJECT_COMPILER);
-extending to 4×4 is a schema residual, not an engine limit. Room dims in
-the $26DD record must match the screen count (KEY_LESSONS S10).
+extending to 4×4 is a schema residual, not an engine limit.~~ **S145 (measured):
+custom rooms take the full 4×4 = 16** — the compiler accepts screen keys 0-15
+(`validators`: "index outside the 4x4 grid") and in the game every screen 0-15 of a
+4×4 custom room loads (`wScreenIndex` == k) and draws == the editor preview, in
+regions 0 and 1 (`tools/walk_fresh_project.py`, ATLAS HALL 100 / 150; DOC_AUDIT
+S145). Each screen costs one byte of its region's 640-byte step-counter area
+(PROJECT_COMPILER §2.53). Room dims in the $26DD record must match the screen
+count (KEY_LESSONS S10).
 
 **Phantom-step hazard when scanning room data.** ~~Step validation in the
 engine only checks `tileset_bank ∈ (0,$80)`~~ (S133: the engine checks nothing; the

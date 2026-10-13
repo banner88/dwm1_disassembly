@@ -1,5 +1,66 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-11 (Session 143 — **ROADMAP ARC CAP4b BUILT: PLACES BY NAME — NO MAP ID OR
+> REGION SHOWN ANYWHERE IN THE EDITOR (VIEW → SHOW TECHNICAL IDS BRINGS THEM BACK), UNIQUE ROOM NAMES,
+> AREAS (ONE LEVEL OF FOLDERS), ONE SEARCHABLE PLACE PICKER FOR ALL 28 ROOM CHOICES, THE ROOMS LIST AS
+> FOLDERS + SEARCH, THE WORLD TAB'S FIND / AREA / NEIGHBOURS; THE ARENA BATTLE COPIES' SPRITE WARNING
+> MEASURED AND FIXED**
+> (user: "Continue on the 4 mb expansion" → the CAP4b audit (below) + 5 questions → "1) Yeah seems ok
+> [S142 tested] 2) view show in case I want them 3) One level 4) Yes [rename duplicates on open] 5) No
+> keep so I know wtf it is [the game's odd rooms stay listed]" + "editor complains about amount of NPCs
+> in ARENA battle room … vanilla has even more? Just want to flag it"; **S142 USER-CONFIRMED** 2026-10-11
+> 14:24 ("Yeah seems ok")). **Built S143; USER-CONFIRMED 2026-10-12 14:09 ("Cap4b/4c seems to work. Will come back later if I find something", S145 start).** Byte-neutral: no ROM change, no test
+> ROM (the example pin `7cd31035…`, patched, unchanged).
+> **The audit (an agent's inventory, spot-checked):** ~100 places printed a map id (`$6B`, `$16B` — the
+> region as a leading digit — or a raw `room:$6B` / `0x6B`): the Rooms lists, the inspector, the door /
+> teleport / redirect dialogs, conversation and cutscene moves, the Gates / Arena / Encounters / Music /
+> Cutscenes / Flags / World tabs, canvas tooltips, questions, undo labels, every build message; 28 room
+> pickers, ~20 of them the same inline loop, 3 searchable; no name uniqueness anywhere (Make editable
+> twice = two "GreatTree"); no areas. **Found:** dwm/map_names.py calls five map ids "Castle: Chest Room
+> (variant)" and `$20-$22` have no name — all eight are the CASTLE's room data under unused ids (bank
+> $0B `RoomSub_Castle_cont`; the exits that seem to lead there are gate entrances — the byte is a gate
+> number); `$5F` = the gate item shop's data (`$50`).
+> **Built (editor; `EDITOR_REVISION` S143):** NEW `editor2/core/place_names.py` — `vanilla_name` (the
+> overrides "Castle (unused copy 1-8)", "Gate Floor: Item Shop (unused copy)"; never a hex fallback),
+> `Places` (`label` of every stored form: `room:$XX` / `room:$16B` / `vanilla:$XX` / `hub` / `gate:N` /
+> a room id / a map id / tuples; `room_entries` by area, `vanilla_entries` in 5 groups,
+> `special_entries`; a game room gets " (game room)" when a project room has its name), `room_ref` /
+> `mid_ref` for messages, `strip_ids` for extracted labels, `next_free_name`, `SHOW_IDS` (+ the id as
+> "[$6B]" / "[region 1 $6B]" / "[game $0B]"; the command-line compiler sets it). NEW
+> `editor2/app/place_picker.py` — `PlacePicker` (a QComboBox you can type into: any part of a name or an
+> area, grouped headers, a header never current, a typed pick emits `activated`) + `ask_place` (the
+> dialog form); every room picker uses it. NEW `editor2/app/rooms/room_tree.py` — `PlaceTree` (folders,
+> the QListWidget calls on the place rows, search, drag a room onto an area). `Document`:
+> `unique_room_name` / `room_name_taken` (New / Copy / Make editable / New art room pick a free name,
+> `rename_room` refuses a taken one), `_migrate_unique_names` (a duplicate → "name 2", a MIGRATED note),
+> areas (`custom.rooms[].area`, `custom._editor.areas` order + empty areas; `areas` / `add_area` /
+> `set_room_area` / `rename_area` / `delete_area` / `move_area`; editor-only). The Rooms tab: one search
+> box over both lists, your rooms in area folders, **Area…**, right-click area menu, the inspector's
+> **area** box; the World tab: Find (Enter = next), Area filter (neighbours faded), "only the selected
+> room and its neighbours" (1-6 steps); script-warp edges keep the region (`world.py`: the high byte of
+> a place word is its region). View → **Show technical ids** (QSettings `view/show_ids`). Every
+> remaining display site (tabs, dialogs, canvas, core notes / errors: animation, cutscenes, doors,
+> gates, hub, worlds, encounters, palette borrow, flag index, script ops, story state, validators,
+> project) → names.
+> **The arena (user's flag), measured** (PyBoy, the user's project build + `.sav`: CONTINUE, the user's
+> arena lobby desk with `$CAB4` = 0 and gold poked, G class YES): in the Arena Battle room the walking
+> party is NOT drawn — its NPCs ARE the party (`$E0` the hero's shape, `$E1-$E3` the party monsters) plus
+> the 4 foes `$F0-$F3`, the match script holds the player; at most 24 sprite pieces were on screen, none
+> dropped. The S117b warning added the walking party (8 a line / 16 in all) on top → false. Fix:
+> `formats.party_walks(room)` (False for a copy of `$5D`) → `sprite_budget(npcs, party=False)` in the
+> validator and the Rooms banner; other rooms keep the warning.
+> **Measured (the scale project = the example + 300 Copies in 3 areas, regions 0-2, + a duplicate
+> name):** opens in 4.6-5.4 s; 20 tabs (hidden pages too), a region-2 room, a game room, 10 place
+> dialogs and the 627 validation warnings: **0** map-id texts — the same scan on the S142 code finds
+> 4,968 (the negative control); the user's project: 0; the picker fills 411 places in 5-8 ms, "place 29"
+> → its 10 rooms, a typed pick = the room's stored destination. **Byte-neutral:** the user's project
+> (`5b81760a…`, patched; with and without areas) and a 311-place 3-region copy of it with areas
+> (`2425d4b4…`, patched) build identical ROMs on the S142 and S143 code.
+> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 1519 PASSED (+ `test_s143`, 12); test_app
+> PASS (+ `s143_names`); test_canvas `--rom` PASS. Help: 10_rooms (rooms by name, areas, picking a room),
+> 11_doors (the World tab's find / area / neighbours), 90_limits.
+> **Next:** CAP4c — Make editable copies one stage (post-game by default).
+
 > Last verified: 2026-10-11 (Session 142 — **ROADMAP ARC CAP4 SPLIT (a scale + safety / b places by name /
 > c one-stage Make editable / d the Capacity page); CAP4a BUILT: THE EDITOR AT 300+ PLACES — A 311-PLACE
 > PROJECT OPENS IN 4-5 s (WAS 28), EDITS + UNDO 0.1-0.3 s (WAS 0.5-2), UNDO KEEPS ONLY WHAT CHANGED (WAS 14 MB A

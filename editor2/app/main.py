@@ -289,11 +289,41 @@ class MainWindow(QMainWindow):
                 self.tabs.addTab(self.balance_tab, 'Balance')
                 continue
             self.tabs.addTab(_stub(title, box, blurb), title)
+        if self.session:
+            # S145 (ROADMAP ARC CAP4d): every ceiling in words — the status bar's
+            # meter measures, this tab shows its report (open_project wires them)
+            from editor2.app.capacity_tab import CapacityTab
+            self.capacity_tab = CapacityTab(self.session)
+            self.capacity_tab.navigate.connect(self.navigate_to)
+            self.capacity_tab.openTab.connect(self.open_tab_titled)
+            self.tabs.addTab(self.capacity_tab, 'Capacity')
+        else:
+            self.capacity_tab = None
         self.build_tab = BuildPlayTab(self)
         self.tabs.addTab(self.build_tab, 'Build && Play')
         from editor2.app.help_tab import HelpTab      # S101 r2
         self.help_tab = HelpTab()
         self.tabs.addTab(self.help_tab, 'Help')
+
+    def _wire_capacity(self):
+        """S145: the status bar's meter feeds the Capacity tab; a click on the meter
+        opens it; the tab's Measure now asks the meter."""
+        m, t = getattr(self, 'space_meter', None), getattr(self, 'capacity_tab', None)
+        if m is None or t is None:
+            return
+        m.reported.connect(t.show_report)
+        m.openRequested.connect(lambda: self.tabs.setCurrentWidget(t))
+        t.measureRequested.connect(m.measure_async)
+        if m.report is not None:
+            t.show_report(m.report)
+
+    def open_tab_titled(self, title):
+        """S145: show the tab whose title is `title` (the Capacity tab's rows)."""
+        for i in range(self.tabs.count()):
+            if self.tabs.tabText(i) == title:
+                self.tabs.setCurrentIndex(i)
+                return True
+        return False
 
     def _show_dialogue_for(self, sid):
         """Monsters tab → the Dialogue tab listing the texts that name `sid`."""
@@ -599,7 +629,7 @@ class MainWindow(QMainWindow):
         session.undo.redoTextChanged.connect(self._redo_text)
         session.dirtyChanged.connect(self._dirty_changed)
         self.undo_view.setStack(session.undo)
-        # S96 space meters (banks $60/$64/$67/$71) in the status bar
+        # S96 space meters in the status bar (S145: ROM space + rooms, the Capacity tab's report)
         from editor2.app.space_meter import SpaceMeter
         if getattr(self, 'space_meter', None) is not None:
             self.statusBar().removeWidget(self.space_meter)
@@ -607,6 +637,7 @@ class MainWindow(QMainWindow):
         self.space_meter = SpaceMeter(session, REPO)
         self.statusBar().insertPermanentWidget(0, self.space_meter)
         self._fill_tabs()
+        self._wire_capacity()
         self.tabs.setCurrentIndex(0)
         self.a_build.setEnabled(True)
         self.a_validate.setEnabled(True)
@@ -712,6 +743,7 @@ class MainWindow(QMainWindow):
         """S143: View > Show technical ids — every view re-fills its labels."""
         PN.SHOW_IDS = bool(on)
         self.settings.setValue('view/show_ids', bool(on))
+        self.settings.sync()             # S145: written now (a later window reads it back)
         if self.session is not None:
             self.session.structureChanged.emit()
 

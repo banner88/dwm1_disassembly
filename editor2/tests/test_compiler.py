@@ -8237,6 +8237,113 @@ def test_s144():
     ok("S144 byte-neutral: the example compiles to the same generated files twice",
        out_a == C.compile_project(os.path.dirname(EXAMPLE), REPO)[0])
 
+def test_s145():
+    """S145 (ROADMAP ARC CAP4d; user S145: the Capacity tab "Sounds good", rows in words
+    "Perfect", the 150-place acceptance as a machine run): editor2/core/capacity.py counts
+    what the build counts — ROM space = the content banks' bytes of measure_banks, the room
+    ceiling = bank $71's free bytes / 15 (measured: +15 B a place in $71, +3 in $76 on a
+    fresh project), the secondary ceilings = the modules' own constants; the per-region
+    step-counter ceiling (every screen one byte, 640 a region) is shown with its count when
+    it stops the build; a 4 x 4 = 16-screen room compiles (capacities.json said the custom
+    schema took 8); the fast LZ match search == the reference; the arrival migration's door
+    index gives the S98 r2 fix; byte-neutral."""
+    import shutil
+    import tempfile
+    from editor2.core import capacity as CAP
+    from editor2.core.compiler import measure_banks
+    from editor2.core.document import Document
+    from editor2.core.render_project import ProjectRenderer
+    from editor2.core import story as ST
+    from editor2.core import encounters as EN
+    from editor2.core import project as P
+    from tools import compress_tiles as CT
+    ex = os.path.dirname(EXAMPLE)
+    data = json.load(open(EXAMPLE))
+    rep = CAP.measure(data, ex, REPO)
+    usage, _e = measure_banks(data, ex, REPO)
+    ok("S145 capacity: the example measures without errors, every row counted",
+       not rep['errors'] and not [x for x in rep['rows'] if x['shown'] == '?'], rep['errors'])
+    content = sum(u for b, (u, _c) in usage.items() if b in CAP.SPILL_HOME or b >= 0x80)
+    ok("S145 ROM space = the bytes of banks $60 / $64 / $67 / $6C + $80-$FF (measure_banks)",
+       rep['content']['used'] == content and rep['content']['cap'] == 132 * 0x4000,
+       (rep['content'], content))
+    n = len([r for r in data['custom']['rooms'] if not r.get('placeholder')])
+    free71 = 0x4000 - usage[0x71][0]
+    ok("S145 the room ceiling = rooms + bank $71's free bytes / 15 (it binds first)",
+       rep['rooms']['ceiling'] == n + free71 // 15 and '$71' in rep['rooms']['by'],
+       rep['rooms'])
+    lim = {x['key']: x['limit'] for x in rep['rows']}
+    ok("S145 the secondary ceilings are the modules' own constants",
+       lim['checks'] == ST.STORY_CHECK_MAX and lim['commands'] == ST.STORY_CMD_MAX
+       and lim['enc_lists'] == EN.MAX_PROJECT_LISTS and lim['enemies'] == P.PROJECT_EID_CAP
+       and lim['joins'] == P.REDIRECT_ROWS_MAX and lim['screens_room'] == 16
+       and lim['npcs_screen'] == 8 and lim['exits_screen'] == 17
+       and lim['flags'] == 1965 and lim['screens_group'] == 640, lim)
+    tmp = tempfile.mkdtemp(prefix='s145_')
+    try:
+        def fresh(name, rooms, screens=1, region_size=None):
+            out = os.path.join(tmp, name)
+            os.makedirs(os.path.join(out, 'assets'))
+            shutil.copy(os.path.join(REPO, 'editor2/templates/blank-project/project.json'), out)
+            d = Document(out)
+            if region_size:
+                d.custom['wram']['region_size'] = region_size
+            r = ProjectRenderer(REPO, d.project_dir, d.data)
+            for i in range(rooms):
+                rid = d.new_room(f'Probe {i}', 0, r, gate_theme=i % 16)
+                room = d.room(rid)
+                lid = room['screens']['0']['layout']['id']
+                for k in range(1, screens):
+                    d.add_screen(room, str(k), {'id': lid})
+            d.save()
+            return d, out
+        use = {}
+        for k in (20, 40):
+            d, out = fresh(f'n{k}', k)
+            use[k] = measure_banks(d.data, out, REPO)[0]
+        d71 = use[40][0x71][0] - use[20][0x71][0]
+        d76 = use[40][0x76][0] - use[20][0x76][0]
+        ok("S145 measured: a place costs bank $71 15 B and bank $76 3 B (PLACE_BYTES_71 / _76)",
+           d71 == 20 * CAP.PLACE_BYTES_71 and d76 == 20 * CAP.PLACE_BYTES_76, (d71, d76))
+        d, out = fresh('ctr', 6, screens=4, region_size=20)
+        rep2 = CAP.measure(d.data, out, REPO)
+        row = next(x for x in rep2['rows'] if x['key'] == 'screens_group')
+        ok("S145 the step-counter ceiling stops the build and the row says by how much",
+           rep2['errors'] and 'step counters' in rep2['errors'][0] and row['level'] == 'full'
+           and row['used'] == 24 and row['limit'] == 20, (rep2['errors'][:1], row))
+        d, out = fresh('big', 2, screens=16)
+        out_files, _p, _w = C.compile_project(out, REPO)
+        rep3 = CAP.measure(d.data, out, REPO)
+        big = next(x for x in rep3['rows'] if x['key'] == 'screens_room')
+        ok("S145 a 4 x 4 = 16-screen room compiles (the engine's grid; not 8)",
+           bool(out_files) and not rep3['errors'] and big['used'] == 16 and big['level'] == 'full'
+           and not any(x['key'] == 'screens_room' for x in CAP.worst(rep3)), rep3['errors'])
+        # the arrival migration with the S145 door index (S98 r2: arrive ON the partner)
+        d, out = fresh('doors', 3)
+        ids = [r['id'] for r in d.rooms]
+        a = d.add_door(ids[0], '0', 8, 1)
+        b = d.add_door(ids[1], '0', 1, 1)
+        d.link_doors(a, b)
+        row = d.door_end(a)['row']
+        row['screen_byte'] = f"0x{int(str(row['screen_byte']), 0) | 0x80:02X}"
+        notes = []
+        d._migrate_door_arrivals(notes)
+        ok("S145 the indexed arrival migration still moves an r1 row onto the partner door",
+           int(str(d.door_end(a)['row']['screen_byte']), 0) & 0x80 == 0 and notes
+           and getattr(d, '_door_index', None) is None, notes)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    import random
+    rnd = random.Random(1450)
+    samples = [bytes(rnd.choice([0, 0, 1, 0x33, 7]) for _ in range(rnd.choice([40, 600, 2048])))
+               for _ in range(6)] + [bytes(2048), bytes(range(256)) * 4]
+    ok("S145 the fast LZ match search == the reference search (compress_tiles --selftest: more)",
+       all(CT.compress_lz(b) == CT.compress_lz(b, reference=True) for b in samples))
+    out_a, _pa, _wa = C.compile_project(ex, REPO)
+    ok("S145 byte-neutral: the example compiles to the same generated files twice",
+       out_a == C.compile_project(ex, REPO)[0])
+
+
 def main():
     # 1. determinism + example compiles clean
     out1, prj, warns = compile_data(base())
@@ -9116,6 +9223,7 @@ def main():
     test_s142()
     test_s143()
     test_s144()
+    test_s145()
 
     if '--rom' in sys.argv:
         from editor2.core import builder as B

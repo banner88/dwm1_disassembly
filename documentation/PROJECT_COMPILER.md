@@ -858,6 +858,7 @@ editor2/
         walk_layouts.py      # S107 2b: the 155 walking layouts — packer, ranking, copies into the other follower bank (§2.23)
         monster_text.py      # S108 gamedata.monster_text: names / nicknames / descriptions (§2.24)
         arena.py arena_doc.py  # S109 gamedata.arena: regions + validator (§2.25); the Arena tab's model (ArenaMixin)
+        capacity.py          # S145 every ceiling in words: the report the Capacity tab + the meters show (§2.53)
         skill_scripts.json   # S105 the custom skills' built-in dialog scripts + texts (§2.22)
         emulator.py
         templates/{bank_060_head.asm, bank_071_head.asm, PINNED_SHA256}
@@ -870,7 +871,8 @@ editor2/
                npc_panel.py rules_panel.py             # S97 NPC inspector, state rules
                talk_editor.py                          # S97 r2 per-box talk text, ROM-font preview
                door_dialog.py object_panels.py         # S98 door / teleport dialog, door/teleport/spot panels
-        import_tab.py space_meter.py                   # S96 Import art tab, bank meters
+        import_tab.py space_meter.py                   # S96 Import art tab, bank meters (S145: ROM space + rooms)
+        capacity_tab.py                                # S145 the Capacity tab (§2.53)
         world_tab.py                                   # S98 World tab (read-only graph)
         gates_tab.py                                   # S100 Gates tab (custom rooms on gate floors)
         arena_tab.py                                   # S109 Arena tab (fees, masters, team sizes, team rows)
@@ -3794,7 +3796,7 @@ bank $60-class data lives is decided by the compiler (`editor2/core/places.py`; 
 - **Accounting / meters:** `validators.bank_usage` — bank $60 = `TEMPLATE_SIZE` + the payload after
   `SCRIPT DATA (generated`; a `bank_0xx.asm` with `PLACE DATA (generated` = `PLACE_TEMPLATE_SIZE` +
   its payload after the marker. The space meter's $60 bar is amber (not red) when full; the "new"
-  bar counts place banks too.
+  bar counts place banks too. (S145: two meters + the Capacity tab instead — §2.53.)
 - **The example and the user's project fit bank $60** (no place bank) but the template changed: pin
   `05b8973d…` (patched; S134's `807d9668…` is historical); the user's project `341a5188…` (patched;
   `aae43261…` historical).
@@ -3926,7 +3928,7 @@ what it meant; WHERE a room's records and frames live is decided by the compiler
 - **Accounting / meters:** `validators.bank_usage` — bank $6C = `TEMPLATE_SIZE[$6C]` + the payload
   after the marker + 15; a `bank_0xx.asm` with `TILEANIM DATA (generated` = `ANIM_TEMPLATE_SIZE`
   + its payload + 15. Bank $6C never gets the "nearly full" warning (it spills by design); the
-  space meter has a **$6C** bar (amber, not red, when full) and the "new" bar counts animation
+  space meter has a **$6C** bar (amber, not red, when full; S145: replaced by the Capacity tab, §2.53) and the "new" bar counts animation
   banks. The Animate tab's budget: "Frame storage: this room X of ~15.8 KB (one bank per room) ·
   whole project Y" (`tile_anim_budget` `rom_room` / `rom_cap` / `rom_used`).
 - **A project whose animations fit bank $6C** gets no animation bank; its frames and records are
@@ -4108,6 +4110,46 @@ LOWERING into ordinary project.json (`states[]`, scripts, `custom.flags`, `state
   "post-game" defaults rest on `story_state` — S144 made it play the real ending (EVENT_FLAGS "Story state
   at a story point").
 - Tests: `test_compiler.test_s144` (19), `test_app.s144_states`.
+
+## §2.53 S145 — THE CAPACITY REPORT (ROADMAP ARC CAP4d; byte-neutral)
+
+**Built S145; USER-CONFIRMED 2026-10-12 17:16 ("Confirm everything works").** No schema change, no emitted byte changes (the example pin
+`7cd31035…`, patched, unchanged; the user's project and a fresh 160-room project build the same
+ROMs on the S144 and S145 code — the latter `8de9ca81…`, patched, with the old and the new LZ
+search alike).
+
+- **`editor2/core/capacity.py` `measure(data, project_dir, repo_root)`** — one Project of a copy
+  of the document; `validators.validate`; when it passes, every emitter (`compiler._emit_all`)
+  and `validators.bank_usage`. The report: `rows` (Row: key, group, what, used, limit, shown,
+  level ok / near ≥ 80 % / full / unknown, at_limit, tab, where, room, screen, tech), `usage`,
+  `content` (banks $60 / $64 / $67 / $6C + $80-$FF: `CONTENT_CAP` = 132 banks = 2,162,688 B),
+  `rooms` (`ceiling` = min(rooms + bank $71 free / `PLACE_BYTES_71` 15, rooms + bank $76 free /
+  `PLACE_BYTES_76` 3, 63 × 128) — measured S145: +15 / +3 B a place), `left` (about N more rooms
+  = min(content free / the average room — content bytes over a blank project's
+  `baseline_content` / rooms, else `TYPICAL_ROOM_BYTES` 3,500 —, bank $71 free / 15)), `errors`,
+  `seconds`. Counts come from the same objects the build uses: `Project._flags` (in the named
+  pool), `_check_records` / `_story_cmds` after emission, `services.resolve(prj)['numbers']`,
+  `gates.new_gate_entries`, `places.plan` block sizes (vs 16,384 − `PLACE_TEMPLATE_SIZE`),
+  `tileanim.plan['room_bytes']`, `step_counter_allocation` / `step_counter_overlay` (per region:
+  the highest counter byte − `STEP_COUNTER_BASE` + 1, vs `wram.region_size`; when the allocation
+  refuses, the screens that need a counter are recounted per region so the row shows by how
+  much), `music_plan()`, `art.usage`. A per-room / per-screen row names the fullest one; `EACH`
+  rows (one room / screen using all of its own allowance) are never counted by `worst`.
+- **The editor:** `app/space_meter.py` measures the report off the UI thread after each edit
+  (first run from the event loop once the window is up) and shows ROM space + rooms; the
+  Capacity tab (`app/capacity_tab.py`) shows the last report. The S96-S139 per-bank bars ($60 /
+  $64 / $67 / $6C / $71 / "new") are gone; the banks are the tab's technical section.
+- **The per-region step-counter ceiling (measured S145):** every screen's counter is allocated,
+  one-state screens included (§2.6); a region holds 640 — 128 rooms × 6 screens stop the build.
+  Lifting it = ROADMAP CAP5.
+- **16 screens:** a 4 × 4 custom room compiles and plays (the S91 "schema 8" was never enforced —
+  DOC_AUDIT S145).
+- **Speed (S145):** `tools/compress_tiles.py` `_Matcher` — the LZ longest-match search via a 4-gram
+  index (byte-identical to `find_best_match`, kept as `compress_lz(…, reference=True)`); a fresh
+  160-room project's first measurement 16 s → 1.7 s, opening 22 s → 4.1 s to a ready window.
+  `doors._indexed_doors` for the on-open arrival migration.
+- Tests: `test_compiler.test_s145` (10), `test_app.s145_capacity`; the acceptance:
+  `tools/walk_fresh_project.py` (TOOLS_AND_DATA S145).
 
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 

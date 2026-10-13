@@ -16,10 +16,21 @@
   Since S137 a room's palettes and colour rows go with it (they used to fill bank
   $17 at ~35-40 rooms). Since S139 a room's own animated tiles overflow too: bank
   $6C first, then new banks (one room's animations must fit one bank, ~15.8 KB).
+- Every limit with how much of it you use: the **Capacity** tab (S145; see
+  *Capacity*). Rooms: about **950** before the table of every room's record, songs
+  and battles is full (15 bytes a room); ROM space for your content about 2 MB.
+- Screens (S145, measured): each screen keeps its room state in one byte and
+  every 128 rooms share **640** — five screens a room on average; past that the
+  build stops (the Capacity tab shows the count). A room has at most **16
+  screens** (4 × 4) — measured in the game: screen 15 of a 4 × 4 room loads and
+  draws like the editor shows it (an older note said 8).
+- A fresh project of 160 rooms, each with its own tileset (S145, measured): it
+  opens in about 4 s; the first space measurement after opening took 16 s before
+  S145 (it compressed every screen and tileset again) — 0.5-1.5 s now.
 - Hundreds of rooms in the editor (S142): measured with 311 rooms (three
   regions) — the project opens in ~4 s, an edit (a new NPC, a rename, a new
   room) and its undo take ~0.1-0.3 s, the World tab ~1-2 s the first time; the
-  bank meter measures in the background. An undo step keeps only what its edit
+  space meter measures in the background. An undo step keeps only what its edit
   changed, so a long session no longer piles up copies of the whole project.
   S143: rooms by name everywhere (names unique), areas (folders), one searchable
   room picker (all ~400 rooms of such a project fill it in a few ms), a search box

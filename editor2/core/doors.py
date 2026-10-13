@@ -231,7 +231,24 @@ class DoorsMixin:
     def _door_rows(self, did):
         if not did:
             return []
+        idx = getattr(self, '_door_index', None)
+        if idx is not None:                  # S145: inside _indexed_doors (one pass)
+            return list(idx.get(did, ()))
         return [(r, k, n, e) for r, k, n, _i, e in self._iter_exit_rows(did)]
+
+    def _indexed_doors(self):
+        """S145 (ROADMAP ARC CAP4d): {door id: [(room, key, state, row)]} built in ONE
+        pass over the exit rows, for an operation that asks for every door's rows — the
+        on-open arrival migration looked each door up with a full pass (doors × rows: 1.2 s
+        of opening a fresh 160-room project with 160 stair pairs, growing with the square).
+        Only valid while no exit row gains / loses / changes its `door`: callers that move
+        door ids (`_migrate_doors`) do not use it."""
+        idx = {}
+        for r, k, n, _i, e in self._iter_exit_rows():
+            d = e.get('door')
+            if d:
+                idx.setdefault(d, []).append((r, k, n, e))
+        return idx
 
     def _vanilla_door_rows(self, did):
         return [rd for rd in (self.custom.get('entrance_redirects') or [])
@@ -675,6 +692,17 @@ class DoorsMixin:
         doorway" (screen_byte bit 7 on the partner's own cell) now arrive ON
         the partner door (vanilla partners keep their own bytes)."""
         n = 0
+        self._door_index = self._indexed_doors()    # S145: rows by door, one pass
+        try:
+            n = self._migrate_arrival_rows()
+        finally:
+            self._door_index = None
+        if n:
+            notes.append(f'{n} door row(s): arrive ON the partner door now (was half a cell '
+                         'below — S98 r2/r3)')
+
+    def _migrate_arrival_rows(self):
+        n = 0
         for did in self.door_ids():
             me, p = self.door_end(did), self.door_partner(did)
             if me is None or p is None or not me.get('row'):
@@ -687,9 +715,7 @@ class DoorsMixin:
                         (_v(e.get('spawn_x', -1)), _v(e.get('spawn_y', -1))) == (p['x'], p['y']):
                     e['screen_byte'] = f'0x{sb & 0x7F:02X}'
                     n += 1
-        if n:
-            notes.append(f'{n} door row(s): arrive ON the partner door now (was half a cell '
-                         'below — S98 r2/r3)')
+        return n
 
     def _migrate_doors(self, notes):
         """S98 r1 wrote a door as TWO ends sharing one id; S98 r2 has one

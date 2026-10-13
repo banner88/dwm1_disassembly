@@ -11,22 +11,22 @@ Game Boy it needs a flash cartridge that takes 4 MB ROMs. Your battery save
 **Space for art (S135):** screen layouts, their colour grids and your tilesets
 first fill their own banks ($64 for layouts and colour grids, $67 for tilesets);
 whatever does not fit goes on into the new half of the 4 MB ROM (banks $80 and
-up) by itself — nothing to set. The space meter under the window shows it: the
-$64 / $67 bars turn amber when full (not an error any more), and the **new** bar
-counts the new banks in use (of 128; hover it for each bank's bytes).
+up) by itself — nothing to set. Since S145 the meters under the window show two
+numbers — **ROM space** (how much of the ~2 MB for your content you use) and
+**rooms** (of about how many fit) — and the **Capacity** tab every limit in words
+(see *Capacity*); the bank-by-bank bars of S96-S144 are gone (View → Show technical
+ids lists the banks on the Capacity tab).
 
 **Space for rooms and words (S136):** each room's scripts, NPC and door lists,
 room states, monster NPCs and tile pieces stay together and first fill bank $60;
 a room that does not fit — and your texts, 256 lines at a time — goes on into a
-new bank by itself, like the art. Nothing to set: the $60 bar turns amber when
-full and the **new** bar counts these banks too. A single room is limited to one
+new bank by itself, like the art. Nothing to set. A single room is limited to one
 bank (about 15 KB of scripts and lists — far more than any room needs); the build
 names a room that is bigger.
 
 **Space for animated tiles (S139):** the frames of each room's own animated tiles
 (the Animate tab) first fill bank $6C; a room whose animations do not fit goes
-on into a new bank by itself, like the rooms and the art. The **$6C**
-bar turns amber when full and the **new** bar counts these banks too. One room's
+on into a new bank by itself, like the rooms and the art. One room's
 animations are limited to one bank (about 15.8 KB — some seven rows of drifting
 4-tile strips); the build names a room that is bigger.
 

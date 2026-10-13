@@ -68,8 +68,8 @@ opens Tiles. The editor remembers the page you used last.
 
 **Painting:** pick a metatile (Tiles page) and paint with the canvas tools; the
 Walk tool shows / flips walkability. Painting is immediate (S132: only the cells
-you paint are redrawn; the side panels update once when you let go; the bank
-space meter measures in a fraction of a second).
+you paint are redrawn; the side panels update once when you let go; the space
+meters measure in the background — see *Capacity*).
 
 **Borrow palette…** (Palettes page): any room's colours — one of your rooms, a
 game room at any screen and step (the Servant room on fire, the night Farm …) or

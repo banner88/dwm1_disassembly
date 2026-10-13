@@ -884,3 +884,30 @@ edge and the battle waits for input forever.
   `ComputeFlagAddress` (`$26B3`, BC = the flag) also catches tests (return `$26B1`) — a set
   returns to `$26A3`. Harness savestates do not load into `playback.Engine` (sound config): keep
   each experiment in one of them.
+
+## S145 techniques — a whole fresh project in one walk, songs by request, a ROM-copy negative
+
+- **Every room of a 160-room project in ~20 s** (`tools/walk_fresh_project.py walk --only halls`):
+  `Walk.goto(real id, region, 10 k + 5, 8 r + 5)` into screen (col k, row r), then the S135
+  picture compare (`census_stream_banks.bg_tiles` vs `ProjectRenderer.render_screen`, tiles under
+  OAM skipped) and (`wMapID`, `wMapRegion`, `wScreenIndex`) — 212 screen checks. The 4 × 4 rooms:
+  every screen 0-15 (`wScreenIndex` == k).
+- **A negative control without a scratch tree:** swap two rooms' tileset POINTERS in the ROM copy
+  (`plan['where'][('tileset', id)]` = (bank, entry) → the words at `bank·$4000 + 1 + 2·entry`);
+  pick two rooms of different looks in one bank — prefer a new bank $80+. Exactly those rooms'
+  pictures must differ (291 / 303 tiles), every other room still equal.
+- **A room's song = a `SetBGM` hook (A = the id) — but only when it CHANGES.** Entering a room
+  whose song is already playing requests nothing (the S145 first run: 3 "FAIL"s were rooms with
+  the previous room's song). Visit rooms in an order whose songs alternate (assert it in the
+  driver).
+- **The JOURNAL save's file:** after `p.stop(save=True)` PyBoy writes `<rom path>.ram`
+  (`walk.gbc.ram`, not `walk.ram`); copy it and boot it with `boot_with_sav` for the CONTINUE.
+- **The real editor, offscreen, as the author** (`walk_fresh_project.py make`): `MainWindow()`,
+  `new_project(dir)`, each new room as ONE `SnapshotCommand` pushed on `session.undo` (the
+  Rooms tab's way: undo-able, the session's signals fire), `w.save()`, `w.open_project(dir)`
+  (timed), `w.build()` and pump events until `w.worker` stops; `w._quiet_build_errors = True`
+  and the QMessageBox statics stubbed so no modal box blocks the run.
+- **Timing an editor open fairly:** clear `recent/project` in QSettings (the window re-opens the
+  last project in `__init__`), time `open_project` alone, then the first `processEvents()` — a
+  QTimer'd background job fires there; time with the meter stubbed out too
+  (`SpaceMeter.measure_async = lambda self: None`) to see what the thread costs the UI.

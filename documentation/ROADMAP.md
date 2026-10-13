@@ -654,7 +654,7 @@ recipes are pure authoring.
       (order-filled; 8 light sheets fit, ~2-3 heavy exhaust; blanks on
       overflow, no crash). Screens/room: engine 16 (4×4 scroll math),
       vanilla max 12-declared/9-valid (mt $54-$59), screen_idx 8 render
-      PyBoy-verified; custom schema currently 8. Residuals named in
+      PyBoy-verified; custom schema currently 8 (S145: wrong — custom rooms take 16, measured in the game; DOC_AUDIT S145). Residuals named in
       capacities.json `_deferred_measurement_boxes` (E6 text budget,
       gate slots, per-sheet tile counts, 4×4 schema extension).
 - [x] **P3.1 — NPC sprite-id catalog** [G-B] — **DONE S91, NOT yet
@@ -2523,7 +2523,7 @@ the user picks.
       there). *User half:* the test ROM in SameBoy.
 - **CAP2 — the spill (split S135, user: "whatever works").** The S133 box bundled four
       independent changes; measured on the user's 11 rooms: $60 79 % / $64 79 % / $67 55 % / $17
-      3,259 B free — the class banks bind at ~14-15 such rooms. Three boxes (S136: + CAP2d, bank $6C split off CAP2b; S137: + CAP2e, stale saves — built S138 with the room songs past $7F), each its own test ROM. **S139: every box built (all user-confirmed; d S139) — no per-room data class is bound to one bank any more below 128 places; next = CAP3 (regions).** **S140: CAP3a built (regions; USER-CONFIRMED) — bank $71 binds next at ≈950 places (15 B a place, CAP5).** **S141: CAP3b built (the game's own moves walked in region 2; USER-CONFIRMED 2026-10-11 10:18 ("Everything works", r3)) — next = CAP4.** **S142: CAP4 split a-d; CAP4a built (scale + safety; USER-CONFIRMED 2026-10-11 14:24 "Yeah seems ok") — next = CAP4b.** **S143: CAP4b built (places by name, NOT yet user-tested) — next = CAP4c.** **S144: CAP4c built (kept room states, NOT yet user-tested) — next = CAP4d.**
+      3,259 B free — the class banks bind at ~14-15 such rooms. Three boxes (S136: + CAP2d, bank $6C split off CAP2b; S137: + CAP2e, stale saves — built S138 with the room songs past $7F), each its own test ROM. **S139: every box built (all user-confirmed; d S139) — no per-room data class is bound to one bank any more below 128 places; next = CAP3 (regions).** **S140: CAP3a built (regions; USER-CONFIRMED) — bank $71 binds next at ≈950 places (15 B a place, CAP5).** **S141: CAP3b built (the game's own moves walked in region 2; USER-CONFIRMED 2026-10-11 10:18 ("Everything works", r3)) — next = CAP4.** **S142: CAP4 split a-d; CAP4a built (scale + safety; USER-CONFIRMED 2026-10-11 14:24 "Yeah seems ok") — next = CAP4b.** **S143: CAP4b built (places by name; USER-CONFIRMED 2026-10-12 14:09) — next = CAP4c.** **S144: CAP4c built (kept room states; USER-CONFIRMED 2026-10-12 14:09) — next = CAP4d.** **S145: CAP4b + CAP4c USER-CONFIRMED 2026-10-12 14:09 ("Cap4b/4c seems to work. Will come back later if I find something"); CAP4d built (the Capacity tab + two meters; the arc's acceptance as a machine run — a fresh 160-room project made in the editor, built, walked in PyBoy; USER-CONFIRMED 2026-10-12 17:16 ("Confirm everything works")) — next = CAP5 (the per-region step counters first) or the `$3E` decoder box.**
   - [x] **CAP2a — LZ streams: layouts, attr maps, tilesets past $64 / $67.** **Built S135;
         USER-CONFIRMED 2026-10-09 12:59 ("Yep all good can confirm").** Compiler-only (`DecompressTileLayout` takes the bank from every
         reference — ARCHITECTURE "LZ stream banks (S135)"): `Project.stream_plan()` first fit
@@ -2751,7 +2751,7 @@ the user picks.
         Copy / Rename suggest "Cave 2"), no map ids or regions shown (vanilla rooms by name
         too), named AREAS (folders in the Rooms list, a World tab filter), the Rooms list with
         search, the World tab's search / filter / "this room and its neighbours".
-        **Built S143, NOT yet user-tested** (user: "1) Yeah seems ok 2) view show in case I want
+        **Built S143; USER-CONFIRMED 2026-10-12 14:09 ("Cap4b/4c seems to work")** (user: "1) Yeah seems ok 2) view show in case I want
         them 3) One level 4) Yes 5) No keep so I know wtf it is"). Byte-neutral, no test ROM.
         NEW `core/place_names.py` (every stored place reference in words; the game's rooms
         named uniquely — the eight unused ids that hold the Castle's room data "Castle (unused
@@ -2776,7 +2776,7 @@ the user picks.
         following the story" kept), scripts no NPC of that stage uses dropped (the S142
         measure: Castle 5.2 → 4.8 KB, GreatTree 2.1 → 1.9, Farm 2.3 → 1.2, Arena Lobby
         2.9 → 1.9 of scripts).
-        **Built S144, NOT yet user-tested** (user: "Uhm do you mean room states?" — yes, the
+        **Built S144; USER-CONFIRMED 2026-10-12 14:09 ("Cap4b/4c seems to work")** (user: "Uhm do you mean room states?" — yes, the
         word is ROOM STATES; "I am also going to edit boss rooms potentially, those have boss
         beaten states" → "1) Yes I want to be able to select states and play with states,
         vanilla and custom 2) yes of course is should stay [a beaten state after a save] 3) Yes
@@ -2810,15 +2810,54 @@ the user picks.
         re-run `tools/census_cutscenes.py` (scenes / steps change), the flag index's
         "check-only" list, and story_state (the hand-added `$00E5` must then come from the
         decoded Farm script). Its own session: the saved cutscene census changes.
-  - [ ] **CAP4d — the Capacity page + help**, then the arc's acceptance (a fresh project past
+  - [x] **CAP4d — the Capacity page + help**, then the arc's acceptance (a fresh project past
         150 places): the whole ROM (≈2.3 MB for content), bank $71 (≈950 places), the
         secondary ceilings (story checks 256, commands 255, flags 1,965, encounter lists 128,
         breeding pools 100, new gates / worlds 64, enemy rows 640, songs …); the always-full
         spill-bank bars ($60 / $64 / $67 / $6C) replaced.
+        **Built S145; USER-CONFIRMED 2026-10-12 17:16 ("Confirm everything works")** (user: "1) Cap4b/4c seems to work … 2) Sure [the
+        `$3E` box later] 3) Sounds good [a Capacity tab + two meters] 4) Perfect [rows in words,
+        the fullest room by name, banks only with Show technical ids] 5) Do a machine version. I
+        dont have time to make a fake 150 room project"). NEW `editor2/core/capacity.py` (the
+        report: ROM space = banks $60 / $64 / $67 / $6C + $80-$FF, 2.06 MB; rooms of ≈ bank $71's
+        free / 15 — measured +15 B a place, +3 in $76; "about N more rooms like your average
+        one"; 24 rows with the build's own counts; PROJECT_COMPILER §2.53), NEW
+        `app/capacity_tab.py`, `app/space_meter.py` = ROM space + rooms + ⚠ (the six bank bars
+        gone), help NEW `81_capacity.md`. *Accept (machine half) MET:* NEW
+        `tools/walk_fresh_project.py` — the real editor window made a fresh project (File → New
+        project, THE ATLAS HALLS: 160 rooms, own tilesets, 2 × 2 and two 4 × 4 rooms, guides,
+        stairs, the GreatTree's Well door, areas, songs; one undo step a room), saved, re-opened
+        (4.1 s to a ready window), measured, built by the window (4 MB; rooms 129-160 in region
+        1); PyBoy on the user's save: 405 checks, 0 failed (every hall + every screen of the
+        4 × 4 halls == the preview, every guide's words, stairs and script warps across the
+        128-room boundary, the Well door, songs, JOURNAL + CONTINUE in hall 140); `--negative`
+        (two tileset pointers swapped in bank $88) fails exactly those halls;
+        `census_place_banks` 5,591 + `census_stale_places` 1,835, 0 mismatched. **Found + fixed:**
+        opening that project took 22 s on the S144 code — the first space measurement
+        LZ-compressed every distinct stream (16 s; S142's probe was Copies — memo hits) and
+        held the interpreter: `tools/compress_tiles.py` `_Matcher` (byte-identical: 863 streams +
+        300 random shapes, the whole 4 MB ROM; `--selftest` in verify check 5), the meter's first
+        run after the window is up, the arrival migration's door index. **Found (measured), not
+        fixed:** the per-region step-counter ceiling (CAP5 first item); custom rooms take 16
+        screens (the S91 "8" was never true). *User half:* `DWM-S145-atlas-test.gbc` in SameBoy
+        (the Well door → the halls, the guides' warps, the 4 × 4 halls, a JOURNAL save in hall
+        140) + the Capacity tab on the user's project.
 - [ ] **CAP5 — secondary ceilings (as they bind).** (S140: + bank $71's per-place tables, 15 B a place → ≈950 places; the regions' id space is 63 × 128.) Story checks 256 / commands 255, named
       flags 1,965 (WRAM-bound), project encounter lists 128, breeding pools 100, own-
-      animation groups 32, screens per room 8 in the schema (16 in the engine) — EDITOR_DESIGN
-      §6.4 E. Measure a real project's need first; lift each in its own box.
+      animation groups 32, screens per room 16 (S145: the "8 in the schema" was never true) — EDITOR_DESIGN
+      §6.4 E. Measure a real project's need first; lift each in its own box. The Capacity tab
+      (S145) shows each with the project's own count.
+  - [ ] **(found S145, measured) screens per region — 640 step counters.** Every screen of a
+        custom room gets a one-byte counter (`Project.step_counter_allocation`, one-state screens
+        too) and a region's counters share the 640-byte area `$CD80-$CFFF` (§2.6 / §2.49): 128
+        rooms × 6 screens (768) stop the build, and `Document.next_free_mapid` fills region 0 by
+        map ids, not counters — a campaign of big town rooms hits this before 128 rooms. Options
+        to weigh with the user: (a) a one-state screen needs no counter (the S133 design note —
+        it would read a shared zero byte; check every reader / writer of a screen's counter
+        label first: scripts `write_ram` it, the render row clamps it, the step reader does
+        not); (b) the editor opens the next region when a room would not fit the current
+        region's counters (editor-only, no engine change). Acceptance: 128 rooms of 6 screens
+        build and play (PyBoy: every screen's state reads 0 / its rule).
 
 ### Phase D — Disassembly deepening (parallel; pick when blocked elsewhere)
 Driven by what the editor must EDIT, not completionism:

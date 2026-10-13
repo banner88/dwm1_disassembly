@@ -190,7 +190,8 @@ editor that draws its boxes) and fails on any other.
 machine-readable **CAPACITIES reference** [G-M] (every known ceiling
 with its evidence; every unknown one as a measurement box):
 - Rooms: free mapIDs (~128 practical, `$6B..$EA`); per-room screens
-  (engine 16 = 4×4, custom schema currently 8 — measured S91); per
+  (engine 16 = 4×4; S145: custom rooms take 16 too — the S91 "custom schema 8" was never
+  enforced, DOC_AUDIT S145); per
   screen-state NPCs (hard 8 + the distinct-sprite-sheet VRAM budget —
   measured S91; capacities.json).
 - Palettes: 4 BG groups per room; the tile picker GREYS OUT tiles whose
@@ -202,6 +203,26 @@ with its evidence; every unknown one as a measurement box):
 - Flags: safe-pool remaining; SRAM banks 1-3 once b2 lands.
 - Species: custom slots used / 32. Quest EIDs used / tail. Songs / 95.
 - Text/scripts: per-bank budget (numbers = E6, a G-M measurement box).
+
+**As built S145 (ROADMAP ARC CAP4d — the Capacity page; USER-CONFIRMED 2026-10-12 17:16 ("Confirm everything works"); user: the tab +
+two meters "Sounds good", rows in words with the fullest room by name and the banks only with
+Show technical ids "Perfect").** One report (`editor2/core/capacity.py`, PROJECT_COMPILER §2.53)
+measured off the UI thread after each edit:
+- **The status bar: two meters** — *ROM space* (the bytes of banks $60 / $64 / $67 / $6C + the
+  128 new banks your rooms, texts, screens, tilesets and animated tiles use, of 2.06 MB) and
+  *rooms N / ≈M* (M = where bank $71's per-room tables are full, 15 B a room — ≈950), + ⚠ n
+  (project-wide limits ≥ 80 %). A click opens the Capacity tab. The six per-bank bars of
+  S96-S139 are gone: since the 4 MB arc a full $60 / $64 / $67 / $6C is normal (they spill).
+- **The Capacity tab** (before Build & Play): the summary (ROM space, rooms, "about N more rooms
+  like your average one" and what decides it); rows by group (Space · Rooms · Text and story ·
+  Gates, battles and monsters · Music): *Used* (green / amber / red), *The fullest* (the room /
+  screen by name for per-room limits: screens of 16, people of 8, exits of 17, a room's block of
+  one place bank, its animations of one bank, animation groups of 32), *When it is full*;
+  double-click → the room on the Rooms tab or the tab that edits the row; View → Show technical
+  ids adds the Technical column + every bank's bytes. A room or screen using all of ITS OWN
+  allowance shows "all used" in amber and is not a warning.
+- **Found while counting** (measured): the per-region step-counter area — every screen of a
+  custom room has a counter byte, 640 a region, five screens a room on average (CAP5).
 
 ### 5.1 Rooms tab (the centerpiece)
 
@@ -359,7 +380,8 @@ tilesets; built S96, USER-CONFIRMED 2026-09-25 ("Everything works")):**
   screens. A whole DWM2 town (Pei) = one import, 87 slots, 6 screens.
 - **Metatile palettes per subtile** (`pal` int or list of 4): painting a
   vanilla cell that mixes slots no longer flattens it.
-- **Space meters** for banks $60/$64/$67/$71 in the status bar (§5.C).
+- **Space meters** for banks $60/$64/$67/$71 in the status bar (§5.C). (S145: ROM space + rooms,
+  and the Capacity tab — §5.C "As built S145".)
 - **Make editable works on every vanilla room** (98/98, all screens and
   states pixel-identical, clones compile) after fixing the extractor's script
   bank, the opcode arity table (BANK04_SCRIPT_ENGINE "Parameter counts"), the
@@ -2449,6 +2471,23 @@ stage" became a choice of ROOM STATES:
   another region is entered twice — `playback.Engine.start(state_ram=…)`).
 - **− Remove state** now warns that it does not renumber scripts (Keep states… does).
 
+**As built S145 (CAP4d — the Capacity page + the arc's acceptance; USER-CONFIRMED 2026-10-12 17:16 ("Confirm everything works"); user:
+"Do a machine version. I dont have time to make a fake 150 room project").** The page: §5.C "As
+built S145". The acceptance, machine half (`tools/walk_fresh_project.py`): the real editor window
+(offscreen) made a FRESH project from File → New project — THE ATLAS HALLS, 160 rooms in the
+16 gate looks, each with its own tileset copy, 2 × 2 rooms every 20th, two 4 × 4 rooms, guides,
+stairs, the GreatTree's Well door linked to hall 1, four areas, songs — one undo step a room;
+saved, re-opened, measured (225 KB of 2.06 MB, 160 of ≈959 rooms, about 799 more like the
+average 1.4 KB), built by the window's Build (4 MB, rooms 129-160 in region 1). In PyBoy on the
+user's save: every hall and every screen of the 4 × 4 halls == the editor preview, every guide's
+words, the stairs across the 128-room boundary both ways, script warps across it and around, the
+Well door both ways, room songs, a JOURNAL save in hall 140 + CONTINUE there — 405 checks, 0
+failed (negative control: two halls' tileset pointers swapped in a new bank → exactly those
+fail); `census_place_banks` 5,591 + `census_stale_places` 1,835 checks, 0 mismatched. Found on
+the way: opening that project took 22 s (the first space measurement LZ-compressed every
+distinct stream — S142's probe of 300 Copies never paid it) → a byte-identical fast match search,
+4.1 s to a ready window; the per-region step-counter ceiling (CAP5); 16 screens work.
+
 **E. Secondary ceilings at campaign scale (CAP5 — measure the need, lift what binds).** From
 the compiler's own limits (S133 grep of `editor2/core/*_MAX` / `_CAP`): story checks **256**
 (virtual flags `$1800-$18FF`, `story.STORY_CHECK_MAX`), story commands **255** (deduped),
@@ -2456,11 +2495,13 @@ named flags **1,965** (`wExtFlags` 256 B; more flags = more WRAM, ≈219 B left 
 `wCustomPool`), the project's encounter lists **128** (numbers 128-255), project enemy rows
 **640**, breeding pools **100**, new gates **64** (32-95), own-animation groups **32**,
 custom songs 95 slots + bank $75, boss-join redirect rows **34**, custom species 19 (engine),
-screens per room 8 in the schema (16 in the engine). (S138: the room-song / battle-song tables
+screens per room 16 (S145: the "8 in the schema" was never enforced — DOC_AUDIT S145), and
+(S145, measured) **640 screens per region** — every screen's one-byte step counter, one-state
+screens included, in the shared 640-byte area: 5 screens a room on average before 128 rooms. (S138: the room-song / battle-song tables
 stopped at map id `$7F` — a project's 22nd room had no song of its own; lifted to every id with
 ARC CAP2e, PROJECT_COMPILER §2.47.) None is hit by the POC; each is a
 table width or a WRAM block and gets lifted when a real project nears it — the editor's
-meters show all of them (CAP4).
+meters show all of them (CAP4; S145: the Capacity tab).
 
 **What stays exactly as it is:** vanilla rooms and their data; the arena (the lobby / battle
 copies keep working through global ids — `ArenaAlias` unchanged); every service NPC kind

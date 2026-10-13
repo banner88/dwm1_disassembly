@@ -6558,3 +6558,44 @@ hook at a routine's ENTRY says it started; read its results after it returns.
 `$3E` (change game mode), whose handler yields (`ret`) and resumes when the mode returns;
 `script_ops.TERMINAL` treats `$3E` as the end. **Rule:** classify an op as terminal only from its
 handler (a `jp` to the script-end path / a room change), never from what it looks like it does.
+
+## S145 — the Capacity tab and the 4 MB arc's acceptance (ROADMAP ARC CAP4d)
+
+**A scale probe made of COPIES measures the copies, not the scale.** **Symptom (S145, the arc's
+acceptance):** a fresh 160-room project made in the editor (each room its own tileset) took 22 s
+to open — S142 had measured a 311-place project at 4-5 s. **Root cause (cProfile + timing on the
+S144 and S145 code alike):** the first space measurement after opening LZ-compressed every
+DISTINCT layout / attr grid / tileset (`tools/compress_tiles.py`'s brute-force match search,
+16 s); S142's probe was 300 Copies of a few rooms — identical streams, all memo hits
+(`layouts._LZ_MEMO`). **Fix:** the same search through a 4-gram index + slice compares —
+byte-identical (863 streams of every project in the repo + 300 random shapes, the 160-room
+project's whole 4 MB ROM), 37× faster; `--selftest` in verify check 5. **Rules:** (1) a scale
+probe must have the DISTINCT content the real use has — copies hit every cache; build it the way
+the user will (new rooms, own art) before calling a feature scale-ready; (2) when making a
+deterministic generator faster, keep the old one callable and prove equality on every real input
+the repo has plus random shapes, then on a whole build's md5.
+
+**"Off the UI thread" in Python is not free.** **Symptom:** the meter's measurement ran in a
+`threading.Thread` (S142) — yet opening was 22 s with it and 4.4 s without it. **Root cause:**
+the GIL: a CPU-bound Python thread and the UI thread take turns. **Fix:** a fast measurement, and
+the first one started from the event loop after `open_project` returns. **Rule:** a background
+Python thread only hides WAITING (I/O, a subprocess); CPU work in it still costs the UI its time
+— make it cheap, or start it once the window is ready, and time the UI with and without it.
+
+**A page of limits finds the limits nobody listed.** **Symptom (S145, while writing the Capacity
+rows):** every screen of a custom room — one-state screens too — gets a one-byte step counter,
+and a region's counters share the 640-byte area; 128 rooms × 6 screens stop the build ("step
+counters exceed …"), and the editor numbers new rooms by map id, so big rooms hit it inside region
+0. No doc listed it as a ceiling (S140 documented the sharing, not the size). **Rule:** when you
+show "used of limit" for every ceiling, derive each count from the code that REFUSES (here
+`step_counter_allocation`'s two raises), not from the docs' list of ceilings — and measure the
+refusal on a generated project.
+
+**A window that reads its settings back makes a test depend on the last run.** **Symptom:**
+`test_app.s143_names` failed ("hub" stayed picked) on the S144 code as well. **Root cause:** a
+scratch script toggled View → Show technical ids and ended with `os._exit` before Qt flushed
+QSettings; the persisted `true` was read back by the test's new `MainWindow()` after the test
+had set `PN.SHOW_IDS = False`, so the picker's labels carried ids. **Fix:** `_ids_toggled`
+syncs the setting at once; the test pins the setting before creating its window. **Rule:** a
+test that builds a window must set every persisted setting that window reads, not the module
+flag it copies it into.

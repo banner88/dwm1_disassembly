@@ -68,6 +68,10 @@ built from it (the original ROM is never changed).
   the world (see *Worlds*); and the **Hub** box: where a lost battle, the
   WarpWing or "home" send the player — your room instead of the Castle,
   changing with flags (see *The hub*).
+- **Capacity** — every limit your project can reach, in words: ROM space, rooms
+  (about 950), the fullest room and screen, texts, flags, story checks, gates,
+  battle lists, songs … and what happens when each is full (see *Capacity*). The
+  two meters under the window (ROM space, rooms) open it.
 - **Build & Play** — build the ROM (Ctrl+B) and run it (Ctrl+R).
 - **Help** — this tab (F1).
 

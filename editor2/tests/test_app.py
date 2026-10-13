@@ -2548,6 +2548,10 @@ def s143_names(app, w):
         regions = sorted({int(str(r['mapID']), 0) >> 8 for r in gen.rooms})
         assert regions[-1] >= 2, regions
         from editor2.app.main import MainWindow
+        from PySide6.QtCore import QSettings
+        # S145: a new window reads View > Show technical ids back from the settings —
+        # pin it off here (a run that toggled it and died left it on: this check failed)
+        QSettings('dwm1_disassembly', 'DWM1Editor').setValue('view/show_ids', False)
         PN.SHOW_IDS = False
         w2 = MainWindow()
         w2.resize(1400, 900)
@@ -2745,6 +2749,106 @@ def s143_names(app, w):
         PN.SHOW_IDS = False
         shutil.rmtree(tmp, ignore_errors=True)
 
+
+
+def s145_capacity(app, w):
+    """S145 (ROADMAP ARC CAP4d; user S145: "Sounds good" to a Capacity tab + two status-bar
+    meters, "Perfect" to rows in words with the fullest room / screen by name and the
+    banks only with View → Show technical ids): the tab is there, fed by the meter's one
+    measurement; the two meters (ROM space, rooms) open it; every row of the report shows;
+    a per-room row opens that room on the Rooms tab, a project-wide row its tab; no
+    technical text without Show technical ids, the banks with it; the warning count
+    ignores one room / screen using all of its own allowance; and the measurement that
+    froze opening a fresh 160-room project (the LZ search) is fast."""
+    import shutil
+    import tempfile
+    import time as _t
+    from PySide6.QtCore import Qt
+    from editor2.core import capacity as CAP
+    from editor2.core import place_names as PN
+    tmp = tempfile.mkdtemp(prefix='s145_cap_')
+    try:
+        pdir = os.path.join(tmp, 'p')
+        shutil.copytree(os.path.join(REPO, 'editor2/example-project'), pdir,
+                        ignore=shutil.ignore_patterns('build'))
+        PN.SHOW_IDS = False
+        w.open_project(pdir)
+        app.processEvents()
+        titles = [w.tabs.tabText(i) for i in range(w.tabs.count())]
+        assert 'Capacity' in titles and titles.index('Capacity') == titles.index('Build && Play') - 1, titles
+        m, t = w.space_meter, w.capacity_tab
+        assert set(m.bars) == {'space', 'rooms'}, m.bars        # S145: two numbers, not six banks
+        t0 = _t.perf_counter()
+        m.measure()
+        app.processEvents()
+        took = _t.perf_counter() - t0
+        rep = m.report
+        assert rep and not rep['errors'] and rep['rows'], rep.get('errors')
+        assert t.rep is rep, 'the tab shows the meter\'s report'
+        assert m.bars['space'].format().startswith('ROM space') and \
+            m.bars['rooms'].format().startswith('rooms ') and '≈' in m.bars['rooms'].format()
+        assert m.last.get(0x60), 'the meter keeps the bank usage (S96 API)'
+        keys = {x['key'] for x in rep['rows']}
+        for k in ('rom_space', 'rooms', 'screens_room', 'npcs_screen', 'exits_screen',
+                  'screens_group', 'room_block', 'texts', 'flags', 'checks', 'commands',
+                  'gates', 'enc_lists', 'enemies', 'pools', 'species', 'skills', 'anims',
+                  'song_ids', 'song_bytes'):
+            assert k in keys, k
+        assert not [x for x in rep['rows'] if x['shown'] == '?'], \
+            [(x['key'], x['tech']) for x in rep['rows'] if x['shown'] == '?']
+        # the meters open the tab
+        w.tabs.setCurrentIndex(0)
+        m.openRequested.emit()
+        app.processEvents()
+        assert w.tabs.currentWidget() is t
+        t._fill()
+        items = [t.tree.topLevelItem(i) for i in range(t.tree.topLevelItemCount())]
+        rows = [it for it in items if it.data(0, Qt.UserRole)]
+        assert len(rows) == len(rep['rows']), (len(rows), len(rep['rows']))
+        assert t.tree.isColumnHidden(4) and not any(it.text(4) for it in items), \
+            'no technical text without Show technical ids'
+        assert not any(it.text(0).strip().startswith('bank $') for it in items)
+        texts = '\n'.join(_texts(t))
+        leaks = [p.pattern for p in _leak_patterns(
+            [w.session.doc.room_name(r) for r in w.session.doc.rooms]) if p.search(texts)]
+        assert not leaks, leaks
+        # a per-room row opens that room; a project-wide row opens its tab
+        it = next(x for x in rows if x.data(0, Qt.UserRole)['key'] == 'screens_room')
+        rid = it.data(0, Qt.UserRole)['room']
+        t._open(it, 0)
+        app.processEvents()
+        assert w.tabs.currentWidget() is w.rooms_tab and w.rooms_tab.room_id == rid, \
+            (w.rooms_tab.room_id, rid)
+        it = next(x for x in rows if x.data(0, Qt.UserRole)['key'] == 'song_ids')
+        t._open(it, 0)
+        app.processEvents()
+        assert w.tabs.tabText(w.tabs.currentIndex()) == 'Music'
+        # View → Show technical ids: the column + the banks
+        w._ids_toggled(True)
+        app.processEvents()
+        t._fill()
+        items = [t.tree.topLevelItem(i) for i in range(t.tree.topLevelItemCount())]
+        assert not t.tree.isColumnHidden(4) and any(it.text(4) for it in items)
+        assert any(it.text(0).strip() == 'bank $60' for it in items)
+        w._ids_toggled(False)
+        # the warning count: a room using all 16 screens is not a warning
+        fake = {'rows': [dict(x) for x in rep['rows']]}
+        for x in fake['rows']:
+            if x['key'] == 'screens_room':
+                x['level'] = 'full'
+        assert not any(x['key'] == 'screens_room' for x in CAP.worst(fake))
+        for x in fake['rows']:
+            if x['key'] == 'flags':
+                x['level'] = 'near'
+        assert [x['key'] for x in CAP.worst(fake)] == ['flags']
+        w.tabs.setCurrentIndex(0)
+        print(f'OK: Capacity (S145) — the tab + the two meters (ROM space, rooms) from one '
+              f'measurement ({took:.1f} s on the example), {len(rep["rows"])} rows in words, '
+              'a room row opens the room, a row its tab, no technical text unless Show '
+              'technical ids (then the banks), warnings skip one room\'s own allowance')
+    finally:
+        PN.SHOW_IDS = False
+        shutil.rmtree(tmp, ignore_errors=True)
 
 
 def s144_states(app, w):
@@ -4288,6 +4392,7 @@ def main():
     s142_scale(app, w)
     s143_names(app, w)
     s144_states(app, w)
+    s145_capacity(app, w)
 
     if do_rom:
         from editor2.app.build_worker import BuildWorker  # noqa: E402
