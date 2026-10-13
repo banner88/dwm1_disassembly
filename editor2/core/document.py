@@ -745,16 +745,51 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         $16B-$1EA, … (S140, ROADMAP ARC CAP3a — a map id is one byte, the high
         byte of a project mapID is the region; $EB-$FE are exit link ids). An
         arena room's map id (custom.arena) is never handed out again in another
-        region — the game knows those rooms by their bare map id."""
+        region — the game knows those rooms by their bare map id. S146 (ROADMAP
+        ARC CAP5 (b)): a region whose screen-state counters are 90 % used takes
+        no new room (`full_counter_groups`) — it goes to the next region."""
         used = {val(r['mapID']) for r in self.rooms}
         ar = (self.data.get('custom') or {}).get('arena') or {}
         glob = {val(r['mapID']) & 0xFF for r in self.rooms
                 if isinstance(ar, dict) and r.get('id') in (ar.get('lobby'), ar.get('battle'))}
+        full = self.full_counter_groups()
         m = 0x6B
         while m in used or not 0x6B <= (m & 0xFF) <= 0xEA or \
-                (m >> 8 and (m & 0xFF) in glob):
+                (m >> 8 and (m & 0xFF) in glob) or (m >> 8) in full:
             m += 1
         return m
+
+    def counter_use(self):
+        """S146 (ROADMAP ARC CAP5): {region: bytes of the 640-byte screen-state
+        counter area its rooms use} — `project.counter_use` on the document
+        (its own scripts' names; the build counts the lowered ones too)."""
+        from editor2.core.project import (counter_use, script_ram_refs,
+                                          WRAM_REGION_SIZE_DEFAULT)
+        cust = self.data.get('custom') or {}
+        scripts = list(cust.get('scripts') or [])
+        scripts += [{'ops': v} for k, v in (cust.get('script_preludes') or {}).items()
+                    if not str(k).startswith('_') and isinstance(v, list)]
+        refs, _r2 = script_ram_refs(scripts)
+        ar = cust.get('arena') or {}
+        glob = {val(r['mapID']) & 0xFF for r in self.rooms
+                if isinstance(ar, dict) and r.get('id') in (ar.get('lobby'), ar.get('battle'))
+                and not val(r['mapID']) >> 8}
+        rooms = [r for r in self.rooms if r.get('mapID') is not None]
+        return counter_use(rooms, (cust.get('wram') or {}).get('reserved', []), refs, glob)
+
+    def full_counter_groups(self):
+        """S146 (CAP5 (b), user: "Yes I also want (b)"): the regions whose counter
+        area is STEP_GROUP_FULL (90 %) used — a new room goes to the next group of
+        128 rooms instead (the rest is head room for states added later to the
+        rooms already there; a room has at most 16 screens)."""
+        from editor2.core.project import STEP_GROUP_FULL, WRAM_REGION_SIZE_DEFAULT
+        size = ((self.data.get('custom') or {}).get('wram') or {}).get(
+            'region_size', WRAM_REGION_SIZE_DEFAULT)
+        try:
+            use = self.counter_use()
+        except Exception:                                # noqa: BLE001
+            return set()
+        return {reg for reg, n in use.items() if n >= STEP_GROUP_FULL * size}
 
     def unique_room_id(self, base):
         ids = {r.get('id') for r in self.rooms}

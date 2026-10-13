@@ -181,6 +181,89 @@ STATE_RULE_MAX_TERMS = 8
 STEP_COUNTER_BASE = 0xCD80
 WRAM_REGION_MAX = 0x280             # $CD80+$280 = $D000 = the wram0 section end
 WRAM_REGION_SIZE_DEFAULT = 0x280    # 640 counters — campaign-scale default
+# S146 (ROADMAP ARC CAP5): a screen with ONE state whose counter no script
+# names reads this one always-zero byte instead of a counter of its own — the
+# original game does the same (65 single-state screens of the gate / maze /
+# arena rooms all point at $D998, which nothing writes). Its label; allocated
+# first (lowest free address from $CD80, so no counter sits right before it —
+# a write_ram2 to the counter below it would write its high byte here).
+STEP_ZERO_LABEL = 'wCustomStepZero'
+# S146 (CAP5 (b)): the editor puts a NEW room into the next group of 128 rooms
+# once its counters fill this share of the area (head room for states added to
+# the rooms already there — a room has at most 16 screens).
+STEP_GROUP_FULL = 0.90
+
+
+def script_ram_refs(scripts):
+    """S146: (every string param of every op of `scripts` (iterable of script
+    dicts), the write_ram2 targets) — a screen whose counter label is among the
+    first set keeps a counter byte of its own."""
+    refs, refs2 = set(), set()
+    for sc in scripts:
+        for it in sc.get('ops') or []:
+            if isinstance(it, list) and len(it) > 2 and it[0] == 'op':
+                for p in it[2:]:
+                    if isinstance(p, str):
+                        refs.add(p)
+                if it[1] in ('write_ram2', '0x13', 0x13) and isinstance(it[2], str):
+                    refs2.add(it[2])
+    return refs, refs2
+
+
+def screen_needs_counter(n_states, label, refs):
+    """S146 (ROADMAP ARC CAP5): an 'auto' screen gets a counter byte of its own
+    only with two or more states, or when a script names its counter (writes it
+    — a shared byte would change every one-state screen — or tests it). Every
+    other one-state screen reads STEP_ZERO_LABEL."""
+    return n_states > 1 or label in refs
+
+
+def _def_label(r, i):
+    return f"wCustomStep_Room{F.val(r['mapID']):02X}_S{i}"
+
+
+def counter_use(rooms, reserved, refs, global_ids, states_of=None):
+    """S146 (ROADMAP ARC CAP5): {region: bytes of the 640-byte counter area that
+    region's rooms span} — as Project.step_counter_allocation lays it out: one
+    region = everything from $CD80; several = the GLOBAL part (reserved, explicit
+    addresses, the shared zero byte, the arena copies' counters) from $CD80, then
+    each region's own bytes from the same address. `states_of(screen)` counts a
+    screen's states (Project.screen_states; default: its `states` list, else 1).
+    Raw data works (the editor's Document: refs from its unlowered scripts)."""
+    if states_of is None:
+        states_of = lambda s: s.get('states') or [s]               # noqa: E731
+    glob, per = set(), {}
+    for x in reserved or []:
+        glob.add(F.val(x['addr']))
+    n_glob, zero = 0, False
+    regions = {mid_region(F.val(r['mapID'])) for r in rooms if r.get('mapID') is not None}
+    multi = len(regions) > 1
+    for r in rooms:
+        if r.get('mapID') is None:
+            continue
+        m = F.val(r['mapID'])
+        reg = mid_region(m)
+        for i, s in sorted((int(k), v) for k, v in (r.get('screens') or {}).items()):
+            sc = s.get('step_counter', 'auto')
+            if isinstance(sc, dict) and sc.get('vanilla') is not None and \
+                    not r.get('state_rules'):
+                continue
+            if isinstance(sc, dict) and 'addr' in sc:
+                glob.add(F.val(sc['addr']))
+                continue
+            lbl = (sc.get('label') if isinstance(sc, dict) else None) or _def_label(r, i)
+            if not screen_needs_counter(len(states_of(s)), lbl, refs):
+                zero = True
+                continue
+            if not multi or (reg == 0 and mid_real(m) in global_ids):
+                n_glob += 1
+            else:
+                per[reg] = per.get(reg, 0) + 1
+    g = len(glob) + n_glob + (1 if zero else 0)
+    top = max([a - STEP_COUNTER_BASE + 1 for a in glob] + [g, 0])
+    if not multi:
+        return {min(regions, default=0): top}
+    return {reg: top + per.get(reg, 0) for reg in sorted(regions)}
 # S133: the last custom map id the engine can tell apart — bank $60
 # CustomPtrChase / CustomStateRules / CustomMonsterCast and bank $17
 # CustomAttrCheck double `mapID - $6B` in 8 bits (CROSSBANK_ROOMS "Custom-side
@@ -3034,6 +3117,38 @@ class Project:
                           sc.get('comment',
                                  self._def_step_comment(r, i)))
             s['_ctr_label'] = used[addr][0]
+        # S146 (ROADMAP ARC CAP5): one-state screens no script names share ONE
+        # always-zero byte (STEP_ZERO_LABEL) — the engine only reads a screen's
+        # counter (CustomPtrChase, CustomRenderCopy); state rules write only
+        # states the screen has (0 here). Allocated first, below every region's
+        # counters (bank $73 RegionEnter never needs to clear it).
+        refs, refs2 = script_ram_refs(self._scripts.values())
+        self._step_shared = []
+        keep = []
+        for r, i, s in auto:
+            lbl = s.get('_ctr_name_override') or self._def_step_label(r, i)
+            if screen_needs_counter(len(self.screen_states(s)), lbl, refs):
+                keep.append((r, i, s))
+            else:
+                s.pop('_ctr_name_override', None)
+                s['_ctr_label'] = lbl
+                self._step_shared.append((lbl, self._def_step_comment(r, i)
+                                          + " — one state: the shared zero byte"))
+        auto = keep
+        self._step_zero = None
+        if self._step_shared:
+            z = STEP_COUNTER_BASE
+            while z in used:
+                z += 1
+            used[z] = (STEP_ZERO_LABEL, "S146: the one-state screens' shared counter — "
+                       "always 0 (nothing writes it; the original game's $D998 rule)")
+            self._step_zero = z
+            below = used.get(z - 1)
+            if below is not None and below[0] in refs2:
+                raise ProjectError(
+                    f"{below[0]}: a write_ram2 to this counter would also write the "
+                    f"one-state screens' shared zero byte right after it — move it "
+                    "(custom.wram.reserved / an explicit addr) or use write_ram")
         # S140 (ROADMAP ARC CAP3a — regions): with more than one region the
         # region's counters SHARE one area: [reserved + explicit + the global
         # places' counters] from $CD80, then wCustomStepRegional — region 0's
@@ -3097,6 +3212,36 @@ class Project:
         first one (EQUs at the shared addresses) and the regional base."""
         self.step_counter_allocation()
         return list(self._step_overlay), self._step_regional_base
+
+    def step_counter_shared(self):
+        """S146 (ROADMAP ARC CAP5): [(label, comment)] — the one-state screens
+        whose label is an EQU of the shared zero byte, and that byte's address
+        (None when no screen shares it)."""
+        self.step_counter_allocation()
+        return list(self._step_shared), self._step_zero
+
+    def step_counter_addresses(self):
+        """S146: {label: address} of EVERY screen-state counter label the build
+        defines — bytes, the game's counters a copy follows (S118c), the other
+        regions' counters (S140) and the one-state screens' shared byte. Only
+        the bytes are in game.sym (an EQU is not), so the build manifest, Play
+        here and the cutscene player read this."""
+        out = {lbl: addr for lbl, addr, _c in self.step_counter_allocation()}
+        out.update({lbl: addr for lbl, addr, _c in self.step_counter_game()})
+        out.update({lbl: addr for lbl, addr, _c in self._step_overlay})
+        if self._step_zero is not None:
+            out.update({lbl: self._step_zero for lbl, _c in self._step_shared})
+        return out
+
+    def step_counter_use(self):
+        """S146 (CAP5): {region: counter bytes that region's rooms need} — the
+        bytes of the shared area its counters span (the global part counts in
+        every region). Never raises: a region past the area shows by how much.
+        Counted on the LOWERED scripts (generated ones included)."""
+        refs, _r2 = script_ram_refs(self._scripts.values())
+        return counter_use(self.rooms, self.custom.get('wram', {}).get('reserved', []),
+                           refs, set(getattr(self, 'global_ids', []) or []),
+                           self.screen_states)
 
     @staticmethod
     def _def_step_label(r, i):

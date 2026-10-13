@@ -343,6 +343,28 @@ relocated `wCustomNPCBuffer`/`wCustomExitBuffer` (`$CC80`/`$CD00`) and the
 S97 r2 carves — see `patches/wram.asm`) are hand-declared in
 `patches/wram.asm`, not compiler-emitted.
 
+**S146 (ROADMAP ARC CAP5) — one-state screens share ONE zero byte.** An `auto` screen (or a
+label-only `{"label": …}` one — the label is a NAME, not a pin) gets a counter byte of its own only
+when `project.screen_needs_counter`: it has two or more states, or a script (any op param of any
+script the build emits — `Project._scripts` after every lowering, preludes included:
+`project.script_ram_refs`) names its label. Every other one-state screen's label is emitted as
+`<label> EQU wCustomStepZero` (`Project.step_counter_shared`), and `wCustomStepZero` (`STEP_ZERO_LABEL`)
+is allocated FIRST among the auto counters — the lowest free address from `$CD80` (after `reserved`
+/ explicit addresses), below `wCustomStepRegional`, so bank $73 `RegionEnter` never clears it. Why it
+is safe (read S146 in the templates, measured in PyBoy): the engine only READS a screen's counter
+(`CustomPtrChase`, `CustomRenderCopy`); a state rule writes only states the screen has (0 on a
+one-state screen); Play here skips one-state screens; kept-state copies drop writes on them (§2.52);
+the original game does the same — 65 single-step screens point at `$D998`, which no script or
+instruction names (bank $0B annotation). A write_ram2 into the counter right BELOW the zero byte
+would write it too — the allocation refuses that project. `Project.step_counter_addresses()` =
+{label: address} of every counter label (bytes, the game's counters a copy follows, other regions'
+EQUs, the shared byte) — the build manifest's `step_counters`, the cutscene player's symbols and
+Play here (`cutscenes.counter_address`: the manifest first, then game.sym — EQUs are never in
+game.sym) read it. `Project.step_counter_use()` / `project.counter_use(rooms, reserved, refs,
+global_ids)` = {region: bytes of the area that region's rooms span} (the global part — reserved,
+explicit, the zero byte, the arena copies — counts in every region); the Capacity row and the
+editor's `Document.counter_use` (its own unlowered scripts' names) use it.
+
 **S118c — a copy that follows the game's room state:** `screens[k].step_counter =
 {"label": "wCustomStep_<id>_S<k>", "vanilla": "0xD92D"}` makes the screen's state the
 ORIGINAL room's own counter (`$D92A-$D99A`, validated): the region emits `<label> EQU
@@ -633,7 +655,8 @@ user-confirmed hand-authored code:
   `NpcSheetLoad0B` / `NpcSheetLoad06` / `NpcDrawPlain` / `NpcDrawMonster` + `NpcSheetToBank1` — a
   custom room's NPC sprite sheets 3-5 in VRAM bank 1) — current value in
   `templates/PINNED_SHA256` (`380733c6…44b0`; the S129 `eb0f0997…` is historical); TEMPLATE_SIZE
-  1967 B (`ShopPtrTable` `$47AF` in the S141 demo game.sym). Example pin `7cd31035…` (patched).
+  1967 B (`ShopPtrTable` `$47AF` in the S141 demo game.sym). Example pin `7cd31035…` (patched,
+  historical since S146 — `27de8ab9…`, patched, §2.54; S146 changed no template).
 * S138 re-pin (§2.47, ROADMAP ARC CAP2e): `bank_071_head.asm` (entry 0 `StalePlace` bound, entry
   5 `$81` past the last room, entry 10 `ContinueCheck` + `StalePlace`, `HubWarp`'s `HUB_CONTINUE`
   branch, no `cp $80`) — current value in `templates/PINNED_SHA256`; TEMPLATE_SIZE 1150 B
@@ -3982,7 +4005,8 @@ S139 layout exactly (one region; only the pinned template bytes moved).
 - **Step counters:** multi-region → [reserved + explicit + the global places'] from `$CD80`, then
   `wCustomStepRegional`: region 0's counters as bytes, every other region's as EQUs at the same
   addresses (`step_counter_overlay`, `emit_region_wram_steps`); one region = the S65 layout (the
-  EQU is still emitted, = the area's start).
+  EQU is still emitted, = the area's start). S146: the one-state screens' shared `wCustomStepZero`
+  is part of the first group (allocated first, below `wCustomStepRegional`; §2.6 "S146").
 - **Editor:** `Document.next_free_mapid` fills region 0 to `$EA`, then `$16B`… (skips `$EB-$FE`
   and the arena ids in regions ≥ 1); `render.place_number` reads the ROM's `RegionTable60`; Play
   here / cutscene playback write `wWarpRegion` (`playback.py`).
@@ -4141,7 +4165,9 @@ search alike).
   $64 / $67 / $6C / $71 / "new") are gone; the banks are the tab's technical section.
 - **The per-region step-counter ceiling (measured S145):** every screen's counter is allocated,
   one-state screens included (§2.6); a region holds 640 — 128 rooms × 6 screens stop the build.
-  Lifting it = ROADMAP CAP5.
+  Lifting it = ROADMAP CAP5. **S146 (§2.54): only screens with states (or a script-named / pinned
+  counter) take a byte; the row = `Project.step_counter_use()` per region (never raises — a group
+  past the area shows by how much).**
 - **16 screens:** a 4 × 4 custom room compiles and plays (the S91 "schema 8" was never enforced —
   DOC_AUDIT S145).
 - **Speed (S145):** `tools/compress_tiles.py` `_Matcher` — the LZ longest-match search via a 4-gram
@@ -4150,6 +4176,47 @@ search alike).
   `doors._indexed_doors` for the on-open arrival migration.
 - Tests: `test_compiler.test_s145` (10), `test_app.s145_capacity`; the acceptance:
   `tools/walk_fresh_project.py` (TOOLS_AND_DATA S145).
+
+## §2.54 S146 — SCREENS PER GROUP: one-state screens share one zero byte; new rooms move on at 90 % (ROADMAP ARC CAP5)
+
+**Built S146, NOT yet user-tested** (user: "1) Sounds good [one-state screens share a zero byte]
+2) Yes I also want (b) [the editor opens the next group] 3) Yes of course fix [Play here past the
+128th room] 4) Yes that's enough [a machine acceptance + a test ROM of the user's project]").
+Compiler + editor only — no template, no engine change, no schema change. The example pin moves
+once: `27de8ab9…` (patched; was `7cd31035…`): its 10 one-state screens' counter words in bank $60
+now read `$CD80` (`wCustomStepZero`) and the two counters scripts name (Room6C_S0, ArenaClone_S1)
+moved up one. The user's project: its 23 own counters → one byte; the S145 and S146 ROMs differ
+only in those counter words (44 bytes of bank $60) + the header checksum.
+
+- **The allocation** — §2.6 "S146": `project.screen_needs_counter` / `script_ram_refs`,
+  `STEP_ZERO_LABEL` first from `$CD80`, `step_counter_shared` → `<label> EQU wCustomStepZero` in the
+  wram region (`emit_region_wram_steps`), the write_ram2-below-the-zero-byte refusal,
+  `step_counter_addresses`, `step_counter_use` / `counter_use`.
+- **(b) the editor** — `Document.next_free_mapid` skips a region in `Document.full_counter_groups()`
+  = the regions whose `counter_use` ≥ `STEP_GROUP_FULL` (0.90) × `wram.region_size`; the rest of the
+  area is head room for states added later (a room has ≤ 16 screens, so ≥ 64 B of 640 always fits
+  the next room). The compiler stays the authority (the build still stops when a region overflows;
+  the Capacity row shows it).
+- **Play here past the 128th room** — `app/rooms/tab.py _play_state` → `cutscenes.counter_address`
+  (the build manifest first). Before S146 a multi-state screen of a room whose counters are EQUs (a
+  later region) answered "no build symbol for its counter — build first".
+- **The Capacity row** `screens_group` = screens with states in the fullest group (§2.53).
+- **Measured:** `tools/walk_counters.py` (TOOLS_AND_DATA S146) — THE COUNTER HALLS: 128 calm halls
+  × 6 one-state screens (region 0, 1 byte; the S145 code refuses the project: "region 0: its step
+  counters … do not fit") + 100 lit halls × 6 two-state screens with a state rule (region 1 to 577 B,
+  then the editor put lit halls 97-100 in region 2) + the switch hall (a lever `write_ram`s a
+  two-state counter, a tester `check_and_branch`es a one-state one — both own bytes); PyBoy on the
+  user's save: 1,988 checks, 0 failed (every screen: place, picture == the preview, the NPC count of
+  the state, the counter byte == the state, the zero byte 0; lit halls with the flag clear and set;
+  tester / lever; crossings between the groups; JOURNAL + CONTINUE in region 2 → state 1 by the rule;
+  Play here's counter for a region-2 room from the manifest — game.sym lacks it — and the playback
+  engine starting it in state 1); `--negative` (the zero byte poked to 1): calm halls 1 / 64 / 128
+  hang or fail while the same entries without the poke pass; `census_place_banks` 20,646 +
+  `census_stale_places` 2,339 + `census_regions` 3,052 checks, 0 mismatched; `walk_counters.py ab`
+  on the user's project: the S145 and S146 builds give the same place, picture, NPC + exit buffers
+  and counter on all 35 screens.
+- Tests: `test_compiler.test_s146` (10; `--rom`: every screen's counter word in a built ROM == its
+  label's address), `test_s145`'s ceiling check now uses two-state screens.
 
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 

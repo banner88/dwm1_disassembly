@@ -7194,6 +7194,11 @@ Exit_Boss_UnusedGate_s0_v1:  ; $77D5 — 1 exits
 RoomSub_Room_50:  ; $77DD — mt=[$50, $5F]
     dw StepBlk_Room_50_s0  ; screen 0
 
+; $D998 = the SHARED step counter of single-step screens (S146, ROM scan): 65 step blocks
+; point here (rooms $50/$51/$5F, the Coliseum, the forest / maze / conveyor rooms …) and no
+; script word, `ld [$D998]` or pointer load names it — it stays 0, so each of those screens
+; always reads its step 0. The editor's one-state custom screens do the same with
+; wCustomStepZero (PROJECT_COMPILER §2.6 "S146").
 StepBlk_Room_50_s0:  ; $77DF — RAM=$D998, 1 steps
     dw $D998  ; RAM step counter
     db $01, $26  ; step 0: layout=$01 bank=$26

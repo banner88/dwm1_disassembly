@@ -44,7 +44,9 @@ canvas (the ◀ ▶ state row) — a game room's and yours alike. When the room 
 the flags of the rule that shows that state are turned on (and a remembered-state flag of
 another state off), because the rules decide the state every time the screen loads. A
 room of another region than where the game starts is entered twice (the first entry's
-region change resets a room's own state).
+region change resets a room's own state). Since S146 this also works for rooms past
+your 128th (before, Play here said "no build symbol for its counter — build first" for
+them and started the screen in its first state).
 
 For every choice you can also turn flags **ON** or **OFF** (your named flags, the
 gates' cleared flags, the arena classes, any number) — to try a room's other states.

@@ -43,12 +43,19 @@ Click either meter (or the ⚠) to open the Capacity tab.
 - **View → Show technical ids** adds a *Technical* column (the table, bank or
   range behind each limit) and a list of every bank with its bytes.
 
-## Screens of a group of 128 rooms
+## Screens with states, per group of 128 rooms
 
-Each screen of your rooms remembers which room state it shows in one byte, and
-**every 128 rooms share 640 bytes** for this (the game keeps it in a fixed part
-of its memory). So the first 128 rooms may have 640 screens between them — five
-screens a room on average; a room of 4 × 4 screens uses 16. Past that the build
-stops and says so; the Capacity row *Screens of all your rooms* (or *… of one
-group of up to 128 rooms* once you have more than 128) shows how close you are.
+A screen that has **two or more room states** remembers which one it shows in
+one byte, and **every 128 rooms share 640 bytes** for this (the game keeps it in
+a fixed part of its memory). Since S146 a screen with **one state** costs nothing:
+all of them share one byte that always reads 0 — the original game does the same
+for its gate and maze rooms. (A one-state screen whose counter one of your own
+scripts reads or writes keeps a byte of its own.) So the limit is 640 screens
+*with states* in a group — a room of 4 × 4 screens with states uses 16.
+
+When a group's bytes are **90 % used**, a new room you make goes into the next
+group of 128 rooms by itself (the rest is room for states you add later to the
+rooms already there). If a group still fills up, the build stops and says so;
+the Capacity row *Screens with states* (in *one group of up to 128 rooms* once you
+have more than 128) shows how close you are.
 A copy of a game room that follows the game's own room state uses none of them.

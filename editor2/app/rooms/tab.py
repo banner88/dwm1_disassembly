@@ -2637,14 +2637,10 @@ class RoomsTab(QWidget):
             addr = val(sc['vanilla'])
         else:
             from editor2.core.project import Project
-            from editor2.core.cutscenes import read_symbols
+            from editor2.core.cutscenes import counter_address
             lab = sc.get('label') if isinstance(sc, dict) and sc.get('label') else \
                 Project._def_step_label(room, int(key))
-            sym = os.path.join(os.path.dirname(rom), 'game.sym')
-            try:
-                addr = read_symbols(sym).get(lab)
-            except OSError:
-                addr = None
+            addr = counter_address(rom, lab)
         on, off = set(), set()
         nums = self.s.doc.flag_numbers() if hasattr(self.s.doc, 'flag_numbers') else {}
         for ru in room.get('state_rules') or []:

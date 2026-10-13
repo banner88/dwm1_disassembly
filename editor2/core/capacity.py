@@ -23,10 +23,10 @@ two status-bar meters read ONE report from `measure(data, project_dir, repo_root
   * Per room / per screen ceilings show the fullest one by name (the largest room's
     screens of 16, the fullest screen's people of 8, the longest door list of 17, the
     biggest room's scripts + lists of one place bank, its animated tiles of one bank).
-  * Screens per region (S145 finding): every screen of a room has its own one-byte step
-    counter (`Project.step_counter_allocation`, auto for one-state screens too) and a
-    region's counters share the 640-byte area (`wram.region_size`, PROJECT_COMPILER
-    §2.6 / §2.49) — rooms of > 5 screens on average fill it before 128 rooms.
+  * Screens per region (S145 finding): a region's step counters share the 640-byte area
+    (`wram.region_size`, PROJECT_COMPILER §2.6 / §2.49). S146 (ROADMAP ARC CAP5): only a
+    screen with states (or whose counter a script names) has a byte of its own — the
+    one-state screens share `wCustomStepZero` (`Project.step_counter_use`).
 
 Never shows a map id or a region unless `place_names.SHOW_IDS` (CAP4b): a region is "a
 group of up to 128 rooms" named by its first room.
@@ -249,54 +249,34 @@ def _room_rows(prj, rooms, rows, rname, usage):
                      'Rooms', where=f'{rname(worst[0])}, screen {int(worst[1])}'
                      if worst else '', room=worst[0].get('id') if worst else None,
                      screen=int(worst[1]) if worst else None))
-    # screens per region: one step-counter byte each, 640 a region (S145 finding)
+    # screens per group: one step-counter byte for each screen with states (S145
+    # finding; S146, ROADMAP ARC CAP5: one-state screens share one zero byte —
+    # Project.step_counter_use counts what the allocator gives a byte of its own)
     try:
-        alloc = prj.step_counter_allocation()
-        overlay, regional_base = prj.step_counter_overlay()
-        from .project import STEP_COUNTER_BASE
+        from .project import STEP_COUNTER_BASE, STEP_GROUP_FULL
         size = prj.wram_region_size
-        groups = {}                              # region -> highest byte used
-        for _l, addr, _c in alloc:
-            groups[0] = max(groups.get(0, 0), addr - STEP_COUNTER_BASE + 1)
-        for _l, addr, cm in overlay:
-            reg = int(cm.rsplit('region ', 1)[-1]) if 'region ' in cm else 0
-            groups[reg] = max(groups.get(reg, 0), addr - STEP_COUNTER_BASE + 1)
+        groups = prj.step_counter_use()
         reg, used = max(groups.items(), key=lambda kv: kv[1], default=(0, 0))
         first = next((r for r in rooms if F.mid_region(F.val(r['mapID'])) == reg), None)
         multi = prj.multi_region()
+        tech = (f'step counters ${STEP_COUNTER_BASE:04X}+{size} (wram.region_size); '
+                f'region {reg} fullest; one-state screens share wCustomStepZero')
+        try:
+            prj.step_counter_allocation()
+        except ProjectError as e:
+            tech = str(e)
         rows.append(_row('screens_group', 'Rooms',
-                         'Screens of one group of up to 128 rooms (each screen remembers '
-                         'its state in one byte)' if multi else
-                         'Screens of all your rooms (each screen remembers its state in '
-                         'one byte; every 128 rooms start a new group)', used, size,
-                         'the build stops: that group\'s rooms have too many screens — '
-                         'fewer screens, or a new group (rooms past the 128th)', 'Rooms',
+                         'Screens with states in one group of up to 128 rooms (each one '
+                         'remembers its state in one byte; one-state screens share one)'
+                         if multi else
+                         'Screens with states (each one remembers its state in one byte; '
+                         'one-state screens share one; every 128 rooms start a new group)',
+                         used, size,
+                         'the build stops: that group\'s rooms have too many screens with '
+                         'states — fewer states, or a new group (new rooms go to the next '
+                         f'group once one is {int(STEP_GROUP_FULL * 100)} % full)', 'Rooms',
                          where=(f'the group with {rname(first)}' if multi and first else ''),
-                         tech=f'step counters ${STEP_COUNTER_BASE:04X}+{size} (wram.region_size); '
-                              f'region {reg} fullest' + (f' (regional from '
-                                                         f'${regional_base:04X})' if multi else '')))
-    except ProjectError as e:
-        # the allocation refused: count the screens that need a counter per group
-        # (what step_counter_allocation allocates — a screen following the game's
-        # counter needs none) so the row says by how much
-        per = {}
-        for r in rooms:
-            reg = F.mid_region(F.val(r['mapID']))
-            for s in (r.get('screens') or {}).values():
-                sc = s.get('step_counter', 'auto')
-                if isinstance(sc, dict) and sc.get('vanilla') is not None \
-                        and not r.get('state_rules'):
-                    continue
-                per[reg] = per.get(reg, 0) + 1
-        reg, used = max(per.items(), key=lambda kv: kv[1], default=(0, 0))
-        first = next((r for r in rooms if F.mid_region(F.val(r['mapID'])) == reg), None)
-        rows.append(_row('screens_group', 'Rooms', 'Screens of one group of up to 128 rooms '
-                         '(each screen remembers its state in one byte)', used,
-                         prj.wram_region_size,
-                         'the build stops: that group\'s rooms have too many screens — '
-                         'fewer screens, or a new group (rooms past the 128th)', 'Rooms',
-                         level='full', where=f'the group with {rname(first)}' if first else '',
-                         tech=str(e)))
+                         tech=tech))
     except Exception:                            # noqa: BLE001
         pass
     if not usage:

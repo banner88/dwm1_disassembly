@@ -2523,7 +2523,10 @@ the user picks.
       there). *User half:* the test ROM in SameBoy.
 - **CAP2 — the spill (split S135, user: "whatever works").** The S133 box bundled four
       independent changes; measured on the user's 11 rooms: $60 79 % / $64 79 % / $67 55 % / $17
-      3,259 B free — the class banks bind at ~14-15 such rooms. Three boxes (S136: + CAP2d, bank $6C split off CAP2b; S137: + CAP2e, stale saves — built S138 with the room songs past $7F), each its own test ROM. **S139: every box built (all user-confirmed; d S139) — no per-room data class is bound to one bank any more below 128 places; next = CAP3 (regions).** **S140: CAP3a built (regions; USER-CONFIRMED) — bank $71 binds next at ≈950 places (15 B a place, CAP5).** **S141: CAP3b built (the game's own moves walked in region 2; USER-CONFIRMED 2026-10-11 10:18 ("Everything works", r3)) — next = CAP4.** **S142: CAP4 split a-d; CAP4a built (scale + safety; USER-CONFIRMED 2026-10-11 14:24 "Yeah seems ok") — next = CAP4b.** **S143: CAP4b built (places by name; USER-CONFIRMED 2026-10-12 14:09) — next = CAP4c.** **S144: CAP4c built (kept room states; USER-CONFIRMED 2026-10-12 14:09) — next = CAP4d.** **S145: CAP4b + CAP4c USER-CONFIRMED 2026-10-12 14:09 ("Cap4b/4c seems to work. Will come back later if I find something"); CAP4d built (the Capacity tab + two meters; the arc's acceptance as a machine run — a fresh 160-room project made in the editor, built, walked in PyBoy; USER-CONFIRMED 2026-10-12 17:16 ("Confirm everything works")) — next = CAP5 (the per-region step counters first) or the `$3E` decoder box.**
+      3,259 B free — the class banks bind at ~14-15 such rooms. Three boxes (S136: + CAP2d, bank $6C split off CAP2b; S137: + CAP2e, stale saves — built S138 with the room songs past $7F), each its own test ROM. **S139: every box built (all user-confirmed; d S139) — no per-room data class is bound to one bank any more below 128 places; next = CAP3 (regions).** **S140: CAP3a built (regions; USER-CONFIRMED) — bank $71 binds next at ≈950 places (15 B a place, CAP5).** **S141: CAP3b built (the game's own moves walked in region 2; USER-CONFIRMED 2026-10-11 10:18 ("Everything works", r3)) — next = CAP4.** **S142: CAP4 split a-d; CAP4a built (scale + safety; USER-CONFIRMED 2026-10-11 14:24 "Yeah seems ok") — next = CAP4b.** **S143: CAP4b built (places by name; USER-CONFIRMED 2026-10-12 14:09) — next = CAP4c.** **S144: CAP4c built (kept room states; USER-CONFIRMED 2026-10-12 14:09) — next = CAP4d.** **S145: CAP4b + CAP4c USER-CONFIRMED 2026-10-12 14:09 ("Cap4b/4c seems to work. Will come back later if I find something"); CAP4d built (the Capacity tab + two meters; the arc's acceptance as a machine run — a fresh 160-room project made in the editor, built, walked in PyBoy; USER-CONFIRMED 2026-10-12 17:16 ("Confirm everything works")) — next = CAP5 (the per-region step counters first) or the `$3E` decoder box.** **S146: CAP5's
+      first box built (screens per group: one-state screens share one zero byte + new rooms move on
+      at 90 %; NOT yet user-tested) — next = the `$3E` decoder box, or the next CAP5 ceiling as it
+      binds.**
   - [x] **CAP2a — LZ streams: layouts, attr maps, tilesets past $64 / $67.** **Built S135;
         USER-CONFIRMED 2026-10-09 12:59 ("Yep all good can confirm").** Compiler-only (`DecompressTileLayout` takes the bank from every
         reference — ARCHITECTURE "LZ stream banks (S135)"): `Project.stream_plan()` first fit
@@ -2844,10 +2847,11 @@ the user picks.
         140) + the Capacity tab on the user's project.
 - [ ] **CAP5 — secondary ceilings (as they bind).** (S140: + bank $71's per-place tables, 15 B a place → ≈950 places; the regions' id space is 63 × 128.) Story checks 256 / commands 255, named
       flags 1,965 (WRAM-bound), project encounter lists 128, breeding pools 100, own-
-      animation groups 32, screens per room 16 (S145: the "8 in the schema" was never true) — EDITOR_DESIGN
+      animation groups 32, screens per room 16 (S145: the "8 in the schema" was never true), screens
+      WITH STATES per group of 128 rooms 640 (S146; one-state screens are free) — EDITOR_DESIGN
       §6.4 E. Measure a real project's need first; lift each in its own box. The Capacity tab
       (S145) shows each with the project's own count.
-  - [ ] **(found S145, measured) screens per region — 640 step counters.** Every screen of a
+  - [x] **(found S145, measured) screens per region — 640 step counters.** Every screen of a
         custom room gets a one-byte counter (`Project.step_counter_allocation`, one-state screens
         too) and a region's counters share the 640-byte area `$CD80-$CFFF` (§2.6 / §2.49): 128
         rooms × 6 screens (768) stop the build, and `Document.next_free_mapid` fills region 0 by
@@ -2858,6 +2862,20 @@ the user picks.
         not); (b) the editor opens the next region when a room would not fit the current
         region's counters (editor-only, no engine change). Acceptance: 128 rooms of 6 screens
         build and play (PyBoy: every screen's state reads 0 / its rule).
+        **Built S146, NOT yet user-tested** (user: "1) Sounds good 2) Yes I also want (b) 3) Yes of
+        course fix 4) Yes that's enough"). BOTH options: (a) a one-state screen whose counter no
+        script names reads one shared always-zero byte `wCustomStepZero` (first free from `$CD80`;
+        the original game's rule — 65 single-step screens read `$D998`, which nothing writes;
+        audited S146: the engine only reads a screen's counter, rules write only existing states);
+        (b) `Document.next_free_mapid` skips a group whose counters are 90 % used. Also fixed: Play
+        here in the state shown for a room whose counters are EQUs (a later region) — the manifest's
+        `step_counters` (`cutscenes.counter_address`). Compiler + editor only (PROJECT_COMPILER
+        §2.54). *Accept (machine half) MET:* `tools/walk_counters.py` — 128 rooms × 6 one-state
+        screens (+ 100 two-state rooms over two groups by (b) + a lever / tester room) built and
+        walked on the user's save: 1,988 checks, 0 failed; `--negative` (zero byte poked) fails /
+        hangs; censuses 26,037 checks, 0 mismatched; the user's project A/B S145 vs S146: 35
+        screens identical. *User half:* `DWM-S146-user-test.gbc` (the user's project) in SameBoy +
+        the Capacity tab / New room in the editor.
 
 ### Phase D — Disassembly deepening (parallel; pick when blocked elsewhere)
 Driven by what the editor must EDIT, not completionism:

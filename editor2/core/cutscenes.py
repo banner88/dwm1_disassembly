@@ -1370,8 +1370,9 @@ class ProjectCatalogue:
         self.prj = Project(fast_copy(data), root)
         self.symbols = dict(symbols or {})
         try:                       # the project's own room-state counters (S118c:
-            for lbl, addr, _c in (self.prj.step_counter_allocation()   # an EQU is not
-                                  + self.prj.step_counter_game()):     # in game.sym)
+            # an EQU is not in game.sym; S146: every label — other regions'
+            # counters and the one-state screens' shared byte too)
+            for lbl, addr in self.prj.step_counter_addresses().items():
                 self.symbols.setdefault(lbl, addr)
         except Exception:                                # noqa: BLE001
             pass
@@ -1618,6 +1619,24 @@ def read_symbols(sym_path):
     except OSError:
         pass
     return out
+
+
+def counter_address(rom_path, label):
+    """S146 (ROADMAP ARC CAP5): the address of a screen-state counter label in
+    the build of `rom_path` — the build manifest's `step_counters` first (every
+    label, EQUs included: a room past the 128th's counters and the one-state
+    screens' shared byte are EQUs, which game.sym never lists — Play here could
+    not start such a room in a chosen state before S146), then game.sym. None
+    when neither has it."""
+    d = os.path.dirname(rom_path)
+    try:
+        man = json.load(open(os.path.join(d, 'manifest.json')))
+        v = (man.get('step_counters') or {}).get(label)
+        if v is not None:
+            return int(str(v).lstrip('$'), 16)
+    except (OSError, ValueError, AttributeError):
+        pass
+    return read_symbols(os.path.join(d, 'game.sym')).get(label)
 
 
 # ------------------------------------------------------------ chains

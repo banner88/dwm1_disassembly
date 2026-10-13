@@ -6599,3 +6599,35 @@ had set `PN.SHOW_IDS = False`, so the picker's labels carried ids. **Fix:** `_id
 syncs the setting at once; the test pins the setting before creating its window. **Rule:** a
 test that builds a window must set every persisted setting that window reads, not the module
 flag it copies it into.
+
+## S146 — screens per group: one-state screens share one zero byte (ROADMAP ARC CAP5)
+
+**Before giving a value "a byte of its own", ask who WRITES it — the original game may already
+share it.** **Symptom (S145):** 128 rooms × 6 screens stopped the build — every custom screen had
+its own step counter. **Root cause:** the allocator gave one-state screens a counter they never
+use: the engine only READS a screen's counter (`CustomPtrChase`, `CustomRenderCopy`), state rules
+write only states the screen has, and the original game points 65 single-step screens at ONE byte,
+`$D998`, that no script or instruction names (a ROM scan: no `$FF12/13/15 $D998`, no `ld [$D998]`,
+no pointer load). **Fix:** one-state screens whose counter no script names share `wCustomStepZero`
+(PROJECT_COMPILER §2.6 "S146"). **Rule:** list every reader and writer of a resource (templates,
+scripts the build emits — after lowering —, the editor's own pokes, the original game's habit)
+before sizing it; a resource nobody writes can be shared, and the vanilla ROM is the first place
+to look for the precedent.
+
+**A label-only pin is a NAME, not an address.** **Symptom:** while splitting "auto" from
+"explicit" counters, treating `{"label": …}` screens as pinned would have kept every kept-state
+copy (S144 gives each screen a label-only dict) on its own byte. **Root cause:** S92's label-only
+form exists so scripts can NAME a counter; the scan of every emitted script already finds those
+names. **Rule:** decide by what the data is FOR (here: is the name used?), not by which schema
+form it was written in.
+
+**A negative control that breaks the game can hang the emulator itself.** **Symptom (S146):** the
+`--negative` walk (the zero byte poked to 1) never returned. **Root cause:** a one-state screen
+then reads 6 bytes past its only step entry: garbage NPC / exit pointers trash WRAM (map id `$10`,
+game mode `$5F`, then `$8F` / 5), and PyBoy's `tick` stops returning; first, the walk's own
+NPC-list scan (`while byte != $FF`) looped forever on the garbage list. **Fix:** every scan of
+game RAM is bounded; each negative case runs in its own process with a time limit, and the same
+case without the poke must pass (`walk_counters.py --negative`). **Rule:** a negative control must
+be able to FAIL by crashing — bound every RAM walk and run it under a watchdog, with a paired
+positive run proving the harness is not what fails.
+

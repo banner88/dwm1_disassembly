@@ -279,7 +279,10 @@
                  $CC80 (128 B) / wCustomExitBuffer $CD00 (127 B) /
                  step-counter region $CD80-$CFFF (compiler-owned, 640 B; S140: with
                  more than one region, wCustomStepRegional .. $CFFF is shared by every
-                 region's counters and zeroed by bank $73 RegionEnter on a region change) /
+                 region's counters and zeroed by bank $73 RegionEnter on a region change;
+                 S146: its first free byte (normally $CD80) is wCustomStepZero — the
+                 one shared, always-0 counter every one-state custom screen reads,
+                 below wCustomStepRegional so RegionEnter never touches it) /
                  wMonList $D001-$D040 (64 B, FX1/S71: roster display
                  lists + canonicalizer compaction map, relocated from $C0D8
                  whose safe extent ~36 B overflows at 40 slots) /
@@ -493,7 +496,9 @@
                                 the return codes $F0 (Grandpa: ask HATCH) / $F1
                                 (Grandpa: the naming) / $F2 (a master: "I hope…")
                                 that the room's entry script reads [S127]
-                   $D998        Shared by maze/conveyor/forest rooms
+                   $D998        Shared by 65 single-step screens (rooms $50/$51/$5F,
+                                Coliseum, forest / maze / conveyor …); nothing
+                                writes it — always 0 (S146 ROM scan)
                    $D99A        Last used (Room_5E)
                  Custom rooms: $D95E (room $6B, shares with MedalManRoom),
                  $D9A0-$D9A2 (room $6C, unique). See ROOM_DATA_FORMAT.md.

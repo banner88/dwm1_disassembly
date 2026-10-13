@@ -208,9 +208,10 @@ def write_manifest(out_dir, prj, project_path, rom_path, sym_path, rom_md5,
         "texts": texts,
         "scripts": scripts,
         "flags": {k: f"${v:04X}" for k, v in prj.flag_map().items()},
+        # S146: every counter label, EQUs included (other regions' counters,
+        # the one-state screens' shared zero byte) — game.sym lacks the EQUs
         "step_counters": {lbl: f"${addr:04X}"
-                          for lbl, addr, _ in (prj.step_counter_allocation()
-                                               + prj.step_counter_game())},
+                          for lbl, addr in sorted(prj.step_counter_addresses().items())},
         "symbols": owned,
         "warnings": compiler_warnings,
     }

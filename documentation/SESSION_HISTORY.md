@@ -1,5 +1,81 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-11 (Session 144 — **ROADMAP ARC CAP4c BUILT: KEPT ROOM STATES — MAKE EDITABLE
+> SHOWS EVERY SCREEN'S STATES AS PICTURES AND COPIES THE ONES YOU TICK (A MOMENT OF THE ORIGINAL STORY
+> PROPOSES THEM); A STATE THE ROOM'S OWN SCRIPTS SWITCH TO STAYS AFTER A SAVE (A FLAG + A STATE RULE);
+> THE COPY TALKS AS AT THAT MOMENT; KEEP STATES… FOR ANY ROOM; ▶ PLAY HERE IN THE STATE SHOWN;
+> FOUND + FIXED: THE STORY MODEL'S "POST-GAME" NOW = THE GAME'S ENDING, PLAYED IN PYBOY TO THE SAVE AT
+> "TO BE CONTINUED" (8 FLAGS AND 11 ROOMS' STATES WERE MISSING)**
+> (user: "Continue on the 4 mb expansion" → the CAP4c audit (below) + 5 questions → "Uhm do you mean
+> room states? When you say post-game do you mean vanilla maps? I am also going to edit boss rooms
+> potentially, those have boss beaten states" → yes / yes (only Make editable on game rooms) / the
+> post-game default would have copied every early boss room BEATEN → 3 questions → "1) Yes I want to be
+> able to select states and play with states, vanilla and custom 2) yes of course is should stay 3) Yes.
+> I will honestly edit a bunch of the NPC talking points anyway. MAYBE Ill even add 1 more new greattree
+> state for postgame-postgame"; S143 not reported on — stays NOT yet user-tested). **Built S144; USER-CONFIRMED 2026-10-12 14:09
+> ("Cap4b/4c seems to work. Will come back later if I find something", S145 start).** Byte-neutral for every existing project (no ROM change: the example pin `7cd31035…`,
+> patched, unchanged; the user's project builds `0edc817a…` (patched) on the S143 and the S144 code;
+> opening it migrates nothing); no test ROM — the feature is the editor's (the in-game behaviour is
+> measured below on scratch builds).
+> **The audit (measured):** 75 of the 101 game rooms have screens with several states; the story model
+> (`story_state.state_at`) gives each screen's state right after Starry Night (GreatTree entrance 3 of
+> 0-4, the Bazaar's right half 2 of 0-8 — the latter wrong, see "Found + fixed" below: 4); a copy that keeps one state must ANSWER its own counter tests
+> (the entry scripts pick their scene by them — KEY_LESSONS S144); 18 rooms still switch their own
+> state at the post-game (the 9 post-game boss rooms, the Castle, Bazaar, Stable, Arena Rooms, Starry
+> Shrine, Library, Well, intro bedroom, the ceremony room); at "after Starry Night" every early boss room
+> is in its BEATEN state (the user's catch); answering the story flags ON at the moment: 51.4 → 22.1 KB of
+> scripts over all rooms (the Castle 4.3 → 0.5); the 19 flags the game's scripts clear (587 scripts) are
+> ON at no story point; the room's script table is positional (a dropped middle script = a stub).
+> **Built (editor; `EDITOR_REVISION` S144):** NEW `editor2/core/room_states.py` — keep specs
+> (`default_spec`: the moment = after Starry Night, or "about to do its gate" for a gate's boss floor;
+> per screen the game's state there + every state the room's own scripts, folded at that moment, can
+> write — a fixed point; a counter used as a variable (`$08`'s `$D951` codes) keeps following the game),
+> `apply` (states kept, the start first, one state = a plain screen with its attr carried up; every
+> project script's tests / writes of the room's counter LABELS answered or renumbered; a kept non-start
+> state written by the room's own scripts → a project flag + a state rule (PROJECT_COMPILER §2.52);
+> story flags ON at the moment answered; `prune`; unused scripts → a stub `<room>_unused`; orphan
+> layouts / palettes removed; `states_kept`), `preview_copy` (the dialog's scratch copy, 0.14 s);
+> `Document.clone_vanilla(keep=)` / `keep_states`; `_migrate_clone_state` / `follow_game_counters` skip
+> kept rooms. NEW `editor2/app/rooms/states_dialog.py` `KeepStatesDialog` (states as pictures with
+> their people + exits, "2 people, 1 exit", keep ticks, "starts here", the moment incl. "Every state,
+> following the original game's story", "People talk as they did at that moment"); Rooms tab: Make
+> editable → the dialog, **Keep states…** on the state row, ▶ Play here starts in the state shown
+> (`_play_state`: a game room's counter; a project room's label from `game.sym` + its state rules'
+> flags; `playback.Engine.start(state_ram=)` re-enters once when a region change reset it), − Remove
+> state warns it does not renumber. The arena copies and the Milly roots room keep every state.
+> **Measured:** `tools/census_room_states.py` (NEW) — the 101 game rooms copied with every state and
+> with the defaults: every kept state renders the reference's original state pixel for pixel with the
+> same entry bytes, 0 mismatched (`--negative`, the attr not carried: 2 of 4 rooms fail); scripts
+> 51,412 → 30,140 B; the 101-copy project builds (4 MB). `tools/walk_room_states.py` (NEW, PyBoy, the
+> user's `.sav`, one process per room): every kept state of the 101 copies — the kept build with every
+> original counter zeroed (a new romhack) vs the every-state build with the original counter at the
+> original state — loads the same people / exits / screen, and runs on without a reset: **101 rooms,
+> 780 checks, 0 failed**; the kept Boss: Villager copy — the boss fought and won, the remembered flag ON
+> and the counter 1, a JOURNAL save, CONTINUE → its counter 0 and the beaten state loaded by the rule
+> (9 checks; `--negative`, rules dropped: the dragon is back, 1 FAIL). Play here's state through the
+> playback engine: the copy in state 0 / 1, GreatTree in state 2.
+> **Found + fixed — the story model's "post-game" lacked the game's ENDING** (the first walk: the kept
+> intro bedroom HUNG the game — its talk answered at a "post-game" with `$00EE` but not `$00EF` took
+> the ending's bedroom branch). `story_state.run_ending` (S132) set `$00EE` + ran the King's cascade;
+> the real ending — PLAYED in PyBoy from the model's "about to do Starry Night" (the final's win tail →
+> the night Farm → its talk → the Starry Shrine → the ceremony → the white room → the bedroom's dresser,
+> question, step-on trigger → the credits (game mode 4) → "TO BE CONTINUED", where the game SAVES (a
+> button + YES — its only save) → CONTINUE in a fresh game → the bedroom → the dresser → GreatTree → the
+> Castle) — sets 8 more flags and 11 rooms' states (Bazaar `$D93A` 4, Gate Hub, Farm, Stable, Arena
+> Rooms, MedalMan `$D95E` 5, Queen, the bedroom, the ceremony, the white room). `run_ending` now plays
+> that chain; `tools/census_story_state.py` plays Starry Night (`run_starry`) — 40 / 40 playable steps
+> equal, `extracted/story_state_census.json` regenerated (Play here's story points after Starry Night
+> change with it). Traced on the way: `$00E5` = the Farm's script 0 right after its op `$3E` (the
+> decoder ends scripts at `$3E`, the game resumes them — ROADMAP box); the ceremony's `$D951` 7 → 8 =
+> bank $01 `CheckPaletteAnimActive` → bank $02 entry 3, ending in NEW label `CeremonySkyDone`
+> ($02:$6886; the entry's `rst $00` table converted to `dw`, both trees, zero bytes); mode 4 = the
+> credits + "TO BE CONTINUED" (ARCHITECTURE).
+> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 1538 PASSED (+ `test_s144`, 19); test_app
+> PASS (+ `s144_states`); test_canvas `--rom` PASS. Help: 10_rooms (kept states, Keep
+> states…, remembered states, talk), 16_play_here (the state shown). Annotation (Iron Rule 6): bank $01
+> `CheckPaletteAnimActive`, bank $02 entry 3 + `CeremonySkyDone` (both trees; build `1ca65793…`).
+> **Next:** CAP4d — the Capacity page + help, then the arc's acceptance (a fresh project past 150 places).
+
 > Last verified: 2026-10-11 (Session 143 — **ROADMAP ARC CAP4b BUILT: PLACES BY NAME — NO MAP ID OR
 > REGION SHOWN ANYWHERE IN THE EDITOR (VIEW → SHOW TECHNICAL IDS BRINGS THEM BACK), UNIQUE ROOM NAMES,
 > AREAS (ONE LEVEL OF FOLDERS), ONE SEARCHABLE PLACE PICKER FOR ALL 28 ROOM CHOICES, THE ROOMS LIST AS

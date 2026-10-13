@@ -932,3 +932,12 @@ mapping, a `rst $10` executing in bank $80). ✏️ = fixed in place this sessio
 | EDITOR_DESIGN §6.4 C / PROJECT_COMPILER §2.49 "the step counters … zeroed on a region change" (true) — but nothing named the per-region SIZE as a ceiling | ⚠ gap | every screen (one-state screens too) takes a counter byte; a region has 640 — 5 screens a room on average; 128 rooms × 6 screens stop the build, and `next_free_mapid` fills region 0 by map ids, not counters | `ctr_probe.py`, `test_compiler.test_s145`; now a Capacity row and a CAP5 box |
 | `capacities.json` `custom_mapids` "bank $71 binds first at ~950 places (15 B a place)" (S140, from the template) | ✅ measured | +15 B a place in bank $71, +3 in bank $76 (fresh projects of 20 / 40 rooms); 959 for the S145 acceptance project | `test_compiler.test_s145` |
 | `editor2/help/80_build.md` / `90_limits.md` (S135-S139): the $60 / $64 / $67 / $6C bars and the "new" bar | ✏️ superseded | two meters (ROM space, rooms) + the Capacity tab; the banks on the tab with Show technical ids | help S145 |
+
+## S146 addendum (2026-10-13; screens per group — ROADMAP ARC CAP5)
+
+| File / claim | Verdict | What is true | Evidence |
+|---|---|---|---|
+| `extracted/capacities.json` `screens_per_region`, EDITOR_DESIGN §6.4 E, PROJECT_COMPILER §2.53, help 81 / 90 (S145): "every screen of a custom room — one-state screens too — gets a one-byte counter; 640 screens a region" | ✏️ superseded (true S145) | S146: only screens with states (or a script-named / pinned counter) take a byte; one-state screens share `wCustomStepZero`; 640 screens WITH STATES a group; new rooms move on at 90 % | `test_compiler.test_s146`; `tools/walk_counters.py` |
+| EDITOR_DESIGN §6.4 B (S133 design): "a one-state screen reads a shared zero byte" | ✅ now true | was a design note never built (S134-S145 allocated every screen); built S146 | PROJECT_COMPILER §2.54 |
+| ROOM_DATA_FORMAT / known_RAM_map "$D998 shared by maze/conveyor/forest rooms" | ⚠ incomplete | 65 single-step screens (rooms $50 / $51 / $5F, the Coliseum, forest / maze / conveyor rooms …); no script word or instruction names it — always 0 | ROM scan S146; bank $0B annotation |
+| (S144 code) Play here "starts the screen in the state shown — your room: its counter from the build's game.sym" | ⚠ gap | a counter that is an EQU (a later region's room) is never in game.sym → "no build symbol for its counter"; S146 reads the build manifest's `step_counters` first | `walk_counters.py` playhere; `test_s146` |

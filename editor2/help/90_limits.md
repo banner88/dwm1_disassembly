@@ -19,9 +19,11 @@
 - Every limit with how much of it you use: the **Capacity** tab (S145; see
   *Capacity*). Rooms: about **950** before the table of every room's record, songs
   and battles is full (15 bytes a room); ROM space for your content about 2 MB.
-- Screens (S145, measured): each screen keeps its room state in one byte and
-  every 128 rooms share **640** — five screens a room on average; past that the
-  build stops (the Capacity tab shows the count). A room has at most **16
+- Screens (S145, measured; S146): a screen with two or more room states keeps
+  its state in one byte and every 128 rooms share **640** of them; a screen with
+  one state costs nothing (S146: they share one always-zero byte, as the original
+  game's gate rooms do). New rooms move on to the next group of 128 when a group
+  is 90 % used; a full group stops the build (the Capacity tab shows the count). A room has at most **16
   screens** (4 × 4) — measured in the game: screen 15 of a 4 × 4 room loads and
   draws like the editor shows it (an older note said 8).
 - A fresh project of 160 rooms, each with its own tileset (S145, measured): it

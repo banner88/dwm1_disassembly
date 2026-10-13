@@ -238,20 +238,22 @@ wCustomExitBuffer:: ds 127 ;cd00-cd7e — exit data copied from overflow bank ($
 ; scale needs one counter per authored screen). TRANSIENT (see banner):
 ; load-inside-a-custom-room shows step-0 content by design.
 ; @BUILD_PROJECT BEGIN wram_step_counters
-wCustomStep_Room6B_S0:: db ;cd80 — Room $6B screen 0 step counter (gate_island)
-wCustomStep_Room6B_S4:: db ;cd81 — Room $6B screen 4 step counter (gate_island)
-wCustomStep_Room6C_S0:: db ;cd82 — Room $6C screen 0 step counter (dusk_mirror)
-wCustomStep_Room6C_S4:: db ;cd83 — Room $6C screen 4 step counter (dusk_mirror)
+wCustomStepZero:: db ;cd80 — S146: the one-state screens' shared counter — always 0 (nothing writes it; the original game's $D998 rule)
+wCustomStep_Room6C_S0:: db ;cd81 — Room $6C screen 0 step counter (dusk_mirror)
+wCustomStep_ArenaClone_S1:: db ;cd82 — Room $72 screen 1 step counter (arena_clone)
+    ds 1 ; reserved hole (explicit addresses above leave a gap)
 wCustomStep_Room6C_S5:: db ;cd84 — Room $6C screen 5 step counter (legacy hole — kept at base+4 so the relative counter layout matches the proven S55 shape; S65 migration moved the base $DE74→$CD80)
-wCustomStep_Room6D_S0:: db ;cd85 — Room $6D screen 0 step counter (gate_rotation)
-wCustomStep_Room70_S0:: db ;cd86 — Room $70 screen 0 step counter (ember_keystone)
-wCustomStep_Room71_S0:: db ;cd87 — Room $71 screen 0 step counter (medal_vault)
-wCustomStep_Room72_S0:: db ;cd88 — Room $72 screen 0 step counter (arena_clone)
-wCustomStep_Room72_S2:: db ;cd89 — Room $72 screen 2 step counter (arena_clone)
-wCustomStep_Room73_S0:: db ;cd8a — Room $73 screen 0 step counter (island_copy)
-wCustomStep_Room73_S4:: db ;cd8b — Room $73 screen 4 step counter (island_copy)
-wCustomStep_ArenaClone_S1:: db ;cd8c — Room $72 screen 1 step counter (arena_clone)
-    ds 627 ; reserved (padded to region_size; region ends at $D000 — PROJECT_COMPILER.md §2.6)
+    ds 635 ; reserved (padded to region_size; region ends at $D000 — PROJECT_COMPILER.md §2.6)
+wCustomStep_Room6B_S0 EQU wCustomStepZero ; Room $6B screen 0 step counter (gate_island) — one state: the shared zero byte
+wCustomStep_Room6B_S4 EQU wCustomStepZero ; Room $6B screen 4 step counter (gate_island) — one state: the shared zero byte
+wCustomStep_Room6C_S4 EQU wCustomStepZero ; Room $6C screen 4 step counter (dusk_mirror) — one state: the shared zero byte
+wCustomStep_Room6D_S0 EQU wCustomStepZero ; Room $6D screen 0 step counter (gate_rotation) — one state: the shared zero byte
+wCustomStep_Room70_S0 EQU wCustomStepZero ; Room $70 screen 0 step counter (ember_keystone) — one state: the shared zero byte
+wCustomStep_Room71_S0 EQU wCustomStepZero ; Room $71 screen 0 step counter (medal_vault) — one state: the shared zero byte
+wCustomStep_Room72_S0 EQU wCustomStepZero ; Room $72 screen 0 step counter (arena_clone) — one state: the shared zero byte
+wCustomStep_Room72_S2 EQU wCustomStepZero ; Room $72 screen 2 step counter (arena_clone) — one state: the shared zero byte
+wCustomStep_Room73_S0 EQU wCustomStepZero ; Room $73 screen 0 step counter (island_copy) — one state: the shared zero byte
+wCustomStep_Room73_S4 EQU wCustomStepZero ; Room $73 screen 4 step counter (island_copy) — one state: the shared zero byte
 wCustomStepRegional EQU $CD80 ; S140: the regions' shared counters start here
 ; @BUILD_PROJECT END wram_step_counters
 

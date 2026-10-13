@@ -2311,7 +2311,10 @@ commit to `$70` came at 1109, the next read was `$70`'s own entry script).
   with the engine copy, chosen per place (CAP2b).
 - **Step counters:** only screens with more than one state get one (a one-state screen reads
   a shared zero byte); allocated per region (C) and zeroed on a region change — the same
-  "transient" contract the window has had since S65.
+  "transient" contract the window has had since S65. **As built S146 (ROADMAP ARC CAP5; until
+  S146 every screen took a byte):** `wCustomStepZero`, the first free byte from `$CD80`, below
+  the regional area; a one-state screen whose counter a script names keeps its own byte; new rooms
+  go to the next region once a region's counters are 90 % used (PROJECT_COMPILER §2.54).
 
 **C. Regions — place identity beyond 128 (CAP3).** A place = (`wMapRegion`, `wMapID`) for
 `wMapID ≥ $6B`; vanilla ids ignore the region. The compiler assigns both **automatically**
@@ -2497,7 +2500,9 @@ named flags **1,965** (`wExtFlags` 256 B; more flags = more WRAM, ≈219 B left 
 custom songs 95 slots + bank $75, boss-join redirect rows **34**, custom species 19 (engine),
 screens per room 16 (S145: the "8 in the schema" was never enforced — DOC_AUDIT S145), and
 (S145, measured) **640 screens per region** — every screen's one-byte step counter, one-state
-screens included, in the shared 640-byte area: 5 screens a room on average before 128 rooms. (S138: the room-song / battle-song tables
+screens included, in the shared 640-byte area: 5 screens a room on average before 128 rooms.
+(S146, ROADMAP ARC CAP5: **640 screens WITH STATES** — one-state screens share one zero byte, and
+the editor starts the next region when one is 90 % used; PROJECT_COMPILER §2.54.) (S138: the room-song / battle-song tables
 stopped at map id `$7F` — a project's 22nd room had no song of its own; lifted to every id with
 ARC CAP2e, PROJECT_COMPILER §2.47.) None is hit by the POC; each is a
 table width or a WRAM block and gets lifted when a real project nears it — the editor's

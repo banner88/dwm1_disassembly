@@ -135,7 +135,8 @@ Key ranges:
 - $D93F–$D944: Farm (6 screens)
 - $D951: Gate_08 (9 steps — most of any single screen)
 - $D977–$D97A: Boss rooms (Villager, Talisman, Memories, Bewilder)
-- $D998: Shared by all maze/conveyor/forest rooms (1 step each)
+- $D998: Shared by 65 single-step screens (the maze / conveyor / forest rooms, rooms $50 / $51 /
+  $5F, the Coliseum …) — no script or instruction writes it, so it stays 0 (S146 ROM scan)
 - $D99A: Last used address (Room_5E)
 
 Custom rooms' counters are compiler-allocated from **$CD80** (S65, the
@@ -144,7 +145,10 @@ refuted S54). The window is TRANSIENT: zeroed at every save-restore, so a
 custom room's state reached by a script is lost on reload. **S97: flag
 STATE RULES** (`custom.rooms[].state_rules`, PROJECT_COMPILER §2.13) make
 state persistent: bank $60 entry 8 re-derives each screen's counter from
-event flags (which ARE saved) at every custom (re)load.
+event flags (which ARE saved) at every custom (re)load. **S146:** only a screen with two or
+more states (or whose counter a script names) has a byte of its own; every one-state custom screen
+reads one shared always-zero byte, `wCustomStepZero` — exactly what the original game does with
+`$D998` for its 65 single-step screens (PROJECT_COMPILER §2.6 "S146").
 
 ### Runtime NPC show/hide (opcodes $48/$49) — UNVERIFIED (S97)
 

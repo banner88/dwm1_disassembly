@@ -911,3 +911,28 @@ edge and the battle waits for input forever.
   last project in `__init__`), time `open_project` alone, then the first `processEvents()` — a
   QTimer'd background job fires there; time with the meter stubbed out too
   (`SpaceMeter.measure_async = lambda self: None`) to see what the thread costs the UI.
+
+## S146 techniques — 2,000 screens with their states, a negative that hangs, a mailbox trap
+
+- **Every screen in every state, falsifiably** (`tools/walk_counters.py walk`): per screen the place
+  (`wMapID`, `wMapRegion`, `wScreenIndex`), the picture == `ProjectRenderer.render_screen(room, k,
+  state_idx=n)` (the S135 compare), the NPC count of bank $0B's `wCustomNPCBuffer` (`$CC80`, 5-byte
+  entries, NPC = type < `$80`, until a TYPE `$FF` — BOUNDED to 24 entries) == the state's list, the
+  screen's counter byte (address from the build manifest's `step_counters`, EQUs included) == the
+  state, and the shared zero byte == 0. States by a rule: poke the rule's flag between passes
+  (`$D99B + n/8` MSB-first, or `wExtFlags` `$D140` for `$1000+`). ~2,000 screen visits ≈ 9 minutes.
+- **Trap — the first mailbox warp after a TALK into another screen of the SAME room** leaves BG tile
+  column 0, rows 2-9 stale (36 tiles; measured in a one-state hall and a two-state hall alike — not
+  the counters). A real script move to the same room's other screen after a talk draws cleanly
+  (`sr_walk.py`): it is the harness, not the game. Leave through another room before the check.
+- **A negative control that can hang the emulator:** the zero byte poked to 1 makes a one-state
+  screen read past its step entry — WRAM is trashed and PyBoy's `tick` stops returning. Run each
+  case as `walk_counters.py walk --only one:<hall>:poke` in a subprocess with a time limit (hang =
+  the expected failure), paired with `one:<hall>:plain`, which must pass.
+- **A/B of one project by two code versions** (`walk_counters.py ab --old OLD --out NEW`): build the
+  project with a `git worktree` of HEAD into OLD/build and with the working tree into NEW/build, then
+  compare every screen's place, picture (BG tiles outside sprites), NPC + exit buffers (`$CC80` /
+  `$CD00`, 40 bytes each) and counter. The user's project S145 vs S146: 35 / 35 identical.
+- **Sandbox trap:** `pkill -f '<pattern>'` also matches the shell running it when the pattern appears
+  in its own command line — the tool call dies with exit 144. Kill by PID (`ps … | awk`).
+

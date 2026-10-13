@@ -342,7 +342,8 @@ handed out by the editor (`Document.next_free_mapid`). Vanilla ids ignore the re
 - **`RegionEnter` on a change:** zeroes `wCustomStepRegional..$CFFF` (every region's step
   counters share one area, region 0's included; the reserved / explicit counters and the global
   places' sit below it — the compiler's per-region overlay, `Project.step_counter_overlay`; one
-  region = the S65 layout) and drops the two caches that compare `wMapID` alone
+  region = the S65 layout; S146: so does `wCustomStepZero`, the one always-0 byte every one-state
+  custom screen reads — PROJECT_COMPILER §2.6 "S146") and drops the two caches that compare `wMapID` alone
   (`wNpcColourMap`, `wTileAnimRoom` := `$FF`).
 - **Who must know the region:** an exit row into another region, or into any place from a vanilla
   or global room (whose region is whatever the player brought), carries the prefix

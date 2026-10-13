@@ -884,6 +884,12 @@ def emit_region_wram_steps(prj, warnings):
     # the label IS the original room's counter (no byte here; saved by the game)
     for label, addr, cm in prj.step_counter_game():
         out.append(f"{label} EQU ${addr:04X} ; {cm}")
+    # S146 (ROADMAP ARC CAP5): one-state screens no script names read the
+    # shared zero byte (the original game's $D998 rule for its gate rooms)
+    from .project import STEP_ZERO_LABEL
+    shared, _z = prj.step_counter_shared()
+    for label, cm in shared:
+        out.append(f"{label} EQU {STEP_ZERO_LABEL} ; {cm}")
     # S140 (ROADMAP ARC CAP3a): the regional area (bank $73 RegionEnter zeroes
     # wCustomStepRegional .. $CFFF on a region change) + the other regions'
     # counters at the same addresses
