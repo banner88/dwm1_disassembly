@@ -2585,6 +2585,7 @@ class Project:
         self._ext_taken = []           # a retry after an error starts at $80 again
         self._place_plan = None        # S136: the places take their banks after these
         self._anim_plan = None         # S139: the animation banks after the places
+        self._song_ext = None          # S147: the song banks after the animations
         banks = {LAYOUT_HOME_BANK: [], TILESET_HOME_BANK: []}
         used = {LAYOUT_HOME_BANK: 1, TILESET_HOME_BANK: 1}      # the self-ID byte
         overflow = []
@@ -2641,6 +2642,8 @@ class Project:
         self.stream_plan()
         _PL.plan(self)
         _TA.plan(self)                     # S139 (ARC CAP2d): the animation banks
+        from . import music as _MU
+        _MU.song_ext_banks(self)           # S147 (ARC CAP5): the song banks
         return dict(getattr(self, '_ext_taken', None) or [])
 
     def place_plan(self):

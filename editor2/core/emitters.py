@@ -341,7 +341,7 @@ def _room_scripts(prj, r, text_names, warnings):
     for idx, sid in table:
         script = prj.script(sid)
         out += S.emit_script(f"{tag}_Scr{idx:02d}",
-                             _regionize_ops(prj, r, _patch_params(r, script['ops'])),
+                             _regionize_ops(prj, r, _patch_params(r, script['ops'], prj)),
                              text_names=text_names, warnings=warnings)
         out.append("")
     out += _patch_data_lines(r)
@@ -353,8 +353,11 @@ def patch_label(r, name):
     return f"{room_tag(r)}_Patch_" + ''.join(c if c.isalnum() else '_' for c in str(name))
 
 
-def _patch_params(r, ops):
-    """S119: script params 'patch:NAME' (ops $24 / $61) -> the room's patch label."""
+def _patch_params(r, ops, prj=None):
+    """S119: script params 'patch:NAME' (ops $24 / $61) -> the room's patch label.
+    S147: 'song:NAME' (a project song, op $41 set_bgm — a cutscene's music step) ->
+    the song's sound id (songs are renumbered by the music plan, so a script names
+    the song, never its number)."""
     names = r.get('patch_data') or {}
     out = []
     for it in ops:
@@ -367,6 +370,13 @@ def _patch_params(r, ops):
                         raise ValueError(f"room {r.get('id')}: tile patch {nm!r} has no "
                                          "patch_data")
                     row.append(patch_label(r, nm))
+                elif isinstance(p, str) and p.startswith('song:') and prj is not None:
+                    nm = p.split(':', 1)[1]
+                    ids = prj.music_song_ids()
+                    if nm not in ids:
+                        raise ValueError(f"room {r.get('id')}: song {nm!r} is not one of "
+                                         "the project's songs (custom.music.songs)")
+                    row.append(ids[nm])
                 else:
                     row.append(p)
             out.append(row)
@@ -905,20 +915,25 @@ def emit_region_wram_steps(prj, warnings):
 # ---------------------------------------------------------------------------
 
 def emit_bank_074(prj, warnings):
-    """The first song bank: project songs (library refs / inline / files) ->
-    the proven song_codec emit path (fixed 95-slot record area, streams from
-    $4180). Deterministic: a pure function of project.json + the referenced
-    library JSONs (repo-committed extracted/ data) + project song files."""
+    """S147 (ROADMAP ARC CAP5): bank $74 = the pinned head (templates/
+    bank_074_head.asm: SongStart + the dummy records) + the song directory + every
+    song's record + the streams the plan keeps here (editor2/core/music.py).
+    Deterministic: a pure function of project.json + the referenced library JSONs
+    (repo-committed extracted/ data) + project song files."""
     P = prj.music_plan()
     warnings += [w for w in P.warnings if w not in warnings]
-    return M.song_bank_asm(prj, 0x74)
+    return M.emit_bank_074(prj)
 
 
 def emit_bank_075(prj, warnings):
-    """S116: the second song bank (the songs past bank $74's 16,000 stream
-    bytes, from the split id; AudioMasterTableExt row 5). All zero but the bank
-    byte when nothing spills."""
-    return M.song_bank_asm(prj, 0x75)
+    """S116: the second song bank; S147: its streams only (the records are in bank
+    $74's directory). The bank byte alone when nothing is placed there."""
+    return M.emit_song_bank(prj, 0x75)
+
+
+def emit_song_banks(prj, warnings):
+    """S147: the song banks past $75 (banks $80+, multi:song_banks)."""
+    return M.emit_song_ext_banks(prj, warnings)
 
 
 def emit_region_audio_master(prj, warnings):
@@ -1236,6 +1251,7 @@ def ext_bank_files(prj):
     out.update({b: PL.place_bank_file(b) for b in PL.plan(prj)['overflow']})
     from . import tileanim as TA                       # S139 (ARC CAP2d)
     out.update({b: TA.anim_bank_file(b) for b in TA.plan(prj)['overflow']})
+    out.update(M.song_bank_files(prj))                 # S147 (ARC CAP5): song banks
     return out
 
 
@@ -1311,6 +1327,10 @@ REGISTRY = [
     # S116 (P3.13b): the second song bank + the master-table rows that reach it
     ("music75", "custom.music", "file:patches/bank_075.asm",
      emit_bank_075, [0x75]),
+    # S147 (ARC CAP5): songs past banks $74 / $75 — whole files bank_0xx.asm, one
+    # per song bank $80+ (none when $74 / $75 hold every song)
+    ("songs_ext", "custom.music", "multi:song_banks",
+     emit_song_banks, list(range(EXT_BANK_FIRST, EXT_BANK_LAST + 1))),
     ("audio_master", "custom.music",
      "region:patches/bank_000.asm#rom0_audio_master", emit_region_audio_master,
      [0x00]),

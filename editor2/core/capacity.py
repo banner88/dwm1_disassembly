@@ -421,17 +421,29 @@ def _project_rows(prj, data, rows):
         tech='art banks $7F / $7C / $7A')
     from . import music as M
 
+    # S147 (ROADMAP ARC CAP5): one id per song (S116: one per channel — 95 ids were
+    # ~31 songs); song data past the two song banks lives in the 4 MB ROM's banks
+    # $80+ and is part of the ROM space row above
     def song_ids():
-        plan = prj.music_plan()
-        return sum(len(s['channels']) for s in plan.songs)
-    add('song_ids', 'Music', 'Song numbers (one per channel a song plays)', song_ids,
-        M.LAST_ID - M.FIRST_ID + 1, 'the build stops', 'Music', tech='ids $9E-$FC')
+        return len(prj.music_plan().songs)
+    add('song_ids', 'Music', 'Songs of your own', song_ids, M.SONG_IDS,
+        'the build stops: every song takes one of the 95 song numbers', 'Music',
+        tech='ids $9E-$FC, one a song (bank $74 SongDirectory)')
 
     def song_bytes():
-        return sum(prj.music_plan().stream_bytes.values())
-    add('song_bytes', 'Music', 'Song data', song_bytes, 2 * M.BANK_STREAM_CAP,
-        'the build stops: the two song banks are full', 'Music',
-        shown=lambda u: f'{kb(u)} of {kb(2 * M.BANK_STREAM_CAP)}', tech='banks $74 / $75')
+        return prj.music_plan().song_bytes()
+
+    def song_shown(u):
+        P = prj.music_plan()
+        shared = sum(n for b, n in P.stream_bytes.items() if b not in M.SONG_BANKS)
+        return kb(u) + (f' ({kb(shared)} of it in the ROM space)' if shared else '')
+    rows_before = len(rows)
+    add('song_bytes', 'Music', 'Song data (two song banks of about 31 KB, then the ROM '
+        'space your rooms share)', song_bytes, None, 'the ROM space row: "the ROM is full"',
+        'Music', shown=song_shown, tech='banks $74 / $75, then banks $80+ (first fit, '
+        'one bank a song)')
+    if len(rows) > rows_before and rows[-1]['used'] is not None:
+        rows[-1]['level'] = 'ok'
 
 
 def bank_rows(usage):

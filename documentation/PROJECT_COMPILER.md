@@ -38,7 +38,9 @@ to the proven overlay:
 | the `lay_copies_10` / `lay_copies_11` regions (the zero tails of `patches/bank_010.asm` / `bank_011.asm`) | walking layouts copied into the other follower bank, from `gamedata.art` + `custom.species` (S107 2b, §2.23 "Walking layouts") |
 | `gd_monster_names` / `gd_monster_nicks` in `patches/bank_041.asm`, `gd_monster_desc` / `gd_monster_desc_extra` in `patches/bank_04d.asm` | the ORIGINAL monsters' names, default nicknames and library descriptions (+ new species' own descriptions), from `gamedata.monster_text` / `custom.species[].description` (S108 P3.10 part 3, §2.24) |
 | `gd_arena_masters_04` / `gd_arena_masters_50` / `gd_arena_fees` / `gd_arena_team_sizes` in `patches/bank_004/050/009/06e.asm` | the arena: each match's master, the class entry fees, the team sizes, from `gamedata.arena` (S109 P3.10b, §2.25; the team members are `gamedata.enemies` rows) |
-| `patches/bank_075.asm` + region `rom0_audio_master` in `patches/bank_000.asm` | S116: the second song bank and the `AudioMasterTableExt` rows (§2.9) |
+| `patches/bank_075.asm` + region `rom0_audio_master` in `patches/bank_000.asm` | S116: the second song bank and the `AudioMasterTableExt` rows (§2.9). S147: bank $75 = self-ID + streams only; the region's custom row is always `[$9E, $4003, $74]` (§2.55) |
+| `patches/bank_074.asm` (S147) | whole file = the pinned head `templates/bank_074_head.asm` (`SongStart`, the 95 dummy records, `SongSilent`) + `SongDirectory` + every song's record + the streams that fit (§2.55) |
+| `patches/bank_0xx.asm` song banks (only when needed) | S147 (ROADMAP ARC CAP5): songs past banks $74 / $75 (`music.emit_song_ext_banks`, §2.55). Whole files (self-ID + streams), INCLUDEd by `bank_ext.asm`; numbered after the stream, place and animation banks |
 | `patches/bank_076.asm` | whole file = template head (`EncResolve`, S115 + `NewGateRowCopy`) + the project's encounter lists, rooms' lists / variants / rates, gates' plans (S114 P3.13a, §2.30) + the new gates' rows / sources (S115 NG1, §2.31) + `GateClearTable` (S117 NG2, §2.32) |
 | `patches/bank_ext.asm` | S134 (ROADMAP ARC CAP1): banks $80-$FF of the 4 MB ROM — a section + self-ID byte per bank (`emit_bank_ext`); a bank whose whole content another emitter writes (ARC CAP2 place banks, `emitters.ext_bank_files`) is INCLUDEd instead. `patches/game.asm` INCLUDEs it |
 | `patches/bank_080.asm` … (only when needed) | S135 (ROADMAP ARC CAP2a): the LZ stream overflow banks — layouts / attr maps / tilesets that did not fit $64 / $67 (`emit_stream_banks`, §2.44). Whole files, INCLUDEd by `bank_ext.asm`; `--apply` deletes one an earlier apply left that this project no longer generates |
@@ -476,15 +478,18 @@ module `editor2/core/music.py` `plan()`; engine: SOUND_SYSTEM §2 / §10):
   S64 padding to the pulse1/pulse2/wave trio and the dropping of extra channels
   are gone; `CustomBGMChanTable` (bank $71, 95 B) holds each song's count at its
   first id, read by the rewritten InitBGM (bank $71 entry 6 `CustomBGMStart`).
+  **(S116-S146; S147: one id per song, the counts in bank $74's directory —
+  §2.55.)**
 * **Two song banks:** songs in first-id order fill bank $74 (streams $4180-$7FFF,
   16,000 B), the rest bank $75 from the first song that no longer fits (the
   split); region `rom0_audio_master` (bank $00 `AudioMasterTableExt`) gets row 5
-  `[split, $4001, $75]`. Over 2 × 16,000 B or ids past $FC = error.
+  `[split, $4001, $75]`. Over 2 × 16,000 B or ids past $FC = error. **(S116-S146;
+  S147: first fit in $74 / $75 / banks $80+, no row 5 — §2.55.)**
 * **Gate rooms:** when any gate has a floors song, custom rooms with no song
   that a gate serves (gate_inserts) or ends in (custom boss rooms) get
   `CustomRoomBGMTable` byte **$FF** = play the dive's gate song; when any gate
   has a battle song, served rooms get $FF in `CustomRoomBattleBGMTable`.
-* **Emitted tables (bank $71, after `CustomRoomBGMTable`):** `CustomBGMChanTable`,
+* **Emitted tables (bank $71, after `CustomRoomBGMTable`):** `CustomBGMChanTable` (gone S147),
   `GATE_BGM_LEN EQU 96`, `CustomGateBGMTable`, `CustomGateBattleBGMTable`,
   `CustomRoomBattleBGMTable` (128; 256 since S138, §2.47), `BattleBGMSettings` [normal, boss, arena,
   Starry final], `BattleFightBGMTable` ([EID lo, EID hi, song]…, `$FF $FF`).
@@ -571,9 +576,10 @@ registering an emitter; nothing existing changes.
 | `palettes_a` | — (S137: emits a comment; the palettes go with the rooms, §2.46) | `region:…#room_palettes_a` | `$17` |
 | `render17` | — (S137: emits a comment; `emitters.render_lines` puts each room's rows + palettes into its place block, §2.46) | `region:…#room_render_tables` | `$17` |
 | `wram_steps` | `custom.rooms` + `custom.wram` | `region:…#wram_step_counters` | — |
-| `music74` | `custom.music` (+ `rooms[].music`) | `file:patches/bank_074.asm` | `$74` |
-| `music75` (S116) | `custom.music` (songs past bank $74's 16,000 B) | `file:patches/bank_075.asm` | `$75` |
-| `audio_master` (S116) | `custom.music` (the bank $75 row) | `region:patches/bank_000.asm#rom0_audio_master` | `$00` |
+| `music74` | `custom.music` (+ `rooms[].music`) | `file:patches/bank_074.asm` (S147: the pinned head + the song directory + every record + the streams that fit, `music.emit_bank_074`) | `$74` |
+| `music75` (S116) | `custom.music` (songs past bank $74's 16,000 B; S147: first fit, streams only) | `file:patches/bank_075.asm` | `$75` |
+| `songs_ext` (S147) | `custom.music` — songs past $74 / $75 (§2.55) | **`multi:song_banks`** — one whole file `patches/bank_0xx.asm` per song bank (none when $74 / $75 hold every song) | `$80-$FF` |
+| `audio_master` (S116) | `custom.music` (the bank $75 row; S147: the constant `[$9E, $4003, $74]` row) | `region:patches/bank_000.asm#rom0_audio_master` | `$00` |
 | `tileanim6c` (S102) | `custom.rooms[].tile_anims` (S139: the rooms `tileanim.plan` keeps in $6C + the directory) | `file:patches/bank_06c.asm` | `$6C` |
 | `anims_ext` (S139) | the rooms' animations that did not fit $6C (§2.48) | **`multi:anim_banks`** — one whole file `patches/bank_0xx.asm` per animation bank (none when everything fits) | `$80-$FF` |
 | `gd_monsters` `gd_enemies` `gd_encounters` `gd_family` `gd_special` `gd_exp_curves` `gd_growth_curves` `gd_skill_learn` `gd_skill_mp` `gd_skill_records` `gd_library` `gd_library_text` (S103) | `gamedata` (§2.20) | `region:` in banks $03 / $14 / $01 / $16 / $69 / $13 / $13 / $06 / $07 / $54 / $12 / $4D | those banks |
@@ -637,6 +643,14 @@ user-confirmed hand-authored code:
   `$A0`/`$A1` prefixes; TEMPLATE_SIZE 678 B; the S105 value `650278bb…` is historical);
   `bank_076_head.asm` `40972da2…2635` (entry 2 `GateBossWin`; TEMPLATE_SIZE 358 B; the
   S115 value `94cb8ece…5d90` is historical).
+* `editor2/core/templates/bank_074_head.asm` (S147, ROADMAP ARC CAP5, §2.55) — bank byte, 1-entry
+  table (entry 0 `SongStart`), the 95 dummy records `SongRecords` (`$4003`, ASSERTed — the
+  `rom0_audio_master` row points there), `SongSilent`, `SongStart`; ends at the `SONG DATA
+  (generated)` marker. `TEMPLATE_SIZE[$74]` 445 (`SongDirectory` `$41BD` in the S147 example
+  game.sym). Same session: `bank_071_head.asm` re-pinned (entry 6 `CustomBGMStart` = a 5-byte
+  forwarder `ld hl, $7400 / rst $10 / ret`; `TEMPLATE_SIZE[$71]` 1355, `Custom26DDTable` `$454B`).
+  Current values: `templates/PINNED_SHA256`. Example pin `6b01894d…` (patched; was `27de8ab9…`,
+  patched, historical).
 * `editor2/core/templates/bank_079_head.asm` (S121) — bank byte, 2-entry table, entry 0
   `MillyShapeTable` / entry 1 `MillyPlayerSheet` (§2.34); only emitted with the hook on;
   pinned `3d7cbdbe…ef95`; no TEMPLATE_SIZE (the bank holds a few hundred bytes).
@@ -656,7 +670,7 @@ user-confirmed hand-authored code:
   custom room's NPC sprite sheets 3-5 in VRAM bank 1) — current value in
   `templates/PINNED_SHA256` (`380733c6…44b0`; the S129 `eb0f0997…` is historical); TEMPLATE_SIZE
   1967 B (`ShopPtrTable` `$47AF` in the S141 demo game.sym). Example pin `7cd31035…` (patched,
-  historical since S146 — `27de8ab9…`, patched, §2.54; S146 changed no template).
+  historical since S146 — `27de8ab9…`, patched, §2.54; S146 changed no template; that one historical since S147 — `6b01894d…`, patched, §2.55).
 * S138 re-pin (§2.47, ROADMAP ARC CAP2e): `bank_071_head.asm` (entry 0 `StalePlace` bound, entry
   5 `$81` past the last room, entry 10 `ContinueCheck` + `StalePlace`, `HubWarp`'s `HUB_CONTINUE`
   branch, no `cp $80`) — current value in `templates/PINNED_SHA256`; TEMPLATE_SIZE 1150 B
@@ -2660,7 +2674,7 @@ first x|y, together, fast, keep_facing}, face {actor, dir | toward}, show / hide
 how instant|flicker|spin, at}, anim {actor, move (`ANIMS`, the measured `$1C` programs)},
 fly {actor, dir in_left|in_right|off_left|off_right, to (in), length 1-9, curve 0-5},
 name_hero (S121, §2.34),
-wait {frames}, wait_walks, music {song} | "back", sound <id>, shake {dir, frames, wait},
+wait {frames}, wait_walks, music {song} | "back" (S147: `song` may NAME a project song — lowered to the param `song:<name>`, resolved to its id by `emitters._patch_params` at emission; an unknown name stops the build), sound <id>, shake {dir, frames, wait},
 fade {to black|normal, step}, flash {frames}, followers hide|show, give_item {item, got,
 full}, give_monster {enemy, got, full}, tiles {x, y, w, h, copy {screen, state}} or
 {x, y, rows}, battle, move, end. TEXT = a dialogue id or `{"boxes": [[…]]}` (inline; the
@@ -4217,6 +4231,56 @@ only in those counter words (44 bytes of bank $60) + the header checksum.
   and counter on all 35 screens.
 - Tests: `test_compiler.test_s146` (10; `--rom`: every screen's counter word in a built ROM == its
   label's address), `test_s145`'s ceiling check now uses two-state screens.
+
+## §2.55 S147 — SONGS AT CAMPAIGN SCALE: one id per song, songs in any bank (ROADMAP ARC CAP5)
+
+**Built S147; USER-CONFIRMED 2026-10-15 22:12 ("everything works")** (user: "2) Yes music 3) 95 is more than enough 4) perfect.
+Dont put too many npcs in one room please, it lags hard"). Engine + compiler + editor; the engine
+side is SOUND_SYSTEM §11 (bank $74 `SongStart`, the dummy records, the song directory).
+
+- **Why (measured S147):** the S116 plan gave a song one id per channel (95 ids ≈ 31 songs) and
+  two song banks (2 × 16,000 B): the user's project + the 11th DWM2-size song stopped the build;
+  the 31-song DWM2 catalog is 57 KB.
+- **`music.plan`:** one id per song — explicit `first_id` claims (the key keeps its S64 name),
+  then `auto` the lowest free id in song order; > 95 songs = error; hw channel 0-3 checked. Bank
+  first fit in id order: `$74` (capacity = 16,384 − `TEMPLATE_SIZE[$74]` 445 − the directory 190
+  − every song's record, 2 + 4 × channels B), `$75` (16,383), then `('ext', k)` keys of 16,383 B;
+  a song never splits (> 16,383 B = error). `Plan.records_bytes`, `Plan.song_bytes()`; `split`
+  stays `None` (no master row 5).
+- **`music.song_ext_banks(prj)`:** the `('ext', k)` keys → banks `$80+` via
+  `Project._take_ext_bank('songs')`, after `tileanim.plan` (streams → places → animations →
+  songs); cached as `Project._song_ext` (reset with the other plans by `stream_plan`);
+  `ext_bank_owners` / `emitters.ext_bank_files` include them; `music.real_bank`.
+- **Emitters:** `music74` = `music.emit_bank_074` (head + `SongDirectory` + `SongRec_<id>` + the
+  bank's streams `SongCh_<id>_<k>`), `music75` / `songs_ext` = `music.emit_song_bank` (self-ID +
+  streams), `audio_master` = the constant row `[$9E, $4003, $74]`; bank $71's
+  `CustomBGMChanTable` is no longer emitted. `validators.bank_usage` counts $74 (template +
+  after the `SONG DATA (generated)` marker) and $75; the overflow checks include them.
+- **Songs by name in scripts:** a cutscene's `music {song: <name>}` lowers to `set_bgm
+  song:<name>`, replaced by the song's id in `emitters._patch_params` (with `prj`) — the ids are
+  the plan's, so scripts never store a song's number (`cutscene_editor.song_items` offers the
+  project's songs by name; S119-S146 offered `first_id`, "auto" for most songs).
+- **Found + fixed (building the demo):** a room whose only scripts are talk / spot cutscenes had no
+  script index 0 — the build refused it ("index 0 is RESERVED"); `cutscene_build.lower_project` now
+  gives such a room an empty entry script `cut:<room>:noentry` (`[['end']]`, as
+  `Document.new_conversation` does).
+- **Editor:** `music_doc.music_capacity` (songs of 95, bytes in the song banks / the shared space),
+  the Music tab meters ("your songs n / 95", the song data in words), Capacity rows `song_ids`
+  (Songs of your own, of 95) and `song_bytes` (info: the part in the ROM space); `music_preview`
+  = `song_machine` + `Machine.start_song`; the build manifest's `songs` (id, bank, stream
+  addresses). Help 61_music, 63_cutscenes, 81_capacity, 90_limits. `EDITOR_REVISION` S147.
+- **Pins:** example `6b01894d…` (patched; was `27de8ab9…`): its auto song `dwm2_bgm10` is `$9F`
+  (was `$A7`), the explicit `$9E` / `$A1` / `$A4` stay; banks $00 (the row), $71, $74, $75 differ.
+  The user's project builds `87a14624…` (patched; the S146 code `c8d4689f…`, patched): banks $00
+  (3 bytes), $71, $74 differ, and its song writes the same sound registers on both builds (2,400
+  frames, `sound_engine.Machine`).
+- **Measured:** `tools/census_sound_engine.py --custom` on the whole catalog (32 songs over
+  $74 / $75 / $80 / $81) 32 / 32 identical × 2,400 frames, `--negative` 4 / 4 mismatched;
+  `test_compiler.test_s147` (16; `--rom`: the catalog's ROM == the plan, every song started by
+  the built InitBGM with its channels / streams / bank, an id with no song silent, the census's
+  directory reader == the plan, the editor's preview == the built ROM's register writes for 32
+  songs × 900 frames); `tools/walk_songs.py` on the JUKEBOX HALLS (TOOLS_AND_DATA S147): 116
+  checks, 0 failed; `--negative` 46 FAIL (exactly the 23 song starts outside bank $74).
 
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 

@@ -219,7 +219,7 @@ YES / If NO / Then / Otherwise* row; ▲ ▼ ⧉ ✕ move, duplicate, remove):
 | Say / Ask YES-NO | the same box editor as NPC conversations: one editor per box, each drawn as the game draws it (red = does not fit; **Fit** / **Fit all** wraps it into boxes; **+ Add box**); top / bottom; YES / NO branches. What you type is kept when you pause (one undo step per pause) |
 | If flags… | the steps under *Then* / *Otherwise* |
 | Wait / Wait until everyone stops | frames (60 = 1 second) |
-| Music / Sound effect | a song (or back to the room's song) / a sound (▶ Hear it) |
+| Music / Sound effect | a song — the game's, or one of yours by name (S147: the build finds its number) — or back to the room's song / a sound (▶ Hear it) |
 | Shake / Fade / Flash | the screen shakes up-down / left-right; fades to black and back; flashes |
 | Hide / show the monsters | the player's following monsters (they come back by themselves after the scene) |
 | Change tiles of the room | a piece of the screen takes the look it has in another screen / room state of this room (paint the open door there) — until the room is loaded again |

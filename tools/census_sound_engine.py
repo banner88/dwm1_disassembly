@@ -21,9 +21,13 @@ difference = a mismatch (first frame + byte reported).
 
   python3 tools/census_sound_engine.py                       # every vanilla sound, both paths
   python3 tools/census_sound_engine.py --frames 2400 --json extracted/sound_engine_census.json
-  python3 tools/census_sound_engine.py --rom BUILT.gbc --ids 0x9E,0xA1 --custom
-        # a patched build: ids >= $9E start through the build's own InitBGM (the
-        # S116 custom path); the Machine mirrors it with start_channels(n)
+  python3 tools/census_sound_engine.py --rom BUILT.gbc --sym game.sym --custom [--ids 0x9E,0xA1]
+        # a patched build (S147): every project song id starts through the build's own
+        # InitBGM -> bank $71 entry 6 -> bank $74 SongStart (the song directory, the
+        # song's own bank $74 / $75 / $80+); the Machine is the EDITOR's path:
+        # Machine.start_song (sound_engine.py) on the original ROM + the build's bank
+        # $74 (dummy records) and song banks, with the channels read from the build's
+        # SongDirectory
   python3 tools/census_sound_engine.py --negative            # a deliberately broken
         # interpreter (DEC (HL) leaves the value) must mismatch
 """
@@ -62,7 +66,7 @@ def game_state(p):
     return w, h, regs, wave, on
 
 
-def run_one(p, st, rom, sid, path, frames, custom_n=None, negative=False):
+def run_one(p, st, rom, sid, path, frames, custom_chans=None, negative=False):
     """Events in game order: 'D' = the frame driver is about to run (snapshot taken),
     'Q' = ProcessBGMQueue is about to run. The driver also runs on lag frames
     (VBlankReentry, bank0 ~line 719) without a queue pass, so the replay follows
@@ -116,8 +120,8 @@ def run_one(p, st, rom, sid, path, frames, custom_n=None, negative=False):
             if kind == 'Q':
                 if not started:
                     started = True
-                    if custom_n:
-                        mach.start_channels(sid, custom_n)
+                    if custom_chans is not None:
+                        mach.start_song(sid, custom_chans)
                     elif path == 'bgm':
                         mach.start_bgm(sid)
                     else:
@@ -155,6 +159,30 @@ def run_one(p, st, rom, sid, path, frames, custom_n=None, negative=False):
         p.hook_deregister(0, SE.INIT_AUDIO)
 
 
+def directory(rom, sym):
+    """S147: the build's song directory (bank $74 SongDirectory, templates/
+    bank_074_head.asm): ([sid], [[(dummy id, slot, stream, bank)] per song], {banks})."""
+    b, a = sym['SongDirectory']
+    base = b * 0x4000 - 0x4000
+
+    def rd(addr):
+        return rom[base + addr]
+    ids, chans, banks = [], [], set()
+    for k in range(95):
+        ptr = rd(a + 2 * k) | (rd(a + 2 * k + 1) << 8)
+        if not ptr:
+            continue
+        n, bank = rd(ptr), rd(ptr + 1)
+        cs = []
+        for j in range(n):
+            q = ptr + 2 + 4 * j
+            cs.append((rd(q), rd(q + 1), rd(q + 2) | (rd(q + 3) << 8), bank))
+        ids.append(0x9E + k)
+        chans.append(cs)
+        banks.add(bank)
+    return ids, chans, banks
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--rom', default=os.path.join(REPO, 'data', 'DWM-original.gbc'))
@@ -162,10 +190,10 @@ def main():
     ap.add_argument('--ids', default=None, help='comma list (default: every sound in songs.json)')
     ap.add_argument('--paths', default='bgm,se')
     ap.add_argument('--custom', action='store_true',
-                    help='--rom is a patched build: the game plays its project songs through its '
-                         'own InitBGM; the Machine is the EDITOR PREVIEW (the original ROM + the '
-                         'build\'s song banks $74/$75 + its master-table rows, start_channels with '
-                         'the build\'s CustomBGMChanTable count) — needs --sym')
+                    help='--rom is a patched build (S147): the game plays its project songs through '
+                         'its own InitBGM -> bank $74 SongStart; the Machine is the EDITOR PREVIEW '
+                         'path (Machine.start_song on the original ROM + the build\'s bank $74 and '
+                         'song banks, the channels from the build\'s SongDirectory) — needs --sym')
     ap.add_argument('--sym', default=None, help='the build\'s game.sym (custom mode)')
     ap.add_argument('--original', default=os.path.join(REPO, 'data', 'DWM-original.gbc'))
     ap.add_argument('--negative', action='store_true')
@@ -180,23 +208,18 @@ def main():
                 ba, name = line.split()
                 b, ad = ba.split(':')
                 sym[name] = (int(b, 16), int(ad, 16))
-        b, ad = sym['CustomBGMChanTable']
-        table = rom[b * 0x4000 + ad - 0x4000:b * 0x4000 + ad - 0x4000 + 95]
-        rows = []
-        t = 0x3FE8 + 12
-        while rom[t] != 0xFF:
-            rows.append((rom[t], rom[t + 1] | (rom[t + 2] << 8), rom[t + 3]))
-            t += 4
+        ids, chans, banks = directory(rom, sym)
         orig = open(a.original, 'rb').read()
+        need = {0x74} | {c[3] for cs in chans for c in cs}
         preview = SE.Machine.for_songs(orig, {bk: rom[bk * 0x4000:(bk + 1) * 0x4000]
-                                              for bk in (0x74, 0x75)}, table_rows=rows).rom
-        ids = [0x9E + i for i, n in enumerate(table) if n]
-        chans = [table[i - 0x9E] for i in ids]
+                                              for bk in sorted(need)},
+                                       table_rows=[(0x9E, 0x4003, 0x74)]).rom
         if a.ids:
             keep = [int(x, 0) for x in a.ids.split(',')]
             chans = [c for i, c in zip(ids, chans) if i in keep]
             ids = [i for i in ids if i in keep]
-        print(f'custom songs in the build: {[(hex(i), c) for i, c in zip(ids, chans)]}; rows {rows}')
+        print(f'custom songs in the build: {len(ids)} in banks '
+              f'{sorted("$%02X" % b for b in banks)}')
     elif a.ids:
         ids = [int(x, 0) for x in a.ids.split(',')]
     else:
@@ -211,7 +234,8 @@ def main():
             if a.custom and path != 'bgm':
                 continue
             first, foreign = run_one(p, st, preview if a.custom else rom, sid, path, a.frames,
-                                     custom_n=nch if a.custom else None, negative=a.negative)
+                                     custom_chans=nch if a.custom else None,
+                                     negative=a.negative)
             ok = first is None and not foreign
             bad += not ok
             results.append({'id': f'${sid:02X}', 'path': path, 'frames': a.frames,

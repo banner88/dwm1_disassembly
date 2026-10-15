@@ -40,11 +40,18 @@ The converted song is saved in your project (`assets/music/`).
 
 ### Limits (the meters at the top)
 
-- **95 song ids** ($9E-$FC): every song takes one per channel (1-6).
-- **Two song banks** of 16,000 bytes each (banks $74 and $75). Songs fill the
-  first bank in id order; the rest go to the second.
+- **95 songs** of your own: each song takes ONE song number ($9E-$FC), whatever
+  its channels (1-6). (Before S147 a song took one number per channel — 95
+  numbers were about 31 songs.)
+- **Song data**: songs fill two song banks first (about 31 KB — the whole
+  DWM2 catalog is 57 KB), the rest goes into the 4 MB ROM's banks, the same ROM
+  space your rooms use (the Capacity tab's *ROM space*). One song always sits
+  in one bank (up to 16 KB — the largest DWM2 song, BGM #15, is 11.5 KB).
 - A song that uses the **sound-effect channels** (some DWM2 jingles) loses that
   channel whenever a sound effect plays.
+- A cutscene's **Music** step and the room / gate / battle settings name your
+  song, never its number — the numbers can change when songs are added or
+  removed, and the build finds the right one.
 
 ## Rooms
 

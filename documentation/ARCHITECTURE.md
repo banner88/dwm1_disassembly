@@ -128,6 +128,12 @@ The ROM is MBC5, 2 MB (`$0148` = `$06`). A 4 MB ROM (256 banks) needs no engine 
   clean a hard-coded list); the compiler's bank meters (`validators.TEMPLATE_SIZE` /
   `bank_usage`, `app/space_meter.py`); `randomizer/romdata.py` refuses a non-2 MB ROM (fine
   for vanilla input). 8 MB would need 9-bit bank numbers through every far call — not planned.
+- **S147 (ROADMAP ARC CAP5) — song banks:** project songs past banks $74 / $75 get banks $80+ too,
+  numbered after the stream, place and animation banks (`music.song_ext_banks`,
+  `Project._take_ext_bank('songs')`; whole files = self-ID + streams, INCLUDEd by
+  `bank_ext.asm`). The frame driver maps a channel's data bank (state +4) with a full 8-bit
+  `ld [$2100], a` (HRAM `$FFE8`, the site listed above), so a stream in bank $80-$FF plays —
+  measured S147 (the JUKEBOX HALLS: songs from banks $81 / $82 in PyBoy; SOUND_SYSTEM §11).
 
 ## LZ stream banks (S135 — ROADMAP ARC CAP2a)
 

@@ -10955,6 +10955,17 @@ AudioUpdate1x:
 ; sentinel $FF: ids $00-$20 -> $1C:$4001, $21-$36 -> $1D:$4001, $37+ -> $1E:$4001.
 ; Per-id record @ bank:ptr+(id-base)*4 = [state_slot, hw_channel, seq_lo, seq_hi].
 ; Full reference: documentation/SOUND_SYSTEM.md (S61).
+; What one call writes to the channel state at $DD80 + state_slot (read S147;
+; SOUND_SYSTEM §3/§4): +0 := 0 and +$19 := 0 (stream position = 0: the header
+; is parsed at the next tick), +1 := the record's hw byte, +2/+3 := the stream
+; pointer, +4 := [$4000] of the bank it just mapped = the RECORD's bank, which
+; becomes the channel's DATA BANK (the frame driver maps state +4 before every
+; tick — so a stream must sit in the same bank as its record), +9 := $FF. If
+; the slot was live (+0 != $FF), the NR51 mask $DE1D first loses that slot's old
+; hw channel bits. Keeps BC/DE/HL; returns in the caller's bank (saved from
+; [$4000]). Patched builds (S147, ROADMAP ARC CAP5): bank $74 SongStart runs it
+; on a dummy record per (slot, hw) and then overwrites +2/+3/+4 with the song's
+; own stream and bank (templates/bank_074_head.asm).
 AudioProcess:
     push bc
     push de
@@ -11068,12 +11079,12 @@ CopyDE2HL_3435:
 
 CopyDE2HL_3437:
 Jump_000_3437:
-    ld [hl+], a
+    ld [hl+], a                     ; +2 stream lo
     ld a, [de]
     inc de
-    ld [hl+], a
-    ld a, [$4000]
-    ld [hl], a
+    ld [hl+], a                     ; +3 stream hi
+    ld a, [$4000]                   ; the bank mapped now = the record's bank
+    ld [hl], a                      ; +4 := the channel's data bank (S147 note above)
     push hl
 
 AudioSkipTwoBytes:
@@ -11205,8 +11216,8 @@ AudioRotateChannel:
     cp $ff
     jp z, AudioPopSetDE
 
-    ldh a, [$e8]
-    ld [$2100], a
+    ldh a, [$e8]                    ; state +4: this channel's data bank (S147: any
+    ld [$2100], a                   ; bank, 8 bits — project songs in banks $80+ too)
     swap a
     rra
     and $03

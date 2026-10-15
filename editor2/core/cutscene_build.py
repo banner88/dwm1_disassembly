@@ -971,6 +971,17 @@ class Lowerer:
             self.op('0x4B')
             return
         song = m.get('song') if isinstance(m, dict) else m
+        if isinstance(song, str) and song and not song[:1].isdigit() \
+                and not song.startswith(('$', '0x', '0X')):
+            # S147: a project song by NAME (its sound id comes from the music plan
+            # at emission — emitters._patch_params 'song:')
+            names = {s.get('id') for s in ((self.env.custom().get('music') or {})
+                                           .get('songs') or [])}
+            if song not in names:
+                self.err(ctx, f'song {song!r} is not one of the project\'s songs')
+                return
+            self.op('set_bgm', f'song:{song}')
+            return
         try:
             self.op('set_bgm', F.val(song))
         except (TypeError, ValueError):
@@ -1398,6 +1409,17 @@ def lower_project(prj):
             if key[0] == 'entry':
                 table['0'] = gid
             else:
+                if '0' not in table:
+                    # S147 (found building the JUKEBOX HALLS): a room whose only
+                    # scripts are talk / spot scenes had no index 0 — the build
+                    # refused it ("index 0 is RESERVED"). The room gets an empty
+                    # entry script, as Document.new_conversation gives one
+                    eid = f'cut:{rid}:noentry'
+                    if eid not in by_id:
+                        scripts.append({'id': eid, 'ops': [['end']],
+                                        'comment': 'empty entry script (S147)'})
+                        by_id[eid] = scripts[-1]
+                    table['0'] = eid
                 idx = max([int(i) for i in table] + [0]) + 1
                 table[str(idx)] = gid
                 _wire(r, key, gid, idx)
@@ -1637,7 +1659,13 @@ def describe(st, names=None, place=None):
     if k == 'wait_walks':
         return 'Wait until everyone stops'
     if k == 'music':
-        return 'Music back to the room\'s song' if v == 'back' else f'Music ${F.val(v.get("song") if isinstance(v, dict) else v):02X}'
+        if v == 'back':
+            return 'Music back to the room\'s song'
+        sg = v.get('song') if isinstance(v, dict) else v
+        try:
+            return f'Music ${F.val(sg):02X}'
+        except (TypeError, ValueError):
+            return f'Music: your song {sg}'            # S147: a project song by name
     if k == 'sound':
         return f'Sound effect ${F.val(v.get("id") if isinstance(v, dict) else v):02X}'
     if k == 'shake':

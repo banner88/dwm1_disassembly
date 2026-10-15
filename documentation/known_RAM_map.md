@@ -844,7 +844,12 @@
                  engine scalars continue to $DE2B ($DE1C-$DE2B: state, frame,
                  $DE22/$DE23/$DE29 counters). Still *** OFF-LIMITS as scratch
                  (S45's corruption when writing $DDF0/$DDFE stands — those are
-                 audio channel bytes).
+                 audio channel bytes). Per channel (SOUND_SYSTEM §4): +0/+$19
+                 position, +2/+3 stream, +4 = the channel's DATA BANK (mapped by
+                 the frame driver before every tick; S147: bank $74 SongStart
+                 writes a project song's own bank here — $74/$75/$80+). $DE24 =
+                 the sound-id cursor AudioProcess reads and increments (S147:
+                 SongStart sets it to each channel's dummy id).
    1:DE74  106   CUSTOM SCRATCH BLOCK (S55 relocation; counters MIGRATED OUT
                  S65): $DE74-$DE7A static pad (step counters now at $CD80
                  region, see the $CC80 window row), wRoomRecScratch $DE7B,

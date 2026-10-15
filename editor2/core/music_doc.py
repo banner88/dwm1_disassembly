@@ -346,13 +346,20 @@ class MusicMixin:
 
     # ------------------------------------------------------------ capacity
     def music_capacity(self):
-        """{'ids': used, 'ids_max', 'banks': {bank: bytes}, 'bank_max', 'error'}."""
+        """{'ids': songs, 'ids_max': 95, 'bytes': all songs' stream bytes, 'home': the
+        bytes in banks $74 / $75, 'shared': the bytes in the 4 MB ROM's banks $80+,
+        'shared_banks': how many, 'banks': {bank key: bytes}, 'error'}.
+        S147 (ROADMAP ARC CAP5): one id per song (S116: per channel); songs past banks
+        $74 / $75 go to banks $80+ (the ROM space every room shares)."""
         try:
             P = self.music_plan()
         except Exception as e:
             return {'error': str(e)}
-        used = sum(len(s['channels']) for s in P.songs)
-        return {'ids': used, 'ids_max': M.LAST_ID - M.FIRST_ID + 1,
+        home = sum(n for b, n in P.stream_bytes.items() if b in M.SONG_BANKS)
+        shared = sum(n for b, n in P.stream_bytes.items() if b not in M.SONG_BANKS)
+        return {'ids': len(P.songs), 'ids_max': M.SONG_IDS,
+                'bytes': home + shared, 'home': home, 'shared': shared,
+                'shared_banks': sum(1 for b in P.stream_bytes if b not in M.SONG_BANKS),
                 'banks': dict(P.stream_bytes), 'bank_max': M.BANK_STREAM_CAP,
                 'song_ids': dict(P.song_ids), 'error': None,
                 'warnings': list(P.warnings)}

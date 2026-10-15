@@ -1723,7 +1723,9 @@ more variety"); include the channel-count extension; MIDI import automatic.
   WAV…; a name for any song (`music.names`); Add to the project / Remove from the
   project (clears its assignments); Import MIDI… (automatic; the song file goes
   to `assets/music/<id>.json`, `source.file`). Meters: 95 song ids, bank $74,
-  bank $75 bytes.
+  bank $75 bytes. **S147 (ROADMAP ARC CAP5, PROJECT_COMPILER §2.55):** "your songs
+  n / 95" (one id a song) + the song data in words (the part past the two song
+  banks is in the ROM space the rooms share).
 * **Rooms page:** every custom + vanilla room: the game's song, your song,
   "battles here". **Gates page:** every gate (vanilla + new): floors song,
   battle song. **Battles page:** normal / boss / arena / Starry final + a song
@@ -2497,7 +2499,9 @@ the compiler's own limits (S133 grep of `editor2/core/*_MAX` / `_CAP`): story ch
 named flags **1,965** (`wExtFlags` 256 B; more flags = more WRAM, ≈219 B left in
 `wCustomPool`), the project's encounter lists **128** (numbers 128-255), project enemy rows
 **640**, breeding pools **100**, new gates **64** (32-95), own-animation groups **32**,
-custom songs 95 slots + bank $75, boss-join redirect rows **34**, custom species 19 (engine),
+custom songs 95 slots + bank $75 (S147: **95 SONGS**, one id each, their data in banks $74 / $75
+then the 4 MB ROM's banks $80+ — the 11th DWM2-size song had stopped the user's project; PROJECT_COMPILER
+§2.55), boss-join redirect rows **34**, custom species 19 (engine),
 screens per room 16 (S145: the "8 in the schema" was never enforced — DOC_AUDIT S145), and
 (S145, measured) **640 screens per region** — every screen's one-byte step counter, one-state
 screens included, in the shared 640-byte area: 5 screens a room on average before 128 rooms.
@@ -2506,7 +2510,11 @@ the editor starts the next region when one is 90 % used; PROJECT_COMPILER §2.54
 stopped at map id `$7F` — a project's 22nd room had no song of its own; lifted to every id with
 ARC CAP2e, PROJECT_COMPILER §2.47.) None is hit by the POC; each is a
 table width or a WRAM block and gets lifted when a real project nears it — the editor's
-meters show all of them (CAP4; S145: the Capacity tab).
+meters show all of them (CAP4; S145: the Capacity tab). **S147 audit** (every ceiling above
+against a campaign of hundreds of places, "each its own music"): songs bound first (lifted S147);
+next would come the project's battle lists 128 + enemy rows 640 (~128 places with battles of their
+own), flags 1,965 (~500-650 rooms at 3-4 a room), story checks / steps, new gates + worlds 64 — the
+user: "very reasonable in terms of current limits and unlikely to be an issue".
 
 **What stays exactly as it is:** vanilla rooms and their data; the arena (the lobby / battle
 copies keep working through global ids — `ArenaAlias` unchanged); every service NPC kind

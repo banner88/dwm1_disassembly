@@ -6631,3 +6631,52 @@ case without the poke must pass (`walk_counters.py --negative`). **Rule:** a neg
 be able to FAIL by crashing — bound every RAM walk and run it under a watchdog, with a paired
 positive run proving the harness is not what fails.
 
+## S147 — songs at campaign scale: one id per song, songs in any bank (ROADMAP ARC CAP5)
+
+**A per-object field the engine re-reads every tick is a free indirection — reuse the engine's own
+init and patch only that field.** **Symptom:** a project song took one sound id PER CHANNEL and had
+to sit in banks $74 / $75 (the master table maps an id to ONE bank: stream + record together); the
+11th DWM2 song stopped the user's project. **Root cause:** nothing in the engine needs that — ROM0
+`AudioProcess` stamps `[$4000]` (the bank it mapped for the record) into channel state +4, and the
+frame driver maps state +4 before every tick; the id → record mapping is only how a channel STARTS.
+**Fix:** bank $74 `SongStart` runs the unchanged AudioProcess on a dummy record of the channel's
+(slot, hw) — so every engine side effect (NR51 mask, +1, +9, positions) is the engine's own — then
+overwrites +2/+3 (stream) and +4 (bank) from a song directory (SOUND_SYSTEM §11). **Rule:** before
+widening an id space or adding table rows in ROM0, find the state the engine keeps per object and
+re-reads; if it already carries the bank / pointer, start through the engine's own init and patch
+the state afterwards — no ROM0 change, and the init stays exact.
+
+**ROMX code cannot map another ROMX bank — call the ROM0 routine that does the mapping.** SongStart
+lives in bank $74 and must read records in bank $74 while the song's streams sit elsewhere: the
+records stay in its own bank (local reads), and the only cross-bank work (AudioProcess's record
+read, the driver's ticks) is ROM0 code that saves `[$4000]` and returns to the caller's bank.
+**Rule:** keep every table a ROMX routine reads in that routine's own bank; let ROM0 do the bank
+switches.
+
+**"Is it playing?" by motion is a heuristic — a rest can last 20 seconds.** **Symptom:** the first
+song walk failed BGM #04 (its noise channel's position never moved in 600 frames) and every short
+jingle (all channels already ended when the check ran after the talk). **Root cause:** the noise
+channel's first rest is 1,228 frames (the Machine says so); jingles end in ~1 s and the talk's idle
+wait is longer. **Fix:** capture the channel states at the moment the song STARTS (a hook on bank
+$74 SongStart's `ret`) and afterwards check invariants (same bank, inside its own stream; a channel
+may end), with frame-exact playback proven by the census against the model. **Rule:** check a
+running engine against invariants or a model, never against "it should have changed by now".
+
+**A trigger that adds a script to a room must also give the room what every script table needs.**
+**Symptom:** the demo's halls (two bards with talk cutscenes, nothing else) did not build: "script
+table has entries but no index 0 (room-entry)". **Root cause:** `lower_project` wired a talk scene
+at index `max + 1` = 1 of an EMPTY table; `Document.new_conversation` has always added an empty entry
+script, the cutscene path never did — a fresh room + a talk cutscene was unbuildable since S119.
+**Fix:** the lowering adds `cut:<room>:noentry` (`[['end']]`) at index 0 when the table has none.
+**Rule:** two code paths that create the same kind of thing must share its invariants — test the
+path with the smallest input (a brand-new room), not only rooms that already have scripts.
+
+**`--apply` regenerates every region it owns — expect byte-neutral comment drift in files you did not
+mean to touch.** **Symptom:** after `build_project.py --apply` on the example, `patches/bank_004.asm`,
+`bank_04d.asm` and `bank_056.asm` showed hundreds of changed lines. **Root cause:** their `gd_*`
+regions were committed with older comment formats (an address in each label comment, a `dw $60BC`
+written later as its label) — the same bytes. **Fix:** compared with comments stripped (identical
+bytes), restored those three files from HEAD so the delivery carries only this session's changes.
+**Rule:** after an `--apply`, diff code-only (`;` comments stripped) every file you did not intend to
+change; deliver only real changes, and note the drift instead of folding it in silently.
+

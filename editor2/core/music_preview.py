@@ -8,10 +8,13 @@
 
 The game's own sequencer runs on the SM83 interpreter (sound_engine.Machine) —
 the sequence is exactly the game's (tools/census_sound_engine.py); apu_synth
-makes the sound. A song is laid into a preview image of bank $74 at id $9E and
-started the way the patched InitBGM starts a project song (InitAudioSystem, then
-one AudioProcess per channel), so a song previews identically before and after
-it is in the project. Costs ~0.1 s of CPU per second of music (streamable).
+makes the sound. S147: a song's streams are laid into a preview image of bank $75
+(bank $74 = the dummy records the game's SongStart uses, ids $9E-$FC) and started
+the way the patched InitBGM starts a project song (sound_engine.Machine.start_song
+= bank $74 SongStart: InitAudioSystem, one AudioProcess per channel on its dummy
+record, then the channel's stream pointer + bank) — streams are relocatable, so a
+song previews identically before and after it is in the project, wherever the
+build puts it. Costs ~0.1 s of CPU per second of music (streamable).
 
 Also: song_info(channels) — bytes, channel roles, whether it loops / its length;
 catalog(repo) — the vanilla sounds (extracted/sound_catalog.json).
@@ -57,13 +60,9 @@ class Renderer:
 
     @classmethod
     def song(cls, rom, channels, repo=None):
-        sc = _song_codec(repo or _repo())
-        img, _, _ = sc.emit_song_bank({"songs": [{"id": "preview", "first_id": PREVIEW_ID,
-                                                  "channels": channels}]})
-        m = SE.Machine.for_songs(rom, {0x74: img})
+        m, chans = song_machine(rom, channels, repo)
         m._call(SE.INIT_AUDIO)
-        n = len(channels)
-        return cls(m, lambda mm: mm.start_channels(PREVIEW_ID, n))
+        return cls(m, lambda mm: mm.start_song(PREVIEW_ID, chans))
 
     def _alive(self):
         w = self.m.wram
@@ -93,6 +92,36 @@ class Renderer:
         x = np.concatenate(out) if out else np.zeros((0, 2))
         x = self.apu.highpass(x) * 0.22
         return np.clip(x * 32767, -32768, 32767).astype(np.int16)
+
+
+def song_machine(rom, channels, repo=None):
+    """S147: (Machine, [(dummy id, slot, stream, bank)]) for one song: the ROM with
+    a preview bank $74 (self-ID + the 95 dummy records at $4003 + the silent
+    stream — the template's bytes, music.dummy_records) and the song's streams in
+    a preview bank $75 from $4001; the master table's custom row [$9E, $4003, $74]."""
+    from . import music as M
+    sc = _song_codec(repo or _repo())
+    b74 = bytearray(0x4000)
+    b74[0] = 0x74
+    silent = M.SONG_RECORDS_AT + 4 * M.SONG_IDS
+    recs = M.dummy_records(silent)
+    b74[3:3 + len(recs)] = recs
+    b74[silent - 0x4000:silent - 0x4000 + len(M.SILENT_STREAM)] = M.SILENT_STREAM
+    b75 = bytearray(0x4000)
+    b75[0] = 0x75
+    pos, chans = 0x4001, []
+    for c in channels:
+        blob = sc.emit_tokens(c['header'], c['tokens'])
+        if pos + len(blob) > 0x8000:
+            raise ValueError("the song is bigger than one bank")
+        b75[pos - 0x4000:pos - 0x4000 + len(blob)] = blob
+        from . import formats as F
+        slot, hw = F.val(c['slot']), F.val(c['hw'])
+        chans.append((M.dummy_id(slot, hw), slot, pos, 0x75))
+        pos += len(blob)
+    m = SE.Machine.for_songs(rom, {0x74: bytes(b74), 0x75: bytes(b75)},
+                             table_rows=[(M.FIRST_ID, M.SONG_RECORDS_AT, 0x74)])
+    return m, chans
 
 
 def song_info(channels, repo=None):

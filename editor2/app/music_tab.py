@@ -12,7 +12,8 @@ Four pages:
            sound_engine.py, census-proven identical to the game), so what you
            hear is what the game plays (only the final sound synthesis is the
            editor's). Name any song; add catalog songs to the project; the
-           meters show the 95 song ids and the two song banks.
+           meters show your songs of 95 (S147: one id a song) and the song data
+           (the two song banks first, then the ROM space every room shares).
   Rooms    every room — yours and the game's — with the game's song and yours,
            and the song of battles in that room.
   Gates    every gate: the song of its floors (maze floors, its special rooms,
@@ -41,8 +42,8 @@ from editor2.core import music_doc as MD
 HELP = ('The game plays a song through its own sound engine; the editor runs that same '
         'engine, so ▶ is what the game plays. A room, a gate or a kind of battle with no '
         'song set keeps the game\'s choice. Your songs (from the DWM2 catalog, the MIDI '
-        'library, or MIDI files you import) take 1-6 sound ids each out of 95, and fill two '
-        'song banks of 16,000 bytes.')
+        'library, or MIDI files you import): up to 95, any number of channels (1-6) each. Their '
+        'data fills two song banks (about 31 KB), then the ROM space every room shares.')
 GREY = QColor(140, 140, 140)
 KIND_LABEL = {'music': 'music', 'jingle': 'jingle', 'effect': 'sound effect'}
 
@@ -321,13 +322,12 @@ class MusicTab(QWidget):
         root = QVBoxLayout(self)
         # meters
         top = QHBoxLayout()
-        self.ids_bar = self._bar('song ids')
-        self.b74_bar = self._bar('song bank 1 ($74)')
-        self.b75_bar = self._bar('song bank 2 ($75)')
-        for lbl, b in (('song ids', self.ids_bar), ('bank $74', self.b74_bar),
-                       ('bank $75', self.b75_bar)):
-            top.addWidget(QLabel(lbl))
-            top.addWidget(b)
+        # S147 (ROADMAP ARC CAP5): songs of 95 (one id each) + the song data in words
+        self.ids_bar = self._bar('your songs')
+        top.addWidget(QLabel('your songs'))
+        top.addWidget(self.ids_bar)
+        self.data_lbl = QLabel()
+        top.addWidget(self.data_lbl)
         top.addStretch(1)
         self.cap_err = QLabel()
         self.cap_err.setStyleSheet('color:#c33')
@@ -583,11 +583,15 @@ class MusicTab(QWidget):
             self.ids_bar.setRange(0, cap['ids_max'])
             self.ids_bar.setValue(cap['ids'])
             self.ids_bar.setFormat(f"{cap['ids']} / {cap['ids_max']}")
-            for bank, bar in ((0x74, self.b74_bar), (0x75, self.b75_bar)):
-                n = cap['banks'].get(bank, 0)
-                bar.setRange(0, cap['bank_max'])
-                bar.setValue(n)
-                bar.setFormat(f'{n:,} / {cap["bank_max"]:,} B')
+            kb = lambda n: f'{n / 1024:,.1f} KB'
+            txt = f"song data {kb(cap['bytes'])}"
+            if cap['shared']:
+                txt += (f" — {kb(cap['shared'])} of it in the ROM space your rooms share "
+                        f"({cap['shared_banks']} bank{'s' if cap['shared_banks'] != 1 else ''})")
+            self.data_lbl.setText(txt)
+            self.data_lbl.setToolTip('Song data fills two song banks first (about 31 KB); the '
+                                     'rest goes into the 4 MB ROM\'s banks, the ROM space shown '
+                                     'on the Capacity tab.')
         self.cap = cap
         self._fill_songs()
         self._fill_rooms()

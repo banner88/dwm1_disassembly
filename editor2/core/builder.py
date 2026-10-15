@@ -170,6 +170,20 @@ def bank_usage(rom_path, bank):
     return last + 1
 
 
+def _song_places(prj, syms):
+    """S147: {song: {'id': '$XX', 'bank': '$XX', 'channels': ['bb:aaaa', …]}}."""
+    out = {}
+    try:
+        from . import music as M
+        for L in M.song_layout(prj):
+            out[L['id']] = {'id': f"${L['sid']:02X}", 'bank': f"${L['bank']:02X}",
+                            'channels': ["%02x:%04x" % syms[c[3]] if c[3] in syms else '?'
+                                         for c in L['channels']]}
+    except Exception:                        # noqa: BLE001 — a manifest never fails a build
+        pass
+    return out
+
+
 def write_manifest(out_dir, prj, project_path, rom_path, sym_path, rom_md5,
                    compiler_warnings):
     from . import compiler as C
@@ -205,6 +219,8 @@ def write_manifest(out_dir, prj, project_path, rom_path, sym_path, rom_md5,
         "music": {sid: f"${fid:02X}"
                   for sid, fid in (prj.music_song_ids().items()
                                    if prj.custom.get('music') else [])},
+        # S147 (ARC CAP5): where every song is — its id, its bank, its stream labels
+        "songs": _song_places(prj, syms),
         "texts": texts,
         "scripts": scripts,
         "flags": {k: f"${v:04X}" for k, v in prj.flag_map().items()},

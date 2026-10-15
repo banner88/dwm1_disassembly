@@ -19,20 +19,25 @@ Schema (§2.9):
   }
 plus `custom.rooms[].music` sugar (merged into room_defaults).
 
-A <song> value is a project song id (its first sound id) or a raw sound id
+A <song> value is a project song id (its sound id) or a raw sound id
 (1-$FC: any vanilla sound, or a custom id). 0 / null = not set.
 
 Resolution rules:
-  * first_id "auto" allocates upward from $9E skipping explicit claims; a song
-    reserves one consecutive id per channel (1-6 channels, any of the 6 state
-    slots, each slot at most once). S116: a song keeps EXACTLY its channels —
-    the rewritten InitBGM (patches/bank_000.asm) starts a project song through
-    bank $71 entry 6 CustomBGMStart with the count from CustomBGMChanTable
-    (the S64 trio padding / dropping is gone).
-  * Two song banks (S116): songs in first-id order fill bank $74 (streams
-    $4180-$7FFF, 16,000 B), the rest bank $75 from the first id that no longer
-    fits (the split) — AudioMasterTableExt (ROM0 $3FE8, region
-    rom0_audio_master) gets a 5th row [split, $4001, $75].
+  * S147 (ROADMAP ARC CAP5 — songs at campaign scale): ONE sound id per song
+    ($9E-$FC = 95 songs). An explicit "first_id" claims that one id (the key
+    keeps its S64 name); "auto" takes the lowest free id, in song order. A song
+    has 1-6 channels on any of the 6 state slots (each slot at most once) and is
+    started by the rewritten InitBGM through bank $71 entry 6 -> bank $74 entry
+    0 SongStart (templates/bank_074_head.asm): the song DIRECTORY in bank $74
+    holds every song's record (channels, its bank, per channel a dummy id + slot
+    + stream pointer). Until S147 a song took one id per channel (95 ids ~ 31
+    songs, CustomBGMChanTable in bank $71).
+  * Song banks (S147): every song's streams sit in ONE bank (never split), first
+    fit in id order: bank $74 (after the head, the directory and every song's
+    record), bank $75, then banks $80-$FF of the 4 MB ROM, taken after the
+    stream / place / animation banks (Project._take_ext_bank('songs')). Until
+    S147: $74 then $75 only (2 x 16,000 B) — AudioMasterTableExt had a 5th row
+    for bank $75; now its custom row is always [$9E, SongRecords $4003, $74].
   * room_bgm (CustomRoomBGMTable, bank $71 entry 2): 0 = vanilla derivation;
     $FF (S116) = "a gate room with no song of its own — play the dive's gate
     song" (rooms served on gate floors + custom boss rooms, only when some gate
@@ -44,8 +49,8 @@ Resolution rules:
     room's table (CustomRoomBattleBGMTable, $FF = follow the gate) > the gate >
     boss fights ($DA09 = 3) > normal; 0 everywhere = vanilla ($27, Starry final $2B).
 
-The byte emitter is tools/song_codec.py (emit_song_bank / song_bank_asm) — one
-proven spec->bytes path for DWM2, MIDI, and inline sources.
+The stream bytes come from tools/song_codec.py emit_tokens — one proven spec->bytes
+path for DWM2, MIDI, and inline sources.
 """
 import importlib.util
 import json
@@ -58,9 +63,13 @@ LAST_ID = 0xFC
 SLOTS = (0x00, 0x1A, 0x34, 0x4E, 0x68, 0x82)
 SLOT_HW = {0x00: 0, 0x1A: 1, 0x34: 0, 0x4E: 1, 0x68: 2, 0x82: 3}
 SE_SLOTS = (0x00, 0x1A)
-SONG_BANKS = (0x74, 0x75)
-STREAMS_AT = 0x4180
-BANK_STREAM_CAP = 0x8000 - STREAMS_AT            # 16,000 B per song bank
+SONG_BANKS = (0x74, 0x75)                        # the song banks before the 4 MB ones
+SONG_IDS = LAST_ID - FIRST_ID + 1                # 95 songs (S147: one id each)
+BANK_BYTES = 0x4000
+SONG_RECORDS_AT = 0x4003                         # bank $74 SongRecords (template ASSERT)
+DIR_BYTES = 2 * SONG_IDS                         # SongDirectory: one dw per id
+EXT_SONG_CAP = BANK_BYTES - 1                    # a song bank $75 / $80+: self-ID + streams
+BANK_STREAM_CAP = EXT_SONG_CAP                   # (S116 name: one song bank's stream room)
 GATE_TABLE_LEN = 96                              # gates 0-95 (S115 NG1)
 MAX_FIGHTS = 255
 FOLLOW_GATE = 0xFF                               # room tables: "the gate's song"
@@ -182,12 +191,11 @@ class Plan:
     """Everything the music emitters need, resolved once per compile."""
 
     def __init__(self):
-        self.songs = []               # [{id, first_id, channels, bank}]
-        self.song_ids = {}            # project song id -> first sound id
-        self.banks = {}               # bank -> [songs]
-        self.split = None             # first id resolved from bank $75 (None: one bank)
+        self.songs = []               # [{id, first_id, channels, bank, bytes}] in id order
+        self.song_ids = {}            # project song id -> its sound id (S147: one per song)
+        self.banks = {}               # bank key -> [songs]: $74, $75, ('ext', k) (S147)
+        self.split = None             # S116 field, always None since S147 (no row 5)
         self.room_bgm = [0] * 256          # S138: every map id (128 until S137)
-        self.chan_table = [0] * (LAST_ID - FIRST_ID + 1)
         self.gate_bgm = [0] * GATE_TABLE_LEN
         self.gate_battle = [0] * GATE_TABLE_LEN
         self.room_battle = [0] * 256       # S138: every map id
@@ -195,13 +203,42 @@ class Plan:
         self.fights = []              # [(eid, sound id)]
         self.rules = []               # S129: [(kind, id, [(flag, must_be_off)], sound id, what)]
         self.warnings = []
-        self.stream_bytes = {}        # bank -> bytes used
+        self.stream_bytes = {}        # bank key -> stream bytes used
+        self.records_bytes = 0        # S147: the songs' records in bank $74
         self.arena_alias = {}         # S138: {project arena copy mid: $5D / $06}
 
     def legacy(self):
-        """(bank74_library, room_bgm, song_ids, warnings) — the S64 tuple."""
+        """(bank74 songs, room_bgm, song_ids, warnings) — the S64 tuple."""
         return ({"_source": "project.json custom.music", "songs": self.banks.get(0x74, [])},
                 self.room_bgm, self.song_ids, self.warnings)
+
+    def song_bytes(self):
+        """S147: every song's stream bytes (wherever they are)."""
+        return sum(self.stream_bytes.values())
+
+
+def dummy_id(slot, hw):
+    """S147: the id of bank $74's dummy record for a channel on state slot `slot`
+    with hw channel `hw` (SongRecords: id $9E + 4 x slot index + hw)."""
+    return FIRST_ID + 4 * SLOTS.index(slot) + (hw & 3)
+
+
+def dummy_records(silent_ptr):
+    """S147: the 95 dummy records of bank $74 (SongRecords, $74:$4003) as bytes —
+    == the template's (test_compiler checks it against the built ROM)."""
+    out = bytearray()
+    for k in range(SONG_IDS):
+        slot, hw = (SLOTS[k // 4], k % 4) if k < 4 * len(SLOTS) else (0x00, 0)
+        out += bytes((slot, hw, silent_ptr & 0xFF, silent_ptr >> 8))
+    return bytes(out)
+
+
+SILENT_STREAM = bytes((0, 0, 0, 0, 0xFF, 0x00))      # bank $74 SongSilent
+
+
+def record_bytes(song):
+    """S147: a song's record in bank $74: channels, bank, 4 B per channel."""
+    return 2 + 4 * len(song['channels'])
 
 
 def _value(v, song_ids, used, ctx, warnings):
@@ -251,48 +288,64 @@ def plan(prj):
         resolved.append({"id": s['id'], "channels": chans,
                          "_explicit": None if str(fid) == 'auto' else F.val(fid)})
     used = set()
+    if len(resolved) > SONG_IDS:
+        raise MusicError(f"{len(resolved)} songs — at most {SONG_IDS} (one sound id each, "
+                         f"${FIRST_ID:02X}-${LAST_ID:02X})")
 
-    def claim(fid, n, sid):
-        for i in range(fid, fid + n):
-            if not (FIRST_ID <= i <= LAST_ID):
-                raise MusicError(f"song {sid!r}: id ${i:02X} outside "
-                                 f"${FIRST_ID:02X}-${LAST_ID:02X}")
-            if i in used:
-                raise MusicError(f"song {sid!r}: id ${i:02X} already claimed")
-            used.add(i)
+    def claim(fid, sid):
+        if not (FIRST_ID <= fid <= LAST_ID):
+            raise MusicError(f"song {sid!r}: id ${fid:02X} outside "
+                             f"${FIRST_ID:02X}-${LAST_ID:02X}")
+        if fid in used:
+            raise MusicError(f"song {sid!r}: id ${fid:02X} already claimed")
+        used.add(fid)
 
+    # S147: one id per song (a channel no longer takes an id of its own)
     for r in resolved:
         if r['_explicit'] is not None:
             r['first_id'] = r['_explicit']
-            claim(r['first_id'], len(r['channels']), r['id'])
+            claim(r['first_id'], r['id'])
     nxt = FIRST_ID
     for r in resolved:
         if r['_explicit'] is None:
-            while any(i in used for i in range(nxt, nxt + len(r['channels']))):
+            while nxt in used:
                 nxt += 1
             r['first_id'] = nxt
-            claim(nxt, len(r['channels']), r['id'])
+            claim(nxt, r['id'])
         r.pop('_explicit')
+        for c in r['channels']:
+            if not 0 <= c['hw'] <= 3:
+                raise MusicError(f"song {r['id']!r}: hw channel {c['hw']} (0-3 allowed)")
     resolved.sort(key=lambda r: r['first_id'])
     P.song_ids = {r['id']: r['first_id'] for r in resolved}
 
-    # ---- bank packing ($74 then $75) --------------------------------------
-    bank, fill = 0x74, 0
+    # ---- song banks (S147): one bank a song, first fit in id order --------
+    # bank $74 holds the head, the directory and EVERY song's record first
+    from . import validators as V
+    P.records_bytes = sum(record_bytes(r) for r in resolved)
+    tmpl = V.TEMPLATE_SIZE.get(0x74) or 0
+    cap = {0x74: BANK_BYTES - tmpl - DIR_BYTES - P.records_bytes, 0x75: EXT_SONG_CAP}
+    if cap[0x74] < 0:
+        raise MusicError("the song records do not fit bank $74")
+    order = [0x74, 0x75]
+    fill = {0x74: 0, 0x75: 0}
     for r in resolved:
         n = sum(len(sc.emit_tokens(c['header'], c['tokens'])) for c in r['channels'])
         r['bytes'] = n
-        if bank == 0x74 and fill + n > BANK_STREAM_CAP:
-            bank, fill = 0x75, 0
-            P.split = r['first_id']
-        if fill + n > BANK_STREAM_CAP:
-            raise MusicError(f"songs need more than the two song banks ($74/$75, "
-                             f"{BANK_STREAM_CAP} B each) — remove or shorten songs "
-                             f"(stopped at {r['id']!r})")
-        fill += n
-        r['bank'] = bank
-        P.banks.setdefault(bank, []).append(r)
-        P.stream_bytes[bank] = fill
-        P.chan_table[r['first_id'] - FIRST_ID] = len(r['channels'])
+        if n > EXT_SONG_CAP:
+            raise MusicError(f"song {r['id']!r}: {n:,} bytes — a song must fit one bank "
+                             f"({EXT_SONG_CAP:,} B)")
+        for b in order:
+            if fill[b] + n <= cap[b]:
+                break
+        else:
+            b = ('ext', len(order) - 2)
+            order.append(b)
+            cap[b], fill[b] = EXT_SONG_CAP, 0
+        fill[b] += n
+        r['bank'] = b
+        P.banks.setdefault(b, []).append(r)
+        P.stream_bytes[b] = fill[b]
     P.songs = resolved
 
     def val(v, ctx):
@@ -440,23 +493,22 @@ def resolve(prj):
 
 
 # ---------------------------------------------------------------- emitters
-def master_table_rows(P):
-    rows = [(0x00, 0x4001, 0x1C), (0x21, 0x4001, 0x1D), (0x37, 0x4001, 0x1E),
-            (FIRST_ID, 0x4001, 0x74)]
-    if P.split is not None:
-        rows.append((P.split, 0x4001, 0x75))
-    return rows
+def master_table_rows(P=None):
+    """AudioMasterTableExt (ROM0 $3FE8): the 3 vanilla rows + ids $9E-$FC -> bank
+    $74's dummy records (S147: always these 4 rows — no bank $75 row)."""
+    return [(0x00, 0x4001, 0x1C), (0x21, 0x4001, 0x1D), (0x37, 0x4001, 0x1E),
+            (FIRST_ID, SONG_RECORDS_AT, 0x74)]
 
 
 def emit_region_master_table(prj, warnings):
     """region rom0_audio_master (patches/bank_000.asm, inside AudioMasterTableExt
-    @ $3FE8, 24 B): the 3 vanilla rows, the bank $74 row, the bank $75 row when
-    songs spill there, the $FF sentinel, $FF filler."""
-    P = prj.music_plan()
-    rows = master_table_rows(P)
+    @ $3FE8, 24 B): the 3 vanilla rows, the bank $74 row (S147: its dummy records
+    SongRecords $74:$4003 — templates/bank_074_head.asm ASSERTs the address), the
+    $FF sentinel, $FF filler."""
+    rows = master_table_rows()
     out = []
     what = {0x1C: 'vanilla row', 0x1D: 'vanilla row', 0x1E: 'vanilla row',
-            0x74: 'project song bank 1', 0x75: 'project song bank 2 (S116)'}
+            0x74: 'project songs: bank $74 SongRecords (S147)'}
     ends = [r[0] for r in rows[1:]] + [0xFD]
     for (base, ptr, bank), end in zip(rows, ends):
         out.append(f"    db ${base:02X}, ${ptr & 0xFF:02X}, ${ptr >> 8:02X}, ${bank:02X}"
@@ -469,27 +521,131 @@ def emit_region_master_table(prj, warnings):
     return "\n".join(out) + "\n"
 
 
-def song_bank_asm(prj, bank):
+def song_ext_banks(prj):
+    """S147: {('ext', k): bank $80-$FF} — the song banks past $75, taken from the 4
+    MB ROM after the stream, place and animation banks (cached on the Project;
+    Project.stream_plan drops it with the other plans)."""
+    got = getattr(prj, '_song_ext', None)
+    if got is not None:
+        return got
     P = prj.music_plan()
-    repo = _repo_root(getattr(prj, 'repo_root', None) or prj.root)
-    sc = song_codec(repo)
-    base = FIRST_ID if bank == 0x74 else (P.split or FIRST_ID)
-    lib = {"_source": "project.json custom.music (music emitter, S116)",
-           "songs": P.banks.get(bank, [])}
-    return sc.song_bank_asm(lib, bank=bank, base_id=base)
-
-
-def bank_images(prj):
-    """{bank: 16 KB image} of the project's song banks (preview + census)."""
-    P = prj.music_plan()
-    repo = _repo_root(getattr(prj, 'repo_root', None) or prj.root)
-    sc = song_codec(repo)
+    keys = sorted((b for b in P.banks if isinstance(b, tuple)), key=lambda b: b[1])
     out = {}
-    for bank in SONG_BANKS:
-        base = FIRST_ID if bank == 0x74 else (P.split or FIRST_ID)
-        img, _, _ = sc.emit_song_bank({"songs": P.banks.get(bank, [])}, bank=bank,
-                                      base_id=base)
-        out[bank] = img
+    if keys:
+        from . import tileanim as TA
+        TA.plan(prj)                       # streams, places, animations number first
+        taken0 = list(getattr(prj, '_ext_taken', None) or [])
+        try:
+            for k in keys:
+                out[k] = prj._take_ext_bank('songs')
+        except Exception:
+            prj._ext_taken = taken0
+            raise
+    prj._song_ext = out
+    return out
+
+
+def real_bank(prj, key):
+    return key if isinstance(key, int) else song_ext_banks(prj)[key]
+
+
+def ch_label(r, k):
+    return f"SongCh_{r['first_id']:02X}_{k}"
+
+
+def song_streams(prj, r):
+    """[(label, bytes)] of a song's channels (song_codec.emit_tokens)."""
+    repo = _repo_root(getattr(prj, 'repo_root', None) or prj.root)
+    sc = song_codec(repo)
+    return [(ch_label(r, k), sc.emit_tokens(c['header'], c['tokens']))
+            for k, c in enumerate(r['channels'])]
+
+
+def _stream_lines(prj, songs):
+    out = []
+    for r in songs:
+        for k, (label, blob) in enumerate(song_streams(prj, r)):
+            c = r['channels'][k]
+            out.append(f"{label}:   ; {r['id']} channel {k} (slot ${c['slot']:02X}, hw "
+                       f"{c['hw']}): {len(blob)} B")
+            for i in range(0, len(blob), 16):
+                out.append(F.db_line(list(blob[i:i + 16])))
+    return out
+
+
+def emit_bank_074(prj):
+    """S147: bank $74 = the pinned head (SongStart + the dummy records) + the song
+    directory + every song's record + the streams the plan keeps here."""
+    from .emitters import template
+    P = prj.music_plan()
+    by_id = {r['first_id']: r for r in P.songs}
+    lines = [template('bank_074_head.asm').rstrip('\n'), "",
+             "; SongDirectory — one dw per id $9E-$FC: the song's record, 0 = no song.",
+             "SongDirectory:"]
+    for i in range(FIRST_ID, LAST_ID + 1, 8):
+        ids = range(i, min(i + 8, LAST_ID + 1))
+        lines.append("    dw " + ", ".join(f"SongRec_{j:02X}" if j in by_id else "$0000"
+                                           for j in ids)
+                     + f"   ; ids ${i:02X}-${ids[-1]:02X}")
+    lines.append("")
+    lines.append("; The song records: db channels, db the song's bank; per channel db dummy id,")
+    lines.append("; db state slot, dw stream (S147).")
+    for r in P.songs:
+        b = real_bank(prj, r['bank'])
+        lines.append(f"SongRec_{r['first_id']:02X}:   ; {r['id']}: {len(r['channels'])} "
+                     f"channels, {r['bytes']:,} B in bank ${b:02X}")
+        lines.append(F.db_line([len(r['channels']), b]))
+        for k, c in enumerate(r['channels']):
+            lines.append(f"    db ${dummy_id(c['slot'], c['hw']):02X}, ${c['slot']:02X}   "
+                         f"; channel {k}: slot ${c['slot']:02X}, hw {c['hw']}")
+            lines.append(f"    dw {ch_label(r, k)}")
+    lines.append("")
+    lines.append(f"; streams in bank $74 ({P.stream_bytes.get(0x74, 0):,} B)")
+    lines += _stream_lines(prj, P.banks.get(0x74, []))
+    return "\n".join(lines) + "\n"
+
+
+def emit_song_bank(prj, key):
+    """S147: bank $75 or a song bank $80+: the self-ID byte + its songs' streams."""
+    P = prj.music_plan()
+    b = real_bank(prj, key)
+    songs = P.banks.get(key, [])
+    lines = ["; " + "=" * 77,
+             f"; BANK ${b:02X} — project song streams (S147, ROADMAP ARC CAP5; GENERATED by",
+             "; editor2/core/music.py — do not hand-edit). The songs' records and the",
+             "; directory are in bank $74 (SongStart, templates/bank_074_head.asm).",
+             "; Songs: " + (", ".join(f"{r['id']} (${r['first_id']:02X})" for r in songs)
+                           or "none"),
+             "; " + "=" * 77, "",
+             f'SECTION "ROM Bank ${b:03X}", ROMX[$4000], BANK[${b:02X}]', "",
+             f"    db ${b:02X}                          ; bank self-ID at $4000", ""]
+    lines += _stream_lines(prj, songs)
+    return "\n".join(lines) + "\n"
+
+
+def song_bank_files(prj):
+    """S147: {bank $80+: 'bank_0xx.asm'} of the song banks past $75."""
+    return {b: f"bank_{b:03x}.asm" for b in song_ext_banks(prj).values()}
+
+
+def emit_song_ext_banks(prj, warnings):
+    """multi:song_banks — one whole file per song bank $80+ (none when $74 / $75 hold
+    every song)."""
+    return {f"file:patches/{fn}": emit_song_bank(prj, k)
+            for k, b in song_ext_banks(prj).items()
+            for fn in [f"bank_{b:03x}.asm"]}
+
+
+def song_layout(prj):
+    """S147: [{id, sid, bank, channels: [(slot, hw, dummy id, label, bytes)]}] — where
+    every song is (the census and the tests read the ROM through game.sym)."""
+    P = prj.music_plan()
+    out = []
+    for r in P.songs:
+        st = song_streams(prj, r)
+        out.append({'id': r['id'], 'sid': r['first_id'], 'bank': real_bank(prj, r['bank']),
+                    'channels': [(c['slot'], c['hw'], dummy_id(c['slot'], c['hw']), lab, blob)
+                                 for c, (lab, blob) in zip(r['channels'], st)]})
     return out
 
 
@@ -514,16 +670,7 @@ def emit_bank_071_tables(prj, warnings):
             return 'follow the gate'
         return by_id.get(v, F.hexb(v))
 
-    lines = ["; " + "-" * 77,
-             "; CustomBGMChanTable — channel count of the project song starting at",
-             f"; each id ${FIRST_ID:02X}-${LAST_ID:02X} (0 = no song starts here: the old",
-             "; 3-channel default). Read by entry 6 CustomBGMStart (S116). (generated)",
-             "; " + "-" * 77]
-    lines += _table_lines("CustomBGMChanTable", P.chan_table, start=FIRST_ID,
-                          fmt=lambda i, row: f"ids ${i:02X}-${i + len(row) - 1:02X}"
-                          + "".join(f" ${i + j:02X}:{by_id.get(i + j, '?')}={n}ch"
-                                    for j, n in enumerate(row) if n))
-    lines.append("")
+    lines = []                       # S147: CustomBGMChanTable is gone (bank $74 directory)
     lines += ["; " + "-" * 77,
               "; CustomGateBGMTable / CustomGateBattleBGMTable — per gate 0-95 (wGateID):",
               "; the song of its floors / of its battles, 0 = vanilla. Read by entries",

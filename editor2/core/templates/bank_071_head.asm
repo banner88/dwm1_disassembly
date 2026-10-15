@@ -94,13 +94,15 @@
 ;     the copies of $08 / $5D, e.g. the Milly hook's roots room). Gate floors
 ;     keep the box rule (vanilla). Preserves DE (the caller's box offset).
 ;
-; Entry 6 (HL=$7106) CustomBGMStart (S116, ROADMAP P3.13b):
+; Entry 6 (HL=$7106) CustomBGMStart (S116, ROADMAP P3.13b; S147 ARC CAP5):
 ;     Called by the rewritten ROM0 InitBGM (patches/bank_000.asm) for a BGM
-;     request id >= $9E, after InitAudioSystem and with [$de24] = the id:
-;     starts CustomBGMChanTable[id-$9E] consecutive sound ids (one ROM0
-;     AudioProcess each — it maps the song bank itself and returns to this
-;     bank), 3 when the table holds 0 (not a song's first id: the old
-;     default). Runs inside InitBGM's di.
+;     request id >= $9E, after InitAudioSystem and with [$de24] = the id.
+;     S147: a forwarder to bank $74 entry 0 SongStart (templates/
+;     bank_074_head.asm) — ONE id per project song, its channels started from
+;     the song directory in bank $74 and played from the song's own bank ($74,
+;     $75 or a bank $80+). Until S147: CustomBGMChanTable[id-$9E] consecutive
+;     ids, one per channel (95 ids ~ 31 songs, two song banks). Runs inside
+;     InitBGM's di.
 ;
 ; Entry 7 (HL=$7107) BattleBGMResolve (S116, ROADMAP P3.13b):
 ;     E := the song a battle starts with. Called by the same-size rewrite of
@@ -843,27 +845,14 @@ TextSpriteMode:
     ret
 
 ; -----------------------------------------------------------------------------
-; Entry 6: CustomBGMStart — start a project song's own channels (S116)
+; Entry 6: CustomBGMStart — start a project song (S116; S147: forwards)
 ; -----------------------------------------------------------------------------
+; S147 (ROADMAP ARC CAP5, songs at campaign scale): bank $74 entry 0 SongStart
+; does the work (the song directory, one id per song, any song bank). BC is
+; clobbered by rst $10; InitBGM's callers read no register.
 CustomBGMStart:
-    ld a, [$de24]                       ; the requested id (>= $9E)
-    sub $9e
-    ld hl, CustomBGMChanTable
-    add l
-    ld l, a
-    adc h
-    sub l
-    ld h, a
-    ld a, [hl]
-    or a
-    jr nz, .go
-    ld a, $03                           ; not a song's first id: 3, as before S116
-.go:
-    ld b, a
-.loop:
-    call AudioProcess                   ; one channel; keeps BC/DE/HL, ++[$de24]
-    dec b
-    jr nz, .loop
+    ld hl, $7400                        ; bank $74 entry 0: SongStart
+    rst $10
     ret
 
 ; -----------------------------------------------------------------------------

@@ -3938,7 +3938,10 @@ def main():
     kinds = {r['kind'] for r in mt._rows()}
     assert kinds == {'project', 'game', 'effect', 'dwm2', 'midi'}, kinds
     n_game = sum(1 for r in mt._rows() if r['kind'] in ('game', 'effect'))
-    assert n_game >= 85 and mt.ids_bar.value() == 12, (n_game, mt.ids_bar.value())
+    # S147: the meter counts SONGS (one id each), not channels (S116: 12 = 4 songs x 3)
+    assert n_game >= 85 and mt.ids_bar.value() == 4, (n_game, mt.ids_bar.value())
+    assert mt.data_lbl.text().startswith('song data ') and 'ROM space' not in mt.data_lbl.text(), \
+        mt.data_lbl.text()
     mt.filter.setCurrentIndex(mt.filter.findData('dwm2'))
     app.processEvents()
     assert mt.song_list.count() == 31, mt.song_list.count()
@@ -3954,7 +3957,7 @@ def main():
     app.processEvents()
     assert doc.song_name('dwm2_bgm04') == 'Drum song' and \
         doc.project_song('dwm2_bgm04') is not None and mt.cur['kind'] == 'project', mt.cur
-    assert mt.ids_bar.value() == 16, mt.ids_bar.value()
+    assert mt.ids_bar.value() == 5, mt.ids_bar.value()
     mt.filter.setCurrentIndex(mt.filter.findData('game'))
     app.processEvents()
     r27 = next(i for i, r in enumerate(mt.shown) if r['key'] == '$27')
@@ -3980,17 +3983,19 @@ def main():
     outs, pp, _ww = Cc.compile_project(os.path.join(td, 'p'), REPO)
     P = pp.music_plan()
     assert P.room_bgm[0x01] == P.song_ids['dwm2_bgm04'] and P.gate_battle[2] == 0x2B and \
-        P.fights == [(325, 0x31)] and P.chan_table[P.song_ids['dwm2_bgm04'] - 0x9E] == 4
+        P.fights == [(325, 0x31)] and \
+        len(next(r for r in P.songs if r['id'] == 'dwm2_bgm04')['channels']) == 4
     while w.session.undo.index() > 0 and doc.dumps() != before:
         w.session.undo.undo()
     app.processEvents()
     assert doc.dumps() == before, 'undo must restore project.json exactly'
     hlp = open(os.path.join(REPO, 'editor2', 'help', '61_music.md')).read()
     for word in ('Import MIDI', 'Add to the project', 'Starry Night final', 'battles here',
-                 'numpy', '95 song ids'):
+                 'numpy', '95 songs'):
         assert word in hlp, f'help 61_music.md lacks "{word}"'
     print('OK: Music tab (S116) — every kind of song listed; DWM2 BGM #04 shows 4 channels '
-          '(noise) and renders through the game engine; renamed + added (16 ids); $27 = the '
+          '(noise) and renders through the game engine; renamed + added (5 songs, S147: one id a '
+          'song); $27 = the '
           'battle start; room / gate / Starry / fight songs compile; undo restores everything')
 
     # S116b: the song player (user report, macOS: "stopped early after a few seconds,

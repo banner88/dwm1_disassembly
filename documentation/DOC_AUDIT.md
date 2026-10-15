@@ -941,3 +941,14 @@ mapping, a `rst $10` executing in bank $80). ✏️ = fixed in place this sessio
 | EDITOR_DESIGN §6.4 B (S133 design): "a one-state screen reads a shared zero byte" | ✅ now true | was a design note never built (S134-S145 allocated every screen); built S146 | PROJECT_COMPILER §2.54 |
 | ROOM_DATA_FORMAT / known_RAM_map "$D998 shared by maze/conveyor/forest rooms" | ⚠ incomplete | 65 single-step screens (rooms $50 / $51 / $5F, the Coliseum, forest / maze / conveyor rooms …); no script word or instruction names it — always 0 | ROM scan S146; bank $0B annotation |
 | (S144 code) Play here "starts the screen in the state shown — your room: its counter from the build's game.sym" | ⚠ gap | a counter that is an EQU (a later region's room) is never in game.sym → "no build symbol for its counter"; S146 reads the build manifest's `step_counters` first | `walk_counters.py` playhere; `test_s146` |
+
+## S147 addendum (2026-10-13; songs at campaign scale — ROADMAP ARC CAP5)
+
+| File / claim | Verdict | What is true | Evidence |
+|---|---|---|---|
+| SOUND_SYSTEM §1 / §2 / §8, PROJECT_COMPILER §2.9 (S116), PROJECT_STATE bank rows $71 / $74 / $75, `extracted/capacities.json` `song_slots`, help 61 / 90: "a song takes one id per channel; 95 ids; two song banks of 16,000 B; row 5 [split, $4001, $75]; CustomBGMChanTable" | ✏️ superseded (true S116-S146) | S147: one id per song (95 songs); bank $74 SongStart + the song directory; songs first fit in $74 / $75 / banks $80+; the master row is always `[$9E, $4003, $74]` (dummy records); no CustomBGMChanTable | SOUND_SYSTEM §11; `test_compiler.test_s147`; `census_sound_engine.py --custom` |
+| SOUND_SYSTEM §8 "~31 three-channel songs, ~15.9 KB" as the practical limit | ⚠ optimistic | measured S147 on the user's project: the 11th DWM2-size song stopped the build (first-fit per bank, songs of 1.5-11.5 KB); the DWM2 catalog is 31 songs / 57 KB | S147 audit (music.plan on the user's project + n catalog songs) |
+| (S119-S146 code) a cutscene's Music step / the cutscene editor's song list: "your song X" = its `first_id` | ⚠ broken for most songs | `first_id` is "auto" for every song added in the editor — the step lowered `F.val('auto')` and stopped the build; since S147 the step names the song and the build resolves its id | `test_s147` (a Music step by name) |
+| (S119-S146 code) "a room's talk cutscene" on a room with no scripts | ⚠ unbuildable | the lowering wired index 1 of an empty table (no index 0); fixed S147 (`cut:<room>:noentry`) | `test_s147`; KEY_LESSONS S147 |
+| validators: "this boss room is past the $7F room-music table — the floor before the boss plays the gate theme" | ⚠ stale since S138 | the room / battle song tables cover every id since S138 (256 rows; per place since S140); the warning still fires for a boss room past `$7F` with no song — harmless, not fixed S147 (outside the box) | PROJECT_COMPILER §2.47 |
+

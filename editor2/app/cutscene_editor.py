@@ -2220,8 +2220,10 @@ class CutsceneEditor(QWidget):
                 out.append((f"${s['id_int']:02X} {s['kind']}" + (f' — {where}' if where else ''),
                             f"0x{s['id_int']:02X}"))
         for sg in (self.s.doc.custom.get('music') or {}).get('songs') or []:
-            if sg.get('id') is not None and sg.get('first_id') is not None:
-                out.append((f"your song {sg['id']}", sg['first_id']))
+            if sg.get('id') is not None:
+                # S147: by NAME — the music plan numbers the songs (one id each); the
+                # S119-S146 form offered first_id, which is "auto" for most songs
+                out.append((f"your song {sg.get('name') or sg['id']}", sg['id']))
         return out
 
     def sound_items(self):

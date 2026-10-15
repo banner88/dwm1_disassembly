@@ -19,8 +19,10 @@ library song.
     for _ in range(600):
         writes = m.frame()                         # [(reg, value), ...] this frame
 
-    m = Machine.for_songs(rom_bytes, banks)        # + project song banks {bank: image}
-    m.start_channels(0xA1, 3)                      # = the S116 InitBGM custom path
+    m = Machine.for_songs(rom_bytes, banks, [(0x9E, 0x4003, 0x74)])
+    m.start_song(0x9E, [(dummy id, slot, stream, bank), ...])
+                                                   # = the patched InitBGM's project-song
+                                                   #   path (S147: bank $74 SongStart)
 
 The memory map is the minimum the engine touches: ROM bank 0 + one switchable
 bank (MBC5 $2000-$3FFF; $4000-$7FFF RAM-bank / $6100 writes ignored), 8 KB WRAM
@@ -88,6 +90,8 @@ class Machine:
         img = bytearray(rom)
         for bank, data in banks.items():
             assert len(data) == 0x4000
+            if (bank + 1) * 0x4000 > len(img):           # S147: a song bank $80+ in a 2 MB image
+                img.extend(bytes((bank + 1) * 0x4000 - len(img)))
             img[bank * 0x4000:(bank + 1) * 0x4000] = data
         rows = [(0x00, 0x4001, 0x1C), (0x21, 0x4001, 0x1D), (0x37, 0x4001, 0x1E)]
         rows += table_rows if table_rows is not None else \
@@ -190,7 +194,7 @@ class Machine:
         return self.writes
 
     def start_channels(self, first_id, n):
-        """InitBGM's custom path (S116, patches/bank_000.asm): reset the audio
+        """HISTORICAL (S116-S146 builds; S147 = start_song): InitBGM's custom path (S116, patches/bank_000.asm): reset the audio
         system, then start `n` consecutive ids from `first_id` (one AudioProcess
         each — the same calls bank $71 `CustomBGMStart` makes)."""
         self.writes = []
@@ -199,6 +203,28 @@ class Machine:
         self.wram[0xDE24 - 0xC000] = first_id
         for _ in range(n):
             self._call(AUDIO_PROCESS)
+        return self.writes
+
+    def start_song(self, sid, channels):
+        """S147 (ROADMAP ARC CAP5): the patched InitBGM's project-song path — bank
+        $71 entry 6 -> bank $74 entry 0 SongStart (templates/bank_074_head.asm) —
+        in Python: InitAudioSystem, then per channel (dummy id, state slot, stream
+        address, bank): ROM0 AudioProcess on the dummy record of that id (the
+        image's master table must send ids >= $9E to bank $74's SongRecords: a
+        patched build's ROM0, or for_songs with that row), then the state's stream
+        pointer (+2 / +3) and data bank (+4) := the channel's. tools/
+        census_sound_engine.py --custom proves it == the game's SongStart."""
+        self.writes = []
+        self.wram[0xC8B5 - 0xC000] = sid                 # wCurrPlayingBGM
+        self._call(INIT_AUDIO)
+        self.wram[0xDE24 - 0xC000] = sid
+        for did, slot, seq, bank in channels:
+            self.wram[0xDE24 - 0xC000] = did
+            self._call(AUDIO_PROCESS)
+            b = 0xDD80 - 0xC000 + slot
+            self.wram[b + 2] = seq & 0xFF
+            self.wram[b + 3] = seq >> 8
+            self.wram[b + 4] = bank
         return self.writes
 
     def frame(self):

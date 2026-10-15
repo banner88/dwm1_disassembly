@@ -1,5 +1,58 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-12 (Session 145 — **ROADMAP ARC CAP4d BUILT + USER-CONFIRMED: THE CAPACITY TAB — EVERY LIMIT IN WORDS
+> (USED OF HOW MUCH, THE FULLEST ROOM / SCREEN BY NAME, WHAT HAPPENS AT THE LIMIT) + TWO STATUS-BAR METERS (ROM
+> SPACE, ROOMS ≈950) INSTEAD OF SIX BANK BARS; THE 4 MB ARC'S ACCEPTANCE AS A MACHINE RUN — A FRESH 160-ROOM
+> PROJECT MADE IN THE REAL EDITOR, BUILT BY IT, WALKED IN PYBOY (405 CHECKS, 0 FAILED); FOUND + FIXED: OPENING
+> IT TOOK 22 s (THE LZ SEARCH; 4.1 s NOW, BYTE-IDENTICAL); FOUND: 640 SCREENS PER REGION (CAP5); 16-SCREEN
+> CUSTOM ROOMS WORK (THE S91 "8" WAS NEVER TRUE)**
+> (user: "Continue on the 4 mb expansion" → the CAP4d audit (the six bank bars, 4 of them amber for good on
+> the user's 12 rooms; no ceiling shown but the banks) + 5 questions → "1) Cap4b/4c seems to work. Will come
+> back lagter if I find something, 2) Sure [CAP4d now, the `$3E` box later] 3) Sounds good [a Capacity tab + two
+> meters] 4) Perfect [rows in words, the fullest by name, banks only with Show technical ids] 5) Do a machine
+> version. I dont have time to make a fake 150 room project"; **S143 + S144 USER-CONFIRMED 2026-10-12 14:09**).
+> **Built S145; USER-CONFIRMED 2026-10-12 17:16 ("Confirm everything works").** Byte-neutral: the example pin `7cd31035…` (patched) unchanged; the
+> user's project builds `89bf1c2c…` (patched) on the S144 and S145 code alike. Test ROM
+> `DWM-S145-atlas-test.gbc` (`74d67f60…`, patched) = the acceptance project.
+> **Built (editor; `EDITOR_REVISION` S145):** NEW `editor2/core/capacity.py` `measure` (PROJECT_COMPILER §2.53):
+> ROM space = banks $60 / $64 / $67 / $6C + $80-$FF (2,162,688 B); rooms of ≈ rooms + bank $71's free / 15
+> (measured: +15 B a place in $71, +3 in $76, fresh 20 / 40-room projects); "about N more rooms like your
+> average one" (content over a blank project's, per room); 24 rows from the build's own counts (texts, flags,
+> story checks / steps, line sets, shops, new gates, encounter lists, enemy rows, joins, pools, species, new
+> skills, animations, re-art, song ids / bytes; per room / screen: screens of 16, people of 8, exits of 17, a
+> room's block of one place bank, its animations, groups of 32; screens of a region's 640 counters). NEW
+> `app/capacity_tab.py` (before Build & Play; double-click → the room / the tab; Technical column + banks with
+> Show technical ids); `app/space_meter.py` = ROM space + rooms + ⚠ (a click opens the tab). Help NEW
+> `81_capacity.md`; 00_start, 10_rooms, 80_build, 90_limits.
+> **The acceptance (machine half, NEW `tools/walk_fresh_project.py`):** the real editor window (offscreen):
+> File → New project → THE ATLAS HALLS — 160 rooms (the 16 gate looks, each its own tileset copy with the
+> hall's digits + a signature tile; 2 × 2 every 20th, halls 100 / 150 4 × 4; a guide offering "ten halls
+> ahead", stairs up / down linked, the GreatTree's Well door ↔ hall 1, areas A-D, a song per 8, hall 140's
+> scribe), one undo step a room (15 s); Save; re-open; the report (225 KB of 2.06 MB, 160 of ≈959 rooms, about
+> 799 more like the average 1.4 KB); Build by the window (4 MB; halls 129-160 = region 1). PyBoy on the user's
+> `.sav`: every hall + every screen of the 4 × 4 halls (place, screen, picture == the editor preview), every
+> guide's words, stairs 125 ↔ 131, guide warps 125 → 135 / 155 → 5 / 60 → 70, the Well door both ways, 12 room
+> songs, JOURNAL in hall 140 + CONTINUE there: **405 checks, 0 failed**; `--negative` (two tileset pointers
+> swapped in bank $88) → exactly those 2 halls fail; `census_place_banks` 5,591 + `census_stale_places` 1,835
+> checks, 0 mismatched.
+> **Found + fixed — opening a FRESH big project took 22 s** (S144 code too): the first space measurement
+> LZ-compressed every distinct stream (16 s; `compress_tiles.find_best_match` brute force) in the meter's thread,
+> holding the interpreter — S142's 300-Copy probe never paid it (memo hits). `compress_tiles._Matcher` (4-gram
+> index + slice compares) is byte-identical (863 streams / 999 KB of every project in the repo + 300 random
+> shapes, and the 160-room project rebuilt = the same 4 MB ROM `8de9ca81…`, patched) and 37× faster;
+> `--selftest` joins verify check 5; the meter's first run waits for the window; the arrival migration's door
+> index (`doors._indexed_doors`). Ready window 4.1 s (S142: 4.3-5.4 s at 311 Copies).
+> **Found (measured), not fixed — 640 screens per region:** every screen's one-byte step counter (one-state
+> screens too) shares the region's 640 B; 128 rooms × 6 screens stop the build; `next_free_mapid` fills
+> region 0 by ids → ROADMAP CAP5 first box. **Corrected:** custom rooms take 16 screens (`capacities.json`
+> said the schema took 8 — never enforced; measured in the game). `test_app.s143_names` failed in this sandbox
+> on the S144 code too: a new window read a persisted "Show technical ids" back (a scratch run left it on) —
+> `_ids_toggled` syncs, the test pins the setting (KEY_LESSONS S145).
+> **Checks:** verify_integrity PASS (+ `compress_tiles.py` selftest); test_compiler `--rom` ALL 1548 PASSED (+
+> `test_s145`, 10); test_app PASS (+ `s145_capacity`); test_canvas `--rom` PASS. No engine decoding this session
+> (Iron Rule 6: nothing to annotate).
+> **Next:** CAP5 — the per-region step counters (the user picks (a) / (b), ROADMAP), or the `$3E` decoder box.
+
 > Last verified: 2026-10-11 (Session 144 — **ROADMAP ARC CAP4c BUILT: KEPT ROOM STATES — MAKE EDITABLE
 > SHOWS EVERY SCREEN'S STATES AS PICTURES AND COPIES THE ONES YOU TICK (A MOMENT OF THE ORIGINAL STORY
 > PROPOSES THEM); A STATE THE ROOM'S OWN SCRIPTS SWITCH TO STAYS AFTER A SAVE (A FLAG + A STATE RULE);

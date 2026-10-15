@@ -59,3 +59,12 @@ rooms already there). If a group still fills up, the build stops and says so;
 the Capacity row *Screens with states* (in *one group of up to 128 rooms* once you
 have more than 128) shows how close you are.
 A copy of a game room that follows the game's own room state uses none of them.
+
+## Songs (S147)
+
+**Songs of your own** counts your project's songs against **95**: each song takes
+one song number, however many channels it has (until S147 each CHANNEL took a
+number, so 95 numbers were only about 31 songs). **Song data** is the size of all
+of them: the two song banks hold about 31 KB, and songs past that go into the
+same ROM space your rooms use (the *ROM space* meter counts them). A song is never
+split — one song sits in one bank.

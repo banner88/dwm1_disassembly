@@ -53,6 +53,11 @@
   made in the deleted room starts in the new room instead (see *The hub*).
 - Room music (S138): every room of yours can have its own song and battle song
   (before S138 only the first 21 rooms, map ids up to $7F, could).
+- Songs (S147): up to **95 songs** of your own, one song number each (1-6
+  channels); their data fills two song banks (~31 KB), then the ROM space your
+  rooms share. One song must fit one bank (16 KB; the largest DWM2 song, BGM #15,
+  is 11.5 KB). Before S147 every channel took a number (95 = about 31 songs) and the
+  data had only the two song banks (about 11 DWM2 songs).
 - One room's scripts and lists must fit one bank (~15 KB) — the build names a
   room that is bigger. Automatically numbered texts start a new 256-line group
   before one group would pass ~12 KB.

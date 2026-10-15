@@ -936,3 +936,25 @@ edge and the battle waits for input forever.
 - **Sandbox trap:** `pkill -f '<pattern>'` also matches the shell running it when the pattern appears
   in its own command line — the tool call dies with exit 144. Kill by PID (`ps … | awk`).
 
+## S147 techniques — songs in the game: the start by hook, sound on, a bank-store negative
+
+- **Boot with the APU on for any music check** (`walk_songs.py` `_sound_boot`): the engine reads
+  NR52 bit 2 at every wave note (KEY_LESSONS S116) — `sound_emulated=True`; the harness's `boot`
+  has it off. A savestate made with sound off plays back silent (S116) — keep one setting per walk.
+- **Catch a song at its START, not later:** hook the `ret` of bank $74 `SongStart` (found from
+  game.sym `SongStart.channel` + the `dec b / jr nz` bytes) and copy the six channel states
+  (`$DD80 + slot`: +0/+$19 position, +2/+3 stream, +4 bank) with `wCurrPlayingBGM` ($C8B5) — a
+  jingle has ended (position `$FFFF`) long before a talk's idle wait returns.
+- **Which song was asked for:** ROM0 `SetBGM` ($1AE1) with `register_file.A` — the battle's own
+  requests show as `$4D $02 <song>` (the start jingle, silence, the battle song); a CONTINUE as
+  `$06 $24 <song>`.
+- **Invariants, not motion:** after the start, every 10 frames each live channel keeps its bank
+  (+4) and stream base (+2/+3) and its position (pair index) stays inside its stream; a channel may
+  end and a rest may last long (BGM #04's noise rests 1,228 frames). Frame-exact equality is the
+  census's job (`census_sound_engine.py --custom`).
+- **Negative control without a scratch tree:** in the ROM copy, SongStart's `ld [hl], c` (`71`
+  after `22`, before `62 6B`) → `00`: every song outside bank $74 keeps bank $74 as its data bank
+  and must FAIL; the bank $74 songs must still pass (S147: 46 FAIL = 23 starts × 2 checks).
+- **Talk to a bard by warping beside it** (`goto(hall, 0, x, y + 1)`, face up, `talk()`): a warp
+  into the same room re-requests the room's song first, which also re-checks the room-entry path.
+

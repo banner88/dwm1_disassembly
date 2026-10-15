@@ -2525,8 +2525,12 @@ the user picks.
       independent changes; measured on the user's 11 rooms: $60 79 % / $64 79 % / $67 55 % / $17
       3,259 B free — the class banks bind at ~14-15 such rooms. Three boxes (S136: + CAP2d, bank $6C split off CAP2b; S137: + CAP2e, stale saves — built S138 with the room songs past $7F), each its own test ROM. **S139: every box built (all user-confirmed; d S139) — no per-room data class is bound to one bank any more below 128 places; next = CAP3 (regions).** **S140: CAP3a built (regions; USER-CONFIRMED) — bank $71 binds next at ≈950 places (15 B a place, CAP5).** **S141: CAP3b built (the game's own moves walked in region 2; USER-CONFIRMED 2026-10-11 10:18 ("Everything works", r3)) — next = CAP4.** **S142: CAP4 split a-d; CAP4a built (scale + safety; USER-CONFIRMED 2026-10-11 14:24 "Yeah seems ok") — next = CAP4b.** **S143: CAP4b built (places by name; USER-CONFIRMED 2026-10-12 14:09) — next = CAP4c.** **S144: CAP4c built (kept room states; USER-CONFIRMED 2026-10-12 14:09) — next = CAP4d.** **S145: CAP4b + CAP4c USER-CONFIRMED 2026-10-12 14:09 ("Cap4b/4c seems to work. Will come back later if I find something"); CAP4d built (the Capacity tab + two meters; the arc's acceptance as a machine run — a fresh 160-room project made in the editor, built, walked in PyBoy; USER-CONFIRMED 2026-10-12 17:16 ("Confirm everything works")) — next = CAP5 (the per-region step counters first) or the `$3E` decoder box.** **S146: CAP5's
       first box built (screens per group: one-state screens share one zero byte + new rooms move on
-      at 90 %; NOT yet user-tested) — next = the `$3E` decoder box, or the next CAP5 ceiling as it
-      binds.**
+      at 90 %; USER-CONFIRMED 2026-10-13 18:23 ("Yes seems fine")) — next = the `$3E` decoder box, or
+      the next CAP5 ceiling as it binds.** **S147: the S147 audit measured every CAP5 ceiling against
+      a campaign of hundreds of places — songs bound first (the 11th DWM2 song stopped the user's
+      project); CAP5's songs box built (one id per song, songs in any bank; USER-CONFIRMED 2026-10-15 22:12 ("everything works")); the
+      user: "the rest seems very reasonable in terms of current limits and unlikely to be an issue" —
+      next = the `$3E` decoder box, or the next CAP5 ceiling as it binds.**
   - [x] **CAP2a — LZ streams: layouts, attr maps, tilesets past $64 / $67.** **Built S135;
         USER-CONFIRMED 2026-10-09 12:59 ("Yep all good can confirm").** Compiler-only (`DecompressTileLayout` takes the bank from every
         reference — ARCHITECTURE "LZ stream banks (S135)"): `Project.stream_plan()` first fit
@@ -2848,9 +2852,15 @@ the user picks.
 - [ ] **CAP5 — secondary ceilings (as they bind).** (S140: + bank $71's per-place tables, 15 B a place → ≈950 places; the regions' id space is 63 × 128.) Story checks 256 / commands 255, named
       flags 1,965 (WRAM-bound), project encounter lists 128, breeding pools 100, own-
       animation groups 32, screens per room 16 (S145: the "8 in the schema" was never true), screens
-      WITH STATES per group of 128 rooms 640 (S146; one-state screens are free) — EDITOR_DESIGN
-      §6.4 E. Measure a real project's need first; lift each in its own box. The Capacity tab
-      (S145) shows each with the project's own count.
+      WITH STATES per group of 128 rooms 640 (S146; one-state screens are free), songs 95 (S147: one
+      id a song, any bank) — EDITOR_DESIGN §6.4 E. Measure a real project's need first; lift each in
+      its own box. The Capacity tab (S145) shows each with the project's own count. **S147 audit
+      (against a campaign of hundreds of places, "each its own music"): songs bound first (box
+      below); then the project's battle lists 128 with enemy rows 640 (bank $6B, one full bank; 5
+      rows a list) at ~128 places with battles of their own; flags 1,965 at ~500-650 rooms if 3-4 a
+      room; story checks 256 / steps 255; new gates + worlds 64; ROM space ≈660 more rooms at the
+      user's average 3.2 KB a room; bank $71 ≈957 rooms. User: "the rest seems very reasonable …
+      unlikely to be an issue".**
   - [x] **(found S145, measured) screens per region — 640 step counters.** Every screen of a
         custom room gets a one-byte counter (`Project.step_counter_allocation`, one-state screens
         too) and a region's counters share the 640-byte area `$CD80-$CFFF` (§2.6 / §2.49): 128
@@ -2862,7 +2872,7 @@ the user picks.
         not); (b) the editor opens the next region when a room would not fit the current
         region's counters (editor-only, no engine change). Acceptance: 128 rooms of 6 screens
         build and play (PyBoy: every screen's state reads 0 / its rule).
-        **Built S146, NOT yet user-tested** (user: "1) Sounds good 2) Yes I also want (b) 3) Yes of
+        **Built S146; USER-CONFIRMED 2026-10-13 18:23 ("Yes seems fine")** (user: "1) Sounds good 2) Yes I also want (b) 3) Yes of
         course fix 4) Yes that's enough"). BOTH options: (a) a one-state screen whose counter no
         script names reads one shared always-zero byte `wCustomStepZero` (first free from `$CD80`;
         the original game's rule — 65 single-step screens read `$D998`, which nothing writes;
@@ -2876,6 +2886,29 @@ the user picks.
         hangs; censuses 26,037 checks, 0 mismatched; the user's project A/B S145 vs S146: 35
         screens identical. *User half:* `DWM-S146-user-test.gbc` (the user's project) in SameBoy +
         the Capacity tab / New room in the editor.
+
+  - [x] **(found S147, measured) songs — 95 ids, one per CHANNEL, two song banks.** S116 gave a
+        project song one sound id per channel ($9E-$FC: 95 ids ≈ 31 three-channel songs) and only
+        banks $74 / $75 for records + streams (2 × 16,000 B): adding DWM2 catalog songs to the user's
+        project one at a time, the 11th stopped the build (the catalog is 31 songs, 57 KB).
+        **Built S147; USER-CONFIRMED 2026-10-15 22:12 ("everything works")** (user: "2) Yes music 3) 95 is more than enough 4)
+        perfect. Dont put too many npcs in one room please, it lags hard"). ONE id per song (95
+        songs) and songs in ANY bank: bank $71 entry 6 forwards to bank $74 entry 0 `SongStart`
+        (pinned `templates/bank_074_head.asm`): the song directory → per channel ROM0 AudioProcess on
+        a DUMMY record of its (slot, hw), then the channel's stream + DATA BANK (+4) overwritten —
+        the engine already maps state +4 before every tick (SOUND_SYSTEM §11, annotated in both
+        trees). Songs first fit in $74 / $75 / banks $80+ (after the stream / place / animation
+        banks). Cutscene Music steps name songs (resolved at emission); a talk-only room gets an
+        empty entry script (found building the demo). PROJECT_COMPILER §2.55. *Accept (machine half)
+        MET:* the whole catalog + the user's song (32 songs over $74 / $75 / $80 / $81) — the census
+        (PyBoy's InitBGM vs the editor's `start_song`) 32 / 32 identical × 2,400 frames; the
+        editor's preview == the built ROM's register writes (32 songs × 900 frames); the JUKEBOX
+        HALLS on the user's save (`tools/walk_songs.py`): 11 halls' room songs, 21 bards' songs, a
+        battle song, the hall song back, the hall song after a JOURNAL + CONTINUE — every start
+        from its bank ($74 / $75 / $81 / $82), 116 checks, 0 failed; `--negative` (the bank store
+        removed): exactly the 23 starts outside bank $74 fail; the user's project S146 vs S147: its
+        song's register writes identical. *User half:* `DWM-S147-jukebox-test.gbc` in SameBoy (the
+        JUKEBOX GUIDE in Cities_FOUNT) + the Music tab / Capacity tab in the editor.
 
 ### Phase D — Disassembly deepening (parallel; pick when blocked elsewhere)
 Driven by what the editor must EDIT, not completionism:
