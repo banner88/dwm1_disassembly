@@ -41,6 +41,7 @@ to the proven overlay:
 | `patches/bank_075.asm` + region `rom0_audio_master` in `patches/bank_000.asm` | S116: the second song bank and the `AudioMasterTableExt` rows (§2.9). S147: bank $75 = self-ID + streams only; the region's custom row is always `[$9E, $4003, $74]` (§2.55) |
 | `patches/bank_074.asm` (S147) | whole file = the pinned head `templates/bank_074_head.asm` (`SongStart`, the 95 dummy records, `SongSilent`) + `SongDirectory` + every song's record + the streams that fit (§2.55) |
 | `patches/bank_0xx.asm` song banks (only when needed) | S147 (ROADMAP ARC CAP5): songs past banks $74 / $75 (`music.emit_song_ext_banks`, §2.55). Whole files (self-ID + streams), INCLUDEd by `bank_ext.asm`; numbered after the stream, place and animation banks |
+| `patches/bank_0xx.asm` battle banks (only when needed) | S149 (ROADMAP ARC CAP5): project enemy rows past bank $6B and battle lists past bank $76 (`battles.emit_battle_banks`, §2.57). Whole files (self-ID + the pinned copier block + rows / lists), INCLUDEd by `bank_ext.asm`; numbered after the song banks |
 | `patches/bank_076.asm` | whole file = template head (`EncResolve`, S115 + `NewGateRowCopy`) + the project's encounter lists, rooms' lists / variants / rates, gates' plans (S114 P3.13a, §2.30) + the new gates' rows / sources (S115 NG1, §2.31) + `GateClearTable` (S117 NG2, §2.32) |
 | `patches/bank_ext.asm` | S134 (ROADMAP ARC CAP1): banks $80-$FF of the 4 MB ROM — a section + self-ID byte per bank (`emit_bank_ext`); a bank whose whole content another emitter writes (ARC CAP2 place banks, `emitters.ext_bank_files`) is INCLUDEd instead. `patches/game.asm` INCLUDEs it |
 | `patches/bank_080.asm` … (only when needed) | S135 (ROADMAP ARC CAP2a): the LZ stream overflow banks — layouts / attr maps / tilesets that did not fit $64 / $67 (`emit_stream_banks`, §2.44). Whole files, INCLUDEd by `bank_ext.asm`; `--apply` deletes one an earlier apply left that this project no longer generates |
@@ -651,6 +652,12 @@ user-confirmed hand-authored code:
   forwarder `ld hl, $7400 / rst $10 / ret`; `TEMPLATE_SIZE[$71]` 1355, `Custom26DDTable` `$454B`).
   Current values: `templates/PINNED_SHA256`. Example pin `6b01894d…` (patched; was `27de8ab9…`,
   patched, historical).
+* S149 re-pins (§2.57, ROADMAP ARC CAP5): `bank_06b_head.asm` (+ entry 1 `EnemyGenderOf`,
+  `RowIndexOf`, the far path to a battle bank; `TEMPLATE_SIZE[$6B]` 100 — `RowBankTable` `$4064`;
+  the S105 value `14c314e0…` is historical) and `bank_076_head.asm` (16-bit list numbers;
+  `TEMPLATE_SIZE[$76]` 580 — `RegionTable76` `$4244`); NEW pinned `battle_bank.asm` (the copier
+  block of a battle bank, `{B}` = `_B<bank>`; `battles.BATTLE_TEMPLATE_SIZE` 76 = addr(`BattleRows_B80`)
+  − $4000). Current values: `templates/PINNED_SHA256`.
 * `editor2/core/templates/bank_079_head.asm` (S121) — bank byte, 2-entry table, entry 0
   `MillyShapeTable` / entry 1 `MillyPlayerSheet` (§2.34); only emitted with the hook on;
   pinned `3d7cbdbe…ef95`; no TEMPLATE_SIZE (the bank holds a few hundred bytes).
@@ -1468,7 +1475,7 @@ display list] … $FF`) read by `CustomMonsterCast` at the head of entry 8
 `{id, eid: "auto", name?, species, level 1-99, exp, joinability 0-7 (0 =
 always joins, 1-6 = sometimes by tier, 7 = never), hp, mp, atk, def, agl,
 int, ai_weights[4], skills[≤4], join_as?}`. EIDs are dense from **519** in
-list order (cap **640**); emitter **`enemies6b`** writes `patches/bank_06b.asm`
+list order (cap **640**; S149: **3,321**, the rows past bank $6B in battle banks — §2.57); emitter **`enemies6b`** writes `patches/bank_06b.asm`
 = template `bank_06b_head.asm` (`CopyEnemyRowExt`, pinned) + `PROJECT_EID_BASE
 EQU 519`, `PROJECT_ENEMY_ROWS EQU n` + `ProjectEnemyRows` (25 B rows,
 MONSTER_DATA "Enemy Stats Table" format; an empty project keeps one zero
@@ -2448,7 +2455,7 @@ the emitter), `editor2/core/encounters_doc.py` (`EncountersMixin` on Document),
 
 ```jsonc
 "custom": {
-  "encounter_lists": [                    // numbers 128, 129, … in order (≤ 128 lists)
+  "encounter_lists": [                    // numbers 128, 129, … in order (≤ 128 lists; S149: ≤ 3,968, §2.57)
     {"id": "den_by_day", "name": "Den by day",
      "rate": 3, "unk1": 3, "size_chance": [5, 5, 0],           // the 26-byte pool format,
      "slot_chance": [5, 3, 2, 0, 0], "eids": [17, 32, "klamutra", 0, 0],   // same field
@@ -4284,7 +4291,7 @@ side is SOUND_SYSTEM §11 (bank $74 `SongStart`, the dummy records, the song dir
 
 ## §2.56 S148 — WHERE A SCRIPT ENDS: the decoders' rule from the handlers; Make editable copies past op $16 (ROADMAP ARC CAP4 "$3E" box)
 
-**Built S148, NOT yet user-tested** (user: "1) Yes 2) Do now 3) replace 4) Test room + machine
+**Built S148; USER-CONFIRMED 2026-10-16 ("I confirm S148 works")** (user: "1) Yes 2) Do now 3) replace 4) Test room + machine
 check"). Editor + tools; no engine / template change; the example pin stays `6b01894d…` (patched)
 and the user's project builds the same ROM as on the S147 code (`ae475c3a…`, patched).
 
@@ -4340,6 +4347,91 @@ and the user's project builds the same ROM as on the S147 code (`ae475c3a…`, p
   ran 245 words and left for the original Castle; the priest said his other line, the heal tune
   stayed). The old-tool demo opened by the S148 editor builds the same ROM as the fresh demo.
 - Help 10_rooms, 63_cutscenes; `EDITOR_REVISION` S148.
+
+## §2.57 S149 — BATTLES AT CAMPAIGN SCALE: enemy rows past 640, battle lists past 128, a project row's gender (ROADMAP ARC CAP5)
+
+**Built S149; USER-CONFIRMED 2026-10-16 22:59 ("yep fixed. Give final files. Everything works")** (user: "1) Yes 2) Sounds good [a gender per row] 3) A
+[no rival names / eggs: "no reason to expand beyond vanilla funcitonality"] 4) Yes fold in
+loose ends 5) Yes"). Engine (bank $14 hand patch + two re-pinned heads + a new pinned block) +
+compiler + editor. Engine side: MONSTER_DATA "Project enemy rows" (S149), DATA_STRUCTURES
+"Encounter list choice" (S149), ARCHITECTURE "ROM banks $80-$FF" (S149).
+
+- **Why (measured S149):** a project had at most 640 enemy rows (bank $6B) and 128 battle lists
+  of its own (numbers 128-255) — about one original game's worth (it uses 128 lists and 487
+  rows); and two original lookups of the monster constructor had no bound for project rows
+  (PyBoy stub calls): the creation gender (rows 519-532 always male, later rows junk) and the
+  foreign-name compare on the low byte only (row 43 = EID 561 a rival tamer's master name, row
+  88 = EID 606 an egg).
+- **Schema:** `progression.enemies[].gender` = `"rolled"` (absent; the species' female ratio, as
+  the original rows marked `$FF`) | `"male"` | `"female"`; validators refuse anything else. Caps:
+  `project.PROJECT_EID_CAP` 3,321 (= `battles.ROW_CAP`, EIDs 519-3839), `encounters.
+  MAX_PROJECT_LISTS` 3,968 (= `battles.LIST_CAP`, numbers 128-4095). `Document.add_enemy(copy_eid=
+  an original row)` copies that row's gender (`conversation.vanilla_gender`: the table at
+  `$14:$4A1D`).
+- **S149 r2 — an enemy row's HP is at least 2** (the user, after the r1 hall monsters joined
+  FAINTED: "0 HP should never be possible"): a monster made from a row (bank $14 entries 2 / 3 —
+  a join, a script gift, an NPC breeding mate, a medal reward) rolls its max HP as HP × (`$CD` +
+  RNG mod `$34`)/256 rounded down (`SaveEnem_4821`), so HP 1 gives 0 HP 51 times in 52 (measured:
+  HP 0/0 MP 0/0 on the r1 ROM, a monster fainted for good); HP 2 gives at least 1; the game's own
+  rows are HP 2 or more (row 480: 2). `gamedata.ENEMY_HP_MIN` 2: validators refuse a project row
+  below it, `gamedata` an edited original row; the editor refuses it (`add_enemy` /
+  `update_enemy` / `set_enemy_fields`; the Enemies dialog's HP box starts at 2);
+  `make_join_version` keeps HP ≥ 2; `Document._migrate_enemy_hp` raises an old project's HP 0 / 1
+  rows to 2 on open (a note each). The S136-S148 demos' HP-1 foes (never joining) were raised to 2
+  in their `project.json` + `build_demo.py` (their test ROMs are historical). Byte-neutral for the
+  example (no row below 2) and the user's project. Help 50_enemies, 52_monsters, 90_limits.
+- **NEW `editor2/core/battles.py`:** `plan(prj)` (cached `Project._battle_plan`, reset by
+  `stream_plan`) — bank $6B = `TEMPLATE_SIZE[$6B]` 100 + `RowBankTable` (3 B a row bank) + the
+  gender codes (1 B a row) + `rows_here` rows (25 B; the fixed point on the row-bank count);
+  bank $76 keeps the first `LISTS_HOME` 256 lists; BATTLE BANKS take the rest in order, rows
+  first then lists (each `BATTLE_TEMPLATE_SIZE` 76 + 25 B a row + 26 B a list ≤ 16 KB), from
+  `Project._take_ext_bank('battles')` after the stream / place / animation / song banks (the
+  plan asks `tileanim.plan` and `music.song_ext_banks` first, whoever calls it first).
+  `emit_bank_06b`, `emit_battle_banks` (`multi:battle_banks`, registry `battles_ext`),
+  `list_home_lines` (bank $76's `LISTS_HERE` / `ListBankTable`), `row_bank_of`, `list_bank_of`,
+  `layout`. `emitters.ext_bank_files` / `Project.ext_bank_owners` include the battle banks;
+  `validators.bank_usage` counts bank $6B (marker `BATTLE DATA (generated`) and every battle bank
+  (`BATTLE BANK DATA (generated`).
+- **Engine:** `templates/bank_06b_head.asm` re-pinned (+ entry 1 `EnemyGenderOf`, `RowIndexOf`,
+  `CopyEnemyRowExt`'s far path: `RowBankTable` → `rst $10` to the battle bank's entry 0);
+  `templates/bank_076_head.asm` re-pinned (`EncResolve` carries the list in HL: the room target
+  word, `EncFloorRun` → HL from `[db last floor, dw list]`; `.copy` — a vanilla number returns D =
+  it, a project one copies from `ProjectEncLists` or far-calls `ListBankTable`'s bank entry 1, D =
+  `$80`; `PROJECT_LIST_BASE` `$80`); NEW pinned `templates/battle_bank.asm` (`{B}` = `_B<bank>`;
+  entry 0 `BattleRowCopy`, entry 1 `BattleListCopy`). Hand patch `patches/bank_014.asm`: the
+  constructor's gender read (17 B, same size) → `ld a, [$DA13] / ld d, a / ld a, [$DA12] / call
+  EnemyGenderCode` + 7 nops; its `jp nz, CreateForeignMasterNames` → `jp nz, ForeignNamesGate`;
+  both routines in the `$7EAD` free bytes (30 of 31; `LoadEnemyStatsExt` stays at `$7ECC`).
+  Current sha256s: `templates/PINNED_SHA256`; `TEMPLATE_SIZE[$6B]` 100 (`RowBankTable` `$4064`),
+  `[$76]` 580 (`RegionTable76` `$4244`) — measured from the S149 example game.sym.
+- **Pin:** example `92060f65…` (patched; was `6b01894d…`, patched): banks $14, $6B, $76 differ
+  (the example's 2 rows: rolled genders, no battle bank). The user's project builds `06721083…`
+  (patched; its 3 rows now roll their gender — they were always male).
+- **The editor:** Monsters tab "Where you meet it" — a Gender column (a choice on the project's
+  own rows, the game's gender read-only on its rows); the Enemies dialog — gender; Capacity rows
+  `enc_lists` / `enemies` with the new limits; help 50_enemies, 52_monsters, 59_encounters,
+  90_limits. **Holes (loose end, PROJECT_STATE Open defects S135):** `Document.room_holes`,
+  `fill_room_holes` (Add screen makes blank screens in the new rectangle's gaps, one undo step —
+  `commands.AddScreen`; only the gaps the new screen makes), `holes_if_removed` (the Rooms tab
+  refuses a removal that makes a new gap), an open-log WARNING for an old project with a gap
+  (`Document._note_room_holes`; a copy of a game room — `is_game_room_copy` — keeps the
+  original's gaps, unreported); help 10_rooms.
+  `EDITOR_REVISION` S149.
+- **The model:** `simulator/raising.py` `Tables.genders` (a project row's code) — `create` reads
+  the original table for EIDs 0-511 (512 B, `$4A1D`), else the row's code.
+- **Measured:** `tools/census_battles.py` (`extracted/battles_census.json`; TOOLS_AND_DATA S149):
+  a 1,500-row / 600-list project (banks $6B / $76 / $80 / $81) — rows 1,541 / 1,541, creations
+  3,004 / 3,004 == the model, lists 728 / 728, the original special rows' extras 4 / 4; the user's
+  project and the demo clean; `--negative` (a row-bank / list-bank byte, the two `cp $02` → `cp
+  $FF`) fails each class. `tools/walk_battles.py` on the user's `.sav` (the S149 demo,
+  `examples/s149_muster_demo/`): 53 checks, 0 failed (r2) — rows 43 / 88 / 900 fought and joined (the
+  gender hook ran with that EID; the player as master, no egg, male / the game's roll / female;
+  healthy: HP = max HP > 0, MP = max MP — the r1 demo rows had HP 1 → 0 HP, user-found),
+  the farm screen, a wild battle from list 700 (a battle bank) with the row-1,000 Golem, + THE FAR
+  WING (region 1: the arena from region 1 and from region 0, a world in region 1, a JOURNAL save
+  on a gate floor served in region 1 + CONTINUE there); `--negative` (the S148 creation): 4 FAIL.
+- Tests: `test_compiler.test_s149` (11 + 4 for r2's HP minimum; `--rom`: the tables / the battle
+  banks' rows / the bank $14 site read back from a built ROM).
 
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 

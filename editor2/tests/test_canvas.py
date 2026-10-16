@@ -168,11 +168,13 @@ def gui_round_trip(project_dir):
             cv._stroke_cell((cx, cy))
     cv._end_stroke('Rectangle')
     assert s.doc.layout(lid0)['tiles'] != s.doc.layout(lid1)['tiles']
-    # add a screen (record dims follow) — 4x4 grid: screen 8 is row 2
+    # add a screen (record dims follow) — 4x4 grid: screen 8 is row 2.
+    # S149: a room stays a full rectangle — screen 4 (the gap between 0 and
+    # 8) is filled in the same undo step (PROJECT_COMPILER §2.57)
     rt._add_screen(8)
     app.processEvents()
     room = s.doc.room(ROOM)
-    assert s.doc.screen_keys(room) == [0, 8]
+    assert s.doc.screen_keys(room) == [0, 4, 8], s.doc.screen_keys(room)
     assert room['record']['width_px'] == 160 and room['record']['height_px'] == 384
     # full undo == disk, redo, save
     n = s.undo.count()
@@ -190,7 +192,7 @@ def gui_round_trip(project_dir):
     assert len(r2['screens']['0']['states']) == 2
     assert 'npcs' not in r2['screens']['0'], 'states form must not keep top-level npcs'
     print(f'OK: GUI round trip — {n} undoable edits, exact undo, saved, '
-          f'2 states ({lid0} / {lid1}), screen 8 added (4x4 grid)')
+          f'2 states ({lid0} / {lid1}), screen 8 added + the gap 4 filled (4x4 grid)')
     return w, s, {0: copy.deepcopy(s.doc.layout(lid0)['tiles']),
                   1: copy.deepcopy(s.doc.layout(lid1)['tiles'])}
 

@@ -157,8 +157,11 @@ class Tables:
     (only ids that have one; custom ids included); unevolved = 256 bytes."""
 
     def __init__(self, info, enemies, exp, growth, learn, unevolved, gender=(0, 0, 0, 0),
-                 names=None, skill_names=None):
+                 names=None, skill_names=None, genders=None):
         self.info = info
+        # S149: a project row's creation gender code ($FF rolled / $00 / $01) —
+        # bank $6B ProjectEnemyGender via bank $14 EnemyGenderCode
+        self.genders = genders or {}
         self.enemies = enemies
         self.exp = exp
         self.growth = growth
@@ -196,6 +199,7 @@ class Tables:
         learn = {sid: bytes(r) for sid, r in enumerate(g.learn) if sid < VANILLA_LEARN_ROWS}
         names = dict(g.names)
         snames = dict(g.snames or {})
+        genders = {}
         if project is not None:
             from editor2.core import custom_skills as CS
             try:
@@ -210,10 +214,15 @@ class Tables:
                         pass
             except Exception:
                 pass
+            from editor2.core import battles as BT
             for e in project.quest_enemy_rows():
                 row = project_enemy_row(e, project)
                 if row is not None:
                     enemies[e['_eid']] = row
+                try:
+                    genders[e['_eid']] = BT.gender_code(e)
+                except Exception:
+                    pass
             from editor2.core import species as SP
             for s in SP.resolve(project, with_art=False):
                 info[s['id']] = bytes(s['info'])
@@ -221,7 +230,8 @@ class Tables:
         unevolved = unevolved_map()
         return cls(info, enemies, [list(c) for c in _curves(g.exp, 3)],
                    [list(c) for c in _curves(g.growth, 1)], learn, unevolved,
-                   gender=GENDER_THRESHOLD, names=names, skill_names=snames)
+                   gender=GENDER_THRESHOLD, names=names, skill_names=snames,
+                   genders=genders)
 
 
 def _curves(rows, width):
@@ -261,9 +271,9 @@ _EGT = None
 
 
 def enemy_gender_table():
-    """EnemyGroupTable $14:$4A0F (526 B, index = EID): a fixed gender for a
-    row ($00 male / $01 female), $FF = rolled at creation. Read from the
-    clean source (never patched)."""
+    """EnemyGroupTable $14:$4A1D (512 B, index = EID 0-511 — S149 correction of
+    the S130 "$4A0F, 526 B"): a fixed gender for a row ($00 male / $01 female),
+    $FF = rolled at creation. Read from the clean source (never patched)."""
     global _EGT
     if _EGT is None:
         root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -344,7 +354,9 @@ def create(T, eid, rng, arena_tier=0, origin=None):
     queue = [q for q in queue if q != FF]
     exp = T.exp_to_reach(sp, level) if level else 0
     egt = enemy_gender_table()
-    fixed = egt[eid] if eid < len(egt) else FF
+    # S149: the vanilla table covers EIDs 0-511 ($14:$4A1D, 512 B); a project row
+    # (519+) has its own code (bank $14 EnemyGenderCode -> bank $6B entry 1)
+    fixed = egt[eid] if eid < len(egt) else T.genders.get(eid, FF)
     if fixed != FF:
         female = fixed
     else:

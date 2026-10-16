@@ -144,7 +144,7 @@ for reg in range(REGIONS):
         guide = d.add_npc(room, '0', 0, 3, 2, 0x0B, 'down')
         mon = d.add_npc(room, '0', 0, 6, 2, 0xF0, 'down', monster=MONSTERS[k])
         enemy = d.add_enemy(copy_eid=2, name=f'Lodge foe {reg}-{k + 1}', species=MONSTERS[k],
-                            level=1, hp=1, joinability=7)
+                            level=1, hp=2, joinability=7)
         scribe = d.add_npc(room, '0', 0, 4, 5, 0x0C, 'down') if (reg, k) == (3, 4) else None
         lodges.append({'id': rid, 'mid': mid, 'reg': reg, 'k': k, 'guide': guide,
                        'mon': mon, 'enemy': enemy, 'scribe': scribe, 'anim': anim})

@@ -1,0 +1,198 @@
+{
+ "_generator": "tools/census_battles.py (S149) \u2014 PyBoy stub calls on a built ROM of the project; ROM source data/DWM-original.gbc",
+ "census": {
+  "summary": "rows 1541/1541 \u00b7 create 3004/3004 \u00b7 lists 728/728 \u00b7 vanilla extras 4/4",
+  "plan": {
+   "rows": 1502,
+   "rows_here": 591,
+   "lists": 600,
+   "lists_here": 256,
+   "banks": [
+    {
+     "bank": "$80",
+     "rows": [
+      591,
+      652
+     ],
+     "lists": [
+      256,
+      0
+     ]
+    },
+    {
+     "bank": "$81",
+     "rows": [
+      1243,
+      259
+     ],
+     "lists": [
+      256,
+      344
+     ]
+    }
+   ]
+  },
+  "genders": {
+   "rolled": {
+    "1": 1386,
+    "0": 118
+   },
+   "male": {
+    "0": 750
+   },
+   "female": {
+    "1": 750
+   }
+  },
+  "vanilla_special": [
+   {
+    "eid": 305,
+    "kind": "master",
+    "ok": true
+   },
+   {
+    "eid": 316,
+    "kind": "master",
+    "ok": true
+   },
+   {
+    "eid": 350,
+    "kind": "egg",
+    "ok": true
+   },
+   {
+    "eid": 484,
+    "kind": "nickname",
+    "ok": true
+   }
+  ],
+  "rows_bad": [],
+  "create_bad": [],
+  "lists_bad": [],
+  "project": "big"
+ },
+ "user": {
+  "summary": "rows 42/42 \u00b7 create 6/6 \u00b7 lists 128/128 \u00b7 vanilla extras 4/4",
+  "plan": {
+   "rows": 3,
+   "rows_here": 3,
+   "lists": 0,
+   "lists_here": 0,
+   "banks": []
+  },
+  "genders": {
+   "rolled": {
+    "1": 6
+   }
+  },
+  "vanilla_special": [
+   {
+    "eid": 305,
+    "kind": "master",
+    "ok": true
+   },
+   {
+    "eid": 316,
+    "kind": "master",
+    "ok": true
+   },
+   {
+    "eid": 350,
+    "kind": "egg",
+    "ok": true
+   },
+   {
+    "eid": 484,
+    "kind": "nickname",
+    "ok": true
+   }
+  ],
+  "rows_bad": [],
+  "create_bad": [],
+  "lists_bad": [],
+  "project": "user"
+ },
+ "demo": {
+  "summary": "rows 1139/1139 \u00b7 create 2200/2200 \u00b7 lists 728/728 \u00b7 vanilla extras 4/4",
+  "plan": {
+   "rows": 1100,
+   "rows_here": 607,
+   "lists": 600,
+   "lists_here": 256,
+   "banks": [
+    {
+     "bank": "$81",
+     "rows": [
+      607,
+      493
+     ],
+     "lists": [
+      256,
+      153
+     ]
+    },
+    {
+     "bank": "$82",
+     "rows": [
+      1100,
+      0
+     ],
+     "lists": [
+      409,
+      191
+     ]
+    }
+   ]
+  },
+  "genders": {
+   "rolled": {
+    "1": 2196
+   },
+   "male": {
+    "0": 2
+   },
+   "female": {
+    "1": 2
+   }
+  },
+  "vanilla_special": [
+   {
+    "eid": 305,
+    "kind": "master",
+    "ok": true
+   },
+   {
+    "eid": 316,
+    "kind": "master",
+    "ok": true
+   },
+   {
+    "eid": 350,
+    "kind": "egg",
+    "ok": true
+   },
+   {
+    "eid": 484,
+    "kind": "nickname",
+    "ok": true
+   }
+  ],
+  "rows_bad": [],
+  "create_bad": [],
+  "lists_bad": [],
+  "project": "demo"
+ },
+ "negative": {
+  "failed_classes": {
+   "rows": true,
+   "lists": true,
+   "create": true
+  },
+  "notes": {
+   "rows": "rows 889/1541 \u00b7 create 1700/3004 \u00b7 lists 728/728 \u00b7 vanilla extras 4/4",
+   "lists": "hung: stub did not return (PC 0xe421)",
+   "create": "rows 1541/1541 \u00b7 create 469/3004 \u00b7 lists 728/728 \u00b7 vanilla extras 4/4"
+  },
+  "project": "big"
+ }
+}

@@ -5031,9 +5031,9 @@ jr_051_5c23:
     ld de, $0f01
     call LoadBtlS_73a3
     ld a, $14
-    ld [$da14], a
-    ld hl, $1403
-    rst $10
+    ld [$da14], a                ; [S149] the JOIN: the new monster is built in
+    ld hl, $1403                 ;   staging slot $14 ($D665) by bank $14 entry 3
+    rst $10                      ;   CreateJoinedMonster (= entry 2's body)
 
 jr_051_5cb8:
     ld hl, $1401

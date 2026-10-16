@@ -105,7 +105,7 @@ for n in range(N):
     if n == N - 1:
         d.add_npc(room, '0', 0, 5, 5, 0xF0, 'down', monster=MONSTER)
         h['enemy'] = d.add_enemy(copy_eid=2, name='Jukebox foe', species=MONSTER,
-                                 level=1, hp=1, joinability=7)
+                                 level=1, hp=2, joinability=7)
     halls.append(h)
 
 cities = d.room('cities_fount')

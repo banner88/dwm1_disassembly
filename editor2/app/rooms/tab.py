@@ -3687,7 +3687,12 @@ class RoomsTab(QWidget):
         pal = None
         if str(self.key) in (room.get('screens') or {}):
             pal = self.s.doc.effective_palette(room, self.key, self.state_idx)
-        self.s.undo.push(C.AddScreen(self.s, self.room_id, key, grid, attr, palette=pal))
+        cmd = C.AddScreen(self.s, self.room_id, key, grid, attr, palette=pal)
+        self.s.undo.push(cmd)
+        if getattr(cmd, 'filled', None):
+            self._say_status('Also added blank screen(s) '
+                             + ', '.join(str(k) for k, _l in cmd.filled)
+                             + ' — a room has every screen inside its size (S149)')
         self.key, self.state_idx = key, 0
         self._show()
 
@@ -3697,6 +3702,15 @@ class RoomsTab(QWidget):
             return
         if len(self.s.doc.screen_keys(room)) <= 1:
             QMessageBox.information(self, 'Remove screen', 'A room keeps at least one screen.')
+            return
+        holes = self.s.doc.holes_if_removed(room, key)
+        if holes:
+            QMessageBox.information(
+                self, 'Remove screen',
+                f'Screen {key} is inside the room: without it the room would have a hole '
+                '(screen ' + ', '.join(str(k) for k in holes) + ') that shows stray tiles '
+                'in the game. Remove the screens at the edge first, or paint this screen '
+                'as a wall instead.')
             return
         if QMessageBox.question(self, 'Remove screen',
                                 f'Remove screen {key}? (Undo restores it.)') != QMessageBox.Yes:

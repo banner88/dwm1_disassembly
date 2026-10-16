@@ -125,7 +125,7 @@ sun_id, sun = rooms[('d', 'hall')]
 bruiser = d.add_enemy(copy_eid=2, name='Dial bruiser', species=BRUISER_SPECIES, level=99,
                       hp=999, mp=0, atk=999, **{'def': 999}, agl=999, joinability=7)
 warden = d.add_enemy(copy_eid=2, name='Dial warden', species=WARDEN_SPECIES, level=1,
-                     hp=1, joinability=7)
+                     hp=2, joinability=7)
 
 # the decoys: only a sign that says "wrong place" and a guide out (SUNDIAL HALL is
 # the portal room as well — below)

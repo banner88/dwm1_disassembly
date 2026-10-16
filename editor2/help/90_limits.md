@@ -71,6 +71,10 @@
 - After a battle started by talking to a monster NPC, that monster is not
   drawn again until the screen reloads (like a vanilla boss leaving).
 - In a 2-3 enemy battle only the enemy knocked out last can join.
+- An enemy row's HP is at least 2 (S149: a monster made from it never has 0 HP).
+- Enemy rows of your own (S149): at most 3,321 (EIDs 519-3839; was 640). Each
+  chooses the gender of the monster that joins from it (rolled / male /
+  female); none carries another master's name, a preset nickname or the egg.
 - New gates (S115): at most 64 (numbers 32-95). A new gate starts with the
   maze look, special rooms and depth tier of the gate it copies; since S120
   every gate can point at other rows (Gates tab → Maze floors) — the rows
@@ -98,7 +102,8 @@
   free); theme rooms do not animate; the damage floors do not hurt in your
   rooms. Per-gate lists per floor, rooms' own lists inside and
   outside dives and flag variants are on the Encounters tab (S114).
-- Encounters: at most 128 lists of your own (numbers 128-255); 8 flag
+- Encounters: at most 3,968 lists of your own (numbers 128-4095; S149 — 128
+  until S148); 8 flag
   conditions per variant. A battle rate is one of the game's 8 codes; on gate
   floors the floor type also changes how often battles come (not shown yet).
 - Monster names are up to 9 characters, default nicknames up to 4,

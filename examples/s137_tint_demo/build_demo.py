@@ -152,7 +152,7 @@ for n in range(N):
     curator = d.add_npc(room, '2', 0, 4, 3, 0x0C, 'down')
     d.make_service_npc(room, '1', 0, libr, 'library')
     enemy = d.add_enemy(copy_eid=2, name=f'Tint foe {n + 1}', species=MONSTERS[n],
-                        level=1, hp=1, joinability=7)
+                        level=1, hp=2, joinability=7)
     flag = f's137_tint_painted_{n + 1}'
     d.add_flag(flag, comment=f'S137 demo: TINTED HALL {n + 1} is painted {name}')
     halls.append({'id': rid, 'mid': int(room['mapID'], 16), 'guide': g, 'painter': painter,

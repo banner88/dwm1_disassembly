@@ -6722,3 +6722,57 @@ The script banks' S43 comments looked complete ("every dw word annotated") and w
 third of the words (parameters shown as texts, wrong op names, targets as numbers, reached words
 as db). **Rule:** an annotation generator is a decoder: when the decoder is corrected, re-run the
 annotation through the corrected one and make its check part of the verifier.
+
+## S149 — battles at campaign scale: enemy rows past 640, battle lists past 128 (ROADMAP ARC CAP5)
+
+**Widening an ID space wakes every reader that assumed the old range.** **Symptom:** none
+reported — found by the audit: a monster made from a project enemy row (EID 519+) was always
+male (rows 519-532), had a junk gender byte (8, 30, 200 … from row 533), joined with a rival
+tamer's master name (EID 561) or as an EGG (EID 606) — PyBoy stub calls of the constructor on
+120 and 1,500 rows. **Root cause:** two original lookups that were safe for the original rows
+(0-486): the gender read `EnemyGroupTable[EID]` has no bound (512 entries, then
+`EnemyStatsTable` bytes), and `CreateForeignMasterNames` is entered for every non-zero high
+byte but compares only the LOW byte. S101 (bank $6B, EID 519+) checked the stats copy, not the
+other readers of the EID. **Fix:** bank $14 `EnemyGenderCode` / `ForeignNamesGate` (same size;
+a project row's own gender code). **Rule:** when an ID can take values the original never used,
+census EVERY reader of that ID (indexing without a bound, compares on part of it, sentinel
+values like $FF / $0F00 in other fields) before the first project uses the new range — and run
+the census past the first few values (the junk began at the 15th row, the egg at the 88th).
+
+**A hook on a routine's head misses a second entry into its body.** **Symptom:** the walk's
+hook on the constructor (`label14_40b4`) never fired, yet a monster joined. **Root cause:** the
+battle join enters through bank $14 entry 3 (misnamed "party slot init/clear"), which does its
+own setup and JUMPS into entry 2's body. **Rule:** measure on the code the result depends on
+(here the gender read inside the shared body), not on the function's documented entry; a
+zero-hit hook on a head is not proof the body did not run.
+
+**A demo builder's room dict can go stale under the Document.** **Symptom:** THE MUSTER HALL
+had no NPCs in the game; the project file showed `npcs: []`. **Root cause:**
+`Document.set_room_battles` commits a fresh copy of the project; the builder kept editing the
+old dict it fetched before. **Rule:** after any Document write that commits (encounters, gate
+inserts, …), fetch rooms again with `d.room(id)` before editing them.
+
+**A harness check that passed by timing is not a passing check.** **Symptom:** S148 — 9 / 780
+room-state checks failed on the user's new save, 0 on the S144 save. **Root cause:** those
+screens lie outside the room's view; the game's camera leaves them 5-40 frames after a warp (the
+originals too) and the harness read 4 frames late — whether it saw screen k depended on the
+save's timing. **Fix:** read at the arrival frame. **Rule:** when a check reads a state the game
+changes by itself, read it at a defined event (the arrival frame), never "a few frames later";
+and when a check flips between saves, look for a race before blaming either save.
+
+**A world / gate number reused across demos inherits the user's progress.** The S149 portals
+showed no swirl: the user's save had cleared gate 33 (the S141 demo's DIAL GATE) and the Gate of
+Villager. **Rule:** a test ROM's new gates take numbers no earlier demo used, and its portals
+are checked as SHOWN in the walk (Iron Rule 7) — the swirl object's hidden bit + the art.
+
+**Test data with values the game never uses tests something else.** **Symptom:** S149 r1 — the
+user: the MUSTER HALL's monsters "FAINT AFTER JOINING". **Root cause:** the demo gave the rows HP 1
+/ MP 0 (for short fights); the creation roll (×0.80-1.00, `SaveEnem_4821`, rounded down) makes
+HP 1 a 0-HP monster 51 times in 52 — measured HP 0/0 MP 0/0 on the r1 ROM, HP 29/29 MP 14/14 with
+HP 30. The engine was right; the walk never read HP. The game's own rows are HP 2 or more.
+**Rule:** demo rows get values in the game's own range (shorten a fight in the HARNESS — it pokes
+the battle copy's HP — not in the data), and a join check reads the whole new record, not only the
+fields the session changed. **Follow-up (the user: "0 HP should never be possible"):** what the
+game itself never does (a row below HP 2) the editor now refuses — `gamedata.ENEMY_HP_MIN`, old
+projects raised on open (PROJECT_COMPILER §2.57 r2). When a test finds data the game would never
+hold, ask whether the editor should let it exist at all.

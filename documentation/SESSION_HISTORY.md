@@ -1,5 +1,47 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-13 (Session 147 — **ROADMAP ARC CAP5 SONGS BOX BUILT: ONE SOUND ID PER SONG (95 SONGS; S116
+> TOOK ONE PER CHANNEL ≈ 31) AND SONGS IN ANY BANK — $74, $75, THEN THE 4 MB ROM'S BANKS $80+ (THE 11TH DWM2 SONG
+> STOPPED THE USER'S PROJECT; THE WHOLE 31-SONG CATALOG NOW FITS); BANK $74 SongStart REUSES THE ENGINE'S OWN
+> AudioProcess ON A DUMMY RECORD, THEN POINTS THE CHANNEL AT THE SONG'S STREAM AND BANK; SONGS BY NAME IN CUTSCENES;
+> THE JUKEBOX HALLS WALKED (116 CHECKS, 0 FAILED); S146 USER-CONFIRMED; S147 USER-CONFIRMED 2026-10-15**
+> (user: "Continue on the 4 mb expansion" → the CAP5 audit (every ceiling against a campaign of hundreds of
+> places, each with its own music: songs bound first — measured: the user's project + the 11th DWM2-size song
+> stopped the build; then battle lists 128 / enemy rows 640, flags 1,965, story checks / steps, gates 64) + 4
+> questions → "Sounds good, the rest seems very reasonable in terms of current limits and unlikely to be an
+> issue. 1) Yes seems fine [S146] 2) Yes music 3) 95 is more than enough 4) perfect. Dont put too many npcs in
+> one room please, it lags hard"). **Built S147; USER-CONFIRMED 2026-10-15 22:12 ("everything works").** Test ROM `DWM-S147-jukebox-test.gbc`
+> (`16ad682f…`, patched) = the user's project + the JUKEBOX HALLS. Example pin `6b01894d…` (patched; was
+> `27de8ab9…`, patched); the user's project builds `87a14624…` (patched; the S146 code `c8d4689f…`, patched —
+> banks $00 (3 B), $71, $74 differ; its song's sound-register writes identical over 2,400 frames).
+> **Built (engine):** NEW pinned `templates/bank_074_head.asm` — bank $74 entry 0 `SongStart`: `SongDirectory[id −
+> $9E]` → the song's record (channels, its bank, per channel dummy id + slot + stream); per channel ROM0
+> `AudioProcess` on dummy record `SongRecords[k]` ($74:$4003, k = 4 × slot index + hw — the engine's own init),
+> then state +2/+3 := the stream, +4 := the song's bank (the frame driver maps +4 before every tick); no song →
+> silence; ids $B6-$FC + LoadSE → `SongSilent`. Bank $71 entry 6 `CustomBGMStart` → a forwarder (`ld hl,
+> $7400 / rst $10`); `CustomBGMChanTable` gone; `AudioMasterTableExt` row 4 `[$9E, $4003, $74]`, no row 5.
+> TEMPLATE_SIZE $74 445 / $71 1355. SOUND_SYSTEM §11, PROJECT_COMPILER §2.55.
+> **Built (compiler + editor):** `music.plan` one id a song (explicit claims, auto = lowest free; ≤ 95), first fit
+> $74 / $75 / `('ext', k)` → banks $80+ after streams / places / animations (`song_ext_banks`, `songs_ext`
+> emitter); a song > one bank refused; cutscene Music steps name songs (`song:<name>` → the id at emission);
+> FOUND + FIXED: a room whose only scripts are talk cutscenes had no index 0 (unbuildable since S119) →
+> `cut:<room>:noentry`; Music tab meters (songs of 95, song data in words), Capacity rows `song_ids` /
+> `song_bytes`, the preview = `Machine.start_song`, the manifest's `songs`. `EDITOR_REVISION` S147; help 61, 63,
+> 81, 90.
+> **The acceptance (machine half):** the whole DWM2 catalog + the user's song (32 songs over $74 / $75 / $80 /
+> $81): `census_sound_engine.py --custom` (PyBoy's InitBGM vs the editor's `start_song`) 32 / 32 identical ×
+> 2,400 frames, `--negative` 4 / 4 mismatched; the editor's preview == the built ROM's register writes (32 ×
+> 900 frames, `test_s147`). NEW `tools/walk_songs.py` on the JUKEBOX HALLS (11 halls × room song + 2 bards'
+> songs, hall 11's monster with a bank $82 battle song, "music back", JOURNAL + CONTINUE in hall 11) on the
+> user's `.sav`, sound on: every request, every start (slots, streams, bank $74 / $75 / $81 / $82 — a hook on
+> SongStart's `ret`), 600 frames inside its own stream: **116 checks, 0 failed**; `--negative` (SongStart's bank
+> store removed): 46 FAIL = exactly the 23 starts outside bank $74.
+> **Checks:** verify_integrity PASS (the committed overlay == the pin `6b01894d…`, patched); test_compiler `--rom`
+> ALL 1577 PASSED (+ `test_s147`, 16; `test_music_s116` / `test_music_rom` rewritten for S147); test_app PASS;
+> test_canvas `--rom` PASS. Annotation (Iron Rule 6): bank $00 `AudioProcess` (what one call writes; state +4 =
+> the record's bank) and the frame driver's bank switch, both trees (build `1ca65793…`).
+> **Next:** the `$3E` decoder box (ROADMAP CAP4 list), or the next CAP5 ceiling as it binds.
+
 > Last verified: 2026-10-13 (Session 146 — **ROADMAP ARC CAP5 FIRST BOX BUILT: SCREENS PER GROUP — A ONE-STATE
 > SCREEN COSTS NOTHING (ALL OF THEM SHARE ONE ALWAYS-ZERO BYTE, `wCustomStepZero` — THE ORIGINAL GAME'S `$D998`
 > RULE FOR 65 SCREENS); NEW ROOMS MOVE ON TO THE NEXT GROUP OF 128 AT 90 %; PLAY HERE IN THE STATE SHOWN FOR

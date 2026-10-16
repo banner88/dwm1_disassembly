@@ -14,8 +14,11 @@
 ; SaveRegsForEncounter and LoadFloorAndEncounterData read wEncListBuf.
 ;
 ; Entry 0 (HL=$7600) EncResolve — returns
-;     D = the list number (0-127 vanilla EncounterPoolData, 128+ = project list
-;         D-128 of ProjectEncLists, already copied to wEncListBuf)
+;     D = the list number 0-127 (vanilla EncounterPoolData, bank $01 copies
+;         it), or $80 = a project list (S149: numbers 128-4095, 16-bit in this
+;         bank's tables), already copied to wEncListBuf — from ProjectEncLists
+;         (the first LISTS_HERE) or a battle bank's BattleListCopy (entry 1 of
+;         the bank ListBankTable names; templates/battle_bank.asm)
 ;     E = the floor's VALUE number (wEncounterPoolIndex: its one other reader,
 ;         the gold lying on depth-tier-3 gate floors, bank $01 $5AF8, scales
 ;         with it — always the VANILLA list number of the gate floor, so a
@@ -37,10 +40,12 @@
 ;   GatePlanPtrs: GATE_PLAN_LEN x dw (0 = vanilla), index wGateID (0-255).
 ;   Variant list: records [db n_terms][n_terms x dw flag (bit 15 = must be
 ;     CLEAR)][dw target]; the last record has n_terms 0 (always holds).
-;     Room target = the list number; gate target = a floor-run list.
-;   Floor runs: [db last_floor, db list] ..., the game's floor numbering
+;     Room target = the list number (dw); gate target = a floor-run list.
+;   Floor runs: [db last_floor, dw list] ... (S149; db list until S148), the game's floor numbering
 ;     (wCurrentFloor + 1, the first floor is 1); the last run has $FF.
-;   ProjectEncLists: 26 B per project list (the EncounterPoolData format).
+;   ProjectEncLists: 26 B per project list (the EncounterPoolData format), the
+;     first LISTS_HERE project lists; ListBankTable: [dw end index (exclusive),
+;     db bank] per battle bank holding the later ones (S149).
 ;   VanillaGateBase / VanillaGateBpPtrs / VanillaBreakpoints: byte copies of
 ;     bank $01 GateBasePoolIndex / GateFloorBreakpoints / FloorBreakpointData
 ;     (the vanilla rule, gates 0-31). A NEW gate (32+, S115) takes the
@@ -85,6 +90,7 @@ SECTION "ROM Bank $076", ROMX[$4000], BANK[$76]
     dw GateBossWin                      ; entry 2  (HL=$7602, S117 — gate cleared on the boss-floor win)
 
 ENC_VANILLA_GATES EQU 32
+PROJECT_LIST_BASE EQU $80               ; S149: project list numbers 128 .. 4095
 
 EncResolve:
     ld b, $FF                           ; rate: the list's own
@@ -118,19 +124,22 @@ EncResolve:
     push bc
     call EncPickVariant                 ; HL -> target (dw list number)
     pop bc
-    ld a, [hl]
-    ld d, a                             ; D = list
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a                             ; HL = list (S149: a 16-bit number)
     ld e, a                             ; E = value (not a gate floor)
     jr .copy
 .gate:
     push bc
     call EncVanillaNumber               ; A = the vanilla list number
     pop bc
-    ld d, a
-    ld e, a
+    ld e, a                             ; E = value (the vanilla number)
+    ld l, a
+    ld h, $00                           ; HL = the vanilla list
     ld a, [wGateID]
     cp GATE_PLAN_LEN
     jr nc, .copy                        ; no plan table entry
+    push hl
     ld l, a
     ld h, $00
     add hl, hl
@@ -142,26 +151,43 @@ EncResolve:
     ld h, [hl]
     ld l, a
     or h
-    jr z, .copy                         ; this gate keeps the vanilla rule
+    jr z, .keep                         ; this gate keeps the vanilla rule
+    pop af                              ; drop the vanilla list (A / F only)
     push de
     push bc
     call EncPickVariant                 ; HL -> target (dw floor runs)
     ld a, [hl+]
     ld h, [hl]
     ld l, a
-    call EncFloorRun                    ; A = this floor's list
+    call EncFloorRun                    ; HL = this floor's list
     pop bc
-    pop de
-    ld d, a                             ; D = list, E keeps the vanilla value
-.copy:
-    ld a, d
+    pop de                              ; E keeps the vanilla value
+    jr .copy
+.keep:
+    pop hl
+.copy:                                  ; HL = list, E = value, B = rate
+    ld a, h
+    or a
+    jr nz, .project
+    ld a, l
+    ld d, a                             ; D = list
     bit 7, a
-    ret z                               ; vanilla list: bank $01 copies it
-    and $7F                             ; project list D-128 -> wEncListBuf
+    ret z                               ; vanilla list 0-127: bank $01 copies it
+.project:                               ; S149: project lists 128 .. (16-bit)
+    ld a, l
+    sub PROJECT_LIST_BASE
+    ld l, a
+    jr nc, .index
+    dec h
+.index:                                 ; HL = the project list index n
+    ld d, $80                           ; D bit 7: the list is in wEncListBuf
     push bc
     push de
-    ld l, a
-    ld h, $00
+    ld a, l
+    sub LOW(LISTS_HERE)
+    ld a, h
+    sbc HIGH(LISTS_HERE)
+    jr nc, .far                         ; a list of a battle bank
     add hl, hl                          ; 2n
     ld d, h
     ld e, l
@@ -182,6 +208,27 @@ EncResolve:
     inc de
     dec c
     jr nz, .loop
+    pop de
+    pop bc
+    ret
+.far:
+    ld d, h
+    ld e, l                             ; DE = n
+    ld hl, ListBankTable                ; [dw end index (exclusive), db bank] …
+.find:
+    ld a, e
+    sub [hl]
+    inc hl
+    ld a, d
+    sbc [hl]
+    inc hl
+    jr c, .found                        ; n < this bank's end
+    inc hl
+    jr .find
+.found:
+    ld h, [hl]
+    ld l, $01                           ; that battle bank's entry 1 BattleListCopy
+    rst $10                             ; (DE = n; it fills wEncListBuf)
     pop de
     pop bc
     ret
@@ -231,8 +278,8 @@ EncPickVariant:
     add hl, de                          ; HL -> the next record
     jr EncPickVariant
 
-; EncFloorRun: HL -> floor runs. A := the list of the run holding the floor
-; (wCurrentFloor + 1). Clobbers C, HL.
+; EncFloorRun: HL -> floor runs [db last floor, dw list] (S149: dw — was db).
+; HL := the list of the run holding the floor (wCurrentFloor + 1). Clobbers A, C.
 EncFloorRun:
     ld a, [wCurrentFloor]
     inc a
@@ -242,9 +289,12 @@ EncFloorRun:
     cp c
     jr nc, .take                        ; floor <= last
     inc hl
+    inc hl
     jr .run
 .take:
-    ld a, [hl]
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a
     ret
 
 ; EncVanillaNumber: A := the vanilla list number of (wGateID, wCurrentFloor) —

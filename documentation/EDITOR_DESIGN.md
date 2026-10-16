@@ -2518,7 +2518,15 @@ meters show all of them (CAP4; S145: the Capacity tab). **S147 audit** (every ce
 against a campaign of hundreds of places, "each its own music"): songs bound first (lifted S147);
 next would come the project's battle lists 128 + enemy rows 640 (~128 places with battles of their
 own), flags 1,965 (~500-650 rooms at 3-4 a room), story checks / steps, new gates + worlds 64 — the
-user: "very reasonable in terms of current limits and unlikely to be an issue".
+user: "very reasonable in terms of current limits and unlikely to be an issue". **S149 (ROADMAP ARC
+CAP5, PROJECT_COMPILER §2.57): battles lifted — enemy rows 3,321 (bank $6B, then battle banks $80+;
+EIDs 519-3839) and battle lists 3,968 (numbers 128-4095; bank $76's first 256, then battle banks);
+on the way, two original lookups of the monster constructor (the gender table, the rival tamers'
+low-byte compare) gave project rows a fixed / junk gender, a rival's name or the egg flag from the
+15th / 43rd / 88th row — fixed (MONSTER_DATA "Project enemy rows" S149). Next to bind: flags
+1,965 (WRAM-bound; GBC WRAM banks 3-7 = 16 KB unused, known_RAM_map), story checks 256 / steps
+255, new gates + worlds 64, the ROM space (≈660 more rooms at the user's average), bank $71
+(≈965 rooms).**
 
 **What stays exactly as it is:** vanilla rooms and their data; the arena (the lobby / battle
 copies keep working through global ids — `ArenaAlias` unchanged); every service NPC kind

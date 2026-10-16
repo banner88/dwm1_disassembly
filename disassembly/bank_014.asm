@@ -49,7 +49,7 @@ SECTION "ROM Bank $014", ROMX[$4000], BANK[$14]
     dw label14_400f          ; Entry 0: Load enemy stats → $DA18
     dw label14_4016          ; Entry 1: Load enemy stats → $DA18 (same as entry 0)
     dw label14_40b4          ; Entry 2: CREATE monster record from enemy-stats row (S87)
-    dw label14_401d          ; Entry 3: Party monster slot init/clear
+    dw CreateJoinedMonster   ; Entry 3: the JOIN constructor (S149; was "party slot init/clear")
     dw label14_7bac          ; Entry 4: Unknown
     dw label14_7d12          ; Entry 5: Unknown
     dw LookupBossRedirect          ; Entry 6: Boss EID redirect lookup
@@ -64,7 +64,16 @@ label14_4016:
     call LoadEnemyStats
     ret
 
-label14_401d:
+; [S149] CreateJoinedMonster (entry 3, was label14_401d "party monster slot
+; init/clear") — the battle JOIN's constructor: bank $51 ($5CB4, the post-battle
+; join) sets $DA14 := $14 (staging slot 20, $D665) and far-calls it. It zero-fills
+; the slot, sets +$15/+$16 := $FF, the known skills / learn queue := $FF, the
+; parents' name fields := the placeholder $477A, the in-use flag, the player as
+; master (+$0C, its 9th byte $CA4A), loads the row (LoadEnemyStats -> $DA18) and
+; jumps into entry 2's body at Jump_014_4158 — the same rolls, gender read and
+; name tail as entry 2 (measured S149: a project row's join ran the gender read
+; once, entry 2's head never; tools/walk_battles.py).
+CreateJoinedMonster:
     ld hl, $cac1
     ld a, [$da14]
     call GetMonsterDataPtr
@@ -145,7 +154,10 @@ label14_401d:
 ; rolled. Known skills +$29 <- the row's 4 skills, then DropKnownSkillBases.
 ; Learn queue +$31 <- info +$06..+$08 (the natural 3). Max level +$4C :=
 ; info +$01 + (RNG1 mod 5) - 2. Gender +$0B := EnemyGroupTable[EID] unless
-; $FF, then RNG1 < CreateGenderThreshold[info +$03] -> 1 (female). Exp
+; $FF, then RNG1 < CreateGenderThreshold[info +$03] -> 1 (female) [S149: the
+; read has NO bound — the table covers EIDs 0-511 ($4A1D-$4C1C); an EID 512+
+; reads EnemyStatsTable bytes as its gender. No original row is past 486; the
+; project rows (519+) are, measured S149 — patches/ divert it]. Exp
 ; snapped to the level ($1301 = bank $13 SnapExpToLevel).
 ; RNG order: HP, MP, ATK, DEF, INT, the four AI rolls (+$64, +$65, +$66,
 ; +$67), the cap roll, the gender roll (only when the table gives $FF).
@@ -551,6 +563,11 @@ jr_014_42fe:
 ; (Jump_014_4586); $15F / $1E4 / $1E5 a nickname only. EIDs < $100 listed
 ; above ($01, $0C, $34, ...: the `$da13 == 0` cases) get a nickname only
 ; (jr_014_4469). Every other row keeps the player's name as master.
+; [S149] Entered for ANY EID whose high byte is non-zero and compares only the
+; LOW byte — fine for the original rows (high byte 0 or 1), but an EID $2xx /
+; $3xx … whose low byte is $31-$3C / $5E / $5F / $E4 / $E5 takes those rows'
+; names / the egg flag (measured on project rows: 561 a rival's master + nickname,
+; 606 an egg). patches/: bank $14 ForeignNamesGate (high byte >= 2 -> none).
 CreateForeignMasterNames:
     ld a, [wTempEnemyStatsId]
     cp $31
@@ -1440,8 +1457,10 @@ BossRedirectTable:
 ; [S130] NOT unknown: the 256-byte UnevolvedSkillMap copy read by
 ; DropSkillBase (`ld hl, $491d`) starts at $491D, 2 bytes before this label
 ; (overlapping the BossRedirect terminator's $0000); its bytes equal bank $16
-; UnevolvedSkillMap ($16:$4874, checked S130). Entries $F2-$FF ($4A0F-$4A1C)
-; are the first 14 bytes of EnemyGroupTable. Label kept (tools/
+; UnevolvedSkillMap ($16:$4874, checked S130); the copy ends at $4A1C (entry
+; $FF) and EnemyGroupTable starts right after it at $4A1D (S149 correction of
+; the S130 note "entries $F2-$FF are the first 14 bytes of EnemyGroupTable": the
+; code adds $4A1D, measured). Label kept (tools/
 ; gen_enemy_stats_db.py emits it).
 UnknownData_491F:
     db $00, $03, $03, $03, $06, $06, $06, $09, $09, $09, $0C, $0C, $0C, $0F, $0F, $0F  ; $491F
@@ -1460,12 +1479,14 @@ UnknownData_491F:
     db $FF, $FF, $FF, $D5, $D6, $D7, $D8, $D9, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF  ; $49EF
     db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF  ; $49FF
     db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-; [S130] EnemyGroupTable = the CREATION GENDER table ($14:$4A0F, 526 B,
-; index = EID 0-525; name kept — simulator/raising.py finds it by name):
+; [S130] EnemyGroupTable = the CREATION GENDER table ($14:$4A1D, 512 B,
+; index = EID 0-511 — S149 correction of "$4A0F, 526 B": label14_40b4 adds
+; $4A1D, and EnemyStatsTable follows at $4C1D; name kept — simulator/raising.py
+; finds it by name):
 ; $00 male / $01 female fixed for that enemy row, $FF = rolled (RNG1 <
 ; CreateGenderThreshold[info +$03] -> female). Read by label14_40b4 -> +$0B.
 EnemyGroupTable:
-    db $FF, $00  ;  $4A0F
+    db $FF, $00  ;  $4A1D
     db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $00, $00, $FF, $FF, $FF, $FF, $FF  ; $4A1F
     db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $00, $00, $FF  ; $4A2F
     db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF  ; $4A3F

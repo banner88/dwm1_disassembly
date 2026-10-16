@@ -23,8 +23,10 @@ A battle draws its monsters from a **list**:
   game (measured S122) — see *Gate themes → How the gates build a floor*.
 
 The game has **128 lists** (0-127); several gates share some of them. **New
-list (copy)** makes a list of your own (numbers 128 and up, at most 128) from
-the selected one; your lists have names. A list nothing uses is grey.
+list (copy)** makes a list of your own (numbers 128 and up, at most 3,968 —
+S149; 128 until S148) from the selected one; your lists have names. A list
+nothing uses is grey. The first 256 of your lists stay with the encounter
+code, the rest go to new banks of the 4 MB ROM by themselves.
 
 **Real chance:** the game draws a number 0-99 and takes the first slot whose
 running total reaches it, so the first slot with a chance gets one point

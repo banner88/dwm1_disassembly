@@ -134,6 +134,14 @@ The ROM is MBC5, 2 MB (`$0148` = `$06`). A 4 MB ROM (256 banks) needs no engine 
   `bank_ext.asm`). The frame driver maps a channel's data bank (state +4) with a full 8-bit
   `ld [$2100], a` (HRAM `$FFE8`, the site listed above), so a stream in bank $80-$FF plays —
   measured S147 (the JUKEBOX HALLS: songs from banks $81 / $82 in PyBoy; SOUND_SYSTEM §11).
+- **S149 (ROADMAP ARC CAP5) — battle banks:** project enemy rows past bank $6B and project
+  battle lists past bank $76 (the first 256) get banks $80+ too, numbered after the song banks
+  (`editor2/core/battles.py` `plan`, `Project._take_ext_bank('battles')`; whole files = self-ID +
+  the pinned copier block `templates/battle_bank.asm` at `$4001` (entry 0 `BattleRowCopy_Bxx`,
+  entry 1 `BattleListCopy_Bxx`) + the rows / lists). Bank $6B / $76 far-call them with `rst $10`
+  (DE in = the destination / the list index; the callee's DE comes back). Measured S149:
+  `tools/census_battles.py` (1,502 project rows — the example's 2 + 1,500 — + 600 lists over $6B / $76 / $80 / $81) and
+  `tools/walk_battles.py` (a row in bank $81 joins, a wild battle from a list in bank $81).
 
 ## LZ stream banks (S135 — ROADMAP ARC CAP2a)
 

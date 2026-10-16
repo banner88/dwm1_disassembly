@@ -977,27 +977,16 @@ def enemy_row_bytes(e):
 
 
 def emit_bank_06b(prj, warnings):
-    from .project import PROJECT_EID_BASE
-    rows = prj.quest_enemy_rows()
-    lines = [template('bank_06b_head.asm').rstrip('\n'), ""]
-    lines += ["; " + "-" * 77,
-              "; ProjectEnemyRows — progression.enemies, row = EID - 519 (generated",
-              "; by build_project.py; S101). An empty project keeps one zero row.",
-              "; " + "-" * 77,
-              f"PROJECT_EID_BASE EQU {PROJECT_EID_BASE}",
-              f"PROJECT_ENEMY_ROWS EQU {max(1, len(rows))}",
-              "ProjectEnemyRows:"]
-    if not rows:
-        lines.append(F.db_line([0] * 25, comment="(no project enemies)"))
-    for e in rows:
-        b = enemy_row_bytes(e)
-        what = (f"EID {e['_eid']} {e['id']} — species {b[0]} L{b[4]}, "
-                f"joinability {b[3]}")
-        if e.get('join_as') is not None:
-            what += f", joins as {e.get('join_as')}"
-        lines.append(f"ProjectEnemy_{e['_eid']}:   ; {what}")
-        lines.append(F.db_line(b))
-    return "\n".join(lines) + "\n"
+    """S149 (ROADMAP ARC CAP5): the head + RowBankTable + the rows' gender codes +
+    the rows that fit bank $6B (editor2/core/battles.py; PROJECT_COMPILER §2.57)."""
+    from . import battles as BT
+    return BT.emit_bank_06b(prj, warnings)
+
+
+def emit_battle_banks(prj, warnings):
+    """S149: the battle banks $80+ (multi:battle_banks)."""
+    from . import battles as BT
+    return BT.emit_battle_banks(prj, warnings)
 
 
 def emit_bank_06c(prj, warnings):
@@ -1252,6 +1241,8 @@ def ext_bank_files(prj):
     from . import tileanim as TA                       # S139 (ARC CAP2d)
     out.update({b: TA.anim_bank_file(b) for b in TA.plan(prj)['overflow']})
     out.update(M.song_bank_files(prj))                 # S147 (ARC CAP5): song banks
+    from . import battles as BT                        # S149 (ARC CAP5): battle banks
+    out.update(BT.battle_bank_files(prj))
     return out
 
 
@@ -1297,6 +1288,10 @@ REGISTRY = [
      emit_stream_banks, list(range(EXT_BANK_FIRST, EXT_BANK_LAST + 1))),
     ("enemies6b", "progression.enemies", "file:patches/bank_06b.asm",
      emit_bank_06b, [0x6B]),
+    # S149 (ARC CAP5): enemy rows past bank $6B and battle lists past bank $76 —
+    # whole files bank_0xx.asm, one per battle bank $80+ (none when they fit)
+    ("battles_ext", "progression.enemies", "multi:battle_banks",
+     emit_battle_banks, list(range(EXT_BANK_FIRST, EXT_BANK_LAST + 1))),
     ("tileanim6c", "custom.rooms", "file:patches/bank_06c.asm",
      emit_bank_06c, [0x6C]),
     # S139 (ARC CAP2d): rooms' own animations past bank $6C — whole files

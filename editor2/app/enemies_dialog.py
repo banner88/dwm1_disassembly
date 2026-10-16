@@ -27,6 +27,7 @@ from editor2.core.conversation import (EnemiesMixin, JOIN_ALWAYS, JOIN_NEVER,
                                        species_names, vanilla_enemies)
 
 STATS = ('hp', 'mp', 'atk', 'def', 'agl', 'int')
+from editor2.core.gamedata import ENEMY_HP_MIN   # noqa: E402  (S149 r2)
 
 
 class EnemyScratch(EnemiesMixin):
@@ -118,7 +119,8 @@ class EnemiesDialog(QDialog):
         self.stat = {}
         for i, k in enumerate(STATS):
             sb = QSpinBox()
-            sb.setRange(0, 0xFFFF)
+            # S149 r2: HP at least 2 — a monster made from the row never has 0 HP
+            sb.setRange(ENEMY_HP_MIN if k == 'hp' else 0, 0xFFFF)
             sb.valueChanged.connect(lambda n, kk=k: self._set(kk, n))
             self.stat[k] = sb
             g.addWidget(QLabel(k.upper()), i // 3, (i % 3) * 2)
@@ -143,6 +145,17 @@ class EnemiesDialog(QDialog):
         self.join_as = QComboBox()
         self.join_as.activated.connect(self._join_as_changed)
         f.addRow('join version', self.join_as)
+        self.gender = QComboBox()                  # S149: the creation gender
+        self.gender.addItem('rolled by the species', 'rolled')
+        self.gender.addItem('always male', 'male')
+        self.gender.addItem('always female', 'female')
+        self.gender.setToolTip('The gender of a monster that joins from this row (or a '
+                               'script gives): the species\' female ratio decides, or '
+                               'always the same')
+        self.gender.activated.connect(
+            lambda _i: self._set('gender', None if self.gender.currentData() == 'rolled'
+                                 else self.gender.currentData()))
+        f.addRow('gender', self.gender)
         sk = QHBoxLayout()
         self.skills = []
         try:                                   # S110: the project's skill names
@@ -239,6 +252,7 @@ class EnemiesDialog(QDialog):
             if o is not e:
                 self.join_as.addItem(f"{o.get('name') or o['id']}", o['id'])
         self.join_as.setCurrentIndex(max(0, self.join_as.findData(e.get('join_as'))))
+        self.gender.setCurrentIndex(max(0, self.gender.findData(e.get('gender', 'rolled'))))
         sk = list(e.get('skills') or [])
         for i, c in enumerate(self.skills):
             c.setCurrentIndex(max(0, c.findData(int(sk[i]) if i < len(sk) else None)))

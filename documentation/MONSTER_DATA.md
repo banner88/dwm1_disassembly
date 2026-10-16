@@ -170,6 +170,43 @@ creation roll). **Join candidate** (`$DD61`): the slot of the enemy the
 player KO'd last (battle banks $51-$53 write `wBattleTargetIdx`) — in a 2-3
 enemy battle only that enemy can join.
 
+**S149 (ROADMAP ARC CAP5, battles at campaign scale; built S149, USER-CONFIRMED 2026-10-16 22:59 ("yep fixed. Give final files. Everything works")).**
+- **More than 640 rows:** up to **3,321** (EIDs 519-3839; `$0F00`+ are the random breeders'
+  slots, S127). Bank $6B keeps its head, `RowBankTable` ([dw end row (exclusive), db bank] per
+  battle bank), `ProjectEnemyGender` (one byte a row) and the first `ROWS_HERE` rows; later rows
+  live in BATTLE BANKS $80+ (`editor2/core/templates/battle_bank.asm`: entry 0 `BattleRowCopy_Bxx`
+  reads the EID itself and copies its row to [DE], DE + 25 — bank $6B `CopyEnemyRowExt`'s far
+  path `rst $10`s it). PROJECT_COMPILER §2.57.
+- **Two original lookups of the monster constructor had no bound (measured S149, PyBoy stub
+  calls on 120 / 1,500 project rows):** (1) the creation GENDER `EnemyGroupTable[EID]`
+  (`$14:$4A1D`, 512 B = EIDs 0-511 — not "$4A0F, 526 B", DOC_AUDIT S149): EIDs 512+ read
+  `EnemyStatsTable` bytes — project rows 519-532 always male, later rows a junk gender byte
+  (8, 30, 100, 200, 233 …); (2) `CreateForeignMasterNames` is entered for every EID with a
+  non-zero high byte and compares only the LOW byte — project EID 561 (`$231`) took a rival
+  tamer's master name + nickname, 606 (`$25E`) joined as an EGG, 607 / 740 / 741 got the original
+  rows' nicknames. **Fixed in patches/bank_014.asm** (same size, in the `$7EAD` free bytes):
+  the gender read → `EnemyGenderCode` (EIDs < `$200` the original table; `$200`+ bank $6B entry 1
+  `EnemyGenderOf` → the row's code: `$FF` rolled by the species' ratio, `$00` male, `$01` female —
+  `progression.enemies[].gender`), the foreign-name jump → `ForeignNamesGate` (high byte ≥ 2 → no
+  name, no nickname, no egg; user S149: "no reason to expand beyond vanilla"). The original rows
+  are unchanged (`$131`-`$13C`, `$15E`, `$1E4` measured with their extras).
+- **A row's HP is at least 2 (S149 r2, the user: "0 HP should never be possible"):** the
+  constructor's max-HP roll is HP × (`$CD`..`$100`)/256 rounded down (`SaveEnem_4821`), so a row
+  with HP 1 makes a monster with 0 max HP 51 times in 52 — it joins FAINTED and no heal can lift
+  it (measured: the S149 r1 demo rows HP 1 → HP 0/0 MP 0/0; HP 30 → 29/29). The original rows
+  are all HP 2 or more (row 480 = 2, worst roll 1). The editor and the compiler enforce
+  `gamedata.ENEMY_HP_MIN` = 2 (PROJECT_COMPILER §2.57 r2).
+- **The battle JOIN is entry 3, not entry 2:** bank $51 `$5CB4` sets `$DA14` := `$14`
+  (vanilla; `$28` = staging index 40 in patched builds, FX1) and far-calls bank $14 entry 3
+  `CreateJoinedMonster` (was `label14_401d`, "party monster slot init/clear" — a misnomer): it
+  zero-fills the slot, the player as master, loads the row and jumps into entry 2's body at
+  `Jump_014_4158` — the same rolls, gender read and name tail (measured: a join ran the gender
+  read once and entry 2's head never; `tools/walk_battles.py`).
+- **Measured:** `tools/census_battles.py` (every project row's LoadEnemyStats bytes, two creations
+  per row == `simulator/raising.create` incl. the gender, the vanilla special rows' extras, every
+  list; `--negative` fails each class); `tools/walk_battles.py` on the user's save (THE MUSTER HALL:
+  rows 43 / 88 / 900 join with the player as master, no egg, their gender; 32 + 18 checks).
+
 ## Boss Table (Bank $14:$4897)
 
 32 gates × 4 bytes. Preceded by 1 non-boss redirect entry at $4893.
@@ -192,7 +229,7 @@ Index function: `Call_000_223b` — `HL = field_base + index × $95`
 | $01 | 8 | Nickname — creation writes it only for named enemy rows (bank $14 `jr_014_4469` / `CreateForeignMasterNames`) *(S130)* |
 | $09 | 1 | Species ID |
 | $0A | 1 | Family |
-| $0B | 1 | Gender, $01 = female — creation: `EnemyGroupTable[EID]` ($14:$4A0F) unless $FF, then rolled; breeding: rolled *(S130)* |
+| $0B | 1 | Gender, $01 = female — creation: `EnemyGroupTable[EID]` ($14:$4A1D, EIDs 0-511 — S149) unless $FF, then rolled; breeding: rolled *(S130)*; project rows (519+): their own code (S149, bank $6B entry 1) |
 | $0C | 8+1 | **Master name** (9th byte +$14 = `$CAD5`) := the player's name `$CA42` at creation (rival rows: another master) and again at birth *(S130)* |
 | $15 / $16 | 1 + 1 | **Pedigree species**: father / mother of a bred monster ($FF = not bred); `BreedPedigreeNames` writes the father first (swap when the pedigree +$0B is female) *(S130)* |
 | $17 / $20 | 9 + 9 | The parents' master names (their +$0C, 9th byte := `$CA4A`) *(S130, code-read)* |
@@ -925,6 +962,8 @@ documents its Phase-N fork/append behaviour and cross-refs the owning patch + to
   487–517 are **unusable**; the first grid-aligned slot at/after `$7EAD` is **EID 518** (`$7EB3`) —
   which is why Gorbunok (species 224) was EID 518 (S30-S104; S105: retired — new species' rows are
   project enemies, EID 519+ in bank $6B). `EnemyStatsTrailingFree` sym-verified to `14:7ead`.
+  **S149:** the patched tree's `$7EAD-$7ECA` now hold `EnemyGenderCode` / `ForeignNamesGate` (the
+  creation fix, every project — "Project enemy rows" above); `LoadEnemyStatsExt` stays at `$7ECC`.
 * **Wild encounters (`bank_001` `EncounterPool_000`).** 5 EID slots (+`$0A`, 5×2 LE) + 5 weights
   (+`$14`); an UNUSED slot = EID `$0000`/wt 0. A new species fills a provably-empty slot — a
   same-size, in-place edit (Iron-Rule-2 safe, no shift), NOT a reader fork. Gorbunok → pool 0 slot 3.
@@ -1665,7 +1704,7 @@ differ at 921 level-ups — the census tells the two orders apart.
 vs a Slime): BattleRex 23→27 and 23→32, Healer 19→25 (the 44→45 upgrade) and
 19→31 (learns 46 from its queue) — stats, skills and queue == the model.
 
-### Creation — bank $14 entry 2 `label14_40b4` (script opcode $29, joins)
+### Creation — bank $14 entry 2 `label14_40b4` (script opcode $29) and entry 3 `CreateJoinedMonster` (joins, S149)
 
 Source: the 25-byte enemy-stats row at `$DA18` (EID `$DA12/$DA13`, slot `$DA14`)
 and the species info row at `$DA33`.
@@ -1690,8 +1729,12 @@ and the species info row at `$DA33`.
   none" is wrong (measured 962/962).*
 - **Learn queue** +$31 ← info +$06..+$08 (the species' natural 3).
 - **Max level** +$4C = info +$01 + (RNG1 mod 5) − 2.
-- **Gender** +$0B = `EnemyGroupTable[EID]` (`$14:$4A0F`, 526 B: $00/$01 fixed)
+- **Gender** +$0B = `EnemyGroupTable[EID]` (`$14:$4A1D`, 512 B = EIDs 0-511: $00/$01 fixed
+  — S149 correction of "$4A0F, 526 B"; the read has no bound, see "Project enemy rows" S149)
   else RNG1 < `CreateGenderThreshold[info +$03]` (`$14:$459E` = 00 1A 80 D6) → 1.
+- **Who calls it (S149):** entry 2 (`$1402`: script op `$29` give monster, the egg receive of
+  bank $12, the NPC-mate of bank $0A, two debug fills) and entry 3 `CreateJoinedMonster`
+  (`$1403`: the battle join, bank $51) which runs entry 2's body from `Jump_014_4158`.
 - **WLD** +$60 = 5·level − 10·[`$CAB4`] clamped 0..255. Exp snapped to the
   level (`$1301` = `SnapExpToLevel`).
 - **RNG order**: HP, MP, ATK, DEF, INT rolls, the 4 AI rolls (+$64, +$65, +$66,

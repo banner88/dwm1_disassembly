@@ -108,7 +108,7 @@ for n in range(N):
     singer = d.add_npc(room, '1', 0, 3, 3, 0x0C, 'down')
     choir = [d.add_npc(room, '2', 0, x, 3, 0x0C, 'down') for x in (3, 5, 7)]
     enemy = d.add_enemy(copy_eid=2, name=f'Echo foe {n + 1}', species=sp, level=1,
-                        hp=1, joinability=7)
+                        hp=2, joinability=7)
     rooms.append({'id': rid, 'mid': int(room['mapID'], 16), 'guide': g, 'mon': mon,
                   'singer': singer, 'choir': choir, 'csids': None, 'lid': lid, 'enemy': enemy, 'species': sp,
                   'sid': None, 'msid': None, 'ssid': None, 'scene': None})

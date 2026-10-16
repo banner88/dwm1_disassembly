@@ -45,11 +45,19 @@ lists (your project's), gate bosses and their join versions, arena classes
 (the Arena tab shows the same rows match by match, with the team sizes and
 masters), coliseum / random / mimic battles, script battles, the starter, and your own
 enemies. Double-click a number to change it: level, HP, MP, ATK, DEF, AGL,
-INT, exp reward, **Joins** (0 = always, 7 = never, anything else = a chance),
+INT, exp reward (HP at least 2 — see the Enemies help), **Joins** (0 = always, 7 = never, anything else = a chance),
 **AI weights** (four numbers 0-255) and **Battle skills** (up to 4 skill
 names, separated by commas). Bold rows differ from the original game. Only
 the changes are saved (`gamedata.enemies`); your own enemies are edited in
 `progression.enemies`, like in the Enemies dialog.
+
+**Gender** (S149) — the gender of a monster that joins from the row (or that a
+script gives): *rolled (by species)* uses the species' female ratio, like most
+of the game's rows; *always male* / *always female* fixes it. Your own rows
+choose it here or in the Enemies dialog; the game's rows show their own and
+keep it (a row you copy from one of them starts with the same gender). A
+monster from your own rows always has you as its master and no preset
+nickname — the rival tamers' names and the egg row are the game's alone.
 
 ## New species from a sprite sheet
 

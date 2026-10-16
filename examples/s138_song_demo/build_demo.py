@@ -103,7 +103,7 @@ for n in range(N):
     mon = d.add_npc(room, '0', 0, 5, 4, 0xF0, 'down', monster=MONSTERS[n])
     scribe = d.add_npc(room, '0', 0, 7, 6, 0x0C, 'down') if n == N - 1 else None
     enemy = d.add_enemy(copy_eid=2, name=f'Song foe {n + 1}', species=MONSTERS[n],
-                        level=1, hp=1, joinability=7)
+                        level=1, hp=2, joinability=7)
     grottos.append({'id': rid, 'mid': mid, 'bard': bard, 'mon': mon, 'scribe': scribe,
                     'enemy': enemy, 'sw': sw, 'bw': bw})
 

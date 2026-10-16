@@ -49,6 +49,17 @@ copied — a copied conversation turns the same flags on as the original.
 mini-map shows them; click a **+** square to add a screen, click a screen
 to show it.
 
+A room is always a full rectangle of screens (S149): walking into a screen
+inside the room's size that was never made showed stray tiles in the game.
+So adding a screen also adds blank screens wherever the new rectangle would
+have a gap (the status line names them; one Undo removes them all), and a
+screen whose removal would leave a gap — the middle of a row, a corner of a
+2 × 2 room — is not removed (remove the screens at the edge first, or paint
+it as a wall). A project made before S149 with such a gap gets a WARNING in
+the open log naming the room and the screens. A copy of one of the game's
+rooms (Make editable) keeps the original room's shape — its gaps are walled
+off in the game, so they are left alone and not reported.
+
 **Maze screen…** (on the screen / state row) fills the shown screen and
 state with one of the gates' maze screens, tiles and palette slots — see
 *Gate themes*.

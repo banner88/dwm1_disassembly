@@ -243,7 +243,14 @@ RoomEncTable gate byte is $FF, so it works inside a dive too); (2) otherwise the
 for (wGateID, floor) — the vanilla walk on byte copies of bank $01's tables, replaced by
 the gate's own plan when `GatePlanPtrs[wGateID]` has one (first variant whose flags hold →
 floor runs `[last floor, list]`). A room's rate applies in either case. No RNG is drawn,
-so battles roll as in vanilla. A NEW gate (32-95, S115) with no plan for a floor walks
+so battles roll as in vanilla. **S149 (ROADMAP ARC CAP5):** list numbers are 16-bit inside
+bank $76 (project lists 128-4095 = 3,968; a room variant's target was already a word, a
+floor run is now `[db last floor, dw list]`); a project list is copied from
+`ProjectEncLists` (the first `LISTS_HERE` = 256) or by a BATTLE BANK's entry 1
+`BattleListCopy_Bxx` (DE = the project index; `ListBankTable` names the bank) and D := `$80` —
+bank $01 still tests only D bit 7 (unchanged). Measured: `tools/census_battles.py` (stub calls
+of `EncResolve.copy` for every number 0-127 and every project list, 728 / 728) and a wild battle
+from list 700 (a battle bank) in `tools/walk_battles.py`. A NEW gate (32-95, S115) with no plan for a floor walks
 the vanilla rule of the gate it copies (`NewGateSource`) — list and value; other numbers
 ≥ 32 give list 0 / value 0.
 

@@ -188,7 +188,7 @@ for n in range(N):
     lamp = d.add_npc(room, '0', 0, 3, 2, 0x0B, 'down')
     mon = d.add_npc(room, '0', 0, 6, 2, 0xF0, 'down', monster=MONSTERS[n])
     enemy = d.add_enemy(copy_eid=2, name=f'Cave foe {n + 1}', species=MONSTERS[n],
-                        level=1, hp=1, joinability=7)
+                        level=1, hp=2, joinability=7)
     caves.append({'id': rid, 'mid': int(room['mapID'], 16), 'lamp': lamp, 'mon': mon,
                   'enemy': enemy, 'sid': None, 'two': two})
 

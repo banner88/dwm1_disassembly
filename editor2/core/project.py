@@ -307,7 +307,9 @@ EXT_BANK_FIRST, EXT_BANK_LAST = 0x80, 0xFF
 # tail now holds the divert + BossRedirectTableExt (project fight->join rows,
 # then the 34 vanilla rows).
 PROJECT_EID_BASE = 519
-PROJECT_EID_CAP = 640              # bank $6B: ~16 KB / 25 B, minus the head
+PROJECT_EID_CAP = 3321             # S149 (ARC CAP5): EIDs 519-3839 — bank $6B then battle banks
+                                   # $80+ (battles.ROW_CAP; $0F00+ = the breeders' slots). Was 640
+                                   # (bank $6B alone) S101-S148
 REDIRECT_ROWS_MAX = 34             # bank $14 tail: 308 - 28 B code - 4*(34 vanilla + end) = 136 B
 QUEST_EID_BASE = PROJECT_EID_BASE  # legacy names (S70)
 QUEST_EID_CAP = PROJECT_EID_CAP
@@ -2586,6 +2588,7 @@ class Project:
         self._place_plan = None        # S136: the places take their banks after these
         self._anim_plan = None         # S139: the animation banks after the places
         self._song_ext = None          # S147: the song banks after the animations
+        self._battle_plan = None       # S149: the battle banks after the songs
         banks = {LAYOUT_HOME_BANK: [], TILESET_HOME_BANK: []}
         used = {LAYOUT_HOME_BANK: 1, TILESET_HOME_BANK: 1}      # the self-ID byte
         overflow = []
@@ -2644,6 +2647,8 @@ class Project:
         _TA.plan(self)                     # S139 (ARC CAP2d): the animation banks
         from . import music as _MU
         _MU.song_ext_banks(self)           # S147 (ARC CAP5): the song banks
+        from . import battles as _BT
+        _BT.plan(self)                     # S149 (ARC CAP5): the battle banks
         return dict(getattr(self, '_ext_taken', None) or [])
 
     def place_plan(self):

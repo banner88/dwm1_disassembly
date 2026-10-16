@@ -368,10 +368,13 @@ class MonstersMixin:
         vrows = G._rows(G.vanilla(REPO), 'enemy_stats')
         where = self.enemy_places(g)
         out = []
+        from editor2.core.conversation import vanilla_gender
         for eid, r in enumerate(g.enemy):
             if r[0] == sid:
+                f = decode_enemy(r)
+                f['gender'] = vanilla_gender(eid)          # S149 (read-only)
                 out.append({'eid': eid, 'kind': 'original', 'id': None,
-                            'fields': decode_enemy(r),
+                            'fields': f,
                             'edited': bytes(r) != bytes(vrows[eid]),
                             'where': where.get(eid, [])})
         for e in self.project_enemies():
@@ -379,6 +382,7 @@ class MonstersMixin:
                 eid = self.project_eid(e)
                 f = {k: e.get(k) for k in ENEMY_KEYS}
                 f['skills'] = list(e.get('skills') or [])
+                f['gender'] = e.get('gender', 'rolled')    # S149
                 out.append({'eid': eid, 'kind': 'project', 'id': e.get('id'),
                             'fields': f, 'edited': True,
                             'where': where.get(eid, []) or where.get(e.get('id'), [])})
@@ -426,6 +430,8 @@ class MonstersMixin:
         (project_id) is edited in progression.enemies."""
         if project_id is not None:
             data_before = copy.deepcopy(self.data)
+            if changes.get('gender') == 'rolled':       # S149: absent = rolled
+                changes = dict(changes, gender=None)
             try:
                 self.update_enemy(project_id, **changes)
                 self._commit_data(copy.deepcopy(self.data))
@@ -437,6 +443,12 @@ class MonstersMixin:
         eid = int(eid)
         if not 0 <= eid <= G.VANILLA_EID_MAX:
             raise G.GamedataError(f'EID {eid} is not an original enemy row')
+        if 'gender' in changes:
+            raise G.GamedataError("an original row's gender is the game's (S149: only your "
+                                  "own enemy rows choose one)")
+        if changes.get('hp') is not None and int(changes['hp']) < G.ENEMY_HP_MIN:
+            raise G.GamedataError(f"HP {int(changes['hp'])}: at least {G.ENEMY_HP_MIN} — "
+                                  f"{G.ENEMY_HP_WHY} (S149 r2)")
         g, _ = self.monsters_model()
         cur = decode_enemy(g.enemy[eid])
         cur.update(changes)

@@ -981,3 +981,36 @@ edge and the battle waits for input forever.
   another screen index (`sa == sb == k` fails; the buffers are equal) — identical on the S147
   code (HEAD worktree), 0 on the S144 save. A warp-landing / save-state effect of the harness's
   `enter()`, not of the copies; left for a later session (PROJECT_STATE "Open defects").
+
+## S149 techniques — a join measured from inside, an arena match in a walk, off-view screens, a save in a dive
+
+- **What a JOIN created:** the battle join is bank $14 entry 3 (`CreateJoinedMonster`), not entry 2
+  — hook the shared body (S149: `EnemyGenderCode`, game.sym) and log `$DA12/$DA13` (the EID) and
+  `wRNG1:wRNG2` there; after the battle the new party member is the last of `PARTY_LIST`. The RNG
+  state at the hook replays the rolled gender exactly (`raising.GameRNG(state).byte1() <
+  GENDER_THRESHOLD[ratio]`). A party of one (the user's save) never asks "Choose a monster back to
+  farm": restart every fight from one savestate (`Walk.start('hall')`).
+- **After a battle with A-mashing, B until `$C8EB` is 0** before walking — an A after the battle
+  opens the field menu (the S115 note; `walk_battles.fight` does it).
+- **Stub-call the constructor for any EID:** `ld hl,$1402 / rst $10` with `$DA12/$DA13` = EID,
+  `$DA14` = slot, RNG pinned (census_raising's stub); `ld hl,$1401` loads a row to `$DA18` (every
+  project row, whatever bank) — `tools/census_battles.py`. bank $76 `EncResolve.copy` is callable
+  with HL = a list number (map bank $76 first; D comes back in a byte the stub stores).
+- **An arena match in a walk** (the user's lobby copy `$74`): classes won `$CAB4` := 0, gold poked;
+  stand on screen 1 (14, 7), step up ×3, left (a turn — do NOT face up after it), A; then A every
+  40 frames, enemy HP 1 + `$DB85` = 7 in each battle, until 3 battles are counted AND the lobby is
+  back — stop there, or the A's start the next class (`walk_battles.arena_match`). Entered by a
+  script warp from region 1 the lobby keeps region 1 (a global place); GreatTree's redirect door
+  enters it in region 0.
+- **Screens outside a room's view** (Labyrinth 1, Forest Maze floors `$61` 2 / `$62` 1): a warp
+  lands there, then the camera slides `wScreenIndex` back (5-40 frames) and reloads that screen's
+  people — read at the arrival frame (`walk_room_states.enter`, S149).
+- **A JOURNAL save inside a dive, then CONTINUE:** the S144 menu taps work on a served gate room
+  (`can_save`); `p.stop(save=True)`, copy `<rom>.ram` as the new `.sav`, a new `Walk` +
+  `s_continue` — CONTINUE lands in that room, its region, `wGateID` / floor restored (gate 45
+  floor 2, S149).
+- **Is a portal SHOWN?** The swirl object ($4D) blinks — the OAM count alternates (18 / 26 on FAR
+  LANDING); check the NPC slot's hidden bit (`$D7D2 + 32n` bit 6) instead of a screenshot, and
+  paint the still swirl (`Document.paint_swirl`, what "Gate entrance here…" does) so a frame
+  without the object still shows a portal. A cleared gate hides its swirl — use gate numbers the
+  user's save has not cleared.

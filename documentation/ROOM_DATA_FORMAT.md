@@ -511,6 +511,20 @@ Screens OUTSIDE the record's width/height are legal and used by vanilla
 `$53/$61-$63` keep extra screens that are never scrolled to — they are
 entered through an exit whose screen_byte names them, exactly like the
 GreatTree floors (KEY_LESSONS S92). The compiler warns instead of failing.
+**S149 (measured, PyBoy):** NO exit of the game names Labyrinth screen 1 or Forest Maze
+floors `$61` screen 2 / `$62` screen 1 (`extracted/all_exits.json`: every exit into `$42` /
+`$61` / `$62` has screen byte 0), and a warp onto such a screen does not stay there: 5-40
+frames after the transition the field camera (bank $06's scroll steps — `wScreenIndex`
+± 1 / ± 4 + `LoadMapS_66e5`) slides back into the record's area and loads that screen's
+people (the original rooms and their copies alike; `$53` screen 3 stays). A harness reading a
+screen there must read at the arrival frame (`tools/walk_room_states.py`, S149).
+**Holes (S149):** the editor keeps a room a full rectangle — Add screen also makes blank
+screens in every gap of the new rectangle, a screen whose removal would leave a gap is not
+removed, a project with a gap gets an open-log WARNING (`Document.room_holes` /
+`fill_room_holes` / `holes_if_removed`); the compiler still warns (S135). A copy of a game
+room (`Document.is_game_room_copy`: `states_kept` / `step_counter.vanilla`) keeps the
+original's gaps (the Castle's screen 4, the Starry Shrine's 0 — walled off in the game): not
+reported, not filled, not counted against a removal.
 
 Exit handlers: Entry 6 checks exits at Y=1-6 (interior, walk-onto trigger).
 Entry 9 checks exits at Y=0 and Y=7 (boundary, requires walking into edge).

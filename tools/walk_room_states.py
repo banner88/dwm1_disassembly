@@ -101,7 +101,13 @@ def enter(w, mid, k, settle=True):
         adv(w.p, 1)
         if m[MAP_ID] == mid and m[W_CHANGING] == 0 and m[SCREEN_IDX] == int(k):
             break
-    adv(w.p, 4)
+    # S149: read AT the arrival frame. A screen outside the room's view (Labyrinth $42
+    # screen 1, Forest Maze floors $61 screen 2 / $62 screen 1 — ROOM_DATA_FORMAT; no
+    # exit of the game names them, extracted/all_exits.json) is left by the game's own
+    # camera 5-40 frames later (bank $06's scroll steps move wScreenIndex back into the
+    # record's area and reload that screen's people) — the copies and the originals
+    # alike. Reading 4 frames late (S144-S148) made `sa == sb == k` a race the user's
+    # 2026-10-15 save lost on 9 screens (PYBOY_DEBUGGING S148 / S149).
     return buf(m, NPC_BUF, 128), buf(m, EXIT_BUF, 127), m[SCREEN_IDX]
 
 

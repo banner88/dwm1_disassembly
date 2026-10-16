@@ -49,7 +49,7 @@ SECTION "ROM Bank $014", ROMX[$4000], BANK[$14]
     dw label14_400f          ; Entry 0: Load enemy stats → $DA18
     dw label14_4016          ; Entry 1: Load enemy stats → $DA18 (same as entry 0)
     dw label14_40b4          ; Entry 2: CREATE monster record from enemy-stats row (S87)
-    dw label14_401d          ; Entry 3: Party monster slot init/clear
+    dw CreateJoinedMonster   ; Entry 3: the JOIN constructor (S149; was "party slot init/clear")
     dw label14_7bac          ; Entry 4: Unknown
     dw label14_7d12          ; Entry 5: Unknown
     dw LookupBossRedirect          ; Entry 6: Boss EID redirect lookup
@@ -64,7 +64,16 @@ label14_4016:
     call LoadEnemyStats
     ret
 
-label14_401d:
+; [S149] CreateJoinedMonster (entry 3, was label14_401d "party monster slot
+; init/clear") — the battle JOIN's constructor: bank $51 ($5CB4, the post-battle
+; join) sets $DA14 := $14 (staging slot 20, $D665) and far-calls it. It zero-fills
+; the slot, sets +$15/+$16 := $FF, the known skills / learn queue := $FF, the
+; parents' name fields := the placeholder $477A, the in-use flag, the player as
+; master (+$0C, its 9th byte $CA4A), loads the row (LoadEnemyStats -> $DA18) and
+; jumps into entry 2's body at Jump_014_4158 — the same rolls, gender read and
+; name tail as entry 2 (measured S149: a project row's join ran the gender read
+; once, entry 2's head never; tools/walk_battles.py).
+CreateJoinedMonster:
     ld hl, $cac1
     ld a, [$da14]
     call GetMonsterDataPtr
@@ -145,7 +154,10 @@ label14_401d:
 ; rolled. Known skills +$29 <- the row's 4 skills, then DropKnownSkillBases.
 ; Learn queue +$31 <- info +$06..+$08 (the natural 3). Max level +$4C :=
 ; info +$01 + (RNG1 mod 5) - 2. Gender +$0B := EnemyGroupTable[EID] unless
-; $FF, then RNG1 < CreateGenderThreshold[info +$03] -> 1 (female). Exp
+; $FF, then RNG1 < CreateGenderThreshold[info +$03] -> 1 (female) [S149: the
+; read has NO bound — the table covers EIDs 0-511 ($4A1D-$4C1C); an EID 512+
+; reads EnemyStatsTable bytes as its gender. No original row is past 486; the
+; project rows (519+) are, measured S149 — patches/ divert it]. Exp
 ; snapped to the level ($1301 = bank $13 SnapExpToLevel).
 ; RNG order: HP, MP, ATK, DEF, INT, the four AI rolls (+$64, +$65, +$66,
 ; +$67), the cap roll, the gender roll (only when the table gives $FF).
@@ -369,17 +381,17 @@ jr_014_4264:
     ld hl, $cacc
     ld a, [$da14]
     call GetMonsterDataPtr
-    ld a, [wTempEnemyStatsId]
-    ld e, a
-    ld a, [$da13]
-    ld d, a
-    ld a, e
-    add LOW(EnemyGroupTable)
-    ld e, a
-    ld a, d
-    adc HIGH(EnemyGroupTable)
-    ld d, a
-    ld a, [de]
+    ld a, [$da13]            ; [S149] SAME SIZE (17 B): the gender code comes from
+    ld d, a                  ;   EnemyGenderCode — the vanilla EnemyGroupTable[EID]
+    ld a, [wTempEnemyStatsId] ;  for EIDs < $200, the project row's own code (bank
+    call EnemyGenderCode     ;   $6B entry 1) for EIDs >= $200. The vanilla read had
+    nop                      ;   no bound: project EIDs 519+ read EnemyStatsTable
+    nop                      ;   bytes (rows 519-532 always male, later rows junk
+    nop                      ;   genders 8 / 30 / 200 …, measured S149). HL (= +$0B)
+    nop                      ;   is kept. MONSTER_DATA "Project enemy rows".
+    nop
+    nop
+    nop
     ld [hl], a
     cp $ff
     jr nz, jr_014_42fe
@@ -411,7 +423,9 @@ jr_014_42fe:
     rst $10
     ld a, [$da13]
     or a
-    jp nz, CreateForeignMasterNames
+    jp nz, ForeignNamesGate  ; [S149] same size: was CreateForeignMasterNames, which
+                             ;   compares only the LOW byte — project EIDs 561-572
+                             ;   took the rival tamers' names, 606 joined as an egg
 
     ld a, [wTempEnemyStatsId]
     cp $01
@@ -551,6 +565,11 @@ jr_014_42fe:
 ; (Jump_014_4586); $15F / $1E4 / $1E5 a nickname only. EIDs < $100 listed
 ; above ($01, $0C, $34, ...: the `$da13 == 0` cases) get a nickname only
 ; (jr_014_4469). Every other row keeps the player's name as master.
+; [S149] Entered for ANY EID whose high byte is non-zero and compares only the
+; LOW byte — fine for the original rows (high byte 0 or 1), but an EID $2xx /
+; $3xx … whose low byte is $31-$3C / $5E / $5F / $E4 / $E5 takes those rows'
+; names / the egg flag (measured on project rows: 561 a rival's master + nickname,
+; 606 an egg). patches/: bank $14 ForeignNamesGate (high byte >= 2 -> none).
 CreateForeignMasterNames:
     ld a, [wTempEnemyStatsId]
     cp $31
@@ -1433,8 +1452,10 @@ BossRedirectTable:
 ; [S130] NOT unknown: the 256-byte UnevolvedSkillMap copy read by
 ; DropSkillBase (`ld hl, $491d`) starts at $491D, 2 bytes before this label
 ; (overlapping the BossRedirect terminator's $0000); its bytes equal bank $16
-; UnevolvedSkillMap ($16:$4874, checked S130). Entries $F2-$FF ($4A0F-$4A1C)
-; are the first 14 bytes of EnemyGroupTable. Label kept (tools/
+; UnevolvedSkillMap ($16:$4874, checked S130); the copy ends at $4A1C (entry
+; $FF) and EnemyGroupTable starts right after it at $4A1D (S149 correction of
+; the S130 note "entries $F2-$FF are the first 14 bytes of EnemyGroupTable": the
+; code adds $4A1D, measured). Label kept (tools/
 ; gen_enemy_stats_db.py emits it).
 UnknownData_491F:
     db $00, $03, $03, $03, $06, $06, $06, $09, $09, $09, $0C, $0C, $0C, $0F, $0F, $0F  ; $491F
@@ -1453,12 +1474,14 @@ UnknownData_491F:
     db $FF, $FF, $FF, $D5, $D6, $D7, $D8, $D9, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF  ; $49EF
     db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF  ; $49FF
     db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-; [S130] EnemyGroupTable = the CREATION GENDER table ($14:$4A0F, 526 B,
-; index = EID 0-525; name kept — simulator/raising.py finds it by name):
+; [S130] EnemyGroupTable = the CREATION GENDER table ($14:$4A1D, 512 B,
+; index = EID 0-511 — S149 correction of "$4A0F, 526 B": label14_40b4 adds
+; $4A1D, and EnemyStatsTable follows at $4C1D; name kept — simulator/raising.py
+; finds it by name):
 ; $00 male / $01 female fixed for that enemy row, $FF = rolled (RNG1 <
 ; CreateGenderThreshold[info +$03] -> female). Read by label14_40b4 -> +$0B.
 EnemyGroupTable:
-    db $FF, $00  ;  $4A0F
+    db $FF, $00  ;  $4A1D
     db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $00, $00, $FF, $FF, $FF, $FF, $FF  ; $4A1F
     db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $00, $00, $FF  ; $4A2F
     db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF  ; $4A3F
@@ -5423,12 +5446,49 @@ Jump_014_7e96:
 
 
 
-; --- free space $7EAD-$7ECB (31 B; vanilla zeros) ---
+; --- $7EAD-$7ECB (31 B; vanilla zeros) ---
 ; S30-S104 held the Gorbunok enemy row (EID 518 @ $7EB3, reached with no fork as
 ; EID*25+$4C1D). Retired S105 (P3.9b): a new species' enemy rows are ordinary
 ; project enemies (progression.enemies, EID 519+, bank $6B — MONSTER_DATA
-; "Project enemy rows"); EIDs 487-518 are code / this free space.
-    ds 31, $00
+; "Project enemy rows"); EIDs 487-518 are code / this space.
+; S149 (ROADMAP ARC CAP5, battles at campaign scale): the two creation hooks of
+; label14_40b4 (the monster constructor, entry 2) for PROJECT rows (EID >= $200;
+; $200-$206 are never valid rows, the project's start at 519 = $207):
+;
+; EnemyGenderCode — in D:A = EID; out A = the gender code ($00 male / $01 female
+;   fixed, $FF = rolled by the species' ratio, exactly the vanilla meaning).
+;   Vanilla EIDs read EnemyGroupTable[EID] ($4A1D, 512 B = EIDs 0-511); project
+;   rows read their own code from bank $6B entry 1 EnemyGenderOf (E). Keeps HL;
+;   clobbers DE (the caller's vanilla code clobbered it too).
+EnemyGenderCode:
+    ld e, a
+    ld a, d
+    cp $02
+    jr nc, .project
+    ld a, e
+    add LOW(EnemyGroupTable)
+    ld e, a
+    ld a, d
+    adc HIGH(EnemyGroupTable)
+    ld d, a
+    ld a, [de]
+    ret
+.project:
+    push hl
+    ld hl, $6b01             ; bank $6B entry 1: EnemyGenderOf -> E
+    rst $10
+    pop hl
+    ld a, e
+    ret
+; ForeignNamesGate — A = the EID's high byte (non-zero). $01 = the vanilla rows
+;   CreateForeignMasterNames knows ($131-$13C rival tamers, $15E the egg, $15F /
+;   $1E4 / $1E5 nicknames); a project row ($200+) keeps the player as its master,
+;   no nickname, never an egg (user S149: "no reason to expand beyond vanilla").
+ForeignNamesGate:
+    cp $02
+    ret nc
+    jp CreateForeignMasterNames
+    ds $7ECC - @, $00        ; 30 of the 31 B; LoadEnemyStatsExt stays at $7ECC
 ; ===== S101: PROJECT ENEMY ROWS + REDIRECT EXTENSION (was the S70 12-row
 ; quest_enemy_stats region; MONSTER_DATA "Project enemy rows") ============
 ; LoadEnemyStatsExt — the LoadEnemyStats head jumps here. (S127: $0F00-$0F03 =

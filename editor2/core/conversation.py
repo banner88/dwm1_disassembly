@@ -46,6 +46,7 @@ WATABOU_SPRITE = 0x21
 CASTLE_THRONE = {'dest': 'vanilla:$00', 'screen': 1, 'x': 4, 'y': 5}   # vanilla boss exits
 
 JOIN_ALWAYS, JOIN_NEVER = 0, 7
+from editor2.core.gamedata import ENEMY_HP_MIN, ENEMY_HP_WHY   # noqa: E402  (S149 r2)
 
 # S101 r3 — what happens when the helper lands the player in the Castle throne
 # room (Castle_Script00 on screen 1 dispatches on the castle-arrival code
@@ -152,6 +153,22 @@ def skill_names():
             pass
         _CACHE['skills'] = out
     return _CACHE['skills']
+
+
+def _check_enemy_hp(fields):
+    """S149 r2 (the user: "0 HP should never be possible"): an enemy row's HP is at
+    least gamedata.ENEMY_HP_MIN (2) — a monster made from it never has 0 HP."""
+    if fields.get('hp') is not None and int(fields['hp']) < ENEMY_HP_MIN:
+        raise ValueError(f"HP {int(fields['hp'])}: at least {ENEMY_HP_MIN} — {ENEMY_HP_WHY}")
+
+
+def vanilla_gender(eid):
+    """S149: 'rolled' | 'male' | 'female' — the creation gender of an original enemy
+    row (bank $14 EnemyGroupTable $4A1D, 512 B; simulator/raising.py reads it)."""
+    from simulator import raising as R
+    t = R.enemy_gender_table()
+    v = t[eid] if 0 <= eid < len(t) else 0xFF
+    return {0x00: 'male', 0x01: 'female'}.get(v, 'rolled')
 
 
 def vanilla_enemies():
@@ -449,7 +466,8 @@ class ConversationMixin:
 
 class EnemiesMixin:
     ENEMY_FIELDS = ('species', 'level', 'exp', 'joinability', 'hp', 'mp', 'atk', 'def',
-                    'agl', 'int', 'ai_weights', 'skills', 'join_as', 'name', 'comment')
+                    'agl', 'int', 'ai_weights', 'skills', 'join_as', 'name', 'comment',
+                    'gender')       # S149: 'rolled' (absent) | 'male' | 'female'
 
     def project_enemies(self):
         return (self.data.get('progression') or {}).get('enemies') or []
@@ -518,8 +536,14 @@ class EnemiesMixin:
                         base.update({k: copy.deepcopy(r[k]) for k in
                                      ('species', 'level', 'exp', 'joinability', 'hp', 'mp',
                                       'atk', 'def', 'agl', 'int', 'ai_weights', 'skills')})
+                        # S149: the copy keeps the original row's creation gender
+                        # (EnemyGroupTable: fixed male / female, else rolled)
+                        g = vanilla_gender(int(copy_eid))
+                        if g != 'rolled':
+                            base['gender'] = g
                         break
         base.update(fields)
+        _check_enemy_hp(base)
         taken = {e.get('id') for e in self.project_enemies()}
         sp = species_names(_project_data(self)).get(int(base['species']), 'enemy')
         eid_name = self._unique_id(self._slug(name or sp.lower()) or 'enemy', taken)
@@ -538,6 +562,7 @@ class EnemiesMixin:
         unknown = set(fields) - set(self.ENEMY_FIELDS)
         if unknown:
             raise ValueError(f'unknown enemy fields {sorted(unknown)}')
+        _check_enemy_hp(fields)
         for k, v in fields.items():
             if v is None:
                 e.pop(k, None)
@@ -572,6 +597,7 @@ class EnemiesMixin:
              and k not in ('join_as', 'name', 'comment')}
         for k in ('hp', 'mp', 'atk', 'def', 'agl', 'int'):
             f[k] = max(1, int(f.get(k, 1)) // 2)
+        f['hp'] = max(f['hp'], ENEMY_HP_MIN)          # S149 r2: never a 0-HP monster
         f['exp'] = 0
         f['joinability'] = JOIN_ALWAYS
         jid = self.add_enemy(name=f"{src.get('name') or src['id']} (joins)", **f)

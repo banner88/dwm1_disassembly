@@ -59,7 +59,12 @@ HELP_WHERE = ('Every enemy row of this species. A wild monster, a boss or an are
               'fighter is a row: its level, stats, exp reward, battle skills and AI '
               'weights. A monster that JOINS you takes its stats and AI from the row it '
               'joined from (each stat rolled to 80-100 %). Double-click a number to change '
-              'it. Joins: 0 = always, 7 = never, anything else = a chance.')
+              'it. Joins: 0 = always, 7 = never, anything else = a chance. Gender = the '
+              'gender of a monster that joins from the row (or is given by a script): '
+              'rolled by the species\' female ratio, or always male / female — the '
+              'game\'s own rows keep theirs.')
+GENDER_LABELS = [('rolled', 'rolled (by species)'), ('male', 'always male'),
+                 ('female', 'always female')]
 TIER_HELP = '0 = starter, 3-6 = normal, 7 = endgame boss (the original game)'
 
 
@@ -330,7 +335,7 @@ class MonstersTab(QWidget):
         v.addWidget(h)
         self.table = QTableWidget()
         self.cols = ['EID', 'Where', 'Level', 'HP', 'MP', 'ATK', 'DEF', 'AGL', 'INT', 'Exp',
-                     'Joins', 'AI weights', 'Battle skills']
+                     'Joins', 'AI weights', 'Battle skills', 'Gender']
         self.table.setColumnCount(len(self.cols))
         self.table.setHorizontalHeaderLabels(self.cols)
         self.table.verticalHeader().setVisible(False)
@@ -688,6 +693,26 @@ class MonstersTab(QWidget):
                 if c == 10:
                     it.setToolTip(M.JOIN_LABELS.get(f['joinability'], 'joins by chance'))
                 self.table.setItem(r, c, it)
+            # S149: the creation gender — a choice on your own rows, the game's on its own
+            g = f.get('gender', 'rolled')
+            label = dict(GENDER_LABELS).get(g, g)
+            if e['kind'] == 'project':
+                cb = QComboBox()
+                for key, text in GENDER_LABELS:
+                    cb.addItem(text, key)
+                cb.setCurrentIndex([k for k, _t in GENDER_LABELS].index(g)
+                                   if g in dict(GENDER_LABELS) else 0)
+                cb.setToolTip('The gender of a monster that joins from this row')
+                cb.currentIndexChanged.connect(
+                    lambda _i, cb=cb, e=e: self._set_gender(e, cb.currentData()))
+                self.table.setItem(r, 13, QTableWidgetItem(label))
+                self.table.setCellWidget(r, 13, cb)
+            else:
+                it = QTableWidgetItem(label)
+                it.setFlags(it.flags() & ~Qt.ItemIsEditable)
+                it.setToolTip("The original game's row: its gender stays the game's")
+                self.table.removeCellWidget(r, 13)
+                self.table.setItem(r, 13, it)
         self.table.resizeColumnsToContents()
         self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
         self._busy = False
@@ -830,6 +855,13 @@ class MonstersTab(QWidget):
         eid, pid = e['eid'], e['id']
         self._push(f'EID {eid}: {key} → {val}',
                    lambda doc: doc.set_enemy_fields(eid, {key: val}, project_id=pid))
+
+    def _set_gender(self, e, g):
+        if self._busy or e['kind'] != 'project' or e['fields'].get('gender', 'rolled') == g:
+            return
+        eid, pid = e['eid'], e['id']
+        self._push(f'EID {eid}: gender → {g}',
+                   lambda doc: doc.set_enemy_fields(eid, {'gender': g}, project_id=pid))
 
     def _selected_row(self):
         r = self.table.currentRow()

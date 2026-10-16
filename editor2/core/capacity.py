@@ -51,7 +51,8 @@ TYPICAL_ROOM_BYTES = 3500    # S133: ≈3-4 KB per new place (used while a proje
 NEAR = 0.80                  # amber from here
 FIXED_BANK_KIND = {0x6F: 'new battle animations', 0x70: 'new battle animation tiles',
                    0x71: 'per-room tables (records, songs, battles)',
-                   0x76: 'encounter lists + gates', 0x77: 'shops, services, story checks'}
+                   0x76: 'encounter lists + gates',
+                   0x6B: 'enemy rows (then battle banks $80+, S149)', 0x77: 'shops, services, story checks'}
 SPILL_KIND = {0x60: 'rooms (scripts, people, doors, colours) + texts',
               0x64: 'screen layouts + colour grids', 0x67: 'tilesets',
               0x6C: 'animated tiles'}
@@ -385,10 +386,14 @@ def _project_rows(prj, data, rows):
     from . import encounters as EN
     add('enc_lists', 'Gates, battles and monsters', 'Battle lists of your own',
         lambda: len(custom.get('encounter_lists') or []), EN.MAX_PROJECT_LISTS,
-        'the editor refuses another', 'Encounters', tech='list numbers 128-255')
+        'the editor refuses another', 'Encounters',
+        tech='list numbers 128-4095; the first 256 in bank $76, then battle banks $80+ '
+             '(S149)')
     add('enemies', 'Gates, battles and monsters', 'Enemy rows (bosses, NPC fights, breeding '
         'mates)', lambda: len(prog.get('enemies') or []), P.PROJECT_EID_CAP,
-        'the build stops', 'Monsters', tech='bank $6B, EID 519+')
+        'the build stops', 'Monsters',
+        tech='EIDs 519-3839: bank $6B, then battle banks $80+ (S149; $0F00+ = the '
+             'random breeders)')
     add('joins', 'Gates, battles and monsters', 'Bosses that join as another row',
         lambda: len(prj.enemy_redirects()), P.REDIRECT_ROWS_MAX, 'the build stops',
         'Monsters', tech='bank $14 redirect rows')

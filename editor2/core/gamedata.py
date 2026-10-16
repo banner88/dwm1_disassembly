@@ -89,6 +89,15 @@ RESIST_NAMES = [
     "MissATurn", "DanceBlock", "BreathBlock", "Aid", "GigaSlash", "Unused",
 ]
 STATS = ('hp', 'mp', 'atk', 'def', 'agl', 'int')
+# S149 r2 (the user: "0 HP should never be possible"): an enemy row's HP is at least 2.
+# A monster made from a row (a join, a gift, a breeding mate, a medal reward — bank $14
+# entries 2 / 3) rolls its max HP as HP x ($CD..$100)/256 rounded down (SaveEnem_4821):
+# HP 1 makes a 0-HP monster 51 times in 52 (fainted, never healed — measured S149 r1);
+# HP 2 gives at least 1. The game's own rows are HP 2 or more (row 480: 2).
+ENEMY_HP_MIN = 2
+ENEMY_HP_WHY = ("a monster made from the row rolls its HP x0.80-1.00 rounded down, so "
+                "HP 1 gives a monster with 0 HP (fainted for good); the game's own rows "
+                "have HP 2 or more")
 LEARN_ROWS = 218             # $00-$D9; $DA-$DD are bank-$06 code (S100)
 SKILL_COUNT = 222
 ALL_MP = 999                 # SkillMPCostTable value of Farewell / MegaMagic
@@ -516,6 +525,9 @@ class Gamedata:
                 r[4] = _range(o['level'], 0, 99, what + '.level')
             for i, s in enumerate(STATS):
                 if s in o:
+                    if s == 'hp' and _int(o[s], f"{what}.hp") < ENEMY_HP_MIN:
+                        raise GamedataError(f"{what}.hp = {_int(o[s], what + '.hp')}: at "
+                                            f"least {ENEMY_HP_MIN} — {ENEMY_HP_WHY}")
                     _put16(r, 5 + 2 * i, _range(o[s], 0, 0xFFFF, f"{what}.{s}"))
             if 'ai_weights' in o:
                 r[17:21] = bytes(_list(o['ai_weights'], 4, 0, 255, what + '.ai_weights'))

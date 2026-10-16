@@ -2532,8 +2532,12 @@ the user picks.
       user: "the rest seems very reasonable in terms of current limits and unlikely to be an issue" —
       next = the `$3E` decoder box, or the next CAP5 ceiling as it binds.** **S148: the `$3E` box built
       (where a script ends — one rule from the handlers; Make editable copies past `$16`; the script
-      banks re-annotated; NOT yet user-tested) — every ARC CAP box is built; CAP5 stays open for the
-      next ceiling that binds.**
+      banks re-annotated; USER-CONFIRMED 2026-10-16 ("I confirm S148 works")) — every ARC CAP box is
+      built; CAP5 stays open for the next ceiling that binds.** **S149: CAP5's battles box built (USER-CONFIRMED 2026-10-16 22:59 ("yep fixed. Give final files. Everything works"))
+      (enemy rows past 640, battle lists past 128, a project row's own creation gender — the
+      constructor's two unbounded original lookups fixed; + the arc's loose ends: the S148
+      room-states harness race, room holes in the editor, the S141 checks not walked then; NOT yet
+      user-tested).**
   - [x] **CAP2a — LZ streams: layouts, attr maps, tilesets past $64 / $67.** **Built S135;
         USER-CONFIRMED 2026-10-09 12:59 ("Yep all good can confirm").** Compiler-only (`DecompressTileLayout` takes the bank from every
         reference — ARCHITECTURE "LZ stream banks (S135)"): `Project.stream_plan()` first fit
@@ -2706,7 +2710,12 @@ the user picks.
         state was saved before `ContinueCheck`'s warp home ran — `playback._continue_save` now
         waits; KEY_LESSONS S141). **Not walked (scope agreed S141):** an arena match from two
         regions, a world in regions ≥ 1, a JOURNAL save inside a dive in region ≥ 1 (their
-        tables: the S140 census). *User half:* `DWM-S141-dial-test.gbc` in SameBoy — r1: "After
+        tables: the S140 census). **Walked S149** (`tools/walk_battles.py` THE FAR WING, region 1,
+        on the user's save): the arena from region 1 (the lobby keeps the region; 3 matches won;
+        its door out) and from region 0 (GreatTree's redirect door); a world whose rooms are in
+        region 1 (portal, its door, a battle, out); a room of region 1 served on a gate floor, a
+        JOURNAL save there + CONTINUE → that room in region 1, inside the dive again (gate 45
+        floor 2). *User half:* `DWM-S141-dial-test.gbc` in SameBoy — r1: "After
         breeding, an NPC disappears and the one in the lower right corner glitches and becomes
         letters" → r2 (the sheets reloaded at the close) → "its still glitching WHILE menu is
         open" → **r3** (`DWM-S141r3-dial-test.gbc`): every windowed screen (shop, Vault, farm, eggs,
@@ -2820,7 +2829,7 @@ the user picks.
         re-run `tools/census_cutscenes.py` (scenes / steps change), the flag index's
         "check-only" list, and story_state (the hand-added `$00E5` must then come from the
         decoded Farm script). Its own session: the saved cutscene census changes.
-        **Built S148, NOT yet user-tested** (user: "1) Yes 2) Do now 3) replace 4) Test room +
+        **Built S148; USER-CONFIRMED 2026-10-16 ("I confirm S148 works")** (user: "1) Yes 2) Do now 3) replace 4) Test room +
         machine check"). The rule from the code: a script ends only where every path of the handler
         clears `wScriptStateFlags` — `$0F $3A $3B $43 $4F $58` (`script_param_counts.py`
         `ends_script`; `script_ops.TERMINAL` checked against it, verify check 5); `$3E` and `$16`
@@ -2909,6 +2918,34 @@ the user picks.
         screens identical. *User half:* `DWM-S146-user-test.gbc` (the user's project) in SameBoy +
         the Capacity tab / New room in the editor.
 
+  - [x] **(found S149, measured) battles — 640 enemy rows, 128 battle lists, and project rows'
+        creation.** The S147 audit's next ceiling: a project's own rows (bank $6B, one full bank)
+        and lists (numbers 128-255) = about one original game's worth (it uses 487 rows and 128
+        lists). The S149 audit found, by PyBoy stub calls, that the monster constructor (bank $14
+        entries 2 / 3) gave project rows a fixed or junk GENDER (the original table has no bound:
+        rows 519-532 always male, later rows junk) and, comparing only the low byte for a non-zero
+        high byte, a rival tamer's master name (row 43 = EID 561) or the EGG flag (row 88 = EID
+        606). **Built S149; USER-CONFIRMED 2026-10-16 22:59 ("yep fixed. Give final files. Everything works")** (user: "1) Yes 2) Sounds good 3) A … no reason to
+        expand beyond vanilla funcitonality … 4) Yes fold in loose ends 5) Yes"). Rows up to 3,321
+        (EIDs 519-3839; bank $6B, then BATTLE BANKS $80+), lists up to 3,968 (numbers 128-4095,
+        16-bit in bank $76; its first 256, then battle banks), `progression.enemies[].gender`
+        (rolled / male / female; a copy of an original row keeps its gender), bank $14
+        `EnemyGenderCode` / `ForeignNamesGate` (same size, original rows unchanged); the battle
+        JOIN = entry 3 `CreateJoinedMonster` (was `label14_401d`, "slot init/clear") running entry
+        2's body; `EnemyGroupTable` = `$4A1D`, 512 B (the S130 "$4A0F, 526 B" was wrong).
+        PROJECT_COMPILER §2.57, MONSTER_DATA "Project enemy rows" (S149). **Loose ends folded in
+        (user: "Yes fold in loose ends"):** (a) the S148 `walk_room_states.py` 9 / 780 — a harness
+        race: screens outside a room's view (Labyrinth 1, Forest Maze floors 1 / 2) are left by the
+        game's own camera 5-40 frames after a warp (the originals too; no exit of the game names
+        them) and the harness read 4 frames late; it reads at the arrival frame now: 789 / 789 on
+        the user's current save; (b) room holes: Add screen fills the new rectangle's gaps, a
+        gap-making removal is refused, old projects warn on open; (c) the S141 checks not walked
+        (CAP3b, walked). *Accept (machine half) MET:* `tools/census_battles.py` (1,502 project rows + 600
+        lists: 1,541 / 3,004 / 728 clean, the original special rows 4 / 4; `--negative` every class
+        fails); `tools/walk_battles.py` on the user's save (THE MUSTER HALL + THE FAR WING): 53 (r2)
+        checks, 0 failed; `--negative` (the S148 creation): 4 FAIL — a rival's name, an egg, gender
+        50, a female row male. *User half:* `DWM-S149r2-muster-test.gbc` (r1 `DWM-S149-muster-test.gbc`: genders right, the joins came FAINTED — the demo rows' HP 1, fixed in r2) + r2's rule (the user: "0 HP should never be possible"): an enemy row's HP ≥ 2 (§2.57 r2) in SameBoy (the MUSTER GUIDE
+        in Cities_FOUNT) + the Monsters tab's Gender column / the Rooms tab's screens in the editor.
   - [x] **(found S147, measured) songs — 95 ids, one per CHANNEL, two song banks.** S116 gave a
         project song one sound id per channel ($9E-$FC: 95 ids ≈ 31 three-channel songs) and only
         banks $74 / $75 for records + streams (2 × 16,000 B): adding DWM2 catalog songs to the user's

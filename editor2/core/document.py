@@ -276,6 +276,9 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         self._migrate_service_words(notes)
         # S143 (ARC CAP4b): room names are unique (the editor shows places by name)
         self._migrate_unique_names(notes)
+        # S149 r2 (the user: "0 HP should never be possible"): enemy rows' HP >= 2
+        self._migrate_enemy_hp(notes)
+        self._note_room_holes()
         if notes:
             self.dirty = True
         return notes
@@ -292,6 +295,40 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
             got, warn = [], [f'the S148 copy check could not run: {e}']
         notes.extend(got)
         self.migration_warnings.extend(warn)
+
+    def _note_room_holes(self):
+        """S149 (PROJECT_STATE Open defects S135): a room with a screen inside its size
+        that was never made (a HOLE — walking in shows stray tiles) is reported in the
+        open log; nothing is changed (Add screen fills new holes from S149 on). A copy of
+        one of the game's rooms (Make editable) keeps the original room's shape — its gaps
+        are the game's own (walled off there) and are not reported."""
+        for r in self.custom.get('rooms') or []:
+            if self.is_game_room_copy(r):
+                continue
+            h = self.room_holes(r)
+            if h:
+                self.migration_warnings.append(
+                    f"room {r.get('name') or r.get('id')}: screen(s) "
+                    f"{', '.join(str(k) for k in h)} lie inside its size but were never "
+                    "made — walking in shows stray tiles. Add them (Rooms → the screen "
+                    "map), or remove the screens beyond them.")
+
+    def _migrate_enemy_hp(self, notes):
+        """S149 r2 (the user: "0 HP should never be possible"): an enemy row with HP
+        below gamedata.ENEMY_HP_MIN (2) — a project row or an edited original — is
+        raised to 2: a monster made from it (a join, a gift, a breeding mate) rolls HP
+        x0.80-1.00 rounded down, and HP 1 gave a 0-HP monster (fainted for good)."""
+        from editor2.core.gamedata import ENEMY_HP_MIN
+        rows = [(e.get('name') or e.get('id'), e)
+                for e in (self.data.get('progression') or {}).get('enemies') or []]
+        rows += [(f'original row {k}', o)
+                 for k, o in ((self.data.get('gamedata') or {}).get('enemies') or {}).items()
+                 if isinstance(o, dict)]
+        for nm, e in rows:
+            if 'hp' in e and val(e['hp']) < ENEMY_HP_MIN:
+                notes.append(f'enemy {nm}: HP {val(e["hp"])} raised to {ENEMY_HP_MIN} '
+                             '(S149: a monster made from a row with HP 1 had 0 HP)')
+                e['hp'] = ENEMY_HP_MIN
 
     def _migrate_unique_names(self, notes):
         """S143 (user S143: "Yes"): a room whose name another room (earlier in the
@@ -666,6 +703,54 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         room['screens'] = {k: scr[k] for k in sorted(scr, key=int)}
         self.sync_record_dims(room)
         self.touch()
+
+    @staticmethod
+    def is_game_room_copy(room):
+        """S149: a copy of one of the game's rooms (Make editable): it carries the kept
+        states (CAP4c, `states_kept`) or screens that follow the game's counters
+        (`step_counter.vanilla`, S118c) — a room made with New room / Copy room has neither."""
+        if room.get('states_kept'):
+            return True
+        return any(isinstance(sc.get('step_counter'), dict) and 'vanilla' in sc['step_counter']
+                   for sc in (room.get('screens') or {}).values() if isinstance(sc, dict))
+
+    def room_holes(self, room):
+        """S149: the screens inside the room's size it does not define (emitters
+        .room_holes: the record's width / height on the 4-wide grid)."""
+        from editor2.core.emitters import room_holes
+        return room_holes(room)
+
+    def holes_if_removed(self, room, key):
+        """S149: the NEW holes the room would have without screen `key` (its size then
+        follows the screens left, as remove_screen does); gaps it already has (a copy of a
+        game room keeps the original's shape) are not counted."""
+        rec = room.get('record')
+        if not rec:
+            return []
+        keys = [k for k in self.screen_keys(room) if k != int(key)]
+        if not keys:
+            return []
+        cols = max(k % GRID_COLS for k in keys) + 1
+        rows = max(k // GRID_COLS for k in keys) + 1
+        before = set(self.room_holes(room))
+        return [r * GRID_COLS + c for r in range(rows) for c in range(cols)
+                if r * GRID_COLS + c not in keys and r * GRID_COLS + c not in before]
+
+    def fill_room_holes(self, room, fill_metatile, palette=None, keep=()):
+        """S149: a blank screen (every cell `fill_metatile`, attributes 0) for every
+        hole of the room — Add screen calls it so a room never has one (a hole shows
+        stray tiles in the game: PROJECT_STATE Open defects S135). `keep` = gaps to leave
+        (those the room had before — a copy keeps the game room's shape). -> [(key, layout id)]."""
+        made = []
+        for k in self.room_holes(room):
+            if k in keep:
+                continue
+            lid = self.unique_layout_id(f"{room['id']}_s{k}")
+            self.add_layout(lid, tiles=self.blank_grid(fill_metatile), attr=self.blank_grid(0),
+                            comment=f"{room['id']} screen {k} (filled: inside the room's size)")
+            self.add_screen(room, k, {'id': lid}, palette=palette)
+            made.append((k, lid))
+        return made
 
     def remove_screen(self, room, key):
         removed = room['screens'].pop(str(key))

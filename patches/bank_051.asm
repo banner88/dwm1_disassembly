@@ -5025,8 +5025,8 @@ jr_051_5c23:
     call LoadBtlS_73a3
     ld a, $28                   ; FX1: build display record into staging (idx 40)
     ld [$da14], a
-    ld hl, $1403
-    rst $10
+    ld hl, $1403                ; [S149] the JOIN: bank $14 entry 3 CreateJoinedMonster
+    rst $10                     ;   (= entry 2's body) builds the new monster there
 
 jr_051_5cb8:
     ld hl, $1401

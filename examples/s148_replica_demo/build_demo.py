@@ -170,7 +170,7 @@ tbl['1'] = sid_c
 d.update_npc(hall, '0', 0, k_castle, script=sid_c)
 
 # the SPARRING SLIME: a fight that leaves marks (fast, hits hard, falls at once)
-foe = d.add_enemy(copy_eid=2, name='Sparring Slime', species=SLIME, level=1, hp=1,
+foe = d.add_enemy(copy_eid=2, name='Sparring Slime', species=SLIME, level=1, hp=2,
                   agl=511, atk=80, joinability=7)
 spar = [{'ask': B('I am the SPARRING SLIME. I hit first and hard, so the priest '
                   'downstairs has something to heal. Fight?'),

@@ -7,8 +7,10 @@ A LIST is the game's 26-byte encounter pool (rate code, 1/2/3-monster chances,
 five slots of enemy row + chance + max count, maze size). Numbers:
   * 0-127   the ROM's lists (bank $01 EncounterPoolData; edited through
             gamedata.encounters, PROJECT_COMPILER §2.20);
-  * 128-255 the project's OWN lists, custom.encounter_lists[] in order
-            (bank $76 ProjectEncLists).
+  * 128-4095 the project's OWN lists, custom.encounter_lists[] in order
+            (bank $76 ProjectEncLists for the first 256, then battle banks $80+
+            — S149, ROADMAP ARC CAP5, editor2/core/battles.py; 128-255 until
+            S148).
 
 Who uses which list (bank $76 EncResolve, called by the patched bank $01
 LoadNextDungeonFloor at every step of an encounter room, at floor setup and
@@ -30,7 +32,7 @@ when a battle fires):
      the gate's own plan). The floor's VALUE (wEncounterPoolIndex, read by the
      depth-tier-3 floor gold) stays the vanilla number.
   `rate` (a room's own battle rate code 0-7, EncounterRateModifierTable) also
-  works on a room that keeps the gate's list. <ref> = a list number 0-255 or a
+  works on a room that keeps the gate's list. <ref> = a list number 0-4095 or a
   custom.encounter_lists id. Flag terms = the gate-insert form
   ({"flag": name | number, "is": "set" | "clear"}).
 """
@@ -42,7 +44,7 @@ from . import formats as F
 from . import gamedata as GD
 
 PROJECT_BASE = 0x80          # first project list number
-MAX_PROJECT_LISTS = 128      # numbers 128-255
+MAX_PROJECT_LISTS = 3968     # numbers 128-4095 (S149, battles.LIST_CAP; 128 = 128-255 S114-S148)
 MAX_TERMS = 8
 VANILLA_GATES = 32
 LIST_DEFAULTS = {'rate': 3, 'unk1': 3, 'size_chance': [7, 0, 0],
@@ -280,7 +282,8 @@ class Model:
             raise EncounterError("custom.encounter_lists must be a list")
         if len(raw) > MAX_PROJECT_LISTS:
             raise EncounterError(f"custom.encounter_lists: {len(raw)} lists — at most "
-                                 f"{MAX_PROJECT_LISTS} (numbers 128-255)")
+                                 f"{MAX_PROJECT_LISTS:,} (numbers 128-"
+                                 f"{PROJECT_BASE + MAX_PROJECT_LISTS - 1})")
         self.lists, self.by_id = [], {}
         for i, o in enumerate(raw):
             ctx = f"custom.encounter_lists[{i}]"
@@ -309,7 +312,7 @@ class Model:
             self.by_id[lid] = entry
 
     def ref(self, ref, ctx):
-        """A list reference -> its number (0-255)."""
+        """A list reference -> its number (0-4095, S149)."""
         if isinstance(ref, str) and ref in self.by_id:
             return self.by_id[ref]['number']
         try:
@@ -562,12 +565,12 @@ def emit_bank_076(prj, warnings, head):
             gbody += _term_lines(terms)
             gbody.append(f"    dw {rl}")
             runs_body.append(f"{rl}:")
-            runs_body += [f"    db ${last:02X}, {num}  ; floors to {last if last != 0xFF else 'the end'}: list {num}"
+            runs_body += [f"    db ${last:02X}\n    dw {num}  ; floors to {last if last != 0xFF else 'the end'}: list {num}"
                           for last, num in _floor_runs(plan, g['floors'])]
         rl = f"EncGateRuns_{gid:02X}_d"
         gbody += ["    db 0", f"    dw {rl}"]
         runs_body.append(f"{rl}:")
-        runs_body += [f"    db ${last:02X}, {num}  ; floors to {last if last != 0xFF else 'the end'}: list {num}"
+        runs_body += [f"    db ${last:02X}\n    dw {num}  ; floors to {last if last != 0xFF else 'the end'}: list {num}"
                       for last, num in _floor_runs(g['default'], g['floors'])]
         gbody += runs_body
     out += [""] + gbody + [""]
@@ -615,14 +618,13 @@ def emit_bank_076(prj, warnings, head):
     out.append("")
     out += win_tail_programs(progs)
     # project lists
+    # S149 (ROADMAP ARC CAP5): the first battles.LISTS_HOME lists here, the rest
+    # in battle banks $80+ (ListBankTable; battles.py)
+    from . import battles as BT
+    out += BT.list_home_lines(prj)
     out.append("ProjectEncLists:  ; 26 B each, numbers 128+ (EncounterPoolData format)")
-    for e in m.lists:
-        r = e['bytes']
-        eids = [r[10 + 2 * k] | r[11 + 2 * k] << 8 for k in range(5)]
-        out += [f"; list {e['number']}: {e['id']}",
-                "    db " + ", ".join(f"${b:02X}" for b in r[0:10]),
-                "    dw " + ", ".join(str(x) for x in eids),
-                "    db " + ", ".join(f"${b:02X}" for b in r[20:26])]
+    for e in m.lists[:BT.plan(prj)['lists_here']]:
+        out += BT.list_lines(e)
     out.append("")
     # vanilla rule copies
     base, ptrs, bps = vanilla_gate_rule(repo)

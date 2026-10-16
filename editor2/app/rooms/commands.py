@@ -225,12 +225,22 @@ class AddScreen(QUndoCommand):
                               comment=f"{self.room_id} screen {self.key}")
         rec = room.get('record') or {}
         self.old_dims = (rec.get('width_px'), rec.get('height_px'))
+        had = set(self.s.doc.room_holes(room))
         self.s.doc.add_screen(room, self.key, {'id': self.lid}, palette=self.palette)
+        # S149: never a NEW hole — the screens inside the new size that do not exist yet
+        # come as blank screens in the same step (the grid's first cell = the blank); gaps
+        # the room already had (a copy keeps the game room's shape) stay
+        self.filled = self.s.doc.fill_room_holes(room, self.grid[0][0], palette=self.palette,
+                                                 keep=had)
         self.s.renderer.invalidate()
         self.s.structureChanged.emit()
 
     def undo(self):
         room = self.s.doc.room(self.room_id)
+        for k, lid in reversed(getattr(self, 'filled', None) or []):
+            self.s.doc.remove_screen(room, k)
+            self.s.doc.remove_layout(lid)
+        self.filled = []
         self.s.doc.remove_screen(room, self.key)
         self.s.doc.remove_layout(self.lid)
         rec = room.get('record')
