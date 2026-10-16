@@ -43,6 +43,7 @@ MAP_TYPE_DISPATCH = 0x71EF        # $04:$71EF (disassembly/game.sym)
 MARK_SCRIPT_ACTIVE = 0x5613       # rst $00 dispatch at its end
 N_OPS = 102                       # $00-$65 (bank_004 ScriptCommandTable; S96: 102 rows)
 W_COUNTER = (0xD8D5, 0xD8D6)      # wScriptCounter / high byte
+W_STATE = 0xD8D7                  # wScriptStateFlags (S148: 0 = the script is over)
 # counter += 1: ld a,[$D8D5] / add $01 / ld [$D8D5],a / ld a,[$D8D6] / adc $00 /
 # ld [$D8D6],a — each occurrence consumes one parameter word (read or skipped)
 INC_SEQ = bytes.fromhex('FAD5D8C601EAD5D8FAD6D8CE00EAD6D8')
@@ -82,24 +83,27 @@ class Tracer:
         (reads, writes_counter, exact) per distinct terminal state."""
         results = set()
         tails = TAILS
-        # state: (pc, reads, callstack tuple, wrote_counter, steps, visited)
-        stack = [(start, 0, (), False, 0, frozenset())]
+        # state: (pc, reads, callstack tuple, wrote_counter, steps, stopped)
+        # S148: `stopped` = the path stored 0 into wScriptStateFlags ($D8D7,
+        # `xor a / ld [$D8D7], a`) — the same store the END word ($FFFF) makes in
+        # ScriptExecLoop: the script is over, nothing resumes it.
+        stack = [(start, 0, (), False, 0, False)]
         seen_states = set()
         while stack:
-            pc, reads, cs, wrote, steps, vis = stack.pop()
-            key = (pc, reads, cs, wrote)
+            pc, reads, cs, wrote, steps, stopped = stack.pop()
+            key = (pc, reads, cs, wrote, stopped)
             if key in seen_states:
                 continue
             seen_states.add(key)
             if steps > 4096 or len(results) > 64:
-                results.add((reads, wrote, False, 'opaque'))
+                results.add((reads, wrote, False, 'opaque', stopped))
                 continue
             if pc in tails and pc != start:
-                results.add((reads, wrote or tails[pc] == 'branch', True, tails[pc]))
+                results.add((reads, wrote or tails[pc] == 'branch', True, tails[pc], stopped))
                 continue
             if all(self.rd(pc + i) == b for i, b in enumerate(INC_SEQ)):
                 # the 16-bit counter increment = one parameter word consumed
-                stack.append((pc + len(INC_SEQ), reads + 1, cs, wrote, steps + 1, vis))
+                stack.append((pc + len(INC_SEQ), reads + 1, cs, wrote, steps + 1, stopped))
                 continue
             op = self.rd(pc)
             n = oplen(op)
@@ -109,51 +113,54 @@ class Tracer:
             st = steps + 1
             if op in (0xC9, 0xD9):                       # ret / reti
                 if cs:
-                    stack.append((cs[-1], reads, cs[:-1], wrote, st, vis))
+                    stack.append((cs[-1], reads, cs[:-1], wrote, st, stopped))
                 else:
-                    results.add((reads, wrote, True, 'ret'))
+                    results.add((reads, wrote, True, 'ret', stopped))
                 continue
             if op in (0xC0, 0xC8, 0xD0, 0xD8):           # ret cc: both
                 if cs:
-                    stack.append((cs[-1], reads, cs[:-1], wrote, st, vis))
+                    stack.append((cs[-1], reads, cs[:-1], wrote, st, stopped))
                 else:
-                    results.add((reads, wrote, True, 'ret'))
-                stack.append((nxt, reads, cs, wrote, st, vis))
+                    results.add((reads, wrote, True, 'ret', stopped))
+                stack.append((nxt, reads, cs, wrote, st, stopped))
                 continue
             if op == 0xE9:                               # jp hl: opaque
-                results.add((reads, wrote, False, 'opaque'))
+                results.add((reads, wrote, False, 'opaque', stopped))
                 continue
             if op == 0xC3:                               # jp nn
-                stack.append((imm16, reads, cs, wrote, st, vis))
+                stack.append((imm16, reads, cs, wrote, st, stopped))
                 continue
             if op in (0xC2, 0xCA, 0xD2, 0xDA):           # jp cc,nn
-                stack.append((imm16, reads, cs, wrote, st, vis))
-                stack.append((nxt, reads, cs, wrote, st, vis))
+                stack.append((imm16, reads, cs, wrote, st, stopped))
+                stack.append((nxt, reads, cs, wrote, st, stopped))
                 continue
             if op == 0x18:                               # jr e
-                stack.append((nxt + (rel - 256 if rel > 127 else rel), reads, cs, wrote, st, vis))
+                stack.append((nxt + (rel - 256 if rel > 127 else rel), reads, cs, wrote, st, stopped))
                 continue
             if op in (0x20, 0x28, 0x30, 0x38):           # jr cc,e
-                stack.append((nxt + (rel - 256 if rel > 127 else rel), reads, cs, wrote, st, vis))
-                stack.append((nxt, reads, cs, wrote, st, vis))
+                stack.append((nxt + (rel - 256 if rel > 127 else rel), reads, cs, wrote, st, stopped))
+                stack.append((nxt, reads, cs, wrote, st, stopped))
                 continue
             if op in (0xCD, 0xC4, 0xCC, 0xD4, 0xDC):     # call (cc)
                 if imm16 == MAP_TYPE_DISPATCH:
-                    stack.append((nxt, reads, cs, wrote, st, vis))
+                    stack.append((nxt, reads, cs, wrote, st, stopped))
                 elif 0x4000 <= imm16 < 0x8000 and len(cs) < 8:
-                    stack.append((imm16, reads, cs + (nxt,), wrote, st, vis))
+                    stack.append((imm16, reads, cs + (nxt,), wrote, st, stopped))
                 else:                                    # ROM0 helper: opaque, returns
-                    stack.append((nxt, reads, cs, wrote, st, vis))
+                    stack.append((nxt, reads, cs, wrote, st, stopped))
                 if op != 0xCD:
-                    stack.append((nxt, reads, cs, wrote, st, vis))
+                    stack.append((nxt, reads, cs, wrote, st, stopped))
                 continue
             if op in (0xC7, 0xCF, 0xD7, 0xDF, 0xE7, 0xEF, 0xF7, 0xFF):  # rst
-                stack.append((nxt, reads, cs, wrote, st, vis))
+                stack.append((nxt, reads, cs, wrote, st, stopped))
                 continue
             if op == 0xEA and imm16 in W_COUNTER:        # ld [wScriptCounter], a
-                stack.append((nxt, reads, cs, True, st, vis))
+                stack.append((nxt, reads, cs, True, st, stopped))
                 continue
-            stack.append((nxt, reads, cs, wrote, st, vis))
+            if op == 0xEA and imm16 == W_STATE and self.rd(pc - 1) == 0xAF:
+                stack.append((nxt, reads, cs, wrote, st, True))   # xor a / ld [$D8D7], a
+                continue
+            stack.append((nxt, reads, cs, wrote, st, stopped))
         return results
 
 
@@ -207,7 +214,7 @@ def analyse(rom):
         # a path ending in 'continue_same' re-fetches at the current counter:
         # its last read was NOT consumed (e.g. a skipped optional word) — the
         # decoder cares about how far the counter moved, i.e. reads - 1 there
-        moved = {(r - 1 if k == 'continue_same' else r) for r, _w, _e, k in res}
+        moved = {(r - 1 if k == 'continue_same' else r) for r, _w, _e, k, _s in res}
         extra, entry = cross_bank_reads(rom, h)
         if extra:
             moved = {r + extra for r in moved}
@@ -215,10 +222,17 @@ def analyse(rom):
         out[f'0x{op:02X}'] = {
             'handler': f'$04:{h:04X}',
             'counts': counts,
-            'ends': sorted({k for _r, _w, _e, k in res}),
-            'branch_paths': sorted({r for r, w, _e, k in res if w}),
-            'exact': all(e for _r, _w, e, _k in res),
+            'ends': sorted({k for _r, _w, _e, k, _s in res}),
+            'branch_paths': sorted({r for r, w, _e, k, _s in res if w}),
+            'exact': all(e for _r, _w, e, _k, _s in res),
         }
+        stops = {s_ for _r, _w, _e, _k, s_ in res}
+        if stops == {True}:
+            # S148: every path ends the script (clears $D8D7) — no fall-through;
+            # the decoders' TERMINAL set (editor2/core/script_ops.py) must equal these
+            out[f'0x{op:02X}']['ends_script'] = True
+        elif True in stops:
+            out[f'0x{op:02X}']['ends_script'] = 'some paths'
         if extra:
             out[f'0x{op:02X}']['cross_bank'] = (f'+{extra} word read by script-bank entry '
                                                 f'{entry} (S118)')
@@ -236,18 +250,33 @@ def main():
     rom = open(a.rom, 'rb').read()
     res = analyse(rom)
     doc = {'_generator': 'tools/script_param_counts.py (S96; S118: + the words ops $24/$61 '
-                         'read through script-bank entries 1/2) over the original ROM '
+                         'read through script-bank entries 1/2; S148: + ends_script = every '
+                         'path clears wScriptStateFlags $D8D7) over the original ROM '
                          '(md5 1ca6579359f21d8e27b446f865bf6b83)',
            '_method': 'per-path count of `call MapTypeDispatch` ($04:$71EF) in each '
                       'bank-$04 script opcode handler; counter writes = branch paths',
            '_variable': sorted(k for k, v in res.items() if len(v['counts']) > 1),
+           '_ends_script': sorted(k for k, v in res.items() if v.get('ends_script') is True),
            'ops': res}
     if a.check:
         old = json.load(open(OUT))
         if old.get('ops') != res:
             print('FAIL: extracted/script_param_counts.json differs from the ROM analysis')
             return 1
-        print('OK: script_param_counts.json == handler analysis')
+        ends = {int(k, 16) for k, v in res.items() if v.get('ends_script') is True}
+        try:
+            sys.path.insert(0, ROOT)
+            from editor2.core import script_ops as SO
+        except Exception as e:                           # noqa: BLE001
+            print(f'FAIL: editor2/core/script_ops.py does not import: {e}')
+            return 1
+        if set(SO.TERMINAL) != ends:
+            print('FAIL: script_ops.TERMINAL ' + str(sorted(f'${c:02X}' for c in SO.TERMINAL))
+                  + ' != the handlers that end the script '
+                  + str(sorted(f'${c:02X}' for c in ends)) + ' (S148)')
+            return 1
+        print('OK: script_param_counts.json == handler analysis; script_ops.TERMINAL == '
+              'the handlers that end the script')
         return 0
     with open(OUT, 'w') as f:
         json.dump(doc, f, indent=1)

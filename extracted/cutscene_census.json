@@ -1,20 +1,24 @@
 {
- "_generator": "tools/census_cutscenes.py (S118) \u2014 PyBoy, a new-game base state, the original ROM (md5 1ca6579359f21d8e27b446f865bf6b83)",
+ "_generator": "tools/census_cutscenes.py (S118; S148: + yields / after_end) \u2014 PyBoy, a new-game base state, the original ROM (md5 1ca6579359f21d8e27b446f865bf6b83)",
  "totals": {
   "scenes": 519,
   "reached": 516,
   "reached_unforced": 442,
-  "ended": 419,
+  "ended": 417,
   "stalled": 0,
   "battle": 86,
-  "menu": 0,
+  "menu": 2,
   "errors": 0,
   "hung": 0,
   "missing_npcs": 0,
   "reset": 0,
-  "model_checks": 3998,
+  "model_checks": 4029,
   "model_mismatches": 6,
-  "seconds": 214
+  "yield_sites": 11,
+  "yields_resumed": 7,
+  "yields_into_end": 4,
+  "words_after_end": 0,
+  "seconds": 167
  },
  "scenes": [
   {
@@ -24,7 +28,7 @@
    "title": "*:I'm the minister of this kingdom. Are you the ",
    "action": "entry",
    "notes": [
-    "set up as room $01 script 0 leaves the game when it sends you here (screen 5)"
+    "set up as GreatTree script 0 leaves the game when it sends you here (screen 5)"
    ],
    "how": [
     "the room-entry script started on arrival",
@@ -52,11 +56,11 @@
    "title": "*:Welcome! I am the King of this kingdom. King:I",
    "action": "entry",
    "notes": [
-    "set up as room $06 script 0 leaves the game when it sends you here (screen 1)"
+    "set up as Arena Lobby script 0 leaves the game when it sends you here (screen 1)"
    ],
    "how": [
     "the room-entry script started on arrival",
-    "the script ended at frame 5774"
+    "the script ended at frame 5773"
    ],
    "reached": true,
    "forced": false,
@@ -66,9 +70,9 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 5864,
+   "frames": 5863,
    "model": {
-    "checks": 8,
+    "checks": 16,
     "mismatches": 0,
     "examples": []
    }
@@ -80,11 +84,11 @@
    "title": "King:Oh, this monster is the former king's... Ki",
    "action": "entry",
    "notes": [
-    "set up as room $06 script 0 leaves the game when it sends you here (screen 1)"
+    "set up as Arena Lobby script 0 leaves the game when it sends you here (screen 1)"
    ],
    "how": [
     "the room-entry script started on arrival",
-    "the script ended at frame 6080"
+    "the script ended at frame 6057"
    ],
    "reached": true,
    "forced": false,
@@ -94,7 +98,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 6170,
+   "frames": 6147,
    "model": {
     "checks": 48,
     "mismatches": 0,
@@ -108,11 +112,11 @@
    "title": "King:Oh [HERO]! I heard you survived G class! Ki",
    "action": "entry",
    "notes": [
-    "set up as room $06 script 0 leaves the game when it sends you here (screen 1)"
+    "set up as Arena Lobby script 0 leaves the game when it sends you here (screen 1)"
    ],
    "how": [
     "the room-entry script started on arrival",
-    "the script ended at frame 5367"
+    "the script ended at frame 5350"
    ],
    "reached": true,
    "forced": false,
@@ -122,7 +126,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 5457,
+   "frames": 5440,
    "model": {
     "checks": 16,
     "mismatches": 0,
@@ -136,11 +140,11 @@
    "title": "King:Oh [HERO]! Good work on surviving D class! ",
    "action": "entry",
    "notes": [
-    "set up as room $06 script 0 leaves the game when it sends you here (screen 1)"
+    "set up as Arena Lobby script 0 leaves the game when it sends you here (screen 1)"
    ],
    "how": [
     "the room-entry script started on arrival",
-    "the script ended at frame 3038"
+    "the script ended at frame 3014"
    ],
    "reached": true,
    "forced": false,
@@ -150,7 +154,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 3128,
+   "frames": 3104,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -164,10 +168,11 @@
    "title": "King:[HERO]! At last you're in the final match! ",
    "action": "entry",
    "notes": [
-    "set up as room $06 script 0 leaves the game when it sends you here (screen 1)"
+    "set up as Arena Lobby script 0 leaves the game when it sends you here (screen 1)"
    ],
    "how": [
-    "the room-entry script started on arrival"
+    "the room-entry script started on arrival",
+    "the script ended at frame 9626"
    ],
    "reached": true,
    "forced": false,
@@ -177,7 +182,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 7944,
+   "frames": 9716,
    "model": {
     "checks": 16,
     "mismatches": 0,
@@ -195,7 +200,7 @@
    ],
    "how": [
     "the room-entry script started on arrival",
-    "the script ended at frame 3628"
+    "the script ended at frame 3613"
    ],
    "reached": true,
    "forced": false,
@@ -205,12 +210,19 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 3718,
+   "frames": 3703,
    "model": {
     "checks": 63,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "yields": [
+    [
+     410,
+     "$16",
+     true
+    ]
+   ]
   },
   {
    "map": 0,
@@ -223,7 +235,7 @@
    ],
    "how": [
     "the room-entry script started on arrival",
-    "the script ended at frame 3473"
+    "the script ended at frame 3470"
    ],
    "reached": true,
    "forced": false,
@@ -233,7 +245,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 3563,
+   "frames": 3560,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -251,7 +263,7 @@
    ],
    "how": [
     "the room-entry script started on arrival",
-    "the script ended at frame 3473"
+    "the script ended at frame 3470"
    ],
    "reached": true,
    "forced": false,
@@ -261,7 +273,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 3563,
+   "frames": 3560,
    "model": {
     "checks": 90,
     "mismatches": 0,
@@ -276,11 +288,11 @@
    "action": "entry",
    "notes": [
     "flag $0033 is tested both ways",
-    "set up as room $06 script 0 leaves the game when it sends you here (screen 1)"
+    "set up as Arena Lobby script 0 leaves the game when it sends you here (screen 1)"
    ],
    "how": [
     "the room-entry script started on arrival",
-    "the script ended at frame 3038"
+    "the script ended at frame 3014"
    ],
    "reached": true,
    "forced": false,
@@ -290,7 +302,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 3128,
+   "frames": 3104,
    "model": {
     "checks": 64,
     "mismatches": 0,
@@ -305,13 +317,13 @@
    "action": "entry",
    "notes": [
     "flag $0033 is tested both ways",
-    "set up as room $06 script 0 leaves the game when it sends you here (screen 1)"
+    "set up as Arena Lobby script 0 leaves the game when it sends you here (screen 1)"
    ],
    "how": [
     "the room-entry script started on arrival",
-    "the script ended at frame 3038",
+    "the script ended at frame 3014",
     "started at the scene's own first step (pos 730)",
-    "the script ended at frame 4262"
+    "the script ended at frame 4238"
    ],
    "reached": true,
    "forced": true,
@@ -321,7 +333,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 4352,
+   "frames": 4328,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -336,10 +348,11 @@
    "action": "entry",
    "notes": [
     "flag $0037 is tested both ways",
-    "set up as room $06 script 0 leaves the game when it sends you here (screen 1)"
+    "set up as Arena Lobby script 0 leaves the game when it sends you here (screen 1)"
    ],
    "how": [
-    "the room-entry script started on arrival"
+    "the room-entry script started on arrival",
+    "the script ended at frame 9626"
    ],
    "reached": true,
    "forced": false,
@@ -349,12 +362,19 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 7944,
+   "frames": 9716,
    "model": {
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "yields": [
+    [
+     753,
+     "$3E",
+     true
+    ]
+   ]
   },
   {
    "map": 0,
@@ -363,11 +383,11 @@
    "title": "the player faces up",
    "action": "entry",
    "notes": [
-    "set up as room $10 script 4 leaves the game when it sends you here (screen 1)"
+    "set up as Copycat House script 4 leaves the game when it sends you here (screen 1)"
    ],
    "how": [
     "the room-entry script started on arrival",
-    "the script ended at frame 2394"
+    "the script ended at frame 2370"
    ],
    "reached": true,
    "forced": false,
@@ -377,7 +397,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 2484,
+   "frames": 2460,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -393,7 +413,7 @@
    "notes": [],
    "how": [
     "the room-entry script started on arrival",
-    "the script ended at frame 693"
+    "the script ended at frame 679"
    ],
    "reached": true,
    "forced": false,
@@ -403,7 +423,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 783,
+   "frames": 769,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -419,7 +439,7 @@
    "notes": [],
    "how": [
     "the room-entry script started on arrival",
-    "the script ended at frame 690"
+    "the script ended at frame 674"
    ],
    "reached": true,
    "forced": false,
@@ -429,7 +449,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 780,
+   "frames": 764,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -445,7 +465,7 @@
    "notes": [],
    "how": [
     "the room-entry script started on arrival",
-    "the script ended at frame 3354"
+    "the script ended at frame 3323"
    ],
    "reached": true,
    "forced": false,
@@ -455,7 +475,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 3444,
+   "frames": 3413,
    "model": {
     "checks": 8,
     "mismatches": 0,
@@ -469,11 +489,11 @@
    "title": "King:Oh, [HERO]! Did you bring back Hale!? King:",
    "action": "entry",
    "notes": [
-    "set up as room $30 script 1 leaves the game when it sends you here (screen 1)"
+    "set up as Boss: Beginning (Healer) script 1 leaves the game when it sends you here (screen 1)"
    ],
    "how": [
     "the room-entry script started on arrival",
-    "the script ended at frame 4652"
+    "the script ended at frame 4620"
    ],
    "reached": true,
    "forced": false,
@@ -483,7 +503,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 4742,
+   "frames": 4710,
    "model": {
     "checks": 16,
     "mismatches": 0,
@@ -499,7 +519,7 @@
    "notes": [],
    "how": [
     "the room-entry script started on arrival",
-    "the script ended at frame 2914"
+    "the script ended at frame 2882"
    ],
    "reached": true,
    "forced": false,
@@ -509,7 +529,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 3004,
+   "frames": 2972,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -525,7 +545,7 @@
    "notes": [],
    "how": [
     "the room-entry script started on arrival",
-    "the script ended at frame 3354"
+    "the script ended at frame 3332"
    ],
    "reached": true,
    "forced": false,
@@ -535,7 +555,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 3444,
+   "frames": 3422,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -551,7 +571,7 @@
    "notes": [],
    "how": [
     "the room-entry script started on arrival",
-    "the script ended at frame 2802"
+    "the script ended at frame 2770"
    ],
    "reached": true,
    "forced": false,
@@ -561,7 +581,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 2892,
+   "frames": 2860,
    "model": {
     "checks": 8,
     "mismatches": 0,
@@ -575,11 +595,11 @@
    "title": "*:Oh...King...",
    "action": "entry",
    "notes": [
-    "set up as room $38 script 1 leaves the game when it sends you here (screen 1)"
+    "set up as Boss: Well (Gigantes) script 1 leaves the game when it sends you here (screen 1)"
    ],
    "how": [
     "the room-entry script started on arrival",
-    "the script ended at frame 3099"
+    "the script ended at frame 3075"
    ],
    "reached": true,
    "forced": false,
@@ -589,7 +609,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 3189,
+   "frames": 3165,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -603,10 +623,11 @@
    "title": "King:Oh [HERO]!! Welcome back! King:I heard you'",
    "action": "entry",
    "notes": [
-    "set up as room $3C script 8 leaves the game when it sends you here (screen 1)"
+    "set up as Boss: Anger (BattleRex) script 8 leaves the game when it sends you here (screen 1)"
    ],
    "how": [
-    "the room-entry script started on arrival"
+    "the room-entry script started on arrival",
+    "the script ended at frame 8974"
    ],
    "reached": true,
    "forced": false,
@@ -616,7 +637,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 7726,
+   "frames": 9064,
    "model": {
     "checks": 48,
     "mismatches": 0,
@@ -630,11 +651,11 @@
    "title": "*:Oh...King...",
    "action": "entry",
    "notes": [
-    "set up as room $10 script 4 leaves the game when it sends you here (screen 1)"
+    "set up as Copycat House script 4 leaves the game when it sends you here (screen 1)"
    ],
    "how": [
     "the room-entry script started on arrival",
-    "the script ended at frame 2394"
+    "the script ended at frame 2370"
    ],
    "reached": true,
    "forced": false,
@@ -644,7 +665,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 2484,
+   "frames": 2460,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -660,7 +681,7 @@
    "notes": [],
    "how": [
     "the room-entry script started on arrival",
-    "the script ended at frame 3162"
+    "the script ended at frame 3131"
    ],
    "reached": true,
    "forced": false,
@@ -670,7 +691,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 3252,
+   "frames": 3221,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -686,7 +707,7 @@
    "notes": [],
    "how": [
     "the room-entry script started on arrival",
-    "the script ended at frame 2650"
+    "the script ended at frame 2618"
    ],
    "reached": true,
    "forced": false,
@@ -696,7 +717,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 2740,
+   "frames": 2708,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -712,7 +733,7 @@
    "notes": [],
    "how": [
     "the room-entry script started on arrival",
-    "the script ended at frame 2114"
+    "the script ended at frame 2090"
    ],
    "reached": true,
    "forced": false,
@@ -722,7 +743,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 2204,
+   "frames": 2180,
    "model": {
     "checks": 8,
     "mismatches": 0,
@@ -736,11 +757,11 @@
    "title": "*:Oh...King...",
    "action": "entry",
    "notes": [
-    "set up as room $44 script 1 leaves the game when it sends you here (screen 1)"
+    "set up as Boss: Library (Orochi) script 1 leaves the game when it sends you here (screen 1)"
    ],
    "how": [
     "the room-entry script started on arrival",
-    "the script ended at frame 2922"
+    "the script ended at frame 2882"
    ],
    "reached": true,
    "forced": false,
@@ -750,7 +771,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 3012,
+   "frames": 2972,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -764,11 +785,11 @@
    "title": "King:[HERO]! How was it? What lies in your futur",
    "action": "entry",
    "notes": [
-    "set up as room $45 script 0 leaves the game when it sends you here (screen 1)"
+    "set up as Boss: Reflection (Durran) script 0 leaves the game when it sends you here (screen 1)"
    ],
    "how": [
     "the room-entry script started on arrival",
-    "the script ended at frame 6831"
+    "the script ended at frame 6799"
    ],
    "reached": true,
    "forced": false,
@@ -778,12 +799,19 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 6921,
+   "frames": 6889,
    "model": {
     "checks": 80,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "yields": [
+    [
+     1433,
+     "$16",
+     true
+    ]
+   ]
   },
   {
    "map": 0,
@@ -794,7 +822,7 @@
    "notes": [],
    "how": [
     "the room-entry script started on arrival",
-    "the script ended at frame 2388"
+    "the script ended at frame 2365"
    ],
    "reached": true,
    "forced": false,
@@ -804,7 +832,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 2478,
+   "frames": 2455,
    "model": {
     "checks": 8,
     "mismatches": 0,
@@ -818,11 +846,11 @@
    "title": "NPC 5 walks right 1 tile",
    "action": "entry",
    "notes": [
-    "set up as room $4E script 1 leaves the game when it sends you here (screen 1)"
+    "set up as Boss: Grandpa's Gate (DeathMore) script 1 leaves the game when it sends you here (screen 1)"
    ],
    "how": [
     "the room-entry script started on arrival",
-    "the script ended at frame 2786"
+    "the script ended at frame 2755"
    ],
    "reached": true,
    "forced": false,
@@ -832,7 +860,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 2876,
+   "frames": 2845,
    "model": {
     "checks": 56,
     "mismatches": 0,
@@ -846,11 +874,11 @@
    "title": "NPC 5 walks right 1 tile",
    "action": "entry",
    "notes": [
-    "set up as room $10 script 4 leaves the game when it sends you here (screen 1)"
+    "set up as Copycat House script 4 leaves the game when it sends you here (screen 1)"
    ],
    "how": [
     "the room-entry script started on arrival",
-    "the script ended at frame 1946"
+    "the script ended at frame 1923"
    ],
    "reached": true,
    "forced": false,
@@ -860,7 +888,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 2036,
+   "frames": 2013,
    "model": {
     "checks": 64,
     "mismatches": 0,
@@ -879,7 +907,7 @@
    ],
    "how": [
     "the room-entry script started on arrival",
-    "the script ended at frame 690"
+    "the script ended at frame 674"
    ],
    "reached": true,
    "forced": false,
@@ -889,26 +917,34 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 780,
+   "frames": 764,
    "model": {
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "yields": [
+    [
+     1851,
+     "$16",
+     true
+    ]
+   ]
   },
   {
    "map": 0,
    "script": 0,
    "entry": 1873,
-   "title": "Fade out and switch to the game mode in $C88B (e",
+   "title": "*:This shaking is evidence of the growth of Grea",
    "action": "entry",
    "notes": [
     "flag $00F1 is tested both ways"
    ],
    "how": [
     "the room-entry script started on arrival",
-    "the script ended at frame 690",
-    "started at the scene's own first step (pos 1873)"
+    "the script ended at frame 674",
+    "started at the scene's own first step (pos 1873)",
+    "the script ended at frame 2200"
    ],
    "reached": true,
    "forced": true,
@@ -918,12 +954,19 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 932,
+   "frames": 2290,
    "model": {
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "yields": [
+    [
+     1879,
+     "$3E",
+     true
+    ]
+   ]
   },
   {
    "map": 0,
@@ -932,12 +975,12 @@
    "title": "*:Oh, Monster Master [HERO]! Where have you been",
    "action": "entry",
    "notes": [
-    "room state 0: as room $2F script 0 leaves it when it sets flag $00EE",
-    "set up as room $01 script 0 leaves the game when it sends you here (screen 5)"
+    "room state 0: as Intro Bedroom (2-screen, crashes) script 0 leaves it when it sets flag $00EE",
+    "set up as GreatTree script 0 leaves the game when it sends you here (screen 5)"
    ],
    "how": [
     "the room-entry script started on arrival",
-    "the script ended at frame 1141"
+    "the script ended at frame 1133"
    ],
    "reached": true,
    "forced": false,
@@ -947,12 +990,13 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 1231,
+   "frames": 1223,
    "model": {
     "checks": 16,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 0,
@@ -965,7 +1009,7 @@
    ],
    "how": [
     "started by examine from side 1",
-    "the script ended at frame 303"
+    "the script ended at frame 287"
    ],
    "reached": true,
    "forced": false,
@@ -975,7 +1019,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 393,
+   "frames": 377,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -993,9 +1037,9 @@
    ],
    "how": [
     "started by examine from side 1",
-    "the script ended at frame 303",
+    "the script ended at frame 287",
     "started at the scene's own first step (pos 28)",
-    "the script ended at frame 888"
+    "the script ended at frame 856"
    ],
    "reached": true,
    "forced": true,
@@ -1005,7 +1049,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 978,
+   "frames": 946,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -1020,11 +1064,11 @@
    "action": "examine",
    "notes": [
     "needs NOT: Go to target when the bag (20) is full",
-    "room state 2: as room $00 script 4 leaves it when it sets flag $003B"
+    "room state 2: as Castle script 4 leaves it when it sets flag $003B"
    ],
    "how": [
     "started by examine from side 1",
-    "the script ended at frame 303"
+    "the script ended at frame 287"
    ],
    "reached": true,
    "forced": false,
@@ -1034,7 +1078,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 393,
+   "frames": 377,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -1049,13 +1093,13 @@
    "action": "examine",
    "notes": [
     "needs: Go to target when the bag (20) is full",
-    "room state 2: as room $00 script 4 leaves it when it sets flag $003B"
+    "room state 2: as Castle script 4 leaves it when it sets flag $003B"
    ],
    "how": [
     "started by examine from side 1",
-    "the script ended at frame 303",
+    "the script ended at frame 287",
     "started at the scene's own first step (pos 51)",
-    "the script ended at frame 888"
+    "the script ended at frame 856"
    ],
    "reached": true,
    "forced": true,
@@ -1065,7 +1109,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 978,
+   "frames": 946,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -1083,7 +1127,7 @@
    ],
    "how": [
     "started by examine from side 1",
-    "the script ended at frame 291"
+    "the script ended at frame 275"
    ],
    "reached": true,
    "forced": false,
@@ -1093,7 +1137,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 381,
+   "frames": 365,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -1111,9 +1155,9 @@
    ],
    "how": [
     "started by examine from side 1",
-    "the script ended at frame 291",
+    "the script ended at frame 275",
     "started at the scene's own first step (pos 28)",
-    "the script ended at frame 878"
+    "the script ended at frame 846"
    ],
    "reached": true,
    "forced": true,
@@ -1123,7 +1167,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 968,
+   "frames": 936,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -1138,11 +1182,11 @@
    "action": "examine",
    "notes": [
     "needs NOT: Go to target when the bag (20) is full",
-    "room state 1: as room $00 script 3 leaves it when it sets flag $003A"
+    "room state 1: as Castle script 3 leaves it when it sets flag $003A"
    ],
    "how": [
     "started by examine from side 1",
-    "the script ended at frame 291"
+    "the script ended at frame 275"
    ],
    "reached": true,
    "forced": false,
@@ -1152,7 +1196,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 381,
+   "frames": 365,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -1167,13 +1211,13 @@
    "action": "examine",
    "notes": [
     "needs: Go to target when the bag (20) is full",
-    "room state 1: as room $00 script 3 leaves it when it sets flag $003A"
+    "room state 1: as Castle script 3 leaves it when it sets flag $003A"
    ],
    "how": [
     "started by examine from side 1",
-    "the script ended at frame 291",
+    "the script ended at frame 275",
     "started at the scene's own first step (pos 51)",
-    "the script ended at frame 878"
+    "the script ended at frame 846"
    ],
    "reached": true,
    "forced": true,
@@ -1183,7 +1227,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 968,
+   "frames": 936,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -1240,7 +1284,8 @@
     "checks": 32,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 1,
@@ -1266,7 +1311,8 @@
     "checks": 8,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 1,
@@ -1292,7 +1338,8 @@
     "checks": 40,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 1,
@@ -1318,7 +1365,8 @@
     "checks": 32,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 1,
@@ -1327,7 +1375,7 @@
    "title": "*:Oh boy! This looks dangerous! Oh, no!",
    "action": "entry",
    "notes": [
-    "room state 2: as room $00 script 0 leaves it when it sets flag $0009"
+    "room state 2: as Castle script 0 leaves it when it sets flag $0009"
    ],
    "how": [
     "the room-entry script started on arrival",
@@ -1355,7 +1403,8 @@
    "title": "*:Now it's time to go see the King.",
    "action": "entry",
    "notes": [
-    "room state 4: as room $2F script 0 leaves it when it sets flag $00EE"
+    "room state 4: as Intro Bedroom (2-screen, crashes) script 0 leaves it when it sets flag $00EE",
+    "set up as GreatTree script 0 leaves the game when it sends you here (screen 0)"
    ],
    "how": [
     "the room-entry script started on arrival",
@@ -1374,20 +1423,22 @@
     "checks": 32,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 1,
    "script": 0,
    "entry": 308,
-   "title": "the player faces up",
+   "title": "*:Oh, GreatTree is shaking! It's welcoming you!",
    "action": "entry",
    "notes": [
-    "room state 3: as room $2F script 0 leaves it when it sets flag $00EE",
-    "set up as room $08 script 0 leaves the game when it sends you here (screen 12)"
+    "room state 3: as Intro Bedroom (2-screen, crashes) script 0 leaves it when it sets flag $00EE",
+    "set up as Starry Shrine Breeding Cutscene script 0 leaves the game when it sends you here (screen 12)"
    ],
    "how": [
-    "the room-entry script started on arrival"
+    "the room-entry script started on arrival",
+    "the script ended at frame 1556"
    ],
    "reached": true,
    "forced": false,
@@ -1397,12 +1448,20 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 315,
+   "frames": 1646,
    "model": {
-    "checks": 0,
+    "checks": 32,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "yields": [
+    [
+     323,
+     "$3E",
+     true
+    ]
+   ],
+   "after_end": 0
   },
   {
    "map": 1,
@@ -1657,12 +1716,12 @@
    "map": 2,
    "script": 4,
    "entry": 23,
-   "title": "*:Since [HERO] won{A4} *:Customers have flooded ",
+   "title": "*:Since [HERO] won\u2026 *:Customers have flooded our",
    "action": "talk",
    "notes": [],
    "how": [
     "started by talk from side 1",
-    "the script ended at frame 828"
+    "the script ended at frame 812"
    ],
    "reached": true,
    "forced": false,
@@ -1672,7 +1731,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 918,
+   "frames": 902,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -1822,7 +1881,7 @@
    "title": "*:I've been alone for a long time. *:I'm lonely.",
    "action": "talk",
    "notes": [
-    "room state 2: as room $06 script 0 leaves it when it sets flag $0037"
+    "room state 2: as Arena Lobby script 0 leaves it when it sets flag $0037"
    ],
    "how": [
     "started by talk from side 1",
@@ -1909,7 +1968,7 @@
     "started by talk from side 1",
     "the script ended at frame 601",
     "started at the scene's own first step (pos 92)",
-    "the script ended at frame 1845"
+    "the script ended at frame 1837"
    ],
    "reached": true,
    "forced": true,
@@ -1919,7 +1978,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 1935,
+   "frames": 1927,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -1934,14 +1993,14 @@
    "action": "talk",
    "notes": [
     "needs: Go to target when party slot knows skill $84-$87",
-    "room state 2: as room $35 script 3 leaves it when it sets flag $0015"
+    "room state 2: as Boss: Bazaar (MadKnight) script 3 leaves it when it sets flag $0015"
    ],
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by talk from side 1",
     "the script ended at frame 563",
     "started at the scene's own first step (pos 40)",
-    "the script ended at frame 2692"
+    "the script ended at frame 2676"
    ],
    "reached": true,
    "forced": true,
@@ -1951,7 +2010,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 2782,
+   "frames": 2766,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -1991,7 +2050,7 @@
    "title": "*:Would you like to see the list of Travelers' G",
    "action": "talk",
    "notes": [
-    "room state 1: as room $06 script 0 leaves it when it sets flag $0032"
+    "room state 1: as Arena Lobby script 0 leaves it when it sets flag $0032"
    ],
    "how": [
     "started by talk from side 1",
@@ -2019,7 +2078,7 @@
    "title": "*:Would you like to see the list of Travelers' G",
    "action": "talk",
    "notes": [
-    "room state 2: as room $06 script 0 leaves it when it sets flag $0033"
+    "room state 2: as Arena Lobby script 0 leaves it when it sets flag $0033"
    ],
    "how": [
     "started by talk from side 1",
@@ -2073,7 +2132,7 @@
    "title": "*:Would you like to see the list of Travelers' G",
    "action": "talk",
    "notes": [
-    "room state 3: as room $06 script 0 leaves it when it sets flag $0034"
+    "room state 3: as Arena Lobby script 0 leaves it when it sets flag $0034"
    ],
    "how": [
     "started by talk from side 1",
@@ -2127,11 +2186,11 @@
    "title": "*:Would you like to see the list of Travelers' G",
    "action": "talk",
    "notes": [
-    "room state 3: as room $06 script 0 leaves it when it sets flag $0037"
+    "room state 3: as Arena Lobby script 0 leaves it when it sets flag $0037"
    ],
    "how": [
     "started by talk from side 1",
-    "the script ended at frame 1628"
+    "the script ended at frame 1627"
    ],
    "reached": true,
    "forced": false,
@@ -2141,7 +2200,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 1718,
+   "frames": 1717,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -2183,7 +2242,7 @@
    "notes": [],
    "how": [
     "started by talk from side 1",
-    "the script ended at frame 1356"
+    "the script ended at frame 1349"
    ],
    "reached": true,
    "forced": false,
@@ -2193,7 +2252,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 1446,
+   "frames": 1439,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -2207,11 +2266,12 @@
    "title": "King:Oh [HERO]! Well done! You won!! King:My kin",
    "action": "walkin",
    "notes": [
-    "room state 2: as room $5D script 0 leaves it when it sets flag $00E4",
+    "room state 2: as Arena Battle script 0 leaves it when it sets flag $00E4",
     "the player walks in from screen 0 (as in the game)"
    ],
    "how": [
-    "walked in from screen 0 (edge cell 1)"
+    "walked in from screen 0 (edge cell 1)",
+    "the script ended at frame 9815"
    ],
    "reached": true,
    "forced": false,
@@ -2221,7 +2281,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 2390,
+   "frames": 9905,
    "model": {
     "checks": 16,
     "mismatches": 2,
@@ -2251,7 +2311,14 @@
       ]
      }
     ]
-   }
+   },
+   "yields": [
+    [
+     49,
+     "$3E",
+     true
+    ]
+   ]
   },
   {
    "map": 4,
@@ -2260,7 +2327,7 @@
    "title": "the player walks up 5 tiles (script waits)",
    "action": "entry",
    "notes": [
-    "set up as room $09 script 11 leaves the game when it sends you here (screen 6)"
+    "set up as Starry Shrine script 11 leaves the game when it sends you here (screen 6)"
    ],
    "how": [
     "the room-entry script started on arrival",
@@ -2290,7 +2357,7 @@
    "notes": [],
    "how": [
     "started by stepon from side 1",
-    "the script ended at frame 221"
+    "the script ended at frame 213"
    ],
    "reached": true,
    "forced": false,
@@ -2300,7 +2367,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 311,
+   "frames": 303,
    "model": {
     "checks": 8,
     "mismatches": 0,
@@ -2318,7 +2385,7 @@
    ],
    "how": [
     "started by stepon from side 1",
-    "the script ended at frame 1164"
+    "the script ended at frame 1148"
    ],
    "reached": true,
    "forced": false,
@@ -2328,7 +2395,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 1254,
+   "frames": 1238,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -2368,7 +2435,7 @@
    "title": "*:No! You'll be hurt if you fall.",
    "action": "stepon",
    "notes": [
-    "room state 1: as room $2F script 0 leaves it when it sets flag $00EE"
+    "room state 1: as Intro Bedroom (2-screen, crashes) script 0 leaves it when it sets flag $00EE"
    ],
    "how": [
     "started by stepon from side 1",
@@ -2396,7 +2463,7 @@
    "title": "*:There are cliffs where you can jump off... *:a",
    "action": "stepon",
    "notes": [
-    "room state 1: as room $2F script 0 leaves it when it sets flag $00EE"
+    "room state 1: as Intro Bedroom (2-screen, crashes) script 0 leaves it when it sets flag $00EE"
    ],
    "how": [
     "started by stepon from side 1",
@@ -2424,7 +2491,7 @@
    "title": "*:The Starry Night is over!",
    "action": "stepon",
    "notes": [
-    "room state 1: as room $2F script 0 leaves it when it sets flag $00EE"
+    "room state 1: as Intro Bedroom (2-screen, crashes) script 0 leaves it when it sets flag $00EE"
    ],
    "how": [
     "started by stepon from side 1",
@@ -2449,12 +2516,12 @@
    "map": 4,
    "script": 12,
    "entry": 0,
-   "title": "*:You did it! [HERO]!! *:I knew youth win, [HERO",
+   "title": "*:You did it! [HERO]!! *:I knew you'd win, [HERO",
    "action": "talk",
    "notes": [],
    "how": [
     "started by talk from side 1",
-    "the script ended at frame 371"
+    "the script ended at frame 352"
    ],
    "reached": true,
    "forced": false,
@@ -2464,7 +2531,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 461,
+   "frames": 442,
    "model": {
     "checks": 8,
     "mismatches": 0,
@@ -2506,7 +2573,7 @@
    "notes": [],
    "how": [
     "started by talk from side 1",
-    "the script ended at frame 169"
+    "the script ended at frame 170"
    ],
    "reached": true,
    "forced": false,
@@ -2516,7 +2583,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 259,
+   "frames": 260,
    "model": {
     "checks": 8,
     "mismatches": 0,
@@ -2562,7 +2629,8 @@
       ]
      }
     ]
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 4,
@@ -2653,7 +2721,7 @@
    "notes": [],
    "how": [
     "started by talk from side 1",
-    "the script ended at frame 1825"
+    "the script ended at frame 1817"
    ],
    "reached": true,
    "forced": false,
@@ -2663,7 +2731,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 1915,
+   "frames": 1907,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -2681,7 +2749,7 @@
    ],
    "how": [
     "started by talk from side 2",
-    "the script ended at frame 886"
+    "the script ended at frame 870"
    ],
    "reached": true,
    "forced": false,
@@ -2691,7 +2759,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 976,
+   "frames": 960,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -2709,7 +2777,7 @@
    ],
    "how": [
     "started by talk from side 2",
-    "the script ended at frame 582"
+    "the script ended at frame 566"
    ],
    "reached": true,
    "forced": false,
@@ -2719,7 +2787,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 672,
+   "frames": 656,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -2735,7 +2803,7 @@
    "notes": [],
    "how": [
     "started by talk from side 2",
-    "the script ended at frame 680"
+    "the script ended at frame 672"
    ],
    "reached": true,
    "forced": false,
@@ -2745,7 +2813,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 770,
+   "frames": 762,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -2776,7 +2844,8 @@
     "checks": 24,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 4,
@@ -2802,7 +2871,8 @@
     "checks": 24,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 5,
@@ -2813,7 +2883,7 @@
    "notes": [],
    "how": [
     "started by talk from side 1",
-    "the script ended at frame 1089"
+    "the script ended at frame 1065"
    ],
    "reached": true,
    "forced": false,
@@ -2823,7 +2893,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 1179,
+   "frames": 1155,
    "model": {
     "checks": 8,
     "mismatches": 0,
@@ -2834,14 +2904,14 @@
    "map": 5,
    "script": 16,
    "entry": 158,
-   "title": "Watabou:You made it! [HERO]!! You beathem all! W",
+   "title": "Watabou:You made it! [HERO]!! You beat'em all! W",
    "action": "talk",
    "notes": [
     "needs NOT: Go to target when all 20 monster slots are taken"
    ],
    "how": [
     "started by talk from side 1",
-    "the script ended at frame 1833"
+    "the script ended at frame 1817"
    ],
    "reached": true,
    "forced": false,
@@ -2851,7 +2921,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 1923,
+   "frames": 1907,
    "model": {
     "checks": 8,
     "mismatches": 0,
@@ -2867,7 +2937,7 @@
    "notes": [],
    "how": [
     "started by talk from side 1",
-    "the script ended at frame 1112"
+    "the script ended at frame 1096"
    ],
    "reached": true,
    "forced": false,
@@ -2877,7 +2947,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 1202,
+   "frames": 1186,
    "model": {
     "checks": 8,
     "mismatches": 0,
@@ -2943,7 +3013,7 @@
    "title": "the player faces left",
    "action": "entry",
    "notes": [
-    "set up as room $5D script 0 leaves the game when it sends you here (screen 1)"
+    "set up as Arena Battle script 0 leaves the game when it sends you here (screen 1)"
    ],
    "how": [
     "room-entry script armed",
@@ -2971,11 +3041,11 @@
    "title": "*:Well done! You survived G class!",
    "action": "entry",
    "notes": [
-    "set up as room $5D script 0 leaves the game when it sends you here (screen 1)"
+    "set up as Arena Battle script 0 leaves the game when it sends you here (screen 1)"
    ],
    "how": [
     "the room-entry script started on arrival",
-    "the script ended at frame 1129"
+    "the script ended at frame 1121"
    ],
    "reached": true,
    "forced": false,
@@ -2985,12 +3055,13 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 1219,
+   "frames": 1211,
    "model": {
     "checks": 48,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 6,
@@ -2999,11 +3070,11 @@
    "title": "*:Great work! You survived D class!!",
    "action": "entry",
    "notes": [
-    "set up as room $5D script 0 leaves the game when it sends you here (screen 1)"
+    "set up as Arena Battle script 0 leaves the game when it sends you here (screen 1)"
    ],
    "how": [
     "the room-entry script started on arrival",
-    "the script ended at frame 1255"
+    "the script ended at frame 1246"
    ],
    "reached": true,
    "forced": false,
@@ -3013,12 +3084,13 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 1345,
+   "frames": 1336,
    "model": {
     "checks": 48,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 6,
@@ -3027,11 +3099,11 @@
    "title": "*:Well done! You survived S class! *:Now you're ",
    "action": "entry",
    "notes": [
-    "set up as room $5D script 0 leaves the game when it sends you here (screen 1)"
+    "set up as Arena Battle script 0 leaves the game when it sends you here (screen 1)"
    ],
    "how": [
     "the room-entry script started on arrival",
-    "the script ended at frame 1221"
+    "the script ended at frame 1213"
    ],
    "reached": true,
    "forced": false,
@@ -3041,12 +3113,13 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 1311,
+   "frames": 1303,
    "model": {
     "checks": 48,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 6,
@@ -3139,7 +3212,7 @@
    "how": [
     "gave the party a monster (a new game has none)",
     "started by examine from side 1",
-    "the script ended at frame 1197"
+    "the script ended at frame 1189"
    ],
    "reached": true,
    "forced": false,
@@ -3149,12 +3222,13 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 1287,
+   "frames": 1279,
    "model": {
     "checks": 24,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 6,
@@ -3167,7 +3241,7 @@
    ],
    "how": [
     "started by examine from side 1",
-    "the script ended at frame 988"
+    "the script ended at frame 980"
    ],
    "reached": true,
    "forced": false,
@@ -3177,7 +3251,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 1078,
+   "frames": 1070,
    "model": {
     "checks": 8,
     "mismatches": 0,
@@ -3195,7 +3269,7 @@
    ],
    "how": [
     "started by examine from side 1",
-    "the script ended at frame 1451"
+    "the script ended at frame 1435"
    ],
    "reached": true,
    "forced": false,
@@ -3205,7 +3279,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 1541,
+   "frames": 1525,
    "model": {
     "checks": 8,
     "mismatches": 0,
@@ -3251,7 +3325,7 @@
    ],
    "how": [
     "started by examine from side 1",
-    "the script ended at frame 1196"
+    "the script ended at frame 1188"
    ],
    "reached": true,
    "forced": false,
@@ -3261,7 +3335,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 1286,
+   "frames": 1278,
    "model": {
     "checks": 8,
     "mismatches": 0,
@@ -3279,7 +3353,7 @@
    ],
    "how": [
     "started by examine from side 1",
-    "the script ended at frame 408"
+    "the script ended at frame 400"
    ],
    "reached": true,
    "forced": false,
@@ -3289,7 +3363,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 498,
+   "frames": 490,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -3305,7 +3379,7 @@
    "notes": [],
    "how": [
     "started by examine from side 1",
-    "the script ended at frame 924"
+    "the script ended at frame 918"
    ],
    "reached": true,
    "forced": false,
@@ -3315,7 +3389,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 1014,
+   "frames": 1008,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -3331,7 +3405,7 @@
    "notes": [],
    "how": [
     "started by examine from side 1",
-    "the script ended at frame 1157"
+    "the script ended at frame 1148"
    ],
    "reached": true,
    "forced": false,
@@ -3341,7 +3415,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 1247,
+   "frames": 1238,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -3383,7 +3457,7 @@
    "notes": [],
    "how": [
     "started by examine from side 1",
-    "the script ended at frame 795"
+    "the script ended at frame 789"
    ],
    "reached": true,
    "forced": false,
@@ -3393,7 +3467,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 885,
+   "frames": 879,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -3435,7 +3509,7 @@
    "notes": [],
    "how": [
     "started by examine from side 1",
-    "the script ended at frame 934"
+    "the script ended at frame 928"
    ],
    "reached": true,
    "forced": false,
@@ -3445,7 +3519,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 1024,
+   "frames": 1018,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -3463,7 +3537,7 @@
    ],
    "how": [
     "started by examine from side 1",
-    "the script ended at frame 924"
+    "the script ended at frame 918"
    ],
    "reached": true,
    "forced": false,
@@ -3473,7 +3547,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 1014,
+   "frames": 1008,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -3517,7 +3591,7 @@
    ],
    "how": [
     "started by examine from side 1",
-    "the script ended at frame 1090"
+    "the script ended at frame 1080"
    ],
    "reached": true,
    "forced": false,
@@ -3527,7 +3601,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 1180,
+   "frames": 1170,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -3543,7 +3617,7 @@
    "notes": [],
    "how": [
     "started by talk from side 2",
-    "the script ended at frame 1157"
+    "the script ended at frame 1150"
    ],
    "reached": true,
    "forced": false,
@@ -3553,7 +3627,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 1247,
+   "frames": 1240,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -3595,7 +3669,7 @@
    "notes": [],
    "how": [
     "started by talk from side 2",
-    "the script ended at frame 799"
+    "the script ended at frame 789"
    ],
    "reached": true,
    "forced": false,
@@ -3605,7 +3679,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 889,
+   "frames": 879,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -3647,7 +3721,7 @@
    "notes": [],
    "how": [
     "started by talk from side 2",
-    "the script ended at frame 934"
+    "the script ended at frame 928"
    ],
    "reached": true,
    "forced": false,
@@ -3657,7 +3731,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 1024,
+   "frames": 1018,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -3675,7 +3749,7 @@
    ],
    "how": [
     "started by talk from side 2",
-    "the script ended at frame 924"
+    "the script ended at frame 919"
    ],
    "reached": true,
    "forced": false,
@@ -3685,7 +3759,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 1014,
+   "frames": 1009,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -3729,7 +3803,7 @@
    ],
    "how": [
     "started by talk from side 2",
-    "the script ended at frame 1090"
+    "the script ended at frame 1080"
    ],
    "reached": true,
    "forced": false,
@@ -3739,7 +3813,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 1180,
+   "frames": 1170,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -3753,7 +3827,7 @@
    "title": "NPC 4 is shown",
    "action": "entry",
    "notes": [
-    "set up as room $04 script 41 leaves the game when it sends you here (screen 6)"
+    "set up as Farm script 41 leaves the game when it sends you here (screen 6)"
    ],
    "how": [
     "the room-entry script started on arrival",
@@ -3991,7 +4065,9 @@
    "entry": 0,
    "title": "step 0",
    "action": "entry",
-   "notes": [],
+   "notes": [
+    "room state 3 is past the screen's 1 valid states"
+   ],
    "how": [
     "2 inserted name(s) had no data: \"Slime\" put in",
     "room-entry script armed",
@@ -4037,7 +4113,8 @@
     "checks": 32,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 8,
@@ -4046,7 +4123,8 @@
    "title": "[INS 00] & [INS 10] disappeared.",
    "action": "entry",
    "notes": [
-    "set up as room $08 script 0 leaves the game when it sends you here (screen 0)"
+    "room state 1 is past the screen's 1 valid states",
+    "set up as Starry Shrine Breeding Cutscene script 0 leaves the game when it sends you here (screen 0)"
    ],
    "how": [
     "2 inserted name(s) had no data: \"Slime\" put in",
@@ -4066,7 +4144,8 @@
     "checks": 16,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 8,
@@ -4075,7 +4154,8 @@
    "title": "[INS 00] & [INS 10] disappeared.",
    "action": "entry",
    "notes": [
-    "set up as room $08 script 0 leaves the game when it sends you here (screen 0)"
+    "room state 1 is past the screen's 1 valid states",
+    "set up as Starry Shrine Breeding Cutscene script 0 leaves the game when it sends you here (screen 0)"
    ],
    "how": [
     "2 inserted name(s) had no data: \"Slime\" put in",
@@ -4095,7 +4175,8 @@
     "checks": 16,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 8,
@@ -4103,7 +4184,9 @@
    "entry": 158,
    "title": "[INS 10] was born. Give it a name.",
    "action": "entry",
-   "notes": [],
+   "notes": [
+    "room state 2 is past the screen's 1 valid states"
+   ],
    "how": [
     "2 inserted name(s) had no data: \"Slime\" put in",
     "the room-entry script started on arrival",
@@ -4122,7 +4205,8 @@
     "checks": 16,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 8,
@@ -4130,7 +4214,9 @@
    "entry": 207,
    "title": "NPC 1 walks up 3 tiles (script waits)",
    "action": "entry",
-   "notes": [],
+   "notes": [
+    "room state 4 is past the screen's 1 valid states"
+   ],
    "how": [
     "2 inserted name(s) had no data: \"Slime\" put in",
     "the room-entry script started on arrival",
@@ -4149,7 +4235,8 @@
     "checks": 32,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 8,
@@ -4158,7 +4245,8 @@
    "title": "NPC 1 walks up 3 tiles (script waits)",
    "action": "entry",
    "notes": [
-    "set up as room $08 script 0 leaves the game when it sends you here (screen 0)"
+    "room state 5 is past the screen's 1 valid states",
+    "set up as Starry Shrine Breeding Cutscene script 0 leaves the game when it sends you here (screen 0)"
    ],
    "how": [
     "2 inserted name(s) had no data: \"Slime\" put in",
@@ -4178,7 +4266,8 @@
     "checks": 16,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 8,
@@ -4187,7 +4276,8 @@
    "title": "*:Oh, you must be the master. You must have had ",
    "action": "entry",
    "notes": [
-    "set up as room $2F script 10 leaves the game when it sends you here (screen 0)"
+    "room state 6 is past the screen's 1 valid states",
+    "set up as Intro Bedroom (2-screen, crashes) script 10 leaves the game when it sends you here (screen 0)"
    ],
    "how": [
     "2 inserted name(s) had no data: \"Slime\" put in",
@@ -4207,7 +4297,8 @@
     "checks": 14,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 8,
@@ -4216,7 +4307,8 @@
    "title": "*:It is filled with the stars that fell to the g",
    "action": "entry",
    "notes": [
-    "set up as room $09 script 0 leaves the game when it sends you here (screen 0)"
+    "room state 7 is past the screen's 1 valid states",
+    "set up as Starry Shrine script 0 leaves the game when it sends you here (screen 0)"
    ],
    "how": [
     "2 inserted name(s) had no data: \"Slime\" put in",
@@ -4244,11 +4336,13 @@
    "entry": 441,
    "title": "*:Yes. This is the new spirit of GreatTree. *:[H",
    "action": "entry",
-   "notes": [],
+   "notes": [
+    "room state 8 is past the screen's 1 valid states"
+   ],
    "how": [
     "2 inserted name(s) had no data: \"Slime\" put in",
     "the room-entry script started on arrival",
-    "the script ended at frame 3828"
+    "the script ended at frame 3808"
    ],
    "reached": true,
    "forced": false,
@@ -4258,26 +4352,28 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 3918,
+   "frames": 3898,
    "model": {
     "checks": 21,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 8,
    "script": 0,
    "entry": 760,
-   "title": "*:Oh, [HERO]! Welcome back!! *:I believed youth ",
+   "title": "*:Oh, [HERO]! Welcome back!! *:I believed you'd ",
    "action": "entry",
    "notes": [
-    "set up as room $2F script 10 leaves the game when it sends you here (screen 0)"
+    "room state 6 is past the screen's 1 valid states",
+    "set up as Intro Bedroom (2-screen, crashes) script 10 leaves the game when it sends you here (screen 0)"
    ],
    "how": [
     "2 inserted name(s) had no data: \"Slime\" put in",
     "the room-entry script started on arrival",
-    "the script ended at frame 1541"
+    "the script ended at frame 1537"
    ],
    "reached": true,
    "forced": false,
@@ -4287,12 +4383,13 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 1631,
+   "frames": 1627,
    "model": {
     "checks": 14,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 9,
@@ -4346,7 +4443,8 @@
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "yields": []
   },
   {
    "map": 9,
@@ -4355,7 +4453,7 @@
    "title": "*:OK! Wait overnight.",
    "action": "entry",
    "notes": [
-    "needs NOT: Go to target when gold < (lead monster level + 1) x 10; else pay it"
+    "needs NOT: Go to target when gold < (plus value +$62 of monster [$CA40] + 1) x 10; else pay it (the breeding fee; S124, code-read)"
    ],
    "how": [
     "3 inserted name(s) had no data: \"Slime\" put in",
@@ -4375,7 +4473,8 @@
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 9,
@@ -4427,7 +4526,8 @@
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "yields": []
   },
   {
    "map": 9,
@@ -4436,7 +4536,7 @@
    "title": "NPC 2 walks down 1 tile",
    "action": "entry",
    "notes": [
-    "set up as room $08 script 0 leaves the game when it sends you here (screen 1)"
+    "set up as Starry Shrine Breeding Cutscene script 0 leaves the game when it sends you here (screen 1)"
    ],
    "how": [
     "3 inserted name(s) had no data: \"Slime\" put in",
@@ -4456,7 +4556,8 @@
     "checks": 32,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 9,
@@ -4465,7 +4566,7 @@
    "title": "NPC 4 walks down 5 tiles",
    "action": "entry",
    "notes": [
-    "set up as room $08 script 0 leaves the game when it sends you here (screen 1)"
+    "set up as Starry Shrine Breeding Cutscene script 0 leaves the game when it sends you here (screen 1)"
    ],
    "how": [
     "3 inserted name(s) had no data: \"Slime\" put in",
@@ -4487,7 +4588,8 @@
     "checks": 24,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 9,
@@ -4496,7 +4598,7 @@
    "title": "NPC 1 walks left 4 tiles",
    "action": "entry",
    "notes": [
-    "set up as room $08 script 0 leaves the game when it sends you here (screen 1)"
+    "set up as Starry Shrine Breeding Cutscene script 0 leaves the game when it sends you here (screen 1)"
    ],
    "how": [
     "3 inserted name(s) had no data: \"Slime\" put in",
@@ -4518,7 +4620,8 @@
     "checks": 16,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 9,
@@ -4527,7 +4630,7 @@
    "title": "NPC 4 is shown",
    "action": "entry",
    "notes": [
-    "set up as room $04 script 42 leaves the game when it sends you here (screen 1)"
+    "set up as Farm script 42 leaves the game when it sends you here (screen 1)"
    ],
    "how": [
     "3 inserted name(s) had no data: \"Slime\" put in",
@@ -4556,7 +4659,7 @@
    "title": "*:Now! Step to the back!",
    "action": "entry",
    "notes": [
-    "room state 2: as room $5D script 0 leaves it when it sets flag $00E4"
+    "room state 2: as Arena Battle script 0 leaves it when it sets flag $00E4"
    ],
    "how": [
     "3 inserted name(s) had no data: \"Slime\" put in",
@@ -4576,7 +4679,8 @@
     "checks": 24,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 9,
@@ -4639,7 +4743,7 @@
    "notes": [],
    "how": [
     "started by talk from side 1",
-    "the script ended at frame 1921"
+    "the script ended at frame 1913"
    ],
    "reached": true,
    "forced": false,
@@ -4649,7 +4753,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 2011,
+   "frames": 2003,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -4665,7 +4769,7 @@
    "notes": [],
    "how": [
     "started by talk from side 1",
-    "the script ended at frame 2357"
+    "the script ended at frame 2349"
    ],
    "reached": true,
    "forced": false,
@@ -4675,7 +4779,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 2447,
+   "frames": 2439,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -4691,7 +4795,7 @@
    "notes": [],
    "how": [
     "started by talk from side 1",
-    "the script ended at frame 1543"
+    "the script ended at frame 1535"
    ],
    "reached": true,
    "forced": false,
@@ -4701,7 +4805,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 1633,
+   "frames": 1625,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -4769,7 +4873,7 @@
    "notes": [],
    "how": [
     "started by examine from side 4",
-    "the script ended at frame 1921"
+    "the script ended at frame 1913"
    ],
    "reached": true,
    "forced": false,
@@ -4779,7 +4883,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 2011,
+   "frames": 2003,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -4795,7 +4899,7 @@
    "notes": [],
    "how": [
     "started by examine from side 4",
-    "the script ended at frame 2358"
+    "the script ended at frame 2350"
    ],
    "reached": true,
    "forced": false,
@@ -4805,7 +4909,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 2448,
+   "frames": 2440,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -4821,7 +4925,7 @@
    "notes": [],
    "how": [
     "started by examine from side 4",
-    "the script ended at frame 1543"
+    "the script ended at frame 1535"
    ],
    "reached": true,
    "forced": false,
@@ -4831,7 +4935,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 1633,
+   "frames": 1625,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -4862,7 +4966,8 @@
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 12,
@@ -4873,7 +4978,7 @@
    "notes": [],
    "how": [
     "started by examine from side 1",
-    "the script ended at frame 2374"
+    "the script ended at frame 2361"
    ],
    "reached": true,
    "forced": false,
@@ -4883,7 +4988,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 2464,
+   "frames": 2451,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -4899,7 +5004,7 @@
    "notes": [],
    "how": [
     "started by examine from side 1",
-    "the script ended at frame 479"
+    "the script ended at frame 471"
    ],
    "reached": true,
    "forced": false,
@@ -4909,7 +5014,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 569,
+   "frames": 561,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -4925,7 +5030,7 @@
    "notes": [],
    "how": [
     "started by examine from side 1",
-    "the script ended at frame 777"
+    "the script ended at frame 767"
    ],
    "reached": true,
    "forced": false,
@@ -4935,7 +5040,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 867,
+   "frames": 857,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -4951,7 +5056,7 @@
    "notes": [],
    "how": [
     "started by talk from side 2",
-    "the script ended at frame 2375"
+    "the script ended at frame 2361"
    ],
    "reached": true,
    "forced": false,
@@ -4961,7 +5066,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 2465,
+   "frames": 2451,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -4977,7 +5082,7 @@
    "notes": [],
    "how": [
     "started by talk from side 2",
-    "the script ended at frame 479"
+    "the script ended at frame 471"
    ],
    "reached": true,
    "forced": false,
@@ -4987,7 +5092,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 569,
+   "frames": 561,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -5003,7 +5108,7 @@
    "notes": [],
    "how": [
     "started by talk from side 2",
-    "the script ended at frame 777"
+    "the script ended at frame 767"
    ],
    "reached": true,
    "forced": false,
@@ -5013,7 +5118,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 867,
+   "frames": 857,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -5201,12 +5306,13 @@
    "outcome": "battle",
    "missing_npcs": [],
    "reset": false,
-   "frames": 1328,
+   "frames": 1329,
    "model": {
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 16,
@@ -5234,7 +5340,8 @@
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 18,
@@ -5483,7 +5590,7 @@
    "notes": [],
    "how": [
     "started by examine from side 1",
-    "the script ended at frame 489"
+    "the script ended at frame 481"
    ],
    "reached": true,
    "forced": false,
@@ -5493,7 +5600,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 579,
+   "frames": 571,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -5561,7 +5668,7 @@
    "notes": [],
    "how": [
     "started by talk from side 2",
-    "the script ended at frame 489"
+    "the script ended at frame 481"
    ],
    "reached": true,
    "forced": false,
@@ -5571,7 +5678,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 579,
+   "frames": 571,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -5713,7 +5820,7 @@
    "map": 26,
    "script": 2,
    "entry": 14,
-   "title": "Open game screen 9 (text $0780)",
+   "title": "Open the Monster Namer (rename a monster)",
    "action": "talk",
    "notes": [],
    "how": [
@@ -6678,7 +6785,7 @@
    "title": "NPC 5 is shown",
    "action": "entry",
    "notes": [
-    "room state 2: as room $5D script 0 leaves it when it sets flag $00E4"
+    "room state 2: as Arena Battle script 0 leaves it when it sets flag $00E4"
    ],
    "how": [
     "the room-entry script started on arrival",
@@ -6708,7 +6815,7 @@
    "notes": [],
    "how": [
     "the room-entry script started on arrival",
-    "the script ended at frame 3753"
+    "the script ended at frame 3747"
    ],
    "reached": true,
    "forced": false,
@@ -6718,7 +6825,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 3843,
+   "frames": 3837,
    "model": {
     "checks": 16,
     "mismatches": 0,
@@ -6732,20 +6839,20 @@
    "title": "Watabou:Gimme that meat.",
    "action": "entry",
    "notes": [
-    "room state 5: as room $2F script 13 leaves it when it sets flag $00ED"
+    "room state 5: as Intro Bedroom (2-screen, crashes) script 13 leaves it when it sets flag $00ED"
    ],
    "how": [
     "the room-entry script started on arrival"
    ],
    "reached": true,
    "forced": false,
-   "ended": true,
+   "ended": false,
    "stalled": false,
    "stall_at": null,
-   "outcome": null,
+   "outcome": "menu",
    "missing_npcs": [],
    "reset": false,
-   "frames": 1690,
+   "frames": 7493,
    "model": {
     "checks": 72,
     "mismatches": 0,
@@ -6759,25 +6866,32 @@
    "title": "Fade out and switch to the game mode in $C88B (e",
    "action": "entry",
    "notes": [
-    "room state 5: as room $2F script 13 leaves it when it sets flag $00ED"
+    "room state 5: as Intro Bedroom (2-screen, crashes) script 13 leaves it when it sets flag $00ED"
    ],
    "how": [
     "the room-entry script started on arrival"
    ],
    "reached": true,
    "forced": false,
-   "ended": true,
+   "ended": false,
    "stalled": false,
    "stall_at": null,
-   "outcome": null,
+   "outcome": "menu",
    "missing_npcs": [],
    "reset": false,
-   "frames": 1690,
+   "frames": 7493,
    "model": {
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "yields": [
+    [
+     586,
+     "$3E",
+     "END"
+    ]
+   ]
   },
   {
    "map": 47,
@@ -6786,11 +6900,11 @@
    "title": "Watabou:Good morning [HERO]! It's time to set a ",
    "action": "entry",
    "notes": [
-    "room state 6: as room $2F script 0 leaves it when it sets flag $00EE"
+    "room state 6: as Intro Bedroom (2-screen, crashes) script 0 leaves it when it sets flag $00EE"
    ],
    "how": [
     "the room-entry script started on arrival",
-    "the script ended at frame 1776"
+    "the script ended at frame 1768"
    ],
    "reached": true,
    "forced": false,
@@ -6800,7 +6914,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 1866,
+   "frames": 1858,
    "model": {
     "checks": 133,
     "mismatches": 0,
@@ -6842,7 +6956,7 @@
    "title": "NPC 1 is shown",
    "action": "walkin",
    "notes": [
-    "room state 1: as room $2F script 0 leaves it when it sets flag $00EF",
+    "room state 1: as Intro Bedroom (2-screen, crashes) script 0 leaves it when it sets flag $00EF",
     "the player walks in from screen 4 (as in the game)"
    ],
    "how": [
@@ -6888,7 +7002,8 @@
     "checks": 32,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 47,
@@ -6914,7 +7029,8 @@
     "checks": 32,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 47,
@@ -6924,7 +7040,8 @@
    "action": "stepon",
    "notes": [],
    "how": [
-    "started by stepon from side 1"
+    "started by stepon from side 1",
+    "the script ended at frame 10403"
    ],
    "reached": true,
    "forced": false,
@@ -6934,12 +7051,19 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 1194,
+   "frames": 10493,
    "model": {
     "checks": 24,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "yields": [
+    [
+     88,
+     "$3E",
+     "END"
+    ]
+   ]
   },
   {
    "map": 47,
@@ -6949,7 +7073,8 @@
    "action": "stepon",
    "notes": [],
    "how": [
-    "started by stepon from side 1"
+    "started by stepon from side 1",
+    "the script ended at frame 10387"
    ],
    "reached": true,
    "forced": false,
@@ -6959,12 +7084,19 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 1178,
+   "frames": 10477,
    "model": {
     "checks": 8,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "yields": [
+    [
+     -2,
+     "$3E",
+     "END"
+    ]
+   ]
   },
   {
    "map": 47,
@@ -6974,7 +7106,8 @@
    "action": "stepon",
    "notes": [],
    "how": [
-    "started by stepon from side 1"
+    "started by stepon from side 1",
+    "the script ended at frame 10387"
    ],
    "reached": true,
    "forced": false,
@@ -6984,7 +7117,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 1178,
+   "frames": 10477,
    "model": {
     "checks": 8,
     "mismatches": 0,
@@ -7043,7 +7176,8 @@
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 49,
@@ -7103,7 +7237,7 @@
    "map": 49,
    "script": 2,
    "entry": 90,
-   "title": "Warp (wavy fade) to room $00 at (14, 5)",
+   "title": "Warp (wavy fade) to a game room at (14, 5)",
    "action": "head",
    "notes": [
     "the room-entry script shows 1 step(s) first",
@@ -7126,7 +7260,8 @@
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 50,
@@ -7213,7 +7348,7 @@
    "map": 50,
    "script": 2,
    "entry": 91,
-   "title": "Warp (wavy fade) to room $00 at (14, 5)",
+   "title": "Warp (wavy fade) to a game room at (14, 5)",
    "action": "head",
    "notes": [
     "the room-entry script shows 1 step(s) first",
@@ -7236,7 +7371,8 @@
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 51,
@@ -7296,7 +7432,7 @@
    "map": 51,
    "script": 1,
    "entry": 103,
-   "title": "Warp (wavy fade) to room $00 at (14, 5)",
+   "title": "Warp (wavy fade) to a game room at (14, 5)",
    "action": "head",
    "notes": [
     "the room-entry script shows 1 step(s) first",
@@ -7319,7 +7455,8 @@
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 52,
@@ -7379,7 +7516,7 @@
    "map": 52,
    "script": 2,
    "entry": 84,
-   "title": "Warp (wavy fade) to room $00 at (14, 5)",
+   "title": "Warp (wavy fade) to a game room at (14, 5)",
    "action": "head",
    "notes": [
     "the room-entry script shows 1 step(s) first",
@@ -7402,7 +7539,8 @@
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 52,
@@ -7658,7 +7796,7 @@
    "map": 53,
    "script": 3,
    "entry": 0,
-   "title": "*:{A4} {A4} {A4}",
+   "title": "*:\u2026 \u2026 \u2026",
    "action": "talk",
    "notes": [
     "the room-entry script shows 1 step(s) first"
@@ -7686,7 +7824,7 @@
    "map": 53,
    "script": 3,
    "entry": 106,
-   "title": "Warp (wavy fade) to room $00 at (14, 5)",
+   "title": "Warp (wavy fade) to a game room at (14, 5)",
    "action": "head",
    "notes": [
     "the room-entry script shows 1 step(s) first",
@@ -7709,7 +7847,8 @@
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 54,
@@ -7769,7 +7908,7 @@
    "map": 54,
    "script": 8,
    "entry": 93,
-   "title": "Warp (wavy fade) to room $00 at (14, 5)",
+   "title": "Warp (wavy fade) to a game room at (14, 5)",
    "action": "head",
    "notes": [
     "the room-entry script shows 1 step(s) first",
@@ -7792,7 +7931,8 @@
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 55,
@@ -7827,7 +7967,7 @@
    "title": "NPC 1 is shown",
    "action": "entry",
    "notes": [
-    "set up as room $37 script 3 leaves the game when it sends you here (screen 0)"
+    "set up as Boss: Bravery (BigEye) script 3 leaves the game when it sends you here (screen 0)"
    ],
    "how": [
     "the room-entry script started on arrival",
@@ -7880,7 +8020,7 @@
    "map": 55,
    "script": 1,
    "entry": 88,
-   "title": "Warp (wavy fade) to room $00 at (14, 5)",
+   "title": "Warp (wavy fade) to a game room at (14, 5)",
    "action": "head",
    "notes": [
     "the room-entry script shows 1 step(s) first",
@@ -7903,7 +8043,8 @@
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 55,
@@ -7959,7 +8100,8 @@
     "checks": 24,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 55,
@@ -7987,7 +8129,8 @@
     "checks": 24,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 56,
@@ -8022,7 +8165,7 @@
    "title": "NPC 1 is shown",
    "action": "entry",
    "notes": [
-    "set up as room $38 script 2 leaves the game when it sends you here (screen 0)"
+    "set up as Boss: Well (Gigantes) script 2 leaves the game when it sends you here (screen 0)"
    ],
    "how": [
     "the room-entry script started on arrival",
@@ -8069,13 +8212,14 @@
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 56,
    "script": 2,
    "entry": 0,
-   "title": "Draw tiles (data $5C9C)",
+   "title": "Change the look of part of the screen (tile patc",
    "action": "stepon",
    "notes": [
     "the room-entry script shows 1 step(s) first"
@@ -8125,13 +8269,14 @@
     "checks": 24,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 56,
    "script": 3,
    "entry": 0,
-   "title": "Draw tiles (data $5CA4)",
+   "title": "Change the look of part of the screen (tile patc",
    "action": "stepon",
    "notes": [
     "the room-entry script shows 1 step(s) first"
@@ -8181,13 +8326,14 @@
     "checks": 24,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 56,
    "script": 4,
    "entry": 0,
-   "title": "Draw tiles (data $5CAC)",
+   "title": "Change the look of part of the screen (tile patc",
    "action": "stepon",
    "notes": [
     "the room-entry script shows 1 step(s) first"
@@ -8237,13 +8383,14 @@
     "checks": 24,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 56,
    "script": 5,
    "entry": 0,
-   "title": "Draw tiles (data $5CB4)",
+   "title": "Change the look of part of the screen (tile patc",
    "action": "stepon",
    "notes": [
     "the room-entry script shows 1 step(s) first"
@@ -8293,13 +8440,14 @@
     "checks": 24,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 56,
    "script": 6,
    "entry": 0,
-   "title": "Draw tiles (data $5CBC)",
+   "title": "Change the look of part of the screen (tile patc",
    "action": "stepon",
    "notes": [
     "the room-entry script shows 1 step(s) first"
@@ -8349,13 +8497,14 @@
     "checks": 24,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 56,
    "script": 7,
    "entry": 0,
-   "title": "Draw tiles (data $5CC4)",
+   "title": "Change the look of part of the screen (tile patc",
    "action": "stepon",
    "notes": [
     "the room-entry script shows 1 step(s) first"
@@ -8405,13 +8554,14 @@
     "checks": 24,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 56,
    "script": 8,
    "entry": 0,
-   "title": "Draw tiles (data $5CCC)",
+   "title": "Change the look of part of the screen (tile patc",
    "action": "stepon",
    "notes": [
     "the room-entry script shows 1 step(s) first"
@@ -8461,13 +8611,14 @@
     "checks": 24,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 56,
    "script": 9,
    "entry": 0,
-   "title": "Draw tiles (data $5CD4)",
+   "title": "Change the look of part of the screen (tile patc",
    "action": "stepon",
    "notes": [
     "the room-entry script shows 1 step(s) first"
@@ -8517,13 +8668,14 @@
     "checks": 24,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 56,
    "script": 10,
    "entry": 0,
-   "title": "Draw tiles (data $5CDC)",
+   "title": "Change the look of part of the screen (tile patc",
    "action": "stepon",
    "notes": [
     "the room-entry script shows 1 step(s) first"
@@ -8573,13 +8725,14 @@
     "checks": 24,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 56,
    "script": 11,
    "entry": 0,
-   "title": "Draw tiles (data $5CE4)",
+   "title": "Change the look of part of the screen (tile patc",
    "action": "stepon",
    "notes": [
     "the room-entry script shows 1 step(s) first"
@@ -8629,13 +8782,14 @@
     "checks": 24,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 56,
    "script": 12,
    "entry": 0,
-   "title": "Draw tiles (data $5CEC)",
+   "title": "Change the look of part of the screen (tile patc",
    "action": "stepon",
    "notes": [
     "the room-entry script shows 1 step(s) first"
@@ -8685,13 +8839,14 @@
     "checks": 24,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 56,
    "script": 13,
    "entry": 0,
-   "title": "Draw tiles (data $5CF4)",
+   "title": "Change the look of part of the screen (tile patc",
    "action": "stepon",
    "notes": [
     "the room-entry script shows 1 step(s) first"
@@ -8741,13 +8896,14 @@
     "checks": 24,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 56,
    "script": 14,
    "entry": 0,
-   "title": "Draw tiles (data $5CFC)",
+   "title": "Change the look of part of the screen (tile patc",
    "action": "stepon",
    "notes": [
     "the room-entry script shows 1 step(s) first"
@@ -8797,13 +8953,14 @@
     "checks": 24,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 56,
    "script": 15,
    "entry": 0,
-   "title": "Draw tiles (data $5D04)",
+   "title": "Change the look of part of the screen (tile patc",
    "action": "stepon",
    "notes": [
     "the room-entry script shows 1 step(s) first"
@@ -8853,7 +9010,8 @@
     "checks": 24,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 56,
@@ -8935,7 +9093,8 @@
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 57,
@@ -8998,7 +9157,7 @@
    "title": "NPC 1 is shown",
    "action": "entry",
    "notes": [
-    "set up as room $3A script 2 leaves the game when it sends you here (screen 0)"
+    "set up as Boss: Wisdom (SkyDragon) script 2 leaves the game when it sends you here (screen 0)"
    ],
    "how": [
     "the room-entry script started on arrival",
@@ -9051,7 +9210,7 @@
    "map": 58,
    "script": 1,
    "entry": 83,
-   "title": "Warp (wavy fade) to room $00 at (14, 5)",
+   "title": "Warp (wavy fade) to a game room at (14, 5)",
    "action": "head",
    "notes": [
     "the room-entry script shows 1 step(s) first",
@@ -9074,7 +9233,8 @@
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 58,
@@ -9102,7 +9262,8 @@
     "checks": 24,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 58,
@@ -9331,7 +9492,7 @@
    "map": 59,
    "script": 1,
    "entry": 99,
-   "title": "Warp (wavy fade) to room $00 at (14, 5)",
+   "title": "Warp (wavy fade) to a game room at (14, 5)",
    "action": "head",
    "notes": [
     "the room-entry script shows 1 step(s) first",
@@ -9354,7 +9515,8 @@
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 60,
@@ -9403,7 +9565,7 @@
    "outcome": "battle",
    "missing_npcs": [],
    "reset": false,
-   "frames": 1377,
+   "frames": 1369,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -9431,7 +9593,7 @@
    "outcome": "battle",
    "missing_npcs": [],
    "reset": false,
-   "frames": 1376,
+   "frames": 1369,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -9459,7 +9621,7 @@
    "outcome": "battle",
    "missing_npcs": [],
    "reset": false,
-   "frames": 1374,
+   "frames": 1366,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -9487,7 +9649,7 @@
    "outcome": "battle",
    "missing_npcs": [],
    "reset": false,
-   "frames": 1374,
+   "frames": 1366,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -9515,7 +9677,7 @@
    "outcome": "battle",
    "missing_npcs": [],
    "reset": false,
-   "frames": 1374,
+   "frames": 1366,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -9543,7 +9705,7 @@
    "outcome": "battle",
    "missing_npcs": [],
    "reset": false,
-   "frames": 1377,
+   "frames": 1369,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -9571,7 +9733,7 @@
    "outcome": "battle",
    "missing_npcs": [],
    "reset": false,
-   "frames": 1374,
+   "frames": 1366,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -9592,7 +9754,7 @@
     "started by talk from side 1",
     "the script ended at frame 579",
     "started at the scene's own first step (pos 11)",
-    "the script ended at frame 2916"
+    "the script ended at frame 2915"
    ],
    "reached": true,
    "forced": true,
@@ -9602,7 +9764,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 3006,
+   "frames": 3005,
    "model": {
     "checks": 168,
     "mismatches": 0,
@@ -9635,7 +9797,8 @@
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 61,
@@ -9839,7 +10002,8 @@
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 61,
@@ -9853,7 +10017,7 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by stepon from side 1",
-    "the script ended at frame 2754"
+    "the script ended at frame 2755"
    ],
    "reached": true,
    "forced": false,
@@ -9863,7 +10027,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 2844,
+   "frames": 2845,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -9882,7 +10046,7 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by stepon from side 1",
-    "the script ended at frame 2754"
+    "the script ended at frame 2755"
    ],
    "reached": true,
    "forced": false,
@@ -9892,7 +10056,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 2844,
+   "frames": 2845,
    "model": {
     "checks": 28,
     "mismatches": 0,
@@ -9911,7 +10075,7 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by stepon from side 1",
-    "the script ended at frame 2754"
+    "the script ended at frame 2755"
    ],
    "reached": true,
    "forced": false,
@@ -9921,7 +10085,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 2844,
+   "frames": 2845,
    "model": {
     "checks": 8,
     "mismatches": 0,
@@ -9940,7 +10104,7 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by stepon from side 1",
-    "the script ended at frame 2754",
+    "the script ended at frame 2755",
     "started at the scene's own first step (pos 169)"
    ],
    "reached": true,
@@ -9970,7 +10134,7 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by stepon from side 1",
-    "the script ended at frame 2754",
+    "the script ended at frame 2755",
     "started at the scene's own first step (pos 195)"
    ],
    "reached": true,
@@ -10001,7 +10165,7 @@
     "gave the party a monster (a new game has none)",
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by stepon from side 1",
-    "the script ended at frame 2758",
+    "the script ended at frame 2755",
     "started at the scene's own first step (pos 226)"
    ],
    "reached": true,
@@ -10031,7 +10195,7 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by stepon from side 1",
-    "the script ended at frame 2754"
+    "the script ended at frame 2755"
    ],
    "reached": true,
    "forced": false,
@@ -10041,12 +10205,13 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 2844,
+   "frames": 2845,
    "model": {
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 61,
@@ -10074,7 +10239,8 @@
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 62,
@@ -10134,7 +10300,7 @@
    "map": 62,
    "script": 1,
    "entry": 102,
-   "title": "Warp (wavy fade) to room $00 at (14, 5)",
+   "title": "Warp (wavy fade) to a game room at (14, 5)",
    "action": "head",
    "notes": [
     "the room-entry script shows 1 step(s) first",
@@ -10157,7 +10323,8 @@
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 63,
@@ -10217,7 +10384,7 @@
    "map": 63,
    "script": 1,
    "entry": 106,
-   "title": "Warp (wavy fade) to room $00 at (14, 5)",
+   "title": "Warp (wavy fade) to a game room at (14, 5)",
    "action": "head",
    "notes": [
     "the room-entry script shows 1 step(s) first",
@@ -10240,7 +10407,8 @@
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 64,
@@ -10326,7 +10494,7 @@
    "map": 65,
    "script": 1,
    "entry": 84,
-   "title": "Warp (wavy fade) to room $00 at (14, 5)",
+   "title": "Warp (wavy fade) to a game room at (14, 5)",
    "action": "head",
    "notes": [
     "the room-entry script shows 1 step(s) first",
@@ -10349,7 +10517,8 @@
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 65,
@@ -10383,7 +10552,7 @@
    "map": 65,
    "script": 2,
    "entry": 84,
-   "title": "Warp (wavy fade) to room $00 at (14, 5)",
+   "title": "Warp (wavy fade) to a game room at (14, 5)",
    "action": "head",
    "notes": [
     "the room-entry script shows 1 step(s) first",
@@ -10406,7 +10575,8 @@
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 65,
@@ -10440,7 +10610,7 @@
    "map": 65,
    "script": 3,
    "entry": 84,
-   "title": "Warp (wavy fade) to room $00 at (14, 5)",
+   "title": "Warp (wavy fade) to a game room at (14, 5)",
    "action": "head",
    "notes": [
     "the room-entry script shows 1 step(s) first",
@@ -10463,7 +10633,8 @@
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 66,
@@ -10523,7 +10694,7 @@
    "map": 66,
    "script": 17,
    "entry": 88,
-   "title": "Warp (wavy fade) to room $00 at (14, 5)",
+   "title": "Warp (wavy fade) to a game room at (14, 5)",
    "action": "head",
    "notes": [
     "the room-entry script shows 1 step(s) first",
@@ -10546,7 +10717,8 @@
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 67,
@@ -10606,7 +10778,7 @@
    "map": 67,
    "script": 2,
    "entry": 118,
-   "title": "Warp (wavy fade) to room $00 at (14, 5)",
+   "title": "Warp (wavy fade) to a game room at (14, 5)",
    "action": "head",
    "notes": [
     "the room-entry script shows 1 step(s) first",
@@ -10629,7 +10801,8 @@
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 68,
@@ -10728,7 +10901,7 @@
    ],
    "how": [
     "started at the scene's own first step (pos 328): it plays after a battle is won",
-    "the script ended at frame 374"
+    "the script ended at frame 366"
    ],
    "reached": true,
    "forced": true,
@@ -10738,7 +10911,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 464,
+   "frames": 456,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -10772,7 +10945,8 @@
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 68,
@@ -10845,7 +11019,7 @@
    "outcome": "battle",
    "missing_npcs": [],
    "reset": false,
-   "frames": 1915,
+   "frames": 1916,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -10871,7 +11045,7 @@
    "outcome": "battle",
    "missing_npcs": [],
    "reset": false,
-   "frames": 1914,
+   "frames": 1915,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -10942,7 +11116,7 @@
    ],
    "how": [
     "started at the scene's own first step (pos 365): it plays after a battle is won",
-    "the script ended at frame 3747"
+    "the script ended at frame 3723"
    ],
    "reached": true,
    "forced": true,
@@ -10952,7 +11126,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 3837,
+   "frames": 3813,
    "model": {
     "checks": 14,
     "mismatches": 0,
@@ -10985,7 +11159,8 @@
     "checks": 32,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 69,
@@ -11006,7 +11181,7 @@
    "outcome": "battle",
    "missing_npcs": [],
    "reset": false,
-   "frames": 2763,
+   "frames": 2755,
    "model": {
     "checks": 8,
     "mismatches": 0,
@@ -11122,7 +11297,7 @@
    "map": 70,
    "script": 1,
    "entry": 104,
-   "title": "Warp (wavy fade) to room $00 at (14, 5)",
+   "title": "Warp (wavy fade) to a game room at (14, 5)",
    "action": "head",
    "notes": [
     "the room-entry script shows 1 step(s) first",
@@ -11145,7 +11320,8 @@
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 71,
@@ -11194,12 +11370,13 @@
    "outcome": "battle",
    "missing_npcs": [],
    "reset": false,
-   "frames": 1764,
+   "frames": 1766,
    "model": {
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 71,
@@ -11233,7 +11410,7 @@
    "map": 71,
    "script": 2,
    "entry": 92,
-   "title": "Warp (wavy fade) to room $00 at (14, 5)",
+   "title": "Warp (wavy fade) to a game room at (14, 5)",
    "action": "head",
    "notes": [
     "the room-entry script shows 1 step(s) first",
@@ -11256,7 +11433,8 @@
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 72,
@@ -11316,7 +11494,7 @@
    "map": 72,
    "script": 1,
    "entry": 92,
-   "title": "Warp (wavy fade) to room $00 at (14, 5)",
+   "title": "Warp (wavy fade) to a game room at (14, 5)",
    "action": "head",
    "notes": [
     "the room-entry script shows 1 step(s) first",
@@ -11339,7 +11517,8 @@
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 73,
@@ -11399,7 +11578,7 @@
    "map": 73,
    "script": 1,
    "entry": 92,
-   "title": "Warp (wavy fade) to room $00 at (14, 5)",
+   "title": "Warp (wavy fade) to a game room at (14, 5)",
    "action": "head",
    "notes": [
     "the room-entry script shows 1 step(s) first",
@@ -11422,7 +11601,8 @@
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 74,
@@ -11482,7 +11662,7 @@
    "map": 74,
    "script": 1,
    "entry": 107,
-   "title": "Warp (wavy fade) to room $00 at (14, 5)",
+   "title": "Warp (wavy fade) to a game room at (14, 5)",
    "action": "head",
    "notes": [
     "the room-entry script shows 1 step(s) first",
@@ -11505,7 +11685,8 @@
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 75,
@@ -11565,7 +11746,7 @@
    "map": 75,
    "script": 1,
    "entry": 98,
-   "title": "Warp (wavy fade) to room $00 at (14, 5)",
+   "title": "Warp (wavy fade) to a game room at (14, 5)",
    "action": "head",
    "notes": [
     "the room-entry script shows 1 step(s) first",
@@ -11588,7 +11769,8 @@
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 76,
@@ -11637,7 +11819,7 @@
    "outcome": "battle",
    "missing_npcs": [],
    "reset": false,
-   "frames": 1790,
+   "frames": 1782,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -11648,7 +11830,7 @@
    "map": 76,
    "script": 1,
    "entry": 104,
-   "title": "Warp (wavy fade) to room $00 at (14, 5)",
+   "title": "Warp (wavy fade) to a game room at (14, 5)",
    "action": "head",
    "notes": [
     "the room-entry script shows 1 step(s) first",
@@ -11671,7 +11853,8 @@
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 77,
@@ -11731,7 +11914,7 @@
    "map": 77,
    "script": 1,
    "entry": 107,
-   "title": "Warp (wavy fade) to room $00 at (14, 5)",
+   "title": "Warp (wavy fade) to a game room at (14, 5)",
    "action": "head",
    "notes": [
     "the room-entry script shows 1 step(s) first",
@@ -11754,7 +11937,8 @@
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 78,
@@ -11810,7 +11994,8 @@
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 79,
@@ -11890,7 +12075,8 @@
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "yields": []
   },
   {
    "map": 81,
@@ -11918,7 +12104,8 @@
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "yields": []
   },
   {
    "map": 82,
@@ -11967,7 +12154,7 @@
    "outcome": "battle",
    "missing_npcs": [],
    "reset": false,
-   "frames": 1526,
+   "frames": 1528,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -11994,7 +12181,7 @@
    "outcome": "battle",
    "missing_npcs": [],
    "reset": false,
-   "frames": 1635,
+   "frames": 1639,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -12021,7 +12208,7 @@
    "outcome": "battle",
    "missing_npcs": [],
    "reset": false,
-   "frames": 1666,
+   "frames": 1670,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -12048,7 +12235,7 @@
    "outcome": "battle",
    "missing_npcs": [],
    "reset": false,
-   "frames": 1554,
+   "frames": 1558,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -12082,7 +12269,8 @@
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 84,
@@ -12173,7 +12361,7 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by examine from side 1",
-    "the script ended at frame 298"
+    "the script ended at frame 282"
    ],
    "reached": true,
    "forced": false,
@@ -12183,7 +12371,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 388,
+   "frames": 372,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -12210,7 +12398,7 @@
    "outcome": "battle",
    "missing_npcs": [],
    "reset": false,
-   "frames": 1395,
+   "frames": 1386,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -12229,9 +12417,9 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by examine from side 1",
-    "the script ended at frame 298",
+    "the script ended at frame 282",
     "started at the scene's own first step (pos 31)",
-    "the script ended at frame 724"
+    "the script ended at frame 691"
    ],
    "reached": true,
    "forced": true,
@@ -12241,7 +12429,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 814,
+   "frames": 781,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -12260,7 +12448,7 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by examine from side 1",
-    "the script ended at frame 298"
+    "the script ended at frame 282"
    ],
    "reached": true,
    "forced": false,
@@ -12270,7 +12458,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 388,
+   "frames": 372,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -12297,7 +12485,7 @@
    "outcome": "battle",
    "missing_npcs": [],
    "reset": false,
-   "frames": 1395,
+   "frames": 1386,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -12316,9 +12504,9 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by examine from side 1",
-    "the script ended at frame 298",
+    "the script ended at frame 282",
     "started at the scene's own first step (pos 31)",
-    "the script ended at frame 724"
+    "the script ended at frame 691"
    ],
    "reached": true,
    "forced": true,
@@ -12328,7 +12516,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 814,
+   "frames": 781,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -12347,7 +12535,7 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by examine from side 1",
-    "the script ended at frame 298"
+    "the script ended at frame 282"
    ],
    "reached": true,
    "forced": false,
@@ -12357,7 +12545,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 388,
+   "frames": 372,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -12384,7 +12572,7 @@
    "outcome": "battle",
    "missing_npcs": [],
    "reset": false,
-   "frames": 1395,
+   "frames": 1386,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -12403,9 +12591,9 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by examine from side 1",
-    "the script ended at frame 298",
+    "the script ended at frame 282",
     "started at the scene's own first step (pos 31)",
-    "the script ended at frame 724"
+    "the script ended at frame 691"
    ],
    "reached": true,
    "forced": true,
@@ -12415,7 +12603,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 814,
+   "frames": 781,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -12434,7 +12622,7 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by examine from side 1",
-    "the script ended at frame 298"
+    "the script ended at frame 282"
    ],
    "reached": true,
    "forced": false,
@@ -12444,7 +12632,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 388,
+   "frames": 372,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -12471,7 +12659,7 @@
    "outcome": "battle",
    "missing_npcs": [],
    "reset": false,
-   "frames": 1395,
+   "frames": 1386,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -12490,9 +12678,9 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by examine from side 1",
-    "the script ended at frame 298",
+    "the script ended at frame 282",
     "started at the scene's own first step (pos 31)",
-    "the script ended at frame 724"
+    "the script ended at frame 691"
    ],
    "reached": true,
    "forced": true,
@@ -12502,7 +12690,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 814,
+   "frames": 781,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -12521,7 +12709,7 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by examine from side 1",
-    "the script ended at frame 298"
+    "the script ended at frame 282"
    ],
    "reached": true,
    "forced": false,
@@ -12531,7 +12719,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 388,
+   "frames": 372,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -12558,7 +12746,7 @@
    "outcome": "battle",
    "missing_npcs": [],
    "reset": false,
-   "frames": 1395,
+   "frames": 1386,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -12577,9 +12765,9 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by examine from side 1",
-    "the script ended at frame 298",
+    "the script ended at frame 282",
     "started at the scene's own first step (pos 31)",
-    "the script ended at frame 724"
+    "the script ended at frame 691"
    ],
    "reached": true,
    "forced": true,
@@ -12589,7 +12777,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 814,
+   "frames": 781,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -12608,7 +12796,7 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by examine from side 1",
-    "the script ended at frame 298"
+    "the script ended at frame 282"
    ],
    "reached": true,
    "forced": false,
@@ -12618,7 +12806,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 388,
+   "frames": 372,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -12645,7 +12833,7 @@
    "outcome": "battle",
    "missing_npcs": [],
    "reset": false,
-   "frames": 1395,
+   "frames": 1386,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -12664,9 +12852,9 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by examine from side 1",
-    "the script ended at frame 298",
+    "the script ended at frame 282",
     "started at the scene's own first step (pos 31)",
-    "the script ended at frame 724"
+    "the script ended at frame 691"
    ],
    "reached": true,
    "forced": true,
@@ -12676,7 +12864,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 814,
+   "frames": 781,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -12695,7 +12883,7 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by examine from side 2",
-    "the script ended at frame 298"
+    "the script ended at frame 282"
    ],
    "reached": true,
    "forced": false,
@@ -12705,7 +12893,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 388,
+   "frames": 372,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -12732,7 +12920,7 @@
    "outcome": "battle",
    "missing_npcs": [],
    "reset": false,
-   "frames": 1395,
+   "frames": 1386,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -12751,9 +12939,9 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by examine from side 2",
-    "the script ended at frame 298",
+    "the script ended at frame 282",
     "started at the scene's own first step (pos 31)",
-    "the script ended at frame 724"
+    "the script ended at frame 691"
    ],
    "reached": true,
    "forced": true,
@@ -12763,7 +12951,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 814,
+   "frames": 781,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -12782,7 +12970,7 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by examine from side 2",
-    "the script ended at frame 298"
+    "the script ended at frame 282"
    ],
    "reached": true,
    "forced": false,
@@ -12792,7 +12980,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 388,
+   "frames": 372,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -12819,7 +13007,7 @@
    "outcome": "battle",
    "missing_npcs": [],
    "reset": false,
-   "frames": 1395,
+   "frames": 1386,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -12838,9 +13026,9 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by examine from side 2",
-    "the script ended at frame 298",
+    "the script ended at frame 282",
     "started at the scene's own first step (pos 31)",
-    "the script ended at frame 724"
+    "the script ended at frame 691"
    ],
    "reached": true,
    "forced": true,
@@ -12850,7 +13038,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 814,
+   "frames": 781,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -12869,7 +13057,7 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by examine from side 3",
-    "the script ended at frame 298"
+    "the script ended at frame 282"
    ],
    "reached": true,
    "forced": false,
@@ -12879,7 +13067,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 388,
+   "frames": 372,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -12906,7 +13094,7 @@
    "outcome": "battle",
    "missing_npcs": [],
    "reset": false,
-   "frames": 1395,
+   "frames": 1386,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -12925,9 +13113,9 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by examine from side 3",
-    "the script ended at frame 298",
+    "the script ended at frame 282",
     "started at the scene's own first step (pos 31)",
-    "the script ended at frame 724"
+    "the script ended at frame 691"
    ],
    "reached": true,
    "forced": true,
@@ -12937,7 +13125,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 814,
+   "frames": 781,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -12956,7 +13144,7 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by examine from side 3",
-    "the script ended at frame 298"
+    "the script ended at frame 282"
    ],
    "reached": true,
    "forced": false,
@@ -12966,7 +13154,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 388,
+   "frames": 372,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -12993,7 +13181,7 @@
    "outcome": "battle",
    "missing_npcs": [],
    "reset": false,
-   "frames": 1395,
+   "frames": 1386,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -13012,9 +13200,9 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by examine from side 3",
-    "the script ended at frame 298",
+    "the script ended at frame 282",
     "started at the scene's own first step (pos 31)",
-    "the script ended at frame 724"
+    "the script ended at frame 691"
    ],
    "reached": true,
    "forced": true,
@@ -13024,7 +13212,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 814,
+   "frames": 781,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -13043,7 +13231,7 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by examine from side 1",
-    "the script ended at frame 298"
+    "the script ended at frame 282"
    ],
    "reached": true,
    "forced": false,
@@ -13053,7 +13241,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 388,
+   "frames": 372,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -13080,7 +13268,7 @@
    "outcome": "battle",
    "missing_npcs": [],
    "reset": false,
-   "frames": 1395,
+   "frames": 1386,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -13099,9 +13287,9 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by examine from side 1",
-    "the script ended at frame 298",
+    "the script ended at frame 282",
     "started at the scene's own first step (pos 31)",
-    "the script ended at frame 724"
+    "the script ended at frame 691"
    ],
    "reached": true,
    "forced": true,
@@ -13111,7 +13299,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 814,
+   "frames": 781,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -13130,7 +13318,7 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by examine from side 1",
-    "the script ended at frame 298"
+    "the script ended at frame 282"
    ],
    "reached": true,
    "forced": false,
@@ -13140,7 +13328,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 388,
+   "frames": 372,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -13167,7 +13355,7 @@
    "outcome": "battle",
    "missing_npcs": [],
    "reset": false,
-   "frames": 1395,
+   "frames": 1386,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -13186,9 +13374,9 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by examine from side 1",
-    "the script ended at frame 298",
+    "the script ended at frame 282",
     "started at the scene's own first step (pos 31)",
-    "the script ended at frame 724"
+    "the script ended at frame 691"
    ],
    "reached": true,
    "forced": true,
@@ -13198,7 +13386,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 814,
+   "frames": 781,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -13217,7 +13405,7 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by examine from side 1",
-    "the script ended at frame 298"
+    "the script ended at frame 282"
    ],
    "reached": true,
    "forced": false,
@@ -13227,7 +13415,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 388,
+   "frames": 372,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -13254,7 +13442,7 @@
    "outcome": "battle",
    "missing_npcs": [],
    "reset": false,
-   "frames": 1395,
+   "frames": 1386,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -13273,9 +13461,9 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by examine from side 1",
-    "the script ended at frame 298",
+    "the script ended at frame 282",
     "started at the scene's own first step (pos 31)",
-    "the script ended at frame 724"
+    "the script ended at frame 691"
    ],
    "reached": true,
    "forced": true,
@@ -13285,7 +13473,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 814,
+   "frames": 781,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -13304,7 +13492,7 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by examine from side 1",
-    "the script ended at frame 298"
+    "the script ended at frame 282"
    ],
    "reached": true,
    "forced": false,
@@ -13314,7 +13502,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 388,
+   "frames": 372,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -13341,7 +13529,7 @@
    "outcome": "battle",
    "missing_npcs": [],
    "reset": false,
-   "frames": 1395,
+   "frames": 1386,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -13360,9 +13548,9 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by examine from side 1",
-    "the script ended at frame 298",
+    "the script ended at frame 282",
     "started at the scene's own first step (pos 31)",
-    "the script ended at frame 724"
+    "the script ended at frame 691"
    ],
    "reached": true,
    "forced": true,
@@ -13372,7 +13560,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 814,
+   "frames": 781,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -13391,7 +13579,7 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by examine from side 1",
-    "the script ended at frame 298"
+    "the script ended at frame 282"
    ],
    "reached": true,
    "forced": false,
@@ -13401,7 +13589,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 388,
+   "frames": 372,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -13428,7 +13616,7 @@
    "outcome": "battle",
    "missing_npcs": [],
    "reset": false,
-   "frames": 1395,
+   "frames": 1386,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -13447,9 +13635,9 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by examine from side 1",
-    "the script ended at frame 298",
+    "the script ended at frame 282",
     "started at the scene's own first step (pos 31)",
-    "the script ended at frame 724"
+    "the script ended at frame 691"
    ],
    "reached": true,
    "forced": true,
@@ -13459,7 +13647,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 814,
+   "frames": 781,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -13478,7 +13666,7 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by examine from side 1",
-    "the script ended at frame 298"
+    "the script ended at frame 282"
    ],
    "reached": true,
    "forced": false,
@@ -13488,7 +13676,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 388,
+   "frames": 372,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -13515,7 +13703,7 @@
    "outcome": "battle",
    "missing_npcs": [],
    "reset": false,
-   "frames": 1395,
+   "frames": 1386,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -13534,9 +13722,9 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by examine from side 1",
-    "the script ended at frame 298",
+    "the script ended at frame 282",
     "started at the scene's own first step (pos 31)",
-    "the script ended at frame 724"
+    "the script ended at frame 691"
    ],
    "reached": true,
    "forced": true,
@@ -13546,7 +13734,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 814,
+   "frames": 781,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -13565,7 +13753,7 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by examine from side 1",
-    "the script ended at frame 298"
+    "the script ended at frame 282"
    ],
    "reached": true,
    "forced": false,
@@ -13575,7 +13763,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 388,
+   "frames": 372,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -13602,7 +13790,7 @@
    "outcome": "battle",
    "missing_npcs": [],
    "reset": false,
-   "frames": 1395,
+   "frames": 1386,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -13621,9 +13809,9 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by examine from side 1",
-    "the script ended at frame 298",
+    "the script ended at frame 282",
     "started at the scene's own first step (pos 31)",
-    "the script ended at frame 724"
+    "the script ended at frame 691"
    ],
    "reached": true,
    "forced": true,
@@ -13633,7 +13821,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 814,
+   "frames": 781,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -13652,7 +13840,7 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by examine from side 1",
-    "the script ended at frame 298"
+    "the script ended at frame 282"
    ],
    "reached": true,
    "forced": false,
@@ -13662,7 +13850,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 388,
+   "frames": 372,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -13689,7 +13877,7 @@
    "outcome": "battle",
    "missing_npcs": [],
    "reset": false,
-   "frames": 1395,
+   "frames": 1386,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -13708,9 +13896,9 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by examine from side 1",
-    "the script ended at frame 298",
+    "the script ended at frame 282",
     "started at the scene's own first step (pos 31)",
-    "the script ended at frame 724"
+    "the script ended at frame 691"
    ],
    "reached": true,
    "forced": true,
@@ -13720,7 +13908,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 814,
+   "frames": 781,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -13739,7 +13927,7 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by examine from side 1",
-    "the script ended at frame 298"
+    "the script ended at frame 282"
    ],
    "reached": true,
    "forced": false,
@@ -13749,7 +13937,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 388,
+   "frames": 372,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -13776,7 +13964,7 @@
    "outcome": "battle",
    "missing_npcs": [],
    "reset": false,
-   "frames": 1395,
+   "frames": 1386,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -13795,9 +13983,9 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by examine from side 1",
-    "the script ended at frame 298",
+    "the script ended at frame 282",
     "started at the scene's own first step (pos 31)",
-    "the script ended at frame 724"
+    "the script ended at frame 691"
    ],
    "reached": true,
    "forced": true,
@@ -13807,7 +13995,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 814,
+   "frames": 781,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -13826,7 +14014,7 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by examine from side 1",
-    "the script ended at frame 298"
+    "the script ended at frame 282"
    ],
    "reached": true,
    "forced": false,
@@ -13836,7 +14024,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 388,
+   "frames": 372,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -13863,7 +14051,7 @@
    "outcome": "battle",
    "missing_npcs": [],
    "reset": false,
-   "frames": 1395,
+   "frames": 1386,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -13882,9 +14070,9 @@
    "how": [
     "1 inserted name(s) had no data: \"Slime\" put in",
     "started by examine from side 1",
-    "the script ended at frame 298",
+    "the script ended at frame 282",
     "started at the scene's own first step (pos 31)",
-    "the script ended at frame 724"
+    "the script ended at frame 691"
    ],
    "reached": true,
    "forced": true,
@@ -13894,7 +14082,7 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 814,
+   "frames": 781,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -13936,7 +14124,7 @@
    "notes": [],
    "how": [
     "the room-entry script started on arrival",
-    "the script ended at frame 635"
+    "the script ended at frame 627"
    ],
    "reached": true,
    "forced": false,
@@ -13946,12 +14134,13 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 725,
+   "frames": 717,
    "model": {
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 93,
@@ -13960,7 +14149,7 @@
    "title": "*:Leeet's Rumble!",
    "action": "entry",
    "notes": [
-    "set up as room $06 script 6 leaves the game when it sends you here (screen 0)"
+    "set up as Arena Lobby script 6 leaves the game when it sends you here (screen 0)"
    ],
    "how": [
     "the room-entry script started on arrival"
@@ -13973,9 +14162,9 @@
    "outcome": "battle",
    "missing_npcs": [],
    "reset": false,
-   "frames": 2440,
+   "frames": 2429,
    "model": {
-    "checks": 45,
+    "checks": 36,
     "mismatches": 0,
     "examples": []
    }
@@ -13990,7 +14179,7 @@
    "how": [
     "gave the party a monster (a new game has none)",
     "the room-entry script started on arrival",
-    "the script ended at frame 635",
+    "the script ended at frame 627",
     "started at the scene's own first step (pos 348)"
    ],
    "reached": true,
@@ -14001,7 +14190,7 @@
    "outcome": "battle",
    "missing_npcs": [],
    "reset": false,
-   "frames": 1830,
+   "frames": 1822,
    "model": {
     "checks": 8,
     "mismatches": 0,
@@ -14016,7 +14205,8 @@
    "action": "entry",
    "notes": [],
    "how": [
-    "the room-entry script started on arrival"
+    "the room-entry script started on arrival",
+    "the script ended at frame 2953"
    ],
    "reached": true,
    "forced": false,
@@ -14026,12 +14216,19 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 2278,
+   "frames": 3043,
    "model": {
     "checks": 126,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "yields": [
+    [
+     665,
+     "$3E",
+     "END"
+    ]
+   ]
   },
   {
    "map": 93,
@@ -14051,7 +14248,7 @@
    "outcome": "battle",
    "missing_npcs": [],
    "reset": false,
-   "frames": 9347,
+   "frames": 9307,
    "model": {
     "checks": 9,
     "mismatches": 0,
@@ -14077,7 +14274,7 @@
    "outcome": "battle",
    "missing_npcs": [],
    "reset": false,
-   "frames": 6772,
+   "frames": 6743,
    "model": {
     "checks": 27,
     "mismatches": 0,
@@ -14091,7 +14288,7 @@
    "title": "*:BigTrunk vs. GreatTree! *:Let's begin!!",
    "action": "entry",
    "notes": [
-    "set up as room $06 script 6 leaves the game when it sends you here (screen 0)"
+    "set up as Arena Lobby script 6 leaves the game when it sends you here (screen 0)"
    ],
    "how": [
     "the room-entry script started on arrival"
@@ -14130,7 +14327,7 @@
    "outcome": "battle",
    "missing_npcs": [],
    "reset": false,
-   "frames": 9346,
+   "frames": 9307,
    "model": {
     "checks": 0,
     "mismatches": 0,
@@ -14141,12 +14338,12 @@
    "map": 93,
    "script": 0,
    "entry": 1105,
-   "title": "Go to room $06 at (14, 4)",
+   "title": "Go to a game room at (14, 4)",
    "action": "entry",
    "notes": [],
    "how": [
     "the room-entry script started on arrival",
-    "the script ended at frame 1367"
+    "the script ended at frame 1342"
    ],
    "reached": true,
    "forced": false,
@@ -14156,12 +14353,13 @@
    "outcome": null,
    "missing_npcs": [],
    "reset": false,
-   "frames": 1457,
+   "frames": 1432,
    "model": {
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 93,
@@ -14171,7 +14369,7 @@
    "action": "entry",
    "notes": [
     "flag $0111 is tested both ways",
-    "set up as room $06 script 6 leaves the game when it sends you here (screen 0)"
+    "set up as Arena Lobby script 6 leaves the game when it sends you here (screen 0)"
    ],
    "how": [
     "the room-entry script started on arrival"
@@ -14184,7 +14382,7 @@
    "outcome": "battle",
    "missing_npcs": [],
    "reset": false,
-   "frames": 3949,
+   "frames": 3928,
    "model": {
     "checks": 45,
     "mismatches": 0,
@@ -14198,7 +14396,7 @@
    "title": "NPC 2 walks right 1 tile",
    "action": "entry",
    "notes": [
-    "set up as room $06 script 6 leaves the game when it sends you here (screen 0)"
+    "set up as Arena Lobby script 6 leaves the game when it sends you here (screen 0)"
    ],
    "how": [
     "gave the party a monster (a new game has none)",
@@ -14212,7 +14410,7 @@
    "outcome": "battle",
    "missing_npcs": [],
    "reset": false,
-   "frames": 3947,
+   "frames": 3926,
    "model": {
     "checks": 9,
     "mismatches": 0,
@@ -14226,7 +14424,8 @@
    "title": "NPC 1 is shown",
    "action": "entry",
    "notes": [
-    "set up as room $08 script 0 leaves the game when it sends you here (screen 0)"
+    "room state 1 is past the screen's 1 valid states",
+    "set up as Starry Shrine Breeding Cutscene script 0 leaves the game when it sends you here (screen 0)"
    ],
    "how": [
     "the room-entry script started on arrival"
@@ -14250,10 +14449,11 @@
    "map": 94,
    "script": 0,
    "entry": 66,
-   "title": "Go to room $2F at (3, 12)",
+   "title": "Go to a game room at (3, 12)",
    "action": "entry",
    "notes": [
-    "set up as room $08 script 0 leaves the game when it sends you here (screen 0)"
+    "room state 3 is past the screen's 1 valid states",
+    "set up as Starry Shrine Breeding Cutscene script 0 leaves the game when it sends you here (screen 0)"
    ],
    "how": [
     "the room-entry script started on arrival",
@@ -14272,7 +14472,8 @@
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   },
   {
    "map": 96,
@@ -14332,7 +14533,7 @@
    "map": 96,
    "script": 17,
    "entry": 88,
-   "title": "Warp (wavy fade) to room $00 at (14, 5)",
+   "title": "Warp (wavy fade) to a game room at (14, 5)",
    "action": "head",
    "notes": [
     "the room-entry script shows 1 step(s) first",
@@ -14355,7 +14556,8 @@
     "checks": 0,
     "mismatches": 0,
     "examples": []
-   }
+   },
+   "after_end": 0
   }
  ]
 }

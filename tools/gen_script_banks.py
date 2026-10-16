@@ -7,8 +7,13 @@ opcode names, text snippets, and structural comments.
 
 Usage:
     python3 tools/gen_script_banks.py                  # Preview
-    python3 tools/gen_script_banks.py --apply           # Apply to .asm files
     python3 tools/gen_script_banks.py --bank 0x0C       # Single bank
+
+S148: SUPERSEDED for the annotation — this S43 generator decodes with the
+decompiler's guessed arity table (wrong for 36 opcodes, DOC_AUDIT S96) and old op
+names. The script data of banks $0C-$0F is annotated by
+tools/recomment_script_banks.py (the handler decoder; verify check 5). --apply
+is refused: it would write the old annotation back over it.
 """
 
 import argparse, json, os, sys
@@ -447,6 +452,9 @@ def main():
     ap.add_argument('--apply', action='store_true')
     ap.add_argument('--bank', type=lambda x: int(x,0))
     args = ap.parse_args()
+    if args.apply:
+        sys.exit('S148: --apply is retired — tools/recomment_script_banks.py annotates the '
+                 'script banks (this generator\'s arity table is wrong for 36 opcodes)')
     
     with open(ROM_PATH, 'rb') as f:
         rom = f.read()

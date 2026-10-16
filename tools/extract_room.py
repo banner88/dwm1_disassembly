@@ -59,6 +59,7 @@ sys.path.insert(0, ROOT)
 
 from editor2.core import scriptgen as SG                       # noqa: E402
 from editor2.core import layouts as LAY                        # noqa: E402
+from editor2.core import script_ops as SO                       # noqa: E402
 
 ROM_PATH = os.path.join(ROOT, 'data', 'DWM-original.gbc')
 MAP_TABLE = os.path.join(ROOT, 'extracted', 'map_table.json')
@@ -130,8 +131,12 @@ def rw(rom, bank, addr):
 
 # --------------------------------------------------------------- scripts
 
-def decode_script(rom, bank, start, pc, bt, stop_addrs):
+def decode_script(rom, bank, start, pc, bt, stop_addrs, legacy_stop16=False):
     """Decode one script: linear + branch-reached blocks.
+
+    legacy_stop16 (S148): decode as S92-S147 did — stop at op $16 and keep
+    decoding words after an op that ends the script — the copies those
+    sessions made (`editor2/core/clone_scripts.py` repairs them on open).
 
     Returns ordered [(addr, opcode, [params])] covering every reachable op,
     or raises with the suspect opcode on any segmentation failure.
@@ -167,8 +172,32 @@ def decode_script(rom, bank, start, pc, bt, stop_addrs):
                         f"${tgt:04X} outside the bank — param table wrong")
                 pend.append(tgt)
             a += 2 + 2 * n
-            if op in (0x14, 0x16):         # goto / return: no fall-through
+            if op == 0x14:                 # goto: no fall-through
                 break
+            if legacy_stop16:
+                if op == 0x16:
+                    break
+                continue
+            if op in SO.TERMINAL:
+                # S148: the handler ENDS the script (clears $D8D7; the room
+                # changes). Every vanilla one is followed by an END word but
+                # one: the Starry Shrine's last script ($0D:$61E0 `$0F`) runs
+                # straight into the next map's pointer table — which the copy
+                # used to decode as words. Stop here; the copy gets its END.
+                if rw(rom, bank, a) == 0xFFFF:
+                    ops[a] = (0x100, [])
+                else:
+                    ops[a] = (0x100, ['synthetic'])
+                break
+            # S148: op $16 is refresh_sprites (redraw OAM + the BG map address,
+            # then `ret` = yield; the script CONTINUES next frame) — the legacy
+            # decompiler called it "return" and this loop stopped at it, so a
+            # copy fell from it into whichever decoded block came next by
+            # address (the Castle's script 0 lost 186 words, the Starry Shrine's
+            # and the Priest floor's lost their ends). The ops that END a
+            # script (script_ops.TERMINAL, derived from the handlers) are
+            # followed by an END word in every vanilla script: decoding on
+            # until it gives the copy its `end` (scriptgen's S70 rule).
     # PROOF: every branch target is a decoded op boundary
     for a, (op, params) in ops.items():
         if op in bt and op != 0x100:
@@ -181,8 +210,10 @@ def decode_script(rom, bank, start, pc, bt, stop_addrs):
     return sorted(ops.items())
 
 
-def ops_to_project(ordered, bt, name_by_code):
-    """[(addr,(op,params))] → scriptgen op list with local @labels."""
+def ops_to_project(ordered, bt, name_by_code, addrs_out=None):
+    """[(addr,(op,params))] → scriptgen op list with local @labels.
+    addrs_out (S148): a list that receives each item's script address (a
+    label: the address it marks)."""
     targets = set()
     for a, (op, params) in ordered:
         if op in bt and op != 0x100:
@@ -191,6 +222,10 @@ def ops_to_project(ordered, bt, name_by_code):
     for a, (op, params) in ordered:
         if a in targets:
             out.append(f"label:L{a:04X}")
+            if addrs_out is not None:
+                addrs_out.append(a)
+        if addrs_out is not None:
+            addrs_out.append(a)
         if op == 0x100:
             out.append(["end"])
             continue

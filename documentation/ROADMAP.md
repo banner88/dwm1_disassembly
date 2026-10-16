@@ -2530,7 +2530,10 @@ the user picks.
       a campaign of hundreds of places — songs bound first (the 11th DWM2 song stopped the user's
       project); CAP5's songs box built (one id per song, songs in any bank; USER-CONFIRMED 2026-10-15 22:12 ("everything works")); the
       user: "the rest seems very reasonable in terms of current limits and unlikely to be an issue" —
-      next = the `$3E` decoder box, or the next CAP5 ceiling as it binds.**
+      next = the `$3E` decoder box, or the next CAP5 ceiling as it binds.** **S148: the `$3E` box built
+      (where a script ends — one rule from the handlers; Make editable copies past `$16`; the script
+      banks re-annotated; NOT yet user-tested) — every ARC CAP box is built; CAP5 stays open for the
+      next ceiling that binds.**
   - [x] **CAP2a — LZ streams: layouts, attr maps, tilesets past $64 / $67.** **Built S135;
         USER-CONFIRMED 2026-10-09 12:59 ("Yep all good can confirm").** Compiler-only (`DecompressTileLayout` takes the bank from every
         reference — ARCHITECTURE "LZ stream banks (S135)"): `Project.stream_plan()` first fit
@@ -2810,13 +2813,32 @@ the user picks.
         engine (the copy in state 0 / 1, GreatTree in state 2). *User half:* the editor on the
         user's project — Make editable a town room and a boss room, Keep states… on the
         GreatTree copy, ▶ Play here in a chosen state.
-  - [ ] **(found S144) the script decoder ends a script at op `$3E`** (`script_ops.TERMINAL`), but
+  - [x] **(found S144) the script decoder ends a script at op `$3E`** (`script_ops.TERMINAL`), but
         the handler yields and the game RESUMES after it (measured: the Farm's script 0 sets
         `$00E5` right after its `$3E`; `story_state.run_ending` adds it by hand). Fix: drop `$3E`
         from TERMINAL (check every other TERMINAL op against its handler the same way), then
         re-run `tools/census_cutscenes.py` (scenes / steps change), the flag index's
         "check-only" list, and story_state (the hand-added `$00E5` must then come from the
         decoded Farm script). Its own session: the saved cutscene census changes.
+        **Built S148, NOT yet user-tested** (user: "1) Yes 2) Do now 3) replace 4) Test room +
+        machine check"). The rule from the code: a script ends only where every path of the handler
+        clears `wScriptStateFlags` — `$0F $3A $3B $43 $4F $58` (`script_param_counts.py`
+        `ends_script`; `script_ops.TERMINAL` checked against it, verify check 5); `$3E` and `$16`
+        yield. The decoder's 8 longer scenes (+51 steps), `$00E5` decoded (flag index, story_state),
+        `entry_caller` never the scene itself. **Found + fixed (same class):** the copy tool
+        (Make editable, `tools/extract_room.py`) stopped at `$16` and laid copies out by address — the
+        Castle / Starry Shrine / Priest floor copies fell into another scene; old copies are repaired
+        on open (`clone_scripts.py`; an edited site is reported). **Also (user: "Do now"):** the
+        script banks $0C-$0F re-annotated from the decoder (`recomment_script_banks.py`, verify check
+        5; the S43 comments put text previews on ~5,100 parameter words). PROJECT_COMPILER §2.56,
+        BANK04_SCRIPT_ENGINE "Where a script ends (S148)". *Accept (machine half) MET:*
+        `census_cutscenes.py` `yields` / `after_end` (every `$3E` / `$16` the game ran resumed; 0
+        words after an end op); `tools/walk_replicas.py` on the user's `.sav` (THE REPLICA HALL): 16
+        checks, 0 failed — the Castle copy runs the original Castle's 44 script words and gives the
+        Herb, the Priest copy's heal ends with restore_bgm; `--negative` (copies by the old tool): 7
+        FAIL; an old-tool demo opened by the S148 editor builds the same ROM as the fresh one.
+        *User half:* `DWM-S148-replica-test.gbc` in SameBoy (the REPLICA GUIDE in Cities_FOUNT) +
+        the Cutscenes tab on GreatTree (the scene after the night sky).
   - [x] **CAP4d — the Capacity page + help**, then the arc's acceptance (a fresh project past
         150 places): the whole ROM (≈2.3 MB for content), bank $71 (≈950 places), the
         secondary ceilings (story checks 256, commands 255, flags 1,965, encounter lists 128,

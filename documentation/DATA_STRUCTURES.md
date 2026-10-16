@@ -523,13 +523,13 @@ Editor source of truth: `extracted/skill_records.json` (222 records, `kind` = 15
 
 ### Banks $0C/$0D/$0E/$0F — NPC Script Data
 
-| Bank | Map Types | Scripts | Labels | Generator |
+| Bank | Map Types | Scripts | Labels (S43 → S148) | Annotation |
 |------|-----------|---------|--------|-----------|
-| $0C | $00–$05 (Castle, GreatTree, Bazaar, GateHub, Farm, Stable) | 129 | 452 | `tools/gen_script_banks.py --apply` |
-| $0D | $06–$1F (Arena, GateTileset, CopycatRoom, MedalMan, Well, etc.) | 168 | 614 | same |
-| $0E | $20–$3F (Gate entrance rooms, boss rooms for first gates) | 130 | 287 | same |
-| $0F | $40–$5F (Late-game boss rooms, post-game content) | 103 | 273 | same |
-| **Total** | **All 96 map types** | **530** | **1,626** | |
+| $0C | $00–$05 (Castle, GreatTree, Bazaar, GateHub, Farm, Stable) | 129 | 453 → 722 | S148: `tools/recomment_script_banks.py` (was `gen_script_banks.py --apply`, S43) |
+| $0D | $06–$1F (Arena, GateTileset, CopycatRoom, MedalMan, Well, etc.) | 168 | 614 → 855 | same |
+| $0E | $20–$3F (Gate entrance rooms, boss rooms for first gates) | 130 | 287 → 325 | same (+ patches/bank_00e.asm) |
+| $0F | $40–$5F (Late-game boss rooms, post-game content) | 103 | 273 → 412 | same |
+| **Total** | **All 96 map types** | **530** | **1,627 → 2,314** | |
 
 Documentation: `BANK04_SCRIPT_ENGINE.md`
 
@@ -976,7 +976,7 @@ Text ID → Display
 | `gen_room_data_db.py` | Room data | $0B | Yes | `--apply` |
 | `gen_tileset_banks.py` | Tileset data | 14 banks | Yes | `--apply` |
 | `gen_growth_tables_db.py` | Growth/EXP tables | $13 | Yes | — |
-| `gen_script_banks.py` | Script data tables | $0C/$0D/$0E/$0F | Yes | `--apply` |
+| `gen_script_banks.py` | Script data tables | $0C/$0D/$0E/$0F | Yes | `--apply` refused S148 — `recomment_script_banks.py` annotates (`--check` in verify) |
 | `annotate_bank052.py` | Skill handler labels | $52 | **No** | one-time |
 
 ---

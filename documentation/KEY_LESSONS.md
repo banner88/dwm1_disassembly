@@ -6680,3 +6680,45 @@ bytes), restored those three files from HEAD so the delivery carries only this s
 **Rule:** after an `--apply`, diff code-only (`;` comments stripped) every file you did not intend to
 change; deliver only real changes, and note the drift instead of folding it in silently.
 
+
+## S148 — where a script ends: one rule from the handlers (ROADMAP ARC CAP4 "$3E" box)
+
+**Two decoders, two different wrong "this is the end" lists, two different symptoms.**
+**Symptom:** the editor's cutscene decoder ended scripts at op `$3E` (8 scenes short, `$00E5`
+"never set" — S144); the copy tool (Make editable) did not stop at `$3E` but stopped at `$16`
+— and its copies of the Castle, the Starry Shrine and the Priest gate floor ran into ANOTHER
+scene (the Castle's priest never gave the Herb and the run left for the original Castle; the
+priest said his other line and kept the heal tune — PyBoy, `walk_replicas.py --negative`).
+**Root cause:** each list was made by looking at what an op seems to do: `$3E` "changes the
+game mode" (it only requests it and yields), `$16` was named "return" by the S43 decompiler (it
+redraws the sprites and yields). Only a handler that stores 0 into `wScriptStateFlags` ends a
+script — six of them, all room changes. **Fix:** the handler tracer records `ends_script`;
+`script_ops.TERMINAL` must equal it (verify check 5); the copy tool stops only at `goto` and at
+those six; old copies are repaired on open (`clone_scripts.py`). **Rule:** a fact two tools need
+lives in ONE place derived from the code (the handler analysis JSON), and each tool is checked
+against it — a hand-kept copy in a second tool drifts in its own direction.
+
+**A copy laid out by address turns a decoding stop into a jump.** The copy tool emits the decoded
+words sorted by address; a word it never decoded is not "missing at the end" — the next decoded
+block simply follows, so the copy runs a different scene without any error. **Rule:** when a
+decoder output is re-assembled, check that every fall-through of the output is a fall-through of
+the input (the A/B here: the copy's executed script words == the original's, arrival to end).
+
+**A scene that grows can become its own cause.** **Symptom:** after the `$3E` fix the census
+played GreatTree's arrival scene FORCED, with 5 position mismatches. **Root cause:** the scene now
+runs on to a warp back to GreatTree, and `Catalogue.entry_caller` ("which block sends the player
+here?") picked the scene's own block as its caller — the recipe put the player on screen 0
+instead of 12. **Fix:** a scene's own block is excluded. **Rule:** when a model gets more
+complete, re-run every derived choice (recipes, callers, hints) and diff them — not only the
+model's direct outputs.
+
+**A stall rule tuned for menus misreads a mode change.** The census treats "the script counter
+stood still 900 frames on a screen op" as a hand-over to a menu; a `$3E` mode change (the night
+sky) takes longer and then RESUMES. **Fix:** 6,000 frames on a `$3E`. **Rule:** a timeout that
+decides WHAT happened (not only that time ran out) must know the slowest legitimate case.
+
+**Regenerate an annotation from the decoder the tools trust, not from the one that wrote it.**
+The script banks' S43 comments looked complete ("every dw word annotated") and were wrong for a
+third of the words (parameters shown as texts, wrong op names, targets as numbers, reached words
+as db). **Rule:** an annotation generator is a decoder: when the decoder is corrected, re-run the
+annotation through the corrected one and make its check part of the verifier.

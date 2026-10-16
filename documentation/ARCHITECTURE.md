@@ -9,7 +9,7 @@
 | $03 | Link/serial, monster info table ($4461) |
 | $04 | NPC script engine (102 opcodes $00-$65; arity table S96: BANK04_SCRIPT_ENGINE) |
 | $0B | Room system: loading, exits, NPCs, transitions, pointer table $4B43 |
-| $0C-$0F | Script data banks: 518 NPC scripts across all map types ($0C=129, $0D=168, $0E=130, $0F=91). Identical code $4000-$41B9, data from $41BA. Master table indexed by absolute map_type. $0C=types<$06, $0D=$06-$1F, $0E=$20-$3F, $0F≥$40. Generator: `gen_script_banks.py` |
+| $0C-$0F | Script data banks: 518 NPC scripts across all map types ($0C=129, $0D=168, $0E=130, $0F=91). Identical code $4000-$41B9, data from $41BA. Master table indexed by absolute map_type. $0C=types<$06, $0D=$06-$1F, $0E=$20-$3F, $0F≥$40. Generator: `gen_script_banks.py` (S43); annotation S148: `recomment_script_banks.py` (the handler decoder) |
 | $13 | Level-up processing, stat growth tables |
 | $14 | Enemy stats table ($4C1D), boss redirect table ($4897) |
 | $16 | Breeding system: special table ($4B30), family table ($4974) |

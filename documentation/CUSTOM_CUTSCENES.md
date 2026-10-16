@@ -190,8 +190,8 @@ python3 tools/decompile_script.py --map 0x0E 0x2F        # Bedroom
 # Decompile from a specific address
 python3 tools/decompile_script.py 0x0E 0x48E4            # Warubou cutscene
 
-# Regenerate script bank assembly (after manual edits)
-python3 tools/gen_script_banks.py --apply
+# Re-annotate the script banks (S148: gen_script_banks.py --apply is refused)
+python3 tools/recomment_script_banks.py
 
 # Rebuild ROM
 cd disassembly && rm -f game.o game.gbc game.sym game.map && make && md5sum game.gbc

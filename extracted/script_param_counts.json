@@ -1,7 +1,15 @@
 {
- "_generator": "tools/script_param_counts.py (S96; S118: + the words ops $24/$61 read through script-bank entries 1/2) over the original ROM (md5 1ca6579359f21d8e27b446f865bf6b83)",
+ "_generator": "tools/script_param_counts.py (S96; S118: + the words ops $24/$61 read through script-bank entries 1/2; S148: + ends_script = every path clears wScriptStateFlags $D8D7) over the original ROM (md5 1ca6579359f21d8e27b446f865bf6b83)",
  "_method": "per-path count of `call MapTypeDispatch` ($04:$71EF) in each bank-$04 script opcode handler; counter writes = branch paths",
  "_variable": [],
+ "_ends_script": [
+  "0x0F",
+  "0x3A",
+  "0x3B",
+  "0x43",
+  "0x4F",
+  "0x58"
+ ],
  "ops": {
   "0x00": {
    "handler": "$04:5711",
@@ -186,7 +194,8 @@
     "ret"
    ],
    "branch_paths": [],
-   "exact": true
+   "exact": true,
+   "ends_script": true
   },
   "0x10": {
    "handler": "$04:5A6F",
@@ -695,7 +704,8 @@
     "ret"
    ],
    "branch_paths": [],
-   "exact": true
+   "exact": true,
+   "ends_script": true
   },
   "0x3B": {
    "handler": "$04:65AB",
@@ -706,7 +716,8 @@
     "ret"
    ],
    "branch_paths": [],
-   "exact": true
+   "exact": true,
+   "ends_script": true
   },
   "0x3C": {
    "handler": "$04:6618",
@@ -797,7 +808,8 @@
     "ret"
    ],
    "branch_paths": [],
-   "exact": true
+   "exact": true,
+   "ends_script": true
   },
   "0x44": {
    "handler": "$04:676F",
@@ -935,7 +947,8 @@
     "ret"
    ],
    "branch_paths": [],
-   "exact": true
+   "exact": true,
+   "ends_script": true
   },
   "0x50": {
    "handler": "$04:6957",
@@ -1034,7 +1047,8 @@
     "ret"
    ],
    "branch_paths": [],
-   "exact": true
+   "exact": true,
+   "ends_script": true
   },
   "0x59": {
    "handler": "$04:6BDF",

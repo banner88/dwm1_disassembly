@@ -1,5 +1,51 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-13 (Session 146 — **ROADMAP ARC CAP5 FIRST BOX BUILT: SCREENS PER GROUP — A ONE-STATE
+> SCREEN COSTS NOTHING (ALL OF THEM SHARE ONE ALWAYS-ZERO BYTE, `wCustomStepZero` — THE ORIGINAL GAME'S `$D998`
+> RULE FOR 65 SCREENS); NEW ROOMS MOVE ON TO THE NEXT GROUP OF 128 AT 90 %; PLAY HERE IN THE STATE SHOWN FOR
+> ROOMS PAST THE 128TH (FIXED); 128 ROOMS × 6 SCREENS (WHICH STOPPED THE S145 BUILD) BUILT AND WALKED — 1,988
+> CHECKS, 0 FAILED**
+> (user: "Continue on the 4 mb expansion" → the CAP5 audit (every reader / writer of a screen's counter; the
+> original game's shared `$D998`; one-state screens 23 of 35 in the user's project) + 4 questions → "1) Sounds
+> good 2) Yes I also want (b) 3) Yes of course fix 4) Yes that's enough"). **Built S146; USER-CONFIRMED 2026-10-13 18:23 ("Yes seems fine").**
+> Compiler + editor only (no template, no engine change). Example pin `27de8ab9…` (patched; was `7cd31035…`,
+> patched): its one-state screens' counter words read `$CD80`. The user's project builds `eb521a17…` (patched;
+> S145 code `29616fe9…`, patched) — the two ROMs differ only in 44 counter-word bytes of bank $60 + the header
+> checksum. Test ROM `DWM-S146-user-test.gbc` = the user's project.
+> **Built:** `project.py` — a one-state screen whose counter no script names (`script_ram_refs` over every
+> emitted script, after lowering) reads `wCustomStepZero` (`<label> EQU wCustomStepZero`), allocated first from
+> `$CD80`, below `wCustomStepRegional`; a write_ram2 into the counter below it is refused;
+> `step_counter_addresses` (every label, EQUs included) → the build manifest, the cutscene player, Play here
+> (`cutscenes.counter_address`: manifest first, then game.sym); `counter_use` / `step_counter_use` → the Capacity
+> row (screens WITH states per group) and `Document.next_free_mapid` (skips a region ≥ 90 % used,
+> `full_counter_groups`). PROJECT_COMPILER §2.6 "S146" + §2.54. `EDITOR_REVISION` S146; help 81_capacity,
+> 90_limits, 16_play_here.
+> **The audit (read + measured):** the engine only READS a screen's counter (`CustomPtrChase` — no clamp —,
+> `CustomRenderCopy`); state rules write only states the screen has; the original game points 65 single-step
+> screens (rooms $50 / $51 / $5F, the Coliseum, forest / maze / conveyor rooms) at `$D998`, which no script word,
+> `ld` or pointer load names (ROM scan; annotated in bank $0B, build `1ca65793…`).
+> **The acceptance (machine half, NEW `tools/walk_counters.py`):** THE COUNTER HALLS — 128 calm halls × 6
+> one-state screens (region 0: 1 counter byte; the S145 code refuses the project), 100 lit halls × 6 two-state
+> screens + a state rule (the editor filled region 1 to 577 B and put halls 97-100 in region 2), the switch hall
+> (a lever `write_ram`s a two-state counter, a tester `check_and_branch`es a one-state one — both own bytes).
+> PyBoy on the user's `.sav`: every screen of every hall (place, picture == the preview, the state's NPC count,
+> the counter byte == the state, the zero byte 0), lit halls with the flag clear then set, tester + lever,
+> crossings between the groups, JOURNAL + CONTINUE in region 2 (the rule brings state 1 back), Play here's
+> counter for a region-2 room from the manifest (game.sym lacks it) + the playback engine starting it in state 1:
+> **1,988 checks, 0 failed**; `--negative` (the zero byte poked to 1): calm halls 1 / 64 / 128 hang or fail, the
+> same entries unpoked pass (7 / 7); `census_place_banks` 20,646 + `census_stale_places` 2,339 +
+> `census_regions` 3,052 checks, 0 mismatched; `walk_counters.py ab` — the user's project built by the S145 and
+> the S146 code: 35 / 35 screens identical (place, picture, NPC + exit buffers, counter); the user's project:
+> censuses 5,291 + 2,780 + 188, 0 mismatched.
+> **Found (harness, not the game):** the first mailbox warp after a talk into another screen of the SAME room
+> leaves BG tile column 0 rows 2-9 stale (measured in one-state and two-state halls alike); a real script move
+> there after a talk draws cleanly (PYBOY_DEBUGGING S146). A poked zero byte hangs PyBoy itself (KEY_LESSONS S146).
+> **Checks:** verify_integrity PASS (the committed overlay `patches/wram.asm` re-applied: == the pin `27de8ab9…`, patched);
+> test_compiler `--rom` ALL 1558 PASSED (+ `test_s146`, 10; `test_s145`'s ceiling check uses two-state screens — with
+> (b) six growing rooms no longer overflow one group); test_app PASS; test_canvas `--rom` PASS. Annotation (Iron Rule 6):
+> bank $0B `$D998` comment (build `1ca65793…`).
+> **Next:** the `$3E` decoder box (ROADMAP CAP4 list), or the next CAP5 ceiling as it binds.
+
 > Last verified: 2026-10-12 (Session 145 — **ROADMAP ARC CAP4d BUILT + USER-CONFIRMED: THE CAPACITY TAB — EVERY LIMIT IN WORDS
 > (USED OF HOW MUCH, THE FULLEST ROOM / SCREEN BY NAME, WHAT HAPPENS AT THE LIMIT) + TWO STATUS-BAR METERS (ROM
 > SPACE, ROOMS ≈950) INSTEAD OF SIX BANK BARS; THE 4 MB ARC'S ACCEPTANCE AS A MACHINE RUN — A FRESH 160-ROOM

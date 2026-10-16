@@ -651,6 +651,8 @@ class MainWindow(QMainWindow):
         self.log.appendPlainText(f'Opened project: {path}   (editor code: {EDITOR_REVISION})')
         for note in getattr(session.doc, 'migrations', []):
             self.log.appendPlainText(f'MIGRATED: {note} — Save to keep it')
+        for note in getattr(session.doc, 'migration_warnings', []):
+            self.log.appendPlainText(f'WARNING: {note}')
         self._offer_animation_repair(session)
         self.statusBar().showMessage(f'Opened {session.name}', 4000)
 

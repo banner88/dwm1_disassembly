@@ -136,6 +136,15 @@ class SceneWatch:
         self.outcome = None                    # 'battle' / 'menu': handed to the player
         self.missing = []                      # NPCs the scene acts on whose slot is empty
         self.reached_at, self.terminal_at, self.f = None, 0, 0
+        # S148 (ROADMAP ARC CAP4 "$3E" box): the steps that YIELD and look final
+        # ($3E change game mode, $16 refresh sprites): did the game run the step
+        # after them? And the ops that END the script (script_ops.TERMINAL): did
+        # any word of the script run after one?
+        steps = scene.script.steps
+        self.yields = {st.pos: scene.script.next_pos(st) for st in scene.steps
+                       if st.code in (0x3E, 0x16)}
+        self.ends = {st.pos for st in scene.steps if st.code in SO.TERMINAL}
+        self.ran, self.end_ran, self.after_end = [], False, 0
 
     def __call__(self, eng):
         CS, SO, r = self.CS, self.SO, self.r
@@ -150,8 +159,18 @@ class SceneWatch:
                 self.terminal_at = self.f
         ex = getattr(eng, 'executed', None)
         if ex:
-            hit = [p for (t, sid, p) in ex
-                   if t == (r.script_type & 0xFF) and sid == r.script_idx and p in self.in_scene]
+            ran = [p for (t, sid, p) in ex
+                   if t == (r.script_type & 0xFF) and sid == r.script_idx]
+            for p in ran:
+                if self.end_ran:
+                    if p == 0:                   # ScriptInit: a NEW run (the next room's
+                        self.end_ran = False     # entry script of the same map type)
+                    else:
+                        self.after_end += 1
+                if p in self.ends:
+                    self.end_ran = True
+            self.ran.extend(p for p in ran if p not in self.ran)
+            hit = [p for p in ran if p in self.in_scene]
             del ex[:]
             for p in hit:                      # an NPC acted on must be in its slot
                 s2 = self.scene.script.steps.get(p)
@@ -199,7 +218,11 @@ class SceneWatch:
             else:
                 self.still = 0
             self.last_ctr = w['pos']
-            if self.still > 900 and not self.stalled and not self.outcome:
+            # S148: a $3E hands the screen to another game mode (the night sky,
+            # the naming screen …) and the script resumes when it returns —
+            # give it the frames it takes before calling it a hand-over
+            if self.still > (6000 if st is not None and st.code == 0x3E else 900) \
+                    and not self.stalled and not self.outcome:
                 kind = SO.OPS[st.code].kind if st is not None and st.code < 0x100 else None
                 if kind in ('battle', 'screen'):
                     # the scene handed over to a battle / a menu screen: the
@@ -249,6 +272,14 @@ def play_scene(eng, CS, cat, mid, scene, max_frames):
                frames=eng.frames,
                model={'checks': watch.checks, 'mismatches': len(watch.bad),
                       'examples': watch.bad[:6]})
+    if watch.yields:
+        # S148: [pos, op, the step after it ran] for every $3E / $16 the game ran
+        row['yields'] = [[p, f'${scene.script.steps[p].code:02X}',
+                          'END' if scene.script.steps.get(nxt) is not None and
+                          scene.script.steps[nxt].code == CS.END else nxt in watch.ran]
+                         for p, nxt in sorted(watch.yields.items()) if p in watch.ran]
+    if watch.ends:
+        row['after_end'] = watch.after_end        # words of the script run after an end op
     return row
 
 
@@ -440,6 +471,15 @@ def main():
         if not ok:
             print('FAIL: cutscene_census.json totals do not match its rows')
             return 1
+        # S148: the decoder's rule, as measured — the step after a $3E / $16 ran (or
+        # was the END word); no word of a script ran after one of its end ops
+        stuck = [(r['map'], r['script'], r['entry']) for r in rows
+                 for y in r.get('yields') or [] if y[2] is False]
+        after = [(r['map'], r['script'], r['entry']) for r in rows if r.get('after_end')]
+        if stuck or after:
+            print(f'FAIL: the game did not resume after $3E / $16 in {stuck} or ran words '
+                  f'after an end op in {after} — script_ops.TERMINAL is wrong')
+            return 1
         if not os.path.exists(a.rom):
             print('OK: cutscene_census.json totals consistent (SKIP the scene list: no ROM)')
             return 0
@@ -506,11 +546,18 @@ def main():
            'reset': sum(1 for r in rows if r.get('reset')),
            'model_checks': sum(r.get('model', {}).get('checks', 0) for r in rows),
            'model_mismatches': sum(r.get('model', {}).get('mismatches', 0) for r in rows),
+           # S148: the steps after a $3E / $16 the game ran (resumed) / did not;
+           # words of a script run after one of its end ops (script_ops.TERMINAL)
+           'yield_sites': sum(len(r.get('yields') or []) for r in rows),
+           'yields_resumed': sum(1 for r in rows for y in r.get('yields') or [] if y[2] is True),
+           'yields_into_end': sum(1 for r in rows for y in r.get('yields') or [] if y[2] == 'END'),
+           'words_after_end': sum(r.get('after_end', 0) for r in rows),
            'seconds': round(time.time() - t0)}
-    doc = {'_generator': 'tools/census_cutscenes.py (S118) — PyBoy, a new-game base state, '
+    doc = {'_generator': 'tools/census_cutscenes.py (S118; S148: + yields / after_end) — PyBoy, '
+                         'a new-game base state, '
                          'the original ROM (md5 1ca6579359f21d8e27b446f865bf6b83)',
            'totals': tot, 'scenes': rows}
-    if not a.maps:
+    if not a.maps or a.out != OUT:      # S148: a partial run writes only to its own --out
         with open(a.out, 'w') as f:
             json.dump(doc, f, indent=1)
             f.write('\n')

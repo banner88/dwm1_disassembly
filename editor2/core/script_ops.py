@@ -181,7 +181,8 @@ OPS = {
              'The next text box opens at the TOP of the screen ($D8D8 bit 1).'),
     0x3E: Op('change_game_mode', _P(), 'screen', None, True,
              'Fade out and switch to the game mode in $C88B (e.g. a naming '
-             'screen) — $C88E is the main loop\'s mode request.'),
+             'screen) — $C88E is the main loop\'s mode request. The script goes on '
+             'with its next step when the mode returns (S148, measured).'),
     0x3F: Op('load_lead_name', _P(), 'text', None, False,
              'Put the first party monster\'s name in $C180 for the next text.'),
     0x40: Op('if_party_has_species', _P('species', 'target'), 'flow', 1, False,
@@ -271,7 +272,15 @@ assert len(OPS) == 102
 
 # Opcodes whose next step depends on a run-time condition (for the path model).
 CONDITIONAL = {c for c, o in OPS.items() if o.branch is not None and c != 0x14}
-TERMINAL = {0x0F, 0x3A, 0x3B, 0x3E, 0x43, 0x4F, 0x58}   # the room / game mode changes: the scene ends
+# The opcodes that END the script (S148, ROADMAP ARC CAP4 "$3E" box): every path of
+# the handler stores 0 into wScriptStateFlags ($D8D7) — the store the END word makes —
+# so nothing resumes the script after them (the room changes). DERIVED from the handler
+# code: extracted/script_param_counts.json `_ends_script` (tools/script_param_counts.py;
+# its --check fails when this set differs). Op $3E (change game mode) is NOT one: its
+# handler only requests the mode ($C88E) and yields (`ret`, no store) — the script
+# resumes after it when the field comes back (measured S144 / S148). Op $16
+# (refresh_sprites) yields and continues too (the legacy decompiler's "return").
+TERMINAL = {0x0F, 0x3A, 0x3B, 0x43, 0x4F, 0x58}
 
 # ---------------------------------------------------------------- programs
 # Opcode $1C programs, MEASURED S118 (PyBoy, an NPC in GreatTree screen 0 and
@@ -748,11 +757,19 @@ def sentence(code, params, ctx=None, target=None):
     if op.branch is not None:
         tgt = p[op.branch]
         args = ', '.join(f'{n} {p[i]}' for i, n in enumerate(op.params) if i != op.branch)
-        return f'{op.doc.split(".")[0]}{" (" + args + ")" if args else ""} → {ctx_label(ctx, tgt)}'
+        return f'{first_sentence(op.doc)}{" (" + args + ")" if args else ""} → {ctx_label(ctx, tgt)}'
     if op.params:
         args = ', '.join(f'{n} ${p[i]:04X}' for i, n in enumerate(op.params))
         return f'{op.name.replace("_", " ")} ({args})'
-    return op.doc.split('. ')[0].rstrip('.')
+    return first_sentence(op.doc)
+
+
+def first_sentence(doc):
+    """The first sentence of an op's doc (S148: "e.g." / "i.e." do not end it — the
+    $3E line read "… the game mode in $C88B (e.g")."""
+    import re
+    parts = re.split(r'(?<!e\.g)(?<!i\.e)\.(?:\s|$)', doc, maxsplit=1)
+    return parts[0].rstrip('.')
 
 
 def ctx_label(ctx, target):

@@ -36,6 +36,9 @@
                  in the per-step encounter drain [S103]
    C8B5     1    wCurrPlayingBGM — the sound id InitBGM last started (LoadNewBGMIdIntoA's caller compares
                  with it; the editor's sound engine reads it — its one WRAM read outside audio RAM) [S116]
+                 S148: script op $41 set_bgm copies it to $C8B6 before the new song; op $4B
+                 restore_bgm plays [$C8B6] (handler bytes; tools/walk_replicas.py reads $C8B5 for
+                 "the room's song is back" — $C8B7 wBGM is a request byte, $FF once consumed)
                  0x02 - No music
                  0x06 - Title Screen
                  0x09 - BigTree

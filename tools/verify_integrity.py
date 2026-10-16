@@ -73,6 +73,7 @@ SELFTEST_TOOLS = [
     "build_balance_anchor.py",   # S130: balance_vanilla.json covers every story fight x profile + every gate dive, matches SIM_VERSION / the raising digest, 3 fights + 1 dive re-derived
     "compress_tiles.py",         # S145: the fast LZ match search == the reference brute-force search, byte for byte (random shapes + the game's own layouts / sheets)
     "census_story_state.py",     # S132: story_state_census.json clean (the game's own win tails / arena cascades in PyBoy == editor2/core/story_state.py) + every story point re-derived equal
+    "recomment_script_banks.py",  # S148: the script data of banks $0C-$0F (+ patches/bank_00e.asm) carries the handler decoder's annotation (no stale S43 comments)
 ]
 
 PATCH_FILES = [

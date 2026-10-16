@@ -107,6 +107,16 @@ someone where he already stands moves nobody — the header says so (the
 Old Man Gate Room's step-on scenes: he only moves when he is not in the
 way already).
 
+**A scene that switches the game mode goes on afterwards (S148).** The night sky over
+GreatTree, the night Farm, the naming screen: the game hands the screen to another mode
+and, when it comes back, the scene CONTINUES with its next step. Before S148 the editor
+ended such a scene there — GreatTree's arrival scene now shows its 25 steps after the
+sky ("Oh, GreatTree is shaking! It's welcoming you!", then NPC 1 leads you up and on),
+the Castle's two and the night Farm's scene theirs,
+and the night Farm's flag `$00E5` is no longer "never set" in Progression & Flags. Only
+a room change (Go to / Warp / the breeding scene / the gate floor kick / the two return
+warps) ends a scene — the game stops the script there.
+
 **Copied rooms** ("Make editable") follow the game's room state like the
 original (Rooms → *Follow the game's room state*, on by default), so their
 scenes play with the same people as the game's. Before S118c a copy kept

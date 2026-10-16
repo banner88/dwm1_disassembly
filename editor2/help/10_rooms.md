@@ -127,6 +127,17 @@ after a save: the copy's script that switches the state also turns on a flag of 
 own (named after the room, "boss_villager_dragon_s0_state1"), and a state rule shows that
 state whenever the flag is on (flags are saved, a room's own state counter is not).
 
+**Copies made before S148 are repaired when you open the project.** The copy tool
+stopped copying a script at its "refresh sprites" step (the game only pauses there and
+goes on), so a copy of the **Castle**, the **Starry Shrine** or a **Priest gate floor**
+ran into another scene at that point (the Castle's priest never gave his Herb, the
+King's post-game greeting broke; the Priest's heal ran on into his other line and kept
+the healing tune). Opening the project puts the missing steps back — the log says
+`MIGRATED: room … got back N step(s)` (Save to keep it). A copied script you edited
+there since is left alone and reported (`WARNING: …`): make that copy again, or compare
+it with the game's scene in the Cutscenes tab. Copies of every other room were
+complete.
+
 **Keep states…** (on the state row) does the same for any room of yours with states —
 a copy you made earlier with every state (your GreatTree), or a room you built: tick,
 pick the start, OK; every script that names the screen's state uses the new numbers

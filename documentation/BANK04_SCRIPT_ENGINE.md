@@ -63,7 +63,7 @@ S118 rewrite (handler code + PyBoy; the old rows for bits 3/4/6 were guesses):
 
 | Bit | Meaning | Set by | Cleared by |
 |-----|---------|--------|------------|
-| 0 | Script is active | MarkScriptActive ($5613) | Script end ($FFFF); a room change ($0F/$3B/$43/$4F/$58) clears the whole byte |
+| 0 | Script is active | MarkScriptActive ($5613) | Script end ($FFFF); a room change ($0F/$3A/$3B/$43/$4F/$58 — S148: $3A too) clears the whole byte |
 | 1 | Text ID queued | TextIDQueue ($56EC) | TextQueueCheck ($5700) |
 | 2 | Delay active ($09): `$D8DB` counts down once every 8 frames (only when `[$C8A4] & 7 == 0`) | ScriptCmd09_Delay | Entry 4 |
 | 3 | A walk the script WAITS for ($0A/$0B/$10/$11): actor `$D8DC` moves by `$D8DD`/`$D8DF` px, 1 px on 3 frames of 4 (skips `[$C8A4] & 3 == 1`), facing follows unless bit 5 | those ops | Entry 4 when both deltas reach 0 |
@@ -147,6 +147,23 @@ bank-$04 calls inlined) and stops at the three tails:
   too, and branch targets live in the script's own bank — the bank $60 forwarders keep both,
   ARCHITECTURE "Place banks (S136)");
 * `ret` — the op yields; Entry 4 continues next frame (ScriptExecContinue).
+
+**Where a script ends (S148, ROADMAP ARC CAP4 "$3E" box).** A `ret` tail is a YIELD unless
+the handler also stores 0 into `wScriptStateFlags` ($D8D7 — `xor a / ld [$D8D7], a`, the
+store ScriptExecLoop makes for the END word `$FFFF`): then nothing resumes the script.
+Exactly six handlers do, on every path — the room changes `$0F` MapTransition, `$3A` to the
+breeding scene, `$3B` WarpFade, `$43` / `$4F` the two return warps, `$58` FloorSkip. The
+tracer records it (`ends_script` per op, `_ends_script`); `editor2/core/script_ops.TERMINAL`
+must equal it (the tool's `--check`, verify check 5). Two ops that LOOK final only yield:
+**`$3E` change_game_mode** (palette 4, `$C88E` += 1, `ret` without touching the counter or
+$D8D7: when the mode returns to the field the script goes on at the next word) and **`$16`
+refresh_sprites** (the S43 decompiler's "return"). Measured (`tools/census_cutscenes.py`,
+`yields` / `after_end`, PyBoy on the original ROM): the step after every `$3E` / `$16` the game
+ran ran — the Castle's three `$16`, the Castle's two `$3E`, GreatTree's, the night Farm's
+(`$00E5`); the other four `$3E` are followed by END — and no word of a script ran after one of
+its six end ops. Until S148 the editor's decoder ended scripts at `$3E` (8 scenes short, `$00E5`
+"never set") and the copy tool (`tools/extract_room.py`) at `$16` (Make editable copies of the
+Castle / Starry Shrine / Priest floor fell into the next block) — PROJECT_COMPILER §2.56.
 
 Every opcode has exactly ONE arity (no path-dependent counts). Handlers that
 write the counter without a branch tail (`$19`, `$46`, `$4C`, `$65`)
@@ -310,7 +327,7 @@ disagrees, this one is the measured / handler-read truth (DOC_AUDIT S118).
 | $13 | `write_ram2`(address, value) | state | Write a 16-bit word to RAM. |
 | $14 | `goto`(target) | flow | Go to target. |
 | $15 | `check_and_branch`(address, value, target) | flow | Go to target when the RAM byte equals value (YES/NO answers are $C83C: 0 = YES). |
-| $16 | `refresh_sprites`() | screen | Redraw the sprites and the screen position (one tick). |
+| $16 | `refresh_sprites`() | screen | Redraw the sprites and the screen position (one tick). **S148: a yield, not an end** — the script goes on at the next word (the S43 decompiler called it "return"; the copy tool stopped there until S148). |
 | $17 | `bedroom_tile_swap`() | screen | Intro bedroom only (screens 4/5): swap tiles $9380<->$9360 and $9600<->$9620 (the night look). |
 | $18 | `give_monster`(enemy) | party | A monster built from the enemy row joins (party if fewer than 3). |
 | $19 | `wait_movement`() | wait | Wait until every queued movement / animation has finished. |
@@ -350,7 +367,7 @@ disagrees, this one is the measured / handler-read truth (DOC_AUDIT S118).
 | $3B | `warp_fade`(map, x, y) | world | Change room with the wavy fade (the boss-win exit). |
 | $3C | `text_box_bottom`() | text | The next text box opens at the BOTTOM of the screen (one box; $D8D8 bit 0, read by bank $06). |
 | $3D | `text_box_top`() | text | The next text box opens at the TOP of the screen ($D8D8 bit 1). |
-| $3E | `change_game_mode`() | screen | Fade out and switch to the game mode in $C88B (e.g. a naming screen) — $C88E is the main loop's mode request. **S144 (measured): the handler YIELDS (`ret`, no advance) — when the mode returns the script RESUMES after it (the Farm's script 0 sets `$00E5` right after its `$3E`); `script_ops.TERMINAL` still lists it (ROADMAP box).** |
+| $3E | `change_game_mode`() | screen | Fade out and switch to the game mode in $C88B (e.g. a naming screen) — $C88E is the main loop's mode request. **S144 (measured): the handler YIELDS (`ret`, no advance) — when the mode returns the script RESUMES after it (the Farm's script 0 sets `$00E5` right after its `$3E`). S148: `script_ops.TERMINAL` no longer lists it (the rule from the handlers above; the census: all five such sites resume).** |
 | $3F | `load_lead_name`() | text | Put the first party monster's name in $C180 for the next text. |
 | $40 | `if_party_has_species`(species, target) | flow | Go to target when a monster of that species is in the party. |
 | $41 | `set_bgm`(song) | sound | Play a song (the current one is kept for restore_bgm). |
@@ -890,14 +907,43 @@ All of the following have been traced and confirmed:
 
 ## Script Data Bank Annotations
 
-All 4 script data banks ($0C/$0D/$0E/$0F) are now fully annotated with
-`tools/gen_script_banks.py`. 530 NPC scripts with 1,626 labels:
+**S148: re-annotated from the handler decoder — `tools/recomment_script_banks.py`
+(verify check 5 `--check`: the files must be what it writes).** The S43 annotation
+(`tools/gen_script_banks.py`, below) decoded with the decompiler's guessed arity table (wrong
+for 36 opcodes — DOC_AUDIT S96) and guessed names: about 5,100 parameter words carried a text
+preview (`dw $FF09 ; SetDelay` / `dw $0004 ; Text $0004: "Terry looked at the bookshelf"`),
+op names were wrong (`$06` "IncrementCounter" = close_text, `$0E` "SetMapTransition" =
+branch_screen, `$15` "PlaySE" = check_and_branch, `$19` "FadeEffect" = wait_movement …),
+branch targets missed by the wrong arities were bare numbers, and the script words they reach
+were `db` bytes (8,983 db lines in bank $0C alone). Now every script of the four banks is
+decoded the way the game runs it (`editor2/core/cutscenes.decode_words`: the handler arities,
+every branch followed, the six end ops — "Where a script ends (S148)" above):
 
-- Pointer tables use label references (`Castle_ScriptPtrTable`, etc.)
-- Script starts labeled (`Castle_Script09`, `BossBeginning_Script01`, etc.)
-- Branch targets labeled (`Bank0C_ScriptAddr_5273`, etc.)
-- Every `dw` word annotated: opcode names, text ID previews, RAM addresses
-- Builds byte-identical (MD5 1ca6579359f21d8e27b446f865bf6b83)
+- each word is one `dw` line: an op with its `script_ops` name and what it does
+  (`script_ops.sentence` — RAM by name, room states, texts by their first words), each
+  parameter with its name, a text id with its first words (extracted/dialogue.json), END —
+  8,309 ops, 11,842 parameters, 2,235 texts over the four banks;
+- a branch target names its label (687 new `BankXX_ScriptAddr_XXXX` labels, 1,627 → 2,314);
+- the tile patches op `$24` / `$61` read (97) are one `db` line each, labelled
+  `BankXX_TilePatch_XXXX` (or the label already there) and decoded — BG offset (row, column),
+  the tiles / colours per row; the op's parameter names the label;
+- the master table names each row's map type (rows of other banks' map types: filler), the
+  per-map tables "script n";
+- words no script reaches stay, marked "not reached" with what they would mean (110: ENDs
+  after a room change, dead fragments such as the Bazaar's unused text `$05F1`); the bytes
+  after the last script of a bank (its tail) stay `db`;
+- every label and every full-line comment stays at its address; a hand-written note on a
+  data line is kept after ` ‖ `; the `@BUILD_PROJECT` region of patches/bank_00e.asm (the
+  Milly hook) is copied verbatim. Byte-identical (MD5 1ca6579359f21d8e27b446f865bf6b83; the
+  patched tree's pin unchanged).
+
+After changing the wording of `script_ops` (names, docs, sentences) re-run
+`python3 tools/recomment_script_banks.py` — the check reports stale annotation.
+
+*(S43, superseded:)* All 4 script data banks ($0C/$0D/$0E/$0F) were annotated with
+`tools/gen_script_banks.py` (S148: its `--apply` is refused). 530 NPC scripts with 1,626 labels:
+pointer tables as label references, script starts labelled (`Castle_Script09`, …), branch
+targets labelled (`Bank0C_ScriptAddr_5273`, …) — the labels are kept.
 
 See `DATA_STRUCTURES.md` for the full script data format reference.
 

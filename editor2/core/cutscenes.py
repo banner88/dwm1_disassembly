@@ -1135,6 +1135,11 @@ class Catalogue:
                 if sc is None:
                     continue
                 for h in sc.entries():
+                    if m == mid and sc.key[2] == r.script_idx and h == r.start_pos:
+                        # S148: never the scene's own block (GreatTree's arrival scene
+                        # runs on through its op $3E into a room change back to
+                        # GreatTree — it cannot be what brought the player there)
+                        continue
                     run = sc.run_from(h, stop_at_heads=True)
                     writes, fls = {}, set()
                     for st in run:

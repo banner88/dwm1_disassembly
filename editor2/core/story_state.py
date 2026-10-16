@@ -201,7 +201,7 @@ def run_class(mach, rom, lobby_scr0, cls):
     mach.ram[COLISEUM] = 0
 
 
-ENDING_FARM_FLAG = 0x00E5               # the Farm's script 0, after its op $3E (S144, traced)
+ENDING_FARM_FLAG = 0x00E5               # the Farm's script 0, after its op $3E (S144 traced; S148 decoded)
 BREED_STAGE = 0xD951                    # the ceremony room's counter (BANK04 "Breeding")
 
 
@@ -214,8 +214,9 @@ def run_ending(mach, rom, castle_scr0=None):
     room, the white room — KEY_LESSONS S144):
 
       the final's win tail (Arena Battle script 0, wArenaGroup 8, the 3rd match won:
-      $00E4, the night Farm's states, game mode 3) → the engine sets $00E5 in the
-      night Farm → the Farm NPC's talk (script 19, YES) → the Starry Shrine → the
+      $00E4, the night Farm's states, game mode 3) → the night Farm's entry scene
+      sets $00E5 after its op $3E (S148: decoded — the script resumes after the
+      mode change) → the Farm NPC's talk (script 19, YES) → the Starry Shrine → the
       ceremony room ($08: $D951 := 7 by op $5E; its sky sequence, bank $02 entry 3
       via bank $01 CheckPaletteAnimActive, ends with $D951 := 8 + a reload — bank $02
       CeremonySkyDone) → the white room ($5E: $D99A) → the bedroom's screen
@@ -232,7 +233,12 @@ def run_ending(mach, rom, castle_scr0=None):
     mach.ram[COLISEUM] = 3
     mach.run(sc(0x5D, 0), 0, screen=0, what="Starry Night won: the final's win tail")
     mach.ram[COLISEUM] = 0
-    mach.flags.add(ENDING_FARM_FLAG)
+    # S148: the night Farm's entry scene (script 0 on screen 1: $00E4 on, $00E5 /
+    # $00EE off) runs on through its op $3E (the night sky — the script RESUMES when
+    # the mode returns) and sets $00E5 — decoded now (was added by hand S144-S147,
+    # when the decoder ended scripts at $3E)
+    mach.run(sc(0x04, 0), 0, screen=1, what='  the night Farm: its entry scene ($00E5)')
+    assert ENDING_FARM_FLAG in mach.flags, 'the night Farm\'s scene no longer sets $00E5'
     mach.run(sc(0x04, 19), 0, screen=2, what='  the night Farm: the talk, YES')
     follow(mach, rom, hops=4)
     if mach.ram.get(BREED_STAGE) == 7:

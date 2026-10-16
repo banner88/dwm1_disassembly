@@ -51,7 +51,10 @@ somewhere; check-only: `$0007`, `$0050`, `$0053` (set by the game's code, below)
 `$00E5` and `$02C1` (set by no decoded script — not traced; **S144: `$00E5` is set by the Farm's
 script 0 right after its op `$3E` (word `$32`) — the decoder ends a script at `$3E`
 (`script_ops.TERMINAL`), but the game resumes it when the mode change returns: measured
-(a per-frame watch of `$D9B7`), ROADMAP box "decoder: `$3E` continues"**). The figures below are the
+(a per-frame watch of `$D9B7`), ROADMAP box "decoder: `$3E` continues"**). **S148 (the box
+done — the decoder ends a script only at the six room changes, BANK04_SCRIPT_ENGINE "Where a
+script ends"): 1,675 flag operations, 332 flags, 328 with a set; check-only `$0007`, `$0050`,
+`$0053` (the game's code) and `$02C1` — `$00E5` is "set in Farm" (its night scene).** The figures below are the
 pre-S96 decoder's (dump_all_scripts.py, the old arity table — DOC_AUDIT S96).
 
 - **1,675 total flag operations** across 732 scripts in banks $0C/$0D/$0E/$0F

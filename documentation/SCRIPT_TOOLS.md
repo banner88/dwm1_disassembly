@@ -9,8 +9,16 @@ ROM bytes ←→ gen_script_banks.py ←→ labeled .asm files (dw tables)
 ROM bytes ←→ decompile_script.py ←→ human-readable pseudo-code
 ```
 
-`gen_script_banks.py` produces **assembly** — the `dw` entries in the .asm
-files that rgbasm compiles. This is what you edit to change the game.
+**S148: the annotation of the script banks is `tools/recomment_script_banks.py`** (the
+handler decoder of `editor2/core/cutscenes.py` + `script_ops`; comments and labels only,
+byte-identical; verify check 5 `--check`) — BANK04_SCRIPT_ENGINE "Script Data Bank
+Annotations". `gen_script_banks.py --apply` is REFUSED: its arity table and op names are the
+S43 decompiler's (wrong for 36 opcodes, DOC_AUDIT S96), and it would write them back.
+`decompile_script.py` carries the same stale table (DOC_AUDIT S127) — read scripts in the
+editor's Cutscenes tab or in the banks' new comments instead.
+
+`gen_script_banks.py` produced **assembly** — the `dw` entries in the .asm
+files that rgbasm compiles (S43; the structure it made is kept).
 
 `decompile_script.py` produces **readable output** — for understanding what
 scripts do. It reads the ROM directly and is read-only.
@@ -50,11 +58,7 @@ script DATA bytes as CPU instructions (producing nonsense like `nop`,
 # Preview what would be generated (dry run)
 python3 tools/gen_script_banks.py
 
-# Apply to all 4 banks
-python3 tools/gen_script_banks.py --apply
-
-# Apply to a single bank
-python3 tools/gen_script_banks.py --bank 0x0C --apply
+# (S148: --apply is refused — re-annotate with tools/recomment_script_banks.py)
 
 # After applying, ALWAYS rebuild and verify:
 cd disassembly && rm -f game.o game.gbc game.sym game.map && make && md5sum game.gbc

@@ -8690,6 +8690,149 @@ def test_s147(with_rom=False):
        "as the built ROM's InitBGM -> bank $74 SongStart (streams relocatable)", not bad, bad)
 
 
+def test_s148(with_rom=False):
+    """S148 (ROADMAP ARC CAP4 "$3E" box; user: "1) Yes 2) Do now 3) replace 4) Test room +
+    machine check"): an op ENDS a script only when its handler clears wScriptStateFlags
+    (script_ops.TERMINAL == extracted/script_param_counts.json `_ends_script`: $0F $3A $3B
+    $43 $4F $58) — $3E (change game mode) and $16 (refresh sprites) yield and go on. The
+    decoder's catalogue: 519 scenes, 8 longer (+51 steps), $00E5 set by the night Farm;
+    story_state decodes $00E5 (no hand-added flag); a scene is never its own entry caller;
+    the copy tool (tools/extract_room.py) copies past $16 (5 game scripts differ from the old
+    tool: the Castle's 0, the Starry Shrine's 0 / 11, the Priest floor's 1 / 2) and a copy made
+    by the old tool is repaired on open (== a fresh copy; an edited site is reported); the
+    script banks carry the decoder's annotation (tools/recomment_script_banks.py --check)."""
+    import importlib.util
+    import json as _json
+    import shutil
+    import tempfile
+    from editor2.core import script_ops as SO
+    pc = _json.load(open(os.path.join(REPO, 'extracted', 'script_param_counts.json')))
+    ends = {int(k, 16) for k in pc.get('_ends_script', [])}
+    ok("S148 TERMINAL == the handlers that clear wScriptStateFlags; $3E / $16 are not ends",
+       set(SO.TERMINAL) == ends == {0x0F, 0x3A, 0x3B, 0x43, 0x4F, 0x58}
+       and 0x3E not in SO.TERMINAL and 0x16 not in SO.TERMINAL, sorted(ends))
+    ok("S148 the $3E line reads whole (first_sentence keeps 'e.g.')",
+       SO.sentence(0x3E, ()).startswith('Fade out and switch to the game mode in $C88B (e.g. a'),
+       SO.sentence(0x3E, ()))
+    if not with_rom or not os.path.exists(ROM):
+        return
+    from editor2.core import cutscenes as CS
+    from editor2.core import story_state as ST
+    from editor2.core import clone_scripts as CL
+    rom = open(ROM, 'rb').read()
+    cat = CS.Catalogue(rom)
+    n = sum(len(cat.scenes(m)) for m in cat.map_types())
+    gt = {s.entry: len(s.steps) for s in cat.scenes(0x01)}
+    ok("S148 the catalogue: 519 scenes; GreatTree's arrival scene runs on through $3E (32 steps)",
+       n == 519 and gt.get(308) == 32, (n, gt.get(308)))
+    ok("S148 $00E5 is set by the night Farm's scene (was 'never set')",
+       cat.flag_desc(0x00E5).startswith('set in Farm'), cat.flag_desc(0x00E5))
+    rec = [cat.recipe(s, 0x01) for s in cat.scenes(0x01) if s.entry == 308][0]
+    ok("S148 a scene is never its own entry caller (GreatTree @308 set up as before: screen 12)",
+       rec.screen == 12, rec)
+    st = ST.state_at(31)                     # the first post-game gate: after the ending
+    ok("S148 story_state: the ending's $00E5 comes from the decoded night Farm",
+       0x00E5 in st['flags_on'] and any('its entry scene' in x for x in st['log']),
+       [x for x in st['log'] if 'Farm' in x])
+    spec = importlib.util.spec_from_file_location('_er148', os.path.join(REPO, 'tools',
+                                                                          'extract_room.py'))
+    er = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(er)
+    pcs, bt, nb = er._load_param_counts()
+    diff = []
+    for m in cat.map_types():
+        b = CS.script_bank(m)
+        for i, p0 in enumerate(CS.vanilla_script_ptrs(rom, m)):
+            old = er.ops_to_project(er.decode_script(rom, b, p0, pcs, bt, set(),
+                                                     legacy_stop16=True), bt, nb)
+            new = er.ops_to_project(er.decode_script(rom, b, p0, pcs, bt, set()), bt, nb)
+            if old != new:
+                diff.append((m, i))
+    ok("S148 the copy tool: exactly the Castle 0, Starry Shrine 0 / 11, Priest floor 1 / 2 change",
+       diff == [(0x00, 0), (0x09, 0), (0x09, 11), (0x51, 1), (0x51, 2)], diff)
+    # a copy made by the old tool, opened by the S148 editor == a fresh S148 copy
+    from editor2.core.document import Document
+    from editor2.core.render_project import ProjectRenderer
+    tmp = tempfile.mkdtemp(prefix='s148_')
+    try:
+        src = os.path.dirname(EXAMPLE)
+        res = {}
+        orig = importlib.util.spec_from_file_location
+        legacy = os.path.join(tmp, 'legacy_er.py')
+        with open(legacy, 'w') as f:
+            f.write("import importlib.machinery, types\n"
+                    f"_l = importlib.machinery.SourceFileLoader('erx', {os.path.join(REPO, 'tools', 'extract_room.py')!r})\n"
+                    "_m = types.ModuleType('erx'); _m.__file__ = _l.path; _l.exec_module(_m)\n"
+                    "_d = _m.decode_script\n"
+                    "def _lg(*a, **k):\n    k['legacy_stop16'] = True\n    return _d(*a, **k)\n"
+                    "_m.decode_script = _lg\n"
+                    "globals().update({k: v for k, v in _m.__dict__.items() if not k.startswith('__')})\n")
+
+        def spec_legacy(name, path, *a, **k):
+            if str(path).endswith('tools/extract_room.py'):
+                path = legacy
+            return orig(name, path, *a, **k)
+        for nm in ('legacy', 'fixed'):
+            shutil.copytree(src, os.path.join(tmp, nm), ignore=shutil.ignore_patterns('build'))
+            importlib.util.spec_from_file_location = spec_legacy if nm == 'legacy' else orig
+            try:
+                d = Document(os.path.join(tmp, nm))
+                r = ProjectRenderer(REPO, d.project_dir, d.data)
+                for mid, keep in ((0x00, None), (0x09, 'default'), (0x51, 'default')):
+                    d.clone_vanilla(mid, f'Copy {mid:02X}', REPO, r, keep=keep)
+                    r.invalidate()
+                d.save()
+            finally:
+                importlib.util.spec_from_file_location = orig
+        CL._ER.clear()
+        CL._PLAN.clear()
+        CL._DIFF.clear()
+        a = Document(os.path.join(tmp, 'legacy'))
+        notes = [x for x in a.migrations if 'S148' in x or 'S92-S147' in x]
+        b = Document(os.path.join(tmp, 'fixed'))
+        sa = {x['id']: x.get('ops') for x in a.custom['scripts']}
+        sb = {x['id']: x.get('ops') for x in b.custom['scripts']}
+        same = [k for k in sb if sa.get(k) != sb[k]]
+        ok("S148 old copies (Castle / Starry Shrine / Priest floor) repaired on open == fresh "
+           "copies (5 scripts, nothing reported)",
+           len(notes) == 5 and not same and not a.migration_warnings
+           and not [x for x in b.migrations if 'S92-S147' in x], (notes, same,
+                                                                  a.migration_warnings))
+        a.save()
+        a2 = Document(os.path.join(tmp, 'legacy'))
+        ok("S148 the repair runs once (a second open finds nothing)",
+           not [x for x in a2.migrations if 'S92-S147' in x] and not a2.migration_warnings,
+           a2.migrations)
+        # an edited site is reported, never changed
+        shutil.copytree(os.path.join(tmp, 'fixed'), os.path.join(tmp, 'edited'))
+        importlib.util.spec_from_file_location = spec_legacy
+        try:
+            d = Document(os.path.join(tmp, 'edited'))
+            r = ProjectRenderer(REPO, d.project_dir, d.data)
+            rid = d.clone_vanilla(0x51, 'Edited priest', REPO, r, keep='default')
+            sid = d.room(rid)['scripts']['1']
+            sc = next(x for x in d.custom['scripts'] if x['id'] == sid)
+            i16 = next(i for i, it in enumerate(sc['ops']) if CL._code(it) == 0x16)
+            sc['ops'][i16 + 1:i16 + 1] = [['op', 'nop']]          # an edit right after it
+            d.save()
+        finally:
+            importlib.util.spec_from_file_location = orig
+        before = json.dumps(next(x for x in json.load(open(os.path.join(tmp, 'edited',
+                                 'project.json')))['custom']['scripts'] if x['id'] == sid))
+        e = Document(os.path.join(tmp, 'edited'))
+        after = json.dumps(next(x for x in e.custom['scripts'] if x['id'] == sid))
+        ok("S148 an old copy edited right after its $16 is left alone and reported",
+           before == after and any(sid in w for w in e.migration_warnings),
+           e.migration_warnings)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    import subprocess
+    r = subprocess.run([sys.executable, os.path.join(REPO, 'tools', 'recomment_script_banks.py'),
+                        '--check'], capture_output=True, text=True)
+    ok("S148 the script banks carry the decoder's annotation (recomment_script_banks --check)",
+       r.returncode == 0, (r.stdout + r.stderr)[-300:])
+
+
 def main():
     # 1. determinism + example compiles clean
     out1, prj, warns = compile_data(base())
@@ -9572,6 +9715,7 @@ def main():
     test_s145()
     test_s146('--rom' in sys.argv)
     test_s147('--rom' in sys.argv)
+    test_s148('--rom' in sys.argv)
 
     if '--rom' in sys.argv:
         from editor2.core import builder as B

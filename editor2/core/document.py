@@ -220,6 +220,7 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         # — set by the GUI Session; tileset-usage queries degrade gracefully
         # (no vanilla vocabulary, no 'changed' flags) without it.
         self.vanilla = None
+        self.migration_warnings = []  # S148: what an open could not repair (log only)
         self.migrations = self._migrate()
 
     # ---------------------------------------------------------- migration
@@ -262,6 +263,10 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         self._migrate_animation(notes)
         # S118c: cloned rooms follow the game's room state
         self._migrate_clone_state(notes)
+        # S148: copies made by the S92-S147 copy tool lost the steps after op $16
+        # (refresh_sprites continues; the tool stopped there) — before the patch
+        # lowering, which then lowers the restored steps' tile patches too
+        self._migrate_refresh_sprites(notes)
         # S119: the tile patches ($24 / $61) of cloned game scripts are copied
         # into the room (bank $60 entries 9 / 10 draw them from there)
         self._migrate_clone_patches(notes)
@@ -274,6 +279,19 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         if notes:
             self.dirty = True
         return notes
+
+    def _migrate_refresh_sprites(self, notes):
+        """S148 (ROADMAP ARC CAP4 "$3E" box; user: "replace"): a copy of the Castle /
+        the Starry Shrine / the Priest gate floor made before S148 dropped the steps
+        after op $16 and fell into another block (`clone_scripts`). Unedited sites
+        get the game's steps back; edited ones are reported, never changed."""
+        from editor2.core import clone_scripts as CL
+        try:
+            got, warn = CL.repair(self)
+        except Exception as e:                           # noqa: BLE001
+            got, warn = [], [f'the S148 copy check could not run: {e}']
+        notes.extend(got)
+        self.migration_warnings.extend(warn)
 
     def _migrate_unique_names(self, notes):
         """S143 (user S143: "Yes"): a room whose name another room (earlier in the

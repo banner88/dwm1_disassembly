@@ -4282,6 +4282,65 @@ side is SOUND_SYSTEM §11 (bank $74 `SongStart`, the dummy records, the song dir
   songs × 900 frames); `tools/walk_songs.py` on the JUKEBOX HALLS (TOOLS_AND_DATA S147): 116
   checks, 0 failed; `--negative` 46 FAIL (exactly the 23 song starts outside bank $74).
 
+## §2.56 S148 — WHERE A SCRIPT ENDS: the decoders' rule from the handlers; Make editable copies past op $16 (ROADMAP ARC CAP4 "$3E" box)
+
+**Built S148, NOT yet user-tested** (user: "1) Yes 2) Do now 3) replace 4) Test room + machine
+check"). Editor + tools; no engine / template change; the example pin stays `6b01894d…` (patched)
+and the user's project builds the same ROM as on the S147 code (`ae475c3a…`, patched).
+
+- **The rule (from the code):** an op ends a script only when every path of its handler stores 0
+  into `wScriptStateFlags` ($D8D7 — the store the END word makes in ScriptExecLoop): `$0F $3A $3B
+  $43 $4F $58` (all room changes). `tools/script_param_counts.py` records it per op (`ends_script`,
+  `_ends_script` in extracted/script_param_counts.json) and its `--check` (verify check 5) fails
+  when `editor2/core/script_ops.TERMINAL` differs. **`$3E`** (change game mode) and **`$16`**
+  (refresh sprites) only yield: the script goes on at the next word (BANK04_SCRIPT_ENGINE "Where a
+  script ends (S148)").
+- **The cutscene decoder** (`cutscenes.decode_words` / `next_pos` / `quiet_literals`, every reader:
+  the Cutscenes tab, the flag index, story_state, room_states' scans, the census) no longer ends a
+  script at `$3E`: the game's 519 scenes stay 519, 8 grow (+51 steps — the Castle ×2, GreatTree's
+  arrival scene +25, the night Farm +11, the intro bedroom ×3 and the Arena Battle +1 END); the
+  night Farm's `$00E5` is set by its scene (the flag index's "never set" list loses it;
+  `story_state.run_ending` runs that scene instead of adding the flag by hand — S144). Found on the
+  way: a grown scene became its own "entry caller" (`Catalogue.entry_caller` — GreatTree's arrival
+  scene now ends in a warp back to GreatTree): the scene's own block is excluded.
+- **The copy tool** (`tools/extract_room.py`, `Document.clone_vanilla` = Make editable): the linear
+  decode stopped at `$16` (the S43 decompiler's "return") and the copy lays its ops out in address
+  order, so a copy FELL INTO THE NEXT BLOCK: the Castle's script 0 (3 sites, 186 words: the
+  priest's GreatTree blessing → no Herb, the King's "How was it?", his post-game greeting), the
+  Starry Shrine's script 0 (2 ENDs), the Priest gate floor's scripts 1 / 2 (restore_bgm + END →
+  his other line "Every journey has its dangers…", the heal tune kept) — 5 of the game's scripts
+  (measured: old vs new tool over every script). Now only `goto` ($14) stops the run, and an op of
+  `TERMINAL` ends it with its END word (a synthetic `end` when none follows: the Starry Shrine's
+  script 11, whose `$0F` runs into the next map's pointer table). `decode_script(…,
+  legacy_stop16=True)` reproduces the old tool (for the repair below); `ops_to_project(…,
+  addrs_out)` gives each item's address.
+- **Old copies are repaired on open** (user: "replace"): NEW `editor2/core/clone_scripts.py`,
+  `Document._migrate_refresh_sprites` (before `_migrate_clone_patches`, which then lowers the
+  restored steps' tile patches). For every room with a `source_mapID` < $6B and each script of its
+  positional table whose game script the old tool got wrong: a script still equal to the old tool's
+  output is copied again (counter labels re-applied as `clone_vanilla` does); otherwise at each
+  broken `$16` (found by the old copy's neighbours — the step before and the step after) the
+  missing run is inserted, game step counters → the copy's labels where the screen follows the
+  game. A site whose `$16` is gone (ARC CAP4c pruned it — nothing falls through there) is left
+  alone; a site edited since is NOT changed and is reported (`Document.migration_warnings` → the
+  open log `WARNING: …`). Words the old tool copied after a room change are dropped. Measured: old
+  copies of the Castle (every state), the Starry Shrine and the Priest floor (default keep) ==
+  fresh S148 copies after one open; a second open does nothing (`test_compiler.test_s148`); the
+  user's project and the example have no affected copy (no migration note).
+- **The script banks' annotation:** `tools/recomment_script_banks.py` (verify check 5) annotates
+  banks $0C-$0F + patches/bank_00e.asm from this decoder (BANK04_SCRIPT_ENGINE "Script Data Bank
+  Annotations"); `tools/gen_script_banks.py --apply` is refused (its arity table is the S43 one).
+- **Measured in the game:** `tools/census_cutscenes.py` (+ `yields` / `after_end`): the step after
+  every `$3E` / `$16` the game ran ran (7 sites; 4 more are followed by END), 0 words of a script
+  after one of its end ops — its `--check` fails otherwise; `tools/walk_replicas.py` on the user's
+  `.sav` (THE REPLICA HALL demo, TOOLS_AND_DATA S148): 16 checks, 0 failed — the Castle copy's
+  arrival from a gate runs the same 44 script words as the original Castle of the same ROM and
+  gives the Herb, the Priest copy's heal ends with restore_bgm (the room's song back, his other
+  line never runs); `--negative` (the same demo copied by the old tool): 7 FAIL (the Castle copy
+  ran 245 words and left for the original Castle; the priest said his other line, the heal tune
+  stayed). The old-tool demo opened by the S148 editor builds the same ROM as the fresh demo.
+- Help 10_rooms, 63_cutscenes; `EDITOR_REVISION` S148.
+
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 
 The user's "fastest way to test": hook a custom room onto a door the player

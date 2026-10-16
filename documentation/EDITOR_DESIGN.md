@@ -2159,7 +2159,11 @@ battle flow is the suspect); the first clone session for an island runs
 that audit (= the preserved-systems audit, one island at a time).
 Backend: [G-J] the clone extractor (`extract_room.py` → project.json;
 formats fully decoded, all 107 rooms render, all 732 scripts
-decompile).
+decompile). **S148:** "decompile" was not "complete" — the extractor stopped a script at op
+`$16` (a yield) and fell into the next block in 5 game scripts (the Castle's 0, the Starry
+Shrine's 0 / 11, the Priest floor's 1 / 2); fixed, old copies repaired on open, and a copy is
+now checked against its original IN THE GAME (the same arrival → the same script words,
+`tools/walk_replicas.py`) — PROJECT_COMPILER §2.56.
 
 ### 6.2 Data tables: Layer A-lite (unchanged from v2)
 

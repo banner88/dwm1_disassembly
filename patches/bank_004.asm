@@ -3178,6 +3178,11 @@ ScriptCmd0E_BranchScreen:
     call MapTypeDispatch
     jp ScriptReturnProcess
 
+; S148: ENDS THE SCRIPT — the room-change mailbox (map, spawn X / Y) + the fade, then `xor a / ld [wScriptStateFlags], a` (the
+; store the END word makes in ScriptExecLoop): nothing resumes it. One of the six
+; such handlers ($0F $3A $3B $43 $4F $58 = script_ops.TERMINAL, derived from the
+; code by tools/script_param_counts.py `ends_script`; PyBoy census_cutscenes S148:
+; no word of a script ran after one).
 ScriptCmd0F_MapTransition:
     ld a, [wScriptCounter]
     add $01
@@ -3427,6 +3432,11 @@ ScriptCmd15_CheckAndBranch:
     call MapTypeDispatch
     jp ScriptReturnProcess
 
+; S148: redraw OAM + the BG map address, then `ret` = YIELD; the script continues
+; at the next word next tick (PyBoy census_cutscenes S148: the Castle's 3 sites).
+; NOT an end — the S43 decompiler called it "return" and tools/extract_room.py
+; stopped there until S148 (the Castle / Starry Shrine / Priest-floor copies fell
+; into the next block — editor2/core/clone_scripts.py repairs old copies).
 ScriptCmd16_RefreshSprites:
     call UpdateOAMSprites
     call GetBGMapAddress
@@ -4836,6 +4846,11 @@ ScriptCmd39_LoadText:
     call TextBankDispatch
     jp Jump_004_55f5
 
+; S148: ENDS THE SCRIPT — the ceremony room $08 + the parent's look, then `xor a / ld [wScriptStateFlags], a` (the
+; store the END word makes in ScriptExecLoop): nothing resumes it. One of the six
+; such handlers ($0F $3A $3B $43 $4F $58 = script_ops.TERMINAL, derived from the
+; code by tools/script_param_counts.py `ends_script`; PyBoy census_cutscenes S148:
+; no word of a script ran after one).
 ScriptCmd3A_ToBreedingScene:
     ld a, [$ca40]
     ld [$cac0], a
@@ -4965,6 +4980,11 @@ SaveReadDE:
 ; vanilla gate-boss win tail (28 boss rooms, ROM survey S101) ends with
 ; `$3B $0000, $00E8, $0058` = Castle (map $00) pixel (232,88) = tile (14,5),
 ; the throne room on screen 1 (PyBoy S101, Villager boss on the user's save).
+; S148: ENDS THE SCRIPT — the room-change mailbox with the wavy fade, then `xor a / ld [wScriptStateFlags], a` (the
+; store the END word makes in ScriptExecLoop): nothing resumes it. One of the six
+; such handlers ($0F $3A $3B $43 $4F $58 = script_ops.TERMINAL, derived from the
+; code by tools/script_param_counts.py `ends_script`; PyBoy census_cutscenes S148:
+; no word of a script ran after one).
 ScriptCmd3B_WarpFade:
     ld a, [wScriptCounter]
     add $01
@@ -5026,6 +5046,13 @@ ScriptCmd3D_TextBoxTop:
     jp Jump_004_55f5
 
 
+; S148 (ROADMAP ARC CAP4 "$3E" box): change game mode — palette 4, $C88E += 1 (the
+; main loop switches to the mode the script wrote to $C88B), then `ret` WITHOUT
+; touching wScriptStateFlags or the counter: the script only YIELDS. When the mode
+; returns to the field the frame driver resumes it at the next word (PyBoy
+; census_cutscenes S148: the step after it ran at all 5 such vanilla sites — the
+; Castle x2, GreatTree, the night Farm's $00E5 — the other 4 are followed by END).
+; The editor's decoder ended scripts here until S148 (script_ops.TERMINAL).
 ScriptCmd3E_ChangeGameMode:
     ld a, $04
     call SetGBCPalette
@@ -5183,6 +5210,11 @@ ScriptCmd42_SaveReturnPoint:
 ; ScriptCmd43 (S127 annotation) — warp back to the op $42/$4E return point. The
 ; ceremony (map $08 script 0) uses it after a type-5 breeding ($D951 4 -> 5 -> $F2):
 ; the room's ENTRY script sees $D951 = $F2 and speaks the breeder's line +9.
+; S148: ENDS THE SCRIPT — the mailbox from the op $42/$4E return point, then `xor a / ld [wScriptStateFlags], a` (the
+; store the END word makes in ScriptExecLoop): nothing resumes it. One of the six
+; such handlers ($0F $3A $3B $43 $4F $58 = script_ops.TERMINAL, derived from the
+; code by tools/script_param_counts.py `ends_script`; PyBoy census_cutscenes S148:
+; no word of a script ran after one).
 ScriptCmd43_ReturnToSavedPoint:
     ld a, [$c8fb]
     ld c, a
@@ -5462,6 +5494,11 @@ ScriptCmd4E_SavePosition:
 
 ; ScriptCmd4F (S127 annotation) — the ceremony's return for Grandpa's paths:
 ; $D951 0 -> 1 -> $F0 (breed done, ask HATCH) and 2 -> $F1 (after op $3A: the naming).
+; S148: ENDS THE SCRIPT — the mailbox from the saved return point, then `xor a / ld [wScriptStateFlags], a` (the
+; store the END word makes in ScriptExecLoop): nothing resumes it. One of the six
+; such handlers ($0F $3A $3B $43 $4F $58 = script_ops.TERMINAL, derived from the
+; code by tools/script_param_counts.py `ends_script`; PyBoy census_cutscenes S148:
+; no word of a script ran after one).
 ScriptCmd4F_ReturnToSavedPosition:
     ld a, [$c8fb]
     ld c, a
@@ -5928,6 +5965,11 @@ WriteAndSetupHLB:
 ; the maze staircase (wWarpGateId 0, wWarpFlag $80). ROM scan S101: the only
 ; script user is the gate-world script set (map type $70) script 4 at
 ; $0F:$6ED0, after a RandomScaledBattle ($52) win.
+; S148: ENDS THE SCRIPT — the gate-floor kick (the staircase mailbox), then `xor a / ld [wScriptStateFlags], a` (the
+; store the END word makes in ScriptExecLoop): nothing resumes it. One of the six
+; such handlers ($0F $3A $3B $43 $4F $58 = script_ops.TERMINAL, derived from the
+; code by tools/script_param_counts.py `ends_script`; PyBoy census_cutscenes S148:
+; no word of a script ran after one).
 ScriptCmd58_FloorSkip:
     ld a, [wLastFloor]
     dec a

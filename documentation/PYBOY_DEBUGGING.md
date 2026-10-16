@@ -958,3 +958,26 @@ edge and the battle waits for input forever.
 - **Talk to a bard by warping beside it** (`goto(hall, 0, x, y + 1)`, face up, `talk()`): a warp
   into the same room re-requests the room's song first, which also re-checks the room-entry path.
 
+
+## S148 techniques — every script word the game runs, copies A/B against the original, a harness drift
+
+- **Log every script word with its value:** hook `MarkScriptActive` (`$04:$5613`, every op / text
+  is dispatched there; game.sym has it in patched builds too) and read `register_file.B / C` —
+  BC = the word (`$FFxx` = op xx, else a text id) — plus `$D8D3` (map type), `$D8D4` (script id),
+  `$D8D5/6` (counter). `tools/walk_replicas.py` `Trace`; `census_cutscenes.py` keeps positions only.
+- **A copy against its original in ONE ROM:** a project build still holds the game's own rooms —
+  the same arrival (`$D92B := 6`, `$D9E3 := 0`, the warp onto (14, 5)) into the copy and then into
+  map $00 gives two word sequences that must be equal (44 = 44); the broken copy ran 245 and left
+  for map $00. No second ROM, no savestate juggling.
+- **The music after a talk:** read `wCurrPlayingBGM` ($C8B5) — `wBGM` ($C8B7) is a request byte the
+  driver consumes (it reads $FF after); set_bgm saves the current song in `$C8B6` for restore_bgm.
+- **Make a party "not healthy" for a healer:** `Walk.party_hp_1()` (HP of every party slot := 1)
+  right before the talk — the priest's script tests HP and MP of every member (`$64`).
+- **A `$3E` scene in the census:** the night sky / naming screen keeps the script counter still
+  for thousands of frames; the stall rule waits 6,000 frames on a `$3E` before calling it a
+  hand-over (the naming screen of the intro bedroom IS one: "menu").
+- **Found (harness / save, not S148):** `walk_room_states.py` on the user's current `.sav` (2026-10-15):
+  9 of 780 checks FAIL — the warp into Labyrinth screen 1 and some forest-maze screens lands on
+  another screen index (`sa == sb == k` fails; the buffers are equal) — identical on the S147
+  code (HEAD worktree), 0 on the S144 save. A warp-landing / save-state effect of the harness's
+  `enter()`, not of the copies; left for a later session (PROJECT_STATE "Open defects").
