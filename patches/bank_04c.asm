@@ -13,365 +13,365 @@ SECTION "ROM Bank $04c", ROMX[$4000], BANK[$4c]
     dw $42E3                          ; Entry 1
     dw $42EA                          ; Entry 2
     dw $42F1                          ; Entry 3
-    dw $4019                          ; Entry 4
-    dw $4215                          ; Entry 5
-    dw $423B                          ; Entry 6
-    dw $4249                          ; Entry 7
-    dw $425B                          ; Entry 8
-    dw $4263                          ; Entry 9
-    dw $4299                          ; Entry 10
-    dw $42CF                          ; Entry 11
-    dw $4305                          ; Entry 12
-    dw $431F                          ; Entry 13
-    dw $4340                          ; Entry 14
-    dw $4366                          ; Entry 15
-    dw $4387                          ; Entry 16
-    dw $43AB                          ; Entry 17
-    dw $43CF                          ; Entry 18
-    dw $43F1                          ; Entry 19
-    dw $4415                          ; Entry 20
-    dw $4438                          ; Entry 21
-    dw $4452                          ; Entry 22
-    dw $4482                          ; Entry 23
-    dw $44AF                          ; Entry 24
-    dw $44D1                          ; Entry 25
-    dw $44F0                          ; Entry 26
-    dw $4517                          ; Entry 27
-    dw $4528                          ; Entry 28
-    dw $4539                          ; Entry 29
-    dw $4555                          ; Entry 30
-    dw $456A                          ; Entry 31
-    dw $457D                          ; Entry 32
-    dw $4597                          ; Entry 33
-    dw $45A9                          ; Entry 34
-    dw $45BE                          ; Entry 35
-    dw $45D2                          ; Entry 36
-    dw $45E6                          ; Entry 37
-    dw $4611                          ; Entry 38
-    dw $463A                          ; Entry 39
-    dw $4666                          ; Entry 40
-    dw $4692                          ; Entry 41
-    dw $46BE                          ; Entry 42
-    dw $46E9                          ; Entry 43
-    dw $4711                          ; Entry 44
-    dw $4747                          ; Entry 45
-    dw $477D                          ; Entry 46
-    dw $478A                          ; Entry 47
-    dw $4799                          ; Entry 48
-    dw $47A8                          ; Entry 49
-    dw $47B6                          ; Entry 50
-    dw $47CF                          ; Entry 51
-    dw $47DF                          ; Entry 52
-    dw $47F3                          ; Entry 53
-    dw $4808                          ; Entry 54
-    dw $481D                          ; Entry 55
-    dw $482F                          ; Entry 56
-    dw $4842                          ; Entry 57
-    dw $485F                          ; Entry 58
-    dw $4887                          ; Entry 59
-    dw $48A4                          ; Entry 60
-    dw $48B5                          ; Entry 61
-    dw $48D6                          ; Entry 62
-    dw $48F1                          ; Entry 63
-    dw $490D                          ; Entry 64
-    dw $4926                          ; Entry 65
-    dw $495E                          ; Entry 66
-    dw $4972                          ; Entry 67
-    dw $498D                          ; Entry 68
-    dw $49B0                          ; Entry 69
-    dw $49CE                          ; Entry 70
-    dw $49E5                          ; Entry 71
-    dw $4A00                          ; Entry 72
-    dw $4A1A                          ; Entry 73
-    dw $4A32                          ; Entry 74
-    dw $4A50                          ; Entry 75
-    dw $4A6A                          ; Entry 76
-    dw $4AA6                          ; Entry 77
-    dw $4ABB                          ; Entry 78
-    dw $4AD9                          ; Entry 79
-    dw $4AEE                          ; Entry 80
-    dw $4B03                          ; Entry 81
-    dw $4B17                          ; Entry 82
-    dw $4B2C                          ; Entry 83
-    dw $4B3A                          ; Entry 84
-    dw $4B4F                          ; Entry 85
-    dw $4B6C                          ; Entry 86
-    dw $4B84                          ; Entry 87
-    dw $4B9F                          ; Entry 88
-    dw $4BB5                          ; Entry 89
-    dw $4BEB                          ; Entry 90
-    dw $4C11                          ; Entry 91
-    dw $4C35                          ; Entry 92
-    dw $4C4C                          ; Entry 93
-    dw $4C63                          ; Entry 94
+    dw $4019                          ; Entry 4 — mode 0 -> table $4019 (mode list $4009)
+    dw $4215                          ; Entry 5 — mode 1 -> table $4215 (mode list $4009)
+    dw $423B                          ; Entry 6 — mode 2 -> table $423B (mode list $4009)
+    dw $4249                          ; Entry 7 — mode 3 -> table $4249 (mode list $4009)
+    dw $425B                          ; Entry 8 — mode 4 -> table $425B (mode list $4009)
+    dw $4263                          ; Entry 9 — mode 5 -> table $4263 (mode list $4009)
+    dw $4299                          ; Entry 10 — mode 6 -> table $4299 (mode list $4009)
+    dw $42CF                          ; Entry 11 — mode 7 -> table $42CF (mode list $4009)
+    dw $4305                          ; Entry 12 — [table $4019]; battle_message #0 "{ED}Look out! [INS 00] monster!{F…"
+    dw $431F                          ; Entry 13 — battle_message #1 "{ED}Uh-oh! A gang of [INS 00] mon…"
+    dw $4340                          ; Entry 14 — battle_message #2 "{ED}Watch out! [INS 00] and{FC}{E…"
+    dw $4366                          ; Entry 15 — battle_message #3 "{ED}But it hasn't spotted us yet!…"
+    dw $4387                          ; Entry 16 — battle_message #4 "{ED}But they haven't spotted us y…"
+    dw $43AB                          ; Entry 17 — battle_message #5 "{ED}But they haven't spotted us y…"
+    dw $43CF                          ; Entry 18 — battle_message #6 "{ED}But we've caught it off-guard…"
+    dw $43F1                          ; Entry 19 — battle_message #7 "{ED}But we've caught them off-gua…"
+    dw $4415                          ; Entry 20 — battle_message #8 "But we've caught them off-guard!{…"
+    dw $4438                          ; Entry 21 — battle_message #9 "Suddenly - [INS 00] attacks!{FC}{…"
+    dw $4452                          ; Entry 22 — battle_message #10 "Suddenly, a gang of [INS 00]{FC}{…"
+    dw $4482                          ; Entry 23 — battle_message #11 "Suddenly, a gang of monsters{FC}{…"
+    dw $44AF                          ; Entry 24 — battle_message #12 "[INS 00] launches a surprise atta…"
+    dw $44D1                          ; Entry 25 — battle_message #13 "Ambush! [INS 00] monsters attack!…"
+    dw $44F0                          ; Entry 26 — battle_message #14 "Ambush! A gang of monsters attack…"
+    dw $4517                          ; Entry 27 — battle_message #15 "[INS 00] is sleeping!{EC}"
+    dw $4528                          ; Entry 28 — battle_message #16 "[INS 00] is confused!{EC}"
+    dw $4539                          ; Entry 29 — battle_message #17 "[INS 00] becames a lump of iron!{…"
+    dw $4555                          ; Entry 30 — battle_message #18 "[INS 00] is frozen solid!{EC}"
+    dw $456A                          ; Entry 31 — battle_message #19 "{ED}[INS 00] is paralyzed!{EC}"
+    dw $457D                          ; Entry 32 — battle_message #20 "{ED}[INS 00] can't resist dancing…"
+    dw $4597                          ; Entry 33 — battle_message #21 "[INS 00] is shivering!{EC}"
+    dw $45A9                          ; Entry 34 — battle_message #22 "[INS 00] can't get up yet!{EC}"
+    dw $45BE                          ; Entry 35 — battle_message #23 "[INS 00] cowers in fear!{EC}"
+    dw $45D2                          ; Entry 36 — battle_message #24 "[INS 00] is daydreaming!{EC}"
+    dw $45E6                          ; Entry 37 — battle_message #25 "A curse is cast on [INS 00]!{FC}{…"
+    dw $4611                          ; Entry 38 — battle_message #26 "A curse is cast on [INS 00]!{FC}{…"
+    dw $463A                          ; Entry 39 — battle_message #27 "{ED}A curse is cast on [INS 00]!{…"
+    dw $4666                          ; Entry 40 — battle_message #28 "{ED}A curse is cast on [INS 00]!{…"
+    dw $4692                          ; Entry 41 — battle_message #29 "[INS 00] tries to use [INS 10]!{F…"
+    dw $46BE                          ; Entry 42 — battle_message #30 "{ED}[INS 00] casts [INS 10]!{FC}{…"
+    dw $46E9                          ; Entry 43 — battle_message #31 "{ED}[INS 00] casts [INS 10]!{FC}{…"
+    dw $4711                          ; Entry 44 — battle_message #32 "[INS 00] tries to spit [INS 10]!{…"
+    dw $4747                          ; Entry 45 — battle_message #33 "[INS 00] performs the{FC}{EC}{F2}…"
+    dw $477D                          ; Entry 46 — battle_message #34 "[INS 00] attacks!{EC}"
+    dw $478A                          ; Entry 47 — battle_message #35 "{ED}[INS 00] casts [INS 10]!{EC}"
+    dw $4799                          ; Entry 48 — battle_message #36 "[INS 00] throws [INS 10]!{EC}"
+    dw $47A8                          ; Entry 49 — battle_message #37 "[INS 00] spits [INS 10]!{EC}"
+    dw $47B6                          ; Entry 50 — battle_message #38 "[INS 00] performs{FC}{EC}{F2}the …"
+    dw $47CF                          ; Entry 51 — battle_message #39 "{ED}[INS 00] shoots [INS 10]!{EC}"
+    dw $47DF                          ; Entry 52 — battle_message #40 "[INS 00] defends itself!{EC}"
+    dw $47F3                          ; Entry 53 — battle_message #41 "[INS 00] tries to escape!{EC}"
+    dw $4808                          ; Entry 54 — battle_message #42 "[INS 00] tries to escape!{EC}"
+    dw $481D                          ; Entry 55 — battle_message #43 "{ED}[INS 00] jumps on [INS 20]!{E…"
+    dw $482F                          ; Entry 56 — battle_message #44 "[INS 00] charges at [INS 20]!{EC}"
+    dw $4842                          ; Entry 57 — battle_message #45 "{ED}[INS 00] attacks in desperati…"
+    dw $485F                          ; Entry 58 — battle_message #46 "[INS 00] launches a suicide{FC}{E…"
+    dw $4887                          ; Entry 59 — battle_message #47 "{ED}[INS 00] attacks [INS 20] in{…"
+    dw $48A4                          ; Entry 60 — battle_message #48 "{ED}[INS 00] slashes [INS 20].{EC}"
+    dw $48B5                          ; Entry 61 — battle_message #49 "{ED}[INS 00] is charging its{FC}{…"
+    dw $48D6                          ; Entry 62 — battle_message #50 "[INS 00] flies high in the sky!{E…"
+    dw $48F1                          ; Entry 63 — battle_message #51 "{ED}[INS 00] dives down with forc…"
+    dw $490D                          ; Entry 64 — battle_message #52 "[INS 00] takes a deep breath!{EC}"
+    dw $4926                          ; Entry 65 — battle_message #53 "{ED}[INS 00] prays for a miracle.…"
+    dw $495E                          ; Entry 66 — battle_message #54 "[INS 00] calls for help!{EC}"
+    dw $4972                          ; Entry 67 — battle_message #55 "[INS 00] yells loudly for help!{E…"
+    dw $498D                          ; Entry 68 — battle_message #56 "{ED}[INS 00] calms itself and{FC}…"
+    dw $49B0                          ; Entry 69 — battle_message #57 "[INS 00] slashes at tornado speed…"
+    dw $49CE                          ; Entry 70 — battle_message #58 "[INS 00] yells and attacks!{EC}"
+    dw $49E5                          ; Entry 71 — battle_message #59 "[INS 00] creates a vacuum wave!{E…"
+    dw $4A00                          ; Entry 72 — battle_message #60 "[INS 00] calls down lightning!{EC}"
+    dw $4A1A                          ; Entry 73 — battle_message #61 "[INS 00] throws a huge rock!{EC}"
+    dw $4A32                          ; Entry 74 — battle_message #62 "[INS 00] summons horrific thunder…"
+    dw $4A50                          ; Entry 75 — battle_message #63 "{ED}[INS 00] summons the BigBang!…"
+    dw $4A6A                          ; Entry 76 — battle_message #64 "[INS 00] uses all magic powers!{F…"
+    dw $4AA6                          ; Entry 77 — battle_message #65 "[INS 00] mumbles a curse!{EC}"
+    dw $4ABB                          ; Entry 78 — battle_message #66 "[INS 00] summons up the SandStorm…"
+    dw $4AD9                          ; Entry 79 — battle_message #67 "[INS 00] starts to dance!{EC}"
+    dw $4AEE                          ; Entry 80 — battle_message #68 "{ED}[INS 00] gives [INS 20] a hug…"
+    dw $4B03                          ; Entry 81 — battle_message #69 "[INS 00] licks [INS 20]'s face!{E…"
+    dw $4B17                          ; Entry 82 — battle_message #70 "[INS 00] sweeps [INS 20]'s legs!{…"
+    dw $4B2C                          ; Entry 83 — battle_message #71 "[INS 00] trips [INS 20]!{EC}"
+    dw $4B3A                          ; Entry 84 — battle_message #72 "[INS 00] shouts a WarCry!{EC}"
+    dw $4B4F                          ; Entry 85 — battle_message #73 "{ED}[INS 00] summons natural forc…"
+    dw $4B6C                          ; Entry 86 — battle_message #74 "[INS 00] creates a tailwind!{EC}"
+    dw $4B84                          ; Entry 87 — battle_message #75 "[INS 00] summons a strong wind!{E…"
+    dw $4B9F                          ; Entry 88 — battle_message #76 "{ED}[INS 00] binds [INS 20]'s mou…"
+    dw $4BB5                          ; Entry 89 — battle_message #77 "[INS 00] is meditating calmly!{FC…"
+    dw $4BEB                          ; Entry 90 — battle_message #78 "{ED}[INS 00] starts to sing the{F…"
+    dw $4C11                          ; Entry 91 — battle_message #79 "{ED}[INS 00] finishes singing{FC}…"
+    dw $4C35                          ; Entry 92 — battle_message #80 "[INS 00] prepares to fight.{EC}"
+    dw $4C4C                          ; Entry 93 — battle_message #81 "{ED}[INS 00] proctects{FC}{EC}{F2…"
+    dw $4C63                          ; Entry 94 — battle_message #82 "{ED}[INS 00] prepares for enemy{F…"
     db $87                            ; Entry 95 low ($4C87)
 Jump_04c_40c0:
     db $4C                            ; Entry 95 high
-    dw $4CAC                          ; Entry 96
-    dw $4CD0                          ; Entry 97
-    dw $4CF4                          ; Entry 98
-    dw $4D23                          ; Entry 99
-    dw $4D4E                          ; Entry 100
-    dw $4D5D                          ; Entry 101
-    dw $4D94                          ; Entry 102
-    dw $4DAB                          ; Entry 103
-    dw $4DC7                          ; Entry 104
-    dw $4DDB                          ; Entry 105
-    dw $4DE8                          ; Entry 106
-    dw $4E01                          ; Entry 107
-    dw $4E1A                          ; Entry 108
-    dw $4E33                          ; Entry 109
-    dw $4E65                          ; Entry 110
-    dw $4E93                          ; Entry 111
-    dw $4EC8                          ; Entry 112
-    dw $4EF4                          ; Entry 113
-    dw $4F20                          ; Entry 114
-    dw $4F54                          ; Entry 115
-    dw $4F76                          ; Entry 116
-    dw $4F93                          ; Entry 117
-    dw $4FAB                          ; Entry 118
-    dw $4FD3                          ; Entry 119
-    dw $4FF1                          ; Entry 120
-    dw $501A                          ; Entry 121
-    dw $5033                          ; Entry 122
-    dw $5051                          ; Entry 123
-    dw $5070                          ; Entry 124
-    dw $508C                          ; Entry 125
-    dw $50AA                          ; Entry 126
-    dw $50BC                          ; Entry 127
-    dw $50FE                          ; Entry 128
-    dw $512B                          ; Entry 129
-    dw $5142                          ; Entry 130
-    dw $5154                          ; Entry 131
-    dw $5175                          ; Entry 132
-    dw $5193                          ; Entry 133
-    dw $51A5                          ; Entry 134
-    dw $51B9                          ; Entry 135
-    dw $51E2                          ; Entry 136
-    dw $5212                          ; Entry 137
-    dw $523F                          ; Entry 138
-    dw $5257                          ; Entry 139
-    dw $5271                          ; Entry 140
-    dw $5287                          ; Entry 141
-    dw $529F                          ; Entry 142
-    dw $52B9                          ; Entry 143
-    dw $52D9                          ; Entry 144
-    dw $52EB                          ; Entry 145
-    dw $530A                          ; Entry 146
-    dw $5321                          ; Entry 147
-    dw $5337                          ; Entry 148
-    dw $5356                          ; Entry 149
-    dw $5375                          ; Entry 150
-    dw $538F                          ; Entry 151
-    dw $53A9                          ; Entry 152
-    dw $53C5                          ; Entry 153
-    dw $53D9                          ; Entry 154
-    dw $53EA                          ; Entry 155
-    dw $53FB                          ; Entry 156
-    dw $5419                          ; Entry 157
-    dw $5439                          ; Entry 158
-    dw $545A                          ; Entry 159
-    dw $5477                          ; Entry 160
-    dw $5494                          ; Entry 161
-    dw $54B4                          ; Entry 162
-    dw $54CC                          ; Entry 163
-    dw $54E6                          ; Entry 164
-    dw $5503                          ; Entry 165
-    dw $5529                          ; Entry 166
-    dw $5554                          ; Entry 167
-    dw $5581                          ; Entry 168
-    dw $559C                          ; Entry 169
-    dw $55B8                          ; Entry 170
-    dw $55C8                          ; Entry 171
-    dw $55E1                          ; Entry 172
-    dw $55F4                          ; Entry 173
-    dw $5611                          ; Entry 174
-    dw $562C                          ; Entry 175
-    dw $563C                          ; Entry 176
-    dw $5667                          ; Entry 177
-    dw $5677                          ; Entry 178
-    dw $5696                          ; Entry 179
-    dw $56B8                          ; Entry 180
-    dw $56CE                          ; Entry 181
-    dw $56FE                          ; Entry 182
-    dw $5714                          ; Entry 183
-    dw $5722                          ; Entry 184
-    dw $5742                          ; Entry 185
-    dw $5760                          ; Entry 186
-    dw $5779                          ; Entry 187
-    dw $5795                          ; Entry 188
-    dw $57B9                          ; Entry 189
-    dw $57DC                          ; Entry 190
-    dw $57F6                          ; Entry 191
-    dw $5810                          ; Entry 192
-    dw $582D                          ; Entry 193
-    dw $583C                          ; Entry 194
-    dw $585A                          ; Entry 195
-    dw $5871                          ; Entry 196
-    dw $5887                          ; Entry 197
-    dw $58A6                          ; Entry 198
-    dw $58D6                          ; Entry 199
-    dw $58EC                          ; Entry 200
-    dw $5904                          ; Entry 201
-    dw $591D                          ; Entry 202
-    dw $5938                          ; Entry 203
-    dw $5938                          ; Entry 204
-    dw $594A                          ; Entry 205
-    dw $5963                          ; Entry 206
-    dw $597F                          ; Entry 207
-    dw $599A                          ; Entry 208
-    dw $59B7                          ; Entry 209
-    dw $59D0                          ; Entry 210
-    dw $59E6                          ; Entry 211
-    dw $59FA                          ; Entry 212
-    dw $5A0D                          ; Entry 213
-    dw $5A24                          ; Entry 214
-    dw $5A38                          ; Entry 215
-    dw $5A54                          ; Entry 216
-    dw $5A6A                          ; Entry 217
-    dw $5A7C                          ; Entry 218
-    dw $5A8D                          ; Entry 219
-    dw $5A9F                          ; Entry 220
-    dw $5AB9                          ; Entry 221
-    dw $5AC8                          ; Entry 222
-    dw $5AD7                          ; Entry 223
-    dw $5AE6                          ; Entry 224
-    dw $5AF9                          ; Entry 225
-    dw $5B0D                          ; Entry 226
-    dw $5B25                          ; Entry 227
-    dw $5B38                          ; Entry 228
-    dw $5B48                          ; Entry 229
-    dw $5B5E                          ; Entry 230
-    dw $5B72                          ; Entry 231
-    dw $5B80                          ; Entry 232
-    dw $5B97                          ; Entry 233
-    dw $5BAF                          ; Entry 234
-    dw $5BCE                          ; Entry 235
-    dw $5BEB                          ; Entry 236
-    dw $5C04                          ; Entry 237
-    dw $5C23                          ; Entry 238
-    dw $5C7B                          ; Entry 239
-    dw $5C8A                          ; Entry 240
-    dw $5C9E                          ; Entry 241
-    dw $5CBB                          ; Entry 242
-    dw $5CCB                          ; Entry 243
-    dw $5CE8                          ; Entry 244
-    dw $5CF9                          ; Entry 245
-    dw $5D0E                          ; Entry 246
-    dw $5D2B                          ; Entry 247
-    dw $5D47                          ; Entry 248
-    dw $5D5A                          ; Entry 249
-    dw $5D71                          ; Entry 250
-    dw $5D8B                          ; Entry 251
-    dw $5D9E                          ; Entry 252
-    dw $5DB6                          ; Entry 253
-    dw $5DD4                          ; Entry 254
-    dw $5DF4                          ; Entry 255
-    dw $5E2C                          ; Entry 256
-    dw $5E4D                          ; Entry 257
-    dw $5E6A                          ; Entry 258
-    dw $5E8D                          ; Entry 259
-    dw $5EB2                          ; Entry 260
-    dw $5ED7                          ; Entry 261
-    dw $5EFD                          ; Entry 262
-    dw $5F12                          ; Entry 263
-    dw $5F41                          ; Entry 264
+    dw $4CAC                          ; Entry 96 — battle_message #84 "{ED}[INS 00] prepares for enemy{F…"
+    dw $4CD0                          ; Entry 97 — battle_message #85 "{ED}[INS 00] prepares to{FC}{EC}{…"
+    dw $4CF4                          ; Entry 98 — battle_message #86 "[INS 00] opens its mouth to suck{…"
+    dw $4D23                          ; Entry 99 — battle_message #87 "[INS 00] attacks wildly!{FC}{EC}{…"
+    dw $4D4E                          ; Entry 100 — battle_message #88 "[INS 00] is scared!{EC}"
+    dw $4D5D                          ; Entry 101 — battle_message #89 "{ED}[INS 00] dashes towards{FC}{E…"
+    dw $4D94                          ; Entry 102 — battle_message #90 "[INS 00] is frozen in fear!{EC}"
+    dw $4DAB                          ; Entry 103 — battle_message #91 "[INS 00]'s turn! But cannot move!…"
+    dw $4DC7                          ; Entry 104 — battle_message #92 "[INS 00] starts dancing!{EC}"
+    dw $4DDB                          ; Entry 105 — battle_message #93 "[INS 00] uses [INS 10]!{EC}"
+    dw $4DE8                          ; Entry 106 — battle_message #94 "[INS 00] throws [INS 10] at{FC}{E…"
+    dw $4E01                          ; Entry 107 — battle_message #95 "{ED}[INS 00] holds up SageStone.{…"
+    dw $4E1A                          ; Entry 108 — battle_message #96 "{ED}[INS 00] sprinkles WorldDew!{…"
+    dw $4E33                          ; Entry 109 — battle_message #97 "[INS 00] uses [INS 10]!{FC}{EC}{F…"
+    dw $4E65                          ; Entry 110 — battle_message #98 "[INS 00] uses [INS 10]!{FC}{EC}{F…"
+    dw $4E93                          ; Entry 111 — battle_message #99 "[INS 00] uses [INS 10]!{FC}{EC}{F…"
+    dw $4EC8                          ; Entry 112 — battle_message #100 "[INS 00] uses [INS 10]!{FC}{EC}{F…"
+    dw $4EF4                          ; Entry 113 — battle_message #101 "[INS 00] uses [INS 10]!{FC}{EC}{F…"
+    dw $4F20                          ; Entry 114 — battle_message #102 "[INS 00] uses [INS 10]!{FC}{EC}{F…"
+    dw $4F54                          ; Entry 115 — battle_message #103 "{ED}[INS 00] attacks{FC}{EC}{F2}w…"
+    dw $4F76                          ; Entry 116 — battle_message #104 "{ED}[INS 00]'s fear boosts its gu…"
+    dw $4F93                          ; Entry 117 — battle_message #105 "[INS 00] focuses its energy!{EC}"
+    dw $4FAB                          ; Entry 118 — battle_message #106 "[INS 00] counters fiercely!{FC}{E…"
+    dw $4FD3                          ; Entry 119 — battle_message #107 "A Celestial light covers [INS 00]…"
+    dw $4FF1                          ; Entry 120 — battle_message #108 "[INS 00] grabs [INS 10] and{FC}{E…"
+    dw $501A                          ; Entry 121 — battle_message #109 "[INS 00] shouts a battle cry!{EC}"
+    dw $5033                          ; Entry 122 — battle_message #110 "[INS 00] easily dodges the attack…"
+    dw $5051                          ; Entry 123 — battle_message #111 "A horrific thing is summoned!{EC}"
+    dw $5070                          ; Entry 124 — battle_message #112 "A thick fog cozes from [INS 00]!{…"
+    dw $508C                          ; Entry 125 — battle_message #113 "[INS 00] is now loaded with power…"
+    dw $50AA                          ; Entry 126 — battle_message #114 "[INS 00] is out of MP!{EC}"
+    dw $50BC                          ; Entry 127 — battle_message #115 "[Chance Chance Chance Chance...]{…"
+    dw $50FE                          ; Entry 128 — battle_message #116 "A gigantic devil emerges!{FC}{EC}…"
+    dw $512B                          ; Entry 129 — battle_message #117 "Cold winds strike [INS 20]!{EC}"
+    dw $5142                          ; Entry 130 — battle_message #118 "[INS 00] recoveres MP!{EC}"
+    dw $5154                          ; Entry 131 — battle_message #119 "Shooting Stars fall everywhere!{E…"
+    dw $5175                          ; Entry 132 — battle_message #120 "[INS 00] easily dodges the attack…"
+    dw $5193                          ; Entry 133 — battle_message #121 "A critical hit! {EC}"
+    dw $51A5                          ; Entry 134 — battle_message #122 "A pitiful attack! {EC}"
+    dw $51B9                          ; Entry 135 — battle_message #123 "A wall of light reflects the{FC}{…"
+    dw $51E2                          ; Entry 136 — battle_message #124 "The spell is reflected by a{FC}{E…"
+    dw $5212                          ; Entry 137 — battle_message #125 "{ED}The wind around [INS 00]{FC}{…"
+    dw $523F                          ; Entry 138 — battle_message #126 "{ED}[INS 20] dodges the attack!{E…"
+    dw $5257                          ; Entry 139 — battle_message #127 "[INS 20] cannot dodge in time!{EC}"
+    dw $5271                          ; Entry 140 — battle_message #128 "{ED}[INS 00] protects{FC}{EC}{F2}…"
+    dw $5287                          ; Entry 141 — battle_message #129 "[INS 00] absorbs the attack!{EC}"
+    dw $529F                          ; Entry 142 — battle_message #130 "{ED}[INS 00] takes [INS 10] damag…"
+    dw $52B9                          ; Entry 143 — battle_message #131 "{ED}[INS 00] receives{FC}{EC}{F2}…"
+    dw $52D9                          ; Entry 144 — battle_message #132 "[INS 00]'s wound heals!{EC}"
+    dw $52EB                          ; Entry 145 — battle_message #133 "[INS 00] receives a fatal{FC}{EC}…"
+    dw $530A                          ; Entry 146 — battle_message #134 "{ED}[INS 00] loses [INS 10] defen…"
+    dw $5321                          ; Entry 147 — battle_message #135 "[INS 00] loses [INS 10] defense!{…"
+    dw $5337                          ; Entry 148 — battle_message #136 "[INS 00]'s spells are all suspend…"
+    dw $5356                          ; Entry 149 — battle_message #137 "[INS 00]'s spells are all suspend…"
+    dw $5375                          ; Entry 150 — battle_message #138 "[INS 00]'s MP is drained by [INS …"
+    dw $538F                          ; Entry 151 — battle_message #139 "[INS 00]'s MP is drained by [INS …"
+    dw $53A9                          ; Entry 152 — battle_message #140 "[INS 00] starts to glow faintly!{…"
+    dw $53C5                          ; Entry 153 — battle_message #141 "[INS 00] sucks in [INS 10] MP!{EC}"
+    dw $53D9                          ; Entry 154 — battle_message #142 "[INS 00] is confused!{EC}"
+    dw $53EA                          ; Entry 155 — battle_message #143 "[INS 00] is confused!{EC}"
+    dw $53FB                          ; Entry 156 — battle_message #144 "[INS 00]'s attack power is double…"
+    dw $5419                          ; Entry 157 — battle_message #145 "{ED}[INS 00] changes into a big d…"
+    dw $5439                          ; Entry 158 — battle_message #146 "{ED}[INS 00]'s defense goes up{FC…"
+    dw $545A                          ; Entry 159 — battle_message #147 "[INS 00]'s gang become iron lumps…"
+    dw $5477                          ; Entry 160 — battle_message #148 "[INS 00] turns into an iron lump!…"
+    dw $5494                          ; Entry 161 — battle_message #149 "[INS 00]'s speed goes down by{FC}…"
+    dw $54B4                          ; Entry 162 — battle_message #150 "[INS 00]'s speed drops by [INS 10…"
+    dw $54CC                          ; Entry 163 — battle_message #151 "[INS 00]'s speed goes up by [INS …"
+    dw $54E6                          ; Entry 164 — battle_message #152 "An illusion engulfs{FC}{EC}{F2}[I…"
+    dw $5503                          ; Entry 165 — battle_message #153 "A wall of light rises before{FC}{…"
+    dw $5529                          ; Entry 166 — battle_message #154 "A wall of light is created before…"
+    dw $5554                          ; Entry 167 — battle_message #155 "A veil of light covers [INS 00]{F…"
+    dw $5581                          ; Entry 168 — battle_message #156 "[INS 00] is no longer poisoned!{E…"
+    dw $559C                          ; Entry 169 — battle_message #157 "[INS 00] is no longer paralyzed!{…"
+    dw $55B8                          ; Entry 170 — battle_message #158 "[INS 00] is revived!{EC}"
+    dw $55C8                          ; Entry 171 — battle_message #159 "[INS 00] is no longer cursed!{EC}"
+    dw $55E1                          ; Entry 172 — battle_message #160 "[INS 20] turns into [INS 00]!{EC}"
+    dw $55F4                          ; Entry 173 — battle_message #161 "Allies appear from nowhere!{EC}"
+    dw $5611                          ; Entry 174 — battle_message #162 "[INS 00] gets sand in its eyes!{E…"
+    dw $562C                          ; Entry 175 — battle_message #163 "[INS 00] is blinded!{EC}"
+    dw $563C                          ; Entry 176 — battle_message #164 "[INS 00] is now vulnerable to{FC}…"
+    dw $5667                          ; Entry 177 — battle_message #165 "[INS 00] lost [INS 10] MP!{EC}"
+    dw $5677                          ; Entry 178 — battle_message #166 "[INS 00] is lured into{FC}{EC}{F2…"
+    dw $5696                          ; Entry 179 — battle_message #167 "[INS 00] seems to be feeling{FC}{…"
+    dw $56B8                          ; Entry 180 — battle_message #168 "[INS 00] gets goose bumps!{EC}"
+    dw $56CE                          ; Entry 181 — battle_message #169 "[INS 00] gets goose bumps!{FC}{EC…"
+    dw $56FE                          ; Entry 182 — battle_message #170 "[INS 00] freezes in shock!{EC}"
+    dw $5714                          ; Entry 183 — battle_message #171 "[INS 00] stumbles!{EC}"
+    dw $5722                          ; Entry 184 — battle_message #172 "The spell on [INS 00]{FC}{EC}{F2}…"
+    dw $5742                          ; Entry 185 — battle_message #173 "[INS 00] returns to its true form…"
+    dw $5760                          ; Entry 186 — battle_message #174 "[INS 00] is completely cured!{EC}"
+    dw $5779                          ; Entry 187 — battle_message #175 "Wow! [INS 00] joined the battle!{…"
+    dw $5795                          ; Entry 188 — battle_message #176 "{ED}[INS 00] hypnotic dance is{FC…"
+    dw $57B9                          ; Entry 189 — battle_message #177 "{ED}[INS 00] hypnotic{FC}{EC}{F2}…"
+    dw $57DC                          ; Entry 190 — battle_message #178 "[INS 00]'s mouth is bound shut!{E…"
+    dw $57F6                          ; Entry 191 — battle_message #179 "[INS 00]'s mouth is bound shut!{E…"
+    dw $5810                          ; Entry 192 — battle_message #180 "[INS 00] is not listening to you!…"
+    dw $582D                          ; Entry 193 — battle_message #181 "[INS 00] is frozen!{EC}"
+    dw $583C                          ; Entry 194 — battle_message #182 "Misses! [INS 00]!{FC}{EC}{F2}is u…"
+    dw $585A                          ; Entry 195 — battle_message #183 "Missed [INS 00]! No damage!{EC}"
+    dw $5871                          ; Entry 196 — battle_message #184 "Has no effect on [INS 00]!{EC}"
+    dw $5887                          ; Entry 197 — battle_message #185 "But the enemy blocks the way!{EC}"
+    dw $58A6                          ; Entry 198 — battle_message #186 "[INS 00]'s turns to iron and{FC}{…"
+    dw $58D6                          ; Entry 199 — battle_message #187 "But nothing happens!{EC}"
+    dw $58EC                          ; Entry 200 — battle_message #188 "[INS 00] doesn't fall asleep!{EC}"
+    dw $5904                          ; Entry 201 — battle_message #189 "[INS 00] is already sleeping!{EC}"
+    dw $591D                          ; Entry 202 — battle_message #190 "[INS 00] becomes more confused!{E…"
+    dw $5938                          ; Entry 203 — battle_message #191 "[INS 00] isn't revived!{EC}"
+    dw $5938                          ; Entry 204 — battle_message #192 "[INS 00] isn't revived!{EC}"
+    dw $594A                          ; Entry 205 — battle_message #193 "But it doesn't reach [INS 00]!{EC}"
+    dw $5963                          ; Entry 206 — battle_message #194 "But the call is not heard!{EC}"
+    dw $597F                          ; Entry 207 — battle_message #195 "[INS 00] dodges the air attack!{E…"
+    dw $599A                          ; Entry 208 — battle_message #196 "[INS 00] quickly covers its ears!…"
+    dw $59B7                          ; Entry 209 — battle_message #197 "[INS 00] shakes off the sand!{EC}"
+    dw $59D0                          ; Entry 210 — battle_message #198 "[INS 00] dodges with ease!{EC}"
+    dw $59E6                          ; Entry 211 — battle_message #199 "[INS 00] dodges quickly!{EC}"
+    dw $59FA                          ; Entry 212 — battle_message #200 "[INS 00] isn't lured in!{EC}"
+    dw $5A0D                          ; Entry 213 — battle_message #201 "But [INS 00] dodges easily!{EC}"
+    dw $5A24                          ; Entry 214 — battle_message #202 "{ED}[INS 00] isn't affected!{EC}"
+    dw $5A38                          ; Entry 215 — battle_message #203 "But the prayer isn't heard!{EC}"
+    dw $5A54                          ; Entry 216 — battle_message #204 "[INS 00] is sent to sleep!{EC}"
+    dw $5A6A                          ; Entry 217 — battle_message #205 "[INS 00] falls asleep!{EC}"
+    dw $5A7C                          ; Entry 218 — battle_message #206 "[INS 00] is poisoned!{EC}"
+    dw $5A8D                          ; Entry 219 — battle_message #207 "[INS 00] is paralyzed!{EC}"
+    dw $5A9F                          ; Entry 220 — battle_message #208 "[INS 00] is severely poisoned!{EC}"
+    dw $5AB9                          ; Entry 221 — battle_message #209 "[INS 00] is cursed!{EC}"
+    dw $5AC8                          ; Entry 222 — battle_message #210 "[INS 00] is frozen!{EC}"
+    dw $5AD7                          ; Entry 223 — battle_message #211 "[INS 00] gets even!{EC}"
+    dw $5AE6                          ; Entry 224 — battle_message #212 "[INS 00] can't get even!{EC}"
+    dw $5AF9                          ; Entry 225 — battle_message #213 "[INS 00] counterattacks!{EC}"
+    dw $5B0D                          ; Entry 226 — battle_message #214 "[INS 00] can't counterattack!{EC}"
+    dw $5B25                          ; Entry 227 — battle_message #215 "[INS 00] blows back [INS 10]!{EC}"
+    dw $5B38                          ; Entry 228 — battle_message #216 "[INS 00] disappears!{EC}"
+    dw $5B48                          ; Entry 229 — battle_message #217 "The wind is stopped!{EC}"
+    dw $5B5E                          ; Entry 230 — battle_message #218 "Allies have gone! {EC}"
+    dw $5B72                          ; Entry 231 — battle_message #219 "[INS 00] wakes up!{EC}"
+    dw $5B80                          ; Entry 232 — battle_message #220 "[INS 00] returns to normal!{EC}"
+    dw $5B97                          ; Entry 233 — battle_message #221 "[INS 00]'s Ironize wears off!{EC}"
+    dw $5BAF                          ; Entry 234 — battle_message #222 "The wall of light disappears!{EC}"
+    dw $5BCE                          ; Entry 235 — battle_message #223 "The devil leaves, laughing!{EC}"
+    dw $5BEB                          ; Entry 236 — battle_message #224 "The [INS 10] falls to pieces!{EC}"
+    dw $5C04                          ; Entry 237 — battle_message #225 "Poisoned! {FC}{EC}{F2}[INS 00] lo…"
+    dw $5C23                          ; Entry 238 — battle_message #226 "A strong poison takes [INS 10] HP…"
+    dw $5C7B                          ; Entry 239 — battle_message #227 "[INS 00] collapses!{EC}"
+    dw $5C8A                          ; Entry 240 — battle_message #228 "[INS 00] is knocked out!{EC}"
+    dw $5C9E                          ; Entry 241 — battle_message #229 "[INS 00] is weak after the dance!…"
+    dw $5CBB                          ; Entry 242 — battle_message #230 "[INS 00] disappears!{EC}"
+    dw $5CCB                          ; Entry 243 — battle_message #231 "[INS 00] is out of HP and faints!…"
+    dw $5CE8                          ; Entry 244 — battle_message #232 "[INS 00] is finished!{EC}"
+    dw $5CF9                          ; Entry 245 — battle_message #233 "[INS 00] falls to pieces!{EC}"
+    dw $5D0E                          ; Entry 246 — battle_message #234 "[INS 00] is out of HP and faints!…"
+    dw $5D2B                          ; Entry 247 — battle_message #235 "The [INS 00] gang is wiped out!"
+    dw $5D47                          ; Entry 248 — battle_message #236 "[HERO] knocks out [INS 00]!"
+    dw $5D5A                          ; Entry 249 — battle_message #237 "[HERO] beats the [INS 00] gang!"
+    dw $5D71                          ; Entry 250 — battle_message #238 "[HERO] knocks out the enemy!"
+    dw $5D8B                          ; Entry 251 — battle_message #239 "The [INS 00] has fled!"
+    dw $5D9E                          ; Entry 252 — battle_message #240 "The [INS 00] gang has fled!"
+    dw $5DB6                          ; Entry 253 — battle_message #241 "All the monsters have fled!"
+    dw $5DD4                          ; Entry 254 — battle_message #242 "Can't use this item in battle!"
+    dw $5DF4                          ; Entry 255 — battle_message #243 "But there are no items that can b…"
+    dw $5E2C                          ; Entry 256 — battle_message #244 "Can't use items in this battle!"
+    dw $5E4D                          ; Entry 257 — battle_message #245 "Can't run from this battle!"
+    dw $5E6A                          ; Entry 258 — battle_message #246 "{ED}Waiting for [INS 00] to choos…"
+    dw $5E8D                          ; Entry 259 — battle_message #247 "[INS 00] casts [INS 10]!{FC}{EC}{…"
+    dw $5EB2                          ; Entry 260 — battle_message #248 "[INS 00] spits [INS 10]!{FC}{EC}{…"
+    dw $5ED7                          ; Entry 261 — battle_message #249 "[INS 00] dances [INS 10]!{FC}{EC}…"
+    dw $5EFD                          ; Entry 262 — battle_message #250 "But cannot use [INS 00]!"
+    dw $5F12                          ; Entry 263 — battle_message #251 "But cannot use this skill in this…"
+    dw $5F41                          ; Entry 264 — battle_message #252 "Cannot give a command in this {F2…"
     dw CustomMsg_E0_MagicBurn                          ; Entry 265
-    dw $5F6D                          ; Entry 266
-    dw $5F86                          ; Entry 267
-    dw $5FA7                          ; Entry 268
-    dw $5FCA                          ; Entry 269
-    dw $6002                          ; Entry 270
-    dw $6032                          ; Entry 271
-    dw $6069                          ; Entry 272
-    dw $609E                          ; Entry 273
-    dw $60F2                          ; Entry 274
-    dw $6127                          ; Entry 275
-    dw $6145                          ; Entry 276
-    dw $6170                          ; Entry 277
-    dw $619A                          ; Entry 278
-    dw $61C8                          ; Entry 279
-    dw $61FB                          ; Entry 280
-    dw $6243                          ; Entry 281
-    dw $6270                          ; Entry 282
-    dw $62AC                          ; Entry 283
-    dw $62E3                          ; Entry 284
-    dw $631F                          ; Entry 285
-    dw $6345                          ; Entry 286
-    dw $6345                          ; Entry 287
-    dw $6375                          ; Entry 288
-    dw $63A3                          ; Entry 289
-    dw $63B5                          ; Entry 290
-    dw $63C9                          ; Entry 291
-    dw $63E5                          ; Entry 292
-    dw $63E5                          ; Entry 293
-    dw $63E5                          ; Entry 294
-    dw $63E5                          ; Entry 295
-    dw $63E5                          ; Entry 296
-    dw $63E5                          ; Entry 297
-    dw $63E5                          ; Entry 298
-    dw $63E5                          ; Entry 299
-    dw $63E5                          ; Entry 300
-    dw $63E5                          ; Entry 301
-    dw $6401                          ; Entry 302
-    dw $6429                          ; Entry 303
-    dw $6447                          ; Entry 304
-    dw $6464                          ; Entry 305
-    dw $6478                          ; Entry 306
-    dw $6490                          ; Entry 307
-    dw $64AC                          ; Entry 308
-    dw $64BC                          ; Entry 309
-    dw $64C8                          ; Entry 310
-    dw $64D5                          ; Entry 311
-    dw $64E8                          ; Entry 312
-    dw $6503                          ; Entry 313
-    dw $651B                          ; Entry 314
-    dw $6534                          ; Entry 315
-    dw $6542                          ; Entry 316
-    dw $654D                          ; Entry 317
-    dw $655A                          ; Entry 318
-    dw $6565                          ; Entry 319
-    dw $6579                          ; Entry 320
-    dw $6589                          ; Entry 321
-    dw $6595                          ; Entry 322
-    dw $659E                          ; Entry 323
-    dw $65B1                          ; Entry 324
-    dw $65B1                          ; Entry 325
-    dw $65BA                          ; Entry 326
-    dw $65C7                          ; Entry 327
-    dw $65DB                          ; Entry 328
-    dw $65E6                          ; Entry 329
-    dw $65FA                          ; Entry 330
-    dw $6605                          ; Entry 331
-    dw $6606                          ; Entry 332
-    dw $6614                          ; Entry 333
-    dw $662D                          ; Entry 334
-    dw $663F                          ; Entry 335
-    dw $6652                          ; Entry 336
-    dw $6654                          ; Entry 337
-    dw $6675                          ; Entry 338
-    dw $669F                          ; Entry 339
-    dw $66BA                          ; Entry 340
-    dw $66CC                          ; Entry 341
-    dw $66CE                          ; Entry 342
-    dw $66E4                          ; Entry 343
+    dw $5F6D                          ; Entry 266 — [table $4215]; battle_effect #0 "{ED}[INS 00] gives [INS 10] to{FC…"
+    dw $5F86                          ; Entry 267 — battle_effect #1 "[INS 00] gives [INS 10] to the{FC…"
+    dw $5FA7                          ; Entry 268 — battle_effect #2 "{ED}[INS 00] gives [INS 10] to th…"
+    dw $5FCA                          ; Entry 269 — battle_effect #3 "{ED}[INS 00] starts eating the tr…"
+    dw $6002                          ; Entry 270 — battle_effect #4 "[INS 00] timidly eats the treat!{…"
+    dw $6032                          ; Entry 271 — battle_effect #5 "The [INS 00] gang eats the treat!…"
+    dw $6069                          ; Entry 272 — battle_effect #6 "The [INS 00] gang nibbles the tre…"
+    dw $609E                          ; Entry 273 — battle_effect #7 "The monsters start eating{FC}{EC}…"
+    dw $60F2                          ; Entry 274 — battle_effect #8 "The monsters nibble the treat!{FC…"
+    dw $6127                          ; Entry 275 — battle_effect #9 "{ED}A veil of light covers [INS 0…"
+    dw $6145                          ; Entry 276 — battle_effect #10 "{ED}A veil of light covers the{FC…"
+    dw $6170                          ; Entry 277 — battle_effect #11 "A veil of light covers the{FC}{EC…"
+    dw $619A                          ; Entry 278 — battle_effect #12 "[INS 00] tries to fly high!{FC}{E…"
+    dw $61C8                          ; Entry 279 — battle_effect #13 "[INS 00] tries to call for help!{…"
+    dw $61FB                          ; Entry 280 — battle_effect #14 "[INS 00] tries to attack after{FC…"
+    dw $6243                          ; Entry 281 — battle_effect #15 "[INS 00] tries to a curse!{FC}{EC…"
+    dw $6270                          ; Entry 282 — battle_effect #16 "[INS 00] tries to suck in{FC}{EC}…"
+    dw $62AC                          ; Entry 283 — battle_effect #17 "[INS 00] tries to shut{FC}{EC}{F2…"
+    dw $62E3                          ; Entry 284 — battle_effect #18 "{ED}[INS 00] tries to sing the{FC…"
+    dw $631F                          ; Entry 285 — [table $423B]; battle_command #0 "No monsters that can give command…"
+    dw $6345                          ; Entry 286 — battle_command #1 "[INS 00] doesn't have any skill t…"
+    dw $6345                          ; Entry 287 — battle_command #2 "[INS 00] doesn't have any skill t…"
+    dw $6375                          ; Entry 288 — battle_command #3 "But this skill cannot be used {F2…"
+    dw $63A3                          ; Entry 289 — battle_command #4 "Not enough MP!"
+    dw $63B5                          ; Entry 290 — battle_command #5 "Give up the battle?"
+    dw $63C9                          ; Entry 291 — battle_command #6 "[INS 00]s gives up the battle!{EC}"
+    dw $63E5                          ; Entry 292 — [table $4249]; battle_beasttail #0 "[HERO] takes out the BeastTail!{E…"
+    dw $63E5                          ; Entry 293 — battle_beasttail #1 "[HERO] takes out the BeastTail!{E…"
+    dw $63E5                          ; Entry 294 — battle_beasttail #2 "[HERO] takes out the BeastTail!{E…"
+    dw $63E5                          ; Entry 295 — battle_beasttail #3 "[HERO] takes out the BeastTail!{E…"
+    dw $63E5                          ; Entry 296 — battle_beasttail #4 "[HERO] takes out the BeastTail!{E…"
+    dw $63E5                          ; Entry 297 — battle_beasttail #5 "[HERO] takes out the BeastTail!{E…"
+    dw $63E5                          ; Entry 298 — battle_beasttail #6 "[HERO] takes out the BeastTail!{E…"
+    dw $63E5                          ; Entry 299 — battle_beasttail #7 "[HERO] takes out the BeastTail!{E…"
+    dw $63E5                          ; Entry 300 — battle_beasttail #8 "[HERO] takes out the BeastTail!{E…"
+    dw $63E5                          ; Entry 301 — [table $425B]; battle_beasttail_result #0 "[HERO] takes out the BeastTail!{E…"
+    dw $6401                          ; Entry 302 — battle_beasttail_result #1 "Points the BeastTail at the{FC}{E…"
+    dw $6429                          ; Entry 303 — battle_beasttail_result #2 "[INS 00] has been your pal before…"
+    dw $6447                          ; Entry 304 — battle_beasttail_result #3 "[INS 00] hasn't been your pal yet…"
+    dw $6464                          ; Entry 305 — [table $4263]; credits_role #0 "{ED}EXECUTIVE DIRECTOR"
+    dw $6478                          ; Entry 306 — credits_role #1 "{ED}SCENARIO & GAME DESIGN"
+    dw $6490                          ; Entry 307 — credits_role #2 "{ED}CHARACTER & MONSTER DESIGN"
+    dw $64AC                          ; Entry 308 — credits_role #3 "{ED}MUSIC COMPOSER"
+    dw $64BC                          ; Entry 309 — credits_role #4 "{ED}TOSE STAFF"
+    dw $64C8                          ; Entry 310 — credits_role #5 "{ED}PROGRAMMERS"
+    dw $64D5                          ; Entry 311 — credits_role #6 "{ED}GRAPHIC DESIGNERS"
+    dw $64E8                          ; Entry 312 — credits_role #7 "{ED}MUSIC COMPOSER ASSISTANTS"
+    dw $6503                          ; Entry 313 — credits_role #8 "{ED}GAME DESIGN ASSISTANTS"
+    dw $651B                          ; Entry 314 — credits_role #9 "{ED}EIDOS INTERACTIVE STAFF"
+    dw $6534                          ; Entry 315 — credits_role #10 "{ED}LOCALIZATION"
+    dw $6542                          ; Entry 316 — credits_role #11 "{ED}PRODUCERS"
+    dw $654D                          ; Entry 317 — credits_role #12 "{ED}QA MANAGERS"
+    dw $655A                          ; Entry 318 — credits_role #13 "{ED}MARKETING"
+    dw $6565                          ; Entry 319 — credits_role #14 "{ED}MANUAL TRANSLATION"
+    dw $6579                          ; Entry 320 — credits_role #15 "{ED}SPECIAL THANKS"
+    dw $6589                          ; Entry 321 — credits_role #16 "{ED}ENIX STAFF"
+    dw $6595                          ; Entry 322 — credits_role #17 "{ED}ARTWORK"
+    dw $659E                          ; Entry 323 — credits_role #18 "{ED}TECHNICAL SUPPORT"
+    dw $65B1                          ; Entry 324 — credits_role #19 "{ED}TESTERS"
+    dw $65B1                          ; Entry 325 — credits_role #20 "{ED}TESTERS"
+    dw $65BA                          ; Entry 326 — credits_role #21 "{ED}U.S.LIAISON"
+    dw $65C7                          ; Entry 327 — credits_role #22 "{ED}ASSISTANT PRODUCER"
+    dw $65DB                          ; Entry 328 — credits_role #23 "{ED}PRODUCERS"
+    dw $65E6                          ; Entry 329 — credits_role #24 "{ED}EXECUTIVE PRODUCER"
+    dw $65FA                          ; Entry 330 — credits_role #25 "{ED}PRESIDENT"
+    dw $6605                          ; Entry 331 — credits_role #26 ""
+    dw $6606                          ; Entry 332 — [table $4299]; credits_name #0 "{ED}YUJI HORII"
+    dw $6614                          ; Entry 333 — credits_name #1 "{ED}ENIX TOSE YUJI HORII"
+    dw $662D                          ; Entry 334 — credits_name #2 "{ED}AKIRA TORIYAMA"
+    dw $663F                          ; Entry 335 — credits_name #3 "{ED}KOICHI SUGIYAMA"
+    dw $6652                          ; Entry 336 — credits_name #4 "{ED}"
+    dw $6654                          ; Entry 337 — credits_name #5 "{ED}GAO MATSUMOTO UMEZO HI!SPEED"
+    dw $6675                          ; Entry 338 — credits_name #6 "{ED}WANTENYU YUKAPI OLD{9B}ONES T…"
+    dw $669F                          ; Entry 339 — credits_name #7 "{ED}ASD{9B}BAT KAZUKI KIKUTANI"
+    dw $66BA                          ; Entry 340 — credits_name #8 "{ED}JIN UNK HISANE"
+    dw $66CC                          ; Entry 341 — credits_name #9 "{ED}"
+    dw $66CE                          ; Entry 342 — credits_name #10 "{ED}JIM CURRY YOTA WADA"
+    dw $66E4                          ; Entry 343 — credits_name #11 "{ED}FRANK HOM (U.S.) YOTA WADA (U…"
 FuncB4c_42b1:
-    dw $6708                          ; Entry 344
-    dw $6730                          ; Entry 345
-    dw $6771                          ; Entry 346
-    dw $677C                          ; Entry 347
-    dw $67BB                          ; Entry 348
-    dw $67BD                          ; Entry 349
-    dw $67CC                          ; Entry 350
-    dw $680D                          ; Entry 351
-    dw $685C                          ; Entry 352
-    dw $68A7                          ; Entry 353
-    dw $68B9                          ; Entry 354
-    dw $68C9                          ; Entry 355
-    dw $68E8                          ; Entry 356
-    dw $68FA                          ; Entry 357
-    dw $6910                          ; Entry 358
-    dw $6944                          ; Entry 359
+    dw $6708                          ; Entry 344 — credits_name #12 "{ED}TONY BOURNE (U.K.) MIKE MCHAL…"
+    dw $6730                          ; Entry 345 — credits_name #13 "{ED}SUSAN BOSHKOFF (U.S.) JIM CUR…"
+    dw $6771                          ; Entry 346 — credits_name #14 "{ED}PHOSPHORS"
+    dw $677C                          ; Entry 347 — credits_name #15 "{ED}EIDOS-JAPAN SATOSHI HONDA TAK…"
+    dw $67BB                          ; Entry 348 — credits_name #16 "{ED}"
+    dw $67BD                          ; Entry 349 — credits_name #17 "{ED}NAOKI OISHI"
+    dw $67CC                          ; Entry 350 — credits_name #18 "{ED}TERUHIKO HANAWA KENJIRO KANO …"
+    dw $680D                          ; Entry 351 — credits_name #19 "{ED}SEIICHI MORIUCHI KAN IKEDA TE…"
+    dw $685C                          ; Entry 352 — credits_name #20 "MITO YAMAGISHI JIRO KIMURA MIWAKO…"
+    dw $68A7                          ; Entry 353 — credits_name #21 "{ED}PAUL HANDELMAN"
+    dw $68B9                          ; Entry 354 — credits_name #22 "{ED}JUN MIYAMOTO"
+    dw $68C9                          ; Entry 355 — credits_name #23 "{ED}HITOSHI SUINOU KEIJI HONDA"
+    dw $68E8                          ; Entry 356 — credits_name #24 "{ED}YUKINOBU CHIDA"
+    dw $68FA                          ; Entry 357 — credits_name #25 "{ED}YASUHIRO FUKUSHIMA"
+    dw $6910                          ; Entry 358 — credits_name #26 "{ED}{B5}2000 ARMOR PROJECT {B5}20…"
+    dw $6944                          ; Entry 359 — [table $42CF]; credits_end #0 "{ED}…TOBECONTINUED"
 
 LoadB4c_42d1:
 ; Bank $4c entry 0 = battle-MESSAGE renderer (S2c). Caller sets $c822=mode (0/1)

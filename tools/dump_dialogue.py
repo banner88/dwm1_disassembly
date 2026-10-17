@@ -33,6 +33,22 @@ is not shown (every box but the last ends with it).
   python3 tools/dump_dialogue.py             # measure + write extracted/dialogue.json
   python3 tools/dump_dialogue.py --selftest  # JSON raw bytes == ROM (no PyBoy; verify check 5)
   python3 tools/dump_dialogue.py --redecode  # S120: re-decode with the measured map kept (no PyBoy)
+
+S150 (ROADMAP P3.6 — editing the game's own text; TEXT_SYSTEM "Edited game text"):
+  * every text id also records the POINTER SLOT the game reads it through —
+    `table` (the per-id table SaveBankAndSwitch indexes: DE right after its
+    level-1 read, hooked at $00:$0944 during the same stub call) and `index`
+    ([$C823] there); bank = `bank`. An edited text is keyed by that slot (bank,
+    table + 2 * index) — the engine hook looks it up there (PROJECT_COMPILER §2.58).
+  * `inside` = the id whose string this one starts INSIDE (an alternate entry
+    point the game uses — editing the outer line does not change it);
+  * a string ends at its first $F0 that is NOT a control code's parameter byte
+    (editor2/core/textmark.scan — the battle tutorial writes `$FB $F0`);
+  * more tables: bank $4C modes 1-7 (treats / veils / not enough MP, commands,
+    the BeastTail, the CREDITS and "TO BE CONTINUED"), bank $59 (the battle
+    tutorial), bank $41 item names / personalities / the families' default
+    names; each table carries `style` (textmark: 'box' / 'rows'), `group` (the
+    editor's Text sub-tab) and `owner` (texts another tab edits).
 """
 import hashlib
 import io
@@ -68,18 +84,34 @@ CHARS.update({0x96: '[', 0x97: ']', 0x9D: '~', 0x9E: '/', 0xA0: '(', 0xA1: ')',
               0xA2: '+', 0xA4: '\u2026'})
 PARAMS = {0xE8: 2, 0xE9: 1, 0xF8: 1, 0xF9: 1, 0xFB: 1, 0xFC: 1}   # S120: + $F8 / $FB / $FC (bank $56 TextCodeTable)
 
-# (source, bank, table address, count, title)
+# (source, bank, table address, count, title, style, group, owner)
+#   style = editor2/core/textmark style ('box': $EF $EE lines, ▼ boxes; 'rows': $F1 lines)
+#   group = the editor's Text sub-tab; owner = another tab edits these (None = the Text tab)
 TABLES = [
-    ('battle_message', 0x4C, 0x4019, 256, 'battle messages (bank $4C mode 0)'),
-    ('field_message', 0x41, 0x4101, 113, 'field messages (bank $41 mode 2)'),
-    ('item_description', 0x41, 0x493F, 44, 'item descriptions (bank $41 mode 9)'),
-    ('misc_message', 0x41, 0x49CD, 37, 'battle / level-up messages (bank $41 mode 11)'),
-    ('watabou_message', 0x41, 0x4A17, 2, 'Watabou (bank $41 mode 12)'),
-    ('item_use_message', 0x41, 0x4A1B, 48, 'item use messages (bank $41 mode 13)'),
-    ('spell_use_message', 0x41, 0x4A7B, 12, 'spell use messages (bank $41 mode 14)'),
-    ('skill_description', 0x56, 0x6667, 256, 'skill descriptions (bank $56)'),
-    ('monster_description', 0x4D, 0x420B, 215, 'monster descriptions (bank $4D mode 1)'),
+    ('battle_message', 0x4C, 0x4019, 253, 'battle messages (bank $4C mode 0; id $FD = the custom skills\' own line, ids 254 / 255 = mode 1 rows 0 / 1)', 'rows', 'battle', None),
+    ('battle_effect', 0x4C, 0x4215, 19, 'battle: treats, veils of light, not enough MP (bank $4C mode 1)', 'rows', 'battle', None),
+    ('battle_command', 0x4C, 0x423B, 7, 'battle: commands and skills that cannot be used (bank $4C mode 2)', 'rows', 'battle', None),
+    ('battle_beasttail', 0x4C, 0x4249, 9, 'battle: the BeastTail (bank $4C mode 3)', 'rows', 'battle', None),
+    ('battle_beasttail_result', 0x4C, 0x425B, 4, 'battle: the BeastTail, its result (bank $4C mode 4)', 'rows', 'battle', None),
+    ('misc_message', 0x41, 0x49CD, 37, 'battle / level-up messages (bank $41 mode 11)', 'rows', 'battle', None),
+    ('spell_use_message', 0x41, 0x4A7B, 12, 'spell use messages (bank $41 mode 14)', 'rows', 'battle', None),
+    ('battle_tutorial', 0x59, 0x5301, 7, 'the battle tutorial (bank $59 mode 0)', 'box', 'battle', None),
+    ('battle_tutorial_name', 0x59, 0x530F, 3, 'the battle tutorial: names (bank $59 mode 1)', 'rows', 'battle', None),
+    ('battle_tutorial_menu', 0x59, 0x5315, 14, 'the battle tutorial: the menus (bank $59 mode 2)', 'box', 'battle', None),
+    ('item_name', 0x41, 0x48E7, 44, 'item names (bank $41 mode 8)', 'rows', 'items', None),
+    ('item_description', 0x41, 0x493F, 44, 'item descriptions (bank $41 mode 9)', 'rows', 'items', None),
+    ('item_use_message', 0x41, 0x4A1B, 48, 'item use messages (bank $41 mode 13)', 'rows', 'items', None),
+    ('field_message', 0x41, 0x4101, 113, 'field messages and menu words (bank $41 mode 2)', 'rows', 'menus', None),
+    ('personality', 0x41, 0x4997, 27, 'personalities (bank $41 mode 10)', 'rows', 'menus', None),
+    ('family_name', 0x41, 0x41E3, 160, "the families' default names (bank $41 mode 3; 16 per family)", 'rows', 'menus', None),
+    ('watabou_message', 0x41, 0x4A17, 2, 'Watabou (bank $41 mode 12)', 'rows', 'menus', None),
+    ('credits_role', 0x4C, 0x4263, 27, 'the credits: roles (bank $4C mode 5)', 'rows', 'credits', None),
+    ('credits_name', 0x4C, 0x4299, 27, 'the credits: names (bank $4C mode 6)', 'rows', 'credits', None),
+    ('credits_end', 0x4C, 0x42CF, 1, '"TO BE CONTINUED" (bank $4C mode 7)', 'rows', 'credits', None),
+    ('skill_description', 0x56, 0x6667, 256, 'skill descriptions (bank $56)', 'rows', 'skills', 'Skills'),
+    ('monster_description', 0x4D, 0x420B, 215, 'monster descriptions (bank $4D mode 1)', 'rows', 'monsters', 'Monsters'),
 ]
+SBAS_LEVEL1 = 0x0944          # SaveBankAndSwitch right after its level-1 read (DE = the table)
 
 
 def flat(bank, addr):
@@ -87,9 +119,9 @@ def flat(bank, addr):
 
 
 def raw_at(rom, bank, addr):
-    o = flat(bank, addr)
-    e = rom.find(b'\xf0', o, o + MAX_LEN)
-    return rom[o:e] if e >= 0 else None
+    """S150: the first $F0 that is not a parameter byte ends the text."""
+    from editor2.core.textmark import scan
+    return scan(rom, flat(bank, addr), MAX_LEN)
 
 
 def decode(raw):
@@ -141,7 +173,15 @@ def measure(rom_path):
     st = io.BytesIO()
     p.save_state(st)
     out = []
+    seen = []
+
+    def level1(_ctx):                              # S150: the slot the id is read through
+        r = p.register_file
+        if not seen:
+            seen.append((p.memory[0xC824], r.D << 8 | r.E, p.memory[0xC823]))
+    p.hook_register(0, SBAS_LEVEL1, level1, None)
     for tid in range(N_IDS):
+        seen.clear()
         st.seek(0)
         p.load_state(st)
         code = [0xF3, 0x21, tid & 0xFF, tid >> 8,          # di / ld hl, id
@@ -153,19 +193,25 @@ def measure(rom_path):
         adv(p, 3)
         if p.register_file.PC != STUB + 7:
             raise SystemExit(f'text id ${tid:04X}: TextBankDispatch did not return')
-        out.append((p.memory[0xC824], p.memory[0xC82D] | p.memory[0xC82E] << 8))
+        if len(seen) != 1 or seen[0][0] != p.memory[0xC824]:
+            raise SystemExit(f'text id ${tid:04X}: no single SaveBankAndSwitch level 1 ({seen})')
+        out.append((p.memory[0xC824], p.memory[0xC82D] | p.memory[0xC82E] << 8,
+                    seen[0][1], seen[0][2]))
     p.stop()
     return out
 
 
 def table_entries(rom):
     out = []
-    for source, bank, base, n, _title in TABLES:
+    for source, bank, base, n, _title, _style, _group, _owner in TABLES:
         for i in range(n):
+            if source == 'battle_message' and i == 0xFD:
+                continue                           # the custom skills' own line (bank $4C fork)
             o = flat(bank, base + 2 * i)
             a = rom[o] | rom[o + 1] << 8
             raw = raw_at(rom, bank, a) if 0x4000 <= a < 0x8000 else None
             out.append({'source': source, 'index': i, 'bank': f'${bank:02X}',
+                        'table': f'${base:04X}',
                         'addr': f'${a:04X}', 'raw': raw.hex() if raw is not None else None,
                         'text': decode(raw) if raw is not None else ''})
     return out
@@ -173,11 +219,15 @@ def table_entries(rom):
 
 def build(rom, resolved):
     ids, first = [], {}
-    for tid, (bank, addr) in enumerate(resolved):
+    spans = []
+    for tid, (bank, addr, table, index) in enumerate(resolved):
         raw = raw_at(rom, bank, addr)
         e = {'id': f'${tid:04X}', 'bank': f'${bank:02X}', 'addr': f'${addr:04X}',
+             'table': f'${table:04X}', 'index': index,
              'raw': raw.hex() if raw is not None else None,
              'text': decode(raw) if raw is not None else ''}
+        if raw is not None:
+            spans.append((bank, addr, addr + len(raw), e['id']))
         key = (bank, addr)
         if key in first:
             e['same_as'] = first[key]
@@ -186,14 +236,22 @@ def build(rom, resolved):
         if not plausible(raw):
             e['suspect'] = True
         ids.append(e)
+    for e in ids:                                  # S150: an entry point inside another string
+        b, a = int(e['bank'][1:], 16), int(e['addr'][1:], 16)
+        outer = [sid for sb, s0, s1, sid in spans if sb == b and s0 < a < s1]
+        if outer and not e.get('suspect'):
+            e['inside'] = sorted(outer)[0]
     return {
         '_generator': ('tools/dump_dialogue.py from data/DWM-original.gbc '
-                       f'{ORIGINAL_MD5} (S108): text ids resolved by stub-calling '
+                       f'{ORIGINAL_MD5} (S108; S150: + every id with its pointer slot — table / index — '
+                       'hooked at SaveBankAndSwitch $00:$0944; more tables; param-aware ends): text ids resolved by stub-calling '
                        'TextBankDispatch $00:$0AD9 in PyBoy; tables read from their '
                        'pointer tables. Read by the editor Dialogue tab '
                        '(editor2/core/dialogue_index.py).'),
         'tables': [{'source': s, 'bank': f'${b:02X}', 'table': f'${t:04X}', 'count': n,
-                    'title': title} for s, b, t, n, title in TABLES],
+                    'title': title, 'style': st, 'group': g, 'owner': ow}
+                   for s, b, t, n, title, st, g, ow in TABLES],
+        'id_style': 'box',
         'text_ids': ids,
         'table_entries': table_entries(rom),
     }
@@ -218,6 +276,10 @@ def selftest():
         if (raw.hex() if raw is not None else None) != e['raw'] or \
                 (decode(raw) if raw is not None else '') != e['text']:
             bad.append(e['id'])
+        # S150: the measured slot holds the string's address (bank, table + 2 * index)
+        o = flat(int(e['bank'][1:], 16), int(e['table'][1:], 16) + 2 * e['index'])
+        if (rom[o] | rom[o + 1] << 8) != int(e['addr'][1:], 16):
+            bad.append(e['id'] + ' slot')
     if len(d['text_ids']) != N_IDS:
         bad.append('count')
     if d['table_entries'] != table_entries(rom):
@@ -226,8 +288,8 @@ def selftest():
         print(f'FAIL: {OUT} differs from the ROM at {bad[:10]} — regenerate')
         return 1
     banks = sorted({e['bank'] for e in d['text_ids']})
-    print(f'OK: dialogue.json == ROM ({N_IDS} text ids in banks {" ".join(banks)}; '
-          f'{len(d["table_entries"])} table texts)')
+    print(f'OK: dialogue.json == ROM ({N_IDS} text ids in banks {" ".join(banks)}, '
+          f'each read through its slot; {len(d["table_entries"])} table texts)')
     return 0
 
 
@@ -239,7 +301,8 @@ def main():
         # S120: keep the MEASURED id -> (bank, address) map, re-read the bytes and
         # re-decode (the glyph table changed; nothing about where texts live did)
         old = json.load(open(OUT))
-        resolved = [(int(e['bank'][1:], 16), int(e['addr'][1:], 16)) for e in old['text_ids']]
+        resolved = [(int(e['bank'][1:], 16), int(e['addr'][1:], 16),
+                     int(e['table'][1:], 16), e['index']) for e in old['text_ids']]
         data = build(rom, resolved)
     else:
         data = build(rom, measure(ROM_PATH))

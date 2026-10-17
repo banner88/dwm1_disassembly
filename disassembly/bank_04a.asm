@@ -12,296 +12,296 @@ SECTION "ROM Bank $04a", ROMX[$4000], BANK[$4a]
     dw LoadB4a_424b                  ; Entry 0
     dw $4263                          ; Entry 1
     dw $427B                          ; Entry 2
-    dw $400B                          ; Entry 3
-    dw $404B                          ; Entry 4
-    dw $4293                          ; Entry 5
-    dw $42B0                          ; Entry 6
-    dw $4339                          ; Entry 7
-    dw $437E                          ; Entry 8
-    dw $439A                          ; Entry 9
-    dw $43B8                          ; Entry 10
-    dw $43E5                          ; Entry 11
-    dw $445B                          ; Entry 12
-    dw $449A                          ; Entry 13
-    dw $44CF                          ; Entry 14
-    dw $44E9                          ; Entry 15
-    dw $450C                          ; Entry 16
-    dw $453C                          ; Entry 17
-    dw $45A7                          ; Entry 18
-    dw $460C                          ; Entry 19
-    dw $4630                          ; Entry 20
-    dw $46B2                          ; Entry 21
-    dw $47C1                          ; Entry 22
-    dw $47E8                          ; Entry 23
-    dw $4822                          ; Entry 24
-    dw $482E                          ; Entry 25
-    dw $4886                          ; Entry 26
-    dw $4940                          ; Entry 27
-    dw $49B6                          ; Entry 28
-    dw $49F5                          ; Entry 29
-    dw $4AE9                          ; Entry 30
-    dw $4B52                          ; Entry 31
-    dw $4C7B                          ; Entry 32
-    dw $4CB5                          ; Entry 33
-    dw $4CEB                          ; Entry 34
-    dw $4D15                          ; Entry 35
-    dw $4DD0                          ; Entry 36
-    dw $4E50                          ; Entry 37
-    dw $4E8E                          ; Entry 38
-    dw $4EAA                          ; Entry 39
-    dw $4EDF                          ; Entry 40
-    dw $4F0D                          ; Entry 41
-    dw $4F44                          ; Entry 42
-    dw $4F68                          ; Entry 43
-    dw $4F89                          ; Entry 44
-    dw $4FF8                          ; Entry 45
-    dw $501F                          ; Entry 46
-    dw $5073                          ; Entry 47
-    dw $50A4                          ; Entry 48
-    dw $50DB                          ; Entry 49
-    dw $50FC                          ; Entry 50
-    dw $5131                          ; Entry 51
-    dw $5131                          ; Entry 52
-    dw $5131                          ; Entry 53
-    dw $514A                          ; Entry 54
-    dw $5174                          ; Entry 55
-    dw $51B0                          ; Entry 56
-    dw $51EA                          ; Entry 57
-    dw $5221                          ; Entry 58
-    dw $524B                          ; Entry 59
-    dw $526C                          ; Entry 60
-    dw $52D0                          ; Entry 61
-    dw $52F7                          ; Entry 62
-    dw $5349                          ; Entry 63
-    dw $5349                          ; Entry 64
-    dw $5349                          ; Entry 65
-    dw $5349                          ; Entry 66
-    dw $5349                          ; Entry 67
-    dw $5349                          ; Entry 68
-    dw $5349                          ; Entry 69
-    dw $53B1                          ; Entry 70
-    dw $53DB                          ; Entry 71
-    dw $5415                          ; Entry 72
-    dw $546D                          ; Entry 73
-    dw $54AA                          ; Entry 74
-    dw $54CE                          ; Entry 75
-    dw $54EF                          ; Entry 76
-    dw $5563                          ; Entry 77
-    dw $558A                          ; Entry 78
-    dw $55E4                          ; Entry 79
-    dw $55E4                          ; Entry 80
-    dw $55E4                          ; Entry 81
-    dw $55E4                          ; Entry 82
-    dw $55E4                          ; Entry 83
-    dw $55E4                          ; Entry 84
-    dw $55E4                          ; Entry 85
-    dw $5627                          ; Entry 86
-    dw $564C                          ; Entry 87
-    dw $567E                          ; Entry 88
-    dw $56B4                          ; Entry 89
-    dw $56EF                          ; Entry 90
-    dw $5713                          ; Entry 91
-    dw $5737                          ; Entry 92
-    dw $579E                          ; Entry 93
-    dw $57C5                          ; Entry 94
-    dw $5817                          ; Entry 95
-    dw $5817                          ; Entry 96
-    dw $5817                          ; Entry 97
-    dw $5817                          ; Entry 98
-    dw $5817                          ; Entry 99
-    dw $5817                          ; Entry 100
-    dw $5817                          ; Entry 101
-    dw $586F                          ; Entry 102
-    dw $5892                          ; Entry 103
-    dw $58C9                          ; Entry 104
-    dw $5903                          ; Entry 105
-    dw $5937                          ; Entry 106
-    dw $5951                          ; Entry 107
-    dw $5978                          ; Entry 108
-    dw $59D2                          ; Entry 109
-    dw $59F9                          ; Entry 110
-    dw $5A43                          ; Entry 111
-    dw $5A43                          ; Entry 112
-    dw $5A43                          ; Entry 113
-    dw $5A43                          ; Entry 114
-    dw $5A43                          ; Entry 115
-    dw $5A43                          ; Entry 116
-    dw $5A43                          ; Entry 117
-    dw $5A74                          ; Entry 118
-    dw $5A92                          ; Entry 119
-    dw $5ACB                          ; Entry 120
-    dw $5AFD                          ; Entry 121
-    dw $5B31                          ; Entry 122
-    dw $5B51                          ; Entry 123
-    dw $5B79                          ; Entry 124
-    dw $5BF0                          ; Entry 125
-    dw $5C1B                          ; Entry 126
-    dw $5C72                          ; Entry 127
-    dw $5C97                          ; Entry 128
-    dw $5CD6                          ; Entry 129
-    dw $5CD6                          ; Entry 130
-    dw $5CD6                          ; Entry 131
-    dw $5CD6                          ; Entry 132
-    dw $5CD6                          ; Entry 133
-    dw $5D06                          ; Entry 134
-    dw $5D28                          ; Entry 135
-    dw $5D63                          ; Entry 136
-    dw $5D94                          ; Entry 137
-    dw $5DD1                          ; Entry 138
-    dw $5DF1                          ; Entry 139
-    dw $5E27                          ; Entry 140
-    dw $5E8F                          ; Entry 141
-    dw $5EA6                          ; Entry 142
-    dw $5F0B                          ; Entry 143
-    dw $5F0B                          ; Entry 144
-    dw $5F0B                          ; Entry 145
-    dw $5F0B                          ; Entry 146
-    dw $5F0B                          ; Entry 147
-    dw $5F0B                          ; Entry 148
-    dw $5F0B                          ; Entry 149
-    dw $5F0B                          ; Entry 150
-    dw $5F0B                          ; Entry 151
-    dw $5F0B                          ; Entry 152
-    dw $5F0B                          ; Entry 153
-    dw $5F0B                          ; Entry 154
-    dw $5F0B                          ; Entry 155
-    dw $5F0B                          ; Entry 156
-    dw $5F0B                          ; Entry 157
-    dw $5F0B                          ; Entry 158
-    dw $5F0B                          ; Entry 159
-    dw $5F0B                          ; Entry 160
-    dw $5F0B                          ; Entry 161
-    dw $5F0B                          ; Entry 162
-    dw $5F0B                          ; Entry 163
-    dw $5F0B                          ; Entry 164
-    dw $5F0B                          ; Entry 165
-    dw $5F2A                          ; Entry 166
-    dw $5F3E                          ; Entry 167
-    dw $5F5A                          ; Entry 168
-    dw $5F73                          ; Entry 169
-    dw $5F8C                          ; Entry 170
-    dw $5F9B                          ; Entry 171
-    dw $5FAD                          ; Entry 172
-    dw $5FCF                          ; Entry 173
-    dw $5FF2                          ; Entry 174
-    dw $6003                          ; Entry 175
-    dw $6028                          ; Entry 176
-    dw $604D                          ; Entry 177
-    dw $6072                          ; Entry 178
-    dw $6084                          ; Entry 179
-    dw $60AF                          ; Entry 180
-    dw $60C3                          ; Entry 181
-    dw $60C3                          ; Entry 182
-    dw $60C3                          ; Entry 183
-    dw $60C3                          ; Entry 184
-    dw $60C3                          ; Entry 185
-    dw $60C3                          ; Entry 186
-    dw $60C3                          ; Entry 187
-    dw $60C3                          ; Entry 188
-    dw $60C3                          ; Entry 189
-    dw $60C3                          ; Entry 190
-    dw $60C3                          ; Entry 191
-    dw $60C3                          ; Entry 192
-    dw $60C3                          ; Entry 193
-    dw $60C3                          ; Entry 194
-    dw $60C3                          ; Entry 195
-    dw $60C3                          ; Entry 196
-    dw $60C3                          ; Entry 197
-    dw $60DE                          ; Entry 198
-    dw $60F3                          ; Entry 199
-    dw $610C                          ; Entry 200
-    dw $6131                          ; Entry 201
-    dw $6141                          ; Entry 202
-    dw $615F                          ; Entry 203
-    dw $6183                          ; Entry 204
-    dw $6190                          ; Entry 205
-    dw $619F                          ; Entry 206
-    dw $61C2                          ; Entry 207
-    dw $61E7                          ; Entry 208
-    dw $61FF                          ; Entry 209
-    dw $623B                          ; Entry 210
-    dw $625E                          ; Entry 211
-    dw $6283                          ; Entry 212
-    dw $62A8                          ; Entry 213
-    dw $62CD                          ; Entry 214
-    dw $62F3                          ; Entry 215
-    dw $6312                          ; Entry 216
-    dw $6329                          ; Entry 217
-    dw $634B                          ; Entry 218
-    dw $635E                          ; Entry 219
-    dw $6375                          ; Entry 220
-    dw $639A                          ; Entry 221
-    dw $63C0                          ; Entry 222
-    dw $63D3                          ; Entry 223
-    dw $63D3                          ; Entry 224
-    dw $63D3                          ; Entry 225
-    dw $63D3                          ; Entry 226
-    dw $63D3                          ; Entry 227
-    dw $63D3                          ; Entry 228
-    dw $63D3                          ; Entry 229
-    dw $63F6                          ; Entry 230
-    dw $640D                          ; Entry 231
-    dw $6432                          ; Entry 232
-    dw $644E                          ; Entry 233
-    dw $648D                          ; Entry 234
-    dw $64A8                          ; Entry 235
-    dw $64E7                          ; Entry 236
-    dw $64FB                          ; Entry 237
-    dw $651E                          ; Entry 238
-    dw $6540                          ; Entry 239
-    dw $6561                          ; Entry 240
-    dw $6582                          ; Entry 241
-    dw $65A6                          ; Entry 242
-    dw $65C8                          ; Entry 243
-    dw $65EE                          ; Entry 244
-    dw $660A                          ; Entry 245
-    dw $662A                          ; Entry 246
-    dw $664F                          ; Entry 247
-    dw $6669                          ; Entry 248
-    dw $6689                          ; Entry 249
-    dw $66A3                          ; Entry 250
-    dw $66C4                          ; Entry 251
-    dw $66E0                          ; Entry 252
-    dw $6701                          ; Entry 253
-    dw $6720                          ; Entry 254
-    dw $673F                          ; Entry 255
-    dw $6760                          ; Entry 256
-    dw $677D                          ; Entry 257
-    dw $679E                          ; Entry 258
-    dw $67D0                          ; Entry 259
-    dw $67F5                          ; Entry 260
-    dw $6827                          ; Entry 261
-    dw $684C                          ; Entry 262
-    dw $6887                          ; Entry 263
-    dw $68D1                          ; Entry 264
-    dw $690E                          ; Entry 265
-    dw $6986                          ; Entry 266
-    dw $69B8                          ; Entry 267
-    dw $69E8                          ; Entry 268
-    dw $69E8                          ; Entry 269
-    dw $69E8                          ; Entry 270
-    dw $69E8                          ; Entry 271
-    dw $69E8                          ; Entry 272
-    dw $69E8                          ; Entry 273
-    dw $69E8                          ; Entry 274
-    dw $69E8                          ; Entry 275
-    dw $69E8                          ; Entry 276
-    dw $69E8                          ; Entry 277
-    dw $6A03                          ; Entry 278
-    dw $6A15                          ; Entry 279
-    dw $6A38                          ; Entry 280
-    dw $6A5C                          ; Entry 281
-    dw $6A7D                          ; Entry 282
-    dw $6A99                          ; Entry 283
-    dw $6ABF                          ; Entry 284
-    dw $6AE0                          ; Entry 285
-    dw $6B05                          ; Entry 286
-    dw $6B4D                          ; Entry 287
-    dw $6B73                          ; Entry 288
-    dw $6B97                          ; Entry 289
-    dw $6BB0                          ; Entry 290
-    dw $6BC8                          ; Entry 291
-    dw $6BE5                          ; Entry 292
+    dw $400B                          ; Entry 3 — mode 0 -> table $400B (mode list $4007)
+    dw $404B                          ; Entry 4 — mode 1 -> table $404B (mode list $4007)
+    dw $4293                          ; Entry 5 — [table $400B]; text $05E0 "*:Humpf, I don't need you!"
+    dw $42B0                          ; Entry 6 — text $05E1 "*:I don't have such a name! Don't…"
+    dw $4339                          ; Entry 7 — text $05E2 "*:Yep. It's Santi. How did you kn…"
+    dw $437E                          ; Entry 8 — text $05E3 "Santi:Wait here for me!"
+    dw $439A                          ; Entry 9 — text $05E4 "Santi:Talk to my Grandpa!!"
+    dw $43B8                          ; Entry 10 — text $05E5 "Santi:C'mon, go talk to my Grandp…"
+    dw $43E5                          ; Entry 11 — text $05E6 "Santi:You talked to my Grandpa, r…"
+    dw $445B                          ; Entry 12 — text $05E7 "Santi:Don't just stand there! Go …"
+    dw $449A                          ; Entry 13 — text $05E8 "Santi:Was the Travelers' Gate use…"
+    dw $44CF                          ; Entry 14 — text $05E9 "Santi:Y...Ya big fool!"
+    dw $44E9                          ; Entry 15 — text $05EA "Santi:I...I'm... happy....blush."
+    dw $450C                          ; Entry 16 — text $05EB "*:Oh our hero [HERO]! Welcome to …"
+    dw $453C                          ; Entry 17 — text $05EC "*:What a good feeling to be the w…"
+    dw $45A7                          ; Entry 18 — text $05ED "*:La la la [HERO] and Milayou La …"
+    dw $460C                          ; Entry 19 — text $05EE "*:I didn't think you could win..."
+    dw $4630                          ; Entry 20 — text $05EF "*:Giggle giggle! Listen listen! *…"
+    dw $46B2                          ; Entry 21 — text $05F0 "*:Well well, Congratulations!! I …"
+    dw $47C1                          ; Entry 22 — text $05F1 "*:Well of course! You're the vict…"
+    dw $47E8                          ; Entry 23 — text $05F2 "*:Hi! *:How about a reward for yo…"
+    dw $4822                          ; Entry 24 — text $05F3 "*:Okay."
+    dw $482E                          ; Entry 25 — text $05F4 "*:...tickle ...tickle, tickle *:t…"
+    dw $4886                          ; Entry 26 — text $05F5 "*:Oh, what a joy! [HERO] won! *:T…"
+    dw $4940                          ; Entry 27 — text $05F6 "*:Oh, the hero of GreatTree, Mast…"
+    dw $49B6                          ; Entry 28 — text $05F7 "*:Yes, of course. The victor woul…"
+    dw $49F5                          ; Entry 29 — text $05F8 "*:The monstrous master was your s…"
+    dw $4AE9                          ; Entry 30 — text $05F9 "*:Hey! Our hero [HERO]! *:The two…"
+    dw $4B52                          ; Entry 31 — text $05FA "*:Missing... Something missing. *…"
+    dw $4C7B                          ; Entry 32 — text $05FB "*:...I wonder if you brought a mo…"
+    dw $4CB5                          ; Entry 33 — text $05FC "*:Oh! You brought it here! Show m…"
+    dw $4CEB                          ; Entry 34 — text $05FD "[INS 00] cast Call! But nothing h…"
+    dw $4D15                          ; Entry 35 — text $05FE "*:What the heck? Nothing happened…"
+    dw $4DD0                          ; Entry 36 — text $05FF "*:You knew it right? This is the …"
+    dw $4E50                          ; Entry 37 — [table $404B]; text $0600 "*:Come to me when you want to bre…"
+    dw $4E8E                          ; Entry 38 — text $0601 "Why not breed with my [INS 00]?"
+    dw $4EAA                          ; Entry 39 — text $0602 "*:Which monster do you want to br…"
+    dw $4EDF                          ; Entry 40 — text $0603 "*:You can't breed low level monst…"
+    dw $4F0D                          ; Entry 41 — text $0604 "*:There will be no monsters to ta…"
+    dw $4F44                          ; Entry 42 — text $0605 "*:Are you okay with this monster?"
+    dw $4F68                          ; Entry 43 — text $0606 "*:Start the breeding ceremony?"
+    dw $4F89                          ; Entry 44 — text $0607 "*:I have no idea what kind of egg…"
+    dw $4FF8                          ; Entry 45 — text $0608 "*:Let's begin the breeding ceremo…"
+    dw $501F                          ; Entry 46 — text $0609 "*:I hope a strong monster will be…"
+    dw $5073                          ; Entry 47 — text $060A "*:My Eyeder loves devils. Want to…"
+    dw $50A4                          ; Entry 48 — text $060B "*:Which monster will you breed wi…"
+    dw $50DB                          ; Entry 49 — text $060C "*:Why not breed with my Yeti?"
+    dw $50FC                          ; Entry 50 — text $060D "*:Which monster will you breed wi…"
+    dw $5131                          ; Entry 51 — text $060E "*:Tut, stingy. Hic..."
+    dw $5131                          ; Entry 52 — text $060F "*:Tut, stingy. Hic..."
+    dw $5131                          ; Entry 53 — text $0610 "*:Tut, stingy. Hic..."
+    dw $514A                          ; Entry 54 — text $0611 "Why don't you breed with my CatFl…"
+    dw $5174                          ; Entry 55 — text $0612 "*:Which monster do you want to br…"
+    dw $51B0                          ; Entry 56 — text $0613 "*:I can't let mine breed with low…"
+    dw $51EA                          ; Entry 57 — text $0614 "*:You won't have any monsters to …"
+    dw $5221                          ; Entry 58 — text $0615 "*:With this monster? Are you sure?"
+    dw $524B                          ; Entry 59 — text $0616 "*:Start the breeding ceremony?"
+    dw $526C                          ; Entry 60 — text $0617 "*:I can't tell what kinda monster…"
+    dw $52D0                          ; Entry 61 — text $0618 "*:Let's begin the breeding ceremo…"
+    dw $52F7                          ; Entry 62 — text $0619 "*:Hope a strong monster will be b…"
+    dw $5349                          ; Entry 63 — text $061A "*:Well, if you want to breed agai…"
+    dw $5349                          ; Entry 64 — text $061B "*:Well, if you want to breed agai…"
+    dw $5349                          ; Entry 65 — text $061C "*:Well, if you want to breed agai…"
+    dw $5349                          ; Entry 66 — text $061D "*:Well, if you want to breed agai…"
+    dw $5349                          ; Entry 67 — text $061E "*:Well, if you want to breed agai…"
+    dw $5349                          ; Entry 68 — text $061F "*:Well, if you want to breed agai…"
+    dw $5349                          ; Entry 69 — text $0620 "*:Well, if you want to breed agai…"
+    dw $53B1                          ; Entry 70 — text $0621 "*:Why not breed with my LizardMan?"
+    dw $53DB                          ; Entry 71 — text $0622 "*:Which one are you gonna breed w…"
+    dw $5415                          ; Entry 72 — text $0623 "*:Hey, your monster is weak. That…"
+    dw $546D                          ; Entry 73 — text $0624 "*:Hey! You won't have any monster…"
+    dw $54AA                          ; Entry 74 — text $0625 "*:Are you okay with this monster?"
+    dw $54CE                          ; Entry 75 — text $0626 "*:Start the breeding ceremony?"
+    dw $54EF                          ; Entry 76 — text $0627 "*:I don't know what kind of egg w…"
+    dw $5563                          ; Entry 77 — text $0628 "*:Let's begin the breeding ceremo…"
+    dw $558A                          ; Entry 78 — text $0629 "*:Well, you should be at least ha…"
+    dw $55E4                          ; Entry 79 — text $062A "Mick:I'll be on my journey by the…"
+    dw $55E4                          ; Entry 80 — text $062B "Mick:I'll be on my journey by the…"
+    dw $55E4                          ; Entry 81 — text $062C "Mick:I'll be on my journey by the…"
+    dw $55E4                          ; Entry 82 — text $062D "Mick:I'll be on my journey by the…"
+    dw $55E4                          ; Entry 83 — text $062E "Mick:I'll be on my journey by the…"
+    dw $55E4                          ; Entry 84 — text $062F "Mick:I'll be on my journey by the…"
+    dw $55E4                          ; Entry 85 — text $0630 "Mick:I'll be on my journey by the…"
+    dw $5627                          ; Entry 86 — text $0631 "Mick:Let's breed with my DeadNite…"
+    dw $564C                          ; Entry 87 — text $0632 "Mick:Who do you want to pick for …"
+    dw $567E                          ; Entry 88 — text $0633 "Mick:Your monster's level is too …"
+    dw $56B4                          ; Entry 89 — text $0634 "Mick:You won't have any monsters …"
+    dw $56EF                          ; Entry 90 — text $0635 "Mick:With this one? Are you sure?"
+    dw $5713                          ; Entry 91 — text $0636 "Mick:Start the breeding ceremony?"
+    dw $5737                          ; Entry 92 — text $0637 "*:I have no idea what kind of egg…"
+    dw $579E                          ; Entry 93 — text $0638 "*:Let's begin the breeding ceremo…"
+    dw $57C5                          ; Entry 94 — text $0639 "*:This egg is the proof of our fr…"
+    dw $5817                          ; Entry 95 — text $063A "*:Please come to me when you want…"
+    dw $5817                          ; Entry 96 — text $063B "*:Please come to me when you want…"
+    dw $5817                          ; Entry 97 — text $063C "*:Please come to me when you want…"
+    dw $5817                          ; Entry 98 — text $063D "*:Please come to me when you want…"
+    dw $5817                          ; Entry 99 — text $063E "*:Please come to me when you want…"
+    dw $5817                          ; Entry 100 — text $063F "*:Please come to me when you want…"
+    dw $5817                          ; Entry 101 — text $0640 "*:Please come to me when you want…"
+    dw $586F                          ; Entry 102 — text $0641 "*:Want to breed with my Rayburn?"
+    dw $5892                          ; Entry 103 — text $0642 "*:Which monster are you picking f…"
+    dw $58C9                          ; Entry 104 — text $0643 "*:I don't want to breed with a lo…"
+    dw $5903                          ; Entry 105 — text $0644 "*:You'll have no monsters to take…"
+    dw $5937                          ; Entry 106 — text $0645 "*:Is this monster okay?"
+    dw $5951                          ; Entry 107 — text $0646 "*:Can I start the breeding ceremo…"
+    dw $5978                          ; Entry 108 — text $0647 "*:I have no idea what kind of egg…"
+    dw $59D2                          ; Entry 109 — text $0648 "*:Let's start the breeding ceremo…"
+    dw $59F9                          ; Entry 110 — text $0649 "*:I hope it'll be a strong monste…"
+    dw $5A43                          ; Entry 111 — text $064A "*:Pay me a visit when you want to…"
+    dw $5A43                          ; Entry 112 — text $064B "*:Pay me a visit when you want to…"
+    dw $5A43                          ; Entry 113 — text $064C "*:Pay me a visit when you want to…"
+    dw $5A43                          ; Entry 114 — text $064D "*:Pay me a visit when you want to…"
+    dw $5A43                          ; Entry 115 — text $064E "*:Pay me a visit when you want to…"
+    dw $5A43                          ; Entry 116 — text $064F "*:Pay me a visit when you want to…"
+    dw $5A43                          ; Entry 117 — text $0650 "*:Pay me a visit when you want to…"
+    dw $5A74                          ; Entry 118 — text $0651 "*:Why not breed with my [INS 00]?"
+    dw $5A92                          ; Entry 119 — text $0652 "*:Which monster are you going to …"
+    dw $5ACB                          ; Entry 120 — text $0653 "*:Cannot breed with a low level m…"
+    dw $5AFD                          ; Entry 121 — text $0654 "*:You'll have no monsters to take…"
+    dw $5B31                          ; Entry 122 — text $0655 "*:This monster? Are you sure?"
+    dw $5B51                          ; Entry 123 — text $0656 "*:Can we start the breeding cerem…"
+    dw $5B79                          ; Entry 124 — text $0657 "*:I can't imagine what kind of eg…"
+    dw $5BF0                          ; Entry 125 — text $0658 "*:Then, let us begin the ceremony."
+    dw $5C1B                          ; Entry 126 — text $0659 "*:Hopefully a strong monster will…"
+    dw $5C72                          ; Entry 127 — text $065A "*:Why not breed with my Metabble!"
+    dw $5C97                          ; Entry 128 — text $065B "*:Which monster do you want to br…"
+    dw $5CD6                          ; Entry 129 — text $065C "Milayou:Come back when you wanna …"
+    dw $5CD6                          ; Entry 130 — text $065D "Milayou:Come back when you wanna …"
+    dw $5CD6                          ; Entry 131 — text $065E "Milayou:Come back when you wanna …"
+    dw $5CD6                          ; Entry 132 — text $065F "Milayou:Come back when you wanna …"
+    dw $5CD6                          ; Entry 133 — text $0660 "Milayou:Come back when you wanna …"
+    dw $5D06                          ; Entry 134 — text $0661 "Milayou:Breed with my Skeletor!"
+    dw $5D28                          ; Entry 135 — text $0662 "Milayou:Which monster will you pi…"
+    dw $5D63                          ; Entry 136 — text $0663 "Milayou:A low level monster can't…"
+    dw $5D94                          ; Entry 137 — text $0664 "Milayou:You won't have any monste…"
+    dw $5DD1                          ; Entry 138 — text $0665 "Milayou:Is this monster okay?"
+    dw $5DF1                          ; Entry 139 — text $0666 "Milayou:I'll start the breeding c…"
+    dw $5E27                          ; Entry 140 — text $0667 "Milayou:I don't know what kind of…"
+    dw $5E8F                          ; Entry 141 — text $0668 "Milayou:Let's breed!"
+    dw $5EA6                          ; Entry 142 — text $0669 "Milayou:I hope it'll be a strong …"
+    dw $5F0B                          ; Entry 143 — text $066A "*:Item shop. May I help you?"
+    dw $5F0B                          ; Entry 144 — text $066B "*:Item shop. May I help you?"
+    dw $5F0B                          ; Entry 145 — text $066C "*:Item shop. May I help you?"
+    dw $5F0B                          ; Entry 146 — text $066D "*:Item shop. May I help you?"
+    dw $5F0B                          ; Entry 147 — text $066E "*:Item shop. May I help you?"
+    dw $5F0B                          ; Entry 148 — text $066F "*:Item shop. May I help you?"
+    dw $5F0B                          ; Entry 149 — text $0670 "*:Item shop. May I help you?"
+    dw $5F0B                          ; Entry 150 — text $0671 "*:Item shop. May I help you?"
+    dw $5F0B                          ; Entry 151 — text $0672 "*:Item shop. May I help you?"
+    dw $5F0B                          ; Entry 152 — text $0673 "*:Item shop. May I help you?"
+    dw $5F0B                          ; Entry 153 — text $0674 "*:Item shop. May I help you?"
+    dw $5F0B                          ; Entry 154 — text $0675 "*:Item shop. May I help you?"
+    dw $5F0B                          ; Entry 155 — text $0676 "*:Item shop. May I help you?"
+    dw $5F0B                          ; Entry 156 — text $0677 "*:Item shop. May I help you?"
+    dw $5F0B                          ; Entry 157 — text $0678 "*:Item shop. May I help you?"
+    dw $5F0B                          ; Entry 158 — text $0679 "*:Item shop. May I help you?"
+    dw $5F0B                          ; Entry 159 — text $067A "*:Item shop. May I help you?"
+    dw $5F0B                          ; Entry 160 — text $067B "*:Item shop. May I help you?"
+    dw $5F0B                          ; Entry 161 — text $067C "*:Item shop. May I help you?"
+    dw $5F0B                          ; Entry 162 — text $067D "*:Item shop. May I help you?"
+    dw $5F0B                          ; Entry 163 — text $067E "*:Item shop. May I help you?"
+    dw $5F0B                          ; Entry 164 — text $067F "*:Item shop. May I help you?"
+    dw $5F0B                          ; Entry 165 — text $0680 "*:Item shop. May I help you?"
+    dw $5F2A                          ; Entry 166 — text $0681 "*:Anything else?"
+    dw $5F3E                          ; Entry 167 — text $0682 "*:Thank you. Come again!"
+    dw $5F5A                          ; Entry 168 — text $0683 "*:What would you like?"
+    dw $5F73                          ; Entry 169 — text $0684 "*:What would you like?"
+    dw $5F8C                          ; Entry 170 — text $0685 "*:How many?"
+    dw $5F9B                          ; Entry 171 — text $0686 "[INS 10] X [INS 00] is [INS 20]G."
+    dw $5FAD                          ; Entry 172 — text $0687 "*:You don't have enough money."
+    dw $5FCF                          ; Entry 173 — text $0688 "*:You can only carry 20 items!"
+    dw $5FF2                          ; Entry 174 — text $0689 "*:Thank you!"
+    dw $6003                          ; Entry 175 — text $068A "*:Which items will you sell to me?"
+    dw $6028                          ; Entry 176 — text $068B "*:You don't have items I can buy."
+    dw $604D                          ; Entry 177 — text $068C "*:How many would you like to sell?"
+    dw $6072                          ; Entry 178 — text $068D "[INS 10] X [INS 00] is [INS 20]G."
+    dw $6084                          ; Entry 179 — text $068E "*:You can only have up to 99999G!"
+    dw $60AF                          ; Entry 180 — text $068F "*:Thanks again!"
+    dw $60C3                          ; Entry 181 — text $0690 "*:Vault. May I help you?"
+    dw $60C3                          ; Entry 182 — text $0691 "*:Vault. May I help you?"
+    dw $60C3                          ; Entry 183 — text $0692 "*:Vault. May I help you?"
+    dw $60C3                          ; Entry 184 — text $0693 "*:Vault. May I help you?"
+    dw $60C3                          ; Entry 185 — text $0694 "*:Vault. May I help you?"
+    dw $60C3                          ; Entry 186 — text $0695 "*:Vault. May I help you?"
+    dw $60C3                          ; Entry 187 — text $0696 "*:Vault. May I help you?"
+    dw $60C3                          ; Entry 188 — text $0697 "*:Vault. May I help you?"
+    dw $60C3                          ; Entry 189 — text $0698 "*:Vault. May I help you?"
+    dw $60C3                          ; Entry 190 — text $0699 "*:Vault. May I help you?"
+    dw $60C3                          ; Entry 191 — text $069A "*:Vault. May I help you?"
+    dw $60C3                          ; Entry 192 — text $069B "*:Vault. May I help you?"
+    dw $60C3                          ; Entry 193 — text $069C "*:Vault. May I help you?"
+    dw $60C3                          ; Entry 194 — text $069D "*:Vault. May I help you?"
+    dw $60C3                          ; Entry 195 — text $069E "*:Vault. May I help you?"
+    dw $60C3                          ; Entry 196 — text $069F "*:Vault. May I help you?"
+    dw $60C3                          ; Entry 197 — text $06A0 "*:Vault. May I help you?"
+    dw $60DE                          ; Entry 198 — text $06A1 "*:Something else?"
+    dw $60F3                          ; Entry 199 — text $06A2 "*:Come again anytime."
+    dw $610C                          ; Entry 200 — text $06A3 "*:What would you like us to store?"
+    dw $6131                          ; Entry 201 — text $06A4 "*:Which one?"
+    dw $6141                          ; Entry 202 — text $06A5 "*:You don't have anything."
+    dw $615F                          ; Entry 203 — text $06A6 "*:Sorry. We can't store anymore."
+    dw $6183                          ; Entry 204 — text $06A7 "*:How many?"
+    dw $6190                          ; Entry 205 — text $06A8 "*:Too much!"
+    dw $619F                          ; Entry 206 — text $06A9 "*:You're in safe hands with us."
+    dw $61C2                          ; Entry 207 — text $06AA "*:How much do you want to deposit?"
+    dw $61E7                          ; Entry 208 — text $06AB "*:Not enough money."
+    dw $61FF                          ; Entry 209 — text $06AC "*:Excuse me but you can only depo…"
+    dw $623B                          ; Entry 210 — text $06AD "*:You're in safe hands with us."
+    dw $625E                          ; Entry 211 — text $06AE "*:What would you like to take out?"
+    dw $6283                          ; Entry 212 — text $06AF "*:We don't have any of your gold."
+    dw $62A8                          ; Entry 213 — text $06B0 "*:Take out items or withdraw gold?"
+    dw $62CD                          ; Entry 214 — text $06B1 "*:We don't have any of your items."
+    dw $62F3                          ; Entry 215 — text $06B2 "*:Too much stuff to store."
+    dw $6312                          ; Entry 216 — text $06B3 "*:Take out how many?"
+    dw $6329                          ; Entry 217 — text $06B4 "*:You have too much to carry!"
+    dw $634B                          ; Entry 218 — text $06B5 "*:Here it is."
+    dw $635E                          ; Entry 219 — text $06B6 "*:Withdraw how much?"
+    dw $6375                          ; Entry 220 — text $06B7 "*:You don't have that much money."
+    dw $639A                          ; Entry 221 — text $06B8 "*:You can't carry that much money."
+    dw $63C0                          ; Entry 222 — text $06B9 "*:Here it is."
+    dw $63D3                          ; Entry 223 — text $06BA "Pulio:Hey there! Whadayagonnado?"
+    dw $63D3                          ; Entry 224 — text $06BB "Pulio:Hey there! Whadayagonnado?"
+    dw $63D3                          ; Entry 225 — text $06BC "Pulio:Hey there! Whadayagonnado?"
+    dw $63D3                          ; Entry 226 — text $06BD "Pulio:Hey there! Whadayagonnado?"
+    dw $63D3                          ; Entry 227 — text $06BE "Pulio:Hey there! Whadayagonnado?"
+    dw $63D3                          ; Entry 228 — text $06BF "Pulio:Hey there! Whadayagonnado?"
+    dw $63D3                          ; Entry 229 — text $06C0 "Pulio:Hey there! Whadayagonnado?"
+    dw $63F6                          ; Entry 230 — text $06C1 "Pulio:Anything else?"
+    dw $640D                          ; Entry 231 — text $06C2 "Pulio:Later! We'll be here for ya!"
+    dw $6432                          ; Entry 232 — text $06C3 "Pulio:Drop off which one?"
+    dw $644E                          ; Entry 233 — text $06C4 "Pulio:Hey, you're not gonna have …"
+    dw $648D                          ; Entry 234 — text $06C5 "Pulio:Drop off this one?"
+    dw $64A8                          ; Entry 235 — text $06C6 "Pulio:Stop by once in a while to …"
+    dw $64E7                          ; Entry 236 — text $06C7 "Pulio:Replace it?"
+    dw $64FB                          ; Entry 237 — text $06C8 "Pulio:Replace it with which one?"
+    dw $651E                          ; Entry 238 — text $06C9 "Pulio:Replace it with this one?"
+    dw $6540                          ; Entry 239 — text $06CA "Pulio:I replaced [INS 00] with [I…"
+    dw $6561                          ; Entry 240 — text $06CB "Pulio:Picking up which one, [HERO…"
+    dw $6582                          ; Entry 241 — text $06CC "Pulio:No monsters here to take."
+    dw $65A6                          ; Entry 242 — text $06CD "Pulio:You can't take any more!"
+    dw $65C8                          ; Entry 243 — text $06CE "Pulio:You're gonna pick this one …"
+    dw $65EE                          ; Entry 244 — text $06CF "Pulio:Train it well, [HERO]!"
+    dw $660A                          ; Entry 245 — text $06D0 "Pulio:Replacing a monster, [HERO]?"
+    dw $662A                          ; Entry 246 — text $06D1 "Pulio:Which one are you replacing?"
+    dw $664F                          ; Entry 247 — text $06D2 "Pulio:Replace this one?"
+    dw $6669                          ; Entry 248 — text $06D3 "Pulio:Replace with which one?"
+    dw $6689                          ; Entry 249 — text $06D4 "Pulio:Replace this one?"
+    dw $66A3                          ; Entry 250 — text $06D5 "Pulio:I replaced [INS 00] with [I…"
+    dw $66C4                          ; Entry 251 — text $06D6 "Pulio:Check on which one?"
+    dw $66E0                          ; Entry 252 — text $06D7 "Pulio:Hey, none to check on!"
+    dw $6701                          ; Entry 253 — text $06D8 "Pulio:Check on which one, [HERO]?"
+    dw $6720                          ; Entry 254 — text $06D9 "Pulio:Check on which one, [HERO]?"
+    dw $673F                          ; Entry 255 — text $06DA "Pulio:Separate with which one?"
+    dw $6760                          ; Entry 256 — text $06DB "Pulio:Hey, nothing here!"
+    dw $677D                          ; Entry 257 — text $06DC "Pulio:Separate with which one?"
+    dw $679E                          ; Entry 258 — text $06DD "Pulio:Are you sure? You'll lose i…"
+    dw $67D0                          ; Entry 259 — text $06DE "[INS 00] was returned to the wild."
+    dw $67F5                          ; Entry 260 — text $06DF "Pulio:Are you sure? You'll lose i…"
+    dw $6827                          ; Entry 261 — text $06E0 "[INS 00] was returned to the wild."
+    dw $684C                          ; Entry 262 — text $06E1 "Pulio:Select [PICK UP] to take th…"
+    dw $6887                          ; Entry 263 — text $06E2 "Pulio:You wanna make the monsters…"
+    dw $68D1                          ; Entry 264 — text $06E3 "Pulio:All the monsters here went …"
+    dw $690E                          ; Entry 265 — text $06E4 "Pulio:I put all the monsters not …"
+    dw $6986                          ; Entry 266 — text $06E5 "Pulio:Wanna wake up the sleeping …"
+    dw $69B8                          ; Entry 267 — text $06E6 "Pulio:I woke up the sleeping mons…"
+    dw $69E8                          ; Entry 268 — text $06E7 "*:What can I do for you?"
+    dw $69E8                          ; Entry 269 — text $06E8 "*:What can I do for you?"
+    dw $69E8                          ; Entry 270 — text $06E9 "*:What can I do for you?"
+    dw $69E8                          ; Entry 271 — text $06EA "*:What can I do for you?"
+    dw $69E8                          ; Entry 272 — text $06EB "*:What can I do for you?"
+    dw $69E8                          ; Entry 273 — text $06EC "*:What can I do for you?"
+    dw $69E8                          ; Entry 274 — text $06ED "*:What can I do for you?"
+    dw $69E8                          ; Entry 275 — text $06EE "*:What can I do for you?"
+    dw $69E8                          ; Entry 276 — text $06EF "*:What can I do for you?"
+    dw $69E8                          ; Entry 277 — text $06F0 "*:What can I do for you?"
+    dw $6A03                          ; Entry 278 — text $06F1 "*:Anything else?"
+    dw $6A15                          ; Entry 279 — text $06F2 "*:Create the ultimate monsters!"
+    dw $6A38                          ; Entry 280 — text $06F3 "*:Which monster for the pedigree?"
+    dw $6A5C                          ; Entry 281 — text $06F4 "*:Which monster to breed with?"
+    dw $6A7D                          ; Entry 282 — text $06F5 "*:That one? Are you sure?"
+    dw $6A99                          ; Entry 283 — text $06F6 "*:There will be no monsters left!"
+    dw $6ABF                          ; Entry 284 — text $06F7 "*:Sorry, it's not old enough."
+    dw $6AE0                          ; Entry 285 — text $06F8 "*:The same gender. Cannot breed."
+    dw $6B05                          ; Entry 286 — text $06F9 "*:I bet [INS 20] will be born! *:…"
+    dw $6B4D                          ; Entry 287 — text $06FA "*:Hmm. Seems like a new monster?!"
+    dw $6B73                          ; Entry 288 — text $06FB "*:Can I record this joyful event?"
+    dw $6B97                          ; Entry 289 — text $06FC "*:OK! Wait overnight."
+    dw $6BB0                          ; Entry 290 — text $06FD "[INS 00] & [INS 10] disappeared."
+    dw $6BC8                          ; Entry 291 — text $06FE "*:Wow! It's a rare breed!"
+    dw $6BE5                          ; Entry 292 — text $06FF "*:Inside it is a baby [INS 20]! *…"
 
 LoadB4a_424b:
     ld a, [$c822]

@@ -142,6 +142,16 @@ The ROM is MBC5, 2 MB (`$0148` = `$06`). A 4 MB ROM (256 banks) needs no engine 
   (DE in = the destination / the list index; the callee's DE comes back). Measured S149:
   `tools/census_battles.py` (1,502 project rows — the example's 2 + 1,500 — + 600 lists over $6B / $76 / $80 / $81) and
   `tools/walk_battles.py` (a row in bank $81 joins, a wild battle from a list in bank $81).
+- **S150 (ROADMAP Phase F T-author) — text banks:** the project's edits of the game's own
+  texts (`gamedata.text`) go to banks $80+ too, numbered after the battle banks
+  (`editor2/core/gametext.py` `plan`, `Project._take_ext_bank('texts')`). The first is the
+  HOME bank: self-ID + entry 0 `TextOvrFind` (pinned `templates/text_home.asm`) + entry 1
+  `TextOvrCopy` (`text_bank.asm`) + `TextOvrBanks` / `TextOvrDir` / the lists + texts; the
+  rest: self-ID + `TextOvrCopy` + texts. Reached from ROM0 `TextLevel1Hook` ($00F0) → bank
+  $60 entry 14 `TextOverride` → `rst $10` to the home bank (`TEXT_OVR_HOME`). The text engine
+  reads every byte from bank `[$C824]`, which the hook sets to the text's bank, so a text in
+  bank $80-$FF shows — measured S150 (`tools/census_text_override.py`: 17 text banks, every
+  slot; `tools/walk_text.py` in game). TEXT_SYSTEM "Edited game text (S150)".
 
 ## LZ stream banks (S135 — ROADMAP ARC CAP2a)
 

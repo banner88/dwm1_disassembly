@@ -12,115 +12,115 @@ SECTION "ROM Bank $048", ROMX[$4000], BANK[$48]
     dw LoadB48_40e1                  ; Entry 0
     dw $410F                          ; Entry 1
     dw $413D                          ; Entry 2
-    dw $4009                          ; Entry 3
-    dw $416B                          ; Entry 4
-    dw $41D2                          ; Entry 5
-    dw $4294                          ; Entry 6
-    dw $42FF                          ; Entry 7
-    dw $435D                          ; Entry 8
-    dw $4375                          ; Entry 9
-    dw $44B1                          ; Entry 10
-    dw $45FC                          ; Entry 11
-    dw $4636                          ; Entry 12
-    dw $4655                          ; Entry 13
-    dw $467A                          ; Entry 14
-    dw $469A                          ; Entry 15
-    dw $477F                          ; Entry 16
-    dw $485F                          ; Entry 17
-    dw $48B0                          ; Entry 18
-    dw $48EA                          ; Entry 19
-    dw $4962                          ; Entry 20
-    dw $497B                          ; Entry 21
-    dw $4AA9                          ; Entry 22
-    dw $4B62                          ; Entry 23
-    dw $4C3F                          ; Entry 24
-    dw $4E5A                          ; Entry 25
-    dw $4EAF                          ; Entry 26
-    dw $506E                          ; Entry 27
-    dw $509C                          ; Entry 28
-    dw $51AA                          ; Entry 29
-    dw $51F7                          ; Entry 30
-    dw $5239                          ; Entry 31
-    dw $52CC                          ; Entry 32
-    dw $533F                          ; Entry 33
-    dw $53B5                          ; Entry 34
-    dw $542C                          ; Entry 35
-    dw $54B9                          ; Entry 36
-    dw $54DF                          ; Entry 37
-    dw $5524                          ; Entry 38
-    dw $5568                          ; Entry 39
-    dw $55A1                          ; Entry 40
-    dw $55B5                          ; Entry 41
-    dw $55F0                          ; Entry 42
-    dw $5629                          ; Entry 43
-    dw $5658                          ; Entry 44
-    dw $56B5                          ; Entry 45
-    dw $5726                          ; Entry 46
-    dw $57F4                          ; Entry 47
-    dw $58AF                          ; Entry 48
-    dw $593A                          ; Entry 49
-    dw $597F                          ; Entry 50
-    dw $59F3                          ; Entry 51
-    dw $5A27                          ; Entry 52
-    dw $5A67                          ; Entry 53
-    dw $5AA4                          ; Entry 54
-    dw $5B12                          ; Entry 55
-    dw $5B66                          ; Entry 56
-    dw $5BA2                          ; Entry 57
-    dw $5BE8                          ; Entry 58
-    dw $5C4F                          ; Entry 59
-    dw $5C7B                          ; Entry 60
-    dw $5CB1                          ; Entry 61
-    dw $5CE2                          ; Entry 62
-    dw $5D0B                          ; Entry 63
-    dw $5D5F                          ; Entry 64
-    dw $5D82                          ; Entry 65
-    dw $5DB0                          ; Entry 66
-    dw $5E79                          ; Entry 67
-    dw $5EB8                          ; Entry 68
-    dw $5F05                          ; Entry 69
-    dw $5F4B                          ; Entry 70
-    dw $5FB0                          ; Entry 71
-    dw $5FBE                          ; Entry 72
-    dw $602C                          ; Entry 73
-    dw $60A0                          ; Entry 74
-    dw $60CC                          ; Entry 75
-    dw $616A                          ; Entry 76
-    dw $61A0                          ; Entry 77
-    dw $61DE                          ; Entry 78
-    dw $624D                          ; Entry 79
-    dw $62F0                          ; Entry 80
-    dw $6383                          ; Entry 81
-    dw $646B                          ; Entry 82
-    dw $64E0                          ; Entry 83
-    dw $65D3                          ; Entry 84
-    dw $6634                          ; Entry 85
-    dw $6652                          ; Entry 86
-    dw $66D1                          ; Entry 87
-    dw $6713                          ; Entry 88
-    dw $6813                          ; Entry 89
-    dw $6857                          ; Entry 90
-    dw $691E                          ; Entry 91
-    dw $69CC                          ; Entry 92
-    dw $6ACB                          ; Entry 93
-    dw $6B4F                          ; Entry 94
-    dw $6BC7                          ; Entry 95
-    dw $6C1A                          ; Entry 96
-    dw $6D13                          ; Entry 97
-    dw $6D70                          ; Entry 98
-    dw $6E6A                          ; Entry 99
-    dw $6EC4                          ; Entry 100
-    dw $6FF5                          ; Entry 101
-    dw $704C                          ; Entry 102
-    dw $7116                          ; Entry 103
-    dw $7137                          ; Entry 104
-    dw $71A2                          ; Entry 105
-    dw $7228                          ; Entry 106
-    dw $72BB                          ; Entry 107
-    dw $7319                          ; Entry 108
-    dw $737A                          ; Entry 109
-    dw $7411                          ; Entry 110
-    dw $74AD                          ; Entry 111
+    dw $4009                          ; Entry 3 — mode 0 -> table $4009 (mode list $4007)
+    dw $416B                          ; Entry 4 — [table $4009]; text $0474 "Durran:Come on Terry! Fight to yo…"
+    dw $41D2                          ; Entry 5 — text $0475 "Durran:Ha ha ha! How easily you d…"
+    dw $4294                          ; Entry 6 — text $0476 "Durran:Want a real thrill? Fight …"
+    dw $42FF                          ; Entry 7 — text $0477 "Durran:How was it? Learn anything…"
+    dw $435D                          ; Entry 8 — text $0478 "Durran:Here I come!!"
+    dw $4375                          ; Entry 9 — text $0479 "Durran:Did I lose? .. I lost... D…"
+    dw $44B1                          ; Entry 10 — text $047A "TERRY?:..You're strong... You eve…"
+    dw $45FC                          ; Entry 11 — text $047B "Do you really want to tell your t…"
+    dw $4636                          ; Entry 12 — text $047C "TERRY?:It's okay. I know..."
+    dw $4655                          ; Entry 13 — text $047D "TERRY?:No. It's okay... I know..."
+    dw $467A                          ; Entry 14 — text $047E "*:Good luck on your journey!"
+    dw $469A                          ; Entry 15 — text $047F "TERRY?:Ahhh... For some reason, I…"
+    dw $477F                          ; Entry 16 — text $0480 "TERRY?:[HERO], don't become like …"
+    dw $485F                          ; Entry 17 — text $0481 "TERRY?:Farewell [HERO]! I'm takin…"
+    dw $48B0                          ; Entry 18 — text $0482 "TERRY?:Take care of your sister. …"
+    dw $48EA                          ; Entry 19 — text $0483 "TERRY?:...You don't want to hear …"
+    dw $4962                          ; Entry 20 — text $0484 "Watabou:Let's go back!"
+    dw $497B                          ; Entry 21 — text $0485 "King:[HERO]! How was it? What lie…"
+    dw $4AA9                          ; Entry 22 — text $0486 "King:Oh [HERO]! Did you rest? Kin…"
+    dw $4B62                          ; Entry 23 — text $0487 "*:You're at the Chamber of Travel…"
+    dw $4C3F                          ; Entry 24 — text $0488 "King:Anyway! Your wish will come …"
+    dw $4E5A                          ; Entry 25 — text $0489 "*:Now, head to the arena! *:A gre…"
+    dw $4EAF                          ; Entry 26 — text $048A "*:Let me tell you the legend of t…"
+    dw $506E                          ; Entry 27 — text $048B "*:Oh bless Starry Night and Maste…"
+    dw $509C                          ; Entry 28 — text $048C "*:Long long ago.. an ancestor of …"
+    dw $51AA                          ; Entry 29 — text $048D "*:You're at the castle of GreatTr…"
+    dw $51F7                          ; Entry 30 — text $048E "*:Good luck at the Starry Night T…"
+    dw $5239                          ; Entry 31 — text $048F "*:You don't have it? You should b…"
+    dw $52CC                          ; Entry 32 — text $0490 "*:Bring them to the Medal Man ups…"
+    dw $533F                          ; Entry 33 — text $0491 "*:Many people are heading to Grea…"
+    dw $53B5                          ; Entry 34 — text $0492 "*:Watabou will be happy if you wi…"
+    dw $542C                          ; Entry 35 — text $0493 "*:You can win! ...I feel it! *:I …"
+    dw $54B9                          ; Entry 36 — text $0494 "*:Proceed to the Vault. Good luck!"
+    dw $54DF                          ; Entry 37 — text $0495 "*:Go right to the Bazaar! *:It's …"
+    dw $5524                          ; Entry 38 — text $0496 "*:Go right to the Bazaar! *:Oh [H…"
+    dw $5568                          ; Entry 39 — text $0497 "*:Are you... really competing in …"
+    dw $55A1                          ; Entry 40 — text $0498 "*:...Don't lose."
+    dw $55B5                          ; Entry 41 — text $0499 "*:...Don't lose. Don't make me sa…"
+    dw $55F0                          ; Entry 42 — text $049A "*:You're right! It's impossible f…"
+    dw $5629                          ; Entry 43 — text $049B "*:...you. Don't you regret saying…"
+    dw $5658                          ; Entry 44 — text $049C "*:The Master Monster Tamer downst…"
+    dw $56B5                          ; Entry 45 — text $049D "*:A surprise awaits you in your f…"
+    dw $5726                          ; Entry 46 — text $049E "*:I wish you good luck! All rooms…"
+    dw $57F4                          ; Entry 47 — text $049F "*:All Gates are now yours! *:The …"
+    dw $58AF                          ; Entry 48 — text $04A0 "*:What kind of future did you see…"
+    dw $593A                          ; Entry 49 — text $04A1 "*:We'll spend the Starry Night, t…"
+    dw $597F                          ; Entry 50 — text $04A2 "*:Hello. Down to the stable. Blea…"
+    dw $59F3                          ; Entry 51 — text $04A3 "*:The Starry Night is soon. Yeah!…"
+    dw $5A27                          ; Entry 52 — text $04A4 "*:There's something good about ha…"
+    dw $5A67                          ; Entry 53 — text $04A5 "*:As the Starry Night nears, I wa…"
+    dw $5AA4                          ; Entry 54 — text $04A6 "*:As the Starry Night nears, it m…"
+    dw $5B12                          ; Entry 55 — text $04A7 "*:Power is flowing all around me!…"
+    dw $5B66                          ; Entry 56 — text $04A8 "*:When the Starry Night nears, my…"
+    dw $5BA2                          ; Entry 57 — text $04A9 "*:Zzz..... ..zzz. Bust! *:Mm? Is …"
+    dw $5BE8                          ; Entry 58 — text $04AA "*:I feel it! GreatTree is shaking…"
+    dw $5C4F                          ; Entry 59 — text $04AB "*:Of course GreatTree will triump…"
+    dw $5C7B                          ; Entry 60 — text $04AC "*:It's GreatLog! GreatLog, will c…"
+    dw $5CB1                          ; Entry 61 — text $04AD "*:I believe DeadTree will be vict…"
+    dw $5CE2                          ; Entry 62 — text $04AE "*:You win, GreatTree happy. Eek!"
+    dw $5D0B                          ; Entry 63 — text $04AF "*:You made it! Good job! *:Fight …"
+    dw $5D5F                          ; Entry 64 — text $04B0 "*:Let me know when you're ready."
+    dw $5D82                          ; Entry 65 — text $04B1 "*:Announcing the rep of GreatTree…"
+    dw $5DB0                          ; Entry 66 — text $04B2 "*:The Starry Night Tournament is …"
+    dw $5E79                          ; Entry 67 — text $04B3 "*:Want to listen to the descripti…"
+    dw $5EB8                          ; Entry 68 — text $04B4 "*:Everybody in the kingdom is beh…"
+    dw $5F05                          ; Entry 69 — text $04B5 "*:You made it! *:I can't even com…"
+    dw $5F4B                          ; Entry 70 — text $04B6 "*:Oh! Its a HornBeet! What a magn…"
+    dw $5FB0                          ; Entry 71 — text $04B7 "*:Wyvern!"
+    dw $5FBE                          ; Entry 72 — text $04B8 "*:Come on! Pray! Pray to the stat…"
+    dw $602C                          ; Entry 73 — text $04B9 "[HERO] reads the blackboard. :The…"
+    dw $60A0                          ; Entry 74 — text $04BA "*:Here is MysticNut. Use it wisel…"
+    dw $60CC                          ; Entry 75 — text $04BB "*:My heart is pounding! The battl…"
+    dw $616A                          ; Entry 76 — text $04BC "*:This is Shoyu! Bebe! Repeat aft…"
+    dw $61A0                          ; Entry 77 — text $04BD "*:What the heck is Shoyu! Can't y…"
+    dw $61DE                          ; Entry 78 — text $04BE "*:Splash Splash! When the Starry …"
+    dw $624D                          ; Entry 79 — text $04BF "*:I would like to go deep in the …"
+    dw $62F0                          ; Entry 80 — text $04C0 "[HERO] looked at the bookshelf. :…"
+    dw $6383                          ; Entry 81 — text $04C1 ":[HERO] already conquered D class…"
+    dw $646B                          ; Entry 82 — text $04C2 ":At last [HERO] will participate …"
+    dw $64E0                          ; Entry 83 — text $04C3 "*:The combination with the same m…"
+    dw $65D3                          ; Entry 84 — text $04C4 "*:Many Stars fall from the sky on…"
+    dw $6634                          ; Entry 85 — text $04C5 "*:Do you know my daughter? [YES/N…"
+    dw $6652                          ; Entry 86 — text $04C6 "*:No!? You don't know such a cute…"
+    dw $66D1                          ; Entry 87 — text $04C7 "*:She's the most graceful girl in…"
+    dw $6713                          ; Entry 88 — text $04C8 "*:You're promising! Let me tell y…"
+    dw $6813                          ; Entry 89 — text $04C9 "*:My hubby adores our girl.. *:Re…"
+    dw $6857                          ; Entry 90 — text $04CA ":Journal of My Baby, Part 3 :Flat…"
+    dw $691E                          ; Entry 91 — text $04CB ":Journal of My Baby, Part 4 :I gu…"
+    dw $69CC                          ; Entry 92 — text $04CC "*:I heard a wish will come true w…"
+    dw $6ACB                          ; Entry 93 — text $04CD "*:I'm looking for a book. *:I can…"
+    dw $6B4F                          ; Entry 94 — text $04CE "*:I am the Monster Minister. All …"
+    dw $6BC7                          ; Entry 95 — text $04CF "*:How about the monsters behind t…"
+    dw $6C1A                          ; Entry 96 — text $04D0 "*:Behind the Gate of Joy live Sna…"
+    dw $6D13                          ; Entry 97 — text $04D1 "*:How about the monsters behind t…"
+    dw $6D70                          ; Entry 98 — text $04D2 "*:Behind the Gate of Happiness li…"
+    dw $6E6A                          ; Entry 99 — text $04D3 "*:How about the monsters behind t…"
+    dw $6EC4                          ; Entry 100 — text $04D4 "*:Behind the Gate of Labyrinth li…"
+    dw $6FF5                          ; Entry 101 — text $04D5 "*:How about the monsters living b…"
+    dw $704C                          ; Entry 102 — text $04D6 "*:Behind the Gate of Reflection l…"
+    dw $7116                          ; Entry 103 — text $04D7 "*:I will do anything for you!"
+    dw $7137                          ; Entry 104 — text $04D8 "*:Ha ha ha! I made Gigantes brave…"
+    dw $71A2                          ; Entry 105 — text $04D9 "*:Oh, you have it! Then... *:Hm? …"
+    dw $7228                          ; Entry 106 — text $04DA "*:Flaring.... I am MadCandle. *:M…"
+    dw $72BB                          ; Entry 107 — text $04DB "*:You must listen to my request! …"
+    dw $7319                          ; Entry 108 — text $04DC "*:Oh, it is a Reaper! What a shar…"
+    dw $737A                          ; Entry 109 — text $04DD "*:[HERO], lemme tell you. *:I hea…"
+    dw $7411                          ; Entry 110 — text $04DE "*:[HERO]! You are the first perso…"
+    dw $74AD                          ; Entry 111 — text $04DF "*:Ladies & Gents! Welcome! *:Toni…"
 
 LoadB48_40e1:
     ld a, [$c822]

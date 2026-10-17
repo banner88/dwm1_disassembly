@@ -983,6 +983,12 @@ def emit_bank_06b(prj, warnings):
     return BT.emit_bank_06b(prj, warnings)
 
 
+def emit_text_banks(prj, warnings):
+    """S150: the text banks $80+ (multi:text_banks) — edited game text."""
+    from . import gametext as GT
+    return GT.emit_text_banks(prj, warnings)
+
+
 def emit_battle_banks(prj, warnings):
     """S149: the battle banks $80+ (multi:battle_banks)."""
     from . import battles as BT
@@ -1243,6 +1249,11 @@ def ext_bank_files(prj):
     out.update(M.song_bank_files(prj))                 # S147 (ARC CAP5): song banks
     from . import battles as BT                        # S149 (ARC CAP5): battle banks
     out.update(BT.battle_bank_files(prj))
+    from . import gametext as GT                       # S150: the text banks
+    try:
+        out.update(GT.text_bank_files(prj))
+    except GT.GameTextError:
+        pass                                           # reported by the validator
     return out
 
 
@@ -1292,6 +1303,9 @@ REGISTRY = [
     # whole files bank_0xx.asm, one per battle bank $80+ (none when they fit)
     ("battles_ext", "progression.enemies", "multi:battle_banks",
      emit_battle_banks, list(range(EXT_BANK_FIRST, EXT_BANK_LAST + 1))),
+    # S150 (ROADMAP P3.6): the text banks — edits of the game's own texts (gametext.py)
+    ("texts_ext", "gamedata.text", "multi:text_banks",
+     emit_text_banks, list(range(EXT_BANK_FIRST, EXT_BANK_LAST + 1))),
     ("tileanim6c", "custom.rooms", "file:patches/bank_06c.asm",
      emit_bank_06c, [0x6C]),
     # S139 (ARC CAP2d): rooms' own animations past bank $6C — whole files

@@ -210,10 +210,12 @@ class MainWindow(QMainWindow):
                     self.monsters_tab = MonstersTab(self.session)
                     self.tabs.addTab(self.monsters_tab, 'Monsters')
                     # S108 (P3.10 part 3): every text in the game, searchable;
-                    # "Texts that name it…" on the Monsters tab opens it filtered
-                    from editor2.app.dialogue_tab import DialogueTab
-                    self.dialogue_tab = DialogueTab(self.session)
-                    self.tabs.addTab(self.dialogue_tab, 'Dialogue')
+                    # "Texts that name it…" on the Monsters tab opens it filtered.
+                    # S150 (P3.6): the Text tab — the game's own texts EDITABLE,
+                    # one sub-tab per kind (replaces the read-only Dialogue tab)
+                    from editor2.app.text_tab import TextTab
+                    self.dialogue_tab = TextTab(self.session)
+                    self.tabs.addTab(self.dialogue_tab, 'Text')
                     self.monsters_tab.showDialogue.connect(self._show_dialogue_for)
                     # S109 (P3.10b): the arena — fees, masters, 1-3 monster teams,
                     # the teams' enemy rows
@@ -326,7 +328,7 @@ class MainWindow(QMainWindow):
         return False
 
     def _show_dialogue_for(self, sid):
-        """Monsters tab → the Dialogue tab listing the texts that name `sid`."""
+        """Monsters tab → the Text tab's Dialogue page listing the texts that name `sid`."""
         self.dialogue_tab.show_monster(sid)
         self.tabs.setCurrentWidget(self.dialogue_tab)
 

@@ -51,6 +51,7 @@ from editor2.core.services_doc import ServicesMixin
 from editor2.core.breeders_doc import BreedersMixin
 from editor2.core.your_arena_doc import YourArenaMixin   # S128 (P3.14e3)
 from editor2.core.story_doc import StoryMixin             # S129 (P3.14b-d)
+from editor2.core.gametext_doc import GameTextMixin       # S150 (P3.6: the game's own texts)
 from editor2.core.formats import anim_source as F_anim
 
 SCREEN_W, SCREEN_H = 20, 16
@@ -76,7 +77,8 @@ class Snapshot:
     _pool = {}                  # sha1 -> bytes, shared by every snapshot
     _POOL_MAX = 200000          # a ceiling on distinct pieces (cleared past it)
 
-    __slots__ = ('rest', 'lists', 'has', 'order')
+    __slots__ = ('rest', 'lists', 'has', 'order', 'text')
+    TEXT_CHUNK = 64             # S150: gamedata.text rows per interned piece
 
     @classmethod
     def _intern(cls, b):
@@ -106,6 +108,21 @@ class Snapshot:
         else:
             shell = data
             sn.order = ()
+        # S150: the game's own texts (gamedata.text, up to ~3,400 rows) in pieces
+        # of TEXT_CHUNK rows — an edit keeps only its piece, not every row again
+        sn.text = None
+        gd = shell.get('gamedata') if isinstance(shell, dict) else None
+        if isinstance(gd, dict) and isinstance(gd.get('text'), dict) and \
+                all(isinstance(v, dict) for v in gd['text'].values()):
+            text = []
+            for src, rows in gd['text'].items():
+                items = list(rows.items())
+                text.append((src, tuple(cls._intern(pickle.dumps(items[i:i + cls.TEXT_CHUNK],
+                                                                 pickle.HIGHEST_PROTOCOL))
+                                        for i in range(0, len(items), cls.TEXT_CHUNK))))
+            sn.text = tuple(text)
+            shell = dict(shell)
+            shell['gamedata'] = {k: (None if k == 'text' else v) for k, v in gd.items()}
         sn.rest = cls._intern(pickle.dumps(shell, pickle.HIGHEST_PROTOCOL))
         sn.lists, sn.has = lists, has
         return sn
@@ -121,11 +138,20 @@ class Snapshot:
                 elif k in rest:
                     custom[k] = rest[k]
             d['custom'] = custom
+        if self.text is not None:
+            text = {}
+            for src, pieces in self.text:
+                rows = {}
+                for b in pieces:
+                    rows.update(pickle.loads(b))
+                text[src] = rows
+            d['gamedata']['text'] = text
         return d
 
     def nbytes(self):
         """Bytes this snapshot refers to (shared pieces counted in full)."""
-        return len(self.rest) + sum(len(b) for v in self.lists.values() for b in v)
+        return len(self.rest) + sum(len(b) for v in self.lists.values() for b in v) + \
+            sum(len(b) for _s, v in (self.text or ()) for b in v)
 
 
 def _vn(mid):
@@ -202,7 +228,7 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
                ConversationMixin, EnemiesMixin, FamiliesMixin, MonstersMixin,
                ArenaMixin, SkillsMixin, AnimsMixin, BreedingMixin, EncountersMixin,
                MusicMixin, ShopsMixin, MillyMixin, WorldsMixin, HubMixin, ServicesMixin,
-               BreedersMixin, YourArenaMixin, StoryMixin):
+               BreedersMixin, YourArenaMixin, StoryMixin, GameTextMixin):
     def __init__(self, path):
         self.path = path if path.endswith('.json') else \
             os.path.join(path, 'project.json')

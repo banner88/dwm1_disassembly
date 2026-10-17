@@ -1040,6 +1040,8 @@ recipes are pure authoring.
       font's 4 default-name tiles drawn "MILLY" in `patches/bank_04f.asm` (TEXT_SYSTEM
       `$F6`); pin `97659a4a…` (patched, historical); test ROM `DWM_S120b_milly_test.gbc`.
       **S121: moved under the Milly hook** (region `milly_name_tiles`; hook off = TERRY, P3.16).
+      **S150: the game's OWN texts too** — the Text tab (Phase F T-author, built S150): every text
+      id and text table editable as markup with the game-font picture, any length.
 - [x] **P3.7 — Triggers/exits editor + World graph v0** — **DONE S98;
       doors USER-CONFIRMED 2026-09-26 in the user's own project ("Works
       now", arrival "Its now fixed"); talk / flags / spots in game built,
@@ -3359,10 +3361,37 @@ yields the E6 capacity numbers.
       string `$40C1` (id $03C8) — redo its bounds first (PROJECT_STATE open defects).
 - [ ] **T2…Tn — Roll-out across `$42-$46, $48-$4B, $4E`** (one or two banks/session, same
       tool). *Accept:* each bank re-sectioned; MD5 stays `1ca6579…` after each.
-- [ ] **T-author — Edit/replace a vanilla string.** A tool that rewrites a vanilla text id's
+- [x] **T-author — Edit/replace a vanilla string.** A tool that rewrites a vanilla text id's
       bytes (same-size in place, or relocate to a free bank via its pointer-table entry).
       *Accept:* a known vanilla line shows new text in SameBoy; clean MD5 unchanged. Byproduct:
       the E6 per-bank capacity/budget numbers.
+      **Built S150 (editor + engine); USER-CONFIRMED 2026-10-17 08:46 ("I confirm everything works")** (user: "Continue on the big ticket items"
+      → the audit → "1) Let's start with dialogue. 2) Everything but differentiate by tab within
+      editor. Samesize NOT preferred"). Not a tool but the whole path: EVERY text the game shows or
+      copies — the 2,560 text ids and 20 tables (battle messages + treats / veils / commands / the
+      BeastTail, level-up / spell lines, the battle tutorial; item names / descriptions / use lines;
+      field messages, personalities, the families' default names, Watabou; the credits + "TO BE
+      CONTINUED") — any length, relocated to text banks $80+: ONE hook where the game finds every
+      text (ROM0 SaveBankAndSwitch's level 1 → bank $60 entry 14 → the text home bank), keyed by
+      the text's POINTER SLOT (measured per id); `gamedata.text`; the **Text** tab (Dialogue /
+      Battle / Items / Menus & field / Credits / Other tabs) replaces the read-only Dialogue tab;
+      shared lines edited with their copies. Monster / skill names and descriptions stay on the
+      Monsters / Skills tabs (in place, S108 / S110). TEXT_SYSTEM "Edited game text (S150)",
+      PROJECT_COMPILER §2.58. *Accept (machine half) MET:* `tools/census_text_override.py` (every
+      slot shown + copied on a build with every text edited: 3,850 / 3,850 × 2, the nickname
+      redirect 512 / 512; negative fails); `tools/walk_text.py` on the user's save (17 checks, 0
+      failed; negative 8 FAIL); clean `1ca6579…` unchanged. *User half:* `DWM-S150-scribe-test.gbc`
+      (the throne room's lady, the bag's FairyDew / BayLeaf, "… pours 1 FairyDew on …", THE
+      SCRIBE'S HALL / FIELD) + the Text tab in the editor.
+- [ ] **T-follow (S150, open) — what the Text tab does not reach yet.** (a) Words drawn as TILES,
+      not text: the field menu's INFO / ITEM / SKIL / OPTN, the INFO page's ATK / DEF …, the HP / MP
+      bar (measured S150: no SaveBankAndSwitch call draws them) — locate the tile strings and their
+      readers; (b) the field messages holding several menu words in one line (`PUT TAKEEXIT`,
+      `ITEMGOLDEXIT`, `WHOINFOOKMONEGG` …, bank $41 mode 2 rows 11 / 12 / 16 / 74; misc rows 9 /
+      10 / 27): which screens show them and how they are cut is NOT measured — the help says keep
+      each word's length; (c) the text window widths of each table (battle window, item page,
+      credits) beyond the dialogue box's measured 2 × 18 — the editor warns only for dialogue;
+      (d) the debug texts (bank $41 modes 0 / 1, bank $56 mode 0, bank $55's viewer) are left out.
 
 ### Arc 2 — Custom skills, then per-skill AI (high value; one real RE gate)
 Skill *effects* are a known pattern (`SkillFunctionTable $52:$4011`, **222 entries** ($00–$DD)

@@ -1402,7 +1402,8 @@ Per species — every knob is a decoded, proven surface:
   changed, the cell counts and the three byte meters (names / nicknames /
   descriptions — spill beyond a block is allowed, the build says when it is full),
   **Back to the original name and text** (originals), **Texts that name it… (N)**
-  (opens the Dialogue tab filtered on this monster, old + new name). New species: the
+  (opens the Dialogue tab filtered on this monster, old + new name; S150: the Text tab's
+  Dialogue page). New species: the
   three lines are its OWN description; left empty, "Library text of" picks another
   monster's. Every species list in the editor reads `monster_names_effective()`
   (renames included). Each edit one undo step, validated by the compiler's model.
@@ -1416,6 +1417,23 @@ Per species — every knob is a decoded, proven surface:
   the new name; the hits highlighted), the full text with "also shown as" ids, and
   **Save as text file…** (the current list). Renames do not touch these texts; the
   tab is where the author finds them (user S108).
+- **Text tab (as built S150 — ROADMAP P3.6 / Phase F T-author; built, PyBoy-verified,
+  USER-CONFIRMED 2026-10-17 08:46 ("I confirm everything works"); `editor2/app/text_tab.py` replaces `dialogue_tab.py`; model
+  `core/gametext.py` + `core/gametext_doc.py` + the codec `core/textmark.py`, the S108
+  `core/dialogue_index.py` kept for the lists; help `56_text.md`)** — every text above is
+  now EDITABLE, any length (user: "Everything but differentiate by tab within editor.
+  Samesize NOT preferred"). Six pages (a `QTabWidget`, a `GroupPage` each): **Dialogue**
+  (the 2,560 ids; + Names a monster), **Battle**, **Items**, **Menus & field**,
+  **Credits**, **Other tabs** (the monster / skill descriptions, read only — the Monsters /
+  Skills tabs own them). Each page: search (words; `$0123` / `#12` = an exact id / row), the
+  kind combo, **Edited only** (✎), **Save as text file…**. Below the list: the markup field
+  (`QPlainTextEdit`; a new line = the next box line / row, ▼ = the box break, `{tokens}` —
+  TEXT_SYSTEM "Edited game text"), the picture in the ROM font beside it (`render`: dialogue
+  as 2 × 18 boxes, a table's text as rows; cells past the box red), the warnings, **Apply**
+  (Ctrl+Return; one `SnapshotCommand`), **Original**, **with its copies** (ticked: every id
+  that showed the same string gets the edit — `set_game_text(…, only_this=False)`), **▼**.
+  Capacity row `game_texts` (tab Text). The S108 search / Names a monster / export work as
+  before on the Dialogue page.
 
 ### 5.2a Families tab (as built S104 r2, ROADMAP P3.10a)
 
@@ -1474,7 +1492,8 @@ grey "(not fought)"; **Back to the original match** (master, size and the three 
 Every edit = one SnapshotCommand; the model validates with the compiler's own code
 (a summon / TERRY? in a fighting slot refused — Iron Rule 8 — also from the Monsters
 tab). Not in scope (user S109): bracket shape (fixed), prizes (none — "Only flags
-progression"), the arena text (read-only on the Dialogue tab), the victory flags.
+progression"), the arena text (read-only on the Dialogue tab; S150: editable on the Text tab's
+Dialogue page like any text id), the victory flags.
 Help page `editor2/help/53_arena.md`.
 
 **Your arena (S128, ROADMAP P3.14e3; test ROM USER-CONFIRMED 2026-10-07).** The list's

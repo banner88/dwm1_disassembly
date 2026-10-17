@@ -214,6 +214,11 @@ SetScrollRegisters_00C2:
     jp RetFromLCDEnable
 
 
+; $00F0-$00FF: unused padding in the original game. Patched builds put two routines
+; here (patches/bank_000.asm): S105-S149 LoadModeBaseRedirect (the new species'
+; nickname redirect), since S150 TextLevel1Hook ($00F0, SaveBankAndSwitch's level-1
+; read -> bank $60 entry 14: the project's EDITED game text) + SaveBankAndSwitchCopy
+; ($00F8, RunTextHandler's lookup) — TEXT_SYSTEM "Edited game text (S150)".
     db $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff
 
 Boot::
@@ -1016,6 +1021,15 @@ CheckScreenTransition:
     ret
 
 
+; CallTextEngine ($05B6): start SHOWING a text. In: DE = the current bank's MODE LIST
+; (e.g. $4007 / $4009 — each text bank's entry 0 passes its own), [$C822] = the mode,
+; [$C823] = the id. Bank $56 entry 5 first (the text window setup), then
+; SaveBankAndSwitch resolves the text: [$C824] = the bank every byte is read from
+; (ReadNextTextByte / SaveBankForTextDisplay switch to it), [$C82D/$C82E] = the
+; read pointer, [$C831/$C832] = its start (an insert's $F0 returns there), [$C825] = 1
+; (text running). Every text the game shows starts here (callers: entry 0 of every
+; text bank — $18 $1A $1B $1F $21 $22 $3F $41 $42-$4E $4F $56 $59; bank $55's debug
+; viewer has its own copy) — S150 measured: the 2,560 text ids and every text table.
 CallTextEngine:
     push de
 
@@ -1065,6 +1079,14 @@ Jump_000_05e3:
     ret
 
 
+; RunTextHandler ($05F6): COPY a text into a buffer. In: as CallTextEngine, plus
+; [$C837/$C838] = the buffer. SaveBankAndSwitch resolves the text in the CURRENT bank,
+; then the loop copies it byte by byte up to and including the first $F0 BYTE (a
+; control code's parameter $F0 — e.g. $FB $F0 in the battle tutorial — ends it too).
+; Callers: entry 1 of every text bank; in play only bank $41's (ROM0 $0981, HL = mode
+; << 8 | id): the names the game copies into its buffers (the $C180 name slots …).
+; Patched builds (S150): `call SaveBankAndSwitchCopy` ($00F8), which marks the lookup
+; a copy, so an edited text in another bank is copied by that bank.
 RunTextHandler:
     call SaveBankAndSwitch
 
@@ -1770,10 +1792,21 @@ MultiplyHL_091F:
 ; MonsterNickPtrTable = 215 entries -> id 224 reads ItemNamePtrTable[9] = "SkyBell";
 ; bank $4D mode 1 desc = 215 -> id 224 read ROM0 code and froze the detail page).
 ; FORK: patches/bank_000.asm replaces the level-1 `ld e,[hl];inc hl;ld d,[hl]` below
-; with `call LoadModeBaseRedirect` ($00:$00F0), which redirects the mode-7 default-
+; with a call to $00:$00F0 (S105-S149 LoadModeBaseRedirect; S150 TextLevel1Hook, whose
+; bank $60 entry 14 keeps this redirect and adds the edited game text), which redirects the mode-7 default-
 ; nick base ($4739) for id>=224 to a new-species short-name table; all other text
 ; byte/behaviour-identical. (Other modes are forked nearer their own tables, e.g.
 ; bank $4D HighDetailTextFork.)
+; S150: the ONE routine that finds every text the game shows (CallTextEngine) or copies
+; (RunTextHandler). The text's POINTER SLOT = (the bank, the mode's table + 2 * id) —
+; tools/dump_dialogue.py measures it for every text id (hooked at $0944, right after
+; level 1). Patched builds replace the level-1 read with `call TextLevel1Hook` ($00F0
+; -> bank $60 entry 14): an edited text is found by its slot and returned as DE =
+; wTextOvrPtr - 2 * id, so level 2 below reads its address from WRAM and [$C824] names
+; its bank. LookupDoublePtrTable ($093D) / TextHandler_0940 ($0940) are mid-routine
+; labels: byte patterns `call $093D` (ROM0 $3F66, banks $01-$03) / `call $0940` (bank
+; $20) exist, NOT checked to be code — an entry there would `pop af` its own return
+; address (the `push af` is at $0932).
 SaveBankAndSwitch:        ; $092F
     ld a, [$4000]
     push af
@@ -1789,7 +1822,7 @@ LookupDoublePtrTable:
 TextHandler_0940:         ; $0940 — mid-routine entry; level-1 lookup starts here
     add hl, de            ; HL = config_base + mode*2
     ld e, [hl]            ; \ level 1: DE = this mode's per-id table base
-    inc hl               ; |  (PATCH forks these 3 instrs -> call LoadModeBaseRedirect)
+    inc hl               ; |  (PATCH forks these 3 instrs -> call TextLevel1Hook, S150; was LoadModeBaseRedirect)
     ld d, [hl]           ; /
     ld a, [$c823]        ; A = ID (species / item index)
     ld l, a

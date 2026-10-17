@@ -24,6 +24,9 @@
 ;            only a STAIRS-DOWN exit of a custom room is an in-gate floor change
 ;   Entry 13: render row        — S137: bank $17 CustomAttrCheck: the current
 ;            screen + state's attr row and palette -> WRAM (forwarded)
+;   Entry 14: TextOverride      — S150: every text lookup (ROM0 SaveBankAndSwitch's
+;            level 1, TextLevel1Hook $00:$00F0): the S105 new-species nickname
+;            redirect, then the build's EDITED game text (the text home bank)
 ;
 ; S136 (ROADMAP ARC CAP2b) — PLACE BANKS. A place (custom room) keeps its
 ; scripts, tile patches, screens, NPC / exit lists, state rules and monster
@@ -65,6 +68,43 @@ SECTION "ROM Bank $060", ROMX[$4000], BANK[$60]
     dw NpcColourDraw        ; Entry 11 — S123 NPC colours (bank $06 NPCDrawSlot same-size redirect)
     dw CustomDescentFeel    ; Entry 12 — S123 r2 gate-flag exit feel (bank $0B CustomDescentInGate far-calls it)
     dw PlaceFwdRender       ; Entry 13 — S137 render row + palette -> WRAM (bank $17 CustomAttrCheck)
+    dw TextOverride         ; Entry 14 — S150 edited game text (ROM0 TextLevel1Hook, every text lookup)
+
+; =============================================================================
+; S150 (ROADMAP P3.6 / Phase F T-author) — EDITED GAME TEXT
+; =============================================================================
+; Entry 14. ROM0 TextLevel1Hook ($00F0 — SaveBankAndSwitch's level-1 read, the
+; one routine every text the game shows or copies goes through) far-calls this
+; with DE = the mode's per-id table, [$C823] = the id, [$C824] = the table's
+; bank, [wTextOvrMode] = 1 for RunTextHandler's copy (ROM0 SaveBankAndSwitchCopy).
+; 1. The S105 G3 redirect that lived at ROM0 $00F0 (LoadModeBaseRedirect, moved
+;    here byte-for-byte in effect): a $47xx table (bank $41 mode 7, the 2-letter
+;    default nicknames, $4739) with an id >= $DD -> $7Dxx (the new species'
+;    short names, bank $41 NewSpeciesShortPtrs).
+; 2. TEXT_OVR_HOME (generated: the text home bank, editor2/core/gametext.py;
+;    0 = no edited text in this build): its entry 0 TextOvrFind (templates/
+;    text_home.asm) swaps in an edited text — DE in / out (rst $10 keeps it).
+; TEXT_SYSTEM "Edited game text (S150)", PROJECT_COMPILER §2.58.
+TextOverride:
+    ld a, d
+    cp $47
+    jr nz, .edited
+    ld a, [$c823]
+    cp $dd
+    jr c, .edited
+    ld d, $7d                   ; $4739 -> $7D39 (S105 G3; ids 221-239)
+.edited:
+    ld a, TEXT_OVR_HOME
+    and a
+    jr z, .none
+    ld h, a
+    ld l, $00
+    rst $10                     ; the text home bank's TextOvrFind
+    ret
+.none:
+    xor a
+    ld [wTextOvrMode], a        ; (RunTextHandler's mark, consumed)
+    ret
 
 ; =============================================================================
 ; S136 — the place lookup

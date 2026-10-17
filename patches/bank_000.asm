@@ -214,30 +214,29 @@ SetScrollRegisters_00C2:
     jp RetFromLCDEnable
 
 
-; --- Phase N default-nickname fix: occupies the 16-byte $00F0-$00FF padding ----
-; SaveBankAndSwitch's level-1 lookup loads DE = per-mode text table base. The
-; default monster nickname uses the 2-letter MonsterNickPtrTable ($4739, 215
-; entries); a new species (id>=221) overshoots it (id 224 -> $48F9 =
-; ItemNamePtrTable[9] = "SkyBell"). This reproduces the original
-; `ld e,[hl];inc hl;ld d,[hl]`, then ONLY when the base is $4739 and id>=221
-; redirects to the new-species SHORT-name table (base $7D39: [221] = $7EF3 ..
-; [239] = $7F17 in bank $41, NewSpeciesShortPtrs — S105 G3; was base $7E39 with
-; only [224] = $7FF9) holding the default nickname (<= 4 letters). Using a real 4-char string (not the full name)
-; fixes BOTH the truncating nickname field AND the untruncated "take X with you"
-; narration. Generic for any new species; gated on $4739 so all other text is
-; byte/behaviour-identical ($4739/$7D39 share low byte $39, so D-only).
-LoadModeBaseRedirect:                ; $00F0
+; --- S150 (ROADMAP P3.6 / Phase F T-author): the EDITED GAME TEXT hook — the 16-byte
+; $00F0-$00FF padding (S105-S149: LoadModeBaseRedirect, the new-species nickname
+; redirect, which moved into bank $60 entry 14 TextOverride unchanged in effect).
+; SaveBankAndSwitch is the one routine that finds every text the game shows or copies
+; (TEXT_SYSTEM "Edited game text (S150)"): its level-1 read calls TextLevel1Hook, which
+; does that read as the original (`ld e,[hl] / inc hl / ld d,[hl]`: DE = the mode's
+; per-id table) and far-calls bank $60 entry 14 — DE in / out (rst $10 keeps it).
+; For an edited text bank $60 (+ the text home bank) returns DE = wTextOvrPtr - 2 * id,
+; so the unchanged level-2 read fetches the edited text's address from WRAM.
+; RunTextHandler (copy a text into the buffer [$C837]) calls SaveBankAndSwitchCopy
+; instead, which marks the lookup a COPY (wTextOvrMode = 1): an edited text in another
+; bank is then copied into the buffer by its own bank (the copy loop reads the mapped bank).
+TextLevel1Hook:                      ; $00F0 — SaveBankAndSwitch's level-1 read
     ld e, [hl]
     inc hl
-    ld d, [hl]
-    ld a, d
-    cp $47
-    ret nz
-    ld a, [$c823]
-    cp $dd                      ; S105 G3: id >= 221 (was $e0 = 224)
-    ret c
-    ld d, $7d                   ; $4739 -> $7D39 (new-species SHORT-name table; [221] = $7EF3 in bank $41). low byte $39 is shared so this is D-only. Gives the first-4 name to BOTH the 4-char nickname field AND the untruncated "take X with you" narration.
+    ld d, [hl]                      ; DE = the mode's per-id table (as the original)
+    ld hl, $600E                    ; bank $60 entry 14 TextOverride
+    rst $10
     ret
+SaveBankAndSwitchCopy:               ; $00F8 — RunTextHandler's lookup: a COPY
+    ld a, $01
+    ld [wTextOvrMode], a
+    jp SaveBankAndSwitch
 
 Boot::
     nop
@@ -1094,7 +1093,7 @@ Jump_000_05e3:
 
 
 RunTextHandler:
-    call SaveBankAndSwitch
+    call SaveBankAndSwitchCopy      ; S150: the lookup of a COPY (edited texts: TextLevel1Hook)
 
 LoadDestFromC837:
     ld a, [$c837]
@@ -1813,7 +1812,7 @@ LookupDoublePtrTable:
 
 TextHandler_0940:
     add hl, de
-    call LoadModeBaseRedirect   ; FORK: load DE=mode table base; for the 2-letter default-name table ($4739) + id>=224, redirect to the new-species SHORT-name table so the default nickname AND the narration use the first 4 letters of its name (else byte/behaviour-identical)
+    call TextLevel1Hook         ; S150: level 1 (DE = the mode's per-id table) + bank $60 entry 14 TextOverride: the S105 new-species nickname redirect ($4739 + id >= $DD -> $7D39) and the build's EDITED game text (DE = wTextOvrPtr - 2 * id)
     ld a, [$c823]
     ld l, a
     ld h, $00

@@ -13,7 +13,7 @@ SECTION "ROM Bank $04d", ROMX[$4000], BANK[$4d]
     dw $43C0                          ; Entry 1
     dw $43C7                          ; Entry 2
     dw $400B                          ; Entry 3
-    dw $420B                          ; Entry 4
+    dw $420B                          ; Entry 4 — mode 1 -> table $420B (mode list $4007)
     dw $43CE                          ; Entry 5
     dw $43E1                          ; Entry 6
     dw $43F4                          ; Entry 7
@@ -270,221 +270,221 @@ SECTION "ROM Bank $04d", ROMX[$4000], BANK[$4d]
     dw $53C4                          ; Entry 258
     dw $53C4                          ; Entry 259
     dw $53C4                          ; Entry 260
-    dw MonsterDesc_000_DrakSlime                               ; Entry 261 ($53D3)
-    dw MonsterDesc_001_SpotSlime                               ; Entry 262 ($53F7)
-    dw MonsterDesc_002_WingSlime                               ; Entry 263 ($541D)
-    dw MonsterDesc_003_TreeSlime                               ; Entry 264 ($5444)
-    dw MonsterDesc_004_Snaily                                  ; Entry 265 ($546F)
-    dw MonsterDesc_005_SlimeNite                               ; Entry 266 ($5494)
-    dw MonsterDesc_006_Babble                                  ; Entry 267 ($54C8)
-    dw MonsterDesc_007_BoxSlime                                ; Entry 268 ($54EE)
-    dw MonsterDesc_008_Slime                                   ; Entry 269 ($5520)
-    dw MonsterDesc_009_Healer                                  ; Entry 270 ($5549)
-    dw MonsterDesc_010_FangSlime                               ; Entry 271 ($5573)
-    dw MonsterDesc_011_RockSlime                               ; Entry 272 ($559E)
-    dw MonsterDesc_012_SlimeBorg                               ; Entry 273 ($55BA)
-    dw MonsterDesc_013_Slabbit                                 ; Entry 274 ($55E6)
-    dw MonsterDesc_014_SpotKing                                ; Entry 275 ($5610)
-    dw MonsterDesc_015_KingSlime                               ; Entry 276 ($5647)
-    dw MonsterDesc_016_Metaly                                  ; Entry 277 ($567A)
-    dw MonsterDesc_017_Metabble                                ; Entry 278 ($56A9)
-    dw MonsterDesc_018_MetalKing                               ; Entry 279 ($56CF)
-    dw MonsterDesc_019_GoldSlime                               ; Entry 280 ($56FA)
-    dw MonsterDesc_020_DragonKid                               ; Entry 281 ($5724)
-    dw MonsterDesc_021_Tortragon                               ; Entry 282 ($574A)
-    dw MonsterDesc_022_Pteranod                                ; Entry 283 ($577A)
-    dw MonsterDesc_023_Gasgon                                  ; Entry 284 ($57A9)
-    dw MonsterDesc_024_FairyDrak                               ; Entry 285 ($57D4)
-    dw MonsterDesc_025_LizardMan                               ; Entry 286 ($5800)
-    dw MonsterDesc_026_Poisongon                               ; Entry 287 ($5830)
-    dw MonsterDesc_027_Swordgon                                ; Entry 288 ($5865)
-    dw MonsterDesc_028_Dragon                                  ; Entry 289 ($5890)
-    dw MonsterDesc_029_MiniDrak                                ; Entry 290 ($58B4)
-    dw MonsterDesc_030_MadDragon                               ; Entry 291 ($58E4)
-    dw MonsterDesc_031_Rayburn                                 ; Entry 292 ($5914)
-    dw MonsterDesc_032_Chamelgon                               ; Entry 293 ($593C)
-    dw MonsterDesc_033_LizardFly                               ; Entry 294 ($5962)
-    dw MonsterDesc_034_Andreal                                 ; Entry 295 ($5987)
-    dw MonsterDesc_035_KingCobra                               ; Entry 296 ($59B7)
-    dw MonsterDesc_036_Spikerous                               ; Entry 297 ($59E5)
-    dw MonsterDesc_037_GreatDrak                               ; Entry 298 ($5A16)
-    dw MonsterDesc_038_Crestpent                               ; Entry 299 ($5A3E)
-    dw MonsterDesc_039_WingSnake                               ; Entry 300 ($5A6B)
-    dw MonsterDesc_040_Coatol                                  ; Entry 301 ($5A97)
-    dw MonsterDesc_041_Orochi                                  ; Entry 302 ($5AC5)
-    dw MonsterDesc_042_BattleRex                               ; Entry 303 ($5AFA)
-    dw MonsterDesc_043_SkyDragon                               ; Entry 304 ($5B24)
-    dw MonsterDesc_044_Divinegon                               ; Entry 305 ($5B54)
-    dw MonsterDesc_045_Tonguella                               ; Entry 306 ($5B80)
-    dw MonsterDesc_046_Almiraj                                 ; Entry 307 ($5BAB)
-    dw MonsterDesc_047_CatFly                                  ; Entry 308 ($5BD9)
-    dw MonsterDesc_048_PillowRat                               ; Entry 309 ($5C00)
-    dw MonsterDesc_049_Saccer                                  ; Entry 310 ($5C22)
-    dw MonsterDesc_050_GulpBeast                               ; Entry 311 ($5C47)
-    dw MonsterDesc_051_Skullroo                                ; Entry 312 ($5C6B)
-    dw MonsterDesc_052_WindBeast                               ; Entry 313 ($5C95)
-    dw MonsterDesc_053_Anteater                                ; Entry 314 ($5CC6)
-    dw MonsterDesc_054_SuperTen                                ; Entry 315 ($5CF1)
-    dw MonsterDesc_055_IronTurt                                ; Entry 316 ($5D16)
-    dw MonsterDesc_056_Mommonja                                ; Entry 317 ($5D49)
-    dw MonsterDesc_057_HammerMan                               ; Entry 318 ($5D63)
-    dw MonsterDesc_058_Grizzly                                 ; Entry 319 ($5D86)
-    dw MonsterDesc_059_Yeti                                    ; Entry 320 ($5DAF)
-    dw MonsterDesc_060_MadGopher                               ; Entry 321 ($5DD4)
-    dw MonsterDesc_061_FairyRat                                ; Entry 322 ($5DFF)
-    dw MonsterDesc_062_Unicorn                                 ; Entry 323 ($5E28)
-    dw MonsterDesc_063_Goategon                                ; Entry 324 ($5E4B)
-    dw MonsterDesc_064_WildApe                                 ; Entry 325 ($5E7A)
-    dw MonsterDesc_065_Trumpeter                               ; Entry 326 ($5EA6)
-    dw MonsterDesc_066_KingLeo                                 ; Entry 327 ($5ECE)
-    dw MonsterDesc_067_DarkHorn                                ; Entry 328 ($5EFD)
-    dw MonsterDesc_068_MadCat                                  ; Entry 329 ($5F1C)
-    dw MonsterDesc_069_BigEye                                  ; Entry 330 ($5F41)
-    dw MonsterDesc_070_Picky                                   ; Entry 331 ($5F69)
-    dw MonsterDesc_071_Wyvern                                  ; Entry 332 ($5F8F)
-    dw MonsterDesc_072_BullBird                                ; Entry 333 ($5FBB)
-    dw MonsterDesc_073_Florajay                                ; Entry 334 ($5FDE)
-    dw MonsterDesc_074_DuckKite                                ; Entry 335 ($600C)
-    dw MonsterDesc_075_MadPecker                               ; Entry 336 ($6039)
-    dw MonsterDesc_076_MadRaven                                ; Entry 337 ($6067)
-    dw MonsterDesc_077_MistyWing                               ; Entry 338 ($608F)
-    dw MonsterDesc_078_Dracky                                  ; Entry 339 ($60BC)
-    dw MonsterDesc_079_BigRoost                                ; Entry 340 ($60EC)
-    dw MonsterDesc_080_StubBird                                ; Entry 341 ($610A)
-    dw MonsterDesc_081_LandOwl                                 ; Entry 342 ($611F)
-    dw MonsterDesc_082_MadGoose                                ; Entry 343 ($6151)
-    dw MonsterDesc_083_MadCondor                               ; Entry 344 ($617B)
-    dw MonsterDesc_084_Blizzardy                               ; Entry 345 ($61B2)
-    dw MonsterDesc_085_Phoenix                                 ; Entry 346 ($61DF)
-    dw MonsterDesc_086_ZapBird                                 ; Entry 347 ($6205)
-    dw MonsterDesc_087_WhipBird                                ; Entry 348 ($6238)
-    dw MonsterDesc_088_FunkyBird                               ; Entry 349 ($626B)
-    dw MonsterDesc_089_RainHawk                                ; Entry 350 ($6281)
-    dw MonsterDesc_090_MadPlant                                ; Entry 351 ($62B1)
-    dw MonsterDesc_091_FireWeed                                ; Entry 352 ($62D4)
-    dw MonsterDesc_092_FloraMan                                ; Entry 353 ($62FA)
-    dw MonsterDesc_093_WingTree                                ; Entry 354 ($632A)
-    dw MonsterDesc_094_CactiBall                               ; Entry 355 ($6359)
-    dw MonsterDesc_095_Gulpple                                 ; Entry 356 ($638C)
-    dw MonsterDesc_096_Toadstool                               ; Entry 357 ($63BD)
-    dw MonsterDesc_097_AmberWeed                               ; Entry 358 ($63E7)
-    dw MonsterDesc_098_Stubsuck                                ; Entry 359 ($640A)
-    dw MonsterDesc_099_Oniono                                  ; Entry 360 ($643A)
-    dw MonsterDesc_100_DanceVegi                               ; Entry 361 ($6466)
-    dw MonsterDesc_101_TreeBoy                                 ; Entry 362 ($6499)
-    dw MonsterDesc_102_FaceTree                                ; Entry 363 ($64C0)
-    dw MonsterDesc_103_HerbMan                                 ; Entry 364 ($64EA)
-    dw MonsterDesc_104_BeanMan                                 ; Entry 365 ($6518)
-    dw MonsterDesc_105_EvilSeed                                ; Entry 366 ($6543)
-    dw MonsterDesc_106_ManEater                                ; Entry 367 ($6569)
-    dw MonsterDesc_107_Snapper                                 ; Entry 368 ($6594)
-    dw MonsterDesc_108_Rosevine                                ; Entry 369 ($65BE)
-    dw MonsterDesc_109_Watabou                                 ; Entry 370 ($65E6)
-    dw MonsterDesc_110_GiantSlug                               ; Entry 371 ($6606)
-    dw MonsterDesc_111_Catapila                                ; Entry 372 ($662B)
-    dw MonsterDesc_112_Gophecada                               ; Entry 373 ($665B)
-    dw MonsterDesc_113_Butterfly                               ; Entry 374 ($6686)
-    dw MonsterDesc_114_WeedBug                                 ; Entry 375 ($66B7)
-    dw MonsterDesc_115_GiantWorm                               ; Entry 376 ($66E7)
-    dw MonsterDesc_116_Lipsy                                   ; Entry 377 ($6714)
-    dw MonsterDesc_117_StagBug                                 ; Entry 378 ($673C)
-    dw MonsterDesc_118_ArmyAnt                                 ; Entry 379 ($675F)
-    dw MonsterDesc_119_GoHopper                                ; Entry 380 ($678A)
-    dw MonsterDesc_120_TailEater                               ; Entry 381 ($67AC)
-    dw MonsterDesc_121_ArmorPede                               ; Entry 382 ($67D7)
-    dw MonsterDesc_122_Eyeder                                  ; Entry 383 ($6803)
-    dw MonsterDesc_123_GiantMoth                               ; Entry 384 ($6829)
-    dw MonsterDesc_124_Droll                                   ; Entry 385 ($6854)
-    dw MonsterDesc_125_ArmyCrab                                ; Entry 386 ($6882)
-    dw MonsterDesc_126_MadHornet                               ; Entry 387 ($68B7)
-    dw MonsterDesc_127_HornBeet                                ; Entry 388 ($68D9)
-    dw MonsterDesc_128_Armorpion                               ; Entry 389 ($68FC)
-    dw MonsterDesc_129_Digster                                 ; Entry 390 ($6920)
-    dw MonsterDesc_130_Pixy                                    ; Entry 391 ($6948)
-    dw MonsterDesc_131_ArcDemon                                ; Entry 392 ($6973)
-    dw MonsterDesc_132_AgDevil                                 ; Entry 393 ($69A1)
-    dw MonsterDesc_133_Demonite                                ; Entry 394 ($69BD)
-    dw MonsterDesc_134_DarkEye                                 ; Entry 395 ($69EB)
-    dw MonsterDesc_135_EyeBall                                 ; Entry 396 ($6A0F)
-    dw MonsterDesc_136_SkulRider                               ; Entry 397 ($6A38)
-    dw MonsterDesc_137_EvilBeast                               ; Entry 398 ($6A5D)
-    dw MonsterDesc_138_1EyeClown                               ; Entry 399 ($6A86)
-    dw MonsterDesc_139_Gremlin                                 ; Entry 400 ($6AA8)
-    dw MonsterDesc_140_MedusaEye                               ; Entry 401 ($6AD6)
-    dw MonsterDesc_141_Lionex                                  ; Entry 402 ($6B08)
-    dw MonsterDesc_142_GoatHorn                                ; Entry 403 ($6B24)
-    dw MonsterDesc_143_Orc                                     ; Entry 404 ($6B57)
-    dw MonsterDesc_144_Ogre                                    ; Entry 405 ($6B7C)
-    dw MonsterDesc_145_GateGuard                               ; Entry 406 ($6BAF)
-    dw MonsterDesc_146_ChopClown                               ; Entry 407 ($6BE0)
-    dw MonsterDesc_147_Grendal                                 ; Entry 408 ($6C0B)
-    dw MonsterDesc_148_Akubar                                  ; Entry 409 ($6C35)
-    dw MonsterDesc_149_MadKnight                               ; Entry 410 ($6C64)
-    dw MonsterDesc_150_Gigantes                                ; Entry 411 ($6C8D)
-    dw MonsterDesc_151_Centasaur                               ; Entry 412 ($6CC1)
-    dw MonsterDesc_152_EvilArmor                               ; Entry 413 ($6CDF)
-    dw MonsterDesc_153_Jamirus                                 ; Entry 414 ($6D11)
-    dw MonsterDesc_154_Durran                                  ; Entry 415 ($6D35)
-    dw MonsterDesc_155_Spooky                                  ; Entry 416 ($6D5E)
-    dw MonsterDesc_156_Skullgon                                ; Entry 417 ($6D7B)
-    dw MonsterDesc_157_Putrepup                                ; Entry 418 ($6D9E)
-    dw MonsterDesc_158_RotRaven                                ; Entry 419 ($6DC9)
-    dw MonsterDesc_159_Mummy                                   ; Entry 420 ($6DEF)
-    dw MonsterDesc_160_DarkCrab                                ; Entry 421 ($6E22)
-    dw MonsterDesc_161_DeadNite                                ; Entry 422 ($6E43)
-    dw MonsterDesc_162_Shadow                                  ; Entry 423 ($6E6F)
-    dw MonsterDesc_163_Hork                                    ; Entry 424 ($6EA4)
-    dw MonsterDesc_164_Mudron                                  ; Entry 425 ($6ECD)
-    dw MonsterDesc_165_NiteWhip                                ; Entry 426 ($6EF5)
-    dw MonsterDesc_166_MadSpirit                               ; Entry 427 ($6F20)
-    dw MonsterDesc_167_WindMerge                               ; Entry 428 ($6F3C)
-    dw MonsterDesc_168_Reaper                                  ; Entry 429 ($6F6A)
-    dw MonsterDesc_169_DeadNoble                               ; Entry 430 ($6F90)
-    dw MonsterDesc_170_WhiteKing                               ; Entry 431 ($6FC2)
-    dw MonsterDesc_171_BoneSlave                               ; Entry 432 ($6FF3)
-    dw MonsterDesc_172_Skeletor                                ; Entry 433 ($701F)
-    dw MonsterDesc_173_Servant                                 ; Entry 434 ($704B)
-    dw MonsterDesc_174_Copycat                                 ; Entry 435 ($7076)
-    dw MonsterDesc_175_JewelBag                                ; Entry 436 ($70A4)
-    dw MonsterDesc_176_EvilWand                                ; Entry 437 ($70D2)
-    dw MonsterDesc_177_MadCandle                               ; Entry 438 ($70FB)
-    dw MonsterDesc_178_CoilBird                                ; Entry 439 ($7124)
-    dw MonsterDesc_179_Facer                                   ; Entry 440 ($7139)
-    dw MonsterDesc_180_SpikyBoy                                ; Entry 441 ($7167)
-    dw MonsterDesc_181_MadMirror                               ; Entry 442 ($717D)
-    dw MonsterDesc_182_RogueNite                               ; Entry 443 ($71AA)
-    dw MonsterDesc_183_Goopi                                   ; Entry 444 ($71DD)
-    dw MonsterDesc_184_Voodoll                                 ; Entry 445 ($7204)
-    dw MonsterDesc_185_MetalDrak                               ; Entry 446 ($7220)
-    dw MonsterDesc_186_Balzak                                  ; Entry 447 ($7240)
-    dw MonsterDesc_187_SabreMan                                ; Entry 448 ($726F)
-    dw MonsterDesc_188_CurseLamp                               ; Entry 449 ($72A3)
-    dw MonsterDesc_189_Roboster                                ; Entry 450 ($72D9)
-    dw MonsterDesc_190_EvilPot                                 ; Entry 451 ($7309)
-    dw MonsterDesc_191_Gismo                                   ; Entry 452 ($732D)
-    dw MonsterDesc_192_LavaMan                                 ; Entry 453 ($7355)
-    dw MonsterDesc_193_IceMan                                  ; Entry 454 ($737C)
-    dw MonsterDesc_194_Mimic                                   ; Entry 455 ($73A1)
-    dw MonsterDesc_195_MudDoll                                 ; Entry 456 ($73D0)
-    dw MonsterDesc_196_Golem                                   ; Entry 457 ($73FC)
-    dw MonsterDesc_197_StoneMan                                ; Entry 458 ($7425)
-    dw MonsterDesc_198_BombCrag                                ; Entry 459 ($744F)
-    dw MonsterDesc_199_GoldGolem                               ; Entry 460 ($747A)
-    dw MonsterDesc_200_DracoLord                               ; Entry 461 ($74A1)
-    dw MonsterDesc_201_DracoLord                               ; Entry 462 ($74CF)
-    dw MonsterDesc_202_Hargon                                  ; Entry 463 ($74F6)
-    dw MonsterDesc_203_Sidoh                                   ; Entry 464 ($7523)
-    dw MonsterDesc_204_Baramos                                 ; Entry 465 ($7551)
-    dw MonsterDesc_205_Zoma                                    ; Entry 466 ($7576)
-    dw MonsterDesc_206_Pizzaro                                 ; Entry 467 ($758D)
-    dw MonsterDesc_207_Esterk                                  ; Entry 468 ($75BC)
-    dw MonsterDesc_208_Mirudraas                               ; Entry 469 ($75EA)
-    dw MonsterDesc_209_Mirudraas                               ; Entry 470 ($7619)
-    dw MonsterDesc_210_Mudou                                   ; Entry 471 ($763F)
-    dw MonsterDesc_211_DeathMore                               ; Entry 472 ($7664)
-    dw MonsterDesc_212_DeathMore                               ; Entry 473 ($7696)
-    dw MonsterDesc_213_DeathMore                               ; Entry 474 ($76C5)
-    dw MonsterDesc_214_Darkdrium                               ; Entry 475 ($76F6)
+    dw MonsterDesc_000_DrakSlime                               ; Entry 261 — [table $420B]; monster_description #0 "Moves & jumps with its tail & win…"
+    dw MonsterDesc_001_SpotSlime                               ; Entry 262 — monster_description #1 "Larger than a regular slime & spo…"
+    dw MonsterDesc_002_WingSlime                               ; Entry 263 — monster_description #2 "Flies with wings that grew on its…"
+    dw MonsterDesc_003_TreeSlime                               ; Entry 264 — monster_description #3 "Its leafy top absorbs energy from…"
+    dw MonsterDesc_004_Snaily                                  ; Entry 265 — monster_description #4 "Hides in its shell when under att…"
+    dw MonsterDesc_005_SlimeNite                               ; Entry 266 — monster_description #5 "The knight riding on this slime i…"
+    dw MonsterDesc_006_Babble                                  ; Entry 267 — monster_description #6 "Can transform its body into any s…"
+    dw MonsterDesc_007_BoxSlime                                ; Entry 268 — monster_description #7 "Being trapped in a box gives this…"
+    dw MonsterDesc_008_Slime                                   ; Entry 269 — monster_description #8 "The most abundant of this popular…"
+    dw MonsterDesc_009_Healer                                  ; Entry 270 — monster_description #9 "Uses its powerful tentacles to mo…"
+    dw MonsterDesc_010_FangSlime                               ; Entry 271 — monster_description #10 "Has a red Mohawk and is very brav…"
+    dw MonsterDesc_011_RockSlime                               ; Entry 272 — monster_description #11 "Its skin is as hard as rock"
+    dw MonsterDesc_012_SlimeBorg                               ; Entry 273 — monster_description #12 "Oil flows through its body instea…"
+    dw MonsterDesc_013_Slabbit                                 ; Entry 274 — monster_description #13 "Flees very fast with its strong h…"
+    dw MonsterDesc_014_SpotKing                                ; Entry 275 — monster_description #14 "Several SpotSlimes combined into …"
+    dw MonsterDesc_015_KingSlime                               ; Entry 276 — monster_description #15 "Several Slimes combined into one …"
+    dw MonsterDesc_016_Metaly                                  ; Entry 277 — monster_description #16 "Its diet of iron gives this slime…"
+    dw MonsterDesc_017_Metabble                                ; Entry 278 — monster_description #17 "Produces strong weapons from its …"
+    dw MonsterDesc_018_MetalKing                               ; Entry 279 — monster_description #18 "Several Metalys combined to form …"
+    dw MonsterDesc_019_GoldSlime                               ; Entry 280 — monster_description #19 "The toughest creature in the slim…"
+    dw MonsterDesc_020_DragonKid                               ; Entry 281 — monster_description #20 "It does not grow any bigger than …"
+    dw MonsterDesc_021_Tortragon                               ; Entry 282 — monster_description #21 "It has a tough shell but it can't…"
+    dw MonsterDesc_022_Pteranod                                ; Entry 283 — monster_description #22 "Flaps its large wings and flies w…"
+    dw MonsterDesc_023_Gasgon                                  ; Entry 284 — monster_description #23 "Traps gas in its belly to float i…"
+    dw MonsterDesc_024_FairyDrak                               ; Entry 285 — monster_description #24 "Uses its tongue to suck nectar fr…"
+    dw MonsterDesc_025_LizardMan                               ; Entry 286 — monster_description #25 "Smart enough to skillfully use a …"
+    dw MonsterDesc_026_Poisongon                               ; Entry 287 — monster_description #26 "The fluid that is secreted from i…"
+    dw MonsterDesc_027_Swordgon                                ; Entry 288 — monster_description #27 "Its body is covered with sword-li…"
+    dw MonsterDesc_028_Dragon                                  ; Entry 289 — monster_description #28 "The oldest living species of drag…"
+    dw MonsterDesc_029_MiniDrak                                ; Entry 290 — monster_description #29 "Runs by using its hands & long ta…"
+    dw MonsterDesc_030_MadDragon                               ; Entry 291 — monster_description #30 "Runs by using its hands & long ta…"
+    dw MonsterDesc_031_Rayburn                                 ; Entry 292 — monster_description #31 "Can grab prey with its talons & f…"
+    dw MonsterDesc_032_Chamelgon                               ; Entry 293 — monster_description #32 "Changes its skin color for camouf…"
+    dw MonsterDesc_033_LizardFly                               ; Entry 294 — monster_description #33 "Hovers in midair with its thin wi…"
+    dw MonsterDesc_034_Andreal                                 ; Entry 295 — monster_description #34 "Sharp claws & fangs are its most …"
+    dw MonsterDesc_035_KingCobra                               ; Entry 296 — monster_description #35 "Its poisonous bite and sharp fang…"
+    dw MonsterDesc_036_Spikerous                               ; Entry 297 — monster_description #36 "Its spiky hard shell protects its…"
+    dw MonsterDesc_037_GreatDrak                               ; Entry 298 — monster_description #37 "The biggest dragon in the dragon …"
+    dw MonsterDesc_038_Crestpent                               ; Entry 299 — monster_description #38 "It shakes its crest to terrorize …"
+    dw MonsterDesc_039_WingSnake                               ; Entry 300 — monster_description #39 "Glides through the air with its l…"
+    dw MonsterDesc_040_Coatol                                  ; Entry 301 — monster_description #40 "Constricts its enemies with its p…"
+    dw MonsterDesc_041_Orochi                                  ; Entry 302 — monster_description #41 "Its 5 heads can do different thin…"
+    dw MonsterDesc_042_BattleRex                               ; Entry 303 — monster_description #42 "Attacks by swinging its powerful …"
+    dw MonsterDesc_043_SkyDragon                               ; Entry 304 — monster_description #43 "Floats freely in midair with its …"
+    dw MonsterDesc_044_Divinegon                               ; Entry 305 — monster_description #44 "If you defeat it, your wish will …"
+    dw MonsterDesc_045_Tonguella                               ; Entry 306 — monster_description #45 "Moves slowly but its long tongue …"
+    dw MonsterDesc_046_Almiraj                                 ; Entry 307 — monster_description #46 "When cornered,it charges with its…"
+    dw MonsterDesc_047_CatFly                                  ; Entry 308 — monster_description #47 "Can see in the dark and preys at …"
+    dw MonsterDesc_048_PillowRat                               ; Entry 309 — monster_description #48 "Soft & fluffy fur covers its body"
+    dw MonsterDesc_049_Saccer                                  ; Entry 310 — monster_description #49 "Lives in a sack made out of branc…"
+    dw MonsterDesc_050_GulpBeast                               ; Entry 311 — monster_description #50 "It devours its prey in one big gu…"
+    dw MonsterDesc_051_Skullroo                                ; Entry 312 — monster_description #51 "Attacks by throwing skulls at its…"
+    dw MonsterDesc_052_WindBeast                               ; Entry 313 — monster_description #52 "Creates tornadoes with its legs t…"
+    dw MonsterDesc_053_Anteater                                ; Entry 314 — monster_description #53 "Uses its tongue to attack & snare…"
+    dw MonsterDesc_054_SuperTen                                ; Entry 315 — monster_description #54 "It likes to show off its dance mo…"
+    dw MonsterDesc_055_IronTurt                                ; Entry 316 — monster_description #55 "Its spiked shell makes its body s…"
+    dw MonsterDesc_056_Mommonja                                ; Entry 317 — monster_description #56 "It follows you like a dog"
+    dw MonsterDesc_057_HammerMan                               ; Entry 318 — monster_description #57 "It has a hammer bigger than itself"
+    dw MonsterDesc_058_Grizzly                                 ; Entry 319 — monster_description #58 "Uses its strong arms to squeeze i…"
+    dw MonsterDesc_059_Yeti                                    ; Entry 320 — monster_description #59 "Its body is covered with a thick …"
+    dw MonsterDesc_060_MadGopher                               ; Entry 321 — monster_description #60 "It can dig very deep holes with i…"
+    dw MonsterDesc_061_FairyRat                                ; Entry 322 — monster_description #61 "Its ears act as wings allowing it…"
+    dw MonsterDesc_062_Unicorn                                 ; Entry 323 — monster_description #62 "Its horn is used to make medicines"
+    dw MonsterDesc_063_Goategon                                ; Entry 324 — monster_description #63 "Charges enemies with its sharp & …"
+    dw MonsterDesc_064_WildApe                                 ; Entry 325 — monster_description #64 "Lives in groups with one dominant…"
+    dw MonsterDesc_065_Trumpeter                               ; Entry 326 — monster_description #65 "Its tusks are used to create craf…"
+    dw MonsterDesc_066_KingLeo                                 ; Entry 327 — monster_description #66 "Uses its 4 hands & 4 arms skillfu…"
+    dw MonsterDesc_067_DarkHorn                                ; Entry 328 — monster_description #67 "Its pelt commands a high price"
+    dw MonsterDesc_068_MadCat                                  ; Entry 329 — monster_description #68 "Moves very swiftly to catch its p…"
+    dw MonsterDesc_069_BigEye                                  ; Entry 330 — monster_description #69 "Looks up at the sky & dozes off a…"
+    dw MonsterDesc_070_Picky                                   ; Entry 331 — monster_description #70 "It's flightless but it can run qu…"
+    dw MonsterDesc_071_Wyvern                                  ; Entry 332 — monster_description #71 "It has an eagle's head & a body o…"
+    dw MonsterDesc_072_BullBird                                ; Entry 333 — monster_description #72 "Sleeps right after it makes a kill"
+    dw MonsterDesc_073_Florajay                                ; Entry 334 — monster_description #73 "Its flower like face lures bugs t…"
+    dw MonsterDesc_074_DuckKite                                ; Entry 335 — monster_description #74 "Spreads its wings to make itself …"
+    dw MonsterDesc_075_MadPecker                               ; Entry 336 — monster_description #75 "Rips flesh from its prey with its…"
+    dw MonsterDesc_076_MadRaven                                ; Entry 337 — monster_description #76 "Attacks by dropping skulls from t…"
+    dw MonsterDesc_077_MistyWing                               ; Entry 338 — monster_description #77 "Its mist like body glows pinkish …"
+    dw MonsterDesc_078_Dracky                                  ; Entry 339 — monster_description #78 "Prefers darkness and sucks blood …"
+    dw MonsterDesc_079_BigRoost                                ; Entry 340 — monster_description #79 "Its firm flesh is good eating"
+    dw MonsterDesc_080_StubBird                                ; Entry 341 — monster_description #80 "A very stubborn bird"
+    dw MonsterDesc_081_LandOwl                                 ; Entry 342 — monster_description #81 "A flightless owl with strong talo…"
+    dw MonsterDesc_082_MadGoose                                ; Entry 343 — monster_description #82 "A migratory bird that can be very…"
+    dw MonsterDesc_083_MadCondor                               ; Entry 344 — monster_description #83 "It has big wings, deadly sharp cl…"
+    dw MonsterDesc_084_Blizzardy                               ; Entry 345 — monster_description #84 "Breathes out freezing air to defe…"
+    dw MonsterDesc_085_Phoenix                                 ; Entry 346 — monster_description #85 "Roasts its prey with its fiery br…"
+    dw MonsterDesc_086_ZapBird                                 ; Entry 347 — monster_description #86 "Attacks with the thundercloud tha…"
+    dw MonsterDesc_087_WhipBird                                ; Entry 348 — monster_description #87 "Attacks with its whip-like legs &…"
+    dw MonsterDesc_088_FunkyBird                               ; Entry 349 — monster_description #88 "Likes to dance & sing"
+    dw MonsterDesc_089_RainHawk                                ; Entry 350 — monster_description #89 "It has 4 strong legs & a pair of …"
+    dw MonsterDesc_090_MadPlant                                ; Entry 351 — monster_description #90 "Secretes sweet sap to attract bugs"
+    dw MonsterDesc_091_FireWeed                                ; Entry 352 — monster_description #91 "Its flame breath is its deadly we…"
+    dw MonsterDesc_092_FloraMan                                ; Entry 353 — monster_description #92 "Can live several hundred years an…"
+    dw MonsterDesc_093_WingTree                                ; Entry 354 — monster_description #93 "Stores gas inside its body to flo…"
+    dw MonsterDesc_094_CactiBall                               ; Entry 355 — monster_description #94 "Stores water inside the body to s…"
+    dw MonsterDesc_095_Gulpple                                 ; Entry 356 — monster_description #95 "Gulps up monsters to stock up on …"
+    dw MonsterDesc_096_Toadstool                               ; Entry 357 — monster_description #96 "Plants its spores on its prey to …"
+    dw MonsterDesc_097_AmberWeed                               ; Entry 358 — monster_description #97 "Secretes sap that hardens its body"
+    dw MonsterDesc_098_Stubsuck                                ; Entry 359 — monster_description #98 "Uses its roots to suck out the pr…"
+    dw MonsterDesc_099_Oniono                                  ; Entry 360 — monster_description #99 "Grows out its roots when its read…"
+    dw MonsterDesc_100_DanceVegi                               ; Entry 361 — monster_description #100 "Its bad balance forces it to walk…"
+    dw MonsterDesc_101_TreeBoy                                 ; Entry 362 — monster_description #101 "A spirit that lives in a very old…"
+    dw MonsterDesc_102_FaceTree                                ; Entry 363 — monster_description #102 "Its roots suck evil power from th…"
+    dw MonsterDesc_103_HerbMan                                 ; Entry 364 — monster_description #103 "Its roots can be used to make a c…"
+    dw MonsterDesc_104_BeanMan                                 ; Entry 365 — monster_description #104 "Travels to find a place to plant …"
+    dw MonsterDesc_105_EvilSeed                                ; Entry 366 — monster_description #105 "Clings on its host with its tenta…"
+    dw MonsterDesc_106_ManEater                                ; Entry 367 — monster_description #106 "Dissolves its prey with its diges…"
+    dw MonsterDesc_107_Snapper                                 ; Entry 368 — monster_description #107 "The 3 buds sink their teeth into …"
+    dw MonsterDesc_108_Rosevine                                ; Entry 369 — monster_description #108 "Squeezes its prey with its thorny…"
+    dw MonsterDesc_109_Watabou                                 ; Entry 370 — monster_description #109 "A mischievous mystical creature"
+    dw MonsterDesc_110_GiantSlug                               ; Entry 371 — monster_description #110 "Its mucus contains digestive enzy…"
+    dw MonsterDesc_111_Catapila                                ; Entry 372 — monster_description #111 "This caterpillar does not grow to…"
+    dw MonsterDesc_112_Gophecada                               ; Entry 373 — monster_description #112 "Since it lives underground, it ha…"
+    dw MonsterDesc_113_Butterfly                               ; Entry 374 — monster_description #113 "Powder on its wings have hallu- c…"
+    dw MonsterDesc_114_WeedBug                                 ; Entry 375 — monster_description #114 "Its weed-top sucks up energy & em…"
+    dw MonsterDesc_115_GiantWorm                               ; Entry 376 — monster_description #115 "Finds its prey with its acute sen…"
+    dw MonsterDesc_116_Lipsy                                   ; Entry 377 — monster_description #116 "Paralyzes its prey with its deadl…"
+    dw MonsterDesc_117_StagBug                                 ; Entry 378 — monster_description #117 "Repels attacks with its hard shell"
+    dw MonsterDesc_118_ArmyAnt                                 ; Entry 379 — monster_description #118 "Its body is small, but its jaw is…"
+    dw MonsterDesc_119_GoHopper                                ; Entry 380 — monster_description #119 "Makes a weird sound when it flies"
+    dw MonsterDesc_120_TailEater                               ; Entry 381 — monster_description #120 "Sucks on its prey with its tail-l…"
+    dw MonsterDesc_121_ArmorPede                               ; Entry 382 — monster_description #121 "A shell protects its back but not…"
+    dw MonsterDesc_122_Eyeder                                  ; Entry 383 — monster_description #122 "Each tentacle has a specific func…"
+    dw MonsterDesc_123_GiantMoth                               ; Entry 384 — monster_description #123 "Creates a violent wind with its h…"
+    dw MonsterDesc_124_Droll                                   ; Entry 385 — monster_description #124 "Protruding eyes gives a large fie…"
+    dw MonsterDesc_125_ArmyCrab                                ; Entry 386 — monster_description #125 "Attacks in a group & cuts up its …"
+    dw MonsterDesc_126_MadHornet                               ; Entry 387 — monster_description #126 "Paralyzes its prey with its sting"
+    dw MonsterDesc_127_HornBeet                                ; Entry 388 — monster_description #127 "Charges its prey with its big horn"
+    dw MonsterDesc_128_Armorpion                               ; Entry 389 — monster_description #128 "Unprotected joints are its weakne…"
+    dw MonsterDesc_129_Digster                                 ; Entry 390 — monster_description #129 "Digs caves to live in a dark humi…"
+    dw MonsterDesc_130_Pixy                                    ; Entry 391 — monster_description #130 "Loves to play pranks with its mag…"
+    dw MonsterDesc_131_ArcDemon                                ; Entry 392 — monster_description #131 "Too fat to fly but its strength i…"
+    dw MonsterDesc_132_AgDevil                                 ; Entry 393 — monster_description #132 "Very quick witted & cunning"
+    dw MonsterDesc_133_Demonite                                ; Entry 394 — monster_description #133 "Smart but, lacks the power to cas…"
+    dw MonsterDesc_134_DarkEye                                 ; Entry 395 — monster_description #134 "Catches its prey with its tentacl…"
+    dw MonsterDesc_135_EyeBall                                 ; Entry 396 — monster_description #135 "Hunts with its large eye & fast t…"
+    dw MonsterDesc_136_SkulRider                               ; Entry 397 — monster_description #136 "Revives dead beasts to use as sla…"
+    dw MonsterDesc_137_EvilBeast                               ; Entry 398 — monster_description #137 "Trained hard to attain its evil s…"
+    dw MonsterDesc_138_1EyeClown                               ; Entry 399 — monster_description #138 "Uses its wand to cast evil spells"
+    dw MonsterDesc_139_Gremlin                                 ; Entry 400 — monster_description #139 "Mischievous & likes to play trick…"
+    dw MonsterDesc_140_MedusaEye                               ; Entry 401 — monster_description #140 "A deadly ball of snakes with an e…"
+    dw MonsterDesc_141_Lionex                                  ; Entry 402 — monster_description #141 "A natural born evil fighter"
+    dw MonsterDesc_142_GoatHorn                                ; Entry 403 — monster_description #142 "A powerful monster with the horns…"
+    dw MonsterDesc_143_Orc                                     ; Entry 404 — monster_description #143 "Its dense pelt acts as natural ar…"
+    dw MonsterDesc_144_Ogre                                    ; Entry 405 — monster_description #144 "Its flail has a metal ball that's…"
+    dw MonsterDesc_145_GateGuard                               ; Entry 406 — monster_description #145 "Uses a scythe as tall as its own …"
+    dw MonsterDesc_146_ChopClown                               ; Entry 407 — monster_description #146 "Has achieved the utmost limit of …"
+    dw MonsterDesc_147_Grendal                                 ; Entry 408 — monster_description #147 "Not too clever, but uses its weap…"
+    dw MonsterDesc_148_Akubar                                  ; Entry 409 — monster_description #148 "Combined evil power with super- h…"
+    dw MonsterDesc_149_MadKnight                               ; Entry 410 — monster_description #149 "Covered with armor that is never …"
+    dw MonsterDesc_150_Gigantes                                ; Entry 411 — monster_description #150 "The biggest in the devil family, …"
+    dw MonsterDesc_151_Centasaur                               ; Entry 412 — monster_description #151 "A hybrid devil of man & beast"
+    dw MonsterDesc_152_EvilArmor                               ; Entry 413 — monster_description #152 "Its real identity underneath the …"
+    dw MonsterDesc_153_Jamirus                                 ; Entry 414 — monster_description #153 "A hybrid devil of an eagle & a li…"
+    dw MonsterDesc_154_Durran                                  ; Entry 415 — monster_description #154 "A strong all-round natural born f…"
+    dw MonsterDesc_155_Spooky                                  ; Entry 416 — monster_description #155 "Its hobby is to scare people"
+    dw MonsterDesc_156_Skullgon                                ; Entry 417 — monster_description #156 "A dragon that's risen from the de…"
+    dw MonsterDesc_157_Putrepup                                ; Entry 418 — monster_description #157 "It's fearless since it doesn't fe…"
+    dw MonsterDesc_158_RotRaven                                ; Entry 419 — monster_description #158 "Dozes all day in its half rotted …"
+    dw MonsterDesc_159_Mummy                                   ; Entry 420 — monster_description #159 "Its body is filled with herbs to …"
+    dw MonsterDesc_160_DarkCrab                                ; Entry 421 — monster_description #160 "Its shell resembles a human face"
+    dw MonsterDesc_161_DeadNite                                ; Entry 422 — monster_description #161 "Knight revived as a zombie, who n…"
+    dw MonsterDesc_162_Shadow                                  ; Entry 423 — monster_description #162 "Real identity is unknown due to i…"
+    dw MonsterDesc_163_Hork                                    ; Entry 424 — monster_description #163 "Its acidic saliva will dissolve a…"
+    dw MonsterDesc_164_Mudron                                  ; Entry 425 — monster_description #164 "A swamp mud infested spirit of th…"
+    dw MonsterDesc_165_NiteWhip                                ; Entry 426 — monster_description #165 "Flies in the air leaving a streak…"
+    dw MonsterDesc_166_MadSpirit                               ; Entry 427 — monster_description #166 "Lost spirits fused together"
+    dw MonsterDesc_167_WindMerge                               ; Entry 428 — monster_description #167 "Strangely, there is nothing under…"
+    dw MonsterDesc_168_Reaper                                  ; Entry 429 — monster_description #168 "Guides dead spirits to the underw…"
+    dw MonsterDesc_169_DeadNoble                               ; Entry 430 — monster_description #169 "Rides on a horse & attacks enemie…"
+    dw MonsterDesc_170_WhiteKing                               ; Entry 431 — monster_description #170 "Has retained its high INT from wh…"
+    dw MonsterDesc_171_BoneSlave                               ; Entry 432 — monster_description #171 "Resurrected as a zombie to serve …"
+    dw MonsterDesc_172_Skeletor                                ; Entry 433 — monster_description #172 "Attacks with a sword in each of i…"
+    dw MonsterDesc_173_Servant                                 ; Entry 434 — monster_description #173 "Created from evil powers,it has a…"
+    dw MonsterDesc_174_Copycat                                 ; Entry 435 — monster_description #174 "Can disguise as any creature & mi…"
+    dw MonsterDesc_175_JewelBag                                ; Entry 436 — monster_description #175 "Likes to eat things that are prec…"
+    dw MonsterDesc_176_EvilWand                                ; Entry 437 — monster_description #176 "An evil spirit possessing a wizar…"
+    dw MonsterDesc_177_MadCandle                               ; Entry 438 — monster_description #177 "Its candle will remain lit until …"
+    dw MonsterDesc_178_CoilBird                                ; Entry 439 — monster_description #178 "Emits an eerie noise"
+    dw MonsterDesc_179_Facer                                   ; Entry 440 — monster_description #179 "An evil spirit has possessed this…"
+    dw MonsterDesc_180_SpikyBoy                                ; Entry 441 — monster_description #180 "Explodes when angered"
+    dw MonsterDesc_181_MadMirror                               ; Entry 442 — monster_description #181 "Absorbs anything that reflects on…"
+    dw MonsterDesc_182_RogueNite                               ; Entry 443 — monster_description #182 "Life was brought to this armor & …"
+    dw MonsterDesc_183_Goopi                                   ; Entry 444 — monster_description #183 "Grabs & paralyzes any prey that p…"
+    dw MonsterDesc_184_Voodoll                                 ; Entry 445 — monster_description #184 "A clay doll brought to life"
+    dw MonsterDesc_185_MetalDrak                               ; Entry 446 — monster_description #185 "A dragon constructed from metal"
+    dw MonsterDesc_186_Balzak                                  ; Entry 447 — monster_description #186 "A creature created to be the stro…"
+    dw MonsterDesc_187_SabreMan                                ; Entry 448 — monster_description #187 "Fashioned with so much passion th…"
+    dw MonsterDesc_188_CurseLamp                               ; Entry 449 — monster_description #188 "Its been said that there is an ev…"
+    dw MonsterDesc_189_Roboster                                ; Entry 450 — monster_description #189 "Last suviving war robot made in a…"
+    dw MonsterDesc_190_EvilPot                                 ; Entry 451 — monster_description #190 "Lurks in a pot to hide its identi…"
+    dw MonsterDesc_191_Gismo                                   ; Entry 452 — monster_description #191 "Life was brought to this ball of …"
+    dw MonsterDesc_192_LavaMan                                 ; Entry 453 — monster_description #192 "It's composed of an energy core &…"
+    dw MonsterDesc_193_IceMan                                  ; Entry 454 — monster_description #193 "It's composed of an energy core &…"
+    dw MonsterDesc_194_Mimic                                   ; Entry 455 — monster_description #194 "Attacks anyone who tries to steal…"
+    dw MonsterDesc_195_MudDoll                                 ; Entry 456 — monster_description #195 "A kneaded dried clay doll that ca…"
+    dw MonsterDesc_196_Golem                                   ; Entry 457 — monster_description #196 "A stack of rock bricks that came …"
+    dw MonsterDesc_197_StoneMan                                ; Entry 458 — monster_description #197 "A statue made from rock that came…"
+    dw MonsterDesc_198_BombCrag                                ; Entry 459 — monster_description #198 "Usually dormant & looks like a no…"
+    dw MonsterDesc_199_GoldGolem                               ; Entry 460 — monster_description #199 "Made out of an elastic & durable …"
+    dw MonsterDesc_200_DracoLord                               ; Entry 461 — monster_description #200 "Tried to unite the monsters to ru…"
+    dw MonsterDesc_201_DracoLord                               ; Entry 462 — monster_description #201 "This is the true identity of Drac…"
+    dw MonsterDesc_202_Hargon                                  ; Entry 463 — monster_description #202 "The one who planned to revive the…"
+    dw MonsterDesc_203_Sidoh                                   ; Entry 464 — monster_description #203 "An evil dragon lord, ruler of all…"
+    dw MonsterDesc_204_Baramos                                 ; Entry 465 — monster_description #204 "This evil lord controls all monst…"
+    dw MonsterDesc_205_Zoma                                    ; Entry 466 — monster_description #205 "The source of all evil"
+    dw MonsterDesc_206_Pizzaro                                 ; Entry 467 — monster_description #206 "Attained its power from the pearl…"
+    dw MonsterDesc_207_Esterk                                  ; Entry 468 — monster_description #207 "Exists beyond the boundries of ti…"
+    dw MonsterDesc_208_Mirudraas                               ; Entry 469 — monster_description #208 "An evil lord who tried to rule th…"
+    dw MonsterDesc_209_Mirudraas                               ; Entry 470 — monster_description #209 "This is the true identity of Miru…"
+    dw MonsterDesc_210_Mudou                                   ; Entry 471 — monster_description #210 "This evil lord controls all monst…"
+    dw MonsterDesc_211_DeathMore                               ; Entry 472 — monster_description #211 "An evil lord that lives between r…"
+    dw MonsterDesc_212_DeathMore                               ; Entry 473 — monster_description #212 "Shed off its disguise to show off…"
+    dw MonsterDesc_213_DeathMore                               ; Entry 474 — monster_description #213 "Only a true warrior can reveal it…"
+    dw MonsterDesc_214_Darkdrium                               ; Entry 475 — monster_description #214 "The master of destruction & carna…"
 
 SetB4d_43b9:
     ld de, $4007

@@ -348,8 +348,21 @@ def _project_rows(prj, data, rows):
     def texts():
         return len(getattr(prj, '_text_by_id', {}) or {})
     add('texts', 'Text and story', 'Texts (lines people say, signs, questions)', texts,
-        246 * 256, 'no more text numbers', 'Dialogue',
+        246 * 256, 'no more text numbers', 'Rooms',
         tech='custom text ids $0A00-$FFFF = 246 sections of 256 (TextSectionBanks)')
+    # S150 (ROADMAP P3.6): the game's own texts the project rewrote (gamedata.text);
+    # their bytes live in text banks $80+ = part of the ROM space row above
+    from . import gametext as GTX
+
+    def game_texts():
+        return len(GTX.edits(data))
+    add('game_texts', 'Text and story', "The game's own texts you rewrote (dialogue, battle, "
+        'items, menus, credits)', game_texts,
+        sum(1 for k in GTX.index(getattr(prj, 'repo_root', None)).order
+            if not GTX.index(getattr(prj, 'repo_root', None)).entries[k].owner),
+        'every one can be rewritten', 'Text',
+        tech='gamedata.text: text banks $80+ (any length; ROM0 TextLevel1Hook -> bank $60 '
+             'entry 14 -> the text home bank)')
     from . import project as P
     pool = sum(hi - lo + 1 for lo, hi in P.FLAG_AUTO_RANGES)
 

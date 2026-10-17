@@ -218,8 +218,15 @@ Player presses A near NPC
 
 Handler banks ($42-$4E) each contain:
 1. Bank number byte at $4000
-2. Jump table (5 entries, 10 bytes) at $4001
-3. Text pointer table at $400B (2 bytes per entry, LE)
+2. Far-call entries from $4001 (mgbdis calls the whole head a "Cross-bank dispatch
+   table (N entries)")
+3. The bank's MODE LIST and per-id pointer tables, NOT a table at a fixed $400B
+   (S108 / S150 correction: the mode list is the word list a caller passes as DE to
+   CallTextEngine — `$4007` in most corpus banks — and each mode's table starts
+   wherever that word points; see "Text id resolution" and "Two-Level"). S150:
+   `tools/annotate_text_slots.py` comments every such `dw … ; Entry N` line in both
+   trees with what it is (a mode-list word, a table's first row, the text id / table
+   row read through that slot) — 3,249 lines, comments only.
 4. Text strings in remaining space
 
 ## Text ID → Bank Routing (ROM0 Cascade at $0AD9)
@@ -289,12 +296,96 @@ crashes the game, KEY_LESSONS S118),
 `$F3` none (a box opener like `$EA` / `$EB`, 20 uses before the speaker). The Control
 Codes table above carries these corrections.
 Battle messages (bank $4C) use their own codes (`$ED`, `$FC xx`, `$EC`, `$F2` — not
-decoded; shown raw by the Dialogue tab). **S111 (the forms the custom skills' own lines
+decoded; S150: written as `{ED}`, `{FC 10}` … tokens by the Text tab's markup). **S111 (the forms the custom skills' own lines
 use — `editor2/core/custom_skills.encode_line` / `decode_line`, read from the vanilla
 lines and verified in PyBoy with new lines):** `$ED` opens a line box, `$F9 $00` inserts
 the acting monster's name (`{name}`), `$F9 $10` the acting skill's name (`{skill}`; for
 ids ≥ $DE fixed S111, BATTLE_SKILL_SYSTEM §13.9), `$F1` = next line, `$FC $10 $EC $F2` =
 a new page, `$EC $F0` = the end. Other `$FC` arguments and codes stay undecoded.
+
+## Edited game text (S150) {#edited-game-text}
+
+**Built S150; USER-CONFIRMED 2026-10-17 08:46 ("I confirm everything works")** (ROADMAP Phase F T-author / P3.6; editor: the
+**Text** tab, help `56_text.md`; compiler: PROJECT_COMPILER §2.58). Every text the
+game shows or copies can be rewritten, ANY length, stored in a text bank $80+.
+
+**Where every text is found (measured S150).** ROM0 `SaveBankAndSwitch` ($092F) is
+the ONE resolver: DE = the current bank's mode list, [$C822] = mode, [$C823] = id;
+level 1 `DE = [DE + 2·mode]` (the per-id TABLE), level 2 `DE = [DE + 2·id]` (the
+text), stored to [$C82D/$C82E]; [$C824] = [$4000] of the current bank = the bank
+the engine reads every byte from (`ReadNextTextByte`, `SaveBankForTextDisplay`).
+Two ROM0 callers: `CallTextEngine` ($05B6) SHOWS the text (the box / row engine);
+`RunTextHandler` ($05F6) COPIES it into the buffer at [$C837] up to the first $F0
+(names the game copies before printing, e.g. bank $41's names through $0981). Bank
+$41's far-call helpers (corrected S150 in both trees' comments): entry 0 shows,
+entry 1 copies, entry 2 shows + waits — 47 call sites in banks $07 $09 $0A $12 $15
+$18 $50 $51 $55 $59. Bank $55 has its own debug copy of the resolver (the debug text
+viewer) — not hooked.
+
+**The hook.** The 8 bytes of ROM0 padding at $00F0 (S105's `LoadModeBaseRedirect`)
+became `TextLevel1Hook` (SBAS's level-1 read: `ld e,[hl] / inc hl / ld d,[hl] / ld
+hl,$600E / rst $10 / ret`) + at $00F8 `SaveBankAndSwitchCopy` (`ld a,1 / ld
+[wTextOvrMode],a / jp SaveBankAndSwitch`, called by RunTextHandler instead of SBAS).
+Bank $60 entry 14 `TextOverride`: first the S105 nickname redirect (bank $47 mode
+table → bank $7D for ids ≥ $DD), then — when the build has edits (`TEXT_OVR_HOME` ≠
+0) — `rst $10` to the text home bank's entry 0 `TextOvrFind`. A HIT returns DE =
+wTextOvrPtr − 2·id (WRAM $D562), so the unchanged level 2 reads the edited text's
+address from WRAM whatever ROM bank is mapped; SHOW sets [$C824] = the text's bank;
+COPY has the text's own bank (entry 1 `TextOvrCopy`) copy it to [$C837] and points
+wTextOvrPtr at the buffer (RunTextHandler then copies the buffer onto itself).
+wTextOvrMode ($D561) is consumed (zeroed) on every lookup. A miss: DE unchanged.
+
+**Keyed by the POINTER SLOT** (bank, table, id), not by the text's address: many
+texts are reached through several slots (382 dialogue ids share a string), and the
+census confirmed each slot is independent. The home bank's data: `TextOvrBanks`
+(32-byte bitmap of banks with an edited table — the quick "no"), `TextOvrDir` rows
+`[db bank, dw table, dw list, db count]` ended by `$00`, lists `count × [db id, db
+text bank, dw address]` (count 0 = 256).
+
+**The texts** (`extracted/dialogue.json`, `tools/dump_dialogue.py`, regenerated
+S150): the 2,560 dialogue ids (each with its MEASURED slot — PyBoy hooks $0944 during
+`TextBankDispatch` and records the table / index; ids whose string starts inside
+another id's string are marked `inside`) + 22 tables, 1,329 rows:
+
+| source | bank:table (mode) | rows | style |
+|---|---|---|---|
+| battle_message | $4C:$4019 (0) | 253 ($FD = the custom skills' own line, skipped) | rows |
+| battle_effect / _command / _beasttail / _beasttail_result | $4C:$4215 / $423B / $4249 / $425B (1-4) | 19 / 7 / 9 / 4 | rows |
+| credits_role / _name / _end | $4C:$4263 / $4299 / $42CF (5-7) | 27 / 27 / 1 | rows |
+| misc_message (battle / level-up) / spell_use_message | $41:$49CD (11) / $4A7B (14) | 37 / 12 | rows |
+| battle_tutorial / _name / _menu | $59:$5301 / $530F / $5315 (0-2) | 7 / 3 / 14 | box / rows / box |
+| item_name / item_description / item_use_message | $41:$48E7 (8) / $493F (9) / $4A1B (13) | 44 / 44 / 48 | rows |
+| field_message / personality / family_name / watabou_message | $41:$4101 (2) / $4997 (10) / $41E3 (3) / $4A17 (12) | 113 / 27 / 160 / 2 | rows |
+| skill_description / monster_description | $56:$6667 / $4D:$420B | 256 / 215 | owned by the Skills / Monsters tabs |
+
+**Text ends are parameter-aware (S150 correction).** A text ends at the first $F0
+that is NOT a control code's parameter (E8: 2 bytes, E9 / F8 / F9 / FB / FC: 1) — the
+battle tutorial's `$FB $F0` is code $FB with its parameter byte $F0 (`$C835` := $F0), not the end (the S108
+scanner, stopping at the first $F0, cut such texts short).
+
+**Markup** (`editor2/core/textmark.py`, lossless — every vanilla text round-trips):
+two styles. 'box' (dialogue, the tutorial): a new line = `$EF $EE`; `▼` = `$FA $F7`
+(wait for A, clear, next box); the closing `$F7` is implied and `{end}` marks a text
+that ends without one. 'rows' (tables): a new line = `$F1`. Tokens: `{hero}` `{ins
+NN}` `{low}` `{high}` `{yes/no}` `{choice}` `{wait}` `{clear}` `{sound NN}` `{XX ..}`
+(any code with its bytes) `{$xx}` (any glyph) and the family icons `{slime}` …; `‥` =
+$61 (the one-cell ".."), `'x` = the one-cell contractions ($65-$71). Length caps the
+editor enforces: item names and personalities 9 glyphs (the bag / INFO columns),
+family default names 4 (the naming screen).
+
+**Proved S150** (on the patched build, md5 in PROJECT_STATE — not quoted here):
+`tools/census_text_override.py` builds a project with EVERY text edited and
+stub-calls CallTextEngine and RunTextHandler for every slot — 3,850 / 3,850 shown
+and copied as edited, unedited slots read as the build's own slot, the nickname
+redirect 512 / 512; the negative build (hook off) fails. `tools/walk_text.py` on the
+user's save: the throne room's speech, the bag's names / descriptions, an item's use
+line in the field, a battle message, the demo's rooms — 17 checks; negative 8 FAIL.
+
+**Not reached (ROADMAP T-follow):** words drawn as TILES (the field menu's INFO /
+ITEM / SKIL / OPTN, the INFO page's ATK / DEF, the HP / MP bar — no SBAS call draws
+them, measured); how the packed menu-word field messages (`PUT TAKEEXIT`,
+`ITEMGOLDEXIT`, `WHOINFOOKMONEGG`) are cut — NOT measured; the window widths of the
+non-dialogue tables; the debug texts.
 
 ## Monster text blocks (S108)
 
@@ -392,7 +483,9 @@ indexed by `wMapID` to the table at `$6119`. Each handler does room-specific vis
 - `extracted/dialogue.json` — S108: ALL 2,560 text ids with their MEASURED bank /
   address / raw bytes / decoded text (+ `same_as` for shared strings) and every text
   table (battle messages, bank $41 message tables, item / skill / monster
-  descriptions) — `tools/dump_dialogue.py`; read by the editor's Dialogue tab
+  descriptions) — `tools/dump_dialogue.py`; read by the editor's Text tab (S150:
+  regenerated — each id's measured pointer slot, 22 tables / 1,329 rows with
+  style / group / owner, param-aware ends; see "Edited game text (S150)")
 - `extracted/text_id_map.json` — derived from dialogue.json since S108 (id → bank /
   index / address / one-line text; the pre-S108 file was modelled and mostly wrong)
 - `extracted/decoded_text.json` — 1374 text strings organized by handler bank (pre-S108,

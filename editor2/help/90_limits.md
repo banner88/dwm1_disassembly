@@ -111,8 +111,12 @@
   bytes, the nicknames 645, the descriptions 9,031 (+ about 2 KB free at the
   end of their bank); names / nicknames longer than the block share the
   ≈ 290 free bytes with the new monsters' names. Words written into dialogue
-  keep the old name (the Dialogue tab lists them; editing dialogue comes
-  later).
+  keep the old name (the Text tab lists them and rewrites them, S150).
+- The game's own texts (S150, the Text tab): any of them can be rewritten, any
+  length (each edited text sits in a bank of its own). Item names and
+  personalities at most 9 letters, the families' default names at most 4 (the
+  game draws them in fixed fields). Labels drawn as tiles — ATK / DEF on the
+  INFO page, the HP / MP bar — are not texts and are not on the tab.
 - Original monsters can get new art (S107): new art walks in one of the game's 155 walk styles
   (picked to fit the sheet's six frames; the original art keeps its own) and
   uses one of the game's 8 shared walking palettes. A walk style the game

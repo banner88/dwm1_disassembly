@@ -12,74 +12,74 @@ SECTION "ROM Bank $04b", ROMX[$4000], BANK[$4b]
     dw LoadB4b_4089                  ; Entry 0
     dw $40A1                          ; Entry 1
     dw $40B9                          ; Entry 2
-    dw $4009                          ; Entry 3
-    dw $40D1                          ; Entry 4
-    dw $420E                          ; Entry 5
-    dw $42C0                          ; Entry 6
-    dw $4328                          ; Entry 7
-    dw $4365                          ; Entry 8
+    dw $4009                          ; Entry 3 — mode 0 -> table $4009 (mode list $4007)
+    dw $40D1                          ; Entry 4 — [table $4009]; text $07C0 "Watabou:[HERO], so you made it! W…"
+    dw $420E                          ; Entry 5 — text $07C1 "Watabou:There are still Travelers…"
+    dw $42C0                          ; Entry 6 — text $07C2 "Watabou:You made it! [HERO]!! You…"
+    dw $4328                          ; Entry 7 — text $07C3 "Watabou:Oh well, you don't need m…"
+    dw $4365                          ; Entry 8 — text $07C4 "Watabou:Hey, you have too many pa…"
 FuncB4b_4013:
-    dw $43CD                          ; Entry 9
-    dw $44AF                          ; Entry 10
-    dw $44EA                          ; Entry 11
-    dw $45C8                          ; Entry 12
-    dw $45DE                          ; Entry 13
-    dw $4617                          ; Entry 14
-    dw $464A                          ; Entry 15
-    dw $4668                          ; Entry 16
-    dw $46A6                          ; Entry 17
-    dw $46F0                          ; Entry 18
-    dw $479B                          ; Entry 19
-    dw $4818                          ; Entry 20
-    dw $48BB                          ; Entry 21
-    dw $49AA                          ; Entry 22
-    dw $4A49                          ; Entry 23
+    dw $43CD                          ; Entry 9 — text $07C5 "Watabou:Good to meet you [HERO]. …"
+    dw $44AF                          ; Entry 10 — text $07C6 "*:Watabou's magic spell Chance, i…"
+    dw $44EA                          ; Entry 11 — text $07C7 "*:[HERO]! Oh it's [HERO]! Welcome…"
+    dw $45C8                          ; Entry 12 — text $07C8 "*:Are you scared?"
+    dw $45DE                          ; Entry 13 — text $07C9 "*:Want to listen to the descripti…"
+    dw $4617                          ; Entry 14 — text $07CA "*:Giggle... It'll be there after …"
+    dw $464A                          ; Entry 15 — text $07CB "*:Oh [HERO]!, Good luck! *kiss*"
+    dw $4668                          ; Entry 16 — text $07CC "*:Are you ready to challenge the …"
+    dw $46A6                          ; Entry 17 — text $07CD "*:If you survive him, there will …"
+    dw $46F0                          ; Entry 18 — text $07CE "King:No, it's not an exaggeration…"
+    dw $479B                          ; Entry 19 — text $07CF "*:The Master Monster Tamer will b…"
+    dw $4818                          ; Entry 20 — text $07D0 "*:You survived D class! *:I'm sti…"
+    dw $48BB                          ; Entry 21 — text $07D1 "*:Ho Ho, Well done! You defeated …"
+    dw $49AA                          ; Entry 22 — text $07D2 "*:[HERO], to tell you the truth..…"
+    dw $4A49                          ; Entry 23 — text $07D3 "*:Oh [HERO]! You really won! *:Aw…"
     db $8D                            ; Entry 24 low ($4A8D)
 DataB4b_4032:
     db $4A                            ; Entry 24 high
-    dw $4ABB                          ; Entry 25
-    dw $4B2F                          ; Entry 26
-    dw $4B9F                          ; Entry 27
-    dw $4D0E                          ; Entry 28
-    dw $4E00                          ; Entry 29
-    dw $4E24                          ; Entry 30
-    dw $4E3C                          ; Entry 31
-    dw $4EB3                          ; Entry 32
-    dw $4EF8                          ; Entry 33
-    dw $4F53                          ; Entry 34
-    dw $5039                          ; Entry 35
-    dw $5119                          ; Entry 36
-    dw $5191                          ; Entry 37
-    dw $5268                          ; Entry 38
-    dw $528D                          ; Entry 39
-    dw $52D0                          ; Entry 40
-    dw $5315                          ; Entry 41
-    dw $53B9                          ; Entry 42
-    dw $5490                          ; Entry 43
-    dw $54E0                          ; Entry 44
-    dw $5510                          ; Entry 45
-    dw $5574                          ; Entry 46
-    dw $55A4                          ; Entry 47
-    dw $5606                          ; Entry 48
-    dw $569A                          ; Entry 49
-    dw $579C                          ; Entry 50
-    dw $5835                          ; Entry 51
-    dw $59B7                          ; Entry 52
-    dw $5B94                          ; Entry 53
-    dw $5CAD                          ; Entry 54
-    dw $5D46                          ; Entry 55
-    dw $5E00                          ; Entry 56
-    dw $5E7A                          ; Entry 57
-    dw $5F0C                          ; Entry 58
-    dw $6088                          ; Entry 59
-    dw $60EE                          ; Entry 60
-    dw $61BA                          ; Entry 61
-    dw $6207                          ; Entry 62
-    dw $626B                          ; Entry 63
-    dw $62DD                          ; Entry 64
-    dw $6308                          ; Entry 65
-    dw $6352                          ; Entry 66
-    dw $6419                          ; Entry 67
+    dw $4ABB                          ; Entry 25 — text $07D5 "*:What? Where are you? *:Well wha…"
+    dw $4B2F                          ; Entry 26 — text $07D6 "*:Oh no! You tripped over didn't …"
+    dw $4B9F                          ; Entry 27 — text $07D7 "*:[HERO]! Congratulations on your…"
+    dw $4D0E                          ; Entry 28 — text $07D8 "*:I..I heard that monsters exist …"
+    dw $4E00                          ; Entry 29 — text $07D9 "*:Hork looks contently at [HERO]."
+    dw $4E24                          ; Entry 30 — text $07DA "*:That's it everyone."
+    dw $4E3C                          ; Entry 31 — text $07DB "*:One of my friends from abroad i…"
+    dw $4EB3                          ; Entry 32 — text $07DC "*:You! I heard you finally made W…"
+    dw $4EF8                          ; Entry 33 — text $07DD "*:A Servant has 4 hands, Skeletor…"
+    dw $4F53                          ; Entry 34 — text $07DE "*:The bishop I know told me an in…"
+    dw $5039                          ; Entry 35 — text $07DF "*:The guy at the entrance to the …"
+    dw $5119                          ; Entry 36 — text $07E0 "*:My slime learned an amazing ski…"
+    dw $5191                          ; Entry 37 — text $07E1 "*:Hurray! I understand now! *:I c…"
+    dw $5268                          ; Entry 38 — text $07E2 "*:Hey hey hey! Run! Don't walk! *…"
+    dw $528D                          ; Entry 39 — text $07E3 "*:Yo, dude, go to the reception. …"
+    dw $52D0                          ; Entry 40 — text $07E4 "*:Yo, dude, wanna know about Mast…"
+    dw $5315                          ; Entry 41 — text $07E5 "*:He has GoldSlime Divinegon, & R…"
+    dw $53B9                          ; Entry 42 — text $07E6 "*:Hurray! I understand now! *:I c…"
+    dw $5490                          ; Entry 43 — text $07E7 "*:Darn! You really defeated the M…"
+    dw $54E0                          ; Entry 44 — text $07E8 "*:It's a HorrorBK. Take good care…"
+    dw $5510                          ; Entry 45 — text $07E9 "*:You, must obey! *:Bring me a Ph…"
+    dw $5574                          ; Entry 46 — text $07EA "*:This is Natto. repeat after me,…"
+    dw $55A4                          ; Entry 47 — text $07EB "*:Natto? What's that? You're maki…"
+    dw $5606                          ; Entry 48 — text $07EC "*:Victory... You've conquered one…"
+    dw $569A                          ; Entry 49 — text $07ED "*:You won! But you know there is …"
+    dw $579C                          ; Entry 50 — text $07EE "*:Y..you defeated the Master Mons…"
+    dw $5835                          ; Entry 51 — text $07EF "*:I also was brought here by Wata…"
+    dw $59B7                          ; Entry 52 — text $07F0 "*:Ha Ha Ha! I made a comeback! *:…"
+    dw $5B94                          ; Entry 53 — text $07F1 "*:You...! I have nothing to say. …"
+    dw $5CAD                          ; Entry 54 — text $07F2 "*:Splash, splash! Congratulations…"
+    dw $5D46                          ; Entry 55 — text $07F3 "*:Congratulations on your victory…"
+    dw $5E00                          ; Entry 56 — text $07F4 ":[HERO] looks at the bookshelf. :…"
+    dw $5E7A                          ; Entry 57 — text $07F5 ":At last, [HERO] will compete in …"
+    dw $5F0C                          ; Entry 58 — text $07F6 ":At last, [HERO] got a victory! :…"
+    dw $6088                          ; Entry 59 — text $07F7 "*:I heard you won with style. *:T…"
+    dw $60EE                          ; Entry 60 — text $07F8 "*:Hey, listen! A different monste…"
+    dw $61BA                          ; Entry 61 — text $07F9 "*:Where did those millions of sta…"
+    dw $6207                          ; Entry 62 — text $07FA "*:Hi [HERO]! Welcome home! *:How …"
+    dw $626B                          ; Entry 63 — text $07FB "*:Congratulations on your victory…"
+    dw $62DD                          ; Entry 64 — text $07FC "*:Just kidding! You're still a ki…"
+    dw $6308                          ; Entry 65 — text $07FD "*:My hubby loves our girl so much…"
+    dw $6352                          ; Entry 66 — text $07FE ":Steps of My Baby Part 4 :I guess…"
+    dw $6419                          ; Entry 67 — text $07FF ":Steps of My Baby Part 5 :I came …"
 
 LoadB4b_4089:
     ld a, [$c822]

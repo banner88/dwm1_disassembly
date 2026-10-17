@@ -1014,3 +1014,22 @@ edge and the battle waits for input forever.
   paint the still swirl (`Document.paint_swirl`, what "Gate entrance here…" does) so a frame
   without the object still shows a portal. A cleared gate hides its swirl — use gate numbers the
   user's save has not cleared.
+
+## S150 techniques — which slot a text is read through, show vs copy, the text engine's input
+
+- **A text id's pointer slot:** stub-call ROM0 `TextBankDispatch` ($0AD9, HL = id) and hook
+  `$0944` (SaveBankAndSwitch right after its level-1 read): DE = the per-id TABLE, `[$C823]` = the
+  index, `[$C824]` = the bank — `tools/dump_dialogue.py`. The slot is `table + 2 · index`.
+- **Any slot, shown or copied, without the game's own caller:** write a one-word "mode list" in
+  WRAM (`$DD30` = the slot's table), `[$C822]` = 0, `[$C823]` = the index, map the slot's bank,
+  DE = `$DD30`; SHOW: call `CallTextEngine` ($05B6) and read `[$C824]` / `[$C82D]` at its tail;
+  COPY: set `[$C837]` = a free buffer (`$C100` at the title) and call `RunTextHandler` ($05F6) —
+  the buffer up to its first $F0 is the copy (`tools/census_text_override.py`).
+- **What the engine was handed in game:** a hook on `$05E3` (CallTextEngine's tail: `[$C824]` =
+  the bank every byte is read from, `[$C82D/$C82E]` = the text) logs every text shown with its
+  bank; with `$0AD9` (HL = the id) it names the dialogue id too (`tools/walk_text.py`). Snap the
+  screenshot when the edited text is handed over, not after the fight / box ends.
+- **The negative of a far-call hook:** patch the ROM copy's `rst $10` at the hook to `nop` (the
+  caller's DE stays the original table) — every edited check fails, the rest pass.
+- **The credits without the ending:** poking game mode 4 runs the credits' text calls (the
+  rows are handed from the text bank) but not their picture; a screenshot needs the real ending.

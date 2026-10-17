@@ -2589,6 +2589,7 @@ class Project:
         self._anim_plan = None         # S139: the animation banks after the places
         self._song_ext = None          # S147: the song banks after the animations
         self._battle_plan = None       # S149: the battle banks after the songs
+        self._text_plan = None         # S150: the text banks after the battles
         banks = {LAYOUT_HOME_BANK: [], TILESET_HOME_BANK: []}
         used = {LAYOUT_HOME_BANK: 1, TILESET_HOME_BANK: 1}      # the self-ID byte
         overflow = []
@@ -2649,6 +2650,11 @@ class Project:
         _MU.song_ext_banks(self)           # S147 (ARC CAP5): the song banks
         from . import battles as _BT
         _BT.plan(self)                     # S149 (ARC CAP5): the battle banks
+        from . import gametext as _GT
+        try:
+            _GT.plan(self)                 # S150: the text banks (edited game text)
+        except _GT.GameTextError:
+            pass                           # reported by the validator
         return dict(getattr(self, '_ext_taken', None) or [])
 
     def place_plan(self):

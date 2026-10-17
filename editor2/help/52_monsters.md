@@ -146,10 +146,10 @@ your new species):
   and `&` exist too. **In the game** draws the lines in the game's own font;
   red letters would be cut off.
 - **Back to the original name and text** undoes all three.
-- **Texts that name it… (N)** opens the **Dialogue** tab with every text that
+- **Texts that name it… (N)** opens the **Text** tab's Dialogue page with every text that
   spells the name ("Slime", "Slimes", "Slime's") — under the old and the new
   name. Words written INTO dialogue are not changed by a rename; that list is
-  where to check them.
+  where to check them — and since S150 you can rewrite them there.
 
 Only the changes are saved (`gamedata.monster_text`). TERRY? and the four
 summons cannot be renamed (they are special battle entries, not monsters).

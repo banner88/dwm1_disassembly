@@ -53,6 +53,6 @@ use — with every team at 3 it does exactly what the original did.
   before its fight (it still fights): the room draws a monster with the
   number id + 16, and 255 means "nothing".
 - How many classes and matches there are cannot be changed. The announcer,
-  the masters' words and the class names are text (the Dialogue tab lists
-  them; editing dialogue comes later). Winning a class gives no prize in the
+  the masters' words and the class names are text (the Text tab lists
+  them and, since S150, rewrites them). Winning a class gives no prize in the
   original game.

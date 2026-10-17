@@ -42,6 +42,7 @@ to the proven overlay:
 | `patches/bank_074.asm` (S147) | whole file = the pinned head `templates/bank_074_head.asm` (`SongStart`, the 95 dummy records, `SongSilent`) + `SongDirectory` + every song's record + the streams that fit (§2.55) |
 | `patches/bank_0xx.asm` song banks (only when needed) | S147 (ROADMAP ARC CAP5): songs past banks $74 / $75 (`music.emit_song_ext_banks`, §2.55). Whole files (self-ID + streams), INCLUDEd by `bank_ext.asm`; numbered after the stream, place and animation banks |
 | `patches/bank_0xx.asm` battle banks (only when needed) | S149 (ROADMAP ARC CAP5): project enemy rows past bank $6B and battle lists past bank $76 (`battles.emit_battle_banks`, §2.57). Whole files (self-ID + the pinned copier block + rows / lists), INCLUDEd by `bank_ext.asm`; numbered after the song banks |
+| `patches/bank_0xx.asm` text banks (only when needed) | S150 (ROADMAP Phase F T-author): the project's edits of the game's own texts (`gamedata.text`; `gametext.emit_text_banks`, §2.58). Whole files: the HOME bank = self-ID + the pinned `text_home.asm` lookup + `text_bank.asm` copier + `TextOvrBanks` / `TextOvrDir` / the lists + texts; further text banks = self-ID + copier + texts. INCLUDEd by `bank_ext.asm`; numbered after the battle banks. Bank $60 gets `TEXT_OVR_HOME EQU $xx` (0 = no edits, no text bank) |
 | `patches/bank_076.asm` | whole file = template head (`EncResolve`, S115 + `NewGateRowCopy`) + the project's encounter lists, rooms' lists / variants / rates, gates' plans (S114 P3.13a, §2.30) + the new gates' rows / sources (S115 NG1, §2.31) + `GateClearTable` (S117 NG2, §2.32) |
 | `patches/bank_ext.asm` | S134 (ROADMAP ARC CAP1): banks $80-$FF of the 4 MB ROM — a section + self-ID byte per bank (`emit_bank_ext`); a bank whose whole content another emitter writes (ARC CAP2 place banks, `emitters.ext_bank_files`) is INCLUDEd instead. `patches/game.asm` INCLUDEs it |
 | `patches/bank_080.asm` … (only when needed) | S135 (ROADMAP ARC CAP2a): the LZ stream overflow banks — layouts / attr maps / tilesets that did not fit $64 / $67 (`emit_stream_banks`, §2.44). Whole files, INCLUDEd by `bank_ext.asm`; `--apply` deletes one an earlier apply left that this project no longer generates |
@@ -583,6 +584,7 @@ registering an emitter; nothing existing changes.
 | `audio_master` (S116) | `custom.music` (the bank $75 row; S147: the constant `[$9E, $4003, $74]` row) | `region:patches/bank_000.asm#rom0_audio_master` | `$00` |
 | `tileanim6c` (S102) | `custom.rooms[].tile_anims` (S139: the rooms `tileanim.plan` keeps in $6C + the directory) | `file:patches/bank_06c.asm` | `$6C` |
 | `anims_ext` (S139) | the rooms' animations that did not fit $6C (§2.48) | **`multi:anim_banks`** — one whole file `patches/bank_0xx.asm` per animation bank (none when everything fits) | `$80-$FF` |
+| `texts_ext` (S150) | `gamedata.text` (§2.58; editor2/core/gametext.py) | **`multi:text_banks`** — one whole file `patches/bank_0xx.asm` per text bank (none when no text is edited); `places.emit_bank_060` appends `gametext.bank60_lines` (`TEXT_OVR_HOME`) | `$80-$FF` |
 | `gd_monsters` `gd_enemies` `gd_encounters` `gd_family` `gd_special` `gd_exp_curves` `gd_growth_curves` `gd_skill_learn` `gd_skill_mp` `gd_skill_records` `gd_library` `gd_library_text` (S103) | `gamedata` (§2.20) | `region:` in banks $03 / $14 / $01 / $16 / $69 / $13 / $13 / $06 / $07 / $54 / $12 / $4D | those banks |
 | `species7e` + `ns_battle_gfx` `ns_follower_attr` `ns_battle_pal` `ns_recipe_pair` `ns_name_ptr` `ns_short_ptr` `ns_text_a`…`ns_text_g` `ns_detail_text` `ns_info` (S105; G3 layout) | `custom.species` (§2.21; editor2/core/species.py) | `file:patches/bank_07e.asm` + `region:` in banks $00 / $11 / $17 / $16 / $41 ×9 / $4D / $6A | those banks |
 | `art7f` `art7c` `art7a` + `art_battle_gfx` `art_battle_pal` `art_walk_01/06/07/09/0b/12/18/59` `art_layout_10/11` `art_attr_10/11` (S107) | `gamedata.art` (§2.23; editor2/core/art.py) | `file:patches/bank_07f/07c/07a.asm` + `region:` in banks $00 / $17 / $01 $06 $07 $09 $0B $12 $18 $59 / $10 / $11 | those banks |
@@ -658,6 +660,13 @@ user-confirmed hand-authored code:
   `TEMPLATE_SIZE[$76]` 580 — `RegionTable76` `$4244`); NEW pinned `battle_bank.asm` (the copier
   block of a battle bank, `{B}` = `_B<bank>`; `battles.BATTLE_TEMPLATE_SIZE` 76 = addr(`BattleRows_B80`)
   − $4000). Current values: `templates/PINNED_SHA256`.
+* S150 re-pins (§2.58, ROADMAP Phase F T-author): `bank_060_head.asm` (+ entry 14 `TextOverride`
+  = the S105 nickname redirect moved from ROM0 + the forward to the text home bank;
+  `TEMPLATE_SIZE[$60]` 1,825 — was 1,794 in the S149 example game.sym); NEW pinned `text_home.asm`
+  (`TextOvrFind{T}`, the home bank's entry 0; `gametext.TEXT_HOME_FIXED` 178 = where its data starts,
+  `$40B2`) and `text_bank.asm` (`TextOvrCopy{T}`, every text bank's entry 1; `TEXT_BANK_FIXED` 21).
+  Every template was re-pinned in the same pass (only these three changed). Current values:
+  `templates/PINNED_SHA256`.
 * `editor2/core/templates/bank_079_head.asm` (S121) — bank byte, 2-entry table, entry 0
   `MillyShapeTable` / entry 1 `MillyPlayerSheet` (§2.34); only emitted with the hook on;
   pinned `3d7cbdbe…ef95`; no TEMPLATE_SIZE (the bank holds a few hundred bytes).
@@ -4432,6 +4441,62 @@ compiler + editor. Engine side: MONSTER_DATA "Project enemy rows" (S149), DATA_S
   on a gate floor served in region 1 + CONTINUE there); `--negative` (the S148 creation): 4 FAIL.
 - Tests: `test_compiler.test_s149` (11 + 4 for r2's HP minimum; `--rom`: the tables / the battle
   banks' rows / the bank $14 site read back from a built ROM).
+
+## §2.58 S150 — THE GAME'S OWN TEXTS: every text editable, any length, any bank (ROADMAP P3.6 / Phase F T-author)
+
+**Built S150; USER-CONFIRMED 2026-10-17 08:46 ("I confirm everything works")** (user: "Continue on the big ticket items" → the audit → "1)
+Let's start with dialogue. 2) Everything but differentiate by tab within editor. Samesize NOT
+preferred"). Engine (ROM0 hand patch + bank $60 re-pin + two new pinned templates) + compiler +
+editor. Engine side and the measurements: TEXT_SYSTEM "Edited game text (S150)".
+
+- **Why (measured S150):** the editor could rename monsters / skills in place (S108 / S110) and
+  write custom rooms' own text, but no line the game itself says — and same-size in-place edits
+  were "NOT preferred". Every text the game shows (ROM0 `CallTextEngine` $05B6) or copies
+  (`RunTextHandler` $05F6) passes through `SaveBankAndSwitch` ($092F) — one hook covers all.
+- **Schema:** `gamedata.text.<source>.<key>` = markup (`editor2/core/textmark.py`); `<source>` =
+  `dialogue` (keys = text ids `"$0123"`) or a table of `extracted/dialogue.json` (keys = the row,
+  `"12"`). Sparse: a key absent = the original text. The owned tables (`skill_description`,
+  `monster_description`) are refused here (the Skills / Monsters tabs own them). Snapshot keeps
+  `gamedata.text` in pieces of 64 rows (`document.TEXT_CHUNK`).
+- **Validation (`gametext.check`, run by `validators`):** markup must encode (MarkupError → an
+  error); item names / personalities ≤ 9 glyphs, family default names ≤ 4 (`MAX_GLYPHS`, errors);
+  dialogue lines past 18 cells or a third line in a box → warnings (`warnings_for`); an unknown
+  source / key → error.
+- **Plan (`gametext.plan`, cached `Project._text_plan`, reset by `stream_plan`):** identical
+  texts stored once; asks `battles.plan` first, then takes text banks from
+  `Project._take_ext_bank('texts')`. The home bank: 1 + `TEXT_HOME_FIXED` 178 (lookup + copier)
+  + 32 (`TextOvrBanks`) + 6 per edited table + 1 + 4 per edited slot, then texts first fit; further
+  banks: `TEXT_BANK_FIXED` 21 + texts. `Project.ext_bank_owners` / `emitters.ext_bank_files`
+  include the text banks; `validators.bank_usage` counts them (marker `TEXT DATA (generated`).
+- **Engine:** `patches/bank_000.asm` (hand) — the $00F0-$00FF padding (S105's
+  `LoadModeBaseRedirect`) = `TextLevel1Hook` + `SaveBankAndSwitchCopy`; SBAS calls the hook for its
+  level-1 read, RunTextHandler calls `SaveBankAndSwitchCopy`. `patches/wram.asm`: `wTextOvrMode`
+  $D561, `wTextOvrPtr` $D562 (3 B from `wCustomPool`). `templates/bank_060_head.asm` entry 14
+  `TextOverride` (the nickname redirect, then `TEXT_OVR_HOME` → `rst $10` to its entry 0; `0` →
+  clear the mode and return). `text_home.asm` / `text_bank.asm` as in §5.
+- **Pin:** example `96d05355…` (patched; was `92060f65…`, patched): ROM0 + bank $60 only (the
+  example edits no text: `TEXT_OVR_HOME EQU $00`). The user's project builds `22d857d9…` (patched;
+  vs S149 `344a0f7b…`, patched: ROM0 17 B + bank $60).
+- **The editor:** the **Text** tab (`app/text_tab.py`; replaces `app/dialogue_tab.py`): sub-tabs
+  Dialogue / Battle / Items / Menus & field / Credits / Other tabs (read-only: the owned
+  descriptions), search (id / `#row` exact), kind, Edited only, Names a monster, export; a markup
+  field + the picture in the ROM font (boxes 2 × 18 for dialogue, rows for tables; red past the
+  box) + Apply / Original / "with its copies" / ▼. `Document` (`gametext_doc.GameTextMixin`):
+  `set_game_text(source, key, markup, only_this=False)` writes every copy (ids that showed the
+  same string) unless `only_this`; `reset_game_text`, `reset_game_text_group`; one undo step each.
+  Capacity row `game_texts` (tab Text); the custom room texts' row moved to tab Rooms. Help
+  `56_text.md` (was `56_dialogue.md`), 00_start, 52 / 53 / 54, 66_hub, 90_limits.
+  `EDITOR_REVISION` S150.
+- **Measured:** `tools/census_text_override.py` (`extracted/text_override_census.json`;
+  TOOLS_AND_DATA S150): a project with every text edited (3,418 edits, 17 text banks) — 3,850 /
+  3,850 slots shown and copied == the edit / the build's own slot, the nickname redirect 512 /
+  512; `--negative` fails. `tools/walk_text.py` on the user's `.sav` (`examples/s150_text_demo/`):
+  17 checks, 0 failed; `--negative` 8 FAIL.
+- Tests: `test_compiler.test_s150` (21: the codec round-trips every original text, typed /
+  refused markup, the index, the plan with every text edited, Document copies / caps / undo
+  pieces; `--rom`: the ROM0 hook bytes, bank $60 entry 14, and the text bank's tables read back
+  through a Python model of `TextOvrFind` — every edit found, an unedited text none); the S105
+  nickname-redirect test now runs bank $60 `TextOverride` (MiniSM83); `test_app` `s150_text`.
 
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 

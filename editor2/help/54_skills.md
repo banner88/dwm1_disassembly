@@ -126,8 +126,9 @@ skill aimed at the other side (a heal's look on an attack): it usually shows
 nothing (measured: Heal with Bang's look draws no explosion). A look marked
 **(summon)** only blinks the screen (a summon's "animation" is the summoned
 monster). **Announced as** is the line the battle
-shows when the skill is used. For original skills it is read-only until the
-dialogue editor. For custom and new skills you choose: **its own line** (up to
+shows when the skill is used. For original skills it is one of the game's
+battle messages, shared with every skill that uses it — rewrite it on the **Text**
+tab → Battle (S150). For custom and new skills you choose: **its own line** (up to
 two pages of two lines of 18 cells; `{name}` = the caster, `{skill}` = this
 skill's name), one of the game's lines ("{name} casts {skill}!", "… spits
 {skill}!" …), or silent.

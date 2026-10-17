@@ -6776,3 +6776,45 @@ fields the session changed. **Follow-up (the user: "0 HP should never be possibl
 game itself never does (a row below HP 2) the editor now refuses — `gamedata.ENEMY_HP_MIN`, old
 projects raised on open (PROJECT_COMPILER §2.57 r2). When a test finds data the game would never
 hold, ask whether the editor should let it exist at all.
+
+## S150 — the game's own texts: one hook where every text is found (ROADMAP P3.6 / Phase F T-author)
+
+**One resolver can have two consumers — test both.** ROM0 `SaveBankAndSwitch` serves
+`CallTextEngine` (SHOW: the engine reads the text from bank `[$C824]`) and `RunTextHandler`
+(COPY: the bytes are copied into a buffer, e.g. an item's name into the use line's slot $20).
+A hook that only redirected the pointer would show edited texts but copy from the wrong bank.
+**Rule:** before hooking a shared routine, list every caller and what it does with the result
+(the census stub-calls BOTH; the walk's "pours 1 FairyDew on" check is the copy path in game).
+And the bank $41 helper comments (S33-era) said entry 1 "fetches the pointer only" — it copies;
+a comment on a helper is a claim to re-measure, not a fact.
+
+**A terminator byte can also be a parameter.** **Symptom:** when the battle tutorial (bank $59)
+was added to the dump, its texts ended mid-sentence. **Root cause:** `$FB $F0` = code $FB with its one parameter byte $F0, not
+the end; the dump cut at the first $F0. **Rule:** a text ends at the first $F0 that is NOT a
+control code's parameter (`textmark.PARAMS`: E8 2, E9 / F8 / F9 / FB / FC 1) — every scanner
+(dump, codec, census, walk) uses the one `textmark.scan`.
+
+**"Unchanged" means as the BUILD has it, not as the original ROM had it.** **Symptom:** the
+census reported false fails on unedited slots (a skill description, id 224). **Root cause:** a
+`gamedata` region of the project had moved that text; the census compared with the original
+ROM. **Rule:** the expectation for an untouched item is read from the build under test (its own
+slot), the original only for what the build must keep byte-identical.
+
+**Measure which row a screen uses before writing its check.** The walk's use-line check assumed
+row 6 ("sprinkles") of the item use messages; the field's FairyDew uses row 3 ("uses 1 X on") —
+the hook log showed it. **Rule:** log what the engine is handed on the real screen first, then
+pick the row to edit for the demo.
+
+**"Every text" needs a measured boundary.** The field menu's INFO / ITEM / SKIL / OPTN, the INFO
+page's ATK / DEF and the HP / MP bar never pass through SaveBankAndSwitch — they are tiles. The
+help and ROADMAP say so (T-follow) instead of promising them. **Rule:** when a feature claims a
+whole class ("every text"), measure the class's edge on screens and write the leftovers down.
+
+**A negative stub run hangs instead of failing.** With the hook off, a stub call that waits for
+a result can run to its tick budget on every case (400 ticks × 3,850 slots). **Fix:**
+`max_fails` (stop after 20 fails — the negative only has to fail). **Rule:** a negative mode
+gives up early; the positive run keeps the full budget.
+
+**Read a file before opening it for writing.** `editor2/help/_revision.md` was emptied: the
+script opened it with `'w'` and then read it. Restored from git. **Rule:** read → change →
+write, never open-for-write first (the same file, one handle).

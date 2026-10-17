@@ -12,131 +12,131 @@ SECTION "ROM Bank $045", ROMX[$4000], BANK[$45]
     dw LoadB45_4101                  ; Entry 0
     dw $411E                          ; Entry 1
     dw $413B                          ; Entry 2
-    dw $4009                          ; Entry 3
-    dw $4158                          ; Entry 4
-    dw $41B2                          ; Entry 5
-    dw $42DE                          ; Entry 6
-    dw $43BE                          ; Entry 7
-    dw $443F                          ; Entry 8
-    dw $4475                          ; Entry 9
-    dw $4490                          ; Entry 10
-    dw $4519                          ; Entry 11
-    dw $456F                          ; Entry 12
-    dw $4625                          ; Entry 13
-    dw $46BC                          ; Entry 14
-    dw $47B2                          ; Entry 15
-    dw $481E                          ; Entry 16
-    dw $4883                          ; Entry 17
-    dw $4899                          ; Entry 18
-    dw $48F2                          ; Entry 19
-    dw $490F                          ; Entry 20
-    dw $4924                          ; Entry 21
-    dw $4977                          ; Entry 22
-    dw $4986                          ; Entry 23
-    dw $49EF                          ; Entry 24
-    dw $4A25                          ; Entry 25
-    dw $4A7E                          ; Entry 26
-    dw $4AA0                          ; Entry 27
-    dw $4B52                          ; Entry 28
-    dw $4BA1                          ; Entry 29
-    dw $4C4D                          ; Entry 30
-    dw $4C83                          ; Entry 31
-    dw $4CB6                          ; Entry 32
-    dw $4CEC                          ; Entry 33
-    dw $4DAD                          ; Entry 34
-    dw $4E3D                          ; Entry 35
-    dw $4E5D                          ; Entry 36
-    dw $4E85                          ; Entry 37
-    dw $4EBB                          ; Entry 38
-    dw $4ED9                          ; Entry 39
-    dw $4EFC                          ; Entry 40
-    dw $4F48                          ; Entry 41
-    dw $4FA2                          ; Entry 42
-    dw $5010                          ; Entry 43
-    dw $505F                          ; Entry 44
-    dw $508B                          ; Entry 45
-    dw $5163                          ; Entry 46
-    dw $51D8                          ; Entry 47
-    dw $523B                          ; Entry 48
-    dw $52D1                          ; Entry 49
-    dw $5348                          ; Entry 50
-    dw $5564                          ; Entry 51
-    dw $5654                          ; Entry 52
-    dw $5694                          ; Entry 53
-    dw $5750                          ; Entry 54
-    dw $57C1                          ; Entry 55
-    dw $5839                          ; Entry 56
-    dw $5878                          ; Entry 57
-    dw $58DE                          ; Entry 58
-    dw $595C                          ; Entry 59
-    dw $59A0                          ; Entry 60
-    dw $5A75                          ; Entry 61
-    dw $5AEB                          ; Entry 62
-    dw $5B87                          ; Entry 63
-    dw $5C21                          ; Entry 64
-    dw $5C46                          ; Entry 65
-    dw $5CFD                          ; Entry 66
-    dw $5D31                          ; Entry 67
-    dw $5DA0                          ; Entry 68
-    dw $5E77                          ; Entry 69
-    dw $5F60                          ; Entry 70
-    dw $5FE0                          ; Entry 71
-    dw $6070                          ; Entry 72
-    dw $60F3                          ; Entry 73
-    dw $6179                          ; Entry 74
-    dw $61B0                          ; Entry 75
-    dw $62B9                          ; Entry 76
-    dw $63A6                          ; Entry 77
-    dw $63DB                          ; Entry 78
-    dw $6458                          ; Entry 79
-    dw $64F5                          ; Entry 80
-    dw $6511                          ; Entry 81
-    dw $652B                          ; Entry 82
-    dw $6535                          ; Entry 83
-    dw $65BF                          ; Entry 84
-    dw $65D3                          ; Entry 85
-    dw $65EA                          ; Entry 86
-    dw $65F6                          ; Entry 87
-    dw $6602                          ; Entry 88
-    dw $667C                          ; Entry 89
-    dw $6722                          ; Entry 90
-    dw $678F                          ; Entry 91
-    dw $6803                          ; Entry 92
-    dw $686F                          ; Entry 93
-    dw $68FF                          ; Entry 94
-    dw $6977                          ; Entry 95
-    dw $6A11                          ; Entry 96
-    dw $6A2E                          ; Entry 97
-    dw $6AA0                          ; Entry 98
-    dw $6AD6                          ; Entry 99
-    dw $6B05                          ; Entry 100
-    dw $6B6F                          ; Entry 101
-    dw $6BA7                          ; Entry 102
-    dw $6BCE                          ; Entry 103
-    dw $6C7D                          ; Entry 104
-    dw $6D72                          ; Entry 105
-    dw $6DE1                          ; Entry 106
-    dw $6F4C                          ; Entry 107
-    dw $6FC7                          ; Entry 108
-    dw $7054                          ; Entry 109
-    dw $7235                          ; Entry 110
-    dw $72AE                          ; Entry 111
-    dw $737A                          ; Entry 112
-    dw $73AD                          ; Entry 113
-    dw $7420                          ; Entry 114
-    dw $7456                          ; Entry 115
-    dw $74DB                          ; Entry 116
-    dw $7510                          ; Entry 117
-    dw $75AE                          ; Entry 118
-    dw $7623                          ; Entry 119
-    dw $7733                          ; Entry 120
-    dw $7788                          ; Entry 121
-    dw $780B                          ; Entry 122
-    dw $787B                          ; Entry 123
-    dw $78F3                          ; Entry 124
-    dw $795E                          ; Entry 125
-    dw $79F3                          ; Entry 126
-    dw $7A28                          ; Entry 127
+    dw $4009                          ; Entry 3 — mode 0 -> table $4009 (mode list $4007)
+    dw $4158                          ; Entry 4 — [table $4009]; text $0244 "*:Even though its for research...…"
+    dw $41B2                          ; Entry 5 — text $0245 "*:A skill such as Vivify can evol…"
+    dw $42DE                          ; Entry 6 — text $0246 "*:Monsters fight differently depe…"
+    dw $43BE                          ; Entry 7 — text $0247 "*:Order the same command again & …"
+    dw $443F                          ; Entry 8 — text $0248 "*:A good personality makes good t…"
+    dw $4475                          ; Entry 9 — text $0249 "*:Argh, who woke us up?"
+    dw $4490                          ; Entry 10 — text $024A "*:Since [HERO] won… *:Customers h…"
+    dw $4519                          ; Entry 11 — text $024B "[HERO] looked at the candle. Whoa…"
+    dw $456F                          ; Entry 12 — text $024C "*:I heard there are only Plant mo…"
+    dw $4625                          ; Entry 13 — text $024D "*:If you've got money you should …"
+    dw $46BC                          ; Entry 14 — text $024E "*:When you receive an offer to br…"
+    dw $47B2                          ; Entry 15 — text $024F "*:Hic, yo brother. Wanna have a b…"
+    dw $481E                          ; Entry 16 — text $0250 "*:I know. *:There will be a youth…"
+    dw $4883                          ; Entry 17 — text $0251 "*:Zzz... zzzz...."
+    dw $4899                          ; Entry 18 — text $0252 "*:Zzz... zzzz.... ....*bust!* *:I…"
+    dw $48F2                          ; Entry 19 — text $0253 "*:...zzz. You came again!"
+    dw $490F                          ; Entry 20 — text $0254 "*:You're strong!!"
+    dw $4924                          ; Entry 21 — text $0255 "Watabou:You couldn't carry the pr…"
+    dw $4977                          ; Entry 22 — text $0256 "*:........"
+    dw $4986                          ; Entry 23 — text $0257 "*:You, stop right there! *:You sh…"
+    dw $49EF                          ; Entry 24 — text $0258 "*:Must I repeat myself? *:You sha…"
+    dw $4A25                          ; Entry 25 — text $0259 "*:You are powerful. *:But defeati…"
+    dw $4A7E                          ; Entry 26 — text $025A "*:Want to match with my CatFly?"
+    dw $4AA0                          ; Entry 27 — text $025B "*:You are aiming for D class now?…"
+    dw $4B52                          ; Entry 28 — text $025C "*:The guardian there doesn't belo…"
+    dw $4BA1                          ; Entry 29 — text $025D "*:I heard it's a haven for slimes…"
+    dw $4C4D                          ; Entry 30 — text $025E "*:I'm Mick. It's hard to deal wit…"
+    dw $4C83                          ; Entry 31 — text $025F "*:The Queen gave me a personal in…"
+    dw $4CB6                          ; Entry 32 — text $0260 "*:If you become famous, you'll be…"
+    dw $4CEC                          ; Entry 33 — text $0261 "*:Why are you bugging me so much?…"
+    dw $4DAD                          ; Entry 34 — text $0262 "Watabou:This village is an illusi…"
+    dw $4E3D                          ; Entry 35 — text $0263 "*:Grrrr... Whoosh! Whoooosh!"
+    dw $4E5D                          ; Entry 36 — text $0264 "*:Guffaw Guffaw..? Cackle cackle.…"
+    dw $4E85                          ; Entry 37 — text $0265 "*:Grrrr... Whoosh! Whoooosh! *:..…"
+    dw $4EBB                          ; Entry 38 — text $0266 "*:Grrrr... Cackle cackle!!"
+    dw $4ED9                          ; Entry 39 — text $0267 "*:[HERO]! [HERO]!! *:Meow. Purrrr…"
+    dw $4EFC                          ; Entry 40 — text $0268 "Watabou:It seems MadCat is attach…"
+    dw $4F48                          ; Entry 41 — text $0269 "[HERO] read the sign. :Youth goes…"
+    dw $4FA2                          ; Entry 42 — text $026A "*:Hee hee hee! I didn't think you…"
+    dw $5010                          ; Entry 43 — text $026B "*:No matter how many times you fi…"
+    dw $505F                          ; Entry 44 — text $026C "You want to breed with my LizardM…"
+    dw $508B                          ; Entry 45 — text $026D "*:Breeding with monsters of anoth…"
+    dw $5163                          ; Entry 46 — text $026E "*:This is the Room of Peace & Bra…"
+    dw $51D8                          ; Entry 47 — text $026F "*:You're my opponent? Is this a j…"
+    dw $523B                          ; Entry 48 — text $0270 "*:I wondered who it would be. Its…"
+    dw $52D1                          ; Entry 49 — text $0271 "*:You again? It'll be the same no…"
+    dw $5348                          ; Entry 50 — text $0272 "King:Oh [HERO]! Good work on surv…"
+    dw $5564                          ; Entry 51 — text $0273 "*:The Gate of Anger seems strange…"
+    dw $5654                          ; Entry 52 — text $0274 "*:The number of monsters is incre…"
+    dw $5694                          ; Entry 53 — text $0275 "King:[HERO]! Its okay to go to ot…"
+    dw $5750                          ; Entry 54 — text $0276 "[HERO] looked at the bookshelf. :…"
+    dw $57C1                          ; Entry 55 — text $0277 "*:I heard you defeated Mick. You'…"
+    dw $5839                          ; Entry 56 — text $0278 "*:The Room of Strength & Anger is…"
+    dw $5878                          ; Entry 57 — text $0279 "*:You're at the Chamber of Traver…"
+    dw $58DE                          ; Entry 58 — text $027A "*:BattleRex uses EvilSlash. *:It …"
+    dw $595C                          ; Entry 59 — text $027B "*:There's a strange stone statue …"
+    dw $59A0                          ; Entry 60 — text $027C "*:Go to the Room of Strength & An…"
+    dw $5A75                          ; Entry 61 — text $027D "*:Until you settle the disaster b…"
+    dw $5AEB                          ; Entry 62 — text $027E "*:I guess staying on the farm mea…"
+    dw $5B87                          ; Entry 63 — text $027F "*:…I heard it's a kingdom of Devi…"
+    dw $5C21                          ; Entry 64 — text $0280 "*:MadGopher go mad go far! Funny?"
+    dw $5C46                          ; Entry 65 — text $0281 "*:You beat Mick? You're one tough…"
+    dw $5CFD                          ; Entry 66 — text $0282 "*:Yo, dude! You're not allowed to…"
+    dw $5D31                          ; Entry 67 — text $0283 "*:…I heard it is overrun with Zom…"
+    dw $5DA0                          ; Entry 68 — text $0284 "*:So you defeated Mick. *:But rem…"
+    dw $5E77                          ; Entry 69 — text $0285 "*:[HERO], as you see, the experim…"
+    dw $5F60                          ; Entry 70 — text $0286 "*:I failed. Sorry, but you have t…"
+    dw $5FE0                          ; Entry 71 — text $0287 "*:He paid for it! He shouldn't ha…"
+    dw $6070                          ; Entry 72 — text $0288 "*:Welcome to the Master School. *…"
+    dw $60F3                          ; Entry 73 — text $0289 "*:…I heard there are monsters in …"
+    dw $6179                          ; Entry 74 — text $028A "[SOUND 60][HERO] looked into the …"
+    dw $61B0                          ; Entry 75 — text $028B "*:How did you beat Mick! I'm glad…"
+    dw $62B9                          ; Entry 76 — text $028C "*:The names of the monsters avail…"
+    dw $63A6                          ; Entry 77 — text $028D "*:Hmm. Indeed. The victor, [HERO]…"
+    dw $63DB                          ; Entry 78 — text $028E "*:Congratulations on your victory…"
+    dw $6458                          ; Entry 79 — text $028F "Mick:I should simply accept my de…"
+    dw $64F5                          ; Entry 80 — text $0290 "*:Ha ha ha! You beat me!"
+    dw $6511                          ; Entry 81 — text $0291 "*:Squeaking squeaking."
+    dw $652B                          ; Entry 82 — text $0292 "*:… …"
+    dw $6535                          ; Entry 83 — text $0293 "Watabou:You did a good job solvin…"
+    dw $65BF                          ; Entry 84 — text $0294 "*:Wel...come..."
+    dw $65D3                          ; Entry 85 — text $0295 "*:Come.....again.."
+    dw $65EA                          ; Entry 86 — text $0296 "*:… … …"
+    dw $65F6                          ; Entry 87 — text $0297 "*:… … …"
+    dw $6602                          ; Entry 88 — text $0298 "Watabou:This place was ruined by …"
+    dw $667C                          ; Entry 89 — text $0299 "[HERO] pulled the slot machine! T…"
+    dw $6722                          ; Entry 90 — text $029A "Mick:As proof of my friendship le…"
+    dw $678F                          ; Entry 91 — text $029B "Mick:I'm going on a journey now. …"
+    dw $6803                          ; Entry 92 — text $029C "*:[HERO], here is the Room of Str…"
+    dw $686F                          ; Entry 93 — text $029D "*:Monsters are flooding out from …"
+    dw $68FF                          ; Entry 94 — text $029E "*:It's my wish that... *:my famil…"
+    dw $6977                          ; Entry 95 — text $029F "*:That my family in this world pr…"
+    dw $6A11                          ; Entry 96 — text $02A0 "*:Shoot! Not here either!"
+    dw $6A2E                          ; Entry 97 — text $02A1 "*:Who are you? You're a monster m…"
+    dw $6AA0                          ; Entry 98 — text $02A2 "[HERO] looked at the egg. A monst…"
+    dw $6AD6                          ; Entry 99 — text $02A3 "[HERO] looked at the egg. The egg…"
+    dw $6B05                          ; Entry 100 — text $02A4 "*:Arrrgh! How dare you crack all …"
+    dw $6B6F                          ; Entry 101 — text $02A5 "*:It's you again! You'll pay for …"
+    dw $6BA7                          ; Entry 102 — text $02A6 "*:That sword man looked like you.…"
+    dw $6BCE                          ; Entry 103 — text $02A7 "Watabou:Those eggs were the reaso…"
+    dw $6C7D                          ; Entry 104 — text $02A8 "*:Soon you will become powerful! …"
+    dw $6D72                          ; Entry 105 — text $02A9 "King:Oh [HERO]!! Welcome back! Ki…"
+    dw $6DE1                          ; Entry 106 — text $02AA "*:Oh... This kingdom is full of e…"
+    dw $6F4C                          ; Entry 107 — text $02AB "*:You look especially merry. Are …"
+    dw $6FC7                          ; Entry 108 — text $02AC "DeadTree King:... King of GreatTr…"
+    dw $7054                          ; Entry 109 — text $02AD "King:DeadTree! You will see! King…"
+    dw $7235                          ; Entry 110 — text $02AE "*:This shaking is evidence of the…"
+    dw $72AE                          ; Entry 111 — text $02AF "*:The shaking of GreatTree has ch…"
+    dw $737A                          ; Entry 112 — text $02B0 "*:Are you familiar with the Gate …"
+    dw $73AD                          ; Entry 113 — text $02B1 "*:The victor made countless eggs …"
+    dw $7420                          ; Entry 114 — text $02B2 "*:Are you familiar with the Gate …"
+    dw $7456                          ; Entry 115 — text $02B3 "*:I looked back and the stone sta…"
+    dw $74DB                          ; Entry 116 — text $02B4 "*:I see. It's okay then. Sorry to…"
+    dw $7510                          ; Entry 117 — text $02B5 "*:Sometimes a lie makes people ha…"
+    dw $75AE                          ; Entry 118 — text $02B6 "King:Oh, [HERO] You beat StoneMan…"
+    dw $7623                          ; Entry 119 — text $02B7 "King:Well [HERO]. Are you talking…"
+    dw $7733                          ; Entry 120 — text $02B8 "[HERO] looked at the bookshelf. :…"
+    dw $7788                          ; Entry 121 — text $02B9 "*:You're at the castle of GreatTr…"
+    dw $780B                          ; Entry 122 — text $02BA "*:A long time ago, the ancestor o…"
+    dw $787B                          ; Entry 123 — text $02BB "*:I often see the girl who stood …"
+    dw $78F3                          ; Entry 124 — text $02BC "*:The Kingdom of DeadTree is almo…"
+    dw $795E                          ; Entry 125 — text $02BD "*:I want us to win this time! *:T…"
+    dw $79F3                          ; Entry 126 — text $02BE "*:Right to the Bazaar! There are …"
+    dw $7A28                          ; Entry 127 — text $02BF "*:D... Do ya know there was a big…"
 
 LoadB45_4101:
     ld a, [$c823]

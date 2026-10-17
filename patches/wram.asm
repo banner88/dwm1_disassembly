@@ -451,7 +451,15 @@ wExitLinks:: ds 2 * LINK_IDS ;d538-d55f — per link id: region, real map id
 ; S141 (ROADMAP ARC CAP3b r3): the NPC sheet being loaded (bank $0B CmpRoom_4839 / bank $06
 ; ReloadNPCSheets hand their sheet index c to bank $77 entries 12 / 13 NpcSheetLoad here).
 wNpcSheetIdx:: db ;d560 — the cache index c of the NPC sprite sheet being DMA'd
-wCustomPool:: ds $5A4 - 132 - 5 - 2 * TILEANIM_MAX_GROUPS - 2 - 18 - 26 - 8 - 256 - 1 - 2 - 160 - 12 - 1 - 514 - 23 - 1 - 1 - 43 - 2 - 2 * LINK_IDS - 1 ;d561-d5e4 — transient reserve (was $664; FX1 carved 64+128; S97 132; S102 69; S105 2; S111 18; S114 26; S115 8; S117 256 wExtFlags + 1 wShopID; S117b 2 push scratch; S121 160 wMillyLayout; S123 12 NPC colours; S125 1 wHubReason; S126 514: the service tile save + wServiceLines; S127 23: wBreedLast + wBreedSlots + the roll scratch; S129 1: wStoryFlag; S136 1: wPlaceIdx; S137 43: the render walk block; S140 42: wMapRegion + wWarpRegion + wExitLinks; S141 1: wNpcSheetIdx)
+; S150 (ROADMAP P3.6 / Phase F T-author) — EDITED GAME TEXT, one text lookup's scratch:
+; ROM0 SaveBankAndSwitchCopy sets wTextOvrMode = 1 right before RunTextHandler's lookup
+; (a COPY into [$C837]); bank $60 entry 14 / the text home bank's TextOvrFind read and
+; clear it in the same lookup. wTextOvrPtr = an edited text's address (or the copy
+; buffer) — SaveBankAndSwitch's level-2 read fetches it from here (DE = wTextOvrPtr -
+; 2 * id; WRAM reads the same whatever ROM bank is mapped). Transient.
+wTextOvrMode:: db ;d561 — 1 = the current text lookup is a copy (RunTextHandler)
+wTextOvrPtr:: dw ;d562 — the edited text's address for SaveBankAndSwitch's level 2
+wCustomPool:: ds $5A4 - 132 - 5 - 2 * TILEANIM_MAX_GROUPS - 2 - 18 - 26 - 8 - 256 - 1 - 2 - 160 - 12 - 1 - 514 - 23 - 1 - 1 - 43 - 2 - 2 * LINK_IDS - 1 - 3 ;d564-d5e4 — transient reserve (was $664; FX1 carved 64+128; S97 132; S102 69; S105 2; S111 18; S114 26; S115 8; S117 256 wExtFlags + 1 wShopID; S117b 2 push scratch; S121 160 wMillyLayout; S123 12 NPC colours; S125 1 wHubReason; S126 514: the service tile save + wServiceLines; S127 23: wBreedLast + wBreedSlots + the roll scratch; S129 1: wStoryFlag; S136 1: wPlaceIdx; S137 43: the render walk block; S140 42: wMapRegion + wWarpRegion + wExitLinks; S141 1: wNpcSheetIdx; S150 3: wTextOvrMode + wTextOvrPtr)
 ; FX1 (S71): wPoolBounce — 128-byte staging for sleep-pool bank-2 record
 ; swaps (per-byte scratch in CF3PoolSwapRecord). Transient. (The v1 drain's
 ; halved-pending scratch use was removed with the S71v2 exp-scale veto.)

@@ -27,7 +27,8 @@ built from it (the original ROM is never changed).
 - **Monsters** — every monster's species data (family, growth, resistances,
   natural skills …), every battle row it appears in (stats, AI, joining), new
   monsters cut from a sprite sheet, and new art for the original monsters.
-- **Dialogue** — every text of the game, searchable (read-only for now).
+- **Text** — every text of the game, searchable and **editable** (S150): dialogue,
+  battle, items, menus & field, credits — one sub-tab each; any length.
 - **Arena** — the classes, Starry Night and Monster Grandpa's match: entry fees, each
   match's master, 1-3 monster teams and the teams' monsters and stats; and
   **your own arena** (copies of the arena's rooms, per class when it opens and

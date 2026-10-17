@@ -12,95 +12,95 @@ SECTION "ROM Bank $04e", ROMX[$4000], BANK[$4e]
     dw LoadB4e_40b9                  ; Entry 0
     dw $40E7                          ; Entry 1
     dw $4115                          ; Entry 2
-    dw $4009                          ; Entry 3
-    dw $4143                          ; Entry 4
-    dw $41C3                          ; Entry 5
-    dw $428E                          ; Entry 6
-    dw $42CF                          ; Entry 7
-    dw $43CE                          ; Entry 8
-    dw $44B6                          ; Entry 9
-    dw $44DC                          ; Entry 10
-    dw $4586                          ; Entry 11
-    dw $4721                          ; Entry 12
-    dw $4755                          ; Entry 13
-    dw $4771                          ; Entry 14
-    dw $4865                          ; Entry 15
-    dw $4957                          ; Entry 16
-    dw $4A71                          ; Entry 17
-    dw $4A84                          ; Entry 18
-    dw $4AC1                          ; Entry 19
-    dw $4C5F                          ; Entry 20
-    dw $4CA5                          ; Entry 21
-    dw $4DFE                          ; Entry 22
-    dw $4EF1                          ; Entry 23
-    dw $5035                          ; Entry 24
-    dw $506F                          ; Entry 25
-    dw $519E                          ; Entry 26
-    dw $51E3                          ; Entry 27
-    dw $5319                          ; Entry 28
-    dw $5357                          ; Entry 29
-    dw $53E2                          ; Entry 30
-    dw $54D9                          ; Entry 31
-    dw $5514                          ; Entry 32
-    dw $5696                          ; Entry 33
-    dw $56DC                          ; Entry 34
-    dw $582A                          ; Entry 35
-    dw $5973                          ; Entry 36
-    dw $5A0C                          ; Entry 37
-    dw $5B17                          ; Entry 38
-    dw $5BC4                          ; Entry 39
-    dw $5C86                          ; Entry 40
-    dw $5CBF                          ; Entry 41
-    dw $5E49                          ; Entry 42
-    dw $5E8D                          ; Entry 43
-    dw $5FB3                          ; Entry 44
-    dw $5FF1                          ; Entry 45
-    dw $60F2                          ; Entry 46
-    dw $613A                          ; Entry 47
-    dw $62B5                          ; Entry 48
-    dw $6352                          ; Entry 49
-    dw $6493                          ; Entry 50
-    dw $6607                          ; Entry 51
-    dw $6662                          ; Entry 52
-    dw $67BA                          ; Entry 53
-    dw $67FD                          ; Entry 54
-    dw $6889                          ; Entry 55
-    dw $68BE                          ; Entry 56
-    dw $69F4                          ; Entry 57
-    dw $6A3A                          ; Entry 58
-    dw $6B4B                          ; Entry 59
-    dw $6B85                          ; Entry 60
-    dw $6CA5                          ; Entry 61
-    dw $6CE4                          ; Entry 62
-    dw $6D23                          ; Entry 63
-    dw $6E62                          ; Entry 64
-    dw $6E90                          ; Entry 65
-    dw $6F15                          ; Entry 66
-    dw $6FCD                          ; Entry 67
-    dw $7033                          ; Entry 68
-    dw $708C                          ; Entry 69
-    dw $70AE                          ; Entry 70
-    dw $711A                          ; Entry 71
-    dw $717B                          ; Entry 72
-    dw $719F                          ; Entry 73
-    dw $7209                          ; Entry 74
-    dw $7270                          ; Entry 75
-    dw $7293                          ; Entry 76
-    dw $72F3                          ; Entry 77
-    dw $734C                          ; Entry 78
-    dw $736F                          ; Entry 79
-    dw $73D8                          ; Entry 80
-    dw $7445                          ; Entry 81
-    dw $746F                          ; Entry 82
-    dw $74DC                          ; Entry 83
-    dw $752E                          ; Entry 84
-    dw $7559                          ; Entry 85
-    dw $75EA                          ; Entry 86
-    dw $76B1                          ; Entry 87
-    dw $770A                          ; Entry 88
-    dw $7764                          ; Entry 89
-    dw $77C8                          ; Entry 90
-    dw $79A8                          ; Entry 91
+    dw $4009                          ; Entry 3 — mode 0 -> table $4009 (mode list $4007)
+    dw $4143                          ; Entry 4 — [table $4009]; text $0868 "*:To show my appreciation, I'll o…"
+    dw $41C3                          ; Entry 5 — text $0869 "*:Hi. Welcome to the library. *:Y…"
+    dw $428E                          ; Entry 6 — text $086A "*:W, Well, it's no use asking me.…"
+    dw $42CF                          ; Entry 7 — text $086B "*:To win, train your monsters beh…"
+    dw $43CE                          ; Entry 8 — text $086C "*:We gather here at the arena, se…"
+    dw $44B6                          ; Entry 9 — text $086D "*:All monsters are born from eggs."
+    dw $44DC                          ; Entry 10 — text $086E "*:Eggs will be eggs forever if le…"
+    dw $4586                          ; Entry 11 — text $086F ":If you choose CHARGE you can tra…"
+    dw $4721                          ; Entry 12 — text $0870 "[HERO] returned the old lady's no…"
+    dw $4755                          ; Entry 13 — text $0871 "*:Hmmm. It's unfortunate."
+    dw $4771                          ; Entry 14 — text $0872 "*:Hmmm. You survived G class. Wel…"
+    dw $4865                          ; Entry 15 — text $0873 "*:Hmm. You survived F class. Cong…"
+    dw $4957                          ; Entry 16 — text $0874 "*:There will be Spookys, ArmyAnts…"
+    dw $4A71                          ; Entry 17 — text $0875 "*:Humpf, okay."
+    dw $4A84                          ; Entry 18 — text $0876 "*:Would you like to hear about th…"
+    dw $4AC1                          ; Entry 19 — text $0877 "*:There were MiniDraks, BigRoosts…"
+    dw $4C5F                          ; Entry 20 — text $0878 "*:Want to know about the monsters…"
+    dw $4CA5                          ; Entry 21 — text $0879 "*:There were Goopis, PillowRats, …"
+    dw $4DFE                          ; Entry 22 — text $087A "*:There are characteristics for m…"
+    dw $4EF1                          ; Entry 23 — text $087B "*:Dragons with Metaly parents *:a…"
+    dw $5035                          ; Entry 24 — text $087C "*:Would you like to hear about th…"
+    dw $506F                          ; Entry 25 — text $087D "*:There were BigRoosts, SpotSlime…"
+    dw $519E                          ; Entry 26 — text $087E "*:Want to know about the monsters…"
+    dw $51E3                          ; Entry 27 — text $087F "*:There are Demonites, BeanMen, 1…"
+    dw $5319                          ; Entry 28 — text $0880 "*:You survived E class, You did b…"
+    dw $5357                          ; Entry 29 — text $0881 "*:IceMan has a relative!! *:It is…"
+    dw $53E2                          ; Entry 30 — text $0882 "*:When you choose COMMAND, very w…"
+    dw $54D9                          ; Entry 31 — text $0883 "*:Would you like to learn about t…"
+    dw $5514                          ; Entry 32 — text $0884 "*:There were GiantWorms, Poisongo…"
+    dw $5696                          ; Entry 33 — text $0885 "*:Want to know about the monsters…"
+    dw $56DC                          ; Entry 34 — text $0886 "*:There are MudDolls, TreeSlimes,…"
+    dw $582A                          ; Entry 35 — text $0887 "*:When the family of the pedigree…"
+    dw $5973                          ; Entry 36 — text $0888 "*:There are foreign masters whose…"
+    dw $5A0C                          ; Entry 37 — text $0889 "[HERO] reads the blackboard. *:Th…"
+    dw $5B17                          ; Entry 38 — text $088A "*:Namely, dragons with Metaly par…"
+    dw $5BC4                          ; Entry 39 — text $088B "*:A mnemonic for useful skills an…"
+    dw $5C86                          ; Entry 40 — text $088C "*:Would you like to learn about t…"
+    dw $5CBF                          ; Entry 41 — text $088D "*:There were Snailys, Saccers, Gu…"
+    dw $5E49                          ; Entry 42 — text $088E "*:Want to know about the monsters…"
+    dw $5E8D                          ; Entry 43 — text $088F "*:There are Facers, Tonguellas, F…"
+    dw $5FB3                          ; Entry 44 — text $0890 "*:Would you like to hear about th…"
+    dw $5FF1                          ; Entry 45 — text $0891 "*:There are Onionos, Gophecadas, …"
+    dw $60F2                          ; Entry 46 — text $0892 "*:Want to know about the monsters…"
+    dw $613A                          ; Entry 47 — text $0893 "*:There are SpikyBoys, KingCobras…"
+    dw $62B5                          ; Entry 48 — text $0894 "*:The Hork downstairs wants to le…"
+    dw $6352                          ; Entry 49 — text $0895 "*:Monsters can inherit all the sk…"
+    dw $6493                          ; Entry 50 — text $0896 "*:Its parents only learned Heal, …"
+    dw $6607                          ; Entry 51 — text $0897 "*:I took notes on how to change t…"
+    dw $6662                          ; Entry 52 — text $0898 "[HERO] opened the notebook. :When…"
+    dw $67BA                          ; Entry 53 — text $0899 "*:I took notes on how to catch mo…"
+    dw $67FD                          ; Entry 54 — text $089A "*:Foreign masters have lots of ki…"
+    dw $6889                          ; Entry 55 — text $089B "*:Gate of Labyrinth. Want to lear…"
+    dw $68BE                          ; Entry 56 — text $089C "*:There are RockSlimes, Chamelgon…"
+    dw $69F4                          ; Entry 57 — text $089D "*:Want to know about the monsters…"
+    dw $6A3A                          ; Entry 58 — text $089E "*:There are WeedBugs, HammerMen, …"
+    dw $6B4B                          ; Entry 59 — text $089F "*:You want to learn about the Gat…"
+    dw $6B85                          ; Entry 60 — text $08A0 "*:I don't want to tell you this. …"
+    dw $6CA5                          ; Entry 61 — text $08A1 "*:I don't want to be reminded of …"
+    dw $6CE4                          ; Entry 62 — text $08A2 "*:What? You want to know about th…"
+    dw $6D23                          ; Entry 63 — text $08A3 "*:I see... I don't remember much.…"
+    dw $6E62                          ; Entry 64 — text $08A4 "*:Tut, you remind me of bad memor…"
+    dw $6E90                          ; Entry 65 — text $08A5 "*:I,I thought you went to the Gat…"
+    dw $6F15                          ; Entry 66 — text $08A6 "*:Oh, you haven't visited the Gat…"
+    dw $6FCD                          ; Entry 67 — text $08A7 "*:You, must obey me. *:I want to …"
+    dw $7033                          ; Entry 68 — text $08A8 "*:Oh, It is KingLeo! How majestic…"
+    dw $708C                          ; Entry 69 — text $08A9 "*:It's a SmartBk Use it wisely!"
+    dw $70AE                          ; Entry 70 — text $08AA "*:You, must obey me! *:Bring me a…"
+    dw $711A                          ; Entry 71 — text $08AB "*:Oh, It is RainHawk! What beauti…"
+    dw $717B                          ; Entry 72 — text $08AC "*:It's a BeNiceBK. Use it wisely."
+    dw $719F                          ; Entry 73 — text $08AD "*:You must obey me! *:I want to s…"
+    dw $7209                          ; Entry 74 — text $08AE "*:Oh! it is Armorpion! What a sca…"
+    dw $7270                          ; Entry 75 — text $08AF "*:It is QuestBK. Use it wisely."
+    dw $7293                          ; Entry 76 — text $08B0 "*:You must obey me. *:I want to s…"
+    dw $72F3                          ; Entry 77 — text $08B1 "*:It's a Rosevine! How snaky it i…"
+    dw $734C                          ; Entry 78 — text $08B2 "It's a LifeAcorn. Use it wisely."
+    dw $736F                          ; Entry 79 — text $08B3 "*:You must obey me. *:I want to s…"
+    dw $73D8                          ; Entry 80 — text $08B4 "*:It's GoldGolem! I could be blin…"
+    dw $7445                          ; Entry 81 — text $08B5 "*:It's a TinyMedal. Use it wisely."
+    dw $746F                          ; Entry 82 — text $08B6 "*:You must obey me. *:I want to s…"
+    dw $74DC                          ; Entry 83 — text $08B7 "*:It's Divinegon! How noble! *:We…"
+    dw $752E                          ; Entry 84 — text $08B8 "*:It's a TinyMedal. Use it wisely."
+    dw $7559                          ; Entry 85 — text $08B9 "*:[HERO], my hearts content. *:Th…"
+    dw $75EA                          ; Entry 86 — text $08BA "*:Her Majesty, the Queen of Great…"
+    dw $76B1                          ; Entry 87 — text $08BB "*:Her Majesty desires a KingSlime…"
+    dw $770A                          ; Entry 88 — text $08BC "*:Her Majesty desires a Florajay.…"
+    dw $7764                          ; Entry 89 — text $08BD "*:Her Majesty desires a CurseLamp…"
+    dw $77C8                          ; Entry 90 — text $08BE "*:I'm Mick. Those clingy fans are…"
+    dw $79A8                          ; Entry 91 — text $08BF "*:Her Majesty desires WildApe. *:…"
 
 LoadB4e_40b9:
     ld a, [$c822]

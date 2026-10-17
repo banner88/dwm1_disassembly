@@ -1154,7 +1154,8 @@ def s127r3_game_text_rule(app, w):
     boxes beside it). A new one fails here until it is a GameTextField / BoxList."""
     import re as _re
     allowed = {('app/main.py', 'self.log'), ('app/cutscenes_tab.py', 'self.log'),
-               ('app/cutscenes_tab.py', 'self.textbox'), ('app/dialogue_tab.py', 'self.detail'),
+               ('app/cutscenes_tab.py', 'self.textbox'),
+               ('app/text_tab.py', 'self.edit'),     # S150: the game's own texts — markup with the game-font picture beside it
                ('app/services_tab.py', 'self.line_edit'),
                ('app/rooms/talk_editor.py', 'self.edit'),
                ('app/rooms/play_dialog.py', 'self.preview')}     # S132: read-only party preview
@@ -2971,6 +2972,94 @@ def s144_states(app, w):
         app.processEvents()
         shutil.rmtree(tmp, ignore_errors=True)
 
+def s150_text(app, w):
+    """S150 (ROADMAP P3.6 / Phase F T-author; user: "Let's start with dialogue … Everything but
+    differentiate by tab within editor. Samesize NOT preferred"): the Text tab — one sub-tab
+    per kind (Dialogue, Battle, Items, Menus & field, Credits, Other tabs); a line edited as
+    markup with the game-font picture beside it, applied as one undo step (with its copies),
+    a longer line kept; a 10-letter item name refused before Apply; Original; the other tabs'
+    texts read-only; the Capacity row; undo restores project.json exactly."""
+    import shutil
+    import tempfile
+    from editor2.core import gametext as GT
+    tmp = tempfile.mkdtemp(prefix='s150_text_')
+    try:
+        pdir = os.path.join(tmp, 'p')
+        shutil.copytree(os.path.join(REPO, 'editor2/example-project'), pdir,
+                        ignore=shutil.ignore_patterns('build'))
+        w.open_project(pdir)
+        app.processEvents()
+        doc = w.session.doc
+        before = doc.dumps()
+        titles = [w.tabs.tabText(i) for i in range(w.tabs.count())]
+        assert 'Text' in titles and 'Dialogue' not in titles, titles
+        tt = w.dialogue_tab
+        w.tabs.setCurrentWidget(tt)
+        app.processEvents()
+        names = [tt.tabs.tabText(i).replace('&&', '&') for i in range(tt.tabs.count())]
+        assert names == ['Dialogue', 'Battle', 'Items', 'Menus & field', 'Credits', 'Other tabs'], names
+        pg = tt.pages['dialogue']
+        tt.tabs.setCurrentWidget(pg)
+        pg.query.setText('Now, head to')
+        app.processEvents()
+        assert pg.table.rowCount() == 1 and pg.cur.key == '$0489', pg.table.rowCount()
+        new = '{low}*:A much longer\nline than the old▼\n*:one, kept in a\nbank of its own.'
+        pg.edit.setPlainText(new)
+        app.processEvents()
+        assert pg.pic.pixmap() is not None and not pg.pic.pixmap().isNull()
+        assert pg.apply_b.isEnabled() and pg.status.text().endswith('bytes'), pg.status.text()
+        pg._apply()
+        app.processEvents()
+        assert doc.data['gamedata']['text']['dialogue']['$0489'] == new
+        pg.query.setText('$0489')
+        app.processEvents()
+        assert pg.table.rowCount() == 1 and pg.table.item(0, 0).text() == '✎'
+        # a line the game shows through several ids: edited together
+        x = next(GT.index(REPO).entries[k] for k in GT.index(REPO).order
+                 if GT.index(REPO).entries[k].source == 'dialogue'
+                 and len(GT.index(REPO).entries[k].same) >= 2 and GT.index(REPO).entries[k].first)
+        pg.query.setText(x.key)
+        app.processEvents()
+        assert pg.cur.key == x.key and not pg.copies.isHidden(), (pg.cur.key, x.key)
+        pg.edit.setPlainText('{low}*:Shared and changed.')
+        pg._apply()
+        rows = doc.data['gamedata']['text']['dialogue']
+        assert all(rows.get(k) == '{low}*:Shared and changed.' for _s, k in x.same), x.same
+        # Items: a 10-letter name is refused before Apply
+        ip = tt.pages['items']
+        tt.tabs.setCurrentWidget(ip)
+        ip.query.setText('#1')
+        ip.kind.setCurrentIndex(ip.kind.findData('item names (bank $41 mode 8)'))
+        app.processEvents()
+        assert ip.cur is not None and ip.cur.source == 'item_name', ip.cur
+        ip.edit.setPlainText('Herbalicious')
+        app.processEvents()
+        assert not ip.apply_b.isEnabled() and ip.status.text().startswith('✗'), ip.status.text()
+        ip.edit.setPlainText('Leaf')
+        ip._apply()
+        assert doc.data['gamedata']['text']['item_name'][ip.cur.key] == 'Leaf'
+        ip._original()
+        assert ip.cur.key not in (doc.data['gamedata']['text'].get('item_name') or {})
+        op = tt.pages['other']
+        assert op.edit.isReadOnly() and not op.apply_b.isEnabled()
+        from editor2.core import capacity as CAP
+        rep = CAP.measure(doc.data, doc.project_dir, REPO)
+        row = next(r for r in rep['rows'] if r['key'] == 'game_texts')
+        assert row['used'] == 4, row                   # $0489 + the shared line's 3 ids
+        for _ in range(4):
+            w.session.undo.undo()
+        app.processEvents()
+        assert doc.dumps() == before, 'undo must restore project.json exactly'
+        print('OK: Text tab (S150) — six sub-tabs; a dialogue line rewritten longer with the '
+              'game-font picture, a shared line edited with its copies, a 10-letter item name '
+              'refused, Original, the other tabs\' texts read-only, the Capacity row; undo restores '
+              'everything')
+    finally:
+        w.open_project(os.path.join(REPO, 'editor2/example-project'))   # the --rom build reads w's project
+        app.processEvents()
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
 def main():
     do_rom = '--rom' in sys.argv
     app = QApplication.instance() or QApplication(sys.argv)
@@ -3338,17 +3427,19 @@ def main():
                  'description': ['A wobbly blob', "that's always", 'grinning']}, e
     assert any(s_['id'] == 8 and s_['name'] == 'Goober' for s_ in doc.species_catalog())
     assert 'Goober' in mt.title.text()
-    dt = w.dialogue_tab
+    dt = w.dialogue_tab                     # S150: the Text tab (was the Dialogue tab)
     w._show_dialogue_for(8)
     app.processEvents()
-    assert w.tabs.currentWidget() is dt and dt.table.rowCount() == n0, (dt.table.rowCount(), n0)
-    assert 'Goober' in dt.monster.currentText() and 'was Slime' in dt.monster.currentText()
-    dt.query.setText('$0000')
-    assert dt.table.rowCount() >= 0
-    dt.show_monster(None)
-    dt.query.setText('Terry! Wait!')
-    assert dt.table.rowCount() == 1 and dt.shown[0]['ref'] == '$0000', dt.table.rowCount()
-    dt.query.clear()
+    pg = dt.pages['dialogue']
+    assert w.tabs.currentWidget() is dt and dt.tabs.currentWidget() is pg
+    assert pg.table.rowCount() >= 1, pg.table.rowCount()
+    assert 'Goober' in pg.monster.currentText() and 'was Slime' in pg.monster.currentText()
+    pg.query.setText('$0000')
+    assert pg.table.rowCount() >= 0
+    pg.monster.setCurrentIndex(0)
+    pg.query.setText('Terry! Wait!')
+    assert pg.table.rowCount() == 1 and pg.shown[0][0].key == '$0000', pg.table.rowCount()
+    pg.query.clear()
     w.tabs.setCurrentWidget(mt)
     mt.select(224)
     for k, t in enumerate(['A gentle dragon', 'from the deep sea', '']):
@@ -4398,6 +4489,7 @@ def main():
     s143_names(app, w)
     s144_states(app, w)
     s145_capacity(app, w)
+    s150_text(app, w)
 
     if do_rom:
         from editor2.app.build_worker import BuildWorker  # noqa: E402

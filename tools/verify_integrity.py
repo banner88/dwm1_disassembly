@@ -75,6 +75,8 @@ SELFTEST_TOOLS = [
     "census_story_state.py",     # S132: story_state_census.json clean (the game's own win tails / arena cascades in PyBoy == editor2/core/story_state.py) + every story point re-derived equal
     "census_battles.py",         # S149: battles_census.json clean (project enemy rows / creation / battle lists past banks $6B / $76 in PyBoy == the plan + raising model; the negative fails every class) + the plan arithmetic
     "recomment_script_banks.py",  # S148: the script data of banks $0C-$0F (+ patches/bank_00e.asm) carries the handler decoder's annotation (no stale S43 comments)
+    "annotate_text_slots.py",    # S150: every text pointer slot in the text banks' head tables carries its comment (text id / table row / mode list, from dialogue.json)
+    "census_text_override.py",   # S150: the markup codec reads back every original text (both styles); text_override_census.json clean (every text slot, shown + copied, in PyBoy == the project's edit or the original; the S105 nickname redirect)
 ]
 
 PATCH_FILES = [

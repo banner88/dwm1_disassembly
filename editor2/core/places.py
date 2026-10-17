@@ -338,6 +338,11 @@ def emit_bank_060(prj, warnings, head_text):
     lines += p['globals']
     lines.append(f"PLACE_COUNT EQU {len(prj.rooms)}")
     lines.append(f"TEXT_SECTIONS EQU {len(p['text_home'])}")
+    from . import gametext as GT                      # S150: entry 14's text home bank
+    try:
+        lines += GT.bank60_lines(prj)
+    except GT.GameTextError:
+        lines.append("TEXT_OVR_HOME EQU $00   ; (gamedata.text has errors — see the validator)")
     return "\n".join(lines) + "\n"
 
 

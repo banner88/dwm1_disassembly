@@ -1005,7 +1005,8 @@ SkillNamePtrTable:  ; $4539 — 256 entries, indexed by skill ID
 ; names".) The editor edits it per species: gamedata.monster_text.<id>.nickname
 ; (1-4 letters; PROJECT_COMPILER §2.24) — patched tree: compiler region gd_monster_nicks.
 ; OVERSHOOT: 215 entries; index >= 215 reads ItemNamePtrTable ($48E7). FORK:
-; patches/bank_000.asm LoadModeBaseRedirect ($00:$00F0) sends mode-7 loads with
+; patches/bank_000.asm $00:$00F0 (S105-S149 LoadModeBaseRedirect; S150 TextLevel1Hook ->
+; bank $60 entry 14 TextOverride, the same rule) sends mode-7 loads with
 ; id >= 221 (S105 G3, `cp $dd`; was 224) to the new-species nickname table
 ; (base $7D39, [221] = $7EF3); 215-220 are never named (not monsters, Iron Rule 8).
 ; =============================================================================
@@ -1498,17 +1499,24 @@ SpellUseTextPtrTable:  ; $4A7B
 ; 3 small helper functions, 7 bytes each
 ; ---------------------------------------------------------------
 
-Func_Bank41_GetText:  ; $4A93
+; The bank's three text entries (S150, measured; the clean tree carries the full note):
+;   entry 0 $4A93: CallTextEngine — start SHOWING [mode][id] (mode list $4007);
+;   entry 1 $4A9A: RunTextHandler — COPY it to the buffer [$C837] (to its first $F0
+;                  byte; ROM0 $098A — the names copied into the game's buffers);
+;   entry 2 $4AA1: show it and wait until it is drawn (47 far calls, banks $07-$59).
+; S150: a project's EDITED text is found here too (ROM0 TextLevel1Hook -> bank $60
+; entry 14); a copy of an edited text is copied by its own text bank.
+Func_Bank41_GetText:  ; $4A93 — entry 0: start SHOWING [mode][id] (CallTextEngine)
     ld de, $4007
     call $05B6
     ret
 
-Func_Bank41_PutText:  ; $4A9A
+Func_Bank41_PutText:  ; $4A9A — entry 1: COPY [mode][id] to the buffer [$C837] (RunTextHandler)
     ld de, $4007
     call $05F6
     ret
 
-Func_Bank41_GetPutText:  ; $4AA1
+Func_Bank41_GetPutText:  ; $4AA1 — entry 2: show [mode][id] and wait until it is drawn
     call Func_Bank41_GetText
     call $0609
     ret
@@ -3765,7 +3773,7 @@ SpiritName_7:  ; "NOVA"
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00   ; unused: the original bytes
 ; @BUILD_PROJECT END ns_text_b
 ; NewSpeciesShortPtrs: the default-nickname pointer table of ids 221-239. The
-; bank-$00 LoadModeBaseRedirect sends the mode-7 lookup ($4739, family codes /
+; bank $60 entry 14 TextOverride (S150; S105-S149 the bank-$00 LoadModeBaseRedirect) sends the mode-7 lookup ($4739, family codes /
 ; nicknames) of a species >= 221 to base $7D39, so [221] = $7D39 + 221*2 = $7EF3.
 NewSpeciesShortPtrs:
     ASSERT @ == $7D39 + 221 * 2

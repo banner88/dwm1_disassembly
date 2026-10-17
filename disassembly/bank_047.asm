@@ -12,63 +12,63 @@ SECTION "ROM Bank $047", ROMX[$4000], BANK[$47]
     dw LoadB47_4079                  ; Entry 0
     dw $4091                          ; Entry 1
     dw $40A9                          ; Entry 2
-    dw $4009                          ; Entry 3
-    dw $40C1                          ; Entry 4
-    dw $4175                          ; Entry 5
-    dw $41E2                          ; Entry 6
-    dw $423E                          ; Entry 7
-    dw $4279                          ; Entry 8
-    dw $42E9                          ; Entry 9
-    dw $4397                          ; Entry 10
-    dw $43F3                          ; Entry 11
-    dw $44A2                          ; Entry 12
-    dw $44F8                          ; Entry 13
-    dw $4605                          ; Entry 14
-    dw $4647                          ; Entry 15
-    dw $4749                          ; Entry 16
-    dw $4784                          ; Entry 17
-    dw $479A                          ; Entry 18
-    dw $47C3                          ; Entry 19
-    dw $4804                          ; Entry 20
-    dw $487C                          ; Entry 21
-    dw $48DB                          ; Entry 22
-    dw $4908                          ; Entry 23
-    dw $49C7                          ; Entry 24
-    dw $4A04                          ; Entry 25
-    dw $4A8C                          ; Entry 26
-    dw $4AEC                          ; Entry 27
-    dw $4B56                          ; Entry 28
-    dw $4B8D                          ; Entry 29
-    dw $4C8D                          ; Entry 30
-    dw $4CBC                          ; Entry 31
-    dw $4D9A                          ; Entry 32
-    dw $4E50                          ; Entry 33
-    dw $4ED6                          ; Entry 34
-    dw $4F66                          ; Entry 35
-    dw $4F97                          ; Entry 36
-    dw $4FD2                          ; Entry 37
-    dw $4FEB                          ; Entry 38
-    dw $5090                          ; Entry 39
-    dw $5143                          ; Entry 40
-    dw $51F1                          ; Entry 41
-    dw $5262                          ; Entry 42
-    dw $5386                          ; Entry 43
-    dw $5421                          ; Entry 44
-    dw $545B                          ; Entry 45
-    dw $54C7                          ; Entry 46
-    dw $5523                          ; Entry 47
-    dw $557F                          ; Entry 48
-    dw $55FE                          ; Entry 49
-    dw $561C                          ; Entry 50
-    dw $5682                          ; Entry 51
-    dw $573B                          ; Entry 52
-    dw $57C0                          ; Entry 53
-    dw $57E1                          ; Entry 54
-    dw $5821                          ; Entry 55
-    dw $58B2                          ; Entry 56
-    dw $58FC                          ; Entry 57
-    dw $59F3                          ; Entry 58
-    dw $5A3C                          ; Entry 59
+    dw $4009                          ; Entry 3 — mode 0 -> table $4009 (mode list $4007)
+    dw $40C1                          ; Entry 4 — [table $4009]; text $03C8 ":[HERO] looked at the bookshelf. …"
+    dw $4175                          ; Entry 5 — text $03C9 "*:He looks a bit nervous. I wonde…"
+    dw $41E2                          ; Entry 6 — text $03CA "*:I'm the Monster Minister! *:Do …"
+    dw $423E                          ; Entry 7 — text $03CB "*:If you don't want to know, that…"
+    dw $4279                          ; Entry 8 — text $03CC "*:How about the monsters living b…"
+    dw $42E9                          ; Entry 9 — text $03CD "*:Behind the Gate of Villager, St…"
+    dw $4397                          ; Entry 10 — text $03CE "*:How about monsters living behin…"
+    dw $43F3                          ; Entry 11 — text $03CF "*:Behind the Gate of Memories are…"
+    dw $44A2                          ; Entry 12 — text $03D0 "*:How about the monsters behind t…"
+    dw $44F8                          ; Entry 13 — text $03D1 "*:Behind the Gate of Peace live B…"
+    dw $4605                          ; Entry 14 — text $03D2 "*:How about monsters behind the G…"
+    dw $4647                          ; Entry 15 — text $03D3 "*:Behind the Gate of Strength liv…"
+    dw $4749                          ; Entry 16 — text $03D4 "*:If you don't want to know, that…"
+    dw $4784                          ; Entry 17 — text $03D5 "*:Don't pick on me!"
+    dw $479A                          ; Entry 18 — text $03D6 "*:Ha ha ha! I made Gigantes a cow…"
+    dw $47C3                          ; Entry 19 — text $03D7 "*:I can see.. I can see! It's a n…"
+    dw $4804                          ; Entry 20 — text $03D8 "*:You, must obey my command. *:I …"
+    dw $487C                          ; Entry 21 — text $03D9 "*:Oh! It's a FloraJay! What a fun…"
+    dw $48DB                          ; Entry 22 — text $03DA "*:This is an AGLseed. Use it wise…"
+    dw $4908                          ; Entry 23 — text $03DB "*:I heard a rumor that a terrible…"
+    dw $49C7                          ; Entry 24 — text $03DC "*:Oops...I lost ...I guess I'll t…"
+    dw $4A04                          ; Entry 25 — text $03DD "*:You're in the Room of Happiness…"
+    dw $4A8C                          ; Entry 26 — text $03DE "*:Welcome to A class. I was expec…"
+    dw $4AEC                          ; Entry 27 — text $03DF "*:Maybe you'll do better next tim…"
+    dw $4B56                          ; Entry 28 — text $03E0 "*:Are you familiar with the Gate …"
+    dw $4B8D                          ; Entry 29 — text $03E1 "*:A quote from the journal of a j…"
+    dw $4C8D                          ; Entry 30 — text $03E2 "*:Do you know of the Gate of Judg…"
+    dw $4CBC                          ; Entry 31 — text $03E3 "*:A quote from the first victor o…"
+    dw $4D9A                          ; Entry 32 — text $03E4 "*:Far across the ocean, is the co…"
+    dw $4E50                          ; Entry 33 — text $03E5 "King:Oh, [HERO]! You beat DarkHor…"
+    dw $4ED6                          ; Entry 34 — text $03E6 "King:Oh, [HERO]! You beat Akubar!…"
+    dw $4F66                          ; Entry 35 — text $03E7 "*:Hey are you really aiming for S…"
+    dw $4F97                          ; Entry 36 — text $03E8 "*:You'll never get there with suc…"
+    dw $4FD2                          ; Entry 37 — text $03E9 "*:Then go home, liar!"
+    dw $4FEB                          ; Entry 38 — text $03EA "*:You're in the Chamber of Travel…"
+    dw $5090                          ; Entry 39 — text $03EB "*:Behind the Gate of Labyrinth th…"
+    dw $5143                          ; Entry 40 — text $03EC "*:DuckKite is a troublesome monst…"
+    dw $51F1                          ; Entry 41 — text $03ED "*:Copycopy. I wanna copycopy an U…"
+    dw $5262                          ; Entry 42 — text $03EE "*:Hello! I am Helo. *:My former m…"
+    dw $5386                          ; Entry 43 — text $03EF "*:Yeah! The Starry Night has arri…"
+    dw $5421                          ; Entry 44 — text $03F0 "*:I wonder what will happen if I …"
+    dw $545B                          ; Entry 45 — text $03F1 "*:Well done! You survived S class…"
+    dw $54C7                          ; Entry 46 — text $03F2 "*:Monster Master [HERO]! You beca…"
+    dw $5523                          ; Entry 47 — text $03F3 "*:The last match in S class will …"
+    dw $557F                          ; Entry 48 — text $03F4 "*[HERO], nothing left but S class…"
+    dw $55FE                          ; Entry 49 — text $03F5 "*:Tut! Not in here either!"
+    dw $561C                          ; Entry 50 — text $03F6 "*:There are cliffs that you can j…"
+    dw $5682                          ; Entry 51 — text $03F7 "*:When a monster learns two certa…"
+    dw $573B                          ; Entry 52 — text $03F8 "*:You, listen to my request. *:I …"
+    dw $57C0                          ; Entry 53 — text $03F9 "*:Yeti doesn't say yet. Funny?"
+    dw $57E1                          ; Entry 54 — text $03FA "*:You're having trouble with the …"
+    dw $5821                          ; Entry 55 — text $03FB "*:You see the merchant with an at…"
+    dw $58B2                          ; Entry 56 — text $03FC "*:Hee hee! Yo dude, wanna know wh…"
+    dw $58FC                          ; Entry 57 — text $03FD "*:The last match in S class will …"
+    dw $59F3                          ; Entry 58 — text $03FE "*:Well, you're strong so you may …"
+    dw $5A3C                          ; Entry 59 — text $03FF "*:You must be something to beat M…"
 
 LoadB47_4079:
     ld a, [$c822]

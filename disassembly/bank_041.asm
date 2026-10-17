@@ -1023,7 +1023,8 @@ SkillNamePtrTable:  ; $4539 — 256 entries, indexed by skill ID
 ; names".) The editor edits it per species: gamedata.monster_text.<id>.nickname
 ; (1-4 letters; PROJECT_COMPILER §2.24) — patched tree: compiler region gd_monster_nicks.
 ; OVERSHOOT: 215 entries; index >= 215 reads ItemNamePtrTable ($48E7). FORK:
-; patches/bank_000.asm LoadModeBaseRedirect ($00:$00F0) sends mode-7 loads with
+; patches/bank_000.asm $00:$00F0 (S105-S149 LoadModeBaseRedirect; S150 TextLevel1Hook ->
+; bank $60 entry 14 TextOverride, the same rule) sends mode-7 loads with
 ; id >= 221 (S105 G3, `cp $dd`; was 224) to the new-species nickname table
 ; (base $7D39, [221] = $7EF3); 215-220 are never named (not monsters, Iron Rule 8).
 ; =============================================================================
@@ -1518,23 +1519,34 @@ SpellUseTextPtrTable:  ; $4A7B
 ; 3 small helper functions, 7 bytes each
 ; ---------------------------------------------------------------
 
-; Generic name/text FETCH entry points. Each loads DE = $4007 (the mode->table
-; config base) and far-calls the ROM0 two-level [mode][id] lookup
-; (SaveBankAndSwitch $00:$092F / TextHandler_0940 $00:$0940): mode=[$c822],
-; id=[$c823] -> string ptr in DE. This is the single funnel through which monster
-; names (mode 5), default nicknames (mode 7), item names (mode 8) etc. are resolved,
-; so it is also where a new-species id overshoots any short per-mode table.
-Func_Bank41_GetText:  ; $4A93 — fetch string ptr only ([mode][id] lookup)
+; The bank's three text entries (S150 corrected: the old comments said "fetch the
+; pointer only" / "render" — measured otherwise). Each loads DE = $4007 (the mode
+; list) for ROM0's two-level [mode][id] lookup (SaveBankAndSwitch $00:$092F):
+; mode = [$c822], id = [$c823]. This is the single funnel through which monster names
+; (mode 5), default nicknames (mode 7), item names (mode 8) etc. are found, so it is
+; also where a new-species id overshoots any short per-mode table.
+;   entry 0 $4A93: CallTextEngine ($05B6) — START SHOWING the text (the text engine
+;                  then prints it from [$C824]:[$C82D]); ROM0 $0975 (HL = mode<<8|id);
+;   entry 1 $4A9A: RunTextHandler ($05F6) — COPY the text to the buffer [$C837]
+;                  (to its first $F0 byte); ROM0 $098A: the names the game copies
+;                  into its buffers (e.g. the item name in slot $C180 + $20 of the
+;                  field's "… uses 1 … on …" line — measured S150);
+;   entry 2 $4AA1: entry 0 + RequestScreenUpdate ($0609) — show it and wait until
+;                  it is drawn (47 `ld hl, $4102 / rst $10` sites: banks $07 $09 $0A $12
+;                  $15 $18 $50 $51 $55 $59).
+; S150: patched builds find a project's EDITED text here too (TEXT_SYSTEM "Edited
+; game text (S150)") — a copy of an edited text is copied by its own text bank.
+Func_Bank41_GetText:  ; $4A93 — entry 0: start SHOWING [mode][id] (CallTextEngine)
     ld de, $4007
     call $05B6
     ret
 
-Func_Bank41_PutText:  ; $4A9A — render the already-fetched string
+Func_Bank41_PutText:  ; $4A9A — entry 1: COPY [mode][id] to the buffer [$C837] (RunTextHandler)
     ld de, $4007
     call $05F6
     ret
 
-Func_Bank41_GetPutText:  ; $4AA1 — fetch (GetText) then render in one call
+Func_Bank41_GetPutText:  ; $4AA1 — entry 2: show [mode][id] and wait until it is drawn
     call Func_Bank41_GetText
     call $0609
     ret

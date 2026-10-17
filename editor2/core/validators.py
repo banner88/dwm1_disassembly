@@ -23,7 +23,7 @@ from . import scriptgen as S
 # --pin-templates after a successful regression build; None = check skipped
 # with a warning.
 TEMPLATE_SIZE = {
-    0x60: 1794,  # addr(SkillScriptPtrTable)-$4000 = $4702 — S140 (ARC CAP3a: + PlaceNum60 55 B (templates/place_number.asm, after the head) and the reader block's CopyExitListToBuffer link rows (+54 B); measured from the S140 example game.sym). Prev 1691 = addr(SkillScriptPtrTable)-$4000 = $469B — S137 (ARC CAP2c: + entry 13 PlaceFwdRender in the head (590 B) and CustomRenderCopy + entries 11-13 in the reader block (1,101 B); measured from the S137 example game.sym). Prev 1515 = $45EB — S136 (ARC CAP2b: the forwarding head 571 B = self-ID + 13 entries + PlaceOf / PlaceGo / the 8 forwarders + the globals, then bank $60's place reader block 944 B; measured from the S136 example game.sym). Prev 1306 = addr(CustomScriptMasterTable) $451A — S127 (CustomDrawTiles: op $24 $FFxx = a compiler command -> bank $77 entry 10, 13 B). Prev 1293 S123 r2 ($450D: + entry 12 CustomDescentFeel, 20 B). Prev 1273 S123 ($44F9 in the S123 example game.sym: + entry 11 NpcColourDraw, NpcColourRecord, the $A2 colour prefix — 203 B over S122's real $42E = 1070; the 678 below was never re-measured after S119's entries 9/10 + patch readers, so the pre-build check under-counted bank $60 by 392 B — DOC_AUDIT S123). Prev 678 S117 (558 + CustomReadInteract's vanilla VanillaNPCExtTable branch + CopyNPCListToBuffer with the $A0/$A1 condition prefixes; measured from the S117 game.sym). Prev 558 S105 reference game.sym (549 + CustomScriptRead's SKILL_SCRIPT_TYPE branch, 9 B). Prev 549 S101 reference game.sym (492 S97 + CustomMonsterCast + its call at the head of CustomStateRules). Prev: S97 reference game.sym (383 S94b -> 492 S97: entry-8 dw + CustomStateRules + the CustomReadStep call)
+    0x60: 1825,  # addr(SkillScriptPtrTable)-$4000 = $4721 — S150 (+ entry 14 TextOverride: the dw + 29 B — the S105 nickname redirect moved from ROM0 $00F0 + the forward to the text home bank; measured from the S150 example game.sym). Prev 1794 = $4702 — S140 (ARC CAP3a: + PlaceNum60 55 B (templates/place_number.asm, after the head) and the reader block's CopyExitListToBuffer link rows (+54 B); measured from the S140 example game.sym). Prev 1691 = addr(SkillScriptPtrTable)-$4000 = $469B — S137 (ARC CAP2c: + entry 13 PlaceFwdRender in the head (590 B) and CustomRenderCopy + entries 11-13 in the reader block (1,101 B); measured from the S137 example game.sym). Prev 1515 = $45EB — S136 (ARC CAP2b: the forwarding head 571 B = self-ID + 13 entries + PlaceOf / PlaceGo / the 8 forwarders + the globals, then bank $60's place reader block 944 B; measured from the S136 example game.sym). Prev 1306 = addr(CustomScriptMasterTable) $451A — S127 (CustomDrawTiles: op $24 $FFxx = a compiler command -> bank $77 entry 10, 13 B). Prev 1293 S123 r2 ($450D: + entry 12 CustomDescentFeel, 20 B). Prev 1273 S123 ($44F9 in the S123 example game.sym: + entry 11 NpcColourDraw, NpcColourRecord, the $A2 colour prefix — 203 B over S122's real $42E = 1070; the 678 below was never re-measured after S119's entries 9/10 + patch readers, so the pre-build check under-counted bank $60 by 392 B — DOC_AUDIT S123). Prev 678 S117 (558 + CustomReadInteract's vanilla VanillaNPCExtTable branch + CopyNPCListToBuffer with the $A0/$A1 condition prefixes; measured from the S117 game.sym). Prev 558 S105 reference game.sym (549 + CustomScriptRead's SKILL_SCRIPT_TYPE branch, 9 B). Prev 549 S101 reference game.sym (492 S97 + CustomMonsterCast + its call at the head of CustomStateRules). Prev: S97 reference game.sym (383 S94b -> 492 S97: entry-8 dw + CustomStateRules + the CustomReadStep call)
                  # (283 S53 -> 348 S70 -> 358 S70v3 (+2x5B wCustomY7Cmp arming): entry-7 dw + VanillaExitResolve +
                  # factored CopyExitListToBuffer in the template head; 383 S94: VanillaExitResolve rows keyed
                  # by (mapID, screen) — `db mapID, screen` with $FF = any screen)
@@ -258,6 +258,12 @@ def validate(prj, generated=None):
             MT.check(prj)
         except (MT.MonsterTextError, SP.SpeciesError) as e:
             errors.append(str(e))
+        # S150 (ROADMAP P3.6, PROJECT_COMPILER §2.58): gamedata.text — the game's
+        # own texts, edited: each encodes (textmark), names fit their field
+        from . import gametext as GT
+        _e, _w = GT.check(prj)
+        errors += _e
+        warnings += [w for w in _w if w not in warnings]
         # S109 (P3.10b, PROJECT_COMPILER §2.25): gamedata.arena — fees, masters,
         # team sizes; every fighting team member must be a drawable monster
         from . import arena as AR
@@ -1242,6 +1248,10 @@ def bank_usage(generated):
             elif 'TILEANIM DATA (generated' in text:       # S139 (ARC CAP2d)
                 used = ANIM_TEMPLATE_SIZE + _payload_bytes(
                     text.split('TILEANIM DATA (generated', 1)[1]) + 15
+            elif 'TEXT DATA (generated' in text:           # S150 (edited game text)
+                from .gametext import TEXT_HOME_FIXED, TEXT_BANK_FIXED, MARKER
+                fixed = TEXT_HOME_FIXED if 'TextOvrFind_T' in text else TEXT_BANK_FIXED
+                used = fixed + _payload_bytes(text.split(MARKER, 1)[1])
             elif 'BATTLE BANK DATA (generated' in text:    # S149 (ARC CAP5)
                 from .battles import BATTLE_TEMPLATE_SIZE
                 used = BATTLE_TEMPLATE_SIZE + _payload_bytes(

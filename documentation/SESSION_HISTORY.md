@@ -1,5 +1,41 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-15 (Session 148 — **ROADMAP ARC CAP4 "$3E" BOX BUILT: WHERE A SCRIPT ENDS — ONE RULE
+> FROM THE HANDLERS (ONLY THE SIX ROOM CHANGES THAT CLEAR wScriptStateFlags; `$3E` AND `$16` YIELD AND GO ON);
+> FOUND + FIXED: MAKE EDITABLE STOPPED AT `$16` AND ITS COPIES OF THE CASTLE / STARRY SHRINE / PRIEST FLOOR FELL
+> INTO ANOTHER SCENE (OLD COPIES REPAIRED ON OPEN); THE SCRIPT BANKS $0C-$0F RE-ANNOTATED FROM THE DECODER
+> (≈5,100 PARAMETER WORDS HAD TEXT PREVIEWS); THE REPLICA HALL WALKED — 16 CHECKS, 0 FAILED; S147 USER-CONFIRMED**
+> (user: "Continue on the 4 mb expansion" → the audit of the `$3E` box (ARC CAP's last open box; CAP5 waits until
+> a limit binds) + the found `$16` copy bug + the stale script-bank comments + 4 questions → "1) Yes 2) Do now
+> 3) replace 4) Test room + machine check"). **Built S148; USER-CONFIRMED 2026-10-16 ("I confirm S148 works").** Test ROM
+> `DWM-S148-replica-test.gbc` (`bd13e8a3…`, patched) = the user's project + THE REPLICA HALL. Pins unchanged:
+> the example `6b01894d…` (patched), the user's project `ae475c3a…` (patched) on the S147 and the S148 code.
+> **Built (tools + editor; no engine change):** `tools/script_param_counts.py` records `ends_script` (a path
+> stores 0 into `$D8D7`) → `extracted/script_param_counts.json` `_ends_script` = `$0F $3A $3B $43 $4F $58`;
+> `script_ops.TERMINAL` must equal it (verify check 5). The decoder no longer ends at `$3E`: 519 scenes stay,
+> 8 grow (+51 steps), `$00E5` "set in Farm", `story_state` decodes it (no hand-added flag), a grown scene is
+> never its own entry caller (`Catalogue.entry_caller`). `tools/extract_room.py` stops only at `goto` and the six
+> (`legacy_stop16` = the old tool); NEW `editor2/core/clone_scripts.py` + `Document._migrate_refresh_sprites`
+> repair old copies on open (an edited site → `WARNING:` in the open log). NEW `tools/recomment_script_banks.py`
+> re-annotates banks $0C-$0F + patches/bank_00e.asm (8,309 ops / 11,842 parameters / 2,235 texts / 97 tile
+> patches; labels 1,627 → 2,314; byte-identical; verify check 5); `gen_script_banks.py --apply` refused.
+> PROJECT_COMPILER §2.56, BANK04_SCRIPT_ENGINE "Where a script ends (S148)" + "Script Data Bank Annotations".
+> `EDITOR_REVISION` S148; help 10, 63.
+> **The acceptance (machine half):** `census_cutscenes.py` (+ `yields` / `after_end`, regenerated): the step
+> after every `$3E` / `$16` the game ran ran (7; 4 more into END), 0 words of a script after one of its end ops;
+> NEW `tools/walk_replicas.py` on the user's `.sav` — the REPLICA CASTLE's arrival from a gate runs the same 44
+> script words as the original Castle in the same ROM and gives the Herb, the REPLICA PRIEST heals and ends with
+> restore_bgm (his other line never, the room's song back), the guides / battle / doors: **16 checks, 0 failed**;
+> `--negative` (the same demo copied by the S92-S147 tool): 7 FAIL (the Castle copy ran 245 words and left for
+> the original Castle; the priest's other line + the heal tune); that old-tool demo opened by the S148 editor
+> builds the same ROM as the fresh one. `census_story_state.py --steps 29,30,31` 3 equal; `census_room_states`
+> 101 rooms 0 mismatched (+ `--build`).
+> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 1588 PASSED (+ `test_s148`, 11); test_app PASS;
+> test_canvas `--rom` PASS. Annotation (Iron Rule 6): bank $04 — the six end handlers, `$3E`, `$16` (both trees);
+> the four script banks (above). Found, not fixed: `walk_room_states.py` on the user's current `.sav`: 9 of 780
+> FAIL (a warp landing on another screen index) — identical on the S147 code (Open defects).
+> **Next:** CAP5 as a ceiling binds (the arc is otherwise complete), or Phase D/F annotation.
+
 > Last verified: 2026-10-13 (Session 147 — **ROADMAP ARC CAP5 SONGS BOX BUILT: ONE SOUND ID PER SONG (95 SONGS; S116
 > TOOK ONE PER CHANNEL ≈ 31) AND SONGS IN ANY BANK — $74, $75, THEN THE 4 MB ROM'S BANKS $80+ (THE 11TH DWM2 SONG
 > STOPPED THE USER'S PROJECT; THE WHOLE 31-SONG CATALOG NOW FITS); BANK $74 SongStart REUSES THE ENGINE'S OWN

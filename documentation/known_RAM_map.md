@@ -389,7 +389,13 @@
                  $0B CmpRoom_4839 / bank $06 ReloadNPCSheets write it, bank $77 entries 12 / 13
                  NpcSheetLoad read it (a custom room's sheets 3-5 also go to VRAM bank 1;
                  PROJECT_COMPILER §2.40 "S141") /
-                 wCustomPool $D561-$D5E4 (transient reserve; $D560 before S141, $D536 before S140, $D50B before S137, $D50A before S136, $D509 before S129, $D4F2 before S127,
+                 [S150] wTextOvrMode $D561 — 1 = the current text lookup is a COPY (ROM0
+                 SaveBankAndSwitchCopy, RunTextHandler's call), 0 = show; zeroed by every
+                 lookup (bank $60 TextOverride / the text home bank's TextOvrFind) /
+                 [S150] wTextOvrPtr $D562-$D563 — an edited text's address (show) or the
+                 copy buffer [$C837] (copy); SaveBankAndSwitch's level 2 reads it through
+                 DE = wTextOvrPtr - 2 * id (TEXT_SYSTEM "Edited game text (S150)") /
+                 wCustomPool $D564-$D5E4 (transient reserve; $D561 before S150, $D560 before S141, $D536 before S140, $D50B before S137, $D50A before S136, $D509 before S129, $D4F2 before S127,
                  $D2F0 before S126, $D2EF before S125, $D2E3 before S123, $D243
                  before S121) /
                  wPoolBounce $D5E5-$D664 (128 B, FX1: sleep-pool swap

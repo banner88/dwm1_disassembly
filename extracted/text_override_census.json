@@ -1,0 +1,9 @@
+{
+ "_generator": "tools/census_text_override.py (S150): every text slot of extracted/dialogue.json stub-called through ROM0 CallTextEngine / RunTextHandler in PyBoy on a build of census-all",
+ "slots": 3850,
+ "edited": 3379,
+ "show_ok": 3850,
+ "copy_ok": 3850,
+ "fails": [],
+ "redirect": 512
+}

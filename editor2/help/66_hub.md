@@ -66,8 +66,8 @@ own heal. It shows nothing; say it in a text.
 - One hub at a time: the rules pick one. A typical game: your hub for the main
   game (`post_game` OFF), the Castle once the story is over (`post_game` ON).
 - The WarpWing's description in the item menu still reads "Warps back to
-  castle instantly" — the game's own text (item descriptions are read-only
-  for now, Dialogue tab).
+  castle instantly" — the game's own text; rewrite it on the **Text** tab →
+  Items (S150).
 - Only your own rooms (or the Castle) can be the hub.
 - An old save sent to **the Castle** arrives in the throne room with the
   party healed, and the Castle's story state untouched (no priest scene).
