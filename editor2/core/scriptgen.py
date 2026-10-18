@@ -43,6 +43,10 @@ OPS = {
                                        # was a decompile_script-inherited
                                        # defect ($41/$07 class); never emitted
                                        # by any project content pre-S92.
+    'give_monster':       (0x18, 1),   # S152: enemy_stats_id -> first empty slot AND the
+                                       # party list when it has < 3 (bank $04
+                                       # ScriptCmd18_GiveMonster; the Give a monster
+                                       # step's "joins the party")
     'check_storage_full': (0x28, 1),   # branch if full
     'add_monster':        (0x29, 1),   # enemy_stats_id (egg path)
     'give_item':          (0x2A, 1),

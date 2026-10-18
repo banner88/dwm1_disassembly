@@ -1,5 +1,50 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-17 (Session 150 — **ROADMAP P3.6 / PHASE F T-AUTHOR BUILT: THE GAME'S OWN TEXTS EDITABLE —
+> ANY OF THEM, ANY LENGTH, ANY BANK; ONE HOOK WHERE THE GAME FINDS EVERY TEXT (ROM0 SaveBankAndSwitch'S LEVEL 1 ->
+> BANK $60 ENTRY 14 -> THE TEXT HOME BANK); THE TEXT TAB (DIALOGUE / BATTLE / ITEMS / MENUS & FIELD / CREDITS /
+> OTHER TABS) REPLACES THE READ-ONLY DIALOGUE TAB** (user: "Continue on the big ticket items"
+> → the audit of what is left after ARC CAP (8 candidates) → "1) Let's start with dialogue. 2) Everything but
+> differentiate by tab within editor. Samesize NOT preferred"). **Built S150; USER-CONFIRMED 2026-10-17 08:46 ("I confirm everything works").** Test ROM
+> `DWM-S150-scribe-test.gbc` (`95030d03…`, patched) = the user's project + 8 rewritten game texts + THE SCRIBE'S HALL /
+> FIELD. Example pin `96d05355…` (patched; was `92060f65…`, patched): ROM0 + bank $60 only (the example edits no text).
+> The user's project builds `22d857d9…` (patched; vs S149 `344a0f7b…`: ROM0 17 B + bank $60).
+> **The engine (measured, PyBoy):** every text the game SHOWS (ROM0 CallTextEngine $05B6) or COPIES into a buffer
+> (RunTextHandler $05F6) is found by SaveBankAndSwitch ($092F: level 1 = the mode's per-id TABLE in the current bank,
+> level 2 = table + 2 * id) — bank $55's debug viewer has its own copy; the field menu's INFO / ITEM / SKIL / OPTN are
+> tiles, not text. A text = its POINTER SLOT (bank, table + 2 * id). Patched: ROM0 `$00F0-$00FF` (S105's
+> LoadModeBaseRedirect, whose redirect moved into bank $60 entry 14 `TextOverride`) = `TextLevel1Hook` (the level-1
+> read + `ld hl, $600E / rst $10`) + `SaveBankAndSwitchCopy` (RunTextHandler's lookup: `wTextOvrMode` = 1);
+> `TEXT_OVR_HOME` (generated; 0 = no edits) -> the text home bank's `TextOvrFind` (pinned `templates/text_home.asm`:
+> a 32-B bank bitmap, `TextOvrDir` rows [bank, table, list, n], lists [id, bank, address]): an edited text returns
+> DE = `wTextOvrPtr` − 2 · id so the unchanged level 2 reads its address from WRAM; show: [$C824] = its bank;
+> copy: its own bank's `TextOvrCopy` (pinned `text_bank.asm`) writes it to [$C837]. Text banks $80+ numbered after
+> the battle banks (`editor2/core/gametext.py`). TEXT_SYSTEM "Edited game text (S150)", PROJECT_COMPILER §2.58.
+> **Data + tools:** `tools/dump_dialogue.py` measures each text id's SLOT (hooked at $0944 during the stub call),
+> ends a text at its first $F0 that is not a parameter (the battle tutorial writes `$FB $F0`), + 13 tables (bank
+> $4C modes 1-7: treats / veils / not enough MP, commands, the BeastTail, the CREDITS roles / names, "TO BE
+> CONTINUED"; bank $59: the battle tutorial; bank $41: item names, personalities, the families' default names);
+> `extracted/dialogue.json` regenerated (2,560 ids + 1,329 table rows; slots; `inside`). NEW `editor2/core/textmark.py`
+> = the lossless markup codec (2 styles; every original text reads back), `gametext.py` (index / schema
+> `gamedata.text` / plan / emit), `gametext_doc.py` (Document: edits with their copies), `app/text_tab.py`.
+> **The acceptance (machine half):** NEW `tools/census_text_override.py` — every slot (3,850) stub-called through
+> CallTextEngine AND RunTextHandler on a build with EVERY text edited (3,418 edits, 17 text banks): 3,850 / 3,850 +
+> 3,850 / 3,850 == the edit / the original, the nickname redirect 512 / 512; `--negative` (a directory byte; the copy
+> mark) fails both classes. NEW `tools/walk_text.py` on the user's `.sav`: the throne room's LADY ($0489, edited,
+> from a text bank) / a SOLDIER ($048C, original), the bag (FairyDew / BayLeaf + description), FairyDew used ("MILLY
+> pours 1 FairyDew on" — the name COPIED into slot $20 by the text bank), the SCRIBE (project text) + the QUOTER (a
+> project script showing $0489), a wild battle opening with the edited battle message 0 / 1: **17 checks, 0 failed**;
+> `--negative` (TextLevel1Hook's `rst $10` -> `nop`): exactly the 8 edited-text checks FAIL. The credits (game mode
+> 4 poked): the edited role / name rows were handed to the text engine from the text bank (the picture needs the real
+> ending). The item page draws in the same frames as S149 (16 lookups, frames 44-156, with and without edits).
+> **Annotation (Iron Rule 6):** ROM0 CallTextEngine / RunTextHandler / SaveBankAndSwitch / the $00F0 padding; bank
+> $41's three text entries (S150 corrected: entry 0 SHOWS, entry 1 COPIES, entry 2 shows + waits — the comments said
+> "fetch the pointer only" / "render"); NEW `tools/annotate_text_slots.py`: 3,249 head-table lines of 19 text banks
+> say which text id / table row / mode-list word they are (both trees; verify check 5). Clean `1ca6579…` byte-perfect.
+> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 1625 PASSED (+ `test_s150`, 21); test_app `--rom` PASS (59 OK, + `s150_text`;
+> the GUI build == the pin) / test_canvas `--rom` PASS (57 OK). **Next:** the next big ticket (gate looks of your own, items E9,
+> the title / ending E5, new-game start E3 a2) or Phase D/F annotation (the text banks' strings, T2…Tn).
+
 > Last verified: 2026-10-16 (Session 149 — **ROADMAP ARC CAP5 BATTLES BOX BUILT: ENEMY ROWS PAST 640 (UP TO 3,321 —
 > BANK $6B, THEN BATTLE BANKS $80+) AND BATTLE LISTS PAST 128 (UP TO 3,968, 16-BIT NUMBERS); FOUND + FIXED: THE MONSTER
 > CONSTRUCTOR GAVE A PROJECT ROW A FIXED / JUNK GENDER, A RIVAL TAMER'S NAME (EID 561) OR THE EGG FLAG (EID 606) — TWO

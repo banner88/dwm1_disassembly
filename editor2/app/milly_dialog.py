@@ -222,6 +222,11 @@ class MillyHookDialog(QDialog):
             self.prev.set_image(None)
         self.prev.set_boxes([(self.x.value(), self.y.value(), QColor(255, 120, 200), 'M')])
         self.problem.setText('')
+        srid = self.s.doc.new_game_start_room()         # S152: New game… starts in a room
+        if srid is not None:
+            nm = self.s.doc.room(srid).get('name') or srid
+            self.problem.setText(f'New game… starts the game in {nm}: Milly arrives THERE (the '
+                                 'dresser never comes), so this arrival is not used.')
 
     def _roots_changed(self, *_a):
         if self._building:

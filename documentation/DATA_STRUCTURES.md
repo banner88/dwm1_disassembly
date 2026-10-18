@@ -406,6 +406,39 @@ names the item from **`wItemInUse` $D565**; the count lists cover 128 ids. Measu
 `tools/walk_items.py` (the user's save: bought, used, given, sold, in battle, the WarpWing /
 a WarpWing-based item out of a gate, a lost battle — 33 / 33).
 
+### New game start (S152 — PyBoy-measured on the original ROM; patched builds: ROADMAP E3 a2, PROJECT_COMPILER §2.60)
+
+- **The title's NEW GAME** (bank $15, annotated S152: `TitleContinue` / `TitleNewGame` /
+  `TitleNewGameInit` $462D): the init zeroes HRAM $FF8A-$FFAA and WRAM $C8EA-$D9E9 (bank $73
+  entry 7), sets the map at $15:$4652 (`ld a, $2f / ld [wMapID], a / ld [wMapIDMirror], a`)
+  and enters the field.
+- **The first field load is a NON-warp load** (`wIsPlayerChangingMaps` = 0, `$C8EA` = 0):
+  bank $01 `LoadFieldTilesDMA` (`jr_001_4464`) takes the player's position from
+  **`DefaultSpawnTable`** ($01:$4506, 4 bytes a map: X lo / hi, Y lo / hi in pixels = cell ×
+  16 + 8 → HRAM $92 / $93 / $95 / $96; map $2F → cell (4, 11), Terry's bed). 96 rows, maps
+  $00-$5F — it ends where `ScanPartySlotTable` begins ($4686); the S66 note said 107 and the
+  auto-label was `NPCWalkDataTable` (re-sectioned + renamed S152, both trees,
+  `tools/resection_default_spawn_01.py`). Only a new game takes this path; every other load
+  is a warp (the mailbox `wWarpGateId` / `wWarpFlag` / `wWarpSpawn*` $C96F-$C972) or a
+  continue (the save's position).
+- **`ClearAnimationState` (bank $01) on that first load zeroes $D92A-$D9E9 again** — the
+  world step counters, the room-state bytes and the game's flags $0000-$0277. Anything a new
+  game must start with in that range is set by the first room's scene, not before.
+- **The opening's state, measured at the King's second audience** (the real intro played:
+  bedroom → dresser → roots room → the old man's walk → the Castle → the King → Pulio's farm,
+  Slib picked up → the King): flags `$0000` (the bedroom done: the end of the bedroom script,
+  pos 1039; `$D974` := 1 at pos 1041), `$0001` (arrived at the Castle — Castle script 0, screen 1), `$0002` (the starter
+  given: Castle script 0's `add_monster` EID 1 = Slib into the farm, then the flag), `$0005`
+  (met Pulio — Farm script 26), `$0007` (the first monster taken into an empty party — bank $12
+  $4EE1, Pulio's farm menu state 6, engine code), `$0008` (the second audience: Pulio to the
+  dungeon, the gates open); room bytes `$D92B` Castle screen 1 := 1, `$D92C` Castle screen 5 :=
+  3, `$D92D` GreatTree screen 0 := 1, `$D93C` Gate Hub screen 1 := 1, `$D93F` / `$D940` / `$D944`
+  Farm screens 0 / 1 / 6 := 1, `$D974` bedroom screen 4 := 1. With those set the game's Castle
+  plays no opening scene and gives no Slib (`walk_opening.py`; with them unset its opening
+  plays — the control).
+- Gold, items and the party start empty; the first monster is Slib, waiting in the FARM
+  (op `$29` = storage only) until Pulio's menu PICK UP.
+
 ### Encounter Runtime Flow (verified end-to-end, June 2026)
 
 The full chain from "player takes a step" to "wild battle starts". Every
@@ -1340,7 +1373,7 @@ to `RoomScreenPtrTable` (`$49b5`) instead of the real `$4974` data (`$4911`) —
 the correct table. Method + rule: KEY_LESSONS "Session 14 Lessons — Bank $0B repointing"; the `disassembly/bank_00b.asm` gate/sprite diff is a worked re-sectioning example.
 
 **All other 19 targets from the original 22 have been fixed** with proper labels
-and LOW/HIGH conversions. New labels created: NPCWalkDataTable, ScreenTransDataTable,
+and LOW/HIGH conversions. New labels created: NPCWalkDataTable (S152: `DefaultSpawnTable`), ScreenTransDataTable,
 SpriteFrameDataTable (S117: really the item records — `ItemInfoTable`, "Shops (S117)"), MapNPCPosDataTable, SkillMPCostTable (×3, renamed S51), TileRefLookupTable,
 FieldPtrLookupTable, ItemSlotPtrTable, EnemyGroupTable, TransitionLookupTable,
 RoomAttrDataBlocks, PaletteColorData, AttrMapData, AttrMapDataB, TextDataPtrLookup,

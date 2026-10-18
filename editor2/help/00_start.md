@@ -16,7 +16,9 @@ built from it (the original ROM is never changed).
   game plays the scene right here, with sound, set up for you (the intro
   chain included); **＋ New cutscene** makes your own scenes on the room
   itself, in tiles, with named NPCs and cast members, previewed instantly or
-  played in the game.
+  played in the game; **New game…** (S152) says where a new game starts (the
+  intro, or one of your rooms) and whether the original opening counts as played
+  — see *Your own opening*.
 - **Gates** — which custom rooms appear on which gate floors, per-gate
   settings (floor count, boss floor, hand-made gates, project enemies) and
   **new gates** of your own (a copy of a vanilla gate; entrances on the Rooms
@@ -85,6 +87,10 @@ Tabs marked with a roadmap box (Balance) are not built yet.
 monsters, levels…), the story spine, quests (Rooms tab → NPC → Quest…), locked
 doors (door → Lock until…), music by flag and shop item sets — see *Story
 checks, quests and the story spine*.
+
+**Your own opening (S152):** NEW GAME → your first room → scenes with no control →
+your King → the first monster from a farm keeper → the first gate, step by step — see
+*Your own opening*.
 
 **Every edit can be undone** (Edit → Undo / Redo; View → History shows
 the list). File → Save saves the project.

@@ -78,7 +78,8 @@ GOLD_MAX = 99999                   # ROM0 CompareGold caps the purse here
 ITEM_MIN, ITEM_MAX = 1, 127   # S151: the game's 1-43 + the project's items 44-127 (items.py)
 PROTECTED_SPECIES = range(215, 221)  # Iron Rule 8: not monsters
 
-CMD_KINDS = {'take_item': 0, 'give_gold': 1, 'take_gold': 2, 'give_item': 3}
+CMD_KINDS = {'take_item': 0, 'give_gold': 1, 'take_gold': 2, 'give_item': 3,
+             'name_given': 4}   # S152: the monster just given gets a name (+ the naming screen)
 
 QUEST_KEYS = ('id', 'name', 'giver', 'requires', 'not_yet', 'offer', 'accept', 'decline',
               'objective', 'progress', 'take', 'reward', 'complete', 'done', 'bag_full',
@@ -333,6 +334,12 @@ def cmd_record(kind, params, ctx, prj=None):
         it = _int(params.get('item'), ctx + '.item', ITEM_MIN, ITEM_MAX)
         _item_exists(prj, it, ctx + '.item')
         return (code, it, _int(params.get('count', 1), ctx + '.count', 1, 20))
+    if kind == 'name_given':
+        # S152: [ask] — the monster op $29 / $18 just made (slot [$DA14]): a row without a
+        # nickname of its own gets the species' default nickname (text mode 7, the join
+        # naming screen's pre-fill); ask = 1 also points the naming screen at it (the
+        # script opens it next: op $04 15)
+        return (code, 1 if params.get('ask') else 0)
     a = _int(params.get('amount'), ctx + '.amount', 1, GOLD_MAX)
     return (code, a & 0xFF, (a >> 8) & 0xFF, a >> 16)
 

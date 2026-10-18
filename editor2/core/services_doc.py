@@ -63,6 +63,17 @@ class ServicesMixin:
                 if d.get('id') == ft.get('text'):
                     boxes = d.get('boxes')
             sv['first_time'] = {'boxes': boxes, 'flag': ft.get('flag'), 'text': ft.get('text')}
+        fm = sv.get('first_monster')
+        if isinstance(fm, dict):                                  # S152: the starter
+            boxes = None
+            for d in self.custom.get('dialogue', []):
+                if d.get('id') == fm.get('text'):
+                    boxes = d.get('boxes')
+            speaker = next((dd.get('speaker') for dd in self.custom.get('dialogue', [])
+                            if dd.get('id') == fm.get('text')), None)
+            sv['first_monster'] = {'enemy': fm.get('enemy'), 'flag': fm.get('flag'),
+                                   'boxes': boxes, 'text': fm.get('text'),
+                                   'speaker': speaker, 'name': fm.get('name', 'ask')}
         return sv
 
     def service_npcs(self):
@@ -188,12 +199,18 @@ class ServicesMixin:
         return 'monster'
 
     # ------------------------------------------------------------ editing
+    FIRST_MONSTER_TEXT = [['This monster is', 'yours now!'],
+                          ['Choose PICK UP to', 'take it with you.']]
+
     def make_service_npc(self, room, key, state_idx, index, kind, lines=None,
-                         first_time=None):
+                         first_time=None, first_monster=None):
         """NPC npcs[index] of (room, key, state) becomes the `kind` service.
         lines = a line set id (None = the game's lines); first_time = {"boxes":
         [[line, line], …], "flag": <name>} (the flag is created when new) or
-        None. Returns the script id."""
+        None. S152: first_monster (a farm keeper only) = {"enemy": <enemy row>,
+        "flag": <name>, "boxes": [[line, line], …] or None} — the first talk puts
+        that monster into the farm and opens the farm menu (Pulio's way).
+        Returns the script id."""
         if kind not in SV.KINDS:
             raise ValueError(f'unknown service {kind!r}')
         if lines is not None:
@@ -218,11 +235,40 @@ class ServicesMixin:
             flag = first_time.get('flag')
             if not flag:
                 raise ValueError('the first visit needs a flag (it remembers the visit)')
+            # S152: the flag's NAME is its slug ("Pulio met" -> "pulio_met") — the spec
+            # carried the typed name and the build refused it ("neither a named flag …")
+            flag = self._slug(flag) or flag
             if not any(f.get('name') == flag for f in self.flags()):
-                self.add_flag(flag, f'{SV.KINDS[kind]["name"]}: met')
+                flag = self.add_flag(flag, f'{SV.KINDS[kind]["name"]}: met')
             from editor2.core.breeders_doc import fit_boxes       # S127 r2: wrap long lines
             spec['first_time'] = {'text': self._talk_entry(sid, fit_boxes(first_time['boxes'])),
                                   'flag': flag}
+        if first_monster:
+            if kind != 'farm':
+                raise ValueError('only a farm keeper hands over the first monster')
+            if first_monster.get('enemy') is None and first_monster.get('species') is not None:
+                first_monster = dict(first_monster, enemy=self.starter_enemy(
+                    first_monster['species'], first_monster.get('level', 1)))
+            if first_monster.get('enemy') is None:
+                raise ValueError('pick the first monster (a species and level, or an enemy row)')
+            flag = self._slug(first_monster.get('flag') or 'first monster given')
+            if not any(f.get('name') == flag for f in self.flags()):
+                flag = self.add_flag(flag, f'{SV.KINDS[kind]["name"]}: the first monster was given')
+            from editor2.core.breeders_doc import fit_boxes
+            boxes = first_monster.get('boxes')
+            if boxes is None:
+                boxes = self.FIRST_MONSTER_TEXT
+            fm = {'enemy': first_monster['enemy'], 'flag': flag}
+            sp = first_monster.get('speaker')
+            if boxes:
+                fm['text'] = self._talk_entry(sid + '_first', fit_boxes(boxes, speaker=sp))
+                if sp is not None:
+                    for dd in self.custom.get('dialogue', []):
+                        if dd.get('id') == fm['text']:
+                            dd['speaker'] = sp
+            if first_monster.get('name', 'ask') != 'ask':
+                fm['name'] = first_monster['name']
+            spec['first_monster'] = fm
         if prev is not None:
             prev['service'] = spec
         else:
@@ -256,6 +302,9 @@ class ServicesMixin:
         for k in ('intro', 'not_yet', 'after'):          # S127: a breeder's own words
             if sv.get(k):
                 drop.add(sv[k])
+        fm = sv.get('first_monster')
+        if isinstance(fm, dict) and fm.get('text'):        # S152: the starter's words
+            drop.add(fm['text'])
         if drop:
             self.custom['dialogue'] = [d for d in self.custom.get('dialogue', [])
                                        if d.get('id') not in drop]

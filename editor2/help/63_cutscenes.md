@@ -181,6 +181,21 @@ room's list, the editor does that for you.
   those OFF). **Plays once** — a flag of its own is turned on when it starts,
   so it never plays again (saved with the game).
 
+**A walk over several screens (S152 r2) — the game's way.** A scene plays on one
+screen, and the player cannot walk off it in a scene (the screen would scroll while
+the walk still runs and leave him out of sight — the build says so). Do what the game
+does when the old man walks Terry up GreatTree: walk everyone to the edge, then
+**Warp the player** to the next screen's edge tile; that screen's own entry scene
+(Plays once) goes on. The helper who walks along is an ordinary NPC of each screen,
+shown only while the walk is on (NPC panel: **shown when → Flags…** — the first scene's flag ON, the next one's OFF), so he
+is already standing there when the screen fades in. Into a door: walk into the hole,
+*Sound effect* `$51` (the door), *Disappear* — and keep the door itself out of the room
+state the scene plays in (a door fires the moment the player steps on it, even in a
+scene: GreatTree's door is not there in the state the old man's walk plays in; the build
+refuses it otherwise). A player who disappeared before a warp
+is shown again when he arrives (the editor adds that to the room he arrives in; a
+game room cannot do it — the build asks you to make him *Appear* first).
+
 **What does a step do?** Every step's form starts with a line saying what it does;
 hover a step in the list, a step in **＋ Add step ▾**, or any field of the form for
 more (e.g. *Wait until everyone stops* = wait for the walks / hops / flights that were
@@ -236,6 +251,7 @@ YES / If NO / Then / Otherwise* row; ▲ ▼ ⧉ ✕ move, duplicate, remove):
 | Name the hero | opens the game's naming screen (the King's "What is your name?"): the player types a name of up to 4 letters or takes the one offered (MILLY with the Milly hook, else TERRY); the scene goes on after "… okay?" YES. Texts after it can use the name (Insert ▾ → the hero's name) |
 | Heal the party | every monster's HP and MP back, ailments cured (the game's own heal; silent) |
 | Take an item, Give / take gold, Refresh the room (S129) | as in conversations — *Give an item* can give several (all or none); *Refresh the room* ends the scene (the room loads again, its states and music pick again) |
+| Give a monster (S152) | into the **farm** (the default — the player picks it up from a farm keeper's menu, as the game's first monster) or, ticked, **straight into the party** when it has room; **the player names it** opens the naming screen for it (otherwise it gets its species' name) |
 | Turn flags ON / OFF, Give an item / a monster, Battle, Warp the player, Stop here | as in conversations (S151 r2: a Give with no room ends the scene after its "full" words, unless *When there is no room* says carry on); *Warp the player* can go **home — the hub** (see *The hub*), to any of your rooms or any game room — only to a screen that room has (a missing screen would crash the game; the build stops) |
 
 **Where the player stands.** In an entry scene the walks of the player are

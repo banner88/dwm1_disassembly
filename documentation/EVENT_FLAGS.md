@@ -268,7 +268,21 @@ Reserved: the editor's named pool is `$1000-$179D` (`FLAG_SAFE_RANGES`); scenes 
 conditions refer to them as `hook:milly` / `hook:milly_arrived` (listed in the flag
 pickers while the hook is on). Byte `$D233` (`wExtFlags + $F3`), masks `$01` / `$02`.
 Saved / cleared like every extended flag (PyBoy S121: CONTINUE on a save with `$179F` →
-Milly).
+Milly). (S152) The hook's whirl also sets `$0000` and `$D974` := 1 — the bedroom tail it
+replaces set them at its end (pos 1039 / 1041); before S152 they stayed OFF after the whirl.
+With a custom new game (`custom.new_game`) `$179E` also marks the start room's first scene
+(hook off) and `$179F` is ON from the first frame of a room start with the hook.
+
+## The original opening's flags (S152 — measured, PyBoy on the original ROM)
+
+At the King's second audience (the intro played for real) the opening has set `$0000` (the
+bedroom done), `$0001` (arrived at the Castle), `$0002` (the starter given), `$0005` (met
+Pulio), `$0007` (the first monster taken — engine, bank $12 $4EE1) and `$0008` (the second
+audience), plus the room bytes `$D92B` 1, `$D92C` 3, `$D92D` 1, `$D93C` 1, `$D93F` 1, `$D940`
+1, `$D944` 1, `$D974` 1. A new game's first field load zeroes $D92A-$D9E9 (bank $01
+`ClearAnimationState`), so a romhack that skips the opening sets them in its first room's
+scene: the editor's New game… "as after the original opening" (PROJECT_COMPILER §2.60;
+DATA_STRUCTURES "New game start (S152)").
 
 ## Analysis Tool
 

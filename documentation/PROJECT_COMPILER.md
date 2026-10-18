@@ -592,6 +592,7 @@ registering an emitter; nothing existing changes.
 | `gd_arena_masters_04` `gd_arena_masters_50` `gd_arena_fees` `gd_arena_team_sizes` (S109) | `gamedata.arena` (§2.25; editor2/core/arena.py) | `region:` in banks $04 / $50 / $09 / $6E | those banks |
 | `anims6f` `anims70` + `gd_anim_routine` `gd_anim_cmd` (S112) | `custom.animations` + `gamedata.skills.<id>.presentation` (§2.28; editor2/core/battle_anims.py) | `file:patches/bank_06f.asm` / `bank_070.asm` + `region:` in bank $5F | `$6F` `$70` $5F |
 | `hooks79` (S121) + regions `milly_bedroom_script` `milly_shape_04a` `milly_shape_04b` `milly_player_sheet` `milly_naming_icon` `milly_name_tiles` | `custom.milly_hook` (§2.34; editor2/core/milly.py) | `file:patches/bank_079.asm` + `region:` in banks $0E / $04 / $01 / $09 / $4F | `$79` |
+| region `newgame_start` (S152) + bank $79 entry 2 `NewGameStart` / `NewGameData` | `custom.new_game` (§2.60; editor2/core/newgame.py) | `region:patches/bank_015.asm#newgame_start` (+ `hooks79`) | `$15` `$79` |
 | `text_sprites06` (S121) | `custom.rooms[].text_keeps_sprites` (§2.34) | `region:patches/bank_006.asm#text_sprite_mode` | `$06` |
 | `enc76` (S114) | `custom.encounter_lists` + `custom.rooms[].encounters` + `custom.gates[].encounters` (§2.30; editor2/core/encounters.py) | `file:patches/bank_076.asm` | `$76` |
 | `lay_copies_10` `lay_copies_11` (S107 2b) + `ns_follower_layout` (in the species list) | `gamedata.art` + `custom.species` (§2.23 "Walking layouts"; editor2/core/walk_layouts.py) | `region:` in banks $10 / $11 | those banks |
@@ -669,7 +670,9 @@ user-confirmed hand-authored code:
   `templates/PINNED_SHA256`.
 * `editor2/core/templates/bank_079_head.asm` (S121) — bank byte, 2-entry table, entry 0
   `MillyShapeTable` / entry 1 `MillyPlayerSheet` (§2.34); only emitted with the hook on;
-  pinned `3d7cbdbe…ef95`; no TEMPLATE_SIZE (the bank holds a few hundred bytes).
+  pinned `3d7cbdbe…ef95`; no TEMPLATE_SIZE (the bank holds a few hundred bytes). S152 re-pin
+  (§2.60): + entry 2 `NewGameStart` (a 3-entry table); emitted with the hook on OR a custom
+  new game (`custom.new_game` active); pinned `a045c49b…a8a9`.
 * S136 re-pins (§2.45, ROADMAP ARC CAP2b): `bank_060_head.asm` (the forwarding head: entries
   0/1/2/4/5/8/9/10 → `PlaceOf` / `PlaceGo`, `SkillScriptRead`, the vanilla branches; the readers
   moved out) — current value in `templates/PINNED_SHA256`; NEW `place_readers.asm` (the reader block
@@ -4615,6 +4618,113 @@ code that reads it: DATA_STRUCTURES "Items (S151)".
   refusal); `test_app` `s151_items` (+ the conversation dialog's "no room" choice); the S117
   price tests read bank $77; the S117 / S126 shop and service script shapes carry op `$3C`.
 
+## §2.60 S152 — THE OPENING: where a new game starts, the original opening as played, the first monster (ROADMAP E3 a2)
+
+**Built S152 (r2 / r3 after the user's tests); USER-CONFIRMED 2026-10-18 17:20 ("Great it all works", on r3)** (user: "giving player new monster and setting up farm as a
+simple button in editor - like with pulio in original" … "Make a new project and set up an
+alternative where waroubou greets Milly (and asks name) in roots room … See if there are any
+issues doing this purely via editor and make a new help detailing every step … editor probably
+SHOULD have that capability. New game -> where to start -> etc."). Engine (a same-size region
+in bank $15, bank $79 entry 2, bank $77 story command 4) + compiler (`newgame.py`, services /
+cutscenes / conversations) + editor (Cutscenes → New game…, the farm keeper's first monster,
+the Give step's party / naming choices). Help `75_opening.md`.
+
+- **The game's new game (measured S152, PyBoy on the original ROM):** bank $15
+  `TitleNewGameInit` ($462D) zeroes HRAM $FF8A-$FFAA and WRAM $C8EA-$D9E9 (bank $73 entry 7),
+  then `ld a, $2f / ld [wMapID], a / ld [wMapIDMirror], a` at $15:$4652; the first field load
+  is a NON-warp load (`wIsPlayerChangingMaps` = 0, `$C8EA` = 0): bank $01 `LoadFieldTilesDMA`
+  takes the spawn from `DefaultSpawnTable` (map $2F → cell (4, 11), Terry's bed; 96 rows,
+  re-sectioned S152 — DATA_STRUCTURES "New game start (S152)") and `ClearAnimationState` zeroes
+  $D92A-$D9E9 AGAIN (the step counters and the game's flags $0000-$0277).
+- **Schema:** `custom.new_game` = `{start: "intro" | "room", at: {room, screen, x, y, face},
+  story: "untouched" | "opening_done"}`; intro + untouched (or no key) = the game's own start,
+  the region keeps the vanilla 8 bytes (the example). Refused: intro + opening_done without the
+  Milly hook ("the intro plays the opening the flags say is over"); a start room that is not a
+  room of the project / a placeholder / lacks the screen; unknown keys.
+- **Emit:** region `newgame_start` = `ld hl, $7902 / rst $10` + 4 `nop` → bank $79 entry 2
+  `NewGameStart` reads `NewGameData` (`db map, region + 1, cell?` / `dw X px, Y px` /
+  `dw ext flag …, $FFFF`): a room start goes through the WARP MAILBOX (`wIsPlayerChangingMaps`
+  = 1, `wWarpGateId` = the map id — left 0 it loaded the Castle, measured —, `wWarpFlag` = 0,
+  `wWarpSpawn*`), so the first load is a warp arrival and the table is not read; the region via
+  `wWarpRegion` (bank $73 RegionCommit, as the Milly hook's whirl). Only EXTENDED flags are set
+  there ($179F "the player is Milly" with the hook) — `ClearAnimationState` would wipe the
+  game's own.
+- **The original opening as played (`opening_done`, measured on the original ROM with the real
+  intro played to the King's second audience):** flags `$0001` (arrived at the Castle), `$0002`
+  (the starter given — Castle script 0), `$0005` (met Pulio), `$0007` (the first monster taken
+  — bank $12 $4EE1, engine), `$0008` (the King's second audience); room bytes `$D92B` := 1,
+  `$D92C` := 3, `$D92D` := 1, `$D93C` := 1, `$D93F` := 1, `$D940` := 1, `$D944` := 1; + `$0000`
+  / `$D974` := 1 (the bedroom done) for a room start. `newgame.lower` (before `milly.lower`)
+  puts them into the start room's FIRST scene (`__game_start`: entry, once `$179E`, the start
+  cell, `set` + `ram` steps — `ram` = a generated step, `cutscene_build` op `$12` / `$13`) or,
+  with the hook, into the hook's arrival scene (`_story_steps`; a room start also moves the
+  hook's arrival to the start cell).
+- **The Milly hook's whirl (S152 fix):** the hook replaced the vanilla bedroom tail (pos
+  951-1044), whose END sets `$0000` and `$D974` := 1 — measured OFF after the whirl
+  (`walk_opening.py --variant intro` failed its story check on `$0000`); the hook script now
+  sets both before the warp (5 words; still the tail's 94).
+- **Story command 4 `name_given [ask]` (bank $77):** the monster op `$29` / `$18` just made
+  (slot `[$DA14]`) had NO nickname — the constructor zero-fills +$01, shown "0000" (measured on
+  the demo's first build) — now gets the species' default nickname (text mode 7, as the join
+  naming screen pre-fills); `ask` = 1 also sets the naming screen's globals as `ScriptCmd3A`
+  does (`$C8F2/3` the nickname, `$C8F4` species + $10, `$C8F5` species, `$C8F6` gender,
+  `$D7CA` / `$D7CB`); the script then runs `close_text`, op `$04` 15, `init_dialog` (the game's
+  order around a naming screen — without the re-opened dialog the farewell after the menu
+  waited forever, measured).
+- **A farm keeper's first monster (`services[].first_monster` = `{enemy, flag, text?, name?}`):**
+  Pulio's way — the first talk: storage-full test, its words, `add_monster` (op `$29`, the
+  FARM), story command 4, its flag, the naming screen, the greeting, then the farm menu (PICK UP
+  takes it; the engine sets `$0007` when the party was empty). Later talks: the farm as usual.
+  Farm keepers only (refused otherwise). Document: `make_service_npc(…, first_monster=)` with a
+  species / level makes a starter enemy row (`breeders_doc.starter_enemy`, the mate stats).
+- **The Give a monster step (cutscenes / conversations):** `to: "party"` = op `$18` (the party
+  when it has room) instead of op `$29`; `name: "ask"` = the naming screen; every given monster
+  gets story command 4.
+- **Flag names = slugs (S152 fix, pre-existing):** a service's first-visit / first-monster flag
+  typed with spaces ("Pulio met") was stored as typed and the build refused it ("neither a named
+  flag …"); `services_doc` slugs it (`pulio_met`).
+- **Editor:** NEW `newgame_doc.py` (Document: `new_game` / `set_new_game` / `new_game_problem` /
+  `new_game_start_room`), NEW `app/newgame_dialog.py` (Cutscenes → **New game…**: the start, the
+  room / screen / cell picture with **S**, the facing, the story; refuses intro + opening_done
+  without the hook); the service dialog's "hands over the first monster" box; the cutscene /
+  conversation Give step's "straight into the party" and "the player names it" ticks.
+- **Acceptance (PyBoy, NEW `tools/walk_opening.py`):** a NEW project made through the editor's
+  window and dialogs (offscreen: MainWindow, the Milly hook / New game / service dialogs,
+  undo-able commands): the roots room (Milly) with Warubou's naming, GREATLOG PATH (2 screens,
+  two entry scenes walking her up with no control), GREATLOG THRONE (the King's scene), GREATLOG
+  FARM (LOGGO = the first monster, a DragonKid L1; the LOG GUARD's two talk scenes + a room
+  state), THE GATE GLADE's portal → GREATLOG GATE (new gate 32, 3 floors) → STUMP HOLLOW (Make
+  boss…). `walk` from the title: room start **34 checks, 0 failed**; intro start (the game's
+  bedroom, the hook's whirl) **36, 0 failed** (r2: 38 / 40 — + Milly on screen the whole path
+  walk, Warubou there at each fade-in, into the hole, shown in the throne room; the r1 build
+  FAILS 3; r3: 39 / 41 — + ONE room load path → throne, the r2 build 2); `--negative` (the region back to the vanilla
+  bytes) FAILS the start checks; `make --story untouched` FAILS the story flags / room bytes /
+  the game's Castle (its opening scene plays). Help 75 written from this project; the friction
+  found on the way is fixed above (the nameless monster, the stuck farewell, the flag slugs) or
+  listed in the help ("Good to know").
+- **r2 (the user: "In second screen, milly disappears … See how vanilla game does it"):** a
+  PLAYER walk past the screen edge in a scene is refused (`s_walk`: the scroll started while
+  the walk ran and left her a row below the new screen, measured); the game's way = walk to the
+  edge, `move` (op `$0F`) to the next screen, its own entry scene goes on (GreatTree map $01
+  script 0). The player's hidden bit (HRAM `$FF90` bit 6, op `$0D 0,$FF90,$40`) survives a room
+  change (measured: invisible in the next room): `lower_project` first runs
+  `_show_after_hidden_warps` — a scene that hides the player and later warps (no Appear
+  between; branches followed) gives each destination screen of the project a first entry
+  scene `__show_player_<screen>` (show the player, `_then_next`); a game room as the
+  destination is refused. Byte-neutral for projects without such a warp (the example pin).
+- **r3 (the user: "then white screen AGAIN and room appears AGAIN"):** a walk-on exit fires
+  during a scripted walk (measured: the path door on the hole fired under the scene's walk,
+  the throne room loaded, the scene went on there and its Warp loaded it again). `s_walk`
+  refuses a player walk whose L-path steps onto an exit of a state the scene can play in
+  (`_states_during`: state 0 + every state a state rule may pick whose terms do not contradict
+  the scene's `once` (OFF) / `when_on` / `when_off`); the remedy, as GreatTree (screen 0: no
+  exits in state 0, the door in state 1): the door in a state picked by a rule on the scene's
+  flag. Byte-neutral.
+- Tests: `test_compiler.test_s152` (13 + 3 r2 + 2 r3: the regions, NewGameData, the story steps, `lower`, the
+  refusals, the hook's whirl words, `name_given`, the first monster's Document + ops, `--rom`:
+  the region bytes / entry word / NewGameData); `test_app` `s152_opening`; the target list + the
+  bank $15 file; `TEMPLATE_SIZE[$77]` 2200.
+
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 
 The user's "fastest way to test": hook a custom room onto a door the player
@@ -4742,6 +4852,11 @@ sha `eb0f0997…`), bank $71 head 1070 B (`MusicRulePick`; sha `cbd0cdec…`).
 
 **S151 re-pin (§2.59):** bank $77 head 2074 B (entries 16-18 `ItemRecordCopy` /
 `BattleItemProbe` / `BattleItemPick` + `BattleSkillOf`; sha `3ee9e06e…`).
+
+**S152 re-pins (§2.60):** bank $77 head 2200 B (`StoryCommand` kind 4 `name_given` + two
+`jr` → `jp`; sha `5e987efb…6f3`; measured `ShopPtrTable` $4898 in the S152 opening demo
+game.sym); bank $79 head + entry 2 `NewGameStart` (sha `a045c49b…a8a9`). The example pin
+moves for bank $77 only: `7e8cb031…` (patched; was `046319ef…`, patched).
 
 ## New verified opcodes (S70, handler-byte-verified)
 

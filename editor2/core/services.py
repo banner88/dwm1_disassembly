@@ -530,7 +530,8 @@ def lower(prj):
         kind = sv['kind']
         if KINDS[kind].get('breeding'):
             continue                     # S127: breeders.lower_talk, after the rooms resolve
-        unknown = set(sv) - {'kind', 'lines', 'first_time', 'comment', 'ask', 'bye'}
+        unknown = set(sv) - {'kind', 'lines', 'first_time', 'comment', 'ask', 'bye',
+                             'first_monster'}
         if unknown:
             raise ServiceError(f"{ctx}: unknown keys {sorted(unknown)}")
         sid = sv.get('lines')
@@ -638,6 +639,46 @@ def service_ops(prj, kind, sid, sv, ctx):
             'label:known'] + box + [greet, 'label:open']
     else:
         lead = box + [greet]
+    fm = sv.get('first_monster')
+    if fm is not None:
+        # S152 (user: "giving player new monster and setting up farm as a simple button in
+        # editor - like with pulio in original"): the game's own Pulio — Slib waits in the
+        # FARM (the Castle's add_monster EID 1, op $29 = storage only) and Pulio's menu
+        # opens on "Choose [PICK UP] to take the monster" (taking it into an empty party
+        # sets the game's flag $0007, bank $12 $4EE1). Here: the first talk says its words,
+        # puts the monster into the farm (op $29), marks it given (its own flag) and opens
+        # the farm menu at once — the player picks it up. Later talks: the farm as usual.
+        if kind != 'farm':
+            raise ServiceError(f"{ctx}.first_monster: only a farm keeper hands over the "
+                               "first monster")
+        if not isinstance(fm, dict) or fm.get('enemy') is None or not fm.get('flag'):
+            raise ServiceError(f"{ctx}.first_monster: {{\"enemy\": <enemy row>, \"flag\": "
+                               "<flag>, \"text\": <dialogue id>}}")
+        try:
+            eid = prj.enemy_ref(fm['enemy'], f"{ctx}.first_monster")
+        except Exception as ex:                                    # noqa: BLE001
+            raise ServiceError(str(ex))
+        ffl = prj._flag_index(fm['flag'], f"{ctx}.first_monster")
+        head = [['op', 'if_flag_set', ffl, '@fm_known'],
+                ['op', 'check_storage_full', '@fm_known']]
+        if fm.get('text'):
+            head += box + [['text', fm['text']]]
+        head += [['op', 'add_monster', eid]]
+        # S152: its name — the species' default nickname (a row's monster is made
+        # nameless: "0000"); "ask" (the default) = the player names it on the naming
+        # screen right away, as a joining monster is named
+        ask = fm.get('name', 'ask') == 'ask'
+        nw = prj.story_command('name_given', {'ask': ask}, f"{ctx}.first_monster")
+        head += [['op', '0x24', f'0x{nw:04X}'], ['op', 'set_flag', ffl]]
+        if ask:
+            # the game's own order around a naming screen (the Castle's hero naming,
+            # Grandpa's newborn): close the box, the screen, init_dialog before the next
+            # text — here the farm keeper's greeting, then his menu (measured S152: without
+            # the dialog re-opened the farewell after the menu waited forever)
+            head += [['op', 'close_text'], ['op', '0x04', 15, 0], ['op', 'init_dialog'],
+                     ['text', _text_ref(prj, sid, kind, 0)]]
+        head += [['op', 'goto', '@fm_open'], 'label:fm_known']
+        lead = head + lead + ['label:fm_open']
     seq = on + lead + [['op', '0x04', scr, base]]
     if kind == 'library':
         seq += [['op', 'nop'], ['op', 'init_dialog']]

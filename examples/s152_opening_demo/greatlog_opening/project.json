@@ -1,0 +1,6730 @@
+{
+ "meta": {
+  "name": "GreatLog Opening (S152 demo)",
+  "schema_version": 1,
+  "notes": [
+   "Created by the DWM1 Editor (File > New project). Everything here is",
+   "authored in the editor; the compiler turns it into the patch overlay."
+  ]
+ },
+ "world": {
+  "_status": "NOT_IMPLEMENTED_V1"
+ },
+ "gamedata": {
+  "_status": "Layer A-lite (S103): sparse overrides of the vanilla data tables \u2014 monsters, enemies, encounters, skills, exp/growth curves, breeding, boss_joins (PROJECT_COMPILER \u00a72.20). Empty = the game's own tables."
+ },
+ "custom": {
+  "wram": {
+   "region_size": 640
+  },
+  "rooms": [
+   {
+    "id": "roots_room_milly",
+    "mapID": "0x6B",
+    "source_mapID": "0x08",
+    "record": {
+     "gfx_id": "0x1C",
+     "gfx_bank": "0x29",
+     "width_px": 160,
+     "height_px": 128,
+     "collision_threshold": "0xA2"
+    },
+    "render": {
+     "palette": "pal_roots_room_milly",
+     "attr": {
+      "id": "roots_room_milly_s0"
+     }
+    },
+    "screens": {
+     "0": {
+      "layout": {
+       "id": "roots_room_milly_s0"
+      },
+      "attr": {
+       "id": "roots_room_milly_s0"
+      },
+      "step_counter": "auto",
+      "npcs": [
+       {
+        "kind": "raw",
+        "bytes": [
+         "0x20",
+         "0x39",
+         "0x05",
+         "0x08",
+         "0xFF"
+        ],
+        "actor": "Warubou",
+        "comment": "Warubou: below the screen, facing up (the old man's place in vanilla $08)"
+       }
+      ],
+      "exits": []
+     }
+    },
+    "scripts": {},
+    "name": "Roots room (Milly)",
+    "animation": "none",
+    "text_keeps_sprites": true,
+    "cutscenes": [
+     {
+      "id": "milly_roots",
+      "name": "Warubou meets Milly",
+      "screen": 0,
+      "trigger": {
+       "on": "entry",
+       "once": "milly_roots_seen"
+      },
+      "player_start": {
+       "x": 5,
+       "y": 4,
+       "face": "down"
+      },
+      "steps": [
+       {
+        "wait": {
+         "frames": 48
+        }
+       },
+       {
+        "walk": {
+         "actor": "Warubou",
+         "to": [
+          5,
+          5
+         ]
+        }
+       },
+       {
+        "say": {
+         "boxes": [
+          [
+           "Heh heh!",
+           "You came through!"
+          ],
+          [
+           "This is GreatLog,",
+           "my kingdom."
+          ],
+          [
+           "And who might",
+           "you be, girl?"
+          ]
+         ],
+         "speaker": "Warubou"
+        }
+       },
+       {
+        "name_hero": true
+       },
+       {
+        "say": {
+         "boxes": [
+          [
+           "{hero}, eh?",
+           "Heh heh!"
+          ],
+          [
+           "Come along. The",
+           "King wants you."
+          ]
+         ],
+         "speaker": "Warubou"
+        }
+       },
+       {
+        "walk": {
+         "actor": "Warubou",
+         "to": [
+          5,
+          9
+         ],
+         "together": true
+        }
+       },
+       {
+        "walk": {
+         "actor": "player",
+         "to": [
+          5,
+          7
+         ]
+        }
+       },
+       {
+        "move": {
+         "dest": "room:$6C",
+         "screen": 4,
+         "x": 4,
+         "y": 6
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "greatlog_path",
+    "name": "GREATLOG PATH",
+    "mapID": "0x6C",
+    "source_mapID": "0x01",
+    "record": {
+     "gfx_id": "0x08",
+     "gfx_bank": "0x2A",
+     "width_px": 160,
+     "height_px": 256,
+     "collision_threshold": "0x50"
+    },
+    "animation": "source",
+    "render": {
+     "attr": {
+      "id": "greatlog_path_s0"
+     },
+     "palette": "pal_greatlog_path"
+    },
+    "screens": {
+     "0": {
+      "layout": {
+       "id": "greatlog_path_s0"
+      },
+      "step_counter": "auto",
+      "states": [
+       {
+        "npcs": [
+         {
+          "kind": "npc",
+          "x": 4,
+          "y": 6,
+          "sprite": "0x39",
+          "facing": "up",
+          "script": "none",
+          "shown_when": [
+           {
+            "flag": "path_walk_1",
+            "is": "set"
+           },
+           {
+            "flag": "path_walk_2",
+            "is": "clear"
+           }
+          ],
+          "actor": "Warubou"
+         }
+        ],
+        "exits": [],
+        "comment": "state 0"
+       },
+       {
+        "npcs": [],
+        "exits": [
+         {
+          "x": 4,
+          "y": 2,
+          "door": "door_1",
+          "name": "GreatLog door (path)",
+          "dest": "room:$6D",
+          "gate_flag": 0,
+          "screen_byte": "0x00",
+          "spawn_x": 1,
+          "spawn_y": 5,
+          "link": "door_2"
+         }
+        ],
+        "comment": "state 1 (copy of 0)"
+       }
+      ]
+     },
+     "4": {
+      "layout": {
+       "id": "greatlog_path_s4"
+      },
+      "step_counter": "auto",
+      "npcs": [
+       {
+        "kind": "npc",
+        "x": 4,
+        "y": 5,
+        "sprite": "0x39",
+        "facing": "up",
+        "script": "none",
+        "shown_when": [
+         {
+          "flag": "path_walk_1",
+          "is": "clear"
+         }
+        ],
+        "actor": "Warubou"
+       }
+      ],
+      "exits": []
+     }
+    },
+    "state_rules": [
+     {
+      "screens": [
+       0
+      ],
+      "state": 1,
+      "when": [
+       {
+        "flag": "path_walk_2",
+        "is": "set"
+       }
+      ]
+     }
+    ],
+    "cutscenes": [
+     {
+      "id": "up_the_greatlog_path",
+      "name": "Up the GreatLog path",
+      "screen": 4,
+      "trigger": {
+       "on": "entry",
+       "once": "path_walk_1"
+      },
+      "steps": [
+       {
+        "say": {
+         "boxes": [
+          [
+           "Heh heh!",
+           "This way. Up the"
+          ],
+          [
+           "path!"
+          ]
+         ],
+         "speaker": "Warubou"
+        }
+       },
+       {
+        "walk": {
+         "actor": "Warubou",
+         "to": [
+          4,
+          0
+         ],
+         "first": "y",
+         "together": true
+        }
+       },
+       {
+        "walk": {
+         "actor": "player",
+         "to": [
+          4,
+          1
+         ],
+         "first": "y"
+        }
+       },
+       {
+        "wait_walks": true
+       },
+       {
+        "move": {
+         "dest": "room:$6C",
+         "screen": 0,
+         "x": 4,
+         "y": 7
+        }
+       }
+      ],
+      "player_start": {
+       "x": 4,
+       "y": 6,
+       "face": "up"
+      }
+     },
+     {
+      "id": "into_the_greatlog_door",
+      "name": "Into the GreatLog door",
+      "screen": 0,
+      "trigger": {
+       "on": "entry",
+       "once": "path_walk_2"
+      },
+      "steps": [
+       {
+        "walk": {
+         "actor": "Warubou",
+         "to": [
+          4,
+          3
+         ],
+         "first": "y",
+         "together": true
+        }
+       },
+       {
+        "walk": {
+         "actor": "player",
+         "to": [
+          4,
+          4
+         ],
+         "first": "y"
+        }
+       },
+       {
+        "wait_walks": true
+       },
+       {
+        "face": {
+         "actor": "Warubou",
+         "dir": "down"
+        }
+       },
+       {
+        "say": {
+         "boxes": [
+          [
+           "The KING",
+           "of GREATLOG waits"
+          ],
+          [
+           "inside. In you go!"
+          ]
+         ],
+         "speaker": "Warubou"
+        }
+       },
+       {
+        "face": {
+         "actor": "Warubou",
+         "dir": "up"
+        }
+       },
+       {
+        "walk": {
+         "actor": "Warubou",
+         "to": [
+          4,
+          2
+         ],
+         "first": "y"
+        }
+       },
+       {
+        "sound": "0x51"
+       },
+       {
+        "hide": {
+         "actor": "Warubou",
+         "how": "instant"
+        }
+       },
+       {
+        "walk": {
+         "actor": "player",
+         "to": [
+          4,
+          2
+         ],
+         "first": "y"
+        }
+       },
+       {
+        "sound": "0x51"
+       },
+       {
+        "wait": {
+         "frames": 16
+        }
+       },
+       {
+        "hide": {
+         "actor": "player",
+         "how": "instant"
+        }
+       },
+       {
+        "wait": {
+         "frames": 32
+        }
+       },
+       {
+        "move": {
+         "dest": "room:$6D",
+         "screen": 0,
+         "x": 2,
+         "y": 5
+        }
+       }
+      ],
+      "player_start": {
+       "x": 4,
+       "y": 7,
+       "face": "up"
+      }
+     }
+    ],
+    "music": "0x0F"
+   },
+   {
+    "id": "greatlog_throne",
+    "name": "GREATLOG THRONE",
+    "mapID": "0x6D",
+    "source_mapID": "0x00",
+    "record": {
+     "gfx_id": "0x00",
+     "gfx_bank": "0x2A",
+     "width_px": 160,
+     "height_px": 128,
+     "collision_threshold": "0x57"
+    },
+    "animation": "source",
+    "render": {
+     "attr": {
+      "id": "greatlog_throne_s0"
+     },
+     "palette": "pal_greatlog_throne"
+    },
+    "screens": {
+     "0": {
+      "layout": {
+       "id": "greatlog_throne_s0"
+      },
+      "step_counter": "auto",
+      "npcs": [
+       {
+        "kind": "npc",
+        "x": 4,
+        "y": 2,
+        "sprite": "0x0C",
+        "facing": "down",
+        "script": "greatlog_throne_king",
+        "actor": "King"
+       },
+       {
+        "kind": "npc",
+        "x": 6,
+        "y": 5,
+        "sprite": "0x39",
+        "facing": "left",
+        "script": "greatlog_throne_warubou",
+        "actor": "Warubou"
+       },
+       {
+        "kind": "npc",
+        "x": 7,
+        "y": 3,
+        "sprite": "0x0B",
+        "facing": "down",
+        "script": "greatlog_throne_guard",
+        "actor": "Guard"
+       }
+      ],
+      "exits": [
+       {
+        "x": 1,
+        "y": 5,
+        "door": "door_2",
+        "name": "Throne stairs down",
+        "dest": "room:$6C",
+        "gate_flag": 0,
+        "screen_byte": "0x00",
+        "spawn_x": 4,
+        "spawn_y": 2,
+        "link": "door_1"
+       },
+       {
+        "x": 8,
+        "y": 5,
+        "door": "door_3",
+        "name": "Throne stairs up",
+        "dest": "room:$6E",
+        "gate_flag": 0,
+        "screen_byte": "0x00",
+        "spawn_x": 1,
+        "spawn_y": 6,
+        "link": "door_4"
+       }
+      ]
+     }
+    },
+    "cutscenes": [
+     {
+      "id": "the_greatlog_king",
+      "name": "The GreatLog King",
+      "screen": 0,
+      "trigger": {
+       "on": "entry",
+       "once": "met_king"
+      },
+      "steps": [
+       {
+        "walk": {
+         "actor": "player",
+         "to": [
+          4,
+          4
+         ],
+         "first": "x"
+        }
+       },
+       {
+        "face": {
+         "actor": "player",
+         "dir": "up"
+        }
+       },
+       {
+        "say": {
+         "boxes": [
+          [
+           "So this is",
+           "the girl from the"
+          ],
+          [
+           "roots. Welcome to",
+           "GREATLOG, {hero}!"
+          ],
+          [
+           "I am the KING of",
+           "GREATLOG, the"
+          ],
+          [
+           "kingdom inside the",
+           "fallen log."
+          ]
+         ],
+         "speaker": "King"
+        }
+       },
+       {
+        "face": {
+         "actor": "Warubou",
+         "dir": "up"
+        }
+       },
+       {
+        "say": {
+         "boxes": [
+          [
+           "Heh heh! I",
+           "found her, my"
+          ],
+          [
+           "King."
+          ]
+         ],
+         "speaker": "Warubou"
+        }
+       },
+       {
+        "say": {
+         "boxes": [
+          [
+           "A master",
+           "needs a partner"
+          ],
+          [
+           "monster. Climb the",
+           "STAIRS on the"
+          ],
+          [
+           "right to the",
+           "GREATLOG FARM."
+          ],
+          [
+           "LOGGO will give",
+           "you your first"
+          ],
+          [
+           "monster."
+          ]
+         ],
+         "speaker": "King"
+        }
+       },
+       {
+        "say": {
+         "boxes": [
+          [
+           "Then the GATE",
+           "GLADE behind the"
+          ],
+          [
+           "farm is yours to",
+           "explore."
+          ]
+         ],
+         "speaker": "King"
+        }
+       }
+      ],
+      "player_start": {
+       "x": 2,
+       "y": 5,
+       "face": "right"
+      }
+     }
+    ],
+    "scripts": {
+     "0": "greatlog_throne_entry",
+     "1": "greatlog_throne_king",
+     "2": "greatlog_throne_warubou",
+     "3": "greatlog_throne_guard"
+    },
+    "music": "0x09"
+   },
+   {
+    "id": "greatlog_farm",
+    "name": "GREATLOG FARM",
+    "mapID": "0x6E",
+    "source_mapID": "0x04",
+    "record": {
+     "width_px": 320,
+     "height_px": 128,
+     "collision_threshold": "0x3A",
+     "tileset": "ts_29_01"
+    },
+    "animation": "source",
+    "render": {
+     "attr": {
+      "id": "greatlog_farm_s0"
+     },
+     "palette": "pal_greatlog_farm"
+    },
+    "screens": {
+     "0": {
+      "layout": {
+       "id": "greatlog_farm_s0"
+      },
+      "step_counter": "auto",
+      "states": [
+       {
+        "npcs": [
+         {
+          "kind": "npc",
+          "x": 6,
+          "y": 3,
+          "sprite": "0x06",
+          "facing": "down",
+          "script": "greatlog_farm_farm",
+          "actor": "LOGGO"
+         },
+         {
+          "kind": "npc",
+          "x": 7,
+          "y": 1,
+          "sprite": "0xF0",
+          "facing": "down",
+          "monster": 8,
+          "script": "none"
+         },
+         {
+          "kind": "npc",
+          "x": 9,
+          "y": 4,
+          "sprite": "0x0B",
+          "facing": "left",
+          "script": "none",
+          "actor": "LOG GUARD"
+         }
+        ],
+        "exits": [
+         {
+          "x": 1,
+          "y": 6,
+          "door": "door_4",
+          "name": "Farm door down",
+          "dest": "room:$6D",
+          "gate_flag": 0,
+          "screen_byte": "0x00",
+          "spawn_x": 8,
+          "spawn_y": 5,
+          "link": "door_3"
+         }
+        ],
+        "comment": "state 0"
+       },
+       {
+        "npcs": [
+         {
+          "kind": "npc",
+          "x": 6,
+          "y": 3,
+          "sprite": "0x06",
+          "facing": "down",
+          "script": "greatlog_farm_farm",
+          "actor": "LOGGO"
+         },
+         {
+          "kind": "npc",
+          "x": 7,
+          "y": 1,
+          "sprite": "0xF0",
+          "facing": "down",
+          "monster": 8,
+          "script": "none"
+         },
+         {
+          "kind": "npc",
+          "x": 8,
+          "y": 5,
+          "sprite": "0x0B",
+          "facing": "left",
+          "script": "greatlog_farm_guard_after",
+          "actor": "LOG GUARD"
+         }
+        ],
+        "exits": [
+         {
+          "x": 1,
+          "y": 6,
+          "door": "door_4",
+          "name": "Farm door down",
+          "dest": "room:$6D",
+          "gate_flag": 0,
+          "screen_byte": "0x00",
+          "spawn_x": 8,
+          "spawn_y": 5,
+          "link": "door_3"
+         }
+        ],
+        "comment": "state 1 (copy of 0)"
+       }
+      ]
+     },
+     "1": {
+      "layout": {
+       "id": "greatlog_farm_s1"
+      },
+      "step_counter": "auto",
+      "npcs": [
+       {
+        "kind": "npc",
+        "x": 2,
+        "y": 5,
+        "sprite": "0x05",
+        "facing": "down",
+        "script": "greatlog_farm_glade_keeper"
+       },
+       {
+        "kind": "npc",
+        "x": 5,
+        "y": 3,
+        "sprite": "0x4d",
+        "script": null,
+        "facing": "down",
+        "swirl_of": 32,
+        "comment": "gate swirl (gate 32): spins until the gate is cleared"
+       }
+      ],
+      "exits": [
+       {
+        "x": 5,
+        "y": 3,
+        "dest": "gate:32",
+        "gate_flag": 1,
+        "screen_byte": "0x00",
+        "spawn_x": 0,
+        "spawn_y": 0,
+        "comment": "gate entrance: GREATLOG GATE"
+       }
+      ]
+     }
+    },
+    "scripts": {
+     "0": "greatlog_farm_entry",
+     "1": "greatlog_farm_farm",
+     "2": "greatlog_farm_guard_after",
+     "3": "greatlog_farm_glade_keeper"
+    },
+    "state_rules": [
+     {
+      "screens": [
+       0
+      ],
+      "state": 1,
+      "when": [
+       {
+        "flag": "guard_moved",
+        "is": "set"
+       }
+      ]
+     }
+    ],
+    "cutscenes": [
+     {
+      "id": "guard_not_yet",
+      "name": "Guard: not yet",
+      "screen": 0,
+      "trigger": {
+       "on": "talk",
+       "actor": "LOG GUARD",
+       "when_off": [
+        "first_monster_given"
+       ]
+      },
+      "steps": [
+       {
+        "say": {
+         "boxes": [
+          [
+           "No",
+           "monster, no GATE"
+          ],
+          [
+           "GLADE! LOGGO keeps",
+           "your first"
+          ],
+          [
+           "monster. Talk to",
+           "him."
+          ]
+         ],
+         "speaker": "LOG GUARD"
+        }
+       }
+      ]
+     },
+     {
+      "id": "guard_steps_aside",
+      "name": "Guard steps aside",
+      "screen": 0,
+      "trigger": {
+       "on": "talk",
+       "actor": "LOG GUARD",
+       "when_on": [
+        "first_monster_given"
+       ],
+       "once": "guard_moved"
+      },
+      "steps": [
+       {
+        "say": {
+         "boxes": [
+          [
+           "A",
+           "DragonKid! You are"
+          ],
+          [
+           "a real master now.",
+           "The GATE GLADE is"
+          ],
+          [
+           "open."
+          ]
+         ],
+         "speaker": "LOG GUARD"
+        }
+       },
+       {
+        "walk": {
+         "actor": "LOG GUARD",
+         "to": [
+          8,
+          5
+         ],
+         "first": "x"
+        }
+       },
+       {
+        "face": {
+         "actor": "LOG GUARD",
+         "dir": "down"
+        }
+       }
+      ]
+     }
+    ],
+    "music": "0x12"
+   },
+   {
+    "id": "stump_hollow",
+    "name": "STUMP HOLLOW",
+    "mapID": "0x6F",
+    "source_mapID": "0x00",
+    "record": {
+     "gfx_id": "0x03",
+     "gfx_bank": "0x28",
+     "width_px": 160,
+     "height_px": 128,
+     "collision_threshold": "0x30"
+    },
+    "animation": "none",
+    "render": {
+     "attr": {
+      "id": "stump_hollow_s0"
+     },
+     "palette": "pal_stump_hollow"
+    },
+    "screens": {
+     "0": {
+      "layout": {
+       "id": "stump_hollow_s0"
+      },
+      "step_counter": "auto",
+      "npcs": [
+       {
+        "kind": "npc",
+        "x": 4,
+        "y": 3,
+        "sprite": "0xF0",
+        "facing": "down",
+        "monster": 45,
+        "script": "stump_hollow_boss_stump_king_beaten",
+        "shown_when": [
+         {
+          "flag": "stump_king_beaten",
+          "is": "clear"
+         }
+        ]
+       }
+      ],
+      "exits": []
+     }
+    },
+    "gate_arrival": {
+     "screen": 0,
+     "x": 4,
+     "y": 6
+    },
+    "scripts": {
+     "0": "stump_hollow_entry",
+     "1": "stump_hollow_boss_stump_king_beaten"
+    },
+    "music": "0x2E"
+   }
+  ],
+  "layouts": [
+   {
+    "id": "roots_room_milly_s0",
+    "attr": [
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      3,
+      3,
+      3,
+      3,
+      3,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      3,
+      3,
+      3,
+      2,
+      2,
+      2,
+      2,
+      3,
+      3,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      3,
+      3,
+      3,
+      2,
+      2,
+      2,
+      2,
+      3,
+      3,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      3,
+      3,
+      2,
+      2,
+      2,
+      2,
+      3,
+      3,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      3,
+      3,
+      3,
+      1,
+      1,
+      3,
+      3,
+      3,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      3,
+      3,
+      3,
+      1,
+      1,
+      3,
+      3,
+      3,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      3,
+      3,
+      3,
+      1,
+      1,
+      3,
+      3,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    ],
+    "tiles": [
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      20,
+      46,
+      11,
+      0,
+      17,
+      0,
+      11,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      6,
+      7,
+      8,
+      9,
+      10,
+      14,
+      12,
+      13,
+      14,
+      65,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      81,
+      0,
+      11,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      65,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      16,
+      15,
+      16,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      52,
+      53,
+      54,
+      55,
+      56,
+      57,
+      58,
+      59,
+      60,
+      61,
+      62,
+      63,
+      18,
+      20,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      68,
+      69,
+      70,
+      71,
+      72,
+      73,
+      74,
+      75,
+      76,
+      77,
+      78,
+      79,
+      128,
+      129,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      11,
+      84,
+      85,
+      86,
+      87,
+      88,
+      89,
+      90,
+      91,
+      92,
+      93,
+      94,
+      95,
+      144,
+      145,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      16,
+      100,
+      101,
+      102,
+      103,
+      104,
+      105,
+      164,
+      165,
+      108,
+      109,
+      110,
+      111,
+      80,
+      20,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      17,
+      116,
+      117,
+      118,
+      119,
+      120,
+      121,
+      166,
+      167,
+      124,
+      125,
+      126,
+      127,
+      96,
+      97,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      17,
+      132,
+      133,
+      134,
+      135,
+      136,
+      137,
+      162,
+      163,
+      140,
+      141,
+      142,
+      143,
+      113,
+      2,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      82,
+      132,
+      101,
+      150,
+      151,
+      152,
+      153,
+      168,
+      169,
+      156,
+      157,
+      158,
+      159,
+      149,
+      19,
+      11,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      149,
+      125,
+      31,
+      47,
+      146,
+      147,
+      170,
+      171,
+      130,
+      131,
+      138,
+      139,
+      3,
+      82,
+      16,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      48,
+      49,
+      98,
+      99,
+      106,
+      107,
+      170,
+      171,
+      146,
+      147,
+      154,
+      155,
+      160,
+      161,
+      17,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      64,
+      65,
+      114,
+      115,
+      122,
+      123,
+      172,
+      173,
+      106,
+      107,
+      50,
+      51,
+      112,
+      4,
+      5,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      32,
+      33,
+      34,
+      35,
+      36,
+      174,
+      175,
+      122,
+      83,
+      66,
+      67,
+      21,
+      1,
+      0,
+      0
+     ]
+    ]
+   },
+   {
+    "id": "greatlog_path_s0",
+    "tiles": [
+     [
+      46,
+      42,
+      46,
+      42,
+      46,
+      42,
+      46,
+      42,
+      46,
+      42,
+      46,
+      42,
+      46,
+      42,
+      46,
+      42,
+      46,
+      42,
+      46,
+      42
+     ],
+     [
+      45,
+      41,
+      45,
+      41,
+      45,
+      41,
+      45,
+      41,
+      45,
+      41,
+      45,
+      41,
+      45,
+      41,
+      45,
+      41,
+      45,
+      41,
+      45,
+      41
+     ],
+     [
+      14,
+      15,
+      14,
+      15,
+      14,
+      15,
+      14,
+      15,
+      8,
+      76,
+      77,
+      78,
+      14,
+      15,
+      14,
+      15,
+      14,
+      15,
+      14,
+      15
+     ],
+     [
+      30,
+      31,
+      30,
+      31,
+      30,
+      31,
+      72,
+      65,
+      24,
+      25,
+      26,
+      27,
+      72,
+      65,
+      30,
+      31,
+      30,
+      31,
+      30,
+      31
+     ],
+     [
+      14,
+      15,
+      12,
+      15,
+      14,
+      15,
+      121,
+      122,
+      96,
+      97,
+      98,
+      99,
+      121,
+      122,
+      14,
+      15,
+      12,
+      15,
+      14,
+      15
+     ],
+     [
+      30,
+      31,
+      28,
+      31,
+      30,
+      31,
+      26,
+      27,
+      100,
+      101,
+      101,
+      102,
+      24,
+      25,
+      30,
+      31,
+      28,
+      31,
+      30,
+      31
+     ],
+     [
+      14,
+      15,
+      14,
+      15,
+      14,
+      15,
+      82,
+      82,
+      80,
+      80,
+      82,
+      82,
+      80,
+      80,
+      14,
+      15,
+      14,
+      15,
+      14,
+      15
+     ],
+     [
+      30,
+      31,
+      30,
+      31,
+      30,
+      31,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      30,
+      31,
+      72,
+      65,
+      30,
+      31
+     ],
+     [
+      72,
+      75,
+      14,
+      15,
+      14,
+      15,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      14,
+      15,
+      14,
+      15,
+      14,
+      15
+     ],
+     [
+      74,
+      64,
+      30,
+      31,
+      30,
+      31,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      30,
+      31,
+      30,
+      31,
+      30,
+      31
+     ],
+     [
+      14,
+      15,
+      12,
+      15,
+      14,
+      15,
+      82,
+      82,
+      80,
+      80,
+      82,
+      82,
+      80,
+      80,
+      14,
+      15,
+      12,
+      15,
+      14,
+      15
+     ],
+     [
+      30,
+      31,
+      28,
+      31,
+      30,
+      31,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      30,
+      31,
+      28,
+      31,
+      30,
+      31
+     ],
+     [
+      14,
+      15,
+      14,
+      15,
+      14,
+      15,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      14,
+      15,
+      14,
+      15,
+      14,
+      15
+     ],
+     [
+      30,
+      31,
+      30,
+      31,
+      72,
+      65,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      30,
+      31,
+      30,
+      31,
+      30,
+      31
+     ],
+     [
+      14,
+      15,
+      14,
+      15,
+      14,
+      15,
+      82,
+      82,
+      80,
+      80,
+      82,
+      82,
+      80,
+      80,
+      14,
+      15,
+      14,
+      15,
+      72,
+      75
+     ],
+     [
+      30,
+      31,
+      30,
+      31,
+      30,
+      31,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      30,
+      31,
+      30,
+      31,
+      74,
+      64
+     ]
+    ],
+    "attr": [
+     [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      3,
+      3,
+      0,
+      0,
+      0,
+      0,
+      3,
+      3,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    ]
+   },
+   {
+    "id": "greatlog_path_s4",
+    "comment": "greatlog_path screen 4",
+    "tiles": [
+     [
+      14,
+      15,
+      14,
+      15,
+      14,
+      15,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      14,
+      15,
+      14,
+      15,
+      14,
+      15
+     ],
+     [
+      30,
+      31,
+      30,
+      31,
+      30,
+      31,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      30,
+      31,
+      30,
+      31,
+      30,
+      31
+     ],
+     [
+      14,
+      15,
+      12,
+      15,
+      14,
+      15,
+      82,
+      82,
+      80,
+      80,
+      82,
+      82,
+      80,
+      80,
+      14,
+      15,
+      12,
+      15,
+      14,
+      15
+     ],
+     [
+      30,
+      31,
+      28,
+      31,
+      30,
+      31,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      30,
+      31,
+      28,
+      31,
+      30,
+      31
+     ],
+     [
+      72,
+      75,
+      14,
+      15,
+      14,
+      15,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      14,
+      15,
+      14,
+      15,
+      14,
+      15
+     ],
+     [
+      74,
+      64,
+      30,
+      31,
+      30,
+      31,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      30,
+      31,
+      72,
+      65,
+      30,
+      31
+     ],
+     [
+      14,
+      15,
+      14,
+      15,
+      14,
+      15,
+      82,
+      82,
+      80,
+      80,
+      82,
+      82,
+      80,
+      80,
+      14,
+      15,
+      14,
+      15,
+      14,
+      15
+     ],
+     [
+      30,
+      31,
+      30,
+      31,
+      30,
+      31,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      30,
+      31,
+      30,
+      31,
+      30,
+      31
+     ],
+     [
+      14,
+      15,
+      14,
+      15,
+      14,
+      15,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      14,
+      15,
+      12,
+      15,
+      14,
+      15
+     ],
+     [
+      30,
+      31,
+      72,
+      65,
+      30,
+      31,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      30,
+      31,
+      28,
+      31,
+      30,
+      31
+     ],
+     [
+      14,
+      15,
+      12,
+      15,
+      14,
+      15,
+      82,
+      82,
+      80,
+      80,
+      82,
+      82,
+      80,
+      80,
+      14,
+      15,
+      14,
+      15,
+      14,
+      15
+     ],
+     [
+      30,
+      31,
+      28,
+      31,
+      30,
+      31,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      30,
+      31,
+      30,
+      31,
+      30,
+      31
+     ],
+     [
+      14,
+      15,
+      14,
+      15,
+      14,
+      15,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      14,
+      15,
+      14,
+      15,
+      72,
+      75
+     ],
+     [
+      30,
+      31,
+      30,
+      31,
+      30,
+      31,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      30,
+      31,
+      30,
+      31,
+      74,
+      64
+     ],
+     [
+      12,
+      15,
+      14,
+      15,
+      14,
+      15,
+      14,
+      15,
+      12,
+      15,
+      14,
+      15,
+      14,
+      15,
+      14,
+      15,
+      14,
+      15,
+      12,
+      15
+     ],
+     [
+      28,
+      31,
+      30,
+      31,
+      30,
+      31,
+      30,
+      31,
+      28,
+      31,
+      30,
+      31,
+      30,
+      31,
+      30,
+      31,
+      30,
+      31,
+      28,
+      31
+     ]
+    ],
+    "attr": [
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    ]
+   },
+   {
+    "id": "greatlog_throne_s0",
+    "tiles": [
+     [
+      49,
+      65,
+      33,
+      33,
+      33,
+      33,
+      33,
+      33,
+      33,
+      33,
+      33,
+      33,
+      33,
+      33,
+      33,
+      33,
+      33,
+      33,
+      49,
+      65
+     ],
+     [
+      49,
+      65,
+      36,
+      37,
+      36,
+      37,
+      36,
+      37,
+      36,
+      37,
+      36,
+      37,
+      36,
+      37,
+      36,
+      37,
+      36,
+      37,
+      49,
+      65
+     ],
+     [
+      49,
+      65,
+      52,
+      53,
+      52,
+      53,
+      52,
+      53,
+      52,
+      53,
+      52,
+      53,
+      52,
+      53,
+      52,
+      53,
+      52,
+      53,
+      49,
+      65
+     ],
+     [
+      49,
+      65,
+      68,
+      69,
+      68,
+      69,
+      68,
+      69,
+      68,
+      69,
+      68,
+      69,
+      68,
+      69,
+      68,
+      69,
+      68,
+      69,
+      49,
+      65
+     ],
+     [
+      49,
+      65,
+      102,
+      103,
+      87,
+      89,
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      89,
+      87,
+      102,
+      103,
+      49,
+      65
+     ],
+     [
+      49,
+      65,
+      102,
+      103,
+      87,
+      89,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      89,
+      87,
+      102,
+      103,
+      49,
+      65
+     ],
+     [
+      49,
+      65,
+      102,
+      103,
+      87,
+      89,
+      8,
+      9,
+      108,
+      108,
+      108,
+      108,
+      11,
+      85,
+      89,
+      87,
+      102,
+      103,
+      49,
+      65
+     ],
+     [
+      49,
+      65,
+      102,
+      103,
+      87,
+      89,
+      24,
+      25,
+      109,
+      109,
+      109,
+      109,
+      27,
+      86,
+      89,
+      87,
+      102,
+      103,
+      49,
+      65
+     ],
+     [
+      49,
+      65,
+      102,
+      103,
+      87,
+      89,
+      89,
+      89,
+      89,
+      89,
+      89,
+      89,
+      89,
+      89,
+      89,
+      87,
+      102,
+      103,
+      49,
+      65
+     ],
+     [
+      49,
+      65,
+      102,
+      103,
+      104,
+      88,
+      88,
+      88,
+      105,
+      89,
+      89,
+      106,
+      88,
+      88,
+      88,
+      107,
+      102,
+      103,
+      49,
+      65
+     ],
+     [
+      49,
+      65,
+      116,
+      117,
+      90,
+      91,
+      102,
+      103,
+      87,
+      89,
+      87,
+      89,
+      102,
+      103,
+      90,
+      91,
+      120,
+      121,
+      49,
+      65
+     ],
+     [
+      49,
+      65,
+      118,
+      119,
+      92,
+      93,
+      102,
+      103,
+      87,
+      89,
+      87,
+      89,
+      102,
+      103,
+      92,
+      93,
+      122,
+      123,
+      49,
+      65
+     ],
+     [
+      49,
+      65,
+      102,
+      103,
+      102,
+      103,
+      102,
+      103,
+      87,
+      89,
+      87,
+      89,
+      102,
+      103,
+      102,
+      103,
+      102,
+      103,
+      49,
+      65
+     ],
+     [
+      49,
+      65,
+      102,
+      103,
+      102,
+      103,
+      102,
+      103,
+      87,
+      89,
+      87,
+      89,
+      102,
+      103,
+      102,
+      103,
+      102,
+      103,
+      49,
+      65
+     ],
+     [
+      49,
+      65,
+      59,
+      75,
+      33,
+      59,
+      75,
+      64,
+      75,
+      64,
+      75,
+      64,
+      75,
+      64,
+      33,
+      59,
+      59,
+      75,
+      49,
+      65
+     ],
+     [
+      49,
+      65,
+      40,
+      41,
+      42,
+      40,
+      41,
+      82,
+      41,
+      82,
+      41,
+      82,
+      41,
+      82,
+      42,
+      40,
+      40,
+      41,
+      49,
+      65
+     ]
+    ],
+    "attr": [
+     [
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2
+     ],
+     [
+      2,
+      2,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      2,
+      2
+     ],
+     [
+      2,
+      2,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      2,
+      2
+     ],
+     [
+      2,
+      2,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      2,
+      2
+     ],
+     [
+      2,
+      2,
+      0,
+      0,
+      3,
+      3,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      3,
+      3,
+      0,
+      0,
+      2,
+      2
+     ],
+     [
+      2,
+      2,
+      0,
+      0,
+      3,
+      3,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      3,
+      3,
+      0,
+      0,
+      2,
+      2
+     ],
+     [
+      2,
+      2,
+      0,
+      0,
+      3,
+      3,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      3,
+      3,
+      0,
+      0,
+      2,
+      2
+     ],
+     [
+      2,
+      2,
+      0,
+      0,
+      3,
+      3,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      3,
+      3,
+      0,
+      0,
+      2,
+      2
+     ],
+     [
+      2,
+      2,
+      0,
+      0,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      0,
+      0,
+      2,
+      2
+     ],
+     [
+      2,
+      2,
+      0,
+      0,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      0,
+      0,
+      2,
+      2
+     ],
+     [
+      2,
+      2,
+      2,
+      2,
+      1,
+      1,
+      0,
+      0,
+      3,
+      3,
+      3,
+      3,
+      0,
+      0,
+      1,
+      1,
+      2,
+      2,
+      2,
+      2
+     ],
+     [
+      2,
+      2,
+      2,
+      2,
+      1,
+      1,
+      0,
+      0,
+      3,
+      3,
+      3,
+      3,
+      0,
+      0,
+      1,
+      1,
+      2,
+      2,
+      2,
+      2
+     ],
+     [
+      2,
+      2,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      3,
+      3,
+      3,
+      3,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      2,
+      2
+     ],
+     [
+      2,
+      2,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      3,
+      3,
+      3,
+      3,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      2,
+      2
+     ],
+     [
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2
+     ],
+     [
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2
+     ]
+    ]
+   },
+   {
+    "id": "greatlog_farm_s0",
+    "tiles": [
+     [
+      6,
+      7,
+      6,
+      7,
+      6,
+      7,
+      6,
+      7,
+      6,
+      7,
+      6,
+      7,
+      6,
+      7,
+      6,
+      7,
+      6,
+      7,
+      6,
+      7
+     ],
+     [
+      25,
+      23,
+      25,
+      23,
+      25,
+      23,
+      25,
+      23,
+      25,
+      23,
+      25,
+      23,
+      25,
+      23,
+      25,
+      23,
+      25,
+      23,
+      25,
+      23
+     ],
+     [
+      6,
+      7,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      41,
+      41,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      28,
+      29,
+      6,
+      7
+     ],
+     [
+      25,
+      23,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      30,
+      31,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      16,
+      17,
+      25,
+      23
+     ],
+     [
+      6,
+      7,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      28,
+      29
+     ],
+     [
+      25,
+      23,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      16,
+      17
+     ],
+     [
+      6,
+      7,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      28,
+      29
+     ],
+     [
+      25,
+      23,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      16,
+      17
+     ],
+     [
+      6,
+      7,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      42,
+      42,
+      42,
+      42,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63
+     ],
+     [
+      25,
+      23,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      43,
+      43,
+      43,
+      43,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79
+     ],
+     [
+      6,
+      7,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      42,
+      42,
+      42,
+      42,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      28,
+      29
+     ],
+     [
+      25,
+      23,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      43,
+      43,
+      43,
+      43,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      16,
+      17
+     ],
+     [
+      6,
+      7,
+      88,
+      89,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      36,
+      37,
+      28,
+      29
+     ],
+     [
+      25,
+      23,
+      90,
+      91,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      38,
+      39,
+      16,
+      17
+     ],
+     [
+      6,
+      7,
+      6,
+      7,
+      6,
+      7,
+      6,
+      7,
+      6,
+      7,
+      6,
+      7,
+      6,
+      7,
+      6,
+      7,
+      6,
+      7,
+      6,
+      7
+     ],
+     [
+      25,
+      23,
+      25,
+      23,
+      25,
+      23,
+      25,
+      23,
+      25,
+      23,
+      25,
+      23,
+      25,
+      23,
+      25,
+      23,
+      25,
+      23,
+      25,
+      23
+     ]
+    ],
+    "attr": [
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      3,
+      3,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      3,
+      3,
+      3,
+      3,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      3,
+      3,
+      3,
+      3,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      3,
+      3,
+      3,
+      3,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      3,
+      3,
+      3,
+      3,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1
+     ],
+     [
+      0,
+      0,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      2,
+      2,
+      1,
+      1
+     ],
+     [
+      0,
+      0,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      2,
+      2,
+      1,
+      1
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    ]
+   },
+   {
+    "id": "greatlog_farm_s1",
+    "comment": "greatlog_farm screen 1",
+    "tiles": [
+     [
+      6,
+      7,
+      6,
+      7,
+      6,
+      7,
+      6,
+      7,
+      6,
+      7,
+      6,
+      7,
+      6,
+      7,
+      6,
+      7,
+      6,
+      7,
+      6,
+      7
+     ],
+     [
+      25,
+      23,
+      25,
+      23,
+      25,
+      23,
+      25,
+      23,
+      25,
+      23,
+      25,
+      23,
+      25,
+      23,
+      25,
+      23,
+      25,
+      23,
+      25,
+      23
+     ],
+     [
+      6,
+      7,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      28,
+      29,
+      6,
+      7
+     ],
+     [
+      25,
+      23,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      16,
+      17,
+      25,
+      23
+     ],
+     [
+      28,
+      29,
+      62,
+      63,
+      28,
+      29,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      28,
+      29,
+      62,
+      63,
+      62,
+      63,
+      6,
+      7
+     ],
+     [
+      16,
+      17,
+      78,
+      79,
+      16,
+      17,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      16,
+      17,
+      78,
+      79,
+      78,
+      79,
+      25,
+      23
+     ],
+     [
+      28,
+      29,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      64,
+      65,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      6,
+      7
+     ],
+     [
+      16,
+      17,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      66,
+      67,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      25,
+      23
+     ],
+     [
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      6,
+      7
+     ],
+     [
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      25,
+      23
+     ],
+     [
+      28,
+      29,
+      62,
+      63,
+      28,
+      29,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      28,
+      29,
+      62,
+      63,
+      62,
+      63,
+      6,
+      7
+     ],
+     [
+      16,
+      17,
+      78,
+      79,
+      16,
+      17,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      16,
+      17,
+      78,
+      79,
+      78,
+      79,
+      25,
+      23
+     ],
+     [
+      28,
+      29,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      6,
+      7
+     ],
+     [
+      16,
+      17,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      25,
+      23
+     ],
+     [
+      6,
+      7,
+      6,
+      7,
+      6,
+      7,
+      6,
+      7,
+      6,
+      7,
+      6,
+      7,
+      6,
+      7,
+      6,
+      7,
+      6,
+      7,
+      6,
+      7
+     ],
+     [
+      25,
+      23,
+      25,
+      23,
+      25,
+      23,
+      25,
+      23,
+      25,
+      23,
+      25,
+      23,
+      25,
+      23,
+      25,
+      23,
+      25,
+      23,
+      25,
+      23
+     ]
+    ],
+    "attr": [
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0
+     ],
+     [
+      1,
+      1,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      1,
+      1,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      1,
+      1,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      1,
+      1,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    ]
+   },
+   {
+    "id": "stump_hollow_s0",
+    "tiles": [
+     [
+      8,
+      9,
+      8,
+      9,
+      8,
+      9,
+      8,
+      9,
+      8,
+      9,
+      8,
+      9,
+      8,
+      9,
+      8,
+      9,
+      8,
+      9,
+      8,
+      9
+     ],
+     [
+      24,
+      25,
+      24,
+      25,
+      24,
+      25,
+      24,
+      25,
+      24,
+      25,
+      24,
+      25,
+      24,
+      25,
+      24,
+      25,
+      24,
+      25,
+      24,
+      25
+     ],
+     [
+      8,
+      9,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      8,
+      9
+     ],
+     [
+      24,
+      25,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      24,
+      25
+     ],
+     [
+      8,
+      9,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      8,
+      9
+     ],
+     [
+      24,
+      25,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      24,
+      25
+     ],
+     [
+      8,
+      9,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      8,
+      9
+     ],
+     [
+      24,
+      25,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      24,
+      25
+     ],
+     [
+      8,
+      9,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      8,
+      9
+     ],
+     [
+      24,
+      25,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      24,
+      25
+     ],
+     [
+      8,
+      9,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      8,
+      9
+     ],
+     [
+      24,
+      25,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      24,
+      25
+     ],
+     [
+      8,
+      9,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      8,
+      9
+     ],
+     [
+      24,
+      25,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      51,
+      24,
+      25
+     ],
+     [
+      8,
+      9,
+      8,
+      9,
+      8,
+      9,
+      8,
+      9,
+      8,
+      9,
+      8,
+      9,
+      8,
+      9,
+      8,
+      9,
+      8,
+      9,
+      8,
+      9
+     ],
+     [
+      24,
+      25,
+      24,
+      25,
+      24,
+      25,
+      24,
+      25,
+      24,
+      25,
+      24,
+      25,
+      24,
+      25,
+      24,
+      25,
+      24,
+      25,
+      24,
+      25
+     ]
+    ],
+    "attr": [
+     [
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3
+     ],
+     [
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3
+     ],
+     [
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3
+     ],
+     [
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3
+     ],
+     [
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3
+     ],
+     [
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3
+     ],
+     [
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3
+     ],
+     [
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3
+     ],
+     [
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3
+     ],
+     [
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3
+     ],
+     [
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3
+     ],
+     [
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3
+     ],
+     [
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3
+     ],
+     [
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3
+     ],
+     [
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3
+     ],
+     [
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3
+     ]
+    ]
+   }
+  ],
+  "tilesets": [
+   {
+    "id": "ts_29_01",
+    "raw2bpp": "assets/ts_29_01.2bpp",
+    "comment": "copied from vanilla bank $29 id $01"
+   }
+  ],
+  "palettes": [
+   {
+    "id": "pal_roots_room_milly",
+    "label": "CustomPaletteColors_roots_room_milly",
+    "placement": "b",
+    "colors_rgb555": [
+     [
+      1261,
+      27647,
+      6682,
+      0
+     ],
+     [
+      8213,
+      27647,
+      8223,
+      0
+     ],
+     [
+      32066,
+      27647,
+      32373,
+      0
+     ],
+     [
+      5422,
+      27647,
+      11834,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0
+     ]
+    ],
+    "comment": [
+     "derived from vanilla $08 (derive_room_palette logic; idx1/idx3 forced)"
+    ]
+   },
+   {
+    "id": "pal_greatlog_path",
+    "label": "CustomPaletteColors_pal_greatlog_path",
+    "placement": "b",
+    "colors_rgb555": [
+     [
+      "0x1A9E",
+      "0x6BFF",
+      "0x1A37",
+      "0x0000"
+     ],
+     [
+      "0x11DC",
+      "0x6BFF",
+      "0x03F0",
+      "0x0000"
+     ],
+     [
+      "0x1720",
+      "0x6BFF",
+      "0x1156",
+      "0x0000"
+     ],
+     [
+      "0x1720",
+      "0x6BFF",
+      "0x1998",
+      "0x0000"
+     ],
+     [
+      "0x318C",
+      "0x6BFF",
+      "0x5AD6",
+      "0x0000"
+     ],
+     [
+      "0x318C",
+      "0x6BFF",
+      "0x5AD6",
+      "0x0000"
+     ],
+     [
+      "0x318C",
+      "0x6BFF",
+      "0x5AD6",
+      "0x0000"
+     ],
+     [
+      "0x318C",
+      "0x6BFF",
+      "0x5AD6",
+      "0x0000"
+     ]
+    ],
+    "comment": [
+     "copied from vanilla $01 for editing (screen 0 state 0)"
+    ]
+   },
+   {
+    "id": "pal_greatlog_throne",
+    "label": "CustomPaletteColors_pal_greatlog_throne",
+    "placement": "b",
+    "colors_rgb555": [
+     [
+      "0x228C",
+      "0x6BFF",
+      "0x11C6",
+      "0x0000"
+     ],
+     [
+      "0x1994",
+      "0x6BFF",
+      "0x08CC",
+      "0x0000"
+     ],
+     [
+      "0x29AE",
+      "0x6BFF",
+      "0x4AD6",
+      "0x0000"
+     ],
+     [
+      "0x7D00",
+      "0x6BFF",
+      "0x7F42",
+      "0x0000"
+     ],
+     [
+      "0x318C",
+      "0x6BFF",
+      "0x5AD6",
+      "0x0000"
+     ],
+     [
+      "0x318C",
+      "0x6BFF",
+      "0x5AD6",
+      "0x0000"
+     ],
+     [
+      "0x318C",
+      "0x6BFF",
+      "0x5AD6",
+      "0x0000"
+     ],
+     [
+      "0x318C",
+      "0x6BFF",
+      "0x5AD6",
+      "0x0000"
+     ]
+    ],
+    "comment": [
+     "copied from vanilla $00 for editing (screen 0 state 0)"
+    ]
+   },
+   {
+    "id": "pal_greatlog_farm",
+    "label": "CustomPaletteColors_pal_greatlog_farm",
+    "placement": "b",
+    "colors_rgb555": [
+     [
+      "0x2B9A",
+      "0x6BFF",
+      "0x03F0",
+      "0x0000"
+     ],
+     [
+      "0x2358",
+      "0x6BFF",
+      "0x11F4",
+      "0x0000"
+     ],
+     [
+      "0x0051",
+      "0x6BFF",
+      "0x0175",
+      "0x0000"
+     ],
+     [
+      "0x7D00",
+      "0x6BFF",
+      "0x7F42",
+      "0x0000"
+     ],
+     [
+      "0x318C",
+      "0x6BFF",
+      "0x5AD6",
+      "0x0000"
+     ],
+     [
+      "0x318C",
+      "0x6BFF",
+      "0x5AD6",
+      "0x0000"
+     ],
+     [
+      "0x318C",
+      "0x6BFF",
+      "0x5AD6",
+      "0x0000"
+     ],
+     [
+      "0x318C",
+      "0x6BFF",
+      "0x5AD6",
+      "0x0000"
+     ]
+    ],
+    "comment": [
+     "copied from vanilla $04 for editing (screen 0 state 0)"
+    ]
+   },
+   {
+    "id": "pal_stump_hollow",
+    "label": "CustomPaletteColors_pal_stump_hollow",
+    "placement": "b",
+    "colors_rgb555": [
+     [
+      "0x0014",
+      "0x6BFF",
+      "0x151F",
+      "0x0000"
+     ],
+     [
+      "0x088F",
+      "0x6BFF",
+      "0x0D78",
+      "0x0000"
+     ],
+     [
+      "0x088F",
+      "0x6BFF",
+      "0x0D78",
+      "0x0000"
+     ],
+     [
+      "0x1490",
+      "0x6BFF",
+      "0x1CD4",
+      "0x0000"
+     ],
+     [
+      "0x0000",
+      "0x6BFF",
+      "0x7FFF",
+      "0x0000"
+     ],
+     [
+      "0x0000",
+      "0x6BFF",
+      "0x7FFF",
+      "0x0000"
+     ],
+     [
+      "0x0000",
+      "0x6BFF",
+      "0x7FFF",
+      "0x0000"
+     ],
+     [
+      "0x0000",
+      "0x6BFF",
+      "0x7FFF",
+      "0x0000"
+     ]
+    ],
+    "comment": [
+     "gate theme 3 (Red rock (damage floor)): the maze floor colours ($17:$51F5[3], colours 1/3 as the engine forces them)"
+    ]
+   }
+  ],
+  "dialogue": [
+   {
+    "id": "greatlog_throne_king_say1",
+    "boxes": [
+     [
+      "A fine",
+      "partner! The GATE"
+     ],
+     [
+      "GLADE is beyond",
+      "the farm."
+     ]
+    ],
+    "speaker": "King",
+    "comment": "greatlog_throne_king say1 (2 boxes)"
+   },
+   {
+    "id": "greatlog_throne_king_say2",
+    "boxes": [
+     [
+      "LOGGO is up",
+      "the STAIRS on the"
+     ],
+     [
+      "right. He keeps",
+      "your first"
+     ],
+     [
+      "monster."
+     ]
+    ],
+    "speaker": "King",
+    "comment": "greatlog_throne_king say2 (3 boxes)"
+   },
+   {
+    "id": "greatlog_throne_warubou_say1",
+    "boxes": [
+     [
+      "Heh heh!",
+      "GREATLOG is my"
+     ],
+     [
+      "home. The",
+      "GreatTree folk"
+     ],
+     [
+      "never visit."
+     ]
+    ],
+    "speaker": "Warubou",
+    "comment": "greatlog_throne_warubou say1 (3 boxes)"
+   },
+   {
+    "id": "greatlog_throne_guard_say1",
+    "boxes": [
+     [
+      "The STAIRS",
+      "behind you lead"
+     ],
+     [
+      "back to the",
+      "GREATLOG PATH."
+     ]
+    ],
+    "comment": "greatlog_throne_guard say1 (2 boxes)"
+   },
+   {
+    "id": "greatlog_farm_farm_first_text",
+    "boxes": [
+     [
+      "Heh! The",
+      "King sent you?"
+     ],
+     [
+      "This DragonKid is",
+      "yours now!"
+     ],
+     [
+      "Give it a name,",
+      "then choose PICK"
+     ],
+     [
+      "UP"
+     ],
+     [
+      "to take it with",
+      "you!"
+     ]
+    ],
+    "comment": "greatlog_farm_farm_first (5 boxes)",
+    "speaker": "LOGGO"
+   },
+   {
+    "id": "greatlog_farm_guard_after_say1",
+    "boxes": [
+     [
+      "The GATE",
+      "GLADE is east."
+     ],
+     [
+      "Step on the swirl",
+      "to enter GREATLOG"
+     ],
+     [
+      "GATE!"
+     ]
+    ],
+    "speaker": "LOG GUARD",
+    "comment": "greatlog_farm_guard_after say1 (3 boxes)"
+   },
+   {
+    "id": "stump_hollow_boss_stump_king_beaten_say1",
+    "boxes": [
+     [
+      "STUMP KING:Who",
+      "dares wake me?"
+     ]
+    ],
+    "comment": "stump_hollow_boss_stump_king_beaten say1 (1 box)"
+   },
+   {
+    "id": "stump_hollow_boss_stump_king_beaten_say2",
+    "boxes": [
+     [
+      "You beat the",
+      "STUMP KING!"
+     ]
+    ],
+    "comment": "stump_hollow_boss_stump_king_beaten say2 (1 box)"
+   },
+   {
+    "id": "stump_hollow_boss_stump_king_beaten_helper3",
+    "boxes": [
+     [
+      "Warubou:Heh heh!",
+      "Back to the glade!"
+     ]
+    ],
+    "comment": "stump_hollow_boss_stump_king_beaten helper3 (1 box)"
+   },
+   {
+    "id": "greatlog_farm_glade_keeper_say1",
+    "boxes": [
+     [
+      "THE GATE",
+      "GLADE: the swirl"
+     ],
+     [
+      "is GREATLOG GATE,",
+      "a new gate of 3"
+     ],
+     [
+      "floors. The STUMP",
+      "KING waits at the"
+     ],
+     [
+      "bottom. Beat him",
+      "and the swirl"
+     ],
+     [
+      "stops."
+     ]
+    ],
+    "speaker": "KEEPER",
+    "comment": "greatlog_farm_glade_keeper say1 (5 boxes)"
+   }
+  ],
+  "scripts": [
+   {
+    "id": "greatlog_throne_king",
+    "talk": {
+     "steps": [
+      {
+       "if": [
+        {
+         "flag": "first_monster_given",
+         "is": "set"
+        }
+       ],
+       "then": [
+        {
+         "say": "greatlog_throne_king_say1"
+        }
+       ],
+       "else": [
+        {
+         "say": "greatlog_throne_king_say2"
+        }
+       ]
+      }
+     ]
+    }
+   },
+   {
+    "id": "greatlog_throne_entry",
+    "ops": [
+     [
+      "end"
+     ]
+    ]
+   },
+   {
+    "id": "greatlog_throne_warubou",
+    "talk": {
+     "steps": [
+      {
+       "say": "greatlog_throne_warubou_say1"
+      }
+     ]
+    }
+   },
+   {
+    "id": "greatlog_throne_guard",
+    "talk": {
+     "steps": [
+      {
+       "say": "greatlog_throne_guard_say1"
+      }
+     ]
+    }
+   },
+   {
+    "id": "greatlog_farm_farm",
+    "service": {
+     "kind": "farm",
+     "lines": "loggo_lines",
+     "first_monster": {
+      "enemy": "dragonkid",
+      "flag": "first_monster_given",
+      "text": "greatlog_farm_farm_first_text"
+     }
+    }
+   },
+   {
+    "id": "greatlog_farm_entry",
+    "ops": [
+     [
+      "end"
+     ]
+    ]
+   },
+   {
+    "id": "greatlog_farm_guard_after",
+    "talk": {
+     "steps": [
+      {
+       "say": "greatlog_farm_guard_after_say1"
+      }
+     ]
+    }
+   },
+   {
+    "id": "stump_hollow_boss_stump_king_beaten",
+    "talk": {
+     "steps": [
+      {
+       "say": "stump_hollow_boss_stump_king_beaten_say1"
+      },
+      {
+       "battle": {
+        "enemies": [
+         "stump_king"
+        ]
+       }
+      },
+      {
+       "set": [
+        "stump_king_beaten"
+       ]
+      },
+      {
+       "vanish": {
+        "how": "flicker"
+       }
+      },
+      {
+       "say": "stump_hollow_boss_stump_king_beaten_say2"
+      },
+      {
+       "helper": {
+        "dest": "room:$6E",
+        "screen": 1,
+        "x": 5,
+        "y": 5,
+        "say": "stump_hollow_boss_stump_king_beaten_helper3"
+       }
+      }
+     ]
+    }
+   },
+   {
+    "id": "stump_hollow_entry",
+    "ops": [
+     [
+      "end"
+     ]
+    ]
+   },
+   {
+    "id": "greatlog_farm_glade_keeper",
+    "talk": {
+     "steps": [
+      {
+       "say": "greatlog_farm_glade_keeper_say1"
+      }
+     ]
+    }
+   }
+  ],
+  "species": [],
+  "music": {
+   "libraries": [
+    "extracted/dwm2_song_library.json",
+    "extracted/midi_song_library.json"
+   ],
+   "songs": [],
+   "room_defaults": {
+    "0x6B": "0x31"
+   }
+  },
+  "_editor": {
+   "metatiles": {
+    "ts_29_01": [
+     {
+      "name": "Gate swirl (portal floor)",
+      "tiles": [
+       64,
+       65,
+       66,
+       67
+      ],
+      "pal": 0,
+      "src": "borrowed"
+     }
+    ]
+   }
+  },
+  "flags": [
+   {
+    "name": "milly_roots_seen",
+    "index": "0x0159"
+   },
+   {
+    "name": "path_walk_2",
+    "index": "0x015A"
+   },
+   {
+    "name": "path_walk_1",
+    "index": "0x015B"
+   },
+   {
+    "name": "met_king",
+    "index": "0x015C"
+   },
+   {
+    "name": "first_monster_given",
+    "index": "0x015D"
+   },
+   {
+    "name": "guard_moved",
+    "index": "0x015E"
+   },
+   {
+    "name": "stump_king_beaten",
+    "index": "0x015F"
+   }
+  ],
+  "milly_hook": {
+   "arrive": {
+    "room": "roots_room_milly",
+    "screen": 0,
+    "x": 5,
+    "y": 4,
+    "face": "down"
+   },
+   "spin": true,
+   "enabled": true
+  },
+  "new_game": {
+   "start": "room",
+   "story": "opening_done",
+   "at": {
+    "room": "roots_room_milly",
+    "screen": 0,
+    "x": 5,
+    "y": 4,
+    "face": "down"
+   }
+  },
+  "service_lines": [
+   {
+    "id": "loggo_lines",
+    "kind": "farm",
+    "name": "LOGGO lines",
+    "lines": {},
+    "speaker": "LOGGO"
+   }
+  ],
+  "gates": [
+   {
+    "gate": 32,
+    "copy_of": 0,
+    "name": "GREATLOG GATE",
+    "floors": 3,
+    "boss": "stump_hollow"
+   }
+  ]
+ },
+ "progression": {
+  "quests": [],
+  "enemies": [
+   {
+    "id": "dragonkid",
+    "eid": "auto",
+    "species": 20,
+    "level": 1,
+    "exp": 0,
+    "joinability": 0,
+    "hp": 8,
+    "mp": 4,
+    "atk": 10,
+    "def": 7,
+    "agl": 6,
+    "int": 8,
+    "ai_weights": [
+     250,
+     50,
+     0,
+     250
+    ],
+    "skills": [],
+    "comment": "the first monster (Rooms tab \u2192 Service\u2026 \u2192 Farm keeper)"
+   },
+   {
+    "id": "stump_king",
+    "eid": "auto",
+    "species": 45,
+    "level": 2,
+    "exp": 3,
+    "joinability": 7,
+    "hp": 6,
+    "mp": 0,
+    "atk": 3,
+    "def": 2,
+    "agl": 2,
+    "int": 1,
+    "ai_weights": [
+     200,
+     50,
+     100,
+     200
+    ],
+    "skills": [],
+    "name": "Stump King"
+   }
+  ]
+ },
+ "build": {}
+}

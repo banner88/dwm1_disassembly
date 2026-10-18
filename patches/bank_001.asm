@@ -662,10 +662,10 @@ jr_001_4464:
     add hl, hl
     add hl, hl
     ld a, l
-    add LOW(NPCWalkDataTable)
+    add LOW(DefaultSpawnTable)
     ld l, a
     ld a, h
-    adc HIGH(NPCWalkDataTable)
+    adc HIGH(DefaultSpawnTable)
     ld h, a
     ld a, [hl+]
     ldh [$92], a
@@ -749,464 +749,114 @@ Jump_001_44ba:
     ret
 
 
-; S66 A'1 NOTE: auto-label is MISLEADING — this is the DEFAULT PLAYER SPAWN
-; table (4 bytes/map: X lo/hi, Y lo/hi -> hram $92/$93/$95/$96), used on the
-; non-warp room-init path (jr_001_4464) when wIsPlayerChangingMaps = 0.
-; Indexed by RAW mapID x4 (16-bit math). 107 vanilla entries: custom rooms
-; ($6B+) read past the end — pre-existing, empirically benign on every proven
-; path (v7 save-in-room -> reload OK: position comes from the save image, not
-; this table). Crossing mapID $7F changes nothing here. If the editor ever
-; relies on non-warp default spawns in custom rooms, emit a custom table
-; instead. (Bytes below are table data mis-decoded as instructions.)
-NPCWalkDataTable:
-    ld hl, sp+$00
-    ret c
-
-    nop
-    add sp, $00
-    cp b
-    nop
-    ld c, b
-    nop
-    jr c, jr_001_4512
-
-jr_001_4512:
-    add sp, $00
-    ret z
-
-    nop
-    add sp, $00
-    xor b
-    nop
-    ld c, b
-    nop
-    jr c, jr_001_451e
-
-jr_001_451e:
-    add sp, $00
-    jr c, jr_001_4522
-
-jr_001_4522:
-    add sp, $00
-    jr c, jr_001_4526
-
-jr_001_4526:
-    ld c, b
-    nop
-    jr c, jr_001_452a
-
-jr_001_452a:
-    add sp, $00
-    ld c, b
-    nop
-    ld c, b
-    nop
-    jr c, jr_001_4532
-
-jr_001_4532:
-    ld c, b
-    nop
-    jr c, jr_001_4536
-
-jr_001_4536:
-    ld c, b
-    nop
-    ld c, b
-    nop
-    ld c, b
-    nop
-    jr c, jr_001_453e
-
-jr_001_453e:
-    ld c, b
-    nop
-    jr c, jr_001_4542
-
-jr_001_4542:
-    ld c, b
-    nop
-    jr c, jr_001_4546
-
-jr_001_4546:
-    ld c, b
-    nop
-    jr c, jr_001_454a
-
-jr_001_454a:
-    ld c, b
-    nop
-    jr c, jr_001_454e
-
-jr_001_454e:
-    ld c, b
-    nop
-    jr c, jr_001_4552
-
-jr_001_4552:
-    ld c, b
-    nop
-    jr c, jr_001_4556
-
-jr_001_4556:
-    ld c, b
-    nop
-    jr c, jr_001_455a
-
-jr_001_455a:
-    ld c, b
-    nop
-    jr c, jr_001_455e
-
-jr_001_455e:
-    jr c, jr_001_4560
-
-jr_001_4560:
-    jr c, jr_001_4562
-
-jr_001_4562:
-    ld c, b
-    nop
-    jr c, jr_001_4566
-
-jr_001_4566:
-    ld c, b
-    nop
-    jr c, jr_001_456a
-
-jr_001_456a:
-    ld c, b
-    nop
-    ld e, b
-    nop
-    ld e, b
-    nop
-    ld l, b
-    nop
-    ld c, b
-    nop
-    jr c, jr_001_4576
-
-jr_001_4576:
-    ld c, b
-    nop
-    jr c, jr_001_457a
-
-jr_001_457a:
-    ld c, b
-    nop
-    jr c, jr_001_457e
-
-jr_001_457e:
-    ld c, b
-    nop
-    jr c, jr_001_4582
-
-jr_001_4582:
-    ld c, b
-    nop
-    jr c, jr_001_4586
-
-jr_001_4586:
-    ld c, b
-    nop
-    jr c, jr_001_458a
-
-jr_001_458a:
-    ld c, b
-    nop
-    jr c, jr_001_458e
-
-jr_001_458e:
-    ld c, b
-    nop
-    jr c, jr_001_4592
-
-jr_001_4592:
-    ld c, b
-    nop
-    jr c, jr_001_4596
-
-jr_001_4596:
-    ld c, b
-    nop
-    jr c, jr_001_459a
-
-jr_001_459a:
-    ld c, b
-    nop
-    jr c, jr_001_459e
-
-jr_001_459e:
-    ld c, b
-    nop
-    jr c, jr_001_45a2
-
-jr_001_45a2:
-    ld c, b
-    nop
-    jr c, jr_001_45a6
-
-jr_001_45a6:
-    ld c, b
-    nop
-    jr c, jr_001_45aa
-
-jr_001_45aa:
-    ld c, b
-    nop
-    jr c, jr_001_45ae
-
-jr_001_45ae:
-    ld c, b
-    nop
-    jr c, jr_001_45b2
-
-jr_001_45b2:
-    ld c, b
-    nop
-    jr c, jr_001_45b6
-
-jr_001_45b6:
-    ld c, b
-    nop
-    jr c, jr_001_45ba
-
-jr_001_45ba:
-    ld c, b
-    nop
-    jr c, jr_001_45be
-
-jr_001_45be:
-    ld c, b
-    nop
-    jr c, jr_001_45c2
-
-jr_001_45c2:
-    ld c, b
-    nop
-    cp b
-    nop
-    ld c, b
-    nop
-    jr c, jr_001_45ca
-
-jr_001_45ca:
-    ld c, b
-    nop
-    jr c, jr_001_45ce
-
-jr_001_45ce:
-    ld c, b
-    nop
-    jr c, jr_001_45d2
-
-jr_001_45d2:
-    ld c, b
-    nop
-    jr c, jr_001_45d6
-
-jr_001_45d6:
-    ld c, b
-    nop
-    jr c, jr_001_45da
-
-jr_001_45da:
-    ld c, b
-    nop
-    jr c, jr_001_45de
-
-jr_001_45de:
-    ld c, b
-    nop
-    jr c, jr_001_45e2
-
-jr_001_45e2:
-    ld c, b
-    nop
-    jr c, jr_001_45e6
-
-jr_001_45e6:
-    ld c, b
-    nop
-    jr c, jr_001_45ea
-
-jr_001_45ea:
-    ld c, b
-    nop
-    jr c, jr_001_45ee
-
-jr_001_45ee:
-    ld c, b
-    nop
-    jr c, jr_001_45f2
-
-jr_001_45f2:
-    ld c, b
-    nop
-    jr c, jr_001_45f6
-
-jr_001_45f6:
-    ld c, b
-    nop
-    jr c, jr_001_45fa
-
-jr_001_45fa:
-    ld c, b
-    nop
-    ld a, b
-    nop
-    ld c, b
-    nop
-    jr c, jr_001_4602
-
-jr_001_4602:
-    ld c, b
-    nop
-    jr c, jr_001_4606
-
-jr_001_4606:
-    ld c, b
-    nop
-    jr c, jr_001_460a
-
-jr_001_460a:
-    ld c, b
-    nop
-    jr c, jr_001_460e
-
-jr_001_460e:
-    ld c, b
-    nop
-    jr c, jr_001_4612
-
-jr_001_4612:
-    ld c, b
-    nop
-    jr c, jr_001_4616
-
-jr_001_4616:
-    ld c, b
-    nop
-    jr c, jr_001_461a
-
-jr_001_461a:
-    ld c, b
-    nop
-    ld a, b
-    nop
-    ld c, b
-    nop
-    ld c, b
-    nop
-    ld c, b
-    nop
-    ld c, b
-    nop
-    ld c, b
-    nop
-    jr c, jr_001_462a
-
-jr_001_462a:
-    ld c, b
-    nop
-    jr c, jr_001_462e
-
-jr_001_462e:
-    ld c, b
-    nop
-    jr c, jr_001_4632
-
-jr_001_4632:
-    ld c, b
-    nop
-    jr c, jr_001_4636
-
-jr_001_4636:
-    ld c, b
-    nop
-    ld c, b
-    nop
-    ld c, b
-    nop
-    jr c, jr_001_463e
-
-jr_001_463e:
-    ld c, b
-    nop
-    ld c, b
-    nop
-    ld c, b
-    nop
-    ld l, b
-    nop
-    ld c, b
-    nop
-    ld l, b
-    nop
-    ld c, b
-    nop
-    ld l, b
-    nop
-    ld l, b
-    nop
-    ld l, b
-    nop
-    ld c, b
-    nop
-    ld l, b
-    nop
-    ret c
-
-    nop
-    ret c
-
-    nop
-    ld c, b
-    nop
-    ld l, b
-    ld bc, $00e8
-    cp b
-    nop
-    ld hl, sp+$00
-    cp b
-    nop
-    jr jr_001_4668
-
-jr_001_4668:
-    jr z, jr_001_466a
-
-jr_001_466a:
-    jr jr_001_466c
-
-jr_001_466c:
-    jr z, jr_001_466e
-
-jr_001_466e:
-    ld c, b
-    nop
-    ld c, b
-    nop
-    ld c, b
-    nop
-    ld c, b
-    nop
-    ld l, b
-    nop
-    ld c, b
-    nop
-    ld c, b
-    nop
-    jr c, jr_001_467e
-
-jr_001_467e:
-    ld c, b
-    nop
-    jr c, jr_001_4682
-
-jr_001_4682:
-    ld c, b
-    nop
-    jr c, ScanPartySlotTable
+; DefaultSpawnTable (S66 note; re-sectioned + renamed S152 — was the auto-label
+; NPCWalkDataTable): the DEFAULT PLAYER SPAWN per map, 4 bytes a map (X lo/hi,
+; Y lo/hi in pixels = cell * 16 + 8 -> HRAM $92/$93/$95/$96), read by the
+; NON-warp room load (jr_001_4464: wIsPlayerChangingMaps = 0 and $C8EA = 0) —
+; only a NEW GAME takes that path (measured S152, PyBoy: map $2F -> (4, 11),
+; Terry's bed in the intro bedroom). 96 rows, maps $00-$5F: the table ends where
+; ScanPartySlotTable begins ($4506 + $60 * 4 = $4686), so maps $60-$6A would
+; read code (never reached; the S66 note said 107). Patched builds index it
+; through ROM0 MapIDClampForPalette (a custom room -> row $16) and a new game
+; can start elsewhere: custom.new_game (bank $79 entry 2 NewGameStart puts the
+; start cell in the warp mailbox, so this table is not read).
+DefaultSpawnTable:
+    dw $00F8, $00D8   ; map $00: cell (15, 13)
+    dw $00E8, $00B8   ; map $01: cell (14, 11)
+    dw $0048, $0038   ; map $02: cell (4, 3)
+    dw $00E8, $00C8   ; map $03: cell (14, 12)
+    dw $00E8, $00A8   ; map $04: cell (14, 10)
+    dw $0048, $0038   ; map $05: cell (4, 3)
+    dw $00E8, $0038   ; map $06: cell (14, 3)
+    dw $00E8, $0038   ; map $07: cell (14, 3)
+    dw $0048, $0038   ; map $08: cell (4, 3)
+    dw $00E8, $0048   ; map $09: cell (14, 4)
+    dw $0048, $0038   ; map $0A: cell (4, 3)
+    dw $0048, $0038   ; map $0B: cell (4, 3)
+    dw $0048, $0048   ; map $0C: cell (4, 4)
+    dw $0048, $0038   ; map $0D: cell (4, 3)
+    dw $0048, $0038   ; map $0E: cell (4, 3)
+    dw $0048, $0038   ; map $0F: cell (4, 3)
+    dw $0048, $0038   ; map $10: cell (4, 3)
+    dw $0048, $0038   ; map $11: cell (4, 3)
+    dw $0048, $0038   ; map $12: cell (4, 3)
+    dw $0048, $0038   ; map $13: cell (4, 3)
+    dw $0048, $0038   ; map $14: cell (4, 3)
+    dw $0048, $0038   ; map $15: cell (4, 3)
+    dw $0038, $0038   ; map $16: cell (3, 3)
+    dw $0048, $0038   ; map $17: cell (4, 3)
+    dw $0048, $0038   ; map $18: cell (4, 3)
+    dw $0048, $0058   ; map $19: cell (4, 5)
+    dw $0058, $0068   ; map $1A: cell (5, 6)
+    dw $0048, $0038   ; map $1B: cell (4, 3)
+    dw $0048, $0038   ; map $1C: cell (4, 3)
+    dw $0048, $0038   ; map $1D: cell (4, 3)
+    dw $0048, $0038   ; map $1E: cell (4, 3)
+    dw $0048, $0038   ; map $1F: cell (4, 3)
+    dw $0048, $0038   ; map $20: cell (4, 3)
+    dw $0048, $0038   ; map $21: cell (4, 3)
+    dw $0048, $0038   ; map $22: cell (4, 3)
+    dw $0048, $0038   ; map $23: cell (4, 3)
+    dw $0048, $0038   ; map $24: cell (4, 3)
+    dw $0048, $0038   ; map $25: cell (4, 3)
+    dw $0048, $0038   ; map $26: cell (4, 3)
+    dw $0048, $0038   ; map $27: cell (4, 3)
+    dw $0048, $0038   ; map $28: cell (4, 3)
+    dw $0048, $0038   ; map $29: cell (4, 3)
+    dw $0048, $0038   ; map $2A: cell (4, 3)
+    dw $0048, $0038   ; map $2B: cell (4, 3)
+    dw $0048, $0038   ; map $2C: cell (4, 3)
+    dw $0048, $0038   ; map $2D: cell (4, 3)
+    dw $0048, $0038   ; map $2E: cell (4, 3)
+    dw $0048, $00B8   ; map $2F: cell (4, 11)
+    dw $0048, $0038   ; map $30: cell (4, 3)
+    dw $0048, $0038   ; map $31: cell (4, 3)
+    dw $0048, $0038   ; map $32: cell (4, 3)
+    dw $0048, $0038   ; map $33: cell (4, 3)
+    dw $0048, $0038   ; map $34: cell (4, 3)
+    dw $0048, $0038   ; map $35: cell (4, 3)
+    dw $0048, $0038   ; map $36: cell (4, 3)
+    dw $0048, $0038   ; map $37: cell (4, 3)
+    dw $0048, $0038   ; map $38: cell (4, 3)
+    dw $0048, $0038   ; map $39: cell (4, 3)
+    dw $0048, $0038   ; map $3A: cell (4, 3)
+    dw $0048, $0038   ; map $3B: cell (4, 3)
+    dw $0048, $0038   ; map $3C: cell (4, 3)
+    dw $0048, $0078   ; map $3D: cell (4, 7)
+    dw $0048, $0038   ; map $3E: cell (4, 3)
+    dw $0048, $0038   ; map $3F: cell (4, 3)
+    dw $0048, $0038   ; map $40: cell (4, 3)
+    dw $0048, $0038   ; map $41: cell (4, 3)
+    dw $0048, $0038   ; map $42: cell (4, 3)
+    dw $0048, $0038   ; map $43: cell (4, 3)
+    dw $0048, $0038   ; map $44: cell (4, 3)
+    dw $0048, $0078   ; map $45: cell (4, 7)
+    dw $0048, $0048   ; map $46: cell (4, 4)
+    dw $0048, $0048   ; map $47: cell (4, 4)
+    dw $0048, $0038   ; map $48: cell (4, 3)
+    dw $0048, $0038   ; map $49: cell (4, 3)
+    dw $0048, $0038   ; map $4A: cell (4, 3)
+    dw $0048, $0038   ; map $4B: cell (4, 3)
+    dw $0048, $0048   ; map $4C: cell (4, 4)
+    dw $0048, $0038   ; map $4D: cell (4, 3)
+    dw $0048, $0048   ; map $4E: cell (4, 4)
+    dw $0048, $0068   ; map $4F: cell (4, 6)
+    dw $0048, $0068   ; map $50: cell (4, 6)
+    dw $0048, $0068   ; map $51: cell (4, 6)
+    dw $0068, $0068   ; map $52: cell (6, 6)
+    dw $0048, $0068   ; map $53: cell (4, 6)
+    dw $00D8, $00D8   ; map $54: cell (13, 13)
+    dw $0048, $0168   ; map $55: cell (4, 22)
+    dw $00E8, $00B8   ; map $56: cell (14, 11)
+    dw $00F8, $00B8   ; map $57: cell (15, 11)
+    dw $0018, $0028   ; map $58: cell (1, 2)
+    dw $0018, $0028   ; map $59: cell (1, 2)
+    dw $0048, $0048   ; map $5A: cell (4, 4)
+    dw $0048, $0048   ; map $5B: cell (4, 4)
+    dw $0068, $0048   ; map $5C: cell (6, 4)
+    dw $0048, $0038   ; map $5D: cell (4, 3)
+    dw $0048, $0038   ; map $5E: cell (4, 3)
+    dw $0048, $0038   ; map $5F: cell (4, 3)
 
 ScanPartySlotTable:
     ld hl, $cac1

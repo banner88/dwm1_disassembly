@@ -1002,3 +1002,14 @@ mapping, a `rst $10` executing in bank $80). ✏️ = fixed in place this sessio
 | PROJECT_COMPILER §2.39 / help 67: the bottom box "for the egg appraiser / namer / librarian" | ✏️ widened S151 r2 | every service and every shopkeeper (the Vault, farm, Medal Man, gate guide, shops opened at the top from below) | same |
 | validators.py (S91): "{n} NPCs with distinct sprites may exhaust the sprite-sheet VRAM budget" | ⚠ counted NPCs, not sprites — fixed S151 r3 | the sheet budget is per DIFFERENT sprite (repeats share a sheet — the NPC panel's own words); 4 NPCs of 3 sprites warned | the S151 demo hall |
 | help 20_npcs / ROOM_DATA_FORMAT "Sprite limits": the limits are sprites only | ⚠ incomplete — S151 r3 | the frame time: ≈13-14 of 154 lines per NPC on screen; 5+ with the party = half speed (measured) | `walk_items.py speed`, the lag rooms |
+
+## S152 addendum (2026-10-18; the opening — ROADMAP E3 a2)
+
+| File / claim | Verdict | What is true | Evidence |
+|---|---|---|---|
+| bank $01 S66 comment / CROSSBANK_ROOMS: the default-spawn table "107 entries", auto-label `NPCWalkDataTable` | ❌ WRONG — fixed S152 | 96 rows (maps $00-$5F; it ends where `ScanPartySlotTable` begins, $4686); renamed `DefaultSpawnTable`, re-sectioned as `dw x, y` rows in both trees (`tools/resection_default_spawn_01.py`); only a new game reads it | clean `1ca6579…` byte-perfect; the S152 PyBoy start (map $2F → (4, 11)) |
+| help 64 / S121: the Milly hook "the game goes on" after the whirl | ⚠ INCOMPLETE — fixed S152 | the replaced bedroom tail set `$0000` / `$D974` at its end; the hook did not, so the bedroom's scene counted as not done | `walk_opening.py --variant intro` (story check FAILED on `$0000` before the fix) |
+| help 90 (S109): "the announcer and the masters' words are text (not editable yet)" | ✏️ stale since S150 | game texts, editable on the Text tab | S150 |
+| services_doc (S126): a first-visit flag "created when new" | ❌ BUG — fixed S152 | the typed name was stored as the flag ("Pulio met") while the flag list holds slugs; the build refused it | `test_s152` |
+| MONSTER_DATA "Creation": the nickname cases | ⚠ INCOMPLETE — added S152 | every other row's monster has NO nickname (+$01 zero, "0000") | the S152 demo's first build |
+| cutscene_build (S119): `CELL_MIN = -3` "walking off the screen is allowed" (any actor) | ⚠ WRONG for the player — fixed S152 r2 | an NPC may walk off; the player's walk past the edge starts the scroll mid-walk and leaves him off the new screen; refused, help 63 / 75 say to warp | `walk_opening.py` (r1 build: 3 FAIL) |

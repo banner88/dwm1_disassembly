@@ -76,8 +76,9 @@ V = {
     ("bank_001.asm", "LoadNewBGMIdIntoA", 0): "CP_UNSIGNED", # patched S64: resolver-first, then same guard
     ("bank_001.asm", "jr_001_4346", 0): "TBL_GUARDED",       # RoomBGMTable x1 stride: cp $61 guard stops >=$61
     ("bank_001.asm", "SaveMapStateToHRAM", 0): "COPY",       # hram $d5 consumer = unsigned cp classifier
-    ("bank_001.asm", "jr_001_4464", 0): "WATCH",             # default-SPAWN table (auto-label "NPCWalkDataTable"
-                                                             # is misleading), raw mapID x4, 16-bit math
+    ("bank_001.asm", "jr_001_4464", 0): "WATCH",             # default-SPAWN table (S152: DefaultSpawnTable, was the
+                                                             # auto-label "NPCWalkDataTable"; 96 rows), raw mapID x4,
+                                                             # 16-bit math; read by a NEW GAME only
     ("bank_001.asm", "CheckBattleModeFlag", 0): "COPY",      # -> wScriptMapType
     ("bank_001.asm", "RetIfInGateworld", 0): "CP_UNSIGNED",
     ("bank_001.asm", "CheckSpecialMapExits", 0): "CP_UNSIGNED",

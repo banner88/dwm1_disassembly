@@ -13,6 +13,7 @@ from editor2.core import textenc as T
 
 TEXT_KEYS = ('intro', 'not_yet', 'after')
 MATE_NOTE = 'a breeding mate (Rooms tab → Service… → Breeder)'
+STARTER_NOTE = 'the first monster (Rooms tab → Service… → Farm keeper)'   # S152
 STAT_KEYS = ('hp', 'mp', 'atk', 'def', 'agl', 'int')
 
 
@@ -165,6 +166,29 @@ class BreedersMixin:
         f.pop('name', None)
         return self.add_enemy(comment=MATE_NOTE, **{k: v for k, v in f.items()
                                                     if k in self.ENEMY_FIELDS})
+
+    def starter_enemy(self, species, level):
+        """S152: the project enemy a farm keeper hands over as the first monster —
+        `species` at `level` made like a breeder's mate (mate_stats), marked
+        STARTER_NOTE; one made before for the same species / level is re-used."""
+        species, level = int(species), int(level)
+        for e in self.project_enemies():
+            if e.get('comment') == STARTER_NOTE and int(e.get('species', -1)) == species \
+                    and int(e.get('level', -1)) == level:
+                return e['id']
+        f = self.mate_stats(species, level)
+        f.pop('name', None)
+        f['hp'] = max(2, int(f.get('hp', 2)))              # S149: a row's HP is at least 2
+        return self.add_enemy(comment=STARTER_NOTE, **{k: v for k, v in f.items()
+                                                       if k in self.ENEMY_FIELDS})
+
+    def starter_info(self, ref):
+        """(species, level) when `ref` is a first monster made by starter_enemy (or a
+        breeder's mate), else None."""
+        e = self.project_enemy(ref) if isinstance(ref, str) else None
+        if e is not None and e.get('comment') in (STARTER_NOTE, MATE_NOTE):
+            return int(e['species']), int(e['level'])
+        return None
 
     def mate_info(self, ref):
         """(species, level) when `ref` is a mate made by mate_for, else None."""

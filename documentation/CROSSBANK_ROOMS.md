@@ -86,7 +86,7 @@ Four same-size `ld a,[wMapID]` → `call MapIDClampForPalette/Dispatch` replacem
 | Address | Table | Purpose |
 |---------|-------|---------|
 | $6115 | VRAM dispatch ($6119, **112** entries — S99) | Per-frame room TILE ANIMATION (S99: no longer a clamp — custom rooms ask bank $71 entry 3 for their `animation` source; ROOM_DATA_FORMAT "Animated tiles") |
-| $447C | NPCWalkDataTable ($4506, ×4) | NPC walk animation frames |
+| $447C | DefaultSpawnTable ($4506, ×4; was the auto-label NPCWalkDataTable — S152) | the default player spawn of a NON-warp room load (only a new game: DATA_STRUCTURES "New game start (S152)"), 96 rows ($00-$5F) |
 | $4C3E | Room entry script call | ScriptInit with mapID |
 | $5E44 | $5E7D table (107 bytes) | Per-room special effects |
 
@@ -164,7 +164,7 @@ Discovered incrementally across 19 ROM iterations. Missing even ONE table causes
 | $0B SpecialRooms | Room data ($4B43, ×2) | rst $10 to bank $60 |
 | $17 (2 sites) | AttrPtrTable ($476F, ×2) | call MapIDClampForPalette |
 | $01 $6119 dispatch | VRAM effects (107 entries) | call MapIDClampForDispatch |
-| $01 NPCWalkDataTable | NPC walk data ($4506, ×4) | call MapIDClampForPalette |
+| $01 DefaultSpawnTable (was NPCWalkDataTable, S152) | default spawn ($4506, ×4) | call MapIDClampForPalette |
 | $01 room entry script | ScriptInit with mapID | call MapIDClampForPalette |
 | $01 $5E7D table | Per-room byte (107 entries) | call MapIDClampForPalette |
 | ROM0 ~$1EBF | Collision threshold ($26E3, ×8) | call MapIDClampForPalette |
@@ -516,12 +516,14 @@ spot, $90 = step-on trigger — S98 names; ROOM_DATA_FORMAT), not a mapID.
      S64, consulted only after the bounds-checked bank $71 resolver.
 2. **Fixed-size tables indexed by raw mapID.** All live ones are covered
    above. One pre-existing **WATCH** item: the bank $01 default-player-spawn
-   table (auto-label `NPCWalkDataTable` — misleading; see the S66 comment at
-   the site) is indexed raw-mapID ×4 with 107 entries. Custom rooms already
+   table (auto-label `NPCWalkDataTable` — misleading; renamed `DefaultSpawnTable`
+   and re-sectioned S152: 96 rows, maps $00-$5F, not 107) is indexed raw-mapID ×4. Custom rooms already
    overrun it today; every proven path is unaffected (v7 save-in-room →
    reload OK: position restores from the save image). Crossing $80 changes
    nothing. If the editor ever depends on non-warp default spawns in custom
-   rooms, emit a custom table.
+   rooms, emit a custom table. (S152: a new game that starts in a custom room —
+   `custom.new_game` — puts its cell in the warp mailbox instead; the table is
+   read only by the game's own new game, map $2F.)
 
 ### Custom-side arithmetic ceilings
 

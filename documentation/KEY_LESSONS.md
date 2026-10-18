@@ -29,7 +29,7 @@ This document records every bug encountered and the root cause. Future implement
 **Root cause**: THREE unpatched mapID table lookups:
 1. **ROM0 collision threshold** ($26E3, ×8) — reading past 107-entry table gave wrong threshold, classifying ALL tiles as walls
 2. **Room entry script** (bank $01) — ScriptInit with mapID $6B routed to bank $0F which had no valid entry → script engine read garbage → hung with script-active flag set → input suppressed
-3. **NPCWalkDataTable** (bank $01, $4506, ×4) — reading past table bounds
+3. **NPCWalkDataTable** (bank $01, $4506, ×4; S152: really `DefaultSpawnTable`, the new game's default spawn, 96 rows) — reading past table bounds
 
 **Fix**: Same-size `call MapIDClampForPalette` for all three sites, plus the $5E7D table.
 **Rule**: EVERY table indexed by mapID must be found and patched. Search ALL banks for `ld a, [wMapID]` followed by table arithmetic.
@@ -6886,3 +6886,88 @@ stops on any warning about its rooms; the walk measures every demo room's speed.
 build's warnings are read, not filtered — a demo / test project must build with ZERO warnings
 about the content the session added; anything a player can see or feel (sprites, speed) gets
 a walk check (here: ticks per frame ≥ 0.97 in every room).
+
+## S152 — the opening: the first load wipes what you set before it (ROADMAP E3 a2)
+
+### A new game's first field load zeroes the story range again
+**Symptom:** the first NewGameStart set the original opening's flags ($0001 …) and room bytes
+before the first load — every one read 0 in the room. **Root cause (measured, PyBoy):** the new
+game's first field load runs with `$C8EA` = 0, and bank $01 `ClearAnimationState` then zeroes
+$D92A-$D9E9 (step counters, room bytes, flags $0000-$0277) — after the title's own clear. **Fix:**
+NewGameStart sets only EXTENDED flags ($1000+, outside the range); the game's own flags / bytes
+go into the start room's first scene (or the Milly hook's arrival scene). **Rule:** state a new
+game must start with is written AFTER the first field load — by a scene — unless it lives
+outside $D92A-$D9E9.
+
+### The warp mailbox needs its destination even when wMapID is already right
+**Symptom:** the room start (wMapID = the room, `wIsPlayerChangingMaps` = 1, the cell in
+`wWarpSpawn*`) loaded the Castle. **Root cause:** a warp arrival takes its room from
+`wWarpGateId` (bank $0B entry 0 commits it to wMapID), which the title's clear left 0 = map 0.
+**Fix:** `wWarpGateId` := the map, `wWarpFlag` := 0. **Rule:** use the whole mailbox (destination,
+flag, cell, region) — never half of it.
+
+### A replaced script tail takes its side effects with it
+**Symptom:** with the Milly hook, flag `$0000` (the bedroom done) stayed OFF after the whirl (the
+intro walk's story check). **Root cause:** S121 replaced the bedroom tail (pos 951-1044) whose
+LAST steps set `$0000` and `$D974`; the replacement did the visible part only. **Fix:** the hook
+script sets both (S152). **Rule:** when a hook replaces game script, list every state write of the
+replaced words (flags, RAM) and keep them — not just what the player sees.
+
+### "0000" — a monster from an enemy row has no name
+**Symptom:** the first monster LOGGO gave was called "0000". **Root cause:** the constructor
+zero-fills the nickname; the game names a joining monster on the join naming screen and its
+scripted gifts use the few named EIDs. **Fix:** story command 4 `name_given` after every
+project give (the species' default nickname; optionally the naming screen). **Rule:** walk
+every new give path to the monster's NAME and stats on screen, not just "it is in the party".
+
+### A text after the naming screen needs init_dialog
+**Symptom:** after the naming screen the farm menu opened and the keeper's farewell never
+ended (script waiting, no box). **Fix:** the game's order: `close_text`, op `$04 15`,
+`init_dialog`, the next text. **Rule:** copy the game's own sequence around a screen (the
+Castle's hero naming, Grandpa's newborn) — op `$04` screens close the dialog.
+
+### "Purely via the editor" is a test, not a claim
+The demo project was made by driving the editor's window, dialogs and undo commands
+(`tools/walk_opening.py make`), then walked from the title in PyBoy. Every gap it hit — the
+nameless monster, the stuck farewell, flag names with spaces refused at build — was a real
+editor bug a user would have hit; three of them were found only by the walk, none by the unit
+tests. Help 75 was written from that project.
+
+### S152 r2 — a walk over two screens: do what the game does, and look at the frames
+**Symptom** (user): "In second screen, milly disappears. THen warubou is sitting inside the
+entrance hall. Then he goes ABOVE the hole and then milly appears. Not ideal. See how vanilla game
+does it." **Root cause (a frame log):** the r1 scene walked the player off the screen's top edge —
+the engine's scroll started while the scripted walk still ran and left her one row below the new
+screen; the walk checks only asked "which screens, which room at the end", never "is she on the
+screen". The door object sat on the trunk above the hole. **The game's way** (GreatTree's old man,
+map $01 script 0): walk to the edge, op `$0F` to the next screen, its own entry script goes on; the
+helper is an NPC of every screen; into a door = into the hole, sound `$51`, hidden, warp. Hiding the
+player before a warp then showed a second engine fact: the hidden bit (HRAM `$FF90` bit 6) survives
+the room change (the game's destination scripts all start "the player is shown"). **Fix:** the
+builder refuses a player walk off the screen and shows a hidden player again in the destination
+room; the demo re-made; the walk samples the player's cell / the helper's slot every 4 frames.
+**Rule:** a scene's acceptance includes what the player SEES (everyone on the screen, no pop-in,
+nobody walking over the art) — sample positions, and look at the frames; and copy the game's own
+pattern for a staging problem before inventing one.
+
+### S152 r2 — never run two project builds at once
+**Symptom:** after two `walk_opening.py make` ran in parallel, test_compiler failed "the original
+font still says TERRY" — 37 files of `disassembly/` held patched / generated text. **Root cause:**
+`builder.build_rom` stages its files OVER `disassembly/`, builds, then restores from a backup taken
+at its start — the second build's backup was the first build's staged files. **Fix:** each damaged
+file restored (the commit's copy; this session's two annotated files from the delivered set), clean
+`1ca6579…` byte-perfect, the ROMs rebuilt on the clean tree (identical md5s). **Rule:** builds
+(editor Build, `build_project.py`, `walk_*.py make`, test suites with `--rom`, verify_integrity) run
+one at a time; PyBoy walks may run in parallel.
+
+### S152 r3 — a door fires under a scripted walk
+**Symptom** (user): "They go in at top of tree, then room appears, then Milly's sprite disappears,
+then white screen AGAIN and room appears AGAIN." **Root cause (frame log):** r2 put the door ON
+the hole and walked Milly into it in the scene — walk-on exits are checked during scripted walks,
+so the door loaded the throne room mid-scene; the scene's remaining steps (sound, Disappear,
+Warp) ran in the throne room and the Warp loaded it again. The r2 walk only checked where she
+ended up. **The game:** GreatTree screen 0 has NO exits in the room state its walk scene plays in
+(state 0); the door is in state 1. **Fix:** the builder refuses a player walk onto an exit of a
+state the scene can play in; the demo's door moved to a state picked after the walk; the walk
+counts room loads (one). **Rule:** when copying a game staging pattern, copy its room states too —
+check the game room's exits per state, not just its script.

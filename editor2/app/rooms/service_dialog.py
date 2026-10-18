@@ -75,6 +75,7 @@ class ServiceDialog(QDialog):
         self.flag_label = QLabel('remembered by flag')
         f.addRow(self.flag_label, self.flag)
         v.addLayout(f)
+        v.addWidget(self._starter_box())
         v.addWidget(self._breeder_box())
         bb = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         bb.accepted.connect(self._ok)
@@ -93,7 +94,91 @@ class ServiceDialog(QDialog):
             self.flag.setText(ft.get('flag') or '')
         self._first_toggled(bool(ft))
         self._fill_breeder(self._cur.get('breeder') or {})
+        self._fill_starter(self._cur.get('first_monster'))
         self._kind_changed(self.kinds.currentRow())
+
+    # ------------------------------------------------------------ S152 the starter
+    def _starter_box(self):
+        """S152 (user: "giving player new monster and setting up farm as a simple button
+        in editor - like with pulio in original"): a farm keeper who hands over the first
+        monster — the game's Pulio: the monster waits in the farm, his menu opens, the
+        player chooses PICK UP."""
+        self.starter = QGroupBox('First monster (like Pulio and Slib)')
+        g = QFormLayout(self.starter)
+        self.st_on = QCheckBox('hands over the first monster (once)')
+        self.st_on.setToolTip('The first time the player talks to this farm keeper, the '
+                              'monster below goes into the farm and the farm menu opens at '
+                              'once — the player chooses PICK UP to take it, as with Pulio and '
+                              'Slib in the game. Later talks: the farm as usual.')
+        g.addRow(self.st_on)
+        self.st_species = QComboBox()
+        for sid, name in self.doc.mate_species():
+            self.st_species.addItem(f'{name} (#{sid})', sid)
+        self.st_level = QSpinBox()
+        self.st_level.setRange(1, 99)
+        self.st_level.setValue(1)
+        self.st_level.setPrefix('level ')
+        sw = QWidget()
+        sh = QHBoxLayout(sw)
+        sh.setContentsMargins(0, 0, 0, 0)
+        sh.addWidget(self.st_species, 1)
+        sh.addWidget(self.st_level)
+        sw.setToolTip('The monster is made for you as one of your enemies (Monsters tab → '
+                      'enemies): that species at that level, its stats from the species\' '
+                      'growth (re-rolled 80-100 % when it is given, as the game does).')
+        self.st_species_row = sw
+        g.addRow('the monster', sw)
+        self.st_name = QCheckBox('the player names it (the naming screen, its species\' '
+                                 'short name offered — as a joining monster)')
+        self.st_name.setChecked(True)
+        self.st_name.setToolTip('Unticked it simply gets its species\' short name (the default '
+                                'nickname, Monsters tab). Either way it is never nameless.')
+        g.addRow(self.st_name)
+        self.st_speaker = QLineEdit()
+        self.st_speaker.setPlaceholderText('the speaker of these words (empty = "*")')
+        self.st_speaker.setToolTip('Shown before the first line ("LOGGO:"), at most 9 letters. '
+                                   'The farm menu\'s own lines take the line set\'s speaker.')
+        g.addRow('speaker', self.st_speaker)
+        self.st_text = GameTextField(self.rom, empty_note='nothing — the farm menu opens at '
+                                     'once (the default words say "Choose PICK UP")')
+        g.addRow(QLabel('What it says first — each box as the game shows it:'))
+        g.addRow(self.st_text)
+        self.st_flag = QLineEdit('first monster given')
+        self.st_flag.setToolTip('The flag that remembers the monster was given (created when '
+                                'new). Use it in state rules and conversations — e.g. a guard '
+                                'who lets the player pass once it is ON.')
+        g.addRow('remembered by flag', self.st_flag)
+        self.st_on.toggled.connect(self._starter_toggled)
+        return self.starter
+
+    def _fill_starter(self, fm):
+        self.st_on.setChecked(bool(fm))
+        made = self.doc.starter_info(fm.get('enemy')) if fm and fm.get('enemy') is not None else None
+        sp, lv = made or (self.st_species.itemData(0), 1)
+        self.st_species.setCurrentIndex(max(0, self.st_species.findData(sp)))
+        self.st_level.setValue(lv)
+        boxes = (fm or {}).get('boxes')
+        self.st_text.set_value(boxes if fm else self.doc.FIRST_MONSTER_TEXT)
+        if fm and fm.get('flag'):
+            self.st_flag.setText(fm['flag'])
+        self.st_name.setChecked((fm or {}).get('name', 'ask') == 'ask')
+        self.st_speaker.setText((fm or {}).get('speaker') or '')
+        self._starter_toggled(bool(fm))
+
+    def _starter_toggled(self, on):
+        for w in (self.st_species_row, self.st_text, self.st_flag, self.st_name,
+                  self.st_speaker):
+            w.setVisible(on)
+
+    def starter_spec(self):
+        """{species, level, boxes, flag} for the first monster, else None."""
+        if self.kind() != 'farm' or not self.st_on.isChecked():
+            return None
+        return {'species': self.st_species.currentData(), 'level': self.st_level.value(),
+                'boxes': self.st_text.value() or [], 'flag': self.st_flag.text().strip()
+                or 'first monster given',
+                'speaker': self.st_speaker.text().strip() or None,
+                'name': 'ask' if self.st_name.isChecked() else 'species'}
 
     # ------------------------------------------------------------ S127 breeder
     def _breeder_box(self):
@@ -219,6 +304,8 @@ class ServiceDialog(QDialog):
 
     def _kind_changed(self, _row):
         kind = self.kind()
+        if hasattr(self, 'starter'):
+            self.starter.setVisible(kind == 'farm')                  # S152
         if hasattr(self, 'brd'):
             self.brd.setVisible(kind == 'breeder')
             # S127 r4 (user: "Why is first visit greyed out?"): every kind has a first
@@ -270,6 +357,8 @@ class ServiceDialog(QDialog):
 
     def _ok(self):
         fields = [('first visit', self.first_text)] if self.first.isChecked() else []
+        if self.kind() == 'farm' and self.st_on.isChecked():
+            fields.append(('first monster', self.st_text))
         if self.kind() == 'breeder':
             fields += [('first words', self.brd_intro), ('not yet', self.brd_notyet),
                        ('afterwards', self.brd_after)]

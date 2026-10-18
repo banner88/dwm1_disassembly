@@ -3156,7 +3156,22 @@ is campaign-BLOCKING** — the POV flip cannot ship without it; E8/E9
 
 - [~] **E3 — New-game initialization + save-schema headroom.
       THE 32 KB SRAM EXPANSION IS BUILT (S69, NOT yet user-tested);
-      init-object (a2) + story-variable schema (b2) remain open.**
+      (a2) THE NEW-GAME START IS BUILT (S152; USER-CONFIRMED 2026-10-18 17:20 ("Great it all works", on r3));
+      the story-variable schema (b2) remains open.**
+      **(a2) as built S152** (owning: PROJECT_COMPILER §2.60; DATA_STRUCTURES "New game
+      start (S152)"): `custom.new_game` — the game's intro or one of the project's rooms
+      (screen / cell / facing; bank $15 region `newgame_start` → bank $79 entry 2
+      `NewGameStart`, the warp mailbox), the original opening as played (flags `$0000`
+      `$0001` `$0002` `$0005` `$0007` `$0008` + 8 room bytes, measured on the original ROM;
+      set by the first room's scene because `ClearAnimationState` wipes $D92A-$D9E9 at the
+      first load); the first monster = a farm keeper's (Pulio's way) or a Give step (farm /
+      party, named — bank $77 story command 4; given monsters were "0000"); gold / items /
+      party start empty as in the game (user: "Starting with 0 gold is completely fine and
+      normal"). Cutscenes → New game…; help 75. Acceptance: `tools/walk_opening.py` (a new
+      project made through the editor, walked from the title: room 39 / 39, intro 41 / 41 on r3;
+      controls FAIL). Test ROMs `DWM-S152r3-greatlog-room-test.gbc` / `-intro-test.gbc` (r2: the
+      game's cross-screen walk, after the user's "milly disappears" report; r3: the door kept
+      out of the walk's room state, after "room appears AGAIN").
       As built (owning doc: ARCHITECTURE "SRAM banking as built S69"):
       `$0149` $02→$03; **RAMB PIN** — the 19 ROM0 quadrant-convention RAMB
       writers retargeted one operand byte each to the MBC5-ignored `$6100`
@@ -3197,7 +3212,8 @@ is campaign-BLOCKING** — the POV flip cannot ship without it; E8/E9
       persistence, sleep/wake + in-gate save. E3 [~] status now reflects
       only the open subscopes (a2 init object; banks 2-3 schema), not the
       expansion itself, which is BUILT AND USER-TESTED.*
-      Still open: (a2) new-game INIT data as an authorable object; (b2)
+      Still open: ~~(a2) new-game INIT data as an authorable object~~ (built
+      S152, above); (b2)
       story-variable headroom — allocation map + init/versioning convention
       for banks 1-3 (first consumer brings the format; banks arrive
       uninitialized by design).

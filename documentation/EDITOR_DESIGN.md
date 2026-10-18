@@ -1265,6 +1265,19 @@ the flag lists. Text previews draw the default name as the build does (MILLY onl
 hook on — `textenc.use_hero_glyphs`, re-applied on every structural edit / undo). Help
 `64_milly_hook.md`.
 
+**S152 — New game… (ROADMAP E3 a2; built, PyBoy-verified by `tools/walk_opening.py`,
+USER-CONFIRMED 2026-10-18 17:20 ("Great it all works", on r3)).** User: "editor probably SHOULD have that capability. New game -> where to start
+-> etc." Cutscenes tab → **New game…** (`editor2/app/newgame_dialog.py`, model
+`core/newgame_doc.py`, compiler `core/newgame.py`, PROJECT_COMPILER §2.60): *The game starts
+in* the game's intro / one of your rooms (room, screen, tile on the screen's picture with
+**S**, facing); *The original game's story* as it is / as after the original opening; the
+intro + "as after" without the Milly hook is refused in the dialog (and by the build). OK = one
+undo step; it re-opens on what was saved. Same session: the service dialog's farm keeper box
+**hands over the first monster (once)** (species, level, words + speaker, the flag, "the player
+names it") and the Give a monster step's **straight into the party** / **the player names it**
+ticks (cutscene editor + conversation dialog). Help `75_opening.md` — every step of an opening
+made in the editor, written from the S152 demo project (`examples/s152_opening_demo/`).
+
 ### 5.2 Monsters tab
 
 Species list: 221 vanilla + custom (ids 221-239, S105 G3; Gorbunok proven end-to-end).

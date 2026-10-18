@@ -10,7 +10,11 @@ menu appeared). Other people keep the game's rule (the box opposite the player).
 
 - **Vault keeper** — stores items and gold.
 - **Farm keeper** — drop off / pick up / check / separate / let monsters
-  sleep (Pulio's menu).
+  sleep (Pulio's menu). (S152) Tick **hands over the first monster (once)** and he is
+  your Pulio: the first talk says his words, puts the monster you pick (species and
+  level) into the farm, opens the naming screen (or gives it the species' name), then
+  his menu — the player takes it with **PICK UP**. The flag you name (*first monster
+  given*) is ON from then on. See *Your own opening*.
 - **Librarian** — looks up the monsters met so far, family by family. (S137: the
   librarian's words always open in the bottom box, as in the game's Library — talked to
   from below, a top box used to show the library's longer lines twice.)

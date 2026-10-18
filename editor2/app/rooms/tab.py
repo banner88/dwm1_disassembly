@@ -2867,12 +2867,13 @@ class RoomsTab(QWidget):
             return
         kind, lines, ft, new_set = dlg.result_spec()
         brd = dlg.breeder_spec()                                  # S127
+        fm = dlg.starter_spec()                                   # S152: the first monster
 
         def op(d, r, k, st):
             ls = lines
             if new_set:
                 ls = d.add_service_lines(kind, new_set)
-            sid = d.make_service_npc(r, k, st, idx, kind, ls, ft)
+            sid = d.make_service_npc(r, k, st, idx, kind, ls, ft, first_monster=fm)
             if brd is not None:
                 d.set_breeder_options(sid, **brd)
             return sid

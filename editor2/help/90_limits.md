@@ -140,8 +140,8 @@
   project; they do not run on gate maze floors (like the game's own).
 - Arena (S109): a team has 1-3 monsters; the number of classes and matches is
   fixed; entry fees are 0-65535 gold; TERRY? and the summons cannot fight in
-  or lead a team; the announcer and the masters' words are text (not editable
-  yet).
+  or lead a team; the announcer's and the masters' words are game texts (the Text
+  tab, S150).
 - Flags (S117, S124): 1,965 named flags of your own (15 left over from the game +
   1,950 new ones; `$0158` is the game's own — a flag on it is moved off when the project opens);
   8 conditions per state rule / variant / NPC; conditions are flags ON / OFF

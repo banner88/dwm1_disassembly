@@ -153,6 +153,9 @@ def lower(prj):
     # stays in the bedroom through the whirl (the flag only takes effect at the next
     # field load), so the player is hidden HERE, as the arrival scene's first step
     steps = [{'hide': {'actor': 'player'}}]
+    # S152 (newgame.py): the original opening's story state, when custom.new_game asks
+    # for it ("opening_done") — newgame.lower leaves the steps here
+    steps += copy.deepcopy((hook(prj.custom) or {}).get('_story_steps') or [])
     if spin:
         states = scr['states'] if scr.get('states') else [scr]
         from . import cutscene_build as CB
@@ -228,6 +231,11 @@ def bedroom_lines(prj):
         ([0xFF17], 'bedroom_tile_swap: the dresser glow'),
         ([0xFF09, 0x0008], 'delay 8'),
         ([0xFF03, HOOK_FLAG], f'set flag ${HOOK_FLAG:04X}: from now the player is Milly (bank $79)'),
+        # S152: the state the vanilla tail sets at its end (pos 1039 / 1041) — flag $0000
+        # (the bedroom's scene done) and $D974 := 1 (bedroom screen 4) — measured OFF
+        # after the hook's whirl before S152 (tools/walk_opening.py --variant intro)
+        ([0xFF03, 0x0000], 'set flag $0000: the intro bedroom done (as the vanilla tail)'),
+        ([0xFF12, 0xD974, 0x0001], 'write_ram $D974 := 1: bedroom screen 4 (as the vanilla tail)'),
     ]
     for i in range(0, 8, 2):
         seq.append(([0xFF13, HERO_NAME + i, HERO_DEFAULT[i] | HERO_DEFAULT[i + 1] << 8],
@@ -338,8 +346,10 @@ def layout_image():
 
 
 def emit_bank_079(prj, warnings, head):
-    if hook(prj.custom) is None:
-        return ('; BANK $79 — story hooks (S121): EMPTY, the Milly hook is off (vanilla zeros).\n'
+    from . import newgame as NG
+    if hook(prj.custom) is None and not NG.active(prj.custom):
+        return ('; BANK $79 — story hooks (S121, S152): EMPTY, the Milly hook and the new game\'s\n'
+                '; start are the game\'s own (vanilla zeros).\n'
                 'SECTION "ROM Bank $079", ROMX[$4000], BANK[$79]\n'
                 '    ds $4000, $00\n')
     out = [head.rstrip('\n'), '',
@@ -351,6 +361,7 @@ def emit_bank_079(prj, warnings, head):
            f'MillyPlayerAttr:  db ${SPRITE_ATTR:02X}          ; $05:$4152[${SPRITE:02X}]',
            f'MillyPlayerGfx:   dw ${SPRITE_GFX:04X}        ; ROM0 $2ADF[${SPRITE:02X}]']
     out += layout_image()
+    out += [''] + NG.data_lines(prj)            # S152: entry 2 NewGameStart's data
     return '\n'.join(out) + '\n'
 
 

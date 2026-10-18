@@ -3194,6 +3194,91 @@ def s151_items(app, w):
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+def s152_opening(app, w):
+    """S152 (ROADMAP E3 a2; user: "New game -> where to start -> etc." and "giving player
+    new monster and setting up farm as a simple button"): the Cutscenes tab's New game…
+    button and dialog — a room start (room / screen / cell / facing) + the original
+    opening as done, refused for the game's intro without the Milly hook; the farm
+    keeper dialog's "hands over the first monster" box (species, level, flag, the naming
+    screen); undo restores project.json exactly."""
+    import shutil
+    import tempfile
+    from PySide6.QtWidgets import QMessageBox, QPushButton
+    from editor2.app.newgame_dialog import NewGameDialog
+    from editor2.app.rooms.service_dialog import ServiceDialog
+    tmp = tempfile.mkdtemp(prefix='s152_opening_')
+    real_warn, real_info = QMessageBox.warning, QMessageBox.information
+    said = []
+    QMessageBox.warning = lambda *a, **k: said.append(a[2] if len(a) > 2 else '')
+    QMessageBox.information = lambda *a, **k: said.append(a[2] if len(a) > 2 else '')
+    try:
+        pdir = os.path.join(tmp, 'p')
+        shutil.copytree(os.path.join(REPO, 'editor2/example-project'), pdir,
+                        ignore=shutil.ignore_patterns('build'))
+        w.open_project(pdir)
+        app.processEvents()
+        s = w.session
+        doc = s.doc
+        before = doc.dumps()
+        n0 = s.undo.index()
+        ct = w.cutscenes_tab
+        assert any(b.text() == 'New game…' for b in ct.findChildren(QPushButton)), \
+            'no New game… button on the Cutscenes tab'
+        ng = NewGameDialog(s, w)
+        assert ng.r_intro.isChecked() and ng.r_untouched.isChecked(), 'defaults: the game\'s own'
+        # the game's intro + "as after the opening" without the Milly hook: refused
+        ng.r_done.setChecked(True)
+        assert not ng._apply() and said and 'Milly hook' in said[-1], said
+        assert doc.dumps() == before
+        ng.r_room.setChecked(True)
+        ng.room.setCurrentIndex(ng.room.findData('gate_island'))
+        ng._room_changed()
+        ng.screen.setCurrentIndex(ng.screen.findData(4))
+        ng.x.setValue(3)
+        ng.y.setValue(5)
+        ng.face.setCurrentIndex(ng.face.findData('left'))
+        assert ng._apply()
+        ng.deleteLater()
+        assert doc.new_game() == {'start': 'room', 'story': 'opening_done',
+                                  'at': {'room': 'gate_island', 'screen': 4, 'x': 3, 'y': 5,
+                                         'face': 'left'}}, doc.new_game()
+        assert doc.new_game_problem() is None and doc.new_game_start_room() == 'gate_island'
+        ng2 = NewGameDialog(s, w)                       # shows what was saved
+        assert ng2.r_room.isChecked() and ng2.r_done.isChecked() and \
+            ng2.room.currentData() == 'gate_island' and ng2.screen.currentData() == 4 and \
+            (ng2.x.value(), ng2.y.value()) == (3, 5), 'the dialog re-opens on the saved start'
+        ng2.deleteLater()
+        # the farm keeper dialog: the first monster
+        sd = ServiceDialog(doc, None, w)
+        for i in range(sd.kinds.count()):
+            if sd.kinds.item(i).data(256) == 'farm':
+                sd.kinds.setCurrentRow(i)
+        assert sd.starter_spec() is None
+        sd.st_on.setChecked(True)
+        sd.st_species.setCurrentIndex(sd.st_species.findData(20))
+        sd.st_level.setValue(3)
+        fm = sd.starter_spec()
+        assert fm['species'] == 20 and fm['level'] == 3 and fm['name'] == 'ask' and \
+            fm['flag'] == 'first monster given', fm
+        for i in range(sd.kinds.count()):
+            if sd.kinds.item(i).data(256) == 'vault':
+                sd.kinds.setCurrentRow(i)
+        assert sd.starter_spec() is None, 'only a farm keeper hands over a first monster'
+        sd.deleteLater()
+        while s.undo.index() > n0:
+            s.undo.undo()
+        app.processEvents()
+        assert doc.dumps() == before, 'undo must restore project.json exactly'
+        print('OK: New game… (S152) — refused for the intro without the hook, a room start '
+              '(room / screen / cell / facing) + the opening as done, re-shown; the farm keeper\'s '
+              'first monster box; undo restores everything')
+    finally:
+        QMessageBox.warning, QMessageBox.information = real_warn, real_info
+        w.open_project(os.path.join(REPO, 'editor2/example-project'))
+        app.processEvents()
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
 def main():
     do_rom = '--rom' in sys.argv
     app = QApplication.instance() or QApplication(sys.argv)
@@ -4627,6 +4712,7 @@ def main():
     s145_capacity(app, w)
     s150_text(app, w)
     s151_items(app, w)
+    s152_opening(app, w)
 
     if do_rom:
         from editor2.app.build_worker import BuildWorker  # noqa: E402

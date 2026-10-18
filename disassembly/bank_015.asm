@@ -496,15 +496,12 @@ Jump_015_43b1:
     inc b
 
 jr_015_43d5:
-    ld a, b
+    ld a, b                         ; S152: the title menu's choice (no save: +1, NEW GAME is the top line)
     rst $00
-    ld b, l
-    ld b, h
-    ld e, $46
-    ld [hl], a
-    ld b, [hl]
-    sbc b
-    ld b, [hl]
+    dw TitleContinue                ; 0: CONTINUE
+    dw TitleNewGame                 ; 1: NEW GAME
+    dw TitleLinkF0                  ; 2: $C86D := $F0 (a link-cable mode; not traced)
+    dw TitleLinkF1                  ; 3: $C86D := $F1 (a link-cable mode; not traced)
     ld a, $f4
     call SerialTransfer
     ld a, $04
@@ -560,6 +557,8 @@ jr_015_4422:
     ret
 
 
+; S152: the title menu's CONTINUE (choice table at jr_015_43d5).
+TitleContinue:
     ld a, $f4
     call SerialTransfer
     ld a, [$c8d3]                       ; the CONTINUE screen's step (S138 annotation)
@@ -844,16 +843,23 @@ jr_015_461d:
     ret
 
 
+; S152: the title menu's NEW GAME (choice table at jr_015_43d5): every step of
+; [$C8D3] runs TitleNewGameInit — HRAM $FF8A-$FFAA and WRAM $C8EA-$D9E9 zeroed,
+; text speed 4, the field starts in the intro bedroom (map $2F, region 0,
+; wInGateworld 0) with an empty party list. The player's cell then comes from
+; bank $01 LoadFieldTilesDMA: wIsPlayerChangingMaps 0 + $C8EA 0 -> the per-map
+; default spawn table (DefaultSpawnTable[wMapID]; $2F = Terry's bed), measured
+; S152 (PyBoy). Patched builds: region newgame_start (editor2/core/newgame.py,
+; custom.new_game) can far-call bank $79 entry 2 NewGameStart instead.
+TitleNewGame:
     ld a, $f4
     call SerialTransfer
     ld a, [$c8d3]
     rst $00
-    dec l
-    ld b, [hl]
-    dec l
-    ld b, [hl]
-    dec l
-    ld b, [hl]
+    dw TitleNewGameInit
+    dw TitleNewGameInit
+    dw TitleNewGameInit
+TitleNewGameInit:
     ld hl, $ff8a
     ld bc, $0021
     xor a
@@ -870,7 +876,7 @@ jr_015_461d:
     inc [hl]
     xor a
     ld [wScriptStateFlags], a
-    ld a, $2f
+    ld a, $2f                       ; the intro bedroom
     ld [wMapID], a
     ld [wMapIDMirror], a
     ld a, $00
@@ -887,6 +893,8 @@ jr_015_461d:
     ret
 
 
+; S152: the title menu's choices 2 / 3 (the link-cable modes, not traced): $C86D := $F0 / $F1.
+TitleLinkF0:
     ld a, [$c8df]
     cp $ff
     jr z, jr_015_4689
@@ -908,6 +916,7 @@ jr_015_4689:
     ret
 
 
+TitleLinkF1:
     ld a, [$c8df]
     cp $ff
     jr z, jr_015_46aa

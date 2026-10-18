@@ -892,6 +892,11 @@ class CutscenesTab(QWidget):
                      'tick, where she arrives, the Roots room (Milly) and its scene')
         b.clicked.connect(self.milly_hook)
         lv.addWidget(b)
+        b = QPushButton('New game…')
+        b.setToolTip('S152: where a NEW GAME starts — the game\'s intro (the bedroom) or one of '
+                     'your rooms — and whether the original game\'s own story counts as played')
+        b.clicked.connect(self.new_game)
+        lv.addWidget(b)
         self.tree = QTreeWidget()
         self.tree.setHeaderHidden(True)
         self.tree.currentItemChanged.connect(self._picked)
@@ -1241,6 +1246,11 @@ class CutscenesTab(QWidget):
         dlg = MillyHookDialog(self.s, self)
         if dlg.exec() and dlg.edit_scene:
             self.open_cutscene(*dlg.edit_scene)
+
+    def new_game(self):
+        """S152 (ROADMAP E3 a2): the New game dialog (editor2/app/newgame_dialog.py)."""
+        from editor2.app.newgame_dialog import NewGameDialog
+        NewGameDialog(self.s, self).exec()
 
     def open_cutscene(self, room_id, scene_id):
         """Open one of the project's cutscenes in the cutscene editor."""

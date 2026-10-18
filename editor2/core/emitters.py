@@ -1554,6 +1554,18 @@ def _milly_entries():
 REGISTRY += _milly_entries()
 
 
+def _newgame_entries():
+    # S152 (ROADMAP E3 a2): where a new game starts — the same-size region in bank
+    # $15's new-game init (bank $79 entry 2 NewGameStart + its data come with
+    # hooks79) — editor2/core/newgame.py. No custom.new_game == vanilla bytes.
+    from . import newgame as NG
+    return [(name, "custom.new_game", f"region:{path}#{name}", fn, [bank])
+            for name, path, fn, bank in NG.REGIONS]
+
+
+REGISTRY += _newgame_entries()
+
+
 TEXT_SPRITE_VANILLA = """\
 jr_006_6893:
     ld a, [wInGateworld]

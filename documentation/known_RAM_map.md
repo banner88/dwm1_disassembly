@@ -159,6 +159,10 @@
                  ClearAnimationState SKIPS its reset, so script state
                  $D8D5-7 survives and the NPC script RESUMES after a won
                  battle. Cleared (res 7) on loss/arena warps -> full re-entry.
+                 S152: 0 on a NEW GAME's first field load -> ClearAnimationState
+                 zeroes $D92A-$D9E9 (step counters, room-state bytes, flags
+                 $0000-$0277) and LoadFieldTilesDMA takes DefaultSpawnTable
+                 (no warp) — DATA_STRUCTURES "New game start (S152)"
    C8EB     1    wGameState flags, routed per field frame by bank $06
                  FieldStateDispatch (entry 6) in priority order bit 5 (map change
                  in progress -> MapTransitionMachine), 7, 4, 0, 1 (field menu ->
@@ -225,6 +229,9 @@
                  number when wWarpFlag = 1); committed to wMapID by bank $0B entry 0, then bank
                  $73 entry 0 (the single commit hook). Every writer + reader: CROSSBANK_ROOMS
                  "S133 capacity audit".
+                 S152: a custom new game's room start writes it (bank $79 entry 2
+                 NewGameStart, with $C96C := 1, wWarpFlag := 0, $C96F-$C972 the
+                 cell): left 0 the first load went to the Castle (map 0, measured).
    CA38     1    Encounter pool index (gate + floor → pool via $01:Call_69e1)
 ;  Gate floor generation pipeline (these vars): see GATE_GENERATION.md
    CA39     2    Counter before random encounter

@@ -1,0 +1,49 @@
+{
+ "variant": "room",
+ "story": "opening_done",
+ "rom": "(built by the editor: build/build/rom.gbc)",
+ "md5": "752927bb9fbf606aeb9e0ce15508ebe2",
+ "rooms": {
+  "roots": {
+   "id": "roots_room_milly",
+   "mid": "0x6B"
+  },
+  "path": {
+   "id": "greatlog_path",
+   "mid": "0x6C"
+  },
+  "throne": {
+   "id": "greatlog_throne",
+   "mid": "0x6D"
+  },
+  "farm": {
+   "id": "greatlog_farm",
+   "mid": "0x6E"
+  },
+  "hollow": {
+   "id": "stump_hollow",
+   "mid": "0x6F"
+  }
+ },
+ "gate": 32,
+ "flags": {
+  "milly_roots_seen": null,
+  "path_walk_2": null,
+  "path_walk_1": null,
+  "met_king": null,
+  "first_monster_given": null,
+  "guard_moved": null,
+  "stump_king_beaten": null
+ },
+ "warnings": [],
+ "friction": [],
+ "flag_numbers": {
+  "milly_roots_seen": 345,
+  "path_walk_2": 346,
+  "path_walk_1": 347,
+  "met_king": 348,
+  "first_monster_given": 349,
+  "guard_moved": 350,
+  "stump_king_beaten": 351
+ }
+}

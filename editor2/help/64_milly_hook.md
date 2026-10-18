@@ -47,5 +47,9 @@ Use them in your scenes or NPC conditions.
   arrival scene (S128 r3; before, Terry's frames cut her picture into pieces).
 - Terry still appears where the game shows him as an NPC (they never meet in the
   romhack anyway).
-- Starting monsters are up to your project (a *Give a monster* step in a scene).
+- Starting monsters are up to your project: a farm keeper who **hands over the first
+  monster** (Services), or a *Give a monster* step in a scene. See *Your own opening*.
+- (S152) The whirl also counts the bedroom's scene as done (as the game's own dresser
+  scene does at its end), and **Cutscenes → New game…** can start a new game right in
+  your roots room (no bedroom) and mark the original opening as played.
 - Not covered: the debug menu and the link-cable battle screens still draw Terry.

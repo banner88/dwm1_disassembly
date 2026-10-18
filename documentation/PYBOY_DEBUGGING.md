@@ -1068,3 +1068,33 @@ edge and the battle waits for input forever.
   cost = (frames between) × 154 + LY end − LY start. Count the NPCs actually on screen from
   the OAM (objects with Y 1-159: the party = 16, an NPC 4) — the NPC slots include off-screen
   ones. Trap: warping to a game room's other screens can hang PyBoy (S127): measure screen 0.
+
+## S152 techniques — a whole opening walked from the title (tools/walk_opening.py)
+
+- **NEW GAME from boot:** 280 frames, START, then A until `wGameMode` = 1 and the map is not 0.
+- **The intro's bedtime scene:** op `$4C` waits for a direction — read the script word at the
+  counter (`$D8D5/6` + 1, the script `$D8D4`, map type `$D8D3`; `cutscenes.vanilla_script_ptrs`
+  + `script_bank`) and press a direction only when it is `$FF4C`; A on text boxes otherwise
+  (pressing a direction at every script frame never let the scene end).
+- **An NPC's live cell:** slot `$D7D2 + 32·n`: +`$18/$19` X, +`$1A/$1B` Y in pixels — the +2 /
+  +3 cell bytes keep where it was PLACED (a guard that walked aside still reads his home cell).
+- **Walking:** BFS over the room's walkable cells (a project room: layout BR subtile ≥ the
+  threshold; a game room: `vanilla_screen_grid`), NPC live cells blocked; one step = press until
+  the pixel position moves, release, wait for the 16-px target (releasing at the movement start
+  stops the overshoot of holding a fixed time).
+- **Automatic input by state:** a battle (`wGameMode` = 2) → A every other slice; a screen
+  (`$C8EB` bit 4) → naming (`$C8EF` = 15) START then A, any other B; a box → A.
+- **The farm menu:** wait for `$C8EF` = 3 (+200 frames for its window); PICK UP by fixed
+  presses with long waits (down, A, A, down, A, A — 60-120 frames each), then check the party
+  (`$CA8D` count, the slot's species +9 / level +$4B); leave with B (the menu) then A (the
+  farewell). The monster records: `$CAC1 + $95·slot` (+0 = 1 in the farm, +1 the nickname).
+- **The game's Castle as a control:** warp to Castle screen 1 (the screen Castle script 0 runs
+  on) and count text frames: 0 with the opening's state set, 134 with the story untouched (the
+  Minister's opening).
+- **Is everyone ON the screen (S152 r2):** every 4 frames while the map is loaded
+  (`$C96C` = 0, `$C8EB` bit 5 clear) record the screen (`$C925`), the player's cell
+  (HRAM $92/$93 / $95/$96) and the helper's slot (+0 bit 6 hidden, +$18 / +$1A pixels): the
+  player's absolute row must lie inside the screen's 8 rows; the helper's first visible sample
+  after the fade = his standing tile; his rows on the door screen never above the hole. A frame
+  dump every frame across a fade (`pathdbg`-style: `P.adv(1)` + `screen.image.save`) shows who
+  appears during the fade-in.

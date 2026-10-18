@@ -1036,6 +1036,14 @@ ScriptCommand:
 ;     2 take_gold [lo, mid, hi]  ROM0 AddGold (subtracts; floor 0)
 ;     3 give_item [item, count]  room for all of them ($00 / $FF slots) ->
 ;        put them in, $D8E1 := 1; else nothing, $D8E1 := 0
+;     4 name_given [ask]  (S152) the monster op $29 / $18 has just made (slot
+;        [$DA14]): no nickname yet (+$01 = 0: every enemy row but the game's few
+;        named ones — the constructor zero-fills it, "0000" on screen, measured
+;        S152) -> the species' default nickname (text mode 7 = the join naming
+;        screen's pre-fill, ROM0 SetupVRAMParams copies it); ask = 1 -> the
+;        naming screen's globals for it as ScriptCmd3A sets them ($C8F2 the
+;        nickname, $C8F4 species + $10, $C8F5 species, $C8F6 gender, $D7CA /
+;        $D7CB) — the script opens the screen next (op $04 15)
 ;   Op $24 yields (BANK04_SCRIPT_ENGINE "Breeding"): a later text needs
 ;   init_dialog — the compiler adds it.
 ; SHOP ITEM SETS: ShopFill picks list a, then ShopSetPick walks ShopSetTable
@@ -1442,13 +1450,78 @@ StoryCommand:
     ld l, a
     ld a, [hl+]                         ; the kind
     or a
-    jr z, .take
+    jp z, .take
     dec a
-    jr z, .giveGold
+    jp z, .giveGold
     dec a
-    jr z, .takeGold
+    jp z, .takeGold
+    dec a
+    jr z, .giveItem
     dec a
     ret nz
+    ; 4 name_given [ask] (S152)
+    ld a, [hl]
+    push af                             ; ask
+    ld a, [$da14]
+    ld [$cac0], a                       ; the slot the constructor filled
+    ld hl, $cac2                        ; +$01 the nickname
+    call GetMonsterDataPtr
+    ld a, [hl]
+    or a
+    jr nz, .named                       ; a nickname of its own (Slib …)
+    push hl
+    ld a, [$cac0]
+    ld hl, $caca                        ; +$09 the species
+    call GetMonsterDataPtr
+    ld l, [hl]
+    ld h, $07                           ; text mode 7: the default nicknames
+    ld de, $c180
+    call SetupVRAMParams                ; ROM0: copies the text to DE ($F0 ends)
+    pop de                              ; DE = +$01
+    ld hl, $c180
+    ld b, 8
+.nick:
+    ld a, [hl+]
+    ld [de], a
+    inc de
+    dec b
+    jr z, .named
+    cp $f0
+    jr nz, .nick
+    ld a, $f0
+.pad:
+    ld [de], a
+    inc de
+    dec b
+    jr nz, .pad
+.named:
+    pop af
+    or a
+    ret z
+    ld a, [$cac0]                       ; the naming screen's globals (ScriptCmd3A's way)
+    ld hl, $caca
+    call GetMonsterDataPtr
+    ld a, [hl]
+    ld [$c8f5], a
+    add $10
+    ld [$c8f4], a
+    ld [$d7ca], a
+    ld a, $01
+    ld [$d7cb], a
+    ld a, [$cac0]
+    ld hl, $cac2
+    call GetMonsterDataPtr
+    ld a, l
+    ld [$c8f2], a
+    ld a, h
+    ld [$c8f3], a
+    ld a, [$cac0]
+    ld hl, $cacc                        ; +$0B the gender
+    call GetMonsterDataPtr
+    ld a, [hl]
+    ld [$c8f6], a
+    ret
+.giveItem:
     ; 3 give_item [item, count]: room for all, or nothing
     ld a, [hl+]
     ld d, a                             ; D = the item

@@ -99,8 +99,10 @@ STEP_HELP = {
                  'player reads ("Then say"), and what happens when the bag is full — by '
                  'default the scene ends there, so the steps after it run only when the '
                  'item was given.',
-    'give_monster': 'Gives a monster (it goes to the party or the farm). Write what the player '
-                    'reads, and what happens when there is no room.',
+    'give_monster': 'Gives a monster: into the FARM (the default — as the game\'s first monster '
+                    'waits for Pulio\'s PICK UP; a farm keeper hands it over) or, ticked, straight '
+                    'into the party when it has room (S152). Write what the player reads, and what '
+                    'happens when there is no room.',
     'tiles': 'Changes a piece of the room picture (an opened door, a cleared path …) to how it '
              'looks in another screen / state of the room. Until the room is loaded again.',
     'battle': 'Starts a battle with up to 3 enemies. The steps after it run only when the '
@@ -115,6 +117,8 @@ STEP_HELP = {
     'gold': 'Gives or takes gold (never below 0 or above 99,999).',
     'refresh': 'The room loads again where the player stands: its room states pick again '
                '(a door unlocked by a flag this scene turned ON opens now). The scene ends.',
+    'ram': 'Writes bytes of the game\'s memory (room states of the game\'s own rooms). Made '
+           'by New game… "as after the original opening" — not offered in the menus (S152).',
     'name_hero': 'Opens the game\'s naming screen (the King\'s "What is your name?" one): the player types the hero\'s name, confirms it, and the '
                  'scene goes on. It offers the current name — MILLY with the Milly hook, '
                  'else TERRY. Text after it can use the name ({hero}).',
@@ -903,6 +907,14 @@ class StepForm(QWidget):
                        lambda n: self._upd(k, 'count', n))
         else:
             self._combo('Monster', self.ed.enemy_items(), v.get('enemy'), lambda e: self._upd(k, 'enemy', e))
+            # S152: op $18 (the party when it has room) instead of op $29 (the farm only)
+            self._check('joins the party at once (the farm when the party has 3)',
+                        v.get('to') == 'party',
+                        lambda b: self._upd(k, 'to', 'party' if b else None))
+            # S152: never nameless — its species' short name, or the naming screen
+            self._check('the player names it (the naming screen; else its species\' short name)',
+                        v.get('name') == 'ask',
+                        lambda b: self._upd(k, 'name', 'ask' if b else None))
         self._text('Then say', v.get('got') or {'boxes': [['']]},
                    lambda t: self._upd(k, 'got', t if _text_from_boxes(t).strip(' …') else None))
         self._text('When it is full', v.get('full') or {'boxes': [['']]},

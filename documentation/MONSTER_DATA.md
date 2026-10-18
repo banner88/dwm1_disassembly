@@ -1716,7 +1716,12 @@ and the species info row at `$DA33`.
   except EIDs $131-$13C (`CreateForeignMasterNames`, the rival tamers' teams):
   another master's name (+$0C) and a nickname (+$01). EIDs $01, $0C, $34, …
   (the `$DA13 == 0` cases) and $15F/$1E4/$1E5 get a nickname only; $15E sets
-  the egg flag +$63 (`Jump_014_4586`).
+  the egg flag +$63 (`Jump_014_4586`). **Every other row's monster has NO
+  nickname** (+$01 zero-filled — shown "0000"; measured S152 on a project row given
+  by op `$29`): the game names a joining monster on the join naming screen, and the
+  scripts' few gifts use the named EIDs. Patched builds: story command 4
+  `name_given` (bank $77, PROJECT_COMPILER §2.60) writes the species' default
+  nickname (text mode 7) after a project's give, and can open the naming screen.
 - **Stats**: MaxHP/HP, MaxMP/MP, ATK, DEF, INT each get the creation roll
   `SaveEnem_4821` (v·m >> 8, m = $CD + (RNG1 mod $34), m = $100 keeps v).
   **AGL is NOT rolled** (`$CB1D ← $DA25`, no roll call) — measured 962/962.

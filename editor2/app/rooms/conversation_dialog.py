@@ -915,6 +915,30 @@ class ConversationDialog(QDialog):
             g['enemy'] = c.currentData()
             self._refresh_label()
         c.activated.connect(ch)
+        # S152: the party at once (op $18) or the farm (op $29, the default)
+        party = QCheckBox('joins the party at once (the farm when the party has 3)')
+        party.setChecked(g.get('to') == 'party')
+
+        def ch_party(on):
+            if on:
+                g['to'] = 'party'
+            else:
+                g.pop('to', None)
+            self._refresh_label()
+        party.toggled.connect(ch_party)
+        f.addRow('', party)
+        # S152: never nameless — its species' short name, or the naming screen
+        ask = QCheckBox("the player names it (the naming screen; else its species' short name)")
+        ask.setChecked(g.get('name') == 'ask')
+
+        def ch_ask(on):
+            if on:
+                g['name'] = 'ask'
+            else:
+                g.pop('name', None)
+            self._refresh_label()
+        ask.toggled.connect(ch_ask)
+        f.addRow('', ask)
         w = QWidget()
         w.setLayout(f)
         self.rv.addWidget(w)

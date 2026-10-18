@@ -451,10 +451,18 @@ class Project:
         # spin-in scene goes in FIRST (milly.lower); its problems stop a build
         # the same way a cutscene's do
         from . import milly as _MH
+        from . import newgame as _NG
+        try:
+            # S152 (ROADMAP E3 a2): where a new game starts — a room start moves the
+            # hook's arrival there / gives the start room its first scene; the
+            # original opening's story steps (newgame.py) — BEFORE the hook's scene
+            _NG.lower(self)
+        except _NG.NewGameError as ex:
+            self.cutscene_error = str(ex)
         try:
             _MH.lower(self)
         except _MH.HookError as ex:
-            self.cutscene_error = str(ex)
+            self.cutscene_error = self.cutscene_error or str(ex)
         try:
             self.cutscene_patches = CB.lower_project(self)
         except CB.CutsceneError as ex:
@@ -945,7 +953,17 @@ class Project:
                 cnt = int(g.get('count', 1) or 1)
                 if kind == 'give_monster':
                     ops.append(['op', 'check_storage_full', f'@gfull{n}'])
-                    ops.append(['op', 'add_monster', self.enemy_ref(g.get('enemy'), c)])
+                    # S152: "to": "party" = op $18 (joins the party when it has room)
+                    ops.append(['op', 'give_monster' if g.get('to') == 'party' else 'add_monster',
+                                self.enemy_ref(g.get('enemy'), c)])
+                    # S152: its name (story command 4: the species' default nickname; "ask"
+                    # = the naming screen too) — a row's monster was nameless ("0000")
+                    nw = self.story_command('name_given', {'ask': g.get('name') == 'ask'}, c)
+                    ops.append(['op', '0x24', f'0x{nw:04X}'])
+                    if g.get('name') == 'ask':
+                        # the game's order around a naming screen: close, name, re-open
+                        ops += [['op', 'close_text'], ['op', '0x04', 15, 0]]
+                    field = True                   # op $24 yields / the naming screen
                 elif cnt == 1:
                     item = F.val(g.get('item'))
                     from . import items as _IT
